@@ -272,8 +272,8 @@ Adb.prototype.getPidsOfProcess = function(name) {
   'use strict';
   return this.shell(['ps', name]).then(function(stdout) {
     var pids = [];
-    var lines = stdout.split(/\r?\n/);
-    if (lines.length === 0 || lines[0].indexOf('USER ') !== 0) {
+    var lines = stdout.split(/[\r\n]+/);
+    if (lines.length === 0 || lines[0].indexOf('USER ') !== 0) {  // Heading.
       throw new Error(util.format('ps command failed, output: %j', stdout));
     }
     lines.forEach(function(line, iLine) {
@@ -306,7 +306,90 @@ Adb.prototype.scheduleKill = function(processName, signal) {
   'use strict';
   this.getPidsOfProcess(processName).then(function(pids) {
     pids.forEach(function(pid) {
-      this.su(['kill', '-' + (signal || 'INT'), pid]);
+      this.su(['kill', '-' + (signal || 'SIGINT'), pid]);
     }.bind(this));
+  }.bind(this));
+};
+
+/**
+ * Schedules a promise resolved with matching process names.
+ *
+ * More precisely, matches ps output lines starting with the process name.
+ *
+ * @param {string} nameRegex  the regular expression to match for.
+ * @return {webdriver.promise.Promise} Resolves to Array of strings.
+ */
+Adb.prototype.getMatchingProcessNames = function(nameRegex) {
+  'use strict';
+  return this.shell(['ps']).then(function(stdout) {
+    var processNames = [];
+    var lines = stdout.split(/\r?\n/);
+    if (lines.length === 0 || lines[0].indexOf('USER ') !== 0) {  // Heading.
+      throw new Error(util.format('ps command failed, output: %j', stdout));
+    }
+    lines.forEach(function(line) {
+      // Extract the 9th element of the ps output line, if it has no spaces.
+      var match = line.match(/(?:\s*\S+\s+){8}(\S+)$/);
+      if (match && nameRegex.test(match[1])) {
+        processNames.push(match[1]);
+      }
+    }.bind(this));
+    return processNames;
+  }.bind(this));
+};
+
+/**
+ * Runs adb force-stop for all running packages mathcing the given regex.
+ *
+ * @param {string} nameRegex
+ */
+Adb.prototype.scheduleForceStopMatchingPackages = function(nameRegex) {
+  'use strict';
+  this.getMatchingProcessNames(nameRegex).then(function(packageNames) {
+    packageNames.forEach(function(packageName) {
+      this.shell(['am', 'force-stop', packageName.trim()]);
+    }.bind(this));
+  }.bind(this));
+};
+
+/**
+ * Returns the name of the single currently connected interface, or undefined.
+ *
+ * Output format:
+ * Up to Honeycomb:
+ *
+ * usb0 UP 192.168.1.67 255.255.255.192 0x00001043
+ *
+ * IceCreamSandwich+:
+ *
+ * usb0 UP 192.168.1.68/28 0x00001002 02:00:00:00:00:01
+ *
+ * @return {webdriver.promise.Promise} Resolves to the interface name.
+ */
+Adb.prototype.scheduleDetectConnectedInterface = function() {
+  'use strict';
+  return this.shell(['netcfg']).then(function(stdout) {
+    var connectedInterfaces = [];
+    stdout.split(/[\r\n]+/).forEach(function(line, lineNumber) {
+      if (!line) {
+        return;  // Skip empty lines.
+      }
+      var fields = line.split(/\s+/);
+      if (fields.length !== 5) {
+        throw new Error(util.format('netcfg output unrecognized at line %d: %j',
+            lineNumber, stdout));
+      }
+      if (fields[0] !== 'lo' && fields[1] === 'UP' &&
+          0 !== fields[2].indexOf('0.0.0.0')) {
+        connectedInterfaces.push(fields[0]);
+      }
+    }.bind(this));
+    if (connectedInterfaces.length !== 1) {
+      throw new Error(util.format(
+          '%s connected interfaces detected: %j, netcfg output: %j',
+          (connectedInterfaces.length === 0 ? 'Zero' : 'More than one'),
+          connectedInterfaces, stdout));
+    }
+    return connectedInterfaces[0];
   }.bind(this));
 };

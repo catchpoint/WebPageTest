@@ -6,6 +6,8 @@ var CloseRequestDialog = function(hash) {
     }
     $('#radio1').attr('checked', 'checked');
     $("#request-dialog-radio").buttonset('refresh');
+    $("#dialog-contents div.dialog-tab-content").hide();
+    $("#request-details").show();
 }
 
 // initialize the pop-up dialog        
@@ -61,9 +63,6 @@ function SelectRequest(request) {
     var requestHeaders='';
     var responseHeaders='';
     $("#response-body").html('');
-    $('#response-body-button').hide();
-    $("#response-image").html('');
-    $('#response-image-button').hide();
     try {
         if (wptBodyRequest !== undefined)
             wptBodyRequest.abort();
@@ -147,7 +146,6 @@ function SelectRequest(request) {
             details += '<a href="' + r['body_url'] + '" target="_blank">Open response body in new window</a><br>'
             try {
                 $("#response-body").text('Loading...');
-                $('#response-body-button').show();
                 wptBodyRequest = new XMLHttpRequest();
                 wptBodyRequest.open('GET', r['body_url'], true);
                 wptBodyRequest.onreadystatechange = function() {
@@ -163,12 +161,13 @@ function SelectRequest(request) {
             } catch (err) {
             }
         } else if (r['contentType'] !== undefined && r['contentType'].indexOf('image') >= 0) {
-            $('#response-body-button').show();
             if (wptNoLinks) {
                 $("#response-body").html('<img style="max-width:100%; max-height:100%;" src="' + r['full_url'] + '">');
             } else {
                 $("#response-body").html('<a href="' + r['full_url'] + '"><img style="max-width:100%; max-height:100%;" src="' + r['full_url'] + '"></a>');
             }
+        } else {
+            $("#response-body").html('Not Available.<br><br>Turn on the "Save Response Bodies" option in the advanced settings to capture text resources.');
         }
     }
     $("#request-details").html(details);

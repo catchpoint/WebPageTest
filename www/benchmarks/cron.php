@@ -253,7 +253,7 @@ function CheckBenchmarkStatus($benchmark, &$state) {
                 $status = GetTestStatus($test['id'], true);
                 $now = time();
                 if ($status['statusCode'] >= 400) {
-                    logMsg("Test {$test['id']} : Failed", "./log/$logFile", true);
+                    logMsg("Test {$test['id']} : Failed - {$status['statusText']}", "./log/$logFile", true);
                     if (ResubmitBenchmarkTest($benchmark, $test['id'], $state)) {
                         logMsg("Test {$test['id']} : Resubmit succeeded, marking benchmark as not done", "./log/$logFile", true);
                         $done = false;

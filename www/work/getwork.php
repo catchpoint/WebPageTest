@@ -15,7 +15,7 @@ include 'common_lib.inc';
 error_reporting(0);
 set_time_limit(600);
 $is_json = array_key_exists('f', $_GET) && $_GET['f'] == 'json';
-$location = $_GET['location'];
+$locations = explode(',', $_GET['location']);
 $key = array_key_exists('key', $_GET) ? $_GET['key'] : '';
 $recover = array_key_exists('recover', $_GET) ? $_GET['recover'] : '';
 $pc = array_key_exists('pc', $_GET) ? $_GET['pc'] : '';
@@ -27,7 +27,7 @@ elseif (strlen($pc))
   $tester = $pc . '-' . trim($_SERVER['REMOTE_ADDR']);
 else
   $tester = trim($_SERVER['REMOTE_ADDR']);
-
+  
 $dnsServers = '';
 if (array_key_exists('dns', $_REQUEST))
   $dnsServers = str_replace('-', ',', $_REQUEST['dns']);
@@ -36,13 +36,19 @@ if (array_key_exists('shards', $_REQUEST) && $_REQUEST['shards'])
   $supports_sharding = true;
 
 $is_done = false;
-if (!array_key_exists('freedisk', $_GET) || (float)$_GET['freedisk'] > 0.1) {
+if (isset($locations) && is_array($locations) && count($locations) &&
+    (!array_key_exists('freedisk', $_GET) || (float)$_GET['freedisk'] > 0.1)) {
+  shuffle($locations);
+  $location = trim($locations[0]);
   if (!$is_done && array_key_exists('ver', $_GET))
     $is_done = GetUpdate();
   if (!$is_done && @$_GET['video'])
     $is_done = GetVideoJob();
-  if (!$is_done)
-    $is_done = GetJob();
+  foreach ($locations as $loc) {
+    $location = trim($loc);
+    if (!$is_done && strlen($location))
+      $is_done = GetJob();
+  }
 }
 
 // kick off any cron work we need to do asynchronously
@@ -176,7 +182,7 @@ function GetJob() {
                 }
                     
                 // zero out the tracked page loads in case some got lost
-                if( !$is_done ) {
+                if (!$is_done && is_file("./tmp/$location.tests")) {
                     $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
                     if( $tests ) {
                         $tests['tests'] = 0;
@@ -192,7 +198,7 @@ function GetJob() {
             $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
             $testerInfo['pc'] = $pc;
             $testerInfo['ec2'] = $ec2;
-            $testerInfo['ver'] = $_GET['ver'];
+            $testerInfo['ver'] = array_key_exists('version', $_GET) ? $_GET['version'] : $_GET['ver'];
             $testerInfo['freedisk'] = @$_GET['freedisk'];
             $testerInfo['ie'] = @$_GET['ie'];
             $testerInfo['dns'] = $dnsServers;
@@ -215,7 +221,6 @@ function GetJob() {
 function GetVideoJob()
 {
     global $debug;
-    global $location;
     global $tester;
     $ret = false;
     
@@ -288,7 +293,9 @@ function GetUpdate()
         if( is_file("$updateDir/{$fileBase}update.ini") && is_file("$updateDir/{$fileBase}update.zip") )
         {
             $update = parse_ini_file("$updateDir/{$fileBase}update.ini");
-            if( $update['ver'] && (int)$update['ver'] != (int)$_GET['ver'] )
+
+            // Check for inequality allows both upgrade and quick downgrade
+            if( $update['ver'] && intval($update['ver']) !== intval($_GET['ver']) )
             {
                 header('Content-Type: application/zip');
                 header("Cache-Control: no-cache, must-revalidate");
@@ -359,7 +366,10 @@ function ProcessTestShard(&$testInfo, &$test, &$delete) {
     global $supports_sharding;
     global $tester;
     if (isset($testInfo) && array_key_exists('shard_test', $testInfo) && $testInfo['shard_test']) {
-        if ($supports_sharding) {
+        if ((array_key_exists('type', $testInfo) && $testInfo['type'] == 'traceroute') ||
+            !$supports_sharding) {
+            $testInfo['shard_test'] = 0;
+        } else {
             if( $testLock = fopen( "$testPath/test.lock", 'w',  false) )
                 flock($testLock, LOCK_EX);
             $done = true;
@@ -424,8 +434,6 @@ function ProcessTestShard(&$testInfo, &$test, &$delete) {
                 flock($testLock, LOCK_UN);
                 fclose($testLock);
             }
-        } else {
-            $testInfo['shard_test'] = 0;
         }
     }
 }

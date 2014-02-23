@@ -12,12 +12,12 @@ if( strlen($page_description) )
 <link rel="icon" href="/images/favicon.png" type="image/png">
 
 <?php 
-    if(extension_loaded('newrelic'))
+    if(!isset($noanalytics) && extension_loaded('newrelic'))
         echo @newrelic_get_browser_timing_header();
     if (is_file('./settings/customhead.inc.php')) {
         include('./settings/customhead.inc.php');
     }
-    if (is_file('./js/user-timing-min.js')) {
+    if (!isset($noanalytics) && is_file('./js/user-timing-min.js')) {
       echo "<script type=\"text/javascript\">\n";
       include('./js/user-timing-min.js');
       if (is_file('./js/user-timing-rum-min.js'))

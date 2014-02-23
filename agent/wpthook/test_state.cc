@@ -40,7 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "trace.h"
 
 static const DWORD ON_LOAD_GRACE_PERIOD = 100;
-static const DWORD SCREEN_CAPTURE_INCREMENTS = 20;
+static const DWORD SCREEN_CAPTURE_INCREMENTS = 200;
 static const DWORD DATA_COLLECTION_INTERVAL = 100;
 static const DWORD START_RENDER_MARGIN = 30;
 static const DWORD MS_IN_SEC = 1000;
@@ -55,7 +55,6 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   ,_screen_capture(screen_capture)
   ,_frame_window(NULL)
   ,_document_window(NULL)
-  ,_render_check_thread(NULL)
   ,_exit(false)
   ,_data_timer(NULL)
   ,_test(test)
@@ -68,7 +67,6 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   ,received_data_(false) {
   QueryPerformanceFrequency(&_ms_frequency);
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
-  _check_render_event = CreateEvent(NULL, TRUE, FALSE, NULL);
   InitializeCriticalSection(&_data_cs);
   FindBrowserNameAndVersion();
   paint_msg_ = RegisterWindowMessage(_T("WPT Browser Paint"));
@@ -118,7 +116,6 @@ void TestState::Reset(bool cascade) {
     _doc_bytes_out = 0;
     _bytes_out = 0;
     _last_bytes_in = 0;
-    _screen_updated = false;
     _last_data.QuadPart = 0;
     _video_capture_count = 0;
     _start.QuadPart = 0;
@@ -161,16 +158,6 @@ void TestState::Reset(bool cascade) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-static unsigned __stdcall RenderCheckThread( void* arg ) {
-  TestState * test_state = (TestState *)arg;
-  if( test_state )
-    test_state->RenderCheckThread();
-    
-  return 0;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
 void __stdcall CollectData(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
   if( lpParameter )
     ((TestState *)lpParameter)->CollectData();
@@ -191,13 +178,6 @@ void TestState::Start() {
   if (!_started) {
     FindViewport(true);
     _started = true;
-  }
-
-  if (!_render_check_thread) {
-    _exit = false;
-    ResetEvent(_check_render_event);
-    _render_check_thread = (HANDLE)_beginthreadex(0, 0, ::RenderCheckThread, 
-                                                                   this, 0, 0);
   }
 
   if (!_data_timer) {
@@ -395,15 +375,7 @@ void TestState::Done(bool force) {
         _data_timer = NULL;
         timeEndPeriod(1);
       }
-
-      // clean up the background thread that was doing the timer checks
-      if (_render_check_thread) {
-        _exit = true;
-        SetEvent(_check_render_event);
-        WaitForSingleObject(_render_check_thread, INFINITE);
-        CloseHandle(_render_check_thread);
-        _render_check_thread = NULL;
-      }
+      _exit = true;
     }
 
     _active = false;
@@ -483,146 +455,30 @@ void TestState::UpdateBrowserWindow() {
     Grab a video frame if it is appropriate
 -----------------------------------------------------------------------------*/
 void TestState::GrabVideoFrame(bool force) {
-  if (_active && _document_window && _test._video) {
-    if (force ||
-        _test._continuous_video ||
-        (_screen_updated && _render_start.QuadPart)) {
-      // use a falloff on the resolution with which we capture video
-      bool grab_video = false;
-      LARGE_INTEGER now;
-      QueryPerformanceCounter(&now);
-      if (!_last_video_time.QuadPart || _test._continuous_video)
+  if (_active && _document_window && (force || received_data_)) {
+    // use a falloff on the resolution with which we capture video
+    bool grab_video = false;
+    LARGE_INTEGER now;
+    QueryPerformanceCounter(&now);
+    if (!_last_video_time.QuadPart || _test._continuous_video)
+      grab_video = true;
+    else {
+      DWORD interval = DATA_COLLECTION_INTERVAL;
+      if (_video_capture_count > SCREEN_CAPTURE_INCREMENTS * 2)
+        interval *= 20;
+      else if (_video_capture_count > SCREEN_CAPTURE_INCREMENTS)
+        interval *= 5;
+      LARGE_INTEGER min_time;
+      min_time.QuadPart = _last_video_time.QuadPart + 
+                            (interval * _ms_frequency.QuadPart);
+      if (now.QuadPart >= min_time.QuadPart)
         grab_video = true;
-      else {
-        DWORD interval = DATA_COLLECTION_INTERVAL;
-        if (_video_capture_count > SCREEN_CAPTURE_INCREMENTS * 2)
-          interval *= 20;
-        else if (_video_capture_count > SCREEN_CAPTURE_INCREMENTS)
-          interval *= 5;
-        LARGE_INTEGER min_time;
-        min_time.QuadPart = _last_video_time.QuadPart + 
-                              (interval * _ms_frequency.QuadPart);
-        if (now.QuadPart >= min_time.QuadPart)
-          grab_video = true;
-      }
-      if (grab_video) {
-        _screen_updated = false;
-        _last_video_time.QuadPart = now.QuadPart;
-        _video_capture_count++;
-        _screen_capture.Capture(_document_window, CapturedImage::VIDEO);
-      }
     }
-  }
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void TestState::PaintEvent(int x, int y, int width, int height) {
-  if (received_data_) {
-    bool valid = true;
-    if (width && height && _screen_capture.IsViewportSet()) {
-      int left = max(x - _screen_capture._viewport.left, 0);
-      int top = max(y - _screen_capture._viewport.top, 0);
-      int right = max(min(x + width, _screen_capture._viewport.right)
-                      - _screen_capture._viewport.left, 0);
-      int bottom = max(min(y + height, _screen_capture._viewport.bottom)
-                        - _screen_capture._viewport.top, 0);
-      x = left;
-      y = top;
-      width = right - left;
-      height = bottom - top;
-      if (width <= 0 || height <= 0)
-        valid = false;
+    if (grab_video) {
+      _last_video_time.QuadPart = now.QuadPart;
+      _video_capture_count++;
+      _screen_capture.Capture(_document_window, CapturedImage::VIDEO);
     }
-    if (valid) {
-      _screen_updated = true;
-      CheckStartRender();
-    }
-  }
-}
-
-/*-----------------------------------------------------------------------------
-    See if anything has been rendered to the screen
------------------------------------------------------------------------------*/
-void TestState::CheckStartRender() {
-  if (!_render_start.QuadPart && _screen_updated && _document_window) {
-    GdiFlush();
-    SetEvent(_check_render_event);
-  }
-}
-
-/*-----------------------------------------------------------------------------
-    Background thread to check to see if rendering has started
-    (this way we don't block the browser itself)
------------------------------------------------------------------------------*/
-void TestState::RenderCheckThread() {
-  while (!_render_start.QuadPart && !_exit) {
-    WaitForSingleObject(_check_render_event, INFINITE);
-    if (!_exit) {
-      _screen_capture.Lock();
-      _screen_updated = false;
-      LARGE_INTEGER now;
-      QueryPerformanceCounter((LARGE_INTEGER *)&now);
-
-      // grab a screen shot
-      bool found = false;
-      CapturedImage captured_img = _screen_capture.CaptureImage(
-                                _document_window, CapturedImage::START_RENDER);
-      CxImage img;
-      if (captured_img.Get(img) && 
-          img.GetWidth() > START_RENDER_MARGIN * 2 &&
-          img.GetHeight() > START_RENDER_MARGIN * 2) {
-        int bpp = img.GetBpp();
-        if (bpp >= 15) {
-          int height = img.GetHeight();
-          int width = img.GetWidth();
-          // 24-bit gets a fast-path where we can just compare full rows
-          if (bpp <= 24 ) {
-            DWORD row_bytes = img.GetEffWidth();
-            DWORD compare_bytes = (bpp>>3) * (width-(START_RENDER_MARGIN * 2));
-            char * background = (char *)malloc(compare_bytes);
-            if (background) {
-              char * image_bytes = (char *)img.GetBits(START_RENDER_MARGIN)
-                                     + START_RENDER_MARGIN * (bpp >> 3);
-              memcpy(background, image_bytes, compare_bytes);
-              for (DWORD row = START_RENDER_MARGIN; 
-                    row < height - START_RENDER_MARGIN && !found; row++) {
-                if (memcmp(image_bytes, background, compare_bytes))
-                  found = true;
-                else
-                  image_bytes += row_bytes;
-              }
-              free (background);
-            }
-          } else {
-            for (DWORD row = START_RENDER_MARGIN; 
-                    row < height - START_RENDER_MARGIN && !found; row++) {
-              for (DWORD x = START_RENDER_MARGIN; 
-                    x < width - START_RENDER_MARGIN && !found; x++) {
-                RGBQUAD pixel = img.GetPixelColor(x, row, false);
-                if (pixel.rgbBlue != 255 || pixel.rgbRed != 255 || 
-                    pixel.rgbGreen != 255)
-                  found = true;
-              }
-            }
-          }
-        }
-      }
-
-      if (found) {
-        _render_start.QuadPart = now.QuadPart;
-        _screen_capture._captured_images.AddTail(captured_img);
-      } else {
-        captured_img.Free();
-      }
-
-      _screen_capture.Unlock();
-    }
-    ResetEvent(_check_render_event);
-
-    // prevent a tight loop
-    if (!_render_start.QuadPart && !_exit)
-      Sleep(20);
   }
 }
 
@@ -995,7 +851,6 @@ void TestState::ResizeBrowserForResponsiveTest() {
   browser-specific extensions
 -----------------------------------------------------------------------------*/
 void TestState::CheckResponsive() {
-  OutputDebugStringA("CheckResponsive");
   if (_frame_window) {
     _screen_capture.Capture(_frame_window, CapturedImage::RESPONSIVE_CHECK,
                             false);

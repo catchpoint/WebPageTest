@@ -42,11 +42,23 @@ var DEVTOOLS_SOCKET = 'localabstract:chrome_devtools_remote';
 var PAC_PORT = 80;
 
 var CHROME_FLAGS = [
+    // Standard command-line flags
+    '--no-first-run', '--disable-background-networking',
+    '--no-default-browser-check', '--process-per-tab',
+    '--allow-running-insecure-content',
     // Stabilize Chrome performance.
     '--disable-fre', '--enable-benchmarking', '--metrics-recording-only',
     // Suppress location JS API to avoid a location prompt obscuring the page.
-    '--disable-geolocation'
+    '--disable-geolocation',
+    // Disable external URL handlers from opening
+    '--disable-external-intent-requests'
   ];
+
+var KNOWN_BROWSERS = {
+    'Chrome': 'com.android.chrome',
+    'Chrome Beta': 'com.chrome.beta',
+    'Chrome Dev': 'com.google.android.apps.chrome_dev'
+  };
 
 
 /**
@@ -64,7 +76,7 @@ var CHROME_FLAGS = [
  *     [captureDir] capture script dir, defaults to ''.
  *     [videoCard] the video card identifier, defaults to None.
  *     [chromePackage] package, defaults to
- *         'com.google.android.apps.chrome_dev'.
+ *         'com.android.google'.
  *     [chromeActivity] activity without the '.Main' suffix, defaults to
  *         'com.google.android.apps.chrome'.
  * @constructor
@@ -80,7 +92,17 @@ function BrowserAndroidChrome(app, args) {
   this.shouldInstall_ = (1 === parseInt(args.runNumber || '1', 10));
   this.chrome_ = args.chrome;  // Chrome.apk.
   this.chromedriver_ = args.chromedriver;
-  this.chromePackage_ = args.chromePackage || 'com.android.chrome';
+  if (args.chromePackage) {
+    this.chromePackage_ = args.chromePackage;
+  } else if (args.options && args.options.browserName) {
+    var browserName = args.options.browserName;
+    var separator = browserName.lastIndexOf('-');
+    if (separator >= 0) {
+      browserName = browserName.substr(separator + 1).trim();
+    }
+    this.chromePackage_ = KNOWN_BROWSERS[browserName];
+  }
+  this.chromePackage_ = this.chromePackage_ || 'com.android.chrome';
   this.chromeActivity_ =
       args.chromeActivity || 'com.google.android.apps.chrome';
   this.devToolsPort_ = args.devToolsPort;
@@ -92,13 +114,18 @@ function BrowserAndroidChrome(app, args) {
   this.pac_ = args.pac;
   this.pacFile_ = undefined;
   this.pacServer_ = undefined;
+  this.maxTemp = args.maxtemp ? parseFloat(args.maxtemp) : 0;
+  this.checkNet = 'yes' === args.checknet;
   this.videoCard_ = args.videoCard;
+  this.deviceVideoPath_ = undefined;
+  this.recordProcess_ = undefined;
   function toDir(s) {
     return (s ? (s[s.length - 1] === '/' ? s : s + '/') : '');
   }
   var captureDir = toDir(args.captureDir);
   this.adb_ = new adb.Adb(this.app_, this.deviceSerial_);
   this.video_ = new video_hdmi.VideoHdmi(this.app_, captureDir + 'capture');
+  this.videoFile_ = undefined;
   this.pcap_ = new packet_capture_android.PacketCaptureAndroid(this.app_, args);
   this.runTempDir_ = args.runTempDir || '';
   this.useXvfb_ = undefined;
@@ -173,16 +200,8 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
   this.scheduleInstallIfNeeded_();
   this.scheduleStartPacServer_();
   this.scheduleSetStartupFlags_();
-  // Delete the prior run's tab(s) and start with "about:blank".
-  //
-  // If we only set "-d about:blank", Chrome will create a new tab.
-  // If we only remove the tab files, Chrome will load the
-  //   "Mobile bookmarks" page
-  //
-  // We also tried a Page.navigate to "data:text/html;charset=utf-8,", which
-  // helped but was insufficient by itself.
-  this.adb_.su(['rm',
-      '/data/data/' + this.chromePackage_ + '/files/tab*']);
+  this.clearProfile_();
+
   // Flush the DNS cache
   this.adb_.su(['ndc', 'resolver', 'flushdefaultif']);
   var activity = this.chromePackage_ + '/' + this.chromeActivity_ + '.Main';
@@ -199,6 +218,31 @@ BrowserAndroidChrome.prototype.onChildProcessExit = function() {
   'use strict';
   logger.info('chromedriver exited, resetting WD server URL');
   this.serverUrl_ = undefined;
+};
+
+/**
+ * Clears the profile directory to reset state.  The lib directory is put there
+ * by the installer so we need to keep that one.  We also have to keep the
+ * "files" directory but empty it's contents to prevent the TOS UI from
+ * coming up.
+ * @private
+ */
+BrowserAndroidChrome.prototype.clearProfile_ = function() {
+  'use strict';
+  // Delete the existing profile (everything except the lib directory)
+  this.adb_.su(['ls', '/data/data/' + this.chromePackage_]).then(
+      function(files) {
+    var lines = files.split('\n');
+    var count = lines.length;
+    for (var i = 0; i < count; i++) {
+      var file = lines[i].trim();
+      if (file.length && file !== '.' && file !== '..' &&
+          file !== 'lib' && file !== 'shared_prefs') {
+        this.adb_.su(['rm', '-r /data/data/' + this.chromePackage_ + '/' +
+                     file]);
+      }
+    }
+  }.bind(this));
 };
 
 /**
@@ -431,11 +475,13 @@ BrowserAndroidChrome.prototype.kill = function() {
   this.releaseDevToolsPortIfNeeded_();
   this.releaseServerPortIfNeeded_();
   this.stopPacServerIfNeeded_();
+  this.adb_.scheduleForceStopMatchingPackages(/\S*\.chrome^:*$/);
   this.adb_.shell(['am', 'force-stop', this.chromePackage_]);
 };
 
 /**
  * @return {boolean}
+ * @override
  */
 BrowserAndroidChrome.prototype.isRunning = function() {
   'use strict';
@@ -445,6 +491,7 @@ BrowserAndroidChrome.prototype.isRunning = function() {
 
 /**
  * @return {string} WebDriver URL.
+ * @override
  */
 BrowserAndroidChrome.prototype.getServerUrl = function() {
   'use strict';
@@ -453,6 +500,7 @@ BrowserAndroidChrome.prototype.getServerUrl = function() {
 
 /**
  * @return {string} DevTools URL.
+ * @override
  */
 BrowserAndroidChrome.prototype.getDevToolsUrl = function() {
   'use strict';
@@ -464,16 +512,31 @@ BrowserAndroidChrome.prototype.getDevToolsUrl = function() {
  */
 BrowserAndroidChrome.prototype.scheduleGetCapabilities = function() {
   'use strict';
-  return this.video_.scheduleIsSupported().then(function(isSupported) {
-    return {
+  if (this.videoCard_) {
+    return this.video_.scheduleIsSupported().then(function(isSupported) {
+      return {
+          webdriver: false,
+          'wkrdp.Page.captureScreenshot': false,
+          'wkrdp.Network.clearBrowserCache': true,
+          'wkrdp.Network.clearBrowserCookies': true,
+          videoRecording: isSupported,
+          takeScreenshot: true
+        };
+    }.bind(this));
+  } else {
+    return this.adb_.shell(['getprop', 'ro.build.version.release']).then(
+        function(stdout) {
+      return {
         webdriver: false,
-        'wkrdp.Page.captureScreenshot': false, // TODO(klm): check before-26.
+        'wkrdp.Page.captureScreenshot': false,
         'wkrdp.Network.clearBrowserCache': true,
         'wkrdp.Network.clearBrowserCookies': true,
-        videoRecording: isSupported,
+        videoRecording: parseFloat(stdout) >= 4.4,
+        videoFileExtension: 'mp4',
         takeScreenshot: true
       };
-  }.bind(this));
+    }.bind(this));
+  }
 };
 
 /**
@@ -500,12 +563,26 @@ BrowserAndroidChrome.prototype.scheduleTakeScreenshot =
 BrowserAndroidChrome.prototype.scheduleStartVideoRecording = function(
     filename, onExit) {
   'use strict';
-  // The video record command needs to know device type for cropping etc.
-  this.adb_.shell(['getprop', 'ro.product.device']).then(
-      function(stdout) {
-    this.video_.scheduleStartVideoRecording(filename, this.deviceSerial_,
-        stdout.trim(), this.videoCard_, onExit);
-  }.bind(this));
+  if (this.videoCard_) {
+    // The video record command needs to know device type for cropping etc.
+    this.adb_.shell(['getprop', 'ro.product.device']).then(
+        function(stdout) {
+      this.video_.scheduleStartVideoRecording(filename, this.deviceSerial_,
+          stdout.trim(), this.videoCard_, onExit);
+    }.bind(this));
+  } else {
+    this.adb_.getStoragePath().then(function(storagePath) {
+      this.deviceVideoPath_ = storagePath + '/wpt_video.mp4';
+      this.videoFile_ = filename;
+      this.adb_.shell(['rm', this.deviceVideoPath_]).then(function() {
+        this.adb_.spawnShell(['screenrecord', '--verbose',
+                              '--bit-rate', 8000000,
+                              this.deviceVideoPath_]).then(function(proc) {
+          this.recordProcess_ = proc;
+        }.bind(this));
+      }.bind(this));
+    }.bind(this));
+  }
 };
 
 /**
@@ -513,7 +590,21 @@ BrowserAndroidChrome.prototype.scheduleStartVideoRecording = function(
  */
 BrowserAndroidChrome.prototype.scheduleStopVideoRecording = function() {
   'use strict';
-  this.video_.scheduleStopVideoRecording();
+  if (this.deviceVideoPath_ && this.videoFile_) {
+    var recordProcess = this.recordProcess_;
+    this.recordProcess_ = undefined;
+    this.adb_.scheduleKill('screenrecord');
+    this.app_.schedule('screenrecord kill issued', function() {
+      if (recordProcess) {
+        process_utils.scheduleWait(this.app_, recordProcess,
+            'screenrecord', 30000).then(function() {
+          this.adb_.adb(['pull', this.deviceVideoPath_, this.videoFile_]);
+        }.bind(this));
+      }
+    }.bind(this));
+  } else {
+    this.video_.scheduleStopVideoRecording();
+  }
 };
 
 /**
@@ -532,4 +623,34 @@ BrowserAndroidChrome.prototype.scheduleStartPacketCapture = function(filename) {
 BrowserAndroidChrome.prototype.scheduleStopPacketCapture = function() {
   'use strict';
   this.pcap_.scheduleStop();
+};
+
+/**
+ * Checks whether the browser is ready to run tests.
+ * Checks if the device is attached, available and under the max temp.
+ * Throws an exception if any of the requested checks fail.
+ *
+ * @override
+ */
+BrowserAndroidChrome.prototype.scheduleIsAvailable = function() {
+  'use strict';
+  if (this.checkNet) {
+    this.adb_.scheduleDetectConnectedInterface().addErrback(function(e) {
+      throw new Error('Device offline: ' + e.message);
+    });
+  }
+  if (this.maxTemp) {
+    this.adb_.shell(['cat', '/sys/class/power_supply/battery/temp'])
+        .then(function(deviceTempStr) {
+      if (deviceTempStr) {
+        var deviceTemp = parseInt(deviceTempStr) / 10.0;
+        if (deviceTemp > this.maxTemp) {
+          throw new Error('Temperature: ' + deviceTemp +
+              ' is higher than the maximum of ' + this.maxTemp);
+        }
+      } else {
+        throw new Error('Device temperature not available');
+      }
+    }.bind(this));
+  }
 };

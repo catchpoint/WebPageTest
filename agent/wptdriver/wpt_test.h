@@ -179,6 +179,7 @@ public:
   bool    _save_response_bodies;
   bool    _save_html_body;
   bool    _preserve_user_agent;
+  bool    _check_responsive;
   DWORD   _browser_width;
   DWORD   _browser_height;
   DWORD   _viewport_width;

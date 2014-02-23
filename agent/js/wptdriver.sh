@@ -89,7 +89,7 @@ case "${browser}" in
   chrome | osx)
     # Select chrome binary
     declare chrome=
-    if [[ "$browser" = "osx" ]]; then
+    if [[ "$browser" == "osx" ]]; then
       declare -a chromes=( \
          "/Applications/Google Chrome"*".app/Contents/MacOS/Google Chrome"*)
       chrome="${chromes[@]:+${chromes[0]}}"

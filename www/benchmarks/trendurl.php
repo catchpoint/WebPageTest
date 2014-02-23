@@ -31,7 +31,7 @@ if (array_key_exists('f', $_REQUEST)) {
         <meta name="description" content="Speed up the performance of your web pages with an automated analysis">
         <meta name="author" content="Patrick Meenan">
         <?php $gaTemplate = 'About'; include ('head.inc'); ?>
-        <script type="text/javascript" src="/js/dygraph-combined.js"></script>
+        <script type="text/javascript" src="/js/dygraph-combined.js?v=2"></script>
         <style type="text/css">
         .chart-container { clear: both; width: 875px; height: 350px; margin-left: auto; margin-right: auto; padding: 0;}
         .benchmark-chart { float: left; width: 700px; height: 350px; }
@@ -187,6 +187,20 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
         }
         $out_data[$bmname][$metric] = array();
         $out_data[$bmname][$metric]['FV'] = TSVEncode($tsv);
+        foreach ($out_data[$bmname][$metric]['FV'] as $index => &$entry) {
+          if (is_array($entry) && array_key_exists('time', $entry)) {
+            if (array_key_exists($entry['time'], $meta)) {
+              $entry['tests'] = array();
+              foreach($meta[$entry['time']] as $index => $value) {
+                if (is_array($value) &&
+                    array_key_exists('label', $value) &&
+                    array_key_exists('test', $value)) {
+                  $entry['tests'][$value['label']] = $value['test'];
+                }
+              }
+            }
+          }
+        }
     }
     if (!isset($out_data) && isset($tsv) && strlen($tsv)) {
         $count++;
@@ -217,6 +231,20 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
         $tsv = LoadTrendDataTSV($benchmark['name'], 1, $metric, $url, $loc, $annotations, $meta);
         if (isset($out_data)) {
             $out_data[$bmname][$metric]['RV'] = TSVEncode($tsv);
+            foreach ($out_data[$bmname][$metric]['RV'] as $index => &$entry) {
+              if (is_array($entry) && array_key_exists('time', $entry)) {
+                if (array_key_exists($entry['time'], $meta)) {
+                  $entry['tests'] = array();
+                  foreach($meta[$entry['time']] as $index => $value) {
+                    if (is_array($value) &&
+                        array_key_exists('label', $value) &&
+                        array_key_exists('test', $value)) {
+                      $entry['tests'][$value['label']] = $value['test'];
+                    }
+                  }
+                }
+              }
+            }
         }
         if (!isset($out_data) && isset($tsv) && strlen($tsv)) {
             $count++;

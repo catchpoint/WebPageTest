@@ -127,25 +127,27 @@ void Results::Reset(void) {
 -----------------------------------------------------------------------------*/
 void Results::Save(void) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save()\n"));
-  if (!_saved && _test._log_data) {
+  if (!_saved) {
     ProcessRequests();
-    OptimizationChecks checks(_requests, _test_state, _test, _dns);
-    checks.Check();
-    base_page_CDN_ = checks._base_page_CDN;
-    SaveRequests(checks);
-    SaveImages();
-    SaveProgressData();
-    SaveStatusMessages();
-    SavePageData(checks);
-    SaveResponseBodies();
-    SaveConsoleLog();
-    SaveTimedEvents();
-    if (_test._timeline) {
-      _dev_tools.SetStartTime(_test_state._start);
-      _dev_tools.Write(_file_base + DEV_TOOLS_FILE);
+    if (_test._log_data) {
+      OptimizationChecks checks(_requests, _test_state, _test, _dns);
+      checks.Check();
+      base_page_CDN_ = checks._base_page_CDN;
+      SaveRequests(checks);
+      SaveImages();
+      SaveProgressData();
+      SaveStatusMessages();
+      SavePageData(checks);
+      SaveResponseBodies();
+      SaveConsoleLog();
+      SaveTimedEvents();
+      if (_test._timeline) {
+        _dev_tools.SetStartTime(_test_state._start);
+        _dev_tools.Write(_file_base + DEV_TOOLS_FILE);
+      }
+      if (_test._trace)
+        _trace.Write(_file_base + TRACE_FILE);
     }
-    if (_test._trace)
-      _trace.Write(_file_base + TRACE_FILE);
     _saved = true;
   }
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));
@@ -228,8 +230,7 @@ void Results::SaveImages(void) {
               true);
   }
 
-  if (_test._video)
-    SaveVideo();
+  SaveVideo();
 }
 
 /*-----------------------------------------------------------------------------
@@ -260,13 +261,17 @@ void Results::SaveVideo(void) {
           if (img->GetHeight() < height)
             img->Expand(0, 0, 0, height - img->GetHeight(), black);
           if (ImagesAreDifferent(last_image, img)) {
-            _visually_complete.QuadPart = image._capture_time.QuadPart;
-            file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base, 
-                              image_time);
-            SaveImage(*img, file_name, _test._image_quality);
-            file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_file_base, 
-                              image_time);
-            SaveHistogram(*img, file_name);
+            if (!_test_state._render_start.QuadPart)
+              _test_state._render_start.QuadPart = image._capture_time.QuadPart;
+            if (_test._video) {
+              _visually_complete.QuadPart = image._capture_time.QuadPart;
+              file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base, 
+                                image_time);
+              SaveImage(*img, file_name, _test._image_quality);
+              file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_file_base, 
+                                image_time);
+              SaveHistogram(*img, file_name);
+            }
           }
         } else {
           width = img->GetWidth();
@@ -738,22 +743,29 @@ void Results::ProcessRequests(void) {
   // to eliminate the gap at startup for browser initialization
   if (_test_state._start.QuadPart) {
     LONGLONG new_start = 0;
-    if (_test_state._first_navigate.QuadPart)
+    if (_test_state._first_navigate.QuadPart &&
+        _test_state._first_navigate.QuadPart > _test_state._start.QuadPart)
       new_start = _test_state._first_navigate.QuadPart;
     POSITION pos = _requests._requests.GetHeadPosition();
     while (pos) {
       Request * request = _requests._requests.GetNext(pos);
-      if (request && request->_start.QuadPart && 
-        (!new_start || request->_start.QuadPart < new_start))
-        new_start = request->_start.QuadPart;
+      if (request &&
+          (!request->_from_browser || !NativeRequestExists(request))) {
+        request->MatchConnections();
+        if (request->_start.QuadPart &&
+            request->_start.QuadPart > _test_state._start.QuadPart &&
+            (!new_start || request->_start.QuadPart < new_start))
+          new_start = request->_start.QuadPart;
+        if (request->_dns_start.QuadPart &&
+            request->_dns_start.QuadPart > _test_state._start.QuadPart &&
+            (!new_start || request->_dns_start.QuadPart < new_start))
+          new_start = request->_dns_start.QuadPart;
+        if (request->_connect_start.QuadPart &&
+            request->_connect_start.QuadPart > _test_state._start.QuadPart &&
+            (!new_start || request->_connect_start.QuadPart < new_start))
+          new_start = request->_connect_start.QuadPart;
+      }
     }
-    LONGLONG earliest_dns = _dns.GetEarliest(_test_state._start.QuadPart);
-    if (earliest_dns && (!new_start || earliest_dns < new_start))
-      new_start = earliest_dns;
-    LONGLONG earliest_socket =
-      _sockets.GetEarliest(_test_state._start.QuadPart);
-    if (earliest_socket && (!new_start || earliest_socket < new_start))
-      new_start = earliest_socket;
     if (new_start)
       _test_state._start.QuadPart = new_start;
   }

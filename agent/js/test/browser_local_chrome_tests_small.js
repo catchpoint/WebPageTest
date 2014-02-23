@@ -82,7 +82,7 @@ describe('browser_local_chrome small', function() {
     should.equal('http://localhost:4444', browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());  // No DevTools with WD.
     should.ok(processSpawnStub.calledOnce);
-    processSpawnStub.assertCall(chromedriver, '--port=4444');
+    processSpawnStub.assertCall({0: chromedriver, 1: '--port=4444'});
     processSpawnStub.assertCall();
 
     browser.kill();
@@ -105,7 +105,7 @@ describe('browser_local_chrome small', function() {
     should.equal('http://localhost:4444', browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());  // No DevTools with WD.
     should.ok(processSpawnStub.calledOnce);
-    processSpawnStub.assertCall(chromedriver, '--port=4444');
+    processSpawnStub.assertCall({0: chromedriver, 1: '--port=4444'});
     processSpawnStub.assertCall();
     var chromedriverProc = processSpawnStub.firstCall.returnValue;
 

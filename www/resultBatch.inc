@@ -550,7 +550,7 @@ function DisplayTest($id, $url, $label, $complete)
             echo "<td><a href=\"/csv.php?test=$id\">Download Page Data</a></td>";
             echo "<td><a href=\"/csv.php?test=$id&requests=1\">Download Object Data</a></td>";
         }
-        echo "<td><a href=\"/export.php?test=$id\">Download HAR</a></td>";
+        echo "<td><a href=\"/export.php?bodies=1&pretty=1&test=$id\">Download HAR</a></td>";
     }
     else
     {
@@ -672,7 +672,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
                     if( is_array($frames) && count($frames) ) {
                         foreach( $frames as $time => $frameFile ) {
                             $entry = array (   
-                                'time' => number_format((double)$time / 10.0, 1),
+                                'time' => number_format((double)$time / 1000.0, 3),
                                 'image' => "http://$host$path/video_{$fvMedian}/$frameFile");
                             $ms = $time * 100;
                             if (array_key_exists('frames', $visual) && array_key_exists($ms, $visual['frames']))
@@ -695,7 +695,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
                     if( is_array($frames) && count($frames) ) {
                         foreach( $frames as $time => $frameFile ) {
                             $entry = array (   
-                                'time' => number_format((double)$time / 10.0, 1),
+                                'time' => number_format((double)$time / 1000.0, 3),
                                 'image' => "http://$host$path/video_{$fvMedian}/$frameFile");
                             $ms = $time * 100;
                             if (array_key_exists('frames', $visual) && array_key_exists($ms, $visual['frames']))
@@ -724,7 +724,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
                     if( is_array($frames) && count($frames) ) {
                         foreach( $frames as $time => $frameFile ) {
                             $entry = array (   
-                                'time' => number_format((double)$time / 10.0, 1),
+                                'time' => number_format((double)$time / 1000.0, 3),
                                 'image' => "http://$host$path/video_{$rvMedian}_cached/$frameFile");
                             $ms = $time * 100;
                             if (array_key_exists('frames', $visual) && array_key_exists($ms, $visual['frames']))
@@ -746,7 +746,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
                     if( is_array($frames) && count($frames) ) {
                         foreach( $frames as $time => $frameFile ) {
                             $entry = array (   
-                                'time' => number_format((double)$time / 10.0, 1),
+                                'time' => number_format((double)$time / 1000.0, 3),
                                 'image' => "http://$host$path/video_{$rvMedian}_cached/$frameFile");
                             $ms = $time * 100;
                             if (array_key_exists('frames', $visual) && array_key_exists($ms, $visual['frames']))

@@ -109,16 +109,16 @@ function GetTestStatus($id, $includePosition = true) {
                         }
                     }
 
-                    if ($includePosition) {
-                        $pageData = loadAllPageData($testPath);
+                    if ($includePosition && isset($testInfoJson) && array_key_exists('runs', $testInfoJson)) {
+                        $runs = $testInfoJson['runs'];
                         
                         // count the number of fv and rv tests that have completed
                         $fvRuns = 0;
                         $rvRuns = 0;
-                        foreach ($pageData as &$run) {
-                            if( isset($run[0]) )
+                        for ($run = 1; $run <= $runs; $run++) {
+                            if(gz_is_file("$testPath/{$run}_IEWPG.txt") || gz_is_file("$testPath/{$run}_devtools.json.txt"))
                                 $fvRuns++;
-                            if( isset($run[1]) )
+                            if(gz_is_file("$testPath/{$run}_Cached_IEWPG.txt") || gz_is_file("$testPath/{$run}_Cached_devtools.json.txt"))
                                 $rvRuns++;
                         }
                         

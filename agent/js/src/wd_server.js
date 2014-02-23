@@ -26,6 +26,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
+var browser_base = require('browser_base');
 var devtools = require('devtools');
 var fs = require('fs');
 var logger = require('logger');
@@ -144,14 +145,8 @@ WebDriverServer.prototype.init = function(initMessage) {
     this.actionCbRecurseGuard_ = false;
     this.app_ = webdriver.promise.controlFlow();
     process_utils.injectWdAppLogging('wd_server', this.app_);
-    // Create the browser via reflection
-    var browserType = (initMessage.browser ||
-        'browser_local_chrome.BrowserLocalChrome');
-    logger.debug('Creating ' + browserType);
-    var lastDot = browserType.lastIndexOf('.');
-    var browserModule = require(browserType.substring(0, lastDot));
-    var BrowserClass = browserModule[browserType.substring(lastDot + 1)];
-    this.browser_ = new BrowserClass(this.app_, initMessage);
+    // Create the browser according to flags.
+    this.browser_ = browser_base.createBrowser(this.app_, initMessage);
     this.capabilities_ = undefined;
     this.devTools_ = undefined;
     this.isCacheCleared_ = false;
@@ -180,6 +175,16 @@ WebDriverServer.prototype.init = function(initMessage) {
   this.pcapFile_ = undefined;
   this.videoFile_ = undefined;
   this.runTempDir_ = initMessage.runTempDir || '';
+  this.pngScreenShot_ = initMessage.pngScreenShot;
+  // Force the screenshot JPEG quality level to be between 30 and 95.
+  var imgQ = initMessage.imageQuality ? parseInt(initMessage.imageQuality) : 30;
+  this.imageQuality_ = Math.min(Math.max(imgQ, 30), 95);
+  this.rotate_ = initMessage.rotate;
+  this.captureTimeline_ = initMessage.captureTimeline;
+  this.timelineStackDepth_ = 0;
+  if (initMessage.timelineStackDepth) {
+    this.timelineStackDepth_ = parseInt(initMessage.timelineStackDepth);
+  }
   this.tearDown_();
 };
 
@@ -252,7 +257,10 @@ WebDriverServer.prototype.connectDevTools_ = function() {
   }.bind(this), DEVTOOLS_CONNECT_TIMEOUT_MS_, 'Connect DevTools');
   this.networkCommand_('enable');
   this.pageCommand_('enable');
-  this.timelineCommand_('start');
+  if (this.captureTimeline_ || this.captureVideo_) {
+    this.timelineCommand_('start',
+                          {maxCallStackDepth: this.timelineStackDepth_});
+  }
 };
 
 /**
@@ -297,30 +305,30 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
   if (this.isRecordingDevTools_) {
     this.devToolsMessages_.push(message);
   }
-  if (this.abortTimer_) {
-    // We received an 'Inspector.detached' message, as noted below, so ignore
-    // messages until our abortTimer fires.
-  } else if ('Page.loadEventFired' === message.method) {
-    if (this.isRecordingDevTools_) {
-      this.onPageLoad_();
+  // If abortTimer_ is set, it means we received an 'Inspector.detached'
+  // message, as noted below, so ignore messages until our abortTimer fires.
+  if (!this.abortTimer_) {
+    if ('Page.loadEventFired' === message.method) {
+      if (this.isRecordingDevTools_) {
+        this.onPageLoad_();
+      }
+    } else if ('Inspector.detached' === message.method) {
+      if (this.pageLoadDonePromise_ && this.pageLoadDonePromise_.isPending()) {
+        // This message typically means that the browser has crashed.
+        // Instead of waiting for the timeout, we'll give the browser a couple
+        // seconds to paint an error message (for our screenshot) and then fail
+        // the page load.
+        var err = new Error('Inspector detached on run ' + this.runNumber_ +
+            ', did the browser crash?', this.runNumber_);
+        this.abortTimer_ = global.setTimeout(
+            this.onPageLoad_.bind(this, err), DETACH_TIMEOUT_MS_);
+      } else {
+        // TODO detach during coalesce?
+        logger.warn('%s after Page.loadEventFired?', message.method);
+      }
     }
-  } else if ('Inspector.detached' === message.method) {
-    if (this.pageLoadDonePromise_ && this.pageLoadDonePromise_.isPending()) {
-      // This message typically means that the browser has crashed.
-      // Instead of waiting for the timeout, we'll give the browser a couple
-      // seconds to paint an error message (for our screenshot) and then fail
-      // the page load.
-      var err = new Error('Inspector detached on run ' + this.runNumber_ +
-          ', did the browser crash?', this.runNumber_);
-      this.abortTimer_ = global.setTimeout(
-          this.onPageLoad_.bind(this, err), DETACH_TIMEOUT_MS_);
-    } else {
-      // TODO detach during coalesce?
-      logger.warn('%s after Page.loadEventFired?', message.method);
-    }
-  } else {
     // We might be able to detect timeouts via Network.loadingFailed and
-    // Page.frameStoppedLoading messages.  For now we'll let our timeoutTimer
+    // Page.frameStoppedLoading messages. For now we'll let our timeoutTimer
     // handle this.
   }
 };
@@ -331,9 +339,6 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
 WebDriverServer.prototype.onTestStarted_ = function() {
   'use strict';
   this.app_.schedule('Test started', function() {
-    if (this.captureVideo_ && !this.videoFile_) {
-      this.takeScreenshot_('progress_0', 'test started');
-    }
     this.app_.schedule('Test started', function() {
       logger.info('Test started');
       this.testStartTime_ = Date.now();
@@ -401,14 +406,44 @@ WebDriverServer.prototype.addScreenshot_ = function(
   'use strict';
   logger.debug('Adding screenshot %s (%s): %s',
       fileName, diskPath, description);
-  var contentType = /\.png$/.test(fileName) ?
-      'image/png' : 'application/octet-stream';
-  this.screenshots_.push({
-      fileName: fileName,
-      diskPath: diskPath || fileName,
-      contentType: contentType,
-      description: description
-    });
+  if (!this.pngScreenShot_ && /\.png$/.test(fileName)) {  // Convert to JPEG.
+    var fileNameJPEG = fileName.replace(/\.png$/i, '.jpg');
+    var diskPathJPEG = diskPath.replace(/\.png$/i, '.jpg');
+    var convertCommand = [diskPath];
+    convertCommand.push('-resize', '50%');
+    if (this.rotate_) {
+      convertCommand.push('-rotate', this.rotate_);
+    }
+    convertCommand.push('-quality', this.imageQuality_);
+    convertCommand.push(diskPathJPEG);
+    process_utils.scheduleExec(this.app_, 'convert', convertCommand).then(
+        function() {
+      this.screenshots_.push({
+          fileName: fileNameJPEG,
+          diskPath: diskPathJPEG,
+          contentType: 'image/jpeg',
+          description: description
+        });
+    }.bind(this), function(e) {
+      logger.warn('Converting %s PNG->JPEG failed, will use original PNG: %s',
+          diskPath, e.message);
+      this.screenshots_.push({
+          fileName: fileName,
+          diskPath: diskPath,
+          contentType: 'image/png',
+          description: description
+        });
+    }.bind(this));
+  } else {
+    var contentType = /\.png$/.test(fileName) ?
+        'image/png' : 'application/octet-stream';
+    this.screenshots_.push({
+        fileName: fileName,
+        diskPath: diskPath,
+        contentType: contentType,
+        description: description
+      });
+  }
 };
 
 /**
@@ -505,24 +540,6 @@ WebDriverServer.prototype.onAfterDriverAction = function(command, commandArgs) {
   }
   this.app_.schedule('After WD action', function() {
     this.actionCbRecurseGuard_ = true;
-    if (this.captureVideo_ && !this.videoFile_) {
-      // We operate in milliseconds, WPT wants "tenths of a second" units.
-      var wptTimestamp = Math.round((Date.now() - this.testStartTime_) / 100);
-      logger.debug('Screenshot after: %s(%j)', command.getName(), commandArgs);
-      this.takeScreenshot_('progress_' + wptTimestamp,
-          'After ' + commandStr).then(function(diskPath) {
-        if (diskPath &&
-            command.getName() === webdriver.command.CommandName.GET) {
-          // This is also the doc-complete screenshot.
-          this.addScreenshot_(
-              'screen_doc' + path.extname(diskPath), diskPath, commandStr);
-        }
-      }.bind(this));
-    } else if (command.getName() === webdriver.command.CommandName.GET) {
-      // No video -- just intercept a get() and take a doc-complete screenshot.
-      logger.debug('Doc-complete screenshot after: %s', commandStr);
-      this.takeScreenshot_('screen_doc', commandStr);
-    }
     // In lieu of 'finally': reset actionCbRecurseGuard_.
   }.bind(this)).then(function(ret) {
     this.actionCbRecurseGuard_ = false;
@@ -603,12 +620,17 @@ WebDriverServer.prototype.networkCommand_ = function(method, params) {
 
 /**
  * @param {string} method command method, e.g. 'start'.
+ * @param {Object} params command options.
  * @return {webdriver.promise.Promise} resolve({string} responseBody).
  * @private
  */
-WebDriverServer.prototype.timelineCommand_ = function(method) {
+WebDriverServer.prototype.timelineCommand_ = function(method, params) {
   'use strict';
-  return this.devToolsCommand_({method: 'Timeline.' + method});
+  var message = {method: 'Timeline.' + method};
+  if (params) {
+    message.params = params;
+  }
+  return this.devToolsCommand_(message);
 };
 
 /**
@@ -667,23 +689,18 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
   // all pending events.  This isn't strictly required if startBrowser loads
   // "about:blank", but it's still a good idea.
   this.pageCommand_('navigate', {url: BLANK_PAGE_URL_});
-  // Get the root frameId
-  this.pageCommand_('getResourceTree').then(function(result) {
-    var frameId = result.frameTree.frame.id;
-    // Paint the page white
-    // TODO Verify that this blanking is required and, if not, remove it.
-    this.setPageBackground_(frameId);
-    if (this.captureVideo_) {  // Generate video sync sequence, start recording.
-      // Hold white(500ms) for our video / 'test started' screenshot
-      this.app_.timeout(500, 'Hold white background');
-      this.getCapabilities_().then(function(caps) {
-        if (!caps.videoRecording) {
-          return;
-        }
-        this.scheduleStartVideoRecording_();
+  if (this.captureVideo_) {  // Generate video sync sequence, start recording.
+    this.getCapabilities_().then(function(caps) {
+      if (!caps.videoRecording) {
+        return;
+      }
+      // Get the root frameId
+      this.pageCommand_('getResourceTree').then(function(result) {
+        var frameId = result.frameTree.frame.id;
         // Hold orange(500ms)->white: anchor video to DevTools.
         this.setPageBackground_(frameId, GHASTLY_ORANGE_);
-        this.app_.timeout(500, 'Hold orange background');
+        this.app_.timeout(500, 'Set orange background');
+        this.scheduleStartVideoRecording_();
         // Begin recording DevTools before onTestStarted_ fires,
         // to make sure we get the paint event from the below switch to white.
         // This allows us to sync the DevTools trace vs. the video by matching
@@ -692,13 +709,14 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
         this.app_.schedule('Start recording DevTools with video', function() {
           this.isRecordingDevTools_ = true;
         }.bind(this));
+        this.app_.timeout(500, 'Hold orange background');
         this.setPageBackground_(frameId);  // White
       }.bind(this));
-    }
-    // Make sure we start recording DevTools regardless of the video.
-    this.app_.schedule('Start recording DevTools', function() {
-      this.isRecordingDevTools_ = true;
     }.bind(this));
+  }
+  // Make sure we start recording DevTools regardless of the video.
+  this.app_.schedule('Start recording DevTools', function() {
+    this.isRecordingDevTools_ = true;
   }.bind(this));
 };
 
@@ -717,11 +735,11 @@ WebDriverServer.prototype.clearPageAndStartVideoWd_ = function() {
       if (!caps.videoRecording) {
         return;
       }
-      this.scheduleStartVideoRecording_();
-      this.app_.timeout(500, 'Hold white background');
       // Hold ghastly orange(500ms)->white: anchor video to DevTools.
       this.driver_.executeScript(
-          'document.body.style.backgroundColor="' + GHASTLY_ORANGE_ + '";');
+        'document.body.style.backgroundColor="' + GHASTLY_ORANGE_ + '";');
+      this.app_.timeout(500, 'Set orange background');
+      this.scheduleStartVideoRecording_();
       this.app_.timeout(500, 'Hold orange background');
       this.driver_.executeScript(
           'document.body.style.backgroundColor="white";');
@@ -735,12 +753,15 @@ WebDriverServer.prototype.clearPageAndStartVideoWd_ = function() {
  */
 WebDriverServer.prototype.scheduleStartVideoRecording_ = function() {
   'use strict';
-  var videoFile = path.join(this.runTempDir_, 'video.avi');
-  this.browser_.scheduleStartVideoRecording(videoFile,
-      this.onVideoRecordingExit_.bind(this));
-  this.app_.schedule('Started recording', function() {
-    logger.debug('Video record start succeeded');
-    this.videoFile_ = videoFile;
+  this.getCapabilities_().then(function(caps) {
+    var videoFileExtension = caps.videoFileExtension || 'avi';
+    var videoFile = path.join(this.runTempDir_, 'video.' + videoFileExtension);
+    this.browser_.scheduleStartVideoRecording(
+        videoFile, this.onVideoRecordingExit_.bind(this));
+    this.app_.schedule('Video record started', function() {
+      logger.debug('Video record start succeeded');
+      this.videoFile_ = videoFile;
+    }.bind(this));
   }.bind(this));
 };
 
@@ -852,6 +873,14 @@ WebDriverServer.prototype.connect = function() {
         Array.prototype.slice.call(arguments));
     this.uncaughtExceptionHandler_.apply(this, arguments);
   }.bind(this));
+  process.on('uncaughtException', function(e) {
+    // Likely from a background function that's not ControlFlow-scheduled.
+    // Immediately unwind the app's scheduled functions, as if the currently
+    // function task threw this exception.
+    logger.error('Top-level process uncaught exception: %s', e.message);
+    var promise = new webdriver.promise.Deferred(undefined, this.app_);
+    promise.reject(e);  // Like throw, only in the ControlFlow.
+  }.bind(this));
   // When IDLE is emitted, the app no longer runs an event loop.
   this.app_.on(webdriver.promise.ControlFlow.EventType.IDLE, function() {
     logger.debug('The main control flow has gone idle, history: %j',
@@ -879,7 +908,7 @@ WebDriverServer.prototype.runScript_ = function(wdSandbox) {
       webdriver: wdSandbox
     };
     logger.info('Running user script');
-    vm.runInNewContext(this.script_, sandbox, 'WPT Job Script');
+    vm.runInNewContext(this.script_, sandbox, 'WPT_Job_Script');
     logger.info('User script returned, but not necessarily finished');
   }.bind(this));
 };
@@ -1000,21 +1029,10 @@ WebDriverServer.prototype.done_ = function(e) {
   var pcapFile = this.pcapFile_;
   // We must schedule/run a driver quit before we emit 'done', to make sure
   // we take the final screenshot and send it in the 'done' IPC message.
-  // Take the timestamp before taking the screenshot, in case we would use it.
-  var wptTimestamp = Math.round((Date.now() - this.testStartTime_) / 100);
   if (this.driver_) {
     this.scheduleGetWdDevToolsLog_();
   }
-  this.takeScreenshot_('screen', (e ? 'run error' : 'end of run')).then(
-      function(diskPath) {
-    if (!e && diskPath && this.captureVideo_ && !this.videoFile_) {
-      // Last video frame
-      this.addScreenshot_(
-          'progress_' + wptTimestamp + path.extname(diskPath),
-          diskPath,
-          'end of run');
-    }
-  }.bind(this));
+  this.takeScreenshot_('screen', (e ? 'run error' : 'end of run'));
   if (videoFile) {
     this.browser_.scheduleStopVideoRecording();
     process_utils.scheduleFunction(this.app_, 'videoFile exists?',

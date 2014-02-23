@@ -94,6 +94,7 @@ public:
   bool ClaimConnect(DWORD socket_id, LARGE_INTEGER before,
                     LARGE_INTEGER& start, LARGE_INTEGER& end,
                     LARGE_INTEGER& ssl_start, LARGE_INTEGER& ssl_end);
+  void ClaimAll();
   ULONG GetPeerAddress(DWORD socket_id);
   int GetLocalPort(DWORD socket_id);
   LONGLONG GetEarliest(LONGLONG& after);

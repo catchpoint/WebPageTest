@@ -1,4 +1,13 @@
 <?php
+require_once('devtools.inc.php');
+if(extension_loaded('newrelic')) { 
+  newrelic_add_custom_tracer('ProcessAllAVIVideos');
+  newrelic_add_custom_tracer('ProcessAVIVideo');
+  newrelic_add_custom_tracer('Video2PNG');
+  newrelic_add_custom_tracer('FindAVIViewport');
+  newrelic_add_custom_tracer('EliminateDuplicateAVIFiles');
+  newrelic_add_custom_tracer('ProcessVideoFrames');
+}
 
 /**
 * Walk the given directory and convert every AVI found into the format WPT expects
@@ -29,18 +38,19 @@ function ProcessAllAVIVideos($testPath) {
 * @param mixed $run
 * @param mixed $cached
 */
-function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
+function ProcessAVIVideo(&$test, $testPath, $run, $cached, $needLock = true) {
+    if ($needLock)
+      $testLock = LockTest($testPath);
+    $videoCodeVersion = 9;
     $cachedText = '';
     if( $cached )
         $cachedText = '_Cached';
-    $orange_leader = true;
     $videoFile = "$testPath/$run{$cachedText}_video.avi";
     $crop = '';
     if (!is_file($videoFile))
       $videoFile = "$testPath/$run{$cachedText}_video.mp4";
     if (!is_file($videoFile)) {
       $crop = ',crop=in_w:in_h-80:0:80';
-      $orange_leader = false;
       $videoFile = "$testPath/$run{$cachedText}_appurify.mp4";
     }
     // trim the video to align with the capture if we have timestamps for both
@@ -58,27 +68,43 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
     }
     if (is_file($videoFile)) {
         $videoDir = "$testPath/video_$run" . strtolower($cachedText);
-        if (!is_dir($videoDir) || !is_file("$videoDir/frame_0000.jpg")) {
+        $needsProcessing = true;
+        if (is_dir($videoDir) && is_file("$videoDir/video.json")) {
+          $videoInfo = json_decode(file_get_contents("$videoDir/video.json"), true);
+          if ($videoInfo &&
+              is_array($videoInfo) &&
+              array_key_exists('ver', $videoInfo) &&
+              $videoInfo['ver'] === $videoCodeVersion)
+            $needsProcessing = false;
+        }
+        if ($needsProcessing) {
             if (is_dir($videoDir))
-              delTree($videoDir);
+              delTree($videoDir, false);
             if (!is_dir($videoDir))
               mkdir($videoDir, 0777, true);
             $videoFile = realpath($videoFile);
             $videoDir = realpath($videoDir);
             if (strlen($videoFile) && strlen($videoDir)) {
                 if (Video2PNG($videoFile, $videoDir, $crop)) {
-                    EliminateDuplicateAVIFiles($videoDir);
-                    $lastImage = ProcessVideoFrames($videoDir, $orange_leader, $renderStart);
+                    $startOffset = DevToolsGetVideoOffset($testPath, $run, $cached, $endTime);
+                    FindAVIViewport($videoDir, $startOffset, $viewport);
+                    EliminateDuplicateAVIFiles($videoDir, $viewport);
+                    $lastImage = ProcessVideoFrames($videoDir, $renderStart);
                     $screenShot = "$testPath/$run{$cachedText}_screen.jpg";
                     if (isset($lastImage) && is_file($lastImage)) {
-                      unlink($videoFile);
+                      //unlink($videoFile);
                       if (!is_file($screenShot))
                           copy($lastImage, $screenShot);
                     }
                 }
             }
+            $videoInfo = array('ver' => $videoCodeVersion);
+            if (isset($viewport))
+              $videoInfo['viewport'] = $viewport;
+            file_put_contents("$videoDir/video.json", json_encode($videoInfo));
         }
     }
+    UnlockTest($testLock);
 }
 
 /**
@@ -92,37 +118,31 @@ function Video2PNG($infile, $outdir, $crop) {
   $oldDir = getcwd();
   chdir($outdir);
 
-  $command = "ffmpeg -report -v debug -i \"$infile\" -vsync 0 -vf \"fps=fps=10$crop,scale=iw*min(400/iw\,400/ih):ih*min(400/iw\,400/ih),decimate\" \"$outdir/img-%d.png\"";
+  $command = "ffmpeg -v debug -i \"$infile\" -vsync 0 -vf \"fps=fps=60$crop,scale=iw*min(400/iw\,400/ih):ih*min(400/iw\,400/ih),decimate\" \"$outdir/img-%d.png\" 2>&1";
   $result;
   exec($command, $output, $result);
-  $logFiles = glob("$outdir/ffmpeg*.log");
-  if ($logFiles && count($logFiles)) {
-    $logFile = $logFiles[0];
-    $lines = file($logFile);
-    if ($lines && is_array($lines) && count($lines)) {
-      $frameCount = 0;
-      foreach ($lines as $line) {
-        if (preg_match('/decimate.*pts:(?P<timecode>[0-9]+).*drop_count:-[0-9]+/', $line, $matches)) {
-          $frameCount++;
-          $frameTime = sprintf("%04d", intval($matches['timecode']) + 1);
-          $src = "$outdir/img-$frameCount.png";
-          $dest = "$outdir/image-$frameTime.png";
-          if (is_file($src)) {
-            $ret = true;
-            rename($src, $dest);
-          }
+  if ($output && is_array($output) && count($output)) {
+    $frameCount = 0;
+    foreach ($output as $line) {
+      if (preg_match('/keep pts:(?P<timecode>[0-9]+)/', $line, $matches)) {
+        $frameCount++;
+        $frameTime = ceil((intval($matches['timecode']) * 1000) / 60);
+        $src = "$outdir/img-$frameCount.png";
+        $destFile = "video-" . sprintf("%06d", $frameTime) . ".png";
+        $dest = "$outdir/$destFile";
+        if (is_file($src)) {
+          $ret = true;
+          rename($src, $dest);
         }
       }
     }
-    foreach ($logFiles as $logFile)
-      unlink($logFile);
   }
+
   $junkImages = glob("$outdir/img*.png");
   if ($junkImages && is_array($junkImages) && count($junkImages)) {
     foreach ($junkImages as $img)
       unlink($img);
   }
-
   chdir($oldDir);
   return $ret;
 }
@@ -132,37 +152,28 @@ function Video2PNG($infile, $outdir, $crop) {
 * 
 * @param mixed $videoDir
 */
-function ProcessVideoFrames($videoDir, $orange_leader, $renderStart) {
-  $startFrame = 0;
+function ProcessVideoFrames($videoDir, $renderStart) {
+  $startFrame = null;
   $lastFrame = 0;
   $renderFrame = 0;
-  $renderBaseline = 0;
-  if (isset($renderStart))
-    $renderBaseline = ceil($renderStart / 100);
   $lastImage = null;
-  $orangeDetected = $orange_leader ? false : true;
   $files = glob("$videoDir/image*.png");
   foreach ($files as $file) {
     if (preg_match('/image-(?P<frame>[0-9]+).png$/', $file, $matches)) {
-      $currentFrame = $matches['frame'];
-      if (!$startFrame) {
-        if (!$orangeDetected) {
-          $orangeDetected = IsOrangeAVIFrame($file, $videoDir);
-        } elseif (IsBlankAVIFrame($file, $videoDir)) {
-          $startFrame = $currentFrame;
-          $lastImage = "$videoDir/frame_0000.jpg";
-          CopyAVIFrame($file, $lastImage);
-        }
+      $frame_ms = intval($matches['frame']);
+      if (!isset($startFrame)) {
+        $startFrame = $frame_ms;
+        $lastImage = "$videoDir/ms_000000.jpg";
       } else {
-        if ($renderBaseline) {
+        if ($renderStart) {
           if (!$renderFrame)
-            $renderFrame = $currentFrame;
-          $lastImage = "$videoDir/frame_" . sprintf('%04d', $currentFrame - $renderFrame + $renderBaseline) . '.jpg';
+            $renderFrame = $frame_ms;
+          $lastImage = "$videoDir/ms_" . sprintf('%06d', $frame_ms - $renderFrame + $renderStart) . '.jpg';
         } else {
-          $lastImage = "$videoDir/frame_" . sprintf('%04d', $currentFrame - $startFrame) . '.jpg';
+          $lastImage = "$videoDir/ms_" . sprintf('%06d', $frame_ms - $startFrame) . '.jpg';
         }
-        CopyAVIFrame($file, $lastImage);
       }
+      CopyAVIFrame($file, $lastImage);
       unlink($file);
     }
   }
@@ -190,9 +201,9 @@ function IsBlankAVIFrame($file, $videoDir) {
 * 
 * @param mixed $im
 */
-function IsOrangeAVIFrame($file, $videoDir) {
+function IsOrangeAVIFrame($file) {
   $ret = false;
-  $command = "convert  \"images/video_orange.png\" \\( \"$file\" -shave 15x55 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
+  $command = "convert  \"images/video_orange.png\" \\( \"$file\" -gravity Center -crop 80x50%+0+0 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
   $differentPixels = shell_exec($command);
   //logMsg("($differentPixels) $command", "$videoDir/video.log", true);
   if (isset($differentPixels) && strlen($differentPixels) && $differentPixels < 100)
@@ -206,22 +217,80 @@ function IsOrangeAVIFrame($file, $videoDir) {
 * 
 * @param mixed $videoDir
 */
-function EliminateDuplicateAVIFiles($videoDir) {
+function EliminateDuplicateAVIFiles($videoDir, $viewport) {
   $previousFile = null;
   $files = glob("$videoDir/image*.png");
+  $crop = '+0+55';
+  if (isset($viewport)) {
+    // Ignore a 4-pixel header on the actual viewport to allow for the progress bar.
+    $margin = 4;
+    $top = $viewport['y'] + $margin;
+    $height = max($viewport['height'] - $margin, 1);
+    $left = $viewport['x'];
+    $width = $viewport['width'];
+    $crop = "{$width}x{$height}+{$left}+{$top}";
+  }
+  
+  // Do a first pass that eliminates frames with duplicate content.
   foreach ($files as $file) {
     $duplicate = false;
-    if (isset($previousFile)) {
-      $command = "convert  \"$previousFile\" \"$file\" -crop +0+55 miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
-      $differentPixels = shell_exec($command);
-      if (isset($differentPixels) && strlen($differentPixels) && $differentPixels < 100)
-        $duplicate = true;
-    }
+    if (isset($previousFile))
+      $duplicate = AreAVIFramesDuplicate($previousFile, $file, 0, $crop);
     if ($duplicate)
       unlink($file);
     else
       $previousFile = $file;
   }
+  
+  // Do a second pass looking for the first non-blank frame with an allowance
+  // for up to a 10% per-pixel difference for noise.
+  $files = glob("$videoDir/image*.png");
+  $blank = $files[0];
+  $count = count($files);
+  for ($i = 1; $i < $count; $i++) {
+    if (AreAVIFramesDuplicate($blank, $files[$i], 10, $crop))
+      unlink($files[$i]);
+    else
+      break;
+  }
+  
+  // Do a third pass looking for the last frame but with an allowance for up
+  // to a 10% difference in individual pixels to deal with noise.
+  $files = glob("$videoDir/image*.png");
+  $files = array_reverse($files);
+  $count = count($files);
+  $duplicates = array();
+  if ($count > 2) {
+    $baseline = $files[0];
+    $previousFrame = $baseline;
+    for ($i = 1; $i < $count; $i++) {
+      if (AreAVIFramesDuplicate($baseline, $files[$i], 10, $crop)) {
+        $duplicates[] = $previousFrame;
+        $previousFrame = $files[$i];
+      } else {
+        break;
+      }
+    }
+    if (count($duplicates)) {
+      foreach ($duplicates as $file)
+        unlink($file);
+    }
+  }
+}
+
+function AreAVIFramesDuplicate($image1, $image2, $fuzzPct = 0, $crop = null) {
+  $duplicate = false;
+  $fuzzStr = '';
+  if ($fuzzPct)
+    $fuzzStr = "-fuzz $fuzzPct% ";
+  $cropStr = '';
+  if (isset($crop))
+    $cropStr = "-crop $crop ";
+  $command = "convert  \"$image1\" \"$image2\" {$cropStr}miff:- | compare -metric AE - {$fuzzStr}null: 2>&1";
+  $differentPixels = shell_exec($command);
+  if (isset($differentPixels) && strlen($differentPixels) && $differentPixels == 0)
+    $duplicate = true;
+  return $duplicate;
 }
 
 /**
@@ -237,5 +306,96 @@ function msToHMS($duration) {
   $M = $duration / 60;
   $S = $duration % 60;
   $formatted = sprintf("%02d:%02d:%02d.%03d", $H, $M, $S, $ms);
+}
+
+/**
+* If the first frame is orange, use the orage to detect the viewport
+* and re-number the remaining frames
+* 
+* @param mixed $videoDir
+* @param mixed $viewport
+*/
+function FindAVIViewport($videoDir, $startOffset, &$viewport) {
+  $files = glob("$videoDir/video-*.png");
+  if ($files && count($files) && IsOrangeAVIFrame($files[0])) {
+    // load the image and figure out the viewport area (orange)
+    $im = imagecreatefrompng($files[0]);
+    if ($im) {
+      $width = imagesx($im);
+      $height = imagesy($im);
+      $x = floor($width / 2);
+      $y = floor($height / 2);
+      $orange = imagecolorat($im, $x, $y);
+      $left = null;
+      while (!isset($left) && $x >= 0) {
+        if (!PixelColorsClose(imagecolorat($im, $x, $y), $orange))
+          $left = $x + 1;
+        else
+          $x--;
+      }
+      if (!isset($left))
+        $left = 0;
+      $x = floor($width / 2);
+      $right = null;
+      while (!isset($right) && $x < $width) {
+        if (!PixelColorsClose(imagecolorat($im, $x, $y), $orange))
+          $right = $x - 1;
+        else
+          $x++;
+      }
+      if (!isset($right))
+        $right = $width;
+      $x = floor($width / 2);
+      $top = null;
+      while (!isset($top) && $y >= 0) {
+        if (!PixelColorsClose(imagecolorat($im, $x, $y), $orange))
+          $top = $y + 1;
+        else
+          $y--;
+      }
+      if (!isset($top))
+        $top = 0;
+      $y = floor($height / 2);
+      $bottom = null;
+      while (!isset($bottom) && $y < $height) {
+        if (!PixelColorsClose(imagecolorat($im, $x, $y), $orange))
+          $bottom = $y - 1;
+        else
+          $y++;
+      }
+      if (!isset($bottom))
+        $bottom = $height;
+      if ($left || $top || $right != $width || $bottom != $height)
+        $viewport = array('x' => $left, 'y' => $top, 'width' => ($right - $left), 'height' => ($bottom - $top));
+    }
+    unlink($files[0]);
+    $fileCount = count($files);
+    $firstFrame = null;
+    for($i = 1; $i < $fileCount; $i++) {
+      $file = $files[$i];
+      if (preg_match('/video-(?P<frame>[0-9]+).png$/', $file, $matches)) {
+        $currentFrame = intval($matches['frame']);
+        if (!isset($firstFrame))
+          $firstFrame = $currentFrame;
+        $frameTime = $currentFrame - $firstFrame;
+        if ($startOffset)
+          $frameTime = max($frameTime - $startOffset, 0);
+        $dest = "$videoDir/image-" . sprintf('%06d', $frameTime) . ".png";
+        if (is_file($dest))
+          unlink($dest);
+        rename($file, $dest);
+      }
+    }
+  }
+}
+
+function PixelColorsClose($rgb, $reference) {
+  $match = true;
+  $pixel = array(($rgb >> 16) & 0xFF, ($rgb >> 8) & 0xFF, $rgb & 0xFF);
+  $ref = array(($reference >> 16) & 0xFF, ($reference >> 8) & 0xFF, $reference & 0xFF);
+  for ($i = 0; $i < 3; $i++)
+    if (abs($ref[$i] - $pixel[$i]) > 25)
+      $match = false;
+  return $match;
 }
 ?>

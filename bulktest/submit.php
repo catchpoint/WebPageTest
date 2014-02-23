@@ -7,8 +7,10 @@ $results = array();
 if (LoadResults($results)) {
     echo "Re-submitting failed tests from current results.txt...\r\n";
 } else {
-    echo "Loading URL list from urls.txt...\r\n";
-    $urls = file('./urls.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (!isset($urls_file))
+      $urls_file = 'urls.txt';
+    echo "Loading URL list from $urls_file...\r\n";
+    $urls = file("./$urls_file", FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     for ($i = 0; $i < $iterations; $i++) {
         foreach ($urls as $url) {
             $url = trim($url);
@@ -66,6 +68,7 @@ function SubmitTests(&$results, $testCount) {
     global $options;
     global $permutations;
     global $priority;
+    global $bodies;
 
     $count = 0;
     foreach ($results as &$result) {
@@ -82,7 +85,7 @@ function SubmitTests(&$results, $testCount) {
              $result['result'] != 99999)) {
             $count++;
             echo "\rSubmitting test $count of $testCount...                  ";
-
+            
             $location = $permutations[$result['label']]['location'];
             $request = $server . "runtest.php?f=json&priority=9&runs=$runs&url=" . urlencode($result['url']) . '&location=' . urlencode($location);
             if( $private )
@@ -93,6 +96,8 @@ function SubmitTests(&$results, $testCount) {
                 $request .= '&web10=1';
             if($fvonly)
                 $request .= '&fvonly=1';
+            if ($bodies)
+                $request .= '&bodies=1';
             if(isset($priority)) {
                 if ($priority > 0 && array_key_exists('resubmit', $result) && $result['resubmit']) {
                   $p = $priority - 1;

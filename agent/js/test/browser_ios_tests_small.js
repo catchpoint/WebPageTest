@@ -53,6 +53,8 @@ describe('browser_ios small', function() {
   var videoStart;
   var videoStop;
 
+  var glob = '/private/var/mobile/Applications/*/MobileSafari.app/Info.plist';
+
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
 
@@ -146,8 +148,12 @@ describe('browser_ios small', function() {
   function spawnCallback_(proc, cmd, argv) {
     var stdout;
     if ('ssh' === cmd) {
-      if (/^echo\s+list\s+Setup.*scutil$/.test(argv[argv.length - 1])) {
+      var argN = argv[argv.length - 1];
+      if (/^echo\s+list\s+Setup.*scutil$/.test(argN)) {
         stdout = 'subKey [123] = foo';
+      } else if (/^test\s+-f\s+(\S+)\s*|\s*ls\s+\1$/.test(argN)) {
+        var path = argN.split(/\s/)[2].trim();
+        stdout = (path === glob ? glob.replace('*', 'MyApp') : '');
       } else {
         stdout = '';
       }
@@ -217,11 +223,17 @@ describe('browser_ios small', function() {
     var proxy = ['-F', '/dev/null', '-i', /^\//, '-o',
         (/^ProxyCommand="[^"]+"\s+-u\s+%h$/), '-o', 'User=root'];
     var sshMatch = [(/ssh$/)].concat(proxy).concat([serial]);
+    var lib = '/private/var/mobile/Applications/MyApp/Library/';
     spawnStub.assertCalls(
         sshMatch.concat(['killall', 'MobileSafari']),
+        sshMatch.concat(['test -f ' + glob + ' | ls ' + glob]),
         sshMatch.concat(['rm', '-rf',
-            /\/Cache\.db$/, /\/SuspendState\.plist$/, /\/LocalStorage$/,
-            /\/ApplicationCache\.db$/, /\/Cookies\.binarycookies/]));
+          lib + 'Caches/com.apple.mobilesafari/Cache.db',
+          lib + 'Caches/fsCachedData/*',
+          lib + 'Safari/History.plist',
+          lib + 'Safari/SuspendState.plist',
+          lib + 'WebKit/LocalStorage',
+          '/private/var/mobile/Library/Cookies/Cookies.binarycookies']));
     if (args.pac) {
       spawnStub.assertCalls(
           sshMatch.concat(['-R', /^\d+:127.0.0.1:\d+$/, '-N']));

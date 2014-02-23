@@ -13,12 +13,17 @@ include 'object_detail.inc';
 require_once('lib/json.php');
 
 // see if we are loading a single run or all of them
-if( isset($testPath) )
-{
+if( isset($testPath) ) {
     $pageData;
-    if( isset($_REQUEST["run"]) && $_REQUEST["run"] )
-    {
-        $pageData[0] = array();
+    if( isset($_REQUEST["run"]) && $_REQUEST["run"] ) {
+        if (!strcasecmp($_REQUEST["run"],'median')) {
+          $raw = loadAllPageData($testPath);
+          $run = GetMedianRun($raw, $cached, $median_metric);
+          if (!$run)
+            $run = 1;
+          unset($raw);
+        }
+        $pageData[$run] = array();
         if( isset($cached) )
             $pageData[$run][$cached] = loadPageRunData($testPath, $run, $cached);
         else
@@ -46,21 +51,27 @@ if( isset($testPath) )
     header("Content-disposition: attachment; filename=$filename");
     header('Content-type: application/json');
 
-    if( $_GET['php'] )
-      $out = json_encode($result);
-    else
-    {    
-      $json = new Services_JSON();
-      $out = $json->encode($result);
-    }
-    
     // see if we need to wrap it in a JSONP callback
     if( isset($_REQUEST['callback']) && strlen($_REQUEST['callback']) )
         echo "{$_REQUEST['callback']}(";
-        
-    // send the actual JSON data
-    echo $out;
-    
+
+    $json_encode_good = version_compare(phpversion(), '5.4.0') >= 0 ? true : false;
+    $pretty_print = array_key_exists('pretty', $_REQUEST) && $_REQUEST['pretty'] ? true : false;
+    if( array_key_exists('php', $_GET) && $_GET['php'] ) {
+      if ($pretty_print && $json_encode_good)
+        echo json_encode($result, JSON_PRETTY_PRINT);
+      else
+        echo json_encode($result);
+    } elseif ($json_encode_good) {
+      if ($pretty_print)
+        echo json_encode($result, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+      else
+        echo json_encode($result, JSON_UNESCAPED_UNICODE);
+    } else {    
+      $json = new Services_JSON();
+      echo $json->encode($result);
+    }
+
     if( isset($_REQUEST['callback']) && strlen($_REQUEST['callback']) )
         echo ");";
 }
@@ -330,6 +341,21 @@ function BuildResult(&$pageData)
                 
                 // add it to the list of entries
                 $entries[] = $entry;
+            }
+            
+            // add the bodies to the requests
+            if (array_key_exists('bodies', $_REQUEST) && $_REQUEST['bodies']) {
+              $bodies_file = $testPath . '/' . $run . $cached_text . '_bodies.zip';
+              if (is_file($bodies_file)) {
+                  $zip = new ZipArchive;
+                  if ($zip->open($bodies_file) === TRUE) {
+                      for( $i = 0; $i < $zip->numFiles; $i++ ) {
+                          $index = intval($zip->getNameIndex($i), 10) - 1;
+                          if (array_key_exists($index, $entries))
+                              $entries[$index]['response']['content']['text'] = $zip->getFromIndex($i);
+                      }
+                  }
+              }
             }
         }
     }

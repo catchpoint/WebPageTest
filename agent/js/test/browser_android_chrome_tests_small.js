@@ -70,6 +70,8 @@ describe('browser_android_chrome small', function() {
     }
   }
 
+  var regExTest = /./.test;
+
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
 
@@ -86,14 +88,23 @@ describe('browser_android_chrome small', function() {
       if ((/chromedriver/).test(command)) {
         shellStub.addKeepAlive(proc);
         keepAlive = true;
-      } else if ((/adb/).test(command) && args.some(function(arg) {
-          return 'force-stop' === arg;
-        })) {
-        // Ignore `adb force-stop`
       } else if ('xset' === command) {
         global.setTimeout(function() {
           proc.stdout.emit('data', 'has display');
         }, 1);
+      } else if ((/adb/).test(command)) {
+        if (args.some(regExTest.bind(/^shell$/)) &&
+            args.some(regExTest.bind(/^ps$/))) {
+          global.setTimeout(function() {
+            proc.stdout.emit('data',
+                'USER PID PPID VSIZE RSS WCHAN PC NAME\n');
+            proc.stdout.emit('data',
+                'root 1 0 560 404 ffffffff 00000000 S /init\n');
+          }, 1);
+        } else if (!args.some(regExTest.bind(/^force-stop$/))) {
+          // Ignore shell am force-stop.
+          keepAlive = shellStub.callback(proc, command, args);
+        }
       } else {
         keepAlive = shellStub.callback(proc, command, args);
       }
@@ -176,11 +187,12 @@ describe('browser_android_chrome small', function() {
     should.ok(browser.isRunning());
     browser.getServerUrl().should.match(/^http:\/\/localhost:\d+$/);
     should.equal(undefined, browser.getDevToolsUrl());  // No DevTools with WD.
-    assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
+    assertAdbCalls(['shell', 'ps'],
+                   ['shell', 'am', 'force-stop', /^com\.[\.\w]+/]);
     if (process.platform === 'linux') {
       spawnStub.assertCall('xset', 'q');
     }
-    spawnStub.assertCall(chromedriver, /^\-port=\d+/);
+    spawnStub.assertCall({0: chromedriver, 1: /^\-port=\d+/});
     var chromedriverProcess = spawnStub.lastCall.returnValue;
     spawnStub.assertCall();
 
@@ -188,7 +200,8 @@ describe('browser_android_chrome small', function() {
     test_utils.tickUntilIdle(app, sandbox);
     should.ok(!browser.isRunning());
     spawnStub.assertCalls({0: 'ps'}, {0: 'kill'});
-    assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
+    assertAdbCalls(['shell', 'ps'],
+                   ['shell', 'am', 'force-stop', /^com\.[\.\w]+/]);
     spawnStub.assertCall();
     should.equal(undefined, browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());
@@ -247,14 +260,16 @@ describe('browser_android_chrome small', function() {
       var keepAlive = false;
       var stdout;
       if (/adb$/.test(command)) {
-        if (args.some(function(arg) {
-                return (/^while true; do nc /).test(arg);
-              })) {
+        if (args.some(regExTest.bind(/^while true; do nc /))) {
           ncProc = proc;
           shellStub.addKeepAlive(ncProc);
           keepAlive = true;
         } else if ('echo x' === args[args.length - 1]) {
           stdout = 'x';
+        } else if (args.some(regExTest.bind(/^shell$/)) &&
+            args.some(regExTest.bind(/^ps$/))) {
+          stdout = 'USER PID PPID VSIZE RSS WCHAN PC NAME\n' +
+              'root 1 0 560 404 ffffffff 00000000 S /init\n';
         }
       } else {
         keepAlive = shellStub.callback(proc, command, args);
@@ -274,7 +289,9 @@ describe('browser_android_chrome small', function() {
 
     browser.startBrowser();
     test_utils.tickUntilIdle(app, sandbox);
-    assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
+    assertAdbCalls(['shell', 'ps'],
+                   ['shell', 'am', 'force-stop', /^com\.[\.\w]+/]);
+    //assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
     if (1 === args.runNumber) {
       assertAdbCalls(
           ['uninstall', /com\.[\w\.]+/],
@@ -288,8 +305,11 @@ describe('browser_android_chrome small', function() {
       assertAdbCall('shell', 'su', '-c',
           /^while true; do nc -l \d+ < \S+pac_body; done$/);
     }
-    var flags = ['--disable-fre', '--enable-benchmarking',
-        '--metrics-recording-only', '--disable-geolocation',
+    var flags = ['--no-first-run', '--disable-background-networking',
+        '--no-default-browser-check', '--process-per-tab',
+        '--allow-running-insecure-content', '--disable-fre',
+        '--enable-benchmarking', '--metrics-recording-only',
+        '--disable-geolocation', '--disable-external-intent-requests',
         '--enable-remote-debugging'];
     if (args.pac) {
       flags.push('--proxy-pac-url=http://127.0.0.1:80/from_netcat');
@@ -298,7 +318,7 @@ describe('browser_android_chrome small', function() {
         ['shell', 'su', '-c', 'echo \\"chrome ' + flags.join(' ') +
             '\\" > /data/local/chrome-command-line'],
         ['shell', 'su', '-c',
-            'rm /data/data/com.android.chrome/files/tab*'],
+            'ls /data/data/com.android.chrome'],
         ['shell', 'su', '-c', 'ndc resolver flushdefaultif'],
         ['shell', 'am', 'start', '-n', /^com\.[\.\w]+/, '-d', 'about:blank'],
         ['forward', /tcp:\d+/, /^\w+/]);
@@ -322,8 +342,8 @@ describe('browser_android_chrome small', function() {
       spawnStub.assertCalls({0: 'ps'}, {0: 'kill'});
       assertAdbCall('shell', 'rm', /^\/.*\/pac_body$/);
     }
-    assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
-    assertAdbCall();
+    assertAdbCalls(['shell', 'ps'],
+                   ['shell', 'am', 'force-stop', /^com\.[\.\w]+/]);
     should.equal(undefined, browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());
     if (args.pac) {

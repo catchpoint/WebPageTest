@@ -30,7 +30,6 @@ var adb = require('adb');
 var fs = require('fs');
 var logger = require('logger');
 var process_utils = require('process_utils');
-var util = require('util');
 
 
 // Exit timeout for 'adb shell tcpdump' after 'adb shell kill <tcpdump-pid>'.
@@ -129,7 +128,7 @@ PacketCaptureAndroid.prototype.scheduleStart = function(localPcapFile) {
   this.schedulePrepare_();
   this.scheduleStop();  // Cleanup possible leftovers.
   this.schedulePushTcpdumpIfNeeded_();
-  this.scheduleDetectConnectedInterface_().then(function(iface) {
+  this.adb_.scheduleDetectConnectedInterface().then(function(iface) {
     logger.debug('Starting tcpdump of %s to %s', iface, this.devicePcapFile_);
     // -p = don't put into promiscuous mode.
     // -s 0 = capture entire packets.
@@ -147,7 +146,7 @@ PacketCaptureAndroid.prototype.scheduleStart = function(localPcapFile) {
               listenBuffer.slice(listenBuffer.lastIndexOf('\n') +
                   1)); // We only need to keep the pending line, if any
         }
-      });
+      }.bind(this));
       proc.on('exit', function(code) {
         if (this.tcpdumpAdbProcess_) {  // We didn't kill it ourselves
           logger.error('Unexpected tcpdump exited, code: ' + code);
@@ -180,48 +179,5 @@ PacketCaptureAndroid.prototype.scheduleStop = function() {
       // Hard-kill any possible leftover tcpdumps.
       this.adb_.scheduleKill('tcpdump', 'KILL');
     }
-  }.bind(this));
-};
-
-/**
- * Returns the name of the single currently connected interface, or undefined.
- *
- * Output format:
- * Up to Honeycomb:
- *
- * usb0 UP 192.168.1.67 255.255.255.192 0x00001043
- *
- * IceCreamSandwich+:
- *
- * usb0 UP 192.168.1.68/28 0x00001002 02:00:00:00:00:01
- *
- * @return {string}  The name of the connected interface.
- * @private
- */
-PacketCaptureAndroid.prototype.scheduleDetectConnectedInterface_ = function() {
-  'use strict';
-  return this.adb_.shell(['netcfg']).then(function(stdout) {
-    var connectedInterfaces = [];
-    stdout.split(/\r?\n/).forEach(function(line, lineNumber) {
-      if (!line) {
-        return;  // Skip empty lines.
-      }
-      var fields = line.split(/\s+/);
-      if (fields.length !== 5) {
-        throw new Error(util.format('netcfg output unrecognized at line %d: %j',
-            lineNumber, stdout));
-      }
-      if (fields[0] !== 'lo' && fields[1] === 'UP' &&
-          0 !== fields[2].indexOf('0.0.0.0')) {
-        connectedInterfaces.push(fields[0]);
-      }
-    }.bind(this));
-    if (connectedInterfaces.length !== 1) {
-      throw new Error(util.format(
-          '%s connected interfaces detected: %j, netcfg output: %j',
-          (connectedInterfaces.length === 0 ? 'Zero' : 'More than one'),
-          connectedInterfaces, stdout));
-    }
-    return connectedInterfaces[0];
   }.bind(this));
 };

@@ -104,8 +104,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
  *    jquery.ui.core.js
  *    jquery.ui.widget.js
  */(function(a,b){function f(){return++d}function e(){return++c}var c=0,d=0;a.widget("ui.tabs",{options:{add:null,ajaxOptions:null,cache:!1,cookie:null,collapsible:!1,disable:null,disabled:[],enable:null,event:"click",fx:null,idPrefix:"ui-tabs-",load:null,panelTemplate:"<div></div>",remove:null,select:null,show:null,spinner:"<em>Loading&#8230;</em>",tabTemplate:"<li><a href='#{href}'><span>#{label}</span></a></li>"},_create:function(){this._tabify(!0)},_setOption:function(a,b){if(a=="selected"){if(this.options.collapsible&&b==this.options.selected)return;this.select(b)}else this.options[a]=b,this._tabify()},_tabId:function(a){return a.title&&a.title.replace(/\s/g,"_").replace(/[^\w\u00c0-\uFFFF-]/g,"")||this.options.idPrefix+e()},_sanitizeSelector:function(a){return a.replace(/:/g,"\\:")},_cookie:function(){var b=this.cookie||(this.cookie=this.options.cookie.name||"ui-tabs-"+f());return a.cookie.apply(null,[b].concat(a.makeArray(arguments)))},_ui:function(a,b){return{tab:a,panel:b,index:this.anchors.index(a)}},_cleanup:function(){this.lis.filter(".ui-state-processing").removeClass("ui-state-processing").find("span:data(label.tabs)").each(function(){var b=a(this);b.html(b.data("label.tabs")).removeData("label.tabs")})},_tabify:function(c){function m(b,c){b.css("display",""),!a.support.opacity&&c.opacity&&b[0].style.removeAttribute("filter")}var d=this,e=this.options,f=/^#.+/;this.list=this.element.find("ol,ul").eq(0),this.lis=a(" > li:has(a[href])",this.list),this.anchors=this.lis.map(function(){return a("a",this)[0]}),this.panels=a([]),this.anchors.each(function(b,c){var g=a(c).attr("href"),h=g.split("#")[0],i;h&&(h===location.toString().split("#")[0]||(i=a("base")[0])&&h===i.href)&&(g=c.hash,c.href=g);if(f.test(g))d.panels=d.panels.add(d.element.find(d._sanitizeSelector(g)));else if(g&&g!=="#"){a.data(c,"href.tabs",g),a.data(c,"load.tabs",g.replace(/#.*$/,""));var j=d._tabId(c);c.href="#"+j;var k=d.element.find("#"+j);k.length||(k=a(e.panelTemplate).attr("id",j).addClass("ui-tabs-panel ui-widget-content ui-corner-bottom").insertAfter(d.panels[b-1]||d.list),k.data("destroy.tabs",!0)),d.panels=d.panels.add(k)}else e.disabled.push(b)}),c?(this.element.addClass("ui-tabs ui-widget ui-widget-content ui-corner-all"),this.list.addClass("ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all"),this.lis.addClass("ui-state-default ui-corner-top"),this.panels.addClass("ui-tabs-panel ui-widget-content ui-corner-bottom"),e.selected===b?(location.hash&&this.anchors.each(function(a,b){if(b.hash==location.hash){e.selected=a;return!1}}),typeof e.selected!="number"&&e.cookie&&(e.selected=parseInt(d._cookie(),10)),typeof e.selected!="number"&&this.lis.filter(".ui-tabs-selected").length&&(e.selected=this.lis.index(this.lis.filter(".ui-tabs-selected"))),e.selected=e.selected||(this.lis.length?0:-1)):e.selected===null&&(e.selected=-1),e.selected=e.selected>=0&&this.anchors[e.selected]||e.selected<0?e.selected:0,e.disabled=a.unique(e.disabled.concat(a.map(this.lis.filter(".ui-state-disabled"),function(a,b){return d.lis.index(a)}))).sort(),a.inArray(e.selected,e.disabled)!=-1&&e.disabled.splice(a.inArray(e.selected,e.disabled),1),this.panels.addClass("ui-tabs-hide"),this.lis.removeClass("ui-tabs-selected ui-state-active"),e.selected>=0&&this.anchors.length&&(d.element.find(d._sanitizeSelector(d.anchors[e.selected].hash)).removeClass("ui-tabs-hide"),this.lis.eq(e.selected).addClass("ui-tabs-selected ui-state-active"),d.element.queue("tabs",function(){d._trigger("show",null,d._ui(d.anchors[e.selected],d.element.find(d._sanitizeSelector(d.anchors[e.selected].hash))[0]))}),this.load(e.selected)),a(window).bind("unload",function(){d.lis.add(d.anchors).unbind(".tabs"),d.lis=d.anchors=d.panels=null})):e.selected=this.lis.index(this.lis.filter(".ui-tabs-selected")),this.element[e.collapsible?"addClass":"removeClass"]("ui-tabs-collapsible"),e.cookie&&this._cookie(e.selected,e.cookie);for(var g=0,h;h=this.lis[g];g++)a(h)[a.inArray(g,e.disabled)!=-1&&!a(h).hasClass("ui-tabs-selected")?"addClass":"removeClass"]("ui-state-disabled");e.cache===!1&&this.anchors.removeData("cache.tabs"),this.lis.add(this.anchors).unbind(".tabs");if(e.event!=="mouseover"){var i=function(a,b){b.is(":not(.ui-state-disabled)")&&b.addClass("ui-state-"+a)},j=function(a,b){b.removeClass("ui-state-"+a)};this.lis.bind("mouseover.tabs",function(){i("hover",a(this))}),this.lis.bind("mouseout.tabs",function(){j("hover",a(this))}),this.anchors.bind("focus.tabs",function(){i("focus",a(this).closest("li"))}),this.anchors.bind("blur.tabs",function(){j("focus",a(this).closest("li"))})}var k,l;e.fx&&(a.isArray(e.fx)?(k=e.fx[0],l=e.fx[1]):k=l=e.fx);var n=l?function(b,c){a(b).closest("li").addClass("ui-tabs-selected ui-state-active"),c.hide().removeClass("ui-tabs-hide").animate(l,l.duration||"normal",function(){m(c,l),d._trigger("show",null,d._ui(b,c[0]))})}:function(b,c){a(b).closest("li").addClass("ui-tabs-selected ui-state-active"),c.removeClass("ui-tabs-hide"),d._trigger("show",null,d._ui(b,c[0]))},o=k?function(a,b){b.animate(k,k.duration||"normal",function(){d.lis.removeClass("ui-tabs-selected ui-state-active"),b.addClass("ui-tabs-hide"),m(b,k),d.element.dequeue("tabs")})}:function(a,b,c){d.lis.removeClass("ui-tabs-selected ui-state-active"),b.addClass("ui-tabs-hide"),d.element.dequeue("tabs")};this.anchors.bind(e.event+".tabs",function(){var b=this,c=a(b).closest("li"),f=d.panels.filter(":not(.ui-tabs-hide)"),g=d.element.find(d._sanitizeSelector(b.hash));if(c.hasClass("ui-tabs-selected")&&!e.collapsible||c.hasClass("ui-state-disabled")||c.hasClass("ui-state-processing")||d.panels.filter(":animated").length||d._trigger("select",null,d._ui(this,g[0]))===!1){this.blur();return!1}e.selected=d.anchors.index(this),d.abort();if(e.collapsible){if(c.hasClass("ui-tabs-selected")){e.selected=-1,e.cookie&&d._cookie(e.selected,e.cookie),d.element.queue("tabs",function(){o(b,f)}).dequeue("tabs"),this.blur();return!1}if(!f.length){e.cookie&&d._cookie(e.selected,e.cookie),d.element.queue("tabs",function(){n(b,g)}),d.load(d.anchors.index(this)),this.blur();return!1}}e.cookie&&d._cookie(e.selected,e.cookie);if(g.length)f.length&&d.element.queue("tabs",function(){o(b,f)}),d.element.queue("tabs",function(){n(b,g)}),d.load(d.anchors.index(this));else throw"jQuery UI Tabs: Mismatching fragment identifier.";a.browser.msie&&this.blur()}),this.anchors.bind("click.tabs",function(){return!1})},_getIndex:function(a){typeof a=="string"&&(a=this.anchors.index(this.anchors.filter("[href$="+a+"]")));return a},destroy:function(){var b=this.options;this.abort(),this.element.unbind(".tabs").removeClass("ui-tabs ui-widget ui-widget-content ui-corner-all ui-tabs-collapsible").removeData("tabs"),this.list.removeClass("ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all"),this.anchors.each(function(){var b=a.data(this,"href.tabs");b&&(this.href=b);var c=a(this).unbind(".tabs");a.each(["href","load","cache"],function(a,b){c.removeData(b+".tabs")})}),this.lis.unbind(".tabs").add(this.panels).each(function(){a.data(this,"destroy.tabs")?a(this).remove():a(this).removeClass(["ui-state-default","ui-corner-top","ui-tabs-selected","ui-state-active","ui-state-hover","ui-state-focus","ui-state-disabled","ui-tabs-panel","ui-widget-content","ui-corner-bottom","ui-tabs-hide"].join(" "))}),b.cookie&&this._cookie(null,b.cookie);return this},add:function(c,d,e){e===b&&(e=this.anchors.length);var f=this,g=this.options,h=a(g.tabTemplate.replace(/#\{href\}/g,c).replace(/#\{label\}/g,d)),i=c.indexOf("#")?this._tabId(a("a",h)[0]):c.replace("#","");h.addClass("ui-state-default ui-corner-top").data("destroy.tabs",!0);var j=f.element.find("#"+i);j.length||(j=a(g.panelTemplate).attr("id",i).data("destroy.tabs",!0)),j.addClass("ui-tabs-panel ui-widget-content ui-corner-bottom ui-tabs-hide"),e>=this.lis.length?(h.appendTo(this.list),j.appendTo(this.list[0].parentNode)):(h.insertBefore(this.lis[e]),j.insertBefore(this.panels[e])),g.disabled=a.map(g.disabled,function(a,b){return a>=e?++a:a}),this._tabify(),this.anchors.length==1&&(g.selected=0,h.addClass("ui-tabs-selected ui-state-active"),j.removeClass("ui-tabs-hide"),this.element.queue("tabs",function(){f._trigger("show",null,f._ui(f.anchors[0],f.panels[0]))}),this.load(0)),this._trigger("add",null,this._ui(this.anchors[e],this.panels[e]));return this},remove:function(b){b=this._getIndex(b);var c=this.options,d=this.lis.eq(b).remove(),e=this.panels.eq(b).remove();d.hasClass("ui-tabs-selected")&&this.anchors.length>1&&this.select(b+(b+1<this.anchors.length?1:-1)),c.disabled=a.map(a.grep(c.disabled,function(a,c){return a!=b}),function(a,c){return a>=b?--a:a}),this._tabify(),this._trigger("remove",null,this._ui(d.find("a")[0],e[0]));return this},enable:function(b){b=this._getIndex(b);var c=this.options;if(a.inArray(b,c.disabled)!=-1){this.lis.eq(b).removeClass("ui-state-disabled"),c.disabled=a.grep(c.disabled,function(a,c){return a!=b}),this._trigger("enable",null,this._ui(this.anchors[b],this.panels[b]));return this}},disable:function(a){a=this._getIndex(a);var b=this,c=this.options;a!=c.selected&&(this.lis.eq(a).addClass("ui-state-disabled"),c.disabled.push(a),c.disabled.sort(),this._trigger("disable",null,this._ui(this.anchors[a],this.panels[a])));return this},select:function(a){a=this._getIndex(a);if(a==-1)if(this.options.collapsible&&this.options.selected!=-1)a=this.options.selected;else return this;this.anchors.eq(a).trigger(this.options.event+".tabs");return this},load:function(b){b=this._getIndex(b);var c=this,d=this.options,e=this.anchors.eq(b)[0],f=a.data(e,"load.tabs");this.abort();if(!f||this.element.queue("tabs").length!==0&&a.data(e,"cache.tabs"))this.element.dequeue("tabs");else{this.lis.eq(b).addClass("ui-state-processing");if(d.spinner){var g=a("span",e);g.data("label.tabs",g.html()).html(d.spinner)}this.xhr=a.ajax(a.extend({},d.ajaxOptions,{url:f,success:function(f,g){c.element.find(c._sanitizeSelector(e.hash)).html(f),c._cleanup(),d.cache&&a.data(e,"cache.tabs",!0),c._trigger("load",null,c._ui(c.anchors[b],c.panels[b]));try{d.ajaxOptions.success(f,g)}catch(h){}},error:function(a,f,g){c._cleanup(),c._trigger("load",null,c._ui(c.anchors[b],c.panels[b]));try{d.ajaxOptions.error(a,f,b,e)}catch(g){}}})),c.element.dequeue("tabs");return this}},abort:function(){this.element.queue([]),this.panels.stop(!1,!0),this.element.queue("tabs",this.element.queue("tabs").splice(-2,2)),this.xhr&&(this.xhr.abort(),delete this.xhr),this._cleanup();return this},url:function(a,b){this.anchors.eq(a).removeData("cache.tabs").data("load.tabs",b);return this},length:function(){return this.anchors.length}}),a.extend(a.ui.tabs,{version:"1.8.17"}),a.extend(a.ui.tabs.prototype,{rotation:null,rotate:function(a,b){var c=this,d=this.options,e=c._rotate||(c._rotate=function(b){clearTimeout(c.rotation),c.rotation=setTimeout(function(){var a=d.selected;c.select(++a<c.anchors.length?a:0)},a),b&&b.stopPropagation()}),f=c._unrotate||(c._unrotate=b?function(a){t=d.selected,e()}:function(a){a.clientX&&c.rotate(null)});a?(this.element.bind("tabsshow",e),this.anchors.bind(d.event+".tabs",f),e()):(clearTimeout(c.rotation),this.element.unbind("tabsshow",e),this.anchors.unbind(d.event+".tabs",f),delete this._rotate,delete this._unrotate);return this}})})(jQuery);
- 
- 
+
+
 /*
  * jQuery Tooltip plugin 1.3
  *
@@ -115,7 +115,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
  * Copyright (c) 2006 - 2008 Jörn Zaefferer
  *
  * $Id: jquery.tooltip.js 5741 2008-06-21 15:22:16Z joern.zaefferer $
- * 
+ *
  * Dual licensed under the MIT and GPL licenses:
  *   http://www.opensource.org/licenses/mit-license.php
  *   http://www.gnu.org/licenses/gpl.html
@@ -175,7 +175,7 @@ function findNodeForMore(node){var $node=$(node);var last_child=$node.children("
  * Dual licensed under the MIT and GPL licenses:
  *   http://www.opensource.org/licenses/mit-license.php
  *   http://www.gnu.org/licenses/gpl.html
- * 
+ *
  * $Version: 03/01/2009 +r14
  */
 (function($) {
@@ -218,7 +218,7 @@ open:function(s,t){var h=H[s],c=h.c,cc='.'+c.closeClass,z=(parseInt(h.w.css('z-i
   r.html(c.ajaxText).load(u,function(){if(c.onLoad)c.onLoad.call(this,h);if(cc)h.w.jqmAddClose($(cc,h.w));e(h);});}
  else if(cc)h.w.jqmAddClose($(cc,h.w));
 
- if(c.toTop&&h.o)h.w.before('<span id="jqmP'+h.w[0]._jqm+'"></span>').insertAfter(h.o);    
+ if(c.toTop&&h.o)h.w.before('<span id="jqmP'+h.w[0]._jqm+'"></span>').insertAfter(h.o);
  (c.onShow)?c.onShow(h):h.w.show();e(h);return F;
 },
 close:function(s){var h=H[s];if(!h.a)return F;h.a=F;
@@ -243,7 +243,7 @@ hs=function(w,t,c){return w.each(function(){var s=this._jqm;$(t).each(function()
  * Copyright (c) 2007 Brice Burgess <bhb@iceburg.net>, http://www.iceburg.net
  * Licensed under the MIT License:
  * http://www.opensource.org/licenses/mit-license.php
- * 
+ *
  * $Version: 2007.08.19 +r2
  */
 
@@ -320,13 +320,13 @@ $.fn.extend({
                 return self.innerHeight;
             else
                 return $.boxModel && document.documentElement.clientHeight || document.body.clientHeight;
-        
-        if ( this[0] == document ) 
+
+        if ( this[0] == document )
             return Math.max( ($.boxModel && document.documentElement.scrollHeight || document.body.scrollHeight), document.body.offsetHeight );
-        
+
         return height.apply(this, arguments);
     },
-    
+
     /**
      * If used on document, returns the document's width (innerWidth).
      * If used on window, returns the viewport's (window) width.
@@ -364,12 +364,12 @@ $.fn.extend({
                 self.scrollTo(scrollLeft, self.pageYOffset);
                 return document.body.offsetWidth + scrollWidth;
             }
-            else 
+            else
                 return Math.max( (($.boxModel && !$.browser.safari) && document.documentElement.scrollWidth || document.body.scrollWidth), document.body.offsetWidth );
 
         return width.apply(this, arguments);
     },
-    
+
     /**
      * Gets the inner height (excludes the border and includes the padding) for the first matched element.
      * If used on document, returns the document's height (innerHeight).
@@ -390,7 +390,7 @@ $.fn.extend({
                 this[0].offsetHeight - num(this, 'borderTopWidth') - num(this, 'borderBottomWidth') :
                 this.height() + num(this, 'paddingTop') + num(this, 'paddingBottom');
     },
-    
+
     /**
      * Gets the inner width (excludes the border and includes the padding) for the first matched element.
      * If used on document, returns the document's width (innerWidth).
@@ -411,7 +411,7 @@ $.fn.extend({
                 this[0].offsetWidth - num(this, 'borderLeftWidth') - num(this, 'borderRightWidth') :
                 this.width() + num(this, 'paddingLeft') + num(this, 'paddingRight');
     },
-    
+
     /**
      * Gets the outer height (includes the border and padding) for the first matched element.
      * If used on document, returns the document's height (innerHeight).
@@ -438,12 +438,12 @@ $.fn.extend({
             this.height() :
             this.is(':visible') ?
                 this[0].offsetHeight + (options.margin ? (num(this, 'marginTop') + num(this, 'marginBottom')) : 0) :
-                this.height() 
-                    + num(this,'borderTopWidth') + num(this, 'borderBottomWidth') 
+                this.height()
+                    + num(this,'borderTopWidth') + num(this, 'borderBottomWidth')
                     + num(this, 'paddingTop') + num(this, 'paddingBottom')
                     + (options.margin ? (num(this, 'marginTop') + num(this, 'marginBottom')) : 0);
     },
-    
+
     /**
      * Gets the outer width (including the border and padding) for the first matched element.
      * If used on document, returns the document's width (innerWidth).
@@ -457,7 +457,7 @@ $.fn.extend({
      *
      * @example $("#testdiv").outerWidth({ margin: true })
      * @result 1020
-     * 
+     *
      * @name outerHeight
      * @type Number
      * @param Map options Optional settings to configure the way the outer width is calculated.
@@ -470,12 +470,12 @@ $.fn.extend({
             this.width() :
             this.is(':visible') ?
                 this[0].offsetWidth + (options.margin ? (num(this, 'marginLeft') + num(this, 'marginRight')) : 0) :
-                this.width() 
-                    + num(this, 'borderLeftWidth') + num(this, 'borderRightWidth') 
+                this.width()
+                    + num(this, 'borderLeftWidth') + num(this, 'borderRightWidth')
                     + num(this, 'paddingLeft') + num(this, 'paddingRight')
                     + (options.margin ? (num(this, 'marginLeft') + num(this, 'marginRight')) : 0);
     },
-    
+
     /**
      * Gets how many pixels the user has scrolled to the right (scrollLeft).
      * Works on containers with overflow: auto and window/document.
@@ -485,7 +485,7 @@ $.fn.extend({
      *
      * @example $(document).scrollLeft()
      * @result 100
-     * 
+     *
      * @example $("#testdiv").scrollLeft()
      * @result 100
      *
@@ -499,7 +499,7 @@ $.fn.extend({
      *
      * @example $(window).scrollLeft(100).scrollLeft()
      * @result 100
-     * 
+     *
      * @example $(document).scrollLeft(100).scrollLeft()
      * @result 100
      *
@@ -521,16 +521,16 @@ $.fn.extend({
                 else
                     this.scrollLeft = val;
             });
-        
+
         // return the scroll left offest in pixels
         if ( this[0] == window || this[0] == document )
             return self.pageXOffset ||
                 $.boxModel && document.documentElement.scrollLeft ||
                 document.body.scrollLeft;
-                
+
         return this[0].scrollLeft;
     },
-    
+
     /**
      * Gets how many pixels the user has scrolled to the bottom (scrollTop).
      * Works on containers with overflow: auto and window/document.
@@ -540,7 +540,7 @@ $.fn.extend({
      *
      * @example $(document).scrollTop()
      * @result 100
-     * 
+     *
      * @example $("#testdiv").scrollTop()
      * @result 100
      *
@@ -554,7 +554,7 @@ $.fn.extend({
      *
      * @example $(window).scrollTop(100).scrollTop()
      * @result 100
-     * 
+     *
      * @example $(document).scrollTop(100).scrollTop()
      * @result 100
      *
@@ -576,7 +576,7 @@ $.fn.extend({
                 else
                     this.scrollTop = val;
             });
-        
+
         // return the scroll top offset in pixels
         if ( this[0] == window || this[0] == document )
             return self.pageYOffset ||
@@ -585,8 +585,8 @@ $.fn.extend({
 
         return this[0].scrollTop;
     },
-    
-    /** 
+
+    /**
      * Gets the top and left positioned offset in pixels.
      * The positioned offset is the offset between a positioned
      * parent and the element itself.
@@ -599,7 +599,7 @@ $.fn.extend({
      * @example var position = {};
      * $("#testdiv").position(position)
      * @result position = { top: 100, left: 100 }
-     * 
+     *
      * @name position
      * @param Object returnObject Optional An object to store the return value in, so as not to break the chain. If passed in the
      *                            chain will not be broken and the result will be assigned to this object.
@@ -609,15 +609,15 @@ $.fn.extend({
     position: function(returnObject) {
         return this.offset({ margin: false, scroll: false, relativeTo: this.offsetParent() }, returnObject);
     },
-    
+
     /**
      * Gets the location of the element in pixels from the top left corner of the viewport.
      * The offset method takes an optional map of key value pairs to configure the way
      * the offset is calculated. Here are the different options.
      *
      * (Boolean) margin - Should the margin of the element be included in the calculations? True by default.
-     * (Boolean) border - Should the border of the element be included in the calculations? False by default. 
-     * (Boolean) padding - Should the padding of the element be included in the calculations? False by default. 
+     * (Boolean) border - Should the border of the element be included in the calculations? False by default.
+     * (Boolean) padding - Should the padding of the element be included in the calculations? False by default.
      * (Boolean) scroll - Should the scroll offsets of the parent elements be included in the calculations? True by default.
      *                    When true it adds the total scroll offsets of all parents to the total offset and also adds two
      *                    properties to the returned object, scrollTop and scrollLeft.
@@ -630,7 +630,7 @@ $.fn.extend({
      * catch the value of the return and continue the chain.
      *
      * For accurate calculations make sure to use pixel values for margins, borders and padding.
-     * 
+     *
      * Known issues:
      *  - Issue: A div positioned relative or static without any content before it and its parent will report an offsetTop of 0 in Safari
      *    Workaround: Place content before the relative div ... and set height and width to 0 and overflow to hidden
@@ -658,14 +658,14 @@ $.fn.extend({
             elem = this[0], parent = this[0], op, parPos, elemPos = $.css(elem, 'position'),
             mo = $.browser.mozilla, ie = $.browser.msie, oa = $.browser.opera,
             sf = $.browser.safari, sf3 = $.browser.safari && parseInt($.browser.version) > 520,
-            absparent = false, relparent = false, 
+            absparent = false, relparent = false,
             options = $.extend({ margin: true, border: false, padding: false, scroll: true, lite: false, relativeTo: document.body }, options || {});
-        
+
         // Use offsetLite if lite option is true
         if (options.lite) return this.offsetLite(options, returnObject);
         // Get the HTMLElement if relativeTo is a jquery collection
         if (options.relativeTo.jquery) options.relativeTo = options.relativeTo[0];
-        
+
         if (elem.tagName == 'BODY') {
             // Safari 2 is the only one to get offsetLeft and offsetTop properties of the body "correct"
             // Except they all mess up when the body is positioned absolute or relative
@@ -694,7 +694,7 @@ $.fn.extend({
         } else {
             do {
                 parPos = $.css(parent, 'position');
-            
+
                 x += parent.offsetLeft;
                 y += parent.offsetTop;
 
@@ -719,24 +719,24 @@ $.fn.extend({
                             sl += parent.scrollLeft;
                             st += parent.scrollTop;
                         }
-                        
+
                         // Opera sometimes incorrectly reports scroll offset for elements with display set to table-row or inline
                         if (oa && ($.css(parent, 'display') || '').match(/table-row|inline/)) {
                             sl = sl - ((parent.scrollLeft == parent.offsetLeft) ? parent.scrollLeft : 0);
                             st = st - ((parent.scrollTop == parent.offsetTop) ? parent.scrollTop : 0);
                         }
-                
+
                         // Mozilla does not add the border for a parent that has overflow set to anything but visible
                         if (mo && parent != elem && $.css(parent, 'overflow') != 'visible') {
                             x += num(parent, 'borderLeftWidth');
                             y += num(parent, 'borderTopWidth');
                         }
-                
+
                         parent = parent.parentNode;
                     } while (parent != op);
                 }
                 parent = op;
-                
+
                 // exit the loop if we are at the relativeTo option but not if it is the body or html tag
                 if (parent == options.relativeTo && !(parent.tagName == 'BODY' || parent.tagName == 'HTML'))  {
                     // Mozilla does not add the border for a parent that has overflow set to anything but visible
@@ -760,7 +760,7 @@ $.fn.extend({
                     // Safari 3 does not include the border on body
                     // Mozilla does not include the border on body if an element isn't positioned absolute and is without an absolute parent
                     // IE does not include the border on the body if an element is positioned static and without an absolute or relative parent
-                    if ( sf3 || (mo && !absparent && elemPos != 'fixed') || 
+                    if ( sf3 || (mo && !absparent && elemPos != 'fixed') ||
                          (ie && elemPos == 'static' && !relparent) ) {
                         x += num(parent, 'borderLeftWidth');
                         y += num(parent, 'borderTopWidth');
@@ -775,7 +775,7 @@ $.fn.extend({
         if (returnObject) { $.extend(returnObject, returnValue); return this; }
         else              { return returnValue; }
     },
-    
+
     /**
      * Gets the location of the element in pixels from the top left corner of the viewport.
      * This method is much faster than offset but not as accurate when borders and margins are
@@ -785,8 +785,8 @@ $.fn.extend({
      * the offset is calculated. Here are the different options.
      *
      * (Boolean) margin - Should the margin of the element be included in the calculations? True by default.
-     * (Boolean) border - Should the border of the element be included in the calculations? False by default. 
-     * (Boolean) padding - Should the padding of the element be included in the calcuations? False by default. 
+     * (Boolean) border - Should the border of the element be included in the calculations? False by default.
+     * (Boolean) padding - Should the padding of the element be included in the calcuations? False by default.
      * (Boolean) scroll - Sould the scroll offsets of the parent elements be included int he calculations? True by default.
      *                    When true it adds the total scroll offsets of all parents to the total offset and also adds two
      *                    properties to the returned object, scrollTop and scrollLeft.
@@ -802,12 +802,12 @@ $.fn.extend({
      */
     offsetLite: function(options, returnObject) {
         if (!this[0]) error();
-        var x = 0, y = 0, sl = 0, st = 0, parent = this[0], offsetParent, 
+        var x = 0, y = 0, sl = 0, st = 0, parent = this[0], offsetParent,
             options = $.extend({ margin: true, border: false, padding: false, scroll: true, relativeTo: document.body }, options || {});
-                
+
         // Get the HTMLElement if relativeTo is a jquery collection
         if (options.relativeTo.jquery) options.relativeTo = options.relativeTo[0];
-        
+
         do {
             x += parent.offsetLeft;
             y += parent.offsetTop;
@@ -829,10 +829,10 @@ $.fn.extend({
         if (returnObject) { $.extend(returnObject, returnValue); return this; }
         else              { return returnValue; }
     },
-    
+
     /**
-     * Returns a jQuery collection with the positioned parent of 
-     * the first matched element. This is the first parent of 
+     * Returns a jQuery collection with the positioned parent of
+     * the first matched element. This is the first parent of
      * the element that has position (as in relative or absolute).
      *
      * @name offsetParent
@@ -887,7 +887,7 @@ var handleOffsetReturn = function(elem, options, x, y, sl, st) {
         x += num(elem, 'paddingLeft');
         y += num(elem, 'paddingTop');
     }
-    
+
     // do not include scroll offset on the element ... opera sometimes reports scroll offset as actual offset
     if ( options.scroll && (!$.browser.opera || elem.offsetLeft != elem.scrollLeft && elem.offsetTop != elem.scrollLeft) ) {
         sl -= elem.scrollLeft;
@@ -943,71 +943,71 @@ var getScrollbarWidth = function() {
  */
  // create closure
  (function($) {
- 
+
     // plugin definition
 
     $.fn.tabby = function(options) {
         // build main options before element iteration
         var opts = $.extend({}, $.fn.tabby.defaults, options);
-        var pressed = $.fn.tabby.pressed; 
-        
+        var pressed = $.fn.tabby.pressed;
+
         // iterate and reformat each matched element
         return this.each(function() {
             $this = $(this);
-            
+
             // build element specific options
             var options = $.meta ? $.extend({}, opts, $this.data()) : opts;
-            
+
             $this.bind('keydown',function (e) {
                 var kc = $.fn.tabby.catch_kc(e);
                 if (16 == kc) pressed.shft = true;
                 /*
-                because both CTRL+TAB and ALT+TAB default to an event (changing tab/window) that 
+                because both CTRL+TAB and ALT+TAB default to an event (changing tab/window) that
                 will prevent js from capturing the keyup event, we'll set a timer on releasing them.
                 */
                 if (17 == kc) {pressed.ctrl = true;    setTimeout("$.fn.tabby.pressed.ctrl = false;",1000);}
                 if (18 == kc) {pressed.alt = true;     setTimeout("$.fn.tabby.pressed.alt = false;",1000);}
-                    
+
                 if (9 == kc && !pressed.ctrl && !pressed.alt) {
                     e.preventDefault; // does not work in O9.63 ??
                     pressed.last = kc;    setTimeout("$.fn.tabby.pressed.last = null;",0);
                     process_keypress ($(e.target).get(0), pressed.shft, options);
                     return false;
                 }
-                
+
             }).bind('keyup',function (e) {
                 if (16 == $.fn.tabby.catch_kc(e)) pressed.shft = false;
             }).bind('blur',function (e) { // workaround for Opera -- http://www.webdeveloper.com/forum/showthread.php?p=806588
                 if (9 == pressed.last) $(e.target).one('focus',function (e) {pressed.last = null;}).get(0).focus();
             });
-        
+
         });
     };
-    
+
     // define and expose any extra methods
     $.fn.tabby.catch_kc = function(e) { return e.keyCode ? e.keyCode : e.charCode ? e.charCode : e.which; };
     $.fn.tabby.pressed = {shft : false, ctrl : false, alt : false, last: null};
-    
+
     function process_keypress (o,shft,options) {
         var scrollTo = o.scrollTop;
         //var tabString = String.fromCharCode(9);
-        
+
         // gecko; o.setSelectionRange is only available when the text box has focus
         if (o.setSelectionRange) gecko_tab (o, shft, options);
-        
+
         // ie; document.selection is always available
         else if (document.selection) ie_tab (o, shft, options);
-        
+
         o.scrollTop = scrollTo;
     }
-    
+
     // plugin defaults
     $.fn.tabby.defaults = {tabString : String.fromCharCode(9)};
-    
+
     function gecko_tab (o, shft, options) {
         var ss = o.selectionStart;
-        var es = o.selectionEnd;    
-                
+        var es = o.selectionEnd;
+
         // when there's no selection and we're just working with the caret, we'll add/remove the tabs at the caret, providing more control
         if(ss == es) {
             // SHIFT+TAB
@@ -1017,7 +1017,7 @@ var getScrollbarWidth = function() {
                     o.value = o.value.substring(0, ss-options.tabString.length) + o.value.substring(ss); // put it back together omitting one character to the left
                     o.focus();
                     o.setSelectionRange(ss - options.tabString.length, ss - options.tabString.length);
-                } 
+                }
                 // then check to the right of the caret
                 else if ("\t" == o.value.substring(ss, ss + options.tabString.length)) {
                     o.value = o.value.substring(0, ss) + o.value.substring(ss + options.tabString.length); // put it back together omitting one character to the right
@@ -1026,12 +1026,12 @@ var getScrollbarWidth = function() {
                 }
             }
             // TAB
-            else {            
+            else {
                 o.value = o.value.substring(0, ss) + options.tabString + o.value.substring(ss);
                 o.focus();
                 o.setSelectionRange(ss + options.tabString.length, ss + options.tabString.length);
             }
-        } 
+        }
         // selections will always add/remove tabs from the start of the line
         else {
             // split the textarea up into lines and figure out which lines are included in the selection
@@ -1045,8 +1045,8 @@ var getScrollbarWidth = function() {
                 indices.push({start: sl, end: el, selected: (sl <= ss && el > ss) || (el >= es && sl < es) || (sl > ss && el < es)});
                 sl = el + 1;// for "\n"
             }
-            
-            // walk through the array of lines (indices) and add tabs where appropriate                        
+
+            // walk through the array of lines (indices) and add tabs where appropriate
             var modifier = 0;
             for (var i in indices) {
                 if (indices[i].selected) {
@@ -1069,10 +1069,10 @@ var getScrollbarWidth = function() {
             o.setSelectionRange(ns,ne);
         }
     }
-    
+
     function ie_tab (o, shft, options) {
         var range = document.selection.createRange();
-        
+
         if (o == range.parentElement()) {
             // when there's no selection and we're just working with the caret, we'll add/remove the tabs at the caret, providing more control
             if ('' == range.text) {
@@ -1087,65 +1087,65 @@ var getScrollbarWidth = function() {
                         // if that didn't work then reset the range and try opening it to the right
                         range.moveToBookmark(bookmark);
                         range.moveEnd('character', options.tabString.length);
-                        if (options.tabString == range.text) 
+                        if (options.tabString == range.text)
                             range.text = '';
                     }
                     // move the pointer to the start of them empty range and select it
                     range.collapse(true);
                     range.select();
                 }
-                
+
                 else {
                     // very simple here. just insert the tab into the range and put the pointer at the end
-                    range.text = options.tabString; 
+                    range.text = options.tabString;
                     range.collapse(false);
                     range.select();
                 }
             }
             // selections will always add/remove tabs from the start of the line
             else {
-            
+
                 var selection_text = range.text;
                 var selection_len = selection_text.length;
                 var selection_arr = selection_text.split("\r\n");
-                
+
                 var before_range = document.body.createTextRange();
                 before_range.moveToElementText(o);
                 before_range.setEndPoint("EndToStart", range);
                 var before_text = before_range.text;
                 var before_arr = before_text.split("\r\n");
                 var before_len = before_text.length; // - before_arr.length + 1;
-                
+
                 var after_range = document.body.createTextRange();
                 after_range.moveToElementText(o);
                 after_range.setEndPoint("StartToEnd", range);
                 var after_text = after_range.text; // we can accurately calculate distance to the end because we're not worried about MSIE trimming a \r\n
-                
+
                 var end_range = document.body.createTextRange();
                 end_range.moveToElementText(o);
                 end_range.setEndPoint("StartToEnd", before_range);
                 var end_text = end_range.text; // we can accurately calculate distance to the end because we're not worried about MSIE trimming a \r\n
-                                
+
                 var check_html = $(o).html();
-                $("#r3").text(before_len + " + " + selection_len + " + " + after_text.length + " = " + check_html.length);                
+                $("#r3").text(before_len + " + " + selection_len + " + " + after_text.length + " = " + check_html.length);
                 if((before_len + end_text.length) < check_html.length) {
                     before_arr.push("");
-                    before_len += 2; // for the \r\n that was trimmed    
+                    before_len += 2; // for the \r\n that was trimmed
                     if (shft && options.tabString == selection_arr[0].substring(0,options.tabString.length))
                         selection_arr[0] = selection_arr[0].substring(options.tabString.length);
-                    else if (!shft) selection_arr[0] = options.tabString + selection_arr[0];    
+                    else if (!shft) selection_arr[0] = options.tabString + selection_arr[0];
                 } else {
-                    if (shft && options.tabString == before_arr[before_arr.length-1].substring(0,options.tabString.length)) 
+                    if (shft && options.tabString == before_arr[before_arr.length-1].substring(0,options.tabString.length))
                         before_arr[before_arr.length-1] = before_arr[before_arr.length-1].substring(options.tabString.length);
                     else if (!shft) before_arr[before_arr.length-1] = options.tabString + before_arr[before_arr.length-1];
                 }
-                
+
                 for (var i = 1; i < selection_arr.length; i++) {
                     if (shft && options.tabString == selection_arr[i].substring(0,options.tabString.length))
                         selection_arr[i] = selection_arr[i].substring(options.tabString.length);
                     else if (!shft) selection_arr[i] = options.tabString + selection_arr[i];
                 }
-                
+
                 if (1 == before_arr.length && 0 == before_len) {
                     if (shft && options.tabString == selection_arr[0].substring(0,options.tabString.length))
                         selection_arr[0] = selection_arr[0].substring(options.tabString.length);
@@ -1156,20 +1156,20 @@ var getScrollbarWidth = function() {
                     selection_arr.push("");
                     selection_len += 2; // for the \r\n that was trimmed
                 }
-                
+
                 before_range.text = before_arr.join("\r\n");
                 range.text = selection_arr.join("\r\n");
-                
+
                 var new_range = document.body.createTextRange();
                 new_range.moveToElementText(o);
-                
+
                 if (0 < before_len)    new_range.setEndPoint("StartToEnd", before_range);
                 else new_range.setEndPoint("StartToStart", before_range);
                 new_range.setEndPoint("EndToEnd", range);
-                
+
                 new_range.select();
-                
-            } 
+
+            }
         }
     }
 
@@ -1186,7 +1186,7 @@ var getScrollbarWidth = function() {
         var tz_expires = "; expires="+tz_date.toGMTString();
         document.cookie = 'tzo=' + tz_offset + tz_expires + '; path=/';
     } catch(e){}
-    
+
     // display any dates on the page in local time
     try {
         $('.jsdate').each(function(){
@@ -1207,7 +1207,7 @@ var getScrollbarWidth = function() {
             $('#'+$(this).attr('id')+'-container').toggleClass('hidden');
             $('#settings_summary_label').toggleClass('hidden');
             UpdateSettingsSummary();
-            
+
             // store it in a cookie
             var date = new Date();
             date.setTime(date.getTime()+(730*24*60*60*1000));
@@ -1216,7 +1216,7 @@ var getScrollbarWidth = function() {
             if( $('#'+$(this).attr('id')+'-container').hasClass('hidden') )
                 as = 0;
             document.cookie = 'as=' + as + expires +  '; path=/';
-            
+
             return false;
         });
 
@@ -1230,7 +1230,7 @@ var getScrollbarWidth = function() {
 
         // jQuery UI Tabs
         $('#test_subbox-container').tabs();
-        
+
         // Truncatable
         $('.truncate').truncate({max_length: 100, more: '...'});
         $('.truncate-80').truncate({max_length: 80, more: '...'});
@@ -1238,7 +1238,7 @@ var getScrollbarWidth = function() {
         $('.grades > li').tooltip({
             bodyHandler: function() {
                 var t = $(this);
-                
+
                 if (t.hasClass('keep_alive_enabled')) {
                     return 'Click the grade to see the requests that did not have keep-alives enabled';
                 } else if (t.hasClass('compress_text')) {
@@ -1256,7 +1256,7 @@ var getScrollbarWidth = function() {
                 } else if (t.hasClass('first_byte_time')) {
                     return 'Click the grade to see information about the target First Byte Time';
                 }
-                
+
                 return false;
             },
             showURL: false,
@@ -1266,7 +1266,7 @@ var getScrollbarWidth = function() {
 
         var testBoxContainer = $('#test_box-container');
         var startTestContainer = $('#start_test-container');
-        
+
         if (testBoxContainer.size() != 0 && startTestContainer.size != 0)
         {
             var tolerance = {
@@ -1279,7 +1279,7 @@ var getScrollbarWidth = function() {
                     top: testBoxContainer.offset().top,
                     bottom: testBoxContainer.offset().top + testBoxContainer.height()
                 }
-                
+
                 if (windowScroll > constraints.top - tolerance.top && windowScroll < constraints.bottom - tolerance.bottom) { // Page is in adjustment range
                     var newPadding = windowScroll - constraints.top + tolerance.top;
                     startTestContainer.css('margin-top', newPadding);
@@ -1288,9 +1288,49 @@ var getScrollbarWidth = function() {
                 }
             }
             positionButton();
-            
+
             $(window).bind('scroll resize', positionButton);
         }
     });
 })(jQuery);
 
+// This code handles editing test labels
+(function($) {
+    $(document).ready(function() {
+        $('.editLabel').click(function(event) {
+            event.preventDefault();
+
+            var element_clicked = $(this),
+                testguid = element_clicked.attr('data-test-guid'),
+                labelNode = $('#label_' + testguid),
+                currentLabelText = element_clicked.attr('data-current-label'),
+                inputNode;
+
+            inputNode = $('<input id="label_input_' + testguid + '" type="text" value="' + currentLabelText + '" />');
+            labelNode.replaceWith(inputNode);
+            element_clicked.hide();
+            var saveNode = $('<a href="#">Save</a>')
+            saveNode.insertAfter(inputNode);
+
+            // Save the new label
+            saveNode.click(function(){
+                inputNode = $('#label_input_' + testguid);
+                newLabel = inputNode.val();
+
+                var request = $.ajax({
+                    url: '/modifytest.php',
+                    type: 'POST',
+                    data: {testID: testguid, label: newLabel},
+                    dataType: 'html'
+                });
+
+                request.done(function(msg) {
+                    inputNode.replaceWith(labelNode.html(newLabel));
+                    element_clicked.attr('data-current-label', newLabel);
+                    saveNode.remove();
+                    element_clicked.show();
+                });
+            });
+        });
+    });
+})(jQuery);

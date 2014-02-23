@@ -85,7 +85,7 @@ describe('logger small', function() {
 
     var lines = buffer.split('\n');
     should.equal(7, lines.length);
-    should.ok(/^E .*: error message$/.test(lines[0]));
+    lines[0].should.match(/^E \S+ logger_tests_small.*: error message$/);
     should.ok(/^W .*: warning message$/.test(lines[1]));
     should.ok(/^I .*: info message$/.test(lines[2]));
     should.ok(/^F .*: log message$/.test(lines[3]));

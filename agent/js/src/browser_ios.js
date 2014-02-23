@@ -27,12 +27,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 var bplist = require('bplist');
+var browser_base = require('browser_base');
 var fs = require('fs');
 var http = require('http');
 var logger = require('logger');
 var os = require('os');
 var path = require('path');
 var process_utils = require('process_utils');
+var util = require('util');
 var video_hdmi = require('video_hdmi');
 var webdriver = require('selenium-webdriver');
 
@@ -50,6 +52,7 @@ var webdriver = require('selenium-webdriver');
  */
 function BrowserIos(app, args) {
   'use strict';
+  browser_base.BrowserBase.call(this, app);
   logger.info('BrowserIos(%j)', args);
   if (!args.deviceSerial) {
     throw new Error('Missing device_serial');
@@ -93,6 +96,7 @@ function BrowserIos(app, args) {
   this.video_ = new video_hdmi.VideoHdmi(this.app_, capturePath);
   this.runTempDir_ = args.runTempDir || '';
 }
+util.inherits(BrowserIos, browser_base.BrowserBase);
 /** Public class. */
 exports.BrowserIos = BrowserIos;
 
@@ -321,14 +325,32 @@ BrowserIos.prototype.scheduleScp_ = function(var_args) { // jshint unused:false
 /** @private */
 BrowserIos.prototype.scheduleClearCacheCookies_ = function() {
   'use strict';
-  var lib = '/private/var/mobile/Library/';
+  var glob = '/private/var/mobile/Applications/*/MobileSafari.app/Info.plist';
   this.scheduleSsh_('killall', 'MobileSafari');
-  this.scheduleSsh_('rm', '-rf',
+  this.scheduleSsh_('test -f ' + glob + ' | ls ' + glob).then(function(stdout) {
+    var path = stdout.trim();
+    if (path) {
+      // iOS 7+: Extract the app_id by removing the glob's [0:'*'] prefix
+      // and ('*':] suffix from the expanded path.
+      var sep = glob.indexOf('*');
+      return path.substring(sep, path.length - (glob.length - sep) + 1);
+    } else {
+      // iOS 6: Safari does not store its content under app-id-named dirs.
+      return undefined;
+    }
+  }.bind(this)).then(function(app_id) {
+    var lib = ('/private/var/mobile' +
+        (app_id ? '/Applications/' + app_id : '') + '/Library/');
+    var cache = (app_id ? 'fsCachedData/*' :
+        'com.apple.WebAppCache/ApplicationCache.db');
+    this.scheduleSsh_('rm', '-rf',
       lib + 'Caches/com.apple.mobilesafari/Cache.db',
+      lib + 'Caches/' + cache,
+      lib + 'Safari/History.plist',
       lib + 'Safari/SuspendState.plist',
       lib + 'WebKit/LocalStorage',
-      lib + 'Caches/com.apple.WebAppCache/ApplicationCache.db',
-      lib + 'Cookies/Cookies.binarycookies');
+      '/private/var/mobile/Library/Cookies/Cookies.binarycookies');
+  }.bind(this));
 };
 
 /**
@@ -660,4 +682,33 @@ BrowserIos.prototype.scheduleStartPacketCapture = function() {
 BrowserIos.prototype.scheduleStopPacketCapture = function() {
   'use strict';
   throw new Error('Packet capture requested, but not implemented for iOS');
+};
+
+/**
+ * Verifies that the device is attached and has WiFi.
+ * Throws an exception if any of the requested checks fail.
+ *
+ * @override
+ */
+BrowserIos.prototype.scheduleIsAvailable = function() {
+  'use strict';
+  this.scheduleSsh_('echo show State:/Network/Interface/en0/IPv4|scutil').then(
+      function(stdout) {
+    // If WiFi is disabled we'll get "No such key" stdout.
+    var hasWifi = false;
+    var insideTag = false;
+    var lines = stdout.trim().split('\n');
+    lines.forEach(function(line) {
+      if (/^\s*Addresses\s*:\s*<array>\s*{\s*$/.test(line)) {
+        insideTag = true;
+      } else if (insideTag && (/^\s*0\s*:\s*\d+(\.\d+){3}\s*/).test(line)) {
+        hasWifi = true;
+      } else if (-1 !== line.indexOf('}')) {
+        insideTag = false;
+      }
+    });
+    if (!hasWifi) {
+      throw new Error('Device offline');
+    }
+  }.bind(this));
 };

@@ -101,8 +101,9 @@
             $test['aftMinChanges'] = (int)$req_aftmc;
             $test['tcpdump'] = $req_tcpdump;
             $test['timeline'] = $req_timeline;
+            $test['timelineStackDepth'] = array_key_exists('timelineStack', $_REQUEST) && $_REQUEST['timelineStack'] ? 5 : 0;
             $test['swrender'] = $req_swrender;
-            $test['trace'] = array_key_exists('trace', $_REQUEST) && $_REQUEST['trace'] ? 1 : 0;;
+            $test['trace'] = array_key_exists('trace', $_REQUEST) && $_REQUEST['trace'] ? 1 : 0;
             $test['standards'] = $req_standards;
             $test['netlog'] = $req_netlog;
             $test['spdy3'] = $req_spdy3;
@@ -118,7 +119,9 @@
             $test['queue_limit'] = 0;
             $test['pngss'] = (int)$req_pngss;
             $test['iq'] = (int)$req_iq;
-            $test['bodies'] = $req_bodies;
+            $test['bodies'] = array_key_exists('bodies', $_REQUEST) && $_REQUEST['bodies'] ? 1 : 0;
+            if (!array_key_exists('bodies', $_REQUEST) && GetSetting('bodies'))
+              $test['bodies'] = 1;
             $test['htmlbody'] = $req_htmlbody;
             $test['time'] = (int)$req_time;
             $test['clear_rv'] = (int)$req_clearRV;
@@ -136,6 +139,7 @@
             $test['mobile'] = array_key_exists('mobile', $_REQUEST) && $_REQUEST['mobile'] ? 1 : 0;
             $test['clearcerts'] = array_key_exists('clearcerts', $_REQUEST) && $_REQUEST['clearcerts'] ? 1 : 0;
             $test['orientation'] = array_key_exists('orientation', $_REQUEST) ? trim($_REQUEST['orientation']) : 'default';
+            $test['responsive'] = array_key_exists('responsive', $_REQUEST) && $_REQUEST['responsive'] ? 1 : 0;
             if (array_key_exists('tsview_id', $_REQUEST))
               $test['tsview_id'] = $_REQUEST['tsview_id'];
 
@@ -171,27 +175,43 @@
                 $test['location'] = trim($matches[1]);
                 if (strlen(trim($matches[2]))) {
                     $test['browser'] = trim($matches[2]);
-                    
+
                     // see if the requested browser is a custom browser
                   if (is_dir('./browsers') &&
                       is_file('./browsers/browsers.ini') &&
-                      is_file("./browsers/{$test['browser']}.zip")) {
+                      (is_file("./browsers/{$test['browser']}.zip") ||
+                       is_file("./browsers/{$test['browser']}.apk"))) {
                     $customBrowsers = parse_ini_file('./browsers/browsers.ini');
                     if (array_key_exists($test['browser'], $customBrowsers)) {
                       $base_uri = "http://{$_SERVER['HTTP_HOST']}/browsers/";
                       if (array_key_exists('browsers_url', $settings) && strlen($settings['browsers_url']))
                           $base_uri = $settings['browsers_url'];
-                      $test['customBrowserUrl'] = "$base_uri{$test['browser']}.zip";
+                      $test['customBrowserUrl'] = is_file("./browsers/{$test['browser']}.zip") ?
+                          "$base_uri{$test['browser']}.zip" : "$base_uri{$test['browser']}.apk";
                       $test['customBrowserMD5'] = $customBrowsers[$test['browser']];
+                      if (is_file("./browsers/{$test['browser']}.json"))
+                        $test['customBrowserSettings'] = json_decode(file_get_contents("./browsers/{$test['browser']}.json"), true);
                     }
                   }
                 }
-                if (strlen(trim($matches[3]))) {
+                if (strlen(trim($matches[3])) &&
+                    empty($locations[$test['location']]['connectivity'])) {
                     $test['connectivity'] = trim($matches[3]);
                     $test['requested_connectivity'] = $test['connectivity'];
                 }
             } else {
                 $test['location'] = trim($req_location);
+            }
+            
+            // set the browser to the default if one wasn't specified
+            if ((!array_key_exists('browser', $test) ||
+                 !strlen($test['browser'])) &&
+                array_key_exists($test['location'], $locations) &&
+                array_key_exists('browser', $locations[$test['location']]) &&
+                strlen($locations[$test['location']]['browser'])) {
+              $browsers = explode(',',$locations[$test['location']]['browser']);
+              if (isset($browsers) && is_array($browsers) && count($browsers))
+                $test['browser'] = trim($browsers[0]);
             }
 
             // Extract the multiple locations.
@@ -720,7 +740,11 @@ function UpdateLocation(&$test, &$locations, $new_location)
       $error = "Invalid Location, please try submitting your test request again.";
 
   // see if we need to pick the default connectivity
-  if (empty($locations[$test['location']]['connectivity']) && !isset($test['connectivity'])) {
+  if (array_key_exists('connectivity', $locations[$test['location']]) &&
+      strlen($locations[$test['location']]['connectivity']) &&
+      array_key_exists('connectivity', $test)) {
+    unset($test['connectivity']);
+  } elseif (empty($locations[$test['location']]['connectivity']) && !isset($test['connectivity'])) {
     if (!empty($locations[$test['location']]['default_connectivity'])) {
         $test['connectivity'] = $locations[$test['location']]['default_connectivity'];
     } else {
@@ -1455,10 +1479,23 @@ function LogTest(&$test, $testId, $url)
     if (array_key_exists('navigateCount', $test) && $test['navigateCount'] > 0)
         $pageLoads *= $test['navigateCount'];
 
-    $log = gmdate("Y-m-d G:i:s") . "\t$ip" . "\t0" . "\t0";
-    $log .= "\t$testId" . "\t$url" . "\t{$test['locationText']}" . "\t{$test['private']}";
-    $log .= "\t{$test['uid']}" . "\t{$test['user']}" . "\t$video" . "\t{$test['label']}";
-    $log .= "\t{$test['owner']}" . "\t{$test['key']}" . "\t$pageLoads" . "\r\n";
+    $line_data = array(
+        'date' => gmdate("Y-m-d G:i:s"),
+        'ip' => $ip,
+        'guid' => $testId,
+        'url' => $url,
+        'location' => $test['locationText'],
+        'private' => $test['private'],
+        'testUID' => $test['uid'],
+        'testUser' => $test['user'],
+        'video' => $video,
+        'label' => $test['label'],
+        'o' => $test['owner'],
+        'key' => $test['key'],
+        'count' => $pageLoads,
+    );
+
+    $log = makeLogLine($line_data);
 
     error_log($log, 3, $filename);
 }
@@ -1581,7 +1618,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         $today = new DateTime("now", new DateTimeZone('UTC'));
         $testId = $today->format('ymd_') . $id;
         $test['path'] = './' . GetTestPath($testId);
-        
+
         // fix up the location text for Appurify tests
         if (array_key_exists('loc_type', $test) && $test['loc_type'] == 'Appurify') {
           require_once('./lib/appurify.inc.php');
@@ -1666,8 +1703,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "\r\ntcpdump=1";
             if( $test['standards'] )
                 $testFile .= "\r\nstandards=1";
-            if( $test['timeline'] )
+            if( $test['timeline'] ) {
                 $testFile .= "\r\ntimeline=1";
+                $testFile .= "\r\ntimelineStackDepth={$test['timelineStackDepth']}";
+            }
             if( $test['trace'] )
                 $testFile .= "\r\ntrace=1";
             if( $test['swrender'] )
@@ -1705,7 +1744,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             }
 
             if( isset($test['browserExe']) && strlen($test['browserExe']) )
-                $testFile .= "browser={$test['browserExe']}\r\n";
+                $testFile .= "browserExe={$test['browserExe']}\r\n";
             if( isset($test['browser']) && strlen($test['browser']) )
                 $testFile .= "browser={$test['browser']}\r\n";
             if( $test['pngss'] || $settings['pngss'] )
@@ -1732,6 +1771,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "orientation={$test['orientation']}\r\n";
             if (array_key_exists('continuousVideo', $test) && $test['continuousVideo'])
                 $testFile .= "continuousVideo=1\r\n";
+            if (array_key_exists('responsive', $test) && $test['responsive'])
+                $testFile .= "responsive=1\r\n";
             if (array_key_exists('cmdLine', $test) && strlen($test['cmdLine']))
                 $testFile .= "cmdLine={$test['cmdLine']}\r\n";
             if (array_key_exists('addCmdLine', $test) && strlen($test['addCmdLine']))
@@ -1740,6 +1781,12 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "customBrowserUrl={$test['customBrowserUrl']}\r\n";
             if (array_key_exists('customBrowserMD5', $test) && strlen($test['customBrowserMD5']))
                 $testFile .= "customBrowserMD5={$test['customBrowserMD5']}\r\n";
+            if (array_key_exists('customBrowserSettings', $test) &&
+                is_array($test['customBrowserSettings']) &&
+                count($test['customBrowserSettings'])) {
+              foreach ($test['customBrowserSettings'] as $setting => $value)
+                $testFile .= "customBrowser_$setting=$value\r\n";
+            }
 
             // see if we need to add custom scan rules
             if (array_key_exists('custom_rules', $test)) {
@@ -2015,81 +2062,6 @@ function GetClosestLocation($url, $browser) {
         }
     }
     return $location;
-}
-
-/**
-*   Generate a unique Id
-*/
-function uniqueId(&$test_num) {
-    $id = NULL;
-    $test_num = 0;
-
-    if( !is_dir('./work/jobs') )
-        mkdir('./work/jobs', 0777, true);
-
-    // try locking the context file
-    $filename = './work/jobs/uniqueId.dat';
-    $file = fopen( $filename, "a+b",  false);
-    if( $file ) {
-        if( flock($file, LOCK_EX) ) {
-            fseek($file, 0, SEEK_SET);
-            $json = fread($file, 300);
-            $num = 0;
-            $day = (int)date('z');
-            $testData = array('day' => $day, 'num' => 0);
-            if ($json !== false) {
-                $newData = json_decode($json, true);
-                if (isset($newData) && is_array($newData) &&
-                    array_key_exists('day', $newData) &&
-                    array_key_exists('num', $newData) &&
-                    $newData['day'] == $day) {
-                    $testData['num'] = $newData['num'];
-                }
-            }
-
-            $testData['num']++;
-            $test_num = $testData['num'];
-
-            // convert the number to a base-32 string for shorter text
-            $id = NumToString($testData['num']);
-
-            // go back to the beginning of the file and write out the new value
-            fseek($file, 0, SEEK_SET);
-            ftruncate($file, 0);
-            fwrite($file, json_encode($testData));
-            flock($file, LOCK_UN);
-        }
-
-        fclose($file);
-    }
-
-    if (!isset($id)) {
-        $test_num = rand();
-        $id = md5(uniqid($test_num, true));
-    }
-
-    return $id;
-}
-
-/**
-* Convert a number to a base-32 string
-*
-* @param mixed $num
-*/
-function NumToString($num) {
-    if ($num > 0) {
-        $str = '';
-        $digits = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-        while($num > 0) {
-            $digitValue = $num % 32;
-            $num = (int)($num / 32);
-            $str .= $digits[$digitValue];
-        }
-        $str = strrev($str);
-    } else {
-        $str = '0';
-    }
-    return $str;
 }
 
 function ErrorPage($error) {

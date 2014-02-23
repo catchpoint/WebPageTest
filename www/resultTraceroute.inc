@@ -50,8 +50,8 @@ function DisplayTraceroute( &$testPath, $run )
 <table class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
 <?php
     $rows = gz_file("$testPath/{$run}_traceroute.txt");
-    if( count($rows) > 2 )
-    {
+    if( count($rows) > 2 ) {
+        $hops = array();
         $addr = '';
         foreach($rows as &$row) {
             $parseLine = str_replace(",", ", ", $row);
@@ -60,26 +60,29 @@ function DisplayTraceroute( &$testPath, $run )
                             'addr' => trim($fields[1]),
                             'time' => trim($fields[2]),
                             'name' => trim($fields[3]));
-            if (array_key_exists('addr', $data) && strlen($data['addr'])) {
-                $addr = $data['addr'];
+            if (array_key_exists('hop', $data) && is_numeric($data['hop'])) {
+              $data['hop'] = intval($data['hop']);
+              if (array_key_exists('addr', $data) && strlen($data['addr']))
+                  $addr = $data['addr'];
+              if (!array_key_exists('addr', $data) || !strlen($data['addr']))
+                $data['addr'] = '-';
+              if (!array_key_exists('time', $data) || !strlen($data['time']))
+                $data['time'] = '-';
+              if (!array_key_exists('name', $data) || !strlen($data['name']))
+                $data['name'] = '-';
+              $hops[$data['hop']] = $data;
             }
         }
+        if (array_key_exists(-1, $hops) &&
+            array_key_exists('addr', $hops[-1]) &&
+            strlen($hops[-1]['addr']))
+            $addr = $hops[-1]['addr'];
         
         $index = 0;
-        foreach($rows as &$row)
-        {
-            $parseLine = str_replace(",", ", ", $row);
-            $fields = explode(",", $parseLine);
-            $data = array('hop' => trim($fields[0]),
-                            'addr' => trim($fields[1]),
-                            'time' => trim($fields[2]),
-                            'name' => trim($fields[3]));
-            
-            if( $data['hop'] > 0 )
-            {
+        foreach($hops as $hop => $data) {
+            if( $hop > 0 ) {
                 $index++;
-                if( $index == 1 )
-                {
+                if( $index == 1 ) {
                     echo "<caption>Traceroute #$run to $addr</caption>\n";
                     ?>
                     <thead>

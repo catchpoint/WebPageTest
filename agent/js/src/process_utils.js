@@ -304,13 +304,14 @@ exports.scheduleExec = function(app, command, args, options, timeout) {
     });
 
     // Listen for 'close' not 'exit', otherwise we might miss some output.
-    proc.on('close', function(code, signal) {
+    proc.on('close', function(code, signal, e) {
       if (timerId) {
         // Our timer is still ticking, so we didn't timeout.
         global.clearTimeout(timerId);
-        if (code || signal) {
-          var e = newError(cmd + ' failed', code, signal);
+        if (e) {
           done.reject(e);
+        } else if (code || signal) {
+          done.reject(newError(cmd + ' failed', code, signal));
         } else {
           logger.debug(newMsg());
           // TODO webdriver's fulfill only saves the first argument, so we can
@@ -322,6 +323,13 @@ exports.scheduleExec = function(app, command, args, options, timeout) {
         // process and rejected our promise.
         logger.debug('%s close on timeout kill', cmd);
       }
+    });
+    // Somehow, I can't figure out how, if I don't set an 'error' handler on the
+    // process, any spawn error throws an uncaught exception and never calls
+    // the 'close' handler (or at least before it calls the 'close' handler),
+    // which in turn preempts my civilized promise logic in the 'close' handler.
+    proc.on('error', function(e) {
+      logger.error('%s failed with exception: %s', cmd, e.message);
     });
     return done.promise;
   });
@@ -378,8 +386,8 @@ function injectWdAppLogging(appName, app) {
       };
 
       app.execute = function(fn, opt_description) {
-        logger.extra('(%s) %s', appName,
-            opt_description || 'function ' + (fn.name || '<unnamed>'));
+        logger.extra('(%s) %s', logger.whoIsMyCaller(),
+            opt_description || 'function ' + fn.name);
         return realExecute.apply(app, arguments);
       };
     }
@@ -387,7 +395,7 @@ function injectWdAppLogging(appName, app) {
     // TODO(klm): Migrate all code to execute().
     // Monkey-patching the old schedule(desc,fn) API just for gradual migration.
     app.schedule = function(description, fn) {
-      logger.extra('(%s) %s', appName, description);
+      logger.extra('(%s) %s', logger.whoIsMyCaller(), description);
       return realExecute.call(app, fn, description);
     };
 
@@ -514,10 +522,10 @@ exports.scheduleFunctionNoFault = function(app, description, f,
 exports.scheduleAllocatePort = function(app, description, minPort, maxPort) {
   'use strict';
   if (!minPort) {
-    minPort = (1 << 10);
+    minPort = 1024;
   }
   if (!maxPort) {
-    maxPort = (1 << 15) - 1;
+    maxPort = 32767;
   }
   // We'll return an even port and use "port+1" as the "lock".
   if (minPort % 2) {

@@ -50,13 +50,18 @@ class Appurify{
       $list = $this->Get('https://live.appurify.com/resource/devices/list/');
       if ($list !== false && is_array($list)) {
         foreach($list as $device) {
-          if ($device['os_name'] == 'iOS' /* && intval($device['os_version']) < 7 */) {
-            $id = $device['device_type_id'] . '-safari';
-            $name = "{$device['brand']} {$device['name']} {$device['os_name']} {$device['os_version']} - Safari";
-            $devices[$id] = $name;
+          if ($device['brand'] == 'Amazon') {
+            $id = $device['device_type_id'] . '-silk';
+            $name = "{$device['brand']} {$device['name']} {$device['os_name']} {$device['os_version']} - Silk";
+          } else {
+            if ($device['os_name'] == 'iOS' /* && intval($device['os_version']) < 7 */) {
+              $id = $device['device_type_id'] . '-safari';
+              $name = "{$device['brand']} {$device['name']} {$device['os_name']} {$device['os_version']} - Safari";
+              $devices[$id] = $name;
+            }
+            $id = $device['device_type_id'] . '-chrome';
+            $name = "{$device['brand']} {$device['name']} {$device['os_name']} {$device['os_version']} - Chrome";
           }
-          $id = $device['device_type_id'] . '-chrome';
-          $name = "{$device['brand']} {$device['name']} {$device['os_name']} {$device['os_version']} - Chrome";
           $devices[$id] = $name;
         }
       }

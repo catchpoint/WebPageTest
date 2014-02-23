@@ -130,7 +130,7 @@ $page_description = "Website performance test result$testLabel.";
                         echo "<a href=\"/csv.php?test=$id\">Raw page data</a> - ";
                         echo "<a href=\"/csv.php?test=$id&requests=1\">Raw object data</a>";
                     }
-                    echo '<br><a href="/export.php?test=' . $id . '">Export HTTP Archive (.har)</a>';
+                    echo '<br><a href="/export.php?bodies=1&pretty=1&test=' . $id . '">Export HTTP Archive (.har)</a>';
                     if( array_key_exists('showslow', $test['testinfo']) && $test['testinfo']['showslow'] && strlen($settings['showslow']) )
                         echo '<br><a href="'.$settings['showslow'].'/details/?url='.urlencode(FixUrlSlash($url)).'#webpagetest' . '">See in ShowSlow</a>';
 		            if( is_dir('./google') && array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'] )

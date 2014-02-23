@@ -42,7 +42,10 @@ public:
 private:
   WptSettings&  _settings;
   WptStatus&    _status;
-  DWORD         _version;
+  DWORD         _majorVer;
+  DWORD         _minorVer;
+  DWORD         _buildNo;
+  DWORD         _revisionNo;
   CString       _computer_name;
   CString       _dns_servers;
 

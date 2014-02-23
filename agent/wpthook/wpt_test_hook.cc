@@ -67,10 +67,6 @@ bool WptTestHook::ProcessCommand(ScriptCommand& command, bool &consumed) {
       test_state_.ResizeBrowserForResponsiveTest();
       continue_processing = false;
       consumed = true;
-    } else if (cmd == _T("checkresponsive")) {
-      test_state_.CheckResponsive();
-      continue_processing = false;
-      consumed = false;
     } else {
       continue_processing = false;
       consumed = false;

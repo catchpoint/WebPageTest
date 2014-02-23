@@ -43,7 +43,10 @@ static const TCHAR * NO_FILE = _T("");
 WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
   _settings(settings)
   ,_status(status)
-  ,_version(0)
+  ,_majorVer(0)
+  ,_minorVer(0)
+  ,_buildNo(0)
+  ,_revisionNo(0)
   ,_exit(false)
   ,has_gpu_(false) {
   SetErrorMode(SEM_FAILCRITICALERRORS);
@@ -58,7 +61,12 @@ WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
         VS_FIXEDFILEINFO * info = NULL;
         UINT size = 0;
         if( VerQueryValue(pVersion, _T("\\"), (LPVOID*)&info, &size) && info )
-          _version = LOWORD(info->dwFileVersionLS);
+        {
+		      _majorVer = HIWORD(info->dwFileVersionMS);
+		      _minorVer = LOWORD(info->dwFileVersionMS);
+		      _buildNo = HIWORD(info->dwFileVersionLS);
+		      _revisionNo = LOWORD(info->dwFileVersionLS);
+        }
       }
 
       delete [] pVersion;
@@ -97,10 +105,12 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
   url += CString(_T("&location=")) + _settings._location;
   if (_settings._key.GetLength())
     url += CString(_T("&key=")) + _settings._key;
-  if (_version) {
-    buff.Format(_T("&software=wpt&ver=%d"), _version);
+  if (_majorVer || _minorVer || _buildNo || _revisionNo) {
+    buff.Format(_T("&software=wpt&version=%d.%d.%d.%d&ver=%d"), _majorVer,
+                _minorVer, _buildNo, _revisionNo, _revisionNo);
     url += buff;
   }
+
   if (_computer_name.GetLength())
     url += CString(_T("&pc=")) + _computer_name;
   if (_settings._ec2_instance.GetLength())
@@ -794,7 +804,11 @@ bool WebPagetest::InstallUpdate(CString dir) {
 
   if (ok) {
     // prevent executing multiple updates in case something goes wrong
-    _version = 0;
+    _majorVer = 0;
+    _minorVer = 0;
+    _buildNo = 0;
+    _revisionNo = 0;
+    
     ShellExecute(NULL,NULL,dir+_T("\\wptupdate.exe"),NULL,dir,SW_SHOWNORMAL);
 
     // wait for up to 2 minutes for the update process to close us

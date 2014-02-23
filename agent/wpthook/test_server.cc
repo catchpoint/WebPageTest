@@ -74,8 +74,14 @@ TestServer::TestServer(WptHook& hook, WptTestHook &test, TestState& test_state,
   ,test_state_(test_state)
   ,requests_(requests)
   ,dev_tools_(dev_tools)
-  ,trace_(trace) {
+  ,trace_(trace)
+  ,started_(false) {
   InitializeCriticalSection(&cs);
+  last_cpu_idle_.QuadPart = 0;
+  last_cpu_kernel_.QuadPart = 0;
+  last_cpu_user_.QuadPart = 0;
+  start_check_time_.QuadPart = 0;
+  QueryPerformanceFrequency(&start_check_freq_);
 }
 
 /*-----------------------------------------------------------------------------
@@ -146,10 +152,12 @@ void TestServer::MongooseCallback(enum mg_event event,
                     (LPCTSTR)CA2T(request_info->query_string));
     if (strcmp(request_info->uri, "/task") == 0) {
       CStringA task;
-      bool record = false;
-      test_.GetNextTask(task, record);
-      if (record)
-        hook_.Start();
+      if (OkToStart()) {
+        bool record = false;
+        test_.GetNextTask(task, record);
+        if (record)
+          hook_.Start();
+      }
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, task);
     } else if (strcmp(request_info->uri, "/event/load") == 0) {
       CString fixed_viewport = GetParam(request_info->query_string,
@@ -277,6 +285,7 @@ void TestServer::MongooseCallback(enum mg_event event,
                   test_state_._is_responsive);
       GetIntParam(request_info->query_string, "viewportSpecified",
                   test_state_._viewport_specified);
+      test_state_.CheckResponsive();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else {
         // unknown command fall-through
@@ -443,4 +452,51 @@ CString TestServer::GetPostBody(struct mg_connection *conn,
   }
 
   return body;
+}
+
+bool TestServer::OkToStart() {
+  if (!started_) {
+    LARGE_INTEGER now;
+    QueryPerformanceCounter(&now);
+    double elapsed = 0;
+    if (start_check_time_.QuadPart) {
+      if (now.QuadPart > start_check_time_.QuadPart &&
+          start_check_freq_.QuadPart > 0)
+        elapsed = (double)(now.QuadPart - start_check_time_.QuadPart) /
+                  (double)start_check_freq_.QuadPart;
+    } else {
+      start_check_time_.QuadPart = now.QuadPart;
+    }
+    if (elapsed > 30) {
+      started_ = true;
+    } else {
+      // calculate CPU utilization
+      FILETIME idle_time, kernel_time, user_time;
+      if (GetSystemTimes(&idle_time, &kernel_time, &user_time)) {
+        ULARGE_INTEGER k, u, i;
+        k.LowPart = kernel_time.dwLowDateTime;
+        k.HighPart = kernel_time.dwHighDateTime;
+        u.LowPart = user_time.dwLowDateTime;
+        u.HighPart = user_time.dwHighDateTime;
+        i.LowPart = idle_time.dwLowDateTime;
+        i.HighPart = idle_time.dwHighDateTime;
+        if(last_cpu_idle_.QuadPart || last_cpu_kernel_.QuadPart || 
+           last_cpu_user_.QuadPart) {
+          __int64 idle = i.QuadPart - last_cpu_idle_.QuadPart;
+          __int64 kernel = k.QuadPart - last_cpu_kernel_.QuadPart;
+          __int64 user = u.QuadPart - last_cpu_user_.QuadPart;
+          if (kernel || user) {
+            int cpu_utilization = (int)((((kernel + user) - idle) * 100) 
+                                          / (kernel + user));
+            if (cpu_utilization < 25)
+              started_ = true;
+          }
+        }
+        last_cpu_idle_.QuadPart = i.QuadPart;
+        last_cpu_kernel_.QuadPart = k.QuadPart;
+        last_cpu_user_.QuadPart = u.QuadPart;
+      }
+    }
+  }
+  return started_;
 }

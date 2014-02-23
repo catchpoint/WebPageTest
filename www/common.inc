@@ -51,11 +51,17 @@ if (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE
     define('VER_TIMELINE', '');       // Leave the timeline version empty
 }
 
+$userIsBot = false;
+if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
+    strlen($_SERVER['HTTP_USER_AGENT']) &&
+    preg_match('/robot|spider|crawler|indexer|WeSEE|AppEngine-Google|Googlebot|^$/i', $_SERVER['HTTP_USER_AGENT']))
+  $userIsBot = true;
+
 // constants
 define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
-define('VER_CSS', 66);           // version of the sitewide css file
-define('VER_JS', 30);            // version of the sitewide javascript file
-define('VER_JS_TEST', 28);       // version of the javascript specific to the test pages
+define('VER_CSS', 67);           // version of the sitewide css file
+define('VER_JS', 31);            // version of the sitewide javascript file
+define('VER_JS_TEST', 29);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);     // version of the javascript specific to the test running status page
 define('UNKNOWN_TIME', -1);      // Value used as a flag for an unknown time.
                                  // To find code that fails to check that a time
@@ -75,8 +81,13 @@ define('PCLZIP_TEMPORARY_DIR', $tempDir);
 if (isset($req_embed)) {
     define('EMBED', true);
     define('BARE_UI', true);
+    define('NAV_NO_SHARE', true);
 } elseif (isset($req_bare)) {
     define('BARE_UI', true);
+    define('NAV_NO_SHARE', true);
+    $noanalytics = true;
+    if (extension_loaded('newrelic'))
+      @newrelic_disable_autorum();
 }
 // load the install-specific settings
 $settings = parse_ini_file('./settings/settings.ini');
@@ -90,7 +101,7 @@ if (!array_key_exists('shard_tests', $settings))
     $settings['shard_tests'] = 0;
 
 $privateInstall = true;
-if( stristr($_SERVER['HTTP_HOST'] , '.webpagetest.org') !== false )
+if( array_key_exists('HTTP_HOST', $_SERVER) && stristr($_SERVER['HTTP_HOST'] , '.webpagetest.org') !== false )
     $privateInstall = false;
 
 // override some settings from the URI
@@ -189,7 +200,8 @@ if (strlen($id)) {
     if ($id !== @$_COOKIE['tid']) {
         setcookie('tid', $id);  // update session cookie
     }
-    RestoreTest($id);   // restore the test if it is archived (and deleted)
+    if (!$userIsBot)
+      RestoreTest($id);   // restore the test if it is archived (and deleted)
 
     $testPath = './' . GetTestPath($id);
     if (@$settings['archive'] && !is_dir($testPath) &&
@@ -208,7 +220,8 @@ if (strlen($id)) {
     $test = array();
     if (is_file("$testPath/testinfo.ini")) {
         $test = parse_ini_file("$testPath/testinfo.ini",true);
-        touch("$testPath/testinfo.ini");
+        if (!$userIsBot)
+          touch("$testPath/testinfo.ini");
     }
     $testDate = null;
     if (gz_is_file("$testPath/testinfo.json")) {

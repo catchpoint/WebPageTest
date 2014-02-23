@@ -220,6 +220,14 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
     }
     $x_scaler = new XScaler($max_ms, $data_x + 1, $data_width);
 
+    if ($use_cpu && !$is_image_map && isset($options) && is_array($options) &&
+        array_key_exists('path', $options) &&
+        array_key_exists('run_id', $options) &&
+        array_key_exists('is_cached', $options)) {
+      require_once('devtools.inc.php');
+      $cpu_slices = DevToolsGetCPUSlices($options['path'], $options['run_id'], $options['is_cached'], $data_width, $max_ms);
+    }
+    
     // Get the CSI information.
     if (is_dir('./google') && array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'] == 1) {
         require_once('./google/google_lib.inc');
