@@ -17,7 +17,7 @@ foreach( $locations as $id => &$location )
     } else {
         $location['PendingTests'] = GetBacklog($location['localDir'], $location['location']);
     }
-    
+
     // strip out any sensitive data
     unset($location['localDir']);
 }
@@ -30,23 +30,11 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
   $ret['data'] = $locations;
   json_response($ret);
 } elseif( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'html' ) {
-  echo "<!DOCTYPE html>\n";
-  echo "<html>\n<head>\n<title>WebPagetest - Tester Status</title>\n";
-  echo "<head>
-        <noscript>
-        <meta http-equiv=\"refresh\" content=\"240\" />
-        </noscript>
-        <script language=\"JavaScript\">
-        setTimeout( \"window.location.reload(true)\", 240000 );
-        </script>\n";
-  echo "<style type=\"text/css\">\n";
-  echo "th,td{text-align:center; padding: 0px 20px;}\n";
-  echo ".location{text-align: left;}\n";
-  echo ".warning{background-color: yellow}\n";
-  echo ".error{background-color: red}\n";
-  echo "</style>\n";
-  echo "</head>\n<body>\n";
-  echo "<table>\n";
+  $refresh = 240;
+  $title = 'WebPagetest - Location Status';
+  include 'admin_header.inc';
+
+  echo "<table class=\"table\">\n";
   echo "<tr>
           <th class=\"location\">Location</th>
           <th>Idle Testers</th>
@@ -70,31 +58,31 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
         array_key_exists('HighPriority', $location['PendingTests']) &&
         array_key_exists('Testing', $location['PendingTests'])) {
         if ($location['PendingTests']['HighPriority'] > $location['PendingTests']['Testing'] * 10)
-          $error = ' error';
+          $error = ' danger';
         elseif ($location['PendingTests']['Total'] > 1)
           $error = ' warning';
     }
-    echo "<tr id=\"$name\">";
-    echo "<td class=\"location$error\">" . @htmlspecialchars($name) . "</td>";
+    echo "<tr id=\"$name\" class=\"$error\">";
+    echo "<td class=\"location\">" . @htmlspecialchars($name) . "</td>" . PHP_EOL;
     if (array_key_exists('PendingTests', $location)) {
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['Idle']) . "</td>";
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['Total']) . "</td>";
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['Testing']) . "</td>";
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['HighPriority']) . "</td>";
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['p1']) . "</td>";
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['p2']) . "</td>";
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['p3']) . "</td>";
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['p4']) . "</td>";
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['p5']) . "</td>";
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['p6']) . "</td>";
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['p7']) . "</td>";
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['p8']) . "</td>";
-      echo "<td>" . @htmlspecialchars($location['PendingTests']['p9']) . "</td>";
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['Idle']) . "</td>" . PHP_EOL;
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['Total']) . "</td>" . PHP_EOL;
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['Testing']) . "</td>" . PHP_EOL;
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['HighPriority']) . "</td>" . PHP_EOL;
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['p1']) . "</td>" . PHP_EOL;
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['p2']) . "</td>" . PHP_EOL;
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['p3']) . "</td>" . PHP_EOL;
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['p4']) . "</td>" . PHP_EOL;
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['p5']) . "</td>" . PHP_EOL;
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['p6']) . "</td>" . PHP_EOL;
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['p7']) . "</td>" . PHP_EOL;
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['p8']) . "</td>" . PHP_EOL;
+      echo "<td>" . @htmlspecialchars($location['PendingTests']['p9']) . "</td>" . PHP_EOL;
     }
     echo "</tr>";
   }
   echo "</table>\n";
-  echo "</body>\n</html>";
+  include 'admin_footer.inc';
 } else {
     header ('Content-type: text/xml');
     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
@@ -105,7 +93,7 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
     if( strlen($_REQUEST['r']) )
         echo "<requestId>{$_REQUEST['r']}</requestId>\n";
     echo "<data>\n";
-    
+
     foreach( $locations as $name => &$location )
     {
         echo "<location>\n";
@@ -129,17 +117,17 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
                     echo "<$key><![CDATA[$value]]></$key>\n";
                 else
                     echo "<$key>$value</$key>\n";
-            }            
+            }
         echo "</location>\n";
     }
-    
+
     echo "</data>\n";
     echo "</response>\n";
 }
 
 /**
 * Load the location information and extract just the end nodes
-* 
+*
 */
 function LoadLocations()
 {
@@ -147,12 +135,12 @@ function LoadLocations()
     $loc = parse_ini_file('./settings/locations.ini', true);
     FilterLocations($loc);
     BuildLocations($loc);
-    
+
     if( isset($loc['locations']['default']) )
         $default = $loc['locations']['default'];
     else
         $default = $loc['locations'][1];
-        
+
     $i = 1;
     while( isset($loc['locations'][$i]) )
     {
@@ -162,12 +150,12 @@ function LoadLocations()
             $_REQUEST['hidden'] )
         {
             $label = $group['label'];
-            
+
             if( isset($group['default']) )
                 $def = $group['default'];
             else
                 $def = $group[1];
-                
+
             $j = 1;
             while( isset($group[$j]) )
             {
@@ -175,7 +163,7 @@ function LoadLocations()
                     if (!array_key_exists('hidden', $loc[$group[$j]]) ||
                         !$loc[$group[$j]]['hidden'] ||
                         $_REQUEST['hidden']) {
-                        $locations[$group[$j]] = array( 'Label' => $label, 
+                        $locations[$group[$j]] = array( 'Label' => $label,
                                                         'location' => $loc[$group[$j]]['location'],
                                                         'Browser' => $loc[$group[$j]]['browser'],
                                                         'localDir' => $loc[$group[$j]]['localDir'],
@@ -186,26 +174,26 @@ function LoadLocations()
                         if( $default == $loc['locations'][$i] && $def == $group[$j] )
                             $locations[$group[$j]]['default'] = true;
                     }
-                }                
+                }
                 $j++;
             }
         }
-        
+
         $i++;
     }
-    
+
     return $locations;
 }
 
 /**
 * Get the backlog for the given directory
-* 
+*
 * @param mixed $dir
 */
 function GetBacklog($dir, $locationId)
 {
     $backlog = array();
-    
+
     $userCount = 0;
     $lowCount = 0;
     $testing = 0;
@@ -231,13 +219,13 @@ function GetBacklog($dir, $locationId)
                 $idle++;
         }
     }
-    
+
     $backlog['Total'] = $userCount + $lowCount + $testing;
     $backlog['HighPriority'] = $userCount;
     $backlog['LowPriority'] = $lowCount;
     $backlog['Testing'] = $testing;
     $backlog['Idle'] = $idle;
-    
+
     return $backlog;
 }
 
@@ -247,7 +235,7 @@ function GetBacklog($dir, $locationId)
 function GetRemoteBacklog($server, $remote_location) {
     $backlog = array();
     global $remote_cache;
-    
+
     $server_hash = md5($server);
 
     if (array_key_exists('relay', $_REQUEST) && $_REQUEST['relay']) {
@@ -272,7 +260,7 @@ function GetRemoteBacklog($server, $remote_location) {
           $backlog = $remote_cache[$server_hash][$remote_location];
       }
     }
-    
+
     return $backlog;
 }
 ?>
