@@ -11,10 +11,10 @@ $targetDate = new DateTime($from, new DateTimeZone('GMT'));
 for($offset = 0; $offset <= $days; $offset++)
 {
     $dayCount = array();
-    
+
     // figure out the name of the log file
     $fileName = './logs/' . $targetDate->format("Ymd") . '.log';
-    
+
     // load the log file into an array of lines
     $lines = file($fileName, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     if( $lines)
@@ -50,7 +50,7 @@ for($offset = 0; $offset <= $days; $offset++)
     }
 
     $dayCounts[] = $dayCount;
-    
+
     // on to the previous day
     $targetDate->modify('-1 day');
 }
@@ -58,7 +58,11 @@ for($offset = 0; $offset <= $days; $offset++)
 // sort the counts descending
 arsort($counts);
 
-echo '<html><head></head><body><table><tr><th>Total</th>';
+
+$title = 'WebPagetest - Check URLs';
+include 'admin_header.inc';
+
+echo '<table class="table"><tr><th>Total</th>';
 foreach( $dayCounts as $index => &$dayCount ) {
     echo "<th>Day $index</th>";
 }
@@ -74,9 +78,11 @@ foreach($counts as $url => $count) {
             echo "<td>$c</td>";
         }
         echo "<td>$url</td></tr>\n";
-    }
-    else
+    } else {
         break;
+    }
 }
-echo "</table></body></html>";
+echo "</table>";
+
+include 'admin_footer.inc';
 ?>
