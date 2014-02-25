@@ -301,6 +301,10 @@ function CheckBenchmarkStatus($benchmark, &$state) {
             logMsg("No test data updated", "./log/$logFile", true);
         }
 
+        $now = time();
+        if ($now > $start_time + 172800) // kill it if it has been running for 2 days
+          $done = true;  
+
         if ($done) {
             logMsg("Benchmark '$benchmark' is finished", "./log/$logFile", true);
             $state['runs'][] = $start_time;
