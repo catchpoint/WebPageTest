@@ -23,9 +23,8 @@ if( isset($test['test']) && (isset($test['test']['completeTime']) || $test['test
         $filename = "{$id}_details.csv";
         $is_requests = true;
     }
-    //header("Content-disposition: attachment; filename=$filename");
-    //header ("Content-type: text/csv");
-    header ("Content-type: text/plain");
+    header("Content-disposition: attachment; filename=$filename");
+    header ("Content-type: text/csv");
     
     if ($test['test']['batch']) {
         $tests = null;
