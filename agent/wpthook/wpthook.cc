@@ -194,6 +194,7 @@ void WptHook::OnReport() {
       results_.Save();
     test_.CollectDataDone();
     if (test_.Done()) {
+      test_state_._exit = true;
       test_server_.Stop();
       results_.Save();
       done_ = true;

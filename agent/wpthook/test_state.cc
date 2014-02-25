@@ -375,7 +375,6 @@ void TestState::Done(bool force) {
         _data_timer = NULL;
         timeEndPeriod(1);
       }
-      _exit = true;
     }
 
     _active = false;
