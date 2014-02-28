@@ -156,6 +156,10 @@ function maybeLog(levelProperties, var_args) {  // jshint unused:false
   }
 }
 
+// Months in locale format
+var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
+    'Oct', 'Nov', 'Dec'];
+
 /**
  * Log to text stream.
  *
@@ -172,7 +176,10 @@ exports.log = function(levelPrinter, levelName, stamp, source, message) {
     date = new Date();
   }
   if (date instanceof Date) {
-    date = date.toISOString().slice(5, -1).replace('T', 'Z').replace('-', '');
+    // e.g. 1391808049123 --> "Feb_07_13:20:49.123" (local timezone is PST).
+    date = new Date(date.getTime() - 60000 * date.getTimezoneOffset());
+    date = MONTHS[date.getMonth()] + '_' +
+        date.toISOString().slice(7, -1).replace('T', '_').replace('-', '');
   }
   levelPrinter(levelName + ' ' + date + ' ' + source + ' ' +
       (message ? (': ' + message) : ''));
