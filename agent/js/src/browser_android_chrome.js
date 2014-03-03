@@ -96,8 +96,8 @@ function BrowserAndroidChrome(app, args) {
   this.chromedriver_ = args.chromedriver;
   if (args.chromePackage) {
     this.chromePackage_ = args.chromePackage;
-  } else if (args.options && args.options.browserName) {
-    var browserName = args.options.browserName;
+  } else if (args.browser) {
+    var browserName = args.browser;
     var separator = browserName.lastIndexOf('-');
     if (separator >= 0) {
       browserName = browserName.substr(separator + 1).trim();
@@ -131,6 +131,16 @@ function BrowserAndroidChrome(app, args) {
   this.pcap_ = new packet_capture_android.PacketCaptureAndroid(this.app_, args);
   this.runTempDir_ = args.runTempDir || '';
   this.useXvfb_ = undefined;
+  this.chromeFlags_ = CHROME_FLAGS.slice();
+  if (args.addCmdLine) {
+    args.addCmdLine.split(/\s+/).forEach(function(flag) {
+      if ((/^--[-_a-zA-Z0-9]+(=.*)?$/).test(flag)) {
+        this.chromeFlags_.push(flag);
+      } else if (flag) {
+        throw new Error('Invalid addCmdLine flag: "' + flag + '"');
+      }
+    }.bind(this));
+  }
 }
 util.inherits(BrowserAndroidChrome, browser_base.BrowserBase);
 /** Public class. */
@@ -153,7 +163,7 @@ BrowserAndroidChrome.prototype.startWdServer = function(browserCaps) {
     throw new Error('Must set chromedriver before starting it');
   }
   browserCaps.chromeOptions = {
-    args: CHROME_FLAGS.slice(),
+    args: this.chromeFlags_.slice(),
     androidPackage: this.chromePackage_,
     androidDeviceSerial: this.deviceSerial_
   };
@@ -301,7 +311,7 @@ BrowserAndroidChrome.prototype.scheduleNeedsXvfb_ = function() {
 BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
   'use strict';
   var flagsFile = '/data/local/chrome-command-line';
-  var flags = CHROME_FLAGS.concat('--enable-remote-debugging');
+  var flags = this.chromeFlags_.concat('--enable-remote-debugging');
   if (this.pac_) {
     flags.push('--proxy-pac-url=http://127.0.0.1:' + PAC_PORT + '/from_netcat');
     if (PAC_PORT !== 80) {

@@ -120,7 +120,7 @@ BrowserBase.prototype.scheduleIsAvailable = function() {
 exports.createBrowser = function(app, flags) {
   'use strict';
   var browserType =
-      flags.browser || 'browser_local_chrome.BrowserLocalChrome';
+      flags.browserType || 'browser_local_chrome.BrowserLocalChrome';
   logger.debug('Creating browser ' + browserType);
   var lastDot = browserType.lastIndexOf('.');
   var browserModule = require(browserType.substring(0, lastDot));
