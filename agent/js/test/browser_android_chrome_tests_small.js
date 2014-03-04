@@ -5,14 +5,14 @@ All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
-    * Redistributions of source code must retain the above copyright notice,
-      this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright notice,
-      this list of conditions and the following disclaimer in the documentation
-      and/or other materials provided with the distribution.
-    * Neither the name of Google, Inc. nor the names of its contributors
-      may be used to endorse or promote products derived from this software
-      without specific prior written permission.
+ * Redistributions of source code must retain the above copyright notice,
+ this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright notice,
+ this list of conditions and the following disclaimer in the documentation
+ and/or other materials provided with the distribution.
+ * Neither the name of Google, Inc. nor the names of its contributors
+ may be used to endorse or promote products derived from this software
+ without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -101,8 +101,9 @@ describe('browser_android_chrome small', function() {
             proc.stdout.emit('data',
                 'root 1 0 560 404 ffffffff 00000000 S /init\n');
           }, 1);
-        } else if (!args.some(regExTest.bind(/^force-stop$/))) {
-          // Ignore shell am force-stop.
+        } else if (!args.some(regExTest.bind(/^force-stop$/)) &&
+                   !args.some(regExTest.bind(/^dumpsys$/))) {
+          // Ignore shell am force-stop and shell dumpsys *.
           keepAlive = shellStub.callback(proc, command, args);
         }
       } else {
@@ -136,7 +137,7 @@ describe('browser_android_chrome small', function() {
 
   it('should use PAC server', function() {
     startBrowser_({deviceSerial: serial, runNumber: 1, chrome: chromeApk,
-        pac: 'function FindProxyForURL...'});
+      pac: 'function FindProxyForURL...'});
     killBrowser_();
   });
 
@@ -157,7 +158,7 @@ describe('browser_android_chrome small', function() {
         video_hdmi.VideoHdmi.prototype, 'scheduleStopVideoRecording');
     browser = new browser_android_chrome.BrowserAndroidChrome(app,
         {deviceSerial: serial, runNumber: 1, chrome: chromeApk,
-        videoCard: videoCard});
+          videoCard: videoCard});
     browser.scheduleStartVideoRecording('test.avi');
     test_utils.tickUntilIdle(app, sandbox);
     should.ok(spawnStub.calledOnce);
@@ -176,11 +177,11 @@ describe('browser_android_chrome small', function() {
 
   it('should start and kill chromedriver', function() {
     browser = new browser_android_chrome.BrowserAndroidChrome(app, {
-        deviceSerial: serial,
-        runNumber: 1,
-        chromedriver: chromedriver,
-        runTempDir: 'runtmp'
-      });
+      deviceSerial: serial,
+      runNumber: 1,
+      chromedriver: chromedriver,
+      runTempDir: 'runtmp'
+    });
     should.ok(!browser.isRunning());
     browser.startWdServer({browserName: 'chrome'});
     test_utils.tickUntilIdle(app, sandbox);
@@ -188,7 +189,8 @@ describe('browser_android_chrome small', function() {
     browser.getServerUrl().should.match(/^http:\/\/localhost:\d+$/);
     should.equal(undefined, browser.getDevToolsUrl());  // No DevTools with WD.
     assertAdbCalls(['shell', 'ps'],
-                   ['shell', 'am', 'force-stop', /^com\.[\.\w]+/]);
+        ['shell', 'am', 'force-stop', /^com\.[\.\w]+/],
+        ['shell', 'dumpsys', 'window', 'windows']);
     if (process.platform === 'linux') {
       spawnStub.assertCall('xset', 'q');
     }
@@ -201,7 +203,8 @@ describe('browser_android_chrome small', function() {
     should.ok(!browser.isRunning());
     spawnStub.assertCalls({0: 'ps'}, {0: 'kill'});
     assertAdbCalls(['shell', 'ps'],
-                   ['shell', 'am', 'force-stop', /^com\.[\.\w]+/]);
+        ['shell', 'am', 'force-stop', /^com\.[\.\w]+/],
+        ['shell', 'dumpsys', 'window', 'windows']);
     spawnStub.assertCall();
     should.equal(undefined, browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());
@@ -290,8 +293,8 @@ describe('browser_android_chrome small', function() {
     browser.startBrowser();
     test_utils.tickUntilIdle(app, sandbox);
     assertAdbCalls(['shell', 'ps'],
-                   ['shell', 'am', 'force-stop', /^com\.[\.\w]+/]);
-    //assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
+        ['shell', 'am', 'force-stop', /^com\.[\.\w]+/],
+        ['shell', 'dumpsys', 'window', 'windows']);
     if (1 === args.runNumber) {
       assertAdbCalls(
           ['uninstall', /com\.[\w\.]+/],
@@ -306,11 +309,11 @@ describe('browser_android_chrome small', function() {
           /^while true; do nc -l \d+ < \S+pac_body; done$/);
     }
     var flags = ['--no-first-run', '--disable-background-networking',
-        '--no-default-browser-check', '--process-per-tab',
-        '--allow-running-insecure-content', '--disable-fre',
-        '--enable-benchmarking', '--metrics-recording-only',
-        '--disable-geolocation', '--disable-external-intent-requests',
-        '--enable-remote-debugging'];
+      '--no-default-browser-check', '--process-per-tab',
+      '--allow-running-insecure-content', '--disable-fre',
+      '--enable-benchmarking', '--metrics-recording-only',
+      '--disable-geolocation', '--disable-external-intent-requests',
+      '--enable-remote-debugging'];
     if (args.pac) {
       flags.push('--proxy-pac-url=http://127.0.0.1:80/from_netcat');
     }
@@ -318,7 +321,7 @@ describe('browser_android_chrome small', function() {
         ['shell', 'su', '-c', 'echo \\"chrome ' + flags.join(' ') +
             '\\" > /data/local/chrome-command-line'],
         ['shell', 'su', '-c',
-            'ls /data/data/com.android.chrome'],
+          'ls /data/data/com.android.chrome'],
         ['shell', 'su', '-c', 'ndc resolver flushdefaultif'],
         ['shell', 'am', 'start', '-n', /^com\.[\.\w]+/, '-d', 'about:blank'],
         ['forward', /tcp:\d+/, /^\w+/]);
@@ -326,7 +329,7 @@ describe('browser_android_chrome small', function() {
     should.ok(browser.isRunning());
     (browser.getDevToolsUrl() || '').should.match(new RegExp(
         '^http:\\\/\\\/localhost:(' + Object.keys(serverStub.ports).join('|') +
-        ')\\\/json$'));
+            ')\\\/json$'));
     should.equal(undefined, browser.getServerUrl());
     should.equal(!!ncProc, !!args.pac);
     assertAdbCall();
@@ -343,7 +346,8 @@ describe('browser_android_chrome small', function() {
       assertAdbCall('shell', 'rm', /^\/.*\/pac_body$/);
     }
     assertAdbCalls(['shell', 'ps'],
-                   ['shell', 'am', 'force-stop', /^com\.[\.\w]+/]);
+        ['shell', 'am', 'force-stop', /^com\.[\.\w]+/],
+        ['shell', 'dumpsys', 'window', 'windows']);
     should.equal(undefined, browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());
     if (args.pac) {

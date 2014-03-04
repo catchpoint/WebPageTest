@@ -404,10 +404,10 @@ Adb.prototype.scheduleDismissSystemDialog = function() {
     var appError = /Window #[^\n]*Application Error\:/;
     var usbDebugging = /Window #[^\n]*systemui\.usb\.UsbDebuggingActivity/;
     if (appError.test(stdout) || usbDebugging.test(stdout)) {
-      logger.warn("System dialog detected, dismissing it.");
-      this.shell(['input','keyevent','KEYCODE_DPAD_RIGHT']);
-      this.shell(['input','keyevent','KEYCODE_DPAD_RIGHT']);
-      this.shell(['input','keyevent','KEYCODE_ENTER']);
+      logger.warn('System dialog detected, dismissing it.');
+      this.shell(['input', 'keyevent', 'KEYCODE_DPAD_RIGHT']);
+      this.shell(['input', 'keyevent', 'KEYCODE_DPAD_RIGHT']);
+      this.shell(['input', 'keyevent', 'KEYCODE_ENTER']);
     }
   }.bind(this));
 };
