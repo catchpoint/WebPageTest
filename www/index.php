@@ -97,6 +97,8 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="discard" value="' . htmlspecialchars($_REQUEST['discard']) . "\">\n";
             if (array_key_exists('responsive', $_REQUEST))
               echo '<input type="hidden" name="responsive" value="' . htmlspecialchars($_REQUEST['responsive']) . "\">\n";
+            if (array_key_exists('trace', $_REQUEST))
+              echo '<input type="hidden" name="trace" value="' . htmlspecialchars($_REQUEST['trace']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>

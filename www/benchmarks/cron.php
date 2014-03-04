@@ -302,17 +302,19 @@ function CheckBenchmarkStatus($benchmark, &$state) {
         }
 
         $now = time();
-        if ($now > $start_time + 172800) // kill it if it has been running for 2 days
+        $elapsed = $now > $start_time ? $now - $start_time : 0;
+        
+        if ($elapsed > 172800) // kill it if it has been running for 2 days
           $done = true;  
 
         if ($done) {
-            logMsg("Benchmark '$benchmark' is finished", "./log/$logFile", true);
+            logMsg("Benchmark '$benchmark' is finished after running for $elapsed seconds", "./log/$logFile", true);
             $state['runs'][] = $start_time;
             $state['running'] = false;
             $state['needs_aggregation'] = true;
             unset($state['tests']);    
         } else {
-            logMsg("Benchmark '$benchmark' is still running", "./log/$logFile", true);
+            logMsg("Benchmark '$benchmark' is still running after $elapsed seconds", "./log/$logFile", true);
         }
         
         logMsg("Done checking status", "./log/$logFile", true);
