@@ -395,14 +395,16 @@ Adb.prototype.scheduleDetectConnectedInterface = function() {
 };
 
 /**
- * Checks for the application error dialog and sends keyboard commands to
- * dismiss it if it is present.
+ * Checks for the application error dialog or USB debugging dialog and send
+ * keyboard commands to dismiss it.
  */
-Adb.prototype.scheduleDismissErrorDialog = function() {
+Adb.prototype.scheduleDismissSystemDialog = function() {
   'use strict';
   this.shell(['dumpsys', 'window', 'windows']).then(function(stdout) {
-    if (/Window #[^\n]*Application Error\:/.test(stdout)) {
-      logger.warn("Application Error dialog detected, dismissing it.");
+    var appError = /Window #[^\n]*Application Error\:/;
+    var usbDebugging = /Window #[^\n]*systemui\.usb\.UsbDebuggingActivity/;
+    if (appError.test(stdout) || usbDebugging.test(stdout)) {
+      logger.warn("System dialog detected, dismissing it.");
       this.shell(['input','keyevent','KEYCODE_DPAD_RIGHT']);
       this.shell(['input','keyevent','KEYCODE_DPAD_RIGHT']);
       this.shell(['input','keyevent','KEYCODE_ENTER']);
