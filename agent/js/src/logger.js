@@ -26,7 +26,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-var jog = require('jog');
 var util = require('util');
 
 /** Object of levelName to [level, printer, levelId]. */
@@ -50,8 +49,6 @@ exports.DOT_WRITER = process.stdout;
 var prevCount = 0;
 var prevLevel;
 var prevMessage;
-
-var jsonFileLogger = jog(new jog.FileStore('./debug.log'));
 
 function getMaxLogLevel() {
   'use strict';
@@ -122,23 +119,20 @@ exports.whoIsMyCaller = function(level) {
 };
 
 /**
- * maybeLog is a wrapper for the visionmedia jog module that will:
- * a) automatically wrap strings in an object to get maximum info.
- * b) use jog.info because it stores the most information.
- * c) check for a WPT_VERBOSE environment variable and mirror logs to the
+ * maybeLog is a logging stub that will:
+ * a) check for a WPT_VERBOSE environment variable and mirror logs to the
  *    console if it is true.
- * d) check for a WPT_MAX_LOGLEVEL environment variable and only log messages
+ * b) check for a WPT_MAX_LOGLEVEL environment variable and only log messages
  *    greater than or equal to the maximum log level.
  *
  * @param {string} levelName the log level.
  * @param {Array} levelProperties [<level>, <stream>, <abbreviation>].
- * @param {Object|string} data an object or string
- *    (which will be converted to an object for jog) that will be logged.
+ * @param {Object|string} data an object or string that will be logged.
 */
 function maybeLog(levelName, levelProperties, data) {
   'use strict';
   var level = levelProperties[0];
-  if (level <= exports.MAX_LOG_LEVEL) {
+  if (exports.LOG_TO_CONSOLE && level <= exports.MAX_LOG_LEVEL) {
     var stamp = new Date();  // Take timestamp early for better precision
     var sourceAnnotation = exports.whoIsMyCaller(2);
     var message;
@@ -151,29 +145,25 @@ function maybeLog(levelName, levelProperties, data) {
       logData = data.slice();  // Don't modify the original
       data.source = sourceAnnotation;
     }
-    if (exports.LOG_TO_CONSOLE) {
-      if (!message) {
-        message = JSON.stringify(data);
-      }
-      if (level === prevLevel && message === prevMessage &&
-            exports.DOT_LIMIT >= prevCount) {
-        prevCount += 1;
-        if (exports.DOT_WRITER) {
-          exports.DOT_WRITER.write('.');
-        }
-      } else {
-        if (prevCount > 1 && exports.DOT_WRITER) {
-          exports.DOT_WRITER.write('\n');
-        }
-        prevCount = 1;
-        prevLevel = level;
-        prevMessage = message;
-        exports.log(levelProperties[1], levelProperties[2], stamp,
-            sourceAnnotation, message);
-      }
+    if (!message) {
+      message = JSON.stringify(data);
     }
-
-    jsonFileLogger.info(levelName, logData);
+    if (level === prevLevel && message === prevMessage &&
+          exports.DOT_LIMIT >= prevCount) {
+      prevCount += 1;
+      if (exports.DOT_WRITER) {
+        exports.DOT_WRITER.write('.');
+      }
+    } else {
+      if (prevCount > 1 && exports.DOT_WRITER) {
+        exports.DOT_WRITER.write('\n');
+      }
+      prevCount = 1;
+      prevLevel = level;
+      prevMessage = message;
+      exports.log(levelProperties[1], levelProperties[2], stamp,
+          sourceAnnotation, message);
+    }
   }
 }
 
