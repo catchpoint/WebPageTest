@@ -313,7 +313,7 @@ describe('browser_android_chrome small', function() {
       '--allow-running-insecure-content', '--disable-fre',
       '--enable-benchmarking', '--metrics-recording-only',
       '--disable-geolocation', '--disable-external-intent-requests',
-      '--enable-remote-debugging'];
+      '--disable-infobars', '--enable-remote-debugging'];
     if (args.pac) {
       flags.push('--proxy-pac-url=http://127.0.0.1:80/from_netcat');
     }
