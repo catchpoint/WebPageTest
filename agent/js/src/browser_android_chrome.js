@@ -241,20 +241,8 @@ BrowserAndroidChrome.prototype.onChildProcessExit = function() {
  */
 BrowserAndroidChrome.prototype.clearProfile_ = function() {
   'use strict';
-  // Delete the existing profile (everything except the lib directory)
-  this.adb_.su(['ls', '/data/data/' + this.chromePackage_]).then(
-      function(files) {
-    var lines = files.split('\n');
-    var count = lines.length;
-    for (var i = 0; i < count; i++) {
-      var file = lines[i].trim();
-      if (file.length && file !== '.' && file !== '..' &&
-          file !== 'lib' && file !== 'shared_prefs') {
-        this.adb_.su(['rm', '-r /data/data/' + this.chromePackage_ + '/' +
-                     file]);
-      }
-    }
-  }.bind(this));
+  this.adb_.su(['rm', '-r /data/data/' + this.chromePackage_ + '/files']);
+  this.adb_.su(['rm', '-r /data/data/' + this.chromePackage_ + '/cache']);
 };
 
 /**
