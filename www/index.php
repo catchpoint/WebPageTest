@@ -410,6 +410,13 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
+                                        <label for="uastring" style="width: auto;">
+                                        User Agent String<br>
+                                        <small>(Custom UA String)</small>
+                                        </label>
+                                        <input type="text" name="uastring" id="uastring" class="text" style="width: 350px;">
+                                    </li>
+                                    <li>
                                         <label for="cmdline" style="width: auto;">
                                         Command-line<br>
                                         <small>Custom options</small>

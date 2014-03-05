@@ -145,6 +145,7 @@
 
             // custom options
             $test['cmdLine'] = '';
+            ValidateCommandLine($req_cmdline, $error);
             $test['addCmdLine'] = $req_cmdline;
             if (isset($req_disableThreadedParser) && $req_disableThreadedParser) {
               if (strlen($test['addCmdLine']))
@@ -160,6 +161,15 @@
               if (strlen($test['addCmdLine']))
                 $test['addCmdLine'] .= ' ';
               $test['addCmdLine'] .= '--enable-spdy-proxy-auth';
+            }
+            if (isset($req_uastring) && strlen($req_uastring)) {
+              if (strpos($req_uastring, '"') !== false) {
+                $error = 'Invalid User Agent String: "' . htmlspecialchars($req_uastring) . '"';
+              } else {
+                if (strlen($test['addCmdLine']))
+                  $test['addCmdLine'] .= ' ';
+                $test['addCmdLine'] .= '--user-agent="' . $req_uastring . '"';
+              }
             }
 
             // see if we need to process a template for these requests
@@ -353,15 +363,6 @@
         ValidateKey($test, $error);
         if( !strlen($error) && CheckIp($test) && CheckUrl($test['url']) )
         {
-            if (isset($req_cmdline) && strlen($req_cmdline)) {
-              $req_cmdline = trim($req_cmdline);
-              if (!preg_match('/^--(([a-zA-Z0-9\-\.\+=,_ "]+)|((proxy-server|proxy-pac-url)=[a-zA-Z0-9\-\.\+=,_:\/"]+))$/', $req_cmdline)) {
-                $error = 'Invalid command-line options';
-                $req_cmdline = '';
-              }
-            } else
-              $req_cmdline = '';
-
             if( !$error && !$test['batch'] )
               ValidateParameters($test, $locations, $error);
 
@@ -2142,4 +2143,23 @@ function ProcessTestScript($url, &$test) {
   return $script;
 }
 
+/**
+* Break up the supplied command-line string and make sure it isn't using
+* invalid characters that may cause system issues.
+* 
+* @param mixed $cmd
+* @param mixed $error
+*/
+function ValidateCommandLine($cmd, &$error) {
+  if (isset($cmd) && strlen($cmd)) {
+    $flags = explode(' ', $cmd);
+    if ($flags && is_array($flags) && count($flags)) {
+      foreach($flags as $flag) {
+        if (!preg_match('/^--(([a-zA-Z0-9\-\.\+=,_ "]+)|((proxy-server|proxy-pac-url)=[a-zA-Z0-9\-\.\+=,_:\/]+))$/', $flag)) {
+          $error = 'Invalid command-line option: "' . htmlspecialchars($flag) . '"';
+        }
+      }
+    }
+  }
+}
 ?>
