@@ -403,6 +403,13 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
+                                        <input type="checkbox" name="dataReduction" id="dataReduction" class="checkbox" style="float: left;width: auto;">
+                                        <label for="dataReduction" class="auto_width">
+                                            Enable Data Reduction<br>
+                                            <small>Chrome 34+ on Android</small>
+                                        </label>
+                                    </li>
+                                    <li>
                                         <label for="cmdline" style="width: auto;">
                                         Command-line<br>
                                         <small>Custom options</small>

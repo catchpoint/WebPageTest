@@ -156,6 +156,11 @@
                 $test['addCmdLine'] .= ' ';
               $test['addCmdLine'] .= '--use-spdy=no-ssl';
             }
+            if (isset($req_dataReduction) && $req_dataReduction) {
+              if (strlen($test['addCmdLine']))
+                $test['addCmdLine'] .= ' ';
+              $test['addCmdLine'] .= '--enable-spdy-proxy-auth';
+            }
 
             // see if we need to process a template for these requests
             if (isset($req_k) && strlen($req_k)) {
