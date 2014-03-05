@@ -117,44 +117,35 @@ exports.whoIsMyCaller = function(level) {
 };
 
 /**
- * maybeLog is a logging stub that will:
- * a) check for a WPT_VERBOSE environment variable and mirror logs to the
- *    console if it is true.
- * b) check for a WPT_MAX_LOGLEVEL environment variable and only log messages
- *    greater than or equal to the maximum log level.
+ * Logs a util.format message if the level is <= our MAX_LOG_LEVEL.
  *
- * @param {string} levelName the log level.
  * @param {Array} levelProperties [<level>, <stream>, <abbreviation>].
- * @param {Object|string} data an object or string that will be logged.
+ * @param {Object} var_args util.format arguments, e.g. '%s is %d', 'foo', 7.
 */
-function maybeLog(levelName, levelProperties, data) {
+function maybeLog(levelProperties, var_args) {  // jshint unused:false
   'use strict';
   var level = levelProperties[0];
   if (level <= exports.MAX_LOG_LEVEL) {
     var stamp = new Date();  // Take timestamp early for better precision
     var sourceAnnotation = exports.whoIsMyCaller(2);
-    var message;
-    var logData = data;
-    if (typeof data === 'string') {
-      message = util.format.apply(
-          /*this=*/undefined, Array.prototype.slice.call(arguments, 2)).trim();
-      logData = { message: message, source: sourceAnnotation };
-    } else {
-      logData = data.slice();  // Don't modify the original
-      data.source = sourceAnnotation;
-    }
-    if (!message) {
-      message = JSON.stringify(data);
-    }
-    if (level === prevLevel && message === prevMessage &&
-          exports.DOT_LIMIT >= prevCount) {
-      prevCount += 1;
-      if (exports.DOT_WRITER) {
-        exports.DOT_WRITER.write('.');
-      }
-    } else {
-      if (prevCount > 1 && exports.DOT_WRITER) {
-        exports.DOT_WRITER.write('\n');
+    var message = util.format.apply(
+        undefined, Array.prototype.slice.call(arguments, 1)).trim();
+    if (exports.LOG_TO_CONSOLE) {
+      if (level === prevLevel && message === prevMessage &&
+            exports.DOT_LIMIT >= prevCount) {
+        prevCount += 1;
+        if (exports.DOT_WRITER) {
+          exports.DOT_WRITER.write('.');
+        }
+      } else {
+        if (prevCount > 1 && exports.DOT_WRITER) {
+          exports.DOT_WRITER.write('\n');
+        }
+        prevCount = 1;
+        prevLevel = level;
+        prevMessage = message;
+        exports.log(levelProperties[1], levelProperties[2], stamp,
+            sourceAnnotation, message);
       }
       prevCount = 1;
       prevLevel = level;
@@ -190,8 +181,7 @@ exports.log = function(levelPrinter, levelName, stamp, source, message) {
 // Generate level-named functions -- info, debug, etc.
 Object.keys(exports.LEVELS).forEach(function(levelName) {
   'use strict';
-  var boundLog = maybeLog.bind(
-      /*this=*/undefined, levelName, exports.LEVELS[levelName]);
+  var boundLog = maybeLog.bind(undefined, exports.LEVELS[levelName]);
   // We cannot simply assign boundLog, because SinonJS somehow doesn't like it,
   // and the stubs on the logging functions break.
   // This is also why whoIsMyCaller needs an arg to return indirect callers.
