@@ -308,6 +308,7 @@ BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
     }
   }
   this.adb_.su(['echo \\"chrome ' + flags.join(' ') + '\\" > ' + flagsFile]);
+  this.adb_.su(['chmod 644 '  + flagsFile]);
 };
 
 /**
