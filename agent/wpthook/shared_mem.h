@@ -37,3 +37,4 @@ extern bool   shared_cleared_cache;
 extern DWORD  shared_current_run;
 extern int    shared_cpu_utilization;
 extern bool   shared_has_gpu;
+extern int    shared_result;

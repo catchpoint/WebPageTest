@@ -148,6 +148,8 @@ void Results::Save(void) {
       if (_test._trace)
         _trace.Write(_file_base + TRACE_FILE);
     }
+    if (shared_result == -1 || shared_result == 0 || shared_result == 99999)
+      shared_result = _test_state._test_result;
     _saved = true;
   }
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));

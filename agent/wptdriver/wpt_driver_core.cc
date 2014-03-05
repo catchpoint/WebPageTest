@@ -172,8 +172,8 @@ void WptDriverCore::WorkThread(void) {
             test._run_error.Empty();
             test._run = test._specific_run ? test._specific_run : test._run;
             test._clear_cache = true;
-            BrowserTest(test, browser);
-            if (!test._fv_only) {
+            bool ok = BrowserTest(test, browser);
+            if (ok && !test._fv_only) {
               test._run_error.Empty();
               test._clear_cache = false;
               BrowserTest(test, browser);
@@ -245,6 +245,7 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
   WptTrace(loglevel::kFunction,_T("[wptdriver] WptDriverCore::BrowserTest\n"));
 
   do {
+    ResetTestResult();
     attempt++;
     test.SetFileBase();
     if (test._clear_cache) {
@@ -276,6 +277,11 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
         _webpagetest.UploadIncrementalResults(test);
       else
         _webpagetest.DeleteIncrementalResults(test);
+    }
+    if (ret) {
+      int result = GetTestResult();
+      if (result != 0 && result != 99999)
+        ret = false;
     }
   } while (attempt < 2 && critical_error);
 
