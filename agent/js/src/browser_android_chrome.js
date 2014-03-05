@@ -241,8 +241,8 @@ BrowserAndroidChrome.prototype.onChildProcessExit = function() {
  */
 BrowserAndroidChrome.prototype.clearProfile_ = function() {
   'use strict';
-  this.adb_.su(['rm', '-r /data/data/' + this.chromePackage_ + '/files']);
-  this.adb_.su(['rm', '-r /data/data/' + this.chromePackage_ + '/cache']);
+  this.adb_.su(['rm', '-r', '/data/data/' + this.chromePackage_ + '/files']);
+  this.adb_.su(['rm', '-r', '/data/data/' + this.chromePackage_ + '/cache']);
 };
 
 /**
