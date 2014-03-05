@@ -68,8 +68,6 @@ function getMaxLogLevel() {
 
 /** Log threshold from $WPT__MAX_LOGLEVEL, defaults to 'info'. */
 exports.MAX_LOG_LEVEL = getMaxLogLevel();
-/** Also log to stdout, set by $WPT_VERBOSE, defaults to 'true'. */
-exports.LOG_TO_CONSOLE = ('true' === (process.env.WPT_VERBOSE || 'true'));
 
 /**
  * Lets the caller verify if the given log level is active.
@@ -132,7 +130,7 @@ exports.whoIsMyCaller = function(level) {
 function maybeLog(levelName, levelProperties, data) {
   'use strict';
   var level = levelProperties[0];
-  if (exports.LOG_TO_CONSOLE && level <= exports.MAX_LOG_LEVEL) {
+  if (level <= exports.MAX_LOG_LEVEL) {
     var stamp = new Date();  // Take timestamp early for better precision
     var sourceAnnotation = exports.whoIsMyCaller(2);
     var message;
