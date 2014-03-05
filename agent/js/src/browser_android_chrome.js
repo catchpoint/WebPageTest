@@ -54,7 +54,7 @@ var CHROME_FLAGS = [
     '--disable-external-intent-requests',
     // Disable UI bars (location, debugging, etc)
     '--disable-infobars'
-];
+  ];
 
 var KNOWN_BROWSERS = {
     'Chrome': 'com.android.chrome',
