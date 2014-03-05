@@ -320,8 +320,8 @@ describe('browser_android_chrome small', function() {
     assertAdbCalls(
         ['shell', 'su', '-c', 'echo \\"chrome ' + flags.join(' ') +
             '\\" > /data/local/chrome-command-line'],
-        ['shell', 'su', '-c',
-          'ls /data/data/com.android.chrome'],
+        ['shell', 'su', '-c', 'chmod 644 /data/local/chrome-command-line'],
+        ['shell', 'su', '-c', 'ls /data/data/com.android.chrome'],
         ['shell', 'su', '-c', 'ndc resolver flushdefaultif'],
         ['shell', 'am', 'start', '-n', /^com\.[\.\w]+/, '-d', 'about:blank'],
         ['forward', /tcp:\d+/, /^\w+/]);
