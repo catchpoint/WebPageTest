@@ -190,6 +190,7 @@ describe('agent_main', function() {
 
     var client = new FakeClient();
     var agent = new agent_main.Agent(app, client, {
+        browser: 'FakeBrowser',
         deviceSerial: 'T3S7'
       });
     agent.run();
@@ -207,19 +208,28 @@ describe('agent_main', function() {
 
     var stubSend = sandbox.stub(FakeWdServer.prototype, 'send',
         function(message) {
-      should.equal('shmowser', message.options.browserName);
       message.should.have.properties({
           cmd: 'run',
-          url: 'http://test',
-          deviceSerial: 'T3S7',
-          script: undefined,
-          pac: undefined,
           runNumber: 0,
           exitWhenDone: true,
+          script: undefined,
+          url: 'http://test',
+          pac: undefined,
           captureVideo: false,
           capturePackets: false,
           captureTimeline: false,
-          pngScreenShot: true
+          pngScreenShot: true,
+          // flags:
+          browserType: 'FakeBrowser',
+          deviceSerial: 'T3S7',
+          // job.task:
+          browser: 'shmowser',
+          runs: 1,
+          replay: 1,
+          'Capture Video': 1,
+          tcpdump: 1,
+          timeline: 1,
+          fvonly: 0
         });
       fakeWdServer.emit('message', {cmd: 'done'});
       fakeWdServer.emit('exit', 0);

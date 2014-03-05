@@ -264,28 +264,32 @@ Agent.prototype.startJobRun_ = function(job) {
     var isRecordingRun = 0 === job.runNumber;
     var message = {
         cmd: 'run',
-        options: {browserName: job.task.browser},
         runNumber: job.runNumber,
         exitWhenDone: job.isFirstViewOnly || job.isCacheWarm || isRecordingRun,
-        // Suppress video capture on WPR recording.
-        captureVideo: job.captureVideo && !isRecordingRun,
-        // Suppress packet capture on WPR recording.
-        capturePackets: job.capturePackets && !isRecordingRun,
-        // Suppress JPEG conversion on WPR recording.
-        pngScreenShot: !!job.task.pngScreenShot || isRecordingRun,
-        imageQuality: job.task.imageQuality,
-        // Suppress Timeline capture on WPR recording.
-        captureTimeline: !!job.task.timeline && !isRecordingRun,
-        timelineStackDepth: job.task.timelineStackDepth,
         script: script,
         url: url,
         pac: pac,
         timeout: this.client_.jobTimeout,
-        runTempDir: this.runTempDir_
+        runTempDir: this.runTempDir_,
+        // On WPR recording, suppress capture of video, packets, and timeline.
+        captureVideo: job.captureVideo && !isRecordingRun,
+        capturePackets: job.capturePackets && !isRecordingRun,
+        captureTimeline: !!job.task.timeline && !isRecordingRun,
+        // On WPR recording, suppress conversion of PNGs to JPEGs.
+        pngScreenShot: !!job.task.pngScreenShot || isRecordingRun
       };
+   // Add our flags, e.g. deviceSerial and chromePackage.
     Object.getOwnPropertyNames(this.flags_).forEach(function(flagName) {
       if (!message[flagName]) {
-        message[flagName] = this.flags_[flagName];
+        // Rename 'browser' to avoid a conflict with job.task.browser.
+        var key = ('browser' === flagName ? 'browserType' : flagName);
+        message[key] = this.flags_[flagName];
+      }
+    }.bind(this));
+    // Add job.task options, e.g. browser and imageQuality.
+    Object.getOwnPropertyNames(job.task).forEach(function(key) {
+      if (!message[key]) {
+        message[key] = job.task[key];
       }
     }.bind(this));
     this.wdServer_.send(message);
