@@ -190,7 +190,6 @@ describe('agent_main', function() {
 
     var client = new FakeClient();
     var agent = new agent_main.Agent(app, client, {
-        browser: 'FakeBrowser',
         deviceSerial: 'T3S7'
       });
     agent.run();
@@ -200,10 +199,10 @@ describe('agent_main', function() {
         browser: 'shmowser',
         runs: 1,
         replay: 1,
+        fvonly: 0,
         'Capture Video': 1,
         tcpdump: 1,
-        timeline: 1,
-        fvonly: 0
+        timeline: 1
       });
 
     var stubSend = sandbox.stub(FakeWdServer.prototype, 'send',
@@ -212,24 +211,18 @@ describe('agent_main', function() {
           cmd: 'run',
           runNumber: 0,
           exitWhenDone: true,
-          script: undefined,
-          url: 'http://test',
-          pac: undefined,
-          captureVideo: false,
-          capturePackets: false,
-          captureTimeline: false,
-          pngScreenShot: true,
-          // flags:
-          browserType: 'FakeBrowser',
-          deviceSerial: 'T3S7',
-          // job.task:
-          browser: 'shmowser',
-          runs: 1,
-          replay: 1,
-          'Capture Video': 1,
-          tcpdump: 1,
-          timeline: 1,
-          fvonly: 0
+          flags: {
+            deviceSerial: 'T3S7'
+          },
+          task: {
+            'browser': 'shmowser',
+            'Test ID': 'id',
+            'replay': 1,
+            'url': 'http://test',
+            'runs': 1,
+            'fvonly': 0,
+            'pngScreenshot': 1
+          }
         });
       fakeWdServer.emit('message', {cmd: 'done'});
       fakeWdServer.emit('exit', 0);
@@ -256,11 +249,20 @@ describe('agent_main', function() {
         function(message) {
       message.should.have.properties({
           runNumber: 1,
-          exitWhenDone: false,
-          captureVideo: true,
-          capturePackets: true,
-          captureTimeline: true,
-          pngScreenShot: false
+          task: {
+            tcpdump: 1,
+            browser: 'shmowser',
+            timeline: 1,
+            'Capture Video': 1,
+            'Test ID': 'id',
+            replay: 1,
+            url: 'http://test',
+            runs: 1,
+            fvonly: 0
+          }
+        });
+      message.should.not.have.properties({
+          task: { pngScreenshot: 1 }
         });
       fakeWdServer.emit('message', {cmd: 'done'});
     });
@@ -285,11 +287,20 @@ describe('agent_main', function() {
         function(message) {
       message.should.have.properties({
           runNumber: 1,
-          exitWhenDone: true,
-          captureVideo: true,
-          capturePackets: true,
-          captureTimeline: true,
-          pngScreenShot: false
+          task: {
+            tcpdump: 1,
+            browser: 'shmowser',
+            timeline: 1,
+            'Capture Video': 1,
+            'Test ID': 'id',
+            replay: 1,
+            url: 'http://test',
+            runs: 1,
+            fvonly: 0
+          }
+        });
+      message.should.not.have.properties({
+          task: { pngScreenshot: 1 }
         });
       wprErrorLog = 'gaga';
       fakeWdServer.emit('message', {cmd: 'done'});

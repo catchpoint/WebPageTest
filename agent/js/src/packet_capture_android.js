@@ -40,17 +40,18 @@ var LISTENING_ON_TIMEOUT = 5000;
 
 /**
  * @param {webdriver.promise.ControlFlow=} app the scheduler.
- * @param {Object.<string>} args options with string values:
- *   #param {string} deviceSerial  the device to run tcpdump on.
- *   #param {string=} tcpdumpBinary  device-architecture tcpdump binary.
- *       If undefined, try to use tcpdump preinstalled on device.
+ * @param {Object} args options:
+ #   #param {Object} flags:
+ *     #param {string} deviceSerial  the device to run tcpdump on.
+ *     #param {string=} tcpdumpBinary  device-architecture tcpdump binary.
+ *         If undefined, try to use tcpdump preinstalled on device.
  * @constructor
  */
 function PacketCaptureAndroid(app, args) {
   'use strict';
   this.app_ = app;
-  this.deviceSerial_ = args.deviceSerial;
-  this.localTcpdumpBinary_ = args.tcpdumpBinary;
+  this.deviceSerial_ = args.flags.deviceSerial;
+  this.localTcpdumpBinary_ = args.flags.tcpdumpBinary;
   this.localPcapFile_ = undefined;
   this.deviceTcpdumpCommand_ = undefined;
   this.devicePcapFile_ = undefined;

@@ -67,37 +67,44 @@ var KNOWN_BROWSERS = {
  * Constructs a Chrome Mobile controller for Android.
  *
  * @param {webdriver.promise.ControlFlow} app the ControlFlow for scheduling.
- * @param {Object.<string>} args browser options with string values:
- *     runNumber test run number. Install the apk on run 1.
- *     deviceSerial the device to drive.
- *     [runTempDir] the directory to store per-run files like screenshots,
- *         defaults to ''.
- *     [chrome] Chrome.apk to install, defaults to None.
- *     [devToolsPort] DevTools port, defaults to dynamic selection.
- *     [pac] PAC content, defaults to None.
- *     [captureDir] capture script dir, defaults to ''.
- *     [videoCard] the video card identifier, defaults to None.
- *     [chromePackage] package, defaults to
- *         'com.android.google'.
- *     [chromeActivity] activity without the '.Main' suffix, defaults to
- *         'com.google.android.apps.chrome'.
+ * @param {Object} args browser options:
+ *   #param {string} runNumber test run number. Install the apk on run 1.
+ *   #param {string=} runTempDir the directory to store per-run files like
+ *       screenshots, defaults to ''.
+ *   #param {Object.<string>} flags options:
+ *      #param {string} deviceSerial the device to drive.
+ *      #param {string=} captureDir capture script dir, defaults to ''.
+ *      #param {string=} checknet 'yes' to enable isAvailable network check.
+ *      #param {string=} chrome Chrome.apk to install, defaults to None.
+ *      #param {string=} chromeActivity activity without the '.Main' suffix,
+ *           defaults to 'com.google.android.apps.chrome'.
+ *      #param {string=} chromePackage package, defaults task.browser-based
+ *          package if set, else 'com.android.google'.
+ *      #param {string=} devToolsPort DevTools port, defaults to dynamic
+ *           selection.
+ *      #param {string=} maxtemp maximum isAvailable temperature.
+ *      #param {string=} videoCard the video card identifier, defaults to None.
+ *   #param {Object.<string>} task options:
+       #param {string=} addCmdLine additional chrome command-line flags.
+ *     #param {string=} browser browser name, defaults to 'Chrome'.
+ *     #param {string=} pac PAC content, defaults to None.
  * @constructor
  */
 function BrowserAndroidChrome(app, args) {
   'use strict';
   browser_base.BrowserBase.call(this, app);
   logger.info('BrowserAndroidChrome(%j)', args);
-  if (!args.deviceSerial) {
+  if (!args.flags.deviceSerial) {
     throw new Error('Missing deviceSerial');
   }
-  this.deviceSerial_ = args.deviceSerial;
+  this.deviceSerial_ = args.flags.deviceSerial;
   this.shouldInstall_ = (1 === parseInt(args.runNumber || '1', 10));
-  this.chrome_ = args.chrome;  // Chrome.apk.
-  this.chromedriver_ = args.chromedriver;
-  if (args.chromePackage) {
-    this.chromePackage_ = args.chromePackage;
-  } else if (args.browser) {
-    var browserName = args.browser;
+  this.chrome_ = args.flags.chrome;  // Chrome.apk.
+  this.chromedriver_ = args.flags.chromedriver;
+  if (args.flags.chromePackage) {
+    this.chromePackage_ = args.flags.chromePackage;
+  } else if (args.task.browser) {
+    var browserName = args.task.browser;
     var separator = browserName.lastIndexOf('-');
     if (separator >= 0) {
       browserName = browserName.substr(separator + 1).trim();
@@ -106,25 +113,25 @@ function BrowserAndroidChrome(app, args) {
   }
   this.chromePackage_ = this.chromePackage_ || 'com.android.chrome';
   this.chromeActivity_ =
-      args.chromeActivity || 'com.google.android.apps.chrome';
-  this.devToolsPort_ = args.devToolsPort;
+      args.flags.chromeActivity || 'com.google.android.apps.chrome';
+  this.devToolsPort_ = args.flags.devToolsPort;
   this.devtoolsPortLock_ = undefined;
   this.devToolsUrl_ = undefined;
-  this.serverPort_ = args.serverPort;
+  this.serverPort_ = args.flags.serverPort;
   this.serverPortLock_ = undefined;
   this.serverUrl_ = undefined;
-  this.pac_ = args.pac;
+  this.pac_ = args.task.pac;
   this.pacFile_ = undefined;
   this.pacServer_ = undefined;
-  this.maxTemp = args.maxtemp ? parseFloat(args.maxtemp) : 0;
-  this.checkNet = 'yes' === args.checknet;
-  this.videoCard_ = args.videoCard;
+  this.maxTemp = args.flags.maxtemp ? parseFloat(args.flags.maxtemp) : 0;
+  this.checkNet = 'yes' === args.flags.checknet;
+  this.videoCard_ = args.flags.videoCard;
   this.deviceVideoPath_ = undefined;
   this.recordProcess_ = undefined;
   function toDir(s) {
     return (s ? (s[s.length - 1] === '/' ? s : s + '/') : '');
   }
-  var captureDir = toDir(args.captureDir);
+  var captureDir = toDir(args.flags.captureDir);
   this.adb_ = new adb.Adb(this.app_, this.deviceSerial_);
   this.video_ = new video_hdmi.VideoHdmi(this.app_, captureDir + 'capture');
   this.videoFile_ = undefined;
@@ -132,8 +139,8 @@ function BrowserAndroidChrome(app, args) {
   this.runTempDir_ = args.runTempDir || '';
   this.useXvfb_ = undefined;
   this.chromeFlags_ = CHROME_FLAGS.slice();
-  if (args.addCmdLine) {
-    args.addCmdLine.split(/\s+/).forEach(function(flag) {
+  if (args.task.addCmdLine) {
+    args.task.addCmdLine.split(/\s+/).forEach(function(flag) {
       if ((/^--[-_a-zA-Z0-9]+(=.*)?$/).test(flag)) {
         this.chromeFlags_.push(flag);
       } else if (flag) {

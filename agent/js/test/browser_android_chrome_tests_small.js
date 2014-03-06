@@ -126,18 +126,20 @@ describe('browser_android_chrome small', function() {
   });
 
   it('should install on first run, start, get killed', function() {
-    startBrowser_({deviceSerial: serial, runNumber: 1, chrome: chromeApk});
+    startBrowser_({runNumber: 1, flags: {deviceSerial: serial,
+        chrome: chromeApk}, task: {}});
     killBrowser_();
   });
 
   it('should not install on a non-first run, start, get killed', function() {
-    startBrowser_({deviceSerial: serial, runNumber: 2, chrome: chromeApk});
+    startBrowser_({runNumber: 2, flags: {deviceSerial: serial,
+        chrome: chromeApk}, task: {}});
     killBrowser_();
   });
 
   it('should use PAC server', function() {
-    startBrowser_({deviceSerial: serial, runNumber: 1, chrome: chromeApk,
-      pac: 'function FindProxyForURL...'});
+    startBrowser_({runNumber: 1, flags: {deviceSerial: serial,
+        chrome: chromeApk}, task: {pac: 'function FindProxyForURL...'}});
     killBrowser_();
   });
 
@@ -157,8 +159,8 @@ describe('browser_android_chrome small', function() {
     var videoStop = sandbox.stub(
         video_hdmi.VideoHdmi.prototype, 'scheduleStopVideoRecording');
     browser = new browser_android_chrome.BrowserAndroidChrome(app,
-        {deviceSerial: serial, runNumber: 1, chrome: chromeApk,
-          videoCard: videoCard});
+        {runNumber: 1, flags: {deviceSerial: serial, chrome: chromeApk,
+          videoCard: videoCard}, task: {}});
     browser.scheduleStartVideoRecording('test.avi');
     test_utils.tickUntilIdle(app, sandbox);
     should.ok(spawnStub.calledOnce);
@@ -177,10 +179,13 @@ describe('browser_android_chrome small', function() {
 
   it('should start and kill chromedriver', function() {
     browser = new browser_android_chrome.BrowserAndroidChrome(app, {
-      deviceSerial: serial,
       runNumber: 1,
-      chromedriver: chromedriver,
-      runTempDir: 'runtmp'
+      runTempDir: 'runtmp',
+      flags: {
+        deviceSerial: serial,
+        chromedriver: chromedriver
+      },
+      task: {}
     });
     should.ok(!browser.isRunning());
     browser.startWdServer({browserName: 'chrome'});
@@ -223,10 +228,13 @@ describe('browser_android_chrome small', function() {
     };
     var screenshotCbSpy = sandbox.spy();
     browser = new browser_android_chrome.BrowserAndroidChrome(app, {
-      deviceSerial: serial,
       runNumber: 1,
-      chromedriver: chromedriver,
-      runTempDir: 'runtmp'
+      runTempDir: 'runtmp',
+      flags: {
+        deviceSerial: serial,
+        chromedriver: chromedriver
+      },
+      task: {}
     });
     browser.scheduleTakeScreenshot('gaga').then(screenshotCbSpy);
     test_utils.tickUntilIdle(app, sandbox);
@@ -300,11 +308,11 @@ describe('browser_android_chrome small', function() {
           ['uninstall', /com\.[\w\.]+/],
           ['install', '-r', chromeApk]);
     }
-    if (args.pac) {
+    if (args.task.pac) {
       assertAdbCall('push', /^[^\/]+\.pac_body$/, /^\/.*\/pac_body$/);
     }
     assertAdbCall('shell', 'su', '-c', 'echo x');
-    if (args.pac) {
+    if (args.task.pac) {
       assertAdbCall('shell', 'su', '-c',
           /^while true; do nc -l \d+ < \S+pac_body; done$/);
     }
@@ -314,7 +322,7 @@ describe('browser_android_chrome small', function() {
       '--enable-benchmarking', '--metrics-recording-only',
       '--disable-geolocation', '--disable-external-intent-requests',
       '--disable-infobars', '--enable-remote-debugging'];
-    if (args.pac) {
+    if (args.task.pac) {
       flags.push('--proxy-pac-url=http://127.0.0.1:80/from_netcat');
     }
     assertAdbCalls(
@@ -332,7 +340,7 @@ describe('browser_android_chrome small', function() {
         '^http:\\\/\\\/localhost:(' + Object.keys(serverStub.ports).join('|') +
             ')\\\/json$'));
     should.equal(undefined, browser.getServerUrl());
-    should.equal(!!ncProc, !!args.pac);
+    should.equal(!!ncProc, !!args.task.pac);
     assertAdbCall();
   }
 
@@ -343,7 +351,7 @@ describe('browser_android_chrome small', function() {
     should.ok(!browser.isRunning());
 
     assertAdbCall('forward', '--remove', /^tcp:\d+$/);
-    if (args.pac) {
+    if (args.task.pac) {
       spawnStub.assertCalls({0: 'ps'}, {0: 'kill'});
       assertAdbCall('shell', 'rm', /^\/.*\/pac_body$/);
     }
@@ -352,7 +360,7 @@ describe('browser_android_chrome small', function() {
         ['shell', 'dumpsys', 'window', 'windows']);
     should.equal(undefined, browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());
-    if (args.pac) {
+    if (args.task.pac) {
       should.ok(ncProc.kill.calledOnce);
     }
   }

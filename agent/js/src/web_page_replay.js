@@ -79,16 +79,17 @@ var process_utils = require('process_utils');
  * in case the previous run somehow failed to do that.
  *
  * @param {webdriver.promise.ControlFlow=} app the scheduler.
- * @param {Object.<string>} args options with string values:
- *   #param {string=} deviceAddr IP or MAC address, defaults to 'any'.
- *   #param {string=} wprCommand wpr command, defaults to 'wpr'.
+ * @param {Object} args options:
+ *   #param {Object.<string>} flags:
+ *     #param {string=} deviceAddr IP or MAC address, defaults to 'any'.
+ *     #param {string=} wprCommand wpr command, defaults to 'wpr'.
  * @constructor
  */
 function WebPageReplay(app, args) {
   'use strict';
   this.app_ = app;
-  this.deviceAddr_ = (args.deviceAddr || 'any');
-  this.wprCommand_ = (args.wprcommand || 'wpr');
+  this.deviceAddr_ = (args.flags.deviceAddr || 'any');
+  this.wprCommand_ = (args.flags.wprcommand || 'wpr');
   this.isSupported_ = undefined;
 }
 /** Export class. */

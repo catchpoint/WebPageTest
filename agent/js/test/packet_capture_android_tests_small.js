@@ -161,7 +161,7 @@ describe('packet_capture_android small', function() {
 
   it('should start and stop with on-device tcpdump', function() {
     var pcap = new packet_capture_android.PacketCaptureAndroid(
-        app, {deviceSerial: serial});
+        app, {flags: {deviceSerial: serial}});
 
     spawnStub.callback = function(proc, command, args) {
       var ret = startSpawnStubCallback(proc, command, args);
@@ -201,7 +201,7 @@ describe('packet_capture_android small', function() {
 
     var localTcpdump = '/gaga/tcpdump';
     var pcap = new packet_capture_android.PacketCaptureAndroid(
-        app, {tcpdumpBinary: localTcpdump, deviceSerial: serial});
+        app, { flags: {tcpdumpBinary: localTcpdump, deviceSerial: serial}});
 
     spawnStub.callback = function(proc, command, args) {
       var ret = startSpawnStubCallback(proc, command, args);
