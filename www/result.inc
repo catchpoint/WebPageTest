@@ -69,11 +69,7 @@ $page_description = "Website performance test result$testLabel.";
                 </p>
                 <?php 
                 $expected = $test['test']['runs'];
-                if (!$test['testinfo']['fvonly'])
-                    $expected *= 2;
-                $available = 0;
-                foreach($pageData as &$data)
-                    $available += count($data);
+                $available = count($pageData);
                 echo "<h3>Test is partially complete ($available of $expected tests).<br>This page will refresh as tests complete.</h3>";
                 echo "<script>\n";
                 echo "var availableTests=$available;\n";

@@ -35,8 +35,6 @@ function GetTestStatus($id, $includePosition = true) {
         $ret['testsExpected'] = $testInfoJson['runs'];
         if (array_key_exists('discard', $testInfoJson) && $testInfoJson['discard'] > 0)
           $ret['testsExpected'] -= $testInfoJson['discard'];
-        if (!$testInfoJson['fvonly'])
-          $ret['testsExpected'] *= 2;
         
         if( isset($test['test']['loc']) )
           $ret['location'] = $test['test']['loc'];
@@ -132,7 +130,14 @@ function GetTestStatus($id, $includePosition = true) {
               
               $ret['fvRunsCompleted'] = $fvRuns;
               $ret['rvRunsCompleted'] = $rvRuns;
-              $ret['testsCompleted'] = $fvRuns + $rvRuns;
+              if (array_key_exists('test_runs', $testInfoJson)) {
+                $ret['testsCompleted'] = 0;
+                foreach($testInfoJson['test_runs'] as &$testRun)
+                  if (array_key_exists('done', $testRun) && $testRun['done'])
+                    $ret['testsCompleted']++;
+              } else {
+                $ret['testsCompleted'] = $fvRuns;
+              }
               if ($ret['testsCompleted'] > 0 && $ret['testsExpected'] > 1 && $ret['statusCode'] == 100) {
                 $ret['statusText'] = "Completed {$ret['testsCompleted']} of {$ret['testsExpected']} tests";
               }
