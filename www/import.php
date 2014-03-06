@@ -20,7 +20,7 @@ if (array_key_exists('tests', $_REQUEST)) {
       mkdir($testPath, 0777, true);
 
     // create the test info files
-    gz_file_put_contents("$testPath/testinfo.json", json_encode($test));
+    SaveTestInfo($id, $test);
 
     // write out the ini file
     $testInfo = "[test]\r\n";
@@ -65,9 +65,8 @@ if (array_key_exists('tests', $_REQUEST)) {
         ValidateTestId($_REQUEST['test'])) {
       $id = $_REQUEST['test'];
       RestoreTest($id);
-      $testPath = './' . GetTestPath($id);
-      if (is_dir($testPath) && gz_is_file("$testPath/testinfo.json")) {
-        $test = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+      $test = GetTestInfo($id);
+      if ($test) {
         $test['runs']++;
         $run = $test['runs'];
         if (((array_key_exists('key', $test) && strlen($test['key'])) ||
@@ -140,7 +139,7 @@ if (array_key_exists('tests', $_REQUEST)) {
       }
       
       // create the test info files
-      gz_file_put_contents("$testPath/testinfo.json", json_encode($test));
+      SaveTestInfo($id, $test);
 
       // write out the ini file
       $testInfo = "[test]\r\n";
@@ -165,7 +164,7 @@ if (array_key_exists('tests', $_REQUEST)) {
       include('workdone.php');
 
       // re-load the test info
-      $test = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+      $test = GetTestInfo($id);
     }
     
     // Return the test ID (or redirect if not using the API)

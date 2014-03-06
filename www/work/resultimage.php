@@ -13,8 +13,8 @@ $id = $_REQUEST['id'];
 
 $path = './' . GetTestPath($id);
 $testPath = $path;
-if (ValidateTestId($id) && gz_is_file("$path/testinfo.json")) {
-  $testInfo = json_decode(gz_file_get_contents("$path/testinfo.json"), true);
+if (ValidateTestId($id)) {
+  $testInfo = GetTestInfo($id);
   if ($testInfo && is_array($testInfo) && array_key_exists('location', $testInfo)) {
     $location = $testInfo['location'];
     $locKey = GetLocationKey($location);
@@ -69,6 +69,7 @@ if (ValidateTestId($id) && gz_is_file("$path/testinfo.json")) {
 */
 function MoveUploadedFile($src, $dest) {
   move_uploaded_file($src, $dest);
+  touch($dest);
   @chmod($dest, 0666);
 }
 ?>

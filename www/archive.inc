@@ -1,6 +1,7 @@
 <?php
 require_once('testStatus.inc');
 require_once('logging.inc');
+require_once('common_lib.inc');
 
 /**
 * Archive the given test if it hasn't already been archived
@@ -22,8 +23,8 @@ function ArchiveTest($id, $store_result = true) {
             $completed = false;
         }
         $testPath = realpath('./' . GetTestPath($id));
-        $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-        if ($completed || $testInfo['batch']) {
+        $testInfo = GetTestInfo($id);
+        if ($testInfo && ($completed || $testInfo['batch'])) {
             if( isset($testInfo['archived']) && $testInfo['archived'] ) {
                 if (VerifyArchive($id)) {
                     $ret = true;
@@ -31,7 +32,7 @@ function ArchiveTest($id, $store_result = true) {
                     $zipFile = GetArchiveFile($id, true);
                     unlink($zipFile);
                     $testInfo['archived'] = false;
-                    gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+                    SaveTestInfo($id, $testInfo);
                 }
             }
             
@@ -101,7 +102,7 @@ function ArchiveTest($id, $store_result = true) {
                             unlink($zipFile);
                         if ($ret && $store_result) {
                             $testInfo['archived'] = true;
-                            gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+                            SaveTestInfo($id, $testInfo);
                         }
                     }
                 }
@@ -189,11 +190,13 @@ function RestoreArchive($id) {
                 $zip->extractTo($testPath);
                 $zip->close();
 
-                $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-                $testInfo['archived'] = true;
-                $testInfo['restored'] = true;
-                $testInfo['restoredDataOnly'] = false;
-                gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+                $testInfo = GetTestInfo($id);
+                if ($testInfo) {
+                  $testInfo['archived'] = true;
+                  $testInfo['restored'] = true;
+                  $testInfo['restoredDataOnly'] = false;
+                  SaveTestInfo($id, $testInfo);
+                }
                 
                 $ret = true;
             }    

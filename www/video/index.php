@@ -45,7 +45,7 @@ $page_description = "Visually compare the performance of multiple websites with 
                                 $testPath = './' . GetTestPath($tid);
                                 $pageData = loadAllPageData($testPath);
                                 $url = trim($pageData[1][0]['URL']);
-                                $testInfo = json_decode(gz_file_get_contents("./$testPath/testinfo.json"), true);
+                                $testInfo = GetTestInfo($tid);
                                 $label = trim($testInfo['label']);
                                 if( strlen($url) )
                                 {

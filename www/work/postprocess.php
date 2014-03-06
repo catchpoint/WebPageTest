@@ -25,16 +25,16 @@ if (array_key_exists('test', $_REQUEST)) {
   $id = $_REQUEST['test'];
   if (ValidateTestId($id)) {
     $testPath = './' . GetTestPath($id);
-    $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+    $testInfo = GetTestInfo($id);
 
     // log any slow tests
     $slow_test_time = GetSetting('slow_test_time');
     if (isset($testInfo) && $slow_test_time && array_key_exists('url', $testInfo) && strlen($testInfo['url'])) {
-        $elapsed = time() - $testInfo['started'];
-        if ($elapsed > $slow_test_time) {
-            $log_entry = gmdate("m/d/y G:i:s", $testInfo['started']) . "\t$elapsed\t{$testInfo['ip']}\t{$testInfo['url']}\t{$testInfo['location']}\t$id\n";
-            error_log($log_entry, 3, './tmp/slow_tests.log');
-        }
+      $elapsed = time() - $testInfo['started'];
+      if ($elapsed > $slow_test_time) {
+        $log_entry = gmdate("m/d/y G:i:s", $testInfo['started']) . "\t$elapsed\t{$testInfo['ip']}\t{$testInfo['url']}\t{$testInfo['location']}\t$id\n";
+        error_log($log_entry, 3, './tmp/slow_tests.log');
+      }
     }
     
     // see if we need to send a showslow beacon
@@ -46,25 +46,26 @@ if (array_key_exists('test', $_REQUEST)) {
           $beaconUrl = "$showslow/beacon/webpagetest/";
           $showslow_key = GetSetting('showslow_key');
           if ($showslow_key && strlen($showslow_key))
-              $beaconUrl .= '?key=' . trim($showslow_key);
+            $beaconUrl .= '?key=' . trim($showslow_key);
           $beaconRate = GetSetting('beaconRate');
-          if ($beaconRate && rand(1, 100) > $beaconRate )
-              unset($beaconUrl);
-          else {
-              $testInfo['showslow'] = 1;
-              $testInfo_dirty = true;
+          if ($beaconRate && rand(1, 100) > $beaconRate ) {
+            unset($beaconUrl);
+          } else {
+            $lock = LockTest($id);
+            if ($lock) {
+              $testInfo = GetTestInfo($id);
+              if ($testInfo) {
+                $testInfo['showslow'] = 1;
+                SaveTestInfo($id, $testInfo);
+              }
+              UnlockTest($lock);
+            }
           }
       }
     }
 
-    if( isset($testInfo) && $testInfo_dirty ) {
-        $testInfo_dirty = false;
-        gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
-    }
-    
     // archive the actual test
-    if (isset($testInfo))
-      ArchiveTest($id, false);
+    ArchiveTest($id, false);
 
     // post the test to tsview if requested
     $tsviewdb = GetSetting('tsviewdb');
@@ -78,45 +79,41 @@ if (array_key_exists('test', $_REQUEST)) {
     
     // Send an email notification if necessary
     $notifyFrom = GetSetting('notifyFrom');
-    if( $notifyFrom && strlen($notifyFrom) && is_file("$testPath/testinfo.ini") )
-    {
-        $host = GetSetting('host');
-        $test = parse_ini_file("$testPath/testinfo.ini",true);
-        if( array_key_exists('notify', $test['test']) && strlen($test['test']['notify']) )
-            notify( $test['test']['notify'], $notifyFrom, $id, $testPath, $host );
+    if ($notifyFrom && strlen($notifyFrom) && is_file("$testPath/testinfo.ini")) {
+      $host = GetSetting('host');
+      $test = parse_ini_file("$testPath/testinfo.ini",true);
+      if( array_key_exists('notify', $test['test']) && strlen($test['test']['notify']) )
+        notify( $test['test']['notify'], $notifyFrom, $id, $testPath, $host );
     }
 
     // send a callback/pingback request
-    if( isset($testInfo) && isset($testInfo['callback']) && strlen($testInfo['callback']) )
-    {
-        $send_callback = true;
-        $testId = $id;
-        
-        if (array_key_exists('batch_id', $testInfo) && strlen($testInfo['batch_id'])) {
-            require_once('testStatus.inc');
-            $testId = $testInfo['batch_id'];
-            $status = GetTestStatus($testId);
-            $send_callback = false;
-            if (array_key_exists('statusCode', $status) && $status['statusCode'] == 200)
-                $send_callback = true;
-        }
-        
-        if ($send_callback) {
-            $url = $testInfo['callback'];
-            if( strncasecmp($url, 'http', 4) )
-                $url = "http://" . $url;
-            if( strpos($url, '?') == false )
-                $url .= '?';
-            else
-                $url .= '&';
-            $url .= "id=$testId";
-            SendCallback($url);
-        }
+    if (isset($testInfo) && isset($testInfo['callback']) && strlen($testInfo['callback'])) {
+      $send_callback = true;
+      $testId = $id;
+      if (array_key_exists('batch_id', $testInfo) && strlen($testInfo['batch_id'])) {
+        require_once('testStatus.inc');
+        $testId = $testInfo['batch_id'];
+        $status = GetTestStatus($testId);
+        $send_callback = false;
+        if (array_key_exists('statusCode', $status) && $status['statusCode'] == 200)
+          $send_callback = true;
+      }
+      
+      if ($send_callback) {
+        $url = $testInfo['callback'];
+        if( strncasecmp($url, 'http', 4) )
+          $url = "http://" . $url;
+        if( strpos($url, '?') == false )
+          $url .= '?';
+        else
+          $url .= '&';
+        $url .= "id=$testId";
+        SendCallback($url);
+      }
     }
 
     // send a beacon?
-    if( isset($beaconUrl) && strlen($beaconUrl) )
-    {
+    if (isset($beaconUrl) && strlen($beaconUrl)) {
       require_once 'page_data.inc';
       $pageData = loadAllPageData($testPath);
       include('./work/beacon.inc');
@@ -135,4 +132,78 @@ function SendCallback($url) {
   curl_exec($c);
   curl_close($c);
 }
+
+/**
+* Send a mail notification to the user
+* 
+* @param mixed $mailto
+* @param mixed $id
+* @param mixed $testPath
+*/
+function notify( $mailto, $from,  $id, $testPath, $host )
+{
+    global $test;
+    
+    // calculate the results
+    require_once 'page_data.inc';
+    $headers  = "MIME-Version: 1.0\r\n";
+    $headers .= "Content-type: text/html; charset=iso-8859-1\r\n";
+    $headers .= "From: $from\r\n";
+    $headers .= "Reply-To: $from";
+    
+    $pageData = loadAllPageData($testPath);
+    $url = trim($pageData[1][0]['URL']);
+    $shorturl = substr($url, 0, 40);
+    if( strlen($url) > 40 )
+        $shorturl .= '...';
+    
+    $subject = "Test results for $shorturl";
+    
+    if( !isset($host) )
+        $host  = $_SERVER['HTTP_HOST'];
+
+    $fv = GetMedianRun($pageData, 0);
+    if( isset($fv) && $fv ) {
+        $load = number_format($pageData[$fv][0]['loadTime'] / 1000.0, 3);
+        $render = number_format($pageData[$fv][0]['render'] / 1000.0, 3);
+        $numRequests = number_format($pageData[$fv][0]['requests'],0);
+        $bytes = number_format($pageData[$fv][0]['bytesIn'] / 1024, 0);
+        $result = "http://$host/result/$id";
+        
+        // capture the optimization report
+        require_once 'optimization.inc';
+        require_once('object_detail.inc');
+        $secure = false;
+        $haveLocations = false;
+        $requests = getRequests($id, $testPath, 1, 0, $secure, $haveLocations, false);
+        ob_start();
+        dumpOptimizationReport($pageData[$fv][0], $requests, $id, 1, 0, $test);
+        $optimization = ob_get_contents();
+        ob_end_clean();
+        
+        // build the message body
+        $body = 
+        "<html>
+            <head>
+                <title>$subject</title>
+                <style type=\"text/css\">
+                    .indented1 {padding-left: 40pt;}
+                    .indented2 {padding-left: 80pt;}
+                </style>
+            </head>
+            <body>
+            <p>The full test results for <a href=\"$url\">$url</a> are now <a href=\"$result/\">available</a>.</p>
+            <p>The page loaded in <b>$load seconds</b> with the user first seeing something on the page after <b>$render seconds</b>.  To download 
+            the page required <b>$numRequests requests</b> and <b>$bytes KB</b>.</p>
+            <p>Here is what the page looked like when it loaded (click the image for a larger view):<br><a href=\"$result/$fv/screen_shot/\"><img src=\"$result/{$fv}_screen_thumb.jpg\"></a></p>
+            <h3>Here are the things on the page that could use improving:</h3>
+            $optimization
+            </body>
+        </html>";
+
+        // send the actual mail
+        mail($mailto, $subject, $body, $headers);
+    }
+}
+
 ?>

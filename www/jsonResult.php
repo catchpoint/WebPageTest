@@ -37,8 +37,7 @@ function GetTestResult($id) {
     $pageStats = calculatePageStats($pageData, $stats[0], $stats[1]);
     if( !strlen($url) )
         $url = $pageData[1][0]['URL'];
-    if (gz_is_file("$testPath/testinfo.json"))
-        $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+    $testInfo = GetTestInfo($id);
     if (is_file("$testPath/testinfo.ini"))
         $test = parse_ini_file("$testPath/testinfo.ini", true);
     $fvOnly = false;

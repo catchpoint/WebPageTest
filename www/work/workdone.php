@@ -1,12 +1,11 @@
 <?php
 if(extension_loaded('newrelic')) { 
-  newrelic_add_custom_tracer('StartProcessingIncrementalResult');
+  newrelic_add_custom_tracer('ProcessIncrementalResult');
   newrelic_add_custom_tracer('CheckForSpam');
   newrelic_add_custom_tracer('loadPageRunData');
   newrelic_add_custom_tracer('getBreakdown');
   newrelic_add_custom_tracer('GetVisualProgress');
   newrelic_add_custom_tracer('DevToolsGetConsoleLog');
-  newrelic_add_custom_tracer('FinishProcessingIncrementalResult');
 }
 
 chdir('..');
@@ -26,10 +25,10 @@ if (!isset($included)) {
   ignore_user_abort(true);
 }
 set_time_limit(60*5);
+ignore_user_abort(true);
 
 $key  = $_REQUEST['key'];
 $id   = $_REQUEST['id'];
-$testLock = null;
 
 if(extension_loaded('newrelic')) { 
   newrelic_add_custom_parameter('test', $id);
@@ -105,13 +104,14 @@ if (ValidateTestId($id)) {
       $ini .= 'completed=' . gmdate('c') . "\r\n";
       file_put_contents($iniFile, $ini);
     }
-  } elseif(gz_is_file("$testPath/testinfo.json")) {
-    $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-    if (isset($testInfo) && is_array($testInfo) && array_key_exists('location', $testInfo)) {
+  } else {
+    $testInfo = GetTestInfo($id);
+    if ($testInfo && array_key_exists('location', $testInfo)) {
       $location = $testInfo['location'];
       $locKey = GetLocationKey($location);
       logMsg("\n\nWork received for test: $id, location: $location, key: $key\n");
       if ((!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADDR'], "127.0.0.1")) {
+        $testLock = LockTest($id);
         // update the location time
         if( strlen($location) ) {
             if( !is_dir('./tmp') )
@@ -138,7 +138,7 @@ if (ValidateTestId($id)) {
           UpdateTester($location, $tester, $testerInfo, $cpu);
         }
         if (array_key_exists('shard_test', $testInfo) && $testInfo['shard_test'])
-          StartProcessingIncrementalResult();
+          ProcessIncrementalResult();
 
         if (array_key_exists('file', $_FILES) && array_key_exists('tmp_name', $_FILES['file'])) {
           if (isset($har) && $har) {
@@ -173,10 +173,10 @@ if (ValidateTestId($id)) {
             }
           }
         }
-        CheckForSpam();
+        //CheckForSpam();
         
         // make sure the test result is valid, otherwise re-run it
-        if ($done && !$har && !$pcap && isset($testInfo) &&
+        if ($done && !$har && !$pcap &&
             array_key_exists('job_file', $testInfo) && 
             array_key_exists('max_retries', $testInfo) && 
             $testInfo['max_retries'] > 1) {
@@ -229,12 +229,34 @@ if (ValidateTestId($id)) {
           $testInfo_dirty = true;
         }
 
-        // pre-process any background processing we need to do for this run
-        if (isset($runNumber) && isset($cacheWarmed))
-          ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed, false);
-            
+        // mark this run as complete
+        if (isset($runNumber) && isset($cacheWarmed)) {
+          if ($testInfo['fvonly'] || $cacheWarmed) {
+            if (!array_key_exists('test_runs', $testInfoJson))
+              $testInfo['test_runs'] = array();
+            if (array_key_exists($runNumber, $testInfo['test_runs']))
+              $testInfo['test_runs'][$runNumber]['done'] = true;
+            else
+              $testInfo['test_runs'][$runNumber] = array('done' => true);
+            $testInfo_dirty = true;
+          }
+        }
+        
         // see if the test is complete
         if ($done) {
+          // Mark the test as done and save it out so that we can load the page data
+          $testInfo['completed'] = $time;
+          if (!array_key_exists('test_runs', $testInfoJson))
+            $testInfo['test_runs'] = array();
+          for ($run = 1; $run <= $testInfo['runs']; $run++) {
+            if (array_key_exists($run, $testInfo['test_runs']))
+              $testInfo['test_runs'][$run]['done'] = true;
+            else
+              $testInfo['test_runs'][$run] = array('done' => true);
+          }
+          SaveTestInfo($id, $testInfo);
+          $testInfo_dirty = false;
+          
           // delete any .test files
           $files = scandir($testPath);
           foreach ($files as $file)
@@ -254,19 +276,8 @@ if (ValidateTestId($id)) {
           if (!isset($pageData))
             $pageData = loadAllPageData($testPath);
           $medianRun = GetMedianRun($pageData, 0);
-
-          // calculate and cache the content breakdown and visual progress information
-          if( isset($testInfo) ) {
-            require_once('breakdown.inc');
-            for ($i = 1; $i <= $testInfo['runs']; $i++) {
-              getBreakdown($id, $testPath, $i, 0, $requests);
-              GetVisualProgress($testPath, $i, 0);
-              if (!$testInfo['fvonly']) {
-                getBreakdown($id, $testPath, $i, 1, $requests);
-                GetVisualProgress($testPath, $i, 1);
-              }
-            }
-          }
+          $testInfo['medianRun'] = $medianRun;
+          $testInfo_dirty = true;
 
           // delete all of the videos except for the median run?
           if( array_key_exists('median_video', $ini) && $ini['median_video'] )
@@ -284,33 +295,26 @@ if (ValidateTestId($id)) {
             file_put_contents("$testPath/testinfo.ini", $out);
           }
 
-          if (!isset($testInfo['completed'])) {
-            $testInfo['completed'] = $time;
-            $testInfo['medianRun'] = $medianRun;
-            gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
-            $testInfo_dirty = false;
-            
-            if ($lock = LockLocation($location)) {
-              $testCount = $testInfo['runs'];
-              if( !$testInfo['fvonly'] )
-                  $testCount *= 2;
-                  
-              if ($testInfo['started'] && $time > $testInfo['started'] && $testCount) {
-                $perTestTime = ceil(($time - $testInfo['started']) / $testCount);
-                $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
-                if( !$tests )
-                  $tests = array();
-                // keep track of the average time for the last 100 tests
-                $tests['times'][] = $perTestTime;
-                if( count($tests['times']) > 100 )
-                  array_shift($tests['times']);
-                // update the number of high-priority "page loads" that we think are in the queue
-                if( array_key_exists('tests', $tests) && $testInfo['priority'] == 0 )
-                  $tests['tests'] = max(0, $tests['tests'] - $testCount);
-                file_put_contents("./tmp/$location.tests", json_encode($tests));
-              }
-              UnlockLocation($lock);
+          if ($lock = LockLocation($location)) {
+            $testCount = $testInfo['runs'];
+            if( !$testInfo['fvonly'] )
+                $testCount *= 2;
+                
+            if ($testInfo['started'] && $time > $testInfo['started'] && $testCount) {
+              $perTestTime = ceil(($time - $testInfo['started']) / $testCount);
+              $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
+              if( !$tests )
+                $tests = array();
+              // keep track of the average time for the last 100 tests
+              $tests['times'][] = $perTestTime;
+              if( count($tests['times']) > 100 )
+                array_shift($tests['times']);
+              // update the number of high-priority "page loads" that we think are in the queue
+              if( array_key_exists('tests', $tests) && $testInfo['priority'] == 0 )
+                $tests['tests'] = max(0, $tests['tests'] - $testCount);
+              file_put_contents("./tmp/$location.tests", json_encode($tests));
             }
+            UnlockLocation($lock);
           }
           
           // see if it is an industry benchmark test
@@ -325,7 +329,7 @@ if (ValidateTestId($id)) {
                 $ind;
                 $data = file_get_contents('./video/dat/industry.dat');
                 if( $data )
-                    $ind = json_decode($data, true);
+                  $ind = json_decode($data, true);
                 $update = array();
                 $update['id'] = $id;
                 $update['last_updated'] = $now;
@@ -337,101 +341,40 @@ if (ValidateTestId($id)) {
               fclose($lockFile);
             }
           }
+        }
+
+        if ($testInfo_dirty)
+          SaveTestInfo($is, $testInfo);
+
+        SecureDir($testPath);
+        UnlockTest($testLock);
+        /*************************************************************************
+        * Do No modify TestInfo after this point
+        **************************************************************************/
           
-          if ($testInfo_dirty) {
-              $testInfo_dirty = false;
-              gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+        // Do any post-processing on this individual run that doesn't requre the test to be locked
+        if (isset($runNumber) && isset($cacheWarmed)) {
+          $secure = false;
+          $haveLocations = false;
+          $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure, $haveLocations, false);
+          if (isset($requests)) {
+            require_once('breakdown.inc');
+            getBreakdown($id, $testPath, $runNumber, $cacheWarmed, $requests);
+            GetVisualProgress($testPath, $runNumber, $cacheWarmed);
           }
-          SecureDir($testPath);
-          FinishProcessingIncrementalResult();
-          
+          ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed);
+        }
+
+        // do any post-processing when the full test is complete that doesn't rely on testinfo        
+        if ($done) {
           // send an async request to the post-processing code so we don't block
           SendAsyncRequest("/work/postprocess.php?test=$id");
-        } else {
-          if( isset($testInfo) && $testInfo_dirty )
-            gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
-          SecureDir($testPath);
-          FinishProcessingIncrementalResult();
         }
       } else {
         logMsg("location key incorrect\n");
       }
     }
   }
-}
-
-/**
-* Send a mail notification to the user
-* 
-* @param mixed $mailto
-* @param mixed $id
-* @param mixed $testPath
-*/
-function notify( $mailto, $from,  $id, $testPath, $host )
-{
-    global $test;
-    
-    // calculate the results
-    require_once 'page_data.inc';
-    $headers  = "MIME-Version: 1.0\r\n";
-    $headers .= "Content-type: text/html; charset=iso-8859-1\r\n";
-    $headers .= "From: $from\r\n";
-    $headers .= "Reply-To: $from";
-    
-    $pageData = loadAllPageData($testPath);
-    $url = trim($pageData[1][0]['URL']);
-    $shorturl = substr($url, 0, 40);
-    if( strlen($url) > 40 )
-        $shorturl .= '...';
-    
-    $subject = "Test results for $shorturl";
-    
-    if( !isset($host) )
-        $host  = $_SERVER['HTTP_HOST'];
-
-    $fv = GetMedianRun($pageData, 0);
-    if( isset($fv) && $fv )
-    {
-        $load = number_format($pageData[$fv][0]['loadTime'] / 1000.0, 3);
-        $render = number_format($pageData[$fv][0]['render'] / 1000.0, 3);
-        $numRequests = number_format($pageData[$fv][0]['requests'],0);
-        $bytes = number_format($pageData[$fv][0]['bytesIn'] / 1024, 0);
-        $result = "http://$host/result/$id";
-        
-        // capture the optimization report
-        require_once 'optimization.inc';
-        require_once('object_detail.inc');
-        $secure = false;
-        $haveLocations = false;
-        $requests = getRequests($id, $testPath, 1, 0, $secure, $haveLocations, false);
-        ob_start();
-        dumpOptimizationReport($pageData[$fv][0], $requests, $id, 1, 0, $test);
-        $optimization = ob_get_contents();
-        ob_end_clean();
-        
-        // build the message body
-        $body = 
-        "<html>
-            <head>
-                <title>$subject</title>
-                <style type=\"text/css\">
-                    .indented1 {padding-left: 40pt;}
-                    .indented2 {padding-left: 80pt;}
-                </style>
-            </head>
-            <body>
-            <p>The full test results for <a href=\"$url\">$url</a> are now <a href=\"$result/\">available</a>.</p>
-            <p>The page loaded in <b>$load seconds</b> with the user first seeing something on the page after <b>$render seconds</b>.  To download 
-            the page required <b>$numRequests requests</b> and <b>$bytes KB</b>.</p>
-            <p>Here is what the page looked like when it loaded (click the image for a larger view):<br><a href=\"$result/$fv/screen_shot/\"><img src=\"$result/{$fv}_screen_thumb.jpg\"></a></p>
-            <h3>Here are the things on the page that could use improving:</h3>
-            $optimization
-            </body>
-        </html>";
-
-        // send the actual mail
-        mail($mailto, $subject, $body, $headers);
-    }
 }
 
 /**
@@ -1453,76 +1396,39 @@ function ResetTestDir($testPath) {
 * Handle sharded test results where they come in individually
 * 
 */
-function StartProcessingIncrementalResult() {
-    global $id;
-    global $testPath;
-    global $done;
-    global $testInfo;
-    global $testInfo_dirty;
-    global $runNumber;
-    global $runIndex;
-    global $cacheWarmed;
-    global $testLock;
-    global $location;
-    global $admin;
+function ProcessIncrementalResult() {
+  global $testPath;
+  global $done;
+  global $testInfo;
+  global $testInfo_dirty;
+  global $runNumber;
+  global $cacheWarmed;
+  global $location;
 
-    if( $testLock = fopen( "$testPath/test.lock", 'w',  false) )
-        flock($testLock, LOCK_EX);
-
-    // re-load the testinfo from disk so we don't write stale data acquired from outside the lock
-    $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-    if( isset($testInfo) ) {
-        $testInfo['last_updated'] = $time;
-        $testInfo_dirty = true;
+  if ($done) {
+    // mark this test as done
+    $testInfo['test_runs'][$runNumber]['done'] = true;
+    $testInfo_dirty = true;
+    
+    // make sure all of the sharded tests are done
+    for ($run = 1; $run <= $testInfo['runs'] && $done; $run++) {
+      if (!$testInfo['test_runs'][$run]['done'])
+        $done = false;
     }
-
-    if ($done) {
-        if (!array_key_exists('test_runs', $testInfo)) {
-            $testInfo['test_runs'] = array();
-            for ($run = 1; $run <= $testInfo['runs']; $run++) {
-                $testInfo['test_runs'][$run] = array();
-            }
+    
+    if (!$done &&
+        array_key_exists('discarded', $testInfo['test_runs'][$runNumber]) &&
+        $testInfo['test_runs'][$runNumber]['discarded']) {
+      if (is_file("$testPath/test.job")) {
+        if ($lock = LockLocation($location)) {
+          if (copy("$testPath/test.job", $testInfo['job_file'])) {
+            AddJobFileHead($testInfo['workdir'], $testInfo['job'], $testInfo['priority'], true);
+          }
+          UnlockLocation($lock);
         }
-        
-        // mark this test as done
-        $testInfo['test_runs'][$runNumber]['done'] = true;
-        $testInfo_dirty = true;
-        
-        // make sure all of the sharded tests are done
-        for ($run = 1; $run <= $testInfo['runs'] && $done; $run++) {
-            if (!$testInfo['test_runs'][$run]['done'])
-                $done = false;
-        }
-        
-        if (!$done &&
-            array_key_exists('discarded', $testInfo['test_runs'][$runNumber]) &&
-            $testInfo['test_runs'][$runNumber]['discarded']) {
-            if (is_file("$testPath/test.job")) {
-                if ($lock = LockLocation($location)) {
-                    if (copy("$testPath/test.job", $testInfo['job_file'])) {
-                        AddJobFileHead($testInfo['workdir'], $testInfo['job'], $testInfo['priority'], true);
-                    }
-                    UnlockLocation($lock);
-                }
-            }
-        }
+      }
     }
-}
-
-/**
-* Clean up the test lock that protects the sharded test result processing
-* 
-*/
-function FinishProcessingIncrementalResult() {
-    global $testPath;
-    global $testLock;
-    global $done;
-    if (isset($testLock) && $testLock) {
-        flock($testLock, LOCK_UN);
-        fclose($testLock);
-    }
-    if ($done)
-        unlink("$testPath/test.lock");
+  }
 }
 
 /**

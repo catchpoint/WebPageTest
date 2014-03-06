@@ -9,34 +9,37 @@ require_once('devtools.inc.php');
 * @param mixed $run
 * @param mixed $cached
 */
-function loadAllPageData($testPath, $options = null)
-{
-    $ret = array();
-    
-    // go in order for the number of runs there are supposed to be
-    if (is_file("$testPath/testinfo.ini")) {
-      $ini = parse_ini_file("$testPath/testinfo.ini", true);
-      if( gz_is_file("$testPath/testinfo.json") )
-          $ini['testinfo'] = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-      $runs = $ini['test']['runs'];
-      $fvonly = $ini['test']['fvonly'];
-      for( $run = 1; $run <= $runs; $run++ )
-      {
-          $data = loadPageRunData($testPath, $run, 0, $options);
+function loadAllPageData($testPath, $options = null) {
+  $ret = array();
+  
+  // go in order for the number of runs there are supposed to be
+  if (is_file("$testPath/testinfo.ini")) {
+    $ini = parse_ini_file("$testPath/testinfo.ini", true);
+    $runs = $ini['test']['runs'];
+    $fvonly = $ini['test']['fvonly'];
+    $testInfo = GetTestInfo($testPath);
+    $completed = true;
+    if ($testInfo && (!array_key_exists('completed', $testInfo) || !$testInfo['completed']))
+      $completed = false;
+      
+    for( $run = 1; $run <= $runs; $run++ ) {
+      // olny load page data for indifidual runs that are complete (or if the whole test is complete)
+      if ($completed || !$testInfo || IsTestRunComplete($run, $testInfo)) {
+        $data = loadPageRunData($testPath, $run, 0, $options);
+        if( isset($data) )
+          $ret[$run][0] = $data;
+        
+        if( !$fvonly ) {
+          unset( $data );
+          $data = loadPageRunData($testPath, $run, 1, $options);
           if( isset($data) )
-              $ret[$run][0] = $data;
-          
-          if( !$fvonly )
-          {
-              unset( $data );
-              $data = loadPageRunData($testPath, $run, 1, $options);
-              if( isset($data) )
-                  $ret[$run][1] = $data;
-          }
+            $ret[$run][1] = $data;
+        }
       }
     }
-    
-    return $ret;
+  }
+  
+  return $ret;
 }
 
 /**

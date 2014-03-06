@@ -62,7 +62,7 @@ function CheckTest($dir)
     global $count;
     
     echo "\r$count: Checking $dir                      ";
-    $testinfo = json_decode(gz_file_get_contents("$dir/testinfo.json"), true);
+    $testinfo = GetTestInfo($dir);
     if( $testinfo )
     {
         if( $testinfo['started'] && $testinfo['completed'] )

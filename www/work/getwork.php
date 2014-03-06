@@ -124,17 +124,27 @@ function GetJob() {
                             file_put_contents("$testPath/testinfo.ini", $out);
                         }
                         
-                        if( gz_is_file("$testPath/testinfo.json") ) {
-                            $testInfoJson = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+                        $lock = LockTest($testId);
+                        if ($lock) {
+                          $testInfoJson = GetTestInfo($testId);
+                          if ($testInfoJson) {
                             if (!array_key_exists('tester', $testInfoJson) || !strlen($testInfoJson['tester']))
-                                $testInfoJson['tester'] = $tester;
+                              $testInfoJson['tester'] = $tester;
                             if (isset($dnsServers) && strlen($dnsServers))
-                                $testInfoJson['testerDNS'] = $dnsServers;
+                              $testInfoJson['testerDNS'] = $dnsServers;
                             if (!array_key_exists('started', $testInfoJson) || !strlen($testInfoJson['started']))
-                                $testInfoJson['started'] = $time;
+                              $testInfoJson['started'] = $time;
+                            if (!array_key_exists('test_runs', $testInfoJson))
+                              $testInfoJson['test_runs'] = array();
+                            for ($run = 1; $run <= $testInfo['runs']; $run++) {
+                              if (!array_key_exists($run, $testInfoJson['test_runs']))
+                                $testInfoJson['test_runs'][$run] = array('done' => false);
+                            }
                             $testInfoJson['id'] = $testId;
                             ProcessTestShard($testInfoJson, $testInfo, $delete);
-                            gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfoJson));
+                            SaveTestInfo($testId, $testInfoJson);
+                          }
+                          UnlockTest($lock);
                         }
                         file_put_contents("./tmp/last-test-{$location}-{$tester}.test", $testId);
                     }
@@ -363,78 +373,65 @@ function CheckCron() {
 * @param mixed $testInfo
 */
 function ProcessTestShard(&$testInfo, &$test, &$delete) {
-    global $supports_sharding;
-    global $tester;
-    if (isset($testInfo) && array_key_exists('shard_test', $testInfo) && $testInfo['shard_test']) {
-        if ((array_key_exists('type', $testInfo) && $testInfo['type'] == 'traceroute') ||
-            !$supports_sharding) {
-            $testInfo['shard_test'] = 0;
-        } else {
-            if( $testLock = fopen( "$testPath/test.lock", 'w',  false) )
-                flock($testLock, LOCK_EX);
-            $done = true;
-            $assigned_run = 0;
-            if (!array_key_exists('test_runs', $testInfo)) {
-                $testInfo['test_runs'] = array();
-                for ($run = 1; $run <= $testInfo['runs']; $run++) {
-                    $testInfo['test_runs'][$run] = array();
-                }
-            }
-            
-            // find a run to assign to a tester
-            for ($run = 1; $run <= $testInfo['runs']; $run++) {
-                if (!array_key_exists('tester', $testInfo['test_runs'][$run])) {
-                    $testInfo['test_runs'][$run]['tester'] = $tester;
-                    $testInfo['test_runs'][$run]['started'] = time();
-                    $testInfo['test_runs'][$run]['done'] = false;
-                    $assigned_run = $run;
-                    break;
-                }
-            }
-            
-            // go through again and see if all tests have been assigned
-            for ($run = 1; $run <= $testInfo['runs']; $run++) {
-                if (!array_key_exists('tester', $testInfo['test_runs'][$run])) {
-                    $done = false;
-                    break;
-                }
-            }
-            
-            if ($assigned_run) {
-                $append = "run=$assigned_run\r\n";
-
-                // Figure out if this test needs to be discarded
-                $index = $assigned_run;
-                if (array_key_exists('discard', $testInfo)) {
-                    if ($index <= $testInfo['discard']) {
-                        $append .= "discardTest=1\r\n";
-                        $index = 1;
-                        $done = true;
-                        $testInfo['test_runs'][$assigned_run]['discarded'] = true;
-                    } else {
-                        $index -= $testInfo['discard'];
-                    }
-                }
-                $append .= "index=$index\r\n";
-                
-                $insert = strpos($test, "\nurl");
-                if ($insert !== false) {
-                    $test = substr($test, 0, $insert + 1) . 
-                            $append . 
-                            substr($test, $insert + 1);
-                } else {
-                    $test = "run=$assigned_run\r\n" + $test;
-                }
-            }
-
-            if (!$done)
-                $delete = false;
-                
-            if (isset($testLock) && $testLock) {
-                flock($testLock, LOCK_UN);
-                fclose($testLock);
-            }
+  global $supports_sharding;
+  global $tester;
+  if (array_key_exists('shard_test', $testInfo) && $testInfo['shard_test']) {
+    if ((array_key_exists('type', $testInfo) && $testInfo['type'] == 'traceroute') ||
+        !$supports_sharding) {
+      $testInfo['shard_test'] = 0;
+    } else {
+      $done = true;
+      $assigned_run = 0;
+      
+      // find a run to assign to a tester
+      for ($run = 1; $run <= $testInfo['runs']; $run++) {
+        if (!array_key_exists('tester', $testInfo['test_runs'][$run])) {
+          $testInfo['test_runs'][$run]['tester'] = $tester;
+          $testInfo['test_runs'][$run]['started'] = time();
+          $testInfo['test_runs'][$run]['done'] = false;
+          $assigned_run = $run;
+          break;
         }
+      }
+      
+      // go through again and see if all tests have been assigned
+      for ($run = 1; $run <= $testInfo['runs']; $run++) {
+        if (!array_key_exists('tester', $testInfo['test_runs'][$run])) {
+          $done = false;
+          break;
+        }
+      }
+      
+      if ($assigned_run) {
+        $append = "run=$assigned_run\r\n";
+
+        // Figure out if this test needs to be discarded
+        $index = $assigned_run;
+        if (array_key_exists('discard', $testInfo)) {
+          if ($index <= $testInfo['discard']) {
+            $append .= "discardTest=1\r\n";
+            $index = 1;
+            $done = true;
+            $testInfo['test_runs'][$assigned_run]['discarded'] = true;
+          } else {
+            $index -= $testInfo['discard'];
+          }
+        }
+        $append .= "index=$index\r\n";
+        
+        $insert = strpos($test, "\nurl");
+        if ($insert !== false) {
+          $test = substr($test, 0, $insert + 1) . 
+                  $append . 
+                  substr($test, $insert + 1);
+        } else {
+          $test = "run=$assigned_run\r\n" + $test;
+        }
+      }
+
+      if (!$done)
+        $delete = false;
     }
+  }
 }
 ?>

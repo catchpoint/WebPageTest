@@ -16,8 +16,7 @@ if(extension_loaded('newrelic')) {
 */
 function ProcessAllAVIVideos($testPath) {
   if (is_dir($testPath)) {
-    if(gz_is_file("$testPath/testinfo.json"))
-      $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+    $testInfo = GetTestInfo($testPath);
     $files = scandir($testPath);
     foreach ($files as $file) {
       if (preg_match('/^(?P<run>[0-9]+)(?P<cached>_Cached)?(_video|_appurify).(?P<ext>avi|mp4)$/', $file, $matches)) {
@@ -25,7 +24,14 @@ function ProcessAllAVIVideos($testPath) {
         $cached = 0;
         if (array_key_exists('cached', $matches) && strlen($matches['cached']))
             $cached = 1;
-        ProcessAVIVideo($testInfo, $testPath, $run, $cached);
+        $cachedText = '';
+        if( $cached )
+            $cachedText = '_Cached';
+        $videoDir = "$testPath/video_$run" . strtolower($cachedText);
+        if (!is_dir($videoDir) || !is_file("$videoDir/video.json")) {
+          if (IsTestRunComplete($run, $testInfo))
+            ProcessAVIVideo($testInfo, $testPath, $run, $cached);
+        }
       }
     }
   }
@@ -38,7 +44,7 @@ function ProcessAllAVIVideos($testPath) {
 * @param mixed $run
 * @param mixed $cached
 */
-function ProcessAVIVideo(&$test, $testPath, $run, $cached, $needLock = true) {
+function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
     if ($needLock)
       $testLock = LockTest($testPath);
     $videoCodeVersion = 9;

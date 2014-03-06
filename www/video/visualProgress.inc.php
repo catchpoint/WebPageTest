@@ -12,12 +12,8 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
     $frames = null;
     if (substr($testPath, 0, 1) !== '.')
       $testPath = './' . $testPath;
-    $completed = false;
-    if( gz_is_file("$testPath/testinfo.json") ) {
-      $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-      if (array_key_exists('completed', $testInfo) && strlen($testInfo['completed']))
-        $completed = true;
-    }
+    $testInfo = GetTestInfo($testPath);
+    $completed = IsTestRunComplete($run, $testInfo);
     $video_directory = "$testPath/video_{$run}";
     if ($cached)
         $video_directory .= '_cached';

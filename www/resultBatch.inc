@@ -638,9 +638,9 @@ function DisplayPSS(&$tests, $video, &$dirty)
         $path = substr($testPath, 1);
         if( $test['c'] )
         {
-            $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-            if( !$started || (array_key_exists('started', $testInfo) && $testInfo['started'] < $started) )
-                $started = $testInfo['started'];
+            $testInfo = GetTestInfo($test['id']);
+            if( $testInfo && (!$started || (array_key_exists('started', $testInfo) && $testInfo['started'] < $started)))
+              $started = $testInfo['started'];
             $options = array('end' => $test['end']);
             $pageData = loadAllPageData($testPath, $options);
             $fvMedian = GetMedianRun($pageData, 0, $median_metric);

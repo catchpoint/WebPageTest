@@ -20,12 +20,8 @@ if(extension_loaded('newrelic')) {
 function GetDevToolsProgress($testPath, $run, $cached) {
     $progress = GetCachedDevToolsProgress($testPath, $run, $cached);
     if (!isset($progress) || !is_array($progress)) {
-      $completed = false;
-      if( gz_is_file("$testPath/testinfo.json") ) {
-        $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-        if (array_key_exists('completed', $testInfo) && strlen($testInfo['completed']))
-          $completed = true;
-      }
+      $testInfo = GetTestInfo($testPath);
+      $completed = IsTestRunComplete($run, $testInfo);
       $startOffset = null;
       if (GetTimeline($testPath, $run, $cached, $timeline, $startOffset)) {
         $cachedText = '';

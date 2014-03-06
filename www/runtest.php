@@ -48,13 +48,15 @@
         // see if we're re-running an existing test
         if( isset($test) )
             unset($test);
-        if( isset($_POST['resubmit']) )
-        {
-            $path = './' . GetTestPath(trim($_POST['resubmit']));
-            $test = json_decode(gz_file_get_contents("$path/testinfo.json"), true);
+        if (array_key_exists('resubmit', $_POST)) {
+          $test = GetTestInfo(trim($_POST['resubmit']));
+          if ($test) {
             unset($test['completed']);
             unset($test['started']);
             unset($test['tester']);
+          } else {
+            unset($test);
+          }
         }
 
         // pull in the test parameters
@@ -1808,24 +1810,21 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testId = null;
         }
 
-        // store the entire test data structure JSON encoded (instead of a bunch of individual files)
-        $oldUrl = @$test['url'];
-        $test['url'] = $url;
-        gz_file_put_contents("{$test['path']}/testinfo.json",  json_encode($test));
-        $test['url'] = $oldUrl;
-
         // log the test
-        if( isset($testId) )
-        {
-            if ( $batch_locations )
-                LogTest($test, $testId, 'Multiple Locations test');
-            else if( $batch )
-                LogTest($test, $testId, 'Bulk Test');
-            else
-                LogTest($test, $testId, $url);
-        }
-        else
-        {
+        if (isset($testId)) {
+          // store the entire test data structure JSON encoded (instead of a bunch of individual files)
+          $oldUrl = @$test['url'];
+          $test['url'] = $url;
+          SaveTestInfo($testId, $test);
+          $test['url'] = $oldUrl;
+
+          if ( $batch_locations )
+              LogTest($test, $testId, 'Multiple Locations test');
+          else if( $batch )
+              LogTest($test, $testId, 'Bulk Test');
+          else
+              LogTest($test, $testId, $url);
+        } else {
             // delete the test if we didn't really submit it
             delTree("{$test['path']}/");
         }
@@ -1972,7 +1971,7 @@ function RelayTest()
         $job = str_replace($test['id'], $id, $job);
         file_put_contents("$testPath/testinfo.ini", $ini);
         WriteJob($location, $test, $job, $id);
-        gz_file_put_contents("$testPath/testinfo.json", json_encode($test));
+        SaveTestInfo($id, $test);
     }
 
     if( isset($error) )

@@ -165,12 +165,13 @@ else
                 if ($test['syncStartRender'] || $test['syncDocTime'] || $test['syncFullyLoaded'])
                     $videoIdExtra .= ".{$test['syncStartRender']}.{$test['syncDocTime']}.{$test['syncFullyLoaded']}";
 
-                $testInfo = json_decode(gz_file_get_contents("./{$test['path']}/testinfo.json"), true);
-                if( !strlen($test['label']) ) {
+                $testInfo = GetTestInfo($test['id']);
+                if ($testInfo) {
+                  if( !strlen($test['label']) )
                     $test['label'] = trim($testInfo['label']);
-                }
-                if (array_key_exists('locationText', $testInfo))
+                  if (array_key_exists('locationText', $testInfo))
                     $test['location'] = $testInfo['locationText'];
+                }
                 if( !strlen($test['label']) )
                     $test['label'] = trim($test['pageData'][1][0]['URL']);
                 $labels[] = $test['label'];

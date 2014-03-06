@@ -1092,49 +1092,38 @@ function FixUrlSlash($url)
 */
 function RestoreTest($id)
 {
-    global $userIsBot;
-    $ret = false;
-    if (!$userIsBot && ValidateTestId($id)) {
-        $testPath = './' . GetTestPath($id);
-        $archive_dir = GetSetting('archive_dir');
-        $archive_s3_url = GetSetting('archive_s3_url');
-        $archive_s3_server = GetSetting('archive_s3_server');
-        if( ($archive_dir && strlen($archive_dir)) ||
-            ($archive_s3_url && strlen($archive_s3_url)) ||
-            ($archive_s3_server && strlen($archive_s3_server)) )
-        {
-            $restore = false;
-            if( is_dir($testPath) && gz_is_file("$testPath/testinfo.json") )
-            {
-                $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-                if( !is_array($testInfo) ||
-                    !count($testInfo) ||
-                    (array_key_exists('restored', $testInfo) &&
-                    $testInfo['restored'] &&
-                    array_key_exists('restoredDataOnly', $testInfo) &&
-                    $testInfo['restoredDataOnly']) )
-                    $restore = true;
-            }
-            else
-                $restore = true;
+  global $userIsBot;
+  $ret = false;
+  if (!$userIsBot && ValidateTestId($id)) {
+    $testPath = './' . GetTestPath($id);
+    $archive_dir = GetSetting('archive_dir');
+    $archive_s3_url = GetSetting('archive_s3_url');
+    $archive_s3_server = GetSetting('archive_s3_server');
+    if (($archive_dir && strlen($archive_dir)) ||
+        ($archive_s3_url && strlen($archive_s3_url)) ||
+        ($archive_s3_server && strlen($archive_s3_server))) {
+      $restore = false;
+      $testInfo = GetTestInfo($id);
+      if (!$testInfo) {
+        $restore = true;
+      }
 
-            if( $restore )
-            {
-                require_once('archive.inc');
-                $ret = RestoreArchive($id);
-            }
-            else
-                $ret = true;
-        }
-        else
-            $ret = true;
-
-        // Handle AVI processing here if necessary
-        require_once('./video/avi2frames.inc.php');
-        ProcessAllAVIVideos($testPath);
+      if( $restore ) {
+        require_once('archive.inc');
+        $ret = RestoreArchive($id);
+      } else {
+        $ret = true;
+      }
+    } else {
+      $ret = true;
     }
 
-    return $ret;
+    // Handle AVI processing here if necessary
+    require_once('./video/avi2frames.inc.php');
+    ProcessAllAVIVideos($testPath);
+  }
+
+  return $ret;
 }
 
 /**
@@ -1644,9 +1633,16 @@ function UnLock(&$lock) {
   }
 }
 
-function LockTest($testPath) {
-  $lock = null;
-  if (is_dir($testPath)) {
+function LockTest($testIdOrPath) {
+  $lock = false;
+  $testPath = $testIdOrPath;
+  if (strpos($testPath, '/') === false) {
+    $id = $testPath;
+    $testPath = '';
+    if (ValidateTestId($id))
+      $testPath = './' . GetTestPath($testPath);
+  }
+  if (strlen($testPath) && is_dir($testPath)) {
     $lock = fopen( "$testPath/test.lock", 'w',  false);
     if( $lock ) {
       if( !flock($lock, LOCK_EX) ) {
@@ -2188,5 +2184,62 @@ function NumToString($num) {
     return $str;
 }
 
+/**
+* Load the testinfo for the given test (can be ID or path)
+* 
+* @param mixed $testPath
+*/
+function GetTestInfo($testIdOrPath) {
+  $testInfo = false;
+  
+  if (isset($testIdOrPath) && strlen($testIdOrPath)) {
+    $testPath = $testIdOrPath;
+    if (strpos($testPath, '/') === false) {
+      $id = $testPath;
+      $testPath = '';
+      if (ValidateTestId($id))
+        $testPath = './' . GetTestPath($testPath);
+    }
+      
+    // TODO(pmeenan): cache the test info to prevent multiple disk
+    // reads (need to deal with read-write-read sequences though)
+    if (gz_is_file("$testPath/testinfo.json"))
+      $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+  }
+  
+  if (!isset($testInfo) || !is_array($testInfo))
+    $testInfo = false;
+  
+  return $testInfo;
+}
 
+function SaveTestInfo($testIdOrPath, &$testInfo) {
+  if (isset($testInfo) && is_array($testInfo) &&
+      isset($testIdOrPath) && strlen($testIdOrPath)) {
+    $testPath = $testIdOrPath;
+    if (strpos($testPath, '/') === false) {
+      $id = $testPath;
+      $testPath = '';
+      if (ValidateTestId($id))
+        $testPath = './' . GetTestPath($testPath);
+    }
+    if (is_dir($testPath))
+      gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+  }
+}
+
+function IsTestRunComplete($run, &$testInfo) {
+  $completed = false;
+  if ($testInfo) {
+    if (array_key_exists('completed', $testInfo) && $testInfo['completed']) {
+      $completed = true;
+    } elseif (array_key_exists('test_runs', $testInfo) &&
+              array_key_exists($run, $testInfo['test_runs']) &&
+              array_key_exists('done', $testInfo['test_runs'][$run]) &&
+              $testInfo['test_runs'][$run]['done']) {
+      $completed = true;
+    }
+  }
+  return $completed;
+}
 ?>

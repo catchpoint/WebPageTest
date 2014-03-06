@@ -52,29 +52,25 @@ if( isset($test['test']) )
 */
 function CancelTest($id)
 {
+  $lock = LockTest($id);
+  if ($lock) {
     $cancelled = false;
-    $testPath = './' . GetTestPath($id);
+    $testInfo = GetTestInfo($id);
+    if ($testInfo && !array_key_exists('started', $testInfo)) {
+      $testInfo['cancelled'] = time();
+      SaveTestInfo($id, $testInfo);
 
-    if( gz_is_file("$testPath/testinfo.json") )
-    {
-        $testInfoJson = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-        if( !$testInfoJson['started'] )
-        {
-            $testInfoJson['cancelled'] = time();
-
-            // delete the actual test file.
-            $ext = 'url';
-            if( $testInfoJson['priority'] )
-                $ext = "p{$testInfoJson['priority']}";
-            $queued_job_file = $testInfoJson['workdir'] . "/$id.$ext";
-            if( unlink($queued_job_file) )
-            {
-                $cancelled = true;
-                gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfoJson));
-            }
-        }
+      // delete the actual test file.
+      if (array_key_exists('workdir', $testInfo)) {
+        $ext = 'url';
+        if( $testInfo['priority'] )
+            $ext = "p{$testInfo['priority']}";
+        $queued_job_file = $testInfo['workdir'] . "/$id.$ext";
+        unlink($queued_job_file);
+      }
     }
-    
-    return $cancelled;
+    UnlockTest($lock);
+  }
+  return $cancelled;
 }
 ?>
