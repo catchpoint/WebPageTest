@@ -28,7 +28,7 @@ function ProcessAllAVIVideos($testPath) {
         if( $cached )
             $cachedText = '_Cached';
         $videoDir = "$testPath/video_$run" . strtolower($cachedText);
-        if (!is_dir($videoDir) || !is_file("$videoDir/video.json")) {
+        if (!is_dir($videoDir) || !is_file("$videoDir/video" . VIDEO_CODE_VERSION . ".json")) {
           if (IsTestRunComplete($run, $testInfo))
             ProcessAVIVideo($testInfo, $testPath, $run, $cached);
         }
@@ -45,9 +45,10 @@ function ProcessAllAVIVideos($testPath) {
 * @param mixed $cached
 */
 function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
+  $testInfo = GetTestInfo($testPath);
+  if ($testInfo && IsTestRunComplete($run, $testInfo)) {
     if ($needLock)
       $testLock = LockTest($testPath);
-    $videoCodeVersion = 9;
     $cachedText = '';
     if( $cached )
         $cachedText = '_Cached';
@@ -74,16 +75,7 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
     }
     if (is_file($videoFile)) {
         $videoDir = "$testPath/video_$run" . strtolower($cachedText);
-        $needsProcessing = true;
-        if (is_dir($videoDir) && is_file("$videoDir/video.json")) {
-          $videoInfo = json_decode(file_get_contents("$videoDir/video.json"), true);
-          if ($videoInfo &&
-              is_array($videoInfo) &&
-              array_key_exists('ver', $videoInfo) &&
-              $videoInfo['ver'] === $videoCodeVersion)
-            $needsProcessing = false;
-        }
-        if ($needsProcessing) {
+        if (!is_file("$videoDir/video" . VIDEO_CODE_VERSION . ".json")) {
             if (is_dir($videoDir))
               delTree($videoDir, false);
             if (!is_dir($videoDir))
@@ -104,13 +96,14 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
                     }
                 }
             }
-            $videoInfo = array('ver' => $videoCodeVersion);
+            $videoInfo = array();
             if (isset($viewport))
               $videoInfo['viewport'] = $viewport;
-            file_put_contents("$videoDir/video.json", json_encode($videoInfo));
+            file_put_contents("$videoDir/video" . VIDEO_CODE_VERSION . ".json", json_encode($videoInfo));
         }
     }
     UnlockTest($testLock);
+  }
 }
 
 /**

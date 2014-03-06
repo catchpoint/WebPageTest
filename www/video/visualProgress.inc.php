@@ -21,7 +21,7 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
     if (!isset($startOffset))
       $startOffset = 0;
     $dirty = false;
-    $current_version = 12;
+    $current_version = VIDEO_CODE_VERSION;
     if (isset($end)) {
         if (is_numeric($end))
             $end = (int)($end * 1000);
