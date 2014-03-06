@@ -361,7 +361,6 @@ if (ValidateTestId($id)) {
           if (isset($requests)) {
             require_once('breakdown.inc');
             getBreakdown($id, $testPath, $runNumber, $cacheWarmed, $requests);
-            GetVisualProgress($testPath, $runNumber, $cacheWarmed);
           }
           ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed);
         }
