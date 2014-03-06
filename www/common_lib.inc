@@ -1640,7 +1640,7 @@ function LockTest($testIdOrPath) {
     $id = $testPath;
     $testPath = '';
     if (ValidateTestId($id))
-      $testPath = './' . GetTestPath($testPath);
+      $testPath = './' . GetTestPath($id);
   }
   if (strlen($testPath) && is_dir($testPath)) {
     $lock = fopen( "$testPath/test.lock", 'w',  false);
@@ -2198,7 +2198,7 @@ function GetTestInfo($testIdOrPath) {
       $id = $testPath;
       $testPath = '';
       if (ValidateTestId($id))
-        $testPath = './' . GetTestPath($testPath);
+        $testPath = './' . GetTestPath($id);
     }
       
     // TODO(pmeenan): cache the test info to prevent multiple disk
@@ -2221,7 +2221,7 @@ function SaveTestInfo($testIdOrPath, &$testInfo) {
       $id = $testPath;
       $testPath = '';
       if (ValidateTestId($id))
-        $testPath = './' . GetTestPath($testPath);
+        $testPath = './' . GetTestPath($id);
     }
     if (is_dir($testPath))
       gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));

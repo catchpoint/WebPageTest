@@ -136,7 +136,7 @@ function GetJob() {
                               $testInfoJson['started'] = $time;
                             if (!array_key_exists('test_runs', $testInfoJson))
                               $testInfoJson['test_runs'] = array();
-                            for ($run = 1; $run <= $testInfo['runs']; $run++) {
+                            for ($run = 1; $run <= $testInfoJson['runs']; $run++) {
                               if (!array_key_exists($run, $testInfoJson['test_runs']))
                                 $testInfoJson['test_runs'][$run] = array('done' => false);
                             }

@@ -232,7 +232,7 @@ if (ValidateTestId($id)) {
         // mark this run as complete
         if (isset($runNumber) && isset($cacheWarmed)) {
           if ($testInfo['fvonly'] || $cacheWarmed) {
-            if (!array_key_exists('test_runs', $testInfoJson))
+            if (!array_key_exists('test_runs', $testInfo))
               $testInfo['test_runs'] = array();
             if (array_key_exists($runNumber, $testInfo['test_runs']))
               $testInfo['test_runs'][$runNumber]['done'] = true;
@@ -246,7 +246,7 @@ if (ValidateTestId($id)) {
         if ($done) {
           // Mark the test as done and save it out so that we can load the page data
           $testInfo['completed'] = $time;
-          if (!array_key_exists('test_runs', $testInfoJson))
+          if (!array_key_exists('test_runs', $testInfo))
             $testInfo['test_runs'] = array();
           for ($run = 1; $run <= $testInfo['runs']; $run++) {
             if (array_key_exists($run, $testInfo['test_runs']))
@@ -344,7 +344,7 @@ if (ValidateTestId($id)) {
         }
 
         if ($testInfo_dirty)
-          SaveTestInfo($is, $testInfo);
+          SaveTestInfo($id, $testInfo);
 
         SecureDir($testPath);
         UnlockTest($testLock);
