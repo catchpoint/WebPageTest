@@ -44,66 +44,63 @@ function ProcessAllAVIVideos($testPath) {
 * @param mixed $run
 * @param mixed $cached
 */
-function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
-  $testInfo = GetTestInfo($testPath);
-  if ($testInfo && IsTestRunComplete($run, $testInfo)) {
-    if ($needLock)
-      $testLock = LockTest($testPath);
-    $cachedText = '';
-    if( $cached )
-        $cachedText = '_Cached';
-    $videoFile = "$testPath/$run{$cachedText}_video.avi";
-    $crop = '';
-    if (!is_file($videoFile))
-      $videoFile = "$testPath/$run{$cachedText}_video.mp4";
-    if (!is_file($videoFile)) {
-      $crop = ',crop=in_w:in_h-80:0:80';
-      $videoFile = "$testPath/$run{$cachedText}_appurify.mp4";
-    }
-    // trim the video to align with the capture if we have timestamps for both
-    $renderStart = null;
-    if (array_key_exists('appurify_tests', $test) &&
-        is_array($test['appurify_tests']) &&
-        array_key_exists($run, $test['appurify_tests']) &&
-        is_array($test['appurify_tests'][$run])) {
-      require_once('page_data.inc');
-      $page_data = loadPageRunData($testPath, $run, $cached);
-      if (isset($page_data) &&
-          is_array($page_data) &&
-          array_key_exists('render', $page_data))
-        $renderStart = $page_data['render'];
-    }
-    if (is_file($videoFile)) {
-        $videoDir = "$testPath/video_$run" . strtolower($cachedText);
-        if (!is_file("$videoDir/video" . VIDEO_CODE_VERSION . ".json")) {
-            if (is_dir($videoDir))
-              delTree($videoDir, false);
-            if (!is_dir($videoDir))
-              mkdir($videoDir, 0777, true);
-            $videoFile = realpath($videoFile);
-            $videoDir = realpath($videoDir);
-            if (strlen($videoFile) && strlen($videoDir)) {
-                if (Video2PNG($videoFile, $videoDir, $crop)) {
-                    $startOffset = DevToolsGetVideoOffset($testPath, $run, $cached, $endTime);
-                    FindAVIViewport($videoDir, $startOffset, $viewport);
-                    EliminateDuplicateAVIFiles($videoDir, $viewport);
-                    $lastImage = ProcessVideoFrames($videoDir, $renderStart);
-                    $screenShot = "$testPath/$run{$cachedText}_screen.jpg";
-                    if (isset($lastImage) && is_file($lastImage)) {
-                      //unlink($videoFile);
-                      if (!is_file($screenShot))
-                          copy($lastImage, $screenShot);
-                    }
-                }
-            }
-            $videoInfo = array();
-            if (isset($viewport))
-              $videoInfo['viewport'] = $viewport;
-            file_put_contents("$videoDir/video" . VIDEO_CODE_VERSION . ".json", json_encode($videoInfo));
-        }
-    }
-    UnlockTest($testLock);
+function ProcessAVIVideo(&$test, $testPath, $run, $cached, $needLock = true) {
+  if ($needLock)
+    $testLock = LockTest($testPath);
+  $cachedText = '';
+  if( $cached )
+    $cachedText = '_Cached';
+  $videoFile = "$testPath/$run{$cachedText}_video.avi";
+  $crop = '';
+  if (!is_file($videoFile))
+    $videoFile = "$testPath/$run{$cachedText}_video.mp4";
+  if (!is_file($videoFile)) {
+    $crop = ',crop=in_w:in_h-80:0:80';
+    $videoFile = "$testPath/$run{$cachedText}_appurify.mp4";
   }
+  // trim the video to align with the capture if we have timestamps for both
+  $renderStart = null;
+  if (array_key_exists('appurify_tests', $test) &&
+      is_array($test['appurify_tests']) &&
+      array_key_exists($run, $test['appurify_tests']) &&
+      is_array($test['appurify_tests'][$run])) {
+    require_once('page_data.inc');
+    $page_data = loadPageRunData($testPath, $run, $cached);
+    if (isset($page_data) &&
+        is_array($page_data) &&
+        array_key_exists('render', $page_data))
+      $renderStart = $page_data['render'];
+  }
+  if (is_file($videoFile)) {
+    $videoDir = "$testPath/video_$run" . strtolower($cachedText);
+    if (!is_file("$videoDir/video" . VIDEO_CODE_VERSION . ".json")) {
+      if (is_dir($videoDir))
+        delTree($videoDir, false);
+      if (!is_dir($videoDir))
+        mkdir($videoDir, 0777, true);
+      $videoFile = realpath($videoFile);
+      $videoDir = realpath($videoDir);
+      if (strlen($videoFile) && strlen($videoDir)) {
+        if (Video2PNG($videoFile, $videoDir, $crop)) {
+          $startOffset = DevToolsGetVideoOffset($testPath, $run, $cached, $endTime);
+          FindAVIViewport($videoDir, $startOffset, $viewport);
+          EliminateDuplicateAVIFiles($videoDir, $viewport);
+          $lastImage = ProcessVideoFrames($videoDir, $renderStart);
+          $screenShot = "$testPath/$run{$cachedText}_screen.jpg";
+          if (isset($lastImage) && is_file($lastImage)) {
+            //unlink($videoFile);
+            if (!is_file($screenShot))
+              copy($lastImage, $screenShot);
+          }
+        }
+      }
+      $videoInfo = array();
+      if (isset($viewport))
+        $videoInfo['viewport'] = $viewport;
+      file_put_contents("$videoDir/video" . VIDEO_CODE_VERSION . ".json", json_encode($videoInfo));
+    }
+  }
+  UnlockTest($testLock);
 }
 
 /**

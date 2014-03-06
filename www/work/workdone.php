@@ -240,6 +240,7 @@ if (ValidateTestId($id)) {
               $testInfo['test_runs'][$runNumber] = array('done' => true);
             $testInfo_dirty = true;
           }
+          ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed, false);
         }
         
         // see if the test is complete
@@ -362,7 +363,6 @@ if (ValidateTestId($id)) {
             require_once('breakdown.inc');
             getBreakdown($id, $testPath, $runNumber, $cacheWarmed, $requests);
           }
-          ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed);
         }
 
         // do any post-processing when the full test is complete that doesn't rely on testinfo        
