@@ -15,9 +15,7 @@ if(extension_loaded('newrelic')) {
 * @param mixed $run
 * @param mixed $cached
 */
-function ProcessAVIVideo(&$test, $testPath, $run, $cached, $needLock = true) {
-  if ($needLock)
-    $testLock = LockTest($testPath);
+function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
   $cachedText = '';
   if( $cached )
     $cachedText = '_Cached';
@@ -71,7 +69,6 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached, $needLock = true) {
       file_put_contents("$videoDir/video" . VIDEO_CODE_VERSION . ".json", json_encode($videoInfo));
     }
   }
-  UnlockTest($testLock);
 }
 
 /**

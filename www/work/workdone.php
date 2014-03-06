@@ -240,7 +240,7 @@ if (ValidateTestId($id)) {
               $testInfo['test_runs'][$runNumber] = array('done' => true);
             $testInfo_dirty = true;
           }
-          ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed, false);
+          ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed);
         }
         
         // see if the test is complete
