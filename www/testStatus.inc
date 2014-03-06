@@ -82,34 +82,54 @@ function GetTestStatus($id, $includePosition = true) {
                 else
                   $ret['statusText'] = "Test Started $elapsed minutes ago (probably failed)";
                   
-                // force the test to end if it started but we haven't seen progress in the last 10 minutes
+                // For any test that runs for over 10 minutes and where we haven't seen an update
+                // in the last 10 minutes, Force individual runs to end if they didn't complete
+                // within 30 minutes and force the overall test to end if all of the individual
+                // runs are complete.
                 if ($elapsed > 10) {
                   $elapsedUpdate = 100;
                   if (isset($testInfoJson['last_updated']) && $now > $testInfoJson['last_updated'])
                     $elapsedUpdate = ($now - $testInfoJson['last_updated']) / 60;
                   if ($elapsedUpdate > 10) {
-                    // force the test to end
+                    $allComplete = true;
                     $lock = LockTest($id);
                     if ($lock) {
                       $testInfoJson = GetTestInfo($id);
                       if ($testInfoJson) {
-                        $testInfoJson['completed'] = $now;
-                        SaveTestInfo($id, $testInfoJson);
+                        if (array_key_exists('test_runs', $testInfoJson)) {
+                          foreach($testInfoJson['test_runs'] as &$testRun) {
+                            if (!array_key_exists('done', $testRun) || !$testRun['done']) {
+                              if (array_key_exists('started', $testRun) && $testRun['started'] && $testRun['started'] < $now) {
+                                $runElapsed = ($now - $testRun['started']) / 60;
+                                if ($runElapsed > 30)
+                                  $testRun['done'] = true;
+                                else
+                                  $allComplete = false;
+                              } else {
+                                $allComplete = false;
+                              }
+                            }
+                          }
+                        }
+                        if ($allComplete) {
+                          $testInfoJson['completed'] = $now;
+                          $test = file_get_contents("$testPath/testinfo.ini");
+                          $date = gmdate("m/d/y G:i:s", $now);
+
+                          // update the completion time if it isn't already set
+                          if (!strpos($test, 'completeTime')) {
+                            $complete = "[test]\r\ncompleteTime=$date";
+                            $out = str_replace('[test]', $complete, $test);
+                            file_put_contents("$testPath/testinfo.ini", $out);
+                          }
+                          $ret['statusCode'] = 200;
+                          $ret['statusText'] = 'Test Complete';
+                          $ret['completeTime'] = $date;
+                        }
                       }
+                      SaveTestInfo($id, $testInfoJson);
                       UnlockTest($lock);
                     }
-                    $test = file_get_contents("$testPath/testinfo.ini");
-                    $date = gmdate("m/d/y G:i:s", $now);
-
-                    // update the completion time if it isn't already set
-                    if (!strpos($test, 'completeTime')) {
-                      $complete = "[test]\r\ncompleteTime=$date";
-                      $out = str_replace('[test]', $complete, $test);
-                      file_put_contents("$testPath/testinfo.ini", $out);
-                    }
-                    $ret['statusCode'] = 200;
-                    $ret['statusText'] = 'Test Complete';
-                    $ret['completeTime'] = $date;
                   }
                 }
               }
