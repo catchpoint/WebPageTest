@@ -354,6 +354,7 @@ if (ValidateTestId($id)) {
           
         // Do any post-processing on this individual run that doesn't requre the test to be locked
         if (isset($runNumber) && isset($cacheWarmed)) {
+          require_once('object_detail.inc');
           $secure = false;
           $haveLocations = false;
           $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure, $haveLocations, false);
