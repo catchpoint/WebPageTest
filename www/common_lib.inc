@@ -1119,10 +1119,6 @@ function RestoreTest($id)
     } else {
       $ret = true;
     }
-
-    // Handle AVI processing here if necessary
-    require_once('./video/avi2frames.inc.php');
-    ProcessAllAVIVideos($testPath);
   }
 
   return $ret;

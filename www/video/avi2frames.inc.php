@@ -1,40 +1,11 @@
 <?php
 require_once('devtools.inc.php');
 if(extension_loaded('newrelic')) { 
-  newrelic_add_custom_tracer('ProcessAllAVIVideos');
   newrelic_add_custom_tracer('ProcessAVIVideo');
   newrelic_add_custom_tracer('Video2PNG');
   newrelic_add_custom_tracer('FindAVIViewport');
   newrelic_add_custom_tracer('EliminateDuplicateAVIFiles');
   newrelic_add_custom_tracer('ProcessVideoFrames');
-}
-
-/**
-* Walk the given directory and convert every AVI found into the format WPT expects
-* 
-* @param mixed $testPath
-*/
-function ProcessAllAVIVideos($testPath) {
-  if (is_dir($testPath)) {
-    $testInfo = GetTestInfo($testPath);
-    $files = scandir($testPath);
-    foreach ($files as $file) {
-      if (preg_match('/^(?P<run>[0-9]+)(?P<cached>_Cached)?(_video|_appurify).(?P<ext>avi|mp4)$/', $file, $matches)) {
-        $run = $matches['run'];
-        $cached = 0;
-        if (array_key_exists('cached', $matches) && strlen($matches['cached']))
-            $cached = 1;
-        $cachedText = '';
-        if( $cached )
-            $cachedText = '_Cached';
-        $videoDir = "$testPath/video_$run" . strtolower($cachedText);
-        if (!is_dir($videoDir) || !is_file("$videoDir/video" . VIDEO_CODE_VERSION . ".json")) {
-          if (IsTestRunComplete($run, $testInfo))
-            ProcessAVIVideo($testInfo, $testPath, $run, $cached);
-        }
-      }
-    }
-  }
 }
 
 /**
