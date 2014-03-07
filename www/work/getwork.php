@@ -132,7 +132,7 @@ function GetJob() {
                               $testInfoJson['tester'] = $tester;
                             if (isset($dnsServers) && strlen($dnsServers))
                               $testInfoJson['testerDNS'] = $dnsServers;
-                            if (!array_key_exists('started', $testInfoJson) || !strlen($testInfoJson['started']))
+                            if (!array_key_exists('started', $testInfoJson) || !$testInfoJson['started'])
                               $testInfoJson['started'] = $time;
                             if (!array_key_exists('test_runs', $testInfoJson))
                               $testInfoJson['test_runs'] = array();

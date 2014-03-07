@@ -179,6 +179,29 @@ function GetTestStatus($id, $includePosition = true) {
               } else {
                 $ret['statusCode'] = 401;
                 $ret['statusText'] = 'Test request not found';
+                
+                // force the test to end - something went very wrong
+                $lock = LockTest($id);
+                if ($lock) {
+                  $testInfoJson = GetTestInfo($id);
+                  if ($testInfoJson) {
+                    $testInfoJson['completed'] = $now;
+                    $test = file_get_contents("$testPath/testinfo.ini");
+                    $date = gmdate("m/d/y G:i:s", $now);
+
+                    // update the completion time if it isn't already set
+                    if (!strpos($test, 'completeTime')) {
+                      $complete = "[test]\r\ncompleteTime=$date";
+                      $out = str_replace('[test]', $complete, $test);
+                      file_put_contents("$testPath/testinfo.ini", $out);
+                    }
+                    $ret['statusCode'] = 200;
+                    $ret['statusText'] = 'Test Complete';
+                    $ret['completeTime'] = $date;
+                    SaveTestInfo($testInfoJson());
+                  }
+                  UnlockTest($lock);
+                }
               }
             } else {
               $ret['statusCode'] = 101;
