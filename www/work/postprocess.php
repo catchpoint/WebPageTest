@@ -119,6 +119,7 @@ if (array_key_exists('test', $_REQUEST)) {
       include('./work/beacon.inc');
       SendBeacon($beaconUrl, $id, $testPath, $testInfo, $pageData);
     }
+    logTestMsg($id, "Test post-processing complete");
   }
 }
 

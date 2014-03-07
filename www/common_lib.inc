@@ -2240,4 +2240,19 @@ function IsTestRunComplete($run, &$testInfo) {
   }
   return $completed;
 }
+
+function logTestMsg($testIdOrPath, $message) {
+  if (isset($testIdOrPath) && strlen($testIdOrPath) && strlen($message)) {
+    $testPath = $testIdOrPath;
+    if (strpos($testPath, '/') === false) {
+      $id = $testPath;
+      $testPath = '';
+      if (ValidateTestId($id))
+        $testPath = './' . GetTestPath($id);
+    }
+    if (is_dir($testPath)) {
+      logMsg($message, "$testPath/test.log", true);
+    }
+  }
+}
 ?>

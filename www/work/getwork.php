@@ -132,8 +132,10 @@ function GetJob() {
                               $testInfoJson['tester'] = $tester;
                             if (isset($dnsServers) && strlen($dnsServers))
                               $testInfoJson['testerDNS'] = $dnsServers;
-                            if (!array_key_exists('started', $testInfoJson) || !$testInfoJson['started'])
+                            if (!array_key_exists('started', $testInfoJson) || !$testInfoJson['started']) {
                               $testInfoJson['started'] = $time;
+                              logTestMsg($testId, "Starting test (initiated by tester $tester)");
+                            }
                             if (!array_key_exists('test_runs', $testInfoJson))
                               $testInfoJson['test_runs'] = array();
                             for ($run = 1; $run <= $testInfoJson['runs']; $run++) {
@@ -403,6 +405,7 @@ function ProcessTestShard(&$testInfo, &$test, &$delete) {
       }
       
       if ($assigned_run) {
+        logTestMsg($testInfo['id'], "Run $assigned_run assigned to $tester");
         $append = "run=$assigned_run\r\n";
 
         // Figure out if this test needs to be discarded

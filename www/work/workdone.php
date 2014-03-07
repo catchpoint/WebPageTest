@@ -111,6 +111,12 @@ if (ValidateTestId($id)) {
       $locKey = GetLocationKey($location);
       logMsg("\n\nWork received for test: $id, location: $location, key: $key\n");
       if ((!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADDR'], "127.0.0.1")) {
+        $testErrorStr = '';
+        if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror']))
+          $testErrorStr = ', Test Error: "' . $_REQUEST['testerror'] . '"';
+        if (array_key_exists('error', $_REQUEST) && strlen($_REQUEST['error']))
+          $errorStr = ', Test Run Error: "' . $_REQUEST['error'] . '"';
+        logTestMsg($id, "Test Run Complete. Run: $runNumber, Cached: $cacheWarmed, Tester: $tester$testErrorStr$errorStr");
         $testLock = LockTest($id);
         // update the location time
         if( strlen($location) ) {
@@ -367,6 +373,8 @@ if (ValidateTestId($id)) {
 
         // do any post-processing when the full test is complete that doesn't rely on testinfo        
         if ($done) {
+          logTestMsg($id, "Test Complete");
+
           // send an async request to the post-processing code so we don't block
           SendAsyncRequest("/work/postprocess.php?test=$id");
         }

@@ -1812,6 +1812,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
 
         // log the test
         if (isset($testId)) {
+          logTestMsg($testId, "Test Created");
+          
           // store the entire test data structure JSON encoded (instead of a bunch of individual files)
           $oldUrl = @$test['url'];
           $test['url'] = $url;
