@@ -409,16 +409,11 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                   $request['contentEncoding'] = '';
                   if (array_key_exists('response', $rawRequest) && 
                       array_key_exists('headers', $rawRequest['response'])) {
-                      if (array_key_exists('Expires', $rawRequest['response']['headers']))
-                          $request['expires'] =  $rawRequest['response']['headers']['Expires'];
-                      if (array_key_exists('Cache-Control', $rawRequest['response']['headers']))
-                          $request['cacheControl'] =  $rawRequest['response']['headers']['Cache-Control'];
-                      if (array_key_exists('Content-Type', $rawRequest['response']['headers']))
-                          $request['contentType'] =  $rawRequest['response']['headers']['Content-Type'];
-                      if (array_key_exists('Content-Encoding', $rawRequest['response']['headers']))
-                          $request['contentEncoding'] =  $rawRequest['response']['headers']['Content-Encoding'];
-                      if (array_key_exists('Content-Length', $rawRequest['response']['headers']))
-                          $request['objectSize'] =  $rawRequest['response']['headers']['Content-Length'];
+                      GetDevToolsHeaderValue($rawRequest['response']['headers'], 'Expires', $request['expires']);
+                      GetDevToolsHeaderValue($rawRequest['response']['headers'], 'Cache-Control', $request['cacheControl']);
+                      GetDevToolsHeaderValue($rawRequest['response']['headers'], 'Content-Type', $request['contentType']);
+                      GetDevToolsHeaderValue($rawRequest['response']['headers'], 'Content-Encoding', $request['contentEncoding']);
+                      GetDevToolsHeaderValue($rawRequest['response']['headers'], 'Content-Length', $request['objectSize']);
                   }
                   $request['type'] = 3;
                   $request['socket'] = array_key_exists('response', $rawRequest) && array_key_exists('connectionId', $rawRequest['response']) ? $rawRequest['response']['connectionId'] : -1;
@@ -721,37 +716,37 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
     }
     // pull out just the requests that were served on the wire
     foreach ($rawRequests as &$request) {
-        if (array_key_exists('startTime', $request)) {
-          if (array_key_exists('response', $request) &&
-              array_key_exists('timing', $request['response'])) {
-              if (array_key_exists('requestTime', $request['response']['timing']) &&
-                  array_key_exists('end_time', $request) &&
-                  $request['response']['timing']['requestTime'] >= $request['startTime'] &&
-                  $request['response']['timing']['requestTime'] <= $request['endTime'])
-                  $request['startTime'] = $request['response']['timing']['requestTime'];
-              $min = null;
-              foreach ($request['response']['timing'] as $key => &$value) {
-                if ($key != 'requestTime' && $value >= 0) {
-                  $value = $request['startTime'] + ($value / 1000);
-                  if (!isset($min) || $value < $min)
-                    $min = $value;
-                }
-              }
-              if (isset($min) && $min > $request['startTime'])
-                $request['startTime'] = $min;
+      if (array_key_exists('startTime', $request)) {
+        if (array_key_exists('response', $request) &&
+            array_key_exists('timing', $request['response'])) {
+          if (array_key_exists('requestTime', $request['response']['timing']) &&
+              array_key_exists('end_time', $request) &&
+              $request['response']['timing']['requestTime'] >= $request['startTime'] &&
+              $request['response']['timing']['requestTime'] <= $request['endTime'])
+              $request['startTime'] = $request['response']['timing']['requestTime'];
+          $min = null;
+          foreach ($request['response']['timing'] as $key => &$value) {
+            if ($key != 'requestTime' && $value >= 0) {
+              $value = $request['startTime'] + ($value / 1000);
+              if (!isset($min) || $value < $min)
+                $min = $value;
+            }
           }
-          if (array_key_exists('startTime', $request) &&
-              (!$pageData['startTime'] ||
-               $request['startTime'] < $pageData['startTime']))
-              $pageData['startTime'] = $request['startTime'];
+          if (isset($min) && $min > $request['startTime'])
+            $request['startTime'] = $min;
         }
-        if (array_key_exists('endTime', $request) &&
-            (!$pageData['endTime'] ||
-             $request['endTime'] > $pageData['endTime']))
-            $pageData['endTime'] = $request['endTime'];
-        if (array_key_exists('fromNet', $request) &&
-            $request['fromNet'])
-            $requests[] = $request;
+        if (array_key_exists('startTime', $request) &&
+            (!$pageData['startTime'] ||
+             $request['startTime'] < $pageData['startTime']))
+          $pageData['startTime'] = $request['startTime'];
+      }
+      if (array_key_exists('endTime', $request) &&
+          (!$pageData['endTime'] ||
+           $request['endTime'] > $pageData['endTime']))
+        $pageData['endTime'] = $request['endTime'];
+      if (array_key_exists('fromNet', $request) && $request['fromNet']) {
+        $requests[] = $request;
+      }
     }
     $ok = false;
     if (count($requests))
@@ -1268,5 +1263,21 @@ function DevToolsGetEventTimes(&$record) {
   }
   
   return $times;
+}
+
+/**
+* Scan through the array of headers and find the requested header.
+* We have to scan because they are case-insensitive.
+* 
+* @param mixed $headers
+* @param mixed $name
+*/
+function GetDevToolsHeaderValue($headers, $name, &$value) {
+  foreach ($headers as $key => $headerValue) {
+    if (!strcasecmp($name, $key)) {
+      $value = $headerValue;
+      break;
+    }
+  }
 }
 ?>
