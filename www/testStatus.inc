@@ -97,14 +97,16 @@ function GetTestStatus($id, $includePosition = true) {
                       $testInfoJson = GetTestInfo($id);
                       if ($testInfoJson) {
                         if (array_key_exists('test_runs', $testInfoJson)) {
-                          foreach($testInfoJson['test_runs'] as &$testRun) {
+                          foreach($testInfoJson['test_runs'] as $run => &$testRun) {
                             if (!array_key_exists('done', $testRun) || !$testRun['done']) {
                               if (array_key_exists('started', $testRun) && $testRun['started'] && $testRun['started'] < $now) {
                                 $runElapsed = ($now - $testRun['started']) / 60;
-                                if ($runElapsed > 30)
+                                if ($runElapsed > 30) {
                                   $testRun['done'] = true;
-                                else
+                                  logTestMsg($id, "Test run $run has been running for $runElapsed minutes, forcing done.");
+                                } else {
                                   $allComplete = false;
+                                }
                               } else {
                                 $allComplete = false;
                               }
@@ -112,6 +114,7 @@ function GetTestStatus($id, $includePosition = true) {
                           }
                         }
                         if ($allComplete) {
+                          logTestMsg($id, "Test has been running for $elapsed minutes and it has been $elapsedUpdate since the last update, forcing the full test to finish.");
                           $testInfoJson['completed'] = $now;
                           $test = file_get_contents("$testPath/testinfo.ini");
                           $date = gmdate("m/d/y G:i:s", $now);
@@ -198,6 +201,7 @@ function GetTestStatus($id, $includePosition = true) {
                     $ret['statusCode'] = 200;
                     $ret['statusText'] = 'Test Complete';
                     $ret['completeTime'] = $date;
+                    logTestMsg($id, "TThe test was not started but the test job could not be found.  Forcing it to end.");
                     SaveTestInfo($testInfoJson());
                   }
                   UnlockTest($lock);
