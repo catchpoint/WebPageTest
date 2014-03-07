@@ -245,6 +245,7 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
   WptTrace(loglevel::kFunction,_T("[wptdriver] WptDriverCore::BrowserTest\n"));
 
   do {
+    critical_error = false;
     ResetTestResult();
     attempt++;
     test.SetFileBase();
@@ -271,7 +272,7 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
         _T("[wptdriver] Critical error, re-installing browser (attempt %d)\n"),
         attempt);
       _webpagetest.DeleteIncrementalResults(test);
-      _settings.ReInstallBrowser();
+      //_settings.ReInstallBrowser();
     } else {
       if (test._upload_incremental_results && !test._discard)
         _webpagetest.UploadIncrementalResults(test);

@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "util.h"
 #include <Wincrypt.h>
 #include <TlHelp32.h>
+#include <Wtsapi32.h>
 #include "dbghelp/dbghelp.h"
 #include <WinInet.h>
 #include <regex>
@@ -588,20 +589,18 @@ DWORD GetParentProcessId(DWORD pid) {
 -----------------------------------------------------------------------------*/
 DWORD FindProcessIds(TCHAR * exe, CAtlList<DWORD> &pids) {
   DWORD count = 0;
-  HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-  if (snap != INVALID_HANDLE_VALUE) {
-    PROCESSENTRY32 proc;
-    proc.dwSize = sizeof(proc);
-    if (Process32First(snap, &proc)) {
-      bool found = false;
-      do {
-        if (!lstrcmpi(exe, proc.szExeFile)) {
-          count++;
-          pids.AddTail(proc.th32ProcessID);
-        }
-      } while (!found && Process32Next(snap, &proc));
+  WTS_PROCESS_INFO * proc = NULL;
+  DWORD process_count = 0;
+  if (WTSEnumerateProcesses(WTS_CURRENT_SERVER_HANDLE, 0, 1, &proc, &process_count)) {
+    for (DWORD i = 0; i < process_count; i++) {
+      TCHAR * process = PathFindFileName(proc[i].pProcessName);
+      if (!lstrcmpi(process, exe)) {
+        count++;
+        pids.AddTail(proc[i].ProcessId);
+      }
     }
-    CloseHandle(snap);
+    if (proc)
+      WTSFreeMemory(proc);
   }
   return count;
 }
@@ -616,6 +615,21 @@ void TerminateProcessById(DWORD pid) {
     TerminateProcess(process, 0);
     WaitForSingleObject(process, 120000);
     CloseHandle(process);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Terminate all instances of a process given it's name
+-----------------------------------------------------------------------------*/
+void TerminateProcessesByName(TCHAR * exe) {
+  CAtlList<DWORD> processes;
+  FindProcessIds(exe, processes);
+  if (!processes.IsEmpty()) {
+    POSITION pos = processes.GetHeadPosition();
+    while (pos) {
+      DWORD pid = processes.GetNext(pos);
+      TerminateProcessById(pid);
+    }
   }
 }
 

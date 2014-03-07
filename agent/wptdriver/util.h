@@ -61,6 +61,7 @@ DWORD FindProcessIds(TCHAR * exe, CAtlList<DWORD> &pids);
 DWORD GetParentProcessId(DWORD pid);
 void TerminateProcessAndChildren(DWORD pid);
 void TerminateProcessById(DWORD pid);
+void TerminateProcessesByName(TCHAR * exe);
 bool IsBrowserDocument(HWND wnd, bool recurse = true);
 CString HttpGetText(CString url);
 DWORD   HttpSaveFile(CString url, CString file);

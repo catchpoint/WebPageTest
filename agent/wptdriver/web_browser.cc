@@ -209,6 +209,7 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
       HANDLE additional_process = NULL;
       CAtlArray<HANDLE> browser_processes;
       bool ok = true;
+      TerminateProcessesByName(PathFindFileName((LPCTSTR)_browser._exe));
       if (CreateProcess(_browser._exe, cmdLine, NULL, NULL, FALSE,
                         CREATE_SUSPENDED, NULL, NULL, &si, &pi)) {
         _browser_process = pi.hProcess;
