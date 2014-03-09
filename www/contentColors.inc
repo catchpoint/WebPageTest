@@ -75,6 +75,7 @@ function MimeColors() {
         'text'  => array(254,241,132),
         'image' => array(196,154,232),
         'flash' => array(45,183,193),
+        'font' => array(255,82,62),
         'other' => array(196,196,196)
         );
     return $colors;
@@ -100,6 +101,8 @@ function ContentType($mime) {
         $content_type = 'image';
     } elseif (!strcasecmp($mime, 'application/x-shockwave-flash')) {
         $content_type = 'flash';
+    } elseif (!stripos($mime, 'font') !== false) {
+        $content_type = 'font';
     }
     return $content_type;
 }
