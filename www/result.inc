@@ -377,8 +377,9 @@ $page_description = "Website performance test result$testLabel.";
                 if (array_key_exists('testinfo', $test) && 
                     array_key_exists('errors', $test['testinfo']) && 
                     array_key_exists($run, $test['testinfo']['errors']) && 
-                    strlen($test['testinfo']['errors'][$run])) {
-                    $error_str = 'Test Error: ' . $test['testinfo']['errors'][$run];
+                    array_key_exists(0, $test['testinfo']['errors'][$run]) && 
+                    strlen($test['testinfo']['errors'][$run][0])) {
+                    $error_str = 'Test Error: ' . $test['testinfo']['errors'][$run][0];
                 } elseif (!isset($pageData) || !is_array($pageData) || !array_key_exists($run, $pageData)) {
                     if ($testComplete)
                         $error_str = 'Test Error: Data is missing.';
@@ -482,67 +483,76 @@ $page_description = "Website performance test result$testLabel.";
                         echo "<td colspan=\"$table_columns\" align=\"left\" valign=\"middle\">First View: Test Data Missing</td>";
                     }
                 echo '</tr>';
-                if( isset($pageData[$run][1]) ) { 
-                    echo '<tr>';
-                    if (array_key_exists($run, $pageData) && array_key_exists(1, $pageData[$run]) && count($pageData[$run][1])) {
-                        echo '<td align="left" class="even" valign="middle">Repeat View';
-                        if( isset($pageData[$run][1]['result']) && $pageData[$run][1]['result'] !== 0 && $pageData[$run][1]['result'] !== 99999 )
-                            echo '<br>(Error: ' . LookupError($pageData[$run][1]['result']) . ')';
-                        else if( isset($pageData[$run][1]['loadTime']) )
-                            echo '<br>(' . number_format($pageData[$run][1]['loadTime'] / 1000.0, 3) . 's)';
-                        if( is_file("$testPath/{$run}_Cached_dynaTrace.dtas") )
-                        {
-                            echo "<br><br><div><a href=\"/$testPath/{$run}_Cached_dynaTrace.dtas\" title=\"Download dynaTrace Session\"><img src=\"{$GLOBALS['cdnPath']}/images/dynatrace_session_v3.png\" alt=\"Download dynaTrace Session\"></a></div><br>";
-                            echo "<a href=\"http://ajax.dynatrace.com/pages/\" target=\"_blank\" title=\"Get dynaTrace AJAX Edition\"><img src=\"{$GLOBALS['cdnPath']}/images/dynatrace_ajax.png\" alt=\"Get dynaTrace Ajax Edition\"></a>";
-                        }
-                        if( gz_is_file("$testPath/{$run}_Cached.cap") )
-                        {
-                            $tcpdump_url = "/getgzip.php?test=$id&file={$run}_Cached.cap";
-                            if( FRIENDLY_URLS )
-                                $tcpdump_url = "/result/$id/{$run}_Cached.cap";
-                            echo "<br><br><a href=\"$tcpdump_url\" title=\"Download tcpdump session capture\">tcpdump</a>";
-                            if (array_key_exists('tcpdump_view', $settings) && strlen($settings['tcpdump_view'])) {
-                                $view_url = $settings['tcpdump_view'] . urlencode("http://$wpt_host$tcpdump_url");
-                                echo " - (<a href=\"$view_url\" title=\"View tcpdump session capture\">view</a>)";
-                            }
-                        }
-                        if( gz_is_file("$testPath/{$run}_Cached_timeline.json") || gz_is_file("$testPath/{$run}_Cached_devtools.json") ) {
-                            echo "<br><br><a href=\"/getTimeline.php?test=$id&run={$run}&cached=1\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
-                            echo " (<a href=\"/timeline/" . VER_TIMELINE . "timeline.php?test=$id&run=$run&cached=1\" title=\"View Chrome Dev Tools Timeline\">view</a>)";
-                            if (array_key_exists('testinfo', $test) && array_key_exists('timeline', $test['testinfo']) && $test['testinfo']['timeline'])
-                              echo "<br><a href=\"/breakdownTimeline.php?test=$id&run=$run&cached=1\" title=\"View browser main thread activity by event type\">Processing Breakdown</a>";
-                        }
-                        if( gz_is_file("$testPath/{$run}_Cached_netlog.txt") ) {
-                            echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_netlog.txt\" title=\"Download Network Log\">Net Log</a>";
-                        }
-                        if( gz_is_file("$testPath/{$run}_Cached_trace.json") ) {
-                            echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_trace.json\" title=\"Download Trace\">Trace</a>";
-                        }
-                        echo '</td>';
-                        if( FRIENDLY_URLS )
-                            echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/details/cached/\"><img class=\"progress\" width=250 src=\"/result/$id/{$run}_Cached_waterfall_thumb.png\"></a></td>";
-                        else
-                            echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/details.php?test=$id&run=$run&cached=1\"><img class=\"progress\" width=250 src=\"/thumbnail.php?test=$id&run=$run&cached=1&file={$run}_Cached_waterfall.png\"></a></td>";
+                if (!$test['test']['fvonly'] || isset($pageData[$run][1])) {
+                  echo '<tr>';
+                  if( isset($pageData[$run][1]) ) { 
+                      if (array_key_exists($run, $pageData) && array_key_exists(1, $pageData[$run]) && count($pageData[$run][1])) {
+                          echo '<td align="left" class="even" valign="middle">Repeat View';
+                          if( isset($pageData[$run][1]['result']) && $pageData[$run][1]['result'] !== 0 && $pageData[$run][1]['result'] !== 99999 )
+                              echo '<br>(Error: ' . LookupError($pageData[$run][1]['result']) . ')';
+                          else if( isset($pageData[$run][1]['loadTime']) )
+                              echo '<br>(' . number_format($pageData[$run][1]['loadTime'] / 1000.0, 3) . 's)';
+                          if( is_file("$testPath/{$run}_Cached_dynaTrace.dtas") )
+                          {
+                              echo "<br><br><div><a href=\"/$testPath/{$run}_Cached_dynaTrace.dtas\" title=\"Download dynaTrace Session\"><img src=\"{$GLOBALS['cdnPath']}/images/dynatrace_session_v3.png\" alt=\"Download dynaTrace Session\"></a></div><br>";
+                              echo "<a href=\"http://ajax.dynatrace.com/pages/\" target=\"_blank\" title=\"Get dynaTrace AJAX Edition\"><img src=\"{$GLOBALS['cdnPath']}/images/dynatrace_ajax.png\" alt=\"Get dynaTrace Ajax Edition\"></a>";
+                          }
+                          if( gz_is_file("$testPath/{$run}_Cached.cap") )
+                          {
+                              $tcpdump_url = "/getgzip.php?test=$id&file={$run}_Cached.cap";
+                              if( FRIENDLY_URLS )
+                                  $tcpdump_url = "/result/$id/{$run}_Cached.cap";
+                              echo "<br><br><a href=\"$tcpdump_url\" title=\"Download tcpdump session capture\">tcpdump</a>";
+                              if (array_key_exists('tcpdump_view', $settings) && strlen($settings['tcpdump_view'])) {
+                                  $view_url = $settings['tcpdump_view'] . urlencode("http://$wpt_host$tcpdump_url");
+                                  echo " - (<a href=\"$view_url\" title=\"View tcpdump session capture\">view</a>)";
+                              }
+                          }
+                          if( gz_is_file("$testPath/{$run}_Cached_timeline.json") || gz_is_file("$testPath/{$run}_Cached_devtools.json") ) {
+                              echo "<br><br><a href=\"/getTimeline.php?test=$id&run={$run}&cached=1\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
+                              echo " (<a href=\"/timeline/" . VER_TIMELINE . "timeline.php?test=$id&run=$run&cached=1\" title=\"View Chrome Dev Tools Timeline\">view</a>)";
+                              if (array_key_exists('testinfo', $test) && array_key_exists('timeline', $test['testinfo']) && $test['testinfo']['timeline'])
+                                echo "<br><a href=\"/breakdownTimeline.php?test=$id&run=$run&cached=1\" title=\"View browser main thread activity by event type\">Processing Breakdown</a>";
+                          }
+                          if( gz_is_file("$testPath/{$run}_Cached_netlog.txt") ) {
+                              echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_netlog.txt\" title=\"Download Network Log\">Net Log</a>";
+                          }
+                          if( gz_is_file("$testPath/{$run}_Cached_trace.json") ) {
+                              echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_trace.json\" title=\"Download Trace\">Trace</a>";
+                          }
+                          echo '</td>';
+                          if( FRIENDLY_URLS )
+                              echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/details/cached/\"><img class=\"progress\" width=250 src=\"/result/$id/{$run}_Cached_waterfall_thumb.png\"></a></td>";
+                          else
+                              echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/details.php?test=$id&run=$run&cached=1\"><img class=\"progress\" width=250 src=\"/thumbnail.php?test=$id&run=$run&cached=1&file={$run}_Cached_waterfall.png\"></a></td>";
 
-                        if (!isset($test['testinfo']) || !$test['testinfo']['noimages']) {
-                            if( FRIENDLY_URLS )
-                                echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/screen_shot/cached/\"><img class=\"progress\" width=250 src=\"/result/$id/{$run}_Cached_screen_thumb.jpg\"></a></td>";
-                            else
-                                echo "<td align=\"center\" valign=\"middle\"><a href=\"/screen_shot.php?test=$id&run=$run&cached=1\"><img class=\"progress\" width=250 src=\"/thumbnail.php?test=$id&run=$run&cached=1&file={$run}_Cached_screen.jpg\"></a></td>";
-                        }
-                        if ($video) {
-                            echo '<td align="center" valign="middle">';
-                            if (is_dir("$testPath/video_{$run}_cached")) {
-                                echo "<a href=\"/video/compare.php?tests=$id-r:$run-c:1\">Filmstrip View</a><br>-<br>";
-                                echo "<a href=\"/video/create.php?tests=$id-r:$run-c:1&id={$id}.{$run}.1\">Watch Video</a>";
-                            } else
-                                echo "not available";
-                            echo '</td>';
-                        } 
-                    } else {
-                        echo "<td colspan=\"$table_columns\" align=\"left\" valign=\"middle\">Repeat View: Test Data Missing</td>";
-                    }
-                echo '</tr>';
+                          if (!isset($test['testinfo']) || !$test['testinfo']['noimages']) {
+                              if( FRIENDLY_URLS )
+                                  echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/screen_shot/cached/\"><img class=\"progress\" width=250 src=\"/result/$id/{$run}_Cached_screen_thumb.jpg\"></a></td>";
+                              else
+                                  echo "<td align=\"center\" valign=\"middle\"><a href=\"/screen_shot.php?test=$id&run=$run&cached=1\"><img class=\"progress\" width=250 src=\"/thumbnail.php?test=$id&run=$run&cached=1&file={$run}_Cached_screen.jpg\"></a></td>";
+                          }
+                          if ($video) {
+                              echo '<td align="center" valign="middle">';
+                              if (is_dir("$testPath/video_{$run}_cached")) {
+                                  echo "<a href=\"/video/compare.php?tests=$id-r:$run-c:1\">Filmstrip View</a><br>-<br>";
+                                  echo "<a href=\"/video/create.php?tests=$id-r:$run-c:1&id={$id}.{$run}.1\">Watch Video</a>";
+                              } else
+                                  echo "not available";
+                              echo '</td>';
+                          } 
+                      }
+                  } else if (array_key_exists('testinfo', $test) && 
+                      array_key_exists('errors', $test['testinfo']) && 
+                      array_key_exists($run, $test['testinfo']['errors']) && 
+                      array_key_exists(0, $test['testinfo']['errors'][$run]) && 
+                      strlen($test['testinfo']['errors'][$run][1])) {
+                      $error_str = htmlspecialchars('Test Error: ' . $test['testinfo']['errors'][$run][1]);
+                      echo "<td colspan=\"$table_columns\" align=\"left\" valign=\"middle\">Repeat View: $error_str</td>";
+                  } else {
+                      echo "<td colspan=\"$table_columns\" align=\"left\" valign=\"middle\">Repeat View: Test Data Missing</td>";
+                  }
+                  echo '</tr>';
                 }
                 if( $testComplete && $run == $fvMedian ) { 
                     $b = getBreakdown($id, $testPath, $run, 0, $requests);
