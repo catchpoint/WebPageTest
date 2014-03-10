@@ -90,7 +90,8 @@ describe('web_page_replay small', function() {
       return false;
     };
 
-    var wpr = new web_page_replay.WebPageReplay(app, {deviceAddr: '1.2.3.4'});
+    var wpr = new web_page_replay.WebPageReplay(app,
+        {flags: {deviceAddr: '1.2.3.4'}, task: {}});
     wpr.scheduleRecord().then(function(ip) {
       should.equal('1.2.3.4', ip);
     });

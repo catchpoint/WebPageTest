@@ -108,22 +108,23 @@ BrowserBase.prototype.scheduleIsAvailable = function() {
 };
 
 /**
- * Imports a browser module and creates a browser object, given flags.
- * The flags should contain the property 'browser', specifying a
- * package-qualified class name for instantiation. If unspecified,
- * defaults to browser_local_chrome.BrowserLocalChrome.
+ * Imports a browser module and creates a browser object, given args.
  *
  * @param {webdriver.promise.ControlFlow} app the ControlFlow for scheduling.
- * @param {Object} flags an object containing a string property 'browser'.
+ * @param {Object} args additional browser-specific args.
+ *   #param {Object} flags:
+ *     #param {string=} browser package-qualified browser class name for
+ *         instantiation, which defaults to
+ *         browser_local_chrome.BrowserLocalChrome.
  * @return {BrowserBase} the browser object.
  */
-exports.createBrowser = function(app, flags) {
+exports.createBrowser = function(app, args) {
   'use strict';
-  var browserType =
-      flags.browserType || 'browser_local_chrome.BrowserLocalChrome';
+  var browserType = (args.flags.browser ? args.flags.browser :
+      'browser_local_chrome.BrowserLocalChrome');
   logger.debug('Creating browser ' + browserType);
   var lastDot = browserType.lastIndexOf('.');
   var browserModule = require(browserType.substring(0, lastDot));
   var BrowserClass = browserModule[browserType.substring(lastDot + 1)];
-  return new BrowserClass(app, flags);
+  return new BrowserClass(app, args);
 };

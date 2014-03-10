@@ -269,9 +269,8 @@ describe('wd_server small', function() {
     wd_server.process.emit('message', {
         cmd: 'run',
         exitWhenDone: false,
-        filePrefix: '1_Cached_',
-        chromedriver: chromedriver,
-        script: 'new webdriver.Builder().build();'
+        flags: {chromedriver: chromedriver},
+        task: {script: 'new webdriver.Builder().build();'}
       });
     test_utils.tickUntilIdle(app, sandbox, 500);
 
@@ -303,10 +302,8 @@ describe('wd_server small', function() {
     wd_server.process.emit('message', {
         cmd: 'run',
         exitWhenDone: true,
-        filePrefix: '1_Cached_',
-        pngScreenShot: true,
-        chromedriver: chromedriver,
-        script: 'new webdriver.Builder().build();'
+        flags: {chromedriver: chromedriver},
+        task: {pngScreenshot: 1, script: 'new webdriver.Builder().build();'}
       });
     test_utils.tickUntilIdle(app, sandbox);
 
@@ -369,10 +366,8 @@ describe('wd_server small', function() {
     wd_server.process.emit('message', {
         cmd: 'run',
         exitWhenDone: false,
-        filePrefix: '1_Cached_',
-        chromedriver: chromedriver,
-        url: 'http://gaga.com/ulala',
-        captureTimeline: true
+        flags: {chromedriver: chromedriver},
+        task: {url: 'http://gaga.com/ulala', timeline: 1}
       });
     // Do not use tickUntilIdle -- it will fail, because we actually stall
     // on the DevTools WebSocket connection, and we want to inject a bunch
@@ -443,10 +438,8 @@ describe('wd_server small', function() {
     wd_server.process.emit('message', {
         cmd: 'run',
         exitWhenDone: true,
-        filePrefix: '1_Cached_',
-        chromedriver: chromedriver,
-        url: 'http://gaga.com/ulala',
-        pngScreenShot: true
+        flags: {chromedriver: chromedriver},
+        task: {url: 'http://gaga.com/ulala', pngScreenshot: 1}
       });
     // Verify that messages get ignored between runs
     fakeWs.emit('message', JSON.stringify(networkMessage), {});
@@ -482,7 +475,7 @@ describe('wd_server small', function() {
   });
 
   it('should fail to connect if the chromedriver/jar are not set', function() {
-    wds.init({});
+    wds.init({flags: {}, task: {}});
     wds.connect.should.throwError();
   });
 
@@ -517,7 +510,8 @@ describe('wd_server small', function() {
 
     // Run! This calls init(message) and connect().
     logger.debug('Sending run message');
-    wd_server.process.emit('message', {cmd: 'run', script: failingScript});
+    wd_server.process.emit('message', {cmd: 'run', flags: {},
+        task: {script: failingScript}});
 
     // Now run the scheduled script.
     test_utils.tickUntilIdle(app, sandbox);
@@ -535,7 +529,7 @@ describe('wd_server small', function() {
   });
 
   it('should stop and send error on uncaught exception', function() {
-    wds.init({});
+    wds.init({flags: {}, task: {}});
     // connect() does this
     wd_server.process.once('uncaughtException',
         wds.uncaughtExceptionHandler_);
