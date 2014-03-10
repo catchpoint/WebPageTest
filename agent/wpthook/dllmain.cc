@@ -41,8 +41,6 @@ __declspec( dllexport ) void __stdcall InstallHook(void);
 }
 
 static DWORD WINAPI HookThreadProc(void* arg) {
-  OutputDebugStringA("Starting up");
-
   SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
 
   // actually do the startup work

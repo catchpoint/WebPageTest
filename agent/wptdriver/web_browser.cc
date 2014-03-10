@@ -35,6 +35,7 @@ const int PIPE_IN = 1;
 const int PIPE_OUT = 2;
 static const TCHAR * GLOBAL_TESTING_MUTEX = _T("Global\\wpt_testing_active");
 static const TCHAR * BROWSER_STARTED_EVENT = _T("Global\\wpt_browser_started");
+static const TCHAR * BROWSER_DONE_EVENT = _T("Global\\wpt_browser_done");
 static const TCHAR * FLASH_CACHE_DIR = 
                         _T("Macromedia\\Flash Player\\#SharedObjects");
 static const TCHAR * SILVERLIGHT_CACHE_DIR = _T("Microsoft\\Silverlight");
@@ -95,6 +96,8 @@ WebBrowser::WebBrowser(WptSettings& settings, WptTestDriver& test,
       null_dacl.lpSecurityDescriptor = &SD;
   _browser_started_event = CreateEvent(&null_dacl, TRUE, FALSE,
                                        BROWSER_STARTED_EVENT);
+  _browser_done_event = CreateEvent(&null_dacl, TRUE, FALSE,
+                                    BROWSER_DONE_EVENT);
 }
 
 /*-----------------------------------------------------------------------------
@@ -215,8 +218,9 @@ bool WebBrowser::RunAndWait() {
       // Launch the browser and wait for the hook to start
       TerminateProcessesByName(PathFindFileName((LPCTSTR)_browser._exe));
       SetBrowserExe(PathFindFileName((LPCTSTR)_browser._exe));
-      if (_browser_started_event) {
+      if (_browser_started_event && _browser_done_event) {
         ResetEvent(_browser_started_event);
+        ResetEvent(_browser_done_event);
 
         if (CreateProcess(_browser._exe, cmdLine, NULL, NULL, FALSE,
                           0, NULL, NULL, &si, &pi)) {
@@ -243,19 +247,15 @@ bool WebBrowser::RunAndWait() {
 
         // wait for the browser to finish (infinite timeout if we are debugging)
         if (_browser_process && ok) {
+          ret = true;
           _status.Set(_T("Waiting up to %d seconds for the test to complete"), 
                       (_test._test_timeout / SECONDS_TO_MS) * 2);
           DWORD wait_time = _test._test_timeout * 2;
           #ifdef DEBUG
           wait_time = INFINITE;
           #endif
-
-          if (WaitForSingleObject(_browser_process, wait_time) != WAIT_TIMEOUT)
-            ret = true;
-          else {
-            _status.Set(_T("Timed out waiting for browser to exit"));
-            _test._run_error = "Timed out waiting for browser to exit.";
-          }
+          WaitForSingleObject(_browser_done_event, wait_time);
+          WaitForSingleObject(_browser_process, 10000);
         }
       } else {
         _status.Set(_T("Error initializing browser event"));
@@ -266,14 +266,12 @@ bool WebBrowser::RunAndWait() {
       // kill the browser and any child processes if it is still running
       EnterCriticalSection(&cs);
       if (_browser_process) {
-        TerminateProcess(_browser_process, 0);
         CloseHandle(_browser_process);
         _browser_process = NULL;
       }
       LeaveCriticalSection(&cs);
 
       SetBrowserExe(NULL);
-      TerminateProcessesByName(PathFindFileName((LPCTSTR)_browser._exe));
       ResetIpfw();
 
     } else {

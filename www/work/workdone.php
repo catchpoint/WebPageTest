@@ -22,7 +22,6 @@ if (!isset($included)) {
   header('Content-type: text/plain');
   header("Cache-Control: no-cache, must-revalidate");
   header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
-  ignore_user_abort(true);
 }
 set_time_limit(60*5);
 ignore_user_abort(true);
@@ -106,18 +105,23 @@ if (ValidateTestId($id)) {
     }
   } else {
     $testInfo = GetTestInfo($id);
+    if (!$testInfo || !array_key_exists('location', $testInfo)) {
+      $testLock = LockTest($id);
+      $testInfo = GetTestInfo($id);
+      UnlockTest($testLock);
+    }
     if ($testInfo && array_key_exists('location', $testInfo)) {
       $location = $testInfo['location'];
       $locKey = GetLocationKey($location);
-      logMsg("\n\nWork received for test: $id, location: $location, key: $key\n");
       if ((!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADDR'], "127.0.0.1")) {
         $testErrorStr = '';
         if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror']))
           $testErrorStr = ', Test Error: "' . $_REQUEST['testerror'] . '"';
         if (array_key_exists('error', $_REQUEST) && strlen($_REQUEST['error']))
           $errorStr = ', Test Run Error: "' . $_REQUEST['error'] . '"';
-        logTestMsg($id, "Test Run Complete. Run: $runNumber, Cached: $cacheWarmed, Tester: $tester$testErrorStr$errorStr");
+        logTestMsg($id, "Test Run Complete. Run: $runNumber, Cached: $cacheWarmed, Done: $done, Tester: $tester$testErrorStr$errorStr");
         $testLock = LockTest($id);
+        $testInfo = GetTestInfo($id);
         // update the location time
         if( strlen($location) ) {
             if( !is_dir('./tmp') )
@@ -139,8 +143,6 @@ if (ValidateTestId($id)) {
         if (strlen($location) && strlen($tester)) {
           $testerInfo = array();
           $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
-          if ($done)
-            $testerInfo['test'] = '';
           UpdateTester($location, $tester, $testerInfo, $cpu);
         }
         if (array_key_exists('shard_test', $testInfo) && $testInfo['shard_test'])

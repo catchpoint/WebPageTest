@@ -5,6 +5,7 @@ if(extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('GetRelayStatus');
     newrelic_add_custom_tracer('GetAppurifyStatus');
 }
+set_time_limit(60*5);
 
 $testQueue = array();
 
@@ -100,10 +101,12 @@ function GetTestStatus($id, $includePosition = true) {
                           foreach($testInfoJson['test_runs'] as $run => &$testRun) {
                             if (!array_key_exists('done', $testRun) || !$testRun['done']) {
                               if (array_key_exists('started', $testRun) && $testRun['started'] && $testRun['started'] < $now) {
-                                $runElapsed = ($now - $testRun['started']) / 60;
-                                if ($runElapsed > 30) {
+                                $runElapsed = intval(($now - $testRun['started']) / 60);
+                                if ($runElapsed > 10) {
                                   $testRun['done'] = true;
-                                  logTestMsg($id, "Test run $run has been running for $runElapsed minutes, forcing done.");
+                                  if (array_key_exists('tester', $testRun) && strlen($testRun['tester']))
+                                    $tester = " on {$testRun['tester']}";
+                                  logTestMsg($id, "Test run $run has been running for $runElapsed minutes$tester, forcing done.");
                                 } else {
                                   $allComplete = false;
                                 }
@@ -201,7 +204,7 @@ function GetTestStatus($id, $includePosition = true) {
                     $ret['statusCode'] = 200;
                     $ret['statusText'] = 'Test Complete';
                     $ret['completeTime'] = $date;
-                    logTestMsg($id, "TThe test was not started but the test job could not be found.  Forcing it to end.");
+                    logTestMsg($id, "The test was not started but the test job could not be found.  Forcing it to end.");
                     SaveTestInfo($testInfoJson());
                   }
                   UnlockTest($lock);

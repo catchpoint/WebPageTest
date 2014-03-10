@@ -42,6 +42,7 @@ static TestServer * _globaltest__server = NULL;
 
 // definitions
 static const TCHAR * BROWSER_STARTED_EVENT = _T("Global\\wpt_browser_started");
+static const TCHAR * BROWSER_DONE_EVENT = _T("Global\\wpt_browser_done");
 static const DWORD RESPONSE_OK = 200;
 static const char * RESPONSE_OK_STR = "OK";
 
@@ -134,6 +135,12 @@ void TestServer::Stop(void){
   if (mongoose_context_) {
     mg_stop(mongoose_context_);
     mongoose_context_ = NULL;
+  }
+  HANDLE browser_done_event = OpenEvent(EVENT_MODIFY_STATE , FALSE,
+                                        BROWSER_DONE_EVENT);
+  if (browser_done_event) {
+    SetEvent(browser_done_event);
+    CloseHandle(browser_done_event);
   }
   _globaltest__server = NULL;
 }

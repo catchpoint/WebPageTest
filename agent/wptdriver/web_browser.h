@@ -58,6 +58,7 @@ private:
 
   HANDLE        _browser_process;
   HANDLE  _browser_started_event;
+  HANDLE  _browser_done_event;
 
   CRITICAL_SECTION  cs;
   SECURITY_ATTRIBUTES null_dacl;

@@ -173,10 +173,24 @@ void WptDriverCore::WorkThread(void) {
             test._run = test._specific_run ? test._specific_run : test._run;
             test._clear_cache = true;
             bool ok = BrowserTest(test, browser);
-            if (ok && !test._fv_only) {
-              test._run_error.Empty();
+            if (!test._fv_only) {
               test._clear_cache = false;
-              BrowserTest(test, browser);
+              if (ok) {
+                test._run_error.Empty();
+                BrowserTest(test, browser);
+              } else {
+                CStringA first_run_error = test._run_error;
+                if (!first_run_error.GetLength()) {
+                  int result = GetTestResult();
+                  if (result != 0 && result != 99999)
+                    first_run_error.Format(
+                        "Test run failed with result code %d", result);
+                }
+                test._run_error =
+                    CStringA("Skipped repeat view, first view failed: ") +
+                    first_run_error;
+                _webpagetest.UploadIncrementalResults(test);
+              }
             }
             if (test._specific_run)
               break;
@@ -261,12 +275,8 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
     _winpcap.StopCapture();
   KillBrowsers();
 
-  if (test._discard)
-    _webpagetest.DeleteIncrementalResults(test);
-  if (test._upload_incremental_results && !test._discard)
-    _webpagetest.UploadIncrementalResults(test);
-  else
-    _webpagetest.DeleteIncrementalResults(test);
+  _webpagetest.UploadIncrementalResults(test);
+
   if (ret) {
     int result = GetTestResult();
     if (result != 0 && result != 99999)

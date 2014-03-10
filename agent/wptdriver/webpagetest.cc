@@ -171,6 +171,8 @@ bool WebPagetest::UploadIncrementalResults(WptTestDriver& test) {
       ret = UploadData(test, false);
       SetCPUUtilization(0);
     }
+  } else {
+    DeleteIncrementalResults(test);
   }
 
   return ret;
@@ -356,88 +358,87 @@ bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test,
     }
   }
 
-  if (BuildFormData(_settings, test, done, file_name, file_size, 
-                      headers, footer, form_data, content_length)) {
-    // use WinInet to do the POST (quite a few steps)
-    HINTERNET internet = InternetOpen(_T("WebPagetest Driver"), 
-              INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-    if (internet) {
-      DWORD timeout = 600000;
-      InternetSetOption(internet, INTERNET_OPTION_CONNECT_TIMEOUT,
-                        &timeout, sizeof(timeout));
-      InternetSetOption(internet, INTERNET_OPTION_RECEIVE_TIMEOUT,
-                        &timeout, sizeof(timeout));
-      InternetSetOption(internet, INTERNET_OPTION_SEND_TIMEOUT,
-                        &timeout, sizeof(timeout));
-      InternetSetOption(internet, INTERNET_OPTION_DATA_SEND_TIMEOUT,
-                        &timeout, sizeof(timeout));
-      InternetSetOption(internet, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT,
-                        &timeout, sizeof(timeout));
+  BuildFormData(_settings, test, done, file_name, file_size, 
+                headers, footer, form_data, content_length);
 
-      CString host, object;
-      unsigned short port;
-      DWORD secure_flag;
-      if (CrackUrl(url, host, port, object, secure_flag)) {
-        HINTERNET connect = InternetConnect(internet, host, port, NULL, NULL,
-                                            INTERNET_SERVICE_HTTP, 0, 0);
-        if (connect){
-          HINTERNET request = HttpOpenRequest(connect, _T("POST"), object, 
-                                                NULL, NULL, NULL, 
-                                                INTERNET_FLAG_NO_CACHE_WRITE |
-                                                INTERNET_FLAG_NO_UI |
-                                                INTERNET_FLAG_PRAGMA_NOCACHE |
-                                                INTERNET_FLAG_RELOAD |
-                                                INTERNET_FLAG_KEEP_CONNECTION |
-                                                secure_flag, NULL);
-          if (request){
-            if (HttpAddRequestHeaders(request, headers, headers.GetLength(), 
-                                      HTTP_ADDREQ_FLAG_ADD |
-                                      HTTP_ADDREQ_FLAG_REPLACE)) {
-              INTERNET_BUFFERS buffers;
-              memset( &buffers, 0, sizeof(buffers) );
-              buffers.dwStructSize = sizeof(buffers);
-              buffers.dwBufferTotal = content_length;
-              if (HttpSendRequestEx(request, &buffers, NULL, 0, NULL)) {
-                DWORD bytes_written;
-                if (InternetWriteFile(request, (LPCSTR)form_data, 
-                                      form_data.GetLength(), &bytes_written)) {
-                  // upload the file itself
-                  if (file_handle != INVALID_HANDLE_VALUE && file_size) {
-                      DWORD chunkSize = min(64 * 1024, file_size);
-                      LPBYTE mem = (LPBYTE)malloc(chunkSize);
-                      if (mem) {
-                        DWORD bytes;
-                        while (ReadFile(file_handle, mem, chunkSize, 
-                                                         &bytes, 0) && bytes) {
-                          InternetWriteFile(request, mem, bytes, 
-                                                            &bytes_written);
-                        }
-                        free(mem);
+  // use WinInet to do the POST (quite a few steps)
+  HINTERNET internet = InternetOpen(_T("WebPagetest Driver"), 
+            INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+  if (internet) {
+    DWORD timeout = 600000;
+    InternetSetOption(internet, INTERNET_OPTION_CONNECT_TIMEOUT,
+                      &timeout, sizeof(timeout));
+    InternetSetOption(internet, INTERNET_OPTION_RECEIVE_TIMEOUT,
+                      &timeout, sizeof(timeout));
+    InternetSetOption(internet, INTERNET_OPTION_SEND_TIMEOUT,
+                      &timeout, sizeof(timeout));
+    InternetSetOption(internet, INTERNET_OPTION_DATA_SEND_TIMEOUT,
+                      &timeout, sizeof(timeout));
+    InternetSetOption(internet, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT,
+                      &timeout, sizeof(timeout));
+
+    CString host, object;
+    unsigned short port;
+    DWORD secure_flag;
+    if (CrackUrl(url, host, port, object, secure_flag)) {
+      HINTERNET connect = InternetConnect(internet, host, port, NULL, NULL,
+                                          INTERNET_SERVICE_HTTP, 0, 0);
+      if (connect){
+        HINTERNET request = HttpOpenRequest(connect, _T("POST"), object, 
+                                              NULL, NULL, NULL, 
+                                              INTERNET_FLAG_NO_CACHE_WRITE |
+                                              INTERNET_FLAG_NO_UI |
+                                              INTERNET_FLAG_PRAGMA_NOCACHE |
+                                              INTERNET_FLAG_RELOAD |
+                                              INTERNET_FLAG_KEEP_CONNECTION |
+                                              secure_flag, NULL);
+        if (request){
+          if (HttpAddRequestHeaders(request, headers, headers.GetLength(), 
+                                    HTTP_ADDREQ_FLAG_ADD |
+                                    HTTP_ADDREQ_FLAG_REPLACE)) {
+            INTERNET_BUFFERS buffers;
+            memset( &buffers, 0, sizeof(buffers) );
+            buffers.dwStructSize = sizeof(buffers);
+            buffers.dwBufferTotal = content_length;
+            if (HttpSendRequestEx(request, &buffers, NULL, 0, NULL)) {
+              DWORD bytes_written;
+              if (InternetWriteFile(request, (LPCSTR)form_data, 
+                                    form_data.GetLength(), &bytes_written)) {
+                // upload the file itself
+                if (file_handle != INVALID_HANDLE_VALUE && file_size) {
+                    DWORD chunkSize = min(64 * 1024, file_size);
+                    LPBYTE mem = (LPBYTE)malloc(chunkSize);
+                    if (mem) {
+                      DWORD bytes;
+                      while (ReadFile(file_handle, mem, chunkSize, 
+                                                        &bytes, 0) && bytes) {
+                        InternetWriteFile(request, mem, bytes, 
+                                                          &bytes_written);
                       }
-                  }
-
-                  // upload the end of the form data
-                  if (InternetWriteFile(request, (LPCSTR)footer, 
-                                        footer.GetLength(), &bytes_written)) {
-                    if (HttpEndRequest(request, NULL, 0, 0)) {
-                      ret = true;
+                      free(mem);
                     }
+                }
+
+                // upload the end of the form data
+                if (InternetWriteFile(request, (LPCSTR)footer, 
+                                      footer.GetLength(), &bytes_written)) {
+                  if (HttpEndRequest(request, NULL, 0, 0)) {
+                    ret = true;
                   }
                 }
               }
             }
-            InternetCloseHandle(request);
           }
-          InternetCloseHandle(connect);
+          InternetCloseHandle(request);
         }
+        InternetCloseHandle(connect);
       }
-      InternetCloseHandle(internet);
     }
+    InternetCloseHandle(internet);
   }
 
-  if (file_handle != INVALID_HANDLE_VALUE) {
+  if (file_handle != INVALID_HANDLE_VALUE)
     CloseHandle( file_handle );
-  }
 
   if (ret)
     DeleteFile(file);
@@ -498,13 +499,11 @@ bool WebPagetest::CrackUrl(CString url, CString &host, unsigned short &port,
 /*-----------------------------------------------------------------------------
   Build the form data for a POST (with an optional file)
 -----------------------------------------------------------------------------*/
-bool WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test, 
+void WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test, 
                             bool done,
                             CString file_name, DWORD file_size,
                             CString& headers, CStringA& footer, 
                             CStringA& form_data, DWORD& content_length){
-  bool ret = true;
-
   footer = "";
   form_data = "";
 
@@ -616,8 +615,6 @@ bool WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test,
   CString buff;
   buff.Format(_T("Content-Length: %u\r\n"), content_length);
   headers += buff;
-
-  return ret;
 }
 
 /*-----------------------------------------------------------------------------
