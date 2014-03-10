@@ -239,52 +239,39 @@ bool WptDriverCore::TracerouteTest(WptTestDriver& test) {
 -----------------------------------------------------------------------------*/
 bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
   bool ret = false;
-  bool critical_error = false;
-  int attempt = 0;
 
   WptTrace(loglevel::kFunction,_T("[wptdriver] WptDriverCore::BrowserTest\n"));
 
-  do {
-    critical_error = false;
-    ResetTestResult();
-    attempt++;
-    test.SetFileBase();
-    if (test._clear_cache) {
-      FlushDNS();
-      browser.ClearUserData();
-    }
-    if (test._tcpdump)
-      _winpcap.StartCapture( test._file_base + _T(".cap") );
+  test._run_error.Empty();
+  ResetTestResult();
+  test.SetFileBase();
+  if (test._clear_cache) {
+    FlushDNS();
+    browser.ClearUserData();
+  }
+  if (test._tcpdump)
+    _winpcap.StartCapture( test._file_base + _T(".cap") );
 
-    SetCursorPos(0,0);
-    ShowCursor(FALSE);
-    ret = browser.RunAndWait(critical_error);
-    ShowCursor(TRUE);
+  SetCursorPos(0,0);
+  ShowCursor(FALSE);
+  ret = browser.RunAndWait();
+  ShowCursor(TRUE);
 
-    if (test._tcpdump)
-      _winpcap.StopCapture();
-    KillBrowsers();
+  if (test._tcpdump)
+    _winpcap.StopCapture();
+  KillBrowsers();
 
-    if (test._discard)
-      _webpagetest.DeleteIncrementalResults(test);
-    if (attempt < 2 && critical_error) {
-      WptTrace(loglevel::kWarning, 
-        _T("[wptdriver] Critical error, re-installing browser (attempt %d)\n"),
-        attempt);
-      _webpagetest.DeleteIncrementalResults(test);
-      //_settings.ReInstallBrowser();
-    } else {
-      if (test._upload_incremental_results && !test._discard)
-        _webpagetest.UploadIncrementalResults(test);
-      else
-        _webpagetest.DeleteIncrementalResults(test);
-    }
-    if (ret) {
-      int result = GetTestResult();
-      if (result != 0 && result != 99999)
-        ret = false;
-    }
-  } while (attempt < 2 && critical_error);
+  if (test._discard)
+    _webpagetest.DeleteIncrementalResults(test);
+  if (test._upload_incremental_results && !test._discard)
+    _webpagetest.UploadIncrementalResults(test);
+  else
+    _webpagetest.DeleteIncrementalResults(test);
+  if (ret) {
+    int result = GetTestResult();
+    if (result != 0 && result != 99999)
+      ret = false;
+  }
 
   WptTrace(loglevel::kFunction, 
             _T("[wptdriver] WptDriverCore::BrowserTest done\n"));
@@ -359,6 +346,31 @@ void WptDriverCore::Init(void){
   _winpcap.Initialize();
 
   KillBrowsers();
+
+  // Install a global appinit hook for wpthook (actual loading will be
+  // controlled by a shared memory state)
+  if (GetModuleFileName(NULL, path, _countof(path))) {
+    lstrcpy(PathFindFileName(path), _T("wpthook.dll"));
+    TCHAR short_path[MAX_PATH];
+    if (GetShortPathName(path, short_path, _countof(short_path))) {
+      HKEY hKey;
+		  if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+                         _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion")
+                         _T("\\Windows"),
+                         0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS ) {
+			  DWORD val = 1;
+			  RegSetValueEx(hKey, _T("LoadAppInit_DLLs"), 0, REG_DWORD,
+                      (const LPBYTE)&val, sizeof(val));
+			  val = 0;
+			  RegSetValueEx(hKey, _T("RequireSignedAppInit_DLLs"), 0, REG_DWORD,
+                      (const LPBYTE)&val, sizeof(val));
+			  RegSetValueEx(hKey, _T("AppInit_DLLs"), 0, REG_SZ,
+                      (const LPBYTE)short_path,
+                      (lstrlen(short_path) + 1) * sizeof(TCHAR));
+        RegCloseKey(hKey);
+      }
+    }
+  }
 
   // start the background timer that does our housekeeping
   CreateTimerQueueTimer(&housekeeping_timer_, NULL, ::DoHouseKeeping, this, 

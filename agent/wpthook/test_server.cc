@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "test_server.h"
 #include "wpthook.h"
 #include "wpt_test_hook.h"
+#include "shared_mem.h"
 #include "mongoose/mongoose.h"
 #include "test_state.h"
 #include "dev_tools.h"
@@ -40,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 static TestServer * _globaltest__server = NULL;
 
 // definitions
+static const TCHAR * BROWSER_STARTED_EVENT = _T("Global\\wpt_browser_started");
 static const DWORD RESPONSE_OK = 200;
 static const char * RESPONSE_OK_STR = "OK";
 
@@ -495,6 +497,16 @@ bool TestServer::OkToStart() {
         last_cpu_idle_.QuadPart = i.QuadPart;
         last_cpu_kernel_.QuadPart = k.QuadPart;
         last_cpu_user_.QuadPart = u.QuadPart;
+      }
+    }
+    if (started_) {
+      // Signal to wptdriver which process it should wait for and that we started
+      shared_browser_process_id = GetCurrentProcessId();
+      HANDLE browser_started_event = OpenEvent(EVENT_MODIFY_STATE , FALSE,
+                                                BROWSER_STARTED_EVENT);
+      if (browser_started_event) {
+        SetEvent(browser_started_event);
+        CloseHandle(browser_started_event);
       }
     }
   }

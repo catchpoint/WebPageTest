@@ -9,7 +9,7 @@ const DWORD TASK_INTERVAL = 500;
 static const TCHAR * GLOBAL_TESTING_MUTEX = _T("Global\\wpt_testing_active");
 static const TCHAR * HOOK_DLL = _T("wpthook.dll");
 
-typedef BOOL (WINAPI * PFN_INSTALL_HOOK)(HANDLE process);
+typedef void (WINAPI * PFN_INSTALL_HOOK)(void);
 
 // registry keys
 static const TCHAR * REG_DOM_STORAGE_LOW = 
@@ -188,8 +188,9 @@ bool Wpt::InstallHook() {
         _hook_dll = LoadLibrary(path);
         if (_hook_dll) {
           PFN_INSTALL_HOOK InstallHook = 
-            (PFN_INSTALL_HOOK)GetProcAddress(_hook_dll, "_InstallHook@4");
-          if (InstallHook && InstallHook(GetCurrentProcess()) ) {
+            (PFN_INSTALL_HOOK)GetProcAddress(_hook_dll, "_InstallHook@0");
+          if (InstallHook) {
+            InstallHook();
             ok = true;
           } else {
             FreeLibrary(_hook_dll);

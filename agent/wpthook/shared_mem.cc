@@ -42,6 +42,8 @@ int   shared_debug_level = 0;
 int   shared_cpu_utilization = 0;
 bool  shared_has_gpu = false;
 int   shared_result = -1;
+WCHAR shared_browser_exe[MAX_PATH] = {NULL};
+DWORD shared_browser_process_id = 0;
 #pragma data_seg ()
 
 #pragma comment(linker,"/SECTION:.shared,RWS")
@@ -113,4 +115,21 @@ void WINAPI ResetTestResult() {
 -----------------------------------------------------------------------------*/
 int WINAPI GetTestResult() {
   return shared_result;
+}
+
+/*-----------------------------------------------------------------------------
+  Set the exe name for the browser we are currently using
+-----------------------------------------------------------------------------*/
+void WINAPI SetBrowserExe(const WCHAR * exe) {
+  if (exe)
+    lstrcpyW(shared_browser_exe, exe);
+  else
+    lstrcpyW(shared_browser_exe, L"");
+  shared_browser_process_id = 0;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+DWORD WINAPI GetBrowserProcessId() {
+  return shared_browser_process_id;
 }
