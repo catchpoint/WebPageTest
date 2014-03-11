@@ -61,6 +61,8 @@ $metrics = array('docTime' => 'Load Time (onload)',
                 'html_requests' => 'HTML Requests', 
                 'text_bytes' => 'Text Bytes (KB)', 
                 'text_requests' => 'Text Requests',
+                'font_bytes' => 'Font Bytes (KB)', 
+                'font_requests' => 'Font Requests',
                 'other_bytes' => 'Other Bytes (KB)', 
                 'other_requests' => 'Other Requests',
                 'browser_version' => 'Browser Version'

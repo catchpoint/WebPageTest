@@ -24,13 +24,22 @@ $pageData = loadAllPageData($testPath);
             <div id="result">
             <h2>Test Result Data Plots</h2>
             <?php
-            $metrics = array('loadTime' => 'Load Time (ms)',
+            $metrics = array('docTime' => 'Load Time (onload - ms)', 
                             'SpeedIndex' => 'Speed Index',
-                            'TTFB' => 'Time to First Byte (ms)',
-                            'render' => 'Start Render Time (ms)',
-                            'fullyLoaded' => 'Fully Loaded Time (ms)',
-                            'bytesIn' => 'Bytes In',
-                            'requests' => 'Requests');
+                            'TTFB' => 'Time to First Byte (ms)', 
+                            'render' => 'Time to Start Render (ms)', 
+                            'visualComplete' => 'Time to Visually Complete (ms)', 
+                            'titleTime' => 'Time to Title (ms)',
+                            'fullyLoaded' => 'Fully Loaded (ms)', 
+                            'server_rtt' => 'Estimated RTT to Server (ms)',
+                            'docCPUms' => 'CPU Busy Time',
+                            'domElements' => 'Number of DOM Elements', 
+                            'connections' => 'Connections', 
+                            'requests' => 'Requests (Fully Loaded)', 
+                            'requestsDoc' => 'Requests (onload)', 
+                            'bytesInDoc' => 'Bytes In (KB - onload)', 
+                            'bytesIn' => 'Bytes In (KB - Fully Loaded)', 
+                            'browser_version' => 'Browser Version');
             if (array_key_exists('testinfo', $test) && !$test['testinfo']['video']) {
                 unset($metrics['SpeedIndex']);
             }
