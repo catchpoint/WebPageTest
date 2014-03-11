@@ -1498,7 +1498,7 @@ function LogTest(&$test, $testId, $url)
         'testUser' => $test['user'],
         'video' => $video,
         'label' => $test['label'],
-        'o' => $test['owner'],
+        'owner' => $test['owner'],
         'key' => $test['key'],
         'count' => $pageLoads,
     );
