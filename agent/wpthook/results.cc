@@ -779,6 +779,7 @@ void Results::ProcessRequests(void) {
   bool base_page = true;
   base_page_redirects_ = 0;
   adult_site_ = false;
+  LONGLONG new_end = 0;
   while (pos) {
     Request * request = _requests._requests.GetNext(pos);
     if (request && 
@@ -844,8 +845,17 @@ void Results::ProcessRequests(void) {
           }
         }
       }
+      new_end = max(new_end, request->_end.QuadPart);
+      new_end = max(new_end, request->_start.QuadPart);
+      new_end = max(new_end, request->_first_byte.QuadPart);
+      new_end = max(new_end, request->_dns_start.QuadPart);
+      new_end = max(new_end, request->_dns_end.QuadPart);
+      new_end = max(new_end, request->_connect_start.QuadPart);
+      new_end = max(new_end, request->_connect_end.QuadPart);
     }
   }
+  if (new_end)
+    _test_state._last_activity.QuadPart = new_end;
   _requests.Unlock();
 }
 
