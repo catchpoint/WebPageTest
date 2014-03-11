@@ -530,6 +530,7 @@ void CPagetestReporting::ProcessResults(void)
 {
 	firstByte = 0;
 	pageIP.sin_addr.S_un.S_addr = 0;
+	__int64 new_end = 0;
 	
 	// if it was just a single js file or something similar, treat it as successful
 	if( errorCode == 200 )
@@ -725,6 +726,13 @@ void CPagetestReporting::ProcessResults(void)
 							firstByte = w->firstByte;
 					}
 				}
+				new_end = max(new_end, w->end);
+				new_end = max(new_end, w->start);
+				new_end = max(new_end, w->firstByte);
+				new_end = max(new_end, w->dnsStart);
+				new_end = max(new_end, w->dnsEnd);
+				new_end = max(new_end, w->socketConnect);
+				new_end = max(new_end, w->socketConnected);
 			}
 
 			// remove invalid requests from the list
@@ -739,6 +747,9 @@ void CPagetestReporting::ProcessResults(void)
 	// move the start time to the start of the first request (non-scripted tests or the first step in a scripted test)
 	if( earliest && (!runningScript || scriptStep == 1) )
 		start = earliest;
+		
+	if (new_end)
+	  lastActivity = new_end;
 
 	// Calculate summary results
 	tmLastActivity = lastActivity < start ? 0 : ((double)(lastActivity - start)) / (double)freq;
