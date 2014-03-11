@@ -101,7 +101,7 @@ function ContentType($mime) {
         $content_type = 'image';
     } elseif (!strcasecmp($mime, 'application/x-shockwave-flash')) {
         $content_type = 'flash';
-    } elseif (!stripos($mime, 'font') !== false) {
+    } elseif (stripos($mime, 'font') !== false) {
         $content_type = 'font';
     }
     return $content_type;
