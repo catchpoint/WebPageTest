@@ -111,12 +111,10 @@ if (array_key_exists('f', $_REQUEST)) {
 }
             $metrics = array('docTime' => 'Load Time (onload)', 
                             'SpeedIndex' => 'Speed Index',
-                            'SpeedIndexDT' => 'Speed Index (Dev Tools)',
                             'TTFB' => 'Time to First Byte', 
                             'titleTime' => 'Time to Title', 
                             'render' => 'Time to Start Render', 
                             'visualComplete' => 'Time to Visually Complete', 
-                            'VisuallyCompleteDT' => 'Time to Visually Complete (Dev Tools)', 
                             'fullyLoaded' => 'Load Time (Fully Loaded)', 
                             'server_rtt' => 'Estimated RTT to Server',
                             'docCPUms' => 'CPU Busy Time',
@@ -138,8 +136,6 @@ if (array_key_exists('f', $_REQUEST)) {
                             'html_requests' => 'HTML Requests', 
                             'text_bytes' => 'Text Bytes (KB)', 
                             'text_requests' => 'Text Requests',
-                            'font_bytes' => 'Font Bytes (KB)', 
-                            'font_requests' => 'Font Requests',
                             'other_bytes' => 'Other Bytes (KB)', 
                             'other_requests' => 'Other Requests',
                             'browser_version' => 'Browser Version');
