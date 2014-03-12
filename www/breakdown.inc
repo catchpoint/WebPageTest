@@ -13,8 +13,9 @@ if(extension_loaded('newrelic')) {
 */
 function getBreakdown($id, $testPath, $run, $cached, &$requests)
 {
+    $version = 1;
     $cache = array();
-    $cache_file = "$testPath/breakdown.json";
+    $cache_file = "$testPath/breakdown$version.json";
     if (is_file($cache_file)) {
         $cache = json_decode(file_get_contents($cache_file), true);
     }
