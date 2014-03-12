@@ -42,7 +42,7 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
   }
   if (is_file($videoFile)) {
     $videoDir = "$testPath/video_$run" . strtolower($cachedText);
-    if (!is_file("$videoDir/video" . VIDEO_CODE_VERSION . ".json")) {
+    if (!is_file("$videoDir/video.json")) {
       if (is_dir($videoDir))
         delTree($videoDir, false);
       if (!is_dir($videoDir))
@@ -66,7 +66,7 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
       $videoInfo = array();
       if (isset($viewport))
         $videoInfo['viewport'] = $viewport;
-      file_put_contents("$videoDir/video" . VIDEO_CODE_VERSION . ".json", json_encode($videoInfo));
+      file_put_contents("$videoDir/video.json", json_encode($videoInfo));
     }
   }
 }
@@ -207,19 +207,19 @@ function EliminateDuplicateAVIFiles($videoDir, $viewport) {
   }
   
   // Do a second pass looking for the first non-blank frame with an allowance
-  // for up to a 10% per-pixel difference for noise.
+  // for up to a 1% per-pixel difference for noise in the white field.
   $files = glob("$videoDir/image*.png");
   $blank = $files[0];
   $count = count($files);
   for ($i = 1; $i < $count; $i++) {
-    if (AreAVIFramesDuplicate($blank, $files[$i], 10, $crop))
+    if (AreAVIFramesDuplicate($blank, $files[$i], 1, $crop))
       unlink($files[$i]);
     else
       break;
   }
   
   // Do a third pass looking for the last frame but with an allowance for up
-  // to a 10% difference in individual pixels to deal with noise.
+  // to a 10% difference in individual pixels to deal with noise around text.
   $files = glob("$videoDir/image*.png");
   $files = array_reverse($files);
   $count = count($files);
@@ -281,61 +281,68 @@ function msToHMS($duration) {
 */
 function FindAVIViewport($videoDir, $startOffset, &$viewport) {
   $files = glob("$videoDir/video-*.png");
-  if ($files && count($files) && IsOrangeAVIFrame($files[0])) {
-    // load the image and figure out the viewport area (orange)
-    $im = imagecreatefrompng($files[0]);
-    if ($im) {
-      $width = imagesx($im);
-      $height = imagesy($im);
-      $x = floor($width / 2);
-      $y = floor($height / 2);
-      $orange = imagecolorat($im, $x, $y);
-      $left = null;
-      while (!isset($left) && $x >= 0) {
-        if (!PixelColorsClose(imagecolorat($im, $x, $y), $orange))
-          $left = $x + 1;
-        else
-          $x--;
+  if ($files && count($files)) {
+    if (IsOrangeAVIFrame($files[0])) {
+      // load the image and figure out the viewport area (orange)
+      $im = imagecreatefrompng($files[0]);
+      if ($im) {
+        $width = imagesx($im);
+        $height = imagesy($im);
+        $x = floor($width / 2);
+        $y = floor($height / 2);
+        $orange = imagecolorat($im, $x, $y);
+        $left = null;
+        while (!isset($left) && $x >= 0) {
+          if (!PixelColorsClose(imagecolorat($im, $x, $y), $orange))
+            $left = $x + 1;
+          else
+            $x--;
+        }
+        if (!isset($left))
+          $left = 0;
+        $x = floor($width / 2);
+        $right = null;
+        while (!isset($right) && $x < $width) {
+          if (!PixelColorsClose(imagecolorat($im, $x, $y), $orange))
+            $right = $x - 1;
+          else
+            $x++;
+        }
+        if (!isset($right))
+          $right = $width;
+        $x = floor($width / 2);
+        $top = null;
+        while (!isset($top) && $y >= 0) {
+          if (!PixelColorsClose(imagecolorat($im, $x, $y), $orange))
+            $top = $y + 1;
+          else
+            $y--;
+        }
+        if (!isset($top))
+          $top = 0;
+        $y = floor($height / 2);
+        $bottom = null;
+        while (!isset($bottom) && $y < $height) {
+          if (!PixelColorsClose(imagecolorat($im, $x, $y), $orange))
+            $bottom = $y - 1;
+          else
+            $y++;
+        }
+        if (!isset($bottom))
+          $bottom = $height;
+        if ($left || $top || $right != $width || $bottom != $height)
+          $viewport = array('x' => $left, 'y' => $top, 'width' => ($right - $left), 'height' => ($bottom - $top));
       }
-      if (!isset($left))
-        $left = 0;
-      $x = floor($width / 2);
-      $right = null;
-      while (!isset($right) && $x < $width) {
-        if (!PixelColorsClose(imagecolorat($im, $x, $y), $orange))
-          $right = $x - 1;
-        else
-          $x++;
-      }
-      if (!isset($right))
-        $right = $width;
-      $x = floor($width / 2);
-      $top = null;
-      while (!isset($top) && $y >= 0) {
-        if (!PixelColorsClose(imagecolorat($im, $x, $y), $orange))
-          $top = $y + 1;
-        else
-          $y--;
-      }
-      if (!isset($top))
-        $top = 0;
-      $y = floor($height / 2);
-      $bottom = null;
-      while (!isset($bottom) && $y < $height) {
-        if (!PixelColorsClose(imagecolorat($im, $x, $y), $orange))
-          $bottom = $y - 1;
-        else
-          $y++;
-      }
-      if (!isset($bottom))
-        $bottom = $height;
-      if ($left || $top || $right != $width || $bottom != $height)
-        $viewport = array('x' => $left, 'y' => $top, 'width' => ($right - $left), 'height' => ($bottom - $top));
+
+      // Remove all of the orange video frames.
+      do {
+        $file = array_shift($files);
+        unlink($file);
+      }while (IsOrangeAVIFrame($files[0]));
     }
-    unlink($files[0]);
     $fileCount = count($files);
     $firstFrame = null;
-    for($i = 1; $i < $fileCount; $i++) {
+    for($i = 0; $i < $fileCount; $i++) {
       $file = $files[$i];
       if (preg_match('/video-(?P<frame>[0-9]+).png$/', $file, $matches)) {
         $currentFrame = intval($matches['frame']);
