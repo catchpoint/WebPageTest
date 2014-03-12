@@ -150,7 +150,8 @@ function CopyAVIFrame($src, $dest) {
 
 function IsBlankAVIFrame($file, $videoDir) {
   $ret = false;
-  $command = "convert \"images/video_white.png\" \\( \"$file\" -shave 15x55 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
+  $white = realpath('images/video_white.png');
+  $command = "convert \"$white\" \\( \"$file\" -shave 15x55 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
   $differentPixels = shell_exec($command);
   //logMsg("($differentPixels) $command", "$videoDir/video.log", true);
   if (isset($differentPixels) && strlen($differentPixels) && $differentPixels < 100)
@@ -167,7 +168,8 @@ function IsBlankAVIFrame($file, $videoDir) {
 */
 function IsOrangeAVIFrame($file) {
   $ret = false;
-  $command = "convert  \"images/video_orange.png\" \\( \"$file\" -gravity Center -crop 80x50%+0+0 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
+  $orange = realpath('./images/video_orange.png');
+  $command = "convert  \"$orange\" \\( \"$file\" -gravity Center -crop 80x50%+0+0 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
   $differentPixels = shell_exec($command);
   //logMsg("($differentPixels) $command", "$videoDir/video.log", true);
   if (isset($differentPixels) && strlen($differentPixels) && $differentPixels < 100)
@@ -338,7 +340,7 @@ function FindAVIViewport($videoDir, $startOffset, &$viewport) {
       do {
         $file = array_shift($files);
         unlink($file);
-      }while (IsOrangeAVIFrame($files[0]));
+      }while (count($files) && IsOrangeAVIFrame($files[0]));
     }
     $fileCount = count($files);
     $firstFrame = null;
