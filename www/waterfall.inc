@@ -170,11 +170,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
             $max_bw = $options['max_bw'];
         }
         $perfs = LoadPerfData($perf_file, $use_cpu, $use_bw, false, $max_bw);
-        if ($is_thumbnail) {
-            $perf_height = 16;
-        } else {
-            $perf_height = 50;
-        }
+        $perf_height = $is_thumbnail ? 16 : 50;
         if (isset($perfs) && is_array($perfs)) {
             foreach (array_keys($perfs) as $key) {
                 if ($perfs[$key]['count']) {
@@ -188,7 +184,27 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
             }
         }
     }
-
+    if ($use_cpu && !$is_image_map && isset($options) && is_array($options) &&
+        array_key_exists('path', $options) &&
+        array_key_exists('run_id', $options) &&
+        array_key_exists('is_cached', $options)) {
+      require_once('devtools.inc.php');
+      $cpu_slices = DevToolsGetCPUSlices($options['path'], $options['run_id'], $options['is_cached'], $data_width, $max_ms);
+      if (isset($cpu_slices) && is_array($cpu_slices) && count($cpu_slices)) {
+        $perf_height = $is_thumbnail ? 16 : 50;
+        $cpu_slice_info = array();
+        foreach (array_keys($cpu_slices) as $thread) {
+          $cpu_slice_info[] = array('thread' => $thread,
+                                    'x1' => 0,
+                                    'x2' => $width - 1,
+                                    'y1' => $height - 1,
+                                    'y2' => $height + $perf_height - 2,
+                                    'height' => $perf_height);
+          $height += $perf_height - 1;
+        }
+      }
+    }
+    
     if ($is_mime) {
         $mime_y = $height;
         $height += (2 * $row_height) + 2;
@@ -220,14 +236,6 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
     }
     $x_scaler = new XScaler($max_ms, $data_x + 1, $data_width);
 
-    if ($use_cpu && !$is_image_map && isset($options) && is_array($options) &&
-        array_key_exists('path', $options) &&
-        array_key_exists('run_id', $options) &&
-        array_key_exists('is_cached', $options)) {
-      require_once('devtools.inc.php');
-      $cpu_slices = DevToolsGetCPUSlices($options['path'], $options['run_id'], $options['is_cached'], $data_width, $max_ms);
-    }
-    
     // Get the CSI information.
     if (is_dir('./google') && array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'] == 1) {
         require_once('./google/google_lib.inc');
@@ -309,6 +317,30 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                 }
             }
         }
+        if (isset($cpu_slice_info)) {
+          $cpu_slice_colors = array();
+          $mime_colors = MimeColors();
+          
+          $cpu_slice_colors['ParseHTML'] = GetColor($im, 130, 168, 222);
+          $cpu_slice_colors['ResourceReceivedData'] = $cpu_slice_colors['ParseHTML'];
+
+          $cpu_slice_colors['Layout'] = GetColor($im, 171, 213, 149);
+          $cpu_slice_colors['RecalculateStyles'] = $cpu_slice_colors['Layout'];
+
+          $cpu_slice_colors['Paint'] = GetColor($im, 194, 219, 181);
+          $cpu_slice_colors['CompositeLayers'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['DecodeImage'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['Rasterize'] = $cpu_slice_colors['Paint'];
+
+          $cpu_slice_colors['EvaluateScript'] = GetColor($im, 228, 185, 136);
+          $cpu_slice_colors['EventDispatch'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['FunctionCall'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['GCEvent'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['TimerFire'] = $cpu_slice_colors['EvaluateScript'];
+
+          $cpu_slice_colors['other'] = GetColor($im, 184, 184, 184);
+          $cpu_slice_colors['Program'] = $cpu_slice_colors['other'];
+        }
 
         $bg_colors = array(
             'default' => $white,
@@ -339,10 +371,20 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                     if (!$is_thumbnail && $show_labels) {
                         DrawPerfLabel($im, $key, $p, $font, $black);
                     }
-                    DrawPerfBackground($im, $p, $data_x, $border_color,
-                                       $bg_colors['alt']);
+                    DrawPerfBackground($im, $p, $data_x, $border_color, $bg_colors['alt']);
                 }
             }
+        }
+        
+        // Draw timeline backgrounds, labels and borders
+        if (isset($cpu_slice_info)) {
+          foreach ($cpu_slice_info as $thread => $p) {
+              if (!$is_thumbnail && $show_labels) {
+                  $label = $thread ? 'Browser Background Thread' : 'Browser Main Thread';
+                  DrawPerfLabel($im, $label, $p, $font, $black);
+              }
+              DrawPerfBackground($im, $p, $data_x, $border_color, $bg_colors['alt']);
+          }
         }
 
         // Draw the time scale.
@@ -366,10 +408,13 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                     foreach ($perfs as $p) {
                         if (array_key_exists('count', $p)) {
                             // Add gridline to performance chart area.
-                            imageline($im, $x, $p['y1'] + 1, $x, $p['y2'] - 1,
-                                      $time_scale_color);
+                            imageline($im, $x, $p['y1'] + 1, $x, $p['y2'] - 1, $time_scale_color);
                         }
                     }
+                }
+                if (isset($cpu_slice_info)) {
+                  foreach ($cpu_slice_info as $p)
+                    imageline($im, $x, $p['y1'] + 1, $x, $p['y2'] - 1, $time_scale_color);
                 }
                 // Draw the time label.
                 if (!$is_thumbnail) {
@@ -405,6 +450,11 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                                                  'y2' => $p['y2'] - 1);
                         }
                     }
+                }
+                if (isset($cpu_slice_info)) {
+                  foreach ($cpu_slice_info as $p)
+                    $endpoints[] = array('y1' => $p['y1'] + 1,
+                                         'y2' => $p['y2'] - 1);
                 }
                 foreach ($endpoints as $y1y2) {
                     $y1 = $y1y2['y1'];
@@ -470,6 +520,42 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                         }
                     }
                 }
+            }
+            
+            // Draw the Timeline information
+            if (isset($cpu_slice_info) && $max_ms) {
+              foreach ($cpu_slice_info as $p) {
+                // go through each pixel and draw bars individually
+                $x1 = $data_x + 1;
+                $x2 = $data_x + $data_width;
+                $cpu_top = $p['y1'] + 1;
+                $cpu_bottom = $p['y2'] - 1;
+                $cpu_height = $cpu_bottom - $cpu_top + 1;
+                $bins = intval(ceil($max_ms / $data_width));
+                $slices = $cpu_slices[$p['thread']];
+                $max_slices_ms = count($slices);
+                if ($x1 < $x2) {
+                  for ($x = $x1; $x <= $x2; $x++) {
+                    $ms = intval(floor(((($x - $x1) / $data_width) * $max_ms)));
+                    if ($ms <= $max_slices_ms) {
+                      $slice_bins = min($bins, $max_slices_ms - $ms);
+                      $cpu_times = AverageCpuSlices($ms, $slice_bins, $slices, $cpu_slice_colors);
+                      if ($cpu_times) {
+                        // draw the line for this data point in the order the colors are defined
+                        $y = $cpu_bottom;
+                        foreach ($cpu_slice_colors as $type => $color) {
+                          if (array_key_exists($type, $cpu_times)) {
+                            $pixels = $cpu_height * $cpu_times[$type];
+                            $y2 = max($cpu_bottom - $pixels, $cpu_top);
+                            imageline($im, $x, $y, $x, $y2, $color);
+                            $y = $y2;
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             }
 
             // Draw the csi metrics.
@@ -576,7 +662,8 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
 
     // Draw the MIME legend
     if ($is_mime && !$is_image_map) {
-        $mime_colors = MimeColors();
+        if (!isset($mime_colors))
+          $mime_colors = MimeColors();
         $mime_count = count($mime_colors);
         $bar_width = $width / $mime_count;
         $x = 0;
@@ -674,6 +761,35 @@ class XScaler
     }
 }
 
+function AverageCpuSlices($ms_start, $bins, &$slices, &$known_types) {
+  $avg = null;
+  if ($bins) {
+    $valid = false;
+    $totals = array();
+    $ms_end = $ms_start + $bins;
+    for ($ms = $ms_start; $ms < $ms_end; $ms++) {
+      if (count($slices[$ms])) {
+        foreach ($slices[$ms] as $type => $value) {
+          if ($value > 0) {
+            $valid = true;
+            if (!array_key_exists($type, $known_types))
+              $type = 'other';
+            if (!array_key_exists($type, $totals))
+              $totals[$type] = 0;
+            $totals[$type] += $value;
+          }
+        }
+      }
+    }
+    if ($valid) {
+      $avg = array();
+      foreach($totals as $type => $total)
+        $avg[$type] = $total / $bins;
+    }
+  }
+  return $avg;
+}
+
 /**
 *
 */
@@ -720,7 +836,7 @@ function DrawPerfLabel($im, $key, $perf, $font, $label_color) {
   $line_y = $perf['y1'] + ($height / 2) - 1;
   imageline($im, $x + 10, $line_y, $x + 45, $line_y, $perf['color']);
 
-  $label = '';
+  $label = $key;
   if ($key == 'cpu') {
       $label = 'CPU Utilization';
   } elseif ($key == 'bw') {
