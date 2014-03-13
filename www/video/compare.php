@@ -102,6 +102,7 @@ else
                     width: 100%;
                     height: 100%;
                     padding-bottom: 1em;
+                    border-left: 1px solid #f00;
                 }
                 #videoContainer
                 {
@@ -300,6 +301,8 @@ else
                     var position = $("#videoDiv").scrollLeft();
                     var viewable = $("#videoDiv").width();
                     var width = $("#video").width();
+                    if (thumbWidth && thumbWidth < width)
+                      width -= thumbWidth;
                     <?php
                     $padding = 250;
                     if (array_key_exists('hideurls', $_REQUEST) && $_REQUEST['hideurls'])
@@ -417,6 +420,7 @@ function ScreenShotTable()
         echo "</tr></thead><tbody>\n";
 
         $firstFrame = 0;
+        $maxThumbWidth = 0;
         foreach($tests as &$test) {
             $aft = (int)$test['aft'] / 100;
 
@@ -432,6 +436,7 @@ function ScreenShotTable()
                     $width = (int)(((float)$thumbSize / (float)$test['video']['height']) * (float)$test['video']['width']);
                 }
             }
+            $maxThumbWidth = max($maxThumbWidth, $width);
             echo "<tr>";
 
             $testEnd = ceil($test['video']['end'] / $interval) * $interval;
@@ -625,9 +630,10 @@ function ScreenShotTable()
         <?php
         } // EMBED
         // scroll the table to show the first thumbnail change
-        $scrollPos = $firstFrame * ($thumbSize + 8);
+        $scrollPos = $firstFrame * ($maxThumbWidth + 6);
         ?>
         <script language="javascript">
+            var thumbWidth = <?php echo "$maxThumbWidth;"; ?>
             var scrollPos = <?php echo "$scrollPos;"; ?>
             document.getElementById("videoDiv").scrollLeft = scrollPos;
         </script>
