@@ -522,8 +522,8 @@ function DisplayTest($id, $url, $label, $complete)
     if( $complete )
     {
         $pageData = loadAllPageData($testPath);
-        $fvMedian = GetMedianRun($pageData, 0, $median_metric);
-        $rvMedian = GetMedianRun($pageData, 1, $median_metric);
+        $fvMedian = GetMedianRun($pageData, 0, 'docTime');
+        $rvMedian = GetMedianRun($pageData, 1, 'docTime');
         $rvMedian_column = '';
         if ($rvMedian)
             $rvMedian_column = number_format($pageData[$rvMedian][1]['loadTime'] / 1000.0, 3);
@@ -537,8 +537,10 @@ function DisplayTest($id, $url, $label, $complete)
             echo "<td>$rvMedian_column</td>";
         }
         echo '<td>';
-        if (array_key_exists('SpeedIndex', $pageData[$fvMedian][0]))
-            echo $pageData[$fvMedian][0]['SpeedIndex'];
+        if (array_key_exists('SpeedIndex', $pageData[$fvMedian][0])) {
+            $siMedian = GetMedianRun($pageData, 0, 'SpeedIndex');
+            echo $pageData[$siMedian][0]['SpeedIndex'];
+        }
         echo '</td>';
         if( FRIENDLY_URLS )
         {
