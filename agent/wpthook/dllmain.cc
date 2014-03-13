@@ -51,9 +51,13 @@ static DWORD WINAPI HookThreadProc(void* arg) {
 }
 
 void WINAPI InstallHook(void) {
-  HANDLE thread_handle = CreateThread(NULL, 0, ::HookThreadProc, 0, 0, NULL);
-  if (thread_handle)
-    CloseHandle(thread_handle);
+  static bool started = false;
+  if (!started) {
+    started = true;
+    HANDLE thread_handle = CreateThread(NULL, 0, ::HookThreadProc, 0, 0, NULL);
+    if (thread_handle)
+      CloseHandle(thread_handle);
+  }
 }
 
 BOOL APIENTRY DllMain( HMODULE hModule,
