@@ -273,9 +273,9 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
 
   if (test._tcpdump)
     _winpcap.StopCapture();
-  KillBrowsers();
 
   _webpagetest.UploadIncrementalResults(test);
+  KillBrowsers();
 
   if (ret) {
     int result = GetTestResult();
@@ -360,7 +360,7 @@ void WptDriverCore::Init(void){
   // Install a global appinit hook for wpthook (actual loading will be
   // controlled by a shared memory state)
   if (GetModuleFileName(NULL, path, _countof(path))) {
-    lstrcpy(PathFindFileName(path), _T("wptloader.dll"));
+    lstrcpy(PathFindFileName(path), _T("wptload.dll"));
     TCHAR short_path[MAX_PATH];
     if (GetShortPathName(path, short_path, _countof(short_path))) {
       HKEY hKey;
