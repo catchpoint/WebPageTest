@@ -248,6 +248,8 @@ function CheckBenchmarkStatus($benchmark, &$state) {
             logMsg("Data file doesn't exist, starting fresh", "./log/$logFile", true);
         }
         $done = true;
+        $total_tests = count($state['tests']);
+        $pending_tests = 0;
         foreach ($state['tests'] as &$test) {
             if (!$test['completed']) {
                 $status = GetTestStatus($test['id'], true);
@@ -264,6 +266,7 @@ function CheckBenchmarkStatus($benchmark, &$state) {
                     else
                         $test['completed'] = $now;
                 } else {
+                    $pending_tests++;
                     $done = false;
                     logMsg("Test {$test['id']} : {$status['statusText']}", "./log/$logFile", true);
                 }
@@ -302,7 +305,7 @@ function CheckBenchmarkStatus($benchmark, &$state) {
             $state['needs_aggregation'] = true;
             unset($state['tests']);    
         } else {
-            logMsg("Benchmark '$benchmark' is still running after $elapsed seconds", "./log/$logFile", true);
+            logMsg("'$benchmark' is waiting for $pending_tests of $total_tests tests after $elapsed seconds", "./log/$logFile", true);
         }
         
         logMsg("Done checking status", "./log/$logFile", true);
