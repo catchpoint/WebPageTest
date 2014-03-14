@@ -1264,19 +1264,13 @@ function DevToolsGetCPUSlices($testPath, $run, $cached) {
   return $slices;
 }
 
-function DevToolsAdjustSlice(&$slice, $amount, $type, $parents) {
+function DevToolsAdjustSlice(&$slice, $amount, $type, $parentType) {
   if ($type && $amount) {
     if ($amount == 1.0) {
       foreach($slice as $sliceType => $value)
         $slice[$sliceType] = 0;
-    } else {
-      if (isset($parents) && is_array($parents)) {
-        foreach($parents as $parentType => $bogus) {
-          if (array_key_exists($parentType, $slice)) {
-            $slice[$parentType] = max(0, $slice[$parentType] - $amount);
-          }
-        }
-      }
+    } elseif (isset($parentType)) {
+        $slice[$parentType] = max(0, $slice[$parentType] - $amount);
     }
     $slice[$type] = $amount;
   }
@@ -1287,7 +1281,7 @@ function DevToolsAdjustSlice(&$slice, $amount, $type, $parents) {
 * 
 * @param mixed $entry
 */
-function DevToolsGetEventTimes(&$record, $startTime, &$slices, $thread = null, $parents = null) {
+function DevToolsGetEventTimes(&$record, $startTime, &$slices, $thread = null, $parentType = null) {
   $count = 0;
   if (array_key_exists('startTime', $record) &&
       array_key_exists('endTime', $record) &&
@@ -1306,35 +1300,31 @@ function DevToolsGetEventTimes(&$record, $startTime, &$slices, $thread = null, $
         // set the time slices for this event
         for ($i = $startWhole; $i <= $endWhole; $i++) {
           $ms = intval($i - $startTime);
-          DevToolsAdjustSlice($slices[$thread][$ms], 1.0, $type, $parents);
+          DevToolsAdjustSlice($slices[$thread][$ms], 1.0, $type, $parentType);
           $count++;
         }
         $elapsed = $startWhole - $start;
         if ($elapsed > 0) {
           $ms = intval(floor($start) - $startTime);
-          DevToolsAdjustSlice($slices[$thread][$ms], $elapsed, $type, $parents);
+          DevToolsAdjustSlice($slices[$thread][$ms], $elapsed, $type, $parentType);
           $count++;
         }
         $elapsed = $end - $endWhole;
         if ($elapsed > 0) {
           $ms = intval(ceil($end) - $startTime);
-          DevToolsAdjustSlice($slices[$thread][$ms], $elapsed, $type, $parents);
+          DevToolsAdjustSlice($slices[$thread][$ms], $elapsed, $type, $parentType);
           $count++;
         }
         // recursively process any child events
         if (array_key_exists('children', $record) && count($record['children'])) {
-          if (!isset($parents))
-            $parents = array();
-          $parents[$type] = true;
-          foreach($record['children'] as &$child) {
-            $count += DevToolsGetEventTimes($child, $startTime, $slices, $thread, $parents);
-          }
+          foreach($record['children'] as &$child)
+            $count += DevToolsGetEventTimes($child, $startTime, $slices, $thread, $type);
         }
       } else {
         $elapsed = $end - $start;
         if ($elapsed < 1 && $elapsed > 0) {
           $ms = intval(floor($start) - $startTime);
-          DevToolsAdjustSlice($slices[$thread][$ms], $elapsed, $type, $parents);
+          DevToolsAdjustSlice($slices[$thread][$ms], $elapsed, $type, $parentType);
           $count++;
         }
       }
