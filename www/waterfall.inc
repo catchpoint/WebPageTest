@@ -674,9 +674,8 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                              $font_width * strlen($mime_type)) / 2);
             DrawBar($im, $x + 2, $bar_y + 1, $x + $bar_width - 4,
                     $bar_y + $row_height - 2, $color);
-            foreach ($color as &$col) {
-                $col = min(255, ($col + ((255 - $col) * 0.4)));
-            }
+            foreach ($color as &$col)
+                $col = min(255, ($col + ((255 - $col) * 0.65)));
             DrawBar($im, $x + 2, $bar_y + 1, $x + ($bar_width / 2),
                     $bar_y + $row_height - 2, $color);
             imagestring($im, $font, $text_x, $text_y + 1, $mime_type, $black);

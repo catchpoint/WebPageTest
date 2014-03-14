@@ -39,7 +39,7 @@ function GetRequestColors($content_type, $thumbnail, $is_mime,
     }
     if ($is_mime) {
         $base_color = GetMimeColor($content_type);
-        $ttfb_color = ScaleRgb($base_color, 0.4);
+        $ttfb_color = ScaleRgb($base_color, 0.65);
         $colors['ttfb'] = $ttfb_color;
         $colors['download'] = $base_color;
 
@@ -72,7 +72,7 @@ function MimeColors() {
         'html'  => array(130,181,252),
         'js'    => array(254,197,132),
         'css'   => array(178,234,148),
-        'text'  => array(254,241,132),
+//        'text'  => array(254,241,132),
         'image' => array(196,154,232),
         'flash' => array(45,183,193),
         'font' => array(255,82,62),
@@ -88,15 +88,15 @@ function ContentType($mime) {
     $content_type = 'other';
     if (stripos($mime, 'javascript') !== false ||
         stripos($mime, 'ecmascript') !== false ||
-        !strcasecmp($mime, 'text/js')) {
+        !strncasecmp($mime, 'text/js', 7)) {
         // Collapse the various javascript content types together.
         $content_type = 'js';
-    } elseif (!strcasecmp($mime, 'text/css')) {
+    } elseif (!strncasecmp($mime, 'text/css', 8)) {
         $content_type = 'css';
-    } elseif (!strcasecmp($mime, 'text/html')) {
+    } elseif (!strncasecmp($mime, 'text/html', 9)) {
         $content_type = 'html';
-    } elseif (!strncasecmp($mime, 'text/', 5)) {
-        $content_type = 'text';
+//    } elseif (!strncasecmp($mime, 'text/', 5)) {
+//        $content_type = 'text';
     } elseif (!strncasecmp($mime, 'image/', 6)) {
         $content_type = 'image';
     } elseif (!strcasecmp($mime, 'application/x-shockwave-flash')) {
