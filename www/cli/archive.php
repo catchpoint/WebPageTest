@@ -16,6 +16,8 @@ include 'common_lib.inc';
 require_once('archive.inc');
 ignore_user_abort(true);
 set_time_limit(3300);   // only allow it to run for 55 minutes
+if (function_exists('proc_nice'))
+  proc_nice(19);
 
 if (array_key_exists('archive_days', $settings)) {
     $MIN_DAYS = $settings['archive_days'];
