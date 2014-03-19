@@ -34,6 +34,8 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_parameter('location', $location);
 }
 
+$workdone_start = microtime(true);
+
 //logmsg(json_encode($_REQUEST), './work/workdone.log', true);
 
 // The following params have a default value:
@@ -248,7 +250,11 @@ if (ValidateTestId($id)) {
               $testInfo['test_runs'][$runNumber] = array('done' => true);
             $testInfo_dirty = true;
           }
+          if ($testInfo['video'])
+            $workdone_video_start = microtime(true);
           ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed);
+          if ($testInfo['video'])
+            $workdone_video_end = microtime(true);
         }
         
         // see if the test is complete
@@ -386,6 +392,17 @@ if (ValidateTestId($id)) {
     }
   }
 }
+
+$workdone_end = microtime(true);
+
+/*
+if (isset($workdone_video_start) && isset($workdone_video_end)) {
+  $elapsed = intval(($workdone_end - $workdone_start) * 1000);
+  $video_elapsed = intval(($workdone_video_end - $workdone_video_start) * 1000);
+  if ($video_elapsed > 10)
+    logMsg("$elapsed ms - video processing: $video_elapsed ms - Test $id, Run $runNumber:$cacheWarmed", './work/workdone.log', true);
+}
+*/
 
 /**
 * Delete all of the video files except for the median run
