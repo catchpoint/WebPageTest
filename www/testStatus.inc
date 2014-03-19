@@ -96,13 +96,14 @@ function GetTestStatus($id, $includePosition = true) {
                   $elapsedUpdate = 100;
                   if (isset($testInfoJson['last_updated']) && $now > $testInfoJson['last_updated'])
                     $elapsedUpdate = ($now - $testInfoJson['last_updated']) / 60;
+                  $ret['elapsedUpdate'] = $elapsedUpdate;
                   if ($elapsedUpdate > 10) {
                     $allComplete = true;
                     $lock = LockTest($id);
                     if ($lock) {
                       $testInfoJson = GetTestInfo($id);
                       if ($testInfoJson) {
-                        if (array_key_exists('test_runs', $testInfoJson)) {
+                        if (array_key_exists('test_runs', $testInfoJson) && $testInfoJson['shard_test']) {
                           foreach($testInfoJson['test_runs'] as $run => &$testRun) {
                             if (!array_key_exists('done', $testRun) || !$testRun['done']) {
                               if (array_key_exists('started', $testRun) && $testRun['started'] && $testRun['started'] < $now) {
