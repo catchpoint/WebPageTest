@@ -80,6 +80,7 @@ if (array_key_exists('tests', $_REQUEST)) {
       $test = array('runs' => 1,
                     'discard' => 0,
                     'fvonly' => 1);
+      $test['location'] = 'Imported';
       $test['started'] = time();
       $test['private'] = array_key_exists('private', $_REQUEST) && $_REQUEST['private'] ? 1 : 0;
       $test['label'] = array_key_exists('label', $_REQUEST) && strlen($_REQUEST['label']) ? htmlspecialchars(trim($req_label)) : '';
