@@ -180,7 +180,7 @@ if (LoadResults($results)) {
                     $first = false;
                 }
                 fwrite($summary, "\r\n");
-                $percentiles = array(25,50,75,95,99);
+                $percentiles = array(25,50,75,95);
                 foreach($percentiles as $percentile) {
                     fwrite($summary, "{$percentile}th Percentile,");
                     $first = true;
