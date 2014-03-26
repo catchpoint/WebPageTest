@@ -372,7 +372,6 @@ void Request::DataIn(DataChunk& chunk) {
   EnterCriticalSection(&cs);
   if (_is_active) {
     QueryPerformanceCounter(&_end);
-    _test_state.received_data_ = true;
     if (!_first_byte.QuadPart)
       _first_byte.QuadPart = _end.QuadPart;
     if (!_is_spdy) {

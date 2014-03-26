@@ -313,7 +313,8 @@ bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2) {
           pixel_bytes = 4;
         DWORD width = max(img1->GetWidth() - RIGHT_MARGIN, 0);
         DWORD height = img1->GetHeight();
-        DWORD row_length = width * pixel_bytes;
+        DWORD row_bytes = img1->GetEffWidth();
+        DWORD row_length = width * (DWORD)(row_bytes / width);
         for (DWORD row = BOTTOM_MARGIN; row < height && !different; row++) {
           BYTE * r1 = img1->GetBits(row);
           BYTE * r2 = img2->GetBits(row);
@@ -780,6 +781,7 @@ void Results::ProcessRequests(void) {
   base_page_redirects_ = 0;
   adult_site_ = false;
   LONGLONG new_end = 0;
+  LONGLONG new_first_byte = 0;
   while (pos) {
     Request * request = _requests._requests.GetNext(pos);
     if (request && 
@@ -852,10 +854,16 @@ void Results::ProcessRequests(void) {
       new_end = max(new_end, request->_dns_end.QuadPart);
       new_end = max(new_end, request->_connect_start.QuadPart);
       new_end = max(new_end, request->_connect_end.QuadPart);
+      if (request->_first_byte.QuadPart &&
+          result_code != 301 && result_code != 302 && 
+          (!new_first_byte || request->_first_byte.QuadPart < new_first_byte))
+        new_first_byte = request->_first_byte.QuadPart;
     }
   }
   if (new_end)
     _test_state._last_activity.QuadPart = new_end;
+  if (new_first_byte)
+    _test_state._first_byte.QuadPart = new_first_byte;
   _requests.Unlock();
 }
 
