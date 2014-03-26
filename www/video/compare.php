@@ -691,6 +691,7 @@ function DisplayGraphs() {
     require_once('breakdown.inc');
     $mimeTypes = array('html', 'js', 'css', 'image', 'flash', 'font', 'other');
     $timeMetrics = array('visualComplete' => 'Visually Complete',
+                        'lastVisualChange' => 'Last Visual Change',
                         'docTime' => 'Load Time (onload)',
                         'fullyLoaded' => 'Load Time (Fully Loaded)',
                         'SpeedIndex' => 'Speed Index',
