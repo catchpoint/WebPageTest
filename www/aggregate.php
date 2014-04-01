@@ -8,12 +8,22 @@ $use_median_run = false;
 if (array_key_exists('run', $_REQUEST) && $_REQUEST['run'] == 'median')
     $use_median_run = true;
 
-// only support batch tests for now
-if( isset($test['test']) && $test['test']['batch'] )
+$tests = null;
+// Support regular tests
+if( isset($_REQUEST['tests']) && strlen($_REQUEST['tests']) )
 {
-    header("Content-disposition: attachment; filename={$id}_aggregate.csv");
-    header("Content-type: text/csv");
-    
+    $testIds = explode(',', $_REQUEST['tests']);
+    $tests = array();
+    $tests['variations'] = array();
+    $tests['urls'] = array();
+    foreach( $testIds as &$testId )
+        $tests['urls'][] = array('u' => null, 'id' => $testId);
+
+    $fvonly = 1;
+}  
+// And obviously batch tests
+else if( isset($test['test']) && $test['test']['batch'] )
+{
     // load the test data
     $fvOnly = $test['test']['fvonly'];
     $tests = null;
@@ -28,8 +38,14 @@ if( isset($test['test']) && $test['test']['batch'] )
     }
     elseif( gz_is_file("$testPath/bulk.json") )
         $tests = json_decode(gz_file_get_contents("$testPath/bulk.json"), true);
-    if( isset($tests) )
-    {
+    
+}
+
+if( isset($tests) )
+{
+    header("Content-disposition: attachment; filename={$id}_aggregate.csv");
+    header("Content-type: text/csv");
+    
         // list of metrics that will be produced
         // for each of these, the median, average and std dev. will be calculated
         $metrics = array(   'docTime' => 'Document Complete', 
@@ -102,6 +118,9 @@ if( isset($test['test']) && $test['test']['batch'] )
             $pageData = loadAllPageData($testPath);
             if( count($pageData) )
             {
+		// If we didn't have an URL before, fill it in now
+		if ($url == null)
+		    $url = $pageData[1][0]['URL'];
                 echo "\"$label\",\"$url\",";
                 $cached = 0;
                 if( !$fvOnly )
@@ -171,7 +190,6 @@ if( isset($test['test']) && $test['test']['batch'] )
             echo "\"{$test['id']}\"\r\n";
         }
     }    
-}
 else
 {
     header("HTTP/1.0 404 Not Found");
