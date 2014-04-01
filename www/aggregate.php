@@ -24,9 +24,6 @@ if( isset($_REQUEST['tests']) && strlen($_REQUEST['tests']) )
 // And obviously batch tests
 else if( isset($test['test']) && $test['test']['batch'] )
 {
-    header("Content-disposition: attachment; filename={$id}_aggregate.csv");
-    header("Content-type: text/csv");
-    
     // load the test data
     $fvOnly = $test['test']['fvonly'];
     $tests = null;
@@ -45,7 +42,10 @@ else if( isset($test['test']) && $test['test']['batch'] )
 }
 
 if( isset($tests) )
-    {
+{
+    header("Content-disposition: attachment; filename={$id}_aggregate.csv");
+    header("Content-type: text/csv");
+    
         // list of metrics that will be produced
         // for each of these, the median, average and std dev. will be calculated
         $metrics = array(   'docTime' => 'Document Complete', 
