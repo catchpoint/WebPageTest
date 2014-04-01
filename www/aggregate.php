@@ -119,8 +119,8 @@ if( isset($tests) )
             if( count($pageData) )
             {
 		// If we didn't have an URL before, fill it in now
-		if (!$url) 
-			$url = $pageData['URL'];
+		if ($url == null)
+		    $url = $pageData[1][0]['URL'];
                 echo "\"$label\",\"$url\",";
                 $cached = 0;
                 if( !$fvOnly )
