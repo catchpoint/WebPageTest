@@ -15,6 +15,11 @@ $version=1;
 if (isset($_REQUEST['ver']) && strlen($_REQUEST['ver']) ) {
 	$version = $_REQUEST['ver'];
 }
+// Allow for status info to be included as well
+$incStatus=0;
+if (isset($_REQUEST['status']) && strlen($_REQUEST['status']) ) {
+	$incStatus = $_REQUEST['status'];
+}
 
 // Support regular tests
 if( isset($_REQUEST['tests']) && strlen($_REQUEST['tests']) )
@@ -66,7 +71,9 @@ if( isset($tests) )
                             'SpeedIndexDT' => 'Speed IndexDT' );
 	if ($version > 1) {
 		$metrics['visualComplete'] = 'Visually Complete';
-		// In ver 2 onwards, always echo the status info
+	}
+	// If asked, add status info as well
+	if ($incStatus) {
 	    	echo '"Status Code","Elapsed Time","Completed Time","Behind Count","Tests Expected","Tests Completed",';
         } 
         // generate the header row of stats
@@ -128,7 +135,7 @@ if( isset($tests) )
             $testPath = './' . GetTestPath($test['id']);
             $pageData = loadAllPageData($testPath);
 	    
-	    if ($version > 1) {
+	    if ($incStatus) {
 	    	$status = GetTestStatus($test['id'], 1);
 		// In ver 2 onwards, always echo the status info
 	    	echo '"' . $status['statusCode'] . '","' .
