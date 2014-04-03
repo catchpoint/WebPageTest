@@ -9,6 +9,13 @@ if (array_key_exists('run', $_REQUEST) && $_REQUEST['run'] == 'median')
     $use_median_run = true;
 
 $tests = null;
+
+// Support multiple versions of output, for backward compatibility
+$version=1;
+if (isset($_REQUEST['ver']) && strlen($_REQUEST['ver']) ) {
+	$version = $_REQUEST['ver'];
+}
+
 // Support regular tests
 if( isset($_REQUEST['tests']) && strlen($_REQUEST['tests']) )
 {
@@ -57,7 +64,11 @@ if( isset($tests) )
                             'loadEventStart' => 'Load Event Start',
                             'SpeedIndex' => 'Speed Index',
                             'SpeedIndexDT' => 'Speed IndexDT' );
-        
+	if ($version > 1) {
+		$metrics['visualComplete'] = 'Visually Complete';
+		// In ver 2 onwards, always echo the status info
+	    	echo '"Status Code","Elapsed Time","Completed Time","Behind Count","Tests Expected","Tests Completed",';
+        } 
         // generate the header row of stats
         echo '"Test","URL","FV Successful Tests",';
         if ($use_median_run) {
@@ -116,6 +127,17 @@ if( isset($tests) )
             $url = $test['u'];
             $testPath = './' . GetTestPath($test['id']);
             $pageData = loadAllPageData($testPath);
+	    
+	    if ($version > 1) {
+	    	$status = GetTestStatus($test['id'], 1);
+		// In ver 2 onwards, always echo the status info
+	    	echo '"' . $status['statusCode'] . '","' .
+			$status['elapsed']. '","' .
+			$status['completeTime']. '","' .
+			$status['behindCount']. '","' .
+			$status['testsExpected']. '","' .
+			$status['testsCompleted']. '",'; 
+	    }
             if( count($pageData) )
             {
 		// If we didn't have an URL before, fill it in now
