@@ -250,7 +250,7 @@ function CalculateFrameProgress(&$histogram, &$start_histogram, &$final_histogra
         if ($totalWeight)
             $progress += (($achieved / $total) * $weight) / $totalWeight;
     }
-    return round($progress * 100);
+    return floor($progress * 100);
 }
 
 /**
