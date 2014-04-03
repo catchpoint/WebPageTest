@@ -1,5 +1,5 @@
 browser=Chrome
-url=http://s3.amazonaws.com/wpt-software/chrome_33.msi
+url=http://httparchive.webpagetest.org/installers/chrome_33.msi
 md5=5238A652B3A04945161AEDF7DB977702
 version=33.0.1750.149
 command=Msiexec /q /I chrome_33.msi
