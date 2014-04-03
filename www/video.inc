@@ -110,26 +110,25 @@ function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false, $
     if (count($frames) >= 1) {
       $script = '';
 
-      end($frames);
-      $end = key($frames);
-      reset($frames);
-      
       // build out all of the frames
       $lastIndex = 0;
       $lastFrame;
       foreach( $frames as $index => $file ) {
-        // see if this is the first frame
-        if( !isset($lastFrame) ) {
-          if( $index > 0 )
-            $script .= "ImageSource(\"$file\", start = 1, end = $index, fps = 10) + \\ \r\n";
-        } elseif( $index > $lastIndex ) {
-          $count = $index - $lastIndex;
-          $script .= "ImageSource(\"$lastFrame\", start = 1, end = $count, fps = 10) + \\ \r\n";
+        if (!$endTime || $index <= $endTime) {
+          // see if this is the first frame
+          if( !isset($lastFrame) ) {
+            if( $index > 0 )
+              $script .= "ImageSource(\"$file\", start = 1, end = $index, fps = 10) + \\ \r\n";
+          } elseif( $index > $lastIndex ) {
+            $count = $index - $lastIndex;
+            $script .= "ImageSource(\"$lastFrame\", start = 1, end = $count, fps = 10) + \\ \r\n";
+          }
+          
+          $lastFrame = $file;
+          $lastIndex = $index;
         }
-        
-        $lastFrame = $file;
-        $lastIndex = $index;
       }
+      $end = $lastIndex;
       
       // put in the last frame
       if( $endTime ) {
