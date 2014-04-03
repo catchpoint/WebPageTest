@@ -14127,6 +14127,8 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
           g_instance.requests[params.requestId]['bytesIn'] = 0;
         if (params['encodedDataLength'] !== undefined && params.encodedDataLength > 0)
           g_instance.requests[params.requestId]['bytesIn'] += params.encodedDataLength;
+        else if (params['dataLength'] !== undefined && params.dataLength > 0)
+          g_instance.requests[params.requestId]['bytesIn'] += params.dataLength;
       }
     } else if (message === 'Network.responseReceived') {
       if (!g_instance.receivedData)
@@ -14152,6 +14154,14 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
         if (g_instance.requests[params.requestId]['fromNet']) {
           request = g_instance.requests[params.requestId];
           request.endTime = params.timestamp;
+          if (!request['bytesIn'] &&
+              request['response'] !== undefined &&
+              request.response['headers'] !== undefined) {
+              if (request.response.headers['Content-Length'] !== undefined)
+                request['bytesIn'] = request.response.headers['Content-Length'] + request.response.headers.join("\r\n").length
+              else if (request.response.headers['content-length'] !== undefined)
+                request['bytesIn'] = request.response.headers['content-length'] + request.response.headers.join("\r\n").length
+          }
           wpt.chromeDebugger.sendRequestDetails(request);
         }
         delete g_instance.requests[params.requestId];
