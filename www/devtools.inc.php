@@ -397,6 +397,11 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                   $request['objectSize'] = '';
                   if (array_key_exists('bytesIn', $rawRequest)) {
                     $request['bytesIn'] = $rawRequest['bytesIn'];
+                  } elseif (array_key_exists('bytesInEncoded', $rawRequest) && $rawRequest['bytesInEncoded']) {
+                    $request['objectSize'] = $rawRequest['bytesInEncoded'];
+                    $request['bytesIn'] = $rawRequest['bytesInEncoded'];
+                    if (array_key_exists('response', $rawRequest) && array_key_exists('headersText', $rawRequest['response']))
+                        $request['bytesIn'] += strlen($rawRequest['response']['headersText']);
                   } elseif (array_key_exists('bytesInData', $rawRequest)) {
                     $request['objectSize'] = $rawRequest['bytesInData'];
                     $request['bytesIn'] = $rawRequest['bytesInData'];
@@ -654,10 +659,12 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                         $rawRequests[$id]['firstByteTime'] = $event['timestamp'];
                     if (!array_key_exists('bytesInData', $rawRequests[$id]))
                         $rawRequests[$id]['bytesInData'] = 0;
-                    if (array_key_exists('encodedDataLength', $event) && $event['encodedDataLength'])
-                        $rawRequests[$id]['bytesInData'] += $event['encodedDataLength'];
-                    elseif (array_key_exists('dataLength', $event) && $event['dataLength'])
+                    if (array_key_exists('dataLength', $event))
                         $rawRequests[$id]['bytesInData'] += $event['dataLength'];
+                    if (!array_key_exists('bytesInEncoded', $rawRequests[$id]))
+                        $rawRequests[$id]['bytesInEncoded'] = 0;
+                    if (array_key_exists('encodedDataLength', $event))
+                        $rawRequests[$id]['bytesInEncoded'] += $event['encodedDataLength'];
                 }
                 if ($event['method'] == 'Network.responseReceived' &&
                     array_key_exists('response', $event)) {
