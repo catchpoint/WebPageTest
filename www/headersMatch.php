@@ -1,10 +1,8 @@
 <?php
 include 'common.inc';
-include 'testStatus.inc';
 include 'page_data.inc';
 include 'object_detail.inc';
-require_once('lib/json.php');
-
+require_once('testStatus.inc');
 set_time_limit(300);
 
 $testIds = array();
@@ -44,7 +42,8 @@ foreach( $testIds as &$testId )
 	$requests = getRequests($testId, $testPath, $medianRun, $cached, $secure, $haveLocations, false,true);
 
 	// Flag indicating if we matched
-	$matched = 0;
+	$matched = array();
+	$nSearches = count($searches);
 	foreach( $requests as &$r )
 	{
                 if( isset($r['headers']) && isset($r['headers']['response']) )
@@ -52,22 +51,24 @@ foreach( $testIds as &$testId )
                     foreach($r['headers']['response'] as &$header)
                     {
 			// Loop through the search conditions we received
-			foreach($searches as &$search) 
+			for($i=0; $i<$nSearches; $i++)
 			{
-				if (strpos($header, $search) !== false ) {
-					$matched = true;
-					break;
+				// Skip already matched items
+				if ($matched[$i])
+					continue;
+				if (strpos($header, $searches[$i]) !== false ) {
+					$matched[$i] = "$i;";
 				}
 			}
 		    }
 		}
-
-		if ($matched) {
+		// Optimization: IF we matched on all of them, no need to continue
+		if (count($matched) == $nSearches) {
 			break;
 		}
 	}
 	// Write the results
-	echo "\"$testId\",\"$matched\"\r\n";
+	echo "\"$testId\",\"" . implode(array_values($matched)) . "\"\r\n";
 }    
 
 ?>
