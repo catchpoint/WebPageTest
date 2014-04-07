@@ -563,22 +563,24 @@ Agent.prototype.trafficShaper_ =
  */
 Agent.prototype.startTrafficShaper_ = function(job) {
   'use strict';
-  var halfDelay = Math.floor(job.task.latency / 2);
-  var opts = {
-      down_bw: job.task.bwIn && (1000 * job.task.bwIn),
-      down_delay: job.task.latency && halfDelay,
-      down_plr: job.task.plr && 0,
-      up_bw: job.task.bwOut && (1000 * job.task.bwOut),
-      up_delay: job.task.latency && job.task.latency - halfDelay,
-      up_plr: job.task.plr && job.task.plr  // All loss on out.
-    };
-  this.trafficShaper_('set', opts).addErrback(function(e) {
-    var stderr = (e.stderr || e.message || '').trim();
-    throw new Error('Unable to configure traffic shaping:\n' + stderr + '\n' +
-      ' To disable traffic shaping, re-run your test with ' +
-      '"Advanced Settings > Test Settings > Connection = Native Connection"' +
-      ' or add "connectivity=WiFi" to this location\'s WebPagetest config.');
-  }.bind(this));
+  if (job.task.bwIn || job.task.bwOut || job.task.latency || job.task.plr) {
+    var halfDelay = Math.floor(job.task.latency / 2);
+    var opts = {
+        down_bw: job.task.bwIn && (1000 * job.task.bwIn),
+        down_delay: job.task.latency && halfDelay,
+        down_plr: job.task.plr && 0,
+        up_bw: job.task.bwOut && (1000 * job.task.bwOut),
+        up_delay: job.task.latency && job.task.latency - halfDelay,
+        up_plr: job.task.plr && job.task.plr  // All loss on out.
+      };
+    this.trafficShaper_('set', opts).addErrback(function(e) {
+      var stderr = (e.stderr || e.message || '').trim();
+      throw new Error('Unable to configure traffic shaping:\n' + stderr + '\n' +
+        ' To disable traffic shaping, re-run your test with ' +
+        '"Advanced Settings > Test Settings > Connection = Native Connection"' +
+        ' or add "connectivity=WiFi" to this location\'s WebPagetest config.');
+    }.bind(this));
+  }
 };
 
 /**
