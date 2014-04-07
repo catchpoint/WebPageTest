@@ -58,15 +58,13 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-declare agent=
-if [ -L $0 ]; then
-  agent=$(readlink $0)
-else
-  case "$0" in
-    /*) agent="$0" ;;
-    *)  agent="$PWD/$0" ;;
-  esac
-fi
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+declare agent="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 export NODE_PATH="${agent}:${agent}/src"
 

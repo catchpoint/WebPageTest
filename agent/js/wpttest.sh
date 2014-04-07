@@ -77,15 +77,14 @@ if [[ "$tests" == '*' || "$tests" == 'all' ]]; then
 fi
 
 # Set paths, copied from wptdriver.sh
-declare agent=
-if [ -L $0 ]; then
-  agent=$(readlink $0)
-else
-  case "$0" in
-    /*) agent="$0" ;;
-    *)  agent="$PWD/$0" ;;
-  esac
-fi
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+declare agent="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
 declare -a chromedrivers=("$agent/lib/webdriver/chromedriver/$(uname -ms)/chromedriver-"*)
 declare -a chromedriver=(--chromedriver "${chromedrivers[${#chromedrivers[@]}-1]}")
 declare src_dir="src${cov:+-cov}"
