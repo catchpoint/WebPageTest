@@ -4,6 +4,7 @@ rem Author: wrightt@google.com (Todd Wright)
 rem
 rem TODO update to match wptdriver.sh
 
+set AGENT=%~dp0
 set DP0=%~dp0
 set WPT_SERVER=http://localhost:8888
 set LOCATION=Test
@@ -95,35 +96,13 @@ if NOT "%0"=="" (
     goto :loop
 )
 
-set WPT_ROOT=%~dp0
-
-:FINDWPTROOT
-if not exist agent\js\src goto NOTFOUNDWPTROOT
-goto FOUNDWPTROOT
-
-:NOTFOUNDWPTROOT
-cd ..
-if %CD%==%CD:~0,3% goto :WPTROOTERROR
-goto :FINDWPTROOT
-
-:WPTROOTERROR
-echo Couldn't find project root
-cd %DP0%
-goto :eof
-
-:FOUNDWPTROOT
-set WPT_ROOT=%CD%
-cd %DP0%
-
-set AGENT=%WPT_ROOT%\agent\js
-
 rem Find the latest version of WD server jar, WDJS, platform-specific chromedriver
-for %%J in (%WPT_ROOT%\lib\webdriver\java\selenium-standalone-*.jar) do set SELENIUM_JAR=%%J
+for %%J in (%AGENT%\lib\webdriver\java\selenium-standalone-*.jar) do set SELENIUM_JAR=%%J
 
-for %%E in (%WPT_ROOT%\lib\webdriver\chromedriver\Win32\chromedriver-*.exe) do set CHROMEDRIVER=%%E
+for %%E in (%AGENT%\lib\webdriver\chromedriver\Win32\chromedriver-*.exe) do set CHROMEDRIVER=%%E
 if defined CHROMEDRIVER set "CHROMEDRIVER_ARGS= --chromedriver ^"%CHROMEDRIVER%^""
 
-set "NODE_PATH=%AGENT%;%AGENT%\src
+set "NODE_PATH=%AGENT%;%AGENT%\src"
 
 rem First, split the browser string into it's browser:device components
 set "DEVICE_SERIAL=%BROWSER:*:=%"
@@ -137,7 +116,7 @@ if "%BROWSER%"=="chrome" (
 )
 if "%BROWSER%"=="android" (
   set KNOWN_BROWSER=1
-  set "BROWSER_ARGS= --browser browser_android_chrome.BrowserAndroidChrome --deviceSerial %DEVICE_SERIAL% --captureDir ^"%WPT_ROOT%\lib\capture^"%CHROMEDRIVER_ARGS%"
+  set "BROWSER_ARGS= --browser browser_android_chrome.BrowserAndroidChrome --deviceSerial %DEVICE_SERIAL% --captureDir ^"%AGENT%\lib\capture^"%CHROMEDRIVER_ARGS%"
 )
 if NOT defined KNOWN_BROWSER (
   echo Unknown browser %BROWSER%
