@@ -580,6 +580,10 @@ Agent.prototype.startTrafficShaper_ = function(job) {
         '"Advanced Settings > Test Settings > Connection = Native Connection"' +
         ' or add "connectivity=WiFi" to this location\'s WebPagetest config.');
     }.bind(this));
+  } else {
+    this.trafficShaper_('clear').addErrback(function(/*e*/) {
+      logger.debug('Ignoring failed trafficShaper clear');
+    }.bind(this));
   }
 };
 
