@@ -5,14 +5,14 @@ All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
- * Redistributions of source code must retain the above copyright notice,
- this list of conditions and the following disclaimer.
- * Redistributions in binary form must reproduce the above copyright notice,
- this list of conditions and the following disclaimer in the documentation
- and/or other materials provided with the distribution.
- * Neither the name of Google, Inc. nor the names of its contributors
- may be used to endorse or promote products derived from this software
- without specific prior written permission.
+    * Redistributions of source code must retain the above copyright notice,
+      this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+    * Neither the name of Google, Inc. nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -97,31 +97,31 @@ describe('agent_main', function() {
     wprErrorLog = '';
     stubWprGetLog = sandbox.stub(web_page_replay.WebPageReplay.prototype,
         'scheduleGetErrorLog', function() {
-          return app.schedule('WPR get log', function() {
-            return wprErrorLog;
-          });
-        });
+      return app.schedule('WPR get log', function() {
+        return wprErrorLog;
+      });
+    });
     stubWprRecord = sandbox.stub(web_page_replay.WebPageReplay.prototype,
         'scheduleRecord', function() {
-          app.schedule('WPR record', function() {});
-        });
+      app.schedule('WPR record', function() {});
+    });
     stubWprReplay = sandbox.stub(web_page_replay.WebPageReplay.prototype,
         'scheduleReplay', function() {
-          app.schedule('WPR replay', function() {});
-        });
+      app.schedule('WPR replay', function() {});
+    });
     stubWprStop = sandbox.stub(web_page_replay.WebPageReplay.prototype,
         'scheduleStop', function() {
-          app.schedule('WPR stop', function() {});
-        });
+      app.schedule('WPR stop', function() {});
+    });
   }
 
   it('should cleanup job on timeout', function() {
     ['scheduleExec', 'scheduleWait', 'scheduleGetAll', 'scheduleAllocatePort']
         .forEach(function(functionName) {
-          sandbox.stub(process_utils, functionName, function() {
-            return new webdriver.promise.Deferred();
-          });
-        });
+      sandbox.stub(process_utils, functionName, function() {
+        return new webdriver.promise.Deferred();
+      });
+    });
     // Stub out fs functions for the temp dir cleanup and ipfw check.
     sandbox.stub(fs, 'exists', function(path, cb) {
       path.should.match(/ipfw$|^runtmp/);
@@ -190,43 +190,43 @@ describe('agent_main', function() {
 
     var client = new FakeClient();
     var agent = new agent_main.Agent(app, client, {
-      deviceSerial: 'T3S7'
-    });
+        deviceSerial: 'T3S7'
+      });
     agent.run();
     var job = new wpt_client.Job(client, {
-      'Test ID': 'id',
-      url: 'http://test',
-      browser: 'shmowser',
-      runs: 1,
-      replay: 1,
-      fvonly: 0,
-      'Capture Video': 1,
-      tcpdump: 1,
-      timeline: 1
-    });
+        'Test ID': 'id',
+        url: 'http://test',
+        browser: 'shmowser',
+        runs: 1,
+        replay: 1,
+        fvonly: 0,
+        'Capture Video': 1,
+        tcpdump: 1,
+        timeline: 1
+      });
 
     var stubSend = sandbox.stub(FakeWdServer.prototype, 'send',
         function(message) {
-          message.should.have.properties({
-            cmd: 'run',
-            runNumber: 0,
-            exitWhenDone: true,
-            flags: {
-              deviceSerial: 'T3S7'
-            },
-            task: {
-              'browser': 'shmowser',
-              'Test ID': 'id',
-              'replay': 1,
-              'url': 'http://test',
-              'runs': 1,
-              'fvonly': 0,
-              'pngScreenshot': 1
-            }
-          });
-          fakeWdServer.emit('message', {cmd: 'done'});
-          fakeWdServer.emit('exit', 0);
+      message.should.have.properties({
+          cmd: 'run',
+          runNumber: 0,
+          exitWhenDone: true,
+          flags: {
+            deviceSerial: 'T3S7'
+          },
+          task: {
+            'browser': 'shmowser',
+            'Test ID': 'id',
+            'replay': 1,
+            'url': 'http://test',
+            'runs': 1,
+            'fvonly': 0,
+            'pngScreenshot': 1
+          }
         });
+      fakeWdServer.emit('message', {cmd: 'done'});
+      fakeWdServer.emit('exit', 0);
+    });
     client.onStartJobRun(job);
     test_utils.tickUntilIdle(app, sandbox);
     should.equal(undefined, job.error);
@@ -247,25 +247,25 @@ describe('agent_main', function() {
 
     stubSend = sandbox.stub(FakeWdServer.prototype, 'send',
         function(message) {
-          message.should.have.properties({
-            runNumber: 1,
-            task: {
-              tcpdump: 1,
-              browser: 'shmowser',
-              timeline: 1,
-              'Capture Video': 1,
-              'Test ID': 'id',
-              replay: 1,
-              url: 'http://test',
-              runs: 1,
-              fvonly: 0
-            }
-          });
-          message.should.not.have.properties({
-            task: { pngScreenshot: 1 }
-          });
-          fakeWdServer.emit('message', {cmd: 'done'});
+      message.should.have.properties({
+          runNumber: 1,
+          task: {
+            tcpdump: 1,
+            browser: 'shmowser',
+            timeline: 1,
+            'Capture Video': 1,
+            'Test ID': 'id',
+            replay: 1,
+            url: 'http://test',
+            runs: 1,
+            fvonly: 0
+          }
         });
+      message.should.not.have.properties({
+          task: { pngScreenshot: 1 }
+        });
+      fakeWdServer.emit('message', {cmd: 'done'});
+    });
     job.runNumber = 1;
     client.onStartJobRun(job);
     test_utils.tickUntilIdle(app, sandbox);
@@ -285,27 +285,27 @@ describe('agent_main', function() {
 
     stubSend = sandbox.stub(FakeWdServer.prototype, 'send',
         function(message) {
-          message.should.have.properties({
-            runNumber: 1,
-            task: {
-              tcpdump: 1,
-              browser: 'shmowser',
-              timeline: 1,
-              'Capture Video': 1,
-              'Test ID': 'id',
-              replay: 1,
-              url: 'http://test',
-              runs: 1,
-              fvonly: 0
-            }
-          });
-          message.should.not.have.properties({
-            task: { pngScreenshot: 1 }
-          });
-          wprErrorLog = 'gaga';
-          fakeWdServer.emit('message', {cmd: 'done'});
-          fakeWdServer.emit('exit', 0);
+      message.should.have.properties({
+          runNumber: 1,
+          task: {
+            tcpdump: 1,
+            browser: 'shmowser',
+            timeline: 1,
+            'Capture Video': 1,
+            'Test ID': 'id',
+            replay: 1,
+            url: 'http://test',
+            runs: 1,
+            fvonly: 0
+          }
         });
+      message.should.not.have.properties({
+          task: { pngScreenshot: 1 }
+        });
+      wprErrorLog = 'gaga';
+      fakeWdServer.emit('message', {cmd: 'done'});
+      fakeWdServer.emit('exit', 0);
+    });
     client.onStartJobRun(job);
     test_utils.tickUntilIdle(app, sandbox);
     should.equal(undefined, job.error);

@@ -102,7 +102,7 @@ describe('browser_android_chrome small', function() {
                 'root 1 0 560 404 ffffffff 00000000 S /init\n');
           }, 1);
         } else if (!args.some(regExTest.bind(/^force-stop$/)) &&
-            !args.some(regExTest.bind(/^dumpsys$/))) {
+                   !args.some(regExTest.bind(/^dumpsys$/))) {
           // Ignore shell am force-stop and shell dumpsys *.
           keepAlive = shellStub.callback(proc, command, args);
         }
@@ -127,19 +127,19 @@ describe('browser_android_chrome small', function() {
 
   it('should install on first run, start, get killed', function() {
     startBrowser_({runNumber: 1, flags: {deviceSerial: serial,
-      chrome: chromeApk}, task: {}});
+        chrome: chromeApk}, task: {}});
     killBrowser_();
   });
 
   it('should not install on a non-first run, start, get killed', function() {
     startBrowser_({runNumber: 2, flags: {deviceSerial: serial,
-      chrome: chromeApk}, task: {}});
+        chrome: chromeApk}, task: {}});
     killBrowser_();
   });
 
   it('should use PAC server', function() {
     startBrowser_({runNumber: 1, flags: {deviceSerial: serial,
-      chrome: chromeApk}, task: {pac: 'function FindProxyForURL...'}});
+        chrome: chromeApk}, task: {pac: 'function FindProxyForURL...'}});
     killBrowser_();
   });
 
