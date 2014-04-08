@@ -139,15 +139,7 @@ function BrowserAndroidChrome(app, args) {
   this.runTempDir_ = args.runTempDir || '';
   this.useXvfb_ = undefined;
   this.chromeFlags_ = CHROME_FLAGS.slice();
-  if (args.task.addCmdLine) {
-    args.task.addCmdLine.split(/\s+/).forEach(function(flag) {
-      if ((/^--[-_a-zA-Z0-9]+(=.*)?$/).test(flag)) {
-        this.chromeFlags_.push(flag);
-      } else if (flag) {
-        throw new Error('Invalid addCmdLine flag: "' + flag + '"');
-      }
-    }.bind(this));
-  }
+  this.additionalFlags_ = args.task.addCmdLine;
 }
 util.inherits(BrowserAndroidChrome, browser_base.BrowserBase);
 /** Public class. */
@@ -314,8 +306,22 @@ BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
       flags.push('--explicitly-allowed-ports=' + PAC_PORT);
     }
   }
-  this.adb_.su(['echo \\"chrome ' + flags.join(' ') + '\\" > ' + flagsFile]);
-  this.adb_.su(['chmod 644 ' + flagsFile]);
+  var localFlagsFile = path.join(this.runTempDir_, 'wpt_chrome_command_line');
+  var flagsString = 'chrome ' + flags.join(' ');
+  if (this.additionalFlags_) {
+    flagsString += ' ' + this.additionalFlags_;
+  }
+  process_utils.scheduleFunction(this.app_, 'Write local flags file',
+      fs.writeFile, localFlagsFile, flagsString);
+  this.adb_.getStoragePath().then(function(storagePath) {
+    var tempFlagsFile = storagePath + '/wpt_chrome_command_line';
+    this.adb_.adb(['push', localFlagsFile, tempFlagsFile]);
+    process_utils.scheduleFunction(this.app_, 'Delete local flags file',
+        fs.unlink, localFlagsFile);
+    this.adb_.su(['cp', tempFlagsFile, flagsFile]);
+    this.adb_.shell(['rm', tempFlagsFile]);
+    this.adb_.su(['chmod', '644', flagsFile]);
+  }.bind(this));
 };
 
 /**

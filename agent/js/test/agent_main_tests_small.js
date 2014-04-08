@@ -241,7 +241,7 @@ describe('agent_main', function() {
     should.ok(stubWprRecord.calledOnce);
     should.ok(stubWprReplay.notCalled);
     should.ok(stubWprGetLog.notCalled);
-    should.ok(stubIpfwStart.calledOnce);
+    should.ok(stubIpfwStart.notCalled);
     should.ok(stubSend.calledOnce);
     stubSend.restore();
 
@@ -319,7 +319,7 @@ describe('agent_main', function() {
     should.ok(stubWprRecord.calledOnce);  // No additional calls.
     should.ok(stubWprReplay.calledOnce);  // No additional calls.
     should.ok(stubWprGetLog.calledTwice);  // Second call.
-    should.equal(stubIpfwStart.callCount, stubIpfwStop.callCount);
+    should.equal(stubIpfwStop.callCount, 4);
     should.ok(stubSend.calledOnce);
     stubSend.restore();
   });

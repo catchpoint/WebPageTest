@@ -281,6 +281,8 @@ describe('browser_android_chrome small', function() {
             args.some(regExTest.bind(/^ps$/))) {
           stdout = 'USER PID PPID VSIZE RSS WCHAN PC NAME\n' +
               'root 1 0 560 404 ffffffff 00000000 S /init\n';
+        } else if (args.some(new RegExp().test.bind(/STORAGE/))) {
+          stdout = '/gagacard';
         }
       } else {
         keepAlive = shellStub.callback(proc, command, args);
@@ -311,8 +313,8 @@ describe('browser_android_chrome small', function() {
     if (args.task.pac) {
       assertAdbCall('push', /^[^\/]+\.pac_body$/, /^\/.*\/pac_body$/);
     }
-    assertAdbCall('shell', 'su', '-c', 'echo x');
     if (args.task.pac) {
+      assertAdbCall('shell', 'su', '-c', 'echo x');
       assertAdbCall('shell', 'su', '-c',
           /^while true; do nc -l \d+ < \S+pac_body; done$/);
     }
@@ -326,8 +328,15 @@ describe('browser_android_chrome small', function() {
       flags.push('--proxy-pac-url=http://127.0.0.1:80/from_netcat');
     }
     assertAdbCalls(
-        ['shell', 'su', '-c', 'echo \\"chrome ' + flags.join(' ') +
-            '\\" > /data/local/chrome-command-line'],
+        ['shell', /^\[\[ -w "\$EXTERNAL_STORAGE"/], // Output ''.
+        ['push', '/wpt-command-line', '/gagacard/wpt-command-line']);
+    if (!args.task.pac) {
+      assertAdbCall('shell', 'su', '-c', 'echo x');
+    }
+    assertAdbCalls(
+        ['shell', 'su', '-c',
+          'cp /gagacard/wpt-command-line /data/local/chrome-command-line'],
+        ['shell', 'rm', '/gagacard/wpt-command-line'],
         ['shell', 'su', '-c', 'chmod 644 /data/local/chrome-command-line'],
         ['shell', 'su', '-c', 'rm -r /data/data/com.android.chrome/files'],
         ['shell', 'su', '-c', 'rm -r /data/data/com.android.chrome/cache'],
