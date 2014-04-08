@@ -306,7 +306,7 @@ BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
       flags.push('--explicitly-allowed-ports=' + PAC_PORT);
     }
   }
-  var localFlagsFile = this.runTempDir_ + '/wpt-command-line';
+  var localFlagsFile = path.join(this.runTempDir_, 'wpt_chrome_command_line');
   var flagsString = 'chrome ' + flags.join(' ');
   if (this.additionalFlags_) {
     flagsString += ' ' + this.additionalFlags_;
@@ -314,7 +314,7 @@ BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
   process_utils.scheduleFunction(this.app_, 'Write local flags file',
       fs.writeFile, localFlagsFile, flagsString);
   this.adb_.getStoragePath().then(function(storagePath) {
-    var tempFlagsFile = storagePath + '/wpt-command-line';
+    var tempFlagsFile = storagePath + '/wpt_chrome_command_line';
     this.adb_.adb(['push', localFlagsFile, tempFlagsFile]);
     process_utils.scheduleFunction(this.app_, 'Delete local flags file',
         fs.unlink, localFlagsFile);
