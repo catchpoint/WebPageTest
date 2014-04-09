@@ -91,6 +91,34 @@ if (array_key_exists('f', $_REQUEST)) {
                 </div>
             </div>
             <div style="clear:both;">
+            <?php
+              $elapsed = 0;
+              $completed = 0;
+              $total = 0;
+              if (is_file("./results/benchmarks/$benchmark/state.json")) {
+                  $state = json_decode(file_get_contents("./results/benchmarks/$benchmark/state.json"), true);
+                  if (array_key_exists('running', $state) && $state['running'] &&
+                      array_key_exists('tests', $state) && is_array($state['tests'])) {
+                    $now = time();
+                    if ($now > $state['last_run'])
+                      $elapsed = $now - $state['last_run'];
+                    $total = count($state['tests']);
+                    foreach ($state['tests'] as &$test) {
+                      if (is_array($test) && array_key_exists('completed', $test) && $test['completed'])
+                        $completed++;
+                    }
+                  }
+              }
+              echo 'Benchmark Status: ';
+              if ($total) {
+                $hours = intval(floor($elapsed / 3600));
+                $elapsed -= $hours * 3600;
+                $minutes = intval(floor($elapsed / 60));
+                echo "Completed $completed of $total tests in $hours hours and $minutes minutes.";
+              } else {
+                echo 'Not Running';
+              }
+            ?>
             </div>
             <script type="text/javascript">
             function SelectedPoint(benchmark, metric, series, time, cached) {

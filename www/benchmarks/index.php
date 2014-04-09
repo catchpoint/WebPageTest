@@ -94,9 +94,32 @@ if (array_key_exists('f', $_REQUEST)) {
                 if (!isset($out_data)) {
                     echo "<h2><a href=\"view.php?benchmark=$bm&aggregate=$aggregate\">$title</a> <span class=\"small\">(<a name=\"{$benchmark['name']}\" href=\"#{$benchmark['name']}\">direct link</a>)</span></h2>\n";
                     if (array_key_exists('description', $benchmark))
-                        echo "<p>{$benchmark['description']}</p>\n";
+                        echo "{$benchmark['description']}<br>\n";
                 }
-                
+                if (is_file("./results/benchmarks/{$benchmark['name']}/state.json")) {
+                    $state = json_decode(file_get_contents("./results/benchmarks/{$benchmark['name']}/state.json"), true);
+                  if (array_key_exists('running', $state) && $state['running'] &&
+                      array_key_exists('tests', $state) && is_array($state['tests'])) {
+                    $elapsed = 0;
+                    $completed = 0;
+                    $total = 0;
+                    $now = time();
+                    if ($now > $state['last_run'])
+                      $elapsed = $now - $state['last_run'];
+                    $total = count($state['tests']);
+                    foreach ($state['tests'] as &$test) {
+                      if (is_array($test) && array_key_exists('completed', $test) && $test['completed'])
+                        $completed++;
+                    }
+                    if ($total) {
+                      $hours = intval(floor($elapsed / 3600));
+                      $elapsed -= $hours * 3600;
+                      $minutes = intval(floor($elapsed / 60));
+                      echo "Benchmark is running - completed $completed of $total tests in $hours hours and $minutes minutes.<br>";
+                    }
+                  }
+                }
+                echo '<br>';
                 if ($benchmark['expand'] && count($benchmark['locations'] > 1)) {
                     foreach ($benchmark['locations'] as $location => $label) {
                         if (is_numeric($label))
