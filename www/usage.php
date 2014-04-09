@@ -1,5 +1,5 @@
 <?php
-include 'common_lib.inc';
+include 'common.inc';
 set_time_limit(0);
 header('Content-Encoding: none;');
 
