@@ -329,14 +329,16 @@ describe('browser_android_chrome small', function() {
     }
     assertAdbCalls(
         ['shell', /^\[\[ -w "\$EXTERNAL_STORAGE"/], // Output ''.
-        ['push', '/wpt-command-line', '/gagacard/wpt-command-line']);
+        ['push', 'wpt_chrome_command_line',
+         '/gagacard/wpt_chrome_command_line']);
     if (!args.task.pac) {
       assertAdbCall('shell', 'su', '-c', 'echo x');
     }
     assertAdbCalls(
         ['shell', 'su', '-c',
-          'cp /gagacard/wpt-command-line /data/local/chrome-command-line'],
-        ['shell', 'rm', '/gagacard/wpt-command-line'],
+            'cp /gagacard/wpt_chrome_command_line' +
+            ' /data/local/chrome-command-line'],
+        ['shell', 'rm', '/gagacard/wpt_chrome_command_line'],
         ['shell', 'su', '-c', 'chmod 644 /data/local/chrome-command-line'],
         ['shell', 'su', '-c', 'rm -r /data/data/com.android.chrome/files'],
         ['shell', 'su', '-c', 'rm -r /data/data/com.android.chrome/cache'],
