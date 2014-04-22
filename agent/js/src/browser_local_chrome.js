@@ -48,10 +48,11 @@ var CHROME_FLAGS = [
  */
 function BrowserLocalChrome(app, args) {
   'use strict';
+  var flags = args.flags || {};
   browser_base.BrowserBase.call(this, app);
-  logger.info('BrowserLocalChrome(%s, %s)', args.chromedriver, args.chrome);
-  this.chromedriver_ = args.chromedriver;  // Requires chromedriver 2.x.
-  this.chrome_ = args.chrome;
+  logger.info('BrowserLocalChrome(%s, %s)', flags.chromedriver, flags.chrome);
+  this.chromedriver_ = flags.chromedriver;  // Requires chromedriver 2.x.
+  this.chrome_ = flags.chrome;
   this.serverPort_ = 4444;  // Chromedriver listen port.
   this.serverUrl_ = undefined;  // WebDriver server URL for WebDriver tests.
   this.devToolsPort_ = 1234;  // If running without chromedriver.
