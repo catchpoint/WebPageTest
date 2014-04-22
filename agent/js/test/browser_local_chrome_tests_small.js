@@ -74,7 +74,7 @@ describe('browser_local_chrome small', function() {
 
   it('should start and get killed', function() {
     var browser = new browser_local_chrome.BrowserLocalChrome(
-        app, {chromedriver: chromedriver});
+        app, {flags: {chromedriver: chromedriver}});
     should.ok(!browser.isRunning());
     browser.startWdServer({browserName: 'chrome'});
     test_utils.tickUntilIdle(app, sandbox);
@@ -97,7 +97,7 @@ describe('browser_local_chrome small', function() {
 
   it('should start and handle process self-exit', function() {
     var browser = new browser_local_chrome.BrowserLocalChrome(
-        app, {chromedriver: chromedriver});
+        app, {flags: {chromedriver: chromedriver}});
     should.ok(!browser.isRunning());
     browser.startWdServer({browserName: 'chrome'});
     test_utils.tickUntilIdle(app, sandbox);

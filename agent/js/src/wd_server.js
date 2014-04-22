@@ -242,7 +242,7 @@ WebDriverServer.prototype.connectDevTools_ = function() {
   this.pageCommand_('enable');
   if (1 === this.task_.timeline || 1 === this.task_['Capture Video']) {
     var timelineStackDepth = (this.task_.timelineStackDepth ?
-        parseInt(this.task_.timelineStackDepth) : 0);
+        parseInt(this.task_.timelineStackDepth, 10) : 0);
     this.timelineCommand_('start', {maxCallStackDepth: timelineStackDepth});
   }
 };
@@ -400,7 +400,8 @@ WebDriverServer.prototype.addScreenshot_ = function(
       convertCommand.push('-rotate', this.task_.rotate);
     }
     // Force the screenshot JPEG quality level to be between 30 and 95.
-    var imgQ = this.task_.imageQuality ? parseInt(this.task_.imageQuality) : 0;
+    var imgQ = (this.task_.imageQuality ?
+        parseInt(this.task_.imageQuality, 10) : 0);
     convertCommand.push('-quality', Math.min(Math.max(imgQ, 30), 95));
     convertCommand.push(diskPathJPEG);
     process_utils.scheduleExec(this.app_, 'convert', convertCommand).then(

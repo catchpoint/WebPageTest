@@ -168,9 +168,7 @@ describe('browser_ios small', function() {
         stdout = 'Install - Complete';
       } else if (/idevice-app-runner$/.test(cmd)) {
         if (-1 !== argv.indexOf('check_gdb')) {
-          global.setTimeout(function() {
-            proc.stderr.emit('data', 'Unknown APPID (check_gdb) is not in:\n');
-          }, 1);
+          proc.stderr.emit('data', 'Unknown APPID (check_gdb) is not in:\n');
           global.setTimeout(function() {
             ['exit', 'close'].forEach(function(evt) {
               proc.emit(evt, 1);
@@ -195,9 +193,7 @@ describe('browser_ios small', function() {
       should.fail('Unexpected ' + cmd + ' ' + (argv || []).join(' '));
     }
     if (stdout) {
-      global.setTimeout(function() {
-        proc.stdout.emit('data', stdout);
-      }, 1);
+      proc.stdout.emit('data', stdout);
     }
     return false; // exit with success
   }

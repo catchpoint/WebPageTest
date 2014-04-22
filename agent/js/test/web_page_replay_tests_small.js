@@ -84,9 +84,7 @@ describe('web_page_replay small', function() {
       } else if (/wpr$/.test(cmd) && 'getlog' === argv[0]) {
         stdout = 'gaga';
       }
-      global.setTimeout(function() {
-        proc.stdout.emit('data', stdout);
-      }, 1);
+      proc.stdout.emit('data', stdout);
       return false;
     };
 

@@ -95,9 +95,7 @@ describe('video_hdmi small', function() {
         should.fail('Unexpected command: ' + command);
       }
       if (undefined !== stdout) {
-        global.setTimeout(function() {
-          proc.stdout.emit('data', stdout);
-        }, 1);
+        proc.stdout.emit('data', stdout);
       }
     };
     // Check for existence of the video record script
