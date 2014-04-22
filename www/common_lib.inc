@@ -1604,8 +1604,8 @@ function Lock($name) {
   if (strlen($name)) {
     if( !is_dir('./tmp') )
       mkdir('./tmp');
-    $lockFile = './tmp' . sha1($name) . '.lock';
-    $file = fopen( "./tmp/$location.lock", 'w',  false);
+    $lockFile = './tmp/' . sha1($name) . '.lock';
+    $file = fopen($lockFile, 'w',  false);
     if( $file ) {
       if( flock($file, LOCK_EX) ) {
         $lock = array('lock' => $file, 'file' => $lockFile);
@@ -1632,7 +1632,7 @@ function UnLock(&$lock) {
 }
 
 function LockTest($testIdOrPath) {
-  $lock = false;
+  $lock = null;
   $testPath = $testIdOrPath;
   if (strpos($testPath, '/') === false) {
     $id = $testPath;
@@ -1641,21 +1641,15 @@ function LockTest($testIdOrPath) {
       $testPath = './' . GetTestPath($id);
   }
   if (strlen($testPath) && is_dir($testPath)) {
-    $lock = fopen( "$testPath/test.lock", 'w',  false);
-    if( $lock ) {
-      if( !flock($lock, LOCK_EX) ) {
-        fclose($lock);
-        $lock = false;
-      }
-    }
+    $testPath = realpath($testPath);
+    $lock = Lock("Test $testPath");
   }
   return $lock;
 }
 
 function UnlockTest(&$testLock) {
   if (isset($testLock) && $testLock) {
-    flock($testLock, LOCK_UN);
-    fclose($testLock);
+    Unlock($testLock);
     $testLock = null;
   }
 }
@@ -2201,8 +2195,19 @@ function GetTestInfo($testIdOrPath) {
       
     // TODO(pmeenan): cache the test info to prevent multiple disk
     // reads (need to deal with read-write-read sequences though)
-    if (gz_is_file("$testPath/testinfo.json"))
-      $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+    if (gz_is_file("$testPath/testinfo.json")) {
+      $testPath = realpath($testPath);
+      $lock = Lock("Test Info $testPath");
+      if ($lock) {
+        $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+        if (!$testInfo) {
+          $testInfo = RebuildTestInfo($testPath);
+          if ($testInfo)
+            gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+        }
+        Unlock($lock);
+      }
+    }
   }
   
   if (!isset($testInfo) || !is_array($testInfo))
@@ -2221,10 +2226,59 @@ function SaveTestInfo($testIdOrPath, &$testInfo) {
       if (ValidateTestId($id))
         $testPath = './' . GetTestPath($id);
     }
-    if (is_dir($testPath))
-      gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+    if (is_dir($testPath)) {
+      $testPath = realpath($testPath);
+      $lock = Lock("Test Info $testPath");
+      if ($lock) {
+        gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+        Unlock($lock);
+      }
+    }
   }
 }
+
+function CopyArrayEntry(&$src, &$dest, $srcEntry, $destEntry = null) {
+  if (!isset($destEntry))
+    $destEntry = $srcEntry;
+  if (array_key_exists($srcEntry, $src))
+    $dest[$destEntry] = $src[$srcEntry];  
+}
+
+/**
+* Rebuild a damaged testinfo.json from testinfo.ini or the raw files on disk.
+* This shouldn't happen but I've seen several cases of it.
+*/
+function RebuildTestInfo($testPath) {
+  $testInfo = false;
+  if (is_file("$testPath/testinfo.ini")) {
+    $ini = parse_ini_file("$testPath/testinfo.ini", true);
+    if (is_array($ini) && array_key_exists('test', $ini) && is_array($ini['test'])) {
+      $testInfo = array();
+      CopyArrayEntry($ini['test'], $testInfo, 'id');
+      CopyArrayEntry($ini['test'], $testInfo, 'runs');
+      CopyArrayEntry($ini['test'], $testInfo, 'fvonly');
+      CopyArrayEntry($ini['test'], $testInfo, 'loc', 'location');
+      CopyArrayEntry($ini['test'], $testInfo, 'batch');
+      CopyArrayEntry($ini['test'], $testInfo, 'sensitive');
+      CopyArrayEntry($ini['test'], $testInfo, 'notify');
+      CopyArrayEntry($ini['test'], $testInfo, 'uid');
+      CopyArrayEntry($ini['test'], $testInfo, 'owner');
+      CopyArrayEntry($ini['test'], $testInfo, 'type');
+      CopyArrayEntry($ini['test'], $testInfo, 'connectivity');
+      CopyArrayEntry($ini['test'], $testInfo, 'bwIn');
+      CopyArrayEntry($ini['test'], $testInfo, 'bwOut');
+      CopyArrayEntry($ini['test'], $testInfo, 'latency');
+      CopyArrayEntry($ini['test'], $testInfo, 'plr');
+      CopyArrayEntry($ini['test'], $testInfo, 'median_video');
+      if (array_key_exists('startTime', $ini['test']))
+        $testInfo['started'] = time();
+      if (array_key_exists('completeTime', $ini['test']))
+        $testInfo['completed'] = time();
+    }
+  }
+  return $testInfo;
+}
+
 
 function IsTestRunComplete($run, &$testInfo) {
   $completed = false;

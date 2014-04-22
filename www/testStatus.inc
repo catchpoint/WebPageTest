@@ -16,14 +16,9 @@ $testQueue = array();
 function GetTestStatus($id, $includePosition = true) {
   global $testQueue;
   
-  $ret = array('statusCode' => 400, 'statusText' => 'Test not found');
+  $ret = array('statusCode' => 400, 'statusText' => 'Test not found', 'id' => $id);
   $testPath = './' . GetTestPath($id);
   $testInfoJson = GetTestInfo($id);
-  if ((!$testInfoJson || !array_key_exists('id', $testInfoJson)) && is_dir($testPath)) {
-    $testLock = LockTest($id);
-    $testInfoJson = GetTestInfo($id);
-    UnlockTest($testLock);
-  }
   if ($testInfoJson) {
     if (isset($testInfoJson['relayId'])) {
       $ret = GetRelayStatus($id, $testPath, $testInfoJson);
