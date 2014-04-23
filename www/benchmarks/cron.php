@@ -2,13 +2,13 @@
 /*
     This is called every 15 minutes as long as agents are polling for work
 */
-ignore_user_abort(true);
 chdir('..');
 require 'common.inc';
 require 'testStatus.inc';
 require 'breakdown.inc';
 require_once('archive.inc');
 set_time_limit(36000);
+ignore_user_abort(true);
 error_reporting(E_ERROR | E_PARSE);
 $debug=true;
 if (!is_dir('./log'))
@@ -28,24 +28,20 @@ $nonZero = array('TTFB', 'bytesOut', 'bytesOutDoc', 'bytesIn', 'bytesInDoc', 'co
 if (array_key_exists('benchmark', $_GET) && strlen($_GET['benchmark'])) {
   $benchmark = trim($_GET['benchmark']);
   if (is_file("./settings/benchmarks/$benchmark.php")) {
-    $lock = Lock("Benchmark $benchmark Cron", false);
-    if (isset($lock)) {
-      $logFile = "bm-$benchmark.log";
-      // see if we are using API keys
-      $key = null;
-      if (is_file('./settings/keys.ini')) {
-          $keys = parse_ini_file('./settings/keys.ini', true);
-          if (array_key_exists('server', $keys) && array_key_exists('key', $keys['server']))
-              $key = $keys['server']['key'];
-      }
-      ProcessBenchmark(basename($benchmark, '.php'));
-      Unlock($lock);
+    $logFile = "bm-$benchmark.log";
+    // see if we are using API keys
+    $key = null;
+    if (is_file('./settings/keys.ini')) {
+        $keys = parse_ini_file('./settings/keys.ini', true);
+        if (array_key_exists('server', $keys) && array_key_exists('key', $keys['server']))
+            $key = $keys['server']['key'];
     }
+    ProcessBenchmark(basename($benchmark, '.php'));
   }
 } else {
   if (is_file('./settings/benchmarks/benchmarks.txt')) {
     // make sure we don't execute multiple cron jobs concurrently
-    $lock = Lock("Benchmarks Cron", false);
+    $lock = Lock("Benchmarks Cron", false, 86400);
     if (isset($lock)) {
       if (is_file("./log/$logFile")) {
           unlink("./log/$logFile");
@@ -81,7 +77,7 @@ function PreProcessBenchmark($benchmark) {
   $needsRunning = false;
   echo "PreProcessing benchmark '$benchmark'\n";
   logMsg("PreProcessing benchmark '$benchmark'", "./log/$logFile", true);
-  $lock = Lock("Benchmark $benchmark Cron", false);
+  $lock = Lock("Benchmark $benchmark Cron", false, 86400);
   if (isset($lock)) {
     $options = array();
     if(include "./settings/benchmarks/$benchmark.php") {
@@ -139,7 +135,9 @@ function PreProcessBenchmark($benchmark) {
 * @param mixed $benchmark
 */
 function ProcessBenchmark($benchmark) {
-    global $logFile;
+  global $logFile;
+  $lock = Lock("Benchmark $benchmark Cron", false, 86400);
+  if (isset($lock)) {
     logMsg("Processing benchmark '$benchmark'", "./log/$logFile", true);
     $options = array();
     if(include "./settings/benchmarks/$benchmark.php") {
@@ -212,6 +210,8 @@ function ProcessBenchmark($benchmark) {
         file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
     }
     logMsg("Done Processing benchmark '$benchmark'", "./log/$logFile", true);
+    Unlock($lock);
+  }
 }
 
 /**
@@ -242,7 +242,10 @@ function CheckBenchmarkStatus($benchmark, &$state) {
             if (!$test['completed']) {
                 $status = GetTestStatus($test['id'], true);
                 $now = time();
-                if( $status['statusCode'] == 200 ) {
+                if ($status['statusCode'] >= 400) {
+                    logMsg("Test {$test['id']} : Failed - {$status['statusText']}", "./log/$logFile", true);
+                    $test['completed'] = $now;
+                } elseif( $status['statusCode'] == 200 ) {
                     logMsg("Test {$test['id']} : Completed", "./log/$logFile", true);
                     if (array_key_exists('completeTime', $status) && $status['completeTime'])
                         $test['completed'] = $status['completeTime'];

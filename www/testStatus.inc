@@ -19,7 +19,7 @@ function GetTestStatus($id, $includePosition = true) {
   $ret = array('statusCode' => 400, 'statusText' => 'Test not found', 'id' => $id);
   RestoreTest($id);
   $testPath = './' . GetTestPath($id);
-  if (is_dir($testPath)) {
+  if (is_dir($testPath) && is_file("$testPath/testinfo.ini")) {
     $ret = array('statusCode' => 101, 'statusText' => 'Test status unavailable', 'id' => $id);
     $testInfoJson = GetTestInfo($id);
     if ($testInfoJson) {

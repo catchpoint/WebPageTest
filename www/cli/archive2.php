@@ -8,7 +8,7 @@ ignore_user_abort(true);
 set_time_limit(86400);   // only allow it to run for 1 day
 
 // bail if we are already running
-$lock = Lock("Archive 2", false);
+$lock = Lock("Archive 2", false, 86400);
 if (!isset($lock)) {
   echo "Archive2 process is already running\n";
   exit(0);

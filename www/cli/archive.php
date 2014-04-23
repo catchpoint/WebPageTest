@@ -10,7 +10,7 @@ if (function_exists('proc_nice'))
   proc_nice(19);
 
 // bail if we are already running
-$lock = Lock("Archive", false);
+$lock = Lock("Archive", false, 3600);
 if (!isset($lock)) {
   echo "Archive process is already running\n";
   exit(0);
@@ -60,8 +60,9 @@ if ((isset($archive_dir) && strlen($archive_dir)) ||
                     foreach( $days as $day ) {
                         $dayDir = "$monthDir/$day";
                         if( is_dir($dayDir) && $day != '.' && $day != '..' ) {
-                            if (ElapsedDays($year, $month, $day) >= ($MIN_DAYS - 1)) {
-                                CheckDay($dayDir, "$year$month$day");
+                            $elapsedDays = ElapsedDays($year, $month, $day);
+                            if ($elapsedDays >= ($MIN_DAYS - 1)) {
+                                CheckDay($dayDir, "$year$month$day", $elapsedDays);
                             }
                         }
                     }
@@ -172,7 +173,7 @@ function CheckOldDir($path) {
         if( $oldDir != '.' && $oldDir != '..' ) {
             // see if it is a test or a higher-level directory
             if( is_file("$path/$oldDir/testinfo.ini") )
-                CheckTest("$path/$oldDir", $oldDir);
+                CheckTest("$path/$oldDir", $oldDir, 1000);
             else
                 CheckOldDir("$path/$oldDir");
         }
@@ -187,7 +188,7 @@ function CheckOldDir($path) {
 * @param mixed $baseID
 * @param mixed $archived
 */
-function CheckDay($dir, $baseID) {
+function CheckDay($dir, $baseID, $elapsedDays) {
     $tests = scandir($dir);
     foreach( $tests as $test ) {
         if( $test != '.' && $test != '..' ) {
@@ -195,9 +196,9 @@ function CheckDay($dir, $baseID) {
             if( is_file("$dir/$test/testinfo.ini") ||
                 is_file("$dir/$test/testinfo.json.gz") ||
                 is_file("$dir/$test/testinfo.json"))
-                CheckTest("$dir/$test", "{$baseID}_$test");
+                CheckTest("$dir/$test", "{$baseID}_$test", $elapsedDays);
             else
-                CheckDay("$dir/$test", "{$baseID}_$test");
+                CheckDay("$dir/$test", "{$baseID}_$test", $elapsedDays);
         }
     }
     @rmdir($dir);
@@ -209,7 +210,7 @@ function CheckDay($dir, $baseID) {
 * @param mixed $logFile
 * @param mixed $match
 */
-function CheckTest($testPath, $id) {
+function CheckTest($testPath, $id, $elapsedDays) {
     global $archiveCount;
     global $deleted;
     global $kept;
@@ -238,11 +239,18 @@ function CheckTest($testPath, $id) {
                    $status['remote'] &&
                    $elapsed > 1))
                 $delete = true;
+          } elseif ($elapsedDays > 10) {
+            $logLine .= "Old test, Failed to archive, deleting";
+            $delete = true;
+          } else {
+            $logLine .= "Failed to archive";
           }
-      } else
+      } else {
           $logLine .= "Last Accessed $elapsed days";
-    } else
+      }
+    } else {
       $delete = true;
+    }
 
     if ($delete) {
         delTree("$testPath/");
