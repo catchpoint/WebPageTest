@@ -2,19 +2,16 @@
 chdir('..');
 $MIN_DAYS = 7;
 
-// bail if we are already running
-$lock = fopen('./tmp/prunearchive.lock', 'w');
-if ($lock) {
-    if (flock($lock, LOCK_EX | LOCK_NB) == false) {
-        fclose($lock);
-        echo "prunearchive process is already running\n";
-        exit(0);
-    }
-}
-
 include 'common.inc';
 ignore_user_abort(true);
 set_time_limit(604800);   // only allow it to run for 7 days
+
+// bail if we are already running
+$lock = Lock("Prune Archive");
+if (!isset($lock)) {
+  echo "prunearchive process is already running\n";
+  exit(0);
+}
 
 $archive_dir = null;
 if (array_key_exists('archive_dir', $settings)) {
@@ -63,10 +60,7 @@ if (isset($archive_dir) && strlen($archive_dir)) {
     }
 }
 echo "\nDone\n\n";
-
-if ($lock) {
-    fclose($lock);
-}
+Unlock($lock);
 
 /**
 * Calculate how many days have passed since the given day

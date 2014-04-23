@@ -232,53 +232,38 @@ function GetJob() {
 */
 function GetVideoJob()
 {
-    global $debug;
-    global $tester;
-    $ret = false;
-    
-    $videoDir = './work/video';
-    if( is_dir($videoDir) )
-    {
-        // lock the directory
-        $lockFile = fopen( './tmp/video.lock', 'w',  false);
-        if( $lockFile )
-        {
-            if( flock($lockFile, LOCK_EX) )
-            {
-                // look for the first zip file
-                $dir = opendir($videoDir);
-                if( $dir )
-                {
-                    $testFile = null;
-                    while(!$testFile && $file = readdir($dir)) 
-                    {
-                        $path = $videoDir . "/$file";
-                        if( is_file($path) && stripos($file, '.zip') )
-                            $testFile = $path;
-                    }
-                    
-                    if( $testFile )
-                    {
-                        header('Content-Type: application/zip');
-                        header("Cache-Control: no-cache, must-revalidate");
-                        header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
-                        readfile_chunked($testFile);
-                        $ret = true;
-                        
-                        // delete the test file
-                        unlink($testFile);
-                    }
-
-                    closedir($dir);
-                }
-                flock($lockFile, LOCK_UN);
-            }
-
-            fclose($lockFile);
+  global $debug;
+  global $tester;
+  $ret = false;
+  
+  $videoDir = './work/video';
+  if (is_dir($videoDir)) {
+    $lock = Lock("Video Jobs");
+    if (isset($lock)) {
+      // look for the first zip file
+      $dir = opendir($videoDir);
+      if ($dir) {
+        $testFile = null;
+        while (!$testFile && $file = readdir($dir))  {
+          $path = $videoDir . "/$file";
+          if( is_file($path) && stripos($file, '.zip') )
+            $testFile = $path;
         }
+        if( $testFile ) {
+            header('Content-Type: application/zip');
+            header("Cache-Control: no-cache, must-revalidate");
+            header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+            readfile_chunked($testFile);
+            unlink($testFile);
+            $ret = true;
+        }
+        closedir($dir);
+      }
+      Unlock($lock);
     }
-    
-    return $ret;
+  }
+  
+  return $ret;
 }
 
 /**
@@ -329,44 +314,40 @@ function GetUpdate()
 * 
 */
 function CheckCron() {
-    // open and lock the cron job file - abandon quickly if we can't get a lock
-    $should_run = false;
-    $cron_lock = fopen('./tmp/wpt_cron.lock', 'w+');
-    if ($cron_lock !== false) {
-        if (flock($cron_lock, LOCK_EX | LOCK_NB)) {
-            $last_run = 0;
-            if (is_file('./tmp/wpt_cron.dat'))
-                $last_run = file_get_contents('./tmp/wpt_cron.dat');
-            $now = time();
-            $elapsed = $now - $last_run;
-            if (!$last_run || $elapsed > 120) {
-                if ($elapsed > 1200) {
-                    // if it has been over 20 minutes, run regardless of the wall-clock time
-                    $should_run = true;
-                } else {
-                    $minute = gmdate('i', $now) % 5;
-                    if ($minute < 2)
-                        $should_run = true;
-                }
-            }
-            if ($should_run) {
-                file_put_contents('./tmp/wpt_cron.dat', $now);
-            }
-            flock($cron_lock, LOCK_UN);
-        }
-        fclose($cron_lock);
+  // open and lock the cron job file - abandon quickly if we can't get a lock
+  $should_run = false;
+  $cron_lock = Lock("Cron Check", false, 1200);
+  if (isset($cron_lock)) {
+    $last_run = 0;
+    if (is_file('./tmp/wpt_cron.dat'))
+      $last_run = file_get_contents('./tmp/wpt_cron.dat');
+    $now = time();
+    $elapsed = $now - $last_run;
+    if (!$last_run || $elapsed > 120) {
+      if ($elapsed > 1200) {
+        // if it has been over 20 minutes, run regardless of the wall-clock time
+        $should_run = true;
+      } else {
+        $minute = gmdate('i', $now) % 5;
+        if ($minute < 2)
+          $should_run = true;
+      }
     }
-    
-    // send the cron requests
-    if ($should_run) {
-        if (is_file('./settings/benchmarks/benchmarks.txt') && 
-            is_file('./benchmarks/cron.php')) {
-            SendAsyncRequest('/benchmarks/cron.php');
-        }
-        if (is_file('./jpeginfo/cleanup.php')) {
-            SendAsyncRequest('/jpeginfo/cleanup.php');
-        }
+    if ($should_run)
+      file_put_contents('./tmp/wpt_cron.dat', $now);
+    Unlock($cron_lock);
+  }
+  
+  // send the cron requests
+  if ($should_run) {
+    if (is_file('./settings/benchmarks/benchmarks.txt') && 
+        is_file('./benchmarks/cron.php')) {
+      SendAsyncRequest('/benchmarks/cron.php');
     }
+    if (is_file('./jpeginfo/cleanup.php')) {
+      SendAsyncRequest('/jpeginfo/cleanup.php');
+    }
+  }
 }
 
 /**

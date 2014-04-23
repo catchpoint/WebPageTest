@@ -837,41 +837,38 @@ function ValidateKey(&$test, &$error, $key = null)
             if( !is_dir('./dat') )
               mkdir('./dat', 0777, true);
 
-          $lock = fopen( "./dat/keys.lock", 'w',  false);
-          if( $lock ) {
-            if( flock($lock, LOCK_EX) ) {
-                $keyfile = './dat/keys_' . gmdate('Ymd') . '.dat';
-                $usage = null;
-                if( is_file($keyfile) )
-                  $usage = json_decode(file_get_contents($keyfile), true);
-                if( !isset($usage) )
-                  $usage = array();
-                if( isset($usage[$key]) )
-                  $used = (int)$usage[$key];
-                else
-                  $used = 0;
+          $lock = Lock("API Keys");
+          if( isset($lock) ) {
+              $keyfile = './dat/keys_' . gmdate('Ymd') . '.dat';
+              $usage = null;
+              if( is_file($keyfile) )
+                $usage = json_decode(file_get_contents($keyfile), true);
+              if( !isset($usage) )
+                $usage = array();
+              if( isset($usage[$key]) )
+                $used = (int)$usage[$key];
+              else
+                $used = 0;
 
-                $runcount = max(1, $test['runs']);
-                if( !$test['fvonly'] )
-                  $runcount *= 2;
+              $runcount = max(1, $test['runs']);
+              if( !$test['fvonly'] )
+                $runcount *= 2;
 
-              if( $limit > 0 ){
-                if( $used + $runcount <= $limit ){
-                  $used += $runcount;
-                  $usage[$key] = $used;
-                }else{
-                  $error = 'The test request will exceed the daily test limit for the given API key';
-                }
+            if( $limit > 0 ){
+              if( $used + $runcount <= $limit ){
+                $used += $runcount;
+                $usage[$key] = $used;
+              }else{
+                $error = 'The test request will exceed the daily test limit for the given API key';
               }
-              else {
-                  $used += $runcount;
-                  $usage[$key] = $used;
-              }
-              if( !strlen($error) )
-                file_put_contents($keyfile, json_encode($usage));
-              flock($lock, LOCK_UN);
             }
-            fclose($lock);
+            else {
+                $used += $runcount;
+                $usage[$key] = $used;
+            }
+            if( !strlen($error) )
+              file_put_contents($keyfile, json_encode($usage));
+            Unlock($lock);
           }
         }
         // check to see if we need to limit queue lengths from this API key
@@ -1296,48 +1293,45 @@ function WriteJob($location, &$test, &$job, $testId)
         if( !is_dir($test['workdir']) )
             mkdir($test['workdir'], 0777, true);
         $workDir = $test['workdir'];
-        $lockFile = fopen( "./tmp/$location.lock", 'w',  false);
-        if( $lockFile )
+        $locationLock = LockLocation($location);
+        if( isset($locationLock) )
         {
-            if( flock($lockFile, LOCK_EX) ) {
-                $fileName = $test['job'];
-                $file = "$workDir/$fileName";
-                if( file_put_contents($file, $job) ) {
-                    if (AddJobFile($workDir, $fileName, $test['priority'], $test['queue_limit'])) {
-                        // store a copy of the job file with the original test in case the test fails and we need to resubmit it
-                        $test['job_file'] = realpath($file);
-                        if (ValidateTestId($testId)) {
-                            $testPath = GetTestPath($testId);
-                            if (strlen($testPath)) {
-                                $testPath = './' . $testPath;
-                                if (!is_dir($testPath))
-                                    mkdir($testPath, 0777, true);
-                                file_put_contents("$testPath/test.job", $job);
-                            }
+            $fileName = $test['job'];
+            $file = "$workDir/$fileName";
+            if( file_put_contents($file, $job) ) {
+                if (AddJobFile($workDir, $fileName, $test['priority'], $test['queue_limit'])) {
+                    // store a copy of the job file with the original test in case the test fails and we need to resubmit it
+                    $test['job_file'] = realpath($file);
+                    if (ValidateTestId($testId)) {
+                        $testPath = GetTestPath($testId);
+                        if (strlen($testPath)) {
+                            $testPath = './' . $testPath;
+                            if (!is_dir($testPath))
+                                mkdir($testPath, 0777, true);
+                            file_put_contents("$testPath/test.job", $job);
                         }
-                        $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
-                        if( !$tests )
-                            $tests = array();
-                        $testCount = $test['runs'];
-                        if( !$test['fvonly'] )
-                            $testCount *= 2;
-                        if( array_key_exists('tests', $tests) )
-                            $tests['tests'] += $testCount;
-                        else
-                            $tests['tests'] = $testCount;
-                        file_put_contents("./tmp/$location.tests", json_encode($tests));
-
-                        $ret = true;
                     }
+                    $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
+                    if( !$tests )
+                        $tests = array();
+                    $testCount = $test['runs'];
+                    if( !$test['fvonly'] )
+                        $testCount *= 2;
+                    if( array_key_exists('tests', $tests) )
+                        $tests['tests'] += $testCount;
                     else
-                    {
-                        unlink($file);
-                        $error = "Sorry, that test location already has too many tests pending.  Pleasy try again later.";
-                    }
+                        $tests['tests'] = $testCount;
+                    file_put_contents("./tmp/$location.tests", json_encode($tests));
+
+                    $ret = true;
                 }
-                flock($lockFile, LOCK_UN);
+                else
+                {
+                    unlink($file);
+                    $error = "Sorry, that test location already has too many tests pending.  Pleasy try again later.";
+                }
             }
-            fclose($lockFile);
+            UnlockLocation($locationLock);
         }
     }
 

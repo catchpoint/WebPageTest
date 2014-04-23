@@ -337,23 +337,20 @@ if (ValidateTestId($id)) {
             strlen($ini['industry']) && strlen($ini['industry_page'])) {
             if( !is_dir('./video/dat') )
               mkdir('./video/dat');
-            $lockFile = fopen( './video/dat/lock.dat', "w",  false);
-            if ($lockFile) {
-              if (flock($lockFile, LOCK_EX)) {
-                // update the page in the industry list
-                $ind;
-                $data = file_get_contents('./video/dat/industry.dat');
-                if( $data )
-                  $ind = json_decode($data, true);
-                $update = array();
-                $update['id'] = $id;
-                $update['last_updated'] = $now;
-                $ind[$ini['industry']][$ini['industry_page']] = $update;
-                $data = json_encode($ind);
-                file_put_contents('./video/dat/industry.dat', $data);
-                flock($lockFile, LOCK_UN);
-              }
-              fclose($lockFile);
+            $indLock = Lock("Industry Video");
+            if (isset($indLock)) {
+              // update the page in the industry list
+              $ind;
+              $data = file_get_contents('./video/dat/industry.dat');
+              if( $data )
+                $ind = json_decode($data, true);
+              $update = array();
+              $update['id'] = $id;
+              $update['last_updated'] = $now;
+              $ind[$ini['industry']][$ini['industry_page']] = $update;
+              $data = json_encode($ind);
+              file_put_contents('./video/dat/industry.dat', $data);
+              Unlock($indLock);
             }
           }
         }

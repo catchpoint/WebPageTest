@@ -2,22 +2,19 @@
 chdir('..');
 $MIN_DAYS = 2;
 
-// bail if we are already running
-$lock = fopen('./tmp/archive.lock', 'w');
-if ($lock) {
-    if (flock($lock, LOCK_EX | LOCK_NB) == false) {
-        fclose($lock);
-        echo "Archive process is already running\n";
-        exit(0);
-    }
-}
-
 include 'common_lib.inc';
 require_once('archive.inc');
 ignore_user_abort(true);
 set_time_limit(3300);   // only allow it to run for 55 minutes
 if (function_exists('proc_nice'))
   proc_nice(19);
+
+// bail if we are already running
+$lock = Lock("Archive", false);
+if (!isset($lock)) {
+  echo "Archive process is already running\n";
+  exit(0);
+}
 
 if (array_key_exists('archive_days', $settings)) {
     $MIN_DAYS = $settings['archive_days'];
@@ -82,11 +79,7 @@ if( $log ) {
     fwrite($log, "Archived: $archiveCount\nDeleted: $deleted\nKept: $kept\n" . gmdate('r') . "\n");;
     fclose($log);
 }
-
-if ($lock) {
-    flock($lock, LOCK_UN);
-    fclose($lock);
-}
+Unlock($lock);
 
 /**
 * Clean up the relay directory of old tests

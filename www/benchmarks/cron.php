@@ -20,58 +20,54 @@ $logFile = 'benchmark.log';
 
 header ("Content-type: text/plain");
 
-$nonZero = array('bytesIn', 'requests', 'render');
+$nonZero = array('TTFB', 'bytesOut', 'bytesOutDoc', 'bytesIn', 'bytesInDoc', 'connections', 'requests', 'requestsDoc', 'render', 
+                'fullyLoaded', 'docTime', 'domElements', 'titleTime', 'domContentLoadedEventStart', 'visualComplete', 'SpeedIndex', 
+                'VisuallyCompleteDT', 'SpeedIndexDT');
 
 // see if we need to actuall process the given benchmark
 if (array_key_exists('benchmark', $_GET) && strlen($_GET['benchmark'])) {
-    $benchmark = trim($_GET['benchmark']);
-    if (is_file("./settings/benchmarks/$benchmark.php")) {
-        $lock = fopen("./tmp/$benchmark.bm", "w+");
-        if ($lock !== false) {
-            if (flock($lock, LOCK_EX | LOCK_NB)) {
-                $logFile = "bm-$benchmark.log";
-                // see if we are using API keys
-                $key = null;
-                if (is_file('./settings/keys.ini')) {
-                    $keys = parse_ini_file('./settings/keys.ini', true);
-                    if (array_key_exists('server', $keys) && array_key_exists('key', $keys['server']))
-                        $key = $keys['server']['key'];
-                }
-                ProcessBenchmark(basename($benchmark, '.php'));
-                flock($lock, LOCK_UN);
-            }
-            fclose($lock);
-        }
+  $benchmark = trim($_GET['benchmark']);
+  if (is_file("./settings/benchmarks/$benchmark.php")) {
+    $lock = Lock("Benchmark $benchmark Cron", false);
+    if (isset($lock)) {
+      $logFile = "bm-$benchmark.log";
+      // see if we are using API keys
+      $key = null;
+      if (is_file('./settings/keys.ini')) {
+          $keys = parse_ini_file('./settings/keys.ini', true);
+          if (array_key_exists('server', $keys) && array_key_exists('key', $keys['server']))
+              $key = $keys['server']['key'];
+      }
+      ProcessBenchmark(basename($benchmark, '.php'));
+      Unlock($lock);
     }
+  }
 } else {
-    if (is_file('./settings/benchmarks/benchmarks.txt')) {
-        // make sure we don't execute multiple cron jobs concurrently
-        $lock = fopen("./tmp/benchmark_cron.lock", "w+");
-        if ($lock !== false) {
-            if (flock($lock, LOCK_EX | LOCK_NB)) {
-                if (is_file("./log/$logFile")) {
-                    unlink("./log/$logFile");
-                }
-                logMsg("Running benchmarks cron processing", "./log/$logFile", true);
+  if (is_file('./settings/benchmarks/benchmarks.txt')) {
+    // make sure we don't execute multiple cron jobs concurrently
+    $lock = Lock("Benchmarks Cron", false);
+    if (isset($lock)) {
+      if (is_file("./log/$logFile")) {
+          unlink("./log/$logFile");
+      }
+      logMsg("Running benchmarks cron processing", "./log/$logFile", true);
 
-                // iterate over all of the benchmarks and if we need to do any processing spawn off a child request to do the actual work
-                // this way we can concurrently process all of the benchmarks
+      // iterate over all of the benchmarks and if we need to do any processing spawn off a child request to do the actual work
+      // this way we can concurrently process all of the benchmarks
 
-                // load the list of benchmarks
-                $bm_list = file('./settings/benchmarks/benchmarks.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-                if (!count($bm_list))
-                    $bm_list = glob('./settings/benchmarks/*.php');
-                foreach ($bm_list as $benchmark) {
-                    PreProcessBenchmark(basename($benchmark, '.php'));
-                }
-                flock($lock, LOCK_UN);
-                logMsg("Done", "./log/$logFile", true);
-            } else {
-                echo "Benchmark cron job is already running\n";
-            }
-            fclose($lock);
-        }
+      // load the list of benchmarks
+      $bm_list = file('./settings/benchmarks/benchmarks.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      if (!count($bm_list))
+        $bm_list = glob('./settings/benchmarks/*.php');
+      foreach ($bm_list as $benchmark) {
+        PreProcessBenchmark(basename($benchmark, '.php'));
+      }
+      logMsg("Done", "./log/$logFile", true);
+      Unlock($lock);
+    } else {
+      echo "Benchmark cron job is already running\n";
     }
+  }
 }
 
 /**
@@ -81,66 +77,60 @@ if (array_key_exists('benchmark', $_GET) && strlen($_GET['benchmark'])) {
 * @param mixed $benchmark
 */
 function PreProcessBenchmark($benchmark) {
-    global $logFile;
-    $needsRunning = false;
-    echo "PreProcessing benchmark '$benchmark'\n";
-    logMsg("PreProcessing benchmark '$benchmark'", "./log/$logFile", true);
-    $lock = fopen("./tmp/$benchmark.bm", "w+");
-    if ($lock !== false) {
-        if (flock($lock, LOCK_EX | LOCK_NB)) {
-            $options = array();
-            if(include "./settings/benchmarks/$benchmark.php") {
-                if (!is_dir("./results/benchmarks/$benchmark"))
-                    mkdir("./results/benchmarks/$benchmark", 0777, true);
-                if (is_file("./results/benchmarks/$benchmark/state.json")) {
-                    $state = json_decode(file_get_contents("./results/benchmarks/$benchmark/state.json"), true);
-                    if (array_key_exists('running', $state) && $state['running']) {
-                        $needsRunning = true;
-                    } elseif (array_key_exists('needs_aggregation', $state) && $state['needs_aggregation']) {
-                        $needsRunning = true;
-                    }
-                } else {
-                    $needsRunning = true;
-                }
-                
-                // see if we need to kick off a new benchmark run
-                if (!$needsRunning) {
-                    if (!array_key_exists('last_run', $state))
-                        $state['last_run'] = 0;
-                    $now = time();
-                    if (call_user_func("{$benchmark}ShouldExecute", $state['last_run'], $now)) {
-                        $needsRunning = true;
-                    }
-                }
-                if (isset($state)) {
-                    file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
-                }
-            }
-            flock($lock, LOCK_UN);
-        } else {
-            echo "Benchmark '$benchmark' is currently locked\n";
-            logMsg("Benchmark '$benchmark' is currently locked", "./log/$logFile", true);
-        }
-        fclose($lock);
+  global $logFile;
+  $needsRunning = false;
+  echo "PreProcessing benchmark '$benchmark'\n";
+  logMsg("PreProcessing benchmark '$benchmark'", "./log/$logFile", true);
+  $lock = Lock("Benchmark $benchmark Cron", false);
+  if (isset($lock)) {
+    $options = array();
+    if(include "./settings/benchmarks/$benchmark.php") {
+      if (!is_dir("./results/benchmarks/$benchmark"))
+          mkdir("./results/benchmarks/$benchmark", 0777, true);
+      if (is_file("./results/benchmarks/$benchmark/state.json")) {
+        $state = json_decode(file_get_contents("./results/benchmarks/$benchmark/state.json"), true);
+        if (array_key_exists('running', $state) && $state['running'])
+          $needsRunning = true;
+        elseif (array_key_exists('needs_aggregation', $state) && $state['needs_aggregation'])
+          $needsRunning = true;
+      } else {
+        $needsRunning = true;
+      }
+      
+      // see if we need to kick off a new benchmark run
+      if (!$needsRunning) {
+        if (!array_key_exists('last_run', $state))
+          $state['last_run'] = 0;
+        $now = time();
+        if (call_user_func("{$benchmark}ShouldExecute", $state['last_run'], $now))
+          $needsRunning = true;
+      }
+      if (isset($state))
+        file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
     }
+    Unlock($lock);
+  } else {
+    echo "Benchmark '$benchmark' is currently locked\n";
+    logMsg("Benchmark '$benchmark' is currently locked", "./log/$logFile", true);
+  }
+  
+  if ($needsRunning) {
+    echo "Benchmark '$benchmark' needs processing, spawning task\n";
+    logMsg("Benchmark '$benchmark' needs processing, spawning task", "./log/$logFile", true);
     
-    if ($needsRunning) {
-        echo "Benchmark '$benchmark' needs processing, spawning task\n";
-        logMsg("Benchmark '$benchmark' needs processing, spawning task", "./log/$logFile", true);
-        
-        $url = "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?benchmark=' . urlencode($benchmark);
-        $c = curl_init();
-        curl_setopt($c, CURLOPT_URL, $url);
-        curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($c, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 1);
-        curl_setopt($c, CURLOPT_TIMEOUT, 1);
-        curl_exec($c);
-        curl_close($c);
-    } else {
-        echo "Benchmark '$benchmark' is idle\n";
-        logMsg("Benchmark '$benchmark' is idle", "./log/$logFile", true);
-    }
+    $url = "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?benchmark=' . urlencode($benchmark);
+    $c = curl_init();
+    curl_setopt($c, CURLOPT_URL, $url);
+    curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($c, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 1);
+    curl_setopt($c, CURLOPT_TIMEOUT, 1);
+    curl_exec($c);
+    curl_close($c);
+  } else {
+    echo "Benchmark '$benchmark' is idle\n";
+    logMsg("Benchmark '$benchmark' is idle", "./log/$logFile", true);
+  }
 }
 
 /**
@@ -252,10 +242,7 @@ function CheckBenchmarkStatus($benchmark, &$state) {
             if (!$test['completed']) {
                 $status = GetTestStatus($test['id'], true);
                 $now = time();
-                if ($status['statusCode'] >= 400) {
-                    logMsg("Test {$test['id']} : Failed - {$status['statusText']}", "./log/$logFile", true);
-                    $test['completed'] = $now;
-                } elseif( $status['statusCode'] == 200 ) {
+                if( $status['statusCode'] == 200 ) {
                     logMsg("Test {$test['id']} : Completed", "./log/$logFile", true);
                     if (array_key_exists('completeTime', $status) && $status['completeTime'])
                         $test['completed'] = $status['completeTime'];

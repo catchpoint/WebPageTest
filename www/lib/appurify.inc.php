@@ -382,17 +382,12 @@ class Appurify{
   }
   
   protected function Lock() {
-    $this->lock = fopen("./tmp/appurify_{$this->key}.lock", 'w');
-    if ($this->lock)
-      flock($this->lock, LOCK_EX);
+    $this->lock = Lock("Appurify {$this->key}");
   }
 
   protected function UnLock() {
-    if ($this->lock) {
-      flock($this->lock, LOCK_UN);
-      fclose($this->lock);
-      unset($this->lock);
-    }
+    if (isset($this->lock))
+      Unlock($this->lock);
   }
   
   protected function Post($command, $data = null, $file = null) {

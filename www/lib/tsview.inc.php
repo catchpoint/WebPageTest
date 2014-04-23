@@ -75,29 +75,27 @@ function TSViewCreate($server, $tsview_name, &$metrics) {
   if (!is_dir('./dat'))
     mkdir('./dat', 0777, true);
   $def = './dat/tsview-' . sha1($tsview_name) . '.json';
-  if ($lock = fopen("$def.lock", 'w')) {
-    if (flock($lock, LOCK_EX)) {
-      if (is_file($def))
-        $current = json_decode(file_get_contents($def), true);
-      if (!isset($current) || !is_array($current))
-        $current = array();
-      foreach ($metrics as $metric => $x) {
-        if (!array_key_exists($metric, $current)) {
-          $needs_update = true;
-          $current[$metric] = 1;
-        }
+  $lock = Lock("TSView $tsview_name");
+  if (isset($lock)) {
+    if (is_file($def))
+      $current = json_decode(file_get_contents($def), true);
+    if (!isset($current) || !is_array($current))
+      $current = array();
+    foreach ($metrics as $metric => $x) {
+      if (!array_key_exists($metric, $current)) {
+        $needs_update = true;
+        $current[$metric] = 1;
       }
-      if ($needs_update) {
-        $data = array('names' => array());
-        foreach ($current as $metric => $x)
-          $data['names'][] = $metric;
-        $body = json_encode($data);
-        if (http_put_raw("$server$tsview_name", $body))
-          file_put_contents($def, json_encode($current));
-      }
-      flock($lock, LOCK_UN);
     }
-    fclose($lock);
+    if ($needs_update) {
+      $data = array('names' => array());
+      foreach ($current as $metric => $x)
+        $data['names'][] = $metric;
+      $body = json_encode($data);
+      if (http_put_raw("$server$tsview_name", $body))
+        file_put_contents($def, json_encode($current));
+    }
+    Unlock($lock);
   }
 }
 
