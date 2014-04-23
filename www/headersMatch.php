@@ -56,7 +56,7 @@ foreach( $testIds as &$testId )
 				// Skip already matched items
 				if ($matched[$i])
 					continue;
-				if (strpos($header, $searches[$i]) !== false ) {
+				if (preg_match('/'.$searches[$i].'/',$header) ) {
 					$matched[$i] = "$i;";
 				}
 			}
@@ -72,3 +72,4 @@ foreach( $testIds as &$testId )
 }    
 
 ?>
+
