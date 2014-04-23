@@ -89,18 +89,14 @@ describe('browser_android_chrome small', function() {
         shellStub.addKeepAlive(proc);
         keepAlive = true;
       } else if ('xset' === command) {
-        global.setTimeout(function() {
-          proc.stdout.emit('data', 'has display');
-        }, 1);
+        proc.stdout.emit('data', 'has display');
       } else if ((/adb/).test(command)) {
         if (args.some(regExTest.bind(/^shell$/)) &&
             args.some(regExTest.bind(/^ps$/))) {
-          global.setTimeout(function() {
-            proc.stdout.emit('data',
-                'USER PID PPID VSIZE RSS WCHAN PC NAME\n');
-            proc.stdout.emit('data',
-                'root 1 0 560 404 ffffffff 00000000 S /init\n');
-          }, 1);
+          proc.stdout.emit('data',
+              'USER PID PPID VSIZE RSS WCHAN PC NAME\n');
+          proc.stdout.emit('data',
+              'root 1 0 560 404 ffffffff 00000000 S /init\n');
         } else if (!args.some(regExTest.bind(/^force-stop$/)) &&
                    !args.some(regExTest.bind(/^dumpsys$/))) {
           // Ignore shell am force-stop and shell dumpsys *.
@@ -147,9 +143,7 @@ describe('browser_android_chrome small', function() {
     // Simulate adb shell getprop ro.product.device -> shmantra.
     spawnStub.callback = function(proc, command, args) {
       if (/adb$/.test(command) && -1 !== args.indexOf('ro.product.device')) {
-        global.setTimeout(function() {
-          proc.stdout.emit('data', 'shmantra');
-        }, 1);
+        proc.stdout.emit('data', 'shmantra');
         return false;
       }
       return true;  // Keep capture alive.
@@ -220,9 +214,7 @@ describe('browser_android_chrome small', function() {
     spawnStub.callback = function(proc, command, args) {
       if (/adb$/.test(command) &&
           args.some(new RegExp().test.bind(/STORAGE/))) {  // Find storage dir.
-        global.setTimeout(function() {
-          proc.stdout.emit('data', '/gagacard');
-        }, 1);
+        proc.stdout.emit('data', '/gagacard');
       }
       return false;
     };
@@ -288,9 +280,7 @@ describe('browser_android_chrome small', function() {
         keepAlive = shellStub.callback(proc, command, args);
       }
       if (undefined !== stdout) {
-        global.setTimeout(function() {
-          proc.stdout.emit('data', stdout);
-        }, 1);
+        proc.stdout.emit('data', stdout);
       }
       return keepAlive;
     };

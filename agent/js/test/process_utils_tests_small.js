@@ -194,9 +194,7 @@ describe('process_utils small', function() {
       } else {
         throw new Error('Unexpected command: ' + command);
       }
-      global.setTimeout(function() {
-        proc.stdout.emit('data', stdout);
-      }.bind(this), 1);
+      proc.stdout.emit('data', stdout);
       return false;
     };
 

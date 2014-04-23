@@ -674,7 +674,7 @@ BrowserAndroidChrome.prototype.scheduleIsAvailable = function() {
     this.adb_.shell(['cat', '/sys/class/power_supply/battery/temp'])
         .then(function(deviceTempStr) {
       if (deviceTempStr) {
-        var deviceTemp = parseInt(deviceTempStr) / 10.0;
+        var deviceTemp = parseInt(deviceTempStr, 10) / 10.0;
         if (deviceTemp > this.maxTemp) {
           throw new Error('Temperature: ' + deviceTemp +
               ' is higher than the maximum of ' + this.maxTemp);
