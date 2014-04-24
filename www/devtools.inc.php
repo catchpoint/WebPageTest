@@ -954,7 +954,7 @@ function DevToolsMatchEvent($filter, &$event, $startTime = null, $endTime = null
       array_key_exists('params', $event)) {
     if (isset($startTime) && $startTime) {
       $time = DevToolsEventEndTime($event);
-      if ($time < $startTime || (isset($endTime) && $endTime && $time >= $endTime))
+      if (isset($time) && $time && ($time < $startTime || (isset($endTime) && $endTime && $time >= $endTime)))
         $match = false;
     }
     if ($match && isset($filter)) {
