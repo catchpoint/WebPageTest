@@ -75,12 +75,12 @@ else
                          <input id="SubmitBtn" type="submit" value="Update List"><br>
                          <?php
                          if( isset($uid) || (isset($owner) && strlen($owner)) ) { ?>
-                             <input id="all" type="checkbox" name="all" <?php check_it($all);?> onclick="this.form.submit();"> Show tests from all users &nbsp;&nbsp;
+                             <label><input id="all" type="checkbox" name="all" <?php check_it($all);?> onclick="this.form.submit();"> Show tests from all users</label> &nbsp;&nbsp;
                              <?php
                          }
                          ?>
-                        <input id="video" type="checkbox" name="video" <?php check_it($onlyVideo);?> onclick="this.form.submit();"> Only list tests that include video &nbsp;&nbsp;
-                        <input id="nolimit" type="checkbox" name="nolimit" <?php check_it($nolimit);?> onclick="this.form.submit();"> Do not limit the number of results (warning, WILL be slow)
+                        <label><input id="video" type="checkbox" name="video" <?php check_it($onlyVideo);?> onclick="this.form.submit();"> Only list tests that include video</label> &nbsp;&nbsp;
+                        <label><input id="nolimit" type="checkbox" name="nolimit" <?php check_it($nolimit);?> onclick="this.form.submit();"> Do not limit the number of results (warning, WILL be slow)</label>
 
                 </form>
                 <h4>Clicking on an url will bring you to the results for that test</h4>
