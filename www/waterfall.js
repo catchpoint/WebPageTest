@@ -190,3 +190,9 @@ $(".waterfall-transparency").change(function() {
     var id = this.name;
     $("#" + id).css({ opacity: newValue });
 });
+
+$(".waterfall-transparency").on('input', function() {
+    var newValue = this.value;
+    var id = this.name;
+    $("#" + id).css({ opacity: newValue });
+});
