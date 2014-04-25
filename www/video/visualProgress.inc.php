@@ -92,7 +92,7 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
             $final_histogram = GetImageHistogram("$video_directory/$last_file", $options);
             foreach($frames['frames'] as $time => &$frame) {
                 $histogram = GetImageHistogram("$video_directory/{$frame['file']}", $options);
-                $frame['progress'] = CalculateFrameProgress($histogram, $start_histogram, $final_histogram, $options);
+                $frame['progress'] = CalculateFrameProgress($histogram, $start_histogram, $final_histogram, 5);
                 if ($frame['progress'] == 100 && !array_key_exists('complete', $frames))
                     $frames['complete'] = $time;
             }
@@ -220,37 +220,39 @@ function GetImageHistogram($image_file, $options = null) {
 /**
 * Calculate how close a given histogram is to the final
 */
-function CalculateFrameProgress(&$histogram, &$start_histogram, &$final_histogram, $options) {
-    $progress = 0;
-    $channels = array('r', 'g', 'b');
-    $totalWeight = count($channels);
-    if (isset($options) && array_key_exists('weights', $options) && is_array($options['weights'])) {
-        $totalWeight = 0;
-        foreach ($channels as $index => $channel) {
-            if (array_key_exists($index, $options['weights']))
-                $totalWeight += $options['weights'][$index];
-            else
-                $options['weights'][$index] = 0;
+function CalculateFrameProgress(&$histogram, &$start_histogram, &$final_histogram, $slop) {
+  $progress = 0;
+  $channels = array_keys($histogram);
+  $channelCount = count($channels);
+  foreach ($channels as $index => $channel) {
+    $total = 0;
+    $matched = 0;
+    $buckets = count($histogram[$channel]);
+    
+    // First build an array of the actual changes in the current histogram.
+    $available = array();
+    for ($i = 0; $i < $buckets; $i++)
+      $available[$i] = abs($histogram[$channel][$i] - $start_histogram[$channel][$i]);
+
+    // Go through the target differences and subtract any matches from the array as we go,
+    // counting how many matches we made.
+    for ($i = 0; $i < $buckets; $i++) {
+      $target = abs($final_histogram[$channel][$i] - $start_histogram[$channel][$i]);
+      if ($target) {
+        $total += $target;
+        $min = max(0, $i - $slop);
+        $max = min($buckets - 1, $i + $slop);
+        for ($j = $min; $j <= $max; $j++) {
+          $thisMatch = min($target, $available[$j]);
+          $available[$j] -= $thisMatch;
+          $matched += $thisMatch;
+          $target -= $thisMatch;
         }
+      }
     }
-    foreach ($channels as $index => $channel) {
-        $weight = 1;
-        if (isset($options) && array_key_exists('weights', $options) && is_array($options['weights']) && array_key_exists($index, $options['weights'])) {
-            $weight = $options['weights'][$index];
-        }
-        $total = 0;
-        $achieved = 0;
-        $buckets = count($final_histogram[$channel]);
-        for ($i = 0; $i < $buckets; $i++) {
-            $total += abs($final_histogram[$channel][$i] - $start_histogram[$channel][$i]);
-        }
-        for ($i = 0; $i < $buckets; $i++) {
-            $achieved += min(abs($final_histogram[$channel][$i] - $start_histogram[$channel][$i]), abs($histogram[$channel][$i] - $start_histogram[$channel][$i]));
-        }
-        if ($totalWeight)
-            $progress += (($achieved / $total) * $weight) / $totalWeight;
-    }
-    return floor($progress * 100);
+    $progress += ($matched / $total) / $channelCount;
+  }
+  return floor($progress * 100);
 }
 
 /**
