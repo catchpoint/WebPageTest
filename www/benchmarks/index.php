@@ -65,6 +65,7 @@ if (array_key_exists('f', $_REQUEST)) {
                             <option value="median" <?php if ($aggregate == 'median') echo "selected"; ?>>Median</option>
                             <option value="75pct" <?php if ($aggregate == '75pct') echo "selected"; ?>>75th Percentile</option>
                             <option value="95pct" <?php if ($aggregate == '95pct') echo "selected"; ?>>95th Percentile</option>
+                            <option value="stddev" <?php if ($aggregate == 'stddev') echo "selected"; ?>>Standard Deviation</option>
                             <option value="count" <?php if ($aggregate == 'count') echo "selected"; ?>>Count</option>
                         </select>
                         <br>
