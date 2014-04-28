@@ -17,6 +17,7 @@ function GetTestStatus($id, $includePosition = true) {
   global $testQueue;
   
   $ret = array('statusCode' => 400, 'statusText' => 'Test not found', 'id' => $id);
+  $now = time();
   RestoreTest($id);
   $testPath = './' . GetTestPath($id);
   if (is_dir($testPath) && is_file("$testPath/testinfo.ini")) {
@@ -58,7 +59,6 @@ function GetTestStatus($id, $includePosition = true) {
                 isset($test['test']['completeTime'])) {
               $ret['startTime'] = $test['test']['startTime'];
               $start = $testInfoJson['started'];
-              $now = time();
               $elapsed = 0;
               if ($now > $start)
                 $elapsed = $now - $start;
@@ -209,7 +209,7 @@ function GetTestStatus($id, $includePosition = true) {
                       $ret['statusText'] = 'Test Complete';
                       $ret['completeTime'] = $date;
                       logTestMsg($id, "The test was not started but the test job could not be found.  Forcing it to end.");
-                      SaveTestInfo($testInfoJson());
+                      SaveTestInfo($id, $testInfoJson);
                     }
                     UnlockTest($lock);
                   }
