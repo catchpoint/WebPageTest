@@ -2210,12 +2210,6 @@ function GetTestInfo($testIdOrPath) {
       $lock = Lock("Test Info $testPath");
       if ($lock) {
         $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-/*        if (!$testInfo) {
-          $testInfo = RebuildTestInfo($testPath);
-          if ($testInfo)
-            gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
-        }
-*/
         Unlock($lock);
       }
     }
@@ -2254,42 +2248,6 @@ function CopyArrayEntry(&$src, &$dest, $srcEntry, $destEntry = null) {
   if (array_key_exists($srcEntry, $src))
     $dest[$destEntry] = $src[$srcEntry];  
 }
-
-/**
-* Rebuild a damaged testinfo.json from testinfo.ini or the raw files on disk.
-* This shouldn't happen but I've seen several cases of it.
-*/
-function RebuildTestInfo($testPath) {
-  $testInfo = false;
-  if (is_file("$testPath/testinfo.ini")) {
-    $ini = parse_ini_file("$testPath/testinfo.ini", true);
-    if (is_array($ini) && array_key_exists('test', $ini) && is_array($ini['test'])) {
-      $testInfo = array();
-      CopyArrayEntry($ini['test'], $testInfo, 'id');
-      CopyArrayEntry($ini['test'], $testInfo, 'runs');
-      CopyArrayEntry($ini['test'], $testInfo, 'fvonly');
-      CopyArrayEntry($ini['test'], $testInfo, 'loc', 'location');
-      CopyArrayEntry($ini['test'], $testInfo, 'batch');
-      CopyArrayEntry($ini['test'], $testInfo, 'sensitive');
-      CopyArrayEntry($ini['test'], $testInfo, 'notify');
-      CopyArrayEntry($ini['test'], $testInfo, 'uid');
-      CopyArrayEntry($ini['test'], $testInfo, 'owner');
-      CopyArrayEntry($ini['test'], $testInfo, 'type');
-      CopyArrayEntry($ini['test'], $testInfo, 'connectivity');
-      CopyArrayEntry($ini['test'], $testInfo, 'bwIn');
-      CopyArrayEntry($ini['test'], $testInfo, 'bwOut');
-      CopyArrayEntry($ini['test'], $testInfo, 'latency');
-      CopyArrayEntry($ini['test'], $testInfo, 'plr');
-      CopyArrayEntry($ini['test'], $testInfo, 'median_video');
-      if (array_key_exists('startTime', $ini['test']))
-        $testInfo['started'] = time();
-      if (array_key_exists('completeTime', $ini['test']))
-        $testInfo['completed'] = time();
-    }
-  }
-  return $testInfo;
-}
-
 
 function IsTestRunComplete($run, &$testInfo) {
   $completed = false;

@@ -2,32 +2,24 @@
 chdir('..');
 include 'common.inc';
 require_once('video/avi2frames.inc.php');
+require_once('archive.inc');
 set_time_limit(1200);
 header ("Content-type: text/plain");
 
 if (ValidateTestId($id)) {
   RestoreTest($id);
-  $testPath = './' . GetTestPath($id);
-  if (is_dir($testPath)) {
-    $videoFiles = glob("$testPath/*.mp4");
-    if ($videoFiles && is_array($videoFiles) && count($videoFiles)) {
-      foreach($videoFiles as $video) {
-        if (preg_match('/^.*\/(?P<run>[0-9])+(?P<cached>_Cached)?_video\.mp4$/i', $video, $matches)) {
-          echo "Reprocessing $video...\n";
-          $run = $matches['run'];
-          $cached = array_key_exists('cached', $matches) ? 1 : 0;
-          $videoDir = "$testPath/video_$run";
-          if ($cached)
-            $videoDir .= '_cached';
-          delTree($videoDir, false);
-          ProcessAVIVideo($id, $testPath, $run, $cached);
-        }
-      }
-    } else {
-      echo "No video files found";
+  ReprocessVideo($id);
+  // If the test was already archived, re-archive it.
+  $testInfo = GetTestInfo($id);
+  if (array_key_exists('archived', $testInfo) && $testInfo['archived']) {
+    $lock = LockTest($id);
+    if (isset($lock)) {
+      $testInfo = GetTestInfo($id);
+      $testInfo['archived'] = false;
+      SaveTestInfo($id, $testInfo);
+      UnlockTest($lock);
     }
-  } else {
-    echo "Test not found";
+    ArchiveTest($id);
   }
 } else {
   echo "Invalid Test ID";
