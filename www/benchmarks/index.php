@@ -116,7 +116,7 @@ if (array_key_exists('f', $_REQUEST)) {
                       $hours = intval(floor($elapsed / 3600));
                       $elapsed -= $hours * 3600;
                       $minutes = intval(floor($elapsed / 60));
-                      echo "Benchmark is running - completed $completed of $total tests in $hours hours and $minutes minutes.<br>";
+                      echo "<a href=\"partial.php?benchmark=$bm\">Benchmark is running</a> - completed $completed of $total tests in $hours hours and $minutes minutes.<br>";
                     }
                   }
                 }
