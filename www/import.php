@@ -139,6 +139,27 @@ if (array_key_exists('tests', $_REQUEST)) {
         move_uploaded_file($_FILES['tcpdump']['tmp_name'], "$testPath/$run.cap");
       }
       
+      // custom metrics
+      if (array_key_exists('metrics', $_REQUEST) &&
+          strlen($_REQUEST['metrics'])) {
+        $lines = explode("\n", $_REQUEST['metrics']);
+        $metrics = array();
+        foreach($lines as $line) {
+          if (preg_match('/(?P<metric>[a-zA-Z0-9\._\-\[\]{}():;<>+$#@!~]+)=(?P<value>[0-9]*(\.[0-9]*)?)/', $line, $matches)) {
+            $metric = trim($matches['metric']);
+            $value = trim($matches['value']);
+            if (strpos($value, '.') === false)
+              $value = intval($value);
+            else
+              $value = floatval($value);
+            if (strlen($metric) && strlen($value))
+              $metrics[$metric] = $value;
+          }
+        }
+        if (count($metrics))
+          gz_file_put_contents("$testPath/{$run}_metrics.json", json_encode($metrics));
+      }
+      
       // create the test info files
       SaveTestInfo($id, $test);
 
@@ -270,6 +291,10 @@ if (array_key_exists('tests', $_REQUEST)) {
                       </li>';
               }
               ?>
+              <li>
+                <textarea name="metrics" id="metrics" value="" cols="80" rows=10></textarea>
+                <label for="metrics">Custom Metrics<br><small>One metric per line:<br>metric=value</small></label>
+              </li>
             </ul>
             <input type="submit" value="Submit">
           </div>

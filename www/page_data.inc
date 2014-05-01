@@ -54,10 +54,8 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
 {
     $ret = null;
 
-    if( $cached )
-        $ret = loadPageData("$testPath/{$run}_Cached_IEWPG.txt", $options);
-    else
-        $ret = loadPageData("$testPath/{$run}_IEWPG.txt", $options);
+    $cachedText = $cached ? '_Cached' : '';
+    $ret = loadPageData("$testPath/{$run}{$cachedText}_IEWPG.txt", $options);
     if (!isset($ret) || !is_array($ret) || !count($ret))
         GetDevToolsRequests($testPath, $run, $cached, $requests, $ret);
     
@@ -68,6 +66,19 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
     if (isset($ret) && !$basic_results) {
         $startOffset = array_key_exists('testStartOffset', $ret) ? intval(round($ret['testStartOffset'])) : 0;
         loadUserTimingData($ret, $testPath, $run, $cached);
+
+        // see if we have custom metrics to load
+        if (gz_is_file("$testPath/{$run}{$cachedText}_metrics.json")) {
+          $custom_metrics = json_decode(gz_file_get_contents("$testPath/{$run}{$cachedText}_metrics.json"), true);
+          if ($custom_metrics && is_array($custom_metrics) && count($custom_metrics)) {
+            $ret["custom"] = array();
+            foreach ($custom_metrics as $metric => $value) {
+              $ret[$metric] = $value;
+              $ret["custom"][] = $metric;
+            }
+          }
+        }
+        
         if (array_key_exists('loadTime', $ret) &&
             !$ret['loadTime'] &&
             array_key_exists('fullyLoaded', $ret) &&

@@ -41,6 +41,15 @@ $pageData = loadAllPageData($testPath);
                             'bytesInDoc' => 'Bytes In (KB - onload)', 
                             'bytesIn' => 'Bytes In (KB - Fully Loaded)', 
                             'browser_version' => 'Browser Version');
+            foreach ($pageData as &$pageRun)
+              foreach ($pageRun as &$data) {
+                if (array_key_exists('custom', $data) && is_array($data['custom']) && count($data['custom'])) {
+                  foreach ($data['custom'] as $metric) {
+                    if (!array_key_exists($metric, $metrics))
+                      $metrics[$metric] = "Custom metric - $metric";
+                  }
+                }
+              }
             if (array_key_exists('testinfo', $test) && !$test['testinfo']['video']) {
                 unset($metrics['SpeedIndex']);
             }
