@@ -15,6 +15,7 @@ if (array_key_exists('benchmark', $_REQUEST)) {
 if (array_key_exists('f', $_REQUEST)) {
     $out_data = array();
 } else {
+  $INCLUDE_ERROR_BARS = true;
 ?>
 <!DOCTYPE html>
 <html>
@@ -219,6 +220,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
     global $count;
     global $aggregate;
     global $out_data;
+    global $INCLUDE_ERROR_BARS;
     $chart_title = '';
     if (isset($title))
         $chart_title = "title: \"$title (First View)\",";
@@ -226,6 +228,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
     if (isset($loc)) {
         $bmname .= ".$loc";
     }
+    $errorBars = $INCLUDE_ERROR_BARS && $aggregate == 'median' ? 'customBars: true,' : '';
     $tsv = LoadDataTSV($benchmark['name'], 0, $metric, $aggregate, $loc, $annotations);
     if (isset($out_data)) {
         if (!array_key_exists($bmname, $out_data)) {
@@ -250,6 +253,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                     colors: ['#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101'],
                     pointClickCallback: function(e, p) {SelectedPoint(\"{$benchmark['name']}\", \"$metric\", p.name, p.xval, false);},
                     $chart_title
+                    $errorBars
                     legend: \"always\"}
                 );";
         if (isset($annotations) && count($annotations)) {
@@ -280,6 +284,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                         colors: ['#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101'],
                         pointClickCallback: function(e, p) {SelectedPoint(\"{$benchmark['name']}\", \"$metric\", p.name, p.xval, true);},
                         $chart_title
+                        $errorBars
                         legend: \"always\"}
                     );";
             if (isset($annotations) && count($annotations)) {

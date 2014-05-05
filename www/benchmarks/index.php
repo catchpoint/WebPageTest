@@ -11,6 +11,7 @@ if (array_key_exists('aggregate', $_REQUEST))
 if (array_key_exists('f', $_REQUEST)) {
     $out_data = array();
 } else {
+  $INCLUDE_ERROR_BARS = true;
 ?>
 <!DOCTYPE html>
 <html>
@@ -155,6 +156,7 @@ function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
     global $count;
     global $aggregate;
     global $out_data;
+    global $INCLUDE_ERROR_BARS;
     $label = 'Speed Index (First View)';
     $chart_title = '';
     if (isset($title))
@@ -163,6 +165,7 @@ function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
     if (isset($loc)) {
         $bmname .= ".$loc";
     }
+    $errorBars = $INCLUDE_ERROR_BARS && $aggregate == 'median' ? 'customBars: true,' : '';
     $tsv = LoadDataTSV($benchmark['name'], 0, 'SpeedIndex', $aggregate, $loc, $annotations);
     $metric = 'SpeedIndex';
     if (!isset($tsv) || !strlen($tsv)) {
@@ -191,6 +194,7 @@ function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
                     labelsSeparateLines: true,
                     colors: ['#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101'],
                     $chart_title
+                    $errorBars
                     labelsDiv: document.getElementById('{$id}_legend'),
                     pointClickCallback: function(e, p) {SelectedPoint(\"{$benchmark['name']}\", \"$metric\", p.name, p.xval, false);},
                     legend: \"always\",
@@ -232,6 +236,7 @@ function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
                         labelsSeparateLines: true,
                         colors: ['#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101'],
                         $chart_title
+                        $errorBars
                         labelsDiv: document.getElementById('{$id}_legend'),
                         pointClickCallback: function(e, p) {SelectedPoint(\"{$benchmark['name']}\", \"$metric\", p.name, p.xval, true);},
                         legend: \"always\",

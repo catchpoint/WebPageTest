@@ -111,10 +111,15 @@ function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc, &$annotatio
                     if (array_key_exists($configuration['name'], $row) && array_key_exists($location['location'], $row[$configuration['name']])) {
                         $value = $row[$configuration['name']][$location['location']];
                         if ($aggregate != 'count') {
-                            if ($isbytes)
-                                $value = number_format($value / 1024.0, 3, '.', '');
-                            elseif ($istime)
-                                $value = number_format($value / 1000.0, 3, '.', '');
+                            $divisor = $isbytes ? 1024.0 : 1000.0;
+                            if (strpos($value, ';') === false) {
+                              $value = number_format($value / $divisor, 3, '.', '');
+                            } else {
+                              $values = explode(';', $value);
+                              foreach($values as $index => $val)
+                                $values[$index] = number_format($val / $divisor, 3, '.', '');
+                              $value = implode(';', $values);
+                            }
                         }
                         $tsv .= $value;
                     }
@@ -164,6 +169,7 @@ function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc, &$annotatio
 function LoadData(&$data, &$configurations, $benchmark, $cached, $metric, $aggregate, $loc) {
     $ok = false;
     global $start_time;
+    global $INCLUDE_ERROR_BARS;
     $data = array();
     if (GetConfigurationNames($benchmark, $configurations, $loc, $loc_aliases)) {
         $data_file = "./results/benchmarks/$benchmark/aggregate/$metric.json";
@@ -190,13 +196,19 @@ function LoadData(&$data, &$configurations, $benchmark, $cached, $metric, $aggre
                             }
                             if (!isset($loc) || $loc == $location) {
                                 $ok = true;
-                                if (!array_key_exists($time, $data)) {
+                                if (!array_key_exists($time, $data))
                                     $data[$time] = array();
-                                }
-                                if (!array_key_exists($config, $data[$time])) {
+                                if (!array_key_exists($config, $data[$time]))
                                     $data[$time][$config] = array();
+                                $mid = $row[$aggregate];
+                                if ($INCLUDE_ERROR_BARS && $aggregate == 'median') {
+                                  $low = array_key_exists('confLow', $row) ? $row['confLow'] : $mid;
+                                  $high = array_key_exists('confHigh', $row) ? $row['confHigh'] : $mid;
+                                  $value = "$low;$mid;$high";
+                                } else {
+                                  $value = $mid;
                                 }
-                                $data[$time][$config][$location] = $row[$aggregate];
+                                $data[$time][$config][$location] = $value;
                             }
                         }
                     }

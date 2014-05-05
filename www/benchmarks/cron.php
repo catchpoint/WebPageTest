@@ -190,7 +190,8 @@ function ProcessBenchmark($benchmark) {
         }
         
         // see if we need to kick off a new benchmark run
-        if (!$state['running'] && !array_key_exists('tests', $state)) {
+        if (!$state['running'] &&
+            (!array_key_exists('tests', $state) || !is_array($state['tests']) || !count($state['tests']))) {
             if (!array_key_exists('last_run', $state))
                 $state['last_run'] = 0;
             $now = time();
@@ -777,42 +778,49 @@ function AggregateMetricByLabel($metric, $info, &$data, $run_time, &$agg_data, $
 * @param mixed $records
 */
 function CalculateMetrics(&$records) {
-    $entry = null;
-    sort($records, SORT_NUMERIC);
-    $count = count($records);
-    if ($count) {
-        $entry = array('count' => $count);
-        // average
-        $sum = 0;
-        foreach ($records as $value) {
-            $sum += $value;
-        }
-        $avg = $sum / $count;
-        $entry['avg'] = $avg;
-        // geometric mean
-        $sum = 0.0;
-        foreach($records as $value) {
-             $sum += log(doubleval($value));
-        }
-        $entry['geo-mean'] = exp($sum/$count);  
-        // median
-        if ($count %2) {
-            $entry['median'] = $records[floor($count * 0.5)];
-        } else {
-            $entry['median'] = intval(round(($records[floor($count * 0.5)] + $records[floor($count * 0.5) - 1]) / 2));
-        }
-        // 75th percentile
-        $entry['75pct'] = $records[floor($count * 0.75)];  // 0-based array, hence the floor instead of ceil
-        // 95th percentile
-        $entry['95pct'] = $records[floor($count * 0.95)];  // 0-based array, hence the floor instead of ceil
-        // standard deviation
-        $sum = 0;
-        foreach ($records as $value) {
-            $sum += pow($value - $avg, 2);
-        }
-        $entry['stddev'] = sqrt($sum / $count);
-    }
-    return $entry;
+  $entry = null;
+  sort($records, SORT_NUMERIC);
+  $count = count($records);
+  if ($count) {
+    $entry = array('count' => $count);
+
+    // average
+    $sum = 0;
+    foreach ($records as $value)
+      $sum += $value;
+    $avg = $sum / $count;
+    $entry['avg'] = $avg;
+
+    // geometric mean
+    $sum = 0.0;
+    foreach($records as $value)
+      $sum += log(doubleval($value));
+    $entry['geo-mean'] = exp($sum/$count);  
+
+    // median
+    if ($count %2)
+      $entry['median'] = $records[floor($count * 0.5)];
+    else
+      $entry['median'] = intval(round(($records[floor($count * 0.5)] + $records[floor($count * 0.5) - 1]) / 2));
+    
+    // confidence interval for median using calculation from
+    // here: https://epilab.ich.ucl.ac.uk/coursematerial/statistics/non_parametric/confidence_interval.html
+    $entry['confLow'] =  $records[max(0, min($count - 1, intval(round(($count / 2) - ((1.96 * sqrt($count)) / 2)))))];
+    $entry['confHigh'] = $records[max(0, min($count - 1, intval(round(1 + ($count / 2) + ((1.96 * sqrt($count)) / 2)))))];
+
+    // 75th percentile
+    $entry['75pct'] = $records[floor($count * 0.75)];  // 0-based array, hence the floor instead of ceil
+
+    // 95th percentile
+    $entry['95pct'] = $records[floor($count * 0.95)];  // 0-based array, hence the floor instead of ceil
+
+    // standard deviation
+    $sum = 0;
+    foreach ($records as $value)
+      $sum += pow($value - $avg, 2);
+    $entry['stddev'] = sqrt($sum / $count);
+  }
+  return $entry;
 }
 
 /**

@@ -21,6 +21,7 @@ if (ValidateTestId($id)) {
     }
     ArchiveTest($id);
   }
+  echo "Done";
 } else {
   echo "Invalid Test ID";
 }
