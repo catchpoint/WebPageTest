@@ -39,11 +39,12 @@ foreach( $files as $file ) {
           $alert = "has not checked for new jobs in $minutes minutes.";
           $collected .= "$loc - $minutes minutes";
         } elseif (array_key_exists('agents', $locations[$loc]) && $locations[$loc]['agents']) {
-          $expected = $locations[$loc]['agents'];
+          $configured = $locations[$loc]['agents'];
+          $expected = array_key_exists('min-agents', $locations[$loc]) ? $locations[$loc]['min-agents'] : $configured;
           $testers = GetTesterCount($loc);
-          $missing = $expected - $testers;
-          if ($missing > 0) {
-            $alert = "has $missing agents offline ($count connected, $expected expected).";
+          if ($testers < $expected) {
+            $missing = $configured - $testers;
+            $alert = "has $missing agents offline ($testers connected, minimum of $expected of the $configured required).";
             $collected .= "$loc - $missing agents offline";
           }
         }
