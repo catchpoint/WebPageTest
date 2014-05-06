@@ -540,7 +540,8 @@ function AggregateResults($benchmark, &$state, $options) {
                                 'responses_other', 'browser_version', 'server_rtt', 'docCPUms');
 
     // loop through all of the runs and see which ones we don't have aggregates for
-    foreach ($state['runs'] as $run_time) {
+    $runs = array_reverse($state['runs']);
+    foreach ($runs as $run_time) {
         if (!array_key_exists($run_time, $info['runs'])) {
             $file_name = "./results/benchmarks/$benchmark/data/" . gmdate('Ymd_Hi', $run_time) . '.json';
             logMsg("Aggregating Results for $file_name", "./log/$logFile", true);
