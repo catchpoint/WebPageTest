@@ -140,7 +140,7 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
     
     // Network events
     if (message === 'Network.requestWillBeSent') {
-      if (params.request.url.indexOf('http') == 0) {
+      if (params['request'] !== undefined && params.request.url.indexOf('http') == 0) {
         // see if it is a redirect
         if (params['redirectResponse'] !== undefined &&
             g_instance.requests[params.requestId] !== undefined) {
@@ -163,8 +163,9 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
         detail.url = params.request.url;
         detail.initiator = params.initiator;
         detail.startTime = params.timestamp;
-        if (params['request'] !== undefined)
-          detail.request = params.request;
+        detail.request = params.request;
+        detail.fromNet = true;
+        detail.bytesIn = 0;
         g_instance.requests[params.requestId] = detail;
       }
     } else if (message === 'Network.dataReceived') {
@@ -186,11 +187,26 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       if (!params.response.fromDiskCache &&
           g_instance.requests[params.requestId] !== undefined &&
           g_instance.requests[params.requestId]['fromNet'] !== false) {
-        g_instance.requests[params.requestId].fromNet = true;
         if (g_instance.requests[params.requestId]['firstByteTime'] === undefined) {
           g_instance.requests[params.requestId].firstByteTime = params.timestamp;
         }
         g_instance.requests[params.requestId].response = params.response;
+        var request = g_instance.requests[params.requestId];
+        var done = false;
+        if (request.response.headers['Content-Length'] !== undefined &&
+            parseInt(request.response.headers['Content-Length']) === 0)
+          done = true;
+        else if (request.response.headers['content-length'] !== undefined &&
+                 parseInt(request.response.headers['content-length']) === 0)
+          done = true;
+        if (done ||
+            (request.response['status'] !== undefined &&
+             request.response.status !== 200 &&
+             request.response.status !== 100)) {
+          request.endTime = params.timestamp;
+          wpt.chromeDebugger.sendRequestDetails(request);
+          delete g_instance.requests[params.requestId];
+        }
       }
     } else if (message === 'Network.requestServedFromCache') {
       if (!g_instance.receivedData)
@@ -202,23 +218,15 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
         wpt.chromeDebugger.SendReceivedData();
       if (g_instance.requests[params.requestId] !== undefined) {
         if (g_instance.requests[params.requestId]['fromNet']) {
-          request = g_instance.requests[params.requestId];
+          var request = g_instance.requests[params.requestId];
           request.endTime = params.timestamp;
-          if (!request['bytesIn'] &&
-              request['response'] !== undefined &&
-              request.response['headers'] !== undefined) {
-              if (request.response.headers['Content-Length'] !== undefined)
-                request['bytesIn'] = request.response.headers['Content-Length'] + request.response.headers.join("\r\n").length
-              else if (request.response.headers['content-length'] !== undefined)
-                request['bytesIn'] = request.response.headers['content-length'] + request.response.headers.join("\r\n").length
-          }
           wpt.chromeDebugger.sendRequestDetails(request);
         }
         delete g_instance.requests[params.requestId];
       }
     } else if (message === 'Network.loadingFailed') {
       if (g_instance.requests[params.requestId] !== undefined) {
-        request = g_instance.requests[params.requestId];
+        var request = g_instance.requests[params.requestId];
         request.endTime = params.timestamp;
         request.error = params.errorText;
         request.errorCode =
@@ -266,6 +274,26 @@ wpt.chromeDebugger.OnAttachDebugger = function() {
  */
 wpt.chromeDebugger.sendRequestDetails = function(request) {
   var valid = false;
+  if (!request['bytesIn'] &&
+      request['response'] !== undefined &&
+      request.response['headers'] !== undefined) {
+    var headerlength = 0;
+    if (request.response['headersText'] !== undefined) {
+      headerlength = request.response['headersText'].length;
+    } else {
+      try {
+        for (var key in request.response.headers) {
+          headerlength += key.length + 4; // include the colon, space and \r\n
+          if (request.response.headers[key] !== undefined)
+            headerlength += request.response.headers[key].length;
+        }    
+      } catch(e) {}
+    }
+    if (request.response.headers['Content-Length'] !== undefined)
+      request['bytesIn'] = parseInt(request.response.headers['Content-Length']) + headerlength;
+    else if (request.response.headers['content-length'] !== undefined)
+      request['bytesIn'] = parseInt(request.response.headers['content-length']) + headerlength;
+  }
   var eventData = 'browser=chrome\n';
   eventData += 'url=' + request.url + '\n';
   if (request['errorCode'] !== undefined)
@@ -383,6 +411,11 @@ wpt.chromeDebugger.sendRequestDetails = function(request) {
 wpt.chromeDebugger.SendReceivedData = function() {
   g_instance.receivedData = true;
   wpt.chromeDebugger.sendEvent('received_data', '');
+};
+
+wpt.chromeDebugger.Trace = function(msg) {
+  g_instance.receivedData = true;
+  wpt.chromeDebugger.sendEvent('trace', msg);
 };
 
 /**
