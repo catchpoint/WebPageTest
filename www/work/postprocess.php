@@ -29,15 +29,20 @@ if (array_key_exists('test', $_REQUEST)) {
     $testInfo = GetTestInfo($id);
     
     // see if we need to log the raw test data
-    $resultUrl = "http://{$_SERVER['HTTP_HOST']}/results.php?test=$id";
     $pageLog = GetSetting('logTestResults');
     if (isset($pageLog) && $pageLog !== false && strlen($pageLog)) {
       $pageData = loadAllPageData($testPath);
       if (isset($pageData) && is_array($pageData)) {
         foreach($pageData as $run => &$pageRun) {
           foreach($pageRun as $cached => &$testData) {
-            $testData['runId'] = "$id.$run.$cached";
-            $testData['resultUrl'] = $resultUrl;
+            $testData['testUrl'] = $testInfo['url'];
+            $testData['testLabel'] = $testInfo['label'];
+            $testData['testLocation'] = $testInfo['location'];
+            $testData['testBrowser'] = $testInfo['browser'];
+            $testData['testConnectivity'] = $testInfo['connectivity'];
+            $testData['tester'] = array_key_exists('test_runs', $testInfo) && array_key_exists($run, $testInfo['test_runs']) && array_key_exists('tester', $testInfo['test_runs'][$run]) ? $testInfo['test_runs'][$run]['tester'] : $testInfo['tester'];
+            $testData['testRunId'] = "$id.$run.$cached";
+            $testData['testResultUrl'] = "http://{$_SERVER['HTTP_HOST']}/details.php?test=$id&run=$run&cached=$cached";
             error_log(json_encode($testData) . "\n", 3, $pageLog);
           }
         }
@@ -54,8 +59,14 @@ if (array_key_exists('test', $_REQUEST)) {
           $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
           if (isset($requests) && is_array($requests)) {
             foreach ($requests as &$request) {
-              $request['runId'] = "$id.$run.$cached";
-              $request['resultUrl'] = $resultUrl;
+              $request['testUrl'] = $testInfo['url'];
+              $request['testLabel'] = $testInfo['label'];
+              $request['testLocation'] = $testInfo['location'];
+              $request['testBrowser'] = $testInfo['browser'];
+              $request['testConnectivity'] = $testInfo['connectivity'];
+              $request['tester'] = array_key_exists('test_runs', $testInfo) && array_key_exists($run, $testInfo['test_runs']) && array_key_exists('tester', $testInfo['test_runs'][$run]) ? $testInfo['test_runs'][$run]['tester'] : $testInfo['tester'];
+              $request['testRunId'] = "$id.$run.$cached";
+              $request['testResultUrl'] = "http://{$_SERVER['HTTP_HOST']}/details.php?test=$id&run=$run&cached=$cached";
               error_log(json_encode($request) . "\n", 3, $requestsLog);
             }
           }
