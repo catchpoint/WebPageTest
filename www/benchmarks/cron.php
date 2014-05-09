@@ -616,7 +616,6 @@ function AggregateMetric($metric, $info, &$data, $run_time, &$agg_data, $options
             array_key_exists('location', $record) && 
             strlen($record['config']) &&
             strlen($record['location']) &&
-            $record['loadTime'] != 0 &&
             ($record['result'] == 0 || $record['result'] == 99999)) {
                 
             // make sure all of the metrics that we expect to be non-zero are
