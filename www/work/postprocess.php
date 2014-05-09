@@ -3,6 +3,7 @@ chdir('..');
 include('common_lib.inc');
 error_reporting(E_ERROR | E_PARSE);
 require_once('archive.inc');
+require_once 'page_data.inc';
 ignore_user_abort(true);
 set_time_limit(60*5*10);
 
@@ -26,6 +27,41 @@ if (array_key_exists('test', $_REQUEST)) {
   if (ValidateTestId($id)) {
     $testPath = './' . GetTestPath($id);
     $testInfo = GetTestInfo($id);
+    
+    // see if we need to log the raw test data
+    $resultUrl = "http://{$_SERVER['HTTP_HOST']}/results.php?test=$id";
+    $pageLog = GetSetting('logTestResults');
+    if (isset($pageLog) && $pageLog !== false && strlen($pageLog)) {
+      $pageData = loadAllPageData($testPath);
+      if (isset($pageData) && is_array($pageData)) {
+        foreach($pageData as $run => &$pageRun) {
+          foreach($pageRun as $cached => &$testData) {
+            $testData['runId'] = "$id.$run.$cached";
+            $testData['resultUrl'] = $resultUrl;
+            error_log(json_encode($testData) . "\n", 3, $pageLog);
+          }
+        }
+      }
+    }
+    $requestsLog = GetSetting('logTestRequests');
+    if (isset($requestsLog) && $requestsLog !== false && strlen($requestsLog)) {
+      require_once('object_detail.inc');
+      $max_cached = $testInfo['fvonly'] ? 0 : 1;
+      for ($run = 1; $run < $testInfo['runs']; $run++) {
+        for ($cached = 0; $cached <= $max_cached; $cached++) {
+          $secure = false;
+          $haveLocations = false;
+          $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
+          if (isset($requests) && is_array($requests)) {
+            foreach ($requests as &$request) {
+              $request['runId'] = "$id.$run.$cached";
+              $request['resultUrl'] = $resultUrl;
+              error_log(json_encode($request) . "\n", 3, $requestsLog);
+            }
+          }
+        }
+      }
+    }
 
     // log any slow tests
     $slow_test_time = GetSetting('slow_test_time');
@@ -114,8 +150,8 @@ if (array_key_exists('test', $_REQUEST)) {
 
     // send a beacon?
     if (isset($beaconUrl) && strlen($beaconUrl)) {
-      require_once 'page_data.inc';
-      $pageData = loadAllPageData($testPath);
+      if (!isset($pageData))
+        $pageData = loadAllPageData($testPath);
       include('./work/beacon.inc');
       SendBeacon($beaconUrl, $id, $testPath, $testInfo, $pageData);
     }

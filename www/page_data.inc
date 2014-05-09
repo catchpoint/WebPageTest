@@ -151,6 +151,9 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
     }
 
     if (isset($ret)) {
+        $ret['run'] = $run;
+        $ret['cached'] = $cached;
+        
         // calculate the effective bps
         if (array_key_exists('fullyLoaded', $ret) &&
             array_key_exists('TTFB', $ret) &&

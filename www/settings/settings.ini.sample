@@ -57,3 +57,14 @@ tcpdump_view="http://cloudshark.org/view?url="
 
 ;tsview time-series database
 ;tsviewdb=http://<server:port>/data/v1/
+
+; Serialize the test results to a log file in JSON format for
+; bulk logs processing (splunk, logster, flume, etc).
+; The directories must already exist and have permissions set so the web server
+; user can write to it.
+;
+; logTestResults - file for the page-level data to be logged
+; logTestRequests - file for the per-request data (each request for every test will be logged as a separate record)
+;
+;logTestResults=/var/log/webpagetest/page_data.log
+;logTestRequests=/var/log/webpagetest/requests.log
