@@ -7,6 +7,7 @@ $page_description = "WebPagetest benchmarks";
 $aggregate = 'median';
 if (array_key_exists('aggregate', $_REQUEST))
     $aggregate = $_REQUEST['aggregate'];
+$benchmarks = GetBenchmarks();
 
 if (array_key_exists('f', $_REQUEST)) {
     $out_data = array();
@@ -37,6 +38,47 @@ if (array_key_exists('f', $_REQUEST)) {
             ?>
             
             <script type="text/javascript">
+            var compareTo = undefined;
+            <?php
+            $bmData = array();
+            foreach ($benchmarks as &$benchmark) {
+              $entry = array();
+              $entry['title'] = array_key_exists('title', $benchmark) && strlen($benchmark['title']) ? $benchmark['title'] : $benchmark['name'];
+              $entry['configurations'] = array();
+              foreach ($benchmark['configurations'] as $name => &$config) {
+                $entry['configurations'][$name] = array();
+                $entry['configurations'][$name]['title'] = htmlspecialchars(array_key_exists('title', $config) && strlen($config['title']) ? $config['title'] : $name);
+                $entry['configurations'][$name]['locations'] = array();
+                foreach ($config['locations'] as $location)
+                  $entry['configurations'][$name]['locations'][] = htmlspecialchars($location);
+              }
+              $bmData[$benchmark['name']] = $entry;
+            }
+            echo "var benchmarks = " . json_encode($bmData) . ";\n";
+            ?>
+            function CompareTo(benchmark, config, location, time, title) {
+              if (compareTo === undefined) {
+                compareTo = {'title' : title,
+                             'benchmark' : benchmark,
+                             'config' : config,
+                             'location' : location,
+                             'time' : time};
+              } else {
+                var url = "compare.php?configs=";
+                url += encodeURIComponent(compareTo['benchmark']);
+                url += '~' + encodeURIComponent(compareTo['config']);
+                url += '~' + encodeURIComponent(compareTo['location']);
+                url += '~' + compareTo['time'];
+                url += ',' + encodeURIComponent(benchmark);
+                url += '~' + encodeURIComponent(config);
+                url += '~' + encodeURIComponent(location);
+                url += '~' + time;
+                window.location.href = url;
+              }
+              $.modal.close();
+              return false;
+            }
+            
             function SelectedPoint(benchmark, metric, series, time, cached) {
                 time = parseInt(time / 1000, 10);
                 var isCached = 0;
@@ -47,6 +89,27 @@ if (array_key_exists('f', $_REQUEST)) {
                 var delta = "delta.php?benchmark=" + encodeURIComponent(benchmark) + "&metric=" + encodeURIComponent(metric) + "&time=" + time;
                 menu += '<a href="' + scatter + '">Scatter Plot</a><br>';
                 menu += '<a href="' + delta + '">Comparison Distribution</a><br>';
+                menu += '<br>';
+                if (compareTo === undefined)
+                  menu += '<h4>Compare</h4>';
+                else
+                  menu += '<h4>Compare ' + compareTo['title'] + ' to:</h4>';
+                for (config in benchmarks[benchmark]['configurations']) {
+                  for (index in benchmarks[benchmark]['configurations'][config]['locations']) {
+                    var location = benchmarks[benchmark]['configurations'][config]['locations'][index];
+                    var title = benchmarks[benchmark]['configurations'][config]['title'];
+                    if (benchmarks[benchmark]['configurations'][config]['locations'].length > 1)
+                      title += ' ' + location;
+                    trailer = '';
+                    if (compareTo === undefined)
+                      trailer = ' to...';
+                    menu += '<a href="#" onclick="CompareTo(\'' + benchmark + '\',\'' 
+                            + config + '\',\'' 
+                            + location + '\',' 
+                            + time + ',\'' 
+                            + title + '\');">' + title + trailer + '</a><br>';
+                  }
+                }
                 menu += '</div>';
                 $.modal(menu, {overlayClose:true});
             }
@@ -85,7 +148,6 @@ if (array_key_exists('f', $_REQUEST)) {
             </div>
             <?php
 }
-            $benchmarks = GetBenchmarks();
             $count = 0;
             foreach ($benchmarks as &$benchmark) {
                 if (array_key_exists('title', $benchmark))
