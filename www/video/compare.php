@@ -77,7 +77,11 @@ else
                 <script language="JavaScript">
                 setTimeout( "window.location.reload(true)", 10000 );
                 </script>
-            <?php } $gaTemplate = 'Visual Comparison'; include ('head.inc'); ?>
+            <?php
+                }
+                $gaTemplate = 'Visual Comparison';
+                include ('head.inc');
+            ?>
             <style type="text/css">
             <?php
                 $bgcolor = '000000';

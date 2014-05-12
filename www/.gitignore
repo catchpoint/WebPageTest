@@ -21,4 +21,6 @@
 /settings/block*.txt
 /settings/whitelist.txt
 /settings/customrules.txt
+/settings/benchmarks/*
+!/settings/benchmarks/sample
 *.log
