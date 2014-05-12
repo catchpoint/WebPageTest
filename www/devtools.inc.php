@@ -654,6 +654,9 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                 $request['id'] = $id;
                 $rawRequests[$id] = $request;
             } elseif (array_key_exists($id, $rawRequests)) {
+                if (!array_key_exists('endTime', $rawRequests[$id]) || 
+                    $event['timestamp'] > $rawRequests[$id]['endTime'])
+                    $rawRequests[$id]['endTime'] = $event['timestamp'];
                 if ($event['method'] == 'Network.dataReceived') {
                     if (!array_key_exists('firstByteTime', $rawRequests[$id]))
                         $rawRequests[$id]['firstByteTime'] = $event['timestamp'];
@@ -668,9 +671,6 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                 }
                 if ($event['method'] == 'Network.responseReceived' &&
                     array_key_exists('response', $event)) {
-                    if (!array_key_exists('endTime', $rawRequests[$id]) || 
-                        $event['timestamp'] > $rawRequests[$id]['endTime'])
-                        $rawRequests[$id]['endTime'] = $event['timestamp'];
                     if (!array_key_exists('firstByteTime', $rawRequests[$id]))
                         $rawRequests[$id]['firstByteTime'] = $event['timestamp'];
                     $rawRequests[$id]['fromNet'] = false;
