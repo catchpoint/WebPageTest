@@ -517,29 +517,28 @@ function LoadTestComparisonTSV($configs, $cached, $metric, &$meta) {
   $maxValues = 0;
   foreach ($configs as $column => $config) {
     if (LoadTestData($data, $bmConfigs, $config['benchmark'], $cached, $metric, $config['time'], $meta, $config['location'])) {
-      foreach ($data as $url => &$a) {
+      foreach ($data as $url => &$configData) {
         $ok = true;
         if (!array_key_exists($url, $rows))
           $rows[$url] = array();
-        foreach($a as &$b) {
-          foreach($b as &$c) {
-            foreach($c as &$result) {
-              if (!array_key_exists($column, $rows[$url])) {
-                $rows[$url][$column] = array('test' => $result['test'], 'values' => array());
-                if (!array_key_exists($url, $meta))
-                  $meta[$url] = array();
-                if (!array_key_exists('tests', $meta[$url]))
-                  $meta[$url]['tests'] = array();
-                $meta[$url]['tests'][$column] = $result['test'];
-              }
-              $value = $result['value'];
-              if ($isbytes)
-                  $value = number_format($value / 1024.0, 3, '.', '');
-              elseif ($istime)
-                  $value = number_format($value / 1000.0, 3, '.', '');
-              $rows[$url][$column]['values'][] = $value;
-              $maxValues = max($maxValues, count($rows[$url][$column]['values']));
+        if (array_key_exists($config['config'], $configData) &&
+            array_key_exists($config['location'], $configData[$config['config']])) {
+          foreach ($configData[$config['config']][$config['location']] as &$result) {
+            if (!array_key_exists($column, $rows[$url])) {
+              $rows[$url][$column] = array('test' => $result['test'], 'values' => array());
+              if (!array_key_exists($url, $meta))
+                $meta[$url] = array();
+              if (!array_key_exists('tests', $meta[$url]))
+                $meta[$url]['tests'] = array();
+              $meta[$url]['tests'][$column] = $result['test'];
             }
+            $value = $result['value'];
+            if ($isbytes)
+                $value = number_format($value / 1024.0, 3, '.', '');
+            elseif ($istime)
+                $value = number_format($value / 1000.0, 3, '.', '');
+            $rows[$url][$column]['values'][] = $value;
+            $maxValues = max($maxValues, count($rows[$url][$column]['values']));
           }
         }
       }
