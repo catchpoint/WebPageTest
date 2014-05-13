@@ -175,7 +175,7 @@ function LoadData(&$data, &$configurations, $benchmark, $cached, $metric, $aggre
     $data = array();
     if (GetConfigurationNames($benchmark, $configurations, $loc, $loc_aliases)) {
         $data_file = "./results/benchmarks/$benchmark/aggregate/$metric.json";
-        $key = "$benchmark-$date";
+        $key = "$metric-$benchmark";
         if (gz_is_file($data_file)) {
             if (!array_key_exists($key, $raw_data)) {
               $raw_data[$key] = json_decode(gz_file_get_contents($data_file), true);
