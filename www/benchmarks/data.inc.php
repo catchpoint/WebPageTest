@@ -112,7 +112,7 @@ function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc, &$annotatio
                     if (array_key_exists($configuration['name'], $row) && array_key_exists($location['location'], $row[$configuration['name']])) {
                         $value = $row[$configuration['name']][$location['location']];
                         if ($aggregate != 'count') {
-                            $divisor = $isbytes ? 1024.0 : $istime ? 1000.0 : null;
+                            $divisor = $isbytes ? 1024.0 : $istime ? 1000.0 : 1;
                             if (strpos($value, ';') === false) {
                               $value = isset($divisor) ? number_format($value / $divisor, 3, '.', '') : $value;
                             } else {
