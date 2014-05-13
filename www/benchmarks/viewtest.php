@@ -317,7 +317,6 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                     labelsDiv: document.getElementById('{$id}_legend'),
                     colors: ['#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101'],
                     axes: {x: {valueFormatter: function(urlid) {return {$id}meta[urlid].url;}}},
-                    colors: ['#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101'],
                     pointClickCallback: function(e, p) {SelectedPoint({$id}meta[p.xval].url, {$id}meta[p.xval]['tests'], p.name, p.xval, false);},
                     $chart_title
                     legend: \"always\"}

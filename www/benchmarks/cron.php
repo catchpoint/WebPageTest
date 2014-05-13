@@ -22,7 +22,7 @@ header ("Content-type: text/plain");
 
 $nonZero = array('TTFB', 'bytesOut', 'bytesOutDoc', 'bytesIn', 'bytesInDoc', 'connections', 'requests', 'requestsDoc', 'render', 
                 'fullyLoaded', 'docTime', 'domElements', 'titleTime', 'domContentLoadedEventStart', 'visualComplete', 'SpeedIndex', 
-                'VisuallyCompleteDT', 'SpeedIndexDT');
+                'VisuallyCompleteDT', 'SpeedIndexDT', 'lastVisualChange');
 
 // see if we need to actuall process the given benchmark
 if (array_key_exists('benchmark', $_GET) && strlen($_GET['benchmark'])) {
