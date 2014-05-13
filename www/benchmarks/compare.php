@@ -8,6 +8,10 @@ $page_description = "WebPagetest benchmark test comparison";
 $benchmarks = GetBenchmarks();
 $bmData = array();
 $count = 0;
+$offset = 0;
+if (array_key_exists('offset', $_REQUEST)) {
+  $offset -= intval($_REQUEST['offset']) * 60;
+}
 foreach ($benchmarks as &$benchmark) {
   $entry = array();
   $entry['title'] = array_key_exists('title', $benchmark) && strlen($benchmark['title']) ? $benchmark['title'] : $benchmark['name'];
@@ -33,7 +37,7 @@ if (array_key_exists('configs', $_REQUEST)) {
                      'title' => $bmData[$benchmark]['configurations'][$config]['title'],
                      'location' => $location,
                      'time' => $time,
-                     'date' => date('M j Y h:i', $time));
+                     'date' => date('M j Y h:i', $time + $offset));
       $configs[] = $entry;
       if (isset($common)) {
         foreach($common as $key => $value) {

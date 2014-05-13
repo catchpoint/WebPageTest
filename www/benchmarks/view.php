@@ -159,10 +159,11 @@ if (array_key_exists('f', $_REQUEST)) {
                 url += '~' + encodeURIComponent(config);
                 url += '~' + encodeURIComponent(location);
                 url += '~' + time;
+                var offset = new Date().getTimezoneOffset();
+                url += '&offset=' + encodeURIComponent(offset);
                 window.location.href = url;
               }
               $.modal.close();
-              return false;
             }
 
             function SelectedPoint(benchmark, metric, series, time, cached) {
@@ -193,7 +194,7 @@ if (array_key_exists('f', $_REQUEST)) {
                             + config + '\',\'' 
                             + location + '\',' 
                             + time + ',\'' 
-                            + title + '\');">' + title + trailer + '</a><br>';
+                            + title + '\');return false;">' + title + trailer + '</a><br>';
                   }
                 }
                 menu += '</div>';
