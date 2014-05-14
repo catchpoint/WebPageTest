@@ -2107,7 +2107,7 @@ function updateLabel($test_guid, $label, $test_uid, $cur_user, $test_owner) {
 */
 function getLabel($test_guid, $current_user) {
     if (!class_exists("SQLite3")) {
-        return "SQLite3 must be installed to get updated test labels";
+        return false;
     }
 
     $db = new SQLite3('./dat/labels.db');

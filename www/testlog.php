@@ -252,7 +252,7 @@ else
                                                 echo "<a href=\"$link\" id=\"label_$guid\">$labelTxt</a>&nbsp;";
 
                                                 // Only allow people to update labels if they are logged in
-                                                if ($user) {
+                                                if ($user && class_exists("SQLite3")) {
                                                     echo '<a href="#" class="editLabel" data-test-guid="' . $guid . '" data-current-label="' . $label . '">(Edit)</a>';
                                                 }
 

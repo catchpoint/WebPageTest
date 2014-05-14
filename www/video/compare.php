@@ -404,7 +404,9 @@ function ScreenShotTable()
             // Print out a link to edit the test
             echo '<br/>';
             echo '<a href="#" class="editLabel" data-test-guid="' . $test['id'] . '" data-current-label="' . htmlentities($test['name']) . '">';
-            echo '(Edit)</a>';
+            if (class_exists("SQLite3"))
+              echo '(Edit)';
+            echo '</a>';
 
             echo "</td></tr>\n";
         }
