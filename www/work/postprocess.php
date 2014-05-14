@@ -36,6 +36,8 @@ if (array_key_exists('test', $_REQUEST)) {
         foreach($pageData as $run => &$pageRun) {
           foreach($pageRun as $cached => &$testData) {
             $testData['testUrl'] = $testInfo['url'];
+            $testData['run'] = $run;
+            $testData['cached'] = $cached;
             $testData['testLabel'] = $testInfo['label'];
             $testData['testLocation'] = $testInfo['location'];
             $testData['testBrowser'] = $testInfo['browser'];
@@ -52,7 +54,7 @@ if (array_key_exists('test', $_REQUEST)) {
     if (isset($requestsLog) && $requestsLog !== false && strlen($requestsLog)) {
       require_once('object_detail.inc');
       $max_cached = $testInfo['fvonly'] ? 0 : 1;
-      for ($run = 1; $run < $testInfo['runs']; $run++) {
+      for ($run = 1; $run <= $testInfo['runs']; $run++) {
         for ($cached = 0; $cached <= $max_cached; $cached++) {
           $secure = false;
           $haveLocations = false;
@@ -60,6 +62,8 @@ if (array_key_exists('test', $_REQUEST)) {
           if (isset($requests) && is_array($requests)) {
             foreach ($requests as &$request) {
               $request['testUrl'] = $testInfo['url'];
+              $request['run'] = $run;
+              $request['cached'] = $cached;
               $request['testLabel'] = $testInfo['label'];
               $request['testLocation'] = $testInfo['location'];
               $request['testBrowser'] = $testInfo['browser'];
