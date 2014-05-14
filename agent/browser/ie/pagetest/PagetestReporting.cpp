@@ -987,8 +987,8 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 		msActivity = 0;
 	}
 */	
-	CString szDate = startTime.Format(_T("%m/%d/%Y"));
-	CString szTime = startTime.Format(_T("%H:%M:%S"));
+	CString szDate = startTime.FormatGmt(_T("%m/%d/%Y"));
+	CString szTime = startTime.FormatGmt(_T("%H:%M:%S"));
 
   // get the Page Speed version
   CString pageSpeedVersion;
@@ -1097,8 +1097,8 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 			msActivity = 0;
 		}
 		
-		CString szDate = startTime.Format(_T("%m/%d/%Y"));
-		CString szTime = startTime.Format(_T("%H:%M:%S"));
+		CString szDate = startTime.FormatGmt(_T("%m/%d/%Y"));
+		CString szTime = startTime.FormatGmt(_T("%H:%M:%S"));
 		CString result;
 		
 		if( fIncludeHeader )
@@ -3646,8 +3646,7 @@ void CPagetestReporting::GetNavTiming(long &load_start, long &load_end,
                                       long &dcl_start, long &dcl_end,
                                       long &first_paint) {
   load_start = load_end = dcl_start = dcl_end = first_paint = 0;
-  static const TCHAR * FN_GET_NAV_TIMING =
-      _T("var wptGetNavTimings = (function(){")
+  CString nav_timings = GetCustomMetric(
       _T("  var timingParams = \"\";")
       _T("  if (window.performance && window.performance.timing) {")
       _T("    function addTime(name) {")
@@ -3660,33 +3659,23 @@ void CPagetestReporting::GetNavTiming(long &load_start, long &load_end,
       _T("        addTime('loadEventStart') + ',' +")
       _T("        addTime('loadEventEnd');")
       _T("  }")
-      _T("  return timingParams;")
-      _T("});");
-  LPOLESTR GET_NAV_TIMINGS = L"wptGetNavTimings";
-  if (ExecuteScript(FN_GET_NAV_TIMING)) {
-    _variant_t timings;
-    if (InvokeScript(GET_NAV_TIMINGS, timings)) {
-      if (timings.vt == VT_BSTR) {
-        CString nav_timings(timings);
-        int pos = 0;
-        int index = 0;
-        CString val = nav_timings.Tokenize(_T(","), pos);
-        while (pos != -1) {
-          index++;
-          long int_val = _ttol(val);
-          if (int_val > 0 && int_val < 3600000) {
-            switch (index) {
-              case 1: dcl_start = int_val; break;
-              case 2: dcl_end = int_val; break;
-              case 3: first_paint = int_val; break;
-              case 4: load_start = int_val; break;
-              case 5: load_end = int_val; break;
-            }
-          }
-          val = nav_timings.Tokenize(_T(","), pos);
-        }
+      _T("  return timingParams;"));
+  int pos = 0;
+  int index = 0;
+  CString val = nav_timings.Tokenize(_T(","), pos);
+  while (pos != -1) {
+    index++;
+    long int_val = _ttol(val);
+    if (int_val > 0 && int_val < 3600000) {
+      switch (index) {
+        case 1: dcl_start = int_val; break;
+        case 2: dcl_end = int_val; break;
+        case 3: first_paint = int_val; break;
+        case 4: load_start = int_val; break;
+        case 5: load_end = int_val; break;
       }
     }
+    val = nav_timings.Tokenize(_T(","), pos);
   }
 }
 
@@ -3694,32 +3683,60 @@ void CPagetestReporting::GetNavTiming(long &load_start, long &load_end,
   Run some in-page javascript to get the user timing data if it exists
 -----------------------------------------------------------------------------*/
 void CPagetestReporting::SaveUserTiming(CString file) {
-  static const TCHAR * FN_GET_USER_TIMING =
-    _T("var wptGetUserTimings = (function(){")
-    _T("  var ret = '';")
-    _T("  if (window.performance && window.performance.getEntriesByType) {")
-    _T("    var marks = JSON.stringify(performance.getEntriesByType('mark'));")
-    _T("    if (marks.length > 2)")
-    _T("      ret = marks.replace(/\"name\":/g,'\"type\":\"mark\",\"name\":');")
-    _T("  }")
-    _T("  return ret;")
-    _T("});");
-  LPOLESTR GET_USER_TIMINGS = L"wptGetUserTimings";
-  if (ExecuteScript(FN_GET_USER_TIMING)) {
-    _variant_t timings;
-    if (InvokeScript(GET_USER_TIMINGS, timings)) {
-      if (timings.vt == VT_BSTR) {
-        CString user_timings(timings);
-        if (user_timings.GetLength()) {
-				  HANDLE hFile = CreateFile(file, GENERIC_WRITE, 0, &nullDacl, CREATE_ALWAYS, 0, 0);
-				  if( hFile != INVALID_HANDLE_VALUE ) {
-					  DWORD written;
-					  CT2A str((LPCTSTR)user_timings, CP_UTF8);
-					  WriteFile(hFile, (LPCSTR)str, lstrlenA(str), &written, 0);
-					  CloseHandle(hFile);
-				  }
-        }
+  CString user_timings = GetCustomMetric(
+      _T("  var ret = '';")
+      _T("  if (window.performance && window.performance.getEntriesByType) {")
+      _T("    var marks = JSON.stringify(performance.getEntriesByType('mark'));")
+      _T("    if (marks.length > 2)")
+      _T("      ret = marks.replace(/\"name\":/g,'\"type\":\"mark\",\"name\":');")
+      _T("  }")
+      _T("  return ret;"));
+  if (user_timings.GetLength()) {
+	  HANDLE hFile = CreateFile(file, GENERIC_WRITE, 0, &nullDacl, CREATE_ALWAYS, 0, 0);
+	  if( hFile != INVALID_HANDLE_VALUE ) {
+		  DWORD written;
+		  CT2A str((LPCTSTR)user_timings, CP_UTF8);
+		  WriteFile(hFile, (LPCSTR)str, lstrlenA(str), &written, 0);
+		  CloseHandle(hFile);
+	  }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Run some custom JS in the context of the page and return the result of that
+  code.  It should be written as the contents of a function that return the
+  value of interest and the value should be something that can be represented
+  as a string.
+  
+  IE is a bit convoluted so we need to define the function and then make
+  a call to it to get the actual return value.
+-----------------------------------------------------------------------------*/
+CString CPagetestReporting::GetCustomMetric(CString js) {
+  CString ret;
+  static int run_count = 0;
+  CString functionName;
+
+  run_count++;
+  functionName.Format(_T("wptCustomJs%d"), run_count);
+  CString functionBody = CString(_T("var ")) + functionName + _T(" = (function(){");
+  functionBody += js;
+  functionBody += _T(";});");
+
+  if (ExecuteScript(_bstr_t((LPCTSTR)functionBody))) {
+    _variant_t result;
+    DWORD len = functionName.GetLength() + 1;
+    LPOLESTR fn = (LPOLESTR)malloc(len * sizeof(OLECHAR));
+    if (fn) {
+      lstrcpyn(fn, (LPCTSTR)functionName, len);
+      if (InvokeScript(fn, result)) {
+        if (result.vt != VT_BSTR)
+          result.ChangeType(VT_BSTR);
+        if (result.vt == VT_BSTR)
+          ret.SetString(result.bstrVal);
       }
+      free(fn);
     }
   }
+  
+  return ret;
 }
