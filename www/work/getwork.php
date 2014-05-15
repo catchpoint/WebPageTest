@@ -316,6 +316,7 @@ function GetUpdate()
 function CheckCron() {
   // open and lock the cron job file - abandon quickly if we can't get a lock
   $should_run = false;
+  $minutes15 = false;
   $cron_lock = Lock("Cron Check", false, 1200);
   if (isset($cron_lock)) {
     $last_run = 0;
@@ -329,8 +330,12 @@ function CheckCron() {
         $should_run = true;
       } else {
         $minute = gmdate('i', $now) % 5;
-        if ($minute < 2)
+        if ($minute < 2) {
           $should_run = true;
+          $minute = gmdate('i', $now) % 15;
+          if ($minute < 2)
+            $minutes15 = true;
+        }
       }
     }
     if ($should_run)
@@ -341,12 +346,12 @@ function CheckCron() {
   // send the cron requests
   if ($should_run) {
     if (is_file('./settings/benchmarks/benchmarks.txt') && 
-        is_file('./benchmarks/cron.php')) {
+        is_file('./benchmarks/cron.php'))
       SendAsyncRequest('/benchmarks/cron.php');
-    }
-    if (is_file('./jpeginfo/cleanup.php')) {
+    if (is_file('./jpeginfo/cleanup.php'))
       SendAsyncRequest('/jpeginfo/cleanup.php');
-    }
+    if ($minutes15)
+      SendAsyncRequest('/cron/15min.php');
   }
 }
 
