@@ -30,22 +30,14 @@ class Appurify{
   /**
   * Get a list of the available devices
   */
-  public function GetDevices() {
+  public function GetDevices($fromServer = false) {
     $devices = null;
     $this->Lock();
     $ttl = 120;
-    if (is_file("./tmp/appurify_{$this->key}.devices")) {
+    if (!$fromServer && is_file("./tmp/appurify_{$this->key}.devices")) {
       $cache = json_decode(file_get_contents("./tmp/appurify_{$this->key}.devices"), true);
-      $now = time();
-      if ($cache &&
-          is_array($cache) &&
-          array_key_exists('devices', $cache) &&
-          array_key_exists('time', $cache) &&
-          $now >= $cache['time'] &&
-          $now - $cache['time'] < $ttl)
-        $devices = $cache['devices'];
-    }
-    if (!isset($devices)) {
+      $devices = $cache['devices'];
+    } elseif ($fromServer) {
       $devices = array();
       $list = $this->Get('https://live.appurify.com/resource/devices/list/');
       if ($list !== false && is_array($list)) {
@@ -75,22 +67,14 @@ class Appurify{
   * Get the list of supported connectivity profiles
   * 
   */
-  public function GetConnections() {
+  public function GetConnections($fromServer = false) {
     $connections = null;
     $this->Lock();
     $ttl = 900;
-    if (is_file("./tmp/appurify_{$this->key}.connections")) {
+    if (!$fromServer && is_file("./tmp/appurify_{$this->key}.connections")) {
       $cache = json_decode(file_get_contents("./tmp/appurify_{$this->key}.connections"), true);
-      $now = time();
-      if ($cache &&
-          is_array($cache) &&
-          array_key_exists('connections', $cache) &&
-          array_key_exists('time', $cache) &&
-          $now >= $cache['time'] &&
-          $now - $cache['time'] < $ttl)
-        $connections = $cache['connections'];
-    }
-    if (!isset($connections)) {
+      $connections = $cache['connections'];
+    } elseif ($fromServer) {
       $connections = array();
       $list = $this->Get('https://live.appurify.com/resource/devices/config/networks/list/');
       if ($list !== false && is_array($list)) {

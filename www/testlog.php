@@ -78,6 +78,8 @@ else
                              <label><input id="all" type="checkbox" name="all" <?php check_it($all);?> onclick="this.form.submit();"> Show tests from all users</label> &nbsp;&nbsp;
                              <?php
                          }
+                         if ($includePrivate)
+                           echo '<input id="private" type="hidden" name="private" value="1">';
                          ?>
                         <label><input id="video" type="checkbox" name="video" <?php check_it($onlyVideo);?> onclick="this.form.submit();"> Only list tests that include video</label> &nbsp;&nbsp;
                         <label><input id="nolimit" type="checkbox" name="nolimit" <?php check_it($nolimit);?> onclick="this.form.submit();"> Do not limit the number of results (warning, WILL be slow)</label>
