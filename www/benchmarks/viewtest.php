@@ -239,7 +239,10 @@ if (array_key_exists('f', $_REQUEST)) {
                                             $cached = '';
                                             if ($test['cached'])
                                                 $cached = 'cached/';
-                                            echo "<a href=\"/result/{$test['id']}/{$test['run']}/details/$cached\">{$test['error']}</a>";
+                                            if (@strlen($test['run']))
+                                              echo "<a href=\"/result/{$test['id']}/{$test['run']}/details/$cached\">{$test['error']}</a>";
+                                            else
+                                              echo "<a href=\"/result/{$test['id']}/\">{$test['error']}</a>";
                                         }
                                         echo "</li>";
                                     }

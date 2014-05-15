@@ -19,6 +19,7 @@ foreach ($benchmarks as &$benchmark) {
   foreach ($benchmark['configurations'] as $name => &$config) {
     $entry['configurations'][$name] = array();
     $entry['configurations'][$name]['title'] = htmlspecialchars(array_key_exists('title', $config) && strlen($config['title']) ? $config['title'] : $name);
+    $entry['configurations'][$name]['video'] = array_key_exists('settings', $config) && array_key_exists('video', $config['settings']) && $config['settings']['video'] ? true : false;
     $entry['configurations'][$name]['locations'] = array();
     foreach ($config['locations'] as $location)
       $entry['configurations'][$name]['locations'][] = htmlspecialchars($location);
@@ -26,6 +27,7 @@ foreach ($benchmarks as &$benchmark) {
   $bmData[$benchmark['name']] = $entry;
 }
 $configs = null;
+$has_video = true;
 if (array_key_exists('configs', $_REQUEST)) {
   $parts = explode(',', $_REQUEST['configs']);
   foreach ($parts as $encoded) {
@@ -38,6 +40,8 @@ if (array_key_exists('configs', $_REQUEST)) {
                      'location' => $location,
                      'time' => $time,
                      'date' => date('M j Y h:i', $time + $offset));
+      if (!$bmData[$benchmark]['configurations'][$config]['video'])
+        $has_video = false;
       $configs[] = $entry;
       if (isset($common)) {
         foreach($common as $key => $value) {
@@ -112,9 +116,8 @@ $metrics = array('docTime' => 'Load Time (onload)',
                 'other_requests' => 'Other Requests',
                 'browser_version' => 'Browser Version'
                 );
-if (!$info['video']) {
+if (!$has_video)
   unset($metrics['SpeedIndex']);
-}
 ?>
 <!DOCTYPE html>
 <html>
