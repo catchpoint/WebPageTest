@@ -18,6 +18,11 @@ if( isset($_REQUEST['searches']) && strlen($_REQUEST['searches']) )
 {
     $searches = explode(',', $_REQUEST['searches']);
 }
+$maxResps = 0;
+if( isset($_REQUEST['maxResps']) && strlen($_REQUEST['maxResps']) )
+{
+    $maxResps = $_REQUEST['maxResps'];
+}
 
 header("Content-disposition: attachment; filename={$id}_headersMatch.csv");
 header("Content-type: text/csv");
@@ -44,8 +49,13 @@ foreach( $testIds as &$testId )
 	// Flag indicating if we matched
 	$matched = array();
 	$nSearches = count($searches);
-	foreach( $requests as &$r )
+	$nRecords = count($requests);
+	if ($nRecords > $maxResps && $maxResps != 0) {
+		$nRecords = $maxResps;
+	}
+	for($rec=0;$rec<$nRecords;$rec++)
 	{
+		$r = $requests[$rec];
                 if( isset($r['headers']) && isset($r['headers']['response']) )
                 {
                     foreach($r['headers']['response'] as &$header)
