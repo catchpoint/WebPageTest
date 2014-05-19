@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "cximage/ximage.h"
 #include <zlib.h>
 #include <zip.h>
+#include <regex>
 
 static const TCHAR * PAGE_DATA_FILE = _T("_IEWPG.txt");
 static const TCHAR * REQUEST_DATA_FILE = _T("_IEWTR.txt");
@@ -782,6 +783,7 @@ void Results::ProcessRequests(void) {
   adult_site_ = false;
   LONGLONG new_end = 0;
   LONGLONG new_first_byte = 0;
+  std::tr1::regex adult_regex("[^0-9]2257[^0-9]");
   while (pos) {
     Request * request = _requests._requests.GetNext(pos);
     if (request && 
@@ -841,9 +843,8 @@ void Results::ProcessRequests(void) {
           if (result_code == 200) {
             DataChunk body_chunk = request->_response_data.GetBody(true);
             CStringA body(body_chunk.GetData(), body_chunk.GetLength());
-            if (body.Find("2257") != -1) {
+            if (regex_search((LPCSTR)body, adult_regex))
               adult_site_ = true;
-            }
           }
         }
       }

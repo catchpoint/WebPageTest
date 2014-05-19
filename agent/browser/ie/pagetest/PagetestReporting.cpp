@@ -585,6 +585,7 @@ void CPagetestReporting::ProcessResults(void)
 	SortEvents();
 	
 	// walk the list and calculate each event
+  std::tr1::regex adult_regex("[^0-9]2257[^0-9]");
 	__int64	earliest = 0;
 	POSITION pos = events.GetHeadPosition();
 	while( pos )
@@ -716,11 +717,9 @@ void CPagetestReporting::ProcessResults(void)
             basePageAddressCount = GetAddressCount(w->host);
             if( html.IsEmpty() && w->body ) {
 							html = w->body;
-              if (html.Find("2257") != -1) {
+              if (regex_search((LPCSTR)html, adult_regex))
                 adultSite = 1;
-              }
-            }
-							
+            }							
 						// use the ttfb of the base page (override the earlier ttfb)
 						if( w->firstByte )
 							firstByte = w->firstByte;
