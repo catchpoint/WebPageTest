@@ -79,6 +79,23 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
           }
         }
         
+        // see if we have CSI metrics to load
+        if (is_dir('./google') && is_file('./google/google_lib.inc')) {
+          require_once('google/google_lib.inc');
+          $csi = ParseCsiInfo($id, $testPath, $run, $cached, true, false);
+          if (isset($csi) && is_array($csi) && count($csi)) {
+            $ret['CSI'] = array();
+            foreach($csi as $metric => $value) {
+              if (preg_match('/^[0-9]+$/', $value))
+                $value = intval($value);
+              elseif (preg_match('/^[0-9\.]+$/', $value))
+                $value = floatval($value);
+              $ret["CSI.$metric"] = $value;
+              $ret['CSI'][] = $metric;
+            }
+          }
+        }
+
         if (array_key_exists('loadTime', $ret) &&
             !$ret['loadTime'] &&
             array_key_exists('fullyLoaded', $ret) &&

@@ -239,6 +239,22 @@ if (ValidateTestId($id)) {
           $testInfo_dirty = true;
         }
 
+        // Do any post-processing on this individual run that doesn't requre the test to be locked
+        if (isset($runNumber) && isset($cacheWarmed)) {
+          require_once('object_detail.inc');
+          $secure = false;
+          $haveLocations = false;
+          $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure, $haveLocations, false);
+          if (isset($requests)) {
+            require_once('breakdown.inc');
+            getBreakdown($id, $testPath, $runNumber, $cacheWarmed, $requests);
+          }
+          if (is_dir('./google') && is_file('./google/google_lib.inc')) {
+            require_once('google/google_lib.inc');
+            ParseCsiInfo($id, $testPath, $runNumber, $cacheWarmed, true);
+          }
+        }
+
         // mark this run as complete
         if (isset($runNumber) && isset($cacheWarmed)) {
           if ($testInfo['fvonly'] || $cacheWarmed) {
@@ -364,18 +380,6 @@ if (ValidateTestId($id)) {
         * Do No modify TestInfo after this point
         **************************************************************************/
           
-        // Do any post-processing on this individual run that doesn't requre the test to be locked
-        if (isset($runNumber) && isset($cacheWarmed)) {
-          require_once('object_detail.inc');
-          $secure = false;
-          $haveLocations = false;
-          $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure, $haveLocations, false);
-          if (isset($requests)) {
-            require_once('breakdown.inc');
-            getBreakdown($id, $testPath, $runNumber, $cacheWarmed, $requests);
-          }
-        }
-
         // do any post-processing when the full test is complete that doesn't rely on testinfo        
         if ($done) {
           logTestMsg($id, "Test Complete");
