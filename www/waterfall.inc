@@ -640,7 +640,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                 }
                 $request['colors'] = GetRequestColors(
                     $request['contentType'],
-                    $is_thumbnail, $is_mime, $is_state);
+                    $is_thumbnail, $is_mime, $is_state, $request['url']);
                 $bars = GetBars($request, $x_scaler, $y1, $y2,
                                 $is_thumbnail, $is_mime, $is_state);
                 foreach ($bars as $bar) {

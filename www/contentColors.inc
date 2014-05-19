@@ -4,7 +4,7 @@
 * Determine the colors to use for each request
 */
 function GetRequestColors($content_type, $thumbnail, $is_mime,
-                          $is_state = false) {
+                          $is_state = false, $url = null) {
     global $settings;
     if (@$settings['new_colors']) {
         // new color scheme (proposed by Steve Souders)
@@ -38,7 +38,7 @@ function GetRequestColors($content_type, $thumbnail, $is_mime,
         }
     }
     if ($is_mime) {
-        $base_color = GetMimeColor($content_type);
+        $base_color = GetMimeColor($content_type, $url);
         $ttfb_color = ScaleRgb($base_color, 0.65);
         $colors['ttfb'] = $ttfb_color;
         $colors['download'] = $base_color;
@@ -55,9 +55,9 @@ function GetRequestColors($content_type, $thumbnail, $is_mime,
 /**
 * Return an array of the defined colors for various mime types
 */
-function GetMimeColor($mime) {
+function GetMimeColor($mime, $url = null) {
     $mime_colors = MimeColors();
-    $type = ContentType($mime);
+    $type = ContentType($mime, $url);
     if (!array_key_exists($type, $mime_colors)) {
         $type = 'other';
     }
@@ -84,7 +84,7 @@ function MimeColors() {
 /**
 * Bucket the content types into our known categories
 */
-function ContentType($mime) {
+function ContentType($mime, $url = null) {
     $content_type = 'other';
     if (stripos($mime, 'javascript') !== false ||
         stripos($mime, 'ecmascript') !== false ||
@@ -103,7 +103,26 @@ function ContentType($mime) {
         $content_type = 'flash';
     } elseif (stripos($mime, 'font') !== false) {
         $content_type = 'font';
+    } elseif (isset($url)) {
+      $url = parse_url($url, PHP_URL_PATH);
+      if (preg_match('/(?P<ext>\.[a-zA-Z0-9]+)$/', $url, $matches)) {
+        $ext = strtolower($matches['ext']);
+        if ($ext == '.js')
+          $content_type = 'js';
+        elseif ($ext == '.js')
+          $content_type = 'css';
+        elseif ($ext == '.htm' || $ext == '.html')
+          $content_type = 'html';
+        elseif ($ext == '.png' || $ext == '.gif' || $ext == '.jpg')
+          $content_type = 'image';
+        elseif ($ext == '.swf')
+          $content_type = 'flash';
+        elseif ($ext == '.eot' || $ext == '.ttf' ||
+                $ext == '.woff' || $ext == '.otf')
+          $content_type = 'font';
+      }
     }
+    
     return $content_type;
 }
 ?>

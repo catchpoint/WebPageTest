@@ -46,7 +46,7 @@ function getBreakdown($id, $testPath, $run, $cached, &$requests)
         }
         
         foreach($requests as $request) {
-            $contentType = ContentType($request['contentType']);
+            $contentType = ContentType($request['contentType'], $request['url']);
             $object = strtolower($request['url']);
             if( strlen($contentType) && (stripos($object, 'favicon.ico') === FALSE) ) {
                 $breakdown[$contentType]['bytes'] += $request['bytesIn'];
