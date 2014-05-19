@@ -2050,7 +2050,7 @@ void CPagetestReporting::CheckCDN()
 	while( pos )
 	{
 		CTrackedEvent * e = events.GetNext(pos);
-		if( e && e->type == CTrackedEvent::etWinInetRequest && !e->ignore )
+		if( e && e->type == CTrackedEvent::etWinInetRequest)
 		{
       bool isStatic = false;
 			CWinInetRequest * w = (CWinInetRequest *)e;
@@ -2080,20 +2080,17 @@ void CPagetestReporting::CheckCDN()
 					mime.Find(_T("image/")) >= 0) )
 			{
         isStatic = true;
-				w->staticCdnScore = 0;
-				count++;
       }
-				
-			CString host = w->host;
-			host.MakeLower();
 
-			if (IsCDN(w, w->cdnProvider) && isStatic) {
-			  w->staticCdnScore = 100;
-			}
-
-      if (isStatic) {
-			  if( !w->staticCdnScore )
+      bool is_cdn = IsCDN(w, w->cdnProvider);
+      if (isStatic && !e->ignore) {
+        if (is_cdn) {
+			    w->staticCdnScore = 100;
+        } else {
+				  w->staticCdnScore = 0;
 				  w->warning = true;
+        }
+				count++;
 			  total += w->staticCdnScore;
       }
 		}
