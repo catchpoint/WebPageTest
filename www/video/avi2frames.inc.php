@@ -246,12 +246,12 @@ function EliminateDuplicateAVIFiles($videoDir, $viewport) {
   }
   
   // Do a second pass looking for the first non-blank frame with an allowance
-  // for up to a 1% per-pixel difference for noise in the white field.
+  // for up to a 2% per-pixel difference for noise in the white field.
   $files = glob("$videoDir/image*.png");
   $blank = $files[0];
   $count = count($files);
   for ($i = 1; $i < $count; $i++) {
-    if (AreAVIFramesDuplicate($blank, $files[$i], 1, $crop))
+    if (AreAVIFramesDuplicate($blank, $files[$i], 2, $crop))
       unlink($files[$i]);
     else
       break;
