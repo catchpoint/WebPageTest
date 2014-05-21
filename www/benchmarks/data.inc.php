@@ -287,6 +287,9 @@ function GetBenchmarkInfo($benchmark) {
         if (isset($links)) {
             $info['links'] = $links;
         }
+        if (isset($metrics)) {
+          $info['metrics'] = $metrics;
+        }
         $info['fvonly'] = false;
         $info['video'] = false;
         $info['expand'] = false;

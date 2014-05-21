@@ -240,6 +240,11 @@ if (array_key_exists('f', $_REQUEST)) {
                 if (!$info['video']) {
                     unset($metrics['SpeedIndex']);
                 }
+                if (array_key_exists('metrics', $info) && is_array($info['metrics'])) {
+                  foreach ($info['metrics'] as $metric => $label) {
+                    $metrics[$metric] = $label;
+                  }
+                }
                 if (!isset($out_data)) {
                     echo "<h1>{$info['title']}</h1>";
                     if (array_key_exists('description', $info))

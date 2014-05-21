@@ -538,6 +538,16 @@ function AggregateResults($benchmark, &$state, $options) {
                                 'flash_bytes', 'flash_requests', 'html_bytes', 'html_requests', 'text_bytes', 'text_requests',
                                 'other_bytes', 'other_requests', 'SpeedIndex', 'responses_404',
                                 'responses_other', 'browser_version', 'server_rtt', 'docCPUms');
+    require_once('benchmarks/data.inc.php');
+    $bmSettings = GetBenchmarkInfo($benchmark);
+    if (isset($bmSettings) &&
+        is_array($bmSettings) &&
+        array_key_exists('metrics', $bmSettings) &&
+        is_array($bmSettings['metrics'])) {
+      foreach ($bmSettings['metrics'] as $metric => $label) {
+        $info['metrics'][] = $metric;
+      }
+    }
 
     // loop through all of the runs and see which ones we don't have aggregates for
     $runs = array_reverse($state['runs']);

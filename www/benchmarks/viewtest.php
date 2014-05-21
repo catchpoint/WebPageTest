@@ -69,6 +69,11 @@ if (!$info['video']) {
     unset($metrics['SpeedIndex']);
     $metric = 'docTime';
 }
+if (array_key_exists('metrics', $info) && is_array($info['metrics'])) {
+  foreach ($info['metrics'] as $metric => $label) {
+    $metrics[$metric] = $label;
+  }
+}
 if (array_key_exists('metric', $_REQUEST)) {
     $metric = $_REQUEST['metric'];
 }

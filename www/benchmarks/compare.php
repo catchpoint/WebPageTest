@@ -118,6 +118,13 @@ $metrics = array('docTime' => 'Load Time (onload)',
                 );
 if (!$has_video)
   unset($metrics['SpeedIndex']);
+foreach ($benchmarks as &$benchmark) {
+  if (array_key_exists('metrics', $benchmark) && is_array($benchmark['metrics'])) {
+    foreach ($benchmark['metrics'] as $metric => $label) {
+      $metrics[$metric] = $label;
+    }
+  }
+}
 ?>
 <!DOCTYPE html>
 <html>
