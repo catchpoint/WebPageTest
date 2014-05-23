@@ -189,7 +189,10 @@ function IsBlankAVIFrame($file, $videoDir) {
   $command = "convert \"$white\" \\( \"$file\" -shave 15x55 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
   $differentPixels = shell_exec($command);
   //logMsg("($differentPixels) $command", "$videoDir/video.log", true);
-  if (isset($differentPixels) && strlen($differentPixels) && $differentPixels < 100)
+  if (isset($differentPixels) &&
+      strlen($differentPixels) &&
+      preg_match('/^[0-9]+$/', $differentPixels) &&
+      $differentPixels < 100)
     $ret = true;
   return $ret;
 }
@@ -207,7 +210,10 @@ function IsOrangeAVIFrame($file) {
   $command = "convert  \"$orange\" \\( \"$file\" -gravity Center -crop 80x50%+0+0 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
   $differentPixels = shell_exec($command);
   //logMsg("($differentPixels) $command", "$videoDir/video.log", true);
-  if (isset($differentPixels) && strlen($differentPixels) && $differentPixels < 100)
+  if (isset($differentPixels) &&
+      strlen($differentPixels) &&
+      preg_match('/^[0-9]+$/', $differentPixels) &&
+      $differentPixels < 100)
     $ret = true;
   return $ret;
 }
@@ -291,7 +297,10 @@ function AreAVIFramesDuplicate($image1, $image2, $fuzzPct = 0, $crop = null) {
     $cropStr = "-crop $crop ";
   $command = "convert  \"$image1\" \"$image2\" {$cropStr}miff:- | compare -metric AE - {$fuzzStr}null: 2>&1";
   $differentPixels = shell_exec($command);
-  if (isset($differentPixels) && strlen($differentPixels) && $differentPixels == 0)
+  if (isset($differentPixels) &&
+      strlen($differentPixels) &&
+      preg_match('/^[0-9]+$/', $differentPixels) &&
+      $differentPixels == 0)
     $duplicate = true;
   return $duplicate;
 }

@@ -29,7 +29,7 @@ else
     include 'common.inc';
     require_once('page_data.inc');
     include 'video/filmstrip.inc.php';  // include the common php shared across the filmstrip code
-    include 'object_detail.inc';
+    require_once('object_detail.inc');
     require_once('waterfall.inc');
 
     $page_keywords = array('Video','comparison','Webpagetest','Website Speed Test');

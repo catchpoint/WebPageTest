@@ -1159,14 +1159,14 @@ function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime) {
           $method_class = substr($event['method'], 0, strpos($event['method'], '.'));
           
           // calculate the start time stuff
-          if (!$startTime && ($method_class === 'Page' || $method_class === 'Network'))
-            $startTime = DevToolsEventTime($event);
           if ($method_class === 'Timeline') {
             $eventTime = DevToolsEventEndTime($event);
             if ($eventTime &&
                 (!$startTime || $eventTime <= $startTime) &&
                 (!$lastPaint || $eventTime > $lastPaint)) {
               $encoded = json_encode($event);
+              if (strpos($encoded, '"type":"ResourceSendRequest"') !== false)
+                $startTime = DevToolsEventTime($event);
               if (strpos($encoded, '"type":"Rasterize"') !== false ||
                   strpos($encoded, '"type":"CompositeLayers"') !== false ||
                   strpos($encoded, '"type":"Paint"') !== false) {

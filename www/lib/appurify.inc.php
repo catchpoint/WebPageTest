@@ -24,7 +24,6 @@ class Appurify{
       }
 */      
     }
-    $this->GenerateToken();
   }
   
   /**
@@ -32,7 +31,6 @@ class Appurify{
   */
   public function GetDevices($fromServer = false) {
     $devices = null;
-    $this->Lock();
     $ttl = 120;
     if (!$fromServer && is_file("./tmp/appurify_{$this->key}.devices")) {
       $cache = json_decode(file_get_contents("./tmp/appurify_{$this->key}.devices"), true);
@@ -59,7 +57,6 @@ class Appurify{
       }
       file_put_contents("./tmp/appurify_{$this->key}.devices", json_encode(array('devices' => $devices, 'time' => time())));
     }
-    $this->Unlock();
     return $devices;
   }
   
@@ -69,7 +66,6 @@ class Appurify{
   */
   public function GetConnections($fromServer = false) {
     $connections = null;
-    $this->Lock();
     $ttl = 900;
     if (!$fromServer && is_file("./tmp/appurify_{$this->key}.connections")) {
       $cache = json_decode(file_get_contents("./tmp/appurify_{$this->key}.connections"), true);
@@ -85,7 +81,6 @@ class Appurify{
       }
       file_put_contents("./tmp/appurify_{$this->key}.connections", json_encode(array('connections' => $connections, 'time' => time())));
     }
-    $this->Unlock();
     return $connections;
   }
   
@@ -338,7 +333,6 @@ class Appurify{
   protected $curl;
   protected function GenerateToken() {
     if (!isset($this->token)) {
-      $this->Lock();
       $ttl = 600;
       if (is_file("./tmp/appurify_{$this->key}.token")) {
         $token = json_decode(file_get_contents("./tmp/appurify_{$this->key}.token"), true);
@@ -352,6 +346,7 @@ class Appurify{
           $this->token = $token['token'];
       }
       if (!isset($this->token)) {
+        $this->Lock();
         $result = $this->Post('https://live.appurify.com/resource/access_token/generate/',
                                 array('key' => $this->key,
                                       'secret' => $this->secret,
@@ -360,8 +355,8 @@ class Appurify{
           $this->token = $result['access_token'];
           file_put_contents("./tmp/appurify_{$this->key}.token", json_encode(array('token' => $this->token, 'time' => time())));
         }
+        $this->UnLock();
       }
-      $this->UnLock();
     }
   }
   
@@ -376,6 +371,7 @@ class Appurify{
   
   protected function Post($command, $data = null, $file = null) {
     $ret = false;
+    $this->GenerateToken();
     if ($this->curl !== false) {
       if (isset($this->token)) {
         if(!isset($data))
@@ -413,6 +409,7 @@ class Appurify{
   
   protected function Get($command, $data = null) {
     $ret = false;
+    $this->GenerateToken();
     if ($this->curl !== false) {
       if (isset($this->token)) {
         if(!isset($data))
@@ -442,6 +439,7 @@ class Appurify{
 
   protected function GetFile($command, $file, $data = null) {
     $ret = false;
+    $this->GenerateToken();
     if ($this->curl !== false) {
       if (isset($this->token)) {
         if(!isset($data))
