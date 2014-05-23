@@ -58,31 +58,19 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Determine parent directory of the webpagetest project
-declare wpt_root=
-if [ -L $0 ]; then
-  wpt_root=$(readlink $0)
-else
-  case "$0" in
-    /*) wpt_root="$0" ;;
-    *)  wpt_root="$PWD/$0" ;;
-  esac
-fi
-while [[ ! -d "$wpt_root/agent/js/src" ]]; do
-  wpt_root="${wpt_root%/*}"
-  if [[ -z "$wpt_root" ]]; then
-    echo "Cannot determine project root from $0" 1>&2
-    exit 2
-  fi
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
 done
-
-declare agent="$wpt_root/agent/js"
+declare agent="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 
 export NODE_PATH="${agent}:${agent}/src"
 
 # Find the latest platform-specific chromedriver
 declare -a chromedrivers=( \
-  "$wpt_root/lib/webdriver/chromedriver/$(uname -ms)/chromedriver-"*)
+  "$agent/lib/webdriver/chromedriver/$(uname -ms)/chromedriver-"*)
 declare chromedriver="${chromedrivers[@]:+${chromedrivers[${#chromedrivers[@]}-1]}}"
 
 case "${browser}" in
@@ -104,18 +92,18 @@ case "${browser}" in
         --browser 'browser_android_chrome.BrowserAndroidChrome' \
         --deviceSerial "$deviceSerial" \
         ${chromedriver:+--chromedriver "${chromedriver}"} \
-        --captureDir "$wpt_root/lib/capture");;
+        --captureDir "$agent/lib/capture");;
   ios:*)
     declare deviceSerial="${browser#*:}"
-    declare -a url_apps=("$wpt_root/lib/ios/openURL/openURL"*.ipa)
+    declare -a url_apps=("$agent/lib/ios/openURL/openURL"*.ipa)
     declare url_app="${url_apps[${#url_apps[@]}-1]}"
     declare -a browser_args=( \
         --browser 'browser_ios.BrowserIos' \
         --deviceSerial "$deviceSerial" \
-        --captureDir "$wpt_root/lib/capture" \
-        --iosIDeviceDir "$wpt_root/lib/ios/idevice/$(uname -ms)" \
-        --iosDevImageDir "$wpt_root/lib/ios/DeviceSupport" \
-        --iosSshProxyDir "$wpt_root/lib/ios/usbmux_python_client" \
+        --captureDir "$agent/lib/capture" \
+        --iosIDeviceDir "$agent/lib/ios/idevice/$(uname -ms)" \
+        --iosDevImageDir "$agent/lib/ios/DeviceSupport" \
+        --iosSshProxyDir "$agent/lib/ios/usbmux_python_client" \
         ${url_app:+--iosUrlOpenerApp "$url_app"});;
   *)
     echo "Unknown browser type \"${browser}\""

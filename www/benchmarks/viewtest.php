@@ -34,12 +34,11 @@ else {
 $series = GetSeriesLabels($benchmark);
 $metrics = array('docTime' => 'Load Time (onload)', 
                 'SpeedIndex' => 'Speed Index',
-                'SpeedIndexDT' => 'Speed Index (Dev Tools)',
                 'TTFB' => 'Time to First Byte', 
                 'titleTime' => 'Time to Title', 
                 'render' => 'Time to Start Render', 
                 'visualComplete' => 'Time to Visually Complete', 
-                'VisuallyCompleteDT' => 'Time to Visually Complete (Dev Tools)', 
+                'lastVisualChange' => 'Last Visual Change',
                 'fullyLoaded' => 'Load Time (Fully Loaded)', 
                 'server_rtt' => 'Estimated RTT to Server',
                 'docCPUms' => 'CPU Busy Time',
@@ -70,6 +69,11 @@ if (!$info['video']) {
     unset($metrics['SpeedIndex']);
     $metric = 'docTime';
 }
+if (array_key_exists('metrics', $info) && is_array($info['metrics'])) {
+  foreach ($info['metrics'] as $metric => $label) {
+    $metrics[$metric] = $label;
+  }
+}
 if (array_key_exists('metric', $_REQUEST)) {
     $metric = $_REQUEST['metric'];
 }
@@ -86,7 +90,7 @@ if (array_key_exists('f', $_REQUEST)) {
         <meta name="description" content="Speed up the performance of your web pages with an automated analysis">
         <meta name="author" content="Patrick Meenan">
         <?php $gaTemplate = 'About'; include ('head.inc'); ?>
-        <script type="text/javascript" src="/js/dygraph-combined.js?v=2"></script>
+        <script type="text/javascript" src="/js/dygraph-combined.js?v=1.0.1"></script>
         <style type="text/css">
         .chart-container { clear: both; width: 875px; height: 350px; margin-left: auto; margin-right: auto; padding: 0;}
         .benchmark-chart { float: left; width: 700px; height: 350px; }
@@ -240,7 +244,10 @@ if (array_key_exists('f', $_REQUEST)) {
                                             $cached = '';
                                             if ($test['cached'])
                                                 $cached = 'cached/';
-                                            echo "<a href=\"/result/{$test['id']}/{$test['run']}/details/$cached\">{$test['error']}</a>";
+                                            if (@strlen($test['run']))
+                                              echo "<a href=\"/result/{$test['id']}/{$test['run']}/details/$cached\">{$test['error']}</a>";
+                                            else
+                                              echo "<a href=\"/result/{$test['id']}/\">{$test['error']}</a>";
                                         }
                                         echo "</li>";
                                     }
@@ -316,6 +323,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                     strokeWidth: 0.0,
                     labelsSeparateLines: true,
                     labelsDiv: document.getElementById('{$id}_legend'),
+                    colors: ['#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101'],
                     axes: {x: {valueFormatter: function(urlid) {return {$id}meta[urlid].url;}}},
                     pointClickCallback: function(e, p) {SelectedPoint({$id}meta[p.xval].url, {$id}meta[p.xval]['tests'], p.name, p.xval, false);},
                     $chart_title
@@ -356,7 +364,9 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                         strokeWidth: 0.0,
                         labelsSeparateLines: true,
                         labelsDiv: document.getElementById('{$id}_legend'),
+                        colors: ['#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101'],
                         axes: {x: {valueFormatter: function(urlid) {return {$id}meta[urlid].url;}}},
+                        colors: ['#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101'],
                         pointClickCallback: function(e, p) {SelectedPoint({$id}meta[p.xval].url, {$id}meta[p.xval]['tests'], p.name, p.xval, true);},
                         $chart_title
                         legend: \"always\"}

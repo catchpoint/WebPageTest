@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				RegisterOutput="true"
+				RegisterOutput="false"
 				IgnoreImportLibrary="true"
 				AdditionalOptions="/ignore:4099"
 				AdditionalDependencies="shlwapi.lib ws2_32.lib wininet.lib Version.lib Iphlpapi.lib comsuppwd.lib msimg32.lib winmm.lib Psapi.lib distormd.lib libcaresd.lib jpeg/lib/turbojpeg-static.lib &quot;PageSpeed\lib\Debug\pagespeed.lib&quot;"
@@ -153,7 +153,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				RegisterOutput="true"
+				RegisterOutput="false"
 				IgnoreImportLibrary="true"
 				AdditionalOptions="/ignore:4099"
 				AdditionalDependencies="shlwapi.lib ws2_32.lib wininet.lib Version.lib Iphlpapi.lib comsuppw.lib msimg32.lib winmm.lib Psapi.lib distorm.lib libcares.lib jpeg/lib/turbojpeg-static.lib &quot;PageSpeed\lib\Release\pagespeed.lib&quot;"

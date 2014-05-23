@@ -459,9 +459,9 @@ void TestState::GrabVideoFrame(bool force) {
     bool grab_video = false;
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
-    if (!_last_video_time.QuadPart || _test._continuous_video)
+    if (!_last_video_time.QuadPart || _test._continuous_video) {
       grab_video = true;
-    else {
+    } else {
       DWORD interval = DATA_COLLECTION_INTERVAL;
       if (_video_capture_count > SCREEN_CAPTURE_INCREMENTS * 2)
         interval *= 20;
@@ -587,11 +587,11 @@ void TestState::FindViewport(bool force) {
         DWORD x = width / 2;
         DWORD y = height / 2;
         RECT viewport = {0,0,0,0}; 
-        viewport.right = width - 1;
         DWORD row_bytes = image.GetEffWidth();
+        DWORD pixel_bytes = row_bytes / width;
         unsigned char * middle = image.GetBits(y);
         if (middle) {
-          middle += row_bytes / 2;
+          middle += x * pixel_bytes;
           unsigned char background[3];
           memcpy(background, middle, 3);
           // find the top
@@ -602,7 +602,7 @@ void TestState::FindViewport(bool force) {
             pixel += row_bytes;
             y++;
           }
-          // find the top
+          // find the bottom
           y = height / 2;
           pixel = middle;
           while (y && !viewport.bottom) {
@@ -613,6 +613,25 @@ void TestState::FindViewport(bool force) {
           }
           if (!viewport.bottom)
             viewport.bottom = height - 1;
+          // find the left
+          pixel = middle;
+          while (x && !viewport.left) {
+            if (memcmp(background, pixel, 3))
+              viewport.left = x + 1;
+            pixel -= pixel_bytes;
+            x--;
+          }
+          // find the right
+          x = width / 2;
+          pixel = middle;
+          while (x < width && !viewport.right) {
+            if (memcmp(background, pixel, 3))
+              viewport.right = x - 1;
+            pixel += pixel_bytes;
+            x++;
+          }
+          if (!viewport.right)
+            viewport.right = width - 1;
         }
         if (viewport.right - viewport.left > (long)width / 2 &&
           viewport.bottom - viewport.top > (long)height / 2) {

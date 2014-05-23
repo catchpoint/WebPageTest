@@ -30,14 +30,17 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
       if ($location['elapsed'] < 30)
         $error = ' success';
     }
-    echo "<tr id=\"$name\"><th class=\"header$error\" colspan=\"12\">" . htmlspecialchars($name) . "$elapsed</th></tr>\n";
+    echo "<tr id=\"$name\"><th class=\"header$error\" colspan=\"13\">" . htmlspecialchars($name) . "$elapsed</th></tr>\n";
     if (array_key_exists('testers', $location)) {
-      echo "<tr><th class=\"tester\">Tester</th><th>Version</th><th>PC</th><th>EC2 Instance</th><th>CPU Utilization</th><th>Free Disk (GB)</th><th>IE Version</th>";
-      echo "<th>GPU?</th><th>IP</th><th>Busy?</th><th>Last Check (minutes)</th><th>Last Work (minutes)</th></tr>\n";
+      echo "<tr><th class=\"tester\">Tester</th><th>Busy?</th><th>Last Check (minutes)</th><th>Last Work (minutes)</th><th>Version</th><th>PC</th><th>EC2 Instance</th><th>CPU Utilization</th><th>Free Disk (GB)</th><th>IE Version</th>";
+      echo "<th>GPU?</th><th>IP</th><th>DNS Server(s)</th></tr>\n";
       $count = 0;
       foreach($location['testers'] as $tester) {
         $count++;
         echo "<tr><td class=\"tester\">$count</td>";
+        echo "<td>" . @htmlspecialchars($tester['busy']) . "</td>";
+        echo "<td>" . @htmlspecialchars($tester['elapsed']) . "</td>";
+        echo "<td>" . @htmlspecialchars($tester['last']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['version']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['pc']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['ec2']) . "</td>";
@@ -46,9 +49,7 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
         echo "<td>" . @htmlspecialchars($tester['ie']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['GPU']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['ip']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['busy']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['elapsed']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['last']) . "</td>";
+        echo "<td>" . @htmlspecialchars($tester['dns']) . "</td>";
         echo "</tr>";
       }
     }

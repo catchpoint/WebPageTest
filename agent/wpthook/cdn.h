@@ -125,6 +125,7 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "ECAcc", "Edgecast"},
   {"server", "ECD", "Edgecast"},
   {"server", "NetDNA", "NetDNA"},
+  {"server", "Airee", "Airee"},
   {"X-CDN-Geo", "", "OVH CDN"},
   {"X-Px", "", "CDNetworks"},
   {"X-Instart-Request-ID", "instart", "Instart Logic"},

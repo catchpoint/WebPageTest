@@ -1,6 +1,7 @@
 <?php
 chdir('..');
 include 'common.inc';
+error_reporting(E_ALL);
 
 // check and see if all of the locations have checked in within the last 30 minutes
 
@@ -17,68 +18,81 @@ $count = 0;
 $collected = '';
 
 $files = scandir('./tmp');
-foreach( $files as $file )
-{
-    if(is_file("./tmp/$file"))
-    {
-        $parts = pathinfo($file);
-        if( !strcasecmp( $parts['extension'], 'tm') )
-        {
-            $loc = basename($file, ".tm");;
-            $fileName = "./tmp/$file";
-            
-            $updated = filemtime($fileName);
-            $now = time();
-            $elapsed = 0;
-            if( $now > $updated )
-                $elapsed = $now - $updated;
-            $minutes = (int)($elapsed / 60);
-            
-            // if it has been over 3 days, stop sending alerts
-            if( $minutes < 4320 && $minutes > 60 && array_key_exists($loc, $locations) && !$locations[$loc]['hidden'])
-            {
-                $collected .= "$loc - $minutes minutes";
-                $count++;
-
-                // if it has been over 60 minutes, send out a notification    
-                // figure out who to notify
-                $to = '';
-                if( $locations[$loc]['notify'] )
-                {
-                    $to = $locations[$loc]['notify'];
-                    $collected .= " : notified $to";
-                }
-                $collected .= "\r\n";
-                
-                if( strlen($to) )
-                {
-                    $subject = "$loc WebPagetest ALERT";
-                    $body = "The $loc location has not checked for new jobs in $minutes minutes.";
-                    SendMessage($to, $subject, $body);
-                    echo "$loc: $elapsed sec (notified $to)\r\n";
-                } else {
-                  echo "$loc: $elapsed sec (nobody to notify)\r\n";
-                }
-            } else {
-              echo "$loc: $elapsed sec (silent)\r\n";
-            }
+foreach( $files as $file ) {
+  if(is_file("./tmp/$file")) {
+    $parts = pathinfo($file);
+    if( !strcasecmp( $parts['extension'], 'tm') ) {
+      $loc = basename($file, ".tm");
+      $fileName = "./tmp/$file";
+      $updated = filemtime($fileName);
+      $now = time();
+      $elapsed = 0;
+      if( $now > $updated )
+          $elapsed = $now - $updated;
+      $minutes = (int)($elapsed / 60);
+      
+      if ($minutes < 4320 &&
+          array_key_exists($loc, $locations) &&
+          (!array_key_exists('hidden', $locations[$loc]) || !$locations[$loc]['hidden'])) {
+        $alert = null;
+        if($minutes > 60) {
+          $alert = "has not checked for new jobs in $minutes minutes.";
+          $collected .= "$loc - $minutes minutes";
+        } elseif (array_key_exists('agents', $locations[$loc]) && $locations[$loc]['agents']) {
+          $configured = $locations[$loc]['agents'];
+          $expected = array_key_exists('min-agents', $locations[$loc]) ? $locations[$loc]['min-agents'] : $configured;
+          $testers = GetTesterCount($loc);
+          if ($testers < $expected) {
+            $missing = $configured - $testers;
+            $alert = "has $missing agents offline ($testers connected, minimum of $expected of the $configured required).";
+            $collected .= "$loc - $missing agents offline";
+          }
         }
+        
+        if(isset($alert)) {
+          $count++;
+
+          // if it has been over 60 minutes, send out a notification    
+          // figure out who to notify
+          $to = '';
+          if( array_key_exists('notify', $locations[$loc]) &&
+              strlen($locations[$loc]['notify']) ) {
+            $to = $locations[$loc]['notify'];
+            $collected .= " : notified $to";
+          }
+          $collected .= "\r\n";
+          
+          if( strlen($to) ) {
+            $subject = "$loc WebPagetest ALERT";
+            $body = "The $loc location $alert";
+            SendMessage($to, $subject, $body);
+            echo "$loc: $alert (notified $to)\r\n";
+          } else {
+            echo "$loc: $alert (nobody to notify)\r\n";
+          }
+        } else {
+          echo "$loc: OK\r\n";
+        }
+      }
     }
+  }
 }
 
+echo "\r\n\r\n$count issues:\r\n$collected";
+
 if (array_key_exists('notify', $settings['settings'])) {
-    $to = $settings['settings']['notify'];
-    if ($count && strlen($collected))
-      SendMessage($to, "$count locations offline - WebPagetest ALERT", $collected);
-    
-    // send the slow logs from the last hour
-    if (strlen($to) && is_file('./tmp/slow_tests.log')) {
-        $slow = file_get_contents('./tmp/slow_tests.log');
-        unlink('./tmp/slow_tests.log');
-        if ($slow !== false && strlen($slow)) {
-            SendMessage($to, 'Slow tests report', $slow);
-        }
+  $to = $settings['settings']['notify'];
+  if ($count && strlen($collected))
+    SendMessage($to, "$count locations with issues - WebPagetest ALERT", $collected);
+  
+  // send the slow logs from the last hour
+  if (strlen($to) && is_file('./tmp/slow_tests.log')) {
+    $slow = file_get_contents('./tmp/slow_tests.log');
+    unlink('./tmp/slow_tests.log');
+    if ($slow !== false && strlen($slow)) {
+      SendMessage($to, 'Slow tests report', $slow);
     }
+  }
 }
 
 function SendMessage($to, $subject, &$body) {

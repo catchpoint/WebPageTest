@@ -44,8 +44,6 @@ var RESULT_IMAGE_SERVLET = 'work/resultimage.php';
 var WORK_DONE_SERVLET = 'work/workdone.php';
 
 // Task JSON field names
-var JOB_CAPTURE_PACKETS = 'tcpdump';
-var JOB_CAPTURE_VIDEO = 'Capture Video';
 var JOB_FIRST_VIEW_ONLY = 'fvonly';
 var JOB_REPLAY = 'replay';
 var JOB_RUNS = 'runs';
@@ -72,7 +70,6 @@ var SIGNAL_NAMES = [SIGQUIT, SIGABRT, SIGTERM, SIGINT];
  * Public attributes:
  *   task JSON descriptor received from the server for this job.
  *   id the job id
- *   captureVideo true to capture a video of the page load.
  *   runs the total number of repetitions for the job.
  *   runNumber the current iteration number.
  *       Incremented when calling runFinished with isRunFinished=true.
@@ -109,8 +106,6 @@ function Job(client, task) {
         JSON.stringify(task));
   }
   this.runs = runs;
-  this.captureVideo = jsonBoolean(task, JOB_CAPTURE_VIDEO);
-  this.capturePackets = jsonBoolean(task, JOB_CAPTURE_PACKETS);
   this.isFirstViewOnly = jsonBoolean(task, JOB_FIRST_VIEW_ONLY);
   this.isReplay = jsonBoolean(task, JOB_REPLAY);
   this.runNumber = this.isReplay ? 0 : 1;

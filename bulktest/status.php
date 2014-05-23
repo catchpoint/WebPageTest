@@ -193,7 +193,8 @@ function GetTestResult(&$data, &$result) {
             if (array_key_exists('run', $data['median']['repeatView']))
               $result['rv_run'] = (int)$data['median']['repeatView']['run'];
             foreach ($metrics as $metric) {
-                $result["rv_$metric"] = (int)$data['median']['repeatView'][$metric];
+                if (array_key_exists($metric, $data['median']['repeatView']))
+                  $result["rv_$metric"] = (int)$data['median']['repeatView'][$metric];
                 if (array_key_exists('standardDeviation', $data) &&
                     is_array($data['standardDeviation']) &&
                     array_key_exists('repeatView', $data['standardDeviation']) &&

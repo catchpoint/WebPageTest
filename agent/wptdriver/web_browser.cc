@@ -34,6 +34,8 @@ typedef void(__stdcall * LPINSTALLHOOK)(DWORD thread_id);
 const int PIPE_IN = 1;
 const int PIPE_OUT = 2;
 static const TCHAR * GLOBAL_TESTING_MUTEX = _T("Global\\wpt_testing_active");
+static const TCHAR * BROWSER_STARTED_EVENT = _T("Global\\wpt_browser_started");
+static const TCHAR * BROWSER_DONE_EVENT = _T("Global\\wpt_browser_done");
 static const TCHAR * FLASH_CACHE_DIR = 
                         _T("Macromedia\\Flash Player\\#SharedObjects");
 static const TCHAR * SILVERLIGHT_CACHE_DIR = _T("Microsoft\\Silverlight");
@@ -92,6 +94,10 @@ WebBrowser::WebBrowser(WptSettings& settings, WptTestDriver& test,
   if( InitializeSecurityDescriptor(&SD, SECURITY_DESCRIPTOR_REVISION) )
     if( SetSecurityDescriptorDacl(&SD, TRUE,(PACL)NULL, FALSE) )
       null_dacl.lpSecurityDescriptor = &SD;
+  _browser_started_event = CreateEvent(&null_dacl, TRUE, FALSE,
+                                       BROWSER_STARTED_EVENT);
+  _browser_done_event = CreateEvent(&null_dacl, TRUE, FALSE,
+                                    BROWSER_DONE_EVENT);
 }
 
 /*-----------------------------------------------------------------------------
@@ -102,9 +108,8 @@ WebBrowser::~WebBrowser(void) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool WebBrowser::RunAndWait(bool &critical_error) {
+bool WebBrowser::RunAndWait() {
   bool ret = false;
-  critical_error = false;
 
   // signal to the IE BHO that it needs to inject the code
   HANDLE active_event = CreateMutex(&null_dacl, TRUE, GLOBAL_TESTING_MUTEX);
@@ -209,131 +214,66 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
       HANDLE additional_process = NULL;
       CAtlArray<HANDLE> browser_processes;
       bool ok = true;
+
+      // Launch the browser and wait for the hook to start
       TerminateProcessesByName(PathFindFileName((LPCTSTR)_browser._exe));
-      if (CreateProcess(_browser._exe, cmdLine, NULL, NULL, FALSE,
-                        CREATE_SUSPENDED, NULL, NULL, &si, &pi)) {
-        _browser_process = pi.hProcess;
-        browser_processes.Add(pi.hProcess);
+      SetBrowserExe(PathFindFileName((LPCTSTR)_browser._exe));
+      if (_browser_started_event && _browser_done_event) {
+        ResetEvent(_browser_started_event);
+        ResetEvent(_browser_done_event);
 
-        ResumeThread(pi.hThread);
-        if (WaitForInputIdle(pi.hProcess, 120000) != 0) {
-          ok = false;
-          critical_error = true;
-          _status.Set(_T("Error waiting for browser to launch\n"));
-          _test._run_error = "Failed while waiting for the browser to launch.";
-        }
-
-        // wait for the child process to start if we are expecting one (Safari)
-        if (ok && hook_child) {
-          Sleep(1000);
-          for (int attempts = 0;
-               attempts < 600 && !additional_process;
-               attempts++) {
-            additional_process = FindAdditionalHookProcess(pi.hProcess, exe);
-            if (!additional_process)
-              Sleep(100);
-          }
-        }
-
-        if (hook) {
-          SuspendThread(pi.hThread);
-          if (ok && !InstallHook(pi.hProcess)) {
+        if (CreateProcess(_browser._exe, cmdLine, NULL, NULL, FALSE,
+                          0, NULL, NULL, &si, &pi)) {
+          CloseHandle(pi.hThread);
+          CloseHandle(pi.hProcess);
+          if (WaitForSingleObject(_browser_started_event, 60000) ==
+              WAIT_OBJECT_0) {
+            DWORD pid = GetBrowserProcessId();
+            if (pid) {
+              _browser_process = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE,
+                                             FALSE, pid);
+            }
+          } else {
             ok = false;
-            critical_error = true;
-            _status.Set(_T("Error instrumenting browser\n"));
-            _test._run_error = "Failed to instrument the browser.";
+            _status.Set(_T("Error waiting for browser to launch"));
+            _test._run_error = "Timed out waiting for the browser to start.";
           }
-          if (additional_process)
-            InstallHook(additional_process);
-          ResumeThread(pi.hThread);
+        } else {
+          ok = false;
+          _status.Set(_T("Error Launching: %s"), cmdLine);
+          _test._run_error = "Failed to launch the browser.";
         }
-        CloseHandle(pi.hThread);
-        SetPriorityClass(pi.hProcess, ABOVE_NORMAL_PRIORITY_CLASS);
-      } else {
-        _status.Set(_T("Error Launching: %s\n"), cmdLine);
-        _test._run_error = "Failed to launch the browser.";
-        critical_error = true;
-      }
-      LeaveCriticalSection(&cs);
+        LeaveCriticalSection(&cs);
 
-      // wait for the browser to finish (infinite timeout if we are debugging)
-      if (_browser_process && ok) {
-        _status.Set(_T("Waiting up to %d seconds for the test to complete\n"), 
-                    (_test._test_timeout / SECONDS_TO_MS) * 2);
-        DWORD wait_time = _test._test_timeout * 2;
-        #ifdef DEBUG
-        wait_time = INFINITE;
-        #endif
-        if (additional_process) {
-          HANDLE handles[2];
-          handles[0] = _browser_process;
-          handles[1] = additional_process;
-          DWORD result = WaitForMultipleObjects(2, handles, TRUE, wait_time);
-          if (result == WAIT_OBJECT_0 || result == WAIT_OBJECT_0 + 1)
-            ret = true;
-        } else if (WaitForSingleObject(_browser_process, wait_time) != 
-                   WAIT_TIMEOUT ) {
+        // wait for the browser to finish (infinite timeout if we are debugging)
+        if (_browser_process && ok) {
           ret = true;
+          _status.Set(_T("Waiting up to %d seconds for the test to complete"), 
+                      (_test._test_timeout / SECONDS_TO_MS) * 2);
+          DWORD wait_time = _test._test_timeout * 2;
+          #ifdef DEBUG
+          wait_time = INFINITE;
+          #endif
+          WaitForSingleObject(_browser_done_event, wait_time);
+          WaitForSingleObject(_browser_process, 10000);
         }
-
-        // see if we need to attach to a child firefox process 
-        // < 4.x spawns a child process after initializing a new profile
-        CString browser_exe;
-        exe.MakeLower();
-        if (exe.Find(_T("firefox.exe")) >= 0)
-          browser_exe = _T("firefox.exe");
-        else if (exe.Find(_T("iexplore.exe")) >= 0)
-          browser_exe = _T("iexplore.exe");
-        if (ret && browser_exe.GetLength()) {
-          EnterCriticalSection(&cs);
-          if (FindBrowserChild(pi.dwProcessId, pi, browser_exe)) {
-            CloseHandle(_browser_process);
-            _browser_process = pi.hProcess;
-            if (WaitForInputIdle(pi.hProcess, 120000) == 0) {
-              if (pi.hThread)
-                SuspendThread(pi.hThread);
-              if (hook && !InstallHook(pi.hProcess))
-                ok = false;
-              if (pi.hThread) {
-                ResumeThread(pi.hThread);
-                CloseHandle(pi.hThread);
-              }
-            }
-          }
-          LeaveCriticalSection(&cs);
-          if (ok) {
-            ret = false;
-            #ifdef DEBUG
-            if (WaitForSingleObject(_browser_process, INFINITE ) ==
-                WAIT_OBJECT_0 ) {
-              ret = true;
-            }
-            #else
-            if (WaitForSingleObject(_browser_process,
-                                    _test._test_timeout * 2) == 
-                WAIT_OBJECT_0 ) {
-              ret = true;
-            }
-            #endif
-          }
-        }
+      } else {
+        _status.Set(_T("Error initializing browser event"));
+        _test._run_error =
+            "Failed while initializing the browser started event.";
       }
 
       // kill the browser and any child processes if it is still running
       EnterCriticalSection(&cs);
       if (_browser_process) {
-        TerminateProcess(_browser_process, 0);
-        WaitForSingleObject(_browser_process, 120000);
         CloseHandle(_browser_process);
         _browser_process = NULL;
       }
-      if (additional_process) {
-        TerminateProcess(additional_process, 0);
-        WaitForSingleObject(additional_process, 120000);
-        CloseHandle(additional_process);
-      }
       LeaveCriticalSection(&cs);
+
+      SetBrowserExe(NULL);
       ResetIpfw();
+
     } else {
       _test._run_error = "Browser configured incorrectly (exe not defined).";
     }

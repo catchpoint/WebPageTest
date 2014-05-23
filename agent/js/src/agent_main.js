@@ -77,10 +77,12 @@ function Agent(app, client, flags) {
   }
   this.runTempDir_ = 'runtmp' + (runTempSuffix ? '_' + runTempSuffix : '');
   this.wdServer_ = undefined;  // The wd_server child process.
-  this.webPageReplay_ = new web_page_replay.WebPageReplay(this.app_, flags);
+  this.webPageReplay_ = new web_page_replay.WebPageReplay(this.app_,
+      {flags: flags});
 
   // Create a single (separate) instance of the browser for checking status.
-  this.browser_ = browser_base.createBrowser(this.app_, flags);
+  this.browser_ = browser_base.createBrowser(this.app_,
+      {flags: flags, task: {}});
 
   this.client_.onStartJobRun = this.startJobRun_.bind(this);
   this.client_.onAbortJob = this.abortJob_.bind(this);
@@ -261,37 +263,53 @@ Agent.prototype.startJobRun_ = function(job) {
     url = 'http://' + url;
   }
   this.scheduleNoFault_('Send IPC "run"', function() {
-    var isRecordingRun = 0 === job.runNumber;
+    // Copy our flags and task
+    var flags = {};
+    Object.getOwnPropertyNames(this.flags_).forEach(function(flagName) {
+      flags[flagName] = this.flags_[flagName];
+    }.bind(this));
+    var task = {};
+    Object.getOwnPropertyNames(job.task).forEach(function(key) {
+      task[key] = job.task[key];
+    }.bind(this));
+    // Override some task fields:
+    if (!!script) {
+      task.script = script;
+    } else {
+      delete task.script;
+    }
+    if (!!url) {
+      task.url = url;
+    }
+    if (!!pac) {
+      task.pac = pac;
+    }
+    var exitWhenDone = job.isFirstViewOnly || job.isCacheWarm;
+    if (0 === job.runNumber) {  // Recording run
+      exitWhenDone = true;
+      // Supress video, packet, and timeline capture
+      if (1 === task['Capture Video']) {
+        delete task['Capture Video'];
+      }
+      if (1 === task.tcpdump) {
+        delete task.tcpdump;
+      }
+      if (1 === task.timeline) {
+        delete task.timeline;
+      }
+      if (1 !== task.pngScreenshot) {
+        task.pngScreenshot = 1;  // Don't convert PNG to JPG
+      }
+    }
     var message = {
         cmd: 'run',
         runNumber: job.runNumber,
-        exitWhenDone: job.isFirstViewOnly || job.isCacheWarm || isRecordingRun,
-        script: script,
-        url: url,
-        pac: pac,
+        exitWhenDone: exitWhenDone,
         timeout: this.client_.jobTimeout,
         runTempDir: this.runTempDir_,
-        // On WPR recording, suppress capture of video, packets, and timeline.
-        captureVideo: job.captureVideo && !isRecordingRun,
-        capturePackets: job.capturePackets && !isRecordingRun,
-        captureTimeline: !!job.task.timeline && !isRecordingRun,
-        // On WPR recording, suppress conversion of PNGs to JPEGs.
-        pngScreenShot: !!job.task.pngScreenShot || isRecordingRun
+        flags: flags,
+        task: task
       };
-   // Add our flags, e.g. deviceSerial and chromePackage.
-    Object.getOwnPropertyNames(this.flags_).forEach(function(flagName) {
-      if (!message[flagName]) {
-        // Rename 'browser' to avoid a conflict with job.task.browser.
-        var key = ('browser' === flagName ? 'browserType' : flagName);
-        message[key] = this.flags_[flagName];
-      }
-    }.bind(this));
-    // Add job.task options, e.g. browser and imageQuality.
-    Object.getOwnPropertyNames(job.task).forEach(function(key) {
-      if (!message[key]) {
-        message[key] = job.task[key];
-      }
-    }.bind(this));
     this.wdServer_.send(message);
   }.bind(this));
 };
@@ -545,22 +563,28 @@ Agent.prototype.trafficShaper_ =
  */
 Agent.prototype.startTrafficShaper_ = function(job) {
   'use strict';
-  var halfDelay = Math.floor(job.task.latency / 2);
-  var opts = {
-      down_bw: job.task.bwIn && (1000 * job.task.bwIn),
-      down_delay: job.task.latency && halfDelay,
-      down_plr: job.task.plr && 0,
-      up_bw: job.task.bwOut && (1000 * job.task.bwOut),
-      up_delay: job.task.latency && job.task.latency - halfDelay,
-      up_plr: job.task.plr && job.task.plr  // All loss on out.
-    };
-  this.trafficShaper_('set', opts).addErrback(function(e) {
-    var stderr = (e.stderr || e.message || '').trim();
-    throw new Error('Unable to configure traffic shaping:\n' + stderr + '\n' +
-      ' To disable traffic shaping, re-run your test with ' +
-      '"Advanced Settings > Test Settings > Connection = Native Connection"' +
-      ' or add "connectivity=WiFi" to this location\'s WebPagetest config.');
-  }.bind(this));
+  if (job.task.bwIn || job.task.bwOut || job.task.latency || job.task.plr) {
+    var halfDelay = Math.floor(job.task.latency / 2);
+    var opts = {
+        down_bw: job.task.bwIn && (1000 * job.task.bwIn),
+        down_delay: job.task.latency && halfDelay,
+        down_plr: job.task.plr && 0,
+        up_bw: job.task.bwOut && (1000 * job.task.bwOut),
+        up_delay: job.task.latency && job.task.latency - halfDelay,
+        up_plr: job.task.plr && job.task.plr  // All loss on out.
+      };
+    this.trafficShaper_('set', opts).addErrback(function(e) {
+      var stderr = (e.stderr || e.message || '').trim();
+      throw new Error('Unable to configure traffic shaping:\n' + stderr + '\n' +
+        ' To disable traffic shaping, re-run your test with ' +
+        '"Advanced Settings > Test Settings > Connection = Native Connection"' +
+        ' or add "connectivity=WiFi" to this location\'s WebPagetest config.');
+    }.bind(this));
+  } else {
+    this.trafficShaper_('clear').addErrback(function(/*e*/) {
+      logger.debug('Ignoring failed trafficShaper clear');
+    }.bind(this));
+  }
 };
 
 /**

@@ -1,6 +1,6 @@
 browser=Firefox
-url=http://s3.amazonaws.com/wpt-software/firefox_27.exe
-md5=3F4E4AD976A7AF2C353CBAEF1311DF66
-version=27
-command=firefox_27.exe -ms
+url=http://httparchive.webpagetest.org/installers/firefox_29.exe
+md5=3A8B2794AE3723A5D2C6FF926E5E3B2C
+version=29
+command=firefox_29.exe -ms
 update=1

@@ -513,8 +513,6 @@ void OptimizationChecks::CheckCDN() {
         isStatic = true;
         request->_scores._static_cdn_score = 0;
       }
-      CStringA host = request->GetHost();
-      host.MakeLower();
       if (IsCDN(request, request->_scores._cdn_provider) && isStatic)
         request->_scores._static_cdn_score = 100;
       if (request->_is_base_page)

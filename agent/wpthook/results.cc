@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "cximage/ximage.h"
 #include <zlib.h>
 #include <zip.h>
+#include <regex>
 
 static const TCHAR * PAGE_DATA_FILE = _T("_IEWPG.txt");
 static const TCHAR * REQUEST_DATA_FILE = _T("_IEWTR.txt");
@@ -313,7 +314,8 @@ bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2) {
           pixel_bytes = 4;
         DWORD width = max(img1->GetWidth() - RIGHT_MARGIN, 0);
         DWORD height = img1->GetHeight();
-        DWORD row_length = width * pixel_bytes;
+        DWORD row_bytes = img1->GetEffWidth();
+        DWORD row_length = width * (DWORD)(row_bytes / width);
         for (DWORD row = BOTTOM_MARGIN; row < height && !different; row++) {
           BYTE * r1 = img1->GetBits(row);
           BYTE * r2 = img2->GetBits(row);
@@ -779,6 +781,9 @@ void Results::ProcessRequests(void) {
   bool base_page = true;
   base_page_redirects_ = 0;
   adult_site_ = false;
+  LONGLONG new_end = 0;
+  LONGLONG new_first_byte = 0;
+  std::tr1::regex adult_regex("[^0-9]2257[^0-9]");
   while (pos) {
     Request * request = _requests._requests.GetNext(pos);
     if (request && 
@@ -838,14 +843,28 @@ void Results::ProcessRequests(void) {
           if (result_code == 200) {
             DataChunk body_chunk = request->_response_data.GetBody(true);
             CStringA body(body_chunk.GetData(), body_chunk.GetLength());
-            if (body.Find("2257") != -1) {
+            if (regex_search((LPCSTR)body, adult_regex))
               adult_site_ = true;
-            }
           }
         }
       }
+      new_end = max(new_end, request->_end.QuadPart);
+      new_end = max(new_end, request->_start.QuadPart);
+      new_end = max(new_end, request->_first_byte.QuadPart);
+      new_end = max(new_end, request->_dns_start.QuadPart);
+      new_end = max(new_end, request->_dns_end.QuadPart);
+      new_end = max(new_end, request->_connect_start.QuadPart);
+      new_end = max(new_end, request->_connect_end.QuadPart);
+      if (request->_first_byte.QuadPart &&
+          result_code != 301 && result_code != 302 && 
+          (!new_first_byte || request->_first_byte.QuadPart < new_first_byte))
+        new_first_byte = request->_first_byte.QuadPart;
     }
   }
+  if (new_end)
+    _test_state._last_activity.QuadPart = new_end;
+  if (new_first_byte)
+    _test_state._first_byte.QuadPart = new_first_byte;
   _requests.Unlock();
 }
 

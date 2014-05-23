@@ -3,7 +3,7 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('RestoreTest');
 }
 
-define('VIDEO_CODE_VERSION', 13);
+define('VIDEO_CODE_VERSION', 15);
 
 require_once('./logging.inc');
 
@@ -1576,16 +1576,7 @@ function GetTesters($locationId)
 */
 function LockLocation($location)
 {
-  if( !is_dir('./tmp') )
-    mkdir('./tmp');
-  $lock = fopen( "./tmp/$location.lock", 'w',  false);
-  if( $lock ) {
-    if( !flock($lock, LOCK_EX) ) {
-      fclose($lock);
-      $lock = false;
-    }
-  }
-  return $lock;
+  return Lock("Location $location", true, 30);
 }
 
 /**
@@ -1593,46 +1584,80 @@ function LockLocation($location)
 */
 function UnlockLocation($lock)
 {
-  if( $lock ) {
-    flock($lock, LOCK_UN);
-    fclose($lock);
+  Unlock($lock);
+}
+
+$RemainingLocks = null;
+function CleanupLocks() {
+  global $RemainingLocks;
+  if (isset($RemainingLocks)) {
+    foreach($RemainingLocks as $lockfile) {
+      if (strlen($lockfile) && is_file($lockfile))
+        @unlink($lockfile);
+    }
   }
 }
 
-function Lock($name) {
+function Lock($name, $blocking = true, $maxLockSeconds = 300) {
+  global $RemainingLocks;
   $lock = null;
   if (strlen($name)) {
     if( !is_dir('./tmp') )
       mkdir('./tmp');
-    $lockFile = './tmp' . sha1($name) . '.lock';
-    $file = fopen( "./tmp/$location.lock", 'w',  false);
-    if( $file ) {
-      if( flock($file, LOCK_EX) ) {
-        $lock = array('lock' => $file, 'file' => $lockFile);
-      } else {
+    if (preg_match('/^[a-zA-Z0-9-_ ]+$/', $name))
+      $lockFile = './tmp/named-' . str_replace(' ', '-', $name) . '.lock';
+    else
+      $lockFile = './tmp/lock-' . sha1($name) . '.lock';
+    $start = time();
+    do {
+      $file = @fopen($lockFile, 'x');
+      if ($file !== false) {
         fclose($file);
+        $lock = array('name' => $name);
+        $lock['file'] = realpath($lockFile);
+      } else {
+        // see if the lock is stale
+        $modified = @filemtime($lockFile);
+        if ($modified && time() - $modified > $maxLockSeconds) {
+          @unlink($lockFile);
+        } elseif ($blocking) {
+          usleep(100000);
+        }
       }
+      $elapsed = time() - $start;
+    } while (!isset($lock) && $blocking && $elapsed < $maxLockSeconds);
+  }
+  if (isset($lock)) {
+    if (!isset($RemainingLocks)) {
+      $RemainingLocks = array();
+      register_shutdown_function('CleanupLocks');
     }
+    $RemainingLocks[] = $lock['file'];
   }
   return $lock;
 }
 
 function UnLock(&$lock) {
-  if( isset($lock) && is_array($lock) ) {
-    if (array_key_exists('lock', $lock) && $lock['lock']) {
-      flock($lock['lock'], LOCK_UN);
-      fclose($lock['lock']);
+  global $RemainingLocks;
+  if (isset($lock)) {
+    if (is_array($lock) && array_key_exists('file', $lock) && strlen($lock['file'])) {
+      if (is_file($lock['file']))
+        unlink($lock['file']);
+      if (isset($RemainingLocks) && is_array($RemainingLocks)) {
+        foreach ($RemainingLocks as $index => $file) {
+          if ($file == $lock['file']) {
+            unset($RemainingLocks[$index]);
+            break;
+          }
+        }
+      }
     }
-    if (array_key_exists('file', $lock) &&
-        strlen($lock['file']) &&
-        is_file($lock['file'])) {
-      unlink($lock['file']);
-    }
+    unset($lock);
   }
 }
 
 function LockTest($testIdOrPath) {
-  $lock = false;
+  $lock = null;
   $testPath = $testIdOrPath;
   if (strpos($testPath, '/') === false) {
     $id = $testPath;
@@ -1641,21 +1666,15 @@ function LockTest($testIdOrPath) {
       $testPath = './' . GetTestPath($id);
   }
   if (strlen($testPath) && is_dir($testPath)) {
-    $lock = fopen( "$testPath/test.lock", 'w',  false);
-    if( $lock ) {
-      if( !flock($lock, LOCK_EX) ) {
-        fclose($lock);
-        $lock = false;
-      }
-    }
+    $testPath = realpath($testPath);
+    $lock = Lock("Test $testPath");
   }
   return $lock;
 }
 
 function UnlockTest(&$testLock) {
   if (isset($testLock) && $testLock) {
-    flock($testLock, LOCK_UN);
-    fclose($testLock);
+    Unlock($testLock);
     $testLock = null;
   }
 }
@@ -2088,7 +2107,7 @@ function updateLabel($test_guid, $label, $test_uid, $cur_user, $test_owner) {
 */
 function getLabel($test_guid, $current_user) {
     if (!class_exists("SQLite3")) {
-        return "SQLite3 must be installed to get updated test labels";
+        return false;
     }
 
     $db = new SQLite3('./dat/labels.db');
@@ -2119,38 +2138,23 @@ function uniqueId(&$test_num) {
 
     // try locking the context file
     $filename = './work/jobs/uniqueId.dat';
-    $file = fopen( $filename, "a+b",  false);
-    if( $file ) {
-        if( flock($file, LOCK_EX) ) {
-            fseek($file, 0, SEEK_SET);
-            $json = fread($file, 300);
-            $num = 0;
-            $day = (int)date('z');
-            $testData = array('day' => $day, 'num' => 0);
-            if ($json !== false) {
-                $newData = json_decode($json, true);
-                if (isset($newData) && is_array($newData) &&
-                    array_key_exists('day', $newData) &&
-                    array_key_exists('num', $newData) &&
-                    $newData['day'] == $day) {
-                    $testData['num'] = $newData['num'];
-                }
-            }
-
-            $testData['num']++;
-            $test_num = $testData['num'];
-
-            // convert the number to a base-32 string for shorter text
-            $id = NumToString($testData['num']);
-
-            // go back to the beginning of the file and write out the new value
-            fseek($file, 0, SEEK_SET);
-            ftruncate($file, 0);
-            fwrite($file, json_encode($testData));
-            flock($file, LOCK_UN);
-        }
-
-        fclose($file);
+    $lock = Lock("Unique ID");
+    if ($lock) {
+      $num = 0;
+      $day = (int)date('z');
+      $testData = array('day' => $day, 'num' => 0);
+      $newData = json_decode(file_get_contents($filename), true);
+      if (isset($newData) && is_array($newData) &&
+          array_key_exists('day', $newData) &&
+          array_key_exists('num', $newData) &&
+        $newData['day'] == $day) {
+        $testData['num'] = $newData['num'];
+      }
+      $testData['num']++;
+      $test_num = $testData['num'];
+      $id = NumToString($testData['num']);
+      file_put_contents($filename, json_encode($testData));
+      Unlock($lock);
     }
 
     if (!isset($id)) {
@@ -2201,8 +2205,14 @@ function GetTestInfo($testIdOrPath) {
       
     // TODO(pmeenan): cache the test info to prevent multiple disk
     // reads (need to deal with read-write-read sequences though)
-    if (gz_is_file("$testPath/testinfo.json"))
-      $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+    if (gz_is_file("$testPath/testinfo.json")) {
+      $testPath = realpath($testPath);
+      $lock = Lock("Test Info $testPath");
+      if ($lock) {
+        $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+        Unlock($lock);
+      }
+    }
   }
   
   if (!isset($testInfo) || !is_array($testInfo))
@@ -2221,9 +2231,22 @@ function SaveTestInfo($testIdOrPath, &$testInfo) {
       if (ValidateTestId($id))
         $testPath = './' . GetTestPath($id);
     }
-    if (is_dir($testPath))
-      gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+    if (is_dir($testPath)) {
+      $testPath = realpath($testPath);
+      $lock = Lock("Test Info $testPath");
+      if ($lock) {
+        gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+        Unlock($lock);
+      }
+    }
   }
+}
+
+function CopyArrayEntry(&$src, &$dest, $srcEntry, $destEntry = null) {
+  if (!isset($destEntry))
+    $destEntry = $srcEntry;
+  if (array_key_exists($srcEntry, $src))
+    $dest[$destEntry] = $src[$srcEntry];  
 }
 
 function IsTestRunComplete($run, &$testInfo) {

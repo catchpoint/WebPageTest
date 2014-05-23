@@ -1,6 +1,6 @@
 @echo off
 
-set WPT_ROOT=%~dp0
+set AGENT=%~dp0
 set DP0=%~dp0
 
 set WPT_MAX_LOGLEVEL='error'
@@ -111,33 +111,10 @@ if not defined WPT_SPEC if not defined WPT_COVERAGE if not defined WPT_LINT set 
 if "%WPT_TESTS%"=="*" set "WPT_TESTS="
 if "%WPT_TESTS%"=="all" set "WPT_TESTS="
 
-rem Set paths, copied from wptdriver.bat
-set WPT_ROOT=%~dp0
-
-:FINDWPTROOT
-if not exist agent\js\src goto NOTFOUNDWPTROOT
-goto FOUNDWPTROOT
-
-:NOTFOUNDWPTROOT
-cd ..
-if %CD%==%CD:~0,3% goto :WPTROOTERROR
-goto :FINDWPTROOT
-
-:WPTROOTERROR
-echo Couldn't find project root
-cd %DP0%
-goto :eof
-
-:FOUNDWPTROOT
-set WPT_ROOT=%CD%
-cd %DP0%
-
-set AGENT=%WPT_ROOT%\agent\js
-
 rem Find the latest version of WD server jar, WDJS, platform-specific chromedriver
-for %%J in (%WPT_ROOT%\lib\webdriver\java\selenium-standalone-*.jar) do set SELENIUM_JAR=%%J
+for %%J in (%AGENT%\lib\webdriver\java\selenium-standalone-*.jar) do set SELENIUM_JAR=%%J
 
-for %%E in (%WPT_ROOT%\lib\webdriver\chromedriver\Win32\chromedriver-*.exe) do set CHROMEDRIVER=%%E
+for %%E in (%AGENT%\lib\webdriver\chromedriver\Win32\chromedriver-*.exe) do set CHROMEDRIVER=%%E
 if defined CHROMEDRIVER set "CHROMEDRIVER_ARGS= --chromedriver ^"%CHROMEDRIVER%^""
 
 set "NODE_PATH=%AGENT%;%AGENT%\src"

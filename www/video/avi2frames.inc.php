@@ -9,6 +9,40 @@ if(extension_loaded('newrelic')) {
 }
 
 /**
+* Re-process all of the video for an existing test
+* 
+* @param mixed $id
+*/
+function ReprocessVideo($id) {
+  $testPath = './' . GetTestPath($id);
+  if (is_dir($testPath)) {
+    $lock = LockTest($id);
+    if (isset($lock)) {
+      $cacheFiles = glob("$testPath/*.dat.gz");
+      if ($cacheFiles && is_array($cacheFiles) && count($cacheFiles)) {
+        foreach($cacheFiles as $cacheFile)
+          unlink($cacheFile);
+      }
+      $videoFiles = glob("$testPath/*.mp4");
+      if ($videoFiles && is_array($videoFiles) && count($videoFiles)) {
+        foreach($videoFiles as $video) {
+          if (preg_match('/^.*\/(?P<run>[0-9]+)(?P<cached>_Cached)?_video\.mp4$/i', $video, $matches)) {
+            $run = $matches['run'];
+            $cached = array_key_exists('cached', $matches) ? 1 : 0;
+            $videoDir = "$testPath/video_$run";
+            if ($cached)
+              $videoDir .= '_cached';
+            delTree($videoDir, false);
+            ProcessAVIVideo($id, $testPath, $run, $cached);
+          }
+        }
+      }
+      UnlockTest($lock);
+    }
+  }
+}
+
+/**
 * Convert an AVI video capture into the video frames the WPT is expecting
 * 
 * @param mixed $testPath
@@ -42,7 +76,7 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
   }
   if (is_file($videoFile)) {
     $videoDir = "$testPath/video_$run" . strtolower($cachedText);
-    if (!is_file("$videoDir/video" . VIDEO_CODE_VERSION . ".json")) {
+    if (!is_file("$videoDir/video.json")) {
       if (is_dir($videoDir))
         delTree($videoDir, false);
       if (!is_dir($videoDir))
@@ -54,7 +88,7 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
           $startOffset = DevToolsGetVideoOffset($testPath, $run, $cached, $endTime);
           FindAVIViewport($videoDir, $startOffset, $viewport);
           EliminateDuplicateAVIFiles($videoDir, $viewport);
-          $lastImage = ProcessVideoFrames($videoDir, $renderStart);
+          $lastImage = ProcessVideoFrames($videoDir, $renderStart, $viewport);
           $screenShot = "$testPath/$run{$cachedText}_screen.jpg";
           if (isset($lastImage) && is_file($lastImage)) {
             //unlink($videoFile);
@@ -66,7 +100,7 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
       $videoInfo = array();
       if (isset($viewport))
         $videoInfo['viewport'] = $viewport;
-      file_put_contents("$videoDir/video" . VIDEO_CODE_VERSION . ".json", json_encode($videoInfo));
+      file_put_contents("$videoDir/video.json", json_encode($videoInfo));
     }
   }
 }
@@ -116,7 +150,7 @@ function Video2PNG($infile, $outdir, $crop) {
 * 
 * @param mixed $videoDir
 */
-function ProcessVideoFrames($videoDir, $renderStart) {
+function ProcessVideoFrames($videoDir, $renderStart, $viewport) {
   $startFrame = null;
   $lastFrame = 0;
   $renderFrame = 0;
@@ -138,6 +172,7 @@ function ProcessVideoFrames($videoDir, $renderStart) {
         }
       }
       CopyAVIFrame($file, $lastImage);
+      CreateHistogram($file, str_replace('.jpg', '.hist', $lastImage), $viewport);
       unlink($file);
     }
   }
@@ -150,10 +185,14 @@ function CopyAVIFrame($src, $dest) {
 
 function IsBlankAVIFrame($file, $videoDir) {
   $ret = false;
-  $command = "convert \"images/video_white.png\" \\( \"$file\" -shave 15x55 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
+  $white = realpath('images/video_white.png');
+  $command = "convert \"$white\" \\( \"$file\" -shave 15x55 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
   $differentPixels = shell_exec($command);
   //logMsg("($differentPixels) $command", "$videoDir/video.log", true);
-  if (isset($differentPixels) && strlen($differentPixels) && $differentPixels < 100)
+  if (isset($differentPixels) &&
+      strlen($differentPixels) &&
+      preg_match('/^[0-9]+$/', $differentPixels) &&
+      $differentPixels < 100)
     $ret = true;
   return $ret;
 }
@@ -167,10 +206,14 @@ function IsBlankAVIFrame($file, $videoDir) {
 */
 function IsOrangeAVIFrame($file) {
   $ret = false;
-  $command = "convert  \"images/video_orange.png\" \\( \"$file\" -gravity Center -crop 80x50%+0+0 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
+  $orange = realpath('./images/video_orange.png');
+  $command = "convert  \"$orange\" \\( \"$file\" -gravity Center -crop 80x50%+0+0 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
   $differentPixels = shell_exec($command);
   //logMsg("($differentPixels) $command", "$videoDir/video.log", true);
-  if (isset($differentPixels) && strlen($differentPixels) && $differentPixels < 100)
+  if (isset($differentPixels) &&
+      strlen($differentPixels) &&
+      preg_match('/^[0-9]+$/', $differentPixels) &&
+      $differentPixels < 100)
     $ret = true;
   return $ret;
 }
@@ -186,12 +229,14 @@ function EliminateDuplicateAVIFiles($videoDir, $viewport) {
   $files = glob("$videoDir/image*.png");
   $crop = '+0+55';
   if (isset($viewport)) {
-    // Ignore a 4-pixel header on the actual viewport to allow for the progress bar.
-    $margin = 4;
-    $top = $viewport['y'] + $margin;
-    $height = max($viewport['height'] - $margin, 1);
+    // Ignore a 4-pixel header on the actual viewport to allow for the progress bar and
+    // a 6 pixel right margin to allow for the scroll bar that fades in and out.
+    $topMargin = 4;
+    $rightMargin = 6;
+    $top = $viewport['y'] + $topMargin;
+    $height = max($viewport['height'] - $topMargin, 1);
     $left = $viewport['x'];
-    $width = $viewport['width'];
+    $width = max($viewport['width'] - $rightMargin, 1);
     $crop = "{$width}x{$height}+{$left}+{$top}";
   }
   
@@ -207,19 +252,19 @@ function EliminateDuplicateAVIFiles($videoDir, $viewport) {
   }
   
   // Do a second pass looking for the first non-blank frame with an allowance
-  // for up to a 10% per-pixel difference for noise.
+  // for up to a 2% per-pixel difference for noise in the white field.
   $files = glob("$videoDir/image*.png");
   $blank = $files[0];
   $count = count($files);
   for ($i = 1; $i < $count; $i++) {
-    if (AreAVIFramesDuplicate($blank, $files[$i], 10, $crop))
+    if (AreAVIFramesDuplicate($blank, $files[$i], 2, $crop))
       unlink($files[$i]);
     else
       break;
   }
   
   // Do a third pass looking for the last frame but with an allowance for up
-  // to a 10% difference in individual pixels to deal with noise.
+  // to a 10% difference in individual pixels to deal with noise around text.
   $files = glob("$videoDir/image*.png");
   $files = array_reverse($files);
   $count = count($files);
@@ -252,7 +297,10 @@ function AreAVIFramesDuplicate($image1, $image2, $fuzzPct = 0, $crop = null) {
     $cropStr = "-crop $crop ";
   $command = "convert  \"$image1\" \"$image2\" {$cropStr}miff:- | compare -metric AE - {$fuzzStr}null: 2>&1";
   $differentPixels = shell_exec($command);
-  if (isset($differentPixels) && strlen($differentPixels) && $differentPixels == 0)
+  if (isset($differentPixels) &&
+      strlen($differentPixels) &&
+      preg_match('/^[0-9]+$/', $differentPixels) &&
+      $differentPixels == 0)
     $duplicate = true;
   return $duplicate;
 }
@@ -281,61 +329,68 @@ function msToHMS($duration) {
 */
 function FindAVIViewport($videoDir, $startOffset, &$viewport) {
   $files = glob("$videoDir/video-*.png");
-  if ($files && count($files) && IsOrangeAVIFrame($files[0])) {
-    // load the image and figure out the viewport area (orange)
-    $im = imagecreatefrompng($files[0]);
-    if ($im) {
-      $width = imagesx($im);
-      $height = imagesy($im);
-      $x = floor($width / 2);
-      $y = floor($height / 2);
-      $orange = imagecolorat($im, $x, $y);
-      $left = null;
-      while (!isset($left) && $x >= 0) {
-        if (!PixelColorsClose(imagecolorat($im, $x, $y), $orange))
-          $left = $x + 1;
-        else
-          $x--;
+  if ($files && count($files)) {
+    if (IsOrangeAVIFrame($files[0])) {
+      // load the image and figure out the viewport area (orange)
+      $im = imagecreatefrompng($files[0]);
+      if ($im) {
+        $width = imagesx($im);
+        $height = imagesy($im);
+        $x = floor($width / 2);
+        $y = floor($height / 2);
+        $orange = imagecolorat($im, $x, $y);
+        $left = null;
+        while (!isset($left) && $x >= 0) {
+          if (!PixelColorsClose(imagecolorat($im, $x, $y), $orange))
+            $left = $x + 1;
+          else
+            $x--;
+        }
+        if (!isset($left))
+          $left = 0;
+        $x = floor($width / 2);
+        $right = null;
+        while (!isset($right) && $x < $width) {
+          if (!PixelColorsClose(imagecolorat($im, $x, $y), $orange))
+            $right = $x - 1;
+          else
+            $x++;
+        }
+        if (!isset($right))
+          $right = $width;
+        $x = floor($width / 2);
+        $top = null;
+        while (!isset($top) && $y >= 0) {
+          if (!PixelColorsClose(imagecolorat($im, $x, $y), $orange))
+            $top = $y + 1;
+          else
+            $y--;
+        }
+        if (!isset($top))
+          $top = 0;
+        $y = floor($height / 2);
+        $bottom = null;
+        while (!isset($bottom) && $y < $height) {
+          if (!PixelColorsClose(imagecolorat($im, $x, $y), $orange))
+            $bottom = $y - 1;
+          else
+            $y++;
+        }
+        if (!isset($bottom))
+          $bottom = $height;
+        if ($left || $top || $right != $width || $bottom != $height)
+          $viewport = array('x' => $left, 'y' => $top, 'width' => ($right - $left), 'height' => ($bottom - $top));
       }
-      if (!isset($left))
-        $left = 0;
-      $x = floor($width / 2);
-      $right = null;
-      while (!isset($right) && $x < $width) {
-        if (!PixelColorsClose(imagecolorat($im, $x, $y), $orange))
-          $right = $x - 1;
-        else
-          $x++;
-      }
-      if (!isset($right))
-        $right = $width;
-      $x = floor($width / 2);
-      $top = null;
-      while (!isset($top) && $y >= 0) {
-        if (!PixelColorsClose(imagecolorat($im, $x, $y), $orange))
-          $top = $y + 1;
-        else
-          $y--;
-      }
-      if (!isset($top))
-        $top = 0;
-      $y = floor($height / 2);
-      $bottom = null;
-      while (!isset($bottom) && $y < $height) {
-        if (!PixelColorsClose(imagecolorat($im, $x, $y), $orange))
-          $bottom = $y - 1;
-        else
-          $y++;
-      }
-      if (!isset($bottom))
-        $bottom = $height;
-      if ($left || $top || $right != $width || $bottom != $height)
-        $viewport = array('x' => $left, 'y' => $top, 'width' => ($right - $left), 'height' => ($bottom - $top));
+
+      // Remove all of the orange video frames.
+      do {
+        $file = array_shift($files);
+        unlink($file);
+      }while (count($files) && IsOrangeAVIFrame($files[0]));
     }
-    unlink($files[0]);
     $fileCount = count($files);
     $firstFrame = null;
-    for($i = 1; $i < $fileCount; $i++) {
+    for($i = 0; $i < $fileCount; $i++) {
       $file = $files[$i];
       if (preg_match('/video-(?P<frame>[0-9]+).png$/', $file, $matches)) {
         $currentFrame = intval($matches['frame']);
@@ -361,5 +416,59 @@ function PixelColorsClose($rgb, $reference) {
     if (abs($ref[$i] - $pixel[$i]) > 25)
       $match = false;
   return $match;
+}
+
+function CreateHistogram($image_file, $histogram_file, $viewport) {
+  $histogram = null;
+  if (stripos($image_file, '.png') !== false)
+    $im = imagecreatefrompng($image_file);
+  elseif (stripos($image_file, '.jpg') !== false)
+    $im = imagecreatefromjpeg($image_file);
+  if ($im !== false) {
+    $width = imagesx($im);
+    $height = imagesy($im);
+    if (isset($viewport)) {
+      // Ignore a 4-pixel header on the actual viewport to allow for the progress bar.
+      $margin = 4;
+      $top = $viewport['y'] + $margin;
+      $left = $viewport['x'];
+      $bottom = min($top + $viewport['height'] - $margin, $height);
+      $right = min($left + $viewport['width'], $width);
+    } else {
+      $top = 0;
+      $left = 0;
+      $bottom = $height;
+      $right = $width;
+    }
+    if ($right > $left && $bottom > $top) {
+      $histogram = array();
+      $histogram['r'] = array();
+      $histogram['g'] = array();
+      $histogram['b'] = array();
+      for ($i = 0; $i < 256; $i++) {
+        $histogram['r'][$i] = 0;
+        $histogram['g'][$i] = 0;
+        $histogram['b'][$i] = 0;
+      }
+      $slop = 5;
+      for ($y = $top; $y < $bottom; $y++) {
+        for ($x = $left; $x < $right; $x++) {
+          $rgb = ImageColorAt($im, $x, $y);
+          $r = ($rgb >> 16) & 0xFF;
+          $g = ($rgb >> 8) & 0xFF;
+          $b = $rgb & 0xFF;
+          // ignore white pixels (allowing for slop)
+          if ($r < 255 - $slop || $g < 255 - $slop || $b < 255 - $slop) {
+            $histogram['r'][$r]++;
+            $histogram['g'][$g]++;
+            $histogram['b'][$b]++;
+          }
+        }
+      }
+      file_put_contents($histogram_file, json_encode($histogram));
+    }
+    imagedestroy($im);
+    unset($im);
+  }
 }
 ?>

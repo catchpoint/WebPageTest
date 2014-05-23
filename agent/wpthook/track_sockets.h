@@ -106,6 +106,7 @@ private:
 
   void SslDataOut(SocketInfo* info, const DataChunk& chunk);
   void SslDataIn(SocketInfo* info, const DataChunk& chunk);
+  bool IsSSLHandshake(const DataChunk& chunk);
 
   CRITICAL_SECTION cs;
   Requests&                   _requests;

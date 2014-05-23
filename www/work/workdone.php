@@ -22,7 +22,6 @@ if (!isset($included)) {
   header('Content-type: text/plain');
   header("Cache-Control: no-cache, must-revalidate");
   header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
-  ignore_user_abort(true);
 }
 set_time_limit(60*5);
 ignore_user_abort(true);
@@ -34,6 +33,8 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_parameter('test', $id);
   newrelic_add_custom_parameter('location', $location);
 }
+
+$workdone_start = microtime(true);
 
 //logmsg(json_encode($_REQUEST), './work/workdone.log', true);
 
@@ -106,18 +107,23 @@ if (ValidateTestId($id)) {
     }
   } else {
     $testInfo = GetTestInfo($id);
+    if (!$testInfo || !array_key_exists('location', $testInfo)) {
+      $testLock = LockTest($id);
+      $testInfo = GetTestInfo($id);
+      UnlockTest($testLock);
+    }
     if ($testInfo && array_key_exists('location', $testInfo)) {
       $location = $testInfo['location'];
       $locKey = GetLocationKey($location);
-      logMsg("\n\nWork received for test: $id, location: $location, key: $key\n");
       if ((!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADDR'], "127.0.0.1")) {
         $testErrorStr = '';
         if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror']))
           $testErrorStr = ', Test Error: "' . $_REQUEST['testerror'] . '"';
         if (array_key_exists('error', $_REQUEST) && strlen($_REQUEST['error']))
           $errorStr = ', Test Run Error: "' . $_REQUEST['error'] . '"';
-        logTestMsg($id, "Test Run Complete. Run: $runNumber, Cached: $cacheWarmed, Tester: $tester$testErrorStr$errorStr");
+        logTestMsg($id, "Test Run Complete. Run: $runNumber, Cached: $cacheWarmed, Done: $done, Tester: $tester$testErrorStr$errorStr");
         $testLock = LockTest($id);
+        $testInfo = GetTestInfo($id);
         // update the location time
         if( strlen($location) ) {
             if( !is_dir('./tmp') )
@@ -139,8 +145,6 @@ if (ValidateTestId($id)) {
         if (strlen($location) && strlen($tester)) {
           $testerInfo = array();
           $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
-          if ($done)
-            $testerInfo['test'] = '';
           UpdateTester($location, $tester, $testerInfo, $cpu);
         }
         if (array_key_exists('shard_test', $testInfo) && $testInfo['shard_test'])
@@ -235,6 +239,22 @@ if (ValidateTestId($id)) {
           $testInfo_dirty = true;
         }
 
+        // Do any post-processing on this individual run that doesn't requre the test to be locked
+        if (isset($runNumber) && isset($cacheWarmed)) {
+          require_once('object_detail.inc');
+          $secure = false;
+          $haveLocations = false;
+          $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure, $haveLocations, false);
+          if (isset($requests)) {
+            require_once('breakdown.inc');
+            getBreakdown($id, $testPath, $runNumber, $cacheWarmed, $requests);
+          }
+          if (is_dir('./google') && is_file('./google/google_lib.inc')) {
+            require_once('google/google_lib.inc');
+            ParseCsiInfo($id, $testPath, $runNumber, $cacheWarmed, true);
+          }
+        }
+
         // mark this run as complete
         if (isset($runNumber) && isset($cacheWarmed)) {
           if ($testInfo['fvonly'] || $cacheWarmed) {
@@ -246,7 +266,11 @@ if (ValidateTestId($id)) {
               $testInfo['test_runs'][$runNumber] = array('done' => true);
             $testInfo_dirty = true;
           }
+          if ($testInfo['video'])
+            $workdone_video_start = microtime(true);
           ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed);
+          if ($testInfo['video'])
+            $workdone_video_end = microtime(true);
         }
         
         // see if the test is complete
@@ -329,23 +353,20 @@ if (ValidateTestId($id)) {
             strlen($ini['industry']) && strlen($ini['industry_page'])) {
             if( !is_dir('./video/dat') )
               mkdir('./video/dat');
-            $lockFile = fopen( './video/dat/lock.dat', "w",  false);
-            if ($lockFile) {
-              if (flock($lockFile, LOCK_EX)) {
-                // update the page in the industry list
-                $ind;
-                $data = file_get_contents('./video/dat/industry.dat');
-                if( $data )
-                  $ind = json_decode($data, true);
-                $update = array();
-                $update['id'] = $id;
-                $update['last_updated'] = $now;
-                $ind[$ini['industry']][$ini['industry_page']] = $update;
-                $data = json_encode($ind);
-                file_put_contents('./video/dat/industry.dat', $data);
-                flock($lockFile, LOCK_UN);
-              }
-              fclose($lockFile);
+            $indLock = Lock("Industry Video");
+            if (isset($indLock)) {
+              // update the page in the industry list
+              $ind;
+              $data = file_get_contents('./video/dat/industry.dat');
+              if( $data )
+                $ind = json_decode($data, true);
+              $update = array();
+              $update['id'] = $id;
+              $update['last_updated'] = $now;
+              $ind[$ini['industry']][$ini['industry_page']] = $update;
+              $data = json_encode($ind);
+              file_put_contents('./video/dat/industry.dat', $data);
+              Unlock($indLock);
             }
           }
         }
@@ -359,18 +380,6 @@ if (ValidateTestId($id)) {
         * Do No modify TestInfo after this point
         **************************************************************************/
           
-        // Do any post-processing on this individual run that doesn't requre the test to be locked
-        if (isset($runNumber) && isset($cacheWarmed)) {
-          require_once('object_detail.inc');
-          $secure = false;
-          $haveLocations = false;
-          $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure, $haveLocations, false);
-          if (isset($requests)) {
-            require_once('breakdown.inc');
-            getBreakdown($id, $testPath, $runNumber, $cacheWarmed, $requests);
-          }
-        }
-
         // do any post-processing when the full test is complete that doesn't rely on testinfo        
         if ($done) {
           logTestMsg($id, "Test Complete");
@@ -384,6 +393,17 @@ if (ValidateTestId($id)) {
     }
   }
 }
+
+$workdone_end = microtime(true);
+
+/*
+if (isset($workdone_video_start) && isset($workdone_video_end)) {
+  $elapsed = intval(($workdone_end - $workdone_start) * 1000);
+  $video_elapsed = intval(($workdone_video_end - $workdone_video_start) * 1000);
+  if ($video_elapsed > 10)
+    logMsg("$elapsed ms - video processing: $video_elapsed ms - Test $id, Run $runNumber:$cacheWarmed", './work/workdone.log', true);
+}
+*/
 
 /**
 * Delete all of the video files except for the median run

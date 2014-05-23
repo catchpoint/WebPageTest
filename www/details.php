@@ -118,6 +118,8 @@ $page_description = "Website performance test details$testLabel";
                         echo '<a href="/export.php?' . "test=$id&run=$run&cached=$cached&bodies=1&pretty=1" . '">Export HTTP Archive (.har)</a>';
                         if ( is_dir('./google') && array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'] )
                             echo '<br><a href="/google/google_csi.php?' . "test=$id&run=$run&cached=$cached" . '">CSI (.csv) data</a>';
+                        if (array_key_exists('custom', $data) && is_array($data['custom']) && count($data['custom']))
+                            echo '<br><a href="/custom_metrics.php?' . "test=$id&run=$run&cached=$cached" . '">Custom Metrics</a>';
                         if( is_file("$testPath/{$run}{$cachedText}_dynaTrace.dtas") )
                         {
                             echo "<br><a href=\"/$testPath/{$run}{$cachedText}_dynaTrace.dtas\">Download dynaTrace Session</a>";

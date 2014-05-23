@@ -213,6 +213,8 @@ void TrackSockets::DataIn(SOCKET s, DataChunk& chunk, bool is_unencrypted) {
   if (!info->IsLocalhost()) {
     if (_test_state._active && !is_unencrypted) {
       _test_state._bytes_in_bandwidth += chunk.GetLength();
+      if (!_test_state.received_data_ && !IsSSLHandshake(chunk))
+        _test_state.received_data_ = true;
       _test_state._bytes_in += chunk.GetLength();
       if (!_test_state._on_load.QuadPart)
         _test_state._doc_bytes_in += chunk.GetLength();
@@ -407,6 +409,17 @@ bool TrackSockets::SslSocketLookup(PRFileDesc* fd, SOCKET& s) {
   bool ret = _ssl_sockets.Lookup(fd, s);
   LeaveCriticalSection(&cs);
   return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool TrackSockets::IsSSLHandshake(const DataChunk& chunk) {
+  bool is_handshake = false;
+  const char *buf = chunk.GetData();
+  DWORD len = chunk.GetLength();
+  if (len > 3 && buf[0] == 0x16)
+    is_handshake = true;
+  return is_handshake;
 }
 
 /*-----------------------------------------------------------------------------

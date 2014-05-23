@@ -493,9 +493,6 @@
     <ClCompile Include="cximage\ximawnd.cpp">
       <Filter>Third-Party\CxImage\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="inject.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="mongoose\mongoose.c">
       <Filter>Third-Party\Mongoose</Filter>
     </ClCompile>

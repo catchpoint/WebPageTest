@@ -1,0 +1,3 @@
+Landing Page	http://www.cnn.com/
+World News	http://www.cnn.com/WORLD/?hpt=sitenav
+Article Page	http://www.cnn.com/2014/05/09/world/europe/ukraine-crisis/index.html?hpt=wo_c1

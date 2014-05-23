@@ -203,7 +203,6 @@ public:
   bool    _discard_test;
   int     _index;
   bool    _clear_cache;
-  bool    _upload_incremental_results;
   bool    _active;
   LARGE_INTEGER _sleep_end;
   LARGE_INTEGER _perf_frequency;

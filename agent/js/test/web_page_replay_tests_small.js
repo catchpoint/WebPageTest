@@ -84,13 +84,12 @@ describe('web_page_replay small', function() {
       } else if (/wpr$/.test(cmd) && 'getlog' === argv[0]) {
         stdout = 'gaga';
       }
-      global.setTimeout(function() {
-        proc.stdout.emit('data', stdout);
-      }, 1);
+      proc.stdout.emit('data', stdout);
       return false;
     };
 
-    var wpr = new web_page_replay.WebPageReplay(app, {deviceAddr: '1.2.3.4'});
+    var wpr = new web_page_replay.WebPageReplay(app,
+        {flags: {deviceAddr: '1.2.3.4'}, task: {}});
     wpr.scheduleRecord().then(function(ip) {
       should.equal('1.2.3.4', ip);
     });

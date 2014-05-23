@@ -132,7 +132,6 @@ void WptTest::Reset(void) {
   _image_quality = JPEG_DEFAULT_QUALITY;
   _png_screen_shot = false;
   _minimum_duration = 0;
-  _upload_incremental_results = true;
   _user_agent.Empty();
   _add_headers.RemoveAll();
   _set_headers.RemoveAll();

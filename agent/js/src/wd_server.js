@@ -116,24 +116,21 @@ WebDriverServer.prototype.initIpc = function() {
  * complete a job. It also sets up an uncaught exception handler.
  * This is acts like a constructor
  *
- * @param  {Object} initMessage the IPC message with test run parameters.
- *   Has attributes:
- *     {Object=} options Selenium options can have the properties:
- *         {string} browserName Selenium name of the browser
- *         {string} browserVersion Selenium version of the browser
- *     {number} runNumber run number.
- *     {string=} runTempDir a directory for run-specific temporary files.
- *     {string=} script webdriverjs script.
- *     {string=} url non-script url.
- *     {string=} browser browser_* object name.
- *     {boolean=} captureVideo
- *     {boolean=} exitWhenDone
- *     {number=} timeout in milliseconds.
- *   plus browser-specific attributes, e.g.:
- *     {string=} deviceSerial unique device id.
- *     {string=} chromedriver path to the chromedriver executable.
+ * @param  {Object} args the IPC message with test run parameters:
+ *   #param {string} runNumber run number.
+ *   #param {string=} runTempDir a directory for run-specific temporary files.
+ *   #param {boolean=} exitWhenDone
+ *   #param {number=} timeout in milliseconds.
+ *   #param {Object} flags:
+ *     #param {string=} browser browser_* class name.
+ *     #param ... other browser properties, chromedriver.
+ *   #param {Object} task:
+ *     #param {string=} browser Selenium browser name, defaults to Chrome.
+ *     #param {string=} script webdriverjs script.
+ *     #param {string=} url non-script url.
+ *     #param ... other task properties, e.g. video.
  */
-WebDriverServer.prototype.init = function(initMessage) {
+WebDriverServer.prototype.init = function(args) {
   'use strict';
   if (!this.browser_) {
     // Only set on the first run:
@@ -145,8 +142,8 @@ WebDriverServer.prototype.init = function(initMessage) {
     this.actionCbRecurseGuard_ = false;
     this.app_ = webdriver.promise.controlFlow();
     process_utils.injectWdAppLogging('wd_server', this.app_);
-    // Create the browser according to flags.
-    this.browser_ = browser_base.createBrowser(this.app_, initMessage);
+    // Create the browser with the given args.
+    this.browser_ = browser_base.createBrowser(this.app_, args);
     this.capabilities_ = undefined;
     this.devTools_ = undefined;
     this.isCacheCleared_ = false;
@@ -157,34 +154,20 @@ WebDriverServer.prototype.init = function(initMessage) {
   // Reset every run:
   this.isDone_ = false;
   this.abortTimer_ = undefined;
-  this.capturePackets_ = initMessage.capturePackets;
-  this.captureVideo_ = initMessage.captureVideo;
   this.devToolsMessages_ = [];
   this.driver_ = undefined;
-  this.exitWhenDone_ = initMessage.exitWhenDone;
+  this.exitWhenDone_ = args.exitWhenDone;
   this.isRecordingDevTools_ = false;
-  this.options_ = initMessage.options || {};
   this.pageLoadDonePromise_ = undefined;
-  this.runNumber_ = initMessage.runNumber;
+  this.pcapFile_ = undefined;
+  this.runNumber_ = args.runNumber;
   this.screenshots_ = [];
-  this.script_ = initMessage.script;
+  this.task_ = args.task;
   this.testStartTime_ = undefined;
   this.timeoutTimer_ = undefined;
-  this.timeout_ = initMessage.timeout;
-  this.url_ = initMessage.url;
-  this.pcapFile_ = undefined;
+  this.timeout_ = args.timeout;
   this.videoFile_ = undefined;
-  this.runTempDir_ = initMessage.runTempDir || '';
-  this.pngScreenShot_ = initMessage.pngScreenShot;
-  // Force the screenshot JPEG quality level to be between 30 and 95.
-  var imgQ = initMessage.imageQuality ? parseInt(initMessage.imageQuality) : 30;
-  this.imageQuality_ = Math.min(Math.max(imgQ, 30), 95);
-  this.rotate_ = initMessage.rotate;
-  this.captureTimeline_ = initMessage.captureTimeline;
-  this.timelineStackDepth_ = 0;
-  if (initMessage.timelineStackDepth) {
-    this.timelineStackDepth_ = parseInt(initMessage.timelineStackDepth);
-  }
+  this.runTempDir_ = args.runTempDir || '';
   this.tearDown_();
 };
 
@@ -257,9 +240,10 @@ WebDriverServer.prototype.connectDevTools_ = function() {
   }.bind(this), DEVTOOLS_CONNECT_TIMEOUT_MS_, 'Connect DevTools');
   this.networkCommand_('enable');
   this.pageCommand_('enable');
-  if (this.captureTimeline_ || this.captureVideo_) {
-    this.timelineCommand_('start',
-                          {maxCallStackDepth: this.timelineStackDepth_});
+  if (1 === this.task_.timeline || 1 === this.task_['Capture Video']) {
+    var timelineStackDepth = (this.task_.timelineStackDepth ?
+        parseInt(this.task_.timelineStackDepth, 10) : 0);
+    this.timelineCommand_('start', {maxCallStackDepth: timelineStackDepth});
   }
 };
 
@@ -406,15 +390,19 @@ WebDriverServer.prototype.addScreenshot_ = function(
   'use strict';
   logger.debug('Adding screenshot %s (%s): %s',
       fileName, diskPath, description);
-  if (!this.pngScreenShot_ && /\.png$/.test(fileName)) {  // Convert to JPEG.
+  if (1 !== this.task_.pngScreenshot &&
+       /\.png$/.test(fileName)) {  // Convert to JPEG.
     var fileNameJPEG = fileName.replace(/\.png$/i, '.jpg');
     var diskPathJPEG = diskPath.replace(/\.png$/i, '.jpg');
     var convertCommand = [diskPath];
     convertCommand.push('-resize', '50%');
-    if (this.rotate_) {
-      convertCommand.push('-rotate', this.rotate_);
+    if (this.task_.rotate) {
+      convertCommand.push('-rotate', this.task_.rotate);
     }
-    convertCommand.push('-quality', this.imageQuality_);
+    // Force the screenshot JPEG quality level to be between 30 and 95.
+    var imgQ = (this.task_.imageQuality ?
+        parseInt(this.task_.imageQuality, 10) : 0);
+    convertCommand.push('-quality', Math.min(Math.max(imgQ, 30), 95));
     convertCommand.push(diskPathJPEG);
     process_utils.scheduleExec(this.app_, 'convert', convertCommand).then(
         function() {
@@ -572,7 +560,7 @@ WebDriverServer.prototype.onAfterDriverError = function(
  */
 WebDriverServer.prototype.runTest_ = function(browserCaps) {
   'use strict';
-  if (this.script_) {
+  if (this.task_.script) {
     this.runSandboxedSession_(browserCaps);
   } else {
     this.runPageLoad_(browserCaps);
@@ -689,7 +677,7 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
   // all pending events.  This isn't strictly required if startBrowser loads
   // "about:blank", but it's still a good idea.
   this.pageCommand_('navigate', {url: BLANK_PAGE_URL_});
-  if (this.captureVideo_) {  // Generate video sync sequence, start recording.
+  if (1 === this.task_['Capture Video']) {  // Emit video sync, start recording
     this.getCapabilities_().then(function(caps) {
       if (!caps.videoRecording) {
         return;
@@ -730,7 +718,7 @@ WebDriverServer.prototype.clearPageAndStartVideoWd_ = function() {
   // Navigate to a blank, to make sure we clear the prior page and cancel
   // all pending events.
   this.driver_.get(BLANK_PAGE_URL_ + '<body/>');
-  if (this.captureVideo_) {  // Generate video sync sequence, start recording.
+  if (1 === this.task_['Capture Video']) {  // Emit video sync, start recording
     this.getCapabilities_().then(function(caps) {
       if (!caps.videoRecording) {
         return;
@@ -771,7 +759,7 @@ WebDriverServer.prototype.scheduleStartVideoRecording_ = function() {
  */
 WebDriverServer.prototype.scheduleStartPacketCaptureIfRequested_ = function() {
   'use strict';
-  if (this.capturePackets_) {
+  if (1 === this.task_.tcpdump) {
     var pcapFile = path.join(this.runTempDir_, 'tcpdump.pcap');
     this.browser_.scheduleStartPacketCapture(pcapFile);
     this.app_.schedule('Packet capture started', function() {
@@ -803,7 +791,7 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
           this.timeout_ - (exports.WAIT_AFTER_ONLOAD_MS + SUBMIT_TIMEOUT_MS_));
     }
     this.onTestStarted_();
-    this.pageCommand_('navigate', {url: this.url_});
+    this.pageCommand_('navigate', {url: this.task_.url});
     return this.pageLoadDonePromise_.promise;
   }.bind(this));
   this.waitForCoalesce_(webdriver, exports.WAIT_AFTER_ONLOAD_MS);
@@ -855,8 +843,8 @@ WebDriverServer.prototype.runSandboxedSession_ = function(browserCaps) {
 WebDriverServer.prototype.connect = function() {
   'use strict';
   var browserCaps = {};
-  browserCaps[webdriver.Capability.BROWSER_NAME] = this.options_.browserName ?
-      this.options_.browserName.toLowerCase() : webdriver.Browser.CHROME;
+  browserCaps[webdriver.Capability.BROWSER_NAME] = (this.task_.browser ?
+      this.task_.browser.toLowerCase() : webdriver.Browser.CHROME);
   var loggingPrefs = {};
   loggingPrefs[webdriver.logging.Type.PERFORMANCE] =
       webdriver.logging.LevelName.ALL;  // DevTools Page, Network, Timeline.
@@ -908,7 +896,7 @@ WebDriverServer.prototype.runScript_ = function(wdSandbox) {
       webdriver: wdSandbox
     };
     logger.info('Running user script');
-    vm.runInNewContext(this.script_, sandbox, 'WPT_Job_Script');
+    vm.runInNewContext(this.task_.script, sandbox, 'WPT_Job_Script');
     logger.info('User script returned, but not necessarily finished');
   }.bind(this));
 };

@@ -43,26 +43,30 @@ var webdriver = require('selenium-webdriver');
  * Constructs a Mobile Safari controller for iOS.
  *
  * @param {webdriver.promise.ControlFlow} app the ControlFlow for scheduling.
- * @param {Object.<string>} args browser options with string values:
- *     runNumber test run number. Install the apk on run 1.
- *     deviceSerial the device to drive.
- *     runTempDir the directory to store per-run files like screenshots.
- *     ...
+ * @param {Object} args options:
+ *   #param {string} runNumber test run number. Install the apk on run 1.
+ *   #param {string} runTempDir the directory to store per-run files like
+ *       screenshots.
+ *   #param {Object.<String>} flags:
+ *     #param {string} deviceSerial the device to drive.
+ *     #param {string=} captureDir capture script dir, defaults to ''.
+ *   #param {Object.<String>} task:
+ *     #param {string=} pac PAC content.
  * @constructor
  */
 function BrowserIos(app, args) {
   'use strict';
   browser_base.BrowserBase.call(this, app);
   logger.info('BrowserIos(%j)', args);
-  if (!args.deviceSerial) {
+  if (!args.flags.deviceSerial) {
     throw new Error('Missing device_serial');
   }
   this.app_ = app;
   this.shouldInstall_ = (1 === parseInt(args.runNumber || '1', 10));
-  this.deviceSerial_ = args.deviceSerial;
+  this.deviceSerial_ = args.flags.deviceSerial;
   // TODO allow idevice/ssh/etc to be undefined and try to run as best we can,
   // potentially with lots of warnings (e.g. "can't clear cache", ...).
-  var iDeviceDir = args.iosIDeviceDir;
+  var iDeviceDir = args.flags.iosIDeviceDir;
   var toIDevicePath = process_utils.concatPath.bind(this, iDeviceDir);
   this.iosWebkitDebugProxy_ = toIDevicePath('ios_webkit_debug_proxy');
   this.iDeviceInstaller_ = toIDevicePath('ideviceinstaller');
@@ -71,28 +75,28 @@ function BrowserIos(app, args) {
   this.iDeviceImageMounter_ = toIDevicePath('ideviceimagemounter');
   this.iDeviceScreenshot_ = toIDevicePath('idevicescreenshot');
   this.imageConverter_ = '/usr/bin/convert'; // TODO use 'sips' on mac?
-  this.devImageDir_ = process_utils.concatPath(args.iosDevImageDir);
-  this.devToolsPort_ = args.devToolsPort;
+  this.devImageDir_ = process_utils.concatPath(args.flags.iosDevImageDir);
+  this.devToolsPort_ = args.flags.devToolsPort;
   this.devtoolsPortLock_ = undefined;
   this.devToolsUrl_ = undefined;
   this.proxyProcess_ = undefined;
   this.sshConfigFile_ = '/dev/null';
-  this.sshProxy_ = process_utils.concatPath(args.iosSshProxyDir,
-      args.iosSshProxy || 'sshproxy.py');
-  this.sshCertPath_ = (args.iosSshCert ||
+  this.sshProxy_ = process_utils.concatPath(args.flags.iosSshProxyDir,
+      args.flags.iosSshProxy || 'sshproxy.py');
+  this.sshCertPath_ = (args.flags.iosSshCert ||
       process.env.HOME + '/.ssh/id_dsa_ios');
-  this.urlOpenerApp_ = process_utils.concatPath(args.iosAppDir,
-      args.iosUrlOpenerApp || 'urlOpener.ipa');
-  this.pac_ = args.pac;
+  this.urlOpenerApp_ = process_utils.concatPath(args.flags.iosAppDir,
+      args.flags.iosUrlOpenerApp || 'urlOpener.ipa');
+  this.pac_ = args.task.pac;
   this.pacServerPort_ = undefined;
   this.pacServerPortLock_ = undefined;
   this.pacServer_ = undefined;
   this.pacUrlPort_ = undefined;
   this.pacUrlPortLock_ = undefined;
   this.pacForwardProcess_ = undefined;
-  this.videoCard_ = args.videoCard;
-  var capturePath = process_utils.concatPath(args.captureDir,
-      args.captureScript || 'capture');
+  this.videoCard_ = args.flags.videoCard;
+  var capturePath = process_utils.concatPath(args.flags.captureDir,
+      args.flags.captureScript || 'capture');
   this.video_ = new video_hdmi.VideoHdmi(this.app_, capturePath);
   this.runTempDir_ = args.runTempDir || '';
 }

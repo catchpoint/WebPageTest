@@ -21,10 +21,13 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <body>
     <table id="locations">
       <xsl:for-each select="response/data/location">
-        <tr><th class="header" colspan="12"><xsl:attribute name="id"><xsl:value-of select="id"/></xsl:attribute><xsl:value-of select="id"/> (<xsl:value-of select="elapsed"/> minutes)</th></tr>
+        <tr><th class="header" colspan="13"><xsl:attribute name="id"><xsl:value-of select="id"/></xsl:attribute><xsl:value-of select="id"/> (<xsl:value-of select="elapsed"/> minutes)</th></tr>
         <xsl:if test="testers">
           <tr>
             <th class="tester">Tester</th>
+            <th>Busy?</th>
+            <th>Last Check (minutes)</th>
+            <th>Last Work (minutes)</th>
             <th>Version</th>
             <th>PC</th>
             <th>EC2 Instance</th>
@@ -33,13 +36,14 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
             <th>IE Version</th>
             <th>GPU?</th>
             <th>IP</th>
-            <th>Busy?</th>
-            <th>Last Check (minutes)</th>
-            <th>Last Work (minutes)</th>
+            <th>DNS Server(s)</th>
           </tr>
           <xsl:for-each select="testers/tester">
               <tr>
                 <td class="tester"><xsl:value-of select="index"/></td>
+                <td><xsl:value-of select="busy"/></td>
+                <td><xsl:value-of select="elapsed"/></td>
+                <td><xsl:value-of select="last"/></td>
                 <td><xsl:value-of select="version"/></td>
                 <td><xsl:value-of select="pc"/></td>
                 <td><xsl:value-of select="ec2"/></td>
@@ -48,9 +52,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
                 <td><xsl:value-of select="ie"/></td>
                 <td><xsl:value-of select="GPU"/></td>
                 <td><xsl:value-of select="ip"/></td>
-                <td><xsl:value-of select="busy"/></td>
-                <td><xsl:value-of select="elapsed"/></td>
-                <td><xsl:value-of select="last"/></td>
+                <td><xsl:value-of select="dns"/></td>
               </tr>
           </xsl:for-each>
         </xsl:if>
