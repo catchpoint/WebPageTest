@@ -42,8 +42,10 @@ function ParseCsiInfo($id, $testPath, $run, $cached, $getAll, $generate = true) 
                 $param_name == 'it' ||
                 $param_name == 'irt' ) {
 					    ParseSubParams($params, $param_name);
-              if( !$getAll )
+              if( !$getAll ) {
+                Unlock($lock);
                 return $params;
+              }
 				    }
 			    }
 		    }
