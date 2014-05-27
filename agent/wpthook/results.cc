@@ -843,7 +843,8 @@ void Results::ProcessRequests(void) {
           if (result_code == 200) {
             DataChunk body_chunk = request->_response_data.GetBody(true);
             CStringA body(body_chunk.GetData(), body_chunk.GetLength());
-            if (regex_search((LPCSTR)body, adult_regex))
+            if (regex_search((LPCSTR)body, adult_regex) ||
+                body.Find("RTA-5042-1996-1400-1577-RTA") >= 0)
               adult_site_ = true;
           }
         }

@@ -718,7 +718,8 @@ void CPagetestReporting::ProcessResults(void)
             basePageAddressCount = GetAddressCount(w->host);
             if( html.IsEmpty() && w->body ) {
 							html = w->body;
-              if (regex_search((LPCSTR)html, adult_regex))
+              if (regex_search((LPCSTR)html, adult_regex) ||
+                  html.Find("RTA-5042-1996-1400-1577-RTA") >= 0)
                 adultSite = 1;
             }							
 						// use the ttfb of the base page (override the earlier ttfb)
