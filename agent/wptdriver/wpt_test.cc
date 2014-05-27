@@ -155,6 +155,7 @@ void WptTest::Reset(void) {
   _browser_additional_command_line.Empty();
   _run_error.Empty();
   _test_error.Empty();
+  _custom_metrics.Empty();
 }
 
 /*-----------------------------------------------------------------------------
@@ -273,6 +274,10 @@ bool WptTest::Load(CString& test) {
               }
             }
           }
+        } else if (!key.CompareNoCase(_T("customMetric"))) {
+          if (!_custom_metrics.IsEmpty())
+            _custom_metrics += _T("\n");
+          _custom_metrics += value;
         } else if (!key.CompareNoCase(_T("cmdLine")))
           _browser_command_line = value;
         else if (!key.CompareNoCase(_T("addCmdLine")))
@@ -987,6 +992,7 @@ void  WptTest::CollectData() {
   // Add the command to trigger the browser to collect in-page stats
   // (before doing a responsive check where we resize the window)
   cmd.command = _T("collectstats");
+  cmd.target = _custom_metrics;
   _script_commands.AddHead(cmd);
 }
 

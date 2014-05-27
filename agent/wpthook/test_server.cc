@@ -262,6 +262,9 @@ void TestServer::MongooseCallback(enum mg_event event,
     } else if (strcmp(request_info->uri, "/event/timed_event") == 0) {
       test_state_.AddTimedEvent(GetPostBody(conn, request_info));
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/custom_metrics") == 0) {
+      test_state_.SetCustomMetrics(GetPostBody(conn, request_info));
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/stats") == 0) {
       DWORD dom_count = 0;
       if (GetDwordParam(request_info->query_string, "domCount", dom_count) &&

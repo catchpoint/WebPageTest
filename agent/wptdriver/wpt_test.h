@@ -195,6 +195,7 @@ public:
   CString _navigated_url;
   CStringA _test_error;
   CStringA _run_error;
+  CString _custom_metrics;
   
   // current state
   int     _run;
