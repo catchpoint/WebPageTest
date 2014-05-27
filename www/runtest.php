@@ -293,6 +293,19 @@
                 else
                     $test['url'] .= '&atwExc=blank';
             }
+            
+            // see if there are any custom metrics to extract
+            if (is_dir('./settings/custom_metrics')) {
+              $files = glob('./settings/custom_metrics/*.js');
+              if ($files !== false && is_array($files) && count($files)) {
+                $test['customMetrics'] = array();
+                foreach ($files as $file) {
+                  $name = basename($file, '.js');
+                  $code = file_get_contents($file);
+                  $test['customMetrics'][$name] = base64_encode($code);
+                }
+              }
+            }
         }
         else
         {
@@ -1798,6 +1811,12 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                         $testFile .= "customRule=$rule\r\n";
                     }
                 }
+            }
+
+            // Add custom metrics
+            if (array_key_exists('customMetrics', $test)) {
+              foreach($test['customMetrics'] as $name => $code)
+                $testFile .= "customMetric=$name:$code\r\n";
             }
 
             if( !SubmitUrl($testId, $testFile, $test, $url) )

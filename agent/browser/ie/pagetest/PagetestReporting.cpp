@@ -436,6 +436,7 @@ void CPagetestReporting::FlushResults(void)
 					  dev_tools_.Write(logFile+step+_T("_devtools.json"));
 
 					  SaveUserTiming(logFile+step+_T("_timed_events.json"));
+            SaveCustomMetrics(logFile+step+_T("_metrics.json"));
           }
 
           // delete the image data
@@ -3695,6 +3696,39 @@ void CPagetestReporting::SaveUserTiming(CString file) {
 		  WriteFile(hFile, (LPCSTR)str, lstrlenA(str), &written, 0);
 		  CloseHandle(hFile);
 	  }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  If custom metrics were requested, gather them
+-----------------------------------------------------------------------------*/
+void CPagetestReporting::SaveCustomMetrics(CString file) {
+  CStringA out;
+  if (!customMetrics.IsEmpty()) {
+    out = "{";
+    DWORD count = 0;
+    POSITION pos = customMetrics.GetHeadPosition();
+    while(pos) {
+      CCustomMetric metric = customMetrics.GetNext(pos);
+      CString result = GetCustomMetric(metric.code);
+      if (count)
+        out += ",";
+      out += "\"";
+      out += JSONEscape((LPCSTR)CT2A(metric.name, CP_UTF8));
+      out += "\":\"";
+      out += JSONEscape((LPCSTR)CT2A(result, CP_UTF8));
+      out += "\"";
+      count++;
+    }
+    out += "}";
+  }
+  if (!out.IsEmpty()) {
+    HANDLE hFile = CreateFile(file, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+    if (hFile != INVALID_HANDLE_VALUE) {
+      DWORD bytes = 0;
+      WriteFile(hFile, (LPCSTR)out, out.GetLength(), &bytes, 0);
+      CloseHandle(hFile);
+    }
   }
 }
 

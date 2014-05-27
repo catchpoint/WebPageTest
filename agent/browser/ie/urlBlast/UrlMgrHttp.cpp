@@ -355,6 +355,11 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
                   info.customRules += _T("\n");
                 info.customRules += value;
               }
+              else if( !key.CompareNoCase(_T("customMetric")) ) {
+                if (!info.customMetrics.IsEmpty())
+                  info.customMetrics += "\n";
+                info.customMetrics += (LPCSTR)CT2A(value);
+              }
 							else if( !key.CompareNoCase(_T("clearcerts")) && _ttol(value) )
                 info.clearCerts = true;
 						}
@@ -384,6 +389,7 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 
 					context->fileRunBase.Format(_T("%s-%d"), (LPCTSTR)context->fileBase, index);
 					info.logFile = workDir + context->fileRunBase;
+          info.customMetricsFile = workDir + _T("custom.txt");
 
 					if( info.eventText.IsEmpty() )						
             info.eventText.Format(_T("Run_%d"), info.currentRun);
@@ -490,6 +496,10 @@ bool CUrlMgrHttp::RunRepeatView(CTestInfo &info)
 void CUrlMgrHttp::UrlFinished(CTestInfo &info)
 {
   UpdateDNSServers();
+  if (!info.customMetricsFile.IsEmpty()) {
+    DeleteFile(info.customMetricsFile);
+    info.customMetricsFile.Empty();
+  }
 	if( info.context )
 	{
 		CUrlMgrHttpContext * context = (CUrlMgrHttpContext *)info.context;
@@ -560,6 +570,7 @@ void CUrlMgrHttp::UrlFinished(CTestInfo &info)
 
 				info.logFile = workDir + context->fileRunBase;
 				info.eventText = CString(_T("Run_")) + runText;
+        info.customMetricsFile = workDir + _T("custom.txt");
 
 				if( info.harvestLinks )
 					info.linksFile = workDir + context->fileRunBase + _T("_links.txt");

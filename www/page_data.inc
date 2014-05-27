@@ -73,7 +73,12 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
           if ($custom_metrics && is_array($custom_metrics) && count($custom_metrics)) {
             $ret["custom"] = array();
             foreach ($custom_metrics as $metric => $value) {
-              $ret[$metric] = $value;
+              if (preg_match('/^[0-9]+$/', $value))
+                $ret[$metric] = intval($value);
+              elseif (preg_match('/^[0-9]*\.[0-9]+$/', $value))
+                $ret[$metric] = floatval($value);
+              else
+                $ret[$metric] = $value;
               $ret["custom"][] = $metric;
             }
           }
@@ -82,7 +87,7 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
         // see if we have CSI metrics to load
         if (is_dir('./google') && is_file('./google/google_lib.inc')) {
           require_once('google/google_lib.inc');
-          $csi = ParseCsiInfo($id, $testPath, $run, $cached, true, false);
+          $csi = ParseCsiInfo(0, $testPath, $run, $cached, true, false);
           if (isset($csi) && is_array($csi) && count($csi)) {
             $ret['CSI'] = array();
             foreach($csi as $metric => $value) {
@@ -332,6 +337,7 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
                 if (!isset($metrics)) {
                     $metrics = array();
                     foreach ($data[0] as $metric => $value)
+                      if (is_numeric($value))
                         $metrics[] = $metric;
                 }
                 // only look at non-error runs
@@ -340,10 +346,12 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
                     if( !isset($fv) )
                         $fv = array();
                     foreach ($metrics as $metric) {
+                      if (is_numeric($data[0][$metric])) {
                         if (array_key_exists($metric, $fv))
                             $fv[$metric] += $data[0][$metric];
                         else
                             $fv[$metric] = $data[0][$metric];
+                      }
                     }
                     $fvCount++;
                 }
@@ -354,6 +362,7 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
                 if (!isset($metrics)) {
                     $metrics = array();
                     foreach ($data[0] as $metric => $value)
+                      if (is_numeric($value))
                         $metrics[] = $metric;
                 }
                 // only look at non-error runs
@@ -362,10 +371,12 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
                     if( !isset($rv) )
                         $rv = array();
                     foreach ($metrics as $metric) {
+                      if (is_numeric($data[1][$metric])) {
                         if (array_key_exists($metric, $rv))
                             $rv[$metric] += $data[1][$metric];
                         else
                             $rv[$metric] = $data[1][$metric];
+                      }
                     }
                     $rvCount++;
                 }
@@ -377,6 +388,7 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
     if( isset($fv) && isset($metrics) && $fvCount > 0 )
     {
         foreach ($metrics as $metric)
+          if (is_numeric($fv[$metric]))
             $fv[$metric] /= (double)$fvCount;
         
         // go through and find the run closest to the average
@@ -404,6 +416,7 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
     if( isset($rv) && isset($metrics) && $rvCount > 0 )
     {
         foreach ($metrics as $metric)
+          if (is_numeric($rv[$metric]))
             $rv[$metric] /= (double)$rvCount;
         
         // go through and find the run closest to the average

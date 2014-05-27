@@ -7,7 +7,7 @@ $page_description = "View Custom Metrics";
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - View CSI Data</title>
+        <title>WebPagetest - View Custom Metrics</title>
         <meta http-equiv="charset" content="iso-8859-1">
         <meta name="author" content="Patrick Meenan">
         <?php $gaTemplate = 'ViewCSI'; include ('head.inc'); ?>
