@@ -13931,8 +13931,8 @@ wpt.commands.CommandRunner.prototype.doNoScript = function() {
 /**
  * Implement the collectStats command.
  */
-wpt.commands.CommandRunner.prototype.doCollectStats = function(callback) {
-  chrome.tabs.sendRequest( g_tabid, {'message': 'collectStats'},
+wpt.commands.CommandRunner.prototype.doCollectStats = function(customMetrics, callback) {
+  chrome.tabs.sendRequest( g_tabid, {'message': 'collectStats', 'customMetrics': customMetrics},
       function(response) {
         if (callback != undefined)
           callback();
@@ -14779,6 +14779,9 @@ chrome.extension.onRequest.addListener(
     } else if (request.message == 'wptResponsive') {
       if (request['isResponsive'] != undefined)
         wptSendEvent('responsive', '?isResponsive=' + request['isResponsive']);
+    } else if (request.message == 'wptCustomMetrics') {
+      if (request['data'] != undefined)
+				wptSendEvent('custom_metrics', '', JSON.stringify(request['data']));
     }
     // TODO: check whether calling sendResponse blocks in the content script
     // side in page.
@@ -14868,7 +14871,7 @@ function wptExecuteTask(task) {
         break;
       case 'collectstats':
         g_processing_task = true;
-        g_commandRunner.doCollectStats(wptTaskCallback);
+        g_commandRunner.doCollectStats(task.target, wptTaskCallback);
         break;
       case 'checkresponsive':
         g_processing_task = true;

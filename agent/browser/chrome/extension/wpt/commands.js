@@ -369,8 +369,8 @@ wpt.commands.CommandRunner.prototype.doNoScript = function() {
 /**
  * Implement the collectStats command.
  */
-wpt.commands.CommandRunner.prototype.doCollectStats = function(callback) {
-  chrome.tabs.sendRequest( g_tabid, {'message': 'collectStats'},
+wpt.commands.CommandRunner.prototype.doCollectStats = function(customMetrics, callback) {
+  chrome.tabs.sendRequest( g_tabid, {'message': 'collectStats', 'customMetrics': customMetrics},
       function(response) {
         if (callback != undefined)
           callback();

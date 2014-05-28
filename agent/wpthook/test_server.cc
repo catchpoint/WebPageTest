@@ -301,6 +301,10 @@ void TestServer::MongooseCallback(enum mg_event event,
                   test_state_._viewport_specified);
       test_state_.CheckResponsive();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/debug") == 0) {
+      CStringA body = CT2A(GetPostBody(conn, request_info));
+      OutputDebugStringA(body);
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else {
         // unknown command fall-through
         SendResponse(conn, request_info, RESPONSE_ERROR_NOT_IMPLEMENTED, 

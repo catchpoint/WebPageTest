@@ -341,7 +341,7 @@ wpt.moz.main.executeTask = function(task) {
         break;
       case 'collectstats':
         g_processing_task = true;
-        wpt.moz.main.collectStats(wpt.moz.main.callback);
+        wpt.moz.main.collectStats(task.target, wpt.moz.main.callback);
         break;
       case 'checkresponsive':
         g_processing_task = true;
@@ -546,7 +546,7 @@ wpt.moz.main.pollForDomElements = function() {
   }
 };
 
-wpt.moz.main.collectStats = function(callback) {
+wpt.moz.main.collectStats = function(customMetrics, callback) {
   var win = window.content.document.defaultView.wrappedJSObject;
   
   // look for any user timing data
@@ -577,6 +577,29 @@ wpt.moz.main.collectStats = function(callback) {
     addTime('loadEventEnd');
     wpt.moz.main.sendEventToDriver_('window_timing', timingParams);
   }
+	
+	// collect any custom metrics
+	if (customMetrics.length) {
+		var lines = customMetrics.split("\n");
+		var lineCount = lines.length;
+		var out = {};
+		for (var i = 0; i < lineCount; i++) {
+			try {
+				var parts = lines[i].split(":");
+				if (parts.length == 2) {
+					var name = parts[0];
+					var code = window.atob(parts[1]);
+					if (code.length) {
+						win.wptCustomMetricFn = new Function("return function wptCustomMetric" + i + "(window, document){" + code + "};")();
+						var result = win.wptCustomMetricFn(win, win.document);
+						out[name] = result;
+					}
+				}
+			} catch(e){
+			}
+		}
+    wpt.moz.main.sendEventToDriver_('custom_metrics', '', JSON.stringify(out));
+	}
   
   if (callback)
     callback();
