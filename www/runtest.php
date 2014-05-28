@@ -306,6 +306,32 @@
                 }
               }
             }
+            if (array_key_exists('custom', $_REQUEST)){
+              $metric = null;
+              $code = '';
+              $lines = explode("\n", $_REQUEST['custom']);
+              foreach ($lines as $line) {
+                $line = trim($line);
+                if (strlen($line)) {
+                  if (preg_match('/^\[(?P<metric>[^\[\]]+)\]$/', $line, $matches)) {
+                    if (isset($metric) && strlen($metric) && strlen($code)) {
+                      if (!array_key_exists('customMetrics', $test))
+                        $test['customMetrics'] = array();
+                      $test['customMetrics'][$metric] = base64_encode($code);
+                    }
+                    $code = '';
+                    $metric = $matches['metric'];
+                  } else {
+                    $code .= $line . "\n";
+                  }
+                }
+              }
+              if (isset($metric) && strlen($metric) && strlen($code)) {
+                if (!array_key_exists('customMetrics', $test))
+                  $test['customMetrics'] = array();
+                $test['customMetrics'][$metric] = base64_encode($code);
+              }
+            }
         }
         else
         {

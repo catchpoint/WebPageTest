@@ -202,6 +202,7 @@ $loc = ParseLocations($locations);
                                 <li><a href="#script">Script</a></li>
                                 <li><a href="#block">Block</a></li>
                                 <li><a href="#spof">SPOF</a></li>
+                                <li><a href="#custom-metrics">Custom</a></li>
                                 <?php if (!$settings['noBulk']) { ?>
                                 <li><a href="#bulk">Bulk Testing</a></li>
                                 <?php } ?>
@@ -506,6 +507,19 @@ $loc = ParseLocations($locations);
                                         echo htmlspecialchars(str_replace(',', "\r\n", $_REQUEST['spof']));
                                     }
                                 ?></textarea>
+                            </div>
+
+                            <div id="custom-metrics" class="test_subbox ui-tabs-hide">
+                                <div>
+                                    <div class="notification-container">
+                                        <div class="notification"><div class="message">
+                                            See <a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/custom-metrics">the documentation</a> for details on how to specify custom metrics to be captured.
+                                        </div></div>
+                                    </div>
+                                    
+                                    <p><label for="custom_metrics" class="full_width">Custom Metrics:</label></p>
+                                    <textarea name="custom" id="custom_metrics" cols="0" rows="0"></textarea>
+                                </div>
                             </div>
 
                             <?php if (!$settings['noBulk']) { ?>
