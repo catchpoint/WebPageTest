@@ -49,8 +49,11 @@ $pageData = loadAllPageData($testPath);
                             'browser_version' => 'Browser Version');
             $customMetrics = null;
             $csiMetrics = null;
+            $userTimings = null;
             foreach ($pageData as &$pageRun)
               foreach ($pageRun as &$data) {
+                if (array_key_exists('userTime', $data))
+                  $metrics['userTime'] = 'Last User Timing Mark';
                 if (array_key_exists('custom', $data) && is_array($data['custom']) && count($data['custom'])) {
                   if (!isset($customMetrics))
                     $customMetrics = array();
@@ -59,6 +62,14 @@ $pageData = loadAllPageData($testPath);
                       $customMetrics[$metric] = "Custom metric - $metric";
                   }
                 }
+                foreach($data as $metric => $value) {
+                  if (substr($metric, 0, 9) == 'userTime.') {
+                    if (!isset($userTimings))
+                      $userTimings = array();
+                    $userTimings[$metric] = 'User Timing - ' . substr($metric, 9);
+                  }
+                }
+                $timingCount = count($userTimings);
                 if (array_key_exists('CSI', $data) && is_array($data['CSI']) && count($data['CSI'])) {
                   if (!isset($csiMetrics))
                     $csiMetrics = array();
@@ -79,6 +90,12 @@ $pageData = loadAllPageData($testPath);
             if (isset($customMetrics) && is_array($customMetrics) && count($customMetrics)) {
               echo '<h1 id="custom">Custom Metrics</h1>';
               foreach($customMetrics as $metric => $label) {
+                InsertChart($metric, $label);
+              }
+            }
+            if (isset($userTimings) && is_array($userTimings) && count($userTimings)) {
+              echo '<h1 id="UserTiming"><a href="http://www.w3.org/TR/user-timing/">W3C User Timing marks</a></h1>';
+              foreach($userTimings as $metric => $label) {
                 InsertChart($metric, $label);
               }
             }
