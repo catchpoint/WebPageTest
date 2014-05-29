@@ -5602,7 +5602,8 @@ chrome.extension.onRequest.addListener(
           function() { pollDOMElement(); },
           DOM_ELEMENT_POLL_INTERVAL);
     } else if (request.message == 'collectStats') {
-      wpt.contentScript.collectStats_(request.customMetrics);
+			var customMetrics = request['customMetrics'] || '';
+      wpt.contentScript.collectStats_(customMetrics);
     } else if (request.message == 'checkResponsive') {
       wpt.contentScript.checkResponsive_();
     }
