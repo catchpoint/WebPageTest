@@ -1,0 +1,151 @@
+<?php
+require_once(__DIR__ . '/common_lib.inc');
+require_once(__DIR__ . '/page_data.inc');
+
+function GetQuantiles(&$data) {
+}
+
+function GetNumeric($value) {
+  if (preg_match('/^[0-9]+$/', $value))
+    $value = intval($value);
+  else
+    $value = floatval($value);
+  return $value;
+}
+
+/**
+ * ChartColumn is a class describing a column of a GViz chart.
+ */
+class ChartColumn
+{
+  public $values; // @var float[] Values in column
+  public $color; // @var string Color in chart
+  public $line; // @var bool: true for line, false for point
+  public $label; // @var string: Label of column in chart
+
+  function __construct($values, $color, $line, $label) {
+    $this->values = $values;
+    $this->color = $color;
+    $this->line = $line;
+    $this->label = $label;
+  }
+
+  /**
+   * fromPageData returns a ChartColumn with points in the given color,
+   * corresponding to all values from a given cached status and metric
+   * of a given pageData object.
+   *
+   * @param (int|float)[][][] &$pageData
+   * @param int cached
+   * @param string metric
+   * @param string color
+   * @param string label
+   *
+   * @return ChartColumn
+   */
+  public static function fromPageData(&$pageData, $cached, $metric, $color, $label) {
+    // For each run in pageData, pull out the data values, then can create the instance
+    $values = values($pageData, $cached, $metric, true);
+    return new ChartColumn($values, $color, false, $label);
+  }
+
+  /**
+   * medianFromPageData returns a ChartColumn with a line in the given color,
+   * corresponding to the median of values from a given cached status and metric
+   * of a given pageData object.
+   *
+   * @param (int|float)[][][] &$pageData
+   * @param int cached
+   * @param string metric
+   * @param string color
+   * @param string label
+   *
+   * @return ChartColumn
+   */
+  public static function medianFromPageData($pageData, $cached, $metric, $color, $label) {
+    // For each run in pageData, pull out the data values and compute the median, then can create the instance
+    $runs = count($pageData);
+    $values = values($pageData, $cached, $metric, true);
+    $value = median($values);
+    if (!$value) {
+      return null;
+    }
+    return new ChartColumn(array_combine(range(1, $runs), array_fill(1, $runs, $value)), $color, true, $label);
+  }
+
+  /**
+   * medianFromPageData returns a ChartColumn with a line in the given color,
+   * corresponding to the value of $metric on the run whose value
+   * of $median_metric is median, drawn from all runs from the given cached
+   * status in the given pageData object.
+   *
+   * @param (int|float)[][][] &$pageData
+   * @param int cached
+   * @param string metric
+   * @param string color
+   * @param string label
+   *
+   * @return ChartColumn
+   */
+  public static function medianRunFromPageData($pageData, $cached, $metric, $median_metric, $color, $label) {
+    $runs = count($pageData);
+    $medianRun = $pageData[GetMedianRun($pageData, $cached, $median_metric)][$cached];
+    if (!array_key_exists($metric, $medianRun)) {
+      return null;
+    }
+    $value = GetNumeric($medianRun[$metric]);
+    return new ChartColumn(array_combine(range(1, $runs), array_fill(1, $runs, $value)), $color, true, $label);
+  }
+
+  /**
+   * runs returns a ChartColumn with the sequence of integers from 1 to $runs.
+   *
+   * @param int runs
+   *
+   * @return ChartColumn
+   */
+  public static function runs($runs) {
+    return new ChartColumn(array_combine(range(1, $runs), range(1, $runs)), null, null, 'run');
+  }
+
+  /**
+   * dataMedianColumns returns a ChartColumn[] with three columns: data points
+   * of $metric, line corresponding to median of $metric, and line
+   * corresponding to value of $metric on run whose value of $median_metric
+   * is median.
+   */
+  public static function dataMedianColumns($pageData, $cached, $metric, $median_metric, $color, $color_median_run, $label) {
+    $chartColumns = array();
+    $chartColumns[] = ChartColumn::fromPageData($pageData, $cached, $metric, $color, $label);
+    $column = ChartColumn::medianRunFromPageData($pageData, $cached, $metric, $median_metric, $color_median_run, $label . ', Run with Median ' . $median_metric);
+    if (!is_null($column)) {
+      $chartColumns[] = $column;
+    }
+    $column = ChartColumn::medianFromPageData($pageData, $cached, $metric, $color, $label . ' Median');
+    if (!is_null($column)) {
+      $chartColumns[] = $column;
+    }
+    return $chartColumns;
+  }
+}
+
+/**
+ * Chart is a class describing a GViz chart.
+ */
+class Chart {
+  /**
+   * @var string name of HTML div element
+   */
+  public $div; // name of HTML div element
+
+  /**
+   * @var ChartColumn[] Columns in chart
+   */
+  public $columns;
+
+  function __construct($div, $columns) {
+    $this->div = $div;
+    $this->columns = $columns;
+  }
+}
+?>
