@@ -216,6 +216,11 @@ if (strlen($id)) {
         $run = (int)1;
     }
     $cached = @(int)$req_cached;  // define a global used in other files
+    if (array_key_exists('run', $_REQUEST) && !strcasecmp($_REQUEST['run'], 'median')) {
+      require_once('page_data.inc');
+      $pageData = loadAllPageData($testPath, $options);
+      $run = GetMedianRun($pageData, $cached);
+    }
     $cachedText = $cached ? '_Cached' : '';
     $test = array();
     if (is_file("$testPath/testinfo.ini")) {
