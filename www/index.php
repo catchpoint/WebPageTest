@@ -8,7 +8,7 @@ if (!array_key_exists('noBulk', $settings))
     $settings['noBulk'] = 0;
 
 // see if we are overriding the max runs
-if (isset($_COOKIE['maxruns'])) {
+if (isset($_COOKIE['maxruns']) && (int)$_GET['maxruns'] > 0) {
     $settings['maxruns'] = (int)$_GET['maxruns'];
 }
 if (isset($_GET['maxruns'])) {
@@ -16,7 +16,7 @@ if (isset($_GET['maxruns'])) {
     setcookie("maxruns", $settings['maxruns']);    
 }
 
-if (!isset($settings['maxruns'])) {
+if (!isset($settings['maxruns']) || $settings['maxruns'] <= 0) {
     $settings['maxruns'] = 10;
 }
 if (isset($_REQUEST['map'])) {

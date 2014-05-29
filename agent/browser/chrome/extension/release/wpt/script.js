@@ -93,6 +93,8 @@ wpt.contentScript.collectStats_ = function(customMetrics) {
 						if (code.length) {
 							var fn = new Function("return function wptCustomMetric" + i + "(){" + code + "};")();
 							var result = fn();
+							if (typeof result == 'undefined')
+								result = '';
 							out[name] = result;
 						}
 					}

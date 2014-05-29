@@ -590,8 +590,10 @@ wpt.moz.main.collectStats = function(customMetrics, callback) {
 					var name = parts[0];
 					var code = window.atob(parts[1]);
 					if (code.length) {
-						win.wptCustomMetricFn = new Function("return function wptCustomMetric" + i + "(window, document){" + code + "};")();
-						var result = win.wptCustomMetricFn(win, win.document);
+						var script = 'var wptCustomMetric = function() {' + code + '};return wptCustomMetric();'
+						var result = wpt.moz.execScriptInSelectedTab(script, {});
+						if (typeof result == 'undefined')
+							result = '';
 						out[name] = result;
 					}
 				}
