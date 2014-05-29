@@ -138,10 +138,6 @@ Here are the rules that you need to add to a server configuration for Nginx to o
         #old pages that were eliminated in the UI rewrite
         rewrite ^/test$ / permanent;
 
-        #wiki
-        rewrite ^/docs/(.*)$ http://www.webperformancecentral.com/wiki/WebPagetest/$1 permanent;
-        rewrite ^/docs$ http://www.webperformancecentral.com/wiki/WebPagetest permanent;
-
         # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
         #
         location ~ \.php$ {

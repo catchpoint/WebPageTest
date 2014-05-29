@@ -125,10 +125,6 @@
     #old pages that were eliminated in the UI rewrite
     RewriteRule ^test$ / [R] 
 
-    #wiki
-    RewriteRule ^docs/(.*)$ http://www.webperformancecentral.com/wiki/WebPagetest/$1 [R]
-    RewriteRule ^docs$ http://www.webperformancecentral.com/wiki/WebPagetest [R]
-
     # versioned path to timeline
     RewriteRule ^timeline/[0-9]+/(.*)$ /timeline/$1
 </IfModule>
