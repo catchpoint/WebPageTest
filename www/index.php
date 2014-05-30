@@ -339,13 +339,6 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="continuousVideo" id="continuousVideo" class="checkbox" style="float: left;width: auto;">
-                                        <label for="continuousVideo" class="auto_width">
-                                            Continuous Video Capture<br>
-                                            <small>Unstable/experimental, may cause tests to fail</small>
-                                        </label>
-                                    </li>
-                                    <li>
                                         <?php
                                         $checked = '';
                                         if (array_key_exists('keepua', $settings) && $settings['keepua'])
