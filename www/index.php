@@ -203,7 +203,7 @@ $loc = ParseLocations($locations);
                                 <li><a href="#block">Block</a></li>
                                 <li><a href="#spof">SPOF</a></li>
                                 <li><a href="#custom-metrics">Custom</a></li>
-                                <?php if (!$settings['noBulk']) { ?>
+                                <?php if ($admin || !$settings['noBulk']) { ?>
                                 <li><a href="#bulk">Bulk Testing</a></li>
                                 <?php } ?>
                             </ul>
@@ -515,7 +515,7 @@ $loc = ParseLocations($locations);
                                 </div>
                             </div>
 
-                            <?php if (!$settings['noBulk']) { ?>
+                            <?php if ($admin || !$settings['noBulk']) { ?>
                             <div id="bulk" class="test_subbox ui-tabs-hide">
                                 <p>
                                     <label for="bulkurls" class="full_width">
