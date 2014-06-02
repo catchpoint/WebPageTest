@@ -167,9 +167,7 @@ else
             {
                 $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? "/compare?pssid=$id" : "/pss.php?pssid=$id",
                                     'Test Result' => FRIENDLY_URLS ? "/result/$id/" : "/results.php?test=$id",
-                                    'PageSpeed Service Home' => 'http://code.google.com/speed/pss', 
-                                    'Sample Tests' => 'http://code.google.com/speed/pss/gallery.html',
-                                    'Sign Up!' => 'https://docs.google.com/a/google.com/spreadsheet/viewform?hl=en_US&formkey=dDdjcmNBZFZsX2c0SkJPQnR3aGdnd0E6MQ');
+                                    'PageSpeed Service' => 'https://developers.google.com/speed/pagespeed/service');
                 if (array_key_exists('testinfo', $test) && array_key_exists('pss_advanced', $test['testinfo']) && $test['testinfo']['pss_advanced']) {                
                     $navTabs['New Comparison'] = FRIENDLY_URLS ? "/compare?pssid=$id&option=prioritize_visible_content" : "/pss.php?pssid=$id&option=prioritize_visible_content";
                 }
@@ -276,8 +274,7 @@ else
                         <div class="left" style="width: 630px; margin-left: auto; margin-right: auto;">
                         <p>Here are some resources you can browse while you wait for testing to complete (all open in new browser tabs):</p>
                         <ul class="bullet_list">
-                        <li><a href="http://code.google.com/speed/pss" target="_blank">PageSpeed Service home page</a> - information about the service</li>
-                        <li><a href="http://code.google.com/speed/pss/gallery.html" target="_blank">Sample Tests</a> - Tests for common types of sites optimized by the PageSpeed Service</li>
+                        <li><a href="https://developers.google.com/speed/pagespeed/service" target="_blank">PageSpeed Service home page</a> - information about the service</li>
                         </ul>
                         </div>
                         <?php
