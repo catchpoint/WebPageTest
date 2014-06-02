@@ -586,7 +586,7 @@ void CPagetestReporting::ProcessResults(void)
 	SortEvents();
 	
 	// walk the list and calculate each event
-  std::tr1::regex adult_regex("[^0-9]2257[^0-9]");
+  std::tr1::regex adult_regex("[^0-9a-zA-Z]2257[^0-9a-zA-Z]");
 	__int64	earliest = 0;
 	POSITION pos = events.GetHeadPosition();
 	while( pos )

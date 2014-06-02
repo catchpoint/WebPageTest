@@ -785,7 +785,7 @@ void Results::ProcessRequests(void) {
   adult_site_ = false;
   LONGLONG new_end = 0;
   LONGLONG new_first_byte = 0;
-  std::tr1::regex adult_regex("[^0-9]2257[^0-9]");
+  std::tr1::regex adult_regex("[^0-9a-zA-Z]2257[^0-9a-zA-Z]");
   while (pos) {
     Request * request = _requests._requests.GetNext(pos);
     if (request && 
