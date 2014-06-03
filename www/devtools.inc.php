@@ -602,7 +602,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
 
 function GetCachedDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData, $ver) {
   $ok = false;
-  $cacheFile = "$testPath/devToolsRequests.$ver";
+  $cacheFile = "$testPath/$run.$cached.devToolsRequests.$ver";
   if (gz_is_file($cacheFile)) {
     $cache = json_decode(gz_file_get_contents($cacheFile), true);
     if (isset($cache[$run][$cached]['requests']) &&
@@ -616,7 +616,7 @@ function GetCachedDevToolsRequests($testPath, $run, $cached, &$requests, &$pageD
 }
 
 function SaveCachedDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData, $ver) {
-  $cacheFile = "$testPath/devToolsRequests.$ver";
+  $cacheFile = "$testPath/$run.$cached.devToolsRequests.$ver";
   $lock = Lock($cacheFile);
   if (isset($lock)) {
     if (gz_is_file($cacheFile))

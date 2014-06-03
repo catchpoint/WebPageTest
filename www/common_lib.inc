@@ -382,7 +382,7 @@ function gz_file_get_contents($file)
         $zip = @gzopen($file, 'rb');
 
     if( $zip !== false ) {
-        while ($string = gzread($zip, 4096)) {
+        while ($string = gzread($zip, 4096000)) {
             $data .= $string;
         }
         gzclose($zip);
@@ -1605,16 +1605,16 @@ function Lock($name, $blocking = true, $maxLockSeconds = 300) {
     if( !is_dir('./tmp') )
       mkdir('./tmp');
     if (preg_match('/^[a-zA-Z0-9-_ ]+$/', $name))
-      $lockFile = './tmp/named-' . str_replace(' ', '-', $name) . '.lock';
+      $lockFile = __DIR__ . '/tmp/named-' . str_replace(' ', '-', $name) . '.lock';
     else
-      $lockFile = './tmp/lock-' . sha1($name) . '.lock';
+      $lockFile = __DIR__ . '/tmp/lock-' . sha1($name) . '.lock';
     $start = time();
     do {
       $file = @fopen($lockFile, 'x');
       if ($file !== false) {
         fclose($file);
         $lock = array('name' => $name);
-        $lock['file'] = realpath($lockFile);
+        $lock['file'] = $lockFile;
       } else {
         // see if the lock is stale
         $modified = @filemtime($lockFile);
@@ -1641,8 +1641,7 @@ function UnLock(&$lock) {
   global $RemainingLocks;
   if (isset($lock)) {
     if (is_array($lock) && array_key_exists('file', $lock) && strlen($lock['file'])) {
-      if (is_file($lock['file']))
-        unlink($lock['file']);
+      @unlink($lock['file']);
       if (isset($RemainingLocks) && is_array($RemainingLocks)) {
         foreach ($RemainingLocks as $index => $file) {
           if ($file == $lock['file']) {
