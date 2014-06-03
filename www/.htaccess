@@ -126,7 +126,7 @@
     RewriteRule ^test$ / [R] 
 
     # versioned path to timeline
-    RewriteRule ^timeline/[0-9]+/(.*)$ /timeline/$1
+    RewriteRule ^timeline/[0-9]+/(.*)$ /chrome/$1
 </IfModule>
 
 #
