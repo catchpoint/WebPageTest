@@ -806,15 +806,19 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
   $recordPending = false;
   $events = array();
   $startOffset = null;
+  $previousTime = null;
   
   foreach ($messages as $message) {
     if (is_array($message)) {
       // See if we got the first valid event in the trace (throw away the timeline
       // events at the beginning that are from video capture starting).
       if ($hasNet) {
-        if (!$firstEvent && array_key_exists('method', $message) && $message['method'] !== 'Timeline.eventRecorded') {
-          $eventTime = DevToolsEventTime($message);
-          $firstEvent = isset($eventTime) ? $eventTime : 0;
+        if (!$firstEvent) {
+          if (isset($message['method']) && $message['method'] !== 'Timeline.eventRecorded') {
+            $firstEvent = isset($previousTime) ? $previousTime : 0;
+          } else {
+            $previousTime = DevToolsEventTime($message);
+          }
         }
       } elseif (!$firstEvent) {
         $eventTime = DevToolsEventTime($message);
