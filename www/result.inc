@@ -443,7 +443,7 @@ $page_description = "Website performance test result$testLabel.";
                         }
                         if( gz_is_file("$testPath/{$run}_trace.json")) {
                             echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_trace.json\" title=\"Download Chrome Trace\">Trace</a>";
-                            echo " (<a href=\"/viewTrace.php?test=$id&run=$run&cached=0\" title=\"View Chrome Trace\">view</a>)";
+                            echo " (<a href=\"/chrome/trace.php?test=$id&run=$run&cached=0\" title=\"View Chrome Trace\">view</a>)";
                         }
                         if( gz_is_file("$testPath/{$run}_netlog.txt") ) {
                             echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_netlog.txt\" title=\"Download Network Log\">Net Log</a>";
@@ -516,7 +516,7 @@ $page_description = "Website performance test result$testLabel.";
                           }
                           if( gz_is_file("$testPath/{$run}_Cached_trace.json")) {
                               echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_trace.json\" title=\"Download Chrome Trace\">Trace</a>";
-                              echo " (<a href=\"/viewTrace.php?test=$id&run=$run&cached=1\" title=\"View Chrome Trace\">view</a>)";
+                              echo " (<a href=\"/chrome/trace.php?test=$id&run=$run&cached=1\" title=\"View Chrome Trace\">view</a>)";
                           }
                           if( gz_is_file("$testPath/{$run}_Cached_netlog.txt") ) {
                               echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_netlog.txt\" title=\"Download Network Log\">Net Log</a>";
