@@ -873,32 +873,24 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
 
 function DevToolsEventTime(&$event) {
   $time = null;
-  if (is_array($event) &&
-      array_key_exists('params', $event) &&
-      is_array($event['params'])) {
-    if (array_key_exists('record', $event['params']) &&
-        is_array($event['params']['record']) &&
-        array_key_exists('startTime', $event['params']['record']))
-      $time = floatval($event['params']['record']['startTime']);
-    elseif (array_key_exists('timestamp', $event['params']))
-      $time = floatval($event['params']['timestamp']) * 1000.0;
-    elseif (array_key_exists('message', $event['params']) && array_key_exists('timestamp', $event['params']['message']))
-      $time = floatval($event['params']['message']['timestamp']) * 1000.0;
+  if (isset($event['params']['record']['startTime'])) {
+    $time = floatval($event['params']['record']['startTime']);
+  }
+  elseif (isset($event['params']['timestamp'])) {
+    $time = floatval($event['params']['timestamp']) * 1000.0;
+  }
+  elseif (isset($event['params']['message']['timestamp'])) {
+    $time = floatval($event['params']['message']['timestamp']) * 1000.0;
   }
   return $time;
 }
 
 function DevToolsEventEndTime(&$event) {
   $time = null;
-  if (is_array($event) &&
-      array_key_exists('params', $event) &&
-      is_array($event['params'])) {
-    if (array_key_exists('record', $event['params']) &&
-        is_array($event['params']['record']) &&
-        array_key_exists('endTime', $event['params']['record']))
-      $time = floatval($event['params']['record']['endTime']);
-    elseif (array_key_exists('timestamp', $event['params']))
-      $time = floatval($event['params']['timestamp']) * 1000.0;
+  if (isset($event['params']['record']['endTime'])) {
+    $time = floatval($event['params']['record']['endTime']);
+  } elseif (isset($event['params']['timestamp'])) {
+    $time = floatval($event['params']['timestamp']) * 1000.0;
   }
   return $time;
 }
@@ -953,12 +945,12 @@ function FindNextNetworkRequest(&$events, $startTime) {
 
 function DevToolsMatchEvent($filter, &$event, $startTime = null, $endTime = null) {
   $match = true;
-  if (is_array($event) &&
-      array_key_exists('method', $event) &&
-      array_key_exists('params', $event)) {
+  if (isset($event['method']) && isset($event['params'])) {
     if (isset($startTime) && $startTime) {
       $time = DevToolsEventEndTime($event);
-      if (isset($time) && $time && ($time < $startTime || (isset($endTime) && $endTime && $time >= $endTime)))
+      if (isset($time) && $time &&
+          ($time < $startTime ||
+              (isset($endTime) && $endTime && $time >= $endTime)))
         $match = false;
     }
     if ($match && isset($filter)) {
