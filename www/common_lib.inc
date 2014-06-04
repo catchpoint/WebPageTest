@@ -377,12 +377,16 @@ function gz_file_get_contents($file)
 {
     $data = null;
 
+    $fileSize = filesize("$file.gz");
+    if (!$fileSize)
+      $fileSize = filesize($file);
+    $chunkSize = min(4096, max(1024000, $fileSize * 10));
     $zip = @gzopen("$file.gz", 'rb');
     if( $zip === false )
         $zip = @gzopen($file, 'rb');
 
     if( $zip !== false ) {
-        while ($string = gzread($zip, 4096000)) {
+        while ($string = gzread($zip, $chunkSize)) {
             $data .= $string;
         }
         gzclose($zip);
