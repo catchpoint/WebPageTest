@@ -95,10 +95,6 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="shard" value="' . htmlspecialchars($_REQUEST['shard']) . "\">\n";
             if (array_key_exists('discard', $_REQUEST))
               echo '<input type="hidden" name="discard" value="' . htmlspecialchars($_REQUEST['discard']) . "\">\n";
-            if (array_key_exists('responsive', $_REQUEST))
-              echo '<input type="hidden" name="responsive" value="' . htmlspecialchars($_REQUEST['responsive']) . "\">\n";
-            if (array_key_exists('trace', $_REQUEST))
-              echo '<input type="hidden" name="trace" value="' . htmlspecialchars($_REQUEST['trace']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
@@ -388,6 +384,12 @@ $loc = ParseLocations($locations);
                                         <input type="checkbox" name="timelineStack" id="timelineStack" class="checkbox" style="float: left;width: auto;">
                                         <label for="timelineStack" class="auto_width">
                                             Include call stack (increases overhead)
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <input type="checkbox" name="trace" id="trace" class="checkbox" style="float: left;width: auto;">
+                                        <label for="trace" class="auto_width">
+                                            Capture Chrome Trace (about://tracing)
                                         </label>
                                     </li>
                                     <li>

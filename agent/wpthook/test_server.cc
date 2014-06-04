@@ -279,12 +279,9 @@ void TestServer::MongooseCallback(enum mg_event event,
       }
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/trace") == 0) {
-      if (test_state_._active) {
-        CStringA body = CT2A(GetPostBody(conn, request_info));
-        OutputDebugStringA(body);
-        if (body.GetLength())
-          trace_.AddEvents(body);
-      }
+      CStringA body = CT2A(GetPostBody(conn, request_info));
+      if (body.GetLength())
+        trace_.AddEvents(body);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/paint") == 0) {
       //test_state_.PaintEvent(0, 0, 0, 0);
