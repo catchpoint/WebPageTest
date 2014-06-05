@@ -323,7 +323,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
     $requests = null;
     $pageData = null;
     $startOffset = null;
-    $ver = 1;
+    $ver = 2;
     $cached = isset($cached) && $cached ? 1 : 0;
     $ok = GetCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
     if (!$ok) {
