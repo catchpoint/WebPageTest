@@ -56,6 +56,14 @@ function NumBytesAsDisplayString(numBytes) {
     return numBytes + ' B';
 }
 
+function htmlEncode(value){
+    if (value) {
+        return jQuery('<div />').text(value).html();
+    } else {
+        return '';
+    }
+}
+
 function SelectRequest(request) {
     $('#request-dialog').css('top', $("#request-overlay-" + request).position().top + 20);
     $("#dialog-title").html('<a href="#request' + request + '">Request #' + request + '</a>');
@@ -72,39 +80,39 @@ function SelectRequest(request) {
         var r = wptRequestData[request - 1];
         if (r['full_url'] !== undefined) {
             if (wptNoLinks) {
-                details += '<b>URL:</b> ' + r['full_url'] + '<br>';
+                details += '<b>URL:</b> ' + htmlEncode(r['full_url']) + '<br>';
             } else {
-                details += '<b>URL:</b> <a href="' + r['full_url'] + '">' + r['full_url'] + '</a><br>';
+                details += '<b>URL:</b> <a href="' + htmlEncode(r['full_url']) + '">' + htmlEncode(r['full_url']) + '</a><br>';
             }
         }
         if (r['initiator'] !== undefined && r['initiator'].length > 0) {
-            details += '<b>Loaded By:</b> ' + r['initiator'];
+            details += '<b>Loaded By:</b> ' + htmlEncode(r['initiator']);
             if (r['initiator_line'] !== undefined)
-                details += ':' + r['initiator_line'];
+                details += ':' + htmlEncode(r['initiator_line']);
             details += '<br>';
         }
         if (r['host'] !== undefined)
-            details += '<b>Host: </b>' + r['host'] + '<br>';
+            details += '<b>Host: </b>' + htmlEncode(r['host']) + '<br>';
         if (r['ip_addr'])
-            details += '<b>IP: </b>' + r['ip_addr'] + '<br>';
+            details += '<b>IP: </b>' + htmlEncode(r['ip_addr']) + '<br>';
         if (r['location'] !== undefined && r['location'] !== null && r['location'].length)
-            details += '<b>Location: </b>' + r['location'] + '<br>';
+            details += '<b>Location: </b>' + htmlEncode(r['location']) + '<br>';
         if (r['responseCode'] !== undefined)
-            details += '<b>Error/Status Code: </b>' + r['responseCode'] + '<br>';
+            details += '<b>Error/Status Code: </b>' + htmlEncode(r['responseCode']) + '<br>';
         if (r['client_port'] !== undefined && r['client_port'] !== null && r['client_port'])
-            details += '<b>Client Port: </b>' + r['client_port'] + '<br>';
+            details += '<b>Client Port: </b>' + htmlEncode(r['client_port']) + '<br>';
         if (r['load_start'] !== undefined)
             details += '<b>Start Offset: </b>' + (r['load_start'] / 1000.0).toFixed(3) + ' s<br>';
         if (IsValidDuration(r['dns_ms'])) {
-            details += '<b>DNS Lookup: </b>' + r['dns_ms'] + ' ms<br>';
+            details += '<b>DNS Lookup: </b>' + htmlEncode(r['dns_ms']) + ' ms<br>';
         } else if( r['dns_end'] !== undefined && r['dns_start'] !== undefined && r['dns_end'] > 0 ) {
             var dnsTime = r['dns_end'] - r['dns_start'];
             details += '<b>DNS Lookup: </b>' + dnsTime + ' ms<br>';
         }
         if (IsValidDuration(r['connect_ms'])) {
-            details += '<b>Initial Connection: </b>' + r['connect_ms'] + ' ms<br>';
+            details += '<b>Initial Connection: </b>' + htmlEncode(r['connect_ms']) + ' ms<br>';
             if (r['is_secure'] !== undefined && r['is_secure'] && IsValidDuration(r['ssl_ms'])) {
-                details += '<b>SSL Negotiation: </b>' + r['ssl_ms'] + ' ms<br>';
+                details += '<b>SSL Negotiation: </b>' + htmlEncode(r['ssl_ms']) + ' ms<br>';
             }
         } else if( r['connect_end'] !== undefined && r['connect_start'] !== undefined && r['connect_end'] > 0 ) {
             var connectTime = r['connect_end'] - r['connect_start'];
@@ -115,35 +123,35 @@ function SelectRequest(request) {
             }
         }
         if (IsValidDuration(r['ttfb_ms'])) {
-            details += '<b>Time to First Byte: </b>' + r['ttfb_ms'] + ' ms<br>';
+            details += '<b>Time to First Byte: </b>' + htmlEncode(r['ttfb_ms']) + ' ms<br>';
         }
         if (IsValidDuration(r['download_ms']))
-            details += '<b>Content Download: </b>' + r['download_ms'] + ' ms<br>';
+            details += '<b>Content Download: </b>' + htmlEncode(r['download_ms']) + ' ms<br>';
         if (r['bytesIn'] !== undefined)
             details += '<b>Bytes In (downloaded): </b>' + NumBytesAsDisplayString(r['bytesIn']) + '<br>';
         if (r['bytesOut'] !== undefined)
             details += '<b>Bytes Out (uploaded): </b>' + NumBytesAsDisplayString(r['bytesOut']) + '<br>';
         if (r['custom_rules'] !== undefined) {
             for (rule in r['custom_rules']) {
-                details += '<b>Custom Rule - ' + rule + ': </b>(';
-                details += r['custom_rules'][rule]['count'] + ' matches) - ';
-                details += r['custom_rules'][rule]['value'].replace(/>/g, '&gt;').replace(/</g, '&lt;') + '<br>';
+                details += '<b>Custom Rule - ' + htmlEncode(rule) + ': </b>(';
+                details += htmlEncode(r['custom_rules'][rule]['count']) + ' matches) - ';
+                details += htmlEncode(r['custom_rules'][rule]['value']) + '<br>';
             }
         }
         if (r['headers'] !== undefined){
             if (r.headers['request'] !== undefined){
                 for (i=0;i<r.headers.request.length;i++) {
-                    requestHeaders += r.headers.request[i] + '<br>';
+                    requestHeaders += htmlEncode(r.headers.request[i]) + '<br>';
                 }
             }
             if (r.headers['response'] !== undefined){
                 for (i=0;i<r.headers.response.length;i++) {
-                    responseHeaders += r.headers.response[i] + '<br>';
+                    responseHeaders += htmlEncode(r.headers.response[i]) + '<br>';
                 }
             }
         }
         if (r['body_url'] !== undefined && r['body_url'].length) {
-            details += '<a href="' + r['body_url'] + '" target="_blank">Open response body in new window</a><br>'
+            details += '<a href="' + htmlEncode(r['body_url']) + '" target="_blank">Open response body in new window</a><br>'
             try {
                 $("#response-body").text('Loading...');
                 wptBodyRequest = new XMLHttpRequest();

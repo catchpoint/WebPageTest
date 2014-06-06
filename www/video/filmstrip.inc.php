@@ -114,8 +114,8 @@ if( $count ) {
 else
     $error = "No valid tests selected.";
 
-if (array_key_exists('thumbSize', $_REQUEST))
-    $thumbSize = $_REQUEST['thumbSize'];
+if (array_key_exists('thumbSize', $_REQUEST) && is_numeric($_REQUEST['thumbSize']))
+    $thumbSize = intval($_REQUEST['thumbSize']);
 if( !isset($thumbSize) || $thumbSize < 50 || $thumbSize > 500 ) {
     if( $count > 6 )
         $thumbSize = 100;

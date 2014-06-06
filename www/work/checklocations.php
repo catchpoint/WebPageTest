@@ -10,8 +10,6 @@ header("Cache-Control: no-cache, must-revalidate");
 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
 $locations = parse_ini_file('./settings/locations.ini', true);
-BuildLocations($locations);
-
 $settings = parse_ini_file('./settings/settings.ini', true);
 
 $count = 0;
@@ -32,15 +30,15 @@ foreach( $files as $file ) {
       $minutes = (int)($elapsed / 60);
       
       if ($minutes < 4320 &&
-          array_key_exists($loc, $locations) &&
-          (!array_key_exists('hidden', $locations[$loc]) || !$locations[$loc]['hidden'])) {
+          isset($locations[$loc]) &&
+          !isset($locations[$loc]['hidden'])) {
         $alert = null;
         if($minutes > 60) {
           $alert = "has not checked for new jobs in $minutes minutes.";
           $collected .= "$loc - $minutes minutes";
-        } elseif (array_key_exists('agents', $locations[$loc]) && $locations[$loc]['agents']) {
+        } elseif (isset($locations[$loc]['agents'])) {
           $configured = $locations[$loc]['agents'];
-          $expected = array_key_exists('min-agents', $locations[$loc]) ? $locations[$loc]['min-agents'] : $configured;
+          $expected = isset($locations[$loc]['min-agents']) ? $locations[$loc]['min-agents'] : $configured;
           $testers = GetTesterCount($loc);
           if ($testers < $expected) {
             $missing = $configured - $testers;
