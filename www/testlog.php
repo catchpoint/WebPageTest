@@ -16,6 +16,7 @@ $filter    = $_GET["filter"];
 $filterstr = $filter ? strtolower($filter) : null;
 $onlyVideo = !empty($_REQUEST['video']);
 $all       = !empty($_REQUEST['all']);
+$repeat   = !empty($_REQUEST['repeat']);
 $nolimit   = !empty($_REQUEST['nolimit']);
 $csv       = !strcasecmp($_GET["f"], 'csv');
 
@@ -82,6 +83,7 @@ else
                            echo '<input id="private" type="hidden" name="private" value="1">';
                          ?>
                         <label><input id="video" type="checkbox" name="video" <?php check_it($onlyVideo);?> onclick="this.form.submit();"> Only list tests that include video</label> &nbsp;&nbsp;
+                        <label><input id="repeat" type="checkbox" name="repeat" <?php check_it($repeat);?> onclick="this.form.submit();"> Show repeat view</label>
                         <label><input id="nolimit" type="checkbox" name="nolimit" <?php check_it($nolimit);?> onclick="this.form.submit();"> Do not limit the number of results (warning, WILL be slow)</label>
 
                 </form>
@@ -215,8 +217,12 @@ else
                                             {
                                                 echo '<tr>';
                                                 echo '<td>';
-                                                if( isset($guid) && $video && !( $url == "Bulk Test" || $url == "Multiple Locations test" ) )
-                                                    echo "<input type=\"checkbox\" name=\"t[]\" value=\"$guid\">";
+                                                if( isset($guid) && $video && !( $url == "Bulk Test" || $url == "Multiple Locations test" ) ) {
+                                                    echo "<input type=\"checkbox\" name=\"t[]\" value=\"$guid\" title=\"First View\">";
+                                                    if($repeat) {
+                                                        echo "<input type=\"checkbox\" name=\"t[]\" value=\"$guid-c:1\" title=\"Repeat View\">";
+                                                    } 
+                                                }
                                                 echo '</td>';
                                                 echo '<td class="date">';
                                                 if( $private )
