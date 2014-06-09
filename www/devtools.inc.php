@@ -323,7 +323,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
     $requests = null;
     $pageData = null;
     $startOffset = null;
-    $ver = 2;
+    $ver = 3;
     $cached = isset($cached) && $cached ? 1 : 0;
     $ok = GetCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
     if (!$ok) {
@@ -351,7 +351,9 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
               $pageData['optimization_checked'] = 0;
               $pageData['start_epoch'] = $rawPageData['startTime'];
               if (array_key_exists('onload', $rawPageData))
-                  $pageData['loadTime'] = $pageData['docTime'] = round(($rawPageData['onload'] - $rawPageData['startTime']));
+                $pageData['loadTime'] = $pageData['docTime'] = round(($rawPageData['onload'] - $rawPageData['startTime']));
+              else
+                $pageData['result'] = 99997;
               
               // go through and pull out the requests, calculating the page stats as we go
               $connections = array();
@@ -586,11 +588,15 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
           }
       }
       if (count($requests)) {
-        if ($pageData['responses_200'] == 0) {
+        if ($pageData['result'] == 0 && $pageData['responses_200'] == 0) {
           if (array_key_exists('responseCode', $requests[0]))
             $pageData['result'] = $requests[0]['responseCode'];
           else
             $pageData['result'] = 12999;
+        } elseif ($pageData['result'] == 0 && $pageData['responses_404'] > 0) {
+            $pageData['result'] = 99999;
+        } elseif ($pageData['result'] == 99997 && $pageData['responses_404'] > 0) {
+            $pageData['result'] = 99998;
         }
         $ok = true;
       }
@@ -638,15 +644,16 @@ function SaveCachedDevToolsRequests($testPath, $run, $cached, &$requests, &$page
 * @param mixed $requests
 */
 function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
-    $pageData = array('startTime' => 0, 'onload' => 0, 'endTime' => 0);
+    $pageData = array('startTime' => 0, 'endTime' => 0);
     $requests = array();
     $rawRequests = array();
     $idMap = array();
     foreach ($events as $event) {
         if ($event['method'] == 'Page.loadEventFired' &&
             array_key_exists('timestamp', $event) &&
-            $event['timestamp'] > $pageData['onload'])
+            (!isset($pageData['onload']) || $event['timestamp'] > $pageData['onload'])) {
             $pageData['onload'] = $event['timestamp'];
+        }
         if (array_key_exists('timestamp', $event) &&
             array_key_exists('requestId', $event)) {
             $originalId = $id = $event['requestId'];
@@ -791,6 +798,10 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
       if (array_key_exists('fromNet', $request) && $request['fromNet']) {
         $requests[] = $request;
       }
+    }
+    if (isset($pageData['onload'])) {
+      if ($pageData['onload'] < $pageData['startTime'] || !isset($pageData['startTime']))
+        unset($pageData['onload']);
     }
     $ok = false;
     if (count($requests))
