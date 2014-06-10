@@ -827,7 +827,7 @@ void Results::ProcessRequests(void) {
         count_connect_doc_ += doc_increment;
       }
       if (base_page) { 
-        if (result_code == 301 || result_code == 302) {
+        if (result_code == 301 || result_code == 302 || result_code == 401) {
           base_page_redirects_++;
         } else {
           base_page = false;
@@ -859,7 +859,7 @@ void Results::ProcessRequests(void) {
       new_end = max(new_end, request->_connect_start.QuadPart);
       new_end = max(new_end, request->_connect_end.QuadPart);
       if (request->_first_byte.QuadPart &&
-          result_code != 301 && result_code != 302 && 
+          result_code != 301 && result_code != 302 && result_code != 401 &&
           (!new_first_byte || request->_first_byte.QuadPart < new_first_byte))
         new_first_byte = request->_first_byte.QuadPart;
     }

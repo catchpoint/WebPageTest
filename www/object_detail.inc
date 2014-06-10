@@ -461,7 +461,7 @@ function AddResponseBodyFlags(&$requests, $bodies_file_name) {
 function GetBasePage(&$requests) {
     $basePage = null;
     foreach($requests as &$request) {
-        if ($request['responseCode'] < 300 || $request['responseCode'] >= 400) {
+        if ($request['responseCode'] != 401 && ($request['responseCode'] < 300 || $request['responseCode'] >= 400)) {
             $basePage = $request;
             break;
         }

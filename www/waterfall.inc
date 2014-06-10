@@ -811,7 +811,7 @@ function SetRowColors(&$rows, $is_page_loaded, $bg_colors) {
             // This is a request view and not a connection view.
             $request = current($row['requests']);
             $code = $request['responseCode'];
-            if ($code >= 400 || ($code < 0 && !$is_page_loaded)) {
+            if ($code != 401 && ($code >= 400 || ($code < 0 && !$is_page_loaded))) {
                 $row['bg_color'] = $bg_colors['error'];
             } elseif ($code >= 300) {
                 $row['bg_color'] = $bg_colors['warning'];

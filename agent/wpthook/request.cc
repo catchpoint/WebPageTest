@@ -491,7 +491,7 @@ bool Request::Process() {
     if (!_test_state._first_byte.QuadPart && result == 200 && 
         _first_byte.QuadPart )
       _test_state._first_byte.QuadPart = _first_byte.QuadPart;
-    if (result >= 400 || result < 0) {
+    if (result != 401 && (result >= 400 || result < 0)) {
       if (_test_state._test_result == TEST_RESULT_NO_ERROR)
         _test_state._test_result = TEST_RESULT_CONTENT_ERROR;
       else if (_test_state._test_result == TEST_RESULT_TIMEOUT)
