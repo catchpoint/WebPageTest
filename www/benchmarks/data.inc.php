@@ -461,7 +461,9 @@ function LoadTestData(&$data, &$configurations, $benchmark, $cached, $metric, $t
                         array_key_exists('config', $row) && 
                         array_key_exists('location', $row) && 
                         array_key_exists($metric, $row) && 
-                        strlen($row[$metric])) {
+                        strlen($row[$metric]) &&
+                        isset($row['result']) &&
+                        ($row['result'] == 0 || $row['result'] == 99999)) {
                         $url = $row['url'];
                         if (array_key_exists('label', $row) && strlen($row['label'])) {
                             $url = $row['label'];
