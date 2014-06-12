@@ -24,6 +24,7 @@ function GetTestStatus($id, $includePosition = true) {
     $ret = array('statusCode' => 101, 'statusText' => 'Test status unavailable', 'id' => $id);
     $testInfoJson = GetTestInfo($id);
     if ($testInfoJson) {
+      $ret['testInfo'] = PopulateTestInfo($testInfoJson);
       if (isset($testInfoJson['relayId'])) {
         $ret = GetRelayStatus($id, $testPath, $testInfoJson);
         $ret['remote'] = true;
@@ -69,6 +70,8 @@ function GetTestStatus($id, $includePosition = true) {
                 $ret['statusText'] = 'Test Complete';
                 $ret['completeTime'] = $test['test']['completeTime'];
                 $ret['testsCompleted'] = $ret['testsExpected'];
+                if (isset($testInfoJson['completed']))
+                  $ret['elapsed'] = $testInfoJson['completed'] - $testInfoJson['started'];
               } else {
                 $ret['statusCode'] = 100;
                 if( $elapsed == 0 )

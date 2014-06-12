@@ -2224,6 +2224,24 @@ function GetTestInfo($testIdOrPath) {
   return $testInfo;
 }
 
+// Extract the non-private test information for returning back to the caller
+function PopulateTestInfo(&$test) {
+  $ret = array();
+  $copy = function($key) use ($test, &$ret) {
+    if (isset($test[$key]))
+      $ret[$key] = $test[$key];
+  };
+  $keys = array('url', 'runs', 'fvonly', 'web10', 'ignoreSSL', 'video', 'label',
+      'priority', 'block', 'location', 'browser', 'connectivity', 'bwIn', 'bwOut',
+      'latency', 'plr', 'tcpdump', 'timeline', 'trace', 'bodies', 'netlog',
+      'standards', 'noscript', 'pngss', 'iq', 'bodies', 'keepua', 'benchmark',
+      'mobile', 'tsview_id', 'addCmdLine');
+  foreach ($keys as $key)
+    $copy($key);
+  $ret['scripted'] = isset($test['script']) && strlen($test['script']) ? 1 : 0;
+  return $ret;
+}
+
 function SaveTestInfo($testIdOrPath, &$testInfo) {
   if (isset($testInfo) && is_array($testInfo) &&
       isset($testIdOrPath) && strlen($testIdOrPath)) {
