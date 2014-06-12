@@ -329,7 +329,8 @@ describe('browser_android_chrome small', function() {
             'cp /gagacard/wpt_chrome_command_line' +
             ' /data/local/chrome-command-line'],
         ['shell', 'rm', '/gagacard/wpt_chrome_command_line'],
-        ['shell', 'su', '-c', 'chmod 644 /data/local/chrome-command-line'],
+        ['shell', 'su', '-c', 'chmod 666 /data/local/chrome-command-line'],
+        ['shell', 'su', '-c', 'rm -r /data/data/com.android.chrome/app_tabs'],
         ['shell', 'su', '-c', 'rm -r /data/data/com.android.chrome/files'],
         ['shell', 'su', '-c', 'rm -r /data/data/com.android.chrome/cache'],
         ['shell', 'su', '-c', 'ndc resolver flushdefaultif'],
