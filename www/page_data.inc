@@ -23,7 +23,7 @@ function loadAllPageData($testPath, $options = null) {
       $completed = false;
       
     for( $run = 1; $run <= $runs; $run++ ) {
-      // olny load page data for indifidual runs that are complete (or if the whole test is complete)
+      // only load page data for individual runs that are complete (or if the whole test is complete)
       if ($completed || !$testInfo || IsTestRunComplete($run, $testInfo)) {
         $data = loadPageRunData($testPath, $run, 0, $options);
         if( isset($data) )
@@ -341,7 +341,7 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
                         $metrics[] = $metric;
                 }
                 // only look at non-error runs
-                if( $data[0]['result'] === 0 || $data[0]['result'] === 99999 )
+                if( successfulRun($data[0]) )
                 {
                     if( !isset($fv) )
                         $fv = array();
@@ -366,7 +366,7 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
                         $metrics[] = $metric;
                 }
                 // only look at non-error runs
-                if( $data[1]['result'] === 0 || $data[1]['result'] === 99999 )
+                if( successfulRun($data[1]) )
                 {
                     if( !isset($rv) )
                         $rv = array();
@@ -397,7 +397,7 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
 
         foreach( $pageData as $run => $data )
         {
-            if( isset($data[0]) && ($data[0]['result'] === 0 || $data[0]['result'] === 99999) )
+            if( isset($data[0]) && successfulRun($data[0]) )
             {
                 $curDist = abs($data[0]['loadTime'] - $fv['loadTime']);
                 if( $curDist < $distance )
@@ -425,7 +425,7 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
 
         foreach( $pageData as $run => $data )
         {
-            if( isset($data[1]) && ($data[1]['result'] === 0 || $data[1]['result'] === 99999) )
+            if( isset($data[1]) && successfulRun($data[1]) )
             {
                 $curDist = abs($data[1]['loadTime'] - $rv['loadTime']);
                 if( $curDist < $distance )
@@ -442,7 +442,10 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
 }
 
 /**
-* Find the test run closest to the median
+ * Find the index of the test run in $pageData with cache status $cached
+ * corresponding to the median (or lower of two middle values) of $metric,
+ * unless the "medianRun" parameter is set to "fastest",
+ * in which case it returns the index of the fastest run.
 * 
 * @param mixed $pageData
 * @param mixed $cached
@@ -450,25 +453,10 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
 function GetMedianRun(&$pageData, $cached, $metric = 'loadTime') {
     $run = 0;
     $cached = $cached ? 1:0;
-    $times = array();
-    
-    // try successful-only runs first
-    foreach( $pageData as $index => &$pageRun ) {
-        if( array_key_exists($cached, $pageRun) && 
-            array_key_exists('result', $pageRun[$cached]) && 
-            array_key_exists($metric, $pageRun[$cached]) &&
-            ($pageRun[$cached]['result'] == 0 || $pageRun[$cached]['result'] == 99999) ) {
-            $times[$index] = $pageRun[$cached][$metric];
-        }
-    }
+    $times = values($pageData, $cached, $metric, true);
             
     if (!count($times)) {
-        // include error runs
-        foreach( $pageData as $index => &$pageRun ) {
-            if( array_key_exists($cached, $pageRun) && array_key_exists($metric, $pageRun[$cached])) {
-                $times[$index] = $pageRun[$cached][$metric];
-            }
-        }
+      $times = values($pageData, $cached, $metric, false);
     }
     
     $count = count($times);
@@ -514,7 +502,7 @@ function CountSuccessfulTests(&$pageData, $cached)
     $count = 0;
     foreach( $pageData as &$run )
     {
-        if( $run[$cached]['result'] === 0 || $run[$cached]['result'] === 99999 )
+        if( successfulRun($run[$cached]) )
             $count++;
     }
     
@@ -539,16 +527,10 @@ function CalculateAggregateStats(&$pageData, $cached, $metric, &$median, &$avg, 
     $count = 0;
     
     // first pass, calculate the average and array of values for grabbing the median
-    $values = array();
-    $sum = 0;
-    foreach( $pageData as &$run ) {
-        if( ($run[$cached]['result'] === 0 || $run[$cached]['result'] === 99999) && array_key_exists($metric, $run[$cached]) ) {
-            $values[] = $run[$cached][$metric];
-            $sum += $run[$cached][$metric];
-            $count++;
-        }
-    }
-    
+    $values = values($pageData, $cached, $metric, true);
+    $sum = array_sum($values);
+    $count = count($values);
+
     if( $count ) {
         $avg = $sum / $count;
         sort($values, SORT_NUMERIC);
@@ -578,8 +560,7 @@ function PageDataStandardDeviation($pageData, $metric, $cached) {
             if( array_key_exists($cached, $data) &&
                 array_key_exists($metric,$data[$cached]) &&
                 array_key_exists('result', $data[$cached]) &&
-                ($data[$cached]['result'] === 0 ||
-                 $data[$cached]['result'] === 99999))
+                successfulRun($data[$cached]))
                 $values[] = $data[$cached][$metric];
         }
     }
@@ -630,4 +611,38 @@ function loadUserTimingData(&$pageData, $testPath, $run, $cached) {
     }
   }
 }
+
+/**
+ * Return whether a particular run (cached or uncached) was successful.
+ *
+ * @param mixed data
+ *
+ * @return bool
+ */
+function successfulRun($data) {
+  return ($data['result'] === 0 || $data['result']  === 99999);
+}
+
+/**
+ * Return all values from a pageData for a given cached state and metric
+ *
+ * @param mixed pageData
+ * @param int cached
+ * @param string metric
+ * @param bool successfulOnly Whether to only include successful runs
+ *
+ * @return (int|float)[]
+ */
+function values(&$pageData, $cached, $metric, $successfulOnly) {
+  $values = array();
+  foreach( $pageData as $index => &$pageRun ) {
+    if( array_key_exists($cached, $pageRun) &&
+      (!$successfulOnly || successfulRun($pageRun[$cached])) &&
+      array_key_exists($metric, $pageRun[$cached]) ) {
+        $values[$index] = $pageRun[$cached][$metric];
+    }
+  }
+  return $values;
+}
+
 ?>

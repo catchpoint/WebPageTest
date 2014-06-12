@@ -5,7 +5,7 @@ if(extension_loaded('newrelic')) {
 
 define('VIDEO_CODE_VERSION', 17);
 
-require_once('./logging.inc');
+require_once(__DIR__ . '/logging.inc');
 
 /**
 * Figure out the test path (relative) for the given test id
@@ -2281,4 +2281,23 @@ function logTestMsg($testIdOrPath, $message) {
     }
   }
 }
+
+/**
+ * Compute the median of an array of values.  If there are an even number
+ * of values, returns the lower of the two middle values for consistency with
+ * GetMedianRun in page_data.inc.
+ *
+ * @param object[] $values Array of values for median computation.
+ *
+ * @return object
+ */
+function median($values) {
+  if (!count($values)) {
+    return null;
+  }
+  $medianIndex = (int)floor((float)(count($values) - 1.0) / 2.0);
+  sort($values, SORT_NUMERIC);
+  return $values[$medianIndex];
+}
+
 ?>

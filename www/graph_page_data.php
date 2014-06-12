@@ -1,6 +1,7 @@
 <?php 
 include 'common.inc';
 require_once('page_data.inc');
+require_once('graph_page_data.inc');
 $page_keywords = array('Graph Page Data','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Graph Page Data.";
 $chartData = array();
@@ -44,8 +45,8 @@ $pageData = loadAllPageData($testPath);
                             'connections' => 'Connections', 
                             'requests' => 'Requests (Fully Loaded)', 
                             'requestsDoc' => 'Requests (onload)', 
-                            'bytesInDoc' => 'Bytes In (KB - onload)', 
-                            'bytesIn' => 'Bytes In (KB - Fully Loaded)', 
+                            'bytesInDoc' => 'Bytes In (onload)', 
+                            'bytesIn' => 'Bytes In (Fully Loaded)', 
                             'browser_version' => 'Browser Version');
             $customMetrics = null;
             $csiMetrics = null;
@@ -124,32 +125,49 @@ $pageData = loadAllPageData($testPath);
                 google.setOnLoadCallback(drawChart);
                 function drawChart() {
                     for (metric in chartData) {
-                        console.log("Starting " + metric);
-                        var data = new google.visualization.DataTable();
-                        data.addColumn('number', 'Run');
-                        data.addColumn('number', 'First View');
-                        data.addColumn('number', 'First View Median');
-                        if (!fvonly) {
-                            data.addColumn('number', 'Repeat View');
-                            data.addColumn('number', 'Repeat View Median');
+                      chart_metric = chartData[metric];
+                      var data = new google.visualization.DataTable();
+
+                      // We construct the series plotting option, which
+                      // depends on each column in chart_metric except the
+                      // first.  For simplicity, we extract from all columns
+                      // and then drop the first.
+                      series = [];
+                      for (column in chart_metric['columns']) {
+                        chartColumn = chart_metric['columns'][column];
+                        data.addColumn('number', chartColumn.label);
+                        if (chartColumn.line) {
+                          series = series.concat({color: chartColumn.color});
+                        } else {
+                          series = series.concat({color: chartColumn.color,
+                            lineWidth: 0, pointSize: 3});
                         }
-                        for (i = 1; i <= runs; i++) {
-                            if (fvonly) {
-                                data.addRow([i, chartData[metric].fv.data[i], chartData[metric].fv.median]);
-                            } else {
-                                data.addRow([i, chartData[metric].fv.data[i], chartData[metric].fv.median, chartData[metric].rv.data[i], chartData[metric].rv.median]);
-                            }
+                      }
+                      series.shift();
+
+                      // Values is a map from run number (1-indexed) to value.
+                      for (i = 1; i <= runs; i++) {
+                        row = []
+                        for (column in chart_metric['columns']) {
+                           // If run i is missing, we add a cell with
+                            // an undefined array element as a placeholder.
+                          cell = chart_metric['columns'][column].values[i];
+                          row = row.concat([cell]);
+
                         }
-                        var options = {
-                                        width: 800,
-                                        height: 400,
-                                        lineWidth: 1,
-                                        hAxis: {gridlines: {count: runs}},
-                                        series: [{color: 'blue', lineWidth: 0, pointSize: 3}, {color: 'blue', visibleInLegend: false}, {color: 'red', lineWidth: 0, pointSize: 3}, {color: 'red', visibleInLegend: false}]
-                                        };
-                        var chart = new google.visualization.LineChart(document.getElementById(chartData[metric].div));
-                        chart.draw(data, options);
-                        console.log("Done " + metric);
+                        data.addRow(row);
+                      }
+                      var options = {
+                          width: 800,
+                          height: 400,
+                          lineWidth: 1,
+                          hAxis: {gridlines: {count: runs}},
+                          series: series
+                      }
+                      var chart = new google.visualization.LineChart(
+                          document.getElementById(chartData[metric].div));
+                      chart.draw(data, options);
+
                     }
                 }
             </script>
@@ -158,42 +176,43 @@ $pageData = loadAllPageData($testPath);
 </html>
 
 <?php
+/**
+ * InsertChart adds a chart for the given $metric, with the given $label, to
+ * global $chartData, and outputs the HTML container elements for the chart.
+ *
+ * @param string $metric Metric to add
+ * @param string $label Label corresponding to metric
+ */
 function InsertChart($metric, $label) {
   global $pageData;
   global $chartData;
   global $test;
   global $median_metric;
   if (array_key_exists('testinfo', $test)) {
+    // Write HTML for chart
     $div = "{$metric}Chart";
     $runs = $test['testinfo']['runs'];
     if (array_key_exists('discard', $test['testinfo']))
       $runs -= $test['testinfo']['discard'];
     echo "<h2 id=\"$metric\">" . htmlspecialchars($label) . "</h2>";
     echo "<div id=\"$div\" class=\"chart\"></div>\n";
-    $chart = array('div' => $div, 'title' => $label, 'fv' => array('data' => array()));
-    $chart['fv']['median'] = GetNumeric($pageData[GetMedianRun($pageData, 0, $median_metric)][0][$metric]);
+
+    // Add data in Chart object to $chartData for later chart construction.
+    $chartColumns = array();
+    $chartColumns[] = ChartColumn::runs($runs);
+    $chartColumnsFirstView = ChartColumn::dataMedianColumns(
+      $pageData, 0, $metric, $median_metric, 'blue', 'lightblue', 'First View');
     $fvonly = $test['testinfo']['fvonly'];
-    if (!$fvonly) {
-      $chart['rv'] = array('data' => array());
-      $chart['rv']['median'] = GetNumeric($pageData[GetMedianRun($pageData, 1, $median_metric)][1][$metric]);
+    if ($fvonly) {
+      $chartColumns = array_merge($chartColumns, $chartColumnsFirstView);
+    } else {
+      $chartColumnsRepeatView = ChartColumn::dataMedianColumns(
+        $pageData, 1, $metric, $median_metric, 'red', 'pink', 'Repeat View');
+      $chartColumns = array_merge(
+        $chartColumns, $chartColumnsFirstView, $chartColumnsRepeatView);
     }
-    for ($i = 1; $i <= $runs; $i++) {
-      $chart['fv']['data'][$i] = GetNumeric($pageData[$i][0][$metric]);
-      if (!$fvonly)
-        $chart['rv']['data'][$i] = GetNumeric($pageData[$i][1][$metric]);
-    }
+    $chart = new Chart($div, $chartColumns);
     $chartData[$metric] = $chart;
   }
-}
-
-function GetQuantiles(&$data) {
-}
-
-function GetNumeric($value) {
-  if (preg_match('/^[0-9]+$/', $value))
-    $value = intval($value);
-  else
-    $value = floatval($value);
-  return $value;
 }
 ?>
