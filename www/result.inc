@@ -273,7 +273,7 @@ $page_description = "Website performance test result$testLabel.";
                     </table>
                     <?php
                     if (count($pageData) > 1) {
-                        echo "<a href=\"/graph_page_data.php?test=$id&medianMetric=$median_metric\">Plot Full Results</a>";
+                        echo "<a href=\"/graph_page_data.php?tests=$id&medianMetric=$median_metric\">Plot Full Results</a>";
                     }
                     ?>
                     <br>

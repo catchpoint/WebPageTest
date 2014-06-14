@@ -2318,4 +2318,19 @@ function median($values) {
   return $values[$medianIndex];
 }
 
+/**
+ * Computes the number of runs, not including discarded runs.
+ *
+ * @param mixed $testInfo Object as returned by GetTestInfo
+ *
+ * @return int Number of runs, not including discarded runs.
+ */
+function numRunsFromTestInfo($testInfo) {
+  $runs = $testInfo['runs'];
+  if (array_key_exists('discard', $testInfo)) {
+    $runs -= $testInfo['discard'];
+  }
+  return $runs;
+}
+
 ?>

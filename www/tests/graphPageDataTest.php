@@ -65,6 +65,13 @@ class GraphPageDataTest extends PHPUnit_Framework_TestCase
     $result = ChartColumn::dataMedianColumns($this->pageData, 0, 'TTFB', 'docTime', 'blue', 'lightblue', 'TTFB');
     $this->assertEquals($expectedResult, $result);
   }
+
+  public function testLighten() {
+    $this->assertEquals("#f0e0d0", lighten("#e0c0a0"));
+    $this->assertEquals("#ffffff", lighten("#ffffff"));
+    $this->assertEquals("#ff80ff", lighten("#ff00ff"));
+    $this->assertEquals("#f69697", lighten("#ed2d2e"));
+  }
 }
 
 ?>
