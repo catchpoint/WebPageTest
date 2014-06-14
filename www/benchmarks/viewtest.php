@@ -182,7 +182,7 @@ if (array_key_exists('f', $_REQUEST)) {
                             if (i) {
                                 compare += ",";
                             }
-                            compare += encodeURIComponent(tests[i] + "-l:" + seriesData[i].name.replace("-","").replace(":",""));
+                            compare += encodeURIComponent(tests[i] + "-l:" + seriesData[i].name.replace("-","").replace(":","") + "-c:" + (cached ? 1 : 0));
                         }
                         menu += '<br><a href="trendurl.php?benchmark=' + encodeURIComponent(benchmark) + '&url=' + encodeURIComponent(url) + '">Trend over time</a>';
                         menu += '<br><a href="' + compare + '">Filmstrip Comparison</a>';
