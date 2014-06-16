@@ -915,6 +915,7 @@ bool WptTest::ModifyRequestHeader(CStringA& header) const {
 -----------------------------------------------------------------------------*/
 bool WptTest::BlockRequest(CString host, CString object) {
   bool block = false;
+  EnterCriticalSection(&cs_);
   CString request = host + object;
   POSITION pos = _block_requests.GetHeadPosition();
   while (!block && pos) {
@@ -922,7 +923,72 @@ bool WptTest::BlockRequest(CString host, CString object) {
     if (request.Find(block_pattern) >= 0)
       block = true;
   }
+  LeaveCriticalSection(&cs_);
   return block;
+}
+
+/*-----------------------------------------------------------------------------
+  See if the host for the outbound request needs to be modified
+-----------------------------------------------------------------------------*/
+bool WptTest::OverrideHost(CString host, CString &new_host) {
+  bool override_host = false;
+  if (host.GetLength()) {
+    EnterCriticalSection(&cs_);
+    POSITION pos = _override_hosts.GetHeadPosition();
+    while (pos) {
+      HttpHeaderValue host_override = _override_hosts.GetNext(pos);
+      if (!host_override._tag.CompareNoCase(CT2A(host)) ||
+          !host_override._tag.Compare("*")) {
+        new_host = CA2T(host_override._value);
+        override_host = true;
+        break;
+      }
+    }
+    LeaveCriticalSection(&cs_);
+  }
+  return override_host;
+}
+
+/*-----------------------------------------------------------------------------
+  See if the host for the outbound request needs to be modified
+-----------------------------------------------------------------------------*/
+bool WptTest::GetHeadersToSet(CString host, CAtlList<CString> &headers) {
+  if (!headers.IsEmpty())
+    headers.RemoveAll();
+  if (host.GetLength()) {
+    EnterCriticalSection(&cs_);
+    POSITION pos = _set_headers.GetHeadPosition();
+    while (pos) {
+      HttpHeaderValue new_header = _set_headers.GetNext(pos);
+      if (RegexMatch((LPCSTR)CT2A(host), new_header._filter)) {
+        CString header = new_header._tag + CStringA(": ") + new_header._value;
+        headers.AddTail(header);
+      }
+    }
+    LeaveCriticalSection(&cs_);
+  }
+  return !headers.IsEmpty();
+}
+
+/*-----------------------------------------------------------------------------
+  See if the host for the outbound request needs to be modified
+-----------------------------------------------------------------------------*/
+bool WptTest::GetHeadersToAdd(CString host, CAtlList<CString> &headers) {
+  if (!headers.IsEmpty())
+    headers.RemoveAll();
+  if (host.GetLength()) {
+    EnterCriticalSection(&cs_);
+    POSITION pos = _add_headers.GetHeadPosition();
+    while (pos) {
+      HttpHeaderValue new_header = _add_headers.GetNext(pos);
+      if (RegexMatch((LPCSTR)CT2A(host), new_header._filter)) {
+        CString header = new_header._tag + CStringA(": ") + new_header._value;
+        headers.AddTail(header);
+      }
+    }
+    LeaveCriticalSection(&cs_);
+  }
+  return !headers.IsEmpty();
 }
 
 /*-----------------------------------------------------------------------------
