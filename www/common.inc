@@ -43,6 +43,14 @@ if (function_exists('apache_request_headers')) {
         $_SERVER["REMOTE_ADDR"] = $headers['X-Forwarded-For'];
     }
 }
+if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
+  $forwarded = explode(',',$_SERVER["HTTP_X_FORWARDED_FOR"]);
+  if (isset($forwarded) && is_array($forwarded) && count($forwarded)) {
+    $forwarded_ip = trim($forwarded[0]);
+    if (strlen($forwarded_ip))
+        $_SERVER["REMOTE_ADDR"] = $forwarded_ip;
+  }
+}
 if (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE'] == 'On') {
     define('FRIENDLY_URLS', true);
     define('VER_TIMELINE', '28/');       // version of the timeline javascript
