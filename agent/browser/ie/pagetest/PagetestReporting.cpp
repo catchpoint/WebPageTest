@@ -1862,7 +1862,6 @@ void CPagetestReporting::CheckGzip()
 			CString mime = w->response.contentType;
 			mime.MakeLower();
 			if( w->result == 200
-				&& w->linkedRequest
 				&& w->fromNet )
 			{
 				CString enc = w->response.contentEncoding;
@@ -1928,7 +1927,10 @@ void CPagetestReporting::CheckGzip()
 							  target = origSize;
 							  w->gzipScore = -1;
 						  }
-					  }
+            } else {
+						  target = origSize;
+						  w->gzipScore = -1;
+            }
 					}
 				}
 
