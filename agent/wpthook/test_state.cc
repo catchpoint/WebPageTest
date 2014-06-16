@@ -230,7 +230,9 @@ void TestState::OnNavigate() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TestState::OnNavigateComplete() {
-  navigating_ = false;
+  // force an onload if one didn't already fire
+  if (navigating_)
+    OnLoad();
 }
 
 /*-----------------------------------------------------------------------------
