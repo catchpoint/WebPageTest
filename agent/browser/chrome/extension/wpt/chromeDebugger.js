@@ -127,17 +127,17 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
     g_instance.timelineStartedCallback();
     g_instance.timelineStartedCallback = undefined;
   }
-	var tracing = false;
+  var tracing = false;
   if (message === 'Tracing.dataCollected') {
-		tracing = true;
-		if (params['value'] !== undefined)
-			wpt.chromeDebugger.sendEvent('trace', JSON.stringify(params['value']));
-	}
+    tracing = true;
+    if (params['value'] !== undefined)
+      wpt.chromeDebugger.sendEvent('trace', JSON.stringify(params['value']));
+  }
   if (message === 'Tracing.tracingComplete') {
-		tracing = true;
-		if (g_instance.statsDoneCallback)
-			g_instance.statsDoneCallback();
-	}
+    tracing = true;
+    if (g_instance.statsDoneCallback)
+      g_instance.statsDoneCallback();
+  }
 
     // actual message recording
   if (g_instance.active && !tracing) {
@@ -391,8 +391,19 @@ wpt.chromeDebugger.sendRequestDetails = function(request) {
       }
       eventData += '\n';
     }
-    if (request.response['headersText'] !== undefined)
+    if (request.response['headersText'] !== undefined) {
       eventData += '[Response Headers]\n' + request.response.headersText + '\n';
+    } else if(request.response['headers'] !== undefined) {
+      eventData += '[Response Headers]\n';
+      if (request.response.headers['version'] !== undefined &&
+          request.response.headers['status'] !== undefined) {
+        eventData += request.response.headers['version'] + ' ' + request.response.headers['status'] + '\n';
+        for (tag in request.response.headers) {
+          if (tag !== 'version' && tag !== 'status')
+            eventData += tag + ': ' + request.response.headers[tag] + '\n';
+        }
+      }
+    }
   } else if (request['request'] !== undefined) {
     eventData += '[Request Headers]\n';
     var method = 'GET';
