@@ -833,6 +833,8 @@ function UpdateLocation(&$test, &$locations, $new_location)
 */
 function ValidateKey(&$test, &$error, $key = null)
 {
+  global $admin;
+  
   // load the secret key (if there is one)
   $secret = '';
   $keys = parse_ini_file('./settings/keys.ini', true);
@@ -921,7 +923,7 @@ function ValidateKey(&$test, &$error, $key = null)
           global $usingAPI;
           $usingAPI = true;
       }
-    }else{
+    }elseif (!isset($admin) || !$admin) {
       $error = 'An error occurred processing your request.  Please reload the testing page and try submitting your test request again. (missing API key)';
     }
   }
