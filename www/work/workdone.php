@@ -41,7 +41,6 @@ $workdone_start = microtime(true);
 // The following params have a default value:
 $done = arrayLookupWithDefault('done', $_REQUEST, false);
 $har  = arrayLookupWithDefault('har',  $_REQUEST, false);
-$pcap = arrayLookupWithDefault('pcap', $_REQUEST, false);
 $cpu = arrayLookupWithDefault('cpu', $_REQUEST, 0);
 $pc = array_key_exists('pc', $_REQUEST) ? $_REQUEST['pc'] : '';
 $ec2 = array_key_exists('ec2', $_REQUEST) ? $_REQUEST['ec2'] : '';
@@ -63,12 +62,6 @@ else
 // re-image all agents we need to support the old behavior for a while.
 $flattenUploadedZippedHar =
     arrayLookupWithDefault('flattenZippedHar', $_REQUEST, false);
-
-// When we upgrade the pcap to har converter, we need to test
-// each agent.  Agents can opt in to testing the latest
-// version by setting this POST param to '1'.
-$useLatestPCap2Har =
-    arrayLookupWithDefault('useLatestPCap2Har', $_REQUEST, false);
 
 // The following params are set by the android agents (blaze and WebpageTest).
 // TODO(skerner): POST params are not saved to disk directly, so it is hard to
@@ -153,10 +146,6 @@ if (ValidateTestId($id)) {
         if (array_key_exists('file', $_FILES) && array_key_exists('tmp_name', $_FILES['file'])) {
           if (isset($har) && $har) {
             ProcessUploadedHAR($testPath);
-          } elseif (isset($pcap) && $pcap) {
-            $finalPcapFileName = $runNumber . ($cacheWarmed ? "_Cached" : "") . ".cap";
-            MovePcapIntoPlace($_FILES['file']['name'], $_FILES['file']['tmp_name'], $testPath, $finalPcapFileName);
-            ProcessPCAP($testPath, $finalPcapFileName);
           } else {
             logMsg(" Extracting uploaded file '{$_FILES['file']['tmp_name']}' to '$testPath'\n");
             $archive = new PclZip($_FILES['file']['tmp_name']);
@@ -186,7 +175,7 @@ if (ValidateTestId($id)) {
         //CheckForSpam();
         
         // make sure the test result is valid, otherwise re-run it
-        if ($done && !$har && !$pcap &&
+        if ($done && !$har &&
             array_key_exists('job_file', $testInfo) && 
             array_key_exists('max_retries', $testInfo) && 
             $testInfo['max_retries'] > 1) {
@@ -438,188 +427,6 @@ function KeepVideoForRun($testPath, $run)
       closedir($dir);
     }
   }
-}
-
-/**
- * Exec the pcap2har python script, which converts a
- * .pcap file to a .har .
- *
- * @param string $pcapPath Path to read the PCAP file from.
- * @param string $harPath Path to which the HAR file will be written.
- * @param boolean $useLatestPCap2Har Use the latest version of pcap2har.py,
- *                as opposed to the stable version.
- * @param &array<string> $consoleOut Console output will be stored
- *                       in this array.
- * @return int The return code from pcap2har.py.
- */
-function ExecPcap2Har($pcapPath, $harPath, $useLatestPCap2Har,
-                      &$consoleOut) {
-  // When we update pcap2har, we need to test that each
-  // agent can use the new version.  To make testing easy,
-  // the agent that uploads a .pcap can control which version
-  // of pcap2har.py is used.  If $useLatestPcap is false,
-  // use the stable version.  If $useLatestPcap is true,
-  // use the latest version.  Once a version is known to
-  // work with all agents, we promote the latest version
-  // to stable.
-  $pathContainingPCapToHar = ($useLatestPCap2Har ? "./mobile/latest"
-                                                 : "./mobile");
-  putenv("PYTHONPATH=".
-         "$pathContainingPCapToHar:".
-         "./mobile/dpkt-1.7:".
-         "./mobile/simplejson");
-  // When converting dates to ms since the epoch, do not add an offset
-  // for time zones.
-  putenv("TZ=UTC");
-
-  $pcap2harExe = "$pathContainingPCapToHar/pcap2har/main.py";
-
-  // Use switch --no-pages to avoid splitting requests into multiple page
-  // loads.  WebpageTest agents start tcpdump for each page load, so we know
-  // all network traffic is part of the same page load.  The heuristics used
-  // to split requests into pages fail on some sites, such as m.yahoo.com.
-  $pcap2harArgs = ($useLatestPCap2Har ? "--no-pages" : "");
-
-  $retLine = exec("/usr/bin/python ".
-                  "$pcap2harExe $pcap2harArgs $pcapPath $harPath 2>&1",
-                  $consoleOut,
-                  $returnCode);
-
-  return $returnCode;
-}
-
-/**
- * Move an uploaded pcap file into the right place, unzipping if nessisary.
- *
- * @param String $clientFileName     File name set by the client.
- * @param String $uploadTmpFileName  Absolute path to the uploaded file.
- * @param String $testPath           Root of the results subdirectory of our test.
- * @param String $finalPcapFileName  The final file name the pcap should have.
- */
-function MovePcapIntoPlace($clientFileName, $uploadTmpFileName,
-                           $testPath, $finalPcapFileName) {
-    // Is the upload a zip archive?  If so, unpack it.
-    if (preg_match("/\.zip$/", $clientFileName)) {
-        // Directory structure is not flattened, because the android
-        // agent puts needed files at paths that encode their run
-        // number and cache state.
-        $archive = new PclZip($uploadTmpFileName);
-        $list = $archive->extract(PCLZIP_OPT_PATH, "$testPath/");
-
-        // Find the path to the uploaded pcap file, relative to
-        // $testPath.
-        $pcapFileName = null;
-        foreach ($list as $file) {
-            if (preg_match('/\.pcap$/', $file['stored_filename'])) {
-                if ($pcapFileName !== null) {
-                    logMalformedInput("zipped pcap upload should ".
-                                      "contain only one .pcap file.");
-                }
-                // The zip library starts all paths with a "/".
-                $pcapFileName = ltrim($file['stored_filename'], "/");
-            }
-        }
-        if ($pcapFileName === null) {
-            logMalformedInput(".pcap.zip file contains no .pcap file.");
-        } else if (!rename("$testPath/$pcapFileName",
-                           "$testPath/$finalPcapFileName")) {
-            logMalformedInput("Failed to rename( $testPath/$pcapFileName , ".
-                              "$testPath/$finalPcapFileName )");
-        }
-    } else {
-        move_uploaded_file(
-            $_FILES['file']['tmp_name'],
-            "$testPath/$finalPcapFileName");
-    }
-}
-
-/**
- * @param string $testPath
- */
-function ProcessPCAP($testPath, $pcapFile)
-{
-    global $runNumber;
-    global $cacheWarmed;
-    global $useLatestPCap2Har;
-
-    $pcapFilePath = "$testPath/$pcapFile";
-    $harFilePath = $pcapFilePath . ".har";
-
-    $consoleOut = array();
-
-    // Execute pcap2har
-    $returnCode = ExecPcap2Har($pcapFilePath, $harFilePath,
-                               $useLatestPCap2Har,
-                               $consoleOut);
-
-    if ($returnCode != 0)
-    {
-       logMalformedInput("pcap to HAR converter returned $returnCode.  ".
-                         "Expected 0.  pcap file is $pcapFilePath .  ".
-                         "Console output is :\n". print_r($consoleOut, true));
-       return;
-    }
-
-    // The mobile agents assume the har file is named results.har.  Make a copy
-    // with the expected path.  We don't just write a file with this name,
-    // because we want to keep the har from each run.
-    copy($harFilePath, $testPath . "/results.har");
-
-    // The entire pacp file captured one single page loading.
-    $harIsFromSinglePageLoad = true;
-    ProcessHARText($testPath, $harIsFromSinglePageLoad);
-}
-
-function ProcessUploadedHAR($testPath)
-{
-    require_once('./lib/pcltar.lib.php3');
-    require_once('./lib/pclerror.lib.php3');
-    require_once('./lib/pcltrace.lib.php3');
-    global $done;
-    global $flattenUploadedZippedHar;
-
-    // From the mobile agents we get the zip file with sub-folders
-    if( isset($_FILES['file']) )
-    {
-        //var_dump($_FILES['file']);
-        logMsg(" Extracting uploaded file '{$_FILES['file']['tmp_name']}' to '$testPath'\n");
-        if ($_FILES['file']['type'] == "application/tar" || preg_match("/\.tar$/",$_FILES['file']['name']))
-        {
-            PclTarExtract($_FILES['file']['tmp_name'],"$testPath","/","tar");
-        }
-        else if (preg_match("/\.zip$/",$_FILES['file']['name']))
-        {
-            $archive = new PclZip($_FILES['file']['tmp_name']);
-            if ($flattenUploadedZippedHar)
-            {
-                // PCLZIP_OPT_REMOVE_ALL_PATH causes any directory structure
-                // within the zip to be flattened.  Different agents have
-                // slightly different directory layout, but all file names
-                // are guaranteed to be unique.  Flattening allows us to avoid
-                // directory traversal.
-                // TODO(skerner): Find out why the blaze agents have different
-                // directory structure and make it consistent, and remove
-                // $flattenUploadedZippedHar as an option.
-                $archive->extract(PCLZIP_OPT_PATH, "$testPath/",
-                                  PCLZIP_OPT_REMOVE_ALL_PATH);
-            }
-            else
-            {
-                logMalformedInput("Depricated har upload path.  Agents should ".
-                                  "set flattenZippedHar=1.");
-                $archive->extract(PCLZIP_OPT_PATH, "$testPath/");
-            }
-        }
-        else
-        {
-            move_uploaded_file($_FILES['file']['tmp_name'],
-                               $testPath . "/" . $_FILES['file']['name']);
-        }
-    }
-
-    // The HAR may hold multiple page loads.
-    $harIsFromSinglePageLoad = false;
-    ProcessHARText($testPath, $harIsFromSinglePageLoad);
 }
 
 function ProcessHARText($testPath, $harIsFromSinglePageLoad)
