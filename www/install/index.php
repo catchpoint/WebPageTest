@@ -118,7 +118,9 @@ function CheckFilesystem() {
     ShowCheck('{docroot}/work/jobs writable', IsWritable('work/jobs'));
     ShowCheck('{docroot}/work/video writable', IsWritable('work/video'));
     ShowCheck('{docroot}/logs writable', IsWritable('logs'));
-    ShowCheck('{docroot}/tmp on tmpfs', IsWPTTmpOnTmpfs(), false);
+    if ('Linux' == PHP_OS) {
+        ShowCheck('{docroot}/tmp on tmpfs', IsWPTTmpOnTmpfs(), false);
+    }
 }
 
 /*-----------------------------------------------------------------------------
