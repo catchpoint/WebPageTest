@@ -64,11 +64,14 @@ function _GetDotsRow() {
 function GetRequestRows($requests, $use_dots, $show_labels = true) {
     $rows = array();
     $filtered_requests = FilterRequests($requests);
-    if ($use_dots && count($filtered_requests) &&
-        !array_key_exists(0, $filtered_requests)) {
-        $rows[] = _GetDotsRow();
-    }
+
+    // Keep track of the number of each request so we can add a dotted row when one is missing
+    $last_request_number = 0;
     foreach ($filtered_requests as $request) {
+        if ($request['number'] > $last_request_number + 1) {
+            $rows[] = _GetDotsRow();
+        }
+        
         $rows[] = array(
             'is_connection' => false,
             'label' => GetRequestLabel($request, $show_labels),
@@ -77,6 +80,8 @@ function GetRequestRows($requests, $use_dots, $show_labels = true) {
             'is_secure' => $request['is_secure'],
             'requests' => array($request)
         );
+
+        $last_request_number = $request['number'];
     }
     if ($use_dots && count($filtered_requests) &&
         !array_key_exists(count($requests) - 1, $filtered_requests)) {

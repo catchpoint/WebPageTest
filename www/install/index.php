@@ -48,7 +48,7 @@ include 'common.inc';
         <?php CheckPHP(); ?>
         </ul><h2>System Utilities</h2><ul>
         <?php CheckUtils(); ?>
-        </ul><h2>Filesystem Permissions</h2><ul>
+        </ul><h2>Filesystem</h2><ul>
         <?php CheckFilesystem(); ?>
         </ul><h2>Test Locations</h2><ul>
         <?php CheckLocations(); ?>
@@ -118,6 +118,23 @@ function CheckFilesystem() {
     ShowCheck('{docroot}/work/jobs writable', IsWritable('work/jobs'));
     ShowCheck('{docroot}/work/video writable', IsWritable('work/video'));
     ShowCheck('{docroot}/logs writable', IsWritable('logs'));
+    if ('Linux' == PHP_OS) {
+        ShowCheck('{docroot}/tmp on tmpfs', IsWPTTmpOnTmpfs(), false);
+    }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+function IsWPTTmpOnTmpfs() {
+    $marker = getcwd() . "/tmp";
+    exec('mount -l -t tmpfs', $lines);
+    foreach ($lines as $line) {
+	if (0 === strpos($line, "tmpfs on $marker")) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 /*-----------------------------------------------------------------------------
