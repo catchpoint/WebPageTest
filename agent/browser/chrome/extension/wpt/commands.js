@@ -98,8 +98,6 @@ wpt.commands.CommandRunner = function(tabId, chromeApi) {
 wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
     commandObject, callback) {
 
-  console.log('Delegate a command to the content script: ', commandObject);
-
   var code = ['wpt.contentScript.InPageCommandRunner.Instance.RunCommand(',
               JSON.stringify(commandObject),
               ');'].join('');
@@ -108,20 +106,6 @@ wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
         if (callback != undefined)
           callback();
       });
-};
-
-/**
- * Implement the exec command.
- * TODO(skerner): Make this use SendCommandToContentScript_(), and
- * wrap it in a try block to avoid breaking the content script on
- * an exception.
- * @param {string} script
- */
-wpt.commands.CommandRunner.prototype.doExec = function(script, callback) {
-  this.chromeApi_.tabs.executeScript(g_tabid, {'code': script}, function(results){
-    if (callback != undefined)
-      callback();
-  });
 };
 
 /**

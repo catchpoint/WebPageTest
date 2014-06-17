@@ -431,7 +431,7 @@ function wptExecuteTask(task) {
         break;
       case 'exec':
         g_processing_task = true;
-        g_commandRunner.doExec(task.target, wptTaskCallback);
+        wpt.chromeDebugger.Exec(task.target, wptTaskCallback);
         break;
       case 'setcookie':
         g_commandRunner.doSetCookie(task.target, task.value);
@@ -484,9 +484,9 @@ function wptExecuteTask(task) {
         break;
       case 'collectstats':
         g_processing_task = true;
-				wpt.chromeDebugger.CollectStats(function(){
-					g_commandRunner.doCollectStats(task.target, wptTaskCallback);
-				});
+        wpt.chromeDebugger.CollectStats(function(){
+          g_commandRunner.doCollectStats(task.target, wptTaskCallback);
+        });
         break;
       case 'checkresponsive':
         g_processing_task = true;

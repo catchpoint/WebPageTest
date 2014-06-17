@@ -61,8 +61,8 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.timelineStartedCallback = undefined;
     g_instance.devToolsData = '';
     g_instance.devToolsTimer = undefined;
-		g_instance.trace = false;
-		g_instance.statsDoneCallback = undefined;
+    g_instance.trace = false;
+    g_instance.statsDoneCallback = undefined;
     var version = '1.0';
     if (g_instance.chromeApi_['debugger'])
         g_instance.chromeApi_.debugger.attach({tabId: g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachDebugger);
@@ -76,9 +76,18 @@ wpt.chromeDebugger.SetActive = function(active) {
   g_instance.requests = {};
   g_instance.receivedData = false;
   g_instance.active = active;
-	if (active && g_instance.trace) {
-		g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start');
-	}
+  if (active && g_instance.trace) {
+    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start');
+  }
+};
+
+/**
+ * Execute a command in the context of the page
+ */
+wpt.chromeDebugger.Exec = function(code, callback) {
+  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Runtime.evaluate', {expression: code, returnByValue: true}, function(response){
+    callback(response);
+  });
 };
 
 /**
@@ -101,19 +110,19 @@ wpt.chromeDebugger.CaptureTimeline = function(callback) {
  * Capture a trace
  */
 wpt.chromeDebugger.CaptureTrace = function() {
-	g_instance.trace = true;
-	if (g_instance.active) {
-		g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start');
-	}
+  g_instance.trace = true;
+  if (g_instance.active) {
+    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start');
+  }
 };
 
 wpt.chromeDebugger.CollectStats = function(callback) {
-	if (g_instance.trace) {
-		g_instance.statsDoneCallback = callback;
-		g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.end');
-	} else {
-		callback();
-	}
+  if (g_instance.trace) {
+    g_instance.statsDoneCallback = callback;
+    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.end');
+  } else {
+    callback();
+  }
 };
 
 /**

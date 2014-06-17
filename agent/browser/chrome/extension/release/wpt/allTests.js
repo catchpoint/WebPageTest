@@ -5420,31 +5420,31 @@ wpt.contentScript.collectStats_ = function(customMetrics) {
                                       'marks': marks },
                                      function(response) {});
     }
-		if (customMetrics.length) {
-			var lines = customMetrics.split("\n");
-			var lineCount = lines.length;
-			var out = {};
-			for (var i = 0; i < lineCount; i++) {
-				try {
-					var parts = lines[i].split(":");
-					if (parts.length == 2) {
-						var name = parts[0];
-						var code = window.atob(parts[1]);
-						if (code.length) {
-							var fn = new Function("return function wptCustomMetric" + i + "(){" + code + "};")();
-							var result = fn();
-							if (typeof result == 'undefined')
-								result = '';
-							out[name] = result;
-						}
-					}
-				} catch(e){
-				}
-			}
-			chrome.extension.sendRequest({'message': 'wptCustomMetrics', 
-																		'data': out },
-																		function(response) {});
-		}
+    if (customMetrics.length) {
+      var lines = customMetrics.split("\n");
+      var lineCount = lines.length;
+      var out = {};
+      for (var i = 0; i < lineCount; i++) {
+        try {
+          var parts = lines[i].split(":");
+          if (parts.length == 2) {
+            var name = parts[0];
+            var code = window.atob(parts[1]);
+            if (code.length) {
+              var fn = new Function("return function wptCustomMetric" + i + "(){" + code + "};")();
+              var result = fn();
+              if (typeof result == 'undefined')
+                result = '';
+              out[name] = result;
+            }
+          }
+        } catch(e){
+        }
+      }
+      chrome.extension.sendRequest({'message': 'wptCustomMetrics', 
+                                    'data': out },
+                                    function(response) {});
+    }
   } catch(e){
   }
 
@@ -5602,7 +5602,7 @@ chrome.extension.onRequest.addListener(
           function() { pollDOMElement(); },
           DOM_ELEMENT_POLL_INTERVAL);
     } else if (request.message == 'collectStats') {
-			var customMetrics = request['customMetrics'] || '';
+      var customMetrics = request['customMetrics'] || '';
       wpt.contentScript.collectStats_(customMetrics);
     } else if (request.message == 'checkResponsive') {
       wpt.contentScript.checkResponsive_();
@@ -18078,8 +18078,6 @@ wpt.commands.CommandRunner = function(tabId, chromeApi) {
 wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
     commandObject, callback) {
 
-  console.log('Delegate a command to the content script: ', commandObject);
-
   var code = ['wpt.contentScript.InPageCommandRunner.Instance.RunCommand(',
               JSON.stringify(commandObject),
               ');'].join('');
@@ -18088,20 +18086,6 @@ wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
         if (callback != undefined)
           callback();
       });
-};
-
-/**
- * Implement the exec command.
- * TODO(skerner): Make this use SendCommandToContentScript_(), and
- * wrap it in a try block to avoid breaking the content script on
- * an exception.
- * @param {string} script
- */
-wpt.commands.CommandRunner.prototype.doExec = function(script, callback) {
-  this.chromeApi_.tabs.executeScript(g_tabid, {'code': script}, function(results){
-    if (callback != undefined)
-      callback();
-  });
 };
 
 /**
