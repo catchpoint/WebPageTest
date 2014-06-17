@@ -722,6 +722,7 @@ function LoadTrendData(&$data, &$configurations, $benchmark, $cached, $metric, $
                     if (!$start_time || $time > $start_time) {
                         $tests = array();
                         $file = basename($file, ".gz");
+                        $key = "$benchmark.$file";
                         if (!array_key_exists($key, $raw_data)) {
                           $raw_data[$key] = json_decode(gz_file_get_contents("./results/benchmarks/$benchmark/data/$file"), true);
                           usort($raw_data[$key], 'RawDataCompare');
