@@ -323,7 +323,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
     $requests = null;
     $pageData = null;
     $startOffset = null;
-    $ver = 2;
+    $ver = 3;
     $cached = isset($cached) && $cached ? 1 : 0;
     $ok = GetCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
     if (!$ok) {
@@ -923,7 +923,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
       // keep any events that we need to keep
       if ($recording && isset($firstEvent)) {
         if (DevToolsMatchEvent($filter, $message, $firstEvent)) {
-          if (!isset($startOffset) && $firstEvent) {
+          if ($hasTrim && !isset($startOffset) && $firstEvent) {
             $eventTime = DevToolsEventTime($message);
             if ($eventTime) {
               $startOffset = $eventTime - $firstEvent;
@@ -1235,11 +1235,11 @@ function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime) {
           
           // calculate the start time stuff
           if ($method_class === 'Timeline') {
+            $encoded = json_encode($event);
             $eventTime = DevToolsEventEndTime($event);
             if ($eventTime &&
                 (!$startTime || $eventTime <= $startTime) &&
                 (!$lastPaint || $eventTime > $lastPaint)) {
-              $encoded = json_encode($event);
               if (strpos($encoded, '"type":"ResourceSendRequest"') !== false)
                 $startTime = DevToolsEventTime($event);
               if (strpos($encoded, '"type":"Rasterize"') !== false ||
@@ -1248,12 +1248,8 @@ function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime) {
                 $lastPaint = $eventTime;
               }
             }
-          }
-          
-          // keep track of the last activity for the end time (for video)
-          if ($method_class === 'Page' || $method_class === 'Network') {
-            $eventTime = DevToolsEventEndTime($event);
-            if ($eventTime > $lastEvent)
+            if ($eventTime > $lastEvent &&
+                strpos($encoded, '"type":"Resource') !== false)
               $lastEvent = $eventTime;
           }
         }

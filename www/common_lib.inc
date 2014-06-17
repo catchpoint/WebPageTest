@@ -3,7 +3,7 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('RestoreTest');
 }
 
-define('VIDEO_CODE_VERSION', 17);
+define('VIDEO_CODE_VERSION', 18);
 
 require_once(__DIR__ . '/logging.inc');
 
