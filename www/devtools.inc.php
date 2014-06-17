@@ -871,6 +871,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
           $json = json_encode($message);
           if (strpos($json, $firstNetEventURL) !== false) {
             $timelineEventTime = $message['params']['record']['startTime'];
+            $firstEvent = $timelineEventTime;
             break;
           }
         }
@@ -881,27 +882,33 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
     }
   }
   
+  if (!$firstEvent && ($hasTimeline || $hasNet)) {
+    foreach ($messages as $message) {
+      if (is_array($message) && isset($message['method'])) {
+        $eventTime = DevToolsEventTime($message);
+        if ($hasTimeline) {
+          $json = json_encode($message);
+          if (strpos($json, '"type":"Resource') !== false) {
+            $firstEvent = $eventTime;
+            break;
+          }
+        } else {
+          $method_class = substr($message['method'], 0, strpos($message['method'], '.'));
+          if ($eventTime && $method_class === 'Network') {
+            $firstEvent = $eventTime;
+            break;
+          }
+        }
+      }
+    }
+  }
+  
   foreach ($messages as $message) {
     if (is_array($message)) {
       if (isset($message['params']['timestamp'])) {
         $message['params']['timestamp'] *= 1000.0;
         if (isset($clockOffset))
           $message['params']['timestamp'] += $clockOffset;
-      }
-      
-      // See if we got the first valid event in the trace (throw away the timeline
-      // events at the beginning that are from video capture starting).
-      if ($hasNet) {
-        if (!$firstEvent) {
-          if (isset($message['method']) && $message['method'] !== 'Timeline.eventRecorded') {
-            $firstEvent = isset($previousTime) ? $previousTime : 0;
-          } else {
-            $previousTime = DevToolsEventTime($message);
-          }
-        }
-      } elseif (!$firstEvent) {
-        $eventTime = DevToolsEventTime($message);
-        $firstEvent = isset($eventTime) ? $eventTime : 0;
       }
       
       // see if we are waiting for the first net message after a WPT Start
@@ -1026,10 +1033,10 @@ function DevToolsMatchEvent($filter, &$event, $startTime = null, $endTime = null
   $match = true;
   if (isset($event['method']) && isset($event['params'])) {
     if (isset($startTime) && $startTime) {
-      $time = DevToolsEventEndTime($event);
+      $time = DevToolsEventTime($event);
       if (isset($time) && $time &&
-          ($time < $startTime ||
-              (isset($endTime) && $endTime && $time >= $endTime)))
+          ($time <= $startTime ||
+          (isset($endTime) && $endTime && $time >= $endTime)))
         $match = false;
     }
     if ($match && isset($filter)) {
@@ -1182,29 +1189,6 @@ function GetTimelineProcessingTimes(&$entry, &$processingTimes, &$processing_sta
   if (array_key_exists('params', $entry) && array_key_exists('record', $entry['params']))
       GetTimelineProcessingTimes($entry['params']['record'], $processingTimes, $processing_start, $processing_end);
   return $duration;
-}
-
-/**
-* Get the baseline start time in dev tools time for the given data.
-* 
-* The start time is the time of the first non-timeline event.
-* 
-* @param mixed $entries
-*/
-function GetDevToolsStartTime(&$entries) {
-  $startOffset = null;
-  foreach ($entries as &$entry) {
-    if (isset($entry) &&
-        is_array($entry) &&
-        array_key_exists('method', $entry) &&
-        $entry['method'] !== 'Timeline.eventRecorded') {
-      $eventTime = DevToolsEventTime($entry);
-      if ($eventTime && (!$startOffset || $eventTime < $startOffset)) {
-        $startOffset = $eventTime;
-      }
-    }
-  }    
-  return $startOffset;
 }
 
 /**
