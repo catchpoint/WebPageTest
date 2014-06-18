@@ -1,5 +1,5 @@
 <?php
-$DevToolsCacheVersion = '1.6';
+$DevToolsCacheVersion = '1.7';
 
 if(extension_loaded('newrelic')) { 
     newrelic_add_custom_tracer('GetCachedDevToolsProgress');
@@ -58,7 +58,8 @@ function GetDevToolsProgress($testPath, $run, $cached) {
               $startTimes['timestamp'] = $entry['timestamp'];
             $frame = '0';
             ProcessPaintEntry($entry, $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse, $viewport);
-            GetTimelineProcessingTimes($entry, $progress['processing'], $processing_start, $processing_end);
+            if (!isset($entry['params']['record']['thread']) || $entry['params']['record']['thread'] == 0)
+              GetTimelineProcessingTimes($entry, $progress['processing'], $processing_start, $processing_end);
             if (DevToolsMatchEvent('Console.messageAdded', $entry) &&
                 array_key_exists('message', $entry['params']) &&
                 is_array($entry['params']['message']))
