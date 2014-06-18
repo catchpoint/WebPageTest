@@ -2326,6 +2326,9 @@ function median($values) {
  * @return int Number of runs, not including discarded runs.
  */
 function numRunsFromTestInfo($testInfo) {
+  if (!$testInfo) {
+    return 0;
+  }
   $runs = $testInfo['runs'];
   if (array_key_exists('discard', $testInfo)) {
     $runs -= $testInfo['discard'];
