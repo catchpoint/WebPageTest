@@ -1271,21 +1271,16 @@ function DevToolsGetCPUSlices($testPath, $run, $cached) {
     $startTime = 0;
     $endTime = 0;
     foreach ($devTools as &$entry) {
-      if (isset($entry) &&
-          is_array($entry) &&
-          array_key_exists('method', $entry) &&
+      if (isset($entry['method']) &&
           $entry['method'] == 'Timeline.eventRecorded' &&
-          array_key_exists('params', $entry) &&
-          is_array($entry['params']) &&
-          array_key_exists('record', $entry['params']) &&
-          is_array($entry['params']['record'])) {
+          isset($entry['params']['record'])) {
         $start = DevToolsEventTime($entry);
         if ($start && (!$startTime || $start < $startTime))
           $startTime = $start;
         $end = DevToolsEventEndTime($entry);
         if ($end && (!$endTime || $end > $endTime))
           $endTime = $end;
-        $thread = array_key_exists('thread', $entry['params']['record']) ? $entry['params']['record']['thread'] : 0;
+        $thread = isset($entry['params']['record']['thread']) ? $entry['params']['record']['thread'] : 0;
         $threads[$thread] = true;
       }
     }
@@ -1307,22 +1302,36 @@ function DevToolsGetCPUSlices($testPath, $run, $cached) {
 
       // Go through each element and account for the time    
       foreach ($devTools as &$entry) {
-        if (isset($entry) &&
-            is_array($entry) &&
-            array_key_exists('method', $entry) &&
+        if (isset($entry['method']) &&
             $entry['method'] == 'Timeline.eventRecorded' &&
-            array_key_exists('params', $entry) &&
-            is_array($entry['params']) &&
-            array_key_exists('record', $entry['params']) &&
-            is_array($entry['params']['record'])) {
+            isset($entry['params']['record'])) {
           $count += DevToolsGetEventTimes($entry['params']['record'], $startTime, $slices);
         }
       }
     }
   }
   
-  if (!$count)
+  if ($count) {
+    // remove any threads that didn't have actual slices populated
+    $emptyThreads = array();
+    foreach ($slices as $thread => &$records) {
+      $is_empty = true;
+      foreach($records as $ms => &$values) {
+        if (count($values)) {
+          $is_empty = false;
+          break;
+        }
+      }
+      if ($is_empty)
+        $emptyThreads[] = $thread;
+    }
+    if (count($emptyThreads)) {
+      foreach($emptyThreads as $thread)
+        unset($slices[$thread]);
+    }
+  } else {
     $slices = null;
+  }
     
   return $slices;
 }
