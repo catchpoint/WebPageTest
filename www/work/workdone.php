@@ -429,6 +429,58 @@ function KeepVideoForRun($testPath, $run)
   }
 }
 
+function ProcessUploadedHAR($testPath)
+{
+    require_once('./lib/pcltar.lib.php3');
+    require_once('./lib/pclerror.lib.php3');
+    require_once('./lib/pcltrace.lib.php3');
+    global $done;
+    global $flattenUploadedZippedHar;
+
+    // From the mobile agents we get the zip file with sub-folders
+    if( isset($_FILES['file']) )
+    {
+        //var_dump($_FILES['file']);
+        logMsg(" Extracting uploaded file '{$_FILES['file']['tmp_name']}' to '$testPath'\n");
+        if ($_FILES['file']['type'] == "application/tar" || preg_match("/\.tar$/",$_FILES['file']['name']))
+        {
+            PclTarExtract($_FILES['file']['tmp_name'],"$testPath","/","tar");
+        }
+        else if (preg_match("/\.zip$/",$_FILES['file']['name']))
+        {
+            $archive = new PclZip($_FILES['file']['tmp_name']);
+            if ($flattenUploadedZippedHar)
+            {
+                // PCLZIP_OPT_REMOVE_ALL_PATH causes any directory structure
+                // within the zip to be flattened.  Different agents have
+                // slightly different directory layout, but all file names
+                // are guaranteed to be unique.  Flattening allows us to avoid
+                // directory traversal.
+                // TODO(skerner): Find out why the blaze agents have different
+                // directory structure and make it consistent, and remove
+                // $flattenUploadedZippedHar as an option.
+                $archive->extract(PCLZIP_OPT_PATH, "$testPath/",
+                                  PCLZIP_OPT_REMOVE_ALL_PATH);
+            }
+            else
+            {
+                logMalformedInput("Depricated har upload path.  Agents should ".
+                                  "set flattenZippedHar=1.");
+                $archive->extract(PCLZIP_OPT_PATH, "$testPath/");
+            }
+        }
+        else
+        {
+            move_uploaded_file($_FILES['file']['tmp_name'],
+                               $testPath . "/" . $_FILES['file']['name']);
+        }
+    }
+
+    // The HAR may hold multiple page loads.
+    $harIsFromSinglePageLoad = false;
+    ProcessHARText($testPath, $harIsFromSinglePageLoad);
+}
+
 function ProcessHARText($testPath, $harIsFromSinglePageLoad)
 {
     $mergedHar = null;
