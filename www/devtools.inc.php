@@ -324,7 +324,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
     $requests = null;
     $pageData = null;
     $startOffset = null;
-    $ver = 3;
+    $ver = 4;
     $cached = isset($cached) && $cached ? 1 : 0;
     $ok = GetCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
     if (!$ok) {
@@ -1036,8 +1036,8 @@ function DevToolsMatchEvent($filter, &$event, $startTime = null, $endTime = null
     if (isset($startTime) && $startTime) {
       $time = DevToolsEventTime($event);
       if (isset($time) && $time &&
-          ($time <= $startTime ||
-          (isset($endTime) && $endTime && $time >= $endTime)))
+          ($time < $startTime ||
+          (isset($endTime) && $endTime && $time > $endTime)))
         $match = false;
     }
     if ($match && isset($filter)) {
