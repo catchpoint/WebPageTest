@@ -473,30 +473,30 @@ HINTERNET WinInetHook::HttpOpenRequestA(HINTERNET hConnect, LPCSTR lpszVerb,
   AtlTrace(_T("WinInetHook::HttpOpenRequestA"));
 
   HINTERNET ret = NULL;
-  void * dlgContext = NULL;
+  bool block = false;
+  CString host;
 
   if (_hook_OpenA) {
-    CString host;
     _host_names.Lookup(hConnect, host);
-    if (_test.BlockRequest(host, lpszObjectName)) {
-      ret = NULL;
-      SetLastError(ERROR_INTERNET_INVALID_URL);
-    } else {
-      if (_HttpOpenRequestA) {
-        ret = _HttpOpenRequestA(hConnect, lpszVerb, lpszObjectName, 
-            lpszVersion, lpszReferrer, lplpszAcceptTypes, dwFlags, dwContext);
-      }
-      
-      if (ret) {
-        EnterCriticalSection(&cs);
-        _https_requests.SetAt(ret, dwFlags & INTERNET_FLAG_SECURE ? true : false);
-        _host_names.SetAt(ret, host);
-        LeaveCriticalSection(&cs);
-        SetHeaders(ret);
-        EnterCriticalSection(&cs);
-        _parents.SetAt(ret, hConnect);
-        LeaveCriticalSection(&cs);
-      }
+    block = _test.BlockRequest(host, lpszObjectName);
+  }
+
+  if (block) {
+    SetLastError(ERROR_INTERNET_INVALID_URL);
+  } else {
+    if (_HttpOpenRequestA) {
+      ret = _HttpOpenRequestA(hConnect, lpszVerb, lpszObjectName, 
+          lpszVersion, lpszReferrer, lplpszAcceptTypes, dwFlags, dwContext);
+    }
+    if (_hook_OpenA && ret) {
+      EnterCriticalSection(&cs);
+      _https_requests.SetAt(ret, dwFlags & INTERNET_FLAG_SECURE ? true : false);
+      _host_names.SetAt(ret, host);
+      LeaveCriticalSection(&cs);
+      SetHeaders(ret);
+      EnterCriticalSection(&cs);
+      _parents.SetAt(ret, hConnect);
+      LeaveCriticalSection(&cs);
     }
   }
 
