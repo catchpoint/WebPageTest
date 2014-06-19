@@ -1,6 +1,18 @@
 <?php 
 $tests = (isset($_REQUEST['tests'])) ? $_REQUEST['tests'] : $_REQUEST['test'];
-$testsId = explode(',', $tests);
+$compTests = explode(',', $tests);
+$testsId = array();
+$testsLabel = array();
+foreach($compTests as $t) {
+  $parts = explode('-', $t);
+  $testsId[] = $parts[0];
+  if ((count($parts) == 2) && preg_match("/^l:(.*)/", $parts[1], $matches)) {
+    $testsLabel[] = $matches[1];
+  } else {
+    $testsLabel[] = $parts[0];
+  }
+}
+
 if (count($testsId) == 1) {
   $_GET['test'] = $testsId[0];
   $_REQUEST['test'] = $testsId[0];
@@ -46,14 +58,15 @@ foreach ( $testsInfo as $testInfo ) {
 
 # Color palette taken from benchmarks/view.php
 # TODO(mgl): Combine this with the colors in benchmarks/view.php
-# TODO(mgl): Support more than 8 tests
+# TODO(mgl): Have a cleaner way to support more than 8 tests with
+# distinct-looking colors.
 $colors = array('#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101');
 $light_colors = array_map("lighten", $colors);
 
 # Figure out what characteristics will be common to all lines in each graph.
 $common_labels = array();
 if (count($testsId) == 1) {
-  $common_labels[] = $testsId[0];
+  $common_labels[] = $testsLabel[0];
 }
 if (count($views) == 1) {
   $common_labels[] = (($views[0] == '1') ? 'Repeat View' : 'First View');
@@ -274,6 +287,7 @@ function InsertChart($metric, $label) {
   global $pagesData;
   global $testsInfo;
   global $testsId;
+  global $testsLabel;
   global $median_value;
   global $median_run;
   // Write HTML for chart
@@ -288,12 +302,14 @@ function InsertChart($metric, $label) {
       foreach ($pagesData as $key=>$pageData) {
         $labels = array();
         if (count($pagesData) > 1) {
-          $labels[] = $testsId[$key];
+          $labels[] = $testsLabel[$key];
         }
         if (count($views) > 1) {
           $labels[] = ($cached == '1') ? 'Repeat View' : 'First View';
         }
         // Prepare Chart object and add to $chartData for later chart construction.
+        // If $view_num is greater than the number of colors, we will pass NULL
+        // as a color, which will lead to GViz choosing a color.
         $chartColumnsAdd = ChartColumn::dataMedianColumns($pageData, $cached,
           $metric, $median_metric, $colors[$view_num], $light_colors[$view_num], $labels,
           $num_runs, $median_run, $median_value);

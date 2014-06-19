@@ -185,7 +185,7 @@ if (array_key_exists('f', $_REQUEST)) {
                                 graph_compare += ",";
                             }
                             compare += encodeURIComponent(tests[i] + "-l:" + seriesData[i].name.replace("-","").replace(":","") + "-c:" + (cached ? 1 : 0));
-                            graph_compare += encodeURIComponent(tests[i]);
+                            graph_compare += encodeURIComponent(tests[i] + "-l:" + seriesData[i].name.replace("-","").replace(":",""));
                         }
                         graph_compare += "&" + (cached ? "rv" : "fv") + "=1";
                         menu += '<br><a href="trendurl.php?benchmark=' + encodeURIComponent(benchmark) + '&url=' + encodeURIComponent(url) + '">Trend over time</a>';
