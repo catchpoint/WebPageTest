@@ -1037,6 +1037,7 @@ function DevToolsMatchEvent($filter, &$event, $startTime = null, $endTime = null
       $time = DevToolsEventTime($event);
       if (isset($time) && $time &&
           ($time < $startTime ||
+          $time - $startTime > 600000 ||
           (isset($endTime) && $endTime && $time > $endTime)))
         $match = false;
     }
