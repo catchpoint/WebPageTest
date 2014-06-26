@@ -24,6 +24,10 @@ $page_keywords = array('Graph Page Data','Webpagetest','Website Speed Test','Pag
 $page_description = "Graph Page Data Comparison.";
 $chartData = array();
 
+foreach($testsId as $id) {
+  RestoreTest($id);
+}
+
 # We intend to change to "?tests" but also allow "?test" so as to not break existing links.
 # TODO(mgl): Support -l:<label> after the test IDs as in video/compare.php
 $testsPath = array_map("GetTestPath", $testsId);
