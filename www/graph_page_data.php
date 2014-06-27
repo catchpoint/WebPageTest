@@ -1,5 +1,9 @@
 <?php 
 $tests = (isset($_REQUEST['tests'])) ? $_REQUEST['tests'] : $_REQUEST['test'];
+$statControl = 'None';
+if (array_key_exists('control', $_REQUEST)) {
+  $statControl = $_REQUEST['control'];
+}
 $compTests = explode(',', $tests);
 $testsId = array();
 $testsLabel = array();
@@ -18,8 +22,10 @@ if (count($testsId) == 1) {
   $_REQUEST['test'] = $testsId[0];
 }
 include 'common.inc';
+include '../lib/PHPStats.phar';
 require_once('page_data.inc');
 require_once('graph_page_data.inc');
+require_once('stat.inc');
 $page_keywords = array('Graph Page Data','Webpagetest','Website Speed Test','Page Speed', 'comparison');
 $page_description = "Graph Page Data Comparison.";
 $chartData = array();
@@ -115,6 +121,25 @@ $common_label = implode(" ", $common_labels);
                     <input type="checkbox" name="median_run" value="1"
                         <?php if ($median_run == '1') echo "checked"; ?> >Run with median
                         <?php echo $median_metric; ?> <br>
+                    Statistical Comparison Against <select id="control" name="control" size="1" onchange="this.form.submit();">
+                    <option value="NOSTAT"<?php if ($statControl === "NOSTAT") echo " selected"; ?>>None</option>
+                    <?php
+                    foreach ($pagesData as $key=>$pageData) {
+                      $selectedString = ((string)$key === $statControl) ? " selected" : "";
+                      echo "<option value=\"$key\"$selectedString>" . $testsLabel[$key] . "</option>";
+                    }
+                    ?>
+                    </select>
+                    <br>
+                    Tests:
+                    <?php
+                    for ($i = 0; $i < count($testsId); $i++) {
+                      echo "<br>";
+                      echo $testsId[$i];
+                      echo "-l:";
+                      echo $testsLabel[$i];
+                    }
+                    ?>
                     <br>
                     <input type="submit">
                 </form>
@@ -217,63 +242,116 @@ $common_label = implode(" ", $common_labels);
                     echo "var chartData = " . json_encode($chartData) . ";\n";
                     echo "var runs = $num_runs;\n";
                 ?>
-                google.load("visualization", "1", {packages:["corechart"]});
+                google.load("visualization", "1", {packages:["corechart", "table"]});
                 google.setOnLoadCallback(drawChart);
-                function drawChart() {
-                    for (metric in chartData) {
-                      chart_metric = chartData[metric];
-                      var data = new google.visualization.DataTable();
+                function drawChartMetric(chart_metric) {
+                  var data = new google.visualization.DataTable();
 
-                      // We construct the series plotting option, which
-                      // depends on each column in chart_metric except the
-                      // first.  For simplicity, we extract from all columns
-                      // and then drop the first.
-                      series = [];
-                      for (column in chart_metric['columns']) {
-                        chartColumn = chart_metric['columns'][column];
-                        data.addColumn('number', chartColumn.label);
-                        if (chartColumn.line) {
-                          series = series.concat({color: chartColumn.color});
-                        } else {
-                          series = series.concat({color: chartColumn.color,
-                            lineWidth: 0, pointSize: 3});
-                        }
-                      }
-                      series.shift();
+                  // We construct the series plotting option, which
+                  // depends on each column in chart_metric except the
+                  // first.  For simplicity, we extract from all columns
+                  // and then drop the first.
+                  series = [];
+                  for (column in chart_metric['columns']) {
+                    chartColumn = chart_metric['columns'][column];
+                    data.addColumn('number', chartColumn.label);
+                    if (chartColumn.line) {
+                      series = series.concat({color: chartColumn.color});
+                    } else {
+                      series = series.concat({color: chartColumn.color,
+                        lineWidth: 0, pointSize: 3});
+                    }
+                  }
+                  series.shift();
 
-                      // Values is a map from run number (1-indexed) to value.
-                      for (i = 1; i <= runs; i++) {
-                        row = []
-                        for (column in chart_metric['columns']) {
-                           // If run i is missing, we add a cell with
-                            // an undefined array element as a placeholder.
-                          cell = chart_metric['columns'][column].values[i];
-                          row = row.concat([cell]);
-
-                        }
-                        data.addRow(row);
-                      }
-                      var options = {
-                          legend: (series.length == 1) ? 'none' : 'right',
-                          width: 950,
-                          height: Math.max(500, series.length * 45),
-                          lineWidth: 1,
-                          hAxis: {minValue: 1, maxValue: runs, gridlines: {count: runs}},
-                          series: series,
-                          chartArea: { width: "60%", left: 70, height: "85%" }
-                      }
-                      var chart = new google.visualization.LineChart(
-                          document.getElementById(chartData[metric].div));
-                      chart.draw(data, options);
+                  // Values is a map from run number (1-indexed) to value.
+                  for (i = 1; i <= runs; i++) {
+                    row = []
+                    for (column in chart_metric['columns']) {
+                       // If run i is missing, we add a cell with
+                        // an undefined array element as a placeholder.
+                      cell = chart_metric['columns'][column].values[i];
+                      row = row.concat([cell]);
 
                     }
+                    data.addRow(row);
+                  }
+                  var options = {
+                      legend: (series.length == 1) ? 'none' : 'right',
+                      width: 950,
+                      height: Math.max(500, series.length * 45),
+                      lineWidth: 1,
+                      hAxis: {minValue: 1, maxValue: runs, gridlines: {count: runs}},
+                      series: series,
+                      chartArea: { width: "60%", left: 70, height: "85%" }
+                  }
+                  var chart = new google.visualization.LineChart(
+                      document.getElementById(chart_metric.div));
+                  chart.draw(data, options);
+
+                };
+                function signifString(pValue) {
+                  if (!pValue) {
+                    return "";
+                  } else if (pValue < 0.05) {
+                    return "TRUE";
+                  } else {
+                    return "FALSE";
+                  }
                 }
+                function drawTableMetric(compareData) {
+                  var data = new google.visualization.DataTable();
+                  var selectEl = document.getElementById("control");
+                  var selectId = selectEl.options[selectEl.selectedIndex].value;
+                  data.addColumn('string', 'Variant');
+                  data.addColumn('number', 'Count');
+                  data.addColumn('string', 'Mean +/- 95% Conf. Int');
+                  data.addColumn('number', 'Diff of mean from ' + compareData.compareFrom[selectId].confData.label);
+                  data.addColumn('number', 'p-value (2-tailed)');
+                  data.addColumn('string', 'Significant?');
+                  for (index in compareData.compareFrom) {
+                    confData = compareData.compareFrom[index].confData;
+                    diff = compareData.compareFrom[index].diff;
+                    pValue = compareData.compareFrom[index].pValue,
+                    pDisplay = pValue ? ((diff > 0) ? 2 * pValue : 2 * (1 - pValue)) : null;
+                    meanDisplay = confData.mean.toPrecision(6) + ' +/- ' +
+                      confData.ciHalfWidth.toPrecision(6)
+                    data.addRow([
+                      confData.label,
+                      confData.n,
+                      meanDisplay,
+                      diff,
+                      pDisplay,
+                      signifString(pDisplay)]);
+                  }
+                  var table = new google.visualization.Table(document.getElementById(compareData.div));
+                  var formatter = new google.visualization.NumberFormat(
+                    {'fractionDigits': 3});
+                  formatter.format(data, 3);
+                  formatter.format(data, 4);
+                  table.draw(data);
+                };
+                function drawChart() {
+                  for (metric in chartData) {
+                    chart_metric = chartData[metric];
+                    drawChartMetric(chart_metric);
+                    if (chart_metric.compareData.length > 0) {
+                      for (index in chart_metric.compareData) {
+                        drawTableMetric(chart_metric.compareData[index]);
+                      }
+                    }
+                  }
+                };
             </script>
         </div>
     </body>
 </html>
 
 <?php
+
+function compareFrom() {
+}
+
 /**
  * InsertChart adds a chart for the given $metric, with the given $label, to
  * global $chartData, and outputs the HTML container elements for the chart.
@@ -294,35 +372,73 @@ function InsertChart($metric, $label) {
   global $testsLabel;
   global $median_value;
   global $median_run;
+  global $statControl;
   // Write HTML for chart
   $div = "{$metric}Chart";
   $num_runs = max(array_map("numRunsFromTestInfo", $testsInfo));
   echo "<h2 id=\"$metric\">" . htmlspecialchars($label) . "</h2>";
-  echo "<div id=\"$div\" class=\"chart\"></div>\n";
-  if ($testsInfo) {
-    $chartColumns = array(ChartColumn::runs($num_runs));
-    $view_num = 0;
-    foreach ($views as $cached) {
-      foreach ($pagesData as $key=>$pageData) {
-        $labels = array();
-        if (count($pagesData) > 1) {
-          $labels[] = $testsLabel[$key];
-        }
-        if (count($views) > 1) {
-          $labels[] = ($cached == '1') ? 'Repeat View' : 'First View';
-        }
-        // Prepare Chart object and add to $chartData for later chart construction.
-        // If $view_num is greater than the number of colors, we will pass NULL
-        // as a color, which will lead to GViz choosing a color.
-        $chartColumnsAdd = ChartColumn::dataMedianColumns($pageData, $cached,
-          $metric, $median_metric, $colors[$view_num], $light_colors[$view_num], $labels,
-          $num_runs, $median_run, $median_value);
-        $chartColumns = array_merge($chartColumns, $chartColumnsAdd);
-        $view_num++;
+  if (!$testsInfo) {
+    return;
+  }
+  $chartColumns = array(ChartColumn::runs($num_runs));
+  $compareChart = array();
+  $view_index = 0;
+  foreach ($views as $cached) {
+    $statValues = array();
+    $statLabels = array();
+    $compareData = NULL;
+    foreach ($pagesData as $key=>$pageData) {
+      $labels = array();
+      if (count($pagesData) > 1) {
+        $labels[] = $testsLabel[$key];
+      }
+      if (count($views) > 1) {
+        $labels[] = ($cached == '1') ? 'Repeat View' : 'First View';
+      }
+      // Prepare Chart object and add to $chartData for later chart construction.
+      // If $view_index is greater than the number of colors, we will pass NULL
+      // as a color, which will lead to GViz choosing a color.
+      $chartColumnsAdd = ChartColumn::dataMedianColumns($pageData, $cached,
+        $metric, $median_metric, $colors[$view_index], $light_colors[$view_index], $labels,
+        $num_runs, $median_run, $median_value);
+      $chartColumns = array_merge($chartColumns, $chartColumnsAdd);
+      $view_index++;
+
+      // Prepare statistical comparison
+      if (($statControl !== 'NOSTAT') && (count($pagesData) >= 1)) {
+        $statValues[] = values($pageData, $cached, $metric, true);
+        $statLabels[] = implode(" ", $labels);
       }
     }
-    $chart = new Chart($div, $chartColumns);
-    $chartData[$metric] = $chart;
+    if (($statControl !== 'NOSTAT') && (count($pagesData) >= 1)) {
+      if (count($statValues[$statControl]) > 0) {
+        $statDiv = "{$metric}Stat{$cached}";
+        $compareFrom = array();
+
+        // Populate compareFrom for the statistical control
+        $confData = ci($statLabels[$statControl], $statValues[$statControl]);
+        $compareFrom[$statControl] = new CompareFrom($confData, NULL, NULL);
+        foreach ($pagesData as $key=>$pageData) {
+          if ($key == $statControl) {
+            continue;
+          }
+          if (count($statValues[$key]) == 0) {
+            continue;
+          }
+
+          // Populate compareFrom for $key
+          $confData = ci($statLabels[$key], $statValues[$key]);
+          $pValue = \PHPStats\StatisticalTests::twoSampleTTest($statValues[$statControl], $statValues[$key]);
+          $diff = $confData->mean - $compareFrom[$statControl]->confData->mean;
+          $compareFrom[$key] = new CompareFrom($confData, $diff, $pValue);
+        }
+        $compareChart[] = new CompareData($statDiv, $compareFrom);
+        echo "<div id=\"$statDiv\"></div>\n";
+      }
+    }
   }
+  $chart = new Chart($div, $chartColumns, $compareChart);
+  $chartData[$metric] = $chart;
+  echo "<div id=\"$div\" class=\"chart\"></div>\n";
 }
 ?>

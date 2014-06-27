@@ -151,6 +151,28 @@ class ChartColumn
   }
 }
 
+class CompareFrom {
+  public $confData; //ConfData
+  public $diff; //difference from control
+  public $pValue; // P-Value
+
+  function __construct($confData, $diff, $pValue) {
+    $this->confData = $confData;
+    $this->diff = $diff;
+    $this->pValue = $pValue;
+  }
+}
+
+class CompareData {
+  public $div; // name of HTML div element
+  public $compareFrom; // array of CompareFrom objects
+
+  function __construct($div, $compareFrom) {
+    $this->div = $div;
+    $this->compareFrom = $compareFrom;
+  }
+}
+
 /**
  * Chart is a class describing a GViz chart.
  */
@@ -165,9 +187,15 @@ class Chart {
    */
   public $columns;
 
-  function __construct($div, $columns) {
+  /**
+   * @var CompareData[] comparison data
+   */
+  public $compareData;
+
+  function __construct($div, $columns, $compareData) {
     $this->div = $div;
     $this->columns = $columns;
+    $this->compareData = $compareData;
   }
 }
 ?>
