@@ -71,19 +71,30 @@ if (array_key_exists('f', $_REQUEST)) {
             <div style="clear:both;">
             </div>
             <script type="text/javascript">
-            function SelectedPoint(meta, time) {
+            function SelectedPoint(meta, time, cached) {
                 <?php
                 echo "var url = \"$url\";\n";
                 echo "var medianMetric=\"$median_metric\";\n";
                 ?>
                 var menu = '<div><h4>View test for ' + url + '</h4>';
+                var compare = "/video/compare.php?ival=100&medianMetric=" + medianMetric + "&tests=";
+                var graph_compare = "/graph_page_data.php?tests=";
                 time = parseInt(time / 1000, 10);
                 var ok = false;
                 if (meta[time] != undefined) {
                     for(i = 0; i < meta[time].length; i++) {
                         ok = true;
                         menu += '<a href="/result/' + meta[time][i]['test'] + '/?medianMetric=' + medianMetric + '" target="_blank">' + meta[time][i]['label'] + '</a><br>';
+                        if (i) {
+                            compare += ",";
+                            graph_compare += ",";
+                        }
+                            compare += encodeURIComponent(meta[time][i]['test'] + "-l:" + meta[time][i]['label'].replace("-","").replace(":","") + "-c:" + (cached ? 1 : 0));
+                            graph_compare += encodeURIComponent(meta[time][i]['test'] + "-l:" + meta[time][i]['label'].replace("-","").replace(":",""));
                     }
+                    graph_compare += "&" + (cached ? "rv" : "fv") + "=1";
+                    menu += '<br><a href="' + compare + '">Filmstrip Comparison</a>';
+                    menu += '<br><a href="' + graph_compare + '">Graph Comparison</a>';
                 }
                 menu += '</div>';
                 if (ok) {
@@ -221,7 +232,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                     labelsSeparateLines: true,
                     colors: ['#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101'],
                     labelsDiv: document.getElementById('{$id}_legend'),
-                    pointClickCallback: function(e, p) {SelectedPoint({$id}meta, p.xval);},
+                    pointClickCallback: function(e, p) {SelectedPoint({$id}meta, p.xval, false);},
                     $chart_title
                     legend: \"always\"}
                 );";
@@ -266,7 +277,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                         labelsSeparateLines: true,
                         colors: ['#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101'],
                         labelsDiv: document.getElementById('{$id}_legend'),
-                        pointClickCallback: function(e, p) {SelectedPoint({$id}meta, p.xval);},
+                        pointClickCallback: function(e, p) {SelectedPoint({$id}meta, p.xval, true);},
                         $chart_title
                         legend: \"always\"}
                     );";
