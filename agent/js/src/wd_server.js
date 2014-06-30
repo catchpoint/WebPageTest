@@ -239,8 +239,6 @@ WebDriverServer.prototype.connectDevTools_ = function() {
     }
     return connected.promise;
   }.bind(this), DEVTOOLS_CONNECT_TIMEOUT_MS_, 'Connect DevTools');
-  this.networkCommand_('enable');
-  this.pageCommand_('enable');
   if (1 === this.task_.timeline || 1 === this.task_['Capture Video']) {
     var timelineStackDepth = (this.task_.timelineStackDepth ?
         parseInt(this.task_.timelineStackDepth, 10) : 0);
@@ -678,6 +676,9 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
   // all pending events.  This isn't strictly required if startBrowser loads
   // "about:blank", but it's still a good idea.
   this.pageCommand_('navigate', {url: BLANK_PAGE_URL_});
+  this.app_.timeout(500, 'Load blank startup page');
+  this.networkCommand_('enable');
+  this.pageCommand_('enable');
   if (1 === this.task_['Capture Video']) {  // Emit video sync, start recording
     this.getCapabilities_().then(function(caps) {
       if (!caps.videoRecording) {

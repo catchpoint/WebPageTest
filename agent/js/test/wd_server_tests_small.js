@@ -404,12 +404,12 @@ describe('wd_server small', function() {
     should.ok(stubWebSocket.calledOnce);
     should.ok('ws://gaga', stubWebSocket.firstCall.args[0]);
     [
-        'Network.enable',
-        'Page.enable',
         'Timeline.start',
         'Network.clearBrowserCache',
         'Network.clearBrowserCookies',
         'Page.navigate',  // To blank page.
+        'Network.enable',
+        'Page.enable',
         'Page.navigate',  // To the real page.
         'Page.captureScreenshot'
       ].should.eql(fakeWs.commands);
