@@ -896,7 +896,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
         } else {
           $method_class = substr($message['method'], 0, strpos($message['method'], '.'));
           if ($eventTime && $method_class === 'Network') {
-            $firstEvent = $eventTime;
+            $firstEvent = $eventTime * 1000.0;
             break;
           }
         }
