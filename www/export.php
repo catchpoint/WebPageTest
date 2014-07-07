@@ -177,27 +177,23 @@ function BuildResult(&$pageData)
                 $request['cookies'] = array();
                 $request['headers'] = array();
                 $ver = '';
-                if( isset($r['headers']) && isset($r['headers']['request']) )
-                {
-                    foreach($r['headers']['request'] as &$header)
-                    {
+                $headersSize = 0;
+                if( isset($r['headers']) && isset($r['headers']['request']) ) {
+                    foreach($r['headers']['request'] as &$header) {
+                        $headersSize += strlen($header) + 2; // add 2 for the \r\n that is on the raw headers
                         $pos = strpos($header, ':');
-                        if( $pos > 0 )
-                        {
+                        if( $pos > 0 ) {
                             $name = trim(substr($header, 0, $pos));
                             $val = trim(substr($header, $pos + 1));
                             if( strlen($name) )
                                 $request['headers'][] = array('name' => $name, 'value' => $val);
 
                             // parse out any cookies
-                            if( !strcasecmp($name, 'cookie') )
-                            {
+                            if( !strcasecmp($name, 'cookie') ) {
                                 $cookies = explode(';', $val);
-                                foreach( $cookies as &$cookie )
-                                {
+                                foreach( $cookies as &$cookie ) {
                                     $pos = strpos($cookie, '=');
-                                    if( $pos > 0 )
-                                    {
+                                    if( $pos > 0 ) {
                                         $name = (string)trim(substr($cookie, 0, $pos));
                                         $val = (string)trim(substr($cookie, $pos + 1));
                                         if( strlen($name) )
@@ -205,15 +201,15 @@ function BuildResult(&$pageData)
                                     }
                                 }
                             }
-                        }
-                        else
-                        {
+                        } else {
                             $pos = strpos($header, 'HTTP/');
                             if( $pos >= 0 )
                                 $ver = (string)trim(substr($header, $pos + 5, 3));
                         }
                     }
                 }
+                if ($headersSize)
+                  $request['headersSize'] = $headersSize;
                 $request['httpVersion'] = $ver;
 
                 $request['queryString'] = array();
@@ -243,13 +239,12 @@ function BuildResult(&$pageData)
                 $response['headers'] = array();
                 $ver = '';
                 $loc = '';
-                if( isset($r['headers']) && isset($r['headers']['response']) )
-                {
-                    foreach($r['headers']['response'] as &$header)
-                    {
+                $headersSize = 0;
+                if( isset($r['headers']) && isset($r['headers']['response']) ) {
+                    foreach($r['headers']['response'] as &$header) {
+                        $headersSize += strlen($header) + 2; // add 2 for the \r\n that is on the raw headers
                         $pos = strpos($header, ':');
-                        if( $pos > 0 )
-                        {
+                        if( $pos > 0 ) {
                             $name = (string)trim(substr($header, 0, $pos));
                             $val = (string)trim(substr($header, $pos + 1));
                             if( strlen($name) )
@@ -257,15 +252,15 @@ function BuildResult(&$pageData)
                             
                             if( !strcasecmp($name, 'location') )
                                 $loc = (string)$val;
-                        }
-                        else
-                        {
+                        } else {
                             $pos = strpos($header, 'HTTP/');
                             if( $pos >= 0 )
                                 $ver = (string)trim(substr($header, $pos + 5, 3));
                         }
                     }
                 }
+                if ($headersSize)
+                  $response['headersSize'] = $headersSize;
                 $response['httpVersion'] = $ver;
                 $response['redirectURL'] = $loc;
 
