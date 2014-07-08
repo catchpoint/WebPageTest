@@ -1,12 +1,19 @@
 <?php 
+// We intend to change to "?tests" but also allow "?test" so as to not break existing links.
 $tests = (isset($_REQUEST['tests'])) ? $_REQUEST['tests'] : $_REQUEST['test'];
-$statControl = 'None';
+
+// Get choice of statistical control from request URL.
+$statControl = 'None'; // 'None' or index starting with 1 into list of tests.
 if (array_key_exists('control', $_REQUEST)) {
   $statControl = $_REQUEST['control'];
 }
+
+// Pull out the test IDs and labels from the "tests" parameter.
 $compTests = explode(',', $tests);
-$testsId = array();
-$testsLabel = array();
+$testsId = array(); // Test IDs
+$testsLabel = array(); // String labels corresponding to the test IDs.
+// TODO(geening): Handle the same parameters as supported in the filmstrip view.
+// https://github.com/WPO-Foundation/webpagetest/blob/master/www/video/filmstrip.inc.php#L17
 foreach($compTests as $t) {
   $parts = explode('-', $t);
   $testsId[] = $parts[0];
@@ -17,6 +24,7 @@ foreach($compTests as $t) {
   }
 }
 
+// If there is exactly one test, populate variables so header code will pick it up.
 if (count($testsId) == 1) {
   $_GET['test'] = $testsId[0];
   $_REQUEST['test'] = $testsId[0];
@@ -28,7 +36,6 @@ require_once('graph_page_data.inc');
 require_once('stat.inc');
 $page_keywords = array('Graph Page Data','Webpagetest','Website Speed Test','Page Speed', 'comparison');
 $page_description = "Graph Page Data Comparison.";
-$chartData = array();
 
 foreach($testsId as $id) {
   RestoreTest($id);
@@ -36,12 +43,14 @@ foreach($testsId as $id) {
 
 # We intend to change to "?tests" but also allow "?test" so as to not break existing links.
 # TODO(mgl): Support -l:<label> after the test IDs as in video/compare.php
+$chartData = array();  // @var Chart[] All charts to be graphed
+
 $testsPath = array_map("GetTestPath", $testsId);
 $testsInfo = array_map("GetTestInfo", $testsPath);
 $pagesData = array_map("loadAllPageData", $testsPath);
 
-# Whether to show first and/or repeat views.
-# Default to showing first view if no views are indicated in the URL.
+// Whether to show first and/or repeat views.
+// Default to showing first view if no views are indicated in the URL.
 $views = array();
 $rv = (isset($_REQUEST['rv'])) ? $_REQUEST['rv'] : 0;
 $fv = (isset($_REQUEST['fv'])) ? $_REQUEST['fv'] : (1 - $rv);
@@ -52,12 +61,11 @@ if ($rv) {
   $views[] = 1;
 }
 
-# Whether to show median run and/or median value
+// Whether to show median run and/or median value
 $median_run = (isset($_REQUEST['median_run'])) ? $_REQUEST['median_run'] : 0;
 $median_value = (isset($_REQUEST['median_value'])) ? $_REQUEST['median_value']  : 0;
 
-
-# Remove speed index if none of the runs have video.
+// Remove speed index if none of the runs have video.
 $removeSpeedIndex = true;
 foreach ( $testsInfo as $testInfo ) {
   if ($testInfo && $testInfo['video']) {
@@ -66,14 +74,14 @@ foreach ( $testsInfo as $testInfo ) {
   }
 }
 
-# Color palette taken from benchmarks/view.php
-# TODO(mgl): Combine this with the colors in benchmarks/view.php
-# TODO(mgl): Have a cleaner way to support more than 8 tests with
-# distinct-looking colors.
+// Color palette taken from benchmarks/view.php
+// TODO(geening): Combine this with the colors in benchmarks/view.php
+// TODO(geening): Have a cleaner way to support more than 8 tests with
+// distinct-looking colors.
 $colors = array('#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101');
 $light_colors = array_map("lighten", $colors);
 
-# Figure out what characteristics will be common to all lines in each graph.
+// Figure out what characteristics will be common to all lines in each graph.
 $common_labels = array();
 if (count($testsId) == 1) {
   $common_labels[] = $testsLabel[0];
@@ -118,8 +126,8 @@ $common_label = implode(" ", $common_labels);
                         <?php if ($rv == '1') echo "checked"; ?> >Repeat<br>
                     Median: <input type="checkbox" name="median_value" value="1"
                         <?php if ($median_value == '1') echo "checked"; ?> >Of plotted metric
-                    <input type="checkbox" name="median_run" value="1"
-                        <?php if ($median_run == '1') echo "checked"; ?> >Run with median
+                        <input type="checkbox" name="median_run" value="1"
+                            <?php if ($median_run == '1') echo "checked"; ?> >Run with median
                         <?php echo $median_metric; ?> <br>
                     Statistical Comparison Against <select id="control" name="control" size="1" onchange="this.form.submit();">
                     <option value="NOSTAT"<?php if ($statControl === "NOSTAT") echo " selected"; ?>>None</option>
@@ -134,10 +142,7 @@ $common_label = implode(" ", $common_labels);
                     Tests:
                     <?php
                     for ($i = 0; $i < count($testsId); $i++) {
-                      echo "<br>";
-                      echo $testsId[$i];
-                      echo "-l:";
-                      echo $testsLabel[$i];
+                      echo "<br>" . $testsId[$i] . "-l:" . $testsLabel[$i];
                     }
                     ?>
                     <br>
@@ -243,8 +248,14 @@ $common_label = implode(" ", $common_labels);
                     echo "var runs = $num_runs;\n";
                 ?>
                 google.load("visualization", "1", {packages:["corechart", "table"]});
-                google.setOnLoadCallback(drawChart);
-                function drawChartMetric(chart_metric) {
+                google.setOnLoadCallback(onLoadHandler);
+
+                /** Draws the chart for a metric.
+                  *
+                  * Takes a JSON object corresponding to a Chart class as
+                  * defined in graph_page_data.inc.
+                 */
+                function drawChart(chart_metric) {
                   var data = new google.visualization.DataTable();
 
                   // We construct the series plotting option, which
@@ -290,6 +301,10 @@ $common_label = implode(" ", $common_labels);
                   chart.draw(data, options);
 
                 };
+
+                /** Given a p-value, returns "TRUE" if it is significant
+                  * or "FALSE" if it is not.
+                 */
                 function signifString(pValue) {
                   if (!pValue) {
                     return "";
@@ -299,7 +314,12 @@ $common_label = implode(" ", $common_labels);
                     return "FALSE";
                   }
                 }
-                function drawTableMetric(compareData) {
+
+                /** Draws a table for a metric.
+                  * Takes a JSON object corresponding to CompareTable
+                  * as defined in graph_page_data.inc.
+                 */
+                function drawTable(compareData) {
                   var data = new google.visualization.DataTable();
                   var selectEl = document.getElementById("control");
                   var selectId = selectEl.options[selectEl.selectedIndex].value;
@@ -331,13 +351,14 @@ $common_label = implode(" ", $common_labels);
                   formatter.format(data, 4);
                   table.draw(data);
                 };
-                function drawChart() {
+
+                function onLoadHandler() {
                   for (metric in chartData) {
                     chart_metric = chartData[metric];
-                    drawChartMetric(chart_metric);
+                    drawChart(chart_metric);
                     if (chart_metric.compareData.length > 0) {
                       for (index in chart_metric.compareData) {
-                        drawTableMetric(chart_metric.compareData[index]);
+                        drawTable(chart_metric.compareData[index]);
                       }
                     }
                   }
@@ -349,9 +370,6 @@ $common_label = implode(" ", $common_labels);
 
 <?php
 
-function compareFrom() {
-}
-
 /**
  * InsertChart adds a chart for the given $metric, with the given $label, to
  * global $chartData, and outputs the HTML container elements for the chart.
@@ -361,7 +379,7 @@ function compareFrom() {
  */
 function InsertChart($metric, $label) {
   global $chartData;
-  global $num_runs;
+  global $num_runs; // @var integer Number of runs
   global $views;
   global $colors;
   global $light_colors;
@@ -373,21 +391,28 @@ function InsertChart($metric, $label) {
   global $median_value;
   global $median_run;
   global $statControl;
+
+  $num_runs = max(array_map("numRunsFromTestInfo", $testsInfo));
+
   // Write HTML for chart
   $div = "{$metric}Chart";
-  $num_runs = max(array_map("numRunsFromTestInfo", $testsInfo));
   echo "<h2 id=\"$metric\">" . htmlspecialchars($label) . "</h2>";
   if (!$testsInfo) {
     return;
   }
   $chartColumns = array(ChartColumn::runs($num_runs));
-  $compareChart = array();
+  $compareTable = array();
   $view_index = 0;
+
+  // For each view (first / repeat) that we want to show
   foreach ($views as $cached) {
     $statValues = array();
     $statLabels = array();
-    $compareData = NULL;
+
+    // For each run in that view
     foreach ($pagesData as $key=>$pageData) {
+      // Construct label from those descriptive attributes that are not
+      // common to all variants.
       $labels = array();
       if (count($pagesData) > 1) {
         $labels[] = $testsLabel[$key];
@@ -395,6 +420,7 @@ function InsertChart($metric, $label) {
       if (count($views) > 1) {
         $labels[] = ($cached == '1') ? 'Repeat View' : 'First View';
       }
+
       // Prepare Chart object and add to $chartData for later chart construction.
       // If $view_index is greater than the number of colors, we will pass NULL
       // as a color, which will lead to GViz choosing a color.
@@ -404,40 +430,43 @@ function InsertChart($metric, $label) {
       $chartColumns = array_merge($chartColumns, $chartColumnsAdd);
       $view_index++;
 
-      // Prepare statistical comparison
+      // If doing a statistical comparison, prepare raw values and labels.
       if (($statControl !== 'NOSTAT') && (count($pagesData) >= 1)) {
         $statValues[] = values($pageData, $cached, $metric, true);
         $statLabels[] = implode(" ", $labels);
       }
     }
     if (($statControl !== 'NOSTAT') && (count($pagesData) >= 1)) {
+
+      // First populate compareFrom for statistical control, if it has values
       if (count($statValues[$statControl]) > 0) {
         $statDiv = "{$metric}Stat{$cached}";
         $compareFrom = array();
-
-        // Populate compareFrom for the statistical control
-        $confData = ci($statLabels[$statControl], $statValues[$statControl]);
+        $confData = ConfData::fromArr($statLabels[$statControl], $statValues[$statControl]);
         $compareFrom[$statControl] = new CompareFrom($confData, NULL, NULL);
+
         foreach ($pagesData as $key=>$pageData) {
+          // Skip the statistical control (we already handled it)
           if ($key == $statControl) {
             continue;
           }
+          // Skip runs with missing values for the statistic.
           if (count($statValues[$key]) == 0) {
             continue;
           }
 
           // Populate compareFrom for $key
-          $confData = ci($statLabels[$key], $statValues[$key]);
+          $confData = ConfData::fromArr($statLabels[$key], $statValues[$key]);
           $pValue = \PHPStats\StatisticalTests::twoSampleTTest($statValues[$statControl], $statValues[$key]);
           $diff = $confData->mean - $compareFrom[$statControl]->confData->mean;
           $compareFrom[$key] = new CompareFrom($confData, $diff, $pValue);
         }
-        $compareChart[] = new CompareData($statDiv, $compareFrom);
+        $compareTable[] = new CompareTable($statDiv, $compareFrom);
         echo "<div id=\"$statDiv\"></div>\n";
       }
     }
   }
-  $chart = new Chart($div, $chartColumns, $compareChart);
+  $chart = new Chart($div, $chartColumns, $compareTable);
   $chartData[$metric] = $chart;
   echo "<div id=\"$div\" class=\"chart\"></div>\n";
 }
