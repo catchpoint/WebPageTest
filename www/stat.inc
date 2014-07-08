@@ -1,5 +1,7 @@
 <?php
 
+include '../lib/PHPStats/PHPStats.phar';
+
 /**
  * ConfData is a class describing basic statistics for a labeled dataset:
  * label, mean, count, and half-width of a symmetric confidence interval about
