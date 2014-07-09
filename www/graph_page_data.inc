@@ -152,22 +152,45 @@ class ChartColumn
 }
 
 /**
+ * CompareFrom is a class describing a statistical comparison against a control.
+ */
+class CompareFrom {
+  public $confData; // @var ConfData Mean and confidence interval.
+  public $diff; // @var float Difference from control
+  public $pValue; // @var float P-Value as compared against control.
+
+  function __construct($confData, $diff, $pValue) {
+    $this->confData = $confData;
+    $this->diff = $diff;
+    $this->pValue = $pValue;
+  }
+}
+
+/**
+ * CompareTable is a class describing a statistical comparison table.
+ */
+class CompareTable {
+  public $div; // @var string name of HTML div element
+  public $compareFrom; // @var CompareFrom[]
+
+  function __construct($div, $compareFrom) {
+    $this->div = $div;
+    $this->compareFrom = $compareFrom;
+  }
+}
+
+/**
  * Chart is a class describing a GViz chart.
  */
 class Chart {
-  /**
-   * @var string name of HTML div element
-   */
-  public $div; // name of HTML div element
+  public $div; // @var string name of HTML div element
+  public $columns; // @var ChartColumn[] Columns in chart
+  public $compareData; // @var CompareTable Comparison data table
 
-  /**
-   * @var ChartColumn[] Columns in chart
-   */
-  public $columns;
-
-  function __construct($div, $columns) {
+  function __construct($div, $columns, $compareData) {
     $this->div = $div;
     $this->columns = $columns;
+    $this->compareData = $compareData;
   }
 }
 ?>
