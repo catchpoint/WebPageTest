@@ -131,7 +131,7 @@ class Appurify{
             $timeline = "timeline=1\r\n";
           if (stripos($device, '-') !== false)
             list($device, $browser) = explode('-', $device);
-          $result = $this->Post('https://live.appurify.com/resource/config/upload/',
+          $result = $this->Post('https://live.appurify.com/resource/tests/config/upload/',
                                 array('test_id' => $test_id),
                                 array('name' => 'source',
                                       'filename' => 'browsertest.conf',
