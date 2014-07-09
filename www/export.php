@@ -118,7 +118,7 @@ function BuildResult(&$pageData)
     $result['log']['version'] = '1.1';
     $result['log']['creator'] = array(
         'name' => 'WebPagetest',
-        'version' => '1.8'
+        'version' => VER_WEBPAGETEST
         );
     $result['log']['pages'] = array();
     foreach ($pageData as $run => $pageRun) {
