@@ -371,7 +371,8 @@ class Appurify{
   
   protected function Post($command, $data = null, $file = null) {
     $ret = false;
-    $this->GenerateToken();
+    if (stripos($command, 'access_token') === false)
+      $this->GenerateToken();
     if ($this->curl !== false) {
       if (isset($this->token)) {
         if(!isset($data))
