@@ -104,7 +104,18 @@ void __stdcall DoHouseKeeping(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
 void WptDriverCore::Start(void){
   _status.Set(_T("Starting..."));
 
-  if( _settings.Load() ){
+  bool ok = false;
+  int count = 0;
+  do {
+    ok = _settings.Load();
+    count++;
+    if (!ok) {
+      _status.Set(_T("Problem loading settings, trying again..."));
+      Sleep(1000);
+    }
+  } while (!ok && !_exit && count < 600);
+
+  if( ok ){
     // boost our priority
     SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
 
