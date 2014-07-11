@@ -67,4 +67,5 @@ private:
   void CloseDialogs();
   bool DetectGPU();
   void PreTest();
+  bool Startup();
 };
