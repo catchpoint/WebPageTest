@@ -262,6 +262,9 @@ void TestServer::MongooseCallback(enum mg_event event,
     } else if (strcmp(request_info->uri, "/event/timed_event") == 0) {
       test_state_.AddTimedEvent(GetPostBody(conn, request_info));
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/custom_metrics") == 0) {
+      test_state_.SetCustomMetrics(GetPostBody(conn, request_info));
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/stats") == 0) {
       DWORD dom_count = 0;
       if (GetDwordParam(request_info->query_string, "domCount", dom_count) &&
@@ -276,12 +279,9 @@ void TestServer::MongooseCallback(enum mg_event event,
       }
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/trace") == 0) {
-      if (test_state_._active) {
-        CStringA body = CT2A(GetPostBody(conn, request_info));
-        OutputDebugStringA(body);
-        if (body.GetLength())
-          trace_.AddEvents(body);
-      }
+      CStringA body = CT2A(GetPostBody(conn, request_info));
+      if (body.GetLength())
+        trace_.AddEvents(body);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/paint") == 0) {
       //test_state_.PaintEvent(0, 0, 0, 0);
@@ -297,6 +297,10 @@ void TestServer::MongooseCallback(enum mg_event event,
       GetIntParam(request_info->query_string, "viewportSpecified",
                   test_state_._viewport_specified);
       test_state_.CheckResponsive();
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/debug") == 0) {
+      CStringA body = CT2A(GetPostBody(conn, request_info));
+      OutputDebugStringA(body);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else {
         // unknown command fall-through

@@ -76,6 +76,8 @@ CDN_PROVIDER cdnList[] = {
   {".mncdn.net", _T("Medianova")},
   {".mncdn.org", _T("Medianova")},
   {"cdn.jsdelivr.net", _T("jsDelivr")},
+  {".nyiftw.net", _T("NYI FTW")},
+  {".nyiftw.com", _T("NYI FTW")},
   {NULL, NULL}
 };
 
@@ -96,5 +98,6 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"X-Px", "", _T("CDNetworks")},
   {"Via", "CloudFront", _T("Amazon CloudFront")},
   {"X-Edge-IP", "", _T("CDN")},
-  {"X-Edge-Location", "", _T("CDN")}
+  {"X-Edge-Location", "", _T("CDN")},
+  {"X-Powered-By", "NYI FTW", _T("NYI FTW")}
 };

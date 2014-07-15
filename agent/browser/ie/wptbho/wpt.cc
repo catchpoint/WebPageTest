@@ -62,7 +62,8 @@ Wpt::Wpt(void):
   ,_navigating(false)
   ,_must_exit(false)
   ,_task_thread(NULL)
-  ,_processing_task(false) {
+  ,_processing_task(false)
+  ,_exec_count(0) {
 }
 
 
@@ -285,7 +286,7 @@ void Wpt::CheckForTask() {
         Click(_task._target);
         break;
       case WptTask::COLLECT_STATS:
-        CollectStats();
+        CollectStats(_task._target);
         break;
       case WptTask::EXEC:
         Exec(_task._target);
@@ -1084,7 +1085,7 @@ DWORD Wpt::CountDOMElements(CComQIPtr<IHTMLDocument2> &document) {
 /*-----------------------------------------------------------------------------
   Collect the stats at the end of a test
 -----------------------------------------------------------------------------*/
-void Wpt::CollectStats() {
+void Wpt::CollectStats(CString custom_metrics) {
   AtlTrace(_T("[wptbho] - Wpt::CollectStats()"));
   if (_web_browser) {
     CComPtr<IDispatch> dispatch;
@@ -1113,6 +1114,89 @@ void Wpt::CollectStats() {
       }
     }
   }
+  int len = custom_metrics.GetLength();
+  if (len) {
+    char * buff = (char *)malloc(len + 1);
+    if (buff) {
+      CString out = _T("{");
+      int pos = 0;
+      int count = 0;
+      CString line = custom_metrics.Tokenize(_T("\r\n"), pos);
+      while (pos != -1) {
+        int split = line.Find(_T(":"));
+        if (split > 0) {
+          CString name = line.Left(split);
+          CStringA encoded = CT2A(line.Mid(split + 1), CP_UTF8);
+          int decoded_len = len;
+          if (Base64Decode((LPCSTR)encoded, encoded.GetLength(),
+              (BYTE*)buff, &decoded_len) && decoded_len) {
+            buff[decoded_len] = 0;
+            CStringA code = buff;
+            CString result = GetCustomMetric((LPCTSTR)CA2T(code));
+            if (count)
+              out += _T(",");
+            out += _T("\"");
+            out += JSONEscape(name);
+            out += "\":\"";
+            out += JSONEscape(result);
+            out += "\"";
+            count++;
+          }
+        }
+        line = custom_metrics.Tokenize(_T("\r\n"), pos);
+      }
+      out += _T("}");
+      if (count)
+        _wpt_interface.ReportCustomMetrics(out);
+      free(buff);
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CString Wpt::GetCustomMetric(CString code) {
+  CString ret;
+  CString functionName;
+
+  _exec_count++;
+  functionName.Format(_T("wptCustomJs%d"), _exec_count);
+  CString functionBody = CString(_T("var ")) + functionName +
+                         _T(" = (function(){");
+  functionBody += code;
+  functionBody += _T(";});");
+
+  if (Exec(functionBody)) {
+    _variant_t result;
+    DWORD len = functionName.GetLength() + 1;
+    LPOLESTR fn = (LPOLESTR)malloc(len * sizeof(OLECHAR));
+    if (fn) {
+      lstrcpyn(fn, (LPCTSTR)functionName, len);
+      if (Invoke(fn, result)) {
+        if (result.vt != VT_BSTR)
+          result.ChangeType(VT_BSTR);
+        if (result.vt == VT_BSTR)
+          ret.SetString(result.bstrVal);
+      }
+      free(fn);
+    }
+  }
+  
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CString Wpt::JSONEscape(CString src) {
+  src.Replace(_T("\\"), _T("\\\\"));
+  src.Replace(_T("\""), _T("\\\""));
+  src.Replace(_T("/"),  _T("\\/"));
+  src.Replace(_T("\b"), _T("\\b"));
+  src.Replace(_T("\r"), _T("\\r"));
+  src.Replace(_T("\n"), _T("\\n"));
+  src.Replace(_T("\t"), _T("\\t"));
+  src.Replace(_T("\f"), _T("\\f"));
+  return src;
 }
 
 /*-----------------------------------------------------------------------------

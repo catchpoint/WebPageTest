@@ -161,6 +161,7 @@ WebDriverServer.prototype.init = function(args) {
   this.pageLoadDonePromise_ = undefined;
   this.pcapFile_ = undefined;
   this.runNumber_ = args.runNumber;
+  this.isCacheWarm_ = args.isCacheWarm;
   this.screenshots_ = [];
   this.task_ = args.task;
   this.testStartTime_ = undefined;
@@ -238,8 +239,6 @@ WebDriverServer.prototype.connectDevTools_ = function() {
     }
     return connected.promise;
   }.bind(this), DEVTOOLS_CONNECT_TIMEOUT_MS_, 'Connect DevTools');
-  this.networkCommand_('enable');
-  this.pageCommand_('enable');
   if (1 === this.task_.timeline || 1 === this.task_['Capture Video']) {
     var timelineStackDepth = (this.task_.timelineStackDepth ?
         parseInt(this.task_.timelineStackDepth, 10) : 0);
@@ -661,7 +660,7 @@ WebDriverServer.prototype.getCapabilities_ = function() {
 WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
   'use strict';
   this.getCapabilities_().then(function(caps) {
-    if (!this.isCacheCleared_) {
+    if (!this.isCacheCleared_ && !this.isCacheWarm_) {
       if (caps['wkrdp.Network.clearBrowserCache']) {
         this.networkCommand_('clearBrowserCache');
         this.app_.schedule('Cache cleared', function() {
@@ -677,6 +676,9 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
   // all pending events.  This isn't strictly required if startBrowser loads
   // "about:blank", but it's still a good idea.
   this.pageCommand_('navigate', {url: BLANK_PAGE_URL_});
+  this.app_.timeout(500, 'Load blank startup page');
+  this.networkCommand_('enable');
+  this.pageCommand_('enable');
   if (1 === this.task_['Capture Video']) {  // Emit video sync, start recording
     this.getCapabilities_().then(function(caps) {
       if (!caps.videoRecording) {
@@ -1056,8 +1058,16 @@ WebDriverServer.prototype.done_ = function(e) {
       logger.warn('Unable to send %s message: %s', cmd, eSend.message);
     }
   }.bind(this));
-  if (e || this.exitWhenDone_) {
+  // For non-webdriver tests we want to stop the browser after every run
+  // (including between first and repeat view).
+  if (e || this.exitWhenDone_ || !this.driver_) {
     this.scheduleStop();
+  }
+  if (e || this.exitWhenDone_) {
+    // Disconnect parent IPC to exit gracefully without a process.exit() call.
+    // This should be the last source of event queue events.
+    this.app_.schedule('Disconnect IPC',
+      exports.process.disconnect.bind(process));
   }
   this.app_.schedule('Tear down', this.tearDown_.bind(this));
 };
@@ -1106,7 +1116,7 @@ WebDriverServer.prototype.scheduleStop = function() {
       logger.debug('%s', e.stack);
     });
   }
-  // kill
+  // kill the browser
   this.app_.schedule('Kill server/browser', function() {
     if (this.browser_) {
       this.browser_.kill();
@@ -1116,10 +1126,6 @@ WebDriverServer.prototype.scheduleStop = function() {
       logger.warn('WD launcher is already unset');
     }
   }.bind(this));
-  // Disconnect parent IPC to exit gracefully without a process.exit() call.
-  // This should be the last source of event queue events.
-  this.app_.schedule('Disconnect IPC',
-      exports.process.disconnect.bind(process));
 };
 
 process_utils.setSystemCommands();

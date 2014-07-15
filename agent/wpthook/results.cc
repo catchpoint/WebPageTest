@@ -55,6 +55,7 @@ static const TCHAR * IMAGE_START_RENDER = _T("_screen_render.jpg");
 static const TCHAR * IMAGE_RESPONSIVE_CHECK = _T("_screen_responsive.jpg");
 static const TCHAR * CONSOLE_LOG_FILE = _T("_console_log.json");
 static const TCHAR * TIMED_EVENTS_FILE = _T("_timed_events.json");
+static const TCHAR * CUSTOM_METRICS_FILE = _T("_metrics.json");
 static const TCHAR * TIMELINE_FILE = _T("_timeline.json");
 static const TCHAR * TRACE_FILE = _T("_trace.json");
 static const TCHAR * CUSTOM_RULES_DATA_FILE = _T("_custom_rules.json");
@@ -142,6 +143,7 @@ void Results::Save(void) {
       SaveResponseBodies();
       SaveConsoleLog();
       SaveTimedEvents();
+      SaveCustomMetrics();
       if (_test._timeline) {
         _dev_tools.SetStartTime(_test_state._start);
         _dev_tools.Write(_file_base + DEV_TOOLS_FILE);
@@ -783,7 +785,7 @@ void Results::ProcessRequests(void) {
   adult_site_ = false;
   LONGLONG new_end = 0;
   LONGLONG new_first_byte = 0;
-  std::tr1::regex adult_regex("[^0-9]2257[^0-9]");
+  std::tr1::regex adult_regex("[^0-9a-zA-Z]2257[^0-9a-zA-Z]");
   while (pos) {
     Request * request = _requests._requests.GetNext(pos);
     if (request && 
@@ -825,7 +827,7 @@ void Results::ProcessRequests(void) {
         count_connect_doc_ += doc_increment;
       }
       if (base_page) { 
-        if (result_code == 301 || result_code == 302) {
+        if (result_code == 301 || result_code == 302 || result_code == 401) {
           base_page_redirects_++;
         } else {
           base_page = false;
@@ -843,7 +845,8 @@ void Results::ProcessRequests(void) {
           if (result_code == 200) {
             DataChunk body_chunk = request->_response_data.GetBody(true);
             CStringA body(body_chunk.GetData(), body_chunk.GetLength());
-            if (regex_search((LPCSTR)body, adult_regex))
+            if (regex_search((LPCSTR)body, adult_regex) ||
+                body.Find("RTA-5042-1996-1400-1577-RTA") >= 0)
               adult_site_ = true;
           }
         }
@@ -856,7 +859,7 @@ void Results::ProcessRequests(void) {
       new_end = max(new_end, request->_connect_start.QuadPart);
       new_end = max(new_end, request->_connect_end.QuadPart);
       if (request->_first_byte.QuadPart &&
-          result_code != 301 && result_code != 302 && 
+          result_code != 301 && result_code != 302 && result_code != 401 &&
           (!new_first_byte || request->_first_byte.QuadPart < new_first_byte))
         new_first_byte = request->_first_byte.QuadPart;
     }
@@ -1265,7 +1268,7 @@ void Results::SaveConsoleLog(void) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Results::SaveTimedEvents(void) {
-  CStringA log = CT2A(_test_state.GetTimedEventsJSON());
+  CStringA log = CT2A(_test_state.GetTimedEventsJSON(), CP_UTF8);
   if (log.GetLength()) {
     HANDLE file = CreateFile(_file_base + TIMED_EVENTS_FILE, GENERIC_WRITE, 0, 
                               NULL, CREATE_ALWAYS, 0, 0);
@@ -1276,6 +1279,22 @@ void Results::SaveTimedEvents(void) {
     }
   }
 }
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Results::SaveCustomMetrics(void) {
+  CStringA custom_metrics = CT2A(_test_state._custom_metrics, CP_UTF8);
+  if (custom_metrics.GetLength()) {
+    HANDLE file = CreateFile(_file_base + CUSTOM_METRICS_FILE, GENERIC_WRITE, 0, 
+                              NULL, CREATE_ALWAYS, 0, 0);
+    if (file != INVALID_HANDLE_VALUE) {
+      DWORD written;
+      WriteFile(file, (LPCSTR)custom_metrics, custom_metrics.GetLength(), &written, 0);
+      CloseHandle(file);
+    }
+  }
+}
+
 
 /*-----------------------------------------------------------------------------
   See if a version of the same request exists but not from the browser.

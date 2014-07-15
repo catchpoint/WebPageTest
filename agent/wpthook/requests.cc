@@ -71,6 +71,7 @@ void Requests::Reset() {
   LeaveCriticalSection(&cs);
   _dns.ClaimAll();
   _sockets.ClaimAll();
+  _start_browser_clock = 0;
 }
 
 /*-----------------------------------------------------------------------------

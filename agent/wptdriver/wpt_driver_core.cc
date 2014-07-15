@@ -104,19 +104,8 @@ void __stdcall DoHouseKeeping(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
 void WptDriverCore::Start(void){
   _status.Set(_T("Starting..."));
 
-  if( _settings.Load() ){
-    // boost our priority
-    SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
-
-    WaitForSingleObject(_testing_mutex, INFINITE);
-    SetupScreen();
-    ReleaseMutex(_testing_mutex);
-
-    // start a background thread to do all of the actual test management
-    _work_thread = (HANDLE)_beginthreadex(0, 0, ::WorkThreadProc, this, 0, 0);
-  }else{
-    _status.Set(_T("Error loading settings from wptdriver.ini"));
-  }
+  // start a background thread to do all of the actual test management
+  _work_thread = (HANDLE)_beginthreadex(0, 0, ::WorkThreadProc, this, 0, 0);
 }
 
 /*-----------------------------------------------------------------------------
@@ -141,16 +130,48 @@ void WptDriverCore::Stop(void) {
 }
 
 /*-----------------------------------------------------------------------------
+  Startup initilization
+-----------------------------------------------------------------------------*/
+bool WptDriverCore::Startup() {
+  bool ok = false;
+  int count = 0;
+  do {
+    ok = _settings.Load();
+    count++;
+    if (!ok) {
+      _status.Set(_T("Problem loading settings, trying again..."));
+      Sleep(1000);
+    }
+  } while (!ok && !_exit && count < 600);
+
+  if( ok ){
+    // boost our priority
+    SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
+
+    WaitForSingleObject(_testing_mutex, INFINITE);
+    SetupScreen();
+    ReleaseMutex(_testing_mutex);
+  }else{
+    _exit = true;
+    _status.Set(_T("Error loading settings from wptdriver.ini"));
+  }
+
+  return ok;
+}
+
+/*-----------------------------------------------------------------------------
   Main thread for processing work
 -----------------------------------------------------------------------------*/
 void WptDriverCore::WorkThread(void) {
-  Sleep(_settings._startup_delay * SECONDS_TO_MS);
+  if (Startup()) {
+    Sleep(_settings._startup_delay * SECONDS_TO_MS);
 
-  WaitForSingleObject(_testing_mutex, INFINITE);
-  Init();  // do initialization and machine configuration
-  ReleaseMutex(_testing_mutex);
+    WaitForSingleObject(_testing_mutex, INFINITE);
+    Init();  // do initialization and machine configuration
+    ReleaseMutex(_testing_mutex);
 
-  _status.Set(_T("Running..."));
+    _status.Set(_T("Running..."));
+  }
   while (!_exit) {
     WaitForSingleObject(_testing_mutex, INFINITE);
     _status.Set(_T("Checking for software updates..."));

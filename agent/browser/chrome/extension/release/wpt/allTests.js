@@ -5405,7 +5405,7 @@ window.goog['isNull'] = window.goog['isNull'] || function(val) {
 /**
  * @private
  */
-wpt.contentScript.collectStats_ = function() {
+wpt.contentScript.collectStats_ = function(customMetrics) {
   // look for any user timing data
   try {
     if (window['performance'] != undefined &&
@@ -5419,6 +5419,31 @@ wpt.contentScript.collectStats_ = function() {
         chrome.extension.sendRequest({'message': 'wptMarks', 
                                       'marks': marks },
                                      function(response) {});
+    }
+    if (customMetrics.length) {
+      var lines = customMetrics.split("\n");
+      var lineCount = lines.length;
+      var out = {};
+      for (var i = 0; i < lineCount; i++) {
+        try {
+          var parts = lines[i].split(":");
+          if (parts.length == 2) {
+            var name = parts[0];
+            var code = window.atob(parts[1]);
+            if (code.length) {
+              var fn = new Function("return function wptCustomMetric" + i + "(){" + code + "};")();
+              var result = fn();
+              if (typeof result == 'undefined')
+                result = '';
+              out[name] = result;
+            }
+          }
+        } catch(e){
+        }
+      }
+      chrome.extension.sendRequest({'message': 'wptCustomMetrics', 
+                                    'data': out },
+                                    function(response) {});
     }
   } catch(e){
   }
@@ -5577,7 +5602,8 @@ chrome.extension.onRequest.addListener(
           function() { pollDOMElement(); },
           DOM_ELEMENT_POLL_INTERVAL);
     } else if (request.message == 'collectStats') {
-      wpt.contentScript.collectStats_();
+      var customMetrics = request['customMetrics'] || '';
+      wpt.contentScript.collectStats_(customMetrics);
     } else if (request.message == 'checkResponsive') {
       wpt.contentScript.checkResponsive_();
     }
@@ -5668,7 +5694,6 @@ wpt.contentScript.InPageCommandRunner = function(doc,
  * @private
  */
 wpt.contentScript.InPageCommandRunner.prototype.Success_ = function() {
-  console.log('Command successful.');
   if (this.resultCallbacks_.success)
     this.resultCallbacks_.success();
 };
@@ -5679,7 +5704,6 @@ wpt.contentScript.InPageCommandRunner.prototype.Success_ = function() {
  * @private
  */
 wpt.contentScript.InPageCommandRunner.prototype.Warn_ = function(warning) {
-  console.log('Command generated warning: ' + warning);
   if (this.resultCallbacks_.warn)
     this.resultCallbacks_.warn(warning);
 };
@@ -5690,7 +5714,6 @@ wpt.contentScript.InPageCommandRunner.prototype.Warn_ = function(warning) {
  * @private
  */
 wpt.contentScript.InPageCommandRunner.prototype.FatalError_ = function(error) {
-  console.log('Command generated error: ' + error);
   if (this.resultCallbacks_.error)
     this.resultCallbacks_.error(error);
 };
@@ -18055,8 +18078,6 @@ wpt.commands.CommandRunner = function(tabId, chromeApi) {
 wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
     commandObject, callback) {
 
-  console.log('Delegate a command to the content script: ', commandObject);
-
   var code = ['wpt.contentScript.InPageCommandRunner.Instance.RunCommand(',
               JSON.stringify(commandObject),
               ');'].join('');
@@ -18065,20 +18086,6 @@ wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
         if (callback != undefined)
           callback();
       });
-};
-
-/**
- * Implement the exec command.
- * TODO(skerner): Make this use SendCommandToContentScript_(), and
- * wrap it in a try block to avoid breaking the content script on
- * an exception.
- * @param {string} script
- */
-wpt.commands.CommandRunner.prototype.doExec = function(script, callback) {
-  this.chromeApi_.tabs.executeScript(g_tabid, {'code': script}, function(results){
-    if (callback != undefined)
-      callback();
-  });
 };
 
 /**
@@ -18326,8 +18333,8 @@ wpt.commands.CommandRunner.prototype.doNoScript = function() {
 /**
  * Implement the collectStats command.
  */
-wpt.commands.CommandRunner.prototype.doCollectStats = function(callback) {
-  chrome.tabs.sendRequest( g_tabid, {'message': 'collectStats'},
+wpt.commands.CommandRunner.prototype.doCollectStats = function(customMetrics, callback) {
+  chrome.tabs.sendRequest( g_tabid, {'message': 'collectStats', 'customMetrics': customMetrics},
       function(response) {
         if (callback != undefined)
           callback();

@@ -393,6 +393,9 @@ chrome.extension.onRequest.addListener(
     } else if (request.message == 'wptResponsive') {
       if (request['isResponsive'] != undefined)
         wptSendEvent('responsive', '?isResponsive=' + request['isResponsive']);
+    } else if (request.message == 'wptCustomMetrics') {
+      if (request['data'] != undefined)
+				wptSendEvent('custom_metrics', '', JSON.stringify(request['data']));
     }
     // TODO: check whether calling sendResponse blocks in the content script
     // side in page.
@@ -428,7 +431,7 @@ function wptExecuteTask(task) {
         break;
       case 'exec':
         g_processing_task = true;
-        g_commandRunner.doExec(task.target, wptTaskCallback);
+        wpt.chromeDebugger.Exec(task.target, wptTaskCallback);
         break;
       case 'setcookie':
         g_commandRunner.doSetCookie(task.target, task.value);
@@ -471,8 +474,7 @@ function wptExecuteTask(task) {
         wpt.chromeDebugger.CaptureTimeline(wptTaskCallback);
         break;
       case 'capturetrace':
-        g_processing_task = true;
-        wpt.chromeDebugger.CaptureTrace(wptTaskCallback);
+        wpt.chromeDebugger.CaptureTrace();
         break;
       case 'noscript':
         g_commandRunner.doNoScript();
@@ -482,7 +484,9 @@ function wptExecuteTask(task) {
         break;
       case 'collectstats':
         g_processing_task = true;
-        g_commandRunner.doCollectStats(wptTaskCallback);
+        wpt.chromeDebugger.CollectStats(function(){
+          g_commandRunner.doCollectStats(task.target, wptTaskCallback);
+        });
         break;
       case 'checkresponsive':
         g_processing_task = true;

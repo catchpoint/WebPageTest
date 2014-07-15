@@ -35,6 +35,7 @@ private:
   HANDLE        _task_thread;
   bool          _processing_task;
   WptTask       _task;
+  int           _exec_count;
 
   typedef enum{
     equal = 0,
@@ -51,7 +52,7 @@ private:
   void  Block(CString block_string);
   void  ClearCache(void);
   void  Click(CString target);
-  void  CollectStats();
+  void  CollectStats(CString custom_metrics);
   bool  Exec(CString javascript);
   void  ExpireCache(CString target);
   bool  Invoke(LPOLESTR function, _variant_t &result);
@@ -67,4 +68,6 @@ private:
   DWORD CountDOMElements(CComQIPtr<IHTMLDocument2> &document);
   void  ExpireCacheEntry(INTERNET_CACHE_ENTRY_INFO * info, DWORD seconds);
   void  CheckBrowserState();
+  CString JSONEscape(CString src);
+  CString GetCustomMetric(CString code);
 };

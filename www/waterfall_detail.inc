@@ -37,7 +37,7 @@ foreach($requests as $reqNum => $request)
 
 		$highlight = '';
 		$result = (int)$request['responseCode'];
-		if( $result >= 400)
+		if( $result != 401 && $result >= 400)
 			$highlight = 'error ';
 		elseif ( $result >= 300)
 			$highlight = 'warning ';

@@ -71,6 +71,8 @@ var KNOWN_BROWSERS = {
  *   #param {string} runNumber test run number. Install the apk on run 1.
  *   #param {string=} runTempDir the directory to store per-run files like
  *       screenshots, defaults to ''.
+ *   #param {boolean} isCacheWarm true for repeat view, false for first view.
+ *       Determines if browser cache should be cleared.
  *   #param {Object.<string>} flags options:
  *      #param {string} deviceSerial the device to drive.
  *      #param {string=} captureDir capture script dir, defaults to ''.
@@ -140,6 +142,7 @@ function BrowserAndroidChrome(app, args) {
   this.useXvfb_ = undefined;
   this.chromeFlags_ = CHROME_FLAGS.slice();
   this.additionalFlags_ = args.task.addCmdLine;
+  this.isCacheWarm_ = args.isCacheWarm;
 }
 util.inherits(BrowserAndroidChrome, browser_base.BrowserBase);
 /** Public class. */
@@ -153,11 +156,6 @@ exports.BrowserAndroidChrome = BrowserAndroidChrome;
  */
 BrowserAndroidChrome.prototype.startWdServer = function(browserCaps) {
   'use strict';
-  var requestedBrowserName = browserCaps[webdriver.Capability.BROWSER_NAME];
-  if (webdriver.Browser.CHROME !== requestedBrowserName) {
-    throw new Error('BrowserLocalChrome called with unexpected browser ' +
-        requestedBrowserName);
-  }
   if (!this.chromedriver_) {
     throw new Error('Must set chromedriver before starting it');
   }
@@ -232,16 +230,18 @@ BrowserAndroidChrome.prototype.onChildProcessExit = function() {
 };
 
 /**
- * Clears the profile directory to reset state.  The lib directory is put there
- * by the installer so we need to keep that one.  We also have to keep the
- * "files" directory but empty it's contents to prevent the TOS UI from
- * coming up.
+ * Clears the profile directory to reset state.  When the caller expects a
+ * cold cache we completely delete the profile.  In all cases we remove the list
+ * of existing tabs.
  * @private
  */
 BrowserAndroidChrome.prototype.clearProfile_ = function() {
   'use strict';
-  this.adb_.su(['rm', '-r', '/data/data/' + this.chromePackage_ + '/files']);
-  this.adb_.su(['rm', '-r', '/data/data/' + this.chromePackage_ + '/cache']);
+  this.adb_.su(['rm', '-r', '/data/data/' + this.chromePackage_ + '/app_tabs']);
+  if (!this.isCacheWarm_) {
+    this.adb_.su(['rm', '-r', '/data/data/' + this.chromePackage_ + '/files']);
+    this.adb_.su(['rm', '-r', '/data/data/' + this.chromePackage_ + '/cache']);
+  }
 };
 
 /**
@@ -320,7 +320,7 @@ BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
         fs.unlink, localFlagsFile);
     this.adb_.su(['cp', tempFlagsFile, flagsFile]);
     this.adb_.shell(['rm', tempFlagsFile]);
-    this.adb_.su(['chmod', '644', flagsFile]);
+    this.adb_.su(['chmod', '666', flagsFile]);
   }.bind(this));
 };
 

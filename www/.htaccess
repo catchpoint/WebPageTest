@@ -19,28 +19,28 @@
     #result paths
     RewriteRule ^result/([a-zA-Z0-9_]+)$ /result/$1/ [R] 
     RewriteRule ^result/([a-zA-Z0-9_]+)/$ /results.php?test=$1 [qsa]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/waterfall$ /result/$1/$2/details/ [R]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/waterfall/$ /result/$1/$2/details/ [R]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/details/$ /details.php?test=$1&run=$2 [qsa]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/waterfall/cached$ /result/$1/$2/details/cached/ [R]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/waterfall/cached/$ /result/$1/$2/details/cached/ [R]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/details/cached/$ /details.php?test=$1&run=$2&cached=1 [qsa]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/optimization$ /result/$1/$2/performance_optimization/ [R]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/optimization/$ /result/$1/$2/performance_optimization/ [R]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/performance_optimization/$ /performance_optimization.php?test=$1&run=$2 [qsa]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/optimization/cached$ /result/$1/$2/performance_optimization/cached/ [R]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/optimization/cached/$ /result/$1/$2/performance_optimization/cached/ [R]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/performance_optimization/cached/$ /performance_optimization.php?test=$1&run=$2&cached=1 [qsa]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/screen_shot/$ /screen_shot.php?test=$1&run=$2 [qsa]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/screen_shot/cached/$ /screen_shot.php?test=$1&run=$2&cached=1 [qsa]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/breakdown/$ /breakdown.php?test=$1&run=$2 [qsa]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/breakdown/cached/$ /breakdown.php?test=$1&run=$2&cached=1 [qsa]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/domains/$ /domains.php?test=$1&run=$2 [qsa]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/domains/cached/$ /domains.php?test=$1&run=$2&cached=1 [qsa]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/optimization_report/$ /optimization_report.php?test=$1&run=$2 [qsa]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/optimization_report/cached/$ /optimization_report.php?test=$1&run=$2&cached=1 [qsa]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/pagespeed/$ /pagespeed.php?test=$1&run=$2 [qsa]
-    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)/pagespeed/cached/$ /pagespeed.php?test=$1&run=$2&cached=1 [qsa]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/waterfall$ /result/$1/$2/details/ [R]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/waterfall/$ /result/$1/$2/details/ [R]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/details/$ /details.php?test=$1&run=$2 [qsa]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/waterfall/cached$ /result/$1/$2/details/cached/ [R]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/waterfall/cached/$ /result/$1/$2/details/cached/ [R]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/details/cached/$ /details.php?test=$1&run=$2&cached=1 [qsa]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/optimization$ /result/$1/$2/performance_optimization/ [R]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/optimization/$ /result/$1/$2/performance_optimization/ [R]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/performance_optimization/$ /performance_optimization.php?test=$1&run=$2 [qsa]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/optimization/cached$ /result/$1/$2/performance_optimization/cached/ [R]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/optimization/cached/$ /result/$1/$2/performance_optimization/cached/ [R]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/performance_optimization/cached/$ /performance_optimization.php?test=$1&run=$2&cached=1 [qsa]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/screen_shot/$ /screen_shot.php?test=$1&run=$2 [qsa]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/screen_shot/cached/$ /screen_shot.php?test=$1&run=$2&cached=1 [qsa]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/breakdown/$ /breakdown.php?test=$1&run=$2 [qsa]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/breakdown/cached/$ /breakdown.php?test=$1&run=$2&cached=1 [qsa]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/domains/$ /domains.php?test=$1&run=$2 [qsa]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/domains/cached/$ /domains.php?test=$1&run=$2&cached=1 [qsa]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/optimization_report/$ /optimization_report.php?test=$1&run=$2 [qsa]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/optimization_report/cached/$ /optimization_report.php?test=$1&run=$2&cached=1 [qsa]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/pagespeed/$ /pagespeed.php?test=$1&run=$2 [qsa]
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([a-zA-Z0-9]+)/pagespeed/cached/$ /pagespeed.php?test=$1&run=$2&cached=1 [qsa]
     RewriteRule ^testlog/([0-9]+)$ /testlog/$1/ [R] 
     RewriteRule ^testlog/([0-9]+)/$ /testlog.php?days=$1 [qsa]
     RewriteRule ^xmlResult/([a-zA-Z0-9_]+)/$ /xmlResult.php?test=$1 [qsa]
@@ -125,12 +125,8 @@
     #old pages that were eliminated in the UI rewrite
     RewriteRule ^test$ / [R] 
 
-    #wiki
-    RewriteRule ^docs/(.*)$ http://www.webperformancecentral.com/wiki/WebPagetest/$1 [R]
-    RewriteRule ^docs$ http://www.webperformancecentral.com/wiki/WebPagetest [R]
-
     # versioned path to timeline
-    RewriteRule ^timeline/[0-9]+/(.*)$ /timeline/$1
+    RewriteRule ^timeline/[0-9]+/(.*)$ /chrome/$1
 </IfModule>
 
 #

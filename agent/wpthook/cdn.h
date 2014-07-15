@@ -116,6 +116,8 @@ CDN_PROVIDER cdnList[] = {
   {".mncdn.net", "Medianova"},
   {".mncdn.org", "Medianova"},
   {"cdn.jsdelivr.net", "jsDelivr"},
+  {".nyiftw.net", "NYI FTW"},
+  {".nyiftw.com", "NYI FTW"},
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -131,5 +133,6 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"X-Instart-Request-ID", "instart", "Instart Logic"},
   {"Via", "CloudFront", "Amazon CloudFront"},
   {"X-Edge-IP", "", "CDN"},
-  {"X-Edge-Location", "", "CDN"}
+  {"X-Edge-Location", "", "CDN"},
+  {"X-Powered-By", "NYI FTW", "NYI FTW"}
 };

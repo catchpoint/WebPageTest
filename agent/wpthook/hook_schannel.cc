@@ -124,7 +124,15 @@ void SchannelHook::Init() {
   EncryptMessage_ = _hook->createHookByName(
       "secur32.dll", "EncryptMessage", EncryptMessage_Hook);
 
-  if (_test._ignore_ssl)
+  bool is_safari = false;
+  TCHAR file_name[MAX_PATH];
+  if (GetModuleFileName(NULL, file_name, _countof(file_name))) {
+    CString exe(file_name);
+    exe.MakeLower();
+    if (exe.Find(_T("webkit2webprocess.exe")) >= 0)
+      is_safari = true;
+  }
+  if (_test._ignore_ssl || is_safari)
     CertVerifyCertificateChainPolicy_ = _hook->createHookByName(
         "crypt32.dll", "CertVerifyCertificateChainPolicy",
         CertVerifyCertificateChainPolicy_Hook);

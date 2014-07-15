@@ -78,6 +78,8 @@ else
                 echo "<label>" . xml_entities($test['testinfo']['label']) . "</label>\n";
             if( @strlen($test['testinfo']['completed']) )
                 echo "<completed>" . gmdate("r",$test['testinfo']['completed']) . "</completed>\n";
+            if( @strlen($test['testinfo']['tester']) )
+                echo "<tester>" . xml_entities($test['testinfo']['tester']) . "</tester>\n";
             if( @strlen($test['testinfo']['testerDNS']) )
                 echo "<testerDNS>" . xml_entities($test['testinfo']['testerDNS']) . "</testerDNS>\n";
         }
@@ -129,6 +131,17 @@ else
             echo "<median>\n";
             echo "<firstView>\n";
             echo "<run>$fvMedian</run>\n";
+            if (array_key_exists('testinfo', $test)) {
+              $tester = null;
+              if (array_key_exists('tester', $test['testinfo']))
+                $tester = $test['testinfo']['tester'];
+              if (array_key_exists('test_runs', $test['testinfo']) &&
+                  array_key_exists($fvMedian, $test['testinfo']['test_runs']) &&
+                  array_key_exists('tester', $test['testinfo']['test_runs'][$fvMedian]))
+                $tester = $test['testinfo']['test_runs'][$fvMedian]['tester'] . '<br>';
+              if (isset($tester))
+                echo "<tester>" . xml_entities($tester) . "</tester>\n";
+            }
             foreach( $pageData[$fvMedian][0] as $key => $val ) {
               $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
               echo "<$key>" . xml_entities($val) . "</$key>\n";
@@ -162,6 +175,17 @@ else
                 {
                     echo "<repeatView>\n";
                     echo "<run>$rvMedian</run>\n";
+                    if (array_key_exists('testinfo', $test)) {
+                      $tester = null;
+                      if (array_key_exists('tester', $test['testinfo']))
+                        $tester = $test['testinfo']['tester'];
+                      if (array_key_exists('test_runs', $test['testinfo']) &&
+                          array_key_exists($rvMedian, $test['testinfo']['test_runs']) &&
+                          array_key_exists('tester', $test['testinfo']['test_runs'][$rvMedian]))
+                        $tester = $test['testinfo']['test_runs'][$rvMedian]['tester'] . '<br>';
+                      if (isset($tester))
+                        echo "<tester>" . xml_entities($tester) . "</tester>\n";
+                    }
                     foreach( $pageData[$rvMedian][1] as $key => $val ) {
                       $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
                       echo "<$key>" . xml_entities($val) . "</$key>\n";
@@ -201,6 +225,17 @@ else
                 if( isset( $pageData[$i][0] ) )
                 {
                     echo "<firstView>\n";
+                    if (array_key_exists('testinfo', $test)) {
+                      $tester = null;
+                      if (array_key_exists('tester', $test['testinfo']))
+                        $tester = $test['testinfo']['tester'];
+                      if (array_key_exists('test_runs', $test['testinfo']) &&
+                          array_key_exists($i, $test['testinfo']['test_runs']) &&
+                          array_key_exists('tester', $test['testinfo']['test_runs'][$i]))
+                        $tester = $test['testinfo']['test_runs'][$i]['tester'] . '<br>';
+                      if (isset($tester))
+                        echo "<tester>" . xml_entities($tester) . "</tester>\n";
+                    }
                     echo "<results>\n";
                     foreach( $pageData[$i][0] as $key => $val ) {
                       $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
@@ -313,6 +348,17 @@ else
                 if( isset( $pageData[$i][1] ) )
                 {
                     echo "<repeatView>\n";
+                    if (array_key_exists('testinfo', $test)) {
+                      $tester = null;
+                      if (array_key_exists('tester', $test['testinfo']))
+                        $tester = $test['testinfo']['tester'];
+                      if (array_key_exists('test_runs', $test['testinfo']) &&
+                          array_key_exists($i, $test['testinfo']['test_runs']) &&
+                          array_key_exists('tester', $test['testinfo']['test_runs'][$i]))
+                        $tester = $test['testinfo']['test_runs'][$i]['tester'] . '<br>';
+                      if (isset($tester))
+                        echo "<tester>" . xml_entities($tester) . "</tester>\n";
+                    }
                     echo "<results>\n";
                     foreach( $pageData[$i][1] as $key => $val ) {
                       $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);

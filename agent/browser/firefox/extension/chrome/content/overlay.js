@@ -341,7 +341,8 @@ wpt.moz.main.executeTask = function(task) {
         break;
       case 'collectstats':
         g_processing_task = true;
-        wpt.moz.main.collectStats(wpt.moz.main.callback);
+				var customMetrics = task['target'] || '';
+        wpt.moz.main.collectStats(customMetrics, wpt.moz.main.callback);
         break;
       case 'checkresponsive':
         g_processing_task = true;
@@ -546,36 +547,64 @@ wpt.moz.main.pollForDomElements = function() {
   }
 };
 
-wpt.moz.main.collectStats = function(callback) {
-  var win = window.content.document.defaultView.wrappedJSObject;
-  
-  // look for any user timing data
-  if (win.performance && win.performance.getEntriesByType) {
-    var marks = win.performance.getEntriesByType("mark");
-    for (var i = 0; i < marks.length; i++) {
-      var mark = marks[i];
-      mark.type = 'mark';
-      wpt.moz.main.sendEventToDriver_('timed_event', '', JSON.stringify(mark));
-    }
-  }
+wpt.moz.main.collectStats = function(customMetrics, callback) {
+  try {
+		var win = window.content.document.defaultView.wrappedJSObject;
+		
+		// look for any user timing data
+		if (win.performance && win.performance.getEntriesByType) {
+			var marks = win.performance.getEntriesByType("mark");
+			for (var i = 0; i < marks.length; i++) {
+				var mark = marks[i];
+				mark.type = 'mark';
+				wpt.moz.main.sendEventToDriver_('timed_event', '', JSON.stringify(mark));
+			}
+		}
 
-  var domCount = win.document.getElementsByTagName("*").length;
-  wpt.moz.main.sendEventToDriver_('domCount', {'domCount':domCount});
+		var domCount = win.document.getElementsByTagName("*").length;
+		wpt.moz.main.sendEventToDriver_('domCount', {'domCount':domCount});
 
-  if (win.performance && win.performance.timing) {
-    var timingParams = {};
-    function addTime(name) {
-      if (win.performance.timing[name] > 0) {
-        timingParams[name] = Math.max(0, (
-            win.performance.timing[name] -
-            win.performance.timing['navigationStart']));
-      }
-    };
-    addTime('domContentLoadedEventStart');
-    addTime('domContentLoadedEventEnd');
-    addTime('loadEventStart');
-    addTime('loadEventEnd');
-    wpt.moz.main.sendEventToDriver_('window_timing', timingParams);
+		if (win.performance && win.performance.timing) {
+			var timingParams = {};
+			function addTime(name) {
+				if (win.performance.timing[name] > 0) {
+					timingParams[name] = Math.max(0, (
+							win.performance.timing[name] -
+							win.performance.timing['navigationStart']));
+				}
+			};
+			addTime('domContentLoadedEventStart');
+			addTime('domContentLoadedEventEnd');
+			addTime('loadEventStart');
+			addTime('loadEventEnd');
+			wpt.moz.main.sendEventToDriver_('window_timing', timingParams);
+		}
+		
+		// collect any custom metrics
+		if (customMetrics.length) {
+			var lines = customMetrics.split("\n");
+			var lineCount = lines.length;
+			var out = {};
+			for (var i = 0; i < lineCount; i++) {
+				try {
+					var parts = lines[i].split(":");
+					if (parts.length == 2) {
+						var name = parts[0];
+						var code = window.atob(parts[1]);
+						if (code.length) {
+							var script = 'var wptCustomMetric = function() {' + code + '};return wptCustomMetric();'
+							var result = wpt.moz.execScriptInSelectedTab(script, {});
+							if (typeof result == 'undefined')
+								result = '';
+							out[name] = result;
+						}
+					}
+				} catch(e){
+				}
+			}
+			wpt.moz.main.sendEventToDriver_('custom_metrics', '', JSON.stringify(out));
+		}
+  } catch(e){
   }
   
   if (callback)

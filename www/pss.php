@@ -36,9 +36,7 @@ $page_description = "Comparison Test$testLabel.";
             $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? '/compare' : '/pss.php' );
             if( array_key_exists('pssid', $_GET) && strlen($_GET['pssid']) )
                 $navTabs['Test Result'] = FRIENDLY_URLS ? "/result/{$_GET['pssid']}/" : "/results.php?test={$_GET['pssid']}";
-            $navTabs += array(  'PageSpeed Service Home' => 'http://code.google.com/speed/pss', 
-                                'Sample Tests' => 'http://code.google.com/speed/pss/gallery.html',
-                                'Sign Up!' => 'https://docs.google.com/a/google.com/spreadsheet/viewform?hl=en_US&formkey=dDdjcmNBZFZsX2c0SkJPQnR3aGdnd0E6MQ');
+            $navTabs += array('PageSpeed Service' => 'https://developers.google.com/speed/pagespeed/service');
             $tab = 'New Comparison';
             include 'header.inc';
             ?>
@@ -100,11 +98,11 @@ $page_description = "Comparison Test$testLabel.";
               if ($mps) {
                 echo '<h2 class="cufon-dincond_black"><small>Evaluate the impact of <a href="https://code.google.com/p/modpagespeed/">mod_pagespeed</a> (must be installed on the server)</small></h2>';
               } elseif ($preview) {
-                echo '<h2 class="cufon-dincond_black"><small>Preview optimization changes for your site hosted on <a href="http://code.google.com/speed/pss">PageSpeed Service</a></small></h2>';
+                echo '<h2 class="cufon-dincond_black"><small>Preview optimization changes for your site hosted on <a href="https://developers.google.com/speed/pagespeed/service">PageSpeed Service</a></small></h2>';
               } elseif( array_key_exists('origin', $_GET) && strlen($_GET['origin']) )
-                echo '<h2 class="cufon-dincond_black"><small>Measure performance of original site vs optimized by <a href="http://code.google.com/speed/pss">PageSpeed Service</a></small></h2>';
+                echo '<h2 class="cufon-dincond_black"><small>Measure performance of original site vs optimized by <a href="https://developers.google.com/speed/pagespeed/service">PageSpeed Service</a></small></h2>';
               else
-                echo '<h2 class="cufon-dincond_black"><small>Measure your site performance when optimized by <a href="http://code.google.com/speed/pss">PageSpeed Service</a></small></h2>';
+                echo '<h2 class="cufon-dincond_black"><small>Measure your site performance when optimized by <a href="https://developers.google.com/speed/pagespeed/service">PageSpeed Service</a></small></h2>';
             }
             ?>
 

@@ -59,9 +59,10 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.chromeApi_ = chromeApi;
     g_instance.startedCallback = callback;
     g_instance.timelineStartedCallback = undefined;
-    g_instance.tracingStartedCallback = undefined;
     g_instance.devToolsData = '';
     g_instance.devToolsTimer = undefined;
+    g_instance.trace = false;
+    g_instance.statsDoneCallback = undefined;
     var version = '1.0';
     if (g_instance.chromeApi_['debugger'])
         g_instance.chromeApi_.debugger.attach({tabId: g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachDebugger);
@@ -75,6 +76,18 @@ wpt.chromeDebugger.SetActive = function(active) {
   g_instance.requests = {};
   g_instance.receivedData = false;
   g_instance.active = active;
+  if (active && g_instance.trace) {
+    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start');
+  }
+};
+
+/**
+ * Execute a command in the context of the page
+ */
+wpt.chromeDebugger.Exec = function(code, callback) {
+  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Runtime.evaluate', {expression: code, returnByValue: true}, function(response){
+    callback(response);
+  });
 };
 
 /**
@@ -96,16 +109,20 @@ wpt.chromeDebugger.CaptureTimeline = function(callback) {
 /**
  * Capture a trace
  */
-wpt.chromeDebugger.CaptureTrace = function(callback) {
-  g_instance.tracingStartedCallback = callback;
-  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start', null, function(){
-    setTimeout(function(){
-      if (g_instance.tracingStartedCallback) {
-        g_instance.tracingStartedCallback();
-        g_instance.tracingStartedCallback = undefined;
-      }
-    }, TRACING_START_TIMEOUT);
-  });
+wpt.chromeDebugger.CaptureTrace = function() {
+  g_instance.trace = true;
+  if (g_instance.active) {
+    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start');
+  }
+};
+
+wpt.chromeDebugger.CollectStats = function(callback) {
+  if (g_instance.trace) {
+    g_instance.statsDoneCallback = callback;
+    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.end');
+  } else {
+    callback();
+  }
 };
 
 /**
@@ -119,16 +136,20 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
     g_instance.timelineStartedCallback();
     g_instance.timelineStartedCallback = undefined;
   }
-  if (g_instance.tracingStartedCallback &&
-      message === 'Tracing.dataCollected') {
-    g_instance.tracingStartedCallback();
-    g_instance.tracingStartedCallback = undefined;
+  var tracing = false;
+  if (message === 'Tracing.dataCollected') {
+    tracing = true;
+    if (params['value'] !== undefined)
+      wpt.chromeDebugger.sendEvent('trace', JSON.stringify(params['value']));
   }
-  if (message === 'Tracing.dataCollected')
-    console.log(params);
+  if (message === 'Tracing.tracingComplete') {
+    tracing = true;
+    if (g_instance.statsDoneCallback)
+      g_instance.statsDoneCallback();
+  }
 
     // actual message recording
-  if (g_instance.active) {
+  if (g_instance.active && !tracing) {
     // keep track of all of the dev tools messages
     if (g_instance.timeline) {
       if (g_instance.devToolsData.length)
@@ -379,8 +400,19 @@ wpt.chromeDebugger.sendRequestDetails = function(request) {
       }
       eventData += '\n';
     }
-    if (request.response['headersText'] !== undefined)
+    if (request.response['headersText'] !== undefined) {
       eventData += '[Response Headers]\n' + request.response.headersText + '\n';
+    } else if(request.response['headers'] !== undefined) {
+      eventData += '[Response Headers]\n';
+      if (request.response.headers['version'] !== undefined &&
+          request.response.headers['status'] !== undefined) {
+        eventData += request.response.headers['version'] + ' ' + request.response.headers['status'] + '\n';
+        for (tag in request.response.headers) {
+          if (tag !== 'version' && tag !== 'status')
+            eventData += tag + ': ' + request.response.headers[tag] + '\n';
+        }
+      }
+    }
   } else if (request['request'] !== undefined) {
     eventData += '[Request Headers]\n';
     var method = 'GET';
@@ -411,11 +443,6 @@ wpt.chromeDebugger.sendRequestDetails = function(request) {
 wpt.chromeDebugger.SendReceivedData = function() {
   g_instance.receivedData = true;
   wpt.chromeDebugger.sendEvent('received_data', '');
-};
-
-wpt.chromeDebugger.Trace = function(msg) {
-  g_instance.receivedData = true;
-  wpt.chromeDebugger.sendEvent('trace', msg);
 };
 
 /**

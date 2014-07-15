@@ -117,7 +117,7 @@ function csvPageData($id, $testPath, $runs) {
   if( $_GET['requests'] ) {
     for( $i = 1; $i <= $runs; $i++ ) {
       for ($cached = 0; $cached <= 1; $cached++) {
-        $requests = getRequests($id, $testPath, $i, 0, $secure, $loc, false);
+        $requests = getRequests($id, $testPath, $i, $cached, $secure, $loc, false);
         if (isset($requests) && is_array($requests) && count($requests))
           foreach ($requests as &$row)
             csvArray($row, $id, $i, $cached);

@@ -8,7 +8,7 @@ if (!array_key_exists('noBulk', $settings))
     $settings['noBulk'] = 0;
 
 // see if we are overriding the max runs
-if (isset($_COOKIE['maxruns'])) {
+if (isset($_COOKIE['maxruns']) && (int)$_GET['maxruns'] > 0) {
     $settings['maxruns'] = (int)$_GET['maxruns'];
 }
 if (isset($_GET['maxruns'])) {
@@ -16,7 +16,7 @@ if (isset($_GET['maxruns'])) {
     setcookie("maxruns", $settings['maxruns']);    
 }
 
-if (!isset($settings['maxruns'])) {
+if (!isset($settings['maxruns']) || $settings['maxruns'] <= 0) {
     $settings['maxruns'] = 10;
 }
 if (isset($_REQUEST['map'])) {
@@ -95,10 +95,6 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="shard" value="' . htmlspecialchars($_REQUEST['shard']) . "\">\n";
             if (array_key_exists('discard', $_REQUEST))
               echo '<input type="hidden" name="discard" value="' . htmlspecialchars($_REQUEST['discard']) . "\">\n";
-            if (array_key_exists('responsive', $_REQUEST))
-              echo '<input type="hidden" name="responsive" value="' . htmlspecialchars($_REQUEST['responsive']) . "\">\n";
-            if (array_key_exists('trace', $_REQUEST))
-              echo '<input type="hidden" name="trace" value="' . htmlspecialchars($_REQUEST['trace']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
@@ -202,7 +198,8 @@ $loc = ParseLocations($locations);
                                 <li><a href="#script">Script</a></li>
                                 <li><a href="#block">Block</a></li>
                                 <li><a href="#spof">SPOF</a></li>
-                                <?php if (!$settings['noBulk']) { ?>
+                                <li><a href="#custom-metrics">Custom</a></li>
+                                <?php if ($admin || !$settings['noBulk']) { ?>
                                 <li><a href="#bulk">Bulk Testing</a></li>
                                 <?php } ?>
                             </ul>
@@ -338,13 +335,6 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="continuousVideo" id="continuousVideo" class="checkbox" style="float: left;width: auto;">
-                                        <label for="continuousVideo" class="auto_width">
-                                            Continuous Video Capture<br>
-                                            <small>Unstable/experimental, may cause tests to fail</small>
-                                        </label>
-                                    </li>
-                                    <li>
                                         <?php
                                         $checked = '';
                                         if (array_key_exists('keepua', $settings) && $settings['keepua'])
@@ -394,6 +384,12 @@ $loc = ParseLocations($locations);
                                         <input type="checkbox" name="timelineStack" id="timelineStack" class="checkbox" style="float: left;width: auto;">
                                         <label for="timelineStack" class="auto_width">
                                             Include call stack (increases overhead)
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <input type="checkbox" name="trace" id="trace" class="checkbox" style="float: left;width: auto;">
+                                        <label for="trace" class="auto_width">
+                                            Capture Chrome Trace (about://tracing)
                                         </label>
                                     </li>
                                     <li>
@@ -508,7 +504,20 @@ $loc = ParseLocations($locations);
                                 ?></textarea>
                             </div>
 
-                            <?php if (!$settings['noBulk']) { ?>
+                            <div id="custom-metrics" class="test_subbox ui-tabs-hide">
+                                <div>
+                                    <div class="notification-container">
+                                        <div class="notification"><div class="message">
+                                            See <a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/custom-metrics">the documentation</a> for details on how to specify custom metrics to be captured.
+                                        </div></div>
+                                    </div>
+                                    
+                                    <p><label for="custom_metrics" class="full_width">Custom Metrics:</label></p>
+                                    <textarea name="custom" id="custom_metrics" cols="0" rows="0"></textarea>
+                                </div>
+                            </div>
+
+                            <?php if ($admin || !$settings['noBulk']) { ?>
                             <div id="bulk" class="test_subbox ui-tabs-hide">
                                 <p>
                                     <label for="bulkurls" class="full_width">

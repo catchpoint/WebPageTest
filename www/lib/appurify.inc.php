@@ -131,7 +131,7 @@ class Appurify{
             $timeline = "timeline=1\r\n";
           if (stripos($device, '-') !== false)
             list($device, $browser) = explode('-', $device);
-          $result = $this->Post('https://live.appurify.com/resource/config/upload/',
+          $result = $this->Post('https://live.appurify.com/resource/tests/config/upload/',
                                 array('test_id' => $test_id),
                                 array('name' => 'source',
                                       'filename' => 'browsertest.conf',
@@ -371,7 +371,8 @@ class Appurify{
   
   protected function Post($command, $data = null, $file = null) {
     $ret = false;
-    $this->GenerateToken();
+    if (stripos($command, 'access_token') === false)
+      $this->GenerateToken();
     if ($this->curl !== false) {
       if (isset($this->token)) {
         if(!isset($data))

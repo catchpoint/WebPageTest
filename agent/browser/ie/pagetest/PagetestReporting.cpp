@@ -436,6 +436,7 @@ void CPagetestReporting::FlushResults(void)
 					  dev_tools_.Write(logFile+step+_T("_devtools.json"));
 
 					  SaveUserTiming(logFile+step+_T("_timed_events.json"));
+            SaveCustomMetrics(logFile+step+_T("_metrics.json"));
           }
 
           // delete the image data
@@ -585,7 +586,7 @@ void CPagetestReporting::ProcessResults(void)
 	SortEvents();
 	
 	// walk the list and calculate each event
-  std::tr1::regex adult_regex("[^0-9]2257[^0-9]");
+  std::tr1::regex adult_regex("[^0-9a-zA-Z]2257[^0-9a-zA-Z]");
 	__int64	earliest = 0;
 	POSITION pos = events.GetHeadPosition();
 	while( pos )
@@ -694,7 +695,7 @@ void CPagetestReporting::ProcessResults(void)
 						firstByte = w->firstByte;
 					
 					// flag errors based on the wininet events
-					if( !errorCode && (w->result >= 400 || w->result < 0) )
+					if( !errorCode && w->result != 401 && (w->result >= 400 || w->result < 0) )
 					{
 						if( (endDoc && w->start < endDoc) || abm == 1 )
 							errorCode = 99999;
@@ -717,7 +718,8 @@ void CPagetestReporting::ProcessResults(void)
             basePageAddressCount = GetAddressCount(w->host);
             if( html.IsEmpty() && w->body ) {
 							html = w->body;
-              if (regex_search((LPCSTR)html, adult_regex))
+              if (regex_search((LPCSTR)html, adult_regex) ||
+                  html.Find("RTA-5042-1996-1400-1577-RTA") >= 0)
                 adultSite = 1;
             }							
 						// use the ttfb of the base page (override the earlier ttfb)
@@ -1860,7 +1862,6 @@ void CPagetestReporting::CheckGzip()
 			CString mime = w->response.contentType;
 			mime.MakeLower();
 			if( w->result == 200
-				&& w->linkedRequest
 				&& w->fromNet )
 			{
 				CString enc = w->response.contentEncoding;
@@ -1926,7 +1927,10 @@ void CPagetestReporting::CheckGzip()
 							  target = origSize;
 							  w->gzipScore = -1;
 						  }
-					  }
+            } else {
+						  target = origSize;
+						  w->gzipScore = -1;
+            }
 					}
 				}
 
@@ -3695,6 +3699,39 @@ void CPagetestReporting::SaveUserTiming(CString file) {
 		  WriteFile(hFile, (LPCSTR)str, lstrlenA(str), &written, 0);
 		  CloseHandle(hFile);
 	  }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  If custom metrics were requested, gather them
+-----------------------------------------------------------------------------*/
+void CPagetestReporting::SaveCustomMetrics(CString file) {
+  CStringA out;
+  if (!customMetrics.IsEmpty()) {
+    out = "{";
+    DWORD count = 0;
+    POSITION pos = customMetrics.GetHeadPosition();
+    while(pos) {
+      CCustomMetric metric = customMetrics.GetNext(pos);
+      CString result = GetCustomMetric(metric.code);
+      if (count)
+        out += ",";
+      out += "\"";
+      out += JSONEscape((LPCSTR)CT2A(metric.name, CP_UTF8));
+      out += "\":\"";
+      out += JSONEscape((LPCSTR)CT2A(result, CP_UTF8));
+      out += "\"";
+      count++;
+    }
+    out += "}";
+  }
+  if (!out.IsEmpty()) {
+    HANDLE hFile = CreateFile(file, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+    if (hFile != INVALID_HANDLE_VALUE) {
+      DWORD bytes = 0;
+      WriteFile(hFile, (LPCSTR)out, out.GetLength(), &bytes, 0);
+      CloseHandle(hFile);
+    }
   }
 }
 

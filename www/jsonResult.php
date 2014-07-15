@@ -77,6 +77,8 @@ function GetTestResult($id) {
             $ret['label'] = $testInfo['label'];
         if (array_key_exists('completed', $testInfo))
             $ret['completed'] = $testInfo['completed'];
+        if (array_key_exists('tester', $testInfo) && strlen($testInfo['tester']))
+            $ret['tester'] = $testInfo['tester'];
         if (array_key_exists('testerDNS', $testInfo) && strlen($testInfo['testerDNS']))
             $ret['testerDNS'] = $testInfo['testerDNS'];
         if (array_key_exists('runs', $testInfo) && $testInfo['runs'])
@@ -149,6 +151,15 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
       if ($cached)
           $cachedText = '_Cached';
 
+      if (isset($testInfo)) {
+        if (array_key_exists('tester', $testInfo))
+          $ret['tester'] = $testInfo['tester'];
+        if (array_key_exists('test_runs', $testInfo) &&
+            array_key_exists($run, $testInfo['test_runs']) &&
+            array_key_exists('tester', $testInfo['test_runs'][$run]))
+          $ret['tester'] = $testInfo['test_runs'][$run]['tester'];
+      }
+          
       $basic_results = false;
       if (array_key_exists('basic', $_REQUEST) && $_REQUEST['basic'])
         $basic_results = true;

@@ -107,6 +107,7 @@ private:
   void SaveResponseBodies(void);
   void SaveConsoleLog(void);
   void SaveTimedEvents(void);
+  void SaveCustomMetrics(void);
   void SaveHistogram(CxImage& image, CString file);
   bool NativeRequestExists(Request * browser_request);
 };

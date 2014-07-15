@@ -147,6 +147,7 @@ void TestState::Reset(bool cascade) {
     _user_agent = _T("WebPagetest");
     _console_log_messages.RemoveAll();
     _timed_events.RemoveAll();
+    _custom_metrics.Empty();
     navigating_ = false;
     GetSystemTime(&_start_time);
   }
@@ -229,7 +230,9 @@ void TestState::OnNavigate() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TestState::OnNavigateComplete() {
-  navigating_ = false;
+  // force an onload if one didn't already fire
+  if (navigating_)
+    OnLoad();
 }
 
 /*-----------------------------------------------------------------------------
@@ -741,6 +744,14 @@ void TestState::AddConsoleLogMessage(CString message) {
 void TestState::AddTimedEvent(CString timed_event) {
   EnterCriticalSection(&_data_cs);
   _timed_events.AddTail(timed_event);
+  LeaveCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::SetCustomMetrics(CString custom_metrics) {
+  EnterCriticalSection(&_data_cs);
+  _custom_metrics = custom_metrics;
   LeaveCriticalSection(&_data_cs);
 }
 

@@ -131,6 +131,9 @@ public:
   void  OverridePort(const struct sockaddr FAR * name, int namelen);
   bool  ModifyRequestHeader(CStringA& header) const;
   bool  BlockRequest(CString host, CString object);
+  bool  OverrideHost(CString host, CString &new_host);
+  bool  GetHeadersToSet(CString host, CAtlList<CString> &headers);
+  bool  GetHeadersToAdd(CString host, CAtlList<CString> &headers);
   void  CollectData();
   void  CollectDataDone();
   virtual void  ReportData();
@@ -195,6 +198,7 @@ public:
   CString _navigated_url;
   CStringA _test_error;
   CStringA _run_error;
+  CString _custom_metrics;
   
   // current state
   int     _run;

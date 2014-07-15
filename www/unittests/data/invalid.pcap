@@ -1,4 +1,0 @@
-This file is not a valid pcap file.
-Unit tests read it to test that the pcap reader fails gracefully.
-
-
