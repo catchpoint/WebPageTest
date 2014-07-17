@@ -357,6 +357,8 @@ chrome.extension.onRequest.addListener(
       wptSendEvent('load', 
                    '?timestamp=' + request['timestamp'] + 
                    '&fixedViewport=' + request['fixedViewport']);
+      wptSendEvent('title',
+                   '?title=' + encodeURIComponent(request['title']));
     }
     else if (request.message == 'wptWindowTiming') {
       wpt.logging.closeWindowIfOpen();

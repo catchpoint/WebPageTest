@@ -5514,9 +5514,13 @@ window.addEventListener('load', function() {
   var fixedViewport = 0;
   if (document.querySelector("meta[name=viewport]"))
     fixedViewport = 1;
+  var title = "";
+  if (document.title != undefined)
+      title = document.title;
   chrome.extension.sendRequest({'message': 'wptLoad',
                                 'fixedViewport': fixedViewport,
-                                'timestamp': timestamp}, function(response) {});
+                                'timestamp': timestamp,
+                                'title': title}, function(response) {});
 }, false);
 
 
