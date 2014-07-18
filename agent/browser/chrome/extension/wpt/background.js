@@ -357,8 +357,6 @@ chrome.extension.onRequest.addListener(
       wptSendEvent('load', 
                    '?timestamp=' + request['timestamp'] + 
                    '&fixedViewport=' + request['fixedViewport']);
-      wptSendEvent('title',
-                   '?title=' + encodeURIComponent(request['title']));
     }
     else if (request.message == 'wptWindowTiming') {
       wpt.logging.closeWindowIfOpen();
@@ -398,7 +396,11 @@ chrome.extension.onRequest.addListener(
     } else if (request.message == 'wptCustomMetrics') {
       if (request['data'] != undefined)
 				wptSendEvent('custom_metrics', '', JSON.stringify(request['data']));
-    }
+    } else if (request.message == 'wptTitle') {
+      if (request[title] != undefined)
+        wptSendEvent('title', '?title=' + encodeURIComponent(request['title']));
+    };
+
     // TODO: check whether calling sendResponse blocks in the content script
     // side in page.
     sendResponse({});

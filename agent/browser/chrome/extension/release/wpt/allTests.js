@@ -5523,6 +5523,15 @@ window.addEventListener('load', function() {
                                 'title': title}, function(response) {});
 }, false);
 
+// DOMContentLoaded is really too late to detect title change
+// Would be nicer if Chrome has a DOMTitleChanged event as Firefox does
+// Or if chrome.tabs OnUpdated fired for title changes
+// May be possible to do this with NutationObservers instead
+window.addEventListener('DOMContentLoaded', function() {
+  chrome.extension.sendRequest({'message': 'wptTitle',
+                                'title': document.title}, function(response) {});
+}, false);
+
 
 
 /**
