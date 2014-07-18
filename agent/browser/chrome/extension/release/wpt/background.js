@@ -14794,7 +14794,7 @@ chrome.extension.onRequest.addListener(
       if (request['data'] != undefined)
 				wptSendEvent('custom_metrics', '', JSON.stringify(request['data']));
     } else if (request.message == 'wptTitle') {
-      if (request[title] != undefined)
+      if (request['title'] != undefined)
         wptSendEvent('title', '?title=' + encodeURIComponent(request['title']));
     };
 

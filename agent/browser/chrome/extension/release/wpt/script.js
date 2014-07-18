@@ -174,13 +174,9 @@ window.addEventListener('load', function() {
   var fixedViewport = 0;
   if (document.querySelector("meta[name=viewport]"))
     fixedViewport = 1;
-  var title = "";
-  if (document.title != undefined)
-      title = document.title;
   chrome.extension.sendRequest({'message': 'wptLoad',
                                 'fixedViewport': fixedViewport,
-                                'timestamp': timestamp,
-                                'title': title}, function(response) {});
+                                'timestamp': timestamp}, function(response) {});
 }, false);
 
 // DOMContentLoaded is really too late to detect title change
@@ -188,8 +184,9 @@ window.addEventListener('load', function() {
 // Or if chrome.tabs OnUpdated fired for title changes
 // May be possible to do this with NutationObservers instead
 window.addEventListener('DOMContentLoaded', function() {
-  chrome.extension.sendRequest({'message': 'wptTitle',
-                                'title': document.title}, function(response) {});
+  if (document.title != undefined)
+    chrome.extension.sendRequest({'message': 'wptTitle',
+                                  'title': document.title}, function(response) {});
 }, false);
 
 
