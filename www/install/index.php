@@ -114,6 +114,7 @@ function CheckUtils() {
 -----------------------------------------------------------------------------*/
 function CheckFilesystem() {
     ShowCheck('{docroot}/tmp writable', IsWritable('tmp'));
+    ShowCheck('{docroot}/dat writable', IsWritable('dat'));
     ShowCheck('{docroot}/results writable', IsWritable('results'));
     ShowCheck('{docroot}/work/jobs writable', IsWritable('work/jobs'));
     ShowCheck('{docroot}/work/video writable', IsWritable('work/video'));
