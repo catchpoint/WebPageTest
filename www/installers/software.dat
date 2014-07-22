@@ -1,14 +1,14 @@
 [FlashAX]
-url=http://httparchive.webpagetest.org/installers/flashplayer13_0r0_214_winax.exe
-version=13.0.0.214
-md5=5BC0935A0711FE5C50E20E476971DF4F
-command=flashplayer13_0r0_214_winax.exe -install
+url=http://httparchive.webpagetest.org/installers/flashplayer14_0r0_145_winax.exe
+version=14.0.0.145
+md5=D780AC840B8A1098C7EEB272217A0272
+command=flashplayer14_0r0_145_winax.exe -install
 
 [Flash]
-url=http://httparchive.webpagetest.org/installers/flashplayer13_0r0_214_win.exe
-version=13.0.0.214
-md5=07A0D2BD41E94CE24CF715F40953B59F
-command=flashplayer13_0r0_214_win.exe -install
+url=http://httparchive.webpagetest.org/installers/flashplayer14_0r0_145_win.exe
+version=14.0.0.145
+md5=668931E57A0D0A3C10225442D2672653
+command=flashplayer14_0r0_145_win.exe -install
 
 [Silverlight]
 url=http://httparchive.webpagetest.org/installers/silverlight_5.exe
