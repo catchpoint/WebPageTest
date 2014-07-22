@@ -545,12 +545,28 @@ void TestState::CollectData() {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
     if (now.QuadPart > _last_data.QuadPart || !_last_data.QuadPart) {
+      CheckTitle();
       GrabVideoFrame();
       CollectSystemStats(now);
       _last_data.QuadPart = now.QuadPart;
     }
   }
   LeaveCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::CheckTitle() {
+  if (_active && _frame_window && received_data_) {
+    TCHAR title[4096];
+    if (GetWindowText(_frame_window, title, _countof(title))) {
+      if (last_title_.Compare(title)) {
+        last_title_ = title;
+        if (last_title_.Left(5).Compare(_T("Blank")))
+          TitleSet(title);
+      }
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------

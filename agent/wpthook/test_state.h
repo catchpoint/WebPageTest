@@ -185,6 +185,7 @@ private:
   CAtlList<CString>        _timed_events; // any supported timed events
   CString process_full_path_;
   CString process_base_exe_;
+  CString last_title_;
 
 
   // tracking of the periodic data capture
@@ -205,6 +206,7 @@ private:
 
   void Done(bool force = false);
   void CollectSystemStats(LARGE_INTEGER &now);
+  void CheckTitle();
   void FindViewport(bool force = false);
   void RecordTime(CString time_name, DWORD time, LARGE_INTEGER * out_time);
   DWORD ElapsedMs(LARGE_INTEGER start, LARGE_INTEGER end) const;
