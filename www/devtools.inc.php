@@ -1166,7 +1166,7 @@ function GetTimelineProcessingTimes(&$entry, &$processingTimes, &$processing_sta
       if (!isset($processing_start) || $entry['startTime'] < $processing_start)
         $processing_start = $entry['startTime'];
       if (!isset($processing_end) || $entry['endTime'] > $processing_end)
-        $processing_end = $entry['startTime'];
+        $processing_end = $entry['endTime'];
     }
     if (array_key_exists('children', $entry) &&
         is_array($entry['children']) &&
