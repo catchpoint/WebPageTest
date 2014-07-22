@@ -134,15 +134,13 @@ void WptDriverCore::Stop(void) {
 -----------------------------------------------------------------------------*/
 bool WptDriverCore::Startup() {
   bool ok = false;
-  int count = 0;
   do {
     ok = _settings.Load();
-    count++;
     if (!ok) {
       _status.Set(_T("Problem loading settings, trying again..."));
       Sleep(1000);
     }
-  } while (!ok && !_exit && count < 600);
+  } while (!ok && !_exit);
 
   if( ok ){
     // boost our priority
