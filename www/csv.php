@@ -85,7 +85,7 @@ if( isset($test['test']) && (isset($test['test']['completeTime']) || $test['test
             }
         }
     } else {
-        $files = glob("$testPath/*$fileType");
+        $files = glob("$testPath/*$fileType.*");
         if ($files && is_array($files) && count($files))
           $hasCSV = true;
         else
