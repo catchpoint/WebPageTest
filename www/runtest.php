@@ -362,6 +362,7 @@
                 unset($test['test_runs']);
             if (array_key_exists('spam', $test))
                 unset($test['spam']);
+            $test['priority'] =  0;
         }
 
         // the API key requirements are for all test paths
