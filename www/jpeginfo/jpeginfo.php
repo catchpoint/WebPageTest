@@ -191,21 +191,23 @@ function GetUrl($url, $path) {
 
 function FetchUrl($url) {
   $ret = false;
-  $curl = curl_init();
-  curl_setopt($curl, CURLOPT_URL, $url);
-  curl_setopt($curl, CURLOPT_USERAGENT, 'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)');
-  curl_setopt($curl, CURLOPT_FILETIME, true);
-  curl_setopt($curl, CURLOPT_FAILONERROR, true);
-  curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
-  curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 30);
-  curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 30);
-  curl_setopt($curl, CURLOPT_MAXREDIRS, 10);
-  curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-  curl_setopt($curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-  curl_setopt($curl, CURLOPT_WRITEFUNCTION, 'WriteCallback');
-  if (curl_exec($curl) !== false)
-    $ret = true;
-  curl_close($curl);
+  if (function_exists('curl_init')) {
+    $curl = curl_init();
+    curl_setopt($curl, CURLOPT_URL, $url);
+    curl_setopt($curl, CURLOPT_USERAGENT, 'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)');
+    curl_setopt($curl, CURLOPT_FILETIME, true);
+    curl_setopt($curl, CURLOPT_FAILONERROR, true);
+    curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 30);
+    curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 30);
+    curl_setopt($curl, CURLOPT_MAXREDIRS, 10);
+    curl_setopt($curl, CURLOPT_TIMEOUT, 30);
+    curl_setopt($curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+    curl_setopt($curl, CURLOPT_WRITEFUNCTION, 'WriteCallback');
+    if (curl_exec($curl) !== false)
+      $ret = true;
+    curl_close($curl);
+  }
   return $ret;
 }
 

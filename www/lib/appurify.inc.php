@@ -6,23 +6,18 @@ class Appurify{
   function __construct($key, $secret) {
     $this->key = $key;
     $this->secret = $secret;
-    $this->curl = curl_init();
-    if ($this->curl !== false) {
-      curl_setopt($this->curl, CURLOPT_RETURNTRANSFER, true);
-      curl_setopt($this->curl, CURLOPT_FAILONERROR, true);
-      curl_setopt($this->curl, CURLOPT_FOLLOWLOCATION, true);
-      curl_setopt($this->curl, CURLOPT_CONNECTTIMEOUT, 30);
-      curl_setopt($this->curl, CURLOPT_DNS_CACHE_TIMEOUT, 600);
-      curl_setopt($this->curl, CURLOPT_MAXREDIRS, 10);
-      curl_setopt($this->curl, CURLOPT_TIMEOUT, 600);
-      curl_setopt($this->curl, CURLOPT_SSL_VERIFYPEER, false);
-/*
-      $log = fopen("./log/appurify-curl-post.txt", 'a+');
-      if ($log) {
-        curl_setopt($this->curl, CURLOPT_VERBOSE, true);
-        curl_setopt($this->curl, CURLOPT_STDERR, $log);
+    if (function_exists('curl_init')) {
+      $this->curl = curl_init();
+      if ($this->curl !== false) {
+        curl_setopt($this->curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($this->curl, CURLOPT_FAILONERROR, true);
+        curl_setopt($this->curl, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($this->curl, CURLOPT_CONNECTTIMEOUT, 30);
+        curl_setopt($this->curl, CURLOPT_DNS_CACHE_TIMEOUT, 600);
+        curl_setopt($this->curl, CURLOPT_MAXREDIRS, 10);
+        curl_setopt($this->curl, CURLOPT_TIMEOUT, 600);
+        curl_setopt($this->curl, CURLOPT_SSL_VERIFYPEER, false);
       }
-*/      
     }
   }
   

@@ -1914,56 +1914,62 @@ function UpdateTester($location, $tester, $testerInfo = null, $cpu = null) {
 * @param mixed $url
 */
 function http_fetch($url) {
-    $ret = null;
-    global $CURL_CONTEXT;
-    if ($CURL_CONTEXT !== false) {
-        curl_setopt($CURL_CONTEXT, CURLOPT_URL, $url);
-        $ret = curl_exec($CURL_CONTEXT);
-    } else {
-        $context = stream_context_create(array('http' => array('header'=>'Connection: close', 'timeout' => 600)));
-        $ret = file_get_contents($url, false, $context);
-    }
-    return $ret;
+  $ret = null;
+  global $CURL_CONTEXT;
+  if ($CURL_CONTEXT !== false) {
+    curl_setopt($CURL_CONTEXT, CURLOPT_URL, $url);
+    $ret = curl_exec($CURL_CONTEXT);
+  } else {
+    $context = stream_context_create(array('http' => array('header'=>'Connection: close', 'timeout' => 600)));
+    $ret = file_get_contents($url, false, $context);
+  }
+  return $ret;
 }
 
 function http_put_raw($url, $body) {
-  $ok = true;
-  $ch = curl_init($url);
-  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-  curl_setopt($ch, CURLOPT_POST, 1 );
-  curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
-  curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
-  curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: text/plain'));
-  curl_setopt($ch, CURLOPT_FAILONERROR, true);
-  curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-  curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-  curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 600);
-  curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
-  curl_setopt($ch, CURLOPT_TIMEOUT, 600);
-  $response = curl_exec($ch);
-  curl_close($ch);
-  if($response === false)
-      $ok = false;
+  $ok = false;
+  if (function_exists('curl_init')) {
+    $ok = true;
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, 1 );
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: text/plain'));
+    curl_setopt($ch, CURLOPT_FAILONERROR, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+    curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 600);
+    curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 600);
+    $response = curl_exec($ch);
+    curl_close($ch);
+    if($response === false)
+        $ok = false;
+  }
   return $ok;
 }
 
 function http_post_raw($url, $body) {
-  $ok = true;
-  $ch = curl_init($url);
-  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-  curl_setopt($ch, CURLOPT_POST, 1 );
-  curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
-  curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: text/plain'));
-  curl_setopt($ch, CURLOPT_FAILONERROR, true);
-  curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-  curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-  curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 600);
-  curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
-  curl_setopt($ch, CURLOPT_TIMEOUT, 600);
-  $response = curl_exec($ch);
-  curl_close($ch);
-  if($response === false)
-      $ok = false;
+  $ok = false;
+  if (function_exists('curl_init')) {
+    $ok = true;
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, 1 );
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: text/plain'));
+    curl_setopt($ch, CURLOPT_FAILONERROR, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+    curl_setopt($ch, CURLOPT_DNS_CACHE_TIMEOUT, 600);
+    curl_setopt($ch, CURLOPT_MAXREDIRS, 10);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 600);
+    $response = curl_exec($ch);
+    curl_close($ch);
+    if($response === false)
+        $ok = false;
+  }
   return $ok;
 }
 
@@ -2009,7 +2015,8 @@ function ShardKey($test_num) {
 * @param mixed $relative_url
 */
 function SendAsyncRequest($relative_url) {
-    $url = "http://{$_SERVER['HTTP_HOST']}$relative_url";
+  $url = "http://{$_SERVER['HTTP_HOST']}$relative_url";
+  if (function_exists('curl_init')) {
     $c = curl_init();
     curl_setopt($c, CURLOPT_URL, $url);
     curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
@@ -2018,6 +2025,10 @@ function SendAsyncRequest($relative_url) {
     curl_setopt($c, CURLOPT_TIMEOUT, 1);
     curl_exec($c);
     curl_close($c);
+  } else {
+    $context = stream_context_create(array('http' => array('header'=>'Connection: close', 'timeout' => 1)));
+    file_get_contents($url, false, $context);
+  }
 }
 
 /**

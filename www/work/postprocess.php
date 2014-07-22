@@ -175,14 +175,19 @@ if (array_key_exists('test', $_REQUEST)) {
 }
 
 function SendCallback($url) {
-  $c = curl_init();
-  curl_setopt($c, CURLOPT_URL, $url);
-  curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
-  curl_setopt($c, CURLOPT_FOLLOWLOCATION, true);
-  curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 10);
-  curl_setopt($c, CURLOPT_TIMEOUT, 10);
-  curl_exec($c);
-  curl_close($c);
+  if (function_exists('curl_init')) {
+    $c = curl_init();
+    curl_setopt($c, CURLOPT_URL, $url);
+    curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($c, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 10);
+    curl_setopt($c, CURLOPT_TIMEOUT, 10);
+    curl_exec($c);
+    curl_close($c);
+  } else {
+    $context = stream_context_create(array('http' => array('header'=>'Connection: close', 'timeout' => 10)));
+    file_get_contents($url, false, $context);
+  }
 }
 
 /**
