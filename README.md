@@ -31,7 +31,7 @@ There are a few different components to it:
 There are also several browser-specific extensions for interacting with the various browsers (navigating, filling forms, capturing the load event, etc):
 
 * /agent/browser/ie/wptbho - A c++ Browser Helper Object for IE.
-* /agent/browser/chrome/extension - Extension for supporting Chrome (JS).  It relies on closure and must be compiled (there is a compile.cmd that will run the closure compiler for you).
+* /agent/browser/chrome/extension - Extension for supporting Chrome (JS).  It relies on closure and must be compiled (there is a compile.cmd that will run the closure compiler for you - compile.cmd depends on python 2.x so install python and edit path in compile.cmd as necessary).
 * /agent/browser/firefox/extension - Extension for supporting Firefox (JS).
 * /agent/browser/firefox/prefs.js - Default prefs file for the Firefox user profile.
 * /agent/browser/safari - Extension for supporting Safari (JS).
