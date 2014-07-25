@@ -306,7 +306,7 @@ $common_label = implode(" ", $common_labels);
                   * or "FALSE" if it is not.
                  */
                 function signifString(pValue) {
-                  if (!pValue) {
+                  if (pValue === null) {
                     return "";
                   } else if (pValue < 0.05) {
                     return "TRUE";
