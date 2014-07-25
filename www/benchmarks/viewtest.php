@@ -35,6 +35,7 @@ $series = GetSeriesLabels($benchmark);
 $metrics = array('docTime' => 'Load Time (onload)', 
                 'SpeedIndex' => 'Speed Index',
                 'TTFB' => 'Time to First Byte', 
+                'basePageSSLTime' => 'Base Page SSL Time',
                 'titleTime' => 'Time to Title', 
                 'render' => 'Time to Start Render', 
                 'visualComplete' => 'Time to Visually Complete', 
