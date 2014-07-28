@@ -344,6 +344,10 @@ function InsertChart($metric, $label) {
           $confData = ConfData::fromArr($statLabels[$key], $statValues[$key]);
           $pValue = \PHPStats\StatisticalTests::twoSampleTTest($statValues[$statControl], $statValues[$key]);
           $diff = $confData->mean - $compareFrom[$statControl]->confData->mean;
+
+          // Derive 2-tailed p-value from 1-tailed p-view returned by twoSampleTTest.
+          $pValue = ($diff > 0) ? (2 * $pValue) : (2 * (1 - $pValue));
+
           $compareFrom[$key] = new CompareFrom($confData, $diff, $pValue);
         }
         $compareTable[] = new CompareTable($statDiv, $compareFrom);

@@ -84,7 +84,6 @@ function drawTable(compareData) {
     confData = compareData.compareFrom[index].confData;
     diff = compareData.compareFrom[index].diff;
     pValue = compareData.compareFrom[index].pValue,
-    pDisplay = pValue ? ((diff > 0) ? 2 * pValue : 2 * (1 - pValue)) : null;
     meanDisplay = confData.mean.toPrecision(6) + ' +/- ' +
       confData.ciHalfWidth.toPrecision(6)
     data.addRow([
@@ -92,8 +91,8 @@ function drawTable(compareData) {
       confData.n,
       meanDisplay,
       diff,
-      pDisplay,
-      signifString(pDisplay)]);
+      pValue,
+      signifString(pValue)]);
   }
   var table = new google.visualization.Table(document.getElementById(compareData.div));
   var formatter = new google.visualization.NumberFormat(
