@@ -157,7 +157,7 @@ class ChartColumn
 class CompareFrom {
   public $confData; // @var ConfData Mean and confidence interval.
   public $diff; // @var float Difference from control, or NULL for the control.
-  public $pValue; // @var float P-Value as compared against control, or NULL 
+  public $pValue; // @var float P-Value as compared against control, or NULL
                   // for the control.
 
   function __construct($confData, $diff, $pValue) {
