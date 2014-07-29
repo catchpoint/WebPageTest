@@ -161,6 +161,7 @@ $common_label = implode(" ", $common_labels);
             $metrics = array('docTime' => 'Load Time (onload - ms)', 
                             'SpeedIndex' => 'Speed Index',
                             'TTFB' => 'Time to First Byte (ms)', 
+                            'basePageSSLTime' => 'Base Page SSL Time (ms)',
                             'render' => 'Time to Start Render (ms)', 
                             'visualComplete' => 'Time to Visually Complete (ms)',
                             'lastVisualChange' => 'Last Visual Change (ms)', 

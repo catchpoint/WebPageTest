@@ -207,6 +207,7 @@ if (array_key_exists('f', $_REQUEST)) {
                             'SpeedIndex' => 'Speed Index',
                             'TTFB' => 'Time to First Byte', 
                             'titleTime' => 'Time to Title', 
+                            'basePageSSLTime' => 'Base Page SSL Time',
                             'render' => 'Time to Start Render', 
                             'visualComplete' => 'Time to Visually Complete', 
                             'lastVisualChange' => 'Last Visual Change',

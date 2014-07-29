@@ -324,9 +324,10 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
     $requests = null;
     $pageData = null;
     $startOffset = null;
-    $ver = 4;
+    $ver = 5;
     $cached = isset($cached) && $cached ? 1 : 0;
     $ok = GetCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
+
     if (!$ok) {
       if (GetDevToolsEvents(array('Page.', 'Network.'), $testPath, $run, $cached, $events, $startOffset)) {
           if (DevToolsFilterNetRequests($events, $rawRequests, $rawPageData)) {
@@ -560,8 +561,13 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                       if (!array_key_exists('TTFB', $pageData) &&
                           $request['ttfb_ms'] >= 0 &&
                           ($request['responseCode'] == 200 ||
-                           $request['responseCode'] == 304))
+                           $request['responseCode'] == 304)) {
                           $pageData['TTFB'] = $request['load_start'] + $request['ttfb_ms'];
+                          if ($request['ssl_end'] >= 0 &&
+                              $request['ssl_start'] >= 0) {
+                              $pageData['basePageSSLTime'] = $request['ssl_end'] - $request['ssl_start'];
+                          }
+                      }
                       $pageData['bytesOut'] += $request['bytesOut'];
                       $pageData['bytesIn'] += $request['bytesIn'];
                       $pageData['requests']++;
