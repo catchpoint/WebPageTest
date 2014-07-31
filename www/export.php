@@ -141,11 +141,11 @@ function BuildResult(&$pageData)
                 $pd['title'] .= "First View";
             $pd['title'] .= " for " . $data['URL'];
             $new_label = getLabel($guid, $user);
-	    if (!empty($new_label)) {
+	     if (!empty($new_label)) {
 		$label = htmlentities($new_label);
-	    }
-	    $pd['label'] = $label;
-            $pd['id'] = "${label}_page_{$run}_{$cached}";
+	     }
+	     $pd['label'] = $label;
+             $pd['id'] = "${label}_page_{$run}_{$cached}";
             $pd['pageTimings'] = array( 'onLoad' => $data['docTime'], 'onContentLoad' => -1, '_startRender' => $data['render'] );
             
             // add the pagespeed score
