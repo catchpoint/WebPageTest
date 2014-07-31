@@ -130,7 +130,7 @@ if (LoadResults($results)) {
                     if (!array_key_exists($label, $urlData) || !array_key_exists($metric, $urlData[$label]))
                         $valid = false;
                 }
-                $compare = "\"http://www.webpagetest.org/video/compare.php?ival=100&end=full&tests=";
+                $compare = "\"http://www.webpagetest.org/video/compare.php?ival=100&end=full&medianMetric=$metric&tests=";
                 $first = true;
                 $baseline = null;
                 foreach($permutations as $label => &$permutation) {

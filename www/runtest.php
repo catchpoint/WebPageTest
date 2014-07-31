@@ -162,7 +162,7 @@
             if (isset($req_dataReduction) && $req_dataReduction) {
               if (strlen($test['addCmdLine']))
                 $test['addCmdLine'] .= ' ';
-              $test['addCmdLine'] .= '--enable-spdy-proxy-auth';
+              $test['addCmdLine'] .= '--enable-spdy-proxy-auth --force-fieldtrials=DataCompressionProxyRollout/Enabled/';
             }
             if (isset($req_uastring) && strlen($req_uastring)) {
               if (strpos($req_uastring, '"') !== false) {

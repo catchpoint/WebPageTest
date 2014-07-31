@@ -8,6 +8,8 @@ Disallow: /forums/memberlist.php
 Disallow: /forums/calendar.php
 Disallow: /forums/misc.php
 Disallow: /results/
+Disallow: /apc/
+Disallow: /work/
 Allow: /
 
 User-agent: Mediapartners-Google
