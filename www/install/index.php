@@ -97,7 +97,7 @@ function CheckPHP() {
     ShowCheck('SQLite Installed (for editable test labels)', class_exists("SQLite3"), false);
     ShowCheck('php.ini upload_max_filesize > 10MB', return_bytes(ini_get('upload_max_filesize')) > 10000000, false, ini_get('upload_max_filesize'));
     ShowCheck('php.ini post_max_size > 10MB', return_bytes(ini_get('post_max_size')) > 10000000, false, ini_get('post_max_size'));
-    ShowCheck('php.ini memory_limt > 256MB or -1 (disabled)', return_bytes(ini_get('memory_limit')) > 256000000 || ini_get('memory_limit') == -1, false, ini_get('memory_limit'));
+    ShowCheck('php.ini memory_limit > 256MB or -1 (disabled)', return_bytes(ini_get('memory_limit')) > 256000000 || ini_get('memory_limit') == -1, false, ini_get('memory_limit'));
 }
 
 function CheckUtils() {
