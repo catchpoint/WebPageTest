@@ -12,6 +12,7 @@ if (isset($_REQUEST['tests'])) {
     for($i = 0; $i < 256; $i++)
       $channel[$i] = 0;
   }
+  $histograms = array();
   foreach($tests as $params) {
     if (preg_match('/(?P<id>[0-9a-zA-Z_]+)-r\:(?P<run>[0-9]+)/', $params, $matches)) {
       $test = $matches['id'];
@@ -19,15 +20,25 @@ if (isset($_REQUEST['tests'])) {
       if (ValidateTestId($test)) {
         RestoreTest($test);
         $result['data'][$test] = -1;
-        $histogram = GetLastFrameHistogram($test, $run);
-        if (isset($histogram)) {
-          if (isset($baseline)) {
-            $result['data'][$test] = CalculateFrameProgress($histogram, $blank, $baseline, 5);
-          } else {
-            $baseline = $histogram;
-            $result['data'][$test] = 100;
-          }
-        }
+        $histograms[$test] = GetLastFrameHistogram($test, $run);
+      }
+    }
+  }
+  if (count($histograms)) {
+    // find the histogram with the most pixels and use that as the baseline
+    $baseline = null;
+    $baseline_pixels = 0;
+    foreach($histograms as $test => &$histogram) {
+      $count = array_sum($histogram['r']) + array_sum($histogram['g']) + array_sum($histogram['b']);
+      if (!isset($baseline) || $count > $baseline_pixels)
+        $baseline = $test;
+    }
+    if (isset($baseline)) {
+      foreach($histograms as $test => &$histogram) {
+        if ($test == $baseline)
+          $result['data'][$test] = 100;
+        else
+          $result['data'][$test] = CalculateFrameProgress($histogram, $blank, $histograms[$baseline], 5);
       }
     }
   }
