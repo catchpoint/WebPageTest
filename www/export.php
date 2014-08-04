@@ -144,8 +144,9 @@ function BuildResult(&$pageData)
 	     if (!empty($new_label)) {
 		$label = htmlentities($new_label);
 	     }
-	     $pd['label'] = $label;
-             $pd['id'] = "${label}_page_{$run}_{$cached}";
+	    $pd['label'] = $label;
+	    $id_label = preg_replace("/[^a-zA-Z0-9_-]/", "", $label);
+	    $pd['id'] = "page{$run}{$cached}{$label}";
             $pd['pageTimings'] = array( 'onLoad' => $data['docTime'], 'onContentLoad' => -1, '_startRender' => $data['render'] );
             
             // add the pagespeed score
