@@ -886,6 +886,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
     }
     if (isset($firstNetEventTime) && isset($timelineEventTime)) {
       $clockOffset = $timelineEventTime - $firstNetEventTime;
+      $firstEvent = min($firstEvent, $firstNetEventTime + $clockOffset);
     }
   }
   
@@ -1040,10 +1041,6 @@ function DevToolsMatchEvent($filter, &$event, $startTime = null, $endTime = null
   $match = true;
   if (isset($event['method']) && isset($event['params'])) {
     if (isset($startTime) && $startTime) {
-      $startTime = intval($startTime);
-      $time = intval(DevToolsEventTime($event));
-      if (isset($endTime))
-        $endTime = intval($endTime);
       if (isset($time) && $time &&
           ($time < $startTime ||
           $time - $startTime > 600000 ||
