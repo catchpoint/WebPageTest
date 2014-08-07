@@ -1040,7 +1040,10 @@ function DevToolsMatchEvent($filter, &$event, $startTime = null, $endTime = null
   $match = true;
   if (isset($event['method']) && isset($event['params'])) {
     if (isset($startTime) && $startTime) {
-      $time = DevToolsEventTime($event);
+      $startTime = intval($startTime);
+      $time = intval(DevToolsEventTime($event));
+      if (isset($endTime))
+        $endTime = intval($endTime);
       if (isset($time) && $time &&
           ($time < $startTime ||
           $time - $startTime > 600000 ||
