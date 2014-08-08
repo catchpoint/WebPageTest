@@ -324,10 +324,9 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
     $requests = null;
     $pageData = null;
     $startOffset = null;
-    $ver = 6;
+    $ver = 7;
     $cached = isset($cached) && $cached ? 1 : 0;
     $ok = GetCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
-
     if (!$ok) {
       if (GetDevToolsEvents(array('Page.', 'Network.'), $testPath, $run, $cached, $events, $startOffset)) {
           if (DevToolsFilterNetRequests($events, $rawRequests, $rawPageData)) {
@@ -379,6 +378,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                       $request['url'] .= '?' . $parts['query'];
                     if ($parts['scheme'] == 'https')
                       $request['is_secure'] = 1;
+                    $request['id'] = $rawRequest['id'];
 
                     $request['responseCode'] = array_key_exists('response', $rawRequest) && array_key_exists('status', $rawRequest['response']) ? $rawRequest['response']['status'] : -1;
                     if (array_key_exists('errorCode', $rawRequest))
@@ -599,6 +599,17 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
           else
             $pageData['result'] = 12999;
         }
+        if (isset($rawPageData['mainResourceID'])) {
+          foreach($requests as $index => &$request) {
+            if ($request['id'] == $rawPageData['mainResourceID'])
+              $main_request = $index;
+          }
+          if (isset($main_request)) {
+            $requests[$main_request]['final_base_page'] = true;
+            $pageData['final_base_page_request'] = $index + 1;
+            $pageData['final_base_page_request_id'] = $rawPageData['mainResourceID'];
+          }
+        }
         $ok = true;
       }
       if ($ok) {
@@ -650,6 +661,22 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
     $rawRequests = array();
     $idMap = array();
     foreach ($events as $event) {
+        if (!isset($main_frame) &&
+            $event['method'] == 'Page.frameStartedLoading' &&
+            isset($event['frameId']))
+          $main_frame = $event['frameId'];
+        if ($event['method'] == 'Page.frameStartedLoading' &&
+            isset($event['frameId']) &&
+            isset($main_frame) &&
+            $event['frameId'] == $main_frame)
+          $main_resource_id = null;
+        if (!isset($main_resource_id) &&
+            $event['method'] == 'Network.requestWillBeSent' &&
+            isset($event['requestId']) &&
+            isset($event['frameId']) &&
+            isset($main_frame) &&
+            $event['frameId'] == $main_frame)
+          $main_resource_id = $event['requestId'];
         if ($event['method'] == 'Page.loadEventFired' &&
             array_key_exists('timestamp', $event) &&
             $event['timestamp'] > $pageData['onload'])
@@ -694,6 +721,8 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                     $count = $idMap[$originalId];
                   $idMap[$originalId] = $count + 1;
                   $id = "{$originalId}-{$idMap[$originalId]}";
+                  if (isset($main_resource_id) && $main_resource_id == $originalId)
+                    $main_resource_id = $id;
                 }
                 $request['id'] = $id;
                 $rawRequests[$id] = $request;
@@ -799,6 +828,8 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
         $requests[] = $request;
       }
     }
+    if (isset($main_resource_id))
+      $pageData['mainResourceID'] = $main_resource_id;
     $ok = false;
     if (count($requests))
         $ok = true;
