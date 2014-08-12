@@ -78,6 +78,7 @@ CDN_PROVIDER cdnList[] = {
   {"cdn.jsdelivr.net", _T("jsDelivr")},
   {".nyiftw.net", _T("NYI FTW")},
   {".nyiftw.com", _T("NYI FTW")},
+  {".resrc.it", _T("ReSRC.it")},
   {NULL, NULL}
 };
 
@@ -99,5 +100,6 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"Via", "CloudFront", _T("Amazon CloudFront")},
   {"X-Edge-IP", "", _T("CDN")},
   {"X-Edge-Location", "", _T("CDN")},
-  {"X-Powered-By", "NYI FTW", _T("NYI FTW")}
+  {"X-Powered-By", "NYI FTW", _T("NYI FTW")},
+  {"server", "ReSRC", _T("ReSRC.it")}
 };
