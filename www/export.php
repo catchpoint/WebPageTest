@@ -140,12 +140,10 @@ function BuildResult(&$pageData)
             else
                 $pd['title'] .= "First View";
             $pd['title'] .= " for " . $data['URL'];
-            $new_label = getLabel($guid, $user);
-	     if (!empty($new_label)) {
-		$label = htmlentities($new_label);
-	     }
-	    $pd['label'] = $label;
-	    $id_label = preg_replace("/[^a-zA-Z0-9_-]/", "", $label);
+	    $testInfo = GetTestInfo($id);
+	    if (array_key_exists('label', $testInfo) && strlen($testInfo['label']))
+                $pd['label'] = $testInfo['label'];
+            $pd['id'] = "{$data['URL']}_{$testInfo['browser']}_{$testInfo['connectivity']}_{$run}_{$cached}";
 	    $pd['id'] = "page_{$run}_{$cached}_{$id_label}";
             $pd['pageTimings'] = array( 'onLoad' => $data['docTime'], 'onContentLoad' => -1, '_startRender' => $data['render'] );
             
