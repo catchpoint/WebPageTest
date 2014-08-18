@@ -26,6 +26,7 @@ if (LoadResults($results)) {
             !@$result['docTime'] ||
             !@$result['TTFB'] ||
             $result['successfulRuns'] < $minRuns ||
+            (isset($result['resubmit']) && $result['resubmit']) ||
             @$result['TTFB'] > @$result['docTime'] ||
             (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth) ||
             ($video && (!$result['SpeedIndex'] || !$result['render'] || !$result['visualComplete']))) {
@@ -130,7 +131,10 @@ if (LoadResults($results)) {
                     if (!array_key_exists($label, $urlData) || !array_key_exists($metric, $urlData[$label]))
                         $valid = false;
                 }
-                $compare = "\"http://www.webpagetest.org/video/compare.php?ival=100&end=full&medianMetric=$metric&tests=";
+                $compare = "\"http://www.webpagetest.org/video/compare.php?ival=100&end=full";
+                if ($video)
+                  $compare .= "&medianMetric=SpeedIndex";
+                $compare .= '&tests=';
                 $first = true;
                 $baseline = null;
                 foreach($permutations as $label => &$permutation) {

@@ -47,10 +47,10 @@ foreach($urls as &$url) {
     
     // update the similarity values for the raw results
     foreach($url as $url_result) {
-      if (isset($url_result['id']) && isset($url_result['similarity'])) {
+      if (isset($url_result['id']) && isset($url_result['sim'])) {
         foreach($results as &$original_result) {
           if (isset($original_result['id']) && $original_result['id'] == $url_result['id']) {
-            $original_result['similarity'] = $url_result['similarity'];
+            $original_result['sim'] = $url_result['sim'];
             break;
           }
         }
@@ -70,7 +70,7 @@ foreach($counts as $label => $count) {
 function AllTestsComplete(&$url) {
   $all_complete = true;
   foreach($url as $result) {
-    if (!isset($result['result'])) {
+    if (!isset($result['result']) || (isset($result['resubmit']) && $result['resubmit'])) {
       $all_complete = false;
       break;
     }
@@ -136,7 +136,7 @@ function ImagesSimilar(&$url) {
     // ask the server to visually compare the last frames (if we don't already have similarity numbers)
     $needSimilarity = false;
     foreach($url as $result) {
-      if (!isset($result['similarity'])) {
+      if (!isset($result['sim'])) {
         $needSimilarity = true;
         break;
       }
@@ -153,13 +153,13 @@ function ImagesSimilar(&$url) {
       $compare = json_decode($raw, true);
       if (isset($compare['data']) && is_array($compare['data'])) {
         foreach($compare['data'] as $test => $similarity)
-          $url[$test]['similarity'] = $similarity;
+          $url[$test]['sim'] = $similarity;
       }
     }
 
     // if the similarity is < 85% for any of them it fails
     foreach($url as $result) {
-      if (!isset($result['similarity']) || $result['similarity'] < 85) {
+      if (!isset($result['sim']) || $result['sim'] < 85) {
         $similar = false;
         break;
       }
