@@ -141,10 +141,7 @@ function BuildResult(&$pageData)
                 $pd['title'] .= "First View";
             $pd['title'] .= " for " . $data['URL'];
 	    $testInfo = GetTestInfo($id);
-	    if (array_key_exists('label', $testInfo) && strlen($testInfo['label']))
-                $pd['label'] = $testInfo['label'];
-            $pd['id'] = "{$data['URL']}_{$testInfo['browser']}_{$testInfo['connectivity']}_{$run}_{$cached}";
-	    $pd['id'] = "page_{$run}_{$cached}_{$id_label}";
+	    pd['id'] = "{$data['URL']}_{$testInfo['label']}_{$testInfo['location']}_{$testInfo['browser']}_{$testInfo['connectivity']}_{$run}_{$cached}";
             $pd['pageTimings'] = array( 'onLoad' => $data['docTime'], 'onContentLoad' => -1, '_startRender' => $data['render'] );
             
             // add the pagespeed score
