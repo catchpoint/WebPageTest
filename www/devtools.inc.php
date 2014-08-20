@@ -324,7 +324,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
     $requests = null;
     $pageData = null;
     $startOffset = null;
-    $ver = 7;
+    $ver = 8;
     $cached = isset($cached) && $cached ? 1 : 0;
     $ok = GetCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
     if (!$ok) {
@@ -759,14 +759,13 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                     // if we didn't get explicit bytes, fall back to any responses that had
                     // content-length headers
                     if ((!array_key_exists('bytesIn', $rawRequests[$id]) || !$rawRequests[$id]['bytesIn']) &&
-                        array_key_exists('response', $event) &&
-                        is_array($event['response']) &&
-                        array_key_exists('headers', $event['response']) &&
-                        is_array($event['response']['headers']) &&
-                        array_key_exists('Content-Length', $event['response']['headers'])) {
+                        isset($event['response']['headers']['Content-Length'])) {
                       $rawRequests[$id]['bytesIn'] = $event['response']['headers']['Content-Length'];
                       $rawRequests[$id]['bytesIn'] += strlen(implode("\n", $rawRequests[$id]['headers']));
                     }
+                    // adjust the start time
+                    if (isset($event['response']['timing']['receiveHeadersEnd']))
+                      $rawRequests[$id]['startTime'] = $event['timestamp'] - $event['response']['timing']['receiveHeadersEnd'];
                     $rawRequests[$id]['response'] = $event['response'];
                 }
                 if ($event['method'] == 'Network.loadingFinished') {
@@ -797,8 +796,7 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
     // pull out just the requests that were served on the wire
     foreach ($rawRequests as &$request) {
       if (array_key_exists('startTime', $request)) {
-        if (array_key_exists('response', $request) &&
-            array_key_exists('timing', $request['response'])) {
+        if (isset($request['response']['timing'])) {
           if (array_key_exists('requestTime', $request['response']['timing']) &&
               array_key_exists('end_time', $request) &&
               $request['response']['timing']['requestTime'] >= $request['startTime'] &&
@@ -831,8 +829,13 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
     if (isset($main_resource_id))
       $pageData['mainResourceID'] = $main_resource_id;
     $ok = false;
-    if (count($requests))
+    if (count($requests)) {
+        // sort them by start time
+        usort($requests, function($a, $b) {
+          return $a['startTime'] > $b['startTime'];
+        });
         $ok = true;
+    }
     return $ok;
 }
 
