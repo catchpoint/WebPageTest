@@ -32,6 +32,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
             <th>PC</th>
             <th>EC2 Instance</th>
             <th>CPU Utilization</th>
+            <th>Error Rate</th>
             <th>Free Disk (GB)</th>
             <th>IE Version</th>
             <th>GPU?</th>
@@ -48,6 +49,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
                 <td><xsl:value-of select="pc"/></td>
                 <td><xsl:value-of select="ec2"/></td>
                 <td><xsl:value-of select="cpu"/></td>
+                <td><xsl:value-of select="errors"/></td>
                 <td><xsl:value-of select="freedisk"/></td>
                 <td><xsl:value-of select="ie"/></td>
                 <td><xsl:value-of select="GPU"/></td>

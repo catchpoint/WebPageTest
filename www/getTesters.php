@@ -32,7 +32,7 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
     }
     echo "<tr id=\"$name\"><th class=\"header$error\" colspan=\"13\">" . htmlspecialchars($name) . "$elapsed</th></tr>\n";
     if (array_key_exists('testers', $location)) {
-      echo "<tr><th class=\"tester\">Tester</th><th>Busy?</th><th>Last Check (minutes)</th><th>Last Work (minutes)</th><th>Version</th><th>PC</th><th>EC2 Instance</th><th>CPU Utilization</th><th>Free Disk (GB)</th><th>IE Version</th>";
+      echo "<tr><th class=\"tester\">Tester</th><th>Busy?</th><th>Last Check (minutes)</th><th>Last Work (minutes)</th><th>Version</th><th>PC</th><th>EC2 Instance</th><th>CPU Utilization</th><th>Error Rate</th><th>Free Disk (GB)</th><th>IE Version</th>";
       echo "<th>GPU?</th><th>IP</th><th>DNS Server(s)</th></tr>\n";
       $count = 0;
       foreach($location['testers'] as $tester) {
@@ -45,6 +45,7 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
         echo "<td>" . @htmlspecialchars($tester['pc']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['ec2']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['cpu']) . "</td>";
+        echo "<td>" . @htmlspecialchars($tester['errors']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['freedisk']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['ie']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['GPU']) . "</td>";

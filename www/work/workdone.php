@@ -138,7 +138,11 @@ if (ValidateTestId($id)) {
         if (strlen($location) && strlen($tester)) {
           $testerInfo = array();
           $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
-          UpdateTester($location, $tester, $testerInfo, $cpu);
+          $testerError = false;
+          if ((array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror'])) || 
+              (array_key_exists('error', $_REQUEST) && strlen($_REQUEST['error'])))
+            $testerError = true;
+          UpdateTester($location, $tester, $testerInfo, $cpu, $testerError);
         }
         if (array_key_exists('shard_test', $testInfo) && $testInfo['shard_test'])
           ProcessIncrementalResult();

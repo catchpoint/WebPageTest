@@ -1542,6 +1542,17 @@ function GetTesters($locationId)
                         $entry['cpu'] = round($total / $count);
                     }
 
+                    if (array_key_exists('errors', $tester) && is_array($tester['errors'])) {
+                      $total = 0;
+                      $count = 0;
+                      foreach($tester['errors'] as $error) {
+                        $total += $error;
+                        $count++;
+                      }
+                      if ($count > 50)
+                        $entry['errors'] = round((100 * $total) / $count);
+                    }
+                    
                     // last time it checked in
                     if( isset($tester['updated']) )
                     {
@@ -1858,7 +1869,7 @@ function SecureDir($path) {
 * @param mixed $tester
 * @param mixed $testerInfo
 */
-function UpdateTester($location, $tester, $testerInfo = null, $cpu = null) {
+function UpdateTester($location, $tester, $testerInfo = null, $cpu = null, $error = null) {
     if ($lock = LockLocation("testers-$location")) {
         $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
         if( !count($testers) )
@@ -1881,6 +1892,14 @@ function UpdateTester($location, $tester, $testerInfo = null, $cpu = null) {
           $testers[$tester]['cpu'][] = $cpu;
           if (count($testers[$tester]['cpu']) > 100)
             array_shift($testers[$tester]['cpu']);
+        }
+        // keep track of the success/error count
+        if (isset($error)) {
+          if (!array_key_exists('errors', $testers[$tester]))
+            $testers[$tester]['errors'] = array();
+          $testers[$tester]['errors'][] = $error ? 1 : 0;
+          if (count($testers[$tester]['errors']) > 100)
+            array_shift($testers[$tester]['errors']);
         }
         if (isset($testerInfo) && is_array($testerInfo)) {
             // keep track of the FIRST idle request as the last work time so we can have an accurate "idle time"
