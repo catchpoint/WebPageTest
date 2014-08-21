@@ -29,12 +29,15 @@ if (array_key_exists('test', $_REQUEST)) {
     $testInfo = GetTestInfo($id);
     
     // see if we need to log the raw test data
+    $now = time();
     $pageLog = GetSetting('logTestResults');
     if (isset($pageLog) && $pageLog !== false && strlen($pageLog)) {
       $pageData = loadAllPageData($testPath);
       if (isset($pageData) && is_array($pageData)) {
         foreach($pageData as $run => &$pageRun) {
           foreach($pageRun as $cached => &$testData) {
+            $testData['reportedTime'] = gmdate('r', $now);
+            $testData['reportedEpoch'] = $now;
             $testData['testUrl'] = $testInfo['url'];
             $testData['run'] = $run;
             $testData['cached'] = $cached;
@@ -61,6 +64,8 @@ if (array_key_exists('test', $_REQUEST)) {
           $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
           if (isset($requests) && is_array($requests)) {
             foreach ($requests as &$request) {
+              $request['reportedTime'] = gmdate('r', $now);
+              $request['reportedEpoch'] = $now;
               $request['testUrl'] = $testInfo['url'];
               $request['run'] = $run;
               $request['cached'] = $cached;
