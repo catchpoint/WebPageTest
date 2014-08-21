@@ -140,7 +140,8 @@ function BuildResult(&$pageData)
             else
                 $pd['title'] .= "First View";
             $pd['title'] .= " for " . $data['URL'];
-            $pd['id'] = "page_{$run}_{$cached}";
+	    $testInfo = GetTestInfo($id);
+	    pd['id'] = "{$data['URL']}_{$testInfo['label']}_{$testInfo['location']}_{$testInfo['browser']}_{$testInfo['connectivity']}_{$run}_{$cached}";
             $pd['pageTimings'] = array( 'onLoad' => $data['docTime'], 'onContentLoad' => -1, '_startRender' => $data['render'] );
             
             // add the pagespeed score
