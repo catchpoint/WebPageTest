@@ -1,6 +1,6 @@
 browser=Chrome
-url=http://httparchive.webpagetest.org/installers/chrome_35.msi
-md5=CB09DE839C77F04A79848C9D956DBB34
-version=35.0.1916.114
-command=Msiexec /q /I chrome_35.msi
+url=http://httparchive.webpagetest.org/installers/chrome_37.msi
+md5=D4E5F19ADEE64B5EF2E95708BE60AE65
+version=37.0.2062.94
+command=Msiexec /q /I chrome_37.msi
 update=0
