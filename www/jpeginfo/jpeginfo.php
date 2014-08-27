@@ -105,21 +105,21 @@ function AnalyzeFile($path) {
 
         if (is_file($path)) {
           echo "<h2>Image (" . number_format($info['filesize']) . " bytes)</h2>";
-          echo '<img src="data::image/jpeg;base64,';
+          echo '<img src="data:image/jpeg;base64,';
           echo base64_encode(file_get_contents($path));
           echo '"><br><br>';
         }
         
         if (isset($optData)) {
           echo "<h2>Optimized Image - Lossless (" . number_format($optsize) . " bytes)</h2>";
-          echo '<img src="data::image/jpeg;base64,';
+          echo '<img src="data:image/jpeg;base64,';
           echo base64_encode($optData);
           echo '"><br><br>';
         }
 
         if (isset($jpegData)) {
           echo "<h2>Quality 85 Image - Lossy (" . number_format($jpegsize) . " bytes)</h2>";
-          echo '<img src="data::image/jpeg;base64,';
+          echo '<img src="data:image/jpeg;base64,';
           echo base64_encode($jpegData);
           echo '"><br><br>';
         }
