@@ -30,8 +30,12 @@ if (array_key_exists('test', $_REQUEST)) {
     
     // see if we need to log the raw test data
     $now = time();
+    $allowLog = true;
+    $logPrivateTests = GetSetting('logPrivateTests');
+    if ($testInfo['private'] && $logPrivateTests !== false && $logPrivateTests == 0)
+      $allowLog = false;
     $pageLog = GetSetting('logTestResults');
-    if (isset($pageLog) && $pageLog !== false && strlen($pageLog)) {
+    if ($allowLog && $pageLog !== false && strlen($pageLog)) {
       $pageData = loadAllPageData($testPath);
       if (isset($pageData) && is_array($pageData)) {
         foreach($pageData as $run => &$pageRun) {
@@ -54,7 +58,7 @@ if (array_key_exists('test', $_REQUEST)) {
       }
     }
     $requestsLog = GetSetting('logTestRequests');
-    if (isset($requestsLog) && $requestsLog !== false && strlen($requestsLog)) {
+    if ($allowLog && $requestsLog !== false && strlen($requestsLog)) {
       require_once('object_detail.inc');
       $max_cached = $testInfo['fvonly'] ? 0 : 1;
       for ($run = 1; $run <= $testInfo['runs']; $run++) {
