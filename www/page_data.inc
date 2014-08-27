@@ -604,6 +604,9 @@ function loadUserTimingData(&$pageData, $testPath, $run, $cached) {
             if ($event['startTime'] > $lastEvent)
               $lastEvent = $event['startTime'];
             $pageData["userTime.$name"] = $time;
+            if (!isset($pageData['userTimes']))
+              $pageData['userTimes'] = array();
+            $pageData['userTimes'][$name] = $time;
           }
         }
       }
