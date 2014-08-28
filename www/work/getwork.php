@@ -90,116 +90,123 @@ function GetJob() {
             $testers = GetTesters($location);
 
             // make sure the tester isn't marked as offline (usually when shutting down EC2 instances)                
-            if(!@$testers[$tester]['offline']) {
-                $fileName = GetJobFile($workDir, $priority);
-                if( isset($fileName) && strlen($fileName) )
-                {
-                    $is_done = true;
-                    $delete = true;
-                    
-                    if ($is_json)
-                        header ("Content-type: application/json");
-                    else
-                        header('Content-type: text/plain');
-                    header("Cache-Control: no-cache, must-revalidate");
-                    header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+            $testerCount = isset($testers['testers']) ? count($testers['testers']) : 0;
+            $testerIndex = null;
+            if ($testerCount) {
+              foreach($testers['testers'] as $index => $testerInfo)
+                if ($testerInfo['id'] == $tester) {
+                  $testerIndex = $index;
+                  break;
+                }
+            }
+            $fileName = GetJobFile($workDir, $priority, $pc, $testerIndex, $testerCount);
+            if( isset($fileName) && strlen($fileName) )
+            {
+                $is_done = true;
+                $delete = true;
+                
+                if ($is_json)
+                    header ("Content-type: application/json");
+                else
+                    header('Content-type: text/plain');
+                header("Cache-Control: no-cache, must-revalidate");
+                header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
-                    // send the test info to the test agent
-                    $testInfo = file_get_contents("$workDir/$fileName");
+                // send the test info to the test agent
+                $testInfo = file_get_contents("$workDir/$fileName");
 
-                    // extract the test ID from the job file
-                    if( preg_match('/Test ID=([^\r\n]+)\r/i', $testInfo, $matches) )
-                        $testId = trim($matches[1]);
+                // extract the test ID from the job file
+                if( preg_match('/Test ID=([^\r\n]+)\r/i', $testInfo, $matches) )
+                    $testId = trim($matches[1]);
 
-                    if( isset($testId) ) {
-                        // figure out the path to the results
-                        $testPath = './' . GetTestPath($testId);
+                if( isset($testId) ) {
+                    // figure out the path to the results
+                    $testPath = './' . GetTestPath($testId);
 
-                        // flag the test with the start time
-                        $ini = file_get_contents("$testPath/testinfo.ini");
-                        if (stripos($ini, 'startTime=') === false) {
-                            $time = time();
-                            $start = "[test]\r\nstartTime=" . gmdate("m/d/y G:i:s", $time);
-                            $out = str_replace('[test]', $start, $ini);
-                            file_put_contents("$testPath/testinfo.ini", $out);
-                        }
-                        
-                        $lock = LockTest($testId);
-                        if ($lock) {
-                          $testInfoJson = GetTestInfo($testId);
-                          if ($testInfoJson) {
-                            if (!array_key_exists('tester', $testInfoJson) || !strlen($testInfoJson['tester']))
-                              $testInfoJson['tester'] = $tester;
-                            if (isset($dnsServers) && strlen($dnsServers))
-                              $testInfoJson['testerDNS'] = $dnsServers;
-                            if (!array_key_exists('started', $testInfoJson) || !$testInfoJson['started']) {
-                              $testInfoJson['started'] = $time;
-                              logTestMsg($testId, "Starting test (initiated by tester $tester)");
-                            }
-                            if (!array_key_exists('test_runs', $testInfoJson))
-                              $testInfoJson['test_runs'] = array();
-                            for ($run = 1; $run <= $testInfoJson['runs']; $run++) {
-                              if (!array_key_exists($run, $testInfoJson['test_runs']))
-                                $testInfoJson['test_runs'][$run] = array('done' => false);
-                            }
-                            $testInfoJson['id'] = $testId;
-                            ProcessTestShard($testInfoJson, $testInfo, $delete);
-                            SaveTestInfo($testId, $testInfoJson);
-                          }
-                          UnlockTest($lock);
-                        }
-                        file_put_contents("./tmp/last-test-{$location}-{$tester}.test", $testId);
+                    // flag the test with the start time
+                    $ini = file_get_contents("$testPath/testinfo.ini");
+                    if (stripos($ini, 'startTime=') === false) {
+                        $time = time();
+                        $start = "[test]\r\nstartTime=" . gmdate("m/d/y G:i:s", $time);
+                        $out = str_replace('[test]', $start, $ini);
+                        file_put_contents("$testPath/testinfo.ini", $out);
                     }
-
-                    if ($delete)
-                        unlink("$workDir/$fileName");
-                    else
-                        AddJobFileHead($workDir, $fileName, $priority, true);
                     
-                    if ($is_json) {
-                        $testJson = array();
-                        $script = '';
-                        $isScript = false;
-                        $lines = explode("\r\n", $testInfo);
-                        foreach($lines as $line) {
-                            if( strlen(trim($line)) ) {
-                                if( $isScript ) {
-                                    if( strlen($script) )
-                                        $script .= "\r\n";
-                                    $script .= $line;
-                                } elseif( !strcasecmp($line, '[Script]') )
-                                    $isScript = true;
-                                else {
-                                    $pos = strpos($line, '=');
-                                    if( $pos > -1 ) {
-                                        $key = trim(substr($line, 0, $pos));
-                                        $value = trim(substr($line, $pos + 1));
-                                        if( strlen($key) && strlen($value) ) {
-                                            if( is_numeric($value) )
-                                                $testJson[$key] = (int)$value;
-                                            else
-                                                $testJson[$key] = $value;
-                                        }
+                    $lock = LockTest($testId);
+                    if ($lock) {
+                      $testInfoJson = GetTestInfo($testId);
+                      if ($testInfoJson) {
+                        if (!array_key_exists('tester', $testInfoJson) || !strlen($testInfoJson['tester']))
+                          $testInfoJson['tester'] = $tester;
+                        if (isset($dnsServers) && strlen($dnsServers))
+                          $testInfoJson['testerDNS'] = $dnsServers;
+                        if (!array_key_exists('started', $testInfoJson) || !$testInfoJson['started']) {
+                          $testInfoJson['started'] = $time;
+                          logTestMsg($testId, "Starting test (initiated by tester $tester)");
+                        }
+                        if (!array_key_exists('test_runs', $testInfoJson))
+                          $testInfoJson['test_runs'] = array();
+                        for ($run = 1; $run <= $testInfoJson['runs']; $run++) {
+                          if (!array_key_exists($run, $testInfoJson['test_runs']))
+                            $testInfoJson['test_runs'][$run] = array('done' => false);
+                        }
+                        $testInfoJson['id'] = $testId;
+                        ProcessTestShard($testInfoJson, $testInfo, $delete);
+                        SaveTestInfo($testId, $testInfoJson);
+                      }
+                      UnlockTest($lock);
+                    }
+                    file_put_contents("./tmp/last-test-{$location}-{$tester}.test", $testId);
+                }
+
+                if ($delete)
+                    unlink("$workDir/$fileName");
+                else
+                    AddJobFileHead($workDir, $fileName, $priority, true);
+                
+                if ($is_json) {
+                    $testJson = array();
+                    $script = '';
+                    $isScript = false;
+                    $lines = explode("\r\n", $testInfo);
+                    foreach($lines as $line) {
+                        if( strlen(trim($line)) ) {
+                            if( $isScript ) {
+                                if( strlen($script) )
+                                    $script .= "\r\n";
+                                $script .= $line;
+                            } elseif( !strcasecmp($line, '[Script]') )
+                                $isScript = true;
+                            else {
+                                $pos = strpos($line, '=');
+                                if( $pos > -1 ) {
+                                    $key = trim(substr($line, 0, $pos));
+                                    $value = trim(substr($line, $pos + 1));
+                                    if( strlen($key) && strlen($value) ) {
+                                        if( is_numeric($value) )
+                                            $testJson[$key] = (int)$value;
+                                        else
+                                            $testJson[$key] = $value;
                                     }
                                 }
                             }
                         }
-                        if( strlen($script) )
-                            $testJson['script'] = $script;
-                        echo json_encode($testJson);
                     }
-                    else
-                        echo $testInfo;
-                    $ok = true;
+                    if( strlen($script) )
+                        $testJson['script'] = $script;
+                    echo json_encode($testJson);
                 }
-                    
-                // zero out the tracked page loads in case some got lost
-                if (!$is_done && is_file("./tmp/$location.tests")) {
-                    $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
-                    if( $tests ) {
-                        $tests['tests'] = 0;
-                        file_put_contents("./tmp/$location.tests", json_encode($tests));
-                    }
+                else
+                    echo $testInfo;
+                $ok = true;
+            }
+                
+            // zero out the tracked page loads in case some got lost
+            if (!$is_done && is_file("./tmp/$location.tests")) {
+                $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
+                if( $tests ) {
+                    $tests['tests'] = 0;
+                    file_put_contents("./tmp/$location.tests", json_encode($tests));
                 }
             }
             

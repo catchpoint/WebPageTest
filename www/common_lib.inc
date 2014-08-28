@@ -1340,7 +1340,7 @@ function AddJobFileHead($workDir, $file, $priority, $atFront = false)
 /**
 * Get a job from the given work queue (assume it is locked)
 */
-function GetJobFile($workDir, &$priority) {
+function GetJobFile($workDir, &$priority, $tester = null, $testerIndex = null, $testerCount = null) {
     $file = null;
 
     $beanstalkd = GetSetting('beanstalkd');
@@ -1369,12 +1369,37 @@ function GetJobFile($workDir, &$priority) {
         $modified = false;
         $priority = 0;
         while (!isset($file) && $priority <= 9) {
-            $file = array_shift($queue[$priority]);
-            if (isset($file))
-                $modified = true;
-            if (isset($file) && !is_file("$workDir/$file"))
-                unset($file);
-            elseif (!isset($file))
+            // Pick any tests without affinity or whose affinity
+            // matches the existing tester
+            if (isset($queue[$priority]) && count($queue[$priority])) {
+              foreach ($queue[$priority] as $index => $job_file) {
+                if (preg_match('/Affinity(?P<affinity>[a-zA-Z0-9\-_]+)\.(?P<id>[a-zA-Z0-9\_]+)\.(p[0-9]|url)$/', $job_file, $matches)) {
+                  $affinity = $matches['affinity'];
+                  if (preg_match('/^Tester(?P<tester>[a-zA-Z0-9\-_]+$)/', $affinity, $matches)) {
+                    if (isset($tester) && !strcasecmp($tester,$matches['tester']))
+                      $file = $job_file;
+                  } elseif (isset($testerIndex) && isset($testerCount) &&
+                            $testerIndex >= 0 && $testerIndex < $testerCount &&
+                            preg_match('/^[0-9]+$/', $affinity, $matches)) {
+                    $matchIndex = intval($affinity) % $testerCount;
+                    if ($matchIndex == $testerIndex)
+                      $file = $job_file;
+                  }
+                } else {
+                  // no affinity, this one works
+                  $file = $job_file;
+                }
+                if (isset($file)) {
+                  unset($queue[$priority][$index]);
+                  $modified = true;
+                  if (is_file("$workDir/$file"))
+                    break;
+                  else
+                    unset($file);
+                }
+              }
+            }
+            if (!isset($file))
                 $priority++;
         }
 
@@ -1525,7 +1550,7 @@ function GetTesters($locationId)
         {
             ksort($testers);
             $location['testers'] = array();
-            foreach( $testers as $index => $tester )
+            foreach( $testers as $id => $tester )
             {
                 if( !array_key_exists('offline', $tester) || !$tester['offline'] )
                 {
@@ -1577,6 +1602,7 @@ function GetTesters($locationId)
                     if( strlen( $tester['test'] ) )
                         $entry['busy'] = 1;
 
+                    $entry['id'] = $id;
                     $location['testers'][] = $entry;
                 }
             }

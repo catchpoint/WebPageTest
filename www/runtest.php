@@ -144,6 +144,10 @@
             $test['responsive'] = array_key_exists('responsive', $_REQUEST) && $_REQUEST['responsive'] ? 1 : 0;
             if (array_key_exists('tsview_id', $_REQUEST))
               $test['tsview_id'] = $_REQUEST['tsview_id'];
+            if (array_key_exists('affinity', $_REQUEST))
+              $test['affinity'] = hexdec(substr(sha1($_REQUEST['affinity']), 0, 8));
+            if (array_key_exists('tester', $_REQUEST) && preg_match('/[a-zA-Z0-9\-_]+/', $_REQUEST['tester']))
+              $test['affinity'] = 'Tester' . $_REQUEST['tester'];
 
             // custom options
             $test['cmdLine'] = '';
@@ -1340,6 +1344,8 @@ function WriteJob($location, &$test, &$job, $testId)
         $locationLock = LockLocation($location);
         if( isset($locationLock) )
         {
+            if (isset($test['affinity']))
+              $test['job'] = "Affinity{$test['affinity']}.{$test['job']}";
             $fileName = $test['job'];
             $file = "$workDir/$fileName";
             if( file_put_contents($file, $job) ) {
