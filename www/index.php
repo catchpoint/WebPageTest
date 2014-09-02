@@ -372,8 +372,8 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="mobile" id="mobile" class="checkbox" style="float: left;width: auto;">
                                         <label for="mobile" class="auto_width">
-                                            Emulate Mobile Browser (Experimental)<br>
-                                            <small>Chrome mobile user agent, 640x960 screen, 2x scaling and fixed viewport</small>
+                                            Emulate Mobile Browser (Experimental, Chrome 39+)<br>
+                                            <small>Nexus 5 user agent, 1080x1920 screen, 3x scaling and fixed viewport</small>
                                         </label>
                                     </li>
                                     <li>

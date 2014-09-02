@@ -488,6 +488,9 @@ function wptExecuteTask(task) {
           g_commandRunner.doCollectStats(task.target, wptTaskCallback);
         });
         break;
+      case 'emulatemobile':
+        wpt.chromeDebugger.EmulateMobile(task.target);
+        break;
       case 'checkresponsive':
         g_processing_task = true;
         g_commandRunner.doCheckResponsive(wptTaskCallback);

@@ -39,17 +39,17 @@ static const DWORD MS_IN_SEC = 1000;
 static const DWORD BROWSER_WIDTH = 1024;
 static const DWORD BROWSER_HEIGHT = 768;
 
-// Mobile emulation defaults (taken from a Droid RAZR).
+// Mobile emulation defaults (taken from a Nexus 5).
 // The height has 36 added pixels to allow for the debugging header.
-static const TCHAR * DEFAULT_MOBILE_SCALE_FACTOR = _T("1.5");
-static const DWORD DEFAULT_MOBILE_WIDTH = 540;
-static const DWORD DEFAULT_MOBILE_HEIGHT = 900;
-static const DWORD CHROME_PADDING_HEIGHT = 115;
-static const DWORD CHROME_PADDING_WIDTH = 4;
+static const TCHAR * DEFAULT_MOBILE_SCALE_FACTOR = _T("3");
+static const DWORD DEFAULT_MOBILE_WIDTH = 360;
+static const DWORD DEFAULT_MOBILE_HEIGHT = 640;
+static const DWORD CHROME_PADDING_HEIGHT = 108;
+static const DWORD CHROME_PADDING_WIDTH = 6;
 static const char * DEFAULT_MOBILE_USER_AGENT =
-    "Mozilla/5.0 (Linux; Android 4.0.4; DROID RAZR "
-    "Build/6.7.2-180_DHD-16_M4-31) AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/31.0.1631.1 Mobile Safari/537.36";
+    "Mozilla/5.0 (Linux; Android 4.4.4; Nexus 5 Build/KTU84P) "
+    "AppleWebKit/537.36 (KHTML like Gecko) "
+    "Chrome/37.0.2062.55 Mobile Safari/537.36";
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -490,34 +490,22 @@ void WptTest::BuildScript() {
     if (_device_scale_factor.IsEmpty())
       _device_scale_factor = DEFAULT_MOBILE_SCALE_FACTOR;
     if (!_viewport_width && !_viewport_height) {
-      DWORD padding_width = CHROME_PADDING_WIDTH;
-      DWORD padding_height = CHROME_PADDING_HEIGHT;
-      double scale = _ttof(_device_scale_factor);
-      if (scale >= 0.5 && scale <= 10.0) {
-        padding_width = (int)((double)padding_width * scale);
-        padding_height = (int)((double)padding_height * scale);
-      }
-      _browser_width = DEFAULT_MOBILE_WIDTH + padding_width;
-      _browser_height = DEFAULT_MOBILE_HEIGHT + padding_height;
+      _viewport_width = DEFAULT_MOBILE_WIDTH;
+      _viewport_height = DEFAULT_MOBILE_HEIGHT;
     }
+    _browser_width = _viewport_width + CHROME_PADDING_WIDTH;
+    _browser_height = _viewport_height + CHROME_PADDING_HEIGHT;
     if (_user_agent.IsEmpty())
       _user_agent = DEFAULT_MOBILE_USER_AGENT;
-  }
-
-  // Scale the viewport or browser size by the scale factor.
-  // Once the viewport scaling is ACTUALLY working in Chrome then we can ues it
-  // but as of right now it isn't.
-  if (!has_gpu_ && _device_scale_factor.GetLength()) {
-    double scale = _ttof(_device_scale_factor);
-    _device_scale_factor.Empty();
-    if (scale >= 0.5 && scale <= 10.0) {
-      _browser_width = (int)((double)_browser_width / scale);
-      _browser_height = (int)((double)_browser_height / scale);
-      if (_viewport_width)
-        _viewport_width = (int)((double)_viewport_width / scale);
-      if (_viewport_height)
-        _viewport_height = (int)((double)_viewport_height / scale);
-    }
+    ScriptCommand command;
+    command.command = _T("emulatemobile");
+    command.target.Format(
+        _T("{\"width\":%d,\"height\":%d,\"deviceScaleFactor\":%s,\"mobile\":true,\"fitWindow\":true}"),
+          _viewport_width, _viewport_height, _device_scale_factor);
+    command.record = false;
+    _script_commands.AddHead(command);
+    _viewport_width = 0;
+    _viewport_height = 0;
   }
 }
 

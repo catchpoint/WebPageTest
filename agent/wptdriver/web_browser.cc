@@ -42,17 +42,8 @@ static const TCHAR * SILVERLIGHT_CACHE_DIR = _T("Microsoft\\Silverlight");
 
 static const TCHAR * CHROME_NETLOG = _T(" --log-net-log=\"%s_netlog.txt\"");
 static const TCHAR * CHROME_SPDY3 = _T(" --enable-spdy3");
-static const TCHAR * CHROME_GPU = 
-    _T(" --force-compositing-mode")
-    _T(" --enable-threaded-compositing")
-    _T(" --enable-viewport");
-static const TCHAR * CHROME_MOBILE = 
-    _T(" --enable-pinch")
-    _T(" --enable-fixed-layout");
 static const TCHAR * CHROME_SOFTWARE_RENDER = 
     _T(" --disable-accelerated-compositing");
-static const TCHAR * CHROME_SCALE_FACTOR =
-    _T(" --force-device-scale-factor=");
 static const TCHAR * CHROME_USER_AGENT =
     _T(" --user-agent=");
 static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
@@ -148,15 +139,6 @@ bool WebBrowser::RunAndWait() {
             lstrcat(cmdLine, CHROME_SPDY3);
           if (_test._force_software_render)
             lstrcat(cmdLine, CHROME_SOFTWARE_RENDER);
-          else if (_test._emulate_mobile) {
-            lstrcat(cmdLine, CHROME_GPU);
-            lstrcat(cmdLine, CHROME_MOBILE);
-          } else if (_test._device_scale_factor.GetLength())
-            lstrcat(cmdLine, CHROME_GPU);
-          if (_test.has_gpu_ && _test._device_scale_factor.GetLength()) {
-            lstrcat(cmdLine, CHROME_SCALE_FACTOR);
-            lstrcat(cmdLine, _test._device_scale_factor);
-          }
           if (_test._user_agent.GetLength() &&
               _test._user_agent.Find(_T('"')) == -1) {
             lstrcat(cmdLine, CHROME_USER_AGENT);

@@ -63,6 +63,7 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.devToolsTimer = undefined;
     g_instance.trace = false;
     g_instance.statsDoneCallback = undefined;
+    g_instance.mobileEmulation = undefined;
     var version = '1.0';
     if (g_instance.chromeApi_['debugger'])
         g_instance.chromeApi_.debugger.attach({tabId: g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachDebugger);
@@ -125,6 +126,11 @@ wpt.chromeDebugger.CollectStats = function(callback) {
   }
 };
 
+wpt.chromeDebugger.EmulateMobile = function(deviceString) {
+  g_instance.mobileEmulation = JSON.parse(deviceString);
+  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.setDeviceMetricsOverride', g_instance.mobileEmulation);
+};
+
 /**
  * Actual message callback
  */
@@ -157,6 +163,14 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       g_instance.devToolsData += '{"method":"' + message + '","params":' + JSON.stringify(params) + '}';
       if (g_instance.devToolsTimer == undefined)
         g_instance.devToolsTimer = setTimeout(wpt.chromeDebugger.SendDevToolsData, TIMELINE_AGGREGATION_INTERVAL);
+    }
+    
+    // Page events
+    if (message === 'Page.frameNavigated' &&
+        params['frame'] !== undefined &&
+        params.frame['parentId'] === undefined &&
+        g_instance.mobileEmulation != undefined) {
+      g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.setDeviceMetricsOverride', g_instance.mobileEmulation);
     }
     
     // Network events
