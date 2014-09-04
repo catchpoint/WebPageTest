@@ -324,11 +324,11 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
     $requests = null;
     $pageData = null;
     $startOffset = null;
-    $ver = 8;
+    $ver = 9;
     $cached = isset($cached) && $cached ? 1 : 0;
     $ok = GetCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
     if (!$ok) {
-      if (GetDevToolsEvents(array('Page.', 'Network.'), $testPath, $run, $cached, $events, $startOffset)) {
+      if (GetDevToolsEvents(null, $testPath, $run, $cached, $events, $startOffset)) {
           if (DevToolsFilterNetRequests($events, $rawRequests, $rawPageData)) {
               $requests = array();
               $pageData = array();
@@ -353,6 +353,18 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
               $pageData['start_epoch'] = $rawPageData['startTime'];
               if (array_key_exists('onload', $rawPageData))
                   $pageData['loadTime'] = $pageData['docTime'] = round(($rawPageData['onload'] - $rawPageData['startTime']));
+              if (isset($rawPageData['domContentLoadedEventStart'])) {
+                $pageData['domContentLoadedEventStart'] = round($rawPageData['domContentLoadedEventStart'] - $rawPageData['startTime']);
+                $pageData['domContentLoadedEventEnd'] = isset($rawPageData['domContentLoadedEventEnd']) ?
+                    round($rawPageData['domContentLoadedEventEnd'] - $rawPageData['startTime']) :
+                    $pageData['domContentLoadedEventStart'];
+              }
+              if (isset($rawPageData['loadEventStart'])) {
+                $pageData['loadEventStart'] = round($rawPageData['loadEventStart'] - $rawPageData['startTime']);
+                $pageData['loadEventEnd'] = isset($rawPageData['loadEventEnd']) ?
+                    round($rawPageData['loadEventEnd'] - $rawPageData['startTime']) :
+                    $pageData['loadEventStart'];
+              }
               
               // go through and pull out the requests, calculating the page stats as we go
               $connections = array();
@@ -792,6 +804,26 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                 }
             }
         }
+        if ($event['method'] == 'Page.domContentEventFired' &&
+            array_key_exists('timestamp', $event) &&
+            !isset($pageData['domContentLoadedEventStart'])) {
+          $pageData['domContentLoadedEventStart'] = $event['timestamp'];
+          $pageData['domContentLoadedEventEnd'] = $event['timestamp'];
+        }
+        if (isset($main_frame) &&
+            $event['method'] == 'Timeline.eventRecorded') {
+          $eventString = json_encode($event);
+          if (!isset($pageData['domContentLoadedEventStart']) &&
+              strpos($eventString, '"type":"DOMContentLoaded"') !== false &&
+              isset($event['record'])) {
+            ParseDevToolsDOMContentLoaded($event['record'], $main_frame, $pageData);
+          }
+          if (!isset($pageData['loadEventStart']) &&
+              strpos($eventString, '"type":"load"') !== false &&
+              isset($event['record'])) {
+            ParseDevToolsLoadEvent($event['record'], $main_frame, $pageData);
+          }
+        }
     }
     // pull out just the requests that were served on the wire
     foreach ($rawRequests as &$request) {
@@ -838,6 +870,45 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
     }
     return $ok;
 }
+
+function ParseDevToolsDOMContentLoaded(&$event, $main_frame, &$pageData) {
+  if (isset($event['type']) &&
+      $event['type'] == 'EventDispatch' &&
+      isset($event['data']['type']) &&
+      $event['data']['type'] == 'DOMContentLoaded' &&
+      isset($event['frameId']) &&
+      $event['frameId'] == $main_frame &&
+      isset($event['startTime'])) {
+    $pageData['domContentLoadedEventStart'] = $event['startTime'];
+    $pageData['domContentLoadedEventEnd'] = isset($event['endTime']) ? $event['endTime'] : $event['startTime'];
+  } elseif (isset($event['children'])) {
+    foreach($event['children'] as &$child) {
+      ParseDevToolsDOMContentLoaded($child, $main_frame, $pageData);
+      if (isset($pageData['domContentLoadedEventStart']))
+        break;
+    }
+  }
+}
+
+function ParseDevToolsLoadEvent(&$event, $main_frame, &$pageData) {
+  if (isset($event['type']) &&
+      $event['type'] == 'EventDispatch' &&
+      isset($event['data']['type']) &&
+      $event['data']['type'] == 'load' &&
+      isset($event['frameId']) &&
+      $event['frameId'] == $main_frame &&
+      isset($event['startTime'])) {
+    $pageData['loadEventStart'] = $event['startTime'];
+    $pageData['loadEventEnd'] = isset($event['endTime']) ? $event['endTime'] : $event['startTime'];
+  } elseif (isset($event['children'])) {
+    foreach($event['children'] as &$child) {
+      ParseDevToolsLoadEvent($child, $main_frame, $pageData);
+      if (isset($pageData['loadEventStart']))
+        break;
+    }
+  }
+}
+
 
 /**
 * Load a filtered list of events from the dev tools capture
