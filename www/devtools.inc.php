@@ -324,7 +324,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
     $requests = null;
     $pageData = null;
     $startOffset = null;
-    $ver = 9;
+    $ver = 10;
     $cached = isset($cached) && $cached ? 1 : 0;
     $ok = GetCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
     if (!$ok) {
@@ -364,6 +364,9 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                 $pageData['loadEventEnd'] = isset($rawPageData['loadEventEnd']) ?
                     round($rawPageData['loadEventEnd'] - $rawPageData['startTime']) :
                     $pageData['loadEventStart'];
+              } else {
+                $pageData['loadEventStart'] = $pageData['loadTime'];
+                $pageData['loadEventEnd'] = $pageData['loadTime'];
               }
               
               // go through and pull out the requests, calculating the page stats as we go
@@ -811,17 +814,12 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
           $pageData['domContentLoadedEventEnd'] = $event['timestamp'];
         }
         if (isset($main_frame) &&
-            $event['method'] == 'Timeline.eventRecorded') {
+            $event['method'] == 'Timeline.eventRecorded' &&
+            !isset($pageData['domContentLoadedEventStart'])) {
           $eventString = json_encode($event);
-          if (!isset($pageData['domContentLoadedEventStart']) &&
-              strpos($eventString, '"type":"DOMContentLoaded"') !== false &&
+          if (strpos($eventString, '"type":"DOMContentLoaded"') !== false &&
               isset($event['record'])) {
             ParseDevToolsDOMContentLoaded($event['record'], $main_frame, $pageData);
-          }
-          if (!isset($pageData['loadEventStart']) &&
-              strpos($eventString, '"type":"load"') !== false &&
-              isset($event['record'])) {
-            ParseDevToolsLoadEvent($event['record'], $main_frame, $pageData);
           }
         }
     }
@@ -889,26 +887,6 @@ function ParseDevToolsDOMContentLoaded(&$event, $main_frame, &$pageData) {
     }
   }
 }
-
-function ParseDevToolsLoadEvent(&$event, $main_frame, &$pageData) {
-  if (isset($event['type']) &&
-      $event['type'] == 'EventDispatch' &&
-      isset($event['data']['type']) &&
-      $event['data']['type'] == 'load' &&
-      isset($event['frameId']) &&
-      $event['frameId'] == $main_frame &&
-      isset($event['startTime'])) {
-    $pageData['loadEventStart'] = $event['startTime'];
-    $pageData['loadEventEnd'] = isset($event['endTime']) ? $event['endTime'] : $event['startTime'];
-  } elseif (isset($event['children'])) {
-    foreach($event['children'] as &$child) {
-      ParseDevToolsLoadEvent($child, $main_frame, $pageData);
-      if (isset($pageData['loadEventStart']))
-        break;
-    }
-  }
-}
-
 
 /**
 * Load a filtered list of events from the dev tools capture
