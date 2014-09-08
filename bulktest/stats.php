@@ -25,6 +25,7 @@ if (LoadResults($results)) {
             !@$result['bytesInDoc'] ||
             !@$result['docTime'] ||
             !@$result['TTFB'] ||
+            ($includeDCL && !$result['domContentLoadedEventStart']) ||
             $result['successfulRuns'] < $minRuns ||
             (isset($result['resubmit']) && $result['resubmit']) ||
             @$result['TTFB'] > @$result['docTime'] ||
@@ -62,7 +63,7 @@ if (LoadResults($results)) {
         $data[$key]['url'] = $url;
         $data[$key][$label] = array();
         $data[$key][$label]['id'] = $result['id'];
-        $data[$key][$label]['result'] = $result['result'];
+        $data[$key][$label]['result'] = @$result['result'];
         if (array_key_exists('rv_result', $result))
           $data[$key][$label]['rv_result'] = $result['rv_result'];
         if (array_key_exists('run', $result))
