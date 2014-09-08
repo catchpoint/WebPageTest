@@ -278,9 +278,14 @@ else
                         </ul>
                         </div>
                         <?php
-                    }
-                    elseif( $view == 'bulk' )
+                    } elseif( $view == 'bulk' ) {
+                        if( FRIENDLY_URLS )
+                            echo "<br>Download Partial Combined Raw: <a href=\"/result/$id/{$id}_bulk_page_data.csv\">Page Data</a> - <a href=\"/result/$id/{$id}_bulk_requests.csv\">Object Data</a>";
+                        else
+                            echo "<br>Download Partial Combined Raw: <a href=\"/csv.php?test=$id\">Page Data</a> - <a href=\"/csv.php?test=$id&requests=1\">Object Data</a>";
+                        echo "<br><br><a href=\"/aggregate.php?test=$id\">Download Partial Aggregate Statistics</a>";
                         echo "<br><br><a href=\"/cancelTest.php?test=$id\">Cancel all pending tests</a>";
+                    }
                 }
                 ?>
             </div>
