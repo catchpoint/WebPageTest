@@ -364,6 +364,13 @@ $loc = ParseLocations($locations);
                                         </label>
                                         <input id="time" type="text" class="text short" name="time" value=""> seconds
                                     </li>
+                                    <li>
+                                        <label for="tester">
+                                            Specific Tester<br>
+                                            <small>Run the test on a specific <a href="/getTesters.php">PC</a>.<br>Name must match exactly or the test will not run.</small>
+                                        </label>
+                                        <input id="tester" type="text" class="text" name="tester" value="">
+                                    </li>
                                 </ul>
                             </div>
                             <div id="advanced-chrome" class="test_subbox ui-tabs-hide">
