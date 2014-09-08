@@ -1452,8 +1452,8 @@ function LoadJobQueue($workDir, &$queue)
         $queue = null;
         $queueName = sha1($workDir);
         $queueFile = "./tmp/$queueName.queue";
-        if( is_file($queueFile) ) {
-            $queue = json_decode(file_get_contents($queueFile), true);
+        if( gz_is_file($queueFile) ) {
+            $queue = json_decode(gz_file_get_contents($queueFile), true);
             // re-scan the directory if the queue is empty
             if (isset($queue)) {
                 if (is_array($queue)) {
@@ -1519,7 +1519,7 @@ function SaveJobQueue($workDir, &$queue)
 {
     $ret = false;
     $queueName = sha1($workDir);
-    if (file_put_contents("./tmp/$queueName.queue", json_encode($queue)) )
+    if (gz_file_put_contents("./tmp/$queueName.queue", json_encode($queue)) )
         $ret = true;
 
     return $ret;
