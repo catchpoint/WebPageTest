@@ -324,7 +324,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
     $requests = null;
     $pageData = null;
     $startOffset = null;
-    $ver = 10;
+    $ver = 11;
     $cached = isset($cached) && $cached ? 1 : 0;
     $ok = GetCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
     if (!$ok) {
@@ -792,17 +792,19 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                 }
                 if ($event['method'] == 'Network.loadingFailed') {
                   if (!array_key_exists('response', $rawRequests[$id])) {
-                    $rawRequests[$id]['fromNet'] = true;
-                    $rawRequests[$id]['errorCode'] = 12999;
-                    if (!array_key_exists('firstByteTime', $rawRequests[$id]))
-                        $rawRequests[$id]['firstByteTime'] = $event['timestamp'];
-                    if (!array_key_exists('endTime', $rawRequests[$id]) || 
-                        $event['timestamp'] > $rawRequests[$id]['endTime'])
-                        $rawRequests[$id]['endTime'] = $event['timestamp'];
-                    if (array_key_exists('errorText', $event))
-                        $rawRequests[$id]['error'] = $event['errorText'];
-                    if (array_key_exists('error', $event))
-                        $rawRequests[$id]['errorCode'] = $event['error'];
+                    if (!isset($event['canceled']) || !$event['canceled']) {
+                      $rawRequests[$id]['fromNet'] = true;
+                      $rawRequests[$id]['errorCode'] = 12999;
+                      if (!array_key_exists('firstByteTime', $rawRequests[$id]))
+                          $rawRequests[$id]['firstByteTime'] = $event['timestamp'];
+                      if (!array_key_exists('endTime', $rawRequests[$id]) || 
+                          $event['timestamp'] > $rawRequests[$id]['endTime'])
+                          $rawRequests[$id]['endTime'] = $event['timestamp'];
+                      if (array_key_exists('errorText', $event))
+                          $rawRequests[$id]['error'] = $event['errorText'];
+                      if (array_key_exists('error', $event))
+                          $rawRequests[$id]['errorCode'] = $event['error'];
+                    }
                   }
                 }
             }
