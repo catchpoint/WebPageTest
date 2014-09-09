@@ -1124,6 +1124,7 @@ function DevToolsMatchEvent($filter, &$event, $startTime = null, $endTime = null
   $match = true;
   if (isset($event['method']) && isset($event['params'])) {
     if (isset($startTime) && $startTime) {
+      $time = DevToolsEventTime($event);
       if (isset($time) && $time &&
           ($time < $startTime ||
           $time - $startTime > 600000 ||
@@ -1427,6 +1428,7 @@ function DevToolsGetCPUSlices($testPath, $run, $cached) {
 }
 
 function DevToolsAdjustSlice(&$slice, $amount, $type, $parentType) {
+
   if ($type && $amount) {
     if ($amount == 1.0) {
       foreach($slice as $sliceType => $value)
