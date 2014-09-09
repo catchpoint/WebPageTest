@@ -1005,19 +1005,17 @@ function GetTestInfoHtml($includeScript = true)
     global $admin;
     global $privateInstall;
     $html = '';
-    if($admin || $privateInstall) {
-      $run = null;
-      if (array_key_exists('run', $_REQUEST))
-        $run = $_REQUEST['run'];
-      if (isset($run) &&
-          array_key_exists('testinfo', $test) &&
-          array_key_exists('test_runs', $test['testinfo']) &&
-          array_key_exists($run, $test['testinfo']['test_runs']) &&
-          array_key_exists('tester', $test['testinfo']['test_runs'][$run]))
-        $html .= 'Tester: ' . $test['testinfo']['test_runs'][$run]['tester'] . '<br>';
-      elseif (isset($test['testinfo']['tester']) )
-        $html .= 'Tester: ' . $test['testinfo']['tester'] . '<br>';
-    }
+    $run = null;
+    if (array_key_exists('run', $_REQUEST))
+      $run = $_REQUEST['run'];
+    if (isset($run) &&
+        array_key_exists('testinfo', $test) &&
+        array_key_exists('test_runs', $test['testinfo']) &&
+        array_key_exists($run, $test['testinfo']['test_runs']) &&
+        array_key_exists('tester', $test['testinfo']['test_runs'][$run]))
+      $html .= 'Tester: ' . $test['testinfo']['test_runs'][$run]['tester'] . '<br>';
+    elseif (isset($test['testinfo']['tester']) )
+      $html .= 'Tester: ' . $test['testinfo']['tester'] . '<br>';
     if( $dom )
         $html .= 'DOM Element: <b>' . $dom . '</b><br>';
     if( $test['test']['fvonly'] )
