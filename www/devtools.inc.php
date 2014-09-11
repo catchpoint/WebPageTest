@@ -324,7 +324,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
     $requests = null;
     $pageData = null;
     $startOffset = null;
-    $ver = 11;
+    $ver = 12;
     $cached = isset($cached) && $cached ? 1 : 0;
     $ok = GetCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
     if (!$ok) {
@@ -678,24 +678,34 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
     foreach ($events as $event) {
         if (!isset($main_frame) &&
             $event['method'] == 'Page.frameStartedLoading' &&
-            isset($event['frameId']))
+            isset($event['frameId'])) {
           $main_frame = $event['frameId'];
+        }
         if ($event['method'] == 'Page.frameStartedLoading' &&
             isset($event['frameId']) &&
             isset($main_frame) &&
-            $event['frameId'] == $main_frame)
+            $event['frameId'] == $main_frame) {
           $main_resource_id = null;
+        }
         if (!isset($main_resource_id) &&
             $event['method'] == 'Network.requestWillBeSent' &&
             isset($event['requestId']) &&
             isset($event['frameId']) &&
             isset($main_frame) &&
-            $event['frameId'] == $main_frame)
+            $event['frameId'] == $main_frame) {
           $main_resource_id = $event['requestId'];
+        }
         if ($event['method'] == 'Page.loadEventFired' &&
             array_key_exists('timestamp', $event) &&
-            $event['timestamp'] > $pageData['onload'])
-            $pageData['onload'] = $event['timestamp'];
+            $event['timestamp'] > $pageData['onload']) {
+          $pageData['onload'] = $event['timestamp'];
+        }
+        if ($event['method'] == 'Network.requestServedFromCache' &&
+            array_key_exists('requestId', $event) &&
+            array_key_exists($event['requestId'], $rawRequests)) {
+          $rawRequests[$event['requestId']]['fromNet'] = false;
+          $rawRequests[$event['requestId']]['fromCache'] = true;
+        }
         if (array_key_exists('timestamp', $event) &&
             array_key_exists('requestId', $event)) {
             $originalId = $id = $event['requestId'];
@@ -762,6 +772,9 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                     if (!array_key_exists('firstByteTime', $rawRequests[$id]))
                         $rawRequests[$id]['firstByteTime'] = $event['timestamp'];
                     $rawRequests[$id]['fromNet'] = false;
+                    // the timing data for cached resources is completely bogus
+                    if (isset($rawRequests[$id]['fromCache']) && isset($event['response']['timing']))
+                      unset($event['response']['timing']);
                     // iOS incorrectly sets the fromNet flag to false for resources from cache
                     // but it doesn't have any send headers for those requests
                     // so use that as an indicator.
@@ -769,8 +782,10 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                         !$event['response']['fromDiskCache'] &&
                         array_key_exists('headers', $rawRequests[$id]) &&
                         is_array($rawRequests[$id]['headers']) &&
-                        count($rawRequests[$id]['headers']))
-                        $rawRequests[$id]['fromNet'] = true;
+                        count($rawRequests[$id]['headers']) &&
+                        !isset($rawRequests[$id]['fromCache'])) {
+                      $rawRequests[$id]['fromNet'] = true;
+                    }
                     // if we didn't get explicit bytes, fall back to any responses that had
                     // content-length headers
                     if ((!array_key_exists('bytesIn', $rawRequests[$id]) || !$rawRequests[$id]['bytesIn']) &&
@@ -791,7 +806,8 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                         $rawRequests[$id]['endTime'] = $event['timestamp'];
                 }
                 if ($event['method'] == 'Network.loadingFailed') {
-                  if (!array_key_exists('response', $rawRequests[$id])) {
+                  if (!array_key_exists('response', $rawRequests[$id]) &&
+                      !isset($rawRequests[$id]['fromCache'])) {
                     if (!isset($event['canceled']) || !$event['canceled']) {
                       $rawRequests[$id]['fromNet'] = true;
                       $rawRequests[$id]['errorCode'] = 12999;
@@ -828,7 +844,7 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
     // pull out just the requests that were served on the wire
     foreach ($rawRequests as &$request) {
       if (array_key_exists('startTime', $request)) {
-        if (isset($request['response']['timing'])) {
+        if (!isset($rawRequests[$id]['fromCache']) && isset($request['response']['timing'])) {
           if (array_key_exists('requestTime', $request['response']['timing']) &&
               array_key_exists('end_time', $request) &&
               $request['response']['timing']['requestTime'] >= $request['startTime'] &&
