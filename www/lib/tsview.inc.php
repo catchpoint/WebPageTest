@@ -102,7 +102,7 @@ function TSViewCreate($server, $tsview_name, &$metrics) {
 function TSViewPost($id, $server, $tsview_name, &$stats) {
   $host  = $_SERVER['HTTP_HOST'];
   $result_url = "http://$host/results.php?test=$id";
-  $data = array('recordTimestamp' => time(),
+  $data = array('recordTimestamp' => round(microtime(true) * 1000),
                 'points' => array(),
                 'pointsDataType' => 'INT64',
                 'configPairs' => array('result_url' => $result_url));
