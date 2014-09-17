@@ -63,9 +63,9 @@ function AnalyzeFile($path) {
         echo "<h2>Stats</h2>";
         echo "Image Type: ";
         if ($info['progressive'])
-          echo "<b>Progressive</b><br>Scan Count: {$info['scans']}<br>";
+          echo "Progressive (Renders from blurry to sharp)<br>Scan Count: {$info['scans']}<br>";
         else
-          echo "<b>Baseline</b><br>";
+          echo "Baseline (Renders top-down)<br>";
         echo "File Size: " . number_format($info['filesize']) . ' bytes<br>';
         echo "Application Data: " . number_format($info['appdata']) . ' bytes (' . number_format(($info['appdata'] / $info['filesize']) * 100, 1) . '%)<br>';
 
