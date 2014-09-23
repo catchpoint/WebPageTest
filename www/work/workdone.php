@@ -135,15 +135,6 @@ if (ValidateTestId($id)) {
             strlen($testInfo['tester']))
           $tester = $testInfo['tester'];
                             
-        if (strlen($location) && strlen($tester)) {
-          $testerInfo = array();
-          $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
-          $testerError = false;
-          if ((array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror'])) || 
-              (array_key_exists('error', $_REQUEST) && strlen($_REQUEST['error'])))
-            $testerError = true;
-          UpdateTester($location, $tester, $testerInfo, $cpu, $testerError);
-        }
         if (array_key_exists('shard_test', $testInfo) && $testInfo['shard_test'])
           ProcessIncrementalResult();
 
@@ -241,6 +232,8 @@ if (ValidateTestId($id)) {
           if (isset($requests)) {
             require_once('breakdown.inc');
             getBreakdown($id, $testPath, $runNumber, $cacheWarmed, $requests);
+          } else {
+            $testerError = true;
           }
           if (is_dir('./google') && is_file('./google/google_lib.inc')) {
             require_once('google/google_lib.inc');
@@ -265,7 +258,18 @@ if (ValidateTestId($id)) {
           if ($testInfo['video'])
             $workdone_video_end = microtime(true);
         }
-        
+
+        if (strlen($location) && strlen($tester)) {
+          $testerInfo = array();
+          $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
+          if (!isset($testerError))
+            $testerError = false;
+          if ((array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror'])) || 
+              (array_key_exists('error', $_REQUEST) && strlen($_REQUEST['error'])))
+            $testerError = true;
+          UpdateTester($location, $tester, $testerInfo, $cpu, $testerError);
+        }
+                
         // see if the test is complete
         if ($done) {
           // Mark the test as done and save it out so that we can load the page data
