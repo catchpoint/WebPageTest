@@ -11,6 +11,9 @@ include 'common.inc';
         <meta name="author" content="Patrick Meenan">
         <meta name="robots" content="noindex,nofollow" />
         <style type="text/css">
+        body {
+            background-color: #fff;
+        }
         ul {
             list-style: none;
             padding:0 2em;
