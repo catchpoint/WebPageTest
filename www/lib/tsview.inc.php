@@ -62,13 +62,20 @@ function TSViewPostResult(&$test, $id, $testPath, $server, $tsview_name) {
           $rv['availability'][] = 0;
       }
     }
-    
-    TSViewCreate($server, $tsview_name, $metrics);
-    TSViewPost($id, $server, $tsview_name, $fv);
-    if (isset($rv)){
-      TSViewCreate($server, "{$tsview_name}-repeat-view", $metrics);
-      TSViewPost($id, $server, "{$tsview_name}-repeat-view", $rv);
+  
+    $spof="";
+    if ($test['label'] == 'SPOF'){
+      $spof="-SPOF";
     }
+    $datasource="{$tsview_name}{$spof}";
+  
+    TSViewCreate($server, $datasource, $metrics);
+    TSViewPost($id, $server, $datasource, $fv);
+    if (isset($rv)){
+      TSViewCreate($server, "{$datasource}-repeat-view", $metrics);
+      TSViewPost($id, $server, "{$datasource}-repeat-view", $rv);
+    }
+  
   }
 }
 
