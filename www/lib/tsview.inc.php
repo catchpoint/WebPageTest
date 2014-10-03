@@ -65,8 +65,10 @@ function TSViewPostResult(&$test, $id, $testPath, $server, $tsview_name) {
     
     TSViewCreate($server, $tsview_name, $metrics);
     TSViewPost($id, $server, $tsview_name, $fv);
-    if (isset($rv))
+    if (isset($rv)){
+      TSViewCreate($server, "{$tsview_name}-repeat-view", $metrics);
       TSViewPost($id, $server, "{$tsview_name}-repeat-view", $rv);
+    }
   }
 }
 
