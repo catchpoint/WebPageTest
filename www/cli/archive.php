@@ -229,7 +229,7 @@ function CheckTest($testPath, $id, $elapsedDays) {
               $archiveCount++;
               $logLine .= "Archived";
                                                                                             
-              if (!VerifyArchive($id) && $elapsed < 60)
+              if (!VerifyArchive($id) && $elapsed < 30)
                   $delete = false;
           } else if ($elapsed < 60) {
               $delete = false;

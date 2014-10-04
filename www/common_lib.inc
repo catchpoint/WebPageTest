@@ -282,7 +282,7 @@ function GetDefaultLocation()
 */
 function delTree($dir, $remove = true)
 {
-  $dir = trim($dir, '/');
+  $dir = rtrim($dir, '/');
   if (is_dir($dir)) {
     $files = scandir($dir);
     foreach( $files as $file ) {
@@ -1017,13 +1017,15 @@ function GetTestInfoHtml($includeScript = true)
     elseif (isset($test['testinfo']['tester']) )
       $html .= 'Tester: ' . $test['testinfo']['tester'] . '<br>';
     if( $dom )
-        $html .= 'DOM Element: <b>' . $dom . '</b><br>';
+        $html .= 'DOM Element: <b>' . htmlspecialchars($dom) . '</b><br>';
     if( $test['test']['fvonly'] )
         $html .= '<b>First View only</b><br>';
     if( (int)$test['test']['runs'] > 1 )
         $html .= 'Test runs: <b>' . $test['test']['runs'] . '</b><br>';
     if( array_key_exists('authenticated', $test['test']) && (int)$test['test']['authenticated'] == 1)
-        $html .= '<b>Authenticated: ' . $login . '</b><br>';
+        $html .= '<b>Authenticated: ' . htmlspecialchars($login) . '</b><br>';
+    if (isset($test['testinfo']['addCmdLine']) && strlen($test['testinfo']['addCmdLine']))
+        $html .= '<b>Command Line: ' . htmlspecialchars($test['testinfo']['addCmdLine']) . '</b><br>';
     if( array_key_exists('testinfo', $test) && array_key_exists('connectivity', $test['testinfo']) && !strcasecmp($test['testinfo']['connectivity'], 'custom') )
     {
         $html .= "<b>Connectivity:</b> {$test['testinfo']['bwIn']}/{$test['testinfo']['bwOut']} Kbps, {$test['testinfo']['latency']}ms Latency";

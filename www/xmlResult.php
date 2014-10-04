@@ -9,6 +9,7 @@ require_once('video/visualProgress.inc.php');
 require_once('domains.inc');
 require_once('breakdown.inc');
 require_once('devtools.inc.php');
+require_once('archive.inc');
 
 // see if we are sending abbreviated results
 $pagespeed = 0;
@@ -460,6 +461,7 @@ else
         $msElapsed = number_format( microtime(true) - $msStart, 3 );
         $msElapsedLoad = number_format( $msLoad - $msStart, 3 );
         logMsg("xmlResult ($id): {$msElapsed}s ({$msElapsedLoad}s to load page data)");
+        ArchiveApi($id);
     }
     else
     {

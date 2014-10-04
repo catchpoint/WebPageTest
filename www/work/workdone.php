@@ -264,9 +264,10 @@ if (ValidateTestId($id)) {
           $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
           if (!isset($testerError))
             $testerError = false;
-          if ((array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror'])) || 
-              (array_key_exists('error', $_REQUEST) && strlen($_REQUEST['error'])))
-            $testerError = true;
+          if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror']))
+            $testerError = $_REQUEST['testerror'];
+          elseif (array_key_exists('error', $_REQUEST) && strlen($_REQUEST['error']))
+            $testerError = $_REQUEST['error'];
           UpdateTester($location, $tester, $testerInfo, $cpu, $testerError);
         }
                 

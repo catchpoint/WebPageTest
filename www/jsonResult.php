@@ -6,6 +6,7 @@ require_once('video/visualProgress.inc.php');
 require_once('domains.inc');
 require_once('breakdown.inc');
 require_once('devtools.inc.php');
+require_once('archive.inc');
 
 if (array_key_exists('batch', $test['test']) && $test['test']['batch']) {
     include 'resultBatch.inc';
@@ -124,7 +125,7 @@ function GetTestResult($id) {
             $ret['runs'][$run][$label] = GetSingleRunData($id, $testPath, $run, $cached, $pageData, $testInfo);
         }
     }
-    
+    ArchiveApi($id);
     return $ret;
 }
 

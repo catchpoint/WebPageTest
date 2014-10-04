@@ -10,7 +10,7 @@ require_once('common_lib.inc');
 * 
 * @param mixed $id
 */
-function ArchiveTest($id, $store_result = true) {
+function ArchiveTest($id, $store_result = true, $delete = false) {
     global $settings;
     global $api_keys;
     $ret = false;
@@ -112,7 +112,10 @@ function ArchiveTest($id, $store_result = true) {
               }
             }
         }
+        if ($ret && $delete && is_dir($testPath))
+          delTree("$testPath/");
     }
+      
     return $ret;
 }
 
@@ -338,4 +341,8 @@ function GetArchiveFile($id, $create_directory = false)
     return $file;
 }
 
+function ArchiveApi($id) {
+  if (GetSetting('archive_api'))
+    ArchiveTest($id, true, true);
+}
 ?>
