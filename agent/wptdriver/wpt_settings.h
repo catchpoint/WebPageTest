@@ -66,6 +66,7 @@ public:
   CString _wpt_directory;
   CString _exe_directory;
   CString _profile_directory;
+  CString _profiles;
   CString _cache_directory;
 
   // Windows/IE directories

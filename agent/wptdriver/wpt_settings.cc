@@ -288,6 +288,7 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
     PathAppend(buff, _T("webpagetest_profiles\\"));
     _profile_directory = buff;
   }
+  _profiles = _profile_directory;
   if (client.GetLength())
     _profile_directory += client + _T("-client-");
   _profile_directory += browser;

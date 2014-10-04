@@ -182,6 +182,9 @@ void WptDriverCore::WorkThread(void) {
       _status.Set(_T("Starting test..."));
       if (_settings.SetBrowser(test._browser, test._browser_url,
                                test._browser_md5, test._client)) {
+        CString profiles_dir = _settings._browser._profiles;
+        if (profiles_dir.GetLength())
+          DeleteDirectory(profiles_dir, false);
         WebBrowser browser(_settings, test, _status, _settings._browser, 
                            _ipfw);
         if (SetupWebPageReplay(test, browser) &&
@@ -220,6 +223,8 @@ void WptDriverCore::WorkThread(void) {
           }
         }
         test._run = test._specific_run ? test._specific_run : test._runs;
+        if (profiles_dir.GetLength())
+          DeleteDirectory(profiles_dir, false);
       } else {
         test._test_error = test._run_error =
             CStringA("Invalid Browser Selected: ") + CT2A(test._browser);
