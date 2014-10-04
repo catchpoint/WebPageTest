@@ -252,6 +252,7 @@ bool WebBrowser::RunAndWait() {
         _browser_process = NULL;
       }
       LeaveCriticalSection(&cs);
+      TerminateProcessesByName(PathFindFileName((LPCTSTR)_browser._exe));
 
       SetBrowserExe(NULL);
       ResetIpfw();
@@ -273,6 +274,7 @@ bool WebBrowser::RunAndWait() {
   Delete the user profile as well as the flash and silverlight caches
 -----------------------------------------------------------------------------*/
 void WebBrowser::ClearUserData() {
+  TerminateProcessesByName(PathFindFileName((LPCTSTR)_browser._exe));
   _browser.ResetProfile(_test._clear_certs);
   TCHAR path[MAX_PATH];
   if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 
