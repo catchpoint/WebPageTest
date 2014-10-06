@@ -1571,7 +1571,10 @@ function GetTesters($locationId)
                       $total = 0;
                       $count = 0;
                       foreach($tester['errors'] as $error) {
-                        $total += $error;
+                        if ($error !== 0 &&
+                            $error !== 'timeout' &&
+                            $error !== 'Page load timeout')
+                          $total++;
                         $count++;
                       }
                       if ($count > 50)
@@ -1923,7 +1926,7 @@ function UpdateTester($location, $tester, $testerInfo = null, $cpu = null, $erro
         if (isset($error)) {
           if (!array_key_exists('errors', $testers[$tester]))
             $testers[$tester]['errors'] = array();
-          $testers[$tester]['errors'][] = $error ? 1 : 0;
+          $testers[$tester]['errors'][] = $error ? $error : 0;
           if (count($testers[$tester]['errors']) > 100)
             array_shift($testers[$tester]['errors']);
         }
@@ -1967,6 +1970,27 @@ function http_fetch($url) {
   } else {
     $context = stream_context_create(array('http' => array('header'=>'Connection: close', 'timeout' => 600)));
     $ret = file_get_contents($url, false, $context);
+  }
+  return $ret;
+}
+
+function http_fetch_file($url, $file) {
+  $ret = false;
+  if (function_exists('curl_init')) {
+    $fp = fopen ($file, 'w+');
+    if ($fp) {
+      $ch = curl_init($url);
+      if ($ch) {
+        curl_setopt($ch, CURLOPT_FILE, $fp);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_exec($ch);
+        curl_close($ch);
+      }
+      fclose($fp);
+      $ret = filesize($file);
+    }
+  } else {
+    $ret = file_put_contents($file, fopen($url, 'r'));
   }
   return $ret;
 }

@@ -2,6 +2,7 @@
 // Jobs that need to run every 15 minutes (expected that this will be called from cron)
 chdir('..');
 include 'common.inc';
+ignore_user_abort(true);
 set_time_limit(1200);
 error_reporting(E_ALL);
 

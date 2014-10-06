@@ -324,6 +324,7 @@ function CheckCron() {
   // open and lock the cron job file - abandon quickly if we can't get a lock
   $should_run = false;
   $minutes15 = false;
+  $minutes60 = false;
   $cron_lock = Lock("Cron Check", false, 1200);
   if (isset($cron_lock)) {
     $last_run = 0;
@@ -342,6 +343,9 @@ function CheckCron() {
           $minute = gmdate('i', $now) % 15;
           if ($minute < 2)
             $minutes15 = true;
+          $minute = gmdate('i', $now) % 60;
+          if ($minute < 2)
+            $minutes60 = true;
         }
       }
     }
@@ -359,6 +363,8 @@ function CheckCron() {
       SendAsyncRequest('/jpeginfo/cleanup.php');
     if ($minutes15)
       SendAsyncRequest('/cron/15min.php');
+    if ($minutes60)
+      SendAsyncRequest('/cron/hourly.php');
   }
 }
 

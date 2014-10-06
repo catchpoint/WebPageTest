@@ -9,11 +9,11 @@ if ($files && is_array($files) && count($files)) {
     if (isset($data['ver'])) {
       $ver = $data['ver'];
       $md5 = false;
-      $key = "update.$name.$ver.md5";
+      $key = "update.$name.zip.$ver.md5";
       if (function_exists('apc_fetch'))
         $md5 = apc_fetch($key);
       if (!$md5) {
-        $md5 = md5_file($file);
+        $md5 = md5_file("./update/$name.zip");
         if ($md5 && function_exists('apc_store'))
           apc_store($key, $md5);
       }

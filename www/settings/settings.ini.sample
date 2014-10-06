@@ -2,11 +2,9 @@
 product=WebPagetest
 contact=admin@my.email.com
 
-; Maximum number of runs allowed per test
-maxruns=9
-
-; Allow (1) or disable (0) testing of sites on private IP addresses (http://192.168.0.1/ for example).
-allowPrivate=1
+; **************
+; UI Integration
+; **************
 
 ; Comment out the publishTo if you do not want to be able to upload your
 ; results to the public instance (this is useful for sharing internal tests
@@ -16,44 +14,53 @@ publishTo=www.webpagetest.org
 ;Uncomment map=1 if you want to enable the map-based picker
 ;map=1
 
-; test options available
-enableVideo=1
-
-; disable gzip compressing the result text files
-;nogzip=1
-
-;directory to archive test files (must include trailing slash)
-;archive_dir=/data/archive/
-
-;showslow beacon
-;showslow=http://www.showslow.com
-;beaconRate=100
-showslow_key=<your showslow API key>
+; Integrate with cloudshark
 tcpdump_view="http://cloudshark.org/view?url="
 
-; image quality (defaults to 30)
-;iq=75
-;save png full-resolution screen shots
-;pngss=1
+; *********************
+; Test options/defaults
+; *********************
+
+enableVideo=1
 
 ; Run tests concurrently across test machines
 ;shard_tests=1
 
+; Maximum number of runs allowed per test
+maxruns=9
+
+; Allow (1) or disable (0) testing of sites on private IP addresses (http://192.168.0.1/ for example).
+allowPrivate=1
+
+; image quality (defaults to 30)
+;iq=75
+
+;save png full-resolution screen shots
+;pngss=1
+
+; *************
+; Server Config
+; *************
+
+; disable gzip compressing the result text files
+;nogzip=1
+
 ;Log tests that take longer than X seconds
 ;slow_test_time=240
 
-; archiving to s3 (using the s3 protocol, not necessarily just s3)
-;archive_s3_server=s3.amazonaws.com
-;archive_s3_key=<access key>
-;archive_s3_secret=<secret>
-;archive_s3_bucket=<bucket>
-;archive_s3_url=http://s3.amazonaws.com/
-
-;Number of days to keep tests locally before archiving
-;archive_days=2
-
 ; beanstalkd memory queue for tests (only the default 11300 port is supported right now)
 ;beanstalkd=127.0.0.1
+
+; Automatically update from git hourly.
+; (assumes a git clone and just runs "git pull origin master" as the web user).
+;gitUpdate=1
+
+; Automatically update test agents hourly (pulls the latest test agents from the provided server)
+;agentUpdate=http://cdn.webpagetest.org/
+
+; ***********************
+; Test result integration
+; ***********************
 
 ;tsview time-series database
 ;tsviewdb=http://<server:port>/src/v1/
@@ -70,3 +77,29 @@ tcpdump_view="http://cloudshark.org/view?url="
 ;logTestResults=/var/log/webpagetest/page_data.log
 ;logTestRequests=/var/log/webpagetest/requests.log
 ;logPrivateTests=0
+
+;
+; showslow (beacon rate is a percent of results to allow for sampling)
+;
+;showslow=http://www.showslow.com
+;beaconRate=100
+;showslow_key=<your showslow API key>
+
+
+; **************
+; Test Archiving
+; **************
+
+; archiving to local storage - directory to archive test files (must include trailing slash)
+;archive_dir=/data/archive/
+
+; archiving to s3 (using the s3 protocol, not necessarily just s3)
+;archive_s3_server=s3.amazonaws.com
+;archive_s3_key=<access key>
+;archive_s3_secret=<secret>
+;archive_s3_bucket=<bucket>
+;archive_s3_url=http://s3.amazonaws.com/
+
+;Number of days to keep tests locally before archiving
+;archive_days=2
+
