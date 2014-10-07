@@ -99,7 +99,7 @@ function TSViewCreate($server, $tsview_name, &$metrics) {
     if ($needs_update) {
       $data = array('names' => array());
       foreach ($current as $metric => $x)
-        $data['names'][] = $metric;
+        $data['names'][] = str_replace('.','_',$metric);
       $body = json_encode($data);
       if (http_put_raw("$server$tsview_name", $body))
         file_put_contents($def, json_encode($current));
@@ -116,7 +116,7 @@ function TSViewPost($id, $server, $tsview_name, &$stats) {
                 'pointsDataType' => 'INT64',
                 'configPairs' => array('result_url' => $result_url));
   foreach ($stats as $metric => $values) {
-    $entry = array('name' => $metric, 'data' => array());
+    $entry = array('name' => str_replace('.','_',$metric), 'data' => array());
     foreach ($values as $value)
       $entry['data'][] = $value;
     $data['points'][] = $entry;
