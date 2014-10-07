@@ -144,19 +144,19 @@ function RestoreArchive($id) {
             array_key_exists('archive_dir', $settings) || 
             array_key_exists('archive_s3_url', $settings) ||
             array_key_exists('archive_s3_server', $settings)) {
+            $deleteZip = true;
             $zipfile = "./tmp/$id.zip";
             if (strlen($url)) {
                 $url .= "/$id.zip";
             } else {
                 if (isset($settings['archive_dir'])) {
-                    $source = GetArchiveFile($id);
+                    $deleteZip = false;
+                    $zipfile = GetArchiveFile($id);
                     //see if we have a 2nd-level archive
-                    if ((!is_file($source) || !filesize($source)) && array_key_exists('archive2_dir', $settings))
-                        RestoreArchive2($id, $source);
-                    if (is_file($source)) {
-                        touch($source);
-                        copy($source, $zipfile);
-                    }
+                    if ((!is_file($zipfile) || !filesize($zipfile)) && array_key_exists('archive2_dir', $settings))
+                        RestoreArchive2($id, $zipfile);
+                    if (is_file($zipfile))
+                        touch($zipfile);
                 } elseif (isset($settings['archive_s3_url'])) {
                     $separator = strrpos($id, '_');
                     if ($separator !== false) {
@@ -210,8 +210,8 @@ function RestoreArchive($id) {
                   $ret = true;
                   UnlockTest($lock);
                 }
-            }    
-            if (is_file($zipfile))
+            }
+            if ($deleteZip && is_file($zipfile))
                 @unlink($zipfile);
         }
         else
