@@ -1,4 +1,6 @@
 <?php
+require_once('archive.inc');
+
 if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('RestoreTest');
 }
@@ -1110,16 +1112,13 @@ function RestoreTest($id)
         ($archive_s3_server && strlen($archive_s3_server))) {
       $restore = false;
       $testInfo = GetTestInfo($id);
-      if (!$testInfo) {
+      if (!$testInfo)
         $restore = true;
-      }
 
-      if( $restore ) {
-        require_once('archive.inc');
+      if( $restore )
         $ret = RestoreArchive($id);
-      } else {
+      else
         $ret = true;
-      }
     } else {
       $ret = true;
     }
