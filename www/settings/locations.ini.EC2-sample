@@ -48,7 +48,7 @@ key=SecretKey
 
 [us-east-1_wptdriver]
 ; AMI: ami-561cb13e
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-east-1_wptdriver
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-east-1
 browser=Chrome,Firefox,Safari,IE 11
 latency=0
 label="US East (N. Virginia)"
@@ -87,7 +87,7 @@ key=SecretKey
 
 [us-west-1_wptdriver]
 ; AMI: ami-1e330f5b
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-west-1_wptdriver
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-west-1
 browser=Chrome,Firefox,Safari,IE 11
 latency=0
 label="US West (N. California)"
@@ -126,7 +126,7 @@ key=SecretKey
 
 [us-west-2_wptdriver]
 ; AMI: ami-82a4c9b2
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-west-2_wptdriver
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-west-2
 browser=Chrome,Firefox,Safari,IE 11
 latency=0
 label="US West (Oregon)"
@@ -165,7 +165,7 @@ key=SecretKey
 
 [eu-west-1_wptdriver]
 ; AMI: ami-ecb3409b
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=eu-west-1_wptdriver
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=eu-west-1
 browser=Chrome,Firefox,Safari,IE 11
 latency=0
 label="Europe (Ireland)"
@@ -204,7 +204,7 @@ key=SecretKey
 
 [ap-southeast-1_wptdriver]
 ; AMI: ami-8c0a5bde
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-southeast-1_wptdriver
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-southeast-1
 browser=Chrome,Firefox,Safari,IE 11
 latency=0
 label="Asia Pacific (Singapore)"
@@ -243,7 +243,7 @@ key=SecretKey
 
 [ap-southeast-2_wptdriver]
 ; AMI: ami-2dfb6217
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-southeast-2_wptdriver
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-southeast-2
 browser=Chrome,Firefox,Safari,IE 11
 latency=0
 label="Asia Pacific (Sydney)"
@@ -282,7 +282,7 @@ key=SecretKey
 
 [ap-northeast-1_wptdriver]
 ; AMI: ami-29473328
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-northeast-1_wptdriver
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-northeast-1
 browser=Chrome,Firefox,Safari,IE 11
 latency=0
 label="Asia Pacific (Tokyo)"
@@ -321,7 +321,7 @@ key=SecretKey
 
 [sa-east-1_wptdriver]
 ; AMI: ami-f9a300e4
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=sa-east-1_wptdriver
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=sa-east-1
 browser=Chrome,Firefox,Safari,IE 11
 latency=0
 label="South America (Sao Paulo)"
