@@ -2,7 +2,7 @@
 // Compare the end-state frames across multiple tests and report how similar they are.
 // Only JSON responses are supported.
 chdir('..');
-include 'common_lib.inc';
+include 'common.inc';
 require_once('video/visualProgress.inc.php');
 $result = array('statusCode' => 200, 'data' => array());
 if (isset($_REQUEST['tests'])) {
