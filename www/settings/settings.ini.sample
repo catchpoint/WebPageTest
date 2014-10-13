@@ -103,3 +103,15 @@ allowPrivate=1
 ;Number of days to keep tests locally before archiving
 ;archive_days=2
 
+; *************
+; EC2 Instances
+; *************
+
+; Use if the server will be auto-starting/stopping EC2 test agents
+;ec2_key=<access key>
+;ec2_secret=<secret>
+
+; Should we automatically delete any EBS volumes marked as "available"?
+; This can be used to prevent orphaned volumes but only if the account
+; doesn't expect to keep offline EBS volumes.
+;ec2_prune_volumes=1
