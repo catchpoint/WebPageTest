@@ -368,6 +368,7 @@ function SubmitBenchmark(&$configurations, &$state, $benchmark) {
     // group all of the tests by URL so that any given URL is tested in all configurations before going to the next URL
     $tests = array();
     foreach ($configurations as $config_label => $config) {
+      if (!isset($config['disabled'])) {
         $urls = file("./settings/benchmarks/{$config['url_file']}", FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         foreach ($urls as $url) {
             $url = trim($url);
@@ -398,6 +399,7 @@ function SubmitBenchmark(&$configurations, &$state, $benchmark) {
               }
             }
         }
+      }
     }
 
     // now submit the actual tests    
