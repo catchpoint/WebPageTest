@@ -146,12 +146,8 @@
             if (array_key_exists('tsview_id', $_REQUEST)){
               $test['tsview_id'] = $_REQUEST['tsview_id'];
               
-              if($_SERVER['HTTPS'] == ''){
-                   $scheme = 'http';
-              } else {
-                   $scheme = 'https';
-              } 
-              $test['tsview_results_host'] = "{$scheme}://{$_SERVER['HTTP_HOST']}";
+              $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+              $test['tsview_results_host'] = "{$protocol}://{$_SERVER['HTTP_HOST']}";
              
               // tsview_configs format: KEY>VALUE,KEY>VALUE,......
               if (array_key_exists('tsview_configs', $_REQUEST))
@@ -218,7 +214,8 @@
                        is_file("./browsers/{$test['browser']}.apk"))) {
                     $customBrowsers = parse_ini_file('./browsers/browsers.ini');
                     if (array_key_exists($test['browser'], $customBrowsers)) {
-                      $base_uri = "http://{$_SERVER['HTTP_HOST']}/browsers/";
+                      $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+                      $base_uri = "$protocol://{$_SERVER['HTTP_HOST']}/browsers/";
                       if (array_key_exists('browsers_url', $settings) && strlen($settings['browsers_url']))
                           $base_uri = $settings['browsers_url'];
                       $test['customBrowserUrl'] = is_file("./browsers/{$test['browser']}.zip") ?
@@ -641,6 +638,7 @@
                 if (array_key_exists('submit_callback', $test)) {
                     $test['submit_callback']($test);
                 }
+                $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
                 $host  = $_SERVER['HTTP_HOST'];
                 $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 
@@ -658,17 +656,17 @@
                     echo "<ownerKey>{$test['owner']}</ownerKey>\n";
                     if( FRIENDLY_URLS )
                     {
-                        echo "<xmlUrl>http://$host$uri/xmlResult/{$test['id']}/</xmlUrl>\n";
-                        echo "<userUrl>http://$host$uri/result/{$test['id']}/</userUrl>\n";
-                        echo "<summaryCSV>http://$host$uri/result/{$test['id']}/page_data.csv</summaryCSV>\n";
-                        echo "<detailCSV>http://$host$uri/result/{$test['id']}/requests.csv</detailCSV>\n";
+                        echo "<xmlUrl>$protocol://$host$uri/xmlResult/{$test['id']}/</xmlUrl>\n";
+                        echo "<userUrl>$protocol://$host$uri/result/{$test['id']}/</userUrl>\n";
+                        echo "<summaryCSV>$protocol://$host$uri/result/{$test['id']}/page_data.csv</summaryCSV>\n";
+                        echo "<detailCSV>$protocol://$host$uri/result/{$test['id']}/requests.csv</detailCSV>\n";
                     }
                     else
                     {
-                        echo "<xmlUrl>http://$host$uri/xmlResult.php?test={$test['id']}</xmlUrl>\n";
-                        echo "<userUrl>http://$host$uri/results.php?test={$test['id']}</userUrl>\n";
-                        echo "<summaryCSV>http://$host$uri/csv.php?test={$test['id']}</summaryCSV>\n";
-                        echo "<detailCSV>http://$host$uri/csv.php?test={$test['id']}&amp;requests=1</detailCSV>\n";
+                        echo "<xmlUrl>$protocol://$host$uri/xmlResult.php?test={$test['id']}</xmlUrl>\n";
+                        echo "<userUrl>$protocol://$host$uri/results.php?test={$test['id']}</userUrl>\n";
+                        echo "<summaryCSV>$protocol://$host$uri/csv.php?test={$test['id']}</summaryCSV>\n";
+                        echo "<detailCSV>$protocol://$host$uri/csv.php?test={$test['id']}&amp;requests=1</detailCSV>\n";
                     }
                     echo "<jsonUrl>http://$host$uri/jsonResult.php?test={$test['id']}/</jsonUrl>\n";
                     echo "</data>\n";
@@ -683,34 +681,34 @@
                     $ret['data'] = array();
                     $ret['data']['testId'] = $test['id'];
                     $ret['data']['ownerKey'] = $test['owner'];
-                    $ret['data']['jsonUrl'] = "http://$host$uri/results.php?test={$test['id']}&f=json";
+                    $ret['data']['jsonUrl'] = "$protocol://$host$uri/results.php?test={$test['id']}&f=json";
                     if( FRIENDLY_URLS )
                     {
-                        $ret['data']['xmlUrl'] = "http://$host$uri/xmlResult/{$test['id']}/";
-                        $ret['data']['userUrl'] = "http://$host$uri/result/{$test['id']}/";
-                        $ret['data']['summaryCSV'] = "http://$host$uri/result/{$test['id']}/page_data.csv";
-                        $ret['data']['detailCSV'] = "http://$host$uri/result/{$test['id']}/requests.csv";
+                        $ret['data']['xmlUrl'] = "$protocol://$host$uri/xmlResult/{$test['id']}/";
+                        $ret['data']['userUrl'] = "$protocol://$host$uri/result/{$test['id']}/";
+                        $ret['data']['summaryCSV'] = "$protocol://$host$uri/result/{$test['id']}/page_data.csv";
+                        $ret['data']['detailCSV'] = "$protocol://$host$uri/result/{$test['id']}/requests.csv";
                     }
                     else
                     {
-                        $ret['data']['xmlUrl'] = "http://$host$uri/xmlResult.php?test={$test['id']}";
-                        $ret['data']['userUrl'] = "http://$host$uri/results.php?test={$test['id']}";
-                        $ret['data']['summaryCSV'] = "http://$host$uri/csv.php?test={$test['id']}";
-                        $ret['data']['detailCSV'] = "http://$host$uri/csv.php?test={$test['id']}&amp;requests=1";
+                        $ret['data']['xmlUrl'] = "$protocol://$host$uri/xmlResult.php?test={$test['id']}";
+                        $ret['data']['userUrl'] = "$protocol://$host$uri/results.php?test={$test['id']}";
+                        $ret['data']['summaryCSV'] = "$protocol://$host$uri/csv.php?test={$test['id']}";
+                        $ret['data']['detailCSV'] = "$protocol://$host$uri/csv.php?test={$test['id']}&amp;requests=1";
                     }
-                    $ret['data']['jsonUrl'] = "http://$host$uri/jsonResult.php?test={$test['id']}";
+                    $ret['data']['jsonUrl'] = "$protocol://$host$uri/jsonResult.php?test={$test['id']}";
                     json_response($ret);
                 }
                 else
                 {
                     if (count($spofTests) > 1) {
-                        header("Location: http://$host$uri/video/compare.php?tests=" . implode(',', $spofTests));
+                        header("Location: $protocol://$host$uri/video/compare.php?tests=" . implode(',', $spofTests));
                     } else {
                         // redirect regardless if it is a bulk test or not
                         if( FRIENDLY_URLS )
-                            header("Location: http://$host$uri/result/{$test['id']}/");
+                            header("Location: $protocol://$host$uri/result/{$test['id']}/");
                         else
-                            header("Location: http://$host$uri/results.php?test={$test['id']}");
+                            header("Location: $protocol://$host$uri/results.php?test={$test['id']}");
                     }
                 }
             }
@@ -1042,6 +1040,8 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 
             // figure out what the location working directory and friendly name are
             $test['locationText'] = $locations[$test['location']]['label'];
+
+
             $test['locationLabel'] = $locations[$test['location']]['label'];
             $test['workdir'] = $locations[$test['location']]['localDir'];
             $test['remoteUrl']  = $locations[$test['location']]['remoteUrl'];
@@ -1868,6 +1868,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                     if (strlen($rule)) {
                         $testFile .= "customRule=$rule\r\n";
                     }
+
                 }
             }
 

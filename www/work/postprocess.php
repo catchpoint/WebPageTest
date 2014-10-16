@@ -51,7 +51,8 @@ if (array_key_exists('test', $_REQUEST)) {
             $testData['testConnectivity'] = $testInfo['connectivity'];
             $testData['tester'] = array_key_exists('test_runs', $testInfo) && array_key_exists($run, $testInfo['test_runs']) && array_key_exists('tester', $testInfo['test_runs'][$run]) ? $testInfo['test_runs'][$run]['tester'] : $testInfo['tester'];
             $testData['testRunId'] = "$id.$run.$cached";
-            $testData['testResultUrl'] = "http://{$_SERVER['HTTP_HOST']}/details.php?test=$id&run=$run&cached=$cached";
+            $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+            $testData['testResultUrl'] = "$protocol://{$_SERVER['HTTP_HOST']}/details.php?test=$id&run=$run&cached=$cached";
             error_log(json_encode($testData) . "\n", 3, $pageLog);
           }
         }
@@ -79,7 +80,8 @@ if (array_key_exists('test', $_REQUEST)) {
               $request['testConnectivity'] = $testInfo['connectivity'];
               $request['tester'] = array_key_exists('test_runs', $testInfo) && array_key_exists($run, $testInfo['test_runs']) && array_key_exists('tester', $testInfo['test_runs'][$run]) ? $testInfo['test_runs'][$run]['tester'] : $testInfo['tester'];
               $request['testRunId'] = "$id.$run.$cached";
-              $request['testResultUrl'] = "http://{$_SERVER['HTTP_HOST']}/details.php?test=$id&run=$run&cached=$cached";
+              $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+              $request['testResultUrl'] = "$protocol://{$_SERVER['HTTP_HOST']}/details.php?test=$id&run=$run&cached=$cached";
               error_log(json_encode($request) . "\n", 3, $requestsLog);
             }
           }
@@ -224,7 +226,7 @@ function notify( $mailto, $from,  $id, $testPath, $host )
         $shorturl .= '...';
     
     $subject = "Test results for $shorturl";
-    
+    $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     if( !isset($host) )
         $host  = $_SERVER['HTTP_HOST'];
 
@@ -234,7 +236,7 @@ function notify( $mailto, $from,  $id, $testPath, $host )
         $render = number_format($pageData[$fv][0]['render'] / 1000.0, 3);
         $numRequests = number_format($pageData[$fv][0]['requests'],0);
         $bytes = number_format($pageData[$fv][0]['bytesIn'] / 1024, 0);
-        $result = "http://$host/result/$id";
+        $result = "$protocol://$host/result/$id";
         
         // capture the optimization report
         require_once 'optimization.inc';

@@ -1601,7 +1601,7 @@ function GetTesters($locationId)
                     }
 
                     $entry['busy'] = 0;
-                    if( strlen( $tester['test'] ) )
+                    if (isset($tester['test']) && strlen($tester['test']))
                         $entry['busy'] = 1;
 
                     $entry['id'] = $id;
@@ -2083,7 +2083,8 @@ function ShardKey($test_num) {
 * @param mixed $relative_url
 */
 function SendAsyncRequest($relative_url) {
-  $url = "http://{$_SERVER['HTTP_HOST']}$relative_url";
+  $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+  $url = "$protocol://{$_SERVER['HTTP_HOST']}$relative_url";
   if (function_exists('curl_init')) {
     $c = curl_init();
     curl_setopt($c, CURLOPT_URL, $url);

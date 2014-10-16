@@ -15,13 +15,14 @@ if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
         }
     }
 
+    $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     $host  = $_SERVER['HTTP_HOST'];
     $uri = $_SERVER['PHP_SELF'];
     $params = '';
     foreach( $_GET as $key => $value )
         if( $key != 't' )
             $params .= "&$key=" . urlencode($value);
-    header("Location: http://$host$uri?tests=$tests{$params}");
+    header("Location: $protocol://$host$uri?tests=$tests{$params}");
 }
 else
 {

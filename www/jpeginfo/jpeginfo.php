@@ -34,7 +34,8 @@ if (array_key_exists('url', $_REQUEST) &&
       mkdir($dir, 0777, true);
     move_uploaded_file($_FILES['imgfile']['tmp_name'], $path);
   }
-  header("Location: http://{$_SERVER['HTTP_HOST']}{$_SERVER['PHP_SELF']}?id=$id");
+  $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+  header("Location: $protocol://{$_SERVER['HTTP_HOST']}{$_SERVER['PHP_SELF']}?id=$id");
 } else {
   echo "<!DOCTYPE html>\n<html>\n<head>\n</head>\n<body>\n";
   echo "No image file provided";

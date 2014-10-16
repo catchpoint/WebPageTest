@@ -28,13 +28,14 @@ if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
         }
     }
 
+    $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     $host  = $_SERVER['HTTP_HOST'];
     $uri = $_SERVER['PHP_SELF'];
     $params = '';
     foreach( $_GET as $key => $value )
         if( $key != 't' && !is_array($value))
             $params .= "&$key=" . urlencode($value);
-    header("Location: http://$host$uri?tests=$tests{$params}");
+    header("Location: $protocol://$host$uri?tests=$tests{$params}");
 }
 else
 {
@@ -307,6 +308,7 @@ else
     // redirect to the destination page
     if( $id )
     {
+        $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
         $host  = $_SERVER['HTTP_HOST'];
         $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 
@@ -321,8 +323,8 @@ else
                 echo "<requestId>{$_REQUEST['r']}</requestId>\n";
             echo "<data>\n";
             echo "<videoId>$id</videoId>\n";
-            echo "<xmlUrl>http://$host$uri/view.php?f=xml&id=$id</xmlUrl>\n";
-            echo "<userUrl>http://$host$uri/view.php?id=$id</userUrl>\n";
+            echo "<xmlUrl>$protocol://$host$uri/view.php?f=xml&id=$id</xmlUrl>\n";
+            echo "<userUrl>$protocol://$host$uri/view.php?id=$id</userUrl>\n";
             echo "</data>\n";
             echo "</response>\n";
         }
@@ -333,13 +335,13 @@ else
             $ret['statusText'] = 'Ok';
             $ret['data'] = array();
             $ret['data']['videoId'] = $id;
-            $ret['data']['jsonUrl'] = "http://$host$uri/view.php?f=json&id=$id";
-            $ret['data']['userUrl'] = "http://$host$uri/view.php?id=$id";
+            $ret['data']['jsonUrl'] = "$protocol://$host$uri/view.php?f=json&id=$id";
+            $ret['data']['userUrl'] = "$protocol://$host$uri/view.php?id=$id";
             json_response($ret);
         }
         else
         {
-            header("Location: http://$host$uri/view.php?id=$id");
+            header("Location: $protocol://$host$uri/view.php?id=$id");
         }
     }
     else
