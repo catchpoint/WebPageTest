@@ -23,9 +23,10 @@ function getRequests($id, $test_path, $run, $is_cached,
     $headers_file_name = $file_prefix . 'report.txt';
     $bodies_file_name = $file_prefix . 'bodies.zip';
     $custom_rules_file_name = $file_prefix . 'custom_rules.json';
+    $beer_file_name = $test_path . '/' . 'sparrowbeer.json.gz';//BEER
 
     $needHeaders = false;
-    $requests = LoadRequests($request_file_name);
+    $requests = LoadRequests($request_file_name, $beer_file_name);//BEER
     if (isset($requests) && is_array($requests) && count($requests)) {
         if ($use_raw_headers)
             $needHeaders = true;
@@ -125,7 +126,7 @@ function CalculateComponentTimes(&$pageData, &$requests) {
 /**
 * Load the gzipped request file (tab deliminated).
 */
-function LoadRequests($request_file_name) {
+function LoadRequests($request_file_name, $beer_file_name = NULL) {
     $requests = array();
     $needed_columns = array(
         // tsv_column => request_key
@@ -180,6 +181,7 @@ function LoadRequests($request_file_name) {
         72 => 'server_rtt',
         73 => 'client_port',
         74 => 'jpeg_scan_count',
+		75 => 'prefetch_hit',//BEER
         );
     $request_lines = gz_file($request_file_name);
     if( isset($request_lines) && is_array($request_lines)) {
@@ -216,7 +218,139 @@ function LoadRequests($request_file_name) {
           }
         }
     }
-    return $requests;
+		
+	LoadHitRequests($beer_file_name,&$requests,&$needed_columns);
+	
+	usort($requests, "compare");
+	
+	return $requests;
+}
+
+function compare($a, $b) {
+	return $a["load_start"] - $b["load_start"];
+}
+
+function LoadHitRequests($beer_file_name,&$requests,&$needed_columns) {
+
+	if (gz_is_file("$beer_file_name"))
+		$beer = json_decode(gz_file_get_contents("$beer_file_name"), true);
+
+	if (empty($beer))
+		return ;
+
+	if (array_key_exists('frame', $beer)) {
+		$timing = $beer['frame']['timing'];
+		$pageStartTime = $timing['navigationStart'];
+	} else {
+		return ;
+	}
+
+	traverseNestedFrames($beer, $requests, $pageStartTime, $needed_columns);
+
+	//usort($requests, "compare");
+
+	return ;
+}
+
+function traverseNestedFrames($nestedFrames, &$requests, $pageStartTime, &$needed_columns){
+
+	foreach ($nestedFrames as $key => $frame) {
+		if (array_key_exists('frame', $nestedFrames)) {
+			
+			$timing = $frame['timing'];
+			$startOffset = $timing['navigationStart'] - $pageStartTime;
+			
+			if (array_key_exists("subresources", $frame)) {
+				foreach ($frame[subresources] as $key => $subresource) {
+					$request = extractFrameRequest($subresource, $startOffset, $needed_columns);
+					if(isset($request))
+						$requests[] = $request;
+			}
+				
+			}else{//FIXME are all the frame timings actual object timing or the timing of the whole frame?
+				//$request = extractFrameRequest($frame, 0.0);
+				//$requests[] = $request;
+			}
+
+			if (array_key_exists('children', $frame)) {
+				foreach ($frame['children'] as $key => $nested) {
+					traverseNestedFrames($nested,$requests,$pageStartTime);
+				}
+
+			}
+		}
+	}
+}
+
+function extractFrameRequest(&$frame, $timingStart, $needed_columns) {
+
+	$request = array();
+
+	$response =$frame['response'];
+	$resource =$frame['resource'];
+	$timing =$frame['timing'];
+	
+	
+	foreach ($needed_columns as $i => $value){
+		$request[$needed_columns[$i + 1]] = ' ';
+	}
+	
+	$request['type'] = 3;
+	
+	if (array_key_exists('responseHttpStatusCode', $response)) {
+		$request['responseCode'] = $response['responseHttpStatusCode'];
+	}
+
+	if (array_key_exists('url', $resource)) {
+		$request['url'] = $resource['url'];
+		$url = parse_url($request['url']);
+		$request['host'] = $url['host'];
+		$request['method'] = 'GET';
+	}
+
+	if (array_key_exists('fetchStart', $timing) && array_key_exists('responseEnd', $timing))
+		$request['load_ms'] = round($timing['responseEnd'] - $timing['fetchStart']);
+
+	if (array_key_exists('fetchStart', $timing) && array_key_exists('responseStart', $timing))
+		$request['ttfb_ms'] = round($timing['responseStart'] - $timing['fetchStart']);
+	
+	//if($request['ttfb_ms'] < 0)
+		//$request['ttfb_ms'] = 0;
+
+	if (array_key_exists('fetchStart', $timing))
+		$request['load_start'] = round($timingStart + $timing['fetchStart']);
+	
+	if (array_key_exists('domainLookupStart', $timing) && array_key_exists('domainLookupEnd', $timing))
+		$request['dns_ms'] = round($timing['domainLookupEnd'] - $timing['domainLookupStart']);
+	
+	//if($request['dns_ms']<0)
+		//$request['dns_ms'] = 0;
+
+	if (array_key_exists('secureConnectionStart', $timing) && array_key_exists('connectStart', $timing))
+		$request['connect_ms'] = round($timing['secureConnectionStart'] - $timing['connectStart']);
+
+	if (array_key_exists('connectEnd', $timing) && array_key_exists('connectStart', $timing))
+		$request['ssl_ms'] = round($timing['connectEnd'] - $timing['secureConnectionStart']);
+	
+	//if($request['ssl_ms']<0)
+		//$request['ssl_ms'] = 0;
+	
+	if($request['connect_ms'] < 0){//FIXME
+		$request['load_start'] += 1000;
+		$request['connect_ms'] = 10;
+		$request['dns_ms'] = 10;
+		$request['ssl_ms'] = 10;
+		$request['ttfb_ms'] = 10;
+		$request['load_ms'] = 50;
+		$request['prefetch_hit'] = true;
+		
+		return $request;
+		
+	}else{
+		$request['prefetch_hit'] = false;
+	}
+	
+	return NULL;
 }
 
 /**

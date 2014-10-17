@@ -7,11 +7,15 @@ function DrawRequestTimeLabel($im, $request, $x1, $y1, $x2, $y2, $min_x, $max_x,
                               $font, $font_width, $font_color, $bg_color) {
     $label = $request['all_ms'] . ' ms';
     $code = $request['responseCode'];
+	
     if ($code >= 300 || $code < 0) {
         $label .= " ({$request['responseCode']})";
     } elseif ($code == 0) {
         $label .= ' (request canceled)';
     }
+	
+    if ($request['prefetch_hit'] == true) //BEER
+        $label = ' hit';//BEER
 
     $label_width = strlen($label) * $font_width;
     $label_x = $x2 + 5;

@@ -1017,6 +1017,8 @@ function AddBarIfValid(&$bars, $key, $request, $x_scaler, $y1, $y2) {
         $request[$end_key] > 0) {
         $x1 = $x_scaler($request[$start_key]);
         $x2 = $x_scaler($request[$end_key]);
+		if($request['prefetch_hit'] == true)//BEER
+            $key = 'prefetch';
         $bars[] = array(
             $x1,
             $x2,
