@@ -18,7 +18,7 @@ $is_secure = false;
 $has_locations = false;
 $use_location_check = false;
 $requests = getRequests($id, $testPath, $run, $cached,
-                        $is_secure, $has_locations, $use_location_check);
+                        $is_secure, $has_locations, $use_location_check, false, $beer_data);//BEER
 if (@$_REQUEST['type'] == 'connection') {
     $is_state = true;
     $rows = GetConnectionRows($requests, $show_labels);

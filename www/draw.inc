@@ -7,6 +7,8 @@ function DrawRequestTimeLabel($im, $request, $x1, $y1, $x2, $y2, $min_x, $max_x,
                               $font, $font_width, $font_color, $bg_color) {
     $label = $request['all_ms'] . ' ms';
     $code = $request['responseCode'];
+    if ($request['prefetch_hit'] == true) //BEER
+        $label = ' hit';//BEER
     if ($code >= 300 || $code < 0) {
         $label .= " ({$request['responseCode']})";
     } elseif ($code == 0) {

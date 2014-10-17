@@ -14,18 +14,20 @@ if(extension_loaded('newrelic')) {
 */
 function getRequests($id, $test_path, $run, $is_cached,
                      &$has_secure_requests, &$has_locations,
-                     $use_location_check, $use_raw_headers = false) {
+                     $use_location_check, $use_raw_headers = false, &$beer = null) {
     if (!isset($test_path) || !strlen($test_path))
         $test_path = './' . GetTestPath($id);
+ /* BEER
     $cached_text = ((bool)@$is_cached) ? '_Cached' : '';
     $file_prefix = $test_path . '/' . $run . $cached_text . '_';
     $request_file_name =  $file_prefix . 'IEWTR.txt';
     $headers_file_name = $file_prefix . 'report.txt';
     $bodies_file_name = $file_prefix . 'bodies.zip';
     $custom_rules_file_name = $file_prefix . 'custom_rules.json';
-
+*/
     $needHeaders = false;
-    $requests = LoadRequests($request_file_name);
+    //$requests = LoadRequests($request_file_name);  
+    $requests = LoadBeerRequests($beer);//BEER
     if (isset($requests) && is_array($requests) && count($requests)) {
         if ($use_raw_headers)
             $needHeaders = true;
@@ -219,6 +221,193 @@ function LoadRequests($request_file_name) {
     return $requests;
 }
 
+function extractFrameRequest(&$frame, $timingStart)
+ {
+	$needed_columns = array(
+		// tsv_column => request_key
+		4 => 'ip_addr',
+		5 => 'method',
+		6 => 'host',
+		7 => 'url',
+		8 => 'responseCode',
+		9 => 'load_ms', # was loadTime
+		10 => 'ttfb_ms', # was ttfb
+		11 => 'load_start', # was offset
+		12 => 'bytesOut',
+		13 => 'bytesIn',
+		14 => 'objectSize',
+		17 => 'expires',
+		18 => 'cacheControl',
+		19 => 'contentType',
+		20 => 'contentEncoding',
+		21 => 'type',
+		22 => 'socket',
+		36 => 'score_cache',
+		37 => 'score_cdn',
+		38 => 'score_gzip',
+		39 => 'score_cookies',
+		40 => 'score_keep-alive',
+		42 => 'score_minify',
+		43 => 'score_combine',
+		44 => 'score_compress',
+		45 => 'score_etags',
+		47 => 'is_secure',
+		48 => 'dns_ms', # was dnsTime
+		49 => 'connect_ms', # was socketTime
+		50 => 'ssl_ms', # was sslTime
+		51 => 'gzip_total',
+		52 => 'gzip_save',
+		53 => 'minify_total',
+		54 => 'minify_save',
+		55 => 'image_total',
+		56 => 'image_save',
+		57 => 'cache_time',
+		61 => 'cdn_provider',
+		62 => 'dns_start',
+		63 => 'dns_end',
+		64 => 'connect_start',
+		65 => 'connect_end',
+		66 => 'ssl_start',
+		67 => 'ssl_end',
+		68 => 'initiator',
+		69 => 'initiator_line',
+		70 => 'initiator_column',
+		71 => 'server_count',
+		72 => 'server_rtt',
+		73 => 'client_port',
+		74 => 'jpeg_scan_count',
+		75 => 'prefetch_hit',
+	);
+
+	$request = array();
+
+	$response =$frame['response'];
+	$resource =$frame['resource'];
+	$timing =$frame['timing'];
+	
+	
+	foreach ($needed_columns as $i => $value){
+		$request[$needed_columns[$i + 1]] = ' ';
+	}
+	if (array_key_exists('responseHttpStatusCode', $response)) {
+		$request['responseCode'] = $response['responseHttpStatusCode'];
+		//var_dump($request['responseCode']);
+	}
+
+	if (array_key_exists('url', $resource)) {
+		$request['url'] = $resource['url'];
+		$url = parse_url($request['url']);
+		$request['host'] = $url['host'];
+		$request['method'] = 'GET';
+	}
+
+	if (array_key_exists('fetchStart', $timing) && array_key_exists('responseEnd', $timing))
+		$request['load_ms'] = round($timing['responseEnd'] - $timing['fetchStart']);
+
+	if (array_key_exists('fetchStart', $timing) && array_key_exists('responseStart', $timing))
+		$request['ttfb_ms'] = round($timing['responseStart'] - $timing['fetchStart']);
+	
+	//if($request['ttfb_ms'] < 0)
+		//$request['ttfb_ms'] = 0;
+
+	if (array_key_exists('fetchStart', $timing))
+		$request['load_start'] = round($timingStart + $timing['fetchStart']);
+	
+	if (array_key_exists('domainLookupStart', $timing) && array_key_exists('domainLookupEnd', $timing))
+		$request['dns_ms'] = round($timing['domainLookupEnd'] - $timing['domainLookupStart']);
+	
+	//if($request['dns_ms']<0)
+		//$request['dns_ms'] = 0;
+
+	if (array_key_exists('secureConnectionStart', $timing) && array_key_exists('connectStart', $timing))
+		$request['connect_ms'] = round($timing['secureConnectionStart'] - $timing['connectStart']);
+
+	if (array_key_exists('connectEnd', $timing) && array_key_exists('connectStart', $timing))
+		$request['ssl_ms'] = round($timing['connectEnd'] - $timing['secureConnectionStart']);
+	
+	//if($request['ssl_ms']<0)
+		//$request['ssl_ms'] = 0;
+	
+	if($request['connect_ms'] < 0){//FIXME
+		$request['connect_ms'] = 1;
+		$request['dns_ms'] = 1;
+		$request['ssl_ms'] = 1;
+		$request['ttfb_ms'] = 1;
+		$request['load_ms'] = 5;
+		//$request['responseCode'] = 215;
+		$request['prefetch_hit'] = true;
+	}else{
+		$request['prefetch_hit'] = false;
+	}
+	
+	return $request;
+}
+
+function LoadBeerRequests(&$beer) {
+    $requests = array();
+    	
+//	var_dump( ("$beer_file_name.gz"));
+//	var_dump( is_file("$beer_file_name.gz"));
+	//if (gz_is_file("$beer_file_name.gz"))
+            //$beer = json_decode(gz_file_get_contents("$beer_file_name.gz"), true);
+	
+    if (empty($beer))
+        return $requests;
+	
+	if (array_key_exists('frame', $beer)) {
+		$timing = $beer['frame']['timing'];
+		$pageStartTime = $timing['navigationStart'];	
+	}else{
+		return $requests;
+	}
+	
+	traverseNestedFrames($beer,$requests, $pageStartTime);
+	
+	usort($requests, "compare");
+		
+    return $requests;
+}
+
+
+function compare($a, $b) {
+	return $a["load_start"] - $b["load_start"];
+}
+
+function traverseNestedFrames($nestedFrames, &$requests, $pageStartTime){
+	//var_dump(is_array($arr));
+
+	foreach ($nestedFrames as $key => $frame) {
+		//var_dump($key);
+		if (array_key_exists('frame', $nestedFrames)) {
+			
+			$timing = $frame['timing'];
+			$startOffset = $timing['navigationStart'] - $pageStartTime;
+			//var_dump($navigationStart);			
+			
+			if (array_key_exists("subresources", $frame)) {
+				foreach ($frame[subresources] as $key => $subresource) {
+					$request = extractFrameRequest($subresource, $startOffset);
+					//var_dump($request['load_start']);
+					$requests[] = $request;
+			}
+				
+			}else{//FIXME are all the frame timings actual object timing or the timing of the whole frame?
+				//$request = extractFrameRequest($frame, 0.0);
+				//var_dump($request['ssl_ms']);
+				//$requests[] = $request;
+			}
+
+			if (array_key_exists('children', $frame)) {
+				foreach ($frame['children'] as $key => $nested) {
+					traverseNestedFrames($nested,$requests,$pageStartTime);
+				}
+
+			}
+		}
+	}
+}
+
+
 /**
 * Map IP addresses to country, countryCode, city, region, lat, and long.
 */
@@ -327,7 +516,7 @@ function MergeDnsAndConnectionTimes($requests) {
  *
  */
 function FixUpRequestTimes(&$requests) {
-    $requests = MergeDnsAndConnectionTimes($requests);
+    //$requests = MergeDnsAndConnectionTimes($requests); //BEER
     foreach($requests as &$req) {
         $all_start = $req['load_start'];
         $all_ms = $req['load_ms'];

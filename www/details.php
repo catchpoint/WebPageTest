@@ -7,7 +7,7 @@ require_once('waterfall.inc');
 $options = null;
 if (array_key_exists('end', $_REQUEST))
     $options = array('end' => $_REQUEST['end']);
-$data = loadPageRunData($testPath, $run, $cached, $options);
+$data = loadPageRunData($testPath, $run, $cached, $options, $beer_data);//BEER
 
 $page_keywords = array('Performance Test','Details','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website performance test details$testLabel";
@@ -297,7 +297,7 @@ $page_description = "Website performance test details$testLabel";
                 }
                 $secure = false;
                 $haveLocations = false;
-                $requests = getRequests($id, $testPath, $run, @$_GET['cached'], $secure, $haveLocations, true, true);
+                $requests = getRequests($id, $testPath, $run, @$_GET['cached'], $secure, $haveLocations, true, true, $beer_data);//BEER
                 ?>
                 <script type="text/javascript">
                   markUserTime('aft.Detail Table');
@@ -314,6 +314,7 @@ $page_description = "Website performance test details$testLabel";
                         <?php } ?>
                         <td><table><tr><td><div class="bar" style="width:15px; background-color:#1fe11f"></div></td><td>Time to First Byte</td></tr></table></td>
                         <td><table><tr><td><div class="bar" style="width:15px; background-color:#1977dd"></div></td><td>Content Download</td></tr></table></td>
+                        <td><table><tr><td><div class="bar" style="width:5px; background-color:#FF0000"></div></td><td>Prefetch Hit</td></tr></table></td>
                         <td style="vertical-align:middle; padding: 4px;"><div style="background-color:#ffff60">&nbsp;3xx response&nbsp;</div></td>
                         <td style="vertical-align:middle; padding: 4px;"><div style="background-color:#ff6060">&nbsp;4xx+ response&nbsp;</div></td>
                     </tr>

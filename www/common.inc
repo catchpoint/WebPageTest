@@ -278,5 +278,12 @@ if (strlen($id)) {
     if (!array_key_exists('testinfo', $test)) {
         $test['testinfo'] = array();
     }
+	
+    $beer_file_name = "$testPath/sparrowbeer.json.gz";//BEER
+	
+    if (gz_is_file($beer_file_name)){//BEER
+	$beer_data = json_decode(gz_file_get_contents("$beer_file_name"), true);//BEER
+	$url=$beer_data['frame']['resource']['url'];//BEER
+    }
 }
 ?>

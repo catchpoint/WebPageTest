@@ -50,12 +50,13 @@ function loadAllPageData($testPath, $options = null) {
 * @param mixed $fv
 * @param mixed $rv
 */
-function loadPageRunData($testPath, $run, $cached, $options = null)
+function loadPageRunData($testPath, $run, $cached, $options = null, &$beer_data = null)
 {
     $ret = null;
 
     $cachedText = $cached ? '_Cached' : '';
-    $ret = loadPageData("$testPath/{$run}{$cachedText}_IEWPG.txt", $options);
+    //$ret = loadPageData("$testPath/{$run}{$cachedText}_IEWPG.txt", $options);
+    $ret = loadBeerPageData($beer_data);//BEER
     if (!isset($ret) || !is_array($ret) || !count($ret))
         GetDevToolsRequests($testPath, $run, $cached, $requests, $ret);
     
@@ -222,6 +223,100 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
     }
     
     return $ret;
+}
+
+function LoadBeerPageData(&$beer) {
+	
+	$ret = array();
+
+	//if (gz_is_file($beer_file_name))
+		//$beer = json_decode(gz_file_get_contents("$beer_file_name"), true);
+
+	if (empty($beer))
+		return $ret;
+	
+	$ret = array(
+		'URL' => 0,
+		'loadTime' => 0,
+		'TTFB' => 0,
+		'bytesOut' => 0,
+		'bytesOutDoc' => 0,
+		'bytesIn' => 0,
+		'bytesInDoc' => 0,
+		'connections' => 0,
+		'requests' => 0,
+		'requestsDoc' => 0,
+		'responses_200' => 0,
+		'responses_404' => 0,
+		'responses_other' => 0,
+		'result' => 0,
+		'render' => 0,
+		'fullyLoaded' => 0,
+		'cached' => 0,
+		'docTime' => 0,
+		'domTime' => 0,
+		'score_cache' => 0,
+		'score_cdn' => 0,
+		'score_gzip' => 0,
+		'score_cookies' => 0,
+		'score_keep-alive' => 0,
+		'score_minify' => 0,
+		'score_combine' => 0,
+		'score_compress' => 0,
+		'score_etags' => 0,
+		'gzip_total' => 0,
+		'gzip_savings' => 0,
+		'minify_total' => 0,
+		'minify_savings' => 0,
+		'image_total' => 0,
+		'image_savings' => 0,
+		'optimization_checked' => 0,
+		'aft' => 0,
+		'domElements' => 0,
+		'pageSpeedVersion' => 0,
+		'title' => 0,
+		'titleTime' => 0,
+		'loadEventStart' => 0,
+		'loadEventEnd' => 0,
+		'domContentLoadedEventStart' => 0,
+		'domContentLoadedEventEnd' => 0,
+		'lastVisualChange' => 0,
+		'browser_name' => 0,
+		'browser_version' => 0,
+		'server_count' => 0,
+		'server_rtt' => 0,
+		'base_page_cdn' => 0,
+		'adult_site' => 0,		
+		'fixed_viewport' => 0,
+		'score_progressive_jpeg' => 0,
+		'firstPaint' => 0,
+		'docCPUms' => 0,
+		'fullyLoadedCPUms' => 0,
+		'docCPUpct' => 0,
+		'fullyLoadedCPUpct' => 0,
+		'isResponsive' => 0,
+		'date' => 0,
+		'pageSpeedVersion' => 0
+	);
+	
+	$timing = $beer['frame']['timing'];
+	$resource = $beer['frame']['resource'];
+	
+	$ret['URL'] = $resource['url'];
+	$ret['bytesIn'] = $resource['encodedDataLength'];
+	$ret['TTFB'] = $timing['responseStart'] -  $timing['navigationStart'] ;
+	$ret['loadTime'] = $timing['loadEventStart'] -  $timing['navigationStart'] ;
+
+	$ret['fullyLoaded'] = $timing['loadEventEnd'] -  $timing['navigationStart'] ;
+	$ret['domTime'] = $timing['domainLookupEnd'] -  $timing['domainLookupStart'] ;
+	$ret['docTime'] = $timing['domComplete'] -  $timing['navigationStart'] ;
+	
+	$ret['loadEventStart'] = $timing['loadEventStart'] ;
+	$ret['loadEventEnd'] = $timing['loadEventEnd'];
+	$ret['domContentLoadedEventStart'] = $timing['domContentLoadedEventStart'] ;
+	$ret['domContentLoadedEventEnd'] = $timing['domContentLoadedEventEnd'];
+	
+	return $ret;
 }
 
 /**
