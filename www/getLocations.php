@@ -132,7 +132,7 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
 function LoadLocations()
 {
     $locations = array();
-    $loc = parse_ini_file('./settings/locations.ini', true);
+    $loc = LoadLocationsIni();
     FilterLocations($loc);
     BuildLocations($loc);
 

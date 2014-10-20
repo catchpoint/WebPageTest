@@ -70,7 +70,8 @@ foreach($counts as $label => $count) {
 function AllTestsComplete(&$url) {
   $all_complete = true;
   foreach($url as $result) {
-    if (!isset($result['result']) || (isset($result['resubmit']) && $result['resubmit'])) {
+    //if (!isset($result['result']) || (isset($result['resubmit']) && $result['resubmit'])) {
+    if (!isset($result['result'])) {
       $all_complete = false;
       break;
     }
@@ -136,7 +137,7 @@ function ImagesSimilar(&$url) {
     // ask the server to visually compare the last frames (if we don't already have similarity numbers)
     $needSimilarity = false;
     foreach($url as $result) {
-      if (!isset($result['sim'])) {
+      if (!isset($result['sim']) || $result['sim'] < 0) {
         $needSimilarity = true;
         break;
       }

@@ -66,7 +66,7 @@ function GetLocationKey($location) {
       $key = apc_fetch("key_$location");
       if ($key === false) {
         $key = '';
-        $locations = parse_ini_file('./settings/locations.ini', true);
+        $locations = LoadLocationsIni();
         if ($locations !== false &&
             is_array($locations) &&
             array_key_exists($location, $locations) &&
@@ -75,7 +75,7 @@ function GetLocationKey($location) {
         apc_store("key_$location", $key, 60);
       }
     } else {
-      $locations = parse_ini_file('./settings/locations.ini', true);
+      $locations = LoadLocationsIni();
       if ($locations !== false &&
           is_array($locations) &&
           array_key_exists($location, $locations) &&
@@ -84,6 +84,35 @@ function GetLocationKey($location) {
     }
   }
   return $key;
+}
+
+// Load the locations from locations.ini and merge-in the ec2 locations if necessary
+function LoadLocationsIni() {
+  $locations = parse_ini_file(__DIR__ . '/settings/locations.ini', true);
+  if (GetSetting('ec2_locations')) {
+    $ec2 = parse_ini_file(__DIR__ . '/settings/ec2_locations.ini', true);
+    if ($ec2 && is_array($ec2) && isset($ec2['locations'])) {
+      if ($locations && is_array($locations) && isset($locations['locations'])) {
+        // Merge the top-level locations
+        $last = 0;
+        foreach($locations['locations'] as $num => $value)
+          if (is_numeric($num) && $num > $last)
+            $last = $num;
+        foreach($ec2['locations'] as $num => $value)
+          if (is_numeric($num))
+            $locations['locations'][$last + $num] = $value;
+        if (!isset($locations['locations']['default']) && isset($ec2['locations']['default']))
+          $locations['locations']['default'] = $ec2['locations']['default'];
+        // add all of the individual locations
+        foreach($ec2 as $name => $group)
+          if ($name !== 'locations')
+            $locations[$name] = $group;
+      } else {
+        $locations = $ec2;
+      }
+    }
+  }
+  return $locations;
 }
 
 /**
@@ -99,7 +128,7 @@ function GetSetting($setting) {
       $ret = $value;
     else {
       if (!isset($settings) || !is_array($settings))
-        $settings = parse_ini_file('./settings/settings.ini');
+        $settings = parse_ini_file(__DIR__ . '/settings/settings.ini');
       if (isset($settings) && is_array($settings) && array_key_exists($setting, $settings))
         $ret = $settings[$setting];
       apc_store("setting_$setting", $ret, 60);
@@ -264,7 +293,7 @@ function GenerateVideoThumbnail($dir)
 */
 function GetDefaultLocation()
 {
-    $locations = parse_ini_file('./settings/locations.ini', true);
+    $locations = LoadLocationsIni();
     BuildLocations($locations);
 
     $def = $locations['locations']['default'];
@@ -695,7 +724,7 @@ function FilterLocations(&$locations, $includeHidden = '',
     if (!isset($_REQUEST['hidden'])) {
         // first remove any locations that haven't checked in for 30 minutes (could tighten this up in the future)
         foreach ($locations as $name => &$locRef) {
-            if (isset($locRef['browser'])) {
+            if (isset($locRef['browser']) && !isset($locRef['ami'])) {
                 $parts = explode(':', $name);
                 $locname = $parts[0];
                 // now check the times

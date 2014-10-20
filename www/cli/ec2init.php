@@ -54,7 +54,10 @@ function UpdateSettings() {
         else
           $settings .= "$key=$value\n";
       }
-      $settings .= "\nec2_initialized=1\n";
+      $location_key = sha1(uniqid(mt_rand(), true));
+      $settings .= "\n";
+      $settings .= "location_key=$location_key\n";
+      $settings .= "ec2_initialized=1\n";
       file_put_contents("./settings/settings.ini", $settings);
     }
   }

@@ -11,7 +11,7 @@ if (!isset($lock))
   exit(0);
 
 // update the appurify devices if we have an API key configured
-$locations = parse_ini_file('./settings/locations.ini', true);
+$locations = LoadLocationsIni();
 foreach ($locations as $configuration) {
   if (is_array($configuration) &&
       array_key_exists('type', $configuration) &&

@@ -458,7 +458,7 @@ $page_description = "Comparison Test$testLabel.";
 */
 function LoadLocations()
 {
-    $locations = parse_ini_file('./settings/locations.ini', true);
+    $locations = LoadLocationsIni();
     FilterLocations( $locations, 'pss' );
     
     // strip out any sensitive information

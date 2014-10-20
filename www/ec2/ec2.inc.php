@@ -1,5 +1,81 @@
 <?php
 require_once('./ec2/sdk.class.php');
+require_once('./common_lib.inc');
+
+/**
+* Tests are pending for the given location, start instances as necessary
+* 
+* @param mixed $location
+*/
+function EC2_StartInstanceIfNeeded($ami) {
+  $target = 1;  // just support 1 instance at a time for now
+  $needed = false;
+  $lock = Lock('ec2-instances', true, 120);
+  if ($lock) {
+    $instances = json_decode(file_get_contents('./tmp/ec2-instances.dat'), true);
+    if (!$instances || !is_array($instances))
+      $instances = array();
+    if (!isset($instances[$ami]))
+      $instances[$ami] = array();
+    if (!isset($instances[$ami]['count']) || !is_numeric($instances[$ami]['count']))
+      $instances[$ami]['count'] = 0;
+    if ($instances[$ami]['count'] < $target)
+      $needed = true;
+    if ($needed) {
+      // figure out the user data string to use for the instance
+      $host = GetSetting('host');
+      if (!$host && isset($_SERVER['HTTP_HOST']) && strlen($_SERVER['HTTP_HOST']))
+        $host = $_SERVER['HTTP_HOST'];
+      if (!$host && GetSetting('ec2'))
+        $host = file_get_contents('http://169.254.169.254/latest/meta-data/hostname');
+      $key = GetSetting('location_key');
+      $locations = LoadLocationsIni();
+      $urlblast = '';
+      $wptdriver = '';
+      $loc = '';
+      $region = null;
+      if ($locations && is_array($locations)) {
+        foreach($locations as $location => $config) {
+          if (isset($config['ami']) && $config['ami'] == $ami) {
+            if (isset($config['region']))
+              $region = trim($config['region']);
+            if (isset($config['key']) && strlen($config['key']))
+              $key = trim($config['key']);
+            if (strlen($loc))
+              $loc .= ',';
+            $loc .= $location;
+            if (isset($config['urlblast'])) {
+              if (strlen($urlblast))
+                $urlblast .= ',';
+              $urlblast .= $location;
+            } else {
+              if (strlen($wptdriver))
+                $wptdriver .= ',';
+              $wptdriver .= $location;
+            }
+          }
+        }
+      }
+      if (strlen($loc) && isset($region)) {
+        $user_data = "wpt_server=$host";
+        if (strlen($urlblast))
+          $user_data .= " wpt_location=$urlblast";
+        if (strlen($wptdriver))
+          $user_data .= " wpt_loc=$wptdriver";
+        if (isset($key) && strlen($key))
+          $user_data .= " wpt_key=$key";
+        $size = GetSetting('ec2_instance_size');
+        if (!$size)
+          $size = 'm1.medium';
+        if (EC2_LaunchInstance($region, $ami, $size, $user_data, $loc)) {
+          $instances[$ami]['count']++;
+          file_put_contents('./tmp/ec2-instances.dat', json_encode($instances));
+        }
+      }
+    }
+    Unlock($lock);
+  }
+}
 
 /**
 * Terminate any EC2 Instances that are configured for auto-scaling
@@ -36,8 +112,20 @@ function EC2_TerminateIdleInstances() {
             $terminate = false;
         }
         
-        if ($terminate)
+        if ($terminate) {
+          if (isset($instance['ami'])) {
+            $lock = Lock('ec2-instances', true, 120);
+            if ($lock) {
+              $counts = json_decode(file_get_contents('./tmp/ec2-instances.dat'), true);
+              if ($counts && is_array($counts) && isset($counts[$instance['ami']])) {
+                unset($counts[$instance['ami']]);
+                file_put_contents('./tmp/ec2-instances.dat', json_encode($instances));
+              }
+              Unlock($lock);
+            }
+          }
           EC2_TerminateInstance($instance['region'], $instance['id']);
+        }
       }
     }
   }
@@ -116,6 +204,25 @@ function EC2_GetRunningInstances() {
       }
     }
   }
+  // update the AMI counts we are tracking locally
+  if (count($instances)) {
+    $lock = Lock('ec2-instances', true, 120);
+    if ($lock) {
+      $amis = array();
+      foreach($instances as $instance) {
+        if (isset($instance['ami']) &&
+            strlen($instance['ami']) &&
+            is_numeric($instance['state']) &&
+            $instance['state'] <= 16) {
+          if (!isset($amis[$instance['ami']]))
+            $amis[$instance['ami']] = array('count' => 0);
+          $amis[$instance['ami']]['count']++;
+        }
+      }
+      file_put_contents('./tmp/ec2-instances.dat', json_encode($amis));
+      Unlock($lock);
+    }
+  }
   return $instances;
 }
 
@@ -129,9 +236,32 @@ function EC2_TerminateInstance($region, $id) {
   }
 }
 
+function EC2_LaunchInstance($region, $ami, $size, $user_data, $loc) {
+  $ret = false;
+  $key = GetSetting('ec2_key');
+  $secret = GetSetting('ec2_secret');
+  if ($key && $secret) {
+    $ec2 = new AmazonEC2($key, $secret);
+    $ec2->set_region($region);
+    $response = $ec2->run_instances($ami, 1, 1, array(
+                                  'InstanceType' => $size,
+                                  'UserData' => base64_encode($user_data)));
+    if ($response->isOK()) {
+      $ret = true;
+      if (isset($loc) && strlen($loc) && isset($response->body->instancesSet->item->instanceId)) {
+        $instance_id = (string)$response->body->instancesSet->item->instanceId;
+        $ec2->create_tags($instance_id, array(
+                          array('Key' => 'Name', 'Value' => 'WebPagetest Agent'),
+                          array('Key' => 'WPTLocations', 'Value' => $loc)));
+      }
+    }
+  }
+  return $ret;
+}
+
 function EC2_GetTesters() {
   $locations = array();
-  $loc = parse_ini_file('./settings/locations.ini', true);
+  $loc = LoadLocationsIni();
   $i = 1;
   while (isset($loc['locations'][$i])) {
     $group = &$loc[$loc['locations'][$i]];

@@ -329,7 +329,7 @@ function GetBatchStatus(&$status) {
 */
 function GetRelayStatus($id, $testPath, &$test) {
     $ret = null;
-    $locations = parse_ini_file('./settings/locations.ini', true);
+    $locations = LoadLocationsIni();
     $location = $test['location'];
     $split = strpos($location, ':');
     if ($split > 0)

@@ -628,7 +628,7 @@ $loc = ParseLocations($locations);
 */
 function LoadLocations()
 {
-    $locations = parse_ini_file('./settings/locations.ini', true);
+    $locations = LoadLocationsIni();
     FilterLocations( $locations );
     
     // strip out any sensitive information

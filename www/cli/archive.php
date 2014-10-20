@@ -282,7 +282,7 @@ function ElapsedDays($year, $month, $day) {
 * 
 */
 function CheckLocations() {
-    $locations = parse_ini_file('./settings/locations.ini', true);
+    $locations = LoadLocationsIni();
     BuildLocations($locations);
     $deleted = false;
     echo "\n";

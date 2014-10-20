@@ -14,6 +14,7 @@
         DealWithMagicQuotes($GLOBALS);
     }
     require_once('common.inc');
+    require_once('./ec2/ec2.inc.php');
     set_time_limit(300);
 
     if(extension_loaded('newrelic')) {
@@ -37,7 +38,7 @@
     }
 
     // load the location information
-    $locations = parse_ini_file('./settings/locations.ini', true);
+    $locations = LoadLocationsIni();
     BuildLocations($locations);
 
     // see if we are running a relay test
@@ -234,6 +235,8 @@
             } else {
                 $test['location'] = trim($req_location);
             }
+            if (isset($locations[$test['location']]['ami']))
+              $test['ami'] = $locations[$test['location']]['ami'];
             
             // set the browser to the default if one wasn't specified
             if ((!array_key_exists('browser', $test) ||
@@ -1329,6 +1332,8 @@ function SubmitUrl($testId, $testData, &$test, $url)
 
       $location = $test['location'];
       $ret = WriteJob($location, $test, $out, $testId);
+      if (isset($test['ami']))
+        EC2_StartInstanceIfNeeded($test['ami']);
     }
 
     return $ret;

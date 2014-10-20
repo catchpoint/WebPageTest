@@ -144,7 +144,7 @@ function IsWPTTmpOnTmpfs() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 function CheckLocations() {
-    $locations = parse_ini_file('./settings/locations.ini', true);
+    $locations = LoadLocationsIni();
     $out = '';
     $video = false;
     foreach($locations['locations'] as $id => $location) {
