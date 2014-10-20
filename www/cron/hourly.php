@@ -29,6 +29,8 @@ function GitUpdate() {
 function AgentUpdate() {
   $updateServer = GetSetting('agentUpdate');
   if ($updateServer && strlen($updateServer)) {
+    if (!is_dir('./work/update'))
+      mkdir('./work/update', 0777, true); 
     $url = $updateServer . 'work/getupdates.php';
     $updates = json_decode(http_fetch($url), true);
     if ($updates && is_array($updates) && count($updates)) {
