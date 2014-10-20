@@ -15,6 +15,8 @@ Some of the features of the server AMI are:
 * Can archive tests to S3 if a bucket is configured and provided through user data
 * Automatically updates the server and test agent code to the latest (hourly)
 * Any settings can be specified or overridden through user data
+* A default API key can be provided through user data which will be configured as a no-limit API key
+    * Additional keys will need to be added manually to /var/www/webpagetest/www/settings/keys.ini
 
 Known issues:
 * Instances are not started to render video.  The plan is to move video rendering to the server but that is not in place yet.
@@ -28,4 +30,5 @@ Example user data:
 ```
 ec2_key=AKIAJKP75OFSROV5GWEQ
 ec2_secret=<secret for the key>
+api_key=MyAPIKey
 ```
