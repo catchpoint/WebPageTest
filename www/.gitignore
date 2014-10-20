@@ -18,6 +18,7 @@
 /settings/*.inc
 /settings/*.ini
 /settings/*.php
+!/settings/ec2_locations.ini
 /settings/block*.txt
 /settings/whitelist.txt
 /settings/customrules.txt
