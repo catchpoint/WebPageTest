@@ -1,10 +1,11 @@
 <?php
 set_time_limit(0);
+$dir = getcwd();
+chdir(__DIR__);
 chdir('..');
 
 // Startup routine for web servers running on EC2 (launched from cli)
 // Gets additional settings from user data and overrides current settings
-
 if (!Initialized()) {
   if ($argc < 2 || $argv[1] !== 'updated') {
     // wait until we have connectivity
@@ -23,6 +24,9 @@ if (!Initialized()) {
     SetupAPIKeys();
   }
 }
+
+// go back to whatever working directory was being used before running the script
+chdir($dir);
 
 function UpdateSettings() {
   global $api_key;
