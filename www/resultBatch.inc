@@ -618,7 +618,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
     $started = 0;
     global $fvonly;
     $url = '';
-    $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     $host  = $_SERVER['HTTP_HOST'];
     $videoCustom = '';
     
@@ -1668,7 +1668,7 @@ function CreateVideo(&$tests, $end = null)
 
     if (!strlen($end))
         $end = 'visual';
-    $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     $host  = $_SERVER['HTTP_HOST'];
     $request = "$protocol://$host/video/create.php?f=json&force=1&end=$end&tests=";
 

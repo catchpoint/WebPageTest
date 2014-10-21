@@ -2124,7 +2124,7 @@ function ShardKey($test_num) {
 * @param mixed $relative_url
 */
 function SendAsyncRequest($relative_url) {
-  $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+  $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
   $url = "$protocol://{$_SERVER['HTTP_HOST']}$relative_url";
   if (function_exists('curl_init')) {
     $c = curl_init();
@@ -2429,6 +2429,7 @@ function logTestMsg($testIdOrPath, $message) {
  * @param object[] $values Array of values for median computation.
  *
  * @return object
+
  */
 function median($values) {
   if (!count($values)) {

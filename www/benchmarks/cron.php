@@ -114,7 +114,7 @@ function PreProcessBenchmark($benchmark) {
     echo "Benchmark '$benchmark' needs processing, spawning task\n";
     logMsg("Benchmark '$benchmark' needs processing, spawning task", "./log/$logFile", true);
     
-    $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     $url = "$protocol://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?benchmark=' . urlencode($benchmark);
     if (function_exists('curl_init')) {
       $c = curl_init();
@@ -494,7 +494,7 @@ function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
                     ));
 
     $ctx = stream_context_create($params);
-    $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     $fp = fopen("$protocol://{$_SERVER['HTTP_HOST']}/runtest.php", 'rb', false, $ctx);
     if ($fp) {
         $response = @stream_get_contents($fp);

@@ -51,7 +51,7 @@ if (array_key_exists('test', $_REQUEST)) {
             $testData['testConnectivity'] = $testInfo['connectivity'];
             $testData['tester'] = array_key_exists('test_runs', $testInfo) && array_key_exists($run, $testInfo['test_runs']) && array_key_exists('tester', $testInfo['test_runs'][$run]) ? $testInfo['test_runs'][$run]['tester'] : $testInfo['tester'];
             $testData['testRunId'] = "$id.$run.$cached";
-            $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+            $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
             $testData['testResultUrl'] = "$protocol://{$_SERVER['HTTP_HOST']}/details.php?test=$id&run=$run&cached=$cached";
             error_log(json_encode($testData) . "\n", 3, $pageLog);
           }
@@ -80,7 +80,7 @@ if (array_key_exists('test', $_REQUEST)) {
               $request['testConnectivity'] = $testInfo['connectivity'];
               $request['tester'] = array_key_exists('test_runs', $testInfo) && array_key_exists($run, $testInfo['test_runs']) && array_key_exists('tester', $testInfo['test_runs'][$run]) ? $testInfo['test_runs'][$run]['tester'] : $testInfo['tester'];
               $request['testRunId'] = "$id.$run.$cached";
-              $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+              $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
               $request['testResultUrl'] = "$protocol://{$_SERVER['HTTP_HOST']}/details.php?test=$id&run=$run&cached=$cached";
               error_log(json_encode($request) . "\n", 3, $requestsLog);
             }
@@ -226,7 +226,7 @@ function notify( $mailto, $from,  $id, $testPath, $host )
         $shorturl .= '...';
     
     $subject = "Test results for $shorturl";
-    $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     if( !isset($host) )
         $host  = $_SERVER['HTTP_HOST'];
 

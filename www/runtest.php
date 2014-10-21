@@ -147,7 +147,7 @@
             if (array_key_exists('tsview_id', $_REQUEST)){
               $test['tsview_id'] = $_REQUEST['tsview_id'];
               
-              $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+              $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
               $test['tsview_results_host'] = "{$protocol}://{$_SERVER['HTTP_HOST']}";
              
               // tsview_configs format: KEY>VALUE,KEY>VALUE,......
@@ -215,7 +215,7 @@
                        is_file("./browsers/{$test['browser']}.apk"))) {
                     $customBrowsers = parse_ini_file('./browsers/browsers.ini');
                     if (array_key_exists($test['browser'], $customBrowsers)) {
-                      $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+                      $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
                       $base_uri = "$protocol://{$_SERVER['HTTP_HOST']}/browsers/";
                       if (array_key_exists('browsers_url', $settings) && strlen($settings['browsers_url']))
                           $base_uri = $settings['browsers_url'];
@@ -641,7 +641,7 @@
                 if (array_key_exists('submit_callback', $test)) {
                     $test['submit_callback']($test);
                 }
-                $protocol = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+                $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
                 $host  = $_SERVER['HTTP_HOST'];
                 $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 

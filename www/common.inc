@@ -116,7 +116,7 @@ if( array_key_exists('HTTP_HOST', $_SERVER) && stristr($_SERVER['HTTP_HOST'] , '
 if (isset($req_bulk)) {
     $settings['noBulk'] = 0;
 }
-$is_ssl = ((isset($_SERVER['HTTPS']) && strlen($_SERVER['HTTPS'])) || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? true : false;
+$is_ssl = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? true : false;
 $GLOBALS['cdnPath'] = '';
 if (isset($settings['cdn']) && !$is_ssl) {
     $GLOBALS['cdnPath'] = $settings['cdn'];
