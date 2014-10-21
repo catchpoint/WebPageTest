@@ -62,6 +62,8 @@ DWORD GetParentProcessId(DWORD pid);
 void TerminateProcessAndChildren(DWORD pid);
 void TerminateProcessById(DWORD pid);
 void TerminateProcessesByName(TCHAR * exe);
+void WaitForChildProcesses(DWORD pid, DWORD timeout = 300000);
+void WaitForProcessesByName(TCHAR * exe, DWORD timeout = 300000);
 bool IsBrowserDocument(HWND wnd, bool recurse = true);
 CString HttpGetText(CString url);
 DWORD   HttpSaveFile(CString url, CString file);

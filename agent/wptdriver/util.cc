@@ -619,6 +619,64 @@ void TerminateProcessById(DWORD pid) {
 }
 
 /*-----------------------------------------------------------------------------
+  Wait for all direct children of the given process to finish
+-----------------------------------------------------------------------------*/
+void WaitForChildProcesses(DWORD pid, DWORD timeout) {
+  bool children_found = false;
+  DWORD end_time = GetTickCount() + timeout;
+  do {
+    children_found = false;
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snap != INVALID_HANDLE_VALUE) {
+      PROCESSENTRY32 proc;
+      proc.dwSize = sizeof(proc);
+      if (Process32First(snap, &proc)) {
+        do {
+          if (proc.th32ParentProcessID == pid) {
+            children_found = true;
+            HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, proc.th32ProcessID);
+            if (process) {
+              WaitForSingleObject(process, timeout);
+              CloseHandle(process);
+            }
+          }
+        } while (Process32Next(snap, &proc));
+      }
+      CloseHandle(snap);
+    }
+  } while(children_found && GetTickCount() < end_time);
+}
+
+/*-----------------------------------------------------------------------------
+  Wait for all instances of the given executable to finish
+-----------------------------------------------------------------------------*/
+void WaitForProcessesByName(TCHAR * exe, DWORD timeout) {
+  bool processes_found = false;
+  DWORD end_time = GetTickCount() + timeout;
+  do {
+    processes_found = false;
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snap != INVALID_HANDLE_VALUE) {
+      PROCESSENTRY32 proc;
+      proc.dwSize = sizeof(proc);
+      if (Process32First(snap, &proc)) {
+        do {
+          if (!lstrcmpi(proc.szExeFile, exe)) {
+            processes_found = true;
+            HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, proc.th32ProcessID);
+            if (process) {
+              WaitForSingleObject(process, timeout);
+              CloseHandle(process);
+            }
+          }
+        } while (Process32Next(snap, &proc));
+      }
+      CloseHandle(snap);
+    }
+  } while(processes_found && GetTickCount() < end_time);
+}
+
+/*-----------------------------------------------------------------------------
   Terminate all instances of a process given it's name
 -----------------------------------------------------------------------------*/
 void TerminateProcessesByName(TCHAR * exe) {

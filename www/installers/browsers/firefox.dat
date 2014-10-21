@@ -1,6 +1,6 @@
 browser=Firefox
-url=http://httparchive.webpagetest.org/installers/firefox_31.exe
-md5=1B270F41DD617B224F52D7B06298EF0E
-version=31
-command=firefox_31.exe -ms
+url=http://httparchive.webpagetest.org/installers/firefox_33.exe
+md5=356414F30B9A8F8756E68CB2482FF5C5
+version=33
+command=firefox_33.exe -ms
 update=1
