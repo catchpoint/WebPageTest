@@ -66,6 +66,7 @@ WptDriverCore::WptDriverCore(WptStatus &status):
   ,housekeeping_timer_(NULL)
   ,has_gpu_(false)
   ,watchdog_started_(false)
+  ,_installing(false)
   ,_settings(status) {
   global_core = this;
   _testing_mutex = CreateMutex(NULL, FALSE, _T("Global\\WebPagetest"));
@@ -173,7 +174,9 @@ void WptDriverCore::WorkThread(void) {
   while (!_exit) {
     WaitForSingleObject(_testing_mutex, INFINITE);
     _status.Set(_T("Checking for software updates..."));
+    _installing = true;
     _settings.UpdateSoftware();
+    _installing = false;
     _status.Set(_T("Checking for work..."));
     WptTestDriver test(_settings._timeout * SECONDS_TO_MS, has_gpu_);
     if (_webpagetest.GetTest(test)) {
@@ -406,16 +409,18 @@ void WptDriverCore::Init(void){
     }
   }
 
-  // start the background timer that does our housekeeping
-  CreateTimerQueueTimer(&housekeeping_timer_, NULL, ::DoHouseKeeping, this, 
-      HOUSEKEEPING_INTERVAL, HOUSEKEEPING_INTERVAL, WT_EXECUTEDEFAULT);
-
+  _installing = true;
   _status.Set(_T("Installing software..."));
   while( !_settings.UpdateSoftware() && !_exit ) {
     _status.Set(_T("Software install failed, waiting to try again..."));
     Sleep(SOFTWARE_INSTALL_RETRY_DELAY);
     _status.Set(_T("Installing software..."));
   }
+  _installing = false;
+
+  // start the background timer that does our housekeeping
+  CreateTimerQueueTimer(&housekeeping_timer_, NULL, ::DoHouseKeeping, this, 
+      HOUSEKEEPING_INTERVAL, HOUSEKEEPING_INTERVAL, WT_EXECUTEDEFAULT);
 }
 
 /*-----------------------------------------------------------------------------
@@ -680,7 +685,7 @@ void WptDriverCore::DoHouseKeeping(void) {
 void WptDriverCore::CloseDialogs(void) {
   TCHAR szTitle[1025];
   // make sure wptdriver isn't doing a software install
-  bool installing = false;
+  bool installing = _installing;
   HWND hWptDriver = ::FindWindow(_T("wptdriver_wnd"), NULL);
   if (hWptDriver) {
     if (::GetWindowText(hWptDriver, szTitle, _countof(szTitle))) {
