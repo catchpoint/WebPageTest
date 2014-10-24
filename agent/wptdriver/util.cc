@@ -724,3 +724,21 @@ int ElapsedFileTimeSeconds(FILETIME& check, FILETIME& now) {
   }
   return elapsed;
 }
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Reboot() {
+	HANDLE hToken;
+	if (OpenProcessToken(GetCurrentProcess(),
+      TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
+		TOKEN_PRIVILEGES tp;
+		if (LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &tp.Privileges[0].Luid)) {
+			tp.PrivilegeCount = 1;
+			tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+			AdjustTokenPrivileges(hToken, FALSE, &tp, 0, (PTOKEN_PRIVILEGES)0, 0) ;
+		}
+		CloseHandle(hToken);
+	}
+	
+	InitiateSystemShutdown(NULL, NULL, 0, TRUE, TRUE);
+}
