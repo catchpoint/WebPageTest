@@ -56,21 +56,8 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
 
     $cachedText = $cached ? '_Cached' : '';
     $ret = loadPageData("$testPath/{$run}{$cachedText}_IEWPG.txt", $options);
-    if (!isset($ret) || !is_array($ret) || !count($ret)) {
-      if (GetDevToolsRequests($testPath, $run, $cached, $requests, $ret) &&
-          is_array($ret) && isset($ret['fullyLoaded']) && $ret['fullyLoaded']) {
-        $processing = GetDevToolsCPUTime($testPath, $run, $cached, $ret['fullyLoaded']);
-        if (isset($processing) && is_array($processing) && count($processing)) {
-          $ret['cpuTimes'] = $processing;
-          if (isset($ret['docTime']) && $ret['docTime']) {
-            $processing = GetDevToolsCPUTime($testPath, $run, $cached, $ret['docTime']);
-            if (isset($processing) && is_array($processing) && count($processing)) {
-              $ret['cpuTimesDoc'] = $processing;
-            }
-          }
-        }
-      }
-    }
+    if (!isset($ret) || !is_array($ret) || !count($ret))
+      GetDevToolsRequests($testPath, $run, $cached, $requests, $ret);
     
     // see if we have video files to calculate a visually complete time from
     $basic_results = false;
@@ -169,6 +156,19 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
                     $ret['SpeedIndexCustom'] = $progress['SpeedIndex'];
                 $ret['visualCompleteCustom'] = $progress['visualComplete'];
             }
+        }
+
+        if (isset($ret) && is_array($ret) && isset($ret['fullyLoaded']) && $ret['fullyLoaded']) {
+          $processing = GetDevToolsCPUTime($testPath, $run, $cached, $ret['fullyLoaded']);
+          if (isset($processing) && is_array($processing) && count($processing)) {
+            $ret['cpuTimes'] = $processing;
+            if (isset($ret['docTime']) && $ret['docTime']) {
+              $processing = GetDevToolsCPUTime($testPath, $run, $cached, $ret['docTime']);
+              if (isset($processing) && is_array($processing) && count($processing)) {
+                $ret['cpuTimesDoc'] = $processing;
+              }
+            }
+          }
         }
     }
 
