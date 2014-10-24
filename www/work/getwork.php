@@ -453,6 +453,7 @@ function GetReboot() {
   if (isset($name) && strlen($name) && isset($location) && strlen($location)) {
     $rebootFile = "./work/jobs/$location/$name.reboot";
     if (is_file($rebootFile)) {
+      unlink($rebootFile);
       header('Content-type: text/plain');
       header("Cache-Control: no-cache, must-revalidate");
       header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
