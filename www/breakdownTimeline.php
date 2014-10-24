@@ -50,13 +50,7 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
             $tab = 'Test Result';
             $subtab = 'Processing Breakdown';
             include 'header.inc';
-            $progress = GetVisualProgress($testPath, $run, $cached);
-            if (isset($progress) &&
-                is_array($progress) &&
-                array_key_exists('DevTools', $progress) &&
-                is_array($progress['DevTools']) &&
-                array_key_exists('processing', $progress['DevTools']))
-              $processing = $progress['DevTools']['processing'];
+            $processing = GetDevToolsCPUTime($testPath, $run, $cached);
             if (isset($processing)) {
               arsort($processing);
               $mapping = array('EvaluateScript' => 'Scripting',

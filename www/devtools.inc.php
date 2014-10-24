@@ -2,144 +2,13 @@
 $DevToolsCacheVersion = '1.7';
 
 if(extension_loaded('newrelic')) { 
-    newrelic_add_custom_tracer('GetCachedDevToolsProgress');
-    newrelic_add_custom_tracer('GetDevToolsProgress');
     newrelic_add_custom_tracer('GetTimeline');
     newrelic_add_custom_tracer('GetDevToolsRequests');
     newrelic_add_custom_tracer('GetDevToolsEvents');
     newrelic_add_custom_tracer('DevToolsGetConsoleLog');
+    newrelic_add_custom_tracer('DevToolsGetCPUSlices');
+    newrelic_add_custom_tracer('GetDevToolsCPUTime');
 }
-
-/**
-* Calculate the visual progress and speed index from the dev tools timeline trace
-* 
-* @param mixed $testPath
-* @param mixed $run
-* @param mixed $cached
-*/
-function GetDevToolsProgress($testPath, $run, $cached) {
-    $progress = GetCachedDevToolsProgress($testPath, $run, $cached);
-    if (!isset($progress) || !is_array($progress)) {
-      $testInfo = GetTestInfo($testPath);
-      $completed = IsTestRunComplete($run, $testInfo);
-      $startOffset = null;
-      if (GetTimeline($testPath, $run, $cached, $timeline, $startOffset)) {
-        $cachedText = '';
-        if( $cached )
-            $cachedText = '_Cached';
-        $console_log_file = "$testPath/$run{$cachedText}_console_log.json";
-        $console_log = array();
-        $progress = array();
-        $startTime = 0;
-        $fullScreen = 0;
-        $regions = array();
-        $viewport = null;
-        if (DevToolsHasLayout($timeline, $viewport)) {
-          $didLayout = false;
-          $didReceiveResponse = false;
-        } else {
-          $didLayout = true;
-          $didReceiveResponse = true;
-        }
-        $startTimes = array();
-        $progress['processing'] = array();
-        foreach($timeline as &$entry) {
-            if (array_key_exists('method', $entry)) {
-              if (array_key_exists('params', $entry) &&
-                  !array_key_exists($entry['method'], $startTimes)) {
-                if (array_key_exists('timestamp', $entry['params']))
-                  $startTimes[$entry['method']] = $entry['params']['timestamp'];
-                elseif (array_key_exists('record', $entry['params']) &&
-                        array_key_exists('startTime', $entry['params']['record']))
-                  $startTimes[$entry['method']] = $entry['params']['record']['startTime'];
-              }
-            } elseif (array_key_exists('timestamp', $entry) &&
-              !array_key_exists('timestamp', $startTimes))
-              $startTimes['timestamp'] = $entry['timestamp'];
-            $frame = '0';
-            ProcessPaintEntry($entry, $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse, $viewport);
-            if (!isset($entry['params']['record']['thread']) || $entry['params']['record']['thread'] == 0)
-              GetTimelineProcessingTimes($entry, $progress['processing'], $processing_start, $processing_end);
-            if (DevToolsMatchEvent('Console.messageAdded', $entry) &&
-                array_key_exists('message', $entry['params']) &&
-                is_array($entry['params']['message']))
-                $console_log[] = $entry['params']['message'];
-        }
-        if (!gz_is_file($console_log_file))
-          gz_file_put_contents($console_log_file, json_encode($console_log));
-        if (count($progress['processing'])) {
-          $proc_total = 0.0;
-          foreach($progress['processing'] as $type => &$procTime) {
-            $proc_total += $procTime;
-            $procTime = intval(round($procTime));
-          }
-          $progress['processing']['Idle'] = 0;
-          if (isset($processing_start) &&
-              isset($processing_end) &&
-              $processing_end > $processing_start) {
-            $proc_elapsed = $processing_end - $processing_start;
-            if ($proc_elapsed > $proc_total)
-              $progress['processing']['Idle'] = intval(round($proc_elapsed - $proc_total));
-          }
-        } else
-          unset($progress['processing']);
-        foreach($startTimes as $time) {
-          if (!$startTime || $time < $startTime)
-            $startTime = $time;
-        }
-        $regionCount = count($regions);
-        if ($regionCount) {
-            $paintEvents = array();
-            $total = 0.0;
-            foreach($regions as $name => &$region) {
-                $area = $region['width'] * $region['height'];
-                $updateCount = floatval(count($region['times']));
-                $incrementalImpact = floatval($area) / $updateCount;
-                // only count full screen paints for half their value
-                if ($area == $fullScreen)
-                    $incrementalImpact /= 2;
-                foreach($region['times'] as $time) {
-                    $total += $incrementalImpact;
-                    $elapsed = (int)($time - $startTime);
-                    if (!array_key_exists($elapsed, $paintEvents))
-                        $paintEvents[$elapsed] = $incrementalImpact;
-                    else
-                        $paintEvents[$elapsed] += $incrementalImpact;
-                }
-            }
-            if (count($paintEvents)) {
-                ksort($paintEvents, SORT_NUMERIC);
-                $current = 0.0;
-                $lastTime = 0.0;
-                $lastProgress = 0.0;
-                $progress['SpeedIndex'] = 0.0;
-                $progress['VisuallyComplete'] = 0;
-                $progress['StartRender'] = 0;
-                $progress['VisualProgress'] = array();
-                foreach($paintEvents as $time => $increment) {
-                    $current += $increment;
-                    $currentProgress = floatval(floatval($current) / floatval($total));
-                    $currentProgress = floatval(round($currentProgress * 100) / 100.0);
-                    $elapsed = $time - $lastTime;
-                    $siIncrement = floatval($elapsed) * (1.0 - $lastProgress);
-                    $progress['SpeedIndex'] += $siIncrement;
-                    $progress['VisualProgress'][$time] = $currentProgress;
-                    $progress['VisuallyComplete'] = $time;
-                    if (!$progress['StartRender'])
-                        $progress['StartRender'] = $time;
-                    $lastProgress = $currentProgress;
-                    $lastTime = $time;
-                    if ($currentProgress >= 1.0)
-                        break;
-                }
-            }
-        }
-        if ($completed && isset($progress) && is_array($progress))
-            SavedCachedDevToolsProgress($testPath, $run, $cached, $progress);
-      }
-    }
-    return $progress;
-}  
 
 /**
 * Load the timeline data for the given test run (from a timeline file or a raw dev tools dump)
@@ -165,151 +34,6 @@ function GetTimeline($testPath, $run, $cached, &$timeline, &$startOffset) {
           $ok = true;
     }
     return $ok;
-}
-
-/**
-* Pull out the paint entries from the timeline data and group them by the region being painted
-* 
-* @param mixed $entry
-* @param mixed $startTime
-* @param mixed $fullScreen
-* @param mixed $regions
-*/
-function ProcessPaintEntry(&$entry, &$fullScreen, &$regions, $frame, &$didLayout, &$didReceiveResponse, $viewport) {
-    $ret = false;
-    if (isset($entry) && is_array($entry)) {
-        $hadPaintChildren = false;
-        if (!$didReceiveResponse &&
-            array_key_exists('type', $entry) &&
-            !strcasecmp($entry['type'], 'ResourceReceiveResponse')) {
-            $didReceiveResponse = true;
-        }
-        if ($didReceiveResponse &&
-            !$didLayout &&
-            array_key_exists('type', $entry) &&
-            !strcasecmp($entry['type'], 'Layout')) {
-            $didLayout = true;
-        }
-        if (array_key_exists('frameId', $entry))
-            $frame = $entry['frameId'];
-        if (array_key_exists('params', $entry) && array_key_exists('record', $entry['params']))
-            ProcessPaintEntry($entry['params']['record'], $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse, $viewport);
-        if(array_key_exists('children', $entry) &&
-           is_array($entry['children'])) {
-            foreach($entry['children'] as &$child)
-                if (ProcessPaintEntry($child, $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse, $viewport))
-                    $hadPaintChildren = true;
-        } 
-        if (array_key_exists('type', $entry) &&
-          !strcasecmp($entry['type'], 'Paint') &&
-          array_key_exists('data', $entry)) {
-          if (array_key_exists('clip', $entry['data'])) {
-            $entry['data']['x'] = $entry['data']['clip'][0];
-            $entry['data']['y'] = $entry['data']['clip'][1];
-            $entry['data']['width'] = $entry['data']['clip'][4] - $entry['data']['clip'][0];
-            $entry['data']['height'] = $entry['data']['clip'][5] - $entry['data']['clip'][1];
-          }
-          if (array_key_exists('width', $entry['data']) &&
-              array_key_exists('height', $entry['data']) &&
-              array_key_exists('x', $entry['data']) &&
-              array_key_exists('y', $entry['data']) &&
-              ClipPaintRectToViewport($entry['data'], $viewport)) {
-            $ret = true;
-            $area = $entry['data']['width'] * $entry['data']['height'];
-            if ($area > $fullScreen)
-                $fullScreen = $area;
-            if ($didLayout && $didReceiveResponse && !$hadPaintChildren) {
-                $paintEvent = $entry['data'];
-                $paintEvent['endTime'] = $entry['endTime'];
-                $paintEvent['startTime'] = $entry['startTime'];
-                $regionName = "$frame:{$paintEvent['x']},{$paintEvent['y']} - {$paintEvent['width']}x{$paintEvent['height']}";
-                if (!array_key_exists($regionName, $regions)) {
-                    $regions[$regionName] = $paintEvent;
-                    $regions[$regionName]['times'] = array();
-                }
-                $regions[$regionName]['times'][] = $entry['endTime'];
-            }
-          }
-        }
-    }
-    return $ret;
-}
-
-/**
-* Clip the provided paint rect to the viewport and return true if the resulting rect is valid
-* 
-* @param mixed $paintRect
-* @param mixed $viewport
-*/
-function ClipPaintRectToViewport(&$paintRect, $viewport) {
-  $isInside = true;
-  if (isset($viewport)) {
-    $isInside = false;
-    $left = max($paintRect['x'], $viewport['x']);
-    $top = max($paintRect['y'], $viewport['y']);
-    $right = min($paintRect['x'] + $paintRect['width'], $viewport['x'] + $viewport['width']);
-    $bottom = min($paintRect['y'] + $paintRect['height'], $viewport['y'] + $viewport['height']);
-    if ($right > $left && $bottom > $top) {
-      $paintRect['x'] = $left;
-      $paintRect['y'] = $top;
-      $paintRect['width'] = $right - $left;
-      $paintRect['height'] = $bottom - $top;
-      $isInside = true;
-    }
-  }
-  return $isInside;
-}
-
-/**
-* Load a cached version of the calculated visual progress if it exists
-* 
-* @param mixed $testPath
-* @param mixed $run
-* @param mixed $cached
-*/
-function GetCachedDevToolsProgress($testPath, $run, $cached) {
-    global $DevToolsCacheVersion;
-    $progress = null;
-    if (gz_is_file("$testPath/devToolsProgress.json")) {
-        $cache = json_decode(gz_file_get_contents("$testPath/devToolsProgress.json"), true);
-        if (isset($cache) && is_array($cache)) {
-            if (array_key_exists('version', $cache) &&
-                $cache['version'] == $DevToolsCacheVersion) {
-                $key = "$run.$cached";
-                if (array_key_exists($key, $cache))
-                    $progress = $cache[$key];
-            } else {
-                if (is_file("$testPath/devToolsProgress.json"))
-                    unlink("$testPath/devToolsProgress.json");
-                if (is_file("$testPath/devToolsProgress.json.gz"))
-                    unlink("$testPath/devToolsProgress.json.gz");
-            }
-        }
-    }
-    return $progress;
-}
-
-/**
-* Save the cached visual progress to disk
-* 
-* @param mixed $testPath
-* @param mixed $run
-* @param mixed $cached
-* @param mixed $progress
-*/
-function SavedCachedDevToolsProgress($testPath, $run, $cached, $progress) {
-    $key = "$run.$cached";
-    $cache = null;
-    global $DevToolsCacheVersion;
-    if (gz_is_file("$testPath/devToolsProgress.json"))
-        $cache = json_decode(gz_file_get_contents("$testPath/devToolsProgress.json"), true);
-    if (!isset($cache) ||
-        !is_array($cache) ||
-        !array_key_exists('version', $cache) ||
-        $cache['version'] != $DevToolsCacheVersion)
-        $cache = array('version' => $DevToolsCacheVersion);
-    $cache[$key] = $progress;
-    gz_file_put_contents("$testPath/devToolsProgress.json", json_encode($cache));
 }
 
 /**
@@ -1167,70 +891,6 @@ function DevToolsMatchEvent($filter, &$event, $startTime = null, $endTime = null
   return $match;
 }
 
-/**
-* See if there are layout and network events in the trace
-* 
-* @param mixed $timeline
-*/
-function DevToolsHasLayout(&$timeline, &$viewport) {
-  $hasLayout = false;
-  $hasResponse = false;
-  $ret = false;
-  foreach ($timeline as &$entry) {
-    DevToolsEventHasLayout($entry, $hasLayout, $hasResponse, $viewport);
-    if ($hasLayout && $hasResponse) {
-      $ret = true;
-      break;
-    }
-  }
-  return $ret;
-}
-
-/**
-* Recursively check the given event for layout or response
-* 
-* @param mixed $event
-*/
-function DevToolsEventHasLayout(&$entry, &$hasLayout, &$hasResponse, &$viewport) {
-  if (isset($entry) && is_array($entry)) {
-      if (!$hasResponse &&
-          array_key_exists('type', $entry) &&
-          !strcasecmp($entry['type'], 'ResourceReceiveResponse')) {
-          $hasResponse = true;
-      }
-      if ($hasResponse &&
-          !$hasLayout &&
-          array_key_exists('type', $entry) &&
-          !strcasecmp($entry['type'], 'Layout')) {
-          if (array_key_exists('data', $entry) &&
-              is_array($entry['data']) &&
-              array_key_exists('partialLayout', $entry['data'])) {
-            if (!$entry['data']['partialLayout']) {
-              if (array_key_exists('root', $entry['data'])) {
-                $x = $entry['data']['root'][0];
-                $y = $entry['data']['root'][1];
-                $width = $entry['data']['root'][2] - $x;
-                $height = $entry['data']['root'][5] - $y;
-                if ($width > 0 && $height > 0) {
-                  $hasLayout = true;
-                  $viewport = array('x' => $x, 'y' => $y, 'width' => $width, 'height' => $height);
-                }
-              } else
-                $hasLayout = true;
-            }
-          } else
-            $hasLayout = true;
-      }
-      if (array_key_exists('params', $entry) && array_key_exists('record', $entry['params']))
-          DevToolsEventHasLayout($entry['params']['record'], $hasLayout, $hasResponse, $viewport);
-      if(array_key_exists('children', $entry) &&
-         is_array($entry['children'])) {
-          foreach($entry['children'] as &$child)
-              DevToolsEventHasLayout($child, $hasLayout, $hasResponse, $viewport);
-      } 
-  }
-}
-
 function DevToolsGetConsoleLog($testPath, $run, $cached) {
   $console_log = null;
   $cachedText = '';
@@ -1255,50 +915,6 @@ function DevToolsGetConsoleLog($testPath, $run, $cached) {
     gz_file_put_contents($console_log_file, json_encode($console_log));
   }
   return $console_log;
-}
-
-/**
-* Get the processing times by event type
-* 
-* @param mixed $entry
-* @param mixed $processingTimes
-*/
-function GetTimelineProcessingTimes(&$entry, &$processingTimes, &$processing_start, &$processing_end) {
-  $duration = 0;
-  if (array_key_exists('type', $entry)) {
-    $type = trim($entry['type']);
-    if (array_key_exists('endTime', $entry) &&
-        array_key_exists('startTime', $entry) &&
-        $entry['endTime'] >= $entry['startTime']) {
-      $duration = $entry['endTime'] - $entry['startTime'];
-      if (!isset($processing_start) || $entry['startTime'] < $processing_start)
-        $processing_start = $entry['startTime'];
-      if (!isset($processing_end) || $entry['endTime'] > $processing_end)
-        $processing_end = $entry['endTime'];
-    }
-    if (array_key_exists('children', $entry) &&
-        is_array($entry['children']) &&
-        count($entry['children'])) {
-      $childTime = 0;
-      foreach($entry['children'] as &$child)
-        $childTime += GetTimelineProcessingTimes($child, $processingTimes, $processing_start, $processing_end);
-      if ($childTime < $duration) {
-        $selfTime = $duration - $childTime;
-        if (array_key_exists($type, $processingTimes))
-          $processingTimes[$type] += $selfTime;
-        else
-          $processingTimes[$type] = $selfTime;
-      }
-    } elseif ($duration) {
-      if (array_key_exists($type, $processingTimes))
-        $processingTimes[$type] += $duration;
-      else
-        $processingTimes[$type] = $duration;
-    }
-  }
-  if (array_key_exists('params', $entry) && array_key_exists('record', $entry['params']))
-      GetTimelineProcessingTimes($entry['params']['record'], $processingTimes, $processing_start, $processing_end);
-  return $duration;
 }
 
 /**
@@ -1373,73 +989,80 @@ function DevToolsGetCPUSlices($testPath, $run, $cached) {
   $slices = null;
   $devTools = array();
   $startOffset = null;
-  GetTimeline($testPath, $run, $cached, $devTools, $startOffset);
-  if (isset($devTools) && is_array($devTools) && count($devTools)) {
-    // Do a first pass to get the start and end times as well as the number of threads
-    $threads = array(0 => true);
-    $startTime = 0;
-    $endTime = 0;
-    foreach ($devTools as &$entry) {
-      if (isset($entry['method']) &&
-          $entry['method'] == 'Timeline.eventRecorded' &&
-          isset($entry['params']['record'])) {
-        $start = DevToolsEventTime($entry);
-        if ($start && (!$startTime || $start < $startTime))
-          $startTime = $start;
-        $end = DevToolsEventEndTime($entry);
-        if ($end && (!$endTime || $end > $endTime))
-          $endTime = $end;
-        $thread = isset($entry['params']['record']['thread']) ? $entry['params']['record']['thread'] : 0;
-        $threads[$thread] = true;
-      }
-    }
-    
-    // create time slice arrays for each thread
-    $slices = array();
-    foreach ($threads as $id => $bogus)
-      $slices[$id] = array();
-      
-    // create 1ms time slices for the full time
-    if ($endTime > $startTime) {
-      $startTime = floor($startTime);
-      $endTime = ceil($endTime);
-      for ($i = $startTime; $i <= $endTime; $i++) {
-        $ms = intval($i - $startTime);
-        foreach ($threads as $id => $bogus)
-          $slices[$id][$ms] = array();
-      }
-
-      // Go through each element and account for the time    
+  $ver = 1;
+  $cacheFile = "$testPath/$run.$cached.devToolsCPUSlices.$ver";
+  if (gz_is_file($cacheFile))
+    $slices = json_decode(gz_file_get_contents($cacheFile), true);
+  if (!isset($slices)) {
+    GetTimeline($testPath, $run, $cached, $devTools, $startOffset);
+    if (isset($devTools) && is_array($devTools) && count($devTools)) {
+      // Do a first pass to get the start and end times as well as the number of threads
+      $threads = array(0 => true);
+      $startTime = 0;
+      $endTime = 0;
       foreach ($devTools as &$entry) {
         if (isset($entry['method']) &&
             $entry['method'] == 'Timeline.eventRecorded' &&
             isset($entry['params']['record'])) {
-          $count += DevToolsGetEventTimes($entry['params']['record'], $startTime, $slices);
+          $start = DevToolsEventTime($entry);
+          if ($start && (!$startTime || $start < $startTime))
+            $startTime = $start;
+          $end = DevToolsEventEndTime($entry);
+          if ($end && (!$endTime || $end > $endTime))
+            $endTime = $end;
+          $thread = isset($entry['params']['record']['thread']) ? $entry['params']['record']['thread'] : 0;
+          $threads[$thread] = true;
+        }
+      }
+      
+      // create time slice arrays for each thread
+      $slices = array();
+      foreach ($threads as $id => $bogus)
+        $slices[$id] = array();
+        
+      // create 1ms time slices for the full time
+      if ($endTime > $startTime) {
+        $startTime = floor($startTime);
+        $endTime = ceil($endTime);
+        for ($i = $startTime; $i <= $endTime; $i++) {
+          $ms = intval($i - $startTime);
+          foreach ($threads as $id => $bogus)
+            $slices[$id][$ms] = array();
+        }
+
+        // Go through each element and account for the time    
+        foreach ($devTools as &$entry) {
+          if (isset($entry['method']) &&
+              $entry['method'] == 'Timeline.eventRecorded' &&
+              isset($entry['params']['record'])) {
+            $count += DevToolsGetEventTimes($entry['params']['record'], $startTime, $slices);
+          }
         }
       }
     }
-  }
-  
-  if ($count) {
-    // remove any threads that didn't have actual slices populated
-    $emptyThreads = array();
-    foreach ($slices as $thread => &$records) {
-      $is_empty = true;
-      foreach($records as $ms => &$values) {
-        if (count($values)) {
-          $is_empty = false;
-          break;
+    
+    if ($count) {
+      // remove any threads that didn't have actual slices populated
+      $emptyThreads = array();
+      foreach ($slices as $thread => &$records) {
+        $is_empty = true;
+        foreach($records as $ms => &$values) {
+          if (count($values)) {
+            $is_empty = false;
+            break;
+          }
         }
+        if ($is_empty)
+          $emptyThreads[] = $thread;
       }
-      if ($is_empty)
-        $emptyThreads[] = $thread;
+      if (count($emptyThreads)) {
+        foreach($emptyThreads as $thread)
+          unset($slices[$thread]);
+      }
+      gz_file_put_contents($cacheFile, json_encode($slices));
+    } else {
+      $slices = null;
     }
-    if (count($emptyThreads)) {
-      foreach($emptyThreads as $thread)
-        unset($slices[$thread]);
-    }
-  } else {
-    $slices = null;
   }
     
   return $slices;
@@ -1530,4 +1153,45 @@ function GetDevToolsHeaderValue($headers, $name, &$value) {
     }
   }
 }
+
+function GetDevToolsCPUTime($testPath, $run, $cached, $endTime = 0) {
+  $times = null;
+  // If an end time wasn't specified, figure out what the fully loaded time is
+  if (!$endTime) {
+    if (GetDevToolsRequests($testPath, $run, $cached, $requests, $pageData) &&
+        isset($pageData) && is_array($pageData) && isset($pageData['fullyLoaded'])) {
+      $endTime = $pageData['fullyLoaded'];
+    }
+  }
+  $slices = DevToolsGetCPUSlices($testPath, $run, $cached);
+  if (isset($slices) && is_array($slices) && isset($slices[0]) &&
+      is_array($slices[0]) && count($slices[0])) {
+    $times = array('Idle' => 0.0);
+    foreach ($slices[0] as $ms => $breakdown) {
+      if (!$endTime || $ms < $endTime) {
+        $idle = 1.0;
+        if (isset($breakdown) && is_array($breakdown) && count($breakdown)) {
+          foreach($breakdown as $event => $ms_time) {
+            if (!isset($times[$event]))
+              $times[$event] = 0;
+            $times[$event] += $ms_time;
+            $idle -= $ms_time;
+          }
+        }
+        $times['Idle'] += $idle;
+      }
+    }
+    // round the times to the nearest millisecond
+    $total = 0;
+    foreach ($times as $event => &$val) {
+      $val = round($val);
+      if ($event !== 'Idle')
+        $total += $val;
+    }
+    if ($endTime && $endTime > $total)
+      $times['Idle'] = $endTime - $total;
+  }
+  return $times;
+}
+
 ?>

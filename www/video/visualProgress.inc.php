@@ -113,12 +113,6 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
             }
         }
     }
-    $devTools = GetDevToolsProgress($testPath, $run, $cached);
-    if (isset($devTools)){
-        if (!isset($frames))
-            $frames = array();
-        $frames['DevTools'] = $devTools;
-    }
     if ($completed && !isset($end) && !isset($options) && $dirty && isset($frames) && count($frames))
         gz_file_put_contents($cache_file,json_encode($frames));
     return $frames;
