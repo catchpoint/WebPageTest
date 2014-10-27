@@ -92,6 +92,7 @@ function CheckPHP() {
     global $settings;
     ShowCheck('PHP version at least 5.3', phpversion() >= 5.3, true, phpversion());
     ShowCheck('GD Module Installed', extension_loaded('gd'));
+    ShowCheck('FreeType enabled for GD (required for video rendering)', CheckFreeType(), false);
     ShowCheck('zip Module Installed', extension_loaded('zip'));
     ShowCheck('zlib Module Installed', extension_loaded('zlib'));
     ShowCheck('curl Module Installed', extension_loaded('curl'), false);
@@ -409,5 +410,15 @@ function CheckCompare() {
     if ($result == 0)
       $ret = true;
     return $ret;
+}
+
+function CheckFreeType() {
+  $ret = false;
+  if (extension_loaded('gd')) {
+    $gdinfo = gd_info();
+    if(isset($gdinfo['FreeType Support']) && $gdinfo['FreeType Support'])
+      $ret = true;
+  }
+  return $ret;
 }
 ?>

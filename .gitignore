@@ -34,3 +34,4 @@ agent/js/results/
 agent/js/src-cov/
 agent/js/runtmp_*
 .vagrant
+/www/installers/browsers/nightly.dat
