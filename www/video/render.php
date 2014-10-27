@@ -11,7 +11,11 @@ $height = 600;
 $padding = 2;
 $minThumbnailSize = 100;
 $black = null;
+$textColor = null;
 $image_bytes = null;
+$font = __DIR__ . '/font/sourcesanspro-semibold.ttf';
+$labelHeight = 40;
+$timeHeight = 80;
 
 // Load the information about the video that needs rendering
 if (isset($_REQUEST['id'])) {
@@ -80,13 +84,13 @@ function RenderVideo(&$tests) {
 * 
 */
 function CalculateVideoDimensions(&$tests) {
-  global $width, $height, $minThumbnailSize, $padding;
+  global $width, $height, $minThumbnailSize, $padding, $labelHeight, $timeHeight;
   
   $rows = max(floor(sqrt(count($tests))), 1);
   $columns = max(ceil(count($tests) / $rows), 1);
   
   $cellWidth = max(floor($width / $columns), $minThumbnailSize + $padding);
-  $cellHeight = max(floor($height / $rows), $minThumbnailSize + $padding);
+  $cellHeight = max(floor($height - (($labelHeight + $timeHeight) * $rows) / $rows), $minThumbnailSize + $padding);
   
   $videoWidth = ($cellWidth * $columns) + $padding;
   $width = floor(($videoWidth + 7) / 8) * 8;  // Multiple of 8
@@ -109,7 +113,7 @@ function CalculateVideoDimensions(&$tests) {
       $row_h[$row] = $cellHeight;
     $height += $row_h[$row];
   }
-  $videoHeight = $height + $padding;
+  $videoHeight = $height + $padding + (($labelHeight + $timeHeight) * $rows);
   $height = floor(($videoHeight + 7) / 8) * 8;  // Multiple of 8
 
   // figure out the left and right margins
@@ -117,12 +121,12 @@ function CalculateVideoDimensions(&$tests) {
   $top = floor(($height - $videoHeight) / 2);
 
   // Figure out the placement of each video  
-  $y = $top;
+  $y = $top + $labelHeight;
   foreach ($tests as $position => &$test) {
     $row = floor($position / $columns);
     $column = $position % $columns;
     if ($column == 0 && $row > 0)
-      $y += $row_h[$row - 1];
+      $y += $row_h[$row - 1] + $timeHeight + $labelHeight;
     $test['x'] = $left + ($column * $cellWidth) + $padding;
     $test['y'] = $y + $padding;
     $test['width'] = $cellWidth - $padding;
@@ -138,19 +142,22 @@ function CalculateVideoDimensions(&$tests) {
 * @param mixed $im
 */
 function RenderFrames(&$tests, $frameCount, $im) {
-  global $width, $height, $black, $videoPath, $image_bytes;
+  global $width, $height, $black, $videoPath, $image_bytes, $textColor;
   
   // prepare the image (black background)
   $black = imagecolorallocate($im, 0, 0, 0);
+  $textColor = imagecolorallocate($im, 255, 255, 255);
   imagefilledrectangle($im, 0, 0, $width - 1, $height - 1, $black);
   $firstImage = true;
   
   // set up ffmpeg
   $descriptors = array(0 => array("pipe", "r"));
   $videoFile = realpath($videoPath) . '/video.mp4';
+  if (is_file($videoFile))
+    unlink($videoFile);
   $command = "ffmpeg -f image2pipe -r 60 -vcodec png -i - ".
-                  "-vcodec libx264 ".
-                  "\"$videoFile\"";
+                  "-vcodec libx264 -r 60 -crf 18 -g 30 ".
+                  "-y \"$videoFile\"";
   $ffmpeg = proc_open($command, $descriptors, $pipes);
   if (is_resource($ffmpeg)){
     for ($frame = 0; $frame < $frameCount; $frame++) {
@@ -232,6 +239,70 @@ function DrawTest(&$test, $frameTime, $im) {
       $updated = true;
     }
   }
+
+  if (DrawFrameTime($test, $frameTime, $im, $test['x'], $test['y'] + $test['height'], $test['width']))
+    $updated = true;
+
   return $updated;
+}
+
+function DrawFrameTime(&$test, $frameTime, $im, $x, $y, $w) {
+  global $timeHeight, $black;
+  static $font_size = 0;
+  $updated = false;
+  
+  if (!$font_size)
+    $font_size = GetFontSize($w, $timeHeight, "000.00");
+    
+  $seconds = floor($frameTime / 1000);
+  $tenths = floor((($frameTime / 1000) - $seconds) * 10);
+  $time = "$seconds.$tenths";
+  if (!isset($test['last_time']) || $test['last_time'] !== $time) {
+    $updated = true;
+    $test['last_time'] = $time;
+    imagefilledrectangle($im, $x, $y, $x + $w, $y + $timeHeight, $black);
+    CenterText($im, $x, $y, $w, $timeHeight, $font_size, $time);
+  }
+  
+  return $updated;
+}
+
+function GetFontSize($width, $height, $text) {
+  global $font;
+  $small = 0;
+  $big = 100;
+  $size = 50;
+  do {
+    $last_size = $size;
+    $box = imagettfbbox($size, 0, $font, $text);
+    $w = abs($box[4] - $box[0]);
+    $h = abs($box[5] - $box[1]);
+    if ($w < $width && $h < $height) {
+      $small = $size;
+      $size = floor($size + (($big - $size) / 2));
+    } else {
+      $big = $size;
+      $size = floor($size - (($size - $small) / 2));
+    }
+  } while ($last_size !== $size && $size > 0);
+  
+  return $size;
+}
+
+function CenterText($im, $x, $y, $w, $h, $size, $text) {
+  global $font, $textColor;
+  $ret = null;
+  if (!$size)
+    $size = GetFontSize($w, $h, $text);
+  if ($size) {
+    $box = imagettfbbox($size, 0, $font, $text);
+    $out_w = abs($box[4] - $box[0]);
+    $out_h = abs($box[5] - $box[1]);
+    $ascent = abs($box[7]);
+    $left = floor($x + (($w - $out_w) / 2));
+    $top = floor($y + (($h - $out_h) / 2)) + $ascent;
+    $ret = imagettftext($im, $size, 0, $left, $top, $textColor, $font, $text);
+  }
+  return $ret;
 }
 ?>
