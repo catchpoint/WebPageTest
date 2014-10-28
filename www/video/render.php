@@ -6,9 +6,9 @@ ignore_user_abort(true);
 set_time_limit(600);
 
 // Globals used throughout the video render
-$width = 800;
-$height = 600;
-$padding = 2;
+$width = 900;
+$height = 650;
+$padding = 4;
 $minThumbnailSize = 100;
 $black = null;
 $textColor = null;
@@ -16,11 +16,16 @@ $image_bytes = null;
 $timeFont = __DIR__ . '/font/sourcesanspro-semibold.ttf';
 $labelFont = __DIR__ . '/font/sourcesanspro-semibold.ttf';
 $labelHeight = 30;
-$timeHeight = 50;
-$timePadding = 4;
+$timeHeight = 40;
+$timePadding = 3;
+$rowPadding = 10;
 $maxAspectRatio = 0;
 $min_font_size = 8;
 $videoExtendTime = 3000;
+$encodeFormat = 'jpg';  // can be jpg (faster) or png (much slower), used internally to transfer to ffmpeg
+$encoderSpeed = 'veryfast';
+
+$start = microtime(true);
 
 // Load the information about the video that needs rendering
 if (isset($_REQUEST['id'])) {
@@ -47,13 +52,19 @@ if (isset($tests) && count($tests)) {
 //  }
 }
 
+$elapsed = microtime(true) - $start;
+echo number_format($elapsed, 3) . " seconds";
+
 function RenderVideo(&$tests) {
   global $width, $height, $maxAspectRatio, $videoExtendTime;
   
   // Figure out the end time of the video and
   // make sure all of the tests are restored.
   $videoEnd = 0;
+  $all_http = true;
   foreach($tests as &$test) {
+    if (isset($test['label']) && strlen($test['label']) && substr($test['label'], 0, 7) !== 'http://')
+      $all_http = false;
     if (isset($test['id']))
       RestoreTest($test['id']);
     if (isset($test['end']) && is_numeric($test['end']) && $test['end'] > $videoEnd)
@@ -75,6 +86,13 @@ function RenderVideo(&$tests) {
     }
   }
   
+  if ($all_http) {
+    foreach($tests as &$test) {
+      if (isset($test['label']) && strlen($test['label']) && substr($test['label'], 0, 7) === 'http://')
+        $test['label'] = substr($test['label'], 7);
+    }
+  }
+  
   if ($videoEnd > 0) {
     $videoEnd += $videoExtendTime;
     $frameCount = ceil($videoEnd * 60 / 1000);  // 60fps
@@ -92,7 +110,7 @@ function RenderVideo(&$tests) {
 * 
 */
 function CalculateVideoDimensions(&$tests) {
-  global $width, $height, $minThumbnailSize, $padding, $labelHeight, $timeHeight, $timePadding, $maxAspectRatio;
+  global $width, $height, $minThumbnailSize, $padding, $labelHeight, $timeHeight, $timePadding, $rowPadding, $maxAspectRatio;
   
   $count = count($tests);
   if ($count <= 25) {
@@ -114,7 +132,7 @@ function CalculateVideoDimensions(&$tests) {
   $columns = max(ceil($count / $rows), 1);
   
   $cellWidth = max(floor($width / $columns), $minThumbnailSize + $padding);
-  $cellHeight = max(floor($height - (($labelHeight + $timeHeight) * $rows) / $rows), $minThumbnailSize + $padding);
+  $cellHeight = max(floor($height - (($labelHeight + $timeHeight + $rowPadding) * $rows) / $rows), $minThumbnailSize + $padding);
   
   $videoWidth = ($cellWidth * $columns) + $padding;
   $width = floor(($videoWidth + 7) / 8) * 8;  // Multiple of 8
@@ -137,7 +155,7 @@ function CalculateVideoDimensions(&$tests) {
       $row_h[$row] = $cellHeight;
     $height += $row_h[$row];
   }
-  $videoHeight = $height + $padding + (($labelHeight + $timeHeight) * $rows);
+  $videoHeight = $height + $padding + (($labelHeight + $timeHeight) * $rows) + ($rowPadding * ($rows - 1));
   $height = floor(($videoHeight + 7) / 8) * 8;  // Multiple of 8
 
   // figure out the left and right margins
@@ -150,7 +168,11 @@ function CalculateVideoDimensions(&$tests) {
     $row = floor($position / $columns);
     $column = $position % $columns;
     if ($column == 0 && $row > 0)
-      $y += $row_h[$row - 1] + $timeHeight + $labelHeight;
+      $y += $row_h[$row - 1] + $timeHeight + $labelHeight + $rowPadding;
+    
+    // if it is the last thumbnail, make sure it takes the bottom-right slot
+    if ($position == $count - 1)
+      $column = $columns - 1;
     
     // Thumbnail image
     $test['thumbRect'] = array();
@@ -169,7 +191,7 @@ function CalculateVideoDimensions(&$tests) {
     // Time
     $test['timeRect'] = array();
     $test['timeRect']['x'] = $left + ($column * $cellWidth) + $padding;
-    $test['timeRect']['y'] = $y + $padding + $timePadding + $row_h[$row];
+    $test['timeRect']['y'] = $y + $timePadding + $row_h[$row];
     $test['timeRect']['width'] = $cellWidth - $padding;
     $test['timeRect']['height'] = $timeHeight - $timePadding;
   }
@@ -183,34 +205,32 @@ function CalculateVideoDimensions(&$tests) {
 * @param mixed $im
 */
 function RenderFrames(&$tests, $frameCount, $im) {
-  global $width, $height, $black, $videoPath, $image_bytes, $textColor;
+  global $width, $height, $black, $videoPath, $image_bytes, $textColor, $encodeFormat, $encoderSpeed;
   
   // prepare the image (black background)
   $black = imagecolorallocate($im, 0, 0, 0);
   $textColor = imagecolorallocate($im, 255, 255, 255);
   imagefilledrectangle($im, 0, 0, $width - 1, $height - 1, $black);
-  $firstImage = true;
+  
+  // figure out what a good interval for keyframes would be based on the video length
+  $keyInt = min(max(6, $frameCount / 15), 240);
   
   // set up ffmpeg
   $descriptors = array(0 => array("pipe", "r"));
   $videoFile = realpath($videoPath) . '/video.mp4';
   if (is_file($videoFile))
     unlink($videoFile);
-  $command = "ffmpeg -f image2pipe -r 60 -vcodec png -i - ".
-                  "-vcodec libx264 -r 60 -crf 26 -g 30 ".
-                  "-y \"$videoFile\"";
+  $codec = $encodeFormat == 'jpg' ? 'mjpeg' : $encodeFormat;
+  $command = "ffmpeg -f image2pipe -vcodec $codec -r 60 -i - ".
+                  "-vcodec libx264 -r 60 -crf 24 -g $keyInt ".
+                  "-preset $encoderSpeed -y \"$videoFile\"";
   $ffmpeg = proc_open($command, $descriptors, $pipes);
   if (is_resource($ffmpeg)){
     DrawLabels($tests, $im);
     for ($frame = 0; $frame < $frameCount; $frame++) {
       RenderFrame($tests, $frame, $im);
-      if (isset($image_bytes)) {
+      if (isset($image_bytes))
         fwrite($pipes[0], $image_bytes);
-        if ($firstImage) {
-          file_put_contents("$videoPath/video.png", $image_bytes);
-          $firstImage = false;
-        }
-      }
     }
     fclose($pipes[0]);
     proc_close($ffmpeg);
@@ -225,7 +245,8 @@ function RenderFrames(&$tests, $frameCount, $im) {
 * @param mixed $im
 */
 function RenderFrame(&$tests, $frame, $im) {
-  global $videoPath, $image_bytes;
+  global $videoPath, $image_bytes, $encodeFormat;
+  static $firstImage = true;
   $updated = false;
   $frameTime = ceil($frame * 1000 / 60);
   foreach ($tests as &$test) {
@@ -233,9 +254,15 @@ function RenderFrame(&$tests, $frame, $im) {
       $updated = true;
   }
   if ($updated) {
-    $image_bytes = null;
+    if ($firstImage) {
+      imagepng($im, "$videoPath/video.png");
+      $firstImage = false;
+    }
     ob_start();
-    imagepng($im);
+    if ($encodeFormat == 'jpg')
+      imagejpeg($im, NULL, 85);
+    else
+      imagepng($im);
     $image_bytes = ob_get_contents();
     ob_end_clean();
   }
