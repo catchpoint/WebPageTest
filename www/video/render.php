@@ -13,9 +13,14 @@ $minThumbnailSize = 100;
 $black = null;
 $textColor = null;
 $image_bytes = null;
-$font = __DIR__ . '/font/sourcesanspro-semibold.ttf';
-$labelHeight = 40;
-$timeHeight = 80;
+$timeFont = __DIR__ . '/font/sourcesanspro-semibold.ttf';
+$labelFont = __DIR__ . '/font/sourcesanspro-semibold.ttf';
+$labelHeight = 30;
+$timeHeight = 50;
+$timePadding = 4;
+$maxAspectRatio = 0;
+$min_font_size = 8;
+$videoExtendTime = 3000;
 
 // Load the information about the video that needs rendering
 if (isset($_REQUEST['id'])) {
@@ -43,7 +48,7 @@ if (isset($tests) && count($tests)) {
 }
 
 function RenderVideo(&$tests) {
-  global $width, $height;
+  global $width, $height, $maxAspectRatio, $videoExtendTime;
   
   // Figure out the end time of the video and
   // make sure all of the tests are restored.
@@ -63,12 +68,15 @@ function RenderVideo(&$tests) {
           $frame = current($test['frames']);
           $dim = getimagesize("./{$frame['path']}");
           $test['aspect'] = $dim[0] / $dim[1];
+          if ($test['aspect'] > $maxAspectRatio)
+            $maxAspectRatio = $test['aspect'];
         }
       }
     }
   }
   
   if ($videoEnd > 0) {
+    $videoEnd += $videoExtendTime;
     $frameCount = ceil($videoEnd * 60 / 1000);  // 60fps
     CalculateVideoDimensions($tests);
     $im = imagecreatetruecolor($width, $height);
@@ -84,10 +92,26 @@ function RenderVideo(&$tests) {
 * 
 */
 function CalculateVideoDimensions(&$tests) {
-  global $width, $height, $minThumbnailSize, $padding, $labelHeight, $timeHeight;
+  global $width, $height, $minThumbnailSize, $padding, $labelHeight, $timeHeight, $timePadding, $maxAspectRatio;
   
-  $rows = max(floor(sqrt(count($tests))), 1);
-  $columns = max(ceil(count($tests) / $rows), 1);
+  $count = count($tests);
+  if ($count <= 25) {
+    if ($maxAspectRatio < 1) {
+      // all mobile, 4 across before going to 2 rows
+      $rows = ($count <= 16) ? ceil($count / 4) : ceil($count / 5);
+    } else {
+      // wide-aspect (desktop)
+      if ($count <= 9)
+        $rows = ceil($count / 3);
+      elseif ($count <= 16)
+        $rows = ceil($count / 4);
+      else
+        $rows = ceil($count / 5);
+    }
+  } else {
+    $rows = max(floor(sqrt($count)), 1);
+  }
+  $columns = max(ceil($count / $rows), 1);
   
   $cellWidth = max(floor($width / $columns), $minThumbnailSize + $padding);
   $cellHeight = max(floor($height - (($labelHeight + $timeHeight) * $rows) / $rows), $minThumbnailSize + $padding);
@@ -127,10 +151,27 @@ function CalculateVideoDimensions(&$tests) {
     $column = $position % $columns;
     if ($column == 0 && $row > 0)
       $y += $row_h[$row - 1] + $timeHeight + $labelHeight;
-    $test['x'] = $left + ($column * $cellWidth) + $padding;
-    $test['y'] = $y + $padding;
-    $test['width'] = $cellWidth - $padding;
-    $test['height'] = $row_h[$row] - $padding;
+    
+    // Thumbnail image
+    $test['thumbRect'] = array();
+    $test['thumbRect']['x'] = $left + ($column * $cellWidth) + $padding;
+    $test['thumbRect']['y'] = $y + $padding;
+    $test['thumbRect']['width'] = $cellWidth - $padding;
+    $test['thumbRect']['height'] = $row_h[$row] - $padding;
+    
+    // Label
+    $test['labelRect'] = array();
+    $test['labelRect']['x'] = $left + ($column * $cellWidth) + $padding;
+    $test['labelRect']['y'] = $y - $labelHeight + $padding;
+    $test['labelRect']['width'] = $cellWidth - $padding;
+    $test['labelRect']['height'] = $labelHeight - $padding;
+    
+    // Time
+    $test['timeRect'] = array();
+    $test['timeRect']['x'] = $left + ($column * $cellWidth) + $padding;
+    $test['timeRect']['y'] = $y + $padding + $timePadding + $row_h[$row];
+    $test['timeRect']['width'] = $cellWidth - $padding;
+    $test['timeRect']['height'] = $timeHeight - $timePadding;
   }
 }
 
@@ -156,10 +197,11 @@ function RenderFrames(&$tests, $frameCount, $im) {
   if (is_file($videoFile))
     unlink($videoFile);
   $command = "ffmpeg -f image2pipe -r 60 -vcodec png -i - ".
-                  "-vcodec libx264 -r 60 -crf 18 -g 30 ".
+                  "-vcodec libx264 -r 60 -crf 26 -g 30 ".
                   "-y \"$videoFile\"";
   $ffmpeg = proc_open($command, $descriptors, $pipes);
   if (is_resource($ffmpeg)){
+    DrawLabels($tests, $im);
     for ($frame = 0; $frame < $frameCount; $frame++) {
       RenderFrame($tests, $frame, $im);
       if (isset($image_bytes)) {
@@ -200,6 +242,50 @@ function RenderFrame(&$tests, $frame, $im) {
 }
 
 /**
+* Draw the labels for all of the tests
+* 
+*/
+function DrawLabels($tests, $im) {
+  global $min_font_size, $labelFont;
+  // First, go through and pick a font size that will fit all of the labels
+  $maxLabelLen = 30;
+  do {
+    $font_size = GetLabelFontSize($tests);
+    if ($font_size < $min_font_size) {
+      // go through and trim the length of all the labels
+      foreach($tests as &$test) {
+        if (isset($test['label']) && strlen($test['label']) > $maxLabelLen) {
+          $test['label'] = substr($test['label'], 0, $maxLabelLen) . '...';
+        }
+      }
+      $maxLabelLen--;
+    }
+  } while($font_size < $min_font_size);
+  
+  if ($font_size > $min_font_size) {
+    foreach($tests as &$test) {
+      if (isset($test['label']) && strlen($test['label'])) {
+        $rect = $test['labelRect'];
+        CenterText($im, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, $test['label'], $labelFont);
+      }
+    }
+  }
+}
+
+function GetLabelFontSize($tests) {
+  global $labelFont;
+  $font_size = null;
+  foreach($tests as $test) {
+    if (isset($test['label']) && strlen($test['label'])) {
+      $size = GetFontSize($test['labelRect']['width'], $test['labelRect']['height'], $test['label'], $labelFont);
+      if (!isset($font_size) || $size < $font_size)
+        $font_size = $size;
+    }
+  }
+  return $font_size;
+}
+
+/**
 * Draw the appropriate thumbnail for the given frame
 * 
 * @param mixed $test
@@ -213,26 +299,35 @@ function DrawTest(&$test, $frameTime, $im) {
   // find the closest video frame <= the target time
   $frame_ms = null;
   foreach ($test['frames'] as $ms => $frame) {
-    if ($ms <= $frameTime && (!isset($frame_ms) || $ms > $frame_ms))
+    if ($ms <= $frameTime && $ms <= $test['end'] && (!isset($frame_ms) || $ms > $frame_ms))
       $frame_ms = $ms;
   }
   $path = null;
   if (isset($frame_ms))
     $path = $test['frames'][$frame_ms]['path'];
+  
+  $need_grey = false;
+  if (!isset($test['done']) && $frameTime > $test['end']) {
+    $need_grey = true;
+    $test['done'] = true;
+  }
     
   // see if we actually need to draw anything
-  if (isset($path) && (!isset($test['lastFrame']) || $test['lastFrame'] !== $path)) {
+  if (isset($path) && (!isset($test['lastFrame']) || $test['lastFrame'] !== $path || $need_grey)) {
     $test['lastFrame'] = $path;
     $thumb = imagecreatefromjpeg("./$path");
     if ($thumb) {
+      if ($need_grey)
+        imagefilter($thumb, IMG_FILTER_GRAYSCALE);
       // Scale and center the thumbnail aspect-correct in the area reserved for it
+      $rect = $test['thumbRect'];
       $thumb_w = imagesx($thumb);
       $thumb_h = imagesy($thumb);
-      $scale = min($test['width'] / $thumb_w, $test['height'] / $thumb_h);
-      $w = min(floor($thumb_w * $scale), $test['width']);
-      $h = min(floor($thumb_h * $scale), $test['height']);
-      $x = $test['x'] + floor(($test['width'] - $w) / 2);
-      $y = $test['y'] + floor(($test['height'] - $h) / 2);
+      $scale = min($rect['width'] / $thumb_w, $rect['height'] / $thumb_h);
+      $w = min(floor($thumb_w * $scale), $rect['width']);
+      $h = min(floor($thumb_h * $scale), $rect['height']);
+      $x = $rect['x'] + floor(($rect['width'] - $w) / 2);
+      $y = $rect['y'] + floor(($rect['height'] - $h) / 2);
       imagefilledrectangle($im, $x, $y, $x + $w, $y + $h, $black);
       fastimagecopyresampled($im, $thumb, $x, $y, 0, 0, $w, $h, $thumb_w, $thumb_h, 4);
       imagedestroy($thumb);
@@ -240,35 +335,39 @@ function DrawTest(&$test, $frameTime, $im) {
     }
   }
 
-  if (DrawFrameTime($test, $frameTime, $im, $test['x'], $test['y'] + $test['height'], $test['width']))
+  if ($frameTime <= $test['end'] && DrawFrameTime($test, $frameTime, $im, $test['timeRect']))
     $updated = true;
 
   return $updated;
 }
 
-function DrawFrameTime(&$test, $frameTime, $im, $x, $y, $w) {
-  global $timeHeight, $black;
+function DrawFrameTime(&$test, $frameTime, $im, $rect) {
+  global $timeHeight, $black, $timeFont;
   static $font_size = 0;
+  static $ascent = 0;
   $updated = false;
   
   if (!$font_size)
-    $font_size = GetFontSize($w, $timeHeight, "000.00");
+    $font_size = GetFontSize($rect['width'], $rect['height'], "000.00", $timeFont);
+  if (!$ascent && $font_size) {
+    $box = imagettfbbox($font_size, 0, $timeFont, "12345678.90");
+    $ascent = abs($box[7]);
+  }
     
   $seconds = floor($frameTime / 1000);
-  $tenths = floor((($frameTime / 1000) - $seconds) * 10);
+  $tenths = floor($frameTime / 100) % 10;
   $time = "$seconds.$tenths";
   if (!isset($test['last_time']) || $test['last_time'] !== $time) {
     $updated = true;
     $test['last_time'] = $time;
-    imagefilledrectangle($im, $x, $y, $x + $w, $y + $timeHeight, $black);
-    CenterText($im, $x, $y, $w, $timeHeight, $font_size, $time);
+    imagefilledrectangle($im, $rect['x'], $rect['y'], $rect['x'] + $rect['width'], $rect['y'] + $rect['height'], $black);
+    CenterText($im, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, $time, $timeFont, $ascent);
   }
   
   return $updated;
 }
 
-function GetFontSize($width, $height, $text) {
-  global $font;
+function GetFontSize($width, $height, $text, $font) {
   $small = 0;
   $big = 100;
   $size = 50;
@@ -289,16 +388,17 @@ function GetFontSize($width, $height, $text) {
   return $size;
 }
 
-function CenterText($im, $x, $y, $w, $h, $size, $text) {
-  global $font, $textColor;
+function CenterText($im, $x, $y, $w, $h, $size, $text, $font, $ascent = null) {
+  global $textColor;
   $ret = null;
   if (!$size)
     $size = GetFontSize($w, $h, $text);
   if ($size) {
     $box = imagettfbbox($size, 0, $font, $text);
+    if (!isset($ascent))
+      $ascent = abs($box[7]);
     $out_w = abs($box[4] - $box[0]);
     $out_h = abs($box[5] - $box[1]);
-    $ascent = abs($box[7]);
     $left = floor($x + (($w - $out_w) / 2));
     $top = floor($y + (($h - $out_h) / 2)) + $ascent;
     $ret = imagettftext($im, $size, 0, $left, $top, $textColor, $font, $text);
