@@ -273,7 +273,7 @@ function RenderFrame(&$tests, $frame, $im) {
 * 
 */
 function DrawLabels($tests, $im) {
-  global $min_font_size, $labelFont;
+  global $min_font_size, $labelFont, $textColor;
   // First, go through and pick a font size that will fit all of the labels
   $maxLabelLen = 30;
   do {
@@ -293,7 +293,9 @@ function DrawLabels($tests, $im) {
     foreach($tests as &$test) {
       if (isset($test['label']) && strlen($test['label'])) {
         $rect = $test['labelRect'];
-        CenterText($im, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, $test['label'], $labelFont);
+        $pos = CenterText($im, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, $test['label'], $labelFont);
+        if (isset($pos))
+          imagettftext($im, $font_size, 0, $pos['x'],  $pos['y'], $textColor, $labelFont, $test['label']);
       }
     }
   }
@@ -368,8 +370,18 @@ function DrawTest(&$test, $frameTime, $im) {
   return $updated;
 }
 
+/**
+* Draw the time ticker below the video.  We need to draw the
+* time, period and fraction separately so we can keep the period
+* fixed in place and not have things move around.
+* 
+* @param mixed $test
+* @param mixed $frameTime
+* @param mixed $im
+* @param mixed $rect
+*/
 function DrawFrameTime(&$test, $frameTime, $im, $rect) {
-  global $timeHeight, $black, $timeFont;
+  global $timeHeight, $black, $timeFont, $textColor;
   static $font_size = 0;
   static $ascent = 0;
   $updated = false;
@@ -380,6 +392,15 @@ function DrawFrameTime(&$test, $frameTime, $im, $rect) {
     $box = imagettfbbox($font_size, 0, $timeFont, "12345678.90");
     $ascent = abs($box[7]);
   }
+  if (!isset($test['periodRect'])) {
+    $test['periodRect'] = array();
+    $pos = CenterText($im, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, "000.00", $timeFont, $ascent);
+    $test['periodRect']['y'] = $pos['y'];
+    $pos = CenterText($im, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, '.', $timeFont, $ascent);
+    $test['periodRect']['x'] = $pos['x'];
+    $box = imagettfbbox($font_size, 0, $timeFont, '.');
+    $test['periodRect']['width'] = abs($box[4] - $box[0]);
+  }
     
   $seconds = floor($frameTime / 1000);
   $tenths = floor($frameTime / 100) % 10;
@@ -387,8 +408,26 @@ function DrawFrameTime(&$test, $frameTime, $im, $rect) {
   if (!isset($test['last_time']) || $test['last_time'] !== $time) {
     $updated = true;
     $test['last_time'] = $time;
+    
+    // erase the last time
     imagefilledrectangle($im, $rect['x'], $rect['y'], $rect['x'] + $rect['width'], $rect['y'] + $rect['height'], $black);
-    CenterText($im, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, $time, $timeFont, $ascent);
+    
+    // draw the period
+    imagettftext($im, $font_size, 0, $test['periodRect']['x'],  $test['periodRect']['y'], $textColor, $timeFont, '.');
+    
+    // draw the seconds
+    $box = imagettfbbox($font_size, 0, $timeFont, $seconds);
+    $s_width = abs($box[4] - $box[0]);
+    $box = imagettfbbox($font_size, 0, $timeFont, "$seconds.");
+    $pad = abs($box[4] - $box[0]) - $s_width;
+    imagettftext($im, $font_size, 0, $test['periodRect']['x'] + $test['periodRect']['width'] - $s_width - $pad,  $test['periodRect']['y'], $textColor, $timeFont, $seconds);
+    
+    //draw the fraction
+    $box = imagettfbbox($font_size, 0, $timeFont, $tenths);
+    $t_width = abs($box[4] - $box[0]);
+    $box = imagettfbbox($font_size, 0, $timeFont, ".$tenths");
+    $pad = abs($box[4] - $box[0]) - $t_width;
+    imagettftext($im, $font_size, 0, $test['periodRect']['x'] + $pad,  $test['periodRect']['y'], $textColor, $timeFont, $tenths);
   }
   
   return $updated;
@@ -416,7 +455,6 @@ function GetFontSize($width, $height, $text, $font) {
 }
 
 function CenterText($im, $x, $y, $w, $h, $size, $text, $font, $ascent = null) {
-  global $textColor;
   $ret = null;
   if (!$size)
     $size = GetFontSize($w, $h, $text);
@@ -424,12 +462,13 @@ function CenterText($im, $x, $y, $w, $h, $size, $text, $font, $ascent = null) {
     $box = imagettfbbox($size, 0, $font, $text);
     if (!isset($ascent))
       $ascent = abs($box[7]);
+    $ret = array();
     $out_w = abs($box[4] - $box[0]);
     $out_h = abs($box[5] - $box[1]);
-    $left = floor($x + (($w - $out_w) / 2));
-    $top = floor($y + (($h - $out_h) / 2)) + $ascent;
-    $ret = imagettftext($im, $size, 0, $left, $top, $textColor, $font, $text);
+    $ret['x'] = floor($x + (($w - $out_w) / 2));
+    $ret['y'] = floor($y + (($h - $out_h) / 2)) + $ascent;
   }
   return $ret;
 }
+
 ?>
