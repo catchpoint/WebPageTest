@@ -4,6 +4,7 @@ require_once('common_lib.inc');
 require_once('video/visualProgress.inc.php');
 ignore_user_abort(true);
 set_time_limit(600);
+error_reporting(E_ERROR | E_PARSE);
 
 // Globals used throughout the video render
 $width = 900;
@@ -20,6 +21,7 @@ $labelHeight = 30;
 $timeHeight = 40;
 $timePadding = 3;
 $rowPadding = 10;
+$bottomMargin = 30;
 $maxAspectRatio = 0;
 $min_font_size = 4;
 $videoExtendTime = 3000;
@@ -57,7 +59,9 @@ if (isset($tests) && count($tests)) {
 //  $lock = Lock("video-$videoId", false, 600);
 //  if ($lock) {
     RenderVideo($tests);
-//    $ini .= 'completed=' . gmdate('c') . "\r\n";
+    if (is_file("$videoPath/render.mp4"))
+      rename("$videoPath/render.mp4", "$videoPath/video.mp4");
+//    $ini = 'completed=' . gmdate('c') . "\r\n";
 //    file_put_contents("$videoPath/video.ini", $ini);
 //    Unlock($lock);
 //  }
@@ -131,6 +135,9 @@ function RenderVideo(&$tests) {
   // no need for 60fps video if we are running in slow motion
   if ($speed < 0.5 && $fps == 60)
     $fps = 30;
+
+  // Keep the time extension constant
+  $videoExtendTime = $videoExtendTime * $speed;
   
   if ($all_http) {
     foreach($tests as &$test) {
@@ -156,7 +163,7 @@ function RenderVideo(&$tests) {
 * 
 */
 function CalculateVideoDimensions(&$tests) {
-  global $width, $height, $minThumbnailSize, $padding, $labelHeight, $timeHeight, $timePadding, $rowPadding, $maxAspectRatio, $biggestThumbnail;
+  global $width, $height, $minThumbnailSize, $padding, $labelHeight, $timeHeight, $timePadding, $rowPadding, $maxAspectRatio, $biggestThumbnail, $bottomMargin;
   
   $count = count($tests);
   if ($maxAspectRatio < 1) {
@@ -206,7 +213,7 @@ function CalculateVideoDimensions(&$tests) {
       $row_h[$row] = $cellHeight;
     $height += $row_h[$row];
   }
-  $videoHeight = $height + $padding + (($labelHeight + $timeHeight) * $rows) + ($rowPadding * ($rows - 1));
+  $videoHeight = $bottomMargin + $height + $padding + (($labelHeight + $timeHeight) * $rows) + ($rowPadding * ($rows - 1));
   $height = floor(($videoHeight + 7) / 8) * 8;  // Multiple of 8
 
   // figure out the left and right margins
@@ -268,11 +275,11 @@ function RenderFrames(&$tests, $frameCount, $im) {
   imagefilledrectangle($im, 0, 0, $width - 1, $height - 1, $black);
   
   // figure out what a good interval for keyframes would be based on the video length
-  $keyInt = min(max(6, $frameCount / 15), 240);
+  $keyInt = min(max(6, $frameCount / 30), 240);
   
   // set up ffmpeg
   $descriptors = array(0 => array("pipe", "r"));
-  $videoFile = realpath($videoPath) . '/video.mp4';
+  $videoFile = realpath($videoPath) . '/render.mp4';
   if (is_file($videoFile))
     unlink($videoFile);
   $codec = $encodeFormat == 'jpg' ? 'mjpeg' : $encodeFormat;

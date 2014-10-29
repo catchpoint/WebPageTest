@@ -163,6 +163,8 @@ else
         <?php
         if( $valid && !$done && !$embed )
         {
+            $autoRefresh = true;
+            $noanalytics = true;
             ?>
             <noscript>
             <meta http-equiv="refresh" content="10" />
