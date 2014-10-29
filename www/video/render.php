@@ -9,7 +9,7 @@ set_time_limit(600);
 $width = 900;
 $height = 650;
 $padding = 4;
-$minThumbnailSize = 100;
+$minThumbnailSize = 60;
 $biggestThumbnail = 0;
 $black = null;
 $textColor = null;
@@ -115,7 +115,7 @@ function RenderVideo(&$tests) {
             $maxAspectRatio = $test['aspect'];
           if (stripos($frame['file'], 'ms_') !== false) {
             $fps = 60;
-            $fractionTime = 100;
+            //$fractionTime = 100;
           }
         }
       }
@@ -159,26 +159,31 @@ function CalculateVideoDimensions(&$tests) {
   global $width, $height, $minThumbnailSize, $padding, $labelHeight, $timeHeight, $timePadding, $rowPadding, $maxAspectRatio, $biggestThumbnail;
   
   $count = count($tests);
-  if ($count <= 25) {
-    if ($maxAspectRatio < 1) {
-      // all mobile, 4 across before going to 2 rows
-      $rows = ($count <= 16) ? ceil($count / 4) : ceil($count / 5);
-    } else {
-      // wide-aspect (desktop)
-      if ($count <= 9)
-        $rows = ceil($count / 3);
-      elseif ($count <= 16)
-        $rows = ceil($count / 4);
-      else
-        $rows = ceil($count / 5);
-    }
+  if ($maxAspectRatio < 1) {
+    // all mobile (narrow)
+    if ($count <= 12)
+      $rows = ceil($count / 6);
+    elseif ($count <= 21)
+      $rows = ceil($count / 7);
+    elseif ($count <= 40)
+      $rows = ceil($count / 8);
+    else
+      $rows = max(floor(sqrt($count) / 1.5), 1);
   } else {
-    $rows = max(floor(sqrt($count)), 1);
+    // wide-aspect (desktop)
+    if ($count <= 9)
+      $rows = ceil($count / 3);
+    elseif ($count <= 16)
+      $rows = ceil($count / 4);
+    elseif ($count <= 25)
+      $rows = ceil($count / 5);
+    else
+      $rows = max(floor(sqrt($count)), 1);
   }
   $columns = max(ceil($count / $rows), 1);
   
   $cellWidth = min($biggestThumbnail + $padding, max(floor($width / $columns), $minThumbnailSize + $padding));
-  $cellHeight = min($biggestThumbnail + $padding + $labelHeight + $timeHeight + $rowPadding, max(floor($height - (($labelHeight + $timeHeight + $rowPadding) * $rows) / $rows), $minThumbnailSize + $padding));
+  $cellHeight = min($biggestThumbnail + $padding + $labelHeight + $timeHeight + $rowPadding, max(floor(($height - (($labelHeight + $timeHeight + $rowPadding) * $rows)) / $rows), $minThumbnailSize + $padding));
   
   $videoWidth = ($cellWidth * $columns) + $padding;
   $width = floor(($videoWidth + 7) / 8) * 8;  // Multiple of 8
