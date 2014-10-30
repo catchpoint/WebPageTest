@@ -56,19 +56,19 @@ if (isset($_REQUEST['id'])) {
 
 // Render the video
 if (isset($tests) && count($tests)) {
-//  $lock = Lock("video-$videoId", false, 600);
-//  if ($lock) {
+  $lock = Lock("video-$videoId", false, 600);
+  if ($lock) {
     RenderVideo($tests);
     if (is_file("$videoPath/render.mp4"))
       rename("$videoPath/render.mp4", "$videoPath/video.mp4");
-//    $ini = 'completed=' . gmdate('c') . "\r\n";
-//    file_put_contents("$videoPath/video.ini", $ini);
-//    Unlock($lock);
-//  }
+    $ini = 'completed=' . gmdate('c') . "\r\n";
+    file_put_contents("$videoPath/video.ini", $ini);
+    Unlock($lock);
+  }
 }
 
 $elapsed = microtime(true) - $start;
-echo number_format($elapsed, 3) . " seconds";
+//echo number_format($elapsed, 3) . " seconds";
 
 function RenderVideo(&$tests) {
   global $width, $height, $maxAspectRatio, $videoExtendTime, $biggestThumbnail, $fps, $labelHeight, $timeHeight, $rowPadding, $speed, $fractionTime;
@@ -477,6 +477,7 @@ function DrawFrameTime(&$test, $frameTime, $im, $rect) {
     $test['last_time'] = $time;
     
     // erase the last time
+
     imagefilledrectangle($im, $rect['x'], $rect['y'], $rect['x'] + $rect['width'], $rect['y'] + $rect['height'], $black);
     
     // draw the period
