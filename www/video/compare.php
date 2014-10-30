@@ -273,6 +273,7 @@ else
                 <?php
                 $tab = 'Test Result';
                 $nosubheader = true;
+                $headerType = 'video';
                 $filmstrip = $_REQUEST['tests'];
                 include 'header.inc';
 
