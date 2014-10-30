@@ -14,7 +14,12 @@ require_once('common.inc');
 require_once('archive.inc');
 require_once('./lib/pclzip.lib.php');
 require_once 'page_data.inc';
+require_once('object_detail.inc');
 require_once('harTiming.inc');
+require_once('video.inc');
+require_once('breakdown.inc');
+require_once('devtools.inc.php');
+require_once('./video/visualProgress.inc.php');
 require_once('./video/avi2frames.inc.php');
 
 if (!isset($included)) {
@@ -225,12 +230,10 @@ if (ValidateTestId($id)) {
 
         // Do any post-processing on this individual run that doesn't requre the test to be locked
         if (isset($runNumber) && isset($cacheWarmed)) {
-          require_once('object_detail.inc');
           $secure = false;
           $haveLocations = false;
           $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure, $haveLocations, false);
           if (isset($requests)) {
-            require_once('breakdown.inc');
             getBreakdown($id, $testPath, $runNumber, $cacheWarmed, $requests);
           } else {
             $testerError = true;
@@ -239,6 +242,7 @@ if (ValidateTestId($id)) {
             require_once('google/google_lib.inc');
             ParseCsiInfo($id, $testPath, $runNumber, $cacheWarmed, true);
           }
+          GetDevToolsCPUTime($testPath, $runNumber, $cacheWarmed);
         }
 
         // mark this run as complete
@@ -298,8 +302,6 @@ if (ValidateTestId($id)) {
           $testCount = 0;
 
           // do pre-complete post-processing
-          require_once('video.inc');
-          require_once('./video/visualProgress.inc.php');
           MoveVideoFiles($testPath);
           
           if (!isset($pageData))
@@ -1354,7 +1356,6 @@ function CheckForSpam() {
             if (!isset($cacheWarmed))
                 $cacheWarmed = 0;
 
-            require_once('object_detail.inc');
             $secure = false;
             $haveLocations = false;
             $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure, $haveLocations, false);
