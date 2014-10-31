@@ -702,6 +702,7 @@ function DisplayGraphs() {
                         'lastVisualChange' => 'Last Visual Change',
                         'docTime' => 'Load Time (onload)',
                         'fullyLoaded' => 'Load Time (Fully Loaded)',
+                        'domContentLoadedEventStart' => 'DOM Content Loaded',
                         'SpeedIndex' => 'Speed Index',
                         'TTFB' => 'Time to First Byte',
                         'titleTime' => 'Time to Title',
