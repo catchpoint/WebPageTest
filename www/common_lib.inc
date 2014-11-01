@@ -2087,35 +2087,43 @@ function http_post_raw($url, $body) {
 *
 */
 function ShardKey($test_num) {
-    $key = '';
+  $key = '';
 
-    $bucket_size = GetSetting('bucket_size');
-    if( $bucket_size ) {
-        // group the tests sequentially
-        $bucket_size = (int)$bucket_size;
-        $bucket = $test_num / $bucket_size;
-        $key = NumToString($bucket) . '_';
-    } else {
-        // default to a 2-digit shard (1024-way shard)
-        $size = 2;
-        $shard = GetSetting('shard');
-        if( $shard )
-            $size = (int)$shard;
+  $bucket_size = GetSetting('bucket_size');
+  if( $bucket_size ) {
+    // group the tests sequentially
+    $bucket_size = (int)$bucket_size;
+    $bucket = $test_num / $bucket_size;
+    $key = NumToString($bucket) . '_';
+  } else {
+    // default to a 2-digit shard (1024-way shard)
+    $size = 2;
+    $shard = GetSetting('shard');
+    if( $shard )
+      $size = (int)$shard;
 
-        if( $size > 0 && $size < 20 )
-        {
-            $digits = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-            $digitCount = strlen($digits) - 1;
-            while( $size )
-            {
-                $key .= substr($digits, rand(0, $digitCount), 1);
-                $size--;
-            }
-            $key .= '_';
-        }
+    if($size > 0 && $size < 20) {
+      $digits = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+      $digitCount = strlen($digits) - 1;
+      while($size) {
+        $key .= substr($digits, rand(0, $digitCount), 1);
+        $size--;
+      }
+      $key .= '_';
     }
+  }
+  
+  // add the server ID if we are using one
+  if (strlen($key)) {
+    $server = GetSetting('serverID');
+    if (isset($server)) {
+      $server = preg_replace('/[^a-zA-Z0-9]/', '', $server);
+      if (strlen($server))
+        $key = $server . $key;
+    }
+  }
 
-    return $key;
+  return $key;
 }
 
 /**
@@ -2429,6 +2437,7 @@ function logTestMsg($testIdOrPath, $message) {
  * @param object[] $values Array of values for median computation.
  *
  * @return object
+
 
  */
 function median($values) {

@@ -58,6 +58,11 @@ allowPrivate=1
 ; Automatically update test agents hourly (pulls the latest test agents from the provided server)
 ;agentUpdate=http://cdn.webpagetest.org/
 
+; For multi-server installs, an ID that gets added to the test ID for server affinity.
+; Must be alpha-numeric and will end up as part of the hash string in the test ID:
+; YYMMDD_<serverID>hash_xxx
+;serverID=A
+
 ; ***********************
 ; Test result integration
 ; ***********************
