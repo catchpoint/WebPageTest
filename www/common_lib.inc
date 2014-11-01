@@ -2119,7 +2119,7 @@ function ShardKey($test_num) {
     if (isset($server)) {
       $server = preg_replace('/[^a-zA-Z0-9]/', '', $server);
       if (strlen($server))
-        $key = $server . $key;
+        $key = $server . 'i' . $key;
     }
   }
 
