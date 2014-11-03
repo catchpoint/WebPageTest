@@ -116,7 +116,7 @@ function Video2PNG($infile, $outdir, $crop) {
   $oldDir = getcwd();
   chdir($outdir);
 
-  $command = "ffmpeg -v debug -i \"$infile\" -vsync 0 -vf \"fps=fps=60$crop,scale=iw*min(400/iw\,400/ih):ih*min(400/iw\,400/ih),decimate\" \"$outdir/img-%d.png\" 2>&1";
+  $command = "ffmpeg -v debug -i \"$infile\" -vsync 0 -vf \"fps=fps=60$crop,decimate,scale=iw*min(400/iw\,400/ih):ih*min(400/iw\,400/ih)\" \"$outdir/img-%d.png\" 2>&1";
   $result;
   exec($command, $output, $result);
   if ($output && is_array($output) && count($output)) {
@@ -239,7 +239,7 @@ function EliminateDuplicateAVIFiles($videoDir, $viewport) {
     $width = max($viewport['width'] - $rightMargin, 1);
     $crop = "{$width}x{$height}+{$left}+{$top}";
   }
-  
+
   // Do a first pass that eliminates frames with duplicate content.
   foreach ($files as $file) {
     $duplicate = false;
