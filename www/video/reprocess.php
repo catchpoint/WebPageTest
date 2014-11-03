@@ -4,6 +4,7 @@ include 'common.inc';
 require_once('video/avi2frames.inc.php');
 require_once('archive.inc');
 set_time_limit(1200);
+ignore_user_abort(true);
 header ("Content-type: text/plain");
 
 if (ValidateTestId($id)) {
