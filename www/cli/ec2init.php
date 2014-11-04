@@ -19,8 +19,8 @@ if (!Initialized()) {
     shell_exec('php "' . __FILE__ .'" updated');
   } else {
     echo "initializing\n";
-    UpdateSettings();
     $api_key = null;
+    UpdateSettings();
     SetupAPIKeys();
   }
 }
