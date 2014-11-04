@@ -116,7 +116,7 @@ function Video2PNG($infile, $outdir, $crop) {
   $oldDir = getcwd();
   chdir($outdir);
 
-  $command = "ffmpeg -v debug -i \"$infile\" -vsync 0 -vf \"fps=fps=60$crop,decimate,scale=iw*min(400/iw\,400/ih):ih*min(400/iw\,400/ih)\" \"$outdir/img-%d.png\" 2>&1";
+  $command = "ffmpeg -v debug -i \"$infile\" -vsync 0 -vf \"fps=fps=60$crop,decimate=hi=0:lo=0,scale=iw*min(400/iw\,400/ih):ih*min(400/iw\,400/ih)\" \"$outdir/img-%d.png\" 2>&1";
   $result;
   exec($command, $output, $result);
   if ($output && is_array($output) && count($output)) {
