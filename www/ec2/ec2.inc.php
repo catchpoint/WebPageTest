@@ -66,7 +66,7 @@ function EC2_StartInstanceIfNeeded($ami) {
           $user_data .= " wpt_key=$key";
         $size = GetSetting('ec2_instance_size');
         if (!$size)
-          $size = 'm1.medium';
+          $size = 'm3.medium';
         if (EC2_LaunchInstance($region, $ami, $size, $user_data, $loc)) {
           $instances[$ami]['count']++;
           file_put_contents('./tmp/ec2-instances.dat', json_encode($instances));
