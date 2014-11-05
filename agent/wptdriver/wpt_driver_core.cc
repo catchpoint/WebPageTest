@@ -238,6 +238,7 @@ void WptDriverCore::WorkThread(void) {
         if( !uploaded )
           Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
       }
+      PostTest();
       ReleaseMutex(_testing_mutex);
     } else {
       ReleaseMutex(_testing_mutex);
@@ -383,31 +384,6 @@ void WptDriverCore::Init(void){
   _winpcap.Initialize();
 
   KillBrowsers();
-
-  // Install a global appinit hook for wpthook (actual loading will be
-  // controlled by a shared memory state)
-  if (GetModuleFileName(NULL, path, _countof(path))) {
-    lstrcpy(PathFindFileName(path), _T("wptload.dll"));
-    TCHAR short_path[MAX_PATH];
-    if (GetShortPathName(path, short_path, _countof(short_path))) {
-      HKEY hKey;
-		  if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
-                         _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion")
-                         _T("\\Windows"),
-                         0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS ) {
-			  DWORD val = 1;
-			  RegSetValueEx(hKey, _T("LoadAppInit_DLLs"), 0, REG_DWORD,
-                      (const LPBYTE)&val, sizeof(val));
-			  val = 0;
-			  RegSetValueEx(hKey, _T("RequireSignedAppInit_DLLs"), 0, REG_DWORD,
-                      (const LPBYTE)&val, sizeof(val));
-			  RegSetValueEx(hKey, _T("AppInit_DLLs"), 0, REG_SZ,
-                      (const LPBYTE)short_path,
-                      (lstrlen(short_path) + 1) * sizeof(TCHAR));
-        RegCloseKey(hKey);
-      }
-    }
-  }
 
   _installing = true;
   _status.Set(_T("Installing software..."));
@@ -822,4 +798,113 @@ void WptDriverCore::PreTest() {
     if (process)
       CloseHandle(process);
   }
+
+  // Install a global appinit hook for wpthook (actual loading will be
+  // controlled by a shared memory state)
+  TCHAR path[MAX_PATH];
+  if (GetModuleFileName(NULL, path, _countof(path))) {
+    lstrcpy(PathFindFileName(path), _T("wptload.dll"));
+    TCHAR short_path[MAX_PATH];
+    if (GetShortPathName(path, short_path, _countof(short_path))) {
+      HKEY hKey;
+		  if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+                         _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion")
+                         _T("\\Windows"),
+                         0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS ) {
+			  DWORD val = 1;
+			  RegSetValueEx(hKey, _T("LoadAppInit_DLLs"), 0, REG_DWORD,
+                      (const LPBYTE)&val, sizeof(val));
+			  val = 0;
+			  RegSetValueEx(hKey, _T("RequireSignedAppInit_DLLs"), 0, REG_DWORD,
+                      (const LPBYTE)&val, sizeof(val));
+        LPTSTR dlls = GetAppInitString(short_path);
+        if (dlls) {
+			    RegSetValueEx(hKey, _T("AppInit_DLLs"), 0, REG_SZ,
+                        (const LPBYTE)dlls,
+                        (lstrlen(dlls) + 1) * sizeof(TCHAR));
+          free(dlls);
+        }
+        RegCloseKey(hKey);
+      }
+    }
+  }
+
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptDriverCore::PostTest() {
+  // Remove the AppInit dll
+  HKEY hKey;
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+                      _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion")
+                      _T("\\Windows"),
+                      0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS ) {
+    LPTSTR dlls = GetAppInitString(NULL);
+    if (dlls) {
+			RegSetValueEx(hKey, _T("AppInit_DLLs"), 0, REG_SZ,
+                    (const LPBYTE)dlls,
+                    (lstrlen(dlls) + 1) * sizeof(TCHAR));
+      free(dlls);
+    }
+    RegCloseKey(hKey);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+LPTSTR WptDriverCore::GetAppInitString(LPCTSTR new_dll) {
+  LPTSTR dlls = NULL;
+  DWORD len = 0;
+
+  // get the existing appinit list
+  HKEY hKey;
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+                      _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion")
+                      _T("\\Windows"),
+                      0, 0, 0, KEY_READ, 0, &hKey, 0) == ERROR_SUCCESS ) {
+    if (RegQueryValueEx(hKey, _T("AppInit_DLLs"), 0, NULL, NULL, &len) ==
+        ERROR_SUCCESS) {
+      if (new_dll && lstrlen(new_dll))
+        len += (lstrlen(new_dll) + 1) * sizeof(TCHAR);
+      dlls = (LPTSTR)malloc(len);
+      memset(dlls, 0, len);
+      DWORD bytes = len;
+      RegQueryValueEx(hKey, _T("AppInit_DLLs"), 0, NULL, (LPBYTE)dlls, &bytes);
+    }
+    RegCloseKey(hKey);
+  }
+
+  // allocate memory in case there wasn't an existing list
+  if (!dlls && new_dll && lstrlen(new_dll)) {
+    len = (lstrlen(new_dll) + 1) * sizeof(TCHAR);
+    dlls = (LPTSTR)malloc(len);
+    memset(dlls, 0, len);
+  }
+
+  // remove any occurences of wptload.dll from the list
+  if (dlls && lstrlen(dlls)) {
+    LPTSTR new_list = (LPTSTR)malloc(len);
+    memset(new_list, 0, len);
+    LPTSTR dll = _tcstok(dlls, _T(" ,"));
+    while (dll) {
+      if (lstrcmpi(PathFindFileName(dll), _T("wptload.dll"))) {
+        if (lstrlen(new_list))
+          lstrcat(new_list, _T(","));
+        lstrcat(new_list, dll);
+      }
+      dll = _tcstok(NULL, _T(" ,"));
+    }
+    free(dlls);
+    dlls = new_list;
+  }
+
+  // add the new dll to the list
+  if (dlls && new_dll && lstrlen(new_dll)) {
+    if (lstrlen(dlls))
+      lstrcat(dlls, _T(","));
+    lstrcat(dlls, new_dll);
+  }
+
+  return dlls;
 }

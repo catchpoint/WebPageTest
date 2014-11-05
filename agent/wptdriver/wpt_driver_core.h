@@ -68,5 +68,7 @@ private:
   void CloseDialogs();
   bool DetectGPU();
   void PreTest();
+  void PostTest();
   bool Startup();
+  LPTSTR GetAppInitString(LPCTSTR new_dll);
 };
