@@ -1,5 +1,5 @@
 browser=Firefox
-url=http://httparchive.webpagetest.org/installers/firefox_33.exe
+url=http://www.webpagetest.org/installers/browsers/firefox_33.exe
 md5=356414F30B9A8F8756E68CB2482FF5C5
 version=33
 command=firefox_33.exe -ms
