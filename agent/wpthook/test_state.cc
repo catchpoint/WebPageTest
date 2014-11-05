@@ -54,7 +54,6 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   _results(results)
   ,_screen_capture(screen_capture)
   ,_frame_window(NULL)
-  ,_document_window(NULL)
   ,_exit(false)
   ,_data_timer(NULL)
   ,_test(test)
@@ -291,7 +290,7 @@ void TestState::OnLoad() {
     QueryPerformanceCounter(&_on_load);
     GetCPUTime(_doc_cpu_time, _doc_total_time);
     ActivityDetected();
-    _screen_capture.Capture(_document_window,
+    _screen_capture.Capture(_frame_window,
                             CapturedImage::DOCUMENT_COMPLETE);
     _current_document = 0;
   }
@@ -369,7 +368,7 @@ void TestState::Done(bool force) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - **** TestState::Done()\n"));
   if (_active) {
     GetCPUTime(_end_cpu_time, _end_total_time);
-    _screen_capture.Capture(_document_window, CapturedImage::FULLY_LOADED);
+    _screen_capture.Capture(_frame_window, CapturedImage::FULLY_LOADED);
 
     if (force || !_test._combine_steps) {
       // kill the timer that was collecting periodic data (cpu, video, etc)
@@ -410,13 +409,9 @@ void TestState::UpdateBrowserWindow() {
     if (no_gdi_)
       browser_process_id = GetParentProcessId(browser_process_id);
     HWND old_frame = _frame_window;
-    if (::FindBrowserWindow(browser_process_id, _frame_window, 
-                            _document_window)) {
+    if (::FindBrowserWindow(browser_process_id, _frame_window)) {
       WptTrace(loglevel::kFunction, 
-                _T("[wpthook] - Frame Window: %08X, Document Window: %08X\n"), 
-                _frame_window, _document_window);
-      if (!_document_window)
-        _document_window = _frame_window;
+                _T("[wpthook] - Frame Window: %08X\n"), _frame_window);
     }
     // position the browser window
     if (_frame_window && old_frame != _frame_window) {
@@ -431,8 +426,6 @@ void TestState::UpdateBrowserWindow() {
         RECT viewport = {0,0,0,0};
         if (_screen_capture.IsViewportSet())
           memcpy(&viewport, &_screen_capture._viewport, sizeof(RECT));
-        else if (_document_window)
-            GetWindowRect(_document_window, &viewport);
         int vp_width = abs(viewport.right - viewport.left);
         int vp_height = abs(viewport.top - viewport.bottom);
         int br_width = abs(browser.right - browser.left);
@@ -457,7 +450,7 @@ void TestState::UpdateBrowserWindow() {
     Grab a video frame if it is appropriate
 -----------------------------------------------------------------------------*/
 void TestState::GrabVideoFrame(bool force) {
-  if (_active && _document_window && (force || received_data_)) {
+  if (_active && _frame_window && (force || received_data_)) {
     // use a falloff on the resolution with which we capture video
     bool grab_video = false;
     LARGE_INTEGER now;
@@ -479,7 +472,7 @@ void TestState::GrabVideoFrame(bool force) {
     if (grab_video) {
       _last_video_time.QuadPart = now.QuadPart;
       _video_capture_count++;
-      _screen_capture.Capture(_document_window, CapturedImage::VIDEO);
+      _screen_capture.Capture(_frame_window, CapturedImage::VIDEO);
     }
   }
 }
@@ -592,10 +585,9 @@ void TestState::TitleSet(CString title) {
   Find the portion of the document window that represents the document
 -----------------------------------------------------------------------------*/
 void TestState::FindViewport(bool force) {
-  if (_document_window == _frame_window &&
-      (force || !_screen_capture.IsViewportSet())) {
+  if (_frame_window && (force || !_screen_capture.IsViewportSet())) {
     _screen_capture.ClearViewport();
-    CapturedImage captured = _screen_capture.CaptureImage(_document_window);
+    CapturedImage captured = _screen_capture.CaptureImage(_frame_window);
     CxImage image;
     if (captured.Get(image)) {
       // start in the middle of the image and go in each direction 

@@ -48,8 +48,7 @@ bool LaunchProcess(CString command_line, HANDLE * process_handle = NULL,
 void DeleteDirectory(LPCTSTR directory, bool remove = true);
 void DeleteRegKey(HKEY hParent, LPCTSTR key, bool remove = true);
 void CopyDirectoryTree(CString source, CString destination);
-bool FindBrowserWindow(DWORD process_id, HWND& frame_window, 
-                       HWND& document_window);
+bool FindBrowserWindow(DWORD process_id, HWND& frame_window);
 void WptTrace(int level, LPCTSTR format, ...);
 
 typedef CAtlList<CStringA> HookSymbolNames;
