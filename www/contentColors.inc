@@ -27,7 +27,7 @@ function GetRequestColors($content_type, $thumbnail, $is_mime,
                 'ssl'      => array(213,102, 223),
                 'ttfb'     => array(64, 255, 64),
                 'download' => array(52,150,255),
-				'prefetch' => array(255,0,0)//BEER
+                'prefetch' => array(255,0,0)//BEER
                 );
         } else {
             $colors = array(
@@ -36,7 +36,7 @@ function GetRequestColors($content_type, $thumbnail, $is_mime,
                 'ssl'      => array(207, 37, 223),
                 'ttfb'     => array(0, 255, 0),
                 'download' => array(0,123,255),
-				'prefetch' => array(255,0,0)//BEER
+                'prefetch' => array(255,0,0)//BEER
                 );
         }
     }

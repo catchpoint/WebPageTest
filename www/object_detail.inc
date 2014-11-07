@@ -334,7 +334,7 @@ function extractFrameRequest(&$frame, $timingStart, $needed_columns) {
 	
 	//if($request['ssl_ms']<0)
 		//$request['ssl_ms'] = 0;
-	
+/*	
 	if($request['connect_ms'] < 0){//FIXME
 		$request['load_start'] += 1000;
 		$request['connect_ms'] = 10;
@@ -349,7 +349,7 @@ function extractFrameRequest(&$frame, $timingStart, $needed_columns) {
 	}else{
 		$request['prefetch_hit'] = false;
 	}
-	
+*/	
 	return NULL;
 }
 
