@@ -11,7 +11,7 @@ chdir('..');
 // Include for test related information.
 include 'common.inc';
 // Include for parsing the http requests from a run.
-include 'object_detail.inc';
+require_once('object_detail.inc');
 require_once('google/google_lib.inc');
 
 // Fill the required variables.

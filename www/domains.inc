@@ -1,5 +1,5 @@
 <?php
-require 'object_detail.inc'; 
+require_once('object_detail.inc'); 
 
 /**
 * Aggregate the individual requests by domain

@@ -3,9 +3,9 @@
     This is called every 15 minutes as long as agents are polling for work
 */
 chdir('..');
-require 'common.inc';
-require 'testStatus.inc';
-require 'breakdown.inc';
+include 'common.inc';
+require_once('testStatus.inc');
+require_once('breakdown.inc');
 require_once('archive.inc');
 set_time_limit(36000);
 ignore_user_abort(true);

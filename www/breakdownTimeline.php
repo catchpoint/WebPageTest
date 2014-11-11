@@ -1,8 +1,8 @@
 <?php
 include 'common.inc';
-include 'breakdown.inc';
+require_once('breakdown.inc');
 require_once('contentColors.inc');
-include 'waterfall.inc';
+require_once('waterfall.inc');
 require_once('page_data.inc');
 
 $page_keywords = array('Timeline Breakdown','Webpagetest','Website Speed Test','Page Speed');

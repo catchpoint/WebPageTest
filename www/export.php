@@ -9,7 +9,7 @@
 
 include 'common.inc';
 require_once('page_data.inc');
-include 'object_detail.inc';
+require_once('object_detail.inc');
 require_once('lib/json.php');
 
 // see if we are loading a single run or all of them

@@ -1,6 +1,6 @@
 <?php
 include 'common.inc';
-include 'object_detail.inc';
+require_once('object_detail.inc');
 require_once('page_data.inc');
 require_once('waterfall.inc');
 
