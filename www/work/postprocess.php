@@ -138,7 +138,14 @@ if (array_key_exists('test', $_REQUEST)) {
       require_once('./lib/tsview.inc.php');
       TSViewPostResult($testInfo, $id, $testPath, $settings['tsviewdb'], $testInfo['tsview_id']);
     }
-    
+
+    // post the test to statsd if requested
+    if (GetSetting('statsdHost') &&
+        is_file('./lib/statsd.inc.php')) {
+      require_once('./lib/statsd.inc.php');
+      StatsdPostResult($testInfo, $testPath);
+    }
+ 
     // Send an email notification if necessary
     $notifyFrom = GetSetting('notifyFrom');
     if ($notifyFrom && strlen($notifyFrom) && is_file("$testPath/testinfo.ini")) {
