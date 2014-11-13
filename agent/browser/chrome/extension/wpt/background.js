@@ -88,6 +88,7 @@ var g_commandRunner = null;  // Will create once we know the tab id under test.
 var g_debugWindow = null;  // May create at window onload.
 var g_overrideHosts = {};
 var g_started = false;
+var g_requestsHooked = false;
 
 /**
  * Uninstall a given set of extensions.  Run |onComplete| when done.
@@ -268,6 +269,39 @@ function wptSendEvent(event_name, query_string, data) {
   }
 }
 
+var wptBeforeSendHeaders = function(details) {
+  var response = {};
+  if (g_active && details.tabId == g_tabid) {
+    var host = details.url.match(URL_REGEX)[2].toString();
+    for (originalHost in g_overrideHosts) {
+      if (g_overrideHosts[originalHost] == host) {
+        details.requestHeaders.push({'name' : 'x-Host', 'value' : originalHost});
+        response = {requestHeaders: details.requestHeaders};
+        break;
+      }
+    }
+  }
+  return response;
+};
+
+var wptBeforeSendRequest = function(details) {
+  var action = {};
+  if (g_active && details.tabId == g_tabid) {
+    var urlParts = details.url.match(URL_REGEX);
+    var scheme = urlParts[1].toString();
+    var host = urlParts[2].toString();
+    var object = urlParts[3].toString();
+    wpt.LOG.info('Checking host override for "' + host +
+                 '" in URL ' + details.url);
+    if (g_overrideHosts[host] != undefined) {
+      var newHost = g_overrideHosts[host];
+      wpt.LOG.info('Overriding host ' + host + ' to ' + newHost);
+      action.redirectUrl = scheme + newHost + object;
+    }
+  }
+  return action;
+};
+  
 chrome.webRequest.onErrorOccurred.addListener(function(details) {
   // Chrome canary is generating spurious net:ERR_ABORTED errors
   // right when navigation starts - we need to ignore them
@@ -297,44 +331,19 @@ chrome.webRequest.onCompleted.addListener(function(details) {
   }, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
 );
 
-chrome.webRequest.onBeforeRequest.addListener(function(details) {
-    var action = {};
-    if (g_active && details.tabId == g_tabid) {
-      var urlParts = details.url.match(URL_REGEX);
-      var scheme = urlParts[1].toString();
-      var host = urlParts[2].toString();
-      var object = urlParts[3].toString();
-      wpt.LOG.info('Checking host override for "' + host +
-                   '" in URL ' + details.url);
-      if (g_overrideHosts[host] != undefined) {
-        var newHost = g_overrideHosts[host];
-        wpt.LOG.info('Overriding host ' + host + ' to ' + newHost);
-        action.redirectUrl = scheme + newHost + object;
-      }
-    }
-    return action;
-  },
-  {urls: ['https://*/*']},
-  ['blocking']
-);
-
-chrome.webRequest.onBeforeSendHeaders.addListener(function(details) {
-    var response = {};
-    if (g_active && details.tabId == g_tabid) {
-      var host = details.url.match(URL_REGEX)[2].toString();
-      for (originalHost in g_overrideHosts) {
-        if (g_overrideHosts[originalHost] == host) {
-          details.requestHeaders.push({'name' : 'x-Host', 'value' : originalHost});
-          response = {requestHeaders: details.requestHeaders};
-          break;
-        }
-      }
-    }
-      return response;
-  },
-  {urls: ['https://*/*']},
-  ['blocking', 'requestHeaders']
-);
+function wptHookRequests() {
+  if (!g_requestsHooked) {
+    g_requestsHooked = true;
+    chrome.webRequest.onBeforeSendHeaders.addListener(wptBeforeSendHeaders,
+      {urls: ['https://*/*']},
+      ['blocking', 'requestHeaders']
+    );
+    chrome.webRequest.onBeforeRequest.addListener(wptBeforeSendRequest,
+      {urls: ['https://*/*']},
+      ['blocking']
+    );
+  }
+}
 
 // Add a listener for messages from script.js through message passing.
 chrome.extension.onRequest.addListener(
@@ -395,7 +404,7 @@ chrome.extension.onRequest.addListener(
         wptSendEvent('responsive', '?isResponsive=' + request['isResponsive']);
     } else if (request.message == 'wptCustomMetrics') {
       if (request['data'] != undefined)
-				wptSendEvent('custom_metrics', '', JSON.stringify(request['data']));
+        wptSendEvent('custom_metrics', '', JSON.stringify(request['data']));
     }
     // TODO: check whether calling sendResponse blocks in the content script
     // side in page.
@@ -471,7 +480,7 @@ function wptExecuteTask(task) {
         break;
       case 'capturetimeline':
         g_processing_task = true;
-        wpt.chromeDebugger.CaptureTimeline(wptTaskCallback);
+        wpt.chromeDebugger.CaptureTimeline(parseInt(task.target), wptTaskCallback);
         break;
       case 'capturetrace':
         wpt.chromeDebugger.CaptureTrace();
@@ -480,6 +489,7 @@ function wptExecuteTask(task) {
         g_commandRunner.doNoScript();
         break;
       case 'overridehost':
+        wptHookRequests();
         g_overrideHosts[task.target] = task.value;
         break;
       case 'collectstats':

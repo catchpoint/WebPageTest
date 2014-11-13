@@ -272,11 +272,9 @@ void TestServer::MongooseCallback(enum mg_event event,
         test_state_._dom_element_count = dom_count;
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/devTools") == 0) {
-      if (test_state_._active) {
-        CStringA body = CT2A(GetPostBody(conn, request_info));
-        if (body.GetLength())
-          dev_tools_.AddRawEvents(body);
-      }
+      CStringA body = CT2A(GetPostBody(conn, request_info));
+      if (body.GetLength())
+        dev_tools_.AddRawEvents(body);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/trace") == 0) {
       CStringA body = CT2A(GetPostBody(conn, request_info));

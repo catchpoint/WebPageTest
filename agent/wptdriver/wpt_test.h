@@ -153,6 +153,7 @@ public:
   bool    _ignore_ssl;
   bool    _tcpdump;
   bool    _timeline;
+  int     _timelineStackDepth;
   bool    _trace;
   bool    _netlog;
   bool    _video;

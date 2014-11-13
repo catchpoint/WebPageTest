@@ -99,6 +99,7 @@ void WptTest::Reset(void) {
   _ignore_ssl = false;
   _tcpdump = false;
   _timeline = false;
+  _timelineStackDepth = 0;
   _trace = false;
   _netlog = false;
   _video = false;
@@ -202,6 +203,8 @@ bool WptTest::Load(CString& test) {
           _tcpdump = true;
         else if (!key.CompareNoCase(_T("timeline")) && _ttoi(value.Trim()))
           _timeline = true;
+        else if (!key.CompareNoCase(_T("timelineStackDepth")))
+          _timelineStackDepth = _ttoi(value.Trim());
         else if (!key.CompareNoCase(_T("trace")) && _ttoi(value.Trim()))
           _trace = true;
         else if (!key.CompareNoCase(_T("netlog")) && _ttoi(value.Trim()))
@@ -468,6 +471,7 @@ void WptTest::BuildScript() {
   if (_timeline) {
     ScriptCommand command;
     command.command = _T("captureTimeline");
+    command.target.Format(_T("%d"), _timelineStackDepth);
     command.record = false;
     _script_commands.AddHead(command);
   }

@@ -60,7 +60,6 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.startedCallback = callback;
     g_instance.timelineStartedCallback = undefined;
     g_instance.devToolsData = '';
-    g_instance.devToolsTimer = undefined;
     g_instance.trace = false;
     g_instance.statsDoneCallback = undefined;
     g_instance.mobileEmulation = undefined;
@@ -73,12 +72,15 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
 };
 
 wpt.chromeDebugger.SetActive = function(active) {
-  g_instance.devToolsData = '';
-  g_instance.requests = {};
-  g_instance.receivedData = false;
   g_instance.active = active;
-  if (active && g_instance.trace) {
-    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start');
+  if (active) {
+    g_instance.requests = {};
+    g_instance.receivedData = false;
+    g_instance.devToolsData = '';
+    g_instance.statsDoneCallback = undefined;
+    if (g_instance.trace) {
+      g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start');
+    }
   }
 };
 
@@ -94,10 +96,10 @@ wpt.chromeDebugger.Exec = function(code, callback) {
 /**
  * Capture the network timeline
  */
-wpt.chromeDebugger.CaptureTimeline = function(callback) {
+wpt.chromeDebugger.CaptureTimeline = function(timelineStackDepth, callback) {
   g_instance.timeline = true;
   g_instance.timelineStartedCallback = callback;
-  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start', null, function(){
+  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start', {maxCallStackDepth: timelineStackDepth}, function(){
     setTimeout(function(){
       if (g_instance.timelineStartedCallback) {
         g_instance.timelineStartedCallback();
@@ -118,12 +120,14 @@ wpt.chromeDebugger.CaptureTrace = function() {
 };
 
 wpt.chromeDebugger.CollectStats = function(callback) {
-  if (g_instance.trace) {
-    g_instance.statsDoneCallback = callback;
-    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.end');
-  } else {
-    callback();
-  }
+  g_instance.statsDoneCallback = callback;
+  wpt.chromeDebugger.SendDevToolsData(function(){
+    if (g_instance.trace) {
+      g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.end');
+    } else {
+      g_instance.statsDoneCallback();
+    }
+  });
 };
 
 wpt.chromeDebugger.EmulateMobile = function(deviceString) {
@@ -161,8 +165,6 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       if (g_instance.devToolsData.length)
         g_instance.devToolsData += ',';
       g_instance.devToolsData += '{"method":"' + message + '","params":' + JSON.stringify(params) + '}';
-      if (g_instance.devToolsTimer == undefined)
-        g_instance.devToolsTimer = setTimeout(wpt.chromeDebugger.SendDevToolsData, TIMELINE_AGGREGATION_INTERVAL);
     }
     
     // Page events
@@ -273,11 +275,12 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
   }
 };
 
-wpt.chromeDebugger.SendDevToolsData = function() {
-  g_instance.devToolsTimer = undefined;
+wpt.chromeDebugger.SendDevToolsData = function(callback) {
   if (g_instance.devToolsData.length) {
-    wpt.chromeDebugger.sendEvent('devTools', g_instance.devToolsData);
+    wpt.chromeDebugger.sendEvent('devTools', g_instance.devToolsData, callback);
     g_instance.devToolsData = '';
+  } else {
+    callback();
   }
 };
 
@@ -466,9 +469,16 @@ wpt.chromeDebugger.SendReceivedData = function() {
  * @param {string} event event string.
  * @param {string} data event data (post body).
  */
-wpt.chromeDebugger.sendEvent = function(event, data) {
+wpt.chromeDebugger.sendEvent = function(event, data, callback) {
   try {
     var xhr = new XMLHttpRequest();
+    if (typeof callback !== 'undefined') {
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+          callback();
+        }
+      }
+    }
     xhr.open('POST', 'http://127.0.0.1:8888/event/' + event, true);
     xhr.send(data);
   } catch (err) {

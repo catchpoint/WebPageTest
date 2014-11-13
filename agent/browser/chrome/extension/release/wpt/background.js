@@ -13719,34 +13719,6 @@ wpt.commands.CommandRunner.prototype.doSetCookie = function(cookie_path, data) {
 };
 
 /**
- * Block all urls matching |blockPattern| using the declarative web
- * request API.
- * @param {string} blockPattern
- */
-wpt.commands.CommandRunner.prototype.doBlockUsingDeclarativeApi_ =
-    function(blockPattern) {
-
-  // Match requests where any part of the URL contains |blockPattern|.
-  var requestMatcher = new chrome.declarativeWebRequest.RequestMatcher({
-    url: {
-      urlContains: blockPattern
-    }
-  });
-
-  // Blocking is implemented by canceling any matching request.
-  var blockingRule = {
-    conditions: [
-        requestMatcher
-    ],
-    actions: [
-        new chrome.declarativeWebRequest.CancelRequest()
-    ]
-  };
-
-  this.chromeApi_.declarativeWebRequest.onRequest.addRules([blockingRule]);
-};
-
-/**
  * Block all urls matching |blockPattern| using the non-declarative web
  * request API.
  * @param {string} blockPattern
@@ -13784,15 +13756,7 @@ wpt.commands.CommandRunner.prototype.doBlock = function(blockPattern) {
   // web request API, the test that we have permission to use it will
   // fail.
   var self = this;
-  this.chromeApi_.permissions.contains(
-      {permissions: ['declarativeWebRequest']},
-      function(hasPermission) {
-        if (hasPermission) {
-          self.doBlockUsingDeclarativeApi_(blockPattern);
-        } else {
-          self.doBlockUsingRequestCallback_(blockPattern);
-        }
-      });
+  self.doBlockUsingRequestCallback_(blockPattern);
 };
 
 /**
@@ -13994,7 +13958,6 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.startedCallback = callback;
     g_instance.timelineStartedCallback = undefined;
     g_instance.devToolsData = '';
-    g_instance.devToolsTimer = undefined;
     g_instance.trace = false;
     g_instance.statsDoneCallback = undefined;
     g_instance.mobileEmulation = undefined;
@@ -14007,12 +13970,15 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
 };
 
 wpt.chromeDebugger.SetActive = function(active) {
-  g_instance.devToolsData = '';
-  g_instance.requests = {};
-  g_instance.receivedData = false;
   g_instance.active = active;
-  if (active && g_instance.trace) {
-    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start');
+  if (active) {
+    g_instance.requests = {};
+    g_instance.receivedData = false;
+    g_instance.devToolsData = '';
+    g_instance.statsDoneCallback = undefined;
+    if (g_instance.trace) {
+      g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start');
+    }
   }
 };
 
@@ -14028,10 +13994,10 @@ wpt.chromeDebugger.Exec = function(code, callback) {
 /**
  * Capture the network timeline
  */
-wpt.chromeDebugger.CaptureTimeline = function(callback) {
+wpt.chromeDebugger.CaptureTimeline = function(timelineStackDepth, callback) {
   g_instance.timeline = true;
   g_instance.timelineStartedCallback = callback;
-  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start', null, function(){
+  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start', {maxCallStackDepth: timelineStackDepth}, function(){
     setTimeout(function(){
       if (g_instance.timelineStartedCallback) {
         g_instance.timelineStartedCallback();
@@ -14052,12 +14018,14 @@ wpt.chromeDebugger.CaptureTrace = function() {
 };
 
 wpt.chromeDebugger.CollectStats = function(callback) {
-  if (g_instance.trace) {
-    g_instance.statsDoneCallback = callback;
-    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.end');
-  } else {
-    callback();
-  }
+  g_instance.statsDoneCallback = callback;
+  wpt.chromeDebugger.SendDevToolsData(function(){
+    if (g_instance.trace) {
+      g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.end');
+    } else {
+      g_instance.statsDoneCallback();
+    }
+  });
 };
 
 wpt.chromeDebugger.EmulateMobile = function(deviceString) {
@@ -14095,8 +14063,6 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       if (g_instance.devToolsData.length)
         g_instance.devToolsData += ',';
       g_instance.devToolsData += '{"method":"' + message + '","params":' + JSON.stringify(params) + '}';
-      if (g_instance.devToolsTimer == undefined)
-        g_instance.devToolsTimer = setTimeout(wpt.chromeDebugger.SendDevToolsData, TIMELINE_AGGREGATION_INTERVAL);
     }
     
     // Page events
@@ -14207,11 +14173,12 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
   }
 };
 
-wpt.chromeDebugger.SendDevToolsData = function() {
-  g_instance.devToolsTimer = undefined;
+wpt.chromeDebugger.SendDevToolsData = function(callback) {
   if (g_instance.devToolsData.length) {
-    wpt.chromeDebugger.sendEvent('devTools', g_instance.devToolsData);
+    wpt.chromeDebugger.sendEvent('devTools', g_instance.devToolsData, callback);
     g_instance.devToolsData = '';
+  } else {
+    callback();
   }
 };
 
@@ -14400,9 +14367,16 @@ wpt.chromeDebugger.SendReceivedData = function() {
  * @param {string} event event string.
  * @param {string} data event data (post body).
  */
-wpt.chromeDebugger.sendEvent = function(event, data) {
+wpt.chromeDebugger.sendEvent = function(event, data, callback) {
   try {
     var xhr = new XMLHttpRequest();
+    if (typeof callback !== 'undefined') {
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+          callback();
+        }
+      }
+    }
     xhr.open('POST', 'http://127.0.0.1:8888/event/' + event, true);
     xhr.send(data);
   } catch (err) {
@@ -14501,6 +14475,7 @@ var g_commandRunner = null;  // Will create once we know the tab id under test.
 var g_debugWindow = null;  // May create at window onload.
 var g_overrideHosts = {};
 var g_started = false;
+var g_requestsHooked = false;
 
 /**
  * Uninstall a given set of extensions.  Run |onComplete| when done.
@@ -14681,6 +14656,39 @@ function wptSendEvent(event_name, query_string, data) {
   }
 }
 
+var wptBeforeSendHeaders = function(details) {
+  var response = {};
+  if (g_active && details.tabId == g_tabid) {
+    var host = details.url.match(URL_REGEX)[2].toString();
+    for (originalHost in g_overrideHosts) {
+      if (g_overrideHosts[originalHost] == host) {
+        details.requestHeaders.push({'name' : 'x-Host', 'value' : originalHost});
+        response = {requestHeaders: details.requestHeaders};
+        break;
+      }
+    }
+  }
+  return response;
+};
+
+var wptBeforeSendRequest = function(details) {
+  var action = {};
+  if (g_active && details.tabId == g_tabid) {
+    var urlParts = details.url.match(URL_REGEX);
+    var scheme = urlParts[1].toString();
+    var host = urlParts[2].toString();
+    var object = urlParts[3].toString();
+    wpt.LOG.info('Checking host override for "' + host +
+                 '" in URL ' + details.url);
+    if (g_overrideHosts[host] != undefined) {
+      var newHost = g_overrideHosts[host];
+      wpt.LOG.info('Overriding host ' + host + ' to ' + newHost);
+      action.redirectUrl = scheme + newHost + object;
+    }
+  }
+  return action;
+};
+  
 chrome.webRequest.onErrorOccurred.addListener(function(details) {
   // Chrome canary is generating spurious net:ERR_ABORTED errors
   // right when navigation starts - we need to ignore them
@@ -14710,44 +14718,19 @@ chrome.webRequest.onCompleted.addListener(function(details) {
   }, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
 );
 
-chrome.webRequest.onBeforeRequest.addListener(function(details) {
-    var action = {};
-    if (g_active && details.tabId == g_tabid) {
-      var urlParts = details.url.match(URL_REGEX);
-      var scheme = urlParts[1].toString();
-      var host = urlParts[2].toString();
-      var object = urlParts[3].toString();
-      wpt.LOG.info('Checking host override for "' + host +
-                   '" in URL ' + details.url);
-      if (g_overrideHosts[host] != undefined) {
-        var newHost = g_overrideHosts[host];
-        wpt.LOG.info('Overriding host ' + host + ' to ' + newHost);
-        action.redirectUrl = scheme + newHost + object;
-      }
-    }
-    return action;
-  },
-  {urls: ['https://*/*']},
-  ['blocking']
-);
-
-chrome.webRequest.onBeforeSendHeaders.addListener(function(details) {
-    var response = {};
-    if (g_active && details.tabId == g_tabid) {
-      var host = details.url.match(URL_REGEX)[2].toString();
-      for (originalHost in g_overrideHosts) {
-        if (g_overrideHosts[originalHost] == host) {
-          details.requestHeaders.push({'name' : 'x-Host', 'value' : originalHost});
-          response = {requestHeaders: details.requestHeaders};
-          break;
-        }
-      }
-    }
-      return response;
-  },
-  {urls: ['https://*/*']},
-  ['blocking', 'requestHeaders']
-);
+function wptHookRequests() {
+  if (!g_requestsHooked) {
+    g_requestsHooked = true;
+    chrome.webRequest.onBeforeSendHeaders.addListener(wptBeforeSendHeaders,
+      {urls: ['https://*/*']},
+      ['blocking', 'requestHeaders']
+    );
+    chrome.webRequest.onBeforeRequest.addListener(wptBeforeSendRequest,
+      {urls: ['https://*/*']},
+      ['blocking']
+    );
+  }
+}
 
 // Add a listener for messages from script.js through message passing.
 chrome.extension.onRequest.addListener(
@@ -14808,7 +14791,7 @@ chrome.extension.onRequest.addListener(
         wptSendEvent('responsive', '?isResponsive=' + request['isResponsive']);
     } else if (request.message == 'wptCustomMetrics') {
       if (request['data'] != undefined)
-				wptSendEvent('custom_metrics', '', JSON.stringify(request['data']));
+        wptSendEvent('custom_metrics', '', JSON.stringify(request['data']));
     }
     // TODO: check whether calling sendResponse blocks in the content script
     // side in page.
@@ -14884,7 +14867,7 @@ function wptExecuteTask(task) {
         break;
       case 'capturetimeline':
         g_processing_task = true;
-        wpt.chromeDebugger.CaptureTimeline(wptTaskCallback);
+        wpt.chromeDebugger.CaptureTimeline(parseInt(task.target), wptTaskCallback);
         break;
       case 'capturetrace':
         wpt.chromeDebugger.CaptureTrace();
@@ -14893,6 +14876,7 @@ function wptExecuteTask(task) {
         g_commandRunner.doNoScript();
         break;
       case 'overridehost':
+        wptHookRequests();
         g_overrideHosts[task.target] = task.value;
         break;
       case 'collectstats':
