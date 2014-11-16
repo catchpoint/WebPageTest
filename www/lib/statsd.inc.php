@@ -2,9 +2,9 @@
 /**
  * Send test result to a Statsd instance
  */
-require_once('./statsd-php/lib/Domnikl/Statsd/Connection.php');
-require_once('./statsd-php/lib/Domnikl/Statsd/Connection/Socket.php');
-require_once('./statsd-php/lib/Domnikl/Statsd/Client.php');
+require_once('./lib/statsd-php/Domnikl/Statsd/Connection.php');
+require_once('./lib/statsd-php/Domnikl/Statsd/Connection/Socket.php');
+require_once('./lib/statsd-php/Domnikl/Statsd/Client.php');
 
 function StatsdPostResult(&$test, $testPath) {
   require_once ('page_data.inc');
