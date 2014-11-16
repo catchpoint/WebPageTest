@@ -157,7 +157,7 @@ else
                               if ($result_code === 0 && is_array($lines) && count($lines))
                                 $ok = true;
                             } else {
-                              $lines = file($file);
+                              $lines = file($fileName);
                               $ok = true;
                             }
                           } else {
