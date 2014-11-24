@@ -38,6 +38,8 @@ else
             $url = $pageData[1][0]['URL'];
 
         header ('Content-type: text/xml');
+        header("Cache-Control: no-cache, must-revalidate");
+        header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
         echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
         echo "<response>\n";
         echo "<statusCode>200</statusCode>\n";
@@ -428,6 +430,8 @@ else
     else
     {
         header ('Content-type: text/xml');
+        header("Cache-Control: no-cache, must-revalidate");
+        header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
         echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
         echo "<response>\n";
         if( strlen($_REQUEST['r']) )
@@ -606,6 +610,8 @@ function ConsoleLog($id, $testPath, $run, $cached) {
 function BatchResult($id, $testPath)
 {
     header ('Content-type: text/xml');
+    header("Cache-Control: no-cache, must-revalidate");
+    header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
     echo "<response>";
     if( strlen($_REQUEST['r']) )

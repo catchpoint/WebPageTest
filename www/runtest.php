@@ -720,6 +720,8 @@
                 if( $xml )
                 {
                     header ('Content-type: text/xml');
+                    header("Cache-Control: no-cache, must-revalidate");
+                    header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
                     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
                     echo "<response>\n";
                     echo "<statusCode>400</statusCode>\n";
@@ -736,6 +738,8 @@
                     if( strlen($req_r) )
                         $ret['requestId'] = $req_r;
                     header ("Content-type: application/json");
+                    header("Cache-Control: no-cache, must-revalidate");
+                    header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
                     echo json_encode($ret);
                 }
                 else
@@ -1141,6 +1145,8 @@ function ValidateScript(&$script, &$error)
                 $url = trim($tokens[1]);
                 if (stripos($url, '%URL%') !== false)
                     $url = null;
+                else
+                    CheckUrl($url);
             } elseif( !strcasecmp($command, 'loadVariables') )
                 $error = "loadVariables is not a supported command for uploaded scripts.";
             elseif( !strcasecmp($command, 'loadFile') )
@@ -1622,6 +1628,7 @@ function CheckUrl($url)
     $ok = true;
     global $user;
     global $usingAPI;
+    global $error;
     $date = gmdate("Ymd");
     if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
         $url = 'http://' . $url;
@@ -1669,6 +1676,14 @@ function CheckUrl($url)
                 }
             }
         }
+    }
+    
+    if ($ok) {
+      $ok = SBL_Check($url, $message);
+      if (!$ok) {
+        $error = "<br>Sorry, your test was blocked because $url is suspected of being used for <a href=\"http://www.antiphishing.org/\">phishing</a> or <a href=\"http://www.stopbadware.org/\">hosting malware</a>.<br><br>Advisory provided by <a href=\"http://code.google.com/apis/safebrowsing/safebrowsing_faq.html#whyAdvisory\">Google</a>.";
+        logMsg("{$_SERVER['REMOTE_ADDR']}: $url failed Safe Browsing check: $message", "./log/{$date}-blocked.log", true);
+      }
     }
 
     return $ok;

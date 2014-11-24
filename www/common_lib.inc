@@ -3,6 +3,7 @@ require_once('archive.inc');
 
 if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('RestoreTest');
+  newrelic_add_custom_tracer('SBL_Check');
 }
 
 define('VIDEO_CODE_VERSION', 19);
@@ -1842,7 +1843,10 @@ function xml_entities($text, $charset = 'UTF-8')
  * @param mixed $response
  */
 function json_response(&$response) {
-    header ("Content-type: application/json; charset=utf-8");
+    header("Content-type: application/json; charset=utf-8");
+    header("Cache-Control: no-cache, must-revalidate");
+    header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+
     if( array_key_exists('callback', $_REQUEST) && strlen($_REQUEST['callback']) )
         echo "{$_REQUEST['callback']}(";
 
@@ -2467,4 +2471,74 @@ function numRunsFromTestInfo($testInfo) {
   return $runs;
 }
 
+/**
+* Update the safe browsing list (if configured)
+* 
+*/
+function SBL_Update() {
+  $key = GetSetting('sbl_api_key');
+  if ($key && strlen($key) && 
+      function_exists('apc_fetch') &&
+      function_exists('apc_store')) {
+    $next_update = apc_fetch('sbl_next_update');
+    if (!$next_update || time() > $next_update) {
+      $db = __DIR__ . '/dat/sbl.db';
+      if (is_file($db)) {
+        $db = realpath($db);
+      } else {
+        file_put_contents($db, '');
+        $db = realpath($db);
+        unlink($db);
+      }
+      $cmd = "gglsbl_client.py --api-key $key --db-path \"$db\" --onetime --debug 2>&1";
+      exec($cmd, $out);
+      $next_update = 0;
+      if (isset($out) && is_array($out) && count($out)) {
+        $updated = 0;
+        $seconds = 0;
+        foreach($out as $line) {
+          if (stripos($line, "Storing sub chunk") !== false) {
+            $updated++;
+          } elseif (preg_match('/Next query will be delayed (?P<seconds>[0-9]+) seconds/', $line, $matches)) {
+            $seconds = intval($matches['seconds']);
+          }
+        }
+        if ($updated)
+          $seconds = 0;
+        $next_update = time() + $seconds;
+      }
+      apc_store('sbl_next_update', $next_update);
+    } else {
+      $seconds = $next_update - time();
+    }
+  }
+}
+
+/**
+* Check an URL against the SBL
+* 
+* @param mixed $url
+*/
+function SBL_Check($url, &$message) {
+  $ok = true;
+  $db = __DIR__ . '/dat/sbl.db';
+  $key = GetSetting('sbl_api_key');
+  if ($key && strlen($key) && is_file($db)) {
+    $db = realpath($db);
+    $url = escapeshellarg($url);
+    $cmd = "gglsbl_client.py --api-key $key --db-path \"$db\" --check-url $url 2>&1";
+    exec($cmd, $out);
+    if (isset($out) && is_array($out) && count($out)) {
+      foreach($out as $line) {
+        if (stripos($line, 'is blacklisted') !== false) {
+          $ok = false;
+          $message = trim($line);
+          logMsg(trim($line), __DIR__ . '/log/sbl.log', true);
+          break;
+        }
+      }
+    }
+  }
+  return $ok;
+}
 ?>
