@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static CWsHook * pHook = NULL;
 
-//#define TRACE_WINSOCK 1
+#define TRACE_WINSOCK 1
 
 /******************************************************************************
 *******************************************************************************

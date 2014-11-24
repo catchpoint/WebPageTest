@@ -172,6 +172,8 @@ bool WebPagetest::DeleteIncrementalResults(WptTestDriver& test) {
 bool WebPagetest::UploadIncrementalResults(WptTestDriver& test) {
   bool ret = true;
 
+  AtlTrace(_T("[wptdriver] - UploadIncrementalResults"));
+
   if (!test._discard_test) {
     CString directory = test._directory + CString(_T("\\"));
     CAtlList<CString> image_files;
@@ -203,6 +205,8 @@ bool WebPagetest::TestDone(WptTestDriver& test){
     ret = UploadData(test, true);
     SetCPUUtilization(0);
   }
+
+  AtlTrace(_T("[wptdriver] - Test Done"));
 
   return ret;
 }
@@ -367,6 +371,8 @@ bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test,
         file_name = PathFindFileName(file);
     }
   }
+
+  AtlTrace(_T("[wptdriver] - Uploading '%s' (%d bytes)"), (LPCTSTR)file, file_size);
 
   BuildFormData(_settings, test, done, file_name, file_size, 
                 headers, footer, form_data, content_length);
