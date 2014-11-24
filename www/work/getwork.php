@@ -11,7 +11,7 @@ if(extension_loaded('newrelic')) {
 }
 
 chdir('..');
-include 'common_lib.inc';
+include 'common.inc';
 error_reporting(0);
 set_time_limit(600);
 $is_json = array_key_exists('f', $_GET) && $_GET['f'] == 'json';
