@@ -11,8 +11,11 @@ if (!isset($lock))
   exit(0);
 
 require_once('./ec2/ec2.inc.php');
-EC2_TerminateIdleInstances();
-EC2_DeleteOrphanedVolumes();
+if (GetSetting('ec2_key')) {
+  EC2_TerminateIdleInstances();
+  EC2_StartNeededInstances();
+  EC2_DeleteOrphanedVolumes();
+}
 
 if (GetSetting('sbl_api_key'))
   SBL_Update();

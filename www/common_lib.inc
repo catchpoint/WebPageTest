@@ -123,6 +123,29 @@ function LoadLocationsIni() {
       } else {
         $locations = $ec2;
       }
+      
+      // see if we have a setting to override the default location
+      $default = GetSetting('EC2.default');
+      if ($default && strlen($default)) {
+        $defaultGroup = null;
+        
+        // Figure out what group the default location is in
+        foreach($ec2 as $name => $group) {
+          if ($name !== 'locations' && !isset($group['browser']) && isset($group[1])) {
+            foreach ($group as $key => $value) {
+              if ($value == $default) {
+                $defaultGroup = $name;
+                break 2;
+              }
+            }
+          }
+        }
+        
+        if (isset($defaultGroup)) {
+          $locations['locations']['default'] = $defaultGroup;
+          $locations[$defaultGroup]['default'] = $default;
+        }
+      }
     }
   }
   return $locations;
@@ -1254,16 +1277,17 @@ function GetPendingTests($loc, &$count, &$avgTime)
                     $stats = $pheanstalk->statsTube($tube);
                     $total += intval($stats['current-jobs-ready']);
                     if (!$priority)
-                        $count = intval($stats['current-jobs-ready']);
+                        $count += intval($stats['current-jobs-ready']);
                 } catch(Exception $e) {
                 }
             }
-        } elseif( LoadJobQueue("./work/jobs/$location", $queue) ) {
+        }
+        if( LoadJobQueue("./work/jobs/$location", $queue) ) {
             foreach( $queue as $priority => &$q ) {
                 if ($priority < 9)
                     $total += count($q);
             }
-            $count = count($queue[0]);
+            $count += count($queue[0]);
         }
     }
     return $total;
@@ -1276,23 +1300,26 @@ function GetPendingTests($loc, &$count, &$avgTime)
 */
 function GetQueueLengths($location) {
     $queues = array();
+    for ($priority = 0; $priority <= 9; $priority++)
+      $queues[$priority] = 0;
     $beanstalkd = GetSetting('beanstalkd');
     if ($beanstalkd && strlen($beanstalkd)) {
         require_once('./lib/beanstalkd/pheanstalk_init.php');
         $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
         for ($priority = 0; $priority <= 9; $priority++) {
-            $queues[$priority] = 0;
             $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
             try {
                 $stats = $pheanstalk->statsTube($tube);
-                $queues[$priority] = intval($stats['current-jobs-ready']);
+                $queues[$priority] += intval($stats['current-jobs-ready']);
             } catch(Exception $e) {
             }
         }
-    } elseif( LoadJobQueue("./work/jobs/$location", $queue) ) {
-        foreach( $queue as $priority => &$q )
-            $queues[$priority] = count($q);
     }
+    if( LoadJobQueue("./work/jobs/$location", $queue) ) {
+        foreach( $queue as $priority => &$q )
+            $queues[$priority] += count($q);
+    }
+    
     return $queues;
 }
 
@@ -1327,25 +1354,30 @@ function GetTesterCount($location)
 */
 function AddJobFile($workDir, $file, $priority, $queue_limit = 0)
 {
-    $ret = false;
-
-    $beanstalkd = GetSetting('beanstalkd');
-    if ($beanstalkd && strlen($beanstalkd)) {
-        try {
-            $tube = 'wpt.' . md5($workDir) . ".$priority";
-            require_once('./lib/beanstalkd/pheanstalk_init.php');
-            $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
-            $pheanstalk->putInTube($tube, $file);
-            $ret = true;
-        } catch(Exception $e) {
-        }
-    } elseif (LoadJobQueue($workDir, $queue)) {
-        if( !$queue_limit || count($queue[$priority]) < $queue_limit )
-            if( array_push($queue[$priority], $file) )
-                $ret = SaveJobQueue($workDir, $queue);
+  $ret = false;
+  
+  $use_beanstalk = false;
+  $beanstalkd = GetSetting('beanstalkd');
+  if ($beanstalkd && strlen($beanstalkd)) {
+    if ($priority || !GetSetting('beanstalk_api_only'))
+      $use_beanstalk = true;
+  }
+  if ($use_beanstalk) {
+    try {
+      $tube = 'wpt.' . md5($workDir) . ".$priority";
+      require_once('./lib/beanstalkd/pheanstalk_init.php');
+      $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
+      $pheanstalk->putInTube($tube, $file);
+      $ret = true;
+    } catch(Exception $e) {
     }
+  } elseif (LoadJobQueue($workDir, $queue)) {
+    if( !$queue_limit || count($queue[$priority]) < $queue_limit )
+      if( array_push($queue[$priority], $file) )
+        $ret = SaveJobQueue($workDir, $queue);
+  }
 
-    return $ret;
+  return $ret;
 }
 
 /**
@@ -1353,29 +1385,34 @@ function AddJobFile($workDir, $file, $priority, $queue_limit = 0)
 */
 function AddJobFileHead($workDir, $file, $priority, $atFront = false)
 {
-    $ret = false;
+  $ret = false;
 
-    $beanstalkd = GetSetting('beanstalkd');
-    if ($beanstalkd && strlen($beanstalkd)) {
-        try {
-            $tube = 'wpt.' . md5($workDir) . ".$priority";
-            require_once('./lib/beanstalkd/pheanstalk_init.php');
-            $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
-            $pheanstalk->putInTube($tube, $file, '0');
-            $ret = true;
-        } catch(Exception $e) {
-        }
-    } elseif (LoadJobQueue($workDir, $queue)) {
-        // we actually want to insert it as the second test if there is already a queue
-        if (!$atFront && count($queue[$priority]))
-            $first = array_shift($queue[$priority]);
-        if (array_unshift($queue[$priority], $file)) {
-            if (!$atFront && isset($first) && strlen($first))
-                array_unshift($queue[$priority], $first);
-            $ret = SaveJobQueue($workDir, $queue);
-        }
+  $use_beanstalk = false;
+  $beanstalkd = GetSetting('beanstalkd');
+  if ($beanstalkd && strlen($beanstalkd)) {
+    if ($priority || !GetSetting('beanstalk_api_only'))
+      $use_beanstalk = true;
+  }
+  if ($use_beanstalk) {
+    try {
+      $tube = 'wpt.' . md5($workDir) . ".$priority";
+      require_once('./lib/beanstalkd/pheanstalk_init.php');
+      $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
+      $pheanstalk->putInTube($tube, $file, '0');
+      $ret = true;
+    } catch(Exception $e) {
     }
-    return $ret;
+  } elseif (LoadJobQueue($workDir, $queue)) {
+    // we actually want to insert it as the second test if there is already a queue
+    if (!$atFront && count($queue[$priority]))
+      $first = array_shift($queue[$priority]);
+    if (array_unshift($queue[$priority], $file)) {
+      if (!$atFront && isset($first) && strlen($first))
+        array_unshift($queue[$priority], $first);
+      $ret = SaveJobQueue($workDir, $queue);
+    }
+  }
+  return $ret;
 }
 
 /**
@@ -1384,68 +1421,72 @@ function AddJobFileHead($workDir, $file, $priority, $atFront = false)
 function GetJobFile($workDir, &$priority, $tester = null, $testerIndex = null, $testerCount = null) {
     $file = null;
 
-    $beanstalkd = GetSetting('beanstalkd');
-    if ($beanstalkd && strlen($beanstalkd)) {
+    if (LoadJobQueue($workDir, $queue)) {
+      $modified = false;
+      $priority = 0;
+      while (!isset($file) && $priority <= 9) {
+        // Pick any tests without affinity or whose affinity
+        // matches the existing tester
+        if (isset($queue[$priority]) && count($queue[$priority])) {
+          foreach ($queue[$priority] as $index => $job_file) {
+            if (preg_match('/Affinity(?P<affinity>[a-zA-Z0-9\-_]+)\.(?P<id>[a-zA-Z0-9\_]+)\.(p[0-9]|url)$/', $job_file, $matches)) {
+              $affinity = $matches['affinity'];
+              if (preg_match('/^Tester(?P<tester>[a-zA-Z0-9\-_]+$)/', $affinity, $matches)) {
+                if (isset($tester) && !strcasecmp($tester,$matches['tester']))
+                  $file = $job_file;
+              } elseif (isset($testerIndex) && isset($testerCount) &&
+                        $testerIndex >= 0 && $testerIndex < $testerCount &&
+                        preg_match('/^[0-9]+$/', $affinity, $matches)) {
+                $matchIndex = intval($affinity) % $testerCount;
+                if ($matchIndex == $testerIndex)
+                  $file = $job_file;
+              }
+            } else {
+              // no affinity, this one works
+              $file = $job_file;
+            }
+            if (isset($file)) {
+              unset($queue[$priority][$index]);
+              $modified = true;
+              if (is_file("$workDir/$file"))
+                break;
+              else
+                unset($file);
+            }
+          }
+        }
+        if (!isset($file))
+          $priority++;
+      }
+
+      if ($modified)
+        SaveJobQueue($workDir, $queue);
+    }
+    
+    if (!isset($file)) {
+      $beanstalkd = GetSetting('beanstalkd');
+      if ($beanstalkd && strlen($beanstalkd)) {
         require_once('./lib/beanstalkd/pheanstalk_init.php');
         $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
         $priority = 0;
         while (!isset($file) && $priority <= 9) {
-            $found = false;
-            try {
-                $tube = 'wpt.' . md5($workDir) . ".$priority";
-                $job = $pheanstalk->reserveFromTube($tube, 0);
-                if ($job !== false) {
-                    $found = true;
-                    $file = $job->getData();
-                    if (isset($file) && !is_file("$workDir/$file"))
-                        unset($file);
-                    $pheanstalk->delete($job);
-                }
-            } catch(Exception $e) {
+          $found = false;
+          try {
+            $tube = 'wpt.' . md5($workDir) . ".$priority";
+            $job = $pheanstalk->reserveFromTube($tube, 0);
+            if ($job !== false) {
+              $found = true;
+              $file = $job->getData();
+              if (isset($file) && !is_file("$workDir/$file"))
+                unset($file);
+              $pheanstalk->delete($job);
             }
-            if (!$found && !isset($file))
-                $priority++;
+          } catch(Exception $e) {
+          }
+          if (!$found && !isset($file))
+            $priority++;
         }
-    } elseif (LoadJobQueue($workDir, $queue)) {
-        $modified = false;
-        $priority = 0;
-        while (!isset($file) && $priority <= 9) {
-            // Pick any tests without affinity or whose affinity
-            // matches the existing tester
-            if (isset($queue[$priority]) && count($queue[$priority])) {
-              foreach ($queue[$priority] as $index => $job_file) {
-                if (preg_match('/Affinity(?P<affinity>[a-zA-Z0-9\-_]+)\.(?P<id>[a-zA-Z0-9\_]+)\.(p[0-9]|url)$/', $job_file, $matches)) {
-                  $affinity = $matches['affinity'];
-                  if (preg_match('/^Tester(?P<tester>[a-zA-Z0-9\-_]+$)/', $affinity, $matches)) {
-                    if (isset($tester) && !strcasecmp($tester,$matches['tester']))
-                      $file = $job_file;
-                  } elseif (isset($testerIndex) && isset($testerCount) &&
-                            $testerIndex >= 0 && $testerIndex < $testerCount &&
-                            preg_match('/^[0-9]+$/', $affinity, $matches)) {
-                    $matchIndex = intval($affinity) % $testerCount;
-                    if ($matchIndex == $testerIndex)
-                      $file = $job_file;
-                  }
-                } else {
-                  // no affinity, this one works
-                  $file = $job_file;
-                }
-                if (isset($file)) {
-                  unset($queue[$priority][$index]);
-                  $modified = true;
-                  if (is_file("$workDir/$file"))
-                    break;
-                  else
-                    unset($file);
-                }
-              }
-            }
-            if (!isset($file))
-                $priority++;
-        }
-
-        if ($modified)
-            SaveJobQueue($workDir, $queue);
+      }
     }
 
     return $file;
@@ -1456,31 +1497,35 @@ function GetJobFile($workDir, &$priority, $tester = null, $testerIndex = null, $
 */
 function FindJobPosition($workDir, $testId)
 {
-    $count = 0;
-    $found = false;
+  $count = 0;
+  $found = false;
 
+  if( LoadJobQueue($workDir, $queue) ) {
+    $priority = 0;
+    while( !$found && $priority <= 9 ) {
+      foreach($queue[$priority] as $file) {
+        if( stripos($file, $testId) !== false ) {
+          $found = true;
+          break;
+        } elseif( !$found ) {
+          $count++;
+        }
+      }
+      $priority++;
+    }
+  }
+  
+  if (!$found) {
     $beanstalkd = GetSetting('beanstalkd');
     if ($beanstalkd && strlen($beanstalkd)) {
-        $found = true;
-    } elseif( LoadJobQueue($workDir, $queue) ) {
-        $priority = 0;
-        while( !$found && $priority <= 9 ) {
-            foreach($queue[$priority] as $file) {
-                if( stripos($file, $testId) !== false ) {
-                    $found = true;
-                    break;
-                }
-                elseif( !$found )
-                    $count++;
-            }
-            $priority++;
-        }
+      $found = true;
     }
+  }
 
-    if( !$found )
-        $count = -1;
+  if( !$found )
+    $count = -1;
 
-    return $count;
+  return $count;
 }
 
 /**

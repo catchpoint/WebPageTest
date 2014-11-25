@@ -51,6 +51,11 @@ allowPrivate=1
 ; beanstalkd memory queue for tests (only the default 11300 port is supported right now)
 ;beanstalkd=127.0.0.1
 
+; Use beanstalkd only for low-priority tests and use traditional work queues for high-priority.
+; The benefit of this is that interactive tests will still get queue position while still
+; scaling for huge numbers of API tests.
+;beanstalk_api_only=0
+
 ; Automatically update from git hourly.
 ; (assumes a git clone and just runs "git pull origin master" as the web user).
 ;gitUpdate=1
@@ -138,3 +143,16 @@ allowPrivate=1
 ; This can be used to prevent orphaned volumes but only if the account
 ; doesn't expect to keep offline EBS volumes.
 ;ec2_prune_volumes=1
+
+; Start an EC2 instance for every X tests in the queue (up to the location max)
+;EC2.ScaleFactor=100
+
+; Default location when using EC2 auto-scaling
+;EC2.default=us-east-1
+
+; Per-location minimum and maximum EC2 instance counts.
+; By default the minimum will be 0 and the maximum will be 1.
+; This needs to be specified for every location where you want
+; different settings (EC2.<location>.min/max).
+;EC2.us-east-1.min=0
+;EC2.us-east-1.max=1
