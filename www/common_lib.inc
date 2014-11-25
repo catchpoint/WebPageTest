@@ -1594,6 +1594,10 @@ function LoadJobQueue($workDir, &$queue)
         }
 
         SaveJobQueue($workDir, $queue);
+      } else {
+        $queue = array();
+        for($priority = 0; $priority <= 9; $priority++)
+          $queue[$priority] = array();
       }
     }
   }
