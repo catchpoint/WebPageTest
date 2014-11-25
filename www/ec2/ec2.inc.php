@@ -72,8 +72,13 @@ function EC2_StartInstance($ami) {
     $host = GetSetting('host');
     if (!$host && isset($_SERVER['HTTP_HOST']) && strlen($_SERVER['HTTP_HOST']))
       $host = $_SERVER['HTTP_HOST'];
-    if ((!$host || $host == '127.0.0.1' || $host == 'localhost') && GetSetting('ec2'))
-      $host = file_get_contents('http://169.254.169.254/latest/meta-data/hostname');
+    if ((!$host || $host == '127.0.0.1' || $host == 'localhost') && GetSetting('ec2')) {
+      $host = file_get_contents('http://169.254.169.254/latest/meta-data/public-ipv4');
+      if (!isset($host) || !strlen($host))
+        $host = file_get_contents('http://169.254.169.254/latest/meta-data/public-hostname');
+      if (!isset($host) || !strlen($host))
+        $host = file_get_contents('http://169.254.169.254/latest/meta-data/hostname');
+    }
     $user_data = "wpt_server=$host";
     if (strlen($urlblast))
       $user_data .= " wpt_location=$urlblast";
