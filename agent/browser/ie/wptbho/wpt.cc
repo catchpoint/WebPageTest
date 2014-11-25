@@ -97,21 +97,25 @@ void Wpt::Install(CComPtr<IWebBrowser2> web_browser) {
   AtlTrace(_T("[wptbho] - Install"));
   HANDLE active_mutex = OpenMutex(SYNCHRONIZE, FALSE, GLOBAL_TESTING_MUTEX);
   if (!_task_timer && active_mutex) {
-    global_wpt = this;
-    WNDCLASS wndClass;
-    memset(&wndClass, 0, sizeof(wndClass));
-    wndClass.lpszClassName = _T("wptbho");
-    wndClass.lpfnWndProc = WptBHOWindowProc;
-    wndClass.hInstance = dll_hinstance;
-    if (RegisterClass(&wndClass)) {
-      _message_window = CreateWindow(wndClass.lpszClassName,
-          wndClass.lpszClassName, WS_POPUP, 0, 0, 0, 0, NULL, NULL,
-          dll_hinstance, NULL);
-    }
-    if (InstallHook()) {
-      _web_browser = web_browser;
-      CComBSTR bstr_url = L"http://127.0.0.1:8888/blank.html";
-      _web_browser->Navigate(bstr_url, 0, 0, 0, 0);
+    if (!global_wpt) {
+      global_wpt = this;
+      WNDCLASS wndClass;
+      memset(&wndClass, 0, sizeof(wndClass));
+      wndClass.lpszClassName = _T("wptbho");
+      wndClass.lpfnWndProc = WptBHOWindowProc;
+      wndClass.hInstance = dll_hinstance;
+      if (RegisterClass(&wndClass)) {
+        _message_window = CreateWindow(wndClass.lpszClassName,
+            wndClass.lpszClassName, WS_POPUP, 0, 0, 0, 0, NULL, NULL,
+            dll_hinstance, NULL);
+      }
+      if (InstallHook()) {
+        _web_browser = web_browser;
+        CComBSTR bstr_url = L"http://127.0.0.1:8888/blank.html";
+        _web_browser->Navigate(bstr_url, 0, 0, 0, 0);
+      }
+    } else {
+      AtlTrace(_T("[wptbho] - Already installed"));
     }
   } else {
     AtlTrace(_T("[wptbho] - Install, failed to open mutex"));
