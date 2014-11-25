@@ -1533,69 +1533,72 @@ function FindJobPosition($workDir, $testId)
 */
 function LoadJobQueue($workDir, &$queue)
 {
+  $ret = false;
+  if (!GetSetting('beanstalkd') || GetSetting('beanstalk_api_only')) {
     $ret = true;
     if (isset($workDir) && strlen($workDir)) {
-        $queue = null;
-        $queueName = sha1($workDir);
-        $queueFile = "./tmp/$queueName.queue";
-        if( gz_is_file($queueFile) ) {
-            $queue = json_decode(gz_file_get_contents($queueFile), true);
-            // re-scan the directory if the queue is empty
-            if (isset($queue)) {
-                if (is_array($queue)) {
-                    $empty = true;
-                    foreach ($queue as &$p) {
-                        if (count($p)) {
-                            $empty = false;
-                            break;
-                        }
-                    }
-                    if ($empty)
-                        unset($queue);
-                } else {
-                    unset($queue);
-                }
+      $queue = null;
+      $queueName = sha1($workDir);
+      $queueFile = "./tmp/$queueName.queue";
+      if( gz_is_file($queueFile) ) {
+        $queue = json_decode(gz_file_get_contents($queueFile), true);
+        // re-scan the directory if the queue is empty
+        if (isset($queue)) {
+          if (is_array($queue)) {
+            $empty = true;
+            foreach ($queue as &$p) {
+              if (count($p)) {
+                $empty = false;
+                break;
+              }
             }
+            if ($empty)
+              unset($queue);
+          } else {
+            unset($queue);
+          }
+        }
+      }
+
+      if (!isset($queue) && !GetSetting('beanstalkd')) {
+        // build the queue from disk
+        $files = array();
+        $f = scandir($workDir);
+        if ($f !== false) {
+          foreach( $f as $file ) {
+            if( is_file("$workDir/$file") ) {
+              $fileTime = filemtime("$workDir/$file");
+              if( $fileTime && !isset($files[$fileTime]) )
+                $files[$fileTime] = $file;
+              else
+                $files[] = $file;
+            }
+          }
         }
 
-        if (!isset($queue)) {
-            // build the queue from disk
-            $files = array();
-            $f = scandir($workDir);
-            if ($f !== false) {
-                foreach( $f as $file ) {
-                    if( is_file("$workDir/$file") ) {
-                        $fileTime = filemtime("$workDir/$file");
-                        if( $fileTime && !isset($files[$fileTime]) )
-                            $files[$fileTime] = $file;
-                        else
-                            $files[] = $file;
-                    }
-                }
-            }
+        // sort it by time
+        ksort($files);
 
-            // sort it by time
-            ksort($files);
+        // now add them to the various priority queues
+        $queue = array();
+        for($priority = 0; $priority <= 9; $priority++)
+          $queue[$priority] = array();
 
-            // now add them to the various priority queues
-            $queue = array();
-            for($priority = 0; $priority <= 9; $priority++)
-                $queue[$priority] = array();
-
-            foreach($files as $file) {
-                if ( stripos($file, '.url') )
-                    $queue[0][] = $file;
-                else if (preg_match('/\.p([1-9])/i', $file, $matches)) {
-                    $priority = (int)$matches[1];
-                    $queue[$priority][] = $file;
-                }
-            }
-
-            SaveJobQueue($workDir, $queue);
+        foreach($files as $file) {
+          if ( stripos($file, '.url') )
+            $queue[0][] = $file;
+          else if (preg_match('/\.p([1-9])/i', $file, $matches)) {
+            $priority = (int)$matches[1];
+            $queue[$priority][] = $file;
+          }
         }
+
+        SaveJobQueue($workDir, $queue);
+      }
     }
+  }
 
-    return $ret;
+  return $ret;
 }
 
 /**
