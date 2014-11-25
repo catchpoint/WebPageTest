@@ -125,6 +125,7 @@ CDN_PROVIDER cdnList[] = {
   {".nyiftw.net", "NYI FTW"},
   {".nyiftw.com", "NYI FTW"},
   {".resrc.it", "ReSRC.it"},
+  {".zenedge.net", "Zenedge"},
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -142,5 +143,6 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"X-Edge-IP", "", "CDN"},
   {"X-Edge-Location", "", "CDN"},
   {"X-Powered-By", "NYI FTW", "NYI FTW"},
-  {"server", "ReSRC", "ReSRC.it"}
+  {"server", "ReSRC", "ReSRC.it"},
+  {"X-Cdn", "Zenedge", "Zenedge"}
 };
