@@ -72,7 +72,7 @@ function EC2_StartInstance($ami) {
     $host = GetSetting('host');
     if (!$host && isset($_SERVER['HTTP_HOST']) && strlen($_SERVER['HTTP_HOST']))
       $host = $_SERVER['HTTP_HOST'];
-    if (!$host && GetSetting('ec2'))
+    if ((!$host || $host == '127.0.0.1' || $host == 'localhost') && GetSetting('ec2'))
       $host = file_get_contents('http://169.254.169.254/latest/meta-data/hostname');
     $user_data = "wpt_server=$host";
     if (strlen($urlblast))
