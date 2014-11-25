@@ -31,4 +31,7 @@ Example user data:
 ec2_key=AKIAJKP75OFSROV5GWEQ
 ec2_secret=<secret for the key>
 api_key=MyAPIKey
+headless=0
 ```
+
+The full list of settings that can be specified is in [settings.ini.sample](https://github.com/WPO-Foundation/webpagetest/blob/master/www/settings/settings.ini.sample)
