@@ -86,6 +86,7 @@ CDN_PROVIDER cdnList[] = {
   {".nyiftw.com", _T("NYI FTW")},
   {".resrc.it", _T("ReSRC.it")},
   {".zenedge.net", _T("Zenedge")},
+  {".lswcdn.net", _T("LeaseWeb CDN")},  
   {NULL, NULL}
 };
 
@@ -109,5 +110,6 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"X-Edge-Location", "", _T("CDN")},
   {"X-Powered-By", "NYI FTW", _T("NYI FTW")},
   {"server", "ReSRC", _T("ReSRC.it")},
-  {"X-Cdn", "Zenedge", _T("Zenedge")}
+  {"X-Cdn", "Zenedge", _T("Zenedge")},
+  {"server", "leasewebcdn", _T("LeaseWeb CDN")}
 };
