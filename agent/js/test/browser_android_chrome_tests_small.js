@@ -275,6 +275,8 @@ describe('browser_android_chrome small', function() {
               'root 1 0 560 404 ffffffff 00000000 S /init\n';
         } else if (args.some(new RegExp().test.bind(/STORAGE/))) {
           stdout = '/gagacard';
+        } else if (/^ls \/data\/data\//.test(args[args.length - 1])) {
+          stdout = 'app_tabs\nfiles\ncache';
         }
       } else {
         keepAlive = shellStub.callback(proc, command, args);
@@ -330,6 +332,7 @@ describe('browser_android_chrome small', function() {
             ' /data/local/chrome-command-line'],
         ['shell', 'rm', '/gagacard/wpt_chrome_command_line'],
         ['shell', 'su', '-c', 'chmod 666 /data/local/chrome-command-line'],
+        ['shell', 'su', '-c', 'ls /data/data/com.android.chrome'],
         ['shell', 'su', '-c', 'rm -r /data/data/com.android.chrome/app_tabs'],
         ['shell', 'su', '-c', 'rm -r /data/data/com.android.chrome/files'],
         ['shell', 'su', '-c', 'rm -r /data/data/com.android.chrome/cache'],

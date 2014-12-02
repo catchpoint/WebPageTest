@@ -89,7 +89,8 @@ function WebPageReplay(app, args) {
   'use strict';
   this.app_ = app;
   this.deviceAddr_ = (args.flags.deviceAddr || 'any');
-  this.wprCommand_ = (args.flags.wprcommand || 'wpr');
+  // split to support 'wpr,--url,http://foo:8082', ignore ',' escaping
+  this.wprCommand_ = (args.flags.wprcommand || 'wpr').split(',');
   this.isSupported_ = undefined;
 }
 /** Export class. */
@@ -105,24 +106,25 @@ WebPageReplay.prototype.scheduleIsSupported_ = function() {
     if (undefined !== this.isSupported_) {
       return this.isSupported_;
     }
+    var commandPath = this.wprCommand_[0];
     var commandExists = true;
     // Only test if the command exists if it has a '/' path.
-    var testIfExists = (-1 !== this.wprCommand_.indexOf('/'));
+    var testIfExists = (-1 !== commandPath.indexOf('/'));
     if (testIfExists) {
       process_utils.scheduleFunction(this.app_, 'Test if exists', fs.exists,
-          this.wprCommand_).then(function(exists) {
+          commandPath).then(function(exists) {
         commandExists = exists;
       });
     }
     return this.app_.schedule('Test wpr status', function() {
       // If testIfExists, we get here only after the fs.exists() callback fired.
       if (commandExists) {
-        return process_utils.scheduleExec(this.app_, this.wprCommand_,
+        return process_utils.scheduleExec(this.app_, commandPath,
                 ['status']).then(function() {
           this.isSupported_ = true;
           return true;
         }.bind(this), function(e) {
-          logger.warn('%s status command failed: %s', this.wprCommand_, e);
+          logger.warn('%s status command failed: %s', commandPath, e);
           this.isSupported_ = false;
           return false;
         }.bind(this));
@@ -149,8 +151,8 @@ WebPageReplay.prototype.scheduleWprCommand_ = function(args) {
     if (!isSupported) {
       throw new Error('WebPageReplay not supported.');
     }
-    return process_utils.scheduleExec(this.app_, this.wprCommand_, args).then(
-        function(stdout) {
+    return process_utils.scheduleExec(this.app_, this.wprCommand_[0],
+        this.wprCommand_.slice(1).concat(args)).then(function(stdout) {
       return stdout.trim();
     });
   }.bind(this));

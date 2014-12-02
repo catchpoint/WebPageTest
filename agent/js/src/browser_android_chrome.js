@@ -59,7 +59,14 @@ var CHROME_FLAGS = [
 var KNOWN_BROWSERS = {
     'Chrome': 'com.android.chrome',
     'Chrome Beta': 'com.chrome.beta',
-    'Chrome Dev': 'com.google.android.apps.chrome_dev'
+    'Chrome Canary': 'com.chrome.canary',
+    'Chrome Dev': 'com.google.android.apps.chrome_dev',
+    'Chrome Stable': 'com.android.chrome',
+    // TODO(wrightt): map version to installed package!
+    'Chrome 35': 'com.google.android.apps.chrome_dev',
+    'Chrome 36': 'com.chrome.canary',
+    'Chrome 37': 'com.android.chrome',
+    'Chrome 38': 'com.chrome.beta'
   };
 
 
@@ -76,7 +83,7 @@ var KNOWN_BROWSERS = {
  *   #param {Object.<string>} flags options:
  *      #param {string} deviceSerial the device to drive.
  *      #param {string=} captureDir capture script dir, defaults to ''.
- *      #param {string=} checknet 'yes' to enable isAvailable network check.
+ *      #param {string=} checknet 'yes' to enable isReady network check.
  *      #param {string=} chrome Chrome.apk to install, defaults to None.
  *      #param {string=} chromeActivity activity without the '.Main' suffix,
  *           defaults to 'com.google.android.apps.chrome'.
@@ -84,7 +91,7 @@ var KNOWN_BROWSERS = {
  *          package if set, else 'com.android.google'.
  *      #param {string=} devToolsPort DevTools port, defaults to dynamic
  *           selection.
- *      #param {string=} maxtemp maximum isAvailable temperature.
+ *      #param {string=} maxtemp maximum isReady temperature.
  *      #param {string=} videoCard the video card identifier, defaults to None.
  *   #param {Object.<string>} task options:
        #param {string=} addCmdLine additional chrome command-line flags.
@@ -127,6 +134,7 @@ function BrowserAndroidChrome(app, args) {
   this.pacServer_ = undefined;
   this.maxTemp = args.flags.maxtemp ? parseFloat(args.flags.maxtemp) : 0;
   this.checkNet = 'yes' === args.flags.checknet;
+  this.useRndis = this.checkNet && 'yes' === args.flags.useRndis;
   this.videoCard_ = args.flags.videoCard;
   this.deviceVideoPath_ = undefined;
   this.recordProcess_ = undefined;
@@ -159,8 +167,9 @@ BrowserAndroidChrome.prototype.startWdServer = function(browserCaps) {
   if (!this.chromedriver_) {
     throw new Error('Must set chromedriver before starting it');
   }
+  browserCaps[webdriver.Capability.BROWSER_NAME] = webdriver.Browser.CHROME;
   browserCaps.chromeOptions = {
-    args: this.chromeFlags_.slice(),
+    args: this.chromeFlags_.slice(),  // FIXME(wrightt): additionalFlags_
     androidPackage: this.chromePackage_,
     androidDeviceSerial: this.deviceSerial_
   };
@@ -237,10 +246,25 @@ BrowserAndroidChrome.prototype.onChildProcessExit = function() {
  */
 BrowserAndroidChrome.prototype.clearProfile_ = function() {
   'use strict';
-  this.adb_.su(['rm', '-r', '/data/data/' + this.chromePackage_ + '/app_tabs']);
-  if (!this.isCacheWarm_) {
-    this.adb_.su(['rm', '-r', '/data/data/' + this.chromePackage_ + '/files']);
-    this.adb_.su(['rm', '-r', '/data/data/' + this.chromePackage_ + '/cache']);
+  if (this.isCacheWarm_) {
+    this.adb_.su(['rm', '-r', '/data/data/' + this.chromePackage_ +
+                 '/app_tabs']);
+  } else {
+    // Delete everything except the lib directory
+    this.adb_.su(['ls', '/data/data/' + this.chromePackage_]).then(
+        function(files) {
+      var lines = files.split('\n');
+      var count = lines.length;
+      for (var i = 0; i < count; i++) {
+        var file = lines[i].trim();
+        if (file.length && file !== '.' && file !== '..' &&
+            file !== 'lib' && file !== 'shared_prefs') {
+          this.adb_.su(['rm', '-r /data/data/' + this.chromePackage_ + '/' +
+                       file]);
+        }
+      }
+    }.bind(this));
+    //this.adb_.su(['rm', '/data/local/chrome-command-line']);
   }
 };
 
@@ -380,6 +404,8 @@ BrowserAndroidChrome.prototype.scheduleConfigureDevToolsPort_ = function() {
       // The adb call must be scheduled, because devToolsPort_ is only assigned
       // when the above scheduled port allocation completes.
       this.app_.schedule('Forward DevTools socket to local port', function() {
+        // TODO(wrightt): if below `adb --help` lacks '--remove', reuse the
+        // existing `adb forward` process if it already exists.
         this.adb_.adb(
             ['forward', 'tcp:' + this.devToolsPort_, DEVTOOLS_SOCKET]);
       }.bind(this));
@@ -505,7 +531,7 @@ BrowserAndroidChrome.prototype.kill = function() {
   this.releaseDevToolsPortIfNeeded_();
   this.releaseServerPortIfNeeded_();
   this.stopPacServerIfNeeded_();
-  this.adb_.scheduleForceStopMatchingPackages(/\S*\.chrome^:*$/);
+  this.adb_.scheduleForceStopMatchingPackages(/^\S*\.chrome[^:]*$/);
   this.adb_.shell(['am', 'force-stop', this.chromePackage_]);
   this.adb_.scheduleDismissSystemDialog();
 };
@@ -605,11 +631,24 @@ BrowserAndroidChrome.prototype.scheduleStartVideoRecording = function(
     this.adb_.getStoragePath().then(function(storagePath) {
       this.deviceVideoPath_ = storagePath + '/wpt_video.mp4';
       this.videoFile_ = filename;
-      this.adb_.shell(['rm', this.deviceVideoPath_]).then(function() {
-        this.adb_.spawnShell(['screenrecord', '--verbose',
-                              '--bit-rate', 8000000,
-                              this.deviceVideoPath_]).then(function(proc) {
-          this.recordProcess_ = proc;
+      this.adb_.shell(['rm', this.deviceVideoPath_]);
+      this.adb_.spawnShell(['screenrecord', '--verbose',
+                            '--bit-rate', 8000000,
+                            this.deviceVideoPath_]).then(function(proc) {
+        this.recordProcess_ = proc;
+        proc.on('exit', function(code, signal) {
+          var err;
+          if (!this.recordProcess_) {
+            logger.debug('Normal exit via scheduleStopVideoRecording');
+          } else {
+            err = new Error('Unexpected video recording EXIT with code ' +
+                code + ' signal ' + signal);
+            logger.error(err.message);
+          }
+          this.recordProcess_ = undefined;
+          if (onExit) {
+            onExit(err);
+          }
         }.bind(this));
       }.bind(this));
     }.bind(this));
@@ -657,31 +696,52 @@ BrowserAndroidChrome.prototype.scheduleStopPacketCapture = function() {
 };
 
 /**
- * Checks whether the browser is ready to run tests.
- * Checks if the device is attached, available and under the max temp.
- * Throws an exception if any of the requested checks fail.
+ * Verifies that the device is attached, online, and under the max temp.
  *
+ * @return {webdriver.promise.Promise} resolve() for addErrback.
  * @override
  */
-BrowserAndroidChrome.prototype.scheduleIsAvailable = function() {
+BrowserAndroidChrome.prototype.scheduleAssertIsReady = function() {
   'use strict';
-  if (this.checkNet) {
-    this.adb_.scheduleDetectConnectedInterface().addErrback(function(e) {
-      throw new Error('Device offline: ' + e.message);
-    });
-  }
-  if (this.maxTemp) {
-    this.adb_.shell(['cat', '/sys/class/power_supply/battery/temp'])
-        .then(function(deviceTempStr) {
-      if (deviceTempStr) {
-        var deviceTemp = parseInt(deviceTempStr, 10) / 10.0;
-        if (deviceTemp > this.maxTemp) {
-          throw new Error('Temperature: ' + deviceTemp +
-              ' is higher than the maximum of ' + this.maxTemp);
-        }
+  return this.app_.schedule('Assert isReady', function() {
+    if (this.checkNet) {
+      if (this.useRndis) {
+        this.adb_.scheduleAssertRndisIsEnabled();
       } else {
-        throw new Error('Device temperature not available');
+        this.adb_.scheduleDetectConnectedInterface();
       }
-    }.bind(this));
-  }
+      this.adb_.scheduleGetGateway().then(function(ip) {
+        this.adb_.schedulePing(ip);
+      }.bind(this));
+    }
+    if (this.maxTemp) {
+      this.adb_.scheduleCheckBatteryTemperature(this.maxTemp);
+    }
+    if (!this.checkNet && !this.maxTemp) {
+      // Run an arbitrary command, simply to verify the device is alive
+      this.adb_.shell(['date']);
+    }
+  }.bind(this));
+};
+
+/**
+ * Attempts recovery if the device is offline.
+ *
+ * @return {webdriver.promise.Promise} resolve(boolean) wasOffline.
+ * @override
+ */
+BrowserAndroidChrome.prototype.scheduleMakeReady = function() {
+  'use strict';
+  return this.scheduleAssertIsReady().then(function() {
+    return false;  // Was already online.
+  }, function(e) {
+    if (this.checkNet && this.useRndis) {
+      return this.adb_.scheduleEnableRndis().then(
+          this.scheduleAssertIsReady.bind(this)).then(function() {
+        return true;  // Was offline but we're back online now.
+      });
+    } else {
+      throw e;  // We're offline and can't recover.
+    }
+  }.bind(this));
 };

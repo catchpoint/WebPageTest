@@ -116,7 +116,7 @@ if "%BROWSER%"=="chrome" (
 )
 if "%BROWSER%"=="android" (
   set KNOWN_BROWSER=1
-  set "BROWSER_ARGS= --browser browser_android_chrome.BrowserAndroidChrome --deviceSerial %DEVICE_SERIAL%%CHROMEDRIVER_ARGS%"
+  set "BROWSER_ARGS= --browser browser_android_chrome.BrowserAndroidChrome --deviceSerial %DEVICE_SERIAL% --captureDir ^"%AGENT%\lib\capture^"%CHROMEDRIVER_ARGS%"
 )
 if NOT defined KNOWN_BROWSER (
   echo Unknown browser %BROWSER%

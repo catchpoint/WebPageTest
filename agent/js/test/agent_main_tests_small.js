@@ -72,9 +72,12 @@ describe('agent_main', function() {
 
   var sandbox;
   var app;
+  var client;
+  var fakeWdServer;
   var stubWprGetLog, stubWprRecord, stubWprReplay, stubWprStop;
-  var wprErrorLog;
-
+  var stubFork;
+  var stubIpfwStart, stubIpfwStop;
+  var stubRunFinished;
   before(function() {
     agent_main.setSystemCommands();
   });
@@ -93,12 +96,33 @@ describe('agent_main', function() {
     sandbox.verifyAndRestore();
   });
 
+  function stubFs() {
+    // Stub out fs functions for the temp dir cleanup and ipfw check.
+    sandbox.stub(fs, 'exists', function(path, cb) {
+      path.should.match(/ipfw$|^runtmp/);
+      global.setTimeout(function() {
+        cb(/^runtmp/.test(path));
+      }, 1);
+    });
+    sandbox.stub(fs, 'readdir', function(path, cb) {
+      path.should.match(/^runtmp/);
+      global.setTimeout(function() {
+        cb(undefined, ['tmp1', 'tmp2']);
+      }, 1);
+    });
+    sandbox.stub(fs, 'unlink', function(path, cb) {
+      path.should.match(/^runtmp.*?[\/\\]tmp\d$/);
+      global.setTimeout(function() {
+        cb();
+      }, 1);
+    });
+  }
+
   function stubWpr() {
-    wprErrorLog = '';
     stubWprGetLog = sandbox.stub(web_page_replay.WebPageReplay.prototype,
         'scheduleGetErrorLog', function() {
       return app.schedule('WPR get log', function() {
-        return wprErrorLog;
+        return 'gaga';
       });
     });
     stubWprRecord = sandbox.stub(web_page_replay.WebPageReplay.prototype,
@@ -122,25 +146,7 @@ describe('agent_main', function() {
         return new webdriver.promise.Deferred();
       });
     });
-    // Stub out fs functions for the temp dir cleanup and ipfw check.
-    sandbox.stub(fs, 'exists', function(path, cb) {
-      path.should.match(/ipfw$|^runtmp/);
-      global.setTimeout(function() {
-        cb(/^runtmp/.test(path));
-      }, 1);
-    });
-    sandbox.stub(fs, 'readdir', function(path, cb) {
-      path.should.match(/^runtmp/);
-      global.setTimeout(function() {
-        cb(undefined, ['tmp1', 'tmp2']);
-      }, 1);
-    });
-    sandbox.stub(fs, 'unlink', function(path, cb) {
-      path.should.match(/^runtmp.*?[\/\\]tmp\d$/);
-      global.setTimeout(function() {
-        cb();
-      }, 1);
-    });
+    stubFs();
     stubWpr();
 
     var client = new FakeClient();
@@ -148,20 +154,20 @@ describe('agent_main', function() {
     agent.run();
 
     var runFinishedSpy = sandbox.spy();
-    var fakeJob = {runFinished: runFinishedSpy};
+    var fakeJob = {runFinished: runFinishedSpy, task: {}};
     client.onAbortJob(fakeJob);
     test_utils.tickUntilIdle(app, sandbox);
     should.ok(runFinishedSpy.calledOnce);
-    should.ok(stubWprStop.calledOnce);
   });
 
-  it('should execute runs with WebPageReplay', function() {
-    var fakeWdServer;
-    var stubFork = sandbox.stub(child_process, 'fork', function() {
+  function reset_() {
+    fakeWdServer = undefined;
+    stubFork = sandbox.stub(child_process, 'fork', function() {
       fakeWdServer = new FakeWdServer();
       return fakeWdServer;
     });
-    var stubIpfwStart = sandbox.spy(), stubIpfwStop = sandbox.spy();
+    stubIpfwStart = sandbox.spy();
+    stubIpfwStop = sandbox.spy();
     sandbox.stub(process_utils, 'scheduleExec', function(app, command, args) {
       if (/ipfw_config$/.test(command)) {
         if ('set' === args[0]) {
@@ -172,155 +178,119 @@ describe('agent_main', function() {
       }
       return new webdriver.promise.Deferred();
     });
-    var stubRunFinished = sandbox.stub(wpt_client.Job.prototype, 'runFinished');
+    stubRunFinished = sandbox.stub(wpt_client.Job.prototype, 'runFinished');
+    stubFs();
     stubWpr();
 
-    sandbox.stub(fs, 'exists', function(path, cb) {
-      path.should.match(/ipfw$|^runtmp/);
-      global.setTimeout(function() {
-        cb(false);
-      }, 1);
-    });
-    sandbox.stub(fs, 'mkdir', function(path, cb) {
-      path.should.match(/ipfw$|^runtmp/);
-      global.setTimeout(function() {
-        cb();
-      }, 1);
-    });
-
-    var client = new FakeClient();
+    client = new FakeClient();
     var agent = new agent_main.Agent(app, client, {
         deviceSerial: 'T3S7'
       });
     agent.run();
-    var job = new wpt_client.Job(client, {
-        'Test ID': 'id',
-        url: 'http://test',
-        browser: 'shmowser',
-        runs: 1,
-        replay: 1,
-        fvonly: 0,
-        'Capture Video': 1,
-        tcpdump: 1,
-        timeline: 1
-      });
+  }
 
+  function startNextRun(job) {
     var stubSend = sandbox.stub(FakeWdServer.prototype, 'send',
         function(message) {
       message.should.have.properties({
           cmd: 'run',
-          runNumber: 0,
-          exitWhenDone: true,
+          runNumber: job.runNumber,
+          exitWhenDone: (job.isFirstViewOnly || job.isCacheWarm),
           flags: {
             deviceSerial: 'T3S7'
           },
-          task: {
-            'browser': 'shmowser',
-            'Test ID': 'id',
-            'replay': 1,
-            'url': 'http://test',
-            'runs': 1,
-            'fvonly': 0,
-            'pngScreenshot': 1
-          }
+          task: job.task
         });
       fakeWdServer.emit('message', {cmd: 'done'});
-      fakeWdServer.emit('exit', 0);
+      if (job.isFirstViewOnly || job.isCacheWarm) {
+        fakeWdServer.emit('exit', 0);
+      }
     });
     client.onStartJobRun(job);
     test_utils.tickUntilIdle(app, sandbox);
     should.equal(undefined, job.error);
-    // Nothing prepared for submission to server.
-    should.ok(job.resultFiles.should.be.empty);
-    should.ok(job.zipResultFiles.should.be.empty);
-    should.ok(stubRunFinished.calledOnce);
-    should.equal(job, stubRunFinished.firstCall.thisValue);
-    [true].should.eql(stubRunFinished.firstCall.args);
-    should.ok(stubFork.calledOnce);
-    should.ok(stubWprStop.calledOnce);
-    should.ok(stubWprRecord.calledOnce);
-    should.ok(stubWprReplay.notCalled);
-    should.ok(stubWprGetLog.notCalled);
-    should.ok(stubIpfwStart.notCalled);
+
+    if (job.isReplay) {
+      should.equal('gaga', job.zipResultFiles['replay.log']);
+    } else {
+      should.ok(job.zipResultFiles.should.be.empty);
+    }
+    should.equal(job, stubRunFinished.lastCall.thisValue);
+    [job.isFirstViewOnly || job.isCacheWarm].should.eql(
+        stubRunFinished.lastCall.args);
+
+    var isEndOfJob = (job.runNumber === job.runs &&
+                      (job.isFirstViewOnly || job.isCacheWarm));
+
+    should.equal(stubRunFinished.callCount,
+        (Math.max(0, ((job.runNumber - (job.isReplay ? 0 : 1)) *
+                      (job.isFirstViewOnly ? 1 : 2))) +
+         (job.isFirstViewOnly || !job.isCacheWarm ? 1 : 2)));
+    should.equal(stubFork.callCount,
+        job.runNumber + (job.isReplay ? 1 : 0));
+    should.equal(stubWprStop.callCount,
+        job.isReplay && isEndOfJob ? 2 : 1);
+    should.equal(stubWprRecord.callCount,
+        job.isReplay ? 1 : 0);
+    should.equal(stubWprReplay.callCount,
+        (job.isReplay && job.runNumber > 0) ? 1 : 0);
+    should.equal(stubWprGetLog.callCount,
+        job.isReplay ? stubRunFinished.callCount : 0);
+    should.equal(stubIpfwStop.callCount,
+        ((job.isReplay ? 1 : 0) + (isEndOfJob ? 1 : 0)));
+    should.equal(stubIpfwStart.callCount,
+         (job.isReplay && job.runNumber === 0) ? 0 : 1);
+
     should.ok(stubSend.calledOnce);
     stubSend.restore();
 
-    stubSend = sandbox.stub(FakeWdServer.prototype, 'send',
-        function(message) {
-      message.should.have.properties({
-          runNumber: 1,
-          task: {
-            tcpdump: 1,
-            browser: 'shmowser',
-            timeline: 1,
-            'Capture Video': 1,
-            'Test ID': 'id',
-            replay: 1,
-            url: 'http://test',
-            runs: 1,
-            fvonly: 0
-          }
-        });
-      message.should.not.have.properties({
-          task: { pngScreenshot: 1 }
-        });
-      fakeWdServer.emit('message', {cmd: 'done'});
-    });
-    job.runNumber = 1;
-    client.onStartJobRun(job);
-    test_utils.tickUntilIdle(app, sandbox);
-    should.equal(undefined, job.error);
-    should.ok(job.resultFiles.should.be.empty);
-    should.ok(job.zipResultFiles.should.be.empty);
-    should.ok(stubRunFinished.calledTwice);
-    should.equal(job, stubRunFinished.secondCall.thisValue);
-    [false].should.eql(stubRunFinished.secondCall.args);
-    should.ok(stubFork.calledTwice);  // Started wd_server again.
-    should.ok(stubWprStop.calledOnce);  // No additional calls.
-    should.ok(stubWprRecord.calledOnce);  // No additional calls.
-    should.ok(stubWprReplay.calledOnce);  // First call.
-    should.ok(stubWprGetLog.calledOnce);  // First call.
-    should.ok(stubSend.calledOnce);
-    stubSend.restore();
+    if (job.isFirstViewOnly) {
+      job.runNumber += 1;
+    } else {
+      if (job.isCacheWarm) {
+        job.runNumber += 1;
+        job.isCacheWarm = false;
+      } else {
+        job.isCacheWarm = true;
+      }
+    }
+  }
 
-    stubSend = sandbox.stub(FakeWdServer.prototype, 'send',
-        function(message) {
-      message.should.have.properties({
-          runNumber: 1,
-          task: {
-            tcpdump: 1,
-            browser: 'shmowser',
-            timeline: 1,
-            'Capture Video': 1,
-            'Test ID': 'id',
-            replay: 1,
-            url: 'http://test',
-            runs: 1,
-            fvonly: 0
-          }
-        });
-      message.should.not.have.properties({
-          task: { pngScreenshot: 1 }
-        });
-      wprErrorLog = 'gaga';
-      fakeWdServer.emit('message', {cmd: 'done'});
-      fakeWdServer.emit('exit', 0);
+  function runTest(taskOverrides) {
+    var task = {
+        'Capture Video': 1,
+        'Test ID': 'id',
+        'pngScreenshot': 1,
+        browser: 'shmowser',
+        fvonly: 0,
+        replay: 0,
+        runs: 1,
+        tcpdump: 1,
+        timeline: 1,
+        bwOut: 123,
+        url: 'http://test'
+      };
+    Object.getOwnPropertyNames(taskOverrides).forEach(function(key) {
+      task[key] = taskOverrides[key];
     });
-    client.onStartJobRun(job);
-    test_utils.tickUntilIdle(app, sandbox);
-    should.equal(undefined, job.error);
-    should.ok(job.resultFiles.should.be.empty);
-    should.equal('gaga', job.zipResultFiles['replay.log']);
-    should.ok(stubRunFinished.calledThrice);
-    should.equal(job, stubRunFinished.thirdCall.thisValue);
-    [true].should.eql(stubRunFinished.thirdCall.args);
-    should.ok(stubFork.calledTwice);  // No additional calls.
-    should.ok(stubWprStop.calledTwice);  // Called again.
-    should.ok(stubWprRecord.calledOnce);  // No additional calls.
-    should.ok(stubWprReplay.calledOnce);  // No additional calls.
-    should.ok(stubWprGetLog.calledTwice);  // Second call.
-    should.equal(stubIpfwStop.callCount, 4);
-    should.ok(stubSend.calledOnce);
-    stubSend.restore();
+    reset_();
+    var job = new wpt_client.Job(client, task);
+    var n = (job.runs + (job.isReplay ? 1 : 0)) * (job.isFirstViewOnly ? 1 : 2);
+    for (var i = 0; i < n; ++i) {
+      startNextRun(job);
+    }
+  }
+
+  it('should execute fvonly !replay', function() {
+    runTest({fvonly: 1, replay: 0, runs: 2});
+  });
+  it('should execute fvonly replay', function() {
+    runTest({fvonly: 1, replay: 1, runs: 2});
+  });
+  it('should execute !fvonly !replay', function() {
+    runTest({fvonly: 0, replay: 0, runs: 2});
+  });
+  it('should execute !fvonly replay', function() {
+    runTest({fvonly: 0, replay: 1, runs: 2});
   });
 });
