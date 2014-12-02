@@ -97,35 +97,86 @@ function GetTestResult($id) {
     if (!$fvOnly)
         $ret['successfulRVRuns'] = CountSuccessfulTests($pageData, 1);
 
-    // average and standard deviation
-    $ret['average'] = array();
-    $ret['standardDeviation'] = array();
-    for ($cached = 0; $cached <= $cachedMax; $cached++) {
-        $label = $cacheLabels[$cached];
-        $ret['average'][$label] = $stats[$cached];
-        $ret['standardDeviation'][$label] = array();
-        foreach($stats[$cached] as $key => $val)
-            $ret['standardDeviation'][$label][$key] = PageDataStandardDeviation($pageData, $key, $cached);
+    // average
+    
+    // check if removing average
+    $addAverage= 1;
+    if(isset($_GET['average'])){
+	    if($_GET['average'] == 0){
+		    $addAverage = 0;
+	    }
     }
+    // add average
+    if($addAverage == 1){
+		$ret['average'] = array();
+		for ($cached = 0; $cached <= $cachedMax; $cached++) {
+        	$label = $cacheLabels[$cached];
+			$ret['average'][$label] = $stats[$cached];
+        }
+    }
+    
+    // standard deviation
+    
+     // check if removing standard deviation
+    $addStandard= 1;
+    if(isset($_GET['standard'])){
+	    if($_GET['standard'] == 0){
+		    $addStandard = 0;
+	    }
+    }
+    // add standard deviation
+    if($addStandard == 1){
+	    $ret['standardDeviation'] = array();
+	    for ($cached = 0; $cached <= $cachedMax; $cached++) {
+	        $label = $cacheLabels[$cached];
+	        $ret['standardDeviation'][$label] = array();
+	        foreach($stats[$cached] as $key => $val)
+	            $ret['standardDeviation'][$label][$key] = PageDataStandardDeviation($pageData, $key, $cached);
+	    }
+	}
     
     // median
-    $ret['median'] = array();
-    for ($cached = 0; $cached <= $cachedMax; $cached++) {
-        $label = $cacheLabels[$cached];
-        $medianRun = GetMedianRun($pageData, $cached, $median_metric);
-        if (array_key_exists($medianRun, $pageData)) {
-            $ret['median'][$label] = GetSingleRunData($id, $testPath, $medianRun, $cached, $pageData, $testInfo);
-        }
+    
+     // check if removing median
+    $addMedian = 1;
+    if(isset($_GET['median'])){
+	    if($_GET['median'] == 0){
+		    $addMedian = 0;
+	    }
+    }
+    // add median
+    if($addMedian == 1){
+	    $ret['median'] = array();
+	    for ($cached = 0; $cached <= $cachedMax; $cached++) {
+	        $label = $cacheLabels[$cached];
+	        $medianRun = GetMedianRun($pageData, $cached, $median_metric);
+	        if (array_key_exists($medianRun, $pageData)) {
+	            $ret['median'][$label] = GetSingleRunData($id, $testPath, $medianRun, $cached, $pageData, $testInfo);
+	        }
+	    }
+	}
+    
+    // runs
+    
+    // check if removing runs
+    $addRuns = 1;
+    if(isset($_GET['runs'])){
+	    if($_GET['runs'] == 0){
+		    $addRuns = 0;
+	    }
+    }
+    // add runs
+    if($addRuns == 1){
+	    $ret['runs'] = array();
+	    for ($run = 1; $run <= $runs; $run++) {
+	        $ret['runs'][$run] = array();
+	        for ($cached = 0; $cached <= $cachedMax; $cached++) {
+	            $label = $cacheLabels[$cached];
+	            $ret['runs'][$run][$label] = GetSingleRunData($id, $testPath, $run, $cached, $pageData, $testInfo);
+	        }
+	    }
     }
     
-    $ret['runs'] = array();
-    for ($run = 1; $run <= $runs; $run++) {
-        $ret['runs'][$run] = array();
-        for ($cached = 0; $cached <= $cachedMax; $cached++) {
-            $label = $cacheLabels[$cached];
-            $ret['runs'][$run][$label] = GetSingleRunData($id, $testPath, $run, $cached, $pageData, $testInfo);
-        }
-    }
     ArchiveApi($id);
     return $ret;
 }
@@ -217,7 +268,19 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
         $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false, true);
         $ret['domains'] = getDomainBreakdown($id, $testPath, $run, $cached, $requests);
         $ret['breakdown'] = getBreakdown($id, $testPath, $run, $cached, $requests);
-        $ret['requests'] = $requests;
+        
+        // check if removing requests
+        $addRequests= 1;
+		if(isset($_GET['requests'])){
+	   		if($_GET['requests'] == 0){
+		    	$addRequests = 0;
+	    	}
+    	}
+    	// add requests
+    	if($addRequests == 1){
+        	$ret['requests'] = $requests;
+        }
+        
         $console_log = DevToolsGetConsoleLog($testPath, $run, $cached);
         if (isset($console_log))
             $ret['consoleLog'] = $console_log;
