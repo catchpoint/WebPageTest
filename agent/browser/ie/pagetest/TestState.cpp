@@ -126,7 +126,7 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
 			{
 				CString szEventName = szUrl;				// default this to the url for right now
 
-				TCHAR buff[10000];
+				TCHAR buff[100000];
 				ULONG len = sizeof(buff) / sizeof(TCHAR);
 
 				if( key.QueryStringValue(_T("EventName"), buff, &len) == ERROR_SUCCESS )
@@ -320,6 +320,45 @@ void CTestState::DoStartup(CString& szUrl, bool initializeDoc)
               rule = rules.Tokenize(_T("\n"), pos);
             }
 				  }
+          customMetrics.RemoveAll();
+				  len = sizeof(buff) / sizeof(TCHAR);
+				  if( key.QueryStringValue(_T("customMetricsFile"), buff, &len) == ERROR_SUCCESS && len > 1 ) {
+            HANDLE hFile = CreateFile(buff, GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0);
+            if (hFile != INVALID_HANDLE_VALUE) {
+              DWORD custom_len = GetFileSize(hFile, NULL);
+              if (custom_len) {
+                char * custom_metrics = (char *)malloc(custom_len + 1);
+                char * decoded = (char *)malloc(custom_len + 1);
+                if (custom_metrics && decoded) {
+                  custom_metrics[custom_len] = 0;
+                  DWORD bytes = 0;
+                  if (ReadFile(hFile, custom_metrics, custom_len, &bytes, 0) && bytes == custom_len) {
+                    char * line = strtok(custom_metrics, "\r\n");
+                    while (line) {
+                      CStringA metric_line(line);
+                      int divider = metric_line.Find(":");
+                      if (divider > 0) {
+                        CCustomMetric metric;
+                        metric.name = (LPCTSTR)CA2T((LPCSTR)metric_line.Left(divider));
+                        CStringA code = metric_line.Mid(divider + 1);
+                        int nDestLen = custom_len;
+                        if (Base64Decode((LPCSTR)code, code.GetLength(), (BYTE*)decoded, &nDestLen) && nDestLen) {
+                          decoded[nDestLen] = 0;
+                          metric.code = (LPCTSTR)CA2T(decoded);
+                          customMetrics.AddTail(metric);
+                        }
+                      }
+                      line = strtok(NULL, "\r\n");
+                    }
+                  }
+                  free(decoded);
+                  free(custom_metrics);
+                }
+              }
+              CloseHandle(hFile);
+            }
+          }
+
 				  key.DeleteValue(_T("Basic Auth"));
 
 					// make sure the event name has changed
@@ -839,8 +878,6 @@ void CTestState::PaintEvent(int x, int y, int width, int height) {
   if (active) {
     SetBrowserWindowUpdated(true);
     CheckWindowPainted();
-    if (painted && (x || y || width || height))
-      dev_tools_.AddPaintEvent(x, y, width, height);
   }
 }
 

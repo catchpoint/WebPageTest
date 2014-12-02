@@ -1,29 +1,23 @@
 <?php
 include 'common.inc';
 set_time_limit(0);
+header('Content-Encoding: none;');
 
 // parse the logs for the counts
 $days = $_REQUEST['days'];
 if( !$days || $days > 1000 )
     $days = 7;
 
+$title = 'WebPagetest - Usage';
+
+include 'admin_header.inc';
 ?>
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>WebPagetest - Usage</title>
-        <style type="text/css">
-            table {text-align: left;}
-            table td, table th {padding: 0 1em;}
-        </style>
-    </head>
-    <body>
+
 <?php
-    if( strlen($req_k) )
-    {
+    if( array_key_exists('k', $_REQUEST) && strlen($_REQUEST['k']) ) {
+        $key = trim($_REQUEST['k']);
         $keys = parse_ini_file('./settings/keys.ini', true);
-        if( $admin && $req_k == 'all' )
-        {
+        if( $admin && $key == 'all' ) {
             $day = gmdate('Ymd');
             if( strlen($req_date) )
                 $day = $req_date;
@@ -44,22 +38,17 @@ if( !$days || $days > 1000 )
             if( count($used) )
             {
                 usort($used, 'comp');
-                echo "<table><tr><th>Used</th><th>Limit</th><th>Contact</th><th>Description</th></tr>";
+                echo "<table class=\"table\"><tr><th>Used</th><th>Limit</th><th>Contact</th><th>Description</th></tr>";
                 foreach($used as &$entry)
                     echo "<tr><td>{$entry['used']}</td><td>{$entry['limit']}</td><td>{$entry['contact']}</td><td>{$entry['description']}</td></tr>";
                 echo '</table>';
             }
-        }
-        else
-        {
-            $key = $req_k;
-            if( isset($keys[$key]) )
-            {
+        } else {
+            if( isset($keys[$key]) ) {
                 $limit = (int)@$keys[$key]['limit'];
-                echo "<table><tr><th>Date</th><th>Used</th><th>Limit</th></tr>";
+                echo "<table class=\"table\"><tr><th>Date</th><th>Used</th><th>Limit</th></tr>";
                 $targetDate = new DateTime('now', new DateTimeZone('GMT'));
-                for($offset = 0; $offset <= $days; $offset++)
-                {
+                for($offset = 0; $offset <= $days; $offset++) {
                     $keyfile = './dat/keys_' . $targetDate->format("Ymd") . '.dat';
                     $usage = null;
                     $used = 0;
@@ -80,25 +69,43 @@ if( !$days || $days > 1000 )
                   $used = 0;
             }
         }
-    }
-    else
-    {
-        $total = 0;
-        echo "Date,Total<br>\n";
+    } elseif ($privateInstall || $admin) {
+        $total_api = 0;
+        $total_ui = 0;
+        echo "<table class=\"table\"><tr><th>Date</th><th>Interactive</th><th>API</th><th>Total</th></tr>" . PHP_EOL;
         $targetDate = new DateTime('now', new DateTimeZone('GMT'));
         for($offset = 0; $offset <= $days; $offset++)
         {
             // figure out the name of the log file
             $fileName = './logs/' . $targetDate->format("Ymd") . '.log';
             $file = file($fileName);
-            $count = count($file);
+            $api = 0;
+            $ui = 0;
+            foreach ($file as &$line) {
+              $parts = tokenizeLogLine($line);
+              if (array_key_exists('key', $parts) && strlen($parts['key']))
+                $api++;
+              else
+                $ui++;
+            }
+            $count = $api + $ui;
             $date = $targetDate->format("Y/m/d");
-            echo "$date,$count<br>\n";
+            echo "<tr><td>$date</td><td>$ui</td><td>$api</td><td>$count</td></tr>\n";
             $targetDate->modify('-1 day');
-            $total += $count;
+            $total_api += $api;
+            $total_ui += $ui;
+            flush();
+            ob_flush();
         }
-        
-        echo "<br><br>Total: $total";
+        $total = $total_api + $total_ui;
+        echo "<tr>
+                <td><b>Total</b></td>
+                <td><b>$total_ui</b></td>
+                <td><b>$total_api</b></td>
+                <td><b>$total</b></td>
+            </tr>\n";
+
+        echo '</table>';
     }
 
 function comp($a, $b)
@@ -108,6 +115,7 @@ function comp($a, $b)
     }
     return ($a['used'] > $b['used']) ? -1 : 1;
 }
+
+include 'admin_footer.inc';
+
 ?>
-    </body>
-</html>

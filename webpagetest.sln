@@ -4,7 +4,6 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wptdriver", "agent\wptdriver\wptdriver.vcxproj", "{54B58196-81BB-4572-8CFA-EED91F6A96CB}"
 	ProjectSection(ProjectDependencies) = postProject
 		{7DE37929-A397-4C9D-97CE-8800091BCB9D} = {7DE37929-A397-4C9D-97CE-8800091BCB9D}
-		{652CFCC5-D014-4D46-9D46-DCC587743A48} = {652CFCC5-D014-4D46-9D46-DCC587743A48}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wpthook", "agent\wpthook\wpthook.vcxproj", "{7DE37929-A397-4C9D-97CE-8800091BCB9D}"
@@ -15,12 +14,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wptbho", "agent\browser\ie\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wptwatchdog", "agent\wptwatchdog\wptwatchdog.vcxproj", "{E4AC1514-8F17-417F-B9F6-7CE700EE8AFE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wptglobal", "agent\wptglobal\wptglobal.vcxproj", "{652CFCC5-D014-4D46-9D46-DCC587743A48}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testGlobalHook", "agent\wptglobal\testGlobalHook\testGlobalHook.vcxproj", "{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}"
-	ProjectSection(ProjectDependencies) = postProject
-		{652CFCC5-D014-4D46-9D46-DCC587743A48} = {652CFCC5-D014-4D46-9D46-DCC587743A48}
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wptloader", "agent\wptloader\wptloader.vcxproj", "{F66CE299-D290-464A-AD73-9023C708464F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -82,26 +76,16 @@ Global
 		{E4AC1514-8F17-417F-B9F6-7CE700EE8AFE}.Release|Mixed Platforms.Build.0 = Release|Win32
 		{E4AC1514-8F17-417F-B9F6-7CE700EE8AFE}.Release|Win32.ActiveCfg = Release|Win32
 		{E4AC1514-8F17-417F-B9F6-7CE700EE8AFE}.Release|Win32.Build.0 = Release|Win32
-		{652CFCC5-D014-4D46-9D46-DCC587743A48}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{652CFCC5-D014-4D46-9D46-DCC587743A48}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
-		{652CFCC5-D014-4D46-9D46-DCC587743A48}.Debug|Mixed Platforms.Build.0 = Debug|Win32
-		{652CFCC5-D014-4D46-9D46-DCC587743A48}.Debug|Win32.ActiveCfg = Debug|Win32
-		{652CFCC5-D014-4D46-9D46-DCC587743A48}.Debug|Win32.Build.0 = Debug|Win32
-		{652CFCC5-D014-4D46-9D46-DCC587743A48}.Release|Any CPU.ActiveCfg = Release|Win32
-		{652CFCC5-D014-4D46-9D46-DCC587743A48}.Release|Mixed Platforms.ActiveCfg = Release|Win32
-		{652CFCC5-D014-4D46-9D46-DCC587743A48}.Release|Mixed Platforms.Build.0 = Release|Win32
-		{652CFCC5-D014-4D46-9D46-DCC587743A48}.Release|Win32.ActiveCfg = Release|Win32
-		{652CFCC5-D014-4D46-9D46-DCC587743A48}.Release|Win32.Build.0 = Release|Win32
-		{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
-		{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}.Debug|Mixed Platforms.Build.0 = Debug|Win32
-		{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}.Debug|Win32.ActiveCfg = Debug|Win32
-		{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}.Debug|Win32.Build.0 = Debug|Win32
-		{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}.Release|Any CPU.ActiveCfg = Release|Win32
-		{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}.Release|Mixed Platforms.ActiveCfg = Release|Win32
-		{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}.Release|Mixed Platforms.Build.0 = Release|Win32
-		{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}.Release|Win32.ActiveCfg = Release|Win32
-		{AE8AFF64-9342-450B-8AB5-8AFD2AA85218}.Release|Win32.Build.0 = Release|Win32
+		{F66CE299-D290-464A-AD73-9023C708464F}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{F66CE299-D290-464A-AD73-9023C708464F}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{F66CE299-D290-464A-AD73-9023C708464F}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{F66CE299-D290-464A-AD73-9023C708464F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F66CE299-D290-464A-AD73-9023C708464F}.Debug|Win32.Build.0 = Debug|Win32
+		{F66CE299-D290-464A-AD73-9023C708464F}.Release|Any CPU.ActiveCfg = Release|Win32
+		{F66CE299-D290-464A-AD73-9023C708464F}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{F66CE299-D290-464A-AD73-9023C708464F}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{F66CE299-D290-464A-AD73-9023C708464F}.Release|Win32.ActiveCfg = Release|Win32
+		{F66CE299-D290-464A-AD73-9023C708464F}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

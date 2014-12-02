@@ -2,20 +2,17 @@
 chdir('..');
 $MIN_DAYS = 7;
 
-// bail if we are already running
-$lock = fopen('./tmp/archive2.lock', 'w');
-if ($lock) {
-    if (flock($lock, LOCK_EX | LOCK_NB) == false) {
-        fclose($lock);
-        echo "Archive2 process is already running\n";
-        exit(0);
-    }
-}
-
 include 'common.inc';
 require_once('archive.inc');
 ignore_user_abort(true);
 set_time_limit(86400);   // only allow it to run for 1 day
+
+// bail if we are already running
+$lock = Lock("Archive 2", false, 86400);
+if (!isset($lock)) {
+  echo "Archive2 process is already running\n";
+  exit(0);
+}
 
 $archive_dir = null;
 if (array_key_exists('archive_dir', $settings)) {
@@ -59,11 +56,7 @@ if (isset($archive_dir) && strlen($archive_dir) &&
     }
 }
 echo "\nDone\n\n";
-
-if ($lock) {
-    flock($lock, LOCK_UN);
-    fclose($lock);
-}
+Unlock($lock);
 
 /**
 * Calculate how many days have passed since the given day

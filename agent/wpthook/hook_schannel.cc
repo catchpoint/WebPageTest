@@ -2,6 +2,7 @@
 #include "request.h"
 #include "test_state.h"
 #include "track_sockets.h"
+#include "wpt_test_hook.h"
 #include "hook_schannel.h"
 
 static SchannelHook* g_hook = NULL;
@@ -78,10 +79,12 @@ BOOL __stdcall CertVerifyCertificateChainPolicy_Hook(
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-SchannelHook::SchannelHook(TrackSockets& sockets, TestState& test_state):
+SchannelHook::SchannelHook(TrackSockets& sockets, TestState& test_state,
+                           WptTestHook& test):
   _hook(NULL)
   ,_sockets(sockets)
   ,_test_state(test_state)
+  ,_test(test)
   ,InitializeSecurityContextW_(NULL)
   ,InitializeSecurityContextA_(NULL)
   ,DecryptMessage_(NULL)
@@ -120,9 +123,19 @@ void SchannelHook::Init() {
       "secur32.dll", "DecryptMessage", DecryptMessage_Hook);
   EncryptMessage_ = _hook->createHookByName(
       "secur32.dll", "EncryptMessage", EncryptMessage_Hook);
-  CertVerifyCertificateChainPolicy_ = _hook->createHookByName(
-      "crypt32.dll", "CertVerifyCertificateChainPolicy",
-      CertVerifyCertificateChainPolicy_Hook);
+
+  bool is_safari = false;
+  TCHAR file_name[MAX_PATH];
+  if (GetModuleFileName(NULL, file_name, _countof(file_name))) {
+    CString exe(file_name);
+    exe.MakeLower();
+    if (exe.Find(_T("webkit2webprocess.exe")) >= 0)
+      is_safari = true;
+  }
+  if (_test._ignore_ssl || is_safari)
+    CertVerifyCertificateChainPolicy_ = _hook->createHookByName(
+        "crypt32.dll", "CertVerifyCertificateChainPolicy",
+        CertVerifyCertificateChainPolicy_Hook);
 }
 
 /*-----------------------------------------------------------------------------

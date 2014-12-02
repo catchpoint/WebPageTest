@@ -37,6 +37,7 @@ public:
     START_RENDER,
     DOCUMENT_COMPLETE,
     FULLY_LOADED,
+    RESPONSIVE_CHECK,
     UNKNOWN
   } TYPE;
 
@@ -57,9 +58,10 @@ class ScreenCapture {
 public:
   ScreenCapture();
   ~ScreenCapture(void);
-  void Capture(HWND wnd, CapturedImage::TYPE type);
+  void Capture(HWND wnd, CapturedImage::TYPE type, bool crop_viewport = true);
   CapturedImage CaptureImage(HWND wnd, 
-                    CapturedImage::TYPE type = CapturedImage::UNKNOWN);
+                    CapturedImage::TYPE type = CapturedImage::UNKNOWN,
+                    bool crop_viewport = true);
   bool GetImage(CapturedImage::TYPE type, CxImage& image);
   void Lock();
   void Unlock();

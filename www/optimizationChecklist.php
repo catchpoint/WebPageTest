@@ -1,8 +1,8 @@
 <?php
 header ("Content-type: image/png");
 include 'common.inc';
-include 'object_detail.inc'; 
-include 'optimizationChecklist.inc';
+require_once('object_detail.inc'); 
+require_once('optimizationChecklist.inc');
 require_once('page_data.inc');
 $pageData = loadPageRunData($testPath, $run, $cached);
 

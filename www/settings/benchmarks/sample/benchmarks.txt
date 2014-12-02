@@ -1,0 +1,2 @@
+news_desktop
+news_mobile

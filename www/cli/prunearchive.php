@@ -2,19 +2,16 @@
 chdir('..');
 $MIN_DAYS = 7;
 
-// bail if we are already running
-$lock = fopen('./tmp/prunearchive.lock', 'w');
-if ($lock) {
-    if (flock($lock, LOCK_EX | LOCK_NB) == false) {
-        fclose($lock);
-        echo "prunearchive process is already running\n";
-        exit(0);
-    }
-}
-
 include 'common.inc';
 ignore_user_abort(true);
 set_time_limit(604800);   // only allow it to run for 7 days
+
+// bail if we are already running
+$lock = Lock("Prune Archive");
+if (!isset($lock)) {
+  echo "prunearchive process is already running\n";
+  exit(0);
+}
 
 $archive_dir = null;
 if (array_key_exists('archive_dir', $settings)) {
@@ -63,10 +60,7 @@ if (isset($archive_dir) && strlen($archive_dir)) {
     }
 }
 echo "\nDone\n\n";
-
-if ($lock) {
-    fclose($lock);
-}
+Unlock($lock);
 
 /**
 * Calculate how many days have passed since the given day
@@ -98,34 +92,6 @@ function PruneArchives($dir) {
             else {
                 $elapsed = max($now - filemtime($file), 0)/ 86400;
                 if ($elapsed > $MIN_DAYS) {
-/*                    $delete = false;
-                    $zip = new ZipArchive;
-                    if ($zip->open($file) === TRUE) {
-                        $delete = true;
-                        // extractTo wasn't working so fall back to loading the file
-                        $test = $zip->getFromName("testinfo.json.gz");
-                        if ($test === FALSE)
-                            $test = $zip->getFromName("testinfo.json");
-                        else {
-                            file_put_contents("./tmp/prune.gz", $test);
-                            $test = gz_file_get_contents("./tmp/prune.gz");
-                        }
-                        $zip->close();
-                        if ($test !== FALSE) {
-                            $test = json_decode($test, true);
-                            if (isset($test) && is_array($test)) {
-                                // for now, only delete tests that were not priority 0 or that used an api key
-                                if (array_key_exists('priority', $test) && $test['priority'] == 0) {
-                                    if (!array_key_exists('key', $test) || !strlen(trim($test['key'])))
-                                        $delete = false;
-                                }
-                            }
-                        }
-                    }
-                    if ($delete) {
-                        unlink($file);
-                    }
-*/
                   unlink($file);
                 }
             }

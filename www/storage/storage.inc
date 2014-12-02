@@ -40,15 +40,14 @@ function StoreResults($id)
                 $response = $storageObj->uploadFile($bucketName, $zfile, $zfile);
                 if( $response )
                 {
-                    // Record the archived state in the local copy
-                    if( gz_is_file("$testPath/testinfo.json") )
-                    {
-                        $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-                        if( !isset($testInfo['archived']) )
-                        {
-                            $testInfo['archived'] = $storageProvider;
-                            gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
-                        }
+                    $lock = LockTest($id);
+                    if ($lock) {
+                      $testInfo = GetTestInfo($id);
+                      if ($testInfo && !isset($testInfo['archived'])) {
+                        $testInfo['archived'] = $storageProvider;
+                        SaveTestInfo($id, $testInfo);
+                      }
+                      UnlockTest($lock);
                     }
                     unlink($zfile);
                 }
@@ -92,16 +91,15 @@ function DownloadResults($id)
                     if( $archive->extract() == 0 )
                         return -2;
                     // Record the archived state in the local copy
-                    $testPath = './' . GetTestPath($id);
-                    if( gz_is_file("$testPath/testinfo.json") )
-                    {
-                        $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-                        if( !isset($testInfo['archived']) )
-                        {
-                            $testInfo['archived'] = $storageProvider;
-                            gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
-                        }
-                    }         
+                    $lock = LockTest($id);
+                    if ($lock) {
+                      $testInfo = GetTestInfo($id);
+                      if ($testInfo && !isset($testInfo['archived'])) {
+                        $testInfo['archived'] = $storageProvider;
+                        SaveTestInfo($id, $testInfo);
+                      }
+                      UnlockTest($lock);
+                    }
                     unlink($zfile);
                 } 
                 else

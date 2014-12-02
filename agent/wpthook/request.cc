@@ -372,7 +372,6 @@ void Request::DataIn(DataChunk& chunk) {
   EnterCriticalSection(&cs);
   if (_is_active) {
     QueryPerformanceCounter(&_end);
-    _test_state.received_data_ = true;
     if (!_first_byte.QuadPart)
       _first_byte.QuadPart = _end.QuadPart;
     if (!_is_spdy) {
@@ -441,6 +440,22 @@ void Request::SocketClosed() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void Request::MatchConnections() {
+  EnterCriticalSection(&cs);
+  if (_is_active && !_from_browser) {
+    if (!_dns_start.QuadPart) {
+      CString host = CA2T(GetHost());
+      _dns.Claim(host, _peer_address, _start, _dns_start, _dns_end);
+    }
+    if (!_connect_start.QuadPart)
+      _sockets.ClaimConnect(_socket_id, _start, _connect_start, _connect_end,
+                            _ssl_start, _ssl_end);
+  }
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 bool Request::Process() {
   bool ret = false;
 
@@ -456,34 +471,16 @@ bool Request::Process() {
       ret = true;
     }
 
-    if (_from_browser) {
-      if (_dns_start.QuadPart && _dns_end.QuadPart) {
-        _ms_dns_start = _test_state.ElapsedMsFromStart(_dns_start);
-        _ms_dns_end = _test_state.ElapsedMsFromStart(_dns_end);
-      }
-      if (_connect_start.QuadPart && _connect_end.QuadPart) {
-        _ms_connect_start = _test_state.ElapsedMsFromStart(_connect_start);
-        _ms_connect_end = _test_state.ElapsedMsFromStart(_connect_end);
-        if (_ssl_start.QuadPart && _ssl_end.QuadPart) {
-          _ms_ssl_start = _test_state.ElapsedMsFromStart(_ssl_start);
-          _ms_ssl_end = _test_state.ElapsedMsFromStart(_ssl_end);
-        }
-      }
-    } else {
-      // Find the matching socket connect and DNS lookup (if they exist).
-      LARGE_INTEGER before = _start;
-      LARGE_INTEGER start, end, ssl_start, ssl_end;
-      CString host = CA2T(GetHost());
-      if (_dns.Claim(host, _peer_address, before, start, end)) {
-        _ms_dns_start = _test_state.ElapsedMsFromStart(start);
-        _ms_dns_end = _test_state.ElapsedMsFromStart(end);
-      }
-      if (_sockets.ClaimConnect(_socket_id, before, start, end,
-                                ssl_start, ssl_end)) {
-        _ms_connect_start = _test_state.ElapsedMsFromStart(start);
-        _ms_connect_end = _test_state.ElapsedMsFromStart(end);
-        _ms_ssl_start = _test_state.ElapsedMsFromStart(ssl_start);
-        _ms_ssl_end = _test_state.ElapsedMsFromStart(ssl_end);
+    if (_dns_start.QuadPart && _dns_end.QuadPart) {
+      _ms_dns_start = _test_state.ElapsedMsFromStart(_dns_start);
+      _ms_dns_end = _test_state.ElapsedMsFromStart(_dns_end);
+    }
+    if (_connect_start.QuadPart && _connect_end.QuadPart) {
+      _ms_connect_start = _test_state.ElapsedMsFromStart(_connect_start);
+      _ms_connect_end = _test_state.ElapsedMsFromStart(_connect_end);
+      if (_ssl_start.QuadPart && _ssl_end.QuadPart) {
+        _ms_ssl_start = _test_state.ElapsedMsFromStart(_ssl_start);
+        _ms_ssl_end = _test_state.ElapsedMsFromStart(_ssl_end);
       }
     }
 
@@ -494,7 +491,7 @@ bool Request::Process() {
     if (!_test_state._first_byte.QuadPart && result == 200 && 
         _first_byte.QuadPart )
       _test_state._first_byte.QuadPart = _first_byte.QuadPart;
-    if (result >= 400 || result < 0) {
+    if (result != 401 && (result >= 400 || result < 0)) {
       if (_test_state._test_result == TEST_RESULT_NO_ERROR)
         _test_state._test_result = TEST_RESULT_CONTENT_ERROR;
       else if (_test_state._test_result == TEST_RESULT_TIMEOUT)

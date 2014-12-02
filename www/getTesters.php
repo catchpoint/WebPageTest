@@ -18,56 +18,46 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
   $ret['data'] = $locations;
   json_response($ret);
 } elseif( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'html' ) {
-  echo "<!DOCTYPE html>\n";
-  echo "<html>\n<head>\n<title>WebPagetest - Tester Status</title>\n";
-  echo "<head>
-        <noscript>
-        <meta http-equiv=\"refresh\" content=\"240\" />
-        </noscript>
-        <script language=\"JavaScript\">
-        setTimeout( \"window.location.reload(true)\", 240000 );
-        </script>\n";
-  echo "<style type=\"text/css\">\n";
-  echo "th,td{text-align:center; padding: 0px 15px;}\n";
-  echo ".tester{text-align: left;}\n";
-  echo ".header{text-align: left; background-color: yellow;font-size: larger; padding: 0.2em;}\n";
-  echo ".error{background-color: red}\n";
-  echo "</style>\n";
-  echo "</head>\n<body>\n";
-  echo "<table>\n";
+  $refresh = 240;
+  $title = 'WebPagetest - Tester Status';
+  include 'admin_header.inc';
+  echo "<table class=\"table\">\n";
   foreach( $locations as $name => &$location ) {
-    $error = ' error';
+    $error = ' danger';
     $elapsed = '';
     if (array_key_exists('elapsed', $location)) {
       $elapsed = " ({$location['elapsed']} minutes)";
       if ($location['elapsed'] < 30)
-        $error = '';
+        $error = ' success';
     }
-    echo "<tr id=\"$name\"><th class=\"header$error\" colspan=\"12\">" . htmlspecialchars($name) . "$elapsed</th></tr>\n";
+    echo "<tr id=\"$name\"><th class=\"header$error\" colspan=\"14\">" . htmlspecialchars($name) . "$elapsed</th></tr>\n";
     if (array_key_exists('testers', $location)) {
-      echo "<tr><th class=\"tester\">Tester</th><th>Version</th><th>PC</th><th>EC2 Instance</th><th>CPU Utilization</th><th>Free Disk (GB)</th><th>IE Version</th>";
-      echo "<th>GPU?</th><th>IP</th><th>Busy?</th><th>Last Check (minutes)</th><th>Last Work (minutes)</th></tr>\n";
+      echo "<tr><th class=\"tester\">Tester</th><th>Busy?</th><th>Last Check (minutes)</th><th>Last Work (minutes)</th><th>Version</th><th>PC</th><th>EC2 Instance</th><th>CPU Utilization</th><th>Error Rate</th><th>Free Disk (GB)</th><th>IE Version</th>";
+      echo "<th>GPU?</th><th>IP</th><th>DNS Server(s)</th></tr>\n";
       $count = 0;
       foreach($location['testers'] as $tester) {
         $count++;
         echo "<tr><td class=\"tester\">$count</td>";
+        echo "<td>" . @htmlspecialchars($tester['busy']) . "</td>";
+        echo "<td>" . @htmlspecialchars($tester['elapsed']) . "</td>";
+        echo "<td>" . @htmlspecialchars($tester['last']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['version']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['pc']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['ec2']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['cpu']) . "</td>";
+        echo "<td>" . @htmlspecialchars($tester['errors']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['freedisk']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['ie']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['GPU']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['ip']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['busy']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['elapsed']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['last']) . "</td>";
+        echo "<td>" . @htmlspecialchars($tester['dns']) . "</td>";
         echo "</tr>";
       }
     }
   }
   echo "</table>\n";
-  echo "</body>\n</html>";
+  include 'admin_footer.inc';
+
 } else {
     header ('Content-type: text/xml');
     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
@@ -78,7 +68,7 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
     if( array_key_exists('r', $_REQUEST) && strlen($_REQUEST['r']) )
         echo "<requestId>{$_REQUEST['r']}</requestId>\n";
     echo "<data>\n";
-    
+
     foreach( $locations as $name => &$location )
     {
         echo "<location>\n";
@@ -112,25 +102,25 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
                     echo "<$key><![CDATA[$value]]></$key>\n";
                 else
                     echo "<$key>$value</$key>\n";
-            }            
+            }
         }
         echo "</location>\n";
     }
-    
+
     echo "</data>\n";
     echo "</response>\n";
 }
 
 /**
 * Load the location information and extract just the end nodes
-* 
+*
 */
 function GetAllTesters()
 {
     $locations = array();
-    $loc = parse_ini_file('./settings/locations.ini', true);
+    $loc = LoadLocationsIni();
     BuildLocations($loc);
-    
+
     $i = 1;
     while( isset($loc['locations'][$i]) )
     {
@@ -147,10 +137,10 @@ function GetAllTesters()
 
             $j++;
         }
-        
+
         $i++;
     }
-    
+
     return $locations;
 }
 
@@ -160,9 +150,9 @@ function GetAllTesters()
 function GetRemoteTesters($server, $remote_location) {
     $testers = array();
     global $remote_cache;
-    
+
     $server_hash = md5($server);
-    
+
     if (array_key_exists('relay', $_REQUEST) && $_REQUEST['relay']) {
       // see if we need to populate the cache from the remote server
       if (!array_key_exists($server_hash, $remote_cache)) {
@@ -192,7 +182,7 @@ function GetRemoteTesters($server, $remote_location) {
           $testers = $remote_cache[$server_hash][$remote_location];
       }
     }
-    
+
     return $testers;
 }
 ?>

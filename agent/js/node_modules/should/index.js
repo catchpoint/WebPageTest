@@ -1,2 +1,2 @@
 
-module.exports = require('./lib/should');
+module.exports = require('./lib/node.js');

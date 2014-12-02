@@ -16,6 +16,8 @@ const TCHAR * EVENT_DOM_ELEMENT_COUNT =
     _T("http://127.0.0.1:8888/event/stats?domCount=");
 const TCHAR * EVENT_TIMED = 
     _T("http://127.0.0.1:8888/event/timed_event");
+const TCHAR * EVENT_CUSTOM_METRICS =
+    _T("http://127.0.0.1:8888/event/custom_metrics");
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -105,8 +107,14 @@ void  WptInterface::ReportNavigationTiming(CString timing) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void  WptInterface::ReportUserTiming(CString events){
+void  WptInterface::ReportUserTiming(CString events) {
   HttpPost(EVENT_TIMED, CT2A(events, CP_UTF8));
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void  WptInterface::ReportCustomMetrics(CString custom_metrics) {
+  HttpPost(EVENT_CUSTOM_METRICS, CT2A(custom_metrics, CP_UTF8));
 }
 
 /*-----------------------------------------------------------------------------

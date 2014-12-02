@@ -436,6 +436,7 @@ void CPagetestReporting::FlushResults(void)
 					  dev_tools_.Write(logFile+step+_T("_devtools.json"));
 
 					  SaveUserTiming(logFile+step+_T("_timed_events.json"));
+            SaveCustomMetrics(logFile+step+_T("_metrics.json"));
           }
 
           // delete the image data
@@ -530,6 +531,7 @@ void CPagetestReporting::ProcessResults(void)
 {
 	firstByte = 0;
 	pageIP.sin_addr.S_un.S_addr = 0;
+	__int64 new_end = 0;
 	
 	// if it was just a single js file or something similar, treat it as successful
 	if( errorCode == 200 )
@@ -584,6 +586,7 @@ void CPagetestReporting::ProcessResults(void)
 	SortEvents();
 	
 	// walk the list and calculate each event
+  std::tr1::regex adult_regex("[^0-9a-zA-Z]2257[^0-9a-zA-Z]");
 	__int64	earliest = 0;
 	POSITION pos = events.GetHeadPosition();
 	while( pos )
@@ -692,7 +695,7 @@ void CPagetestReporting::ProcessResults(void)
 						firstByte = w->firstByte;
 					
 					// flag errors based on the wininet events
-					if( !errorCode && (w->result >= 400 || w->result < 0) )
+					if( !errorCode && w->result != 401 && (w->result >= 400 || w->result < 0) )
 					{
 						if( (endDoc && w->start < endDoc) || abm == 1 )
 							errorCode = 99999;
@@ -715,16 +718,22 @@ void CPagetestReporting::ProcessResults(void)
             basePageAddressCount = GetAddressCount(w->host);
             if( html.IsEmpty() && w->body ) {
 							html = w->body;
-              if (html.Find("2257") != -1) {
+              if (regex_search((LPCSTR)html, adult_regex) ||
+                  html.Find("RTA-5042-1996-1400-1577-RTA") >= 0)
                 adultSite = 1;
-              }
-            }
-							
+            }							
 						// use the ttfb of the base page (override the earlier ttfb)
 						if( w->firstByte )
 							firstByte = w->firstByte;
 					}
 				}
+				new_end = max(new_end, w->end);
+				new_end = max(new_end, w->start);
+				new_end = max(new_end, w->firstByte);
+				new_end = max(new_end, w->dnsStart);
+				new_end = max(new_end, w->dnsEnd);
+				new_end = max(new_end, w->socketConnect);
+				new_end = max(new_end, w->socketConnected);
 			}
 
 			// remove invalid requests from the list
@@ -739,6 +748,9 @@ void CPagetestReporting::ProcessResults(void)
 	// move the start time to the start of the first request (non-scripted tests or the first step in a scripted test)
 	if( earliest && (!runningScript || scriptStep == 1) )
 		start = earliest;
+		
+	if (new_end)
+	  lastActivity = new_end;
 
 	// Calculate summary results
 	tmLastActivity = lastActivity < start ? 0 : ((double)(lastActivity - start)) / (double)freq;
@@ -976,8 +988,8 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 		msActivity = 0;
 	}
 */	
-	CString szDate = startTime.Format(_T("%m/%d/%Y"));
-	CString szTime = startTime.Format(_T("%H:%M:%S"));
+	CString szDate = startTime.FormatGmt(_T("%m/%d/%Y"));
+	CString szTime = startTime.FormatGmt(_T("%H:%M:%S"));
 
   // get the Page Speed version
   CString pageSpeedVersion;
@@ -1086,8 +1098,8 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 			msActivity = 0;
 		}
 		
-		CString szDate = startTime.Format(_T("%m/%d/%Y"));
-		CString szTime = startTime.Format(_T("%H:%M:%S"));
+		CString szDate = startTime.FormatGmt(_T("%m/%d/%Y"));
+		CString szTime = startTime.FormatGmt(_T("%H:%M:%S"));
 		CString result;
 		
 		if( fIncludeHeader )
@@ -1850,7 +1862,6 @@ void CPagetestReporting::CheckGzip()
 			CString mime = w->response.contentType;
 			mime.MakeLower();
 			if( w->result == 200
-				&& w->linkedRequest
 				&& w->fromNet )
 			{
 				CString enc = w->response.contentEncoding;
@@ -1916,7 +1927,10 @@ void CPagetestReporting::CheckGzip()
 							  target = origSize;
 							  w->gzipScore = -1;
 						  }
-					  }
+            } else {
+						  target = origSize;
+						  w->gzipScore = -1;
+            }
 					}
 				}
 
@@ -2040,7 +2054,7 @@ void CPagetestReporting::CheckCDN()
 	while( pos )
 	{
 		CTrackedEvent * e = events.GetNext(pos);
-		if( e && e->type == CTrackedEvent::etWinInetRequest && !e->ignore )
+		if( e && e->type == CTrackedEvent::etWinInetRequest)
 		{
       bool isStatic = false;
 			CWinInetRequest * w = (CWinInetRequest *)e;
@@ -2070,20 +2084,17 @@ void CPagetestReporting::CheckCDN()
 					mime.Find(_T("image/")) >= 0) )
 			{
         isStatic = true;
-				w->staticCdnScore = 0;
-				count++;
       }
-				
-			CString host = w->host;
-			host.MakeLower();
 
-			if (IsCDN(w, w->cdnProvider) && isStatic) {
-			  w->staticCdnScore = 100;
-			}
-
-      if (isStatic) {
-			  if( !w->staticCdnScore )
+      bool is_cdn = IsCDN(w, w->cdnProvider);
+      if (isStatic && !e->ignore) {
+        if (is_cdn) {
+			    w->staticCdnScore = 100;
+        } else {
+				  w->staticCdnScore = 0;
 				  w->warning = true;
+        }
+				count++;
 			  total += w->staticCdnScore;
       }
 		}
@@ -3635,8 +3646,7 @@ void CPagetestReporting::GetNavTiming(long &load_start, long &load_end,
                                       long &dcl_start, long &dcl_end,
                                       long &first_paint) {
   load_start = load_end = dcl_start = dcl_end = first_paint = 0;
-  static const TCHAR * FN_GET_NAV_TIMING =
-      _T("var wptGetNavTimings = (function(){")
+  CString nav_timings = GetCustomMetric(
       _T("  var timingParams = \"\";")
       _T("  if (window.performance && window.performance.timing) {")
       _T("    function addTime(name) {")
@@ -3649,33 +3659,23 @@ void CPagetestReporting::GetNavTiming(long &load_start, long &load_end,
       _T("        addTime('loadEventStart') + ',' +")
       _T("        addTime('loadEventEnd');")
       _T("  }")
-      _T("  return timingParams;")
-      _T("});");
-  LPOLESTR GET_NAV_TIMINGS = L"wptGetNavTimings";
-  if (ExecuteScript(FN_GET_NAV_TIMING)) {
-    _variant_t timings;
-    if (InvokeScript(GET_NAV_TIMINGS, timings)) {
-      if (timings.vt == VT_BSTR) {
-        CString nav_timings(timings);
-        int pos = 0;
-        int index = 0;
-        CString val = nav_timings.Tokenize(_T(","), pos);
-        while (pos != -1) {
-          index++;
-          long int_val = _ttol(val);
-          if (int_val > 0 && int_val < 3600000) {
-            switch (index) {
-              case 1: dcl_start = int_val; break;
-              case 2: dcl_end = int_val; break;
-              case 3: first_paint = int_val; break;
-              case 4: load_start = int_val; break;
-              case 5: load_end = int_val; break;
-            }
-          }
-          val = nav_timings.Tokenize(_T(","), pos);
-        }
+      _T("  return timingParams;"));
+  int pos = 0;
+  int index = 0;
+  CString val = nav_timings.Tokenize(_T(","), pos);
+  while (pos != -1) {
+    index++;
+    long int_val = _ttol(val);
+    if (int_val > 0 && int_val < 3600000) {
+      switch (index) {
+        case 1: dcl_start = int_val; break;
+        case 2: dcl_end = int_val; break;
+        case 3: first_paint = int_val; break;
+        case 4: load_start = int_val; break;
+        case 5: load_end = int_val; break;
       }
     }
+    val = nav_timings.Tokenize(_T(","), pos);
   }
 }
 
@@ -3683,32 +3683,93 @@ void CPagetestReporting::GetNavTiming(long &load_start, long &load_end,
   Run some in-page javascript to get the user timing data if it exists
 -----------------------------------------------------------------------------*/
 void CPagetestReporting::SaveUserTiming(CString file) {
-  static const TCHAR * FN_GET_USER_TIMING =
-    _T("var wptGetUserTimings = (function(){")
-    _T("  var ret = '';")
-    _T("  if (window.performance && window.performance.getEntriesByType) {")
-    _T("    var marks = JSON.stringify(performance.getEntriesByType('mark'));")
-    _T("    if (marks.length > 2)")
-    _T("      ret = marks.replace(/\"name\":/g,'\"type\":\"mark\",\"name\":');")
-    _T("  }")
-    _T("  return ret;")
-    _T("});");
-  LPOLESTR GET_USER_TIMINGS = L"wptGetUserTimings";
-  if (ExecuteScript(FN_GET_USER_TIMING)) {
-    _variant_t timings;
-    if (InvokeScript(GET_USER_TIMINGS, timings)) {
-      if (timings.vt == VT_BSTR) {
-        CString user_timings(timings);
-        if (user_timings.GetLength()) {
-				  HANDLE hFile = CreateFile(file, GENERIC_WRITE, 0, &nullDacl, CREATE_ALWAYS, 0, 0);
-				  if( hFile != INVALID_HANDLE_VALUE ) {
-					  DWORD written;
-					  CT2A str((LPCTSTR)user_timings, CP_UTF8);
-					  WriteFile(hFile, (LPCSTR)str, lstrlenA(str), &written, 0);
-					  CloseHandle(hFile);
-				  }
-        }
-      }
+  CString user_timings = GetCustomMetric(
+      _T("  var ret = '';")
+      _T("  if (window.performance && window.performance.getEntriesByType) {")
+      _T("    var marks = JSON.stringify(performance.getEntriesByType('mark'));")
+      _T("    if (marks.length > 2)")
+      _T("      ret = marks.replace(/\"name\":/g,'\"type\":\"mark\",\"name\":');")
+      _T("  }")
+      _T("  return ret;"));
+  if (user_timings.GetLength()) {
+	  HANDLE hFile = CreateFile(file, GENERIC_WRITE, 0, &nullDacl, CREATE_ALWAYS, 0, 0);
+	  if( hFile != INVALID_HANDLE_VALUE ) {
+		  DWORD written;
+		  CT2A str((LPCTSTR)user_timings, CP_UTF8);
+		  WriteFile(hFile, (LPCSTR)str, lstrlenA(str), &written, 0);
+		  CloseHandle(hFile);
+	  }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  If custom metrics were requested, gather them
+-----------------------------------------------------------------------------*/
+void CPagetestReporting::SaveCustomMetrics(CString file) {
+  CStringA out;
+  if (!customMetrics.IsEmpty()) {
+    out = "{";
+    DWORD count = 0;
+    POSITION pos = customMetrics.GetHeadPosition();
+    while(pos) {
+      CCustomMetric metric = customMetrics.GetNext(pos);
+      CString result = GetCustomMetric(metric.code);
+      if (count)
+        out += ",";
+      out += "\"";
+      out += JSONEscape((LPCSTR)CT2A(metric.name, CP_UTF8));
+      out += "\":\"";
+      out += JSONEscape((LPCSTR)CT2A(result, CP_UTF8));
+      out += "\"";
+      count++;
+    }
+    out += "}";
+  }
+  if (!out.IsEmpty()) {
+    HANDLE hFile = CreateFile(file, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+    if (hFile != INVALID_HANDLE_VALUE) {
+      DWORD bytes = 0;
+      WriteFile(hFile, (LPCSTR)out, out.GetLength(), &bytes, 0);
+      CloseHandle(hFile);
     }
   }
+}
+
+/*-----------------------------------------------------------------------------
+  Run some custom JS in the context of the page and return the result of that
+  code.  It should be written as the contents of a function that return the
+  value of interest and the value should be something that can be represented
+  as a string.
+  
+  IE is a bit convoluted so we need to define the function and then make
+  a call to it to get the actual return value.
+-----------------------------------------------------------------------------*/
+CString CPagetestReporting::GetCustomMetric(CString js) {
+  CString ret;
+  static int run_count = 0;
+  CString functionName;
+
+  run_count++;
+  functionName.Format(_T("wptCustomJs%d"), run_count);
+  CString functionBody = CString(_T("var ")) + functionName + _T(" = (function(){");
+  functionBody += js;
+  functionBody += _T(";});");
+
+  if (ExecuteScript(_bstr_t((LPCTSTR)functionBody))) {
+    _variant_t result;
+    DWORD len = functionName.GetLength() + 1;
+    LPOLESTR fn = (LPOLESTR)malloc(len * sizeof(OLECHAR));
+    if (fn) {
+      lstrcpyn(fn, (LPCTSTR)functionName, len);
+      if (InvokeScript(fn, result)) {
+        if (result.vt != VT_BSTR)
+          result.ChangeType(VT_BSTR);
+        if (result.vt == VT_BSTR)
+          ret.SetString(result.bstrVal);
+      }
+      free(fn);
+    }
+  }
+  
+  return ret;
 }

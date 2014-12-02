@@ -97,7 +97,7 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 .test_box label.full_width {float: none;width: auto;}
 .test_box label.inline {float: none;display: inline;}
 .test_box input.text {width: 350px;height: 22px;padding: 0 5px;background-color: #fff;border: 1px solid #bbb;}
-.test_box input.text.large {width: 680px;height: 33px;padding: 0 10px;font-size: 18px;font-weight: bold;background: url(/images/test_box-text-bkg.png) no-repeat;border: none;}
+.test_box input.text.large {width: 680px;height: 33px;padding: 0 10px;font-size: 18px;font-weight: bold;border: none;}
 .test_box input.text.short {width: 40px;}
 .test_box input.before_label {float: left;width: auto;}
 .test_box select {width: 270px;}

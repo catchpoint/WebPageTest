@@ -1,0 +1,3 @@
+Landing Page	http://news.google.com/
+World News	http://news.google.com/news/i/section?pz=1&cf=all&ned=us&topic=w
+Article Page	http://www.google.com/m/search?pz=1&cf=all&ned=us&hl=en&tbs=nws%3A1&q=Ukraine

@@ -97,3 +97,34 @@ BrowserBase.prototype.killChildProcessIfNeeded = function() {
     logger.debug('Browser/driver process already unset, not killing');
   }
 };
+
+/**
+ * Checks whether the browser is ready to run tests.
+ *
+ * A simple return means ready, any exception prevents polling for new jobs.
+ */
+BrowserBase.prototype.scheduleIsAvailable = function() {
+  'use strict';
+};
+
+/**
+ * Imports a browser module and creates a browser object, given args.
+ *
+ * @param {webdriver.promise.ControlFlow} app the ControlFlow for scheduling.
+ * @param {Object} args additional browser-specific args.
+ *   #param {Object} flags:
+ *     #param {string=} browser package-qualified browser class name for
+ *         instantiation, which defaults to
+ *         browser_local_chrome.BrowserLocalChrome.
+ * @return {BrowserBase} the browser object.
+ */
+exports.createBrowser = function(app, args) {
+  'use strict';
+  var browserType = (args.flags.browser ? args.flags.browser :
+      'browser_local_chrome.BrowserLocalChrome');
+  logger.debug('Creating browser ' + browserType);
+  var lastDot = browserType.lastIndexOf('.');
+  var browserModule = require(browserType.substring(0, lastDot));
+  var BrowserClass = browserModule[browserType.substring(lastDot + 1)];
+  return new BrowserClass(app, args);
+};

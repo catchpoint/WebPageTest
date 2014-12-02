@@ -186,6 +186,8 @@ protected:
 	void PopulatePageSpeedInput(pagespeed::PagespeedInput* input);
 	void GetNavTiming(long &load_start, long &load_end, long &dcl_start, long &dcl_end, long &first_paint);
 	void SaveUserTiming(CString file);
+  void SaveCustomMetrics(CString file);
+	CString GetCustomMetric(CString js);
 	CRITICAL_SECTION csCDN;
 
 	CAtlList<DWORD>	otherResponseCodes;

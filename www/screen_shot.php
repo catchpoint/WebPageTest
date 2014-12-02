@@ -156,6 +156,11 @@ $userImages = true;
                     echo 'White = Stabilized Early, Blue = Dynamic, Red = Late Static (failed AFT), Green = AFT<br>';
                     echo '<img class="center" alt="AFT Diagnostic image" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_aft.png">';
                 }
+                if( is_file($testPath . '/' . $run . $cachedText . '_screen_responsive.jpg') )
+                {
+                    echo '<br><br><h1 id="responsive">Responsive Site Check</h1>';
+                    echo '<img class="center" alt="Responsive Site Check image" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen_responsive.jpg">';
+                }
                 
                 // display all of the status messages
                 if( count($messages) )

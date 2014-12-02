@@ -8,7 +8,7 @@ if (!array_key_exists('noBulk', $settings))
     $settings['noBulk'] = 0;
 
 // see if we are overriding the max runs
-if (isset($_COOKIE['maxruns'])) {
+if (isset($_COOKIE['maxruns']) && (int)$_GET['maxruns'] > 0) {
     $settings['maxruns'] = (int)$_GET['maxruns'];
 }
 if (isset($_GET['maxruns'])) {
@@ -16,7 +16,7 @@ if (isset($_GET['maxruns'])) {
     setcookie("maxruns", $settings['maxruns']);    
 }
 
-if (!isset($settings['maxruns'])) {
+if (!isset($settings['maxruns']) || $settings['maxruns'] <= 0) {
     $settings['maxruns'] = 10;
 }
 if (isset($_REQUEST['map'])) {
@@ -88,13 +88,13 @@ $loc = ParseLocations($locations);
               echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
             }
             if (array_key_exists('iq', $_REQUEST))
-              echo "<input type=\"hidden\" name=\"iq\" value=\"{$_REQUEST['iq']}\">\n";
+              echo '<input type="hidden" name="iq" value="' . htmlspecialchars($_REQUEST['iq']) . "\">\n";
             if (array_key_exists('pngss', $_REQUEST))
-              echo "<input type=\"hidden\" name=\"pngss\" value=\"{$_REQUEST['pngss']}\">\n";
+              echo '<input type="hidden" name="pngss" value="' . htmlspecialchars($_REQUEST['pngss']) . "\">\n";
             if (array_key_exists('shard', $_REQUEST))
-              echo "<input type=\"hidden\" name=\"shard\" value=\"{$_REQUEST['shard']}\">\n";
+              echo '<input type="hidden" name="shard" value="' . htmlspecialchars($_REQUEST['shard']) . "\">\n";
             if (array_key_exists('discard', $_REQUEST))
-              echo "<input type=\"hidden\" name=\"discard\" value=\"{$_REQUEST['discard']}\">\n";
+              echo '<input type="hidden" name="discard" value="' . htmlspecialchars($_REQUEST['discard']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
@@ -103,10 +103,6 @@ $loc = ParseLocations($locations);
                 <ul class="ui-tabs-nav">
                     <li class="analytical_review ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Analytical Review</a></li>
                     <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
-                    <?php
-                    if (GetSetting('mobile'))
-                        echo '<li class="mobile_test"><a href="/mobile">Mobile</a></li>';
-                    ?>
                     <li class="traceroute"><a href="/traceroute">Traceroute</a></li>
                 </ul>
                 <div id="analytical-review" class="test_box">
@@ -202,7 +198,8 @@ $loc = ParseLocations($locations);
                                 <li><a href="#script">Script</a></li>
                                 <li><a href="#block">Block</a></li>
                                 <li><a href="#spof">SPOF</a></li>
-                                <?php if (!$settings['noBulk']) { ?>
+                                <li><a href="#custom-metrics">Custom</a></li>
+                                <?php if ($admin || !$settings['noBulk']) { ?>
                                 <li><a href="#bulk">Bulk Testing</a></li>
                                 <?php } ?>
                             </ul>
@@ -367,19 +364,13 @@ $loc = ParseLocations($locations);
                                         </label>
                                         <input id="time" type="text" class="text short" name="time" value=""> seconds
                                     </li>
-                                    <?php
-                                    /*
                                     <li>
-                                        <label for="orientationDefault">
-                                            Mobile Orientation<br>
-                                            <small>Experimental</small>
+                                        <label for="tester">
+                                            Specific Tester<br>
+                                            <small>Run the test on a specific <a href="/getTesters.php">PC</a>.<br>Name must match exactly or the test will not run.</small>
                                         </label>
-                                        <input id="orientationDefault" type="radio" name="orientation" checked=checked value="default">Device Default
-                                        <input id="orientationPortrait" type="radio" name="orientation" value="portrait">Portrait
-                                        <input id="orientationPortrait" type="radio" name="orientation" value="landscape">Landscape
+                                        <input id="tester" type="text" class="text" name="tester" value="">
                                     </li>
-                                    */
-                                    ?>
                                 </ul>
                             </div>
                             <div id="advanced-chrome" class="test_subbox ui-tabs-hide">
@@ -388,14 +379,24 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="mobile" id="mobile" class="checkbox" style="float: left;width: auto;">
                                         <label for="mobile" class="auto_width">
-                                            Emulate Mobile Browser (Experimental)<br>
-                                            <small>Chrome mobile user agent, 640x960 screen, 2x scaling and fixed viewport</small>
+                                            Emulate Mobile Browser (Experimental, Chrome 39+)<br>
+                                            <small>Nexus 5 user agent, 1080x1920 screen, 3x scaling and fixed viewport</small>
                                         </label>
                                     </li>
                                     <li>
                                         <input type="checkbox" name="timeline" id="timeline" class="checkbox" style="float: left;width: auto;">
                                         <label for="timeline" class="auto_width">
                                             Capture Dev Tools Timeline
+                                        </label>
+                                        <input type="checkbox" name="timelineStack" id="timelineStack" class="checkbox" style="float: left;width: auto;">
+                                        <label for="timelineStack" class="auto_width">
+                                            Include call stack (increases overhead)
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <input type="checkbox" name="trace" id="trace" class="checkbox" style="float: left;width: auto;">
+                                        <label for="trace" class="auto_width">
+                                            Capture Chrome Trace (about://tracing)
                                         </label>
                                     </li>
                                     <li>
@@ -405,28 +406,18 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="spdy3" id="spdy3" class="checkbox" style="float: left;width: auto;">
-                                        <label for="spdy3" class="auto_width">
-                                            Force Spdy version 3
+                                        <input type="checkbox" name="dataReduction" id="dataReduction" class="checkbox" style="float: left;width: auto;">
+                                        <label for="dataReduction" class="auto_width">
+                                            Enable Data Reduction<br>
+                                            <small>Chrome 34+ on Android</small>
                                         </label>
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="spdyNoSSL" id="spdyNoSSL" class="checkbox" style="float: left;width: auto;">
-                                        <label for="spdyNoSSL" class="auto_width">
-                                            Use SPDY without SSL
+                                        <label for="uastring" style="width: auto;">
+                                        User Agent String<br>
+                                        <small>(Custom UA String)</small>
                                         </label>
-                                    </li>
-                                    <li>
-                                        <input type="checkbox" name="swrender" id="swrender" class="checkbox" style="float: left;width: auto;">
-                                        <label for="swrender" class="auto_width">
-                                            Force Software Rendering (disable GPU acceleration)
-                                        </label>
-                                    </li>
-                                    <li>
-                                        <input type="checkbox" name="disableThreadedParser" id="disableThreadedParser" class="checkbox" style="float: left;width: auto;">
-                                        <label for="disableThreadedParser" class="auto_width">
-                                            Disable Threaded HTML Parser
-                                        </label>
+                                        <input type="text" name="uastring" id="uastring" class="text" style="width: 350px;">
                                     </li>
                                     <li>
                                         <label for="cmdline" style="width: auto;">
@@ -520,7 +511,20 @@ $loc = ParseLocations($locations);
                                 ?></textarea>
                             </div>
 
-                            <?php if (!$settings['noBulk']) { ?>
+                            <div id="custom-metrics" class="test_subbox ui-tabs-hide">
+                                <div>
+                                    <div class="notification-container">
+                                        <div class="notification"><div class="message">
+                                            See <a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/custom-metrics">the documentation</a> for details on how to specify custom metrics to be captured.
+                                        </div></div>
+                                    </div>
+                                    
+                                    <p><label for="custom_metrics" class="full_width">Custom Metrics:</label></p>
+                                    <textarea name="custom" id="custom_metrics" cols="0" rows="0"></textarea>
+                                </div>
+                            </div>
+
+                            <?php if ($admin || !$settings['noBulk']) { ?>
                             <div id="bulk" class="test_subbox ui-tabs-hide">
                                 <p>
                                     <label for="bulkurls" class="full_width">
@@ -624,7 +628,7 @@ $loc = ParseLocations($locations);
 */
 function LoadLocations()
 {
-    $locations = parse_ini_file('./settings/locations.ini', true);
+    $locations = LoadLocationsIni();
     FilterLocations( $locations );
     
     // strip out any sensitive information

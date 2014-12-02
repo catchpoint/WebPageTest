@@ -221,9 +221,6 @@
     <ClInclude Include="cdn.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="hook_gdi.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="hook_nspr.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -379,9 +376,6 @@
     <ClCompile Include="hook_winsock.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="hook_gdi.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="track_sockets.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -498,9 +492,6 @@
     </ClCompile>
     <ClCompile Include="cximage\ximawnd.cpp">
       <Filter>Third-Party\CxImage\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="inject.cc">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="mongoose\mongoose.c">
       <Filter>Third-Party\Mongoose</Filter>

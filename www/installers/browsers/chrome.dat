@@ -1,6 +1,6 @@
 browser=Chrome
-url=http://s3.amazonaws.com/wpt-software/chrome_30.msi
-md5=6CDE11819D97BCA323308174E99DAB5F
-version=30.0.1599.69
-command=Msiexec /q /I chrome_30.msi
+url=http://www.webpagetest.org/installers/browsers/chrome_38.exe
+md5=5C2760E841B1B19C8FECBD6BAA56260E
+version=38.0.2125.111
+command=chrome_38.exe /silent /install
 update=0

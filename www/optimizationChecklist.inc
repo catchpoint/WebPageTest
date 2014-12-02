@@ -47,7 +47,7 @@ function drawChecklist($url, &$requests, &$pageData, $imageMap = false)
             $color = $white;
             if( $i % 2 == 0 )
                 $color = $grey;
-            if( $request['responseCode'] >= 400 || $request['responseCode'] < 0 )
+            if( $request['responseCode'] != 401 && ($request['responseCode'] >= 400 || $request['responseCode'] < 0) )
                 $color = $error;
             elseif( $request['responseCode'] >= 300 )
                 $color = $warning;

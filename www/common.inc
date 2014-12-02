@@ -22,6 +22,9 @@ date_default_timezone_set('UTC');
 extract($_POST, EXTR_SKIP|EXTR_PREFIX_ALL|EXTR_REFS, 'req');
 extract($_GET, EXTR_SKIP|EXTR_PREFIX_ALL|EXTR_REFS, 'req');
 
+// add a CORS header
+header('Access-Control-Allow-Origin: *');
+
 // set up a global curl context that can be used for keep-alive connections (particularly when doing bulk relays)
 if (function_exists('curl_init')) {
     $CURL_CONTEXT = curl_init();
@@ -43,6 +46,14 @@ if (function_exists('apache_request_headers')) {
         $_SERVER["REMOTE_ADDR"] = $headers['X-Forwarded-For'];
     }
 }
+if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
+  $forwarded = explode(',',$_SERVER["HTTP_X_FORWARDED_FOR"]);
+  if (isset($forwarded) && is_array($forwarded) && count($forwarded)) {
+    $forwarded_ip = trim($forwarded[0]);
+    if (strlen($forwarded_ip))
+        $_SERVER["REMOTE_ADDR"] = $forwarded_ip;
+  }
+}
 if (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE'] == 'On') {
     define('FRIENDLY_URLS', true);
     define('VER_TIMELINE', '28/');       // version of the timeline javascript
@@ -51,11 +62,17 @@ if (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE
     define('VER_TIMELINE', '');       // Leave the timeline version empty
 }
 
+$userIsBot = false;
+if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
+    strlen($_SERVER['HTTP_USER_AGENT']) &&
+    preg_match('/robot|spider|crawler|indexer|WeSEE|AppEngine-Google|Googlebot|^$/i', $_SERVER['HTTP_USER_AGENT']))
+  $userIsBot = true;
+
 // constants
-define('VER_WEBPAGETEST', '2.2.1');   // webpagetest version
-define('VER_CSS', 66);           // version of the sitewide css file
-define('VER_JS', 30);            // version of the sitewide javascript file
-define('VER_JS_TEST', 28);       // version of the javascript specific to the test pages
+define('VER_WEBPAGETEST', '2.15');   // webpagetest version
+define('VER_CSS', 67);           // version of the sitewide css file
+define('VER_JS', 31);            // version of the sitewide javascript file
+define('VER_JS_TEST', 29);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);     // version of the javascript specific to the test running status page
 define('UNKNOWN_TIME', -1);      // Value used as a flag for an unknown time.
                                  // To find code that fails to check that a time
@@ -75,8 +92,13 @@ define('PCLZIP_TEMPORARY_DIR', $tempDir);
 if (isset($req_embed)) {
     define('EMBED', true);
     define('BARE_UI', true);
+    define('NAV_NO_SHARE', true);
 } elseif (isset($req_bare)) {
     define('BARE_UI', true);
+    define('NAV_NO_SHARE', true);
+    $noanalytics = true;
+    if (extension_loaded('newrelic'))
+      @newrelic_disable_autorum();
 }
 // load the install-specific settings
 $settings = parse_ini_file('./settings/settings.ini');
@@ -90,14 +112,14 @@ if (!array_key_exists('shard_tests', $settings))
     $settings['shard_tests'] = 0;
 
 $privateInstall = true;
-if( stristr($_SERVER['HTTP_HOST'] , '.webpagetest.org') !== false )
+if( array_key_exists('HTTP_HOST', $_SERVER) && stristr($_SERVER['HTTP_HOST'] , '.webpagetest.org') !== false )
     $privateInstall = false;
 
 // override some settings from the URI
 if (isset($req_bulk)) {
     $settings['noBulk'] = 0;
 }
-$is_ssl = isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On';
+$is_ssl = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? true : false;
 $GLOBALS['cdnPath'] = '';
 if (isset($settings['cdn']) && !$is_ssl) {
     $GLOBALS['cdnPath'] = $settings['cdn'];
@@ -189,7 +211,8 @@ if (strlen($id)) {
     if ($id !== @$_COOKIE['tid']) {
         setcookie('tid', $id);  // update session cookie
     }
-    RestoreTest($id);   // restore the test if it is archived (and deleted)
+    if (!$userIsBot)
+      RestoreTest($id);   // restore the test if it is archived (and deleted)
 
     $testPath = './' . GetTestPath($id);
     if (@$settings['archive'] && !is_dir($testPath) &&
@@ -204,29 +227,33 @@ if (strlen($id)) {
         $run = (int)1;
     }
     $cached = @(int)$req_cached;  // define a global used in other files
+    if (array_key_exists('run', $_REQUEST) && !strcasecmp($_REQUEST['run'], 'median')) {
+      require_once('page_data.inc');
+      $pageData = loadAllPageData($testPath, $options);
+      $run = GetMedianRun($pageData, $cached);
+    }
     $cachedText = $cached ? '_Cached' : '';
     $test = array();
     if (is_file("$testPath/testinfo.ini")) {
         $test = parse_ini_file("$testPath/testinfo.ini",true);
-        touch("$testPath/testinfo.ini");
+        if (!$userIsBot)
+          touch("$testPath/testinfo.ini");
     }
     $testDate = null;
-    if (gz_is_file("$testPath/testinfo.json")) {
-        $test['testinfo'] = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-        if (isset($test['testinfo'])) {
-            if( array_key_exists('completed', $test['testinfo']))
-                $testDate = strftime('%x %X', (int)$test['testinfo']['completed'] + ($tz_offset * 60));
-            if (array_key_exists('owner', $test['testinfo']) && strlen($owner) && $owner == $test['testinfo']['owner'])
-                $isOwner = true;
-            elseif (array_key_exists('uid', $test['testinfo']) && strlen($uid) && $uid == $test['testinfo']['uid'])
-                $isOwner = true;
+    $test['testinfo'] = GetTestInfo($id);
+    if ($test['testinfo']) {
+      if( array_key_exists('completed', $test['testinfo']))
+          $testDate = strftime('%x %X', (int)$test['testinfo']['completed'] + ($tz_offset * 60));
+      if (array_key_exists('owner', $test['testinfo']) && strlen($owner) && $owner == $test['testinfo']['owner'])
+          $isOwner = true;
+      elseif (array_key_exists('uid', $test['testinfo']) && strlen($uid) && $uid == $test['testinfo']['uid'])
+          $isOwner = true;
 
-            $url = array_key_exists('url', $test['testinfo']) ? htmlspecialchars($test['testinfo']['url']) : null;
-            $dom = array_key_exists('domElement', $test['testinfo']) ? htmlspecialchars($test['testinfo']['domElement']) : null;
-            $login = array_key_exists('login', $test['testinfo']) ? htmlspecialchars($test['testinfo']['login']) : null;
-            $blockString = array_key_exists('block', $test['testinfo']) ? htmlspecialchars($test['testinfo']['block']) : null;
-            $label = array_key_exists('label', $test['testinfo']) ? htmlspecialchars($test['testinfo']['label']) : null;
-        }
+      $url = array_key_exists('url', $test['testinfo']) ? htmlspecialchars($test['testinfo']['url']) : null;
+      $dom = array_key_exists('domElement', $test['testinfo']) ? htmlspecialchars($test['testinfo']['domElement']) : null;
+      $login = array_key_exists('login', $test['testinfo']) ? htmlspecialchars($test['testinfo']['login']) : null;
+      $blockString = array_key_exists('block', $test['testinfo']) ? htmlspecialchars($test['testinfo']['block']) : null;
+      $label = array_key_exists('label', $test['testinfo']) ? htmlspecialchars($test['testinfo']['label']) : null;
     }
 
     // build a common label to add to the title of each of the results pages

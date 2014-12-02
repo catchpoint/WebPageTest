@@ -131,6 +131,9 @@ public:
   void  OverridePort(const struct sockaddr FAR * name, int namelen);
   bool  ModifyRequestHeader(CStringA& header) const;
   bool  BlockRequest(CString host, CString object);
+  bool  OverrideHost(CString host, CString &new_host);
+  bool  GetHeadersToSet(CString host, CAtlList<CString> &headers);
+  bool  GetHeadersToAdd(CString host, CAtlList<CString> &headers);
   void  CollectData();
   void  CollectDataDone();
   virtual void  ReportData();
@@ -150,6 +153,7 @@ public:
   bool    _ignore_ssl;
   bool    _tcpdump;
   bool    _timeline;
+  int     _timelineStackDepth;
   bool    _trace;
   bool    _netlog;
   bool    _video;
@@ -179,6 +183,7 @@ public:
   bool    _save_response_bodies;
   bool    _save_html_body;
   bool    _preserve_user_agent;
+  bool    _check_responsive;
   DWORD   _browser_width;
   DWORD   _browser_height;
   DWORD   _viewport_width;
@@ -194,6 +199,7 @@ public:
   CString _navigated_url;
   CStringA _test_error;
   CStringA _run_error;
+  CString _custom_metrics;
   
   // current state
   int     _run;
@@ -202,7 +208,6 @@ public:
   bool    _discard_test;
   int     _index;
   bool    _clear_cache;
-  bool    _upload_incremental_results;
   bool    _active;
   LARGE_INTEGER _sleep_end;
   LARGE_INTEGER _perf_frequency;
@@ -222,11 +227,11 @@ protected:
   CStringA  EncodeTask(ScriptCommand& command);
   bool      NavigationCommand(CString& command);
   void      FixURL(ScriptCommand& command);
-  bool      ProcessCommand(ScriptCommand& command, bool &consumed);
   bool      PreProcessScriptCommand(ScriptCommand& command);
   bool      ConditionMatches(ScriptCommand& command);
   void      ParseBlockCommand(CString block_list, bool add_head);
   int       lock_count_;
+  virtual bool ProcessCommand(ScriptCommand& command, bool &consumed);
 
   CRITICAL_SECTION cs_;
 

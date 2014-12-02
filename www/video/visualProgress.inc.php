@@ -10,6 +10,10 @@ require_once('devtools.inc.php');
 */
 function GetVisualProgress($testPath, $run, $cached, $options = null, $end = null, $startOffset = null) {
     $frames = null;
+    if (substr($testPath, 0, 1) !== '.')
+      $testPath = './' . $testPath;
+    $testInfo = GetTestInfo($testPath);
+    $completed = IsTestRunComplete($run, $testInfo);
     $video_directory = "$testPath/video_{$run}";
     if ($cached)
         $video_directory .= '_cached';
@@ -17,7 +21,7 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
     if (!isset($startOffset))
       $startOffset = 0;
     $dirty = false;
-    $current_version = 4;
+    $current_version = VIDEO_CODE_VERSION;
     if (isset($end)) {
         if (is_numeric($end))
             $end = (int)($end * 1000);
@@ -58,6 +62,23 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
                     }
                     $previous_file = $file;
                 }
+            } elseif (strpos($file,'ms_') !== false && strpos($file,'.hist') === false) {
+                $parts = explode('_', $file);
+                if (count($parts) >= 2) {
+                    $time = intval($parts[1]) - $startOffset;
+                    if ($time >= 0 && (!isset($end) || $time <= $end)) {
+                      if (isset($previous_file) && !array_key_exists(0, $frames['frames']) && $time > 0) {
+                        $frames['frames'][0] = array('path' => "$base_path/$previous_file",
+                                                     'file' => $previous_file);
+                        $first_file = $previous_file;
+                      } elseif (!isset($first_file))
+                        $first_file = $file;
+                      $last_file = $file;
+                      $frames['frames'][$time] = array('path' => "$base_path/$file",
+                                                       'file' => $file);
+                    }
+                    $previous_file = $file;
+                }
             }
         }
         if (count($frames['frames']) == 1) {
@@ -71,7 +92,7 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
             $final_histogram = GetImageHistogram("$video_directory/$last_file", $options);
             foreach($frames['frames'] as $time => &$frame) {
                 $histogram = GetImageHistogram("$video_directory/{$frame['file']}", $options);
-                $frame['progress'] = CalculateFrameProgress($histogram, $start_histogram, $final_histogram, $options);
+                $frame['progress'] = CalculateFrameProgress($histogram, $start_histogram, $final_histogram, 5);
                 if ($frame['progress'] == 100 && !array_key_exists('complete', $frames))
                     $frames['complete'] = $time;
             }
@@ -92,13 +113,7 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
             }
         }
     }
-    $devTools = GetDevToolsProgress($testPath, $run, $cached);
-    if (isset($devTools)){
-        if (!isset($frames))
-            $frames = array();
-        $frames['DevTools'] = $devTools;
-    }
-    if (!isset($end) && !isset($options) && $dirty && isset($frames) && count($frames))
+    if ($completed && !isset($end) && !isset($options) && $dirty && isset($frames) && count($frames))
         gz_file_put_contents($cache_file,json_encode($frames));
     return $frames;
 }
@@ -190,6 +205,8 @@ function GetImageHistogram($image_file, $options = null) {
             imagedestroy($im);
             unset($im);
         }
+        if (!isset($options) && isset($histogram_file) && !is_file($histogram_file) && isset($histogram))
+          file_put_contents($histogram_file, json_encode($histogram));
     }
     return $histogram;
 }
@@ -197,37 +214,39 @@ function GetImageHistogram($image_file, $options = null) {
 /**
 * Calculate how close a given histogram is to the final
 */
-function CalculateFrameProgress(&$histogram, &$start_histogram, &$final_histogram, $options) {
-    $progress = 0;
-    $channels = array('r', 'g', 'b');
-    $totalWeight = count($channels);
-    if (isset($options) && array_key_exists('weights', $options) && is_array($options['weights'])) {
-        $totalWeight = 0;
-        foreach ($channels as $index => $channel) {
-            if (array_key_exists($index, $options['weights']))
-                $totalWeight += $options['weights'][$index];
-            else
-                $options['weights'][$index] = 0;
+function CalculateFrameProgress(&$histogram, &$start_histogram, &$final_histogram, $slop) {
+  $progress = 0;
+  $channels = array_keys($histogram);
+  $channelCount = count($channels);
+  foreach ($channels as $index => $channel) {
+    $total = 0;
+    $matched = 0;
+    $buckets = count($histogram[$channel]);
+    
+    // First build an array of the actual changes in the current histogram.
+    $available = array();
+    for ($i = 0; $i < $buckets; $i++)
+      $available[$i] = abs($histogram[$channel][$i] - $start_histogram[$channel][$i]);
+
+    // Go through the target differences and subtract any matches from the array as we go,
+    // counting how many matches we made.
+    for ($i = 0; $i < $buckets; $i++) {
+      $target = abs($final_histogram[$channel][$i] - $start_histogram[$channel][$i]);
+      if ($target) {
+        $total += $target;
+        $min = max(0, $i - $slop);
+        $max = min($buckets - 1, $i + $slop);
+        for ($j = $min; $j <= $max; $j++) {
+          $thisMatch = min($target, $available[$j]);
+          $available[$j] -= $thisMatch;
+          $matched += $thisMatch;
+          $target -= $thisMatch;
         }
+      }
     }
-    foreach ($channels as $index => $channel) {
-        $weight = 1;
-        if (isset($options) && array_key_exists('weights', $options) && is_array($options['weights']) && array_key_exists($index, $options['weights'])) {
-            $weight = $options['weights'][$index];
-        }
-        $total = 0;
-        $achieved = 0;
-        $buckets = count($final_histogram[$channel]);
-        for ($i = 0; $i < $buckets; $i++) {
-            $total += abs($final_histogram[$channel][$i] - $start_histogram[$channel][$i]);
-        }
-        for ($i = 0; $i < $buckets; $i++) {
-            $achieved += min(abs($final_histogram[$channel][$i] - $start_histogram[$channel][$i]), abs($histogram[$channel][$i] - $start_histogram[$channel][$i]));
-        }
-        if ($totalWeight)
-            $progress += (($achieved / $total) * $weight) / $totalWeight;
-    }
-    return round($progress * 100);
+    $progress += ($matched / $total) / $channelCount;
+  }
+  return floor($progress * 100);
 }
 
 /**

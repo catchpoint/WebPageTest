@@ -209,7 +209,12 @@ function LoadPerfData($file_name, $use_cpu, $use_bw, $use_mem = false, $max_bw =
     }
     if ($use_bw) {
         $count = count($perfs['bw']['data']);
-        $perfs['bw']['max'] = $count ? max($perfs['bw']['data']) : 0;
+        if ($max_bw)
+          $perfs['bw']['max'] = $max_bw;
+        elseif ($count)
+          $perfs['bw']['max'] = max($perfs['bw']['data']);
+        else
+          $perfs['bw']['max'] = 0;
         $perfs['bw']['count'] = $count;
     } else {
         unset($perfs['bw']);

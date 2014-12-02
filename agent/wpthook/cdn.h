@@ -46,6 +46,12 @@ typedef struct {
 CDN_PROVIDER cdnList[] = {
   {".akamai.net", "Akamai"},
   {".akamaiedge.net", "Akamai"},
+  {".akamaihd.net", "Akamai"},
+  {".edgesuite.net", "Akamai"},
+  {".edgekey.net", "Akamai"},
+  {".srip.ne", "Akamai"},
+  {".akamaitechnologies.com", "Akamai"},
+  {".akamaitechnologies.fr", "Akamai"},
   {".llnwd.net", "Limelight"},
   {"edgecastcdn.net", "Edgecast"},
   {".systemcdn.net", "Edgecast"},
@@ -112,6 +118,15 @@ CDN_PROVIDER cdnList[] = {
   {".cdncloud.net.au", "MediaCloud"},
   {".rncdn1.com", "Reflected Networks"},
   {".cdnsun.net", "CDNsun"},
+  {".mncdn.com", "Medianova"},
+  {".mncdn.net", "Medianova"},
+  {".mncdn.org", "Medianova"},
+  {"cdn.jsdelivr.net", "jsDelivr"},
+  {".nyiftw.net", "NYI FTW"},
+  {".nyiftw.com", "NYI FTW"},
+  {".resrc.it", "ReSRC.it"},
+  {".zenedge.net", "Zenedge"},
+  {".lswcdn.net", "LeaseWeb CDN"},  
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -121,10 +136,15 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "ECAcc", "Edgecast"},
   {"server", "ECD", "Edgecast"},
   {"server", "NetDNA", "NetDNA"},
+  {"server", "Airee", "Airee"},
   {"X-CDN-Geo", "", "OVH CDN"},
   {"X-Px", "", "CDNetworks"},
   {"X-Instart-Request-ID", "instart", "Instart Logic"},
   {"Via", "CloudFront", "Amazon CloudFront"},
   {"X-Edge-IP", "", "CDN"},
-  {"X-Edge-Location", "", "CDN"}
+  {"X-Edge-Location", "", "CDN"},
+  {"X-Powered-By", "NYI FTW", "NYI FTW"},
+  {"server", "ReSRC", "ReSRC.it"},
+  {"X-Cdn", "Zenedge", "Zenedge"},
+  {"server", "leasewebcdn", "LeaseWeb CDN"}
 };

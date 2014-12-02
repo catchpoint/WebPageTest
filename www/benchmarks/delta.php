@@ -1,7 +1,7 @@
 <?php
 chdir('..');
 include 'common.inc';
-include './benchmarks/data.inc.php';
+require_once('./benchmarks/data.inc.php');
 $page_keywords = array('Benchmarks','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "WebPagetest benchmark test details";
 $benchmark = '';
@@ -32,12 +32,13 @@ else {
 }
 $metrics = array('docTime' => 'Load Time (onload)', 
                 'SpeedIndex' => 'Speed Index',
-                'SpeedIndexDT' => 'Speed Index (Dev Tools)',
                 'TTFB' => 'Time to First Byte', 
+                'basePageSSLTime' => 'Base Page SSL Time',
                 'titleTime' => 'Time to Title', 
                 'render' => 'Time to Start Render', 
+                'domContentLoadedEventStart' => 'DOM Content Loaded',
                 'visualComplete' => 'Time to Visually Complete', 
-                'VisuallyCompleteDT' => 'Time to Visually Complete (Dev Tools)', 
+                'lastVisualChange' => 'Last Visual Change',
                 'fullyLoaded' => 'Load Time (Fully Loaded)', 
                 'server_rtt' => 'Estimated RTT to Server',
                 'docCPUms' => 'CPU Busy Time',
@@ -90,7 +91,7 @@ if (!isset($ref)) {
         <meta name="description" content="Speed up the performance of your web pages with an automated analysis">
         <meta name="author" content="Patrick Meenan">
         <?php $gaTemplate = 'About'; include ('head.inc'); ?>
-        <script type="text/javascript" src="/js/dygraph-combined.js"></script>
+        <script type="text/javascript" src="/js/dygraph-combined.js?v=1.0.1"></script>
         <style type="text/css">
         .chart-container { clear: both; width: 875px; height: 350px; margin-left: auto; margin-right: auto; padding: 0;}
         .benchmark-chart { float: left; width: 700px; height: 350px; }
@@ -280,6 +281,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null) {
                         strokeWidth: 0.0,
                         labelsSeparateLines: true,
                         labelsDiv: document.getElementById('hidden'),
+                        colors: ['#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101'],
                         axes: {x: {valueFormatter: function(delta) {
                                     var num = delta * 100;
                                     return num.toFixed(2) + '%';
@@ -315,6 +317,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null) {
             if (isset($tsv) && strlen($tsv)) {
                 $count++;
                 $id = "g$count";
+
                 echo "<br><div class=\"chart-container\"><div id=\"$id\" class=\"benchmark-chart\"></div><div id=\"{$id}_legend\" class=\"benchmark-legend\"></div></div>\n";
                 echo "<script type=\"text/javascript\">
                         var {$id}meta = " . json_encode($meta) . ";
@@ -326,6 +329,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null) {
                             strokeWidth: 0.0,
                             labelsSeparateLines: true,
                             labelsDiv: document.getElementById('{$id}_legend'),
+                            colors: ['#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101'],
                             axes: {x: {valueFormatter: function(delta) {
                                         var num = delta * 100;
                                         return num.toFixed(2) + '%';

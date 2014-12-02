@@ -1,46 +1,51 @@
 <?php
 if(extension_loaded('newrelic')) { 
-  newrelic_add_custom_tracer('StartProcessingIncrementalResult');
+  newrelic_add_custom_tracer('ProcessIncrementalResult');
   newrelic_add_custom_tracer('CheckForSpam');
   newrelic_add_custom_tracer('loadPageRunData');
-  newrelic_add_custom_tracer('ProcessAVIVideo');
   newrelic_add_custom_tracer('getBreakdown');
   newrelic_add_custom_tracer('GetVisualProgress');
   newrelic_add_custom_tracer('DevToolsGetConsoleLog');
-  newrelic_add_custom_tracer('FinishProcessingIncrementalResult');
 }
 
 chdir('..');
 //$debug = true;
-include('common.inc');
-error_reporting(E_ERROR | E_PARSE);
+require_once('common.inc');
 require_once('archive.inc');
 require_once('./lib/pclzip.lib.php');
 require_once 'page_data.inc';
-header('Content-type: text/plain');
-header("Cache-Control: no-cache, must-revalidate");
-header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
-ignore_user_abort(true);
-set_time_limit(60*5);
+require_once('object_detail.inc');
 require_once('harTiming.inc');
+require_once('video.inc');
+require_once('breakdown.inc');
+require_once('devtools.inc.php');
+require_once('./video/visualProgress.inc.php');
 require_once('./video/avi2frames.inc.php');
 
-$location = $_REQUEST['location'];
+if (!isset($included)) {
+  error_reporting(E_ERROR | E_PARSE);
+  header('Content-type: text/plain');
+  header("Cache-Control: no-cache, must-revalidate");
+  header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+}
+set_time_limit(60*5);
+ignore_user_abort(true);
+
 $key  = $_REQUEST['key'];
 $id   = $_REQUEST['id'];
-$testLock = null;
 
 if(extension_loaded('newrelic')) { 
   newrelic_add_custom_parameter('test', $id);
   newrelic_add_custom_parameter('location', $location);
 }
 
+$workdone_start = microtime(true);
+
 //logmsg(json_encode($_REQUEST), './work/workdone.log', true);
 
 // The following params have a default value:
 $done = arrayLookupWithDefault('done', $_REQUEST, false);
 $har  = arrayLookupWithDefault('har',  $_REQUEST, false);
-$pcap = arrayLookupWithDefault('pcap', $_REQUEST, false);
 $cpu = arrayLookupWithDefault('cpu', $_REQUEST, 0);
 $pc = array_key_exists('pc', $_REQUEST) ? $_REQUEST['pc'] : '';
 $ec2 = array_key_exists('ec2', $_REQUEST) ? $_REQUEST['ec2'] : '';
@@ -63,12 +68,6 @@ else
 $flattenUploadedZippedHar =
     arrayLookupWithDefault('flattenZippedHar', $_REQUEST, false);
 
-// When we upgrade the pcap to har converter, we need to test
-// each agent.  Agents can opt in to testing the latest
-// version by setting this POST param to '1'.
-$useLatestPCap2Har =
-    arrayLookupWithDefault('useLatestPCap2Har', $_REQUEST, false);
-
 // The following params are set by the android agents (blaze and WebpageTest).
 // TODO(skerner): POST params are not saved to disk directly, so it is hard to
 // see what the agent uploaded after the fact.  Consider writing them to a
@@ -85,37 +84,44 @@ $urlUnderTest  = arrayLookupWithDefault('_urlUnderTest',  $_REQUEST, null);
 
 $testInfo_dirty = false;
 
-
-if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
-{
-    logMsg("Video file $id received from $location");
-    
-    if (ValidateTestId($id)) {
-        $dir = './' . GetVideoPath($id);
-        if( isset($_FILES['file']) )
-        {
-            if (!is_dir($dir)) {
-                mkdir($dir, 0777, true);
-            }
-            $dest = $dir . '/video.mp4';
-            move_uploaded_file($_FILES['file']['tmp_name'], $dest);
-            @chmod($dest, 0666);
-
-            // update the ini file
-            $iniFile = $dir . '/video.ini';
-            if (is_file($iniFile)) {
-                $ini = file_get_contents($iniFile);
-            } else {
-                $ini = '';
-            }
-            $ini .= 'completed=' . gmdate('c') . "\r\n";
-            file_put_contents($iniFile, $ini);
-        }
+if (ValidateTestId($id)) {
+  $testPath = './' . GetTestPath($id);
+  if (array_key_exists('video', $_REQUEST) && $_REQUEST['video']) {
+    logMsg("Video file $id received from {$_REQUEST['location']}");
+    $dir = './' . GetVideoPath($id);
+    if (array_key_exists('file', $_FILES) && array_key_exists('tmp_name', $_FILES['file'])) {
+      if (!is_dir($dir))
+          mkdir($dir, 0777, true);
+      $dest = $dir . '/video.mp4';
+      move_uploaded_file($_FILES['file']['tmp_name'], $dest);
+      @chmod($dest, 0666);
+      $iniFile = $dir . '/video.ini';
+      if (is_file($iniFile))
+        $ini = file_get_contents($iniFile);
+      else
+        $ini = '';
+      $ini .= 'completed=' . gmdate('c') . "\r\n";
+      file_put_contents($iniFile, $ini);
     }
-} elseif (ValidateTestId($id)) {
-    $locKey = GetLocationKey($location);
-    logMsg("\n\nWork received for test: $id, location: $location, key: $key\n");
-    if( (!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADDR'], "127.0.0.1") ) {
+  } else {
+    $testInfo = GetTestInfo($id);
+    if (!$testInfo || !array_key_exists('location', $testInfo)) {
+      $testLock = LockTest($id);
+      $testInfo = GetTestInfo($id);
+      UnlockTest($testLock);
+    }
+    if ($testInfo && array_key_exists('location', $testInfo)) {
+      $location = $testInfo['location'];
+      $locKey = GetLocationKey($location);
+      if ((!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADDR'], "127.0.0.1")) {
+        $testErrorStr = '';
+        if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror']))
+          $testErrorStr = ', Test Error: "' . $_REQUEST['testerror'] . '"';
+        if (array_key_exists('error', $_REQUEST) && strlen($_REQUEST['error']))
+          $errorStr = ', Test Run Error: "' . $_REQUEST['error'] . '"';
+        logTestMsg($id, "Test Run Complete. Run: $runNumber, Cached: $cacheWarmed, Done: $done, Tester: $tester$testErrorStr$errorStr");
+        $testLock = LockTest($id);
+        $testInfo = GetTestInfo($id);
         // update the location time
         if( strlen($location) ) {
             if( !is_dir('./tmp') )
@@ -123,372 +129,281 @@ if( array_key_exists('video', $_REQUEST) && $_REQUEST['video'] )
             touch( "./tmp/$location.tm" );
         }
         
-        if( !isset($_FILES['file']) )
-            logMsg(" No uploaded file attached\n");
-        
         // Figure out the path to the results.
-        $testPath = './' . GetTestPath($id);
         $ini = parse_ini_file("$testPath/testinfo.ini");
         $time = time();
-        if( gz_is_file("$testPath/testinfo.json") ) {
-            $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-            if( isset($testInfo) ) {
-                $testInfo['last_updated'] = $time;
-                $testInfo_dirty = true;
+        $testInfo['last_updated'] = $time;
+        $testInfo_dirty = true;
 
-                if (!strlen($location) &&
-                    array_key_exists('location', $testInfo) &&
-                    strlen($testInfo['location']))
-                  $location = $testInfo['location'];
-                if (!strlen($tester) &&
-                    array_key_exists('tester', $testInfo) &&
-                    strlen($testInfo['tester']))
-                  $tester = $testInfo['tester'];
-                                    
-                if (strlen($location) && strlen($tester)) {
-                    $testerInfo = array();
-                    $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
-                    if ($done)
-                        $testerInfo['test'] = '';
-                    UpdateTester($location, $tester, $testerInfo, $cpu);
-                }
-            }
-        }
-        if (isset($testInfo) && array_key_exists('shard_test', $testInfo) && $testInfo['shard_test'])
-            StartProcessingIncrementalResult();
+        if (!strlen($tester) &&
+            array_key_exists('tester', $testInfo) &&
+            strlen($testInfo['tester']))
+          $tester = $testInfo['tester'];
+                            
+        if (array_key_exists('shard_test', $testInfo) && $testInfo['shard_test'])
+          ProcessIncrementalResult();
 
-        if (isset($har) && $har && isset($_FILES['file']) && isset($_FILES['file']['tmp_name'])) {
+        if (array_key_exists('file', $_FILES) && array_key_exists('tmp_name', $_FILES['file'])) {
+          if (isset($har) && $har) {
             ProcessUploadedHAR($testPath);
-        } elseif(isset($pcap) && $pcap &&
-                 isset($_FILES['file']) && isset($_FILES['file']['tmp_name'])) {
-            // The results page allows a user to download a pcap file.  It
-            // expects the file to be at a specific path, which encodes the
-            // run number and cache state.
-            $finalPcapFileName =
-                $runNumber . ($cacheWarmed ? "_Cached" : "") . ".cap";
-
-            MovePcapIntoPlace($_FILES['file']['name'],
-                              $_FILES['file']['tmp_name'],
-                              $testPath, $finalPcapFileName);
-
-            ProcessPCAP($testPath, $finalPcapFileName);
-        } elseif( isset($_FILES['file']) ) {
-            // extract the zip file
+          } else {
             logMsg(" Extracting uploaded file '{$_FILES['file']['tmp_name']}' to '$testPath'\n");
             $archive = new PclZip($_FILES['file']['tmp_name']);
             $list = $archive->extract(PCLZIP_OPT_PATH, "$testPath/", PCLZIP_OPT_REMOVE_ALL_PATH);
+          }
         }
 
         // compress the text data files
         if( isset($_FILES['file']) ) {
-            $f = scandir($testPath);
-            foreach( $f as $textFile ) {
-                logMsg("Checking $textFile\n");
-                if( is_file("$testPath/$textFile") ) {
-                    $parts = pathinfo($textFile);
-                    $ext = $parts['extension'];
-                    if( !strcasecmp( $ext, 'txt') || !strcasecmp( $ext, 'json') || !strcasecmp( $ext, 'csv') ) {
-                        // delete the optimization file (generated dynamically now)
-                        // or any files with sensitive data if we were asked to
-                        if( $ini['sensitive'] && strpos($textFile, '_report') ) {
-                            RemoveSensitiveHeaders("$testPath/$textFile");
-                        }
-                        if( strpos($textFile, '_optimization') ) {
-                            unlink("$testPath/$textFile");
-                        } else {
-                            logMsg( "Compressing $testPath/$textFile\n" );
-
-                            if( gz_compress("$testPath/$textFile") )
-                                unlink("$testPath/$textFile");
-                        }
-                    }
-                }
+          $f = scandir($testPath);
+          foreach( $f as $textFile ) {
+            logMsg("Checking $textFile\n");
+            if( is_file("$testPath/$textFile") ) {
+              $parts = pathinfo($textFile);
+              $ext = $parts['extension'];
+              if( !strcasecmp( $ext, 'txt') || !strcasecmp( $ext, 'json') || !strcasecmp( $ext, 'csv') ) {
+                if ($ini['sensitive'] && strpos($textFile, '_report'))
+                  RemoveSensitiveHeaders("$testPath/$textFile");
+                elseif (strpos($textFile, '_optimization'))
+                  unlink("$testPath/$textFile");
+                elseif (gz_compress("$testPath/$textFile"))
+                  unlink("$testPath/$textFile");
+              }
             }
+          }
         }
-        CheckForSpam();
+        //CheckForSpam();
         
         // make sure the test result is valid, otherwise re-run it
-        if ($done && !$har && !$pcap && isset($testInfo) &&
+        if ($done && !$har &&
             array_key_exists('job_file', $testInfo) && 
             array_key_exists('max_retries', $testInfo) && 
             $testInfo['max_retries'] > 1) {
-            $testfile = null;
-            $valid = true;
-            $available_runs = 0;
-            $expected_runs = $testInfo['runs'];
-            if (!$testInfo['fvonly'])
-                $expected_runs = $expected_runs * 2;
-            $files = scandir($testPath);
-            foreach ($files as $file) {
-                if (stripos($file, 'IEWPG'))
-                    $available_runs++;
-                if ($file == 'test.job')
-                    $testfile = "$testPath/$file";
+          $testfile = null;
+          $valid = true;
+          $available_runs = 0;
+          $expected_runs = $testInfo['runs'];
+          if (!$testInfo['fvonly'])
+            $expected_runs = $expected_runs * 2;
+          $files = scandir($testPath);
+          foreach ($files as $file) {
+            if (stripos($file, 'IEWPG'))
+              $available_runs++;
+            if ($file == 'test.job')
+              $testfile = "$testPath/$file";
+          }
+          if ($available_runs < $expected_runs)
+            $valid = false;
+          if (!array_key_exists('retries', $testInfo))
+            $testInfo['retries'] = 0;
+          if (!$valid && $testInfo['retries'] < $testInfo['max_retries'] && isset($testfile)) {
+            if ($lock = LockLocation($location)) {
+              if (copy($testfile, $testInfo['job_file'])) {
+                ResetTestDir($testPath);
+                $testInfo['retries']++;
+                AddJobFileHead($testInfo['workdir'], $testInfo['job'], $testInfo['priority'], false);
+                $done = false;
+                unset($testInfo['started']);
+                $testInfo_dirty = true;
+              }
+              UnlockLocation($lock);
             }
-            if ($available_runs < $expected_runs)
-                $valid = false;
-            if (!array_key_exists('retries', $testInfo))
-                $testInfo['retries'] = 0;
-            if (!$valid && $testInfo['retries'] < $testInfo['max_retries'] && isset($testfile)) {
-                if ($lock = LockLocation($location)) {
-                    if (copy($testfile, $testInfo['job_file'])) {
-                        ResetTestDir($testPath);
-                        $testInfo['retries']++;
-                        AddJobFileHead($testInfo['workdir'], $testInfo['job'], $testInfo['priority'], false);
-                        $done = false;
-                        unset($testInfo['started']);
-                        $testInfo_dirty = true;
-                    }
-                    UnlockLocation($lock);
-                }
-            }
+          }
         }
         
         // keep track of any overall or run-specific errors reported by the agent
         if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror'])) {
-            $testInfo['test_error'] = $_REQUEST['testerror'];
-            $testInfo_dirty = true;
+          $testInfo['test_error'] = $_REQUEST['testerror'];
+          $testInfo_dirty = true;
         }
         if (isset($runNumber) && 
             isset($cacheWarmed) && 
             array_key_exists('error', $_REQUEST) && 
             strlen($_REQUEST['error'])) {
-            if (!array_key_exists('errors', $testInfo))
-                $testInfo['errors'] = array();
-            if (!array_key_exists($runNumber, $testInfo['errors']))
-                $testInfo['errors'][$runNumber] = array();
-            $testInfo['errors'][$runNumber][$cacheWarmed] = $_REQUEST['error'];
-            $testInfo_dirty = true;
+          if (!array_key_exists('errors', $testInfo))
+            $testInfo['errors'] = array();
+          if (!array_key_exists($runNumber, $testInfo['errors']))
+            $testInfo['errors'][$runNumber] = array();
+          $testInfo['errors'][$runNumber][$cacheWarmed] = $_REQUEST['error'];
+          $testInfo_dirty = true;
         }
-        // pre-process any background processing we need to do for this run
+
+        // Do any post-processing on this individual run that doesn't requre the test to be locked
         if (isset($runNumber) && isset($cacheWarmed)) {
-            loadPageRunData($testPath, $runNumber, $cacheWarmed);
-            ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed);
+          $secure = false;
+          $haveLocations = false;
+          $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure, $haveLocations, false);
+          if (isset($requests)) {
+            getBreakdown($id, $testPath, $runNumber, $cacheWarmed, $requests);
+          } else {
+            $testerError = true;
+          }
+          if (is_dir('./google') && is_file('./google/google_lib.inc')) {
+            require_once('google/google_lib.inc');
+            ParseCsiInfo($id, $testPath, $runNumber, $cacheWarmed, true);
+          }
+          GetDevToolsCPUTime($testPath, $runNumber, $cacheWarmed);
         }
-            
+
+        // mark this run as complete
+        if (isset($runNumber) && isset($cacheWarmed)) {
+          if ($testInfo['fvonly'] || $cacheWarmed) {
+            if (!array_key_exists('test_runs', $testInfo))
+              $testInfo['test_runs'] = array();
+            if (array_key_exists($runNumber, $testInfo['test_runs']))
+              $testInfo['test_runs'][$runNumber]['done'] = true;
+            else
+              $testInfo['test_runs'][$runNumber] = array('done' => true);
+            $testInfo_dirty = true;
+          }
+          if ($testInfo['video'])
+            $workdone_video_start = microtime(true);
+          ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed);
+          if ($testInfo['video'])
+            $workdone_video_end = microtime(true);
+        }
+
+        if (strlen($location) && strlen($tester)) {
+          $testerInfo = array();
+          $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
+          if (!isset($testerError))
+            $testerError = false;
+          if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror']))
+            $testerError = $_REQUEST['testerror'];
+          elseif (array_key_exists('error', $_REQUEST) && strlen($_REQUEST['error']))
+            $testerError = $_REQUEST['error'];
+          UpdateTester($location, $tester, $testerInfo, $cpu, $testerError);
+        }
+                
         // see if the test is complete
-        if( $done )
-        {
-            // delete any .test files
-            $files = scandir($testPath);
-            foreach ($files as $file) {
-                if (preg_match('/.*\.test$/', $file)) {
-                    unlink("$testPath/$file");
-                }
-            }
-            if (array_key_exists('job_file', $testInfo) && is_file($testInfo['job_file'])) {
-                unlink($testInfo['job_file']);
-            }
-            
-            $perTestTime = 0;
-            $testCount = 0;
+        if ($done) {
+          // Mark the test as done and save it out so that we can load the page data
+          $testInfo['completed'] = $time;
+          if (!array_key_exists('test_runs', $testInfo))
+            $testInfo['test_runs'] = array();
+          for ($run = 1; $run <= $testInfo['runs']; $run++) {
+            if (array_key_exists($run, $testInfo['test_runs']))
+              $testInfo['test_runs'][$run]['done'] = true;
+            else
+              $testInfo['test_runs'][$run] = array('done' => true);
+          }
+          SaveTestInfo($id, $testInfo);
+          $testInfo_dirty = false;
+          
+          // delete any .test files
+          $files = scandir($testPath);
+          foreach ($files as $file)
+            if (preg_match('/.*\.test$/', $file))
+              unlink("$testPath/$file");
+          if (array_key_exists('job_file', $testInfo) && is_file($testInfo['job_file']))
+            unlink($testInfo['job_file']);
+          
+          $perTestTime = 0;
+          $testCount = 0;
 
-            // do pre-complete post-processing
-            require_once('video.inc');
-            require_once('./video/visualProgress.inc.php');
-            MoveVideoFiles($testPath);
-            
-            if (!isset($pageData))
-              $pageData = loadAllPageData($testPath);
-            $medianRun = GetMedianRun($pageData, 0);
+          // do pre-complete post-processing
+          MoveVideoFiles($testPath);
+          
+          if (!isset($pageData))
+            $pageData = loadAllPageData($testPath);
+          $medianRun = GetMedianRun($pageData, 0);
+          $testInfo['medianRun'] = $medianRun;
+          $testInfo_dirty = true;
 
-            // calculate and cache the content breakdown and visual progress information
-            if( isset($testInfo) ) {
-                require_once('breakdown.inc');
-                for ($i = 1; $i <= $testInfo['runs']; $i++) {
-                    getBreakdown($id, $testPath, $i, 0, $requests);
-                    GetVisualProgress($testPath, $i, 0);
-                    if (!$testInfo['fvonly']) {
-                        getBreakdown($id, $testPath, $i, 1, $requests);
-                        GetVisualProgress($testPath, $i, 1);
-                    }
-                }
-            }
+          // delete all of the videos except for the median run?
+          if( array_key_exists('median_video', $ini) && $ini['median_video'] )
+            KeepVideoForRun($testPath, $medianRun);
+          
+          $test = file_get_contents("$testPath/testinfo.ini");
+          $now = gmdate("m/d/y G:i:s", $time);
 
-            // delete all of the videos except for the median run?
-            if( array_key_exists('median_video', $ini) && $ini['median_video'] )
-                KeepVideoForRun($testPath, $medianRun);
-            
-            $test = file_get_contents("$testPath/testinfo.ini");
-            $now = gmdate("m/d/y G:i:s", $time);
+          // update the completion time if it isn't already set
+          if (!strpos($test, 'completeTime')) {
+            $complete = "[test]\r\ncompleteTime=$now";
+            if($medianRun)
+              $complete .= "\r\nmedianRun=$medianRun";
+            $out = str_replace('[test]', $complete, $test);
+            file_put_contents("$testPath/testinfo.ini", $out);
+          }
 
-            // update the completion time if it isn't already set
-            if( !strpos($test, 'completeTime') )
-            {
-                $complete = "[test]\r\ncompleteTime=$now";
-                if($medianRun)
-                    $complete .= "\r\nmedianRun=$medianRun";
-                $out = str_replace('[test]', $complete, $test);
-                file_put_contents("$testPath/testinfo.ini", $out);
+          if ($lock = LockLocation($location)) {
+            $testCount = $testInfo['runs'];
+            if( !$testInfo['fvonly'] )
+                $testCount *= 2;
+                
+            if ($testInfo['started'] && $time > $testInfo['started'] && $testCount) {
+              $perTestTime = ceil(($time - $testInfo['started']) / $testCount);
+              $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
+              if( !$tests )
+                $tests = array();
+              // keep track of the average time for the last 100 tests
+              $tests['times'][] = $perTestTime;
+              if( count($tests['times']) > 100 )
+                array_shift($tests['times']);
+              // update the number of high-priority "page loads" that we think are in the queue
+              if( array_key_exists('tests', $tests) && $testInfo['priority'] == 0 )
+                $tests['tests'] = max(0, $tests['tests'] - $testCount);
+              file_put_contents("./tmp/$location.tests", json_encode($tests));
             }
-
-            if( isset($testInfo) )
-            {
-                if( !isset($testInfo['completed']) )
-                {
-                    $testInfo['completed'] = $time;
-                    $testInfo['medianRun'] = $medianRun;
-                    gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
-                    $testInfo_dirty = false;
-                    
-                    $lockFile = fopen( "./tmp/$location.lock", 'w',  false);
-                    if( $lockFile )
-                    {
-                        if( flock($lockFile, LOCK_EX) )
-                        {
-                            $testCount = $testInfo['runs'];
-                            if( !$testInfo['fvonly'] )
-                                $testCount *= 2;
-                                
-                            if( $testInfo['started'] && $time > $testInfo['started'] && $testCount )
-                            {
-                                $perTestTime = ceil(($time - $testInfo['started']) / $testCount);
-                                $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
-                                if( !$tests )
-                                    $tests = array();
-                                // keep track of the average time for the last 100 tests
-                                $tests['times'][] = $perTestTime;
-                                if( count($tests['times']) > 100 )
-                                    array_shift($tests['times']);
-                                // update the number of high-priority "page loads" that we think are in the queue
-                                if( array_key_exists('tests', $tests) && $testInfo['priority'] == 0 )
-                                    $tests['tests'] = max(0, $tests['tests'] - $testCount);
-                                file_put_contents("./tmp/$location.tests", json_encode($tests));
-                            }
-                            flock($lockFile, LOCK_UN);
-                        }
-                        fclose($lockFile);
-                    }
-                }
+            UnlockLocation($lock);
+          }
+          
+          // see if it is an industry benchmark test
+          if (array_key_exists('industry', $ini) && array_key_exists('industry_page', $ini) && 
+            strlen($ini['industry']) && strlen($ini['industry_page'])) {
+            if( !is_dir('./video/dat') )
+              mkdir('./video/dat');
+            $indLock = Lock("Industry Video");
+            if (isset($indLock)) {
+              // update the page in the industry list
+              $ind;
+              $data = file_get_contents('./video/dat/industry.dat');
+              if( $data )
+                $ind = json_decode($data, true);
+              $update = array();
+              $update['id'] = $id;
+              $update['last_updated'] = $now;
+              $ind[$ini['industry']][$ini['industry_page']] = $update;
+              $data = json_encode($ind);
+              file_put_contents('./video/dat/industry.dat', $data);
+              Unlock($indLock);
             }
-            
-            // see if it is an industry benchmark test
-            if( array_key_exists('industry', $ini) && array_key_exists('industry_page', $ini) && 
-                strlen($ini['industry']) && strlen($ini['industry_page']) )
-            {
-                // lock the industry list
-                // we will just lock it against ourselves to protect against  simultaneous updates
-                // we will let the readers get whatever they can
-                if( !is_dir('./video/dat') )
-                    mkdir('./video/dat');
-                    
-                $lockFile = fopen( './video/dat/lock.dat', "w",  false);
-                if( $lockFile )
-                {
-                    if( flock($lockFile, LOCK_EX) )
-                    {
-                        // update the page in the industry list
-                        $ind;
-                        $data = file_get_contents('./video/dat/industry.dat');
-                        if( $data )
-                            $ind = json_decode($data, true);
-                        $update = array();
-                        $update['id'] = $id;
-                        $update['last_updated'] = $now;
-                        $ind[$ini['industry']][$ini['industry_page']] = $update;
-                        $data = json_encode($ind);
-                        file_put_contents('./video/dat/industry.dat', $data);
-                        flock($lockFile, LOCK_UN);
-                    }
-                        
-                    fclose($lockFile);
-                }
-            }
-            
-            if( isset($testInfo) && $testInfo_dirty ) {
-                $testInfo_dirty = false;
-                gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
-            }
-            SecureDir($testPath);
-            FinishProcessingIncrementalResult();
-            
-            // send an async request to the post-processing code so we don't block
-            SendAsyncRequest("/work/postprocess.php?test=$id");
-        } else {
-            if( isset($testInfo) && $testInfo_dirty )
-                gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
-
-            SecureDir($testPath);
-            FinishProcessingIncrementalResult();
+          }
         }
-    }
-    else
+
+        if ($testInfo_dirty)
+          SaveTestInfo($id, $testInfo);
+
+        SecureDir($testPath);
+        UnlockTest($testLock);
+        /*************************************************************************
+        * Do No modify TestInfo after this point
+        **************************************************************************/
+          
+        // do any post-processing when the full test is complete that doesn't rely on testinfo        
+        if ($done) {
+          logTestMsg($id, "Test Complete");
+
+          // send an async request to the post-processing code so we don't block
+          SendAsyncRequest("/work/postprocess.php?test=$id");
+        }
+      } else {
         logMsg("location key incorrect\n");
-}
-
-/**
-* Send a mail notification to the user
-* 
-* @param mixed $mailto
-* @param mixed $id
-* @param mixed $testPath
-*/
-function notify( $mailto, $from,  $id, $testPath, $host )
-{
-    global $test;
-    
-    // calculate the results
-    require_once 'page_data.inc';
-    $headers  = "MIME-Version: 1.0\r\n";
-    $headers .= "Content-type: text/html; charset=iso-8859-1\r\n";
-    $headers .= "From: $from\r\n";
-    $headers .= "Reply-To: $from";
-    
-    $pageData = loadAllPageData($testPath);
-    $url = trim($pageData[1][0]['URL']);
-    $shorturl = substr($url, 0, 40);
-    if( strlen($url) > 40 )
-        $shorturl .= '...';
-    
-    $subject = "Test results for $shorturl";
-    
-    if( !isset($host) )
-        $host  = $_SERVER['HTTP_HOST'];
-
-    $fv = GetMedianRun($pageData, 0);
-    if( isset($fv) && $fv )
-    {
-        $load = number_format($pageData[$fv][0]['loadTime'] / 1000.0, 3);
-        $render = number_format($pageData[$fv][0]['render'] / 1000.0, 3);
-        $numRequests = number_format($pageData[$fv][0]['requests'],0);
-        $bytes = number_format($pageData[$fv][0]['bytesIn'] / 1024, 0);
-        $result = "http://$host/result/$id";
-        
-        // capture the optimization report
-        require_once 'optimization.inc';
-        require_once('object_detail.inc');
-        $secure = false;
-        $haveLocations = false;
-        $requests = getRequests($id, $testPath, 1, 0, $secure, $haveLocations, false);
-        ob_start();
-        dumpOptimizationReport($pageData[$fv][0], $requests, $id, 1, 0, $test);
-        $optimization = ob_get_contents();
-        ob_end_clean();
-        
-        // build the message body
-        $body = 
-        "<html>
-            <head>
-                <title>$subject</title>
-                <style type=\"text/css\">
-                    .indented1 {padding-left: 40pt;}
-                    .indented2 {padding-left: 80pt;}
-                </style>
-            </head>
-            <body>
-            <p>The full test results for <a href=\"$url\">$url</a> are now <a href=\"$result/\">available</a>.</p>
-            <p>The page loaded in <b>$load seconds</b> with the user first seeing something on the page after <b>$render seconds</b>.  To download 
-            the page required <b>$numRequests requests</b> and <b>$bytes KB</b>.</p>
-            <p>Here is what the page looked like when it loaded (click the image for a larger view):<br><a href=\"$result/$fv/screen_shot/\"><img src=\"$result/{$fv}_screen_thumb.jpg\"></a></p>
-            <h3>Here are the things on the page that could use improving:</h3>
-            $optimization
-            </body>
-        </html>";
-
-        // send the actual mail
-        mail($mailto, $subject, $body, $headers);
+      }
     }
+  }
 }
+
+$workdone_end = microtime(true);
+
+/*
+if (isset($workdone_video_start) && isset($workdone_video_end)) {
+  $elapsed = intval(($workdone_end - $workdone_start) * 1000);
+  $video_elapsed = intval(($workdone_video_end - $workdone_video_start) * 1000);
+  if ($video_elapsed > 10)
+    logMsg("$elapsed ms - video processing: $video_elapsed ms - Test $id, Run $runNumber:$cacheWarmed", './work/workdone.log', true);
+}
+*/
 
 /**
 * Delete all of the video files except for the median run
@@ -523,136 +438,6 @@ function KeepVideoForRun($testPath, $run)
       closedir($dir);
     }
   }
-}
-
-/**
- * Exec the pcap2har python script, which converts a
- * .pcap file to a .har .
- *
- * @param string $pcapPath Path to read the PCAP file from.
- * @param string $harPath Path to which the HAR file will be written.
- * @param boolean $useLatestPCap2Har Use the latest version of pcap2har.py,
- *                as opposed to the stable version.
- * @param &array<string> $consoleOut Console output will be stored
- *                       in this array.
- * @return int The return code from pcap2har.py.
- */
-function ExecPcap2Har($pcapPath, $harPath, $useLatestPCap2Har,
-                      &$consoleOut) {
-  // When we update pcap2har, we need to test that each
-  // agent can use the new version.  To make testing easy,
-  // the agent that uploads a .pcap can control which version
-  // of pcap2har.py is used.  If $useLatestPcap is false,
-  // use the stable version.  If $useLatestPcap is true,
-  // use the latest version.  Once a version is known to
-  // work with all agents, we promote the latest version
-  // to stable.
-  $pathContainingPCapToHar = ($useLatestPCap2Har ? "./mobile/latest"
-                                                 : "./mobile");
-  putenv("PYTHONPATH=".
-         "$pathContainingPCapToHar:".
-         "./mobile/dpkt-1.7:".
-         "./mobile/simplejson");
-  // When converting dates to ms since the epoch, do not add an offset
-  // for time zones.
-  putenv("TZ=UTC");
-
-  $pcap2harExe = "$pathContainingPCapToHar/pcap2har/main.py";
-
-  // Use switch --no-pages to avoid splitting requests into multiple page
-  // loads.  WebpageTest agents start tcpdump for each page load, so we know
-  // all network traffic is part of the same page load.  The heuristics used
-  // to split requests into pages fail on some sites, such as m.yahoo.com.
-  $pcap2harArgs = ($useLatestPCap2Har ? "--no-pages" : "");
-
-  $retLine = exec("/usr/bin/python ".
-                  "$pcap2harExe $pcap2harArgs $pcapPath $harPath 2>&1",
-                  $consoleOut,
-                  $returnCode);
-
-  return $returnCode;
-}
-
-/**
- * Move an uploaded pcap file into the right place, unzipping if nessisary.
- *
- * @param String $clientFileName     File name set by the client.
- * @param String $uploadTmpFileName  Absolute path to the uploaded file.
- * @param String $testPath           Root of the results subdirectory of our test.
- * @param String $finalPcapFileName  The final file name the pcap should have.
- */
-function MovePcapIntoPlace($clientFileName, $uploadTmpFileName,
-                           $testPath, $finalPcapFileName) {
-    // Is the upload a zip archive?  If so, unpack it.
-    if (preg_match("/\.zip$/", $clientFileName)) {
-        // Directory structure is not flattened, because the android
-        // agent puts needed files at paths that encode their run
-        // number and cache state.
-        $archive = new PclZip($uploadTmpFileName);
-        $list = $archive->extract(PCLZIP_OPT_PATH, "$testPath/");
-
-        // Find the path to the uploaded pcap file, relative to
-        // $testPath.
-        $pcapFileName = null;
-        foreach ($list as $file) {
-            if (preg_match('/\.pcap$/', $file['stored_filename'])) {
-                if ($pcapFileName !== null) {
-                    logMalformedInput("zipped pcap upload should ".
-                                      "contain only one .pcap file.");
-                }
-                // The zip library starts all paths with a "/".
-                $pcapFileName = ltrim($file['stored_filename'], "/");
-            }
-        }
-        if ($pcapFileName === null) {
-            logMalformedInput(".pcap.zip file contains no .pcap file.");
-        } else if (!rename("$testPath/$pcapFileName",
-                           "$testPath/$finalPcapFileName")) {
-            logMalformedInput("Failed to rename( $testPath/$pcapFileName , ".
-                              "$testPath/$finalPcapFileName )");
-        }
-    } else {
-        move_uploaded_file(
-            $_FILES['file']['tmp_name'],
-            "$testPath/$finalPcapFileName");
-    }
-}
-
-/**
- * @param string $testPath
- */
-function ProcessPCAP($testPath, $pcapFile)
-{
-    global $runNumber;
-    global $cacheWarmed;
-    global $useLatestPCap2Har;
-
-    $pcapFilePath = "$testPath/$pcapFile";
-    $harFilePath = $pcapFilePath . ".har";
-
-    $consoleOut = array();
-
-    // Execute pcap2har
-    $returnCode = ExecPcap2Har($pcapFilePath, $harFilePath,
-                               $useLatestPCap2Har,
-                               $consoleOut);
-
-    if ($returnCode != 0)
-    {
-       logMalformedInput("pcap to HAR converter returned $returnCode.  ".
-                         "Expected 0.  pcap file is $pcapFilePath .  ".
-                         "Console output is :\n". print_r($consoleOut, true));
-       return;
-    }
-
-    // The mobile agents assume the har file is named results.har.  Make a copy
-    // with the expected path.  We don't just write a file with this name,
-    // because we want to keep the har from each run.
-    copy($harFilePath, $testPath . "/results.har");
-
-    // The entire pacp file captured one single page loading.
-    $harIsFromSinglePageLoad = true;
-    ProcessHARText($testPath, $harIsFromSinglePageLoad);
 }
 
 function ProcessUploadedHAR($testPath)
@@ -1509,76 +1294,39 @@ function ResetTestDir($testPath) {
 * Handle sharded test results where they come in individually
 * 
 */
-function StartProcessingIncrementalResult() {
-    global $id;
-    global $testPath;
-    global $done;
-    global $testInfo;
-    global $testInfo_dirty;
-    global $runNumber;
-    global $runIndex;
-    global $cacheWarmed;
-    global $testLock;
-    global $location;
-    global $admin;
+function ProcessIncrementalResult() {
+  global $testPath;
+  global $done;
+  global $testInfo;
+  global $testInfo_dirty;
+  global $runNumber;
+  global $cacheWarmed;
+  global $location;
 
-    if( $testLock = fopen( "$testPath/test.lock", 'w',  false) )
-        flock($testLock, LOCK_EX);
-
-    // re-load the testinfo from disk so we don't write stale data acquired from outside the lock
-    $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-    if( isset($testInfo) ) {
-        $testInfo['last_updated'] = $time;
-        $testInfo_dirty = true;
+  if ($done) {
+    // mark this test as done
+    $testInfo['test_runs'][$runNumber]['done'] = true;
+    $testInfo_dirty = true;
+    
+    // make sure all of the sharded tests are done
+    for ($run = 1; $run <= $testInfo['runs'] && $done; $run++) {
+      if (!$testInfo['test_runs'][$run]['done'])
+        $done = false;
     }
-
-    if ($done) {
-        if (!array_key_exists('test_runs', $testInfo)) {
-            $testInfo['test_runs'] = array();
-            for ($run = 1; $run <= $testInfo['runs']; $run++) {
-                $testInfo['test_runs'][$run] = array();
-            }
+    
+    if (!$done &&
+        array_key_exists('discarded', $testInfo['test_runs'][$runNumber]) &&
+        $testInfo['test_runs'][$runNumber]['discarded']) {
+      if (is_file("$testPath/test.job")) {
+        if ($lock = LockLocation($location)) {
+          if (copy("$testPath/test.job", $testInfo['job_file'])) {
+            AddJobFileHead($testInfo['workdir'], $testInfo['job'], $testInfo['priority'], true);
+          }
+          UnlockLocation($lock);
         }
-        
-        // mark this test as done
-        $testInfo['test_runs'][$runNumber]['done'] = true;
-        $testInfo_dirty = true;
-        
-        // make sure all of the sharded tests are done
-        for ($run = 1; $run <= $testInfo['runs'] && $done; $run++) {
-            if (!$testInfo['test_runs'][$run]['done'])
-                $done = false;
-        }
-        
-        if (!$done &&
-            array_key_exists('discarded', $testInfo['test_runs'][$runNumber]) &&
-            $testInfo['test_runs'][$runNumber]['discarded']) {
-            if (is_file("$testPath/test.job")) {
-                if ($lock = LockLocation($location)) {
-                    if (copy("$testPath/test.job", $testInfo['job_file'])) {
-                        AddJobFileHead($testInfo['workdir'], $testInfo['job'], $testInfo['priority'], true);
-                    }
-                    UnlockLocation($lock);
-                }
-            }
-        }
+      }
     }
-}
-
-/**
-* Clean up the test lock that protects the sharded test result processing
-* 
-*/
-function FinishProcessingIncrementalResult() {
-    global $testPath;
-    global $testLock;
-    global $done;
-    if (isset($testLock) && $testLock) {
-        flock($testLock, LOCK_UN);
-        fclose($testLock);
-    }
-    if ($done)
-        unlink("$testPath/test.lock");
+  }
 }
 
 /**
@@ -1608,7 +1356,6 @@ function CheckForSpam() {
             if (!isset($cacheWarmed))
                 $cacheWarmed = 0;
 
-            require_once('object_detail.inc');
             $secure = false;
             $haveLocations = false;
             $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure, $haveLocations, false);

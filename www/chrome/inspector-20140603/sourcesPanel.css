@@ -1,0 +1,224 @@
+/*
+ * Copyright (C) 2006, 2007, 2008 Apple Inc.  All rights reserved.
+ * Copyright (C) 2009 Anthony Ricaud <rik@webkit.org>
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1.  Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ * 2.  Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ * 3.  Neither the name of Apple Computer, Inc. ("Apple") nor the names of
+ *     its contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL APPLE OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+.scripts-pause-on-exceptions-status-bar-item .glyph {
+    -webkit-mask-position: -256px 0;
+}
+
+.scripts-pause-on-exceptions-status-bar-item.toggled-on .glyph {
+    background-color: rgb(66, 129, 235);
+}
+
+.evaluate-snippet-status-bar-item .glyph {
+    -webkit-mask-position: -64px -48px;
+}
+
+.evaluate-snippet-status-bar-item.toggled .glyph {
+    background-color: rgb(66, 129, 235);
+}
+
+.scripts-debug-toolbar {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    background-color: rgb(236, 236, 236);
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.scripts-debug-toolbar-drawer {
+    flex: 0 0 46px;
+    -webkit-transition: margin-top 0.1s ease-in-out;
+    margin-top: -23px;
+    line-height: 23px;
+    padding-top: 22px;
+    border-bottom: 1px solid rgb(202, 202, 202);
+    background-color: white;
+    overflow: hidden;
+}
+
+.scripts-debug-toolbar-drawer.expanded {
+    margin-top: 0;
+}
+
+.scripts-debug-toolbar-drawer > label {
+    display: flex;
+    padding-left: 3px;
+    border-top: 1px solid rgb(196,196,196);
+}
+
+#scripts-editor-toolbar {
+    position: relative;
+    margin-top: -1px;
+    height: 24px;
+}
+
+.scripts-run-snippet .glyph {
+    -webkit-mask-position: -64px -48px;
+}
+
+.scripts-pause .glyph {
+    -webkit-mask-position: -32px -72px;
+}
+
+.scripts-pause.toggled-on .glyph {
+    -webkit-mask-position: 0 -72px;
+}
+
+.scripts-step-over .glyph {
+    -webkit-mask-position: -128px -72px;
+}
+
+.scripts-step-into .glyph {
+    -webkit-mask-position: -64px -72px;
+}
+
+.scripts-step-out .glyph {
+    -webkit-mask-position: -96px -72px;
+}
+
+.scripts-long-resume .glyph {
+    -webkit-mask-position: -64px -48px;
+}
+
+.scripts-toggle-breakpoints.toggled-on .glyph {
+    -webkit-mask-position: -32px 0;
+}
+
+.scripts-toggle-breakpoints .glyph {
+    -webkit-mask-position: 0 -24px;
+}
+
+.dedicated-worker-item {
+    margin: 5px 0 5px 1px;
+}
+
+#shared-workers-list {
+    margin: 5px 0 5px 20px;
+    font-style:italic;
+}
+
+#pause-workers-checkbox > input {
+    position: relative;
+    top: 2px;
+}
+
+.panel.sources #sources-editor-container-tabbed-pane .tabbed-pane-header-contents {
+    margin-left: 22px;
+    margin-right: 36px;
+}
+
+.panel.sources .split-view button.scripts-debugger-show-hide-button.right-sidebar-show-hide-button.toggled-hide {
+    margin-right: 15px;
+}
+
+.panel.sources .split-view #scripts-debug-sidebar-resizer-widget.ns-resizer-widget {
+    -webkit-transform: rotate(90deg);
+    right: 17px;
+    bottom: 4px;
+    top: auto;
+    height: 10px;
+    width: 18px;
+}
+
+.panel.sources .split-view.hbox #scripts-debug-sidebar-resizer-widget {
+    bottom: 0;
+}
+
+.panel.sources .scripts-debugger-show-hide-button {
+    display: block;
+}
+
+.panel.sources button.status-bar-item.scripts-navigator-show-hide-button {
+    display: block;
+    top: 4px;
+    left: 4px;
+}
+
+.panel.sources .navigator-tabbed-pane .tabbed-pane-header {
+    background-color: rgb(236, 236, 236);
+}
+
+.function-location-link {
+    float: right;
+    margin-left: 10px;
+}
+
+.function-popover-title {
+    border-bottom: 1px solid #AAA;
+    margin-bottom: 3px;
+    padding-bottom: 2px;
+}
+
+.function-popover-title .function-name {
+    font-weight: bold;
+}
+
+.workers-list > li {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-left: 1em;
+    font-size: 12px;
+}
+
+a.worker-item {
+    color: rgb(33%, 33%, 33%);
+    cursor: pointer;
+    text-decoration: none;
+}
+
+a.worker-item:hover {
+    color: rgb(15%, 15%, 15%);
+}
+
+.panel.sources .sidebar-pane-stack {
+    overflow: auto;
+}
+
+.threads-toolbar {
+    padding-left: 10px;
+    margin-top: -1px;
+}
+
+.panel.sources .drag-mask {
+    background-color: rgba(255,255,255,0.8);
+    z-index: 1000;
+}
+
+.panel.sources .drag-mask-inner {
+    font-size: 30px;
+    color: #999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px;
+    border: 4px dashed #ddd;
+    pointer-events: none;
+}

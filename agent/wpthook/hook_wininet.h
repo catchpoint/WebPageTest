@@ -93,8 +93,12 @@ private:
   CAtlMap<HINTERNET, INTERNET_STATUS_CALLBACK>	_status_callbacks;
   CAtlMap<HINTERNET, HINTERNET>	_parents;
   CAtlMap<HINTERNET, CString>	  _host_names;
+  CAtlMap<HINTERNET, bool>      _https_requests;
   CRITICAL_SECTION	cs;
   bool  _hook_OpenA;
+
+  void SetHeaders(HINTERNET hRequest, bool also_add = false);
+  void CrackUrl(CString url, CString &scheme, CString &host, CString &object, CString &extra);
 
   LPINTERNETOPENW				_InternetOpenW;
   LPINTERNETOPENA				_InternetOpenA;

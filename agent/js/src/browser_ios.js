@@ -27,12 +27,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 var bplist = require('bplist');
+var browser_base = require('browser_base');
 var fs = require('fs');
 var http = require('http');
 var logger = require('logger');
 var os = require('os');
 var path = require('path');
 var process_utils = require('process_utils');
+var util = require('util');
 var video_hdmi = require('video_hdmi');
 var webdriver = require('selenium-webdriver');
 
@@ -41,25 +43,30 @@ var webdriver = require('selenium-webdriver');
  * Constructs a Mobile Safari controller for iOS.
  *
  * @param {webdriver.promise.ControlFlow} app the ControlFlow for scheduling.
- * @param {Object.<string>} args browser options with string values:
- *     runNumber test run number. Install the apk on run 1.
- *     deviceSerial the device to drive.
- *     runTempDir the directory to store per-run files like screenshots.
- *     ...
+ * @param {Object} args options:
+ *   #param {string} runNumber test run number. Install the apk on run 1.
+ *   #param {string} runTempDir the directory to store per-run files like
+ *       screenshots.
+ *   #param {Object.<String>} flags:
+ *     #param {string} deviceSerial the device to drive.
+ *     #param {string=} captureDir capture script dir, defaults to ''.
+ *   #param {Object.<String>} task:
+ *     #param {string=} pac PAC content.
  * @constructor
  */
 function BrowserIos(app, args) {
   'use strict';
+  browser_base.BrowserBase.call(this, app);
   logger.info('BrowserIos(%j)', args);
-  if (!args.deviceSerial) {
+  if (!args.flags.deviceSerial) {
     throw new Error('Missing device_serial');
   }
   this.app_ = app;
   this.shouldInstall_ = (1 === parseInt(args.runNumber || '1', 10));
-  this.deviceSerial_ = args.deviceSerial;
+  this.deviceSerial_ = args.flags.deviceSerial;
   // TODO allow idevice/ssh/etc to be undefined and try to run as best we can,
   // potentially with lots of warnings (e.g. "can't clear cache", ...).
-  var iDeviceDir = args.iosIDeviceDir;
+  var iDeviceDir = args.flags.iosIDeviceDir;
   var toIDevicePath = process_utils.concatPath.bind(this, iDeviceDir);
   this.iosWebkitDebugProxy_ = toIDevicePath('ios_webkit_debug_proxy');
   this.iDeviceInstaller_ = toIDevicePath('ideviceinstaller');
@@ -68,31 +75,32 @@ function BrowserIos(app, args) {
   this.iDeviceImageMounter_ = toIDevicePath('ideviceimagemounter');
   this.iDeviceScreenshot_ = toIDevicePath('idevicescreenshot');
   this.imageConverter_ = '/usr/bin/convert'; // TODO use 'sips' on mac?
-  this.devImageDir_ = process_utils.concatPath(args.iosDevImageDir);
-  this.devToolsPort_ = args.devToolsPort;
+  this.devImageDir_ = process_utils.concatPath(args.flags.iosDevImageDir);
+  this.devToolsPort_ = args.flags.devToolsPort;
   this.devtoolsPortLock_ = undefined;
   this.devToolsUrl_ = undefined;
   this.proxyProcess_ = undefined;
   this.sshConfigFile_ = '/dev/null';
-  this.sshProxy_ = process_utils.concatPath(args.iosSshProxyDir,
-      args.iosSshProxy || 'sshproxy.py');
-  this.sshCertPath_ = (args.iosSshCert ||
+  this.sshProxy_ = process_utils.concatPath(args.flags.iosSshProxyDir,
+      args.flags.iosSshProxy || 'sshproxy.py');
+  this.sshCertPath_ = (args.flags.iosSshCert ||
       process.env.HOME + '/.ssh/id_dsa_ios');
-  this.urlOpenerApp_ = process_utils.concatPath(args.iosAppDir,
-      args.iosUrlOpenerApp || 'urlOpener.ipa');
-  this.pac_ = args.pac;
+  this.urlOpenerApp_ = process_utils.concatPath(args.flags.iosAppDir,
+      args.flags.iosUrlOpenerApp || 'urlOpener.ipa');
+  this.pac_ = args.task.pac;
   this.pacServerPort_ = undefined;
   this.pacServerPortLock_ = undefined;
   this.pacServer_ = undefined;
   this.pacUrlPort_ = undefined;
   this.pacUrlPortLock_ = undefined;
   this.pacForwardProcess_ = undefined;
-  this.videoCard_ = args.videoCard;
-  var capturePath = process_utils.concatPath(args.captureDir,
-      args.captureScript || 'capture');
+  this.videoCard_ = args.flags.videoCard;
+  var capturePath = process_utils.concatPath(args.flags.captureDir,
+      args.flags.captureScript || 'capture');
   this.video_ = new video_hdmi.VideoHdmi(this.app_, capturePath);
   this.runTempDir_ = args.runTempDir || '';
 }
+util.inherits(BrowserIos, browser_base.BrowserBase);
 /** Public class. */
 exports.BrowserIos = BrowserIos;
 
@@ -321,14 +329,32 @@ BrowserIos.prototype.scheduleScp_ = function(var_args) { // jshint unused:false
 /** @private */
 BrowserIos.prototype.scheduleClearCacheCookies_ = function() {
   'use strict';
-  var lib = '/private/var/mobile/Library/';
+  var glob = '/private/var/mobile/Applications/*/MobileSafari.app/Info.plist';
   this.scheduleSsh_('killall', 'MobileSafari');
-  this.scheduleSsh_('rm', '-rf',
+  this.scheduleSsh_('test -f ' + glob + ' | ls ' + glob).then(function(stdout) {
+    var path = stdout.trim();
+    if (path) {
+      // iOS 7+: Extract the app_id by removing the glob's [0:'*'] prefix
+      // and ('*':] suffix from the expanded path.
+      var sep = glob.indexOf('*');
+      return path.substring(sep, path.length - (glob.length - sep) + 1);
+    } else {
+      // iOS 6: Safari does not store its content under app-id-named dirs.
+      return undefined;
+    }
+  }.bind(this)).then(function(app_id) {
+    var lib = ('/private/var/mobile' +
+        (app_id ? '/Applications/' + app_id : '') + '/Library/');
+    var cache = (app_id ? 'fsCachedData/*' :
+        'com.apple.WebAppCache/ApplicationCache.db');
+    this.scheduleSsh_('rm', '-rf',
       lib + 'Caches/com.apple.mobilesafari/Cache.db',
+      lib + 'Caches/' + cache,
+      lib + 'Safari/History.plist',
       lib + 'Safari/SuspendState.plist',
       lib + 'WebKit/LocalStorage',
-      lib + 'Caches/com.apple.WebAppCache/ApplicationCache.db',
-      lib + 'Cookies/Cookies.binarycookies');
+      '/private/var/mobile/Library/Cookies/Cookies.binarycookies');
+  }.bind(this));
 };
 
 /**
@@ -660,4 +686,33 @@ BrowserIos.prototype.scheduleStartPacketCapture = function() {
 BrowserIos.prototype.scheduleStopPacketCapture = function() {
   'use strict';
   throw new Error('Packet capture requested, but not implemented for iOS');
+};
+
+/**
+ * Verifies that the device is attached and has WiFi.
+ * Throws an exception if any of the requested checks fail.
+ *
+ * @override
+ */
+BrowserIos.prototype.scheduleIsAvailable = function() {
+  'use strict';
+  this.scheduleSsh_('echo show State:/Network/Interface/en0/IPv4|scutil').then(
+      function(stdout) {
+    // If WiFi is disabled we'll get "No such key" stdout.
+    var hasWifi = false;
+    var insideTag = false;
+    var lines = stdout.trim().split('\n');
+    lines.forEach(function(line) {
+      if (/^\s*Addresses\s*:\s*<array>\s*{\s*$/.test(line)) {
+        insideTag = true;
+      } else if (insideTag && (/^\s*0\s*:\s*\d+(\.\d+){3}\s*/).test(line)) {
+        hasWifi = true;
+      } else if (-1 !== line.indexOf('}')) {
+        insideTag = false;
+      }
+    });
+    if (!hasWifi) {
+      throw new Error('Device offline');
+    }
+  }.bind(this));
 };

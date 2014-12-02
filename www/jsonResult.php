@@ -6,6 +6,7 @@ require_once('video/visualProgress.inc.php');
 require_once('domains.inc');
 require_once('breakdown.inc');
 require_once('devtools.inc.php');
+require_once('archive.inc');
 
 if (array_key_exists('batch', $test['test']) && $test['test']['batch']) {
     include 'resultBatch.inc';
@@ -29,6 +30,7 @@ function GetTestResult($id) {
     global $median_metric;
 
     $testPath = './' . GetTestPath($id);
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     $host  = $_SERVER['HTTP_HOST'];
     $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
     $path = substr($testPath, 1);
@@ -37,8 +39,7 @@ function GetTestResult($id) {
     $pageStats = calculatePageStats($pageData, $stats[0], $stats[1]);
     if( !strlen($url) )
         $url = $pageData[1][0]['URL'];
-    if (gz_is_file("$testPath/testinfo.json"))
-        $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+    $testInfo = GetTestInfo($id);
     if (is_file("$testPath/testinfo.ini"))
         $test = parse_ini_file("$testPath/testinfo.ini", true);
     $fvOnly = false;
@@ -47,7 +48,7 @@ function GetTestResult($id) {
     $cacheLabels = array('firstView', 'repeatView');
 
     // summary information
-    $ret = array('id' => $id, 'url' => $url, 'summary' => "http://$host$uri/results.php?test=$id");
+    $ret = array('id' => $id, 'url' => $url, 'summary' => "$protocol://$host$uri/results.php?test=$id");
     $runs = max(array_keys($pageData));
     if (isset($testInfo)) {
         if (array_key_exists('url', $testInfo) && strlen($testInfo['url']))
@@ -78,6 +79,8 @@ function GetTestResult($id) {
             $ret['label'] = $testInfo['label'];
         if (array_key_exists('completed', $testInfo))
             $ret['completed'] = $testInfo['completed'];
+        if (array_key_exists('tester', $testInfo) && strlen($testInfo['tester']))
+            $ret['tester'] = $testInfo['tester'];
         if (array_key_exists('testerDNS', $testInfo) && strlen($testInfo['testerDNS']))
             $ret['testerDNS'] = $testInfo['testerDNS'];
         if (array_key_exists('runs', $testInfo) && $testInfo['runs'])
@@ -123,7 +126,7 @@ function GetTestResult($id) {
             $ret['runs'][$run][$label] = GetSingleRunData($id, $testPath, $run, $cached, $pageData, $testInfo);
         }
     }
-    
+    ArchiveApi($id);
     return $ret;
 }
 
@@ -141,6 +144,7 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
         is_array($pageData[$run]) &&
         array_key_exists($cached, $pageData[$run]) &&
         is_array($pageData[$run][$cached])) {
+      $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
       $host  = $_SERVER['HTTP_HOST'];
       $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
       $path = substr($testPath, 1);
@@ -150,42 +154,51 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
       if ($cached)
           $cachedText = '_Cached';
 
+      if (isset($testInfo)) {
+        if (array_key_exists('tester', $testInfo))
+          $ret['tester'] = $testInfo['tester'];
+        if (array_key_exists('test_runs', $testInfo) &&
+            array_key_exists($run, $testInfo['test_runs']) &&
+            array_key_exists('tester', $testInfo['test_runs'][$run]))
+          $ret['tester'] = $testInfo['test_runs'][$run]['tester'];
+      }
+          
       $basic_results = false;
       if (array_key_exists('basic', $_REQUEST) && $_REQUEST['basic'])
         $basic_results = true;
           
       if (!$basic_results && gz_is_file("$testPath/$run{$cachedText}_pagespeed.txt")) {
           $ret['PageSpeedScore'] = GetPageSpeedScore("$testPath/$run{$cachedText}_pagespeed.txt");
-          $ret['PageSpeedData'] = "http://$host$uri//getgzip.php?test=$id&amp;file=$run{$cachedText}_pagespeed.txt";
+          $ret['PageSpeedData'] = "$protocol://$host$uri//getgzip.php?test=$id&amp;file=$run{$cachedText}_pagespeed.txt";
       }
 
       $ret['pages'] = array();
-      $ret['pages']['details'] = "http://$host$uri/details.php?test=$id&run=$run&cached=$cached";
-      $ret['pages']['checklist'] = "http://$host$uri/performance_optimization.php?test=$id&run=$run&cached=$cached";
-      $ret['pages']['breakdown'] = "http://$host$uri/breakdown.php?test=$id&run=$run&cached=$cached";
-      $ret['pages']['domains'] = "http://$host$uri/domains.php?test=$id&run=$run&cached=$cached";
-      $ret['pages']['screenShot'] = "http://$host$uri/screen_shot.php?test=$id&run=$run&cached=$cached";
+      $ret['pages']['details'] = "$protocol://$host$uri/details.php?test=$id&run=$run&cached=$cached";
+      $ret['pages']['checklist'] = "$protocol://$host$uri/performance_optimization.php?test=$id&run=$run&cached=$cached";
+      $ret['pages']['breakdown'] = "$protocol://$host$uri/breakdown.php?test=$id&run=$run&cached=$cached";
+      $ret['pages']['domains'] = "$protocol://$host$uri/domains.php?test=$id&run=$run&cached=$cached";
+      $ret['pages']['screenShot'] = "$protocol://$host$uri/screen_shot.php?test=$id&run=$run&cached=$cached";
 
       $ret['thumbnails'] = array();
-      $ret['thumbnails']['waterfall'] = "http://$host$uri/result/$id/$run{$cachedText}_waterfall_thumb.png";
-      $ret['thumbnails']['checklist'] = "http://$host$uri/result/$id/$run{$cachedText}_optimization_thumb.png";
-      $ret['thumbnails']['screenShot'] = "http://$host$uri/result/$id/$run{$cachedText}_screen_thumb.png";
+      $ret['thumbnails']['waterfall'] = "$protocol://$host$uri/result/$id/$run{$cachedText}_waterfall_thumb.png";
+      $ret['thumbnails']['checklist'] = "$protocol://$host$uri/result/$id/$run{$cachedText}_optimization_thumb.png";
+      $ret['thumbnails']['screenShot'] = "$protocol://$host$uri/result/$id/$run{$cachedText}_screen_thumb.png";
 
       $ret['images'] = array();
-      $ret['images']['waterfall'] = "http://$host$uri$path/$run{$cachedText}_waterfall.png";
-      $ret['images']['connectionView'] = "http://$host$uri$path/$run{$cachedText}_connection.png";
-      $ret['images']['checklist'] = "http://$host$uri$path/$run{$cachedText}_optimization.png";
-      $ret['images']['screenShot'] = "http://$host$uri$path/$run{$cachedText}_screen.jpg";
+      $ret['images']['waterfall'] = "$protocol://$host$uri$path/$run{$cachedText}_waterfall.png";
+      $ret['images']['connectionView'] = "$protocol://$host$uri$path/$run{$cachedText}_connection.png";
+      $ret['images']['checklist'] = "$protocol://$host$uri$path/$run{$cachedText}_optimization.png";
+      $ret['images']['screenShot'] = "$protocol://$host$uri$path/$run{$cachedText}_screen.jpg";
       if( is_file("$testPath/$run{$cachedText}_screen.png") )
-          $ret['images']['screenShotPng'] = "http://$host$uri$path/$run{$cachedText}_screen.png";
+          $ret['images']['screenShotPng'] = "$protocol://$host$uri$path/$run{$cachedText}_screen.png";
 
       $ret['rawData'] = array();
-      $ret['rawData']['headers'] = "http://$host$uri$path/$run{$cachedText}_report.txt";
-      $ret['rawData']['pageData'] = "http://$host$uri$path/$run{$cachedText}_IEWPG.txt";
-      $ret['rawData']['requestsData'] = "http://$host$uri$path/$run{$cachedText}_IEWTR.txt";
-      $ret['rawData']['utilization'] = "http://$host$uri$path/$run{$cachedText}_progress.csv";
+      $ret['rawData']['headers'] = "$protocol://$host$uri$path/$run{$cachedText}_report.txt";
+      $ret['rawData']['pageData'] = "$protocol://$host$uri$path/$run{$cachedText}_IEWPG.txt";
+      $ret['rawData']['requestsData'] = "$protocol://$host$uri$path/$run{$cachedText}_IEWTR.txt";
+      $ret['rawData']['utilization'] = "$protocol://$host$uri$path/$run{$cachedText}_progress.csv";
       if( is_file("$testPath/$run{$cachedText}_bodies.zip") )
-          $ret['rawData']['bodies'] = "http://$host$uri$path/$run{$cachedText}_bodies.zip";
+          $ret['rawData']['bodies'] = "$protocol://$host$uri$path/$run{$cachedText}_bodies.zip";
 
       if (!$basic_results) {
         $startOffset = array_key_exists('testStartOffset', $ret) ? intval(round($ret['testStartOffset'])) : 0;
@@ -199,15 +212,6 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
               $videoFrame['VisuallyComplete'] = $frame['progress'];
               $ret['videoFrames'][] = $videoFrame;
           }
-        }
-        if (isset($progress) &&
-            is_array($progress) &&
-            array_key_exists('DevTools', $progress) &&
-            is_array($progress['DevTools'])) {
-            if (array_key_exists('processing', $progress['DevTools']))
-                $ret['processing'] = $progress['DevTools']['processing'];
-            if (array_key_exists('VisualProgress', $progress['DevTools']))
-                $ret['VisualProgress'] = $progress['DevTools']['VisualProgress'];
         }
         
         $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false, true);

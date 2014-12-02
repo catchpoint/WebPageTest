@@ -147,6 +147,21 @@ public:
   CString regex;
 };
 
+// custom metrics
+class CCustomMetric {
+public:
+	CCustomMetric(void){}
+	CCustomMetric(const CCustomMetric& src){ *this = src; }
+	~CCustomMetric(void){}
+	const CCustomMetric& operator =(const CCustomMetric& src) {
+		name = src.name;
+		code = src.code;
+		return src;
+	}
+
+  CString name;
+  CString code;
+};
 
 class CPagetestBase
 {
@@ -206,6 +221,7 @@ public:
 	CString						userAgent;		// custom user agent string
 	CAtlArray<struct in_addr>	dnsServers;		// DNS servers to use for lookups (if overriding the default)
   CAtlList<CCustomRule> customRules;
+  CAtlList<CCustomMetric> customMetrics;
   DWORD           currentRun;
 	CAtlMap<DWORD, int>	    client_ports;
 

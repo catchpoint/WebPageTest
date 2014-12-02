@@ -647,6 +647,8 @@ void CurlBlastDlg::CloseDialogs(void)
 			, _T("choose file")
 			, _T("network delay simulator") 
 			, _T("shut down windows")
+      , _T("vmware")
+      , _T("security essentials")
 		};
 
 		// build a list of dialogs to close

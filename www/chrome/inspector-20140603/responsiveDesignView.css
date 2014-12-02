@@ -1,0 +1,246 @@
+/*
+ * Copyright 2014 The Chromium Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+.responsive-design {
+    overflow: hidden;
+    position: relative;
+}
+
+.responsive-design-reset-button {
+    position: absolute;
+    left: 0;
+    top: 0;
+    background-color: rgb(54, 54, 54);
+}
+
+.responsive-design-reset-button:hover {
+    box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+.responsive-design-sliders-container {
+    position: absolute;
+    overflow: visible;
+}
+
+.responsive-design-slider-width,
+.responsive-design-slider-height {
+    flex: none;
+    justify-content: center;
+}
+
+.responsive-design-slider-thumb {
+    border: 1px solid rgb(231, 231, 231);
+    background-color: lightgray;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    background-repeat: no-repeat;
+}
+
+.responsive-design-slider-width .responsive-design-slider-thumb {
+    padding: 44px 5px;
+    border-radius: 0 3px 3px 0;
+    border-left: none;
+}
+
+.responsive-design-slider-height .responsive-design-slider-thumb {
+    padding: 4px 44px;
+    border-radius: 0 0 3px 3px;
+    border-top: none;
+}
+
+.responsive-design-thumb-handle {
+    content: url(Images/statusbarResizerHorizontal.png);
+    pointer-events: none;
+}
+
+.responsive-design-slider-height .responsive-design-thumb-handle  {
+    transform: rotate(90deg);
+}
+
+.responsive-design-resolution-label {
+    position: absolute;
+    color: white;
+    background-color: rgb(255, 156, 0);
+    padding: 3px;
+    font-size: 12px;
+    text-align: center;
+}
+
+.responsive-design-resolution-width {
+    top: 0;
+}
+
+.responsive-design-resolution-height {
+    left: 0;
+}
+
+.responsive-design-toolbar {
+    flex: none;
+    background-color: rgb(64, 64, 64);
+    color: rgb(180, 180, 180);
+}
+
+.responsive-design-toolbar fieldset,
+.responsive-design-toolbar p {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    display: inline-block;
+}
+
+.responsive-design-toolbar .responsive-design-section {
+    display: inline-flex;
+    height: 24px;
+    border: 1px solid rgb(163, 163, 163);
+    border-left: none;
+    margin-top: -1px;
+    white-space: nowrap;
+    align-items: center;
+    padding-right: 3px;
+}
+
+.responsive-design-toolbar .field-error-message {
+    display: none;
+}
+
+.responsive-design-toolbar input[type='text'] {
+    color: rgb(255, 156, 0);
+    text-align: center;
+    background-color: transparent;
+    border: none;
+    margin: 0;
+    padding: 3px 0;
+}
+
+.responsive-design-toolbar input:disabled,
+.responsive-design-toolbar button:disabled {
+    opacity: 0.7;
+}
+
+.responsive-design-toolbar input[type='checkbox'] {
+    -webkit-appearance: none;
+    margin: 0 5px 0 7px;
+    border: 1px solid rgb(45, 45, 45);
+    border-radius: 3px;
+    background-color: rgb(102, 102, 102);
+    position: relative;
+    top: 1px;
+}
+
+.responsive-design-toolbar input[type='checkbox']:after {
+    content: '';
+    line-height: 10px;
+    position: absolute;
+    cursor: pointer;
+    width: 12px;
+    height: 12px;
+    background: none;
+}
+
+.responsive-design-toolbar input[type='checkbox']:checked:after {
+    background: rgb(220, 220, 220);
+}
+
+.responsive-design-toolbar input.error-input {
+    color: red;
+    text-decoration: line-through;
+}
+
+.responsive-design-toolbar select {
+    width: 150px;
+    background-color: transparent;
+    color: rgb(255, 156, 0);
+    border: 0;
+    margin-left: 10px;
+    line-height: 16px;
+    position: relative;
+    top: 1px;
+}
+
+.responsive-design-toolbar input:focus {
+    background-color: rgb(102, 102, 102)
+}
+
+.responsive-design-icon {
+    background-color: rgb(180, 180, 180);
+    -webkit-mask-image: url(Images/responsiveDesign.png);
+    -webkit-mask-size: 48px 16px;
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    position: relative;
+    top: 3px;
+}
+
+@media (-webkit-min-device-pixel-ratio: 1.5) {
+.responsive-design-icon {
+    -webkit-mask-image: url(Images/responsiveDesign_2x.png);
+}
+} /* media */
+
+.responsive-design-toolbar input[type='checkbox']:after {
+    -webkit-mask-image: url(Images/statusbarButtonGlyphs.png);
+    -webkit-mask-size: 320px 144px;
+    -webkit-mask-position: -128px -110px;
+}
+
+@media (-webkit-min-device-pixel-ratio: 1.5) {
+.responsive-design-toolbar input[type='checkbox']:after {
+    -webkit-mask-image: url(Images/statusbarButtonGlyphs_2x.png);
+}
+} /* media */
+
+.responsive-design-icon-resolution {
+    -webkit-mask-position: 0 0;
+}
+
+.responsive-design-icon-dpr {
+    -webkit-mask-position: -16px 0;
+}
+
+.responsive-design-icon-swap {
+    opacity: 0.9;
+    background-color: rgb(255, 156, 0);
+    -webkit-mask-position: -32px 0;
+    margin-right: 10px;
+    -webkit-appearance: none;
+    padding: 0;
+    border: 0;
+}
+
+.responsive-design-icon-swap:hover {
+    opacity: 1;
+}
+
+.responsive-design-icon-swap:active {
+    opacity: 0.8;
+}
+
+.responsive-design-warning {
+    background-color: rgb(64, 64, 64);
+    color: rgb(180, 180, 180);
+    height: 19px;
+    padding: 2px;
+}
+
+.responsive-design-warning::before {
+    background-image: url(Images/statusbarButtonGlyphs.png);
+    background-size: 320px 144px;
+    width: 10px;
+    height: 10px;
+    content: "";
+    position: relative;
+    top: 2px;
+    background-position: -202px -107px;
+    float: left;
+    margin-right: 4px;
+    margin-left: 2px;
+}
+
+@media (-webkit-min-device-pixel-ratio: 1.5) {
+.responsive-design-warning::before {
+    background-image: url(Images/statusbarButtonGlyphs_2x.png);
+}
+} /* media */

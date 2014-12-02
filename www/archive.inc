@@ -1,6 +1,7 @@
 <?php
 require_once('testStatus.inc');
 require_once('logging.inc');
+require_once('common_lib.inc');
 
 /**
 * Archive the given test if it hasn't already been archived
@@ -9,7 +10,7 @@ require_once('logging.inc');
 * 
 * @param mixed $id
 */
-function ArchiveTest($id, $store_result = true) {
+function ArchiveTest($id, $store_result = true, $delete = false) {
     global $settings;
     global $api_keys;
     $ret = false;
@@ -18,12 +19,11 @@ function ArchiveTest($id, $store_result = true) {
         array_key_exists('archive_s3_server', $settings)) ) {    // S3 Interface (Internet Archive or standard)
         $status = GetTestStatus($id, false);
         $completed = true;
-        if ($status['statusCode'] >= 100 && $status['statusCode'] < 200) {
+        if ($status['statusCode'] >= 100 && $status['statusCode'] < 200)
             $completed = false;
-        }
         $testPath = realpath('./' . GetTestPath($id));
-        $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-        if ($completed || $testInfo['batch']) {
+        $testInfo = GetTestInfo($id);
+        if ($testInfo && ($completed || $testInfo['batch'])) {
             if( isset($testInfo['archived']) && $testInfo['archived'] ) {
                 if (VerifyArchive($id)) {
                     $ret = true;
@@ -31,11 +31,14 @@ function ArchiveTest($id, $store_result = true) {
                     $zipFile = GetArchiveFile($id, true);
                     unlink($zipFile);
                     $testInfo['archived'] = false;
-                    gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+                    SaveTestInfo($id, $testInfo);
                 }
             }
             
             if (!$ret) {
+              $lock = LockTest($id);
+              if (isset($lock)) {
+                $testInfo = GetTestInfo($id);
                 $zipFile = "./tmp/$id.zip";
                 // zip up the contents
                 if (is_dir($testPath) === true) {
@@ -101,13 +104,18 @@ function ArchiveTest($id, $store_result = true) {
                             unlink($zipFile);
                         if ($ret && $store_result) {
                             $testInfo['archived'] = true;
-                            gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
+                            SaveTestInfo($id, $testInfo);
                         }
                     }
                 }
+                UnlockTest($lock);
+              }
             }
         }
+        if ($ret && $delete && is_dir($testPath))
+          delTree("$testPath/");
     }
+      
     return $ret;
 }
 
@@ -136,19 +144,19 @@ function RestoreArchive($id) {
             array_key_exists('archive_dir', $settings) || 
             array_key_exists('archive_s3_url', $settings) ||
             array_key_exists('archive_s3_server', $settings)) {
+            $deleteZip = true;
             $zipfile = "./tmp/$id.zip";
             if (strlen($url)) {
                 $url .= "/$id.zip";
             } else {
                 if (isset($settings['archive_dir'])) {
-                    $source = GetArchiveFile($id);
+                    $deleteZip = false;
+                    $zipfile = GetArchiveFile($id);
                     //see if we have a 2nd-level archive
-                    if ((!is_file($source) || !filesize($source)) && array_key_exists('archive2_dir', $settings))
-                        RestoreArchive2($id, $source);
-                    if (is_file($source)) {
-                        touch($source);
-                        copy($source, $zipfile);
-                    }
+                    if ((!is_file($zipfile) || !filesize($zipfile)) && array_key_exists('archive2_dir', $settings))
+                        RestoreArchive2($id, $zipfile);
+                    if (is_file($zipfile))
+                        touch($zipfile);
                 } elseif (isset($settings['archive_s3_url'])) {
                     $separator = strrpos($id, '_');
                     if ($separator !== false) {
@@ -185,19 +193,25 @@ function RestoreArchive($id) {
             if ($zip->open($zipfile) === TRUE) {
                 if (!is_dir($testPath))
                     mkdir( $testPath, 0777, true );
-                $testPath = realpath($testPath);
-                $zip->extractTo($testPath);
-                $zip->close();
+                $lock = LockTest($testPath);
+                if (isset($lock)) {
+                  $testPath = realpath($testPath);
+                  $zip->extractTo($testPath);
+                  $zip->close();
 
-                $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-                $testInfo['archived'] = true;
-                $testInfo['restored'] = true;
-                $testInfo['restoredDataOnly'] = false;
-                gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
-                
-                $ret = true;
-            }    
-            if (is_file($zipfile))
+                  $testInfo = GetTestInfo($id);
+                  if ($testInfo) {
+                    $testInfo['archived'] = true;
+                    $testInfo['restored'] = true;
+                    $testInfo['restoredDataOnly'] = false;
+                    SaveTestInfo($id, $testInfo);
+                  }
+                  
+                  $ret = true;
+                  UnlockTest($lock);
+                }
+            }
+            if ($deleteZip && is_file($zipfile))
                 @unlink($zipfile);
         }
         else
@@ -327,4 +341,8 @@ function GetArchiveFile($id, $create_directory = false)
     return $file;
 }
 
+function ArchiveApi($id) {
+  if (GetSetting('archive_api'))
+    ArchiveTest($id, true, true);
+}
 ?>

@@ -99,12 +99,11 @@ bool DevTools::Write(CString file) {
       while (pos) {
         CStringA event_string = events_.GetNext(pos);
         if (event_string.GetLength()) {
-          if (first)
-            first = false;
-          else
-            event_string = CStringA(",") + event_string;
+          if (!first)
+            WriteFile(file_handle, ",", 1, &bytes_written, 0);
           WriteFile(file_handle, (LPCSTR)event_string,
                     event_string.GetLength(), &bytes_written, 0);
+          first = false;
         }
       }
       WriteFile(file_handle, "]", 1, &bytes_written, 0);
@@ -153,31 +152,6 @@ void DevTools::SetStartTime(LARGE_INTEGER &start_time) {
       event_string += ",\"type\":\"Program\"}}";
       AddEvent(kTimelineEvent, event_string, true);
     }
-  }
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void DevTools::AddPaintEvent(int x, int y, int width, int height) {
-  if (!using_raw_events_) {
-    CStringA timestamp = GetTime();
-    CStringA position;
-    position.Format("\"x\":%d,\"y\":%d,\"width\":%d,\"height\":%d",
-                    x, y, width, height);
-    CStringA event_string = "{\"record\":{\"startTime\":";
-    event_string += timestamp;
-    event_string += ",\"data\":{},\"children\":[{\"startTime\":";
-    event_string += timestamp;
-    event_string += ",\"data\":{";
-    event_string += position;
-    event_string += "},\"children\":[],\"endTime\":";
-    event_string += timestamp;
-    event_string += ",\"type\":\"Paint\",\"frameId\":\"1\",\"usedHeapSize\":";
-    event_string += GetUsedHeap();
-    event_string += "}],\"endTime\":";
-    event_string += timestamp;
-    event_string += ",\"type\":\"Program\"}}";
-    AddEvent(kTimelineEvent, event_string);
   }
 }
 

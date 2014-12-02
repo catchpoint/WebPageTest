@@ -87,7 +87,10 @@ var g_processing_task = false;
 var g_commandRunner = null;  // Will create once we know the tab id under test.
 var g_debugWindow = null;  // May create at window onload.
 var g_overrideHosts = {};
+var g_addHeaders = [];
+var g_setHeaders = [];
 var g_started = false;
+var g_requestsHooked = false;
 
 /**
  * Uninstall a given set of extensions.  Run |onComplete| when done.
@@ -100,7 +103,7 @@ wpt.main.uninstallUnwantedExtensions = function(idsToUninstall, onComplete) {
   var numPendingCallbacks = 0;
 
   var callOnCompleteWhenDone = function() {
-    if (numPendingCallbacks == 0)
+    if (numPendingCallbacks === 0)
       onComplete();
   };
 
@@ -141,7 +144,7 @@ wpt.main.startMeasurements = function() {
     // Fetch tasks from wptdriver.exe.
     window.setInterval(wptGetTask, TASK_INTERVAL);
   }
-}
+};
 
 // Install an onLoad handler for all tabs.
 chrome.tabs.onUpdated.addListener(function(tabId, props) {
@@ -175,7 +178,7 @@ function FakeCommand(action, target, opt_value) {
   };
 
   if (typeof opt_value != 'undefined')
-    result['value'] = opt_value;
+    result.value = opt_value;
 
   return result;
 }
@@ -268,6 +271,80 @@ function wptSendEvent(event_name, query_string, data) {
   }
 }
 
+function wptHostMatches(host, filter) {
+  var matched = false;
+  if (!filter.length || filter == '*' || host.toLowerCase() == filter.toLowerCase()) {
+    matched = true;
+  } else {
+    var re = new RegExp(filter);
+    matched = re.test(host);
+  }
+  return matched;
+}
+
+var wptBeforeSendHeaders = function(details) {
+  var response = {};
+  if (g_active && details.tabId == g_tabid) {
+    var modified = false;
+    var host = details.url.match(URL_REGEX)[2].toString();
+    var scheme = details.url.match(URL_REGEX)[1].toString();
+    for (var originalHost in g_overrideHosts) {
+      if (g_overrideHosts[originalHost] == host) {
+        details.requestHeaders.push({'name' : 'x-Host', 'value' : originalHost});
+        modified = true;
+        break;
+      }
+    }
+    
+    // modify headers for HTTPS requests (non-encrypted will be handled at the network layer)
+    if (scheme.toLowerCase() == "https://") {
+      var i;
+      for (i = 0; i < g_setHeaders.length; i++) {
+        if (wptHostMatches(host, g_setHeaders[i].filter)) {
+          var headerSet = false;
+          for (var j = 0; j < details.requestHeaders.length; j++) {
+            if (g_setHeaders[i].name.toLowerCase() == details.requestHeaders[j].name.toLowerCase()) {
+              details.requestHeaders[j].value = g_setHeaders[i].value;
+              headerSet = true;
+            }
+          }
+          if (!headerSet)
+            details.requestHeaders.push({'name' : g_setHeaders[i].name, 'value' : g_setHeaders[i].value});
+          modified = true;
+        }
+      }
+      for (i = 0; i < g_addHeaders.length; i++) {
+        if (wptHostMatches(host, g_addHeaders[i].filter)) {
+          details.requestHeaders.push({'name' : g_addHeaders[i].name, 'value' : g_addHeaders[i].value});
+          modified = true;
+        }
+      }
+    }
+    
+    if (modified)
+      response = {requestHeaders: details.requestHeaders};
+  }
+  return response;
+};
+
+var wptBeforeSendRequest = function(details) {
+  var action = {};
+  if (g_active && details.tabId == g_tabid) {
+    var urlParts = details.url.match(URL_REGEX);
+    var scheme = urlParts[1].toString();
+    var host = urlParts[2].toString();
+    var object = urlParts[3].toString();
+    wpt.LOG.info('Checking host override for "' + host +
+                 '" in URL ' + details.url);
+    if (g_overrideHosts[host] !== undefined) {
+      var newHost = g_overrideHosts[host];
+      wpt.LOG.info('Overriding host ' + host + ' to ' + newHost);
+      action.redirectUrl = scheme + newHost + object;
+    }
+  }
+  return action;
+};
+  
 chrome.webRequest.onErrorOccurred.addListener(function(details) {
   // Chrome canary is generating spurious net:ERR_ABORTED errors
   // right when navigation starts - we need to ignore them
@@ -297,44 +374,19 @@ chrome.webRequest.onCompleted.addListener(function(details) {
   }, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
 );
 
-chrome.webRequest.onBeforeRequest.addListener(function(details) {
-    var action = {};
-    if (g_active && details.tabId == g_tabid) {
-      var urlParts = details.url.match(URL_REGEX);
-      var scheme = urlParts[1].toString();
-      var host = urlParts[2].toString();
-      var object = urlParts[3].toString();
-      wpt.LOG.info('Checking host override for "' + host +
-                   '" in URL ' + details.url);
-      if (g_overrideHosts[host] != undefined) {
-        var newHost = g_overrideHosts[host];
-        wpt.LOG.info('Overriding host ' + host + ' to ' + newHost);
-        action.redirectUrl = scheme + newHost + object;
-      }
-    }
-    return action;
-  },
-  {urls: ['https://*/*']},
-  ['blocking']
-);
-
-chrome.webRequest.onBeforeSendHeaders.addListener(function(details) {
-    var response = {};
-    if (g_active && details.tabId == g_tabid) {
-      var host = details.url.match(URL_REGEX)[2].toString();
-      for (originalHost in g_overrideHosts) {
-        if (g_overrideHosts[originalHost] == host) {
-          details.requestHeaders.push({'name' : 'x-Host', 'value' : originalHost});
-          response = {requestHeaders: details.requestHeaders};
-          break;
-        }
-      }
-    }
-      return response;
-  },
-  {urls: ['https://*/*']},
-  ['blocking', 'requestHeaders']
-);
+function wptHookRequests() {
+  if (!g_requestsHooked) {
+    g_requestsHooked = true;
+    chrome.webRequest.onBeforeSendHeaders.addListener(wptBeforeSendHeaders,
+      {urls: ['https://*/*']},
+      ['blocking', 'requestHeaders']
+    );
+    chrome.webRequest.onBeforeRequest.addListener(wptBeforeSendRequest,
+      {urls: ['https://*/*']},
+      ['blocking']
+    );
+  }
+}
 
 // Add a listener for messages from script.js through message passing.
 chrome.extension.onRequest.addListener(
@@ -344,7 +396,7 @@ chrome.extension.onRequest.addListener(
       var dom_element_time = new Date().getTime() - g_start;
       wptSendEvent(
           'dom_element',
-          '?name_value=' + encodeURIComponent(request['name_value']) +
+          '?name_value=' + encodeURIComponent(request.name_value) +
           '&time=' + dom_element_time);
     }
     else if (request.message == 'AllDOMElementsLoaded') {
@@ -355,9 +407,8 @@ chrome.extension.onRequest.addListener(
     }
     else if (request.message == 'wptLoad') {
       wptSendEvent('load', 
-                   '?timestamp=' + request['timestamp'] + 
-                   '&fixedViewport=' + request['fixedViewport'] +
-                   '&domCount=' + request['domCount']);
+                   '?timestamp=' + request.timestamp + 
+                   '&fixedViewport=' + request.fixedViewport);
     }
     else if (request.message == 'wptWindowTiming') {
       wpt.logging.closeWindowIfOpen();
@@ -366,18 +417,19 @@ chrome.extension.onRequest.addListener(
       wptSendEvent(
           'window_timing',
           '?domContentLoadedEventStart=' +
-              request['domContentLoadedEventStart'] +
+              request.domContentLoadedEventStart +
           '&domContentLoadedEventEnd=' +
-              request['domContentLoadedEventEnd'] +
-          '&loadEventStart=' + request['loadEventStart'] +
-          '&loadEventEnd=' + request['loadEventEnd']);
+              request.domContentLoadedEventEnd +
+          '&loadEventStart=' + request.loadEventStart +
+          '&loadEventEnd=' + request.loadEventEnd +
+          '&msFirstPaint=' + request.msFirstPaint);
     }
     else if (request.message == 'wptDomCount') {
       wptSendEvent('domCount', 
-                   '&domCount=' + request['domCount']);
+                   '?domCount=' + request.domCount);
     }
     else if (request.message == 'wptMarks') {
-      if (request['marks'] != undefined &&
+      if (request['marks'] !== undefined &&
           request.marks.length) {
         for (var i = 0; i < request.marks.length; i++) {
           var mark = request.marks[i];
@@ -387,9 +439,15 @@ chrome.extension.onRequest.addListener(
       }
     } else if (request.message == 'wptStats') {
       var stats = '?';
-      if (request['domCount'] != undefined)
-        stats += 'domCount=' + request['domCount'];
+      if (request['domCount'] !== undefined)
+        stats += 'domCount=' + request.domCount;
       wptSendEvent('stats', stats);
+    } else if (request.message == 'wptResponsive') {
+      if (request['isResponsive'] !== undefined)
+        wptSendEvent('responsive', '?isResponsive=' + request.isResponsive);
+    } else if (request.message == 'wptCustomMetrics') {
+      if (request['data'] !== undefined)
+        wptSendEvent('custom_metrics', '', JSON.stringify(request.data));
     }
     // TODO: check whether calling sendResponse blocks in the content script
     // side in page.
@@ -425,7 +483,7 @@ function wptExecuteTask(task) {
         break;
       case 'exec':
         g_processing_task = true;
-        g_commandRunner.doExec(task.target, wptTaskCallback);
+        wpt.chromeDebugger.Exec(task.target, wptTaskCallback);
         break;
       case 'setcookie':
         g_commandRunner.doSetCookie(task.target, task.value);
@@ -465,21 +523,50 @@ function wptExecuteTask(task) {
         break;
       case 'capturetimeline':
         g_processing_task = true;
-        wpt.chromeDebugger.CaptureTimeline(wptTaskCallback);
+        wpt.chromeDebugger.CaptureTimeline(parseInt(task.target), wptTaskCallback);
         break;
       case 'capturetrace':
-        g_processing_task = true;
-        wpt.chromeDebugger.CaptureTrace(wptTaskCallback);
+        wpt.chromeDebugger.CaptureTrace();
         break;
       case 'noscript':
         g_commandRunner.doNoScript();
         break;
       case 'overridehost':
+        wptHookRequests();
         g_overrideHosts[task.target] = task.value;
+        break;
+      case 'addheader':
+        var separator = task.target.indexOf(":");
+        if (separator > 0)
+          g_addHeaders.push({'name' : task.target.substr(0, separator).trim(),
+                             'value' : task.target.substr(separator + 1).trim(),
+                             'filter' : typeof(task.value) === 'undefined' ? '' : task.value});
+        wptHookRequests();
+        break;
+      case 'setheader':
+        var separator = task.target.indexOf(":");
+        if (separator > 0)
+          g_setHeaders.push({'name' : task.target.substr(0, separator).trim(),
+                             'value' : task.target.substr(separator + 1).trim(),
+                             'filter' : typeof(task.value) === 'undefined' ? '' : task.value});
+        wptHookRequests();
+        break;
+      case 'resetheaders':
+        g_addHeaders = [];
+        g_setHeaders = [];
         break;
       case 'collectstats':
         g_processing_task = true;
-        g_commandRunner.doCollectStats(wptTaskCallback);
+        wpt.chromeDebugger.CollectStats(function(){
+          g_commandRunner.doCollectStats(task.target, wptTaskCallback);
+        });
+        break;
+      case 'emulatemobile':
+        wpt.chromeDebugger.EmulateMobile(task.target);
+        break;
+      case 'checkresponsive':
+        g_processing_task = true;
+        g_commandRunner.doCheckResponsive(wptTaskCallback);
         break;
 
       default:

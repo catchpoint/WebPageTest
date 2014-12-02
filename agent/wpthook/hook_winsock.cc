@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static CWsHook * pHook = NULL;
 
-//#define TRACE_WINSOCK 1
+#define TRACE_WINSOCK 1
 
 /******************************************************************************
 *******************************************************************************
@@ -204,18 +204,36 @@ PTP_IO WINAPI CreateThreadpoolIo_Hook(HANDLE fl,
     PTP_WIN32_IO_CALLBACK_WPT pfnio, PVOID pv, PTP_CALLBACK_ENVIRON pcbe) {
   PTP_IO ret = NULL;
   if (pHook)
-    ret = pHook->CreateThreadpoolIo(fl, pfnio, pv, pcbe);
+    ret = pHook->CreateThreadpoolIo(fl, pfnio, pv, pcbe, false);
+  return ret;
+}
+
+PTP_IO WINAPI CreateThreadpoolIo_base_Hook(HANDLE fl,
+    PTP_WIN32_IO_CALLBACK_WPT pfnio, PVOID pv, PTP_CALLBACK_ENVIRON pcbe) {
+  PTP_IO ret = NULL;
+  if (pHook)
+    ret = pHook->CreateThreadpoolIo(fl, pfnio, pv, pcbe, true);
   return ret;
 }
 
 void WINAPI CloseThreadpoolIo_Hook(PTP_IO pio) {
   if (pHook)
-    pHook->CloseThreadpoolIo(pio);
+    pHook->CloseThreadpoolIo(pio, false);
+}
+
+void WINAPI CloseThreadpoolIo_base_Hook(PTP_IO pio) {
+  if (pHook)
+    pHook->CloseThreadpoolIo(pio, true);
 }
 
 void WINAPI StartThreadpoolIo_Hook(PTP_IO pio) {
   if (pHook)
-    pHook->StartThreadpoolIo(pio);
+    pHook->StartThreadpoolIo(pio, false);
+}
+
+void WINAPI StartThreadpoolIo_base_Hook(PTP_IO pio) {
+  if (pHook)
+    pHook->StartThreadpoolIo(pio, true);
 }
 
 int WSAAPI WSAIoctl_Hook(SOCKET s, DWORD dwIoControlCode, LPVOID lpvInBuffer,
@@ -286,21 +304,18 @@ void CWsHook::Init() {
                                           WSAEventSelect_Hook);
   _WSAEnumNetworkEvents = hook.createHookByName("ws2_32.dll",
       "WSAEnumNetworkEvents", WSAEnumNetworkEvents_Hook);
-  _CreateThreadpoolIo = hook.createHookByName("kernelbase.dll",
+  _CreateThreadpoolIo = hook.createHookByName("kernel32.dll",
       "CreateThreadpoolIo", CreateThreadpoolIo_Hook);
-  if (!_CreateThreadpoolIo)
-    _CreateThreadpoolIo = hook.createHookByName("kernel32.dll",
-        "CreateThreadpoolIo", CreateThreadpoolIo_Hook);
+  _CreateThreadpoolIo_base = hook.createHookByName("kernelbase.dll",
+      "CreateThreadpoolIo", CreateThreadpoolIo_base_Hook);
   _CloseThreadpoolIo = hook.createHookByName("kernelbase.dll",
       "CloseThreadpoolIo", CloseThreadpoolIo_Hook);
-  if (!_CloseThreadpoolIo)
-    _CloseThreadpoolIo = hook.createHookByName("kernel32.dll",
-        "CloseThreadpoolIo", CloseThreadpoolIo_Hook);
+  _CloseThreadpoolIo_base = hook.createHookByName("kernel32.dll",
+      "CloseThreadpoolIo", CloseThreadpoolIo_base_Hook);
   _StartThreadpoolIo = hook.createHookByName("kernelbase.dll",
       "StartThreadpoolIo", StartThreadpoolIo_Hook);
-  if (!_StartThreadpoolIo)
-    _StartThreadpoolIo = hook.createHookByName("kernel32.dll",
-        "StartThreadpoolIo", StartThreadpoolIo_Hook);
+  _StartThreadpoolIo_base = hook.createHookByName("kernel32.dll",
+      "StartThreadpoolIo", StartThreadpoolIo_base_Hook);
   _WSAIoctl = hook.createHookByName("ws2_32.dll", "WSAIoctl", WSAIoctl_Hook);
 
   // only hook the A version if the W version wasn't present (XP SP1 or below)
@@ -529,6 +544,7 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
   ATLTRACE(_T("%d - WSASend %d buffers"), s, dwBufferCount);
 #endif
   if (_WSASend) {
+    _sockets.ClaimSslFd(s);
     bool is_modified = 0;
     unsigned original_len = 0;
     DataChunk chunk;
@@ -930,31 +946,36 @@ void CWsHook::ThreadpoolCallback(PTP_CALLBACK_INSTANCE Instance, PVOID Context,
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 PTP_IO CWsHook::CreateThreadpoolIo(HANDLE fl,
-    PTP_WIN32_IO_CALLBACK_WPT pfnio, PVOID pv, PTP_CALLBACK_ENVIRON pcbe) {
+    PTP_WIN32_IO_CALLBACK_WPT pfnio, PVOID pv, PTP_CALLBACK_ENVIRON pcbe,
+    bool kernelBase) {
   PTP_IO ret = NULL;
-  if (_CreateThreadpoolIo) {
-    EnterCriticalSection(&cs);
+  if (kernelBase && _CreateThreadpoolIo_base)
+    ret = _CreateThreadpoolIo_base(fl, ::ThreadpoolCallback, pv, pcbe);
+  else if (!kernelBase && _CreateThreadpoolIo)
     ret = _CreateThreadpoolIo(fl, ::ThreadpoolCallback, pv, pcbe);
-    if (ret) {
-      _threadpool_callbacks.SetAt(ret, pfnio);
-      _threadpool_sockets.SetAt(ret, (SOCKET)fl);
-    }
-    LeaveCriticalSection(&cs);
+  EnterCriticalSection(&cs);
+  if (ret && pfnio != ::ThreadpoolCallback) {
+    _threadpool_callbacks.SetAt(ret, pfnio);
+    _threadpool_sockets.SetAt(ret, (SOCKET)fl);
   }
+  LeaveCriticalSection(&cs);
 #ifdef TRACE_WINSOCK
-  ATLTRACE(_T("%d: CreateThreadpoolIo - callback = 0x%p, pio = 0x%p"),
-      fl, pfnio, ret);
+  ATLTRACE(_T("%d: CreateThreadpoolIo (%s) - callback = 0x%p, pio = 0x%p"),
+            fl, kernelBase ? _T("kernelbase") : _T("kernel32"), pfnio, ret);
 #endif
   return ret;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void CWsHook::CloseThreadpoolIo(PTP_IO pio) {
+void CWsHook::CloseThreadpoolIo(PTP_IO pio, bool kernelBase) {
 #ifdef TRACE_WINSOCK
-  ATLTRACE(_T("CloseThreadpoolIo - pio = 0x%p"), pio);
+  ATLTRACE(_T("CloseThreadpoolIo (%s) - pio = 0x%p"),
+           kernelBase ? _T("kernelbase") : _T("kernel32"), pio);
 #endif
-  if (_CloseThreadpoolIo)
+  if (kernelBase && _CloseThreadpoolIo_base)
+    _CloseThreadpoolIo_base(pio);
+  else if (!kernelBase && _CloseThreadpoolIo)
     _CloseThreadpoolIo(pio);
   EnterCriticalSection(&cs);
   _threadpool_callbacks.RemoveKey(pio);
@@ -964,11 +985,14 @@ void CWsHook::CloseThreadpoolIo(PTP_IO pio) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void CWsHook::StartThreadpoolIo(PTP_IO pio) {
+void CWsHook::StartThreadpoolIo(PTP_IO pio, bool kernelBase) {
 #ifdef TRACE_WINSOCK
-  ATLTRACE(_T("StartThreadpoolIo - pio = 0x%p"), pio);
+  ATLTRACE(_T("StartThreadpoolIo (%s) - pio = 0x%p"),
+           kernelBase ? _T("kernelbase") : _T("kernel32"), pio);
 #endif
-  if (_StartThreadpoolIo)
+  if (kernelBase && _StartThreadpoolIo_base)
+    _StartThreadpoolIo_base(pio);
+  else if (!kernelBase && _StartThreadpoolIo)
     _StartThreadpoolIo(pio);
 }
 

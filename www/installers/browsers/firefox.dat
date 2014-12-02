@@ -1,6 +1,6 @@
 browser=Firefox
-url=http://s3.amazonaws.com/wpt-software/firefox_25.exe
-md5=D080C1C8E7A275C81F454275DE3810E2
-version=25
-command=firefox_25.exe -ms
+url=http://www.webpagetest.org/installers/browsers/firefox_33.exe
+md5=356414F30B9A8F8756E68CB2482FF5C5
+version=33
+command=firefox_33.exe -ms
 update=1

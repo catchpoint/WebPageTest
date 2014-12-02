@@ -1,7 +1,11 @@
 <?php
 include 'common.inc';
 require_once('page_data.inc');
+require_once('object_detail.inc');
 require_once('./video/visualProgress.inc.php');
+
+$sentHeader = false;
+$hasCSV = null;
 
 // make sure the test has finished, otherwise return a 404
 if( isset($test['test']) && (isset($test['test']['completeTime']) || $test['test']['batch']) )
@@ -21,77 +25,145 @@ if( isset($test['test']) && (isset($test['test']['completeTime']) || $test['test
     }
     header("Content-disposition: attachment; filename=$filename");
     header ("Content-type: text/csv");
-    
-    
-    if( $test['test']['batch'] )
-    {
-        echo "\"Test\",$header,\"Run\"";
-        if (!$is_requests) {
-            echo ',"Speed Index"';
-        }
-        echo "\r\n";
+    header("Cache-Control: no-cache, must-revalidate");
+    header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+
+    if ($test['test']['batch']) {
         $tests = null;
-        if( gz_is_file("$testPath/tests.json") )
-        {
+        if( gz_is_file("$testPath/tests.json") ) {
             $legacyData = json_decode(gz_file_get_contents("$testPath/tests.json"), true);
             $tests = array();
             $tests['variations'] = array();
             $tests['urls'] = array();
             foreach( $legacyData as &$legacyTest )
                 $tests['urls'][] = array('u' => $legacyTest['url'], 'id' => $legacyTest['id']);
-        }
-        elseif( gz_is_file("$testPath/bulk.json") )
+        } elseif( gz_is_file("$testPath/bulk.json") )
             $tests = json_decode(gz_file_get_contents("$testPath/bulk.json"), true);
-        if( isset($tests) )
-        {
-            foreach( $tests['urls'] as &$testData )
-            {
+        if( isset($tests) ) {
+            foreach( $tests['urls'] as &$testData ) {
+                $path = './' . GetTestPath($testData['id']);
+                if (!isset($hasCSV)) {
+                  $files = glob("$path/*$fileType");
+                  if ($files && is_array($files) && count($files))
+                    $hasCSV = true;
+                  else
+                    $hasCSV = false;
+                }
                 $label = $testData['l'];
                 if( !strlen($label) )
                     $label = htmlspecialchars(ShortenUrl($testData['u']));
-                $path = './' . GetTestPath($testData['id']);
-                for( $i = 1; $i <= $test['test']['runs']; $i++ )
-                {
-                    $additional = array($i, SpeedIndex($path, $i, 0));
-                    csvFile("$path/{$i}_$fileType", $label, $column_count, $additional);
-                    $additional = array($i, SpeedIndex($path, $i, 1));
-                    csvFile("$path/{$i}_Cached_$fileType", $label, $column_count, $additional);
+                if ($hasCSV) {
+                  if (!$sentHeader) {
+                    echo "\"Test\",$header,\"Run\",\"Cached\"";
+                    if (!$is_requests) {
+                        echo ',"Speed Index"';
+                    }
+                    echo "\r\n";
+                    $sentHeader = true;
+                  }
+                  for( $i = 1; $i <= $test['test']['runs']; $i++ ) {
+                      $additional = array($i, 0, SpeedIndex($path, $i, 0));
+                      csvFile("$path/{$i}_$fileType", $label, $column_count, $additional);
+                      $additional = array($i, 1, SpeedIndex($path, $i, 1));
+                      csvFile("$path/{$i}_Cached_$fileType", $label, $column_count, $additional);
+                  }
+                } else {
+                  csvPageData($testData['id'], $path, $test['test']['runs']);
                 }
                 
-                foreach( $testData['v'] as $variationIndex => $variationId )
-                {
+                foreach( $testData['v'] as $variationIndex => $variationId ) {
                     $path = './' . GetTestPath($variationId);
-                    for( $i = 1; $i <= $test['test']['runs']; $i++ )
-                    {
-                        $additional = array($i, SpeedIndex($path, $i, 0));
-                        csvFile("$path/{$i}_$fileType", "$label - {$tests['variations'][$variationIndex]['l']}", $column_count, $additional);
-                        $additional = array($i, SpeedIndex($path, $i, 1));
-                        csvFile("$path/{$i}_Cached_$fileType", "$label - {$tests['variations'][$variationIndex]['l']}", $column_count, $additional);
+                    if ($hasCSV) {
+                      for( $i = 1; $i <= $test['test']['runs']; $i++ ) {
+                          $additional = array($i, 0, SpeedIndex($path, $i, 0));
+                          csvFile("$path/{$i}_$fileType", "$label - {$tests['variations'][$variationIndex]['l']}", $column_count, $additional);
+                          $additional = array($i, 1, SpeedIndex($path, $i, 1));
+                          csvFile("$path/{$i}_Cached_$fileType", "$label - {$tests['variations'][$variationIndex]['l']}", $column_count, $additional);
+                      }
+                    } else {
+                      csvPageData($variationId, $path, $test['test']['runs']);
                     }
                 }
             }
         }
-    }
-    else
-    {
-        echo "$header,\"Run\"";
-        if (!$is_requests) {
-            echo ',"Speed Index"';
-        }
-        echo "\r\n";
+    } else {
+        $files = glob("$testPath/*$fileType.*");
+        if ($files && is_array($files) && count($files))
+          $hasCSV = true;
+        else
+          $hasCSV = false;
         // loop through all  of the results files (one per run) - both cached and uncached
-        for( $i = 1; $i <= $test['test']['runs']; $i++ )
-        {
-            $additional = array($i, SpeedIndex($testPath, $i, 0));
-            csvFile("$testPath/{$i}_$fileType", null, $column_count, $additional);
-            $additional = array($i, SpeedIndex($testPath, $i, 1));
-            csvFile("$testPath/{$i}_Cached_$fileType", null, $column_count, $additional);
+        if ($hasCSV) {
+          echo "$header,\"Run\",\"Cached\"";
+          if (!$is_requests)
+              echo ',"Speed Index"';
+          echo "\r\n";
+          for( $i = 1; $i <= $test['test']['runs']; $i++ ) {
+              $additional = array($i, 0);
+              if (!$is_requests)
+                $additional[] = SpeedIndex($testPath, $i, 0);
+              csvFile("$testPath/{$i}_$fileType", null, $column_count, $additional);
+              $additional = array($i, 1);
+              if (!$is_requests)
+                $additional[] = SpeedIndex($testPath, $i, 1);
+              csvFile("$testPath/{$i}_Cached_$fileType", null, $column_count, $additional);
+          }
+        } else {
+          csvPageData($id, $testPath, $test['test']['runs']);
         }
     }
 }
 else
 {
     header("HTTP/1.0 404 Not Found");
+}
+
+function csvPageData($id, $testPath, $runs) {
+  if( $_GET['requests'] ) {
+    for( $i = 1; $i <= $runs; $i++ ) {
+      for ($cached = 0; $cached <= 1; $cached++) {
+        $requests = getRequests($id, $testPath, $i, $cached, $secure, $loc, false);
+        if (isset($requests) && is_array($requests) && count($requests))
+          foreach ($requests as &$row)
+            csvArray($row, $id, $i, $cached);
+      }
+    }
+  } else {
+    $pageData = loadAllPageData($testPath);
+    if ($pageData && is_array($pageData) && count($pageData)) {
+      for( $i = 1; $i <= $runs; $i++ ) {
+        if (array_key_exists($i, $pageData)) {
+          if (array_key_exists(0, $pageData[$i]))
+            csvArray($pageData[$i][0], $id, $i, 0);
+          if (array_key_exists(1, $pageData[$i]))
+            csvArray($pageData[$i][1], $id, $i, 1);
+        }
+      }
+    }
+  }
+}
+
+$fields = null;
+function csvArray(&$array, $id, $run, $cached) {
+  global $fields;
+  if (isset($array) && is_array($array) && count($array)) {
+    $array['id'] = $id;
+    $array['run'] = $run;
+    $array['cached'] = $cached;
+    if (!isset($fields)) {
+      $fields = array();
+      foreach ($array as $field => $value) {
+        $fields[] = $field;
+        echo '"' . str_replace('"', '""', $field) . '",';
+      }
+      echo "\r\n";
+    }
+    foreach ($fields as $field) {
+      $value = array_key_exists($field, $array) ? $array[$field] : '';
+      echo '"' . str_replace('"', '""', $value) . '",';
+    }
+    echo "\r\n";
+  }
 }
 
 function SpeedIndex($testPath, $run, $cached) {

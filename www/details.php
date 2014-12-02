@@ -1,6 +1,6 @@
 <?php
 include 'common.inc';
-include 'object_detail.inc';
+require_once('object_detail.inc');
 require_once('page_data.inc');
 require_once('waterfall.inc');
 
@@ -115,9 +115,11 @@ $page_description = "Website performance test details$testLabel";
                         ?>
                     </div>
                     <?php
-                        echo '<a href="/export.php?' . "test=$id&run=$run&cached=$cached" . '">Export HTTP Archive (.har)</a>';
+                        echo '<a href="/export.php?' . "test=$id&run=$run&cached=$cached&bodies=1&pretty=1" . '">Export HTTP Archive (.har)</a>';
                         if ( is_dir('./google') && array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'] )
                             echo '<br><a href="/google/google_csi.php?' . "test=$id&run=$run&cached=$cached" . '">CSI (.csv) data</a>';
+                        if (array_key_exists('custom', $data) && is_array($data['custom']) && count($data['custom']))
+                            echo '<br><a href="/custom_metrics.php?' . "test=$id&run=$run&cached=$cached" . '">Custom Metrics</a>';
                         if( is_file("$testPath/{$run}{$cachedText}_dynaTrace.dtas") )
                         {
                             echo "<br><a href=\"/$testPath/{$run}{$cachedText}_dynaTrace.dtas\">Download dynaTrace Session</a>";
@@ -272,7 +274,7 @@ $page_description = "Website performance test details$testLabel";
                     if ($navTiming) {
                       echo "<th$borderClass>";
                       if ($data['firstPaint'] > 0)
-                        echo "msFirstPaint</th><th>";
+                        echo "RUM First Paint</th><th>";
                       echo "<a href=\"http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#process\">domContentLoaded</a></th><th><a href=\"http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#process\">loadEvent</a></th>";
                     }
                     echo '</tr><tr>';

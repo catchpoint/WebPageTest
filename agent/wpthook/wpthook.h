@@ -31,7 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hook_nspr.h"
 #include "hook_schannel.h"
 #include "hook_wininet.h"
-#include "hook_gdi.h"
 #include "requests.h"
 #include "track_dns.h"
 #include "track_sockets.h"
@@ -66,11 +65,7 @@ public:
   void Report();
   void OnReport();
 
-  // hook interfaces (for marshalling to the processing thread)
-  void SendPaintEvent(int x, int y, int width, int height);
-
 private:
-  CGDIHook  gdi_hook_;
   CWsHook   winsock_hook_;
   NsprHook  nspr_hook_;
   SchannelHook  schannel_hook_;

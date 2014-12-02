@@ -9,16 +9,21 @@
 
 include 'common.inc';
 require_once('page_data.inc');
-include 'object_detail.inc';
+require_once('object_detail.inc');
 require_once('lib/json.php');
 
 // see if we are loading a single run or all of them
-if( isset($testPath) )
-{
+if( isset($testPath) ) {
     $pageData;
-    if( isset($_REQUEST["run"]) && $_REQUEST["run"] )
-    {
-        $pageData[0] = array();
+    if( isset($_REQUEST["run"]) && $_REQUEST["run"] ) {
+        if (!strcasecmp($_REQUEST["run"],'median')) {
+          $raw = loadAllPageData($testPath);
+          $run = GetMedianRun($raw, $cached, $median_metric);
+          if (!$run)
+            $run = 1;
+          unset($raw);
+        }
+        $pageData[$run] = array();
         if( isset($cached) )
             $pageData[$run][$cached] = loadPageRunData($testPath, $run, $cached);
         else
@@ -46,21 +51,27 @@ if( isset($testPath) )
     header("Content-disposition: attachment; filename=$filename");
     header('Content-type: application/json');
 
-    if( $_GET['php'] )
-      $out = json_encode($result);
-    else
-    {    
-      $json = new Services_JSON();
-      $out = $json->encode($result);
-    }
-    
     // see if we need to wrap it in a JSONP callback
     if( isset($_REQUEST['callback']) && strlen($_REQUEST['callback']) )
         echo "{$_REQUEST['callback']}(";
-        
-    // send the actual JSON data
-    echo $out;
-    
+
+    $json_encode_good = version_compare(phpversion(), '5.4.0') >= 0 ? true : false;
+    $pretty_print = array_key_exists('pretty', $_REQUEST) && $_REQUEST['pretty'] ? true : false;
+    if( array_key_exists('php', $_GET) && $_GET['php'] ) {
+      if ($pretty_print && $json_encode_good)
+        echo json_encode($result, JSON_PRETTY_PRINT);
+      else
+        echo json_encode($result);
+    } elseif ($json_encode_good) {
+      if ($pretty_print)
+        echo json_encode($result, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+      else
+        echo json_encode($result, JSON_UNESCAPED_UNICODE);
+    } else {    
+      $json = new Services_JSON();
+      echo $json->encode($result);
+    }
+
     if( isset($_REQUEST['callback']) && strlen($_REQUEST['callback']) )
         echo ");";
 }
@@ -107,7 +118,7 @@ function BuildResult(&$pageData)
     $result['log']['version'] = '1.1';
     $result['log']['creator'] = array(
         'name' => 'WebPagetest',
-        'version' => '1.8'
+        'version' => VER_WEBPAGETEST
         );
     $result['log']['pages'] = array();
     foreach ($pageData as $run => $pageRun) {
@@ -166,27 +177,23 @@ function BuildResult(&$pageData)
                 $request['cookies'] = array();
                 $request['headers'] = array();
                 $ver = '';
-                if( isset($r['headers']) && isset($r['headers']['request']) )
-                {
-                    foreach($r['headers']['request'] as &$header)
-                    {
+                $headersSize = 0;
+                if( isset($r['headers']) && isset($r['headers']['request']) ) {
+                    foreach($r['headers']['request'] as &$header) {
+                        $headersSize += strlen($header) + 2; // add 2 for the \r\n that is on the raw headers
                         $pos = strpos($header, ':');
-                        if( $pos > 0 )
-                        {
+                        if( $pos > 0 ) {
                             $name = trim(substr($header, 0, $pos));
                             $val = trim(substr($header, $pos + 1));
                             if( strlen($name) )
                                 $request['headers'][] = array('name' => $name, 'value' => $val);
 
                             // parse out any cookies
-                            if( !strcasecmp($name, 'cookie') )
-                            {
+                            if( !strcasecmp($name, 'cookie') ) {
                                 $cookies = explode(';', $val);
-                                foreach( $cookies as &$cookie )
-                                {
+                                foreach( $cookies as &$cookie ) {
                                     $pos = strpos($cookie, '=');
-                                    if( $pos > 0 )
-                                    {
+                                    if( $pos > 0 ) {
                                         $name = (string)trim(substr($cookie, 0, $pos));
                                         $val = (string)trim(substr($cookie, $pos + 1));
                                         if( strlen($name) )
@@ -194,15 +201,15 @@ function BuildResult(&$pageData)
                                     }
                                 }
                             }
-                        }
-                        else
-                        {
+                        } else {
                             $pos = strpos($header, 'HTTP/');
                             if( $pos >= 0 )
                                 $ver = (string)trim(substr($header, $pos + 5, 3));
                         }
                     }
                 }
+                if ($headersSize)
+                  $request['headersSize'] = $headersSize;
                 $request['httpVersion'] = $ver;
 
                 $request['queryString'] = array();
@@ -232,13 +239,12 @@ function BuildResult(&$pageData)
                 $response['headers'] = array();
                 $ver = '';
                 $loc = '';
-                if( isset($r['headers']) && isset($r['headers']['response']) )
-                {
-                    foreach($r['headers']['response'] as &$header)
-                    {
+                $headersSize = 0;
+                if( isset($r['headers']) && isset($r['headers']['response']) ) {
+                    foreach($r['headers']['response'] as &$header) {
+                        $headersSize += strlen($header) + 2; // add 2 for the \r\n that is on the raw headers
                         $pos = strpos($header, ':');
-                        if( $pos > 0 )
-                        {
+                        if( $pos > 0 ) {
                             $name = (string)trim(substr($header, 0, $pos));
                             $val = (string)trim(substr($header, $pos + 1));
                             if( strlen($name) )
@@ -246,15 +252,15 @@ function BuildResult(&$pageData)
                             
                             if( !strcasecmp($name, 'location') )
                                 $loc = (string)$val;
-                        }
-                        else
-                        {
+                        } else {
                             $pos = strpos($header, 'HTTP/');
                             if( $pos >= 0 )
                                 $ver = (string)trim(substr($header, $pos + 5, 3));
                         }
                     }
                 }
+                if ($headersSize)
+                  $response['headersSize'] = $headersSize;
                 $response['httpVersion'] = $ver;
                 $response['redirectURL'] = $loc;
 
@@ -330,6 +336,21 @@ function BuildResult(&$pageData)
                 
                 // add it to the list of entries
                 $entries[] = $entry;
+            }
+            
+            // add the bodies to the requests
+            if (array_key_exists('bodies', $_REQUEST) && $_REQUEST['bodies']) {
+              $bodies_file = $testPath . '/' . $run . $cached_text . '_bodies.zip';
+              if (is_file($bodies_file)) {
+                  $zip = new ZipArchive;
+                  if ($zip->open($bodies_file) === TRUE) {
+                      for( $i = 0; $i < $zip->numFiles; $i++ ) {
+                          $index = intval($zip->getNameIndex($i), 10) - 1;
+                          if (array_key_exists($index, $entries))
+                              $entries[$index]['response']['content']['text'] = $zip->getFromIndex($i);
+                      }
+                  }
+              }
             }
         }
     }

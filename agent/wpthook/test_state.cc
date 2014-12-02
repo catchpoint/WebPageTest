@@ -40,11 +40,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "trace.h"
 
 static const DWORD ON_LOAD_GRACE_PERIOD = 100;
-static const DWORD SCREEN_CAPTURE_INCREMENTS = 20;
+static const DWORD SCREEN_CAPTURE_INCREMENTS = 200;
 static const DWORD DATA_COLLECTION_INTERVAL = 100;
 static const DWORD START_RENDER_MARGIN = 30;
 static const DWORD MS_IN_SEC = 1000;
 static const DWORD SCRIPT_TIMEOUT_MULTIPLIER = 10;
+static const DWORD RESPONSIVE_BROWSER_WIDTH = 480;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -53,8 +54,6 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   _results(results)
   ,_screen_capture(screen_capture)
   ,_frame_window(NULL)
-  ,_document_window(NULL)
-  ,_render_check_thread(NULL)
   ,_exit(false)
   ,_data_timer(NULL)
   ,_test(test)
@@ -67,7 +66,6 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   ,received_data_(false) {
   QueryPerformanceFrequency(&_ms_frequency);
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
-  _check_render_event = CreateEvent(NULL, TRUE, FALSE, NULL);
   InitializeCriticalSection(&_data_cs);
   FindBrowserNameAndVersion();
   paint_msg_ = RegisterWindowMessage(_T("WPT Browser Paint"));
@@ -99,6 +97,8 @@ void TestState::Reset(bool cascade) {
   _on_load.QuadPart = 0;
   _fixed_viewport = -1;
   _dom_element_count = 0;
+  _is_responsive = -1;
+  _viewport_specified = -1;
   if (cascade && _test._combine_steps) {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
@@ -115,7 +115,6 @@ void TestState::Reset(bool cascade) {
     _doc_bytes_out = 0;
     _bytes_out = 0;
     _last_bytes_in = 0;
-    _screen_updated = false;
     _last_data.QuadPart = 0;
     _video_capture_count = 0;
     _start.QuadPart = 0;
@@ -147,6 +146,7 @@ void TestState::Reset(bool cascade) {
     _user_agent = _T("WebPagetest");
     _console_log_messages.RemoveAll();
     _timed_events.RemoveAll();
+    _custom_metrics.Empty();
     navigating_ = false;
     GetSystemTime(&_start_time);
   }
@@ -154,16 +154,6 @@ void TestState::Reset(bool cascade) {
 
   if (cascade && !_test._combine_steps)
     _results.Reset();
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-static unsigned __stdcall RenderCheckThread( void* arg ) {
-  TestState * test_state = (TestState *)arg;
-  if( test_state )
-    test_state->RenderCheckThread();
-    
-  return 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -188,13 +178,6 @@ void TestState::Start() {
   if (!_started) {
     FindViewport(true);
     _started = true;
-  }
-
-  if (!_render_check_thread) {
-    _exit = false;
-    ResetEvent(_check_render_event);
-    _render_check_thread = (HANDLE)_beginthreadex(0, 0, ::RenderCheckThread, 
-                                                                   this, 0, 0);
   }
 
   if (!_data_timer) {
@@ -246,7 +229,9 @@ void TestState::OnNavigate() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TestState::OnNavigateComplete() {
-  navigating_ = false;
+  // force an onload if one didn't already fire
+  if (navigating_)
+    OnLoad();
 }
 
 /*-----------------------------------------------------------------------------
@@ -305,7 +290,7 @@ void TestState::OnLoad() {
     QueryPerformanceCounter(&_on_load);
     GetCPUTime(_doc_cpu_time, _doc_total_time);
     ActivityDetected();
-    _screen_capture.Capture(_document_window,
+    _screen_capture.Capture(_frame_window,
                             CapturedImage::DOCUMENT_COMPLETE);
     _current_document = 0;
   }
@@ -383,7 +368,7 @@ void TestState::Done(bool force) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - **** TestState::Done()\n"));
   if (_active) {
     GetCPUTime(_end_cpu_time, _end_total_time);
-    _screen_capture.Capture(_document_window, CapturedImage::FULLY_LOADED);
+    _screen_capture.Capture(_frame_window, CapturedImage::FULLY_LOADED);
 
     if (force || !_test._combine_steps) {
       // kill the timer that was collecting periodic data (cpu, video, etc)
@@ -391,15 +376,6 @@ void TestState::Done(bool force) {
         DeleteTimerQueueTimer(NULL, _data_timer, NULL);
         _data_timer = NULL;
         timeEndPeriod(1);
-      }
-
-      // clean up the background thread that was doing the timer checks
-      if (_render_check_thread) {
-        _exit = true;
-        SetEvent(_check_render_event);
-        WaitForSingleObject(_render_check_thread, INFINITE);
-        CloseHandle(_render_check_thread);
-        _render_check_thread = NULL;
       }
     }
 
@@ -433,13 +409,9 @@ void TestState::UpdateBrowserWindow() {
     if (no_gdi_)
       browser_process_id = GetParentProcessId(browser_process_id);
     HWND old_frame = _frame_window;
-    if (::FindBrowserWindow(browser_process_id, _frame_window, 
-                            _document_window)) {
+    if (::FindBrowserWindow(browser_process_id, _frame_window)) {
       WptTrace(loglevel::kFunction, 
-                _T("[wpthook] - Frame Window: %08X, Document Window: %08X\n"), 
-                _frame_window, _document_window);
-      if (!_document_window)
-        _document_window = _frame_window;
+                _T("[wpthook] - Frame Window: %08X\n"), _frame_window);
     }
     // position the browser window
     if (_frame_window && old_frame != _frame_window) {
@@ -454,8 +426,6 @@ void TestState::UpdateBrowserWindow() {
         RECT viewport = {0,0,0,0};
         if (_screen_capture.IsViewportSet())
           memcpy(&viewport, &_screen_capture._viewport, sizeof(RECT));
-        else if (_document_window)
-            GetWindowRect(_document_window, &viewport);
         int vp_width = abs(viewport.right - viewport.left);
         int vp_height = abs(viewport.top - viewport.bottom);
         int br_width = abs(browser.right - browser.left);
@@ -480,146 +450,30 @@ void TestState::UpdateBrowserWindow() {
     Grab a video frame if it is appropriate
 -----------------------------------------------------------------------------*/
 void TestState::GrabVideoFrame(bool force) {
-  if (_active && _document_window && _test._video) {
-    if (force ||
-        _test._continuous_video ||
-        (_screen_updated && _render_start.QuadPart)) {
-      // use a falloff on the resolution with which we capture video
-      bool grab_video = false;
-      LARGE_INTEGER now;
-      QueryPerformanceCounter(&now);
-      if (!_last_video_time.QuadPart || _test._continuous_video)
+  if (_active && _frame_window && (force || received_data_)) {
+    // use a falloff on the resolution with which we capture video
+    bool grab_video = false;
+    LARGE_INTEGER now;
+    QueryPerformanceCounter(&now);
+    if (!_last_video_time.QuadPart || _test._continuous_video) {
+      grab_video = true;
+    } else {
+      DWORD interval = DATA_COLLECTION_INTERVAL;
+      if (_video_capture_count > SCREEN_CAPTURE_INCREMENTS * 2)
+        interval *= 20;
+      else if (_video_capture_count > SCREEN_CAPTURE_INCREMENTS)
+        interval *= 5;
+      LARGE_INTEGER min_time;
+      min_time.QuadPart = _last_video_time.QuadPart + 
+                            (interval * _ms_frequency.QuadPart);
+      if (now.QuadPart >= min_time.QuadPart)
         grab_video = true;
-      else {
-        DWORD interval = DATA_COLLECTION_INTERVAL;
-        if (_video_capture_count > SCREEN_CAPTURE_INCREMENTS * 2)
-          interval *= 20;
-        else if (_video_capture_count > SCREEN_CAPTURE_INCREMENTS)
-          interval *= 5;
-        LARGE_INTEGER min_time;
-        min_time.QuadPart = _last_video_time.QuadPart + 
-                              (interval * _ms_frequency.QuadPart);
-        if (now.QuadPart >= min_time.QuadPart)
-          grab_video = true;
-      }
-      if (grab_video) {
-        _screen_updated = false;
-        _last_video_time.QuadPart = now.QuadPart;
-        _video_capture_count++;
-        _screen_capture.Capture(_document_window, CapturedImage::VIDEO);
-      }
     }
-  }
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void TestState::PaintEvent(int x, int y, int width, int height) {
-  if (received_data_) {
-    bool valid = true;
-    if (width && height && _screen_capture.IsViewportSet()) {
-      int left = max(x - _screen_capture._viewport.left, 0);
-      int top = max(y - _screen_capture._viewport.top, 0);
-      int right = max(min(x + width, _screen_capture._viewport.right)
-                      - _screen_capture._viewport.left, 0);
-      int bottom = max(min(y + height, _screen_capture._viewport.bottom)
-                        - _screen_capture._viewport.top, 0);
-      x = left;
-      y = top;
-      width = right - left;
-      height = bottom - top;
-      if (width <= 0 || height <= 0)
-        valid = false;
+    if (grab_video) {
+      _last_video_time.QuadPart = now.QuadPart;
+      _video_capture_count++;
+      _screen_capture.Capture(_frame_window, CapturedImage::VIDEO);
     }
-    if (valid) {
-      _screen_updated = true;
-      CheckStartRender();
-    }
-  }
-}
-
-/*-----------------------------------------------------------------------------
-    See if anything has been rendered to the screen
------------------------------------------------------------------------------*/
-void TestState::CheckStartRender() {
-  if (!_render_start.QuadPart && _screen_updated && _document_window) {
-    GdiFlush();
-    SetEvent(_check_render_event);
-  }
-}
-
-/*-----------------------------------------------------------------------------
-    Background thread to check to see if rendering has started
-    (this way we don't block the browser itself)
------------------------------------------------------------------------------*/
-void TestState::RenderCheckThread() {
-  while (!_render_start.QuadPart && !_exit) {
-    WaitForSingleObject(_check_render_event, INFINITE);
-    if (!_exit) {
-      _screen_capture.Lock();
-      _screen_updated = false;
-      LARGE_INTEGER now;
-      QueryPerformanceCounter((LARGE_INTEGER *)&now);
-
-      // grab a screen shot
-      bool found = false;
-      CapturedImage captured_img = _screen_capture.CaptureImage(
-                                _document_window, CapturedImage::START_RENDER);
-      CxImage img;
-      if (captured_img.Get(img) && 
-          img.GetWidth() > START_RENDER_MARGIN * 2 &&
-          img.GetHeight() > START_RENDER_MARGIN * 2) {
-        int bpp = img.GetBpp();
-        if (bpp >= 15) {
-          int height = img.GetHeight();
-          int width = img.GetWidth();
-          // 24-bit gets a fast-path where we can just compare full rows
-          if (bpp <= 24 ) {
-            DWORD row_bytes = img.GetEffWidth();
-            DWORD compare_bytes = (bpp>>3) * (width-(START_RENDER_MARGIN * 2));
-            char * background = (char *)malloc(compare_bytes);
-            if (background) {
-              char * image_bytes = (char *)img.GetBits(START_RENDER_MARGIN)
-                                     + START_RENDER_MARGIN * (bpp >> 3);
-              memcpy(background, image_bytes, compare_bytes);
-              for (DWORD row = START_RENDER_MARGIN; 
-                    row < height - START_RENDER_MARGIN && !found; row++) {
-                if (memcmp(image_bytes, background, compare_bytes))
-                  found = true;
-                else
-                  image_bytes += row_bytes;
-              }
-              free (background);
-            }
-          } else {
-            for (DWORD row = START_RENDER_MARGIN; 
-                    row < height - START_RENDER_MARGIN && !found; row++) {
-              for (DWORD x = START_RENDER_MARGIN; 
-                    x < width - START_RENDER_MARGIN && !found; x++) {
-                RGBQUAD pixel = img.GetPixelColor(x, row, false);
-                if (pixel.rgbBlue != 255 || pixel.rgbRed != 255 || 
-                    pixel.rgbGreen != 255)
-                  found = true;
-              }
-            }
-          }
-        }
-      }
-
-      if (found) {
-        _render_start.QuadPart = now.QuadPart;
-        _screen_capture._captured_images.AddTail(captured_img);
-      } else {
-        captured_img.Free();
-      }
-
-      _screen_capture.Unlock();
-    }
-    ResetEvent(_check_render_event);
-
-    // prevent a tight loop
-    if (!_render_start.QuadPart && !_exit)
-      Sleep(20);
   }
 }
 
@@ -684,12 +538,28 @@ void TestState::CollectData() {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
     if (now.QuadPart > _last_data.QuadPart || !_last_data.QuadPart) {
+      CheckTitle();
       GrabVideoFrame();
       CollectSystemStats(now);
       _last_data.QuadPart = now.QuadPart;
     }
   }
   LeaveCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::CheckTitle() {
+  if (_active && _frame_window && received_data_) {
+    TCHAR title[4096];
+    if (GetWindowText(_frame_window, title, _countof(title))) {
+      if (last_title_.Compare(title)) {
+        last_title_ = title;
+        if (last_title_.Left(5).Compare(_T("Blank")))
+          TitleSet(title);
+      }
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -715,10 +585,9 @@ void TestState::TitleSet(CString title) {
   Find the portion of the document window that represents the document
 -----------------------------------------------------------------------------*/
 void TestState::FindViewport(bool force) {
-  if (_document_window == _frame_window &&
-      (force || !_screen_capture.IsViewportSet())) {
+  if (_frame_window && (force || !_screen_capture.IsViewportSet())) {
     _screen_capture.ClearViewport();
-    CapturedImage captured = _screen_capture.CaptureImage(_document_window);
+    CapturedImage captured = _screen_capture.CaptureImage(_frame_window);
     CxImage image;
     if (captured.Get(image)) {
       // start in the middle of the image and go in each direction 
@@ -729,11 +598,11 @@ void TestState::FindViewport(bool force) {
         DWORD x = width / 2;
         DWORD y = height / 2;
         RECT viewport = {0,0,0,0}; 
-        viewport.right = width - 1;
         DWORD row_bytes = image.GetEffWidth();
+        DWORD pixel_bytes = row_bytes / width;
         unsigned char * middle = image.GetBits(y);
         if (middle) {
-          middle += row_bytes / 2;
+          middle += x * pixel_bytes;
           unsigned char background[3];
           memcpy(background, middle, 3);
           // find the top
@@ -744,7 +613,7 @@ void TestState::FindViewport(bool force) {
             pixel += row_bytes;
             y++;
           }
-          // find the top
+          // find the bottom
           y = height / 2;
           pixel = middle;
           while (y && !viewport.bottom) {
@@ -755,6 +624,25 @@ void TestState::FindViewport(bool force) {
           }
           if (!viewport.bottom)
             viewport.bottom = height - 1;
+          // find the left
+          pixel = middle;
+          while (x && !viewport.left) {
+            if (memcmp(background, pixel, 3))
+              viewport.left = x + 1;
+            pixel -= pixel_bytes;
+            x--;
+          }
+          // find the right
+          x = width / 2;
+          pixel = middle;
+          while (x < width && !viewport.right) {
+            if (memcmp(background, pixel, 3))
+              viewport.right = x - 1;
+            pixel += pixel_bytes;
+            x++;
+          }
+          if (!viewport.right)
+            viewport.right = width - 1;
         }
         if (viewport.right - viewport.left > (long)width / 2 &&
           viewport.bottom - viewport.top > (long)height / 2) {
@@ -869,6 +757,14 @@ void TestState::AddTimedEvent(CString timed_event) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void TestState::SetCustomMetrics(CString custom_metrics) {
+  EnterCriticalSection(&_data_cs);
+  _custom_metrics = custom_metrics;
+  LeaveCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 CString TestState::GetConsoleLogJSON() {
   CString ret;
   EnterCriticalSection(&_data_cs);
@@ -971,4 +867,29 @@ void TestState::Lock() {
 -----------------------------------------------------------------------------*/
 void TestState::UnLock() {
   LeaveCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+    Resize the browser window to a narrow width for checking to see if the
+    site is responsive
+-----------------------------------------------------------------------------*/
+void TestState::ResizeBrowserForResponsiveTest() {
+  RECT rect;
+  if (_frame_window && ::GetWindowRect(_frame_window, &rect)) {
+    int height = abs(rect.top - rect.bottom);
+    ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, 
+                    RESPONSIVE_BROWSER_WIDTH, height, SWP_NOACTIVATE);
+    ::UpdateWindow(_frame_window);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  We are just going to grab a screen shot - the actual check is done in the
+  browser-specific extensions
+-----------------------------------------------------------------------------*/
+void TestState::CheckResponsive() {
+  if (_frame_window) {
+    _screen_capture.Capture(_frame_window, CapturedImage::RESPONSIVE_CHECK,
+                            false);
+  }
 }

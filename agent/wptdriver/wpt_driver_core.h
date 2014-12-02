@@ -47,6 +47,7 @@ private:
   WebBrowser *_browser;
   CWinPCap    _winpcap;
   bool        _exit;
+  bool        _installing;
   HANDLE      _work_thread;
   HANDLE      _testing_mutex;
   CIpfw       _ipfw;
@@ -67,4 +68,7 @@ private:
   void CloseDialogs();
   bool DetectGPU();
   void PreTest();
+  void PostTest();
+  bool Startup();
+  LPTSTR GetAppInitString(LPCTSTR new_dll);
 };

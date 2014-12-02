@@ -5,7 +5,7 @@ $results = array();
 $errors = array();
 $urlErrors = array();
 
-$statsVer = 3;
+$statsVer = 5;
 $statusCounts = array();
 
 // see if there is an existing test we are working with
@@ -48,6 +48,7 @@ if (LoadResults($results)) {
                     !$result['bytesInDoc'] ||
                     !$result['docTime'] ||
                     !$result['TTFB'] ||
+                    ($includeDCL && !$result['domContentLoadedEventStart']) ||
                     $result['successfulRuns'] < $minRuns ||
                     $result['TTFB'] > $result['docTime'] ||
                     $stddev > $maxVariancePct || // > 10% variation in results
@@ -131,6 +132,7 @@ function UpdateResults(&$results, $testCount) {
             echo "\rUpdating the status of test $count of $testCount...                  ";
 
             $url = "{$server}jsonResult.php?test={$result['id']}&medianRun=fastest";
+            //$url = "{$server}jsonResult.php?test={$result['id']}";
             if ($video)
               $url .= "&medianMetric=SpeedIndex";
             $response = http_fetch($url);
@@ -193,7 +195,8 @@ function GetTestResult(&$data, &$result) {
             if (array_key_exists('run', $data['median']['repeatView']))
               $result['rv_run'] = (int)$data['median']['repeatView']['run'];
             foreach ($metrics as $metric) {
-                $result["rv_$metric"] = (int)$data['median']['repeatView'][$metric];
+                if (array_key_exists($metric, $data['median']['repeatView']))
+                  $result["rv_$metric"] = (int)$data['median']['repeatView'][$metric];
                 if (array_key_exists('standardDeviation', $data) &&
                     is_array($data['standardDeviation']) &&
                     array_key_exists('repeatView', $data['standardDeviation']) &&

@@ -55,6 +55,7 @@ public:
     clearCerts = false;
     cpu = 0;
     customRules.Empty();
+    customMetrics.Empty();
 	}
 	
 	CString zipFileDir;			  // If we got a custom job (video rendering only currently)
@@ -94,6 +95,8 @@ public:
   DWORD clearShortTermCacheSecs;  // in repeat view, delete objects with a expires of less than X seconds
   DWORD keepua;             // preserve the original User Agent string
   CString customRules;      // custom rule set (newline delimited)
+  CStringA customMetrics;      // custom metrics (newline delimited)
+  CString customMetricsFile;  // File where the custom metrics command data was stored (delete after each test)
   DWORD currentRun;
   bool cached;              // are we testing a cached run?
   bool clearCerts;          // do we need to clear the OS certificate cache?

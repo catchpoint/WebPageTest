@@ -50,10 +50,6 @@ $page_description = "Test network path from multiple locations around the world 
                 <ul class="ui-tabs-nav">
                     <li class="analytical_review"><a href="/">Analytical Review</a></li>
                     <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
-                    <?php
-                    if( $settings['mobile'] )
-                        echo '<li class="mobile_test"><a href="/mobile">Mobile</a></li>';
-                    ?>
                     <li class="traceroute ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Traceroute</a></li>
                 </ul>
                 <div id="analytical-review" class="test_box">
@@ -181,7 +177,7 @@ $page_description = "Test network path from multiple locations around the world 
 */
 function LoadLocations()
 {
-    $locations = parse_ini_file('./settings/locations.ini', true);
+    $locations = LoadLocationsIni();
     FilterLocations( $locations );
     
     // strip out any sensitive information

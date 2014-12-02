@@ -28,10 +28,6 @@ $page_description = "Visually compare the performance of multiple websites with 
                 <ul class="ui-tabs-nav">
                     <li class="analytical_review"><a href="/">Analytical Review</a></li>
                     <li class="visual_comparison ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Visual Comparison</a></li>
-                    <?php
-                    if( $settings['mobile'] )
-                        echo '<li class="mobile_test"><a href="/mobile">Mobile</a></li>';
-                    ?>
                     <li class="traceroute"><a href="/traceroute">Traceroute</a></li>
                 </ul>
                 <div id="visual_comparison" class="test_box">
@@ -45,7 +41,7 @@ $page_description = "Visually compare the performance of multiple websites with 
                                 $testPath = './' . GetTestPath($tid);
                                 $pageData = loadAllPageData($testPath);
                                 $url = trim($pageData[1][0]['URL']);
-                                $testInfo = json_decode(gz_file_get_contents("./$testPath/testinfo.json"), true);
+                                $testInfo = GetTestInfo($tid);
                                 $label = trim($testInfo['label']);
                                 if( strlen($url) )
                                 {

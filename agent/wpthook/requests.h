@@ -62,7 +62,6 @@ public:
   long  connect_end_;
   long  ssl_start_;
   long  ssl_end_;
-
 };
 
 class Requests {
@@ -92,6 +91,7 @@ private:
   TrackSockets&     _sockets;
   TrackDns&         _dns;
   WptTest&          _test;
+  double            _start_browser_clock;
   CAtlList<BrowserRequestData>  browser_request_data_;
 
   bool IsHttpRequest(const DataChunk& chunk) const;

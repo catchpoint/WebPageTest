@@ -13,8 +13,9 @@ if(extension_loaded('newrelic')) {
 */
 function getBreakdown($id, $testPath, $run, $cached, &$requests)
 {
+    $version = 2;
     $cache = array();
-    $cache_file = "$testPath/breakdown.json";
+    $cache_file = "$testPath/breakdown$version.json";
     if (is_file($cache_file)) {
         $cache = json_decode(file_get_contents($cache_file), true);
     }
@@ -45,7 +46,7 @@ function getBreakdown($id, $testPath, $run, $cached, &$requests)
         }
         
         foreach($requests as $request) {
-            $contentType = ContentType($request['contentType']);
+            $contentType = ContentType($request['contentType'], $request['url']);
             $object = strtolower($request['url']);
             if( strlen($contentType) && (stripos($object, 'favicon.ico') === FALSE) ) {
                 $breakdown[$contentType]['bytes'] += $request['bytesIn'];
