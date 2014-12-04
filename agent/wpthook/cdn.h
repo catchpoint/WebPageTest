@@ -73,6 +73,7 @@ CDN_PROVIDER cdnList[] = {
   {"youtube.", "Google"},
   {".googleusercontent.com", "Google"},
   {"googlehosted.com", "Google"},
+  {".gstatic.com", "Google"},
   {".insnw.net", "Instart Logic"},
   {".inscname.net", "Instart Logic"},
   {".internapcdn.net", "Internap"},
