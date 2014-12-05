@@ -36,7 +36,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 const TCHAR * BROWSERS[] = {
   _T("chrome.exe"),
   _T("firefox.exe"),
-  _T("iexplore.exe")
+  _T("iexplore.exe"),
+  _T("plugin-container.exe")
 };
 
 const TCHAR * DIALOG_WHITELIST[] = { 
