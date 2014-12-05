@@ -149,7 +149,7 @@ exports.tickUntilIdle = function(app, sandbox, maxSteps, ticksPerStep) {
   }
   app.removeListener(webdriver.promise.ControlFlow.EventType.IDLE, onIdle);
   should.ok(steps < maxSteps, 'ControlFlow still active after ' + steps + '*' +
-      ticksPerStep + ' ticks');
+      ticksPerStep + ' ticks: \n' + app.getSchedule());
   should.equal('[]', app.getSchedule());
 };
 
@@ -187,13 +187,13 @@ exports.stubLog = function(sandbox, isMatch) {
  */
 exports.stubHttpGet = function(sandbox, urlRegExp, data) {
   'use strict';
-  var response = new Stream();
-  response.setEncoding = function() {};
   return sandbox.stub(http, 'get', function(url, responseCb) {
     logger.debug('Stub http.get(%s)', url.href);
     if (urlRegExp) {
       url.href.should.match(urlRegExp);
     }
+    var response = new Stream();
+    response.setEncoding = function() {};
     responseCb(response);
     response.emit('data', data);
     response.emit('end');
@@ -287,7 +287,15 @@ function BufferedEventEmitter() {
   var origAddListener = this.addListener;
   var buffer = [];
   this.emit = function() {
-    buffer.push(arguments);
+    if (this.emit === origEmit) {
+      // addListener sets this.emit = origEmit, but we can still get callbacks
+      // from a saved pointer, e.g.:
+      //   var stdout = proc.stdout.emit.bind(proc.stdout, 'data');
+      //   global.setTimeout(...  stdout('foo'); ...);
+      origEmit.apply(this, arguments);
+    } else {
+      buffer.push(arguments);
+    }
   };
   this.addListener = function() {
     this.emit = origEmit;
@@ -297,6 +305,7 @@ function BufferedEventEmitter() {
     buffer.forEach(function(args) {
       this.emit.apply(this, args);
     }.bind(this));
+    buffer = [];
   };
   this.on = this.addListener;
 }

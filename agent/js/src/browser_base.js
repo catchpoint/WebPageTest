@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 var logger = require('logger');
 var process_utils = require('process_utils');
+var webdriver = require('selenium-webdriver');
 
 /**
  * Base class for browsers.
@@ -99,12 +100,27 @@ BrowserBase.prototype.killChildProcessIfNeeded = function() {
 };
 
 /**
- * Checks whether the browser is ready to run tests.
+ * Verifies that the browser is ready to run tests.
  *
- * A simple return means ready, any exception prevents polling for new jobs.
+ * @return {webdriver.promise.Promise} resolve() for addErrback.
  */
-BrowserBase.prototype.scheduleIsAvailable = function() {
+BrowserBase.prototype.scheduleAssertIsReady = function() {
   'use strict';
+  return webdriver.promise.fulfilled();  // Assume it's ready.
+};
+
+/**
+ * Attempts recovery if the browser is not ready to run tests.
+ *
+ * @return {webdriver.promise.Promise} resolve(boolean) wasOffline,
+ *   i.e. didRecover:  false if already ready, true if wasOffline but we
+ *   sucessfully recovered, else an error is thrown if we're offline.
+ */
+BrowserBase.prototype.scheduleMakeReady = function() {
+  'use strict';
+  return this.scheduleAssertIsReady().then(function() {
+    return false;  // Was already online.
+  });
 };
 
 /**

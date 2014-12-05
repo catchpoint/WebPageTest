@@ -1,6 +1,7 @@
 There is now a server AMI for WebPagetest for quickly spinning up a private instance.
 
-AMI: ami-24199c4c
+AMI: ami-fcfd6194
+
 Region: us-east-1
 
 When you launch the instance, make sure to allow HTTP traffic through your EC2 firewall configuration/security group.

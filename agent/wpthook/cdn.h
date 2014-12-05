@@ -73,6 +73,7 @@ CDN_PROVIDER cdnList[] = {
   {"youtube.", "Google"},
   {".googleusercontent.com", "Google"},
   {"googlehosted.com", "Google"},
+  {".gstatic.com", "Google"},
   {".insnw.net", "Instart Logic"},
   {".inscname.net", "Instart Logic"},
   {".internapcdn.net", "Internap"},
@@ -126,6 +127,7 @@ CDN_PROVIDER cdnList[] = {
   {".nyiftw.com", "NYI FTW"},
   {".resrc.it", "ReSRC.it"},
   {".zenedge.net", "Zenedge"},
+  {".lswcdn.net", "LeaseWeb CDN"},  
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -144,5 +146,6 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"X-Edge-Location", "", "CDN"},
   {"X-Powered-By", "NYI FTW", "NYI FTW"},
   {"server", "ReSRC", "ReSRC.it"},
-  {"X-Cdn", "Zenedge", "Zenedge"}
+  {"X-Cdn", "Zenedge", "Zenedge"},
+  {"server", "leasewebcdn", "LeaseWeb CDN"}
 };

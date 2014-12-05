@@ -250,9 +250,9 @@ describe('wpt_client small', function() {
 
     test_utils.stubLog(sandbox, function(
          levelPrinter, levelName, stamp, source, message) {
-      return message.match(new RegExp('Finished\\srun\\s\\d+/' +
-          task.runs + '\\s(.*\\s)?of\\sjob\\s' + task['Test ID'] +
-          '(\\s|$)'));
+      return message.match(new RegExp('Finished\\srun\\s\\d+[ab]/' +
+          task.runs + '\\s(.*\\s)?of\\s(finished\\s)?job\\s' +
+          task['Test ID'] + '(\\s|$)'));
     });
 
     var numJobRuns = 0;
@@ -303,7 +303,7 @@ describe('wpt_client small', function() {
     });
 
     client.run(/*forever=*/false);
-    sandbox.clock.tick(10);
+    sandbox.clock.tick(100);
     should.ok(doneSpy.calledOnce);
     should.equal(6, numJobRuns);
   });
@@ -314,14 +314,15 @@ describe('wpt_client small', function() {
     test_utils.stubLog(sandbox, function(
          levelPrinter, levelName, stamp, source, message) {
       return ((/^Unhandled\sexception\s/).test(message) ||
-          (/^Finished\srun\s/).test(message));
+          (/^(Finished|Failed)\srun\s/).test(message));
     });
     var client = new wpt_client.Client(app, {serverUrl: 'url'});
     client.onStartJobRun = function() {};  // Do nothing, wait for exception.
     sandbox.stub(client, 'postResultFile_',
         function(job, resultFile, fields, callback) {
       logger.debug('stub postResultFile_ f=%j fields=%j', resultFile, fields);
-      should.equal(job.error, e.message);
+      should.equal(job.agentError, undefined);
+      should.equal(job.testError, e.message);
       var isFoundErrorField = false;
       fields.forEach(function(nameValue) {
         if ('error' === nameValue[0]) {
@@ -334,7 +335,8 @@ describe('wpt_client small', function() {
     var doneSpy = sandbox.spy();
     client.on('done', function(job) {
       logger.debug('client done');
-      should.equal(job.error, e.message);
+      should.equal(job.agentError, undefined);
+      should.equal(job.testError, e.message);
       // Second uncaught exception outside of job processing is ignored.
       // Spy on logger.critical just for this exception and make sure
       // that we log the message "outside of job".
@@ -351,6 +353,7 @@ describe('wpt_client small', function() {
     logger.debug('emitting uncaught');
     // First uncaught exception finishes the job.
     wpt_client.process.emit('uncaughtException', e);
+    test_utils.tickUntilIdle(app, sandbox);
     should.ok(doneSpy.calledOnce);
   });
 
@@ -368,7 +371,7 @@ describe('wpt_client small', function() {
          levelPrinter, levelName, stamp, source, message) {
       return ((/^Received \S+, will exit after /).test(message) ||
           (/^Aborting job /).test(message) ||
-          (/^Finished run \d+/).test(message) ||
+          (/^(Finished|Failed) run \d+/).test(message) ||
           (/^Exiting due to /).test(message));
     });
     client.onStartJobRun = function(job) {
@@ -397,7 +400,7 @@ describe('wpt_client small', function() {
     });
     wpt_client.process.exit = exitSpy;
     client.processJobResponse_('{"Test ID": "gaga", "runs": 2, "fvonly": 0}');
-    sandbox.clock.tick(40);
+    sandbox.clock.tick(100);
 
     should.ok(exitSpy.calledOnce);
     should.equal(startSpy.callCount, expectedStartCount);

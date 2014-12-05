@@ -172,16 +172,16 @@ describe('wd_server small', function() {
   }
 
   it('should work overall with WD - start, run, stop', function() {
-    // This is a long test that does a full run twice. It goes like this:
+    // This is a long test that does a full run. It goes like this:
     // * General stubs/fakes/spies.
-    // * Run 1 -- exitWhenDone=false.
-    // * Verify after run 1, make sure we didn't quit/stop WD.
-    // * Run 2 -- exitWhenDone=true.
-    // * Verify after run 2, make sure we did quit+stop WD.
+    // * First view:
+    // *   Verify we clear the cache, run, and quit/stop WD.
+    // * Repeat view:
+    // *   Verify we clear the cache, run, and quit/stop WD.
     //
     // We do this as a single test, because the WebDriverServer state after
-    // the first run is crucial for the second run, and because some of the
-    // stubs/spies remain the same from the first run into the second run.
+    // the first view is crucial for the repeat view, and because some of the
+    // stubs/spies remain the same from the first view into the repeat view.
 
     // * General stubs/fakes/spies.
     var chromedriver = '/gaga/chromedriver';
@@ -264,17 +264,18 @@ describe('wd_server small', function() {
     var idleSpy = sandbox.spy();
     app.on(webdriver.promise.ControlFlow.EventType.IDLE, idleSpy);
 
-    // * Run 1 -- exitWhenDone=false.
+    // * First view.
     logger.debug('First run of WD server');
     wd_server.process.emit('message', {
         cmd: 'run',
+        isCacheWarm: false,
         exitWhenDone: false,
         flags: {chromedriver: chromedriver},
         task: {script: 'new webdriver.Builder().build();'}
       });
     test_utils.tickUntilIdle(app, sandbox, 500);
 
-    // * Verify after run 1, make sure we did quit/stop WD.
+    // *   Verify we clear the cache, run, and quit/stop WD.
     // Should spawn the chromedriver process on port 4444.
     should.ok(startWdServerStub.calledOnce);
     should.equal('chrome', startWdServerStub.firstCall.args[0].browserName);
@@ -283,10 +284,10 @@ describe('wd_server small', function() {
     should.ok(sendStub.calledOnce);
     var doneIpcMsg = sendStub.firstCall.args[0];
     should.equal(doneIpcMsg.cmd, 'done');
-    [pageMessage, networkMessage, timelineMessage].should.eql(
-        doneIpcMsg.devToolsMessages);
-    ['screen.jpg'].should.eql(
-        doneIpcMsg.screenshots.map(function(s) { return s.fileName; }));
+    doneIpcMsg.devToolsMessages.should.eql(
+        [pageMessage, networkMessage, timelineMessage]);
+    doneIpcMsg.screenshots.map(function(s) { return s.fileName; }).should.eql(
+        ['screen.jpg']);
     should.equal(1, writeFileStub.callCount);
 
     // We do not clean up between runs in webdriver mode.
@@ -294,44 +295,51 @@ describe('wd_server small', function() {
     should.ok(killStub.notCalled);
     should.ok(disconnectStub.notCalled);
 
-    // * Run 2 -- exitWhenDone=true.
+    // * Repeat view.
     logger.debug('Second run of WD server');
     logsGetMock.withArgs('performance').returns([
         wdLogEntryFromMessage(networkMessage)
       ]);
     wd_server.process.emit('message', {
         cmd: 'run',
+        isCacheWarm: true,
         exitWhenDone: true,
         flags: {chromedriver: chromedriver},
         task: {pngScreenshot: 1, script: 'new webdriver.Builder().build();'}
       });
     test_utils.tickUntilIdle(app, sandbox);
 
-    // * Verify after run 2, make sure we did quit+stop WD.
-    // Make sure we did spawn the WD server etc. for the second time.
+    // *   Verify we clear the cache, run, and quit/stop WD.
+    // Make sure we spawned the WD server etc.
     should.ok(startWdServerStub.calledOnce);
     should.ok(wdBuildStub.calledOnce);
 
-    // These things get called for the second time on the second run.
+    // These things get called for the second time on the repeat view.
     should.ok(sendStub.calledTwice);
     doneIpcMsg = sendStub.secondCall.args[0];
     should.equal(doneIpcMsg.cmd, 'done');
-    [networkMessage].should.eql(doneIpcMsg.devToolsMessages);
-    ['screen.png'].should.eql(
-        doneIpcMsg.screenshots.map(function(s) { return s.fileName; }));
+    doneIpcMsg.devToolsMessages.should.eql([networkMessage]);
+    doneIpcMsg.screenshots.map(function(s) { return s.fileName; }).should.eql(
+        ['screen.png']);
     should.equal(2, writeFileStub.callCount);
 
-    // The disconnect occurs only on the second run.
+    // The disconnect occurs only on the repeat view.
     should.ok(driverQuitSpy.calledOnce);
     should.ok(killStub.calledOnce);
     should.ok(disconnectStub.calledOnce);
   });
 
   it('should work overall with Chrome - start, run, stop', function() {
-    // This is a long test that does a full run once. It goes like this:
+    // This is a long test that does a full run. It goes like this:
     // * General stubs/fakes/spies.
-    // * Run 1 -- exitWhenDone=true.
-    // * Verify after run 1, make sure we did quit/stop WD.
+    // * First view:
+    // *   Verify we clear the cache, run, then keep our WD.
+    // * Repeat view:
+    // *   Verify we keep our cache, run, then quit/stop WD.
+    //
+    // We do this as a single test, because the WebDriverServer state after
+    // the first view is crucial for the repeat view, and because some of the
+    // stubs/spies remain the same from the first view into the repeat view.
 
     // * General stubs/fakes/spies.
     var chromedriver = '/gaga/chromedriver';
@@ -355,11 +363,12 @@ describe('wd_server small', function() {
     var idleSpy = sandbox.spy();
     app.on(webdriver.promise.ControlFlow.EventType.IDLE, idleSpy);
 
-    // * Run 1 -- exitWhenDone=false.
+    // * First view.
     logger.debug('First run of WD server');
     wd_server.process.emit('message', {
         cmd: 'run',
-        exitWhenDone: true,
+        isCacheWarm: false,
+        exitWhenDone: false,
         flags: {chromedriver: chromedriver},
         task: {url: 'http://gaga.com/ulala', timeline: 1}
       });
@@ -397,34 +406,78 @@ describe('wd_server small', function() {
     fakeWs.on('message', onPageNavigate);
     test_utils.tickUntilIdle(app, sandbox);
 
-    // * Verify after run 1, make sure we did quit/stop Chrome.
+    // *   Verify we clear the cache, run, then keep our WD.
     should.ok(startChromeStub.calledOnce);
     should.equal('chrome', startChromeStub.firstCall.args[0].browserName);
 
     should.ok(stubWebSocket.calledOnce);
     should.ok('ws://gaga', stubWebSocket.firstCall.args[0]);
-    [
-        'Timeline.start',
-        'Network.clearBrowserCache',
-        'Network.clearBrowserCookies',
+    fakeWs.commands.should.eql([
+      'Timeline.start',
+      'Network.clearBrowserCache',
+      'Network.clearBrowserCookies',
+      'Page.navigate',
+      'Network.enable',
+      'Page.enable',
+      'Page.navigate',
+      'Page.captureScreenshot'
+    ]);
+    fakeWs.commands = [];  // Reset for the next verification.
+    should.ok(sendStub.calledOnce);
+    var doneIpcMsg = sendStub.firstCall.args[0];
+    should.equal(doneIpcMsg.cmd, 'done');
+    doneIpcMsg.devToolsMessages.should.eql(
+        [pageMessage, networkMessage, timelineMessage, pageLoadedMessage]);
+    doneIpcMsg.screenshots.map(function(s) { return s.fileName; }).should.eql(
+        ['screen.jpg']);
+    should.equal(1, writeFileStub.callCount);
+
+    // We expect a kill Chrome and keep our agent.
+    should.ok(killStub.calledOnce);
+    should.ok(disconnectStub.notCalled);
+
+    // * Repeat view
+    logger.debug('Second run of WD server');
+    wd_server.process.emit('message', {
+        cmd: 'run',
+        isCacheWarm: true,
+        exitWhenDone: true,
+        flags: {chromedriver: chromedriver},
+        task: {url: 'http://gaga.com/ulala', pngScreenshot: 1}
+      });
+    // Verify that messages get ignored between runs
+    fakeWs.emit('message', JSON.stringify(networkMessage), {});
+    // Do not use tickUntilIdle -- see comment above for run 1.
+    sandbox.clock.tick(wd_server.WAIT_AFTER_ONLOAD_MS +
+        webdriver.promise.ControlFlow.EVENT_LOOP_FREQUENCY * 20 + 1000);
+    should.ok(stubWebSocket.calledTwice);
+    fakeWs = stubWebSocket.secondCall.thisValue;  // The DevTools WebSocket.
+    // Simulate page load finish.
+    fakeWs.emit('message', JSON.stringify(pageLoadedMessage), {});
+    test_utils.tickUntilIdle(app, sandbox);
+
+    // *   Verify we keep our cache, run, then quit/stop WD.
+    // Make sure we re-spawned Chrome but didn't reconnect to our agent.
+    should.ok(startChromeStub.calledTwice);
+
+    // These things get called for the second time on the repeat view.
+    fakeWs.commands.should.eql([
         'Page.navigate',  // To blank page.
         'Network.enable',
         'Page.enable',
         'Page.navigate',  // To the real page.
         'Page.captureScreenshot'
-      ].should.eql(fakeWs.commands);
-    fakeWs.commands = [];  // Reset for the next verification.
-    should.ok(sendStub.calledOnce);
-    var doneIpcMsg = sendStub.firstCall.args[0];
+      ]);
+    should.ok(sendStub.calledTwice);
+    doneIpcMsg = sendStub.secondCall.args[0];
     should.equal(doneIpcMsg.cmd, 'done');
-    [pageMessage, networkMessage, timelineMessage,
-        pageLoadedMessage].should.eql(doneIpcMsg.devToolsMessages);
-    ['screen.jpg'].should.eql(
-        doneIpcMsg.screenshots.map(function(s) { return s.fileName; }));
-    should.equal(1, writeFileStub.callCount);
+    doneIpcMsg.devToolsMessages.should.eql([pageLoadedMessage]);
+    doneIpcMsg.screenshots.map(function(s) { return s.fileName; }).should.eql(
+        ['screen.png']);
+    should.equal(2, writeFileStub.callCount);
 
-    // Make sure we cleaned up.
-    should.ok(killStub.calledOnce);
+    // The cleanup occurs only on the repeat view.
+    should.ok(killStub.calledTwice);
     should.ok(disconnectStub.calledOnce);
   });
 
@@ -434,15 +487,17 @@ describe('wd_server small', function() {
   });
 
   it('should stop and send error on user script exception', function() {
+    var error = 'fake err';
+
     // supress expected errors
     test_utils.stubLog(sandbox, function(
          levelPrinter, levelName, stamp, source, message) {
       return ((/^wd_server\.js/).test(source) &&
           ((/^Run failed, stopping/).test(message) ||
-           (/^Sending IPC error/).test(message)));
+           (/^Sending IPC error/).test(message) ||
+           (new RegExp('^(Script|Test) failed: ' + error).test(message))));
     });
 
-    var error = 'scheduled failure';
     var failingScript =
         'webdriver.promise.controlFlow().schedule("#fail", ' +
         '    function() { throw new Error("' + error + '"); });';
@@ -476,8 +531,10 @@ describe('wd_server small', function() {
 
     // Verify the result was sent
     should.ok(sendStub.calledOnce);
-    should.equal(sendStub.firstCall.args[0].cmd, 'error');
-    should.equal(sendStub.firstCall.args[0].e, error);
+    var msg = sendStub.firstCall.args[0];
+    should.equal(msg.cmd, 'error');
+    should.equal(msg.agentError, undefined);
+    should.equal(msg.testError, error);
     should.ok(killStub.calledOnce);
     should.ok(disconnectStub.calledOnce);
   });
@@ -500,8 +557,10 @@ describe('wd_server small', function() {
     test_utils.tickUntilIdle(app, sandbox);
 
     should.ok(sendStub.calledOnce);
-    should.equal(sendStub.firstCall.args[0].cmd, 'error');
-    should.equal(sendStub.firstCall.args[0].e, error);
-    should.ok(disconnectStub.calledOnce);
+    var msg = sendStub.firstCall.args[0];
+    should.equal(msg.cmd, 'done');
+    should.equal(msg.agentError, error);
+    should.equal(msg.testError, undefined);
+    should.ok(disconnectStub.notCalled);
   });
 });

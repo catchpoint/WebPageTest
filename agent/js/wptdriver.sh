@@ -91,7 +91,8 @@ case "${browser}" in
     declare -a browser_args=( \
         --browser 'browser_android_chrome.BrowserAndroidChrome' \
         --deviceSerial "$deviceSerial" \
-        ${chromedriver:+--chromedriver "${chromedriver}"});;
+        ${chromedriver:+--chromedriver "${chromedriver}"} \
+        --captureDir "$agent/lib/capture");;
   ios:*)
     declare deviceSerial="${browser#*:}"
     declare -a url_apps=("$agent/lib/ios/openURL/openURL"*.ipa)
