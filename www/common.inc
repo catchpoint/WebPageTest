@@ -36,6 +36,8 @@ if (function_exists('curl_init')) {
         curl_setopt($CURL_CONTEXT, CURLOPT_DNS_CACHE_TIMEOUT, 600);
         curl_setopt($CURL_CONTEXT, CURLOPT_MAXREDIRS, 10);
         curl_setopt($CURL_CONTEXT, CURLOPT_TIMEOUT, 600);
+        curl_setopt($CURL_CONTEXT, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($CURL_CONTEXT, CURLOPT_SSL_VERIFYPEER, 0);
     }
 } else
     $CURL_CONTEXT = false;

@@ -101,6 +101,7 @@ function GetLocationKey($location) {
 
 // Load the locations from locations.ini and merge-in the ec2 locations if necessary
 function LoadLocationsIni() {
+  $ec2_allow = GetSetting('ec2_allow');
   $locations = parse_ini_file(__DIR__ . '/settings/locations.ini', true);
   if (GetSetting('ec2_locations')) {
     $ec2 = parse_ini_file(__DIR__ . '/settings/ec2_locations.ini', true);
@@ -117,9 +118,13 @@ function LoadLocationsIni() {
         if (!isset($locations['locations']['default']) && isset($ec2['locations']['default']))
           $locations['locations']['default'] = $ec2['locations']['default'];
         // add all of the individual locations
-        foreach($ec2 as $name => $group)
-          if ($name !== 'locations')
+        foreach($ec2 as $name => $group) {
+          if ($name !== 'locations') {
             $locations[$name] = $group;
+            if ($ec2_allow)
+              $locations[$name]['allowKeys'] = $ec2_allow;
+          }
+        }
       } else {
         $locations = $ec2;
       }
