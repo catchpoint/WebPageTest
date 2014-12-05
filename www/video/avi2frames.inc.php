@@ -286,19 +286,6 @@ function EliminateDuplicateAVIFiles($videoDir, $viewport) {
         unlink($file);
     }
   }
-
-  // Do a third pass that eliminates frames with duplicate content.
-  $previousFile = null;
-  $files = glob("$videoDir/image*.png");
-  foreach ($files as $file) {
-    $duplicate = false;
-    if (isset($previousFile))
-      $duplicate = AreAVIFramesDuplicate($previousFile, $file, 0, $crop);
-    if ($duplicate)
-      unlink($file);
-    else
-      $previousFile = $file;
-  }
 }
 
 function AreAVIFramesDuplicate($image1, $image2, $fuzzPct = 0, $crop = null) {
