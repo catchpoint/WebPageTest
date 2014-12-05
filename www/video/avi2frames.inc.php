@@ -115,31 +115,45 @@ function Video2PNG($infile, $outdir, $crop) {
   $ret = false;
   $oldDir = getcwd();
   chdir($outdir);
-
-  $command = "ffmpeg -v debug -i \"$infile\" -vsync 0 -vf \"decimate=hi=0:lo=0:frac=0,scale=iw*min(400/iw\,400/ih):ih*min(400/iw\,400/ih)\" \"$outdir/img-%d.png\" 2>&1";
-  $result;
-  exec($command, $output, $result);
+  
+  // figure out which decimate filter we need to use (originally it was called decimate but then renamed to mpdecimate)
+  $decimate = null;
+  exec('ffmpeg -filters', $output, $result);
   if ($output && is_array($output) && count($output)) {
-    $frameCount = 0;
     foreach ($output as $line) {
-      if (preg_match('/keep pts:[0-9]+ pts_time:(?P<timecode>[0-9\.]+)/', $line, $matches)) {
-        $frameCount++;
-        $frameTime = ceil($matches['timecode'] * 1000);
-        $src = "$outdir/img-$frameCount.png";
-        $destFile = "video-" . sprintf("%06d", $frameTime) . ".png";
-        $dest = "$outdir/$destFile";
-        if (is_file($src)) {
-          $ret = true;
-          rename($src, $dest);
-        }
+      if (preg_match('/(?P<filter>[mp]*decimate).*V->V.*Remove near-duplicate frames/', $line, $matches)) {
+        $decimate = $matches['filter'];
+        break;
       }
     }
   }
 
-  $junkImages = glob("$outdir/img*.png");
-  if ($junkImages && is_array($junkImages) && count($junkImages)) {
-    foreach ($junkImages as $img)
-      unlink($img);
+  if (isset($decimate)) {
+    $command = "ffmpeg -v debug -i \"$infile\" -vsync 0 -vf \"$decimate=hi=0:lo=0:frac=0,scale=iw*min(400/iw\,400/ih):ih*min(400/iw\,400/ih)\" \"$outdir/img-%d.png\" 2>&1";
+    $result;
+    exec($command, $output, $result);
+    if ($output && is_array($output) && count($output)) {
+      $frameCount = 0;
+      foreach ($output as $line) {
+        if (preg_match('/keep pts:[0-9]+ pts_time:(?P<timecode>[0-9\.]+)/', $line, $matches)) {
+          $frameCount++;
+          $frameTime = ceil($matches['timecode'] * 1000);
+          $src = "$outdir/img-$frameCount.png";
+          $destFile = "video-" . sprintf("%06d", $frameTime) . ".png";
+          $dest = "$outdir/$destFile";
+          if (is_file($src)) {
+            $ret = true;
+            rename($src, $dest);
+          }
+        }
+      }
+    }
+
+    $junkImages = glob("$outdir/img*.png");
+    if ($junkImages && is_array($junkImages) && count($junkImages)) {
+      foreach ($junkImages as $img)
+        unlink($img);
+    }
   }
   chdir($oldDir);
   return $ret;

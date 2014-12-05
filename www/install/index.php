@@ -106,7 +106,7 @@ function CheckPHP() {
 
 function CheckUtils() {
     ShowCheck('ffmpeg Installed (required for video)', CheckFfmpeg());
-    ShowCheck('ffmpeg 1.x Installed with fps, scale and decimate filters(required for mobile video)', CheckFfmpegFilters($ffmpegInfo), false, $ffmpegInfo);
+    ShowCheck('ffmpeg Installed with scale and decimate filters(required for mobile video)', CheckFfmpegFilters($ffmpegInfo), false, $ffmpegInfo);
     ShowCheck('imagemagick compare Installed (required for mobile video)', CheckCompare(), false);
     ShowCheck('jpegtran Installed (required for JPEG Analysis)', CheckJpegTran(), false);
     ShowCheck('exiftool Installed (required for JPEG Analysis)', CheckExifTool(), false);
@@ -359,28 +359,24 @@ function CheckFfmpegFilters(&$info) {
     $command = "ffmpeg -filters";
     $retStr = exec($command, $output, $result);
     $fps = false;
-    $decimate = false;
+    $decimate = null;
     $scale = false;
     if (count($output)) {
       foreach ($output as $line) {
-        if (!strncmp($line, 'fps ', 4))
-          $fps = true;
         if (!strncmp($line, 'scale ', 6))
           $scale = true;
-        if (!strncmp($line, 'decimate ', 9))
-          $decimate = true;
+        if (preg_match('/(?P<filter>[mp]*decimate).*V->V.*Remove near-duplicate frames/', $line, $matches))
+          $decimate = $matches['filter'];
       }
     }
 
-    if (intval($ver) == 1 && $fps && $scale && $decimate)
+    if ($scale && isset($decimate))
       $ret = true;
     $info = $ver;
-    if ($fps)
-      $info .= ',fps';
     if ($scale)
       $info .= ',scale';
-    if ($decimate)
-      $info .= ',decimate';
+    if (isset($decimate))
+      $info .= ",$decimate";
 
     return $ret;
 }
