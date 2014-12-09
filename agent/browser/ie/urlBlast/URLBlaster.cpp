@@ -253,7 +253,6 @@ void CURLBlaster::ThreadProc(void)
 						if( Launch(preLaunch) )
 						{
 							LaunchBrowser();
-              dlg.SetStatus(_T("Uploading test run..."));
               
 							// record the cleared cache view
 							if( urlManager->RunRepeatView(info) ) {
@@ -663,7 +662,7 @@ void CURLBlaster::ClearCache(void)
     }
   }
   
-    // This magic value is the combination of the following bitflags:
+  // This magic value is the combination of the following bitflags:
   // #define CLEAR_HISTORY         0x0001 // Clears history
   // #define CLEAR_COOKIES         0x0002 // Clears cookies
   // #define CLEAR_CACHE           0x0004 // Clears Temporary Internet Files folder
@@ -682,7 +681,11 @@ void CURLBlaster::ClearCache(void)
   // #define CLEAR_PRESERVE_FAVORITES 0x2000 // Preserves cached data for "favorite" websites
 
   // Use the command-line version of cache clearing in case WinInet didn't work
-  Launch(_T("RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 6655"));
+  // 6655 = 0x19FF
+  HANDLE hAsync = NULL;
+  Launch(_T("RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 6655"), &hAsync);
+  if (hAsync)
+    CloseHandle(hAsync);
 
 	cached = false;
 }
@@ -1588,8 +1591,13 @@ void CURLBlaster::FlushDNS()
 	else
 		log.Trace(_T("Failed to load dnsapi.dll"));
 
-	if( !flushed )
-		Launch(_T("ipconfig.exe /flushdns"));
+  if( !flushed ) {
+    HANDLE hProc = NULL;
+		Launch(_T("ipconfig.exe /flushdns"), &hProc);
+    // Let it run asynchronously.  It will complete well before the browser launches
+    if (hProc)
+      CloseHandle(hProc);
+  }
 }
 
 /*-----------------------------------------------------------------------------

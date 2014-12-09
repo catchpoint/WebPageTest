@@ -706,7 +706,10 @@ void BrowserSettings::ClearWinInetCache() {
   // #define CLEAR_PRESERVE_FAVORITES 0x2000 // Preserves cached data for "favorite" websites
 
   // Use the command-line version of cache clearing in case WinInet didn't work
-  LaunchProcess(_T("RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 6655"));
+  HANDLE async = NULL;
+  LaunchProcess(_T("RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 6655"), &async);
+  if (async)
+    CloseHandle(async);
 }
 
 /*-----------------------------------------------------------------------------

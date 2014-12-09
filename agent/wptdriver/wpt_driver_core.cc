@@ -439,8 +439,12 @@ void WptDriverCore::FlushDNS(void) {
   } else
     _status.Set(_T("Failed to load dnsapi.dll"));
 
-  if (!flushed)
-    LaunchProcess(_T("ipconfig.exe /flushdns"));
+  if (!flushed) {
+    HANDLE async = NULL;
+    LaunchProcess(_T("ipconfig.exe /flushdns"), &async);
+    if (async)
+      CloseHandle(async);
+  }
 }
 
 /*-----------------------------------------------------------------------------
