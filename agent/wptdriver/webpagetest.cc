@@ -372,7 +372,7 @@ bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test,
     }
   }
 
-  AtlTrace(_T("[wptdriver] - Uploading '%s' (%d bytes)"), (LPCTSTR)file, file_size);
+  AtlTrace(_T("[wptdriver] - Uploading '%s' (%d bytes) to '%s'"), (LPCTSTR)file, file_size, (LPCTSTR)url);
 
   BuildFormData(_settings, test, done, file_name, file_size, 
                 headers, footer, form_data, content_length);
@@ -397,9 +397,11 @@ bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test,
     unsigned short port;
     DWORD secure_flag;
     if (CrackUrl(url, host, port, object, secure_flag)) {
+      AtlTrace(_T("[wptdriver] - Connecting to '%s' port %d"), (LPCTSTR)host, port);
       HINTERNET connect = InternetConnect(internet, host, port, NULL, NULL,
                                           INTERNET_SERVICE_HTTP, 0, 0);
-      if (connect){
+      if (connect) {
+        AtlTrace(_T("[wptdriver] - POSTing to %s"), (LPCTSTR)object);
         HINTERNET request = HttpOpenRequest(connect, _T("POST"), object, 
                                               NULL, NULL, NULL, 
                                               INTERNET_FLAG_NO_CACHE_WRITE |
@@ -408,7 +410,7 @@ bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test,
                                               INTERNET_FLAG_RELOAD |
                                               INTERNET_FLAG_KEEP_CONNECTION |
                                               secure_flag, NULL);
-        if (request){
+        if (request) {
           if (HttpAddRequestHeaders(request, headers, headers.GetLength(), 
                                     HTTP_ADDREQ_FLAG_ADD |
                                     HTTP_ADDREQ_FLAG_REPLACE)) {
@@ -416,10 +418,13 @@ bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test,
             memset( &buffers, 0, sizeof(buffers) );
             buffers.dwStructSize = sizeof(buffers);
             buffers.dwBufferTotal = content_length;
+            AtlTrace(_T("[wptdriver] - Sending request"));
             if (HttpSendRequestEx(request, &buffers, NULL, 0, NULL)) {
               DWORD bytes_written;
+              AtlTrace(_T("[wptdriver] - Writing data"));
               if (InternetWriteFile(request, (LPCSTR)form_data, 
                                     form_data.GetLength(), &bytes_written)) {
+                AtlTrace(_T("[wptdriver] - Uploading the file"));
                 // upload the file itself
                 if (file_handle != INVALID_HANDLE_VALUE && file_size) {
                     DWORD chunkSize = min(64 * 1024, file_size);
@@ -442,7 +447,11 @@ bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test,
                     ret = true;
                   }
                 }
+              } else {
+                AtlTrace(_T("InternetWriteFile failed: %d"), GetLastError());
               }
+            } else {
+              AtlTrace(_T("HttpSendRequestEx failed: %d"), GetLastError());
             }
           }
           InternetCloseHandle(request);
@@ -458,6 +467,8 @@ bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test,
 
   if (ret)
     DeleteFile(file);
+
+  AtlTrace(_T("[wptdriver] - Upload %s"), ret ? _T("SUCCEEDED") : _T("FAILED"));
 
   return ret;
 }
@@ -498,8 +509,6 @@ bool WebPagetest::CrackUrl(CString url, CString &host, unsigned short &port,
       port = parts.nPort;
       object = path;
       object += extra;
-      if (!host.CompareNoCase(_T("www.webpagetest.org")))
-        host = _T("agent.webpagetest.org");
       if (!lstrcmpi(scheme, _T("https"))) {
         secure_flag = INTERNET_FLAG_SECURE |
                       INTERNET_FLAG_IGNORE_CERT_CN_INVALID |
