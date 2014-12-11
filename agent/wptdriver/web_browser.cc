@@ -540,6 +540,20 @@ void WebBrowser::ConfigureIESettings() {
 		}
 
 		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+        _T("Software\\Microsoft\\Internet Explorer\\PhishingFilter"), 0, 0, 0,
+        KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
+			DWORD val = 0;
+			RegSetValueEx(hKey, _T("EnabledV9"), 0, REG_DWORD,
+                    (const LPBYTE)&val, sizeof(val));
+			RegSetValueEx(hKey, _T("Enabled"), 0, REG_DWORD,
+                    (const LPBYTE)&val, sizeof(val));
+      val = 3;
+			RegSetValueEx(hKey, _T("ShownVerifyBalloon"), 0, REG_DWORD,
+                    (const LPBYTE)&val, sizeof(val));
+			RegCloseKey(hKey);
+		}
+
+		if (RegCreateKeyEx(HKEY_CURRENT_USER,
         _T("Software\\Microsoft\\Internet Explorer\\IntelliForms"), 0, 0, 0,
         KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
 			DWORD val = 0;
