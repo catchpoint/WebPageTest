@@ -133,44 +133,6 @@ if (!defined('EMBED')) {
                 echo "<li$current><a title=\"$tabName$opens\" href=\"$tabUrl\"$target>$tabName</a></li>";
             }
         }
-
-        if (!$privateInstall && $_SERVER['HTTP_SSL'] != 'On' && (!defined('NAV_NO_SHARE') || !NAV_NO_SHARE))
-        {
-            echo '<div class="gplusone"><g:plusone size="medium" count="false" href="http://www.webpagetest.org/" actions="+1,addtocircles"></g:plusone>&nbsp;
-                <a href="http://twitter.com/share" class="twitter-share-button" data-count="none" data-text=" "></a>
-                ';
-            if (!array_key_exists('slow', $_REQUEST)) {
-                echo '<script type="text/javascript">
-                        (function() {
-                            var po = document.createElement(\'script\'); po.type = \'text/javascript\'; po.async = true;
-                            po.src = \'https://apis.google.com/js/plusone.js\';
-                            var tw = document.createElement(\'script\'); tw.type = \'text/javascript\'; tw.async = true;
-                            tw.src = \'http://platform.twitter.com/widgets.js\';
-                            var s = document.getElementsByTagName(\'script\')[0]; 
-                            s.parentNode.insertBefore(po, s);
-                            s.parentNode.insertBefore(tw, s);
-                          })();
-                  </script></div>
-                  ';
-            } else {
-                echo '<script type="text/javascript">
-                        (function() {
-                            var po = document.createElement(\'script\'); po.type = \'text/javascript\'; po.async = true;
-                            po.src = \'https://apis.google.com/js/plusone.js\';
-                            var s = document.getElementsByTagName(\'script\')[0]; 
-                            s.parentNode.insertBefore(po, s);
-                          })();
-                  </script></div>
-                  ';
-                if ($_REQUEST['slow'] !== 'bottom') {
-                    $delay = 10;
-                    if (array_key_exists('delay', $_REQUEST)) {
-                        $delay = $_REQUEST['delay'];
-                    }
-                    echo "<script type=\"text/javascript\" src=\"/slowtweet.php?delay=$delay\"></script>";
-                }
-            }
-        }
 ?></ul>
 
 </div>
