@@ -120,11 +120,11 @@ $page_description = "Comparison Test$testLabel.";
                             <label for="location">Test From<br><small id="locinfo">(Using Chrome on Cable)</small></label>
                             <select name="pssloc" id="pssloc">
                                 <option value="US_East" selected>US East (Virginia)</option>
-                                <option value="US_West">US West (California)</option>
-                                <option value="Brazil">South America (Brazil)</option>
-                                <option value="Europe">Europe (Ireland)</option>
-                                <option value="Asia_Singapore">Asia (Singapore)</option>
-                                <option value="Asia_Tokyo">Asia (Tokyo)</option>
+                                <option value="ec2-us-west-1-akamai">US West (California)</option>
+                                <option value="ec2-sa-east-1-akamai">South America (Brazil)</option>
+                                <option value="ec2-eu-west-1-akamai">Europe (Ireland)</option>
+                                <option value="ec2-ap-southeast-1-akamai">Asia (Singapore)</option>
+                                <option value="ec2-ap-northeast-1-akamai">Asia (Tokyo)</option>
                                 <option value="other">More Configurations...</option>
                             </select>
                         </li>

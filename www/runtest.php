@@ -39,6 +39,27 @@
 
     // load the location information
     $locations = LoadLocationsIni();
+    // See if we need to load a subset of the locations
+    $filter = null;
+    if (isset($_REQUEST['k']) && preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $_REQUEST['k'], $matches)) {
+      $filter = $matches['prefix'];
+      foreach ($locations as $name => $location) {
+        if (isset($location['browser'])) {
+          $ok = false;
+          if (isset($location['allowKeys'])) {
+            $keys = explode(',', $location['allowKeys']);
+            foreach($keys as $k) {
+              if ($k == $filter) {
+                $ok = true;
+                break;
+              }
+            }
+          }
+          if (!$ok)
+            unset($locations[$name]);
+        }
+      }
+    }
     BuildLocations($locations);
 
     // see if we are running a relay test
@@ -887,6 +908,17 @@ function ValidateKey(&$test, &$error, $key = null)
     }elseif( isset($key) || (isset($test['key']) && strlen($test['key'])) ){
       if( isset($test['key']) && strlen($test['key']) && !isset($key) )
         $key = $test['key'];
+      // see if it was an auto-provisioned key
+      if (preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $key, $matches)) {
+        $prefix = $matches['prefix'];
+        $db = new SQLite3(__DIR__ . "/dat/{$prefix}_api_keys.db");
+        $k = $db->escapeString($matches['key']);
+        $info = $db->querySingle("SELECT key_limit FROM keys WHERE key='$k'", true);
+        $db->close();
+        if (isset($info) && is_array($info) && isset($info['key_limit']))
+          $keys[$key] = array('limit' => $info['key_limit']);
+      }
+      
       // validate their API key and enforce any rate limits
       if( array_key_exists($key, $keys) ){
         if (array_key_exists('default location', $keys[$key]) &&
@@ -948,7 +980,12 @@ function ValidateKey(&$test, &$error, $key = null)
           $usingAPI = true;
       }
     }elseif (!isset($admin) || !$admin) {
-      $error = 'An error occurred processing your request.  Please reload the testing page and try submitting your test request again. (missing API key)';
+      $error = 'An error occurred processing your request (missing API key).';
+      if (GetSetting('allow_getkeys')) {
+        $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+        $url = "$protocol://{$_SERVER['HTTP_HOST']}/getkey.php";
+        $error .= "  If you do not have an API key assigned you can request one at $url";
+      }
     }
   }
 }
@@ -1444,6 +1481,7 @@ function SendToRelay(&$test, &$out)
     $data .= "Content-Disposition: form-data; name=\"testinfo\"\r\n\r\n" . json_encode($test);
 
     $data .= "\r\n--$boundary--\r\n";
+
 
     $params = array('http' => array(
                        'method' => 'POST',

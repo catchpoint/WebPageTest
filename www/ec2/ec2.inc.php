@@ -125,6 +125,9 @@ function EC2_TerminateIdleInstances() {
         foreach ($instance['locations'] as $location) {
           if (!isset($agentCounts[$location])) {
             $agentCounts[$location] = array('min' => 0, 'count' => 0);
+            $min = GetSetting("EC2.min");
+            if ($min)
+              $agentCounts[$location]['min'] = $min;
             $min = GetSetting("EC2.$location.min");
             if ($min)
               $agentCounts[$location]['min'] = $min;
@@ -194,7 +197,7 @@ function EC2_StartNeededInstances() {
     $scaleFactor = GetSetting('EC2.ScaleFactor');
     if (!$scaleFactor)
       $scaleFactor = 100;
-    
+
     // see how long the work queues are for each location in each AMI
     foreach ($locations as $ami => $info) {
       $tests = 0;
@@ -206,12 +209,18 @@ function EC2_StartNeededInstances() {
           foreach($queues as $priority => $count)
             $tests += $count;
         }
+        $locMin = GetSetting("EC2.min");
+        if ($locMin !== false)
+          $min = max(0, intval($locMin));
         $locMin = GetSetting("EC2.$location.min");
         if ($locMin !== false)
-          $min = max($min, intval($locMin));
+          $min = max(0, intval($locMin));
+        $locMax = GetSetting("EC2.max");
+        if ($locMax !== false)
+          $max = max(1, intval($locMax));
         $locMax = GetSetting("EC2.$location.max");
         if ($locMax !== false)
-          $max = max($max, intval($locMax));
+          $max = max(1, intval($locMax));
       }
       $locations[$ami]['tests'] = $tests;
       $locations[$ami]['min'] = $min;

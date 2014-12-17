@@ -36,7 +36,8 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
 
   echo "<table class=\"table\">\n";
   echo "<tr>
-          <th class=\"location\">Location</th>
+          <th class=\"location\">Location ID</th>
+          <th>Description</th>
           <th>Idle Testers</th>
           <th>Total Tests</th>
           <th>Being Tested</th>
@@ -64,6 +65,7 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
     }
     echo "<tr id=\"$name\" class=\"$error\">";
     echo "<td class=\"location\">" . @htmlspecialchars($name) . "</td>" . PHP_EOL;
+    echo "<td>" . @htmlspecialchars($location['labelShort']) . "</td>" . PHP_EOL;
     if (array_key_exists('PendingTests', $location)) {
       echo "<td>" . @htmlspecialchars($location['PendingTests']['Idle']) . "</td>" . PHP_EOL;
       echo "<td>" . @htmlspecialchars($location['PendingTests']['Total']) . "</td>" . PHP_EOL;
@@ -133,6 +135,25 @@ function LoadLocations()
 {
     $locations = array();
     $loc = LoadLocationsIni();
+    if (isset($_REQUEST['k']) && preg_match('/^(?P<prefix>[0-9A-Za-z]+)(?P<key>[\.0-9A-Za-z]*)$/', $_REQUEST['k'], $matches)) {
+      $filter = $matches['prefix'];
+      foreach ($loc as $name => $location) {
+        if (isset($location['browser'])) {
+          $ok = false;
+          if (isset($location['allowKeys'])) {
+            $keys = explode(',', $location['allowKeys']);
+            foreach($keys as $k) {
+              if ($k == $filter) {
+                $ok = true;
+                break;
+              }
+            }
+          }
+          if (!$ok)
+            unset($loc[$name]);
+        }
+      }
+    }
     FilterLocations($loc);
     BuildLocations($loc);
 
@@ -168,7 +189,8 @@ function LoadLocations()
                                                         'Browser' => $loc[$group[$j]]['browser'],
                                                         'localDir' => $loc[$group[$j]]['localDir'],
                                                         'relayServer' => @$loc[$group[$j]]['relayServer'],
-                                                        'relayLocation' => @$loc[$group[$j]]['relayLocation']
+                                                        'relayLocation' => @$loc[$group[$j]]['relayLocation'],
+                                                        'labelShort' => $loc[$group[$j]]['label'],
                                                         );
 
                         if( $default == $loc['locations'][$i] && $def == $group[$j] )

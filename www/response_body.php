@@ -1,7 +1,24 @@
 <?php
 include 'common.inc';
 $body = null;
-$request = (int)$_GET['request'];
+if (isset($_GET['request'])) {
+  $request = (int)$_GET['request'];
+} elseif (isset($_GET['url'])) {
+  // figure out the request ID from the URL
+  $url = trim($_GET['url']);
+  if (substr($url, 0, 4) != 'http')
+    $url = 'http://' . $url;
+  require_once('object_detail.inc');
+  $secure = false;
+  $haveLocations = false;
+  $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false, true);
+  foreach( $requests as &$r ) {
+    if ($r['full_url'] == $url) {
+      $request = $r['number'];
+      break;
+    }
+  }
+}
 if ($request) {
     $bodies_file = $testPath . '/' . $run . $cachedText . '_bodies.zip';
     if (is_file($bodies_file)) {
