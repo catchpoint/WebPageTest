@@ -67,9 +67,7 @@ if (!defined('EMBED')) {
         {
             // see if we have a location that the test was run from (for a custom ad)
             $testLoc = null;
-            if( isset($adLoc) )
-                $testLoc = $adLoc;
-            elseif( isset($test) && isset($test['test']) && isset($test['test']['loc']) )
+            if( isset($test) && isset($test['test']['loc']) )
                 $testLoc = $test['test']['loc'];
             
             if( strpos($testLoc, '..') === false && strpos($testLoc, '/') === false && strpos($testLoc, '\\') === false && 

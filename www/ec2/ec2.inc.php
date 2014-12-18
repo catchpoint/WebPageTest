@@ -1,6 +1,7 @@
 <?php
-require_once('./ec2/sdk.class.php');
 require_once('./common_lib.inc');
+require_once('./lib/aws/aws-autoloader.php');
+
 
 /**
 * Tests are pending for the given location, start instances as necessary
@@ -258,25 +259,28 @@ function EC2_DeleteOrphanedVolumes() {
   $key = GetSetting('ec2_key');
   $secret = GetSetting('ec2_secret');
   if ($key && $secret && GetSetting('ec2_prune_volumes')) {
-    $ec2 = new AmazonEC2($key, $secret);
-    $regions = array();
-    $response = $ec2->describe_regions();
-    if (isset($response) && $response->isOK()) {
-      foreach ($response->body->regionInfo->item as $region){
-        $regions[] = (string)$region->regionName;
+    try {
+      $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => 'us-east-1'));
+      $regions = array();
+      $response = $ec2->describeRegions();
+      if (isset($response['Regions'])) {
+        foreach ($response['Regions'] as $region)
+          $regions[] = $region['RegionName'];
       }
-    }
-    foreach ($regions as $region) {
-      $ec2->set_region($region);
-      $volumes = $ec2->describe_volumes();
-      if (isset($volumes)) {
-        foreach ($volumes->body->volumeSet->item as $item) {
-          if ($item->status == 'available') {
-            $id = strval($item->volumeId);
-            $ec2->delete_volume($id);
+      foreach ($regions as $region) {
+        $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => $region));
+        $response = $ec2->describeVolumes();
+        if (isset($response['Volumes'])) {
+          foreach ($response['Volumes'] as $volume) {
+            if ($volume['State'] == 'available') {
+              $ec2->deleteVolume(array('VolumeId' => $volume['VolumeId']));
+            }
           }
         }
       }
+    } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
+      $error = $e->getMessage();
+      logError("Error pruning EC2 volumes: $error");
     }
   }
 }
@@ -287,49 +291,53 @@ function EC2_GetRunningInstances() {
   $key = GetSetting('ec2_key');
   $secret = GetSetting('ec2_secret');
   if ($key && $secret) {
-    $ec2 = new AmazonEC2($key, $secret);
-    $regions = array();
-    $response = $ec2->describe_regions();
-    if (isset($response) && $response->isOK()) {
-      foreach ($response->body->regionInfo->item as $region){
-        $regions[] = (string)$region->regionName;
+    try {
+      $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => 'us-east-1'));
+      $regions = array();
+      $response = $ec2->describeRegions();
+      if (isset($response['Regions'])) {
+        foreach ($response['Regions'] as $region)
+          $regions[] = $region['RegionName'];
       }
-    }
-    foreach ($regions as $region) {
-      $ec2->set_region($region);
-      $response = $ec2->describe_instances();
-      if (isset($response) && $response->isOK()) {
-        foreach( $response->body->reservationSet->item as $item ) {
-          foreach( $item->instancesSet->item as $instance ) {
-            $wptLocations = null;
-            if (isset($instance->tagSet)) {
-              foreach ($instance->tagSet->item as $tag) {
-                if ($tag->key == 'WPTLocations') {
-                  $wptLocations = explode(',', $tag->value);
-                  break;
+      foreach ($regions as $region) {
+        $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => $region));
+        $response = $ec2->describeInstances();
+        if (isset($response['Reservations'])) {
+          foreach ($response['Reservations'] as $reservation) {
+            foreach ($reservation['Instances'] as $instance ) {
+              $wptLocations = null;
+              if (isset($instance['Tags'])) {
+                foreach ($instance['Tags'] as $tag) {
+                  if ($tag['Key'] == 'WPTLocations') {
+                    $wptLocations = explode(',', $tag['Value']);
+                    break;
+                  }
                 }
               }
-            }
-            if (isset($wptLocations)) {
-              $launchTime = strtotime((string)$instance->launchTime);
-              $elapsed = $now - $launchTime;
-              $state = (int)$instance->instanceState->code;
-              $running = false;
-              if (is_numeric($state) && $state <= 16)
-                $running = true;
-              $instances[] = array('region' => $region,
-                                   'id' => (string)$instance->instanceId,
-                                   'ami' => (string)$instance->imageId,
-                                   'state' => $state,
-                                   'launchTime' => (string)$instance->launchTime,
-                                   'launched' => $launchTime,
-                                   'runningTime' => $elapsed,
-                                   'locations' => $wptLocations,
-                                   'running' => $running);
+              if (isset($wptLocations)) {
+                $launchTime = strtotime($instance['LaunchTime']);
+                $elapsed = $now - $launchTime;
+                $state = $instance['State']['Code'];
+                $running = false;
+                if (is_numeric($state) && $state <= 16)
+                  $running = true;
+                $instances[] = array('region' => $region,
+                                     'id' => $instance['InstanceId'],
+                                     'ami' => $instance['ImageId'],
+                                     'state' => $state,
+                                     'launchTime' => $instance['LaunchTime'],
+                                     'launched' => $launchTime,
+                                     'runningTime' => $elapsed,
+                                     'locations' => $wptLocations,
+                                     'running' => $running);
+              }
             }
           }
         }
       }
+    } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
+      $error = $e->getMessage();
+      logError("Error listing running EC2 instances: $error");
     }
   }
   // update the AMI counts we are tracking locally
@@ -357,9 +365,13 @@ function EC2_TerminateInstance($region, $id) {
   $key = GetSetting('ec2_key');
   $secret = GetSetting('ec2_secret');
   if ($key && $secret) {
-    $ec2 = new AmazonEC2($key, $secret);
-    $ec2->set_region($region);
-    $ec2->terminate_instances(array($id));
+    try {
+      $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => $region));
+      $ec2->terminateInstances(array('InstanceIds' => array($id)));
+    } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
+      $error = $e->getMessage();
+      logError("Error Terminating EC2 instance. Region: $region, ID: $id, error: $error");
+    }
   }
 }
 
@@ -368,19 +380,27 @@ function EC2_LaunchInstance($region, $ami, $size, $user_data, $loc) {
   $key = GetSetting('ec2_key');
   $secret = GetSetting('ec2_secret');
   if ($key && $secret) {
-    $ec2 = new AmazonEC2($key, $secret);
-    $ec2->set_region($region);
-    $response = $ec2->run_instances($ami, 1, 1, array(
-                                  'InstanceType' => $size,
-                                  'UserData' => base64_encode($user_data)));
-    if ($response->isOK()) {
+    try {
+      $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => $region));
+      $response = $ec2->runInstances(array(
+          'ImageId' => $ami,
+          'MinCount' => 1,
+          'MaxCount' => 1,
+          'InstanceType' => $size,
+          'UserData' => base64_encode($user_data)
+      ));
       $ret = true;
-      if (isset($loc) && strlen($loc) && isset($response->body->instancesSet->item->instanceId)) {
-        $instance_id = (string)$response->body->instancesSet->item->instanceId;
-        $ec2->create_tags($instance_id, array(
-                          array('Key' => 'Name', 'Value' => 'WebPagetest Agent'),
-                          array('Key' => 'WPTLocations', 'Value' => $loc)));
+      if (isset($loc) && strlen($loc) && isset($response['Instances'][0]['InstanceId'])) {
+        $instance_id = $response['Instances'][0]['InstanceId'];
+        $ec2->createTags(array(
+          'Resources' => array($instance_id),
+          'Tags' => array(array('Key' => 'Name', 'Value' => 'WebPagetest Agent'),
+                          array('Key' => 'WPTLocations', 'Value' => $loc))
+        ));
       }
+    } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
+      $error = $e->getMessage();
+      logError("Error launching EC2 instance. Region: $region, AMI: $ami, error: $error");
     }
   }
   return $ret;
