@@ -46,7 +46,7 @@ include 'common.inc';
         </style>
     </head>
     <body>
-        <h1>WebPagetest Installation Check</h1>
+        <h1>WebPagetest <?php echo VER_WEBPAGETEST; ?> Installation Check</h1>
         <h2>PHP</h2><ul>
         <?php CheckPHP(); ?>
         </ul><h2>System Utilities</h2><ul>
