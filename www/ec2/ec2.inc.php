@@ -47,11 +47,14 @@ function EC2_StartInstance($ami) {
   $wptdriver = '';
   $loc = '';
   $region = null;
+  $size = GetSetting('ec2_instance_size');
   if ($locations && is_array($locations)) {
     foreach($locations as $location => $config) {
       if (isset($config['ami']) && $config['ami'] == $ami) {
         if (isset($config['region']))
           $region = trim($config['region']);
+        if (isset($config['size']))
+          $size = trim($config['size']);
         if (isset($config['key']) && strlen($config['key']))
           $key = trim($config['key']);
         if (strlen($loc))
@@ -87,7 +90,6 @@ function EC2_StartInstance($ami) {
       $user_data .= " wpt_loc=$wptdriver";
     if (isset($key) && strlen($key))
       $user_data .= " wpt_key=$key";
-    $size = GetSetting('ec2_instance_size');
     if (!$size)
       $size = 'm3.medium';
     $started = EC2_LaunchInstance($region, $ami, $size, $user_data, $loc);
