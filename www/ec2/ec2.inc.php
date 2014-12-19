@@ -105,20 +105,36 @@ function EC2_StartInstance($ami) {
 * 
 */
 function EC2_TerminateIdleInstances() {
+  EC2_SendInstancesOffline();
   $instances = EC2_GetRunningInstances();
   if (count($instances)) {
     $instanceCounts = array();
     $agentCounts = array();
     $locations = EC2_GetTesters();
+    
+    // Do a first pass to count the number of instances at each location/ami
     foreach($instances as $instance) {
-      // Keep track of the number of running instances of each AMI
       if (isset($instance['ami'])) {
         if (!isset($instanceCounts[$instance['ami']]))
           $instanceCounts[$instance['ami']] = array('count' => 0);
         if ($instance['running'])
           $instanceCounts[$instance['ami']]['count']++;
       }
-      
+      foreach ($instance['locations'] as $location) {
+        if (!isset($agentCounts[$location])) {
+          $agentCounts[$location] = array('min' => 0, 'count' => 0);
+          $min = GetSetting("EC2.min");
+          if ($min)
+            $agentCounts[$location]['min'] = $min;
+          $min = GetSetting("EC2.$location.min");
+          if ($min)
+            $agentCounts[$location]['min'] = $min;
+        }
+        $agentCounts[$location]['count']++;
+      }
+    }
+
+    foreach($instances as $instance) {
       $minutes = $instance['runningTime'] / 60.0;
       if ($minutes > 15 && $minutes % 60 >= 50) {
         $terminate = true;
@@ -126,34 +142,23 @@ function EC2_TerminateIdleInstances() {
         $lastCheck = null;  // time since this instance connected (if ever)
         
         foreach ($instance['locations'] as $location) {
-          if (!isset($agentCounts[$location])) {
-            $agentCounts[$location] = array('min' => 0, 'count' => 0);
-            $min = GetSetting("EC2.min");
-            if ($min)
-              $agentCounts[$location]['min'] = $min;
-            $min = GetSetting("EC2.$location.min");
-            if ($min)
-              $agentCounts[$location]['min'] = $min;
-          }
-          $agentCounts[$location]['count']++;
           if ($agentCounts[$location]['count'] <= $agentCounts[$location]['min']) {
             $terminate = false;
           } elseif (isset($locations[$location]['testers'])) {
             foreach ($locations[$location]['testers'] as $tester) {
-              if (isset($tester['last']) && (!isset($lastWork) || $tester['last'] < $lastWork))
-                $lastWork = $tester['last'];
-              if (isset($tester['ec2']) && $tester['ec2'] == $instance['id'])
+              if (isset($tester['ec2']) && $tester['ec2'] == $instance['id']) {
+                if (isset($tester['last']) && (!isset($lastWork) || $tester['last'] < $lastWork))
+                  $lastWork = $tester['last'];
                 $lastCheck = $tester['elapsed'];
+              }
             }
           }
         }
         
         // Keep the instance if the location had work in the last 15 minutes
         // and if this instance has checked in recently
-        if (isset($lastWork) && isset($lastCheck)) {
-          if ($lastWork < 15 && $lastCheck < 15)
-            $terminate = false;
-        }
+        if (isset($lastWork) && isset($lastCheck) && $lastWork < 15 && $lastCheck < 15)
+          $terminate = false;
         
         if ($terminate) {
           if (isset($instance['ami']) && $instance['running'])
@@ -181,6 +186,64 @@ function EC2_TerminateIdleInstances() {
       }
       file_put_contents('./tmp/ec2-instances.dat', json_encode($counts));
       Unlock($lock);
+    }
+  }
+}
+
+/**
+* Any excess instances should be marked as offline so that they can go idle and eventually terminate
+* 
+*/
+function EC2_SendInstancesOffline() {
+  // Mark excess instances as offline so they can go idle
+  $locations = EC2_GetAMILocations();
+  $scaleFactor = GetSetting('EC2.ScaleFactor');
+  if (!$scaleFactor)
+    $scaleFactor = 100;
+
+  // Figure out how many tests are pending for the given AMI across all of the locations it supports
+  foreach ($locations as $ami => $info) {
+    $tests = 0;
+    foreach($info['locations'] as $location) {
+      $queues = GetQueueLengths($location);
+      if (isset($queues) && is_array($queues)) {
+        foreach($queues as $priority => $count)
+          $tests += $count;
+      }
+    }
+    $locations[$ami]['tests'] = $tests;
+  }
+  
+  foreach ($locations as $ami => $info) {
+    // See if we have any offline testers that we need to bring online
+    $online_target = max(1, intval($locations[$ami]['tests'] / ($scaleFactor / 2)));
+    foreach ($info['locations'] as $location) {
+      $lock = LockLocation($location);
+      if ($lock) {
+        if (is_file("./tmp/$location.tm")) {
+          $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
+          if (isset($testers) && is_array($testers) && count($testers)) {
+            $online = 0;
+            foreach ($testers as $tester) {
+              if (!isset($tester['offline']) || !$tester['offline'])
+                $online++;
+            }
+            if ($online > $online_target) {
+              $changed = false;
+              foreach ($testers as &$tester) {
+                if ($online > $online_target && (!isset($tester['offline']) || !$tester['offline'])) {
+                  $tester['offline'] = true;
+                  $online--;
+                  $changed = true;
+                }
+              }
+              if ($changed)
+                file_put_contents("./tmp/$location.tm", json_encode($testers));
+            }
+          }
+        }
+        UnlockLocation($lock);
+      }
     }
   }
 }
@@ -235,7 +298,39 @@ function EC2_StartNeededInstances() {
       $target = $locations[$ami]['tests'] / $scaleFactor;
       $target = min($target, $locations[$ami]['max']);
       $target = max($target, $locations[$ami]['min']);
-      $needed = 0;
+      
+      // See if we have any offline testers that we need to bring online
+      $online_target = intval($locations[$ami]['tests'] / ($scaleFactor / 2));
+      foreach ($info['locations'] as $location) {
+        $lock = LockLocation($location);
+        if ($lock) {
+          if (is_file("./tmp/$location.tm")) {
+            $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
+            if (isset($testers) && is_array($testers) && count($testers)) {
+              $online = 0;
+              foreach ($testers as $tester) {
+                if (!isset($tester['offline']) || !$tester['offline'])
+                  $online++;
+              }
+              if ($online < $online_target) {
+                $changed = false;
+                foreach ($testers as &$tester) {
+                  if ($online < $online_target && isset($tester['offline']) && $tester['offline']) {
+                    $tester['offline'] = false;
+                    $online++;
+                    $changed = true;
+                  }
+                }
+                if ($changed)
+                  file_put_contents("./tmp/$location.tm", json_encode($testers));
+              }
+            }
+          }
+          UnlockLocation($lock);
+        }
+      }
+      
+      // Start new instances as needed
       if ($count < $target) {
         $needed = $target - $count;
         for ($i = 0; $i < $needed; $i++) {
@@ -416,7 +511,7 @@ function EC2_GetTesters() {
     $group = &$loc[$loc['locations'][$i]];
     $j = 1;
     while (isset($group[$j])) {
-      $locations[$group[$j]] = GetTesters($group[$j]);
+      $locations[$group[$j]] = GetTesters($group[$j], true);
       $j++;
     }
     $i++;

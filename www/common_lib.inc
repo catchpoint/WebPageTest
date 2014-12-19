@@ -1628,7 +1628,7 @@ function SaveJobQueue($workDir, &$queue)
 *
 * @param mixed $dir
 */
-function GetTesters($locationId)
+function GetTesters($locationId, $includeOffline = false)
 {
     $location = array();
 
@@ -1650,9 +1650,17 @@ function GetTesters($locationId)
             $location['testers'] = array();
             foreach( $testers as $id => $tester )
             {
-                if( !array_key_exists('offline', $tester) || !$tester['offline'] )
+                if( $includeOffline || !array_key_exists('offline', $tester) || !$tester['offline'] )
                 {
-                    $entry = array('pc' => @$tester['pc'], 'ec2' => @$tester['ec2'], 'ip' => @$tester['ip'], 'version' => @$tester['ver'], 'freedisk' => @$tester['freedisk'], 'ie' => @$tester['ie'], 'dns' => @$tester['dns'], 'GPU' => @$tester['GPU']);
+                    $entry = array('pc' => @$tester['pc'],
+                                   'ec2' => @$tester['ec2'],
+                                   'ip' => @$tester['ip'],
+                                   'version' => @$tester['ver'],
+                                   'freedisk' => @$tester['freedisk'],
+                                   'ie' => @$tester['ie'],
+                                   'dns' => @$tester['dns'],
+                                   'GPU' => @$tester['GPU'],
+                                   'offline' => @$tester['offline']);
 
                     if (array_key_exists('cpu', $tester) && is_array($tester['cpu'])) {
                       $total = 0;
