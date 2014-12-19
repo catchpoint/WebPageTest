@@ -42,6 +42,10 @@ allowPrivate=1
 ; Server Config
 ; *************
 
+; Host name to use for URLs when it can not be automatically detected.
+; This is mostly for auto-scaling EC2 instances to tell the agents what server to connect to
+;host=www.webpagetest.org
+
 ; disable gzip compressing the result text files
 ;nogzip=1
 
