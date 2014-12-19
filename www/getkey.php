@@ -4,7 +4,7 @@ define('BARE_UI', true);
 $prefix = GetSetting('api_key_prefix');
 if (!$prefix)
   $prefix = 'K';
-if (isset($_REQUEST['validate'])) {
+if (isset($_REQUEST['validate']) && strpos($_REQUEST['validate'], '.') !== false) {
   $parts = explode('.', $_REQUEST['validate']);
   $prefix = $parts[0];
   $_REQUEST['validate'] = $parts[1];
@@ -215,6 +215,9 @@ function CreateRequest($email) {
       $now = time();
       if ($db->query("INSERT INTO requests (id, created, email, ip, name, company, website, contact) VALUES (\"$id\", $now, $email, $ip, $name, $company, $website, $contact)"))
         $info = array('id' => "$prefix.$id", 'email' => trim($email, '"'));
+    } else {
+      if (strpos($info['id'], '.') === false)
+        $info['id'] = "$prefix.{$info['id']}";
     }
     $db->close();
   }
