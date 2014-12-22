@@ -24,6 +24,7 @@ user_pref("browser.search.update", false);
 user_pref("browser.sessionstore.resume_from_crash", false);
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.startup.homepage", "about:blank");
+user_pref("browser.startup.homepage_override.mstone", "ignore");
 user_pref("browser.startup.page", 0);
 user_pref("browser.tabs.warnOnClose", false);
 user_pref("dom.max_chrome_script_run_time", 0);
