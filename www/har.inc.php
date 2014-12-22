@@ -16,10 +16,12 @@ function GenerateHAR($id, $testPath, $options) {
       if (!strcasecmp($options["run"],'median')) {
         $raw = loadAllPageData($testPath);
         $run = GetMedianRun($raw, $options['cached'], $median_metric);
-        if (!$run)
-          $run = 1;
         unset($raw);
+      } else {
+        $run = intval($options["run"]);
       }
+      if (!$run)
+        $run = 1;
       $pageData[$run] = array();
       if( isset($options['cached']) ) {
         $pageData[$run][$options['cached']] = loadPageRunData($testPath, $run, $options['cached']);
