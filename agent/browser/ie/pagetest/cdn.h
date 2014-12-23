@@ -88,6 +88,8 @@ CDN_PROVIDER cdnList[] = {
   {".resrc.it", _T("ReSRC.it")},
   {".zenedge.net", _T("Zenedge")},
   {".lswcdn.net", _T("LeaseWeb CDN")},  
+  {".revcn.net", _T("Rev Software")},  
+  {".revdn.net", _T("Rev Software")},  
   {NULL, NULL}
 };
 
@@ -112,5 +114,7 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"X-Powered-By", "NYI FTW", _T("NYI FTW")},
   {"server", "ReSRC", _T("ReSRC.it")},
   {"X-Cdn", "Zenedge", _T("Zenedge")},
-  {"server", "leasewebcdn", _T("LeaseWeb CDN")}
+  {"server", "leasewebcdn", _T("LeaseWeb CDN")},
+  {"Via", "Rev-Cache", _T("Rev Software")},
+  {"X-Rev-Cache", "", _T("Rev Software")}
 };
