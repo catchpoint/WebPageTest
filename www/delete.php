@@ -11,11 +11,11 @@ if( strpos($testPath, 'relay') !== false
     DelTree($testPath);
     
     // delete empty directories above this one
-    do {
+    while (strpos($testPath, 'relay')) {
         $testPath = rtrim($testPath, "/\\");
         $testPath = dirname($testPath);
         rmdir($testPath);
-    } while( strpos($testPath, 'relay') );
+    }
     
     $ok = true;
 }
