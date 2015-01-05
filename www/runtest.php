@@ -403,6 +403,8 @@
                 unset($test['spam']);
             $test['priority'] =  0;
         }
+        
+        $test['created'] = time();
 
         // the API key requirements are for all test paths
         $test['vd'] = $req_vd;
@@ -1670,7 +1672,7 @@ function CheckUrl($url)
     $date = gmdate("Ymd");
     if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
         $url = 'http://' . $url;
-    if (!isset($user) && !$usingAPI) {
+    if (!$usingAPI) {
         $blockUrls = file('./settings/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         $blockHosts = file('./settings/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         $blockAuto = file('./settings/blockdomainsauto.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
