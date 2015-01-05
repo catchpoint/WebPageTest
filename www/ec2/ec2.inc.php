@@ -479,13 +479,28 @@ function EC2_LaunchInstance($region, $ami, $size, $user_data, $loc) {
   if ($key && $secret) {
     try {
       $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => $region));
-      $response = $ec2->runInstances(array(
+      $ec2_options = array (
           'ImageId' => $ami,
           'MinCount' => 1,
           'MaxCount' => 1,
           'InstanceType' => $size,
-          'UserData' => base64_encode($user_data)
-      ));
+          'UserData' => base64_encode ( $user_data )
+			);
+
+      //add/modify the SecurityGroupIds if present in config
+      $securityGroupIds = explode(",", GetSetting('EC2.'.$region.'.securityGroup'));
+      if (isset($securityGroupIds)) {
+        $ec2_options['SecurityGroupIds'] = $securityGroupIds;
+      }
+
+      //add/modify the SubnetId if present in config
+      $subnetId = GetSetting('EC2.'.$region.'.subnetId');
+      if (isset($subnetId)) {
+        $ec2_options['SubnetId'] = $subnetId;
+      }
+
+      $response = $ec2->runInstances ( $ec2_options );
+
       $ret = true;
       if (isset($loc) && strlen($loc) && isset($response['Instances'][0]['InstanceId'])) {
         $instance_id = $response['Instances'][0]['InstanceId'];
