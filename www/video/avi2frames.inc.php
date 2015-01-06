@@ -6,6 +6,7 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('FindAVIViewport');
   newrelic_add_custom_tracer('EliminateDuplicateAVIFiles');
   newrelic_add_custom_tracer('ProcessVideoFrames');
+  newrelic_add_custom_tracer('CreateHistogram');
 }
 
 /**
@@ -57,10 +58,9 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
   $crop = '';
   if (!is_file($videoFile))
     $videoFile = "$testPath/$run{$cachedText}_video.mp4";
-  if (!is_file($videoFile)) {
-    $crop = ',crop=in_w:in_h-80:0:80';
+  if (!is_file($videoFile))
     $videoFile = "$testPath/$run{$cachedText}_appurify.mp4";
-  }
+    
   // trim the video to align with the capture if we have timestamps for both
   $renderStart = null;
   if (array_key_exists('appurify_tests', $test) &&
@@ -130,7 +130,7 @@ function Video2PNG($infile, $outdir, $crop) {
   }
 
   if (isset($decimate)) {
-    $command = "ffmpeg -v debug -i \"$infile\" -vsync 0 -vf \"{$crop}scale=iw*min(400/iw\,400/ih):ih*min(400/iw\,400/ih),$decimate=hi=64:lo=640:frac=0.001\" \"$outdir/img-%d.png\" 2>&1";
+    $command = "ffmpeg -v debug -i \"$infile\" -vsync 0 -vf \"{$crop}scale=iw*min(400/iw\,400/ih):ih*min(400/iw\,400/ih),$decimate=0:64:640:0.001\" \"$outdir/img-%d.png\" 2>&1";
     $result;
     exec($command, $output, $result);
     if ($output && is_array($output) && count($output)) {
@@ -503,7 +503,7 @@ function FindVideoCrop($videoFile, $videoDir) {
     if (IsOrangeAVIFrame($image) || IsBlankAVIFrame($image)) {
       $viewport = GetImageViewport($image);
       if (isset($viewport))
-        $crop = "crop=w={$viewport['width']}:h={$viewport['height']}:x={$viewport['x']}:y={$viewport['y']},";
+        $crop = "crop={$viewport['width']}:{$viewport['height']}:{$viewport['x']}:{$viewport['y']},";
     }
     unlink($image);
   }
