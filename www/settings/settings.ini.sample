@@ -151,12 +151,13 @@ allowPrivate=1
 ; Start an EC2 instance for every X tests in the queue (up to the location max)
 ;EC2.ScaleFactor=100
 
-; Default location when using EC2 auto-scaling
+; Default location when using EC2 auto-scaling - this setting is required for auto-scaling
 ;EC2.default=us-east-1
 
 ; Per-location minimum and maximum EC2 instance counts.
 ; By default the minimum will be 0 and the maximum will be 1.
 ; This needs to be specified for every location where you want
-; different settings (EC2.<location>.min/max).
+; different settings (EC2.<location>.min/max). 
+; Don't forget to also set the EC2.default region to enable auto-scaling.
 ;EC2.us-east-1.min=0
 ;EC2.us-east-1.max=1
