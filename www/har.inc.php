@@ -59,6 +59,10 @@ function GenerateHAR($id, $testPath, $options) {
       $jsonLib = new Services_JSON();
       $json = $jsonLib->encode($harData);
     }
+    if ($json === false) {
+      $jsonLib = new Services_JSON();
+      $json = $jsonLib->encode($harData);
+    }
   }
   
   return $json;
@@ -329,7 +333,7 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
             for( $i = 0; $i < $zip->numFiles; $i++ ) {
               $index = intval($zip->getNameIndex($i), 10) - 1;
               if (array_key_exists($index, $entries))
-                $entries[$index]['response']['content']['text'] = $zip->getFromIndex($i);
+                $entries[$index]['response']['content']['text'] = utf8_encode($zip->getFromIndex($i));
             }
           }
         }
