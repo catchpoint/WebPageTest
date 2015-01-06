@@ -201,7 +201,7 @@ function CopyAVIFrame($src, $dest) {
 function IsBlankAVIFrame($file) {
   $ret = false;
   $white = realpath('images/video_white.png');
-  $command = "convert  \"$white\" \\( \"$file\" -gravity Center -crop 50x50%+0+0 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
+  $command = "convert  \"$white\" \\( \"$file\" -gravity Center -crop 50x33%+0+0 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
   $differentPixels = shell_exec($command);
   if (isset($differentPixels) &&
       strlen($differentPixels) &&
@@ -221,7 +221,7 @@ function IsBlankAVIFrame($file) {
 function IsOrangeAVIFrame($file) {
   $ret = false;
   $orange = realpath('./images/video_orange.png');
-  $command = "convert  \"$orange\" \\( \"$file\" -gravity Center -crop 50x50%+0+0 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
+  $command = "convert  \"$orange\" \\( \"$file\" -gravity Center -crop 50x33%+0+0 -resize 200x200! \\) miff:- | compare -metric AE - -fuzz 10% null: 2>&1";
   $differentPixels = shell_exec($command);
   if (isset($differentPixels) &&
       strlen($differentPixels) &&
