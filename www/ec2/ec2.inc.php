@@ -29,6 +29,8 @@ function EC2_StartInstanceIfNeeded($ami) {
       }
     }
     Unlock($lock);
+  } else {
+    EC2LogError("Acquiring lock for ec2-instances"); 
   }
 }
 
@@ -93,6 +95,8 @@ function EC2_StartInstance($ami) {
     if (!$size)
       $size = 'm3.medium';
     $started = EC2_LaunchInstance($region, $ami, $size, $user_data, $loc);
+  } else {
+    EC2LogError("Region ($region) or Location ($loc) invalid in EC2_StartInstance");
   }
   
   return $started;
@@ -377,7 +381,7 @@ function EC2_DeleteOrphanedVolumes() {
       }
     } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
       $error = $e->getMessage();
-      logError("Error pruning EC2 volumes: $error");
+      EC2LogError("Pruning EC2 volumes: $error");
     }
   }
 }
@@ -434,7 +438,7 @@ function EC2_GetRunningInstances() {
       }
     } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
       $error = $e->getMessage();
-      logError("Error listing running EC2 instances: $error");
+      EC2LogError("Listing running EC2 instances: $error");
     }
   }
   // update the AMI counts we are tracking locally
@@ -465,14 +469,18 @@ function EC2_TerminateInstance($region, $id) {
     try {
       $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => $region));
       $ec2->terminateInstances(array('InstanceIds' => array($id)));
+      EC2Log("Terminated instance $id in $region");
     } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
       $error = $e->getMessage();
-      logError("Error Terminating EC2 instance. Region: $region, ID: $id, error: $error");
+      EC2LogError("Terminating EC2 instance. Region: $region, ID: $id, error: $error");
     }
+  } else {
+    EC2LogError("Missing key or secret - Terminating instance $id in $region");
   }
 }
 
 function EC2_LaunchInstance($region, $ami, $size, $user_data, $loc) {
+  EC2Log("Launching $size ami $ami in $region for $loc with user data: $user_data");
   $ret = false;
   $key = GetSetting('ec2_key');
   $secret = GetSetting('ec2_secret');
@@ -488,9 +496,12 @@ function EC2_LaunchInstance($region, $ami, $size, $user_data, $loc) {
       );
 
       //add/modify the SecurityGroupIds if present in config
-      $securityGroupIds = explode(",", GetSetting('EC2.'.$region.'.securityGroup'));
-      if (isset($securityGroupIds)) {
-        $ec2_options['SecurityGroupIds'] = $securityGroupIds;
+      $secGroups = GetSetting("EC2.$region.securityGroup");
+      if ($secGroups) {
+        $securityGroupIds = explode(",", $secGroups);
+        if (isset($securityGroupIds)) {
+          $ec2_options['SecurityGroupIds'] = $securityGroupIds;
+        }
       }
 
       //add/modify the SubnetId if present in config
@@ -503,6 +514,7 @@ function EC2_LaunchInstance($region, $ami, $size, $user_data, $loc) {
       $ret = true;
       if (isset($loc) && strlen($loc) && isset($response['Instances'][0]['InstanceId'])) {
         $instance_id = $response['Instances'][0]['InstanceId'];
+        EC2Log("Instance $instance_id started: $size ami $ami in $region for $loc with user data: $user_data");
         $ec2->createTags(array(
           'Resources' => array($instance_id),
           'Tags' => array(array('Key' => 'Name', 'Value' => 'WebPagetest Agent'),
@@ -511,8 +523,10 @@ function EC2_LaunchInstance($region, $ami, $size, $user_data, $loc) {
       }
     } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
       $error = $e->getMessage();
-      logError("Error launching EC2 instance. Region: $region, AMI: $ami, error: $error");
+      EC2LogError("Launching EC2 instance. Region: $region, AMI: $ami, error: $error");
     }
+  } else {
+      EC2LogError("Launching EC2 instance. Missing key or secret");
   }
   return $ret;
 }
@@ -548,5 +562,42 @@ function EC2_GetAMILocations() {
     }
   }
   return $locations;
+}
+
+/**
+* Write out log messages about EC2 scaling
+* 
+* @param mixed $msg
+*/
+function EC2Log($msg) {
+  $dir = __DIR__ . '/log';
+  if (!is_dir($dir))
+    mkdir($dir, 0744, true);
+  if (is_dir($dir)) {
+    // Delete any error logs that are more than a week old
+    $files = glob("$dir/ec2.log.*");
+    $UTC = new DateTimeZone('UTC');
+    $now = time();
+    foreach ($files as $file) {
+      if (preg_match('/ec2\.log\.([0-9]{8})$/', $file, $matches)) {
+        $date = DateTime::createFromFormat('Ymd', $matches[1], $UTC);
+        $time = $date->getTimestamp();
+        if ($time < $now && $now - $time > 604800)
+          unlink($file);
+      }
+    }
+    $date = gmdate('Ymd');
+    error_log(gmdate('H:i:s - ') . $msg . "\n", 3, "$dir/ec2.log.$date");
+  }
+}
+
+/**
+* Log an error to both the EC2 log and the error log
+* 
+* @param mixed $msg
+*/
+function EC2LogError($msg) {
+  EC2Log('Error: ' . $msg);
+  logError('EC2:' . $msg);
 }
 ?>
