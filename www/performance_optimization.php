@@ -49,25 +49,42 @@ $page_description = "Website performance optimization recommendations$testLabel.
             $tab = 'Test Result';
             $subtab = 'Performance Review';
             include 'header.inc';
+            $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false, false, true);
             ?>
+            <hr>
+            <h1 style="text-align:center; font-size:2.8em">
+              	<?php 
+ 				if($cached){
+					echo "Repeat View";
+				} else {
+					echo "First View";
+				}      
+               	?>
+            </h1>
+            <hr>
+            <br>
             <div style="text-align:center;">
-                <h1>Full Optimization Checklist</h1>
-                <?php
-                    echo '<img alt="Optimization Checklist" id="image" src="';
-                    if( FRIENDLY_URLS )
-                        echo substr($testPath, 1) . '/' . $run . $cachedText . '_optimization.png';
-                    else
-                        echo "/optimizationChecklist.php?test=$id&run=$run&cached=$cached";
+            	<?php foreach(array_keys($requests) as $eventName)
+            	{ ?>
+                	<a name="checklist<?php echo $eventName?>"></a>
+                	<h1>Full Optimization Checklist - <?php echo $eventName; ?></h1>
+                	<?php                	
+	                    echo '<img alt="Optimization Checklist" id="image'.$eventName.'" src="';
+	                    echo "/optimizationChecklist.php?test=$id&run=$run&cached=$cached&eventName=$eventName";
                     echo '">';
+	                ?>                
+                <br/><br/><br/>
+                <?php     
+            	}
                 ?>
-                <br>
             </div>
 
 		    <br>
             <?php include('./ads/optimization_middle.inc'); ?>
 		    <br>
-
-            <h2>Details:</h2>
+			
+			<a name="details"></a>
+            <h2>Details (for all Event Names):</h2>
             <?php
                 require 'optimization.inc';
 

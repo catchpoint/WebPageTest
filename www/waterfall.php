@@ -2,10 +2,18 @@
 header ("Content-type: image/png");
 include 'common.inc';
 require_once('object_detail.inc');
+require_once('utils.inc');
 require_once('page_data.inc');
 require_once('waterfall.inc');
 
-$page_data = loadPageRunData($testPath, $run, $cached);
+$eventName = urldecode($_REQUEST["eventName"]);
+if(isset($eventName)){
+	$pageDataArray = loadPageRunData($testPath, $run, $cached, array('allEvents' => true));
+	$page_data = $pageDataArray[$eventName];
+} else {
+	$page_data = loadPageRunData($testPath, $run, $cached);
+	$eventName = null;
+}
 
 $is_mime = (bool)@$_REQUEST['mime'];
 $is_state = (bool)@$_REQUEST['state'];
@@ -14,17 +22,25 @@ $show_labels = (!isset($_REQUEST['labels']) || $_REQUEST['labels'] != 0);
 $rowcount = array_key_exists('rowcount', $_REQUEST) ? $_REQUEST['rowcount'] : 0;
 
 // Get all of the requests;
+$requests = getRequests($id, $testPath, $run, $cached,
+		$is_secure, $has_locations, $use_location_check, false, true);
 $is_secure = false;
 $has_locations = false;
 $use_location_check = false;
-$requests = getRequests($id, $testPath, $run, $cached,
-                        $is_secure, $has_locations, $use_location_check);
+$file = $testPath . "/" . $run.'_';
+if($cached){
+	$file .= 'Cached_';
+}
+$file .= getEventNameID($eventName).'_';
 if (@$_REQUEST['type'] == 'connection') {
     $is_state = true;
-    $rows = GetConnectionRows($requests, $show_labels);
+    $file .= "connection_detail.png";
+    $rows = GetConnectionRows($requests[$eventName], $show_labels);
 } else {
-    $rows = GetRequestRows($requests, $use_dots, $show_labels);
+    $file .= "waterfall_detail.png";
+    $rows = GetRequestRows($requests[$eventName], $use_dots, $show_labels);
 }
+
 $page_events = GetPageEvents($page_data);
 $bwIn=0;
 if (isset($test) && array_key_exists('testinfo', $test) && array_key_exists('bwIn', $test['testinfo'])) {
@@ -46,9 +62,15 @@ $options = array(
     'is_state' => $is_state,
     'rowcount' => $rowcount
     );
-$im = GetWaterfallImage($rows, $url, $page_events, $options, $page_data);
+$im = GetWaterfallImage($rows, $eventName, $page_events, $options, $page_data);
 
 // Spit the image out to the browser.
 imagepng($im);
+
+// Cache file as image on the server once
+if($test['imageCaching'] && !file_exists($file)){
+	imagepng($im, $file);
+}
+
 imagedestroy($im);
 ?>

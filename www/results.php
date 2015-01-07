@@ -1,4 +1,8 @@
 <?php 
+error_reporting(-1);
+$conf['error_level'] = 2;
+ini_set('display_errors',true);
+ini_set('display_startup_errors',true);
 include 'common.inc';
 require_once('page_data.inc');
 
@@ -27,11 +31,12 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
             include 'testcancelled.inc';
         elseif( (isset($test['test']) && isset($test['test']['completeTime'])) || count($pageData) > 0 )
         {
-            if( @$test['test']['type'] == 'traceroute' )
+        if( @$test['test']['type'] == 'traceroute' ){
                 include 'resultTraceroute.inc';
-            else
+        } else {
                 include 'result.inc';
         }
+    }
         else
             include 'running.inc';
     }

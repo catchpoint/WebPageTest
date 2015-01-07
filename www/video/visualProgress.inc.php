@@ -4,6 +4,7 @@ if(extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('GetImageHistogram');
 }
 require_once('devtools.inc.php');
+require_once('utils.inc');
 
 /**
 * Calculate the progress for all of the images in a given directory
@@ -15,9 +16,18 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
     $testInfo = GetTestInfo($testPath);
     $completed = IsTestRunComplete($run, $testInfo);
     $video_directory = "$testPath/video_{$run}";
+    if(isset($eventNumber)){
+    	$video_directory .= "_{$eventNumber}";
+    }
+    $eventNumber = checkOptionKeyAndGetValue('eventNumber', $options);
+    if($eventNumber !== false){
+    	$video_directory .= "_{$eventNumber}";
+    	$cache_file = "$testPath/$run.$eventNumber.$cached.visual.dat";
+    } else {
+    	$cache_file = "$testPath/$run.$cached.visual.dat";
+    }
     if ($cached)
         $video_directory .= '_cached';
-    $cache_file = "$testPath/$run.$cached.visual.dat";
     if (!isset($startOffset))
       $startOffset = 0;
     $dirty = false;
@@ -39,7 +49,8 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
         $frames = array('version' => $current_version);
         $frames['frames'] = array();
         $dirty = true;
-        $base_path = substr($video_directory, 1);
+        //$base_path = substr($video_directory, 1);
+        $base_path = $video_directory;
         $files = scandir($video_directory);
         $last_file = null;
         $first_file = null;
@@ -47,8 +58,8 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
         foreach ($files as $file) {
             if (strpos($file,'frame_') !== false && strpos($file,'.hist') === false) {
                 $parts = explode('_', $file);
-                if (count($parts) >= 2) {
-                    $time = (((int)$parts[1]) * 100) - $startOffset;
+                if (count($parts) >= 3) {
+                    $time = (((int)$parts[2]) * 100) - $startOffset;
                     if ($time >= 0 && (!isset($end) || $time <= $end)) {
                       if (isset($previous_file) && !array_key_exists(0, $frames['frames']) && $time > 0) {
                         $frames['frames'][0] = array('path' => "$base_path/$previous_file",

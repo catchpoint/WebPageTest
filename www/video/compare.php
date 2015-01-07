@@ -324,10 +324,46 @@ else
                 include "waterfall.js";
                 ?>
             </script>
+            
         </body>
     </html>
 
     <?php
+}
+
+/**
+ * Gets the event name for a test (data specific to this file)
+ * @param unknown $test
+ */
+function GetEventName($test){
+	$run = $test['run'];
+	$cached = $test['cached'];
+	$eventName = $test['pageData'][$run][$cached]['eventName'];
+	if(strlen($eventName) == 0){
+		$eventName = "<No event>";
+	}
+	return $eventName;
+}
+
+/**
+ * Gets the number of a test (data specific to this file)
+ * @param unknown $test
+ * @return string
+ */
+function GetTestNumber($test){
+	$testNumber = substr($test['name'], 0, strpos($test['name'], ": ") + 2);
+	return $testNumber;
+}
+
+/**
+ * Gets the numbered event name for a test (data specific to this file)
+ * @param unknown $test
+ * @return string
+ */
+function GetNumberedEventName($test){
+	$eventName = GetEventName($test);
+	$numberedEventName = GetTestNumber($test) . $eventName;
+	return $numberedEventName;
 }
 
 /**
@@ -359,6 +395,37 @@ function ScreenShotTable()
         if (!defined('EMBED')) {
             echo '<br>';
         }
+        ?>
+        <div style="height: 20px"> <?php 
+	        $request_parameter_tests = urldecode($_REQUEST['tests']);
+	        $eventNumber = $test['eventNumber'];
+	        $currentPage = "p:".$eventNumber;
+			?>
+    			<div style="float:right"> <?php  	 		        
+			        $nextPage = "p:".($eventNumber+1);
+			        $nextPageTests = str_replace($currentPage, $nextPage, $request_parameter_tests);
+			        ?>	   
+	        		<form method="get" action="/video/compare.php">
+	        	     	<input type="hidden" name="tests" value="<?php echo $nextPageTests?>">
+	        	       	<input type="submit" value="Next Event"/>      
+	        	   </form>
+        		</div>
+        	<?php 
+			if($eventNumber > 1)
+			{?>
+	        	<div style="float:right">
+			   		<?php 
+				        $prevPage = "p:".($eventNumber-1);
+				        $prevPageTests = str_replace($currentPage, $prevPage, $request_parameter_tests); ?>
+				       	<form method="get" action="/video/compare.php">
+				        	<input type="hidden" name="tests" value="<?php echo $prevPageTests?>">
+				        	<input type="submit" value="Previous Event"/>      
+				        </form>	 
+		        </div>
+	        <?php 
+			} ?>
+        </div>
+        <?php 
         echo '<form id="createForm" name="create" method="get" action="/video/create.php">';
         echo "<input type=\"hidden\" name=\"end\" value=\"$endTime\">";
         echo '<input type="hidden" name="tests" value="' . htmlspecialchars($_REQUEST['tests']) . '">';
@@ -397,11 +464,15 @@ function ScreenShotTable()
                     $href = "/result/{$test['id']}/{$test['run']}/details/$cached";
                 else
                     $href = "/details.php?test={$test['id']}&run={$test['run']}&cached={$test['cached']}";
-
                 echo "<a class=\"pagelink\" id=\"label_{$test['id']}\" href=\"$href\">" . WrapableString($test['name']) . '</a>';
-            } else {
-                echo WrapableString($test['name']);
-            }
+            } else {			
+				echo WrapableString($test['name']);
+			}          
+                
+            $testNumber = GetTestNumber($test);
+            $numberedEventName = GetEventName($test);
+            $numberedEventName = $testNumber . "<br/>" . htmlentities($numberedEventName);
+            echo WrapableString($numberedEventName);
 
             // Print out a link to edit the test
             echo '<br/>';
@@ -475,7 +546,7 @@ function ScreenShotTable()
                     $cached = '';
                     if( $test['cached'] )
                         $cached = '_cached';
-                    $imgPath = GetTestPath($test['id']) . "/video_{$test['run']}$cached/$path";
+                        $imgPath = GetTestPath($test['id']) . "/video_{$test['run']}_{$test['eventNumber']}$cached/$path";
                     echo "<a href=\"/$imgPath\">";
                     echo "<img title=\"{$test['name']}\"";
                     $class = 'thumb';
@@ -488,7 +559,7 @@ function ScreenShotTable()
                     echo " width=\"$width\"";
                     if( $height )
                         echo " height=\"$height\"";
-                    echo " src=\"/thumbnail.php?test={$test['id']}&fit=$thumbSize&file=video_{$test['run']}$cached/$path\"></a>";
+                        echo " src=\"/thumbnail.php?test={$test['id']}&fit=$thumbSize&file=video_{$test['run']}_{$test['eventNumber']}$cached/$path\"></a>";
                     if (isset($progress))
                         echo "<br>$progress%";
                     $lastThumb = $path;
@@ -509,7 +580,7 @@ function ScreenShotTable()
         echo "<a id=\"export\" class=\"pagelink\" href=\"filmstrip.php?tests={$_REQUEST['tests']}&thumbSize=$thumbSize&ival=$interval&end=$endTime&text=$color&bg=$bgcolor\">Export filmstrip as an image...</a>";
         echo "</div>";
         echo '<div id="bottom"><input type="checkbox" name="slow" value="1"> Slow Motion<br><br>';
-        echo "<input id=\"SubmitBtn\" type=\"submit\" value=\"Create Video\">";
+        echo "<input id=\"SubmitBtn\" type=\"submit\" value=\"Create Video\">";    
         echo '<br><br><a class="pagelink" href="javascript:ShowAdvanced()">Advanced customization options...</a>';
         echo "</div></form>";
         if (!defined('EMBED')) {
@@ -593,11 +664,14 @@ function ScreenShotTable()
         // display the waterfall if there is only one test
         $end_seconds = $filmstrip_end_time / 1000;
         if( count($tests) == 1 ) {
-            $data = loadPageRunData($tests[0]['path'], $tests[0]['run'], $tests[0]['cached']);
+            $data = loadPageRunData($tests[0]['path'], $tests[0]['run'], $tests[0]['cached'], array('allEvents' => true, 'eventNumberKeys' => true));
+            $eventNumber = $test['eventNumber'];
+            $data = $data[$eventNumber];
             $secure = false;
             $haveLocations = false;
-            $requests = getRequests($tests[0]['id'], $tests[0]['path'], $tests[0]['run'], $tests[0]['cached'], $secure, $haveLocations, true, true);
-            InsertWaterfall('', $requests, $tests[0]['id'], $tests[0]['run'], $tests[0]['cached'], $data, "&max=$end_seconds&mime=1&state=1&cpu=1&bw=1" );
+            $requests = getRequests($tests[0]['id'], $tests[0]['path'], $tests[0]['run'], $tests[0]['cached'], $secure, $haveLocations, true, true, true);
+            InsertWaterfall('', $requests, $tests[0]['id'], $tests[0]['run'], $tests[0]['cached'], "&max=$end_seconds&mime=1&state=1&cpu=1&bw=1", $data['eventName']);
+            $requests = $requests[$data['eventName']];
             echo '<br><br>';
         } else {
           $waterfalls = array();
@@ -611,9 +685,11 @@ function ScreenShotTable()
           if (array_key_exists('hideurls', $_REQUEST) && $_REQUEST['hideurls'])
             $labels = '&labels=0';
           InsertMultiWaterfall($waterfalls, "&max=$end_seconds&mime=1&state=1&cpu=1&bw=1$labels");
+          // InsertMultiWaterfall($waterfalls, "&max=$filmstrip_end_time&mime=1&state=1&cpu=1&bw=1$labels");
         }
         ?>
 
+        
         <div id="advanced" style="display:none;">
             <h3>Advanced Visual Comparison Configuration</h3>
             <p>There are additional customizations that can be done by modifying the <b>tests</b> parameter in the comparison URL directly.</p>
@@ -711,8 +787,9 @@ function DisplayGraphs() {
     $progress_end = 0;
     $testCount = count($tests);
     foreach($tests as &$test) {
+		$eventName = GetEventName($test);
         $requests;
-        $test['breakdown'] = getBreakdown($test['id'], $test['path'], $test['run'], $test['cached'], $requests);
+        $test['breakdown'] = getBreakdown($test['id'], $test['path'], $test['run'], $test['cached'], $requests, $eventName);
         if (array_key_exists('progress', $test['video'])
             && array_key_exists('frames', $test['video']['progress'])) {
             foreach ($test['video']['progress']['frames'] as $ms => &$data) {
@@ -744,9 +821,10 @@ function DisplayGraphs() {
             dataBytes.addColumn('string', 'MIME Type');
             <?php
             foreach($tests as &$test) {
-                echo "dataTimes.addColumn('number', '{$test['name']}');\n";
-                echo "dataRequests.addColumn('number', '{$test['name']}');\n";
-                echo "dataBytes.addColumn('number', '{$test['name']}');\n";
+				$numberedEventName = GetNumberedEventName($test);
+                echo "dataTimes.addColumn('number', '{$numberedEventName}');\n";
+                echo "dataRequests.addColumn('number', '{$numberedEventName}');\n";
+                echo "dataBytes.addColumn('number', '{$numberedEventName}');\n";
             }
             echo 'dataTimes.addRows(' . count($timeMetrics) . ");\n";
             echo 'dataRequests.addRows(' . strval(count($mimeTypes) + 1) . ");\n";
@@ -754,8 +832,15 @@ function DisplayGraphs() {
             if ($progress_end) {
                 echo "var dataProgress = google.visualization.arrayToDataTable([\n";
                 echo "  ['Time (ms)'";
-                foreach($tests as &$test)
-                    echo ", '{$test['name']}'";
+                foreach($tests as &$test){					
+					$numberedEventName = GetNumberedEventName($test);
+                    echo ", '{$numberedEventName}'";
+                }
+					$count = 0;
+                    foreach($tests as &$test){
+						$numberedEventName = GetNumberedEventName($test);
+                        echo ", '{$numberedEventName} (Dev Tools)'";
+                    }
                 echo " ]";
                 for ($ms = 0; $ms <= $progress_end; $ms += 100) {
                     echo ",\n  ['" . number_format($ms / 1000, 1) . "'";
@@ -825,9 +910,11 @@ function DisplayGraphs() {
                 echo "dataBytes.setValue($row, 0, '$mimeType');\n";
                 $column = 1;
                 foreach($tests as &$test) {
-                    echo "dataRequests.setValue($row, $column, {$test['breakdown'][$mimeType]['requests']});\n";
-                    echo "dataBytes.setValue($row, $column, {$test['breakdown'][$mimeType]['bytes']});\n";
-                    $column++;
+					if(array_key_exists('pageData', $test) && isset($test['pageData'])){
+	                    echo "dataRequests.setValue($row, $column, {$test['breakdown'][$mimeType]['requests']});\n";
+	                    echo "dataBytes.setValue($row, $column, {$test['breakdown'][$mimeType]['bytes']});\n";
+	                    $column++;
+                    }
                 }
                 $row++;
             }

@@ -11,7 +11,7 @@ if(extension_loaded('newrelic')) {
 * 
 * @param mixed $requests
 */
-function getBreakdown($id, $testPath, $run, $cached, &$requests)
+function getBreakdown($id, $testPath, $run, $cached, &$requests, $eventName = null)
 {
     $version = 2;
     $cache = array();
@@ -20,19 +20,25 @@ function getBreakdown($id, $testPath, $run, $cached, &$requests)
         $cache = json_decode(file_get_contents($cache_file), true);
     }
     
-    if (array_key_exists("run_$run", $cache)) {
-        if (array_key_exists("cached_$cached", $cache["run_$run"])) {
-            $breakdown = $cache["run_$run"]["cached_$cached"];
-        }
-    } else {
-        $cache["run_$run"] = array("cached_$cached" => array());
-    }
+//     if (array_key_exists("run_$run", $cache)) {
+//         if (array_key_exists("cached_$cached", $cache["run_$run"])) {
+//             $breakdown = $cache["run_$run"]["cached_$cached"];
+//         }
+//     } else {
+//         $cache["run_$run"] = array("cached_$cached" => array());
+//     }
 
     if (!isset($breakdown)) {
         // get all of the requests
         $secure = false;
         $haveLocations = false;
+        if($eventName != null){
+        	$requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false, false, true);
+        	$requestsArray = $requests[$eventName];
+        } else {
         $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
+        	$requestsArray = $requests;
+        }
         
         $breakdown = array();
         $mime_colors = MimeColors();
@@ -44,9 +50,9 @@ function getBreakdown($id, $testPath, $run, $cached, &$requests)
                 );
             $breakdown["$contentType"] = $entry;
         }
-        
-        foreach($requests as $request) {
-            $contentType = ContentType($request['contentType'], $request['url']);
+
+        foreach($requestsArray as $request) {
+            $contentType = ContentType($request['contentType']);
             $object = strtolower($request['url']);
             if( strlen($contentType) && (stripos($object, 'favicon.ico') === FALSE) ) {
                 $breakdown[$contentType]['bytes'] += $request['bytesIn'];

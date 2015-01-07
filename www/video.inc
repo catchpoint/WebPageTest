@@ -17,19 +17,29 @@ function MoveVideoFiles($testPath)
                 $src = $testPath  . "/$file";
                 $parts = explode('_', $file);
                 if( count($parts) )
-                {
+                {                	
                     $run = (int)$parts[0];
-                    if( $run )
+                    $page = $parts[1];
+                    if( $run && $page )
                     {
-                        $destDir = $testPath . "/video_$run";
-                        if( strpos($file, '_Cached') !== false )
-                            $destDir .= '_cached';
+                    	$cached = '';
+                    	if( strpos($file, '_Cached') ){
+                    		$cached = '_cached';
+                    		$page = $parts[2];
+                    	}
+                        $destDir = $testPath . "/video_" . $run. "_" . $page . $cached;
+                        $destOldDir = $testPath . "/video_" . $run. $cached;
                             
                         if( !is_dir($destDir) )
                             mkdir($destDir);
+                        if( !is_dir($destOldDir) )
+                        	mkdir($destOldDir);
                         
-                        $fileBase = $parts[count($parts) - 1];
-                        $dest = "$destDir/frame_$fileBase";
+                        $fileNumber = $parts[count($parts) - 1];
+                        $frame = "frame_" . $page . "_" . $fileNumber;
+                        $dest = $destDir . "/" . $frame;
+                        $destOld = $destOldDir . "/" . $frame;
+                        copy($src, $destOld);
                         rename($src, $dest);
                     }
                 }

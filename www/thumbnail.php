@@ -17,7 +17,12 @@ else
     include 'common.inc';
     require_once('object_detail.inc'); 
     require_once('page_data.inc');
-    $file = $_GET['file'];
+    $file = $_REQUEST['file'];
+    if(isset($_REQUEST['eventName'])){
+    	$eventName = urldecode($_REQUEST['eventName']);
+    } else {
+    	$eventName = null;
+    }    
 
     // make sure nobody is trying to use us to pull down external images from somewhere else
     if( strpos($file, ':') === FALSE &&
@@ -38,11 +43,11 @@ else
         // see if it is a waterfall image
         if( strstr($parts['basename'], 'waterfall') !== false )
         {
-            tbnDrawWaterfall($img);
+            tbnDrawWaterfall($img, $eventName);
         }
         elseif( strstr($parts['basename'], 'optimization') !== false )
         {
-            tbnDrawChecklist($img);
+            tbnDrawChecklist($img, $eventName);
         }
         else {
             if( !is_file("$testPath/$file") ) {
@@ -62,10 +67,11 @@ else
 
         if( $img )
         {
+        	$path = $testPath . "/" . urlencode($file);
             header('Last-Modified: ' . gmdate('r'));
             header('Expires: '.gmdate('r', time() + 31536000));
             GenerateThumbnail($img, $type);
-            SendImage($img, $type);
+            SendImage($img, $type, $path);
         }
         else
         {
@@ -79,7 +85,7 @@ else
 * 
 * @param resource $img
 */
-function tbnDrawWaterfall(&$img)
+function tbnDrawWaterfall(&$img, $eventName = null)
 {
     global $id;
     global $testPath;
@@ -92,8 +98,14 @@ function tbnDrawWaterfall(&$img)
     require_once('waterfall.inc');
     $is_secure = false;
     $has_locations = false;
-    $requests = getRequests($id, $testPath, $run, $cached, $is_secure,
-                            $has_locations, false);
+    if($eventName != null){
+    	$requestsArray = getRequests($id, $testPath, $run, $cached, $is_secure,
+    			$has_locations, false, false, true);
+    	$requests = $requestsArray[$eventName];
+    } else {
+    	$requests = getRequests($id, $testPath, $run, $cached, $is_secure,
+        	                    $has_locations, false, false);
+    }
     $use_dots = (!isset($_REQUEST['dots']) || $_REQUEST['dots'] != 0);
     $rows = GetRequestRows($requests, $use_dots);
     $page_data = loadPageRunData($testPath, $run, $cached);
@@ -115,7 +127,11 @@ function tbnDrawWaterfall(&$img)
         'is_thumbnail' => true,
         'width' => $newWidth
         );
-    $img = GetWaterfallImage($rows, $url, $page_events, $options, $page_data);
+    if($eventName == null){
+    	$img = GetWaterfallImage($rows, $url, $page_events, $options, $page_data);
+    } else {
+    	$img = GetWaterfallImage($rows, $eventName, $page_events, $options, $page_data);
+    }
     if (!$requests || !$page_data) {
         $failed = true;
     }
@@ -126,7 +142,7 @@ function tbnDrawWaterfall(&$img)
 * 
 * @param resource $img
 */
-function tbnDrawChecklist(&$img)
+function tbnDrawChecklist(&$img, $eventName = null)
 {
     global $id;
     global $testPath;
@@ -137,7 +153,12 @@ function tbnDrawChecklist(&$img)
     require_once('optimizationChecklist.inc');
     $is_secure = false;
     $has_locations = false;
+    if($eventName != null){
+    	$requestsArray = getRequests($id, $testPath, $run, $cached, $is_secure, $has_locations, false, false, true);
+   		$requests = $requestsArray[$eventName];
+    } else {
     $requests = getRequests($id, $testPath, $run, $cached, $is_secure, $has_locations, false);
+    }
     $page_data = loadPageRunData($testPath, $run, $cached);
     $img = drawChecklist($url, $requests, $page_data);
     if (!$requests || !$page_data) {
@@ -193,8 +214,10 @@ function GenerateThumbnail(&$img, $type)
 * 
 * @param mixed $img
 * @param mixed $type
+* @param mixed $path
+* 		path to save image to
 */
-function SendImage(&$img, $type)
+function SendImage(&$img, $type, $path = null)
 {
     // output the image
     if( !strcasecmp( $type, 'jpg') )
@@ -206,6 +229,9 @@ function SendImage(&$img, $type)
     else
     {
         header ("Content-type: image/png");
+        if($path != null){
+        	imagepng($img, $path);
+        }
         imagepng($img);
     }
 }
