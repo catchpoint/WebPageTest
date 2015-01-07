@@ -6,6 +6,7 @@ lib-debug/
 wptdriver tests/
 /ipch/
 .idea/
+.project
 *.vcxproj.user
 *.vcproj.*.user
 *~
