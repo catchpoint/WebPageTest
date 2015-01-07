@@ -10,7 +10,7 @@ $lock = Lock("cron-5", false, 1200);
 if (!isset($lock))
   exit(0);
 
-if (GEtSetting('ec2_initialized'))
+if (GetSetting('ec2_initialized'))
   CleanGetWork();
 
 require_once('./ec2/ec2.inc.php');
