@@ -1,10 +1,10 @@
 <?php
 
 /******************************************************************************
-* 
+ *
 *   Export a result data set  in HTTP archive format:
 *   http://groups.google.com/group/firebug-working-group/web/http-tracing---export-format
-* 
+*
 ******************************************************************************/
 
 include 'common.inc';
@@ -25,19 +25,19 @@ if( isset($testPath) ) {
         }
         $pageData[$run] = array();
         if( isset($cached) )
-            $pageData[$run][$cached] = loadPageRunData($testPath, $run, $cached);
+			$pageData = loadPageRunData($testPath, $run, $cached, array('allEvents' => true, 'allLevels' => true));
         else
         {
-            $pageData[$run][0] = loadPageRunData($testPath, $run, 0);
-            $pageData[$run][1] = loadPageRunData($testPath, $run, 1);
+			$pageData = loadPageRunData($testPath, $run, 0, array('allEvents' => true, 'allLevels' => true));
+			$pageData = loadPageRunData($testPath, $run, 1, array('allEvents' => true, 'allLevels' => true));
         }
     }
     else
-        $pageData = loadAllPageData($testPath);
+		$pageData = loadAllPageData($testPath, array('allEvents' => true));
 
     // build up the array
     $result = BuildResult($pageData);
-    
+
     // spit it out as json
     $filename = '';
     if (@strlen($url))
@@ -80,7 +80,7 @@ function msdate($mstimestamp)
 {
     $timestamp = floor($mstimestamp);
     $milliseconds = round(($mstimestamp - $timestamp) * 1000);
-    
+
     $date = gmdate('c', $timestamp);
     $msDate = substr($date, 0, 19) . '.' . sprintf('%03d', $milliseconds) . substr($date, 19);
 
@@ -103,17 +103,17 @@ function durationOfInterval($value) {
 }
 
 /**
-* Build the data set
-* 
-* @param mixed $pageData
-*/
+ * Build the data set
+ *
+ * @param mixed $pageData
+ */
 function BuildResult(&$pageData)
 {
     global $id;
     global $testPath;
     $result = array();
     $entries = array();
-    
+
     $result['log'] = array();
     $result['log']['version'] = '1.1';
     $result['log']['creator'] = array(
@@ -121,9 +121,11 @@ function BuildResult(&$pageData)
         'version' => VER_WEBPAGETEST
         );
     $result['log']['pages'] = array();
-    foreach ($pageData as $run => $pageRun) {
+	foreach($pageData as $eventName => $pageDataArray){
+		foreach ($pageDataArray as $run => $pageRun) {
         foreach ($pageRun as $cached => $data) {
             $cached_text = '';
+            $eventNumber = $data['eventNumber'];
             if ($cached)
                 $cached_text = '_Cached';
             if (!array_key_exists('browser', $result['log'])) {
@@ -135,19 +137,20 @@ function BuildResult(&$pageData)
             $pd = array();
             $pd['startedDateTime'] = msdate($data['date']);
             $pd['title'] = "Run $run, ";
+				$pd['title'] .= "Event Name $eventName, ";
             if( $cached )
                 $pd['title'] .= "Repeat View";
             else
                 $pd['title'] .= "First View";
             $pd['title'] .= " for " . $data['URL'];
-            $pd['id'] = "page_{$run}_{$cached}";
+			$pd['id'] = "page_{$run}_{$eventNumber}_{$cached}";
             $pd['pageTimings'] = array( 'onLoad' => $data['docTime'], 'onContentLoad' => -1, '_startRender' => $data['render'] );
-            
+
             // add the pagespeed score
             $score = GetPageSpeedScore("$testPath/{$run}{$cached_text}_pagespeed.txt");
             if( strlen($score) )
                 $pd['_pageSpeed'] = array( 'score' => $score );
-            
+
             // dump all of our metrics into the har data as custom fields
             foreach($data as $name => $value) {
                 if (!is_array($value))
@@ -156,18 +159,17 @@ function BuildResult(&$pageData)
             
             // add the page-level ldata to the result
             $result['log']['pages'][] = $pd;
-            
             // now add the object-level data to the result
             $secure = false;
             $haveLocations = false;
-            $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false, true);
-            foreach( $requests as &$r )
+				$requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false, true, true);
+				foreach( $requests[$eventName] as &$r )
             {
                 $entry = array();
                 $entry['pageref'] = $pd['id'];
                 $entry['startedDateTime'] = msdate((double)$data['date'] + ($r['load_start'] / 1000.0));
                 $entry['time'] = $r['all_ms'];
-                
+
                 $request = array();
                 $request['method'] = $r['method'];
                 $protocol = ($r['is_secure']) ? 'https://' : 'http://';
@@ -221,14 +223,14 @@ function BuildResult(&$pageData)
                     foreach($qs as $name => $val)
                         $request['queryString'][] = array('name' => (string)$name, 'value' => (string)$val );
                 }
-                
+
                 if( !strcasecmp(trim($request['method']), 'post') )
                 {
                     $request['postData'] = array();
                     $request['postData']['mimeType'] = '';
                     $request['postData']['text'] = '';
                 }
-                
+
                 $entry['request'] = $request;
 
                 $response = array();
@@ -249,7 +251,7 @@ function BuildResult(&$pageData)
                             $val = (string)trim(substr($header, $pos + 1));
                             if( strlen($name) )
                                 $response['headers'][] = array('name' => $name, 'value' => $val);
-                            
+
                             if( !strcasecmp($name, 'location') )
                                 $loc = (string)$val;
                         } else {
@@ -270,14 +272,14 @@ function BuildResult(&$pageData)
                     $response['content']['mimeType'] = (string)$r['contentType'];
                 else
                     $response['content']['mimeType'] = '';
-                
+
                 // unsupported fields that are required
                 $response['cookies'] = array();
 
                 $entry['response'] = $response;
-                
+
                 $entry['cache'] = (object)array();
-                
+
                 $timings = array();
                 $timings['blocked'] = -1;
                 $timings['dns'] = (int)$r['dns_ms'];
@@ -323,7 +325,7 @@ function BuildResult(&$pageData)
                         $entry['time'] += $duration;
                     }
                 }
-                
+
                 if (array_key_exists('custom_rules', $r)) {
                     $entry['_custom_rules'] = $r['custom_rules'];
                 }
@@ -354,9 +356,10 @@ function BuildResult(&$pageData)
             }
         }
     }
-    
+	}
+
     $result['log']['entries'] = $entries;
-    
+
     return $result;
 }
 ?>
