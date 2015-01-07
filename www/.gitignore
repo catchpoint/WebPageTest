@@ -26,3 +26,4 @@
 /settings/benchmarks/*
 !/settings/benchmarks/sample
 *.log
+*.orig
