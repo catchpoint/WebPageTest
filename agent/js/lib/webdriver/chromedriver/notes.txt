@@ -14,4 +14,4 @@ Resolved issue 489: No longer using packed extension id when loading custom exte
 Resolved issue 491: Extension does not have its _id_ [Pri-3]
 Resolved issue 497: unrecognized chrome option: useExistingBrowser [Pri-3]
 
-----------ChromeDriver v2.2 (2013-08-06)----------
+----------ChromeDriver v2.2 (2013-08-06)----------

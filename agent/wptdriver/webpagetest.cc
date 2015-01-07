@@ -36,7 +36,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "zlib/contrib/minizip/unzip.h"
 #include "util.h"
 
+// High level file processing for multistepInfo
+#include <iostream>
+#include <fstream>
+#include <string>
+using namespace std;
+
 static const TCHAR * NO_FILE = _T("");
+static const CString MULTISTEP_INFO_FILE = _T("multistep.info.txt");
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -92,6 +99,26 @@ WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
 WebPagetest::~WebPagetest(void) {
 }
 
+CString WebPagetest::GetMultistepVersionInfo(){
+	ifstream file;
+	file.open(MULTISTEP_INFO_FILE);
+	string line;
+	CString version;
+	const string VERSION_MARK = "Version:";
+	if(file.is_open()){
+		while(getline(file, line)){
+			if(line.find(VERSION_MARK) == 0){
+				line = line.substr(VERSION_MARK.size());
+				version = line.c_str();
+				version.Trim();
+				break;
+			}
+		}
+		file.close();
+	}	
+	return version;
+}
+
 /*-----------------------------------------------------------------------------
   Fetch a test from the server
 -----------------------------------------------------------------------------*/
@@ -106,6 +133,8 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
 
   DeleteDirectory(test._directory, false);
 
+  CString multistepVersion = GetMultistepVersionInfo();
+
   // build the url for the request
   CString buff;
   CString url = _settings._server + _T("work/getwork.php?shards=1&reboot=1");
@@ -113,8 +142,8 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
   if (_settings._key.GetLength())
     url += CString(_T("&key=")) + _settings._key;
   if (_majorVer || _minorVer || _buildNo || _revisionNo) {
-    buff.Format(_T("&software=wpt&version=%d.%d.%d.%d&ver=%d"), _majorVer,
-                _minorVer, _buildNo, _revisionNo, _revisionNo);
+    buff.Format(_T("&software=wpt&version=%d.%d.%d.%d.%s&ver=%d"), _majorVer,
+                _minorVer, _buildNo, _revisionNo, multistepVersion, _revisionNo);
     url += buff;
   }
 

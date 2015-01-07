@@ -77,7 +77,8 @@ Results::Results(TestState& test_state, WptTest& test, Requests& requests,
   , _screen_capture(screen_capture)
   , _saved(false)
   , _dev_tools(dev_tools)
-  , _trace(trace) {
+  , _trace(trace)
+  , currentPage(1)  {
   _file_base = shared_results_file_base;
   _visually_complete.QuadPart = 0;
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results base file: %s"), 
@@ -221,21 +222,31 @@ void Results::SaveStatusMessages(void) {
 void Results::SaveImages(void) {
   // save the event-based images
   CxImage image;
-  if (_screen_capture.GetImage(CapturedImage::START_RENDER, image))
-    SaveImage(image, _file_base + IMAGE_START_RENDER, _test._image_quality);
-  if (_screen_capture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image))
-    SaveImage(image, _file_base + IMAGE_DOC_COMPLETE, _test._image_quality);
+  CString page;
+  page.Format(_T("_%d"), currentPage);
+  if (_screen_capture.GetImage(CapturedImage::START_RENDER, image)) {
+    SaveImage(image, _file_base + page + IMAGE_START_RENDER,
+              _test._image_quality);
+  }
+  if (_screen_capture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image)) {
+    SaveImage(image, _file_base + page + IMAGE_DOC_COMPLETE,
+              _test._image_quality);
+  }
   if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, image)) {
     if (_test._png_screen_shot)
-      image.Save(_file_base + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
-    SaveImage(image, _file_base + IMAGE_FULLY_LOADED, _test._image_quality);
+      image.Save(_file_base + page + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
+    SaveImage(image, _file_base + page + IMAGE_FULLY_LOADED,
+              _test._image_quality);
   }
   if (_screen_capture.GetImage(CapturedImage::RESPONSIVE_CHECK, image)) {
-    SaveImage(image, _file_base + IMAGE_RESPONSIVE_CHECK, _test._image_quality,
+    SaveImage(image, _file_base + page + IMAGE_RESPONSIVE_CHECK, _test._image_quality,
               true);
   }
-
   SaveVideo();
+
+  currentPage++;
+
+  currentPage++;
 }
 
 /*-----------------------------------------------------------------------------
@@ -270,28 +281,30 @@ void Results::SaveVideo(void) {
               _test_state._render_start.QuadPart = image._capture_time.QuadPart;
             if (_test._video) {
               _visually_complete.QuadPart = image._capture_time.QuadPart;
-              file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base, 
-                                image_time);
-              SaveImage(*img, file_name, _test._image_quality);
-              file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_file_base, 
-                                image_time);
+              file_name.Format(_T("%s_%d_progress_%04d.jpg"), (LPCTSTR)_file_base, currentPage,
+                            image_time);
+          	  SaveImage(*img, file_name, _test._image_quality);
+              file_name.Format(_T("%s_%d_progress_%04d.hist"), (LPCTSTR)_file_base, currentPage,
+                            image_time);
               SaveHistogram(*img, file_name);
             }
           }
         } else {
-          width = img->GetWidth();
-          height = img->GetHeight();
-          // always save the first image at time zero
-          file_name = _file_base + _T("_progress_0000.jpg");
-          SaveImage(*img, file_name, _test._image_quality);
-          file_name = _file_base + _T("_progress_0000.hist");
-          SaveHistogram(*img, file_name);
-        }
-
+			CString page;
+			page.Format(_T("_%d"), currentPage);
+			width = img->GetWidth();
+			height = img->GetHeight();
+			// always save the first image at time zero
+			file_name = _file_base + page + _T("_progress_0000.jpg");
+			SaveImage(*img, file_name, _test._image_quality);
+			file_name.Format(_T("%s_%d_progress_%04d.hist"), (LPCTSTR)_file_base, currentPage,
+								image_time);
+			SaveHistogram(*img, file_name);
+        } 
         if (last_image)
           delete last_image;
         last_image = img;
-      }
+	  }
       else
         delete img;
     }
@@ -427,7 +440,7 @@ void Results::SavePageData(OptimizationChecks& checks){
           _test_state._start_time.wMinute, _test_state._start_time.wSecond);
     result += buff;
     // Event Name
-    result += "\t";
+    result += (CT2A(checks._test.event_name + "\t"));
     // URL
     result += CStringA((LPCSTR)CT2A(_test._navigated_url)) + "\t";
     // Load Time (ms)
@@ -875,6 +888,8 @@ void Results::ProcessRequests(void) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Results::SaveRequests(OptimizationChecks& checks) {
+  CString page;
+  page.Format(_T("_%d"), currentPage);
   HANDLE file = CreateFile(_file_base + REQUEST_DATA_FILE, GENERIC_WRITE, 0, 
                             NULL, OPEN_ALWAYS, 0, 0);
   if (file != INVALID_HANDLE_VALUE) {
@@ -882,7 +897,7 @@ void Results::SaveRequests(OptimizationChecks& checks) {
     CStringA buff;
     SetFilePointer( file, 0, 0, FILE_END );
 
-    HANDLE headers_file = CreateFile(_file_base + REQUEST_HEADERS_DATA_FILE,
+    HANDLE headers_file = CreateFile(_file_base + page + REQUEST_HEADERS_DATA_FILE,
                             GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
 
     HANDLE custom_rules_file = INVALID_HANDLE_VALUE;
@@ -915,6 +930,7 @@ void Results::SaveRequests(OptimizationChecks& checks) {
         request->_reported = true;
         if (request->_processed) {
           i++;
+          request->SetEventName(checks._test.event_name);  
           SaveRequest(file, headers_file, request, i);
           if (!request->_custom_rules_matches.IsEmpty() && 
               custom_rules_file != INVALID_HANDLE_VALUE) {
@@ -981,7 +997,7 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
         _test_state._start_time.wMinute, _test_state._start_time.wSecond);
   result += buff;
   // Event Name
-  result += "\t";
+  result += request->GetEventName()+"\t";
   // IP Address
   struct sockaddr_in addr;
   addr.sin_addr.S_un.S_addr = request->_peer_address;

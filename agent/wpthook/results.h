@@ -73,6 +73,7 @@ private:
   CStringA      base_page_server_rtt_;
   int           base_page_address_count_;
   bool          adult_site_;
+  int           currentPage;
 
   int count_connect_;
   int count_connect_doc_;

@@ -251,6 +251,14 @@ bool WebBrowser::RunAndWait() {
         CloseHandle(_browser_process);
         _browser_process = NULL;
       }
+	  // Execute browser cleanup batch file
+	  if(_browser._cleanupBatch && _browser._cleanupBatch.GetLength() > 0){
+		  system(CT2A(_browser._cleanupBatch));
+	  }
+	  // Execute browser cleanup batch file
+	  if(_browser._cleanupBatch && _browser._cleanupBatch.GetLength() > 0){
+		  system(CT2A(_browser._cleanupBatch));
+	  }
       LeaveCriticalSection(&cs);
       TerminateProcessesByName(PathFindFileName((LPCTSTR)_browser._exe));
 

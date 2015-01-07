@@ -216,6 +216,8 @@ public:
   // Whether we need to wait for DOM element.
   bool    _dom_element_check;
   int     _no_run;  // conditional block support - if/else/endif
+  // for seteventname command
+  CString event_name;
 
   // system information
   bool      has_gpu_;
@@ -248,4 +250,7 @@ protected:
   CAtlList<HttpHeaderValue> _override_hosts;
 
   CAtlMap<USHORT, USHORT> _tcp_port_override;
+  
+private:
+	void convertForHTML(CString& text);
 };

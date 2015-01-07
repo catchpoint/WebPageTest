@@ -68,6 +68,7 @@ public:
   CString _profile_directory;
   CString _profiles;
   CString _cache_directory;
+  CString _cleanupBatch;
 
   // Windows/IE directories
   CString windows_dir_;
