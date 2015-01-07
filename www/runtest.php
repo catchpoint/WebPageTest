@@ -188,6 +188,9 @@
                 $test['addCmdLine'] .= '--user-agent="' . $req_uastring . '"';
               }
             }
+            
+            // iteratec extensions
+            $test['imageCaching'] = $req_imageCaching;
 
             // see if we need to process a template for these requests
             if (isset($req_k) && strlen($req_k)) {
@@ -1021,6 +1024,9 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             $test['pss_advanced'] = $test['pss_advanced'] ? 1 : 0;
             $test['noheaders'] = $test['noheaders'] ? 1 : 0;
             $test['aft'] = 0;
+            
+            // iteratec extensions
+            $test['imageCaching'] = $test['imageCaching'] ? 1 : 0;
 
             if( !$test['aftMinChanges'] && $settings['aftMinChanges'] )
                 $test['aftMinChanges'] = $settings['aftMinChanges'];

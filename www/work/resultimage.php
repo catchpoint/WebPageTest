@@ -16,51 +16,73 @@ $testPath = $path;
 if (ValidateTestId($id)) {
   $testInfo = GetTestInfo($id);
   if ($testInfo && is_array($testInfo) && array_key_exists('location', $testInfo)) {
-    $location = $testInfo['location'];
-    $locKey = GetLocationKey($location);
-    if ((!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADDR'], "127.0.0.1")) {
-      if (array_key_exists('file', $_FILES) && array_key_exists('name', $_FILES['file'])) {
-        $fileName = $_FILES['file']['name'];
-        if (strpos($fileName, '..') === false &&
-            strpos($fileName, '/') === false &&
-            strpos($fileName, '\\') === false) {
-          // make sure the file is an acceptable type
-          $parts = pathinfo($fileName);
-          $ext = strtolower($parts['extension']);
-          $ok = false;
-          if (strpos($ext, 'php') === false &&
-              strpos($ext, 'pl') === false &&
-              strpos($ext, 'py') === false &&
-              strpos($ext, 'cgi') === false &&
-              strpos($ext, 'asp') === false &&
-              strpos($ext, 'js') === false &&
-              strpos($ext, 'rb') === false &&
-              strpos($ext, 'htaccess') === false &&
-              strpos($ext, 'jar') === false) {
-              $ok = true;
-          }
-          
-          if ($ok) {
-            // put each run of video data in it's own directory
-            if (strpos($fileName, 'progress')) {
-              $parts = explode('_', $fileName);
-              if (count($parts)) {
-                $runNum = $parts[0];
-                $fileBase = $parts[count($parts) - 1];
-                $cached = '';
-                if( strpos($fileName, '_Cached') )
-                  $cached = '_cached';
-                $path .= "/video_$runNum$cached";
-                if( !is_dir($path) )
-                  mkdir($path);
-                $fileName = 'frame_' . $fileBase;
+      $location = $testInfo['location'];
+      $locKey = GetLocationKey($location);
+      if ((!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADDR'], "127.0.0.1")) {
+          if (array_key_exists('file', $_FILES) && array_key_exists('name', $_FILES['file'])) {
+              $fileName = $_FILES['file']['name'];
+              if (strpos($fileName, '..') === false &&
+                  strpos($fileName, '/') === false &&
+                  strpos($fileName, '\\') === false
+              ) {
+                  // make sure the file is an acceptable type
+                  $parts = pathinfo($fileName);
+                  $ext = strtolower($parts['extension']);
+                  $ok = false;
+                  if (strpos($ext, 'php') === false &&
+                      strpos($ext, 'pl') === false &&
+                      strpos($ext, 'py') === false &&
+                      strpos($ext, 'cgi') === false &&
+                      strpos($ext, 'asp') === false &&
+                      strpos($ext, 'js') === false &&
+                      strpos($ext, 'rb') === false &&
+                      strpos($ext, 'htaccess') === false &&
+                      strpos($ext, 'jar') === false
+                  ) {
+                      $ok = true;
+                  }
+
+                  if ($ok) {
+                      // put each run of video data in it's own directory
+                      if (strpos($fileName, 'progress')) {
+                          $parts = explode('_', $fileName);
+                          if (count($parts)) {
+                              $runNum = $parts[0];
+                              $page = $parts[1];
+                              $fileNumber = $parts[count($parts) - 1];
+                              $cached = '';
+                              if (strpos($fileName, '_Cached')) {
+                                  $cached = '_cached';
+                                  $page = $parts[2];
+                              }
+                              $pathOld = $testPath . "/video_{$runNum}{$cached}";
+                              if (!is_dir($pathOld))
+                                  mkdir($pathOld);
+                              $path .= "/video_{$runNum}_{$page}{$cached}";
+                              if (!is_dir($path))
+                                  mkdir($path);
+                              $fileName = "frame_{$page}_{$fileNumber}";
+                          }
+                      }
+                      copy($_FILES['file']['tmp_name'], "$pathOld/$fileName");
+                      MoveUploadedFile($_FILES['file']['tmp_name'], "$path/$fileName");
+                      if (strpos($fileName, 'video.avi')) {
+                          $parts = explode('_', $fileName);
+                          if (count($parts)) {
+                              $runNum = $parts[0];
+                              $cached = 0;
+                              if (strpos($fileName, '_Cached'))
+                                  $cached = 1;
+                              require_once('./video/avi2frames.inc.php');
+                              if (gz_is_file("$testPath/testinfo.json"))
+                                  $testInfo = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+                              ProcessAVIVideo($testInfo, $testPath, $runNum, $cached);
+                          }
+                      }
+                  }
               }
-            }
-            MoveUploadedFile($_FILES['file']['tmp_name'], "$path/$fileName");
           }
-        }
       }
-    }
   }
 }
 

@@ -9,7 +9,7 @@ if(extension_loaded('newrelic')) {
 }
 
 chdir('..');
-//$debug = true;
+$debug = false;
 require_once('common.inc');
 require_once('archive.inc');
 require_once('./lib/pclzip.lib.php');
@@ -143,8 +143,11 @@ if (ValidateTestId($id)) {
         if (array_key_exists('shard_test', $testInfo) && $testInfo['shard_test'])
           ProcessIncrementalResult();
 
-        if (array_key_exists('file', $_FILES) && array_key_exists('tmp_name', $_FILES['file'])) {
-          if (isset($har) && $har) {
+        if (isset($har) && $har && isset($_FILES['file']) && isset($_FILES['file']['tmp_name'])) {
+        	//For debugging Purposes copy result-zip-file to result-path
+        	if($debug){
+        		copy($_FILES['file']['tmp_name'], $testPath . "/" . $_FILES['file']['name']);
+        	}
             ProcessUploadedHAR($testPath);
           } else {
             logMsg(" Extracting uploaded file '{$_FILES['file']['tmp_name']}' to '$testPath'\n");
@@ -387,14 +390,19 @@ if (ValidateTestId($id)) {
           // send an async request to the post-processing code so we don't block
           SendAsyncRequest("/work/postprocess.php?test=$id");
         }
-      } else {
+    }
+    else {
         logMsg("location key incorrect\n");
-      }
     }
   }
 }
 
 $workdone_end = microtime(true);
+if($testInfo['imageCaching']){
+	require_once('waterfall.inc');
+	GenerateWaterfallAndConnectionImages($id, $testPath, $testInfo);
+}
+
 
 /*
 if (isset($workdone_video_start) && isset($workdone_video_end)) {
@@ -453,6 +461,9 @@ function ProcessUploadedHAR($testPath)
     {
         //var_dump($_FILES['file']);
         logMsg(" Extracting uploaded file '{$_FILES['file']['tmp_name']}' to '$testPath'\n");
+        
+        
+        
         if ($_FILES['file']['type'] == "application/tar" || preg_match("/\.tar$/",$_FILES['file']['name']))
         {
             PclTarExtract($_FILES['file']['tmp_name'],"$testPath","/","tar");
@@ -507,11 +518,11 @@ function ProcessHARText($testPath, $harIsFromSinglePageLoad)
                 $parsedHar = json_decode(file_get_contents("{$testPath}/{$file}"), true);
                 gz_compress("{$testPath}/{$file}");
                 unlink("{$testPath}/{$file}");
-                if (!$parsedHar)
-                {
-                    logMalformedInput("Failed to parse json file '{$file}'");
-                    continue;
-                }
+//                 if (!$parsedHar)
+//                 {
+//                     logMalformedInput("Failed to parse json file '{$file}'");
+//                     continue;
+//                 }
 
                 if( $mergedHar === null)
                 {
@@ -621,6 +632,9 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
 
     // Keep meta data about a page from iterating the entries
     $pageData;
+    
+    //Later every entry will get a Sequence-Number
+    $sequenceNumbers = array();
 
     // Iterate over the page records.
     foreach ($parsedHar['log']['pages'] as $pagecount => $page)
@@ -629,8 +643,9 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
         $curPageData = array();
 
         // Extract direct page data and save in data array
-        $curPageData["url"] = $page['title'];
+        $curPageData["url"] = $page['url'];
 
+        // Extract startDate, startTime and startFull
         $startFull = $page['startedDateTime'];
         $startFullDatePart = '';
         $startFullTimePart = '';
@@ -646,6 +661,7 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
               "a time part.  Value of key is '$startFull'.");
         }
 
+        // Extract onRender, docComplete and fullyLoaded
         global $onRender;
         $curPageData["onRender"] =
             arrayLookupWithDefault('onRender', $page['pageTimings'],
@@ -700,17 +716,19 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
           if (isset($onFullyLoaded) && $curPageData['fullyLoaded'] <=0) {
             $curPageData['fullyLoaded'] = $onFullyLoaded;
           }
-
-        } else if (preg_match("/page_(\d+)_([01])/", $pageref, $matches)) {
+		// Extracting page run, step and cached-mode
+        } else if (preg_match("/page_(\d+)_(\d+)_([01])/", $pageref, $matches)) {
           $curPageData["run"] = $matches[1];
-          $curPageData["cached"] = $matches[2];
+          $curPageData["step"] = $matches[2];
+          $curPageData["cached"] = $matches[3];
 
         } else {
-          logMalformedInput("HAR error: Could not get runs or cache ".
+          logMalformedInput("HAR error: Could not get runs, steps or cache ".
                             "status, from post params, pages array ".
                             "or page name \"$pageref\".");
           // Sensible defaults:
           $curPageData["run"] =  1;
+          $curPageData["step"] =  1;
           $curPageData["cached"] = 0;
         }
 
@@ -718,66 +736,12 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
           logMalformedInput("HAR error: \$curPageData[\"run\"] should ".
                             "always be positive.  Value is ".
                             $curPageData["run"]);
-
-        $curPageData["title"] =
-          ($curPageData["cached"] ? "Cached-" : "Cleared Cache-") .
-              "Run_" . $curPageData["run"]  . 
-              "^" . $curPageData["url"];
-
-        // Define filename prefix
-        $curPageData["runFilePrefix"] =
-            $testPath . "/" . $curPageData["run"] . "_";
-
-        if ($curPageData["cached"])
-          $curPageData["runFilePrefix"] .= "Cached_";
-        $curPageData["runFileName"] = $curPageData["runFilePrefix"] . "IEWTR.txt";
-        $curPageData["reportFileName"] = $curPageData["runFilePrefix"] . "report.txt";
-
-        // Write the title line
-        file_put_contents($curPageData["runFileName"],
-            "Date\tTime\tEvent Name\tIP Address\tAction\tHost\tURL\tResponse Code\t" . 
-            "Time to Load (ms)\tTime to First Byte (ms)\tStart Time (ms)\tBytes Out\t".
-            "Bytes In\tObject Size\tCookie Size (out)\tCookie Count(out)\tExpires\t" .
-            "Cache Control\tContent Type\tContent Encoding\tTransaction Type\tSocket ID\t" . 
-            "Document ID\tEnd Time (ms)\tDescriptor\tLab ID\tDialer ID\tConnection Type\t" .
-            "Cached\tEvent URL\tPagetest Build\tMeasurement Type\tExperimental\tEvent GUID\t" . 
-            "Sequence Number\tCache Score\tStatic CDN Score\tGZIP Score\tCookie Score\t" .
-            "Keep-Alive Score\tDOCTYPE Score\tMinify Score\tCombine Score\tCompression Score\t" .
-            "ETag Score\tFlagged\tSecure\tDNS Time\tConnect Time\tSSL Time\tGzip Total Bytes\t" .
-            "Gzip Savings\tMinify Total Bytes\tMinify Savings\tImage Total Bytes\tImage Savings\t" .
-            "Cache Time (sec)\tReal Start Time (ms)\tFull Time to Load (ms)\tOptimization Checked\r\n");
-
-        // Write the page line line
-        file_put_contents($curPageData["runFileName"],
-            "{$curPageData['startDate']}\t{$curPageData['startTime']}\t".
-            "{$curPageData['title']}\t\t\t{$curPageData['host']}\t{$curPageData['url']}\t".
-            "0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t\t\t\t0\t0\t0\t0\tLaunch\t-1\t0\t-1\t".
-            "{$curPageData['cached']}\t{$curPageData['url']}\t".
-            "0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t-1\t0\t0\t0\t0\t0\t0\t\t\t\t0\t0\t0\t0\t0\t0\t".
-            "\t0\t\t0\r\n", FILE_APPEND);
-
-        // Write the raw data in the report (not accurate, may need to fix after)
-        // TODO: Write real data
-        file_put_contents($curPageData["reportFileName"],
-            "Results for '{$curPageData['url']}':\r\n\r\n" .
-            "Page load time: 0 seconds\r\n" .
-            "Time to first byte: 0 seconds\r\n" .
-            "Time to Base Page Downloaded: 0 seconds\r\n" .
-            "Time to Start Render: 0 seconds\r\n" .
-            "Time to Document Complete: 0 seconds\r\n" .
-            "Time to Fully Loaded: 0 seconds\r\n" .
-            "Bytes sent out: 0 KB\r\n" .
-            "Bytes received: 0 KB\r\n" .
-            "DNS Lookups: 0\r\n" .
-            "Connections: 0\r\n" .
-            "Requests: 0\r\n" .
-            "   OK Requests:  0\r\n" .
-            "   Redirects:    0\r\n" .
-            "   Not Modified: 0\r\n" .
-            "   Not Found:    0\r\n" .
-            "   Other:        0\r\n" .
-            "Base Page Response: 200\r\n" . 
-            "Request details:\r\n\r\n");                    
+        if ($curPageData["step"] <= 0)
+        	logMalformedInput("HAR error: \$curPageData[\"step\"] should ".
+        			"always be positive.  Value is ".
+        			$curPageData["run"]);
+        
+        $curPageData["title"] = $page["title"];               
 
         // Start by stating the time-to-first-byte is the page load time,
         // will be updated as we iterate requests.
@@ -855,7 +819,7 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
               "Value is '$startedDateTime'");
         }
 
-        $reqEventName = $curPageData['title'];
+        $reqEventName = $curPageData["title"];
         $reqAction = $reqEnt['method'];
 
         logMsg("Processing resource " . ShortenUrl($reqEnt['url']));
@@ -921,7 +885,26 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
         $reqLabId = -1;
         $reqDialerId = 0;
         $reqConnnectionType = -1;
-
+        
+        // Set filename prefix
+        $curPageData["resultFilePath"] =
+        $testPath . "/" . $curPageData["run"] . "_";
+        
+        // Set IEWTR-File
+        if ($curPageData["cached"])
+        	$curPageData["runFilePrefix"] = $curPageData["resultFilePath"] . "Cached_";
+        else
+        	$curPageData["runFilePrefix"] = $curPageData["resultFilePath"];
+        $curPageData["runFileName"] = $curPageData["runFilePrefix"] . "IEWTR.txt";
+        
+        //Giving every entry a Sequence-Number. The Array $Sequence_Numbers will only be used for this purpose
+        if(array_key_exists($pageref, $sequenceNumbers)){
+        	$sequenceNumbers[$pageref] += 1;
+        } else {
+        	$sequenceNumbers[$pageref] = 1;
+        }
+		$reqSequenceNumber = $sequenceNumbers[$pageref];
+        
         // Write the line
         file_put_contents($curPageData["runFileName"],
             "$reqDate\t" . 
@@ -936,7 +919,7 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
             $requestTimings['ttfb']  . "\t" . // Time to First Byte (ms)
             $requestTimings['start'] . "\t" . // Start Time (ms)
             "$reqBytesOut\t" .
-            "$reqBytesIn\t" . 
+            "$reqBytesIn\t" .
             "$reqObjectSize\t" . 
             "$reqCookieSize\t" . 
             "$reqCookieCount\t" . 
@@ -958,7 +941,7 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
             "\t" . //"Measurement Type\t" . 
             "\t" . //"Experimental\t" . 
             "\t" . //"Event GUID\t" . 
-            "\t" . //"Sequence Number\t" . 
+            "$reqSequenceNumber\t" . //"Sequence Number\t" . 
             "\t" . //"Cache Score\t" . 
             "\t" . //"Static CDN Score\t" . 
             "\t" . //"GZIP Score\t" . 
@@ -992,25 +975,28 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
             $requestTimings['ssl_start']     . "\t" . // ssl negotiation start
             $requestTimings['ssl_end']       . "\t" . // ssl negotiation end
             "\t" . //initiator
+            "\t" . //initiatior Line
+            "\t" . //initiator column
+            "\t" . //server count
+            "\t" . //server rtt
+            "\t" . //local port
+            "\t" . //JPEG Scan count
             "\r\n",
             FILE_APPEND);
 
         $reqNum = $curPageData["reqNum"] + 1;
         $curPageData["reqNum"] = $reqNum;
+        
+        // Set report file path
+        $curPageData["reportFileName"] = $curPageData["runFilePrefix"] .$curPageData["step"] . "_report.txt";
 
         // Write the request raw data
         file_put_contents($curPageData["reportFileName"],
+        	"Request details:\r\n".
             "Request $reqNum:\r\n".
-            "      Action: GET\r\n".
-            "      Url: {$reqUrl}\r\n".
-            "      Host: {$reqHost}\r\n".
-            "      Result code: $reqRespCode\r\n".
-            "      Transaction time: $reqTime milliseconds\r\n".
-            "      Time to first byte: " . $requestTimings['ttfb'] . " milliseconds\r\n".
-            "      Request size (out): $reqBytesOut Bytes\r\n".
-            "      Response size (in): $reqBytesIn Bytes\r\n".
-            "  Request Headers:\r\n".
-            "      {$reqAction} {$reqUrl} {$reqHttpVer}\r\n",
+            "Request Headers:\r\n".
+            "{$reqAction} {$reqUrl} {$reqHttpVer}\r\n".
+            "Host: {$reqHost}\r\n",
         FILE_APPEND);
 
         // Write the request/response headers
@@ -1018,13 +1004,12 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
         {
             // Write the request/response headers
             file_put_contents($curPageData["reportFileName"],
-                "      {$header['name']}: {$header['value']}\r\n", FILE_APPEND);
+                "{$header['name']}: {$header['value']}\r\n", FILE_APPEND);
         }
         // Write the response raw data
-        // TODO: Fill real data
         file_put_contents($curPageData["reportFileName"],
-            "  Response Headers:\r\n".
-            "      {$respHttpVer} {$reqRespCode} {$reqRespCodeText}\r\n",
+            "Response Headers:\r\n".
+            "{$respHttpVer} {$reqRespCode} {$reqRespCodeText}\r\n",
         FILE_APPEND);
 
         // Write the request/response headers
@@ -1032,10 +1017,10 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
         {
             // Write the request/response headers
             file_put_contents($curPageData["reportFileName"],
-                "      {$header['name']}: {$header['value']}\r\n", FILE_APPEND);
+                "{$header['name']}: {$header['value']}\r\n", FILE_APPEND);
         }
         // Add a newline
-        file_put_contents($curPageData["reportFileName"],"\r\n", FILE_APPEND);
+//         file_put_contents($curPageData["reportFileName"],"\r\n", FILE_APPEND);
 
         // Add up the total page counters
         $curPageData["bytesOut"] += $reqBytesOut;
@@ -1087,16 +1072,18 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
         $pageData[$pageref] = $curPageData;
     }
 
-    // Create the page files
+    // Create the page files (IEWPG.txt)
     foreach ($parsedHar['log']['pages'] as $pagecount => $page)
     {
         $pageref = $page['id'];
         $curPageData = $pageData[$pageref];
 
-        // Create the page title line
-        $curPageData["resourceFileName"] = $curPageData["runFilePrefix"] . "IEWPG.txt";
-        file_put_contents($curPageData["resourceFileName"],
-            "Date\tTime\tEvent Name\tURL\tLoad Time (ms)\tTime to First Byte (ms)\tunused\tBytes Out\tBytes In\tDNS Lookups\tConnections\tRequests\tOK Responses\tRedirects\tNot Modified\tNot Found\tOther Responses\tError Code\tTime to Start Render (ms)\tSegments Transmitted\tSegments Retransmitted\tPacket Loss (out)\tActivity Time(ms)\tDescriptor\tLab ID\tDialer ID\tConnection Type\tCached\tEvent URL\tPagetest Build\tMeasurement Type\tExperimental\tDoc Complete Time (ms)\tEvent GUID\tTime to DOM Element (ms)\tIncludes Object Data\tCache Score\tStatic CDN Score\tOne CDN Score\tGZIP Score\tCookie Score\tKeep-Alive Score\tDOCTYPE Score\tMinify Score\tCombine Score\tBytes Out (Doc)\tBytes In (Doc)\tDNS Lookups (Doc)\tConnections (Doc)\tRequests (Doc)\tOK Responses (Doc)\tRedirects (Doc)\tNot Modified (Doc)\tNot Found (Doc)\tOther Responses (Doc)\tCompression Score\tHost\tIP Address\tETag Score\tFlagged Requests\tFlagged Connections\tMax Simultaneous Flagged Connections\tTime to Base Page Complete (ms)\tBase Page Result\tGzip Total Bytes\tGzip Savings\tMinify Total Bytes\tMinify Savings\tImage Total Bytes\tImage Savings\tBase Page Redirects\tOptimization Checked\r\n");
+        // Set IEWPG file
+        if ($curPageData["cached"])
+        	$curPageData["resourceFilePrefix"] = $curPageData["resultFilePath"] . "Cached_";
+        else
+        	$curPageData["resourceFilePrefix"] = $curPageData["resultFilePath"];
+        $curPageData["resourceFileName"] = $curPageData["resourceFilePrefix"] . "IEWPG.txt";
 
         // Write the page's data
         file_put_contents($curPageData["resourceFileName"],
@@ -1171,7 +1158,27 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
             "\t" . //"Image Total Bytes\t" . 
             "\t" . //"Image Savings\t" . 
             "\t" . //"Base Page Redirects\t" . 
-            "0\r\n", //"Optimization Checked\r\n"
+            "0". //"Optimization Checked\r\n"
+            "\t" . //Above-the-fold-time
+            "\t" . //DOM Element Count
+            "\t" . //Page Speed Version
+            "\t" . //Page Title
+            "\t" . //Time To Tile
+            "\t" . //Load Event Start
+            "\t" . //Load Event End
+            "\t" . //DOM Content Ready Start
+            "\t" . //DOM Content Ready End
+            "\t" . //Visually Complete
+            "\t" . //Browser Name
+            "\t" . //Browser Version
+            "\t" . //Bas Page Server count
+            "\t" . //Server RTT
+            "\t" . //Base Page CDN
+            "\t" . //Adult Site Flag
+            "\t" . //Fixed Viewport
+            "\t" . //Progressive JPEG Score
+            "\t" . //First Paint
+            "\r\n",
         FILE_APPEND);
     }
 }
