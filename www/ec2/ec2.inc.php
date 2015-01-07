@@ -505,8 +505,8 @@ function EC2_LaunchInstance($region, $ami, $size, $user_data, $loc) {
       }
 
       //add/modify the SubnetId if present in config
-      $subnetId = GetSetting('EC2.'.$region.'.subnetId');
-      if (isset($subnetId)) {
+      $subnetId = GetSetting("EC2.$region.subnetId");
+      if ($subnetId) {
         $ec2_options['SubnetId'] = $subnetId;
       }
 
