@@ -88,10 +88,13 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
             }
         } elseif (isset($first_file) && strlen($first_file) &&
                   isset($last_file) && strlen($last_file) && count($frames['frames'])) {
-            $start_histogram = GetImageHistogram("$video_directory/$first_file", $options);
-            $final_histogram = GetImageHistogram("$video_directory/$last_file", $options);
+            $histograms = null;
+            if (gz_is_file("$testPath/$run.$cached.histograms.json"))
+              $histograms = json_decode(gz_file_get_contents("$testPath/$run.$cached.histograms.json"), true);
+            $start_histogram = GetImageHistogram("$video_directory/$first_file", $options, $histograms);
+            $final_histogram = GetImageHistogram("$video_directory/$last_file", $options, $histograms);
             foreach($frames['frames'] as $time => &$frame) {
-                $histogram = GetImageHistogram("$video_directory/{$frame['file']}", $options);
+                $histogram = GetImageHistogram("$video_directory/{$frame['file']}", $options, $histograms);
                 $frame['progress'] = CalculateFrameProgress($histogram, $start_histogram, $final_histogram, 5);
                 if ($frame['progress'] == 100 && !array_key_exists('complete', $frames))
                     $frames['complete'] = $time;
@@ -121,94 +124,111 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
 /**
 * Calculate histograms for each color channel for the given image
 */
-function GetImageHistogram($image_file, $options = null) {
-    $histogram = null;
-    $ext = strripos($image_file, '.jpg');
-    if ($ext !== false) {
-        $histogram_file = substr($image_file, 0, $ext) . '.hist';
+function GetImageHistogram($image_file, $options, $histograms) {
+  $histogram = null;
+  
+  $ext = strripos($image_file, '.jpg');
+  if ($ext !== false) {
+      $histogram_file = substr($image_file, 0, $ext) . '.hist';
+  }
+  
+  if (isset($histograms)) {
+    // figure out the timestamp for the video frame in ms
+    $ms = null;
+    if (preg_match('/ms_(?P<ms>[0-9]+)\.(png|jpg)/i', $image_file, $matches))
+      $ms = intval($matches['ms']);
+    elseif (preg_match('/frame_(?P<ms>[0-9]+)\.(png|jpg)/i', $image_file, $matches))
+      $ms = intval($matches['ms']) * 100;
+    foreach($histograms as &$hist) {
+      if (isset($hist['histogram']) && isset($hist['time']) && $hist['time'] == $ms) {
+        $histogram = $hist['histogram'];
+        break;
+      }
     }
-    // first, see if we have a client-generated histogram
-    if (!isset($options) && isset($histogram_file) && is_file($histogram_file)) {
-        $histogram = json_decode(file_get_contents($histogram_file), true);
-        if (!is_array($histogram) ||
-            !array_key_exists('r', $histogram) ||
-            !array_key_exists('g', $histogram) ||
-            !array_key_exists('b', $histogram) ||
-            count($histogram['r']) != 256 ||
-            count($histogram['g']) != 256 ||
-            count($histogram['b']) != 256) {
-            unset($histogram);
-        }
-    }
+  }
+  
+  // See if we have the old-style histograms (separate files)
+  if (!isset($histogram) && !isset($options) && isset($histogram_file) && is_file($histogram_file)) {
+      $histogram = json_decode(file_get_contents($histogram_file), true);
+      if (!is_array($histogram) ||
+          !array_key_exists('r', $histogram) ||
+          !array_key_exists('g', $histogram) ||
+          !array_key_exists('b', $histogram) ||
+          count($histogram['r']) != 256 ||
+          count($histogram['g']) != 256 ||
+          count($histogram['b']) != 256) {
+          unset($histogram);
+      }
+  }
 
-    // generate a histogram from the image itself
-    if (!isset($histogram)) {
-        $im = imagecreatefromjpeg($image_file);
-        if ($im !== false) {
-            $width = imagesx($im);
-            $height = imagesy($im);
-            if ($width > 0 && $height > 0) {
-                // default a resample to 1/4 in each direction which will significantly speed up processing with minimal impact to accuracy.
-                // This is only for calculations done on the server.  Histograms from the client look at every pixel
-                $resample = 8;
-                if (isset($options) && array_key_exists('resample', $options))
-                    $resample = $options['resample'];
-                if ($resample > 2) {
-                    $oldWidth = $width;
-                    $oldHeight = $height;
-                    $width = intval(($width * 2) / $resample);
-                    $height = intval(($height * 2) / $resample);
-                    $tmp = imagecreatetruecolor($width, $height);
-                    fastimagecopyresampled($tmp, $im, 0, 0, 0, 0, $width, $height, $oldWidth, $oldHeight, 3);
-                    imagedestroy($im);
-                    $im = $tmp;
-                    unset($tmp);
-                }
-                $histogram = array();
-                $histogram['r'] = array();
-                $histogram['g'] = array();
-                $histogram['b'] = array();
-                $buckets = 256;
-                if (isset($options) && array_key_exists('buckets', $options) && $options['buckets'] >= 1 && $options['buckets'] <= 256) {
-                    $buckets = $options['buckets'];
-                }
-                for ($i = 0; $i < $buckets; $i++) {
-                    $histogram['r'][$i] = 0;
-                    $histogram['g'][$i] = 0;
-                    $histogram['b'][$i] = 0;
-                }
-                for ($y = 0; $y < $height; $y++) {
-                    for ($x = 0; $x < $width; $x++) {
-                        $rgb = ImageColorAt($im, $x, $y);
-                        $r = ($rgb >> 16) & 0xFF;
-                        $g = ($rgb >> 8) & 0xFF;
-                        $b = $rgb & 0xFF;
-                        // ignore white pixels
-                        if ($r != 255 || $g != 255 || $b != 255) {
-                            if (isset($options) && array_key_exists('colorSpace', $options) && $options['colorSpace'] != 'RGB') {
-                                if ($options['colorSpace'] == 'HSV') {
-                                    RGB_TO_HSV($r, $g, $b);
-                                } elseif ($options['colorSpace'] == 'YUV') {
-                                    RGB_TO_YUV($r, $g, $b);
-                                }
-                            }
-                            $bucket = (int)(($r + 1.0) / 256.0 * $buckets) - 1;
-                            $histogram['r'][$bucket]++;
-                            $bucket = (int)(($g + 1.0) / 256.0 * $buckets) - 1;
-                            $histogram['g'][$bucket]++;
-                            $bucket = (int)(($b + 1.0) / 256.0 * $buckets) - 1;
-                            $histogram['b'][$bucket]++;
-                        }
-                    }
-                }
-            }
-            imagedestroy($im);
-            unset($im);
-        }
-        if (!isset($options) && isset($histogram_file) && !is_file($histogram_file) && isset($histogram))
-          file_put_contents($histogram_file, json_encode($histogram));
-    }
-    return $histogram;
+  // generate a histogram from the image itself
+  if (!isset($histogram)) {
+      $im = imagecreatefromjpeg($image_file);
+      if ($im !== false) {
+          $width = imagesx($im);
+          $height = imagesy($im);
+          if ($width > 0 && $height > 0) {
+              // default a resample to 1/4 in each direction which will significantly speed up processing with minimal impact to accuracy.
+              // This is only for calculations done on the server.  Histograms from the client look at every pixel
+              $resample = 8;
+              if (isset($options) && array_key_exists('resample', $options))
+                  $resample = $options['resample'];
+              if ($resample > 2) {
+                  $oldWidth = $width;
+                  $oldHeight = $height;
+                  $width = intval(($width * 2) / $resample);
+                  $height = intval(($height * 2) / $resample);
+                  $tmp = imagecreatetruecolor($width, $height);
+                  fastimagecopyresampled($tmp, $im, 0, 0, 0, 0, $width, $height, $oldWidth, $oldHeight, 3);
+                  imagedestroy($im);
+                  $im = $tmp;
+                  unset($tmp);
+              }
+              $histogram = array();
+              $histogram['r'] = array();
+              $histogram['g'] = array();
+              $histogram['b'] = array();
+              $buckets = 256;
+              if (isset($options) && array_key_exists('buckets', $options) && $options['buckets'] >= 1 && $options['buckets'] <= 256) {
+                  $buckets = $options['buckets'];
+              }
+              for ($i = 0; $i < $buckets; $i++) {
+                  $histogram['r'][$i] = 0;
+                  $histogram['g'][$i] = 0;
+                  $histogram['b'][$i] = 0;
+              }
+              for ($y = 0; $y < $height; $y++) {
+                  for ($x = 0; $x < $width; $x++) {
+                      $rgb = ImageColorAt($im, $x, $y);
+                      $r = ($rgb >> 16) & 0xFF;
+                      $g = ($rgb >> 8) & 0xFF;
+                      $b = $rgb & 0xFF;
+                      // ignore white pixels
+                      if ($r != 255 || $g != 255 || $b != 255) {
+                          if (isset($options) && array_key_exists('colorSpace', $options) && $options['colorSpace'] != 'RGB') {
+                              if ($options['colorSpace'] == 'HSV') {
+                                  RGB_TO_HSV($r, $g, $b);
+                              } elseif ($options['colorSpace'] == 'YUV') {
+                                  RGB_TO_YUV($r, $g, $b);
+                              }
+                          }
+                          $bucket = (int)(($r + 1.0) / 256.0 * $buckets) - 1;
+                          $histogram['r'][$bucket]++;
+                          $bucket = (int)(($g + 1.0) / 256.0 * $buckets) - 1;
+                          $histogram['g'][$bucket]++;
+                          $bucket = (int)(($b + 1.0) / 256.0 * $buckets) - 1;
+                          $histogram['b'][$bucket]++;
+                      }
+                  }
+              }
+          }
+          imagedestroy($im);
+          unset($im);
+      }
+      if (!isset($options) && isset($histogram_file) && !is_file($histogram_file) && isset($histogram))
+        file_put_contents($histogram_file, json_encode($histogram));
+  }
+  return $histogram;
 }
 
 /**

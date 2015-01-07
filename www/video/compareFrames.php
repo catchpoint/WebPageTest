@@ -32,12 +32,15 @@ json_response($result);
 
 function GetLastFrameHistogram($test, $run) {
   $histogram = null;
-  $videoPath = './' . GetTestPath($test) . "/video_$run";
+  $testPath = GetTestPath($test);
+  $videoPath = "./$testPath/video_$run";
   $files = glob("$videoPath/*.jpg");
   if ($files) {
     rsort($files);
     $lastFrame = $files[0];
-    $histogram = GetImageHistogram($lastFrame);
+    if (gz_is_file("$testPath/$run.0.histograms.json"))
+      $histograms = json_decode(gz_file_get_contents("$testPath/$run.0.histograms.json"), true);
+    $histogram = GetImageHistogram($lastFrame, null, $histograms);
   }
   return $histogram;
 }
