@@ -344,7 +344,11 @@ function CheckCron() {
       $last_run = file_get_contents('./tmp/wpt_cron.dat');
     $now = time();
     $elapsed = $now - $last_run;
-    if (!$last_run || $elapsed > 120) {
+    if (!$last_run) {
+        $should_run = true;
+        $minutes15 = true;
+        $minutes60 = true;
+    } elseif ($elapsed > 120) {
       if ($elapsed > 1200) {
         // if it has been over 20 minutes, run regardless of the wall-clock time
         $should_run = true;
