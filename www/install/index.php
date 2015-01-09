@@ -46,7 +46,7 @@ include 'common.inc';
         </style>
     </head>
     <body>
-        <h1>WebPagetest Installation Check</h1>
+        <h1>WebPagetest <?php echo VER_WEBPAGETEST; ?> Installation Check</h1>
         <h2>PHP</h2><ul>
         <?php CheckPHP(); ?>
         </ul><h2>System Utilities</h2><ul>
@@ -92,6 +92,7 @@ function CheckPHP() {
     global $settings;
     ShowCheck('PHP version at least 5.3', phpversion() >= 5.3, true, phpversion());
     ShowCheck('GD Module Installed', extension_loaded('gd'));
+    ShowCheck('FreeType enabled for GD (required for video rendering)', CheckFreeType(), false);
     ShowCheck('zip Module Installed', extension_loaded('zip'));
     ShowCheck('zlib Module Installed', extension_loaded('zlib'));
     ShowCheck('curl Module Installed', extension_loaded('curl'), false);
@@ -105,7 +106,7 @@ function CheckPHP() {
 
 function CheckUtils() {
     ShowCheck('ffmpeg Installed (required for video)', CheckFfmpeg());
-    ShowCheck('ffmpeg 1.x Installed with fps, scale and decimate filters(required for mobile video)', CheckFfmpegFilters($ffmpegInfo), false, $ffmpegInfo);
+    ShowCheck('ffmpeg Installed with scale and decimate filters(required for mobile video)', CheckFfmpegFilters($ffmpegInfo), false, $ffmpegInfo);
     ShowCheck('imagemagick compare Installed (required for mobile video)', CheckCompare(), false);
     ShowCheck('jpegtran Installed (required for JPEG Analysis)', CheckJpegTran(), false);
     ShowCheck('exiftool Installed (required for JPEG Analysis)', CheckExifTool(), false);
@@ -144,7 +145,7 @@ function IsWPTTmpOnTmpfs() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 function CheckLocations() {
-    $locations = parse_ini_file('./settings/locations.ini', true);
+    $locations = LoadLocationsIni();
     $out = '';
     $video = false;
     foreach($locations['locations'] as $id => $location) {
@@ -358,28 +359,24 @@ function CheckFfmpegFilters(&$info) {
     $command = "ffmpeg -filters";
     $retStr = exec($command, $output, $result);
     $fps = false;
-    $decimate = false;
+    $decimate = null;
     $scale = false;
     if (count($output)) {
       foreach ($output as $line) {
-        if (!strncmp($line, 'fps ', 4))
-          $fps = true;
         if (!strncmp($line, 'scale ', 6))
           $scale = true;
-        if (!strncmp($line, 'decimate ', 9))
-          $decimate = true;
+        if (preg_match('/(?P<filter>[mp]*decimate).*V->V.*Remove near-duplicate frames/', $line, $matches))
+          $decimate = $matches['filter'];
       }
     }
 
-    if (intval($ver) == 1 && $fps && $scale && $decimate)
+    if ($scale && isset($decimate))
       $ret = true;
     $info = $ver;
-    if ($fps)
-      $info .= ',fps';
     if ($scale)
       $info .= ',scale';
-    if ($decimate)
-      $info .= ',decimate';
+    if (isset($decimate))
+      $info .= ",$decimate";
 
     return $ret;
 }
@@ -409,5 +406,15 @@ function CheckCompare() {
     if ($result == 0)
       $ret = true;
     return $ret;
+}
+
+function CheckFreeType() {
+  $ret = false;
+  if (extension_loaded('gd')) {
+    $gdinfo = gd_info();
+    if(isset($gdinfo['FreeType Support']) && $gdinfo['FreeType Support'])
+      $ret = true;
+  }
+  return $ret;
 }
 ?>

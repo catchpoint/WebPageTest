@@ -81,6 +81,8 @@ bool WptSettings::Load(void) {
     _server = buff;
     if( _server.Right(1) != '/' )
       _server += "/";
+    // Automatically re-map www.webpagetest.org to agent.webpagetest.org
+    _server.Replace(_T("www.webpagetest.org"), _T("agent.webpagetest.org"));
   }
 
   if (GetPrivateProfileString(_T("WebPagetest"), _T("Location"), _T(""), buff, 
@@ -288,6 +290,7 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
     PathAppend(buff, _T("webpagetest_profiles\\"));
     _profile_directory = buff;
   }
+  _profiles = _profile_directory;
   if (client.GetLength())
     _profile_directory += client + _T("-client-");
   _profile_directory += browser;
@@ -705,7 +708,10 @@ void BrowserSettings::ClearWinInetCache() {
   // #define CLEAR_PRESERVE_FAVORITES 0x2000 // Preserves cached data for "favorite" websites
 
   // Use the command-line version of cache clearing in case WinInet didn't work
-  LaunchProcess(_T("RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 6655"));
+  HANDLE async = NULL;
+  LaunchProcess(_T("RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 6655"), &async);
+  if (async)
+    CloseHandle(async);
 }
 
 /*-----------------------------------------------------------------------------

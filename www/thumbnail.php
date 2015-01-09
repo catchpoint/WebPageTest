@@ -15,7 +15,7 @@ if(array_key_exists("HTTP_IF_MODIFIED_SINCE",$_SERVER) && strlen(trim($_SERVER['
 else
 {
     include 'common.inc';
-    include 'object_detail.inc'; 
+    require_once('object_detail.inc'); 
     require_once('page_data.inc');
     $file = $_GET['file'];
 
@@ -89,7 +89,7 @@ function tbnDrawWaterfall(&$img)
     global $newWidth;
     global $test;
 
-    include('waterfall.inc');
+    require_once('waterfall.inc');
     $is_secure = false;
     $has_locations = false;
     $requests = getRequests($id, $testPath, $run, $cached, $is_secure,
@@ -134,7 +134,7 @@ function tbnDrawChecklist(&$img)
     global $cached;
     global $url;
 
-    include('optimizationChecklist.inc');
+    require_once('optimizationChecklist.inc');
     $is_secure = false;
     $has_locations = false;
     $requests = getRequests($id, $testPath, $run, $cached, $is_secure, $has_locations, false);

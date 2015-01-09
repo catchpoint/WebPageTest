@@ -2,11 +2,9 @@
 product=WebPagetest
 contact=admin@my.email.com
 
-; Maximum number of runs allowed per test
-maxruns=9
-
-; Allow (1) or disable (0) testing of sites on private IP addresses (http://192.168.0.1/ for example).
-allowPrivate=1
+; **************
+; UI Integration
+; **************
 
 ; Comment out the publishTo if you do not want to be able to upload your
 ; results to the public instance (this is useful for sharing internal tests
@@ -16,31 +14,116 @@ publishTo=www.webpagetest.org
 ;Uncomment map=1 if you want to enable the map-based picker
 ;map=1
 
-; test options available
-enableVideo=1
-
-; disable gzip compressing the result text files
-;nogzip=1
-
-;directory to archive test files (must include trailing slash)
-;archive_dir=/data/archive/
-
-;showslow beacon
-;showslow=http://www.showslow.com
-;beaconRate=100
-showslow_key=<your showslow API key>
+; Integrate with cloudshark
 tcpdump_view="http://cloudshark.org/view?url="
 
-; image quality (defaults to 30)
-;iq=75
-;save png full-resolution screen shots
-;pngss=1
+; *********************
+; Test options/defaults
+; *********************
+
+enableVideo=1
 
 ; Run tests concurrently across test machines
 ;shard_tests=1
 
+; Maximum number of runs allowed per test
+maxruns=9
+
+; Allow (1) or disable (0) testing of sites on private IP addresses (http://192.168.0.1/ for example).
+allowPrivate=1
+
+; image quality (defaults to 30)
+;iq=75
+
+;save png full-resolution screen shots
+;pngss=1
+
+; *************
+; Server Config
+; *************
+
+; Host name to use for URLs when it can not be automatically detected.
+; This is mostly for auto-scaling EC2 instances to tell the agents what server to connect to
+;host=www.webpagetest.org
+
+; disable gzip compressing the result text files
+;nogzip=1
+
 ;Log tests that take longer than X seconds
 ;slow_test_time=240
+
+; beanstalkd memory queue for tests (only the default 11300 port is supported right now)
+;beanstalkd=127.0.0.1
+
+; Use beanstalkd only for low-priority tests and use traditional work queues for high-priority.
+; The benefit of this is that interactive tests will still get queue position while still
+; scaling for huge numbers of API tests.
+;beanstalk_api_only=0
+
+; Automatically update from git hourly.
+; (assumes a git clone and just runs "git pull origin master" as the web user).
+;gitUpdate=1
+
+; Automatically update test agents hourly (pulls the latest test agents from the provided server)
+;agentUpdate=http://cdn.webpagetest.org/
+
+; For multi-server installs, an ID that gets added to the test ID for server affinity.
+; Must be alpha-numeric and will end up as part of the hash string in the test ID:
+; YYMMDD_<serverID>hash_xxx
+;serverID=A
+
+; ***********************
+; Test result integration
+; ***********************
+
+;tsview time-series database
+;tsviewdb=http://<server:port>/src/v1/
+
+
+; Publish test results to a StatsD backend
+; for trend visualization.
+;
+; statsdHost - StatsD hostname.
+; statsdPort - StatsD port number (default: 8125).
+; statsdPrefix - Graphite key prefix (default: '').
+; statsdPattern - Set to a valid regexp pattern to send only matching tests labels.
+; statsdCleanPattern - Set to 1 to exclude pattern from label (default: 0).
+; statsdMedianOnly - Set to 1 to send only median tests to StatsD. (default: 0).
+;
+;statsdHost=127.0.0.1
+;statsdPort=8125
+;statsdPrefix=webpagetest
+;statsdPattern=^cron_
+;statsdCleanPattern=0
+;statsdMedianOnly=0
+
+; Serialize the test results to a log file in JSON format for
+; bulk logs processing (splunk, logster, flume, etc).
+; The directories must already exist and have permissions set so the web server
+; user can write to it.
+;
+; logTestResults - file for the page-level data to be logged
+; logTestRequests - file for the per-request data (each request for every test will be logged as a separate record)
+; logPrivateTests - Set to 0 to disable logging of tests marked private (defaults to logging all tests)
+;
+;logTestResults=/var/log/webpagetest/page_data.log
+;logTestRequests=/var/log/webpagetest/requests.log
+;logPrivateTests=0
+
+;
+; showslow (beacon rate is a percent of results to allow for sampling)
+;
+;showslow=http://www.showslow.com
+;beaconRate=100
+;showslow_key=<your showslow API key>
+
+
+; **************
+; Test Archiving
+; **************
+
+; archiving to local storage - directory to archive test files (must include trailing slash)
+;archive_dir=/data/archive/
 
 ; archiving to s3 (using the s3 protocol, not necessarily just s3)
 ;archive_s3_server=s3.amazonaws.com
@@ -52,19 +135,35 @@ tcpdump_view="http://cloudshark.org/view?url="
 ;Number of days to keep tests locally before archiving
 ;archive_days=2
 
-; beanstalkd memory queue for tests (only the default 11300 port is supported right now)
-;beanstalkd=127.0.0.1
+; *************
+; EC2 Instances
+; *************
 
-;tsview time-series database
-;tsviewdb=http://<server:port>/data/v1/
+; Use if the server will be auto-starting/stopping EC2 test agents
+;ec2_key=<access key>
+;ec2_secret=<secret>
 
-; Serialize the test results to a log file in JSON format for
-; bulk logs processing (splunk, logster, flume, etc).
-; The directories must already exist and have permissions set so the web server
-; user can write to it.
-;
-; logTestResults - file for the page-level data to be logged
-; logTestRequests - file for the per-request data (each request for every test will be logged as a separate record)
-;
-;logTestResults=/var/log/webpagetest/page_data.log
-;logTestRequests=/var/log/webpagetest/requests.log
+; Should we automatically delete any EBS volumes marked as "available"?
+; This can be used to prevent orphaned volumes but only if the account
+; doesn't expect to keep offline EBS volumes.
+;ec2_prune_volumes=1
+
+; Start an EC2 instance for every X tests in the queue (up to the location max)
+;EC2.ScaleFactor=100
+
+; Default location when using EC2 auto-scaling - this setting is required for auto-scaling
+;EC2.default=us-east-1
+
+; Per-location minimum and maximum EC2 instance counts.
+; By default the minimum will be 0 and the maximum will be 1.
+; This needs to be specified for every location where you want
+; different settings (EC2.<location>.min/max).
+; Don't forget to also set the EC2.default region to enable auto-scaling.
+;EC2.us-east-1.min=0
+;EC2.us-east-1.max=1
+
+; Per-location Security Group and Subnet IDs to enable launching into VPCs 
+; (note that this will pin your instances to the availability zone associated with 
+; the subnet). This is required only if you do not have a default VPC.
+;EC2.us-west-2.securityGroup=sg-a0011b223,sg-b1122c334
+;EC2.us-west-2.subnetId=subnet-aaa0011bc1

@@ -71,6 +71,7 @@ function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc, &$annotatio
             stripos($metric, 'visualcomplete') !== false || 
             stripos($metric, 'eventstart') !== false || 
             stripos($metric, 'lastVisualChange') !== false || 
+            stripos($metric, 'domContentLoadedEventStart') !== false || 
             stripos($metric, 'ttfb') !== false) {
         $istime = true;
     }

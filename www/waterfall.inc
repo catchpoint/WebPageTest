@@ -194,7 +194,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
         array_key_exists('run_id', $options) &&
         array_key_exists('is_cached', $options)) {
       require_once('devtools.inc.php');
-      $cpu_slices = DevToolsGetCPUSlices($options['path'], $options['run_id'], $options['is_cached'], $data_width, $max_ms);
+      $cpu_slices = DevToolsGetCPUSlices($options['path'], $options['run_id'], $options['is_cached']);
       if (isset($cpu_slices) && is_array($cpu_slices) && count($cpu_slices)) {
         $perf_height = $is_thumbnail ? 16 : 50;
         $cpu_slice_info = array();

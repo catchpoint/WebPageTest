@@ -1,12 +1,17 @@
 <?php
-// Jobs that need to run every 15 minutes (expected that this will be called from cron)
+// Jobs that need to run every 15 minutes
 chdir('..');
 include 'common.inc';
+ignore_user_abort(true);
 set_time_limit(1200);
 error_reporting(E_ALL);
 
+$lock = Lock("cron-15", false, 1200);
+if (!isset($lock))
+  exit(0);
+
 // update the appurify devices if we have an API key configured
-$locations = parse_ini_file('./settings/locations.ini', true);
+$locations = LoadLocationsIni();
 foreach ($locations as $configuration) {
   if (is_array($configuration) &&
       array_key_exists('type', $configuration) &&

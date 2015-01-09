@@ -15,13 +15,14 @@ if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
         }
     }
 
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     $host  = $_SERVER['HTTP_HOST'];
     $uri = $_SERVER['PHP_SELF'];
     $params = '';
     foreach( $_GET as $key => $value )
         if( $key != 't' )
             $params .= "&$key=" . urlencode($value);
-    header("Location: http://$host$uri?tests=$tests{$params}");
+    header("Location: $protocol://$host$uri?tests=$tests{$params}");
 }
 else
 {
@@ -272,6 +273,7 @@ else
                 <?php
                 $tab = 'Test Result';
                 $nosubheader = true;
+                $headerType = 'video';
                 $filmstrip = $_REQUEST['tests'];
                 include 'header.inc';
 
@@ -700,6 +702,7 @@ function DisplayGraphs() {
                         'lastVisualChange' => 'Last Visual Change',
                         'docTime' => 'Load Time (onload)',
                         'fullyLoaded' => 'Load Time (Fully Loaded)',
+                        'domContentLoadedEventStart' => 'DOM Content Loaded',
                         'SpeedIndex' => 'Speed Index',
                         'TTFB' => 'Time to First Byte',
                         'titleTime' => 'Time to Title',

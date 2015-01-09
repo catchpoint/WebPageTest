@@ -99,12 +99,11 @@ bool DevTools::Write(CString file) {
       while (pos) {
         CStringA event_string = events_.GetNext(pos);
         if (event_string.GetLength()) {
-          if (first)
-            first = false;
-          else
-            event_string = CStringA(",") + event_string;
+          if (!first)
+            WriteFile(file_handle, ",", 1, &bytes_written, 0);
           WriteFile(file_handle, (LPCSTR)event_string,
                     event_string.GetLength(), &bytes_written, 0);
+          first = false;
         }
       }
       WriteFile(file_handle, "]", 1, &bytes_written, 0);

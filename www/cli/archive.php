@@ -2,7 +2,7 @@
 chdir('..');
 $MIN_DAYS = 2;
 
-include 'common_lib.inc';
+include 'common.inc';
 require_once('archive.inc');
 ignore_user_abort(true);
 set_time_limit(3300);   // only allow it to run for 55 minutes
@@ -229,7 +229,7 @@ function CheckTest($testPath, $id, $elapsedDays) {
               $archiveCount++;
               $logLine .= "Archived";
                                                                                             
-              if (!VerifyArchive($id) && $elapsed < 60)
+              if (!VerifyArchive($id) && $elapsed < 30)
                   $delete = false;
           } else if ($elapsed < 60) {
               $delete = false;
@@ -282,7 +282,7 @@ function ElapsedDays($year, $month, $day) {
 * 
 */
 function CheckLocations() {
-    $locations = parse_ini_file('./settings/locations.ini', true);
+    $locations = LoadLocationsIni();
     BuildLocations($locations);
     $deleted = false;
     echo "\n";

@@ -32,7 +32,8 @@ if (array_key_exists('original', $_REQUEST) && array_key_exists('optimized', $_R
             if (FRIENDLY_URLS)
                 $url = "/result/{$test['id']}/";
 
-            header("Location: http://{$_SERVER['HTTP_HOST']}$url");    
+            $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+            header("Location: $protocol://{$_SERVER['HTTP_HOST']}$url");    
         } else {
             echo "Invalid Test.  Should be /create_pss.php?original=&LT;original test ID&GT;&optimized=&LT;optimized test ID&GT;";
         }            

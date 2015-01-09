@@ -38,6 +38,7 @@ public:
 
   bool _exit;
   bool has_gpu_;
+  bool rebooting_;
 
 private:
   WptSettings&  _settings;

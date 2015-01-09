@@ -227,7 +227,7 @@ function AddLocationData(&$requests) {
     $geo_ip = null;
     try {
       if (is_file('./Net/GeoLiteCity.dat')) {
-        include('./Net/GeoIP.php');
+        require_once('./Net/GeoIP.php');
         $geo_ip = Net_GeoIP::getInstance(
             './Net/GeoLiteCity.dat', Net_GeoIP::MEMORY_CACHE);
       }

@@ -1,7 +1,7 @@
 <?php 
 chdir('..');
 include 'common.inc';
-include 'object_detail.inc';
+require_once('object_detail.inc');
 require_once('google/google_lib.inc');
 $page_keywords = array('View CSI Data','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "View CSI Data.";

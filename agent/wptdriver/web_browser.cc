@@ -42,17 +42,8 @@ static const TCHAR * SILVERLIGHT_CACHE_DIR = _T("Microsoft\\Silverlight");
 
 static const TCHAR * CHROME_NETLOG = _T(" --log-net-log=\"%s_netlog.txt\"");
 static const TCHAR * CHROME_SPDY3 = _T(" --enable-spdy3");
-static const TCHAR * CHROME_GPU = 
-    _T(" --force-compositing-mode")
-    _T(" --enable-threaded-compositing")
-    _T(" --enable-viewport");
-static const TCHAR * CHROME_MOBILE = 
-    _T(" --enable-pinch")
-    _T(" --enable-fixed-layout");
 static const TCHAR * CHROME_SOFTWARE_RENDER = 
     _T(" --disable-accelerated-compositing");
-static const TCHAR * CHROME_SCALE_FACTOR =
-    _T(" --force-device-scale-factor=");
 static const TCHAR * CHROME_USER_AGENT =
     _T(" --user-agent=");
 static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
@@ -148,15 +139,6 @@ bool WebBrowser::RunAndWait() {
             lstrcat(cmdLine, CHROME_SPDY3);
           if (_test._force_software_render)
             lstrcat(cmdLine, CHROME_SOFTWARE_RENDER);
-          else if (_test._emulate_mobile) {
-            lstrcat(cmdLine, CHROME_GPU);
-            lstrcat(cmdLine, CHROME_MOBILE);
-          } else if (_test._device_scale_factor.GetLength())
-            lstrcat(cmdLine, CHROME_GPU);
-          if (_test.has_gpu_ && _test._device_scale_factor.GetLength()) {
-            lstrcat(cmdLine, CHROME_SCALE_FACTOR);
-            lstrcat(cmdLine, _test._device_scale_factor);
-          }
           if (_test._user_agent.GetLength() &&
               _test._user_agent.Find(_T('"')) == -1) {
             lstrcat(cmdLine, CHROME_USER_AGENT);
@@ -270,6 +252,7 @@ bool WebBrowser::RunAndWait() {
         _browser_process = NULL;
       }
       LeaveCriticalSection(&cs);
+      TerminateProcessesByName(PathFindFileName((LPCTSTR)_browser._exe));
 
       SetBrowserExe(NULL);
       ResetIpfw();
@@ -291,6 +274,7 @@ bool WebBrowser::RunAndWait() {
   Delete the user profile as well as the flash and silverlight caches
 -----------------------------------------------------------------------------*/
 void WebBrowser::ClearUserData() {
+  TerminateProcessesByName(PathFindFileName((LPCTSTR)_browser._exe));
   _browser.ResetProfile(_test._clear_certs);
   TCHAR path[MAX_PATH];
   if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 
@@ -556,6 +540,20 @@ void WebBrowser::ConfigureIESettings() {
 		}
 
 		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+        _T("Software\\Microsoft\\Internet Explorer\\PhishingFilter"), 0, 0, 0,
+        KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
+			DWORD val = 0;
+			RegSetValueEx(hKey, _T("EnabledV9"), 0, REG_DWORD,
+                    (const LPBYTE)&val, sizeof(val));
+			RegSetValueEx(hKey, _T("Enabled"), 0, REG_DWORD,
+                    (const LPBYTE)&val, sizeof(val));
+      val = 3;
+			RegSetValueEx(hKey, _T("ShownVerifyBalloon"), 0, REG_DWORD,
+                    (const LPBYTE)&val, sizeof(val));
+			RegCloseKey(hKey);
+		}
+
+		if (RegCreateKeyEx(HKEY_CURRENT_USER,
         _T("Software\\Microsoft\\Internet Explorer\\IntelliForms"), 0, 0, 0,
         KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
 			DWORD val = 0;
@@ -648,6 +646,16 @@ void WebBrowser::ConfigureIESettings() {
 			RegSetValueEx(hKey, _T("1609"), 0, REG_DWORD, (const LPBYTE)&val,
                     sizeof(val));
 
+			RegCloseKey(hKey);
+		}
+
+    // Disable the blocking of ActiveX controls (which seems to be inconsistent)
+		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+        _T("Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Ext"),
+        0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
+			DWORD val = 0;
+			RegSetValueEx(hKey, _T("VersionCheckEnabled"), 0, REG_DWORD,
+                    (const LPBYTE)&val, sizeof(val));
 			RegCloseKey(hKey);
 		}
 }

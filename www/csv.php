@@ -25,7 +25,9 @@ if( isset($test['test']) && (isset($test['test']['completeTime']) || $test['test
     }
     header("Content-disposition: attachment; filename=$filename");
     header ("Content-type: text/csv");
-    
+    header("Cache-Control: no-cache, must-revalidate");
+    header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+
     if ($test['test']['batch']) {
         $tests = null;
         if( gz_is_file("$testPath/tests.json") ) {
@@ -52,7 +54,7 @@ if( isset($test['test']) && (isset($test['test']['completeTime']) || $test['test
                     $label = htmlspecialchars(ShortenUrl($testData['u']));
                 if ($hasCSV) {
                   if (!$sentHeader) {
-                    echo "\"Test\",$header,\"Run\"";
+                    echo "\"Test\",$header,\"Run\",\"Cached\"";
                     if (!$is_requests) {
                         echo ',"Speed Index"';
                     }
@@ -60,9 +62,9 @@ if( isset($test['test']) && (isset($test['test']['completeTime']) || $test['test
                     $sentHeader = true;
                   }
                   for( $i = 1; $i <= $test['test']['runs']; $i++ ) {
-                      $additional = array($i, SpeedIndex($path, $i, 0));
+                      $additional = array($i, 0, SpeedIndex($path, $i, 0));
                       csvFile("$path/{$i}_$fileType", $label, $column_count, $additional);
-                      $additional = array($i, SpeedIndex($path, $i, 1));
+                      $additional = array($i, 1, SpeedIndex($path, $i, 1));
                       csvFile("$path/{$i}_Cached_$fileType", $label, $column_count, $additional);
                   }
                 } else {
@@ -73,9 +75,9 @@ if( isset($test['test']) && (isset($test['test']['completeTime']) || $test['test
                     $path = './' . GetTestPath($variationId);
                     if ($hasCSV) {
                       for( $i = 1; $i <= $test['test']['runs']; $i++ ) {
-                          $additional = array($i, SpeedIndex($path, $i, 0));
+                          $additional = array($i, 0, SpeedIndex($path, $i, 0));
                           csvFile("$path/{$i}_$fileType", "$label - {$tests['variations'][$variationIndex]['l']}", $column_count, $additional);
-                          $additional = array($i, SpeedIndex($path, $i, 1));
+                          $additional = array($i, 1, SpeedIndex($path, $i, 1));
                           csvFile("$path/{$i}_Cached_$fileType", "$label - {$tests['variations'][$variationIndex]['l']}", $column_count, $additional);
                       }
                     } else {
@@ -92,15 +94,18 @@ if( isset($test['test']) && (isset($test['test']['completeTime']) || $test['test
           $hasCSV = false;
         // loop through all  of the results files (one per run) - both cached and uncached
         if ($hasCSV) {
-          echo "$header,\"Run\"";
-          if (!$is_requests) {
+          echo "$header,\"Run\",\"Cached\"";
+          if (!$is_requests)
               echo ',"Speed Index"';
-          }
           echo "\r\n";
           for( $i = 1; $i <= $test['test']['runs']; $i++ ) {
-              $additional = array($i, SpeedIndex($testPath, $i, 0));
+              $additional = array($i, 0);
+              if (!$is_requests)
+                $additional[] = SpeedIndex($testPath, $i, 0);
               csvFile("$testPath/{$i}_$fileType", null, $column_count, $additional);
-              $additional = array($i, SpeedIndex($testPath, $i, 1));
+              $additional = array($i, 1);
+              if (!$is_requests)
+                $additional[] = SpeedIndex($testPath, $i, 1);
               csvFile("$testPath/{$i}_Cached_$fileType", null, $column_count, $additional);
           }
         } else {

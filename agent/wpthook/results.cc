@@ -788,6 +788,7 @@ void Results::ProcessRequests(void) {
   std::tr1::regex adult_regex("[^0-9a-zA-Z]2257[^0-9a-zA-Z]");
   while (pos) {
     Request * request = _requests._requests.GetNext(pos);
+    WptTrace(loglevel::kFunction, _T("[wpthook] - Processing request %S%S"), (LPCSTR)request->GetHost(), (LPCSTR)request->_request_data.GetObject());
     if (request && 
         (!request->_from_browser || !NativeRequestExists(request))) {
       request->Process();
@@ -968,6 +969,8 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
                                                                    int index) {
   CStringA result;
   CStringA buff;
+
+  WptTrace(loglevel::kFunction, _T("[wpthook] - Saving request %S%S"), (LPCSTR)request->GetHost(), (LPCSTR)request->_request_data.GetObject());
 
   // Date
   buff.Format("%02d/%02d/%02d\t", _test_state._start_time.wMonth,

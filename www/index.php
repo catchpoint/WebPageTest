@@ -364,6 +364,13 @@ $loc = ParseLocations($locations);
                                         </label>
                                         <input id="time" type="text" class="text short" name="time" value=""> seconds
                                     </li>
+                                    <li>
+                                        <label for="tester">
+                                            Specific Tester<br>
+                                            <small>Run the test on a specific <a href="/getTesters.php">PC</a>.<br>Name must match exactly or the test will not run.</small>
+                                        </label>
+                                        <input id="tester" type="text" class="text" name="tester" value="">
+                                    </li>
                                 </ul>
                             </div>
                             <div id="advanced-chrome" class="test_subbox ui-tabs-hide">
@@ -372,8 +379,8 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="mobile" id="mobile" class="checkbox" style="float: left;width: auto;">
                                         <label for="mobile" class="auto_width">
-                                            Emulate Mobile Browser (Experimental)<br>
-                                            <small>Chrome mobile user agent, 640x960 screen, 2x scaling and fixed viewport</small>
+                                            Emulate Mobile Browser (Experimental, Chrome 39+)<br>
+                                            <small>Nexus 5 user agent, 1080x1920 screen, 3x scaling and fixed viewport</small>
                                         </label>
                                     </li>
                                     <li>
@@ -621,7 +628,7 @@ $loc = ParseLocations($locations);
 */
 function LoadLocations()
 {
-    $locations = parse_ini_file('./settings/locations.ini', true);
+    $locations = LoadLocationsIni();
     FilterLocations( $locations );
     
     // strip out any sensitive information

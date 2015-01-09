@@ -165,7 +165,6 @@ public:
   bool received_data_;
 
   HWND  _frame_window;
-  HWND  _document_window;
 
   WptTestHook& _test;
   

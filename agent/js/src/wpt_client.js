@@ -57,11 +57,12 @@ exports.NO_JOB_PAUSE = 10000;
 var MAX_RUNS = 1000;  // Sanity limit
 
 // Signal names, in increasing order
+var SIGPIPE = 'SIGPIPE';
 var SIGQUIT = 'SIGQUIT';
 var SIGABRT = 'SIGABRT';
 var SIGTERM = 'SIGTERM';
 var SIGINT = 'SIGINT';
-var SIGNAL_NAMES = [SIGQUIT, SIGABRT, SIGTERM, SIGINT];
+var SIGNAL_NAMES = [SIGPIPE, SIGQUIT, SIGABRT, SIGTERM, SIGINT];
 
 
 /**
@@ -97,13 +98,12 @@ function Job(client, task) {
   this.task = task;
   this.id = task[JOB_TEST_ID];
   if ('string' !== typeof this.id || !this.id) {
-    throw new Error('Task has invalid/missing id: ' + JSON.stringify(task));
+    throw new Error('Invalid "' + JOB_TEST_ID + '" string');
   }
   var runs = task[JOB_RUNS];
   if ('number' !== typeof runs || runs <= 0 || runs > MAX_RUNS ||
       0 !== (runs - Math.floor(runs))) {  // Make sure it's an integer.
-    throw new Error('Task has invalid/missing number of runs: ' +
-        JSON.stringify(task));
+    throw new Error('Invalid "' + JOB_RUNS + '" number is not 0..' + MAX_RUNS);
   }
   this.runs = runs;
   this.isFirstViewOnly = jsonBoolean(task, JOB_FIRST_VIEW_ONLY);
@@ -112,7 +112,9 @@ function Job(client, task) {
   this.isCacheWarm = false;
   this.resultFiles = [];
   this.zipResultFiles = {};
-  this.error = undefined;
+  this.agentError = undefined;
+  this.testError = undefined;
+  this.retryError = undefined;
 }
 /** Public class. */
 exports.Job = Job;
@@ -125,7 +127,7 @@ function jsonBoolean(task, attr) {
   } else if (0 === value || 1 === value) {
     return !!value;
   }
-  throw new Error('Invalid task field "' + attr + '": ' + JSON.stringify(task));
+  throw new Error('Invalid "' + attr + '" number is not 0 or 1');
 }
 
 /**
@@ -208,7 +210,7 @@ exports.processResponse = function(response, callback) {
  * #field {Function=} onAbortJob job timeout callback.
  *     #param {Job} job the job that timed out.
  *         MUST call job.runFinished() after handling the timeout.
- * #field {Function=} onIsReady agent ready check callback.
+ * #field {Function=} onMakeReady agent attempt recovery callback.
  *     Any exception would skip polling for new jobs.
  *
  * @param {webdriver.promise.ControlFlow} app the ControlFlow for scheduling.
@@ -250,7 +252,7 @@ function Client(app, args) {
   this.jobTimeout = args.jobTimeout || DEFAULT_JOB_TIMEOUT;
   this.onStartJobRun = undefined;
   this.onAbortJob = undefined;
-  this.onIsReady = undefined;
+  this.onMakeReady = undefined;
   this.handlingUncaughtException_ = undefined;
   this.handlingSignal_ = undefined;
 
@@ -269,6 +271,7 @@ exports.Client = Client;
  * Handles process signals.
  *
  * @param {string} signal_name signal name:
+ *    'SIGPIPE' (kill -13):    Exit if idle (clean).
  *    'SIGQUIT' (kill -3):     Exit after finishing job (clean).
  *    'SIGABRT' (kill -6):     Exit after finishing run (abort job).
  *    'SIGTERM' (kill [-15]):  Exit after aborting run (aborts job).
@@ -281,7 +284,6 @@ Client.prototype.onSignal_ = function(signal_name) {
   var old_signal = this.handlingSignal_;
   var new_signal = SIGNAL_NAMES[Math.max(
       SIGNAL_NAMES.indexOf(signal_name), SIGNAL_NAMES.indexOf(old_signal))];
-  this.handlingSignal_ = new_signal;
 
   if (this.noJobTimer_) {
     // Exit now.  We check the noJobTimer_ instead of !currentJob_ because
@@ -289,8 +291,11 @@ Client.prototype.onSignal_ = function(signal_name) {
     // (b)  we don't want to exit in the middle of requesting a new job.
     logger.alert('Received %s, exiting.', signal_name);
     exports.process.exit();
+  } else if (SIGPIPE === new_signal) {
+    logger.alert('Received %s, ignoring because we have a job.', signal_name);
   } else {
     // Exit later, when we're 'done' or get a 'nojob' event.
+    this.handlingSignal_ = new_signal;
     if (!old_signal) {
       this.removeAllListeners();
       ['done', 'nojob'].forEach(function(event_name) {
@@ -308,7 +313,7 @@ Client.prototype.onSignal_ = function(signal_name) {
     if (job &&
          (SIGTERM === new_signal || SIGINT === new_signal) &&
          (SIGTERM !== old_signal && SIGINT !== old_signal)) {
-      job.error = this.handlingSignal_;
+      job.agentError = this.handlingSignal_;
       this.abortJob_(job);
     }
   }
@@ -337,7 +342,7 @@ Client.prototype.onUncaughtException_ = function(e) {
         this.currentJob_.id);
     // Prevent an infinite loop for an exception while submitting job results.
     this.handlingUncaughtException_ = e;
-    this.currentJob_.error = e.message;
+    this.currentJob_.testError = e.message;
     this.currentJob_.runFinished(/*isRunFinished=*/true);
   } else {
     logger.critical('Unhandled exception outside of job processing');
@@ -354,9 +359,7 @@ Client.prototype.onUncaughtException_ = function(e) {
 Client.prototype.requestNextJob_ = function() {
   'use strict';
   this.app_.schedule('Check if agent is ready for new jobs', function() {
-    if (this.onIsReady) {
-      this.onIsReady();
-    }
+    return (this.onMakeReady ? this.onMakeReady() : undefined);
   }.bind(this)).then(function() {
     var getWorkUrl = url.resolve(this.baseUrl_,
       GET_WORK_SERVLET +
@@ -421,17 +424,21 @@ Client.prototype.processJobResponse_ = function(responseBody) {
     task.browser = task.browser.match(/(.*)-wpr$/)[1];
     task[JOB_REPLAY] = 1;
   }
-  var job = new Job(this, task);
+  var job;
+  try {
+    job = new Job(this, task);
+  } catch (e) {
+    logger.warn('Ignoring job: %s: "%s"', e.message, responseBody);
+    this.emit('nojob');
+    return;
+  }
   if (SIGTERM === this.handlingSignal_ || SIGINT === this.handlingSignal_) {
     // Got a signal in the middle of a job request, abort the job immediately.
-    job.error = this.handlingSignal_;
+    job.agentError = this.handlingSignal_;
     this.abortJob_(job);
   }
+  logger.info('Got job: %s', responseBody);
   this.currentJob_ = null;
-  logger.info('Got job: %s', JSON.stringify(job, function(name, value) {
-    // ControlFlow has circular references to us through its queue.
-    return ('app_' === name) ? '<REDACTED>' : value;
-  }));
   this.startNextRun_(job);
 };
 
@@ -441,7 +448,9 @@ Client.prototype.processJobResponse_ = function(responseBody) {
  */
 Client.prototype.abortJob_ = function(job) {
   'use strict';
-  logger.error('Aborting job %s: %s', job.id, job.error);
+  logger.error('Aborting job %s: %s%s', job.id, (job.testError || ''),
+      (job.testError && job.agentError ? ' ' : ''),
+      (job.agentError ? '(' + job.agentError + ')' : ''));
   if (this.onAbortJob) {
     this.onAbortJob(job);
   } else {
@@ -455,12 +464,13 @@ Client.prototype.abortJob_ = function(job) {
  */
 Client.prototype.startNextRun_ = function(job) {
   'use strict';
-  job.error = undefined;  // Reset previous run's error, if any.
+  job.testError = undefined;  // Reset previous run's error, if any.
+  job.agentError = undefined;
   // For comparison in finishRun_()
   this.currentJob_ = job;
   // Set up job timeout
   this.timeoutTimer_ = global.setTimeout(function() {
-    job.error = 'timeout';
+    job.testError = 'timeout';
     this.abortJob_(job);
   }.bind(this), this.jobTimeout + exports.JOB_FINISH_TIMEOUT);
 
@@ -469,11 +479,11 @@ Client.prototype.startNextRun_ = function(job) {
       this.onStartJobRun(job);
     } catch (e) {
       logger.debug('onStartJobRunFailed: %s\n%s', e.stack);
-      job.error = e.message;
+      job.testError = e.message;
       this.abortJob_(job);
     }
   } else {
-    job.error = 'Client.onStartJobRun not set';
+    job.testError = 'Client.onStartJobRun not set';
     this.abortJob_(job);
   }
 };
@@ -490,37 +500,77 @@ Client.prototype.startNextRun_ = function(job) {
  */
 Client.prototype.finishRun_ = function(job, isRunFinished) {
   'use strict';
-  logger.alert('Finished run %s/%s (isRunFinished=%s) of job %s',
-      job.runNumber, job.runs, isRunFinished, job.id);
   if (job !== this.currentJob_) {
     // Unexpected job finish: not the current job
-    logger.error('Timed-out job finished, but too late: %s', job.id);
+    logger.error('Ignoring old job %s != current job %s', job.id,
+        (this.currentJob_ ? this.currentJob_.id : 'None'));
     this.handlingUncaughtException_ = undefined;
-  } else {
-    var isJobFinished = (
-        (job.runNumber === job.runs && isRunFinished) ||
-        // Failed WPR record-run terminates the whole job.
-        (job.runNumber === 0 && job.error));
-    if (!isJobFinished && (
-         (SIGTERM === this.handlingSignal_ ||
-          SIGINT === this.handlingSignal_) ||  // Abort run
-         (SIGABRT === this.handlingSignal_ && isRunFinished))) {  // Abort job
-      isJobFinished = true;
-      job.error = this.handlingSignal_;
-    }
-    // Don't submit WPR recording run.
-    var shouldSubmit = (0 !== job.runNumber || job.error);
-
-    global.clearTimeout(this.timeoutTimer_);
-    this.timeoutTimer_ = undefined;
-    this.currentJob_ = undefined;
-    if (shouldSubmit) {
-      this.submitResult_(job, isJobFinished,
-          this.endOfRun_.bind(this, job, isRunFinished, isJobFinished));
-    } else {
-      this.endOfRun_(job, isRunFinished, isJobFinished, /*e=*/undefined);
-    }
+    return;
   }
+  global.clearTimeout(this.timeoutTimer_);
+  this.timeoutTimer_ = undefined;
+  this.currentJob_ = undefined;
+
+  this.app_.schedule('Verify that the agent is online', function() {
+    if (SIGTERM === this.handlingSignal_ || SIGINT === this.handlingSignal_) {
+      return false;  // Don't check readiness if we're aborting.
+    } else if (this.onMakeReady) {
+      return this.onMakeReady();  // Returns true if wasOffline & recovered.
+    } else {
+      return false;  // Assume we're online.
+    }
+  }.bind(this)).addBoth(function(errOrBool) {
+    var wasOffline = (errOrBool !== false);
+    if (wasOffline) {
+      job.agentError = job.agentError || 'Agent was offline';
+    }
+    var isOffline = (errOrBool instanceof Error);
+    if (isOffline) {
+      logger.error('Agent is offline: ' + errOrBool.message);
+      job.agentError = job.agentError || errOrBool.message;
+    }
+
+    var isAbort = (
+        (SIGTERM === this.handlingSignal_ ||
+         SIGINT === this.handlingSignal_) ||  // Abort run
+        (SIGABRT === this.handlingSignal_ && isRunFinished));  // Abort job
+    if (isAbort) {
+      job.agentError = this.handlingSignal_;
+    }
+
+    // Retry on agentError, at most once per run, but only if we're online.
+    //
+    // There are many other definitions that we could use instead, e.g.
+    //   retry on any job.testError, retry up to N times per job, etc.
+    var shouldRetry = (
+        !!job.agentError && !isOffline && !isAbort && !job.retryError);
+
+    var isJobFinished = (!shouldRetry && (
+          isAbort || wasOffline || isOffline ||
+          (job.runNumber === job.runs && isRunFinished) ||
+          // Failed WPR record-run terminates the whole job.
+          (job.runNumber === 0 && job.testError)));
+
+    logger.alert('%s run %d%s%s/%d of %sjob %s%s%s%s',
+        ((job.testError || job.agentError) ? 'Failed' : 'Finished'),
+        job.runNumber,
+        (job.isFirstViewOnly ? '' : (job.isCacheWarm ? 'b' : 'a')),
+        (job.retryError ? '\'' : ''),
+        job.runs, (isJobFinished ? 'finished ' : ''),
+        job.id, (job.testError || job.agentError ? ': ' : ''),
+        (job.testError || ''), (job.testError && job.agentError ? ' ' : ''),
+        (job.agentError ? '(' + job.agentError + ')' : ''));
+
+    if (shouldRetry) {
+      job.retryError = job.agentError || 'Unknown';
+      job.isCacheWarm = false;
+      this.startNextRun_(job);
+      return;
+    }
+
+    this.submitResult_(job, isJobFinished,
+        this.endOfRun_.bind(this, job, isRunFinished, isJobFinished));
+  }.bind(this));
 };
 
 /**
@@ -547,7 +597,9 @@ Client.prototype.endOfRun_ = function(job, isRunFinished, isJobFinished, e) {
         throw new Error('Internal error: job.runNumber >= job.runs');
       }
       job.runNumber += 1;
+      job.retryError = undefined;  // Only cleared on sucessful first view.
     }
+    job.isCacheWarm = !isRunFinished;
     this.startNextRun_(job);
   }
 };
@@ -625,13 +677,13 @@ Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
     var fileName = createFileName(job, resultFile.fileName);
     mp.addFilePart(
         'file', fileName, resultFile.contentType, resultFile.content);
-    if (logger.isLogging('debug')) {
+    if (logger.isLogging('extra')) {
       logger.debug('Writing a local copy of %s', fileName);
       var body = resultFile.content;
       var bodyBuffer = (body instanceof Buffer ? body : new Buffer(body));
-      fs.mkdir('results', parseInt('0755', 8), function(e) {
+      fs.mkdir('/data/results', parseInt('0755', 8), function(e) {
         if (!e || 'EEXIST' === e.code) {
-          var subdir = path.join('results', job.id);
+          var subdir = path.join('/data/results', job.id);
           fs.mkdir(subdir, parseInt('0755', 8), function(e) {
             if (!e || 'EEXIST' === e.code) {
               fs.writeFile(path.join(subdir, fileName), bodyBuffer);
@@ -699,16 +751,22 @@ Client.prototype.submitResult_ = function(job, isJobFinished,
     var resultFile = filesToSubmit.shift();
     var fields = [];
     if (resultFile) {
-      if (job.error) {
-        fields.push(['error', job.error]);
+      if (job.testError) {
+        fields.push(['error', job.testError]);
       }
       this.postResultFile_(job, resultFile, fields, submitNextResult);
     } else {
       if (isJobFinished) {
         fields.push(['done', '1']);
       }
-      if (job.error) {
-        fields.push(['testerror', job.error]);
+      if (job.agentError) {
+        fields.push(['agenterror', job.agentError]);
+      }
+      if (job.retryError) {
+        fields.push(['retryerror', job.retryError]);
+      }
+      if (job.testError) {
+        fields.push(['testerror', job.testError]);
       }
       if (fields.length) {
         this.postResultFile_(job, undefined, fields, function(e2) {

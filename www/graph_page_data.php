@@ -30,7 +30,7 @@ if (count($testsId) == 1) {
   $_REQUEST['test'] = $testsId[0];
 }
 include 'common.inc';
-include 'lib/PHPStats/PHPStats.phar';
+require_once('lib/PHPStats/PHPStats.phar');
 require_once('page_data.inc');
 require_once('graph_page_data.inc');
 require_once('stat.inc');

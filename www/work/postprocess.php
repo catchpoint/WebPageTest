@@ -29,12 +29,19 @@ if (array_key_exists('test', $_REQUEST)) {
     $testInfo = GetTestInfo($id);
     
     // see if we need to log the raw test data
+    $now = time();
+    $allowLog = true;
+    $logPrivateTests = GetSetting('logPrivateTests');
+    if ($testInfo['private'] && $logPrivateTests !== false && $logPrivateTests == 0)
+      $allowLog = false;
     $pageLog = GetSetting('logTestResults');
-    if (isset($pageLog) && $pageLog !== false && strlen($pageLog)) {
+    if ($allowLog && $pageLog !== false && strlen($pageLog)) {
       $pageData = loadAllPageData($testPath);
       if (isset($pageData) && is_array($pageData)) {
         foreach($pageData as $run => &$pageRun) {
           foreach($pageRun as $cached => &$testData) {
+            $testData['reportedTime'] = gmdate('r', $now);
+            $testData['reportedEpoch'] = $now;
             $testData['testUrl'] = $testInfo['url'];
             $testData['run'] = $run;
             $testData['cached'] = $cached;
@@ -44,14 +51,15 @@ if (array_key_exists('test', $_REQUEST)) {
             $testData['testConnectivity'] = $testInfo['connectivity'];
             $testData['tester'] = array_key_exists('test_runs', $testInfo) && array_key_exists($run, $testInfo['test_runs']) && array_key_exists('tester', $testInfo['test_runs'][$run]) ? $testInfo['test_runs'][$run]['tester'] : $testInfo['tester'];
             $testData['testRunId'] = "$id.$run.$cached";
-            $testData['testResultUrl'] = "http://{$_SERVER['HTTP_HOST']}/details.php?test=$id&run=$run&cached=$cached";
+            $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+            $testData['testResultUrl'] = "$protocol://{$_SERVER['HTTP_HOST']}/details.php?test=$id&run=$run&cached=$cached";
             error_log(json_encode($testData) . "\n", 3, $pageLog);
           }
         }
       }
     }
     $requestsLog = GetSetting('logTestRequests');
-    if (isset($requestsLog) && $requestsLog !== false && strlen($requestsLog)) {
+    if ($allowLog && $requestsLog !== false && strlen($requestsLog)) {
       require_once('object_detail.inc');
       $max_cached = $testInfo['fvonly'] ? 0 : 1;
       for ($run = 1; $run <= $testInfo['runs']; $run++) {
@@ -61,6 +69,8 @@ if (array_key_exists('test', $_REQUEST)) {
           $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
           if (isset($requests) && is_array($requests)) {
             foreach ($requests as &$request) {
+              $request['reportedTime'] = gmdate('r', $now);
+              $request['reportedEpoch'] = $now;
               $request['testUrl'] = $testInfo['url'];
               $request['run'] = $run;
               $request['cached'] = $cached;
@@ -70,7 +80,8 @@ if (array_key_exists('test', $_REQUEST)) {
               $request['testConnectivity'] = $testInfo['connectivity'];
               $request['tester'] = array_key_exists('test_runs', $testInfo) && array_key_exists($run, $testInfo['test_runs']) && array_key_exists('tester', $testInfo['test_runs'][$run]) ? $testInfo['test_runs'][$run]['tester'] : $testInfo['tester'];
               $request['testRunId'] = "$id.$run.$cached";
-              $request['testResultUrl'] = "http://{$_SERVER['HTTP_HOST']}/details.php?test=$id&run=$run&cached=$cached";
+              $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+              $request['testResultUrl'] = "$protocol://{$_SERVER['HTTP_HOST']}/details.php?test=$id&run=$run&cached=$cached";
               error_log(json_encode($request) . "\n", 3, $requestsLog);
             }
           }
@@ -127,7 +138,14 @@ if (array_key_exists('test', $_REQUEST)) {
       require_once('./lib/tsview.inc.php');
       TSViewPostResult($testInfo, $id, $testPath, $settings['tsviewdb'], $testInfo['tsview_id']);
     }
-    
+
+    // post the test to statsd if requested
+    if (GetSetting('statsdHost') &&
+        is_file('./lib/statsd.inc.php')) {
+      require_once('./lib/statsd.inc.php');
+      StatsdPostResult($testInfo, $testPath);
+    }
+ 
     // Send an email notification if necessary
     $notifyFrom = GetSetting('notifyFrom');
     if ($notifyFrom && strlen($notifyFrom) && is_file("$testPath/testinfo.ini")) {
@@ -215,7 +233,7 @@ function notify( $mailto, $from,  $id, $testPath, $host )
         $shorturl .= '...';
     
     $subject = "Test results for $shorturl";
-    
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     if( !isset($host) )
         $host  = $_SERVER['HTTP_HOST'];
 
@@ -225,7 +243,7 @@ function notify( $mailto, $from,  $id, $testPath, $host )
         $render = number_format($pageData[$fv][0]['render'] / 1000.0, 3);
         $numRequests = number_format($pageData[$fv][0]['requests'],0);
         $bytes = number_format($pageData[$fv][0]['bytesIn'] / 1024, 0);
-        $result = "http://$host/result/$id";
+        $result = "$protocol://$host/result/$id";
         
         // capture the optimization report
         require_once 'optimization.inc';

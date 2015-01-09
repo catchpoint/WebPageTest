@@ -69,7 +69,7 @@ include 'admin_header.inc';
                   $used = 0;
             }
         }
-    } else {
+    } elseif ($privateInstall || $admin) {
         $total_api = 0;
         $total_ui = 0;
         echo "<table class=\"table\"><tr><th>Date</th><th>Interactive</th><th>API</th><th>Total</th></tr>" . PHP_EOL;

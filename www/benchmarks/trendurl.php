@@ -1,7 +1,7 @@
 <?php
 chdir('..');
 include 'common.inc';
-include './benchmarks/data.inc.php';
+require_once('./benchmarks/data.inc.php');
 $page_keywords = array('Benchmarks','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "WebPagetest benchmark details";
 $aggregate = 'median';
@@ -110,6 +110,7 @@ if (array_key_exists('f', $_REQUEST)) {
                             'basePageSSLTime' => 'Base Page SSL Time',
                             'titleTime' => 'Time to Title', 
                             'render' => 'Time to Start Render', 
+                            'domContentLoadedEventStart' => 'DOM Content Loaded',
                             'visualComplete' => 'Time to Visually Complete', 
                             'lastVisualChange' => 'Last Visual Change',
                             'fullyLoaded' => 'Load Time (Fully Loaded)', 

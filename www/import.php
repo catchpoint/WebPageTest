@@ -334,6 +334,7 @@ function CreateTestID() {
 }
 
 function TestResult(&$test, $error) {
+  $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
   $host  = $_SERVER['HTTP_HOST'];
   $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
   if (array_key_exists('f', $_REQUEST)) {
@@ -347,19 +348,19 @@ function TestResult(&$test, $error) {
       $ret['data'] = array();
       $ret['data']['testId'] = $test['id'];
       $ret['data']['ownerKey'] = $test['owner'];
-      $ret['data']['jsonUrl'] = "http://$host$uri/results.php?test={$test['id']}&f=json";
-      $ret['data']['xmlUrl'] = "http://$host$uri/xmlResult.php?test={$test['id']}";
-      $ret['data']['userUrl'] = "http://$host$uri/results.php?test={$test['id']}";
-      $ret['data']['summaryCSV'] = "http://$host$uri/csv.php?test={$test['id']}";
-      $ret['data']['detailCSV'] = "http://$host$uri/csv.php?test={$test['id']}&requests=1";
-      $ret['data']['jsonUrl'] = "http://$host$uri/jsonResult.php?test={$test['id']}";
+      $ret['data']['jsonUrl'] = "$protocol://$host$uri/results.php?test={$test['id']}&f=json";
+      $ret['data']['xmlUrl'] = "$protocol://$host$uri/xmlResult.php?test={$test['id']}";
+      $ret['data']['userUrl'] = "$protocol://$host$uri/results.php?test={$test['id']}";
+      $ret['data']['summaryCSV'] = "$protocol://$host$uri/csv.php?test={$test['id']}";
+      $ret['data']['detailCSV'] = "$protocol://$host$uri/csv.php?test={$test['id']}&requests=1";
+      $ret['data']['jsonUrl'] = "$protocol://$host$uri/jsonResult.php?test={$test['id']}";
     }
     json_response($ret);
   } else {
     if (isset($error)) {
       echo "<html><body>$error</body>";
     } else {
-      header("Location: http://$host$uri/results.php?test={$test['id']}");
+      header("Location: $protocol://$host$uri/results.php?test={$test['id']}");
     }
   }
 }

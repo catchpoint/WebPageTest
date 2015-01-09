@@ -1,7 +1,7 @@
 <?php
 // Generate a PNG image that is the difference of two existing images
 include('common.inc');
-include('draw.inc');
+require_once('draw.inc');
 
 // figure out the paths to the actual images
 $parts = explode('/', $_REQUEST['ref']);

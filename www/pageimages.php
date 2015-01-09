@@ -1,6 +1,6 @@
 <?php
 include 'common.inc';
-include 'object_detail.inc'; 
+require_once('object_detail.inc'); 
 require_once('page_data.inc');
 $secure = false;
 $haveLocations = false;
@@ -55,9 +55,9 @@ $userImages = true;
                         }
                         if (array_key_exists('jpeg_scan_count', $request) && $request['jpeg_scan_count'] > 0) {
                           if ($request['jpeg_scan_count'] == 1)
-                            echo "<b>Not Progressive</b>";
+                            echo "Baseline (Renders top-down)";
                           else
-                            echo "Progressive: <b>{$request['jpeg_scan_count']} scans</b>";
+                            echo "Progressive (Renders blurry to sharp): {$request['jpeg_scan_count']} scans";
                           $analyze_url = 'jpeginfo/jpeginfo.php?url=' . urlencode($reqUrl);
                           echo " - <a href=\"$analyze_url\">Analyze JPEG</a><br>";
                         }

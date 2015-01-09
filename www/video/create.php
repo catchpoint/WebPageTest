@@ -28,13 +28,14 @@ if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
         }
     }
 
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     $host  = $_SERVER['HTTP_HOST'];
     $uri = $_SERVER['PHP_SELF'];
     $params = '';
     foreach( $_GET as $key => $value )
         if( $key != 't' && !is_array($value))
             $params .= "&$key=" . urlencode($value);
-    header("Location: http://$host$uri?tests=$tests{$params}");
+    header("Location: $protocol://$host$uri?tests=$tests{$params}");
 }
 else
 {
@@ -92,6 +93,9 @@ else
                 $test['syncStartRender'] = "";
                 $test['syncDocTime'] = "";
                 $test['syncFullyLoaded'] = "";
+                
+                if (isset($_REQUEST['slow']) && $_REQUEST['slow'])
+                  $test['speed'] = 0.2;
 
                 for( $i = 1; $i < count($parts); $i++ )
                 {
@@ -221,85 +225,17 @@ else
                     $exists = true;
             }
 
-            if( !$exists )
-            {
-                // load the appropriate script file
-                $scriptFile = "./video/templates/$count.avs";
-                if( strlen($_REQUEST['template']) )
-                    $scriptFile = "./video/templates/{$_REQUEST['template']}.avs";
+            if( !$exists ) {
+                // set up the result directory
+                $dest = './' . GetVideoPath($id);
+                if( !is_dir($dest) )
+                    mkdir($dest, 0777, true);
+                if( count($labels) )
+                    file_put_contents("$dest/labels.txt", json_encode($labels));
+                gz_file_put_contents("$dest/testinfo.json", json_encode($tests));
 
-                $script = file_get_contents($scriptFile);
-                if( strlen($script) )
-                {
-                    // figure out the job id
-                    require_once('./lib/pclzip.lib.php');
-
-                    $zipFile = "./work/video/tmp/$id.zip";
-                    $zip = new PclZip($zipFile);
-                    if( $zip )
-                    {
-                        // zip up the video files
-                        foreach( $tests as $index => &$test )
-                        {
-                            // build an appropriate script file for this test
-                            $startOffset = array_key_exists('pageData', $test) &&
-                                           array_key_exists($test['run'], $test['pageData']) &&
-                                           array_key_exists($test['cached'], $test['pageData'][$test['run']]) &&
-                                           array_key_exists('testStartOffset', $test['pageData'][$test['run']][$test['cached']])
-                                           ? $test['pageData'][$test['run']][$test['cached']]['testStartOffset'] : null;
-                            BuildVideoScript(null, $test['videoPath'], $test['end'], $test['extend'], $startOffset);
-
-                            $files = array();
-                            $dir = opendir($test['videoPath']);
-                            if( $dir )
-                            {
-                                while($file = readdir($dir))
-                                {
-                                    $path = $test['videoPath'] . "/$file";
-                                    if( is_file($path) && (stripos($file, '.jpg') || stripos($file, '.avs')) &&  strpos($file, '.thm') === false )
-                                        $files[] = $path;
-                                }
-
-                                closedir($dir);
-                            }
-
-                            // update the label in the script
-                            $script = str_replace("%$index%", $test['label'], $script);
-
-                            if( count($files) )
-                                $zip->add($files, PCLZIP_OPT_REMOVE_ALL_PATH, PCLZIP_OPT_ADD_PATH, "$index");
-                        }
-                    }
-
-                    // see if they want the video in slow motion
-                    if( $_REQUEST['slow'] )
-                        $script .= "\r\nAssumeFPS(2)\r\n";
-
-                    // add the script to the zip file
-                    $tmpScript = "./work/video/tmp/$id.avs";
-                    file_put_contents($tmpScript, $script);
-                    $zip->add($tmpScript, PCLZIP_CB_PRE_ADD, 'ZipAvsCallback');
-                    unlink($tmpScript);
-
-                    // create an ini file for the job as well
-                    $ini = "[info]\r\n";
-                    $ini .= "id=$id\r\n";
-                    $tmpIni = "./work/video/tmp/$id.ini";
-                    file_put_contents($tmpIni, $ini);
-                    $zip->add($tmpIni, PCLZIP_CB_PRE_ADD, 'ZipIniCallback');
-                    unlink($tmpIni);
-
-                    // set up the result directory
-                    $dest = './' . GetVideoPath($id);
-                    if( !is_dir($dest) )
-                        mkdir($dest, 0777, true);
-                    if( count($labels) )
-                        file_put_contents("$dest/labels.txt", json_encode($labels));
-                    gz_file_put_contents("$dest/testinfo.json", json_encode($tests));
-
-                    // move the file to the video work directory
-                    rename( $zipFile, "./work/video/$id.zip" );
-                }
+                // kick off the actual rendering
+                SendAsyncRequest("/video/render.php?id=$id");
             }
         }
     }
@@ -307,6 +243,7 @@ else
     // redirect to the destination page
     if( $id )
     {
+        $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
         $host  = $_SERVER['HTTP_HOST'];
         $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 
@@ -321,8 +258,8 @@ else
                 echo "<requestId>{$_REQUEST['r']}</requestId>\n";
             echo "<data>\n";
             echo "<videoId>$id</videoId>\n";
-            echo "<xmlUrl>http://$host$uri/view.php?f=xml&id=$id</xmlUrl>\n";
-            echo "<userUrl>http://$host$uri/view.php?id=$id</userUrl>\n";
+            echo "<xmlUrl>$protocol://$host$uri/view.php?f=xml&id=$id</xmlUrl>\n";
+            echo "<userUrl>$protocol://$host$uri/view.php?id=$id</userUrl>\n";
             echo "</data>\n";
             echo "</response>\n";
         }
@@ -333,13 +270,13 @@ else
             $ret['statusText'] = 'Ok';
             $ret['data'] = array();
             $ret['data']['videoId'] = $id;
-            $ret['data']['jsonUrl'] = "http://$host$uri/view.php?f=json&id=$id";
-            $ret['data']['userUrl'] = "http://$host$uri/view.php?id=$id";
+            $ret['data']['jsonUrl'] = "$protocol://$host$uri/view.php?f=json&id=$id";
+            $ret['data']['userUrl'] = "$protocol://$host$uri/view.php?id=$id";
             json_response($ret);
         }
         else
         {
-            header("Location: http://$host$uri/view.php?id=$id");
+            header("Location: $protocol://$host$uri/view.php?id=$id");
         }
     }
     else

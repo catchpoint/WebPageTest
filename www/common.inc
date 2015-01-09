@@ -22,6 +22,9 @@ date_default_timezone_set('UTC');
 extract($_POST, EXTR_SKIP|EXTR_PREFIX_ALL|EXTR_REFS, 'req');
 extract($_GET, EXTR_SKIP|EXTR_PREFIX_ALL|EXTR_REFS, 'req');
 
+// add a CORS header
+header('Access-Control-Allow-Origin: *');
+
 // set up a global curl context that can be used for keep-alive connections (particularly when doing bulk relays)
 if (function_exists('curl_init')) {
     $CURL_CONTEXT = curl_init();
@@ -33,6 +36,8 @@ if (function_exists('curl_init')) {
         curl_setopt($CURL_CONTEXT, CURLOPT_DNS_CACHE_TIMEOUT, 600);
         curl_setopt($CURL_CONTEXT, CURLOPT_MAXREDIRS, 10);
         curl_setopt($CURL_CONTEXT, CURLOPT_TIMEOUT, 600);
+        curl_setopt($CURL_CONTEXT, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($CURL_CONTEXT, CURLOPT_SSL_VERIFYPEER, 0);
     }
 } else
     $CURL_CONTEXT = false;
@@ -66,7 +71,7 @@ if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
   $userIsBot = true;
 
 // constants
-define('VER_WEBPAGETEST', '2.15');   // webpagetest version
+define('VER_WEBPAGETEST', '2.16');   // webpagetest version
 define('VER_CSS', 67);           // version of the sitewide css file
 define('VER_JS', 31);            // version of the sitewide javascript file
 define('VER_JS_TEST', 29);       // version of the javascript specific to the test pages
@@ -116,7 +121,7 @@ if( array_key_exists('HTTP_HOST', $_SERVER) && stristr($_SERVER['HTTP_HOST'] , '
 if (isset($req_bulk)) {
     $settings['noBulk'] = 0;
 }
-$is_ssl = isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On';
+$is_ssl = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? true : false;
 $GLOBALS['cdnPath'] = '';
 if (isset($settings['cdn']) && !$is_ssl) {
     $GLOBALS['cdnPath'] = $settings['cdn'];

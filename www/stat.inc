@@ -1,6 +1,6 @@
 <?php
 
-include 'lib/PHPStats/PHPStats.phar';
+require_once('lib/PHPStats/PHPStats.phar');
 
 /**
  * ConfData is a class describing basic statistics for a labeled dataset:

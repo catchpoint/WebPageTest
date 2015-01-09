@@ -10,18 +10,19 @@ if (array_key_exists('url', $_REQUEST) && strlen($_REQUEST['url'])) {
 }
 
 if (isset($id) && strlen($id)) {
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     $host  = $_SERVER['HTTP_HOST'];
     $ret['statusCode'] = 200;
     $ret['statusText'] = 'Ok';
     $ret['data'] = array();
     $ret['data']['testId'] = $id;
-    $ret['data']['jsonUrl'] = "http://$host/results.php?test=$id&f=json";
+    $ret['data']['jsonUrl'] = "$protocol://$host/results.php?test=$id&f=json";
     if (FRIENDLY_URLS) {
-        $ret['data']['xmlUrl'] = "http://$host/xmlResult/$id/";
-        $ret['data']['userUrl'] = "http://$host/result/$id/";
+        $ret['data']['xmlUrl'] = "$protocol://$host/xmlResult/$id/";
+        $ret['data']['userUrl'] = "$protocol://$host/result/$id/";
     } else {
-        $ret['data']['xmlUrl'] = "http://$host/xmlResult.php?test=$id";
-        $ret['data']['userUrl'] = "http://$host/results.php?test=$id";
+        $ret['data']['xmlUrl'] = "$protocol://$host/xmlResult.php?test=$id";
+        $ret['data']['userUrl'] = "$protocol://$host/results.php?test=$id";
     }
 } else {
     $ret['statusCode'] = 404;

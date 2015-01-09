@@ -1,11 +1,10 @@
 <?php
-require_once('common.inc');
+require_once('common_lib.inc');
 require_once('page_data.inc');
 if(extension_loaded('newrelic')) { 
     newrelic_add_custom_tracer('GetRelayStatus');
     newrelic_add_custom_tracer('GetAppurifyStatus');
 }
-set_time_limit(60*5);
 
 $testQueue = array();
 
@@ -330,7 +329,7 @@ function GetBatchStatus(&$status) {
 */
 function GetRelayStatus($id, $testPath, &$test) {
     $ret = null;
-    $locations = parse_ini_file('./settings/locations.ini', true);
+    $locations = LoadLocationsIni();
     $location = $test['location'];
     $split = strpos($location, ':');
     if ($split > 0)

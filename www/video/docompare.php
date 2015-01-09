@@ -53,7 +53,8 @@ if( count($ids) )
         $idStr .= $id;
     }
     
-    $compareUrl = 'http://' . $_SERVER['HTTP_HOST'] . "/video/compare.php?tests=$idStr";
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $compareUrl = "$protocol://" . $_SERVER['HTTP_HOST'] . "/video/compare.php?tests=$idStr";
     header("Location: $compareUrl");    
 }
 else
@@ -74,7 +75,8 @@ function SubmitTest($url, $label, $key)
     global $ip;
     $id = null;
     
-    $testUrl = 'http://' . $_SERVER['HTTP_HOST'] . '/runtest.php?';
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $testUrl = "$protocol://" . $_SERVER['HTTP_HOST'] . '/runtest.php?';
     $testUrl .= 'f=xml&priority=2&runs=3&video=1&mv=1&fvonly=1&url=' . urlencode($url);
     if( $label && strlen($label) )
         $testUrl .= '&label=' . urlencode($label);

@@ -278,9 +278,14 @@ else
                         </ul>
                         </div>
                         <?php
-                    }
-                    elseif( $view == 'bulk' )
+                    } elseif( $view == 'bulk' ) {
+                        if( FRIENDLY_URLS )
+                            echo "<br>Download Partial Combined Raw: <a href=\"/result/$id/{$id}_bulk_page_data.csv\">Page Data</a> - <a href=\"/result/$id/{$id}_bulk_requests.csv\">Object Data</a>";
+                        else
+                            echo "<br>Download Partial Combined Raw: <a href=\"/csv.php?test=$id\">Page Data</a> - <a href=\"/csv.php?test=$id&requests=1\">Object Data</a>";
+                        echo "<br><br><a href=\"/aggregate.php?test=$id\">Download Partial Aggregate Statistics</a>";
                         echo "<br><br><a href=\"/cancelTest.php?test=$id\">Cancel all pending tests</a>";
+                    }
                 }
                 ?>
             </div>
@@ -613,6 +618,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
     $started = 0;
     global $fvonly;
     $url = '';
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     $host  = $_SERVER['HTTP_HOST'];
     $videoCustom = '';
     
@@ -680,7 +686,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
                         foreach( $frames as $time => $frameFile ) {
                             $entry = array (   
                                 'time' => number_format((double)$time / 1000.0, 3),
-                                'image' => "http://$host$path/video_{$fvMedian}/$frameFile");
+                                'image' => "$protocol://$host$path/video_{$fvMedian}/$frameFile");
                             $ms = $time * 100;
                             if (array_key_exists('frames', $visual) && array_key_exists($ms, $visual['frames']))
                                 $entry['progress'] = $visual['frames'][$ms]['progress'];
@@ -703,7 +709,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
                         foreach( $frames as $time => $frameFile ) {
                             $entry = array (   
                                 'time' => number_format((double)$time / 1000.0, 3),
-                                'image' => "http://$host$path/video_{$fvMedian}/$frameFile");
+                                'image' => "$protocol://$host$path/video_{$fvMedian}/$frameFile");
                             $ms = $time * 100;
                             if (array_key_exists('frames', $visual) && array_key_exists($ms, $visual['frames']))
                                 $entry['progress'] = $visual['frames'][$ms]['progress'];
@@ -732,7 +738,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
                         foreach( $frames as $time => $frameFile ) {
                             $entry = array (   
                                 'time' => number_format((double)$time / 1000.0, 3),
-                                'image' => "http://$host$path/video_{$rvMedian}_cached/$frameFile");
+                                'image' => "$protocol://$host$path/video_{$rvMedian}_cached/$frameFile");
                             $ms = $time * 100;
                             if (array_key_exists('frames', $visual) && array_key_exists($ms, $visual['frames']))
                                 $entry['progress'] = $visual['frames'][$ms]['progress'];
@@ -754,7 +760,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
                         foreach( $frames as $time => $frameFile ) {
                             $entry = array (   
                                 'time' => number_format((double)$time / 1000.0, 3),
-                                'image' => "http://$host$path/video_{$rvMedian}_cached/$frameFile");
+                                'image' => "$protocol://$host$path/video_{$rvMedian}_cached/$frameFile");
                             $ms = $time * 100;
                             if (array_key_exists('frames', $visual) && array_key_exists($ms, $visual['frames']))
                                 $entry['progress'] = $visual['frames'][$ms]['progress'];
@@ -1065,7 +1071,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 $json_response['statusCode'] = 200;
                 $host  = $_SERVER['HTTP_HOST'];
                 $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-                $json_response['data']['videoEmbed'] = "http://$host$uri/video/view.php?embed=1&id=" . $videoInfo['vID' . $videoCustom];
+                $json_response['data']['videoEmbed'] = "$protocol://$host$uri/video/view.php?embed=1&id=" . $videoInfo['vID' . $videoCustom];
             } else {
                 $json_response['statusCode'] = 103;
                 $json_response['statusText'] = 'Creating Video';
@@ -1412,6 +1418,7 @@ function DisplayBlink(&$tests, $video, &$dirty)
                 $tests['videoReady'] = CheckVideo($tests['videoId'], $regenerate_video);
                 if( $tests['videoReady'] )
                     $dirty = true;
+
                 else
                     $videoComplete = false;
             }
@@ -1661,8 +1668,9 @@ function CreateVideo(&$tests, $end = null)
 
     if (!strlen($end))
         $end = 'visual';
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     $host  = $_SERVER['HTTP_HOST'];
-    $request = "http://$host/video/create.php?f=json&force=1&end=$end&tests=";
+    $request = "$protocol://$host/video/create.php?f=json&force=1&end=$end&tests=";
 
     $count = 0;
     foreach( $tests as &$test )

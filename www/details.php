@@ -1,6 +1,6 @@
 <?php
 include 'common.inc';
-include 'object_detail.inc';
+require_once('object_detail.inc');
 require_once('page_data.inc');
 require_once('waterfall.inc');
 
@@ -274,7 +274,7 @@ $page_description = "Website performance test details$testLabel";
                     if ($navTiming) {
                       echo "<th$borderClass>";
                       if ($data['firstPaint'] > 0)
-                        echo "msFirstPaint</th><th>";
+                        echo "RUM First Paint</th><th>";
                       echo "<a href=\"http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#process\">domContentLoaded</a></th><th><a href=\"http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#process\">loadEvent</a></th>";
                     }
                     echo '</tr><tr>';

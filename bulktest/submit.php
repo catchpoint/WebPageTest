@@ -3,8 +3,18 @@ require_once('./settings.inc');
 
 $results = array();
 
+$pending = 0;
+
 // see if there is an existing test we are working with
 if (LoadResults($results)) {
+  foreach($results as $result) {
+    if (!isset($result['result'])) {
+      $pending++;
+    }
+  }
+  if ($pending)
+    echo "Waiting for $pending tests to complete...\r\n";
+  else
     echo "Re-submitting failed tests from current results.txt...\r\n";
 } else {
     if (!isset($urls_file))
@@ -23,7 +33,7 @@ if (LoadResults($results)) {
 }
 
 // go through and submit tests for any url where we don't have a test ID or where the test failed
-if (count($results)) {
+if (!$pending && count($results)) {
     // first count the number of tests we are going to have to submit (to give some progress indication)
     $testCount = 0;
     foreach ($results as &$result) {
@@ -49,6 +59,7 @@ if (count($results)) {
         echo "No tests to submit, all tests have completed successfully are are still running\r\n";
     }
 } else {
+  if (!$pending)
     echo "Nothing to do (no urls found)\r\n";
 }
 
@@ -87,7 +98,8 @@ function SubmitTests(&$results, $testCount) {
             echo "\rSubmitting test $count of $testCount...                  ";
             
             $location = $permutations[$result['label']]['location'];
-            $request = $server . "runtest.php?f=json&priority=9&runs=$runs&url=" . urlencode($result['url']) . '&location=' . urlencode($location);
+            $request = $server . "runtest.php?f=json&runs=$runs&url=" . urlencode($result['url']) . '&location=' . urlencode($location);
+            $request .= "&affinity=" . urlencode($result['url']);
             if( $private )
                 $request .= '&private=1';
             if( $video )
@@ -99,11 +111,9 @@ function SubmitTests(&$results, $testCount) {
             if ($bodies)
                 $request .= '&bodies=1';
             if(isset($priority)) {
-                if ($priority > 0 && array_key_exists('resubmit', $result) && $result['resubmit']) {
-                  $p = $priority - 1;
-                  $request .= "&priority=$p";
-                } else
-                  $request .= "&priority=$priority";
+              $request .= "&priority=$priority";
+            } else {
+              $request .= "&priority=9";
             }
             if(strlen($key))
                 $request .= "&k=$key";

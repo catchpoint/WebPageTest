@@ -3,9 +3,9 @@
     This is called every 15 minutes as long as agents are polling for work
 */
 chdir('..');
-require 'common.inc';
-require 'testStatus.inc';
-require 'breakdown.inc';
+include 'common.inc';
+require_once('testStatus.inc');
+require_once('breakdown.inc');
 require_once('archive.inc');
 set_time_limit(36000);
 ignore_user_abort(true);
@@ -114,7 +114,8 @@ function PreProcessBenchmark($benchmark) {
     echo "Benchmark '$benchmark' needs processing, spawning task\n";
     logMsg("Benchmark '$benchmark' needs processing, spawning task", "./log/$logFile", true);
     
-    $url = "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?benchmark=' . urlencode($benchmark);
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $url = "$protocol://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?benchmark=' . urlencode($benchmark);
     if (function_exists('curl_init')) {
       $c = curl_init();
       curl_setopt($c, CURLOPT_URL, $url);
@@ -368,6 +369,7 @@ function SubmitBenchmark(&$configurations, &$state, $benchmark) {
     // group all of the tests by URL so that any given URL is tested in all configurations before going to the next URL
     $tests = array();
     foreach ($configurations as $config_label => $config) {
+      if (!isset($config['disabled'])) {
         $urls = file("./settings/benchmarks/{$config['url_file']}", FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         foreach ($urls as $url) {
             $url = trim($url);
@@ -398,6 +400,7 @@ function SubmitBenchmark(&$configurations, &$state, $benchmark) {
               }
             }
         }
+      }
     }
 
     // now submit the actual tests    
@@ -491,7 +494,8 @@ function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
                     ));
 
     $ctx = stream_context_create($params);
-    $fp = fopen("http://{$_SERVER['HTTP_HOST']}/runtest.php", 'rb', false, $ctx);
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $fp = fopen("$protocol://{$_SERVER['HTTP_HOST']}/runtest.php", 'rb', false, $ctx);
     if ($fp) {
         $response = @stream_get_contents($fp);
         if ($response && strlen($response)) {
