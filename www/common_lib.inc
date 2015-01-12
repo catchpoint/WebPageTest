@@ -1717,6 +1717,11 @@ function GetTesters($locationId, $includeOffline = false)
             }
         }
     }
+    
+    if (isset($location['elapsed']) && $location['elapsed'] < 60)
+      $location['status'] = 'OK';
+    else
+      $location['status'] = 'OFFLINE';
 
     return $location;
 }
