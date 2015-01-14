@@ -1,6 +1,6 @@
 <?php
 include 'common.inc';
-include 'domains.inc';
+require_once('domains.inc');
 
 $page_keywords = array('Domains','Webpagetest','Website Speed Test');
 $page_description = "Website domain breakdown$testLabel";
@@ -48,7 +48,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
 
     json_response($output);
 
-    return;
+    exit;
 }
 ?>
 
