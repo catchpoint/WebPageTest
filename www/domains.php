@@ -12,7 +12,47 @@ $breakdownRv = array();
 $requestsRv = array();
 if( (int)$test[test][fvonly] == 0 )
     $breakdownRv = getDomainBreakdown($id, $testPath, $run, 1, $requestsRv);
+
+if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
+    $domains = array();
+    $firstView = array();
+
+    ksort($breakdownFv);
+    foreach($breakdownFv as $domain => $data) {
+        $entry = array();
+        $entry['domain'] = strrev($domain);
+        $entry['bytes'] = $data['bytes'];
+        $entry['requests'] = $data['requests'];
+        $entry['connections'] = $data['connections'];
+        $firstView[] = $entry;
+    }
+    $domains['firstView'] = $firstView;
+
+    if( (int)$test[test][fvonly] == 0 ) {
+        $repeatView = array();
+
+        ksort($breakdownRv);
+        foreach($breakdownRv as $domain => $data) {
+            $entry = array();
+            $entry['domain'] = strrev($domain);
+            $entry['bytes'] = $data['bytes'];
+            $entry['requests'] = $data['requests'];
+            $entry['connections'] = $data['connections'];
+            $repeatView[] = $entry;
+        }
+        $domains['repeatView'] = $repeatView;
+    }
+
+    $output = array();
+    $output['domains'] = $domains;
+
+    json_response($output);
+
+    exit;
+}
 ?>
+
+
 <!DOCTYPE html>
 <html>
     <head>
