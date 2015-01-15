@@ -147,13 +147,9 @@ function IsWPTTmpOnTmpfs() {
 function CheckLocations() {
     $locations = LoadLocationsIni();
     $out = '';
-    $video = false;
     foreach($locations['locations'] as $id => $location) {
         if (is_numeric($id)) {
             $info = GetLocationInfo($locations, $location);
-            if ($info['video']) {
-                $video = true;
-            }
             $out .= "<li class=\"{$info['state']}\">{$info['label']}";
             if (count($info['locations'])) {
                 $out .= "<ul>";
@@ -165,11 +161,6 @@ function CheckLocations() {
             }
             $out .= "</li>";
         }
-    }
-    if ($video) {
-        echo '<li class="pass">Video rendering is supported</li></ul><br><ul>';
-    } else {
-        echo '<li class="fail"><span class="fail">No test agents are configured to render video</span></li></ul><br><ul>';
     }
     echo $out;
 }
