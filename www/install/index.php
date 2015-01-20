@@ -105,7 +105,7 @@ function CheckPHP() {
 }
 
 function CheckUtils() {
-    ShowCheck('ffmpeg Installed (required for video)', CheckFfmpeg());
+    ShowCheck('ffmpeg Installed with --enable-libx264 (required for video)', CheckFfmpeg());
     ShowCheck('ffmpeg Installed with scale and decimate filters(required for mobile video)', CheckFfmpegFilters($ffmpegInfo), false, $ffmpegInfo);
     ShowCheck('imagemagick compare Installed (required for mobile video)', CheckCompare(), false);
     ShowCheck('jpegtran Installed (required for JPEG Analysis)', CheckJpegTran(), false);
@@ -317,17 +317,19 @@ function CheckBeanstalkd() {
 */
 function CheckFfmpeg() {
     $ret = false;
+    $x264 = false;
     $command = "ffmpeg -version";
     $retStr = exec($command, $output, $result);
     if (count($output)) {
         foreach($output as $line) {
-            if (stripos($line, 'ffmpeg ') !== false) {
+            if (stripos($line, 'ffmpeg ') !== false)
                 $ret = true;
-                break;
-            }
+            if (stripos($line, '--enable-libx264') !== false)
+                $x264 = true;
         }
     }
-    return $ret;
+    
+    return $ret && $x264;
 }
 
 /**
