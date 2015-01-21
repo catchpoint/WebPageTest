@@ -637,7 +637,7 @@ function EC2_CreateTagArray($tagstring) {
 
   foreach ($kvpairs as $kvpair) {
     $pair = explode('=>', $kvpair);
-    array_push($final_array, array('Key' => $pair[0], 'Value' => $pair[1]));
+    $final_array[] = array('Key' => $pair[0], 'Value' => $pair[1]);
   }
   return $final_array;
 }
