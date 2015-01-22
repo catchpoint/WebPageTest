@@ -204,8 +204,19 @@ else
                                       if (!$location) {
                                           $location = '';
                                       }
-                                                  if( isset($date) && isset($location) && isset($url) && isset($guid))
-                                                  {
+                                      if( isset($date) && isset($location) && isset($url) && isset($guid))
+                                      {
+                                          // Automatically make any URLs with credentials private
+                                          if (!$private) {
+                                            $atPos = strpos($url, '@');
+                                            if ($atPos !== false) {
+                                              $queryPos = strpos($url, '?');
+                                              if ($queryPos === false || $queryPos > $atPos) {
+                                                $private = 1;
+                                              }
+                                            }
+                                          }
+                                          
                                           // see if it is supposed to be filtered out
                                           if ($private) {
                                               $ok = false;

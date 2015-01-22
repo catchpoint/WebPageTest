@@ -306,6 +306,15 @@
             // login tests are forced to be private
             if( strlen($test['login']) )
                 $test['private'] = 1;
+            
+            // Tests that include credentials in the URL (usually indicated by @ in the host section) are forced to be private
+            $atPos = strpos($test['url'], '@');
+            if ($atPos !== false) {
+              $queryPos = strpos($test['url'], '?');
+              if ($queryPos === false || $queryPos > $atPos) {
+                $test['private'] = 1;
+              }
+            }
 
             // default batch and API requests to a lower priority
             if( !isset($req_priority) )
