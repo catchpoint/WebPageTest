@@ -45,13 +45,13 @@ if (function_exists('curl_init')) {
 if (function_exists('apache_request_headers')) {
     $headers = apache_request_headers();
     if (array_key_exists('X-Forwarded-For', $headers)){
-        $_SERVER["REMOTE_ADDR"] = $headers['X-Forwarded-For'];
+        $_SERVER["HTTP_X_FORWARDED_FOR"] = $headers['X-Forwarded-For'];
     }
 }
 if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
   $forwarded = explode(',',$_SERVER["HTTP_X_FORWARDED_FOR"]);
   if (isset($forwarded) && is_array($forwarded) && count($forwarded)) {
-    $forwarded_ip = trim($forwarded[0]);
+    $forwarded_ip = trim(end($forwarded));
     if (strlen($forwarded_ip))
         $_SERVER["REMOTE_ADDR"] = $forwarded_ip;
   }
