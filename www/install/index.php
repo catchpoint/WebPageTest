@@ -356,7 +356,7 @@ function CheckFfmpegFilters(&$info) {
     $scale = false;
     if (count($output)) {
       foreach ($output as $line) {
-        if (!strncmp($line, 'scale ', 6))
+        if (preg_match('/scale.*V->V.*Scale the input video/', $line))
           $scale = true;
         if (preg_match('/(?P<filter>[mp]*decimate).*V->V.*Remove near-duplicate frames/', $line, $matches))
           $decimate = $matches['filter'];
@@ -385,7 +385,7 @@ function CheckJpegTran() {
 
 function CheckExifTool() {
     $ret = false;
-    $command = "exiftool";
+    $command = "exiftool -ver";
     $retStr = exec($command, $output, $result);
     if ($result == 0)
       $ret = true;
