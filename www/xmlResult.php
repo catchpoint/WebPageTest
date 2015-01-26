@@ -399,7 +399,7 @@ else
                       foreach($progress['frames'] as $ms => $frame) {
                           echo "<frame>\n";
                           echo "<time>$ms</time>\n";
-                          echo "<image>$protocol://$host$uri$path/getfile.php?test=$id&amp;video=video_{$i}_cached&amp;file={$frame['file']}</image>\n";
+                          echo "<image>$protocol://$host$uri/getfile.php?test=$id&amp;video=video_{$i}_cached&amp;file={$frame['file']}</image>\n";
                           echo "<VisuallyComplete>{$frame['progress']}</VisuallyComplete>\n";
                           echo "</frame>\n";
                       }
