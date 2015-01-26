@@ -20,7 +20,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
     ksort($breakdownFv);
     foreach($breakdownFv as $domain => $data) {
         $entry = array();
-        $entry['domain'] = strrev($domain);
+        $entry['domain'] = $domain;
         $entry['bytes'] = $data['bytes'];
         $entry['requests'] = $data['requests'];
         $entry['connections'] = $data['connections'];
@@ -34,7 +34,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
         ksort($breakdownRv);
         foreach($breakdownRv as $domain => $data) {
             $entry = array();
-            $entry['domain'] = strrev($domain);
+            $entry['domain'] = $domain;
             $entry['bytes'] = $data['bytes'];
             $entry['requests'] = $data['requests'];
             $entry['connections'] = $data['connections'];
@@ -164,10 +164,9 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
             fvBytes.addRows(<?php echo count($breakdownFv); ?>);
             <?php
             $index = 0;
-            ksort($breakdownFv);
             foreach($breakdownFv as $domain => $data)
             {
-                $domain = strrev($domain);
+                $domain = $domain;
                 echo "dataFv.setValue($index, 0, '$domain');\n";
                 echo "dataFv.setValue($index, 1, {$data['requests']});\n";
                 echo "dataFv.setValue($index, 2, {$data['bytes']});\n";
@@ -215,10 +214,9 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
                 rvBytes.addRows(<?php echo count($breakdownRv); ?>);
                 <?php
                 $index = 0;
-                ksort($breakdownRv);
                 foreach($breakdownRv as $domain => $data)
                 {
-                    $domain = strrev($domain);
+                    $domain = $domain;
                     echo "dataRv.setValue($index, 0, '$domain');\n";
                     echo "dataRv.setValue($index, 1, {$data['requests']});\n";
                     echo "dataRv.setValue($index, 2, {$data['bytes']});\n";

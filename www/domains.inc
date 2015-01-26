@@ -20,7 +20,7 @@ function getDomainBreakdown($id, $testPath, $run, $cached, &$requests)
     $connections = array();
     foreach($requests as $request)
     {
-        $domain = strrev(strtok($request['host'],':'));
+        $domain = strtok($request['host'],':');
         $object = strtolower($request['url']);
         if( strlen($domain) && (strstr($object, 'favicon.ico') === FALSE) )
         {
@@ -41,6 +41,9 @@ function getDomainBreakdown($id, $testPath, $run, $cached, &$requests)
             $data['connections'] = count($connections[$domain]);
         }
     }
+    
+    // sort the array by reversed domain so the resources from a given domain are grouped
+    uksort($breakdown, function($a, $b) {return strcmp(strrev($a), strrev($b));});
     
     return $breakdown;
 }
