@@ -115,13 +115,18 @@ exports.scheduleKillAll = function(app, description, procs) {
  */
 exports.scheduleGetAll = function(app) {
   'use strict';
-  var cmd = system_commands.get('get all', [process.getuid()]).split(/\s+/);
-  return exports.scheduleExec(app, cmd.shift(), cmd).then(function(psOut) {
-    psOut = psOut.trim();
-    return (!psOut ? [] : psOut.split('\n').map(function(psLine) {
-        return new exports.ProcessInfo(psLine);
-      }));
-  });
+  // Only do this for platforms that support getuid (posix - i.e. not Windows)
+  if (process.getuid) {
+    var cmd = system_commands.get('get all', [process.getuid()]).split(/\s+/);
+    return exports.scheduleExec(app, cmd.shift(), cmd).then(function(psOut) {
+      psOut = psOut.trim();
+      return (!psOut ? [] : psOut.split('\n').map(function(psLine) {
+          return new exports.ProcessInfo(psLine);
+        }));
+    });
+  } else {
+    return [];
+  }
 };
 
 /**
