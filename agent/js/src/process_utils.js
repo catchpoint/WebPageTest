@@ -125,7 +125,9 @@ exports.scheduleGetAll = function(app) {
         }));
     });
   } else {
-    return [];
+    return app.schedule('Return empty user process list', function() {
+      return [];
+    });
   }
 };
 
