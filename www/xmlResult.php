@@ -1,4 +1,14 @@
 <?php
+if(extension_loaded('newrelic')) { 
+  newrelic_add_custom_tracer('GetTestStatus');
+  newrelic_add_custom_tracer('calculatePageStats');
+  newrelic_add_custom_tracer('xmlDomains');
+  newrelic_add_custom_tracer('xmlBreakdown');
+  newrelic_add_custom_tracer('xmlRequests');
+  newrelic_add_custom_tracer('GetVisualProgress');
+  newrelic_add_custom_tracer('ArchiveApi');
+}
+
 $msStart = microtime(true);
 
 //$debug=true;
