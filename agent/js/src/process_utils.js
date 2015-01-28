@@ -173,10 +173,12 @@ exports.scheduleGetTree = function(app, description, rootPid) {
  */
 exports.scheduleKillTree = function(app, description, proc) {
   'use strict';
-  exports.scheduleGetTree(app, 'getTree ' + description, proc.pid).then(
-      function(processInfos) {
-    exports.scheduleKillAll(app, 'killAll ' + description, processInfos);
-  });
+  if (proc && proc['pid']) {
+    exports.scheduleGetTree(app, 'getTree ' + description, proc.pid).then(
+        function (processInfos) {
+      exports.scheduleKillAll(app, 'killAll ' + description, processInfos);
+    });
+  }
 };
 
 /**
