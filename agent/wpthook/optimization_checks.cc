@@ -529,7 +529,7 @@ bool OptimizationChecks::IsCDN(Request * request, CStringA &provider) {
   provider.Empty();
   bool ret = false;
 
-  CString host = (LPCTSTR)CA2T(request->GetHost());
+  CString host = (LPCTSTR)CA2T(request->GetHost(), CP_UTF8);
   host.MakeLower();
   if( host.IsEmpty() )
     return ret;
@@ -592,7 +592,7 @@ void OptimizationChecks::CheckCustomRules() {
               match._count++;
               if (match._value.IsEmpty()) {
                 std::string match_string = *i;
-                match._value = CA2T(match_string.c_str());
+                match._value = CA2T(match_string.c_str(), CP_UTF8);
               }
               i++;
             }

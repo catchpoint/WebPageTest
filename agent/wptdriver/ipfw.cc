@@ -65,7 +65,7 @@ bool CIpfw::Init() {
             if (pos > 0) {
               CStringA cmd = line.Mid(pos + 1).Trim();
               if (cmd.GetLength()) {
-                initialized_ = Execute((LPCTSTR)CA2T((LPCSTR)cmd));
+                initialized_ = Execute((LPCTSTR)CA2T((LPCSTR)cmd, CP_UTF8));
               }
             }
           }

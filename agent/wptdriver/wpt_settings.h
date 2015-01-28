@@ -93,6 +93,8 @@ public:
   ~WptSettings(void);
   bool Load(void);
   void LoadFromEC2(void);
+  void LoadFromAzure(void);
+  void ParseInstanceData(CString &userData);
   bool SetBrowser(CString browser, CString url, CString md5, CString client);
   bool PrepareTest(WptTest& test);
   bool GetUrlText(CString url, CString &response);
@@ -109,6 +111,7 @@ public:
   CString _web_page_replay_host;
   CString _ini_file;
   CString _ec2_instance;
+  CString _azure_instance;
   CString _clients_directory;
 
   BrowserSettings _browser;

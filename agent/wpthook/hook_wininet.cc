@@ -226,7 +226,7 @@ HINTERNET WinInetHook::InternetOpenA(LPCSTR lpszAgent, DWORD dwAccessType,
 
   AtlTrace(_T("WinInetHook::InternetOpenA"));
 
-  CString agent((LPCTSTR)CA2T(lpszAgent));
+  CString agent((LPCTSTR)CA2T(lpszAgent, CP_UTF8));
   if( _InternetOpenA )
     ret = _InternetOpenA((LPCSTR)CT2A(agent), dwAccessType, lpszProxy, 
                           lpszProxyBypass, dwFlags);
@@ -293,24 +293,24 @@ void WinInetHook::InternetStatusCallback(HINTERNET hInternet,
   AtlTrace(_T("WinInetHook::InternetStatusCallback"));
 
   switch (dwInternetStatus) {
-		case INTERNET_STATUS_RESOLVING_NAME: 
+    case INTERNET_STATUS_RESOLVING_NAME: 
         AtlTrace(_T("INTERNET_STATUS_RESOLVING_NAME"));
         break;
-		case INTERNET_STATUS_NAME_RESOLVED:
+    case INTERNET_STATUS_NAME_RESOLVED:
         AtlTrace(_T("INTERNET_STATUS_NAME_RESOLVED"));
         break;
-		case INTERNET_STATUS_CONNECTING_TO_SERVER:
+    case INTERNET_STATUS_CONNECTING_TO_SERVER:
         AtlTrace(_T("INTERNET_STATUS_CONNECTING_TO_SERVER"));
         break;
-		case INTERNET_STATUS_CONNECTED_TO_SERVER:
+    case INTERNET_STATUS_CONNECTED_TO_SERVER:
         AtlTrace(_T("INTERNET_STATUS_CONNECTED_TO_SERVER"));
         break;
-		case INTERNET_STATUS_SENDING_REQUEST: {
+    case INTERNET_STATUS_SENDING_REQUEST: {
           AtlTrace(_T("INTERNET_STATUS_SENDING_REQUEST"));
-				  // check if the request is secure
-				  DWORD flags = 0;
-				  DWORD len = sizeof(flags);
-				  if (InternetQueryOption(hInternet, INTERNET_OPTION_SECURITY_FLAGS, &flags, &len)) {
+          // check if the request is secure
+          DWORD flags = 0;
+          DWORD len = sizeof(flags);
+          if (InternetQueryOption(hInternet, INTERNET_OPTION_SECURITY_FLAGS, &flags, &len)) {
             EnterCriticalSection(&cs);
             _https_requests.SetAt(hInternet, flags & SECURITY_FLAG_SECURE ? true : false);
             LeaveCriticalSection(&cs);
@@ -318,13 +318,13 @@ void WinInetHook::InternetStatusCallback(HINTERNET hInternet,
           SetHeaders(hInternet, true);
         }
         break;
-		case INTERNET_STATUS_REQUEST_SENT:
+    case INTERNET_STATUS_REQUEST_SENT:
         AtlTrace(_T("INTERNET_STATUS_REQUEST_SENT"));
         break;
-		case INTERNET_STATUS_RECEIVING_RESPONSE:
+    case INTERNET_STATUS_RECEIVING_RESPONSE:
         AtlTrace(_T("INTERNET_STATUS_RECEIVING_RESPONSE"));
         break;
-		case INTERNET_STATUS_REDIRECT:
+    case INTERNET_STATUS_REDIRECT:
         AtlTrace(_T("INTERNET_STATUS_REDIRECT"));
         if (lpvStatusInformation) {
           CString url = CA2T((LPCSTR)lpvStatusInformation);
@@ -339,10 +339,10 @@ void WinInetHook::InternetStatusCallback(HINTERNET hInternet,
             InternetCloseHandle(hInternet);
         }
         break;
-		case INTERNET_STATUS_RESPONSE_RECEIVED:
+    case INTERNET_STATUS_RESPONSE_RECEIVED:
         AtlTrace(_T("INTERNET_STATUS_RESPONSE_RECEIVED"));
         break;
-		case INTERNET_STATUS_REQUEST_COMPLETE:
+    case INTERNET_STATUS_REQUEST_COMPLETE:
         AtlTrace(_T("INTERNET_STATUS_REQUEST_COMPLETE"));
         break;
   }
@@ -658,32 +658,32 @@ void WinInetHook::SetHeaders(HINTERNET hRequest, bool also_add) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WinInetHook::CrackUrl(CString url, CString &scheme, CString &host, CString &object, CString &extra) {
-	URL_COMPONENTS parts;
-	memset(&parts, 0, sizeof(parts));
-	TCHAR scheme_buff[10000];
-	TCHAR host_buff[10000];
-	TCHAR object_buff[10000];
-	TCHAR extra_buff[10000];
-  							
-	memset(scheme_buff, 0, sizeof(scheme));
-	memset(host_buff, 0, sizeof(host));
-	memset(object_buff, 0, sizeof(object));
-	memset(extra_buff, 0, sizeof(extra));
+  URL_COMPONENTS parts;
+  memset(&parts, 0, sizeof(parts));
+  TCHAR scheme_buff[10000];
+  TCHAR host_buff[10000];
+  TCHAR object_buff[10000];
+  TCHAR extra_buff[10000];
+                
+  memset(scheme_buff, 0, sizeof(scheme));
+  memset(host_buff, 0, sizeof(host));
+  memset(object_buff, 0, sizeof(object));
+  memset(extra_buff, 0, sizeof(extra));
 
-	parts.lpszScheme = scheme_buff;
-	parts.dwSchemeLength = _countof(scheme_buff);
-	parts.lpszHostName = host_buff;
-	parts.dwHostNameLength = _countof(host_buff);
-	parts.lpszUrlPath = object_buff;
-	parts.dwUrlPathLength = _countof(object_buff);
-	parts.lpszExtraInfo = extra_buff;
-	parts.dwExtraInfoLength = _countof(extra_buff);
-	parts.dwStructSize = sizeof(parts);
-  							
-	if (InternetCrackUrl((LPCTSTR)url, url.GetLength(), 0, &parts)) {
+  parts.lpszScheme = scheme_buff;
+  parts.dwSchemeLength = _countof(scheme_buff);
+  parts.lpszHostName = host_buff;
+  parts.dwHostNameLength = _countof(host_buff);
+  parts.lpszUrlPath = object_buff;
+  parts.dwUrlPathLength = _countof(object_buff);
+  parts.lpszExtraInfo = extra_buff;
+  parts.dwExtraInfoLength = _countof(extra_buff);
+  parts.dwStructSize = sizeof(parts);
+                
+  if (InternetCrackUrl((LPCTSTR)url, url.GetLength(), 0, &parts)) {
     scheme = scheme_buff;
     host = host_buff;
     object = object_buff;
     extra = extra_buff;
-	}
+  }
 }

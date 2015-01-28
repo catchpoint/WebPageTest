@@ -63,10 +63,10 @@ WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
         UINT size = 0;
         if( VerQueryValue(pVersion, _T("\\"), (LPVOID*)&info, &size) && info )
         {
-		      _majorVer = HIWORD(info->dwFileVersionMS);
-		      _minorVer = LOWORD(info->dwFileVersionMS);
-		      _buildNo = HIWORD(info->dwFileVersionLS);
-		      _revisionNo = LOWORD(info->dwFileVersionLS);
+          _majorVer = HIWORD(info->dwFileVersionMS);
+          _minorVer = LOWORD(info->dwFileVersionMS);
+          _buildNo = HIWORD(info->dwFileVersionLS);
+          _revisionNo = LOWORD(info->dwFileVersionLS);
         }
       }
 
@@ -122,6 +122,8 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
     url += CString(_T("&pc=")) + _computer_name;
   if (_settings._ec2_instance.GetLength())
     url += CString(_T("&ec2=")) + _settings._ec2_instance;
+  if (_settings._azure_instance.GetLength())
+    url += CString(_T("&azure=")) + _settings._azure_instance;
   if (_dns_servers.GetLength())
     url += CString(_T("&dns=")) + _dns_servers;
   ULARGE_INTEGER fd;
@@ -332,7 +334,7 @@ bool WebPagetest::HttpGet(CString url, WptTestDriver& test,
             } else {
               // NULL-terminate it and add it to our response string
               buff[bytes_read] = 0;
-              test_string += CA2T(buff);
+              test_string += CA2T(buff, CP_UTF8);
             }
           }
           if (file != INVALID_HANDLE_VALUE)
@@ -541,7 +543,7 @@ void WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test,
       guid.Data4[3],guid.Data4[4],guid.Data4[5],guid.Data4[6],guid.Data4[7]);
   
   headers = CString("Content-Type: multipart/form-data; boundary=") + 
-              CString(CA2T(boundary)) + _T("\r\n");
+              CString(CA2T(boundary, CP_UTF8)) + _T("\r\n");
 
   // location
   form_data += CStringA("--") + boundary + "\r\n";
@@ -607,6 +609,12 @@ void WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test,
     form_data += CStringA("--") + boundary + "\r\n";
     form_data += "Content-Disposition: form-data; name=\"ec2\"\r\n\r\n";
     form_data += CStringA(CT2A(_settings._ec2_instance)) + "\r\n";
+  }
+
+  if (_settings._azure_instance.GetLength()) {
+    form_data += CStringA("--") + boundary + "\r\n";
+    form_data += "Content-Disposition: form-data; name=\"azure\"\r\n\r\n";
+    form_data += CStringA(CT2A(_settings._azure_instance)) + "\r\n";
   }
 
   // DNS servers

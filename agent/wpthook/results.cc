@@ -835,7 +835,7 @@ void Results::ProcessRequests(void) {
           base_page_result_ = result_code;
           base_page_server_rtt_ = request->rtt_;
           base_page_address_count_ = _dns.GetAddressCount(
-                                          (LPCTSTR)CA2T(request->GetHost()));
+              (LPCTSTR)CA2T(request->GetHost(), CP_UTF8));
           request->_is_base_page = true;
           base_page_complete_.QuadPart = request->_end.QuadPart;
           if ((!_test_state._test_result ||  _test_state._test_result == 99999)
@@ -1161,7 +1161,8 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   result += request->initiator_line_ + _T("\t");
   result += request->initiator_column_ + _T("\t");
   // Server Count
-  buff.Format("%d\t", _dns.GetAddressCount((LPCTSTR)CA2T(request->GetHost())));
+  buff.Format("%d\t",
+      _dns.GetAddressCount((LPCTSTR)CA2T(request->GetHost(), CP_UTF8)));
   result += buff;
   // Server RTT
   result += request->rtt_ + "\t";

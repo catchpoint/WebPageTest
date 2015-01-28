@@ -405,7 +405,7 @@ CString HttpGetText(CString url) {
       while (InternetReadFile(http_request, buff, sizeof(buff) - 1, 
               &bytes_read) && bytes_read) {
         buff[bytes_read] = 0;
-        response += CA2T(buff);
+        response += CA2T(buff, CP_UTF8);
       }
       InternetCloseHandle(http_request);
     }
@@ -727,17 +727,17 @@ int ElapsedFileTimeSeconds(FILETIME& check, FILETIME& now) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Reboot() {
-	HANDLE hToken;
-	if (OpenProcessToken(GetCurrentProcess(),
+  HANDLE hToken;
+  if (OpenProcessToken(GetCurrentProcess(),
       TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
-		TOKEN_PRIVILEGES tp;
-		if (LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &tp.Privileges[0].Luid)) {
-			tp.PrivilegeCount = 1;
-			tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			AdjustTokenPrivileges(hToken, FALSE, &tp, 0, (PTOKEN_PRIVILEGES)0, 0) ;
-		}
-		CloseHandle(hToken);
-	}
-	
-	InitiateSystemShutdown(NULL, NULL, 0, TRUE, TRUE);
+    TOKEN_PRIVILEGES tp;
+    if (LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &tp.Privileges[0].Luid)) {
+      tp.PrivilegeCount = 1;
+      tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+      AdjustTokenPrivileges(hToken, FALSE, &tp, 0, (PTOKEN_PRIVILEGES)0, 0) ;
+    }
+    CloseHandle(hToken);
+  }
+  
+  InitiateSystemShutdown(NULL, NULL, 0, TRUE, TRUE);
 }

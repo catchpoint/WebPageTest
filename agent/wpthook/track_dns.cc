@@ -348,7 +348,7 @@ CStringA TrackDns::GetCDNProvider(CString host) {
     POSITION pos = _cdn_hosts.GetHeadPosition();
     while (provider.IsEmpty() && pos) {
       CDNEntry &entry = _cdn_hosts.GetNext(pos);
-      if (!host.CompareNoCase((LPCTSTR)CA2T(entry._name)))
+      if (!host.CompareNoCase((LPCTSTR)CA2T(entry._name, CP_UTF8)))
         provider = entry._provider;
     }
   }

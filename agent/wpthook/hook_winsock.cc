@@ -620,7 +620,7 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName,
   int ret = WSAEINVAL;
   _sockets.ResetSslFd();
   void * context = NULL;
-  CString name = CA2T(pNodeName);
+  CString name = CA2T(pNodeName, CP_UTF8);
   if (!_test_state._exit)
     context = _dns.LookupStart(name);
   if (pHints)
@@ -635,7 +635,7 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName,
     while (addr && count < 100) {
       count++;
       if (addr->ai_canonname)
-        _dns.LookupAlias(name, (LPCTSTR)CA2T(addr->ai_canonname));
+        _dns.LookupAlias(name, (LPCTSTR)CA2T(addr->ai_canonname, CP_UTF8));
       if (addr->ai_addrlen >= sizeof(struct sockaddr_in) && 
           addr->ai_family == AF_INET) {
         struct sockaddr_in * ipName = (struct sockaddr_in *)addr->ai_addr;
@@ -696,7 +696,7 @@ struct hostent * CWsHook::gethostbyname(const char * pNodeName) {
   struct hostent * ret = NULL;
   _sockets.ResetSslFd();
   void * context = NULL;
-  CString name = CA2T(pNodeName);
+  CString name = CA2T(pNodeName, CP_UTF8);
   if (!_test_state._exit)
       context = _dns.LookupStart(name);
 
@@ -705,12 +705,12 @@ struct hostent * CWsHook::gethostbyname(const char * pNodeName) {
 
   if (ret && !_test_state._exit) {
     if (ret->h_name)
-      _dns.LookupAlias(name, (LPCTSTR)CA2T(ret->h_name));
+      _dns.LookupAlias(name, (LPCTSTR)CA2T(ret->h_name, CP_UTF8));
     char ** alias = ret->h_aliases;
     int count = 0;
     while (*alias && count < 100) {
       count++;
-      _dns.LookupAlias(name, (LPCTSTR)CA2T(*alias));
+      _dns.LookupAlias(name, (LPCTSTR)CA2T(*alias, CP_UTF8));
       alias++;
     }    
     for (int i = 0; ret->h_addr_list[i] != 0; i++)
@@ -840,7 +840,7 @@ int CWsHook::GetAddrInfoExA(PCSTR pName, PCSTR pServiceName, DWORD dwNameSpace,
     while (addr && count < 100) {
       count++;
       if (addr->ai_canonname)
-        _dns.LookupAlias(name, (LPCTSTR)CA2T(addr->ai_canonname));
+        _dns.LookupAlias(name, (LPCTSTR)CA2T(addr->ai_canonname, CP_UTF8));
       if (addr->ai_addrlen >= sizeof(struct sockaddr_in) && 
           addr->ai_family == AF_INET) {
         struct sockaddr_in * ipName = (struct sockaddr_in *)addr->ai_addr;

@@ -444,7 +444,7 @@ void Request::MatchConnections() {
   EnterCriticalSection(&cs);
   if (_is_active && !_from_browser) {
     if (!_dns_start.QuadPart) {
-      CString host = CA2T(GetHost());
+      CString host = CA2T(GetHost(), CP_UTF8);
       _dns.Claim(host, _peer_address, _start, _dns_start, _dns_end);
     }
     if (!_connect_start.QuadPart)
@@ -500,14 +500,14 @@ bool Request::Process() {
 
     CStringA user_agent = GetRequestHeader("User-Agent");
     if (user_agent.GetLength())
-      _test_state._user_agent = CA2T(user_agent);
+      _test_state._user_agent = CA2T(user_agent, CP_UTF8);
 
     // see if we have a matching request with browser data
     CString url = _T("http://");
     if (_is_ssl)
       url = _T("https://");
-    url += CA2T(GetHost());
-    url += CA2T(_request_data.GetObject());
+    url += CA2T(GetHost(), CP_UTF8);
+    url += CA2T(_request_data.GetObject(), CP_UTF8);
     if (!_from_browser) {
       BrowserRequestData data(url);
       if (requests_.GetBrowserRequest(data)) {

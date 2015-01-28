@@ -116,6 +116,8 @@ bool WptSettings::Load(void) {
   // see if we need to load settings from EC2 (server and location)
   if (GetPrivateProfileInt(_T("WebPagetest"), _T("ec2"), 0, iniFile)) {
     LoadFromEC2();
+  } else if (GetPrivateProfileInt(_T("WebPagetest"), _T("azure"), 0, iniFile)) {
+    LoadFromAzure();
   }
 
   SetTestTimeout(_timeout * SECONDS_TO_MS);
@@ -129,48 +131,23 @@ bool WptSettings::Load(void) {
 
 /*-----------------------------------------------------------------------------
   Load the settings from EC2 User Data
-  We have to support the old "urlblast" format settings because both may
-  be running on the same machine
 -----------------------------------------------------------------------------*/
 void WptSettings::LoadFromEC2(void) {
 
   CString userData;
   if (GetUrlText(_T("http://169.254.169.254/latest/user-data"), userData)) {
-    int pos = 0;
-    do {
-      CString token = userData.Tokenize(_T(" &"), pos).Trim();
-      if (token.GetLength()) {
-        int split = token.Find(_T('='), 0);
-        if (split > 0) {
-          CString key = token.Left(split).Trim();
-          CString value = token.Mid(split + 1).Trim();
+    ParseInstanceData(userData);
+  }
 
-          if (key.GetLength() && value.GetLength()) {
-            if (!key.CompareNoCase(_T("wpt_server")))
-              _server = CString(_T("http://")) + value + _T("/");
-            else if (!key.CompareNoCase(_T("wpt_loc")))
-              _location = value; 
-            else if (_location.IsEmpty() &&
-                     !key.CompareNoCase(_T("wpt_location")))
-              _location = value + _T("_wptdriver"); 
-            else if (!key.CompareNoCase(_T("wpt_key")) )
-              _key = value; 
-            else if (!key.CompareNoCase(_T("wpt_timeout")))
-              _timeout = _ttol(value); 
-          }
-        }
-      }
-    } while (pos > 0);
-    if (_location.IsEmpty()) {
-      CString zone;
-      if (GetUrlText(_T("http://169.254.169.254/latest/meta-data")
-                     _T("/placement/availability-zone"), zone)) {
-        int pos = zone.Find('-');
-        if (pos > 0) {
-          pos = zone.Find('-', pos + 1);
-          if (pos > 0)
-            _location = CString(_T("ec2-")) + zone.Left(pos).Trim();
-        }
+  if (_location.IsEmpty()) {
+    CString zone;
+    if (GetUrlText(_T("http://169.254.169.254/latest/meta-data")
+                    _T("/placement/availability-zone"), zone)) {
+      int pos = zone.Find('-');
+      if (pos > 0) {
+        pos = zone.Find('-', pos + 1);
+        if (pos > 0)
+          _location = CString(_T("ec2-")) + zone.Left(pos).Trim();
       }
     }
   }
@@ -178,6 +155,72 @@ void WptSettings::LoadFromEC2(void) {
   GetUrlText(_T("http://169.254.169.254/latest/meta-data/instance-id"), 
     _ec2_instance);
   _ec2_instance = _ec2_instance.Trim();
+}
+
+/*-----------------------------------------------------------------------------
+  Load the settings from Azure Custom Data
+-----------------------------------------------------------------------------*/
+void WptSettings::LoadFromAzure(void) {
+  TCHAR drive[1024];
+  if (GetEnvironmentVariable(_T("SystemDrive"), drive, _countof(drive))) {
+    HANDLE file = CreateFile(CString(drive) + _T("\\AzureData\\CustomData.bin"),
+        GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+    if (file != INVALID_HANDLE_VALUE) {
+      DWORD size = GetFileSize(file, NULL);
+      if (size && size < 100000) {
+        char * custom_data = (char *)malloc(size + 1);
+        DWORD bytes_read = 0;
+        if (ReadFile(file, custom_data, size, &bytes_read, 0) &&
+            bytes_read == size) {
+          custom_data[size - 1] = 0;
+          CString user_data = CA2T(custom_data, CP_UTF8);
+          ParseInstanceData(user_data);
+        }
+      }
+      CloseHandle(file);
+    }
+  }
+  TCHAR instance_id[1024];
+  if (GetEnvironmentVariable(_T("RoleInstanceId"), instance_id,
+                             _countof(instance_id))) {
+    _azure_instance = CString(instance_id).Trim();
+    OutputDebugString(CString("Azure Instance ID: ") + _azure_instance);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Parse the custom instance data (EC2 or Azure)
+  We have to support the old "urlblast" format settings because both may
+  be running on the same machine
+-----------------------------------------------------------------------------*/
+void WptSettings::ParseInstanceData(CString &userData) {
+  int pos = 0;
+  OutputDebugStringA("User Data:");
+  OutputDebugString(userData);
+  do {
+    CString token = userData.Tokenize(_T(" &"), pos).Trim();
+    if (token.GetLength()) {
+      int split = token.Find(_T('='), 0);
+      if (split > 0) {
+        CString key = token.Left(split).Trim();
+        CString value = token.Mid(split + 1).Trim();
+
+        if (key.GetLength() && value.GetLength()) {
+          if (!key.CompareNoCase(_T("wpt_server")))
+            _server = CString(_T("http://")) + value + _T("/");
+          else if (!key.CompareNoCase(_T("wpt_loc")))
+            _location = value; 
+          else if (_location.IsEmpty() &&
+                    !key.CompareNoCase(_T("wpt_location")))
+            _location = value + _T("_wptdriver"); 
+          else if (!key.CompareNoCase(_T("wpt_key")) )
+            _key = value; 
+          else if (!key.CompareNoCase(_T("wpt_timeout")))
+            _timeout = _ttol(value); 
+        }
+      }
+    }
+  } while (pos > 0);
 }
 
 /*-----------------------------------------------------------------------------
@@ -206,7 +249,7 @@ bool WptSettings::GetUrlText(CString url, CString &response)
               &bytes_read) && bytes_read) {
         // NULL-terminate it and add it to our response string
         buff[bytes_read] = 0;
-        response += CA2T(buff);
+        response += CA2T(buff, CP_UTF8);
       }
       if (file != INVALID_HANDLE_VALUE)
         CloseHandle(file);

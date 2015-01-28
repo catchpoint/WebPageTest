@@ -156,9 +156,9 @@ void TestServer::MongooseCallback(enum mg_event event,
   if (event == MG_NEW_REQUEST) {
     //OutputDebugStringA(CStringA(request_info->uri) + CStringA("?") + request_info->query_string);
     WptTrace(loglevel::kFrequentEvent, _T("[wpthook] HTTP Request: %s\n"), 
-                    (LPCTSTR)CA2T(request_info->uri));
+                    (LPCTSTR)CA2T(request_info->uri, CP_UTF8));
     WptTrace(loglevel::kFrequentEvent, _T("[wpthook] HTTP Query String: %s\n"), 
-                    (LPCTSTR)CA2T(request_info->query_string));
+                    (LPCTSTR)CA2T(request_info->query_string, CP_UTF8));
     if (strcmp(request_info->uri, "/task") == 0) {
       CStringA task;
       if (OkToStart()) {
@@ -455,7 +455,7 @@ CString TestServer::GetPostBody(struct mg_connection *conn,
           int bytes = mg_read(conn, buff, length);
           if (bytes && bytes <= length) {
             buff[bytes] = 0;
-            body += CA2T(buff);
+            body += CA2T(buff, CP_UTF8);
             length -= bytes;
           }
         }
