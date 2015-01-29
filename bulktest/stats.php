@@ -123,7 +123,7 @@ if (LoadResults($results)) {
                 $metricData[$label] = array();
                 $first = false;
             }
-            fwrite($file, "Test Comparison\r\n");
+            fwrite($file, "Test Comparison,Screen Shot Comparison\r\n");
             foreach($data as $key => &$urlData) {
                 fwrite($file, "\"{$urlData['url']}\",");
                 // check and make sure we have data for all of the configurations for this url
@@ -132,6 +132,7 @@ if (LoadResults($results)) {
                     if (!array_key_exists($label, $urlData) || !array_key_exists($metric, $urlData[$label]))
                         $valid = false;
                 }
+                $screens = "\"http://www.webpagetest.org/compare_screens.php?tests=";
                 $compare = "\"http://www.webpagetest.org/video/compare.php?ival=100&end=full";
                 if ($video)
                   $compare .= "&medianMetric=SpeedIndex";
@@ -165,10 +166,11 @@ if (LoadResults($results)) {
                       if (!strncmp('rv_', $metric, 3))
                         $cached = '-c:1';
                       $compare .= $urlData[$label]['id'] . $run . $cached . '-l:' . urlencode($label) . ',';
+                      $screens .= $urlData[$label]['id'] . $run . $cached . '-l:' . urlencode($label) . ',';
                     }
                     $first = false;
                 }
-                $compare .= "\"\r\n";
+                $compare .= "\",$screens\"\r\n";
                 fwrite($file, $compare);
             }
             fclose($file);
