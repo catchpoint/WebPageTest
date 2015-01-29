@@ -225,7 +225,7 @@ function CheckTest($testPath, $id, $elapsedDays) {
     if (isset($elapsed)) {
       if( $elapsed >= $MIN_DAYS ) {
           $delete = true;
-          if (ArchiveTest($id) ) {
+          if (ArchiveTest($id) || $archive_dir == 'none') { // archive_dir == none indicates don't archive anything
               $archiveCount++;
               $logLine .= "Archived";
                                                                                             

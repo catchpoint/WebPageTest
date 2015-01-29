@@ -17,6 +17,9 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
     if ( strpos($id, '.') === false &&                           // make sure it isn't a relay test
         (array_key_exists('archive_dir', $settings) ||           // local mount
         array_key_exists('archive_s3_server', $settings)) ) {    // S3 Interface (Internet Archive or standard)
+        if ($settings['archive_dir'] == 'none') { // don't archive anything
+            return true;
+        }
         $status = GetTestStatus($id, false);
         $completed = true;
         if ($status['statusCode'] >= 100 && $status['statusCode'] < 200)
@@ -144,6 +147,9 @@ function RestoreArchive($id) {
             array_key_exists('archive_dir', $settings) || 
             array_key_exists('archive_s3_url', $settings) ||
             array_key_exists('archive_s3_server', $settings)) {
+            if ($settings['archive_dir'] == 'none') { // don't restore anything
+                return true;
+            }
             $deleteZip = true;
             $zipfile = "./tmp/$id.zip";
             if (strlen($url)) {
