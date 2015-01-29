@@ -35,11 +35,11 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
         elseif(array_key_exists('version', $frames) && $frames['version'] !== $current_version)
             unset($frames);
     }    
+    $base_path = substr($video_directory, 1);
     if ((!isset($frames) || !count($frames)) && is_dir($video_directory)) {
         $frames = array('version' => $current_version);
         $frames['frames'] = array();
         $dirty = true;
-        $base_path = substr($video_directory, 1);
         $files = scandir($video_directory);
         $last_file = null;
         $first_file = null;
@@ -110,10 +110,11 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
         foreach($frames['frames'] as $time => &$frame) {
             if ($frame['progress'] > 0 && !array_key_exists('startRender', $frames))
               $frames['startRender'] = $time;
-            if ($frame['progress'] == 100) {
+            if (!$frames['visualComplete'] && $frame['progress'] == 100)
                 $frames['visualComplete'] = $time;
-                break;
-            }
+            // fix up the frame paths in case we have a cached version referencing a relay path
+            if (isset($frame['path']))
+              $frame['path'] = $base_path . '/' . basename($frame['path']);
         }
     }
     if ($completed && !isset($end) && !isset($options) && $dirty && isset($frames) && count($frames))
