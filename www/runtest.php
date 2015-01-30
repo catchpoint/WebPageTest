@@ -1084,6 +1084,13 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                     $loc = $locations[$def]['1'];
                 $test['location'] = $loc;
             }
+            
+            // Use the default browser if one wasn't specified
+            if ((!isset($test['browser']) || !strlen($test['browser'])) && isset($locations[$test['location']]['browser'])) {
+              $browsers = explode(',', $locations[$test['location']]['browser']);
+              if (isset($browsers) && is_array($browsers) && count($browsers))
+                $test['browser'] = $browsers[0];
+            }
 
             // see if we are blocking API access at the given location
             if( $locations[$test['location']]['noscript'] && $test['priority'] )
