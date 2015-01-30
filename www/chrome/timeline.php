@@ -9,7 +9,8 @@ include 'common.inc';
 <html>
 <head>
 <style type="text/css">
-  body {margin:0px;padding:0px;overflow:hidden;height:100%}
+  html, body{min-height: 100% !important; height: 100%;}
+  body {margin:0px;padding:0px;overflow:hidden;}
   #devtools {overflow:hidden;height:100%;width:100%}
 </style>
 </head>

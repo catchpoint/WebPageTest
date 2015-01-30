@@ -117,7 +117,7 @@ bool WptSettings::Load(void) {
   if (GetPrivateProfileInt(_T("WebPagetest"), _T("ec2"), 0, iniFile)) {
     LoadFromEC2();
   } else if (GetPrivateProfileInt(_T("WebPagetest"), _T("azure"), 0, iniFile)) {
-    LoadFromAzure();
+//    LoadFromAzure();
   }
 
   SetTestTimeout(_timeout * SECONDS_TO_MS);
@@ -195,8 +195,8 @@ void WptSettings::LoadFromAzure(void) {
 -----------------------------------------------------------------------------*/
 void WptSettings::ParseInstanceData(CString &userData) {
   int pos = 0;
-  OutputDebugStringA("User Data:");
-  OutputDebugString(userData);
+//  OutputDebugStringA("User Data:");
+//  OutputDebugString(userData);
   do {
     CString token = userData.Tokenize(_T(" &"), pos).Trim();
     if (token.GetLength()) {
@@ -279,14 +279,8 @@ bool WptSettings::SetBrowser(CString browser, CString url,
   } else {
     // try loading the settings for the specified browser
     TCHAR buff[1024];
-    if (!browser.GetLength()) {
-      browser = _T("chrome");  // default to "chrome" to support older ini file
-      if (GetPrivateProfileString(_T("WebPagetest"), _T("browser"), _T(""), buff,
-        _countof(buff), _ini_file )) {
-        browser = buff;
-      }
-    }
-    ret = _browser.Load(browser, _ini_file, client);
+    if (browser.GetLength())
+      ret = _browser.Load(browser, _ini_file, client);
   }
   return ret;
 }
