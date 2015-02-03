@@ -515,10 +515,14 @@ function EC2_LaunchInstance($region, $ami, $size, $user_data, $loc) {
       if (isset($loc) && strlen($loc) && isset($response['Instances'][0]['InstanceId'])) {
         $instance_id = $response['Instances'][0]['InstanceId'];
         EC2Log("Instance $instance_id started: $size ami $ami in $region for $loc with user data: $user_data");
+        $tags = "Name=>WebPagetest Agent|WPTLocations=>$loc";
+        $static_tags = GetSetting("EC2.tags");
+        if ($static_tags) {
+          $tags = $tags . '|' . $static_tags;
+        }
         $ec2->createTags(array(
           'Resources' => array($instance_id),
-          'Tags' => array(array('Key' => 'Name', 'Value' => 'WebPagetest Agent'),
-                          array('Key' => 'WPTLocations', 'Value' => $loc))
+          'Tags' => EC2_CreateTagArray($tags)
         ));
       }
     } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
@@ -549,7 +553,7 @@ function EC2_GetTesters() {
 
 /**
 * Get a list of locations supported by the given AMI
-* 
+*
 */
 function EC2_GetAMILocations() {
   $locations = array();
@@ -566,7 +570,7 @@ function EC2_GetAMILocations() {
 
 /**
 * Write out log messages about EC2 scaling
-* 
+*
 * @param mixed $msg
 */
 function EC2Log($msg) {
@@ -593,11 +597,48 @@ function EC2Log($msg) {
 
 /**
 * Log an error to both the EC2 log and the error log
-* 
+*
 * @param mixed $msg
 */
 function EC2LogError($msg) {
   EC2Log('Error: ' . $msg);
   logError('EC2:' . $msg);
+}
+
+/**
+ * A tag delimited string looks as follows:
+ *   'k1=>v1|k2=>v2|k3=>v3'
+ * And this function will return the following:
+ *  Array (
+ *     [0] => Array (
+ *       [Key] => k1
+ *       [Value] => v1
+ *     )
+ *
+ *     [1] => Array (
+ *       [Key] => k2
+ *       [Value] => v2
+ *     )
+ *
+ *     [2] => Array (
+ *       [Key] => k3
+ *       [Value] => v3
+ *     )
+ *   )
+ *
+ * We use hash rockets and pipes to build our string because
+ * they are much less likely to be used in a tag than other characters.
+ * @param string $tagstring A tag delimited string.
+ * @return array An array of array tag key-value pairs
+ */
+function EC2_CreateTagArray($tagstring) {
+  $kvpairs = explode('|', $tagstring);
+  $final_array = array();
+
+  foreach ($kvpairs as $kvpair) {
+    $pair = explode('=>', $kvpair);
+    $final_array[] = array('Key' => $pair[0], 'Value' => $pair[1]);
+  }
+  return $final_array;
 }
 ?>
