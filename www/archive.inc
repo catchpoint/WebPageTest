@@ -94,7 +94,7 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                                                                 'x-archive-meta-collection' => 'httparchive',
                                                                 'x-archive-auto-make-bucket' => '1');
                                     }
-                                    if ($s3->putObject($s3->inputFile($zipFile, false), $bucket, $file, S3::ACL_PUBLIC_READ, $metaHeaders, $requestHeaders))
+                                    if ($s3->putObject($s3->inputFile($zipFile, false), $bucket, $file, S3::ACL_PRIVATE, $metaHeaders, $requestHeaders))
                                         $ret = true;
                                 }
                             }

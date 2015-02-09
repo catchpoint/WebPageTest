@@ -70,14 +70,16 @@ function GetLocationKey($location) {
         $locations = LoadLocationsIni();
         if ($locations !== false &&
             is_array($locations) &&
-            array_key_exists($location, $locations) &&
-            array_key_exists('key', $locations[$location])) {
-          $key = $locations[$location]['key'];
-        }
-        if (!isset($key)) {
-          $default_key = GetSetting('location_key');
-          if ($default_key)
-            $key = $default_key;
+            isset($locations[$location])) {
+          if (isset($locations[$location]['key'])) {
+            $key = $locations[$location]['key'];
+          } else {
+            $default_key = GetSetting('location_key');
+            if ($default_key)
+              $key = $default_key;
+            else
+              $key = '';
+          }
         }
         apc_store("key_$location", $key, 60);
       }
@@ -85,14 +87,16 @@ function GetLocationKey($location) {
       $locations = LoadLocationsIni();
       if ($locations !== false &&
           is_array($locations) &&
-          array_key_exists($location, $locations) &&
-          array_key_exists('key', $locations[$location])) {
-        $key = $locations[$location]['key'];
-      }
-      if (!isset($key)) {
-        $default_key = GetSetting('location_key');
-        if ($default_key)
-          $key = $default_key;
+          isset($locations[$location])) {
+        if (isset($locations[$location]['key'])) {
+          $key = $locations[$location]['key'];
+        } else {
+          $default_key = GetSetting('location_key');
+          if ($default_key)
+            $key = $default_key;
+          else
+            $key = '';
+        }
       }
     }
   }
