@@ -392,6 +392,7 @@ function EC2_GetRunningInstances() {
   $key = GetSetting('ec2_key');
   $secret = GetSetting('ec2_secret');
   if ($key && $secret) {
+    $locations = EC2_GetAMILocations();
     try {
       $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => 'us-east-1'));
       $regions = array();
@@ -400,45 +401,56 @@ function EC2_GetRunningInstances() {
         foreach ($response['Regions'] as $region)
           $regions[] = $region['RegionName'];
       }
-      foreach ($regions as $region) {
-        $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => $region));
-        $response = $ec2->describeInstances();
-        if (isset($response['Reservations'])) {
-          foreach ($response['Reservations'] as $reservation) {
-            foreach ($reservation['Instances'] as $instance ) {
-              $wptLocations = null;
-              if (isset($instance['Tags'])) {
-                foreach ($instance['Tags'] as $tag) {
-                  if ($tag['Key'] == 'WPTLocations') {
-                    $wptLocations = explode(',', $tag['Value']);
-                    break;
-                  }
-                }
-              }
-              if (isset($wptLocations)) {
-                $launchTime = strtotime($instance['LaunchTime']);
-                $elapsed = $now - $launchTime;
-                $state = $instance['State']['Code'];
-                $running = false;
-                if (is_numeric($state) && $state <= 16)
-                  $running = true;
-                $instances[] = array('region' => $region,
-                                     'id' => $instance['InstanceId'],
-                                     'ami' => $instance['ImageId'],
-                                     'state' => $state,
-                                     'launchTime' => $instance['LaunchTime'],
-                                     'launched' => $launchTime,
-                                     'runningTime' => $elapsed,
-                                     'locations' => $wptLocations,
-                                     'running' => $running);
-              }
-            }
-          }
-        }
-      }
     } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
       $error = $e->getMessage();
       EC2LogError("Listing running EC2 instances: $error");
+    }
+    if (isset($regions) && is_array($regions) && count($regions)) {
+      foreach ($regions as $region) {
+        try {
+          $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => $region));
+          $response = $ec2->describeInstances();
+          if (isset($response['Reservations'])) {
+            foreach ($response['Reservations'] as $reservation) {
+              foreach ($reservation['Instances'] as $instance ) {
+                $wptLocations = null;
+                // See what locations are associated with the AMI
+                if (isset($instance['ImageId']) && isset($locations[$instance['ImageId']]['locations'])) {
+                  $wptLocations = $locations[$instance['ImageId']]['locations'];
+                } elseif (isset($instance['Tags'])) {
+                  // fall back to using tags to identify locations if they were set
+                  foreach ($instance['Tags'] as $tag) {
+                    if ($tag['Key'] == 'WPTLocations') {
+                      $wptLocations = explode(',', $tag['Value']);
+                      break;
+                    }
+                  }
+                }
+                if (isset($wptLocations)) {
+                  $launchTime = strtotime($instance['LaunchTime']);
+                  $elapsed = $now - $launchTime;
+                  $state = $instance['State']['Code'];
+                  $running = false;
+                  if (is_numeric($state) && $state <= 16)
+                    $running = true;
+                  $instances[] = array('region' => $region,
+                                       'id' => $instance['InstanceId'],
+                                       'ami' => $instance['ImageId'],
+                                       'state' => $state,
+                                       'launchTime' => $instance['LaunchTime'],
+                                       'launched' => $launchTime,
+                                       'runningTime' => $elapsed,
+                                       'locations' => $wptLocations,
+                                       'running' => $running);
+                }
+              }
+            }
+          }
+        } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
+          $error = $e->getMessage();
+          EC2LogError("Listing running EC2 instances: $error");
+        }
+      }
     }
   }
   // update the AMI counts we are tracking locally
