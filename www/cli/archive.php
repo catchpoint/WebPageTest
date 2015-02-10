@@ -1,13 +1,16 @@
 <?php
 chdir('..');
 $MIN_DAYS = 2;
+$MAX_RUN_TIME = 25200;  // scripts for only 25200s = 7h
 
 include 'common.inc';
 require_once('archive.inc');
 ignore_user_abort(true);
-set_time_limit(3300);   // only allow it to run for 55 minutes
+set_time_limit(3300);   // only allow it to run for 55 minutes - this is the time acting in THIS script, not for any system- or db-calls http://php.net/manual/en/function.set-time-limit.php
 if (function_exists('proc_nice'))
   proc_nice(19);
+
+$startTime = microtime(true);
 
 // bail if we are already running
 $lock = Lock("Archive", false, 3600);
@@ -63,6 +66,9 @@ if ((isset($archive_dir) && strlen($archive_dir)) ||
                             $elapsedDays = ElapsedDays($year, $month, $day);
                             if ($elapsedDays >= ($MIN_DAYS - 1)) {
                                 CheckDay($dayDir, "$year$month$day", $elapsedDays);
+                            }
+                            if((microtime(true)-$startTime) > $MAX_RUN_TIME){
+                                exit(0);
                             }
                         }
                     }
