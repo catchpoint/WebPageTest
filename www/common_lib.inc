@@ -2615,4 +2615,46 @@ function SBL_Check($url, &$message) {
   }
   return $ok;
 }
+
+/**
+* Check to see if we can use the python visual metrics processing script
+* 
+*/
+function CheckPythonVisualMetrics(&$failures) {
+  $ok = false;
+  $failures = null;
+  if (function_exists('apc_fetch')) {
+    $ok = apc_fetch("PythonVisualMetrics");
+  }
+  if (!$ok) {
+    if (is_file(__DIR__ . '/video/visualmetrics.py')) {
+      $script = realpath(__DIR__ . '/video/visualmetrics.py');
+      $command = "python \"$script\" -c 2>&1";
+      exec($command, $output, $result);
+      if (isset($output) && is_array($output) && count($output)) {
+        foreach ($output as $line) {
+          $parts = explode(':', $line);
+          if (count($parts) == 2) {
+            $module = trim($parts[0]);
+            $status = trim($parts[1]);
+            if ($status == 'OK') {
+              $ok = true;
+            } else {
+              if (!isset($failures))
+                $failures = array();
+              $failures[] = $module;
+            }
+          }
+        }
+      }
+    }
+    if (isset($failures)) {
+      $ok = false;
+    }
+    if ($ok && function_exists('apc_store')) {
+      apc_store("PythonVisualMetrics", $ok, 3600);
+    }
+  }
+  return $ok;
+}
 ?>

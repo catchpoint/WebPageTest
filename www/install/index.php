@@ -51,6 +51,8 @@ include 'common.inc';
         <?php CheckPHP(); ?>
         </ul><h2>System Utilities</h2><ul>
         <?php CheckUtils(); ?>
+        </ul><h2>Misc</h2><ul>
+        <?php CheckMisc(); ?>
         </ul><h2>Filesystem</h2><ul>
         <?php CheckFilesystem(); ?>
         </ul><h2>Test Locations</h2><ul>
@@ -112,6 +114,10 @@ function CheckUtils() {
     ShowCheck('exiftool Installed (required for JPEG Analysis)', CheckExifTool(), false);
     if (array_key_exists('beanstalkd', $settings))
         ShowCheck("beanstalkd responding on {$settings['beanstalkd']} (configured in settings.ini)", CheckBeanstalkd());
+}
+
+function CheckMisc() {
+    ShowCheck('python 2.7 with modules (faster mobile video processing)', CheckPythonVideo($info), false, $info);
 }
 
 /*-----------------------------------------------------------------------------
@@ -407,6 +413,18 @@ function CheckFreeType() {
     $gdinfo = gd_info();
     if(isset($gdinfo['FreeType Support']) && $gdinfo['FreeType Support'])
       $ret = true;
+  }
+  return $ret;
+}
+
+function CheckPythonVideo(&$info) {
+  $ret = CheckPythonVisualMetrics($failures);
+  if (!$ret) {
+    if (isset($failures)) {
+      $info = 'Missing python modules: ' . implode(',', $failures);
+    } else {
+      $info = 'Error running "python video/visualmetrics.py -c"';
+    }
   }
   return $ret;
 }

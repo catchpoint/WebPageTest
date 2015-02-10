@@ -502,33 +502,34 @@ function FindVideoCrop($videoFile, $videoDir) {
 * @param mixed $devToolsFile
 */
 function PythonVisualMetrics($videoFile, $videoDir, $testPath, $run, $cached) {
-  return false;
   $ret = false;
-  if (is_file(__DIR__ . '/visualmetrics.py')) {
-    $script = realpath(__DIR__ . '/visualmetrics.py');
-    $histograms = "$testPath/$run.$cached.histograms.json.gz";
-    $timeline = "$testPath/$run{$cachedText}_devtools.json.gz";
-    if (is_file($timeline))
-      $timeline = realpath($timeline);
-    else
-      unset($timeline);
-    touch($histograms);
-    if (is_file($histograms)) {
-      $histograms = realpath($histograms);
-      unlink($histograms);
-    } else {
-      unset($histograms);
-    }
+  if (CheckPythonVisualMetrics($failures)) {
+    if (is_file(__DIR__ . '/visualmetrics.py')) {
+      $script = realpath(__DIR__ . '/visualmetrics.py');
+      $histograms = "$testPath/$run.$cached.histograms.json.gz";
+      $timeline = "$testPath/$run{$cachedText}_devtools.json.gz";
+      if (is_file($timeline))
+        $timeline = realpath($timeline);
+      else
+        unset($timeline);
+      touch($histograms);
+      if (is_file($histograms)) {
+        $histograms = realpath($histograms);
+        unlink($histograms);
+      } else {
+        unset($histograms);
+      }
 
-    $command = "python \"$script\" -i \"$videoFile\" -d \"$videoDir\" --orange --viewport --force --quality 75";
-    if (isset($histograms))
-      $command .= " --histogram \"$histograms\"";
-    if (isset($timeline))
-      $command .= " --timeline \"$timeline\"";
-    $command .= " 2>&1";
-    exec($command, $output, $result);
-    if (is_file("$videoDir/ms_000000.jpg"))
-      $ret = true;
+      $command = "python \"$script\" -i \"$videoFile\" -d \"$videoDir\" --orange --viewport --force --quality 75";
+      if (isset($histograms))
+        $command .= " --histogram \"$histograms\"";
+      if (isset($timeline))
+        $command .= " --timeline \"$timeline\"";
+      $command .= " 2>&1";
+      exec($command, $output, $result);
+      if (is_file("$videoDir/ms_000000.jpg"))
+        $ret = true;
+    }
   }
   return $ret;
 }
