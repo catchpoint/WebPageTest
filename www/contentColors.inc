@@ -118,7 +118,8 @@ function ContentType($mime, $url = null) {
         elseif ($ext == '.swf')
           $content_type = 'flash';
         elseif ($ext == '.eot' || $ext == '.ttf' ||
-                $ext == '.woff' || $ext == '.otf')
+                $ext == '.woff' || $ext == '.woff2' ||
+                $ext == '.otf')
           $content_type = 'font';
       }
     }
