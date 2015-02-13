@@ -26,7 +26,6 @@ Some of the features of the server AMI are:
     * Additional keys will need to be added manually to /var/www/webpagetest/www/settings/keys.ini
 
 Known issues:
-* Instances are not started to render video.  The plan is to move video rendering to the server but that is not in place yet.
 * The lag time for starting new test agents can be as long as 10 minutes.
 * S3 archiving does not currently re-use the EC2 key that is used for starting test agents.
 
