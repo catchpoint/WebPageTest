@@ -70,6 +70,7 @@
             $test['password'] = trim($req_password);
             $test['runs'] = (int)$req_runs;
             $test['fvonly'] = (int)$req_fvonly;
+			$test['timeout'] = (int)$req_timeout;
             $test['connections'] = (int)$req_connections;
             $test['private'] = $req_private;
             $test['web10'] = $req_web10;
@@ -1741,6 +1742,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         // write out the ini file
         $testInfo = "[test]\r\n";
         $testInfo .= "fvonly={$test['fvonly']}\r\n";
+		$testInfo .= "timeout={$test['timeout']}\r\n";
         $resultRuns = $test['runs'] - $test['discard'];
         $testInfo .= "runs=$resultRuns\r\n";
         $testInfo .= "location=\"{$test['locationText']}\"\r\n";
@@ -1794,6 +1796,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "\r\nDOMElement={$test['domElement']}";
             if( $test['fvonly'] )
                 $testFile .= "\r\nfvonly=1";
+            if( $test['timeout'] )
+                $testFile .= "\r\ntimeout={$test['timeout']}";
             if( $test['web10'] )
                 $testFile .= "\r\nweb10=1";
             if( $test['ignoreSSL'] )

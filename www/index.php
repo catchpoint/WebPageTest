@@ -377,6 +377,15 @@ $loc = ParseLocations($locations);
                                         <input id="time" type="text" class="text short" name="time" value=""> seconds
                                     </li>
                                     <li>
+									<li>
+                                        <label for="time">
+                                            Maximum test duration<br>
+                                            <small>Maximum time to run test.<br>This will override minimum test duration</br>
+											</small>
+                                        </label>
+                                        <input id="timeout" type="text" class="text short" name="timeout" value=""> seconds
+                                    </li>
+                                    <li>
                                         <label for="tester">
                                             Specific Tester<br>
                                             <small>Run the test on a specific <a href="/getTesters.php">PC</a>.<br>Name must match exactly or the test will not run.</small>

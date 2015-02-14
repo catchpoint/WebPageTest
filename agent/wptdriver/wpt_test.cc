@@ -157,6 +157,8 @@ void WptTest::Reset(void) {
   _run_error.Empty();
   _test_error.Empty();
   _custom_metrics.Empty();
+  _has_test_timed_out = false;
+  _timeout_value_in_seconds = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -288,6 +290,8 @@ bool WptTest::Load(CString& test) {
         else if (!key.CompareNoCase(_T("continuousVideo")) &&
                  _ttoi(value.Trim()))
           _continuous_video = true;
+		else if (!key.CompareNoCase(_T("timeout")))
+			_timeout_value_in_seconds = _ttoi(value.Trim());
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {
       // grab the rest of the response as the script
@@ -392,7 +396,7 @@ bool WptTest::Done() {
   bool ret = false;
 
   _active = false;
-  if (_script_commands.IsEmpty())
+  if (_script_commands.IsEmpty() || _has_test_timed_out)
     ret = true;
 
   return ret;

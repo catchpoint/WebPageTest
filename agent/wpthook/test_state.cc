@@ -82,6 +82,7 @@ TestState::~TestState(void) {
 -----------------------------------------------------------------------------*/
 void TestState::Init() {
   Reset(false);
+  _timeout_start_time.QuadPart = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -140,7 +141,7 @@ void TestState::Reset(bool cascade) {
     _start_total_time.dwHighDateTime = _start_total_time.dwLowDateTime = 0;
     _end_total_time.dwHighDateTime = _end_total_time.dwLowDateTime = 0;
     _progress_data.RemoveAll();
-    _test_result = 0;
+	_test_result = 0;
     _title_time.QuadPart = 0;
     _title.Empty();
     _user_agent = _T("WebPagetest");
@@ -172,6 +173,11 @@ void TestState::Start() {
   GetSystemTime(&_start_time);
   if (!_start.QuadPart)
     _start.QuadPart = _step_start.QuadPart;
+
+  //This is only called once, on the first navigate
+  if (!_timeout_start_time.QuadPart)
+	  _timeout_start_time.QuadPart = _step_start.QuadPart;
+
   GetCPUTime(_start_cpu_time, _start_total_time);
   _active = true;
   UpdateBrowserWindow();  // the document window may not be available yet
@@ -319,7 +325,15 @@ bool TestState::IsDone() {
   if (_active) {
     bool is_page_done = false;
     CString done_reason;
-    if (test_ms >= _test._minimum_duration) {
+	if (_test._enable_per_test_timeout && 
+		_test._timeout_value_in_seconds != 0 && 
+		ElapsedMsFromTimeoutStart(now) > _test._timeout_value_in_seconds * 1000) {
+		_test_result = TEST_RESULT_TIMELIMIT_REACHED_ERROR;
+		is_page_done = true;
+		done_reason = _T("Per-test timeout value reached.");
+		_test._has_test_timed_out = true;
+	}
+    else if (test_ms >= _test._minimum_duration) {
       DWORD load_ms = ElapsedMs(_on_load, now);
       DWORD inactive_ms = ElapsedMs(_last_activity, now);
       DWORD navigated = navigated_ ? 1:0;
@@ -349,7 +363,7 @@ bool TestState::IsDone() {
         _test_result = TEST_RESULT_TIMEOUT;
         is_page_done = true;
         done_reason = _T("Test timed out.");
-      }
+	  }
     }
     if (is_page_done) {
       WptTrace(loglevel::kFrequentEvent,
@@ -669,6 +683,10 @@ void TestState::OnStatusMessage(CString status) {
 -----------------------------------------------------------------------------*/
 DWORD TestState::ElapsedMsFromStart(LARGE_INTEGER end) const {
   return ElapsedMs(_start, end);
+}
+
+DWORD TestState::ElapsedMsFromTimeoutStart(LARGE_INTEGER end) const {
+	return ElapsedMs(_timeout_start_time, end);
 }
 
 DWORD TestState::ElapsedMs(LARGE_INTEGER start, LARGE_INTEGER end) const {

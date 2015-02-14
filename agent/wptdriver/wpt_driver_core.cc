@@ -179,7 +179,7 @@ void WptDriverCore::WorkThread(void) {
     _settings.UpdateSoftware();
     _installing = false;
     _status.Set(_T("Checking for work..."));
-    WptTestDriver test(_settings._timeout * SECONDS_TO_MS, has_gpu_);
+	WptTestDriver test(_settings._timeout * SECONDS_TO_MS, _settings._enable_per_test_timeout, has_gpu_);
     if (_webpagetest.GetTest(test)) {
       PreTest();
       test._run = test._specific_run ? test._specific_run : 1;

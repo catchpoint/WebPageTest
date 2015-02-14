@@ -42,7 +42,8 @@ WptSettings::WptSettings(WptStatus &status):
   ,_polling_delay(DEFAULT_POLLING_DELAY)
   ,_debug(0)
   ,_status(status)
-  ,_software_update(status) {
+  ,_software_update(status)
+  ,_enable_per_test_timeout(0) {
 }
 
 /*-----------------------------------------------------------------------------
@@ -103,6 +104,9 @@ bool WptSettings::Load(void) {
   // load the test parameters
   _timeout = GetPrivateProfileInt(_T("WebPagetest"), _T("Time Limit"),
                                   _timeout, iniFile);
+
+  _enable_per_test_timeout = GetPrivateProfileInt(_T("WebPagetest"), _T("EnablePerTestTimeout"),
+	  _enable_per_test_timeout, iniFile);
 
   // load the Web Page Replay host
   if (GetPrivateProfileString(

@@ -35,6 +35,7 @@ class DevTools;
 class Trace;
 
 const int TEST_RESULT_NO_ERROR = 0;
+const int TEST_RESULT_TIMELIMIT_REACHED_ERROR = 99995;
 const int TEST_RESULT_TIMEOUT = 99997;
 const int TEST_RESULT_TIMEOUT_CONTENT_ERROR = 99998;
 const int TEST_RESULT_CONTENT_ERROR = 99999;
@@ -104,6 +105,7 @@ public:
   void TitleSet(CString title);
   void UpdateBrowserWindow();
   DWORD ElapsedMsFromStart(LARGE_INTEGER end) const;
+  DWORD ElapsedMsFromTimeoutStart(LARGE_INTEGER end) const;
   void FindBrowserNameAndVersion();
   void AddConsoleLogMessage(CString message);
   void AddTimedEvent(CString timed_event);
@@ -134,6 +136,9 @@ public:
   LARGE_INTEGER _ms_frequency;
   LARGE_INTEGER _title_time;
   SYSTEMTIME    _start_time;
+
+  //Timeout measurer
+  LARGE_INTEGER _timeout_start_time;
 
   LARGE_INTEGER _first_byte;
   int _doc_requests;

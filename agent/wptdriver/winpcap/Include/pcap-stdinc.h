@@ -66,8 +66,6 @@
 #define strdup _strdup
 #endif
 
-#define inline __inline 
-
 #ifdef __MINGW32__
 #include <stdint.h>
 #else /*__MINGW32__*/

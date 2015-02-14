@@ -225,6 +225,11 @@ public:
   void      BuildScript();
   CAtlList<ScriptCommand> _script_commands;
 
+  //Timeout information
+  DWORD _timeout_value_in_seconds;
+  bool _enable_per_test_timeout;
+  bool _has_test_timed_out;
+
 protected:
   CStringA  EncodeTask(ScriptCommand& command);
   bool      NavigationCommand(CString& command);
