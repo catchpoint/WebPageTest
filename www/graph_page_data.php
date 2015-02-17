@@ -30,10 +30,8 @@ if (count($testsId) == 1) {
   $_REQUEST['test'] = $testsId[0];
 }
 include 'common.inc';
-require_once('lib/PHPStats/PHPStats.phar');
 require_once('page_data.inc');
 require_once('graph_page_data.inc');
-require_once('stat.inc');
 $page_keywords = array('Graph Page Data','Webpagetest','Website Speed Test','Page Speed', 'comparison');
 $page_description = "Graph Page Data Comparison.";
 
@@ -322,7 +320,9 @@ function InsertChart($metric, $label) {
         $statLabels[] = implode(" ", $labels);
       }
     }
-    if (($statControl !== 'NOSTAT') && (count($pagesData) >= 1)) {
+    if (is_file('lib/PHPStats/PHPStats.phar') && ($statControl !== 'NOSTAT') && (count($pagesData) >= 1)) {
+      require_once('lib/PHPStats/PHPStats.phar');
+      require_once('stat.inc');
 
       // First populate compareFrom for statistical control, if it has values
       if (count($statValues[$statControl]) > 0) {
