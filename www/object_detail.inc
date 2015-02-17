@@ -226,10 +226,10 @@ function AddLocationData(&$requests) {
     $has_locations = false;
     $geo_ip = null;
     try {
-      if (is_file('./Net/GeoLiteCity.dat')) {
-        require_once('./Net/GeoIP.php');
+      if (is_file('./lib/maxmind/GeoLiteCity.dat')) {
+        require_once('./lib/maxmind/GeoIP.php');
         $geo_ip = Net_GeoIP::getInstance(
-            './Net/GeoLiteCity.dat', Net_GeoIP::MEMORY_CACHE);
+            './lib/maxmind/GeoLiteCity.dat', Net_GeoIP::MEMORY_CACHE);
       }
     } catch(Exception $e) { }
 

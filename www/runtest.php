@@ -178,8 +178,8 @@
 
             if (array_key_exists('affinity', $_REQUEST))
               $test['affinity'] = hexdec(substr(sha1($_REQUEST['affinity']), 0, 8));
-            if (array_key_exists('tester', $_REQUEST) && preg_match('/[a-zA-Z0-9\-_]+/', $_REQUEST['tester']))
-              $test['affinity'] = 'Tester' . $_REQUEST['tester'];
+            //if (array_key_exists('tester', $_REQUEST) && preg_match('/[a-zA-Z0-9\-_]+/', $_REQUEST['tester']))
+            //  $test['affinity'] = 'Tester' . $_REQUEST['tester'];
 
             // custom options
             $test['cmdLine'] = '';
@@ -2184,32 +2184,34 @@ function GetClosestLocation($url, $browser) {
             }
             if (!isset($location)) {
                 $ip = gethostbyname($host);
-                try {
-                    require_once('./Net/GeoIP.php');
-                    $geoip = Net_GeoIP::getInstance('./Net/GeoLiteCity.dat', Net_GeoIP::MEMORY_CACHE);
-                    if ($geoip) {
-                        $host_location = $geoip->lookupLocation($ip);
-                        if ($host_location) {
-                            $lat = $host_location->latitude;
-                            $lng = $host_location->longitude;
+                if (is_file('./lib/maxmind/GeoLiteCity.dat')) {
+                  try {
+                      require_once('./lib/maxmind/GeoIP.php');
+                      $geoip = Net_GeoIP::getInstance('./lib/maxmind/GeoLiteCity.dat', Net_GeoIP::MEMORY_CACHE);
+                      if ($geoip) {
+                          $host_location = $geoip->lookupLocation($ip);
+                          if ($host_location) {
+                              $lat = $host_location->latitude;
+                              $lng = $host_location->longitude;
 
-                            // calculate the distance to each location and see which is closest
-                            $distance = 0;
-                            foreach( $locations as $loc => $pos ) {
-                                $r = 6371; // km
-                                $dLat = deg2rad($pos['lat']-$lat);
-                                $dLon = deg2rad($pos['lng']-$lng);
-                                $a = sin($dLat/2) * sin($dLat/2) + sin($dLon/2) * sin($dLon/2) * cos(deg2rad($lat)) * cos(deg2rad($pos['lat']));
-                                $c = 2 * atan2(sqrt($a), sqrt(1-$a));
-                                $dist = $r * $c;
-                                if (!isset($location) || $dist < $distance) {
-                                    $location = $loc;
-                                    $distance = $dist;
-                                }
-                            }
-                        }
-                    }
-                }catch(Exception $e) { }
+                              // calculate the distance to each location and see which is closest
+                              $distance = 0;
+                              foreach( $locations as $loc => $pos ) {
+                                  $r = 6371; // km
+                                  $dLat = deg2rad($pos['lat']-$lat);
+                                  $dLon = deg2rad($pos['lng']-$lng);
+                                  $a = sin($dLat/2) * sin($dLat/2) + sin($dLon/2) * sin($dLon/2) * cos(deg2rad($lat)) * cos(deg2rad($pos['lat']));
+                                  $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+                                  $dist = $r * $c;
+                                  if (!isset($location) || $dist < $distance) {
+                                      $location = $loc;
+                                      $distance = $dist;
+                                  }
+                              }
+                          }
+                      }
+                  }catch(Exception $e) { }
+                }
             }
         }
         if (!isset($location)) {
