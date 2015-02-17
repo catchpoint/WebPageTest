@@ -1,7 +1,6 @@
 <?php
 chdir('..');
 include 'common.inc';
-require_once('./lib/pclzip.lib.php');
 header('Content-type: text/plain');
 header("Cache-Control: no-cache, must-revalidate");
 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
@@ -22,10 +21,12 @@ if( isset($_FILES['file']) )
       mkdir($path, 0777, true);
   
   // extract the zip file
-  $archive = new PclZip($_FILES['file']['tmp_name']);
-  $list = $archive->extract(PCLZIP_OPT_PATH, "$path/");
-  if( !$list )
-    unset($id);
+  $zip = new ZipArchive();
+  if ($zip->open($zipfile) === TRUE) {
+      $testPath = realpath($path);
+      $zip->extractTo($testPath);
+      $zip->close();
+  }
       
   // make sure there are no risky files and that nothing is allowed execute permission
   SecureDir($path);

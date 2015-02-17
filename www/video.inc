@@ -173,9 +173,16 @@ function ZipVideo($path)
             if( isset($files) && count($files) )
             {    
                 // zip up the results
-                require_once('./lib/pclzip.lib.php');
-                $zip = new PclZip($zipFile);
-                $zip->create($files, PCLZIP_OPT_REMOVE_ALL_PATH);
+                $zip = new ZipArchive();
+                if ($zip->open($zipFile, ZIPARCHIVE::CREATE) === true) {
+                    $files = scandir($path);
+                    foreach ($files as $file) {
+                        $filePath = "$path/$file";
+                        if ($file != 'video.zip' && is_file($filePath))
+                            $zip->addFile($filePath, $file);
+                    }
+                    $zip->close();
+                }
                 $path = substr($zipFile,1);
             }
             

@@ -2657,4 +2657,19 @@ function CheckPythonVisualMetrics(&$failures) {
   }
   return $ok;
 }
+
+function ZipExtract($zipFile, $path) {
+  if (is_file($zipFile) && is_dir($path)) {
+    $zipFile = realpath($zipFile);
+    $extractPath = realpath($path);
+    $zip = new ZipArchive();
+    if ($zip->open($zipFile) === TRUE) {
+      $zip->extractTo($extractPath);
+      $zip->close();
+    } else {
+      $command = "unzip \"$zipFile\" -d \"$extractPath\"";
+      exec($command, $output, $result);
+    }
+  }
+}
 ?>

@@ -89,7 +89,6 @@ $tempDir = './tmp';
 if (!is_dir($tempDir))
     mkdir($tempDir, 0777, true);
 $tempDir = realpath($tempDir) . '/';
-define('PCLZIP_TEMPORARY_DIR', $tempDir);
 
 if (isset($req_embed)) {
     define('EMBED', true);
