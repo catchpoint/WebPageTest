@@ -217,12 +217,6 @@ if (strlen($id)) {
       RestoreTest($id);   // restore the test if it is archived (and deleted)
 
     $testPath = './' . GetTestPath($id);
-    if (@$settings['archive'] && !is_dir($testPath) &&
-        is_file('storage/storage.ini') && is_file('storage/storage.inc')) {
-        // testPath does not exist, so download from the remote storage.
-        require_once('storage/storage.inc');
-        DownloadResults($id);
-    }
 
     $run = htmlspecialchars(@$req_run);
     if (!$run) {
