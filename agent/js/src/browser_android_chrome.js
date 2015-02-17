@@ -53,7 +53,9 @@ var CHROME_FLAGS = [
     // Disable external URL handlers from opening
     '--disable-external-intent-requests',
     // Disable UI bars (location, debugging, etc)
-    '--disable-infobars'
+    '--disable-infobars',
+    // Disable the save password dialog
+    '--disable-save-password-bubble'
   ];
 
 var KNOWN_BROWSERS = {
