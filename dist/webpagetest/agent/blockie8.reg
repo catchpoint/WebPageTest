@@ -1,7 +1,0 @@
-REGEDIT4
-
-; Disables the installation offer of Internet Explorer 8 from
-; Automatic Updates, and the sites Windows Update and Microsoft Update.
-
-[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\Setup\8.0]
-"DoNotAllowIE80"=dword:00000001
