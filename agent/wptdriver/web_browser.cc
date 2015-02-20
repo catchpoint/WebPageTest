@@ -26,7 +26,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 #include "StdAfx.h"
-#include "dbghelp/dbghelp.h"
 #include "util.h"
 #include "web_browser.h"
 
@@ -56,7 +55,8 @@ static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--disable-translate"),
     _T("--disable-desktop-notifications"),
     _T("--allow-running-insecure-content"),
-    _T("--disable-save-password-bubble")
+    _T("--disable-save-password-bubble"),
+    _T("--disable-infobars")
 };
 static const TCHAR * CHROME_IGNORE_CERT_ERRORS =
     _T(" --ignore-certificate-errors");
