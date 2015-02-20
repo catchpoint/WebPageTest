@@ -246,6 +246,15 @@ Request * Requests::GetActiveRequest(DWORD socket_id) {
 }
 
 /*-----------------------------------------------------------------------------
+  Map a browser time to a perf counter time for a request
+-----------------------------------------------------------------------------*/
+LONGLONG Requests::GetRelativeTime(Request * request, double end_time, double time) {
+  LONGLONG elapsed_ticks =
+      (LONGLONG)((end_time - time) * _test_state._ms_frequency.QuadPart);
+  return request->_end.QuadPart - elapsed_ticks;
+}
+
+/*-----------------------------------------------------------------------------
   Request information passed in from a browser-specific extension
   For now this is only Chrome and we only use it to get the initiator 
   information
@@ -253,11 +262,10 @@ Request * Requests::GetActiveRequest(DWORD socket_id) {
 void Requests::ProcessBrowserRequest(CString request_data) {
   CString browser, url, initiator, initiator_line, initiator_column;
   CStringA request_headers, response_headers;
-  double  start_time = 0, end_time = 0, first_byte = 0, request_time = 0;
-  long  dns_start = -1, dns_end = -1, connect_start = -1, connect_end = -1,
-        ssl_start = -1, ssl_end = -1, send_start = -1, send_end = -1,
-        headers_end = -1, connection = 0, error_code = 0, 
-        status = 0, bytes_in = 0;
+  double  start_time = 0, end_time = 0, first_byte = 0, request_start = 0,
+          dns_start = -1, dns_end = -1, connect_start = -1, connect_end = -1,
+          ssl_start = -1, ssl_end = -1;
+  long connection = 0, error_code = 0, status = 0, bytes_in = 0;
   LARGE_INTEGER now;
   QueryPerformanceCounter(&now);
   bool processing_values = true;
@@ -289,11 +297,13 @@ void Requests::ProcessBrowserRequest(CString request_data) {
             else if (!key.CompareNoCase(_T("errorCode")))
               error_code = _ttol(value);
             else if (!key.CompareNoCase(_T("startTime")))
-              start_time = _ttof(value) * 1000.0;
+              start_time = _ttof(value);
+            else if (!key.CompareNoCase(_T("requestStart")))
+              request_start = _ttof(value);
             else if (!key.CompareNoCase(_T("firstByteTime")))
-              first_byte = _ttof(value) * 1000.0;
+              first_byte = _ttof(value);
             else if (!key.CompareNoCase(_T("endTime")))
-              end_time = _ttof(value) * 1000.0;
+              end_time = _ttof(value);
             else if (!key.CompareNoCase(_T("bytesIn")))
               bytes_in = _ttol(value);
             else if (!key.CompareNoCase(_T("initiatorUrl")))
@@ -306,26 +316,18 @@ void Requests::ProcessBrowserRequest(CString request_data) {
               status = _ttol(value);
             else if (!key.CompareNoCase(_T("connectionId")))
               connection = _ttol(value);
-            else if (!key.CompareNoCase(_T("timing.dnsStart")))
-              dns_start = (int)(_ttof(value) + 0.5);
-            else if (!key.CompareNoCase(_T("timing.dnsEnd")))
-              dns_end = (int)(_ttof(value) + 0.5);
-            else if (!key.CompareNoCase(_T("timing.connectStart")))
-              connect_start = (int)(_ttof(value) + 0.5);
-            else if (!key.CompareNoCase(_T("timing.connectEnd")))
-              connect_end = (int)(_ttof(value) + 0.5);
-            else if (!key.CompareNoCase(_T("timing.sslStart")))
-              ssl_start = (int)(_ttof(value) + 0.5);
-            else if (!key.CompareNoCase(_T("timing.sslEnd")))
-              ssl_end = (int)(_ttof(value) + 0.5);
-            else if (!key.CompareNoCase(_T("timing.sendStart")))
-              send_start = (int)(_ttof(value) + 0.5);
-            else if (!key.CompareNoCase(_T("timing.sendEnd")))
-              send_end = (int)(_ttof(value) + 0.5);
-            else if (!key.CompareNoCase(_T("timing.receiveHeadersEnd")))
-              headers_end = (int)(_ttof(value) + 0.5);
-            else if (!key.CompareNoCase(_T("timing.requestTime")))
-              request_time = _ttof(value) * 1000.0;
+            else if (!key.CompareNoCase(_T("dnsStart")))
+              dns_start = _ttof(value);
+            else if (!key.CompareNoCase(_T("dnsEnd")))
+              dns_end = _ttof(value);
+            else if (!key.CompareNoCase(_T("connectStart")))
+              connect_start = _ttof(value);
+            else if (!key.CompareNoCase(_T("connectEnd")))
+              connect_end = _ttof(value);
+            else if (!key.CompareNoCase(_T("sslStart")))
+              ssl_start = _ttof(value);
+            else if (!key.CompareNoCase(_T("sslEnd")))
+              ssl_end = _ttof(value);
           }
         }
       } else if (processing_request) {
@@ -346,9 +348,7 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     LeaveCriticalSection(&cs);
   }
   _test_state.ActivityDetected();
-  if (request_time)
-    start_time = request_time;
-  if (end_time > 0 && start_time > 0) {
+  if (end_time > 0 && request_start > 0) {
     Request * request = new Request(_test_state, connection, _sockets, _dns,
                                     _test, false, *this);
     request->_from_browser = true;
@@ -375,11 +375,10 @@ void Requests::ProcessBrowserRequest(CString request_data) {
           DNSAddressList addresses;
           LARGE_INTEGER match_dns_start, match_dns_end;
           if (_dns.Find(host, addresses, match_dns_start, match_dns_end)) {
-            double dns_end_clock_time = start_time + dns_end;
             // Figure out what the clock time would have been at our perf
             // counter start time.
-            _start_browser_clock = dns_end_clock_time -
-                _test_state.ElapsedMsFromStart(match_dns_end);
+            _start_browser_clock =
+                dns_end - _test_state.ElapsedMsFromStart(match_dns_end);
           }
         }
       }
@@ -394,46 +393,35 @@ void Requests::ProcessBrowserRequest(CString request_data) {
       request->_is_ssl = true;
     else
       request->_is_ssl = false;
+
     // figure out the conversion from browser time to perf counter
     LONGLONG ms_freq = _test_state._ms_frequency.QuadPart;
-    if (_start_browser_clock != 0)
+    if (_start_browser_clock != 0) {
       request->_end.QuadPart = _test_state._start.QuadPart +
           (LONGLONG)((end_time - _start_browser_clock)  * ms_freq);
-    else
+    } else {
       request->_end.QuadPart = now.QuadPart;
+      _start_browser_clock = end_time - _test_state.ElapsedMsFromStart(request->_end);
+    }
     request->_start.QuadPart = request->_end.QuadPart - 
-                (LONGLONG)((end_time - start_time) * ms_freq);
+                (LONGLONG)((end_time - request_start) * ms_freq);
     if (first_byte > 0) {
       request->_first_byte.QuadPart = request->_end.QuadPart - 
                 (LONGLONG)((end_time - first_byte) * ms_freq);
     }
     // if we have request timing info, the real start is sent directly
-    LONGLONG timing_baseline = request->_start.QuadPart;
-    if (send_start >= 0)
-      request->_start.QuadPart = timing_baseline +
-                                 (LONGLONG)(send_start * ms_freq);
-    if (headers_end != -1 && headers_end >= send_start)
-      request->_first_byte.QuadPart = timing_baseline + 
-                                      (LONGLONG)(headers_end * ms_freq);
     if (!already_connected) {
       if (dns_start > -1 && dns_end > -1) {
-        request->_dns_start.QuadPart = timing_baseline +
-                                       (LONGLONG)(dns_start * ms_freq);
-        request->_dns_end.QuadPart = timing_baseline +
-                                     (LONGLONG)(dns_end * ms_freq);
+        request->_dns_start.QuadPart = GetRelativeTime(request, end_time, dns_start);
+        request->_dns_end.QuadPart = GetRelativeTime(request, end_time, dns_end);
       }
       if (connect_start > -1 && connect_end > -1) {
         if (ssl_start > -1 && ssl_end > -1) {
-          connect_end = ssl_start;
-          request->_ssl_start.QuadPart = timing_baseline +
-                                         (LONGLONG)(ssl_start * ms_freq);
-          request->_ssl_end.QuadPart = timing_baseline +
-                                       (LONGLONG)(ssl_end * ms_freq);
+          request->_ssl_start.QuadPart = GetRelativeTime(request, end_time, ssl_start);
+          request->_ssl_end.QuadPart = GetRelativeTime(request, end_time, ssl_end);
         }
-        request->_connect_start.QuadPart = timing_baseline +
-                                           (LONGLONG)(connect_start * ms_freq);
-        request->_connect_end.QuadPart = timing_baseline +
-                                         (LONGLONG)(connect_end * ms_freq);
+        request->_connect_start.QuadPart = GetRelativeTime(request, end_time, connect_start);
+        request->_connect_end.QuadPart = GetRelativeTime(request, end_time, connect_end);
       }
     }
     if (request_headers.GetLength()) {
