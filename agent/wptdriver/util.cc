@@ -31,7 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Wincrypt.h>
 #include <TlHelp32.h>
 #include <Wtsapi32.h>
-#include "dbghelp/dbghelp.h"
 #include <WinInet.h>
 #include <regex>
 #include <string>

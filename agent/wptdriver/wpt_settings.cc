@@ -278,7 +278,6 @@ bool WptSettings::SetBrowser(CString browser, CString url,
     ret = _browser.Install(browser, url, md5);
   } else {
     // try loading the settings for the specified browser
-    TCHAR buff[1024];
     if (browser.GetLength())
       ret = _browser.Load(browser, _ini_file, client);
   }
