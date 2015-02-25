@@ -10,7 +10,7 @@ There is now a server AMI for WebPagetest for quickly spinning up a private inst
 * ap-southeast-2: ami-eb3542d1
 * ap-northeast-1: ami-66233967
 
-When you launch the instance, make sure to allow HTTP traffic through your EC2 firewall configuration/security group.
+When you launch the instance, make sure to allow HTTP traffic through your EC2 firewall configuration/security group.  You should probably also check /home/ubuntu/.ssh/authorized_keys and make sure previous keys from when the instances were created are not carried forward.
 
 Some of the features of the server AMI are:
 * Pre-configured with locations for all of the EC2 regions
