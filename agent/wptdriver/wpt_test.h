@@ -200,7 +200,8 @@ public:
   CStringA _test_error;
   CStringA _run_error;
   CString _custom_metrics;
-  
+  bool    _webdriver_mode;
+  CString _webdriver_lang;
   // current state
   int     _run;
   int     _specific_run;

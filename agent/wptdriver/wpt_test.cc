@@ -76,7 +76,6 @@ WptTest::WptTest(void):
   }
   InitializeCriticalSection(&cs_);
   _tcp_port_override.InitHashTable(257);
-
   Reset();
 }
 
@@ -157,6 +156,7 @@ void WptTest::Reset(void) {
   _run_error.Empty();
   _test_error.Empty();
   _custom_metrics.Empty();
+  _webdriver_mode = false;
 }
 
 /*-----------------------------------------------------------------------------
@@ -286,8 +286,12 @@ bool WptTest::Load(CString& test) {
         else if (!key.CompareNoCase(_T("addCmdLine")))
           _browser_additional_command_line = value;
         else if (!key.CompareNoCase(_T("continuousVideo")) &&
-                 _ttoi(value.Trim()))
+                  _ttoi(value.Trim()))
           _continuous_video = true;
+        else if (!key.CompareNoCase(_T("webdriver"))) {
+	        _webdriver_mode = true;
+	        _webdriver_lang = value.Trim();
+        }
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {
       // grab the rest of the response as the script

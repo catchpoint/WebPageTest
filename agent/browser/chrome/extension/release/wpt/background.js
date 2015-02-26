@@ -14606,7 +14606,7 @@ var g_addHeaders = [];
 var g_setHeaders = [];
 var g_started = false;
 var g_requestsHooked = false;
-
+var g_webdriver_mode = false;
 /**
  * Uninstall a given set of extensions.  Run |onComplete| when done.
  * @param {Array.<string>} idsToUninstall IDs to uninstall.
@@ -14656,24 +14656,62 @@ wpt.main.startMeasurements = function() {
     // Run the tasks in FAKE_TASKS.
     window.setInterval(wptFeedFakeTasks, FAKE_TASK_INTERVAL);
   } else {
-    // Fetch tasks from wptdriver.exe.
-    window.setInterval(wptGetTask, TASK_INTERVAL);
+    wptQuery('http://127.0.0.1:8888/mode', function(response) {
+      if (response.webdriver) {
+        g_webdriver_mode = true;
+        g_active = true;
+        // Now that we are in webdriver mode, let the hook know that
+        // we are all set to go.
+        wptSendEvent('extension_loaded', '');
+        // Note: In WebDriver mode, we will not be able to hook the chrome debugger because the Chrome
+        // WebDriver installs an automation extension in the browser which also attaches to the debugger
+        // and since only one client can attach to the debugger, we refrain ourselves. The downside is
+        // that we won't be able to capture timeline and other chrome dev-tools related stuff from the
+        // extension and send them to the hook. But, this is okay, since WebDriver supports mechanism to
+        // retrieve the same.
+        // TODO (kk): Investigate WebDriver dev-tools API and gather similar metrics and send them to hook.
+      } else {
+        // Setup the debugger.
+        wpt.chromeDebugger.Init(g_tabid, window.chrome, function() {
+          wpt.LOG.info('Chrome debugger successfully attached to tabId: ' + g_tabid);
+        });
+        // Fetch tasks from wptdriver.exe.
+        window.setInterval(wptGetTask, TASK_INTERVAL);
+      }
+    });
   }
 };
 
+function runSoon(callback) {
+  setTimeout(callback, 0);
+}
+
 // Install an onLoad handler for all tabs.
-chrome.tabs.onUpdated.addListener(function(tabId, props) {
-  if (!g_started && g_starting && props.status == 'complete') {
-    // handle the startup sequencing (attach the debugger
-    // after the browser loads and then start testing).
-    g_started = true;
-    wpt.main.onStartup();
-  }else if (g_active && tabId == g_tabid) {
-    if (props.status == 'loading') {
-      g_start = new Date().getTime();
-      wptSendEvent('navigate', '');
-    } else if (props.status == 'complete') {
-      wptSendEvent('complete', '');
+chrome.tabs.onUpdated.addListener(function(tabId, props, tabDetails) {
+  wpt.LOG.info('onUpdated called with tabId: ' + tabId + "; for url: " + tabDetails.url);
+  if (g_tabid == tabId) {
+    if (!g_started && g_starting && props.status == 'complete') {
+      // We are done loading up the STARTUP_URL. Handle the startup sequencing.
+      g_started = true;
+      g_starting = false;
+      wpt.main.onStartup();
+      return;
+    }
+    if (g_started && (g_active || g_webdriver_mode)) {
+      if (props.status == 'loading') {
+        g_start = new Date().getTime();
+        wptSendEvent('navigate', '');
+      } else if (props.status == 'complete') {
+        wptSendEvent('complete', '');
+        if (g_webdriver_mode) {
+          // Collect stats as soon as possible and send them out to the hook.
+          runSoon(function () {
+            g_commandRunner.doCollectStats('', function() {
+              wpt.LOG.info('[webdriver-mode] collect stats completed!');
+            });
+          });
+        }
+      }
     }
   }
 });
@@ -14775,6 +14813,44 @@ function wptGetTask() {
   }
 }
 
+// TODO (kk): Refactor the above wptGetTask to use wptQuery instead.
+// TODO (kk): Refactor the below code to make it more generic and take error callbacks.
+function wptQuery(url, callback) {
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState != 4)
+        return;
+      if (xhr.status != 200) {
+        wpt.LOG.warning('Got unexpected (not 200) XHR status: ' + xhr.status);
+        callback({webdriver: false});
+        return;
+      }
+      var resp = JSON.parse(xhr.responseText);
+      if (resp.statusCode != 200) {
+        wpt.LOG.warning('Got unexpected status code ' + resp.statusCode);
+        callback({webdriver: false});
+        return;
+      }
+      if (!resp.data) {
+        wpt.LOG.warning('Empty data for url: ' + url);
+        callback({webdriver: false});
+        return;
+      }
+      callback(resp.data);
+    };
+    xhr.onerror = function() {
+      wpt.LOG.warning('Got an XHR error!');
+      callback({webdriver: false});
+    }
+    xhr.send();
+  } catch (err) {
+    callback({webdriver: false});
+    wpt.LOG.warning('Error querying mode');
+  }
+}
+
 function wptSendEvent(event_name, query_string, data) {
   try {
     var xhr = new XMLHttpRequest();
@@ -14869,8 +14945,10 @@ chrome.webRequest.onErrorOccurred.addListener(function(details) {
       var error_code =
           wpt.chromeExtensionUtils.netErrorStringToWptCode(details.error);
       wpt.LOG.info(details.error + ' = ' + error_code);
-      g_active = false;
-      wpt.chromeDebugger.SetActive(g_active);
+      if (!g_webdriver_mode) {
+        g_active = false;
+        wpt.chromeDebugger.SetActive(g_active);
+      }
       wptSendEvent('navigate_error?error=' + error_code +
                    '&str=' + encodeURIComponent(details.error), '');
     }
@@ -14881,8 +14959,10 @@ chrome.webRequest.onCompleted.addListener(function(details) {
     if (g_active && details.tabId == g_tabid) {
       wpt.LOG.info('Completed, status = ' + details.statusCode);
       if (details.statusCode >= 400) {
-        g_active = false;
-        wpt.chromeDebugger.SetActive(g_active);
+        if (!g_webdriver_mode) {
+          g_active = false;
+          wpt.chromeDebugger.SetActive(g_active);
+        }
         wptSendEvent('navigate_error?error=' + details.statusCode, '');
       }
     }
@@ -14925,10 +15005,16 @@ chrome.extension.onRequest.addListener(
                    '?timestamp=' + request.timestamp + 
                    '&fixedViewport=' + request.fixedViewport);
     }
+    else if (request.message == 'wptBeforeUnload' && g_webdriver_mode) {
+      // We are about to move to a new page. Let the hook know so that it can prepare for the next step.
+      wptSendEvent('before_unload', '');
+    }
     else if (request.message == 'wptWindowTiming') {
       wpt.logging.closeWindowIfOpen();
-      g_active = false;
-      wpt.chromeDebugger.SetActive(g_active);
+      if (!g_webdriver_mode) {
+        g_active = false;
+        wpt.chromeDebugger.SetActive(g_active);
+      }
       wptSendEvent(
           'window_timing',
           '?domContentLoadedEventStart=' +
@@ -14980,6 +15066,9 @@ var wptTaskCallback = function() {
 
 // execute a single task/script command
 function wptExecuteTask(task) {
+  if (g_webdriver_mode) {
+    return; // Just a safe guard in case we shoot ourselves in the foot.
+  }
   if (task.action.length) {
     if (task.record) {
       g_active = true;
@@ -15104,11 +15193,13 @@ chrome.tabs.query(queryForFocusedTab, function(focusedTabs) {
   // Use the first one even if the length is not the expected value.
   var tab = focusedTabs[0];
   g_tabid = tab.id;
-  wpt.LOG.info('Got tab id: ' + tab.id);
+  wpt.LOG.info('Got tab with id: ' + tab.id + ' and url: ' + tab.url);
   g_commandRunner = new wpt.commands.CommandRunner(g_tabid, window.chrome);
-  wpt.chromeDebugger.Init(g_tabid, window.chrome, function(){
-    setTimeout(function(){g_starting = true;chrome.tabs.update(g_tabid, {'url': STARTUP_URL});}, STARTUP_DELAY);
-  });
+
+  setTimeout(function() {
+    g_starting = true;
+    chrome.tabs.update(g_tabid, {'url': STARTUP_URL});
+  }, STARTUP_DELAY);
 });
 
 })());  // namespace

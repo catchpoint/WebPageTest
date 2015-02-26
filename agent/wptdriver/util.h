@@ -75,3 +75,4 @@ void QueryPerfCounter(__int64 &counter);
 void QueryPerfFrequency(__int64 &freq);
 int ElapsedFileTimeSeconds(FILETIME& check, FILETIME& now);
 void Reboot();
+void AppendCmdLineOptions(TCHAR *cmdLine, CAtlArray<CString>& options, CString prefix);

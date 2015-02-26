@@ -740,3 +740,10 @@ void Reboot() {
   
   InitiateSystemShutdown(NULL, NULL, 0, TRUE, TRUE);
 }
+
+// TODO (kk): Check for buffer overflow.
+void AppendCmdLineOptions(TCHAR *cmdLine, CAtlArray<CString>& options, CString prefix) {
+  for (size_t i = 0; i < options.GetCount(); i++) {
+    lstrcat(cmdLine, _T(" ") + prefix + options[i]);
+  }
+}
