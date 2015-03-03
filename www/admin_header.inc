@@ -11,16 +11,16 @@ function header_link($url, $title) {
 ?><!doctype html>
 <html>
     <head>
-        <title><?=$title?></title>
+        <title><?php echo $title; ?></title>
         <link rel="stylesheet" href="/css/vendor/bootstrap-3.1.1.min.css">
 
         <?php
         if (!empty($refresh)) { ?>
             <noscript>
-                <meta http-equiv="refresh" content="<?=$refresh?>" />
+                <meta http-equiv="refresh" content="<?php echo $refresh; ?>" />
             </noscript>
             <script type="text/javascript">
-                setTimeout("window.location.reload(true)", <?=$refresh*1000?>);
+                setTimeout("window.location.reload(true)", <?php echo $refresh*1000; ?>);
             </script>
         <?php
         } ?>
@@ -35,11 +35,11 @@ function header_link($url, $title) {
                     </div>
                     <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                         <ul class="nav navbar-nav">
-                            <?=header_link('/getLocations.php?f=html', 'Locations');?>
-                            <?=header_link('/getTesters.php?f=html', 'Testers');?>
-                            <?=header_link('/usage.php', 'Usage');?>
-                            <?=header_link('/checkURLs.php', 'Check URLs');?>
-                            <?=header_link('/checkIPs.php', 'Check IPs');?>
+                            <?php header_link('/getLocations.php?f=html', 'Locations');?>
+                            <?php header_link('/getTesters.php?f=html', 'Testers');?>
+                            <?php header_link('/usage.php', 'Usage');?>
+                            <?php header_link('/checkURLs.php', 'Check URLs');?>
+                            <?php header_link('/checkIPs.php', 'Check IPs');?>
                         </ul>
                     </div>
                 </div>
