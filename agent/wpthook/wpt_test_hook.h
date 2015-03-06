@@ -7,7 +7,7 @@ class TestState;
 class WptTestHook :
   public WptTest {
 public:
-  WptTestHook(WptHook& hook, TestState& test_state, DWORD timeout);
+  WptTestHook(WptHook& hook, TestState& test_state, DWORD timeout, bool enableUserSetTimeout);
   virtual ~WptTestHook(void);
   void LoadFromFile();
   virtual void ReportData();
