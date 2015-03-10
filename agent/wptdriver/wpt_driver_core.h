@@ -55,6 +55,8 @@ private:
   bool        has_gpu_;
   bool        watchdog_started_;
   bool TracerouteTest(WptTestDriver& test);
+  bool RunTest(WptTestDriver& test, WebBrowser &browser);
+  bool WebDriverTest(WptTestDriver& test, WebBrowser &browser);
   bool BrowserTest(WptTestDriver& test, WebBrowser &browser);
   bool SetupWebPageReplay(WptTestDriver& test, WebBrowser &browser);
   void Init(void);

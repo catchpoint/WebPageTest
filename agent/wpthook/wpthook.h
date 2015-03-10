@@ -64,7 +64,10 @@ public:
   void OnNavigateComplete();
   void Report();
   void OnReport();
-
+  void SetHookReady();
+  bool IsHookReady();
+  void OnWebDriverDone();
+  bool IsWebDriverDone();
 private:
   CWsHook   winsock_hook_;
   NsprHook  nspr_hook_;
@@ -76,6 +79,8 @@ private:
   CString   file_base_;
   bool      done_;
   bool      reported_;
+  bool      hook_ready_;
+  bool      webdriver_done_;
   UINT      report_message_;
 
   // winsock event tracking

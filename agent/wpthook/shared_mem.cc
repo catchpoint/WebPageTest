@@ -44,6 +44,7 @@ bool  shared_has_gpu = false;
 int   shared_result = -1;
 WCHAR shared_browser_exe[MAX_PATH] = {NULL};
 DWORD shared_browser_process_id = 0;
+bool  shared_webdriver_mode = false;
 #pragma data_seg ()
 
 #pragma comment(linker,"/SECTION:.shared,RWS")
@@ -132,4 +133,12 @@ void WINAPI SetBrowserExe(const WCHAR * exe) {
 -----------------------------------------------------------------------------*/
 DWORD WINAPI GetBrowserProcessId() {
   return shared_browser_process_id;
+}
+
+void WINAPI SetWebDriverMode(bool mode) {
+  shared_webdriver_mode = mode;
+}
+
+bool WINAPI GetWebDriverMode() {
+  return shared_webdriver_mode;
 }

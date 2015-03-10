@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #include "StdAfx.h"
+#include "globals.h"
 #include "wpt_settings.h"
 #include "wpt_status.h"
 #include <WinInet.h>
@@ -42,7 +43,8 @@ WptSettings::WptSettings(WptStatus &status):
   ,_polling_delay(DEFAULT_POLLING_DELAY)
   ,_debug(0)
   ,_status(status)
-  ,_software_update(status) {
+  ,_software_update(status)
+  ,_webdriver_supported(false) {
 }
 
 /*-----------------------------------------------------------------------------
@@ -111,6 +113,10 @@ bool WptSettings::Load(void) {
       _T("WebPagetest"), _T("web_page_replay_host"), _T(""), buff,
       _countof(buff), iniFile )) {
     _web_page_replay_host = buff;
+  }
+
+  if (GetPrivateProfileInt(_T("WebPagetest"), _T("WebDriver"), 0, iniFile)) {
+    _webdriver_supported = true;
   }
 
   // see if we need to load settings from EC2 (server and location)
@@ -774,6 +780,79 @@ void BrowserSettings::ClearWebCache() {
   DeleteDirectory(webcache_dir_, false);
 }
 
+void BrowserSettings::GetCmdLineOptions(WptTest& test, CAtlArray<CString>& options) {
+  if (!_browser.CompareNoCase(_T("chrome"))) {
+    if (test._browser_command_line.GetLength()) {
+      SplitCommandLine(test._browser_command_line, options);
+    } else {
+      // Add all the required options.
+      for (int i = 0; i < _countof(CHROME_REQUIRED_OPTIONS); i++) {
+        if (_options.Find(CHROME_REQUIRED_OPTIONS[i]) < 0) {
+          options.Add(CHROME_REQUIRED_OPTIONS[i]);
+        }
+      }
+      // Test specific options.
+      if (test._netlog) {
+        CString netlog;
+        netlog.Format(CHROME_NETLOG, (LPCTSTR)test._file_base);
+        options.Add(netlog);
+      }
+      if (test._ignore_ssl) {
+        options.Add(CHROME_IGNORE_CERT_ERRORS);
+      }
+      if (test._spdy3) {
+        options.Add(CHROME_SPDY3);
+      }
+      if (test._force_software_render) {
+        options.Add(CHROME_SOFTWARE_RENDER);
+      }
+      if (test._user_agent.GetLength() &&
+          test._user_agent.Find(_T('"')) == -1) {
+        CString user_agent = CHROME_USER_AGENT;
+        user_agent += _T("\"");
+        user_agent += test._user_agent;
+        user_agent += _T("\"");
+        options.Add(user_agent);
+      }
+      // Add additional command line options specified by the user.
+      if (test._browser_additional_command_line.GetLength()) {
+        // if we are specifying a proxy server, strip any default setting out
+        if (test._browser_additional_command_line.Find(_T("--proxy-")) !=
+            -1) {
+          _options.Replace(_T("--no-proxy-server"), _T(""));
+        }
+        SplitCommandLine(test._browser_additional_command_line, options);
+      }
+      // Add command line options specified in the .ini file.
+      if (_options.GetLength()) {
+        SplitCommandLine(_options, options);
+      }
+    }
+  } else if (!_browser.CompareNoCase(_T("firefox"))) {
+    for (int i = 0; i < _countof(FIREFOX_REQUIRED_OPTIONS); i++) {
+      if (_options.Find(FIREFOX_REQUIRED_OPTIONS[i]) < 0) {
+        options.Add(FIREFOX_REQUIRED_OPTIONS[i]);
+      }
+    }
+  }
+}
+
+void BrowserSettings::SplitCommandLine(CString command_line, CAtlArray<CString>& options) {
+  CString opt; 
+  int pos = 0;
+
+  opt = command_line.Tokenize(_T(" "), pos);
+  while (pos != -1) {
+    opt.Trim();
+    if (opt.GetLength() > 2 && opt[0] == '-' && opt[1] == '-') {
+      opt.Delete(0, 2); // Get rid of leading '--'
+    } else if (opt.GetLength() > 1 && opt[0] == '-') {
+      opt.Delete(0, 1); // Get rid of leading '-'
+    }
+    options.Add(opt);
+    opt = command_line.Tokenize(_T(" "), pos);
+  }
+}
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 static bool Unzip(CString file, CStringA dir) {

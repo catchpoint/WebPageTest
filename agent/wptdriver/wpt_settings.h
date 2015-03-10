@@ -58,7 +58,8 @@ public:
   void ClearWinInetCache();
   void ClearWebCache();
   void CleanupCustomBrowsers(CString browser);
-  
+  void GetCmdLineOptions(WptTest& test, CAtlArray<CString>& options);
+
   CString _browser;
   CString _template;
   CString _exe;
@@ -84,6 +85,9 @@ public:
   CString recovery_dir_;
   CString flash_dir_;
   CString webcache_dir_;
+
+private:
+  void SplitCommandLine(CString command_line, CAtlArray<CString>& options);
 };
 
 // dynamic settings loaded from file
@@ -117,4 +121,5 @@ public:
   BrowserSettings _browser;
   SoftwareUpdate _software_update;
   WptStatus &_status;
+  bool _webdriver_supported;
 };
