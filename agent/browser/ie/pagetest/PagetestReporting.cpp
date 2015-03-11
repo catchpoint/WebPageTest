@@ -396,11 +396,8 @@ void CPagetestReporting::FlushResults(void)
             SaveBodies(logFile+step+_T("_bodies.zip"));
             SaveCustomMatches(logFile+step+_T("_custom_rules.json"));
 
-            if( captureVideo )
-            {
-              ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving video\n"));
-              SaveVideo();
-            }
+            ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving video\n"));
+            SaveVideo();
 
             // save out the progress data
             if( !noHeaders )
@@ -3108,6 +3105,14 @@ void CPagetestReporting::SaveProgressImage(CxImage &img, CString file, bool resi
   Save the image histogram as a json data structure
 -----------------------------------------------------------------------------*/
 void CPagetestReporting::SaveHistogram(CxImage& image, CString file) {
+
+}
+
+/*-----------------------------------------------------------------------------
+	Generate the JSON histogram string for the given image
+-----------------------------------------------------------------------------*/
+CStringA CPagetestReporting::GetHistogram(CxImage& image) {
+  CStringA histogram;
   if (image.IsValid()) {
     DWORD r[256], g[256], b[256];
     for (int i = 0; i < 256; i++) {
@@ -3147,18 +3152,11 @@ void CPagetestReporting::SaveHistogram(CxImage& image, CString file) {
     red += "]";
     green += "]";
     blue += "]";
-    CStringA histogram = CStringA("{") + red + 
-                         CStringA(",") + green + 
-                         CStringA(",") + blue + CStringA("}");
-
-    HANDLE file_handle = CreateFile(file, GENERIC_WRITE, 0, 0, 
-                                    CREATE_ALWAYS, 0, 0);
-    if (file_handle != INVALID_HANDLE_VALUE) {
-      DWORD bytes;
-      WriteFile(file_handle, (LPCSTR)histogram, histogram.GetLength(), &bytes, 0);
-      CloseHandle(file_handle);
-    }
+    histogram = CStringA("{") + red + 
+                CStringA(",") + green + 
+                CStringA(",") + blue + CStringA("}");
   }
+  return histogram;
 }
 
 /*-----------------------------------------------------------------------------
@@ -3316,15 +3314,17 @@ void CPagetestReporting::SaveVideo()
   CxImage * last_image = NULL;
   CString file_name;
   POSITION pos = screenCapture._captured_images.GetHeadPosition();
+  CStringA histograms = "[";
+  int histogram_count = 0;
   while (pos) 
   {
     CapturedImage& image = screenCapture._captured_images.GetNext(pos);
-    DWORD image_time = 0;
+    DWORD ms_time = 0;
     if (image._capture_time.QuadPart > start)
-      image_time = (DWORD)((image._capture_time.QuadPart - start) / msFreq);
+      ms_time = (DWORD)((image._capture_time.QuadPart - start) / msFreq);
 
     // we save the frames in increments of 100ms, round it to the closest interval
-    image_time = ((image_time + 50) / 100);
+    DWORD image_time = ((ms_time + 50) / 100);
     CxImage * img = new CxImage;
     if (image.Get(*img)) 
     {
@@ -3332,6 +3332,7 @@ void CPagetestReporting::SaveVideo()
       int newWidth = min(400, img->GetWidth() / 2);
       int newHeight = (int)((double)img->GetHeight() * ((double)newWidth / (double)img->GetWidth()));
       img->Resample2(newWidth, newHeight);
+      CStringA histogram;
       if (last_image) 
       {
         RGBQUAD black = {0,0,0,0};
@@ -3344,10 +3345,11 @@ void CPagetestReporting::SaveVideo()
         if (img->GetHeight() < height)
           img->Expand(0, 0, 0, height - img->GetHeight(), black);
         if (ImagesAreDifferent(last_image, img)) {
-          file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)logFile, image_time);
-          SaveProgressImage(*img, file_name, false, imageQuality);
-          file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)logFile, image_time);
-          SaveHistogram(*img, file_name);
+          if (captureVideo) {
+            file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)logFile, image_time);
+            SaveProgressImage(*img, file_name, false, imageQuality);
+          }
+          histogram = GetHistogram(*img);
           msVisualComplete = (DWORD)((image._capture_time.QuadPart - start) / msFreq);
         }
       } 
@@ -3355,11 +3357,36 @@ void CPagetestReporting::SaveVideo()
       {
         width = img->GetWidth();
         height = img->GetHeight();
+        image_time = 0;
         // always save the first image at time zero
-        file_name = logFile + _T("_progress_0000.jpg");
-        SaveProgressImage(*img, file_name, false, imageQuality);
-        file_name = logFile + _T("_progress_0000.hist");
-        SaveHistogram(*img, file_name);
+        if (captureVideo) {
+          file_name = logFile + _T("_progress_0000.jpg");
+          SaveProgressImage(*img, file_name, false, imageQuality);
+        }
+        histogram = GetHistogram(*img);
+      }
+
+      if (!histogram.IsEmpty()) {
+        if (histogram_count)
+          histograms += ",";
+        histograms += "{\"histogram\": ";
+        histograms += histogram;
+        histograms += ", \"time\": ";
+        CStringA ms_time_string;
+        ms_time_string.Format("%d", ms_time);
+        histograms += ms_time_string;
+        histograms += "}";
+        histogram_count++;
+        if (captureVideo) {
+          file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)logFile, image_time);
+          HANDLE file_handle = CreateFile(file_name, GENERIC_WRITE, 0, 0, 
+                                          CREATE_ALWAYS, 0, 0);
+          if (file_handle != INVALID_HANDLE_VALUE) {
+            DWORD bytes;
+            WriteFile(file_handle, (LPCSTR)histogram, histogram.GetLength(), &bytes, 0);
+            CloseHandle(file_handle);
+          }
+        }
       }
 
       if (last_image)
@@ -3371,6 +3398,24 @@ void CPagetestReporting::SaveVideo()
   }
   if (last_image)
     delete last_image;
+
+  if (histogram_count > 1) {
+    histograms += "]";
+    TCHAR newLogPath[MAX_PATH);
+    lstrcpy(newLogPath, logFile);
+    TCHAR * fileName = PathFindFileName(newLogPath);
+    int run = _tstoi(fileName);
+    int cached = _tcsstr(fileName, _T("Cached")) ? 1 : 0;
+    fileName = 0;
+    file_name.Format(ile + _T("_histograms.json");
+    HANDLE file_handle = CreateFile(file_name, GENERIC_WRITE, 0, 0, 
+                                    CREATE_ALWAYS, 0, 0);
+    if (file_handle != INVALID_HANDLE_VALUE) {
+      DWORD bytes;
+      WriteFile(file_handle, (LPCSTR)histograms, histograms.GetLength(), &bytes, 0);
+      CloseHandle(file_handle);
+    }
+  }
   screenCapture.Unlock();
 }
 
