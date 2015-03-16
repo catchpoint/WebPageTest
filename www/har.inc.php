@@ -134,11 +134,11 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
       
       // add the pagespeed score
       if (gz_is_file("$testPath/{$run}{$cached_text}_pagespeed.txt")) {
-        $data = LoadPageSpeedData("$testPath/{$run}{$cached_text}_pagespeed.txt");
-        if ($data) {
-          $score = GetPageSpeedScore(null, $data);
+        $pagespeed_data = LoadPageSpeedData("$testPath/{$run}{$cached_text}_pagespeed.txt");
+        if ($pagespeed_data) {
+          $score = GetPageSpeedScore(null, $pagespeed_data);
           if (strlen($score)) {
-            $pd['_pageSpeed'] = array('score' => $score, 'result' => $data);
+            $pd['_pageSpeed'] = array('score' => $score, 'result' => $pagespeed_data);
           }
         }
       }
