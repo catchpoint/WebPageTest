@@ -2604,8 +2604,6 @@ function SBL_Check($url, &$message) {
       foreach($out as $line) {
         if (stripos($line, 'is blacklisted') !== false) {
           $ok = false;
-          $message = trim($line);
-          logMsg(trim($line), __DIR__ . '/log/sbl.log', true);
           break;
         }
       }
