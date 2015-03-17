@@ -557,32 +557,30 @@ function gz_is_file($filename)
 *
 * @param mixed $file
 */
-function GetPageSpeedScore($file)
+function GetPageSpeedScore($file, $data = null)
 {
-    $score = '';
-    if (gz_is_file($file)) {
-        $pagespeed = LoadPageSpeedData($file);
+  $score = '';
+  if (isset($data))
+    $pagespeed = $data;
+  elseif (gz_is_file($file))
+    $pagespeed = LoadPageSpeedData($file);
 
-        if( $pagespeed )
-        {
-            if( isset($pagespeed['score']) )
-                $score = $pagespeed['score'];
-            else
-            {
-                $total = 0;
-                $count = 0;
-                foreach( $pagespeed as &$check )
-                {
-                    $total += (double)$check['score'];
-                    $count++;
-                }
-                if( $count )
-                    $score = ceil($total / $count);
-            }
-        }
+  if ($pagespeed) {
+    if (isset($pagespeed['score'])) {
+      $score = $pagespeed['score'];
+    } else {
+      $total = 0;
+      $count = 0;
+      foreach ($pagespeed as &$check) {
+        $total += (double)$check['score'];
+        $count++;
+      }
+      if( $count )
+        $score = ceil($total / $count);
     }
+  }
 
-    return $score;
+  return $score;
 }
 
 /**
@@ -590,24 +588,24 @@ function GetPageSpeedScore($file)
 *
 * @param mixed $file
 */
-function LoadPageSpeedData($file)
-{
+function LoadPageSpeedData($file) {
+  $pagespeed = false;
+  
+  if (gz_is_file($file)) {
     $pagespeed = json_decode(gz_file_get_contents($file), true);
 
-    if( !$pagespeed )
-    {
-        // try an alternate JSON decoder
-        require_once('./lib/json.php');
-        $json = new Services_JSON(SERVICES_JSON_LOOSE_TYPE | SERVICES_JSON_SUPPRESS_ERRORS);
-        $pagespeed = $json->decode(gz_file_get_contents($file), true);
-        if( $pagespeed )
-        {
-            // make sure we only have to go this route once, save the corrected file
-            gz_file_put_contents($file, json_encode($pagespeed));
-        }
+    if (!$pagespeed) {
+      // try an alternate JSON decoder
+      require_once('./lib/json.php');
+      $json = new Services_JSON(SERVICES_JSON_LOOSE_TYPE | SERVICES_JSON_SUPPRESS_ERRORS);
+      $pagespeed = $json->decode(gz_file_get_contents($file), true);
+      if ($pagespeed) {
+        // make sure we only have to go this route once, save the corrected file
+        gz_file_put_contents($file, json_encode($pagespeed));
+      }
     }
-
-    return $pagespeed;
+  }
+  return $pagespeed;
 }
 
 /**

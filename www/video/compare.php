@@ -727,9 +727,18 @@ function DisplayGraphs() {
             $progress_end = intval((intval($progress_end / 100) + 1) * 100);
         echo '<div id="compare_visual_progress" class="compare-graph"></div>';
     }
-    echo '<div id="compare_times" class="compare-graph"></div>';
-    echo '<div id="compare_requests" class="compare-graph"></div>';
-    echo '<div id="compare_bytes" class="compare-graph"></div>';
+    if (count($tests) <= 4) {
+      echo '<div id="compare_times" class="compare-graph"></div>';
+      echo '<div id="compare_requests" class="compare-graph"></div>';
+      echo '<div id="compare_bytes" class="compare-graph"></div>';
+    } else {
+      foreach($timeMetrics as $metric => $label)
+        echo "<div id=\"compare_times_$metric\" class=\"compare-graph\"></div>";
+      foreach($mimeTypes as $type) {
+        echo "<div id=\"compare_requests_$type\" class=\"compare-graph\"></div>";
+        echo "<div id=\"compare_bytes_$type\" class=\"compare-graph\"></div>";
+      }
+    }
     ?>
     <script type="text/javascript" src="<?php echo $GLOBALS['ptotocol']; ?>://www.google.com/jsapi"></script>
     <script type="text/javascript">
@@ -801,6 +810,12 @@ function DisplayGraphs() {
                 }
                 $row++;
             }
+            $row = 0;
+            foreach($timeMetrics as $metric => $label) {
+              echo "var dataTimes$metric = new google.visualization.DataView(dataTimes);\n";
+              echo "dataTimes$metric.setRows($row, $row);\n";
+              $row++;
+            }
             echo "dataRequests.setValue(0, 0, 'Total');\n";
             echo "dataBytes.setValue(0, 0, 'Total');\n";
             $column = 1;
@@ -831,19 +846,38 @@ function DisplayGraphs() {
                 }
                 $row++;
             }
+            $row = 1;
+            foreach($mimeTypes as $mimeType) {
+              echo "var dataRequests$mimeType = new google.visualization.DataView(dataRequests);\n";
+              echo "dataRequests$mimeType.setRows($row, $row);\n";
+              echo "var dataBytes$mimeType = new google.visualization.DataView(dataBytes);\n";
+              echo "dataBytes$mimeType.setRows($row, $row);\n";
+              $row++;
+            }
             if ($progress_end) {
                 echo "var progressChart = new google.visualization.LineChart(document.getElementById('compare_visual_progress'));\n";
                 echo "progressChart.draw(dataProgress, {title: 'Visual Progress (%)', hAxis: {title: 'Time (seconds)'}});\n";
             }
+            if (count($tests) <= 4) {
+              echo "var timesChart = new google.visualization.ColumnChart(document.getElementById('compare_times'));\n";
+              echo "timesChart.draw(dataTimes, {title: 'Timings (ms)'});\n";
+              echo "var requestsChart = new google.visualization.ColumnChart(document.getElementById('compare_requests'));\n";
+              echo "requestsChart.draw(dataRequests, {title: 'Requests'});\n";
+              echo "var bytesChart = new google.visualization.ColumnChart(document.getElementById('compare_bytes'));\n";
+              echo "bytesChart.draw(dataBytes, {title: 'Bytes'});\n";
+            } else {
+              foreach($timeMetrics as $metric => $label) {
+                echo "var timesChart$metric = new google.visualization.ColumnChart(document.getElementById('compare_times_$metric'));\n";
+                echo "timesChart$metric.draw(dataTimes$metric, {title: '$label (ms)'});\n";
+              }
+              foreach($mimeTypes as $type) {
+                echo "var requestsChart$type = new google.visualization.ColumnChart(document.getElementById('compare_requests_$type'));\n";
+                echo "requestsChart$type.draw(dataRequests$type, {title: '$type Requests'});\n";
+                echo "var bytesChart$type = new google.visualization.ColumnChart(document.getElementById('compare_bytes_$type'));\n";
+                echo "bytesChart$type.draw(dataBytes$type, {title: '$type Bytes'});\n";
+              }
+            }
             ?>
-            var timesChart = new google.visualization.ColumnChart(document.getElementById('compare_times'));
-            timesChart.draw(dataTimes, {title: 'Timings (ms)'});
-
-            var requestsChart = new google.visualization.ColumnChart(document.getElementById('compare_requests'));
-            requestsChart.draw(dataRequests, {title: 'Requests'});
-
-            var bytesChart = new google.visualization.ColumnChart(document.getElementById('compare_bytes'));
-            bytesChart.draw(dataBytes, {title: 'Bytes'});
         }
     </script>
     <?php

@@ -989,7 +989,7 @@ function DevToolsGetCPUSlices($testPath, $run, $cached) {
   $slices = null;
   $devTools = array();
   $startOffset = null;
-  $ver = 1;
+  $ver = 2;
   $cacheFile = "$testPath/$run.$cached.devToolsCPUSlices.$ver";
   if (gz_is_file($cacheFile))
     $slices = json_decode(gz_file_get_contents($cacheFile), true);
