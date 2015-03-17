@@ -102,7 +102,7 @@ void DeleteDirectory( LPCTSTR directory, bool remove ) {
           else
             DeleteFile(path);
         }
-      }while(FindNextFile(hFind, &fd));
+      } while(FindNextFile(hFind, &fd));
       
       FindClose(hFind);
     }
@@ -110,6 +110,30 @@ void DeleteDirectory( LPCTSTR directory, bool remove ) {
     delete [] path;
     if( remove )
       RemoveDirectory(directory);
+  }
+}
+
+
+/*-----------------------------------------------------------------------------
+  Delete anything in the given directory older than the provided age
+-----------------------------------------------------------------------------*/
+void DeleteOldDirectoryEntries(CString directory, int seconds) {
+  WIN32_FIND_DATA fd;
+  HANDLE hFind = FindFirstFile(directory + _T("\\*.*"), &fd);
+  if (hFind != INVALID_HANDLE_VALUE) {
+    FILETIME now;
+    GetSystemTimeAsFileTime(&now);
+    do {
+      if (lstrcmp(fd.cFileName, _T(".")) &&
+          lstrcmp(fd.cFileName, _T("..")) &&
+          ElapsedFileTimeSeconds(fd.ftLastWriteTime, now) > seconds) {
+        if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+          DeleteDirectory(directory + _T("\\") + fd.cFileName);
+        else
+          DeleteFile(directory + _T("\\") + fd.cFileName);
+      }
+    } while (FindNextFile(hFind, &fd));
+    FindClose(hFind);
   }
 }
 

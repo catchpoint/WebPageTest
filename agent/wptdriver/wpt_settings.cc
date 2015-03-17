@@ -458,25 +458,7 @@ void BrowserSettings::CleanupCustomBrowsers(CString browser) {
   _wpt_directory = buff;
   _wpt_directory.Trim(_T("\\"));
   CString browsers_directory = _wpt_directory + CString(_T("\\browsers"));
-  WIN32_FIND_DATA fd;
-  HANDLE hFind = FindFirstFile(browsers_directory + _T("\\*.*"), &fd);
-  FILETIME now;
-  GetSystemTimeAsFileTime(&now);
-  if (hFind != INVALID_HANDLE_VALUE) {
-    do {
-      if (lstrcmp(fd.cFileName, _T(".")) &&
-          lstrcmp(fd.cFileName, _T("..")) &&
-          lstrcmp(fd.cFileName, browser) &&
-          fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-        if (ElapsedFileTimeSeconds(fd.ftLastWriteTime, now) > 86400)
-          DeleteDirectory(browsers_directory +
-                          CString(_T("\\")) + fd.cFileName);
-      } else if (!CString(fd.cFileName).Right(4).CompareNoCase(_T(".zip"))) {
-        // delete all of the zip files
-        DeleteFile(browsers_directory + CString(_T("\\")) + fd.cFileName);
-      }
-    } while(FindNextFile(hFind, &fd));
-  }
+  DeleteOldDirectoryEntries(browsers_directory, 86400);
 }
 
 /*-----------------------------------------------------------------------------
@@ -540,6 +522,18 @@ void BrowserSettings::ResetProfile(bool clear_certs) {
     } while(FindNextFile(find, &fd));
     FindClose(find);
   }
+  find = FindFirstFile(windows_dir_ + _T("\\Temp*-Signatures"), &fd);
+  if (find != INVALID_HANDLE_VALUE) {
+    do {
+      DeleteDirectory(windows_dir_ + fd.cFileName);
+    } while (FindNextFile(find, &fd));
+    FindClose(find);
+  }
+
+  // Clean up old Chrome installers that sometimes accumulate
+  // (anything over 2 days old).
+  DeleteOldDirectoryEntries(
+      local_app_data_dir_ + _T("\\Google\\Update\\Install"), 172800);
 }
 
 /*-----------------------------------------------------------------------------
