@@ -22,7 +22,7 @@ if( isset($_FILES['file']) )
   
   // extract the zip file
   $zip = new ZipArchive();
-  if ($zip->open($zipfile) === TRUE) {
+  if ($zip->open($_FILES['file']['tmp_name']) === TRUE) {
       $testPath = realpath($path);
       $zip->extractTo($testPath);
       $zip->close();
