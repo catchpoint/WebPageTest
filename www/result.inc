@@ -170,9 +170,12 @@ $page_description = "Website performance test result$testLabel.";
                         <th align="center" class="empty" valign="middle" style="border:1px white solid;"></th>
                         <?php
                         echo "<th align=\"center\" class=\"empty\" valign=\"middle\" colspan=\"$cols\"></th>\n";
+                        echo '<th align="center" class="border" valign="middle" colspan="3">Document Complete</th>';
+                        if (GetSetting('show_cost'))
+                          echo '<th align="center" class="border" valign="middle" colspan="4">Fully Loaded</th>';
+                        else
+                          echo '<th align="center" class="border" valign="middle" colspan="3">Fully Loaded</th>';
                         ?>
-                        <th align="center" class="border" valign="middle" colspan="3">Document Complete</th>
-                        <th align="center" class="border" valign="middle" colspan="3">Fully Loaded</th>
                     </tr>
                     <tr>
                         <th align="center" class="empty" valign="middle"></th>
@@ -200,6 +203,10 @@ $page_description = "Website performance test result$testLabel.";
                         <th align="center" class="border" valign="middle">Time</th>
                         <th align="center" valign="middle">Requests</th>
                         <th align="center" valign="middle">Bytes In</th>
+                        <?php
+                        if (GetSetting('show_cost'))
+                          echo '<th align="center" valign="middle">Cost</th>';
+                        ?>
                     </tr>
                     <tr>
                         <td align="left" valign="middle">First View
@@ -231,6 +238,14 @@ $page_description = "Website performance test result$testLabel.";
                         echo "<td id=\"fvFullyLoaded\" class=\"border\" valign=\"middle\">" . formatMsInterval($pageData[$fvMedian][0]['fullyLoaded'], 3) . "</td>\n";
                         echo "<td id=\"fvRequests\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['requests'],0) . "</td>\n";
                         echo "<td id=\"fvBytes\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['bytesIn'] / 1024, 0) . " KB</td>\n";
+                        if (GetSetting('show_cost')) {
+                          echo "<td id=\"fvCost\" valign=\"middle\"><a title=\"Find out how much it costs for someone to use your site on mobile networks around the world.\" href=\"http://whatdoesmysitecost.com/test/$id\">";
+                          // one dollar sign for every 500KB
+                          $count = max(1, min(5, ceil($pageData[$fvMedian][0]['bytesIn'] / (500 * 1024))));
+                          for ($i = 1; $i <= 5; $i++)
+                            echo $i <= $count ? '$' : '-';
+                          echo "</a></td>\n";
+                        }
                         ?>
                     </tr>
                     <?php if( $rvMedian ) { ?>
@@ -267,6 +282,9 @@ $page_description = "Website performance test result$testLabel.";
                         echo "<td id=\"rvFullyLoaded\" class=\"even border\" valign=\"middle\">" . formatMsInterval($pageData[$rvMedian][1]['fullyLoaded'], 3) . "</td>\n";
                         echo "<td id=\"rvRequests\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['requests'],0) . "</td>\n";
                         echo "<td id=\"rvBytes\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['bytesIn'] / 1024, 0) . " KB</td>\n";
+                        if (GetSetting('show_cost')) {
+                          echo '<td></td>';
+                        }
                         ?>
                     </tr>
                     <?php } ?>
