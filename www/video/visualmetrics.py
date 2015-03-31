@@ -3,29 +3,29 @@
 Copyright (c) 2014, Google Inc.
 All rights reserved.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
 
     * Redistributions of source code must retain the above copyright notice,
       this list of conditions and the following disclaimer.
     * Redistributions in binary form must reproduce the above copyright notice,
       this list of conditions and the following disclaimer in the documentation
       and/or other materials provided with the distribution.
-    * Neither the name of the <ORGANIZATION> nor the names of its contributors
-    may be used to endorse or promote products derived from this software
-    without specific prior written permission.
+    * Neither the name of the company nor the names of its contributors may be
+      used to endorse or promote products derived from this software without
+      specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."""
 import glob
 import gzip
 import json
@@ -44,7 +44,6 @@ import tempfile
 
 
 def video_to_frames(video, directory, force, orange_file, find_viewport, full_resolution, timeline_file):
-    viewport = None
     first_frame = os.path.join(directory, 'ms_000000')
     if (not os.path.isfile(first_frame + '.png') and not os.path.isfile(first_frame + '.jpg')) or force:
         if os.path.isfile(video):
@@ -71,7 +70,6 @@ def video_to_frames(video, directory, force, orange_file, find_viewport, full_re
             logging.critical("Input video file " + video + " does not exist")
     else:
         logging.info("Extracted video already exists in " + directory)
-    return viewport
 
 
 def extract_frames(video, directory, full_resolution, viewport):
@@ -270,7 +268,7 @@ def eliminate_duplicate_frames(directory):
             os.remove(duplicate)
 
     except:
-        logging.critical('Error processing frames for duplicates')
+        logging.exception('Error processing frames for duplicates')
 
 
 def get_decimate_filter():
@@ -354,7 +352,7 @@ def generate_orange_png(orange_file):
         del draw
         im.save(orange_file, 'PNG')
     except:
-        logging.debug('Error generating orange png ' + orange_file)
+        logging.exception('Error generating orange png ' + orange_file)
 
 
 def synchronize_to_timeline(directory, timeline_file):
@@ -403,8 +401,8 @@ def get_timeline_offset(timeline_file):
             offset = int(round(first_navigate - last_paint))
             logging.info(
                 "Trimming {0:d}ms from the start of the video based on timeline synchronization".format(offset))
-    except Exception as e:
-        logging.debug("Error processing timeline file " + timeline_file)
+    except:
+        logging.critical("Error processing timeline file " + timeline_file)
 
     return offset
 
@@ -475,7 +473,7 @@ def get_timeline_event_navigate_time(timeline_event):
 ########################################################################################################################
 
 
-def calculate_histograms(directory, histograms_file, force, viewport):
+def calculate_histograms(directory, histograms_file, force):
     if not os.path.isfile(histograms_file) or force:
         try:
             extension = None
@@ -504,7 +502,7 @@ def calculate_histograms(directory, histograms_file, force, viewport):
             else:
                 logging.critical('No video frames found in ' + directory)
         except:
-            logging.critical('Error calculating histograms')
+            logging.exception('Error calculating histograms')
     else:
         logging.debug('Histograms file {0} already exists'.format(histograms_file))
 
@@ -527,9 +525,9 @@ def calculate_image_histogram(file):
                     histogram['r'][pixel[0]] += 1
                     histogram['g'][pixel[1]] += 1
                     histogram['b'][pixel[2]] += 1
-    except Exception as e:
+    except:
         histogram = None
-        logging.error('Error calculating histogram for ' + file)
+        logging.exception('Error calculating histogram for ' + file)
     return histogram
 
 
@@ -729,7 +727,7 @@ def check_process(command, output):
 ########################################################################################################################
 
 
-if '__main__' == __name__:
+def main():
     import argparse
 
     parser = argparse.ArgumentParser(description='Calculate visual performance metrics from a video.',
@@ -799,9 +797,9 @@ if '__main__' == __name__:
                     not os.path.isfile(orange_file):
                     orange_file = os.path.join(temp_dir, 'orange.png')
                     generate_orange_png(orange_file)
-                viewport = video_to_frames(options.video, directory, options.force, orange_file, options.viewport,
-                                           options.full, options.timeline)
-            calculate_histograms(directory, histogram_file, options.force, viewport)
+                video_to_frames(options.video, directory, options.force, orange_file, options.viewport, options.full,
+                                options.timeline)
+            calculate_histograms(directory, histogram_file, options.force)
             if options.dir is not None and options.quality is not None:
                 convert_to_jpeg(directory, options.quality)
             metrics = calculate_visual_metrics(histogram_file, options.start, options.end)
@@ -812,6 +810,7 @@ if '__main__' == __name__:
         else:
             ok = check_config()
     except Exception as e:
+        logging.exception(e)
         ok = False
 
     # Clean up
@@ -820,3 +819,7 @@ if '__main__' == __name__:
         exit(0)
     else:
         exit(1)
+
+
+if '__main__' == __name__:
+    main()

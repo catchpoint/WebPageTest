@@ -931,7 +931,7 @@ bool WptTest::OverrideHost(CString host, CString &new_host) {
       HttpHeaderValue host_override = _override_hosts.GetNext(pos);
       if (!host_override._tag.CompareNoCase(CT2A(host)) ||
           !host_override._tag.Compare("*")) {
-        new_host = CA2T(host_override._value);
+        new_host = CA2T(host_override._value, CP_UTF8);
         override_host = true;
         break;
       }

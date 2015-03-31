@@ -115,13 +115,20 @@ exports.scheduleKillAll = function(app, description, procs) {
  */
 exports.scheduleGetAll = function(app) {
   'use strict';
-  var cmd = system_commands.get('get all', [process.getuid()]).split(/\s+/);
-  return exports.scheduleExec(app, cmd.shift(), cmd).then(function(psOut) {
-    psOut = psOut.trim();
-    return (!psOut ? [] : psOut.split('\n').map(function(psLine) {
-        return new exports.ProcessInfo(psLine);
-      }));
-  });
+  // Only do this for platforms that support getuid (posix - i.e. not Windows)
+  if (process.getuid) {
+    var cmd = system_commands.get('get all', [process.getuid()]).split(/\s+/);
+    return exports.scheduleExec(app, cmd.shift(), cmd).then(function(psOut) {
+      psOut = psOut.trim();
+      return (!psOut ? [] : psOut.split('\n').map(function(psLine) {
+          return new exports.ProcessInfo(psLine);
+        }));
+    });
+  } else {
+    return app.schedule('Return empty user process list', function() {
+      return [];
+    });
+  }
 };
 
 /**
@@ -166,10 +173,13 @@ exports.scheduleGetTree = function(app, description, rootPid) {
  */
 exports.scheduleKillTree = function(app, description, proc) {
   'use strict';
-  exports.scheduleGetTree(app, 'getTree ' + description, proc.pid).then(
-      function(processInfos) {
-    exports.scheduleKillAll(app, 'killAll ' + description, processInfos);
-  });
+  try {
+    exports.scheduleGetTree(app, 'getTree ' + description, proc.pid).then(
+        function (processInfos) {
+      exports.scheduleKillAll(app, 'killAll ' + description, processInfos);
+    });
+  } catch (e) {
+  }
 };
 
 /**

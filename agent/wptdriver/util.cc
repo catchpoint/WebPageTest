@@ -31,7 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Wincrypt.h>
 #include <TlHelp32.h>
 #include <Wtsapi32.h>
-#include "dbghelp/dbghelp.h"
 #include <WinInet.h>
 #include <regex>
 #include <string>
@@ -103,7 +102,7 @@ void DeleteDirectory( LPCTSTR directory, bool remove ) {
           else
             DeleteFile(path);
         }
-      }while(FindNextFile(hFind, &fd));
+      } while(FindNextFile(hFind, &fd));
       
       FindClose(hFind);
     }
@@ -111,6 +110,30 @@ void DeleteDirectory( LPCTSTR directory, bool remove ) {
     delete [] path;
     if( remove )
       RemoveDirectory(directory);
+  }
+}
+
+
+/*-----------------------------------------------------------------------------
+  Delete anything in the given directory older than the provided age
+-----------------------------------------------------------------------------*/
+void DeleteOldDirectoryEntries(CString directory, int seconds) {
+  WIN32_FIND_DATA fd;
+  HANDLE hFind = FindFirstFile(directory + _T("\\*.*"), &fd);
+  if (hFind != INVALID_HANDLE_VALUE) {
+    FILETIME now;
+    GetSystemTimeAsFileTime(&now);
+    do {
+      if (lstrcmp(fd.cFileName, _T(".")) &&
+          lstrcmp(fd.cFileName, _T("..")) &&
+          ElapsedFileTimeSeconds(fd.ftLastWriteTime, now) > seconds) {
+        if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+          DeleteDirectory(directory + _T("\\") + fd.cFileName);
+        else
+          DeleteFile(directory + _T("\\") + fd.cFileName);
+      }
+    } while (FindNextFile(hFind, &fd));
+    FindClose(hFind);
   }
 }
 
@@ -405,7 +428,7 @@ CString HttpGetText(CString url) {
       while (InternetReadFile(http_request, buff, sizeof(buff) - 1, 
               &bytes_read) && bytes_read) {
         buff[bytes_read] = 0;
-        response += CA2T(buff);
+        response += CA2T(buff, CP_UTF8);
       }
       InternetCloseHandle(http_request);
     }
@@ -727,17 +750,17 @@ int ElapsedFileTimeSeconds(FILETIME& check, FILETIME& now) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Reboot() {
-	HANDLE hToken;
-	if (OpenProcessToken(GetCurrentProcess(),
+  HANDLE hToken;
+  if (OpenProcessToken(GetCurrentProcess(),
       TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
-		TOKEN_PRIVILEGES tp;
-		if (LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &tp.Privileges[0].Luid)) {
-			tp.PrivilegeCount = 1;
-			tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
-			AdjustTokenPrivileges(hToken, FALSE, &tp, 0, (PTOKEN_PRIVILEGES)0, 0) ;
-		}
-		CloseHandle(hToken);
-	}
-	
-	InitiateSystemShutdown(NULL, NULL, 0, TRUE, TRUE);
+    TOKEN_PRIVILEGES tp;
+    if (LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &tp.Privileges[0].Luid)) {
+      tp.PrivilegeCount = 1;
+      tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+      AdjustTokenPrivileges(hToken, FALSE, &tp, 0, (PTOKEN_PRIVILEGES)0, 0) ;
+    }
+    CloseHandle(hToken);
+  }
+  
+  InitiateSystemShutdown(NULL, NULL, 0, TRUE, TRUE);
 }

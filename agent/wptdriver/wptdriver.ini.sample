@@ -1,13 +1,12 @@
 [WebPagetest]
 url=http://127.0.0.1/
 location=Test
-browser=chrome
 Time Limit=120
 ;key=TestKey123
 ;Automatically install and update support software (Flash, Silverlight, etc)
 software=http://www.webpagetest.org/installers/software.dat
 
-[chrome]
+[Chrome]
 exe="%PROGRAM_FILES%\Google\Chrome\Application\chrome.exe"
 options='--load-extension="%WPTDIR%\extension" --user-data-dir="%PROFILE%" --no-proxy-server'
 installer=http://www.webpagetest.org/installers/browsers/chrome.dat

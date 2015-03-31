@@ -70,14 +70,16 @@ function GetLocationKey($location) {
         $locations = LoadLocationsIni();
         if ($locations !== false &&
             is_array($locations) &&
-            array_key_exists($location, $locations) &&
-            array_key_exists('key', $locations[$location])) {
-          $key = $locations[$location]['key'];
-        }
-        if (!isset($key)) {
-          $default_key = GetSetting('location_key');
-          if ($default_key)
-            $key = $default_key;
+            isset($locations[$location])) {
+          if (isset($locations[$location]['key'])) {
+            $key = $locations[$location]['key'];
+          } else {
+            $default_key = GetSetting('location_key');
+            if ($default_key)
+              $key = $default_key;
+            else
+              $key = '';
+          }
         }
         apc_store("key_$location", $key, 60);
       }
@@ -85,14 +87,16 @@ function GetLocationKey($location) {
       $locations = LoadLocationsIni();
       if ($locations !== false &&
           is_array($locations) &&
-          array_key_exists($location, $locations) &&
-          array_key_exists('key', $locations[$location])) {
-        $key = $locations[$location]['key'];
-      }
-      if (!isset($key)) {
-        $default_key = GetSetting('location_key');
-        if ($default_key)
-          $key = $default_key;
+          isset($locations[$location])) {
+        if (isset($locations[$location]['key'])) {
+          $key = $locations[$location]['key'];
+        } else {
+          $default_key = GetSetting('location_key');
+          if ($default_key)
+            $key = $default_key;
+          else
+            $key = '';
+        }
       }
     }
   }
@@ -553,32 +557,30 @@ function gz_is_file($filename)
 *
 * @param mixed $file
 */
-function GetPageSpeedScore($file)
+function GetPageSpeedScore($file, $data = null)
 {
-    $score = '';
-    if (gz_is_file($file)) {
-        $pagespeed = LoadPageSpeedData($file);
+  $score = '';
+  if (isset($data))
+    $pagespeed = $data;
+  elseif (gz_is_file($file))
+    $pagespeed = LoadPageSpeedData($file);
 
-        if( $pagespeed )
-        {
-            if( isset($pagespeed['score']) )
-                $score = $pagespeed['score'];
-            else
-            {
-                $total = 0;
-                $count = 0;
-                foreach( $pagespeed as &$check )
-                {
-                    $total += (double)$check['score'];
-                    $count++;
-                }
-                if( $count )
-                    $score = ceil($total / $count);
-            }
-        }
+  if ($pagespeed) {
+    if (isset($pagespeed['score'])) {
+      $score = $pagespeed['score'];
+    } else {
+      $total = 0;
+      $count = 0;
+      foreach ($pagespeed as &$check) {
+        $total += (double)$check['score'];
+        $count++;
+      }
+      if( $count )
+        $score = ceil($total / $count);
     }
+  }
 
-    return $score;
+  return $score;
 }
 
 /**
@@ -586,24 +588,24 @@ function GetPageSpeedScore($file)
 *
 * @param mixed $file
 */
-function LoadPageSpeedData($file)
-{
+function LoadPageSpeedData($file) {
+  $pagespeed = false;
+  
+  if (gz_is_file($file)) {
     $pagespeed = json_decode(gz_file_get_contents($file), true);
 
-    if( !$pagespeed )
-    {
-        // try an alternate JSON decoder
-        require_once('./lib/json.php');
-        $json = new Services_JSON(SERVICES_JSON_LOOSE_TYPE | SERVICES_JSON_SUPPRESS_ERRORS);
-        $pagespeed = $json->decode(gz_file_get_contents($file), true);
-        if( $pagespeed )
-        {
-            // make sure we only have to go this route once, save the corrected file
-            gz_file_put_contents($file, json_encode($pagespeed));
-        }
+    if (!$pagespeed) {
+      // try an alternate JSON decoder
+      require_once('./lib/json.php');
+      $json = new Services_JSON(SERVICES_JSON_LOOSE_TYPE | SERVICES_JSON_SUPPRESS_ERRORS);
+      $pagespeed = $json->decode(gz_file_get_contents($file), true);
+      if ($pagespeed) {
+        // make sure we only have to go this route once, save the corrected file
+        gz_file_put_contents($file, json_encode($pagespeed));
+      }
     }
-
-    return $pagespeed;
+  }
+  return $pagespeed;
 }
 
 /**
@@ -1717,6 +1719,11 @@ function GetTesters($locationId, $includeOffline = false)
             }
         }
     }
+    
+    if (isset($location['elapsed']) && $location['elapsed'] < 60)
+      $location['status'] = 'OK';
+    else
+      $location['status'] = 'OFFLINE';
 
     return $location;
 }
@@ -2597,13 +2604,68 @@ function SBL_Check($url, &$message) {
       foreach($out as $line) {
         if (stripos($line, 'is blacklisted') !== false) {
           $ok = false;
-          $message = trim($line);
-          logMsg(trim($line), __DIR__ . '/log/sbl.log', true);
           break;
         }
       }
     }
   }
   return $ok;
+}
+
+/**
+* Check to see if we can use the python visual metrics processing script
+* 
+*/
+function CheckPythonVisualMetrics(&$failures) {
+  $ok = false;
+  $failures = null;
+  if (function_exists('apc_fetch')) {
+    $ok = apc_fetch("PythonVisualMetrics");
+  }
+  if (!$ok) {
+    if (is_file(__DIR__ . '/video/visualmetrics.py')) {
+      $script = realpath(__DIR__ . '/video/visualmetrics.py');
+      $command = "python \"$script\" -c 2>&1";
+      exec($command, $output, $result);
+      if (isset($output) && is_array($output) && count($output)) {
+        foreach ($output as $line) {
+          $parts = explode(':', $line);
+          if (count($parts) == 2) {
+            $module = trim($parts[0]);
+            $status = trim($parts[1]);
+            if ($status == 'OK') {
+              $ok = true;
+            } else {
+              if (!isset($failures))
+                $failures = array();
+              $failures[] = $module;
+            }
+          }
+        }
+      }
+    }
+    if (isset($failures)) {
+      $ok = false;
+    }
+    if ($ok && function_exists('apc_store')) {
+      apc_store("PythonVisualMetrics", $ok, 3600);
+    }
+  }
+  return $ok;
+}
+
+function ZipExtract($zipFile, $path) {
+  if (is_file($zipFile) && is_dir($path)) {
+    $zipFile = realpath($zipFile);
+    $extractPath = realpath($path);
+    $zip = new ZipArchive();
+    if ($zip->open($zipFile) === TRUE) {
+      $zip->extractTo($extractPath);
+      $zip->close();
+    } else {
+      $command = "unzip \"$zipFile\" -d \"$extractPath\"";
+      exec($command, $output, $result);
+    }
+  }
 }
 ?>

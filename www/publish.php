@@ -2,7 +2,6 @@
 ob_start();
 set_time_limit(300);
 include 'common.inc';
-require_once('./lib/pclzip.lib.php');
 $pub = $settings['publishTo'];
 if (!isset($pub) || !strlen($pub)) {
     $pub = $_SERVER['HTTP_HOST'];
@@ -101,9 +100,30 @@ function PublishResult()
     {    
         // zip up the results
         $zipFile = $testPath . '/publish.zip';
-        $zip = new PclZip($zipFile);
-        if( $zip->create($files, PCLZIP_OPT_REMOVE_PATH, $testPath) != 0 )
-        {
+        $zip = new ZipArchive();
+        if ($zip->open($zipFile, ZIPARCHIVE::CREATE) === true) {
+            // add the files
+            $files = scandir($testPath);
+            foreach ($files as $file) {
+              if ($file != 'publish.zip') {
+                $filePath = "$testPath/$file";
+                if (is_file($filePath)) {
+                    $count++;
+                    $zip->addFile($filePath, $file);
+                } else if ($file != '.' && $file != '..' && is_dir($filePath)) {
+                    $subFiles = scandir($filePath);
+                    if ($subFiles) {
+                        $zip->addEmptyDir($file);
+                        foreach ($subFiles as $subFile) {
+                            if( is_file("$filePath/$subFile") )
+                                $zip->addFile("$filePath/$subFile", "$file/$subFile");
+                        }
+                    }
+                }
+              }
+            }
+            $zip->close();
+
             // upload the actual file
             $boundary = "---------------------".substr(md5(rand(0,32000)), 0, 10);
             $data = "--$boundary\r\n";

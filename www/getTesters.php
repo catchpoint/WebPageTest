@@ -119,8 +119,18 @@ function GetAllTesters()
 {
     $locations = array();
     $loc = LoadLocationsIni();
-    BuildLocations($loc);
 
+    if (isset($_REQUEST['location'])) {
+      $location = $_REQUEST['location'];
+      $new = array('locations' => array('1' => 'group', 'default' => 'group'),
+                   'group' => array('1' => $location, 'default' => $location, 'label' => 'placeholder'));
+      if (isset($loc[$_REQUEST['location']]))
+        $new[$_REQUEST['location']] = $loc[$_REQUEST['location']];
+      $loc = $new;
+    }
+
+    BuildLocations($loc);
+    
     $i = 1;
     while( isset($loc['locations'][$i]) )
     {
@@ -140,7 +150,7 @@ function GetAllTesters()
 
         $i++;
     }
-
+    
     return $locations;
 }
 

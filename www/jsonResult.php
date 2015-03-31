@@ -239,9 +239,9 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
       $ret['images']['waterfall'] = "$protocol://$host$uri$path/$run{$cachedText}_waterfall.png";
       $ret['images']['connectionView'] = "$protocol://$host$uri$path/$run{$cachedText}_connection.png";
       $ret['images']['checklist'] = "$protocol://$host$uri$path/$run{$cachedText}_optimization.png";
-      $ret['images']['screenShot'] = "$protocol://$host$uri$path/$run{$cachedText}_screen.jpg";
+      $ret['images']['screenShot'] = "$protocol://$host$uri/getfile.php?test=$id&file=$run{$cachedText}_screen.jpg";
       if( is_file("$testPath/$run{$cachedText}_screen.png") )
-          $ret['images']['screenShotPng'] = "$protocol://$host$uri$path/$run{$cachedText}_screen.png";
+          $ret['images']['screenShotPng'] = "$protocol://$host$uri/getfile.php?test=$id&file=$run{$cachedText}_screen.png";
 
       $ret['rawData'] = array();
       $ret['rawData']['headers'] = "$protocol://$host$uri$path/$run{$cachedText}_report.txt";
@@ -259,7 +259,7 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
           $ret['videoFrames'] = array();
           foreach($progress['frames'] as $ms => $frame) {
               $videoFrame = array('time' => $ms);
-              $videoFrame['image'] = "http://$host$uri$path/video_{$run}$cachedTextLower/{$frame['file']}";
+              $videoFrame['image'] = "http://$host$uri/getfile.php?test=$id&video=video_{$run}$cachedTextLower&file={$frame['file']}";
               $videoFrame['VisuallyComplete'] = $frame['progress'];
               $ret['videoFrames'][] = $videoFrame;
           }

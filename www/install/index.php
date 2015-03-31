@@ -51,6 +51,8 @@ include 'common.inc';
         <?php CheckPHP(); ?>
         </ul><h2>System Utilities</h2><ul>
         <?php CheckUtils(); ?>
+        </ul><h2>Misc</h2><ul>
+        <?php CheckMisc(); ?>
         </ul><h2>Filesystem</h2><ul>
         <?php CheckFilesystem(); ?>
         </ul><h2>Test Locations</h2><ul>
@@ -105,13 +107,17 @@ function CheckPHP() {
 }
 
 function CheckUtils() {
-    ShowCheck('ffmpeg Installed (required for video)', CheckFfmpeg());
+    ShowCheck('ffmpeg Installed with --enable-libx264 (required for video)', CheckFfmpeg());
     ShowCheck('ffmpeg Installed with scale and decimate filters(required for mobile video)', CheckFfmpegFilters($ffmpegInfo), false, $ffmpegInfo);
     ShowCheck('imagemagick compare Installed (required for mobile video)', CheckCompare(), false);
     ShowCheck('jpegtran Installed (required for JPEG Analysis)', CheckJpegTran(), false);
     ShowCheck('exiftool Installed (required for JPEG Analysis)', CheckExifTool(), false);
     if (array_key_exists('beanstalkd', $settings))
         ShowCheck("beanstalkd responding on {$settings['beanstalkd']} (configured in settings.ini)", CheckBeanstalkd());
+}
+
+function CheckMisc() {
+    ShowCheck('python 2.7 with modules (faster mobile video processing)', CheckPythonVideo($info), false, $info);
 }
 
 /*-----------------------------------------------------------------------------
@@ -147,13 +153,9 @@ function IsWPTTmpOnTmpfs() {
 function CheckLocations() {
     $locations = LoadLocationsIni();
     $out = '';
-    $video = false;
     foreach($locations['locations'] as $id => $location) {
         if (is_numeric($id)) {
             $info = GetLocationInfo($locations, $location);
-            if ($info['video']) {
-                $video = true;
-            }
             $out .= "<li class=\"{$info['state']}\">{$info['label']}";
             if (count($info['locations'])) {
                 $out .= "<ul>";
@@ -165,11 +167,6 @@ function CheckLocations() {
             }
             $out .= "</li>";
         }
-    }
-    if ($video) {
-        echo '<li class="pass">Video rendering is supported</li></ul><br><ul>';
-    } else {
-        echo '<li class="fail"><span class="fail">No test agents are configured to render video</span></li></ul><br><ul>';
     }
     echo $out;
 }
@@ -326,17 +323,19 @@ function CheckBeanstalkd() {
 */
 function CheckFfmpeg() {
     $ret = false;
+    $x264 = false;
     $command = "ffmpeg -version";
     $retStr = exec($command, $output, $result);
     if (count($output)) {
         foreach($output as $line) {
-            if (stripos($line, 'ffmpeg ') !== false) {
+            if (stripos($line, 'ffmpeg ') !== false)
                 $ret = true;
-                break;
-            }
+            if (stripos($line, '--enable-libx264') !== false)
+                $x264 = true;
         }
     }
-    return $ret;
+    
+    return $ret && $x264;
 }
 
 /**
@@ -363,7 +362,7 @@ function CheckFfmpegFilters(&$info) {
     $scale = false;
     if (count($output)) {
       foreach ($output as $line) {
-        if (!strncmp($line, 'scale ', 6))
+        if (preg_match('/scale.*V->V.*Scale the input video/', $line))
           $scale = true;
         if (preg_match('/(?P<filter>[mp]*decimate).*V->V.*Remove near-duplicate frames/', $line, $matches))
           $decimate = $matches['filter'];
@@ -392,7 +391,7 @@ function CheckJpegTran() {
 
 function CheckExifTool() {
     $ret = false;
-    $command = "exiftool";
+    $command = "exiftool -ver";
     $retStr = exec($command, $output, $result);
     if ($result == 0)
       $ret = true;
@@ -414,6 +413,18 @@ function CheckFreeType() {
     $gdinfo = gd_info();
     if(isset($gdinfo['FreeType Support']) && $gdinfo['FreeType Support'])
       $ret = true;
+  }
+  return $ret;
+}
+
+function CheckPythonVideo(&$info) {
+  $ret = CheckPythonVisualMetrics($failures);
+  if (!$ret) {
+    if (isset($failures)) {
+      $info = 'Missing python modules: ' . implode(',', $failures);
+    } else {
+      $info = 'Error running "python video/visualmetrics.py -c"';
+    }
   }
   return $ret;
 }

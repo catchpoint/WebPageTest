@@ -45,13 +45,13 @@ if (function_exists('curl_init')) {
 if (function_exists('apache_request_headers')) {
     $headers = apache_request_headers();
     if (array_key_exists('X-Forwarded-For', $headers)){
-        $_SERVER["REMOTE_ADDR"] = $headers['X-Forwarded-For'];
+        $_SERVER["HTTP_X_FORWARDED_FOR"] = $headers['X-Forwarded-For'];
     }
 }
 if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
   $forwarded = explode(',',$_SERVER["HTTP_X_FORWARDED_FOR"]);
   if (isset($forwarded) && is_array($forwarded) && count($forwarded)) {
-    $forwarded_ip = trim($forwarded[0]);
+    $forwarded_ip = trim(end($forwarded));
     if (strlen($forwarded_ip))
         $_SERVER["REMOTE_ADDR"] = $forwarded_ip;
   }
@@ -73,8 +73,8 @@ if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
 // constants
 define('VER_WEBPAGETEST', '2.16');   // webpagetest version
 define('VER_CSS', 67);           // version of the sitewide css file
-define('VER_JS', 31);            // version of the sitewide javascript file
-define('VER_JS_TEST', 29);       // version of the javascript specific to the test pages
+define('VER_JS', 32);            // version of the sitewide javascript file
+define('VER_JS_TEST', 30);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);     // version of the javascript specific to the test running status page
 define('UNKNOWN_TIME', -1);      // Value used as a flag for an unknown time.
                                  // To find code that fails to check that a time
@@ -89,7 +89,6 @@ $tempDir = './tmp';
 if (!is_dir($tempDir))
     mkdir($tempDir, 0777, true);
 $tempDir = realpath($tempDir) . '/';
-define('PCLZIP_TEMPORARY_DIR', $tempDir);
 
 if (isset($req_embed)) {
     define('EMBED', true);
@@ -217,12 +216,6 @@ if (strlen($id)) {
       RestoreTest($id);   // restore the test if it is archived (and deleted)
 
     $testPath = './' . GetTestPath($id);
-    if (@$settings['archive'] && !is_dir($testPath) &&
-        is_file('storage/storage.ini') && is_file('storage/storage.inc')) {
-        // testPath does not exist, so download from the remote storage.
-        require_once('storage/storage.inc');
-        DownloadResults($id);
-    }
 
     $run = htmlspecialchars(@$req_run);
     if (!$run) {

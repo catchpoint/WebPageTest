@@ -72,7 +72,9 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
       $videoFile = realpath($videoFile);
       $videoDir = realpath($videoDir);
       if (strlen($videoFile) && strlen($videoDir)) {
-        if (!PythonVisualMetrics($videoFile, $videoDir, $testPath, $run, $cached)) {
+        if (PythonVisualMetrics($videoFile, $videoDir, $testPath, $run, $cached)) {
+          unlink($videoFile);
+        } else {
           $crop = FindVideoCrop($videoFile, $videoDir);
           if (Video2PNG($videoFile, $videoDir, $crop)) {
             $startOffset = DevToolsGetVideoOffset($testPath, $run, $cached, $endTime);
@@ -81,7 +83,7 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
             $lastImage = ProcessVideoFrames($videoDir, $viewport);
             $screenShot = "$testPath/$run{$cachedText}_screen.jpg";
             if (isset($lastImage) && is_file($lastImage)) {
-              //unlink($videoFile);
+              unlink($videoFile);
               if (!is_file($screenShot))
                 copy($lastImage, $screenShot);
             }
@@ -502,33 +504,34 @@ function FindVideoCrop($videoFile, $videoDir) {
 * @param mixed $devToolsFile
 */
 function PythonVisualMetrics($videoFile, $videoDir, $testPath, $run, $cached) {
-  return false;
   $ret = false;
-  if (is_file(__DIR__ . '/visualmetrics.py')) {
-    $script = realpath(__DIR__ . '/visualmetrics.py');
-    $histograms = "$testPath/$run.$cached.histograms.json.gz";
-    $timeline = "$testPath/$run{$cachedText}_devtools.json.gz";
-    if (is_file($timeline))
-      $timeline = realpath($timeline);
-    else
-      unset($timeline);
-    touch($histograms);
-    if (is_file($histograms)) {
-      $histograms = realpath($histograms);
-      unlink($histograms);
-    } else {
-      unset($histograms);
-    }
+  if (CheckPythonVisualMetrics($failures)) {
+    if (is_file(__DIR__ . '/visualmetrics.py')) {
+      $script = realpath(__DIR__ . '/visualmetrics.py');
+      $histograms = "$testPath/$run.$cached.histograms.json.gz";
+      $timeline = "$testPath/$run{$cachedText}_devtools.json.gz";
+      if (is_file($timeline))
+        $timeline = realpath($timeline);
+      else
+        unset($timeline);
+      touch($histograms);
+      if (is_file($histograms)) {
+        $histograms = realpath($histograms);
+        unlink($histograms);
+      } else {
+        unset($histograms);
+      }
 
-    $command = "python \"$script\" -i \"$videoFile\" -d \"$videoDir\" --orange --viewport --force --quality 75";
-    if (isset($histograms))
-      $command .= " --histogram \"$histograms\"";
-    if (isset($timeline))
-      $command .= " --timeline \"$timeline\"";
-    $command .= " 2>&1";
-    exec($command, $output, $result);
-    if (is_file("$videoDir/ms_000000.jpg"))
-      $ret = true;
+      $command = "python \"$script\" -i \"$videoFile\" -d \"$videoDir\" --orange --viewport --force --quality 75";
+      if (isset($histograms))
+        $command .= " --histogram \"$histograms\"";
+      if (isset($timeline))
+        $command .= " --timeline \"$timeline\"";
+      $command .= " 2>&1";
+      exec($command, $output, $result);
+      if (is_file("$videoDir/ms_000000.jpg"))
+        $ret = true;
+    }
   }
   return $ret;
 }

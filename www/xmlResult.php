@@ -1,4 +1,14 @@
 <?php
+if(extension_loaded('newrelic')) { 
+  newrelic_add_custom_tracer('GetTestStatus');
+  newrelic_add_custom_tracer('calculatePageStats');
+  newrelic_add_custom_tracer('xmlDomains');
+  newrelic_add_custom_tracer('xmlBreakdown');
+  newrelic_add_custom_tracer('xmlRequests');
+  newrelic_add_custom_tracer('GetVisualProgress');
+  newrelic_add_custom_tracer('ArchiveApi');
+}
+
 $msStart = microtime(true);
 
 //$debug=true;
@@ -277,9 +287,9 @@ else
                     echo "<connectionView>$protocol://$host$uri$path/{$i}_connection.png</connectionView>\n";
                     echo "<checklist>$protocol://$host$uri$path/{$i}_optimization.png</checklist>\n";
                     if( is_file("$testPath/{$i}_screen.jpg") )
-                      echo "<screenShot>$protocol://$host$uri$path/{$i}_screen.jpg</screenShot>\n";
+                      echo "<screenShot>$protocol://$host$uri/getfile.php?test=$id&amp;file={$i}_screen.jpg</screenShot>\n";
                     if( is_file("$testPath/{$i}_screen.png") )
-                        echo "<screenShotPng>$protocol://$host$uri$path/{$i}_screen.png</screenShotPng>\n";
+                        echo "<screenShotPng>$protocol://$host$uri/getfile.php?test=$id&amp;file={$i}_screen.png</screenShotPng>\n";
                     echo "</images>\n";
 
                     // raw results
@@ -306,7 +316,7 @@ else
                       foreach($progress['frames'] as $ms => $frame) {
                           echo "<frame>\n";
                           echo "<time>$ms</time>\n";
-                          echo "<image>$protocol://$host$uri$path/video_{$i}/{$frame['file']}</image>\n";
+                          echo "<image>$protocol://$host$uri/getfile.php?test=$id&amp;video=video_{$i}&amp;file={$frame['file']}</image>\n";
                           echo "<VisuallyComplete>{$frame['progress']}</VisuallyComplete>\n";
                           echo "</frame>\n";
                       }
@@ -370,9 +380,9 @@ else
                     echo "<connectionView>$protocol://$host$uri$path/{$i}_Cached_connection.png</connectionView>\n";
                     echo "<checklist>$protocol://$host$uri$path/{$i}_Cached_optimization.png</checklist>\n";
                     if( is_file("$testPath/{$i}_Cached_screen.jpg") )
-                      echo "<screenShot>$protocol://$host$uri$path/{$i}_Cached_screen.jpg</screenShot>\n";
+                      echo "<screenShot>$protocol://$host$uri/getfile.php?test=$id&amp;file={$i}_Cached_screen.jpg</screenShot>\n";
                     if( is_file("$testPath/{$i}_Cached_screen.png") )
-                        echo "<screenShotPng>$protocol://$host$uri$path/{$i}_Cached_screen.png</screenShotPng>\n";
+                        echo "<screenShotPng>$protocol://$host$uri/getfile.php?test=$id&amp;file={$i}_Cached_screen.png</screenShotPng>\n";
                     echo "</images>\n";
 
                     // raw results
@@ -399,7 +409,7 @@ else
                       foreach($progress['frames'] as $ms => $frame) {
                           echo "<frame>\n";
                           echo "<time>$ms</time>\n";
-                          echo "<image>$protocol://$host$uri$path/video_{$i}_cached/{$frame['file']}</image>\n";
+                          echo "<image>$protocol://$host$uri/getfile.php?test=$id&amp;video=video_{$i}_cached&amp;file={$frame['file']}</image>\n";
                           echo "<VisuallyComplete>{$frame['progress']}</VisuallyComplete>\n";
                           echo "</frame>\n";
                       }
@@ -475,7 +485,7 @@ function xmlDomains($id, $testPath, $run, $cached) {
         $requests;
         $breakdown = getDomainBreakdown($id, $testPath, $run, $cached, $requests);
         foreach ($breakdown as $domain => &$values) {
-            $domain = strrev($domain);
+            $domain = $domain;
             echo "<domain host=\"" . xml_entities($domain) . "\">\n";
             echo "<requests>{$values['requests']}</requests>\n";
             echo "<bytes>{$values['bytes']}</bytes>\n";

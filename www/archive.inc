@@ -94,7 +94,7 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                                                                 'x-archive-meta-collection' => 'httparchive',
                                                                 'x-archive-auto-make-bucket' => '1');
                                     }
-                                    if ($s3->putObject($s3->inputFile($zipFile, false), $bucket, $file, S3::ACL_PUBLIC_READ, $metaHeaders, $requestHeaders))
+                                    if ($s3->putObject($s3->inputFile($zipFile, false), $bucket, $file, S3::ACL_PRIVATE, $metaHeaders, $requestHeaders))
                                         $ret = true;
                                 }
                             }
@@ -189,30 +189,25 @@ function RestoreArchive($id) {
                     unset($data);
                 }
             }
-            $zip = new ZipArchive;
-            if ($zip->open($zipfile) === TRUE) {
-                if (!is_dir($testPath))
-                    mkdir( $testPath, 0777, true );
-                $lock = LockTest($testPath);
-                if (isset($lock)) {
-                  $testPath = realpath($testPath);
-                  $zip->extractTo($testPath);
-                  $zip->close();
-
-                  $testInfo = GetTestInfo($id);
-                  if ($testInfo) {
-                    $testInfo['archived'] = true;
-                    $testInfo['restored'] = true;
-                    $testInfo['restoredDataOnly'] = false;
-                    SaveTestInfo($id, $testInfo);
-                  }
-                  
-                  $ret = true;
-                  UnlockTest($lock);
+            if (is_file($zipfile)) {
+              if (!is_dir($testPath))
+                  mkdir( $testPath, 0777, true );
+              $lock = LockTest($testPath);
+              if (isset($lock)) {
+                ZipExtract($zipfile, $testPath);
+                $ret = true;
+                $testInfo = GetTestInfo($id);
+                if ($testInfo) {
+                  $testInfo['archived'] = true;
+                  $testInfo['restored'] = true;
+                  $testInfo['restoredDataOnly'] = false;
+                  SaveTestInfo($id, $testInfo);
                 }
-            }
-            if ($deleteZip && is_file($zipfile))
+                UnlockTest($lock);
+              }
+              if ($deleteZip)
                 @unlink($zipfile);
+            }
         }
         else
             $ret = true;

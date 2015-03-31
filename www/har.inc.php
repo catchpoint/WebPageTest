@@ -133,9 +133,15 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
       $pd['pageTimings'] = array( 'onLoad' => $data['docTime'], 'onContentLoad' => -1, '_startRender' => $data['render'] );
       
       // add the pagespeed score
-      $score = GetPageSpeedScore("$testPath/{$run}{$cached_text}_pagespeed.txt");
-      if( strlen($score) )
-        $pd['_pageSpeed'] = array( 'score' => $score );
+      if (gz_is_file("$testPath/{$run}{$cached_text}_pagespeed.txt")) {
+        $pagespeed_data = LoadPageSpeedData("$testPath/{$run}{$cached_text}_pagespeed.txt");
+        if ($pagespeed_data) {
+          $score = GetPageSpeedScore(null, $pagespeed_data);
+          if (strlen($score)) {
+            $pd['_pageSpeed'] = array('score' => $score, 'result' => $pagespeed_data);
+          }
+        }
+      }
       
       // dump all of our metrics into the har data as custom fields
       foreach($data as $name => $value) {

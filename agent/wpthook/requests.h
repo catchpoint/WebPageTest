@@ -101,4 +101,5 @@ private:
   Request * GetOrCreateRequest(DWORD socket_id, const DataChunk& chunk);
   Request * NewRequest(DWORD socket_id, bool is_spdy);
   Request * GetActiveRequest(DWORD socket_id);
+  LONGLONG GetRelativeTime(Request * request, double end_time, double time);
 };

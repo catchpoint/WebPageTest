@@ -52,6 +52,7 @@ public:
   ~SocketInfo(void){}
 
   bool IsLocalhost();
+  bool IsLinkLocal();
 
   DWORD               _id;
   struct sockaddr_in  _addr;
@@ -73,7 +74,7 @@ public:
 
   void Create(SOCKET s);
   void Close(SOCKET s);
-  void Connect(SOCKET s, const struct sockaddr FAR * name, int namelen);
+  bool Connect(SOCKET s, const struct sockaddr FAR * name, int namelen);
   void Connected(SOCKET s);
   void Bind(SOCKET s, const struct sockaddr FAR * name, int namelen);
   bool ModifyDataOut(SOCKET s, DataChunk& chunk, bool is_unencrypted);

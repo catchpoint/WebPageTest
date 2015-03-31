@@ -66,7 +66,9 @@
 #define strdup _strdup
 #endif
 
+#if _MSC_VER < 1800
 #define inline __inline 
+#endif
 
 #ifdef __MINGW32__
 #include <stdint.h>

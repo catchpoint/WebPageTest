@@ -3,7 +3,7 @@ rmdir /S /Q "%~dp0extension/release"
 mkdir "%~dp0extension/release"
 mkdir "%~dp0extension/release/wpt"
 set CLOSURE_COMPILER_JAR="%~dp0/compiler.jar"
-set COMPILE_JS=C:\Python_26\files\python.exe "%~dp0extension/third_party/closure-library/closure/bin/build/closurebuilder.py" ^
+set COMPILE_JS=C:\Python27\python.exe "%~dp0extension/third_party/closure-library/closure/bin/build/closurebuilder.py" ^
   --root="%~dp0extension/third_party/closure-library/" ^
   --root="%~dp0extension/wpt" ^
   --compiler_jar=%CLOSURE_COMPILER_JAR% ^

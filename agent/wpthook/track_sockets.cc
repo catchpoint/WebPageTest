@@ -34,11 +34,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../wptdriver/wpt_test.h"
 
 const DWORD LOCALHOST = 0x0100007F; // 127.0.0.1
+const DWORD LINK_LOCAL_MASK = 0x0000FFFF;
+const DWORD LINK_LOCAL = 0x0000FEA9; // 169.254.x.x
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool SocketInfo::IsLocalhost() {
   return _addr.sin_addr.S_un.S_addr == LOCALHOST;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool SocketInfo::IsLinkLocal() {
+  return (_addr.sin_addr.S_un.S_addr & LINK_LOCAL_MASK) == LINK_LOCAL;
 }
 
 /*-----------------------------------------------------------------------------
@@ -85,8 +93,9 @@ void TrackSockets::Close(SOCKET s) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name, 
+bool TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name, 
                             int namelen) {
+  bool allowed = true;
   WptTrace(loglevel::kFunction, 
             _T("[wpthook] - TrackSockets::Connect(%d)\n"), s);
 
@@ -105,6 +114,7 @@ void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
     memcpy(&info->_addr, ip_name, sizeof(struct sockaddr_in));
     QueryPerformanceCounter(&info->_connect_start);
     localhost = info->IsLocalhost();
+    allowed = !info->IsLinkLocal();
     LeaveCriticalSection(&cs);
 
     if (!localhost) {
@@ -112,6 +122,7 @@ void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
       _test_state.ActivityDetected();
     }
   }
+  return allowed;
 }
 
 /*-----------------------------------------------------------------------------

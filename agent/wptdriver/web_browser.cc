@@ -26,7 +26,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 #include "StdAfx.h"
-#include "dbghelp/dbghelp.h"
 #include "util.h"
 #include "web_browser.h"
 
@@ -55,7 +54,8 @@ static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--new-window"),
     _T("--disable-translate"),
     _T("--disable-desktop-notifications"),
-    _T("--allow-running-insecure-content")
+    _T("--allow-running-insecure-content"),
+    _T("--disable-save-password-bubble")
 };
 static const TCHAR * CHROME_IGNORE_CERT_ERRORS =
     _T(" --ignore-certificate-errors");
@@ -143,7 +143,7 @@ bool WebBrowser::RunAndWait() {
               _test._user_agent.Find(_T('"')) == -1) {
             lstrcat(cmdLine, CHROME_USER_AGENT);
             lstrcat(cmdLine, _T("\""));
-            lstrcat(cmdLine, CA2T(_test._user_agent));
+            lstrcat(cmdLine, CA2T(_test._user_agent, CP_UTF8));
             lstrcat(cmdLine, _T("\""));
           }
         }
@@ -295,6 +295,37 @@ void WebBrowser::ClearUserData() {
   GetModuleFileName(NULL, path, MAX_PATH);
   lstrcpy(PathFindFileName(path), _T("symbols"));
   DeleteDirectory(path, false);
+
+  // Clean out any old windows update downloads (over 1 month old)
+  const unsigned __int64 TICKS_PER_MONTH = 10000000ui64 * 60ui64 * 60ui64 * 24ui64 * 30L;
+  FILETIME now;
+  GetSystemTimeAsFileTime(&now);
+  ULARGE_INTEGER keep_start;
+  keep_start.LowPart = now.dwLowDateTime;
+  keep_start.HighPart = now.dwHighDateTime;
+  keep_start.QuadPart -= TICKS_PER_MONTH;
+  TCHAR dir[MAX_PATH];
+  GetWindowsDirectory(dir, MAX_PATH);
+  lstrcat(dir, _T("\\SoftwareDistribution\\Download\\"));
+  CString downloads(dir);
+  WIN32_FIND_DATA fd;
+  HANDLE hFind = FindFirstFile(downloads + _T("*.*"), &fd);
+  if (hFind != INVALID_HANDLE_VALUE) {
+    do {
+      if (lstrcmp(fd.cFileName, _T(".")) && lstrcmp(fd.cFileName, _T(".."))) {
+        ULARGE_INTEGER file_time;
+        file_time.LowPart = fd.ftLastWriteTime.dwLowDateTime;
+        file_time.HighPart = fd.ftLastWriteTime.dwHighDateTime;
+        if (file_time.QuadPart < keep_start.QuadPart) {
+          if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            DeleteDirectory(downloads + fd.cFileName, true);
+          else
+            DeleteFile(downloads + fd.cFileName);
+        }
+      }
+    } while (FindNextFile(hFind, &fd));
+    FindClose(hFind);
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -501,161 +532,161 @@ HANDLE WebBrowser::FindAdditionalHookProcess(HANDLE launched_process,
   Set some IE prefs to make sure testing is consistent
 -----------------------------------------------------------------------------*/
 void WebBrowser::ConfigureIESettings() {
-		HKEY hKey;
-		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+    HKEY hKey;
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
                        _T("Software\\Microsoft\\Internet Explorer\\Main"),
                        0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS ) {
-			LPCTSTR szVal = _T("yes");
-			RegSetValueEx(hKey, _T("DisableScriptDebuggerIE"), 0, REG_SZ,
+      LPCTSTR szVal = _T("yes");
+      RegSetValueEx(hKey, _T("DisableScriptDebuggerIE"), 0, REG_SZ,
                     (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
 
-			szVal = _T("no");
-			RegSetValueEx(hKey, _T("FormSuggest PW Ask"), 0, REG_SZ,
+      szVal = _T("no");
+      RegSetValueEx(hKey, _T("FormSuggest PW Ask"), 0, REG_SZ,
                     (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
-			RegSetValueEx(hKey, _T("Friendly http errors"), 0, REG_SZ,
+      RegSetValueEx(hKey, _T("Friendly http errors"), 0, REG_SZ,
                     (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
-			RegSetValueEx(hKey, _T("Use FormSuggest"), 0, REG_SZ,
+      RegSetValueEx(hKey, _T("Use FormSuggest"), 0, REG_SZ,
                     (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
 
-			DWORD val = 1;
-			RegSetValueEx(hKey, _T("NoUpdateCheck"), 0, REG_DWORD,
+      DWORD val = 1;
+      RegSetValueEx(hKey, _T("NoUpdateCheck"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
-			RegSetValueEx(hKey, _T("NoJITSetup"), 0, REG_DWORD,
+      RegSetValueEx(hKey, _T("NoJITSetup"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
-			RegSetValueEx(hKey, _T("NoWebJITSetup"), 0, REG_DWORD,
+      RegSetValueEx(hKey, _T("NoWebJITSetup"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
-			//val = 0;
-			RegSetValueEx(hKey, _T("UseSWRender"), 0, REG_DWORD,
+      //val = 0;
+      RegSetValueEx(hKey, _T("UseSWRender"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
-			RegCloseKey(hKey);
-		}
+      RegCloseKey(hKey);
+    }
 
-		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
         _T("Software\\Microsoft\\Internet Explorer\\InformationBar"), 0, 0, 0,
         KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
-			DWORD val = 0;
-			RegSetValueEx(hKey, _T("FirstTime"), 0, REG_DWORD,
+      DWORD val = 0;
+      RegSetValueEx(hKey, _T("FirstTime"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
-			RegCloseKey(hKey);
-		}
+      RegCloseKey(hKey);
+    }
 
-		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
         _T("Software\\Microsoft\\Internet Explorer\\PhishingFilter"), 0, 0, 0,
         KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
-			DWORD val = 0;
-			RegSetValueEx(hKey, _T("EnabledV9"), 0, REG_DWORD,
+      DWORD val = 0;
+      RegSetValueEx(hKey, _T("EnabledV9"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
-			RegSetValueEx(hKey, _T("Enabled"), 0, REG_DWORD,
+      RegSetValueEx(hKey, _T("Enabled"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
       val = 3;
-			RegSetValueEx(hKey, _T("ShownVerifyBalloon"), 0, REG_DWORD,
+      RegSetValueEx(hKey, _T("ShownVerifyBalloon"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
-			RegCloseKey(hKey);
-		}
+      RegCloseKey(hKey);
+    }
 
-		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
         _T("Software\\Microsoft\\Internet Explorer\\IntelliForms"), 0, 0, 0,
         KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
-			DWORD val = 0;
-			RegSetValueEx(hKey, _T("AskUser"), 0, REG_DWORD,
+      DWORD val = 0;
+      RegSetValueEx(hKey, _T("AskUser"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
-			RegCloseKey(hKey);
-		}
+      RegCloseKey(hKey);
+    }
 
-		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
         _T("Software\\Microsoft\\Internet Explorer\\Security"), 0, 0, 0,
         KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
-			LPCTSTR szVal = _T("Query");
-			RegSetValueEx(hKey, _T("Safety Warning Level"), 0, REG_SZ,
+      LPCTSTR szVal = _T("Query");
+      RegSetValueEx(hKey, _T("Safety Warning Level"), 0, REG_SZ,
                     (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
-			szVal = _T("Medium");
-			RegSetValueEx(hKey, _T("Sending_Security"), 0, REG_SZ,
+      szVal = _T("Medium");
+      RegSetValueEx(hKey, _T("Sending_Security"), 0, REG_SZ,
                     (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
-			szVal = _T("Low");
-			RegSetValueEx(hKey, _T("Viewing_Security"), 0, REG_SZ,
+      szVal = _T("Low");
+      RegSetValueEx(hKey, _T("Viewing_Security"), 0, REG_SZ,
                     (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
-			RegCloseKey(hKey);
-		}
+      RegCloseKey(hKey);
+    }
 
-		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
         _T("Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings"),
         0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
-			DWORD val = 1;
-			RegSetValueEx(hKey, _T("AllowCookies"), 0, REG_DWORD,
+      DWORD val = 1;
+      RegSetValueEx(hKey, _T("AllowCookies"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
-			RegSetValueEx(hKey, _T("EnableHttp1_1"), 0, REG_DWORD,
+      RegSetValueEx(hKey, _T("EnableHttp1_1"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
-			RegSetValueEx(hKey, _T("ProxyHttp1.1"), 0, REG_DWORD,
+      RegSetValueEx(hKey, _T("ProxyHttp1.1"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
-			RegSetValueEx(hKey, _T("EnableNegotiate"), 0, REG_DWORD,
+      RegSetValueEx(hKey, _T("EnableNegotiate"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
 
-			val = 0;
-			RegSetValueEx(hKey, _T("WarnAlwaysOnPost"), 0,
+      val = 0;
+      RegSetValueEx(hKey, _T("WarnAlwaysOnPost"), 0,
                     REG_DWORD, (const LPBYTE)&val, sizeof(val));
-			RegSetValueEx(hKey, _T("WarnonBadCertRecving"), 0,
+      RegSetValueEx(hKey, _T("WarnonBadCertRecving"), 0,
                     REG_DWORD, (const LPBYTE)&val, sizeof(val));
-			RegSetValueEx(hKey, _T("WarnOnPost"), 0, REG_DWORD,
+      RegSetValueEx(hKey, _T("WarnOnPost"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
-			RegSetValueEx(hKey, _T("WarnOnPostRedirect"), 0,
+      RegSetValueEx(hKey, _T("WarnOnPostRedirect"), 0,
                     REG_DWORD, (const LPBYTE)&val, sizeof(val));
-			RegSetValueEx(hKey, _T("WarnOnZoneCrossing"), 0,
+      RegSetValueEx(hKey, _T("WarnOnZoneCrossing"), 0,
                     REG_DWORD, (const LPBYTE)&val, sizeof(val));
-			RegCloseKey(hKey);
-		}
+      RegCloseKey(hKey);
+    }
 
-		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
         _T("Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings")
         _T("\\5.0\\Cache\\Content"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0)
         == ERROR_SUCCESS) {
-			DWORD val = 131072;
-			RegSetValueEx(hKey, _T("CacheLimit"), 0, REG_DWORD,
+      DWORD val = 131072;
+      RegSetValueEx(hKey, _T("CacheLimit"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
-			RegCloseKey(hKey);
-		}
+      RegCloseKey(hKey);
+    }
 
-		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
         _T("Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings")
         _T("\\Cache\\Content"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0)
         == ERROR_SUCCESS) {
-			DWORD val = 131072;
-			RegSetValueEx(hKey, _T("CacheLimit"), 0, REG_DWORD,
+      DWORD val = 131072;
+      RegSetValueEx(hKey, _T("CacheLimit"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
-			RegCloseKey(hKey);
-		}
+      RegCloseKey(hKey);
+    }
 
-		// reset the toolbar layout (to make sure the sidebar isn't open)		
-		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+    // reset the toolbar layout (to make sure the sidebar isn't open)		
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
         _T("Software\\Microsoft\\Internet Explorer\\Toolbar\\WebBrowser"),
         0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
-			RegDeleteValue(hKey, _T("ITBarLayout"));
-			RegCloseKey(hKey);
-		}
-		
-		// Tweak the security zone to eliminate some warnings
-		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+      RegDeleteValue(hKey, _T("ITBarLayout"));
+      RegCloseKey(hKey);
+    }
+    
+    // Tweak the security zone to eliminate some warnings
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
         _T("Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings")
         _T("\\Zones\\3"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
-			DWORD val = 0;
-			
-			// don't warn about posting data
-			RegSetValueEx(hKey, _T("1601"), 0, REG_DWORD, (const LPBYTE)&val,
+      DWORD val = 0;
+      
+      // don't warn about posting data
+      RegSetValueEx(hKey, _T("1601"), 0, REG_DWORD, (const LPBYTE)&val,
                     sizeof(val));
 
-			// don't warn about mixed content
-			RegSetValueEx(hKey, _T("1609"), 0, REG_DWORD, (const LPBYTE)&val,
+      // don't warn about mixed content
+      RegSetValueEx(hKey, _T("1609"), 0, REG_DWORD, (const LPBYTE)&val,
                     sizeof(val));
 
-			RegCloseKey(hKey);
-		}
+      RegCloseKey(hKey);
+    }
 
     // Disable the blocking of ActiveX controls (which seems to be inconsistent)
-		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
         _T("Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Ext"),
         0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
-			DWORD val = 0;
-			RegSetValueEx(hKey, _T("VersionCheckEnabled"), 0, REG_DWORD,
+      DWORD val = 0;
+      RegSetValueEx(hKey, _T("VersionCheckEnabled"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
-			RegCloseKey(hKey);
-		}
+      RegCloseKey(hKey);
+    }
 }

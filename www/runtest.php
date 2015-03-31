@@ -178,8 +178,8 @@
 
             if (array_key_exists('affinity', $_REQUEST))
               $test['affinity'] = hexdec(substr(sha1($_REQUEST['affinity']), 0, 8));
-            if (array_key_exists('tester', $_REQUEST) && preg_match('/[a-zA-Z0-9\-_]+/', $_REQUEST['tester']))
-              $test['affinity'] = 'Tester' . $_REQUEST['tester'];
+            //if (array_key_exists('tester', $_REQUEST) && preg_match('/[a-zA-Z0-9\-_]+/', $_REQUEST['tester']))
+            //  $test['affinity'] = 'Tester' . $_REQUEST['tester'];
 
             // custom options
             $test['cmdLine'] = '';
@@ -306,6 +306,15 @@
             // login tests are forced to be private
             if( strlen($test['login']) )
                 $test['private'] = 1;
+            
+            // Tests that include credentials in the URL (usually indicated by @ in the host section) are forced to be private
+            $atPos = strpos($test['url'], '@');
+            if ($atPos !== false) {
+              $queryPos = strpos($test['url'], '?');
+              if ($queryPos === false || $queryPos > $atPos) {
+                $test['private'] = 1;
+              }
+            }
 
             // default batch and API requests to a lower priority
             if( !isset($req_priority) )
@@ -1075,6 +1084,13 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                     $loc = $locations[$def]['1'];
                 $test['location'] = $loc;
             }
+            
+            // Use the default browser if one wasn't specified
+            if ((!isset($test['browser']) || !strlen($test['browser'])) && isset($locations[$test['location']]['browser'])) {
+              $browsers = explode(',', $locations[$test['location']]['browser']);
+              if (isset($browsers) && is_array($browsers) && count($browsers))
+                $test['browser'] = $browsers[0];
+            }
 
             // see if we are blocking API access at the given location
             if( $locations[$test['location']]['noscript'] && $test['priority'] )
@@ -1327,8 +1343,10 @@ function ValidateURL(&$url, &$error, &$settings)
         $error = "Please enter a Valid URL.  <b>" . htmlspecialchars($url) . "</b> is not a valid URL";
     elseif( strpos($host, '.') === FALSE )
         $error = "Please enter a Valid URL.  <b>" . htmlspecialchars($host) . "</b> is not a valid Internet host name";
-    elseif( (!strcmp($host, "127.0.0.1") || !strncmp($host, "192.168.", 8)  || !strncmp($host, "10.", 3)) && !$settings['allowPrivate'] )
+    elseif( (!strcmp($host, "127.0.0.1") || !strncmp($host, "192.168.", 8)  || !strncmp($host, "169.254.", 8) || !strncmp($host, "10.", 3)) && !$settings['allowPrivate'] )
         $error = "You can not test <b>$host</b> from the public Internet.  Your web site needs to be hosted on the public Internet for testing";
+    elseif (!strcmp($host, "169.254.169.254"))
+        $error = "Sorry, $host is blocked from testing";
     elseif( !strcasecmp(substr($url, -4), '.pdf') )
         $error = "You can not test PDF files with WebPagetest";
     else
@@ -2168,32 +2186,34 @@ function GetClosestLocation($url, $browser) {
             }
             if (!isset($location)) {
                 $ip = gethostbyname($host);
-                try {
-                    require_once('./Net/GeoIP.php');
-                    $geoip = Net_GeoIP::getInstance('./Net/GeoLiteCity.dat', Net_GeoIP::MEMORY_CACHE);
-                    if ($geoip) {
-                        $host_location = $geoip->lookupLocation($ip);
-                        if ($host_location) {
-                            $lat = $host_location->latitude;
-                            $lng = $host_location->longitude;
+                if (is_file('./lib/maxmind/GeoLiteCity.dat')) {
+                  try {
+                      require_once('./lib/maxmind/GeoIP.php');
+                      $geoip = Net_GeoIP::getInstance('./lib/maxmind/GeoLiteCity.dat', Net_GeoIP::MEMORY_CACHE);
+                      if ($geoip) {
+                          $host_location = $geoip->lookupLocation($ip);
+                          if ($host_location) {
+                              $lat = $host_location->latitude;
+                              $lng = $host_location->longitude;
 
-                            // calculate the distance to each location and see which is closest
-                            $distance = 0;
-                            foreach( $locations as $loc => $pos ) {
-                                $r = 6371; // km
-                                $dLat = deg2rad($pos['lat']-$lat);
-                                $dLon = deg2rad($pos['lng']-$lng);
-                                $a = sin($dLat/2) * sin($dLat/2) + sin($dLon/2) * sin($dLon/2) * cos(deg2rad($lat)) * cos(deg2rad($pos['lat']));
-                                $c = 2 * atan2(sqrt($a), sqrt(1-$a));
-                                $dist = $r * $c;
-                                if (!isset($location) || $dist < $distance) {
-                                    $location = $loc;
-                                    $distance = $dist;
-                                }
-                            }
-                        }
-                    }
-                }catch(Exception $e) { }
+                              // calculate the distance to each location and see which is closest
+                              $distance = 0;
+                              foreach( $locations as $loc => $pos ) {
+                                  $r = 6371; // km
+                                  $dLat = deg2rad($pos['lat']-$lat);
+                                  $dLon = deg2rad($pos['lng']-$lng);
+                                  $a = sin($dLat/2) * sin($dLat/2) + sin($dLon/2) * sin($dLon/2) * cos(deg2rad($lat)) * cos(deg2rad($pos['lat']));
+                                  $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+                                  $dist = $r * $c;
+                                  if (!isset($location) || $dist < $distance) {
+                                      $location = $loc;
+                                      $distance = $dist;
+                                  }
+                              }
+                          }
+                      }
+                  }catch(Exception $e) { }
+                }
             }
         }
         if (!isset($location)) {
