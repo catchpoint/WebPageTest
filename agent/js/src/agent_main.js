@@ -619,10 +619,10 @@ Agent.prototype.startTrafficShaper_ = function(job) {
   var opts = {
       down_bw: job.task.bwIn && (1000 * job.task.bwIn),
       down_delay: job.task.latency && halfDelay,
-      down_plr: job.task.plr && 0,
+      down_plr: job.task.plr && job.task.plr,
       up_bw: job.task.bwOut && (1000 * job.task.bwOut),
       up_delay: job.task.latency && job.task.latency - halfDelay,
-      up_plr: job.task.plr && job.task.plr  // All loss on out.
+      up_plr: job.task.plr && job.task.plr
     };
   this.trafficShaper_('set', opts).addErrback(function(e) {
     var stderr = (e.stderr || e.message || '').trim();
