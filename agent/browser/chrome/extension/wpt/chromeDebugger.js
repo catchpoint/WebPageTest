@@ -159,6 +159,10 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       g_instance.statsDoneCallback();
   }
 
+  if(message === 'Console.messageAdded') {
+    wpt.chromeDebugger.sendEvent('console_log', JSON.stringify(params['message']));
+  }
+
     // actual message recording
   if (g_instance.active && !tracing) {
     // keep track of all of the dev tools messages
