@@ -32,6 +32,39 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <WinInet.h>
 #include "zlib/contrib/minizip/unzip.h"
 
+static const TCHAR * CHROME_NETLOG = _T("log-net-log=\"%s_netlog.txt\"");
+static const TCHAR * CHROME_SPDY3 = _T("enable-spdy3");
+static const TCHAR * CHROME_SOFTWARE_RENDER =
+_T("disable-accelerated-compositing");
+static const TCHAR * CHROME_USER_AGENT =
+_T("user-agent=");
+static const TCHAR * CHROME_DISABLE_PLUGINS[] = {
+  _T("disable-plugins-discovery"),
+  _T("disable-bundled-ppapi-flash")
+};
+
+static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
+  _T("enable-experimental-extension-apis"),
+  _T("disable-background-networking"),
+  _T("no-default-browser-check"),
+  _T("no-first-run"),
+  _T("process-per-tab"),
+  _T("new-window"),
+  _T("disable-translate"),
+  _T("disable-desktop-notifications"),
+  _T("allow-running-insecure-content"),
+  _T("disable-save-password-bubble"),
+  _T("disable-component-update"),
+  _T("disable-background-downloads"),
+  _T("host-rules=\"MAP cache.pack.google.com 127.0.0.1\"")
+};
+static const TCHAR * CHROME_IGNORE_CERT_ERRORS =
+_T("ignore-certificate-errors");
+
+static const TCHAR * FIREFOX_REQUIRED_OPTIONS[] = {
+  _T("-no-remote")
+};
+
 bool Unzip(CString file, CStringA dir);
 
 /*-----------------------------------------------------------------------------
@@ -43,7 +76,8 @@ WptSettings::WptSettings(WptStatus &status):
   ,_debug(0)
   ,_status(status)
   ,_software_update(status)
-  ,_requireValidCertificate(false) {
+  ,_requireValidCertificate(false)
+  ,_webdriver_supported(false) {
 }
 
 /*-----------------------------------------------------------------------------
@@ -132,6 +166,27 @@ bool WptSettings::Load(void) {
       _T("WebPagetest"), _T("web_page_replay_host"), _T(""), buff,
       _countof(buff), iniFile )) {
     _web_page_replay_host = buff;
+  }
+
+  if (GetPrivateProfileInt(_T("WebPagetest"), _T("WebDriver"), 0, iniFile)) {
+    _webdriver_supported = true;
+  }
+
+  if (_webdriver_supported) {
+    if (GetPrivateProfileString(
+      _T("WebPageTest"), _T("WebDriverServer"), _T(""), buff, _countof(buff), iniFile)) {
+      _webdriver_server_command = buff;
+    }
+
+    if (GetPrivateProfileString(
+      _T("WebPageTest"), _T("WebDriverClient"), _T(""), buff, _countof(buff), iniFile)) {
+      _webdriver_client_command = buff;
+    }
+
+    if (GetPrivateProfileString(
+      _T("WebPageTest"), _T("WebDriverServerURL"), _T(""), buff, _countof(buff), iniFile)) {
+      _webdriver_server_url = buff;
+    }
   }
 
   // see if we need to load settings from EC2 (server and location)
@@ -823,6 +878,85 @@ void BrowserSettings::ClearWebCache() {
   DeleteDirectory(webcache_dir_, false);
 }
 
+void BrowserSettings::GetCmdLineOptions(WptTest& test, CAtlArray<CString>& options) {
+  if (IsChrome()) {
+    if (test._browser_command_line.GetLength()) {
+      SplitCommandLine(test._browser_command_line, options);
+    } else {
+      // Add all the required options.
+      for (int i = 0; i < _countof(CHROME_REQUIRED_OPTIONS); i++) {
+        if (_options.Find(CHROME_REQUIRED_OPTIONS[i]) < 0) {
+          options.Add(CHROME_REQUIRED_OPTIONS[i]);
+        }
+      }
+      // Test specific options.
+      if (test._netlog) {
+        CString netlog;
+        netlog.Format(CHROME_NETLOG, (LPCTSTR)test._file_base);
+        options.Add(netlog);
+      }
+      if (test._ignore_ssl) {
+        options.Add(CHROME_IGNORE_CERT_ERRORS);
+      }
+      if (test._spdy3) {
+        options.Add(CHROME_SPDY3);
+      }
+      if (test._force_software_render) {
+        options.Add(CHROME_SOFTWARE_RENDER);
+      }
+      if (test._emulate_mobile) {
+        for (int i = 0; i < _countof(CHROME_DISABLE_PLUGINS); i++) {
+          options.Add(CHROME_DISABLE_PLUGINS[i]);
+        }
+      }
+      if (test._user_agent.GetLength() &&
+          test._user_agent.Find(_T('"')) == -1) {
+        CString user_agent = CHROME_USER_AGENT;
+        user_agent += _T("\"");
+        user_agent += test._user_agent;
+        user_agent += _T("\"");
+        options.Add(user_agent);
+      }
+      // Add additional command line options specified by the user.
+      if (test._browser_additional_command_line.GetLength()) {
+        // if user wants a proxy server, make sure we don't have
+        // --no-proxy-server setup on the command line.
+        if (test._browser_additional_command_line.Find(_T("--proxy-")) !=
+            -1) {
+          _options.Replace(_T("--no-proxy-server"), _T(""));
+        }
+        SplitCommandLine(test._browser_additional_command_line, options);
+      }
+      // Add command line options specified in the .ini file.
+      if (_options.GetLength()) {
+        SplitCommandLine(_options, options);
+      }
+    }
+  } else if (IsFirefox()) {
+    for (int i = 0; i < _countof(FIREFOX_REQUIRED_OPTIONS); i++) {
+      if (_options.Find(FIREFOX_REQUIRED_OPTIONS[i]) < 0) {
+        options.Add(FIREFOX_REQUIRED_OPTIONS[i]);
+      }
+    }
+  }
+}
+
+void BrowserSettings::SplitCommandLine(CString command_line, CAtlArray<CString>& options) {
+  CString opt; 
+  int pos = 0;
+
+  opt = command_line.Tokenize(_T(" "), pos);
+  while (pos != -1) {
+    opt.Trim();
+    if (opt.GetLength() > 2 && opt[0] == '-' && opt[1] == '-') {
+      opt.Delete(0, 2); // Get rid of leading '--'
+    } else if (opt.GetLength() > 1 && opt[0] == '-') {
+      opt.Delete(0, 1); // Get rid of leading '-'
+    }
+    options.Add(opt);
+    opt = command_line.Tokenize(_T(" "), pos);
+  }
+}
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 static bool Unzip(CString file, CStringA dir) {
@@ -876,4 +1010,20 @@ static bool Unzip(CString file, CStringA dir) {
   }
 
   return ret;
+}
+
+bool BrowserSettings::IsChrome() {
+  return _browser.CompareNoCase(_T("chrome")) == 0;
+}
+
+bool BrowserSettings::IsFirefox() {
+  return _browser.CompareNoCase(_T("firefox")) == 0;
+}
+
+bool BrowserSettings::IsIE() {
+  return _browser.CompareNoCase(_T("ie")) == 0;
+}
+
+bool BrowserSettings::IsSafari() {
+  return _browser.CompareNoCase(_T("safari")) == 0;
 }

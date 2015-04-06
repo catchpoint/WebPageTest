@@ -30,6 +30,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ipfw.h"
 #include "ipfw_int.h"
 
+static const int PIPE_IN = 1;
+static const int PIPE_OUT = 2;
+
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 CIpfw::CIpfw(void):win32_(false),initialized_(false) {
@@ -167,6 +170,49 @@ bool CIpfw::SetPipe(unsigned int num, unsigned long bandwidth,
     }
   }
   return ret;
+}
+
+/*-----------------------------------------------------------------------------
+Set up bandwidth throttling
+-----------------------------------------------------------------------------*/
+bool CIpfw::Configure(WptTest &test) {
+  bool ret = false;
+  if (test._bwIn && test._bwOut) {
+    // split the latency across directions
+    DWORD latency = test._latency / 2;
+
+    CString buff;
+    buff.Format(_T("[wptdriver] - Throttling: %d Kbps in, %d Kbps out, ")
+      _T("%d ms latency, %0.2f plr"), test._bwIn, test._bwOut,
+      test._latency, test._plr);
+    AtlTrace(buff);
+
+    if (SetPipe(PIPE_IN, test._bwIn, latency, test._plr / 100.0)) {
+      // make up for odd values
+      if (test._latency % 2)
+        latency++;
+
+      if (SetPipe(PIPE_OUT, test._bwOut, latency, test._plr / 100.0))
+        ret = true;
+      else
+        SetPipe(PIPE_IN, 0, 0, 0);
+    }
+  } else
+    ret = true;
+
+  if (!ret) {
+    AtlTrace(_T("[wptdriver] - Error Configuring dummynet"));
+  }
+
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+Remove the bandwidth throttling
+-----------------------------------------------------------------------------*/
+void CIpfw::Reset(void) {
+  SetPipe(PIPE_IN, 0, 0, 0);
+  SetPipe(PIPE_OUT, 0, 0, 0);
 }
 
 /*-----------------------------------------------------------------------------

@@ -764,3 +764,31 @@ void Reboot() {
   
   InitiateSystemShutdown(NULL, NULL, 0, TRUE, TRUE);
 }
+
+void ConstructCmdLine(CString& exe, CAtlArray<CString>& options,
+  CString& prefix, CString& cmdLine) {
+
+  //cmdLine.Append(_T("\"") + exe + _T("\""));
+  cmdLine.Append(exe);
+
+  for (size_t i = 0; i < options.GetCount(); i++) {
+    cmdLine.Append(_T(" ") + prefix + options[i]);
+  }
+}
+
+LPTSTR GetErrorDetail(DWORD error) {
+  LPTSTR error_text = NULL;
+
+  FormatMessage(
+    FORMAT_MESSAGE_FROM_SYSTEM
+    | FORMAT_MESSAGE_ALLOCATE_BUFFER
+    | FORMAT_MESSAGE_IGNORE_INSERTS,
+    NULL,
+    error,
+    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+    (LPTSTR)&error_text,
+    0,
+    NULL);
+
+  return error_text;
+}

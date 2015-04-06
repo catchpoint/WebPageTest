@@ -76,3 +76,6 @@ void QueryPerfCounter(__int64 &counter);
 void QueryPerfFrequency(__int64 &freq);
 int ElapsedFileTimeSeconds(FILETIME& check, FILETIME& now);
 void Reboot();
+void ConstructCmdLine(CString& exe, CAtlArray<CString>& options,
+  CString& prefix, CString& cmdLine);
+LPTSTR GetErrorDetail(DWORD error);

@@ -30,44 +30,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "web_browser.h"
 
 typedef void(__stdcall * LPINSTALLHOOK)(DWORD thread_id);
-const int PIPE_IN = 1;
-const int PIPE_OUT = 2;
-static const TCHAR * GLOBAL_TESTING_MUTEX = _T("Global\\wpt_testing_active");
-static const TCHAR * BROWSER_STARTED_EVENT = _T("Global\\wpt_browser_started");
-static const TCHAR * BROWSER_DONE_EVENT = _T("Global\\wpt_browser_done");
-static const TCHAR * FLASH_CACHE_DIR = 
-                        _T("Macromedia\\Flash Player\\#SharedObjects");
-static const TCHAR * SILVERLIGHT_CACHE_DIR = _T("Microsoft\\Silverlight");
 
-static const TCHAR * CHROME_NETLOG = _T(" --log-net-log=\"%s_netlog.txt\"");
-static const TCHAR * CHROME_SPDY3 = _T(" --enable-spdy3");
-static const TCHAR * CHROME_SOFTWARE_RENDER = 
-    _T(" --disable-accelerated-compositing");
-static const TCHAR * CHROME_USER_AGENT =
-    _T(" --user-agent=");
-static const TCHAR * CHROME_DISABLE_PLUGINS = 
-    _T(" --disable-plugins-discovery --disable-bundled-ppapi-flash");
-static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
-    _T("--enable-experimental-extension-apis"),
-    _T("--disable-background-networking"),
-    _T("--no-default-browser-check"),
-    _T("--no-first-run"),
-    _T("--process-per-tab"),
-    _T("--new-window"),
-    _T("--disable-translate"),
-    _T("--disable-desktop-notifications"),
-    _T("--allow-running-insecure-content"),
-    _T("--disable-save-password-bubble"),
-    _T("--disable-component-update"),
-    _T("--disable-background-downloads"),
-    _T("--host-rules=\"MAP cache.pack.google.com 127.0.0.1\"")
-};
-static const TCHAR * CHROME_IGNORE_CERT_ERRORS =
-    _T(" --ignore-certificate-errors");
-
-static const TCHAR * FIREFOX_REQUIRED_OPTIONS[] = {
-    _T("-no-remote")
-};
+extern const TCHAR * FLASH_CACHE_DIR;
+extern const TCHAR * SILVERLIGHT_CACHE_DIR;
+extern const TCHAR * GLOBAL_TESTING_MUTEX;
+extern const TCHAR * BROWSER_STARTED_EVENT;
+extern const TCHAR * BROWSER_DONE_EVENT;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -90,6 +58,7 @@ WebBrowser::WebBrowser(WptSettings& settings, WptTestDriver& test,
   if( InitializeSecurityDescriptor(&SD, SECURITY_DESCRIPTOR_REVISION) )
     if( SetSecurityDescriptorDacl(&SD, TRUE,(PACL)NULL, FALSE) )
       null_dacl.lpSecurityDescriptor = &SD;
+
   _browser_started_event = CreateEvent(&null_dacl, TRUE, FALSE,
                                        BROWSER_STARTED_EVENT);
   _browser_done_event = CreateEvent(&null_dacl, TRUE, FALSE,
@@ -110,78 +79,33 @@ bool WebBrowser::RunAndWait() {
   // signal to the IE BHO that it needs to inject the code
   HANDLE active_event = CreateMutex(&null_dacl, TRUE, GLOBAL_TESTING_MUTEX);
 
-  if (_test.Start() && ConfigureIpfw(_test)) {
+  if (_test.Start() && _ipfw.Configure(_test)) {
     if (_browser._exe.GetLength()) {
       bool hook = true;
       bool hook_child = false;
-      TCHAR cmdLine[32768];
-      lstrcpy( cmdLine, CString(_T("\"")) + _browser._exe + _T("\"") );
-      if (_browser._options.GetLength() )
-        lstrcat( cmdLine, CString(_T(" ")) + _browser._options );
-      // if we are running chrome, make sure the command line options that our 
-      // extension NEEDS are present
-      CString exe(_browser._exe);
-      exe.MakeLower();
-      if (exe.Find(_T("chrome.exe")) >= 0) {
-        if (_test._browser_command_line.GetLength()) {
-          lstrcat(cmdLine, CString(_T(" ")) +
-                  _test._browser_command_line);
-        } else {
-          for (int i = 0; i < _countof(CHROME_REQUIRED_OPTIONS); i++) {
-            if (_browser._options.Find(CHROME_REQUIRED_OPTIONS[i]) < 0) {
-              lstrcat(cmdLine, _T(" "));
-              lstrcat(cmdLine, CHROME_REQUIRED_OPTIONS[i]);
-            }
-          }
-          if (_test._netlog) {
-            CString netlog;
-            netlog.Format(CHROME_NETLOG, (LPCTSTR)_test._file_base);
-            lstrcat(cmdLine, netlog);
-          }
-          if (_test._ignore_ssl)
-            lstrcat(cmdLine, CHROME_IGNORE_CERT_ERRORS);
-          if (_test._spdy3)
-            lstrcat(cmdLine, CHROME_SPDY3);
-          if (_test._force_software_render)
-            lstrcat(cmdLine, CHROME_SOFTWARE_RENDER);
-          if (_test._emulate_mobile)
-            lstrcat(cmdLine, CHROME_DISABLE_PLUGINS);
-          if (_test._user_agent.GetLength() &&
-              _test._user_agent.Find(_T('"')) == -1) {
-            lstrcat(cmdLine, CHROME_USER_AGENT);
-            lstrcat(cmdLine, _T("\""));
-            lstrcat(cmdLine, CA2T(_test._user_agent, CP_UTF8));
-            lstrcat(cmdLine, _T("\""));
-          }
-        }
-        if (_test._browser_additional_command_line.GetLength()) {
-          // if we are specifying a proxy server, strip any default setting out
-          if (_test._browser_additional_command_line.Find(_T("--proxy-")) !=
-              -1) {
-            CString cmd(cmdLine);
-            cmd.Replace(_T(" --no-proxy-server"), _T(""));
-            lstrcpy(cmdLine, cmd);
-          }
-          lstrcat(cmdLine, CString(_T(" ")) +
-                  _test._browser_additional_command_line);
-        }
-      } else if (exe.Find(_T("firefox.exe")) >= 0) {
-        for (int i = 0; i < _countof(FIREFOX_REQUIRED_OPTIONS); i++) {
-          if (_browser._options.Find(FIREFOX_REQUIRED_OPTIONS[i]) < 0) {
-            lstrcat(cmdLine, _T(" "));
-            lstrcat(cmdLine, FIREFOX_REQUIRED_OPTIONS[i]);
-          }
-        }
+      CString cmdLine;
+      CString browser(_browser._browser);
+      CAtlArray<CString> cmdLineOptions;
+      CString prefix = _browser.IsChrome() ? _T("--") : _browser.IsFirefox() ? _T("-") : _T("");
+
+      // Get the command line options for the browser we are about to spawn.
+      _browser.GetCmdLineOptions(_test, cmdLineOptions);
+      // Now construct the command line.
+      ConstructCmdLine(_browser._exe, cmdLineOptions, prefix, cmdLine);
+      // Now apply browser specific settings.
+      if (_browser.IsChrome()) {
+        cmdLine.Append(_T(" http://127.0.0.1:8888/blank.html"));
+      } else if (_browser.IsFirefox()) {
+        // For firefox, add options that were specified in the settings ini file.
+        cmdLine.Append(_T(" ") + _browser._options);
+        cmdLine.Append(_T(" http://127.0.0.1:8888/blank.html"));
         ConfigureFirefoxPrefs();
-      }
-      if (exe.Find(_T("iexplore.exe")) >= 0) {
+      } else if (_browser.IsIE()) {
         hook = false;
-        lstrcat(cmdLine, _T(" about:blank"));
+        cmdLine.Append(_T(" about:blank"));
         ConfigureIESettings();
-      } else if (exe.Find(_T("safari.exe")) >= 0) {
+      } else if (_browser.IsSafari()) {
         hook_child = true;
-      } else {
-        lstrcat(cmdLine, _T(" http://127.0.0.1:8888/blank.html"));
       }
 
       // set up the TLS session key log
@@ -215,7 +139,7 @@ bool WebBrowser::RunAndWait() {
         ResetEvent(_browser_started_event);
         ResetEvent(_browser_done_event);
 
-        if (CreateProcess(_browser._exe, cmdLine, NULL, NULL, FALSE,
+        if (CreateProcess(_browser._exe, cmdLine.GetBuffer(), NULL, NULL, FALSE,
                           0, NULL, NULL, &si, &pi)) {
           CloseHandle(pi.hThread);
           CloseHandle(pi.hProcess);
@@ -266,7 +190,7 @@ bool WebBrowser::RunAndWait() {
       TerminateProcessesByName(PathFindFileName((LPCTSTR)_browser._exe));
 
       SetBrowserExe(NULL);
-      ResetIpfw();
+      _ipfw.Reset();
 
     } else {
       _test._run_error = "Browser configured incorrectly (exe not defined).";
@@ -337,50 +261,6 @@ void WebBrowser::ClearUserData() {
     } while (FindNextFile(hFind, &fd));
     FindClose(hFind);
   }
-}
-
-/*-----------------------------------------------------------------------------
-  Set up bandwidth throttling
------------------------------------------------------------------------------*/
-bool WebBrowser::ConfigureIpfw(WptTestDriver& test) {
-  bool ret = false;
-  if (test._bwIn && test._bwOut) {
-    // split the latency across directions
-    DWORD latency = test._latency / 2;
-
-    CString buff;
-    buff.Format(_T("[wptdriver] - Throttling: %d Kbps in, %d Kbps out, ")
-                _T("%d ms latency, %0.2f plr"), test._bwIn, test._bwOut, 
-                test._latency, test._plr );
-    AtlTrace(buff);
-
-    if (_ipfw.SetPipe(PIPE_IN, test._bwIn, latency,test._plr/100.0)) {
-      // make up for odd values
-      if( test._latency % 2 )
-        latency++;
-
-      if (_ipfw.SetPipe(PIPE_OUT, test._bwOut,latency,test._plr/100.0))
-        ret = true;
-      else
-        _ipfw.SetPipe(PIPE_IN, 0, 0, 0);
-    }
-  }
-  else
-    ret = true;
-
-  if (!ret) {
-    AtlTrace(_T("[wptdriver] - Error Configuring dummynet"));
-  }
-
-  return ret;
-}
-
-/*-----------------------------------------------------------------------------
-  Remove the bandwidth throttling
------------------------------------------------------------------------------*/
-void WebBrowser::ResetIpfw(void) {
-  _ipfw.SetPipe(PIPE_IN, 0, 0, 0);
-  _ipfw.SetPipe(PIPE_OUT, 0, 0, 0);
 }
 
 /*-----------------------------------------------------------------------------

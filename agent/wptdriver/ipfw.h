@@ -35,6 +35,8 @@ public:
 
   bool SetPipe(unsigned int num, unsigned long bandwidth, 
                unsigned long delay, double plr = 0.0);
+  bool Configure(WptTest &test);
+  void Reset();
 
 protected:
   bool Init();
