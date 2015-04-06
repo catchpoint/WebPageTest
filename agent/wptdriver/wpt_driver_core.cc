@@ -395,6 +395,8 @@ void WptDriverCore::Init(void){
   }
   _installing = false;
 
+  SetupScreen();
+
   // start the background timer that does our housekeeping
   CreateTimerQueueTimer(&housekeeping_timer_, NULL, ::DoHouseKeeping, this, 
       HOUSEKEEPING_INTERVAL, HOUSEKEEPING_INTERVAL, WT_EXECUTEDEFAULT);
