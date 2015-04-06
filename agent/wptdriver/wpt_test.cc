@@ -33,7 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../wpthook/shared_mem.h"
 #include "wpt_settings.h"
 
-static const DWORD SCRIPT_TIMEOUT_MULTIPLIER = 2;
 static const BYTE JPEG_DEFAULT_QUALITY = 30;
 static const DWORD MS_IN_SEC = 1000;
 static const DWORD BROWSER_WIDTH = 1024;
@@ -59,7 +58,9 @@ WptTest::WptTest(void):
   ,_activity_timeout(DEFAULT_ACTIVITY_TIMEOUT)
   ,_measurement_timeout(DEFAULT_TEST_TIMEOUT)
   ,has_gpu_(false)
-  ,lock_count_(0) {
+  ,lock_count_(0),
+  _script_timeout_multiplier(2),
+  _enableUserSetTimeout(false) {
   QueryPerformanceFrequency(&_perf_frequency);
 
   // figure out what our working diriectory is
@@ -157,6 +158,7 @@ void WptTest::Reset(void) {
   _run_error.Empty();
   _test_error.Empty();
   _custom_metrics.Empty();
+  _has_test_timed_out = false;
 }
 
 /*-----------------------------------------------------------------------------
@@ -286,8 +288,16 @@ bool WptTest::Load(CString& test) {
         else if (!key.CompareNoCase(_T("addCmdLine")))
           _browser_additional_command_line = value;
         else if (!key.CompareNoCase(_T("continuousVideo")) &&
-                 _ttoi(value.Trim()))
+          _ttoi(value.Trim()))
           _continuous_video = true;
+        else if (!key.CompareNoCase(_T("timeout")) && _enableUserSetTimeout) {
+          _test_timeout = _ttoi(value.Trim()) * 1000;
+          _script_timeout_multiplier = 1;
+          if (_test_timeout < 0)
+            _test_timeout = 0;
+          else if (_test_timeout > 3600)
+            _test_timeout = 3600;
+        }
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {
       // grab the rest of the response as the script
@@ -303,7 +313,7 @@ bool WptTest::Load(CString& test) {
   }
 
   if (_script.GetLength())
-    _test_timeout *= SCRIPT_TIMEOUT_MULTIPLIER;
+    _test_timeout *= _script_timeout_multiplier;
 
   WptTrace(loglevel::kFunction, _T("WptTest::Load() - Loaded test %s\n"), 
                                                                 (LPCTSTR)_id);
@@ -392,7 +402,7 @@ bool WptTest::Done() {
   bool ret = false;
 
   _active = false;
-  if (_script_commands.IsEmpty())
+  if (_script_commands.IsEmpty() || _has_test_timed_out)
     ret = true;
 
   return ret;

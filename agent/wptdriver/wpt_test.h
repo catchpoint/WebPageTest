@@ -176,6 +176,7 @@ public:
   CString _test_file;
   bool    _log_data;
   DWORD   _test_timeout;
+  bool    _has_test_timed_out;
   DWORD   _measurement_timeout;
   BYTE    _image_quality;
   bool    _png_screen_shot;
@@ -200,6 +201,8 @@ public:
   CStringA _test_error;
   CStringA _run_error;
   CString _custom_metrics;
+  DWORD   _script_timeout_multiplier;
+  bool   _enableUserSetTimeout;
   
   // current state
   int     _run;
