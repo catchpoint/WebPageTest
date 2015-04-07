@@ -636,12 +636,24 @@ Adb.prototype.scheduleGetGateway = function(ifname) {
       }
     });
     if (!ret) {
-      throw new Error(
-          'Unable to find' + (!ifname ? '' : (' ' + ifname + '\'s')) +
-          ' gateway: ' + stdout);
+      return this.shell(['getprop']).then(function(stdout) {
+        stdout.split(/[\r\n]+/).forEach(function(line) {
+          var m = line.match(/^\[\w*\.(\w*)\.gateway\]\:\s*\[([\d\.\:]*)\]/);
+          if (m && (!ifname || m[1] === ifname)) {
+            logger.debug("Detected gateway: " + m[2]);
+            ret = m[2];
+          }
+        });
+        if (!ret) {
+          throw new Error(
+              'Unable to find' + (!ifname ? '' : (' ' + ifname + '\'s')) +
+              ' gateway: ' + stdout);
+        }
+        return ret;
+      }.bind(this));
     }
     return ret;
-  });
+  }.bind(this));
 };
 
 /**
