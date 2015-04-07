@@ -1187,7 +1187,8 @@ function ValidateScript(&$script, &$error)
 {
     global $test;
     $url = null;
-    if (stripos($script, 'webdriver.Builder(') === false) {
+    if (stripos($script, 'webdriver.Builder(') === false &&
+            stripos($script, '#!/webdriver') === false) {
         global $test;
         FixScript($test, $script);
 
@@ -1227,9 +1228,24 @@ function ValidateScript(&$script, &$error)
 
         if( strlen($error) )
             unset($url);
+    } elseif (stripos($script, '#!/webdriver') == 0) {
+        $wdLang = 'java';
+        ParseWebdriverScript($script, $wdLang);
+        $test['webdriver'] = $wdLang;
     }
 
     return $url;
+}
+
+function ParseWebdriverScript(&$script, &$wdLang) {
+    $lines = explode("\n", $script);
+    $shebang = $lines[0];
+    array_shift($lines);
+    $newScript = "";
+    foreach ($lines as $line) {
+        $newScript = $newScript . $line . "\r\n";
+    }
+    $script = $newScript;
 }
 
 /**
@@ -1798,8 +1814,12 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         if( strlen($test['login']) )
             $testInfo .= "authenticated=1\r\n";
         $testInfo .= "connections={$test['connections']}\r\n";
-        if( strlen($test['script']) )
+        if( strlen($test['script']) ) {
             $testInfo .= "script=1\r\n";
+            if ($test['webdriver']) {
+                $testInfo .= "webdriver={$test['webdriver']}\r\n";
+            }
+        }
         if( strlen($test['notify']) )
             $testInfo .= "notify={$test['notify']}\r\n";
         if( strlen($test['video']) )
@@ -1918,6 +1938,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "clearcerts=1\r\n";
             if( $test['orientation'] )
                 $testFile .= "orientation={$test['orientation']}\r\n";
+            if ($test['script'] && $test['webdriver'])
+                $testFile .= "webdriver={$test['webdriver']}\r\n";
             if (array_key_exists('continuousVideo', $test) && $test['continuousVideo'])
                 $testFile .= "continuousVideo=1\r\n";
             if (array_key_exists('responsive', $test) && $test['responsive'])
