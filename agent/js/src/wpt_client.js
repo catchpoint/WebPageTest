@@ -50,6 +50,7 @@ var JOB_RUNS = 'runs';
 var JOB_TEST_ID = 'Test ID';
 
 var DEFAULT_JOB_TIMEOUT = 120000;
+var MAX_JOB_TIMEOUT = 600000;
 /** Allow test access. */
 exports.JOB_FINISH_TIMEOUT = 30000;
 /** Allow test access. */
@@ -116,6 +117,8 @@ function Job(client, task) {
   this.agentError = undefined;
   this.testError = undefined;
   this.retryError = undefined;
+  this.timeout = client.jobTimeout;
+  this.processScript(task['script']);
 }
 /** Public class. */
 exports.Job = Job;
@@ -150,6 +153,88 @@ function constructHostsFile(task) {
   }
   hosts += "\n";
   return hosts;
+}
+
+Job.prototype.processScript = function(script) {
+  try {
+    if (script !== undefined) {
+      logger.debug("Processing script:\r\n" + script);
+      var lines = script.split("\n");
+      var lineCount = lines.length;
+      for (var l = 0; l < lineCount; l++) {
+        var parts = lines[l].split("\t");
+        if (parts.length > 0) {
+          this.processScriptCommand(parts[0], parts[1], parts[2]);
+        }
+      }
+    }
+  } catch (err) {
+    logger.error("Exception while processing script: " + err.message);
+  }
+}
+
+Job.prototype.processScriptCommand = function(command, value, extra) {
+  logger.debug("Processing script command :" + command);
+  try {
+    command = command.toLowerCase();
+    if (command == 'navigate') {
+      if (value !== undefined && value.trim().length)
+        this.task.url = value.trim();
+    } else if (command == 'setdns') {
+      if (value !== undefined && extra !== undefined) {
+        var host = value.trim();
+        var ip = extra.trim();
+        if (host.length && ip.length)
+          this.task.hostsFile += ip + " " + host + "\n";
+      } else {
+        logger.debug("Invalid setDns command parameters");
+      }
+    } else if (command == 'setdnsname') {
+      // special-case the SPOF blackhole testing
+      if (value !== undefined &&
+          extra !== undefined &&
+          extra.trim().toLowerCase() == 'blackhole.webpagetest.org') {
+        var host = value.trim();
+        if (host.length)
+          this.task.hostsFile += "72.66.115.13 " + host + "\n";
+      } else {
+        logger.debug("Invalid setDnsName command parameters");
+      }
+    } else if (command == 'block') {
+      if (value !== undefined) {
+        hosts = "";
+        var entries = value.split(" ");
+        var count = entries.length;
+        for (var i = 0; i < count; i++) {
+          var host = entries[i].trim();
+          if (host.length) {
+            hosts += " " + host;
+          }
+        }
+        hosts = hosts.trim();
+        if (hosts.length)
+          this.task.hostsFile += "127.0.0.1 " + hosts + "\n";
+      } else {
+        logger.debug("Invalid block command parameters");
+      }
+    } else if (command == 'settimeout') {
+      if (value !== undefined) {
+        timeout = parseInt(value) * 1000;
+        if (timeout > 0 && timeout <= MAX_JOB_TIMEOUT) {
+          this.timeout = timeout;
+          logger.debug("New job timeout: " + timeout);
+        } else {
+          logger.debug("Invalid timeout: " + timeout);
+        }
+      } else {
+        logger.debug("Invalid setTimeout command parameters");
+      }
+    } else {
+      logger.error("Unexpected script command: " + command);
+    }
+  } catch(err) {
+    logger.error("Exception while processing script command '" + command +"': " + err.message);
+  }
 }
 
 /**
@@ -491,10 +576,11 @@ Client.prototype.startNextRun_ = function(job) {
   // For comparison in finishRun_()
   this.currentJob_ = job;
   // Set up job timeout
+  logger.debug("Waiting for up to " + job.timeout + "ms for the test to complete");
   this.timeoutTimer_ = global.setTimeout(function() {
     job.testError = 'timeout';
     this.abortJob_(job);
-  }.bind(this), this.jobTimeout + exports.JOB_FINISH_TIMEOUT);
+  }.bind(this), job.timeout + exports.JOB_FINISH_TIMEOUT);
 
   if (this.onStartJobRun) {
     try {

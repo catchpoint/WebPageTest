@@ -240,12 +240,11 @@ Agent.prototype.startJobRun_ = function(job) {
     // Validate job
     var script = job.task.script;
     var url = job.task.url;
-    var pac;
     try {
       if (script && !/new\s+(\S+\.)?Builder\s*\(/.test(script)) {
-        var urlAndPac = this.decodeUrlAndPacFromScript_(script);
-        url = urlAndPac.url;
-        pac = urlAndPac.pac;
+        // Nuke any non-webdriver scripts for now.  Regular WPT
+        // scripts would have been pre-processed when the task was
+        // initially parsed.
         script = undefined;
       }
       url = url.trim();
@@ -318,9 +317,6 @@ Agent.prototype.startJobRun_ = function(job) {
       if (!!url) {
         task.url = url;
       }
-      if (!!pac) {
-        task.pac = pac;
-      }
       var message = {
           cmd: 'run',
           runNumber: job.runNumber,
@@ -375,92 +371,6 @@ Agent.prototype.scheduleCleanRunTempDir_ = function() {
           fs.unlink, filePath);
     }.bind(this));
   }.bind(this));
-};
-
-/**
- * @param {string} message the error message.
- * @constructor
- * @see decodeUrlAndPacFromScript_
- */
-function ScriptError(message) {
-  'use strict';
-  this.message = message;
-  this.stack = (new Error(message)).stack;
-}
-ScriptError.prototype = new Error();
-
-/**
- * Extract the URL and PAC from a simple WPT script.
- *
- * We don't support general WPT scripts.  Instead, we only support the minimal
- * subset that's required to express a PAC proxy configuration script.
- * Here are a couple examples of supported scripts:
- *
- *    1)
- *    setDnsName foo.com bar.com
- *    navigate qux.com
- *
- *    2)
- *    setDnsName foo.com ignored.com
- *    overrideHost foo.com bar.com
- *    navigate qux.com
- *
- * Blank lines and lines starting with "//" are ignored.  Lines starting with
- * "if", "endif", and "addHeader" are also ignored for now, but this feature is
- * deprecated and these commands will be rejected in a future.  Any other input
- * will throw a ScriptError.
- *
- * @param {string} script e.g.:
- *   setDnsName fromHost toHost
- *   navigate url.
- * @return {Object} a URL and PAC object, e.g.:
- *   {url:'http://x.com', pac:'function Find...'}.
- * @private
- */
-Agent.prototype.decodeUrlAndPacFromScript_ = function(script) {
-  'use strict';
-  // Assign nulls to appease 'possibly uninitialized' warnings.
-  var fromHost = null, toHost = null, proxy = null, url = null;
-  script.split('\n').forEach(function(line, lineNumber) {
-    line = line.trim();
-    if (!line || 0 === line.indexOf('//')) {
-      return;
-    }
-    if (line.match(/^(if|endif|addHeader)\s/i)) {
-      return;
-    }
-    var m = line.match(/^setDnsName\s+(\S+)\s+(\S+)$/i);
-    if (m && !fromHost && !url) {
-      fromHost = m[1];
-      toHost = m[2];
-      return;
-    }
-    m = line.match(/^overrideHost\s+(\S+)\s+(\S+)$/i);
-    if (m && fromHost && m[1] === fromHost && !proxy && !url) {
-      proxy = m[2];
-      return;
-    }
-    m = line.match(/^navigate\s+(\S+)$/i);
-    if (m && fromHost && !url) {
-      url = m[1];
-      return;
-    }
-    throw new ScriptError('WPT script contains unsupported line[' +
-        lineNumber + ']: ' + line + '\n' +
-        '--- support is limited to:\n' +
-        'setDnsName H1 H2\\n [overrideHost H1 H3]\\n navigate H4');
-  });
-  if (!fromHost || !url) {
-    throw new ScriptError('WPT script lacks ' +
-        (fromHost ? 'navigate' : 'setDnsName'));
-  }
-  logger.debug('Script is a simple PAC from=%s to=%s url=%s',
-      fromHost, proxy || toHost, url);
-  return {url: url, pac: 'function FindProxyForURL(url, host) {\n' +
-      '  if ("' + fromHost + '" === host) {\n' +
-      '    return "PROXY ' + (proxy || toHost) + '";\n' +
-      '  }\n' +
-      '  return "DIRECT";\n}\n'};
 };
 
 /**
