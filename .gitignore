@@ -6,7 +6,6 @@ lib-debug/
 wptdriver tests/
 /ipch/
 .idea/
-.project
 *.vcxproj.user
 *.vcproj.*.user
 *~
@@ -40,7 +39,9 @@ agent/js/lib/ios/DeviceSupport
 /www/installers/browsers/nightly.dat
 /www/cli/archive-ia.php
 /www/cli/ec2-keys.inc.php
-
 agent/js/5c.sh
-
 *.mp4
+.gradle
+*/webdriver-support/java/build/
+*.iml
+logs/
