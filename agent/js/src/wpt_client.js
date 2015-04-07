@@ -108,6 +108,7 @@ function Job(client, task) {
   this.runs = runs;
   this.isFirstViewOnly = jsonBoolean(task, JOB_FIRST_VIEW_ONLY);
   this.isReplay = jsonBoolean(task, JOB_REPLAY);
+  this.task.hostsFile = constructHostsFile(task);
   this.runNumber = this.isReplay ? 0 : 1;
   this.isCacheWarm = false;
   this.resultFiles = [];
@@ -128,6 +129,27 @@ function jsonBoolean(task, attr) {
     return !!value;
   }
   throw new Error('Invalid "' + attr + '" number is not 0 or 1');
+}
+
+function constructHostsFile(task) {
+  // Start with a default localhost hosts file
+  var hosts = "127.0.0.1 localhost";
+  try {
+    var block = task['block'];
+    if (block !== undefined) {
+      var entries = block.split(" ");
+      var count = entries.length;
+      for (var i = 0; i < count; i++) {
+        var host = entries[i].trim();
+        if (host.length) {
+          hosts += " " + host;
+        }
+      }
+    }
+  } catch (err) {
+  }
+  hosts += "\n";
+  return hosts;
 }
 
 /**
