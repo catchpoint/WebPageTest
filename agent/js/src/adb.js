@@ -432,7 +432,17 @@ Adb.prototype.scheduleCheckBatteryTemperature = function(maxTemp) {
         throw new Error('Temperature ' + deviceTemp + ' > ' + maxTemp);
       }
     } else {
-      throw new Error('Device temperature not available');
+      this.shell(['cat', '/sys/class/power_supply/battery/batt_temp']).then(
+          function(stdout) {
+        if ((/^\d+$/).test(stdout.trim())) {
+          var deviceTemp = parseInt(stdout.trim(), 10) / 10.0;
+          if (deviceTemp > maxTemp) {
+            throw new Error('Temperature ' + deviceTemp + ' > ' + maxTemp);
+          }
+        } else {
+          throw new Error('Device temperature not available');
+        }
+      }.bind(this));
     }
   }.bind(this));
 };
