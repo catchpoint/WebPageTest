@@ -54,7 +54,7 @@ var g_requesting_task = false;
 var g_processing_task = false;
 var g_started = false;
 var g_initialized = false;
-
+var g_webdriver_mode = false;
 // Set to true to pull commands from a static list in fakeCommandSource.js.
 var RUN_FAKE_COMMAND_SEQUENCE = false;
 
@@ -108,8 +108,17 @@ wpt.moz.main.onStartup = function() {
         wpt.moz.main.executeTask(nextCommand);
     }, TEST_TASK_INTERVAL);
   } else {
-    // Fetch tasks from wptdriver.exe .
-    window.setInterval(function() {wpt.moz.main.getTask();}, TASK_INTERVAL);
+    wptQuery('http://127.0.0.1:8888/mode', function(response) {
+      if (response.webdriver) {
+        g_webdriver_mode = true;
+        g_active = true;
+      } else {
+        // Fetch tasks from wptdriver.exe .
+        window.setInterval(function() {
+          wpt.moz.main.getTask();
+        }, TASK_INTERVAL);
+      }
+    });
   }
 };
 
@@ -160,6 +169,42 @@ wpt.moz.main.getTask = function() {
   }
 };
 
+function wptQuery(url, callback) {
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState != 4)
+        return;
+      if (xhr.status != 200) {
+        alert('Got unexpected (not 200) XHR status: ' + xhr.status);
+        callback({webdriver: false});
+        return;
+      }
+      var resp = JSON.parse(xhr.responseText);
+      if (resp.statusCode != 200) {
+        alert('Got unexpected status code ' + resp.statusCode);
+        callback({webdriver: false});
+        return;
+      }
+      if (!resp.data) {
+        alert('Empty data for url: ' + url);
+        callback({webdriver: false});
+        return;
+      }
+      callback(resp.data);
+    };
+    xhr.onerror = function() {
+      alert('Got an XHR error!');
+      callback({webdriver: false});
+    }
+    xhr.send();
+  } catch (err) {
+    callback({webdriver: false});
+    alert('Error querying mode');
+  }
+}
+
 // Send message that navigation started.
 wpt.moz.main.onNavigate = function() {
   wpt.moz.main.sendEventToDriver_('navigate');
@@ -180,7 +225,37 @@ wpt.moz.main.onLoad = function(win) {
   var domCount = win.document.getElementsByTagName("*").length;
   wpt.moz.main.sendEventToDriver_('load?fixedViewport=' +
       fixedViewport + '&domCount=' + domCount);
+  if (g_webdriver_mode) {
+    runSoon(function () {
+      wpt.moz.main.collectStats('', function () {
+      });
+    });
+  }
 };
+
+wpt.moz.main.onBeforeUnload = function() {
+  wpt.moz.main.sendEventToDriver_('before_unload');
+}
+
+function runSoon(callback) {
+  setTimeout(callback, 0);
+}
+/**
+ * Fired when gBrowser receives a beforeunload event.
+ */
+function onBeforeUnload(event) {
+  // We only care about events aimed at the document.
+  if (!event.originalTarget instanceof HTMLDocument)
+    return;
+  // Filter events from frames by checking that this event references the top
+  // window in the page.
+  var win = event.originalTarget.defaultView;
+  if (!win || win !== win.top)
+    return;
+  if (g_webdriver_mode) {
+    wptExtension.beforeUnload();
+  }
+}
 
 /**
  * Fired when gBrowser receives a load event, this function
@@ -251,29 +326,34 @@ var wptExtension = {
   init: function() {
     // Use the load event on the global browser object to see when the
     // page gets the onload event.
-	if (!g_initialized) {
-		gBrowser.addEventListener('load', onPageLoad, true);
-		gBrowser.addEventListener('pagehide', onPageHide, true);
-		gBrowser.addProgressListener(progressListener);
-		g_initialized = true;
-		setTimeout(function() {
-			if (!g_started)
-				onPageLoad();
-		}, STARTUP_FAILSAFE_INTERVAL);
-	}
+    if (!g_initialized) {
+      gBrowser.addEventListener('load', onPageLoad, true);
+      gBrowser.addEventListener('pagehide', onPageHide, true);
+      gBrowser.addEventListener('beforeunload', onBeforeUnload, true)
+      gBrowser.addProgressListener(progressListener);
+      g_initialized = true;
+      setTimeout(function() {
+        if (!g_started)
+          onPageLoad();
+      }, STARTUP_FAILSAFE_INTERVAL);
+    }
   },
   uninit: function() {
-	if (g_initialized) {
-		gBrowser.removeEventListener('load', onPageLoad, true);
-		gBrowser.removeEventListener('pagehide', onPageHide, true);
-		gBrowser.removeProgressListener(progressListener);
-	}
+    if (g_initialized) {
+      gBrowser.removeEventListener('load', onPageLoad, true);
+      gBrowser.removeEventListener('pagehide', onPageHide, true);
+      gBrowser.removeEventListener('beforeunload', onBeforeUnload, true);
+      gBrowser.removeProgressListener(progressListener);
+    }
   },
   loadStart: function() {
-	wpt.moz.main.onNavigate();
+    wpt.moz.main.onNavigate();
   },
   loadStop: function(win) {
-	wpt.moz.main.onLoad(win);
+    wpt.moz.main.onLoad(win);
+  },
+  beforeUnload: function() {
+    wpt.moz.main.onBeforeUnload();
   }
 };
 window.addEventListener('load', function() { wptExtension.init(); }, false);

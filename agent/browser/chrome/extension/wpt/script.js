@@ -183,7 +183,9 @@ window.addEventListener('load', function() {
                                 'timestamp': timestamp}, function(response) {});
 }, false);
 
-
+window.addEventListener('beforeunload', function() {
+  chrome.extension.sendRequest({'message': 'wptBeforeUnload'}, function(response) {});
+});
 
 /**
  * WebPageTest's scripting language has several commands that act on
