@@ -6,7 +6,7 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('SBL_Check');
 }
 
-define('VIDEO_CODE_VERSION', 19);
+define('VIDEO_CODE_VERSION', 20);
 
 require_once(__DIR__ . '/logging.inc');
 

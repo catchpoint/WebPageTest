@@ -110,9 +110,6 @@ if (!defined('EMBED')) {
                 $navTabs['Forums'] = '/forums/';
             }
             $navTabs['Documentation'] = 'http://sites.google.com/a/webpagetest.org/docs/';
-            //if (!$privateInstall) {
-            //    $navTabs['Try Acceleration'] = 'http://www.webpagetest.org/compare';
-            //}
             $navTabs['About'] = FRIENDLY_URLS ? '/about' : '/about.php';
         }
         foreach ($navTabs as $tabName => $tabUrl) {
@@ -171,38 +168,44 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
         }
 
         echo '<div id="header_container">';
-        echo '<div id="optimization">';
-            echo '<div id="optimization_header">';
-            if( gz_is_file("$testPath/{$gradeRun}_pagespeed.txt") )
-            {
-                $score = GetPageSpeedScore("$testPath/{$gradeRun}_pagespeed.txt");
-                if( strlen($score) )
-                {
-                    $pageSpeedUrl = FRIENDLY_URLS ? "/result/$id/$gradeRun/pagespeed/" : "pagespeed.php?test=$id&run=$gradeRun";
-                    echo "<span id=\"headerPagespeedScore\"><a href=\"$pageSpeedUrl\">PageSpeed {$pageData[$gradeRun][0]['pageSpeedVersion']} Score</a>: <b>$score/100</b></span>";
-                }
-            }
-            
-            echo "<div id=\"opthelp\"><a href=\"https://sites.google.com/a/webpagetest.org/docs/other-resources/optimization-resources\" title=\"Optimization Resources\" target=\"_blank\">Need help improving?</a></div>\n";
-            echo '</div>';
-            echo '<div id="grades">';
-                $grades = GetGrades($pageData[$gradeRun][0], $test, $id, $gradeRun);
-                if( count($grades) )
-                {
-                    $smaller = '';
-                    if( count($grades) > 6 )
-                      $smaller = ' smaller';
-                    echo "<ul class=\"grades$smaller\">";
-                    $optlink = FRIENDLY_URLS ? "/result/$id/$gradeRun/performance_optimization/" : "performance_optimization.php?test=$id&run=$gradeRun";
-                    foreach( $grades as $check => &$grade )
-                        echo "<li class=\"$check\"><a href=\"$optlink#$check\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
-                    echo '</ul>';
-                }
-            echo '</div>';
-        echo '</div>';
+        // Only include optimization data for normal tests
+        $data_class = '';
+        if (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type'])) {
+          echo '<div id="optimization">';
+              echo '<div id="optimization_header">';
+              if( gz_is_file("$testPath/{$gradeRun}_pagespeed.txt") )
+              {
+                  $score = GetPageSpeedScore("$testPath/{$gradeRun}_pagespeed.txt");
+                  if( strlen($score) )
+                  {
+                      $pageSpeedUrl = FRIENDLY_URLS ? "/result/$id/$gradeRun/pagespeed/" : "pagespeed.php?test=$id&run=$gradeRun";
+                      echo "<span id=\"headerPagespeedScore\"><a href=\"$pageSpeedUrl\">PageSpeed {$pageData[$gradeRun][0]['pageSpeedVersion']} Score</a>: <b>$score/100</b></span>";
+                  }
+              }
+              
+              echo "<div id=\"opthelp\"><a href=\"https://sites.google.com/a/webpagetest.org/docs/other-resources/optimization-resources\" title=\"Optimization Resources\" target=\"_blank\">Need help improving?</a></div>\n";
+              echo '</div>';
+              echo '<div id="grades">';
+                  $grades = GetGrades($pageData[$gradeRun][0], $test, $id, $gradeRun);
+                  if( count($grades) )
+                  {
+                      $smaller = '';
+                      if( count($grades) > 6 )
+                        $smaller = ' smaller';
+                      echo "<ul class=\"grades$smaller\">";
+                      $optlink = FRIENDLY_URLS ? "/result/$id/$gradeRun/performance_optimization/" : "performance_optimization.php?test=$id&run=$gradeRun";
+                      foreach( $grades as $check => &$grade )
+                          echo "<li class=\"$check\"><a href=\"$optlink#$check\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
+                      echo '</ul>';
+                  }
+              echo '</div>';
+          echo '</div>';
+        } else {
+          $data_class = ' class="header_data_full"';
+        }
         
-        echo '<div id="header_data">';
-            $shortUrl = str_replace('http://', '',  FitText($url, 120));
+        echo "<div id=\"header_data\"$data_class>";
+            $shortUrl = str_replace('http://', '',  FitText($url, 180));
             echo "<h2 class=\"alternate cufon-dincond_regular\">Web Page Performance Test for<br>";
             if ($settings['nolinks']) {
                 echo "<span class=\"medium colored\">$shortUrl</span>";
