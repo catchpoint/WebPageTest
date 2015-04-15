@@ -16,11 +16,11 @@ set "BATCH_NAME=%0"
 shift
 
 :loop
-if NOT "%0"=="" (
+if NOT "%~0"=="" (
     set "MATCHED="
     set "TRUE="
-    if "%0"=="-s" set TRUE=1
-    if "%0"=="--serverUrl" set TRUE=1
+    if "%~0"=="-s" set TRUE=1
+    if "%~0"=="--serverUrl" set TRUE=1
     if defined TRUE (
         set MATCHED=1
         set WPT_SERVER=%1
@@ -28,8 +28,8 @@ if NOT "%0"=="" (
         shift
     )
     set "TRUE="
-    if "%0"=="-l" set TRUE=1
-    if "%0"=="--location" set TRUE=1
+    if "%~0"=="-l" set TRUE=1
+    if "%~0"=="--location" set TRUE=1
     if defined TRUE (
         set MATCHED=1
         set LOCATION=%1
@@ -37,9 +37,9 @@ if NOT "%0"=="" (
         shift
     )
     set "TRUE="
-    if "%0"=="-b" set TRUE=1
-    if "%0"=="-c" set TRUE=1
-    if "%0"=="--browser" set TRUE=1
+    if "%~0"=="-b" set TRUE=1
+    if "%~0"=="-c" set TRUE=1
+    if "%~0"=="--browser" set TRUE=1
     if defined TRUE (
         set MATCHED=1
         set BROWSER=%1
@@ -47,16 +47,16 @@ if NOT "%0"=="" (
         shift
     )
     set "TRUE="
-    if "%0"=="-q" set TRUE=1
-    if "%0"=="--quiet" set TRUE=1
+    if "%~0"=="-q" set TRUE=1
+    if "%~0"=="--quiet" set TRUE=1
     if defined TRUE (
         set MATCHED=1
         set WPT_VERBOSE=false
         shift
     )
     set "TRUE="
-    if "%0"=="-m" set TRUE=1
-    if "%0"=="--max_log" set TRUE=1
+    if "%~0"=="-m" set TRUE=1
+    if "%~0"=="--max_log" set TRUE=1
     if defined TRUE (
         set MATCHED=1
         set "WPT_MAX_LOGLEVEL=%1"
@@ -64,8 +64,8 @@ if NOT "%0"=="" (
         shift
     )
     set "TRUE="
-    if "%0"=="-h" set TRUE=1
-    if "%0"=="--help" set TRUE=1
+    if "%~0"=="-h" set TRUE=1
+    if "%~0"=="--help" set TRUE=1
     if defined TRUE (
       set MATCHED=1
       echo Usage: %BATCH_NAME% [options]...
