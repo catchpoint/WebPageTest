@@ -44,6 +44,7 @@ bool  shared_has_gpu = false;
 int   shared_result = -1;
 WCHAR shared_browser_exe[MAX_PATH] = {NULL};
 DWORD shared_browser_process_id = 0;
+bool  shared_enableUserSetTimeout = false;
 #pragma data_seg ()
 
 #pragma comment(linker,"/SECTION:.shared,RWS")
@@ -61,6 +62,11 @@ void WINAPI SetTestTimeout(DWORD timeout) {
   shared_test_timeout = timeout;
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WINAPI SetEnableUserSetTimeout(bool userTimeout) {
+  shared_enableUserSetTimeout = userTimeout;
+}
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WINAPI SetClearedCache(bool cleared_cache) {

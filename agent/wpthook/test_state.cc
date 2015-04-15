@@ -69,6 +69,7 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   InitializeCriticalSection(&_data_cs);
   FindBrowserNameAndVersion();
   paint_msg_ = RegisterWindowMessage(_T("WPT Browser Paint"));
+  _timeout_start_time.QuadPart = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -172,6 +173,11 @@ void TestState::Start() {
   GetSystemTime(&_start_time);
   if (!_start.QuadPart)
     _start.QuadPart = _step_start.QuadPart;
+
+  //This is only called once, on the first navigate
+  if (!_timeout_start_time.QuadPart)
+    _timeout_start_time.QuadPart = _step_start.QuadPart;
+
   GetCPUTime(_start_cpu_time, _start_total_time);
   _active = true;
   UpdateBrowserWindow();  // the document window may not be available yet
@@ -319,7 +325,13 @@ bool TestState::IsDone() {
   if (_active) {
     bool is_page_done = false;
     CString done_reason;
-    if (test_ms >= _test._minimum_duration) {
+    DWORD elapsed_timeout_ms = ElapsedMs(_timeout_start_time, now);
+    if (elapsed_timeout_ms > _test._test_timeout) {
+      _test_result = TEST_RESULT_TIMEOUT;
+      is_page_done = true;
+      done_reason = _T("Test timed out.");
+      _test._has_test_timed_out = true;
+    } else if (test_ms >= _test._minimum_duration) {
       DWORD load_ms = ElapsedMs(_on_load, now);
       DWORD inactive_ms = ElapsedMs(_last_activity, now);
       DWORD navigated = navigated_ ? 1:0;
@@ -348,7 +360,7 @@ bool TestState::IsDone() {
       } else if (test_ms > _test._measurement_timeout) {
         _test_result = TEST_RESULT_TIMEOUT;
         is_page_done = true;
-        done_reason = _T("Test timed out.");
+        done_reason = _T("Meaurement timed out.");
       }
     }
     if (is_page_done) {

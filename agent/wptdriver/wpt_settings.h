@@ -105,6 +105,7 @@ public:
   CString _location;
   CString _key;
   DWORD   _timeout;
+  bool   _enableUserSetTimeout;
   DWORD   _startup_delay;
   DWORD   _polling_delay;
   int     _debug;
