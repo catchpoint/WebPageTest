@@ -86,8 +86,7 @@ function Agent(app, client, flags) {
 
   this.client_.onStartJobRun = this.startJobRun_.bind(this);
   this.client_.onAbortJob = this.abortJob_.bind(this);
-  this.client_.onMakeReady =
-      this.browser_.scheduleMakeReady.bind(this.browser_);
+  this.client_.onMakeReady = this.onMakeReady_.bind(this);
 }
 /** Public class. */
 exports.Agent = Agent;
@@ -460,6 +459,29 @@ Agent.prototype.scheduleCleanup_ = function(job, isEndOfJob) {
     });
   }
   this.scheduleCleanRunTempDir_();
+};
+
+/**
+ * Schedules the browser MakeReady with added agent cleanup.
+ *
+ * @return {webdriver.promise.Promise} resolve(boolean) isReady.
+ * @private
+ */
+Agent.prototype.onMakeReady_ = function() {
+  'use strict';
+  return this.browser_.scheduleMakeReady(this.browser_).addBoth(
+      function(errOrBool) {
+    if (!(errOrBool instanceof Error)) {
+      return errOrBool;  // is online.
+    }
+    var done = new webdriver.promise.Deferred();
+    this.stopTrafficShaper_();
+    process_utils.scheduleNoFault(this.app_, 'Stop WPR', function() {
+      this.webPageReplay_.scheduleStop();
+    }.bind(this));
+    this.app_.schedule('Not ready', function() { done.reject(errOrBool); });
+    return done.promise;
+  }.bind(this));
 };
 
 /**
