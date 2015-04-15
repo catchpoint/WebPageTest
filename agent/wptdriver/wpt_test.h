@@ -180,6 +180,7 @@ public:
   DWORD   _measurement_timeout;
   BYTE    _image_quality;
   bool    _png_screen_shot;
+  bool    _full_size_images;
   DWORD   _minimum_duration;
   bool    _save_response_bodies;
   bool    _save_html_body;

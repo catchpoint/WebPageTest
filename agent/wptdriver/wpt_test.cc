@@ -133,6 +133,7 @@ void WptTest::Reset(void) {
   _combine_steps = 0;
   _image_quality = JPEG_DEFAULT_QUALITY;
   _png_screen_shot = false;
+  _full_size_images = false;
   _minimum_duration = 0;
   _user_agent.Empty();
   _add_headers.RemoveAll();
@@ -248,6 +249,8 @@ bool WptTest::Load(CString& test) {
                                      min(100, _ttoi(value.Trim())));
         else if (!key.CompareNoCase(_T("pngScreenShot")) &&_ttoi(value.Trim()))
           _png_screen_shot = true;
+        else if (!key.CompareNoCase(_T("fullSizeImages")) &&_ttoi(value.Trim()))
+          _full_size_images = true;
         else if (!key.CompareNoCase(_T("time")))
           _minimum_duration = MS_IN_SEC * max(_minimum_duration, 
                                min(DEFAULT_TEST_TIMEOUT, _ttoi(value.Trim())));

@@ -222,17 +222,17 @@ void Results::SaveImages(void) {
   // save the event-based images
   CxImage image;
   if (_screen_capture.GetImage(CapturedImage::START_RENDER, image))
-    SaveImage(image, _file_base + IMAGE_START_RENDER, _test._image_quality);
+    SaveImage(image, _file_base + IMAGE_START_RENDER, _test._image_quality, false, _test._full_size_images);
   if (_screen_capture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image))
-    SaveImage(image, _file_base + IMAGE_DOC_COMPLETE, _test._image_quality);
+    SaveImage(image, _file_base + IMAGE_DOC_COMPLETE, _test._image_quality, false, _test._full_size_images);
   if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, image)) {
     if (_test._png_screen_shot)
       image.Save(_file_base + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
-    SaveImage(image, _file_base + IMAGE_FULLY_LOADED, _test._image_quality);
+    SaveImage(image, _file_base + IMAGE_FULLY_LOADED, _test._image_quality, false, _test._full_size_images);
   }
   if (_screen_capture.GetImage(CapturedImage::RESPONSIVE_CHECK, image)) {
     SaveImage(image, _file_base + IMAGE_RESPONSIVE_CHECK, _test._image_quality,
-              true);
+              true, _test._full_size_images);
   }
 
   SaveVideo();
@@ -276,7 +276,7 @@ void Results::SaveVideo(void) {
               _visually_complete.QuadPart = image._capture_time.QuadPart;
               file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base, 
                                 image_time);
-              SaveImage(*img, file_name, _test._image_quality);
+              SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_images);
             }
           }
         } else {
@@ -288,7 +288,7 @@ void Results::SaveVideo(void) {
           histogram = GetHistogramJSON(*img);
           if (_test._video) {
             file_name = _file_base + _T("_progress_0000.jpg");
-            SaveImage(*img, file_name, _test._image_quality);
+            SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_images);
           }
         }
 
@@ -370,11 +370,12 @@ bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Results::SaveImage(CxImage& image, CString file, BYTE quality,
-                        bool force_small) {
+                        bool force_small, bool _full_size_images) {
   if (image.IsValid()) {
     CxImage img(image);
-    if (force_small || (img.GetWidth() > 600 && img.GetHeight() > 600))
-      img.Resample2(img.GetWidth() / 2, img.GetHeight() / 2);
+    if (!_full_size_images)
+      if (force_small || (img.GetWidth() > 600 && img.GetHeight() > 600))
+        img.Resample2(img.GetWidth() / 2, img.GetHeight() / 2);
 
     img.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
     img.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
