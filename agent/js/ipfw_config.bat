@@ -119,3 +119,4 @@ echo %DOWNCMD%
 %DOWNCMD%
 echo %UPCMD%
 %UPCMD%
+EXIT /B 0
