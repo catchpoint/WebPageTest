@@ -392,13 +392,7 @@ $page_description = "Website performance test result$testLabel.";
             for( $run = 1; $run <= $runs; $run++)
             {
                 $error_str = null;
-                if (array_key_exists('testinfo', $test) && 
-                    array_key_exists('errors', $test['testinfo']) && 
-                    array_key_exists($run, $test['testinfo']['errors']) && 
-                    array_key_exists(0, $test['testinfo']['errors'][$run]) && 
-                    strlen($test['testinfo']['errors'][$run][0])) {
-                    $error_str = 'Test Error: ' . $test['testinfo']['errors'][$run][0];
-                } elseif (!isset($pageData) || !is_array($pageData) || !array_key_exists($run, $pageData)) {
+                if (!isset($pageData) || !is_array($pageData) || !array_key_exists($run, $pageData)) {
                     if ($testComplete)
                         $error_str = 'Test Error: Data is missing.';
                     else
@@ -434,6 +428,8 @@ $page_description = "Website performance test result$testLabel.";
                         }
                         $first_displayed = true;
                         echo '<td align="left" valign="middle">First View';
+                        if (isset($test['testinfo']['errors'][$run][0]) && strlen($test['testinfo']['errors'][$run][0]))
+                            echo '<br>(Test Error: ' . htmlspecialchars($test['testinfo']['errors'][$run][0]) . ')';
                         if( isset($pageData[$run][0]['result']) && $pageData[$run][0]['result'] !== 0 && $pageData[$run][0]['result'] !== 99999 )
                             echo '<br>(Error: ' . LookupError($pageData[$run][0]['result']) . ')';
                         else if( isset($pageData[$run][0]['loadTime']) )
@@ -507,6 +503,8 @@ $page_description = "Website performance test result$testLabel.";
                   if( isset($pageData[$run][1]) ) { 
                       if (array_key_exists($run, $pageData) && array_key_exists(1, $pageData[$run]) && count($pageData[$run][1])) {
                           echo '<td align="left" class="even" valign="middle">Repeat View';
+                        if (isset($test['testinfo']['errors'][$run][1]) && strlen($test['testinfo']['errors'][$run][1]))
+                            echo '<br>(Test Error: ' . htmlspecialchars($test['testinfo']['errors'][$run][0]) . ')';
                           if( isset($pageData[$run][1]['result']) && $pageData[$run][1]['result'] !== 0 && $pageData[$run][1]['result'] !== 99999 )
                               echo '<br>(Error: ' . LookupError($pageData[$run][1]['result']) . ')';
                           else if( isset($pageData[$run][1]['loadTime']) )
