@@ -346,6 +346,16 @@ $loc = ParseLocations($locations);
                                             <small>Do not add PTST to the browser UA string</small>
                                         </label>
                                     </li>
+                                    <?php
+                                    if ( isset($settings['fullSizeVideoOn']) && $settings['fullSizeVideoOn'] )
+                                    { ?>
+                                    <li>
+                                        <input type="checkbox" name="fullsizevideo" id="full_size_video" class="checkbox" <?php if( isset($settings['fullSizeVideoDefault']) && $settings['fullSizeVideoDefault'] )  echo 'checked=checked'; ?> style="float: left;width: auto;">
+                                        <label for="full_size_video" class="auto_width">
+                                            Capture Full Size Video<br>
+                                            <small>Enables full size screenshots in the filmstrip</small>
+                                        </label>
+                                    </li><?php } ?>
                                     <li>
                                         <label for="dom_elements" class="auto_width">DOM Element</label>
                                         <input type="text" name="domelement" id="dom_elements" class="text">
