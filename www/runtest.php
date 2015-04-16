@@ -133,6 +133,7 @@
             $test['netlog'] = $req_netlog;
             $test['spdy3'] = $req_spdy3;
             $test['noscript'] = $req_noscript;
+            $test['fullsizevideo'] = $req_fullsizevideo;
             $test['blockads'] = $req_blockads;
             $test['sensitive'] = $req_sensitive;
             $test['type'] = trim($req_type);
@@ -1032,6 +1033,12 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
         if( !$maxruns )
             $maxruns = 10;
 
+        if ( !isset($settings['fullSizeVideoOn']) || !$settings['fullSizeVideoOn'] )
+        {
+            //overwrite the Full Size Video flag with 0 if feature disabled in the settings
+            $test['fullsizevideo'] = 0;
+        }
+
         if( !$test['batch'] )
             ValidateURL($test['url'], $error, $settings);
 
@@ -1064,6 +1071,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             $test['netlog'] = $test['netlog'] ? 1 : 0;
             $test['spdy3'] = $test['spdy3'] ? 1 : 0;
             $test['noscript'] = $test['noscript'] ? 1 : 0;
+            $test['fullsizevideo'] = $test['fullsizevideo'] ? 1 : 0;
             $test['blockads'] = $test['blockads'] ? 1 : 0;
             $test['sensitive'] = $test['sensitive'] ? 1 : 0;
             $test['pngss'] = $test['pngss'] ? 1 : 0;
@@ -1876,6 +1884,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "\r\nspdy3=1";
             if( $test['noscript'] )
                 $testFile .= "\r\nnoscript=1";
+            if( $test['fullsizevideo'] )
+                $testFile .= "\r\nfullSizeVideo=1";
             if( $test['blockads'] )
                 $testFile .= "\r\nblockads=1";
             if( $test['video'] )
