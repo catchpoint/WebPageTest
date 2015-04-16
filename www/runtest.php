@@ -869,6 +869,8 @@ function UpdateLocation(&$test, &$locations, $new_location)
           $test['latency'] = (int)$connectivity[$test['connectivity']]['latency'];
           $test['testLatency'] = (int)$connectivity[$test['connectivity']]['latency'];
           $test['plr'] = $connectivity[$test['connectivity']]['plr'];
+          if (!$test['timeout'] && isset($connectivity[$test['connectivity']]['timeout']))
+            $test['timeout'] = $connectivity[$test['connectivity']]['timeout'];
 
           if( isset($connectivity[$test['connectivity']]['aftCutoff']) && !$test['aftEarlyCutoff'] )
               $test['aftEarlyCutoff'] = $connectivity[$test['connectivity']]['aftCutoff'];
@@ -1152,6 +1154,8 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                         $test['latency'] = (int)$connectivity[$test['connectivity']]['latency'];
                         $test['testLatency'] = (int)$connectivity[$test['connectivity']]['latency'];
                         $test['plr'] = $connectivity[$test['connectivity']]['plr'];
+                        if (!$test['timeout'] && isset($connectivity[$test['connectivity']]['timeout']))
+                          $test['timeout'] = $connectivity[$test['connectivity']]['timeout'];
 
                         if( isset($connectivity[$test['connectivity']]['aftCutoff']) && !$test['aftEarlyCutoff'] )
                             $test['aftEarlyCutoff'] = $connectivity[$test['connectivity']]['aftCutoff'];
