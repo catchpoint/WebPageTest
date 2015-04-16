@@ -236,10 +236,10 @@ if (ValidateTestId($id)) {
           $secure = false;
           $haveLocations = false;
           $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure, $haveLocations, false);
-          if (isset($requests)) {
+          if (isset($requests) && is_array($requests) && count($requests)) {
             getBreakdown($id, $testPath, $runNumber, $cacheWarmed, $requests);
           } else {
-            $testerError = true;
+            $testerError = 'Missing Results';
           }
           if (is_dir('./google') && is_file('./google/google_lib.inc')) {
             require_once('google/google_lib.inc');
