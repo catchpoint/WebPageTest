@@ -653,6 +653,11 @@ Adb.prototype.scheduleGetGateway = function(ifname) {
             logger.debug("Detected gateway: " + m[2]);
             ret = m[2];
           }
+          m = line.match(/^\[net\.dns1\]\:\s*\[([\d\.\:]*)\]/);
+          if (!ret && m) {
+            logger.debug("Detected gateway: " + m[1]);
+            ret = m[1];
+          }
         });
         if (!ret) {
           throw new Error(
