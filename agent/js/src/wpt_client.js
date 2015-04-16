@@ -117,7 +117,7 @@ function Job(client, task) {
   this.agentError = undefined;
   this.testError = undefined;
   this.retryError = undefined;
-  this.timeout = client.jobTimeout;
+  this.timeout = (task.timeout * 1000) || client.jobTimeout;
   this.processScript(task['script']);
 }
 /** Public class. */
