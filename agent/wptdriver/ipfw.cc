@@ -150,7 +150,7 @@ bool CIpfw::SetPipe(unsigned int num, unsigned long bandwidth,
         cmd += buff;
       }
       if (plr > 0.0) {
-        buff.Format(_T(" plr 0.4f"), plr);
+        buff.Format(_T(" plr %0.4f"), plr);
         cmd += buff;
       }
       ret = Execute(cmd);

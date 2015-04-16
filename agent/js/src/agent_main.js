@@ -86,8 +86,7 @@ function Agent(app, client, flags) {
 
   this.client_.onStartJobRun = this.startJobRun_.bind(this);
   this.client_.onAbortJob = this.abortJob_.bind(this);
-  this.client_.onMakeReady =
-      this.browser_.scheduleMakeReady.bind(this.browser_);
+  this.client_.onMakeReady = this.onMakeReady_.bind(this);
 }
 /** Public class. */
 exports.Agent = Agent;
@@ -463,6 +462,29 @@ Agent.prototype.scheduleCleanup_ = function(job, isEndOfJob) {
 };
 
 /**
+ * Schedules the browser MakeReady with added agent cleanup.
+ *
+ * @return {webdriver.promise.Promise} resolve(boolean) isReady.
+ * @private
+ */
+Agent.prototype.onMakeReady_ = function() {
+  'use strict';
+  return this.browser_.scheduleMakeReady(this.browser_).addBoth(
+      function(errOrBool) {
+    if (!(errOrBool instanceof Error)) {
+      return errOrBool;  // is online.
+    }
+    var done = new webdriver.promise.Deferred();
+    this.stopTrafficShaper_();
+    process_utils.scheduleNoFault(this.app_, 'Stop WPR', function() {
+      this.webPageReplay_.scheduleStop();
+    }.bind(this));
+    this.app_.schedule('Not ready', function() { done.reject(errOrBool); });
+    return done.promise;
+  }.bind(this));
+};
+
+/**
  * Schedules a traffic shaper command.
  *
  * The "--trafficShaper" script defaults to "./ipfw_config".  If the value
@@ -529,10 +551,10 @@ Agent.prototype.startTrafficShaper_ = function(job) {
   var opts = {
       down_bw: job.task.bwIn && (1000 * job.task.bwIn),
       down_delay: job.task.latency && halfDelay,
-      down_plr: job.task.plr && job.task.plr,
+      down_plr: job.task.plr && (job.task.plr / 100.0),
       up_bw: job.task.bwOut && (1000 * job.task.bwOut),
       up_delay: job.task.latency && job.task.latency - halfDelay,
-      up_plr: job.task.plr && job.task.plr
+      up_plr: job.task.plr && (job.task.plr / 100.0)
     };
   this.trafficShaper_('set', opts).addErrback(function(e) {
     var stderr = (e.stderr || e.message || '').trim();
