@@ -23,6 +23,11 @@ tcpdump_view="http://cloudshark.org/view?url="
 
 enableVideo=1
 
+;Full Size Video capturing - enabled (1) or disable (0)
+fullSizeVideoOn=1
+;Full Size Video - default checkbox state - ticked (1) or unticked (0)
+fullSizeVideoDefault=0
+
 ; Run tests concurrently across test machines
 ;shard_tests=1
 

@@ -101,7 +101,7 @@ private:
   void SaveProgressData(void);
   void SaveStatusMessages(void);
   void SaveImage(CxImage& image, CString file, BYTE quality,
-                 bool force_small = false);
+                 bool force_small = false, bool _full_size_video = false);
   bool ImagesAreDifferent(CxImage * img1, CxImage* img2);
   CStringA FormatTime(LARGE_INTEGER t);
   void SaveResponseBodies(void);
