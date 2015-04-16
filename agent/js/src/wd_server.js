@@ -935,9 +935,13 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
       var coalesceMillis = (undefined === this.task_.waitAfterOnload ?
           exports.WAIT_AFTER_ONLOAD_MS :
           (1000 * Math.floor(parseFloat(this.task_.waitAfterOnload, 10))));
+      logger.debug("Waiting up to " + this.timeout_ +
+                   "ms for the page to load");
       this.timeoutTimer_ = global.setTimeout(
           this.onPageLoad_.bind(this, new Error('Page load timeout')),
           this.timeout_ - coalesceMillis);
+    } else {
+      logger.debug("No page load timeout set (unexpected)");
     }
     this.onTestStarted_();
     this.pageCommand_('navigate', {url: this.task_.url});

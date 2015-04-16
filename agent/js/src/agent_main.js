@@ -321,7 +321,7 @@ Agent.prototype.startJobRun_ = function(job) {
           runNumber: job.runNumber,
           isCacheWarm: job.isCacheWarm,
           exitWhenDone: job.isFirstViewOnly || job.isCacheWarm,
-          timeout: this.client_.jobTimeout,
+          timeout: job.timeout,
           runTempDir: this.runTempDir_,
           flags: flags,
           task: task
