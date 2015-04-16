@@ -131,14 +131,18 @@ int _tmain(int argc, _TCHAR* argv[]) {
   // validate the parameters
   if (!command.IsEmpty() && !server.IsEmpty() && down_pipe > 0 && up_pipe > 0) {
     if (!command.CompareNoCase(L"clear")) {
-      ipfw(server, user, password, down_pipe, 0, 0, 0);
-      ipfw(server, user, password, up_pipe, 0, 0, 0);
+      if (ipfw(server, user, password, down_pipe, 0, 0, 0) &&
+          ipfw(server, user, password, up_pipe, 0, 0, 0)) {
+        ret = 0;
+      }
     } else if (!command.CompareNoCase(L"set")) {
-      ipfw(server, user, password, down_pipe, down_bw, down_delay, down_plr);
-      ipfw(server, user, password, up_pipe, up_bw, up_delay, up_plr);
+      if (ipfw(server, user, password, down_pipe, down_bw, down_delay, down_plr) &&
+          ipfw(server, user, password, up_pipe, up_bw, up_delay, up_plr)) {
+        ret = 0;
+      }
     }
   }
 
-	return 0;
+	return ret;
 }
 
