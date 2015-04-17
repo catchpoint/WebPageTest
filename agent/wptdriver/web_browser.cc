@@ -45,6 +45,8 @@ static const TCHAR * CHROME_SOFTWARE_RENDER =
     _T(" --disable-accelerated-compositing");
 static const TCHAR * CHROME_USER_AGENT =
     _T(" --user-agent=");
+static const TCHAR * CHROME_DISABLE_PLUGINS = 
+    _T(" --disable-plugins");
 static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--enable-experimental-extension-apis"),
     _T("--disable-background-networking"),
@@ -59,7 +61,7 @@ static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
 };
 static const TCHAR * CHROME_IGNORE_CERT_ERRORS =
     _T(" --ignore-certificate-errors");
- 
+
 static const TCHAR * FIREFOX_REQUIRED_OPTIONS[] = {
     _T("-no-remote")
 };
@@ -139,6 +141,8 @@ bool WebBrowser::RunAndWait() {
             lstrcat(cmdLine, CHROME_SPDY3);
           if (_test._force_software_render)
             lstrcat(cmdLine, CHROME_SOFTWARE_RENDER);
+          if (_test._emulate_mobile)
+            lstrcat(cmdLine, CHROME_DISABLE_PLUGINS);
           if (_test._user_agent.GetLength() &&
               _test._user_agent.Find(_T('"')) == -1) {
             lstrcat(cmdLine, CHROME_USER_AGENT);
