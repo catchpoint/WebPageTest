@@ -617,7 +617,8 @@ WebDriverServer.prototype.devToolsCommand_ = function(command) {
   var sender = (function(callback) {
     return this.devTools_.sendCommand(command, callback);
   }.bind(this));
-  return process_utils.scheduleFunction(this.app_, command.method, sender);
+  return process_utils.scheduleFunctionNoFault(
+      this.app_, command.method, sender);
 };
 
 /**
