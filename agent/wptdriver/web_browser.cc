@@ -46,7 +46,7 @@ static const TCHAR * CHROME_SOFTWARE_RENDER =
 static const TCHAR * CHROME_USER_AGENT =
     _T(" --user-agent=");
 static const TCHAR * CHROME_DISABLE_PLUGINS = 
-    _T(" --disable-plugins");
+    _T(" --disable-plugins-discovery --disable-bundled-ppapi-flash");
 static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--enable-experimental-extension-apis"),
     _T("--disable-background-networking"),
