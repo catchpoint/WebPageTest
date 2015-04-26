@@ -1362,10 +1362,65 @@ function ValidateURL(&$url, &$error, &$settings)
         $error = "Sorry, $host is blocked from testing";
     elseif( !strcasecmp(substr($url, -4), '.pdf') )
         $error = "You can not test PDF files with WebPagetest";
-    else
+
+    $ip_address = gethostbyname($host);
+
+    if (ValidateIP($ip_address, $settings) !== FALSE) {
         $ret = true;
+    } else {
+        $error = "You can not test <b>$ip_address</b> from the public Internet.  Your web site needs to be hosted on the public Internet for testing";
+    }
 
     return $ret;
+}
+
+function cidr_match($ip, $range)
+{
+    # Taken from http://stackoverflow.com/posts/594134/revisions
+    list ($subnet, $bits) = explode('/', $range);
+    $ip = ip2long($ip);
+    $subnet = ip2long($subnet);
+    $mask = -1 << (32 - $bits);
+    $subnet &= $mask;
+    return ($ip & $mask) == $subnet;
+}
+
+/**
+* Make sure the IP address is valid
+* @param mixed $error
+*/
+function ValidateIP(&$ip_address, &$settings)
+{
+    # List from here http://en.wikipedia.org/wiki/Reserved_IP_addresses
+    $private_ip_ranges = array(
+        '0.0.0.0/8',
+        '7.0.0.0/8',
+        '10.0.0.0/8',
+        '100.64.0.0/10',
+        '127.0.0.0/8',
+        '169.254.0.0/16',
+        '172.16.0.0/12',
+        '192.0.0.0/24',
+        '192.0.2.0/24',
+        '192.88.99.0/24',
+        '192.168.0.0/16',
+        '198.18.0.0/15',
+        '198.51.100.0/24',
+        '203.0.113.0/24',
+        '224.0.0.0/4',
+        '240.0.0.0/4',
+        '255.255.255.255/32'
+    );
+
+    if (!$settings['allowPrivate']) {
+        foreach ($private_ip_ranges as $private_ip_range) {
+            if (cidr_match($ip_address, $private_ip_range)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 /**
