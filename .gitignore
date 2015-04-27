@@ -36,3 +36,5 @@ agent/js/src-cov/
 agent/js/runtmp_*
 .vagrant
 /www/installers/browsers/nightly.dat
+/www/cli/archive-ia.php
+/www/cli/ec2-keys.inc.php
