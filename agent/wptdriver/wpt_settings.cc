@@ -537,8 +537,8 @@ void BrowserSettings::ResetProfile(bool clear_certs) {
 
   // Clean up old Chrome installers that sometimes accumulate
   // (anything over 2 days old).
-  DeleteOldDirectoryEntries(
-      local_app_data_dir_ + _T("\\Google\\Update\\Install"), 172800);
+  //DeleteOldDirectoryEntries(
+  //    local_app_data_dir_ + _T("\\Google\\Update\\Install"), 172800);
 }
 
 /*-----------------------------------------------------------------------------
