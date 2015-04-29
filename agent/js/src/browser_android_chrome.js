@@ -683,9 +683,8 @@ BrowserAndroidChrome.prototype.scheduleStartVideoRecording = function(
           if (!this.recordProcess_) {
             logger.debug('Normal exit via scheduleStopVideoRecording');
           } else {
-            err = new Error('Unexpected video recording EXIT with code ' +
+            logger.error('Unexpected video recording EXIT with code ' +
                 code + ' signal ' + signal);
-            logger.error(err.message);
           }
           this.recordProcess_ = undefined;
           if (onExit) {
@@ -709,10 +708,9 @@ BrowserAndroidChrome.prototype.scheduleStopVideoRecording = function() {
     this.app_.schedule('screenrecord kill issued', function() {
       if (recordProcess) {
         process_utils.scheduleWait(this.app_, recordProcess,
-            'screenrecord', 30000).then(function() {
-          this.adb_.adb(['pull', this.deviceVideoPath_, this.videoFile_]);
-        }.bind(this));
+            'screenrecord', 30000);
       }
+      this.adb_.adb(['pull', this.deviceVideoPath_, this.videoFile_]);
     }.bind(this));
   } else {
     this.video_.scheduleStopVideoRecording();
