@@ -46,12 +46,14 @@ function getBreakdown($id, $testPath, $run, $cached, &$requests)
         }
         
         foreach($requests as $request) {
+          if (isset($request['contentType']) && isset($request['url'])) {
             $contentType = ContentType($request['contentType'], $request['url']);
             $object = strtolower($request['url']);
             if( strlen($contentType) && (stripos($object, 'favicon.ico') === FALSE) ) {
                 $breakdown[$contentType]['bytes'] += $request['bytesIn'];
                 $breakdown[$contentType]['requests']++;
             }
+          }
         }
         $cache["run_$run"]["cached_$cached"] = $breakdown;
         file_put_contents($cache_file, json_encode($cache));

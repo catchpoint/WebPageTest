@@ -78,6 +78,8 @@ else
         if( strlen($_REQUEST['end']) )
             $endTime = trim($_REQUEST['end']);
         $videoIdExtra = "";
+        $bgColor = isset($_REQUEST['bg']) ? $_REQUEST['bg'] : '000000';
+        $textColor = isset($_REQUEST['text']) ? $_REQUEST['text'] : 'ffffff';
 
         $compTests = explode(',', $_REQUEST['tests']);
         foreach($compTests as $t)
@@ -93,6 +95,8 @@ else
                 $test['syncStartRender'] = "";
                 $test['syncDocTime'] = "";
                 $test['syncFullyLoaded'] = "";
+                $test['bg'] = $bgColor;
+                $test['text'] = $textColor;
                 
                 if (isset($_REQUEST['slow']) && $_REQUEST['slow'])
                   $test['speed'] = 0.2;
@@ -205,7 +209,7 @@ else
                 if( strlen($_REQUEST['tests']) )
                 {
                     $date = gmdate('ymd_');
-                    $hashstr = $_REQUEST['tests'] . $_REQUEST['template'] . $version . trim($_REQUEST['end']) . $videoIdExtra;
+                    $hashstr = $_REQUEST['tests'] . $_REQUEST['template'] . $version . trim($_REQUEST['end']) . $videoIdExtra . $bgColor . $textColor;
                     if( $_REQUEST['slow'] )
                         $hashstr .= '.slow';
                     if( strpos($hashstr, '_') == 6 )

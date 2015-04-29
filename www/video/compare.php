@@ -362,6 +362,8 @@ function ScreenShotTable()
         echo '<form id="createForm" name="create" method="get" action="/video/create.php">';
         echo "<input type=\"hidden\" name=\"end\" value=\"$endTime\">";
         echo '<input type="hidden" name="tests" value="' . htmlspecialchars($_REQUEST['tests']) . '">';
+        echo "<input type=\"hidden\" name=\"bg\" value=\"$bgcolor\">";
+        echo "<input type=\"hidden\" name=\"text\" value=\"$color\">";
         echo '<table id="videoContainer"><tr>';
 
         // build a table with the labels
@@ -626,12 +628,15 @@ function ScreenShotTable()
             <tr><td>Specific End Time</td><td>-e:&lt;seconds&gt;</td><td>110606_MJ_RZEY-e:1.1</td></tr>
             </table>
             <br>
+            <p>You can also customize the background and text color by passing HTML color values to <b>bg</b> and <b>text</b> query parameters.</p>
             <p>Examples:</p>
             <ul>
             <li><b>Customizing labels:</b>
             http://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY-l:Original,110606_AE_RZN5-l:No+JS</li>
             <li><b>Compare First vs. Repeat view:</b>
             http://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY, 110606_MJ_RZEY-c:1</li>
+            <li><b>White background with black text:</b>
+            http://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY, 110606_MJ_RZEY-c:1&bg=ffffff&text=000000</li>
             </ul>
             <input id="advanced-ok" type=button class="simplemodal-close" value="OK">
         </div>
