@@ -40,4 +40,3 @@ extern bool   shared_has_gpu;
 extern int    shared_result;
 extern WCHAR  shared_browser_exe[MAX_PATH];
 extern DWORD  shared_browser_process_id;
-extern bool   shared_enableUserSetTimeout;
