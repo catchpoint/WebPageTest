@@ -59,8 +59,7 @@ WptTest::WptTest(void):
   ,_measurement_timeout(DEFAULT_TEST_TIMEOUT)
   ,has_gpu_(false)
   ,lock_count_(0),
-  _script_timeout_multiplier(2),
-  _enableUserSetTimeout(false) {
+  _script_timeout_multiplier(2) {
   QueryPerformanceFrequency(&_perf_frequency);
 
   // figure out what our working diriectory is
@@ -293,13 +292,13 @@ bool WptTest::Load(CString& test) {
         else if (!key.CompareNoCase(_T("continuousVideo")) &&
           _ttoi(value.Trim()))
           _continuous_video = true;
-        else if (!key.CompareNoCase(_T("timeout")) && _enableUserSetTimeout) {
+        else if (!key.CompareNoCase(_T("timeout"))) {
           _test_timeout = _ttoi(value.Trim()) * 1000;
           _script_timeout_multiplier = 1;
           if (_test_timeout < 0)
             _test_timeout = 0;
-          else if (_test_timeout > 3600)
-            _test_timeout = 3600;
+          else if (_test_timeout > 3600000)
+            _test_timeout = 3600000;
         }
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {
@@ -310,6 +309,9 @@ bool WptTest::Load(CString& test) {
 
     line = test.Tokenize(_T("\r\n"), linePos);
   }
+
+  if (_measurement_timeout < _test_timeout)
+    _measurement_timeout = _test_timeout;
 
   if (_specific_run) {
     _discard = 0;

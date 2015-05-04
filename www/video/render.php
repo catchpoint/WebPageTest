@@ -12,7 +12,7 @@ $height = 650;
 $padding = 4;
 $minThumbnailSize = 60;
 $biggestThumbnail = 0;
-$black = null;
+$backgroundColor = null;
 $textColor = null;
 $image_bytes = null;
 $timeFont = __DIR__ . '/font/sourcesanspro-semibold.ttf';
@@ -267,12 +267,16 @@ function CalculateVideoDimensions(&$tests) {
 * @param mixed $im
 */
 function RenderFrames(&$tests, $frameCount, $im) {
-  global $width, $height, $black, $videoPath, $image_bytes, $textColor, $encodeFormat, $encoderSpeed, $fps, $labelHeight;
+  global $width, $height, $backgroundColor, $videoPath, $image_bytes, $textColor, $encodeFormat, $encoderSpeed, $fps, $labelHeight;
   
-  // prepare the image (black background)
-  $black = imagecolorallocate($im, 0, 0, 0);
-  $textColor = imagecolorallocate($im, 255, 255, 255);
-  imagefilledrectangle($im, 0, 0, $width - 1, $height - 1, $black);
+  // allocate the background and foreground colors
+  $bgcolor = isset($tests[0]['bg']) ? html2rgb($tests[0]['bg']) : array(0,0,0);
+  $color = isset($tests[0]['text']) ? html2rgb($tests[0]['text']) : array(255,255,255);
+  
+  // prepare the image
+  $backgroundColor = imagecolorallocate($im, $bgcolor[0], $bgcolor[1], $bgcolor[2]);
+  $textColor = imagecolorallocate($im, $color[0], $color[1], $color[2]);
+  imagefilledrectangle($im, 0, 0, $width - 1, $height - 1, $backgroundColor);
   
   // figure out what a good interval for keyframes would be based on the video length
   $keyInt = min(max(6, $frameCount / 30), 240);
@@ -385,7 +389,7 @@ function GetLabelFontSize($tests) {
 * @param mixed $im
 */
 function DrawTest(&$test, $frameTime, $im) {
-  global $black;
+  global $backgroundColor;
   $updated = false;
 
   // find the closest video frame <= the target time
@@ -420,7 +424,7 @@ function DrawTest(&$test, $frameTime, $im) {
       $h = min(floor($thumb_h * $scale), $rect['height']);
       $x = $rect['x'] + floor(($rect['width'] - $w) / 2);
       $y = $rect['y'] + floor(($rect['height'] - $h) / 2);
-      imagefilledrectangle($im, $x, $y, $x + $w, $y + $h, $black);
+      imagefilledrectangle($im, $x, $y, $x + $w, $y + $h, $backgroundColor);
       fastimagecopyresampled($im, $thumb, $x, $y, 0, 0, $w, $h, $thumb_w, $thumb_h, 4);
       imagedestroy($thumb);
       $updated = true;
@@ -444,7 +448,7 @@ function DrawTest(&$test, $frameTime, $im) {
 * @param mixed $rect
 */
 function DrawFrameTime(&$test, $frameTime, $im, $rect) {
-  global $timeHeight, $black, $timeFont, $textColor, $fps, $fractionTime;
+  global $timeHeight, $backgroundColor, $timeFont, $textColor, $fps, $fractionTime;
   static $font_size = 0;
   static $ascent = 0;
   $updated = false;
@@ -478,7 +482,7 @@ function DrawFrameTime(&$test, $frameTime, $im, $rect) {
     
     // erase the last time
 
-    imagefilledrectangle($im, $rect['x'], $rect['y'], $rect['x'] + $rect['width'], $rect['y'] + $rect['height'], $black);
+    imagefilledrectangle($im, $rect['x'], $rect['y'], $rect['x'] + $rect['width'], $rect['y'] + $rect['height'], $backgroundColor);
     
     // draw the period
     imagettftext($im, $font_size, 0, $test['periodRect']['x'],  $test['periodRect']['y'], $textColor, $timeFont, '.');

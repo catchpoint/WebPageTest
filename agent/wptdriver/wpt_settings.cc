@@ -106,10 +106,6 @@ bool WptSettings::Load(void) {
   _timeout = GetPrivateProfileInt(_T("WebPagetest"), _T("Time Limit"),
                                   _timeout, iniFile);
 
-  //Check if user-defined timeouts are enabled
-  _enableUserSetTimeout = GetPrivateProfileInt(_T("WebPagetest"), 
-    _T("EnableUserSetTimeout"), 0, iniFile) == 1;
-
   // load the Web Page Replay host
   if (GetPrivateProfileString(
       _T("WebPagetest"), _T("web_page_replay_host"), _T(""), buff,
@@ -125,7 +121,6 @@ bool WptSettings::Load(void) {
   }
 
   SetTestTimeout(_timeout * SECONDS_TO_MS);
-  SetEnableUserSetTimeout(_enableUserSetTimeout);
   if (_server.GetLength() && _location.GetLength())
     ret = true;
 

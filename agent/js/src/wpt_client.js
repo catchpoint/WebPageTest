@@ -838,15 +838,17 @@ Client.prototype.submitResult_ = function(job, isJobFinished,
   logger.debug('submitResult_: job=%s', job.id);
   var filesToSubmit = job.resultFiles.slice();
   // If there are job.zipResultFiles, add results.zip to job.resultFiles.
-  if (Object.getOwnPropertyNames(job.zipResultFiles).length > 0) {
-    var zipResultFiles = job.zipResultFiles;
-    job.zipResultFiles = {};
-    filesToSubmit.push(new ResultFile(
-        /*resultType=*/undefined,
-        'results.zip',
-        'application/zip',
-        createZip(zipResultFiles, createFileName.bind(undefined, job))));
-  }
+  try {
+    if (Object.getOwnPropertyNames(job.zipResultFiles).length > 0) {
+      var zipResultFiles = job.zipResultFiles;
+      job.zipResultFiles = {};
+      filesToSubmit.push(new ResultFile(
+          /*resultType=*/undefined,
+          'results.zip',
+          'application/zip',
+          createZip(zipResultFiles, createFileName.bind(undefined, job))));
+    }
+  } catch(e) {}
   job.resultFiles = [];
   // Chain submitNextResult calls off of the HTTP request callback
   var submitNextResult = (function(e) {

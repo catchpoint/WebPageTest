@@ -8,6 +8,7 @@ if( !defined('BARE_UI') )
     define('BARE_UI', true);
 $csv = false;
 $json = false;
+$weblite = false;
 if (array_key_exists('f', $_REQUEST)) {
   if( $_REQUEST['f'] == 'csv' )
   {
@@ -54,7 +55,10 @@ elseif ($view == 'pss_path')
     $view = 'pss_path';
 elseif ($view == 'blink')
     $view = 'blink';
-else
+elseif ($view == 'weblite') {
+    $view = 'weblite';
+    $weblite = true;
+} else
     $view = 'bulk';
 $mod_pagespeed = false;
 if (array_key_exists('script', $test['testinfo']) &&
@@ -172,6 +176,11 @@ else
                     $navTabs['New Comparison'] = FRIENDLY_URLS ? "/compare?pssid=$id&option=prioritize_visible_content" : "/pss.php?pssid=$id&option=prioritize_visible_content";
                 }
             }
+            elseif ($view == 'weblite')
+            {
+                $navTabs = array(   'New Comparison' => "/optimized?pssid=$id",
+                                    'Test Result' => "/result/$id/");
+            }
             elseif ($view == 'blink')
             {
                 $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? "/blink?bid=$id" : "/blink.php?bid=$id",
@@ -183,7 +192,10 @@ else
                 <div id="download">
                     <div id="testinfo">
                         <?php
-                            if( $test['test']['batch'] )
+                            if ($weblite) {
+                              echo "Tested From: Dulles, VA on a 2G network connection <a href=\"https://github.com/facebook/augmented-traffic-control/blob/master/utils/profiles/2G-DevelopingUrban.json\">(35Kbps, 1.3s RTT)</a>";
+                            }
+                            elseif( $test['test']['batch'] )
                             {
                                 echo "Tested From: $location<br>";
                             }
@@ -208,6 +220,8 @@ else
                     }
 
                     if( $view == 'pss' )
+                        DisplayPSS($tests, $test['testinfo']['video'], $dirty);
+                    elseif( $view == 'weblite' )
                         DisplayPSS($tests, $test['testinfo']['video'], $dirty);
                     elseif( $view == 'pss_path' )
                         DisplayPSSPath($tests, $test['testinfo']['video'], $dirty);
@@ -599,6 +613,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
     global $admin;
     global $median_metric;
     global $showExperimental;
+    global $weblite;
     require_once('object_detail.inc');
     $includeRender = false;
     if( array_key_exists('norender', $_REQUEST) && $_REQUEST['norender'] )
@@ -627,7 +642,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
     {
         if (!strlen($url) && array_key_exists('u', $test))
           $url = $test['u'];
-        $test['end'] = 'visual';
+        $test['end'] = $weblite ? 'full' : 'visual';
         if (!$count) {
             if (array_key_exists('endOriginal', $_GET)) {
                 $test['end'] = urlencode(trim($_GET['endOriginal']));
@@ -791,7 +806,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
     $baseDomainRedirect = false;
     $baseDomainSSL = false;
     global $mod_pagespeed;
-    if (!$mod_pagespeed) {
+    if (!$mod_pagespeed && !$weblite) {
       if (!strncasecmp($url, 'https://', 8))
         $baseDomainSSL = true;
       $requests = getRequests($tests['urls'][1]['id'], $tests['urls'][1]['path'], $tests['urls'][1]['fvMedian'], 0, $secure, $haveLocations, false);
@@ -975,9 +990,11 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 DisplayMetric('Page Load Time', $fvLoadTimes, $count);
                 if( $includeRender )
                     DisplayMetric('Start Render Time', $fvRenderTimes, $count);
-                DisplayMetric('<a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a> (lower is better)', $fvFLI, $count, false, false);
-                if (isset($fvSpeedIndexDT) && count($fvSpeedIndexDT))
-                    DisplayMetric('<a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a> (Dev Tools)', $fvSpeedIndexDT, $count, false, false);
+                if (!$weblite) {
+                  DisplayMetric('<a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a> (lower is better)', $fvFLI, $count, false, false);
+                  if (isset($fvSpeedIndexDT) && count($fvSpeedIndexDT))
+                      DisplayMetric('<a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a> (Dev Tools)', $fvSpeedIndexDT, $count, false, false);
+                }
                     
                 if( !$fvonly )
                 {
@@ -1046,7 +1063,8 @@ function DisplayPSS(&$tests, $video, &$dirty)
         }
         if( !strlen($videoInfo['vID' . $videoCustom]) )
         {
-            $videoInfo['vID' . $videoCustom] = CreateVideo($tests['urls']);
+            $videoEnd = $weblite ? 'full' : null;
+            $videoInfo['vID' . $videoCustom] = CreateVideo($tests['urls'], $videoEnd);
             $videoDirty = true;
             $videoComplete = false;
             if( !strlen($videoInfo['vID' . $videoCustom]) )
@@ -1079,7 +1097,9 @@ function DisplayPSS(&$tests, $video, &$dirty)
         } else {
             if( $videoComplete )
             {
-                if (!array_key_exists('pss_advanced', $testInfo) || !$testInfo['pss_advanced']) {
+                if ($weblite) {
+                    echo "<h2>Visual Comparison (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}&end=full\" target=\"_blank\">view filmstrip comparison</a>)</h2>";
+                } elseif (!array_key_exists('pss_advanced', $testInfo) || !$testInfo['pss_advanced']) {
                     echo "<h2>Visual Comparison* (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']}-e:{$tests['urls'][0]['end']},{$tests['urls'][1]['id']}-e:{$tests['urls'][1]['end']}&end=visual\" target=\"_blank\">view filmstrip comparison</a>)</h2>";
                 } else {
                     echo "<h2>Visual Comparison*</h2>";
@@ -1737,6 +1757,7 @@ function CheckVideo($videoID, &$regenerate_video)
 function VideoHtml($id)
 {
     global $videoCount;
+    global $weblite;
     $videoCount++;
     $width = 816;
     $height = 384;
@@ -1787,9 +1808,10 @@ function VideoHtml($id)
                                         }\n
                                     }\n
                                 ); \n
-                </script>\n
-                <br>* The video for each page stops when the page is visually complete and may not match the technical load time measurement.\n
-                <br><a class=\"link\" href=\"/video/download.php?id=$id\">Click here to download the video file...</a>\n";
+                </script>\n";
+    if (!$weblite)
+      echo "<br>* The video for each page stops when the page is visually complete and may not match the technical load time measurement.\n";
+    echo "<br><a class=\"link\" href=\"/video/download.php?id=$id\">Click here to download the video file...</a>\n";
 }
 
 /**

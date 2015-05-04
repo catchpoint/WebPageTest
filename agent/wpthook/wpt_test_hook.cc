@@ -6,11 +6,10 @@
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WptTestHook::WptTestHook(WptHook& hook, TestState& test_state, DWORD timeout, bool enabledUserSetTimeout):
+WptTestHook::WptTestHook(WptHook& hook, TestState& test_state, DWORD timeout):
   hook_(hook)
   , test_state_(test_state) {
   _measurement_timeout = timeout;
-  _enableUserSetTimeout = enabledUserSetTimeout;
 }
 
 /*-----------------------------------------------------------------------------

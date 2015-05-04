@@ -203,7 +203,6 @@ public:
   CStringA _run_error;
   CString _custom_metrics;
   DWORD   _script_timeout_multiplier;
-  bool   _enableUserSetTimeout;
   
   // current state
   int     _run;

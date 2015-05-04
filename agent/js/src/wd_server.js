@@ -1019,7 +1019,10 @@ WebDriverServer.prototype.connect = function() {
     // Likely from a background function that's not ControlFlow-scheduled.
     // Immediately unwind the app's scheduled functions, as if the currently
     // function task threw this exception.
-    logger.error('Top-level process uncaught exception: %s', e.message);
+    if (e && e['message'])
+      logger.error('Top-level process uncaught exception: %s', e.message);
+    else
+      logger.error('Top-level process uncaught exception');
     var promise = new webdriver.promise.Deferred(undefined, this.app_);
     promise.reject(e);  // Like throw, only in the ControlFlow.
   }.bind(this));

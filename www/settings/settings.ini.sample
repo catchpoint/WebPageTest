@@ -34,6 +34,9 @@ fullSizeVideoDefault=0
 ; Maximum number of runs allowed per test
 maxruns=9
 
+; Maximum amount of time for a test run (if requested by timeout=X)
+maxtime=600
+
 ; Allow (1) or disable (0) testing of sites on private IP addresses (http://192.168.0.1/ for example).
 allowPrivate=1
 

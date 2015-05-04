@@ -92,6 +92,9 @@
             $test['runs'] = (int)$req_runs;
             $test['fvonly'] = (int)$req_fvonly;
             $test['timeout'] = (int)$req_timeout;
+            $maxTime = GetSetting('maxtime');
+            if ($maxTime && $test['timeout'] > $maxTime)
+              $test['timeout'] = $maxTime;
             $test['connections'] = (int)$req_connections;
             $test['private'] = $req_private;
             $test['web10'] = $req_web10;
