@@ -199,8 +199,6 @@ function LoadTestData() {
             if (is_numeric($test['end']) && $test['end'] > 0)
                 $end = $test['end'] / 1000.0;
             $startOffset = array_key_exists('testStartOffset', $pageData[$test['run']][$test['cached']]) ? intval(round($pageData[$test['run']][$test['cached']]['testStartOffset'])) : 0;
-            if (isset($testInfo) && is_array($testInfo) && array_key_exists('appurify_tests', $testInfo))
-              $startOffset = 0;
             $test['video']['progress'] = GetVisualProgress("./$testPath", $test['run'], $test['cached'], null, $end, $startOffset);
             if (array_key_exists('frames', $test['video']['progress'])) {
               foreach($test['video']['progress']['frames'] as $ms => $frame) {

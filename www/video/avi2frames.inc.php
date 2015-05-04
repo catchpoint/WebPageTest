@@ -59,8 +59,6 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
   $crop = '';
   if (!is_file($videoFile))
     $videoFile = "$testPath/$run{$cachedText}_video.avi";
-  if (!is_file($videoFile))
-    $videoFile = "$testPath/$run{$cachedText}_appurify.mp4";
     
   if (is_file($videoFile)) {
     $videoDir = "$testPath/video_$run" . strtolower($cachedText);

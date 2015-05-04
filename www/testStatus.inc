@@ -3,7 +3,6 @@ require_once('common_lib.inc');
 require_once('page_data.inc');
 if(extension_loaded('newrelic')) { 
     newrelic_add_custom_tracer('GetRelayStatus');
-    newrelic_add_custom_tracer('GetAppurifyStatus');
 }
 
 $testQueue = array();
@@ -26,9 +25,6 @@ function GetTestStatus($id, $includePosition = true) {
       $ret['testInfo'] = PopulateTestInfo($testInfoJson);
       if (isset($testInfoJson['relayId'])) {
         $ret = GetRelayStatus($id, $testPath, $testInfoJson);
-        $ret['remote'] = true;
-      } elseif (array_key_exists('loc_type', $testInfoJson) && $testInfoJson['loc_type'] == 'Appurify') {
-        $ret = GetAppurifyStatus($id, $testPath, $testInfoJson);
         $ret['remote'] = true;
       } else {
         $test = @parse_ini_file("$testPath/testinfo.ini",true);
@@ -369,98 +365,6 @@ function GetRelayStatus($id, $testPath, &$test) {
     }
     
     return $ret;
-}
-
-/**
-* Check on the status of a pending Appurify test
-* 
-* @param mixed $id
-* @param mixed $testPath
-* @param mixed $test
-*/
-function GetAppurifyStatus($id, $testPath, &$test) {
-  $ret = array('statusCode' => 401, 'statusText' => 'Test request not found');
-  if (array_key_exists('appurify_tests', $test) &&
-      is_array($test['appurify_tests']) &&
-      count($test['appurify_tests'])) {
-    $ret['statusCode'] = 102;
-    $ret['statusText'] = 'Server Unreachable';
-    $waiting = false;
-    $installing = false;
-    $started = false;
-    require_once('./lib/appurify.inc.php');
-    $appurify = new Appurify($test['appurify_key'], $test['appurify_secret']);
-    $all_complete = true;
-    $lock = LockTest($id);
-    if ($lock) {
-      $dirty = false;
-      $ok = true;
-      foreach ($test['appurify_tests'] as $index => &$run) {
-        $completed = array_key_exists('completed', $run) ? $run['completed'] : false;
-        if (!$completed) {
-          if ($appurify->CheckTestRun($test, $run, $index, $testPath)) {
-            if (array_key_exists('status', $run)) {
-              if ($run['status'] == 'in_progress' ||
-                  $run['status'] == 'in-progress') {
-                if (array_key_exists('detailed_status', $run) &&
-                    $run['detailed_status'] == 'queueing')
-                  $waiting = true;
-                elseif (array_key_exists('detailed_status', $run) &&
-                    $run['detailed_status'] == 'installing')
-                  $installing = true;
-                else
-                  $started = true;
-              } else
-                $waiting = true;
-            }
-            if (array_key_exists('completed', $run) && $run['completed']) {
-              $completed = true;
-              $dirty = true;
-            }
-          } else {
-            $ok = false;
-            break;
-          }
-        }
-        if (!$completed)
-          $all_complete = false;
-      }
-      if ($dirty)
-        SaveTestInfo($id, $test);
-
-      if ($ok) {
-        if ($all_complete) {
-          $now = time();
-          $test['completed'] = $now;
-          SaveTestInfo($id, $test);
-          $ini = file_get_contents("$testPath/testinfo.ini");
-          $date = gmdate("m/d/y G:i:s", $now);
-
-          // update the completion time if it isn't already set
-          if (!strpos($ini, 'completeTime')) {
-              $complete = "[test]\r\ncompleteTime=$date";
-              $out = str_replace('[test]', $complete, $ini);
-              file_put_contents("$testPath/testinfo.ini", $out);
-          }
-          $ret['statusCode'] = 200;
-          $ret['statusText'] = 'Test Complete';
-          $ret['completeTime'] = $date;
-          SendAsyncRequest("/work/postprocess.php?test=$id");
-        } elseif ($started) {
-          $ret['statusCode'] = 100;
-          $ret['statusText'] = 'Running Test';
-        } elseif ($installing) {
-          $ret['statusCode'] = 100;
-          $ret['statusText'] = 'Preparing Device';
-        } elseif ($waiting) {
-          $ret['statusCode'] = 101;
-          $ret['statusText'] = 'Waiting for Available Device';
-        }
-      }
-      UnlockTest($lock);
-    }
-  }
-  return $ret;
 }
 
 ?>

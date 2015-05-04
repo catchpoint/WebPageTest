@@ -462,19 +462,36 @@ function GetReboot() {
   global $location;
   global $pc;
   global $ec2;
-  $rebooted = false;
+  global $tester;
+  $reboot = false;
   $name = @strlen($ec2) ? $ec2 : $pc;
   if (isset($name) && strlen($name) && isset($location) && strlen($location)) {
     $rebootFile = "./work/jobs/$location/$name.reboot";
     if (is_file($rebootFile)) {
       unlink($rebootFile);
-      header('Content-type: text/plain');
-      header("Cache-Control: no-cache, must-revalidate");
-      header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
-      echo "Reboot";
-      $rebooted = true;
+      $reboot = true;
     }
   }
-  return $rebooted;
+  // If we have a 100% error rate for the current PC, send it a reboot
+  if (!$reboot) {
+    $testers = GetTesters($location);
+    foreach ($testers as $t) {
+      if ($t['id'] == $tester && !$rebooted) {
+        if ($t['errors'] >= 100) {
+          UpdateTester($location, $tester, null, null, null, true);
+          $reboot = true;
+        }
+        break;
+      }
+    }
+  }
+  
+  if ($reboot) {
+    header('Content-type: text/plain');
+    header("Cache-Control: no-cache, must-revalidate");
+    header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+    echo "Reboot";
+  }
+  return $reboot;
 }
 ?>

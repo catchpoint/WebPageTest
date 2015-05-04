@@ -275,7 +275,11 @@ if (ValidateTestId($id)) {
             $testerError = $_REQUEST['testerror'];
           elseif (array_key_exists('error', $_REQUEST) && strlen($_REQUEST['error']))
             $testerError = $_REQUEST['error'];
-          UpdateTester($location, $tester, $testerInfo, $cpu, $testerError);
+          // clear the rebooted flag on the first successful test
+          $rebooted = null;
+          if ($testerError === false)
+            $rebooted = false;
+          UpdateTester($location, $tester, $testerInfo, $cpu, $testerError, $rebooted);
         }
                 
         // see if the test is complete

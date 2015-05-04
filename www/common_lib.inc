@@ -696,32 +696,6 @@ function BuildLocations( &$locations )
                                         $location[$index] = $value;
                                         $index++;
                                     }
-                                } elseif (array_key_exists('type', $configuration) &&
-                                          $configuration['type'] == 'Appurify' &&
-                                          array_key_exists('key', $configuration) &&
-                                          array_key_exists('secret', $configuration)) {
-                                  $configuration['localDir'] = "./work/jobs/$value";
-                                  $configuration['location'] = $value;
-                                  require_once('./lib/appurify.inc.php');
-                                  $appurify = new Appurify($configuration['key'], $configuration['secret']);
-                                  unset($configuration['key']);
-                                  unset($configuration['secret']);
-                                  $devices = $appurify->GetDevices();
-                                  $connections = $appurify->GetConnections();
-                                  if (count($devices)) {
-                                    $configuration['browser'] = '';
-                                    foreach($devices as $app_id => $app_name) {
-                                      $label = $value . ':' . $app_id;
-                                      $location[$index] = $label;
-                                      $index++;
-                                      $cfg = $configuration;
-                                      $cfg['browser'] = $app_name;
-                                      $cfg['label'] = $cfg['label'] . " - $app_name";
-                                      if (isset($connections))
-                                        $cfg['connections'] = $connections;
-                                      $locations[$label] = $cfg;
-                                    }
-                                  }
                                 }
                             }
                         } elseif ($key !== 'default') {
@@ -782,8 +756,7 @@ function FilterLocations(&$locations, $includeHidden = '',
                         unset($locations[$name]);
                 } else {
                   // TODO: Fix this so it only hides local locations, not relay and API
-                  if ((!array_key_exists('type', $locRef) || $locRef['type'] != 'Appurify') &&
-                      !array_key_exists('relayServer', $locRef)) {
+                  if (!array_key_exists('relayServer', $locRef)) {
                     unset($locations[$name]);
                   }
                 }
@@ -1653,7 +1626,8 @@ function GetTesters($locationId, $includeOffline = false)
             {
                 if( $includeOffline || !array_key_exists('offline', $tester) || !$tester['offline'] )
                 {
-                    $entry = array('pc' => @$tester['pc'],
+                    $entry = array('id' => $id,
+                                   'pc' => @$tester['pc'],
                                    'ec2' => @$tester['ec2'],
                                    'ip' => @$tester['ip'],
                                    'version' => @$tester['ver'],
@@ -1662,6 +1636,7 @@ function GetTesters($locationId, $includeOffline = false)
                                    'dns' => @$tester['dns'],
                                    'GPU' => @$tester['GPU'],
                                    'offline' => @$tester['offline']);
+                    $entry['rebooted'] = isset($tester['rebooted']) ? $tester['rebooted'] : false;
 
                     if (array_key_exists('cpu', $tester) && is_array($tester['cpu'])) {
                       $total = 0;
@@ -2013,7 +1988,7 @@ function SecureDir($path) {
 * @param mixed $tester
 * @param mixed $testerInfo
 */
-function UpdateTester($location, $tester, $testerInfo = null, $cpu = null, $error = null) {
+function UpdateTester($location, $tester, $testerInfo = null, $cpu = null, $error = null, $rebooted = null) {
     if ($lock = LockLocation("testers-$location")) {
         $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
         if( !count($testers) )
@@ -2030,6 +2005,8 @@ function UpdateTester($location, $tester, $testerInfo = null, $cpu = null, $erro
         if (!array_key_exists('first_contact', $testers[$tester])) {
             $testers[$tester]['first_contact'] = $now;
         }
+        if (isset($rebooted))
+          $testers[$tester]['rebooted'] = $rebooted;
         if (isset($cpu) && $cpu > 0) {
           if (!array_key_exists('cpu', $testers[$tester]))
             $testers[$tester]['cpu'] = array();
