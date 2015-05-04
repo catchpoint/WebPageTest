@@ -95,6 +95,8 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="shard" value="' . htmlspecialchars($_REQUEST['shard']) . "\">\n";
             if (array_key_exists('discard', $_REQUEST))
               echo '<input type="hidden" name="discard" value="' . htmlspecialchars($_REQUEST['discard']) . "\">\n";
+            if (array_key_exists('timeout', $_REQUEST))
+              echo '<input type="hidden" name="timeout" value="' . htmlspecialchars($_REQUEST['timeout']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
