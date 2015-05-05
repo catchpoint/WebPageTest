@@ -1,10 +1,15 @@
 <?php
 chdir('..');
+$settings = null;
 require_once('common_lib.inc');
 require_once('video/visualProgress.inc.php');
 ignore_user_abort(true);
-set_time_limit(600);
+set_time_limit(3600);
 error_reporting(E_ERROR | E_PARSE);
+
+$max_load = GetSetting('render_max_load');
+if ($max_load !== false && $max_load > 0)
+  WaitForSystemLoad($max_load, 3600);
 
 // Globals used throughout the video render
 $width = 900;

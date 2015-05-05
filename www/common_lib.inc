@@ -2662,4 +2662,22 @@ function html2rgb($color) {
 
   return array($r, $g, $b);
 }
+
+function WaitForSystemLoad($max_load, $timeout) {
+  $wait = false;
+  $started = time();
+  if (function_exists('sys_getloadavg')) {
+    do {
+      $wait = false;
+      $load = sys_getloadavg();
+      if ($load[0] > $max_load) {
+        $now = time();
+        if ($now - $started < $timeout) {
+          $wait = true;
+          sleep(rand(1, 30));
+        }
+      }
+    } while ($wait);
+  }
+}
 ?>
