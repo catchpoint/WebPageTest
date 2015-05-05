@@ -144,6 +144,7 @@ else
         $gaTemplate = 'Bulk Result';
         include ('head.inc');
         ?>
+        <link rel="stylesheet" href="/video/video-js.3.2.0/video-js.min.css" type="text/css">
         <style type="text/css">
             .player
             {
@@ -159,9 +160,12 @@ else
                 width: 100%;
                 height: 380px;
             }
+            .vjs-default-skin .vjs-controls {height: 0;}
+            .vjs-default-skin .vjs-mute-control {display: none;}
+            .vjs-default-skin .vjs-volume-control {display: none;}
         </style>
         </style>
-        <script type="text/javascript" src="/video/player/flowplayer-3.2.12.min.js"></script>
+        <script type="text/javascript" src="/video/video-js.3.2.0/video.min.js"></script>
     </head>
     <body>
         <div class="page">
@@ -1770,45 +1774,38 @@ function VideoHtml($id)
         list($width, $height) = getimagesize("./$dir/video.png");
     }
     
-    echo "<div style=\"display:block; width:{$width}px; height:{$height}px\" id=\"player$videoCount\" class=\"player\"></div>\n";
-    echo "<script>\n
-                    flowplayer(\"player$videoCount\", \n
-                                    {\n
-                                        src: \"/video/player/flowplayer-3.2.16.swf\",\n
-                                        cachebusting: true,\n
-                                        version: [9, 115]\n
-                                    } , \n
-                                    { \n
-                                        clip:  { \n
-                                            scaling: \"fit\"\n
-                                        } ,\n
-                                        playlist: [";
-    if( $hasThumb )
-    {
-        echo "{ url: '/$dir/video.png'} ,\n";
-        echo "{ url: '/$dir/video.mp4', autoPlay: false, autoBuffering: false}\n";
-    }
+    echo "<script>\n";
+    if (array_key_exists('html', $_REQUEST) && $_REQUEST['html'])
+        echo "_V_.options.techOrder = ['html5', 'flash'];\n";
     else
-        echo "{ url: '/$dir/video.mp4', autoPlay: false, autoBuffering: true}\n";
-    echo "                          ],\n
-                                        plugins: {\n
-                                            controls: {\n
-                                                volume:false,\n
-                                                mute:false,\n
-                                                stop:true,\n
-                                                tooltips: { \n
-                                                    buttons: true, \n
-                                                    fullscreen: 'Enter fullscreen mode' \n
-                                                } \n
-                                            }\n
-                                        } ,\n
-                                        canvas:  { \n
-                                            backgroundColor: '#000000', \n
-                                            backgroundGradient: 'none'\n
-                                        }\n
-                                    }\n
-                                ); \n
-                </script>\n";
+        echo "_V_.options.techOrder = ['flash', 'html5'];\n";
+    echo "_V_.options.flash.swf = '/video/player/flowplayer-3.2.16.swf';\n";
+    echo "_V_.options.flash.flashVars = {config:\"{";
+    echo "'clip':{'scaling':'fit'},";
+    echo "'plugins':{'controls':{'volume':false,'mute':false,'stop':true,'tooltips':{'buttons':true,'fullscreen':'Enter fullscreen mode'}}},";
+    echo "'canvas':{'backgroundColor':'#000000','backgroundGradient':'none'},";
+    if ($hasThumb) {
+        echo "'playlist':[{'url':'/$dir/video.png'},{'url':'/$dir/video.mp4','autoPlay':false,'autoBuffering':false}]";
+    } else {
+        echo "'playlist':[{'url':'/$dir/video.mp4','autoPlay':false,'autoBuffering':true}]";
+    }
+    echo "}\"};\n";
+    echo "_V_.options.flash.params = {
+           allowfullscreen: 'true',
+           wmode: 'transparent',
+           allowscriptaccess: 'always'
+       };
+       _V_.options.flash.attributes={};\n";
+    echo "</script>\n";
+        
+    echo "<video id=\"player\" class=\"player video-js vjs-default-skin\" controls
+      preload=\"auto\" width=\"$width\" height=\"$height\"";
+    if ($hasThumb)
+        echo " poster=\"/$dir/video.png\"";
+    echo "data-setup=\"{}\">
+        <source src=\"/$dir/video.mp4\" type='video/mp4'>
+    </video>";
+
     if (!$weblite)
       echo "<br>* The video for each page stops when the page is visually complete and may not match the technical load time measurement.\n";
     echo "<br><a class=\"link\" href=\"/video/download.php?id=$id\">Click here to download the video file...</a>\n";
