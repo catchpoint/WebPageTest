@@ -62,7 +62,7 @@ var KNOWN_BROWSERS = {
     'Chrome': 'com.android.chrome',
     'Chrome Beta': 'com.chrome.beta',
     'Chrome Canary': 'com.chrome.canary',
-    'Chrome Dev': 'com.google.android.apps.chrome_dev',
+    'Chrome Dev': 'com.chrome.dev',
     'Chrome Stable': 'com.android.chrome',
     // TODO(wrightt): map version to installed package!
     'Chrome 35': 'com.google.android.apps.chrome_dev',
