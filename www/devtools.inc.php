@@ -647,7 +647,7 @@ function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events, &$startO
       $cachedText = '_Cached';
   $devToolsFile = "$testPath/$run{$cachedText}_devtools.json";
   if (gz_is_file($devToolsFile)){
-    $raw = gz_file_get_contents($devToolsFile);
+    $raw = trim(gz_file_get_contents($devToolsFile));
     ParseDevToolsEvents($raw, $events, $filter, true, $startOffset);
   }
   if (count($events))
@@ -669,6 +669,18 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
   $hasTimeline = strpos($json, '"Timeline.eventRecorded"') !== false ? true : false;
   $hasTrim = strpos($json, $START_MESSAGE) !== false ? true : false;
   $messages = json_decode($json, true);
+  // try fixing up the file if it doesn't look like it is valid json
+  if (!isset($messages) && substr($json, -1) !== ']') {
+    do {
+      $pos = strrpos($json, '}');
+      if ($pos !== false) {
+        $json = substr($json, 0, $pos);
+        $messages = json_decode($json . '}]', true);
+      } else {
+        $json = '';
+      }
+    } while(!isset($messages) && strlen($json));
+  }
   unset($json);
 
   $firstEvent = null;
