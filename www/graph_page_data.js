@@ -31,8 +31,12 @@ function drawChart(chart_metric) {
     row = []
     for (column in chart_metric['columns']) {
        // If run i is missing, we add a cell with
-        // an undefined array element as a placeholder.
+       // an undefined array element as a placeholder.
       cell = chart_metric['columns'][column].values[i];
+      // Ensure cell is a number, best effort to turn it into a number.
+      if (typeof cell !== 'number') {
+        cell = parseFloat(cell, 10);
+      }
       row = row.concat([cell]);
 
     }
