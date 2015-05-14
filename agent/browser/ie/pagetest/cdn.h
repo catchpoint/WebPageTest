@@ -87,9 +87,9 @@ CDN_PROVIDER cdnList[] = {
   {".nyiftw.com", _T("NYI FTW")},
   {".resrc.it", _T("ReSRC.it")},
   {".zenedge.net", _T("Zenedge")},
-  {".lswcdn.net", _T("LeaseWeb CDN")},  
-  {".revcn.net", _T("Rev Software")},  
-  {".revdn.net", _T("Rev Software")},  
+  {".lswcdn.net", _T("LeaseWeb CDN")},
+  {".revcn.net", _T("Rev Software")},
+  {".revdn.net", _T("Rev Software")},
   {".caspowa.com", _T("Caspowa")},
   {NULL, NULL}
 };
@@ -118,5 +118,6 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "leasewebcdn", _T("LeaseWeb CDN")},
   {"Via", "Rev-Cache", _T("Rev Software")},
   {"X-Rev-Cache", "", _T("Rev Software")},
-  {"Server", "Caspowa", _T("Caspowa")}
+  {"Server", "Caspowa", _T("Caspowa")},
+  {"Server", "SurgeCDN", "Surge"}
 };
