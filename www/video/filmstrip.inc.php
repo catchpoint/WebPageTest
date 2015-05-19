@@ -72,6 +72,8 @@ foreach($compTests as $t) {
                     if (isset($test['end'])) {
                         if( !strcmp($test['end'], 'visual') && array_key_exists('visualComplete', $test['pageData'][$test['run']][$test['cached']]) )
                             $test['end'] = $test['pageData'][$test['run']][$test['cached']]['visualComplete'];
+                        elseif( !strcmp($test['end'], 'load') )
+                            $test['end'] = $test['pageData'][$test['run']][$test['cached']]['loadTime'];
                         elseif( !strcmp($test['end'], 'doc') )
                             $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'];
                         elseif(!strncasecmp($test['end'], 'doc+', 4))

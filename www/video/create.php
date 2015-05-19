@@ -154,6 +154,8 @@ else
                         if( !$test['end'] )
                             $test['end'] = -1;
                     }
+                    elseif( !strcmp($test['end'], 'load') )
+                        $test['end'] = $test['pageData'][$test['run']][$test['cached']]['loadTime'];
                     elseif( !strcmp($test['end'], 'full') )
                         $test['end'] = 0;
                     elseif( !strcmp($test['end'], 'all') )

@@ -639,14 +639,14 @@ function DisplayPSS(&$tests, $video, &$dirty)
     $url = '';
     $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     $host  = $_SERVER['HTTP_HOST'];
-    $videoCustom = '';
+    $videoCustom = '2';
     
     // first pass, check the status of all of the tests and calculate the relevant times
     foreach( $tests['urls'] as &$test )
     {
         if (!strlen($url) && array_key_exists('u', $test))
           $url = $test['u'];
-        $test['end'] = $weblite ? 'full' : 'visual';
+        $test['end'] = $weblite ? 'load' : 'visual';
         if (!$count) {
             if (array_key_exists('endOriginal', $_GET)) {
                 $test['end'] = urlencode(trim($_GET['endOriginal']));
@@ -804,6 +804,9 @@ function DisplayPSS(&$tests, $video, &$dirty)
             $rvRenderTimes[$count] = $rvRenderTime;
             $rvFLI[$count] = $rvFLIvalue;
         }
+        if ($weblite)
+          $test['end'] = number_format($fvLoadTime / 1000.0, 3);
+
         $count++;
     }
 
@@ -1067,7 +1070,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
         }
         if( !strlen($videoInfo['vID' . $videoCustom]) )
         {
-            $videoEnd = $weblite ? 'full' : null;
+            $videoEnd = $weblite ? 'load' : null;
             $videoInfo['vID' . $videoCustom] = CreateVideo($tests['urls'], $videoEnd);
             $videoDirty = true;
             $videoComplete = false;
@@ -1102,7 +1105,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
             if( $videoComplete )
             {
                 if ($weblite) {
-                    echo "<h2>Visual Comparison (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}&end=full\" target=\"_blank\">view filmstrip comparison</a>)</h2>";
+                    echo "<h2>Visual Comparison (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}&end=load\" target=\"_blank\">view filmstrip comparison</a>)</h2>";
                 } elseif (!array_key_exists('pss_advanced', $testInfo) || !$testInfo['pss_advanced']) {
                     echo "<h2>Visual Comparison* (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']}-e:{$tests['urls'][0]['end']},{$tests['urls'][1]['id']}-e:{$tests['urls'][1]['end']}&end=visual\" target=\"_blank\">view filmstrip comparison</a>)</h2>";
                 } else {

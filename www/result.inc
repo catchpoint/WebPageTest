@@ -456,7 +456,10 @@ $page_description = "Website performance test result$testLabel.";
                             if (array_key_exists('testinfo', $test) && array_key_exists('timeline', $test['testinfo']) && $test['testinfo']['timeline'])
                               echo "<br><a href=\"/breakdownTimeline.php?test=$id&run=$run&cached=0\" title=\"View browser main thread activity by event type\">Processing Breakdown</a>";
                         }
-                        if( gz_is_file("$testPath/{$run}_trace.json")) {
+                        if( gz_is_file("$testPath/{$run}_trace_v2.json")) {
+                            echo "<br><br><a href=\"/getTimeline.php?test=$id&run=$run&cached=0\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
+                            echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_trace_v2.json\" title=\"Download Chrome Trace\">Trace</a>";
+                        } elseif( gz_is_file("$testPath/{$run}_trace.json")) {
                             echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_trace.json\" title=\"Download Chrome Trace\">Trace</a>";
                             echo " (<a href=\"/chrome/trace.php?test=$id&run=$run&cached=0\" title=\"View Chrome Trace\">view</a>)";
                         }
@@ -531,7 +534,10 @@ $page_description = "Website performance test result$testLabel.";
                               if (array_key_exists('testinfo', $test) && array_key_exists('timeline', $test['testinfo']) && $test['testinfo']['timeline'])
                                 echo "<br><a href=\"/breakdownTimeline.php?test=$id&run=$run&cached=1\" title=\"View browser main thread activity by event type\">Processing Breakdown</a>";
                           }
-                          if( gz_is_file("$testPath/{$run}_Cached_trace.json")) {
+                          if( gz_is_file("$testPath/{$run}_Cached_trace_v2.json")) {
+                              echo "<br><br><a href=\"/getTimeline.php?test=$id&run=$run&cached=1\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
+                              echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_trace_v2.json\" title=\"Download Chrome Trace\">Trace</a>";
+                          } elseif( gz_is_file("$testPath/{$run}_Cached_trace.json")) {
                               echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_trace.json\" title=\"Download Chrome Trace\">Trace</a>";
                               echo " (<a href=\"/chrome/trace.php?test=$id&run=$run&cached=1\" title=\"View Chrome Trace\">view</a>)";
                           }
