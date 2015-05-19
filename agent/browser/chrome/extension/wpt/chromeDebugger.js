@@ -58,11 +58,13 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.tabId_ = tabId;
     g_instance.chromeApi_ = chromeApi;
     g_instance.startedCallback = callback;
-    g_instance.timelineStartedCallback = undefined;
     g_instance.devToolsData = '';
     g_instance.trace = false;
+    g_instance.timeline = false;
     g_instance.statsDoneCallback = undefined;
     g_instance.mobileEmulation = undefined;
+    g_instance.timelineStackDepth = 0;
+    g_instance.traceRunning = false;
     var version = '1.0';
     if (g_instance.chromeApi_['debugger'])
         g_instance.chromeApi_.debugger.attach({tabId: g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachDebugger);
@@ -79,9 +81,7 @@ wpt.chromeDebugger.SetActive = function(active) {
     g_instance.receivedData = false;
     g_instance.devToolsData = '';
     g_instance.statsDoneCallback = undefined;
-    if (g_instance.trace) {
-      g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start');
-    }
+    StartTrace();
   }
 };
 
@@ -99,15 +99,10 @@ wpt.chromeDebugger.Exec = function(code, callback) {
  */
 wpt.chromeDebugger.CaptureTimeline = function(timelineStackDepth, callback) {
   g_instance.timeline = true;
-  g_instance.timelineStartedCallback = callback;
-  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start', {maxCallStackDepth: timelineStackDepth}, function(){
-    setTimeout(function(){
-      if (g_instance.timelineStartedCallback) {
-        g_instance.timelineStartedCallback();
-        g_instance.timelineStartedCallback = undefined;
-      }
-    }, TIMELINE_START_TIMEOUT);
-  });
+  g_instance.timelineStackDepth = timelineStackDepth;
+  if (g_instance.active) {
+    wpt.chromeDebugger.StartTrace();
+  }
 };
 
 /**
@@ -116,14 +111,28 @@ wpt.chromeDebugger.CaptureTimeline = function(timelineStackDepth, callback) {
 wpt.chromeDebugger.CaptureTrace = function() {
   g_instance.trace = true;
   if (g_instance.active) {
-    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start');
+    wpt.chromeDebugger.StartTrace();
   }
 };
+
+wpt.chromeDebugger.StartTrace = function() {
+  if (!g_instance.traceRunning && (g_instance.trace || g_instance.timeline) {
+    g_instance.traceRunning = true;
+    var traceCategories = 'disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame';
+    if (g_instance.timelineStackDepth > 0)
+      traceCategories += ',disabled-by-default-devtools.timeline.stack,devtools.timeline.stack';
+    if (g_instance.trace)
+      traceCategories += ',*';
+    var params = {categories: traceCategories, options:'record-as-much-as-possible'};
+    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start', params);
+  }
+}
 
 wpt.chromeDebugger.CollectStats = function(callback) {
   g_instance.statsDoneCallback = callback;
   wpt.chromeDebugger.SendDevToolsData(function(){
     if (g_instance.trace) {
+      g_instance.traceRunning = false;
       g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.end');
     } else {
       g_instance.statsDoneCallback();
@@ -142,11 +151,6 @@ wpt.chromeDebugger.EmulateMobile = function(deviceString) {
 wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
   // timeline and tracing starts seem to have a delay in startup
   // and don't really start when the callback completes
-  if (g_instance.timelineStartedCallback &&
-      message === 'Timeline.eventRecorded') {
-    g_instance.timelineStartedCallback();
-    g_instance.timelineStartedCallback = undefined;
-  }
   var tracing = false;
   if (message === 'Tracing.dataCollected') {
     tracing = true;

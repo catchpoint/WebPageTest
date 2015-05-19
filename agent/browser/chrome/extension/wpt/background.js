@@ -522,8 +522,7 @@ function wptExecuteTask(task) {
         g_commandRunner.doClearCache(task.target, wptTaskCallback);
         break;
       case 'capturetimeline':
-        g_processing_task = true;
-        wpt.chromeDebugger.CaptureTimeline(parseInt(task.target), wptTaskCallback);
+        wpt.chromeDebugger.CaptureTimeline(parseInt(task.target));
         break;
       case 'capturetrace':
         wpt.chromeDebugger.CaptureTrace();
