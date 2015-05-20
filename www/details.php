@@ -256,6 +256,16 @@ $page_description = "Website performance test details$testLabel";
                 foreach($data as $metric => $value)
                   if (substr($metric, 0, 9) == 'userTime.')
                     $userTimings[substr($metric, 9)] = $value;
+                if (isset($data['custom']) && count($data['custom'])) {
+                  foreach($data['custom'] as $metric) {
+                    if (isset($data[$metric])) {
+                      $value = $data[$metric];
+                      if (is_double($value))
+                        $value = number_format($value, 3, '.', '');
+                      $userTimings[$metric] = $value;
+                    }
+                  }
+                }
                 $timingCount = count($userTimings);
                 $navTiming = false;
                 if ((array_key_exists('loadEventStart', $data) && $data['loadEventStart'] > 0) ||
