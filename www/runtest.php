@@ -94,7 +94,7 @@
             $test['timeout'] = (int)$req_timeout;
             $maxTime = GetSetting('maxtime');
             if ($maxTime && $test['timeout'] > $maxTime)
-              $test['timeout'] = $maxTime;
+              $test['timeout'] = (int)$maxTime;
             $test['connections'] = (int)$req_connections;
             $test['private'] = $req_private;
             $test['web10'] = $req_web10;
@@ -104,7 +104,7 @@
             $test['notify'] = trim($req_notify);
             $test['video'] = $req_video;
             $test['continuousVideo'] = isset($req_continuousVideo) && $req_continuousVideo ? 1 : 0;
-            $test['label'] = htmlspecialchars(trim($req_label));
+            $test['label'] = preg_replace('/[^a-zA-Z0-9 \-_]/', '', trim($req_label));
             $test['industry'] = trim($req_ig);
             $test['industry_page'] = trim($req_ip);
             $test['median_video'] = (int)$req_mv;

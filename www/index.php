@@ -36,7 +36,7 @@ if (is_file('./settings/keys.ini')) {
 }
 $url = '';
 if (isset($req_url)) {
-  $url = $req_url;
+  $url = htmlspecialchars($req_url);
 }
 if (!strlen($url)) {
     $url = 'Enter a Website URL';

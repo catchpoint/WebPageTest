@@ -113,7 +113,7 @@ $page_description = "Comparison Test$testLabel.";
                         $default = 'Enter a Website URL';
                         $testurl = trim($_GET['url']);
                         if( strlen($testurl) )
-                            $default = $testurl;
+                            $default = htmlspecialchars($testurl);
                         echo "<li><input type=\"text\" name=\"testurl\" id=\"testurl\" value=\"$default\" class=\"text large\" onfocus=\"if (this.value == this.defaultValue) {this.value = '';}\" onblur=\"if (this.value == '') {this.value = this.defaultValue;}\"></li>\n";
                         ?>
                         <li>
