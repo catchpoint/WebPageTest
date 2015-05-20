@@ -255,7 +255,7 @@ $page_description = "Website performance test details$testLabel";
                 $userTimings = array();
                 foreach($data as $metric => $value)
                   if (substr($metric, 0, 9) == 'userTime.')
-                    $userTimings[substr($metric, 9)] = $value;
+                    $userTimings[substr($metric, 9)] = number_format($value / 1000, 3) . 's';
                 if (isset($data['custom']) && count($data['custom'])) {
                   foreach($data['custom'] as $metric) {
                     if (isset($data[$metric])) {
@@ -290,7 +290,7 @@ $page_description = "Website performance test details$testLabel";
                     echo '</tr><tr>';
                     if ($timingCount)
                       foreach($userTimings as $label => $value)
-                        echo '<td>' . number_format($value / 1000, 3) . 's</td>';
+                        echo '<td>' . htmlspecialchars($value) . '</td>';
                     if ($navTiming) {
                       echo "<td$borderClass>";
                       if ($data['firstPaint'] > 0)
