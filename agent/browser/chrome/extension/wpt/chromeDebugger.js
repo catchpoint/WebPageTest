@@ -81,7 +81,7 @@ wpt.chromeDebugger.SetActive = function(active) {
     g_instance.receivedData = false;
     g_instance.devToolsData = '';
     g_instance.statsDoneCallback = undefined;
-    StartTrace();
+    wpt.chromeDebugger.StartTrace();
   }
 };
 
@@ -116,7 +116,7 @@ wpt.chromeDebugger.CaptureTrace = function() {
 };
 
 wpt.chromeDebugger.StartTrace = function() {
-  if (!g_instance.traceRunning && (g_instance.trace || g_instance.timeline) {
+  if (!g_instance.traceRunning && (g_instance.trace || g_instance.timeline)) {
     g_instance.traceRunning = true;
     var traceCategories = 'disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame';
     if (g_instance.timelineStackDepth > 0)
@@ -131,7 +131,7 @@ wpt.chromeDebugger.StartTrace = function() {
 wpt.chromeDebugger.CollectStats = function(callback) {
   g_instance.statsDoneCallback = callback;
   wpt.chromeDebugger.SendDevToolsData(function(){
-    if (g_instance.trace) {
+    if (g_instance.traceRunning) {
       g_instance.traceRunning = false;
       g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.end');
     } else {

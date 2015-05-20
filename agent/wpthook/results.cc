@@ -56,10 +56,8 @@ static const TCHAR * IMAGE_RESPONSIVE_CHECK = _T("_screen_responsive.jpg");
 static const TCHAR * CONSOLE_LOG_FILE = _T("_console_log.json");
 static const TCHAR * TIMED_EVENTS_FILE = _T("_timed_events.json");
 static const TCHAR * CUSTOM_METRICS_FILE = _T("_metrics.json");
-static const TCHAR * TIMELINE_FILE = _T("_timeline.json");
-static const TCHAR * TRACE_FILE = _T("_trace.json");
+static const TCHAR * TRACE_FILE = _T("_trace_v2.json");
 static const TCHAR * CUSTOM_RULES_DATA_FILE = _T("_custom_rules.json");
-static const TCHAR * DEV_TOOLS_FILE = _T("_devtools.json");
 static const DWORD RIGHT_MARGIN = 25;
 static const DWORD BOTTOM_MARGIN = 25;
 
@@ -144,11 +142,7 @@ void Results::Save(void) {
       SaveConsoleLog();
       SaveTimedEvents();
       SaveCustomMetrics();
-      if (_test._timeline) {
-        _dev_tools.SetStartTime(_test_state._start);
-        _dev_tools.Write(_file_base + DEV_TOOLS_FILE);
-      }
-      if (_test._trace)
+      if (_test._trace || _test._timeline)
         _trace.Write(_file_base + TRACE_FILE);
     }
     if (shared_result == -1 || shared_result == 0 || shared_result == 99999)
