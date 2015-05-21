@@ -1,7 +1,7 @@
 <?php
 include 'common.inc'; 
 $ok = false;
-if (gz_is_file("$testPath/$run{$cachedText}_trace_v2.json")) {
+if (gz_is_file("$testPath/$run{$cachedText}_trace.json")) {
   $ok = true;
   header("Content-disposition: attachment; filename=timeline.json");
   header ("Content-type: application/json");
@@ -9,7 +9,7 @@ if (gz_is_file("$testPath/$run{$cachedText}_trace_v2.json")) {
   // Trim off the beginning "traceEvents" object and the trailing }
   // and reduce the trace to just an array which is what the timeline
   // viewer expects
-  $filename = "$testPath/$run{$cachedText}_trace_v2.json";
+  $filename = "$testPath/$run{$cachedText}_trace.json";
   $buffer = '';
   $handle = gzopen("$filename.gz", 'rb');
   if ($handle === false)
