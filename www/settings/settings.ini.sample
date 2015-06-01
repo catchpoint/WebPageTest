@@ -17,6 +17,11 @@ publishTo=www.webpagetest.org
 ; Integrate with cloudshark
 tcpdump_view="http://cloudshark.org/view?url="
 
+; Log in with Google
+;google_oauth_client_id=<client ID>
+;google_oauth_client_secret=<secret>
+
+
 ; *********************
 ; Test options/defaults
 ; *********************
