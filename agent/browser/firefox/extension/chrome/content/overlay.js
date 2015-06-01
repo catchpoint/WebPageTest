@@ -555,7 +555,7 @@ wpt.moz.main.collectStats = function(customMetrics, callback) {
 		if (win.performance && win.performance.getEntriesByType) {
 			var marks = win.performance.getEntriesByType("mark");
 			for (var i = 0; i < marks.length; i++) {
-				var mark = marks[i];
+				var mark = {"entryType": marks[i].entryType, "name": marks[i].name, "startTime": marks[i].startTime};
 				mark.type = 'mark';
 				wpt.moz.main.sendEventToDriver_('timed_event', '', JSON.stringify(mark));
 			}
