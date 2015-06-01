@@ -75,10 +75,14 @@ wpt.contentScript.collectStats_ = function(customMetrics) {
         var marks = window.performance.getEntriesByType("mark");
       else
         var marks = window.performance.webkitGetEntriesByType("mark");
-      if (marks.length)
+      if (marks.length) {
+        var m = [];
+        for (var i = 0; i < marks.length; i++)
+          m.push({"entryType": marks[i].entryType, "name": marks[i].name, "startTime": marks[i].startTime});
         chrome.extension.sendRequest({'message': 'wptMarks', 
-                                      'marks': marks },
+                                      'marks': m },
                                      function(response) {});
+      }
     }
     if (customMetrics.length) {
       var lines = customMetrics.split("\n");
