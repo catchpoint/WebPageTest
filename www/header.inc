@@ -53,7 +53,6 @@ if( $supportsAuth && !defined('EMBED') )
           echo '<a href="/forums/member.php?action=register">Register</a> &nbsp;|&nbsp; ';
         }
         if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
-          $currentPath = $_SERVER['SCRIPT_NAME'];
           echo '<a href="/oauth/login.php">Login with Google</a> ';
         }
     }

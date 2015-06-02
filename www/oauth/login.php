@@ -16,7 +16,7 @@ $client = new Google_Client();
 $client->setClientId($client_id);
 $client->setClientSecret($client_secret);
 $client->setRedirectUri($redirect_uri);
-$client->setScopes('email');
+$client->addScope('email');
 
 if (!isset($_GET['code'])) {
   setcookie("page_before_google_oauth", $_SERVER['HTTP_REFERER']);
@@ -26,10 +26,21 @@ if (!isset($_GET['code'])) {
 } else {
   $client->authenticate($_GET['code']);
   $token_data = $client->verifyIdToken()->getAttributes();
-  if (isset($token_data['payload']['sub']))
-    setcookie("google_id", md5($token_data['payload']['sub']), time()+60*60*24*7*2, "/");
-  if (isset($token_data['payload']['email']))
-    setcookie("google_email", $token_data['payload']['email'], time()+60*60*24*7*2, "/");
+
+  // Keep a mapping of user ID to email addresses (and allow for it to be overridden if needed)
+  $users = json_decode(gz_file_get_contents('./dat/users.dat'), true);
+  $user['id'] = md5($token_data['payload']['sub']);
+  $user['oauth2id'] = $token_data['payload']['sub'];
+  $user['email'] = $token_data['payload']['email'];
+  if (!isset($users) || !is_array($users))
+    $users = array();
+  if (isset($users[$user['email']]['id']))
+    $user['id'] = $users[$user['email']]['id'];
+  $users[$user['email']] = $user;
+  gz_file_put_contents('./dat/users.dat', json_encode($users));
+  
+  setcookie("google_id", $user['id'], time()+60*60*24*7*2, "/");
+  setcookie("google_email", $user['email'], time()+60*60*24*7*2, "/");
   $redirect = isset($_COOKIE['page_before_google_oauth']) ? $_COOKIE['page_before_google_oauth'] : "$protocol://$host/";
   header('Location: ' . $redirect);
 }
