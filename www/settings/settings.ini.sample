@@ -62,6 +62,11 @@ allowPrivate=1
 ; This is mostly for auto-scaling EC2 instances to tell the agents what server to connect to
 ;host=www.webpagetest.org
 
+; Base URI to use for loopback requests (background processing, video creation, etc).
+; This is mostly used when the pages are behind authentication and need another path
+; for processing background tasks.
+;local_server=http://127.0.0.1
+
 ; disable gzip compressing the result text files
 ;nogzip=1
 
