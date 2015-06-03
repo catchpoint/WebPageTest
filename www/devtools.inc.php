@@ -988,6 +988,93 @@ function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime) {
   return $offset;
 }
 
+function GetTraceTimeline($testPath, $run, $cached, &$timeline) {
+  $ok = false;
+  $cachedText = '';
+  if( $cached )
+      $cachedText = '_Cached';
+  $traceFile = "$testPath/$run{$cachedText}_trace.json";
+  if (gz_is_file($traceFile)){
+    $events = json_decode(gz_file_get_contents($traceFile), true);
+    if (isset($events) && is_array($events) && isset($events['traceEvents'])) {
+      $timeline = array();
+      $thread_stack = array();
+      $main_thread = null;
+      $threads = array();
+      $ignore_threads = array();
+      foreach ($events['traceEvents'] as $event) {
+        if (isset($event['cat']) && isset($event['name']) && isset($event['pid']) && isset($event['tid']) && isset($event['ph']) && isset($event['ts']) &&
+            ($event['cat'] == 'disabled-by-default-devtools.timeline' || $event['cat'] == 'devtools.timeline')) {
+          $thread = "{$event['pid']}:{$event['tid']}";
+          if (!isset($main_thread) &&
+              $event['name'] == 'ResourceSendRequest' &&
+              isset($event['args']['data']['url'])) {
+            if (substr($event['args']['data']['url'], 0, 21) == 'http://127.0.0.1:8888') {
+              $ignore_threads[$thread] = true;
+            } else {
+              if (!isset($threads[$thread]))
+                $threads[$thread] = count($threads);
+              $main_thread = $thread;
+            }
+          }
+
+          if (isset($main_thread) &&
+              !isset($threads[$thread]) &&
+              $event['name'] !== 'Program' &&
+              !isset($ignore_threads[$thread])) {
+            $threads[$thread] = count($threads);
+          }
+          
+          // ignore any activity before the first navigation
+          if (isset($threads[$thread]) &&
+              ((isset($event['dur']) && isset($thread_stack[$thread]) && count($thread_stack[$thread])) ||
+               $event['ph'] == 'B' || $event['ph'] == 'E')) {
+            $event['thread'] = $threads[$thread];
+            if (!isset($thread_stack[$thread]))
+              $thread_stack[$thread] = array();
+            $e = null;
+            if ($event['ph'] == 'E') {
+              if (count($thread_stack[$thread])) {
+                $e = array_pop($thread_stack[$thread]);
+                // These had BETTER match
+                if ($e['name'] == $event['name'])
+                  $e['endTime'] = $event['ts'] / 1000.0;
+              }
+            } else {
+              $e = $event;
+              $e['type'] = $event['name'];
+              $e['startTime'] = $event['ts'] / 1000.0;
+
+              // Start of an event, just push it to the stack
+              if ($event['ph'] == 'B') {
+                $thread_stack[$thread][] = $e;
+                unset($e);
+              } elseif (isset($event['dur'])) {
+                $e['endTime'] = $e['startTime'] + ($event['dur'] / 1000.0);
+              }
+            }
+            
+            if (isset($e)) {
+              if (count($thread_stack[$thread])) {
+                $parent = array_pop($thread_stack[$thread]);
+                if (!isset($parent['children']))
+                  $parent['children'] = array();
+                $parent['children'][] = $e;
+                $thread_stack[$thread][] = $parent;
+              } else {
+                $timeline[] = $e;
+              }
+            }
+          }
+        }
+      }
+      if (count($timeline))
+        $ok = true;
+    }
+  }
+  return $ok;
+}
+
 /**
 * If we have a timeline, figure out what each thread was doing at each point in time.
 * Basically CPU utilization from the timeline.
@@ -999,32 +1086,24 @@ function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime) {
 function DevToolsGetCPUSlices($testPath, $run, $cached) {
   $count = 0;
   $slices = null;
-  $devTools = array();
-  $startOffset = null;
+  $timeline = array();
   $ver = 2;
   $cacheFile = "$testPath/$run.$cached.devToolsCPUSlices.$ver";
   if (gz_is_file($cacheFile))
     $slices = json_decode(gz_file_get_contents($cacheFile), true);
   if (!isset($slices)) {
-    GetTimeline($testPath, $run, $cached, $devTools, $startOffset);
-    if (isset($devTools) && is_array($devTools) && count($devTools)) {
+    GetTraceTimeline($testPath, $run, $cached, $timeline);
+    if (isset($timeline) && is_array($timeline) && count($timeline)) {
       // Do a first pass to get the start and end times as well as the number of threads
       $threads = array(0 => true);
       $startTime = 0;
       $endTime = 0;
-      foreach ($devTools as &$entry) {
-        if (isset($entry['method']) &&
-            $entry['method'] == 'Timeline.eventRecorded' &&
-            isset($entry['params']['record'])) {
-          $start = DevToolsEventTime($entry);
-          if ($start && (!$startTime || $start < $startTime))
-            $startTime = $start;
-          $end = DevToolsEventEndTime($entry);
-          if ($end && (!$endTime || $end > $endTime))
-            $endTime = $end;
-          $thread = isset($entry['params']['record']['thread']) ? $entry['params']['record']['thread'] : 0;
-          $threads[$thread] = true;
-        }
+      foreach ($timeline as $entry) {
+        if ($entry['startTime'] && (!$startTime || $entry['startTime'] < $startTime))
+          $startTime = $entry['startTime'];
+        if ($entry['endTime'] && (!$endTime || $entry['endTime'] > $endTime))
+          $endTime = $entry['endTime'];
+        $threads[$entry['thread']] = true;
       }
       
       // create time slice arrays for each thread
@@ -1043,13 +1122,8 @@ function DevToolsGetCPUSlices($testPath, $run, $cached) {
         }
 
         // Go through each element and account for the time    
-        foreach ($devTools as &$entry) {
-          if (isset($entry['method']) &&
-              $entry['method'] == 'Timeline.eventRecorded' &&
-              isset($entry['params']['record'])) {
-            $count += DevToolsGetEventTimes($entry['params']['record'], $startTime, $slices);
-          }
-        }
+        foreach ($timeline as $entry)
+          $count += DevToolsGetEventTimes($entry, $startTime, $slices);
       }
     }
     
@@ -1074,6 +1148,14 @@ function DevToolsGetCPUSlices($testPath, $run, $cached) {
       gz_file_put_contents($cacheFile, json_encode($slices));
     } else {
       $slices = null;
+    }
+  }
+  
+  if (!isset($_REQUEST['threads'])) {
+    $threads = array_keys($slices);
+    foreach ($threads as $thread) {
+      if ($thread !== 0)
+        unset($slices[$thread]);
     }
   }
     
