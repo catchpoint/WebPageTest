@@ -96,6 +96,7 @@ CDN_PROVIDER cdnList[] = {
   {".gccdn.net", "CDNetworks"},
   {".panthercdn.com", "CDNetworks"},
   {".fastly.net", "Fastly"},
+  {".fastlylb.net", "Fastly"},
   {".nocookie.net", "Fastly"},
   {".gslb.taobao.com", "Taobao"},
   {".gslb.tbcache.com", "Alimama"},
