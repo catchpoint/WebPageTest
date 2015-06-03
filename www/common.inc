@@ -142,6 +142,8 @@ SetLocaleFromBrowser();
 
 // some myBB integration to get the requesting user
 $supportsAuth = false;
+if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret'))
+  $supportsAuth = true;
 $uid = NULL;
 $user = NULL;
 $admin = false;
@@ -175,10 +177,7 @@ $isOwner = false;
 $owner = null;
 if( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
   $owner = $_COOKIE['google_id'];
-  if (!isset($user))
-    $user = $owner;
-}
-else if( isset($_COOKIE['o']) && strlen($_COOKIE['o']) ){
+} else if( isset($_COOKIE['o']) && strlen($_COOKIE['o']) ){
   $owner = $_COOKIE['o'];
 }else{
   $owner = sha1(uniqid(uniqid('', true), true));
