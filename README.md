@@ -37,7 +37,7 @@ There are also several browser-specific extensions for interacting with the vari
 * /agent/browser/safari - Extension for supporting Safari (JS).
 
 ##Urlblast/Pagetest
-Urlblast and pagetest are the original agent that support IE only and requires Visual Studio 2008 SP3 to build (also all c++).  It is in the process of being depricated but wptdriver is not quite at feature parity yet (a few script commands and PageSpeed integration).
+Urlblast and pagetest are the original agent that support IE only and requires Visual Studio 2008 SP3 to build (also all c++).  It is in the process of being deprecated but wptdriver is not quite at feature parity yet (a few script commands and PageSpeed integration).
 
 The main project file for it is /agent/browser/ie/pagetest.sln
 
