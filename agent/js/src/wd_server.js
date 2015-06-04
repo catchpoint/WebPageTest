@@ -377,7 +377,6 @@ WebDriverServer.prototype.onDriverBuild = function(driver) {
     // also cannot use DevTools, only WebDriver API via this.driver_.
     this.clearPageAndStartVideoWd_();
     this.scheduleStartPacketCaptureIfRequested_();
-    this.scheduleStartTracingIfRequested_();
     this.onTestStarted_();
   } else if (this.driver_ !== driver) {
     throw new Error('Internal error: repeat onDriverBuild with wrong driver');
@@ -726,6 +725,7 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
       this.pageCommand_('getResourceTree').then(function(result) {
         var frameId = result.frameTree.frame.id;
         // Hold orange(500ms)->white: anchor video to DevTools.
+        this.app_.schedule('Setting background to orange', function() {logger.debug('Setting background to orange');});
         this.setPageBackground_(frameId, GHASTLY_ORANGE_);
         this.app_.timeout(500, 'Set orange background');
         this.scheduleStartVideoRecording_();
@@ -737,7 +737,11 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
         this.app_.schedule('Start recording DevTools with video', function() {
           this.isRecordingDevTools_ = true;
         }.bind(this));
+        this.app_.schedule('Start recording tracing', function() {
+          this.scheduleStartTracingIfRequested_();
+        }.bind(this));
         this.app_.timeout(500, 'Hold orange background');
+        this.app_.schedule('Setting background to white', function() {logger.debug('Setting background to white');});
         this.setPageBackground_(frameId);  // White
       }.bind(this));
     }.bind(this));
@@ -745,6 +749,9 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
   // Make sure we start recording DevTools regardless of the video.
   this.app_.schedule('Start recording DevTools', function() {
     this.isRecordingDevTools_ = true;
+  }.bind(this));
+  this.app_.schedule('Start recording tracing', function() {
+    this.scheduleStartTracingIfRequested_();
   }.bind(this));
 };
 
@@ -782,7 +789,7 @@ WebDriverServer.prototype.clearPageAndStartVideoWd_ = function() {
 WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
   'use strict';
   // Always enable tracing, at a minimum to capture timeline data
-  if (!this.driver_) {
+  if (!this.driver_ && !this.traceStream_) {
     var traceFile = path.join(this.runTempDir_, 'trace.json');
     process_utils.scheduleOpenStream(this.app_, traceFile).then(
         function(stream) {
@@ -922,7 +929,6 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
   }
   this.clearPageAndStartVideoDevTools_();
   this.scheduleStartPacketCaptureIfRequested_();
-  this.scheduleStartTracingIfRequested_();
   // No page load timeout here -- agent_main enforces run-level timeout.
   this.app_.schedule('Run page load', function() {
     // onDevToolsMessage_ resolves this promise when it detects on-load.

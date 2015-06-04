@@ -221,14 +221,15 @@ function IsOrangeAVIFrame($file) {
 * @param mixed $videoDir
 */
 function EliminateDuplicateAVIFiles($videoDir, $viewport) {
-  $crop = '+0+4';
+  $crop = '+0+6';
   if (isset($viewport)) {
     // Ignore a 4-pixel header on the actual viewport to allow for the progress bar and
     // a 6 pixel right margin to allow for the scroll bar that fades in and out.
-    $topMargin = 4;
+    $topMargin = 6;
     $rightMargin = 6;
+    $bottomMargin = 6;
     $top = $viewport['y'] + $topMargin;
-    $height = max($viewport['height'] - $topMargin, 1);
+    $height = max($viewport['height'] - $topMargin - $bottomMargin, 1);
     $left = $viewport['x'];
     $width = max($viewport['width'] - $rightMargin, 1);
     $crop = "{$width}x{$height}+{$left}+{$top}";

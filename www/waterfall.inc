@@ -326,20 +326,20 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
           $cpu_slice_colors = array();
           $mime_colors = MimeColors();
           
-          $cpu_slice_colors['ParseHTML'] = GetColor($im, 130, 168, 222);
+          $cpu_slice_colors['ParseHTML'] = GetColor($im, 112, 162, 227);
           $cpu_slice_colors['ResourceReceivedData'] = $cpu_slice_colors['ParseHTML'];
           $cpu_slice_colors['ResourceSendRequest'] = $cpu_slice_colors['ParseHTML'];
           $cpu_slice_colors['ResourceReceivedResponse'] = $cpu_slice_colors['ParseHTML'];
           $cpu_slice_colors['ResourceFinish'] = $cpu_slice_colors['ParseHTML'];
           $cpu_slice_colors['CommitLoad'] = $cpu_slice_colors['ParseHTML'];
 
-          $cpu_slice_colors['Layout'] = GetColor($im, 171, 213, 149);
+          $cpu_slice_colors['Layout'] = GetColor($im, 154, 126, 230);
           $cpu_slice_colors['RecalculateStyles'] = $cpu_slice_colors['Layout'];
           $cpu_slice_colors['ParseAuthorStyleSheet'] = $cpu_slice_colors['Layout'];
           $cpu_slice_colors['ScheduleStyleRecalculation'] = $cpu_slice_colors['Layout'];
           $cpu_slice_colors['InvalidateLayout'] = $cpu_slice_colors['Layout'];
 
-          $cpu_slice_colors['Paint'] = GetColor($im, 194, 219, 181);
+          $cpu_slice_colors['Paint'] = GetColor($im, 113, 179, 99);
           $cpu_slice_colors['PaintImage'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['PaintSetup'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['CompositeLayers'] = $cpu_slice_colors['Paint'];
@@ -354,7 +354,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
           $cpu_slice_colors['Draw LazyPixelRef'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['Decode LazyPixelRef'] = $cpu_slice_colors['Paint'];
 
-          $cpu_slice_colors['EvaluateScript'] = GetColor($im, 228, 185, 136);
+          $cpu_slice_colors['EvaluateScript'] = GetColor($im, 241, 196, 83);
           $cpu_slice_colors['EventDispatch'] = $cpu_slice_colors['EvaluateScript'];
           $cpu_slice_colors['FunctionCall'] = $cpu_slice_colors['EvaluateScript'];
           $cpu_slice_colors['GCEvent'] = $cpu_slice_colors['EvaluateScript'];
