@@ -34,6 +34,7 @@ CDN_PROVIDER cdnList[] = {
 	{".googleusercontent.com", _T("Google")},
 	{"googlehosted.com", _T("Google")},
 	{".gstatic.com", _T("Google")},
+	{".doubleclick.net", _T("Google")},
 	{".insnw.net", _T("Instart Logic")},
 	{".inscname.net", _T("Instart Logic")},
 	{".internapcdn.net", _T("Internap")},
@@ -92,6 +93,13 @@ CDN_PROVIDER cdnList[] = {
   {".revcn.net", _T("Rev Software")},
   {".revdn.net", _T("Rev Software")},
   {".caspowa.com", _T("Caspowa")},
+  {".twimg.net", _T("Twitter")},
+  {".facebook.com", _T("Facebook")},
+  {".facebook.net", _T("Facebook")},
+  {".fbcdn.net", _T("Facebook")},
+  {".cdninstagram.com", _T("Facebook")},
+  {".rlcdn.com", _T("Reapleaf")},
+  {".wp.com", _T("WordPress Jetpack")},
   {NULL, NULL}
 };
 
@@ -120,5 +128,10 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"Via", "Rev-Cache", _T("Rev Software")},
   {"X-Rev-Cache", "", _T("Rev Software")},
   {"Server", "Caspowa", _T("Caspowa")},
-  {"Server", "SurgeCDN", "Surge"}
+  {"Server", "SurgeCDN", _T("Surge")},
+  {"server", "sffe", _T("Google")},
+  {"server", "gws", _T("Google")},
+  {"server", "GSE", _T("Google")},
+  {"server", "Golfe2", _T("Google")},
+  {"server", "tsa_b", _T("Twitter")}
 };
