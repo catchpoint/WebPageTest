@@ -490,6 +490,8 @@ function xmlDomains($id, $testPath, $run, $cached) {
             echo "<requests>{$values['requests']}</requests>\n";
             echo "<bytes>{$values['bytes']}</bytes>\n";
             echo "<connections>{$values['connections']}</connections>\n";
+            if (isset($values['cdn_provider']))
+              echo "<cdn_provider>{$values['cdn_provider']}</cdn_provider>\n";
             echo "</domain>\n";
         }
         echo "</domains>\n";

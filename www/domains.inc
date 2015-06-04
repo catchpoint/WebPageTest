@@ -33,6 +33,9 @@ function getDomainBreakdown($id, $testPath, $run, $cached, &$requests)
             if (array_key_exists('bytesIn', $request))
               $breakdown["$domain"]['bytes'] += $request['bytesIn'];
             $breakdown["$domain"]['requests']++;
+            
+            if (isset($request['cdn_provider']) && strlen($request['cdn_provider']))
+              $breakdown[$domain]['cdn_provider'] = $request['cdn_provider'];
         }
     }
     foreach ($breakdown as $domain => &$data) {

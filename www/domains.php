@@ -24,6 +24,8 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
         $entry['bytes'] = $data['bytes'];
         $entry['requests'] = $data['requests'];
         $entry['connections'] = $data['connections'];
+        if (isset($data['cdn_provider']))
+          $entry['cdn_provider'] = $data['cdn_provider'];
         $firstView[] = $entry;
     }
     $domains['firstView'] = $firstView;
@@ -38,6 +40,8 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
             $entry['bytes'] = $data['bytes'];
             $entry['requests'] = $data['requests'];
             $entry['connections'] = $data['connections'];
+            if (isset($data['cdn_provider']))
+              $entry['cdn_provider'] = $data['cdn_provider'];
             $repeatView[] = $entry;
         }
         $domains['repeatView'] = $repeatView;
