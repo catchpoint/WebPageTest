@@ -125,6 +125,6 @@ if NOT defined KNOWN_BROWSER (
 )
 
 cd %AGENT%
-set "CMD=node src\agent_main --serverUrl %WPT_SERVER% --location %LOCATION%%BROWSER_ARGS%%OPT_ARGS%"
+set "CMD=node --max-old-space-size=4096 --expose-gc src\agent_main --serverUrl %WPT_SERVER% --location %LOCATION%%BROWSER_ARGS%%OPT_ARGS%"
 echo %CMD%
 %CMD%

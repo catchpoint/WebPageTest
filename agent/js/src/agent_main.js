@@ -469,6 +469,7 @@ Agent.prototype.scheduleCleanup_ = function(job, isEndOfJob) {
  */
 Agent.prototype.onMakeReady_ = function() {
   'use strict';
+  try {global.gc();} catch (e) {}
   return this.browser_.scheduleMakeReady(this.browser_).addBoth(
       function(errOrBool) {
     if (!(errOrBool instanceof Error)) {

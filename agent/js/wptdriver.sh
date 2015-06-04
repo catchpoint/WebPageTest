@@ -111,7 +111,7 @@ case "${browser}" in
 esac
 
 cd ${agent}
-declare -a cmd=(node src/agent_main \
+declare -a cmd=(node --max-old-space-size=4096 --expose-gc src/agent_main \
     --serverUrl ${server} --location ${location} \
     "${browser_args[@]:+${browser_args[@]}}" \
     "${opt_args[@]:+${opt_args[@]}}")

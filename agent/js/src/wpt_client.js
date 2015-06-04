@@ -753,6 +753,7 @@ Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
   var mp = new multipart.Multipart();
   mp.addPart('id', job.id, ['Content-Type: text/plain']);
   mp.addPart('location', this.location_);
+  mp.addPart('timeline', 1);
   if (this.apiKey_) {
     mp.addPart('key', this.apiKey_);
   }

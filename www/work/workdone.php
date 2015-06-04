@@ -132,6 +132,10 @@ if (ValidateTestId($id)) {
         $ini = parse_ini_file("$testPath/testinfo.ini");
         $time = time();
         $testInfo['last_updated'] = $time;
+        // Allow for the test agents to indicate that they are including a
+        // trace-based timeline (mostly for the mobile agents that always include it)
+        if (isset($_REQUEST['timeline']) && $_REQUEST['timeline'])
+          $testInfo['timeline'] = 1;
         $testInfo_dirty = true;
 
         if (!strlen($tester) &&

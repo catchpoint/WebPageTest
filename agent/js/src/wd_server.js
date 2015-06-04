@@ -781,12 +781,8 @@ WebDriverServer.prototype.clearPageAndStartVideoWd_ = function() {
  */
 WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
   'use strict';
-  // TODO(wrightt): add browser-specific & WD-friendly impls.
-  if (1 === this.task_.trace && !this.driver_) {
-    // There's example tracing code that tries to determine if tracing is
-    // supported by sending 'Tracing.hasCompleted' and asserting that the
-    // browser returns an 'error'.  However, we've found that most browsers
-    // (tracing-enabled- or not) respond with the same "unknown command" error.
+  // Always enable tracing, at a minimum to capture timeline data
+  if (!this.driver_) {
     var traceFile = path.join(this.runTempDir_, 'trace.json');
     process_utils.scheduleOpenStream(this.app_, traceFile).then(
         function(stream) {
@@ -797,11 +793,14 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
       this.traceStream_ = stream;
     }.bind(this));
     var message = {method: 'Tracing.start'};
-    // Must set all param values, pending crrev/665123008.
     message.params = {
-      categories: this.task_.traceCategories || 'webkit,blink,benchmark',
-      options: 'record-until-full'
+      categories: 'disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame',
+      options: 'record-as-much-as-possible'
     };
+    if (1 === this.task_.trace) {
+      var trace_categories = this.task_.traceCategories || '*';
+      message.params.categories = message.params.categories + ',' + trace_categories;
+    }
     this.devToolsCommand_(message).then(function() {
       logger.debug('Started tracing to ' + traceFile);
     }, function(e) {
@@ -848,7 +847,7 @@ WebDriverServer.prototype.onTracingMessage_ = function(message) {
  */
 WebDriverServer.prototype.scheduleStopTracing_ = function() {
   'use strict';
-  if (1 === this.task_.trace) {
+  if (this.traceStream_) {
     this.app_.schedule('Wait for tracingComplete', function() {
       if (this.tracePromise_ && this.tracePromise_.isPending()) {
         this.devToolsCommand_({method: 'Tracing.end'});
@@ -858,26 +857,22 @@ WebDriverServer.prototype.scheduleStopTracing_ = function() {
       }
     }.bind(this));
     this.app_.schedule('Close tracing stream', function() {
-      if (!this.traceStream_) {
-        return undefined;
-      } else {
-        var stream = this.traceStream_;
-        this.traceStream_ = undefined;
-        // Ideally we'd simply do:
-        //   return scheduleCloseStream(..., ']}', 'utf8');
-        // but, in practice, the stream never writes this ']}' or invokes our
-        // "finished" callback.  Instead, we'll simply write and flush our ']}'.
-        var done = new webdriver.promise.Deferred();
-        stream.write(']}', 'utf8', function() {
-          logger.debug('Stopped tracing to ' + this.traceFile_);
-          process_utils.scheduleCloseStream(this.app_, stream).addErrback(
-              function(e) {
-            logger.debug('Ignoring close error: ' + e.message);
-          });  // Don't wait for close; we've already flushed.
-          done.fulfill();
-        }.bind(this));
-        return done.promise;
-      }
+      var stream = this.traceStream_;
+      this.traceStream_ = undefined;
+      // Ideally we'd simply do:
+      //   return scheduleCloseStream(..., ']}', 'utf8');
+      // but, in practice, the stream never writes this ']}' or invokes our
+      // "finished" callback.  Instead, we'll simply write and flush our ']}'.
+      var done = new webdriver.promise.Deferred();
+      stream.write(']}', 'utf8', function() {
+        logger.debug('Stopped tracing to ' + this.traceFile_);
+        process_utils.scheduleCloseStream(this.app_, stream).addErrback(
+            function(e) {
+          logger.debug('Ignoring close error: ' + e.message);
+        });  // Don't wait for close; we've already flushed.
+        done.fulfill();
+      }.bind(this));
+      return done.promise;
     }.bind(this));
   }
 };
