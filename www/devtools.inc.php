@@ -1015,6 +1015,9 @@ function GetTraceTimeline($testPath, $run, $cached, &$timeline) {
               if (!isset($threads[$thread]))
                 $threads[$thread] = count($threads);
               $main_thread = $thread;
+              // make sure the navigation event is included so we have the real start time
+              if (!isset($event['dur']))
+                $event['dur'] = 1;
             }
           }
 
