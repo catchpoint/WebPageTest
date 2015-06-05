@@ -140,6 +140,8 @@ bool CIpfw::SetPipe(unsigned int num, unsigned long bandwidth,
       }
     } else {
       CString cmd, buff;
+
+      // Bandwidth and delay get applied to the pipe
       cmd.Format(_T("pipe %d config"), num);
       if (bandwidth > 0) {
         buff.Format(_T(" bw %dKbit/s"), bandwidth);
@@ -149,11 +151,19 @@ bool CIpfw::SetPipe(unsigned int num, unsigned long bandwidth,
         buff.Format(_T(" delay %dms"), delay);
         cmd += buff;
       }
-      if (plr > 0.0) {
-        buff.Format(_T(" plr %0.4f"), plr);
-        cmd += buff;
-      }
       ret = Execute(cmd);
+
+      // Packet loss needs to be applied to the queue
+      if (ret) {
+        cmd.Format(_T("queue %d config"), num);
+        if (plr > 0.0) {
+          buff.Format(_T(" plr %0.4f"), plr);
+          cmd += buff;
+        } else {
+          cmd += _T(" plr 0");
+        }
+        Execute(cmd);
+      }
     }
   }
   return ret;

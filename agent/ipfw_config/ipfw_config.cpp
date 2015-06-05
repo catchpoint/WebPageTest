@@ -29,6 +29,7 @@ bool Exec(CString command_line){
 }
 
 bool ipfw(CString server, CString user, CString password, int pipe, int bw, int delay, double plr) {
+  bool ret = false;
   CString cmd = L"plink";
   if (!password.IsEmpty())
     cmd += L" -pw " + password;
@@ -38,6 +39,8 @@ bool ipfw(CString server, CString user, CString password, int pipe, int bw, int 
   cmd += server + L" ";
 
   CString ipfw_command, buff;
+
+  // Bandwidth and delay are applied to the pipe
   ipfw_command.Format(L"ipfw pipe %d config", pipe);
   if (bw > 0) {
     buff.Format(L" bw %dKbit/s", bw/1000);
@@ -47,14 +50,25 @@ bool ipfw(CString server, CString user, CString password, int pipe, int bw, int 
     buff.Format(L" delay %dms", delay);
     ipfw_command += buff;
   }
-  if (plr > 0 && plr <= 1.0) {
-    buff.Format(L" plr %0.4f", plr);
-    ipfw_command += buff;
+
+  
+  ret = Exec(cmd + ipfw_command);
+
+  if (ret) {
+    // packet loss is applied to the queue
+    ipfw_command.Format(L"ipfw queue %d config", pipe);
+    if (plr > 0 && plr <= 1.0) {
+      buff.Format(L" plr %0.4f", plr);
+      ipfw_command += buff;
+    } else {
+      ipfw_command += L" plr 0";
+    }
+    Exec(cmd + ipfw_command);
   }
 
   cmd += ipfw_command;
 
-  return Exec(cmd);
+  return ret;
 }
 
 int _tmain(int argc, _TCHAR* argv[]) {
