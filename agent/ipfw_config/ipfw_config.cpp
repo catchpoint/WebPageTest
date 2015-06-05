@@ -46,7 +46,7 @@ bool ipfw(CString server, CString user, CString password, int pipe, int bw, int 
     buff.Format(L" bw %dKbit/s", bw/1000);
     ipfw_command += buff;
   }
-  if (delay > 0) {
+  if (delay >= 0) {
     buff.Format(L" delay %dms", delay);
     ipfw_command += buff;
   }
