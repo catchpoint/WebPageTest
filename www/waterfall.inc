@@ -228,7 +228,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
 
     // Figure out the scale.
     $max_ms = 0;
-    if ((int)@$_REQUEST['max'] > 0) {
+    if (@$_REQUEST['max'] > 0) {
         $max_ms = (int)($_REQUEST['max'] * 1000.0);
     } else {
         // Include all page events and resource times in time scale.
