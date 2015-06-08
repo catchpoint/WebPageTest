@@ -28,7 +28,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 var browser_base = require('browser_base');
 var child_process = require('child_process');
+var crypto = require('crypto');
 var fs = require('fs');
+var http = require('http');
 var logger = require('logger');
 var nopt = require('nopt');
 var path = require('path');
@@ -76,6 +78,8 @@ function Agent(app, client, flags) {
     throw new Error('--deviceSerial may contain only letters and digits');
   }
   this.runTempDir_ = 'runtmp/' + (runTempSuffix || '_wpt');
+  this.workDir_ = 'work/' + (runTempSuffix || '_wpt');
+  this.scheduleMakeDirs_(this.workDir_);
   this.aliveFile_ = undefined;
   if (flags.alive)
     this.aliveFile_ = flags.alive + '.alive';
@@ -87,6 +91,7 @@ function Agent(app, client, flags) {
   this.browser_ = browser_base.createBrowser(this.app_,
       {flags: flags, task: {}});
 
+  this.client_.onPrepareJob = this.prepareJob_.bind(this);
   this.client_.onStartJobRun = this.startJobRun_.bind(this);
   this.client_.onAbortJob = this.abortJob_.bind(this);
   this.client_.onMakeReady = this.onMakeReady_.bind(this);
@@ -230,6 +235,102 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
 };
 
 /**
+ * Do any pre-job preparation
+ *
+ * @param {Job} job the job to prepare.
+ * @private
+ */
+Agent.prototype.prepareJob_ = function(job) {
+  var done = new webdriver.promise.Deferred();
+  if (job.task.customBrowserUrl && job.task.customBrowserMD5) {
+    var browserName = path.basename(job.task.customBrowserUrl);
+    logger.debug("Custom Browser: " + browserName);
+    this.scheduleCreateDirectory_(this.app_, this.workDir_).then(
+        function() {
+      this.scheduleCreateDirectory_(this.app_,
+          path.join(this.workDir_, 'browsers')).then(function() {
+        job.customBrowser = path.join(this.workDir_, 'browsers',
+            job.task.customBrowserMD5 + '-' + browserName);
+        process_utils.scheduleFunction(this.app_,
+            'Check if browser exists', fs.exists, job.customBrowser).then(
+            function(exists) {
+          if (!exists) {
+            // TODO(pmeenan): Implement a cleanup that deletes custom browsers
+            // that haven't been used in a while
+            logger.debug("Custom Browser not available, downloading from " +
+                job.task.customBrowserUrl);
+            var tempFile = job.customBrowser + '.tmp';
+            this.scheduleUnlinkIfExists_(this.app_, tempFile).then(
+                function() {
+              var active = true;
+              var md5 = crypto.createHash('md5');
+              var file = fs.createWriteStream(tempFile);
+              var onError = function(e) {
+                if (active) {
+                  active = false;
+                  file.end();
+                  this.scheduleUnlinkIfExists_(this.app_,
+                      tempFile).then(function() {
+                    e.message = 'Custom browser download failure from ' +
+                        job.task.customBrowserUrl + ': ' + e.message;
+                    logger.warn(e.message);
+                    done.reject(e);
+                  }.bind(this));
+                }
+              }.bind(this);
+              var onDone = function() {
+                if (active) {
+                  active = false;
+                  file.end();
+                  var md5hex = md5.digest('hex').toUpperCase();
+                  logger.debug('Finished download - md5: ' + md5hex);
+                  if (md5hex == job.task.customBrowserMD5.toUpperCase()) {
+                    process_utils.scheduleFunction(this.app_,
+                            'Rename successful browser download',
+                            fs.rename, tempFile, job.customBrowser).then(
+                        function() {
+                      done.fulfill();
+                    }.bind(this), function() {
+                      done.reject(new Error(
+                          'Failed to rename custom browser file'));
+                    }.bind(this));
+                  } else {
+                    process_utils.scheduleUnlinkIfExists(this.app_,
+                        tempFile).then(function() {
+                      done.reject(new Error(
+                          'Failed to download custom browser from ' +
+                          job.task.customBrowserUrl));
+                    }.bind(this));
+                  }
+                }
+              }.bind(this);
+              var request = http.get(job.task.customBrowserUrl,
+                  function(response) {
+                response.pipe(file);
+                response.on('data', function(chunk) {
+                  md5.update(chunk);
+                }.bind(this));
+                response.on('error', onError);
+                response.on('end', onDone);
+                response.on('close', onDone);
+              }.bind(this));
+              request.on('error', onError);
+              request.end();
+            }.bind(this));
+          } else {
+            logger.debug("Custom Browser already available");
+            done.fulfill();
+          }
+        }.bind(this));
+      }.bind(this));
+    }.bind(this));
+  } else {
+    done.fulfill();
+  }
+  return done.promise;
+};
+
+/**
  * Performs one run of a job in a wd_server module that runs as a child process.
  *
  * Must call job.runFinished() no matter how the run ended.
@@ -326,6 +427,7 @@ Agent.prototype.startJobRun_ = function(job) {
           isCacheWarm: job.isCacheWarm,
           exitWhenDone: job.isFirstViewOnly || job.isCacheWarm,
           timeout: job.timeout,
+          customBrowser: job.customBrowser,
           runTempDir: this.runTempDir_,
           flags: flags,
           task: task
@@ -336,6 +438,40 @@ Agent.prototype.startJobRun_ = function(job) {
     logger.error('Unable to start job: ' + e.message);
     job.agentError = job.agentError || e.message;
     this.abortJob_(job);
+  }.bind(this));
+};
+
+/**
+ * Check if the provided file exists and if it does, delete it.
+ *
+ * @param {webdriver.promise.ControlFlow} app the scheduler.
+ * @param file
+ * @return {webdriver.promise.Promise} fulfill({Object}):
+ */
+Agent.prototype.scheduleUnlinkIfExists_ = function(app, file) {
+  return process_utils.scheduleFunction(app, 'Check if ' + file + ' exists',
+      fs.exists, file).then(function(exists) {
+    if (exists) {
+      return process_utils.scheduleFunctionNoFault(app,
+              'Unlinking existing file ' + file, fs.unlink, file);
+    }
+  }.bind(this));
+};
+
+/**
+ * Create the requested directory if it doesn't already exist.
+ *
+ * @param {webdriver.promise.ControlFlow} app the scheduler.
+ * @param dir
+ * @return {webdriver.promise.Promise} fulfill({Object}):
+ */
+Agent.prototype.scheduleCreateDirectory_ = function(app, dir) {
+  return process_utils.scheduleFunction(app, 'Check if ' + dir + ' exists', fs.exists,
+      dir).then(function(exists) {
+    if (!exists) {
+      return process_utils.scheduleFunctionNoFault(app, 'Create Directory ' + dir,
+          fs.mkdir, dir, parseInt('0755', 8));
+    }
   }.bind(this));
 };
 
@@ -374,6 +510,31 @@ Agent.prototype.scheduleCleanRunTempDir_ = function() {
           fs.unlink, filePath);
     }.bind(this));
   }.bind(this));
+};
+
+/**
+ * Download the specified file, verifying that the md5 hash matches
+ * @private
+ */
+Agent.prototype.scheduleDownload_ = function() {
+  this.app_.schedule('Download', function() {
+    var tmpFile = this.cacheDir_ + '/download.tmp';
+    process_utils.scheduleFunctionNoFault(this.app_, 'Delete ' + tmpFile,
+        fs.unlink, tmpFile);
+    this.app_.wait(function() {
+      var downloaded = new webdriver.promise.Deferred();
+      var file = fs.createWriteStream(tmpFile);
+      var request = http.get(job.customBrowserUrl, function(response) {
+        response.pipe(file);
+        file.on('finish', function() {
+          file.close(function() {
+            downloaded.fulfill();
+          });
+        });
+      });
+      return downloaded;
+    });
+  }).bind(this);
 };
 
 /**

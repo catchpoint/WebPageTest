@@ -357,6 +357,7 @@ function Client(app, args) {
   this.timeoutTimer_ = undefined;
   this.currentJob_ = undefined;
   this.jobTimeout = args.jobTimeout || DEFAULT_JOB_TIMEOUT;
+  this.onPrepareJob = undefined;
   this.onStartJobRun = undefined;
   this.onAbortJob = undefined;
   this.onMakeReady = undefined;
@@ -549,7 +550,16 @@ Client.prototype.processJobResponse_ = function(responseBody) {
   }
   logger.info('Got job: %s', responseBody);
   this.currentJob_ = null;
-  this.startNextRun_(job);
+  if (this.onPrepareJob) {
+    this.onPrepareJob(job).then(function() {
+      this.startNextRun_(job);
+    }.bind(this), function(e) {
+      job.error = e.message;
+      this.abortJob_(job);
+    }.bind(this));
+  } else {
+    this.startNextRun_(job);
+  }
 };
 
 /**

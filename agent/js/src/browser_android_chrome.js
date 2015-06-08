@@ -38,6 +38,8 @@ var video_hdmi = require('video_hdmi');
 var webdriver = require('selenium-webdriver');
 var webdriver_proxy = require('selenium-webdriver/proxy');
 
+var gLastInstall = undefined;   // Last custom browser that we installed
+
 var DEVTOOLS_SOCKET = 'localabstract:chrome_devtools_remote';
 var PAC_PORT = 80;
 
@@ -109,8 +111,8 @@ function BrowserAndroidChrome(app, args) {
     throw new Error('Missing deviceSerial');
   }
   this.deviceSerial_ = args.flags.deviceSerial;
-  this.shouldInstall_ = (1 === parseInt(args.runNumber || '1', 10));
-  this.chrome_ = args.flags.chrome;  // Chrome.apk.
+  this.shouldInstall_ = args.customBrowser !== gLastInstall;
+  this.chrome_ = args.customBrowser || args.flags.chrome;  // Chrome.apk.
   this.chromedriver_ = args.flags.chromedriver;
   if (args.flags.chromePackage) {
     this.chromePackage_ = args.flags.chromePackage;
@@ -122,10 +124,15 @@ function BrowserAndroidChrome(app, args) {
     }
     this.chromePackage_ = KNOWN_BROWSERS[browserName];
   }
-  this.chromePackage_ = this.chromePackage_ || 'com.android.chrome';
-  this.chromeActivity_ =
-      args.flags.chromeActivity || 'com.google.android.apps.chrome';
+  this.chromePackage_ = args.task.customBrowser_package ||
+      args.chromePackage_ || this.chromePackage_ || 'com.android.chrome';
+  this.chromeActivity_ = args.task.customBrowser_activity ||
+      args.chromeActivity || 'com.google.android.apps.chrome.Main';
+  this.flagsFile_ = args.task.customBrowser_flagsFile ||
+      args.flagsFile || '/data/local/chrome-command-line';
   this.devToolsPort_ = args.flags.devToolsPort;
+  this.devToolsSocket_ = args.task.customBrowser_socket ||
+      args.devToolsSocket || DEVTOOLS_SOCKET;
   this.devtoolsPortLock_ = undefined;
   this.devToolsUrl_ = undefined;
   this.hostsFile_ = args.task.hostsFile;
@@ -227,7 +234,7 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
 
   // Flush the DNS cache
   this.adb_.su(['ndc', 'resolver', 'flushdefaultif']);
-  var activity = this.chromePackage_ + '/' + this.chromeActivity_ + '.Main';
+  var activity = this.chromePackage_ + '/' + this.chromeActivity_;
   this.adb_.shell(['am', 'start', '-n', activity, '-d', 'about:blank']);
   // TODO(wrightt): check start error
   this.scheduleConfigureDevToolsPort_();
@@ -320,8 +327,11 @@ BrowserAndroidChrome.prototype.scheduleInstallIfNeeded_ = function() {
     this.adb_.adb(['uninstall', this.chromePackage_]).addErrback(function() {
       logger.debug('Ignoring failed uninstall');
     }.bind(this));
+    // Delete ALL of the existing app data for the package before installing
+    this.adb_.su(['rm', '-rf', '/data/data/' + this.chromePackage_]);
     // Chrome install on an emulator takes a looong time.
     this.adb_.adb(['install', '-r', this.chrome_], {}, /*timeout=*/120000);
+    gLastInstall = this.chrome_;
   }
   // TODO(wrightt): use `pm list packages` to check pkg
 };
@@ -362,7 +372,6 @@ BrowserAndroidChrome.prototype.scheduleNeedsXvfb_ = function() {
 BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
   'use strict';
   this.app_.schedule('Configure startup flags', function() {
-    var flagsFile = '/data/local/chrome-command-line';
     var flags = this.chromeFlags_.concat('--enable-remote-debugging');
     if (this.pac_) {
       flags.push('--proxy-pac-url=http://127.0.0.1:' + PAC_PORT + '/from_netcat');
@@ -383,9 +392,9 @@ BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
       this.adb_.adb(['push', localFlagsFile, tempFlagsFile]);
       process_utils.scheduleFunction(this.app_, 'Delete local flags file',
           fs.unlink, localFlagsFile);
-      this.adb_.su(['cp', tempFlagsFile, flagsFile]);
+      this.adb_.su(['cp', tempFlagsFile, this.flagsFile_]);
       this.adb_.shell(['rm', tempFlagsFile]);
-      this.adb_.su(['chmod', '666', flagsFile]);
+      this.adb_.su(['chmod', '666', this.flagsFile_]);
     }.bind(this));
   }.bind(this));
 };
@@ -449,7 +458,7 @@ BrowserAndroidChrome.prototype.scheduleConfigureDevToolsPort_ = function() {
         // TODO(wrightt): if below `adb --help` lacks '--remove', reuse the
         // existing `adb forward` process if it already exists.
         this.adb_.adb(
-            ['forward', 'tcp:' + this.devToolsPort_, DEVTOOLS_SOCKET]);
+            ['forward', 'tcp:' + this.devToolsPort_, this.devToolsSocket_]);
       }.bind(this));
       // Make sure we set devToolsUrl_ only after the adb forward succeeds.
       this.app_.schedule('Set DevTools URL', function() {
