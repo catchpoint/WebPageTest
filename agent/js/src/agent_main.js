@@ -76,6 +76,9 @@ function Agent(app, client, flags) {
     throw new Error('--deviceSerial may contain only letters and digits');
   }
   this.runTempDir_ = 'runtmp/' + (runTempSuffix || '_wpt');
+  this.aliveFile_ = undefined;
+  if (flags.alive)
+    this.aliveFile_ = flags.alive + '.alive';
   this.wdServer_ = undefined;  // The wd_server child process.
   this.webPageReplay_ = new web_page_replay.WebPageReplay(this.app_,
       {flags: flags});
@@ -87,6 +90,7 @@ function Agent(app, client, flags) {
   this.client_.onStartJobRun = this.startJobRun_.bind(this);
   this.client_.onAbortJob = this.abortJob_.bind(this);
   this.client_.onMakeReady = this.onMakeReady_.bind(this);
+  this.client_.onAlive = this.onAlive_.bind(this);
 }
 /** Public class. */
 exports.Agent = Agent;
@@ -385,6 +389,17 @@ Agent.prototype.abortJob_ = function(job) {
   this.scheduleCleanup_(job, /*isEndOfJob=*/true);
   this.scheduleNoFault_('Abort job',
       job.runFinished.bind(job, /*isRunFinished=*/true));
+};
+
+/**
+ * Updates/writes an alive file periodically
+ * @private
+ */
+Agent.prototype.onAlive_ = function() {
+  'use strict';
+  if (this.aliveFile_) {
+    fs.closeSync(fs.openSync(this.aliveFile_, 'w'));
+  }
 };
 
 /**

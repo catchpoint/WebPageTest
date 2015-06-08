@@ -360,6 +360,7 @@ function Client(app, args) {
   this.onStartJobRun = undefined;
   this.onAbortJob = undefined;
   this.onMakeReady = undefined;
+  this.onAlive = undefined;
   this.handlingUncaughtException_ = undefined;
   this.handlingSignal_ = undefined;
 
@@ -466,6 +467,8 @@ Client.prototype.onUncaughtException_ = function(e) {
 Client.prototype.requestNextJob_ = function() {
   'use strict';
   this.app_.schedule('Check if agent is ready for new jobs', function() {
+    if (this.onAlive)
+      this.onAlive();
     return (this.onMakeReady ? this.onMakeReady() : undefined);
   }.bind(this)).then(function() {
     var getWorkUrl = url.resolve(this.baseUrl_,
@@ -573,6 +576,8 @@ Client.prototype.startNextRun_ = function(job) {
   'use strict';
   job.testError = undefined;  // Reset previous run's error, if any.
   job.agentError = undefined;
+  if (this.onAlive)
+    this.onAlive();
   // For comparison in finishRun_()
   this.currentJob_ = job;
   // Set up job timeout
@@ -618,6 +623,8 @@ Client.prototype.finishRun_ = function(job, isRunFinished) {
   global.clearTimeout(this.timeoutTimer_);
   this.timeoutTimer_ = undefined;
   this.currentJob_ = undefined;
+  if (this.onAlive)
+    this.onAlive();
 
   this.app_.schedule('Verify that the agent is online', function() {
     if (SIGTERM === this.handlingSignal_ || SIGINT === this.handlingSignal_) {
