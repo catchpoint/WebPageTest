@@ -195,7 +195,7 @@ WebDriverServer.prototype.scheduleNoFault_ = function(description, f) {
   'use strict';
   return this.app_.schedule(description, f).addErrback(function(e) {
     logger.error('Exception from "%s": %s', description, e);
-    this.agentError_ = this.agentError_ || e.message;
+    //this.agentError_ = this.agentError_ || e.message;
   }.bind(this));
 };
 
@@ -864,6 +864,7 @@ WebDriverServer.prototype.scheduleStopTracing_ = function() {
       }
     }.bind(this));
     this.app_.schedule('Close tracing stream', function() {
+      logger.debug('Closing trace file ' + this.traceFile_);
       var stream = this.traceStream_;
       this.traceStream_ = undefined;
       // Ideally we'd simply do:
@@ -871,12 +872,8 @@ WebDriverServer.prototype.scheduleStopTracing_ = function() {
       // but, in practice, the stream never writes this ']}' or invokes our
       // "finished" callback.  Instead, we'll simply write and flush our ']}'.
       var done = new webdriver.promise.Deferred();
-      stream.write(']}', 'utf8', function() {
+      stream.end(']}', 'utf8', function() {
         logger.debug('Stopped tracing to ' + this.traceFile_);
-        process_utils.scheduleCloseStream(this.app_, stream).addErrback(
-            function(e) {
-          logger.debug('Ignoring close error: ' + e.message);
-        });  // Don't wait for close; we've already flushed.
         done.fulfill();
       }.bind(this));
       return done.promise;
