@@ -165,11 +165,8 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
       job.zipResultFiles['devtools.json'] =
           JSON.stringify(ipcMsg.devToolsMessages);
     }
-    if (ipcMsg.traceFile) {
-      process_utils.scheduleFunctionNoFault(this.app_, 'Read trace file',
-          fs.readFile, ipcMsg.traceFile).then(function(buffer) {
-        job.zipResultFiles['trace.json'] = buffer.toString();
-      });
+    if (ipcMsg.traceData) {
+      job.zipResultFiles['trace.json'] = JSON.stringify(ipcMsg.traceData);
     }
     if (ipcMsg.screenshots && ipcMsg.screenshots.length > 0) {
       var imageDescriptors = [];

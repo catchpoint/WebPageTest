@@ -163,6 +163,7 @@ WebDriverServer.prototype.init = function(args) {
   this.abortTimer_ = undefined;
   this.agentError_ = undefined;
   this.devToolsMessages_ = [];
+  this.traceData_ = {traceEvents: []};
   this.driver_ = undefined;
   this.exitWhenDone_ = args.exitWhenDone;
   this.isRecordingDevTools_ = false;
@@ -176,10 +177,7 @@ WebDriverServer.prototype.init = function(args) {
   this.testStartTime_ = undefined;
   this.timeoutTimer_ = undefined;
   this.timeout_ = args.timeout;
-  this.traceCount_ = 0;
-  this.traceFile_ = undefined;
   this.tracePromise_ = undefined;
-  this.traceStream_ = undefined;
   this.videoFile_ = undefined;
   this.runTempDir_ = args.runTempDir || '';
   this.tearDown_();
@@ -195,7 +193,7 @@ WebDriverServer.prototype.scheduleNoFault_ = function(description, f) {
   'use strict';
   return this.app_.schedule(description, f).addErrback(function(e) {
     logger.error('Exception from "%s": %s', description, e);
-    //this.agentError_ = this.agentError_ || e.message;
+    logger.debug('%s', e.stack);
   }.bind(this));
 };
 
@@ -789,16 +787,9 @@ WebDriverServer.prototype.clearPageAndStartVideoWd_ = function() {
 WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
   'use strict';
   // Always enable tracing, at a minimum to capture timeline data
-  if (!this.driver_ && !this.traceStream_) {
-    var traceFile = path.join(this.runTempDir_, 'trace.json');
-    process_utils.scheduleOpenStream(this.app_, traceFile).then(
-        function(stream) {
-      // As noted in onTracingMessage_, we don't wait for the flush/drain.
-      stream.write('{"traceEvents": [', 'utf8');
-      this.traceFile_ = traceFile;
-      this.tracePromise_ = new webdriver.promise.Deferred();
-      this.traceStream_ = stream;
-    }.bind(this));
+  if (!this.driver_ && !this.tracePromise_) {
+    this.traceData_ = {traceEvents: []};
+    this.tracePromise_ = new webdriver.promise.Deferred();
     var message = {method: 'Tracing.start'};
     message.params = {
       categories: 'disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame',
@@ -809,13 +800,11 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
       message.params.categories = message.params.categories + ',' + trace_categories;
     }
     this.devToolsCommand_(message).then(function() {
-      logger.debug('Started tracing to ' + traceFile);
+      logger.debug('Started tracing');
     }, function(e) {
       // Might be crbug/392577, which affects Chrome 36.0.1967 - 37.0.2000.
       this.testError_ = 'Tracing is not supported.';
-      this.traceFile_ = undefined;
       this.tracePromise_ = undefined;
-      this.traceStream_ = undefined;
       throw e;
     }.bind(this));
   }
@@ -828,23 +817,17 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
  */
 WebDriverServer.prototype.onTracingMessage_ = function(message) {
   'use strict';
-  if ('Tracing.dataCollected' === message.method && this.traceStream_) {
-    var value = (message.params || {}).value;
-    if (value instanceof Array) {
-      value.forEach(function(item) {
-        var data = JSON.stringify(item);
-        // We don't want to block our caller, so don't wait for a 'drain' event
-        // if "write" returns false; instead, let the stream buffer handle this.
-        if (this.traceCount_ > 0) {
-          this.traceStream_.write(',', 'utf8');
-        }
-        this.traceStream_.write(data, 'utf8');
-        this.traceCount_ += 1;
-      }.bind(this));
+  if (this.tracePromise_ && this.tracePromise_.isPending()) {
+    if ('Tracing.dataCollected' === message.method) {
+      var value = (message.params || {}).value;
+      if (value instanceof Array) {
+        value.forEach(function(item) {
+          this.traceData_.traceEvents.push(item);
+        }.bind(this));
+      }
+    } else if ('Tracing.tracingComplete' === message.method) {
+      this.tracePromise_.fulfill();
     }
-  } else if ('Tracing.tracingComplete' === message.method &&
-      this.tracePromise_ && this.tracePromise_.isPending()) {
-    this.tracePromise_.fulfill();
   }
 };
 
@@ -854,31 +837,14 @@ WebDriverServer.prototype.onTracingMessage_ = function(message) {
  */
 WebDriverServer.prototype.scheduleStopTracing_ = function() {
   'use strict';
-  if (this.traceStream_) {
-    this.app_.schedule('Wait for tracingComplete', function() {
-      if (this.tracePromise_ && this.tracePromise_.isPending()) {
-        this.devToolsCommand_({method: 'Tracing.end'});
-        return this.tracePromise_;
-      } else {
-        return undefined;
-      }
-    }.bind(this));
-    this.app_.schedule('Close tracing stream', function() {
-      logger.debug('Closing trace file ' + this.traceFile_);
-      var stream = this.traceStream_;
-      this.traceStream_ = undefined;
-      // Ideally we'd simply do:
-      //   return scheduleCloseStream(..., ']}', 'utf8');
-      // but, in practice, the stream never writes this ']}' or invokes our
-      // "finished" callback.  Instead, we'll simply write and flush our ']}'.
-      var done = new webdriver.promise.Deferred();
-      stream.end(']}', 'utf8', function() {
-        logger.debug('Stopped tracing to ' + this.traceFile_);
-        done.fulfill();
-      }.bind(this));
-      return done.promise;
-    }.bind(this));
-  }
+  this.scheduleNoFault_('Wait for tracingComplete', function() {
+    if (this.tracePromise_ && this.tracePromise_.isPending()) {
+      this.devToolsCommand_({method: 'Tracing.end'});
+      return this.tracePromise_;
+    } else {
+      return undefined;
+    }
+  }.bind(this));
 };
 
 /**
@@ -1210,7 +1176,7 @@ WebDriverServer.prototype.done_ = function() {
           agentError: this.agentError_,
           devToolsMessages: this.devToolsMessages_,
           screenshots: this.screenshots_,
-          traceFile: this.traceFile_,
+          traceData: this.traceData_,
           videoFile: this.videoFile_,
           pcapFile: this.pcapFile_
         });
