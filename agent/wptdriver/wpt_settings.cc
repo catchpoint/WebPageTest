@@ -150,10 +150,10 @@ bool WptSettings::Load(void) {
 -----------------------------------------------------------------------------*/
 void WptSettings::LoadFromEC2(void) {
 
-  CString userData = "wpt_username=feo wpt_password=Fe0Optimize@ wpt_validcertificate=1 wpt_server=https://54.204.44.126 wpt_location=us_east_ie10 wpt_key=1UsKey1";
-  //if (GetUrlText(_T("http://169.254.169.254/latest/user-data"), userData)) {
+  CString userData;
+  if (GetUrlText(_T("http://169.254.169.254/latest/user-data"), userData)) {
     ParseInstanceData(userData);
-  /*}
+  }
 
   if (_location.IsEmpty()) {
     CString zone;
@@ -170,7 +170,7 @@ void WptSettings::LoadFromEC2(void) {
 
   GetUrlText(_T("http://169.254.169.254/latest/meta-data/instance-id"), 
     _ec2_instance);
-  _ec2_instance = _ec2_instance.Trim();*/
+  _ec2_instance = _ec2_instance.Trim();
 }
 
 /*-----------------------------------------------------------------------------
@@ -492,7 +492,6 @@ void BrowserSettings::CleanupCustomBrowsers(CString browser) {
   Reset the browser user profile (nuke the directory, copy the template over)
 -----------------------------------------------------------------------------*/
 void BrowserSettings::ResetProfile(bool clear_certs) {
-  return;
   // clear the browser-specific profile directory
   if (_cache_directory.GetLength()) {
     DeleteDirectory(_cache_directory, false);

@@ -537,11 +537,11 @@ bool WebPagetest::CrackUrl(CString url, CString &host, unsigned short &port,
       object = path;
       object += extra;
       if (!lstrcmpi(scheme, _T("https"))) {
-		    secure_flag = INTERNET_FLAG_SECURE;
-		    if (!_settings._requireValidCertificate) {
-			    secure_flag |= INTERNET_FLAG_IGNORE_CERT_CN_INVALID |
-				    INTERNET_FLAG_IGNORE_CERT_DATE_INVALID;
-		    }
+        secure_flag = INTERNET_FLAG_SECURE;
+        if (!_settings._requireValidCertificate) {
+          secure_flag |= INTERNET_FLAG_IGNORE_CERT_CN_INVALID |
+          INTERNET_FLAG_IGNORE_CERT_DATE_INVALID;
+        }
         if (!port)
           port = INTERNET_DEFAULT_HTTPS_PORT;
       } else if (!port)
