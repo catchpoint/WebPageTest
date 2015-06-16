@@ -225,10 +225,11 @@ void WptSettings::ParseInstanceData(CString &userData) {
           if (!key.CompareNoCase(_T("wpt_server"))) {
             if (value.Find(_T("http://")) == -1 && value.Find(_T("https://")) == -1)
               _server = CString(_T("http://")) + value + _T("/");
-            else
+            else {
               _server = value;
               if (_server.Right(1) != '/')
                 _server += "/";
+            }
           } else if (!key.CompareNoCase(_T("wpt_username")))
             _username = value;
           else if (!key.CompareNoCase(_T("wpt_password")))
