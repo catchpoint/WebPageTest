@@ -87,13 +87,13 @@ bool WptSettings::Load(void) {
   }
 
   if (GetPrivateProfileString(_T("WebPagetest"), _T("username"), _T(""), buff,
-	  _countof(buff), iniFile)) {
-	  _username = buff;
+    _countof(buff), iniFile)) {
+    _username = buff;
   }
 
   if (GetPrivateProfileString(_T("WebPagetest"), _T("password"), _T(""), buff,
-	  _countof(buff), iniFile)) {
-	  _password = buff;
+    _countof(buff), iniFile)) {
+    _password = buff;
   }
 
   if (GetPrivateProfileString(_T("WebPagetest"), _T("Location"), _T(""), buff, 
@@ -108,7 +108,7 @@ bool WptSettings::Load(void) {
 
   if (GetPrivateProfileInt(_T("WebPagetest"), _T("Valid Certificate"), 
     _requireValidCertificate, iniFile)) {
-	  _requireValidCertificate = true;
+    _requireValidCertificate = true;
   }
 
   #ifdef DEBUG

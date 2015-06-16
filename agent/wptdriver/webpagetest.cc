@@ -282,7 +282,7 @@ bool WebPagetest::UploadData(WptTestDriver& test, bool done) {
 }
 
 /*-----------------------------------------------------------------------------
-  Set the credentials requuired to access the server, if configured
+  Set the credentials required to access the server, if configured
 -----------------------------------------------------------------------------*/
 void WebPagetest::SetLoginCredentials(HINTERNET request) {
   if (!_settings._username.IsEmpty() & !_settings._password.IsEmpty()) {
