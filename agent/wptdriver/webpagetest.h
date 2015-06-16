@@ -27,6 +27,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #pragma once
+
+#include <Wininet.h>
+
 class WebPagetest {
 public:
   WebPagetest(WptSettings &settings, WptStatus &status);
@@ -50,6 +53,7 @@ private:
   CString       _computer_name;
   CString       _dns_servers;
 
+  void SetLoginCredentials(HINTERNET request);
   bool HttpGet(CString url, WptTestDriver& test, CString& test_string, 
                CString& zip_file);
   bool ParseTest(CString& test_string, WptTestDriver& test);

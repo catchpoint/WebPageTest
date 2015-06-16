@@ -42,7 +42,8 @@ WptSettings::WptSettings(WptStatus &status):
   ,_polling_delay(DEFAULT_POLLING_DELAY)
   ,_debug(0)
   ,_status(status)
-  ,_software_update(status) {
+  ,_software_update(status)
+  ,_requireValidCertificate(false) {
 }
 
 /*-----------------------------------------------------------------------------
@@ -85,6 +86,16 @@ bool WptSettings::Load(void) {
     _server.Replace(_T("www.webpagetest.org"), _T("agent.webpagetest.org"));
   }
 
+  if (GetPrivateProfileString(_T("WebPagetest"), _T("username"), _T(""), buff,
+	  _countof(buff), iniFile)) {
+	  _username = buff;
+  }
+
+  if (GetPrivateProfileString(_T("WebPagetest"), _T("password"), _T(""), buff,
+	  _countof(buff), iniFile)) {
+	  _password = buff;
+  }
+
   if (GetPrivateProfileString(_T("WebPagetest"), _T("Location"), _T(""), buff, 
     _countof(buff), iniFile )) {
     _location = buff;
@@ -93,6 +104,11 @@ bool WptSettings::Load(void) {
   if (GetPrivateProfileString(_T("WebPagetest"), _T("Key"), _T(""), buff, 
     _countof(buff), iniFile )) {
     _key = buff;
+  }
+
+  if (GetPrivateProfileInt(_T("WebPagetest"), _T("Valid Certificate"), 
+    _requireValidCertificate, iniFile)) {
+	  _requireValidCertificate = true;
   }
 
   #ifdef DEBUG
@@ -134,10 +150,10 @@ bool WptSettings::Load(void) {
 -----------------------------------------------------------------------------*/
 void WptSettings::LoadFromEC2(void) {
 
-  CString userData;
-  if (GetUrlText(_T("http://169.254.169.254/latest/user-data"), userData)) {
+  CString userData = "wpt_username=feo wpt_password=Fe0Optimize@ wpt_validcertificate=1 wpt_server=https://54.204.44.126 wpt_location=us_east_ie10 wpt_key=1UsKey1";
+  //if (GetUrlText(_T("http://169.254.169.254/latest/user-data"), userData)) {
     ParseInstanceData(userData);
-  }
+  /*}
 
   if (_location.IsEmpty()) {
     CString zone;
@@ -154,7 +170,7 @@ void WptSettings::LoadFromEC2(void) {
 
   GetUrlText(_T("http://169.254.169.254/latest/meta-data/instance-id"), 
     _ec2_instance);
-  _ec2_instance = _ec2_instance.Trim();
+  _ec2_instance = _ec2_instance.Trim();*/
 }
 
 /*-----------------------------------------------------------------------------
@@ -206,8 +222,19 @@ void WptSettings::ParseInstanceData(CString &userData) {
         CString value = token.Mid(split + 1).Trim();
 
         if (key.GetLength() && value.GetLength()) {
-          if (!key.CompareNoCase(_T("wpt_server")))
-            _server = CString(_T("http://")) + value + _T("/");
+          if (!key.CompareNoCase(_T("wpt_server"))) {
+            if (value.Find(_T("http://")) == -1 && value.Find(_T("https://")) == -1)
+              _server = CString(_T("http://")) + value + _T("/");
+            else
+              _server = value;
+              if (_server.Right(1) != '/')
+                _server += "/";
+          } else if (!key.CompareNoCase(_T("wpt_username")))
+            _username = value;
+          else if (!key.CompareNoCase(_T("wpt_password")))
+            _password = value;
+          else if (!key.CompareNoCase(_T("wpt_validcertificate")))
+            _requireValidCertificate = (0 == value.Compare(_T("1")));
           else if (!key.CompareNoCase(_T("wpt_loc")))
             _location = value; 
           else if (_location.IsEmpty() &&
@@ -465,6 +492,7 @@ void BrowserSettings::CleanupCustomBrowsers(CString browser) {
   Reset the browser user profile (nuke the directory, copy the template over)
 -----------------------------------------------------------------------------*/
 void BrowserSettings::ResetProfile(bool clear_certs) {
+  return;
   // clear the browser-specific profile directory
   if (_cache_directory.GetLength()) {
     DeleteDirectory(_cache_directory, false);

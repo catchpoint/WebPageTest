@@ -102,6 +102,8 @@ public:
   bool ReInstallBrowser();
 
   CString _server;
+  CString _username;
+  CString _password;
   CString _location;
   CString _key;
   DWORD   _timeout;
@@ -113,6 +115,7 @@ public:
   CString _ec2_instance;
   CString _azure_instance;
   CString _clients_directory;
+  BOOL _requireValidCertificate;
 
   BrowserSettings _browser;
   SoftwareUpdate _software_update;
