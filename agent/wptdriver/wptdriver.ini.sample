@@ -5,6 +5,13 @@ Time Limit=120
 ;key=TestKey123
 ;Automatically install and update support software (Flash, Silverlight, etc)
 software=http://www.webpagetest.org/installers/software.dat
+; Optional credentials
+; username=user
+; password=mypassword
+; Optional: only applies if the scheme of the URL is https.
+; Check if the CN of the WPT server SSL certificate matches the host in the url parameter, and if the certificate has expired.
+; Default is '0', which disables these checks.
+; Valid Certificate=1
 
 [Chrome]
 exe="%PROGRAM_FILES%\Google\Chrome\Application\chrome.exe"
