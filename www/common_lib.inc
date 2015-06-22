@@ -911,7 +911,7 @@ function ParseLocations(&$locations) {
     $currentLoc = null;
     if (array_key_exists('cfg', $_COOKIE))
         $currentLoc = GetLocationFromConfig($locations, $_COOKIE["cfg"] );
-    if (!$currentLoc || !isset($loc['locations'][$currentLoc])) {
+    if ((!$currentLoc || !isset($loc['locations'][$currentLoc])) && isset($locations['locations']['default'])) {
         // nope, try thee default
         $currentLoc = $locations['locations']['default'];
     }

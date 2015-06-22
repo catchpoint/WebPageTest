@@ -234,7 +234,10 @@
                 if (strlen(trim($matches[2]))) {
                     $test['browser'] = trim($matches[2]);
 
-                    // see if the requested browser is a custom browser
+                  if (isset($_REQUEST['custombrowser']))
+                    $test['browser'] = trim($_REQUEST['custombrowser']);
+
+                  // see if the requested browser is a custom browser
                   if (is_dir('./browsers') &&
                       is_file('./browsers/browsers.ini') &&
                       (is_file("./browsers/{$test['browser']}.zip") ||

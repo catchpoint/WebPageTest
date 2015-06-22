@@ -238,6 +238,16 @@ $loc = ParseLocations($locations);
                                             </tr>
                                         </table>
                                     </li>
+                                    <?php
+                                    if ($admin) {
+                                      echo '<li>';
+                                      echo '<label for="custom_browser">';
+                                      echo '<a href="/custom_browsers.php">Custom Browser</a>';
+                                      echo '</label>';
+                                      echo '<input id="custom_browser" type="text" class="text" name="custombrowser" value="">';
+                                      echo '</li>';
+                                    }
+                                    ?>
                                     <li>
                                         <label for="number_of_tests">
                                             Number of Tests to Run<br>

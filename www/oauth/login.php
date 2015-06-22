@@ -28,16 +28,38 @@ if (!isset($_GET['code'])) {
   $token_data = $client->verifyIdToken()->getAttributes();
 
   // Keep a mapping of user ID to email addresses (and allow for it to be overridden if needed)
-  $users = json_decode(gz_file_get_contents('./dat/users.dat'), true);
-  $user['id'] = md5($token_data['payload']['sub']);
-  $user['oauth2id'] = $token_data['payload']['sub'];
-  $user['email'] = $token_data['payload']['email'];
-  if (!isset($users) || !is_array($users))
-    $users = array();
-  if (isset($users[$user['email']]['id']))
-    $user['id'] = $users[$user['email']]['id'];
-  $users[$user['email']] = $user;
-  gz_file_put_contents('./dat/users.dat', json_encode($users));
+  $lock = Lock('Auth', true, 10);
+  if ($lock) {
+    $users = json_decode(gz_file_get_contents('./dat/users.dat'), true);
+    $user['id'] = md5($token_data['payload']['sub']);
+    $user['oauth2id'] = $token_data['payload']['sub'];
+    $user['email'] = $token_data['payload']['email'];
+    if (!isset($users) || !is_array($users))
+      $users = array();
+    if (isset($users[$user['email']]['id']))
+      $user['id'] = $users[$user['email']]['id'];
+    $users[$user['email']] = $user;
+    gz_file_put_contents('./dat/users.dat', json_encode($users));
+    
+    // se if the user that logged in was an administrator
+    $admin_users = GetSetting('admin_users');
+    if ($admin_users) {
+      $admins = explode(',', $admin_users);
+      foreach ($admins as $admin) {
+        if (strcasecmp(trim($admin), $user['email']) == 0) {
+          $session = sha1(json_encode($token_data) . time());
+          setcookie("asid", $session, time()+60*60*24*7*2, "/");
+          $sessions = json_decode(gz_file_get_contents('./dat/admin_sessions.dat'), true);
+          if (!isset($sessions) || !is_array($sessions))
+            $sessions = array();
+          $sessions[$session] = $user;
+          gz_file_put_contents('./dat/admin_sessions.dat', json_encode($sessions));
+          break;
+        }
+      }
+    }
+    Unlock($lock);
+  }
   
   setcookie("google_id", $user['id'], time()+60*60*24*7*2, "/");
   setcookie("google_email", $user['email'], time()+60*60*24*7*2, "/");

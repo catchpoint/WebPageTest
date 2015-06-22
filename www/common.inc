@@ -172,6 +172,21 @@ if (is_dir('./forums') && (!array_key_exists('disableMybb', $settings) || !$sett
     ob_end_clean();
 }
 
+if (!$admin && isset($_COOKIE['asid']) && isset($_COOKIE['google_id']) && isset($_COOKIE['google_email'])) {
+  $lock = Lock('Auth', true, 10);
+  if ($lock) {
+    $sessions = json_decode(gz_file_get_contents('./dat/admin_sessions.dat'), true);
+    $session = $_COOKIE['asid'];
+    if ($sessions &&
+        isset($sessions[$session]) &&
+        $sessions[$session]['id'] == $_COOKIE['google_id'] &&
+        $sessions[$session]['email'] == $_COOKIE['google_email']) {
+      $admin = true;
+    }
+    Unlock($lock);
+  }
+}
+
 // assign a unique ID to each person
 $isOwner = false;
 $owner = null;
