@@ -48,7 +48,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
     $requests = null;
     $pageData = null;
     $startOffset = null;
-    $ver = 12;
+    $ver = 13;
     $cached = isset($cached) && $cached ? 1 : 0;
     $ok = GetCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
     if (!$ok) {
@@ -105,7 +105,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                       array_key_exists('path', $parts)) {
                     $request = array();
                     $request['ip_addr'] = '';
-                    $request['method'] = array_key_exists('method', $rawRequest) ? $rawRequest['method'] : '';
+                    $request['method'] = isset($rawRequest['method']) ? $rawRequest['method'] : '';
                     $request['host'] = '';
                     $request['url'] = '';
                     $request['full_url'] = '';
@@ -113,51 +113,48 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                     $request['full_url'] = $rawRequest['url'];
                     $request['host'] = $parts['host'];
                     $request['url'] = $parts['path'];
-                    if (array_key_exists('query', $parts) && strlen($parts['query']))
+                    if (isset($parts['query']) && strlen($parts['query']))
                       $request['url'] .= '?' . $parts['query'];
                     if ($parts['scheme'] == 'https')
                       $request['is_secure'] = 1;
                     $request['id'] = $rawRequest['id'];
 
-                    $request['responseCode'] = array_key_exists('response', $rawRequest) && array_key_exists('status', $rawRequest['response']) ? $rawRequest['response']['status'] : -1;
-                    if (array_key_exists('errorCode', $rawRequest))
+                    $request['responseCode'] = isset($rawRequest['response']['status']) ? $rawRequest['response']['status'] : -1;
+                    if (isset($rawRequest['errorCode']))
                         $request['responseCode'] = $rawRequest['errorCode'];
                     $request['load_ms'] = -1;
-                    if (array_key_exists('response', $rawRequest) &&
-                        array_key_exists('timing', $rawRequest['response']) &&
-                        array_key_exists('sendStart', $rawRequest['response']['timing']) &&
+                    if (isset($rawRequest['response']['timing']['sendStart']) &&
                         $rawRequest['response']['timing']['sendStart'] >= 0)
                         $rawRequest['startTime'] = $rawRequest['response']['timing']['sendStart'];
-                    if (array_key_exists('endTime', $rawRequest)) {
+                    if (isset($rawRequest['endTime'])) {
                         $request['load_ms'] = round(($rawRequest['endTime'] - $rawRequest['startTime']));
                         $endOffset = round(($rawRequest['endTime'] - $rawPageData['startTime']));
                         if ($endOffset > $pageData['fullyLoaded'])
                             $pageData['fullyLoaded'] = $endOffset;
                     }
-                    $request['ttfb_ms'] = array_key_exists('firstByteTime', $rawRequest) ? round(($rawRequest['firstByteTime'] - $rawRequest['startTime'])) : -1;
-                    $request['load_start'] = array_key_exists('startTime', $rawRequest) ? round(($rawRequest['startTime'] - $rawPageData['startTime'])) : 0;
-                    $request['bytesOut'] = array_key_exists('headers', $rawRequest) ? strlen(implode("\r\n", $rawRequest['headers'])) : 0;
+                    $request['ttfb_ms'] = isset($rawRequest['firstByteTime']) ? round(($rawRequest['firstByteTime'] - $rawRequest['startTime'])) : -1;
+                    $request['load_start'] = isset($rawRequest['startTime']) ? round(($rawRequest['startTime'] - $rawPageData['startTime'])) : 0;
+                    $request['bytesOut'] = isset($rawRequest['headers']) ? strlen(implode("\r\n", $rawRequest['headers'])) : 0;
                     $request['bytesIn'] = 0;
                     $request['objectSize'] = '';
-                    if (array_key_exists('bytesIn', $rawRequest)) {
+                    if (isset($rawRequest['bytesIn'])) {
                       $request['bytesIn'] = $rawRequest['bytesIn'];
-                    } elseif (array_key_exists('bytesInEncoded', $rawRequest) && $rawRequest['bytesInEncoded']) {
+                    } elseif (isset($rawRequest['bytesInEncoded']) && $rawRequest['bytesInEncoded']) {
                       $request['objectSize'] = $rawRequest['bytesInEncoded'];
                       $request['bytesIn'] = $rawRequest['bytesInEncoded'];
-                      if (array_key_exists('response', $rawRequest) && array_key_exists('headersText', $rawRequest['response']))
+                      if (isset($rawRequest['response']['headersText']))
                           $request['bytesIn'] += strlen($rawRequest['response']['headersText']);
-                    } elseif (array_key_exists('bytesInData', $rawRequest)) {
+                    } elseif (isset($rawRequest['bytesInData'])) {
                       $request['objectSize'] = $rawRequest['bytesInData'];
                       $request['bytesIn'] = $rawRequest['bytesInData'];
-                      if (array_key_exists('response', $rawRequest) && array_key_exists('headersText', $rawRequest['response']))
+                      if (isset($rawRequest['response']['headersText']))
                           $request['bytesIn'] += strlen($rawRequest['response']['headersText']);
                     }
                     $request['expires'] = '';
                     $request['cacheControl'] = '';
                     $request['contentType'] = '';
                     $request['contentEncoding'] = '';
-                    if (array_key_exists('response', $rawRequest) && 
-                        array_key_exists('headers', $rawRequest['response'])) {
+                    if (isset($rawRequest['response']['headers'])) {
                         GetDevToolsHeaderValue($rawRequest['response']['headers'], 'Expires', $request['expires']);
                         GetDevToolsHeaderValue($rawRequest['response']['headers'], 'Cache-Control', $request['cacheControl']);
                         GetDevToolsHeaderValue($rawRequest['response']['headers'], 'Content-Type', $request['contentType']);
@@ -165,17 +162,16 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                         GetDevToolsHeaderValue($rawRequest['response']['headers'], 'Content-Length', $request['objectSize']);
                     }
                     $request['type'] = 3;
-                    $request['socket'] = array_key_exists('response', $rawRequest) && array_key_exists('connectionId', $rawRequest['response']) ? $rawRequest['response']['connectionId'] : -1;
+                    $request['socket'] = isset($rawRequest['response']['connectionId']) ? $rawRequest['response']['connectionId'] : -1;
                     $request['dns_start'] = -1;
                     $request['dns_end'] = -1;
                     $request['connect_start'] = -1;
                     $request['connect_end'] = -1;
                     $request['ssl_start'] = -1;
                     $request['ssl_end'] = -1;
-                    if (array_key_exists('response', $rawRequest) &&
-                        array_key_exists('timing', $rawRequest['response'])) {
-                      if (array_key_exists('sendStart', $rawRequest['response']['timing']) &&
-                          array_key_exists('receiveHeadersEnd', $rawRequest['response']['timing']) &&
+                    if (isset($rawRequest['response']['timing'])) {
+                      if (isset($rawRequest['response']['timing']['sendStart']) &&
+                          isset($rawRequest['response']['timing']['receiveHeadersEnd']) &&
                           $rawRequest['response']['timing']['receiveHeadersEnd'] >= $rawRequest['response']['timing']['sendStart'])
                         $request['ttfb_ms'] = round(($rawRequest['response']['timing']['receiveHeadersEnd'] - $rawRequest['response']['timing']['sendStart']));
                       
@@ -183,30 +179,30 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                       if ($request['socket'] !== -1 &&
                         !array_key_exists($request['socket'], $connections)) {
                         $connections[$request['socket']] = $rawRequest['response']['timing'];
-                        if (array_key_exists('dnsStart', $rawRequest['response']['timing']) &&
+                        if (isset($rawRequest['response']['timing']['dnsStart']) &&
                             $rawRequest['response']['timing']['dnsStart'] >= 0) {
                           $dnsKey = $request['host'];
                           if (!array_key_exists($dnsKey, $dnsTimes)) {
                             $dnsTimes[$dnsKey] = 1;
                             $request['dns_start'] = round(($rawRequest['response']['timing']['dnsStart'] - $rawPageData['startTime']));
-                            if (array_key_exists('dnsEnd', $rawRequest['response']['timing']) &&
+                            if (isset($rawRequest['response']['timing']['dnsEnd']) &&
                                 $rawRequest['response']['timing']['dnsEnd'] >= 0)
                               $request['dns_end'] = round(($rawRequest['response']['timing']['dnsEnd'] - $rawPageData['startTime']));
                           }
                         }
-                        if (array_key_exists('connectStart', $rawRequest['response']['timing']) &&
+                        if (isset($rawRequest['response']['timing']['connectStart']) &&
                             $rawRequest['response']['timing']['connectStart'] >= 0) {
                           $request['connect_start'] = round(($rawRequest['response']['timing']['connectStart'] - $rawPageData['startTime']));
-                          if (array_key_exists('connectEnd', $rawRequest['response']['timing']) &&
+                          if (isset($rawRequest['response']['timing']['connectEnd']) &&
                               $rawRequest['response']['timing']['connectEnd'] >= 0)
                             $request['connect_end'] = round(($rawRequest['response']['timing']['connectEnd'] - $rawPageData['startTime']));
                         }
-                        if (array_key_exists('sslStart', $rawRequest['response']['timing']) &&
+                        if (isset($rawRequest['response']['timing']['sslStart']) &&
                             $rawRequest['response']['timing']['sslStart'] >= 0) {
                           $request['ssl_start'] = round(($rawRequest['response']['timing']['sslStart'] - $rawPageData['startTime']));
                           if ($request['connect_end'] > $request['ssl_start'])
                             $request['connect_end'] = $request['ssl_start'];
-                          if (array_key_exists('sslEnd', $rawRequest['response']['timing']) &&
+                          if (isset($rawRequest['response']['timing']['sslEnd']) &&
                               $rawRequest['response']['timing']['sslEnd'] >= 0)
                             $request['ssl_end'] = round(($rawRequest['response']['timing']['sslEnd'] - $rawPageData['startTime']));
                         }
@@ -215,16 +211,14 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                     $request['initiator'] = '';
                     $request['initiator_line'] = '';
                     $request['initiator_column'] = '';
-                    if (array_key_exists('initiator', $rawRequest)) {
-                        if (array_key_exists('url', $rawRequest['initiator']))
-                            $request['initiator'] = $rawRequest['initiator']['url'];
-                        if (array_key_exists('lineNumber', $rawRequest['initiator']))
-                            $request['initiator_line'] = $rawRequest['initiator']['lineNumber'];
+                    if (isset($rawRequest['initiator']['url'])) {
+                      $request['initiator'] = $rawRequest['initiator']['url'];
+                      if (isset($rawRequest['initiator']['lineNumber']))
+                        $request['initiator_line'] = $rawRequest['initiator']['lineNumber'];
                     }
                     $request['server_rtt'] = null;
                     $request['headers'] = array('request' => array(), 'response' => array());
-                    if (array_key_exists('response', $rawRequest) &&
-                        array_key_exists('requestHeadersText', $rawRequest['response'])) {
+                    if (isset($rawRequest['response']['requestHeadersText'])) {
                         $request['headers']['request'] = array();
                         $headers = explode("\n", $rawRequest['response']['requestHeadersText']);
                         foreach($headers as $header) {
@@ -232,18 +226,16 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                             if (strlen($header))
                                 $request['headers']['request'][] = $header;
                         }
-                    } elseif (array_key_exists('response', $rawRequest) &&
-                        array_key_exists('requestHeaders', $rawRequest['response'])) {
+                    } elseif (isset($rawRequest['response']['requestHeaders'])) {
                         $request['headers']['request'] = array();
                         foreach($rawRequest['response']['requestHeaders'] as $key => $value)
                             $request['headers']['request'][] = "$key: $value";
-                    } elseif (array_key_exists('headers', $rawRequest)) {
+                    } elseif (isset($rawRequest['headers'])) {
                         $request['headers']['request'] = array();
                         foreach($rawRequest['headers'] as $key => $value)
                             $request['headers']['request'][] = "$key: $value";
                     }
-                    if (array_key_exists('response', $rawRequest) &&
-                        array_key_exists('headersText', $rawRequest['response'])) {
+                    if (isset($rawRequest['response']['headersText'])) {
                         $request['headers']['response'] = array();
                         $headers = explode("\n", $rawRequest['response']['headersText']);
                         foreach($headers as $header) {
@@ -251,8 +243,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                             if (strlen($header))
                                 $request['headers']['response'][] = $header;
                         }
-                    } elseif (array_key_exists('response', $rawRequest) &&
-                        array_key_exists('headers', $rawRequest['response'])) {
+                    } elseif (isset($rawRequest['response']['headers'])) {
                         $request['headers']['response'] = array();
                         foreach($rawRequest['response']['headers'] as $key => $value)
                             $request['headers']['response'][] = "$key: $value";
@@ -283,21 +274,26 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                     
                     // make SURE it is a valid request
                     $valid = true;
-                    if (array_key_exists('load_ms', $request) &&
-                        array_key_exists('ttfb_ms', $request) &&
+                    if (isset($request['load_ms']) &&
+                        isset($request['ttfb_ms']) &&
                         $request['load_ms'] < $request['ttfb_ms'])
                       $valid = false;
                     
                     if ($valid) {
                       // page-level stats
-                      if (!array_key_exists('URL', $pageData) && strlen($request['full_url']))
+                      if (!isset($pageData['URL']) && strlen($request['full_url']))
                           $pageData['URL'] = $request['full_url'];
-                      if (array_key_exists('endTime', $rawRequest)) {
+                      if (isset($rawRequest['startTime'])) {
+                          $startOffset = round(($rawRequest['startTime'] - $rawPageData['startTime']));
+                          if ($startOffset > $pageData['fullyLoaded'])
+                              $pageData['fullyLoaded'] = $startOffset;
+                      }
+                      if (isset($rawRequest['endTime'])) {
                           $endOffset = round(($rawRequest['endTime'] - $rawPageData['startTime']));
                           if ($endOffset > $pageData['fullyLoaded'])
                               $pageData['fullyLoaded'] = $endOffset;
                       }
-                      if (!array_key_exists('TTFB', $pageData) &&
+                      if (!isset($pageData['TTFB']) &&
                           $request['ttfb_ms'] >= 0 &&
                           ($request['responseCode'] == 200 ||
                            $request['responseCode'] == 304)) {
@@ -399,7 +395,10 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
     $requests = array();
     $rawRequests = array();
     $idMap = array();
+    $endTimestamp = null;
     foreach ($events as $event) {
+      if (isset($event['timestamp']) && (!isset($endTimestamp) || $event['timestamp'] > $endTimestamp))
+        $endTimestamp = $event['timestamp'];
         if (!isset($main_frame) &&
             $event['method'] == 'Page.frameStartedLoading' &&
             isset($event['frameId'])) {
@@ -442,7 +441,6 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                 parse_url($event['request']['url']) !== false) {
                 $request = $event['request'];
                 $request['startTime'] = $event['timestamp'];
-                $request['endTime'] = $event['timestamp'];
                 if (array_key_exists('initiator', $event))
                     $request['initiator'] = $event['initiator'];
                 // redirects re-use the same request ID
@@ -565,6 +563,18 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
           }
         }
     }
+    // Go through and error-out any requests that were started but never got a response or error
+    if (isset($endTimestamp)) {
+      foreach ($rawRequests as &$request) {
+        if (!isset($request['endTime'])) {
+          $request['endTime'] = $endTimestamp;
+          $request['firstByteTime'] = $endTimestamp;
+          $request['fromNet'] = true;
+          $request['errorCode'] = 12999;
+        }
+      }
+    }
+    
     // pull out just the requests that were served on the wire
     foreach ($rawRequests as &$request) {
       if (array_key_exists('startTime', $request)) {
