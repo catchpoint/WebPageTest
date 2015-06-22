@@ -51,6 +51,10 @@ var JOB_TEST_ID = 'Test ID';
 
 var DEFAULT_JOB_TIMEOUT = 120000;
 var MAX_JOB_TIMEOUT = 600000;
+
+// After 30 minutes kill any individual job in case something went VERY wrong
+var JOB_WATCHDOG_TIMEOUT = 1800000;
+
 /** Allow test access. */
 exports.JOB_FINISH_TIMEOUT = 30000;
 /** Allow test access. */
@@ -364,6 +368,7 @@ function Client(app, args) {
   this.onAlive = undefined;
   this.handlingUncaughtException_ = undefined;
   this.handlingSignal_ = undefined;
+  this.runningJob_ = false;
 
   exports.process.on('uncaughtException', this.onUncaughtException_.bind(this));
   SIGNAL_NAMES.forEach(function(signal_name) {
@@ -467,45 +472,47 @@ Client.prototype.onUncaughtException_ = function(e) {
  */
 Client.prototype.requestNextJob_ = function() {
   'use strict';
-  this.app_.schedule('Check if agent is ready for new jobs', function() {
-    if (this.onAlive)
-      this.onAlive();
-    return (this.onMakeReady ? this.onMakeReady() : undefined);
-  }.bind(this)).then(function() {
-    var getWorkUrl = url.resolve(this.baseUrl_,
-      GET_WORK_SERVLET +
-        '?location=' + encodeURIComponent(this.location_) +
-        (this.name_ ?
-          ('&pc=' + encodeURIComponent(this.name_)) : (this.deviceSerial_ ?
-          ('&pc=' + encodeURIComponent(this.deviceSerial_)) : '')) +
-        (this.apiKey_ ? ('&key=' + encodeURIComponent(this.apiKey_)) : '') +
-        '&f=json');
+  if (!this.runningJob_) {
+    this.app_.schedule('Check if agent is ready for new jobs', function() {
+      if (this.onAlive)
+        this.onAlive();
+      return (this.onMakeReady ? this.onMakeReady() : undefined);
+    }.bind(this)).then(function() {
+      var getWorkUrl = url.resolve(this.baseUrl_,
+        GET_WORK_SERVLET +
+          '?location=' + encodeURIComponent(this.location_) +
+          (this.name_ ?
+            ('&pc=' + encodeURIComponent(this.name_)) : (this.deviceSerial_ ?
+            ('&pc=' + encodeURIComponent(this.deviceSerial_)) : '')) +
+          (this.apiKey_ ? ('&key=' + encodeURIComponent(this.apiKey_)) : '') +
+          '&f=json');
 
-    logger.info('Get work: %s', getWorkUrl);
-    var request = http.get(url.parse(getWorkUrl), function(res) {
-      exports.processResponse(res, function(e, responseBody) {
-        if (e || responseBody === '') {
-          this.emit('nojob');
-        } else if (responseBody[0] === '<') {
-          // '<' is a sign that it's HTML, most likely an error page.
-          logger.warn('Error response? ' + responseBody);
-          this.emit('nojob');
-        } else if (responseBody === 'shutdown') {
-          // We could simply process.exit() here
-          this.emit('shutdown');
-        } else {  // We got a job
-          this.processJobResponse_(responseBody);
-        }
+      logger.info('Get work: %s', getWorkUrl);
+      var request = http.get(url.parse(getWorkUrl), function(res) {
+        exports.processResponse(res, function(e, responseBody) {
+          if (e || responseBody === '') {
+            this.emit('nojob');
+          } else if (responseBody[0] === '<') {
+            // '<' is a sign that it's HTML, most likely an error page.
+            logger.warn('Error response? ' + responseBody);
+            this.emit('nojob');
+          } else if (responseBody === 'shutdown') {
+            // We could simply process.exit() here
+            this.emit('shutdown');
+          } else {  // We got a job
+            this.processJobResponse_(responseBody);
+          }
+        }.bind(this));
       }.bind(this));
-    }.bind(this));
-    request.on('error', function(e) {
-      logger.warn('Got error: ' + e.message);
+      request.on('error', function(e) {
+        logger.warn('Got error: ' + e.message);
+        this.emit('nojob');
+      }.bind(this));
+    }.bind(this), function(e) {
+      logger.warn('Agent is not ready: ' + e.message);
       this.emit('nojob');
     }.bind(this));
-  }.bind(this), function(e) {
-    logger.warn('Agent is not ready: ' + e.message);
-    this.emit('nojob');
-  }.bind(this));
+  }
 };
 
 /**
@@ -550,6 +557,7 @@ Client.prototype.processJobResponse_ = function(responseBody) {
   }
   logger.info('Got job: %s', responseBody);
   this.currentJob_ = null;
+  this.runningJob_ = true;
   if (this.onPrepareJob) {
     this.onPrepareJob(job).then(function() {
       this.startNextRun_(job);
@@ -591,11 +599,11 @@ Client.prototype.startNextRun_ = function(job) {
   // For comparison in finishRun_()
   this.currentJob_ = job;
   // Set up job timeout
-  logger.debug("Waiting for up to " + job.timeout + "ms for the test to complete");
+  logger.debug("Setting watchdog timeout to " + JOB_WATCHDOG_TIMEOUT + "ms");
   this.timeoutTimer_ = global.setTimeout(function() {
     job.testError = 'timeout';
     this.abortJob_(job);
-  }.bind(this), job.timeout + exports.JOB_FINISH_TIMEOUT);
+  }.bind(this), JOB_WATCHDOG_TIMEOUT);
 
   if (this.onStartJobRun) {
     try {
@@ -714,6 +722,7 @@ Client.prototype.endOfRun_ = function(job, isRunFinished, isJobFinished, e) {
     logger.error('Unable to submit result: %s', e.stack);
   }
   if (e || isJobFinished) {
+    this.runningJob_ = false;
     this.emit('done', job);
   } else {
     // Continue running

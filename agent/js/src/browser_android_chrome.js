@@ -760,7 +760,9 @@ BrowserAndroidChrome.prototype.scheduleAssertIsReady = function() {
         this.adb_.scheduleDetectConnectedInterface();
       }
       this.adb_.scheduleGetGateway().then(function(ip) {
-        this.adb_.schedulePing(ip);
+        this.adb_.schedulePing(ip).addErrback(function(){
+          this.adb_.schedulePing('8.8.8.8');
+        }.bind(this));
       }.bind(this));
     }
     if (this.maxTemp) {

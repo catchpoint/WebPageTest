@@ -59,8 +59,16 @@ latency=840
 plr=0
 timeout=300
 
+[2GFast]
+label="Mobile 2G - Fast (150 Kbps/120 Kbps 840ms RTT)"
+bwIn=150000
+bwOut=120000
+latency=840
+plr=0
+timeout=300
+
 [2G]
-label="Mobile 2G (35 Kbps/32 Kbps 1300ms RTT)"
+label="Mobile 2G - Slow (35 Kbps/32 Kbps 1300ms RTT)"
 bwIn=35000
 bwOut=32000
 latency=1300
