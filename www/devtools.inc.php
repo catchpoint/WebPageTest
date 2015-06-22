@@ -1154,7 +1154,7 @@ function DevToolsGetCPUSlices($testPath, $run, $cached) {
     }
   }
   
-  if (!isset($_REQUEST['threads'])) {
+  if (!isset($_REQUEST['threads']) && isset($slices) && is_array($slices)) {
     $threads = array_keys($slices);
     foreach ($threads as $thread) {
       if ($thread !== 0)

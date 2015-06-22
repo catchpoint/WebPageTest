@@ -149,7 +149,7 @@ $page_description = "Website performance test result$testLabel.";
                     strlen($test['testinfo']['test_error'])) {
                     $is_test_error = true;
                 }
-                if( $fvMedian && !$is_test_error )
+                if( $fvMedian  )
                 {
                     if( count($pageData) > 1) 
                         echo '<h2>Performance Results (Median Run)</h2>';
@@ -349,7 +349,7 @@ $page_description = "Website performance test result$testLabel.";
 		<?php
 		    }
                 }
-                else {
+                if (!$fvMedian || $is_test_error) {
                     $error = 'The test completed but there were no successful results.';
                     $detail = null;
                     if ($is_test_error) {
@@ -368,7 +368,8 @@ $page_description = "Website performance test result$testLabel.";
                             }
                         }
                     }
-                    echo '<h3>' . htmlspecialchars($error) . '</h3>';
+                    if (!$fvMedian)
+                      echo '<h3>' . htmlspecialchars($error) . '</h3>';
                     if (isset($detail)) {
                         echo '<h4>' . htmlspecialchars($detail) . '</h4>';
                     }
