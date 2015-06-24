@@ -776,6 +776,8 @@ bool WptTest::PreProcessScriptCommand(ScriptCommand& command) {
     } else if (cmd == _T("setuseragent")) {
       _user_agent = CT2A(command.target.Trim());
       processed = false;
+    } else if (cmd == _T("seteventname")) {
+      _current_event_name = CT2A(command.target.Trim());
     } else {
       processed = false;
     }
@@ -1084,6 +1086,7 @@ void WptTest::ReportData() {
 -----------------------------------------------------------------------------*/
 void WptTest::CollectDataDone() {
   bool removed = false;
+  _current_event_name.Empty();
   do {
     removed = false;
     if (!_script_commands.IsEmpty()) {

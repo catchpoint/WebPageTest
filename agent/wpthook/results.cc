@@ -75,7 +75,8 @@ Results::Results(TestState& test_state, WptTest& test, Requests& requests,
   , _screen_capture(screen_capture)
   , _saved(false)
   , _dev_tools(dev_tools)
-  , _trace(trace) {
+  , _trace(trace)
+  , reported_step_(0) {
   _file_base = shared_results_file_base;
   _visually_complete.QuadPart = 0;
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results base file: %s"), 
@@ -130,6 +131,11 @@ void Results::Save(void) {
   if (!_saved) {
     ProcessRequests();
     if (_test._log_data) {
+      reported_step_++;
+      if (_test._current_event_name.IsEmpty())
+        current_step_name_.Format("Step %d", reported_step_);
+      else
+        current_step_name_ = _test._current_event_name;
       OptimizationChecks checks(_requests, _test_state, _test, _dns);
       checks.Check();
       base_page_CDN_ = checks._base_page_CDN;
@@ -468,7 +474,7 @@ void Results::SavePageData(OptimizationChecks& checks){
           _test_state._start_time.wMinute, _test_state._start_time.wSecond);
     result += buff;
     // Event Name
-    result += "\t";
+    result += current_step_name_ + "\t";
     // URL
     result += CStringA((LPCSTR)CT2A(_test._navigated_url)) + "\t";
     // Load Time (ms)
@@ -1022,7 +1028,7 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
         _test_state._start_time.wMinute, _test_state._start_time.wSecond);
   result += buff;
   // Event Name
-  result += "\t";
+  result += current_step_name_ + "\t";
   // IP Address
   struct sockaddr_in addr;
   addr.sin_addr.S_un.S_addr = request->_peer_address;

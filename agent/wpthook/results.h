@@ -88,6 +88,8 @@ private:
   int count_not_found_doc_;
   int count_other_;
   int count_other_doc_;
+  int reported_step_;
+  CStringA  current_step_name_;
 
   DWORD peak_memory_;
   DWORD peak_process_count_;

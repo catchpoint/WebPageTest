@@ -219,6 +219,7 @@ public:
   // Whether we need to wait for DOM element.
   bool    _dom_element_check;
   int     _no_run;  // conditional block support - if/else/endif
+  CStringA _current_event_name;
 
   // system information
   bool      has_gpu_;
