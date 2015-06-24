@@ -104,7 +104,7 @@
             $test['notify'] = trim($req_notify);
             $test['video'] = $req_video;
             $test['continuousVideo'] = isset($req_continuousVideo) && $req_continuousVideo ? 1 : 0;
-            $test['label'] = preg_replace('/[^a-zA-Z0-9 \-_]/', '', trim($req_label));
+            $test['label'] = preg_replace('/[^a-zA-Z0-9 \-_\.]/', '', trim($req_label));
             $test['industry'] = trim($req_ig);
             $test['industry_page'] = trim($req_ip);
             $test['median_video'] = (int)$req_mv;
