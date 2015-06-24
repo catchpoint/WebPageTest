@@ -76,6 +76,7 @@
             unset($test['completed']);
             unset($test['started']);
             unset($test['tester']);
+            unset($test['batch']);
           } else {
             unset($test);
           }
