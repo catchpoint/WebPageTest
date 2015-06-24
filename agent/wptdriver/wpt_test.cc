@@ -773,6 +773,9 @@ bool WptTest::PreProcessScriptCommand(ScriptCommand& command) {
       }
       if (!_device_scale_factor.GetLength())
         _device_scale_factor.Empty();
+    } else if (cmd == _T("setuseragent")) {
+      _user_agent = CT2A(command.target.Trim());
+      processed = false;
     } else {
       processed = false;
     }
