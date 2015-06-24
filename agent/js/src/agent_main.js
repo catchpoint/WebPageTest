@@ -371,6 +371,13 @@ Agent.prototype.startJobRun_ = function(job) {
       this.scheduleCleanup_(job, /*isEndOfJob=*/false);
     }
     this.scheduleCleanRunTempDir_();
+
+    if (this.isTrafficShaping_(job)) {
+      this.startTrafficShaper_(job);  // Start shaping.
+    } else {
+      this.stopTrafficShaper_();  // clear any traffic shaping.
+    }
+
     if (!job.isCacheWarm) {
       if (job.isReplay) {
         if (job.runNumber === 0) {
@@ -384,16 +391,6 @@ Agent.prototype.startJobRun_ = function(job) {
             this.app_, 'Stop WPR just in case, ignore failures', function() {
           this.webPageReplay_.scheduleStop();
         }.bind(this));
-      }
-
-      if (job.isReplay && job.runNumber === 0) {
-        this.stopTrafficShaper_();  // Don't shape the recording.
-      } else if (job.runNumber === 1) {
-        if (this.isTrafficShaping_(job)) {
-          this.startTrafficShaper_(job);  // Start shaping.
-        } else if (!job.isReplay) {
-          this.stopTrafficShaper_();  // Force-stop the shaper.
-        }
       }
 
       this.app_.schedule('Start WD Server',
