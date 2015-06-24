@@ -357,6 +357,7 @@ function EC2_StartNeededInstances() {
 }
 
 function EC2_DeleteOrphanedVolumes() {
+/*
   $key = GetSetting('ec2_key');
   $secret = GetSetting('ec2_secret');
   if ($key && $secret && GetSetting('ec2_prune_volumes')) {
@@ -384,6 +385,7 @@ function EC2_DeleteOrphanedVolumes() {
       EC2LogError("Pruning EC2 volumes: $error");
     }
   }
+*/
 }
 
 function EC2_GetRunningInstances() {
