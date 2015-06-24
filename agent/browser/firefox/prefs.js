@@ -35,6 +35,7 @@ user_pref("browser.uitour.enabled", false);
 user_pref("browser.tabs.warnOnClose", false);
 user_pref("datareporting.healthreport.service.enabled", false);
 user_pref("datareporting.healthreport.uploadEnabled", false);
+user_pref("dom.ipc.plugins.flash.disable-protected-mode", true);
 user_pref("dom.max_chrome_script_run_time", 0);
 user_pref("dom.max_script_run_time", 0);
 user_pref("extensions.checkCompatibility", false);
