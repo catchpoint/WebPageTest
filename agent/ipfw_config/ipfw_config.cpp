@@ -53,6 +53,7 @@ bool ipfw(CString server, CString user, CString password, int pipe, int bw, int 
 
   
   ret = Exec(cmd + ipfw_command);
+  OutputDebugString(ipfw_command);
 
   if (ret) {
     // packet loss is applied to the queue
@@ -64,6 +65,7 @@ bool ipfw(CString server, CString user, CString password, int pipe, int bw, int 
       ipfw_command += L" plr 0";
     }
     Exec(cmd + ipfw_command);
+    OutputDebugString(ipfw_command);
   }
 
   cmd += ipfw_command;
