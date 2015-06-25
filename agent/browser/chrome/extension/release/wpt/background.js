@@ -14455,7 +14455,7 @@ wpt.chromeDebugger.sendRequestDetails = function(id) {
             request.response.headers['status'] !== undefined) {
           eventData += request.response.headers['version'] + ' ' + request.response.headers['status'] + '\n';
         } else if (request.response.headers['status'] !== undefined) {
-          eventData += 'HTTP/2.0 ' + request.response.headers['status'] + '\n';
+          eventData += 'HTTP/2 ' + request.response.headers['status'] + '\n';
         }
         for (tag in request.response.headers) {
           if (tag !== 'version' && tag !== 'status')
