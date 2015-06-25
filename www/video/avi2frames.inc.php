@@ -52,6 +52,7 @@ function ReprocessVideo($id) {
 * @param mixed $cached
 */
 function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
+  global $max_load;
   $cachedText = '';
   if( $cached )
     $cachedText = '_Cached';
@@ -63,6 +64,8 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
   if (is_file($videoFile)) {
     $videoDir = "$testPath/video_$run" . strtolower($cachedText);
     if (!is_file("$videoDir/video.json")) {
+      if (isset($max_load) && $max_load > 0)
+        WaitForSystemLoad($max_load, 3600);
       if (is_dir($videoDir))
         delTree($videoDir, false);
       if (!is_dir($videoDir))
