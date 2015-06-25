@@ -1263,6 +1263,11 @@ function GetDevToolsHeaderValue($headers, $name, &$value) {
 
 function GetDevToolsCPUTime($testPath, $run, $cached, $endTime = 0) {
   $times = null;
+  $ver = 1;
+  $ver = 2;
+  $cacheFile = "$testPath/$run.$cached.devToolsCPUTime.$ver";
+  if (gz_is_file($cacheFile))
+    $cache = json_decode(gz_file_get_contents($cacheFile), true);
   // If an end time wasn't specified, figure out what the fully loaded time is
   if (!$endTime) {
     if (GetDevToolsRequests($testPath, $run, $cached, $requests, $pageData) &&
@@ -1270,33 +1275,39 @@ function GetDevToolsCPUTime($testPath, $run, $cached, $endTime = 0) {
       $endTime = $pageData['fullyLoaded'];
     }
   }
-  $slices = DevToolsGetCPUSlices($testPath, $run, $cached);
-  if (isset($slices) && is_array($slices) && isset($slices[0]) &&
-      is_array($slices[0]) && count($slices[0])) {
-    $times = array('Idle' => 0.0);
-    foreach ($slices[0] as $ms => $breakdown) {
-      if (!$endTime || $ms < $endTime) {
-        $idle = 1.0;
-        if (isset($breakdown) && is_array($breakdown) && count($breakdown)) {
-          foreach($breakdown as $event => $ms_time) {
-            if (!isset($times[$event]))
-              $times[$event] = 0;
-            $times[$event] += $ms_time;
-            $idle -= $ms_time;
+  if (isset($cache[$endTime])) {
+    $times = $cache[$endTime];
+  } else {
+    $slices = DevToolsGetCPUSlices($testPath, $run, $cached);
+    if (isset($slices) && is_array($slices) && isset($slices[0]) &&
+        is_array($slices[0]) && count($slices[0])) {
+      $times = array('Idle' => 0.0);
+      foreach ($slices[0] as $ms => $breakdown) {
+        if (!$endTime || $ms < $endTime) {
+          $idle = 1.0;
+          if (isset($breakdown) && is_array($breakdown) && count($breakdown)) {
+            foreach($breakdown as $event => $ms_time) {
+              if (!isset($times[$event]))
+                $times[$event] = 0;
+              $times[$event] += $ms_time;
+              $idle -= $ms_time;
+            }
           }
+          $times['Idle'] += $idle;
         }
-        $times['Idle'] += $idle;
       }
+      // round the times to the nearest millisecond
+      $total = 0;
+      foreach ($times as $event => &$val) {
+        $val = round($val);
+        if ($event !== 'Idle')
+          $total += $val;
+      }
+      if ($endTime && $endTime > $total)
+        $times['Idle'] = $endTime - $total;
     }
-    // round the times to the nearest millisecond
-    $total = 0;
-    foreach ($times as $event => &$val) {
-      $val = round($val);
-      if ($event !== 'Idle')
-        $total += $val;
-    }
-    if ($endTime && $endTime > $total)
-      $times['Idle'] = $endTime - $total;
+    $cache[$endTime] = $times;
+    gz_file_put_contents($cacheFile, json_encode($cache));
   }
   return $times;
 }
