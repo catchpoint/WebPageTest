@@ -48,6 +48,9 @@
     <Filter Include="Third-Party\png">
       <UniqueIdentifier>{84bbfb46-a9fc-4fb8-8297-1e195eaefb74}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Third-Party\nghttp2">
+      <UniqueIdentifier>{bd2f09c2-c8da-4a14-a5d5-1235a58ca441}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NCodeHook\NCodeHook.h">
@@ -359,6 +362,69 @@
     <ClInclude Include="trace.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_buf.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_callbacks.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_frame.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_hd.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_hd_huffman.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_helper.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_http.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_int.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_map.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_mem.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_net.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_npn.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_option.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_outbound_item.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_pq.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_priority_spec.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_queue.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_session.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_stream.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_submit.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\includes\nghttp2\nghttp2.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cc">
@@ -651,6 +717,66 @@
     </ClCompile>
     <ClCompile Include="trace.cc">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_buf.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_callbacks.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_frame.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_hd.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_hd_huffman.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_hd_huffman_data.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_helper.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_http.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_map.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_mem.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_npn.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_option.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_outbound_item.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_pq.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_priority_spec.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_queue.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_session.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_stream.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_submit.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_version.c">
+      <Filter>Third-Party\nghttp2</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
