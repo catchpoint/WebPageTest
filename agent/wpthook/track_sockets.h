@@ -34,6 +34,14 @@ class TestState;
 class WptTest;
 struct PRFileDesc;
 
+typedef enum {
+  PROTO_NOT_CHECKED,
+  PROTO_HTTP,
+  PROTO_SPDY,
+  PROTO_H2,
+  PROTO_UNKNOWN
+} SOCKET_PROTOCOL;
+
 class SocketInfo {
 public:
   SocketInfo():
@@ -42,7 +50,8 @@ public:
     , _during_test(false)
     , _is_ssl(false)
     , _is_ssl_handshake_complete(false)
-    , _local_port(0) {
+    , _local_port(0)
+    , _protocol(PROTO_NOT_CHECKED) {
     memset(&_addr, 0, sizeof(_addr));
     _connect_start.QuadPart = 0;
     _connect_end.QuadPart = 0;
@@ -65,6 +74,7 @@ public:
   LARGE_INTEGER       _connect_end;
   LARGE_INTEGER       _ssl_start;
   LARGE_INTEGER       _ssl_end;
+  SOCKET_PROTOCOL     _protocol;
 };
 
 class TrackSockets {

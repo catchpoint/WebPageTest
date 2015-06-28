@@ -177,13 +177,55 @@ void TrackSockets::Connected(SOCKET s) {
 bool TrackSockets::ModifyDataOut(SOCKET s, DataChunk& chunk,
                                  bool is_unencrypted) {
   bool is_modified = false;
-  EnterCriticalSection(&cs);
-  SocketInfo* info = GetSocketInfo(s);
-  DWORD socket_id = info->_id;
-  if (!info->IsLocalhost() && (is_unencrypted || !info->_is_ssl)) {
-    is_modified = _requests.ModifyDataOut(socket_id, chunk);
+  DWORD len = chunk.GetLength();
+  if (len > 0) {
+    EnterCriticalSection(&cs);
+    SocketInfo* info = GetSocketInfo(s);
+    DWORD socket_id = info->_id;
+
+    // see if we need to sniff the protocol
+    if (is_unencrypted && info->_is_ssl) {
+      const char * data = chunk.GetData();
+      if (info->_protocol == PROTO_NOT_CHECKED) {
+        info->_protocol = PROTO_UNKNOWN;
+
+        const char * HTTP_METHODS[] = {"GET ", "HEAD ", "POST ", "PUT ",
+            "OPTIONS ", "DELETE ", "TRACE ", "CONNECT ", "PATCH "};
+        for (int i = 0; i < _countof(HTTP_METHODS); i++) {
+          const char * method = HTTP_METHODS[i];
+          unsigned long method_len = strlen(method);
+          if (len >= method_len && !memcmp(data, method, method_len)) {
+            AtlTrace(_T("[%d] ********* HTTP 1 Connection detected"), socket_id);
+            info->_protocol = PROTO_HTTP;
+            break;
+          }
+        }
+
+        const char * HTTP2_HEADER = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
+        if (info->_protocol == PROTO_UNKNOWN && len >= 24 &&
+            !memcmp(data, HTTP2_HEADER, 24)) {
+          AtlTrace(_T("[%d] ********* HTTP 2 Connection detected"), socket_id);
+          info->_protocol = PROTO_H2;
+        }
+
+        if (info->_protocol == PROTO_UNKNOWN && len >= 8 &&
+            data[0] == '\x80' && data[1] == '\x02') {
+          AtlTrace(_T("[%d] ********* SPDY Connection detected"), socket_id);
+          info->_protocol = PROTO_SPDY;
+        }
+
+        if (info->_protocol == PROTO_UNKNOWN) {
+          AtlTrace(_T("[%d] ********* Unknown connection protocol"), socket_id);
+        }
+      }
+    }
+
+    if (!info->IsLocalhost() && ((is_unencrypted && info->_protocol == PROTO_HTTP) || !info->_is_ssl)) {
+      is_modified = _requests.ModifyDataOut(socket_id, chunk);
+    }
+
+    LeaveCriticalSection(&cs);
   }
-  LeaveCriticalSection(&cs);
   return is_modified;
 }
 

@@ -35,9 +35,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../wptdriver/wpt_test.h"
 
 
-const char * HTTP_METHODS[] = {"GET ", "HEAD ", "POST ", "PUT ", "OPTIONS ",
-                               "DELETE ", "TRACE ", "CONNECT ", "PATCH "};
-
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 Requests::Requests(TestState& test_state, TrackSockets& sockets,
@@ -178,6 +175,8 @@ bool Requests::HasActiveRequest(DWORD socket_id) {
 -----------------------------------------------------------------------------*/
 bool Requests::IsHttpRequest(const DataChunk& chunk) const {
   bool ret = false;
+  const char * HTTP_METHODS[] = {"GET ", "HEAD ", "POST ", "PUT ",
+      "OPTIONS ", "DELETE ", "TRACE ", "CONNECT ", "PATCH "};
   for (int i = 0; i < _countof(HTTP_METHODS) && !ret; i++) {
     const char * method = HTTP_METHODS[i];
     unsigned long method_len = strlen(method);
