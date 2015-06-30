@@ -33,6 +33,7 @@ class Requests;
 class TestState;
 class WptTest;
 struct PRFileDesc;
+struct nghttp2_session;
 
 typedef enum {
   PROTO_NOT_CHECKED,
@@ -42,23 +43,22 @@ typedef enum {
   PROTO_UNKNOWN
 } SOCKET_PROTOCOL;
 
+typedef enum {
+  DATA_IN,
+  DATA_OUT
+} DATA_DIRECTION;
+
+typedef struct {
+  nghttp2_session * session;
+  void *            connection;
+  DWORD             socket_id;
+  DATA_DIRECTION    direction;
+} H2_USER_DATA;
+
 class SocketInfo {
 public:
-  SocketInfo():
-    _id(0)
-    , _accounted_for(false)
-    , _during_test(false)
-    , _is_ssl(false)
-    , _is_ssl_handshake_complete(false)
-    , _local_port(0)
-    , _protocol(PROTO_NOT_CHECKED) {
-    memset(&_addr, 0, sizeof(_addr));
-    _connect_start.QuadPart = 0;
-    _connect_end.QuadPart = 0;
-    _ssl_start.QuadPart = 0;
-    _ssl_end.QuadPart = 0;
-  }
-  ~SocketInfo(void){}
+  SocketInfo();
+  ~SocketInfo(void);
 
   bool IsLocalhost();
   bool IsLinkLocal();
@@ -75,6 +75,8 @@ public:
   LARGE_INTEGER       _ssl_start;
   LARGE_INTEGER       _ssl_end;
   SOCKET_PROTOCOL     _protocol;
+  H2_USER_DATA *      _h2_in;
+  H2_USER_DATA *      _h2_out;
 };
 
 class TrackSockets {
@@ -111,6 +113,13 @@ public:
   LONGLONG GetEarliest(LONGLONG& after);
   CStringA GetRTT(DWORD ipv4_address);
 
+  void H2BeginHeaders(DATA_DIRECTION direction, DWORD socket_id, int stream_id);
+  void H2CloseStream(DATA_DIRECTION direction, DWORD socket_id, int stream_id);
+  void H2Header(DATA_DIRECTION direction, DWORD socket_id, int stream_id,
+                const char * header, const char * value);
+  void H2Data(DATA_DIRECTION direction, DWORD socket_id, int stream_id,
+              size_t len, const char * data);
+
 private:
   SocketInfo* GetSocketInfo(SOCKET s, bool lookup_peer = true);
   SocketInfo* GetSocketInfoById(DWORD socket_id);
@@ -118,6 +127,8 @@ private:
   void SslDataOut(SocketInfo* info, const DataChunk& chunk);
   void SslDataIn(SocketInfo* info, const DataChunk& chunk);
   bool IsSSLHandshake(const DataChunk& chunk);
+  H2_USER_DATA * NewHttp2Session(DWORD socket_id,
+                                 DATA_DIRECTION direction);
 
   CRITICAL_SECTION cs;
   Requests&                   _requests;
