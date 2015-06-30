@@ -3847,7 +3847,7 @@ typedef enum {
  *                                        in, inlen, final);
  *
  *             if(rv < 0) {
- *                 fprintf(stderr, "inflate failed with error code %zd", rv);
+ *                 AtlTrace("inflate failed with error code %d", rv);
  *                 return -1;
  *             }
  *
@@ -3856,9 +3856,9 @@ typedef enum {
  *
  *             if(inflate_flags & NGHTTP2_HD_INFLATE_EMIT) {
  *                 fwrite(nv.name, nv.namelen, 1, stderr);
- *                 fprintf(stderr, ": ");
+ *                 AtlTrace(": ");
  *                 fwrite(nv.value, nv.valuelen, 1, stderr);
- *                 fprintf(stderr, "\n");
+ *                 AtlTrace("\n");
  *             }
  *             if(inflate_flags & NGHTTP2_HD_INFLATE_FINAL) {
  *                 nghttp2_hd_inflate_end_headers(hd_inflater);

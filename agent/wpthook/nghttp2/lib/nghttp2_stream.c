@@ -161,7 +161,7 @@ static void stream_update_dep_set_rest(nghttp2_stream *stream) {
     return;
   }
 
-  DEBUGF(fprintf(stderr, "stream: stream=%d is rest\n", stream->stream_id));
+  DEBUGF(AtlTrace("stream: stream=%d is rest\n", stream->stream_id));
 
   if (stream->dpri == NGHTTP2_STREAM_DPRI_REST) {
     return;
@@ -200,7 +200,7 @@ static int stream_update_dep_set_top(nghttp2_stream *stream) {
 
   if (stream->dpri == NGHTTP2_STREAM_DPRI_REST) {
     DEBUGF(
-        fprintf(stderr, "stream: stream=%d item is top\n", stream->stream_id));
+        AtlTrace("stream: stream=%d item is top\n", stream->stream_id));
 
     stream->dpri = NGHTTP2_STREAM_DPRI_TOP;
 
@@ -237,7 +237,7 @@ static int stream_update_dep_queue_top(nghttp2_stream *stream,
 
   if (stream->dpri == NGHTTP2_STREAM_DPRI_TOP) {
     if (!stream->item->queued) {
-      DEBUGF(fprintf(stderr, "stream: stream=%d enqueue\n", stream->stream_id));
+      DEBUGF(AtlTrace("stream: stream=%d enqueue\n", stream->stream_id));
       rv = stream_push_item(stream, session);
 
       if (rv != 0) {
@@ -340,7 +340,7 @@ static int stream_update_dep_on_attach_item(nghttp2_stream *stream,
   }
 
   if (!stream->item->queued) {
-    DEBUGF(fprintf(stderr, "stream: stream=%d enqueue\n", stream->stream_id));
+    DEBUGF(AtlTrace("stream: stream=%d enqueue\n", stream->stream_id));
     rv = stream_push_item(stream, session);
 
     if (rv != 0) {
@@ -381,7 +381,7 @@ int nghttp2_stream_attach_item(nghttp2_stream *stream,
   assert((stream->flags & NGHTTP2_STREAM_FLAG_DEFERRED_ALL) == 0);
   assert(stream->item == NULL);
 
-  DEBUGF(fprintf(stderr, "stream: stream=%d attach item=%p\n",
+  DEBUGF(AtlTrace("stream: stream=%d attach item=%p\n",
                  stream->stream_id, item));
 
   stream->item = item;
@@ -391,7 +391,7 @@ int nghttp2_stream_attach_item(nghttp2_stream *stream,
 
 int nghttp2_stream_detach_item(nghttp2_stream *stream,
                                nghttp2_session *session) {
-  DEBUGF(fprintf(stderr, "stream: stream=%d detach item=%p\n",
+  DEBUGF(AtlTrace("stream: stream=%d detach item=%p\n",
                  stream->stream_id, stream->item));
 
   stream->item = NULL;
@@ -404,7 +404,7 @@ int nghttp2_stream_defer_item(nghttp2_stream *stream, uint8_t flags,
                               nghttp2_session *session) {
   assert(stream->item);
 
-  DEBUGF(fprintf(stderr, "stream: stream=%d defer item=%p cause=%02x\n",
+  DEBUGF(AtlTrace("stream: stream=%d defer item=%p cause=%02x\n",
                  stream->stream_id, stream->item, flags));
 
   stream->flags |= flags;
@@ -416,7 +416,7 @@ int nghttp2_stream_resume_deferred_item(nghttp2_stream *stream, uint8_t flags,
                                         nghttp2_session *session) {
   assert(stream->item);
 
-  DEBUGF(fprintf(stderr, "stream: stream=%d resume item=%p flags=%02x\n",
+  DEBUGF(AtlTrace("stream: stream=%d resume item=%p flags=%02x\n",
                  stream->stream_id, stream->item, flags));
 
   stream->flags &= ~flags;
@@ -667,7 +667,7 @@ void nghttp2_stream_dep_add(nghttp2_stream *dep_stream,
                             nghttp2_stream *stream) {
   assert(stream->dpri == NGHTTP2_STREAM_DPRI_NO_ITEM);
 
-  DEBUGF(fprintf(stderr, "stream: dep_add dep_stream(%p)=%d, stream(%p)=%d\n",
+  DEBUGF(AtlTrace("stream: dep_add dep_stream(%p)=%d, stream(%p)=%d\n",
                  dep_stream, dep_stream->stream_id, stream, stream->stream_id));
 
   stream_update_dep_length(dep_stream, 1);
@@ -689,7 +689,7 @@ void nghttp2_stream_dep_remove(nghttp2_stream *stream) {
 
   assert(stream->dpri == NGHTTP2_STREAM_DPRI_NO_ITEM);
 
-  DEBUGF(fprintf(stderr, "stream: dep_remove stream(%p)=%d\n", stream,
+  DEBUGF(AtlTrace("stream: dep_remove stream(%p)=%d\n", stream,
                  stream->stream_id));
 
   blocking_stream = stream_get_dep_blocking(stream->dep_prev);
@@ -770,7 +770,7 @@ int nghttp2_stream_dep_insert_subtree(nghttp2_stream *dep_stream,
   nghttp2_stream *si;
   size_t delta_substreams;
 
-  DEBUGF(fprintf(stderr, "stream: dep_insert_subtree dep_stream(%p)=%d "
+  DEBUGF(AtlTrace("stream: dep_insert_subtree dep_stream(%p)=%d "
                          "stream(%p)=%d\n",
                  dep_stream, dep_stream->stream_id, stream, stream->stream_id));
 
@@ -838,7 +838,7 @@ int nghttp2_stream_dep_add_subtree(nghttp2_stream *dep_stream,
                                    nghttp2_session *session) {
   nghttp2_stream *blocking_stream;
 
-  DEBUGF(fprintf(stderr, "stream: dep_add_subtree dep_stream(%p)=%d "
+  DEBUGF(AtlTrace("stream: dep_add_subtree dep_stream(%p)=%d "
                          "stream(%p)=%d\n",
                  dep_stream, dep_stream->stream_id, stream, stream->stream_id));
 
@@ -884,7 +884,7 @@ int nghttp2_stream_dep_add_subtree(nghttp2_stream *dep_stream,
 void nghttp2_stream_dep_remove_subtree(nghttp2_stream *stream) {
   nghttp2_stream *next, *dep_prev, *blocking_stream;
 
-  DEBUGF(fprintf(stderr, "stream: dep_remove_subtree stream(%p)=%d\n", stream,
+  DEBUGF(AtlTrace("stream: dep_remove_subtree stream(%p)=%d\n", stream,
                  stream->stream_id));
 
   if (stream->sib_prev) {
@@ -926,7 +926,7 @@ void nghttp2_stream_dep_remove_subtree(nghttp2_stream *stream) {
 
 int nghttp2_stream_dep_make_root(nghttp2_stream *stream,
                                  nghttp2_session *session) {
-  DEBUGF(fprintf(stderr, "stream: dep_make_root stream(%p)=%d\n", stream,
+  DEBUGF(AtlTrace("stream: dep_make_root stream(%p)=%d\n", stream,
                  stream->stream_id));
 
   nghttp2_stream_roots_add(stream->roots, stream);
@@ -943,7 +943,7 @@ nghttp2_stream_dep_all_your_stream_are_belong_to_us(nghttp2_stream *stream,
                                                     nghttp2_session *session) {
   nghttp2_stream *first, *si;
 
-  DEBUGF(fprintf(stderr, "stream: ALL YOUR STREAM ARE BELONG TO US "
+  DEBUGF(AtlTrace("stream: ALL YOUR STREAM ARE BELONG TO US "
                          "stream(%p)=%d\n",
                  stream, stream->stream_id));
 
@@ -957,7 +957,7 @@ nghttp2_stream_dep_all_your_stream_are_belong_to_us(nghttp2_stream *stream,
 
     prev = first;
 
-    DEBUGF(fprintf(stderr, "stream: root stream(%p)=%d\n", first,
+    DEBUGF(AtlTrace("stream: root stream(%p)=%d\n", first,
                    first->stream_id));
 
     stream->sum_dep_weight += first->weight;
@@ -975,7 +975,7 @@ nghttp2_stream_dep_all_your_stream_are_belong_to_us(nghttp2_stream *stream,
       assert(si != stream);
 
       DEBUGF(
-          fprintf(stderr, "stream: root stream(%p)=%d\n", si, si->stream_id));
+          AtlTrace("stream: root stream(%p)=%d\n", si, si->stream_id));
 
       stream->sum_dep_weight += si->weight;
       stream->num_substreams += si->num_substreams;

@@ -38,6 +38,7 @@
   do {                                                                         \
   } while (0)
 #endif
+void AtlTrace(const char * pszFormat, ...);
 
 /* "less" function, return nonzero if |lhs| is less than |rhs|. */
 typedef int (*nghttp2_less)(const void *lhs, const void *rhs);
