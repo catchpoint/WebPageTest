@@ -235,8 +235,10 @@ public:
 
   void HeaderIn(const char * header, const char * value);
   void ObjectDataIn(DataChunk& chunk);
+  void BytesIn(size_t len);
   void HeaderOut(const char * header, const char * value);
   void ObjectDataOut(DataChunk& chunk);
+  void BytesOut(size_t len);
 
   void MatchConnections();
   bool Process();

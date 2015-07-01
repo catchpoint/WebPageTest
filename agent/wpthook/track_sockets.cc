@@ -682,6 +682,15 @@ void TrackSockets::H2Data(DATA_DIRECTION direction, DWORD socket_id,
     _requests.ObjectDataOut(socket_id, stream_id, chunk);
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TrackSockets::H2Bytes(DATA_DIRECTION direction, DWORD socket_id, int stream_id,
+              size_t len) {
+  if (direction == DATA_IN)
+    _requests.BytesIn(socket_id, stream_id, len);
+  else
+    _requests.BytesOut(socket_id, stream_id, len);
+}
 
 /******************************************************************************
   nghttp2 c-interface callbacks (trampoline back to TrackSockets callbacks)
@@ -699,7 +708,14 @@ int h2_on_begin_frame_callback(nghttp2_session *session,
 
 int h2_on_frame_recv_callback(nghttp2_session *session,
                               const nghttp2_frame *frame, void *user_data) {
-  AtlTrace("h2_on_frame_recv_callback - stream %d", frame->hd.stream_id);
+  AtlTrace("h2_on_frame_recv_callback - stream %d, %d bytes", frame->hd.stream_id, frame->hd.length);
+  if (user_data) {
+    H2_USER_DATA * u = (H2_USER_DATA *)user_data;
+    if (u->connection) {
+      TrackSockets * c = (TrackSockets *)u->connection;
+      c->H2Bytes(u->direction, u->socket_id, frame->hd.stream_id, frame->hd.length);
+    }
+  }
   return 0;
 }
 

@@ -542,6 +542,26 @@ void Requests::ObjectDataIn(DWORD socket_id, DWORD stream_id,
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void Requests::BytesIn(DWORD socket_id, DWORD stream_id, size_t len) {
+  EnterCriticalSection(&cs);
+  Request * request = GetActiveRequest(socket_id, stream_id);
+  if (request)
+    request->BytesIn(len);
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Requests::BytesOut(DWORD socket_id, DWORD stream_id, size_t len) {
+  EnterCriticalSection(&cs);
+  Request * request = GetActiveRequest(socket_id, stream_id);
+  if (request)
+    request->BytesOut(len);
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 void Requests::HeaderOut(DWORD socket_id, DWORD stream_id,
                          const char * header, const char * value) {
   EnterCriticalSection(&cs);

@@ -82,9 +82,11 @@ public:
   void HeaderIn(DWORD socket_id, DWORD stream_id,
                 const char * header, const char * value);
   void ObjectDataIn(DWORD socket_id, DWORD stream_id, DataChunk& chunk);
+  void BytesIn(DWORD socket_id, DWORD stream_id, size_t len);
   void HeaderOut(DWORD socket_id, DWORD stream_id,
                  const char * header, const char * value);
   void ObjectDataOut(DWORD socket_id, DWORD stream_id, DataChunk& chunk);
+  void BytesOut(DWORD socket_id, DWORD stream_id, size_t len);
 
   void Lock();
   void Unlock();

@@ -1062,7 +1062,8 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   buff.Format("%d\t", request->_ms_start);
   result += buff;
   // Bytes Out
-  buff.Format("%d\t", request->_request_data.GetDataSize());
+  buff.Format("%d\t", request->_bytes_out ? request->_bytes_out:
+              request->_request_data.GetDataSize());
   result += buff;
   // Bytes In
   buff.Format("%d\t", request->_bytes_in ? request->_bytes_in :

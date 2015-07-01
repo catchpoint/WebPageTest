@@ -119,6 +119,8 @@ public:
                 const char * header, const char * value);
   void H2Data(DATA_DIRECTION direction, DWORD socket_id, int stream_id,
               size_t len, const char * data);
+  void H2Bytes(DATA_DIRECTION direction, DWORD socket_id, int stream_id,
+               size_t len);
 
 private:
   SocketInfo* GetSocketInfo(SOCKET s, bool lookup_peer = true);

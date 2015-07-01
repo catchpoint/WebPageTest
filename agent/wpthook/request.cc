@@ -149,6 +149,15 @@ void HttpData::CopyData() {
       _headers.Append(_data, header_end - _data + 4);
     }
   }
+
+  if (_headers.IsEmpty() && !_header_fields.IsEmpty()) {
+    POSITION pos = _header_fields.GetHeadPosition();
+    while (pos) {
+      HeaderField field = _header_fields.GetNext(pos);
+      _headers += field._field_name + ": " + field._value + "\r\n";
+    }
+    _headers += "\r\n";
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -401,8 +410,9 @@ Request::Request(TestState& test_state, DWORD socket_id, DWORD stream_id,
   _is_ssl = _sockets.IsSslById(socket_id);
   InitializeCriticalSection(&cs);
 
-  WptTrace(loglevel::kFunction, _T("[wpthook] - new request on socket %d\n"), 
-            socket_id);
+  WptTrace(loglevel::kFunction,
+           _T("[wpthook] - new request on socket %d stream %d\n"), 
+           socket_id, stream_id);
 }
 
 
@@ -499,9 +509,18 @@ void Request::ObjectDataIn(DataChunk& chunk) {
     QueryPerformanceCounter(&_end);
     if (!_first_byte.QuadPart)
       _first_byte.QuadPart = _end.QuadPart;
-    _bytes_in += chunk.GetLength();
     _response_data.AddBodyChunk(chunk);
   }
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Request::BytesIn(size_t len) {
+  WptTrace(loglevel::kFunction, _T("[wpthook] - Request::BytesIn(%d)"), len);
+  EnterCriticalSection(&cs);
+  if (_is_active)
+    _bytes_in += len;
   LeaveCriticalSection(&cs);
 }
 
@@ -534,9 +553,18 @@ void Request::ObjectDataOut(DataChunk& chunk) {
     _data_sent = true;
   }
   if (_is_active) {
-    _bytes_out += chunk.GetLength();
     _request_data.AddBodyChunk(chunk);
   }
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Request::BytesOut(size_t len) {
+  WptTrace(loglevel::kFunction, _T("[wpthook] - Request::BytesOut(%d)"), len);
+  EnterCriticalSection(&cs);
+  if (_is_active)
+    _bytes_out += len;
   LeaveCriticalSection(&cs);
 }
 
@@ -731,6 +759,8 @@ CStringA Request::GetHost() {
   CStringA host = GetRequestHeader("x-host");
   if (!host.GetLength())
     host = GetRequestHeader("host");
+  if (!host.GetLength())
+    host = GetRequestHeader(":authority");
   return host;
 }
 
