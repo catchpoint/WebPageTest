@@ -80,11 +80,11 @@ public:
   // HTTP/2 interface
   void StreamClosed(DWORD socket_id, DWORD stream_id);
   void HeaderIn(DWORD socket_id, DWORD stream_id,
-                const char * header, const char * value);
+                const char * header, const char * value, bool pushed);
   void ObjectDataIn(DWORD socket_id, DWORD stream_id, DataChunk& chunk);
   void BytesIn(DWORD socket_id, DWORD stream_id, size_t len);
   void HeaderOut(DWORD socket_id, DWORD stream_id,
-                 const char * header, const char * value);
+                 const char * header, const char * value, bool pushed);
   void ObjectDataOut(DWORD socket_id, DWORD stream_id, DataChunk& chunk);
   void BytesOut(DWORD socket_id, DWORD stream_id, size_t len);
 

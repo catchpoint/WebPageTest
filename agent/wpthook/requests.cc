@@ -521,11 +521,13 @@ void Requests::StreamClosed(DWORD socket_id, DWORD stream_id) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Requests::HeaderIn(DWORD socket_id, DWORD stream_id,
-                        const char * header, const char * value) {
+                        const char * header, const char * value, bool pushed) {
   EnterCriticalSection(&cs);
   Request * request = GetActiveRequest(socket_id, stream_id);
+  if (!request)
+    request = NewRequest(socket_id, stream_id, false);
   if (request)
-    request->HeaderIn(header, value);
+    request->HeaderIn(header, value, pushed);
   LeaveCriticalSection(&cs);
 }
 
@@ -562,14 +564,14 @@ void Requests::BytesOut(DWORD socket_id, DWORD stream_id, size_t len) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Requests::HeaderOut(DWORD socket_id, DWORD stream_id,
-                         const char * header, const char * value) {
+void Requests::HeaderOut(DWORD socket_id, DWORD stream_id, const char * header,
+                         const char * value, bool pushed) {
   EnterCriticalSection(&cs);
   Request * request = GetActiveRequest(socket_id, stream_id);
   if (!request)
     request = NewRequest(socket_id, stream_id, false);
   if (request)
-    request->HeaderOut(header, value);
+    request->HeaderOut(header, value, pushed);
   LeaveCriticalSection(&cs);
 }
 

@@ -233,10 +233,10 @@ public:
   void DataOut(DataChunk& chunk);
   void SocketClosed();
 
-  void HeaderIn(const char * header, const char * value);
+  void HeaderIn(const char * header, const char * value, bool pushed);
   void ObjectDataIn(DataChunk& chunk);
   void BytesIn(size_t len);
-  void HeaderOut(const char * header, const char * value);
+  void HeaderOut(const char * header, const char * value, bool pushed);
   void ObjectDataOut(DataChunk& chunk);
   void BytesOut(size_t len);
 

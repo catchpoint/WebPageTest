@@ -1471,23 +1471,28 @@ static int session_predicate_push_promise_send(nghttp2_session *session,
   int rv;
 
   if (!session->server) {
+    OutputDebugStringA("session_predicate_push_promise_send - NGHTTP2_ERR_PROTO");
     return NGHTTP2_ERR_PROTO;
   }
 
   rv = session_predicate_for_stream_send(session, stream);
   if (rv != 0) {
+    OutputDebugStringA("session_predicate_push_promise_send - error in session_predicate_for_stream_send");
     return rv;
   }
 
   assert(stream);
 
   if (session->remote_settings.enable_push == 0) {
+    OutputDebugStringA("session_predicate_push_promise_send - NGHTTP2_ERR_PUSH_DISABLED");
     return NGHTTP2_ERR_PUSH_DISABLED;
   }
   if (stream->state == NGHTTP2_STREAM_CLOSING) {
+    OutputDebugStringA("session_predicate_push_promise_send - NGHTTP2_ERR_STREAM_CLOSING");
     return NGHTTP2_ERR_STREAM_CLOSING;
   }
   if (session->goaway_flags & NGHTTP2_GOAWAY_RECV) {
+    OutputDebugStringA("session_predicate_push_promise_send - NGHTTP2_ERR_START_STREAM_NOT_ALLOWED");
     return NGHTTP2_ERR_START_STREAM_NOT_ALLOWED;
   }
   return 0;
@@ -3186,6 +3191,9 @@ static int inflate_header_block(nghttp2_session *session, nghttp2_frame *frame,
   int trailer = 0;
   int token;
 
+  // WPT - always emit the header
+  call_header_cb = 1;
+
   *readlen_ptr = 0;
   stream = nghttp2_session_get_stream(session, frame->hd.stream_id);
 
@@ -3260,6 +3268,8 @@ static int inflate_header_block(nghttp2_session *session, nghttp2_frame *frame,
               frame->hd.type, subject_stream->stream_id, (int)nv.namelen,
               nv.name, (int)nv.valuelen, nv.value));
         }
+      } else {
+        DEBUGF(AtlTrace("no subject_stream\n"));
       }
       if (rv == 0) {
         rv = session_call_on_header(session, frame, &nv);
@@ -3268,6 +3278,13 @@ static int inflate_header_block(nghttp2_session *session, nghttp2_frame *frame,
         if (rv != 0) {
           return rv;
         }
+      }
+    } else {
+      if (!call_header_cb) {
+        DEBUGF(AtlTrace("not set to call_header_cb\n"));
+      }
+      if (!(inflate_flags & NGHTTP2_HD_INFLATE_EMIT)) {
+        DEBUGF(AtlTrace("NGHTTP2_HD_INFLATE_EMIT inflate flag not set\n"));
       }
     }
     if (inflate_flags & NGHTTP2_HD_INFLATE_FINAL) {

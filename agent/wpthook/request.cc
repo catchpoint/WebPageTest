@@ -484,7 +484,7 @@ void Request::DataOut(DataChunk& chunk) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Request::HeaderIn(const char * header, const char * value) {
+void Request::HeaderIn(const char * header, const char * value, bool pushed) {
   WptTrace(loglevel::kFunction, 
       _T("[wpthook] - Request::HeaderIn('%S', '%S')"), header, value);
 
@@ -494,6 +494,8 @@ void Request::HeaderIn(const char * header, const char * value) {
     if (!_first_byte.QuadPart)
       _first_byte.QuadPart = _end.QuadPart;
     _response_data.AddHeader(header, value);
+    if (pushed && initiator_.IsEmpty())
+      initiator_ = "HTTP/2 Server Push";
   }
   LeaveCriticalSection(&cs);
 }
@@ -526,7 +528,7 @@ void Request::BytesIn(size_t len) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Request::HeaderOut(const char * header, const char * value) {
+void Request::HeaderOut(const char * header, const char * value, bool pushed) {
   WptTrace(loglevel::kFunction, 
       _T("[wpthook] - Request::HeaderOut('%S', '%S')"), header, value);
 
@@ -537,6 +539,8 @@ void Request::HeaderOut(const char * header, const char * value) {
   }
   if (_is_active) {
     _request_data.AddHeader(header, value);
+    if (pushed && initiator_.IsEmpty())
+      initiator_ = "HTTP/2 Server Push";
   }
   LeaveCriticalSection(&cs);
 }

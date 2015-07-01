@@ -116,7 +116,7 @@ public:
   void H2BeginHeaders(DATA_DIRECTION direction, DWORD socket_id, int stream_id);
   void H2CloseStream(DATA_DIRECTION direction, DWORD socket_id, int stream_id);
   void H2Header(DATA_DIRECTION direction, DWORD socket_id, int stream_id,
-                const char * header, const char * value);
+                const char * header, const char * value, bool pushed);
   void H2Data(DATA_DIRECTION direction, DWORD socket_id, int stream_id,
               size_t len, const char * data);
   void H2Bytes(DATA_DIRECTION direction, DWORD socket_id, int stream_id,

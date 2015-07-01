@@ -664,11 +664,11 @@ void TrackSockets::H2CloseStream(DATA_DIRECTION direction, DWORD socket_id,
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TrackSockets::H2Header(DATA_DIRECTION direction, DWORD socket_id,
-    int stream_id, const char * header, const char * value) {
+    int stream_id, const char * header, const char * value, bool pushed) {
   if (direction == DATA_IN)
-    _requests.HeaderIn(socket_id, stream_id, header, value);
+    _requests.HeaderIn(socket_id, stream_id, header, value, pushed);
   else
-    _requests.HeaderOut(socket_id, stream_id, header, value);
+    _requests.HeaderOut(socket_id, stream_id, header, value, pushed);
 }
 
 /*-----------------------------------------------------------------------------
@@ -700,20 +700,40 @@ ssize_t h2_send_callback(nghttp2_session *session, const uint8_t *data,
   return length;
 }
 
+const char * h2_frame_type(int type) {
+  switch (type) {
+    case NGHTTP2_DATA: return "DATA";
+    case NGHTTP2_HEADERS: return "HEADERS";
+    case NGHTTP2_PRIORITY: return "PRIORITY";
+    case NGHTTP2_RST_STREAM: return "RST_STREAM";
+    case NGHTTP2_SETTINGS: return "SETTINGS";
+    case NGHTTP2_PUSH_PROMISE: return "PUSH_PROMISE";
+    case NGHTTP2_PING: return "PING";
+    case NGHTTP2_GOAWAY: return "GOAWAY";
+    case NGHTTP2_WINDOW_UPDATE: return "WINDOW_UPDATE";
+    case NGHTTP2_CONTINUATION: return "CONTINUATION";
+    default: return "UNKNOWN";
+  }
+}
+
 int h2_on_begin_frame_callback(nghttp2_session *session,
                                const nghttp2_frame_hd *hd, void *user_data) {
-  AtlTrace("h2_on_begin_frame_callback - stream %d", hd->stream_id);
+  AtlTrace("h2_on_begin_frame_callback [%s] - stream %d",
+           h2_frame_type(hd->type), hd->stream_id);
   return 0;
 }
 
 int h2_on_frame_recv_callback(nghttp2_session *session,
                               const nghttp2_frame *frame, void *user_data) {
-  AtlTrace("h2_on_frame_recv_callback - stream %d, %d bytes", frame->hd.stream_id, frame->hd.length);
+  AtlTrace("h2_on_frame_recv_callback [%s] - stream %d, %d bytes",
+           h2_frame_type(frame->hd.type), frame->hd.stream_id,
+           frame->hd.length);
   if (user_data) {
     H2_USER_DATA * u = (H2_USER_DATA *)user_data;
     if (u->connection) {
       TrackSockets * c = (TrackSockets *)u->connection;
-      c->H2Bytes(u->direction, u->socket_id, frame->hd.stream_id, frame->hd.length);
+      c->H2Bytes(u->direction, u->socket_id, frame->hd.stream_id,
+                 frame->hd.length);
     }
   }
   return 0;
@@ -763,14 +783,25 @@ int h2_on_header_callback(nghttp2_session *session, const nghttp2_frame *frame,
                           const uint8_t *name, size_t namelen,
                           const uint8_t *value, size_t valuelen,
                           uint8_t flags, void *user_data) {
+  int32_t stream_id = frame->hd.stream_id;
+  if (frame->hd.type == NGHTTP2_PUSH_PROMISE)
+    stream_id = frame->push_promise.promised_stream_id;
+
   AtlTrace("h2_on_header_callback - stream %d '%S' : '%S'",
-           frame->hd.stream_id, name, value);
+           stream_id, name, value);
   if (user_data && name && value) {
     H2_USER_DATA * u = (H2_USER_DATA *)user_data;
     if (u->connection) {
+      DATA_DIRECTION direction = u->direction;
+      // if we are processing a PUSH_PROMISE, flip the header direction
+      bool pushed = false;
+      if (frame->hd.type == NGHTTP2_PUSH_PROMISE) {
+        direction = u->direction == DATA_IN ? DATA_OUT : DATA_IN;
+        pushed = true;
+      }
       TrackSockets * c = (TrackSockets *)u->connection;
-      c->H2Header(u->direction, u->socket_id, frame->hd.stream_id,
-                  (const char *)name, (const char *)value);
+      c->H2Header(direction, u->socket_id, stream_id,
+                  (const char *)name, (const char *)value, pushed);
     }
   }
   return 0;
