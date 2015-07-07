@@ -160,6 +160,9 @@ function BrowserAndroidChrome(app, args) {
   this.useXvfb_ = undefined;
   this.chromeFlags_ = CHROME_FLAGS.slice();
   this.additionalFlags_ = args.task.addCmdLine;
+  if (args.task.ignoreSSL) {
+    this.chromeFlags_.push('--ignore-certificate-errors');
+  }
   this.isCacheWarm_ = args.isCacheWarm;
 }
 util.inherits(BrowserAndroidChrome, browser_base.BrowserBase);
