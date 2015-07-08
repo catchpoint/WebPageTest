@@ -25,4 +25,3 @@ copy "%~dp0extension\manifest.json" "%~dp0extension\release\manifest.json"
 copy "%~dp0extension\wpt\*.html" "%~dp0extension\release\wpt\"
 copy "%~dp0extension\wpt\*.jpg"  "%~dp0extension\release\wpt\"
 copy "%~dp0extension\wpt\*.css"  "%~dp0extension\release\wpt\"
-pause
