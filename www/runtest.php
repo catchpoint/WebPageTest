@@ -235,7 +235,7 @@
                 if (strlen(trim($matches[2]))) {
                     $test['browser'] = trim($matches[2]);
 
-                  if (isset($_REQUEST['custombrowser']))
+                  if (isset($_REQUEST['custombrowser']) && strlen($_REQUEST['custombrowser']))
                     $test['browser'] = trim($_REQUEST['custombrowser']);
 
                   // see if the requested browser is a custom browser

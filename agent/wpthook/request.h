@@ -116,7 +116,7 @@ typedef CAtlList<HeaderField> Fields;
 
 class HttpData {
  public:
-  HttpData(): _data(NULL), _data_size(0) {}
+  HttpData(): _data(NULL), _data_size(0), _body_chunks_size(0) {}
   ~HttpData() { delete _data; }
 
   bool HasHeaders() { CopyData(); return _headers.GetLength() != 0; }
@@ -126,13 +126,18 @@ class HttpData {
   void AddChunk(DataChunk& chunk);
   CStringA GetHeader(CStringA field_name);
 
+  virtual void AddHeader(const char * header, const char * value);
+  void AddBodyChunk(DataChunk& chunk);
+
 protected:
   void CopyData();
   void ExtractHeaderFields();
 
   CAtlList<DataChunk> _data_chunks;
+  CAtlList<DataChunk> _body_chunks;
   const char * _data;
   DWORD _data_size;
+  DWORD _body_chunks_size;
   CStringA _headers;
   Fields _header_fields;
 };
@@ -141,6 +146,7 @@ class RequestData : public HttpData {
  public:
    CStringA GetMethod() { ProcessRequestLine(); return _method; }
    CStringA GetObject() { ProcessRequestLine(); return _object; }
+   virtual void AddHeader(const char * header, const char * value);
 
  private:
    void ProcessRequestLine();
@@ -152,6 +158,7 @@ class RequestData : public HttpData {
 class ResponseData : public HttpData {
  public:
   ResponseData(): HttpData(), _result(-2), _protocol_version(-1.0) {}
+  virtual void AddHeader(const char * header, const char * value);
 
   int GetResult() { ProcessStatusLine(); return _result; }
   double GetProtocolVersion() { ProcessStatusLine(); return _protocol_version;}
@@ -216,7 +223,7 @@ public:
 
 class Request {
 public:
-  Request(TestState& test_state, DWORD socket_id,
+  Request(TestState& test_state, DWORD socket_id, DWORD stream_id,
           TrackSockets& sockets, TrackDns& dns, WptTest& test, bool is_spdy,
           Requests& requests);
   ~Request(void);
@@ -225,6 +232,13 @@ public:
   bool ModifyDataOut(DataChunk& chunk);
   void DataOut(DataChunk& chunk);
   void SocketClosed();
+
+  void HeaderIn(const char * header, const char * value, bool pushed);
+  void ObjectDataIn(DataChunk& chunk);
+  void BytesIn(size_t len);
+  void HeaderOut(const char * header, const char * value, bool pushed);
+  void ObjectDataOut(DataChunk& chunk);
+  void BytesOut(size_t len);
 
   void MatchConnections();
   bool Process();
@@ -245,6 +259,7 @@ public:
   bool  _processed;
   bool  _reported;
   DWORD _socket_id;
+  DWORD _stream_id;
   ULONG _peer_address;
   int   _local_port;
   bool  _is_ssl;
