@@ -1734,7 +1734,7 @@ function Lock($name, $blocking = true, $maxLockSeconds = 300) {
   $lock = null;
   if (strlen($name)) {
     if( !is_dir('./tmp') )
-      mkdir('./tmp');
+      mkdir('./tmp', 0777, true);
     if (preg_match('/^[a-zA-Z0-9-_ ]+$/', $name))
       $lockFile = __DIR__ . '/tmp/named-' . str_replace(' ', '-', $name) . '.lock';
     else

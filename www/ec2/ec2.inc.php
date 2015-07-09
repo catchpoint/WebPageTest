@@ -590,7 +590,7 @@ function EC2_GetAMILocations() {
 function EC2Log($msg) {
   $dir = __DIR__ . '/log';
   if (!is_dir($dir))
-    mkdir($dir, 0744, true);
+    mkdir($dir, 0777, true);
   if (is_dir($dir)) {
     // Delete any error logs that are more than a week old
     $files = glob("$dir/ec2.log.*");
