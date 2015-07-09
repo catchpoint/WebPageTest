@@ -125,7 +125,7 @@ if (ValidateTestId($id)) {
         // update the location time
         if( strlen($location) ) {
             if( !is_dir('./tmp') )
-                mkdir('./tmp');
+                mkdir('./tmp', 0777, true);
             touch( "./tmp/$location.tm" );
         }
         
@@ -364,7 +364,7 @@ if (ValidateTestId($id)) {
           if (array_key_exists('industry', $ini) && array_key_exists('industry_page', $ini) && 
             strlen($ini['industry']) && strlen($ini['industry_page'])) {
             if( !is_dir('./video/dat') )
-              mkdir('./video/dat');
+              mkdir('./video/dat', 0777, true);
             $indLock = Lock("Industry Video");
             if (isset($indLock)) {
               // update the page in the industry list

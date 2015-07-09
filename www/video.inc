@@ -26,7 +26,7 @@ function MoveVideoFiles($testPath)
                             $destDir .= '_cached';
                             
                         if( !is_dir($destDir) )
-                            mkdir($destDir);
+                            mkdir($destDir, 0777, true);
                         
                         $fileBase = $parts[count($parts) - 1];
                         $dest = "$destDir/frame_$fileBase";

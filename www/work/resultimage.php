@@ -53,7 +53,7 @@ if (ValidateTestId($id)) {
                     $cached = '_cached';
                   $path .= "/video_$runNum$cached";
                   if( !is_dir($path) )
-                    mkdir($path);
+                    mkdir($path, 0777, true);
                   $fileName = 'frame_' . $fileBase;
                 }
               }
