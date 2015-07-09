@@ -219,30 +219,34 @@ bool TrackSockets::ModifyDataOut(SOCKET s, DataChunk& chunk,
     DWORD socket_id = info->_id;
 
     // see if we need to sniff the protocol
-    if (is_unencrypted && info->_is_ssl) {
+    if (is_unencrypted && info->_is_ssl && !info->IsLocalhost()) {
       const char * data = chunk.GetData();
       if (info->_protocol == PROTO_NOT_CHECKED) {
         info->_protocol = PROTO_UNKNOWN;
 
-        const char * HTTP_METHODS[] = {"GET ", "HEAD ", "POST ", "PUT ",
-            "OPTIONS ", "DELETE ", "TRACE ", "CONNECT ", "PATCH "};
-        for (int i = 0; i < _countof(HTTP_METHODS); i++) {
-          const char * method = HTTP_METHODS[i];
-          unsigned long method_len = strlen(method);
-          if (len >= method_len && !memcmp(data, method, method_len)) {
-            AtlTrace(_T("[%d] ********* HTTP 1 Connection detected"), socket_id);
-            info->_protocol = PROTO_HTTP;
-            break;
-          }
-        }
-
         const char * HTTP2_HEADER = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
-        if (info->_protocol == PROTO_UNKNOWN && len >= 24 &&
-            !memcmp(data, HTTP2_HEADER, 24)) {
+        if (info->_protocol == PROTO_UNKNOWN &&
+            len >= (DWORD)lstrlenA(HTTP2_HEADER) &&
+            !memcmp(data, HTTP2_HEADER, lstrlenA(HTTP2_HEADER))) {
           AtlTrace(_T("[%d] ********* HTTP 2 Connection detected"), socket_id);
           info->_protocol = PROTO_H2;
           info->_h2_in = NewHttp2Session(socket_id, DATA_IN);
           info->_h2_out = NewHttp2Session(socket_id, DATA_OUT);
+        }
+
+        if (info->_protocol == PROTO_UNKNOWN) {
+          const char * HTTP_METHODS[] = {"GET ", "HEAD ", "POST ", "PUT ",
+              "OPTIONS ", "DELETE ", "TRACE ", "CONNECT ", "PATCH "};
+          for (int i = 0; i < _countof(HTTP_METHODS); i++) {
+            const char * method = HTTP_METHODS[i];
+            unsigned long method_len = strlen(method);
+            if (len >= method_len && !memcmp(data, method, method_len)) {
+              AtlTrace(_T("[%d] ********* HTTP 1 Connection detected"),
+                       socket_id);
+              info->_protocol = PROTO_HTTP;
+              break;
+            }
+          }
         }
 
         if (info->_protocol == PROTO_UNKNOWN && len >= 8 &&
@@ -257,7 +261,8 @@ bool TrackSockets::ModifyDataOut(SOCKET s, DataChunk& chunk,
       }
     }
 
-    if (!info->IsLocalhost() && ((is_unencrypted && info->_protocol == PROTO_HTTP) || !info->_is_ssl)) {
+    if (!info->IsLocalhost() &&
+        ((is_unencrypted && info->_protocol == PROTO_HTTP) || !info->_is_ssl)) {
       is_modified = _requests.ModifyDataOut(socket_id, chunk);
     }
 
