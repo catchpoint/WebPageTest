@@ -698,6 +698,8 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
     ReportData();
     continue_processing = false;
     consumed = false;
+  } else if (cmd == _T("seteventname")) {
+    _current_event_name = CT2A(command.target.Trim());
   } else {
     continue_processing = false;
     consumed = false;
@@ -776,8 +778,6 @@ bool WptTest::PreProcessScriptCommand(ScriptCommand& command) {
     } else if (cmd == _T("setuseragent")) {
       _user_agent = CT2A(command.target.Trim());
       processed = false;
-    } else if (cmd == _T("seteventname")) {
-      _current_event_name = CT2A(command.target.Trim());
     } else {
       processed = false;
     }
