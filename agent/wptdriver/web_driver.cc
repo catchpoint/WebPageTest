@@ -248,7 +248,7 @@ bool WebDriver::SpawnWebDriverClient() {
   
   // Add the browser we are about to launch.
   options.Add(_T("--browser"));
-  options.Add(_settings._browser._browser.MakeLower());
+  options.Add(_T("\"") + _settings._browser._browser.MakeLower() + _T("\""));
   if (!_test._script.GetLength()) {
     // Script is empty. Test the said url.
     options.Add(_T("--test-url"));
