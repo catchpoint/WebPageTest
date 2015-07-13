@@ -181,6 +181,7 @@ WebDriverServer.prototype.init = function(args) {
   this.videoFile_ = undefined;
   this.runTempDir_ = args.runTempDir || '';
   this.customMetrics_ = undefined;
+  this.userTimingMarks_ = undefined;
   this.tearDown_();
 };
 
@@ -689,7 +690,6 @@ WebDriverServer.prototype.setPageBackground_ = function(frameId, color) {
  */
 WebDriverServer.prototype.execBrowserScript_ = function(code) {
   'use strict';
-  logger.debug('Executing: ' + code);
   return this.runtimeCommand_('evaluate',
       {expression: code, returnByValue: true}).then(function(response){
     var value = undefined;
@@ -1177,6 +1177,24 @@ WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
       }
     }
   }.bind(this));
+
+  this.scheduleNoFault_('Collect User Timing', function() {
+    this.execBrowserScript_('(function() {' +
+          'var marks = window.performance.getEntriesByType("mark");' +
+          'var m = [];' +
+          'if (marks.length) {' +
+          '  for (var i = 0; i < marks.length; i++)' +
+          '    m.push({"entryType": marks[i].entryType, ' +
+          '            "name": marks[i].name, ' +
+          '            "startTime": marks[i].startTime});' +
+          '}' +
+          'return m;' +
+          '})();').then(function(result) {
+      if (result && result.length) {
+        this.userTimingMarks_ = result;
+      }
+    }.bind(this));
+  }.bind(this));
 };
 
 /**
@@ -1236,7 +1254,8 @@ WebDriverServer.prototype.done_ = function() {
           traceData: this.traceData_,
           videoFile: this.videoFile_,
           pcapFile: this.pcapFile_,
-          customMetrics: this.customMetrics_
+          customMetrics: this.customMetrics_,
+          userTimingMarks: this.userTimingMarks_
         });
     }.bind(this));
 
