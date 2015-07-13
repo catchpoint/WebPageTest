@@ -180,6 +180,7 @@ WebDriverServer.prototype.init = function(args) {
   this.tracePromise_ = undefined;
   this.videoFile_ = undefined;
   this.runTempDir_ = args.runTempDir || '';
+  this.customMetrics_ = undefined;
   this.tearDown_();
 };
 
@@ -630,6 +631,17 @@ WebDriverServer.prototype.pageCommand_ = function(method, params) {
 };
 
 /**
+ * @param {string} method command method, e.g. 'navigate'.
+ * @param {Object} params command options.
+ * @return {webdriver.promise.Promise} resolve({string} responseBody).
+ * @private
+ */
+WebDriverServer.prototype.runtimeCommand_ = function(method, params) {
+  'use strict';
+  return this.devToolsCommand_({method: 'Runtime.' + method, params: params});
+};
+
+/**
  * @param {string} method command method, e.g. 'enable'.
  * @param {Object} params command options.
  * @return {webdriver.promise.Promise} resolve({string} responseBody).
@@ -667,6 +679,26 @@ WebDriverServer.prototype.setPageBackground_ = function(frameId, color) {
       frameId: frameId,
       html: color ? '<body style="background-color:' + color + ';"/>' : ''
     });
+};
+
+/**
+ * @param {string} method command method, e.g. 'navigate'.
+ * @param {Object} params command options.
+ * @return {webdriver.promise.Promise} resolve({string} responseBody).
+ * @private
+ */
+WebDriverServer.prototype.execBrowserScript_ = function(code) {
+  'use strict';
+  logger.debug('Executing: ' + code);
+  return this.runtimeCommand_('evaluate',
+      {expression: code, returnByValue: true}).then(function(response){
+    var value = undefined;
+    if (response['result'] !== undefined &&
+        response.result['value'] !== undefined) {
+      value = response.result.value;
+    }
+    return value;
+  }.bind(this));
 };
 
 /**
@@ -1124,6 +1156,30 @@ WebDriverServer.prototype.scheduleGetWdDevToolsLog_ = function() {
 };
 
 /**
+ * Collects in-browser metrics after the test is complete
+ * @private
+ */
+WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
+  this.scheduleNoFault_('Collect Custom Metrics', function() {
+    if (this.task_['customMetrics'] !== undefined) {
+      for (var metric in this.task_.customMetrics) {
+        (function(metric){
+          this.execBrowserScript_('var wptCustomMetric = function() { ' +
+              this.task_.customMetrics[metric] +
+              '};' +
+              'wptCustomMetric();').then(function(result) {
+            if (this.customMetrics_ == undefined)
+              this.customMetrics_ = {};
+            this.customMetrics_[metric] = result;
+            logger.debug(metric + ' : ' + result);
+          }.bind(this));
+        }.bind(this))(metric);
+      }
+    }
+  }.bind(this));
+};
+
+/**
  * @private
  */
 WebDriverServer.prototype.done_ = function() {
@@ -1161,6 +1217,7 @@ WebDriverServer.prototype.done_ = function() {
     }.bind(this), function(err) {
       logger.info('Ignoring screenshot error: ' + err.message);
     });
+    this.scheduleCollectMetrics_();
     if (this.videoFile_) {
       this.scheduleNoFault_('Stop video recording',
           this.browser_.scheduleStopVideoRecording.bind(this.browser_));
@@ -1178,7 +1235,8 @@ WebDriverServer.prototype.done_ = function() {
           screenshots: this.screenshots_,
           traceData: this.traceData_,
           videoFile: this.videoFile_,
-          pcapFile: this.pcapFile_
+          pcapFile: this.pcapFile_,
+          customMetrics: this.customMetrics_
         });
     }.bind(this));
 

@@ -168,6 +168,9 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
     if (ipcMsg.traceData) {
       job.zipResultFiles['trace.json'] = JSON.stringify(ipcMsg.traceData);
     }
+    if (ipcMsg.customMetrics) {
+      job.zipResultFiles['metrics.json'] = JSON.stringify(ipcMsg.customMetrics);
+    }
     if (ipcMsg.screenshots && ipcMsg.screenshots.length > 0) {
       var imageDescriptors = [];
       ipcMsg.screenshots.forEach(function(screenshot) {
