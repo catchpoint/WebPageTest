@@ -187,18 +187,30 @@ function GetJob() {
                                   if( strlen($script) )
                                       $script .= "\r\n";
                                   $script .= $line;
-                              } elseif( !strcasecmp($line, '[Script]') )
+                              } elseif( !strcasecmp($line, '[Script]') ) {
                                   $isScript = true;
-                              else {
+                              } else {
                                   $pos = strpos($line, '=');
-                                  if( $pos > -1 ) {
+                                  if( $pos !== false ) {
                                       $key = trim(substr($line, 0, $pos));
                                       $value = trim(substr($line, $pos + 1));
                                       if( strlen($key) && strlen($value) ) {
-                                          if( is_numeric($value) )
-                                              $testJson[$key] = (int)$value;
-                                          else
-                                              $testJson[$key] = $value;
+                                        if ($key == 'customMetric') {
+                                          $pos = strpos($value, ':');
+                                          if ($pos !== false) {
+                                            $metric = trim(substr($value, 0, $pos));
+                                            $code = base64_decode(substr($value, $pos+1));
+                                            if ($code !== false && strlen($metric) && strlen($code)) {
+                                              if (!isset($testJson['customMetrics']))
+                                                $testJson['customMetrics'] = array();
+                                              $testJson['customMetrics'][$metric] = $code;
+                                            }
+                                          }
+                                        } elseif( is_numeric($value) ) {
+                                          $testJson[$key] = (int)$value;
+                                        } else {
+                                          $testJson[$key] = $value;
+                                        }
                                       }
                                   }
                               }
