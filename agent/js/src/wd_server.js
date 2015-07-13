@@ -182,6 +182,7 @@ WebDriverServer.prototype.init = function(args) {
   this.runTempDir_ = args.runTempDir || '';
   this.customMetrics_ = undefined;
   this.userTimingMarks_ = undefined;
+  this.pageData_ = undefined;
   this.tearDown_();
 };
 
@@ -1195,6 +1196,46 @@ WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
       }
     }.bind(this));
   }.bind(this));
+
+  this.scheduleNoFault_('Collect Page Metrics', function() {
+    this.execBrowserScript_('(function() {' +
+        'var pageData = {};' +
+        'var domCount = ' +
+        '   document.documentElement.getElementsByTagName("*").length;' +
+        'if (domCount === undefined)' +
+        ' domCount = 0;' +
+        'pageData["domElements"] = domCount;' +
+        'function addTime(name) {'+
+        ' if (window.performance.timing[name] > 0) {' +
+        '   pageData[name] = Math.max(0, Math.round(' +
+        '       window.performance.timing[name] -' +
+        '       window.performance.timing["navigationStart"]));' +
+        ' }' +
+        '};' +
+        'addTime("domContentLoadedEventStart");' +
+        'addTime("domContentLoadedEventEnd");' +
+        'addTime("loadEventStart");' +
+        'addTime("loadEventEnd");' +
+        'pageData["firstPaint"] = 0;' +
+        'if (window["chrome"] !== undefined && ' +
+        '    window.chrome["loadTimes"] !== undefined) {' +
+        ' var chromeTimes = window.chrome.loadTimes();' +
+        ' if (chromeTimes["firstPaintTime"] !== undefined &&' +
+        '     chromeTimes["firstPaintTime"] > 0) {' +
+        '   var startTime = chromeTimes["requestTime"] ? ' +
+        '       chromeTimes["requestTime"] : chromeTimes["startLoadTime"];' +
+        '   if (chromeTimes["firstPaintTime"] >= startTime)' +
+        '     pageData["firstPaint"] = Math.round(' +
+        '         (chromeTimes["firstPaintTime"] - startTime) * 1000.0);' +
+        ' }' +
+        '}' +
+        'return pageData;' +
+        '})();').then(function(result) {
+      if (result) {
+        this.pageData_ = result;
+      }
+    }.bind(this));
+  }.bind(this));
 };
 
 /**
@@ -1255,7 +1296,8 @@ WebDriverServer.prototype.done_ = function() {
           videoFile: this.videoFile_,
           pcapFile: this.pcapFile_,
           customMetrics: this.customMetrics_,
-          userTimingMarks: this.userTimingMarks_
+          userTimingMarks: this.userTimingMarks_,
+          pageData: this.pageData_
         });
     }.bind(this));
 

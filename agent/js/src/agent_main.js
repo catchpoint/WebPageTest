@@ -174,6 +174,9 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
     if (ipcMsg.userTimingMarks) {
       job.zipResultFiles['timed_events.json'] = JSON.stringify(ipcMsg.userTimingMarks);
     }
+    if (ipcMsg.pageData) {
+      job.zipResultFiles['page_data.json'] = JSON.stringify(ipcMsg.pageData);
+    }
     if (ipcMsg.screenshots && ipcMsg.screenshots.length > 0) {
       var imageDescriptors = [];
       ipcMsg.screenshots.forEach(function(screenshot) {

@@ -63,6 +63,15 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
     $basic_results = false;
     if (array_key_exists('basic', $_REQUEST) && $_REQUEST['basic'])
       $basic_results = true;
+    if (gz_is_file("$testPath/{$run}{$cachedText}_page_data.json")) {
+      $pd = json_decode(gz_file_get_contents("$testPath/{$run}{$cachedText}_page_data.json"), true);
+      if ($pd && is_array($pd) && count($pd)) {
+        foreach($pd as $key => $value) {
+          $ret[$key] = $value;
+        }
+      }
+    }
+    
     if (isset($ret) && !$basic_results) {
         $startOffset = array_key_exists('testStartOffset', $ret) ? intval(round($ret['testStartOffset'])) : 0;
         loadUserTimingData($ret, $testPath, $run, $cached);
