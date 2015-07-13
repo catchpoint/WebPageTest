@@ -129,6 +129,8 @@ function SumbitRequest() {
       $email = trim($_REQUEST['email']);
       if (!preg_match('/[^@]+@[^\.]+\..+/', $email)) {
         echo 'Please provide a valid email address';
+      } elseif (BlockEmail($email)) {
+        echo 'Sorry, registration is not permitted.  Please contact us for more information.';
       } elseif ($keyinfo = GetKeyInfo($email)) {
         EmailKeyInfo($keyinfo);
       } elseif ($requestinfo = CreateRequest($email)) {
@@ -140,6 +142,30 @@ function SumbitRequest() {
       echo 'Please agree to the terms and conditions';
     }
   }
+}
+
+/**
+* Block email domains
+* 
+* @param mixed $email
+*/
+function BlockEmail($email) {
+  $block = false;
+  if (is_file('./settings/blockemail.txt')) {
+    $lines = file('./settings/blockemail.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if ($lines && is_array($lines) && count($lines)) {
+      foreach ($lines as $line) {
+        $line = trim($line);
+        if (strlen($line)) {
+          if (stripos($email, $line) !== false) {
+            $block = true;
+            break;
+          }
+        }
+      }
+    }
+  }
+  return $block;
 }
 
 /**

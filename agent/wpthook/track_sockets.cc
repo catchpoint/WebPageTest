@@ -723,8 +723,8 @@ const char * h2_frame_type(int type) {
 
 int h2_on_begin_frame_callback(nghttp2_session *session,
                                const nghttp2_frame_hd *hd, void *user_data) {
-  AtlTrace("h2_on_begin_frame_callback [%s] - stream %d",
-           h2_frame_type(hd->type), hd->stream_id);
+  AtlTrace("h2_on_begin_frame_callback [%s] - stream %d, %d bytes",
+           h2_frame_type(hd->type), hd->stream_id, hd->length);
   return 0;
 }
 
@@ -733,7 +733,8 @@ int h2_on_frame_recv_callback(nghttp2_session *session,
   AtlTrace("h2_on_frame_recv_callback [%s] - stream %d, %d bytes",
            h2_frame_type(frame->hd.type), frame->hd.stream_id,
            frame->hd.length);
-  if (user_data) {
+  // Keep track of the bytes-in for headers by looking at the frame
+  if (user_data && frame->hd.type == NGHTTP2_HEADERS) {
     H2_USER_DATA * u = (H2_USER_DATA *)user_data;
     if (u->connection) {
       TrackSockets * c = (TrackSockets *)u->connection;
@@ -753,6 +754,7 @@ int h2_on_data_chunk_recv_callback(nghttp2_session *session, uint8_t flags,
     if (u->connection) {
       TrackSockets * c = (TrackSockets *)u->connection;
       c->H2Data(u->direction, u->socket_id, stream_id, len, (const char *)data);
+      c->H2Bytes(u->direction, u->socket_id, stream_id, len);
     }
   }
   return 0;
@@ -773,7 +775,7 @@ int h2_on_stream_close_callback(nghttp2_session *session, int32_t stream_id,
 
 int h2_on_begin_headers_callback(nghttp2_session *session,
                                  const nghttp2_frame *frame, void *user_data) {
-  AtlTrace("h2_on_begin_headers_callback - stream %d", frame->hd.stream_id);
+  AtlTrace("h2_on_begin_headers_callback - stream %d, %d bytes", frame->hd.stream_id, frame->hd.length);
   if (user_data) {
     H2_USER_DATA * u = (H2_USER_DATA *)user_data;
     if (u->connection) {
