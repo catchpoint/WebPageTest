@@ -450,6 +450,10 @@ $page_description = "Website performance test result$testLabel.";
                                 $view_url = $settings['tcpdump_view'] . urlencode("http://$wpt_host$tcpdump_url");
                                 echo " - (<a href=\"$view_url\" title=\"View tcpdump session capture\">view</a>)";
                             }
+                            if( gz_is_file("$testPath/{$run}_keylog.log") ) {
+                              $keylog = "/getgzip.php?test=$id&file={$run}_keylog.log";
+                              echo "<br>(<a href=\"$keylog\" title=\"TLS key log file\">TLS Key Log</a>)";
+                            }
                         }
                         if ($test['testinfo']['timeline']) {
                           if( gz_is_file("$testPath/{$run}_trace.json")) {
@@ -529,6 +533,10 @@ $page_description = "Website performance test result$testLabel.";
                               if (array_key_exists('tcpdump_view', $settings) && strlen($settings['tcpdump_view'])) {
                                   $view_url = $settings['tcpdump_view'] . urlencode("http://$wpt_host$tcpdump_url");
                                   echo " - (<a href=\"$view_url\" title=\"View tcpdump session capture\">view</a>)";
+                              }
+                              if( gz_is_file("$testPath/{$run}_Cached_keylog.log") ) {
+                                $keylog = "/getgzip.php?test=$id&file={$run}_Cached_keylog.log";
+                                echo "<br>(<a href=\"$keylog\" title=\"TLS key log file\">TLS Key Log</a>)";
                               }
                           }
                           if ($test['testinfo']['timeline']) {
