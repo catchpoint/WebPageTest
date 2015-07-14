@@ -93,11 +93,12 @@ public:
   ~WptSettings(void);
   bool Load(void);
   void LoadFromEC2(void);
+  void LoadFromGCE(void);
   void LoadFromAzure(void);
   void ParseInstanceData(CString &userData);
   bool SetBrowser(CString browser, CString url, CString md5, CString client);
   bool PrepareTest(WptTest& test);
-  bool GetUrlText(CString url, CString &response);
+  bool GetUrlText(CString url, CString &response, LPCTSTR headers = NULL);
   bool UpdateSoftware();
   bool ReInstallBrowser();
 
