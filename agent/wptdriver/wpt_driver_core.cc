@@ -70,6 +70,7 @@ WptDriverCore::WptDriverCore(WptStatus &status):
   ,_installing(false)
   ,_settings(status) {
   global_core = this;
+  reboot_time_.QuadPart = 0;
   _testing_mutex = CreateMutex(NULL, FALSE, _T("Global\\WebPagetest"));
   has_gpu_ = DetectGPU();
   _webpagetest.has_gpu_ = has_gpu_;
@@ -172,7 +173,7 @@ void WptDriverCore::WorkThread(void) {
 
     _status.Set(_T("Running..."));
   }
-  while (!_exit) {
+  while (!_exit && !NeedsReboot()) {
     WaitForSingleObject(_testing_mutex, INFINITE);
     _status.Set(_T("Checking for software updates..."));
     _installing = true;
@@ -914,4 +915,39 @@ LPTSTR WptDriverCore::GetAppInitString(LPCTSTR new_dll) {
   }
 
   return dlls;
+}
+
+/*-----------------------------------------------------------------------------
+  Check to see if a reboot is needed for some reason.
+  (right now just pending windows updates)
+-----------------------------------------------------------------------------*/
+bool WptDriverCore::NeedsReboot() {
+  HKEY key;
+
+  if (reboot_time_.QuadPart != 0) {
+    LARGE_INTEGER now;
+    QueryPerformanceCounter(&now);
+    if (now.QuadPart >= reboot_time_.QuadPart) {
+      _exit = true;
+      Reboot();
+    }
+  } else {
+    bool needs_reboot = false;
+    if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+        L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WindowsUpdate"
+        L"\\Auto Update\\RebootRequired", 0, 0, &key)) {
+      needs_reboot = true;
+      RegCloseKey(key);
+    }
+
+    if (needs_reboot) {
+      // schedule a reboot for 1 hour from now to allow updates to finish installing
+      LARGE_INTEGER now, freq;
+      QueryPerformanceCounter(&now);
+      QueryPerformanceFrequency(&freq);
+      reboot_time_.QuadPart = now.QuadPart + (freq.QuadPart * 3600);
+    }
+  }
+
+  return _exit;
 }
