@@ -65,8 +65,10 @@ There are two examples using the [Restful API](https://sites.google.com/a/webpag
 * /batchtool - A python project that can submit a bulk set of tests and gather the results.
 
 #Communicating sensitive information
+
 If you need to communicate sensitive information in an issue or through mail please use the following GPG key to encrypt the data:
 
+```
 -----BEGIN PGP PUBLIC KEY BLOCK-----
 Version: WebPageTest
 Comment: pmeenan@webpagetest.org
@@ -123,3 +125,4 @@ F43eKTVjurBpwwEzGhOZ09ehYq5oqJ1d3qNZHu4TnAIKqeqXT2PEKanDeSPM
 4nHIkA==
 =BMAU
 -----END PGP PUBLIC KEY BLOCK-----
+```
