@@ -55,7 +55,7 @@ else
         {
             if( strlen($labels) )
                 $labels .= ", ";
-            $labels .= $test['name'];
+            $labels .= htmlspecialchars($test['name']);
         }
     }
     if( strlen($labels) )
@@ -88,10 +88,10 @@ else
                 $bgcolor = '000000';
                 $color = 'ffffff';
                 if (array_key_exists('bg', $_GET)) {
-                    $bgcolor = $_GET['bg'];
+                    $bgcolor = preg_replace('/[^0-9]/', $_GET['bg']);
                 }
                 if (array_key_exists('text', $_GET)) {
-                    $color = $_GET['text'];
+                    $color = preg_replace('/[^0-9]/', $_GET['text']);
                 }
             ?>
                 #video
@@ -400,9 +400,9 @@ function ScreenShotTable()
                 else
                     $href = "/details.php?test={$test['id']}&run={$test['run']}&cached={$test['cached']}";
 
-                echo "<a class=\"pagelink\" id=\"label_{$test['id']}\" href=\"$href\">" . WrapableString($test['name']) . '</a>';
+                echo "<a class=\"pagelink\" id=\"label_{$test['id']}\" href=\"$href\">" . WrapableString(htmlspecialchars($test['name'])) . '</a>';
             } else {
-                echo WrapableString($test['name']);
+                echo WrapableString(htmlspecialchars($test['name']));
             }
 
             // Print out a link to edit the test
@@ -479,7 +479,7 @@ function ScreenShotTable()
                         $cached = '_cached';
                     $imgPath = GetTestPath($test['id']) . "/video_{$test['run']}$cached/$path";
                     echo "<a href=\"/$imgPath\">";
-                    echo "<img title=\"{$test['name']}\"";
+                    echo "<img title=\"" . htmlspecialchars($test['name']) . "\"";
                     $class = 'thumb';
                     if ($lastThumb != $path) {
                         if( !$firstFrame || $frameCount < $firstFrame )
@@ -666,7 +666,7 @@ function DisplayStatus()
     echo "<table id=\"statusTable\"><tr><th>Test</th><th>Status</th></tr><tr>";
     foreach($tests as &$test)
     {
-        echo "<tr><td><a href=\"/result/{$test['id']}/\">{$test['name']}</a></td><td>";
+        echo "<tr><td><a href=\"/result/{$test['id']}/\">" . htmlspecialchars($test['name']) . "</a></td><td>";
         if( $test['done'] )
             echo "Done";
         elseif( $test['started'] )
@@ -758,9 +758,10 @@ function DisplayGraphs() {
             dataBytes.addColumn('string', 'MIME Type');
             <?php
             foreach($tests as &$test) {
-                echo "dataTimes.addColumn('number', '{$test['name']}');\n";
-                echo "dataRequests.addColumn('number', '{$test['name']}');\n";
-                echo "dataBytes.addColumn('number', '{$test['name']}');\n";
+                $name = htmlspecialchars($test['name']);
+                echo "dataTimes.addColumn('number', '$name');\n";
+                echo "dataRequests.addColumn('number', '$name');\n";
+                echo "dataBytes.addColumn('number', '$name');\n";
             }
             echo 'dataTimes.addRows(' . count($timeMetrics) . ");\n";
             echo 'dataRequests.addRows(' . strval(count($mimeTypes) + 1) . ");\n";
@@ -769,7 +770,7 @@ function DisplayGraphs() {
                 echo "var dataProgress = google.visualization.arrayToDataTable([\n";
                 echo "  ['Time (ms)'";
                 foreach($tests as &$test)
-                    echo ", '{$test['name']}'";
+                    echo ", '" . htmlspecialchars($test['name']) . "'";
                 echo " ]";
                 for ($ms = 0; $ms <= $progress_end; $ms += 100) {
                     echo ",\n  ['" . number_format($ms / 1000, 1) . "'";

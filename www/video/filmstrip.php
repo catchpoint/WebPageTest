@@ -21,10 +21,10 @@ $thumbTop = $fontHeight + $rowMargin;
 $bgcolor = '000000';
 $color = 'ffffff';
 if (array_key_exists('bg', $_GET)) {
-    $bgcolor = $_GET['bg'];
+    $bgcolor = preg_replace('/[^0-9]/', $_GET['bg']);
 }
 if (array_key_exists('text', $_GET)) {
-    $color = $_GET['text'];
+    $color = preg_replace('/[^0-9]/', $_GET['text']);
 }
 $bgcolor = html2rgb($bgcolor);
 $color = html2rgb($color);
