@@ -184,6 +184,10 @@ bool WebBrowser::RunAndWait() {
         lstrcat(cmdLine, _T(" http://127.0.0.1:8888/blank.html"));
       }
 
+      // set up the TLS session key log
+      SetEnvironmentVariable(L"SSLKEYLOGFILE", _test._file_base + L"_keylog.log");
+      DeleteFile(_test._file_base + L"_keylog.log");
+
       _status.Set(_T("Launching: %s\n"), cmdLine);
 
       STARTUPINFO si;

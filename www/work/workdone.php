@@ -169,7 +169,10 @@ if (ValidateTestId($id)) {
             if( is_file("$testPath/$textFile") ) {
               $parts = pathinfo($textFile);
               $ext = $parts['extension'];
-              if( !strcasecmp( $ext, 'txt') || !strcasecmp( $ext, 'json') || !strcasecmp( $ext, 'csv') ) {
+              if( !strcasecmp( $ext, 'txt') ||
+                  !strcasecmp( $ext, 'json') ||
+                  !strcasecmp( $ext, 'log') ||
+                  !strcasecmp( $ext, 'csv') ) {
                 if ($ini['sensitive'] && strpos($textFile, '_report'))
                   RemoveSensitiveHeaders("$testPath/$textFile");
                 elseif (strpos($textFile, '_optimization'))

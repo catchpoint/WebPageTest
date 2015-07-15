@@ -132,6 +132,8 @@ bool WptSettings::Load(void) {
   // see if we need to load settings from EC2 (server and location)
   if (GetPrivateProfileInt(_T("WebPagetest"), _T("ec2"), 0, iniFile)) {
     LoadFromEC2();
+  } else if (GetPrivateProfileInt(_T("WebPagetest"), _T("gce"), 0, iniFile)) {
+    LoadFromGCE();
   } else if (GetPrivateProfileInt(_T("WebPagetest"), _T("azure"), 0, iniFile)) {
 //    LoadFromAzure();
   }
@@ -170,6 +172,22 @@ void WptSettings::LoadFromEC2(void) {
 
   GetUrlText(_T("http://169.254.169.254/latest/meta-data/instance-id"), 
     _ec2_instance);
+  _ec2_instance = _ec2_instance.Trim();
+}
+
+/*-----------------------------------------------------------------------------
+  Load the settings from GCE Meta Data
+-----------------------------------------------------------------------------*/
+void WptSettings::LoadFromGCE(void) {
+  CString userData;
+  if (GetUrlText(
+      L"http://169.254.169.254/computeMetadata/v1/instance/attributes/wpt_data",
+      userData, L"Metadata-Flavor: Google")) {
+    ParseInstanceData(userData);
+  }
+
+  GetUrlText(_T("http://169.254.169.254/computeMetadata/v1/instance/id"), 
+    _ec2_instance, L"Metadata-Flavor: Google");
   _ec2_instance = _ec2_instance.Trim();
 }
 
@@ -254,7 +272,7 @@ void WptSettings::ParseInstanceData(CString &userData) {
 /*-----------------------------------------------------------------------------
   Get a string response from the given url
 -----------------------------------------------------------------------------*/
-bool WptSettings::GetUrlText(CString url, CString &response)
+bool WptSettings::GetUrlText(CString url, CString &response, LPCTSTR headers)
 {
   bool ret = false;
   response.Empty();
@@ -263,7 +281,11 @@ bool WptSettings::GetUrlText(CString url, CString &response)
                                     INTERNET_OPEN_TYPE_PRECONFIG,
                                     NULL, NULL, 0);
   if (internet) {
-    HINTERNET http_request = InternetOpenUrl(internet, url, NULL, 0, 
+    DWORD headers_len = 0;
+    if (headers)
+      headers_len = lstrlen(headers);
+    HINTERNET http_request = InternetOpenUrl(internet, url,
+                                headers, headers_len, 
                                 INTERNET_FLAG_NO_CACHE_WRITE | 
                                 INTERNET_FLAG_NO_UI | 
                                 INTERNET_FLAG_PRAGMA_NOCACHE | 
