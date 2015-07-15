@@ -252,7 +252,8 @@ $page_description = "Comparison Test$testLabel.";
             echo "var sponsors = " . json_encode($sponsors) . ";\n";
 
             if( strlen($_GET['origin']) ) {
-                echo "var wpt_origin=\"{$_GET['origin']}\";\n";
+                $origin = htmlspecialchars($_GET['origin']);
+                echo "var wpt_origin=\"$origin\";\n";
                 echo "var wpt_use_origin=true;\n";
             } else
                 echo "var wpt_use_origin=false;\n";
@@ -288,12 +289,13 @@ $page_description = "Comparison Test$testLabel.";
                 <?php
                 // build the batch script
                 if( strlen($_GET['origin']) ) {
+                    $origin = htmlspecialchars($_GET['origin']);
                     echo 'var batch = "' .
 
                             '{test}\n' .
                             'label=Original\n' .
                             '{script}\n' .
-                            'setDnsName\t%HOSTR%\t' . $_GET['origin'] . '\n'.
+                            'setDnsName\t%HOSTR%\t' . $origin . '\n'.
                             'navigate\t" + url + "\n' .
                             '{/script}\n' .
                             '{/test}\n' .
@@ -309,7 +311,7 @@ $page_description = "Comparison Test$testLabel.";
                             '{test}\n' .
                             'label=Original Path\n' .
                             '{script}\n' .
-                            'setDnsName\t%HOSTR%\t' . $_GET['origin'] . '\n'.
+                            'setDnsName\t%HOSTR%\t' . $origin . '\n'.
                             'logdata\t0\n' .
                             'navigate\t" + landing + "\n' .
                             'navigate\thttp://www.webpagetest.org/blank.html\n' .
