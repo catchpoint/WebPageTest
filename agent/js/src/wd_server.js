@@ -43,6 +43,7 @@ exports.process = process;
 var WD_CONNECT_TIMEOUT_MS_ = 120000;
 var DEVTOOLS_CONNECT_TIMEOUT_MS_ = 10000;
 var DETACH_TIMEOUT_MS_ = 2000;
+var VIDEO_PROCESSING_TIMEOUT_MS = 600000;
 
 /** Allow test access. */
 exports.WAIT_AFTER_ONLOAD_MS = 10000;
@@ -173,12 +174,15 @@ WebDriverServer.prototype.init = function(args) {
   this.isCacheWarm_ = args.isCacheWarm;
   this.screenshots_ = [];
   this.task_ = args.task;
+  this.flags_ = args.flags;
   this.testError_ = undefined;
   this.testStartTime_ = undefined;
   this.timeoutTimer_ = undefined;
   this.timeout_ = args.timeout;
   this.tracePromise_ = undefined;
   this.videoFile_ = undefined;
+  this.videoFrames_ = undefined;
+  this.histogramFile_ = undefined;
   this.runTempDir_ = args.runTempDir || '';
   this.customMetrics_ = undefined;
   this.userTimingMarks_ = undefined;
@@ -825,12 +829,17 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
     this.tracePromise_ = new webdriver.promise.Deferred();
     var message = {method: 'Tracing.start'};
     message.params = {
-      categories: 'disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame',
+      categories: 'blink.console,toplevel,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame',
       options: 'record-as-much-as-possible'
     };
     if (1 === this.task_.trace) {
       var trace_categories = this.task_.traceCategories || '*';
-      message.params.categories = message.params.categories + ',' + trace_categories;
+      message.params.categories = trace_categories + ',' + message.params.categories;
+    } else {
+      message.params.categories = '-*,' + message.params.categories;
+    }
+    if (this.task_.timelineStackDepth) {
+      message.params.categories = message.params.categories + ',disabled-by-default-devtools.timeline.stack,devtools.timeline.stack,disabled-by-default-v8.cpu_profile';
     }
     this.devToolsCommand_(message).then(function() {
       logger.debug('Started tracing');
@@ -1238,6 +1247,39 @@ WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
   }.bind(this));
 };
 
+WebDriverServer.prototype.scheduleProcessVideo_ = function() {
+  this.scheduleNoFault_('Process Video', function() {
+    if (this.videoFile_ && this.flags_['processvideo'] == 'yes') {
+      var videoDir = path.join(this.runTempDir_, 'video');
+      this.histogramFile_ = path.join(this.runTempDir_, 'histograms.json');
+      var traceFile = path.join(this.runTempDir_, 'trace.json');
+      var options = ['visualmetrics.py', '-i', this.videoFile_, '-d',
+          videoDir, '--orange', '--viewport', '--force', '--quality', '75',
+          '--histogram', this.histogramFile_];
+      if (this.traceData_) {
+        fs.writeFileSync(traceFile, JSON.stringify(this.traceData_));
+        options.push('--timeline');
+        options.push(traceFile);
+      }
+      process_utils.scheduleExec(this.app_,
+          'python', options, undefined,
+          VIDEO_PROCESSING_TIMEOUT_MS).then(function(stdout) {
+        logger.info('Video processing completed: ' + stdout);
+        this.videoFrames_ = [];
+        var videoDir = path.join(this.runTempDir_, 'video');
+        var files = fs.readdirSync(videoDir);
+        files.forEach(function(fileName) {
+          var filePath = path.join(videoDir, fileName);
+          this.videoFrames_.push({'fileName' : fileName, 'diskPath' : filePath});
+        }.bind(this));
+        this.videoFile_ = undefined;
+      }.bind(this), function(err) {
+        logger.info('Video processing error: ' + err.message);
+      }.bind(this));
+    }
+  }.bind(this));
+};
+
 /**
  * @private
  */
@@ -1280,6 +1322,7 @@ WebDriverServer.prototype.done_ = function() {
     if (this.videoFile_) {
       this.scheduleNoFault_('Stop video recording',
           this.browser_.scheduleStopVideoRecording.bind(this.browser_));
+      this.scheduleProcessVideo_();
     }
     if (this.pcapFile_) {
       this.scheduleNoFault_('Stop packet capture',
@@ -1294,7 +1337,9 @@ WebDriverServer.prototype.done_ = function() {
           screenshots: this.screenshots_,
           traceData: this.traceData_,
           videoFile: this.videoFile_,
+          videoFrames: this.videoFrames_,
           pcapFile: this.pcapFile_,
+          histogramFile: this.histogramFile_,
           customMetrics: this.customMetrics_,
           userTimingMarks: this.userTimingMarks_,
           pageData: this.pageData_

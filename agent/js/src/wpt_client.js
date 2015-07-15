@@ -740,8 +740,13 @@ Client.prototype.endOfRun_ = function(job, isRunFinished, isJobFinished, e) {
 
 function createFileName(job, fileName) {
   'use strict';
-  return job.runNumber + (job.isCacheWarm ? '_Cached' : '') +
-      ('.' !== fileName[0] ? '_' : '') + fileName;
+  if (fileName == 'histograms.json') {
+    var prefix = job.runNumber + '.' + (job.isCacheWarm ? '1' : '0') + '.';
+  } else {
+    var prefix = job.runNumber + (job.isCacheWarm ? '_Cached' : '') +
+                 ('.' !== fileName[0] ? '_' : '');
+  }
+  return prefix + fileName;
 }
 
 function createZip(zipFileMap, fileNamer) {
