@@ -38,6 +38,8 @@ CURLBlaster::CURLBlaster(HWND hWnd, CLog &logRef, CIpfw &ipfwRef, HANDLE &testin
 , ipfw(ipfwRef)
 , testingMutex(testingMutexRef)
 , dlg(dlgRef)
+, rebooting(false)
+, needsReboot(false)
 {
 	InitializeCriticalSection(&cs);
 	hMustExit = CreateEvent(0, TRUE, FALSE, NULL );
@@ -212,7 +214,7 @@ void CURLBlaster::ThreadProc(void)
 	  Launch(_T("RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 6655"));
     ReleaseMutex(testingMutex);
 
-		while( WaitForSingleObject(hMustExit,0) == WAIT_TIMEOUT )
+		while( WaitForSingleObject(hMustExit,0) == WAIT_TIMEOUT && !rebooting )
 		{
 		  dlg.Alive();
 		  
@@ -252,13 +254,13 @@ void CURLBlaster::ThreadProc(void)
 						dlg.Alive();
 						if( Launch(preLaunch) )
 						{
-							LaunchBrowser();
-              
-							// record the cleared cache view
-							if( urlManager->RunRepeatView(info) ) {
-							  dlg.Alive();
-								LaunchBrowser();
-							}
+              if (LaunchBrowser()) {
+							  // record the cleared cache view
+							  if( urlManager->RunRepeatView(info) ) {
+							    dlg.Alive();
+								  LaunchBrowser();
+							  }
+              }
 
 							Launch(postLaunch);
 						}
@@ -279,8 +281,15 @@ void CURLBlaster::ThreadProc(void)
         dlg.SetStatus(_T("Waiting for next test..."));
 				Sleep(500 + (rand() % 500));
       }
+
+      if (needsReboot) {
+        Reboot();
+        rebooting = true;
+      }
 		}
-	}
+  } else {
+    Reboot();
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -884,7 +893,16 @@ bool CURLBlaster::LaunchBrowser(void)
 						info.cpu = 0;
 						DWORD len = sizeof(info.cpu);
 						RegQueryValueEx(hKey, _T("cpu"), 0, 0, (LPBYTE)&info.cpu, &len);
+
+            DWORD started = 0;
+            len = sizeof(started);
+						RegQueryValueEx(hKey, _T("Started"), 0, 0, (LPBYTE)&started, &len);
+            if (!started) {
+              ret = false;
+              needsReboot = true;
+            }
 								
+						RegDeleteValue(hKey, _T("Started"));
 						RegDeleteValue(hKey, _T("Result"));
 						RegDeleteValue(hKey, _T("cpu"));
 						
@@ -972,6 +990,7 @@ void CURLBlaster::ConfigurePagetest(void)
 			// delete any old results from the reg key
 			RegDeleteValue(hKey, _T("Result"));
 			RegDeleteValue(hKey, _T("cpu"));
+			RegDeleteValue(hKey, _T("Started"));
 
 			RegCloseKey(hKey);
 		}
