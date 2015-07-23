@@ -12,8 +12,6 @@ Makefile
 /stamp-h*
 /java/classnoinst.stamp
 /pkgscripts/
-/jconfig.h
-/jconfigint.h
 /config.guess
 /config.h
 /config.h.in
