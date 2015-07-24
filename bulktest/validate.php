@@ -70,8 +70,7 @@ foreach($counts as $label => $count) {
 function AllTestsComplete(&$url) {
   $all_complete = true;
   foreach($url as $result) {
-    //if (!isset($result['result']) || (isset($result['resubmit']) && $result['resubmit'])) {
-    if (!isset($result['result'])) {
+    if (!isset($result['result']) || (isset($result['resubmit']) && $result['resubmit'])) {
       $all_complete = false;
       break;
     }
@@ -95,12 +94,12 @@ function MetricsSimilar(&$url) {
     }
   }
   
-  // make sure the TTFB is within 100ms
+  // make sure the TTFB is within 200ms
   if ($similar) {
     $baseline = null;
     foreach($url as $result) {
       if (isset($baseline)) {
-        if (abs($result['TTFB'] - $baseline) > 100) {
+        if (abs($result['TTFB'] - $baseline) > 200) {
           $similar = false;
           break;
         }

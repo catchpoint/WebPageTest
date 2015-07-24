@@ -4,5 +4,5 @@ do
 	php status.php
 #	php validate.php
 	php submit.php
-	sleep 300
+	sleep 30
 done
