@@ -223,7 +223,11 @@ void CURLBlaster::ThreadProc(void)
       dlg.SetStatus(_T("Checking for work..."));
 			if(	GetUrl() )
 			{
-        if( info.testType.GetLength() )
+        if (info.reboot)
+        {
+          needsReboot = true;
+        }
+        else if( info.testType.GetLength() )
         {
           // running a custom test
           do
@@ -287,8 +291,6 @@ void CURLBlaster::ThreadProc(void)
         rebooting = true;
       }
 		}
-  } else {
-    Reboot();
   }
 }
 
@@ -705,6 +707,7 @@ void CURLBlaster::ClearCache(void)
 bool CURLBlaster::LaunchBrowser(void)
 {
 	bool ret = false;
+  bool isIE = false;
 	info.testResult = -1;
 
 	// flush the DNS cache
@@ -788,6 +791,7 @@ bool CURLBlaster::LaunchBrowser(void)
 					// we're launching IE
 					SHGetFolderPath(NULL, CSIDL_PROGRAM_FILES, 0, SHGFP_TYPE_CURRENT, exe);
 					PathAppend(exe, _T("Internet Explorer\\iexplore.exe"));
+          isIE = true;
 					
 					// give it an about:blank command line for launch
 					lstrcpy( commandLine, _T("\"") );
@@ -897,7 +901,7 @@ bool CURLBlaster::LaunchBrowser(void)
             DWORD started = 0;
             len = sizeof(started);
 						RegQueryValueEx(hKey, _T("Started"), 0, 0, (LPBYTE)&started, &len);
-            if (!started) {
+            if (isIE && !started) {
               ret = false;
               needsReboot = true;
             }
