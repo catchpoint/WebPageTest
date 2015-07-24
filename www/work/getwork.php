@@ -51,6 +51,14 @@ if (isset($locations) && is_array($locations) && count($locations) &&
     if (!$is_done && strlen($location))
       $is_done = GetJob();
   }
+} elseif (isset($_GET['freedisk']) && (float)$_GET['freedisk'] <= 0.1) {
+  if (isset($_GET['reboot']) && GetSetting("lowDiskReboot")) {
+    header('Content-type: text/plain');
+    header("Cache-Control: no-cache, must-revalidate");
+    header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+    echo "Reboot";
+    $is_done = true;
+  }
 }
 
 // kick off any cron work we need to do asynchronously
