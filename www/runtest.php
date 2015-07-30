@@ -1808,7 +1808,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         $testInfo .= "batch_locations=$batch_locations\r\n";
         $testInfo .= "sensitive={$test['sensitive']}\r\n";
         $testInfo .= "webdriver={$test['webdriver']}\r\n";
-        $testInfo .= "webdriver={$test['webdriverExtraArgs']}\r\n";
+        $testInfo .= "webdriverExtraArgs={$test['webdriverExtraArgs']}\r\n";
         if( strlen($test['login']) )
             $testInfo .= "authenticated=1\r\n";
         $testInfo .= "connections={$test['connections']}\r\n";
