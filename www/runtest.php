@@ -1189,7 +1189,7 @@ function ValidateScript(&$script, &$error)
 {
     global $test;
     $url = null;
-    if (!$req_webdriver) {
+    if (stripos($script, 'webdriver.Builder(') === false && !$req_webdriver) {
         global $test;
         FixScript($test, $script);
 
