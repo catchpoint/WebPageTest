@@ -101,6 +101,8 @@
             $test['web10'] = $req_web10;
             $test['ignoreSSL'] = $req_ignoreSSL;
             $test['script'] = trim($req_script);
+            $test['webdriver'] = trim($req_webdriver);
+            $test['webdriverExtraArgs'] = trim($req_webdriverExtraArgs);
             $test['block'] = $req_block;
             $test['notify'] = trim($req_notify);
             $test['video'] = $req_video;
@@ -1187,8 +1189,7 @@ function ValidateScript(&$script, &$error)
 {
     global $test;
     $url = null;
-    if (stripos($script, 'webdriver.Builder(') === false &&
-            stripos($script, '#!/webdriver') === false) {
+    if (!$req_webdriver) {
         global $test;
         FixScript($test, $script);
 
@@ -1228,12 +1229,7 @@ function ValidateScript(&$script, &$error)
 
         if( strlen($error) )
             unset($url);
-    } elseif (stripos($script, '#!/webdriver') == 0) {
-        $wdLang = 'java';
-        ParseWebdriverScript($script, $wdLang);
-        $test['webdriver'] = $wdLang;
-    }
-
+    } 
     return $url;
 }
 
@@ -1811,14 +1807,13 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         $testInfo .= "batch=$batch\r\n";
         $testInfo .= "batch_locations=$batch_locations\r\n";
         $testInfo .= "sensitive={$test['sensitive']}\r\n";
+        $testInfo .= "webdriver={$test['webdriver']}\r\n";
+        $testInfo .= "webdriver={$test['webdriverExtraArgs']}\r\n";
         if( strlen($test['login']) )
             $testInfo .= "authenticated=1\r\n";
         $testInfo .= "connections={$test['connections']}\r\n";
         if( strlen($test['script']) ) {
             $testInfo .= "script=1\r\n";
-            if ($test['webdriver']) {
-                $testInfo .= "webdriver={$test['webdriver']}\r\n";
-            }
         }
         if( strlen($test['notify']) )
             $testInfo .= "notify={$test['notify']}\r\n";
@@ -1938,8 +1933,11 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "clearcerts=1\r\n";
             if( $test['orientation'] )
                 $testFile .= "orientation={$test['orientation']}\r\n";
-            if ($test['script'] && $test['webdriver'])
+            if ($test['script'] && $test['webdriver']) {
                 $testFile .= "webdriver={$test['webdriver']}\r\n";
+                if ($test['webdriverExtraArgs'])
+                    $testFile .= "webdriverExtraArgs={$test['webdriverExtraArgs']}\r\n";
+            }
             if (array_key_exists('continuousVideo', $test) && $test['continuousVideo'])
                 $testFile .= "continuousVideo=1\r\n";
             if (array_key_exists('responsive', $test) && $test['responsive'])
