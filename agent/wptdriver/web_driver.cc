@@ -4,6 +4,19 @@
 extern const TCHAR * BROWSER_STARTED_EVENT;
 extern const TCHAR * BROWSER_DONE_EVENT;
 
+static CStringA UTF16toUTF8(const CStringW& utf16) {
+  CStringA utf8;
+  int len = WideCharToMultiByte(CP_UTF8, 0, utf16, -1, NULL, 0, 0, 0);
+  if (len > 1) {
+    char *ptr = utf8.GetBuffer(len - 1);
+    if (ptr) {
+      WideCharToMultiByte(CP_UTF8, 0, utf16, -1, ptr, len, 0, 0);
+    }
+    utf8.ReleaseBuffer();
+  }
+  return utf8;
+}
+
 static DWORD WINAPI ReadClientErrorProc(LPVOID lpvParam) {
   WebDriver *driver = (WebDriver *)lpvParam;
 
@@ -41,6 +54,9 @@ WebDriver::WebDriver(WptSettings& settings,
                                        BROWSER_STARTED_EVENT);
   _browser_done_event = CreateEvent(&null_dacl, TRUE, FALSE,
                                     BROWSER_DONE_EVENT);
+  _scripts_dir = browser.app_data_dir_ + _T("\\webdriver_scripts");
+  CreateDirectory(_scripts_dir, NULL);
+
 }
 
 WebDriver::~WebDriver() {
@@ -246,6 +262,9 @@ bool WebDriver::SpawnWebDriverClient() {
   CAtlArray<CString> options;
   DWORD thread_id;
   
+  // Add the test id
+  options.Add(_T("--id"));
+  options.Add(_test._id);
   // Add the browser we are about to launch.
   options.Add(_T("--browser"));
   options.Add(_T("\"") + _settings._browser._browser.MakeLower() + _T("\""));
@@ -253,6 +272,11 @@ bool WebDriver::SpawnWebDriverClient() {
     // Script is empty. Test the said url.
     options.Add(_T("--test-url"));
     options.Add(_test._url);
+  } else {
+    CString filepath = _scripts_dir + _T("\\script_") + _test._id;
+    WriteScriptToFile(_test._script, filepath);
+    options.Add(_T("--test-script"));
+    options.Add(_T("\"") + filepath + _T("\""));
   }
   options.Add(_T("--server-url"));
   options.Add(_settings._webdriver_server_url);
@@ -329,4 +353,19 @@ bool WebDriver::ReadPipe(HANDLE hRead, CString &content) {
   }
   
   return true;
+}
+
+bool WebDriver::WriteScriptToFile(CString& script, CString& filepath) {
+  HANDLE file = CreateFile(filepath.GetBuffer(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS,
+                            0, 0);
+  bool ret = false;
+  if (file != INVALID_HANDLE_VALUE) {
+    DWORD bytes_written = 0;
+    CStringA utf8_script = ::UTF16toUTF8(script);
+    WriteFile(file, (LPCWSTR)utf8_script.GetBuffer(), utf8_script.GetLength(), &bytes_written, 0);
+    CloseHandle(file);
+    ret = true;
+  }
+
+  return ret;
 }

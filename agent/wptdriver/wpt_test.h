@@ -205,6 +205,7 @@ public:
   DWORD   _script_timeout_multiplier;
   bool    _webdriver_mode;
   CString _webdriver_lang;
+  CString _webdriver_args;
 
   // current state
   int     _run;

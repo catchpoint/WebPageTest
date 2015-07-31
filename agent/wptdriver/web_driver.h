@@ -18,6 +18,7 @@ private:
   bool SpawnWebDriverClient();
   void TerminateWebDriverServer();
   void TerminateWebDriverClient();
+  bool WriteScriptToFile(CString& script, CString& filename);
 
   bool CreateStdPipes(HANDLE *hRead, HANDLE *hWrite);
   
@@ -43,4 +44,5 @@ private:
 
   CString _client_err;
   CString _server_err;
+  CString _scripts_dir;
 };

@@ -159,7 +159,7 @@ void WptTest::Reset(void) {
   _test_error.Empty();
   _custom_metrics.Empty();
   _has_test_timed_out = false;
-  _webdriver_mode = true;
+  _webdriver_mode = false;
 }
 
 /*-----------------------------------------------------------------------------
@@ -303,6 +303,8 @@ bool WptTest::Load(CString& test) {
         } else if (!key.CompareNoCase(_T("webdriver"))) {
           _webdriver_mode = true;
           _webdriver_lang = value.Trim();
+        } else if (!key.CompareNoCase(_T("webdriverExtraArgs"))) {
+          _webdriver_args = value.Trim();
         }
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {
@@ -323,7 +325,6 @@ bool WptTest::Load(CString& test) {
 
   if (_script.GetLength())
     _test_timeout *= _script_timeout_multiplier;
-
   WptTrace(loglevel::kFunction, _T("WptTest::Load() - Loaded test %s\n"), 
                                                                 (LPCTSTR)_id);
 

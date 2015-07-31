@@ -1188,6 +1188,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 function ValidateScript(&$script, &$error)
 {
     global $test;
+    global $req_webdriver;
     $url = null;
     if (stripos($script, 'webdriver.Builder(') === false && !$req_webdriver) {
         global $test;
