@@ -340,6 +340,16 @@ void WptDriverCore::Init(void){
     RegCloseKey(hKey);
   }
 
+  // Set it to reboot automatically with Windows updates
+  if (SUCCEEDED(RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
+      _T("SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU"), 0, 
+      KEY_SET_VALUE, &hKey))) {
+    DWORD val = 1;
+    RegSetValueEx(hKey, _T("AlwaysAutoRebootAtScheduledTime"), 0, REG_DWORD, 
+                  (LPBYTE)&val, sizeof(val));
+    RegCloseKey(hKey);
+  }
+
   ExtractZipFiles();
 
   // register the IE BHO if it is in the directory
