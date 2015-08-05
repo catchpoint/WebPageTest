@@ -79,7 +79,7 @@ function Agent(app, client, flags) {
   }
   this.runTempDir_ = 'runtmp/' + (runTempSuffix || '_wpt');
   this.workDir_ = 'work/' + (runTempSuffix || '_wpt');
-  this.scheduleMakeDirs_(this.workDir_);
+  this.scheduleCleanWorkDir_();
   this.aliveFile_ = undefined;
   if (flags.alive)
     this.aliveFile_ = flags.alive + '.alive';
@@ -457,6 +457,7 @@ Agent.prototype.startJobRun_ = function(job) {
           timeout: job.timeout,
           customBrowser: job.customBrowser,
           runTempDir: this.runTempDir_,
+          workDir: this.workDir_,
           flags: flags,
           task: task
         };
@@ -535,10 +536,22 @@ Agent.prototype.scheduleCleanRunTempDir_ = function() {
         try {fs.unlinkSync(filePath);} catch(e) {}
       }.bind(this));
     }.bind(this));
-    process_utils.scheduleFunction(this.app_, 'Tmp read',
-        fs.readdir, this.runTempDir_).then(function(files) {
+  }.bind(this));
+};
+
+/**
+ * Makes sure the work dir exists and is empty, but ignores deletion errors.
+ * Currently supports only flat files, no subdirectories.
+ * @private
+ */
+Agent.prototype.scheduleCleanWorkDir_ = function() {
+  'use strict';
+  this.scheduleNoFault_('Clean work dir', function() {
+    this.scheduleMakeDirs_(this.workDir_);
+    process_utils.scheduleFunctionNoFault(this.app_, 'Work read',
+        fs.readdir, this.workDir_).then(function(files) {
       files.forEach(function(fileName) {
-        var filePath = path.join(this.runTempDir_, fileName);
+        var filePath = path.join(this.workDir_, fileName);
         try {fs.unlinkSync(filePath);} catch(e) {}
       }.bind(this));
     }.bind(this));

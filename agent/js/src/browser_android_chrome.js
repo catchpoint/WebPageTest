@@ -70,6 +70,8 @@ var KNOWN_BROWSERS = {
     'Chrome 38': 'com.chrome.beta'
   };
 
+var LAST_INSTALL_FILE = 'lastInstall.txt';
+
 
 /**
  * Constructs a Chrome Mobile controller for Android.
@@ -108,10 +110,16 @@ function BrowserAndroidChrome(app, args) {
     throw new Error('Missing deviceSerial');
   }
   this.deviceSerial_ = args.flags.deviceSerial;
-  this.shouldInstall_ = args.customBrowser && args.customBrowser !== this.app_.gLastInstall;
+  this.workDir_ = args.workDir || '';
+  var lastInstall = undefined;
+  try {
+    lastInstall = fs.readFileSync(path.join(this.workDir_, LAST_INSTALL_FILE));
+  } catch(e) {}
+  this.shouldInstall_ =
+      args.customBrowser && (args.customBrowser != lastInstall);
   if (this.shouldInstall_)
-    logger.debug('Browser install for ' + args.customBrowser +
-        ' needed.  Last install: ' + this.app_.gLastInstall);
+    logger.debug('Browser install for "' + args.customBrowser +
+        '" needed.  Last install: "' + lastInstall + '"');
   this.chrome_ = args.customBrowser || args.flags.chrome;  // Chrome.apk.
   this.chromedriver_ = args.flags.chromedriver;
   if (args.flags.chromePackage) {
@@ -232,6 +240,8 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
   this.scheduleStartPacServer_();
   this.scheduleSetStartupFlags_();
   this.clearProfile_();
+  this.clearDownloads_();
+  this.clearNotifications_();
 
   // Flush the DNS cache
   this.adb_.su(['ndc', 'resolver', 'flushdefaultif']);
@@ -279,6 +289,20 @@ BrowserAndroidChrome.prototype.clearProfile_ = function() {
     }.bind(this));
     //this.adb_.su(['rm', '/data/local/chrome-command-line']);
   }
+};
+
+BrowserAndroidChrome.prototype.clearDownloads_ = function() {
+  this.app_.schedule('Clear Downloads', function() {
+    this.adb_.getStoragePath().then(function(storagePath) {
+      this.adb_.su(['rm', storagePath + '/Download/*']);
+    }.bind(this));
+  }.bind(this));
+};
+
+BrowserAndroidChrome.prototype.clearNotifications_ = function() {
+  this.app_.schedule('Clear Notifications', function() {
+    this.adb_.su(['service', 'call', 'notification', '1']);
+  }.bind(this));
 };
 
 /**
@@ -331,8 +355,7 @@ BrowserAndroidChrome.prototype.scheduleInstallIfNeeded_ = function() {
     this.adb_.su(['rm', '-rf', '/data/data/' + this.chromePackage_]);
     // Chrome install on an emulator takes a looong time.
     this.adb_.adb(['install', '-r', this.chrome_], {}, /*timeout=*/120000);
-    this.app_.gLastInstall = this.chrome_;
-    logger.debug('Installed ' + this.app_.gLastInstall);
+    fs.writeFileSync(path.join(this.workDir_, LAST_INSTALL_FILE), this.chrome_);
   }
   // TODO(wrightt): use `pm list packages` to check pkg
 };

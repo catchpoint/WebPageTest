@@ -180,11 +180,12 @@ WebDriverServer.prototype.init = function(args) {
   this.testStartTime_ = undefined;
   this.timeoutTimer_ = undefined;
   this.timeout_ = args.timeout;
-  this.tracePromise_ = undefined;
+  this.traceRunning_ = false;
   this.videoFile_ = undefined;
   this.videoFrames_ = undefined;
   this.histogramFile_ = undefined;
   this.runTempDir_ = args.runTempDir || '';
+  this.workDir_ = args.workDir || '';
   this.customMetrics_ = undefined;
   this.userTimingMarks_ = undefined;
   this.pageData_ = undefined;
@@ -825,9 +826,9 @@ WebDriverServer.prototype.clearPageAndStartVideoWd_ = function() {
 WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
   'use strict';
   // Always enable tracing, at a minimum to capture timeline data
-  if (!this.driver_ && !this.tracePromise_) {
+  if (!this.driver_ && !this.traceRunning_) {
     this.traceData_ = {traceEvents: []};
-    this.tracePromise_ = new webdriver.promise.Deferred();
+    this.traceRunning_ = true;
     var message = {method: 'Tracing.start'};
     message.params = {
       categories: 'blink.console,toplevel,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame',
@@ -847,7 +848,7 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
     }, function(e) {
       // Might be crbug/392577, which affects Chrome 36.0.1967 - 37.0.2000.
       this.testError_ = 'Tracing is not supported.';
-      this.tracePromise_ = undefined;
+      this.traceRunning_ = false;
       throw e;
     }.bind(this));
   }
@@ -860,7 +861,7 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
  */
 WebDriverServer.prototype.onTracingMessage_ = function(message) {
   'use strict';
-  if (this.tracePromise_ && this.tracePromise_.isPending()) {
+  if (this.traceRunning_) {
     if ('Tracing.dataCollected' === message.method) {
       var value = (message.params || {}).value;
       if (value instanceof Array) {
@@ -870,7 +871,7 @@ WebDriverServer.prototype.onTracingMessage_ = function(message) {
       }
     } else if ('Tracing.tracingComplete' === message.method) {
       logger.debug('Signalling finish of tracing');
-      this.tracePromise_.fulfill();
+      this.traceRunning_ = false;
     }
   } else {
     logger.debug('Unexpected tracing message - ' + message.method);
@@ -883,14 +884,11 @@ WebDriverServer.prototype.onTracingMessage_ = function(message) {
  */
 WebDriverServer.prototype.scheduleStopTracing_ = function() {
   'use strict';
-  this.scheduleNoFault_('Wait for tracingComplete', function() {
-    if (this.tracePromise_ && this.tracePromise_.isPending()) {
-      this.devToolsCommand_({method: 'Tracing.end'});
-      return this.app_.wait(function() {
-        return !this.tracePromise_ || !this.tracePromise_.isPending();
-      }.bind(this), TRACING_STOP_TIMEOUT_MS);
-    } else {
-      return undefined;
+  this.scheduleNoFault_('Stop tracing', function() {
+    if (this.traceRunning_) {
+    this.devToolsCommand_({method: 'Tracing.end'});
+    this.app_.wait(function() {return !this.traceRunning_;}.bind(this),
+        TRACING_STOP_TIMEOUT_MS);
     }
   }.bind(this));
 };
