@@ -178,80 +178,83 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
       job.zipResultFiles['page_data.json'] = JSON.stringify(ipcMsg.pageData);
     }
     if (ipcMsg.histogramFile) {
-      process_utils.scheduleFunctionNoFault(this.app_, 'Read histogram file',
-              fs.readFile, ipcMsg.histogramFile).then(function(buffer) {
-        job.resultFiles.push(new wpt_client.ResultFile(
-            wpt_client.ResultFile.ResultType.IMAGE,
-            'histograms.json',
-            'text/plain',
-            buffer));
-      }.bind(this));
-      process_utils.scheduleFunctionNoFault(this.app_, 'Delete histogram file',
-          fs.unlink, ipcMsg.histogramFile);
+      try {
+        var buffer = fs.readFileSync(ipcMsg.histogramFile);
+        if (buffer) {
+          job.resultFiles.push(new wpt_client.ResultFile(
+              wpt_client.ResultFile.ResultType.IMAGE,
+              'histograms.json',
+              'text/plain',
+              buffer));
+        }
+        fs.unlinkSync(ipcMsg.histogramFile);
+      } catch(e) {}
     }
     if (ipcMsg.screenshots && ipcMsg.screenshots.length > 0) {
       var imageDescriptors = [];
       ipcMsg.screenshots.forEach(function(screenshot) {
-        logger.debug('Adding screenshot %s', screenshot.fileName);
-        process_utils.scheduleFunctionNoFault(this.app_,
-            'Read ' + screenshot.diskPath,
-            fs.readFile, screenshot.diskPath).then(function(buffer) {
-          job.resultFiles.push(new wpt_client.ResultFile(
-              wpt_client.ResultFile.ResultType.IMAGE,
-              screenshot.fileName,
-              screenshot.contentType,
-              buffer));
-          if (screenshot.description) {
-            imageDescriptors.push({
-              filename: screenshot.fileName,
-              description: screenshot.description
-            });
+        try {
+          logger.debug('Adding screenshot %s', screenshot.fileName);
+          var buffer = fs.readFileSync(screenshot.diskPath);
+          if (buffer) {
+            job.resultFiles.push(new wpt_client.ResultFile(
+                wpt_client.ResultFile.ResultType.IMAGE,
+                screenshot.fileName,
+                screenshot.contentType,
+                buffer));
+            if (screenshot.description) {
+              imageDescriptors.push({
+                filename: screenshot.fileName,
+                description: screenshot.description
+              });
+            }
           }
-        }.bind(this));
+          fs.unlinkSync(screenshot.fileName);
+        } catch(e) {}
       }.bind(this));
       if (imageDescriptors.length > 0) {
         job.zipResultFiles['images.json'] = JSON.stringify(imageDescriptors);
       }
     }
     if (ipcMsg.videoFile) {
-      process_utils.scheduleFunction(this.app_, 'Read video file',
-          fs.readFile, ipcMsg.videoFile).then(function(buffer) {
-        var ext = path.extname(ipcMsg.videoFile);
-        var mimeType = ('.mp4' === ext) ? 'video/mp4' : 'video/avi';
-        job.resultFiles.push(new wpt_client.ResultFile(
-            wpt_client.ResultFile.ResultType.IMAGE,
-            'video' + ext, mimeType, buffer));
-      }, function(e) {
-        logger.error('Unable to read video file: ' + e.message);
-        job.agentError = job.agentError || e.message;
-      });
+      try {
+        var buffer = fs.readFileSync(ipcMsg.videoFile);
+        if (buffer) {
+          var ext = path.extname(ipcMsg.videoFile);
+          var mimeType = ('.mp4' === ext) ? 'video/mp4' : 'video/avi';
+          job.resultFiles.push(new wpt_client.ResultFile(
+              wpt_client.ResultFile.ResultType.IMAGE,
+              'video' + ext, mimeType, buffer));
+        }
+        fs.unlinkSync(ipcMsg.videoFile);
+      } catch(e) {}
     }
     if (ipcMsg.videoFrames) {
       ipcMsg.videoFrames.forEach(function(videoFrame) {
-        logger.debug('Adding video frame %s', videoFrame.fileName);
-        process_utils.scheduleFunctionNoFault(this.app_,
-            'Read ' + videoFrame.diskPath,
-            fs.readFile, videoFrame.diskPath).then(function(buffer) {
-          job.resultFiles.push(new wpt_client.ResultFile(
-              wpt_client.ResultFile.ResultType.IMAGE,
-              videoFrame.fileName,
-              'image/jpeg',
-              buffer));
-        }.bind(this));
+        try {
+          logger.debug('Adding video frame %s', videoFrame.fileName);
+          var buffer = fs.readFileSync(videoFrame.diskPath);
+          if (buffer) {
+            job.resultFiles.push(new wpt_client.ResultFile(
+                wpt_client.ResultFile.ResultType.IMAGE,
+                videoFrame.fileName,
+                'image/jpeg',
+                buffer));
+          }
+          fs.unlinkSync(videoFrame.diskPath);
+        } catch(e) {}
       }.bind(this));
     }
     if (ipcMsg.pcapFile) {
-      process_utils.scheduleFunction(this.app_, 'Read pcap file',
-              fs.readFile, ipcMsg.pcapFile).then(function(buffer) {
-        job.resultFiles.push(new wpt_client.ResultFile(
-            wpt_client.ResultFile.ResultType.PCAP,
-            '.cap', 'application/vnd.tcpdump.pcap', buffer));
-      }, function(e) {
-        logger.error('Unable to read pcap file: ' + e.message);
-        job.agentError = job.agentError || e.message;
-      });
-      process_utils.scheduleFunctionNoFault(this.app_, 'Delete pcap file',
-          fs.unlink, ipcMsg.pcapFile);
+      try {
+        var buffer = fs.readFileSync(ipcMsg.pcapFile);
+        if (buffer) {
+          job.resultFiles.push(new wpt_client.ResultFile(
+              wpt_client.ResultFile.ResultType.PCAP,
+              '.cap', 'application/vnd.tcpdump.pcap', buffer));
+        }
+        fs.unlinkSync(ipcMsg.pcapFile);
+      } catch(e) {}
     }
     if (job.isReplay) {
       this.webPageReplay_.scheduleGetErrorLog().then(function(log) {
@@ -292,63 +295,59 @@ Agent.prototype.prepareJob_ = function(job) {
             logger.debug("Custom Browser not available, downloading from " +
                 job.task.customBrowserUrl);
             var tempFile = job.customBrowser + '.tmp';
-            this.scheduleUnlinkIfExists_(this.app_, tempFile).then(
-                function() {
-              var active = true;
-              var md5 = crypto.createHash('md5');
-              var file = fs.createWriteStream(tempFile);
-              var onError = function(e) {
-                if (active) {
-                  active = false;
-                  file.end();
-                  this.scheduleUnlinkIfExists_(this.app_,
+            try {fs.unlinkSync(tempFile);} catch(e) {}
+            var active = true;
+            var md5 = crypto.createHash('md5');
+            var file = fs.createWriteStream(tempFile);
+            var onError = function(e) {
+              if (active) {
+                active = false;
+                file.end();
+                try {fs.unlinkSync(tempFile);} catch(e) {}
+                e.message = 'Custom browser download failure from ' +
+                    job.task.customBrowserUrl + ': ' + e.message;
+                logger.warn(e.message);
+                done.reject(e);
+              }
+            }.bind(this);
+            var onDone = function() {
+              if (active) {
+                active = false;
+                file.end();
+                var md5hex = md5.digest('hex').toUpperCase();
+                logger.debug('Finished download - md5: ' + md5hex);
+                if (md5hex == job.task.customBrowserMD5.toUpperCase()) {
+                  process_utils.scheduleFunction(this.app_,
+                          'Rename successful browser download',
+                          fs.rename, tempFile, job.customBrowser).then(
+                      function() {
+                    done.fulfill();
+                  }.bind(this), function() {
+                    done.reject(new Error(
+                        'Failed to rename custom browser file'));
+                  }.bind(this));
+                } else {
+                  process_utils.scheduleUnlinkIfExists(this.app_,
                       tempFile).then(function() {
-                    e.message = 'Custom browser download failure from ' +
-                        job.task.customBrowserUrl + ': ' + e.message;
-                    logger.warn(e.message);
-                    done.reject(e);
+                    done.reject(new Error(
+                        'Failed to download custom browser from ' +
+                        job.task.customBrowserUrl));
                   }.bind(this));
                 }
-              }.bind(this);
-              var onDone = function() {
-                if (active) {
-                  active = false;
-                  file.end();
-                  var md5hex = md5.digest('hex').toUpperCase();
-                  logger.debug('Finished download - md5: ' + md5hex);
-                  if (md5hex == job.task.customBrowserMD5.toUpperCase()) {
-                    process_utils.scheduleFunction(this.app_,
-                            'Rename successful browser download',
-                            fs.rename, tempFile, job.customBrowser).then(
-                        function() {
-                      done.fulfill();
-                    }.bind(this), function() {
-                      done.reject(new Error(
-                          'Failed to rename custom browser file'));
-                    }.bind(this));
-                  } else {
-                    process_utils.scheduleUnlinkIfExists(this.app_,
-                        tempFile).then(function() {
-                      done.reject(new Error(
-                          'Failed to download custom browser from ' +
-                          job.task.customBrowserUrl));
-                    }.bind(this));
-                  }
-                }
-              }.bind(this);
-              var request = http.get(job.task.customBrowserUrl,
-                  function(response) {
-                response.pipe(file);
-                response.on('data', function(chunk) {
-                  md5.update(chunk);
-                }.bind(this));
-                response.on('error', onError);
-                response.on('end', onDone);
-                response.on('close', onDone);
+              }
+            }.bind(this);
+            var request = http.get(job.task.customBrowserUrl,
+                function(response) {
+              response.pipe(file);
+              response.on('data', function(chunk) {
+                md5.update(chunk);
               }.bind(this));
-              request.on('error', onError);
-              request.end();
+              response.on('error', onError);
+              response.on('end', onDone);
+              response.on('close', onDone);
             }.bind(this));
+            request.on('error', onError);
+            request.end();
           } else {
             logger.debug("Custom Browser already available");
             done.fulfill();
@@ -471,23 +470,6 @@ Agent.prototype.startJobRun_ = function(job) {
 };
 
 /**
- * Check if the provided file exists and if it does, delete it.
- *
- * @param {webdriver.promise.ControlFlow} app the scheduler.
- * @param file
- * @return {webdriver.promise.Promise} fulfill({Object}):
- */
-Agent.prototype.scheduleUnlinkIfExists_ = function(app, file) {
-  return process_utils.scheduleFunction(app, 'Check if ' + file + ' exists',
-      fs.exists, file).then(function(exists) {
-    if (exists) {
-      return process_utils.scheduleFunctionNoFault(app,
-              'Unlinking existing file ' + file, fs.unlink, file);
-    }
-  }.bind(this));
-};
-
-/**
  * Create the requested directory if it doesn't already exist.
  *
  * @param {webdriver.promise.ControlFlow} app the scheduler.
@@ -540,8 +522,7 @@ Agent.prototype.scheduleCleanRunTempDir_ = function() {
         var files = fs.readdirSync(videoDir);
         files.forEach(function(fileName) {
           var filePath = path.join(videoDir, fileName);
-          process_utils.scheduleFunctionNoFault(this.app_, 'Delete ' + filePath,
-              fs.unlink, filePath);
+          try {fs.unlinkSync(filePath);} catch(e) {}
         }.bind(this));
         process_utils.scheduleFunctionNoFault(this.app_, 'rmdir ' + videoDir,
             fs.rmdir, videoDir);
@@ -551,16 +532,14 @@ Agent.prototype.scheduleCleanRunTempDir_ = function() {
         fs.readdir, this.runTempDir_).then(function(files) {
       files.forEach(function(fileName) {
         var filePath = path.join(this.runTempDir_, fileName);
-        process_utils.scheduleFunctionNoFault(this.app_, 'Delete ' + filePath,
-            fs.unlink, filePath);
+        try {fs.unlinkSync(filePath);} catch(e) {}
       }.bind(this));
     }.bind(this));
     process_utils.scheduleFunction(this.app_, 'Tmp read',
         fs.readdir, this.runTempDir_).then(function(files) {
       files.forEach(function(fileName) {
         var filePath = path.join(this.runTempDir_, fileName);
-        process_utils.scheduleFunctionNoFault(this.app_, 'Delete ' + filePath,
-            fs.unlink, filePath);
+        try {fs.unlinkSync(filePath);} catch(e) {}
       }.bind(this));
     }.bind(this));
   }.bind(this));
@@ -573,8 +552,7 @@ Agent.prototype.scheduleCleanRunTempDir_ = function() {
 Agent.prototype.scheduleDownload_ = function() {
   this.app_.schedule('Download', function() {
     var tmpFile = this.cacheDir_ + '/download.tmp';
-    process_utils.scheduleFunctionNoFault(this.app_, 'Delete ' + tmpFile,
-        fs.unlink, tmpFile);
+    try {fs.unlinkSync(tmpFile);} catch(e) {}
     this.app_.wait(function() {
       var downloaded = new webdriver.promise.Deferred();
       var file = fs.createWriteStream(tmpFile);

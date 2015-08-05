@@ -44,6 +44,7 @@ var WD_CONNECT_TIMEOUT_MS_ = 120000;
 var DEVTOOLS_CONNECT_TIMEOUT_MS_ = 10000;
 var DETACH_TIMEOUT_MS_ = 2000;
 var VIDEO_PROCESSING_TIMEOUT_MS = 600000;
+var TRACING_STOP_TIMEOUT_MS = 120000;
 
 /** Allow test access. */
 exports.WAIT_AFTER_ONLOAD_MS = 10000;
@@ -868,8 +869,11 @@ WebDriverServer.prototype.onTracingMessage_ = function(message) {
         }.bind(this));
       }
     } else if ('Tracing.tracingComplete' === message.method) {
+      logger.debug('Signalling finish of tracing');
       this.tracePromise_.fulfill();
     }
+  } else {
+    logger.debug('Unexpected tracing message - ' + message.method);
   }
 };
 
@@ -882,7 +886,9 @@ WebDriverServer.prototype.scheduleStopTracing_ = function() {
   this.scheduleNoFault_('Wait for tracingComplete', function() {
     if (this.tracePromise_ && this.tracePromise_.isPending()) {
       this.devToolsCommand_({method: 'Tracing.end'});
-      return this.tracePromise_;
+      return this.app_.wait(function() {
+        return !this.tracePromise_ || !this.tracePromise_.isPending();
+      }.bind(this), TRACING_STOP_TIMEOUT_MS);
     } else {
       return undefined;
     }
@@ -898,8 +904,7 @@ WebDriverServer.prototype.scheduleStartVideoRecording_ = function() {
   this.getCapabilities_().then(function(caps) {
     var videoFileExtension = caps.videoFileExtension || 'avi';
     var videoFile = path.join(this.runTempDir_, 'video.' + videoFileExtension);
-    this.browser_.scheduleStartVideoRecording(
-        videoFile, this.onVideoRecordingExit_.bind(this));
+    this.browser_.scheduleStartVideoRecording(videoFile);
     this.app_.schedule('Video record started', function() {
       logger.debug('Video record start succeeded');
       this.videoFile_ = videoFile;
@@ -1170,6 +1175,7 @@ WebDriverServer.prototype.scheduleGetWdDevToolsLog_ = function() {
  * @private
  */
 WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
+  logger.debug('Collecting metrics');
   this.scheduleNoFault_('Collect Custom Metrics', function() {
     if (this.task_['customMetrics'] !== undefined) {
       for (var metric in this.task_.customMetrics) {
@@ -1292,41 +1298,33 @@ WebDriverServer.prototype.done_ = function() {
       return;
     }
     this.isDone_ = true;
+    this.isRecordingDevTools_ = false;
 
     if (this.testError_) {
       logger.error('Test failed: ' + this.testError_);
     } else {
       logger.info('Test passed');
     }
+    this.scheduleNoFault_('Capture Screen Shot', function() {
+      this.takeScreenshot_('screen', 'end of run');
+    }.bind(this));
+    if (this.videoFile_) {
+      this.scheduleNoFault_('Stop video recording',
+          this.browser_.scheduleStopVideoRecording.bind(this.browser_));
+    }
     this.scheduleStopTracing_();
     if (this.driver_) {
       this.scheduleNoFault_('Get WD Log',
           this.scheduleGetWdDevToolsLog_.bind(this));
     }
-    this.takeScreenshot_('screen', 'end of run').then(
-        function(diskPath) {
-      this.scheduleNoFault_('Check screenshot', function() {
-        process_utils.scheduleExec(this.app_,
-            'identify', ['-verbose', diskPath]).then(function(stdout) {
-          if ((/[\r\n]\s*Colors:\s+1\s*[\r\n]/).test(stdout)) {
-            throw new Error('Screen is blank');
-          }
-        }, function(err) {
-          logger.info('Ignoring identify error: ' + err.message);
-        });
-      }.bind(this));
-    }.bind(this), function(err) {
-      logger.info('Ignoring screenshot error: ' + err.message);
-    });
-    this.scheduleCollectMetrics_();
-    if (this.videoFile_) {
-      this.scheduleNoFault_('Stop video recording',
-          this.browser_.scheduleStopVideoRecording.bind(this.browser_));
-      this.scheduleProcessVideo_();
-    }
     if (this.pcapFile_) {
       this.scheduleNoFault_('Stop packet capture',
           this.browser_.scheduleStopPacketCapture.bind(this.browser_));
+    }
+    this.scheduleCollectMetrics_();
+    if (this.videoFile_) {
+      // video processing needs to be done after tracing has been stopped and collected
+      this.scheduleProcessVideo_();
     }
     this.scheduleNoFault_('Send IPC', function() {
       exports.process.send({
@@ -1359,19 +1357,6 @@ WebDriverServer.prototype.done_ = function() {
     }
     this.scheduleNoFault_('Tear down', this.tearDown_.bind(this));
   }.bind(this));
-};
-
-/**
- * @param {Error=} e video error if the recording failed.
- * @private
- */
-WebDriverServer.prototype.onVideoRecordingExit_ = function(e) {
-  'use strict';
-  if (e) {
-    logger.error('Video recording failed:\n' + e.stack);
-    this.agentError_ = this.agentError_ || e.message;
-    // Could call this.done_();
-  }
 };
 
 /**

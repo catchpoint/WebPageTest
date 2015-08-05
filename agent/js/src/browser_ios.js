@@ -653,12 +653,12 @@ BrowserIos.prototype.scheduleTakeScreenshot = function(fileNameNoExt) {
  * @param {string} filename The local filename to write to.
  * @param {Function=} onExit Optional exit callback, as noted in video_hdmi.
  */
-BrowserIos.prototype.scheduleStartVideoRecording = function(filename, onExit) {
+BrowserIos.prototype.scheduleStartVideoRecording = function(filename) {
   'use strict';
   // The video record command needs to know device type for cropping etc.
   this.scheduleGetDeviceInfo_('ProductType').then(function(stdout) {
     this.video_.scheduleStartVideoRecording(filename, this.deviceSerial_,
-        stdout.trim(), this.videoCard_, onExit);
+        stdout.trim(), this.videoCard_);
   }.bind(this));
 };
 
