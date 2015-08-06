@@ -831,7 +831,7 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
     this.traceRunning_ = true;
     var message = {method: 'Tracing.start'};
     message.params = {
-      categories: 'blink.console,toplevel,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame',
+      categories: 'blink.console,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame',
       options: 'record-as-much-as-possible'
     };
     if (1 === this.task_.trace) {
@@ -841,7 +841,7 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
       message.params.categories = '-*,' + message.params.categories;
     }
     if (this.task_.timelineStackDepth) {
-      message.params.categories = message.params.categories + ',disabled-by-default-devtools.timeline.stack,devtools.timeline.stack,disabled-by-default-v8.cpu_profile';
+      message.params.categories = message.params.categories + ',toplevel,disabled-by-default-devtools.timeline.stack,devtools.timeline.stack,disabled-by-default-v8.cpu_profile';
     }
     this.devToolsCommand_(message).then(function() {
       logger.debug('Started tracing');
