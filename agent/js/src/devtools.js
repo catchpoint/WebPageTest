@@ -30,6 +30,8 @@ var http = require('http');
 var logger = require('logger');
 var url = require('url');
 
+var DEV_TOOLS_COMMAND_TIMEOUT = 60000;
+
 /** Allow tests to stub out. */
 exports.WebSocket = require('ws');
 
@@ -221,14 +223,21 @@ DevTools.prototype.command_ = function(command, callback, errback) {
   'use strict';
   this.commandId_ += 1;
   command.id = this.commandId_;
+  logger.debug('Send command: %j', command);
   if (callback || errback) {
     this.commandCallbacks_[command.id] = {
-        method: command.method,
-        callback: callback,
-        errback: errback
-      };
+      method: command.method,
+      callback: callback,
+      errback: errback
+    };
+    global.setTimeout(function(){
+      if (this.commandCallbacks_[command.id]) {
+        delete this.commandCallbacks_[command.id];
+        logger.debug('Timeout for command: %j', command);
+        this.commandCallbacks_[command.id]({});
+      }
+    }.bind(this), DEV_TOOLS_COMMAND_TIMEOUT);
   }
-  logger.debug('Send command: %j', command);
   this.ws_.send(JSON.stringify(command));
   return command.id;
 };
