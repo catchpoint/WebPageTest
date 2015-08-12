@@ -210,6 +210,10 @@ void TestServer::MongooseCallback(enum mg_event event,
       if (GetDwordParam(request_info->query_string, "domCount", dom_count) &&
           dom_count)
         test_state_._dom_element_count = dom_count;
+      CString url = GetUnescapedParam(request_info->query_string, "url");
+      if (!url.IsEmpty()) {
+        test_._navigated_url = url;
+      }
       // Browsers may get "/event/window_timing" to set "onload" time.
       DWORD load_time = 0;
       GetDwordParam(request_info->query_string, "timestamp", load_time);

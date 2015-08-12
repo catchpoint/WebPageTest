@@ -457,7 +457,8 @@ chrome.extension.onRequest.addListener(
     else if (request.message == 'wptLoad') {
       wptSendEvent('load', 
                    '?timestamp=' + request.timestamp + 
-                   '&fixedViewport=' + request.fixedViewport);
+                   '&fixedViewport=' + request.fixedViewport +
+                   '&url=' + encodeURIComponent(request.navigatedUrl));
     }
     else if (request.message == 'wptBeforeUnload' && g_webdriver_mode) {
       // We are about to move to a new page. Let the hook know so that it can prepare for the next step.

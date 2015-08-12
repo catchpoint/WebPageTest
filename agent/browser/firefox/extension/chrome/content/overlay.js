@@ -224,7 +224,7 @@ wpt.moz.main.onLoad = function(win) {
     fixedViewport = 1;
   var domCount = win.document.getElementsByTagName("*").length;
   wpt.moz.main.sendEventToDriver_('load?fixedViewport=' +
-      fixedViewport + '&domCount=' + domCount);
+      fixedViewport + '&domCount=' + domCount + '&url='+ encodeURIComponent(win.document.URL));
   if (g_webdriver_mode) {
     runSoon(function () {
       wpt.moz.main.collectStats('', function () {
