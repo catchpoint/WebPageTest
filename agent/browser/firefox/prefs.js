@@ -67,3 +67,8 @@ user_pref("signon.rememberSignons", false);
 user_pref("javascript.options.showInConsole", true);
 user_pref("devtools.chrome.enabled", true);
 user_pref("devtools.debugger.remote-enabled", true);
+
+//Fix for CORE-46266
+user_pref("dom.ipc.plugins.flash.disable-protected-mode", true);
+//Fix for CORE-39213
+user_pref("network.http.spdy.enabled", false);
