@@ -52,9 +52,9 @@ function GenerateHAR($id, $testPath, $options) {
         $json = json_encode($harData);
     } elseif ($json_encode_good) {
       if ($pretty_print)
-        $json = json_encode($harData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        $json = json_encode($harData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
       else
-        $json = json_encode($harData, JSON_UNESCAPED_UNICODE);
+        $json = json_encode($harData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     } else {    
       $jsonLib = new Services_JSON();
       $json = $jsonLib->encode($harData);
