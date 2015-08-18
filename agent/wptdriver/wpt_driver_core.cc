@@ -308,6 +308,7 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
       ret = driver.RunAndWait();
     }
   } else {
+    SetWebDriverMode(false);
     ret = browser.RunAndWait();
   }
   ShowCursor(TRUE);
