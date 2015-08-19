@@ -35,14 +35,13 @@ $releasedir = Get-ChildItem $wptroot $configuration
 $outdir = ($releasedir.fullname + "\dist")
 
 # Create output directories
-if (test-path $outdir) { remove-item -recurse $outdir }
+if (test-path $outdir) { Remove-Item -recurse $outdir }
 mkdir $outdir | Out-Null
 mkdir ($outdir + "\extension") | Out-Null
-mkdir ($outdir + "\extension\templates") | Out-Null
 
 "-> Building the Visual Studio Solution in $configuration configuration"
 "(log file is $wptroot\$configuration\msbuild.log)"
-msbuild.exe webpagetest.sln /P:Configuration=$configuration | Out-File ($outdir + "\msbuild.log")
+msbuild.exe webpagetest.sln /P:Configuration=$configuration | Out-File ($releasedir.fullname + "\msbuild.log")
 
 # Copying compiled stuff into the output directory
 $binaries = "wptbho.dll", "wptdriver.exe", "wpthook.dll", "wptload.dll", "wptupdate.exe", "wptwatchdog.exe"
@@ -52,17 +51,19 @@ foreach ($bin in $binaries) {
 
 "-> Building and copying Chrome extension"
 "(log file is $wptroot\$configuration\msbuild.log)"
-& $wptroot\agent\browser\chrome\compile.cmd 2>&1 | Out-File ($outdir + "\chromebuild.log")
-copy-item -recurse $wptroot\agent\browser\chrome\extension\release\ $wptroot\$configuration\dist\extension\extension
+& $wptroot\agent\browser\chrome\compile.cmd 2>&1 | Out-File ($releasedir.fullname + "\chromebuild.log")
+Copy-Item -recurse $wptroot\agent\browser\chrome\extension\release\ $wptroot\$configuration\dist\extension\extension
 
-"-> Zipping Chrome extension"
+"-> Copying Firefox extension"
+Copy-Item -recurse $releasedir\templates $wptroot\$configuration\dist\extension\
+
+"-> Zipping extension directory"
 $extdir=Get-ChildItem $wptroot\$configuration\dist extension
 Add-Type -Assembly System.IO.Compression.FileSystem
 [System.IO.Compression.ZipFile]::CreateFromDirectory($extdir.fullname,
 	($outdir + "\extension.zip"))
 
-"-> Copying Firefox extension"
-copy-item -recurse $wptroot\agent\browser\firefox\ $wptroot\$configuration\dist\extension\templates\Firefox
+Remove-Item -recurse ($outdir + "\extension")
 
 "-> Writing wptupdate.ini with MD5 hashes"
 $tohash= $binaries + "extension.zip"
