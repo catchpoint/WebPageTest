@@ -79,10 +79,10 @@ ver=$ver
 "@
 
 $wptupdate = ($outdir + "\wptupdate.ini")
-$ini | Out-File  $wptupdate
+$ini | Out-File $wptupdate -Encoding "ASCII" -Append
 foreach ($filename in $tohash) {
 	$md5 = Get-FileHash ($outdir + "\" + $filename) -Algorithm MD5
-	($filename + "=" + $md5.hash) | Out-File -Append $wptupdate
+	($filename + "=" + $md5.hash) | Out-File $wptupdate -Encoding "ASCII" -Append
 }
 
 $updatezip = ($releasedir.fullname + "\wptupdate.zip")
