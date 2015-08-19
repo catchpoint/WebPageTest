@@ -190,6 +190,10 @@ bool WebDriver::RunAndWait() {
   CloseHandle(_client_err_read);
   CloseHandle(_server_err_read);
 
+  // Delete the script
+  CString filepath = _scripts_dir + _T("\\script_") + _test._id;
+  DeleteFile(filepath);
+
   return ok && !client_exit_code && !server_exit_code;
 }
 
