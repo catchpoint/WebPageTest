@@ -768,7 +768,7 @@ void Reboot() {
 void ConstructCmdLine(CString& exe, CAtlArray<CString>& options,
   CString& prefix, CString& cmdLine) {
 
-  //cmdLine.Append(_T("\"") + exe + _T("\""));
+  // cmdLine.Append(_T("\"") + exe + _T("\""));
   cmdLine.Append(exe);
 
   for (size_t i = 0; i < options.GetCount(); i++) {

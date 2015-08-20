@@ -176,11 +176,13 @@ bool WptSettings::Load(void) {
     if (GetPrivateProfileString(
       _T("WebPageTest"), _T("WebDriverServer"), _T(""), buff, _countof(buff), iniFile)) {
       _webdriver_server_command = buff;
+      _webdriver_server_command.Trim(_T("\""));
     }
 
     if (GetPrivateProfileString(
       _T("WebPageTest"), _T("WebDriverClient"), _T(""), buff, _countof(buff), iniFile)) {
       _webdriver_client_command = buff;
+      _webdriver_client_command.Trim(_T("\""));
     }
 
     if (GetPrivateProfileString(

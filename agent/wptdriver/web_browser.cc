@@ -91,7 +91,7 @@ bool WebBrowser::RunAndWait() {
       // Get the command line options for the browser we are about to spawn.
       _browser.GetCmdLineOptions(_test, cmdLineOptions);
       // Now construct the command line.
-      ConstructCmdLine(_browser._exe, cmdLineOptions, prefix, cmdLine);
+      ConstructCmdLine(CString(_T("\"")) + _browser._exe + _T("\""), cmdLineOptions, prefix, cmdLine);
       // Now apply browser specific settings.
       if (_browser.IsChrome()) {
         cmdLine.Append(_T(" http://127.0.0.1:8888/blank.html"));
@@ -139,7 +139,7 @@ bool WebBrowser::RunAndWait() {
         ResetEvent(_browser_started_event);
         ResetEvent(_browser_done_event);
 
-        if (CreateProcess(_browser._exe, cmdLine.GetBuffer(), NULL, NULL, FALSE,
+        if (CreateProcess(NULL, cmdLine.GetBuffer(), NULL, NULL, FALSE,
                           0, NULL, NULL, &si, &pi)) {
           CloseHandle(pi.hThread);
           CloseHandle(pi.hProcess);
