@@ -88,10 +88,10 @@ else
                 $bgcolor = '000000';
                 $color = 'ffffff';
                 if (array_key_exists('bg', $_GET)) {
-                    $bgcolor = preg_replace('/[^0-9]/', $_GET['bg']);
+                    $bgcolor = preg_replace('/[^0-9a-fA-F]/', '', $_GET['bg']);
                 }
                 if (array_key_exists('text', $_GET)) {
-                    $color = preg_replace('/[^0-9]/', $_GET['text']);
+                    $color = preg_replace('/[^0-9a-fA-F]/', '', $_GET['text']);
                 }
             ?>
                 #video

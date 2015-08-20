@@ -225,12 +225,14 @@ def eliminate_duplicate_frames(directory):
         from PIL import Image
         im = Image.open(blank)
         width, height = im.size
-        top = 4
+        top = 6
         right_margin = 6
+        bottom_margin = 6
         if height > 400 or width > 400:
-            top = int(math.ceil(float(height) * 0.02))
+            top = int(math.ceil(float(height) * 0.03))
             right_margin = int(math.ceil(float(width) * 0.03))
-        height = max(height - top, 1)
+            bottom_margin = int(math.ceil(float(width) * 0.03))
+        height = max(height - top - bottom_margin, 1)
         left = 0
         width = max(width - right_margin, 1)
         crop = '{0:d}x{1:d}+{2:d}+{3:d}'.format(width, height, left, top)
@@ -376,7 +378,7 @@ def get_timeline_offset(timeline_file):
     offset = 0
     try:
         file_name, ext = os.path.splitext(timeline_file)
-        if ext.lower() is '.gz':
+        if ext.lower() == '.gz':
             f = gzip.open(timeline_file, 'rb')
         else:
             f = open(timeline_file, 'r')
@@ -644,7 +646,7 @@ def calculate_frame_progress(histogram, start, final):
                     target -= this_match
         total += channel_total
         matched += channel_matched
-    progress = (float(matched) / float(total))
+    progress = (float(matched) / float(total)) if total else 1
     return math.floor(progress * 100)
 
 

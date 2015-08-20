@@ -44,6 +44,7 @@ var WD_CONNECT_TIMEOUT_MS_ = 120000;
 var DEVTOOLS_CONNECT_TIMEOUT_MS_ = 10000;
 var DETACH_TIMEOUT_MS_ = 2000;
 var VIDEO_PROCESSING_TIMEOUT_MS = 600000;
+var TRACING_STOP_TIMEOUT_MS = 120000;
 
 /** Allow test access. */
 exports.WAIT_AFTER_ONLOAD_MS = 10000;
@@ -179,11 +180,12 @@ WebDriverServer.prototype.init = function(args) {
   this.testStartTime_ = undefined;
   this.timeoutTimer_ = undefined;
   this.timeout_ = args.timeout;
-  this.tracePromise_ = undefined;
+  this.traceRunning_ = false;
   this.videoFile_ = undefined;
   this.videoFrames_ = undefined;
   this.histogramFile_ = undefined;
   this.runTempDir_ = args.runTempDir || '';
+  this.workDir_ = args.workDir || '';
   this.customMetrics_ = undefined;
   this.userTimingMarks_ = undefined;
   this.pageData_ = undefined;
@@ -824,12 +826,12 @@ WebDriverServer.prototype.clearPageAndStartVideoWd_ = function() {
 WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
   'use strict';
   // Always enable tracing, at a minimum to capture timeline data
-  if (!this.driver_ && !this.tracePromise_) {
+  if (!this.driver_ && !this.traceRunning_) {
     this.traceData_ = {traceEvents: []};
-    this.tracePromise_ = new webdriver.promise.Deferred();
+    this.traceRunning_ = true;
     var message = {method: 'Tracing.start'};
     message.params = {
-      categories: 'blink.console,toplevel,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame',
+      categories: 'blink.console,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame',
       options: 'record-as-much-as-possible'
     };
     if (1 === this.task_.trace) {
@@ -839,14 +841,14 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
       message.params.categories = '-*,' + message.params.categories;
     }
     if (this.task_.timelineStackDepth) {
-      message.params.categories = message.params.categories + ',disabled-by-default-devtools.timeline.stack,devtools.timeline.stack,disabled-by-default-v8.cpu_profile';
+      message.params.categories = message.params.categories + ',toplevel,disabled-by-default-devtools.timeline.stack,devtools.timeline.stack,disabled-by-default-v8.cpu_profile';
     }
     this.devToolsCommand_(message).then(function() {
       logger.debug('Started tracing');
     }, function(e) {
       // Might be crbug/392577, which affects Chrome 36.0.1967 - 37.0.2000.
       this.testError_ = 'Tracing is not supported.';
-      this.tracePromise_ = undefined;
+      this.traceRunning_ = false;
       throw e;
     }.bind(this));
   }
@@ -859,7 +861,7 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
  */
 WebDriverServer.prototype.onTracingMessage_ = function(message) {
   'use strict';
-  if (this.tracePromise_ && this.tracePromise_.isPending()) {
+  if (this.traceRunning_) {
     if ('Tracing.dataCollected' === message.method) {
       var value = (message.params || {}).value;
       if (value instanceof Array) {
@@ -868,8 +870,11 @@ WebDriverServer.prototype.onTracingMessage_ = function(message) {
         }.bind(this));
       }
     } else if ('Tracing.tracingComplete' === message.method) {
-      this.tracePromise_.fulfill();
+      logger.debug('Signalling finish of tracing');
+      this.traceRunning_ = false;
     }
+  } else {
+    logger.debug('Unexpected tracing message - ' + message.method);
   }
 };
 
@@ -879,12 +884,11 @@ WebDriverServer.prototype.onTracingMessage_ = function(message) {
  */
 WebDriverServer.prototype.scheduleStopTracing_ = function() {
   'use strict';
-  this.scheduleNoFault_('Wait for tracingComplete', function() {
-    if (this.tracePromise_ && this.tracePromise_.isPending()) {
-      this.devToolsCommand_({method: 'Tracing.end'});
-      return this.tracePromise_;
-    } else {
-      return undefined;
+  this.scheduleNoFault_('Stop tracing', function() {
+    if (this.traceRunning_) {
+    this.devToolsCommand_({method: 'Tracing.end'});
+    this.app_.wait(function() {return !this.traceRunning_;}.bind(this),
+        TRACING_STOP_TIMEOUT_MS);
     }
   }.bind(this));
 };
@@ -898,8 +902,7 @@ WebDriverServer.prototype.scheduleStartVideoRecording_ = function() {
   this.getCapabilities_().then(function(caps) {
     var videoFileExtension = caps.videoFileExtension || 'avi';
     var videoFile = path.join(this.runTempDir_, 'video.' + videoFileExtension);
-    this.browser_.scheduleStartVideoRecording(
-        videoFile, this.onVideoRecordingExit_.bind(this));
+    this.browser_.scheduleStartVideoRecording(videoFile);
     this.app_.schedule('Video record started', function() {
       logger.debug('Video record start succeeded');
       this.videoFile_ = videoFile;
@@ -1170,6 +1173,7 @@ WebDriverServer.prototype.scheduleGetWdDevToolsLog_ = function() {
  * @private
  */
 WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
+  logger.debug('Collecting metrics');
   this.scheduleNoFault_('Collect Custom Metrics', function() {
     if (this.task_['customMetrics'] !== undefined) {
       for (var metric in this.task_.customMetrics) {
@@ -1292,41 +1296,33 @@ WebDriverServer.prototype.done_ = function() {
       return;
     }
     this.isDone_ = true;
+    this.isRecordingDevTools_ = false;
 
     if (this.testError_) {
       logger.error('Test failed: ' + this.testError_);
     } else {
       logger.info('Test passed');
     }
+    this.scheduleNoFault_('Capture Screen Shot', function() {
+      this.takeScreenshot_('screen', 'end of run');
+    }.bind(this));
+    if (this.videoFile_) {
+      this.scheduleNoFault_('Stop video recording',
+          this.browser_.scheduleStopVideoRecording.bind(this.browser_));
+    }
     this.scheduleStopTracing_();
     if (this.driver_) {
       this.scheduleNoFault_('Get WD Log',
           this.scheduleGetWdDevToolsLog_.bind(this));
     }
-    this.takeScreenshot_('screen', 'end of run').then(
-        function(diskPath) {
-      this.scheduleNoFault_('Check screenshot', function() {
-        process_utils.scheduleExec(this.app_,
-            'identify', ['-verbose', diskPath]).then(function(stdout) {
-          if ((/[\r\n]\s*Colors:\s+1\s*[\r\n]/).test(stdout)) {
-            throw new Error('Screen is blank');
-          }
-        }, function(err) {
-          logger.info('Ignoring identify error: ' + err.message);
-        });
-      }.bind(this));
-    }.bind(this), function(err) {
-      logger.info('Ignoring screenshot error: ' + err.message);
-    });
-    this.scheduleCollectMetrics_();
-    if (this.videoFile_) {
-      this.scheduleNoFault_('Stop video recording',
-          this.browser_.scheduleStopVideoRecording.bind(this.browser_));
-      this.scheduleProcessVideo_();
-    }
     if (this.pcapFile_) {
       this.scheduleNoFault_('Stop packet capture',
           this.browser_.scheduleStopPacketCapture.bind(this.browser_));
+    }
+    this.scheduleCollectMetrics_();
+    if (this.videoFile_) {
+      // video processing needs to be done after tracing has been stopped and collected
+      this.scheduleProcessVideo_();
     }
     this.scheduleNoFault_('Send IPC', function() {
       exports.process.send({
@@ -1359,19 +1355,6 @@ WebDriverServer.prototype.done_ = function() {
     }
     this.scheduleNoFault_('Tear down', this.tearDown_.bind(this));
   }.bind(this));
-};
-
-/**
- * @param {Error=} e video error if the recording failed.
- * @private
- */
-WebDriverServer.prototype.onVideoRecordingExit_ = function(e) {
-  'use strict';
-  if (e) {
-    logger.error('Video recording failed:\n' + e.stack);
-    this.agentError_ = this.agentError_ || e.message;
-    // Could call this.done_();
-  }
 };
 
 /**

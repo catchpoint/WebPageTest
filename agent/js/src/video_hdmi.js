@@ -97,7 +97,7 @@ VideoHdmi.prototype.scheduleKillRunningCapture_ = function(deviceSerial) {
  *   expected scheduleStopVideoRecording exit or an unexpected exit.
  */
 VideoHdmi.prototype.scheduleStartVideoRecording = function(filename,
-    deviceSerial, deviceType, videoCard, onExit) {
+    deviceSerial, deviceType, videoCard) {
   'use strict';
   this.scheduleIsSupported().then(function(isSupported) {
     if (!isSupported) {
@@ -131,9 +131,6 @@ VideoHdmi.prototype.scheduleStartVideoRecording = function(filename,
           err = new Error('Unexpected video recording EXIT with code ' + code +
               ' signal ' + signal);
           logger.error(err.message);
-        }
-        if (onExit) {
-          onExit(err);
         }
       }.bind(this));
     }.bind(this));
