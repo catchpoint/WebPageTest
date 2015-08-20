@@ -291,6 +291,9 @@ bool WebDriver::SpawnWebDriverClient() {
     options.Add(_T("--firefox-profile-dir"));
     options.Add(_T("\"") + _settings._browser._profile_directory + _T("\""));
   }
+  if (!_test._webdriver_args.IsEmpty()) {
+    options.Add(_test._webdriver_args);
+  }
   ConstructCmdLine(_settings._webdriver_client_command, options, CString(""), cmdLine);
 
   ZeroMemory(&si, sizeof(STARTUPINFO));
