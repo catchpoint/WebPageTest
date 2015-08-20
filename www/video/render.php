@@ -15,6 +15,7 @@ if ($max_load !== false && $max_load > 0)
 $width = 900;
 $height = 650;
 $padding = 4;
+$textPadding = 0;
 $minThumbnailSize = 60;
 $biggestThumbnail = 0;
 $backgroundColor = null;
@@ -56,6 +57,8 @@ if (is_file('./settings/video.ini')) {
     $height = (int)$videoSettings['height'];
   if (isset($videoSettings['padding']))
     $padding = (int)$videoSettings['padding'];
+  if (isset($videoSettings['text-padding']))
+    $textPadding = (int)$videoSettings['text-padding'];
   if (isset($videoSettings['label-height']))
     $labelHeight = (int)$videoSettings['label-height'];
   if (isset($videoSettings['time-height']))
@@ -71,9 +74,9 @@ if (is_file('./settings/video.ini')) {
   if (isset($videoSettings['video-extend-time']))
     $videoExtendTime = (int)$videoSettings['video-extend-time'];
   if (isset($videoSettings['stop-time']))
-    $stopTime = (int)$videoSettings['stop-time'];
+    $stopTime = $videoSettings['stop-time'];
   if (isset($videoSettings['stop-text']))
-    $stopText = (int)$videoSettings['stop-text'];
+    $stopText = $videoSettings['stop-text'];
   if (isset($videoSettings['combine-time-label']) && $videoSettings['combine-time-label'])
     $combineTimeLabel = true;
   if (isset($videoSettings['time-seconds']) && $videoSettings['time-seconds'])
@@ -540,7 +543,7 @@ function DrawTest(&$test, $frameTime, $im) {
 * @param mixed $rect
 */
 function DrawFrameTime(&$test, $frameTime, $im, $rect) {
-  global $timeHeight, $backgroundColor, $timeFont, $textColor, $fps, $fractionTime, $timeSeconds, $bgEvenText, $bgOddText;
+  global $timeHeight, $backgroundColor, $timeFont, $textColor, $fps, $fractionTime, $timeSeconds, $bgEvenText, $bgOddText, $stopTime, $stopText;
   static $font_size = 0;
   static $ascent = 0;
   $updated = false;
@@ -562,14 +565,21 @@ function DrawFrameTime(&$test, $frameTime, $im, $rect) {
     $box = imagettfbbox($font_size, 0, $timeFont, '.');
     $test['periodRect']['width'] = abs($box[4] - $box[0]);
   }
-    
+  
   $seconds = floor($frameTime / 1000);
   $fraction = floor($frameTime / (1000 / $fractionTime)) % $fractionTime;
   if ($fractionTime == 100)
     $fraction = sprintf("%02d", $fraction);
   elseif ($fractionTime == 1000)
     $fraction = sprintf("%03d", $fraction);
-  $time = "$seconds.$fraction";
+  if (!isset($test['endText']) &&
+      isset($stopTime) &&
+      isset($test['pageData'][$test['run']][$test['cached']][$stopTime]) &&
+      $frameTime >= $test['pageData'][$test['run']][$test['cached']][$stopTime]) {
+    $prefix = isset($stopText) ? "$stopText " : '';
+    $test['endText'] = "$prefix$seconds.$fraction$suffix";
+  }
+  $time = isset($test['endText']) ? $test['endText'] : "$seconds.$fraction";
   if (!isset($test['last_time']) || $test['last_time'] !== $time) {
     $updated = true;
     $test['last_time'] = $time;
@@ -578,22 +588,28 @@ function DrawFrameTime(&$test, $frameTime, $im, $rect) {
     $bgColor = $rect['even'] ? $bgEvenText : $bgOddText;
     imagefilledrectangle($im, $rect['x'], $rect['y'], $rect['x'] + $rect['width'], $rect['y'] + $rect['height'], $bgColor);
     
-    // draw the period
-    imagettftext($im, $font_size, 0, $test['periodRect']['x'],  $test['periodRect']['y'], $textColor, $timeFont, '.');
-    
-    // draw the seconds
-    $box = imagettfbbox($font_size, 0, $timeFont, $seconds);
-    $s_width = abs($box[4] - $box[0]);
-    $box = imagettfbbox($font_size, 0, $timeFont, "$seconds.");
-    $pad = abs($box[4] - $box[0]) - $s_width;
-    imagettftext($im, $font_size, 0, $test['periodRect']['x'] + $test['periodRect']['width'] - $s_width - $pad,  $test['periodRect']['y'], $textColor, $timeFont, $seconds);
-    
-    //draw the fraction
-    $box = imagettfbbox($font_size, 0, $timeFont, "$fraction$suffix");
-    $t_width = abs($box[4] - $box[0]);
-    $box = imagettfbbox($font_size, 0, $timeFont, ".$fraction$suffix");
-    $pad = abs($box[4] - $box[0]) - $t_width + 1;
-    imagettftext($im, $font_size, 0, $test['periodRect']['x'] + $pad,  $test['periodRect']['y'], $textColor, $timeFont, "$fraction$suffix");
+    if (isset($test['endText'])) {
+      $pos = CenterText($im, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, $test['endText'], $timeFont, $ascent, $rect['align']);
+      if (isset($pos))
+        imagettftext($im, $font_size, 0, $pos['x'],  $pos['y'], $textColor, $timeFont, $test['endText']);
+    } else {
+      // draw the period
+      imagettftext($im, $font_size, 0, $test['periodRect']['x'],  $test['periodRect']['y'], $textColor, $timeFont, '.');
+      
+      // draw the seconds
+      $box = imagettfbbox($font_size, 0, $timeFont, $seconds);
+      $s_width = abs($box[4] - $box[0]);
+      $box = imagettfbbox($font_size, 0, $timeFont, "$seconds.");
+      $pad = abs($box[4] - $box[0]) - $s_width;
+      imagettftext($im, $font_size, 0, $test['periodRect']['x'] + $test['periodRect']['width'] - $s_width - $pad,  $test['periodRect']['y'], $textColor, $timeFont, $seconds);
+      
+      //draw the fraction
+      $box = imagettfbbox($font_size, 0, $timeFont, "$fraction$suffix");
+      $t_width = abs($box[4] - $box[0]);
+      $box = imagettfbbox($font_size, 0, $timeFont, ".$fraction$suffix");
+      $pad = abs($box[4] - $box[0]) - $t_width + 1;
+      imagettftext($im, $font_size, 0, $test['periodRect']['x'] + $pad,  $test['periodRect']['y'], $textColor, $timeFont, "$fraction$suffix");
+    }
   }
   
   return $updated;
@@ -627,6 +643,7 @@ function GetFontSize($width, $height, $text, $font) {
 }
 
 function CenterText($im, $x, $y, $w, $h, $size, $text, $font, $ascent = null, $align) {
+  global $textPadding;
   $ret = null;
   if (!$size)
     $size = GetFontSize($w, $h, $text);
@@ -638,9 +655,9 @@ function CenterText($im, $x, $y, $w, $h, $size, $text, $font, $ascent = null, $a
     $out_w = abs($box[4] - $box[0]);
     $out_h = abs($box[5] - $box[1]);
     if ($align == 'left')
-      $ret['x'] = $x;
+      $ret['x'] = $x + $textPadding;
     elseif ($align == 'right')
-      $ret['x'] = floor($x + ($w - $out_w));
+      $ret['x'] = floor($x + ($w - $out_w - $textPadding));
     else
       $ret['x'] = floor($x + (($w - $out_w) / 2));
     $ret['y'] = floor($y + (($h - $out_h) / 2)) + $ascent;
