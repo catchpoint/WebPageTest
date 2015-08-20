@@ -2,11 +2,15 @@
 Copyright (c) AppDynamics, Inc., and its affiliates 2015
 All rights reserved
 
-Build script for wpt-driver.
+Build script for wpt-driver. Usage:
+
+create-update.ps1 Release # Build in Release mode
+create-update.ps1 Debug   # Build in Debug mode
 
 REQUIREMENTS:
 - msbuild.exe and python.exe (required by the Chrome compile.cmd) should be in
   the path
+- powershell v.4 or more recent, with Get-FileHash cmdlet
 
 This script has been tested in GitHub's Git Shell.
 Executing it in a regular PowerShell may also work, but you will have to
@@ -16,6 +20,21 @@ setup the path for each dependencies.
 param(
     [string]$configuration = "Release"
 )
+
+if ((Get-Command "python.exe" -ErrorAction SilentlyContinue) -eq $null) {
+    "Error: python.exe is not installed or not in PATH, exiting"
+    Exit 1;
+}
+if ((Get-Command "msbuild.exe" -ErrorAction SilentlyContinue) -eq $null) {
+    "Error: MSBuild.exe is not installed or not in PATH, exiting"
+    Exit 1;
+}
+if ((Get-Command "Get-FileHash" -ErrorAction SilentlyContinue) -eq $null) {
+    "Error: Get-FileHash cmdlet not available, exiting"
+    "You probably need to run this script with a more recent version of Powershell"
+    Exit 1;
+}
+
 
 $wptroot = $PSScriptRoot + "\.."
 
@@ -31,6 +50,10 @@ function ZipFiles( $zipFilename, $sourceDir)
         $zipfilename, $compressionLevel, $false)
 }
 
+$releasedir_path = $wptroot + "\" + $configuration
+if (!(test-path $releasedir_path)) {
+    New-Item -ItemType directory -Path $releasedir_path | Out-Null
+}
 $releasedir = Get-ChildItem $wptroot $configuration
 $outdir = ($releasedir.fullname + "\dist")
 
@@ -50,7 +73,7 @@ foreach ($bin in $binaries) {
 }
 
 "-> Building and copying Chrome extension"
-"(log file is $wptroot\$configuration\msbuild.log)"
+"(log file is $wptroot\$configuration\chromebuild.log)"
 & $wptroot\agent\browser\chrome\compile.cmd 2>&1 | Out-File ($releasedir.fullname + "\chromebuild.log")
 Copy-Item -recurse $wptroot\agent\browser\chrome\extension\release\ $wptroot\$configuration\dist\extension\extension
 
