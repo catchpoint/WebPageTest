@@ -296,6 +296,13 @@ bool WebDriver::SpawnWebDriverClient() {
   if (!_test._webdriver_args.IsEmpty()) {
     options.Add(_test._webdriver_args);
   }
+  // pass an output file for the client to record stdout/stderr
+  /*
+  CString filepath = _test._directory + _T("\\output.json");
+  options.Add(_T("--output"));
+  options.Add(_T("\"") + filepath + _T("\""));
+  */
+
   ConstructCmdLine(_settings._webdriver_client_command, options, CString(""), cmdLine);
 
   ZeroMemory(&si, sizeof(STARTUPINFO));
