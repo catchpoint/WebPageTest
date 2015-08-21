@@ -282,8 +282,10 @@ bool WebDriver::SpawnWebDriverClient() {
     options.Add(_T("--test-script"));
     options.Add(_T("\"") + filepath + _T("\""));
   }
-  options.Add(_T("--server-url"));
-  options.Add(_settings._webdriver_server_url);
+  if (!_settings._webdriver_server_url.IsEmpty()) {
+    options.Add(_T("--server-url"));
+    options.Add(_settings._webdriver_server_url);
+  }
   // Get the command line options for the specific browser.
   _browser.GetCmdLineOptions(_test, options);
   // Add the profile directory option for firefox.
