@@ -84,16 +84,16 @@ function GetTestStatus($id, $includePosition = true) {
                   else
                     $ret['statusText'] = "Test Started $elapsed minutes ago (probably failed)";
                     
-                  // For any test that runs for over 10 minutes and where we haven't seen an update
-                  // in the last 10 minutes, Force individual runs to end if they didn't complete
-                  // within 30 minutes and force the overall test to end if all of the individual
+                  // For any test that runs for over 60 minutes and where we haven't seen an update
+                  // in the last 60 minutes, Force individual runs to end if they didn't complete
+                  // within 60 minutes and force the overall test to end if all of the individual
                   // runs are complete.
-                  if ($elapsed > 10) {
+                  if ($elapsed > 60) {
                     $elapsedUpdate = 100;
                     if (isset($testInfoJson['last_updated']) && $now > $testInfoJson['last_updated'])
                       $elapsedUpdate = ($now - $testInfoJson['last_updated']) / 60;
                     $ret['elapsedUpdate'] = $elapsedUpdate;
-                    if ($elapsedUpdate > 10) {
+                    if ($elapsedUpdate > 60) {
                       $allComplete = true;
                       $lock = LockTest($id);
                       if ($lock) {
@@ -104,7 +104,7 @@ function GetTestStatus($id, $includePosition = true) {
                               if (!array_key_exists('done', $testRun) || !$testRun['done']) {
                                 if (array_key_exists('started', $testRun) && $testRun['started'] && $testRun['started'] < $now) {
                                   $runElapsed = intval(($now - $testRun['started']) / 60);
-                                  if ($runElapsed > 10) {
+                                  if ($runElapsed > 60) {
                                     $testRun['done'] = true;
                                     if (array_key_exists('tester', $testRun) && strlen($testRun['tester']))
                                       $tester = " on {$testRun['tester']}";
