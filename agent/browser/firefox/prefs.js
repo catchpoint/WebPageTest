@@ -62,6 +62,7 @@ user_pref("layers.acceleration.disabled", true);
 user_pref("gfx.direct2d.disabled", true);
 user_pref("xpinstall.whitelist.add", "");
 user_pref("xpinstall.whitelist.add.36", "");
+user_pref("xpinstall.signatures.required", false);
 user_pref("toolkit.telemetry.prompted", 2);
 user_pref("signon.rememberSignons", false);
 user_pref("javascript.options.showInConsole", true);
