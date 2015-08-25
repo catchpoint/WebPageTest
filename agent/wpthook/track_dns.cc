@@ -32,8 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../wptdriver/wpt_test.h"
 
 static LPCTSTR blocked_domains[] = {
-  _T("cache.pack.google.com"),  // Chrome crx update URL
-  _T("redirector.gvt1.com"),    // Chrome crx update URL
+  _T(".pack.google.com"),  // Chrome crx update URL
+  _T(".gvt1.com"),         // Chrome crx update URL
   NULL
 };
 
@@ -55,11 +55,12 @@ TrackDns::~TrackDns(void){
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool TrackDns::BlockLookup(CString& name) {
+bool TrackDns::BlockLookup(CString name) {
   bool block = false;
   LPCTSTR * domain = blocked_domains;
+  name.MakeLower();
   while (*domain && !block) {
-    if (!name.CompareNoCase(*domain))
+    if (name.Find(*domain) != -1)
       block = true;
     domain++;
   }
