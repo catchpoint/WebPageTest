@@ -2,21 +2,19 @@
 // Check the firefox nightly builds FTP server for an updated nightly build
 chdir(__DIR__);
 set_time_limit(3600);
-$server = 'ftp.mozilla.org';
-$dir = '/pub/mozilla.org/firefox/nightly/latest-trunk/';
-$ftp = ftp_connect($server);
 $remote_file = null;
 $remote_file_ver = 0;
 $remote_file_time = 0;
-if ($ftp) {
-  if (ftp_login($ftp, 'anonymous', 'webpagetest@webpagetest.org')) {
-    ftp_pasv($ftp, true);
-    $files = ftp_nlist($ftp, $dir);
-    foreach ($files as $file) {
-      if (preg_match('/firefox-(?P<ver>[0-9]+)[a-zA-Z0-9\.]+\.en-US\.win32\.installer\.exe$/', $file, $matches)) {
-        $file = $matches[0];
+$base_url = 'http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/';
+$html_list = file_get_contents($base_url);
+if ($html_list) {
+  if (preg_match_all('/<tr>[^\n]+<\/tr>/', $html_list, $matches) &&
+      isset($matches[0]) && is_array($matches[0]) && count($matches[0])) {
+    foreach ($matches[0] as $line) {
+      if (preg_match('/href=\"(?P<file>firefox-(?P<ver>[0-9]+)[a-zA-Z0-9\.]+\.en-US\.win32\.installer\.exe).*<\/a><\/td><td align="right">(?P<time>[^<]+)/', $line, $matches)) {
+        $file = $matches['file'];
         $ver = intval($matches['ver']);
-        $time = ftp_mdtm($ftp, "$dir$file");
+        $time = strtotime(trim($matches['time']));
         if ($ver && $time && $time > $remote_file_time) {
           $remote_file = $file;
           $remote_file_ver = $ver;
@@ -31,7 +29,7 @@ if ($ftp) {
       if (!is_file($local_file)) {
         $valid_md5 = strtoupper(GetMD5());
         if ($valid_md5) {
-          if (ftp_get($ftp, $local_file, "$dir$remote_file", FTP_BINARY)) {
+          if (file_put_contents($local_file, file_get_contents("$base_url$remote_file"))) {
             $md5 = strtoupper(md5_file($local_file));
             if ($md5 == $valid_md5) {
               // write out the new nightly dat file
@@ -60,34 +58,27 @@ if ($ftp) {
       }
     }
   }
-  ftp_close($ftp);
 }
 
 function GetMD5() {
   global $ftp;
   global $dir;
   global $remote_file;
+  global $base_url;
   $md5 = null;
   $checksum_file = str_replace('.installer.exe', '.checksums', $remote_file);
-  $local_checksums = 'nightly-checksums.dat';
-  if (is_file($local_checksums))
-    unlink($local_checksums);
-  if (ftp_get($ftp, $local_checksums, "$dir$checksum_file", FTP_ASCII)) {
-    $checksums = file($local_checksums);
-    if ($checksums && is_array($checksums)) {
-      foreach ($checksums as $line) {
-        if (strstr($line, $remote_file) !== FALSE) {
-          list($hash, $type, $size, $file) = explode(' ', trim($line));
-          if ($type == 'md5') {
-            $md5 = $hash;
-            break;
-          }
+  $checksums = file("$base_url$checksum_file");
+  if ($checksums && is_array($checksums)) {
+    foreach ($checksums as $line) {
+      if (strstr($line, $remote_file) !== FALSE) {
+        list($hash, $type, $size, $file) = explode(' ', trim($line));
+        if ($type == 'md5') {
+          $md5 = $hash;
+          break;
         }
       }
     }
   }
-  if (is_file($local_checksums))
-    unlink($local_checksums);
   return $md5;
 }
 ?>
