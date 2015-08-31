@@ -70,7 +70,6 @@ function BrowserIos(app, args) {
   var toIDevicePath = process_utils.concatPath.bind(this, iDeviceDir);
   this.iosWebkitDebugProxy_ = toIDevicePath('ios_webkit_debug_proxy');
   this.iDeviceInstaller_ = toIDevicePath('ideviceinstaller');
-  this.iDeviceAppRunner_ = toIDevicePath('idevice-app-runner');
   this.iDeviceInfo_ = toIDevicePath('ideviceinfo');
   this.iDeviceImageMounter_ = toIDevicePath('ideviceimagemounter');
   this.iDeviceScreenshot_ = toIDevicePath('idevicescreenshot');
@@ -135,51 +134,32 @@ BrowserIos.prototype.startBrowser = function() {
  */
 BrowserIos.prototype.scheduleMountDeveloperImageIfNeeded_ = function() {
   'use strict';
-  if (!this.iDeviceAppRunner_) {
-    return undefined;
-  }
   var done = new webdriver.promise.Deferred();
   function reject(e) {
     done.reject(e instanceof Error ? e : new Error(e));
   }
-  logger.debug('Checking iOS debugserver');
-  process_utils.scheduleExec(this.app_, this.iDeviceAppRunner_,
-      ['-U', this.deviceSerial_, '-r', 'check_gdb'],
-      undefined,  // Use default spawn options.
-      20000).then(function(stdout) {
-    reject('Expecting an error from check_gdb, not ' + stdout);
-  }, function(e) {
-    var stderr = (e.stderr || e.message || '').trim();
-    if (0 === stderr.indexOf('Unknown APPID (check_gdb) is not in:')) {
-      logger.debug('Dev image already mounted');
-      done.fulfill();
-    } else if (stderr !== 'Could not start com.apple.debugserver!') {
-      reject('Unexpected stderr: ' + stderr);
-    } else {
-      this.scheduleGetDeviceInfo_('ProductVersion').then(function(stdout) {
-        var version = stdout.trim();
-        var m = version.match(/^(\d+\.\d+)\./);
-        version = (m ? m[1] : version);
-        var dmgDir = this.devImageDir_ + version;
-        var img = dmgDir + '/DeveloperDiskImage.dmg';
-        fs.exists(img, function(exists) {
-          if (!exists) {
-            reject('Missing Xcode image: ' + img + '{,.signature}');
-          } else {
-            logger.info('Mounting ' + this.deviceSerial_ + ' ' + dmgDir);
-            var sig = img + '.signature';
-            process_utils.scheduleExec(
-                this.app_, this.iDeviceImageMounter_,
-                ['-u', this.deviceSerial_, img, sig],
-                undefined,  // Use default spawn options.
-                30000).then(function() {
-              done.fulfill();
-            }.bind(this), reject);
-          }
-        }.bind(this));
-      }.bind(this), reject);
-    }
-  }.bind(this));
+  this.scheduleGetDeviceInfo_('ProductVersion').then(function(stdout) {
+    var version = stdout.trim();
+    var m = version.match(/^(\d+\.\d+)\./);
+    version = (m ? m[1] : version);
+    var dmgDir = this.devImageDir_ + version;
+    var img = dmgDir + '/DeveloperDiskImage.dmg';
+    fs.exists(img, function(exists) {
+      if (!exists) {
+        reject('Missing Xcode image: ' + img + '{,.signature}');
+      } else {
+        logger.info('Mounting ' + this.deviceSerial_ + ' ' + dmgDir);
+        var sig = img + '.signature';
+        process_utils.scheduleExec(
+            this.app_, this.iDeviceImageMounter_,
+            ['-u', this.deviceSerial_, img, sig],
+            undefined,  // Use default spawn options.
+            30000).then(function() {
+          done.fulfill();
+        }.bind(this), reject);
+      }
+    }.bind(this));
+  }.bind(this), reject);
   return done.promise;
 };
 
@@ -363,13 +343,10 @@ BrowserIos.prototype.scheduleClearCacheCookies_ = function() {
  */
 BrowserIos.prototype.scheduleOpenUrl_ = function(url) {
   'use strict';
-  if (this.iDeviceAppRunner_) {
-    process_utils.scheduleExec(
-        this.app_, this.iDeviceAppRunner_,
-        ['-u', this.deviceSerial_, '-r', 'com.google.openURL', '--args', url],
-        undefined,  // Use default spawn options.
-        20000);
-  }
+  this.app_.schedule('Open URL', function() {
+    logger.debug('Opening URL: ' + url);
+    this.scheduleSsh_('uiopen', url);
+  }.bind(this));
 };
 
 /** @private */
