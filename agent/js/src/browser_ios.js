@@ -71,7 +71,7 @@ function BrowserIos(app, args) {
   this.iDeviceInfo_ = toIDevicePath('ideviceinfo');
   this.iDeviceImageMounter_ = toIDevicePath('ideviceimagemounter');
   this.iDeviceScreenshot_ = toIDevicePath('idevicescreenshot');
-  this.imageConverter_ = '/usr/bin/convert'; // TODO use 'sips' on mac?
+  this.imageConverter_ = 'convert'; // TODO use 'sips' on mac?
   this.devImageDir_ = process_utils.concatPath(args.flags.iosDevImageDir);
   this.devToolsPort_ = args.flags.devToolsPort;
   this.devtoolsPortLock_ = undefined;
@@ -126,27 +126,36 @@ BrowserIos.prototype.scheduleMountDeveloperImageIfNeeded_ = function() {
   function reject(e) {
     done.reject(e instanceof Error ? e : new Error(e));
   }
-  this.scheduleGetDeviceInfo_('ProductVersion').then(function(stdout) {
-    var version = stdout.trim();
-    var m = version.match(/^(\d+\.\d+)\./);
-    version = (m ? m[1] : version);
-    var dmgDir = this.devImageDir_ + version;
-    var img = dmgDir + '/DeveloperDiskImage.dmg';
-    fs.exists(img, function(exists) {
-      if (!exists) {
-        reject('Missing Xcode image: ' + img + '{,.signature}');
-      } else {
-        logger.info('Mounting ' + this.deviceSerial_ + ' ' + dmgDir);
-        var sig = img + '.signature';
-        process_utils.scheduleExec(
-            this.app_, this.iDeviceImageMounter_,
-            ['-u', this.deviceSerial_, img, sig],
-            undefined,  // Use default spawn options.
-            30000).then(function() {
-          done.fulfill();
-        }.bind(this), reject);
-      }
-    }.bind(this));
+  process_utils.scheduleExec(this.app_, this.iDeviceImageMounter_,
+      ['-u', this.deviceSerial_, '-l']).then(function(stdout) {
+    var m = stdout.match(/ImagePresent\: true/);
+    if (m) {
+      logger.debug("Developer image already mounted.")
+      done.fulfill();
+    } else {
+      this.scheduleGetDeviceInfo_('ProductVersion').then(function(stdout) {
+        var version = stdout.trim();
+        var m = version.match(/^(\d+\.\d+)\./);
+        version = (m ? m[1] : version);
+        var dmgDir = this.devImageDir_ + version;
+        var img = dmgDir + '/DeveloperDiskImage.dmg';
+        fs.exists(img, function(exists) {
+          if (!exists) {
+            reject('Missing Xcode image: ' + img + '{,.signature}');
+          } else {
+            logger.info('Mounting ' + this.deviceSerial_ + ' ' + dmgDir);
+            var sig = img + '.signature';
+            process_utils.scheduleExec(
+                this.app_, this.iDeviceImageMounter_,
+                ['-u', this.deviceSerial_, img, sig],
+                undefined,  // Use default spawn options.
+                30000).then(function() {
+              done.fulfill();
+            }.bind(this), reject);
+          }
+        }.bind(this));
+      }.bind(this), reject);
+    }
   }.bind(this), reject);
   return done.promise;
 };
@@ -275,6 +284,7 @@ BrowserIos.prototype.scheduleClearCacheCookies_ = function() {
   'use strict';
   var glob = '/private/var/mobile/Applications/*/MobileSafari.app/Info.plist';
   this.scheduleSsh_('killall', 'MobileSafari');
+  return undefined;
   this.scheduleSsh_('test -f ' + glob + ' | ls ' + glob).then(function(stdout) {
     var path = stdout.trim();
     if (path) {
@@ -344,9 +354,13 @@ BrowserIos.prototype.getDevToolsUrl = function() {
 BrowserIos.prototype.scheduleGetCapabilities = function() {
   'use strict';
   return this.video_.scheduleIsSupported().then(function(canRecordVideo) {
-    return process_utils.scheduleFunction(this.app_, 'exists',
-        fs.exists, this.imageConverter_ || '').then(function(canConvertImages) {
-      if (!canConvertImages && ((/convert$/).test(this.imageConverter_))) {
+    return process_utils.scheduleExec(this.app_, this.imageConverter_,
+        ['--version']).then(function(stdout) {
+      var m = stdout.match(/Version: ImageMagick/i);
+      var canConvertImages = false;
+      if (m) {
+        canConvertImages = true;
+      } else {
         logger.debug('Missing ' + this.imageConverter_ + ', possible fix:\n' +
             (/^darwin/i.test(os.platform()) ?
              'brew install imagemagick --with-libtiff' :
@@ -356,6 +370,12 @@ BrowserIos.prototype.scheduleGetCapabilities = function() {
           webdriver: false,
           videoRecording: canRecordVideo,
           takeScreenshot: canConvertImages
+        };
+    }.bind(this), function() {
+      return {
+          webdriver: false,
+          videoRecording: canRecordVideo,
+          takeScreenshot: false
         };
     }.bind(this));
   }.bind(this));
@@ -386,7 +406,8 @@ BrowserIos.prototype.scheduleTakeScreenshot = function(fileNameNoExt) {
       {cwd: this.runTempDir_}).then(function(stdout) {
     var m = stdout.match(/^Screenshot\s+saved\s+to\s+(\S+\.tiff)(\s|$)/i);
     if (!m) {
-      throw new Error('Unable to take screenshot: ' + stdout);
+      //throw new Error('Unable to take screenshot: ' + stdout);
+      logger.debug("Unable to take screenshot: " + stdout)
     }
     return m[1];
   }).then(function(localTiffFilename) {
