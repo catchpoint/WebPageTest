@@ -69,7 +69,6 @@ function BrowserIos(app, args) {
   var iDeviceDir = args.flags.iosIDeviceDir;
   var toIDevicePath = process_utils.concatPath.bind(this, iDeviceDir);
   this.iosWebkitDebugProxy_ = toIDevicePath('ios_webkit_debug_proxy');
-  this.iDeviceInstaller_ = toIDevicePath('ideviceinstaller');
   this.iDeviceInfo_ = toIDevicePath('ideviceinfo');
   this.iDeviceImageMounter_ = toIDevicePath('ideviceimagemounter');
   this.iDeviceScreenshot_ = toIDevicePath('idevicescreenshot');
@@ -116,7 +115,6 @@ BrowserIos.prototype.startWdServer = function() {
 BrowserIos.prototype.startBrowser = function() {
   'use strict';
   this.scheduleMountDeveloperImageIfNeeded_();
-  this.scheduleInstallHelpersIfNeeded_();
   this.scheduleClearCacheCookies_();
   this.scheduleStartPacServer_();
   this.scheduleConfigurePac_();
@@ -161,30 +159,6 @@ BrowserIos.prototype.scheduleMountDeveloperImageIfNeeded_ = function() {
     }.bind(this));
   }.bind(this), reject);
   return done.promise;
-};
-
-/** @private */
-BrowserIos.prototype.scheduleInstallHelpersIfNeeded_ = function() {
-  'use strict';
-  if (this.shouldInstall_ && this.urlOpenerApp_) {
-    this.app_.schedule('Install openURL app', function() {
-      var done = new webdriver.promise.Deferred();
-      function reject(e) {
-        done.reject(e instanceof Error ? e : new Error(e));
-      }
-      process_utils.scheduleExec(this.app_, this.iDeviceInstaller_,
-          ['-U', this.deviceSerial_, '-i', this.urlOpenerApp_],
-          undefined,  // Use default spawn options.
-          20000).then(function(stdout) {
-        if (stdout.indexOf('Install - Complete') >= 0) {
-          done.fulfill();
-        } else {
-          reject('Install failed: ' + stdout);
-        }
-      }.bind(this), reject);
-      return done.promise;
-    }.bind(this));
-  }
 };
 
 /** @private */
