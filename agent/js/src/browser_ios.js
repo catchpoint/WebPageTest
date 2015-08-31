@@ -51,7 +51,6 @@ var webdriver = require('selenium-webdriver');
  *     #param {string} deviceSerial the device to drive.
  *     #param {string=} captureDir capture script dir, defaults to ''.
  *   #param {Object.<String>} task:
- *     #param {string=} pac PAC content.
  * @constructor
  */
 function BrowserIos(app, args) {
@@ -85,13 +84,6 @@ function BrowserIos(app, args) {
       process.env.HOME + '/.ssh/id_dsa_ios');
   this.urlOpenerApp_ = process_utils.concatPath(args.flags.iosAppDir,
       args.flags.iosUrlOpenerApp || 'urlOpener.ipa');
-  this.pac_ = args.task.pac;
-  this.pacServerPort_ = undefined;
-  this.pacServerPortLock_ = undefined;
-  this.pacServer_ = undefined;
-  this.pacUrlPort_ = undefined;
-  this.pacUrlPortLock_ = undefined;
-  this.pacForwardProcess_ = undefined;
   this.videoCard_ = args.flags.videoCard;
   var capturePath = process_utils.concatPath(args.flags.captureDir,
       args.flags.captureScript || 'capture');
@@ -116,9 +108,7 @@ BrowserIos.prototype.startBrowser = function() {
   'use strict';
   this.scheduleMountDeveloperImageIfNeeded_();
   this.scheduleClearCacheCookies_();
-  this.scheduleStartPacServer_();
-  this.scheduleConfigurePac_();
-  this.scheduleOpenUrl_('http://');
+  this.scheduleOpenUrl_('http://about:blank');
   this.scheduleSelectDevToolsPort_();
   this.scheduleStartDevToolsProxy_();
 };
@@ -323,202 +313,12 @@ BrowserIos.prototype.scheduleOpenUrl_ = function(url) {
   }.bind(this));
 };
 
-/** @private */
-BrowserIos.prototype.scheduleConfigurePac_ = function() {
-  'use strict';
-  // Modify the configd table, which will notify Safari.  This config is not
-  // persisted.
-  //
-  // This doesn't update the "Settings > WiFi > ? > Auto" UI.  Instead, the UI
-  // persists its PAC settings in:
-  //   /private/var/preferences/SystemConfiguration/preferences.plist
-  // When you manually change the settings in the UI, it both (1) saves a new
-  // plist and (2) modifies the configd table, which notifies Safari.
-  this.scheduleSsh_('echo list Setup:/Network/Service/.*/Proxies |scutil').then(
-    function(stdout) {
-      logger.debug((this.pacUrlPort_ ? 'Setting' : 'Clearing') + ' PAC');
-      var commands = [];
-      var lines = stdout.trim().split('\n');
-      lines.forEach(function(line) {
-        var matches = /^\s*subKey\s*\[\d+\]\s*=\s*(.*)\s*$/im.exec(line);
-        if (matches) {
-          var key = matches[1];
-          commands.push('get ' + key);
-          if (this.pacUrlPort_) {
-            commands.push('d.add ProxyAutoConfigEnable # 1');
-            commands.push('d.add ProxyAutoConfigURLString ' +
-                'http://127.0.0.1:' + this.pacUrlPort_ + '/proxy.pac');
-          } else {
-            commands.push('d.remove ProxyAutoConfigEnable');
-            commands.push('d.remove ProxyAutoConfigURLString');
-          }
-          commands.push('set ' + key);
-        }
-      }.bind(this));
-      if (commands.length > 0) {
-        logger.debug('Sending commands to scutil:\n  ' + commands.join('\n  '));
-        return this.scheduleSsh_('echo -e "' + commands.join('\n') +
-            '" | scutil');
-      }
-      if (!this.pacUrlPort_) {
-        return undefined;
-      }
-      throw new Error('scutil lacks PAC Proxies? ' + stdout);
-    }.bind(this));
-
-  // Update the Settings UI.  This is optional but a good idea, since
-  // otherwise the UI won't reflect the PAC settings.
-  this.scheduleConfigurePacUI_();
-};
-
-/** @private */
-BrowserIos.prototype.scheduleConfigurePacUI_ = function() {
-  'use strict';
-  // TODO(klm): Switch from tmp file to 'ssh ... cat' after upgrading NodeJS
-  // to a version where child_process.exec stdout is a Buffer not a string.
-  var remotePrefs =
-      '/private/var/preferences/SystemConfiguration/preferences.plist';
-  var scpRemotePrefs = this.deviceSerial_ + ':' + remotePrefs;
-  var localPrefs = path.join(this.runTempDir_, '.preferences.plist');
-  this.scheduleScp_(scpRemotePrefs, localPrefs);
-
-  process_utils.scheduleFunction(this.app_, 'Read plist', fs.readFile,
-       localPrefs).then(function(data) {
-    return process_utils.scheduleFunction(this.app_, 'Parse',
-        bplist.parseBuffer, data);
-  }.bind(this), function() {}).then(function(result) {
-    return result && result[0];
-  }).then(function(plist) {
-    var modified = false;
-    process_utils.forEachRecursive(plist, function(key, parentObject, keyPath) {
-      var parentKey = keyPath[keyPath.length - 1];
-      if ('signature' === parentKey || 'IOMACAddress' === parentKey) {
-        return true;  // Skip this branch.
-      }
-      if ('Proxies' !== key) {
-        return false;  // Keep going.
-      }
-      var proxies = parentObject.Proxies;
-      modified = true;
-      if (this.pacUrlPort_) {
-        logger.debug('Setting PAC URL in %s/%s', keyPath.join('/'), key);
-        proxies.ProxyAutoConfigEnable = 1;
-        // The URL points to the ssh reverse port forward to the server
-        // from scheduleStartPacServer_, always responding with this.pac_.
-        proxies.ProxyAutoConfigURLString =
-            'http://127.0.0.1:' + this.pacUrlPort_ + '/proxy.pac';
-      } else {
-        logger.debug('Deleting PAC URL in %s/%s', keyPath.join('/'), key);
-        delete proxies.ProxyAutoConfigEnable;
-        delete proxies.ProxyAutoConfigURLString;
-      }
-      return true;  // Skip -- no need to recurse under Proxies.
-    }.bind(this));
-    return (modified ? plist : undefined);
-  }.bind(this)).then(function(plist) {
-    return plist && process_utils.scheduleFunction(this.app_, 'write plist',
-        fs.writeFile, localPrefs, bplist.create(plist));
-  }.bind(this));
-
-  this.scheduleScp_(localPrefs, scpRemotePrefs);
-};
-
-/** @private */
-BrowserIos.prototype.scheduleStartPacServer_ = function() {
-  'use strict';
-  logger.debug('PAC: %s', this.pac_);
-  if (!this.pac_) {
-    // Only need the server and its ssh forward if we have PAC content.
-    return;
-  }
-  // We must dynamically allocate both ports, otherwise Safari thinks that
-  // the PAC content hasn't changed.
-  process_utils.scheduleAllocatePort(this.app_, 'Select PAC Server port').then(
-    function(alloc) {
-      logger.debug('Selected PAC Server port ' + alloc.port);
-      this.pacServerPortLock_ = alloc;
-      this.pacServerPort_ = alloc.port;
-    }.bind(this));
-  this.app_.schedule('Start PAC Server', function() {
-    this.pacServer_ = http.createServer(function(request, response) {
-      logger.debug('Got PAC HTTP request path=%s headers=%j',
-          request.url, request.headers);
-      response.writeHead(200, {
-        'Content-Length': this.pac_.length,
-        'Content-Type': 'application/x-ns-proxy-autoconfig'
-      });
-      response.write(this.pac_);
-      response.end();
-    }.bind(this));
-    return process_utils.scheduleFunction(this.app_,
-        'Start PAC listener on port ' + this.pacServerPort_,
-        this.pacServer_.listen.bind(this.pacServer_), this.pacServerPort_);
-  }.bind(this));
-  process_utils.scheduleAllocatePort(this.app_, 'Select PAC URL port').then(
-    function(alloc) {
-      logger.debug('Selected PAC URL port ' + alloc.port);
-      this.pacUrlPortLock_ = alloc;
-      this.pacUrlPort_ = alloc.port;
-      var args = this.getSshArgs_(
-          this.deviceSerial_,
-          '-R', this.pacUrlPort_ + ':127.0.0.1:' + this.pacServerPort_, '-N');
-      return process_utils.scheduleSpawn(this.app_, 'ssh', args).then(
-        function(proc) {
-          logger.info('Created tunnel from ' +
-              this.deviceSerial_ + ':' + this.pacUrlPort_ + ' to :' +
-              this.pacServerPort_);
-          this.pacForwardProcess_ = proc;
-        }.bind(this));
-    }.bind(this));
-};
-
-/**
- * Stops the PAC server.
- *
- * @private
- */
-BrowserIos.prototype.stopPacServer_ = function() {
-  'use strict';
-  if (this.pacForwardProcess_) {
-    logger.debug('Killing PAC port forwarding');
-    try {
-      this.pacForwardProcess_.kill();
-      logger.debug('Killed PAC port forwarding');
-    } catch (killException) {
-      logger.error('PAC port forwarding kill failed: %s', killException);
-    }
-    this.pacForwardProcess_ = undefined;
-  } else {
-    logger.debug('PAC port forwarding process already unset');
-  }
-  if (this.pacUrlPortLock_) {
-    this.pacUrlPort_ = undefined;
-    this.pacUrlPortLock_.release();
-    this.pacUrlPortLock_ = undefined;
-  }
-  if (this.pacServer_) {
-    process_utils.scheduleFunction(this.app_, 'Stop PAC server',
-        this.pacServer_.close.bind(this.pacServer_));
-    this.pacServer_ = undefined;
-  }
-  if (this.pacServerPortLock_) {
-    this.pacServerPort_ = undefined;
-    this.pacServerPortLock_.release();
-    this.pacServerPortLock_ = undefined;
-  }
-};
-
 /** Kills the browser. */
 BrowserIos.prototype.kill = function() {
   'use strict';
   this.devToolsUrl_ = undefined;
   this.stopDevToolsProxy_();
   this.releaseDevToolsPort_();
-  this.stopPacServer_();
-  if (this.pac_) {
-    // Clear the PAC settings
-    this.scheduleConfigurePac_();
-  }
   this.video_.scheduleStopVideoRecording();
 };
 
