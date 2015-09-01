@@ -628,6 +628,24 @@ WebDriverServer.prototype.devToolsCommand_ = function(command) {
 };
 
 /**
+ * @param {Object} command must have 'method' and 'params'.
+ * @return {webdriver.promise.Promise} resolve({string} responseBody).
+ * @private
+ */
+WebDriverServer.prototype.devToolsCommandNoIgnore_ = function(command) {
+  'use strict';
+  // We use a "sender" function because, at startup, our "this.devTools_"
+  // is undefined and scheduled, so we can't do:
+  //   return process_utils.scheduleFunction(this.app_, command.method,
+  //       this.devTools_.sendCommand, command);
+  var sender = (function(callback) {
+    return this.devTools_.sendCommandNoIgnore(command, callback);
+  }.bind(this));
+  return process_utils.scheduleFunction(
+      this.app_, command.method, sender);
+};
+
+/**
  * @param {string} method command method, e.g. 'navigate'.
  * @param {Object} params command options.
  * @return {webdriver.promise.Promise} resolve({string} responseBody).
@@ -843,13 +861,12 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
     if (this.task_.timelineStackDepth) {
       message.params.categories = message.params.categories + ',toplevel,disabled-by-default-devtools.timeline.stack,devtools.timeline.stack,disabled-by-default-v8.cpu_profile';
     }
-    this.devToolsCommand_(message).then(function() {
+    this.devToolsCommandNoIgnore_(message).then(function() {
       logger.debug('Started tracing');
     }, function(e) {
-      // Might be crbug/392577, which affects Chrome 36.0.1967 - 37.0.2000.
-      this.testError_ = 'Tracing is not supported.';
+      logger.debug('Tracing is not supported');
       this.traceRunning_ = false;
-      throw e;
+      this.task_.trace = 0;
     }.bind(this));
   }
 };
