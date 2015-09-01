@@ -53,6 +53,7 @@ private:
   CString       _computer_name;
   CString       _dns_servers;
 
+  void LoadClientCertificateFromStore(HINTERNET request);
   void SetLoginCredentials(HINTERNET request);
   bool HttpGet(CString url, WptTestDriver& test, CString& test_string, 
                CString& zip_file);

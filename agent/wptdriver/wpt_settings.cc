@@ -111,6 +111,11 @@ bool WptSettings::Load(void) {
     _requireValidCertificate = true;
   }
 
+  if (GetPrivateProfileString(_T("WebPagetest"), _T("Client Certificate Common Name"), _T(""), buff,
+    _countof(buff), iniFile)) {
+    _clientCertCommonName = buff;
+  }
+
   #ifdef DEBUG
   _debug = 9;
   #else
