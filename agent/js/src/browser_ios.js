@@ -35,7 +35,6 @@ var os = require('os');
 var path = require('path');
 var process_utils = require('process_utils');
 var util = require('util');
-var video_hdmi = require('video_hdmi');
 var webdriver = require('selenium-webdriver');
 
 
@@ -82,12 +81,11 @@ function BrowserIos(app, args) {
       args.flags.iosSshProxy || 'sshproxy.py');
   this.sshCertPath_ = (args.flags.iosSshCert ||
       process.env.HOME + '/.ssh/id_dsa_ios');
-  this.urlOpenerApp_ = process_utils.concatPath(args.flags.iosAppDir,
-      args.flags.iosUrlOpenerApp || 'urlOpener.ipa');
-  this.videoCard_ = args.flags.videoCard;
+  this.xrecord_ = process_utils.concatPath(args.flags.iosVideoDir,
+      'xrecord');
+  this.videoProcess_ = undefined;
   var capturePath = process_utils.concatPath(args.flags.captureDir,
       args.flags.captureScript || 'capture');
-  this.video_ = new video_hdmi.VideoHdmi(this.app_, capturePath);
   this.runTempDir_ = args.runTempDir || '';
 }
 util.inherits(BrowserIos, browser_base.BrowserBase);
@@ -329,7 +327,6 @@ BrowserIos.prototype.kill = function() {
   this.devToolsUrl_ = undefined;
   this.stopDevToolsProxy_();
   this.releaseDevToolsPort_();
-  this.video_.scheduleStopVideoRecording();
 };
 
 /** @return {boolean} */
@@ -353,10 +350,12 @@ BrowserIos.prototype.getDevToolsUrl = function() {
 /** @return {Object} capabilities. */
 BrowserIos.prototype.scheduleGetCapabilities = function() {
   'use strict';
-  return this.video_.scheduleIsSupported().then(function(canRecordVideo) {
+  return this.app_.schedule('iOS get capabilities', function() {
     return {
       webdriver: false,
-      videoRecording: canRecordVideo,
+//      videoRecording: os.platform() == 'darwin' ? true : false,
+      videoRecording: false,
+      videoFileExtension: 'mp4',
       takeScreenshot: true
     };
   }.bind(this));
@@ -408,11 +407,27 @@ BrowserIos.prototype.scheduleTakeScreenshot = function(fileNameNoExt) {
  */
 BrowserIos.prototype.scheduleStartVideoRecording = function(filename) {
   'use strict';
-  // The video record command needs to know device type for cropping etc.
-  this.scheduleGetDeviceInfo_('ProductType').then(function(stdout) {
-    this.video_.scheduleStartVideoRecording(filename, this.deviceSerial_,
-        stdout.trim(), this.videoCard_);
+  // xrecord breaks the debug proxy connection currently.  Need to beef up
+  // the debug proxy and have it auto reconnect and hopefully mux the
+  // same connection as the video capture
+
+  /*
+  this.app_.schedule('Start video capture', function() {
+    if (this.xrecord_) {
+      process_utils.scheduleSpawn(this.app_, this.xrecord_,
+          ['-q', '-d', '-f', '-i', this.deviceSerial_, '-o', filename]).then(
+          function(proc) {
+        this.videoProcess_ = proc;
+        this.videoProcess_.on('exit', function(code, signal) {
+          logger.info('xrecord EXIT code %s signal %s', code, signal);
+          this.videoProcess_ = undefined;
+        }.bind(this));
+        // TODO: wait for the video file to start actual recording
+        this.scheduleRestartDevToolsProxy_();
+      }.bind(this));
+    }
   }.bind(this));
+  */
 };
 
 /**
@@ -420,7 +435,16 @@ BrowserIos.prototype.scheduleStartVideoRecording = function(filename) {
  */
 BrowserIos.prototype.scheduleStopVideoRecording = function() {
   'use strict';
-  this.video_.scheduleStopVideoRecording();
+  if (this.videoProcess_) {
+    logger.debug('Killing video capture');
+    try {
+      this.videoProcess_.kill();
+      logger.info('Killed video capture');
+    } catch (killException) {
+      logger.error('video capture kill failed: %s', killException);
+    }
+  }
+  this.videoProcess_ = undefined;
 };
 
 /**
@@ -430,7 +454,7 @@ BrowserIos.prototype.scheduleStopVideoRecording = function() {
  */
 BrowserIos.prototype.scheduleStartPacketCapture = function() {
   'use strict';
-  throw new Error('Packet capture requested, but not implemented for iOS');
+  logger.debug('Packet capture requested, but not implemented for iOS');
 };
 
 /**
@@ -438,7 +462,6 @@ BrowserIos.prototype.scheduleStartPacketCapture = function() {
  */
 BrowserIos.prototype.scheduleStopPacketCapture = function() {
   'use strict';
-  throw new Error('Packet capture requested, but not implemented for iOS');
 };
 
 /**

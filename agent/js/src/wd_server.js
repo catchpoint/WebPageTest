@@ -866,6 +866,7 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
     }, function(e) {
       logger.debug('Tracing is not supported');
       this.traceRunning_ = false;
+      this.traceData_ = undefined;
       this.task_.trace = 0;
     }.bind(this));
   }
@@ -1342,6 +1343,7 @@ WebDriverServer.prototype.done_ = function() {
       this.scheduleProcessVideo_();
     }
     this.scheduleNoFault_('Send IPC', function() {
+      logger.debug("Done collecting results")
       exports.process.send({
           cmd: (this.testError_ ? 'error' : 'done'),
           testError: this.testError_,
@@ -1362,6 +1364,7 @@ WebDriverServer.prototype.done_ = function() {
     // For non-webdriver tests we want to stop the browser after every run
     // (including between first and repeat view).
     if (this.testError_ || this.exitWhenDone_ || !this.driver_) {
+      logger.debug("Scheduling Stop")
       this.scheduleStop();
     }
     if (this.testError_ || this.exitWhenDone_) {
