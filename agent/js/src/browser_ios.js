@@ -354,30 +354,11 @@ BrowserIos.prototype.getDevToolsUrl = function() {
 BrowserIos.prototype.scheduleGetCapabilities = function() {
   'use strict';
   return this.video_.scheduleIsSupported().then(function(canRecordVideo) {
-    return process_utils.scheduleExec(this.app_, this.imageConverter_,
-        ['--version']).then(function(stdout) {
-      var m = stdout.match(/Version: ImageMagick/i);
-      var canConvertImages = false;
-      if (m) {
-        canConvertImages = true;
-      } else {
-        logger.debug('Missing ' + this.imageConverter_ + ', possible fix:\n' +
-            (/^darwin/i.test(os.platform()) ?
-             'brew install imagemagick --with-libtiff' :
-             'sudo apt-get install imagemagick'));
-      }
-      return {
-          webdriver: false,
-          videoRecording: canRecordVideo,
-          takeScreenshot: canConvertImages
-        };
-    }.bind(this), function() {
-      return {
-          webdriver: false,
-          videoRecording: canRecordVideo,
-          takeScreenshot: false
-        };
-    }.bind(this));
+    return {
+      webdriver: false,
+      videoRecording: canRecordVideo,
+      takeScreenshot: true
+    };
   }.bind(this));
 };
 
