@@ -41,3 +41,5 @@ agent/js/lib/ios/DeviceSupport
 /www/cli/ec2-keys.inc.php
 
 agent/js/5c.sh
+
+*.mp4

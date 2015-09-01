@@ -249,6 +249,19 @@ WebDriverServer.prototype.startChrome_ = function(browserCaps) {
 };
 
 /**
+ * @private
+ */
+WebDriverServer.prototype.prepareVideoCapture_ = function() {
+  this.getCapabilities_().then(function(caps) {
+    var videoFileExtension = caps.videoFileExtension || 'avi';
+    var videoFile = path.join(this.runTempDir_, 'video.' + videoFileExtension);
+    if (this.browser_.prepareVideoCapture) {
+      this.browser_.prepareVideoCapture(videoFile);
+    }
+  }.bind(this));
+};
+
+/**
  * connectDevTools_ attempts to create a new devtools instance and attempts to
  * connect it to the webdriver server.
  *
@@ -950,6 +963,7 @@ WebDriverServer.prototype.scheduleStartPacketCaptureIfRequested_ = function() {
  */
 WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
   'use strict';
+  this.prepareVideoCapture_();
   if (!this.devTools_) {
     this.startChrome_(browserCaps);
   }

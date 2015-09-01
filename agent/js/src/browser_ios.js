@@ -84,6 +84,7 @@ function BrowserIos(app, args) {
   this.xrecord_ = process_utils.concatPath(args.flags.iosVideoDir,
       'xrecord');
   this.videoProcess_ = undefined;
+  this.videoStarted_ = false;
   var capturePath = process_utils.concatPath(args.flags.captureDir,
       args.flags.captureScript || 'capture');
   this.runTempDir_ = args.runTempDir || '';
@@ -353,8 +354,7 @@ BrowserIos.prototype.scheduleGetCapabilities = function() {
   return this.app_.schedule('iOS get capabilities', function() {
     return {
       webdriver: false,
-//      videoRecording: os.platform() == 'darwin' ? true : false,
-      videoRecording: false,
+      videoRecording: os.platform() == 'darwin' ? true : false,
       videoFileExtension: 'mp4',
       takeScreenshot: true
     };
@@ -405,13 +405,9 @@ BrowserIos.prototype.scheduleTakeScreenshot = function(fileNameNoExt) {
  * @param {string} filename The local filename to write to.
  * @param {Function=} onExit Optional exit callback, as noted in video_hdmi.
  */
-BrowserIos.prototype.scheduleStartVideoRecording = function(filename) {
-  'use strict';
-  // xrecord breaks the debug proxy connection currently.  Need to beef up
-  // the debug proxy and have it auto reconnect and hopefully mux the
-  // same connection as the video capture
-
-  /*
+BrowserIos.prototype.prepareVideoCapture = function(filename) {
+  // xrecord breaks the debug proxy connection so we need to start
+  // video capture before starting the proxy.
   this.app_.schedule('Start video capture', function() {
     if (this.xrecord_) {
       process_utils.scheduleSpawn(this.app_, this.xrecord_,
@@ -422,12 +418,25 @@ BrowserIos.prototype.scheduleStartVideoRecording = function(filename) {
           logger.info('xrecord EXIT code %s signal %s', code, signal);
           this.videoProcess_ = undefined;
         }.bind(this));
-        // TODO: wait for the video file to start actual recording
-        this.scheduleRestartDevToolsProxy_();
+        this.videoStarted_ = false;
+        this.videoProcess_.stderr.on('data', function(data) {
+          if (data.toString().indexOf('Recording started') >= 0) {
+            logger.debug('Video capture started recording');
+            this.videoStarted_ = true;
+          }
+        }.bind(this));
+        this.app_.wait(function() {return this.videoStarted_;}.bind(this), 30000);
       }.bind(this));
     }
   }.bind(this));
-  */
+};
+
+/**
+ * @param {string} filename The local filename to write to.
+ * @param {Function=} onExit Optional exit callback, as noted in video_hdmi.
+ */
+BrowserIos.prototype.scheduleStartVideoRecording = function(filename) {
+  'use strict';
 };
 
 /**
@@ -436,15 +445,21 @@ BrowserIos.prototype.scheduleStartVideoRecording = function(filename) {
 BrowserIos.prototype.scheduleStopVideoRecording = function() {
   'use strict';
   if (this.videoProcess_) {
-    logger.debug('Killing video capture');
-    try {
-      this.videoProcess_.kill();
-      logger.info('Killed video capture');
-    } catch (killException) {
-      logger.error('video capture kill failed: %s', killException);
-    }
+    this.app_.schedule('Stop video capture', function() {
+      logger.debug('Killing video capture');
+      try {
+        this.videoProcess_.kill('SIGINT');
+        this.app_.wait(function() {
+          return this.videoProcess_ == undefined;
+        }.bind(this), 30000).then(function() {
+          logger.info('Killed video capture');
+        }.bind(this));
+      } catch (killException) {
+        logger.error('video capture kill failed: %s', killException);
+        this.videoProcess_ = undefined;
+      }
+    }.bind(this));
   }
-  this.videoProcess_ = undefined;
 };
 
 /**
