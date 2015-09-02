@@ -85,6 +85,10 @@ function BrowserIos(app, args) {
       'xrecord');
   this.videoProcess_ = undefined;
   this.videoStarted_ = false;
+  this.pcapFile_ = undefined;
+  this.pcapRemoteFile_ = '/var/logs/webpagetest.pcap';
+  this.pcapProcess_ = undefined;
+  this.pcapStarted_ = false;
   var capturePath = process_utils.concatPath(args.flags.captureDir,
       args.flags.captureScript || 'capture');
   this.runTempDir_ = args.runTempDir || '';
@@ -291,6 +295,19 @@ BrowserIos.prototype.scheduleSshNoFault_ = function(var_args) { // jshint unused
     }
     return '';
   }.bind(this));
+};
+
+/**
+ * Spawns a SSH process
+ * @param {string} var_args arguments.
+ * @return {webdriver.promise.Promise} fulfill({string} stdout).
+ * @private
+ */
+BrowserIos.prototype.scheduleSpawnSsh_ = function(var_args) { // jshint unused:false
+  'use strict';
+  var args = this.getSshArgs_.apply(
+      this, [this.deviceSerial_].concat(Array.prototype.slice.call(arguments)));
+  return process_utils.scheduleSpawn(this.app_, 'ssh', args);
 };
 
 /**
@@ -502,9 +519,29 @@ BrowserIos.prototype.scheduleStopVideoRecording = function() {
  *
  * #param {string} filename  local file where to copy the pcap result.
  */
-BrowserIos.prototype.scheduleStartPacketCapture = function() {
+BrowserIos.prototype.scheduleStartPacketCapture = function(filename) {
   'use strict';
-  logger.debug('Packet capture requested, but not implemented for iOS');
+  this.app_.schedule('Start packet capture', function() {
+    this.scheduleSshNoFault_('rm', '-f', this.pcapRemoteFile_).then(function() {
+      this.scheduleSpawnSsh_('tcpdump -i en0 -s 0 -p -w ' + this.pcapRemoteFile_).then(
+          function(proc) {
+        this.pcapProcess_ = proc;
+        this.pcapFile_ = filename;
+        this.pcapProcess_.on('exit', function(code, signal) {
+          logger.info('packet capture EXIT code %s signal %s', code, signal);
+          this.pcapProcess_ = undefined;
+        }.bind(this));
+        this.pcapStarted_ = false;
+        this.pcapProcess_.stderr.on('data', function(data) {
+          if (data.toString().indexOf('listening on en0') >= 0) {
+            logger.debug('packet capture started recording');
+            this.pcapStarted_ = true;
+          }
+        }.bind(this));
+        this.app_.wait(function() {return this.pcapStarted_;}.bind(this), 30000);
+      }.bind(this));
+    }.bind(this));
+  }.bind(this));
 };
 
 /**
@@ -512,6 +549,23 @@ BrowserIos.prototype.scheduleStartPacketCapture = function() {
  */
 BrowserIos.prototype.scheduleStopPacketCapture = function() {
   'use strict';
+  if (this.pcapProcess_) {
+    this.app_.schedule('Stop packet capture', function() {
+      logger.debug('Killing packet capture');
+      try {
+        this.pcapProcess_.kill('SIGINT');
+        this.app_.wait(function() {
+          return this.pcapProcess_ == undefined;
+        }.bind(this), 30000).then(function() {
+          logger.info('Killed packet capture');
+        }.bind(this));
+      } catch (killException) {
+        logger.error('packet capture kill failed: %s', killException);
+        this.pcapProcess_ = undefined;
+      }
+    }.bind(this));
+    this.scheduleScp_(this.deviceSerial_ + ':' + this.pcapRemoteFile_, this.pcapFile_);
+  }
 };
 
 /**
@@ -537,10 +591,6 @@ BrowserIos.prototype.scheduleAssertIsReady = function() {
         insideTag = false;
       }
     });
-
-    // clean up any browser state while we're here
-    this.scheduleClearCacheCookies_();
-
     if (!hasWifi) {
       throw new Error('Wifi is offline');
     }
