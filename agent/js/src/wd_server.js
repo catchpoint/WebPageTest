@@ -245,6 +245,12 @@ WebDriverServer.prototype.startChrome_ = function(browserCaps) {
     throw new Error('Internal error: prior Chrome running unexpectedly');
   }
   this.browser_.startBrowser(browserCaps, this.runNumber_ === 1);
+};
+
+WebDriverServer.prototype.startDevTools_ = function(browserCaps) {
+  if (this.browser_.prepareDevTools) {
+    this.browser_.prepareDevTools();
+  }
   this.connectDevTools_();
 };
 
@@ -444,6 +450,7 @@ WebDriverServer.prototype.addScreenshot_ = function(
     var fileNameJPEG = fileName.replace(/\.png$/i, '.jpg');
     var diskPathJPEG = diskPath.replace(/\.png$/i, '.jpg');
     var convertCommand = [diskPath];
+    convertCommand.push('-set', 'colorspace', 'sRGB');
     convertCommand.push('-resize', '50%');
     if (this.task_.rotate) {
       convertCommand.push('-rotate', this.task_.rotate);
@@ -963,10 +970,11 @@ WebDriverServer.prototype.scheduleStartPacketCaptureIfRequested_ = function() {
  */
 WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
   'use strict';
-  this.prepareVideoCapture_();
   if (!this.devTools_) {
     this.startChrome_(browserCaps);
   }
+  this.prepareVideoCapture_();
+  this.startDevTools_();
   this.clearPageAndStartVideoDevTools_();
   this.scheduleStartPacketCaptureIfRequested_();
   // No page load timeout here -- agent_main enforces run-level timeout.
@@ -1289,7 +1297,7 @@ WebDriverServer.prototype.scheduleProcessVideo_ = function() {
       var videoDir = path.join(this.runTempDir_, 'video');
       this.histogramFile_ = path.join(this.runTempDir_, 'histograms.json');
       var traceFile = path.join(this.runTempDir_, 'trace.json');
-      var options = ['visualmetrics.py', '-i', this.videoFile_, '-d',
+      var options = ['lib/video/visualmetrics.py', '-i', this.videoFile_, '-d',
           videoDir, '--orange', '--viewport', '--force', '--quality', '75',
           '--histogram', this.histogramFile_];
       if (this.traceData_) {

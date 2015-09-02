@@ -50,7 +50,7 @@ def video_to_frames(video, directory, force, orange_file, find_viewport, full_re
             video = os.path.realpath(video)
             logging.info("Processing frames from video " + video + " to " + directory)
             if not os.path.isdir(directory):
-                os.mkdir(directory, 0644)
+                os.mkdir(directory, 0755)
             if os.path.isdir(directory):
                 directory = os.path.realpath(directory)
                 clean_directory(directory)
@@ -561,7 +561,7 @@ def convert_to_jpeg(directory, quality):
             dest = os.path.join(directory, m.groupdict().get('base') + 'jpg')
             if os.path.isfile(dest):
                 os.remove(dest)
-            command = 'convert "{0}" -quality {1:d} "{2}"'.format(file, quality, dest)
+            command = 'convert "{0}" -set colorspace sRGB -quality {1:d} "{2}"'.format(file, quality, dest)
             subprocess.call(command, shell=True)
             if os.path.isfile(dest):
                 os.remove(file)
