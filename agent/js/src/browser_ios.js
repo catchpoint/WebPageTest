@@ -88,6 +88,7 @@ function BrowserIos(app, args) {
   var capturePath = process_utils.concatPath(args.flags.captureDir,
       args.flags.captureScript || 'capture');
   this.runTempDir_ = args.runTempDir || '';
+  this.isCacheWarm_ = args.isCacheWarm;
 }
 util.inherits(BrowserIos, browser_base.BrowserBase);
 /** Public class. */
@@ -106,8 +107,13 @@ BrowserIos.prototype.startWdServer = function() {
 BrowserIos.prototype.startBrowser = function() {
   'use strict';
   this.scheduleMountDeveloperImageIfNeeded_();
-  this.scheduleClearCacheCookies_();
+  if (!this.isCacheWarm_) {
+    this.scheduleClearCacheCookies_();
+  }
   this.scheduleOpenUrl_('http://about:blank');
+};
+
+BrowserIos.prototype.prepareDevTools = function() {
   this.scheduleSelectDevToolsPort_();
   this.scheduleStartDevToolsProxy_();
 };
