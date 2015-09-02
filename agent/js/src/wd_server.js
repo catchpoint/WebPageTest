@@ -1386,10 +1386,11 @@ WebDriverServer.prototype.done_ = function() {
     // For non-webdriver tests we want to stop the browser after every run
     // (including between first and repeat view).
     if (this.testError_ || this.exitWhenDone_ || !this.driver_) {
-      logger.debug("Scheduling Stop")
+      logger.debug("Scheduling Stop");
       this.scheduleStop();
     }
     if (this.testError_ || this.exitWhenDone_) {
+      logger.debug("Disconnecting IPC");
       // Disconnect parent IPC to exit gracefully without a process.exit() call.
       // This should be the last source of event queue events.
       this.app_.schedule('Disconnect IPC',

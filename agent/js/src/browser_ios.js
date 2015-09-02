@@ -275,6 +275,25 @@ BrowserIos.prototype.scheduleSsh_ = function(var_args) { // jshint unused:false
 };
 
 /**
+ * Runs an ssh command, treats exit code of 0 or 1 as success.
+ * @param {string} var_args arguments.
+ * @return {webdriver.promise.Promise} fulfill({string} stdout).
+ * @private
+ */
+BrowserIos.prototype.scheduleSshNoFault_ = function(var_args) { // jshint unused:false
+  'use strict';
+  var args = this.getSshArgs_.apply(
+      this, [this.deviceSerial_].concat(Array.prototype.slice.call(arguments)));
+  return process_utils.scheduleExec(this.app_, 'ssh', args).addErrback(
+      function(e) {
+    if (!e.signal && 1 === e.code) {
+      return e.stdout;
+    }
+    return '';
+  }.bind(this));
+};
+
+/**
  * @param {string} var_args arguments.
  * @private
  */
@@ -287,10 +306,9 @@ BrowserIos.prototype.scheduleScp_ = function(var_args) { // jshint unused:false
 /** @private */
 BrowserIos.prototype.scheduleClearCacheCookies_ = function() {
   'use strict';
+  this.scheduleSshNoFault_('killall', 'MobileSafari');
   var glob = '/private/var/mobile/Applications/*/MobileSafari.app/Info.plist';
-  this.scheduleSsh_('killall', 'MobileSafari');
-  return undefined;
-  this.scheduleSsh_('test -f ' + glob + ' | ls ' + glob).then(function(stdout) {
+  this.scheduleSshNoFault_('test -f ' + glob + ' | ls ' + glob).then(function(stdout) {
     var path = stdout.trim();
     if (path) {
       // iOS 7+: Extract the app_id by removing the glob's [0:'*'] prefix
@@ -306,7 +324,7 @@ BrowserIos.prototype.scheduleClearCacheCookies_ = function() {
         (app_id ? '/Applications/' + app_id : '') + '/Library/');
     var cache = (app_id ? 'fsCachedData/*' :
         'com.apple.WebAppCache/ApplicationCache.db');
-    this.scheduleSsh_('rm', '-rf',
+    this.scheduleSshNoFault_('rm', '-rf',
       lib + 'Caches/com.apple.mobilesafari/Cache.db',
       lib + 'Caches/' + cache,
       lib + 'Safari/History.plist',
@@ -314,6 +332,17 @@ BrowserIos.prototype.scheduleClearCacheCookies_ = function() {
       lib + 'WebKit/LocalStorage',
       '/private/var/mobile/Library/Cookies/Cookies.binarycookies');
   }.bind(this));
+
+  // iOS 8 uses a different paths
+  var paths = ['/private/var/mobile/Containers/Data/Application/*/Library/Safari',
+               '/var/mobile/Downloads',
+               '/private/var/mobile/Downloads',
+               '/var/mobile/Library/Safari',
+               '/private/var/mobile/Library/Safari',
+               '/private/var/mobile/Library/Cookies'];
+  for (var path in paths) {
+    this.scheduleSshNoFault_('rm', '-rf', path + '/*');
+  }
 };
 
 /**
@@ -508,6 +537,10 @@ BrowserIos.prototype.scheduleAssertIsReady = function() {
         insideTag = false;
       }
     });
+
+    // clean up any browser state while we're here
+    this.scheduleClearCacheCookies_();
+
     if (!hasWifi) {
       throw new Error('Wifi is offline');
     }
