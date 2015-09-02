@@ -357,8 +357,8 @@ BrowserIos.prototype.scheduleClearCacheCookies_ = function() {
                '/var/mobile/Library/Safari',
                '/private/var/mobile/Library/Safari',
                '/private/var/mobile/Library/Cookies'];
-  for (var path in paths) {
-    this.scheduleSshNoFault_('rm', '-rf', path + '/*');
+  for (var i = 0; i < paths.length; i++) {
+    this.scheduleSshNoFault_('rm', '-rf', paths[i] + '/*');
   }
 };
 
@@ -591,6 +591,8 @@ BrowserIos.prototype.scheduleAssertIsReady = function() {
         insideTag = false;
       }
     });
+    // Make sure Safari is closed if we aren't running a test
+    this.scheduleSshNoFault_('killall', 'MobileSafari');
     if (!hasWifi) {
       throw new Error('Wifi is offline');
     }
