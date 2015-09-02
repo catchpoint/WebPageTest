@@ -135,9 +135,8 @@ BrowserIos.prototype.scheduleMountDeveloperImageIfNeeded_ = function() {
   function reject(e) {
     done.reject(e instanceof Error ? e : new Error(e));
   }
-  process_utils.scheduleExec(this.app_, this.iDeviceImageMounter_,
-      ['-u', this.deviceSerial_, '-l']).then(function(stdout) {
-    var m = stdout.match(/ImagePresent\: true/);
+  this.scheduleSsh_('mount').then(function(stdout) {
+    var m = stdout.match(/ on \/Developer/);
     if (m) {
       logger.debug("Developer image already mounted.")
       done.fulfill();
