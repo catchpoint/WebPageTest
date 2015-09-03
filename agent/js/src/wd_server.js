@@ -258,13 +258,15 @@ WebDriverServer.prototype.startDevTools_ = function(browserCaps) {
  * @private
  */
 WebDriverServer.prototype.prepareVideoCapture_ = function() {
-  this.getCapabilities_().then(function(caps) {
-    var videoFileExtension = caps.videoFileExtension || 'avi';
-    var videoFile = path.join(this.runTempDir_, 'video.' + videoFileExtension);
-    if (this.browser_.prepareVideoCapture) {
-      this.browser_.prepareVideoCapture(videoFile);
-    }
-  }.bind(this));
+  if (1 === this.task_['Capture Video']) {
+    this.getCapabilities_().then(function(caps) {
+      var videoFileExtension = caps.videoFileExtension || 'avi';
+      var videoFile = path.join(this.runTempDir_, 'video.' + videoFileExtension);
+      if (this.browser_.prepareVideoCapture) {
+        this.browser_.prepareVideoCapture(videoFile);
+      }
+    }.bind(this));
+  }
 };
 
 /**
