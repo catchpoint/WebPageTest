@@ -200,8 +200,17 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
         if( isset($parts['query']) ) {
           $qs = array();
           parse_str($parts['query'], $qs);
-          foreach($qs as $name => $val)
-            $request['queryString'][] = array('name' => (string)$name, 'value' => (string)$val );
+          foreach($qs as $name => $val) {
+            if (!mb_detect_encoding($name, 'UTF-8', true)) {
+              // not a valid UTF-8 string. URL encode it again so it can be safely consumed by the client.
+              $name = urlencode($name);
+            }
+            if (!mb_detect_encoding($val, 'UTF-8', true)) {
+              // not a valid UTF-8 string. URL encode it again so it can be safely consumed by the client.
+              $val = urlencode($val);
+            }
+            $request['queryString'][] = array('name' => (string)$name, 'value' => (string)$val);
+          }
         }
         
         if( !strcasecmp(trim($request['method']), 'post') ) {
