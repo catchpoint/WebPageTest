@@ -28,6 +28,7 @@ webpagetest.vsmdi
 *.idx
 *.ncb
 *.$wrk
+*.swp
 agent/js/*.log
 agent/js/node_modules/.bin/jshint
 agent/js/node_modules/jshint/
