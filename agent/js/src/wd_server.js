@@ -1366,13 +1366,18 @@ WebDriverServer.prototype.done_ = function() {
       // video processing needs to be done after tracing has been stopped and collected
       this.scheduleProcessVideo_();
     }
+    logger.debug("Done collecting results")
+    var devToolsFile = this.devToolsMessages_ ? path.join(this.runTempDir_, 'devtools.json') : undefined;
+    if (devToolsFile) {
+      fs.writeFileSync(devToolsFile, JSON.stringify(this.devToolsMessages_));
+    }
     this.scheduleNoFault_('Send IPC', function() {
-      logger.debug("Done collecting results")
+      logger.debug("Sending 'done' IPC")
       exports.process.send({
           cmd: (this.testError_ ? 'error' : 'done'),
           testError: this.testError_,
           agentError: this.agentError_,
-          devToolsMessages: this.devToolsMessages_,
+          devToolsFile: devToolsFile,
           screenshots: this.screenshots_,
           traceData: this.traceData_,
           videoFile: this.videoFile_,
