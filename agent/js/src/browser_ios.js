@@ -137,7 +137,7 @@ BrowserIos.prototype.scheduleMountDeveloperImageIfNeeded_ = function() {
     done.reject(e instanceof Error ? e : new Error(e));
   }
   this.scheduleSsh_('mount').then(function(stdout) {
-    var m = stdout.match(/ on \/Developer/);
+    var m = stdout.match(/ on \/Developer /);
     if (m) {
       logger.debug("Developer image already mounted.")
       done.fulfill();
