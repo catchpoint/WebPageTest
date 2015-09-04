@@ -164,8 +164,8 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
     if (ipcMsg.devToolsFile) {
       job.zipResultFiles['devtools.json'] = fs.readFileSync(ipcMsg.devToolsFile, "utf8");
     }
-    if (ipcMsg.traceData) {
-      job.zipResultFiles['trace.json'] = JSON.stringify(ipcMsg.traceData);
+    if (ipcMsg.traceFile) {
+      job.zipResultFiles['trace.json'] = fs.readFileSync(ipcMsg.traceFile, "utf8");
     }
     if (ipcMsg.customMetrics) {
       job.zipResultFiles['metrics.json'] = JSON.stringify(ipcMsg.customMetrics);

@@ -650,24 +650,6 @@ WebDriverServer.prototype.devToolsCommand_ = function(command) {
 };
 
 /**
- * @param {Object} command must have 'method' and 'params'.
- * @return {webdriver.promise.Promise} resolve({string} responseBody).
- * @private
- */
-WebDriverServer.prototype.devToolsCommandNoIgnore_ = function(command) {
-  'use strict';
-  // We use a "sender" function because, at startup, our "this.devTools_"
-  // is undefined and scheduled, so we can't do:
-  //   return process_utils.scheduleFunction(this.app_, command.method,
-  //       this.devTools_.sendCommand, command);
-  var sender = (function(callback) {
-    return this.devTools_.sendCommandNoIgnore(command, callback);
-  }.bind(this));
-  return process_utils.scheduleFunction(
-      this.app_, command.method, sender);
-};
-
-/**
  * @param {string} method command method, e.g. 'navigate'.
  * @param {Object} params command options.
  * @return {webdriver.promise.Promise} resolve({string} responseBody).
@@ -866,7 +848,7 @@ WebDriverServer.prototype.clearPageAndStartVideoWd_ = function() {
 WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
   'use strict';
   // Always enable tracing, at a minimum to capture timeline data
-  if (!this.driver_ && !this.traceRunning_) {
+  if (this.browser_.supportsTracing && !this.driver_ && !this.traceRunning_) {
     this.traceData_ = {traceEvents: []};
     this.traceRunning_ = true;
     var message = {method: 'Tracing.start'};
@@ -883,13 +865,8 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
     if (this.task_.timelineStackDepth) {
       message.params.categories = message.params.categories + ',toplevel,disabled-by-default-devtools.timeline.stack,devtools.timeline.stack,disabled-by-default-v8.cpu_profile';
     }
-    this.devToolsCommandNoIgnore_(message).then(function() {
+    this.devToolsCommand_(message).then(function() {
       logger.debug('Started tracing');
-    }, function(e) {
-      logger.debug('Tracing is not supported');
-      this.traceRunning_ = false;
-      this.traceData_ = undefined;
-      this.task_.trace = 0;
     }.bind(this));
   }
 };
@@ -1371,6 +1348,10 @@ WebDriverServer.prototype.done_ = function() {
     if (devToolsFile) {
       fs.writeFileSync(devToolsFile, JSON.stringify(this.devToolsMessages_));
     }
+    var traceFile = this.traceData_ ? path.join(this.runTempDir_, 'trace.json') : undefined;
+    if (traceFile) {
+      fs.writeFileSync(traceFile, JSON.stringify(this.traceData_));
+    }
     this.scheduleNoFault_('Send IPC', function() {
       logger.debug("Sending 'done' IPC")
       exports.process.send({
@@ -1379,7 +1360,7 @@ WebDriverServer.prototype.done_ = function() {
           agentError: this.agentError_,
           devToolsFile: devToolsFile,
           screenshots: this.screenshots_,
-          traceData: this.traceData_,
+          traceFile: traceFile,
           videoFile: this.videoFile_,
           videoFrames: this.videoFrames_,
           pcapFile: this.pcapFile_,

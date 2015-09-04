@@ -93,6 +93,7 @@ function BrowserIos(app, args) {
       args.flags.captureScript || 'capture');
   this.runTempDir_ = args.runTempDir || '';
   this.isCacheWarm_ = args.isCacheWarm;
+  this.supportsTracing = false;
 }
 util.inherits(BrowserIos, browser_base.BrowserBase);
 /** Public class. */

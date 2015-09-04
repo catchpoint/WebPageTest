@@ -170,6 +170,7 @@ function BrowserAndroidChrome(app, args) {
     this.chromeFlags_.push('--ignore-certificate-errors');
   }
   this.isCacheWarm_ = args.isCacheWarm;
+  this.supportsTracing = true;
 }
 util.inherits(BrowserAndroidChrome, browser_base.BrowserBase);
 /** Public class. */
