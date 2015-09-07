@@ -477,7 +477,9 @@ BrowserIos.prototype.prepareVideoCapture = function(filename) {
             this.videoStarted_ = true;
           }
         }.bind(this));
-        this.app_.wait(function() {return this.videoStarted_;}.bind(this), 30000);
+        // xrecord will wait for up to 10 minutes to acquire an exclusive lock
+        // (only one video at a time is currently possible in OSX)
+        this.app_.wait(function() {return this.videoStarted_;}.bind(this), 660000);
       }.bind(this));
     }
   }.bind(this));
