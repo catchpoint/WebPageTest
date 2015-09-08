@@ -107,7 +107,7 @@ public:
   TrackDns(TestState& test_state, WptTest& test);
   ~TrackDns(void);
 
-  bool BlockLookup(CString& name);
+  bool BlockLookup(CString name);
   void * LookupStart(CString& name);
   void LookupAddress(void * context, ULONG &addr);
   void LookupAlias(CString name, CString alias);

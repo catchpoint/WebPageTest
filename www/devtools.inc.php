@@ -578,7 +578,7 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
     // pull out just the requests that were served on the wire
     foreach ($rawRequests as &$request) {
       if (array_key_exists('startTime', $request)) {
-        if (!isset($rawRequests[$id]['fromCache']) && isset($request['response']['timing'])) {
+        if (!isset($request['fromCache']) && isset($request['response']['timing'])) {
           if (array_key_exists('requestTime', $request['response']['timing']) &&
               array_key_exists('end_time', $request) &&
               $request['response']['timing']['requestTime'] >= $request['startTime'] &&

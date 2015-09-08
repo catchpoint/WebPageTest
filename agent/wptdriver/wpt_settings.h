@@ -117,6 +117,7 @@ public:
   CString _azure_instance;
   CString _clients_directory;
   BOOL _requireValidCertificate;
+  CString _clientCertCommonName;
 
   BrowserSettings _browser;
   SoftwareUpdate _software_update;

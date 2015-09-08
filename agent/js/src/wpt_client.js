@@ -644,66 +644,30 @@ Client.prototype.finishRun_ = function(job, isRunFinished) {
   if (this.onAlive)
     this.onAlive();
 
-  this.app_.schedule('Verify that the agent is online', function() {
-    if (SIGTERM === this.handlingSignal_ || SIGINT === this.handlingSignal_) {
-      return false;  // Don't check readiness if we're aborting.
-    } else if (this.onMakeReady) {
-      return this.onMakeReady();  // Returns true if wasOffline & recovered.
-    } else {
-      return false;  // Assume we're online.
-    }
-  }.bind(this)).addBoth(function(errOrBool) {
-    var wasOffline = (errOrBool !== false);
-    if (wasOffline) {
-      job.agentError = job.agentError || 'Agent was offline';
-    }
-    var isOffline = (errOrBool instanceof Error);
-    if (isOffline) {
-      logger.error('Agent is offline: ' + errOrBool.message);
-      job.agentError = job.agentError || errOrBool.message;
-    }
+  var isAbort = (
+      (SIGTERM === this.handlingSignal_ ||
+       SIGINT === this.handlingSignal_) ||  // Abort run
+      (SIGABRT === this.handlingSignal_ && isRunFinished));  // Abort job
+  if (isAbort) {
+    job.agentError = this.handlingSignal_;
+  }
 
-    var isAbort = (
-        (SIGTERM === this.handlingSignal_ ||
-         SIGINT === this.handlingSignal_) ||  // Abort run
-        (SIGABRT === this.handlingSignal_ && isRunFinished));  // Abort job
-    if (isAbort) {
-      job.agentError = this.handlingSignal_;
-    }
+  var isJobFinished = (job.runNumber === job.runs && isRunFinished) ||
+        // Failed WPR record-run terminates the whole job.
+        (job.runNumber === 0 && job.testError);
 
-    // Retry on agentError, at most once per run, but only if we're online.
-    //
-    // There are many other definitions that we could use instead, e.g.
-    //   retry on any job.testError, retry up to N times per job, etc.
-    var shouldRetry = (
-        !!job.agentError && !isOffline && !isAbort && !job.retryError);
+  logger.alert('%s run %d%s%s/%d of %sjob %s%s%s%s',
+      ((job.testError || job.agentError) ? 'Failed' : 'Finished'),
+      job.runNumber,
+      (job.isFirstViewOnly ? '' : (job.isCacheWarm ? 'b' : 'a')),
+      (job.retryError ? '\'' : ''),
+      job.runs, (isJobFinished ? 'finished ' : ''),
+      job.id, (job.testError || job.agentError ? ': ' : ''),
+      (job.testError || ''), (job.testError && job.agentError ? ' ' : ''),
+      (job.agentError ? '(' + job.agentError + ')' : ''));
 
-    var isJobFinished = (!shouldRetry && (
-          isAbort || wasOffline || isOffline ||
-          (job.runNumber === job.runs && isRunFinished) ||
-          // Failed WPR record-run terminates the whole job.
-          (job.runNumber === 0 && job.testError)));
-
-    logger.alert('%s run %d%s%s/%d of %sjob %s%s%s%s',
-        ((job.testError || job.agentError) ? 'Failed' : 'Finished'),
-        job.runNumber,
-        (job.isFirstViewOnly ? '' : (job.isCacheWarm ? 'b' : 'a')),
-        (job.retryError ? '\'' : ''),
-        job.runs, (isJobFinished ? 'finished ' : ''),
-        job.id, (job.testError || job.agentError ? ': ' : ''),
-        (job.testError || ''), (job.testError && job.agentError ? ' ' : ''),
-        (job.agentError ? '(' + job.agentError + ')' : ''));
-
-    if (shouldRetry) {
-      job.retryError = job.agentError || 'Unknown';
-      job.isCacheWarm = false;
-      this.startNextRun_(job);
-      return;
-    }
-
-    this.submitResult_(job, isJobFinished,
-        this.endOfRun_.bind(this, job, isRunFinished, isJobFinished));
-  }.bind(this));
+  this.submitResult_(job, isJobFinished,
+      this.endOfRun_.bind(this, job, isRunFinished, isJobFinished));
 };
 
 /**
@@ -778,82 +742,69 @@ function createZip(zipFileMap, fileNamer) {
  */
 Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
   'use strict';
-  logger.extra('postResultFile: job=%s resultFile=%s fields=%j callback=%s',
-      job.id, (resultFile ? 'present' : null), fields, callback);
-  var servlet = WORK_DONE_SERVLET;
-  var mp = new multipart.Multipart();
-  mp.addPart('id', job.id, ['Content-Type: text/plain']);
-  mp.addPart('location', this.location_);
-  mp.addPart('timeline', 1);
-  if (this.apiKey_) {
-    mp.addPart('key', this.apiKey_);
-  }
-  if (this.name_) {
-    mp.addPart('pc', this.name_);
-  } else if (this.deviceSerial_) {
-    mp.addPart('pc', this.deviceSerial_);
-  }
-  if (fields) {
-    fields.forEach(function(nameValue) {
-      mp.addPart(nameValue[0], nameValue[1]);
-    });
-  }
-  if (resultFile) {
-    if (exports.ResultFile.ResultType.IMAGE === resultFile.resultType ||
-        exports.ResultFile.ResultType.PCAP === resultFile.resultType) {
-      // Images and pcaps must be uploaded to the RESULT_IMAGE_SERVLET, with no
-      // resultType or run/cache parts.
-      //
-      // If we submit the pcap via the regular servlet, it would be used for
-      // the waterfall instead of the DevTools trace, which we don't want.
-      servlet = RESULT_IMAGE_SERVLET;
-    } else {
-      if (resultFile.resultType) {
-        mp.addPart(resultFile.resultType, '1');
-      }
-      mp.addPart('_runNumber', String(job.runNumber));
-      mp.addPart('_cacheWarmed', job.isCacheWarm ? '1' : '0');
+  try {
+    logger.extra('postResultFile: job=%s resultFile=%s fields=%j callback=%s',
+        job.id, (resultFile ? 'present' : null), fields, callback);
+    var servlet = WORK_DONE_SERVLET;
+    var mp = new multipart.Multipart();
+    mp.addPart('id', job.id, ['Content-Type: text/plain']);
+    mp.addPart('location', this.location_);
+    mp.addPart('timeline', 1);
+    if (this.apiKey_) {
+      mp.addPart('key', this.apiKey_);
     }
-    var fileName = createFileName(job, resultFile.fileName);
-    mp.addFilePart(
-        'file', fileName, resultFile.contentType, resultFile.content);
-    if (logger.isLogging('extra')) {
-      logger.debug('Writing a local copy of %s', fileName);
-      var body = resultFile.content;
-      var bodyBuffer = (body instanceof Buffer ? body : new Buffer(body));
-      fs.mkdir('/data/results', parseInt('0755', 8), function(e) {
-        if (!e || 'EEXIST' === e.code) {
-          var subdir = path.join('/data/results', job.id);
-          fs.mkdir(subdir, parseInt('0755', 8), function(e) {
-            if (!e || 'EEXIST' === e.code) {
-              fs.writeFile(path.join(subdir, fileName), bodyBuffer);
-            }
-          });
-        }
+    if (this.name_) {
+      mp.addPart('pc', this.name_);
+    } else if (this.deviceSerial_) {
+      mp.addPart('pc', this.deviceSerial_);
+    }
+    if (fields) {
+      fields.forEach(function(nameValue) {
+        mp.addPart(nameValue[0], nameValue[1]);
       });
     }
-  }
-  // TODO(klm): change body to chunked request.write().
-  // Only makes sense if done for file content, the rest is peanuts.
-  var mpResponse = mp.getHeadersAndBody();
-
-  var options = {
-      method: 'POST',
-      host: this.baseUrl_.hostname,
-      port: this.baseUrl_.port,
-      path: this.baseUrl_.path.replace(/\/+$/, '') + '/' + servlet,
-      headers: mpResponse.headers
-    };
-  var request = http.request(options, function(res) {
-    exports.processResponse(res, callback);
-  });
-  request.on('error', function(e) {
-    logger.warn('Unable to post result: ' + e.message);
-    if (callback) {
-      callback(e, '');
+    if (resultFile) {
+      if (exports.ResultFile.ResultType.IMAGE === resultFile.resultType ||
+          exports.ResultFile.ResultType.PCAP === resultFile.resultType) {
+        // Images and pcaps must be uploaded to the RESULT_IMAGE_SERVLET, with no
+        // resultType or run/cache parts.
+        //
+        // If we submit the pcap via the regular servlet, it would be used for
+        // the waterfall instead of the DevTools trace, which we don't want.
+        servlet = RESULT_IMAGE_SERVLET;
+      } else {
+        if (resultFile.resultType) {
+          mp.addPart(resultFile.resultType, '1');
+        }
+        mp.addPart('_runNumber', String(job.runNumber));
+        mp.addPart('_cacheWarmed', job.isCacheWarm ? '1' : '0');
+      }
+      var fileName = createFileName(job, resultFile.fileName);
+      mp.addFilePart(
+          'file', fileName, resultFile.contentType, resultFile.content);
     }
-  });
-  request.end(mpResponse.bodyBuffer, 'UTF-8');
+    // TODO(klm): change body to chunked request.write().
+    // Only makes sense if done for file content, the rest is peanuts.
+    var mpResponse = mp.getHeadersAndBody();
+
+    var options = {
+        method: 'POST',
+        host: this.baseUrl_.hostname,
+        port: this.baseUrl_.port,
+        path: this.baseUrl_.path.replace(/\/+$/, '') + '/' + servlet,
+        headers: mpResponse.headers
+      };
+    var request = http.request(options, function(res) {
+      exports.processResponse(res, callback);
+    });
+    request.on('error', function(e) {
+      logger.warn('Unable to post result: ' + e.message);
+      if (callback) {
+        callback(e, '');
+      }
+    });
+    request.end(mpResponse.bodyBuffer, 'UTF-8');
+  } catch(e) {}
 };
 
 /**

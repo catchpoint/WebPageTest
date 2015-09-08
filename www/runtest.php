@@ -184,8 +184,8 @@
 
             if (array_key_exists('affinity', $_REQUEST))
               $test['affinity'] = hexdec(substr(sha1($_REQUEST['affinity']), 0, 8));
-            //if (array_key_exists('tester', $_REQUEST) && preg_match('/[a-zA-Z0-9\-_]+/', $_REQUEST['tester']))
-            //  $test['affinity'] = 'Tester' . $_REQUEST['tester'];
+            if (array_key_exists('tester', $_REQUEST) && preg_match('/[a-zA-Z0-9\-_]+/', $_REQUEST['tester']))
+              $test['affinity'] = 'Tester' . $_REQUEST['tester'];
 
             // custom options
             $test['cmdLine'] = '';
@@ -1334,7 +1334,7 @@ function ScriptParameterCount($command)
 * @param mixed $error
 */
 function ValidateURL(&$url, &$error, &$settings)
-{
+{                
     $ret = false;
 
     // make sure the url starts with http://
@@ -1686,10 +1686,11 @@ function CheckUrl($url)
     global $user;
     global $usingAPI;
     global $error;
+    global $admin;
     $date = gmdate("Ymd");
     if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
         $url = 'http://' . $url;
-    if (!$usingAPI) {
+    if (!$usingAPI && !$admin) {
         $blockUrls = file('./settings/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         $blockHosts = file('./settings/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         $blockAuto = file('./settings/blockdomainsauto.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -1735,7 +1736,7 @@ function CheckUrl($url)
         }
     }
     
-    if ($ok) {
+    if ($ok && !$admin) {
       $ok = SBL_Check($url, $message);
       if (!$ok) {
         $error = "<br>Sorry, your test was blocked because $url is suspected of being used for <a href=\"http://www.antiphishing.org/\">phishing</a> or <a href=\"http://www.stopbadware.org/\">hosting malware</a>.<br><br>Advisory provided by <a href=\"http://code.google.com/apis/safebrowsing/safebrowsing_faq.html#whyAdvisory\">Google</a>.";
@@ -2308,7 +2309,7 @@ function ValidateCommandLine($cmd, &$error) {
     $flags = explode(' ', $cmd);
     if ($flags && is_array($flags) && count($flags)) {
       foreach($flags as $flag) {
-        if (!preg_match('/^--(([a-zA-Z0-9\-\.\+=,_ "]+)|((proxy-server|proxy-pac-url)=[a-zA-Z0-9\-\.\+=,_:\/]+))$/', $flag)) {
+        if (!preg_match('/^--(([a-zA-Z0-9\-\.\+=,_ "]+)|((proxy-server|proxy-pac-url|force-fieldtrials)=[a-zA-Z0-9\-\.\+=,_:\/]+))$/', $flag)) {
           $error = 'Invalid command-line option: "' . htmlspecialchars($flag) . '"';
         }
       }
