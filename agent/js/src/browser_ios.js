@@ -351,14 +351,16 @@ BrowserIos.prototype.scheduleClearCacheCookies_ = function() {
   }.bind(this));
 
   // iOS 8 uses a different paths
-  var paths = ['/private/var/mobile/Containers/Data/Application/*/Library/Safari',
-               '/var/mobile/Downloads',
-               '/private/var/mobile/Downloads',
-               '/var/mobile/Library/Safari',
-               '/private/var/mobile/Library/Safari',
-               '/private/var/mobile/Library/Cookies'];
+  var paths = ['/private/var/mobile/Containers/Data/Application/*/Library/Safari/*',
+               '/var/mobile/Downloads/*',
+               '/private/var/mobile/Downloads/*',
+               '/var/mobile/Library/Safari/*',
+               '/private/var/mobile/Library/Safari/*',
+               '/private/var/mobile/Library/Cookies/*',
+               '/private/var/logs/webpagetest.pcap',
+               '/private/var/mobile/Library/Assets/com_apple_MobileAsset_SoftwareUpdate/*.asset'];
   for (var i = 0; i < paths.length; i++) {
-    this.scheduleSshNoFault_('rm', '-rf', paths[i] + '/*');
+    this.scheduleSshNoFault_('rm', '-rf', paths[i]);
   }
 };
 
@@ -524,7 +526,7 @@ BrowserIos.prototype.scheduleStopVideoRecording = function() {
 BrowserIos.prototype.scheduleStartPacketCapture = function(filename) {
   'use strict';
   this.app_.schedule('Start packet capture', function() {
-    this.scheduleSshNoFault_('rm', '-f', this.pcapRemoteFile_).then(function() {
+    this.scheduleSshNoFault_('rm', this.pcapRemoteFile_).then(function() {
       this.scheduleSpawnSsh_('tcpdump -i en0 -s 0 -p -w ' + this.pcapRemoteFile_).then(
           function(proc) {
         this.pcapProcess_ = proc;
@@ -567,6 +569,7 @@ BrowserIos.prototype.scheduleStopPacketCapture = function() {
       }
     }.bind(this));
     this.scheduleScp_(this.deviceSerial_ + ':' + this.pcapRemoteFile_, this.pcapFile_);
+    this.scheduleSshNoFault_('rm', this.pcapRemoteFile_);
   }
 };
 
