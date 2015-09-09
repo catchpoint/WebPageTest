@@ -116,6 +116,7 @@ BrowserIos.prototype.startBrowser = function() {
     this.scheduleClearCacheCookies_();
   }
   this.scheduleOpenUrl_('http://about:blank');
+  this.cleanup_();
 };
 
 BrowserIos.prototype.prepareDevTools = function() {
@@ -320,6 +321,16 @@ BrowserIos.prototype.scheduleScp_ = function(var_args) { // jshint unused:false
       this.app_, 'scp', this.getSshArgs_.apply(this, arguments));
 };
 
+/**
+  Do any device cleanup we'd want to do between, before or after tests.
+  @private
+*/
+BrowserIos.prototype.cleanup_ = function() {
+  this.scheduleSshNoFault_('killall', 'tcpdump');
+  this.scheduleSshNoFault_('rm', '-rf', '/private/var/logs/webpagetest.pcap');
+  this.scheduleSshNoFault_('rm', '-rf', '/private/var/mobile/Library/Assets/com_apple_MobileAsset_SoftwareUpdate/*.asset');
+}
+
 /** @private */
 BrowserIos.prototype.scheduleClearCacheCookies_ = function() {
   'use strict';
@@ -356,9 +367,7 @@ BrowserIos.prototype.scheduleClearCacheCookies_ = function() {
                '/private/var/mobile/Downloads/*',
                '/var/mobile/Library/Safari/*',
                '/private/var/mobile/Library/Safari/*',
-               '/private/var/mobile/Library/Cookies/*',
-               '/private/var/logs/webpagetest.pcap',
-               '/private/var/mobile/Library/Assets/com_apple_MobileAsset_SoftwareUpdate/*.asset'];
+               '/private/var/mobile/Library/Cookies/*'];
   for (var i = 0; i < paths.length; i++) {
     this.scheduleSshNoFault_('rm', '-rf', paths[i]);
   }
@@ -382,6 +391,7 @@ BrowserIos.prototype.kill = function() {
   this.devToolsUrl_ = undefined;
   this.stopDevToolsProxy_();
   this.releaseDevToolsPort_();
+  this.cleanup_();
 };
 
 /** @return {boolean} */
