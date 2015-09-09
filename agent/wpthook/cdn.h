@@ -65,6 +65,7 @@ CDN_PROVIDER cdnList[] = {
   {".simplecdn.net", "Simple CDN"},
   {".instacontent.net", "Mirror Image"},
   {".footprint.net", "Level 3"},
+  {".fpbns.net", "Level 3"},
   {".ay1.b.yahoo.com", "Yahoo"},
   {".yimg.", "Yahoo"},
   {".yahooapis.com", "Yahoo"},
