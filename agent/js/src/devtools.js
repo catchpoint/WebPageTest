@@ -92,6 +92,7 @@ DevTools.prototype.onMessage = function(callback) {
 DevTools.prototype.connect = function(callback, errback) {
   'use strict';
   var retries = 0;  // ios_webkit_debug_proxy sometimes returns an empty array.
+  this.debuggerUrl_ = undefined;
   var listTabs = (function() {
     var request = http.get(url.parse(this.devToolsUrl_), function(response) {
       exports.processResponse(response, function(responseBody) {
@@ -102,7 +103,9 @@ DevTools.prototype.connect = function(callback, errback) {
           global.setTimeout(listTabs, 2000);
           return;
         }
-        this.debuggerUrl_ = devToolsJson[0].webSocketDebuggerUrl;
+        if (devToolsJson && devToolsJson.length) {
+          this.debuggerUrl_ = devToolsJson[0].webSocketDebuggerUrl;
+        }
         if (!this.debuggerUrl_) {
           throw new Error('DevTools response at ' + this.devToolsUrl_ +
               ' does not contain webSocketDebuggerUrl: ' + responseBody);

@@ -722,7 +722,8 @@ WebDriverServer.prototype.execBrowserScript_ = function(code) {
   return this.runtimeCommand_('evaluate',
       {expression: code, returnByValue: true}).then(function(response){
     var value = undefined;
-    if (response['result'] !== undefined &&
+    if (response !== undefined &&
+        response['result'] !== undefined &&
         response.result['value'] !== undefined) {
       value = response.result.value;
     }
