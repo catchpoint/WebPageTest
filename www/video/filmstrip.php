@@ -167,7 +167,10 @@ foreach( $tests as &$test ) {
                     imagedestroy($thumb);
                     unset($thuumb);
                 }
-                $tmp = imagecreatefromjpeg("./$imgPath");
+                if (strtolower(substr($imgPath, -4)) == '.png')
+                  $tmp = imagecreatefrompng("./$imgPath");
+                else
+                  $tmp = imagecreatefromjpeg("./$imgPath");
                 if( $tmp ) {
                     $thumb = imagecreatetruecolor($test['video']['thumbWidth'], $test['video']['thumbHeight']);
                     fastimagecopyresampled($thumb, $tmp, 0, 0, 0, 0, $test['video']['thumbWidth'], $test['video']['thumbHeight'], imagesx($tmp), imagesy($tmp), 4);

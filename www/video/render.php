@@ -506,7 +506,10 @@ function DrawTest(&$test, $frameTime, $im) {
   // see if we actually need to draw anything
   if (isset($path) && (!isset($test['lastFrame']) || $test['lastFrame'] !== $path || $need_grey)) {
     $test['lastFrame'] = $path;
-    $thumb = imagecreatefromjpeg("./$path");
+    if (strtolower(substr($path, -4)) == '.png')
+      $thumb = imagecreatefrompng("./$path");
+    else
+      $thumb = imagecreatefromjpeg("./$path");
     if ($thumb) {
       if ($need_grey)
         imagefilter($thumb, IMG_FILTER_GRAYSCALE);
