@@ -355,6 +355,10 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
       if (this.isRecordingDevTools_) {
         this.onPageLoad_();
       }
+    } else if ('Page.javascriptDialogOpening' === message.method) {
+      var err = new Error('Page opened a modal dailog.', this.runNumber_);
+      this.abortTimer_ = global.setTimeout(
+          this.onPageLoad_.bind(this, err), DETACH_TIMEOUT_MS_);
     } else if ('Inspector.detached' === message.method) {
       if (this.pageLoadDonePromise_ && this.pageLoadDonePromise_.isPending()) {
         // This message typically means that the browser has crashed.
@@ -1194,6 +1198,9 @@ WebDriverServer.prototype.scheduleGetWdDevToolsLog_ = function() {
  */
 WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
   logger.debug('Collecting metrics');
+  if (this.testError_)
+    return;
+  
   this.scheduleNoFault_('Collect Custom Metrics', function() {
     if (this.task_['customMetrics'] !== undefined) {
       for (var metric in this.task_.customMetrics) {
