@@ -189,11 +189,14 @@ if (!$admin && isset($_COOKIE['asid']) && isset($_COOKIE['google_id']) && isset(
 }
 
 // assign a unique ID to each person
+$isFirstVisit = true;
 $isOwner = false;
 $owner = null;
 if( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
+  $isFirstVisit = false;
   $owner = $_COOKIE['google_id'];
 } else if( isset($_COOKIE['o']) && strlen($_COOKIE['o']) ){
+  $isFirstVisit = false;
   $owner = $_COOKIE['o'];
 }else{
   $owner = sha1(uniqid(uniqid('', true), true));
