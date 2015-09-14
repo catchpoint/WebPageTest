@@ -567,7 +567,7 @@ BrowserIos.prototype.scheduleStopPacketCapture = function() {
     this.app_.schedule('Stop packet capture', function() {
       logger.debug('Killing packet capture');
       try {
-        this.pcapProcess_.kill('SIGINT');
+        this.scheduleSshNoFault_('killall', '-INT', 'tcpdump');
         this.app_.wait(function() {
           return this.pcapProcess_ == undefined;
         }.bind(this), 30000).then(function() {
