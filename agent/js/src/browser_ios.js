@@ -327,6 +327,7 @@ BrowserIos.prototype.scheduleScp_ = function(var_args) { // jshint unused:false
 */
 BrowserIos.prototype.cleanup_ = function() {
   this.scheduleSshNoFault_('killall', 'tcpdump');
+  this.scheduleSshNoFault_('killall', 'certui_relay');
   this.scheduleSshNoFault_('rm', '-rf', '/private/var/logs/webpagetest.pcap');
   this.scheduleSshNoFault_('rm', '-rf', '/private/var/mobile/Library/Assets/com_apple_MobileAsset_SoftwareUpdate/*.asset');
 }
