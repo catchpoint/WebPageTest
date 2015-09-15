@@ -116,6 +116,7 @@ BrowserIos.prototype.startBrowser = function() {
     this.scheduleClearCacheCookies_();
   }
   this.scheduleOpenUrl_('http://about:blank');
+  this.cleanup_();
 };
 
 BrowserIos.prototype.prepareDevTools = function() {
@@ -320,6 +321,17 @@ BrowserIos.prototype.scheduleScp_ = function(var_args) { // jshint unused:false
       this.app_, 'scp', this.getSshArgs_.apply(this, arguments));
 };
 
+/**
+  Do any device cleanup we'd want to do between, before or after tests.
+  @private
+*/
+BrowserIos.prototype.cleanup_ = function() {
+  this.scheduleSshNoFault_('killall', 'tcpdump');
+  this.scheduleSshNoFault_('killall', 'certui_relay');
+  this.scheduleSshNoFault_('rm', '-rf', '/private/var/logs/webpagetest.pcap');
+  this.scheduleSshNoFault_('rm', '-rf', '/private/var/mobile/Library/Assets/com_apple_MobileAsset_SoftwareUpdate/*.asset');
+}
+
 /** @private */
 BrowserIos.prototype.scheduleClearCacheCookies_ = function() {
   'use strict';
@@ -351,14 +363,14 @@ BrowserIos.prototype.scheduleClearCacheCookies_ = function() {
   }.bind(this));
 
   // iOS 8 uses a different paths
-  var paths = ['/private/var/mobile/Containers/Data/Application/*/Library/Safari',
-               '/var/mobile/Downloads',
-               '/private/var/mobile/Downloads',
-               '/var/mobile/Library/Safari',
-               '/private/var/mobile/Library/Safari',
-               '/private/var/mobile/Library/Cookies'];
+  var paths = ['/private/var/mobile/Containers/Data/Application/*/Library/Safari/*',
+               '/var/mobile/Downloads/*',
+               '/private/var/mobile/Downloads/*',
+               '/var/mobile/Library/Safari/*',
+               '/private/var/mobile/Library/Safari/*',
+               '/private/var/mobile/Library/Cookies/*'];
   for (var i = 0; i < paths.length; i++) {
-    this.scheduleSshNoFault_('rm', '-rf', paths[i] + '/*');
+    this.scheduleSshNoFault_('rm', '-rf', paths[i]);
   }
 };
 
@@ -380,6 +392,7 @@ BrowserIos.prototype.kill = function() {
   this.devToolsUrl_ = undefined;
   this.stopDevToolsProxy_();
   this.releaseDevToolsPort_();
+  this.cleanup_();
 };
 
 /** @return {boolean} */
@@ -524,7 +537,7 @@ BrowserIos.prototype.scheduleStopVideoRecording = function() {
 BrowserIos.prototype.scheduleStartPacketCapture = function(filename) {
   'use strict';
   this.app_.schedule('Start packet capture', function() {
-    this.scheduleSshNoFault_('rm', '-f', this.pcapRemoteFile_).then(function() {
+    this.scheduleSshNoFault_('rm', this.pcapRemoteFile_).then(function() {
       this.scheduleSpawnSsh_('tcpdump -i en0 -s 0 -p -w ' + this.pcapRemoteFile_).then(
           function(proc) {
         this.pcapProcess_ = proc;
@@ -555,7 +568,7 @@ BrowserIos.prototype.scheduleStopPacketCapture = function() {
     this.app_.schedule('Stop packet capture', function() {
       logger.debug('Killing packet capture');
       try {
-        this.pcapProcess_.kill('SIGINT');
+        this.scheduleSshNoFault_('killall', '-INT', 'tcpdump');
         this.app_.wait(function() {
           return this.pcapProcess_ == undefined;
         }.bind(this), 30000).then(function() {
@@ -567,6 +580,7 @@ BrowserIos.prototype.scheduleStopPacketCapture = function() {
       }
     }.bind(this));
     this.scheduleScp_(this.deviceSerial_ + ':' + this.pcapRemoteFile_, this.pcapFile_);
+    this.scheduleSshNoFault_('rm', this.pcapRemoteFile_);
   }
 };
 
