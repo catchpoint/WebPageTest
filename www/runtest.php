@@ -1697,10 +1697,16 @@ function CheckUrl($url)
         if ($blockUrls !== false && count($blockUrls) ||
             $blockHosts !== false && count($blockHosts) ||
             $blockAuto !== false && count($blockAuto)) {
+            // Follow redirects to see if they are obscuring the site being tested
+            GetRedirect($url, $rhost, $rurl);
             foreach( $blockUrls as $block ) {
                 $block = trim($block);
                 if( strlen($block) && preg_match("/$block/i", $url)) {
                     logMsg("{$_SERVER['REMOTE_ADDR']}: url $url matched $block", "./log/{$date}-blocked.log", true);
+                    $ok = false;
+                    break;
+                } elseif( strlen($block) && strlen($rurl) && preg_match("/$block/i", $rurl)) {
+                    logMsg("{$_SERVER['REMOTE_ADDR']}: url $url redirected to $rurl matched $block", "./log/{$date}-blocked.log", true);
                     $ok = false;
                     break;
                 }
@@ -1713,7 +1719,13 @@ function CheckUrl($url)
                     if( strlen($block) &&
                         (!strcasecmp($host, $block) ||
                          !strcasecmp($host, "www.$block"))) {
-                         logMsg("{$_SERVER['REMOTE_ADDR']}: host $url matched $block", "./log/{$date}-blocked.log", true);
+                         logMsg("{$_SERVER['REMOTE_ADDR']}: $url matched $block", "./log/{$date}-blocked.log", true);
+                        $ok = false;
+                        break;
+                    } elseif( strlen($block) &&
+                        (!strcasecmp($rhost, $block) ||
+                         !strcasecmp($rhost, "www.$block"))) {
+                         logMsg("{$_SERVER['REMOTE_ADDR']}: $url redirected to $rhost which matched $block", "./log/{$date}-blocked.log", true);
                         $ok = false;
                         break;
                     }
@@ -1727,7 +1739,7 @@ function CheckUrl($url)
                     if( strlen($block) &&
                         (!strcasecmp($host, $block) ||
                          !strcasecmp($host, "www.$block"))) {
-                         logMsg("{$_SERVER['REMOTE_ADDR']}: host $url matched auto-block $block", "./log/{$date}-blocked.log", true);
+                         logMsg("{$_SERVER['REMOTE_ADDR']}: $url matched auto-block $block", "./log/{$date}-blocked.log", true);
                         $ok = false;
                         break;
                     }
