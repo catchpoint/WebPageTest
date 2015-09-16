@@ -234,10 +234,15 @@ DevTools.prototype.command_ = function(command, callback, errback) {
       errback: errback
     };
     global.setTimeout(function(){
-      if (this.commandCallbacks_[command.id]) {
+      callbackErrback = this.commandCallbacks_[command.id];
+      if (callbackErrback) {
         delete this.commandCallbacks_[command.id];
         logger.debug('Timeout for command: %j', command);
-        this.commandCallbacks_[command.id]({});
+        if (callbackErrback.errback) {
+          try {
+            callbackErrback.errback(new Error("Command Timeout"));
+          } catch(e) {}
+        }
       }
     }.bind(this), DEV_TOOLS_COMMAND_TIMEOUT);
   }
