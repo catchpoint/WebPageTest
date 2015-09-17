@@ -54,7 +54,8 @@ var knownOpts = {
   deviceAddr: [String, null],
   deviceSerial: [String, null],
   jobTimeout: [Number, null],
-  apiKey: [String, null]
+  apiKey: [String, null],
+  exitTests: [Number, null]
 };
 
 var WD_SERVER_EXIT_TIMEOUT = 5000;  // Wait for 5 seconds before force-killing
