@@ -48,7 +48,7 @@ for($offset = 0; $offset <= $days; $offset++)
                     if (array_key_exists(14, $parts))
                         $count = intval(trim($parts[14]));
                     $count = max(1, $count);
-                    if( ($privateInstall || $admin) && strlen($key) && array_key_exists($key, $keys) )
+                    if( ($privateInstall || $admin) && strlen($key) && array_key_exists($key, $keys) && $key != $keys['server']['key'] )
                       $keys[$ip] = $keys[$key]['contact'];
                     if( isset($counts[$ip]) )
                         $counts[$ip] += $count;
