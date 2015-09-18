@@ -76,6 +76,7 @@ Results::Results(TestState& test_state, WptTest& test, Requests& requests,
   , _saved(false)
   , _dev_tools(dev_tools)
   , _trace(trace)
+  , currentPage(1)
   , reported_step_(0) {
   _file_base = shared_results_file_base;
   _visually_complete.QuadPart = 0;
@@ -154,6 +155,7 @@ void Results::Save(void) {
     if (shared_result == -1 || shared_result == 0 || shared_result == 99999)
       shared_result = _test_state._test_result;
     _saved = true;
+	currentPage++;
   }
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));
 }
@@ -221,20 +223,26 @@ void Results::SaveStatusMessages(void) {
 void Results::SaveImages(void) {
   // save the event-based images
   CxImage image;
-  if (_screen_capture.GetImage(CapturedImage::START_RENDER, image))
-    SaveImage(image, _file_base + IMAGE_START_RENDER, _test._image_quality, false, _test._full_size_video);
-  if (_screen_capture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image))
-    SaveImage(image, _file_base + IMAGE_DOC_COMPLETE, _test._image_quality, false, _test._full_size_video);
+  CString page;
+  page.Format(_T("_%d"), currentPage);
+  if (_screen_capture.GetImage(CapturedImage::START_RENDER, image)) {
+    SaveImage(image, _file_base + page + IMAGE_START_RENDER, _test._image_quality, true, 
+              _test._full_size_video);
+  }
+  if (_screen_capture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image)) {
+    SaveImage(image, _file_base + page + IMAGE_DOC_COMPLETE, _test._image_quality, true,
+              _test._full_size_video);
+  }
   if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, image)) {
     if (_test._png_screen_shot)
-      image.Save(_file_base + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
-    SaveImage(image, _file_base + IMAGE_FULLY_LOADED, _test._image_quality, false, _test._full_size_video);
+      image.Save(_file_base + page + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
+    SaveImage(image, _file_base + page + IMAGE_FULLY_LOADED, _test._image_quality, true, 
+              _test._full_size_video);
   }
   if (_screen_capture.GetImage(CapturedImage::RESPONSIVE_CHECK, image)) {
-    SaveImage(image, _file_base + IMAGE_RESPONSIVE_CHECK, _test._image_quality,
+    SaveImage(image, _file_base + page + IMAGE_RESPONSIVE_CHECK, _test._image_quality,
               true, _test._full_size_video);
   }
-
   SaveVideo();
 }
 
@@ -274,12 +282,14 @@ void Results::SaveVideo(void) {
             histogram = GetHistogramJSON(*img);
             if (_test._video) {
               _visually_complete.QuadPart = image._capture_time.QuadPart;
-              file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base, 
-                                image_time);
+              file_name.Format(_T("%s_%d_progress_%04d.jpg"), (LPCTSTR)_file_base, currentPage,
+                            image_time);
               SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_video);
             }
           }
         } else {
+			CString page;
+			page.Format(_T("_%d"), currentPage);
           width = img->GetWidth();
           height = img->GetHeight();
           // always save the first image at time zero
@@ -287,12 +297,14 @@ void Results::SaveVideo(void) {
           image_time_ms = 0;
           histogram = GetHistogramJSON(*img);
           if (_test._video) {
-            file_name = _file_base + _T("_progress_0000.jpg");
+            file_name = _file_base + page + _T("_progress_0000.jpg");
             SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_video);
           }
         }
 
         if (!histogram.IsEmpty()) {
+          CString page;
+		  page.Format(_T("_%d"));
           if (histogram_count)
             histograms += ", ";
           histograms += "{\"histogram\": ";
@@ -304,16 +316,15 @@ void Results::SaveVideo(void) {
           histograms += "}";
           histogram_count++;
           if (_test._video) {
-            file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_file_base,
+            file_name.Format(_T("%s%s_progress_%04d.hist"), (LPCTSTR)_file_base, page,
                              image_time);
             SaveHistogram(histogram, file_name);
           }
-        }
-
+        } 
         if (last_image)
           delete last_image;
         last_image = img;
-      }
+	  }
       else
         delete img;
     }
@@ -474,7 +485,7 @@ void Results::SavePageData(OptimizationChecks& checks){
           _test_state._start_time.wMinute, _test_state._start_time.wSecond);
     result += buff;
     // Event Name
-    result += current_step_name_ + "\t";
+    result += (CT2A(checks._test.event_name + "\t"));
     // URL
     result += CStringA((LPCSTR)CT2A(_test._navigated_url)) + "\t";
     // Load Time (ms)
@@ -922,6 +933,8 @@ void Results::ProcessRequests(void) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Results::SaveRequests(OptimizationChecks& checks) {
+  CString page;
+  page.Format(_T("_%d"), currentPage);
   HANDLE file = CreateFile(_file_base + REQUEST_DATA_FILE, GENERIC_WRITE, 0, 
                             NULL, OPEN_ALWAYS, 0, 0);
   if (file != INVALID_HANDLE_VALUE) {
@@ -929,7 +942,7 @@ void Results::SaveRequests(OptimizationChecks& checks) {
     CStringA buff;
     SetFilePointer( file, 0, 0, FILE_END );
 
-    HANDLE headers_file = CreateFile(_file_base + REQUEST_HEADERS_DATA_FILE,
+    HANDLE headers_file = CreateFile(_file_base + page + REQUEST_HEADERS_DATA_FILE,
                             GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
 
     HANDLE custom_rules_file = INVALID_HANDLE_VALUE;
@@ -962,6 +975,7 @@ void Results::SaveRequests(OptimizationChecks& checks) {
         request->_reported = true;
         if (request->_processed) {
           i++;
+          request->SetEventName(checks._test.event_name);  
           SaveRequest(file, headers_file, request, i);
           if (!request->_custom_rules_matches.IsEmpty() && 
               custom_rules_file != INVALID_HANDLE_VALUE) {
@@ -1028,7 +1042,7 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
         _test_state._start_time.wMinute, _test_state._start_time.wSecond);
   result += buff;
   // Event Name
-  result += current_step_name_ + "\t";
+  result += request->GetEventName()+"\t";
   // IP Address
   struct sockaddr_in addr;
   addr.sin_addr.S_un.S_addr = request->_peer_address;
@@ -1258,7 +1272,10 @@ CStringA Results::FormatTime(LARGE_INTEGER t) {
 -----------------------------------------------------------------------------*/
 void Results::SaveResponseBodies(void) {
   if (_test._save_response_bodies || _test._save_html_body) {
-    CString file = _file_base + _T("_bodies.zip");
+	CString page;
+	page.Format(_T("_%d"), currentPage);
+
+	CString file = _file_base + page + _T("_bodies.zip");
     zipFile zip = zipOpen(CT2A(file), APPEND_STATUS_CREATE);
     if (zip) {
       DWORD count = 0;

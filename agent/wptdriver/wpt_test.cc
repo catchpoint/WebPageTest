@@ -677,6 +677,11 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
     _block_requests.AddTail(command.target);
     continue_processing = false;
     consumed = false;
+  } else if (cmd == _T("seteventname")) {
+	  event_name = command.target;
+      convertForHTML(event_name);
+	WptTrace(loglevel::kFrequentEvent, 
+		_T("[wpthook] - WptTest - received SetEventName-command: "+command.target));
   } else if (cmd == _T("setdomelement")) {
     if (command.target.Trim().GetLength()) {
       _dom_element_check = true;
@@ -704,7 +709,7 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
     continue_processing = false;
     consumed = false;
   }
-
+  
   return continue_processing;
 }
 
@@ -1116,4 +1121,23 @@ void WptTest::Unlock() {
 -----------------------------------------------------------------------------*/
 bool WptTest::IsLocked() {
   return lock_count_ != 0;
+}
+
+void WptTest::convertForHTML(CString& text){
+	text.Replace(_T("ä"), _T("ae"));
+	text.Replace(_T("ö"), _T("oe"));
+	text.Replace(_T("ü"), _T("ue"));
+	text.Replace(_T("Ä"), _T("Ae"));
+	text.Replace(_T("Ö"), _T("Oe"));
+	text.Replace(_T("Ü"), _T("Ue"));
+	text.Replace(_T("ß"), _T("ss"));
+
+	// Can't be used since WPT-Server-Code isn't capable to handle it
+	// text.Replace(_T("ä"), _T("&auml;"));
+	// text.Replace(_T("ö"), _T("&ouml;"));
+	// text.Replace(_T("ü"), _T("&uuml;"));
+	// text.Replace(_T("Ä"), _T("&Auml;"));
+	// text.Replace(_T("Ö"), _T("&Ouml;"));
+	// text.Replace(_T("Ü"), _T("&Uuml;"));
+	// text.Replace(_T("ß"), _T("&szlig;"));
 }

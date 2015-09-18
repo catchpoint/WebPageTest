@@ -14989,6 +14989,10 @@ var wptTaskCallback = function() {
     window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT);
 }
 
+// Boolean if a navigation command occured 
+// (needed to reset expected dom elements for setDOMElement command)
+var g_navigationCmd = false;
+
 // execute a single task/script command
 function wptExecuteTask(task) {
   if (task.action.length) {
@@ -15006,10 +15010,12 @@ function wptExecuteTask(task) {
       case 'navigate':
         g_processing_task = true;
         g_commandRunner.doNavigate(task.target, wptTaskCallback);
+		g_navigationCmd = true;
         break;
       case 'exec':
         g_processing_task = true;
         wpt.chromeDebugger.Exec(task.target, wptTaskCallback);
+		g_navigationCmd = true;
         break;
       case 'setcookie':
         g_commandRunner.doSetCookie(task.target, task.value);
@@ -15018,6 +15024,11 @@ function wptExecuteTask(task) {
         g_commandRunner.doBlock(task.target);
         break;
       case 'setdomelement':
+		// Reset dom elements if navigation command occured before
+		if(g_navigationCmd){
+			wpt.commands.g_domElements = [];	
+			g_navigationCmd = false;
+		}
         // Sending request to set the DOM element has to happen only at the
         // navigate event after the content script is loaded. So, this just
         // sets the global variable.
@@ -15026,6 +15037,7 @@ function wptExecuteTask(task) {
       case 'click':
         g_processing_task = true;
         g_commandRunner.doClick(task.target, wptTaskCallback);
+		g_navigationCmd = true;
         break;
       case 'setinnerhtml':
         g_processing_task = true;
@@ -15042,6 +15054,7 @@ function wptExecuteTask(task) {
       case 'submitform':
         g_processing_task = true;
         g_commandRunner.doSubmitForm(task.target, wptTaskCallback);
+		g_navigationCmd = true;
         break;
       case 'clearcache':
         g_processing_task = true;

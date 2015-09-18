@@ -256,6 +256,8 @@ public:
   ULONG GetPeerAddress();
   CString GetUrl();
 
+  CStringA GetEventName();
+  void SetEventName(CString eventName);
   bool  _processed;
   bool  _reported;
   DWORD _socket_id;
@@ -264,6 +266,8 @@ public:
   int   _local_port;
   bool  _is_ssl;
   bool  _is_spdy;
+
+  CString event_name;
   CString initiator_;
   CString initiator_line_;
   CString initiator_column_;

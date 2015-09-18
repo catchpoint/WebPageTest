@@ -364,6 +364,7 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
   _exe.Empty();
   _exe_directory.Empty();
   _options.Empty();
+  _cleanupBatch.Empty();
 
   AtlTrace(_T("Loading settings for %s"), (LPCTSTR)browser);
 
@@ -409,6 +410,16 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
     _exe_directory = buff;
     _exe_directory.Trim(_T("/\\"));
     ret = true;
+  }
+
+  if (GetPrivateProfileString(browser, _T("cleanup-batch"), _T(""), buff, 
+    _countof(buff), iniFile )) {
+    _cleanupBatch = buff;
+  }
+
+  if (GetPrivateProfileString(browser, _T("cleanup-batch"), _T(""), buff, 
+    _countof(buff), iniFile )) {
+    _cleanupBatch = buff;
   }
 
   if (GetPrivateProfileString(browser, _T("options"), _T(""), buff, 

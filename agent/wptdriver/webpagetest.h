@@ -42,7 +42,7 @@ public:
   bool _exit;
   bool has_gpu_;
   bool rebooting_;
-
+  
 private:
   WptSettings&  _settings;
   WptStatus&    _status;
@@ -77,4 +77,6 @@ private:
   bool GetClient(WptTestDriver& test);
   bool UnzipTo(CString zip_file, CString dest);
   void UpdateDNSServers();
+
+  CString WebPagetest::GetMultistepVersionInfo();
 };
