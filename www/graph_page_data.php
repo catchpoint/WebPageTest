@@ -1,6 +1,7 @@
 <?php 
 // We intend to change to "?tests" but also allow "?test" so as to not break existing links.
 $tests = (isset($_REQUEST['tests'])) ? $_REQUEST['tests'] : $_REQUEST['test'];
+$tests = preg_replace('/[^a-zA-Z0-9,_\.\-:\ ]/', '', $tests);
 
 // Get choice of statistical control from request URL.
 $statControl = 'None'; // 'None' or index starting with 1 into list of tests.

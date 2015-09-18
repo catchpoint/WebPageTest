@@ -43,6 +43,8 @@ exports.process = process;
 var WD_CONNECT_TIMEOUT_MS_ = 120000;
 var DEVTOOLS_CONNECT_TIMEOUT_MS_ = 10000;
 var DETACH_TIMEOUT_MS_ = 2000;
+var VIDEO_PROCESSING_TIMEOUT_MS = 600000;
+var TRACING_STOP_TIMEOUT_MS = 120000;
 
 /** Allow test access. */
 exports.WAIT_AFTER_ONLOAD_MS = 10000;
@@ -163,6 +165,7 @@ WebDriverServer.prototype.init = function(args) {
   this.abortTimer_ = undefined;
   this.agentError_ = undefined;
   this.devToolsMessages_ = [];
+  this.traceData_ = {traceEvents: []};
   this.driver_ = undefined;
   this.exitWhenDone_ = args.exitWhenDone;
   this.isRecordingDevTools_ = false;
@@ -172,16 +175,20 @@ WebDriverServer.prototype.init = function(args) {
   this.isCacheWarm_ = args.isCacheWarm;
   this.screenshots_ = [];
   this.task_ = args.task;
+  this.flags_ = args.flags;
   this.testError_ = undefined;
   this.testStartTime_ = undefined;
   this.timeoutTimer_ = undefined;
   this.timeout_ = args.timeout;
-  this.traceCount_ = 0;
-  this.traceFile_ = undefined;
-  this.tracePromise_ = undefined;
-  this.traceStream_ = undefined;
+  this.traceRunning_ = false;
   this.videoFile_ = undefined;
+  this.videoFrames_ = undefined;
+  this.histogramFile_ = undefined;
   this.runTempDir_ = args.runTempDir || '';
+  this.workDir_ = args.workDir || '';
+  this.customMetrics_ = undefined;
+  this.userTimingMarks_ = undefined;
+  this.pageData_ = undefined;
   this.tearDown_();
 };
 
@@ -195,7 +202,7 @@ WebDriverServer.prototype.scheduleNoFault_ = function(description, f) {
   'use strict';
   return this.app_.schedule(description, f).addErrback(function(e) {
     logger.error('Exception from "%s": %s', description, e);
-    this.agentError_ = this.agentError_ || e.message;
+    logger.debug('%s', e.stack);
   }.bind(this));
 };
 
@@ -238,7 +245,28 @@ WebDriverServer.prototype.startChrome_ = function(browserCaps) {
     throw new Error('Internal error: prior Chrome running unexpectedly');
   }
   this.browser_.startBrowser(browserCaps, this.runNumber_ === 1);
+};
+
+WebDriverServer.prototype.startDevTools_ = function(browserCaps) {
+  if (this.browser_.prepareDevTools) {
+    this.browser_.prepareDevTools();
+  }
   this.connectDevTools_();
+};
+
+/**
+ * @private
+ */
+WebDriverServer.prototype.prepareVideoCapture_ = function() {
+  if (1 === this.task_['Capture Video']) {
+    this.getCapabilities_().then(function(caps) {
+      var videoFileExtension = caps.videoFileExtension || 'avi';
+      var videoFile = path.join(this.runTempDir_, 'video.' + videoFileExtension);
+      if (this.browser_.prepareVideoCapture) {
+        this.browser_.prepareVideoCapture(videoFile);
+      }
+    }.bind(this));
+  }
 };
 
 /**
@@ -327,6 +355,10 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
       if (this.isRecordingDevTools_) {
         this.onPageLoad_();
       }
+    } else if ('Page.javascriptDialogOpening' === message.method) {
+      var err = new Error('Page opened a modal dailog.', this.runNumber_);
+      this.abortTimer_ = global.setTimeout(
+          this.onPageLoad_.bind(this, err), DETACH_TIMEOUT_MS_);
     } else if ('Inspector.detached' === message.method) {
       if (this.pageLoadDonePromise_ && this.pageLoadDonePromise_.isPending()) {
         // This message typically means that the browser has crashed.
@@ -377,7 +409,6 @@ WebDriverServer.prototype.onDriverBuild = function(driver) {
     // also cannot use DevTools, only WebDriver API via this.driver_.
     this.clearPageAndStartVideoWd_();
     this.scheduleStartPacketCaptureIfRequested_();
-    this.scheduleStartTracingIfRequested_();
     this.onTestStarted_();
   } else if (this.driver_ !== driver) {
     throw new Error('Internal error: repeat onDriverBuild with wrong driver');
@@ -425,6 +456,7 @@ WebDriverServer.prototype.addScreenshot_ = function(
     var fileNameJPEG = fileName.replace(/\.png$/i, '.jpg');
     var diskPathJPEG = diskPath.replace(/\.png$/i, '.jpg');
     var convertCommand = [diskPath];
+    convertCommand.push('-set', 'colorspace', 'sRGB');
     convertCommand.push('-resize', '50%');
     if (this.task_.rotate) {
       convertCommand.push('-rotate', this.task_.rotate);
@@ -617,7 +649,8 @@ WebDriverServer.prototype.devToolsCommand_ = function(command) {
   var sender = (function(callback) {
     return this.devTools_.sendCommand(command, callback);
   }.bind(this));
-  return process_utils.scheduleFunction(this.app_, command.method, sender);
+  return process_utils.scheduleFunctionNoFault(
+      this.app_, command.method, sender);
 };
 
 /**
@@ -629,6 +662,17 @@ WebDriverServer.prototype.devToolsCommand_ = function(command) {
 WebDriverServer.prototype.pageCommand_ = function(method, params) {
   'use strict';
   return this.devToolsCommand_({method: 'Page.' + method, params: params});
+};
+
+/**
+ * @param {string} method command method, e.g. 'navigate'.
+ * @param {Object} params command options.
+ * @return {webdriver.promise.Promise} resolve({string} responseBody).
+ * @private
+ */
+WebDriverServer.prototype.runtimeCommand_ = function(method, params) {
+  'use strict';
+  return this.devToolsCommand_({method: 'Runtime.' + method, params: params});
 };
 
 /**
@@ -669,6 +713,26 @@ WebDriverServer.prototype.setPageBackground_ = function(frameId, color) {
       frameId: frameId,
       html: color ? '<body style="background-color:' + color + ';"/>' : ''
     });
+};
+
+/**
+ * @param {string} method command method, e.g. 'navigate'.
+ * @param {Object} params command options.
+ * @return {webdriver.promise.Promise} resolve({string} responseBody).
+ * @private
+ */
+WebDriverServer.prototype.execBrowserScript_ = function(code) {
+  'use strict';
+  return this.runtimeCommand_('evaluate',
+      {expression: code, returnByValue: true}).then(function(response){
+    var value = undefined;
+    if (response !== undefined &&
+        response['result'] !== undefined &&
+        response.result['value'] !== undefined) {
+      value = response.result.value;
+    }
+    return value;
+  }.bind(this));
 };
 
 /**
@@ -725,6 +789,7 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
       this.pageCommand_('getResourceTree').then(function(result) {
         var frameId = result.frameTree.frame.id;
         // Hold orange(500ms)->white: anchor video to DevTools.
+        this.app_.schedule('Setting background to orange', function() {logger.debug('Setting background to orange');});
         this.setPageBackground_(frameId, GHASTLY_ORANGE_);
         this.app_.timeout(500, 'Set orange background');
         this.scheduleStartVideoRecording_();
@@ -736,7 +801,11 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
         this.app_.schedule('Start recording DevTools with video', function() {
           this.isRecordingDevTools_ = true;
         }.bind(this));
+        this.app_.schedule('Start recording tracing', function() {
+          this.scheduleStartTracingIfRequested_();
+        }.bind(this));
         this.app_.timeout(500, 'Hold orange background');
+        this.app_.schedule('Setting background to white', function() {logger.debug('Setting background to white');});
         this.setPageBackground_(frameId);  // White
       }.bind(this));
     }.bind(this));
@@ -744,6 +813,9 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
   // Make sure we start recording DevTools regardless of the video.
   this.app_.schedule('Start recording DevTools', function() {
     this.isRecordingDevTools_ = true;
+  }.bind(this));
+  this.app_.schedule('Start recording tracing', function() {
+    this.scheduleStartTracingIfRequested_();
   }.bind(this));
 };
 
@@ -780,36 +852,26 @@ WebDriverServer.prototype.clearPageAndStartVideoWd_ = function() {
  */
 WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
   'use strict';
-  // TODO(wrightt): add browser-specific & WD-friendly impls.
-  if (1 === this.task_.trace && !this.driver_) {
-    // There's example tracing code that tries to determine if tracing is
-    // supported by sending 'Tracing.hasCompleted' and asserting that the
-    // browser returns an 'error'.  However, we've found that most browsers
-    // (tracing-enabled- or not) respond with the same "unknown command" error.
-    var traceFile = path.join(this.runTempDir_, 'trace.json');
-    process_utils.scheduleOpenStream(this.app_, traceFile).then(
-        function(stream) {
-      // As noted in onTracingMessage_, we don't wait for the flush/drain.
-      stream.write('{"traceEvents": [', 'utf8');
-      this.traceFile_ = traceFile;
-      this.tracePromise_ = new webdriver.promise.Deferred();
-      this.traceStream_ = stream;
-    }.bind(this));
+  // Always enable tracing, at a minimum to capture timeline data
+  if (this.browser_.supportsTracing && !this.driver_ && !this.traceRunning_) {
+    this.traceData_ = {traceEvents: []};
+    this.traceRunning_ = true;
     var message = {method: 'Tracing.start'};
-    // Must set all param values, pending crrev/665123008.
     message.params = {
-      categories: this.task_.traceCategories || 'webkit,blink,benchmark',
-      options: 'record-until-full'
+      categories: 'netlog,blink.console,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame',
+      options: 'record-as-much-as-possible'
     };
+    if (1 === this.task_.trace) {
+      var trace_categories = this.task_.traceCategories || '*';
+      message.params.categories = trace_categories + ',' + message.params.categories;
+    } else {
+      message.params.categories = '-*,' + message.params.categories;
+    }
+    if (this.task_.timelineStackDepth) {
+      message.params.categories = message.params.categories + ',toplevel,disabled-by-default-devtools.timeline.stack,devtools.timeline.stack,disabled-by-default-v8.cpu_profile';
+    }
     this.devToolsCommand_(message).then(function() {
-      logger.debug('Started tracing to ' + traceFile);
-    }, function(e) {
-      // Might be crbug/392577, which affects Chrome 36.0.1967 - 37.0.2000.
-      this.testError_ = 'Tracing is not supported.';
-      this.traceFile_ = undefined;
-      this.tracePromise_ = undefined;
-      this.traceStream_ = undefined;
-      throw e;
+      logger.debug('Started tracing');
     }.bind(this));
   }
 };
@@ -821,23 +883,20 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
  */
 WebDriverServer.prototype.onTracingMessage_ = function(message) {
   'use strict';
-  if ('Tracing.dataCollected' === message.method && this.traceStream_) {
-    var value = (message.params || {}).value;
-    if (value instanceof Array) {
-      value.forEach(function(item) {
-        var data = JSON.stringify(item);
-        // We don't want to block our caller, so don't wait for a 'drain' event
-        // if "write" returns false; instead, let the stream buffer handle this.
-        if (this.traceCount_ > 0) {
-          this.traceStream_.write(',', 'utf8');
-        }
-        this.traceStream_.write(data, 'utf8');
-        this.traceCount_ += 1;
-      }.bind(this));
+  if (this.traceRunning_) {
+    if ('Tracing.dataCollected' === message.method) {
+      var value = (message.params || {}).value;
+      if (value instanceof Array) {
+        value.forEach(function(item) {
+          this.traceData_.traceEvents.push(item);
+        }.bind(this));
+      }
+    } else if ('Tracing.tracingComplete' === message.method) {
+      logger.debug('Signalling finish of tracing');
+      this.traceRunning_ = false;
     }
-  } else if ('Tracing.tracingComplete' === message.method &&
-      this.tracePromise_ && this.tracePromise_.isPending()) {
-    this.tracePromise_.fulfill();
+  } else {
+    logger.debug('Unexpected tracing message - ' + message.method);
   }
 };
 
@@ -847,38 +906,13 @@ WebDriverServer.prototype.onTracingMessage_ = function(message) {
  */
 WebDriverServer.prototype.scheduleStopTracing_ = function() {
   'use strict';
-  if (1 === this.task_.trace) {
-    this.app_.schedule('Wait for tracingComplete', function() {
-      if (this.tracePromise_ && this.tracePromise_.isPending()) {
-        this.devToolsCommand_({method: 'Tracing.end'});
-        return this.tracePromise_;
-      } else {
-        return undefined;
-      }
-    }.bind(this));
-    this.app_.schedule('Close tracing stream', function() {
-      if (!this.traceStream_) {
-        return undefined;
-      } else {
-        var stream = this.traceStream_;
-        this.traceStream_ = undefined;
-        // Ideally we'd simply do:
-        //   return scheduleCloseStream(..., ']}', 'utf8');
-        // but, in practice, the stream never writes this ']}' or invokes our
-        // "finished" callback.  Instead, we'll simply write and flush our ']}'.
-        var done = new webdriver.promise.Deferred();
-        stream.write(']}', 'utf8', function() {
-          logger.debug('Stopped tracing to ' + this.traceFile_);
-          process_utils.scheduleCloseStream(this.app_, stream).addErrback(
-              function(e) {
-            logger.debug('Ignoring close error: ' + e.message);
-          });  // Don't wait for close; we've already flushed.
-          done.fulfill();
-        }.bind(this));
-        return done.promise;
-      }
-    }.bind(this));
-  }
+  this.scheduleNoFault_('Stop tracing', function() {
+    if (this.traceRunning_) {
+    this.devToolsCommand_({method: 'Tracing.end'});
+    this.app_.wait(function() {return !this.traceRunning_;}.bind(this),
+        TRACING_STOP_TIMEOUT_MS);
+    }
+  }.bind(this));
 };
 
 /**
@@ -890,8 +924,7 @@ WebDriverServer.prototype.scheduleStartVideoRecording_ = function() {
   this.getCapabilities_().then(function(caps) {
     var videoFileExtension = caps.videoFileExtension || 'avi';
     var videoFile = path.join(this.runTempDir_, 'video.' + videoFileExtension);
-    this.browser_.scheduleStartVideoRecording(
-        videoFile, this.onVideoRecordingExit_.bind(this));
+    this.browser_.scheduleStartVideoRecording(videoFile);
     this.app_.schedule('Video record started', function() {
       logger.debug('Video record start succeeded');
       this.videoFile_ = videoFile;
@@ -924,9 +957,10 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
   if (!this.devTools_) {
     this.startChrome_(browserCaps);
   }
+  this.prepareVideoCapture_();
+  this.startDevTools_();
   this.clearPageAndStartVideoDevTools_();
   this.scheduleStartPacketCaptureIfRequested_();
-  this.scheduleStartTracingIfRequested_();
   // No page load timeout here -- agent_main enforces run-level timeout.
   this.app_.schedule('Run page load', function() {
     // onDevToolsMessage_ resolves this promise when it detects on-load.
@@ -935,9 +969,13 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
       var coalesceMillis = (undefined === this.task_.waitAfterOnload ?
           exports.WAIT_AFTER_ONLOAD_MS :
           (1000 * Math.floor(parseFloat(this.task_.waitAfterOnload, 10))));
+      logger.debug("Waiting up to " + this.timeout_ +
+                   "ms for the page to load");
       this.timeoutTimer_ = global.setTimeout(
           this.onPageLoad_.bind(this, new Error('Page load timeout')),
           this.timeout_ - coalesceMillis);
+    } else {
+      logger.debug("No page load timeout set (unexpected)");
     }
     this.onTestStarted_();
     this.pageCommand_('navigate', {url: this.task_.url});
@@ -1014,7 +1052,10 @@ WebDriverServer.prototype.connect = function() {
     // Likely from a background function that's not ControlFlow-scheduled.
     // Immediately unwind the app's scheduled functions, as if the currently
     // function task threw this exception.
-    logger.error('Top-level process uncaught exception: %s', e.message);
+    if (e && e['message'])
+      logger.error('Top-level process uncaught exception: %s', e.message);
+    else
+      logger.error('Top-level process uncaught exception');
     var promise = new webdriver.promise.Deferred(undefined, this.app_);
     promise.reject(e);  // Like throw, only in the ControlFlow.
   }.bind(this));
@@ -1152,6 +1193,125 @@ WebDriverServer.prototype.scheduleGetWdDevToolsLog_ = function() {
 };
 
 /**
+ * Collects in-browser metrics after the test is complete
+ * @private
+ */
+WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
+  logger.debug('Collecting metrics');
+  if (this.testError_)
+    return;
+  
+  this.scheduleNoFault_('Collect Custom Metrics', function() {
+    if (this.task_['customMetrics'] !== undefined) {
+      for (var metric in this.task_.customMetrics) {
+        (function(metric){
+          this.execBrowserScript_('var wptCustomMetric = function() { ' +
+              this.task_.customMetrics[metric] +
+              '};' +
+              'wptCustomMetric();').then(function(result) {
+            if (this.customMetrics_ == undefined)
+              this.customMetrics_ = {};
+            this.customMetrics_[metric] = result;
+            logger.debug(metric + ' : ' + result);
+          }.bind(this));
+        }.bind(this))(metric);
+      }
+    }
+  }.bind(this));
+
+  this.scheduleNoFault_('Collect User Timing', function() {
+    this.execBrowserScript_('(function() {' +
+          'var marks = window.performance.getEntriesByType("mark");' +
+          'var m = [];' +
+          'if (marks.length) {' +
+          '  for (var i = 0; i < marks.length; i++)' +
+          '    m.push({"entryType": marks[i].entryType, ' +
+          '            "name": marks[i].name, ' +
+          '            "startTime": marks[i].startTime});' +
+          '}' +
+          'return m;' +
+          '})();').then(function(result) {
+      if (result && result.length) {
+        this.userTimingMarks_ = result;
+      }
+    }.bind(this));
+  }.bind(this));
+
+  this.scheduleNoFault_('Collect Page Metrics', function() {
+    this.execBrowserScript_('(function() {' +
+        'var pageData = {};' +
+        'var domCount = ' +
+        '   document.documentElement.getElementsByTagName("*").length;' +
+        'if (domCount === undefined)' +
+        ' domCount = 0;' +
+        'pageData["domElements"] = domCount;' +
+        'function addTime(name) {'+
+        ' if (window.performance.timing[name] > 0) {' +
+        '   pageData[name] = Math.max(0, Math.round(' +
+        '       window.performance.timing[name] -' +
+        '       window.performance.timing["navigationStart"]));' +
+        ' }' +
+        '};' +
+        'addTime("domContentLoadedEventStart");' +
+        'addTime("domContentLoadedEventEnd");' +
+        'addTime("loadEventStart");' +
+        'addTime("loadEventEnd");' +
+        'pageData["firstPaint"] = 0;' +
+        'if (window["chrome"] !== undefined && ' +
+        '    window.chrome["loadTimes"] !== undefined) {' +
+        ' var chromeTimes = window.chrome.loadTimes();' +
+        ' if (chromeTimes["firstPaintTime"] !== undefined &&' +
+        '     chromeTimes["firstPaintTime"] > 0) {' +
+        '   var startTime = chromeTimes["requestTime"] ? ' +
+        '       chromeTimes["requestTime"] : chromeTimes["startLoadTime"];' +
+        '   if (chromeTimes["firstPaintTime"] >= startTime)' +
+        '     pageData["firstPaint"] = Math.round(' +
+        '         (chromeTimes["firstPaintTime"] - startTime) * 1000.0);' +
+        ' }' +
+        '}' +
+        'return pageData;' +
+        '})();').then(function(result) {
+      if (result) {
+        this.pageData_ = result;
+      }
+    }.bind(this));
+  }.bind(this));
+};
+
+WebDriverServer.prototype.scheduleProcessVideo_ = function() {
+  this.scheduleNoFault_('Process Video', function() {
+    if (this.videoFile_ && this.flags_['processvideo'] == 'yes') {
+      var videoDir = path.join(this.runTempDir_, 'video');
+      this.histogramFile_ = path.join(this.runTempDir_, 'histograms.json');
+      var traceFile = path.join(this.runTempDir_, 'trace.json');
+      var options = ['lib/video/visualmetrics.py', '-i', this.videoFile_, '-d',
+          videoDir, '--orange', '--viewport', '--force', '--quality', '75',
+          '--histogram', this.histogramFile_];
+      if (this.traceData_) {
+        fs.writeFileSync(traceFile, JSON.stringify(this.traceData_));
+        options.push('--timeline');
+        options.push(traceFile);
+      }
+      process_utils.scheduleExec(this.app_,
+          'python', options, undefined,
+          VIDEO_PROCESSING_TIMEOUT_MS).then(function(stdout) {
+        logger.info('Video processing completed: ' + stdout);
+        this.videoFrames_ = [];
+        var videoDir = path.join(this.runTempDir_, 'video');
+        var files = fs.readdirSync(videoDir);
+        files.forEach(function(fileName) {
+          var filePath = path.join(videoDir, fileName);
+          this.videoFrames_.push({'fileName' : fileName, 'diskPath' : filePath});
+        }.bind(this));
+        this.videoFile_ = undefined;
+      }.bind(this), function(err) {
+        logger.info('Video processing error: ' + err.message);
+      }.bind(this));
+    }
+  }.bind(this));
+};
+
+/**
  * @private
  */
 WebDriverServer.prototype.done_ = function() {
@@ -1163,59 +1323,70 @@ WebDriverServer.prototype.done_ = function() {
       return;
     }
     this.isDone_ = true;
+    this.isRecordingDevTools_ = false;
 
     if (this.testError_) {
       logger.error('Test failed: ' + this.testError_);
     } else {
       logger.info('Test passed');
     }
+    this.scheduleNoFault_('Capture Screen Shot', function() {
+      this.takeScreenshot_('screen', 'end of run');
+    }.bind(this));
+    if (this.videoFile_) {
+      this.scheduleNoFault_('Stop video recording',
+          this.browser_.scheduleStopVideoRecording.bind(this.browser_));
+    }
     this.scheduleStopTracing_();
     if (this.driver_) {
       this.scheduleNoFault_('Get WD Log',
           this.scheduleGetWdDevToolsLog_.bind(this));
     }
-    this.takeScreenshot_('screen', 'end of run').then(
-        function(diskPath) {
-      this.scheduleNoFault_('Check screenshot', function() {
-        process_utils.scheduleExec(this.app_,
-            'identify', ['-verbose', diskPath]).then(function(stdout) {
-          if ((/[\r\n]\s*Colors:\s+1\s*[\r\n]/).test(stdout)) {
-            throw new Error('Screen is blank');
-          }
-        }, function(err) {
-          logger.info('Ignoring identify error: ' + err.message);
-        });
-      }.bind(this));
-    }.bind(this), function(err) {
-      logger.info('Ignoring screenshot error: ' + err.message);
-    });
-    if (this.videoFile_) {
-      this.scheduleNoFault_('Stop video recording',
-          this.browser_.scheduleStopVideoRecording.bind(this.browser_));
-    }
     if (this.pcapFile_) {
       this.scheduleNoFault_('Stop packet capture',
           this.browser_.scheduleStopPacketCapture.bind(this.browser_));
     }
+    this.scheduleCollectMetrics_();
+    if (this.videoFile_) {
+      // video processing needs to be done after tracing has been stopped and collected
+      this.scheduleProcessVideo_();
+    }
+    logger.debug("Done collecting results")
+    var devToolsFile = this.devToolsMessages_ ? path.join(this.runTempDir_, 'devtools.json') : undefined;
+    if (devToolsFile) {
+      fs.writeFileSync(devToolsFile, JSON.stringify(this.devToolsMessages_));
+    }
+    var traceFile = this.traceData_ ? path.join(this.runTempDir_, 'trace.json') : undefined;
+    if (traceFile) {
+      fs.writeFileSync(traceFile, JSON.stringify(this.traceData_));
+    }
     this.scheduleNoFault_('Send IPC', function() {
+      logger.debug("Sending 'done' IPC")
       exports.process.send({
           cmd: (this.testError_ ? 'error' : 'done'),
           testError: this.testError_,
           agentError: this.agentError_,
-          devToolsMessages: this.devToolsMessages_,
+          devToolsFile: devToolsFile,
           screenshots: this.screenshots_,
-          traceFile: this.traceFile_,
+          traceFile: traceFile,
           videoFile: this.videoFile_,
-          pcapFile: this.pcapFile_
+          videoFrames: this.videoFrames_,
+          pcapFile: this.pcapFile_,
+          histogramFile: this.histogramFile_,
+          customMetrics: this.customMetrics_,
+          userTimingMarks: this.userTimingMarks_,
+          pageData: this.pageData_
         });
     }.bind(this));
 
     // For non-webdriver tests we want to stop the browser after every run
     // (including between first and repeat view).
     if (this.testError_ || this.exitWhenDone_ || !this.driver_) {
+      logger.debug("Scheduling Stop");
       this.scheduleStop();
     }
     if (this.testError_ || this.exitWhenDone_) {
+      logger.debug("Disconnecting IPC");
       // Disconnect parent IPC to exit gracefully without a process.exit() call.
       // This should be the last source of event queue events.
       this.app_.schedule('Disconnect IPC',
@@ -1223,19 +1394,6 @@ WebDriverServer.prototype.done_ = function() {
     }
     this.scheduleNoFault_('Tear down', this.tearDown_.bind(this));
   }.bind(this));
-};
-
-/**
- * @param {Error=} e video error if the recording failed.
- * @private
- */
-WebDriverServer.prototype.onVideoRecordingExit_ = function(e) {
-  'use strict';
-  if (e) {
-    logger.error('Video recording failed:\n' + e.stack);
-    this.agentError_ = this.agentError_ || e.message;
-    // Could call this.done_();
-  }
 };
 
 /**

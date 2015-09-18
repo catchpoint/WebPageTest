@@ -51,6 +51,14 @@ if (isset($locations) && is_array($locations) && count($locations) &&
     if (!$is_done && strlen($location))
       $is_done = GetJob();
   }
+} elseif (isset($_GET['freedisk']) && (float)$_GET['freedisk'] <= 0.1) {
+  if (isset($_GET['reboot']) && GetSetting("lowDiskReboot")) {
+    header('Content-type: text/plain');
+    header("Cache-Control: no-cache, must-revalidate");
+    header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+    echo "Reboot";
+    $is_done = true;
+  }
 }
 
 // kick off any cron work we need to do asynchronously
@@ -187,18 +195,30 @@ function GetJob() {
                                   if( strlen($script) )
                                       $script .= "\r\n";
                                   $script .= $line;
-                              } elseif( !strcasecmp($line, '[Script]') )
+                              } elseif( !strcasecmp($line, '[Script]') ) {
                                   $isScript = true;
-                              else {
+                              } else {
                                   $pos = strpos($line, '=');
-                                  if( $pos > -1 ) {
+                                  if( $pos !== false ) {
                                       $key = trim(substr($line, 0, $pos));
                                       $value = trim(substr($line, $pos + 1));
                                       if( strlen($key) && strlen($value) ) {
-                                          if( is_numeric($value) )
-                                              $testJson[$key] = (int)$value;
-                                          else
-                                              $testJson[$key] = $value;
+                                        if ($key == 'customMetric') {
+                                          $pos = strpos($value, ':');
+                                          if ($pos !== false) {
+                                            $metric = trim(substr($value, 0, $pos));
+                                            $code = base64_decode(substr($value, $pos+1));
+                                            if ($code !== false && strlen($metric) && strlen($code)) {
+                                              if (!isset($testJson['customMetrics']))
+                                                $testJson['customMetrics'] = array();
+                                              $testJson['customMetrics'][$metric] = $code;
+                                            }
+                                          }
+                                        } elseif( is_numeric($value) ) {
+                                          $testJson[$key] = (int)$value;
+                                        } else {
+                                          $testJson[$key] = $value;
+                                        }
                                       }
                                   }
                               }
@@ -462,19 +482,36 @@ function GetReboot() {
   global $location;
   global $pc;
   global $ec2;
-  $rebooted = false;
+  global $tester;
+  $reboot = false;
   $name = @strlen($ec2) ? $ec2 : $pc;
   if (isset($name) && strlen($name) && isset($location) && strlen($location)) {
     $rebootFile = "./work/jobs/$location/$name.reboot";
     if (is_file($rebootFile)) {
       unlink($rebootFile);
-      header('Content-type: text/plain');
-      header("Cache-Control: no-cache, must-revalidate");
-      header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
-      echo "Reboot";
-      $rebooted = true;
+      $reboot = true;
     }
   }
-  return $rebooted;
+  // If we have a 100% error rate for the current PC, send it a reboot
+  if (!$reboot) {
+    $testers = GetTesters($location);
+    foreach ($testers as $t) {
+      if ($t['id'] == $tester && !$rebooted) {
+        if ($t['errors'] >= 100) {
+          UpdateTester($location, $tester, null, null, null, true);
+          $reboot = true;
+        }
+        break;
+      }
+    }
+  }
+  
+  if ($reboot) {
+    header('Content-type: text/plain');
+    header("Cache-Control: no-cache, must-revalidate");
+    header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+    echo "Reboot";
+  }
+  return $reboot;
 }
 ?>

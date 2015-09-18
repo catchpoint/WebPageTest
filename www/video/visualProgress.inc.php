@@ -20,6 +20,13 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
     $cache_file = "$testPath/$run.$cached.visual.dat";
     if (!isset($startOffset))
       $startOffset = 0;
+    $visual_data_file = "$testPath/llab_$run.$cached.visual.dat";
+    if (gz_is_file($visual_data_file)) {
+      $visual_data = json_decode(gz_file_get_contents($visual_data_file), true);
+      // see if we are processing an externally-uploaded visual data file
+      if (isset($visual_data['timespans']['page_load']['startOffset']))
+        $startOffset += $visual_data['timespans']['page_load']['startOffset'];
+    }
     $dirty = false;
     $current_version = VIDEO_CODE_VERSION;
     if (isset($end)) {
@@ -150,6 +157,10 @@ function GetImageHistogram($image_file, $options, $histograms) {
   $ext = strripos($image_file, '.jpg');
   if ($ext !== false) {
       $histogram_file = substr($image_file, 0, $ext) . '.hist';
+  } else {
+    $ext = strripos($image_file, '.png');
+    if ($ext !== false)
+        $histogram_file = substr($image_file, 0, $ext) . '.hist';
   }
   
   if (isset($histograms)) {

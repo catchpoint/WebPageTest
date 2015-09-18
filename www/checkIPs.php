@@ -7,6 +7,7 @@ if( isset($_GET["days"]) )
 
 $whitelist = array();
 $wl = file('./settings/whitelist.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+$blockIps = file('./settings/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 foreach( $wl as &$w )
 {
     $parts = explode(" ", $w);
@@ -47,7 +48,7 @@ for($offset = 0; $offset <= $days; $offset++)
                     if (array_key_exists(14, $parts))
                         $count = intval(trim($parts[14]));
                     $count = max(1, $count);
-                    if( ($privateInstall || $admin) && strlen($key) && array_key_exists($key, $keys) )
+                    if( ($privateInstall || $admin) && strlen($key) && array_key_exists($key, $keys) && $key != $keys['server']['key'] )
                       $keys[$ip] = $keys[$key]['contact'];
                     if( isset($counts[$ip]) )
                         $counts[$ip] += $count;
@@ -117,7 +118,8 @@ foreach($counts as $ip => $count)
                 $c = $dayCount[$ip];
             echo "<td>$c</td>";
         }
-        echo "<td>$ip</td></tr>\n";
+        $blocked = IPBlocked($ip) ? ' (Blocked)' : '';
+        echo "<td>$ip$blocked</td></tr>\n";
     }
     else
         break;
@@ -125,4 +127,19 @@ foreach($counts as $ip => $count)
 echo "</table>";
 
 include 'admin_footer.inc';
+
+function IPBlocked($ip) {
+  $blocked = false;
+  global $blockIps;
+  if (isset($blockIps) && is_array($blockIps) && count($blockIps)) {
+    foreach( $blockIps as $block ) {
+      $block = trim($block);
+      if (strlen($block) && ereg($block, $ip)) {
+        $blocked = true;
+        break;
+      }
+    }
+  }
+  return $blocked;
+}
 ?>

@@ -36,7 +36,7 @@ if (is_file('./settings/keys.ini')) {
 }
 $url = '';
 if (isset($req_url)) {
-  $url = $req_url;
+  $url = htmlspecialchars($req_url);
 }
 if (!strlen($url)) {
     $url = 'Enter a Website URL';
@@ -95,6 +95,8 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="shard" value="' . htmlspecialchars($_REQUEST['shard']) . "\">\n";
             if (array_key_exists('discard', $_REQUEST))
               echo '<input type="hidden" name="discard" value="' . htmlspecialchars($_REQUEST['discard']) . "\">\n";
+            if (array_key_exists('timeout', $_REQUEST))
+              echo '<input type="hidden" name="timeout" value="' . htmlspecialchars($_REQUEST['timeout']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
@@ -236,6 +238,16 @@ $loc = ParseLocations($locations);
                                             </tr>
                                         </table>
                                     </li>
+                                    <?php
+                                    if ($admin) {
+                                      echo '<li>';
+                                      echo '<label for="custom_browser">';
+                                      echo '<a href="/custom_browsers.php">Custom Browser</a>';
+                                      echo '</label>';
+                                      echo '<input id="custom_browser" type="text" class="text" name="custombrowser" value="">';
+                                      echo '</li>';
+                                    }
+                                    ?>
                                     <li>
                                         <label for="number_of_tests">
                                             Number of Tests to Run<br>
@@ -346,6 +358,16 @@ $loc = ParseLocations($locations);
                                             <small>Do not add PTST to the browser UA string</small>
                                         </label>
                                     </li>
+                                    <?php
+                                    if ( isset($settings['fullSizeVideoOn']) && $settings['fullSizeVideoOn'] )
+                                    { ?>
+                                    <li>
+                                        <input type="checkbox" name="fullsizevideo" id="full_size_video" class="checkbox" <?php if( isset($settings['fullSizeVideoDefault']) && $settings['fullSizeVideoDefault'] )  echo 'checked=checked'; ?> style="float: left;width: auto;">
+                                        <label for="full_size_video" class="auto_width">
+                                            Capture Full Size Video<br>
+                                            <small>Enables full size screenshots in the filmstrip</small>
+                                        </label>
+                                    </li><?php } ?>
                                     <li>
                                         <label for="dom_elements" class="auto_width">DOM Element</label>
                                         <input type="text" name="domelement" id="dom_elements" class="text">

@@ -70,7 +70,8 @@ static const char * BLANK_HTML = "HTTP/1.1 200 OK\r\n"
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 TestServer::TestServer(WptHook& hook, WptTestHook &test, TestState& test_state,
-                        Requests& requests, DevTools &dev_tools, Trace &trace)
+                        Requests& requests, DevTools &dev_tools, Trace &trace,
+                        Trace &trace_netlog)
   :mongoose_context_(NULL)
   ,hook_(hook)
   ,test_(test)
@@ -78,6 +79,7 @@ TestServer::TestServer(WptHook& hook, WptTestHook &test, TestState& test_state,
   ,requests_(requests)
   ,dev_tools_(dev_tools)
   ,trace_(trace)
+  ,trace_netlog_(trace_netlog)
   ,started_(false) {
   InitializeCriticalSection(&cs);
   last_cpu_idle_.QuadPart = 0;
@@ -280,6 +282,11 @@ void TestServer::MongooseCallback(enum mg_event event,
       CStringA body = CT2A(GetPostBody(conn, request_info));
       if (body.GetLength())
         trace_.AddEvents(body);
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/trace_netlog") == 0) {
+      CStringA body = CT2A(GetPostBody(conn, request_info));
+      if (body.GetLength())
+        trace_netlog_.AddEvents(body);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/paint") == 0) {
       //test_state_.PaintEvent(0, 0, 0, 0);

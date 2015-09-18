@@ -22,12 +22,11 @@ if (LoadResults($results)) {
         $rvValid = false;
         $total++;
         if ((@$result['result'] != 0 && @$result['result'] != 99999 ) ||
+            (isset($result['resubmit']) && $result['resubmit']) ||
             !@$result['bytesInDoc'] ||
             !@$result['docTime'] ||
             !@$result['TTFB'] ||
-            ($includeDCL && !$result['domContentLoadedEventStart']) ||
             $result['successfulRuns'] < $minRuns ||
-            (isset($result['resubmit']) && $result['resubmit']) ||
             @$result['TTFB'] > @$result['docTime'] ||
             (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth) ||
             ($video && (!$result['SpeedIndex'] || !$result['render'] || !$result['visualComplete']))) {
@@ -63,7 +62,7 @@ if (LoadResults($results)) {
         $data[$key]['url'] = $url;
         $data[$key][$label] = array();
         $data[$key][$label]['id'] = $result['id'];
-        $data[$key][$label]['result'] = @$result['result'];
+        $data[$key][$label]['result'] = $result['result'];
         if (array_key_exists('rv_result', $result))
           $data[$key][$label]['rv_result'] = $result['rv_result'];
         if (array_key_exists('run', $result))
@@ -123,7 +122,7 @@ if (LoadResults($results)) {
                 $metricData[$label] = array();
                 $first = false;
             }
-            fwrite($file, "Test Comparison,Screen Shot Comparison\r\n");
+            fwrite($file, "Test Comparison\r\n");
             foreach($data as $key => &$urlData) {
                 fwrite($file, "\"{$urlData['url']}\",");
                 // check and make sure we have data for all of the configurations for this url
@@ -132,11 +131,7 @@ if (LoadResults($results)) {
                     if (!array_key_exists($label, $urlData) || !array_key_exists($metric, $urlData[$label]))
                         $valid = false;
                 }
-                $screens = "\"http://www.webpagetest.org/compare_screens.php?tests=";
-                $compare = "\"http://www.webpagetest.org/video/compare.php?ival=100&end=full";
-                if ($video)
-                  $compare .= "&medianMetric=SpeedIndex";
-                $compare .= '&tests=';
+                $compare = "\"http://www.webpagetest.org/video/compare.php?ival=100&end=full&tests=";
                 $first = true;
                 $baseline = null;
                 foreach($permutations as $label => &$permutation) {
@@ -166,11 +161,10 @@ if (LoadResults($results)) {
                       if (!strncmp('rv_', $metric, 3))
                         $cached = '-c:1';
                       $compare .= $urlData[$label]['id'] . $run . $cached . '-l:' . urlencode($label) . ',';
-                      $screens .= $urlData[$label]['id'] . $run . $cached . '-l:' . urlencode($label) . ',';
                     }
                     $first = false;
                 }
-                $compare .= "\",$screens\"\r\n";
+                $compare .= "\"\r\n";
                 fwrite($file, $compare);
             }
             fclose($file);

@@ -34,7 +34,6 @@ var packet_capture_android = require('packet_capture_android');
 var path = require('path');
 var process_utils = require('process_utils');
 var util = require('util');
-var video_hdmi = require('video_hdmi');
 var webdriver = require('selenium-webdriver');
 var webdriver_proxy = require('selenium-webdriver/proxy');
 
@@ -62,7 +61,7 @@ var KNOWN_BROWSERS = {
     'Chrome': 'com.android.chrome',
     'Chrome Beta': 'com.chrome.beta',
     'Chrome Canary': 'com.chrome.canary',
-    'Chrome Dev': 'com.google.android.apps.chrome_dev',
+    'Chrome Dev': 'com.chrome.dev',
     'Chrome Stable': 'com.android.chrome',
     // TODO(wrightt): map version to installed package!
     'Chrome 35': 'com.google.android.apps.chrome_dev',
@@ -70,6 +69,8 @@ var KNOWN_BROWSERS = {
     'Chrome 37': 'com.android.chrome',
     'Chrome 38': 'com.chrome.beta'
   };
+
+var LAST_INSTALL_FILE = 'lastInstall.txt';
 
 
 /**
@@ -109,8 +110,17 @@ function BrowserAndroidChrome(app, args) {
     throw new Error('Missing deviceSerial');
   }
   this.deviceSerial_ = args.flags.deviceSerial;
-  this.shouldInstall_ = (1 === parseInt(args.runNumber || '1', 10));
-  this.chrome_ = args.flags.chrome;  // Chrome.apk.
+  this.workDir_ = args.workDir || '';
+  var lastInstall = undefined;
+  try {
+    lastInstall = fs.readFileSync(path.join(this.workDir_, LAST_INSTALL_FILE));
+  } catch(e) {}
+  this.shouldInstall_ =
+      args.customBrowser && (args.customBrowser != lastInstall);
+  if (this.shouldInstall_)
+    logger.debug('Browser install for "' + args.customBrowser +
+        '" needed.  Last install: "' + lastInstall + '"');
+  this.chrome_ = args.customBrowser || args.flags.chrome;  // Chrome.apk.
   this.chromedriver_ = args.flags.chromedriver;
   if (args.flags.chromePackage) {
     this.chromePackage_ = args.flags.chromePackage;
@@ -122,12 +132,18 @@ function BrowserAndroidChrome(app, args) {
     }
     this.chromePackage_ = KNOWN_BROWSERS[browserName];
   }
-  this.chromePackage_ = this.chromePackage_ || 'com.android.chrome';
-  this.chromeActivity_ =
-      args.flags.chromeActivity || 'com.google.android.apps.chrome';
+  this.chromePackage_ = args.task.customBrowser_package ||
+      args.chromePackage_ || this.chromePackage_ || 'com.android.chrome';
+  this.chromeActivity_ = args.task.customBrowser_activity ||
+      args.chromeActivity || 'com.google.android.apps.chrome.Main';
+  this.flagsFile_ = args.task.customBrowser_flagsFile ||
+      args.flagsFile || '/data/local/chrome-command-line';
   this.devToolsPort_ = args.flags.devToolsPort;
+  this.devToolsSocket_ = args.task.customBrowser_socket ||
+      args.devToolsSocket || DEVTOOLS_SOCKET;
   this.devtoolsPortLock_ = undefined;
   this.devToolsUrl_ = undefined;
+  this.hostsFile_ = args.task.hostsFile;
   this.serverPort_ = args.flags.serverPort;
   this.serverPortLock_ = undefined;
   this.serverUrl_ = undefined;
@@ -137,7 +153,6 @@ function BrowserAndroidChrome(app, args) {
   this.maxTemp = args.flags.maxtemp ? parseFloat(args.flags.maxtemp) : 0;
   this.checkNet = 'yes' === args.flags.checknet;
   this.useRndis = this.checkNet && 'yes' === args.flags.useRndis;
-  this.videoCard_ = args.flags.videoCard;
   this.deviceVideoPath_ = undefined;
   this.recordProcess_ = undefined;
   function toDir(s) {
@@ -145,14 +160,17 @@ function BrowserAndroidChrome(app, args) {
   }
   var captureDir = toDir(args.flags.captureDir);
   this.adb_ = new adb.Adb(this.app_, this.deviceSerial_);
-  this.video_ = new video_hdmi.VideoHdmi(this.app_, captureDir + 'capture');
   this.videoFile_ = undefined;
   this.pcap_ = new packet_capture_android.PacketCaptureAndroid(this.app_, args);
   this.runTempDir_ = args.runTempDir || '';
   this.useXvfb_ = undefined;
   this.chromeFlags_ = CHROME_FLAGS.slice();
   this.additionalFlags_ = args.task.addCmdLine;
+  if (args.task.ignoreSSL) {
+    this.chromeFlags_.push('--ignore-certificate-errors');
+  }
   this.isCacheWarm_ = args.isCacheWarm;
+  this.supportsTracing = true;
 }
 util.inherits(BrowserAndroidChrome, browser_base.BrowserBase);
 /** Public class. */
@@ -185,6 +203,7 @@ BrowserAndroidChrome.prototype.startWdServer = function(browserCaps) {
         'http://127.0.0.1:' + PAC_PORT + '/from_netcat');
   }
   this.kill();
+  this.scheduleConfigureHostsFile_();
   this.scheduleInstallIfNeeded_();
   this.scheduleConfigureServerPort_();
   // Must be scheduled, since serverPort_ is assigned in a scheduled function.
@@ -217,14 +236,17 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
   // Stop Chrome at the start of each run.
   // TODO(wrightt): could keep the devToolsPort and pacServer up
   this.kill();
+  this.scheduleConfigureHostsFile_();
   this.scheduleInstallIfNeeded_();
   this.scheduleStartPacServer_();
   this.scheduleSetStartupFlags_();
   this.clearProfile_();
+  this.clearDownloads_();
+  this.clearNotifications_();
 
   // Flush the DNS cache
   this.adb_.su(['ndc', 'resolver', 'flushdefaultif']);
-  var activity = this.chromePackage_ + '/' + this.chromeActivity_ + '.Main';
+  var activity = this.chromePackage_ + '/' + this.chromeActivity_;
   this.adb_.shell(['am', 'start', '-n', activity, '-d', 'about:blank']);
   // TODO(wrightt): check start error
   this.scheduleConfigureDevToolsPort_();
@@ -270,6 +292,54 @@ BrowserAndroidChrome.prototype.clearProfile_ = function() {
   }
 };
 
+BrowserAndroidChrome.prototype.clearDownloads_ = function() {
+  this.app_.schedule('Clear Downloads', function() {
+    this.adb_.getStoragePath().then(function(storagePath) {
+      this.adb_.su(['rm', storagePath + '/Download/*']);
+    }.bind(this));
+  }.bind(this));
+};
+
+BrowserAndroidChrome.prototype.clearNotifications_ = function() {
+  this.app_.schedule('Clear Notifications', function() {
+    this.adb_.su(['service', 'call', 'notification', '1']);
+  }.bind(this));
+};
+
+/**
+ * Configures /etc/hosts to match the desired hosts file (for content
+ * blocking, SPOF testing or DNS override).
+ * @private
+ */
+BrowserAndroidChrome.prototype.scheduleConfigureHostsFile_ = function() {
+  this.app_.schedule('Configure hosts file', function() {
+    if (this.hostsFile_ !== undefined && this.hostsFile_.length) {
+      this.adb_.shell(['cat', '/etc/hosts']).then(
+          function(stdout) {
+        if (stdout.trim() != this.hostsFile_.trim()) {
+          logger.debug("Rewriting /etc/hosts");
+          logger.debug("Current hosts file: " + stdout);
+          logger.debug("New hosts file: " + this.hostsFile_);
+          var localHostsFile = path.join(this.runTempDir_, 'wpt_hosts');
+          try {fs.unlinkSync(localHostsFile);} catch(e) {}
+          process_utils.scheduleFunction(this.app_, 'Write local hosts file',
+              fs.writeFile, localHostsFile, this.hostsFile_);
+          this.adb_.getStoragePath().then(function(storagePath) {
+            var tempHostsFile = storagePath + '/wpt_hosts';
+            this.adb_.adb(['push', localHostsFile, tempHostsFile]);
+            this.adb_.su(['chown', 'root:root', tempHostsFile]);
+            this.adb_.su(['chmod', '644', tempHostsFile]);
+            this.adb_.su(['mount', '-o', 'rw,remount', '/system']);
+            this.adb_.su(['cp', tempHostsFile, '/etc/hosts']);
+            this.adb_.su(['mount', '-o', 'ro,remount', '/system']);
+            this.adb_.su(['rm', tempHostsFile]);
+          }.bind(this));
+        }
+      }.bind(this));
+    }
+  }.bind(this));
+};
+
 /**
  * Installs Chrome apk if this is the first run, and the apk was provided.
  * @private
@@ -282,8 +352,11 @@ BrowserAndroidChrome.prototype.scheduleInstallIfNeeded_ = function() {
     this.adb_.adb(['uninstall', this.chromePackage_]).addErrback(function() {
       logger.debug('Ignoring failed uninstall');
     }.bind(this));
+    // Delete ALL of the existing app data for the package before installing
+    this.adb_.su(['rm', '-rf', '/data/data/' + this.chromePackage_]);
     // Chrome install on an emulator takes a looong time.
     this.adb_.adb(['install', '-r', this.chrome_], {}, /*timeout=*/120000);
+    fs.writeFileSync(path.join(this.workDir_, LAST_INSTALL_FILE), this.chrome_);
   }
   // TODO(wrightt): use `pm list packages` to check pkg
 };
@@ -323,30 +396,30 @@ BrowserAndroidChrome.prototype.scheduleNeedsXvfb_ = function() {
  */
 BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
   'use strict';
-  var flagsFile = '/data/local/chrome-command-line';
-  var flags = this.chromeFlags_.concat('--enable-remote-debugging');
-  if (this.pac_) {
-    flags.push('--proxy-pac-url=http://127.0.0.1:' + PAC_PORT + '/from_netcat');
-    if (PAC_PORT !== 80) {
-      logger.warn('Non-standard PAC port might not work: ' + PAC_PORT);
-      flags.push('--explicitly-allowed-ports=' + PAC_PORT);
+  this.app_.schedule('Configure startup flags', function() {
+    var flags = this.chromeFlags_.concat('--enable-remote-debugging');
+    if (this.pac_) {
+      flags.push('--proxy-pac-url=http://127.0.0.1:' + PAC_PORT + '/from_netcat');
+      if (PAC_PORT !== 80) {
+        logger.warn('Non-standard PAC port might not work: ' + PAC_PORT);
+        flags.push('--explicitly-allowed-ports=' + PAC_PORT);
+      }
     }
-  }
-  var localFlagsFile = path.join(this.runTempDir_, 'wpt_chrome_command_line');
-  var flagsString = 'chrome ' + flags.join(' ');
-  if (this.additionalFlags_) {
-    flagsString += ' ' + this.additionalFlags_;
-  }
-  process_utils.scheduleFunction(this.app_, 'Write local flags file',
-      fs.writeFile, localFlagsFile, flagsString);
-  this.adb_.getStoragePath().then(function(storagePath) {
-    var tempFlagsFile = storagePath + '/wpt_chrome_command_line';
-    this.adb_.adb(['push', localFlagsFile, tempFlagsFile]);
-    process_utils.scheduleFunction(this.app_, 'Delete local flags file',
-        fs.unlink, localFlagsFile);
-    this.adb_.su(['cp', tempFlagsFile, flagsFile]);
-    this.adb_.shell(['rm', tempFlagsFile]);
-    this.adb_.su(['chmod', '666', flagsFile]);
+    var localFlagsFile = path.join(this.runTempDir_, 'wpt_chrome_command_line');
+    try {fs.unlinkSync(localFlagsFile);} catch(e) {}
+    var flagsString = 'chrome ' + flags.join(' ');
+    if (this.additionalFlags_) {
+      flagsString += ' ' + this.additionalFlags_;
+    }
+    process_utils.scheduleFunction(this.app_, 'Write local flags file',
+        fs.writeFile, localFlagsFile, flagsString);
+    this.adb_.getStoragePath().then(function(storagePath) {
+      var tempFlagsFile = storagePath + '/wpt_chrome_command_line';
+      this.adb_.adb(['push', localFlagsFile, tempFlagsFile]);
+      this.adb_.su(['cp', tempFlagsFile, this.flagsFile_]);
+      this.adb_.shell(['rm', tempFlagsFile]);
+      this.adb_.su(['chmod', '666', this.flagsFile_]);
+    }.bind(this));
   }.bind(this));
 };
 
@@ -409,7 +482,7 @@ BrowserAndroidChrome.prototype.scheduleConfigureDevToolsPort_ = function() {
         // TODO(wrightt): if below `adb --help` lacks '--remove', reuse the
         // existing `adb forward` process if it already exists.
         this.adb_.adb(
-            ['forward', 'tcp:' + this.devToolsPort_, DEVTOOLS_SOCKET]);
+            ['forward', 'tcp:' + this.devToolsPort_, this.devToolsSocket_]);
       }.bind(this));
       // Make sure we set devToolsUrl_ only after the adb forward succeeds.
       this.app_.schedule('Set DevTools URL', function() {
@@ -571,31 +644,18 @@ BrowserAndroidChrome.prototype.getDevToolsUrl = function() {
  */
 BrowserAndroidChrome.prototype.scheduleGetCapabilities = function() {
   'use strict';
-  if (this.videoCard_) {
-    return this.video_.scheduleIsSupported().then(function(isSupported) {
-      return {
-          webdriver: false,
-          'wkrdp.Page.captureScreenshot': false,
-          'wkrdp.Network.clearBrowserCache': true,
-          'wkrdp.Network.clearBrowserCookies': true,
-          videoRecording: isSupported,
-          takeScreenshot: true
-        };
-    }.bind(this));
-  } else {
-    return this.adb_.shell(['getprop', 'ro.build.version.release']).then(
-        function(stdout) {
-      return {
-        webdriver: false,
-        'wkrdp.Page.captureScreenshot': false,
-        'wkrdp.Network.clearBrowserCache': true,
-        'wkrdp.Network.clearBrowserCookies': true,
-        videoRecording: parseFloat(stdout) >= 4.4,
-        videoFileExtension: 'mp4',
-        takeScreenshot: true
-      };
-    }.bind(this));
-  }
+  return this.adb_.shell(['getprop', 'ro.build.version.release']).then(
+      function(stdout) {
+    return {
+      webdriver: false,
+      'wkrdp.Page.captureScreenshot': false,
+      'wkrdp.Network.clearBrowserCache': true,
+      'wkrdp.Network.clearBrowserCookies': true,
+      videoRecording: parseFloat(stdout) >= 4.4,
+      videoFileExtension: 'mp4',
+      takeScreenshot: true
+    };
+  }.bind(this));
 };
 
 /**
@@ -620,41 +680,27 @@ BrowserAndroidChrome.prototype.scheduleTakeScreenshot =
  * @param {Function=} onExit Optional exit callback, as noted in video_hdmi.
  */
 BrowserAndroidChrome.prototype.scheduleStartVideoRecording = function(
-    filename, onExit) {
+    filename) {
   'use strict';
-  if (this.videoCard_) {
-    // The video record command needs to know device type for cropping etc.
-    this.adb_.shell(['getprop', 'ro.product.device']).then(
-        function(stdout) {
-      this.video_.scheduleStartVideoRecording(filename, this.deviceSerial_,
-          stdout.trim(), this.videoCard_, onExit);
-    }.bind(this));
-  } else {
-    this.adb_.getStoragePath().then(function(storagePath) {
-      this.deviceVideoPath_ = storagePath + '/wpt_video.mp4';
-      this.videoFile_ = filename;
-      this.adb_.shell(['rm', this.deviceVideoPath_]);
-      this.adb_.spawnShell(['screenrecord', '--verbose',
-                            '--bit-rate', 8000000,
-                            this.deviceVideoPath_]).then(function(proc) {
-        this.recordProcess_ = proc;
-        proc.on('exit', function(code, signal) {
-          var err;
-          if (!this.recordProcess_) {
-            logger.debug('Normal exit via scheduleStopVideoRecording');
-          } else {
-            err = new Error('Unexpected video recording EXIT with code ' +
-                code + ' signal ' + signal);
-            logger.error(err.message);
-          }
-          this.recordProcess_ = undefined;
-          if (onExit) {
-            onExit(err);
-          }
-        }.bind(this));
+  this.adb_.getStoragePath().then(function(storagePath) {
+    this.deviceVideoPath_ = storagePath + '/wpt_video.mp4';
+    this.videoFile_ = filename;
+    this.adb_.shell(['rm', this.deviceVideoPath_]);
+    this.adb_.spawnShell(['screenrecord', '--verbose',
+                          '--bit-rate', 8000000,
+                          this.deviceVideoPath_]).then(function(proc) {
+      this.recordProcess_ = proc;
+      proc.on('exit', function(code, signal) {
+        if (!this.recordProcess_) {
+          logger.debug('Normal exit via scheduleStopVideoRecording');
+        } else {
+          logger.debug('Unexpected video recording EXIT with code ' +
+              code + ' signal ' + signal);
+        }
+        this.recordProcess_ = undefined;
       }.bind(this));
     }.bind(this));
-  }
+  }.bind(this));
 };
 
 /**
@@ -663,19 +709,18 @@ BrowserAndroidChrome.prototype.scheduleStartVideoRecording = function(
 BrowserAndroidChrome.prototype.scheduleStopVideoRecording = function() {
   'use strict';
   if (this.deviceVideoPath_ && this.videoFile_) {
-    var recordProcess = this.recordProcess_;
-    this.recordProcess_ = undefined;
-    this.adb_.scheduleKill('screenrecord');
-    this.app_.schedule('screenrecord kill issued', function() {
-      if (recordProcess) {
-        process_utils.scheduleWait(this.app_, recordProcess,
-            'screenrecord', 30000).then(function() {
-          this.adb_.adb(['pull', this.deviceVideoPath_, this.videoFile_]);
+    if (this.recordProcess_) {
+      try {
+        var recordProcess = this.recordProcess_;
+        this.recordProcess_ = undefined;
+        this.adb_.scheduleKill('screenrecord');
+        this.app_.schedule('screenrecord kill issued', function() {
+          process_utils.scheduleWait(this.app_, recordProcess,
+              'screenrecord', 30000);
         }.bind(this));
-      }
-    }.bind(this));
-  } else {
-    this.video_.scheduleStopVideoRecording();
+      } catch(e) {}
+    }
+    this.adb_.adb(['pull', this.deviceVideoPath_, this.videoFile_]);
   }
 };
 
@@ -713,7 +758,9 @@ BrowserAndroidChrome.prototype.scheduleAssertIsReady = function() {
         this.adb_.scheduleDetectConnectedInterface();
       }
       this.adb_.scheduleGetGateway().then(function(ip) {
-        this.adb_.schedulePing(ip);
+        this.adb_.schedulePing(ip).addErrback(function(){
+          this.adb_.schedulePing('8.8.8.8');
+        }.bind(this));
       }.bind(this));
     }
     if (this.maxTemp) {

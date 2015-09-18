@@ -505,8 +505,8 @@ exports.scheduleFunctionNoFault = function(app, description, f,
   'use strict';
   return exports.scheduleFunction.apply(undefined, arguments).addErrback(
       function(e) {
-    logger.error('Exception from "%s": %s', description, e);
-    logger.debug('%s', e.stack);
+    logger.debug('Ignoring Exception from "%s": %s', description, e);
+    //logger.debug('%s', e.stack);
   });
 };
 

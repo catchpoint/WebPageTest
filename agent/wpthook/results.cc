@@ -56,10 +56,9 @@ static const TCHAR * IMAGE_RESPONSIVE_CHECK = _T("_screen_responsive.jpg");
 static const TCHAR * CONSOLE_LOG_FILE = _T("_console_log.json");
 static const TCHAR * TIMED_EVENTS_FILE = _T("_timed_events.json");
 static const TCHAR * CUSTOM_METRICS_FILE = _T("_metrics.json");
-static const TCHAR * TIMELINE_FILE = _T("_timeline.json");
 static const TCHAR * TRACE_FILE = _T("_trace.json");
+static const TCHAR * TRACE_NETLOG_FILE = _T("_trace_netlog.json");
 static const TCHAR * CUSTOM_RULES_DATA_FILE = _T("_custom_rules.json");
-static const TCHAR * DEV_TOOLS_FILE = _T("_devtools.json");
 static const DWORD RIGHT_MARGIN = 25;
 static const DWORD BOTTOM_MARGIN = 25;
 
@@ -68,7 +67,7 @@ static const DWORD BOTTOM_MARGIN = 25;
 Results::Results(TestState& test_state, WptTest& test, Requests& requests, 
                   TrackSockets& sockets, TrackDns& dns, 
                   ScreenCapture& screen_capture, DevTools &dev_tools,
-                  Trace &trace):
+                  Trace &trace, Trace &trace_netlog):
   _requests(requests)
   , _test_state(test_state)
   , _test(test)
@@ -77,7 +76,9 @@ Results::Results(TestState& test_state, WptTest& test, Requests& requests,
   , _screen_capture(screen_capture)
   , _saved(false)
   , _dev_tools(dev_tools)
-  , _trace(trace) {
+  , _trace(trace)
+  , _trace_netlog(trace_netlog)
+  , reported_step_(0) {
   _file_base = shared_results_file_base;
   _visually_complete.QuadPart = 0;
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results base file: %s"), 
@@ -132,6 +133,11 @@ void Results::Save(void) {
   if (!_saved) {
     ProcessRequests();
     if (_test._log_data) {
+      reported_step_++;
+      if (_test._current_event_name.IsEmpty())
+        current_step_name_.Format("Step %d", reported_step_);
+      else
+        current_step_name_ = _test._current_event_name;
       OptimizationChecks checks(_requests, _test_state, _test, _dns);
       checks.Check();
       base_page_CDN_ = checks._base_page_CDN;
@@ -144,12 +150,8 @@ void Results::Save(void) {
       SaveConsoleLog();
       SaveTimedEvents();
       SaveCustomMetrics();
-      if (_test._timeline) {
-        _dev_tools.SetStartTime(_test_state._start);
-        _dev_tools.Write(_file_base + DEV_TOOLS_FILE);
-      }
-      if (_test._trace)
-        _trace.Write(_file_base + TRACE_FILE);
+      _trace.Write(_file_base + TRACE_FILE);
+      _trace_netlog.Write(_file_base + TRACE_NETLOG_FILE);
     }
     if (shared_result == -1 || shared_result == 0 || shared_result == 99999)
       shared_result = _test_state._test_result;
@@ -222,17 +224,17 @@ void Results::SaveImages(void) {
   // save the event-based images
   CxImage image;
   if (_screen_capture.GetImage(CapturedImage::START_RENDER, image))
-    SaveImage(image, _file_base + IMAGE_START_RENDER, _test._image_quality);
+    SaveImage(image, _file_base + IMAGE_START_RENDER, _test._image_quality, false, _test._full_size_video);
   if (_screen_capture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image))
-    SaveImage(image, _file_base + IMAGE_DOC_COMPLETE, _test._image_quality);
+    SaveImage(image, _file_base + IMAGE_DOC_COMPLETE, _test._image_quality, false, _test._full_size_video);
   if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, image)) {
     if (_test._png_screen_shot)
       image.Save(_file_base + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
-    SaveImage(image, _file_base + IMAGE_FULLY_LOADED, _test._image_quality);
+    SaveImage(image, _file_base + IMAGE_FULLY_LOADED, _test._image_quality, false, _test._full_size_video);
   }
   if (_screen_capture.GetImage(CapturedImage::RESPONSIVE_CHECK, image)) {
     SaveImage(image, _file_base + IMAGE_RESPONSIVE_CHECK, _test._image_quality,
-              true);
+              true, _test._full_size_video);
   }
 
   SaveVideo();
@@ -276,7 +278,7 @@ void Results::SaveVideo(void) {
               _visually_complete.QuadPart = image._capture_time.QuadPart;
               file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base, 
                                 image_time);
-              SaveImage(*img, file_name, _test._image_quality);
+              SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_video);
             }
           }
         } else {
@@ -288,7 +290,7 @@ void Results::SaveVideo(void) {
           histogram = GetHistogramJSON(*img);
           if (_test._video) {
             file_name = _file_base + _T("_progress_0000.jpg");
-            SaveImage(*img, file_name, _test._image_quality);
+            SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_video);
           }
         }
 
@@ -370,11 +372,12 @@ bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Results::SaveImage(CxImage& image, CString file, BYTE quality,
-                        bool force_small) {
+                        bool force_small, bool _full_size_video) {
   if (image.IsValid()) {
     CxImage img(image);
-    if (force_small || (img.GetWidth() > 600 && img.GetHeight() > 600))
-      img.Resample2(img.GetWidth() / 2, img.GetHeight() / 2);
+    if (!_full_size_video)
+      if (force_small || (img.GetWidth() > 600 && img.GetHeight() > 600))
+        img.Resample2(img.GetWidth() / 2, img.GetHeight() / 2);
 
     img.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
     img.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
@@ -473,7 +476,7 @@ void Results::SavePageData(OptimizationChecks& checks){
           _test_state._start_time.wMinute, _test_state._start_time.wSecond);
     result += buff;
     // Event Name
-    result += "\t";
+    result += current_step_name_ + "\t";
     // URL
     result += CStringA((LPCSTR)CT2A(_test._navigated_url)) + "\t";
     // Load Time (ms)
@@ -1027,7 +1030,7 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
         _test_state._start_time.wMinute, _test_state._start_time.wSecond);
   result += buff;
   // Event Name
-  result += "\t";
+  result += current_step_name_ + "\t";
   // IP Address
   struct sockaddr_in addr;
   addr.sin_addr.S_un.S_addr = request->_peer_address;
@@ -1061,7 +1064,8 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   buff.Format("%d\t", request->_ms_start);
   result += buff;
   // Bytes Out
-  buff.Format("%d\t", request->_request_data.GetDataSize());
+  buff.Format("%d\t", request->_bytes_out ? request->_bytes_out:
+              request->_request_data.GetDataSize());
   result += buff;
   // Bytes In
   buff.Format("%d\t", request->_bytes_in ? request->_bytes_in :

@@ -6,7 +6,7 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('SBL_Check');
 }
 
-define('VIDEO_CODE_VERSION', 19);
+define('VIDEO_CODE_VERSION', 20);
 
 require_once(__DIR__ . '/logging.inc');
 
@@ -19,15 +19,14 @@ function GetTestPath($id)
 {
     $base = 'results';
     // see if it is a relay test (includes the key)
-    if( strpos($id, '.') !== false ) {
-        $parts = explode('.', $id);
-        if( count($parts) == 2 ) {
-            $key = trim($parts[0]);
-            if( strlen($key) ) {
-                $base .= "/relay/$key";
-                $id = trim($parts[1]);
-            }
-        }
+    $separator = strrpos($id, '.');
+    if ($separator !== false ) {
+      $key = trim(substr($id, 0, $separator));
+      $real_id = trim(substr($id, $separator + 1));
+      if (strlen($key) && strlen($real_id)) {
+        $id = $real_id;
+        $base .= "/relay/$key";
+      }
     }
 
     $testPath = "$base/$id";
@@ -697,32 +696,6 @@ function BuildLocations( &$locations )
                                         $location[$index] = $value;
                                         $index++;
                                     }
-                                } elseif (array_key_exists('type', $configuration) &&
-                                          $configuration['type'] == 'Appurify' &&
-                                          array_key_exists('key', $configuration) &&
-                                          array_key_exists('secret', $configuration)) {
-                                  $configuration['localDir'] = "./work/jobs/$value";
-                                  $configuration['location'] = $value;
-                                  require_once('./lib/appurify.inc.php');
-                                  $appurify = new Appurify($configuration['key'], $configuration['secret']);
-                                  unset($configuration['key']);
-                                  unset($configuration['secret']);
-                                  $devices = $appurify->GetDevices();
-                                  $connections = $appurify->GetConnections();
-                                  if (count($devices)) {
-                                    $configuration['browser'] = '';
-                                    foreach($devices as $app_id => $app_name) {
-                                      $label = $value . ':' . $app_id;
-                                      $location[$index] = $label;
-                                      $index++;
-                                      $cfg = $configuration;
-                                      $cfg['browser'] = $app_name;
-                                      $cfg['label'] = $cfg['label'] . " - $app_name";
-                                      if (isset($connections))
-                                        $cfg['connections'] = $connections;
-                                      $locations[$label] = $cfg;
-                                    }
-                                  }
                                 }
                             }
                         } elseif ($key !== 'default') {
@@ -783,8 +756,7 @@ function FilterLocations(&$locations, $includeHidden = '',
                         unset($locations[$name]);
                 } else {
                   // TODO: Fix this so it only hides local locations, not relay and API
-                  if ((!array_key_exists('type', $locRef) || $locRef['type'] != 'Appurify') &&
-                      !array_key_exists('relayServer', $locRef)) {
+                  if (!array_key_exists('relayServer', $locRef)) {
                     unset($locations[$name]);
                   }
                 }
@@ -939,7 +911,7 @@ function ParseLocations(&$locations) {
     $currentLoc = null;
     if (array_key_exists('cfg', $_COOKIE))
         $currentLoc = GetLocationFromConfig($locations, $_COOKIE["cfg"] );
-    if (!$currentLoc || !isset($loc['locations'][$currentLoc])) {
+    if ((!$currentLoc || !isset($loc['locations'][$currentLoc])) && isset($locations['locations']['default'])) {
         // nope, try thee default
         $currentLoc = $locations['locations']['default'];
     }
@@ -1654,7 +1626,8 @@ function GetTesters($locationId, $includeOffline = false)
             {
                 if( $includeOffline || !array_key_exists('offline', $tester) || !$tester['offline'] )
                 {
-                    $entry = array('pc' => @$tester['pc'],
+                    $entry = array('id' => $id,
+                                   'pc' => @$tester['pc'],
                                    'ec2' => @$tester['ec2'],
                                    'ip' => @$tester['ip'],
                                    'version' => @$tester['ver'],
@@ -1663,6 +1636,7 @@ function GetTesters($locationId, $includeOffline = false)
                                    'dns' => @$tester['dns'],
                                    'GPU' => @$tester['GPU'],
                                    'offline' => @$tester['offline']);
+                    $entry['rebooted'] = isset($tester['rebooted']) ? $tester['rebooted'] : false;
 
                     if (array_key_exists('cpu', $tester) && is_array($tester['cpu'])) {
                       $total = 0;
@@ -1760,7 +1734,7 @@ function Lock($name, $blocking = true, $maxLockSeconds = 300) {
   $lock = null;
   if (strlen($name)) {
     if( !is_dir('./tmp') )
-      mkdir('./tmp');
+      mkdir('./tmp', 0777, true);
     if (preg_match('/^[a-zA-Z0-9-_ ]+$/', $name))
       $lockFile = __DIR__ . '/tmp/named-' . str_replace(' ', '-', $name) . '.lock';
     else
@@ -2014,7 +1988,7 @@ function SecureDir($path) {
 * @param mixed $tester
 * @param mixed $testerInfo
 */
-function UpdateTester($location, $tester, $testerInfo = null, $cpu = null, $error = null) {
+function UpdateTester($location, $tester, $testerInfo = null, $cpu = null, $error = null, $rebooted = null) {
     if ($lock = LockLocation("testers-$location")) {
         $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
         if( !count($testers) )
@@ -2031,6 +2005,8 @@ function UpdateTester($location, $tester, $testerInfo = null, $cpu = null, $erro
         if (!array_key_exists('first_contact', $testers[$tester])) {
             $testers[$tester]['first_contact'] = $now;
         }
+        if (isset($rebooted))
+          $testers[$tester]['rebooted'] = $rebooted;
         if (isset($cpu) && $cpu > 0) {
           if (!array_key_exists('cpu', $testers[$tester]))
             $testers[$tester]['cpu'] = array();
@@ -2210,6 +2186,9 @@ function ShardKey($test_num) {
 function SendAsyncRequest($relative_url) {
   $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
   $url = "$protocol://{$_SERVER['HTTP_HOST']}$relative_url";
+  $local = GetSetting('local_server');
+  if ($local)
+    $url = "$local$relative_url";
   if (function_exists('curl_init')) {
     $c = curl_init();
     curl_setopt($c, CURLOPT_URL, $url);
@@ -2666,6 +2645,42 @@ function ZipExtract($zipFile, $path) {
       $command = "unzip \"$zipFile\" -d \"$extractPath\"";
       exec($command, $output, $result);
     }
+  }
+}
+
+function html2rgb($color) {
+  if ($color[0] == '#')
+    $color = substr($color, 1);
+
+  if (strlen($color) == 6)
+    list($r, $g, $b) = array($color[0].$color[1],
+                             $color[2].$color[3],
+                             $color[4].$color[5]);
+  elseif (strlen($color) == 3)
+    list($r, $g, $b) = array($color[0].$color[0], $color[1].$color[1], $color[2].$color[2]);
+  else
+    return false;
+
+  $r = hexdec($r); $g = hexdec($g); $b = hexdec($b);
+
+  return array($r, $g, $b);
+}
+
+function WaitForSystemLoad($max_load, $timeout) {
+  $wait = false;
+  $started = time();
+  if (function_exists('sys_getloadavg')) {
+    do {
+      $wait = false;
+      $load = sys_getloadavg();
+      if ($load[0] > $max_load) {
+        $now = time();
+        if ($now - $started < $timeout) {
+          $wait = true;
+          sleep(rand(1, 30));
+        }
+      }
+    } while ($wait);
   }
 }
 ?>

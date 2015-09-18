@@ -6,6 +6,19 @@ Time Limit=120
 ;Automatically install and update support software (Flash, Silverlight, etc)
 software=http://www.webpagetest.org/installers/software.dat
 
+; Optional credentials
+; username=user
+; password=mypassword
+
+; Optional: only applies if the scheme of the URL is https.
+;   Check if the CN of the WPT server SSL certificate matches the host in the url parameter, and if the certificate has expired.
+;   Default is '0', which disables these checks.
+; Valid Certificate=1
+
+; Optional : If a client certificate is required for requests to the WebPagetest server, set "Client Certificate Common Name" to load a
+;   specific certificate from the certificate store, or omit this option in order to use the first certificate in the store
+; Client Certificate Common Name="WPT Agent"
+
 [Chrome]
 exe="%PROGRAM_FILES%\Google\Chrome\Application\chrome.exe"
 options='--load-extension="%WPTDIR%\extension" --user-data-dir="%PROFILE%" --no-proxy-server'

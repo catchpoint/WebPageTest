@@ -228,7 +228,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
 
     // Figure out the scale.
     $max_ms = 0;
-    if ((int)@$_REQUEST['max'] > 0) {
+    if (@$_REQUEST['max'] > 0) {
         $max_ms = (int)($_REQUEST['max'] * 1000.0);
     } else {
         // Include all page events and resource times in time scale.
@@ -326,22 +326,43 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
           $cpu_slice_colors = array();
           $mime_colors = MimeColors();
           
-          $cpu_slice_colors['ParseHTML'] = GetColor($im, 130, 168, 222);
+          $cpu_slice_colors['ParseHTML'] = GetColor($im, 112, 162, 227);
           $cpu_slice_colors['ResourceReceivedData'] = $cpu_slice_colors['ParseHTML'];
+          $cpu_slice_colors['ResourceSendRequest'] = $cpu_slice_colors['ParseHTML'];
+          $cpu_slice_colors['ResourceReceivedResponse'] = $cpu_slice_colors['ParseHTML'];
+          $cpu_slice_colors['ResourceFinish'] = $cpu_slice_colors['ParseHTML'];
+          $cpu_slice_colors['CommitLoad'] = $cpu_slice_colors['ParseHTML'];
 
-          $cpu_slice_colors['Layout'] = GetColor($im, 171, 213, 149);
+          $cpu_slice_colors['Layout'] = GetColor($im, 154, 126, 230);
           $cpu_slice_colors['RecalculateStyles'] = $cpu_slice_colors['Layout'];
+          $cpu_slice_colors['ParseAuthorStyleSheet'] = $cpu_slice_colors['Layout'];
+          $cpu_slice_colors['ScheduleStyleRecalculation'] = $cpu_slice_colors['Layout'];
+          $cpu_slice_colors['InvalidateLayout'] = $cpu_slice_colors['Layout'];
 
-          $cpu_slice_colors['Paint'] = GetColor($im, 194, 219, 181);
+          $cpu_slice_colors['Paint'] = GetColor($im, 113, 179, 99);
+          $cpu_slice_colors['PaintImage'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['PaintSetup'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['CompositeLayers'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['DecodeImage'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['ImageDecodeTask'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['Rasterize'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['GPUTask'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['SetLayerTreeId'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['layerId'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['UpdateLayer'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['UpdateLayerTree'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['Draw LazyPixelRef'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['Decode LazyPixelRef'] = $cpu_slice_colors['Paint'];
 
-          $cpu_slice_colors['EvaluateScript'] = GetColor($im, 228, 185, 136);
+          $cpu_slice_colors['EvaluateScript'] = GetColor($im, 241, 196, 83);
           $cpu_slice_colors['EventDispatch'] = $cpu_slice_colors['EvaluateScript'];
           $cpu_slice_colors['FunctionCall'] = $cpu_slice_colors['EvaluateScript'];
           $cpu_slice_colors['GCEvent'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['TimerInstall'] = $cpu_slice_colors['EvaluateScript'];
           $cpu_slice_colors['TimerFire'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['TimerRemove'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['XHRLoad'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['XHRReadyStateChange'] = $cpu_slice_colors['EvaluateScript'];
 
           $cpu_slice_colors['other'] = GetColor($im, 184, 184, 184);
           $cpu_slice_colors['Program'] = $cpu_slice_colors['other'];

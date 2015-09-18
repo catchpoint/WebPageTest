@@ -102,7 +102,7 @@ function SelectRequest(request) {
         if (r['client_port'] !== undefined && r['client_port'] !== null && r['client_port'])
             details += '<b>Client Port: </b>' + htmlEncode(r['client_port']) + '<br>';
         if (r['load_start'] !== undefined)
-            details += '<b>Start Offset: </b>' + (r['load_start'] / 1000.0).toFixed(3) + ' s<br>';
+            details += '<b>Request Start: </b>' + (r['load_start'] / 1000.0).toFixed(3) + ' s<br>';
         if (IsValidDuration(r['dns_ms'])) {
             details += '<b>DNS Lookup: </b>' + htmlEncode(r['dns_ms']) + ' ms<br>';
         } else if( r['dns_end'] !== undefined && r['dns_start'] !== undefined && r['dns_end'] > 0 ) {

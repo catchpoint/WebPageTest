@@ -30,7 +30,7 @@ foreach($compTests as $t) {
                     if( $p[0] == 'r' )
                         $test['run'] = (int)$p[1];
                     if( $p[0] == 'l' )
-                        $test['label'] = $p[1];
+                        $test['label'] = preg_replace('/[^a-zA-Z0-9 \-_]/', '', $p[1]);
                     if( $p[0] == 'c' )
                         $test['cached'] = (int)$p[1];
                     if( $p[0] == 'e' )
@@ -72,6 +72,8 @@ foreach($compTests as $t) {
                     if (isset($test['end'])) {
                         if( !strcmp($test['end'], 'visual') && array_key_exists('visualComplete', $test['pageData'][$test['run']][$test['cached']]) )
                             $test['end'] = $test['pageData'][$test['run']][$test['cached']]['visualComplete'];
+                        elseif( !strcmp($test['end'], 'load') )
+                            $test['end'] = $test['pageData'][$test['run']][$test['cached']]['loadTime'];
                         elseif( !strcmp($test['end'], 'doc') )
                             $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'];
                         elseif(!strncasecmp($test['end'], 'doc+', 4))
@@ -199,8 +201,6 @@ function LoadTestData() {
             if (is_numeric($test['end']) && $test['end'] > 0)
                 $end = $test['end'] / 1000.0;
             $startOffset = array_key_exists('testStartOffset', $pageData[$test['run']][$test['cached']]) ? intval(round($pageData[$test['run']][$test['cached']]['testStartOffset'])) : 0;
-            if (isset($testInfo) && is_array($testInfo) && array_key_exists('appurify_tests', $testInfo))
-              $startOffset = 0;
             $test['video']['progress'] = GetVisualProgress("./$testPath", $test['run'], $test['cached'], null, $end, $startOffset);
             if (array_key_exists('frames', $test['video']['progress'])) {
               foreach($test['video']['progress']['frames'] as $ms => $frame) {

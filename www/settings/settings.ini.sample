@@ -17,17 +17,33 @@ publishTo=www.webpagetest.org
 ; Integrate with cloudshark
 tcpdump_view="http://cloudshark.org/view?url="
 
+; Log in with Google
+;google_oauth_client_id=<client ID>
+;google_oauth_client_secret=<secret>
+
+
 ; *********************
 ; Test options/defaults
 ; *********************
 
 enableVideo=1
 
+;Full Size Video capturing - enabled (1) or disable (0)
+fullSizeVideoOn=1
+;Full Size Video - default checkbox state - ticked (1) or unticked (0)
+fullSizeVideoDefault=0
+
 ; Run tests concurrently across test machines
 ;shard_tests=1
 
 ; Maximum number of runs allowed per test
 maxruns=9
+
+; Maximum amount of time for a test run (if requested by timeout=X)
+maxtime=600
+
+; Maximum server load to allow when rendering video on the server
+render_max_load=8
 
 ; Allow (1) or disable (0) testing of sites on private IP addresses (http://192.168.0.1/ for example).
 allowPrivate=1
@@ -45,6 +61,11 @@ allowPrivate=1
 ; Host name to use for URLs when it can not be automatically detected.
 ; This is mostly for auto-scaling EC2 instances to tell the agents what server to connect to
 ;host=www.webpagetest.org
+
+; Base URI to use for loopback requests (background processing, video creation, etc).
+; This is mostly used when the pages are behind authentication and need another path
+; for processing background tasks.
+;local_server=http://127.0.0.1
 
 ; disable gzip compressing the result text files
 ;nogzip=1

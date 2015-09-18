@@ -432,7 +432,17 @@ Adb.prototype.scheduleCheckBatteryTemperature = function(maxTemp) {
         throw new Error('Temperature ' + deviceTemp + ' > ' + maxTemp);
       }
     } else {
-      throw new Error('Device temperature not available');
+      this.shell(['cat', '/sys/class/power_supply/battery/batt_temp']).then(
+          function(stdout) {
+        if ((/^\d+$/).test(stdout.trim())) {
+          var deviceTemp = parseInt(stdout.trim(), 10) / 10.0;
+          if (deviceTemp > maxTemp) {
+            throw new Error('Temperature ' + deviceTemp + ' > ' + maxTemp);
+          }
+        } else {
+          throw new Error('Device temperature not available');
+        }
+      }.bind(this));
     }
   }.bind(this));
 };
@@ -636,12 +646,29 @@ Adb.prototype.scheduleGetGateway = function(ifname) {
       }
     });
     if (!ret) {
-      throw new Error(
-          'Unable to find' + (!ifname ? '' : (' ' + ifname + '\'s')) +
-          ' gateway: ' + stdout);
+      return this.shell(['getprop']).then(function(stdout) {
+        stdout.split(/[\r\n]+/).forEach(function(line) {
+          var m = line.match(/^\[\w*\.(\w*)\.gateway\]\:\s*\[([\d\.\:]*)\]/);
+          if (m && (!ifname || m[1] === ifname)) {
+            logger.debug("Detected gateway: " + m[2]);
+            ret = m[2];
+          }
+          m = line.match(/^\[net\.dns1\]\:\s*\[([\d\.\:]*)\]/);
+          if (!ret && m) {
+            logger.debug("Detected gateway: " + m[1]);
+            ret = m[1];
+          }
+        });
+        if (!ret) {
+          throw new Error(
+              'Unable to find' + (!ifname ? '' : (' ' + ifname + '\'s')) +
+              ' gateway: ' + stdout);
+        }
+        return ret;
+      }.bind(this));
     }
     return ret;
-  });
+  }.bind(this));
 };
 
 /**

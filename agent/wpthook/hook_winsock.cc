@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static CWsHook * pHook = NULL;
 
-#define TRACE_WINSOCK 1
+//#define TRACE_WINSOCK 1
 
 /******************************************************************************
 *******************************************************************************
@@ -625,33 +625,34 @@ int	CWsHook::getaddrinfo(PCSTR pNodeName, PCSTR pServiceName,
   _sockets.ResetSslFd();
   void * context = NULL;
   CString name = CA2T(pNodeName, CP_UTF8);
-  if (!_test_state._exit)
-    context = _dns.LookupStart(name);
-  if (pHints)
-    pHints->ai_flags |= AI_CANONNAME;
+  if (!_dns.BlockLookup(name)) {
+    if (!_test_state._exit)
+      context = _dns.LookupStart(name);
+    if (pHints)
+      pHints->ai_flags |= AI_CANONNAME;
 
-  if (_getaddrinfo)
-    ret = _getaddrinfo(CT2A((LPCTSTR)name), pServiceName, pHints, ppResult);
+    if (_getaddrinfo)
+      ret = _getaddrinfo(CT2A((LPCTSTR)name), pServiceName, pHints, ppResult);
 
-  if (!ret && !_test_state._exit) {
-    PADDRINFOA addr = *ppResult;
-    int count = 0;
-    while (addr && count < 100) {
-      count++;
-      if (addr->ai_canonname)
-        _dns.LookupAlias(name, (LPCTSTR)CA2T(addr->ai_canonname, CP_UTF8));
-      if (addr->ai_addrlen >= sizeof(struct sockaddr_in) && 
-          addr->ai_family == AF_INET) {
-        struct sockaddr_in * ipName = (struct sockaddr_in *)addr->ai_addr;
-        _dns.LookupAddress(context, ipName->sin_addr.S_un.S_addr);
+    if (!ret && !_test_state._exit) {
+      PADDRINFOA addr = *ppResult;
+      int count = 0;
+      while (addr && count < 100) {
+        count++;
+        if (addr->ai_canonname)
+          _dns.LookupAlias(name, (LPCTSTR)CA2T(addr->ai_canonname, CP_UTF8));
+        if (addr->ai_addrlen >= sizeof(struct sockaddr_in) && 
+            addr->ai_family == AF_INET) {
+          struct sockaddr_in * ipName = (struct sockaddr_in *)addr->ai_addr;
+          _dns.LookupAddress(context, ipName->sin_addr.S_un.S_addr);
+        }
+        addr = addr->ai_next;
       }
-      addr = addr->ai_next;
     }
+
+    if (context && !_test_state._exit)
+      _dns.LookupDone(context, ret);
   }
-
-  if (context && !_test_state._exit)
-    _dns.LookupDone(context, ret);
-
   return ret;
 }
 
@@ -663,33 +664,34 @@ int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName,
   _sockets.ResetSslFd();
   void * context = NULL;
   CString name = CW2T(pNodeName);
-  if (!_test_state._exit)
-      context = _dns.LookupStart(name);
-  if (pHints)
-    pHints->ai_flags |= AI_CANONNAME;
+  if (!_dns.BlockLookup(name)) {
+    if (!_test_state._exit)
+        context = _dns.LookupStart(name);
+    if (pHints)
+      pHints->ai_flags |= AI_CANONNAME;
 
-  if (_GetAddrInfoW)
-    ret = _GetAddrInfoW(CT2W((LPCWSTR)name), pServiceName, pHints, ppResult);
+    if (_GetAddrInfoW)
+      ret = _GetAddrInfoW(CT2W((LPCWSTR)name), pServiceName, pHints, ppResult);
 
-  if (!ret && !_test_state._exit) {
-    PADDRINFOW addr = (PADDRINFOW)*ppResult;
-    int count = 0;
-    while (addr && count < 100) {
-      count++;
-      if (addr->ai_canonname)
-        _dns.LookupAlias(name, addr->ai_canonname);
-      if (addr->ai_addrlen >= sizeof(struct sockaddr_in) && 
-          addr->ai_family == AF_INET) {
-        struct sockaddr_in * ipName = (struct sockaddr_in *)addr->ai_addr;
-        _dns.LookupAddress(context, ipName->sin_addr.S_un.S_addr);
+    if (!ret && !_test_state._exit) {
+      PADDRINFOW addr = (PADDRINFOW)*ppResult;
+      int count = 0;
+      while (addr && count < 100) {
+        count++;
+        if (addr->ai_canonname)
+          _dns.LookupAlias(name, addr->ai_canonname);
+        if (addr->ai_addrlen >= sizeof(struct sockaddr_in) && 
+            addr->ai_family == AF_INET) {
+          struct sockaddr_in * ipName = (struct sockaddr_in *)addr->ai_addr;
+          _dns.LookupAddress(context, ipName->sin_addr.S_un.S_addr);
+        }
+        addr = addr->ai_next;
       }
-      addr = addr->ai_next;
     }
+
+    if (context)
+      _dns.LookupDone(context, ret);
   }
-
-  if (context)
-    _dns.LookupDone(context, ret);
-
   return ret;
 }
 
@@ -701,31 +703,33 @@ struct hostent * CWsHook::gethostbyname(const char * pNodeName) {
   _sockets.ResetSslFd();
   void * context = NULL;
   CString name = CA2T(pNodeName, CP_UTF8);
-  if (!_test_state._exit)
-      context = _dns.LookupStart(name);
+  if (!_dns.BlockLookup(name)) {
+    if (!_test_state._exit)
+        context = _dns.LookupStart(name);
 
-  if (_gethostbyname)
-    ret = _gethostbyname((LPCSTR)CT2A(name));
+    if (_gethostbyname)
+      ret = _gethostbyname((LPCSTR)CT2A(name));
 
-  if (ret && !_test_state._exit) {
-    if (ret->h_name)
-      _dns.LookupAlias(name, (LPCTSTR)CA2T(ret->h_name, CP_UTF8));
-    char ** alias = ret->h_aliases;
-    int count = 0;
-    while (*alias && count < 100) {
-      count++;
-      _dns.LookupAlias(name, (LPCTSTR)CA2T(*alias, CP_UTF8));
-      alias++;
-    }    
-    for (int i = 0; ret->h_addr_list[i] != 0; i++)
-      _dns.LookupAddress(context, *(u_long *)ret->h_addr_list[i]);
+    if (ret && !_test_state._exit) {
+      if (ret->h_name)
+        _dns.LookupAlias(name, (LPCTSTR)CA2T(ret->h_name, CP_UTF8));
+      char ** alias = ret->h_aliases;
+      int count = 0;
+      while (*alias && count < 100) {
+        count++;
+        _dns.LookupAlias(name, (LPCTSTR)CA2T(*alias, CP_UTF8));
+        alias++;
+      }    
+      for (int i = 0; ret->h_addr_list[i] != 0; i++)
+        _dns.LookupAddress(context, *(u_long *)ret->h_addr_list[i]);
+    }
+
+    int err = WSAHOST_NOT_FOUND;
+    if (ret)
+      err = 0;
+    if (context)
+      _dns.LookupDone(context, err);
   }
-
-  int err = WSAHOST_NOT_FOUND;
-  if (ret)
-    err = 0;
-  if (context)
-    _dns.LookupDone(context, err);
 
   return ret;
 }
@@ -827,35 +831,37 @@ int CWsHook::GetAddrInfoExA(PCSTR pName, PCSTR pServiceName, DWORD dwNameSpace,
   _sockets.ResetSslFd();
   void * context = NULL;
   CString name = (LPCWSTR)CA2W(pName);
-  if (!_test_state._exit)
-      context = _dns.LookupStart(name);
-  if (hints)
-    hints->ai_flags |= AI_CANONNAME;
+  if (!_dns.BlockLookup(name)) {
+    if (!_test_state._exit)
+        context = _dns.LookupStart(name);
+    if (hints)
+      hints->ai_flags |= AI_CANONNAME;
 
-  if (_GetAddrInfoExA)
-    ret = _GetAddrInfoExA((LPCSTR)CW2A(name), pServiceName, dwNameSpace,
-        lpNspId, hints, ppResult, timeout, lpOverlapped, lpCompletionRoutine,
-        lpNameHandle);
+    if (_GetAddrInfoExA)
+      ret = _GetAddrInfoExA((LPCSTR)CW2A(name), pServiceName, dwNameSpace,
+          lpNspId, hints, ppResult, timeout, lpOverlapped, lpCompletionRoutine,
+          lpNameHandle);
 
-  int err = WSAHOST_NOT_FOUND;
-  if (ret == NO_ERROR && ppResult && *ppResult) {
-    PADDRINFOEXA addr = *ppResult;
-    int count = 0;
-    while (addr && count < 100) {
-      count++;
-      if (addr->ai_canonname)
-        _dns.LookupAlias(name, (LPCTSTR)CA2T(addr->ai_canonname, CP_UTF8));
-      if (addr->ai_addrlen >= sizeof(struct sockaddr_in) && 
-          addr->ai_family == AF_INET) {
-        struct sockaddr_in * ipName = (struct sockaddr_in *)addr->ai_addr;
-        _dns.LookupAddress(context, ipName->sin_addr.S_un.S_addr);
+    int err = WSAHOST_NOT_FOUND;
+    if (ret == NO_ERROR && ppResult && *ppResult) {
+      PADDRINFOEXA addr = *ppResult;
+      int count = 0;
+      while (addr && count < 100) {
+        count++;
+        if (addr->ai_canonname)
+          _dns.LookupAlias(name, (LPCTSTR)CA2T(addr->ai_canonname, CP_UTF8));
+        if (addr->ai_addrlen >= sizeof(struct sockaddr_in) && 
+            addr->ai_family == AF_INET) {
+          struct sockaddr_in * ipName = (struct sockaddr_in *)addr->ai_addr;
+          _dns.LookupAddress(context, ipName->sin_addr.S_un.S_addr);
+        }
+        addr = addr->ai_next;
       }
-      addr = addr->ai_next;
+      err = 0;
     }
-    err = 0;
+    if (context)
+      _dns.LookupDone(context, err);
   }
-  if (context)
-    _dns.LookupDone(context, err);
   return ret;
 }
 
@@ -874,35 +880,37 @@ int CWsHook::GetAddrInfoExW(PCWSTR pName, PCWSTR pServiceName, DWORD dwNameSpace
   _sockets.ResetSslFd();
   void * context = NULL;
   CString name = pName;
-  if (!_test_state._exit)
-      context = _dns.LookupStart(name);
-  if (hints)
-    hints->ai_flags |= AI_CANONNAME;
+  if (!_dns.BlockLookup(name)) {
+    if (!_test_state._exit)
+        context = _dns.LookupStart(name);
+    if (hints)
+      hints->ai_flags |= AI_CANONNAME;
 
-  if (_GetAddrInfoExW)
-    ret = _GetAddrInfoExW(LPCWSTR(name), pServiceName, dwNameSpace, lpNspId,
-        hints, ppResult, timeout, lpOverlapped, lpCompletionRoutine,
-        lpHandle);
+    if (_GetAddrInfoExW)
+      ret = _GetAddrInfoExW(LPCWSTR(name), pServiceName, dwNameSpace, lpNspId,
+          hints, ppResult, timeout, lpOverlapped, lpCompletionRoutine,
+          lpHandle);
 
-  int err = WSAHOST_NOT_FOUND;
-  if (ret == NO_ERROR && ppResult && *ppResult) {
-    PADDRINFOEXW addr = *ppResult;
-    int count = 0;
-    while (addr && count < 100) {
-      count++;
-      if (addr->ai_canonname)
-        _dns.LookupAlias(name, addr->ai_canonname);
-      if (addr->ai_addrlen >= sizeof(struct sockaddr_in) && 
-          addr->ai_family == AF_INET) {
-        struct sockaddr_in * ipName = (struct sockaddr_in *)addr->ai_addr;
-        _dns.LookupAddress(context, ipName->sin_addr.S_un.S_addr);
+    int err = WSAHOST_NOT_FOUND;
+    if (ret == NO_ERROR && ppResult && *ppResult) {
+      PADDRINFOEXW addr = *ppResult;
+      int count = 0;
+      while (addr && count < 100) {
+        count++;
+        if (addr->ai_canonname)
+          _dns.LookupAlias(name, addr->ai_canonname);
+        if (addr->ai_addrlen >= sizeof(struct sockaddr_in) && 
+            addr->ai_family == AF_INET) {
+          struct sockaddr_in * ipName = (struct sockaddr_in *)addr->ai_addr;
+          _dns.LookupAddress(context, ipName->sin_addr.S_un.S_addr);
+        }
+        addr = addr->ai_next;
       }
-      addr = addr->ai_next;
+      err = 0;
     }
-    err = 0;
+    if (context)
+      _dns.LookupDone(context, err);
   }
-  if (context)
-    _dns.LookupDone(context, err);
   return ret;
 }
 

@@ -69,8 +69,9 @@ $page_description = "Comparison Test$testLabel.";
                 echo "<input type=\"hidden\" name=\"runs\" value=\"8\">\n";
                 echo "<input type=\"hidden\" name=\"discard\" value=\"1\">\n";
             } elseif( array_key_exists('origin', $_GET) && strlen($_GET['origin']) ) {
-                $script = 'setDnsName\t%HOSTR%\t' . htmlspecialchars($_GET['origin']) . '\nnavigate\t%URL%';
-                echo "<input type=\"hidden\" id=\"script\" name=\"script\" value=\"setDnsName&#09;%HOSTR%&#09;{$_GET['origin']}&#10;navigate&#09;%URL%\">\n";
+                $origin = htmlspecialchars($_GET['origin']);
+                $script = 'setDnsName\t%HOSTR%\t' . $origin . '\nnavigate\t%URL%';
+                echo "<input type=\"hidden\" id=\"script\" name=\"script\" value=\"setDnsName&#09;%HOSTR%&#09;$origin&#10;navigate&#09;%URL%\">\n";
                 echo "<input type=\"hidden\" name=\"runs\" value=\"5\">\n";
             } else {
                 $script = 'if\trun\t1\nif\tcached\t0\naddHeader\tX-PSA-Blocking-Rewrite: pss_blocking_rewrite\t%HOST_REGEX%\nendif\nendif\nsetDnsName\t%HOSTR%\tghs.google.com\noverrideHost\t%HOSTR%\tpsa.pssdemos.com\nnavigate\t%URL%';
@@ -113,7 +114,7 @@ $page_description = "Comparison Test$testLabel.";
                         $default = 'Enter a Website URL';
                         $testurl = trim($_GET['url']);
                         if( strlen($testurl) )
-                            $default = $testurl;
+                            $default = htmlspecialchars($testurl);
                         echo "<li><input type=\"text\" name=\"testurl\" id=\"testurl\" value=\"$default\" class=\"text large\" onfocus=\"if (this.value == this.defaultValue) {this.value = '';}\" onblur=\"if (this.value == '') {this.value = this.defaultValue;}\"></li>\n";
                         ?>
                         <li>

@@ -210,5 +210,6 @@ private:
   CStringA JSONEscape(CStringA src);
   bool FindJPEGMarker(BYTE * buff, DWORD len, DWORD &pos,
                       BYTE * &marker, DWORD &marker_len);
+  CStringA GetHistogram(CxImage& image);
 };
 

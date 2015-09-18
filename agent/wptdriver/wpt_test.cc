@@ -33,7 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../wpthook/shared_mem.h"
 #include "wpt_settings.h"
 
-static const DWORD SCRIPT_TIMEOUT_MULTIPLIER = 2;
 static const BYTE JPEG_DEFAULT_QUALITY = 30;
 static const DWORD MS_IN_SEC = 1000;
 static const DWORD BROWSER_WIDTH = 1024;
@@ -59,7 +58,8 @@ WptTest::WptTest(void):
   ,_activity_timeout(DEFAULT_ACTIVITY_TIMEOUT)
   ,_measurement_timeout(DEFAULT_TEST_TIMEOUT)
   ,has_gpu_(false)
-  ,lock_count_(0) {
+  ,lock_count_(0),
+  _script_timeout_multiplier(2) {
   QueryPerformanceFrequency(&_perf_frequency);
 
   // figure out what our working diriectory is
@@ -132,6 +132,7 @@ void WptTest::Reset(void) {
   _combine_steps = 0;
   _image_quality = JPEG_DEFAULT_QUALITY;
   _png_screen_shot = false;
+  _full_size_video = false;
   _minimum_duration = 0;
   _user_agent.Empty();
   _add_headers.RemoveAll();
@@ -157,6 +158,7 @@ void WptTest::Reset(void) {
   _run_error.Empty();
   _test_error.Empty();
   _custom_metrics.Empty();
+  _has_test_timed_out = false;
 }
 
 /*-----------------------------------------------------------------------------
@@ -246,6 +248,8 @@ bool WptTest::Load(CString& test) {
                                      min(100, _ttoi(value.Trim())));
         else if (!key.CompareNoCase(_T("pngScreenShot")) &&_ttoi(value.Trim()))
           _png_screen_shot = true;
+        else if (!key.CompareNoCase(_T("fullSizeVideo")) &&_ttoi(value.Trim()))
+          _full_size_video = true;
         else if (!key.CompareNoCase(_T("time")))
           _minimum_duration = MS_IN_SEC * max(_minimum_duration, 
                                min(DEFAULT_TEST_TIMEOUT, _ttoi(value.Trim())));
@@ -286,8 +290,16 @@ bool WptTest::Load(CString& test) {
         else if (!key.CompareNoCase(_T("addCmdLine")))
           _browser_additional_command_line = value;
         else if (!key.CompareNoCase(_T("continuousVideo")) &&
-                 _ttoi(value.Trim()))
+          _ttoi(value.Trim()))
           _continuous_video = true;
+        else if (!key.CompareNoCase(_T("timeout"))) {
+          _test_timeout = _ttoi(value.Trim()) * 1000;
+          _script_timeout_multiplier = 1;
+          if (_test_timeout < 0)
+            _test_timeout = 0;
+          else if (_test_timeout > 3600000)
+            _test_timeout = 3600000;
+        }
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {
       // grab the rest of the response as the script
@@ -298,12 +310,15 @@ bool WptTest::Load(CString& test) {
     line = test.Tokenize(_T("\r\n"), linePos);
   }
 
+  if (_measurement_timeout < _test_timeout)
+    _measurement_timeout = _test_timeout;
+
   if (_specific_run) {
     _discard = 0;
   }
 
   if (_script.GetLength())
-    _test_timeout *= SCRIPT_TIMEOUT_MULTIPLIER;
+    _test_timeout *= _script_timeout_multiplier;
 
   WptTrace(loglevel::kFunction, _T("WptTest::Load() - Loaded test %s\n"), 
                                                                 (LPCTSTR)_id);
@@ -392,7 +407,7 @@ bool WptTest::Done() {
   bool ret = false;
 
   _active = false;
-  if (_script_commands.IsEmpty())
+  if (_script_commands.IsEmpty() || _has_test_timed_out)
     ret = true;
 
   return ret;
@@ -683,6 +698,8 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
     ReportData();
     continue_processing = false;
     consumed = false;
+  } else if (cmd == _T("seteventname")) {
+    _current_event_name = CT2A(command.target.Trim());
   } else {
     continue_processing = false;
     consumed = false;
@@ -758,6 +775,9 @@ bool WptTest::PreProcessScriptCommand(ScriptCommand& command) {
       }
       if (!_device_scale_factor.GetLength())
         _device_scale_factor.Empty();
+    } else if (cmd == _T("setuseragent")) {
+      _user_agent = CT2A(command.target.Trim());
+      processed = false;
     } else {
       processed = false;
     }
@@ -1066,6 +1086,7 @@ void WptTest::ReportData() {
 -----------------------------------------------------------------------------*/
 void WptTest::CollectDataDone() {
   bool removed = false;
+  _current_event_name.Empty();
   do {
     removed = false;
     if (!_script_commands.IsEmpty()) {

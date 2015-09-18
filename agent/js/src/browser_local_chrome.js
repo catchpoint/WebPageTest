@@ -57,6 +57,9 @@ function BrowserLocalChrome(app, args) {
   this.serverUrl_ = undefined;  // WebDriver server URL for WebDriver tests.
   this.devToolsPort_ = 1234;  // If running without chromedriver.
   this.devToolsUrl_ = undefined;    // If running without chromedriver.
+  this.chromeFlags_ = CHROME_FLAGS;
+  this.task_ = args.task;
+  this.supportsTracing = true;
 }
 util.inherits(BrowserLocalChrome, browser_base.BrowserBase);
 /** @constructor */
@@ -101,9 +104,12 @@ BrowserLocalChrome.prototype.startWdServer = function(browserCaps) {
 BrowserLocalChrome.prototype.startBrowser = function() {
   'use strict';
   // TODO(klm): clean profile, see how ChromeDriver does it.
-  this.startChildProcess(this.chrome_ || 'chrome',
-      CHROME_FLAGS.concat('-remote-debugging-port=' + this.devToolsPort_),
-      'Chrome');
+  var flags = CHROME_FLAGS;
+  flags.push('-remote-debugging-port=' + this.devToolsPort_);
+  if (this.task_.ignoreSSL) {
+    flags.push('--ignore-certificate-errors');
+  }
+  this.startChildProcess(this.chrome_ || 'chrome', flags, 'Chrome');
   // Make sure we set devToolsUrl_ only after the child process start success.
   this.app_.schedule('Set DevTools URL', function() {
     this.devToolsUrl_ = 'http://localhost:' + this.devToolsPort_ + '/json';

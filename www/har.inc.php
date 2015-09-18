@@ -52,9 +52,9 @@ function GenerateHAR($id, $testPath, $options) {
         $json = json_encode($harData);
     } elseif ($json_encode_good) {
       if ($pretty_print)
-        $json = json_encode($harData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        $json = json_encode($harData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
       else
-        $json = json_encode($harData, JSON_UNESCAPED_UNICODE);
+        $json = json_encode($harData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     } else {    
       $jsonLib = new Services_JSON();
       $json = $jsonLib->encode($harData);
@@ -132,17 +132,6 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
       $pd['id'] = "page_{$run}_{$cached}";
       $pd['pageTimings'] = array( 'onLoad' => $data['docTime'], 'onContentLoad' => -1, '_startRender' => $data['render'] );
       
-      // add the pagespeed score
-      if (gz_is_file("$testPath/{$run}{$cached_text}_pagespeed.txt")) {
-        $pagespeed_data = LoadPageSpeedData("$testPath/{$run}{$cached_text}_pagespeed.txt");
-        if ($pagespeed_data) {
-          $score = GetPageSpeedScore(null, $pagespeed_data);
-          if (strlen($score)) {
-            $pd['_pageSpeed'] = array('score' => $score, 'result' => $pagespeed_data);
-          }
-        }
-      }
-      
       // dump all of our metrics into the har data as custom fields
       foreach($data as $name => $value) {
         if (!is_array($value))
@@ -211,8 +200,17 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
         if( isset($parts['query']) ) {
           $qs = array();
           parse_str($parts['query'], $qs);
-          foreach($qs as $name => $val)
-            $request['queryString'][] = array('name' => (string)$name, 'value' => (string)$val );
+          foreach($qs as $name => $val) {
+            if (!mb_detect_encoding($name, 'UTF-8', true)) {
+              // not a valid UTF-8 string. URL encode it again so it can be safely consumed by the client.
+              $name = urlencode($name);
+            }
+            if (!mb_detect_encoding($val, 'UTF-8', true)) {
+              // not a valid UTF-8 string. URL encode it again so it can be safely consumed by the client.
+              $val = urlencode($val);
+            }
+            $request['queryString'][] = array('name' => (string)$name, 'value' => (string)$val);
+          }
         }
         
         if( !strcasecmp(trim($request['method']), 'post') ) {

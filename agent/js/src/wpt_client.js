@@ -50,6 +50,11 @@ var JOB_RUNS = 'runs';
 var JOB_TEST_ID = 'Test ID';
 
 var DEFAULT_JOB_TIMEOUT = 120000;
+var MAX_JOB_TIMEOUT = 600000;
+
+// After 30 minutes kill any individual job in case something went VERY wrong
+var JOB_WATCHDOG_TIMEOUT = 1800000;
+
 /** Allow test access. */
 exports.JOB_FINISH_TIMEOUT = 30000;
 /** Allow test access. */
@@ -108,6 +113,7 @@ function Job(client, task) {
   this.runs = runs;
   this.isFirstViewOnly = jsonBoolean(task, JOB_FIRST_VIEW_ONLY);
   this.isReplay = jsonBoolean(task, JOB_REPLAY);
+  this.task.hostsFile = constructHostsFile(task);
   this.runNumber = this.isReplay ? 0 : 1;
   this.isCacheWarm = false;
   this.resultFiles = [];
@@ -115,6 +121,8 @@ function Job(client, task) {
   this.agentError = undefined;
   this.testError = undefined;
   this.retryError = undefined;
+  this.timeout = (task.timeout * 1000) || client.jobTimeout;
+  this.processScript(task['script']);
 }
 /** Public class. */
 exports.Job = Job;
@@ -128,6 +136,109 @@ function jsonBoolean(task, attr) {
     return !!value;
   }
   throw new Error('Invalid "' + attr + '" number is not 0 or 1');
+}
+
+function constructHostsFile(task) {
+  // Start with a default localhost hosts file
+  var hosts = "127.0.0.1 localhost";
+  try {
+    var block = task['block'];
+    if (block !== undefined) {
+      var entries = block.split(" ");
+      var count = entries.length;
+      for (var i = 0; i < count; i++) {
+        var host = entries[i].trim();
+        if (host.length) {
+          hosts += " " + host;
+        }
+      }
+    }
+  } catch (err) {
+  }
+  hosts += "\n";
+  return hosts;
+}
+
+Job.prototype.processScript = function(script) {
+  try {
+    if (script !== undefined) {
+      logger.debug("Processing script:\r\n" + script);
+      var lines = script.split("\n");
+      var lineCount = lines.length;
+      for (var l = 0; l < lineCount; l++) {
+        var parts = lines[l].split("\t");
+        if (parts.length > 0) {
+          this.processScriptCommand(parts[0], parts[1], parts[2]);
+        }
+      }
+    }
+  } catch (err) {
+    logger.error("Exception while processing script: " + err.message);
+  }
+}
+
+Job.prototype.processScriptCommand = function(command, value, extra) {
+  logger.debug("Processing script command :" + command);
+  try {
+    command = command.toLowerCase();
+    if (command == 'navigate') {
+      if (value !== undefined && value.trim().length)
+        this.task.url = value.trim();
+    } else if (command == 'setdns') {
+      if (value !== undefined && extra !== undefined) {
+        var host = value.trim();
+        var ip = extra.trim();
+        if (host.length && ip.length)
+          this.task.hostsFile += ip + " " + host + "\n";
+      } else {
+        logger.debug("Invalid setDns command parameters");
+      }
+    } else if (command == 'setdnsname') {
+      // special-case the SPOF blackhole testing
+      if (value !== undefined &&
+          extra !== undefined &&
+          extra.trim().toLowerCase() == 'blackhole.webpagetest.org') {
+        var host = value.trim();
+        if (host.length)
+          this.task.hostsFile += "72.66.115.13 " + host + "\n";
+      } else {
+        logger.debug("Invalid setDnsName command parameters");
+      }
+    } else if (command == 'block') {
+      if (value !== undefined) {
+        hosts = "";
+        var entries = value.split(" ");
+        var count = entries.length;
+        for (var i = 0; i < count; i++) {
+          var host = entries[i].trim();
+          if (host.length) {
+            hosts += " " + host;
+          }
+        }
+        hosts = hosts.trim();
+        if (hosts.length)
+          this.task.hostsFile += "127.0.0.1 " + hosts + "\n";
+      } else {
+        logger.debug("Invalid block command parameters");
+      }
+    } else if (command == 'settimeout') {
+      if (value !== undefined) {
+        timeout = parseInt(value) * 1000;
+        if (timeout > 0 && timeout <= MAX_JOB_TIMEOUT) {
+          this.timeout = timeout;
+          logger.debug("New job timeout: " + timeout);
+        } else {
+          logger.debug("Invalid timeout: " + timeout);
+        }
+      } else {
+        logger.debug("Invalid setTimeout command parameters");
+      }
+    } else {
+      logger.error("Unexpected script command: " + command);
+    }
+  } catch(err) {
+    logger.error("Exception while processing script command '" + command +"': " + err.message);
+  }
 }
 
 /**
@@ -250,11 +361,16 @@ function Client(app, args) {
   this.timeoutTimer_ = undefined;
   this.currentJob_ = undefined;
   this.jobTimeout = args.jobTimeout || DEFAULT_JOB_TIMEOUT;
+  this.onPrepareJob = undefined;
   this.onStartJobRun = undefined;
   this.onAbortJob = undefined;
   this.onMakeReady = undefined;
+  this.onAlive = undefined;
   this.handlingUncaughtException_ = undefined;
   this.handlingSignal_ = undefined;
+  this.runningJob_ = false;
+  this.exitTests_ = args.exitTests || 0;
+  this.testCount_ = 0;
 
   exports.process.on('uncaughtException', this.onUncaughtException_.bind(this));
   SIGNAL_NAMES.forEach(function(signal_name) {
@@ -358,43 +474,52 @@ Client.prototype.onUncaughtException_ = function(e) {
  */
 Client.prototype.requestNextJob_ = function() {
   'use strict';
-  this.app_.schedule('Check if agent is ready for new jobs', function() {
-    return (this.onMakeReady ? this.onMakeReady() : undefined);
-  }.bind(this)).then(function() {
-    var getWorkUrl = url.resolve(this.baseUrl_,
-      GET_WORK_SERVLET +
-        '?location=' + encodeURIComponent(this.location_) +
-        (this.name_ ?
-          ('&pc=' + encodeURIComponent(this.name_)) : (this.deviceSerial_ ?
-          ('&pc=' + encodeURIComponent(this.deviceSerial_)) : '')) +
-        (this.apiKey_ ? ('&key=' + encodeURIComponent(this.apiKey_)) : '') +
-        '&f=json');
+  if (!this.runningJob_) {
+    if (this.exitTests_ && this.testCount_ >= this.exitTests_) {
+      logger.info('Max test count reached, exiting...');
+      process.exit(0);
+    }
+    this.app_.schedule('Check if agent is ready for new jobs', function() {
+      if (this.onAlive)
+        this.onAlive();
+      return (this.onMakeReady ? this.onMakeReady() : undefined);
+    }.bind(this)).then(function() {
+      var getWorkUrl = url.resolve(this.baseUrl_,
+        GET_WORK_SERVLET +
+          '?location=' + encodeURIComponent(this.location_) +
+          (this.name_ ?
+            ('&pc=' + encodeURIComponent(this.name_)) : (this.deviceSerial_ ?
+            ('&pc=' + encodeURIComponent(this.deviceSerial_)) : '')) +
+          (this.apiKey_ ? ('&key=' + encodeURIComponent(this.apiKey_)) : '') +
+          '&f=json');
 
-    logger.info('Get work: %s', getWorkUrl);
-    var request = http.get(url.parse(getWorkUrl), function(res) {
-      exports.processResponse(res, function(e, responseBody) {
-        if (e || responseBody === '') {
-          this.emit('nojob');
-        } else if (responseBody[0] === '<') {
-          // '<' is a sign that it's HTML, most likely an error page.
-          logger.warn('Error response? ' + responseBody);
-          this.emit('nojob');
-        } else if (responseBody === 'shutdown') {
-          // We could simply process.exit() here
-          this.emit('shutdown');
-        } else {  // We got a job
-          this.processJobResponse_(responseBody);
-        }
+      logger.info('Get work: %s', getWorkUrl);
+      var request = http.get(url.parse(getWorkUrl), function(res) {
+        exports.processResponse(res, function(e, responseBody) {
+          if (e || responseBody === '') {
+            this.emit('nojob');
+          } else if (responseBody[0] === '<') {
+            // '<' is a sign that it's HTML, most likely an error page.
+            logger.warn('Error response? ' + responseBody);
+            this.emit('nojob');
+          } else if (responseBody === 'shutdown') {
+            // We could simply process.exit() here
+            this.emit('shutdown');
+          } else {  // We got a job
+            this.testCount_++;
+            this.processJobResponse_(responseBody);
+          }
+        }.bind(this));
       }.bind(this));
-    }.bind(this));
-    request.on('error', function(e) {
-      logger.warn('Got error: ' + e.message);
+      request.on('error', function(e) {
+        logger.warn('Got error: ' + e.message);
+        this.emit('nojob');
+      }.bind(this));
+    }.bind(this), function(e) {
+      logger.warn('Agent is not ready: ' + e.message);
       this.emit('nojob');
     }.bind(this));
-  }.bind(this), function(e) {
-    logger.warn('Agent is not ready: ' + e.message);
-    this.emit('nojob');
-  }.bind(this));
+  }
 };
 
 /**
@@ -439,7 +564,17 @@ Client.prototype.processJobResponse_ = function(responseBody) {
   }
   logger.info('Got job: %s', responseBody);
   this.currentJob_ = null;
-  this.startNextRun_(job);
+  this.runningJob_ = true;
+  if (this.onPrepareJob) {
+    this.onPrepareJob(job).then(function() {
+      this.startNextRun_(job);
+    }.bind(this), function(e) {
+      job.error = e.message;
+      this.abortJob_(job);
+    }.bind(this));
+  } else {
+    this.startNextRun_(job);
+  }
 };
 
 /**
@@ -466,13 +601,16 @@ Client.prototype.startNextRun_ = function(job) {
   'use strict';
   job.testError = undefined;  // Reset previous run's error, if any.
   job.agentError = undefined;
+  if (this.onAlive)
+    this.onAlive();
   // For comparison in finishRun_()
   this.currentJob_ = job;
   // Set up job timeout
+  logger.debug("Setting watchdog timeout to " + JOB_WATCHDOG_TIMEOUT + "ms");
   this.timeoutTimer_ = global.setTimeout(function() {
     job.testError = 'timeout';
     this.abortJob_(job);
-  }.bind(this), this.jobTimeout + exports.JOB_FINISH_TIMEOUT);
+  }.bind(this), JOB_WATCHDOG_TIMEOUT);
 
   if (this.onStartJobRun) {
     try {
@@ -510,67 +648,33 @@ Client.prototype.finishRun_ = function(job, isRunFinished) {
   global.clearTimeout(this.timeoutTimer_);
   this.timeoutTimer_ = undefined;
   this.currentJob_ = undefined;
+  if (this.onAlive)
+    this.onAlive();
 
-  this.app_.schedule('Verify that the agent is online', function() {
-    if (SIGTERM === this.handlingSignal_ || SIGINT === this.handlingSignal_) {
-      return false;  // Don't check readiness if we're aborting.
-    } else if (this.onMakeReady) {
-      return this.onMakeReady();  // Returns true if wasOffline & recovered.
-    } else {
-      return false;  // Assume we're online.
-    }
-  }.bind(this)).addBoth(function(errOrBool) {
-    var wasOffline = (errOrBool !== false);
-    if (wasOffline) {
-      job.agentError = job.agentError || 'Agent was offline';
-    }
-    var isOffline = (errOrBool instanceof Error);
-    if (isOffline) {
-      logger.error('Agent is offline: ' + errOrBool.message);
-      job.agentError = job.agentError || errOrBool.message;
-    }
+  var isAbort = (
+      (SIGTERM === this.handlingSignal_ ||
+       SIGINT === this.handlingSignal_) ||  // Abort run
+      (SIGABRT === this.handlingSignal_ && isRunFinished));  // Abort job
+  if (isAbort) {
+    job.agentError = this.handlingSignal_;
+  }
 
-    var isAbort = (
-        (SIGTERM === this.handlingSignal_ ||
-         SIGINT === this.handlingSignal_) ||  // Abort run
-        (SIGABRT === this.handlingSignal_ && isRunFinished));  // Abort job
-    if (isAbort) {
-      job.agentError = this.handlingSignal_;
-    }
+  var isJobFinished = (job.runNumber === job.runs && isRunFinished) ||
+        // Failed WPR record-run terminates the whole job.
+        (job.runNumber === 0 && job.testError);
 
-    // Retry on agentError, at most once per run, but only if we're online.
-    //
-    // There are many other definitions that we could use instead, e.g.
-    //   retry on any job.testError, retry up to N times per job, etc.
-    var shouldRetry = (
-        !!job.agentError && !isOffline && !isAbort && !job.retryError);
+  logger.alert('%s run %d%s%s/%d of %sjob %s%s%s%s',
+      ((job.testError || job.agentError) ? 'Failed' : 'Finished'),
+      job.runNumber,
+      (job.isFirstViewOnly ? '' : (job.isCacheWarm ? 'b' : 'a')),
+      (job.retryError ? '\'' : ''),
+      job.runs, (isJobFinished ? 'finished ' : ''),
+      job.id, (job.testError || job.agentError ? ': ' : ''),
+      (job.testError || ''), (job.testError && job.agentError ? ' ' : ''),
+      (job.agentError ? '(' + job.agentError + ')' : ''));
 
-    var isJobFinished = (!shouldRetry && (
-          isAbort || wasOffline || isOffline ||
-          (job.runNumber === job.runs && isRunFinished) ||
-          // Failed WPR record-run terminates the whole job.
-          (job.runNumber === 0 && job.testError)));
-
-    logger.alert('%s run %d%s%s/%d of %sjob %s%s%s%s',
-        ((job.testError || job.agentError) ? 'Failed' : 'Finished'),
-        job.runNumber,
-        (job.isFirstViewOnly ? '' : (job.isCacheWarm ? 'b' : 'a')),
-        (job.retryError ? '\'' : ''),
-        job.runs, (isJobFinished ? 'finished ' : ''),
-        job.id, (job.testError || job.agentError ? ': ' : ''),
-        (job.testError || ''), (job.testError && job.agentError ? ' ' : ''),
-        (job.agentError ? '(' + job.agentError + ')' : ''));
-
-    if (shouldRetry) {
-      job.retryError = job.agentError || 'Unknown';
-      job.isCacheWarm = false;
-      this.startNextRun_(job);
-      return;
-    }
-
-    this.submitResult_(job, isJobFinished,
-        this.endOfRun_.bind(this, job, isRunFinished, isJobFinished));
-  }.bind(this));
+  this.submitResult_(job, isJobFinished,
+      this.endOfRun_.bind(this, job, isRunFinished, isJobFinished));
 };
 
 /**
@@ -589,6 +693,7 @@ Client.prototype.endOfRun_ = function(job, isRunFinished, isJobFinished, e) {
     logger.error('Unable to submit result: %s', e.stack);
   }
   if (e || isJobFinished) {
+    this.runningJob_ = false;
     this.emit('done', job);
   } else {
     // Continue running
@@ -606,8 +711,13 @@ Client.prototype.endOfRun_ = function(job, isRunFinished, isJobFinished, e) {
 
 function createFileName(job, fileName) {
   'use strict';
-  return job.runNumber + (job.isCacheWarm ? '_Cached' : '') +
-      ('.' !== fileName[0] ? '_' : '') + fileName;
+  if (fileName == 'histograms.json') {
+    var prefix = job.runNumber + '.' + (job.isCacheWarm ? '1' : '0') + '.';
+  } else {
+    var prefix = job.runNumber + (job.isCacheWarm ? '_Cached' : '') +
+                 ('.' !== fileName[0] ? '_' : '');
+  }
+  return prefix + fileName;
 }
 
 function createZip(zipFileMap, fileNamer) {
@@ -639,81 +749,69 @@ function createZip(zipFileMap, fileNamer) {
  */
 Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
   'use strict';
-  logger.extra('postResultFile: job=%s resultFile=%s fields=%j callback=%s',
-      job.id, (resultFile ? 'present' : null), fields, callback);
-  var servlet = WORK_DONE_SERVLET;
-  var mp = new multipart.Multipart();
-  mp.addPart('id', job.id, ['Content-Type: text/plain']);
-  mp.addPart('location', this.location_);
-  if (this.apiKey_) {
-    mp.addPart('key', this.apiKey_);
-  }
-  if (this.name_) {
-    mp.addPart('pc', this.name_);
-  } else if (this.deviceSerial_) {
-    mp.addPart('pc', this.deviceSerial_);
-  }
-  if (fields) {
-    fields.forEach(function(nameValue) {
-      mp.addPart(nameValue[0], nameValue[1]);
-    });
-  }
-  if (resultFile) {
-    if (exports.ResultFile.ResultType.IMAGE === resultFile.resultType ||
-        exports.ResultFile.ResultType.PCAP === resultFile.resultType) {
-      // Images and pcaps must be uploaded to the RESULT_IMAGE_SERVLET, with no
-      // resultType or run/cache parts.
-      //
-      // If we submit the pcap via the regular servlet, it would be used for
-      // the waterfall instead of the DevTools trace, which we don't want.
-      servlet = RESULT_IMAGE_SERVLET;
-    } else {
-      if (resultFile.resultType) {
-        mp.addPart(resultFile.resultType, '1');
-      }
-      mp.addPart('_runNumber', String(job.runNumber));
-      mp.addPart('_cacheWarmed', job.isCacheWarm ? '1' : '0');
+  try {
+    logger.extra('postResultFile: job=%s resultFile=%s fields=%j callback=%s',
+        job.id, (resultFile ? 'present' : null), fields, callback);
+    var servlet = WORK_DONE_SERVLET;
+    var mp = new multipart.Multipart();
+    mp.addPart('id', job.id, ['Content-Type: text/plain']);
+    mp.addPart('location', this.location_);
+    mp.addPart('timeline', 1);
+    if (this.apiKey_) {
+      mp.addPart('key', this.apiKey_);
     }
-    var fileName = createFileName(job, resultFile.fileName);
-    mp.addFilePart(
-        'file', fileName, resultFile.contentType, resultFile.content);
-    if (logger.isLogging('extra')) {
-      logger.debug('Writing a local copy of %s', fileName);
-      var body = resultFile.content;
-      var bodyBuffer = (body instanceof Buffer ? body : new Buffer(body));
-      fs.mkdir('/data/results', parseInt('0755', 8), function(e) {
-        if (!e || 'EEXIST' === e.code) {
-          var subdir = path.join('/data/results', job.id);
-          fs.mkdir(subdir, parseInt('0755', 8), function(e) {
-            if (!e || 'EEXIST' === e.code) {
-              fs.writeFile(path.join(subdir, fileName), bodyBuffer);
-            }
-          });
-        }
+    if (this.name_) {
+      mp.addPart('pc', this.name_);
+    } else if (this.deviceSerial_) {
+      mp.addPart('pc', this.deviceSerial_);
+    }
+    if (fields) {
+      fields.forEach(function(nameValue) {
+        mp.addPart(nameValue[0], nameValue[1]);
       });
     }
-  }
-  // TODO(klm): change body to chunked request.write().
-  // Only makes sense if done for file content, the rest is peanuts.
-  var mpResponse = mp.getHeadersAndBody();
-
-  var options = {
-      method: 'POST',
-      host: this.baseUrl_.hostname,
-      port: this.baseUrl_.port,
-      path: this.baseUrl_.path.replace(/\/+$/, '') + '/' + servlet,
-      headers: mpResponse.headers
-    };
-  var request = http.request(options, function(res) {
-    exports.processResponse(res, callback);
-  });
-  request.on('error', function(e) {
-    logger.warn('Unable to post result: ' + e.message);
-    if (callback) {
-      callback(e, '');
+    if (resultFile) {
+      if (exports.ResultFile.ResultType.IMAGE === resultFile.resultType ||
+          exports.ResultFile.ResultType.PCAP === resultFile.resultType) {
+        // Images and pcaps must be uploaded to the RESULT_IMAGE_SERVLET, with no
+        // resultType or run/cache parts.
+        //
+        // If we submit the pcap via the regular servlet, it would be used for
+        // the waterfall instead of the DevTools trace, which we don't want.
+        servlet = RESULT_IMAGE_SERVLET;
+      } else {
+        if (resultFile.resultType) {
+          mp.addPart(resultFile.resultType, '1');
+        }
+        mp.addPart('_runNumber', String(job.runNumber));
+        mp.addPart('_cacheWarmed', job.isCacheWarm ? '1' : '0');
+      }
+      var fileName = createFileName(job, resultFile.fileName);
+      mp.addFilePart(
+          'file', fileName, resultFile.contentType, resultFile.content);
     }
-  });
-  request.end(mpResponse.bodyBuffer, 'UTF-8');
+    // TODO(klm): change body to chunked request.write().
+    // Only makes sense if done for file content, the rest is peanuts.
+    var mpResponse = mp.getHeadersAndBody();
+
+    var options = {
+        method: 'POST',
+        host: this.baseUrl_.hostname,
+        port: this.baseUrl_.port,
+        path: this.baseUrl_.path.replace(/\/+$/, '') + '/' + servlet,
+        headers: mpResponse.headers
+      };
+    var request = http.request(options, function(res) {
+      exports.processResponse(res, callback);
+    });
+    request.on('error', function(e) {
+      logger.warn('Unable to post result: ' + e.message);
+      if (callback) {
+        callback(e, '');
+      }
+    });
+    request.end(mpResponse.bodyBuffer, 'UTF-8');
+  } catch(e) {}
 };
 
 /**
@@ -730,15 +828,17 @@ Client.prototype.submitResult_ = function(job, isJobFinished,
   logger.debug('submitResult_: job=%s', job.id);
   var filesToSubmit = job.resultFiles.slice();
   // If there are job.zipResultFiles, add results.zip to job.resultFiles.
-  if (Object.getOwnPropertyNames(job.zipResultFiles).length > 0) {
-    var zipResultFiles = job.zipResultFiles;
-    job.zipResultFiles = {};
-    filesToSubmit.push(new ResultFile(
-        /*resultType=*/undefined,
-        'results.zip',
-        'application/zip',
-        createZip(zipResultFiles, createFileName.bind(undefined, job))));
-  }
+  try {
+    if (Object.getOwnPropertyNames(job.zipResultFiles).length > 0) {
+      var zipResultFiles = job.zipResultFiles;
+      job.zipResultFiles = {};
+      filesToSubmit.push(new ResultFile(
+          /*resultType=*/undefined,
+          'results.zip',
+          'application/zip',
+          createZip(zipResultFiles, createFileName.bind(undefined, job))));
+    }
+  } catch(e) {}
   job.resultFiles = [];
   // Chain submitNextResult calls off of the HTTP request callback
   var submitNextResult = (function(e) {

@@ -52,6 +52,7 @@ function ReprocessVideo($id) {
 * @param mixed $cached
 */
 function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
+  global $max_load;
   $cachedText = '';
   if( $cached )
     $cachedText = '_Cached';
@@ -59,12 +60,12 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
   $crop = '';
   if (!is_file($videoFile))
     $videoFile = "$testPath/$run{$cachedText}_video.avi";
-  if (!is_file($videoFile))
-    $videoFile = "$testPath/$run{$cachedText}_appurify.mp4";
     
   if (is_file($videoFile)) {
     $videoDir = "$testPath/video_$run" . strtolower($cachedText);
     if (!is_file("$videoDir/video.json")) {
+      if (isset($max_load) && $max_load > 0)
+        WaitForSystemLoad($max_load, 3600);
       if (is_dir($videoDir))
         delTree($videoDir, false);
       if (!is_dir($videoDir))
@@ -223,14 +224,15 @@ function IsOrangeAVIFrame($file) {
 * @param mixed $videoDir
 */
 function EliminateDuplicateAVIFiles($videoDir, $viewport) {
-  $crop = '+0+4';
+  $crop = '+0+6';
   if (isset($viewport)) {
     // Ignore a 4-pixel header on the actual viewport to allow for the progress bar and
     // a 6 pixel right margin to allow for the scroll bar that fades in and out.
-    $topMargin = 4;
+    $topMargin = 6;
     $rightMargin = 6;
+    $bottomMargin = 6;
     $top = $viewport['y'] + $topMargin;
-    $height = max($viewport['height'] - $topMargin, 1);
+    $height = max($viewport['height'] - $topMargin - $bottomMargin, 1);
     $left = $viewport['x'];
     $width = max($viewport['width'] - $rightMargin, 1);
     $crop = "{$width}x{$height}+{$left}+{$top}";

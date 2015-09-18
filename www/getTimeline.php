@@ -1,7 +1,37 @@
 <?php
 include 'common.inc'; 
 $ok = false;
-if (gz_is_file("$testPath/$run{$cachedText}_timeline.json")) {
+if (gz_is_file("$testPath/$run{$cachedText}_trace.json")) {
+  $ok = true;
+  header("Content-disposition: attachment; filename=timeline.json");
+  header ("Content-type: application/json");
+  
+  // Trim off the beginning "traceEvents" object and the trailing }
+  // and reduce the trace to just an array which is what the timeline
+  // viewer expects
+  $filename = "$testPath/$run{$cachedText}_trace.json";
+  $buffer = '';
+  $handle = gzopen("$filename.gz", 'rb');
+  if ($handle === false)
+      $handle = gzopen($filename, 'rb');
+  if ($handle !== false) {
+    $started = false;
+    while (!gzeof($handle)) {
+      echo $buffer;
+      $buffer = gzread($handle, 1024 * 1024);  // 1MB at a time
+      if (!$started) {
+        $started = true;
+        $pos = strpos($buffer, '[');
+        if ($pos !== false)
+          $buffer = substr($buffer, $pos);
+      }
+      ob_flush();
+      flush();
+    }
+    echo rtrim($buffer, "\r\n}");
+    gzclose($handle);
+  }
+} elseif (gz_is_file("$testPath/$run{$cachedText}_timeline.json")) {
   $ok = true;
   header("Content-disposition: attachment; filename=timeline.json");
   header ("Content-type: application/json");

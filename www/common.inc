@@ -71,8 +71,8 @@ if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
   $userIsBot = true;
 
 // constants
-define('VER_WEBPAGETEST', '2.16');   // webpagetest version
-define('VER_CSS', 67);           // version of the sitewide css file
+define('VER_WEBPAGETEST', '2.18');   // webpagetest version
+define('VER_CSS', 68);           // version of the sitewide css file
 define('VER_JS', 32);            // version of the sitewide javascript file
 define('VER_JS_TEST', 30);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);     // version of the javascript specific to the test running status page
@@ -111,6 +111,7 @@ if (!array_key_exists('nolinks', $settings))
     $settings['nolinks'] = 0;
 if (!array_key_exists('shard_tests', $settings))
     $settings['shard_tests'] = 0;
+$max_load = GetSetting('render_max_load');
 
 $privateInstall = true;
 if( array_key_exists('HTTP_HOST', $_SERVER) && stristr($_SERVER['HTTP_HOST'] , '.webpagetest.org') !== false )
@@ -142,6 +143,8 @@ SetLocaleFromBrowser();
 
 // some myBB integration to get the requesting user
 $supportsAuth = false;
+if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret'))
+  $supportsAuth = true;
 $uid = NULL;
 $user = NULL;
 $admin = false;
@@ -170,15 +173,30 @@ if (is_dir('./forums') && (!array_key_exists('disableMybb', $settings) || !$sett
     ob_end_clean();
 }
 
+if (!$admin && isset($_COOKIE['asid']) && isset($_COOKIE['google_id']) && isset($_COOKIE['google_email'])) {
+  $lock = Lock('Auth', true, 10);
+  if ($lock) {
+    $sessions = json_decode(gz_file_get_contents('./dat/admin_sessions.dat'), true);
+    $session = $_COOKIE['asid'];
+    if ($sessions &&
+        isset($sessions[$session]) &&
+        $sessions[$session]['id'] == $_COOKIE['google_id'] &&
+        $sessions[$session]['email'] == $_COOKIE['google_email']) {
+      $admin = true;
+    }
+    Unlock($lock);
+  }
+}
+
 // assign a unique ID to each person
+$isFirstVisit = true;
 $isOwner = false;
 $owner = null;
 if( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
+  $isFirstVisit = false;
   $owner = $_COOKIE['google_id'];
-  if (!isset($user))
-    $user = $owner;
-}
-else if( isset($_COOKIE['o']) && strlen($_COOKIE['o']) ){
+} else if( isset($_COOKIE['o']) && strlen($_COOKIE['o']) ){
+  $isFirstVisit = false;
   $owner = $_COOKIE['o'];
 }else{
   $owner = sha1(uniqid(uniqid('', true), true));

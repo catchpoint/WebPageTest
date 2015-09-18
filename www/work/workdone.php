@@ -6,6 +6,7 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('getBreakdown');
   newrelic_add_custom_tracer('GetVisualProgress');
   newrelic_add_custom_tracer('DevToolsGetConsoleLog');
+  newrelic_add_custom_tracer('WaitForSystemLoad');
 }
 
 chdir('..');
@@ -27,7 +28,7 @@ if (!isset($included)) {
   header("Cache-Control: no-cache, must-revalidate");
   header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 }
-set_time_limit(60*5);
+set_time_limit(3600);
 ignore_user_abort(true);
 
 $key  = $_REQUEST['key'];
@@ -124,7 +125,7 @@ if (ValidateTestId($id)) {
         // update the location time
         if( strlen($location) ) {
             if( !is_dir('./tmp') )
-                mkdir('./tmp');
+                mkdir('./tmp', 0777, true);
             touch( "./tmp/$location.tm" );
         }
         
@@ -132,6 +133,10 @@ if (ValidateTestId($id)) {
         $ini = parse_ini_file("$testPath/testinfo.ini");
         $time = time();
         $testInfo['last_updated'] = $time;
+        // Allow for the test agents to indicate that they are including a
+        // trace-based timeline (mostly for the mobile agents that always include it)
+        if (isset($_REQUEST['timeline']) && $_REQUEST['timeline'])
+          $testInfo['timeline'] = 1;
         $testInfo_dirty = true;
 
         if (!strlen($tester) &&
@@ -164,7 +169,10 @@ if (ValidateTestId($id)) {
             if( is_file("$testPath/$textFile") ) {
               $parts = pathinfo($textFile);
               $ext = $parts['extension'];
-              if( !strcasecmp( $ext, 'txt') || !strcasecmp( $ext, 'json') || !strcasecmp( $ext, 'csv') ) {
+              if( !strcasecmp( $ext, 'txt') ||
+                  !strcasecmp( $ext, 'json') ||
+                  !strcasecmp( $ext, 'log') ||
+                  !strcasecmp( $ext, 'csv') ) {
                 if ($ini['sensitive'] && strpos($textFile, '_report'))
                   RemoveSensitiveHeaders("$testPath/$textFile");
                 elseif (strpos($textFile, '_optimization'))
@@ -236,10 +244,10 @@ if (ValidateTestId($id)) {
           $secure = false;
           $haveLocations = false;
           $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure, $haveLocations, false);
-          if (isset($requests)) {
+          if (isset($requests) && is_array($requests) && count($requests)) {
             getBreakdown($id, $testPath, $runNumber, $cacheWarmed, $requests);
           } else {
-            $testerError = true;
+            $testerError = 'Missing Results';
           }
           if (is_dir('./google') && is_file('./google/google_lib.inc')) {
             require_once('google/google_lib.inc');
@@ -261,7 +269,7 @@ if (ValidateTestId($id)) {
           }
           if ($testInfo['video'])
             $workdone_video_start = microtime(true);
-          ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed);
+          ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed, $max_load);
           if ($testInfo['video'])
             $workdone_video_end = microtime(true);
         }
@@ -275,7 +283,11 @@ if (ValidateTestId($id)) {
             $testerError = $_REQUEST['testerror'];
           elseif (array_key_exists('error', $_REQUEST) && strlen($_REQUEST['error']))
             $testerError = $_REQUEST['error'];
-          UpdateTester($location, $tester, $testerInfo, $cpu, $testerError);
+          // clear the rebooted flag on the first successful test
+          $rebooted = null;
+          if ($testerError === false)
+            $rebooted = false;
+          UpdateTester($location, $tester, $testerInfo, $cpu, $testerError, $rebooted);
         }
                 
         // see if the test is complete
@@ -355,7 +367,7 @@ if (ValidateTestId($id)) {
           if (array_key_exists('industry', $ini) && array_key_exists('industry_page', $ini) && 
             strlen($ini['industry']) && strlen($ini['industry_page'])) {
             if( !is_dir('./video/dat') )
-              mkdir('./video/dat');
+              mkdir('./video/dat', 0777, true);
             $indLock = Lock("Industry Video");
             if (isset($indLock)) {
               // update the page in the industry list

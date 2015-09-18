@@ -43,7 +43,7 @@ if (ValidateTestId($id)) {
             
             if ($ok) {
               // put each run of video data in it's own directory
-              if (strpos($fileName, 'progress')) {
+              if (strpos($fileName, 'progress') !== false) {
                 $parts = explode('_', $fileName);
                 if (count($parts)) {
                   $runNum = $parts[0];
@@ -53,8 +53,21 @@ if (ValidateTestId($id)) {
                     $cached = '_cached';
                   $path .= "/video_$runNum$cached";
                   if( !is_dir($path) )
-                    mkdir($path);
+                    mkdir($path, 0777, true);
                   $fileName = 'frame_' . $fileBase;
+                }
+              } elseif (strpos($fileName, '_ms_') !== false) {
+                $parts = explode('_', $fileName);
+                if (count($parts)) {
+                  $runNum = $parts[0];
+                  $fileBase = $parts[count($parts) - 1];
+                  $cached = '';
+                  if( strpos($fileName, '_Cached') )
+                    $cached = '_cached';
+                  $path .= "/video_$runNum$cached";
+                  if( !is_dir($path) )
+                    mkdir($path, 0777, true);
+                  $fileName = 'ms_' . $fileBase;
                 }
               }
               MoveUploadedFile($_FILES['file']['tmp_name'], "$path/$fileName");

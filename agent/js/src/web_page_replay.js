@@ -92,6 +92,8 @@ function WebPageReplay(app, args) {
   // split to support 'wpr,--url,http://foo:8082', ignore ',' escaping
   this.wprCommand_ = (args.flags.wprcommand || 'wpr').split(',');
   this.isSupported_ = undefined;
+  if (args.flags['wprcommand'] === undefined)
+    this.isSupported_ = false;
 }
 /** Export class. */
 exports.WebPageReplay = WebPageReplay;

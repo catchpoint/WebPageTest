@@ -5,7 +5,7 @@ error_reporting(E_ERROR | E_PARSE);
 require_once('archive.inc');
 require_once 'page_data.inc';
 ignore_user_abort(true);
-set_time_limit(60*5*10);
+set_time_limit(60*50);
 
 // disconnect the caller
 header("Content-Length: 0", true);

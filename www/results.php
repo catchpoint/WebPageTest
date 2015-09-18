@@ -13,7 +13,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
     $pageData = loadAllPageData($testPath, $options);
 
     // if we don't have an url, try to get it from the page results
-    if( !strlen($url) )
+    if( !strlen($url) && isset($pageData[1][0]['URL']))
         $url = $pageData[1][0]['URL'];
     if (array_key_exists('testinfo', $test) && 
         array_key_exists('spam', $test['testinfo']) &&

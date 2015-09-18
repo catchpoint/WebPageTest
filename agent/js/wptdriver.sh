@@ -104,6 +104,7 @@ case "${browser}" in
         --iosIDeviceDir "$agent/lib/ios/idevice/$(uname -ms)" \
         --iosDevImageDir "$agent/lib/ios/DeviceSupport" \
         --iosSshProxyDir "$agent/lib/ios/usbmux_python_client" \
+        --iosVideoDir "$agent/lib/ios/video" \
         ${url_app:+--iosUrlOpenerApp "$url_app"});;
   *)
     echo "Unknown browser type \"${browser}\""
@@ -111,7 +112,7 @@ case "${browser}" in
 esac
 
 cd ${agent}
-declare -a cmd=(node src/agent_main \
+declare -a cmd=(node --max-old-space-size=4096 --expose-gc src/agent_main \
     --serverUrl ${server} --location ${location} \
     "${browser_args[@]:+${browser_args[@]}}" \
     "${opt_args[@]:+${opt_args[@]}}")

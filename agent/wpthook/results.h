@@ -44,7 +44,7 @@ class Results {
 public:
   Results(TestState& test_state, WptTest& test, Requests& requests, 
           TrackSockets& sockets, TrackDns& dns, ScreenCapture& screen_capture,
-          DevTools &dev_tools, Trace &trace);
+          DevTools &dev_tools, Trace &trace, Trace &trace_netlog);
   ~Results(void);
 
   void Reset(void);
@@ -63,6 +63,7 @@ private:
   WptTest&      _test;
   DevTools      &_dev_tools;
   Trace         &_trace;
+  Trace         &_trace_netlog;
   bool          _saved;
   LARGE_INTEGER _visually_complete;
 
@@ -88,6 +89,8 @@ private:
   int count_not_found_doc_;
   int count_other_;
   int count_other_doc_;
+  int reported_step_;
+  CStringA  current_step_name_;
 
   DWORD peak_memory_;
   DWORD peak_process_count_;
@@ -101,7 +104,7 @@ private:
   void SaveProgressData(void);
   void SaveStatusMessages(void);
   void SaveImage(CxImage& image, CString file, BYTE quality,
-                 bool force_small = false);
+                 bool force_small = false, bool _full_size_video = false);
   bool ImagesAreDifferent(CxImage * img1, CxImage* img2);
   CStringA FormatTime(LARGE_INTEGER t);
   void SaveResponseBodies(void);

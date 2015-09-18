@@ -1,19 +1,27 @@
 <?php
 chdir('..');
+$settings = null;
 require_once('common_lib.inc');
 require_once('video/visualProgress.inc.php');
 ignore_user_abort(true);
-set_time_limit(600);
+set_time_limit(3600);
 error_reporting(E_ERROR | E_PARSE);
+
+$max_load = GetSetting('render_max_load');
+if ($max_load !== false && $max_load > 0)
+  WaitForSystemLoad($max_load, 3600);
 
 // Globals used throughout the video render
 $width = 900;
 $height = 650;
 $padding = 4;
+$textPadding = 0;
 $minThumbnailSize = 60;
 $biggestThumbnail = 0;
-$black = null;
+$backgroundColor = null;
 $textColor = null;
+$bgEvenText = null;
+$bgOddText = null;
 $image_bytes = null;
 $timeFont = __DIR__ . '/font/sourcesanspro-semibold.ttf';
 $labelFont = __DIR__ . '/font/sourcesanspro-semibold.ttf';
@@ -26,10 +34,65 @@ $maxAspectRatio = 0;
 $min_font_size = 4;
 $videoExtendTime = 3000;
 $encodeFormat = 'jpg';  // can be jpg (faster) or png (much slower), used internally to transfer to ffmpeg
-$encoderSpeed = 'veryfast';
+$encoderSpeed = 'superfast';
 $fps = 30;
 $speed = 1;
 $fractionTime = 10; // tenths of a second - 100 or 1000 are also available
+$stopTime = null;
+$combineTimeLabel = false;
+$evenTextBackground = null;
+$oddTextBackground = null;
+$forceBackgroundColor = null;
+$forceTextColor = null;
+$timeSeconds = false;
+$stopText = '';
+$forceFontSize = 0;
+
+// load any overrides
+if (is_file('./settings/video.ini')) {
+  $videoSettings = parse_ini_file('./settings/video.ini');
+  if (isset($videoSettings['width']))
+    $width = (int)$videoSettings['width'];
+  if (isset($videoSettings['height']))
+    $height = (int)$videoSettings['height'];
+  if (isset($videoSettings['padding']))
+    $padding = (int)$videoSettings['padding'];
+  if (isset($videoSettings['text-padding']))
+    $textPadding = (int)$videoSettings['text-padding'];
+  if (isset($videoSettings['label-height']))
+    $labelHeight = (int)$videoSettings['label-height'];
+  if (isset($videoSettings['time-height']))
+    $timeHeight = (int)$videoSettings['time-height'];
+  if (isset($videoSettings['font-size']))
+    $forceFontSize = (float)$videoSettings['font-size'];
+  if (isset($videoSettings['time-padding']))
+    $timePadding = (int)$videoSettings['time-padding'];
+  if (isset($videoSettings['row-padding']))
+    $rowPadding = (int)$videoSettings['row-padding'];
+  if (isset($videoSettings['bottom-margin']))
+    $bottomMargin = (int)$videoSettings['bottom-margin'];
+  if (isset($videoSettings['video-extend-time']))
+    $videoExtendTime = (int)$videoSettings['video-extend-time'];
+  if (isset($videoSettings['stop-time']))
+    $stopTime = $videoSettings['stop-time'];
+  if (isset($videoSettings['stop-text']))
+    $stopText = $videoSettings['stop-text'];
+  if (isset($videoSettings['combine-time-label']) && $videoSettings['combine-time-label'])
+    $combineTimeLabel = true;
+  if (isset($videoSettings['time-seconds']) && $videoSettings['time-seconds'])
+    $timeSeconds = true;
+  if (isset($videoSettings['background-color']))
+    $forceBackgroundColor = $videoSettings['background-color'];
+  if (isset($videoSettings['text-color']))
+    $forceTextColor = $videoSettings['text-color'];
+  if (isset($videoSettings['even-text-bg']))
+    $evenTextBackground = $videoSettings['even-text-bg'];
+  if (isset($videoSettings['odd-text-bg']))
+    $oddTextBackground = $videoSettings['odd-text-bg'];
+}
+
+if ($combineTimeLabel)
+  $labelHeight = 0;
 
 $start = microtime(true);
 
@@ -163,7 +226,7 @@ function RenderVideo(&$tests) {
 * 
 */
 function CalculateVideoDimensions(&$tests) {
-  global $width, $height, $minThumbnailSize, $padding, $labelHeight, $timeHeight, $timePadding, $rowPadding, $maxAspectRatio, $biggestThumbnail, $bottomMargin;
+  global $width, $height, $minThumbnailSize, $padding, $labelHeight, $timeHeight, $timePadding, $rowPadding, $maxAspectRatio, $biggestThumbnail, $bottomMargin, $combineTimeLabel;
   
   $count = count($tests);
   if ($maxAspectRatio < 1) {
@@ -246,6 +309,7 @@ function CalculateVideoDimensions(&$tests) {
       $test['labelRect']['y'] = $y - $labelHeight + $padding;
       $test['labelRect']['width'] = $cellWidth - $padding;
       $test['labelRect']['height'] = $labelHeight - $padding;
+      $test['labelRect']['align'] = 'center';
     }
     
     // Time
@@ -255,6 +319,21 @@ function CalculateVideoDimensions(&$tests) {
       $test['timeRect']['y'] = $y + $timePadding + $row_h[$row];
       $test['timeRect']['width'] = $cellWidth - $padding;
       $test['timeRect']['height'] = $timeHeight - $timePadding;
+      $test['timeRect']['align'] = 'center';
+      $test['timeRect']['even'] = $position % 2;
+      
+      if ($combineTimeLabel) {
+        $test['labelRect'] = array();
+        $test['labelRect']['x'] = $left + ($column * $cellWidth) + $padding;
+        $test['labelRect']['y'] = $y + $timePadding + $row_h[$row];
+        $test['labelRect']['width'] = floor(($cellWidth - $padding) / 2);
+        $test['labelRect']['height'] = $timeHeight - $timePadding;
+        $test['labelRect']['align'] = 'left';
+
+        $test['timeRect']['align'] = 'right';
+        $test['timeRect']['width'] = floor(($cellWidth - $padding) / 2);
+        $test['timeRect']['x'] += $test['labelRect']['width'];
+      }
     }
   }
 }
@@ -267,12 +346,26 @@ function CalculateVideoDimensions(&$tests) {
 * @param mixed $im
 */
 function RenderFrames(&$tests, $frameCount, $im) {
-  global $width, $height, $black, $videoPath, $image_bytes, $textColor, $encodeFormat, $encoderSpeed, $fps, $labelHeight;
+  global $width, $height, $backgroundColor, $videoPath, $image_bytes, $textColor, $encodeFormat,
+         $encoderSpeed, $fps, $labelHeight, $forceBackgroundColor, $forceTextColor, $combineTimeLabel,
+         $evenTextBackground, $oddTextBackground, $bgEvenText, $bgOddText;
+
+  // allocate the background and foreground colors
+  $bgcolor = isset($tests[0]['bg']) ? html2rgb($tests[0]['bg']) : html2rgb('000000');
+  $color = isset($tests[0]['text']) ? html2rgb($tests[0]['text']) : html2rgb('ffffff');
+  if (isset($forceBackgroundColor))
+    $bgcolor = html2rgb($forceBackgroundColor);
+  if (isset($forceTextColor))
+    $color = html2rgb($forceTextColor);
+  $bgEvenTextColor = isset($evenTextBackground) ? html2rgb($evenTextBackground) : $bgcolor;
+  $bgOddTextColor = isset($oddTextBackground) ? html2rgb($oddTextBackground) : $bgcolor;
   
-  // prepare the image (black background)
-  $black = imagecolorallocate($im, 0, 0, 0);
-  $textColor = imagecolorallocate($im, 255, 255, 255);
-  imagefilledrectangle($im, 0, 0, $width - 1, $height - 1, $black);
+  // prepare the image
+  $backgroundColor = imagecolorallocate($im, $bgcolor[0], $bgcolor[1], $bgcolor[2]);
+  $textColor = imagecolorallocate($im, $color[0], $color[1], $color[2]);
+  $bgEvenText = imagecolorallocate($im, $bgEvenTextColor[0], $bgEvenTextColor[1], $bgEvenTextColor[2]);
+  $bgOddText = imagecolorallocate($im, $bgOddTextColor[0], $bgOddTextColor[1], $bgOddTextColor[2]);
+  imagefilledrectangle($im, 0, 0, $width - 1, $height - 1, $backgroundColor);
   
   // figure out what a good interval for keyframes would be based on the video length
   $keyInt = min(max(6, $frameCount / 30), 240);
@@ -288,7 +381,7 @@ function RenderFrames(&$tests, $frameCount, $im) {
                   "-preset $encoderSpeed -y \"$videoFile\"";
   $ffmpeg = proc_open($command, $descriptors, $pipes);
   if (is_resource($ffmpeg)){
-    if ($labelHeight > 0)
+    if ($labelHeight > 0 || $combineTimeLabel)
       DrawLabels($tests, $im);
     for ($frame = 0; $frame < $frameCount; $frame++) {
       RenderFrame($tests, $frame, $im);
@@ -336,27 +429,33 @@ function RenderFrame(&$tests, $frame, $im) {
 * 
 */
 function DrawLabels($tests, $im) {
-  global $min_font_size, $labelFont, $textColor;
+  global $min_font_size, $labelFont, $textColor, $forceFontSize, $bgEvenText, $bgOddText;
   // First, go through and pick a font size that will fit all of the labels
-  $maxLabelLen = 30;
-  do {
-    $font_size = GetLabelFontSize($tests);
-    if ($font_size < $min_font_size) {
-      // go through and trim the length of all the labels
-      foreach($tests as &$test) {
-        if (isset($test['labelRect']) && isset($test['label']) && strlen($test['label']) > $maxLabelLen) {
-          $test['label'] = substr($test['label'], 0, $maxLabelLen) . '...';
+  if ($forceFontSize) {
+    $font_size = $forceFontSize;
+  } else {
+    $maxLabelLen = 30;
+    do {
+      $font_size = GetLabelFontSize($tests);
+      if ($font_size < $min_font_size) {
+        // go through and trim the length of all the labels
+        foreach($tests as &$test) {
+          if (isset($test['labelRect']) && isset($test['label']) && strlen($test['label']) > $maxLabelLen) {
+            $test['label'] = substr($test['label'], 0, $maxLabelLen) . '...';
+          }
         }
+        $maxLabelLen--;
       }
-      $maxLabelLen--;
-    }
-  } while($font_size < $min_font_size && $maxLabelLen > 1);
+    } while($font_size < $min_font_size && $maxLabelLen > 1);
+  }
   
   if ($font_size > $min_font_size) {
-    foreach($tests as &$test) {
+    foreach($tests as $index => &$test) {
       if (isset($test['labelRect']) && isset($test['label']) && strlen($test['label'])) {
         $rect = $test['labelRect'];
-        $pos = CenterText($im, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, $test['label'], $labelFont);
+        $bgColor = ($index % 2) ? $bgEvenText : $bgOddText;
+        imagefilledrectangle($im, $rect['x'], $rect['y'], $rect['x'] + $rect['width'], $rect['y'] + $rect['height'], $bgColor);
+        $pos = CenterText($im, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, $test['label'], $labelFont, null, $test['labelRect']['align']);
         if (isset($pos))
           imagettftext($im, $font_size, 0, $pos['x'],  $pos['y'], $textColor, $labelFont, $test['label']);
       }
@@ -385,7 +484,7 @@ function GetLabelFontSize($tests) {
 * @param mixed $im
 */
 function DrawTest(&$test, $frameTime, $im) {
-  global $black;
+  global $backgroundColor;
   $updated = false;
 
   // find the closest video frame <= the target time
@@ -407,7 +506,10 @@ function DrawTest(&$test, $frameTime, $im) {
   // see if we actually need to draw anything
   if (isset($path) && (!isset($test['lastFrame']) || $test['lastFrame'] !== $path || $need_grey)) {
     $test['lastFrame'] = $path;
-    $thumb = imagecreatefromjpeg("./$path");
+    if (strtolower(substr($path, -4)) == '.png')
+      $thumb = imagecreatefrompng("./$path");
+    else
+      $thumb = imagecreatefromjpeg("./$path");
     if ($thumb) {
       if ($need_grey)
         imagefilter($thumb, IMG_FILTER_GRAYSCALE);
@@ -420,7 +522,7 @@ function DrawTest(&$test, $frameTime, $im) {
       $h = min(floor($thumb_h * $scale), $rect['height']);
       $x = $rect['x'] + floor(($rect['width'] - $w) / 2);
       $y = $rect['y'] + floor(($rect['height'] - $h) / 2);
-      imagefilledrectangle($im, $x, $y, $x + $w, $y + $h, $black);
+      imagefilledrectangle($im, $x, $y, $x + $w, $y + $h, $backgroundColor);
       fastimagecopyresampled($im, $thumb, $x, $y, 0, 0, $w, $h, $thumb_w, $thumb_h, 4);
       imagedestroy($thumb);
       $updated = true;
@@ -444,10 +546,11 @@ function DrawTest(&$test, $frameTime, $im) {
 * @param mixed $rect
 */
 function DrawFrameTime(&$test, $frameTime, $im, $rect) {
-  global $timeHeight, $black, $timeFont, $textColor, $fps, $fractionTime;
+  global $timeHeight, $backgroundColor, $timeFont, $textColor, $fps, $fractionTime, $timeSeconds, $bgEvenText, $bgOddText, $stopTime, $stopText;
   static $font_size = 0;
   static $ascent = 0;
   $updated = false;
+  $suffix = $timeSeconds ? 's' : '';
   
   if (!$font_size)
     $font_size = GetFontSize($rect['width'], $rect['height'], "000.00", $timeFont);
@@ -457,72 +560,93 @@ function DrawFrameTime(&$test, $frameTime, $im, $rect) {
   }
   if (!isset($test['periodRect'])) {
     $test['periodRect'] = array();
-    $pos = CenterText($im, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, "000.00", $timeFont, $ascent);
+    $pos = CenterText($im, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, "000.00$suffix", $timeFont, $ascent, $rect['align']);
     $test['periodRect']['y'] = $pos['y'];
-    $pos = CenterText($im, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, '.', $timeFont, $ascent);
+    $posText = $rect['align'] == 'right' ? ".00$suffix" : '.';
+    $pos = CenterText($im, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, $posText, $timeFont, $ascent, $rect['align']);
     $test['periodRect']['x'] = $pos['x'];
     $box = imagettfbbox($font_size, 0, $timeFont, '.');
     $test['periodRect']['width'] = abs($box[4] - $box[0]);
   }
-    
+  
   $seconds = floor($frameTime / 1000);
   $fraction = floor($frameTime / (1000 / $fractionTime)) % $fractionTime;
   if ($fractionTime == 100)
     $fraction = sprintf("%02d", $fraction);
   elseif ($fractionTime == 1000)
     $fraction = sprintf("%03d", $fraction);
-  $time = "$seconds.$fraction";
+  if (!isset($test['endText']) &&
+      isset($stopTime) &&
+      isset($test['pageData'][$test['run']][$test['cached']][$stopTime]) &&
+      $frameTime >= $test['pageData'][$test['run']][$test['cached']][$stopTime]) {
+    $prefix = isset($stopText) ? "$stopText " : '';
+    $test['endText'] = "$prefix$seconds.$fraction$suffix";
+  }
+  $time = isset($test['endText']) ? $test['endText'] : "$seconds.$fraction";
   if (!isset($test['last_time']) || $test['last_time'] !== $time) {
     $updated = true;
     $test['last_time'] = $time;
     
     // erase the last time
-
-    imagefilledrectangle($im, $rect['x'], $rect['y'], $rect['x'] + $rect['width'], $rect['y'] + $rect['height'], $black);
+    $bgColor = $rect['even'] ? $bgEvenText : $bgOddText;
+    imagefilledrectangle($im, $rect['x'], $rect['y'], $rect['x'] + $rect['width'], $rect['y'] + $rect['height'], $bgColor);
     
-    // draw the period
-    imagettftext($im, $font_size, 0, $test['periodRect']['x'],  $test['periodRect']['y'], $textColor, $timeFont, '.');
-    
-    // draw the seconds
-    $box = imagettfbbox($font_size, 0, $timeFont, $seconds);
-    $s_width = abs($box[4] - $box[0]);
-    $box = imagettfbbox($font_size, 0, $timeFont, "$seconds.");
-    $pad = abs($box[4] - $box[0]) - $s_width;
-    imagettftext($im, $font_size, 0, $test['periodRect']['x'] + $test['periodRect']['width'] - $s_width - $pad,  $test['periodRect']['y'], $textColor, $timeFont, $seconds);
-    
-    //draw the fraction
-    $box = imagettfbbox($font_size, 0, $timeFont, $fraction);
-    $t_width = abs($box[4] - $box[0]);
-    $box = imagettfbbox($font_size, 0, $timeFont, ".$fraction");
-    $pad = abs($box[4] - $box[0]) - $t_width + 1;
-    imagettftext($im, $font_size, 0, $test['periodRect']['x'] + $pad,  $test['periodRect']['y'], $textColor, $timeFont, $fraction);
+    if (isset($test['endText'])) {
+      $pos = CenterText($im, $rect['x'], $rect['y'], $rect['width'], $rect['height'], $font_size, $test['endText'], $timeFont, $ascent, $rect['align']);
+      if (isset($pos))
+        imagettftext($im, $font_size, 0, $pos['x'],  $pos['y'], $textColor, $timeFont, $test['endText']);
+    } else {
+      // draw the period
+      imagettftext($im, $font_size, 0, $test['periodRect']['x'],  $test['periodRect']['y'], $textColor, $timeFont, '.');
+      
+      // draw the seconds
+      $box = imagettfbbox($font_size, 0, $timeFont, $seconds);
+      $s_width = abs($box[4] - $box[0]);
+      $box = imagettfbbox($font_size, 0, $timeFont, "$seconds.");
+      $pad = abs($box[4] - $box[0]) - $s_width;
+      imagettftext($im, $font_size, 0, $test['periodRect']['x'] + $test['periodRect']['width'] - $s_width - $pad,  $test['periodRect']['y'], $textColor, $timeFont, $seconds);
+      
+      //draw the fraction
+      $box = imagettfbbox($font_size, 0, $timeFont, "$fraction$suffix");
+      $t_width = abs($box[4] - $box[0]);
+      $box = imagettfbbox($font_size, 0, $timeFont, ".$fraction$suffix");
+      $pad = abs($box[4] - $box[0]) - $t_width + 1;
+      imagettftext($im, $font_size, 0, $test['periodRect']['x'] + $pad,  $test['periodRect']['y'], $textColor, $timeFont, "$fraction$suffix");
+    }
   }
   
   return $updated;
 }
 
 function GetFontSize($width, $height, $text, $font) {
-  $small = 0;
-  $big = 100;
-  $size = 50;
-  do {
-    $last_size = $size;
-    $box = imagettfbbox($size, 0, $font, $text);
-    $w = abs($box[4] - $box[0]);
-    $h = abs($box[5] - $box[1]);
-    if ($w < $width && $h < $height) {
-      $small = $size;
-      $size = floor($size + (($big - $size) / 2));
-    } else {
-      $big = $size;
-      $size = floor($size - (($size - $small) / 2));
-    }
-  } while ($last_size !== $size && $size > 0);
+  global $forceFontSize;
+  
+  if ($forceFontSize) {
+    $size = $forceFontSize;
+  } else {
+    $small = 0;
+    $big = 100;
+    $size = 50;
+    do {
+      $last_size = $size;
+      $box = imagettfbbox($size, 0, $font, $text);
+      $w = abs($box[4] - $box[0]);
+      $h = abs($box[5] - $box[1]);
+      if ($w < $width && $h < $height) {
+        $small = $size;
+        $size = floor($size + (($big - $size) / 2));
+      } else {
+        $big = $size;
+        $size = floor($size - (($size - $small) / 2));
+      }
+    } while ($last_size !== $size && $size > 0);
+  }
   
   return $size;
 }
 
-function CenterText($im, $x, $y, $w, $h, $size, $text, $font, $ascent = null) {
+function CenterText($im, $x, $y, $w, $h, $size, $text, $font, $ascent = null, $align) {
+  global $textPadding;
   $ret = null;
   if (!$size)
     $size = GetFontSize($w, $h, $text);
@@ -533,10 +657,14 @@ function CenterText($im, $x, $y, $w, $h, $size, $text, $font, $ascent = null) {
     $ret = array();
     $out_w = abs($box[4] - $box[0]);
     $out_h = abs($box[5] - $box[1]);
-    $ret['x'] = floor($x + (($w - $out_w) / 2));
+    if ($align == 'left')
+      $ret['x'] = $x + $textPadding;
+    elseif ($align == 'right')
+      $ret['x'] = floor($x + ($w - $out_w - $textPadding));
+    else
+      $ret['x'] = floor($x + (($w - $out_w) / 2));
     $ret['y'] = floor($y + (($h - $out_h) / 2)) + $ascent;
   }
   return $ret;
 }
-
 ?>

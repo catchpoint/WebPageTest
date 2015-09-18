@@ -3401,13 +3401,13 @@ void CPagetestReporting::SaveVideo()
 
   if (histogram_count > 1) {
     histograms += "]";
-    TCHAR newLogPath[MAX_PATH);
+    TCHAR newLogPath[MAX_PATH];
     lstrcpy(newLogPath, logFile);
     TCHAR * fileName = PathFindFileName(newLogPath);
     int run = _tstoi(fileName);
     int cached = _tcsstr(fileName, _T("Cached")) ? 1 : 0;
     fileName = 0;
-    file_name.Format(ile + _T("_histograms.json");
+    file_name.Format(logFile + _T("_histograms.json"));
     HANDLE file_handle = CreateFile(file_name, GENERIC_WRITE, 0, 0, 
                                     CREATE_ALWAYS, 0, 0);
     if (file_handle != INVALID_HANDLE_VALUE) {

@@ -101,6 +101,7 @@ function CheckPHP() {
     ShowCheck('php.ini allow_url_fopen enabled', ini_get('allow_url_fopen'), true);
     ShowCheck('APC Installed', extension_loaded('apc'), false);
     ShowCheck('SQLite Installed (for editable test labels)', class_exists("SQLite3"), false);
+    ShowCheck('Open SSL Module Installed (for "Login with Google")', function_exists('openssl_x509_read'), false);
     ShowCheck('php.ini upload_max_filesize > 10MB', return_bytes(ini_get('upload_max_filesize')) > 10000000, false, ini_get('upload_max_filesize'));
     ShowCheck('php.ini post_max_size > 10MB', return_bytes(ini_get('post_max_size')) > 10000000, false, ini_get('post_max_size'));
     ShowCheck('php.ini memory_limit > 256MB or -1 (disabled)', return_bytes(ini_get('memory_limit')) > 256000000 || ini_get('memory_limit') == -1, false, ini_get('memory_limit'));

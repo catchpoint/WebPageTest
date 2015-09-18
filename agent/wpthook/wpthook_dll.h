@@ -38,6 +38,7 @@ extern "C" {
 _import void WINAPI InstallHook(void);
 _import void WINAPI SetResultsFileBase(const WCHAR * file_base);
 _import void WINAPI SetTestTimeout(DWORD timeout);
+_import void WINAPI SetEnableUserSetTimeout(bool enableUserSetTimeout);
 _import void WINAPI SetClearedCache(bool cleared_cache);
 _import bool WINAPI GetClearedCache();
 _import void WINAPI SetCurrentRun(DWORD run);

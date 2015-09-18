@@ -36,6 +36,7 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 #optimization {float:right; width:414px;}
 #optimization_header {width: 100%; clear:both; vertical-align: middle; line-height: 20px;}
 #header_data {float:left; width: 510px; overflow-x: hidden;}
+.header_data_full {width: 924px !important;}
 #header_data h2 {margin: 0;}
 #headerPagespeedScore {margin-left: 10px;}
 #opthelp {float:right; display: inline;}
@@ -240,7 +241,7 @@ table.pretty th.border, table.pretty td.border { border-left: 2px black solid; }
 table.pretty td.even { background: whitesmoke; }
 
 /* details page */
-#headers {text-align: left; width:930px; overflow:hidden;}
+#headers {text-align: left; width:930px; overflow:auto;}
 #headers h1, #headers h2 {text-transform:none;} 
 
 /* feeds */

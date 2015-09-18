@@ -74,15 +74,26 @@ public:
   void DataIn(DWORD socket_id, DataChunk& chunk);
   bool ModifyDataOut(DWORD socket_id, DataChunk& chunk);
   void DataOut(DWORD socket_id, DataChunk& chunk);
-  bool HasActiveRequest(DWORD socket_id);
+  bool HasActiveRequest(DWORD socket_id, DWORD stream_id);
   void ProcessBrowserRequest(CString request_data);
+
+  // HTTP/2 interface
+  void StreamClosed(DWORD socket_id, DWORD stream_id);
+  void HeaderIn(DWORD socket_id, DWORD stream_id,
+                const char * header, const char * value, bool pushed);
+  void ObjectDataIn(DWORD socket_id, DWORD stream_id, DataChunk& chunk);
+  void BytesIn(DWORD socket_id, DWORD stream_id, size_t len);
+  void HeaderOut(DWORD socket_id, DWORD stream_id,
+                 const char * header, const char * value, bool pushed);
+  void ObjectDataOut(DWORD socket_id, DWORD stream_id, DataChunk& chunk);
+  void BytesOut(DWORD socket_id, DWORD stream_id, size_t len);
+
   void Lock();
   void Unlock();
   void Reset();
   bool GetBrowserRequest(BrowserRequestData &data, bool remove = true);
 
   CAtlList<Request *>       _requests;        // all requests
-  CAtlMap<DWORD, Request *> _active_requests; // requests indexed by socket
   CAtlMap<DWORD, bool>      connections_;     // Connection IDs
 
 private:
@@ -93,13 +104,15 @@ private:
   WptTest&          _test;
   double            _start_browser_clock;
   CAtlList<BrowserRequestData>  browser_request_data_;
+  CAtlMap<ULONGLONG, Request *> _active_requests; // requests indexed by socket
 
   bool IsHttpRequest(const DataChunk& chunk) const;
   bool IsSpdyRequest(const DataChunk& chunk) const;
 
   // GetOrCreateRequest must be called within a critical section.
-  Request * GetOrCreateRequest(DWORD socket_id, const DataChunk& chunk);
-  Request * NewRequest(DWORD socket_id, bool is_spdy);
-  Request * GetActiveRequest(DWORD socket_id);
+  Request * GetOrCreateRequest(DWORD socket_id, DWORD stream_id,
+                               const DataChunk& chunk);
+  Request * NewRequest(DWORD socket_id, DWORD stream_id, bool is_spdy);
+  Request * GetActiveRequest(DWORD socket_id, DWORD stream_id);
   LONGLONG GetRelativeTime(Request * request, double end_time, double time);
 };

@@ -38,6 +38,8 @@ CURLBlaster::CURLBlaster(HWND hWnd, CLog &logRef, CIpfw &ipfwRef, HANDLE &testin
 , ipfw(ipfwRef)
 , testingMutex(testingMutexRef)
 , dlg(dlgRef)
+, rebooting(false)
+, needsReboot(false)
 {
 	InitializeCriticalSection(&cs);
 	hMustExit = CreateEvent(0, TRUE, FALSE, NULL );
@@ -212,7 +214,7 @@ void CURLBlaster::ThreadProc(void)
 	  Launch(_T("RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 6655"));
     ReleaseMutex(testingMutex);
 
-		while( WaitForSingleObject(hMustExit,0) == WAIT_TIMEOUT )
+		while( WaitForSingleObject(hMustExit,0) == WAIT_TIMEOUT && !rebooting )
 		{
 		  dlg.Alive();
 		  
@@ -221,7 +223,11 @@ void CURLBlaster::ThreadProc(void)
       dlg.SetStatus(_T("Checking for work..."));
 			if(	GetUrl() )
 			{
-        if( info.testType.GetLength() )
+        if (info.reboot)
+        {
+          needsReboot = true;
+        }
+        else if( info.testType.GetLength() )
         {
           // running a custom test
           do
@@ -252,13 +258,13 @@ void CURLBlaster::ThreadProc(void)
 						dlg.Alive();
 						if( Launch(preLaunch) )
 						{
-							LaunchBrowser();
-              
-							// record the cleared cache view
-							if( urlManager->RunRepeatView(info) ) {
-							  dlg.Alive();
-								LaunchBrowser();
-							}
+              if (LaunchBrowser()) {
+							  // record the cleared cache view
+							  if( urlManager->RunRepeatView(info) ) {
+							    dlg.Alive();
+								  LaunchBrowser();
+							  }
+              }
 
 							Launch(postLaunch);
 						}
@@ -279,8 +285,13 @@ void CURLBlaster::ThreadProc(void)
         dlg.SetStatus(_T("Waiting for next test..."));
 				Sleep(500 + (rand() % 500));
       }
+
+      if (needsReboot) {
+        Reboot();
+        rebooting = true;
+      }
 		}
-	}
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -696,6 +707,7 @@ void CURLBlaster::ClearCache(void)
 bool CURLBlaster::LaunchBrowser(void)
 {
 	bool ret = false;
+  bool isIE = false;
 	info.testResult = -1;
 
 	// flush the DNS cache
@@ -779,6 +791,7 @@ bool CURLBlaster::LaunchBrowser(void)
 					// we're launching IE
 					SHGetFolderPath(NULL, CSIDL_PROGRAM_FILES, 0, SHGFP_TYPE_CURRENT, exe);
 					PathAppend(exe, _T("Internet Explorer\\iexplore.exe"));
+          isIE = true;
 					
 					// give it an about:blank command line for launch
 					lstrcpy( commandLine, _T("\"") );
@@ -884,7 +897,16 @@ bool CURLBlaster::LaunchBrowser(void)
 						info.cpu = 0;
 						DWORD len = sizeof(info.cpu);
 						RegQueryValueEx(hKey, _T("cpu"), 0, 0, (LPBYTE)&info.cpu, &len);
+
+            DWORD started = 0;
+            len = sizeof(started);
+						RegQueryValueEx(hKey, _T("Started"), 0, 0, (LPBYTE)&started, &len);
+            if (isIE && !started) {
+              ret = false;
+              needsReboot = true;
+            }
 								
+						RegDeleteValue(hKey, _T("Started"));
 						RegDeleteValue(hKey, _T("Result"));
 						RegDeleteValue(hKey, _T("cpu"));
 						
@@ -972,6 +994,7 @@ void CURLBlaster::ConfigurePagetest(void)
 			// delete any old results from the reg key
 			RegDeleteValue(hKey, _T("Result"));
 			RegDeleteValue(hKey, _T("cpu"));
+			RegDeleteValue(hKey, _T("Started"));
 
 			RegCloseKey(hKey);
 		}

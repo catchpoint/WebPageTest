@@ -357,6 +357,7 @@ function EC2_StartNeededInstances() {
 }
 
 function EC2_DeleteOrphanedVolumes() {
+/*
   $key = GetSetting('ec2_key');
   $secret = GetSetting('ec2_secret');
   if ($key && $secret && GetSetting('ec2_prune_volumes')) {
@@ -384,6 +385,7 @@ function EC2_DeleteOrphanedVolumes() {
       EC2LogError("Pruning EC2 volumes: $error");
     }
   }
+*/
 }
 
 function EC2_GetRunningInstances() {
@@ -588,7 +590,7 @@ function EC2_GetAMILocations() {
 function EC2Log($msg) {
   $dir = __DIR__ . '/log';
   if (!is_dir($dir))
-    mkdir($dir, 0744, true);
+    mkdir($dir, 0777, true);
   if (is_dir($dir)) {
     // Delete any error logs that are more than a week old
     $files = glob("$dir/ec2.log.*");

@@ -1,5 +1,5 @@
 <?php
-$version = 7;
+$version = 8;
 if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
 {
     $tests = '';
@@ -78,6 +78,8 @@ else
         if( strlen($_REQUEST['end']) )
             $endTime = trim($_REQUEST['end']);
         $videoIdExtra = "";
+        $bgColor = isset($_REQUEST['bg']) ? $_REQUEST['bg'] : '000000';
+        $textColor = isset($_REQUEST['text']) ? $_REQUEST['text'] : 'ffffff';
 
         $compTests = explode(',', $_REQUEST['tests']);
         foreach($compTests as $t)
@@ -93,6 +95,8 @@ else
                 $test['syncStartRender'] = "";
                 $test['syncDocTime'] = "";
                 $test['syncFullyLoaded'] = "";
+                $test['bg'] = $bgColor;
+                $test['text'] = $textColor;
                 
                 if (isset($_REQUEST['slow']) && $_REQUEST['slow'])
                   $test['speed'] = 0.2;
@@ -105,7 +109,7 @@ else
                         if( $p[0] == 'r' )
                             $test['run'] = (int)$p[1];
                         if( $p[0] == 'l' )
-                            $test['label'] = urldecode($p[1]);
+                            $test['label'] = preg_replace('/[^a-zA-Z0-9 \-_]/', '', $p[1]);
                         if( $p[0] == 'c' )
                             $test['cached'] = (int)$p[1];
                         if( $p[0] == 'e' )
@@ -150,6 +154,8 @@ else
                         if( !$test['end'] )
                             $test['end'] = -1;
                     }
+                    elseif( !strcmp($test['end'], 'load') )
+                        $test['end'] = $test['pageData'][$test['run']][$test['cached']]['loadTime'];
                     elseif( !strcmp($test['end'], 'full') )
                         $test['end'] = 0;
                     elseif( !strcmp($test['end'], 'all') )
@@ -205,7 +211,7 @@ else
                 if( strlen($_REQUEST['tests']) )
                 {
                     $date = gmdate('ymd_');
-                    $hashstr = $_REQUEST['tests'] . $_REQUEST['template'] . $version . trim($_REQUEST['end']) . $videoIdExtra;
+                    $hashstr = $_REQUEST['tests'] . $_REQUEST['template'] . $version . trim($_REQUEST['end']) . $videoIdExtra . $bgColor . $textColor;
                     if( $_REQUEST['slow'] )
                         $hashstr .= '.slow';
                     if( strpos($hashstr, '_') == 6 )

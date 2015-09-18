@@ -93,15 +93,18 @@ public:
   ~WptSettings(void);
   bool Load(void);
   void LoadFromEC2(void);
+  void LoadFromGCE(void);
   void LoadFromAzure(void);
   void ParseInstanceData(CString &userData);
   bool SetBrowser(CString browser, CString url, CString md5, CString client);
   bool PrepareTest(WptTest& test);
-  bool GetUrlText(CString url, CString &response);
+  bool GetUrlText(CString url, CString &response, LPCTSTR headers = NULL);
   bool UpdateSoftware();
   bool ReInstallBrowser();
 
   CString _server;
+  CString _username;
+  CString _password;
   CString _location;
   CString _key;
   DWORD   _timeout;
@@ -113,6 +116,8 @@ public:
   CString _ec2_instance;
   CString _azure_instance;
   CString _clients_directory;
+  BOOL _requireValidCertificate;
+  CString _clientCertCommonName;
 
   BrowserSettings _browser;
   SoftwareUpdate _software_update;
