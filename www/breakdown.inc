@@ -1,17 +1,17 @@
 <?php
 require_once('object_detail.inc');
-require_once('contentColors.inc'); 
+require_once('contentColors.inc');
 
-if(extension_loaded('newrelic')) { 
+if(extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('getBreakdown');
     newrelic_add_custom_tracer('getBreakdownCombined');
 }
 /**
 * Aggregate the individual requests by mime type
-* 
+*
 * @param mixed $requests
 */
-function getBreakdown($id, $testPath, $run, $cached, &$requests)
+function getBreakdown($id, $testPath, $run, $cached, &$requests, $eventName = null)
 {
     $version = 2;
     $cache = array();
@@ -19,21 +19,27 @@ function getBreakdown($id, $testPath, $run, $cached, &$requests)
     if (is_file($cache_file)) {
         $cache = json_decode(file_get_contents($cache_file), true);
     }
-    
-    if (array_key_exists("run_$run", $cache)) {
-        if (array_key_exists("cached_$cached", $cache["run_$run"])) {
-            $breakdown = $cache["run_$run"]["cached_$cached"];
-        }
-    } else {
-        $cache["run_$run"] = array("cached_$cached" => array());
-    }
+
+//    if (array_key_exists("run_$run", $cache)) {
+//        if (array_key_exists("cached_$cached", $cache["run_$run"])) {
+//            $breakdown = $cache["run_$run"]["cached_$cached"];
+//        }
+//    } else {
+//        $cache["run_$run"] = array("cached_$cached" => array());
+//    }
 
     if (!isset($breakdown)) {
         // get all of the requests
         $secure = false;
         $haveLocations = false;
-        $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
-        
+        if($eventName != null){
+        	$requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false, false, true);
+        	$requestsArray = $requests[$eventName];
+        } else {
+            $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
+        	$requestsArray = $requests;
+        }
+
         $breakdown = array();
         $mime_colors = MimeColors();
         foreach ($mime_colors as $contentType => $color) {
@@ -44,27 +50,27 @@ function getBreakdown($id, $testPath, $run, $cached, &$requests)
                 );
             $breakdown["$contentType"] = $entry;
         }
-        
-        foreach($requests as $request) {
-          if (isset($request['contentType']) && isset($request['url'])) {
-            $contentType = ContentType($request['contentType'], $request['url']);
-            $object = strtolower($request['url']);
-            if( strlen($contentType) && (stripos($object, 'favicon.ico') === FALSE) ) {
-                $breakdown[$contentType]['bytes'] += $request['bytesIn'];
-                $breakdown[$contentType]['requests']++;
+
+        foreach($requestsArray as $request) {
+            if (isset($request['contentType']) && isset($request['url'])) {
+                $contentType = ContentType($request['contentType'], $request['url']);
+                $object = strtolower($request['url']);
+                if( strlen($contentType) && (stripos($object, 'favicon.ico') === FALSE) ) {
+                    $breakdown[$contentType]['bytes'] += $request['bytesIn'];
+                    $breakdown[$contentType]['requests']++;
+                }
             }
-          }
         }
         $cache["run_$run"]["cached_$cached"] = $breakdown;
         file_put_contents($cache_file, json_encode($cache));
     }
-    
+
     return $breakdown;
 }
 
 /**
 * Get a combined result that has both first and repeat view data
-* 
+*
 * @param mixed $id
 * @param mixed $run
 */
@@ -104,7 +110,7 @@ function getBreakdownCombined($id, $testPath, $run)
             $combined[$type] = $fv;
         }
     }
-    
+
     return $combined;
 }
 ?>

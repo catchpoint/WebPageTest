@@ -4,20 +4,29 @@ if(extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('GetImageHistogram');
 }
 require_once('devtools.inc.php');
+require_once('utils.inc');
 
 /**
 * Calculate the progress for all of the images in a given directory
 */
 function GetVisualProgress($testPath, $run, $cached, $options = null, $end = null, $startOffset = null) {
     $frames = null;
+
     if (substr($testPath, 0, 1) !== '.')
       $testPath = './' . $testPath;
     $testInfo = GetTestInfo($testPath);
     $completed = IsTestRunComplete($run, $testInfo);
     $video_directory = "$testPath/video_{$run}";
+
+    $eventNumber = checkOptionKeyAndGetValue('eventNumber', $options);
+    if($eventNumber !== false){
+    	$video_directory .= "_{$eventNumber}";
+    	$cache_file = "$testPath/$run.$eventNumber.$cached.visual.dat";
+    } else {
+    	$cache_file = "$testPath/$run.$cached.visual.dat";
+    }
     if ($cached)
         $video_directory .= '_cached';
-    $cache_file = "$testPath/$run.$cached.visual.dat";
     if (!isset($startOffset))
       $startOffset = 0;
     $visual_data_file = "$testPath/llab_$run.$cached.visual.dat";
@@ -35,7 +44,7 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
         else
             unset($end);
     }
-    if (!isset($end) && !isset($options) && gz_is_file($cache_file)) {
+    if (!isset($end) && (!isset($options) || $eventNumber !== false) && gz_is_file($cache_file)) {
         $frames = json_decode(gz_file_get_contents($cache_file), true);
         if (!array_key_exists('frames', $frames) || !array_key_exists('version', $frames))
             unset($frames);
@@ -47,30 +56,42 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
         $frames = array('version' => $current_version);
         $frames['frames'] = array();
         $dirty = true;
-        if (is_dir($video_directory)) {
+        $base_path = substr($video_directory, 1);
+
+        $base_path = $video_directory;
           $files = scandir($video_directory);
           $last_file = null;
           $first_file = null;
           $previous_file = null;
+
+        if($eventNumber === false){
+            $stepBeginsAt = getRelativeBeginOfEveryStep($testPath,$run,$cached);
+        } else {
+            $pageData = loadPageRunData($testPath, $run, $cached, array( 'eventNumberKeys' => true, 'noVisualProgress' => true));
+            $eventName = $pageData[$eventNumber]['eventName'];
+        }
+
           foreach ($files as $file) {
-              if (strpos($file,'frame_') !== false && strpos($file,'.hist') === false) {
-                  $parts = explode('_', $file);
-                  if (count($parts) >= 2) {
-                      $time = (((int)$parts[1]) * 100) - $startOffset;
-                      if ($time >= 0 && (!isset($end) || $time <= $end)) {
-                        if (isset($previous_file) && !array_key_exists(0, $frames['frames']) && $time > 0) {
-                          $frames['frames'][0] = array('path' => "$base_path/$previous_file",
-                                                       'file' => $previous_file);
-                          $first_file = $previous_file;
-                        } elseif (!isset($first_file))
-                          $first_file = $file;
-                        $last_file = $file;
-                        $frames['frames'][$time] = array('path' => "$base_path/$file",
-                                                         'file' => $file);
-                      }
-                      $previous_file = $file;
-                  }
-              } elseif (strpos($file,'ms_') !== false && strpos($file,'.hist') === false) {
+            if (preg_match("/frame_(?P<stepNumber>[0-9]+)_(?P<frameNumber>[0-9]+).jpg/",$file,$matches)) {
+                if($eventNumber === false){
+                    $time = (intval($matches['frameNumber']) * 100) - $startOffset + $stepBeginsAt[intval($matches['stepNumber'])];
+                } else {
+                    $time = (intval($matches['frameNumber']) * 100) - $startOffset;
+                }
+
+                    if ($time >= 0 && (!isset($end) || $time <= $end)) {
+                      if (isset($previous_file) && !array_key_exists(0, $frames['frames']) && $time > 0) {
+                        $frames['frames'][0] = array('path' => "$base_path/$previous_file",
+                                                     'file' => $previous_file);
+                        $first_file = $previous_file;
+                      } elseif (!isset($first_file))
+                        $first_file = $file;
+                      $last_file = $file;
+                      $frames['frames'][$time] = array('path' => "$base_path/$file",
+                                                       'file' => $file);
+                    }
+                    $previous_file = $file;
+              } elseif ((strpos($file,'ms_') !== false && strpos($file,'.hist') === false)) {
                   $parts = explode('_', $file);
                   if (count($parts) >= 2) {
                       $time = intval($parts[1]) - $startOffset;
@@ -96,13 +117,10 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
               }
           } elseif (isset($first_file) && strlen($first_file) &&
                     isset($last_file) && strlen($last_file) && count($frames['frames'])) {
-              $histograms = null;
-              if (gz_is_file("$testPath/$run.$cached.histograms.json"))
-                $histograms = json_decode(gz_file_get_contents("$testPath/$run.$cached.histograms.json"), true);
-              $start_histogram = GetImageHistogram("$video_directory/$first_file", $options, $histograms);
-              $final_histogram = GetImageHistogram("$video_directory/$last_file", $options, $histograms);
+            $start_histogram = GetImageHistogram("$video_directory/$first_file", $options);
+            $final_histogram = GetImageHistogram("$video_directory/$last_file", $options);
               foreach($frames['frames'] as $time => &$frame) {
-                  $histogram = GetImageHistogram("$video_directory/{$frame['file']}", $options, $histograms);
+                $histogram = GetImageHistogram("$video_directory/{$frame['file']}", $options);
                   $frame['progress'] = CalculateFrameProgress($histogram, $start_histogram, $final_histogram, 5);
                   if ($frame['progress'] == 100 && !array_key_exists('complete', $frames))
                       $frames['complete'] = $time;
@@ -126,7 +144,6 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
               $frames['complete'] = $time;
           }
         }
-    }
     if (isset($frames) && !array_key_exists('SpeedIndex', $frames)) {
         $dirty = true;
         $frames['SpeedIndex'] = CalculateSpeedIndex($frames);
@@ -143,7 +160,7 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
               $frame['path'] = $base_path . '/' . basename($frame['path']);
         }
     }
-    if ($completed && !isset($end) && !isset($options) && $dirty && isset($frames) && count($frames))
+    if ($completed && !isset($end) && (!isset($options) || $eventNumber !== false) && $dirty && isset($frames) && count($frames))
         gz_file_put_contents($cache_file,json_encode($frames));
     return $frames;
 }
@@ -151,7 +168,7 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
 /**
 * Calculate histograms for each color channel for the given image
 */
-function GetImageHistogram($image_file, $options, $histograms) {
+function GetImageHistogram($image_file, $options = null, $eventName = null) {
   $histogram = null;
   
   $ext = strripos($image_file, '.jpg');
@@ -194,7 +211,12 @@ function GetImageHistogram($image_file, $options, $histograms) {
 
   // generate a histogram from the image itself
   if (!isset($histogram)) {
-      $im = imagecreatefromjpeg($image_file);
+        if(isset($eventName) && $eventName != null) {
+            $pathToMergedImage = imagecreatefromjpeg_by_bitmask($image_file, $eventName);
+            $im = imagecreatefromjpeg($pathToMergedImage);
+        }
+        else
+        $im = imagecreatefromjpeg($image_file);
       if ($im !== false) {
           $width = imagesx($im);
           $height = imagesy($im);
@@ -255,8 +277,9 @@ function GetImageHistogram($image_file, $options, $histograms) {
           }
           imagedestroy($im);
           unset($im);
+            unlink($pathToMergedImage);
       }
-      if (!isset($options) && isset($histogram_file) && !is_file($histogram_file) && isset($histogram))
+        if ((!isset($options) || array_keys($options) == array( 'eventNumber' )) && isset($histogram_file) && !is_file($histogram_file) && isset($histogram))
         file_put_contents($histogram_file, json_encode($histogram));
   }
   return $histogram;
@@ -375,5 +398,54 @@ function RGB_TO_YUV(&$r, &$g, &$b) {
     $r = min(max((int)$Y, 0), 255);
     $g = min(max((int)$U, 0), 255);
     $b = min(max((int)$V, 0), 255);
+}
+
+/**
+ * Take the original $image_file and pipe it through a bitmask lying in VP_BITMASK_PATH.
+ * This image will only be stored in memory, so the original screenshot will be still available.
+ * Return: jpegimage-object processed by bitmask
+ */
+function imagecreatefromjpeg_by_bitmask($image_file, $eventName) {
+    $pathToBitmask = get_path_to_bitmask($eventName);
+
+    // Create PHP-Objects from imagefiles
+    $originalImage = new Imagick($image_file);
+    if (file_exists($pathToBitmask)) {
+        $bitmaskImage = new Imagick($pathToBitmask);
+        $width = $originalImage->getImageWidth();
+        $length = $originalImage->getImageHeight();
+        $bitmaskImage->scaleImage($width,$length);
+
+        // IMPORTANT! Must activate the opacity channel
+        // See: http://www.php.net/manual/en/function.imagick-setimagematte.php
+        $originalImage->setImageMatte(1);
+
+        // Create composite of two images using DSTIN
+        // See: http://www.imagemagick.org/Usage/compose/#dstin
+        $originalImage->compositeImage($bitmaskImage, Imagick::COMPOSITE_DSTIN, 0, 0);
+    }
+
+    $originalImage->setImageFormat( "jpg" );
+
+    $pathToMergedImage = "./tmp/" . uniqid() . ".jpg";
+    $originalImage->writeImage($pathToMergedImage);
+
+    return $pathToMergedImage;
+}
+
+function get_path_to_bitmask($eventName) {
+    $settings = parse_ini_file('./settings/settings.ini');
+    $limiterInEventName = ":::";
+    $pathToBitmask = null;
+
+    if (array_key_exists('vp_bitmask_path', $settings) && $eventName != null) {
+        $basePath = $settings['vp_bitmask_path'];
+        if (file_exists($basePath) && is_dir($basePath)) {
+            $pathToBitmask = rtrim($basePath, "/");
+            $pathToBitmask = $pathToBitmask . "/" . str_replace($limiterInEventName, "/", $eventName) . ".png";
+        }
+    }
+
+    return $pathToBitmask;
 }
 ?>

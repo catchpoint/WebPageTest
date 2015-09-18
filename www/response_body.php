@@ -19,8 +19,9 @@ if (isset($_GET['request'])) {
     }
   }
 }
+$eventNumber = $_GET['eventNumber'];
 if ($request) {
-    $bodies_file = $testPath . '/' . $run . $cachedText . '_bodies.zip';
+    $bodies_file = $testPath . '/' . $run . $cachedText . '_' . $eventNumber . '_bodies.zip';
     if (is_file($bodies_file)) {
         $zip = new ZipArchive;
         if ($zip->open($bodies_file) === TRUE) {

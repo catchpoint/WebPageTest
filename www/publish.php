@@ -108,7 +108,6 @@ function PublishResult()
               if ($file != 'publish.zip') {
                 $filePath = "$testPath/$file";
                 if (is_file($filePath)) {
-                    $count++;
                     $zip->addFile($filePath, $file);
                 } else if ($file != '.' && $file != '..' && is_dir($filePath)) {
                     $subFiles = scandir($filePath);

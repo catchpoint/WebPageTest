@@ -1,13 +1,17 @@
 <?php
 chdir('..');
-$MIN_DAYS = 2;
+$archive_days = 2;
+$MAX_RUN_TIME = 25200;  // script runs for only 25200s = 7h
+$media_file_patterns = array(".mp4", ".avs", ".png", "video"); // files which contain one of these strings in filename get deleted if before media_days in past
 
 include 'common.inc';
 require_once('archive.inc');
 ignore_user_abort(true);
-set_time_limit(3300);   // only allow it to run for 55 minutes
+set_time_limit(3300);   // only allow it to run for 55 minutes - this is the time acting in THIS script, not for any system- or db-calls http://php.net/manual/en/function.set-time-limit.php
 if (function_exists('proc_nice'))
   proc_nice(19);
+
+$startTime = microtime(true);
 
 // bail if we are already running
 $lock = Lock("Archive", false, 3600);
@@ -16,14 +20,29 @@ if (!isset($lock)) {
   exit(0);
 }
 
+$archive_days = null;
 if (array_key_exists('archive_days', $settings)) {
-    $MIN_DAYS = $settings['archive_days'];
+    $archive_days = $settings['archive_days'];
+    $archive_days = max($archive_days,0.1);
 }
-$MIN_DAYS = max($MIN_DAYS,0.1);
 
 $archive_dir = null;
 if (array_key_exists('archive_dir', $settings)) {
     $archive_dir = $settings['archive_dir'];
+}
+
+$media_days = null;
+if (array_key_exists('media_days', $settings)) {
+    $media_days = $settings['media_days'];
+    $media_days = max($media_days,0.1);
+}
+
+$min_days = min($media_days,$archive_days);
+
+$clear_archive_days = null;
+if (array_key_exists('clear_archive_days', $settings)) {
+    $clear_archive_days = $settings['clear_archive_days'];
+    $clear_archive_days = max($clear_archive_days,0.1);
 }
 
 $kept = 0;
@@ -41,7 +60,7 @@ $UTC = new DateTimeZone('UTC');
 
 $now = time();
 
-if ((isset($archive_dir) && strlen($archive_dir)) ||
+if (isset($media_days) || (isset($archive_dir) && strlen($archive_dir)) ||
     (array_key_exists('archive_s3_server', $settings) && strlen($settings['archive_s3_server']))) {
     //CheckRelay();
     CheckOldDir('./results/old');
@@ -61,8 +80,11 @@ if ((isset($archive_dir) && strlen($archive_dir)) ||
                         $dayDir = "$monthDir/$day";
                         if( is_dir($dayDir) && $day != '.' && $day != '..' ) {
                             $elapsedDays = ElapsedDays($year, $month, $day);
-                            if ($elapsedDays >= ($MIN_DAYS - 1)) {
+                            if ($elapsedDays >= ($min_days)) {
                                 CheckDay($dayDir, "$year$month$day", $elapsedDays);
+                            }
+                            if ((microtime(true) - $startTime) > $MAX_RUN_TIME) { //check if maximal allowed runtime reached
+                                exit(0); //if yes, end the archiving immediately
                             }
                         }
                     }
@@ -70,6 +92,39 @@ if ((isset($archive_dir) && strlen($archive_dir)) ||
                 }
             }
             rmdir($yearDir);
+        }
+    }
+
+    // Clear the archive-directory
+    if (isset($archive_dir) && isset($clear_archive_days)) {
+        $years = scandir($archive_dir . "results");
+        foreach ($years as $year) {
+            mkdir("$archive_dir/logs/archived", 0777, true);
+            $yearDir = $archive_dir . "results/$year";
+            if (is_numeric($year) && is_dir($yearDir) && $year != '.' && $year != '..') {
+                $months = scandir($yearDir);
+                foreach ($months as $month) {
+                    $monthDir = "$yearDir/$month";
+                    if (is_dir($monthDir) && $month != '.' && $month != '..') {
+                        $days = scandir($monthDir);
+                        foreach ($days as $day) {
+                            $dayDir = "$monthDir/$day";
+                            if (is_dir($dayDir) && $day != '.' && $day != '..') {
+                                $elapsedDays = ElapsedDays($year, $month, $day);
+                                if ($elapsedDays >= ($clear_archive_days)) {
+                                    delTree($dayDir);
+                                    fwrite($log, "Archives in $dayDir removed \n");
+                                }
+                                if ((microtime(true) - $startTime) > $MAX_RUN_TIME) { //check if maximal allowed runtime reached
+                                    exit(0); //if yes, end the archiving immediately
+                                }
+                            }
+                        }
+                        rmdir($monthDir);
+                    }
+                }
+                rmdir($yearDir);
+            }
         }
     }
 }
@@ -215,46 +270,63 @@ function CheckTest($testPath, $id, $elapsedDays) {
   global $deleted;
   global $kept;
   global $log;
-  global $MIN_DAYS;
-  $logLine = "$id : ";
+    global $archive_dir;
+    global $archive_days;
+    global $media_days;
+    global $media_file_patterns;
+    global $settings;
+    $logLine = "$id : ";
 
   echo "\rArc:$archiveCount, Del:$deleted, Kept:$kept, Checking:" . str_pad($id,45);
 
   $delete = false;
-  $elapsed = TestLastAccessed($id);
-  if (isset($elapsed)) {
-    if( $elapsed >= $MIN_DAYS ) {
+    if (isset($elapsedDays)) {
+        if( isset($media_days) && $elapsedDays >= $media_days ) {
+            echo $testPath;
+            delFilesByFileNameRecursive("$testPath/",$media_file_patterns);
+            $logLine .= "Last Accessed $elapsedDays days, media-files were been deleted ";
+        } else {
+            $logLine .= "Last Accessed $elapsedDays days, media-files were not deleted ";
+        }
+      if( isset($archive_days) && $elapsedDays >= $archive_days && ((isset($archive_dir) && strlen($archive_dir)) ||
       if (ArchiveTest($id) ) {
         $archiveCount++;
-        $logLine .= "Archived";
+              $logLine .= "and job results are archived";
                                                                                       
-        if (VerifyArchive($id) || $elapsed >= 30)
+              if (!VerifyArchive($id) && $elapsedDays < 30)
           $delete = true;
-      } else if ($elapsed < 60) {
+          } else if ($elapsedDays < 60) {
         $status = GetTestStatus($id, false);
+              $logLine .= "and job result are maybe archived ";
         if ($status['statusCode'] >= 400 ||
             ($status['statusCode'] == 102 &&
              $status['remote'] &&
-             $elapsed > 1)) {
+                   $elapsedDays > 1))
           $delete = true;
         }
       } elseif ($elapsedDays > 10) {
-        $logLine .= "Old test, Failed to archive, deleting";
+            $logLine .= "Old test, Failed to archive, deleting";
         $delete = true;
       } else {
         $logLine .= "Failed to archive";
       }
-    } else {
-      $logLine .= "Last Accessed $elapsed days";
+      } else {
+          if( isset($media_days) && $elapsed >= $media_days ) {
+              echo $testPath;
+              delFilesByFileEndingRecursive("$testPath/",$media_file_endings);
+              $logLine .= "Last Accessed $elapsed days, media-files were been deleted";
+          } else {
+              $logLine .= "Last Accessed $elapsed days";
+          }
     }
   } else {
-    $delete = true;
+      $logLine .= "Testfolder $testPath couldn't get deleted, because elapsed days couldn't get determined: $elapsedDays";
   }
 
   if ($delete) {
     delTree("$testPath/");
     $deleted++;
-    $logLine .= " Deleted";
+        $logLine .= ",job results are deleted";
   } else {
     $kept++;
   }

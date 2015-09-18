@@ -168,7 +168,11 @@ function RenderVideo(&$tests) {
     if (isset($test['path']) &&
         isset($test['run']) &&
         isset($test['cached'])) {
-      $progress = GetVisualProgress("./{$test['path']}", $test['run'], $test['cached']);
+      if(array_key_exists('eventNumber',$test['pageData'][$test['run']][$test['cached']])) {
+        $progress = GetVisualProgress("./{$test['path']}", $test['run'], $test['cached'],array("eventNumber" => $test['pageData'][$test['run']][$test['cached']]['eventNumber']));
+      } else {
+        $progress = GetVisualProgress("./{$test['path']}", $test['run'], $test['cached']);
+      }
       if (isset($progress) && is_array($progress) && isset($progress['frames'])) {
         $test['frames'] = $progress['frames'];
         if (count($test['frames'])) {
@@ -188,7 +192,7 @@ function RenderVideo(&$tests) {
       }
     }
   }
-
+  
   if ($scale < 1) {
     $labelHeight = ceil($labelHeight * $scale);
     $timeHeight = ceil($timeHeight * $scale);

@@ -115,6 +115,7 @@ $loc = ParseLocations($locations);
                             <select name="where" id="location">
                                 <?php
                                 $lastGroup = null;
+                                $testerCounts = GetTesterCounts();
                                 foreach($loc['locations'] as &$location)
                                 {
                                     $selected = '';
@@ -128,9 +129,19 @@ $loc = ParseLocations($locations);
                                             echo "<optgroup label=\"" . htmlspecialchars($lastGroup) . "\">";
                                         } else
                                             $lastGroup = null;
+                                    }                               
+                                    $testerCount = $testerCounts[$location['name']];  
+                                    echo "<option value=\"{$location['name']}\" $selected>{$location['label']}";
+                                    if($testerCount){
+	                                    echo " ({$testerCount} ";
+	                                    if($testerCount == 1){
+	                                    	echo "Agent";
+	    								} else {
+											echo "Agenten";
+										}
+	                                    echo ")";
                                     }
-                                        
-                                    echo "<option value=\"{$location['name']}\" $selected>{$location['label']}</option>";
+                                    echo "</option>";
                                 }
                                 if (isset($lastGroup))
                                     echo "</optgroup>";
@@ -204,6 +215,7 @@ $loc = ParseLocations($locations);
                                 <?php if ($admin || !$settings['noBulk']) { ?>
                                 <li><a href="#bulk">Bulk Testing</a></li>
                                 <?php } ?>
+                                <li><a href="#iteratec">iteratec Extensions</a></li>
                             </ul>
                             <div id="test-settings" class="test_subbox">
                                 <ul class="input_fields">
@@ -221,7 +233,7 @@ $loc = ParseLocations($locations);
                                             ?>
                                         </select>
                                         <br>
-                                        <table class="configuration hidden" id="bwTable">
+                                        <table class="configuration" id="bwTable">
                                             <tr>
                                                 <th>BW Down</th>
                                                 <th>BW Up</th>
@@ -558,7 +570,19 @@ $loc = ParseLocations($locations);
                                 upload list of Urls (one per line): <input type="file" name="bulkfile" size="40"> 
                             </div>
                             <?php } ?>
-
+							
+							<div id="iteratec" class="test_subbox ui-tabs-hide">
+								 <ul class="input_fields">
+                                    <li>
+                                        <input type="checkbox" name="imageCaching" id="imageCaching" class="checkbox" style="float: left;width: auto;">
+                                        <label for="imageChacing" class="auto_width">
+                                            Image Caching for Waterfall and Connection Views<br>
+                                            <small>Generate images for faster loading waterfall and connection detail views (Thumbnail caching can't be disabled)</small><br/>
+                                        </label>
+                                    </li>
+                                 </ul>
+							</div>
+							
                         </div>
                     </div>
                 </div>
@@ -672,5 +696,52 @@ function LoadLocations()
     }
     
     return $locations;
+}
+
+/**
+ * Get the count of testers for each location
+ *
+ */
+function GetTesterCounts()
+{
+	$locations = array();
+	$loc = parse_ini_file('./settings/locations.ini', true);
+	BuildLocations($loc);
+	$testerCount = array();
+	
+	$i = 1;
+	while( isset($loc['locations'][$i]) )
+	{
+		$key = $loc['locations'][$i];
+		if(!array_key_exists($testerCount, $key)){
+			$testerCount[$key] = 0;
+		}
+		$group = &$loc[$loc['locations'][$i]];
+		$j = 1;
+		$lastLocation = null;
+		while( isset($group[$j]) )
+		{
+			if (array_key_exists('relayServer', $loc[$group[$j]]) && strlen($loc[$group[$j]]['relayServer']) &&
+			array_key_exists('relayLocation', $loc[$group[$j]]) && strlen($loc[$group[$j]]['relayLocation'])) {
+				$locations[$loc[$group[$j]]['location']] = GetRemoteTesters($loc[$group[$j]]['relayServer'], $loc[$group[$j]]['relayLocation']);
+			} else {
+				$locations[$loc[$group[$j]]['location']] = GetTesters($loc[$group[$j]]['location']);
+			}	
+			
+			// Compare current location with last location and add tester count if new location
+			// Necessary since each location appears once for each browser
+			$tmp = split(":", $group[$j]);
+			$curLocation = $tmp[0];
+			if($lastLocation == null || strcmp($lastLocation, $curLocation) !== 0){
+				$testerCount[$key] += count($locations[$loc[$group[$j]]['location']]['testers']);
+			}			
+			$lastLocation = $curLocation;
+			
+			$j++;
+		}
+		$i++;
+	}
+
+	return $testerCount;
 }
 ?>

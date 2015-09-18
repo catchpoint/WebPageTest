@@ -121,12 +121,20 @@ else
                             $test['syncDocTime'] = (int)$p[1];
                         if( $p[0] == 'f' )
                             $test['syncFullyLoaded'] = (int)$p[1];
+                        if( $p[0] == 'p' )
+                            $testEventNumber = (int)$p[1];
                     }
                 }
 
                 RestoreTest($test['id']);
                 $test['path'] = GetTestPath($test['id']);
-                $test['pageData'] = loadAllPageData($test['path']);
+                if(isset($testEventNumber)){
+                    $pageDataArray = loadAllPageData($test['path'],array("allEvents" => true,"eventNumberKeys" => true));
+                    $test['pageData'] = $pageDataArray[$testEventNumber];
+                } else {
+                    $test['pageData'] = loadAllPageData($test['path']);
+                }
+
 
                 if( !$test['run'] )
                     $test['run'] = GetMedianRun($test['pageData'], 0, $median_metric);
@@ -160,6 +168,23 @@ else
                         $test['end'] = 0;
                     elseif( !strcmp($test['end'], 'all') )
                         $test['end'] = -1;
+                    elseif(count($test['pageData']) > 0){
+                        $tempEnd = 0;
+                        $stepBeginsAt = getRelativeBeginOfEveryStep("./".$test['path'],$test['run'],$test['cached']);
+
+                        foreach($test['pageData'] as $eventName => $eventData){
+                            if(count($eventData[$test['run']]) > 0) {
+                                $eventNumber = $eventData[$test['run']][$test['cached']]['eventNumber'];
+                                if ($eventNumber == count($test['pageData'][$test['run']][$test['cached']])) {
+                                    $tempEnd = $tempEnd + $eventData[$test['run']][$test['cached']]['visualComplete'];
+                                } else {
+                                    $tempEnd = $tempEnd + $stepBeginsAt[$eventNumber + 1];
+                                }
+                            }
+
+                        }
+                        $test['end'] = $tempEnd;
+                    }
                     else
                         $test['end'] = (int)((double)$test['end'] * 1000.0);
                 }
@@ -168,7 +193,11 @@ else
                 elseif( !$test['end'] )
                     $test['end'] = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];
 
-                $test['videoPath'] = "./{$test['path']}/video_{$test['run']}";
+                if(array_key_exists('eventNumber',$test['pageData'][$test['run']][$test['cached']])){
+                    $test['videoPath'] = "./{$test['path']}/video_{$test['run']}_{$test['pageData'][$test['run']][$test['cached']]['eventNumber']}";
+                } else {
+                    $test['videoPath'] = "./{$test['path']}/video_{$test['run']}";
+                }
                 if( $test['cached'] )
                     $test['videoPath'] .= '_cached';
 

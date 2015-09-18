@@ -274,7 +274,7 @@ else
                                                   echo '<tr>';
                                                   echo '<td>';
                                                   if( isset($guid) && $video && !( $url == "Bulk Test" || $url == "Multiple Locations test" ) ) {
-                                                      echo "<input type=\"checkbox\" name=\"t[]\" value=\"$guid\" title=\"First View\">";
+                                                    echo "<input type=\"checkbox\" name=\"t[]\" value=\"{$guid}-r:1-p:1-c:0\">";
                                                       if($repeat) {
                                                           echo "<input type=\"checkbox\" name=\"t[]\" value=\"$guid-c:1\" title=\"Repeat View\">";
                                                       } 

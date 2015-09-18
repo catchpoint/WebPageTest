@@ -17,19 +17,29 @@ function MoveVideoFiles($testPath)
                 $src = $testPath  . "/$file";
                 $parts = explode('_', $file);
                 if( count($parts) )
-                {
+                {                	
                     $run = (int)$parts[0];
-                    if( $run )
+                    $page = $parts[1];
+                    if( $run && $page )
                     {
-                        $destDir = $testPath . "/video_$run";
-                        if( strpos($file, '_Cached') !== false )
-                            $destDir .= '_cached';
+                    	$cached = '';
+                    	if( strpos($file, '_Cached') ){
+                    		$cached = '_cached';
+                    		$page = $parts[2];
+                    	}
+                        $destDir = $testPath . "/video_" . $run. "_" . $page . $cached;
+                        $destOldDir = $testPath . "/video_" . $run. $cached;
                             
                         if( !is_dir($destDir) )
                             mkdir($destDir, 0777, true);
+                        if( !is_dir($destOldDir) )
+                        	mkdir($destOldDir);
                         
-                        $fileBase = $parts[count($parts) - 1];
-                        $dest = "$destDir/frame_$fileBase";
+                        $fileNumber = $parts[count($parts) - 1];
+                        $frame = "frame_" . $page . "_" . $fileNumber;
+                        $dest = $destDir . "/" . $frame;
+                        $destOld = $destOldDir . "/" . $frame;
+                        copy($src, $destOld);
                         rename($src, $dest);
                     }
                 }
@@ -152,13 +162,12 @@ function ZipVideo($path)
 {
     if( is_dir($path) )
     {
-        $zipFile .= $path . '/video.zip';    
+        $zipFile .= $path . '/video.zip';
         if( is_file($zipFile) )
             $path = substr($zipFile,1);
         else
         {
             // zip up the directory contents
-
             // build the list of files to zip
             $files;
             $dir = opendir("$path");
@@ -169,9 +178,8 @@ function ZipVideo($path)
                         $files[] = $path . "/$file";
                 closedir($dir);
             }
-
             if( isset($files) && count($files) )
-            {    
+            {
                 // zip up the results
                 $zip = new ZipArchive();
                 if ($zip->open($zipFile, ZIPARCHIVE::CREATE) === true) {
@@ -185,12 +193,12 @@ function ZipVideo($path)
                 }
                 $path = substr($zipFile,1);
             }
-            
+
         }
     }
     else
         unset($path);
-        
+
     return $path;
 }
   

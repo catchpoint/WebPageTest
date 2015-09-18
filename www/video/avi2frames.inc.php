@@ -1,6 +1,6 @@
 <?php
 require_once('devtools.inc.php');
-if(extension_loaded('newrelic')) { 
+if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('ProcessAVIVideo');
   newrelic_add_custom_tracer('Video2PNG');
   newrelic_add_custom_tracer('FindAVIViewport');
@@ -11,10 +11,10 @@ if(extension_loaded('newrelic')) {
 }
 
 /**
-* Re-process all of the video for an existing test
-* 
-* @param mixed $id
-*/
+ * Re-process all of the video for an existing test
+ *
+ * @param mixed $id
+ */
 function ReprocessVideo($id) {
   $testPath = './' . GetTestPath($id);
   if (is_dir($testPath)) {
@@ -45,14 +45,16 @@ function ReprocessVideo($id) {
 }
 
 /**
-* Convert an AVI video capture into the video frames the WPT is expecting
-* 
-* @param mixed $testPath
-* @param mixed $run
-* @param mixed $cached
-*/
+ * Convert an AVI video capture into the video frames the WPT is expecting
+ *
+ * @param mixed $testPath
+ * @param mixed $run
+ * @param mixed $cached
+ */
 function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
   global $max_load;
+  // the processing takes max 20 minutes
+  set_time_limit(20 * 60);
   $cachedText = '';
   if( $cached )
     $cachedText = '_Cached';
@@ -62,7 +64,7 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
     $videoFile = "$testPath/$run{$cachedText}_video.avi";
     
   if (is_file($videoFile)) {
-    $videoDir = "$testPath/video_$run" . strtolower($cachedText);
+    $videoDir = "$testPath/video_".$run . strtolower($cachedText);
     if (!is_file("$videoDir/video.json")) {
       if (isset($max_load) && $max_load > 0)
         WaitForSystemLoad($max_load, 3600);
@@ -89,10 +91,11 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
                 copy($lastImage, $screenShot);
             }
           }
+          MoveVideoFilesToStepfolders($test['id'],$videoDir,$testPath,$run,$cached);
         }
       }
       $videoInfo = array();
-      if (isset($viewport))
+      if (isset($viewport) && $viewport != null)
         $videoInfo['viewport'] = $viewport;
       file_put_contents("$videoDir/video.json", json_encode($videoInfo));
     }
@@ -100,16 +103,16 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
 }
 
 /**
-* Use ffmpeg to extract the given video file to individual frames at 10fps
-* 
-* @param mixed $infile
-* @param mixed $outdir
-*/
+ * Use ffmpeg to extract the given video file to individual frames at 10fps
+ *
+ * @param mixed $infile
+ * @param mixed $outdir
+ */
 function Video2PNG($infile, $outdir, $crop) {
   $ret = false;
   $oldDir = getcwd();
   chdir($outdir);
-  
+
   // figure out which decimate filter we need to use (originally it was called decimate but then renamed to mpdecimate)
   $decimate = null;
   exec('ffmpeg -filters', $output, $result);
@@ -154,10 +157,10 @@ function Video2PNG($infile, $outdir, $crop) {
 }
 
 /**
-* De-dupe the video frames and compress them for normal WPT processing
-* 
-* @param mixed $videoDir
-*/
+ * De-dupe the video frames and compress them for normal WPT processing
+ *
+ * @param mixed $videoDir
+ */
 function ProcessVideoFrames($videoDir, $viewport) {
   $startFrame = null;
   $lastFrame = 0;
@@ -173,11 +176,68 @@ function ProcessVideoFrames($videoDir, $viewport) {
         $lastImage = "$videoDir/ms_" . sprintf('%06d', $frame_ms - $startFrame) . '.jpg';
       }
       CopyAVIFrame($file, $lastImage);
-      CreateHistogram($file, str_replace('.jpg', '.hist', $lastImage), $viewport);
+      // CreateHistogram($file, str_replace('.jpg', '.hist', $lastImage), $viewport);
       unlink($file);
     }
   }
   return $lastImage;
+}
+
+/**
+ * Moves all video-frames from videoDir to specific step folders
+ *
+ * @param mixed $videoDir
+ */
+function MoveVideoFilesToStepfolders($id,$videoDir,$testPath,$run,$cached){
+  $secure = false;
+  $haveLocations = false;
+  $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, true, true, true);
+
+  $eventNumber = 0;
+
+  $stepBeginsAt = getRelativeBeginOfEveryStep($testPath,$run,$cached);
+
+  //SORT IMAGES TO STEP-FOLDER
+  foreach($requests as $eventRequests){
+    $eventNumber++;
+    $destVideoPath = $testPath."/video_".$run."_".$eventNumber;
+    $destPreviousVideoPath = $testPath."/video_".$run."_".($eventNumber-1);
+
+    $allImages = glob($videoDir."/ms_*");
+
+    mkdir($destVideoPath, 0777, true);
+
+    //Move video-images of the previous step into the correct folder
+    if ((count($requests) > 1) && $eventNumber > 1){
+      foreach($allImages as $imageFile){
+        if(preg_match('/ms_(?P<frame>[0-9]+)/', $imageFile, $matches)){
+          $frameTime = intval($matches['frame']);
+          $filename = basename($imageFile);
+          if($frameTime < $stepBeginsAt[($eventNumber)]){
+            copy($imageFile, $destPreviousVideoPath . "/" . $filename);
+          } elseif((count($requests) == $eventNumber) && $frameTime >= $stepBeginsAt[($eventNumber)]){
+            copy($imageFile, $destVideoPath . "/" . $filename);
+          }
+        }
+      }
+    }
+  }
+
+  //RENAMING ALL VIDEO-IMAGES
+  $allVideoFolders = glob($testPath."/video_*_*");
+  foreach($allVideoFolders as $videoFolder){
+    $allImageFiles = glob($videoFolder."/ms_*");
+    preg_match('/ms_(?P<frame>[0-9]+)/', $allImageFiles[0], $matches); //get base-image-number
+    $baseFrame = intval($matches['frame']);
+    foreach($allImageFiles as $imageFile){
+      if(preg_match('/ms_(?P<frame>[0-9]+)/', $imageFile, $matches)){
+        $fileExt = pathinfo($imageFile, PATHINFO_EXTENSION);
+        $frameTime = intval($matches['frame']);
+        $frameTimeAsString = str_pad(($frameTime-$baseFrame), 6 ,'0', STR_PAD_LEFT);
+        rename($imageFile, $videoFolder . "/ms_" . $frameTimeAsString.".".$fileExt);
+      }
+    }
+  }
 }
 
 function CopyAVIFrame($src, $dest) {
@@ -198,12 +258,12 @@ function IsBlankAVIFrame($file) {
 }
 
 /**
-* Check to see if the given frame is an "orange" marker frame.
-* We need to be kind of loose for the definition of orange since
-* it varies a bit from capture to capture.
-* 
-* @param mixed $im
-*/
+ * Check to see if the given frame is an "orange" marker frame.
+ * We need to be kind of loose for the definition of orange since
+ * it varies a bit from capture to capture.
+ *
+ * @param mixed $im
+ */
 function IsOrangeAVIFrame($file) {
   $ret = false;
   $orange = realpath('./images/video_orange.png');
@@ -218,11 +278,11 @@ function IsOrangeAVIFrame($file) {
 }
 
 /**
-* Go through the video files and delete the ones that have identical md5 hashes
-* (in a series)
-* 
-* @param mixed $videoDir
-*/
+ * Go through the video files and delete the ones that have identical md5 hashes
+ * (in a series)
+ *
+ * @param mixed $videoDir
+ */
 function EliminateDuplicateAVIFiles($videoDir, $viewport) {
   $crop = '+0+6';
   if (isset($viewport)) {
@@ -249,7 +309,7 @@ function EliminateDuplicateAVIFiles($videoDir, $viewport) {
     else
       break;
   }
-  
+
   // Do a second pass looking for the last frame but with an allowance for up
   // to a 10% difference in individual pixels to deal with noise around text.
   $files = glob("$videoDir/image*.png");
@@ -293,10 +353,10 @@ function AreAVIFramesDuplicate($image1, $image2, $fuzzPct = 0, $crop = null) {
 }
 
 /**
-* Take a ms duration and convert it to HH:MM:SS.xxx fiormat
-* 
-* @param mixed $duration
-*/
+ * Take a ms duration and convert it to HH:MM:SS.xxx fiormat
+ *
+ * @param mixed $duration
+ */
 function msToHMS($duration) {
   $ms = number_format($duration - floor($duration), 3) * 1000;
   $duration = floor($duration);
@@ -308,12 +368,12 @@ function msToHMS($duration) {
 }
 
 /**
-* If the first frame is orange, use the orage to detect the viewport
-* and re-number the remaining frames
-* 
-* @param mixed $videoDir
-* @param mixed $viewport
-*/
+ * If the first frame is orange, use the orage to detect the viewport
+ * and re-number the remaining frames
+ *
+ * @param mixed $videoDir
+ * @param mixed $viewport
+ */
 function FindAVIViewport($videoDir, $startOffset, &$viewport) {
   $files = glob("$videoDir/video-*.png");
   if ($files && count($files)) {
@@ -419,57 +479,8 @@ function PixelColorsClose($rgb, $reference) {
 }
 
 function CreateHistogram($image_file, $histogram_file, $viewport) {
-  $histogram = null;
-  if (stripos($image_file, '.png') !== false)
-    $im = imagecreatefrompng($image_file);
-  elseif (stripos($image_file, '.jpg') !== false)
-    $im = imagecreatefromjpeg($image_file);
-  if ($im !== false) {
-    $width = imagesx($im);
-    $height = imagesy($im);
-    if (isset($viewport)) {
-      // Ignore a 4-pixel header on the actual viewport to allow for the progress bar.
-      $margin = 4;
-      $top = $viewport['y'] + $margin;
-      $left = $viewport['x'];
-      $bottom = min($top + $viewport['height'] - $margin, $height);
-      $right = min($left + $viewport['width'], $width);
-    } else {
-      $top = 0;
-      $left = 0;
-      $bottom = $height;
-      $right = $width;
-    }
-    if ($right > $left && $bottom > $top) {
-      $histogram = array();
-      $histogram['r'] = array();
-      $histogram['g'] = array();
-      $histogram['b'] = array();
-      for ($i = 0; $i < 256; $i++) {
-        $histogram['r'][$i] = 0;
-        $histogram['g'][$i] = 0;
-        $histogram['b'][$i] = 0;
-      }
-      $slop = 5;
-      for ($y = $top; $y < $bottom; $y++) {
-        for ($x = $left; $x < $right; $x++) {
-          $rgb = ImageColorAt($im, $x, $y);
-          $r = ($rgb >> 16) & 0xFF;
-          $g = ($rgb >> 8) & 0xFF;
-          $b = $rgb & 0xFF;
-          // ignore white pixels (allowing for slop)
-          if ($r < 255 - $slop || $g < 255 - $slop || $b < 255 - $slop) {
-            $histogram['r'][$r]++;
-            $histogram['g'][$g]++;
-            $histogram['b'][$b]++;
-          }
-        }
-      }
-      file_put_contents($histogram_file, json_encode($histogram));
-    }
-    imagedestroy($im);
-    unset($im);
-  }
+  require_once('visualProgress.inc.php');
+  GetImageHistogram($image_file);
 }
 
 /**
@@ -484,7 +495,6 @@ function FindVideoCrop($videoFile, $videoDir) {
   if (is_file($image))
     unlink($image);
   $command = "ffmpeg -i \"$videoFile\" -frames:v 1 \"$image\" 2>&1";
-  $result;
   exec($command, $output, $result);
   if (is_file($image)) {
     if (IsOrangeAVIFrame($image) || IsBlankAVIFrame($image)) {

@@ -496,7 +496,7 @@ function GetReboot() {
   if (!$reboot) {
     $testers = GetTesters($location);
     foreach ($testers as $t) {
-      if ($t['id'] == $tester && !$rebooted) {
+      if ($t['id'] == $tester && !$reboot) {
         if ($t['errors'] >= 100) {
           UpdateTester($location, $tester, null, null, null, true);
           $reboot = true;
