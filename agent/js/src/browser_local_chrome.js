@@ -59,6 +59,7 @@ function BrowserLocalChrome(app, args) {
   this.devToolsUrl_ = undefined;    // If running without chromedriver.
   this.chromeFlags_ = CHROME_FLAGS;
   this.task_ = args.task;
+  this.supportsTracing = true;
 }
 util.inherits(BrowserLocalChrome, browser_base.BrowserBase);
 /** @constructor */

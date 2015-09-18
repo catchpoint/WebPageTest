@@ -104,6 +104,7 @@ case "${browser}" in
         --iosIDeviceDir "$agent/lib/ios/idevice/$(uname -ms)" \
         --iosDevImageDir "$agent/lib/ios/DeviceSupport" \
         --iosSshProxyDir "$agent/lib/ios/usbmux_python_client" \
+        --iosVideoDir "$agent/lib/ios/video" \
         ${url_app:+--iosUrlOpenerApp "$url_app"});;
   *)
     echo "Unknown browser type \"${browser}\""

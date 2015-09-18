@@ -245,7 +245,28 @@ WebDriverServer.prototype.startChrome_ = function(browserCaps) {
     throw new Error('Internal error: prior Chrome running unexpectedly');
   }
   this.browser_.startBrowser(browserCaps, this.runNumber_ === 1);
+};
+
+WebDriverServer.prototype.startDevTools_ = function(browserCaps) {
+  if (this.browser_.prepareDevTools) {
+    this.browser_.prepareDevTools();
+  }
   this.connectDevTools_();
+};
+
+/**
+ * @private
+ */
+WebDriverServer.prototype.prepareVideoCapture_ = function() {
+  if (1 === this.task_['Capture Video']) {
+    this.getCapabilities_().then(function(caps) {
+      var videoFileExtension = caps.videoFileExtension || 'avi';
+      var videoFile = path.join(this.runTempDir_, 'video.' + videoFileExtension);
+      if (this.browser_.prepareVideoCapture) {
+        this.browser_.prepareVideoCapture(videoFile);
+      }
+    }.bind(this));
+  }
 };
 
 /**
@@ -431,6 +452,7 @@ WebDriverServer.prototype.addScreenshot_ = function(
     var fileNameJPEG = fileName.replace(/\.png$/i, '.jpg');
     var diskPathJPEG = diskPath.replace(/\.png$/i, '.jpg');
     var convertCommand = [diskPath];
+    convertCommand.push('-set', 'colorspace', 'sRGB');
     convertCommand.push('-resize', '50%');
     if (this.task_.rotate) {
       convertCommand.push('-rotate', this.task_.rotate);
@@ -826,7 +848,7 @@ WebDriverServer.prototype.clearPageAndStartVideoWd_ = function() {
 WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
   'use strict';
   // Always enable tracing, at a minimum to capture timeline data
-  if (!this.driver_ && !this.traceRunning_) {
+  if (this.browser_.supportsTracing && !this.driver_ && !this.traceRunning_) {
     this.traceData_ = {traceEvents: []};
     this.traceRunning_ = true;
     var message = {method: 'Tracing.start'};
@@ -845,11 +867,6 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
     }
     this.devToolsCommand_(message).then(function() {
       logger.debug('Started tracing');
-    }, function(e) {
-      // Might be crbug/392577, which affects Chrome 36.0.1967 - 37.0.2000.
-      this.testError_ = 'Tracing is not supported.';
-      this.traceRunning_ = false;
-      throw e;
     }.bind(this));
   }
 };
@@ -935,6 +952,8 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
   if (!this.devTools_) {
     this.startChrome_(browserCaps);
   }
+  this.prepareVideoCapture_();
+  this.startDevTools_();
   this.clearPageAndStartVideoDevTools_();
   this.scheduleStartPacketCaptureIfRequested_();
   // No page load timeout here -- agent_main enforces run-level timeout.
@@ -1257,7 +1276,7 @@ WebDriverServer.prototype.scheduleProcessVideo_ = function() {
       var videoDir = path.join(this.runTempDir_, 'video');
       this.histogramFile_ = path.join(this.runTempDir_, 'histograms.json');
       var traceFile = path.join(this.runTempDir_, 'trace.json');
-      var options = ['visualmetrics.py', '-i', this.videoFile_, '-d',
+      var options = ['lib/video/visualmetrics.py', '-i', this.videoFile_, '-d',
           videoDir, '--orange', '--viewport', '--force', '--quality', '75',
           '--histogram', this.histogramFile_];
       if (this.traceData_) {
@@ -1324,14 +1343,24 @@ WebDriverServer.prototype.done_ = function() {
       // video processing needs to be done after tracing has been stopped and collected
       this.scheduleProcessVideo_();
     }
+    logger.debug("Done collecting results")
+    var devToolsFile = this.devToolsMessages_ ? path.join(this.runTempDir_, 'devtools.json') : undefined;
+    if (devToolsFile) {
+      fs.writeFileSync(devToolsFile, JSON.stringify(this.devToolsMessages_));
+    }
+    var traceFile = this.traceData_ ? path.join(this.runTempDir_, 'trace.json') : undefined;
+    if (traceFile) {
+      fs.writeFileSync(traceFile, JSON.stringify(this.traceData_));
+    }
     this.scheduleNoFault_('Send IPC', function() {
+      logger.debug("Sending 'done' IPC")
       exports.process.send({
           cmd: (this.testError_ ? 'error' : 'done'),
           testError: this.testError_,
           agentError: this.agentError_,
-          devToolsMessages: this.devToolsMessages_,
+          devToolsFile: devToolsFile,
           screenshots: this.screenshots_,
-          traceData: this.traceData_,
+          traceFile: traceFile,
           videoFile: this.videoFile_,
           videoFrames: this.videoFrames_,
           pcapFile: this.pcapFile_,
@@ -1345,9 +1374,11 @@ WebDriverServer.prototype.done_ = function() {
     // For non-webdriver tests we want to stop the browser after every run
     // (including between first and repeat view).
     if (this.testError_ || this.exitWhenDone_ || !this.driver_) {
+      logger.debug("Scheduling Stop");
       this.scheduleStop();
     }
     if (this.testError_ || this.exitWhenDone_) {
+      logger.debug("Disconnecting IPC");
       // Disconnect parent IPC to exit gracefully without a process.exit() call.
       // This should be the last source of event queue events.
       this.app_.schedule('Disconnect IPC',

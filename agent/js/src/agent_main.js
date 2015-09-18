@@ -161,12 +161,11 @@ Agent.prototype.startWdServer_ = function(job) {
 Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
   'use strict';
   this.app_.schedule('Process job results', function() {
-    if (ipcMsg.devToolsMessages) {
-      job.zipResultFiles['devtools.json'] =
-          JSON.stringify(ipcMsg.devToolsMessages);
+    if (ipcMsg.devToolsFile) {
+      job.zipResultFiles['devtools.json'] = fs.readFileSync(ipcMsg.devToolsFile, "utf8");
     }
-    if (ipcMsg.traceData) {
-      job.zipResultFiles['trace.json'] = JSON.stringify(ipcMsg.traceData);
+    if (ipcMsg.traceFile) {
+      job.zipResultFiles['trace.json'] = fs.readFileSync(ipcMsg.traceFile, "utf8");
     }
     if (ipcMsg.customMetrics) {
       job.zipResultFiles['metrics.json'] = JSON.stringify(ipcMsg.customMetrics);

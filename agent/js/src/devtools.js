@@ -96,10 +96,10 @@ DevTools.prototype.connect = function(callback, errback) {
     var request = http.get(url.parse(this.devToolsUrl_), function(response) {
       exports.processResponse(response, function(responseBody) {
         var devToolsJson = JSON.parse(responseBody);
-        if (devToolsJson.length === 0 && retries < 10) {
+        if (devToolsJson.length === 0 && retries < 20) {
           retries += 1;
           logger.debug('Retrying DevTools tab list, attempt %d', retries + 1);
-          global.setTimeout(listTabs, 1000);
+          global.setTimeout(listTabs, 2000);
           return;
         }
         this.debuggerUrl_ = devToolsJson[0].webSocketDebuggerUrl;

@@ -294,6 +294,63 @@ void WebPagetest::SetLoginCredentials(HINTERNET request) {
 }
 
 /*-----------------------------------------------------------------------------
+  Retrieves a client certificate from the Personal certificate store.  Gets the
+  first certificate, or the certificate that matches the common name specified
+  in the settings
+-----------------------------------------------------------------------------*/
+void WebPagetest::LoadClientCertificateFromStore(HINTERNET request) {
+  HCERTSTORE hMyStore = CertOpenSystemStore(0, _T("MY"));
+
+  if (!hMyStore)
+    return;
+
+  PCCERT_CONTEXT pDesiredCert = NULL;
+  if (!_settings._clientCertCommonName.IsEmpty()) {
+    CERT_RDN cert_rdn;
+    CERT_RDN_ATTR cert_rdn_attr;
+
+    cert_rdn.cRDNAttr = 1;
+    cert_rdn.rgRDNAttr = &cert_rdn_attr;
+
+    _settings._clientCertCommonName;
+    cert_rdn_attr.pszObjId = szOID_COMMON_NAME;
+    cert_rdn_attr.dwValueType = CERT_RDN_ANY_TYPE;
+    cert_rdn_attr.Value.cbData = _settings._clientCertCommonName.GetLength();
+
+    LPSTR pCommonName = new char[_settings._clientCertCommonName.GetLength() + 1];
+    WideCharToMultiByte(CP_ACP, 0, _settings._clientCertCommonName, -1, pCommonName, _settings._clientCertCommonName.GetLength() + 1, NULL, NULL);
+    cert_rdn_attr.Value.pbData = (BYTE *)pCommonName;
+
+    pDesiredCert = CertFindCertificateInStore(
+      hMyStore,
+      X509_ASN_ENCODING | PKCS_7_ASN_ENCODING,
+      0,
+      CERT_FIND_SUBJECT_ATTR,
+      &cert_rdn,
+      NULL);
+  }
+  else {
+    // use the first certificate in the store
+    pDesiredCert = CertFindCertificateInStore(
+      hMyStore,
+      X509_ASN_ENCODING | PKCS_7_ASN_ENCODING,
+      0,
+      NULL,
+      NULL,
+      NULL);
+  }
+
+  if (pDesiredCert) {
+    InternetSetOption(request, INTERNET_OPTION_CLIENT_CERT_CONTEXT,
+      (LPVOID)pDesiredCert, sizeof(CERT_CONTEXT));
+    CertFreeCertificateContext(pDesiredCert);
+  }
+
+  if (hMyStore)
+    CertCloseStore(hMyStore, 0);
+}
+
+/*-----------------------------------------------------------------------------
   Perform a http GET operation and return the body as a string
 -----------------------------------------------------------------------------*/
 bool WebPagetest::HttpGet(CString url, WptTestDriver& test,
@@ -330,8 +387,16 @@ bool WebPagetest::HttpGet(CString url, WptTestDriver& test,
         if (request) {
 
           SetLoginCredentials(request);
+          bool send_request_result = HttpSendRequest(request, NULL, 0, NULL, 0);
+          if (!send_request_result) {
+            DWORD dwError = GetLastError();
+            if (dwError == ERROR_INTERNET_CLIENT_AUTH_CERT_NEEDED) {
+              LoadClientCertificateFromStore(request);
+              send_request_result = HttpSendRequest(request, NULL, 0, NULL, 0);
+            } 
+          }
 
-          if (HttpSendRequest(request, NULL, 0, NULL, 0)) {
+          if (send_request_result) {
             TCHAR mime_type[1024] = TEXT("\0");
             DWORD len = _countof(mime_type);
 
@@ -446,7 +511,16 @@ bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test,
             buffers.dwStructSize = sizeof(buffers);
             buffers.dwBufferTotal = content_length;
             AtlTrace(_T("[wptdriver] - Sending request"));
-            if (HttpSendRequestEx(request, &buffers, NULL, 0, NULL)) {
+            bool send_request_result = HttpSendRequestEx(request, &buffers, NULL, 0, NULL);
+            if (!send_request_result) {
+              DWORD dwError = GetLastError();
+              if (dwError == ERROR_INTERNET_CLIENT_AUTH_CERT_NEEDED) {
+                LoadClientCertificateFromStore(request);
+                send_request_result = HttpSendRequestEx(request, &buffers, NULL, 0, NULL);
+              }
+            }
+
+            if (send_request_result) {
               DWORD bytes_written;
               AtlTrace(_T("[wptdriver] - Writing data"));
               if (InternetWriteFile(request, (LPCSTR)form_data, 

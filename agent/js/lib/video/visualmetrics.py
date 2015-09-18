@@ -38,9 +38,9 @@ import subprocess
 import tempfile
 
 
-########################################################################################################################
-#   Frame Extraction and de-duplication
-########################################################################################################################
+# #######################################################################################################################
+# Frame Extraction and de-duplication
+# #######################################################################################################################
 
 
 def video_to_frames(video, directory, force, orange_file, find_viewport, full_resolution, timeline_file):
@@ -50,7 +50,7 @@ def video_to_frames(video, directory, force, orange_file, find_viewport, full_re
             video = os.path.realpath(video)
             logging.info("Processing frames from video " + video + " to " + directory)
             if not os.path.isdir(directory):
-                os.mkdir(directory, 0644)
+                os.mkdir(directory, 0755)
             if os.path.isdir(directory):
                 directory = os.path.realpath(directory)
                 clean_directory(directory)
@@ -83,7 +83,7 @@ def extract_frames(video, directory, full_resolution, viewport):
         scale = 'scale=iw*min(400/iw\,400/ih):ih*min(400/iw\,400/ih),'
         if full_resolution:
             scale = ''
-        command = ['ffmpeg', '-v', 'debug', '-i', video, '-vsync',  '0',
+        command = ['ffmpeg', '-v', 'debug', '-i', video, '-vsync', '0',
                    '-vf', crop + scale + decimate + '=0:64:640:0.001',
                    os.path.join(directory, 'img-%d.png')]
         logging.debug(' '.join(command))
@@ -110,12 +110,20 @@ def extract_frames(video, directory, full_resolution, viewport):
 
 def remove_orange_frames(directory, orange_file):
     frames = sorted(glob.glob(os.path.join(directory, 'video-*.png')))
+    remove = []
+    found_orange = False
     for frame in frames:
         if is_orange_frame(frame, orange_file):
-            logging.debug("Removing orange frame " + frame)
-            os.remove(frame)
+            found_orange = True
+            remove.append(frame)
+        elif not found_orange:
+            remove.append(frame)
         else:
             break
+    if found_orange:
+        for frame in remove:
+            logging.debug("Removing orange frame " + frame)
+            os.remove(frame)
     for frame in reversed(frames):
         if is_orange_frame(frame, orange_file):
             logging.debug("Removing orange frame " + frame + " from the end")
@@ -128,6 +136,7 @@ def find_video_viewport(video, directory, find_viewport):
     viewport = None
     try:
         from PIL import Image
+
         frame = os.path.join(directory, 'viewport.png')
         if os.path.isfile(frame):
             os.remove(frame)
@@ -184,7 +193,7 @@ def find_video_viewport(video, directory, find_viewport):
                     if not colors_are_similar(background, pixels[x, y]):
                         bottom = y - 1
                     else:
-                        y +=1
+                        y += 1
                 if bottom is None:
                     bottom = height
                 logging.debug('Viewport bottom edge is {0:d}'.format(bottom))
@@ -223,6 +232,7 @@ def eliminate_duplicate_frames(directory):
         blank = files[0]
 
         from PIL import Image
+
         im = Image.open(blank)
         width, height = im.size
         top = 6
@@ -239,7 +249,7 @@ def eliminate_duplicate_frames(directory):
         logging.debug('Viewport cropping set to ' + crop)
 
         count = len(files)
-        for i in range (1, count):
+        for i in range(1, count):
             if frames_match(blank, files[i], 2, crop):
                 logging.debug('Removing duplicate frame {0} from the beginning'.format(files[i]))
                 os.remove(files[i])
@@ -255,7 +265,7 @@ def eliminate_duplicate_frames(directory):
             files.reverse()
             baseline = files[0]
             previous_frame = baseline
-            for i in range (1, count):
+            for i in range(1, count):
                 if frames_match(baseline, files[i], 10, crop):
                     if previous_frame is baseline:
                         duplicates.append(previous_frame)
@@ -320,11 +330,12 @@ def is_orange_frame(file, orange_file):
 
 def colors_are_similar(a, b):
     similar = True
-    for x in range (0, 3):
+    for x in range(0, 3):
         if abs(a[x] - b[x]) > 25:
             similar = False
 
     return similar
+
 
 def frames_match(image1, image2, fuzz_percent, crop_region):
     match = False
@@ -348,9 +359,10 @@ def frames_match(image1, image2, fuzz_percent, crop_region):
 def generate_orange_png(orange_file):
     try:
         from PIL import Image, ImageDraw
-        im = Image.new('RGB', (200,200))
+
+        im = Image.new('RGB', (200, 200))
         draw = ImageDraw.Draw(im)
-        draw.rectangle([0,0,200,200], fill=(222,100,13))
+        draw.rectangle([0, 0, 200, 200], fill=(222, 100, 13))
         del draw
         im.save(orange_file, 'PNG')
     except:
@@ -415,7 +427,7 @@ def get_timeline_event_paint_time(timeline_event):
         if (timeline_event['cat'].find('devtools.timeline') >= 0 and
                     'ts' in timeline_event and
                     'name' in timeline_event and (timeline_event['name'].find('Paint') >= 0 or
-                                                  timeline_event['name'].find('CompositeLayers') >= 0)):
+                                                          timeline_event['name'].find('CompositeLayers') >= 0)):
             paint_time = float(timeline_event['ts']) / 1000.0
             if 'dur' in timeline_event:
                 paint_time += float(timeline_event['dur']) / 1000.0
@@ -425,9 +437,9 @@ def get_timeline_event_paint_time(timeline_event):
             paint_time = get_timeline_event_paint_time(timeline_event['params']['record'])
     else:
         if ('type' in timeline_event and
-              (timeline_event['type'] == 'Rasterize' or
-                       timeline_event['type'] == 'CompositeLayers' or
-                       timeline_event['type'] == 'Paint')):
+                (timeline_event['type'] == 'Rasterize' or
+                         timeline_event['type'] == 'CompositeLayers' or
+                         timeline_event['type'] == 'Paint')):
             if 'endTime' in timeline_event:
                 paint_time = timeline_event['endTime']
             elif 'startTime' in timeline_event:
@@ -513,15 +525,16 @@ def calculate_image_histogram(file):
     logging.debug('Calculating histogram for ' + file)
     try:
         from PIL import Image
+
         im = Image.open(file)
         width, height = im.size
         pixels = im.load()
         histogram = {'r': [0 for i in range(256)],
                      'g': [0 for i in range(256)],
                      'b': [0 for i in range(256)]}
-        for y in range (0, height):
-            for x in range (0, width):
-                pixel = pixels[x,y]
+        for y in range(0, height):
+            for x in range(0, width):
+                pixel = pixels[x, y]
                 # Don't include White pixels (with a tiny bit of slop for compression artifacts)
                 if pixel[0] < 250 or pixel[1] < 250 or pixel[2] < 250:
                     histogram['r'][pixel[0]] += 1
@@ -548,7 +561,7 @@ def convert_to_jpeg(directory, quality):
             dest = os.path.join(directory, m.groupdict().get('base') + 'jpg')
             if os.path.isfile(dest):
                 os.remove(dest)
-            command = 'convert "{0}" -quality {1:d} "{2}"'.format(file, quality, dest)
+            command = 'convert "{0}" -set colorspace sRGB -quality {1:d} "{2}"'.format(file, quality, dest)
             subprocess.call(command, shell=True)
             if os.path.isfile(dest):
                 os.remove(file)
@@ -559,7 +572,7 @@ def convert_to_jpeg(directory, quality):
 ########################################################################################################################
 
 
-def calculate_visual_metrics(histograms_file, start, end):
+def calculate_visual_metrics(histograms_file, start, end, perceptual, dirs):
     metrics = None
     histograms = load_histograms(histograms_file, start, end)
     if histograms is not None and len(histograms) > 0:
@@ -568,9 +581,11 @@ def calculate_visual_metrics(histograms_file, start, end):
             metrics = [
                 {'name': 'First Visual Change', 'value': histograms[1]['time']},
                 {'name': 'Last Visual Change', 'value': histograms[-1]['time']},
-                {'name': 'Visually Complete', 'value': find_visually_complete(progress)},
                 {'name': 'Speed Index', 'value': calculate_speed_index(progress)}
             ]
+            if perceptual:
+                metrics.append({'name': 'Perceptual Speed Index',
+                                'value': calculate_perceptual_speed_index(progress, dirs)})
         else:
             metrics = [
                 {'name': 'First Visual Change', 'value': histograms[0]['time']},
@@ -578,6 +593,8 @@ def calculate_visual_metrics(histograms_file, start, end):
                 {'name': 'Visually Complete', 'value': histograms[0]['time']},
                 {'name': 'Speed Index', 'value': 0}
             ]
+            if perceptual:
+                metrics.append({'name': 'Perceptual Speed Index', 'value': 0})
         prog = ''
         for p in progress:
             if len(prog):
@@ -624,16 +641,16 @@ def calculate_visual_progress(histograms):
 def calculate_frame_progress(histogram, start, final):
     total = 0;
     matched = 0;
-    slop = 5    # allow for matching slight color variations
+    slop = 5  # allow for matching slight color variations
     channels = ['r', 'g', 'b']
     for channel in channels:
         channel_total = 0
         channel_matched = 0
         buckets = 256
         available = [0 for i in range(buckets)]
-        for i in range (buckets):
+        for i in range(buckets):
             available[i] = abs(histogram[channel][i] - start[channel][i])
-        for i in range (buckets):
+        for i in range(buckets):
             target = abs(final[channel][i] - start[channel][i])
             if (target):
                 channel_total += target
@@ -673,6 +690,27 @@ def calculate_speed_index(progress):
     return int(si)
 
 
+def calculate_perceptual_speed_index(progress, directory):
+    from ssim import compute_ssim
+    per_si = 0
+    last_ms = progress[0]['time']
+    x = len(progress)
+    # Full Path of the Target Frame
+    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), directory)
+    target_frame = os.path.join(dir, "ms_{0:06d}.png".format(progress[x - 1]["time"]))
+    logging.debug("Target image for perSI is %s" % target_frame)
+    for p in progress:
+        elapsed = p['time'] - last_ms
+        # Full Path of the Current Frame
+        current_frame = os.path.join(dir, "ms_{0:06d}.png".format(p["time"]))
+        logging.debug("Current Image is %s" % current_frame)
+        # Takes full path of PNG frames to compute SSIM value
+        ssim = compute_ssim(current_frame, target_frame)
+        per_si += elapsed * (1.0 - ssim)
+        last_ms = p['time']
+    return int(per_si)
+
+
 ########################################################################################################################
 #   Check any dependencies
 ########################################################################################################################
@@ -705,6 +743,16 @@ def check_config():
     print 'Pillow:  ',
     try:
         from PIL import Image, ImageDraw
+
+        print 'OK'
+    except:
+        print 'FAIL'
+        ok = False
+
+    print 'SSIM:    ',
+    try:
+        from ssim import compute_ssim
+
         print 'OK'
     except:
         print 'FAIL'
@@ -736,7 +784,7 @@ def main():
                                      prog='visualmetrics')
     parser.add_argument('--version', action='version', version='%(prog)s 0.1')
     parser.add_argument('-c', '--check', action='store_true', default=False,
-                        help="Check dependencies (ffmpeg, imagemagick, PIL).")
+                        help="Check dependencies (ffmpeg, imagemagick, PIL, SSIM).")
     parser.add_argument('-v', '--verbose', action='count', help="Increase verbosity (specify multiple times for more).")
     parser.add_argument('-i', '--video', help="Input video file.")
     parser.add_argument('-d', '--dir', help="Directory of video frames "
@@ -760,11 +808,18 @@ def main():
                                                                    "visual metrics.")
     parser.add_argument('-e', '--end', type=int, default=0, help="End time (in milliseconds) for calculating "
                                                                  "visual metrics.")
+    parser.add_argument('-k', '--perceptual', action='store_true', default=False,
+                        help="Calculate perceptual Speed Index")
+
     options = parser.parse_args()
 
     if not options.check and not options.dir and not options.video and not options.histogram:
         parser.error("A video, Directory of images or histograms file needs to be provided.\n\n"
                      "Use -h to see available options")
+
+    if options.perceptual:
+        if not options.video:
+            parser.error("A video file needs to be provided.\n\n" "Use -h to see available options")
 
     temp_dir = tempfile.mkdtemp(prefix='vis-')
     directory = temp_dir
@@ -774,6 +829,7 @@ def main():
         histogram_file = options.histogram
     else:
         histogram_file = os.path.join(temp_dir, 'histograms.json.gz')
+
 
     # Set up logging
     log_level = logging.CRITICAL
@@ -795,16 +851,19 @@ def main():
                 orange_file = None
                 if options.orange:
                     orange_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'orange.png')
-                if options.orange and\
-                    not os.path.isfile(orange_file):
+                if options.orange and \
+                        not os.path.isfile(orange_file):
                     orange_file = os.path.join(temp_dir, 'orange.png')
                     generate_orange_png(orange_file)
                 video_to_frames(options.video, directory, options.force, orange_file, options.viewport, options.full,
                                 options.timeline)
             calculate_histograms(directory, histogram_file, options.force)
-            if options.dir is not None and options.quality is not None:
+            metrics = calculate_visual_metrics(histogram_file, options.start, options.end, options.perceptual,
+                                               directory)
+            # Perceptual SI computation works on png's only
+            if options.dir is not None and options.quality is not None and options.perceptual is False:
                 convert_to_jpeg(directory, options.quality)
-            metrics = calculate_visual_metrics(histogram_file, options.start, options.end)
+
             if metrics is not None:
                 ok = True
                 for metric in metrics:
