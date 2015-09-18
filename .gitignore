@@ -1,6 +1,5 @@
 Debug/
 PageSpeed/lib/Debug/
-Release/
 lib-release/
 lib-debug/
 wptdriver tests/
