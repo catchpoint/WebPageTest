@@ -407,8 +407,8 @@ $page_description = "Website performance test details$testLabel";
 			<h3 name="waterfall_view<?= getEventNameID($eventName); ?>" id="slide_opener_waterfall_view<?= getEventNameID($eventName); ?>" data-slideid="waterfall_view<?= getEventNameID($eventName); ?>" class="slide_opener close_accordeon">Waterfall View - <?= $eventName ?> </h3>
 			<div id="waterfall_view<?= getEventNameID($eventName); ?>" class="hide_on_load" data-waterfallcontainer="waterfallcontainer-<?= $data['eventNumber'] ?>" data-eventname="<?= $eventName ?>">
 				<div id="waterfallcontainer-<?= $data['eventNumber'] ?>" style="width:930px"></div>
+			</div>
 			<?php
-			echo "</div>";
 			}
 			?>
 				<?php
@@ -418,8 +418,8 @@ $page_description = "Website performance test details$testLabel";
 					<h3 name="connection_view<?= getEventNameID($eventName); ?>" id="slide_opener_connection_view<?= getEventNameID($eventName); ?>" data-slideid="connection_view<?= getEventNameID($eventName); ?>" class="slide_opener close_accordeon">Connection View - <?= $eventName ?> </h3>
 					<div id="connection_view<?= getEventNameID($eventName); ?>" class="hide_on_load" data-waterfallcontainer="connectionviewcontainer-<?= $data['eventNumber'] ?>" data-eventname="<?= $eventName ?>">
 						<div id="connectionviewcontainer-<?= $data['eventNumber'] ?>" style="width:930px"></div>
+					</div>
 				<?php
-				echo "</div>";
 				} ?>
 		</div>
 		<?php include('./ads/details_middle.inc'); ?>
