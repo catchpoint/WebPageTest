@@ -414,75 +414,14 @@ $page_description = "Website performance test details$testLabel";
 				<?php
 				foreach($dataArray as $eventName => $data)
 				{ ?>
-				<a name="connection_view<?= getEventNameID($eventName); ?>"></a>
-				<h3 name="connection_view<?= getEventNameID($eventName); ?>">
-					Connection View -
-					<?= $eventName ?>
-				</h3>
-				<a href="#quicklinks">Back to Quicklinks</a>
-				<map name="connection_map<?= $eventName ?>">
-					<?php
-				$connection_rows = GetConnectionRows($requests[$eventName], true);
-				$options = array(
-					'id' => $id,
-					'path' => $testPath,
-					'run_id' => $run,
-					'is_cached' => (bool)@$_GET['cached'],
-					'use_cpu' => true,
-					'show_labels' => true,
-					'width' => 930
-				);
-				$map = GetWaterfallMap($connection_rows, $eventName, $options, $data);
-				foreach($map as $entry) {
-					if (array_key_exists('request', $entry)) {
-						$index = $entry['request'] + 1;
-						$title = "$index: " . htmlspecialchars($entry['url']);
-						echo "<area href=\"#request$index\" alt=\"$title\" title=\"$title\" shape=RECT coords=\"{$entry['left']},{$entry['top']},{$entry['right']},{$entry['bottom']}\">\n";
-					} elseif(array_key_exists('url', $entry)) {
-						echo "<area href=\"#request\" alt=\"{$entry['url']}\" title=\"{$entry['url']}\" shape=RECT coords=\"{$entry['left']},{$entry['top']},{$entry['right']},{$entry['bottom']}\">\n";
-					}
-				}
-				?>
-			</map>
-			<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">
-				<tr>
-					<td><table><tr><td><div class="bar" style="width:15px; background-color:#007B84"></div></td><td>DNS Lookup</td></tr></table></td>
-					<td><table><tr><td><div class="bar" style="width:15px; background-color:#FF7B00"></div></td><td>Initial Connection</td></tr></table></td>
-					<?php if($secure) { ?>
-						<td><table><tr><td><div class="bar" style="width:15px; background-color:#CF25DF"></div></td><td>SSL Negotiation</td></tr></table></td>
-					<?php } ?>
-					<td><table><tr><td><div class="bar" style="width:2px; background-color:#28BC00"></div></td><td>Start Render</td></tr></table></td>
-					<?php if(checkForAllEventNames($dataArray, 'domTime', '>', 0.0, "float") ) { ?>
-						<td><table><tr><td><div class="bar" style="width:2px; background-color:#F28300"></div></td><td>DOM Element</td></tr></table></td>
-					<?php } ?>
-					<?php if(array_key_exists('domContentLoadedEventStart', $data) && (float)$data['domContentLoadedEventStart'] > 0.0 ) { ?>
-						<td><table><tr><td><div class="bar" style="width:15px; background-color:#D888DF"></div></td><td>DOM Content Loaded</td></tr></table></td>
-					<?php } ?>
-					<?php if(array_key_exists('loadEventStart', $data) && (float)$data['loadEventStart'] > 0.0 ) { ?>
-						<td><table><tr><td><div class="bar" style="width:15px; background-color:#C0C0FF"></div></td><td>On Load</td></tr></table></td>
-					<?php } ?>
-					<td><table><tr><td><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td>Document Complete</td></tr></table></td>
-				</tr>
-			</table>
-			<br> <img class="progress" alt="Connection View waterfall diagram"
-					  usemap="#connection_map<?= $eventName ?>"
-					  id="connectionView<?= $eventName ?>"
-					  src="<?php
-					  if($test['testinfo']['imageCaching']){
-						  $type = "connection";
-						  $file = generateViewImagePath($testPath, $eventName, $run, $cached, $type);
-						  if(!file_exists($file)){
-							  createImageAndSave($id, $testPath, $test['testinfo'], $eventName, $run, $cached, $data[$run][$cached], $type);
-						  }
-						  echo substr($file, 1);
-					  } else {
-						  echo "/waterfall.php?type=connection&width=930&test=$id&run=$run&cached=$cached&mime=1&eventName=$eventName";
-					  }
-					  ?>">
-					<br /> <br /> <br />
-					<?php
+					<a name="connection_view<?= getEventNameID($eventName); ?>"></a>
+					<h3 name="connection_view<?= getEventNameID($eventName); ?>" id="slide_opener_connection_view<?= getEventNameID($eventName); ?>" data-slideid="connection_view<?= getEventNameID($eventName); ?>" class="slide_opener close_accordeon">Connection View - <?= $eventName ?> </h3>
+					<div id="connection_view<?= getEventNameID($eventName); ?>" class="hide_on_load" data-waterfallcontainer="connectionviewcontainer-<?= $data['eventNumber'] ?>" data-eventname="<?= $eventName ?>">
+						<div id="connectionviewcontainer-<?= $data['eventNumber'] ?>" style="width:930px"></div>
+				<?php
+				echo "</div>";
 				} ?>
-			</div>
+		</div>
 		<?php include('./ads/details_middle.inc'); ?>
 
 		<br>
@@ -597,9 +536,18 @@ $page_description = "Website performance test details$testLabel";
 
 					var argument_map = {'id':test_id , 'testPath':test_path , 'eventName':event_name , 'run':run_number , 'cached':cached , 'testInfo':test_info , 'secure':secure , 'haveLocation':have_locations };
 					var waterfallcontainerid = '#' + $(this).data('waterfallcontainer');
-					$(waterfallcontainerid).load('/template_create_waterfall.php', argument_map, function(){
-						$(this).data('loaded','true');
-					});
+					if(waterfallcontainerid.match("^#waterfallcontainer"))
+					{
+						$(waterfallcontainerid).load('/template_create_waterfall.php', argument_map, function () {
+							$(this).data('loaded', 'true');
+						});
+					}
+					if(waterfallcontainerid.match("^#connectionviewcontainer"))
+					{
+						$(waterfallcontainerid).load('/template_create_connectionview.php', argument_map, function () {
+							$(this).data('loaded', 'true');
+						});
+					}
 				}
 			});
 			$(this).toggleClass('close_accordeon').toggleClass('open_accordeon');
