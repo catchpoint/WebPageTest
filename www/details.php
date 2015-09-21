@@ -101,11 +101,14 @@ $page_description = "Website performance test details$testLabel";
 		.open_accordeon{
 			background: url('/images/open_accordeon.png') no-repeat 10px 50%;
 		}
-		.slide_opener{ /* -> CSS-Klasse */
+		.slide_opener{
 			cursor: pointer;
 			border: 1px solid #aaa;
 			border-radius: 5px;
 			padding: 4px 28px;
+		}
+		.slide_opener_activity_indicator{
+			background: url('/images/activity_indicator.gif') no-repeat 10px 50%;
 		}
 		.hide_on_load{}
 
@@ -522,6 +525,14 @@ $page_description = "Website performance test details$testLabel";
 
 		$('.slide_opener').on('click', function(){
 			var slideid = '#' + $(this).data('slideid');
+			$.ajax({
+				beforeSend: function(){
+					$('#slide_opener_' + slideid.replace('#','')).addClass('slide_opener_activity_indicator');
+				},
+				complete: function(){
+					$('#slide_opener_' + slideid.replace('#','')).removeClass('slide_opener_activity_indicator');
+				}
+			})
 
 			$(slideid).slideToggle(500,'linear',function(){
 				if( $(this).is(':visible') && $(this).data('loaded') != 'true' ){
