@@ -1645,31 +1645,29 @@ function CheckIp(&$test)
     global $user;
     global $usingAPI;
     $date = gmdate("Ymd");
-    if (!$usingAPI) {
-        $ip2 = @$test['ip'];
-        $ip = $_SERVER['REMOTE_ADDR'];
-        $blockIps = file('./settings/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        if (isset($blockIps) && is_array($blockIps) && count($blockIps)) {
-          $blockIpsAuto = file('./settings/blockipauto.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-          if (isset($blockIpsAuto) && is_array($blockIpsAuto) && count($blockIpsAuto))
-            $blockIps = array_merge($blockIps, $blockIpsAuto);
-          foreach( $blockIps as $block ) {
-              $block = trim($block);
-              if( strlen($block) ) {
-                  if( ereg($block, $ip) ) {
-                      logMsg("$ip: matched $block for url {$test['url']}", "./log/{$date}-blocked.log", true);
-                      $ok = false;
-                      break;
-                  }
+    $ip2 = @$test['ip'];
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $blockIps = file('./settings/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (isset($blockIps) && is_array($blockIps) && count($blockIps)) {
+      $blockIpsAuto = file('./settings/blockipauto.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+      if (isset($blockIpsAuto) && is_array($blockIpsAuto) && count($blockIpsAuto))
+        $blockIps = array_merge($blockIps, $blockIpsAuto);
+      foreach( $blockIps as $block ) {
+          $block = trim($block);
+          if( strlen($block) ) {
+              if( ereg($block, $ip) ) {
+                  logMsg("$ip: matched $block for url {$test['url']}", "./log/{$date}-blocked.log", true);
+                  $ok = false;
+                  break;
+              }
 
-                  if( $ip2 && strlen($ip2) && ereg($block, $ip2) ) {
-                      logMsg("$ip2: matched(2) $block for url {$test['url']}", "./log/{$date}-blocked.log", true);
-                      $ok = false;
-                      break;
-                  }
+              if( $ip2 && strlen($ip2) && ereg($block, $ip2) ) {
+                  logMsg("$ip2: matched(2) $block for url {$test['url']}", "./log/{$date}-blocked.log", true);
+                  $ok = false;
+                  break;
               }
           }
-        }
+      }
     }
 
     return $ok;
@@ -1769,6 +1767,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
 {
     global $settings;
     $testId = null;
+    if (is_file('./settings/block.txt'))
+      $forceBlock = trim(file_get_contents('./settings/block.txt'));
 
     if (CheckUrl($url) && WptHookValidateTest($test)) {
         // generate the test ID
@@ -1884,8 +1884,13 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "\r\nCapture Video=1";
             if( strlen($test['type']) )
                 $testFile .= "\r\ntype={$test['type']}";
-            if( $test['block'] )
+            if( $test['block'] ) {
                 $testFile .= "\r\nblock={$test['block']}";
+                if (isset($forceBlock))
+                  $testFile .= " $forceBlock";
+            } elseif (isset($forceBlock)) {
+                $testFile .= "\r\nblock=$forceBlock";
+            }
             if( $test['noopt'] )
                 $testFile .= "\r\nnoopt=1";
             if( $test['noimages'] )
