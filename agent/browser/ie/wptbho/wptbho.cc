@@ -40,6 +40,7 @@ STDMETHODIMP_(void) WptBHO::OnBeforeNavigate2(IDispatch *pDisp, VARIANT * vUrl,
   CComPtr<IUnknown> unknown_browser = _web_browser;
   CComPtr<IUnknown> unknown_frame = pDisp;
   if (unknown_browser && unknown_frame && unknown_browser == unknown_frame) {
+    _wpt.OnBeforeNavigate();
     _wpt.OnNavigate();
   }
 }
