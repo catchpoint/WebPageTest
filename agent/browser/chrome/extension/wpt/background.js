@@ -362,6 +362,15 @@ chrome.webRequest.onErrorOccurred.addListener(function(details) {
   }, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
 );
 
+chrome.webRequest.onAuthRequired.addListener(function(details, cb) {
+    console.log("CB: " + cb);
+    if (g_active && details.tabId == g_tabid) {
+       return {
+         cancel: true
+       };
+    }
+}, {urls: ["<all_urls>"]}, ["blocking"]);
+
 chrome.webRequest.onCompleted.addListener(function(details) {
     if (g_active && details.tabId == g_tabid) {
       wpt.LOG.info('Completed, status = ' + details.statusCode);
