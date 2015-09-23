@@ -525,17 +525,11 @@ $page_description = "Website performance test details$testLabel";
 
 		$('.slide_opener').on('click', function(){
 			var slideid = '#' + $(this).data('slideid');
-			$.ajax({
-				beforeSend: function(){
-					$('#slide_opener_' + slideid.replace('#','')).addClass('slide_opener_activity_indicator');
-				},
-				complete: function(){
-					$('#slide_opener_' + slideid.replace('#','')).removeClass('slide_opener_activity_indicator');
-				}
-			})
+			var slideopener = this;
 
 			$(slideid).slideToggle(500,'linear',function(){
 				if( $(this).is(':visible') && $(this).data('loaded') != 'true' ){
+					$(slideopener).addClass('slide_opener_activity_indicator');
 					var test_id = <?= "\"".urlencode($id)."\""; ?>;
 					var test_path = <?= "\"".urlencode($testPath)."\""; ?>;
 					var event_name = encodeURIComponent($(this).data('eventname'));
@@ -551,12 +545,14 @@ $page_description = "Website performance test details$testLabel";
 					{
 						$(waterfallcontainerid).load('/template_create_waterfall.php', argument_map, function () {
 							$(this).data('loaded', 'true');
+							$(slideopener).removeClass('slide_opener_activity_indicator');
 						});
 					}
 					if(waterfallcontainerid.match("^#connectionviewcontainer"))
 					{
 						$(waterfallcontainerid).load('/template_create_connectionview.php', argument_map, function () {
 							$(this).data('loaded', 'true');
+							$(slideopener).removeClass('slide_opener_activity_indicator');
 						});
 					}
 				}
