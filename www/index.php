@@ -109,7 +109,7 @@ $loc = ParseLocations($locations);
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
-                        <li><input type="text" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>
+                        <li><input type="url" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>
                         <li>
                             <label for="location">Test Location</label>
                             <select name="where" id="location">
@@ -259,7 +259,7 @@ $loc = ParseLocations($locations);
                                             $runs = (int)$req_runs;
                                         $runs = max(1, min($runs, $settings['maxruns']));
                                         ?>
-                                        <input id="number_of_tests" type="text" class="text short" name="runs" value=<?php echo "\"$runs\""; ?>>
+                                        <input id="number_of_tests" type="number" class="text short" name="runs" value=<?php echo "\"$runs\""; ?>>
                                     </li>
                                     <li>
                                         <label for="viewBoth">
@@ -384,7 +384,7 @@ $loc = ParseLocations($locations);
                                             Minimum test duration<br>
                                             <small>Capture data for at least...</small>
                                         </label>
-                                        <input id="time" type="text" class="text short" name="time" value=""> seconds
+                                        <input id="time" type="number" class="text short" name="time" value=""> seconds
                                     </li>
                                     <li>
                                         <label for="tester">
