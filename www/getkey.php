@@ -151,7 +151,9 @@ function SumbitRequest() {
 */
 function BlockEmail($email) {
   $block = false;
-  if (is_file('./settings/blockemail.txt')) {
+  if (strpos($email, '+') !== false) {
+    $block = true;
+  } elseif (is_file('./settings/blockemail.txt')) {
     $lines = file('./settings/blockemail.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     if ($lines && is_array($lines) && count($lines)) {
       foreach ($lines as $line) {
