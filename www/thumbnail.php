@@ -50,10 +50,25 @@ else
             tbnDrawChecklist($img, $eventName);
         }
         else {
+            // if extension is wrong
             if( !is_file("$testPath/$file") ) {
                 $file = str_ireplace('.jpg', '.png', $file);
                 $parts = pathinfo($file);
                 $type = $parts['extension'];
+            }
+            // if delivered screenshots are in singlestep-format
+            if( !is_file("$testPath/$file") ) {
+                if (preg_match("/(?P<runNumber>[0-9]+)_(?P<cached>Cached_)?(?P<screenName>[a-z]+).(?P<extension>[a-z]+)/",$file,$matches)) {
+                    $cachedPart = "";
+                    $matches['cached'] != null ? $cachedPart="Cached_" : $cachedPart = "";
+                    $file = $matches['runNumber']."_".$cachedPart.$matches['screenName'].".".$matches['extension'];
+                }
+                // check if extension is wrong again after changing filename to singlestep-format
+                if( !is_file("$testPath/$file") ) {
+                    $file = str_ireplace('.png', '.jpg', $file);
+                    $parts = pathinfo($file);
+                    $type = $parts['extension'];
+                }
             }
             if( is_file("$testPath/$file") ) {
                 if( !strcasecmp( $type, 'jpg') )

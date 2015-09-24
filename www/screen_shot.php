@@ -131,7 +131,21 @@ $userImages = true;
             	foreach($pageRunDataArray as $eventName => $pageRunData){
             		echo "<h1><a name=".getEventNameID($eventName)." style=\"color:blue\">".$eventName."</a></h1>";
             		echo "<a href=\"#quicklinks\">Back to Quicklinks</a>";
-            		$pageString = "_" . $pageRunData['eventNumber'];
+                    $pageString = "_" . $pageRunData['eventNumber'];
+                    if(count($pageRunDataArray) == 1) {
+                        //maybe it's a singlestep-result and the screenshots are in singlestep-format
+                        $jpgFilesInResult = glob($testPath."/*.jpg");
+                        $pngFilesInResult = glob($testPath."/*.png");
+                        $imagesInResult = array_merge($jpgFilesInResult,$pngFilesInResult);
+                        //if there is a single screenshot which matches singlestep-format, all other screenshots are
+                        //also singlestep-format
+                        foreach ($imagesInResult as $imageInResult) {
+                            if (preg_match("/\/(?P<runNumber>[0-9]+)_(?P<cached>Cached_)?(?P<screenName>[a-z]+).(?P<extension>[a-z]+)/",$imageInResult,$matches)) {
+                                $pageString = "";
+                                break;
+                            }
+                        }
+                    }
 	            	echo "<hr><hr><br>";
             		
                 if( is_dir("./$videoPath") )

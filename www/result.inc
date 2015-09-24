@@ -565,7 +565,7 @@ $page_description = "Website performance test result$testLabel.";
 							if( FRIENDLY_URLS )
 								echo "<td align=\"center\" valign=\"middle\"><a href=\"/result/$id/$run/screen_shot/#" . getEventNameId($eventName) . "\"><img class=\"progress\"$onloadScreenShot width=250 src=\"/result/$id/{$run}_{$pageData[$run][0]['eventNumber']}_screen_thumb.jpg\"></a></td>";
 							else
-								echo "<td align=\"center\" valign=\"middle\"><a href=\"/screen_shot.php?test=$id&run=$run#" . getEventNameId($eventName) . "\"><img class=\"progress\"$onloadScreenShot width=250 src=\"/thumbnail.php?test=$id&run=$run&file={$run}_1_{$pageData[$run][0]['eventNumber']}_screen.jpg\"></a></td>";
+								echo "<td align=\"center\" valign=\"middle\"><a href=\"/screen_shot.php?test=$id&run=$run#" . getEventNameId($eventName) . "\"><img class=\"progress\"$onloadScreenShot width=250 src=\"/thumbnail.php?test=$id&run=$run&file={$run}_{$pageData[$run][0]['eventNumber']}_screen.jpg\"></a></td>";
 						}
 						if ($video) {
 							echo '<td align="center" valign="middle">';
