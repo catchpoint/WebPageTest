@@ -63,6 +63,11 @@ else
 			echo "<requestId>{$_REQUEST['r']}</requestId>\n";
 		echo "<data>\n";
 
+		// spit out the calculated averages
+		$fv = null;
+		$rv = null;
+		$pageStats = calculatePageStats($pageData, $fv, $rv);
+
 		$fvArray = array ();
 		$rvArray = array ();
 		$pageStatsArray = array ();
@@ -118,6 +123,11 @@ else
 		}
 		echo "<average>\n";
 		echo "<firstView>\n";
+		foreach( $fv as $key => $val ) {
+			$key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
+			echo "<$key>" . number_format($val,0, '.', '') . "</$key>\n";
+		}
+
 		$stepCounter = 1;
 		foreach ( $pageDataArray as $eventName => $pageData ) {
 			echo "<testStep>";
@@ -138,6 +148,11 @@ else
 		$stepCounter = 1;
 		if (! empty ( $rvArray )) {
 			echo "<repeatView>\n";
+			foreach( $rv as $key => $val ) {
+				$key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
+				echo "<$key>" . PageDataStandardDeviation($pageData, $key, 1) . "</$key>\n";
+			}
+
 			foreach ( $pageDataArray as $eventName => $pageData ) {
 				echo "<testStep>";
 				if(!isset($pageData[$fvMedian][0]['eventNumber']))
@@ -185,6 +200,36 @@ else
 		if (! empty ( $fvMedianArray )) {
 			echo "<median>\n";
 			echo "<firstView>\n";
+			echo "<run>$fvMedian</run>\n";
+			if (array_key_exists('testinfo', $test)) {
+				$tester = null;
+				if (array_key_exists('tester', $test['testinfo']))
+					$tester = $test['testinfo']['tester'];
+				if (array_key_exists('test_runs', $test['testinfo']) &&
+					array_key_exists($fvMedian, $test['testinfo']['test_runs']) &&
+					array_key_exists('tester', $test['testinfo']['test_runs'][$fvMedian]))
+					$tester = $test['testinfo']['test_runs'][$fvMedian]['tester'] . '<br>';
+				if (isset($tester))
+					echo "<tester>" . xml_entities($tester) . "</tester>\n";
+			}
+			echo ArrayToXML($pageData[$fvMedian][0]);
+			if (gz_is_file("$testPath/{$fvMedian}_pagespeed.txt")) {
+				if( $pagespeed )
+				{
+					$score = GetPageSpeedScore("$testPath/{$fvMedian}_pagespeed.txt");
+					if( strlen($score) )
+						echo "<PageSpeedScore>$score</PageSpeedScore>\n";
+				}
+				if( FRIENDLY_URLS )
+					echo "<PageSpeedData>$protocol://$host$uri/result/$id/{$fvMedian}_pagespeed.txt</PageSpeedData>\n";
+				else
+					echo "<PageSpeedData>$protocol://$host$uri//getgzip.php?test=$id&amp;file={$fvMedian}_pagespeed.txt</PageSpeedData>\n";
+			}
+			xmlDomains($id, $testPath, $fvMedian, 0);
+			xmlBreakdown($id, $testPath, $fvMedian, 0);
+			xmlRequests($id, $testPath, $fvMedian, 0);
+			StatusMessages($id, $testPath, $fvMedian, 0);
+			ConsoleLog($id, $testPath, $fvMedian, 0);
 
 			$stepCounter = 1;
 			foreach ( $pageDataArray as $eventName => $pageData ) {
@@ -239,7 +284,43 @@ else
 					$rvMedianArray [$eventName] = $medianRun;
 			}
 			if (! empty ( $rvMedianArray )) {
+				if (array_key_exists('rvmedian', $_REQUEST) && $_REQUEST['rvmedian'] == 'fv')
+					$rvMedian = $fvMedian;
+				else
+					$rvMedian = GetMedianRun($pageData, 1, $median_metric);
+
 				echo "<repeatView>\n";
+				echo "<run>$rvMedian</run>\n";
+				if (array_key_exists('testinfo', $test)) {
+					$tester = null;
+					if (array_key_exists('tester', $test['testinfo']))
+						$tester = $test['testinfo']['tester'];
+					if (array_key_exists('test_runs', $test['testinfo']) &&
+						array_key_exists($rvMedian, $test['testinfo']['test_runs']) &&
+						array_key_exists('tester', $test['testinfo']['test_runs'][$rvMedian]))
+						$tester = $test['testinfo']['test_runs'][$rvMedian]['tester'] . '<br>';
+					if (isset($tester))
+						echo "<tester>" . xml_entities($tester) . "</tester>\n";
+				}
+				echo ArrayToXML($pageData[$rvMedian][1]);
+				if (gz_is_file("$testPath/{$fvMedian}_Cached_pagespeed.txt")) {
+					if( $pagespeed )
+					{
+						$score = GetPageSpeedScore("$testPath/{$rvMedian}_Cached_pagespeed.txt");
+						if( strlen($score) )
+							echo "<PageSpeedScore>$score</PageSpeedScore>\n";
+					}
+					if( FRIENDLY_URLS )
+						echo "<PageSpeedData>$protocol://$host$uri/result/$id/{$rvMedian}_Cached_pagespeed.txt</PageSpeedData>\n";
+					else
+						echo "<PageSpeedData>$protocol://$host$uri//getgzip.php?test=$id&amp;file={$rvMedian}_Cached_pagespeed.txt</PageSpeedData>\n";
+				}
+				xmlDomains($id, $testPath, $rvMedian, 1);
+				xmlBreakdown($id, $testPath, $rvMedian, 1);
+				xmlRequests($id, $testPath, $rvMedian, 1);
+				StatusMessages($id, $testPath, $rvMedian, 1);
+				ConsoleLog($id, $testPath, $rvMedian, 1);
+
 				foreach ( $pageDataArray as $eventName => $pageData ) {
 					$rvMedian = $rvMedianArray [$eventName];
 
@@ -311,6 +392,14 @@ else
 							echo "<tester>" . xml_entities($tester) . "</tester>\n";
 					}
 					echo "<results>\n";
+					echo ArrayToXML($pageData[$i][0]);
+					if( $pagespeed )
+					{
+						$score = GetPageSpeedScore("$testPath/{$i}_pagespeed.txt");
+						if( strlen($score) )
+							echo "<PageSpeedScore>$score</PageSpeedScore>\n";
+					}
+
 					$stepCounter = 1;
 					foreach ($pageDataArray as $eventName => $pageData) {
 						echo "<testStep>";
@@ -354,7 +443,7 @@ else
 					// urls for the relevant images
 					echo "<thumbnails>\n";
 
-					echo "<waterfall>";
+					echo "<waterfall>$protocol://$host$uri/result/$id/{$i}_waterfall_thumb.png";
 					foreach ( array_keys ( $pageDataArray ) as $eventName ) {
 						echo "<testStep>";
 						echo "<eventName>" . $eventName . "</eventName>";
@@ -362,7 +451,7 @@ else
 						echo "</testStep>";
 					}
 					echo "</waterfall>\n";
-					echo "<checklist>";
+					echo "<checklist>$protocol://$host$uri/result/$id/{$i}_optimization_thumb.png";
 					foreach ( array_keys ( $pageDataArray ) as $eventName ) {
 						echo "<testStep>";
 						echo "<eventName>" . $eventName . "</eventName>";
@@ -370,7 +459,7 @@ else
 						echo "</testStep>";
 					}
 					echo "</checklist>\n";
-					echo "<screenShot>";
+					echo "<screenShot>$protocol://$host$uri/result/$id/{$i}_screen_thumb.jpg";
 					$pageRunData = loadPageRunData ( $testPath, $i, 0, array (
 						'allEvents' => true
 					) );
@@ -384,7 +473,7 @@ else
 					echo "</thumbnails>\n";
 
 					echo "<images>\n";
-					echo "<waterfall>";
+					echo "<waterfall>$protocol://$host$uri$path/{$i}_waterfall.png";
 					foreach ( array_keys ( $pageDataArray ) as $eventName ) {
 						echo "<testStep>";
 						echo "<eventName>" . $eventName . "</eventName>";
@@ -392,7 +481,7 @@ else
 						echo "</testStep>";
 					}
 					echo "</waterfall>\n";
-					echo "<connectionView>";
+					echo "<connectionView>$protocol://$host$uri$path/{$i}_connection.png";
 					foreach ( array_keys ( $pageDataArray ) as $eventName ) {
 						echo "<testStep>";
 						echo "<eventName>" . $eventName . "</eventName>";
@@ -400,7 +489,7 @@ else
 						echo "</testStep>";
 					}
 					echo "</connectionView>\n";
-					echo "<checklist>";
+					echo "<checklist>$protocol://$host$uri$path/{$i}_optimization.png";
 					foreach ( array_keys ( $pageDataArray ) as $eventName ) {
 						echo "<testStep>";
 						echo "<eventName>" . $eventName . "</eventName>";
@@ -408,7 +497,7 @@ else
 						echo "</testStep>";
 					}
 					echo "</checklist>\n";
-					echo "<screenShot>";
+					echo "<screenShot>$protocol://$host$uri/getfile.php?test=$id&amp;file={$i}_screen.jpg";
 					foreach ( array_keys ( $pageDataArray ) as $eventName ) {
 						echo "<testStep>";
 						echo "<eventName>" . $eventName . "</eventName>";
@@ -423,7 +512,7 @@ else
 					// raw results
 					echo "<rawData>";
 
-					echo "<headers>";
+					echo "<headers>$protocol://$host$uri$path/{$i}_report.txt";
 					foreach ( array_keys ( $pageDataArray ) as $eventName ) {
 						echo "<testStep>";
 						echo "<eventName>" . $eventName . "</eventName>";
@@ -448,6 +537,14 @@ else
 					$progress = GetVisualProgress($testPath, $i, 0, null, null, $startOffset);
 					if (array_key_exists('frames', $progress) && is_array($progress['frames']) && count($progress['frames'])) {
 						echo "<videoFrames>\n";
+						foreach ($progress['frames'] as $ms => $frame) {
+							echo "<frame>\n";
+							echo "<time>$ms</time>\n";
+							echo "<image>$protocol://$host$uri/getfile.php?test=$id&amp;video=video_{$i}&amp;file={$frame['file']}</image>\n";
+							echo "<VisuallyComplete>{$frame['progress']}</VisuallyComplete>\n";
+							echo "</frame>\n";
+						}
+
 						foreach ( array_keys ( $pageDataArray ) as $eventName ) {
 							echo "<testStep>";
 							echo "<eventName>" . $eventName . "</eventName>";
@@ -508,6 +605,14 @@ else
 							echo "<tester>" . xml_entities($tester) . "</tester>\n";
 					}
 					echo "<results>\n";
+					echo ArrayToXML($pageData[$i][1]);
+					if( $pagespeed )
+					{
+						$score = GetPageSpeedScore("$testPath/{$i}_Cached_pagespeed.txt");
+						if( strlen($score) )
+							echo "<PageSpeedScore>$score</PageSpeedScore>\n";
+					}
+
 					$stepCounter = 1;
 					foreach ( $pageDataArray as $eventName => $pageData ) {
 						echo "<testStep>";
@@ -540,7 +645,7 @@ else
 
 					// urls for the relevant images
 					echo "<thumbnails>\n";
-					echo "<waterfall>";
+					echo "<waterfall>$protocol://$host$uri/result/$id/{$i}_Cached_waterfall_thumb.png";
 					foreach ( array_keys ( $pageDataArray ) as $eventName ) {
 						echo "<testStep>";
 						echo "<eventName>" . $eventName . "</eventName>";
@@ -548,7 +653,7 @@ else
 						echo "</testStep>";
 					}
 					echo "</waterfall>\n";
-					echo "<checklist>";
+					echo "<checklist>$protocol://$host$uri/result/$id/{$i}_Cached_optimization_thumb.png";
 					foreach ( array_keys ( $pageDataArray ) as $eventName ) {
 						echo "<testStep>";
 						echo "<eventName>" . $eventName . "</eventName>";
@@ -559,7 +664,7 @@ else
 					$pageRunDataCached = loadPageRunData ( $testPath, $i, 1, array (
 						'allEvents' => true
 					) );
-					echo "<screenShot>";
+					echo "<screenShot>$protocol://$host$uri/result/$id/{$i}_Cached_screen_thumb.jpg";
 					foreach ( array_keys ( $pageDataArray ) as $eventName ) {
 						echo "<testStep>";
 						echo "<eventName>" . $eventName . "</eventName>";
@@ -570,7 +675,7 @@ else
 					echo "</thumbnails>\n";
 
 					echo "<images>\n";
-					echo "<waterfall>";
+					echo "<waterfall>$protocol://$host$uri$path/{$i}_Cached_waterfall.png";
 					foreach ( array_keys ( $pageDataArray ) as $eventName ) {
 						echo "<testStep>";
 						echo "<eventName>" . $eventName . "</eventName>";
@@ -578,7 +683,7 @@ else
 						echo "</testStep>";
 					}
 					echo "</waterfall>\n";
-					echo "<connectionView>";
+					echo "<connectionView>$protocol://$host$uri$path/{$i}_Cached_connection.png";
 					foreach ( array_keys ( $pageDataArray ) as $eventName ) {
 						echo "<testStep>";
 						echo "<eventName>" . $eventName . "</eventName>";
@@ -586,7 +691,7 @@ else
 						echo "</testStep>";
 					}
 					echo "</connectionView>\n";
-					echo "<checklist>";
+					echo "<checklist>$protocol://$host$uri$path/{$i}_Cached_optimization.png";
 					foreach ( array_keys ( $pageDataArray ) as $eventName ) {
 						echo "<testStep>";
 						echo "<eventName>" . $eventName . "</eventName>";
@@ -594,7 +699,7 @@ else
 						echo "</testStep>";
 					}
 					echo "</checklist>\n";
-					echo "<screenShot>";
+					echo "<screenShot>$protocol://$host$uri/getfile.php?test=$id&amp;file={$i}_Cached_screen.jpg";
 					foreach ( array_keys ( $pageDataArray ) as $eventName ) {
 						echo "<testStep>";
 						echo "<eventName>" . $eventName . "</eventName>";
@@ -608,7 +713,7 @@ else
 
 					// raw results
 					echo "<rawData>\n";
-					echo "<headers>";
+					echo "<headers>$protocol://$host$uri$path/{$i}_Cached_report.txt";
 					foreach ( array_keys ( $pageDataArray ) as $eventName ) {
 						echo "<testStep>";
 						echo "<eventName>" . $eventName . "</eventName>";
@@ -633,6 +738,14 @@ else
 					$progress = GetVisualProgress($testPath, $i, 1, null, null, $startOffset);
 					if (array_key_exists('frames', $progress) && is_array($progress['frames']) && count($progress['frames'])) {
 						echo "<videoFrames>\n";
+						foreach($progress['frames'] as $ms => $frame) {
+							echo "<frame>\n";
+							echo "<time>$ms</time>\n";
+							echo "<image>$protocol://$host$uri/getfile.php?test=$id&amp;video=video_{$i}_cached&amp;file={$frame['file']}</image>\n";
+							echo "<VisuallyComplete>{$frame['progress']}</VisuallyComplete>\n";
+							echo "</frame>\n";
+						}
+
 						foreach ( array_keys ( $pageDataArray ) as $eventName ) {
 							echo "<testStep>";
 							echo "<eventName>" . $eventName . "</eventName>";
