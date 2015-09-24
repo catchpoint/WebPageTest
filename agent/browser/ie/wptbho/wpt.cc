@@ -63,7 +63,8 @@ Wpt::Wpt(void):
   ,_must_exit(false)
   ,_task_thread(NULL)
   ,_processing_task(false)
-  ,_exec_count(0) {
+  ,_exec_count(0)
+  ,_webdriver_mode(false) {
 }
 
 
@@ -134,8 +135,10 @@ bool Wpt::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
         CheckBrowserState();
         break;
     case UWM_TASK:
-        CheckForTask();
-        _processing_task = false;
+        if (!_webdriver_mode) {
+          CheckForTask();
+          _processing_task = false;
+        }
         break;
     default:
         ret = false;
@@ -157,8 +160,15 @@ static unsigned __stdcall TaskThreadProc(void* arg) {
 -----------------------------------------------------------------------------*/
 void Wpt::Start(void) {
   if (!_task_timer && _message_window) {
+    _webdriver_mode = _wpt_interface.IsWebdriverMode();
     _task_thread = (HANDLE)_beginthreadex(0, 0, ::TaskThreadProc, this, 0, 0);
     _task_timer = SetTimer(_message_window, 1, TASK_INTERVAL, NULL);
+    if (_webdriver_mode) {
+      AtlTrace(_T("[wptbho] - Running in webdriver mode"));
+      _active = true;
+    } else {
+      AtlTrace(_T("[wptbho] - Not running in webdriver mode"));
+    }
   }
 }
 
@@ -166,8 +176,10 @@ void Wpt::Start(void) {
 -----------------------------------------------------------------------------*/
 void Wpt::Stop(void) {
   if (_message_window) {
-    KillTimer(_message_window, 1);
-    _task_timer = 0;
+    if (!_webdriver_mode) {
+      KillTimer(_message_window, 1);
+      _task_timer = 0;
+    }
     DestroyWindow(_message_window);
   }
   _web_browser.Release();
@@ -214,7 +226,11 @@ bool Wpt::InstallHook() {
 -----------------------------------------------------------------------------*/
 void Wpt::OnLoad() {
   if (_active) {
-    AtlTrace(_T("[wptbho] - Wpt::OnLoad()"));
+    // this is just a safety net -- just in case we failed to get the URL
+    // via get_LocationURL.
+    BSTR current_url = (BSTR)"http://unknown.url";
+    _web_browser->get_LocationURL(&current_url);
+    AtlTrace(_T("[wptbho] - Wpt::OnLoad(); URL = %s"), current_url);
     int fixed_viewport = 0;
     if (_web_browser) {
       CComPtr<IDispatch> dispatch;
@@ -228,13 +244,24 @@ void Wpt::OnLoad() {
       }
     }
     CString options;
-    options.Format(_T("fixedViewport=%d"), fixed_viewport);
+    options.Format(_T("fixedViewport=%d&url=%s"), fixed_viewport, current_url);
     _wpt_interface.OnLoad(options);
-    _active = false;
+    if (_webdriver_mode) {
+      // In webdriver mode, send the browser stats to the hook automatically
+      CollectStats(CString());
+    } else {
+      _active = false;
+    }
     _navigating = false;
   }
 }
 
+void Wpt::OnBeforeNavigate() {
+  if (_active && _webdriver_mode) {
+    AtlTrace(_T("[wptbho] - Wpt::OnBeforeNavigate()"));
+    _wpt_interface.OnBeforeNavigate();
+  }
+}
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Wpt::OnNavigate() {
@@ -253,7 +280,12 @@ void Wpt::OnNavigateError(DWORD error) {
     CString options;
     options.Format(_T("error=%d"), error);
     _wpt_interface.OnNavigateError(options);
-    _active = false;
+    if (!_webdriver_mode) {
+      // in webdriver mode, the bho should stay active even on a navigation
+      // error as otherwise, subsequent steps performed by the webdriver
+      // script won't be recorded.
+      _active = false;
+    }
     _navigating = false;
   }
 }

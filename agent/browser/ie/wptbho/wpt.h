@@ -17,6 +17,7 @@ public:
 
   // browser events
   void  OnLoad();
+  void  OnBeforeNavigate();
   void  OnNavigate();
   void  OnNavigateError(DWORD error);
   void  OnTitle(CString title);
@@ -36,6 +37,7 @@ private:
   bool          _processing_task;
   WptTask       _task;
   int           _exec_count;
+  bool          _webdriver_mode;
 
   typedef enum{
     equal = 0,

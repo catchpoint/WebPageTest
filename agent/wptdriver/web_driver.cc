@@ -3,6 +3,7 @@
 
 extern const TCHAR * BROWSER_STARTED_EVENT;
 extern const TCHAR * BROWSER_DONE_EVENT;
+extern const TCHAR * GLOBAL_TESTING_MUTEX;
 
 static CStringA UTF16toUTF8(const CStringW& utf16) {
   CStringA utf8;
@@ -72,7 +73,7 @@ bool WebDriver::RunAndWait() {
   bool ok = true;
   DWORD client_exit_code = 0;
   DWORD server_exit_code = 0;
-  HANDLE browser_process;
+  HANDLE browser_process, active_event;
 
   if (!_test.Start()) {
     _status.Set(_T("[webdriver] Error with internal test state."));
@@ -95,6 +96,10 @@ bool WebDriver::RunAndWait() {
 
   ResetEvent(_browser_started_event);
   ResetEvent(_browser_done_event);
+  if (_settings._browser.IsIE()) {
+    // signal to the IE BHO that it needs to inject the code
+    active_event = CreateMutex(&null_dacl, TRUE, GLOBAL_TESTING_MUTEX);
+  }
 
   if (!SpawnWebDriverServer()) {
     ok = false;
@@ -194,6 +199,9 @@ bool WebDriver::RunAndWait() {
   CString filepath = _scripts_dir + _T("\\script_") + _test._id;
   DeleteFile(filepath);
 
+  if (active_event) {
+    CloseHandle(active_event);
+  }
   return ok && !client_exit_code && !server_exit_code;
 }
 
