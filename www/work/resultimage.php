@@ -44,15 +44,13 @@ if (ValidateTestId($id)) {
                         if ($ok) {
                             // put each run of video data in it's own directory
                             if (strpos($fileName, 'progress') !== false) {
-                                $parts = explode('_', $fileName);
-                                if (count($parts)) {
-                                    $runNum = $parts[0];
-                                    $page = $parts[1];
-                                    $fileBase = $parts[count($parts) - 1];
+                                if (preg_match("/(?P<runNumber>[0-9]+)_(?P<cached>Cached_)?(?P<pageNumber>[a-z]+)_progress_(?P<fileBase>[\S]+)/",$file,$matches)) {
+                                    $runNum = $matches['runNumber'];
+                                    $page = $matches['pageNumber'];
+                                    $fileBase = $matches['fileBase'];
                                     $cached = '';
-                                    if( strpos($fileName, '_Cached') ) {
+                                    if( array_key_exists('cached') ) {
                                         $cached = '_cached';
-                                        $page = $parts[2];
                                     }
                                     $pathOld = $testPath . "/video_{$runNum}{$cached}";
                                     if (!is_dir($pathOld))
@@ -61,6 +59,21 @@ if (ValidateTestId($id)) {
                                     if( !is_dir($path) )
                                         mkdir($path, 0777, true);
                                     $fileName = 'frame_' . $page . '_' . $fileBase;
+                                }
+                                if (preg_match("/(?P<runNumber>[0-9]+)(?P<cached>Cached_)?_progress_(?P<fileBase>[\S]+)/",$file,$matches)) {
+                                    $runNum = $matches['runNumber'];
+                                    $fileBase = $matches['fileBase'];
+                                    $cached = '';
+                                    if( array_key_exists('cached') ) {
+                                        $cached = '_cached';
+                                    }
+                                    $pathOld = $testPath . "/video_{$runNum}{$cached}";
+                                    if (!is_dir($pathOld))
+                                        mkdir($pathOld, 0777, true);
+                                    $path .= "/video_{$runNum}_1{$cached}";
+                                    if( !is_dir($path) )
+                                        mkdir($path, 0777, true);
+                                    $fileName = 'frame_1_' . $fileBase;
                                 }
                             } elseif (strpos($fileName, '_ms_') !== false) {
                                 $parts = explode('_', $fileName);

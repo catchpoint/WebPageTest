@@ -15,34 +15,39 @@ function MoveVideoFiles($testPath)
             if( strpos($file, '_progress_') !== false )
             {
                 $src = $testPath  . "/$file";
-                $parts = explode('_', $file);
-                if( count($parts) )
-                {                	
-                    $run = (int)$parts[0];
-                    $page = $parts[1];
-                    if( $run && $page )
-                    {
-                    	$cached = '';
-                    	if( strpos($file, '_Cached') ){
-                    		$cached = '_cached';
-                    		$page = $parts[2];
-                    	}
-                        $destDir = $testPath . "/video_" . $run. "_" . $page . $cached;
-                        $destOldDir = $testPath . "/video_" . $run. $cached;
-                            
-                        if( !is_dir($destDir) )
-                            mkdir($destDir, 0777, true);
-                        if( !is_dir($destOldDir) )
-                        	mkdir($destOldDir);
-                        
-                        $fileNumber = $parts[count($parts) - 1];
-                        $frame = "frame_" . $page . "_" . $fileNumber;
-                        $dest = $destDir . "/" . $frame;
-                        $destOld = $destOldDir . "/" . $frame;
-                        copy($src, $destOld);
-                        rename($src, $dest);
+                if (preg_match("/(?P<runNumber>[0-9]+)_(?P<cached>Cached_)?(?P<pageNumber>[a-z]+)_progress_(?P<fileBase>[\S]+)/",$file,$matches)) {
+                    $runNum = $matches['runNumber'];
+                    $page = $matches['pageNumber'];
+                    $fileBase = $matches['fileBase'];
+                    $cached = '';
+                    if( array_key_exists('cached') ) {
+                        $cached = '_cached';
                     }
+                    $pathOld = $testPath . "/video_{$runNum}{$cached}";
+                    if (!is_dir($pathOld))
+                        mkdir($pathOld, 0777, true);
+                    $path = $testPath . "/video_{$runNum}_{$page}{$cached}";
+                    if( !is_dir($path) )
+                        mkdir($path, 0777, true);
+                    $fileName = 'frame_' . $page . '_' . $fileBase;
                 }
+                if (preg_match("/(?P<runNumber>[0-9]+)(?P<cached>Cached_)?_progress_(?P<fileBase>[\S]+)/",$file,$matches)) {
+                    $runNum = $matches['runNumber'];
+                    $fileBase = $matches['fileBase'];
+                    $cached = '';
+                    if( array_key_exists('cached') ) {
+                        $cached = '_cached';
+                    }
+                    $pathOld = $testPath . "/video_{$runNum}{$cached}";
+                    if (!is_dir($pathOld))
+                        mkdir($pathOld, 0777, true);
+                    $path = $testPath . "/video_{$runNum}_1{$cached}";
+                    if( !is_dir($path) )
+                        mkdir($path, 0777, true);
+                    $fileName = 'frame_1_' . $fileBase;
+                }
+                copy($src, $pathOld . "/" . $fileName);
+                rename($src, $path . "/" . $fileName);
             }
         }
 
