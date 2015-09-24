@@ -164,6 +164,8 @@ void Results::Save(void) {
   Save the cpu, memory and bandwidth progress data during the test.
 -----------------------------------------------------------------------------*/
 void Results::SaveProgressData(void) {
+  CString page;
+  page.Format(_T("_%d"), currentPage);
   CStringA progress;
   _test_state.Lock();
   POSITION pos = _test_state._progress_data.GetHeadPosition();
@@ -190,6 +192,13 @@ void Results::SaveProgressData(void) {
     DWORD dwBytes;
     WriteFile(hFile, (LPCSTR)progress, progress.GetLength(), &dwBytes, 0);
     CloseHandle(hFile);
+  }
+  HANDLE hFileMultistep = CreateFile(_file_base + page + PROGRESS_DATA_FILE, GENERIC_WRITE, 0,
+	  NULL, CREATE_ALWAYS, 0, 0);
+  if (hFileMultistep != INVALID_HANDLE_VALUE) {
+	  DWORD dwBytes;
+	  WriteFile(hFileMultistep, (LPCSTR)progress, progress.GetLength(), &dwBytes, 0);
+	  CloseHandle(hFileMultistep);
   }
 }
 
@@ -226,22 +235,32 @@ void Results::SaveImages(void) {
   CString page;
   page.Format(_T("_%d"), currentPage);
   if (_screen_capture.GetImage(CapturedImage::START_RENDER, image)) {
+	SaveImage(image, _file_base + IMAGE_START_RENDER, _test._image_quality, true,
+		  _test._full_size_video);
     SaveImage(image, _file_base + page + IMAGE_START_RENDER, _test._image_quality, true, 
               _test._full_size_video);
   }
   if (_screen_capture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image)) {
+	SaveImage(image, _file_base + IMAGE_DOC_COMPLETE, _test._image_quality, true,
+		  _test._full_size_video);
     SaveImage(image, _file_base + page + IMAGE_DOC_COMPLETE, _test._image_quality, true,
               _test._full_size_video);
   }
   if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, image)) {
     if (_test._png_screen_shot)
-      image.Save(_file_base + page + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
-    SaveImage(image, _file_base + page + IMAGE_FULLY_LOADED, _test._image_quality, true, 
+      image.Save(_file_base + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
+    SaveImage(image, _file_base + IMAGE_FULLY_LOADED, _test._image_quality, true, 
               _test._full_size_video);
+	if (_test._png_screen_shot)
+		image.Save(_file_base + page + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
+	SaveImage(image, _file_base + page + IMAGE_FULLY_LOADED, _test._image_quality, true,
+		_test._full_size_video);
   }
   if (_screen_capture.GetImage(CapturedImage::RESPONSIVE_CHECK, image)) {
-    SaveImage(image, _file_base + page + IMAGE_RESPONSIVE_CHECK, _test._image_quality,
+    SaveImage(image, _file_base + IMAGE_RESPONSIVE_CHECK, _test._image_quality,
               true, _test._full_size_video);
+	SaveImage(image, _file_base + page + IMAGE_RESPONSIVE_CHECK, _test._image_quality,
+		true, _test._full_size_video);
   }
   SaveVideo();
 }
@@ -282,9 +301,12 @@ void Results::SaveVideo(void) {
             histogram = GetHistogramJSON(*img);
             if (_test._video) {
               _visually_complete.QuadPart = image._capture_time.QuadPart;
-              file_name.Format(_T("%s_%d_progress_%04d.jpg"), (LPCTSTR)_file_base, currentPage,
+              file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base,
                             image_time);
               SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_video);
+			  file_name.Format(_T("%s_%d_progress_%04d.jpg"), (LPCTSTR)_file_base, currentPage,
+				  image_time);
+			  SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_video);
             }
           }
         } else {
@@ -297,8 +319,10 @@ void Results::SaveVideo(void) {
           image_time_ms = 0;
           histogram = GetHistogramJSON(*img);
           if (_test._video) {
-            file_name = _file_base + page + _T("_progress_0000.jpg");
+            file_name = _file_base + _T("_progress_0000.jpg");
             SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_video);
+			file_name = _file_base + page + _T("_progress_0000.jpg");
+			SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_video);
           }
         }
 
@@ -316,9 +340,12 @@ void Results::SaveVideo(void) {
           histograms += "}";
           histogram_count++;
           if (_test._video) {
-            file_name.Format(_T("%s%s_progress_%04d.hist"), (LPCTSTR)_file_base, page,
+            file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_file_base,
                              image_time);
             SaveHistogram(histogram, file_name);
+			file_name.Format(_T("%s%s_progress_%04d.hist"), (LPCTSTR)_file_base, page,
+				image_time);
+			SaveHistogram(histogram, file_name);
           }
         } 
         if (last_image)
@@ -942,8 +969,10 @@ void Results::SaveRequests(OptimizationChecks& checks) {
     CStringA buff;
     SetFilePointer( file, 0, 0, FILE_END );
 
-    HANDLE headers_file = CreateFile(_file_base + page + REQUEST_HEADERS_DATA_FILE,
+    HANDLE headers_file = CreateFile(_file_base + REQUEST_HEADERS_DATA_FILE,
                             GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+	HANDLE headers_file_multistep = CreateFile(_file_base + page + REQUEST_HEADERS_DATA_FILE,
+		GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
 
     HANDLE custom_rules_file = INVALID_HANDLE_VALUE;
     if (!_test._custom_rules.IsEmpty()) {
@@ -977,6 +1006,7 @@ void Results::SaveRequests(OptimizationChecks& checks) {
           i++;
           request->SetEventName(checks._test.event_name);  
           SaveRequest(file, headers_file, request, i);
+		  SaveRequest(file, headers_file_multistep, request, i);
           if (!request->_custom_rules_matches.IsEmpty() && 
               custom_rules_file != INVALID_HANDLE_VALUE) {
             if (first_custom_rule) {
@@ -1020,6 +1050,8 @@ void Results::SaveRequests(OptimizationChecks& checks) {
     }
     if (headers_file != INVALID_HANDLE_VALUE)
       CloseHandle(headers_file);
+	if (headers_file_multistep != INVALID_HANDLE_VALUE)
+		CloseHandle(headers_file_multistep);
     CloseHandle(file);
   }
 }
@@ -1322,6 +1354,8 @@ void Results::SaveResponseBodies(void) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Results::SaveConsoleLog(void) {
+  CString page;
+  page.Format(_T("_%d"), currentPage);
   CStringA log = CT2A(_test_state.GetConsoleLogJSON());
   if (log.GetLength()) {
     HANDLE file = CreateFile(_file_base + CONSOLE_LOG_FILE, GENERIC_WRITE, 0, 
@@ -1331,12 +1365,22 @@ void Results::SaveConsoleLog(void) {
       WriteFile(file, (LPCSTR)log, log.GetLength(), &written, 0);
       CloseHandle(file);
     }
+
+	HANDLE file_multistep = CreateFile(_file_base + page + CONSOLE_LOG_FILE, GENERIC_WRITE, 0,
+		NULL, CREATE_ALWAYS, 0, 0);
+	if (file_multistep != INVALID_HANDLE_VALUE) {
+		DWORD written;
+		WriteFile(file_multistep, (LPCSTR)log, log.GetLength(), &written, 0);
+		CloseHandle(file_multistep);
+	}
   }
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Results::SaveTimedEvents(void) {
+  CString page;
+  page.Format(_T("_%d"), currentPage);
   CStringA log = CT2A(_test_state.GetTimedEventsJSON(), CP_UTF8);
   if (log.GetLength()) {
     HANDLE file = CreateFile(_file_base + TIMED_EVENTS_FILE, GENERIC_WRITE, 0, 
@@ -1346,12 +1390,22 @@ void Results::SaveTimedEvents(void) {
       WriteFile(file, (LPCSTR)log, log.GetLength(), &written, 0);
       CloseHandle(file);
     }
+
+	HANDLE file_multistep = CreateFile(_file_base + page + TIMED_EVENTS_FILE, GENERIC_WRITE, 0,
+		NULL, CREATE_ALWAYS, 0, 0);
+	if (file_multistep != INVALID_HANDLE_VALUE) {
+		DWORD written;
+		WriteFile(file_multistep, (LPCSTR)log, log.GetLength(), &written, 0);
+		CloseHandle(file_multistep);
+	}
   }
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Results::SaveCustomMetrics(void) {
+  CString page;
+  page.Format(_T("_%d"), currentPage);
   CStringA custom_metrics = CT2A(_test_state._custom_metrics, CP_UTF8);
   if (custom_metrics.GetLength()) {
     HANDLE file = CreateFile(_file_base + CUSTOM_METRICS_FILE, GENERIC_WRITE, 0, 
@@ -1361,6 +1415,14 @@ void Results::SaveCustomMetrics(void) {
       WriteFile(file, (LPCSTR)custom_metrics, custom_metrics.GetLength(), &written, 0);
       CloseHandle(file);
     }
+
+	HANDLE file_multistep = CreateFile(_file_base + page + CUSTOM_METRICS_FILE, GENERIC_WRITE, 0,
+		NULL, CREATE_ALWAYS, 0, 0);
+	if (file_multistep != INVALID_HANDLE_VALUE) {
+		DWORD written;
+		WriteFile(file_multistep, (LPCSTR)custom_metrics, custom_metrics.GetLength(), &written, 0);
+		CloseHandle(file_multistep);
+	}
   }
 }
 
