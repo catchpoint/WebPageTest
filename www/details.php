@@ -525,40 +525,7 @@ $page_description = "Website performance test details$testLabel";
 		var initial_slide_opener_id = "";
 
 		$('.slide_opener').on('click', function(){
-			var slideid = '#' + $(this).data('slideid');
-			var slideopener = this;
-
-			$(slideid).slideToggle(500,'linear',function(){
-				if( $(this).is(':visible') && $(this).data('loaded') != 'true' ){
-					$(slideopener).addClass('slide_opener_activity_indicator');
-					var test_id = <?= "\"".urlencode($id)."\""; ?>;
-					var test_path = <?= "\"".urlencode($testPath)."\""; ?>;
-					var event_name = encodeURIComponent($(this).data('eventname'));
-					var run_number = <?= "\"$run\""; ?>;
-					var cached = <?= "\"$cached\""; ?>;
-					var test_info = <?= "\"".urlencode(json_encode($test['testinfo']))."\""; ?>;
-					var secure = <?= "\"$secure\""; ?>;
-					var have_locations = <?= "\"$haveLocations\""; ?>;
-
-					var argument_map = {'id':test_id , 'testPath':test_path , 'eventName':event_name , 'run':run_number , 'cached':cached , 'testInfo':test_info , 'secure':secure , 'haveLocation':have_locations };
-					var waterfallcontainerid = '#' + $(this).data('waterfallcontainer');
-					if(waterfallcontainerid.match("^#waterfallcontainer"))
-					{
-						$(waterfallcontainerid).load('/template_create_waterfall.php', argument_map, function () {
-							$(this).data('loaded', 'true');
-							$(slideopener).removeClass('slide_opener_activity_indicator');
-						});
-					}
-					if(waterfallcontainerid.match("^#connectionviewcontainer"))
-					{
-						$(waterfallcontainerid).load('/template_create_connectionview.php', argument_map, function () {
-							$(this).data('loaded', 'true');
-							$(slideopener).removeClass('slide_opener_activity_indicator');
-						});
-					}
-				}
-			});
-			$(this).toggleClass('close_accordeon').toggleClass('open_accordeon');
+			openAndCloseSlide(true,$(this).attr('id'));
 		})
 
 		$('.slide_opener_anchor').on('click',function(){
@@ -569,18 +536,65 @@ $page_description = "Website performance test details$testLabel";
 		openWaterfall('');
 	});
 
+	function openAndCloseSlide(clickByUser,slideOpenerId){
+		var slideopener = '#' + slideOpenerId;
+		var slideid = '#' + $(slideopener).data('slideid');
+
+		if( (!$(slideid).is(':visible') && !clickByUser) || clickByUser) {
+			$(slideid).slideToggle(500, 'linear', function () {
+				if ($(this).is(':visible') && $(this).data('loaded') != 'true') {
+					$(slideopener).addClass('slide_opener_activity_indicator');
+					var test_id = <?= "\"".urlencode($id)."\""; ?>;
+					var test_path = <?= "\"".urlencode($testPath)."\""; ?>;
+					var event_name = encodeURIComponent($(this).data('eventname'));
+					var run_number = <?= "\"$run\""; ?>;
+					var cached = <?= "\"$cached\""; ?>;
+					var test_info = <?= "\"".urlencode(json_encode($test['testinfo']))."\""; ?>;
+					var secure = <?= "\"$secure\""; ?>;
+					var have_locations = <?= "\"$haveLocations\""; ?>;
+
+					var argument_map = {
+						'id': test_id,
+						'testPath': test_path,
+						'eventName': event_name,
+						'run': run_number,
+						'cached': cached,
+						'testInfo': test_info,
+						'secure': secure,
+						'haveLocation': have_locations
+					};
+					var waterfallcontainerid = '#' + $(this).data('waterfallcontainer');
+					if (waterfallcontainerid.match("^#waterfallcontainer")) {
+						$(waterfallcontainerid).load('/template_create_waterfall.php', argument_map, function () {
+							$(this).data('loaded', 'true');
+							$(slideopener).removeClass('slide_opener_activity_indicator');
+						});
+					}
+					if (waterfallcontainerid.match("^#connectionviewcontainer")) {
+						$(waterfallcontainerid).load('/template_create_connectionview.php', argument_map, function () {
+							$(this).data('loaded', 'true');
+							$(slideopener).removeClass('slide_opener_activity_indicator');
+						});
+					}
+				}
+			});
+			$(slideopener).toggleClass('close_accordeon').toggleClass('open_accordeon');
+		}
+	}
+
 	function openWaterfall(waterfall_anchor) {
 		//check if inital waterfall was specified in anchor
 		if(waterfall_anchor == '') {
 			waterfall_anchor = window.location.hash;
 		}
+		var initial_slide_opener_id = '';
 		if(waterfall_anchor !== ''){
-			initial_slide_opener_id = "#slide_opener_" + waterfall_anchor.replace('#','');
+			initial_slide_opener_id = "slide_opener_" + waterfall_anchor.replace('#','');
 		} else {
-			initial_slide_opener_id = '#' + document.getElementsByClassName('slide_opener')[0].id;
+			initial_slide_opener_id = document.getElementsByClassName('slide_opener')[0].id;
 		}
 		//open inital waterfall-slide
-		$(initial_slide_opener_id).click();
+		openAndCloseSlide(false,initial_slide_opener_id);
 	}
 </script>
 </body>
