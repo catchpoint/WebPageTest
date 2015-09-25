@@ -110,6 +110,7 @@ $page_description = "Website performance test details$testLabel";
 		.slide_opener_activity_indicator{
 			background: url('/images/activity_indicator.gif') no-repeat 10px 50%;
 		}
+		.slide_opener_anchor{}
 		.hide_on_load{}
 
 		<?php
@@ -374,16 +375,16 @@ $page_description = "Website performance test details$testLabel";
 				{ ?>
 					<tr>
 						<td><?= $eventName ?></td>
-						<td><a href=" #waterfall_view<?= getEventNameID($eventName); ?>">WV
+						<td><a href="#waterfall_view<?= getEventNameID($eventName); ?>" class="slide_opener_anchor">WV
 								#<?= getShortEventName($eventName) ?>
 							</a></td>
-						<td><a href=" #connection_view<?= getEventNameID($eventName); ?>">CV
+						<td><a href="#connection_view<?= getEventNameID($eventName); ?>" class="slide_opener_anchor">CV
 								#<?= getShortEventName($eventName) ?>
 							</a></td>
-						<td><a href=" #request_details<?= getEventNameID($eventName); ?>">RD
+						<td><a href="#request_details<?= getEventNameID($eventName); ?>">RD
 								#<?= getShortEventName($eventName) ?>
 							</a></td>
-						<td><a href=" #request_headers<?= getEventNameID($eventName); ?>">RH
+						<td><a href="#request_headers<?= getEventNameID($eventName); ?>">RH
 								#<?= getShortEventName($eventName) ?>
 							</a></td>
 						<td><a
@@ -407,23 +408,23 @@ $page_description = "Website performance test details$testLabel";
 			foreach($dataArray as $eventName => $data)
 			{ ?>
 			<a name="waterfall_view<?= getEventNameID($eventName); ?>"></a>
-			<h3 name="waterfall_view<?= getEventNameID($eventName); ?>" id="slide_opener_waterfall_view<?= getEventNameID($eventName); ?>" data-slideid="waterfall_view<?= getEventNameID($eventName); ?>" class="slide_opener close_accordeon">Waterfall View - <?= $eventName ?> </h3>
-			<div id="waterfall_view<?= getEventNameID($eventName); ?>" class="hide_on_load" data-waterfallcontainer="waterfallcontainer-<?= $data['eventNumber'] ?>" data-eventname="<?= $eventName ?>">
+			<h3 name="waterfall_view<?= getEventNameID($eventName); ?>" id="slide_opener_waterfall_view<?= getEventNameID($eventName); ?>" data-slideid="waterfall_<?= getEventNameID($eventName); ?>" class="slide_opener close_accordeon">Waterfall View - <?= $eventName ?> </h3>
+			<div id="waterfall_<?= getEventNameID($eventName); ?>" class="hide_on_load" data-waterfallcontainer="waterfallcontainer-<?= $data['eventNumber'] ?>" data-eventname="<?= $eventName ?>">
 				<div id="waterfallcontainer-<?= $data['eventNumber'] ?>" style="width:930px"></div>
 			</div>
 			<?php
 			}
 			?>
-				<?php
-				foreach($dataArray as $eventName => $data)
-				{ ?>
-					<a name="connection_view<?= getEventNameID($eventName); ?>"></a>
-					<h3 name="connection_view<?= getEventNameID($eventName); ?>" id="slide_opener_connection_view<?= getEventNameID($eventName); ?>" data-slideid="connection_view<?= getEventNameID($eventName); ?>" class="slide_opener close_accordeon">Connection View - <?= $eventName ?> </h3>
-					<div id="connection_view<?= getEventNameID($eventName); ?>" class="hide_on_load" data-waterfallcontainer="connectionviewcontainer-<?= $data['eventNumber'] ?>" data-eventname="<?= $eventName ?>">
-						<div id="connectionviewcontainer-<?= $data['eventNumber'] ?>" style="width:930px"></div>
-					</div>
-				<?php
-				} ?>
+			<?php
+			foreach($dataArray as $eventName => $data)
+			{ ?>
+				<a name="connection_view<?= getEventNameID($eventName); ?>"></a>
+				<h3 name="connection_view<?= getEventNameID($eventName); ?>" id="slide_opener_connection_view<?= getEventNameID($eventName); ?>" data-slideid="connection_<?= getEventNameID($eventName); ?>" class="slide_opener close_accordeon">Connection View - <?= $eventName ?> </h3>
+				<div id="connection_<?= getEventNameID($eventName); ?>" class="hide_on_load" data-waterfallcontainer="connectionviewcontainer-<?= $data['eventNumber'] ?>" data-eventname="<?= $eventName ?>">
+					<div id="connectionviewcontainer-<?= $data['eventNumber'] ?>" style="width:930px"></div>
+				</div>
+			<?php
+			} ?>
 		</div>
 		<?php include('./ads/details_middle.inc'); ?>
 
@@ -560,8 +561,19 @@ $page_description = "Website performance test details$testLabel";
 			$(this).toggleClass('close_accordeon').toggleClass('open_accordeon');
 		})
 
+		$('.slide_opener_anchor').on('click',function(){
+			var anchor = $(this).attr('href');
+			openWaterfall(anchor);
+		})
+
+		openWaterfall('');
+	});
+
+	function openWaterfall(waterfall_anchor) {
 		//check if inital waterfall was specified in anchor
-		var waterfall_anchor = window.location.hash;
+		if(waterfall_anchor == '') {
+			waterfall_anchor = window.location.hash;
+		}
 		if(waterfall_anchor !== ''){
 			initial_slide_opener_id = "#slide_opener_" + waterfall_anchor.replace('#','');
 		} else {
@@ -569,7 +581,7 @@ $page_description = "Website performance test details$testLabel";
 		}
 		//open inital waterfall-slide
 		$(initial_slide_opener_id).click();
-	});
+	}
 </script>
 </body>
 </html>
