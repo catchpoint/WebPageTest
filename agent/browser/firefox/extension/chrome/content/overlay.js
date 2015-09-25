@@ -132,6 +132,25 @@ wpt.moz.main.onStartup = function() {
   windowMediator.addListener(listener);
 })();
 
+/**
+ * Get notifications from the dialog overlay to log a navigation error when
+ * basic auth is required and no credentials have been supplied.
+ */
+(function() {
+  var observerService = Components.classes["@mozilla.org/observer-service;1"].
+    getService(Components.interfaces.nsIObserverService);
+
+  var observeUnauthorizedErrors = {
+    observe: function(aSubject, aTopic, aData) {
+			wpt.moz.main.sendEventToDriver_('navigate_error?error=401');
+      g_active = false;
+      wptExtension.uninit();
+    }
+  };
+
+  observerService.addObserver(observeUnauthorizedErrors, "wpt-unauthorised-errors", false);
+})();
+
 // Get the next task from the wptdriver.
 wpt.moz.main.getTask = function() {
   if (!g_requesting_task && !g_processing_task) {

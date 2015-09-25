@@ -28,7 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 var buildNavigateTask = function(url) {
-  return task = {
+  var task = {
     statusCode: 200,
     data: {
       record: 1,
@@ -36,6 +36,7 @@ var buildNavigateTask = function(url) {
       target: url
     }
   };
+  return JSON.stringify(task);
 }
 
 var usage = function() {
@@ -72,7 +73,7 @@ http.createServer(function (req, res) {
     if (servedOnce === false || repeat) {
       var task = buildNavigateTask(url);
       console.log("Serving task: " + task);
-      res.end(JSON.stringify(buildNavigateTask(url)));
+      res.end(buildNavigateTask(url));
       servedOnce = true;
     } else {
       console.log("No more task to serve");
