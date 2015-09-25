@@ -64,6 +64,7 @@ if (!defined('EMBED')) {
 
 <div id="header">
     <h1 class="logo"><a href="/">WebPageTest</a></h1>
+    <!--Start Custom Head -->
     <div class="headerAd">
     <?php
         if( !defined('BARE_UI') )
@@ -81,6 +82,7 @@ if (!defined('EMBED')) {
         }
     ?>
     </div>
+    <!--End Custom Head -->
 </div>
 
 <div id="nav_bkg"><ul id="nav" class="cufon-dincond_black"><?php
