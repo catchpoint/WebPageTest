@@ -33,7 +33,7 @@ if( $haveLocations)
 	print_r($requests,true);
 	foreach($requests as $eventName => $eventRequests){ ?>
 		<a name="request_headers<?= getEventNameID($eventName); ?>"></a>
-		<h3 name="request_headers<?= getEventNameID($eventName); ?>" id="slide_opener_request_headers<?= getEventNameID($eventName); ?>" data-slideid="requestheaders<?= getEventNameID($eventName); ?>" class="slide_opener close_accordeon">Request Headers - <?php echo $eventName; ?></h3>
+		<h3 name="request_headers<?= getEventNameID($eventName); ?>" id="slide_opener_request_headers<?= getEventNameID($eventName); ?>" data-slideid="requestheaders<?= getEventNameID($eventName); ?>" class="slide_opener close_accordeon" align="center">Request Headers - <?php echo $eventName; ?></h3>
 		<div id="requestheaders<?= getEventNameID($eventName); ?>" class="hide_on_load" data-waterfallcontainer="requestheaderscontainer-<?= getEventNameID($eventName); ?>" data-eventname="<?= $eventName ?>">
 			<div id="requestheaderscontainer-<?= getEventNameID($eventName); ?>" style="width:930px"></div>
 		</div>
