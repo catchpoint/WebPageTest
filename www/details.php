@@ -384,7 +384,7 @@ $page_description = "Website performance test details$testLabel";
 						<td><a href="#request_details<?= getEventNameID($eventName); ?>" class="slide_opener_anchor">RD
 								#<?= getShortEventName($eventName) ?>
 							</a></td>
-						<td><a href="#request_headers<?= getEventNameID($eventName); ?>">RH
+						<td><a href="#request_headers<?= getEventNameID($eventName); ?>" class="slide_opener_anchor">RH
 								#<?= getShortEventName($eventName) ?>
 							</a></td>
 						<td><a
@@ -572,6 +572,9 @@ $page_description = "Website performance test details$testLabel";
 					}
 					if (containerid.match("^#requestdetailscontainer")) {
 						$(containerid).load('/template_create_requestdetails.php', argument_map, requestCompleted(containerid,slideopener));
+					}
+					if (containerid.match("^#requestheaderscontainer")) {
+						$(containerid).load('/template_create_requestheaders.php', argument_map, requestCompleted(containerid,slideopener));
 					}
 				}
 			});
