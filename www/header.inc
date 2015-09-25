@@ -64,15 +64,23 @@ if (!defined('EMBED')) {
 
 <div id="header">
     <h1 class="logo"><a href="/">WebPageTest</a></h1>
-
+    <div class="headerAd">
     <?php
-    $pathToPartnerImages = "./images/partner/";
-    if(file_exists($pathToPartnerImages) && count(scandir($pathToPartnerImages)) > 0){
+        if( !defined('BARE_UI') )
+        {
+            // see if we have a location that the test was run from (for a custom ad)
+            $testLoc = null;
+            if( isset($test) && isset($test['test']['loc']) )
+                $testLoc = $test['test']['loc'];
+            
+            if( strpos($testLoc, '..') === false && strpos($testLoc, '/') === false && strpos($testLoc, '\\') === false && 
+                isset($testLoc) && strlen($testLoc) && is_file("./custom/$testLoc/headerAd.inc") )
+                include("./custom/$testLoc/headerAd.inc");
+            elseif( is_file('./ads/header.inc') && (!array_key_exists('HTTP_SSL', $_SERVER) || $_SERVER['HTTP_SSL'] != 'On') )
+                include('./ads/header.inc');
+        }
     ?>
-    <h1 class="logo_iteratec"><a href="http://www.iteratec.de">iteratec</a></h1>
-    <p>Software based on<a href="http://www.webpagetest.org"> WebPageTest</a>.</p>
-    <?php } ?>
-
+    </div>
 </div>
 
 <div id="nav_bkg"><ul id="nav" class="cufon-dincond_black"><?php
