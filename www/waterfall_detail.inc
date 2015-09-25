@@ -24,7 +24,6 @@ if( $haveLocations)
 	echo '<p class="center">*This product includes GeoLite data created by MaxMind, available from <a href="http://maxmind.com/">http://maxmind.com/</a>.</p>';
 ?>
 
-<br>
 <?php include('./ads/details_bottom.inc'); ?>
 <br>
 <script type="text/javascript"

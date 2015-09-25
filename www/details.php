@@ -415,6 +415,7 @@ $page_description = "Website performance test details$testLabel";
 			<?php
 			}
 			?>
+			<br>
 			<?php
 			foreach($dataArray as $eventName => $data)
 			{ ?>
