@@ -381,7 +381,7 @@ $page_description = "Website performance test details$testLabel";
 						<td><a href="#connection_view<?= getEventNameID($eventName); ?>" class="slide_opener_anchor">CV
 								#<?= getShortEventName($eventName) ?>
 							</a></td>
-						<td><a href="#request_details<?= getEventNameID($eventName); ?>">RD
+						<td><a href="#request_details<?= getEventNameID($eventName); ?>" class="slide_opener_anchor">RD
 								#<?= getShortEventName($eventName) ?>
 							</a></td>
 						<td><a href="#request_headers<?= getEventNameID($eventName); ?>">RH
@@ -409,8 +409,8 @@ $page_description = "Website performance test details$testLabel";
 			{ ?>
 			<a name="waterfall_view<?= getEventNameID($eventName); ?>"></a>
 			<h3 name="waterfall_view<?= getEventNameID($eventName); ?>" id="slide_opener_waterfall_view<?= getEventNameID($eventName); ?>" data-slideid="waterfall_<?= getEventNameID($eventName); ?>" class="slide_opener close_accordeon">Waterfall View - <?= $eventName ?> </h3>
-			<div id="waterfall_<?= getEventNameID($eventName); ?>" class="hide_on_load" data-waterfallcontainer="waterfallcontainer-<?= $data['eventNumber'] ?>" data-eventname="<?= $eventName ?>">
-				<div id="waterfallcontainer-<?= $data['eventNumber'] ?>" style="width:930px"></div>
+			<div id="waterfall_<?= getEventNameID($eventName); ?>" class="hide_on_load" data-waterfallcontainer="waterfallcontainer-<?= getEventNameID($eventName); ?>" data-eventname="<?= $eventName ?>">
+				<div id="waterfallcontainer-<?= getEventNameID($eventName); ?>" style="width:930px"></div>
 			</div>
 			<?php
 			}
@@ -420,8 +420,8 @@ $page_description = "Website performance test details$testLabel";
 			{ ?>
 				<a name="connection_view<?= getEventNameID($eventName); ?>"></a>
 				<h3 name="connection_view<?= getEventNameID($eventName); ?>" id="slide_opener_connection_view<?= getEventNameID($eventName); ?>" data-slideid="connection_<?= getEventNameID($eventName); ?>" class="slide_opener close_accordeon">Connection View - <?= $eventName ?> </h3>
-				<div id="connection_<?= getEventNameID($eventName); ?>" class="hide_on_load" data-waterfallcontainer="connectionviewcontainer-<?= $data['eventNumber'] ?>" data-eventname="<?= $eventName ?>">
-					<div id="connectionviewcontainer-<?= $data['eventNumber'] ?>" style="width:930px"></div>
+				<div id="connection_<?= getEventNameID($eventName); ?>" class="hide_on_load" data-waterfallcontainer="connectionviewcontainer-<?= getEventNameID($eventName); ?>" data-eventname="<?= $eventName ?>">
+					<div id="connectionviewcontainer-<?= getEventNameID($eventName); ?>" style="width:930px"></div>
 				</div>
 			<?php
 			} ?>
@@ -565,10 +565,13 @@ $page_description = "Website performance test details$testLabel";
 					};
 					var containerid = '#' + $(this).data('waterfallcontainer');
 					if (containerid.match("^#waterfallcontainer")) {
-						$(containerid).load('/template_create_waterfall.php', argument_map, requestCompleted(containerid,containerid));
+						$(containerid).load('/template_create_waterfall.php', argument_map, requestCompleted(containerid,slideopener));
 					}
 					if (containerid.match("^#connectionviewcontainer")) {
-						$(containerid).load('/template_create_connectionview.php', argument_map, requestCompleted(containerid,containerid));
+						$(containerid).load('/template_create_connectionview.php', argument_map, requestCompleted(containerid,slideopener));
+					}
+					if (containerid.match("^#requestdetailscontainer")) {
+						$(containerid).load('/template_create_requestdetails.php', argument_map, requestCompleted(containerid,slideopener));
 					}
 				}
 			});
