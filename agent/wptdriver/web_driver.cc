@@ -73,7 +73,7 @@ bool WebDriver::RunAndWait() {
   bool ok = true;
   DWORD client_exit_code = 0;
   DWORD server_exit_code = 0;
-  HANDLE browser_process, active_event;
+  HANDLE browser_process, active_event = NULL;
 
   if (!_test.Start()) {
     _status.Set(_T("[webdriver] Error with internal test state."));
@@ -110,26 +110,44 @@ bool WebDriver::RunAndWait() {
   }
 
   if (ok) {
-    // Now both the processes are spawned. We wait until something
+    // Now that both the processes are spawned, we wait until something
     // interesting happens.
-    if (WaitForSingleObject(_browser_started_event, 60000) !=
-      WAIT_OBJECT_0) {
+    HANDLE handles[] = { _client_info.hProcess,
+      _server_info.hProcess,
+      _browser_started_event
+    };
+    DWORD ret = WaitForMultipleObjects(_countof(handles), handles, false, 60000);
+    if (ret == WAIT_FAILED || ret == WAIT_TIMEOUT || ret == WAIT_ABANDONED) {
+      // WAIT_ABANDONED is also included here because even though the mutex 
+      // is abandoned, and possibly left things in a sloppy state, there is
+      // not much we can do here except signal that the browser never started.
       _status.Set(_T("Error waiting for browser to launch"));
       _test._run_error = "Timed out waiting for the browser to start.";
       ok = false;
+    } else if (ret == 0) {
+      // webdriver client died before the browser could have been started.
+      _status.Set(_T("Error starting webdriver client"));
+      _test._run_error = "Error starting webdriver client";
+      ok = false;
+    } else if (ret == 1) {
+      _status.Set(_T("Error starting webdriver server"));
+      _test._run_error = "Error starting webdriver server";
+      ok = false;
+    } /* else {
+      // everything went okay and the browser was started.
+    } */
+  }
+  if (ok) {
+    // Get a handle to the browser process.
+    DWORD browser_pid = GetBrowserProcessId();
+    if (browser_pid) {
+      browser_process = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE,
+        FALSE, browser_pid);
     }
-    if (ok) {
-      // Get a handle to the browser process.
-      DWORD browser_pid = GetBrowserProcessId();
-      if (browser_pid) {
-        browser_process = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE,
-          FALSE, browser_pid);
-      }
-      if (!browser_process) {
-        WptTrace(loglevel::kError, _T("Failed to acquire handle to the browser process."));
-        _test._run_error = "Failed to acquire handle to the browser process.";
-        ok = false;
-      }
+    if (!browser_process) {
+      WptTrace(loglevel::kError, _T("Failed to acquire handle to the browser process."));
+      _test._run_error = "Failed to acquire handle to the browser process.";
+      ok = false;
     }
 
     if (ok) {
@@ -142,13 +160,11 @@ bool WebDriver::RunAndWait() {
       WaitForMultipleObjects(2, handles, false, wait_time);
     }
   }
-  if (_client_info.hProcess) {
-    // Wait for the wd-runner process to die.
-    WaitForSingleObject(_client_info.hProcess, 10000);
-  }
+  // Wait for the wd-runner process to die.
+  WaitForSingleObject(_client_info.hProcess, 10000);
   // The standalone selenium server might have spawned a chromedriver.exe or
-  // and iedriverserver.exe in the background. We need to kill them to make
-  // sure there are no left over processes after a test.
+  // iedriverserver.exe in the background. We need to kill them to make sure
+  // there are no left over processes after a test.
   TerminateProcessesByName(_T("chromedriver.exe"));
   TerminateProcessesByName(_T("iedriverserver.exe"));
   // Now, terminate anything that might still be running.
@@ -156,11 +172,11 @@ bool WebDriver::RunAndWait() {
   TerminateProcessById(_client_info.dwProcessId);
 
   if (!GetExitCodeProcess(_client_info.hProcess, &client_exit_code)) {
-    WptTrace(loglevel::kError, _T("[webdriver] WINAPI error GetExitCodeProcess: %u"), GetLastError());
+    WptTrace(loglevel::kError, _T("[webdriver] Client exited with exit code: %u"), GetLastError());
   }
 
   if (!GetExitCodeProcess(_server_info.hProcess, &server_exit_code)) {
-    WptTrace(loglevel::kError, _T("[webdriver] WINAPI error GetExitCodeProcess: %u"), GetLastError());
+    WptTrace(loglevel::kError, _T("[webdriver] Server exited with exit code: %u"), GetLastError());
   }
   
   // Wait for all the read threads to be done.
@@ -246,7 +262,7 @@ bool WebDriver::SpawnWebDriverServer() {
   si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
   si.hStdError = _server_err_write;
   si.dwFlags |= STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
-
+  _settings._webdriver_server_command.Replace(_T("%RESULTDIR%"), _test._directory);
   _status.Set(_T("Launching: %s"), _settings._webdriver_server_command);
   if (!CreateProcess(NULL, _settings._webdriver_server_command.GetBuffer(), NULL, NULL, TRUE, 0, NULL,
     NULL, &si, &_server_info)) {
