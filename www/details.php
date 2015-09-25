@@ -563,18 +563,12 @@ $page_description = "Website performance test details$testLabel";
 						'secure': secure,
 						'haveLocation': have_locations
 					};
-					var waterfallcontainerid = '#' + $(this).data('waterfallcontainer');
-					if (waterfallcontainerid.match("^#waterfallcontainer")) {
-						$(waterfallcontainerid).load('/template_create_waterfall.php', argument_map, function () {
-							$(this).data('loaded', 'true');
-							$(slideopener).removeClass('slide_opener_activity_indicator');
-						});
+					var containerid = '#' + $(this).data('waterfallcontainer');
+					if (containerid.match("^#waterfallcontainer")) {
+						$(containerid).load('/template_create_waterfall.php', argument_map, requestCompleted(containerid,containerid));
 					}
-					if (waterfallcontainerid.match("^#connectionviewcontainer")) {
-						$(waterfallcontainerid).load('/template_create_connectionview.php', argument_map, function () {
-							$(this).data('loaded', 'true');
-							$(slideopener).removeClass('slide_opener_activity_indicator');
-						});
+					if (containerid.match("^#connectionviewcontainer")) {
+						$(containerid).load('/template_create_connectionview.php', argument_map, requestCompleted(containerid,containerid));
 					}
 				}
 			});
@@ -595,6 +589,11 @@ $page_description = "Website performance test details$testLabel";
 		}
 		//open inital waterfall-slide
 		openAndCloseSlide(false,initial_slide_opener_id);
+	}
+
+	function requestCompleted(containerid,slideopener){
+		$(containerid).data('loaded', 'true');
+		$(slideopener).removeClass('slide_opener_activity_indicator');
 	}
 </script>
 </body>
