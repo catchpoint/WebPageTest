@@ -150,7 +150,7 @@ else
 			echo "<repeatView>\n";
 			foreach( $rv as $key => $val ) {
 				$key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
-				echo "<$key>" . PageDataStandardDeviation($pageData, $key, 1) . "</$key>\n";
+				echo "<$key>" . number_format($val,0, '.', '') . "</$key>\n";
 			}
 
 			foreach ( $pageDataArray as $eventName => $pageData ) {
