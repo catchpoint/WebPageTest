@@ -156,6 +156,12 @@ allowPrivate=1
 ;Number of days to keep tests locally before archiving
 ;archive_days=2
 
+;all files ending with MEDIA_FILES_ENDINGS and which access-time are older than this days will be deleted
+;media_days = 30
+
+;all archives which access-time are older than this days will be deleted
+;clear_archive_days = 390
+
 ; *************
 ; EC2 Instances
 ; *************
@@ -188,3 +194,10 @@ allowPrivate=1
 ; the subnet). This is required only if you do not have a default VPC.
 ;EC2.us-west-2.securityGroup=sg-a0011b223,sg-b1122c334
 ;EC2.us-west-2.subnetId=subnet-aaa0011bc1
+
+; *************
+; Processing Options
+; *************
+
+; Set base-path where to find the bitmasks for calculating Visual-Complete times
+;vp_bitmask_path=/path/bitmasks/
