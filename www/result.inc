@@ -559,7 +559,7 @@ $page_description = "Website performance test result$testLabel.";
 							$testUrl .= "&end={$_REQUEST['end']}";
 						elseif (FRIENDLY_URLS)
 							$testUrl = "/result/$id/$run/details/";
-						echo "<a href=\"$testUrl\">";
+						echo "<a href=\"$testUrl#waterfall_view".getEventNameID($eventName)."\">";
 						echo "<img class=\"progress\"$onloadWaterfall width=250 src=\"/thumbnail.php?test=$id&run=$run&eventName=" . urlencode($eventName) . "&file={$run}_" . urlencode(getEventNameID($eventName)) . "_waterfall.png\"></a></td>\n";
 						if (!isset($test['testinfo']) || !$test['testinfo']['noimages']) {
 							if( FRIENDLY_URLS )
