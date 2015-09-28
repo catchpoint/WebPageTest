@@ -16,7 +16,7 @@ STDMETHODIMP WptBHO::SetSite(IUnknown *pUnkSite) {
   if (pUnkSite) {
     if (!_web_browser) {
       _web_browser = pUnkSite;
-      // Set up ServiceProvideer for intercepting auth requests
+      // Set up ServiceProvider for intercepting auth requests
       basicAuthDismissed = false;
       CComQIPtr<IServiceProvider> sp(_web_browser);
       if (sp) {
@@ -30,7 +30,7 @@ STDMETHODIMP WptBHO::SetSite(IUnknown *pUnkSite) {
       }
       _wpt.InstallHook();
       DispEventAdvise(pUnkSite, &DIID_DWebBrowserEvents2);
-	  }
+    }
   } else {
     DispEventUnadvise(_web_browser, &DIID_DWebBrowserEvents2);
     _wpt.Stop();
@@ -42,10 +42,10 @@ STDMETHODIMP WptBHO::SetSite(IUnknown *pUnkSite) {
 
 
 HRESULT STDMETHODCALLTYPE WptBHO::Authenticate(
-	__RPC__deref_out_opt HWND *phwnd,
-	__RPC__deref_out_opt LPWSTR *pszUsername,
-	__RPC__deref_out_opt LPWSTR *pszPassword) {
-	AtlTrace(_T("[WptBHO] Request for Authentication"));
+  __RPC__deref_out_opt HWND *phwnd,
+  __RPC__deref_out_opt LPWSTR *pszUsername,
+  __RPC__deref_out_opt LPWSTR *pszPassword) {
+  AtlTrace(_T("[WptBHO] Request for Authentication"));
   basicAuthDismissed = true;
   return E_ACCESSDENIED;
 }

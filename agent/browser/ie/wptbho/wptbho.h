@@ -76,9 +76,9 @@ public:
   HRESULT STDMETHODCALLTYPE QueryService(REFGUID guid, REFIID iid, void** ppv);
   // IAuthenticate
   HRESULT STDMETHODCALLTYPE Authenticate(
-	  /* [out] */ __RPC__deref_out_opt HWND *phwnd,
-	  /* [out] */ __RPC__deref_out_opt LPWSTR *pszUsername,
-	  /* [out] */ __RPC__deref_out_opt LPWSTR *pszPassword);
+    /* [out] */ __RPC__deref_out_opt HWND *phwnd,
+    /* [out] */ __RPC__deref_out_opt LPWSTR *pszUsername,
+    /* [out] */ __RPC__deref_out_opt LPWSTR *pszPassword);
 
 
 private:

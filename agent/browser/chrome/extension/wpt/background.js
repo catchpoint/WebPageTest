@@ -363,7 +363,6 @@ chrome.webRequest.onErrorOccurred.addListener(function(details) {
 );
 
 chrome.webRequest.onAuthRequired.addListener(function(details, cb) {
-    console.log("CB: " + cb);
     if (g_active && details.tabId == g_tabid) {
        return {
          cancel: true
