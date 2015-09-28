@@ -244,6 +244,7 @@ if (ValidateTestId($id)) {
 
         // Do any post-processing on this individual run that doesn't requre the test to be locked
         if (isset($runNumber) && isset($cacheWarmed)) {
+
           $secure = false;
           $haveLocations = false;
           $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure, $haveLocations, false);
@@ -258,6 +259,10 @@ if (ValidateTestId($id)) {
           }
           GetDevToolsCPUTime($testPath, $runNumber, $cacheWarmed);
         }
+        /* Check if it's singlestep or a multistep-result
+         * If it's multistep-result, remove all singlestep-data from it!
+         */
+        clearMultistepResult($testPath);
 
         // mark this run as complete
         if (isset($runNumber) && isset($cacheWarmed)) {

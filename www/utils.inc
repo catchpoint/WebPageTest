@@ -1,5 +1,4 @@
-<?php 
-
+<?php
 	/**
 	 * Delivers the full eventname from jobname, event string and line number
 	 * @param string $jobLabel
@@ -9,40 +8,40 @@
 	 * @param int $eventNumber
 	 * 		number of current page (just needed if setEventName hasn't been used)
 	 */
-	function getFullEventName($jobLabel, $eventString, $eventNumber){		
+	function getFullEventName($jobLabel, $eventString, $eventNumber){
 		if(trim($eventString) == ""){
-			if(trim($jobLabel) == ""){				
+			if(trim($jobLabel) == ""){
 				$job = "Unnamed Job";
 			} else {
 				$job = $jobLabel;
-			}			
+			}
 			$event = $job . ' ' . ($eventNumber + 1);
 		} else {
 			$event = $eventString;
 		}
-		
+
 		return $event;
 	}
-	
+
 	/**
 	 * array to cache event name ids
-	 */ 
+	 */
 	global $eventNameIDs;
-	
+
 	/**
 	 * Delivers an ID for the given event name
 	 * @param unknown $eventName
 	 * 		event name
 	 * @return mixed|string
 	 * 		calculated id
-	 */	
+	 */
 	function getEventNameID($eventName){
 		if($eventName != null){
 			if(isset($eventNameIDs[$eventName])){
 				return $eventNameIDs[$eventName];
 			}
 			$eventNameID = str_replace(" ", "_", $eventName);
-			$eventNameID = preg_replace("/[^a-zA-Z_0-9_-]/", "", $eventNameID);	
+			$eventNameID = preg_replace("/[^a-zA-Z_0-9_-]/", "", $eventNameID);
 			$eventNameIDs[$eventName] = $eventNameID;
 			return $eventNameID;
 		}
@@ -51,9 +50,9 @@
 
 	/**
 	 * array to cache short event names
-	 */ 
+	 */
 	global $shortEventNames;
-	
+
 	/**
 	 * Delivers an short name for the given event name (first characters of every word)
 	 * @param unknown $eventName
@@ -62,7 +61,7 @@
 	 * 		calculated short name
 	 */
 	function getShortEventName($eventName){
-		if($eventName != null){		
+		if($eventName != null){
 			if(isset($shortEventNames[$eventName])){
 				return $shortEventNames[$eventName];
 			}
@@ -81,10 +80,10 @@
 		}
 		return "";
 	}
-	
+
 	/**
 	 * Function to check a condition for every event name (e.g. exists an event which has a domTime)
-	 * 
+	 *
 	 * 		Checks the following array elements (according to set parameters):
 	 * 			$array
 	 * 				[<All event names>]
@@ -92,10 +91,10 @@
 	 *              	[$subArray1] (optional)
 	 *              	[$subArray2] (optional)
 	 *              [$key]
-	 *          
+	 *
 	 *      Checks for each event element in $array:
-	 *      
-	 *      (array_key_exists(	$key, 
+	 *
+	 *      (array_key_exists(	$key,
 	 *      					$array[$eventName]
 	 *      						[$subEventArray][<All event names>]
 	 *              				[$subArray1]
@@ -107,15 +106,15 @@
 	 *          [$subArray1]
 	 *          [$subArray2]
 	 *       [$key]) $operator $compare
-	 *     
+	 *
 	 *	e.g.: 	checkForAllEventNames($pageDataArray, 'domTime', '>', 0.0, "float", -1, $fvMedian, 0):
-	 *		
+	 *
 	 *			$result = true;
 	 *			For all events as $eventName
-	 *				$result |= (array_key_exists('domTime', $pageDataArray[<All event names>][$fvMedian][0]) && 
+	 *				$result |= (array_key_exists('domTime', $pageDataArray[<All event names>][$fvMedian][0]) &&
 	 *							(float)$pageDataArray[$eventName][$fvMedian][0] > 0.0)
-	 *      	
-	 * 
+	 *
+	 *
 	 * @param array $array
 	 * 		array containing all event data
 	 * @param string $key
@@ -159,14 +158,14 @@
 		if($subArray2 != -1){
 			$code .= '[$subArray2]';
 		}
-		$code .= '[$key]';		
+		$code .= '[$key]';
 		$code .=') '.$operator.' $compare);';
 		foreach(array_keys($array) as $eventName){
 			eval($code);
 		}
 		return $result;
 	}
-	
+
 	/**
 	 * Function to convert umlauts back to readable umlauts
 	 * @param unknown $string
@@ -185,7 +184,7 @@
 		$string = str_replace ("&szlig;", "ß", $string);
 		return $string;
 	}
-	
+
 	/**
 	 * Checks the key for an option of the option array.
 	 * Returns false if option is null or key isn't set.
@@ -204,7 +203,7 @@
 		}
 		return $result;
 	}
-	
+
 	/**
 	 * Checks option with name $name of the option array and sets the default value $default if no value is set
 	 * @param unknown $name
@@ -218,6 +217,40 @@
 		if(!isset($options[$name])){
 			$options[$name] = $default;
 		}
+	}
+
+	function clearMultistepResult($testPath){
+		$allFilesInTestPath = glob($testPath."/*");
+		if(checkIfTestContainsMultistepResult($testPath)) {
+			foreach ($allFilesInTestPath as $file) {
+				$regexScreenshotSinglestep = "/^[\S]*\/([0-9]+)_(Cached_)?screen([\S]+)$/";
+				$regexReportSinglestep = "/^[\S]*\/([0-9]+)_(Cached_)?report([\S]+)$/";
+				$regexVideoFileSinglestep = "/^[\S]*\/([0-9]+)_(Cached_)?progress([\S]+)$/";
+				if (preg_match($regexScreenshotSinglestep, $file) ||
+					preg_match($regexReportSinglestep, $file) ||
+					preg_match($regexVideoFileSinglestep, $file)
+				) {
+					unlink($file);
+				}
+			}
+		}
+	}
+
+	/** Checks if the given path contains video-directories ('video*_*') or progress_files (*_*_progress_.*)
+	 * in multistep-format
+	 * @param $testPath path which shall be checked
+	 * @return true, if path contains video-files in multistep-format. false, if not true.
+	 */
+	function checkIfTestContainsMultistepResult($testPath){
+		$regexReportMultistep = "/^[\S]*\/([0-9]+)_([0-9]+)_(Cached_)?report([\S]+)$/";
+		$allFilesInTestPath = glob($testPath."/*");
+		foreach($allFilesInTestPath as $file) {
+			if(preg_match($regexReportMultistep,$file)){
+				return true;
+			}
+		}
+		//if no video-file in multistep-format found, it must be a singlestep-result
+		return false;
 	}
 
 ?>

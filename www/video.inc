@@ -2,7 +2,7 @@
 
 /**
 * Move all of the progress images to individual video directories (will usually be there but in th case of a jobsync script I need to move them)
-* 
+*
 * @param mixed $testPath
 */
 function MoveVideoFiles($testPath)
@@ -10,12 +10,14 @@ function MoveVideoFiles($testPath)
     $dir = opendir($testPath);
     if( $dir )
     {
-        while($file = readdir($dir)) 
+        while($file = readdir($dir))
         {
             if( strpos($file, '_progress_') !== false )
             {
+                $fileWillBeMoved = false;
                 $src = $testPath  . "/$file";
-                if (preg_match("/(?P<runNumber>[0-9]+)_(?P<cached>Cached_)?(?P<pageNumber>[a-z]+)_progress_(?P<fileBase>[\S]+)/",$file,$matches)) {
+                $regexForMultistep = "/^(?P<runNumber>[0-9]+)_(?P<cached>Cached_)?(?P<pageNumber>[0-9]+)_progress_(?P<fileBase>[\S]+)$/";
+                if (preg_match($regexForMultistep,$file,$matches)) {
                     $runNum = $matches['runNumber'];
                     $page = $matches['pageNumber'];
                     $fileBase = $matches['fileBase'];
@@ -30,24 +32,30 @@ function MoveVideoFiles($testPath)
                     if( !is_dir($path) )
                         mkdir($path, 0777, true);
                     $fileName = 'frame_' . $page . '_' . $fileBase;
+                    $fileWillBeMoved = true;
                 }
-                if (preg_match("/(?P<runNumber>[0-9]+)(?P<cached>Cached_)?_progress_(?P<fileBase>[\S]+)/",$file,$matches)) {
+                //If this result contains video-files in multistep- and singlestep-result
+                // format, delete the one in singlestep-format
+                if(preg_match("/^(?P<runNumber>[0-9]+)_(?P<cached>Cached_)?progress_(?P<fileBase>[\S]+)$/", $file, $matches)) {
                     $runNum = $matches['runNumber'];
                     $fileBase = $matches['fileBase'];
                     $cached = '';
-                    if( array_key_exists('cached') ) {
+                    if (array_key_exists('cached')) {
                         $cached = '_cached';
                     }
                     $pathOld = $testPath . "/video_{$runNum}{$cached}";
                     if (!is_dir($pathOld))
                         mkdir($pathOld, 0777, true);
                     $path = $testPath . "/video_{$runNum}_1{$cached}";
-                    if( !is_dir($path) )
+                    if (!is_dir($path))
                         mkdir($path, 0777, true);
                     $fileName = 'frame_1_' . $fileBase;
+                    $fileWillBeMoved = true;
                 }
-                copy($src, $pathOld . "/" . $fileName);
-                rename($src, $path . "/" . $fileName);
+                if($fileWillBeMoved){
+                    copy($src, $pathOld . "/" . $fileName);
+                    rename($src, $path . "/" . $fileName);
+                }
             }
         }
 
@@ -57,7 +65,7 @@ function MoveVideoFiles($testPath)
 
 /**
 * Go through a given test and see if "video" was captured.  If so, build the avisynth script to stitch the images together into a video
-* 
+*
 * @param mixed $testPath
 */
 function BuildVideoScripts($testPath)
@@ -65,7 +73,7 @@ function BuildVideoScripts($testPath)
     $dir = opendir($testPath);
     if( $dir )
     {
-        while($file = readdir($dir)) 
+        while($file = readdir($dir))
         {
             $path = $testPath  . "/$file";
             if( is_dir($path) && !strncmp($file, 'video_', 6) )
@@ -78,7 +86,7 @@ function BuildVideoScripts($testPath)
 
 /**
 * Buiild an avisynth script for the given directory
-* 
+*
 * @param mixed $videoDir
 */
 function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false, $startOffset = null)
@@ -89,7 +97,7 @@ function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false, $
   $frames = array();
   if( $endTime )
       $endTime = (int)(($endTime + 99) / 100);
-  
+
   if (loadVideo($videoDir, $frames_ms) && count($frames_ms)) {
     // get 10fps frame timings for now - eventually add support for rendering 60fps video
     $frames = array();
@@ -120,7 +128,7 @@ function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false, $
         }
       }
     }
-  
+
     // build the actual script
     if (count($frames) >= 1) {
       $script = '';
@@ -138,20 +146,20 @@ function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false, $
             $count = $index - $lastIndex;
             $script .= "ImageSource(\"$lastFrame\", start = 1, end = $count, fps = 10) + \\ \r\n";
           }
-          
+
           $lastFrame = $file;
           $lastIndex = $index;
         }
       }
       $end = $lastIndex;
-      
+
       // put in the last frame
       if( $endTime ) {
         $count = max((int)($endTime - $lastIndex + 1), 1);
         $script .= "ImageSource(\"{$frames[$end]}\", start = 1, end = $count, fps = 10)\r\n";
       } else
         $script .= "ImageSource(\"{$frames[$end]}\", start = 1, end = 1, fps = 10)\r\n";
-      
+
       // write out the script file
       file_put_contents("$videoDir/video.avs", $script);
     }
@@ -160,7 +168,7 @@ function BuildVideoScript($testPath, $videoDir, $endTime = 0, $extend = false, $
 
 /**
 * Create the zip file of the video
-* 
+*
 * @param mixed $videoDir
 */
 function ZipVideo($path)
@@ -206,5 +214,5 @@ function ZipVideo($path)
 
     return $path;
 }
-  
+
 ?>
