@@ -328,7 +328,7 @@ void Results::SaveVideo(void) {
 
         if (!histogram.IsEmpty()) {
           CString page;
-		  page.Format(_T("_%d"));
+		  page.Format(_T("_%d"), currentPage);
           if (histogram_count)
             histograms += ", ";
           histograms += "{\"histogram\": ";
