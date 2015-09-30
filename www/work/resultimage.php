@@ -49,7 +49,7 @@ if (ValidateTestId($id)) {
                                     $page = $matches['pageNumber'];
                                     $fileBase = $matches['fileBase'];
                                     $cached = '';
-                                    if( array_key_exists('cached') ) {
+                                    if( array_key_exists('cached',$matches) && $matches['cached'] != null && $matches['cached'] != '' ) {
                                         $cached = '_cached';
                                     }
                                     $pathOld = $testPath . "/video_{$runNum}{$cached}";
@@ -64,7 +64,7 @@ if (ValidateTestId($id)) {
                                     $runNum = $matches['runNumber'];
                                     $fileBase = $matches['fileBase'];
                                     $cached = '';
-                                    if( array_key_exists('cached') ) {
+                                    if( array_key_exists('cached',$matches) && $matches['cached'] != null && $matches['cached'] != '' ) {
                                         $cached = '_cached';
                                     }
                                     $pathOld = $testPath . "/video_{$runNum}{$cached}";

@@ -22,7 +22,7 @@ function MoveVideoFiles($testPath)
                     $page = $matches['pageNumber'];
                     $fileBase = $matches['fileBase'];
                     $cached = '';
-                    if( array_key_exists('cached') ) {
+                    if( array_key_exists('cached',$matches) && $matches['cached'] != null && $matches['cached'] != '' ) {
                         $cached = '_cached';
                     }
                     $pathOld = $testPath . "/video_{$runNum}{$cached}";
@@ -40,7 +40,7 @@ function MoveVideoFiles($testPath)
                     $runNum = $matches['runNumber'];
                     $fileBase = $matches['fileBase'];
                     $cached = '';
-                    if (array_key_exists('cached')) {
+                    if ( array_key_exists('cached',$matches) && $matches['cached'] != null && $matches['cached'] != '' ) {
                         $cached = '_cached';
                     }
                     $pathOld = $testPath . "/video_{$runNum}{$cached}";
