@@ -1005,7 +1005,7 @@ void Results::SaveRequests(OptimizationChecks& checks) {
         if (request->_processed) {
           i++;
           request->SetEventName(checks._test.event_name);  
-          SaveRequest(file, headers_file, request, i);
+          SaveRequest(NULL, headers_file, request, i);
 		  SaveRequest(file, headers_file_multistep, request, i);
           if (!request->_custom_rules_matches.IsEmpty() && 
               custom_rules_file != INVALID_HANDLE_VALUE) {
@@ -1270,7 +1270,9 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   result += "\r\n";
 
   DWORD written;
-  WriteFile(file, (LPCSTR)result, result.GetLength(), &written, 0);
+  if (file != NULL){
+	  WriteFile(file, (LPCSTR)result, result.GetLength(), &written, 0);
+  }
 
   // write out the raw headers
   if (headers != INVALID_HANDLE_VALUE) {
