@@ -640,7 +640,7 @@ $page_description = "Website performance test result$testLabel.";
 												}
 													echo '</td>';
 													if( FRIENDLY_URLS )
-														echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/details/cached/\"><img class=\"progress\" width=250 src=\"/result/$id/{$run}/" . urlencode($eventName) . "/" . urlencode(getEventNameID($eventName)) . "/Cached_waterfall_thumb.png\"></a></td>";
+														echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/details/cached/#waterfall_view" . getEventNameId($eventName) . "\"><img class=\"progress\" width=250 src=\"/result/$id/{$run}/" . urlencode($eventName) . "/" . urlencode(getEventNameID($eventName)) . "/Cached_waterfall_thumb.png\"></a></td>";
 													else
 														echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/details.php?test=$id&run=$run&cached=1\"><img class=\"progress\" width=250 src=\"/thumbnail.php?test=$id&run=$run&cached=1&eventName=" . urlencode($eventName) . "&file={$run}_" . urlencode(getEventNameID($eventName)) . "_Cached_waterfall.png\"></a></td>";
 
