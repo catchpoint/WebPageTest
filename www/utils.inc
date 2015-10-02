@@ -226,9 +226,11 @@
 				$regexScreenshotSinglestep = "/^[\S]*\/([0-9]+)_(Cached_)?screen([\S]+)$/";
 				$regexReportSinglestep = "/^[\S]*\/([0-9]+)_(Cached_)?report([\S]+)$/";
 				$regexVideoFileSinglestep = "/^[\S]*\/([0-9]+)_(Cached_)?progress([\S]+)$/";
+				$regexVisualCacheFiles = "/^[\S]*\/(\S*)visual([\S]*)$/";
 				if (preg_match($regexScreenshotSinglestep, $file) ||
 					preg_match($regexReportSinglestep, $file) ||
-					preg_match($regexVideoFileSinglestep, $file)
+					preg_match($regexVideoFileSinglestep, $file) ||
+					preg_match($regexVisualCacheFiles, $file)
 				) {
 					unlink($file);
 				}

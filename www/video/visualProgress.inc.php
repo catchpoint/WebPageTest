@@ -126,7 +126,7 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
                       $frames['complete'] = $time;
               }
           }
-        } elseif (gz_is_file("$testPath/$run.$cached.histograms.json")) {
+        } elseif (gz_is_file("$testPath/$run.$cached.histograms.json") && !isset($frames)) {
           $raw = json_decode(gz_file_get_contents("$testPath/$run.$cached.histograms.json"), true);
           $histograms = array();
           foreach ($raw as $h) {
