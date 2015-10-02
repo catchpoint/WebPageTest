@@ -8,7 +8,7 @@ $pending = 0;
 // see if there is an existing test we are working with
 if (LoadResults($results)) {
   foreach($results as $result) {
-    if (!isset($result['result'])) {
+    if (isset($result['id']) && strlen($result['id']) && !isset($result['result'])) {
       $pending++;
     }
   }
