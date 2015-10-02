@@ -109,7 +109,7 @@ $loc = ParseLocations($locations);
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
-                        <li><input type="url" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>
+                        <li><input type="text" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>
                         <li>
                             <label for="location">Test Location</label>
                             <select name="where" id="location">
@@ -434,6 +434,30 @@ $loc = ParseLocations($locations);
                                             <small>Chrome 34+ on Android</small>
                                         </label>
                                     </li>
+                                    <?php
+                                    if ($admin && GetSetting('wprDesktop')) {
+                                    ?>
+                                    <li>
+                                        <input type="checkbox" name="wprDesktop" id="wprDesktop" class="checkbox" style="float: left;width: auto;">
+                                        <label for="wprDesktop" class="auto_width">
+                                            Use Web Page Replay recorded Desktop Page<br>
+                                            <small>Limited list of available <a href="/wprDesktop.txt">URLs</a></small>
+                                        </label>
+                                    </li>
+                                    <?php
+                                    }
+                                    if ($admin && GetSetting('wprMobile')) {
+                                    ?>
+                                    <li>
+                                        <input type="checkbox" name="wprMobile" id="wprMobile" class="checkbox" style="float: left;width: auto;">
+                                        <label for="wprMobile" class="auto_width">
+                                            Use Web Page Replay recorded Mobile Page<br>
+                                            <small>Limited list of available <a href="/wprDesktop.txt">URLs</a></small>
+                                        </label>
+                                    </li>
+                                    <?php
+                                    }
+                                    ?>
                                     <li>
                                         <label for="uastring" style="width: auto;">
                                         User Agent String<br>

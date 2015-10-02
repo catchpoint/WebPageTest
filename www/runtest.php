@@ -215,6 +215,23 @@
                 $test['addCmdLine'] .= '--user-agent="' . $req_uastring . '"';
               }
             }
+            if (isset($req_wprDesktop) && $req_wprDesktop) {
+              $wprDesktop = GetSetting('wprDesktop');
+              if ($wprDesktop) {
+                if (strlen($test['addCmdLine']))
+                  $test['addCmdLine'] .= ' ';
+                $test['addCmdLine'] .= "--host-resolver-rules=\"MAP * $wprDesktop,EXCLUDE localhost,EXCLUDE 127.0.0.1\"";
+                $test['ignoreSSL'] = 1;
+              }
+            } elseif (isset($req_wprMobile) && $req_wprMobile) {
+              $wprMobile = GetSetting('wprMobile');
+              if ($wprMobile) {
+                if (strlen($test['addCmdLine']))
+                  $test['addCmdLine'] .= ' ';
+                $test['addCmdLine'] .= "--host-resolver-rules=\"MAP * $wprMobile,EXCLUDE localhost,EXCLUDE 127.0.0.1\"";
+                $test['ignoreSSL'] = 1;
+              }
+            }
 
             // see if we need to process a template for these requests
             if (isset($req_k) && strlen($req_k)) {
@@ -2324,7 +2341,7 @@ function ProcessTestScript($url, &$test) {
 function ValidateCommandLine($cmd, &$error) {
   if (isset($cmd) && strlen($cmd)) {
     $flags = explode(' ', $cmd);
-    if ($flags && is_array($flags) && count($flags)) {
+    if ($flags && is_array($flags) && count($flags)) {                
       foreach($flags as $flag) {
         if (!preg_match('/^--(([a-zA-Z0-9\-\.\+=,_ "]+)|((proxy-server|proxy-pac-url|force-fieldtrials)=[a-zA-Z0-9\-\.\+=,_:\/]+))$/', $flag)) {
           $error = 'Invalid command-line option: "' . htmlspecialchars($flag) . '"';
