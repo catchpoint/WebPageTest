@@ -10,13 +10,25 @@ function MoveVideoFiles($testPath)
     $dir = opendir($testPath);
     if( $dir )
     {
-        while($file = readdir($dir))
+        $allFilesInTestPath = glob($testPath."/*");
+        $allFilesInTest = array();
+        //look for video-directories
+        foreach($allFilesInTestPath as $file){
+            $allFilesInTest[] = $file;
+            if (preg_match("/^[\S]*\/(\S*)video_([\S]*)$/",$file)){
+                $filesInVideoDirectory = glob($file."/*");
+                foreach($filesInVideoDirectory as $possibleVideoFile){
+                    $allFilesInTest[] = $possibleVideoFile;
+                }
+            }
+        }
+        foreach($allFilesInTest as $file)
         {
             if( strpos($file, '_progress_') !== false )
             {
                 $fileWillBeMoved = false;
-                $src = $testPath  . "/$file";
-                $regexForMultistep = "/^(?P<runNumber>[0-9]+)_(?P<cached>Cached_)?(?P<pageNumber>[0-9]+)_progress_(?P<fileBase>[\S]+)$/";
+                $src = $file;
+                $regexForMultistep = "/^[\S]*\/(?P<runNumber>[0-9]+)_(?P<cached>Cached_)?(?P<pageNumber>[0-9]+)_progress_(?P<fileBase>[\S]+)$/";
                 if (preg_match($regexForMultistep,$file,$matches)) {
                     $runNum = $matches['runNumber'];
                     $page = $matches['pageNumber'];
@@ -36,7 +48,7 @@ function MoveVideoFiles($testPath)
                 }
                 //If this result contains video-files in multistep- and singlestep-result
                 // format, delete the one in singlestep-format
-                if(preg_match("/^(?P<runNumber>[0-9]+)_(?P<cached>Cached_)?progress_(?P<fileBase>[\S]+)$/", $file, $matches)) {
+                if(preg_match("/^[\S]*\/(?P<runNumber>[0-9]+)_(?P<cached>Cached_)?progress_(?P<fileBase>[\S]+)$/", $file, $matches)) {
                     $runNum = $matches['runNumber'];
                     $fileBase = $matches['fileBase'];
                     $cached = '';
