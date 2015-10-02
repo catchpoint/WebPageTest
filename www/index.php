@@ -393,6 +393,13 @@ $loc = ParseLocations($locations);
                                         </label>
                                         <input id="tester" type="text" class="text" name="tester" value="">
                                     </li>
+                                    <li>
+                                        <label for="customHeaders">
+                                            Custom headers<br>
+                                            <small>Add custom headers to all network requests emitted from the browser</small>
+                                        </label>
+                                        <textarea id="customHeaders" type="text" class="text" name="customHeaders" value=""></textarea>
+                                    </li>
                                 </ul>
                             </div>
                             <div id="advanced-chrome" class="test_subbox ui-tabs-hide">

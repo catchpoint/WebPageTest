@@ -90,6 +90,7 @@
             $test['domElement'] = trim($req_domelement);
             $test['login'] = trim($req_login);
             $test['password'] = trim($req_password);
+            $test['customHeaders'] = trim($req_customHeaders);
             $test['runs'] = (int)$req_runs;
             $test['fvonly'] = (int)$req_fvonly;
             $test['timeout'] = (int)$req_timeout;
@@ -2327,6 +2328,17 @@ function ProcessTestScript($url, &$test) {
     if (!isset($script) || !strlen($script))
       $script = "navigate\t$url";
     $script = "addHeader\t$header\r\n" . $script;
+  }
+  // Add custom headers
+  if (strlen($test['customHeaders'])) {
+    if (!isset($script) || !strlen($script))
+      $script = "navigate\t$url";
+    $headers = preg_split("/\r\n|\n|\r/", $test['customHeaders']);
+    $headerCommands = "";
+    foreach ($headers as $header) {
+      $headerCommands = $headerCommands . "addHeader\t".$header."\r\n";
+    }
+    $script = $headerCommands . $script;
   }
   return $script;
 }
