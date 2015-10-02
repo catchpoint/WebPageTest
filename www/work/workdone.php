@@ -730,38 +730,6 @@ function ProcessHARData($parsedHar, $testPath, $harIsFromSinglePageLoad) {
         $curPageData["runFileName"] = $curPageData["runFilePrefix"] . "IEWTR.txt";
         $curPageData["reportFileName"] = $curPageData["runFilePrefix"] . $curPageData["step"] ."_report.txt";
 
-        // Write the page line line
-        file_put_contents($curPageData["runFileName"],
-            "{$curPageData['startDate']}\t{$curPageData['startTime']}\t".
-            "{$curPageData['title']}\t\t\t{$curPageData['host']}\t{$curPageData['url']}\t".
-            "0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t\t\t\t0\t0\t0\t0\tLaunch\t-1\t0\t-1\t".
-            "{$curPageData['cached']}\t{$curPageData['url']}\t".
-            "0\t0\t0\t0\t0\t0\t0\t0\t0\t0\t-1\t0\t0\t0\t0\t0\t0\t\t\t\t0\t0\t0\t0\t0\t0\t".
-            "\t0\t\t0\r\n", FILE_APPEND);
-
-        // Write the raw data in the report (not accurate, may need to fix after)
-        // TODO: Write real data
-        file_put_contents($curPageData["reportFileName"],
-            "Results for '{$curPageData['url']}':\r\n\r\n" .
-            "Page load time: 0 seconds\r\n" .
-            "Time to first byte: 0 seconds\r\n" .
-            "Time to Base Page Downloaded: 0 seconds\r\n" .
-            "Time to Start Render: 0 seconds\r\n" .
-            "Time to Document Complete: 0 seconds\r\n" .
-            "Time to Fully Loaded: 0 seconds\r\n" .
-            "Bytes sent out: 0 KB\r\n" .
-            "Bytes received: 0 KB\r\n" .
-            "DNS Lookups: 0\r\n" .
-            "Connections: 0\r\n" .
-            "Requests: 0\r\n" .
-            "   OK Requests:  0\r\n" .
-            "   Redirects:    0\r\n" .
-            "   Not Modified: 0\r\n" .
-            "   Not Found:    0\r\n" .
-            "   Other:        0\r\n" .
-            "Base Page Response: 200\r\n" .
-            "Request details:\r\n\r\n");
-
         // Start by stating the time-to-first-byte is the page load time,
         // will be updated as we iterate requests.
         $curPageData["TTFB"] = $curPageData["docComplete"];

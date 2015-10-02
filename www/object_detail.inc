@@ -217,8 +217,8 @@ function LoadRequests($request_file_name,$eventSeperated) {
             if (strncmp($line, "Date\t", 4)) {
                 $columns = explode("\t", str_replace("\t", "\t ", $line));
                 // sequence number equals 1?
-                if(intval($columns[34]) == 1){
-                    $eventName = getFullEventName($test_info['label'], trim($columns[2]), $eventCount, $requests);
+                $eventName = getFullEventName($test_info['label'], trim($columns[2]), $eventCount, $requests);
+                if($eventSeperated && !array_key_exists($eventName,$requests)){
                     $requests[$eventName] = array();
                     $eventCount++;
                 }
