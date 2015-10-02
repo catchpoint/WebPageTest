@@ -565,17 +565,18 @@ $page_description = "Website performance test details$testLabel";
 						'haveLocation': have_locations
 					};
 					var containerid = '#' + $(this).data('waterfallcontainer');
+					var completeFunction = partial(requestCompleted,containerid,slideopener);
 					if (containerid.match("^#waterfallcontainer")) {
-						$(containerid).load('/template_create_waterfall.php', argument_map, requestCompleted(containerid,slideopener));
+						$(containerid).load('/template_create_waterfall.php', argument_map, completeFunction);
 					}
 					if (containerid.match("^#connectionviewcontainer")) {
-						$(containerid).load('/template_create_connectionview.php', argument_map, requestCompleted(containerid,slideopener));
+						$(containerid).load('/template_create_connectionview.php', argument_map, completeFunction);
 					}
 					if (containerid.match("^#requestdetailscontainer")) {
-						$(containerid).load('/template_create_requestdetails.php', argument_map, requestCompleted(containerid,slideopener));
+						$(containerid).load('/template_create_requestdetails.php', argument_map, completeFunction);
 					}
 					if (containerid.match("^#requestheaderscontainer")) {
-						$(containerid).load('/template_create_requestheaders.php', argument_map, requestCompleted(containerid,slideopener));
+						$(containerid).load('/template_create_requestheaders.php', argument_map, completeFunction);
 					}
 				}
 			});
@@ -601,6 +602,16 @@ $page_description = "Website performance test details$testLabel";
 	function requestCompleted(containerid,slideopener){
 		$(containerid).data('loaded', 'true');
 		$(slideopener).removeClass('slide_opener_activity_indicator');
+	}
+
+	// is only needed for passing a function-reference containing parameters
+	// copied from http://stackoverflow.com/questions/321113/how-can-i-pre-set-arguments-in-javascript-function-call-partial-function-appli
+	function partial(func /*, 0..n args */) {
+		var args = Array.prototype.slice.call(arguments, 1);
+		return function() {
+			var allArguments = args.concat(Array.prototype.slice.call(arguments));
+			return func.apply(this, allArguments);
+		};
 	}
 </script>
 </body>
