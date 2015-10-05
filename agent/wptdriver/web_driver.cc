@@ -18,20 +18,6 @@ static CStringA UTF16toUTF8(const CStringW& utf16) {
   return utf8;
 }
 
-static DWORD WINAPI ReadClientErrorProc(LPVOID lpvParam) {
-  WebDriver *driver = (WebDriver *)lpvParam;
-
-  driver->ReadClientError();
-  return 0;
-}
-
-static DWORD WINAPI ReadServerErrorProc(LPVOID lpvParam) {
-  WebDriver *driver = (WebDriver *)lpvParam;
-
-  driver->ReadServerError();
-  return 0;
-}
-
 WebDriver::WebDriver(WptSettings& settings,
                      WptTestDriver& test,
                      WptStatus &status, 
@@ -179,16 +165,6 @@ bool WebDriver::RunAndWait() {
     WptTrace(loglevel::kError, _T("[webdriver] Server exited with exit code: %u"), GetLastError());
   }
   
-  // Wait for all the read threads to be done.
-  if (_server_read_thread) {
-    WaitForSingleObject(_server_read_thread, 10000);
-    TerminateThread(_server_read_thread, 0);    // Force terminate, just in case.
-  }
-  if (_client_read_thread) {
-    WaitForSingleObject(_client_read_thread, 10000);
-    TerminateThread(_client_read_thread, 0);
-  }
-
   // Close all the handles.
   CloseHandle(_server_info.hProcess);
   CloseHandle(_server_info.hThread);
@@ -198,19 +174,6 @@ bool WebDriver::RunAndWait() {
   CloseHandle(_browser_started_event);
   CloseHandle(_browser_done_event);
 
-  if (server_exit_code && _server_err.GetLength()) {
-    _test._run_error = _server_err;
-    WptTrace(loglevel::kError, _T("[webdriver] Error with webdriver server: ") + _server_err);
-  }
-
-  if (client_exit_code && _client_err.GetLength()) {
-    _test._run_error += _client_err;
-    WptTrace(loglevel::kError, _T("[webdriver] Error with webdriver client: ") + _client_err);
-  }
-
-  CloseHandle(_client_err_read);
-  CloseHandle(_server_err_read);
-
   // Delete the script
   CString filepath = _scripts_dir + _T("\\script_") + _test._id;
   DeleteFile(filepath);
@@ -218,50 +181,17 @@ bool WebDriver::RunAndWait() {
   if (active_event) {
     CloseHandle(active_event);
   }
+
   return ok && !client_exit_code && !server_exit_code;
-}
-
-bool WebDriver::CreateStdPipes(HANDLE *hRead, HANDLE *hWrite) {
-  SECURITY_ATTRIBUTES sa_attr;
-
-  sa_attr.nLength = sizeof(SECURITY_ATTRIBUTES);
-  sa_attr.bInheritHandle = TRUE;
-  sa_attr.lpSecurityDescriptor = NULL;
-
-  // Create the stdout pipe. Child will write via out_write
-  // and we will read via out_read.
-  if (!CreatePipe(hRead, hWrite, &sa_attr, 0)) {
-    WptTrace(loglevel::kError, _T("[webdirver] Failed to create pipes. Error: %u"),
-      GetLastError());
-    return false;
-  }
-  // Make sure the read end of the pipe is not inheritable by the
-  // child.
-  if (!SetHandleInformation(*hRead, HANDLE_FLAG_INHERIT, 0)) {
-    WptTrace(loglevel::kError, _T("[webdriver] Failed to make handle uninheritable. Error: %u"),
-      GetLastError());
-    return false;
-  }
-  return true;
 }
 
 bool WebDriver::SpawnWebDriverServer() {
   STARTUPINFO si;
-  DWORD thread_id;
 
   ZeroMemory(&si, sizeof(STARTUPINFO));
 
-  if (!CreateStdPipes(&_server_err_read, &_server_err_write)) {
-    _test._run_error = "Failed to launch the webdriver server.";
-    return false;
-  }
-  
   si.cb = sizeof(STARTUPINFO);
-  si.wShowWindow = SW_MINIMIZE;
-  si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
-  si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-  si.hStdError = _server_err_write;
-  si.dwFlags |= STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+  si.dwFlags = STARTF_USESHOWWINDOW;
   _settings._webdriver_server_command.Replace(_T("%RESULTDIR%"), _test._directory);
   _status.Set(_T("Launching: %s"), _settings._webdriver_server_command);
   if (!CreateProcess(NULL, _settings._webdriver_server_command.GetBuffer(), NULL, NULL, TRUE, 0, NULL,
@@ -272,15 +202,6 @@ bool WebDriver::SpawnWebDriverServer() {
     return false;
   }
   
-  CloseHandle(_server_err_write); // We won't be needing the write end of the pipe.
-
-  if (!(_server_read_thread = CreateThread(NULL, 0, ::ReadServerErrorProc, this, 0, &thread_id))) {
-    WptTrace(loglevel::kError, _T("[webdriver] Failed to create thread to read server errors. Error: %u"),
-      GetLastError());
-    _test._run_error = "Failed to launch the webdriver server.";
-    return false;
-  }
-
   return true;
 }
 
@@ -288,7 +209,6 @@ bool WebDriver::SpawnWebDriverClient() {
   STARTUPINFO si;
   CString cmdLine;
   CAtlArray<CString> options;
-  DWORD thread_id;
   
   // Add the test id
   options.Add(_T("--id"));
@@ -329,17 +249,8 @@ bool WebDriver::SpawnWebDriverClient() {
 
   ZeroMemory(&si, sizeof(STARTUPINFO));
 
-  if (!CreateStdPipes(&_client_err_read, &_client_err_write)) {
-    _test._run_error = "Failed to launch the webdriver client.";
-    return false;
-  }
-
   si.cb = sizeof(STARTUPINFO);
-  si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
-  si.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
-  si.hStdError = _client_err_write;		// so that we can read stderr.
-  si.wShowWindow = SW_MINIMIZE;
-  si.dwFlags |= STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+  si.dwFlags = STARTF_USESHOWWINDOW;
   
   _status.Set(_T("Launching: %s"), cmdLine);
 
@@ -351,45 +262,6 @@ bool WebDriver::SpawnWebDriverClient() {
     return false;
   }
 
-  CloseHandle(_client_err_write);	// We won't be needing the write end of the pipe.
-
-  if (!(_client_read_thread = CreateThread(NULL, 0, ::ReadClientErrorProc, this, 0, &thread_id))) {
-    WptTrace(loglevel::kError, _T("[webdriver] Failed to create thread to read client errors. Error: %s"),
-      GetErrorDetail(GetLastError()));
-    _test._run_error = "Failed to launch the webdriver client";
-    return false;
-  }
-
-  return true;
-}
-
-bool WebDriver::ReadClientError() {
-  return ReadPipe(_client_err_read, _client_err);
-}
-
-bool WebDriver::ReadServerError() {
-  return ReadPipe(_server_err_read, _server_err);
-}
-
-bool WebDriver::ReadPipe(HANDLE hRead, CString &content) {
-  DWORD bytesRead = -1;
-  char buf[1024];
-
-  while (true) {
-    if (!ReadFile(hRead, &buf, sizeof(buf) - 1, &bytesRead, NULL)
-      || !bytesRead) {
-      DWORD err_code = GetLastError();
-      if (err_code == ERROR_BROKEN_PIPE) {
-        break;
-      } else {
-        // Something bad happened.
-        WptTrace(loglevel::kError, _T("[webdriver] WINAPI error ReadFile. Error: %u"), GetLastError());
-        return false;
-      }
-    }
-    content.Append(CString(buf), bytesRead);
-  }
-  
   return true;
 }
 
