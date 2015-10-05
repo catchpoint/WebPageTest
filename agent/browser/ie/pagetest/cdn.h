@@ -102,7 +102,7 @@ CDN_PROVIDER cdnList[] = {
 	{".cdninstagram.com", _T("Facebook")},
 	{".rlcdn.com", _T("Reapleaf")},
 	{".wp.com", _T("WordPress Jetpack")},
-	{".incapdns.net", _T("Incapsula")),
+	{".incapdns.net", _T("Incapsula"}),
 	{".cdn.gocache.net", _T("GoCache")},
 	{NULL, NULL}
 };
