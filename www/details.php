@@ -150,6 +150,17 @@ $page_description = "Website performance test details$testLabel";
 			?>
 		</div>
 		<div class="cleared"></div>
+		<hr>
+		<h1 style="text-align:center; font-size:2.8em">
+			<?php
+			if($cached){
+				echo "Repeat View";
+			} else {
+				echo "First View";
+			}
+			?>
+		</h1>
+		<hr>
 		<br>
 		<table id="tableResults" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
 			<tr>
