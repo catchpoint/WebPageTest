@@ -95,12 +95,6 @@ $page_description = "Website performance test details$testLabel";
 		.a_request {
 			cursor: pointer;
 		}
-		.close_accordeon{
-			background: url('/images/close_accordion.png') no-repeat 10px 50%;
-		}
-		.open_accordeon{
-			background: url('/images/open_accordion.png') no-repeat 10px 50%;
-		}
 		.slide_opener{
 			cursor: pointer;
 			border: 1px solid #aaa;
