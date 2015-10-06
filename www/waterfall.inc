@@ -1194,14 +1194,14 @@ echo '</div>'; // container
 // script support
 	if($eventName != null){
 		$eventCount = array();
-		foreach(array_keys($requests) as $page){
-			$eventCount[$page] = count($requests[$eventName]);
+		foreach($requests as $eventName => $page){
+			$eventCount[$eventName] = count($requests[$eventName]);
 		}
 	} else {
 		$eventCount = count($requests);
 	}
     echo "<script type=\"text/javascript\">\n";
-	echo "var wptRequestCount=" . $eventCount. ";\n";
+	echo "var wptRequestCount=" . json_encode($eventCount). ";\n";
     echo "var wptRequestData=" . json_encode($requests) . ";\n";
     echo "var wptNoLinks={$settings['nolinks']};\n";
     echo "</script>";
