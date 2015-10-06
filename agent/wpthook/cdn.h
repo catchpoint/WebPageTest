@@ -142,6 +142,7 @@ CDN_PROVIDER cdnList[] = {
   {".cdninstagram.com", "Facebook"},
   {".rlcdn.com", "Reapleaf"},
   {".wp.com", "WordPress Jetpack"},
+  {"nexus.ensighten.com", _T("Ensighten"}),
   {"END_MARKER", "END_MARKER"}
 };
 
