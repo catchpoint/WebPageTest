@@ -435,23 +435,6 @@ $page_description = "Website performance test details$testLabel";
 		<?php include('./ads/details_middle.inc'); ?>
 
 		<br>
-		<?php
-		// script support
-		if(true){
-			$eventCount = array();
-			foreach($requests as $eventName => $page){
-				$eventCount[$eventName] = count($requests[$eventName]);
-			}
-		} else {
-			$eventCount = count($requests);
-		}
-		echo "<script type=\"text/javascript\">\n";
-		echo "var wptRequestCount=" . json_encode($eventCount). ";\n";
-		echo "var wptRequestData=" . json_encode($requests) . ";\n";
-		echo "var wptNoLinks={$settings['nolinks']};\n";
-		echo "</script>";
-		?>
-		<script type="text/javascript"><?php include "waterfall.js"; ?></script>
 		<?php include 'waterfall_detail.inc'; ?>
 	</div>
 
