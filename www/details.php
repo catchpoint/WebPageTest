@@ -95,6 +95,9 @@ $page_description = "Website performance test details$testLabel";
 		.a_request {
 			cursor: pointer;
 		}
+		.slide_header{
+			text-align:left;
+		}
 		.slide_opener{
 			cursor: pointer;
 			border: 1px solid #aaa;
@@ -409,11 +412,12 @@ $page_description = "Website performance test details$testLabel";
 		</div>
 		<br /> <br /> <br />
 		<div style="text-align:center;">
+			<h3 class="slide_header">Waterfall View</h3>
 			<?php
 			foreach($dataArray as $eventName => $data)
 			{ ?>
 			<a name="waterfall_view<?= getEventNameID($eventName); ?>"></a>
-			<h3 name="waterfall_view<?= getEventNameID($eventName); ?>" id="slide_opener_waterfall_view<?= getEventNameID($eventName); ?>" data-slideid="waterfall_<?= getEventNameID($eventName); ?>" class="slide_opener close_accordeon">Waterfall View - <?= $eventName ?> </h3>
+			<h2 name="waterfall_view<?= getEventNameID($eventName); ?>" id="slide_opener_waterfall_view<?= getEventNameID($eventName); ?>" data-slideid="waterfall_<?= getEventNameID($eventName); ?>" class="slide_opener close_accordeon"><?= $eventName ?> </h2>
 			<div id="waterfall_<?= getEventNameID($eventName); ?>" class="hide_on_load" data-waterfallcontainer="waterfallcontainer-<?= getEventNameID($eventName); ?>" data-eventname="<?= $eventName ?>">
 				<div id="waterfallcontainer-<?= getEventNameID($eventName); ?>" style="width:930px"></div>
 			</div>
@@ -421,11 +425,12 @@ $page_description = "Website performance test details$testLabel";
 			}
 			?>
 			<br>
+			<h3 class="slide_header">Connection View</h3>
 			<?php
 			foreach($dataArray as $eventName => $data)
 			{ ?>
 				<a name="connection_view<?= getEventNameID($eventName); ?>"></a>
-				<h3 name="connection_view<?= getEventNameID($eventName); ?>" id="slide_opener_connection_view<?= getEventNameID($eventName); ?>" data-slideid="connection_<?= getEventNameID($eventName); ?>" class="slide_opener close_accordeon">Connection View - <?= $eventName ?> </h3>
+				<h2 name="connection_view<?= getEventNameID($eventName); ?>" id="slide_opener_connection_view<?= getEventNameID($eventName); ?>" data-slideid="connection_<?= getEventNameID($eventName); ?>" class="slide_opener close_accordeon"><?= $eventName ?> </h2>
 				<div id="connection_<?= getEventNameID($eventName); ?>" class="hide_on_load" data-waterfallcontainer="connectionviewcontainer-<?= getEventNameID($eventName); ?>" data-eventname="<?= $eventName ?>">
 					<div id="connectionviewcontainer-<?= getEventNameID($eventName); ?>" style="width:930px"></div>
 				</div>
