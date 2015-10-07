@@ -25,8 +25,8 @@ function initDialog(eventName) {
         hash.w.hide();
         var requestCount = getRequestCount(eventName);
         for (i = 1; i <= requestCount; i++) {
-            $("#request-overlay-" + eventNameID + i).removeClass("selected");
-            $("#request-overlay-" + eventNameID + i).addClass("transparent");
+            $("#request-overlay-" + eventNameID + "-" + i).removeClass("selected");
+            $("#request-overlay-" + eventNameID + "-" + i).addClass("transparent");
         }
         $('#radio' + eventNameID + '1').attr('checked', 'checked');
         $("#request-dialog-radio" + eventNameID).buttonset('refresh');
