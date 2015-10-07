@@ -11,6 +11,9 @@ require_once('utils.inc');
 */
 function GetVisualProgress($testPath, $run, $cached, $options = null, $end = null, $startOffset = null) {
     $frames = null;
+    if($cached == null){
+        $cached = 0;
+    }
 
     if (substr($testPath, 0, 1) !== '.')
       $testPath = './' . $testPath;
@@ -52,7 +55,12 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
             unset($frames);
     }    
     $base_path = substr($video_directory, 1);
-    if ((!isset($frames) || !count($frames)) && (is_dir($video_directory) || gz_is_file("$testPath/$run.$cached.histograms.json"))) {
+    if($eventNumber !== false){
+        $histograms_file = "$testPath/$run.$eventNumber.$cached.histograms.json";
+    } else {
+        $histograms_file = "$testPath/$run.$cached.histograms.json";
+    }
+    if ((!isset($frames) || !count($frames)) && (is_dir($video_directory) || gz_is_file($histograms_file))) {
         $frames = array('version' => $current_version);
         $frames['frames'] = array();
         $dirty = true;
@@ -126,8 +134,8 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
                       $frames['complete'] = $time;
               }
           }
-        } elseif (gz_is_file("$testPath/$run.$cached.histograms.json") && !isset($frames)) {
-          $raw = json_decode(gz_file_get_contents("$testPath/$run.$cached.histograms.json"), true);
+        } elseif (gz_is_file($histograms_file) && empty($frames['frames'])) {
+          $raw = json_decode(gz_file_get_contents($histograms_file), true);
           $histograms = array();
           foreach ($raw as $h) {
             if (isset($h['time']) && isset($h['histogram']))
@@ -144,7 +152,7 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
               $frames['complete'] = $time;
           }
         }
-    if (isset($frames) && !array_key_exists('SpeedIndex', $frames)) {
+    if (isset($frames) && !array_key_exists('SpeedIndex', $frames) && count($frames['frames'])>0) {
         $dirty = true;
         $frames['SpeedIndex'] = CalculateSpeedIndex($frames);
     }
