@@ -370,6 +370,8 @@ void Results::SaveVideo(void) {
       int cached = _tcsstr(file, _T("_Cached")) ? 1 : 0;
       *file = 0;
       file_name.Format(_T("%s%d.%d.histograms.json"), path, run, cached);
+	  SaveHistogram(histograms, file_name);
+	  file_name.Format(_T("%s%d.%d.%d.histograms.json"), path, run, currentPage, cached);
       SaveHistogram(histograms, file_name);
     }
   }

@@ -43,3 +43,4 @@ agent/js/lib/ios/DeviceSupport
 agent/js/5c.sh
 
 *.mp4
+*.obj
