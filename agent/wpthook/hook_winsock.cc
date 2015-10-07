@@ -531,7 +531,9 @@ int CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags) {
       _sockets.DataOut(s, chunk, false);
     }
     ret = _send(s, chunk.GetData(), chunk.GetLength(), flags);
-    ret = original_len;
+    if (ret != SOCKET_ERROR) {
+        ret = original_len;
+    }
   }
   _sockets.ResetSslFd();
   return ret;
