@@ -328,6 +328,8 @@ void WebPagetest::LoadClientCertificateFromStore(HINTERNET request) {
       CERT_FIND_SUBJECT_ATTR,
       &cert_rdn,
       NULL);
+
+    delete[] pCommonName;
   }
   else {
     // use the first certificate in the store
