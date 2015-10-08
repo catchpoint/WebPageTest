@@ -43,7 +43,7 @@ WptSettings::WptSettings(WptStatus &status):
   ,_debug(0)
   ,_status(status)
   ,_software_update(status)
-  ,_requireValidCertificate(false) {
+  ,_requireValidCertificate(true) {
 }
 
 /*-----------------------------------------------------------------------------
@@ -106,10 +106,7 @@ bool WptSettings::Load(void) {
     _key = buff;
   }
 
-  if (GetPrivateProfileInt(_T("WebPagetest"), _T("Valid Certificate"), 
-    _requireValidCertificate, iniFile)) {
-    _requireValidCertificate = true;
-  }
+  _requireValidCertificate = GetPrivateProfileInt(_T("WebPagetest"), _T("Valid Certificate"), _requireValidCertificate, iniFile);
 
   if (GetPrivateProfileString(_T("WebPagetest"), _T("Client Certificate Common Name"), _T(""), buff,
     _countof(buff), iniFile)) {
