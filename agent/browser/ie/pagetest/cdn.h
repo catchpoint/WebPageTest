@@ -102,7 +102,8 @@ CDN_PROVIDER cdnList[] = {
 	{".cdninstagram.com", _T("Facebook")},
 	{".rlcdn.com", _T("Reapleaf")},
 	{".wp.com", _T("WordPress Jetpack")},
-	{".incapdns.net", _T("Incapsula"}),
+	{".incapdns.net", _T("Incapsula")},
+	{".cdn.gocache.net", _T("GoCache")},
 	{NULL, NULL}
 };
 
@@ -138,5 +139,6 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
 	{"server", "Golfe2", _T("Google")},
 	{"server", "tsa_b", _T("Twitter")},
 	{"X-CDN", "Incapsula", _T("Incapsula")},
-	{"X-Iinfo", "", _T("Incapsula")}
+	{"X-Iinfo", "", _T("Incapsula")},
+	{"server", "gocache", _T("GoCache")}
 };
