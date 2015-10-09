@@ -20,6 +20,8 @@ $key = array_key_exists('key', $_GET) ? $_GET['key'] : '';
 $recover = array_key_exists('recover', $_GET) ? $_GET['recover'] : '';
 $pc = array_key_exists('pc', $_GET) ? $_GET['pc'] : '';
 $ec2 = array_key_exists('ec2', $_GET) ? $_GET['ec2'] : '';
+$screenwidth = array_key_exists('screenwidth', $_GET) ? $_GET['screenwidth'] : '';
+$screenheight = array_key_exists('screenheight', $_GET) ? $_GET['screenheight'] : '';
 $tester = null;
 if (strlen($ec2))
   $tester = $ec2;
@@ -87,6 +89,8 @@ function GetJob() {
     global $recover;
     global $is_json;
     global $dnsServers;
+    global $screenwidth;
+    global $screenheight;
 
     $workDir = "./work/jobs/$location";
     $locKey = GetLocationKey($location);
@@ -255,6 +259,8 @@ function GetJob() {
         $testerInfo['dns'] = $dnsServers;
         $testerInfo['video'] = @$_GET['video'];
         $testerInfo['GPU'] = @$_GET['GPU'];
+        $testerInfo['screenwidth'] = $screenwidth;
+        $testerInfo['screenheight'] = $screenheight;
         $testerInfo['test'] = '';
         if (isset($testId))
             $testerInfo['test'] = $testId;

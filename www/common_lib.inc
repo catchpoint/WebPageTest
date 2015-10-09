@@ -260,6 +260,7 @@ function generate_languages()
         foreach ($rawlangs as $rawlang) {
             $parts = explode(';', $rawlang);
             if (count($parts) == 1) {
+
                 $qual = 1;  // no q-factor
             } else {
                 $qual = explode('=', $parts[1]);
@@ -1457,6 +1458,7 @@ function GetJobFile($workDir, &$priority, $tester = null, $testerIndex = null, $
               $found = true;
               $file = $job->getData();
               if (isset($file) && !is_file("$workDir/$file"))
+
                 unset($file);
               $pheanstalk->delete($job);
             }
@@ -1635,7 +1637,9 @@ function GetTesters($locationId, $includeOffline = false)
                                    'ie' => @$tester['ie'],
                                    'dns' => @$tester['dns'],
                                    'GPU' => @$tester['GPU'],
-                                   'offline' => @$tester['offline']);
+                                   'offline' => @$tester['offline'],
+                                   'screenwidth' => @$tester['screenwidth'],
+                                   'screenheight' => @$tester['screenheight']);
                     $entry['rebooted'] = isset($tester['rebooted']) ? $tester['rebooted'] : false;
 
                     if (array_key_exists('cpu', $tester) && is_array($tester['cpu'])) {
