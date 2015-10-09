@@ -183,7 +183,7 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
         if (buffer) {
           job.resultFiles.push(new wpt_client.ResultFile(
               wpt_client.ResultFile.ResultType.IMAGE,
-              'histograms.json',
+              'histograms.json.gz',
               'text/plain',
               buffer));
         }

@@ -711,7 +711,7 @@ Client.prototype.endOfRun_ = function(job, isRunFinished, isJobFinished, e) {
 
 function createFileName(job, fileName) {
   'use strict';
-  if (fileName == 'histograms.json') {
+  if (fileName == 'histograms.json.gz') {
     var prefix = job.runNumber + '.' + (job.isCacheWarm ? '1' : '0') + '.';
   } else {
     var prefix = job.runNumber + (job.isCacheWarm ? '_Cached' : '') +

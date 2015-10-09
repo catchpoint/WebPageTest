@@ -1282,7 +1282,7 @@ WebDriverServer.prototype.scheduleProcessVideo_ = function() {
   this.scheduleNoFault_('Process Video', function() {
     if (this.videoFile_ && this.flags_['processvideo'] == 'yes') {
       var videoDir = path.join(this.runTempDir_, 'video');
-      this.histogramFile_ = path.join(this.runTempDir_, 'histograms.json');
+      this.histogramFile_ = path.join(this.runTempDir_, 'histograms.json.gz');
       var traceFile = path.join(this.runTempDir_, 'trace.json');
       var options = ['lib/video/visualmetrics.py', '-i', this.videoFile_, '-d',
           videoDir, '--orange', '--viewport', '--force', '--quality', '75',
