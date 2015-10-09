@@ -143,8 +143,8 @@ CDN_PROVIDER cdnList[] = {
   {".rlcdn.com", "Reapleaf"},
   {".wp.com", "WordPress Jetpack"},
   {".aads1.net", "Aryaka"},
-  {".aadscn.net", "Aryaka"},
-  {".aadscng.net", "Aryaka"},
+  {".aads-cn.net", "Aryaka"},
+  {".aads-cng.net", "Aryaka"},
   {"END_MARKER", "END_MARKER"}
 };
 
