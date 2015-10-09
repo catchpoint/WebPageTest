@@ -48,7 +48,7 @@ WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
   ,_revisionNo(0)
   ,_exit(false)
   ,has_gpu_(false)
-  ,rebooting_(false){
+  ,rebooting_(false) {
   SetErrorMode(SEM_FAILCRITICALERRORS);
   // get the version number of the binary (for software updates)
   TCHAR file[MAX_PATH];
