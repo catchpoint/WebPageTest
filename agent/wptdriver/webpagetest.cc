@@ -48,7 +48,7 @@ WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
   ,_revisionNo(0)
   ,_exit(false)
   ,has_gpu_(false)
-  ,rebooting_(false) {
+  ,rebooting_(false){
   SetErrorMode(SEM_FAILCRITICALERRORS);
   // get the version number of the binary (for software updates)
   TCHAR file[MAX_PATH];
@@ -84,6 +84,9 @@ WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
       _computer_name = escaped;
   }
   UpdateDNSServers();
+
+  _screenWidth = GetSystemMetrics(SM_CXSCREEN);
+  _screenHeight = GetSystemMetrics(SM_CYSCREEN);
 }
 
 /*-----------------------------------------------------------------------------
@@ -108,7 +111,8 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
   // build the url for the request
   CString buff;
   CString url = _settings._server + _T("work/getwork.php?shards=1&reboot=1");
-  url += CString(_T("&location=")) + _settings._location;
+  buff.Format(_T("&location=%s&screenwidth=%d&screenheight=%d"), _settings._location, _screenWidth, _screenHeight);
+  url += buff;
   if (_settings._key.GetLength())
     url += CString(_T("&key=")) + _settings._key;
   if (_majorVer || _minorVer || _buildNo || _revisionNo) {
