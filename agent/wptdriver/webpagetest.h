@@ -52,6 +52,8 @@ private:
   DWORD         _revisionNo;
   CString       _computer_name;
   CString       _dns_servers;
+  int           _screenWidth;
+  int           _screenHeight;
 
   void LoadClientCertificateFromStore(HINTERNET request);
   void SetLoginCredentials(HINTERNET request);
