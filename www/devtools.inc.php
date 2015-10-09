@@ -8,6 +8,8 @@ if(extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('DevToolsGetConsoleLog');
     newrelic_add_custom_tracer('DevToolsGetCPUSlices');
     newrelic_add_custom_tracer('GetDevToolsCPUTime');
+    newrelic_add_custom_tracer('ParseDevToolsEvents');
+    newrelic_add_custom_tracer('DevToolsMatchEvent');
 }
 
 /**
@@ -679,18 +681,6 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
   $hasTimeline = strpos($json, '"Timeline.eventRecorded"') !== false ? true : false;
   $hasTrim = strpos($json, $START_MESSAGE) !== false ? true : false;
   $messages = json_decode($json, true);
-  // try fixing up the file if it doesn't look like it is valid json
-  if (!isset($messages) && substr($json, -1) !== ']') {
-    do {
-      $pos = strrpos($json, '}');
-      if ($pos !== false) {
-        $json = substr($json, 0, $pos);
-        $messages = json_decode($json . '}]', true);
-      } else {
-        $json = '';
-      }
-    } while(!isset($messages) && strlen($json));
-  }
   unset($json);
 
   $firstEvent = null;

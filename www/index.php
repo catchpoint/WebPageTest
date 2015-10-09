@@ -459,7 +459,7 @@ $loc = ParseLocations($locations);
                                         <input type="checkbox" name="wprMobile" id="wprMobile" class="checkbox" style="float: left;width: auto;">
                                         <label for="wprMobile" class="auto_width">
                                             Use Web Page Replay recorded Mobile Page<br>
-                                            <small>Limited list of available <a href="/wprDesktop.txt">URLs</a></small>
+                                            <small>Limited list of available <a href="/wprMobile.txt">URLs</a></small>
                                         </label>
                                     </li>
                                     <?php
