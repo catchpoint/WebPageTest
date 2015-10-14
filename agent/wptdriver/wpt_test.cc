@@ -54,6 +54,7 @@ static const char * DEFAULT_MOBILE_USER_AGENT =
 -----------------------------------------------------------------------------*/
 WptTest::WptTest(void):
   _version(0)
+  , server_capabilities_(0)
   ,_test_timeout(DEFAULT_TEST_TIMEOUT * SECONDS_TO_MS)
   ,_activity_timeout(DEFAULT_ACTIVITY_TIMEOUT)
   ,_measurement_timeout(DEFAULT_TEST_TIMEOUT)
@@ -185,6 +186,9 @@ bool WptTest::Load(CString& test) {
           _id = value.Trim();
         else if (!key.CompareNoCase(_T("url")))
           _url = value.Trim();
+        else if (!key.CompareNoCase(_T("server_caps"))) {
+          server_capabilities_ = _ttoi(value.Trim());
+        }
         else if (!key.CompareNoCase(_T("fvonly")) && _ttoi(value.Trim()))
           _fv_only = true;
         else if (!key.CompareNoCase(_T("run")))
@@ -1116,4 +1120,8 @@ void WptTest::Unlock() {
 -----------------------------------------------------------------------------*/
 bool WptTest::IsLocked() {
   return lock_count_ != 0;
+}
+
+bool WptTest::IsServerMultistepCapable() {
+  return server_capabilities_ & ::CAPABILITIES[::kMultistepSupport];
 }

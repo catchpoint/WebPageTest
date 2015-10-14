@@ -30,6 +30,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <TlHelp32.h>
 
+enum {
+  kMultistepSupport = 0,
+  nCapabilities
+};
+
+extern const DWORD CAPABILITIES[::nCapabilities];
+
 namespace loglevel {
   const int kError = 1;
   const int kWarning = 2;
@@ -76,3 +83,4 @@ void QueryPerfCounter(__int64 &counter);
 void QueryPerfFrequency(__int64 &freq);
 int ElapsedFileTimeSeconds(FILETIME& check, FILETIME& now);
 void Reboot();
+DWORD GetCapabilities(void);

@@ -8,8 +8,29 @@ if(extension_loaded('newrelic')) {
 
 define('VIDEO_CODE_VERSION', 20);
 
+#
+$CAPABILITIES = array(
+  "MULTISTEP_SUPPORT" => 0x0001
+);
+
 require_once(__DIR__ . '/logging.inc');
 
+function GetCapabilities() {
+  global $CAPABILITIES;
+  $capabilities = 0;
+
+  foreach ($CAPABILITIES as $mask) {
+    $capabilities |= $mask;
+  }
+
+  return $capabilities;
+}
+
+function IsMultistepTestResult($testInfo) {
+  global $CAPABILITIES;
+
+  return (isset($testInfo['agent_caps']) && ($testInfo['agent_caps'] & $CAPABILITIES['MULTISTEP_SUPPORT']) !== 0);
+}
 /**
 * Figure out the test path (relative) for the given test id
 *

@@ -22,6 +22,7 @@ $pc = array_key_exists('pc', $_GET) ? $_GET['pc'] : '';
 $ec2 = array_key_exists('ec2', $_GET) ? $_GET['ec2'] : '';
 $screenwidth = array_key_exists('screenwidth', $_GET) ? $_GET['screenwidth'] : '';
 $screenheight = array_key_exists('screenheight', $_GET) ? $_GET['screenheight'] : '';
+$agent_caps=array_key_exists('capabilities', $_GET) ? $_GET['capabilities'] : 0;
 $tester = null;
 if (strlen($ec2))
   $tester = $ec2;
@@ -91,6 +92,7 @@ function GetJob() {
     global $dnsServers;
     global $screenwidth;
     global $screenheight;
+    global $agent_caps;
 
     $workDir = "./work/jobs/$location";
     $locKey = GetLocationKey($location);
@@ -149,13 +151,19 @@ function GetJob() {
 
                       // flag the test with the start time
                       $ini = file_get_contents("$testPath/testinfo.ini");
+                      $newFields = "";
                       if (stripos($ini, 'startTime=') === false) {
                           $time = time();
-                          $start = "[test]\r\nstartTime=" . gmdate("m/d/y G:i:s", $time);
-                          $out = str_replace('[test]', $start, $ini);
-                          file_put_contents("$testPath/testinfo.ini", $out);
+                          $newFields = "[test]\r\nstartTime=" . gmdate("m/d/y G:i:s", $time);
                       }
-                      
+                      // note down the agent capabilities
+                      if (stripos($ini, 'agent_caps=') === false && $agent_caps) {
+                          $newFields .= "\r\nagent_caps=" . $agent_caps;
+                      }
+                      if ($newFields) {
+                        $out = str_replace('[test]', $newFields, $ini);
+                        file_put_contents("$testPath/testinfo.ini", $out);
+                      }
                       $lock = LockTest($testId);
                       if ($lock) {
                         $testInfoJson = GetTestInfo($testId);
@@ -175,6 +183,7 @@ function GetJob() {
                               $testInfoJson['test_runs'][$run] = array('done' => false);
                           }
                           $testInfoJson['id'] = $testId;
+                          $testInfoJson['agent_caps'] = $agent_caps;
                           ProcessTestShard($testInfoJson, $testInfo, $delete);
                           SaveTestInfo($testId, $testInfoJson);
                         }

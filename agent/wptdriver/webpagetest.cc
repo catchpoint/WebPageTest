@@ -135,6 +135,9 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
     buff.Format(_T("&freedisk=%0.3f"), freeDisk);
     url += buff;
   }
+  buff.Format(_T("&capabilities=%d"), ::GetCapabilities());
+  url += buff;
+
   url += has_gpu_ ? _T("&GPU=1") : _T("&GPU=0");
 
   CString test_string, zip_file;

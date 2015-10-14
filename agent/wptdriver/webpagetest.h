@@ -38,6 +38,7 @@ public:
   bool DeleteIncrementalResults(WptTestDriver& test);
   bool UploadIncrementalResults(WptTestDriver& test);
   bool TestDone(WptTestDriver& test);
+  DWORD GetCapabilities(void);
 
   bool _exit;
   bool has_gpu_;
