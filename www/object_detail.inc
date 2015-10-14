@@ -15,6 +15,7 @@ if(extension_loaded('newrelic')) {
 function getRequests($id, $test_path, $run, $is_cached,
                      &$has_secure_requests, &$has_locations,
                      $use_location_check, $use_raw_headers = false, $stepName = null) {
+    logAlways("<");
     if (!isset($test_path) || !strlen($test_path))
         $test_path = './' . GetTestPath($id);
     $cached_text = ((bool)@$is_cached) ? '_Cached' : '';
@@ -25,6 +26,7 @@ function getRequests($id, $test_path, $run, $is_cached,
     $custom_rules_file_name = $file_prefix . 'custom_rules.json';
 
     $needHeaders = false;
+    /*
     $requests = LoadRequests($request_file_name, $stepName);
     if (isset($requests) && is_array($requests) && count($requests)) {
         if ($use_raw_headers)
@@ -36,7 +38,7 @@ function getRequests($id, $test_path, $run, $is_cached,
         $custom_rules = array();
         if (gz_is_file($custom_rules_file_name))
             $custom_rules = json_decode(gz_file_get_contents($custom_rules_file_name), true);
-    } else
+    } else */
         GetDevToolsRequests($test_path, $run, $is_cached, $requests, $pageData);
     FixUpRequestTimes($requests);
     if ($needHeaders)

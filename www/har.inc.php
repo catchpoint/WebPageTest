@@ -37,8 +37,12 @@ function GenerateHAR($id, $testPath, $options) {
       }
     }
     
-    if (!isset($pageData))
+    if (!isset($pageData)) {
+      logAlways("--- no pageData yet");
       $pageData = loadAllPageData($testPath, null, $multistep);
+      //logArray($pageData, 10);
+    }
+    logAlways("*********");
 
     // build up the array
     $harData = BuildHAR($pageData, $id, $testPath, $options);
