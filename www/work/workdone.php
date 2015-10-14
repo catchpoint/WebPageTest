@@ -165,7 +165,6 @@ if (ValidateTestId($id)) {
         if( isset($_FILES['file']) ) {
           $f = scandir($testPath);
           foreach( $f as $textFile ) {
-            logMsg("Checking $textFile\n");
             if( is_file("$testPath/$textFile") ) {
               $parts = pathinfo($textFile);
               $ext = $parts['extension'];
@@ -173,6 +172,23 @@ if (ValidateTestId($id)) {
                   !strcasecmp( $ext, 'json') ||
                   !strcasecmp( $ext, 'log') ||
                   !strcasecmp( $ext, 'csv') ) {
+                if (strpos($textFile, 'histograms.json') !== false) {
+                  $parts = explode('.', $textFile);
+                  if (count($parts) && IsMultistepTestResult($testInfo)) {
+                    // The agent sent us a multistep version of histograms.json. This means, there
+                    // will be one such json file for each step in the test. However, only export.php
+                    // understands the multistep version of histograms.json. Until other parts of the
+                    // server can handle multistep version of histograms.json, have a backup histograms.json
+                    // in the non-multistep format so that we get the old behavior in the UI (and other places)
+                    // and the new behavior in export.php
+                    $runNum = $parts[0];
+                    $cached = $parts[1];
+                    $histograms_file = $runNum . "." . $cached . "." . "histograms.json";
+                    copy("$testPath/$textFile", "$testPath/$histograms_file");
+                    gz_compress("$testPath/$histograms_file");
+                    unlink("$testPath/$histograms_file");
+                  }
+                }
                 if ($ini['sensitive'] && strpos($textFile, '_report'))
                   RemoveSensitiveHeaders("$testPath/$textFile");
                 elseif (strpos($textFile, '_optimization'))

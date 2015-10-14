@@ -276,8 +276,13 @@ void Results::SaveVideo(void) {
             histogram = GetHistogramJSON(*img);
             if (_test._video) {
               _visually_complete.QuadPart = image._capture_time.QuadPart;
-              file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base, 
-                                image_time);
+              if (!_test.IsServerMultistepCapable()) {
+                file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base,
+                  image_time);
+              } else {
+                file_name.Format(_T("%s_progress_%d_%04d.jpg"), (LPCTSTR)_file_base,
+                  reported_step_, image_time);
+              }
               SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_video);
             }
           }
@@ -289,7 +294,11 @@ void Results::SaveVideo(void) {
           image_time_ms = 0;
           histogram = GetHistogramJSON(*img);
           if (_test._video) {
-            file_name = _file_base + _T("_progress_0000.jpg");
+            if (!_test.IsServerMultistepCapable()) {
+              file_name.Format(_T("%s_progress_0000.jpg"), (LPCTSTR)_file_base);
+            } else {
+              file_name.Format(_T("%s_progress_%d_0000.jpg"), (LPCTSTR)_file_base, reported_step_);
+            }
             SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_video);
           }
         }
@@ -306,8 +315,13 @@ void Results::SaveVideo(void) {
           histograms += "}";
           histogram_count++;
           if (_test._video) {
-            file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_file_base,
-                             image_time);
+            if (!_test.IsServerMultistepCapable()) {
+              file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_file_base,
+                image_time);
+            } else {
+              file_name.Format(_T("%s_progress_%d_%04d.hist"), (LPCTSTR)_file_base,
+                reported_step_, image_time);
+            }
             SaveHistogram(histogram, file_name);
           }
         }
@@ -333,7 +347,11 @@ void Results::SaveVideo(void) {
     if (run) {
       int cached = _tcsstr(file, _T("_Cached")) ? 1 : 0;
       *file = 0;
-      file_name.Format(_T("%s%d.%d.histograms.json"), path, run, cached);
+      if (!_test.IsServerMultistepCapable()) {
+        file_name.Format(_T("%s%d.%d.histograms.json"), path, run, cached);
+      } else {
+        file_name.Format(_T("%s%d.%d.%d.histograms.json"), path, run, cached, reported_step_);
+      }
       SaveHistogram(histograms, file_name);
     }
   }
@@ -932,7 +950,7 @@ void Results::SaveRequests(OptimizationChecks& checks) {
     SetFilePointer( file, 0, 0, FILE_END );
 
     HANDLE headers_file = CreateFile(_file_base + REQUEST_HEADERS_DATA_FILE,
-                            GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+                            GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, 0, 0);
 
     HANDLE custom_rules_file = INVALID_HANDLE_VALUE;
     if (!_test._custom_rules.IsEmpty()) {
@@ -1230,8 +1248,9 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
 
   // write out the raw headers
   if (headers != INVALID_HANDLE_VALUE) {
-    buff.Format("Request details:\r\nRequest %d:\r\nRequest Headers:\r\n", 
-                  index);
+    SetFilePointer(headers, 0, 0, FILE_END);
+    buff.Format("Request details:\r\nStep name:%s\r\nRequest %d:\r\nRequest Headers:\r\n", 
+                  current_step_name_.GetBuffer(), index);
     buff += request->_request_data.GetHeaders();
     buff.Trim("\r\n");
     buff += "\r\nResponse Headers:\r\n";
