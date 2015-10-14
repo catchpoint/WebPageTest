@@ -14333,8 +14333,8 @@ wpt.chromeDebugger.FinalizeRequest = function(id) {
   // Fix-up the bytes in (fall back to content length) if we didn't get it explicitly
   if (g_instance.requests[id]['bytesIn'] === undefined && g_instance.requests[id]['bytesInEncoded'] !== undefined)
     g_instance.requests[id].bytesIn = g_instance.requests[id].bytesInEncoded;
+  var headerlength = 0;
   if (!g_instance.requests[id]['bytesIn'] && g_instance.requests[id]['response'] !== undefined && g_instance.requests[id].response['headers'] !== undefined) {
-    var headerlength = 0;
     if (g_instance.requests[id].response['headersText'] !== undefined) {
       headerlength = g_instance.requests[id].response['headersText'].length;
     } else {
@@ -14350,6 +14350,14 @@ wpt.chromeDebugger.FinalizeRequest = function(id) {
       g_instance.requests[id]['bytesIn'] = parseInt(g_instance.requests[id].response.headers['Content-Length']) + headerlength;
     else if (g_instance.requests[id].response.headers['content-length'] !== undefined)
       g_instance.requests[id]['bytesIn'] = parseInt(g_instance.requests[id].response.headers['content-length']) + headerlength;
+  }
+  // Populate the objectSize (fall back to bytesIn if not available)
+  g_instance.requests[id]['objectSize'] = g_instance.requests[id]['bytesIn'] - headerlength;
+  if (g_instance.requests[id]['response'] !== undefined && g_instance.requests[id].response['headers'] !== undefined) {
+    if (g_instance.requests[id].response.headers['Content-Length'] !== undefined)
+      g_instance.requests[id]['objectSize'] = parseInt(g_instance.requests[id].response.headers['Content-Length']);
+    else if (g_instance.requests[id].response.headers['content-length'] !== undefined)
+      g_instance.requests[id]['objectSize'] = parseInt(g_instance.requests[id].response.headers['content-length']);
   }
 }
 
@@ -14397,6 +14405,8 @@ wpt.chromeDebugger.sendRequestDetails = function(id) {
 
     if (request['bytesIn'] !== undefined)
       eventData += 'bytesIn=' + request.bytesIn + '\n';
+    if (request['objectSize'] !== undefined)
+      eventData += 'objectSize=' + request.objectSize + '\n';
     if (request['initiator'] !== undefined && request.initiator['type'] !== undefined) {
       eventData += 'initiatorType=' + request.initiator.type + '\n';
       if (request.initiator.type == 'parser') {
@@ -14917,6 +14927,14 @@ chrome.webRequest.onErrorOccurred.addListener(function(details) {
     }
   }, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
 );
+
+chrome.webRequest.onAuthRequired.addListener(function(details, cb) {
+    if (g_active && details.tabId == g_tabid) {
+       return {
+         cancel: true
+       };
+    }
+}, {urls: ["<all_urls>"]}, ["blocking"]);
 
 chrome.webRequest.onCompleted.addListener(function(details) {
     if (g_active && details.tabId == g_tabid) {

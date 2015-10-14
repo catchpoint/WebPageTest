@@ -1073,6 +1073,8 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   result += buff;
   // Object Size
   DWORD size = request->_response_data.GetBody().GetLength();
+  if (size <= 0 && request->_object_size > 0)
+    size = request->_object_size;
   buff.Format("%d\t", size);
   result += buff;
   // Cookie Size (out)

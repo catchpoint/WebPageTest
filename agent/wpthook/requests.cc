@@ -271,7 +271,8 @@ void Requests::ProcessBrowserRequest(CString request_data) {
   double  start_time = 0, end_time = 0, first_byte = 0, request_start = 0,
           dns_start = -1, dns_end = -1, connect_start = -1, connect_end = -1,
           ssl_start = -1, ssl_end = -1;
-  long connection = 0, error_code = 0, status = 0, bytes_in = 0, stream_id = 0;
+  long connection = 0, error_code = 0, status = 0, bytes_in = 0, stream_id = 0,
+       object_size = 0;
   LARGE_INTEGER now;
   QueryPerformanceCounter(&now);
   bool processing_values = true;
@@ -312,6 +313,8 @@ void Requests::ProcessBrowserRequest(CString request_data) {
               end_time = _ttof(value);
             else if (!key.CompareNoCase(_T("bytesIn")))
               bytes_in = _ttol(value);
+            else if (!key.CompareNoCase(_T("objectSize")))
+              object_size = _ttol(value);
             else if (!key.CompareNoCase(_T("initiatorUrl")))
               initiator = value;
             else if (!key.CompareNoCase(_T("initiatorLineNumber")))
@@ -362,6 +365,7 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     request->initiator_line_ = initiator_line;
     request->initiator_column_ = initiator_column;
     request->_bytes_in = bytes_in;
+    request->_object_size = object_size;
 
     // See if we can map the browser's internal clock timestamps to our
     // performance counters.  If we have a DNS lookup we can match up or a

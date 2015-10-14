@@ -553,6 +553,8 @@ void BrowserSettings::ResetProfile(bool clear_certs) {
     DeleteDirectory(recovery_dir_, false);
     DeleteDirectory(flash_dir_, false);
     DeleteDirectory(windows_dir_ + _T("\\temp"), false);
+    DeleteDirectory(app_data_dir_ + _T("\\Roaming\\Mozilla\\Firefox\\Crash Reports"), false);
+    DeleteDirectory(local_app_data_dir_ + _T("\\Microsoft\\Windows\\WER"), false);
     ClearWinInetCache();
     ClearWebCache();
   }
