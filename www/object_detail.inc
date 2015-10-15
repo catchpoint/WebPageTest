@@ -26,20 +26,26 @@ function getRequests($id, $test_path, $run, $is_cached,
     $custom_rules_file_name = $file_prefix . 'custom_rules.json';
 
     $needHeaders = false;
-    /*
-    $requests = LoadRequests($request_file_name, $stepName);
-    if (isset($requests) && is_array($requests) && count($requests)) {
-        if ($use_raw_headers)
-            $needHeaders = true;
-
-        AddResponseBodyFlags($requests, $bodies_file_name);
-
-        // load any custom checks if they are available
-        $custom_rules = array();
-        if (gz_is_file($custom_rules_file_name))
-            $custom_rules = json_decode(gz_file_get_contents($custom_rules_file_name), true);
-    } else */
+    $requests = null;
+    if (gz_is_file("$test_path/devtools.json")) {
+        logAlways("---- loading devtools");
         GetDevToolsRequests($test_path, $run, $is_cached, $requests, $pageData);
+    }
+    else {
+        $requests = LoadRequests($request_file_name, $stepName);
+        if (isset($requests) && is_array($requests) && count($requests)) {
+            if ($use_raw_headers)
+                $needHeaders = true;
+
+            AddResponseBodyFlags($requests, $bodies_file_name);
+
+            // load any custom checks if they are available
+            $custom_rules = array();
+            if (gz_is_file($custom_rules_file_name))
+                $custom_rules = json_decode(gz_file_get_contents($custom_rules_file_name), true);
+        }
+    }
+    logAlways("number of requests:" + count($requests));
     FixUpRequestTimes($requests);
     if ($needHeaders)
         AddHeaders($requests, $headers_file_name, $stepName);

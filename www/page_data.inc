@@ -55,22 +55,16 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $multistep=f
     logAlways("*** loadPageRunData");
     $ret = null;
     $cachedText = $cached ? '_Cached' : '';
-    //$ret = loadPageData("$testPath/{$run}{$cachedText}_IEWPG.txt", $options, $multistep);
-    $fromTxt = loadPageData("$testPath/{$run}{$cachedText}_IEWPG.txt", $options, $multistep);
-    logArray($fromTxt, 3);
-    //if (!$multistep && (!isset($ret) || !is_array($ret) || !count($ret))) {
-      // Not yet supported for multistep. TODO(kk): Mention in the PR so Pat knows about it.
-      GetDevToolsRequests($testPath, $run, $cached, $requests, $ret);
-    logAlways("requests: ".count($requests));
-    logAlways("ret: ".count($ret));
-    logArray($ret, 3);
-    //}
+    if (gz_is_file("$testPath/devtools.json")) {
+        GetDevToolsRequests($testPath, $run, $cached, $requests, $ret);
+    } else {
+        $ret = loadPageData("$testPath/{$run}{$cachedText}_IEWPG.txt", $options, $multistep);
+    }
     // see if we have video files to calculate a visually complete time from
     $basic_results = false;
     if (array_key_exists('basic', $_REQUEST) && $_REQUEST['basic'])
       $basic_results = true;
 
-    logAlways("- basic_results: ".$basic_results);
     if (!$multistep && gz_is_file("$testPath/{$run}{$cachedText}_page_data.json")) {
       // Not yet supported for multistep.
       $pd = json_decode(gz_file_get_contents("$testPath/{$run}{$cachedText}_page_data.json"), true);
