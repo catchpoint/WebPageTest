@@ -685,209 +685,58 @@ function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events, &$startO
 * @param mixed $json
 * @param mixed $events
 */
-function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOffset) {
-  logAlways("<");
-  $START_MESSAGE = '"WPT start"';
-  $STOP_MESSAGE = '"WPT stop"';
-  $hasNet = strpos($json, '"Network.') !== false ? true : false;
-  $hasTimeline = strpos($json, '"devtools.timeline"') !== false ? true : false;
-  $hasTrim = strpos($json, $START_MESSAGE) !== false ? true : false;
-  $messages = json_decode($json, true);
-  // try fixing up the file if it doesn't look like it is valid json
-  if (!isset($messages) && substr($json, -1) !== ']') {
-    do {
-      $pos = strrpos($json, '}');
-      if ($pos !== false) {
-        $json = substr($json, 0, $pos);
-        $messages = json_decode($json . '}]', true);
-      } else {
-        $json = '';
-      }
-    } while(!isset($messages) && strlen($json));
-  }
-  unset($json);
+function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOffset)
+{
+    logAlways("<");
+    $messages = json_decode($json, true);
+    // invalid json means we fail
+    if (!$messages) {
+        return;
+    }
 
-  $firstEvent = null;
-  $recording = $hasTrim ? false : true;
-  $recordPending = false;
-  $events = array();
-  $startOffset = null;
-  $previousTime = null;
-  $clockOffset = null;
+    $events = array();
+    $startOffset = null;
 
-  // First go and match up the first net event with the matching timeline event
-  // to sync the clocks (recent Chrome builds use different clocks)
-  /*
-  if ($hasNet && $hasTimeline) {
-    foreach ($messages as $entry) {
-      $message = $entry['message'];
-      if (is_array($message) &&
-          isset($message['method']) &&
-          isset($message['params']['timestamp']) &&
-          isset($message['params']['request']['url']) &&
-          strlen($message['params']['request']['url']) &&
-          $message['method'] == 'Network.requestWillBeSent') {
-        $firstNetEventTime = $message['params']['timestamp'] * 1000.0;
-        $firstNetEventRequestId = $message['params']['requestId'];
-        logAlways("firstNetEventTime $firstNetEventTime, firstNetEventRequestId $firstNetEventRequestId");
-        $firstNetEventURL = json_encode($message['params']['request']['url']);
-        break;
-      }
-    }
-    if (isset($firstNetEventTime) && isset($firstNetEventURL)) {
-      foreach ($messages as $entry) {
-        $message = $entry['message'];
-        if (is_array($message) &&
-            isset($message['method']) &&
-            isset($message['params']) &&
-            isset($message['params']['name']) &&
-            isset($message['params']['args']) &&
-            isset($message['params']['args']['data']) &&
-            $message['method'] == 'Tracing.dataCollected' &&
-            $message['params']['name'] == 'ResourceSendRequest' &&
-            $message['params']['args']['data']['requestId'] == $firstNetEventRequestId) {
-            $timelineEventTime = $message['params']['ts'] / 1000.0;
-            logAlways("timelineEventTime $timelineEventTime");
-            $firstEvent = $timelineEventTime;
-            break;
-          //}
-        }
-      }
-    }
-    if (isset($firstNetEventTime) && isset($timelineEventTime)) {
-      $clockOffset = $timelineEventTime - $firstNetEventTime;
-      $firstEvent = min($firstEvent, $firstNetEventTime + $clockOffset);
-    }
-  }
-  */
+    $foundFirstEvent = false;
     $foundHookPage = false;
     foreach ($messages as $entry) {
         $message = $entry['message'];
-        if (is_array($message) &&
+        if (isset($message['params']['timestamp'])) {
+            $message['params']['timestamp'] *= 1000.0;
+        }
+        if (!$foundFirstEvent &&
             isset($message['method']) &&
             isset($message['params']['timestamp']) &&
             isset($message['params']['request']['url']) &&
             strlen($message['params']['request']['url']) &&
-            $message['method'] == 'Network.requestWillBeSent') {
+            $message['method'] == 'Network.requestWillBeSent'
+        ) {
+            // The first page of the webdriver session is the one that is loaded after the blank2.html page loaded
+            // by the Chrome extension
             if (!$foundHookPage) {
                 if ($message['params']['documentURL'] == 'http://127.0.0.1:8888/blank2.html') {
                     $foundHookPage = true;
                 }
-            }
-            else {
+            } else {
                 // Skip other requests on the hook page
                 if ($message['params']['documentURL'] == 'http://127.0.0.1:8888/blank2.html') {
                     continue;
                 }
-                if (!isset($firstEvent)) {
-                    $firstNetEventTime = $message['params']['timestamp'] * 1000.0;
-                    $firstNetEventRequestId = $message['params']['requestId'];
-                    logAlways("firstNetEventTime $firstNetEventTime, firstNetEventRequestId $firstNetEventRequestId");
-                    $firstEvent = $firstNetEventTime;
-                    break;
-                }
-                if (isset($message['params']['timestamp'])) {
-                    $message['params']['timestamp'] *= 1000.0;
-                    if (!isset($firstEvent)) {
-                        $firstEvent = $message['params']['timestamp'];
-                    }
-                }
-                if (DevToolsMatchEvent($filter, $message)) {
-                    if (!isset($startOffset)) {
-                        $startOffset = $message['params']['timestamp'] - $firstEvent;
-                    }
-                    if ($removeParams && array_key_exists('params', $message)) {
-                        $event = $message['params'];
-                        $event['method'] = $message['method'];
-                        $events[] = $event;
-                    } else {
-                        $events[] = $message;
-                    }
+                $foundFirstEvent = true;
+            }
+        }
+        if ($foundFirstEvent) {
+            if (DevToolsMatchEvent($filter, $message)) {
+                if ($removeParams && array_key_exists('params', $message)) {
+                    $event = $message['params'];
+                    $event['method'] = $message['method'];
+                    $events[] = $event;
+                } else {
+                    $events[] = $message;
                 }
             }
         }
     }
-    logAlways("startOffset: $startOffset");
-    //return;
-
-    /* XXX OCR I think this is dead code
-  if (!$firstEvent && ($hasTimeline || $hasNet)) {
-    foreach ($messages as $entry) {
-      $message = $entry['message'];
-      if (is_array($message) && isset($message['method'])) {
-        $eventTime = DevToolsEventTime($message);
-        if ($hasTimeline) {
-          $json = json_encode($message);
-          if (strpos($json, '"type":"Resource') !== false) {
-            $firstEvent = $eventTime;
-            break;
-          }
-        } else {
-          $method_class = substr($message['method'], 0, strpos($message['method'], '.'));
-          if ($eventTime && $method_class === 'Network') {
-            $firstEvent = $eventTime * 1000.0;
-            break;
-          }
-        }
-      }
-    }
-  }
-    */
-
-  foreach ($messages as $entry) {
-    $message = $entry['message'];
-    if (is_array($message)) {
-      if (isset($message['params']['timestamp'])) {
-        $message['params']['timestamp'] *= 1000.0;
-        if (isset($clockOffset))
-          $message['params']['timestamp'] += $clockOffset;
-      }
-
-      // see if we are waiting for the first net message after a WPT Start
-      if  ($recordPending && array_key_exists('method', $message)) {
-        $method_class = substr($message['method'], 0, strpos($message['method'], '.'));
-        if ($method_class === 'Network' || $method_class === 'Page') {
-          $recordPending = false;
-          $recording = true;
-        }
-      }
-
-      // see if we got a stop message (do this before capture so we don't include it)
-      if ($recording && $hasTrim) {
-        $encoded = json_encode($message);
-        if (strpos($encoded, $STOP_MESSAGE) !== false)
-          $recording = false;
-      }
-
-      // keep any events that we need to keep
-      if ($recording && isset($firstEvent)) {
-        if (DevToolsMatchEvent($filter, $message, $firstEvent)) {
-          if ($hasTrim && !isset($startOffset) && $firstEvent) {
-            $eventTime = DevToolsEventTime($message);
-            if ($eventTime) {
-              $startOffset = $eventTime - $firstEvent;
-            }
-          }
-
-          if ($removeParams && array_key_exists('params', $message)) {
-            $event = $message['params'];
-            $event['method'] = $message['method'];
-            $events[] = $event;
-          } else {
-            $events[] = $message;
-          }
-        }
-      }
-
-      // see if we got a start message (do this after capture so we don't include it)
-      if (!$recording && !$recordPending && $hasTrim) {
-        $encoded = json_encode($message);
-        if (strpos($encoded, $START_MESSAGE) !== false)
-          $recordPending = true;
-      }
-    }
-  }
-  logAlways("startOffset: $startOffset");
 }
 
 function DevToolsEventTime(&$event) {
