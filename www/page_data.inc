@@ -60,6 +60,8 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $multistep=f
     } else {
         $ret = loadPageData("$testPath/{$run}{$cachedText}_IEWPG.txt", $options, $multistep);
     }
+    logArray($ret, 99);
+    logArray($requests, 99);
     // see if we have video files to calculate a visually complete time from
     $basic_results = false;
     if (array_key_exists('basic', $_REQUEST) && $_REQUEST['basic'])
