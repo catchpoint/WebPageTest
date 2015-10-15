@@ -727,22 +727,26 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
     }
   }
   
-  if (!$firstEvent && ($hasTimeline || $hasNet)) {
+  if (!$firstEvent && $hasTimeline) {
     foreach ($messages as $message) {
       if (is_array($message) && isset($message['method'])) {
         $eventTime = DevToolsEventTime($message);
-        if ($hasTimeline) {
-          $json = json_encode($message);
-          if (strpos($json, '"type":"Resource') !== false) {
-            $firstEvent = $eventTime;
-            break;
-          }
-        } else {
-          $method_class = substr($message['method'], 0, strpos($message['method'], '.'));
-          if ($eventTime && $method_class === 'Network') {
-            $firstEvent = $eventTime * 1000.0;
-            break;
-          }
+        $json = json_encode($message);
+        if (strpos($json, '"type":"Resource') !== false) {
+          $firstEvent = $eventTime;
+          break;
+        }
+      }
+    }
+  }
+  if (!$firstEvent && $hasNet) {
+    foreach ($messages as $message) {
+      if (is_array($message) && isset($message['method'])) {
+        $eventTime = DevToolsEventTime($message);
+        $method_class = substr($message['method'], 0, strpos($message['method'], '.'));
+        if ($eventTime && $method_class === 'Network') {
+          $firstEvent = $eventTime * 1000.0;
+          break;
         }
       }
     }
