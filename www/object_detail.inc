@@ -15,7 +15,7 @@ if(extension_loaded('newrelic')) {
 function getRequests($id, $test_path, $run, $is_cached,
                      &$has_secure_requests, &$has_locations,
                      $use_location_check, $use_raw_headers = false, $stepName = null) {
-    logAlways("<");
+    logAlways("< stepName: $stepName");
     if (!isset($test_path) || !strlen($test_path))
         $test_path = './' . GetTestPath($id);
     $cached_text = ((bool)@$is_cached) ? '_Cached' : '';

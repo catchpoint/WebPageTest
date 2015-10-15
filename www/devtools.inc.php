@@ -358,57 +358,31 @@ function ProcessDevToolsEvents($events, &$pageData, &$requests)
 * @param mixed $cached
 * @param mixed $requests
 */
-function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
-    logAlways("<");
+function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData, $multistep = false) {
+    logAlways("< multistep: $multistep");
     $requests = null;
     $pageData = null;
     $startOffset = null;
-    $ver = 13;
-    $cached = isset($cached) && $cached ? 1 : 0;
-    $ok = GetCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
-    if (!$ok) {
-      if (GetDevToolsEvents(null, $testPath, $run, $cached, $events, $startOffset)) {
-          $ok = ProcessDevToolsEvents($events, $pageData, $requests);
-      }
-      logAlways("requests: ".count($requests));
-      // XXX OCR disabling saving of cache during dev
-      //if ($ok) {
-      //  SaveCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
-      //}
+    $ok = true;
+    if ($multistep) {
+        $requests = Array();
+        $pageData = Array();
     }
+    if (GetDevToolsEvents(null, $testPath, $run, $cached, $events, $startOffset, $multistep)) {
+        if ($multistep) {
+            foreach($events as $stepEvents) {
+                $stepPageData = null;
+                $stepRequests = null;
+                $ok = ProcessDevToolsEvents($stepEvents, $stepPageData, $stepPageRequests);
+                $requests[] = $stepPageRequests;
+                $pageData[] = $stepPageData;
+            }
+        } else {
+            $ok = ProcessDevToolsEvents($events, $pageData, $requests);
+        }
+    }
+    logAlways("requests: " . count($requests));
     return $ok;
-}
-
-function GetCachedDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData, $ver) {
-  logAlways("<");
-  $ok = false;
-  $cacheFile = "$testPath/$run.$cached.devToolsRequests.$ver";
-  if (gz_is_file($cacheFile)) {
-    $cache = json_decode(gz_file_get_contents($cacheFile), true);
-    if (isset($cache[$run][$cached]['requests']) &&
-        isset($cache[$run][$cached]['pageData'])) {
-      $ok = true;
-      $requests = $cache[$run][$cached]['requests'];
-      $pageData = $cache[$run][$cached]['pageData'];
-    }
-  }
-  return $ok;
-}
-
-function SaveCachedDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData, $ver) {
-  logAlways("<");
-  $cacheFile = "$testPath/$run.$cached.devToolsRequests.$ver";
-  $lock = Lock($cacheFile);
-  if (isset($lock)) {
-    if (gz_is_file($cacheFile))
-      $cache = json_decode(gz_file_get_contents($cacheFile), true);
-    if (!isset($cache) || !is_array($cache))
-      $cache = array();
-    $cache[$run][$cached]['requests'] = $requests;
-    $cache[$run][$cached]['pageData'] = $pageData;
-    gz_file_put_contents($cacheFile, json_encode($cache));
-    Unlock($lock);
-  }
 }
 
 /**
@@ -678,14 +652,14 @@ function ParseDevToolsDOMContentLoaded(&$event, $main_frame, &$pageData) {
 * @param mixed $cached
 * @param mixed $events
 */
-function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events, &$startOffset) {
-  logAlways("<");
+function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events, &$startOffset, $multistep=false) {
+  logAlways("< multistep: $multistep");
   $ok = false;
   $events = array();
   $devToolsFile = "$testPath/devtools.json";
   if (gz_is_file($devToolsFile)){
     $raw = trim(gz_file_get_contents($devToolsFile));
-    ParseDevToolsEvents($raw, $events, $filter, true, $startOffset);
+    ParseDevToolsEvents($raw, $events, $filter, true, $startOffset, $multistep);
     logAlways("number of events: ".count($events));
   }
   if (count($events))
@@ -700,16 +674,15 @@ function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events, &$startO
 * @param mixed $json
 * @param mixed $events
 */
-function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOffset)
-{
-    logAlways("<");
+function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOffset, $multistep=false) {
+    logAlways("< multistep: $multistep");
     $messages = json_decode($json, true);
     // invalid json means we fail
     if (!$messages) {
         return;
     }
 
-    $events = array();
+    $step = array();
     $startOffset = null;
 
     $foundFirstEvent = false;
@@ -748,12 +721,20 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
                 if ($removeParams && array_key_exists('params', $message)) {
                     $event = $message['params'];
                     $event['method'] = $message['method'];
-                    $events[] = $event;
+                    $step[] = $event;
                 } else {
-                    $events[] = $message;
+                    $step[] = $message;
                 }
             }
         }
+    }
+    if ($multistep) {
+        $events = Array();
+        $events[] = $step;
+        logAlways("Returning an array with nb steps:".count($events));
+    } else {
+        $events = $step;
+        logAlways("returning a single step with nb events:".count($events));
     }
 }
 
