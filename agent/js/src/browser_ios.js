@@ -475,6 +475,7 @@ BrowserIos.prototype.prepareVideoCapture = function(filename) {
   // video capture before starting the proxy.
   this.app_.schedule('Start video capture', function() {
     if (this.xrecord_) {
+      process_utils.scheduleExec(this.app_, 'killall', ['PTPCamera'], undefined, 30000).then(function(){}, function(){});
       process_utils.scheduleSpawn(this.app_, this.xrecord_,
           ['-q', '-d', '-f', '-i', this.deviceSerial_, '-o', filename]).then(
           function(proc) {
