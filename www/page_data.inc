@@ -320,8 +320,7 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
             {
                 foreach($ret as $eventName => $data)
                 {
-                    $eventNumber = $data['eventNumber'];
-                    $tmp[$eventNumber][$run][$cached] = $data;
+                    $tmp[$eventName][$run][$cached] = $data;
                 }
             }
             else
