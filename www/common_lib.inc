@@ -2756,19 +2756,13 @@ function getRelativeBeginOfEveryStep($testPath,$run,$cached){
     foreach ($pageDataArray as $eventName => $pageData) {
         if($pageData['eventNumber'] == 1){
             $baseTimestamp = floatval($pageData[$time_key]);
-            file_put_contents($logPath,print_r($pageData[$time_key]."\r\n",true),FILE_APPEND);
-            file_put_contents($logPath,print_r($baseTimestamp."\r\n",true),FILE_APPEND);
             break;
         }
     }
 
     foreach ($pageDataArray as $eventName => $pageData) {
         $stepBeginsAt[$pageData['eventNumber']] = (((float)$pageData[$time_key]) - $baseTimestamp) * $time_multiplicator;
-        file_put_contents($logPath,print_r($stepBeginsAt,true),FILE_APPEND);
     }
-    file_put_contents($logPath,print_r($pageDataArray,true),FILE_APPEND);
-    file_put_contents($logPath,print_r($stepBeginsAt,true),FILE_APPEND);
-
     return $stepBeginsAt;
 }
 ?>
