@@ -91,6 +91,7 @@ var g_addHeaders = [];
 var g_setHeaders = [];
 var g_started = false;
 var g_requestsHooked = false;
+var g_appendUA = [];
 
 /**
  * Uninstall a given set of extensions.  Run |onComplete| when done.
@@ -316,6 +317,16 @@ var wptBeforeSendHeaders = function(details) {
       for (i = 0; i < g_addHeaders.length; i++) {
         if (wptHostMatches(host, g_addHeaders[i].filter)) {
           details.requestHeaders.push({'name' : g_addHeaders[i].name, 'value' : g_addHeaders[i].value});
+          modified = true;
+        }
+      }
+    }
+    
+    // Append the PTST user agent string as necessary
+    if (g_appendUA.length) {
+      for (i = 0; i < details.requestHeaders.length; i++) {
+        if (details.requestHeaders[i].name.toLowerCase() === 'user-agent') {
+          details.requestHeaders[i].value += ' ' + g_appendUA.join(' ');
           modified = true;
         }
       }
@@ -561,6 +572,10 @@ function wptExecuteTask(task) {
       case 'resetheaders':
         g_addHeaders = [];
         g_setHeaders = [];
+        break;
+      case 'appenduseragent':
+        g_appendUA.push(task.target);
+        wptHookRequests();
         break;
       case 'collectstats':
         g_processing_task = true;
