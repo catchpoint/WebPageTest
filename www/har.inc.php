@@ -38,12 +38,8 @@ function GenerateHAR($id, $testPath, $options) {
     }
     
     if (!isset($pageData)) {
-      logAlways("--- no pageData yet");
       $pageData = loadAllPageData($testPath, $requests, null, $multistep);
-      //logArray($pageData, 10);
     }
-    logAlways("*********");
-    logAlways("nb requests: " . count($requests));
 
     // build up the array
     $harData = BuildHAR($pageData, $requests, $id, $testPath, $options);
@@ -315,7 +311,7 @@ function BuildHAREntry($data, $pd, $r) {
 *
 * @param mixed $pageData
 */
-function BuildHAR(&$pageData, $requests, $id, $testPath, $options) {
+function BuildHAR(&$pageData, $allRequests, $id, $testPath, $options) {
   $result = array();
   $entries = array();
   $multistep = $options['multistep'] != 0;
@@ -347,8 +343,24 @@ function BuildHAR(&$pageData, $requests, $id, $testPath, $options) {
             'version' => $steps[0]['browser_version']
         );
       }
-      foreach ($steps as $stepData) {
-        logAlways("*** step in BuildHar");
+      if (isset($allRequests)) {
+        $requestsByStep = array();
+        $runRequests = $allRequests[$run][$cached];
+        if ($multistep) {
+          foreach ($runRequests as $stepName => $stepRequests) {
+            $requestsByStep[] = $stepRequests;
+          }
+        } else {
+          $requestsByStep[] = $runRequests;
+        }
+      }
+      if ($cached)
+        $cached_text = '_Cached';
+      for ($i = 0; $i < count($steps); $i++) {
+        $stepData = $steps[$i];
+        if (isset($requestsByStep)) {
+          $stepRequests = $requestsByStep[$i];
+        }
         // add the page-level ldata to the result
         $pd = BuildHarPage($testPath, $cached, $run, $stepData);
         $result['log']['pages'][] = $pd;
@@ -356,7 +368,14 @@ function BuildHAR(&$pageData, $requests, $id, $testPath, $options) {
         $secure = false;
         $haveLocations = false;
         $stepName = isset($stepData['stepName']) ? $stepData['stepName'] : null;
-        $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false, true, $stepName);
+        if (isset($stepRequests)) {
+          $requests = $stepRequests;
+          fixRequests($stepRequests, $id, $testPath, $run, $cached, $secure, $haveLocations, false, true, null,
+              $stepName);
+
+        } else {
+          $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false, true, $stepName);
+        }
         // add it to the list of entries
         foreach ($requests as $r) {
           $entry = BuildHAREntry($stepData, $pd, $r);

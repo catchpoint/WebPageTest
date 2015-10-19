@@ -307,7 +307,13 @@ $page_description = "Website performance test details$testLabel";
                 }
                 $secure = false;
                 $haveLocations = false;
-                $requests = getRequests($id, $testPath, $run, @$_GET['cached'], $secure, $haveLocations, true, true);
+                if (!isset($requests)) {
+                    $requests = getRequests($id, $testPath, $run, @$_GET['cached'], $secure, $haveLocations, true, true);
+                } else {
+                    // not multisteps enabled
+                    $requests = $requests[$run][$cached];
+                    fixRequests($requests, $id, $testPath, $run, @$_GET['cached'], $secure, $haveLocations, true, true);
+                }
                 ?>
                 <script type="text/javascript">
                   markUserTime('aft.Detail Table');

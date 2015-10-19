@@ -9,45 +9,16 @@ if(extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('BuildRequestDependencies');
 }
 
-/**
-* Load the object data file.
-*/
-function getRequests($id, $test_path, $run, $is_cached,
+function fixRequests(&$requests, $id, $test_path, $run, $is_cached,
                      &$has_secure_requests, &$has_locations,
-                     $use_location_check, $use_raw_headers = false, $stepName = null) {
-    logAlways("< stepName: $stepName");
-    if (!isset($test_path) || !strlen($test_path))
-        $test_path = './' . GetTestPath($id);
-    $cached_text = ((bool)@$is_cached) ? '_Cached' : '';
+                     $use_location_check, $use_raw_headers = false, $custom_rules = null, $stepName = null) {
     $file_prefix = $test_path . '/' . $run . $cached_text . '_';
-    $request_file_name =  $file_prefix . 'IEWTR.txt';
     $headers_file_name = $file_prefix . 'report.txt';
-    $bodies_file_name = $file_prefix . 'bodies.zip';
-    $custom_rules_file_name = $file_prefix . 'custom_rules.json';
 
-    $needHeaders = false;
-    $requests = null;
-    if (gz_is_file("$test_path/devtools.json")) {
-        logAlways("---- loading devtools");
-        GetDevToolsRequests($test_path, $run, $is_cached, $requests, $pageData);
-    }
-    else {
-        $requests = LoadRequests($request_file_name, $stepName);
-        if (isset($requests) && is_array($requests) && count($requests)) {
-            if ($use_raw_headers)
-                $needHeaders = true;
-
-            AddResponseBodyFlags($requests, $bodies_file_name);
-
-            // load any custom checks if they are available
-            $custom_rules = array();
-            if (gz_is_file($custom_rules_file_name))
-                $custom_rules = json_decode(gz_file_get_contents($custom_rules_file_name), true);
-        }
-    }
     logAlways("number of requests:" + count($requests));
     FixUpRequestTimes($requests);
-    if ($needHeaders)
+
+    if ($use_raw_headers)
         AddHeaders($requests, $headers_file_name, $stepName);
 
     $has_locations = false;
@@ -66,11 +37,44 @@ function getRequests($id, $test_path, $run, $is_cached,
         if (isset($custom_rules) && is_array($custom_rules) && array_key_exists($index + 1, $custom_rules))
             $request['custom_rules'] = $custom_rules[$index + 1];
     }
-    
+
     // this is disabled for right now - there were indications that it was
     // spiking CPU to 100% on WPT so there may be a loop condition of some kind
     //BuildRequestDependencies($requests);
-    
+}
+
+/**
+* Load the object data file.
+*/
+function getRequests($id, $test_path, $run, $is_cached,
+                     &$has_secure_requests, &$has_locations,
+                     $use_location_check, $use_raw_headers = false, $stepName = null) {
+    logAlways("< stepName: $stepName");
+    if (!isset($test_path) || !strlen($test_path))
+        $test_path = './' . GetTestPath($id);
+    $cached_text = ((bool)@$is_cached) ? '_Cached' : '';
+    $file_prefix = $test_path . '/' . $run . $cached_text . '_';
+    $request_file_name =  $file_prefix . 'IEWTR.txt';
+    $bodies_file_name = $file_prefix . 'bodies.zip';
+    $custom_rules_file_name = $file_prefix . 'custom_rules.json';
+
+    $needHeaders = false;
+    $requests = LoadRequests($request_file_name, $stepName);
+    if (isset($requests) && is_array($requests) && count($requests)) {
+        if ($use_raw_headers)
+            $needHeaders = true;
+
+        AddResponseBodyFlags($requests, $bodies_file_name);
+
+        // load any custom checks if they are available
+        $custom_rules = array();
+        if (gz_is_file($custom_rules_file_name))
+            $custom_rules = json_decode(gz_file_get_contents($custom_rules_file_name), true);
+    }
+
+    fixRequests($requests, $id, $test_path, $run, $is_cached, $has_secure_requests, $has_locations, $use_location_check,
+        $needHeaders, $custom_rules, $stepName);
+
     return $requests;
 }
 

@@ -56,11 +56,11 @@ function loadPageRunData($testPath, $run, $cached, &$requests = null, $options =
     $ret = null;
     $cachedText = $cached ? '_Cached' : '';
     if (gz_is_file("$testPath/devtools.json")) {
-        GetDevToolsRequests($testPath, $run, $cached, $requests, $ret, $multistep);
+        GetDevToolsRequests($testPath, $run, $cached, $runRequests, $ret, $multistep);
+        $requests[$run][$cached] = $runRequests;
     } else {
         $ret = loadPageData("$testPath/{$run}{$cachedText}_IEWPG.txt", $options, $multistep);
     }
-    logArray($ret, 99);
     // see if we have video files to calculate a visually complete time from
     $basic_results = false;
     if (array_key_exists('basic', $_REQUEST) && $_REQUEST['basic'])
