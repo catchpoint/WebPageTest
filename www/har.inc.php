@@ -370,7 +370,7 @@ function BuildHAR(&$pageData, $allRequests, $id, $testPath, $options) {
         $stepName = isset($stepData['stepName']) ? $stepData['stepName'] : null;
         if (isset($stepRequests)) {
           $requests = $stepRequests;
-          fixRequests($stepRequests, $id, $testPath, $run, $cached, $secure, $haveLocations, false, true, null,
+          fixRequests($requests, $id, $testPath, $run, $cached, $secure, $haveLocations, false, true, null,
               $stepName);
 
         } else {
