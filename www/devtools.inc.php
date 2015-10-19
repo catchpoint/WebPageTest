@@ -46,6 +46,7 @@ function ProcessDevToolsEvents($events, &$pageData, &$requests)
         $pageData = array();
 
         // initialize the page data records
+        $pageData['date'] = $rawPageData['date'];
         $pageData['loadTime'] = 0;
         $pageData['docTime'] = 0;
         $pageData['fullyLoaded'] = 0;
@@ -399,6 +400,12 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
     $idMap = array();
     $endTimestamp = null;
     foreach ($events as $event) {
+      if ($event['method'] == 'Network.requestWillBeSent' &&
+        isset($event['wallTime']) &&
+        (!isset($pageData['date']) || $event['wallTime'] < $pageData['date'])
+      ) {
+        $pageData['date'] = $event['wallTime'];
+      }
       if (isset($event['timestamp']) && (!isset($endTimestamp) || $event['timestamp'] > $endTimestamp))
         $endTimestamp = $event['timestamp'];
         if (!isset($main_frame) &&
