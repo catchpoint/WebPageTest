@@ -38,7 +38,7 @@ function GetTimeline($testPath, $run, $cached, &$timeline, &$startOffset) {
     return $ok;
 }
 
-function ProcessDevToolsEvents($events, &$pageData, &$requests)
+function ProcessDevToolsEvents($events, &$pageData, &$requests, $stepName = 0)
 {
     $ok = false;
     if (DevToolsFilterNetRequests($events, $rawRequests, $rawPageData)) {
@@ -46,6 +46,7 @@ function ProcessDevToolsEvents($events, &$pageData, &$requests)
         $pageData = array();
 
         // initialize the page data records
+        $pageData['stepName'] = $stepName;
         $pageData['date'] = $rawPageData['date'];
         $pageData['loadTime'] = 0;
         $pageData['docTime'] = 0;
@@ -371,10 +372,11 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData, $
     }
     if (GetDevToolsEvents(null, $testPath, $run, $cached, $events, $startOffset, $multistep)) {
         if ($multistep) {
-            foreach($events as $stepEvents) {
+            for ($i = 0; $i < count($events); $i++) {
+                $stepEvents = $events[$i];
                 $stepPageData = null;
                 $stepRequests = null;
-                $ok = ProcessDevToolsEvents($stepEvents, $stepPageData, $stepPageRequests);
+                $ok = ProcessDevToolsEvents($stepEvents, $stepPageData, $stepPageRequests, $i);
                 $requests[] = $stepPageRequests;
                 $pageData[] = $stepPageData;
             }
