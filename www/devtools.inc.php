@@ -46,7 +46,7 @@ function ProcessDevToolsEvents($events, &$pageData, &$requests, $stepName = 0)
         $pageData = array();
 
         // initialize the page data records
-        $pageData['stepName'] = $stepName;
+        $pageData['stepName'] = "Step ".($stepName+1);
         $pageData['date'] = $rawPageData['date'];
         $pageData['loadTime'] = 0;
         $pageData['docTime'] = 0;
