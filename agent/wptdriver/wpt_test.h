@@ -205,6 +205,9 @@ public:
   CString _custom_metrics;
   DWORD   _script_timeout_multiplier;
   DWORD server_capabilities_;
+  bool    _webdriver_mode;
+  CString _webdriver_lang;
+  CString _webdriver_args;
 
   // current state
   int     _run;

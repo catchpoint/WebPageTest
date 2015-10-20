@@ -106,6 +106,12 @@
     <ClCompile Include="software_update.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="web_driver.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="globals.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -205,6 +211,9 @@
       <Filter>Third-Party\zlib</Filter>
     </ClInclude>
     <ClInclude Include="software_update.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="web_driver.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

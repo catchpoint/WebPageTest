@@ -42,8 +42,6 @@ public:
 
 private:
   void InjectDll();
-  bool ConfigureIpfw(WptTestDriver& test);
-  void ResetIpfw(void);
   bool FindBrowserChild(DWORD pid, PROCESS_INFORMATION& pi,
                         LPCTSTR browser_exe);
   void ConfigureFirefoxPrefs();

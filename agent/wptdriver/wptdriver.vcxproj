@@ -126,6 +126,7 @@ xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\ex
     <ClInclude Include="traceroute.h" />
     <ClInclude Include="webpagetest.h" />
     <ClInclude Include="web_browser.h" />
+    <ClInclude Include="web_driver.h" />
     <ClInclude Include="web_page_replay.h" />
     <ClInclude Include="winpcap.h" />
     <ClInclude Include="wptdriver.h" />
@@ -152,6 +153,7 @@ xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\ex
     <ClInclude Include="zlib\zutil.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="globals.cc" />
     <ClCompile Include="software_update.cc" />
     <ClCompile Include="ipfw.cc" />
     <ClCompile Include="stdafx.cc">
@@ -162,6 +164,7 @@ xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\ex
     <ClCompile Include="traceroute.cpp" />
     <ClCompile Include="webpagetest.cc" />
     <ClCompile Include="web_browser.cc" />
+    <ClCompile Include="web_driver.cc" />
     <ClCompile Include="web_page_replay.cc" />
     <ClCompile Include="winpcap.cpp" />
     <ClCompile Include="wptdriver.cc" />

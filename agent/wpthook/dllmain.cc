@@ -81,8 +81,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
           }
           if (!lstrcmpi(exe, _T("wptdriver.exe"))) {
             ok = TRUE;
-          } else if(lstrlen(shared_browser_exe) &&
-                    IsCorrectBrowserProcess(exe)) {
+          } else if(IsCorrectBrowserProcess(exe)) {
             ok = TRUE;
             global_dll_handle = (HINSTANCE)hModule;
 
@@ -108,21 +107,29 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 bool IsCorrectBrowserProcess(LPCTSTR exe) {
   bool ok = false;
 
-  if (!lstrcmpi(exe, shared_browser_exe)) {
-    LPTSTR cmdline = GetCommandLine();
-    if (!lstrcmpi(exe, _T("chrome.exe"))) {
-      if (_tcsstr(cmdline, _T("http://127.0.0.1:8888/blank.html")))
-        ok = true;
-    } else if (!lstrcmpi(exe, _T("firefox.exe"))) {
-      if (_tcsstr(cmdline, _T("http://127.0.0.1:8888/blank.html")))
-        ok = true;
-    } else if (!lstrcmpi(exe, _T("iexplore.exe"))) {
+  if (shared_webdriver_mode) {
+    if (!lstrcmpi(exe, _T("chrome.exe"))
+      || !lstrcmpi(exe, _T("firefox.exe"))
+      || !lstrcmpi(exe, _T("iexplore.exe"))
+      || (!lstrcmpi(exe, _T("WebKit2WebProcess.exe")))) {
       ok = true;
     }
-  } else if (!lstrcmpi(_T("safari.exe"), shared_browser_exe) &&
-             !lstrcmpi(exe, _T("WebKit2WebProcess.exe"))) {
+  } else if (lstrlen(shared_browser_exe)) {
+    if (!lstrcmpi(exe, shared_browser_exe)) {
+      LPTSTR cmdline = GetCommandLine();
+      if (!lstrcmpi(exe, _T("chrome.exe")) || !lstrcmpi(exe, _T("firefox.exe"))) {
+        if (_tcsstr(cmdline, _T("http://127.0.0.1:8888/blank.html"))) {
+          ok = true;
+        }
+      } else if (!lstrcmpi(exe, _T("iexplore.exe"))) {
+        ok = true;
+      }
+    } else if (!lstrcmpi(_T("safari.exe"), shared_browser_exe) &&
+      !lstrcmpi(_T("WebKit2WebProcess.exe"), exe)) {
       ok = true;
+    }
   }
-
   return ok;
 }
+
+

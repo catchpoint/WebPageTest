@@ -56,6 +56,8 @@ private:
   bool        watchdog_started_;
   LARGE_INTEGER reboot_time_;
   bool TracerouteTest(WptTestDriver& test);
+  bool RunTest(WptTestDriver& test, WebBrowser &browser);
+  bool WebDriverTest(WptTestDriver& test, WebBrowser &browser);
   bool BrowserTest(WptTestDriver& test, WebBrowser &browser);
   bool SetupWebPageReplay(WptTestDriver& test, WebBrowser &browser);
   void Init(void);

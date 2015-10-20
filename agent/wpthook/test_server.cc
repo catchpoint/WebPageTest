@@ -49,6 +49,9 @@ static const char * RESPONSE_OK_STR = "OK";
 static const DWORD RESPONSE_ERROR_NOtest_ = 404;
 static const char * RESPONSE_ERROR_NOtest__STR = "ERROR: No Test";
 
+static const DWORD RESPONSE_HOOK_UNAVAILABLE = 503;
+static const char * RESPONSE_HOOK_UNAVAILABLE_STR = "Hook Unavailable";
+
 static const DWORD RESPONSE_ERROR_NOT_IMPLEMENTED = 403;
 static const char * RESPONSE_ERROR_NOT_IMPLEMENTED_STR = 
                                                       "ERROR: Not Implemented";
@@ -127,6 +130,10 @@ bool TestServer::Start(void){
   if (mongoose_context_)
     ret = true;
 
+  WptTrace(loglevel :: kTrace, 
+    _T("[wpthook] Mongoose server started. WebDriver Mode: %d"), shared_webdriver_mode
+  );
+
   return ret;
 }
 
@@ -160,8 +167,34 @@ void TestServer::MongooseCallback(enum mg_event event,
     WptTrace(loglevel::kFrequentEvent, _T("[wpthook] HTTP Request: %s\n"), 
                     (LPCTSTR)CA2T(request_info->uri, CP_UTF8));
     WptTrace(loglevel::kFrequentEvent, _T("[wpthook] HTTP Query String: %s\n"), 
-                    (LPCTSTR)CA2T(request_info->query_string, CP_UTF8));
-    if (strcmp(request_info->uri, "/task") == 0) {
+                    (LPCTSTR)CA2T(request_info->query_string));
+    if (strcmp(request_info->uri, "/mode") == 0) {
+      // Extension loaded.
+      if (shared_webdriver_mode) {
+        SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, _T("{\"webdriver\": true}"));
+        // Wait for the browser to cool down.
+        while (!OkToStart()) {
+          WptTrace(loglevel::kFrequentEvent, _T("[wpthook] Waiting for browser to cool down..."));
+          Sleep(100);   // retry.
+        }
+        // Start the hook and mark it ready.
+        hook_.Start();
+        hook_.SetHookReady();
+      } else {
+        SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, _T("{\"webdriver\": false}"));
+      }
+    } else if (strcmp(request_info->uri, "/is_hook_ready") == 0) {
+      if (hook_.IsHookReady()) {
+        SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, _T("{\"ready\": true}"));
+      } else {
+        SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, _T("{\"ready\": false}"));
+      }
+    } else if (strcmp(request_info->uri, "/event/webdriver_done") == 0) {
+      hook_.OnWebDriverDone();
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/before_unload") == 0) {
+      hook_.Start(); // also forces hook_ready_ = false
+    } else if (strcmp(request_info->uri, "/task") == 0) {
       CStringA task;
       if (OkToStart()) {
         bool record = false;
@@ -179,6 +212,10 @@ void TestServer::MongooseCallback(enum mg_event event,
       if (GetDwordParam(request_info->query_string, "domCount", dom_count) &&
           dom_count)
         test_state_._dom_element_count = dom_count;
+      CString url = GetUnescapedParam(request_info->query_string, "url");
+      if (!url.IsEmpty()) {
+        test_._navigated_url = url;
+      }
       // Browsers may get "/event/window_timing" to set "onload" time.
       DWORD load_time = 0;
       GetDwordParam(request_info->query_string, "timestamp", load_time);
@@ -518,7 +555,6 @@ bool TestServer::OkToStart() {
       }
     }
     if (started_) {
-      // Signal to wptdriver which process it should wait for and that we started
       shared_browser_process_id = GetCurrentProcessId();
       HANDLE browser_started_event = OpenEvent(EVENT_MODIFY_STATE , FALSE,
                                                 BROWSER_STARTED_EVENT);

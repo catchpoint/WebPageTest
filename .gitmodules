@@ -1,0 +1,3 @@
+[submodule "agent/webdriver-support/python"]
+	path = agent/webdriver-support/python
+	url = https://github.com/Appdynamics/wpt-rwd-python.git

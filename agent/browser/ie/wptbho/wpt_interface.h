@@ -9,7 +9,9 @@ public:
   ~WptInterface(void);
 
   bool  GetTask(WptTask& task);
+  bool  IsWebdriverMode();
   void  OnLoad(CString options);
+  void  OnBeforeNavigate();
   void  OnNavigate();
   void  OnNavigateError(CString options);
   void  OnTitle(CString title);

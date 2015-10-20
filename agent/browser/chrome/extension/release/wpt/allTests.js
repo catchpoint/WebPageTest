@@ -5518,12 +5518,16 @@ window.addEventListener('load', function() {
   var fixedViewport = 0;
   if (document.querySelector("meta[name=viewport]"))
     fixedViewport = 1;
+  var navigatedUrl = document.URL;
   chrome.extension.sendRequest({'message': 'wptLoad',
                                 'fixedViewport': fixedViewport,
+                                'navigatedUrl': navigatedUrl,
                                 'timestamp': timestamp}, function(response) {});
 }, false);
 
-
+window.addEventListener('beforeunload', function() {
+  chrome.extension.sendRequest({'message': 'wptBeforeUnload'}, function(response) {});
+});
 
 /**
  * WebPageTest's scripting language has several commands that act on

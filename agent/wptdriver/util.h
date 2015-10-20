@@ -84,3 +84,6 @@ void QueryPerfFrequency(__int64 &freq);
 int ElapsedFileTimeSeconds(FILETIME& check, FILETIME& now);
 void Reboot();
 DWORD GetCapabilities(void);
+void ConstructCmdLine(CString& exe, CAtlArray<CString>& options,
+  CString& prefix, CString& cmdLine);
+LPTSTR GetErrorDetail(DWORD error);

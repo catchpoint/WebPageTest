@@ -1,10 +1,13 @@
 #include "StdAfx.h"
 #include "wpt_interface.h"
+#include "json/json.h"
 #include "wpt_task.h"
 
 const TCHAR * TASK_REQUEST = _T("http://127.0.0.1:8888/task");
+const TCHAR * MODE_REQUEST = _T("http://127.0.0.1:8888/mode");
 const TCHAR * EVENT_ON_NAVIGATE = _T("http://127.0.0.1:8888/event/navigate");
 const TCHAR * EVENT_ON_LOAD = _T("http://127.0.0.1:8888/event/load");
+const TCHAR * EVENT_ON_BEFORE_UNLOAD = _T("http://127.0.0.1:8888/event/before_unload");
 const TCHAR * EVENT_ON_NAVIGATE_ERROR =
     _T("http://127.0.0.1:8888/event/navigate_error");
 const TCHAR * EVENT_ON_TITLE = _T("http://127.0.0.1:8888/event/title?title=");
@@ -44,6 +47,34 @@ bool WptInterface::GetTask(WptTask& task) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+bool WptInterface::IsWebdriverMode() {
+  CString response;
+  if (HttpGet(MODE_REQUEST, response)) {
+    AtlTrace(_T("[wptbho] /mode response: %s"), response);
+    Json::Value root;
+    Json::Reader reader;
+    std::string document = CT2A(response);
+    if (reader.parse(document, root)) {
+      int code = 0;
+      Json::Value value = root.get("statusCode", 0);
+      if (!value.empty() && value.isConvertibleTo(Json::intValue)) {
+        code = value.asInt();
+      }
+      if (code == 200) {
+        const Json::Value data = root["data"];
+        if (!data.empty() && data.isObject()) {
+          Json::Value value = data.get("webdriver", false);
+          if (!value.empty() && value.isConvertibleTo(Json::booleanValue)) {
+            return value.asBool();
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 void WptInterface::OnLoad(CString options) {
   CString url = EVENT_ON_LOAD;
   if (options.GetLength())
@@ -51,6 +82,10 @@ void WptInterface::OnLoad(CString options) {
   HttpPost(url);
 }
 
+void WptInterface::OnBeforeNavigate() {
+  CString url = EVENT_ON_BEFORE_UNLOAD;
+  HttpPost(url);
+}
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptInterface::OnNavigate() {

@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "StdAfx.h"
 #include "web_page_replay.h"
 #include "wpt_driver_core.h"
+#include "web_driver.h"
 #include "zlib/contrib/minizip/unzip.h"
 #include <Wtsapi32.h>
 #include <D3D9.h>
@@ -298,7 +299,18 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
 
   SetCursorPos(0,0);
   ShowCursor(FALSE);
-  ret = browser.RunAndWait();
+  if (test._webdriver_mode) {
+    if (!_settings._webdriver_supported) {
+      test._run_error = _T("This agent doesn't support webdriver tests");
+    } else {
+      WebDriver driver(_settings, test, _status, _settings._browser, _ipfw);
+      SetWebDriverMode(true);
+      ret = driver.RunAndWait();
+    }
+  } else {
+    SetWebDriverMode(false);
+    ret = browser.RunAndWait();
+  }
   ShowCursor(TRUE);
 
   if (test._tcpdump)
