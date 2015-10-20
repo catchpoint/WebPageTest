@@ -217,7 +217,12 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
             }
             echo "</h2>";
             
-            echo "<p class=\"heading_details\"><strong>From:</strong> {$test['test']['location']}<br>";
+            echo "<p class=\"heading_details\"><strong>From:</strong> {$test['test']['location']}";
+            if (isset($test['testinfo']['mobile']) && $test['testinfo']['mobile'] === 1)
+            {
+            	echo " - Mobile";
+            }
+            echo "<br />\n";
             if (isset($test['testinfo']) && (isset($test['testinfo']['completed']) || isset($test['testinfo']['started'])) )
             {
                 if (isset($test['testinfo']['completed'])) {
