@@ -90,6 +90,8 @@ else
             }
             if( @strlen($test['testinfo']['mobile']) )
                 echo "<mobile>" . xml_entities($test['testinfo']['mobile']) .   "</mobile>\n";
+            if( isset($test['testinfo']['mobile']) )
+                echo "<mobile>" . xml_entities($test['testinfo']['mobile']) .   "</mobile>\n";
             if( @strlen($test['testinfo']['label']) )
                 echo "<label>" . xml_entities($test['testinfo']['label']) . "</label>\n";
             if( @strlen($test['testinfo']['completed']) )
