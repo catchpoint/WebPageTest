@@ -44,6 +44,12 @@ static const TCHAR * DOCUMENT_WINDOW_CLASSES[] = {
   _T("WebKit2WebViewWindowClass")
 };
 
+// this should be maintained in sync with the capability bitmask constants in common_lib.inc
+// on the server side.
+const DWORD CAPABILITIES[::nCapabilities] = {
+  0x0001    // kMultistepSupport bitmask value
+};
+
 /*-----------------------------------------------------------------------------
   Launch the provided process and wait for it to finish 
   (unless process_handle is provided in which case it will return immediately)
@@ -763,4 +769,14 @@ void Reboot() {
   }
   
   InitiateSystemShutdown(NULL, NULL, 0, TRUE, TRUE);
+}
+
+DWORD GetCapabilities() {
+  DWORD agent_capabilities = 0;
+
+  for (int i = 0; i < ::nCapabilities; i++) {
+    agent_capabilities |= CAPABILITIES[i];
+  }
+
+  return agent_capabilities;
 }

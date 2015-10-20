@@ -140,6 +140,7 @@ public:
   void Lock();
   void Unlock();
   bool IsLocked();
+  bool IsServerMultistepCapable();
 
   // overall test settings
   CString _id;
@@ -203,7 +204,8 @@ public:
   CStringA _run_error;
   CString _custom_metrics;
   DWORD   _script_timeout_multiplier;
-  
+  DWORD server_capabilities_;
+
   // current state
   int     _run;
   int     _specific_run;

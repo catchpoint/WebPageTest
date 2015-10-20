@@ -10,6 +10,8 @@
 include 'common.inc';
 require_once('har.inc.php');
 
+$testInfo = GetTestInfo($id);
+
 $options = array();
 if (isset($_REQUEST['bodies']))
   $options['bodies'] = $_REQUEST['bodies'];
@@ -20,7 +22,12 @@ if (isset($_REQUEST['pretty']))
   $options['pretty'] = $_REQUEST['pretty'];
 if (isset($_REQUEST['run']))
   $options['run'] = $_REQUEST['run'];
-  
+
+$options['multistep'] = 0;
+if (isset($_REQUEST['multistep']) && IsMultistepTestResult($testInfo)) {
+  $options['multistep'] = 1;
+}
+
 $filename = '';
 if (@strlen($url)) {
     $parts = parse_url($url);

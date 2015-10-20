@@ -86,6 +86,7 @@
         if( !isset($test) )
         {
             $test = array();
+            $test['server_caps'] = (int)GetCapabilities();
             $test['url'] = trim($req_url);
             $test['domElement'] = trim($req_domelement);
             $test['login'] = trim($req_login);
@@ -1815,6 +1816,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
 
         // write out the ini file
         $testInfo = "[test]\r\n";
+        $testInfo .= "server_caps={$test['server_caps']}\r\n";
         $testInfo .= "fvonly={$test['fvonly']}\r\n";
         $testInfo .= "timeout={$test['timeout']}\r\n";
         $resultRuns = $test['runs'] - $test['discard'];
@@ -1866,6 +1868,9 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         {
             // build up the actual test commands
             $testFile = '';
+            if (isset($test['server_caps'])) {
+              $testFile .= "\r\nserver_caps={$test['server_caps']}";
+            }
             if( strlen($test['domElement']) )
                 $testFile .= "\r\nDOMElement={$test['domElement']}";
             if( $test['fvonly'] )

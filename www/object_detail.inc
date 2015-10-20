@@ -14,7 +14,7 @@ if(extension_loaded('newrelic')) {
 */
 function getRequests($id, $test_path, $run, $is_cached,
                      &$has_secure_requests, &$has_locations,
-                     $use_location_check, $use_raw_headers = false) {
+                     $use_location_check, $use_raw_headers = false, $stepName = null) {
     if (!isset($test_path) || !strlen($test_path))
         $test_path = './' . GetTestPath($id);
     $cached_text = ((bool)@$is_cached) ? '_Cached' : '';
@@ -25,7 +25,7 @@ function getRequests($id, $test_path, $run, $is_cached,
     $custom_rules_file_name = $file_prefix . 'custom_rules.json';
 
     $needHeaders = false;
-    $requests = LoadRequests($request_file_name);
+    $requests = LoadRequests($request_file_name, $stepName);
     if (isset($requests) && is_array($requests) && count($requests)) {
         if ($use_raw_headers)
             $needHeaders = true;
@@ -40,7 +40,7 @@ function getRequests($id, $test_path, $run, $is_cached,
         GetDevToolsRequests($test_path, $run, $is_cached, $requests, $pageData);
     FixUpRequestTimes($requests);
     if ($needHeaders)
-        AddHeaders($requests, $headers_file_name);
+        AddHeaders($requests, $headers_file_name, $stepName);
 
     $has_locations = false;
     if ($use_location_check) {
@@ -125,7 +125,7 @@ function CalculateComponentTimes(&$pageData, &$requests) {
 /**
 * Load the gzipped request file (tab deliminated).
 */
-function LoadRequests($request_file_name) {
+function LoadRequests($request_file_name, $stepName = null) {
     $requests = array();
     $needed_columns = array(
         // tsv_column => request_key
@@ -188,6 +188,11 @@ function LoadRequests($request_file_name) {
             $columns = explode("\t", str_replace("\t", "\t ", $line));
             if (count($columns)) {
                 $request = array();
+                // logAlways("[LoadRequests] request: $columns[7]; $columns[2]; $stepName;");
+                if (isset($stepName) && isset($columns[2]) && strlen($columns[2]) && trim($columns[2]) != $stepName) {
+                    // request doesn't belong to the step that we are interested in. skip this request.
+                    continue;
+                }
                 foreach ($columns as $i => $value) {
                     if (array_key_exists($i + 1, $needed_columns) && strlen(trim($value)))
                         $request[$needed_columns[$i + 1]] = trim($value);
@@ -404,7 +409,7 @@ function _AddHeadersSave(&$requests, &$index, &$headers) {
 /**
 * Load the raw headers if we have them.
 */
-function AddHeaders(&$requests, $headers_file_name) {
+function AddHeaders(&$requests, $headers_file_name, $stepName = null) {
     $header_lines = gz_file($headers_file_name);
     if ($header_lines) {
         $is_started = false;
@@ -414,7 +419,12 @@ function AddHeaders(&$requests, $headers_file_name) {
             if (!$is_started) {
                 $is_started = ($trimmed == 'Request details:');
             } else {
-                if ($trimmed == 'Request Headers:' && isset($index)) {
+                if (isset($stepName) && strpos($trimmed, 'Step name:') !== false) {
+                    $thisStepName = substr($trimmed, 10, strlen($trimmed));
+                    if ($thisStepName != $stepName) {
+                        $is_started = false;
+                    }
+                } elseif ($trimmed == 'Request Headers:' && isset($index)) {
                     $headers_key = 'request';
                 } elseif ($trimmed == 'Response Headers:' && isset($index)) {
                     $headers_key = 'response';

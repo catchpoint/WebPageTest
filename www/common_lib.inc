@@ -8,8 +8,29 @@ if(extension_loaded('newrelic')) {
 
 define('VIDEO_CODE_VERSION', 20);
 
+#
+$CAPABILITIES = array(
+  "MULTISTEP_SUPPORT" => 0x0001
+);
+
 require_once(__DIR__ . '/logging.inc');
 
+function GetCapabilities() {
+  global $CAPABILITIES;
+  $capabilities = 0;
+
+  foreach ($CAPABILITIES as $mask) {
+    $capabilities |= $mask;
+  }
+
+  return $capabilities;
+}
+
+function IsMultistepTestResult($testInfo) {
+  global $CAPABILITIES;
+
+  return (isset($testInfo['agent_caps']) && ($testInfo['agent_caps'] & $CAPABILITIES['MULTISTEP_SUPPORT']) !== 0);
+}
 /**
 * Figure out the test path (relative) for the given test id
 *
@@ -1816,12 +1837,13 @@ function UnlockTest(&$testLock) {
 *
 * @param mixed $path
 */
-function loadVideo($path, &$frames)
+function loadVideo($path, &$frames, $stepNum = null)
 {
     $ret = false;
     $frames = null;
     if (is_dir($path)) {
-        $files = glob( $path . '/frame_*.jpg', GLOB_NOSORT );
+        $filespec = isset($stepNum) ? '/frame_' . $stepNum . '*.jpg' : '/frame_*.jpg';
+        $files = glob( $path . $filespec, GLOB_NOSORT );
         if ($files && count($files)) {
             $ret = true;
             $frames = array();
@@ -1829,7 +1851,7 @@ function loadVideo($path, &$frames)
                 $file = basename($file);
                 $parts = explode('_', $file);
                 if (count($parts) >= 2) {
-                    $index = intval($parts[1] * 100);
+                    $index = intval($parts[count($parts) - 1] * 100);
                     $frames[$index] = $file;
                 }
             }
