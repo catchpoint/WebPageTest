@@ -369,6 +369,8 @@ function Client(app, args) {
   this.handlingUncaughtException_ = undefined;
   this.handlingSignal_ = undefined;
   this.runningJob_ = false;
+  this.exitTests_ = args.exitTests || 0;
+  this.testCount_ = 0;
 
   exports.process.on('uncaughtException', this.onUncaughtException_.bind(this));
   SIGNAL_NAMES.forEach(function(signal_name) {
@@ -473,6 +475,10 @@ Client.prototype.onUncaughtException_ = function(e) {
 Client.prototype.requestNextJob_ = function() {
   'use strict';
   if (!this.runningJob_) {
+    if (this.exitTests_ && this.testCount_ >= this.exitTests_) {
+      logger.info('Max test count reached, exiting...');
+      process.exit(0);
+    }
     this.app_.schedule('Check if agent is ready for new jobs', function() {
       if (this.onAlive)
         this.onAlive();
@@ -500,6 +506,7 @@ Client.prototype.requestNextJob_ = function() {
             // We could simply process.exit() here
             this.emit('shutdown');
           } else {  // We got a job
+            this.testCount_++;
             this.processJobResponse_(responseBody);
           }
         }.bind(this));
@@ -704,7 +711,7 @@ Client.prototype.endOfRun_ = function(job, isRunFinished, isJobFinished, e) {
 
 function createFileName(job, fileName) {
   'use strict';
-  if (fileName == 'histograms.json') {
+  if (fileName == 'histograms.json.gz') {
     var prefix = job.runNumber + '.' + (job.isCacheWarm ? '1' : '0') + '.';
   } else {
     var prefix = job.runNumber + (job.isCacheWarm ? '_Cached' : '') +

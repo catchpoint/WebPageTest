@@ -44,7 +44,7 @@ class Results {
 public:
   Results(TestState& test_state, WptTest& test, Requests& requests, 
           TrackSockets& sockets, TrackDns& dns, ScreenCapture& screen_capture,
-          DevTools &dev_tools, Trace &trace);
+          DevTools &dev_tools, Trace &trace, Trace &trace_netlog);
   ~Results(void);
 
   void Reset(void);
@@ -63,6 +63,7 @@ private:
   WptTest&      _test;
   DevTools      &_dev_tools;
   Trace         &_trace;
+  Trace         &_trace_netlog;
   bool          _saved;
   LARGE_INTEGER _visually_complete;
 

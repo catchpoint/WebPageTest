@@ -505,6 +505,14 @@ void WptTest::BuildScript() {
     _script_commands.AddHead(command);
   }
 
+  if(!_preserve_user_agent) {
+    ScriptCommand command;
+    command.command = _T("appendUserAgent");
+    command.target.Format(_T("PTST/%d"), _version);
+    command.record = false;
+    _script_commands.AddHead(command);
+  }
+
   if (_emulate_mobile) {
     if (_device_scale_factor.IsEmpty())
       _device_scale_factor = DEFAULT_MOBILE_SCALE_FACTOR;
@@ -859,7 +867,7 @@ bool WptTest::ModifyRequestHeader(CStringA& header) const {
   if( !tag.CompareNoCase("User-Agent") ) {
     if (_user_agent.GetLength()) {
       header = CStringA("User-Agent: ") + _user_agent;
-    } else if(!_preserve_user_agent) {
+    } else if(!_preserve_user_agent && value.Find(" PTST/") == -1) {
       CStringA user_agent;
       user_agent.Format(" PTST/%d", _version);
       header += user_agent;

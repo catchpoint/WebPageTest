@@ -1,6 +1,7 @@
 <?php
 chdir('..');
 include 'common.inc';
+set_time_limit(600);
 require_once('./benchmarks/data.inc.php');
 $page_keywords = array('Benchmarks','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "WebPagetest benchmark details";
@@ -52,7 +53,7 @@ if (array_key_exists('f', $_REQUEST)) {
                     Highlight an area of the chart to zoom in on that area and double-click to zoom out.
                 </div>
                 <div style="float: right;">
-                    <form name="aggregation" method="get" action="view.php">
+                    <form name="aggregation" method="get" action="trendurl.php">
                         <?php
                         echo "<input type=\"hidden\" name=\"benchmark\" value=\"$benchmark\">";
                         echo '<input type="hidden" name="url" value="' . htmlentities($url) . '">';

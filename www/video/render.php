@@ -7,6 +7,10 @@ ignore_user_abort(true);
 set_time_limit(3600);
 error_reporting(E_ERROR | E_PARSE);
 
+if(extension_loaded('newrelic')) { 
+  newrelic_background_job(true);
+}
+
 $max_load = GetSetting('render_max_load');
 if ($max_load !== false && $max_load > 0)
   WaitForSystemLoad($max_load, 3600);

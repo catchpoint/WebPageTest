@@ -11,7 +11,11 @@ $has_apc = function_exists('apc_fetch') && function_exists('apc_store');
 $ok = false;
 if (isset($_REQUEST['installer']) && isset($_SERVER['REMOTE_ADDR'])) {
   $installer = $_REQUEST['installer'];
-  if (preg_match('/^(software|browsers\/[-_a-zA-Z0-9]+)\.dat$/', $installer)) {
+  $installer_postfix = GetSetting('installerPostfix');
+  if ($installer_postfix) {
+    $installer .= $installer_postfix;
+    $ok = true;
+  } elseif (preg_match('/^(software|browsers\/[-_a-zA-Z0-9]+)\.dat$/', $installer)) {
     $ok = $has_apc ? ApcCheckIp($installer) : CheckIp($installer);
   }
 }

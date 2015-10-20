@@ -363,12 +363,19 @@ BrowserIos.prototype.scheduleClearCacheCookies_ = function() {
   }.bind(this));
 
   // iOS 8 uses a different paths
-  var paths = ['/private/var/mobile/Containers/Data/Application/*/Library/Safari/*',
+  var paths = [// iOS 8+
+               '/private/var/mobile/Containers/Data/Application/*/Library/Safari/*',
                '/var/mobile/Downloads/*',
                '/private/var/mobile/Downloads/*',
                '/var/mobile/Library/Safari/*',
                '/private/var/mobile/Library/Safari/*',
-               '/private/var/mobile/Library/Cookies/*'];
+               '/private/var/mobile/Library/Cookies/*',
+               //iOS 9+
+               '/private/var/mobile/Containers/Data/Application/*/Library/Caches/com.apple.mobilesafari',
+               '/private/var/mobile/Containers/Data/Application/*/Library/Caches/Snapshots/com.apple.mobilesafari',
+               '/private/var/mobile/Containers/Data/Application/*/Library/Caches/WebKit',
+               '/private/var/mobile/Containers/Data/Application/*/Library/Caches/com.apple.WebKit.*',
+               '/private/var/mobile/Containers/Data/Application/*/Library/WebKit'];
   for (var i = 0; i < paths.length; i++) {
     this.scheduleSshNoFault_('rm', '-rf', paths[i]);
   }
@@ -492,7 +499,7 @@ BrowserIos.prototype.prepareVideoCapture = function(filename) {
         }.bind(this));
         // xrecord will wait for up to 10 minutes to acquire an exclusive lock
         // (only one video at a time is currently possible in OSX)
-        this.app_.wait(function() {return this.videoStarted_;}.bind(this), 660000);
+        this.app_.wait(function() {return this.videoStarted_ || !this.videoProcess_;}.bind(this), 660000);
       }.bind(this));
     }
   }.bind(this));

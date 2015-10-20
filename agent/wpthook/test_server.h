@@ -38,7 +38,8 @@ class Trace;
 class TestServer {
 public:
   TestServer(WptHook& hook, WptTestHook &test, TestState& test_state, 
-             Requests& requests, DevTools &dev_tools, Trace &trace);
+             Requests& requests, DevTools &dev_tools, Trace &trace,
+             Trace &trace_netlog);
   ~TestServer(void);
 
   bool Start(void);
@@ -55,6 +56,7 @@ private:
   Requests&         requests_;
   DevTools          &dev_tools_;
   Trace             &trace_;
+  Trace             &trace_netlog_;
   CRITICAL_SECTION  cs;
   bool              started_;
   ULARGE_INTEGER    last_cpu_idle_;

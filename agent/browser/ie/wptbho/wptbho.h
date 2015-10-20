@@ -15,12 +15,13 @@ class ATL_NO_VTABLE WptBHO :
   public CComCoClass<WptBHO, &CLSID_WptBHO>,
   public IObjectWithSiteImpl<WptBHO>,
   public IDispEventImpl<1, WptBHO, &DIID_DWebBrowserEvents2, &LIBID_SHDocVw, 1, 1>,
-  public IDispatchImpl<IWptBHO, &IID_IWptBHO, &LIBID_wptbhoLib, /*wMajor =*/ 1, /*wMinor =*/ 0>
+  public IDispatchImpl<IWptBHO, &IID_IWptBHO, &LIBID_wptbhoLib, /*wMajor =*/ 1, /*wMinor =*/ 0>,
+  public IServiceProvider,
+  public IAuthenticate
 {
 public:
-  WptBHO(){
+  WptBHO(): basicAuthDismissed(false) {
   }
-
 DECLARE_REGISTRY_RESOURCEID(IDR_WPTBHO)
 
 DECLARE_NOT_AGGREGATABLE(WptBHO)
@@ -29,6 +30,8 @@ BEGIN_COM_MAP(WptBHO)
   COM_INTERFACE_ENTRY(IWptBHO)
   COM_INTERFACE_ENTRY(IDispatch)
   COM_INTERFACE_ENTRY(IObjectWithSite)
+  COM_INTERFACE_ENTRY(IServiceProvider)
+  COM_INTERFACE_ENTRY(IAuthenticate)
 END_COM_MAP()
 
   DECLARE_PROTECT_FINAL_CONSTRUCT()
@@ -69,10 +72,19 @@ END_COM_MAP()
 public:
   // IObjectWithSite
   STDMETHOD(SetSite)(IUnknown *pUnkSite);
+  // IServiceProvider
+  HRESULT STDMETHODCALLTYPE QueryService(REFGUID guid, REFIID iid, void** ppv);
+  // IAuthenticate
+  HRESULT STDMETHODCALLTYPE Authenticate(
+    /* [out] */ __RPC__deref_out_opt HWND *phwnd,
+    /* [out] */ __RPC__deref_out_opt LPWSTR *pszUsername,
+    /* [out] */ __RPC__deref_out_opt LPWSTR *pszPassword);
+
 
 private:
   CComQIPtr<IWebBrowser2> _web_browser;
   Wpt   _wpt;
+  bool basicAuthDismissed;
 
 // leave this public empty to support the DECLARE_PROTECT_FINAL_CONSTRUCT macro
 public:

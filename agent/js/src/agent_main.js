@@ -54,7 +54,8 @@ var knownOpts = {
   deviceAddr: [String, null],
   deviceSerial: [String, null],
   jobTimeout: [Number, null],
-  apiKey: [String, null]
+  apiKey: [String, null],
+  exitTests: [Number, null]
 };
 
 var WD_SERVER_EXIT_TIMEOUT = 5000;  // Wait for 5 seconds before force-killing
@@ -182,7 +183,7 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
         if (buffer) {
           job.resultFiles.push(new wpt_client.ResultFile(
               wpt_client.ResultFile.ResultType.IMAGE,
-              'histograms.json',
+              'histograms.json.gz',
               'text/plain',
               buffer));
         }
@@ -822,14 +823,6 @@ exports.setSystemCommands = function() {
  */
 exports.main = function(flags) {
   'use strict';
-  var versionMatch = /^v(\d+)\.(\d+)(?:\.\d+)?$/.exec(process.version);
-  if (!versionMatch) {
-    throw new Error('Cannot parse NodeJS version: ' + process.version);
-  }
-  if (parseInt(versionMatch[1], 10) !== 0 ||
-      parseInt(versionMatch[2], 10) < 8) {
-    throw new Error('node version must be >=0.8, not ' + process.version);
-  }
   exports.setSystemCommands();
   delete flags.argv; // Remove nopt dup
   var app = webdriver.promise.controlFlow();

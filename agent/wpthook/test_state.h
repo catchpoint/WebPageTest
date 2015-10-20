@@ -83,7 +83,8 @@ public:
 class TestState {
 public:
   TestState(Results& results, ScreenCapture& screen_capture,
-            WptTestHook &test, DevTools& dev_tools, Trace& trace);
+            WptTestHook &test, DevTools& dev_tools, Trace& trace,
+            Trace& trace_netlog);
   ~TestState(void);
 
   void Start();
@@ -182,6 +183,7 @@ private:
   ScreenCapture& _screen_capture;
   DevTools &_dev_tools;
   Trace &_trace;
+  Trace &_trace_netlog;
   HANDLE  _data_timer;
   CAtlList<CString>        _console_log_messages; // messages to the console
   CAtlList<CString>        _timed_events; // any supported timed events

@@ -50,7 +50,8 @@ static const DWORD RESPONSIVE_BROWSER_WIDTH = 480;
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 TestState::TestState(Results& results, ScreenCapture& screen_capture, 
-                      WptTestHook &test, DevTools& dev_tools, Trace& trace):
+                      WptTestHook &test, DevTools& dev_tools, Trace& trace,
+                      Trace& trace_netlog):
   _results(results)
   ,_screen_capture(screen_capture)
   ,_frame_window(NULL)
@@ -59,6 +60,7 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   ,_test(test)
   ,_dev_tools(dev_tools)
   ,_trace(trace)
+  ,_trace_netlog(trace_netlog)
   ,no_gdi_(false)
   ,gdi_only_(false)
   ,navigated_(false)
@@ -187,6 +189,10 @@ void TestState::Start() {
   }
 
   if (!_data_timer) {
+    // for repeat view start capturing video immediately
+    if (!shared_cleared_cache)
+      received_data_ = true;
+      
     timeBeginPeriod(1);
     CreateTimerQueueTimer(&_data_timer, NULL, ::CollectData, this, 
         DATA_COLLECTION_INTERVAL, DATA_COLLECTION_INTERVAL, WT_EXECUTEDEFAULT);

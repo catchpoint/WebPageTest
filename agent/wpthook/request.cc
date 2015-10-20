@@ -395,7 +395,8 @@ Request::Request(TestState& test_state, DWORD socket_id, DWORD stream_id,
   , _is_base_page(false)
   , requests_(requests)
   , _bytes_in(0)
-  , _bytes_out(0) {
+  , _bytes_out(0)
+  , _object_size(0) {
   QueryPerformanceCounter(&_start);
   _first_byte.QuadPart = 0;
   _end.QuadPart = 0;

@@ -259,7 +259,7 @@ $loc = ParseLocations($locations);
                                             $runs = (int)$req_runs;
                                         $runs = max(1, min($runs, $settings['maxruns']));
                                         ?>
-                                        <input id="number_of_tests" type="text" class="text short" name="runs" value=<?php echo "\"$runs\""; ?>>
+                                        <input id="number_of_tests" type="number" class="text short" name="runs" value=<?php echo "\"$runs\""; ?>>
                                     </li>
                                     <li>
                                         <label for="viewBoth">
@@ -384,7 +384,7 @@ $loc = ParseLocations($locations);
                                             Minimum test duration<br>
                                             <small>Capture data for at least...</small>
                                         </label>
-                                        <input id="time" type="text" class="text short" name="time" value=""> seconds
+                                        <input id="time" type="number" class="text short" name="time" value=""> seconds
                                     </li>
                                     <li>
                                         <label for="tester">
@@ -392,6 +392,13 @@ $loc = ParseLocations($locations);
                                             <small>Run the test on a specific <a href="/getTesters.php">PC</a>.<br>Name must match exactly or the test will not run.</small>
                                         </label>
                                         <input id="tester" type="text" class="text" name="tester" value="">
+                                    </li>
+                                    <li>
+                                        <label for="customHeaders">
+                                            Custom headers<br>
+                                            <small>Add custom headers to all network requests emitted from the browser</small>
+                                        </label>
+                                        <textarea id="customHeaders" type="text" class="text" name="customHeaders" value=""></textarea>
                                     </li>
                                 </ul>
                             </div>
@@ -434,6 +441,30 @@ $loc = ParseLocations($locations);
                                             <small>Chrome 34+ on Android</small>
                                         </label>
                                     </li>
+                                    <?php
+                                    if ($admin && GetSetting('wprDesktop')) {
+                                    ?>
+                                    <li>
+                                        <input type="checkbox" name="wprDesktop" id="wprDesktop" class="checkbox" style="float: left;width: auto;">
+                                        <label for="wprDesktop" class="auto_width">
+                                            Use Web Page Replay recorded Desktop Page<br>
+                                            <small>Limited list of available <a href="/wprDesktop.txt">URLs</a></small>
+                                        </label>
+                                    </li>
+                                    <?php
+                                    }
+                                    if ($admin && GetSetting('wprMobile')) {
+                                    ?>
+                                    <li>
+                                        <input type="checkbox" name="wprMobile" id="wprMobile" class="checkbox" style="float: left;width: auto;">
+                                        <label for="wprMobile" class="auto_width">
+                                            Use Web Page Replay recorded Mobile Page<br>
+                                            <small>Limited list of available <a href="/wprMobile.txt">URLs</a></small>
+                                        </label>
+                                    </li>
+                                    <?php
+                                    }
+                                    ?>
                                     <li>
                                         <label for="uastring" style="width: auto;">
                                         User Agent String<br>

@@ -91,6 +91,7 @@ var g_addHeaders = [];
 var g_setHeaders = [];
 var g_started = false;
 var g_requestsHooked = false;
+var g_appendUA = [];
 
 /**
  * Uninstall a given set of extensions.  Run |onComplete| when done.
@@ -321,6 +322,16 @@ var wptBeforeSendHeaders = function(details) {
       }
     }
     
+    // Append the PTST user agent string as necessary
+    if (g_appendUA.length) {
+      for (i = 0; i < details.requestHeaders.length; i++) {
+        if (details.requestHeaders[i].name.toLowerCase() === 'user-agent') {
+          details.requestHeaders[i].value += ' ' + g_appendUA.join(' ');
+          modified = true;
+        }
+      }
+    }
+    
     if (modified)
       response = {requestHeaders: details.requestHeaders};
   }
@@ -361,6 +372,14 @@ chrome.webRequest.onErrorOccurred.addListener(function(details) {
     }
   }, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
 );
+
+chrome.webRequest.onAuthRequired.addListener(function(details, cb) {
+    if (g_active && details.tabId == g_tabid) {
+       return {
+         cancel: true
+       };
+    }
+}, {urls: ["<all_urls>"]}, ["blocking"]);
 
 chrome.webRequest.onCompleted.addListener(function(details) {
     if (g_active && details.tabId == g_tabid) {
@@ -553,6 +572,10 @@ function wptExecuteTask(task) {
       case 'resetheaders':
         g_addHeaders = [];
         g_setHeaders = [];
+        break;
+      case 'appenduseragent':
+        g_appendUA.push(task.target);
+        wptHookRequests();
         break;
       case 'collectstats':
         g_processing_task = true;

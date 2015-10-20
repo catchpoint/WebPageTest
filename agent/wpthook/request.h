@@ -289,6 +289,7 @@ public:
   // byte counts
   DWORD _bytes_in;
   DWORD _bytes_out;
+  DWORD _object_size;
 
   // performance counter times
   LARGE_INTEGER _start;

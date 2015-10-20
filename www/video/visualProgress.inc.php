@@ -193,7 +193,7 @@ function GetImageHistogram($image_file, $options, $histograms) {
   }
 
   // generate a histogram from the image itself
-  if (!isset($histogram)) {
+  if (!isset($histogram) && !GetSetting('disable_image_processing')) {
       $im = imagecreatefromjpeg($image_file);
       if ($im !== false) {
           $width = imagesx($im);
