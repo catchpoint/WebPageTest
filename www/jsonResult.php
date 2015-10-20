@@ -75,6 +75,8 @@ function GetTestResult($id) {
             $ret['latency'] = $testInfo['latency'];
         if (array_key_exists('plr', $testInfo))
             $ret['plr'] = $testInfo['plr'];
+        if (array_key_exists('mobile', $testInfo))
+            $ret['mobile'] = $testInfo['mobile'];
         if (array_key_exists('label', $testInfo) && strlen($testInfo['label']))
             $ret['label'] = $testInfo['label'];
         if (array_key_exists('completed', $testInfo))
