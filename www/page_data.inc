@@ -11,7 +11,6 @@ include 'common.inc';
 * @param mixed $cached
 */
 function loadAllPageData($testPath, &$requests, $options = null, $multistep = false) {
-  logAlways("***loadAllPageData");
   $ret = array();
   // go in order for the number of runs there are supposed to be
   if (is_file("$testPath/testinfo.ini")) {
@@ -52,7 +51,6 @@ function loadAllPageData($testPath, &$requests, $options = null, $multistep = fa
 */
 function loadPageRunData($testPath, $run, $cached, &$requests = null, $options = null, $multistep=false)
 {
-    logAlways("*** loadPageRunData, multistep $multistep");
     $ret = null;
     $cachedText = $cached ? '_Cached' : '';
     if (gz_is_file("$testPath/devtools.json")) {

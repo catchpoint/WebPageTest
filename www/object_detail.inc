@@ -15,7 +15,6 @@ function fixRequests(&$requests, $id, $test_path, $run, $is_cached,
     $file_prefix = $test_path . '/' . $run . $cached_text . '_';
     $headers_file_name = $file_prefix . 'report.txt';
 
-    logAlways("number of requests:" + count($requests));
     FixUpRequestTimes($requests);
 
     if ($use_raw_headers)
@@ -49,7 +48,6 @@ function fixRequests(&$requests, $id, $test_path, $run, $is_cached,
 function getRequests($id, $test_path, $run, $is_cached,
                      &$has_secure_requests, &$has_locations,
                      $use_location_check, $use_raw_headers = false, $stepName = null) {
-    logAlways("< stepName: $stepName");
     if (!isset($test_path) || !strlen($test_path))
         $test_path = './' . GetTestPath($id);
     $cached_text = ((bool)@$is_cached) ? '_Cached' : '';
@@ -200,7 +198,6 @@ function LoadRequests($request_file_name, $stepName = null) {
             $columns = explode("\t", str_replace("\t", "\t ", $line));
             if (count($columns)) {
                 $request = array();
-                // logAlways("[LoadRequests] request: $columns[7]; $columns[2]; $stepName;");
                 if (isset($stepName) && isset($columns[2]) && strlen($columns[2]) && trim($columns[2]) != $stepName) {
                     // request doesn't belong to the step that we are interested in. skip this request.
                     continue;
