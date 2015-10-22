@@ -4,6 +4,7 @@ bwIn=5000000
 bwOut=1000000
 latency=28
 plr=0
+isDefault=1
 
 [DSL]
 label="DSL (1.5 Mbps/384 Kbps 50ms RTT)"
@@ -11,6 +12,7 @@ bwIn=1500000
 bwOut=384000
 latency=50
 plr=0
+isDefault=0
 
 [FIOS]
 label="FIOS (20/5 Mbps 4ms RTT)"
@@ -18,6 +20,7 @@ bwIn=20000000
 bwOut=5000000
 latency=4
 plr=0
+isDefault=0
 
 [Dial]
 label="56K Dial-Up (49/30 Kbps 120ms RTT)"
@@ -26,6 +29,7 @@ bwOut=30000
 latency=120
 plr=0
 timeout=300
+isDefault=0
 
 [3G]
 label="Mobile 3G (1.6 Mbps/768 Kbps 300ms RTT)"
@@ -34,6 +38,7 @@ bwOut=768000
 latency=300
 plr=0
 timeout=120
+isDefault=0
 
 [3GFast]
 label="Mobile 3G - Fast (1.6 Mbps/768 Kbps 150ms RTT)"
@@ -42,6 +47,7 @@ bwOut=768000
 latency=150
 plr=0
 timeout=120
+isDefault=0
 
 [3GSlow]
 label="Mobile 3G - Slow (780 Kbps/330 Kbps 200ms RTT)"
@@ -50,6 +56,7 @@ bwOut=330000
 latency=200
 plr=0
 timeout=240
+isDefault=0
 
 [Edge]
 label="Mobile Edge (240 Kbps/200 Kbps 840ms RTT)"
@@ -58,6 +65,7 @@ bwOut=200000
 latency=840
 plr=0
 timeout=300
+isDefault=0
 
 [2GFast]
 label="Mobile 2G - Fast (150 Kbps/120 Kbps 840ms RTT)"
@@ -66,6 +74,7 @@ bwOut=120000
 latency=840
 plr=0
 timeout=300
+isDefault=0
 
 [2G]
 label="Mobile 2G - Slow (35 Kbps/32 Kbps 1300ms RTT)"
@@ -74,6 +83,7 @@ bwOut=32000
 latency=1300
 plr=0
 timeout=300
+isDefault=0
 
 [Native]
 label="Native Connection (No Traffic Shaping)"
@@ -81,3 +91,4 @@ bwIn=0
 bwOut=0
 latency=0
 plr=0
+isDefault=0
