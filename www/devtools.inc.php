@@ -53,6 +53,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
     $ver = 13;
     $cached = isset($cached) && $cached ? 1 : 0;
     $ok = GetCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
+    $ok = false;
     if (!$ok) {
       if (GetDevToolsEvents(null, $testPath, $run, $cached, $events, $startOffset)) {
           if (DevToolsFilterNetRequests($events, $rawRequests, $rawPageData)) {
@@ -680,7 +681,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
   $hasNet = strpos($json, '"Network.') !== false ? true : false;
   $hasTimeline = strpos($json, '"Timeline.eventRecorded"') !== false ? true : false;
   $hasTrim = strpos($json, $START_MESSAGE) !== false ? true : false;
-  $messages = json_decode($json, true);
+  $messages = json_decode($json, true, 100000);
   unset($json);
 
   $firstEvent = null;
