@@ -13969,6 +13969,7 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.mobileEmulation = undefined;
     g_instance.timelineStackDepth = 0;
     g_instance.traceRunning = false;
+    g_instance.netlog = [];
     var version = '1.0';
     if (g_instance.chromeApi_['debugger'])
         g_instance.chromeApi_.debugger.attach({tabId: g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachDebugger);
@@ -13982,6 +13983,7 @@ wpt.chromeDebugger.SetActive = function(active) {
   if (active) {
     g_instance.requests = {};
     g_instance.idMap = {};
+    g_instance.netlog = [];
     g_instance.receivedData = false;
     g_instance.devToolsData = '';
     g_instance.statsDoneCallback = undefined;
@@ -14067,29 +14069,18 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       if (g_instance.trace || g_instance.timeline) {
         wpt.chromeDebugger.sendEvent('trace', JSON.stringify(params['value']));
       }
-      // Send the netlog-specific events separately for easier processing
-      var netlog = [];
+      // Collect the netlog events separately for calculating the request timings
       var len = params['value'].length;
       for(var i = 0; i < len; i++) {
         if (params['value'][i]['cat'] == 'netlog') {
-          var ignore = false;
-          for (j = 0; j < IGNORE_NETLOG_EVENTS.length; j++) {
-            if (params['value'][i]['name'].substring(0, IGNORE_NETLOG_EVENTS[j].length) == IGNORE_NETLOG_EVENTS[j]) {
-              ignore = true;
-              break;
-            }
-          }
-          if (!ignore)
-            netlog.push(params['value'][i]);
+          g_instance.netlog.push(params['value'][i]);
         }
-      }
-      if (netlog.length) {
-        wpt.chromeDebugger.sendEvent('trace_netlog', JSON.stringify(netlog));
       }
     }
   }
   if (message === 'Tracing.tracingComplete') {
     tracing = true;
+    wpt.chromeDebugger.processNetlog();
     if (g_instance.statsDoneCallback)
       g_instance.statsDoneCallback();
   }
@@ -14251,6 +14242,12 @@ wpt.chromeDebugger.SendDevToolsData = function(callback) {
   } else {
     callback();
   }
+};
+
+/**
+* Process the netlog data into individual requests
+*/
+wpt.chromeDebugger.processNetlog = function() {
 };
 
 /**

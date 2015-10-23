@@ -15,7 +15,20 @@ if (array_key_exists('headless', $settings) && $settings['headless']) {
     $headless = true;
 }
 
-if (!$headless) {
+$duplicates = false;
+foreach( $urls as $index => $url ) {
+  $url = trim($url);
+  if( strlen($url) ) {
+    foreach( $urls as $index2 => $url2 ) {
+      $url2 = trim($url2);
+      if ($index != $index2 && $url == $url2) {
+        $duplicates = true;
+      }
+    }
+  }
+}
+
+if (!$duplicates && !$headless) {
     foreach( $urls as $index => $url )
     {
         $url = trim($url);

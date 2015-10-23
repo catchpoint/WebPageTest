@@ -1,5 +1,8 @@
 <?php
 // Return the version, size and md5 hash of all of the agent updates currently available
+header("Cache-Control: no-cache, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 $updates = array();
 $files = glob('./update/*.ini');
 if ($files && is_array($files) && count($files)) {
