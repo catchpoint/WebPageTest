@@ -2357,15 +2357,18 @@ function ProcessTestScript($url, &$test) {
     $script = "addHeader\t$header\r\n" . $script;
   }
   // Add custom headers
-  if (strlen($test['customHeaders'])) {
-    if (!isset($script) || !strlen($script))
-      $script = "navigate\t$url";
-    $headers = preg_split("/\r\n|\n|\r/", $test['customHeaders']);
-    $headerCommands = "";
-    foreach ($headers as $header) {
-      $headerCommands = $headerCommands . "addHeader\t".$header."\r\n";
+  /* temporarily disabled for webdriver */
+  if (!isset($test['webdriver']) || $test['webdriver'] == '') {
+    if (strlen($test['customHeaders'])) {
+      if (!isset($script) || !strlen($script))
+        $script = "navigate\t$url";
+      $headers = preg_split("/\r\n|\n|\r/", $test['customHeaders']);
+      $headerCommands = "";
+      foreach ($headers as $header) {
+        $headerCommands = $headerCommands . "addHeader\t".$header."\r\n";
+      }
+      $script = $headerCommands . $script;
     }
-    $script = $headerCommands . $script;
   }
   return $script;
 }
