@@ -130,10 +130,6 @@ $GLOBALS['ptotocol'] = 'http';
 if ($is_ssl) {
     $GLOBALS['ptotocol'] = 'https';
 }
-$median_metric = 'loadTime';
-if (array_key_exists('medianMetric', $_REQUEST)) {
-    $median_metric = $_REQUEST['medianMetric'];
-}
 
 $tz_offset = null;
 if (isset($_COOKIE['tzo'])) {
@@ -221,6 +217,7 @@ if (preg_match('/^[a-zA-Z0-9_]+$/', @$req_test)) {
     $id = $_COOKIE['tid'];
 }
 
+$median_metric = 'loadTime';
 $testLabel = '';
 if (strlen($id)) {
     if (@strlen($req_rkey)) {
@@ -234,6 +231,9 @@ if (strlen($id)) {
       RestoreTest($id);   // restore the test if it is archived (and deleted)
 
     $testPath = './' . GetTestPath($id);
+    $test['testinfo'] = GetTestInfo($id);
+    if (isset($test['testinfo']['medianMetric']))
+      $median_metric = $test['testinfo']['medianMetric'];
 
     $run = htmlspecialchars(@$req_run);
     if (!$run) {
@@ -243,7 +243,7 @@ if (strlen($id)) {
     if (array_key_exists('run', $_REQUEST) && !strcasecmp($_REQUEST['run'], 'median')) {
       require_once('page_data.inc');
       $pageData = loadAllPageData($testPath, $options);
-      $run = GetMedianRun($pageData, $cached);
+      $run = GetMedianRun($pageData, $cached, $median_metric);
     }
     $cachedText = $cached ? '_Cached' : '';
     $test = array();
@@ -253,7 +253,6 @@ if (strlen($id)) {
           touch("$testPath/testinfo.ini");
     }
     $testDate = null;
-    $test['testinfo'] = GetTestInfo($id);
     if ($test['testinfo']) {
       if( array_key_exists('completed', $test['testinfo']))
           $testDate = strftime('%x %X', (int)$test['testinfo']['completed'] + ($tz_offset * 60));
@@ -295,4 +294,9 @@ if (strlen($id)) {
         $test['testinfo'] = array();
     }
 }
+
+if (array_key_exists('medianMetric', $_REQUEST)) {
+    $median_metric = $_REQUEST['medianMetric'];
+}
+
 ?>
