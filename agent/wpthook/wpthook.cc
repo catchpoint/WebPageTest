@@ -43,6 +43,7 @@ static const DWORD TIMER_DONE_INTERVAL = 100;
 static const DWORD INIT_TIMEOUT = 30000;
 static const DWORD TIMER_FORCE_REPORT_INTERVAL = 10000;
 
+static const TCHAR * BROWSER_DONE_EVENT = _T("Global\\wpt_browser_done");
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WptHook::WptHook(void):
@@ -60,14 +61,17 @@ WptHook::WptHook(void):
             dev_tools_, trace_)
   ,dns_(test_state_, test_)
   ,done_(false)
+  ,new_page_load_(false)
   ,hook_ready_(false)
   ,webdriver_done_(false)
+  ,window_timing_received_(false)
   ,test_server_(*this, test_, test_state_, requests_, dev_tools_, trace_)
   ,test_(*this, test_state_, shared_test_timeout) {
 
   file_base_ = shared_results_file_base;
   background_thread_started_ = CreateEvent(NULL, TRUE, FALSE, NULL);
   report_message_ = RegisterWindowMessage(_T("WPT Report Data"));
+  shutdown_message_ = RegisterWindowMessage(_T("WPT Shutdown Now"));
 
   // grab the version number of the dll
   TCHAR file[MAX_PATH];
@@ -139,9 +143,12 @@ void WptHook::Init(){
 -----------------------------------------------------------------------------*/
 void WptHook::Start() {
   reported_ = false;
-  hook_ready_ = false;
+  new_page_load_ = false;
+  window_timing_received_ = false;
   test_state_.Start();
-  SetTimer(message_window_, TIMER_DONE, TIMER_DONE_INTERVAL, NULL);
+  if (!shared_webdriver_mode) {
+    SetTimer(message_window_, TIMER_DONE, TIMER_DONE_INTERVAL, NULL);
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -193,26 +200,16 @@ void WptHook::OnReport() {
   KillTimer(message_window_, TIMER_FORCE_REPORT);
   if (!reported_) {
     reported_ = true;
-    if (!test_._combine_steps || shared_webdriver_mode) {
-      WptTrace(loglevel::kTrace, _T("[wpthook:OnReport()] Saving incremental results."));
+    if (test_._combine_steps) {
       results_.Save();
     }
-    if (!shared_webdriver_mode)
-      test_.CollectDataDone();
-    // Now that we are done saving results for the current step,
-    // let the webdriver know that we are ready for more.
-    SetHookReady();
-    WptTrace(loglevel::kTrace, _T("[wpthook:OnReport()] Step completed. Hook ready for more!"));
-    if (shared_webdriver_mode ? webdriver_done_ : test_.Done()) {
+    test_.CollectDataDone();
+    if (test_.Done()) {
       test_state_._exit = true;
       test_server_.Stop();
       results_.Save();
-      done_ = true;
-      if (test_state_._frame_window) {
-        WptTrace(loglevel::kTrace, 
-                  _T("[wpthook] - **** Exiting Hooked Browser\n"));
-        ::SendMessage(test_state_._frame_window,WM_CLOSE,0,0);
-      }
+      Cleanup();
+      ShutdownNow();
     }
   }
   test_.Unlock();
@@ -227,6 +224,39 @@ void WptHook::Report() {
   }
 }
 
+void WptHook::Save() {
+  if (!reported_) {
+    reported_ = true;
+    results_.Save();
+  }
+}
+
+void WptHook::Cleanup() {
+  // Let the wptdriver know that the hook is done.
+  HANDLE browser_done_event = OpenEvent(EVENT_MODIFY_STATE, FALSE,
+    BROWSER_DONE_EVENT);
+  if (browser_done_event) {
+    SetEvent(browser_done_event);
+    CloseHandle(browser_done_event);
+  }
+  test_state_._exit = true;
+}
+
+void WptHook::ShutdownNow() {
+  done_ = true;
+  test_server_.Stop();
+  if (test_state_._frame_window) {
+    WptTrace(loglevel::kTrace, _T("[wpthook] - **** Exiting Hooked Browser\n"));
+    ::SendMessage(test_state_._frame_window, WM_CLOSE, 0, 0);
+  }
+}
+
+void WptHook::AsyncShutdown() {
+  if (message_window_ && shutdown_message_) {
+    ::PostMessage(message_window_, shutdown_message_, 0, 0);
+  }
+}
+
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool WptHook::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
@@ -237,20 +267,10 @@ bool WptHook::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
         switch (wParam){
             case TIMER_DONE:
                 if (test_state_.IsDone()) {
-                  WptTrace(loglevel::kTrace,
-                    _T("[wpthook:OnMessage():TIMER_DONE] Done with current step!")
-                  );
                   KillTimer(message_window_, TIMER_DONE);
-                  if (!shared_webdriver_mode) {
-                    test_.CollectData();
-                    SetTimer(message_window_, TIMER_FORCE_REPORT, 
-                      TIMER_FORCE_REPORT_INTERVAL, NULL);
-                  } else {
-                    // In WebDriver mode, the browser sends us the collected metrics
-                    // asynchronously. Call OnReport() to save the incremental
-                    // results.
-                    OnReport();
-                  }
+                  test_.CollectData();
+                  SetTimer(message_window_, TIMER_FORCE_REPORT, 
+                  TIMER_FORCE_REPORT_INTERVAL, NULL);
                   test_.Done();
                 }
                 break;
@@ -262,6 +282,8 @@ bool WptHook::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
     default:
         if (message == report_message_) {
           OnReport();
+        } else if (message == shutdown_message_) {
+          ShutdownNow();
         } else {
           ret = false;
         }
@@ -328,10 +350,30 @@ bool WptHook::IsHookReady() {
   return hook_ready_;
 }
 
+void WptHook::ResetHookReady() {
+  hook_ready_ = false;
+}
+
 void WptHook::OnWebDriverDone() {
   webdriver_done_ = true;
 }
 
 bool WptHook::IsWebDriverDone() {
   return webdriver_done_;
+}
+
+void WptHook::SetNewPageLoad() {
+  new_page_load_ = true;
+}
+
+bool WptHook::IsNewPageLoad() {
+  return new_page_load_;
+}
+
+void WptHook::OnWindowTimingReceived() {
+  window_timing_received_ = true;
+}
+
+bool WptHook::IsWindowTimingReceived() {
+  return window_timing_received_;
 }

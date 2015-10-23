@@ -42,7 +42,6 @@ static TestServer * _globaltest__server = NULL;
 
 // definitions
 static const TCHAR * BROWSER_STARTED_EVENT = _T("Global\\wpt_browser_started");
-static const TCHAR * BROWSER_DONE_EVENT = _T("Global\\wpt_browser_done");
 static const DWORD RESPONSE_OK = 200;
 static const char * RESPONSE_OK_STR = "OK";
 
@@ -143,13 +142,23 @@ void TestServer::Stop(void){
     mg_stop(mongoose_context_);
     mongoose_context_ = NULL;
   }
-  HANDLE browser_done_event = OpenEvent(EVENT_MODIFY_STATE , FALSE,
-                                        BROWSER_DONE_EVENT);
-  if (browser_done_event) {
-    SetEvent(browser_done_event);
-    CloseHandle(browser_done_event);
-  }
+  
   _globaltest__server = NULL;
+}
+
+void TestServer::SaveResultsIfNeeded(void) {
+  if (test_state_._active) {
+    // Stop the current state.
+    test_state_.Done(true);
+    if (hook_.IsNewPageLoad()) {
+      WptTrace(loglevel::kTrace, _T("[wpthook] An active test state. Saving incremental results"));
+      hook_.Save();
+    } else {
+      WptTrace(loglevel::kTrace, _T("[wpthook] An active test state. Discarding incremental results"));
+    }
+  } else {
+    WptTrace(loglevel::kTrace, _T("[wpthook] No active test state."));
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -175,8 +184,6 @@ void TestServer::MongooseCallback(enum mg_event event,
           WptTrace(loglevel::kFrequentEvent, _T("[wpthook] Waiting for browser to cool down..."));
           Sleep(100);   // retry.
         }
-        // Start the hook and mark it ready.
-        hook_.Start();
         hook_.SetHookReady();
       } else {
         SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, _T("{\"webdriver\": false}"));
@@ -188,13 +195,21 @@ void TestServer::MongooseCallback(enum mg_event event,
         SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, _T("{\"ready\": false}"));
       }
     } else if (strcmp(request_info->uri, "/event/webdriver_done") == 0) {
-      hook_.OnWebDriverDone();
+      SaveResultsIfNeeded();
+      hook_.Cleanup();
+      hook_.AsyncShutdown();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/before_unload") == 0) {
-      hook_.Start(); // also forces hook_ready_ = false
+      hook_.SetNewPageLoad();
+      hook_.ResetHookReady();
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/next_webdriver_action") == 0) {
+      SaveResultsIfNeeded();
+      hook_.Start();
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/task") == 0) {
       CStringA task;
-      if (OkToStart()) {
+      if (!shared_webdriver_mode && OkToStart()) {
         bool record = false;
         test_.GetNextTask(task, record);
         if (record)
@@ -245,6 +260,8 @@ void TestServer::MongooseCallback(enum mg_event event,
       if (first_paint < 0 || first_paint > 3600000)
         first_paint = 0;
       hook_.SetFirstPaint(first_paint);
+      hook_.OnWindowTimingReceived();
+      hook_.SetHookReady();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/navigate") == 0) {
       hook_.OnNavigate();

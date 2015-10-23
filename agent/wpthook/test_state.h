@@ -96,6 +96,7 @@ public:
   void SetFirstPaint(DWORD first_paint);
   void OnLoad(); // browsers either call this or SetLoadEvent
   void OnStatusMessage(CString status);
+  void Done(bool force = false);
   bool IsDone();
   void GrabVideoFrame(bool force = false);
   void CollectData();
@@ -206,7 +207,6 @@ private:
 
   CRITICAL_SECTION  _data_cs;
 
-  void Done(bool force = false);
   void CollectSystemStats(LARGE_INTEGER &now);
   void CheckTitle();
   void FindViewport(bool force = false);
