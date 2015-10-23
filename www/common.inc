@@ -231,6 +231,12 @@ if (strlen($id)) {
       RestoreTest($id);   // restore the test if it is archived (and deleted)
 
     $testPath = './' . GetTestPath($id);
+    $test = array();
+    if (is_file("$testPath/testinfo.ini")) {
+        $test = parse_ini_file("$testPath/testinfo.ini",true);
+        if (!$userIsBot)
+          touch("$testPath/testinfo.ini");
+    }
     $test['testinfo'] = GetTestInfo($id);
     if (isset($test['testinfo']['medianMetric']))
       $median_metric = $test['testinfo']['medianMetric'];
@@ -246,12 +252,6 @@ if (strlen($id)) {
       $run = GetMedianRun($pageData, $cached, $median_metric);
     }
     $cachedText = $cached ? '_Cached' : '';
-    $test = array();
-    if (is_file("$testPath/testinfo.ini")) {
-        $test = parse_ini_file("$testPath/testinfo.ini",true);
-        if (!$userIsBot)
-          touch("$testPath/testinfo.ini");
-    }
     $testDate = null;
     if ($test['testinfo']) {
       if( array_key_exists('completed', $test['testinfo']))
