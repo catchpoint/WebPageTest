@@ -1971,6 +1971,9 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
               foreach ($test['customBrowserSettings'] as $setting => $value)
                 $testFile .= "customBrowser_$setting=$value\r\n";
             }
+            $UAModifier = GetSetting('UAModifier');
+            if ($UAModifier && strlen($UAModifier))
+                $testFile .= "UAModifier=$UAModifier\r\n";
 
             // see if we need to add custom scan rules
             if (array_key_exists('custom_rules', $test)) {

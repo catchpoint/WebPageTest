@@ -159,6 +159,7 @@ void WptTest::Reset(void) {
   _test_error.Empty();
   _custom_metrics.Empty();
   _has_test_timed_out = false;
+  _user_agent_modifier = "PTST";
 }
 
 /*-----------------------------------------------------------------------------
@@ -299,6 +300,8 @@ bool WptTest::Load(CString& test) {
             _test_timeout = 0;
           else if (_test_timeout > 3600000)
             _test_timeout = 3600000;
+        } else if (!key.CompareNoCase(_T("UAModifier"))) {
+          _user_agent_modifier = value;
         }
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {
@@ -508,7 +511,7 @@ void WptTest::BuildScript() {
   if(!_preserve_user_agent) {
     ScriptCommand command;
     command.command = _T("appendUserAgent");
-    command.target.Format(_T("PTST/%d"), _version);
+    command.target.Format(_T("%S/%d"), (LPCSTR)_user_agent_modifier, _version);
     command.record = false;
     _script_commands.AddHead(command);
   }
@@ -867,9 +870,9 @@ bool WptTest::ModifyRequestHeader(CStringA& header) const {
   if( !tag.CompareNoCase("User-Agent") ) {
     if (_user_agent.GetLength()) {
       header = CStringA("User-Agent: ") + _user_agent;
-    } else if(!_preserve_user_agent && value.Find(" PTST/") == -1) {
+    } else if(!_preserve_user_agent && value.Find(" " + _user_agent_modifier + "/") == -1) {
       CStringA user_agent;
-      user_agent.Format(" PTST/%d", _version);
+      user_agent.Format(" %s/%d", _user_agent_modifier, _version);
       header += user_agent;
     }
   } else if (!tag.CompareNoCase("Host")) {
