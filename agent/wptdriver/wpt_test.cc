@@ -302,6 +302,14 @@ bool WptTest::Load(CString& test) {
             _test_timeout = 3600000;
         } else if (!key.CompareNoCase(_T("UAModifier"))) {
           _user_agent_modifier = value;
+        } else if (!key.CompareNoCase(_T("UAString"))) {
+          _user_agent = value.Trim();
+        } else if (!key.CompareNoCase(_T("dpr")) && _ttoi(value.Trim())) {
+          _device_scale_factor = value.Trim();
+        } else if (!key.CompareNoCase(_T("width")) && _ttoi(value.Trim())) {
+          _viewport_width = _ttoi(value.Trim());
+        } else if (!key.CompareNoCase(_T("height")) && _ttoi(value.Trim())) {
+          _viewport_height = _ttoi(value.Trim());
         }
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {

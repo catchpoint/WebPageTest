@@ -168,6 +168,9 @@
             if (array_key_exists('shard', $_REQUEST))
               $test['shard_test'] = $_REQUEST['shard'];
             $test['mobile'] = array_key_exists('mobile', $_REQUEST) && $_REQUEST['mobile'] ? 1 : 0;
+            $test['dpr'] = isset($_REQUEST['dpr']) && $_REQUEST['dpr'] > 0 ? $_REQUEST['dpr'] : 0;
+            $test['width'] = isset($_REQUEST['width']) && $_REQUEST['width'] > 0 ? $_REQUEST['width'] : 0;
+            $test['height'] = isset($_REQUEST['height']) && $_REQUEST['height'] > 0 ? $_REQUEST['height'] : 0;
             $test['clearcerts'] = array_key_exists('clearcerts', $_REQUEST) && $_REQUEST['clearcerts'] ? 1 : 0;
             $test['orientation'] = array_key_exists('orientation', $_REQUEST) ? trim($_REQUEST['orientation']) : 'default';
             $test['responsive'] = array_key_exists('responsive', $_REQUEST) && $_REQUEST['responsive'] ? 1 : 0;
@@ -213,9 +216,7 @@
               if (strpos($req_uastring, '"') !== false) {
                 $error = 'Invalid User Agent String: "' . htmlspecialchars($req_uastring) . '"';
               } else {
-                if (strlen($test['addCmdLine']))
-                  $test['addCmdLine'] .= ' ';
-                $test['addCmdLine'] .= '--user-agent="' . $req_uastring . '"';
+                $test['uastring'] = $req_uastring;
               }
             }
             if (isset($req_wprDesktop) && $req_wprDesktop) {
@@ -1951,6 +1952,12 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "keepua=1\r\n";
             if( $test['mobile'] )
                 $testFile .= "mobile=1\r\n";
+            if( isset($test['dpr']) && $test['dpr'] > 0 )
+                $testFile .= "dpr={$test['dpr']}\r\n";
+            if( isset($test['width']) && $test['width'] > 0 )
+                $testFile .= "width={$test['width']}\r\n";
+            if( isset($test['height']) && $test['height'] > 0 )
+                $testFile .= "height={$test['height']}\r\n";
             if( $test['clearcerts'] )
                 $testFile .= "clearcerts=1\r\n";
             if( $test['orientation'] )
@@ -1973,6 +1980,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
               foreach ($test['customBrowserSettings'] as $setting => $value)
                 $testFile .= "customBrowser_$setting=$value\r\n";
             }
+            if (isset($test['uastring']))
+              $testFile .= "uastring={$test['uastring']}\r\n";
             $UAModifier = GetSetting('UAModifier');
             if ($UAModifier && strlen($UAModifier))
                 $testFile .= "UAModifier=$UAModifier\r\n";
