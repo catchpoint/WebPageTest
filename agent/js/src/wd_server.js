@@ -1342,11 +1342,15 @@ WebDriverServer.prototype.done_ = function() {
       this.scheduleNoFault_('Get WD Log',
           this.scheduleGetWdDevToolsLog_.bind(this));
     }
-    if (this.pcapFile_) {
-      this.scheduleNoFault_('Stop packet capture',
-          this.browser_.scheduleStopPacketCapture.bind(this.browser_));
-    }
-    this.scheduleCollectMetrics_();
+    try {
+      if (this.pcapFile_) {
+        this.scheduleNoFault_('Stop packet capture',
+            this.browser_.scheduleStopPacketCapture.bind(this.browser_));
+      }
+    } catch(e) {}
+    try {
+      this.scheduleCollectMetrics_();
+    } catch(e) {}
     if (this.videoFile_) {
       // video processing needs to be done after tracing has been stopped and collected
       this.scheduleProcessVideo_();
