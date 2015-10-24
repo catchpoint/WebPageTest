@@ -1337,10 +1337,6 @@ WebDriverServer.prototype.done_ = function() {
     this.scheduleNoFault_('Capture Screen Shot', function() {
       this.takeScreenshot_('screen', 'end of run');
     }.bind(this));
-    if (this.videoFile_) {
-      this.scheduleNoFault_('Stop video recording',
-          this.browser_.scheduleStopVideoRecording.bind(this.browser_));
-    }
     this.scheduleStopTracing_();
     if (this.driver_) {
       this.scheduleNoFault_('Get WD Log',
@@ -1355,6 +1351,10 @@ WebDriverServer.prototype.done_ = function() {
     try {
       this.scheduleCollectMetrics_();
     } catch(e) {}
+    if (this.videoFile_) {
+      this.scheduleNoFault_('Stop video recording',
+          this.browser_.scheduleStopVideoRecording.bind(this.browser_));
+    }
     if (this.videoFile_) {
       // video processing needs to be done after tracing has been stopped and collected
       this.scheduleProcessVideo_();
