@@ -1208,7 +1208,7 @@ WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
           this.execBrowserScript_('var wptCustomMetric = function() { ' +
               this.task_.customMetrics[metric] +
               '};' +
-              'wptCustomMetric();').then(function(result) {
+              'try{wptCustomMetric();}catch(e){};').then(function(result) {
             if (this.customMetrics_ == undefined)
               this.customMetrics_ = {};
             this.customMetrics_[metric] = result;
@@ -1221,14 +1221,16 @@ WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
 
   this.scheduleNoFault_('Collect User Timing', function() {
     this.execBrowserScript_('(function() {' +
-          'var marks = window.performance.getEntriesByType("mark");' +
           'var m = [];' +
+          'try {' +
+          'var marks = window.performance.getEntriesByType("mark");' +
           'if (marks.length) {' +
           '  for (var i = 0; i < marks.length; i++)' +
           '    m.push({"entryType": marks[i].entryType, ' +
           '            "name": marks[i].name, ' +
           '            "startTime": marks[i].startTime});' +
           '}' +
+          '} catch(e) {};' +
           'return m;' +
           '})();').then(function(result) {
       if (result && result.length) {
@@ -1246,11 +1248,13 @@ WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
         ' domCount = 0;' +
         'pageData["domElements"] = domCount;' +
         'function addTime(name) {'+
+        ' try {' +
         ' if (window.performance.timing[name] > 0) {' +
         '   pageData[name] = Math.max(0, Math.round(' +
         '       window.performance.timing[name] -' +
         '       window.performance.timing["navigationStart"]));' +
         ' }' +
+        ' } catch(e) {}' +
         '};' +
         'addTime("domContentLoadedEventStart");' +
         'addTime("domContentLoadedEventEnd");' +
