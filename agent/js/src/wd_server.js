@@ -732,7 +732,7 @@ WebDriverServer.prototype.execBrowserScript_ = function(code) {
       value = response.result.value;
     }
     return value;
-  }.bind(this));
+  }.bind(this), function(){});
 };
 
 /**
