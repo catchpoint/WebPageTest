@@ -1130,6 +1130,10 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             // see if we need to override the browser
             if( isset($locations[$test['location']]['browserExe']) && strlen($locations[$test['location']]['browserExe']))
                 $test['browserExe'] = $locations[$test['location']]['browserExe'];
+                
+            // See if we need to force mobile emulation
+            if (!$test['mobile'] && isset($locations[$test['location']]['force_mobile']) && $locations[$test['location']]['force_mobile'])
+              $test['mobile'] = 1;
 
             // figure out what the location working directory and friendly name are
             $test['locationText'] = $locations[$test['location']]['label'];
