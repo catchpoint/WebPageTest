@@ -103,6 +103,7 @@ CDN_PROVIDER cdnList[] = {
 	{".rlcdn.com", _T("Reapleaf")},
 	{".wp.com", _T("WordPress Jetpack")},
 	{".incapdns.net", _T("Incapsula"}),
+	{".squixa.net", _T("section.io"}),
 	{NULL, NULL}
 };
 
