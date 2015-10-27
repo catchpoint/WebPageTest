@@ -64,10 +64,20 @@ public:
   void OnNavigateComplete();
   void Report();
   void OnReport();
+  void ResetHookReady();
   void SetHookReady();
   bool IsHookReady();
   void OnWebDriverDone();
   bool IsWebDriverDone();
+  void SetNewPageLoad();
+  bool IsNewPageLoad();
+  void Save();
+  void Cleanup();
+  void AsyncShutdown();
+  void ShutdownNow();
+  void OnWindowTimingReceived();
+  bool IsWindowTimingReceived();
+
 private:
   CWsHook   winsock_hook_;
   NsprHook  nspr_hook_;
@@ -81,7 +91,10 @@ private:
   bool      reported_;
   bool      hook_ready_;
   bool      webdriver_done_;
+  bool      new_page_load_;
+  bool      window_timing_received_;
   UINT      report_message_;
+  UINT      shutdown_message_;
 
   // winsock event tracking
   TrackDns      dns_;
