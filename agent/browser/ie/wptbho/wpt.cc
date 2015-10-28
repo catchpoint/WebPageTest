@@ -246,10 +246,7 @@ void Wpt::OnLoad() {
     CString options;
     options.Format(_T("fixedViewport=%d&url=%s"), fixed_viewport, current_url);
     _wpt_interface.OnLoad(options);
-    if (_webdriver_mode) {
-      // In webdriver mode, send the browser stats to the hook automatically
-      CollectStats(CString());
-    } else {
+    if (!_webdriver_mode) {
       _active = false;
     }
     _navigating = false;
@@ -258,6 +255,7 @@ void Wpt::OnLoad() {
 
 void Wpt::OnBeforeNavigate() {
   if (_active && _webdriver_mode) {
+    _timings_reported = false;
     AtlTrace(_T("[wptbho] - Wpt::OnBeforeNavigate()"));
     _wpt_interface.OnBeforeNavigate();
   }
@@ -1122,6 +1120,10 @@ DWORD Wpt::CountDOMElements(CComQIPtr<IHTMLDocument2> &document) {
   Collect the stats at the end of a test
 -----------------------------------------------------------------------------*/
 void Wpt::CollectStats(CString custom_metrics) {
+  if (_timings_reported) {
+    return;
+  }
+  _timings_reported = true;
   AtlTrace(_T("[wptbho] - Wpt::CollectStats()"));
   if (_web_browser) {
     CComPtr<IDispatch> dispatch;
@@ -1240,11 +1242,17 @@ CString Wpt::JSONEscape(CString src) {
   the onload event never fired.
 -----------------------------------------------------------------------------*/
 void Wpt::CheckBrowserState() {
-  if (_navigating && _web_browser) {
+  if (_web_browser) {
     READYSTATE ready_state = READYSTATE_COMPLETE;
     if (SUCCEEDED(_web_browser->get_ReadyState(&ready_state)) &&
-        ready_state == READYSTATE_COMPLETE)
-      OnLoad();
+        ready_state == READYSTATE_COMPLETE) {
+      if (_navigating) {
+        OnLoad();
+      }
+      if (_webdriver_mode) {
+        CollectStats(CString());
+      }
+    }
   }
 }
 
