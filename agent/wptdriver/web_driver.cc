@@ -209,13 +209,15 @@ bool WebDriver::SpawnWebDriverClient() {
   STARTUPINFO si;
   CString cmdLine;
   CAtlArray<CString> options;
+  CString browser(_settings._browser._browser);
   
+  browser.MakeLower();
   // Add the test id
   options.Add(_T("--id"));
   options.Add(_test._id);
   // Add the browser we are about to launch.
   options.Add(_T("--browser"));
-  options.Add(_T("\"") + _settings._browser._browser.MakeLower() + _T("\""));
+  options.Add(_T("\"") + browser + _T("\""));
   if (!_test._script.GetLength()) {
     // Script is empty. Test the said url.
     options.Add(_T("--test-url"));
@@ -233,7 +235,7 @@ bool WebDriver::SpawnWebDriverClient() {
   // Get the command line options for the specific browser.
   _browser.GetCmdLineOptions(_test, options);
   // Add the profile directory option for firefox.
-  if (!_settings._browser._browser.CompareNoCase(_T("firefox"))) {
+  if (_settings._browser.IsFirefox()) {
     options.Add(_T("--firefox-profile-dir"));
     options.Add(_T("\"") + _settings._browser._profile_directory + _T("\""));
   }

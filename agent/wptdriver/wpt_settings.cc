@@ -1022,7 +1022,10 @@ bool BrowserSettings::IsFirefox() {
 }
 
 bool BrowserSettings::IsIE() {
-  return _browser.CompareNoCase(_T("ie")) == 0;
+  CString browser(_browser);
+
+  browser.MakeLower();
+  return browser.Find(_T("ie")) == 0;
 }
 
 bool BrowserSettings::IsSafari() {
