@@ -9,11 +9,7 @@ function logMsg($msg, $logFile = './log.txt', $force = false)
 {
     global $debug;
     if ((array_key_exists('debug', $_REQUEST) && $_REQUEST['debug']) || $debug || $force)
-      error_log(gmdate('Y/m/d H:i:s - ') . $msg . "\n", 3, $logFile);
-}
-
-function logAlways($msg, $logFile = './log.txt') {
-  logMsg($msg, $logFile, true);  // true -> force logging.
+      error_log($msg . "\n", 3, $logFile);
 }
 
 /**
@@ -26,6 +22,28 @@ function logWithLocation($msg, $backtraceFrameIndex = 0)
   $file = $backtrace[$backtraceFrameIndex]["file"];
   $line = $backtrace[$backtraceFrameIndex]["line"];
   logMsg("$file:$line: $msg");
+}
+
+function logAlways($msg, $logFile = './log.txt') {
+  $backtrace = debug_backtrace();
+  $file = basename($backtrace[0]["file"]);
+  $line = $backtrace[0]["line"];
+  $function = $backtrace[1]["function"];
+  logMsg("$file:$function:$line: $msg", $logFile, true);
+}
+
+function logArray($a, $depth, $space = "") {
+  if ($depth > 0) {
+    foreach ($a as $key => $value) {
+      if (is_array($value)) {
+        logAlways($space . $key . " -> array");
+        logArray($value, $depth - 1, $space . "  ");
+      } else {
+        logAlways($space . $key . " -> " . $value);
+      }
+
+    }
+  }
 }
 
 /**

@@ -4,7 +4,7 @@ if( !isset($pageData) && isset($id) && isset($testPath) ) {
     $options = null;
     if (array_key_exists('end', $_REQUEST))
         $options = array('end' => $_REQUEST['end']);
-    $pageData = loadAllPageData($testPath, $options);
+    $pageData = loadAllPageData($testPath, $unusedrequests, $options);
 }
 if (isset($pageData) && is_array($pageData)) {
   $adultKeywords = array();

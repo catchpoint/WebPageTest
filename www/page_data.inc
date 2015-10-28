@@ -10,7 +10,7 @@ include 'common.inc';
 * @param mixed $run
 * @param mixed $cached
 */
-function loadAllPageData($testPath, $options = null, $multistep = false) {
+function loadAllPageData($testPath, &$requests, $options = null, $multistep = false) {
   $ret = array();
   // go in order for the number of runs there are supposed to be
   if (is_file("$testPath/testinfo.ini")) {
@@ -25,13 +25,13 @@ function loadAllPageData($testPath, $options = null, $multistep = false) {
     for( $run = 1; $run <= $runs; $run++ ) {
       // only load page data for individual runs that are complete (or if the whole test is complete)
       if ($completed || !$testInfo || IsTestRunComplete($run, $testInfo)) {
-        $data = loadPageRunData($testPath, $run, 0, $options, $multistep);
+        $data = loadPageRunData($testPath, $run, 0, $requests, $options, $multistep);
         if( isset($data) )
           $ret[$run][0] = $data;
         
         if( !$fvonly ) {
           unset( $data );
-          $data = loadPageRunData($testPath, $run, 1, $options, $multistep);
+          $data = loadPageRunData($testPath, $run, 1, $requests, $options, $multistep);
           if( isset($data) )
             $ret[$run][1] = $data;
         }
@@ -49,19 +49,21 @@ function loadAllPageData($testPath, $options = null, $multistep = false) {
 * @param mixed $fv
 * @param mixed $rv
 */
-function loadPageRunData($testPath, $run, $cached, $options = null, $multistep=false)
+function loadPageRunData($testPath, $run, $cached, &$requests = null, $options = null, $multistep=false)
 {
     $ret = null;
     $cachedText = $cached ? '_Cached' : '';
-    $ret = loadPageData("$testPath/{$run}{$cachedText}_IEWPG.txt", $options, $multistep);
-    if (!$multistep && (!isset($ret) || !is_array($ret) || !count($ret))) {
-      // Not yet supported for multistep.
-      GetDevToolsRequests($testPath, $run, $cached, $requests, $ret);
+    if (gz_is_file("$testPath/devtools.json")) {
+        GetDevToolsRequests($testPath, $run, $cached, $runRequests, $ret, $multistep);
+        $requests[$run][$cached] = $runRequests;
+    } else {
+        $ret = loadPageData("$testPath/{$run}{$cachedText}_IEWPG.txt", $options, $multistep);
     }
     // see if we have video files to calculate a visually complete time from
     $basic_results = false;
     if (array_key_exists('basic', $_REQUEST) && $_REQUEST['basic'])
       $basic_results = true;
+
     if (!$multistep && gz_is_file("$testPath/{$run}{$cachedText}_page_data.json")) {
       // Not yet supported for multistep.
       $pd = json_decode(gz_file_get_contents("$testPath/{$run}{$cachedText}_page_data.json"), true);

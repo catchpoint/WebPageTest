@@ -7,7 +7,7 @@ require_once('waterfall.inc');
 $options = null;
 if (array_key_exists('end', $_REQUEST))
     $options = array('end' => $_REQUEST['end']);
-$data = loadPageRunData($testPath, $run, $cached, $options);
+$data = loadPageRunData($testPath, $run, $cached, $requests, $options);
 
 $page_keywords = array('Performance Test','Details','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website performance test details$testLabel";
@@ -307,7 +307,13 @@ $page_description = "Website performance test details$testLabel";
                 }
                 $secure = false;
                 $haveLocations = false;
-                $requests = getRequests($id, $testPath, $run, @$_GET['cached'], $secure, $haveLocations, true, true);
+                if (!isset($requests)) {
+                    $requests = getRequests($id, $testPath, $run, @$_GET['cached'], $secure, $haveLocations, true, true);
+                } else {
+                    // not multisteps enabled
+                    $requests = $requests[$run][$cached];
+                    fixRequests($requests, $id, $testPath, $run, @$_GET['cached'], $secure, $haveLocations, true, true);
+                }
                 ?>
                 <script type="text/javascript">
                   markUserTime('aft.Detail Table');

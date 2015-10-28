@@ -674,7 +674,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
             if( $testInfo && (!$started || (array_key_exists('started', $testInfo) && $testInfo['started'] < $started)))
               $started = $testInfo['started'];
             $options = array('end' => $test['end']);
-            $pageData = loadAllPageData($testPath, $options);
+            $pageData = loadAllPageData($testPath, $unusedrequests, $options);
             $fvMedian = GetMedianRun($pageData, 0, $median_metric);
             $test['fvMedian'] = $fvMedian;
             $fvLoadTime = $pageData[$fvMedian][0]['loadTime'];

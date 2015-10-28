@@ -16,7 +16,7 @@ function GenerateHAR($id, $testPath, $options) {
     $pageData = null;
     if (isset($options["run"]) && $options["run"]) {
       if (!strcasecmp($options["run"],'median')) {
-        $raw = loadAllPageData($testPath, null, $multistep);
+        $raw = loadAllPageData($testPath, $requests, null, $multistep);
         $run = GetMedianRun($raw, $options['cached'], $median_metric);
         unset($raw);
       } else {
@@ -26,22 +26,23 @@ function GenerateHAR($id, $testPath, $options) {
         $run = 1;
       $pageData[$run] = array();
       if( isset($options['cached']) ) {
-        $pageData[$run][$options['cached']] = loadPageRunData($testPath, $run, $options['cached'], null, $multistep);
+        $pageData[$run][$options['cached']] = loadPageRunData($testPath, $run, $options['cached'], $requests, null, $multistep);
         if (!isset($pageData[$run][$options['cached']]))
           unset($pageData);
       } else {
-        $pageData[$run][0] = loadPageRunData($testPath, $run, 0, null, $multistep);
+        $pageData[$run][0] = loadPageRunData($testPath, $run, 0, $requests, null, $multistep);
         if (!isset($pageData[$run][0]))
           unset($pageData);
-        $pageData[$run][1] = loadPageRunData($testPath, $run, 1, null, $multistep);
+        $pageData[$run][1] = loadPageRunData($testPath, $run, 1, $requests, null, $multistep);
       }
     }
     
-    if (!isset($pageData))
-      $pageData = loadAllPageData($testPath, null, $multistep);
+    if (!isset($pageData)) {
+      $pageData = loadAllPageData($testPath, $requests, null, $multistep);
+    }
 
     // build up the array
-    $harData = BuildHAR($pageData, $id, $testPath, $options);
+    $harData = BuildHAR($pageData, $requests, $id, $testPath, $options);
 
     $json_encode_good = version_compare(phpversion(), '5.4.0') >= 0 ? true : false;
     $pretty_print = false;
@@ -310,7 +311,7 @@ function BuildHAREntry($data, $pd, $r) {
 *
 * @param mixed $pageData
 */
-function BuildHAR(&$pageData, $id, $testPath, $options) {
+function BuildHAR(&$pageData, $allRequests, $id, $testPath, $options) {
   $result = array();
   $entries = array();
   $multistep = $options['multistep'] != 0;
@@ -342,7 +343,24 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
             'version' => $steps[0]['browser_version']
         );
       }
-      foreach ($steps as $stepData) {
+      if (isset($allRequests)) {
+        $requestsByStep = array();
+        $runRequests = $allRequests[$run][$cached];
+        if ($multistep) {
+          foreach ($runRequests as $stepName => $stepRequests) {
+            $requestsByStep[] = $stepRequests;
+          }
+        } else {
+          $requestsByStep[] = $runRequests;
+        }
+      }
+      if ($cached)
+        $cached_text = '_Cached';
+      for ($i = 0; $i < count($steps); $i++) {
+        $stepData = $steps[$i];
+        if (isset($requestsByStep)) {
+          $stepRequests = $requestsByStep[$i];
+        }
         // add the page-level ldata to the result
         $pd = BuildHarPage($testPath, $cached, $run, $stepData);
         $result['log']['pages'][] = $pd;
@@ -350,7 +368,14 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
         $secure = false;
         $haveLocations = false;
         $stepName = isset($stepData['stepName']) ? $stepData['stepName'] : null;
-        $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false, true, $stepName);
+        if (isset($stepRequests)) {
+          $requests = $stepRequests;
+          fixRequests($requests, $id, $testPath, $run, $cached, $secure, $haveLocations, false, true, null,
+              $stepName);
+
+        } else {
+          $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false, true, $stepName);
+        }
         // add it to the list of entries
         foreach ($requests as $r) {
           $entry = BuildHAREntry($stepData, $pd, $r);

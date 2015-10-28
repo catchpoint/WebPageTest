@@ -5,7 +5,7 @@ require_once('object_detail.inc');
 require_once('page_data.inc');
 require_once('waterfall.inc');
 
-$page_data = loadPageRunData($testPath, $run, $cached);
+$page_data = loadPageRunData($testPath, $run, $cached, $requests);
 
 $is_mime = (bool)@$_REQUEST['mime'];
 $is_state = (bool)@$_REQUEST['state'];
@@ -17,8 +17,16 @@ $rowcount = array_key_exists('rowcount', $_REQUEST) ? $_REQUEST['rowcount'] : 0;
 $is_secure = false;
 $has_locations = false;
 $use_location_check = false;
-$requests = getRequests($id, $testPath, $run, $cached,
-                        $is_secure, $has_locations, $use_location_check);
+if (!isset($requests)) {
+    $requests = getRequests($id, $testPath, $run, $cached,
+        $is_secure, $has_locations, $use_location_check);
+}
+else {
+    // not multisteps enabled
+    $requests = $requests[$run][$cached];
+    fixRequests($requests, $id, $testPath, $run, $cached,
+        $is_secure, $has_locations, $use_location_check);
+}
 if (@$_REQUEST['type'] == 'connection') {
     $is_state = true;
     $rows = GetConnectionRows($requests, $show_labels);
