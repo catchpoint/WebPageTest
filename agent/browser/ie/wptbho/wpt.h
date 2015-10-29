@@ -33,6 +33,7 @@ private:
   HWND          _message_window;
   bool          _navigating;
   bool          _must_exit;
+  bool          _timings_reported;
   HANDLE        _task_thread;
   bool          _processing_task;
   WptTask       _task;
