@@ -2016,6 +2016,17 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "customMetric=$name:$code\r\n";
             }
 
+            // Add Custom Headers
+            if ($test['script'] && isset($test['webdriver']) && $test['webdriver']) {
+              if (strlen($test['customHeaders'])) {
+                $headers = preg_split("/\r\n|\n|\r/", $test['customHeaders']);
+                $testFile .= "\r\n[StartHeaders]\r\n";
+                foreach ($headers as $header) {
+                  $testFile .= $header . "\r\n";
+                }
+                $testFile .= "[EndHeaders]\r\n";
+              }
+            }
             if( !SubmitUrl($testId, $testFile, $test, $url) )
                 $testId = null;
         }
@@ -2357,7 +2368,6 @@ function ProcessTestScript($url, &$test) {
     $script = "addHeader\t$header\r\n" . $script;
   }
   // Add custom headers
-  /* temporarily disabled for webdriver */
   if (!isset($test['webdriver']) || $test['webdriver'] == '') {
     if (strlen($test['customHeaders'])) {
       if (!isset($script) || !strlen($script))

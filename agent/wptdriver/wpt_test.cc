@@ -168,6 +168,7 @@ void WptTest::Reset(void) {
 -----------------------------------------------------------------------------*/
 bool WptTest::Load(CString& test) {
   bool ret = false;
+  bool reading_headers = false;
 
   WptTrace(loglevel::kFunction, _T("WptTest::Load()\n"));
 
@@ -178,7 +179,7 @@ bool WptTest::Load(CString& test) {
   CString line = test.Tokenize(_T("\r\n"), linePos);
   while (!done && linePos >= 0) {
     int keyEnd = line.Find('=');
-    if (keyEnd > 0) {
+    if (!reading_headers && keyEnd > 0) {
       CString key = line.Left(keyEnd).Trim();
       CString value = line.Mid(keyEnd + 1);
       if (key.GetLength()) {
@@ -311,11 +312,23 @@ bool WptTest::Load(CString& test) {
           _webdriver_args = value.Trim();
         }
       }
-    } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {
+    } else if (!reading_headers && !line.Trim().CompareNoCase(_T("[Script]"))) {
       // grab the rest of the response as the script
       _script = test.Mid(linePos).Trim();
       done = true;
-    }
+    } else if (!line.Trim().CompareNoCase(_T("[StartHeaders]"))) {
+      reading_headers = true;
+    } else if (!line.Trim().CompareNoCase(_T("[EndHeaders]"))) {
+      reading_headers = false;
+    } else if (reading_headers) {
+      int pos = line.Find(_T(':'));
+      if (pos > 0) {
+        CStringA tag = CT2A(line.Left(pos).Trim());
+        CStringA value = CT2A(line.Mid(pos + 1).Trim());
+        HttpHeaderValue header(tag, value, CStringA());
+        _add_headers.AddTail(header);
+      }
+    } 
 
     line = test.Tokenize(_T("\r\n"), linePos);
   }
