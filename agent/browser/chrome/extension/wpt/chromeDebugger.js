@@ -84,6 +84,7 @@ wpt.chromeDebugger.SetActive = function(active) {
   g_instance.active = active;
   if (active) {
     g_instance.requests = {};
+    g_instance.netlogRequests = {};
     g_instance.idMap = {};
     g_instance.netlog = [];
     g_instance.receivedData = false;
@@ -213,36 +214,18 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
     if (params['requestId'] !== undefined) {
       if (message === 'Network.requestServedFromCache') {
         wpt.chromeDebugger.SendReceivedData();
-        if (g_instance.requests[params.requestId] !== undefined) {
-          g_instance.requests[params.requestId].fromNet = false;
-          g_instance.requests[params.requestId].fromCache = true;
-        }
       } else if (params['timestamp'] !== undefined) {
-        params.timestamp *= 1000;  // Convert it to ms
         var id = params.requestId;
         var originalId = id;
         if (g_instance.idMap[id] !== undefined)
           id += '-' + g_instance.idMap[id];
         if (message === 'Network.requestWillBeSent' && params['request'] !== undefined && params.request['url'] !== undefined && params.request.url.indexOf('http') == 0) {
           var request = params.request;
-          request.startTime = params.timestamp;
-          request.endTime = params.timestamp;
           if (params['initiator'] !== undefined)
             request.initiator = params.initiator;
           // redirects re-use the same request ID
           if (g_instance.requests[id] !== undefined) {
             wpt.chromeDebugger.SendReceivedData();
-            if (params['redirectResponse'] !== undefined) {
-              if (g_instance.requests[id]['endTime'] === undefined || params.timestamp > g_instance.requests[id].endTime)
-                  g_instance.requests[id].endTime = params.timestamp;
-              if (g_instance.requests[id]['firstByteTime'] === undefined)
-                  g_instance.requests[id].firstByteTime = params.timestamp;
-              g_instance.requests[id].fromNet = false;
-              if (params.redirectResponse['fromDiskCache'] !== undefined && !params.redirectResponse.fromDiskCache)
-                g_instance.requests[id].fromNet = true;
-              g_instance.requests[id].response = params.redirectResponse;
-            }
-            wpt.chromeDebugger.sendRequestDetails(id);
             // Generate a new unique ID
             var count = 0;
             if (g_instance.idMap[originalId] !== undefined)
@@ -254,82 +237,13 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
           request['id'] = id;
           g_instance.requests[id] = request;
         } else if (g_instance.requests[id] !== undefined) {
-          if (g_instance.requests[id]['endTime'] === undefined || params.timestamp > g_instance.requests[id].endTime)
-              g_instance.requests[id].endTime = params.timestamp;
           if (message === 'Network.dataReceived') {
             wpt.chromeDebugger.SendReceivedData();
-            if (g_instance.requests[id]['firstByteTime'] === undefined)
-              g_instance.requests[id].firstByteTime = params.timestamp;
-            if (g_instance.requests[id]['bytesInData'] === undefined)
-              g_instance.requests[id].bytesInData = 0;
-            if (params['dataLength'] !== undefined)
-              g_instance.requests[id].bytesInData += params.dataLength;
-            if (g_instance.requests[id]['bytesInEncoded'] === undefined)
-              g_instance.requests[id].bytesInEncoded = 0;
-            if (params['encodedDataLength'] !== undefined)
-              g_instance.requests[id].bytesInEncoded += params.encodedDataLength;
           } else if (message === 'Network.responseReceived' && params['response'] !== undefined) {
             wpt.chromeDebugger.SendReceivedData();
-            if (g_instance.requests[id]['firstByteTime'] === undefined)
-              g_instance.requests[id].firstByteTime = params.timestamp;
-            g_instance.requests[id].fromNet = false;
-            // the timing data for cached resources is completely bogus
-            if (g_instance.requests[id]['fromCache'] !== undefined && params.response['timing'] !== undefined)
-              delete params.response.timing;
-            if (params.response['fromDiskCache'] !== undefined &&
-                !params.response.fromDiskCache &&
-                g_instance.requests[id]['fromCache'] === undefined) {
-              g_instance.requests[id].fromNet = true;
-            }
-            // adjust the start time
-            if (params.response['timing'] !== undefined && params.response.timing['receiveHeadersEnd'] !== undefined)
-              g_instance.requests[id].startTime = params.timestamp - params.response.timing.receiveHeadersEnd;
             g_instance.requests[id].response = params.response;
-            var done = false;
-            if (g_instance.requests[id].response['headers'] !== undefined &&
-                g_instance.requests[id].response.headers['Content-Length'] !== undefined &&
-                parseInt(g_instance.requests[id].response.headers['Content-Length']) === 0) {
-              done = true;
-            }
-            if (g_instance.requests[id].response['headers'] !== undefined &&
-                g_instance.requests[id].response.headers['content-length'] !== undefined &&
-                parseInt(g_instance.requests[id].response.headers['content-length']) === 0) {
-              done = true;
-            }
-            if (done ||
-                (g_instance.requests[id].response['status'] !== undefined &&
-                 g_instance.requests[id].response.status !== 200 &&
-                 g_instance.requests[id].response.status !== 100)) {
-              g_instance.requests[id].endTime = params.timestamp;
-              wpt.chromeDebugger.sendRequestDetails(id);
-            }
           } else if (message === 'Network.loadingFinished') {
             wpt.chromeDebugger.SendReceivedData();
-            if (g_instance.requests[id]['firstByteTime'] === undefined)
-              g_instance.requests[id].firstByteTime = params.timestamp;
-            if (g_instance.requests[id]['endTime'] === undefined || params.timestamp > g_instance.requests[id].endTime)
-              g_instance.requests[id].endTime = params.timestamp;
-            wpt.chromeDebugger.sendRequestDetails(id);
-          } else if (message === 'Network.loadingFailed') {
-            if (g_instance.requests[id]['response'] !== undefined && g_instance.requests[id]['fromCache'] === undefined) {
-              if (params['canceled'] !== undefined && params.canceled) {
-                g_instance.requests[id].canceled = true;
-              } else {
-                g_instance.requests[id].fromNet = true;
-                g_instance.requests[id].errorCode = 12999;
-                if (g_instance.requests[id]['firstByteTime'] === undefined)
-                  g_instance.requests[id].firstByteTime = params.timestamp;
-                if (g_instance.requests[id]['endTime'] === undefined || params.timestamp > g_instance.requests[id].endTime)
-                  g_instance.requests[id].endTime = params.timestamp;
-                if (params['errorText'] !== undefined) {
-                  g_instance.requests[id].error = params.errorText;
-                  g_instance.requests[id].errorCode = wpt.chromeExtensionUtils.netErrorStringToWptCode(params.errorText);
-                } else if (params['error'] !== undefined) {
-                  g_instance.requests[id].errorCode = params.error;
-                }
-              }
-              wpt.chromeDebugger.sendRequestDetails(id);
-            }
           }
         }
       }
@@ -346,15 +260,6 @@ wpt.chromeDebugger.SendDevToolsData = function(callback) {
   }
 };
 
-/**
-* Process the netlog data into individual requests
-*/
-wpt.chromeDebugger.processNetlog = function() {
-};
-
-/**
- * Attached using the 1.0 released interface
- */
 wpt.chromeDebugger.OnAttachDebugger = function() {
   wpt.LOG.info('attached to debugger extension interface');
   g_instance.connected = true;
@@ -374,258 +279,76 @@ wpt.chromeDebugger.OnAttachDebugger = function() {
 };
 
 /**
-* Fix up all of the request details for sending
-*/
-wpt.chromeDebugger.FinalizeRequest = function(id) {
-  // keep track of some common checks
-  if (g_instance.requests[id]['response'] !== undefined && g_instance.requests[id].response['timing'] !== undefined)
-    hasTiming = true;
-
-  // Fix the "requestTime" to be in ms and use it as the anchor for the start time
-  if (hasTiming && g_instance.requests[id].response.timing['requestTime'] !== undefined) {
-    g_instance.requests[id].response.timing.requestTime *= 1000;
-    g_instance.requests[id].startTime = g_instance.requests[id].response.timing.requestTime;
-  }
-
-  // Calculate absolute timestamps for all of the timings
-  if (hasTiming) {
-    if (g_instance.requests[id].response.timing['dnsStart'] !== undefined &&
-        g_instance.requests[id].response.timing['dnsEnd'] !== undefined &&
-        g_instance.requests[id].response.timing.dnsStart !== -1 &&
-        g_instance.requests[id].response.timing.dnsEnd !== -1 &&
-        g_instance.requests[id].response.timing.dnsEnd > g_instance.requests[id].response.timing.dnsStart) {
-      g_instance.requests[id].dnsStart = g_instance.requests[id].startTime + g_instance.requests[id].response.timing.dnsStart;
-      g_instance.requests[id].dnsEnd = g_instance.requests[id].startTime + g_instance.requests[id].response.timing.dnsEnd;
-    }
-    if (g_instance.requests[id].response.timing['connectStart'] !== undefined &&
-        g_instance.requests[id].response.timing['connectEnd'] !== undefined &&
-        g_instance.requests[id].response.timing.connectStart !== -1 &&
-        g_instance.requests[id].response.timing.connectEnd !== -1 &&
-        g_instance.requests[id].response.timing.connectEnd > g_instance.requests[id].response.timing.connectStart) {
-      g_instance.requests[id].connectStart = g_instance.requests[id].startTime + g_instance.requests[id].response.timing.connectStart;
-      if (g_instance.requests[id].response.timing['sslStart'] !== undefined &&
-          g_instance.requests[id].response.timing.sslStart !== -1 &&
-          g_instance.requests[id].response.timing.sslStart > g_instance.requests[id].response.timing.connectStart) {
-        g_instance.requests[id].connectEnd = g_instance.requests[id].startTime + g_instance.requests[id].response.timing.sslStart;
-      } else {
-        g_instance.requests[id].connectEnd = g_instance.requests[id].startTime + g_instance.requests[id].response.timing.connectEnd;
-      }
-    }
-    if (g_instance.requests[id].response.timing['sslStart'] !== undefined &&
-        g_instance.requests[id].response.timing['sslEnd'] !== undefined &&
-        g_instance.requests[id].response.timing.sslStart !== -1 &&
-        g_instance.requests[id].response.timing.sslEnd !== -1 &&
-        g_instance.requests[id].response.timing.sslEnd > g_instance.requests[id].response.timing.sslStart) {
-      g_instance.requests[id].sslStart = g_instance.requests[id].startTime + g_instance.requests[id].response.timing.sslStart;
-      g_instance.requests[id].sslEnd = g_instance.requests[id].startTime + g_instance.requests[id].response.timing.sslEnd;
-    }
-    if (g_instance.requests[id].response.timing['sendStart'] !== undefined &&
-        g_instance.requests[id].response.timing.sendStart !== -1) {
-      g_instance.requests[id].requestStart = g_instance.requests[id].startTime + g_instance.requests[id].response.timing.sendStart;
-    }
-    if (g_instance.requests[id].response.timing['receiveHeadersEnd'] !== undefined &&
-        g_instance.requests[id].response.timing.receiveHeadersEnd !== -1) {
-      g_instance.requests[id].firstByteTime = g_instance.requests[id].startTime + g_instance.requests[id].response.timing.receiveHeadersEnd;
-    }
-  }
-
-  // Fix-up the bytes in (fall back to content length) if we didn't get it explicitly
-  if (g_instance.requests[id]['bytesIn'] === undefined && g_instance.requests[id]['bytesInEncoded'] !== undefined)
-    g_instance.requests[id].bytesIn = g_instance.requests[id].bytesInEncoded;
-  var headerlength = 0;
-  if (!g_instance.requests[id]['bytesIn'] && g_instance.requests[id]['response'] !== undefined && g_instance.requests[id].response['headers'] !== undefined) {
-    if (g_instance.requests[id].response['headersText'] !== undefined) {
-      headerlength = g_instance.requests[id].response['headersText'].length;
-    } else {
-      try {
-        for (var key in g_instance.requests[id].response.headers) {
-          headerlength += key.length + 4; // include the colon, space and \r\n
-          if (g_instance.requests[id].response.headers[key] !== undefined)
-            headerlength += g_instance.requests[id].response.headers[key].length;
-        }    
-      } catch(e) {}
-    }
-    if (g_instance.requests[id].response.headers['Content-Length'] !== undefined)
-      g_instance.requests[id]['bytesIn'] = parseInt(g_instance.requests[id].response.headers['Content-Length']) + headerlength;
-    else if (g_instance.requests[id].response.headers['content-length'] !== undefined)
-      g_instance.requests[id]['bytesIn'] = parseInt(g_instance.requests[id].response.headers['content-length']) + headerlength;
-  }
-  // Populate the objectSize (fall back to bytesIn if not available)
-  g_instance.requests[id]['objectSize'] = g_instance.requests[id]['bytesIn'] - headerlength;
-  if (g_instance.requests[id]['response'] !== undefined && g_instance.requests[id].response['headers'] !== undefined) {
-    if (g_instance.requests[id].response.headers['Content-Length'] !== undefined)
-      g_instance.requests[id]['objectSize'] = parseInt(g_instance.requests[id].response.headers['Content-Length']);
-    else if (g_instance.requests[id].response.headers['content-length'] !== undefined)
-      g_instance.requests[id]['objectSize'] = parseInt(g_instance.requests[id].response.headers['content-length']);
-  }
-}
-
-/**
  * Process and send the data for a single request
  * to the hook for processing
  * @param {object} request Request data.
  */
 wpt.chromeDebugger.sendRequestDetails = function(id) {
-  if (g_instance.requests[id] === undefined || g_instance.requests[id]['sent'] !== undefined)
-    return;
-  wpt.chromeDebugger.FinalizeRequest(id);
-  g_instance.requests[id].sent = true;
-
-  var request = g_instance.requests[id];
-  if (request['fromNet'] !== undefined && request.fromNet && request['requestStart'] !== undefined) {
+  var request = g_instance.netlogRequests[id];
+  if (request['start'] !== undefined && request['url'] !== undefined) {
     var eventData = 'browser=chrome\n';
     eventData += 'id=' + id + '\n';
     eventData += 'url=' + request.url + '\n';
-    if (request['errorCode'] !== undefined)
-      eventData += 'errorCode=' + request.errorCode + '\n';
-    if (request['error'] !== undefined)
-      eventData += 'errorText=' + request.error + '\n';
-
-    if (request['startTime'] !== undefined)
-      eventData += 'startTime=' + request.startTime + '\n';
-    if (request['requestStart'] !== undefined)
-      eventData += 'requestStart=' + request.requestStart + '\n';
-    if (request['firstByteTime'] !== undefined)
-      eventData += 'firstByteTime=' + request.firstByteTime + '\n';
-    if (request['endTime'] !== undefined)
-      eventData += 'endTime=' + request.endTime + '\n';
-    if (request['dnsStart'] !== undefined)
-      eventData += 'dnsStart=' + request.dnsStart + '\n';
-    if (request['dnsEnd'] !== undefined)
-      eventData += 'dnsEnd=' + request.dnsEnd + '\n';
-    if (request['connectStart'] !== undefined)
-      eventData += 'connectStart=' + request.connectStart + '\n';
-    if (request['connectEnd'] !== undefined)
-      eventData += 'connectEnd=' + request.connectEnd + '\n';
-    if (request['sslStart'] !== undefined)
-      eventData += 'sslStart=' + request.sslStart + '\n';
-    if (request['sslEnd'] !== undefined)
-      eventData += 'sslEnd=' + request.sslEnd + '\n';
+    if (request['start'] !== undefined)
+      eventData += 'startTime=' + request.start + '\n';
+    if (request['start'] !== undefined)
+      eventData += 'requestStart=' + request.start + '\n';
+    if (request['firstByte'] !== undefined)
+      eventData += 'firstByteTime=' + request.firstByte + '\n';
+    if (request['end'] !== undefined)
+      eventData += 'endTime=' + request.end + '\n';
+    if (request['dnsLookup'] !== undefined && g_instance.netlogDNS[request.dnsLookup] !== undefined) {
+      var dns = g_instance.netlogDNS[request.dnsLookup];
+      if (dns['start'] !== undefined)
+        eventData += 'dnsStart=' + dns.start + '\n';
+      if (dns['end'] !== undefined)
+        eventData += 'dnsEnd=' + dns.end + '\n';
+    }
+    if (request['socketConnect'] !== undefined && g_instance.netlogConnections[request.socketConnect] !== undefined) {
+      var connect = g_instance.netlogConnections[request.socketConnect];
+      if (connect['start'] !== undefined)
+        eventData += 'connectStart=' + connect.start + '\n';
+      if (connect['end'] !== undefined)
+        eventData += 'connectEnd=' + connect.end + '\n';
+      if (connect['sslStart'] !== undefined)
+        eventData += 'sslStart=' + connect.sslStart + '\n';
+      if (connect['sslEnd'] !== undefined)
+        eventData += 'sslEnd=' + connect.sslEnd + '\n';
+    }
+    if (request['socket'] !== undefined)
+      eventData += 'connectionId=' + request.socket + '\n';
+    if (request['h2Stream'] !== undefined)
+      eventData += 'streamId=' + request.h2Stream + '\n';
+    if (request['h2Push'])
+      eventData += 'push=true\n';
 
     if (request['bytesIn'] !== undefined)
       eventData += 'bytesIn=' + request.bytesIn + '\n';
     if (request['objectSize'] !== undefined)
       eventData += 'objectSize=' + request.objectSize + '\n';
-    if (request['initiator'] !== undefined && request.initiator['type'] !== undefined) {
-      eventData += 'initiatorType=' + request.initiator.type + '\n';
-      if (request.initiator.type == 'parser') {
-        if (request.initiator['url'] !== undefined)
-          eventData += 'initiatorUrl=' + request.initiator.url + '\n';
-        if (request.initiator['lineNumber'] !== undefined)
-          eventData += 'initiatorLineNumber=' + request.initiator.lineNumber + '\n';
-      } else if (request.initiator.type == 'script' &&
-                 request.initiator['stackTrace'] &&
-                 request.initiator.stackTrace[0]) {
-        if (request.initiator.stackTrace[0]['url'] !== undefined)
-          eventData += 'initiatorUrl=' + request.initiator.stackTrace[0].url + '\n';
-        if (request.initiator.stackTrace[0]['lineNumber'] !== undefined)
-          eventData += 'initiatorLineNumber=' + request.initiator.stackTrace[0].lineNumber + '\n';
-        if (request.initiator.stackTrace[0]['columnNumber'] !== undefined)
-          eventData += 'initiatorColumnNumber=' + request.initiator.stackTrace[0].columnNumber + '\n';
-        if (request.initiator.stackTrace[0]['functionName'] !== undefined)
-          eventData += 'initiatorFunctionName=' + request.initiator.stackTrace[0].functionName + '\n';
-      }
-    }
-    if (request['response'] !== undefined) {
-      if (request.response['status'] !== undefined)
-        eventData += 'status=' + request.response.status + '\n';
-      if (request.response['connectionId'] !== undefined)
-        eventData += 'connectionId=' + request.response.connectionId + '\n';
 
-      // the end of the data is ini-file style for multi-line values
-      eventData += '\n';
-      if (request.response['requestHeadersText'] !== undefined) {
-        eventData += '[Request Headers]\n' + request.response.requestHeadersText + '\n';
-      } else if (request.response['requestHeaders'] !== undefined) {
-        eventData += '[Request Headers]\n';
-        var method = 'GET';
-        if (request.response.requestHeaders['method'] !== undefined)
-          method = request.response.requestHeaders['method'];
-        else if (request.response.requestHeaders[':method'] !== undefined)
-          method = request.response.requestHeaders[':method'];
-        var version = 'HTTP/1.1';
-        if (request.response.requestHeaders['version'] !== undefined)
-          version = request.response.requestHeaders['version'];
-        else if (request.response.requestHeaders[':version'] !== undefined)
-          version = request.response.requestHeaders[':version'];
-        var matches = request.url.match(/[^\/]*\/\/([^\/]+)(.*)/);
-        if (matches !== undefined && matches.length > 1) {
-          var host = matches[1];
-          if (request.response.requestHeaders['host'] !== undefined)
-            host = request.response.requestHeaders['host'];
-          else if (request.response.requestHeaders[':host'] !== undefined)
-            host = request.response.requestHeaders[':host'];
-          var object = '/';
-          if (matches.length > 2)
-            object = matches[2];
-          if (request.response.requestHeaders['path'] !== undefined)
-            object = request.response.requestHeaders['path'];
-          else if (request.response.requestHeaders[':path'] !== undefined)
-            object = request.response.requestHeaders[':path'];
-          eventData += method + ' ' + object + ' ' + version + '\n';
-          eventData += 'Host: ' + host + '\n';
-          for (tag in request.response.requestHeaders)
-            eventData += tag + ': ' + request.response.requestHeaders[tag] + '\n';
-        }
-        eventData += '\n';
-      } else if (request['request'] !== undefined) {
-        eventData += '[Request Headers]\n';
-        var method = 'GET';
-        if (request.request['method'] !== undefined)
-          method = request.request['method'];
-        var matches = request.url.match(/[^\/]*\/\/([^\/]+)(.*)/);
-        if (matches !== undefined && matches.length > 1) {
-          var host = matches[1];
-          var object = '/';
-          if (matches.length > 2)
-            object = matches[2];
-          eventData += method + ' ' + object + ' HTTP/1.1\n';
-          eventData += 'Host: ' + host + '\n';
-          if (request.request['headers'] !== undefined) {
-            for (tag in request.request.headers)
-              eventData += tag + ': ' + request.request.headers[tag] + '\n';
-          }
-        }
-        eventData += '\n';
-      }
+    // the end of the data is ini-file style for multi-line values
+    eventData += '\n';
 
-      if (request.response['headersText'] !== undefined) {
-        eventData += '[Response Headers]\n' + request.response.headersText + '\n';
-      } else if(request.response['headers'] !== undefined) {
-        eventData += '[Response Headers]\n';
-        if (request.response.headers['version'] !== undefined &&
-            request.response.headers['status'] !== undefined) {
-          eventData += request.response.headers['version'] + ' ' + request.response.headers['status'] + '\n';
-        } else if (request.response.headers['status'] !== undefined) {
-          eventData += 'HTTP/2 ' + request.response.headers['status'] + '\n';
-        }
-        for (tag in request.response.headers) {
-          if (tag !== 'version' && tag !== 'status')
-            eventData += tag + ': ' + request.response.headers[tag] + '\n';
-        }
-      }
-    } else if (request['request'] !== undefined) {
+    if (request['outHeaders'] !== undefined) {
       eventData += '[Request Headers]\n';
-      var method = 'GET';
-      if (request.request['method'] !== undefined)
-        method = request.request['method'];
-      var matches = request.url.match(/[^\/]*\/\/([^\/]+)(.*)/);
-      if (matches !== undefined && matches.length > 1) {
-        var host = matches[1];
-        var object = '/';
-        if (matches.length > 2) {
-          object = matches[2];
-        }
-        eventData += method + ' ' + object + ' HTTP/1.1\n';
-        eventData += 'Host: ' + host + '\n';
-        if (request.request['headers'] !== undefined) {
-          for (tag in request.request.headers) {
-            eventData += tag + ': ' + request.request.headers[tag] + '\n';
-          }
-        }
+      if (request['outHTTP'] !== undefined) {
+        eventData += request.outHTTP.trim() + '\n';
+      } else if (request['method'] !== undefined && request['object'] !== undefined) {
+        eventData += request.method + ' ' + request.object + ' ' + 'HTTP/1.1\n';
       }
+      for (var i = 0; i < request.outHeaders.length; i++)
+        eventData += request.outHeaders[i] + '\n';
       eventData += '\n';
     }
+
+    if (request['inHeaders'] !== undefined) {
+      eventData += '[Response Headers]\n';
+      for (var i = 0; i < request.inHeaders.length; i++)
+        eventData += request.inHeaders[i] + '\n';
+      eventData += '\n';
+    }
+
     wpt.chromeDebugger.sendEvent('request_data', eventData);
   }
 };
@@ -660,6 +383,533 @@ wpt.chromeDebugger.sendEvent = function(event, data, callback) {
   } catch (err) {
     wpt.LOG.warning('Error sending request data XHR: ' + err);
   }
+};
+
+/*******************************************************************************
+********************************************************************************
+                          Netlog Trace Processing
+********************************************************************************
+*******************************************************************************/
+
+g_instance.netlogDNS = {};
+g_instance.netlogConnections = {};
+g_instance.netlogRequests = {};
+g_instance.netlogStreamJobs = {};
+g_instance.netlogH2Sessions = {};
+
+/**
+* Process the netlog data into individual requests
+*/
+wpt.chromeDebugger.processNetlog = function() {
+  var netlog_len = g_instance.netlog.length;
+  for (var i = 0; i < netlog_len; i++) {
+    var entry = g_instance.netlog[i];
+    if (entry.cat === "netlog" && entry['id'] !== undefined && entry['ts'] !== undefined) {
+      entry['id'] = parseInt(entry['id']);
+      entry['ts'] = entry['ts'] / 1000.0; // convert to milliseconds
+      if (entry.name.match(/^HOST_RESOLVER_/)) {
+        wpt.chromeDebugger.ParseNetlogDNSEntry(entry);
+      } else if (entry.name.match(/^TCP_CONNECT/) || entry.name.match(/^SOCKET_BYTES_/)) {
+        wpt.chromeDebugger.ParseNetlogConnectEntry(entry);
+      } else if (entry.name === "SSL_CONNECT") {
+        wpt.chromeDebugger.ParseNetlogSSLEntry(entry);
+      } else if (entry.name.match(/^URL_REQUEST/) ||
+                 entry.name.match(/^HTTP_TRANSACTION/) ||
+                 entry.name === "REQUEST_ALIVE") {
+        wpt.chromeDebugger.ParseNetlogRequestEntry(entry);
+      } else if (entry.name === "HTTP_STREAM_JOB_BOUND_TO_REQUEST" ||
+                 entry.name === "SOCKET_POOL_BOUND_TO_SOCKET" ||
+                 entry.name === "HTTP2_SESSION_POOL_IMPORTED_SESSION_FROM_SOCKET" ||
+                 entry.name === "HTTP2_SESSION_POOL_FOUND_EXISTING_SESSION") {
+        wpt.chromeDebugger.linkNetlogSocket(entry);
+      } else if (entry.name.match(/^HTTP2_SESSION/) ||
+                 entry.name.match(/HTTP2_STREAM/)) {
+        wpt.chromeDebugger.ParseHTTP2SessionEntry(entry);
+      }
+    }
+  }
+
+  // create requests for any push streams that were not adopted
+  for (var h2Session in g_instance.netlogH2Sessions) {
+    for (var h2Stream in g_instance.netlogH2Sessions[h2Session].streams) {
+      if (g_instance.netlogH2Sessions[h2Session].streams[h2Stream]['request'] === undefined) {
+        g_instance.netlogH2Sessions[h2Session].streams[h2Stream].request =
+            wpt.chromeDebugger.createPushedRequest(parseInt(h2Session), parseInt(h2Stream));
+      }
+    }
+  }
+
+  // Remove any requests that didn't actually start
+  for (var requestId in g_instance.netlogRequests) {
+    wpt.chromeDebugger.sendRequestDetails(requestId);
+  }
+
+  g_instance.netlog = [];
+  g_instance.netlogRequests = [];
+
+};
+
+wpt.chromeDebugger.ParseNetlogDNSEntry = function(entry) {
+  var id = entry['id'];
+  if (entry.name === "HOST_RESOLVER_IMPL_JOB") {
+    if (g_instance.netlogDNS[id] === undefined) {
+      g_instance.netlogDNS[id] = {};
+    }
+    if (entry['ph'] === 'b') {
+      g_instance.netlogDNS[id].start = entry['ts'];
+    } else if (entry['ph'] === 'e') {
+      g_instance.netlogDNS[id].end = entry['ts'];
+    }
+
+  }
+  if (g_instance.netlogDNS[id] !== undefined && entry['args'] !== undefined && entry.args['params'] !== undefined) {
+    if (entry.args.params['host'] !== undefined) {
+      g_instance.netlogDNS[id].host = entry.args.params['host'];
+    }
+    if (entry.args.params['address_list'] !== undefined) {
+      g_instance.netlogDNS[id].address_list = entry.args.params['address_list'];
+    }
+  }
+};
+
+wpt.chromeDebugger.ParseNetlogConnectEntry = function(entry) {
+  var id = entry['id'];
+  if (entry.name === "TCP_CONNECT_ATTEMPT" &&
+      entry['ph'] === 'b' &&
+      entry['args'] !== undefined &&
+      entry.args['params'] !== undefined &&
+      entry.args.params['address'] !== undefined &&
+      entry.args.params.address !== "127.0.0.1:8888" &&
+      g_instance.netlogConnections[id] === undefined) {
+    g_instance.netlogConnections[id] = {address: entry.args.params.address, start: entry['ts']};
+  }
+  if (g_instance.netlogConnections[id] !== undefined) {
+    if (entry.name === "TCP_CONNECT_ATTEMPT" && entry['ph'] === 'e') {
+      g_instance.netlogConnections[id].end = entry['ts'];
+    }
+    if (entry.name === "TCP_CONNECT" &&
+        entry['ph'] === 'e' &&
+        entry['args'] !== undefined &&
+        entry.args['params'] !== undefined &&
+        entry.args.params['source_address'] !== undefined) {
+      g_instance.netlogConnections[id].sourceAddress = entry.args.params.source_address;
+    }
+
+    // Track bytes-in for requests on the socket if the socket isn't multiplexing HTTP/2 sessions
+    if (entry['args'] !== undefined &&
+        entry.args['params'] !== undefined &&
+        entry.args.params['byte_count'] !== undefined &&
+        g_instance.netlogConnections[id]['request'] !== undefined &&
+        g_instance.netlogConnections[id]['h2session'] === undefined &&
+        g_instance.netlogRequests[g_instance.netlogConnections[id].request] !== undefined) {
+      if (entry.name === "SOCKET_BYTES_RECEIVED") {
+        g_instance.netlogRequests[g_instance.netlogConnections[id].request].bytesIn += entry.args.params.byte_count;
+        if (g_instance.netlogRequests[g_instance.netlogConnections[id].request]['firstByte'] !== undefined)
+          g_instance.netlogRequests[g_instance.netlogConnections[id].request].objectSize += entry.args.params.byte_count;
+      } else if (entry.name === "SOCKET_BYTES_SENT") {
+        g_instance.netlogRequests[g_instance.netlogConnections[id].request].bytesOut += entry.args.params.byte_count;
+      }
+    }
+  }
+};
+
+wpt.chromeDebugger.ParseNetlogSSLEntry = function(entry) {
+  var id = entry['id'];
+  if (g_instance.netlogConnections[id] !== undefined) {
+    if (entry['ph'] === 'b') {
+      g_instance.netlogConnections[id].sslStart = entry['ts'];
+    } else if (entry['ph'] === 'e') {
+      g_instance.netlogConnections[id].sslEnd = entry['ts'];
+    }
+  }
+};
+
+wpt.chromeDebugger.parseHeaders = function(headers) {
+  if (headers.constructor === Array) {
+    return headers;
+  }
+  var ret = [];
+  var host = undefined;
+  var hostExists = false;
+  for (var key in headers) {
+    if (key === ':host' || key === ':authority') {
+      host = headers[key];
+    } else if (key === 'Host:' || key === 'host:') {
+      hostExists = true;
+    }
+  }
+  ret.push(key + ': ' + headers[key]);
+  if (!hostExists && host !== undefined) {
+      ret.push('Host: ' + host);
+  }
+  return ret;
+};
+
+wpt.chromeDebugger.ParseNetlogRequestEntry = function(entry) {
+  var id = entry['id'];
+  if (entry.name === "URL_REQUEST_START_JOB" &&
+      entry['ph'] === 'b' &&
+      entry['args'] !== undefined &&
+      entry.args['params'] !== undefined &&
+      entry.args.params['url']) {
+    // Following a redirect will re-use the same request ID. Easiest way to
+    // deal is to clone the original request ID to a new ID and close it out.
+    if (g_instance.netlogRequests[id] !== undefined) {
+      if (g_instance.netlogRequests[id]['start'] !== undefined) {
+        g_instance.netlogRequests[id].end = entry['ts'];
+        if (g_instance.netlogRequests[id]['socket'] !== undefined &&
+            g_instance.netlogConnections[g_instance.netlogRequests[id].socket] !== undefined &&
+            g_instance.netlogConnections[g_instance.netlogRequests[id].socket]['request'] === id) {
+          delete g_instance.netlogConnections[g_instance.netlogRequests[id].socket].request;
+        }
+        var newId = 100000 + id;
+        while (g_instance.netlogRequests[newId] !== undefined)
+          newId++;
+        g_instance.netlogRequests[newId] = g_instance.netlogRequests[id];
+      }
+      delete g_instance.netlogRequests[id];
+    }
+
+    var parser = document.createElement('a');
+    parser.href = entry.args.params.url;
+    var hostname = parser.hostname;
+    if (hostname !== "127.0.0.1") {
+      g_instance.netlogRequests[id] = {url: entry.args.params.url,
+                                               host: hostname,
+                                               object: parser.pathname + parser.search,
+                                               bytesIn: 0,
+                                               bytesOut: 0,
+                                               objectSize: 0};
+      if (entry.args.params['priority'] !== undefined) {
+        g_instance.netlogRequests[id].priority = entry.args.params.priority;
+      }
+      if (entry.args.params['method'] !== undefined) {
+        g_instance.netlogRequests[id].method = entry.args.params.method;
+      }
+    }
+  }
+
+  if (g_instance.netlogRequests[id] !== undefined) {
+    if (entry.name === "HTTP_TRANSACTION_HTTP2_SEND_REQUEST_HEADERS" &&
+        g_instance.netlogRequests[id]['h2session'] !== undefined &&
+        g_instance.netlogH2Sessions[g_instance.netlogRequests[id].h2session] !== undefined) {
+      g_instance.netlogH2Sessions[g_instance.netlogRequests[id].h2session].currentRequest = id;
+    }
+    if (entry.name === "HTTP_TRANSACTION_SEND_REQUEST" &&
+        entry['ph'] === 'b') {
+      wpt.chromeDebugger.claimNetlogDNSRequest(id);
+      g_instance.netlogRequests[id].start = entry['ts'];
+    }
+    if ((entry.name === "HTTP_TRANSACTION_SEND_REQUEST_HEADERS" ||
+         entry.name === "HTTP_TRANSACTION_HTTP2_SEND_REQUEST_HEADERS") &&
+        entry['args'] !== undefined &&
+        entry.args['params'] !== undefined &&
+        entry.args.params['headers'] !== undefined) {
+      g_instance.netlogRequests[id].outHeaders = wpt.chromeDebugger.parseHeaders(entry.args.params.headers);
+      if (entry.args.params['line'] !== undefined) {
+        g_instance.netlogRequests[id].outHTTP = entry.args.params.line;
+      }
+    }
+    if (entry.name === "HTTP_TRANSACTION_READ_RESPONSE_HEADERS" &&
+        entry['args'] !== undefined &&
+        entry.args['params'] !== undefined &&
+        entry.args.params['headers'] !== undefined) {
+      if (g_instance.netlogRequests[id]['firstByte'] === undefined) {
+        g_instance.netlogRequests[id].firstByte = entry['ts'];
+      }
+      g_instance.netlogRequests[id].end = entry['ts'];
+      g_instance.netlogRequests[id].inHeaders = wpt.chromeDebugger.parseHeaders(entry.args.params.headers);
+    }
+    if (entry.name === "URL_REQUEST_JOB_FILTERED_BYTES_READ") {
+      g_instance.netlogRequests[id].end = entry['ts'];
+    }
+    if (entry.name === "REQUEST_ALIVE" && entry['ph'] === 'e') {
+      g_instance.netlogRequests[id].end = entry['ts'];
+      if (g_instance.netlogRequests[id]['socket'] !== undefined &&
+          g_instance.netlogConnections[g_instance.netlogRequests[id].socket] !== undefined &&
+          g_instance.netlogConnections[g_instance.netlogRequests[id].socket]['request'] === id) {
+        delete g_instance.netlogConnections[g_instance.netlogRequests[id].socket].request;
+      }
+    }
+  }
+};
+
+wpt.chromeDebugger.ParseHTTP2SessionEntry = function(entry) {
+  var id = entry['id'];
+  if (entry.name === "HTTP2_SESSION_INITIALIZED" &&
+      entry['args'] !== undefined &&
+      entry.args['params'] !== undefined &&
+      entry.args.params['source_dependency'] !== undefined &&
+      entry.args.params.source_dependency['id'] !== undefined) {
+    if (g_instance.netlogH2Sessions[id] == undefined) {
+      g_instance.netlogH2Sessions[id] = {streams: {}};
+    }
+    g_instance.netlogH2Sessions[id].socket = entry.args.params.source_dependency.id;
+    if (g_instance.netlogConnections[g_instance.netlogH2Sessions[id].socket] !== undefined) {
+      g_instance.netlogConnections[g_instance.netlogH2Sessions[id].socket].h2session = id;
+    }
+    if (entry.args.params['protocol'] !== undefined) {
+      g_instance.netlogH2Sessions[id].protocol = entry.args.params.protocol;
+    }
+  } else if (g_instance.netlogH2Sessions[id] !== undefined) {
+    // Link the stream ID to the actual request
+    if (g_instance.netlogH2Sessions[id]['currentRequest'] !== undefined) {
+      if (entry.name === "HTTP2_SESSION_SEND_HEADERS" &&
+          entry['args'] !== undefined &&
+          entry.args['params'] !== undefined &&
+          entry.args.params['stream_id'] !== undefined) {
+        var streamID = entry.args.params.stream_id;
+        if (g_instance.netlogH2Sessions[id].streams[streamID] === undefined) {
+          g_instance.netlogH2Sessions[id].streams[streamID] = {bytesIn: 0, bytesOut: 0};
+        }
+        g_instance.netlogH2Sessions[id].streams[streamID].request = g_instance.netlogH2Sessions[id].currentRequest;
+        if (g_instance.netlogRequests[g_instance.netlogH2Sessions[id].currentRequest] !== undefined) {
+          g_instance.netlogRequests[g_instance.netlogH2Sessions[id].currentRequest].h2Stream = streamID;
+        }
+      }
+      delete g_instance.netlogH2Sessions[id].currentRequest;
+    }
+    if (entry['args'] !== undefined &&
+        entry.args['params'] !== undefined &&
+        entry.args.params['stream_id'] !== undefined &&
+        entry.args.params['size'] !== undefined) {
+      var streamID = entry.args.params.stream_id;
+      if (g_instance.netlogH2Sessions[id].streams[streamID] === undefined) {
+        g_instance.netlogH2Sessions[id].streams[streamID] = {bytesIn: 0, bytesOut: 0};
+      }
+      if (entry.name === "HTTP2_SESSION_RECV_DATA") {
+        if (g_instance.netlogH2Sessions[id].streams[streamID]['request'] !== undefined &&
+            g_instance.netlogRequests[g_instance.netlogH2Sessions[id].streams[streamID].request] !== undefined) {
+            g_instance.netlogRequests[g_instance.netlogH2Sessions[id].streams[streamID].request].bytesIn += entry.args.params.size;
+            g_instance.netlogRequests[g_instance.netlogH2Sessions[id].streams[streamID].request].objectSize += entry.args.params.size;
+            if (g_instance.netlogRequests[g_instance.netlogH2Sessions[id].streams[streamID].request]['start'] === undefined) {
+              g_instance.netlogRequests[g_instance.netlogH2Sessions[id].streams[streamID].request].start = entry['ts'];
+            }
+            if (g_instance.netlogRequests[g_instance.netlogH2Sessions[id].streams[streamID].request]['firstByte'] === undefined) {
+              g_instance.netlogRequests[g_instance.netlogH2Sessions[id].streams[streamID].request].firstByte = entry['ts'];
+            }
+            g_instance.netlogRequests[g_instance.netlogH2Sessions[id].streams[streamID].request].end = entry['ts'];
+        } else {
+          g_instance.netlogH2Sessions[id].streams[streamID].bytesIn += entry.args.params.size;
+          if (g_instance.netlogH2Sessions[id].streams[streamID]['start'] === undefined) {
+            g_instance.netlogH2Sessions[id].streams[streamID].start = entry['ts'];
+          }
+          if (g_instance.netlogH2Sessions[id].streams[streamID]['firstByte'] === undefined) {
+            g_instance.netlogH2Sessions[id].streams[streamID].firstByte = entry['ts'];
+          }
+          g_instance.netlogH2Sessions[id].streams[streamID].end = entry['ts'];
+        }
+      }
+    }
+    if (entry.name === "HTTP2_SESSION_RECV_PUSH_PROMISE" &&
+        entry['args'] !== undefined &&
+        entry.args['params'] !== undefined &&
+        entry.args.params['promised_stream_id'] !== undefined &&
+        entry.args.params['headers'] !== undefined) {
+      var streamID = entry.args.params.promised_stream_id;
+      if (g_instance.netlogH2Sessions[id].streams[streamID] === undefined) {
+        g_instance.netlogH2Sessions[id].streams[streamID] = {bytesIn: 0, bytesOut: 0};
+      }
+      g_instance.netlogH2Sessions[id].streams[streamID].outHeaders = wpt.chromeDebugger.parseHeaders(entry.args.params.headers);
+      g_instance.netlogH2Sessions[id].streams[streamID].start = entry['ts'];
+      var host = undefined;
+      var path = undefined;
+      var method = undefined;
+      for (var i = 0; i < g_instance.netlogH2Sessions[id].streams[streamID].outHeaders.length; i++) {
+        var header = g_instance.netlogH2Sessions[id].streams[streamID].outHeaders[i];
+        var match = header.match(/:host: (.*)/);
+        if (match && match.length)
+          host = match[1];
+        match = header.match(/:authority: (.*)/);
+        if (match && match.length)
+          host = match[1];
+        match = header.match(/:path: (.*)/);
+        if (match && match.length)
+          path = match[1];
+        match = header.match(/:method: (.*)/);
+        if (match && match.length)
+          method = match[1];
+      }
+      if (host !== undefined && path !== undefined) {
+        g_instance.netlogH2Sessions[id].streams[streamID].url = "https://" + host + path;
+        g_instance.netlogH2Sessions[id].streams[streamID].object = path;
+        g_instance.netlogH2Sessions[id].streams[streamID].host = host;
+      }
+      if (method !== undefined)
+        g_instance.netlogH2Sessions[id].streams[streamID].method = method;
+    }
+    if (entry.name === "HTTP2_SESSION_RECV_HEADERS" &&
+        entry['args'] !== undefined &&
+        entry.args['params'] !== undefined &&
+        entry.args.params['stream_id'] !== undefined &&
+        entry.args.params['headers'] !== undefined) {
+      var streamID = entry.args.params.stream_id;
+      if (g_instance.netlogH2Sessions[id].streams[streamID] === undefined) {
+        g_instance.netlogH2Sessions[id].streams[streamID] = {bytesIn: 0, bytesOut: 0};
+      }
+      if (g_instance.netlogH2Sessions[id].streams[streamID]['request'] === undefined) {
+        g_instance.netlogH2Sessions[id].streams[streamID].inHeaders = wpt.chromeDebugger.parseHeaders(entry.args.params.headers);
+        if (g_instance.netlogH2Sessions[id].streams[streamID]['start'] === undefined) {
+          g_instance.netlogH2Sessions[id].streams[streamID].start = entry['ts'];
+        }
+        g_instance.netlogH2Sessions[id].streams[streamID].firstByte = entry['ts'];
+        g_instance.netlogH2Sessions[id].streams[streamID].end = entry['ts'];
+      }
+    }
+    if (entry.name === "HTTP2_STREAM_ADOPTED_PUSH_STREAM" &&
+        entry['args'] !== undefined &&
+        entry.args['params'] !== undefined &&
+        entry.args.params['stream_id'] !== undefined &&
+        entry.args.params['url'] !== undefined) {
+      var streamID = entry.args.params.stream_id;
+      var url = entry.args.params.url;
+      if (g_instance.netlogH2Sessions[id].streams[streamID] === undefined) {
+        g_instance.netlogH2Sessions[id].streams[streamID] = {bytesIn: 0, bytesOut: 0};
+      }
+      // Find the request that was created on this H2 session and move the
+      // pushed information over to it.
+      for (var requestId in g_instance.netlogRequests) {
+        if (g_instance.netlogRequests[requestId]['start'] === undefined &&
+            g_instance.netlogRequests[requestId]['h2session'] !== undefined &&
+            g_instance.netlogRequests[requestId].h2session === id &&
+            g_instance.netlogRequests[requestId]['url'] !== undefined &&
+            g_instance.netlogRequests[requestId].url === url) {
+          g_instance.netlogH2Sessions[id].streams[streamID].request = requestId;
+          g_instance.netlogRequests[requestId].h2Stream = streamID;
+          g_instance.netlogRequests[requestId].bytesIn = g_instance.netlogH2Sessions[id].streams[streamID].bytesIn;
+          g_instance.netlogRequests[requestId].objectSize = g_instance.netlogH2Sessions[id].streams[streamID].bytesIn;
+          g_instance.netlogRequests[requestId].bytesOut = g_instance.netlogH2Sessions[id].streams[streamID].bytesOut;
+          g_instance.netlogRequests[requestId].h2push = true;
+          if (g_instance.netlogH2Sessions[id].streams[streamID]['start'] !== undefined) {
+            g_instance.netlogRequests[requestId].start = g_instance.netlogH2Sessions[id].streams[streamID].start;
+            delete g_instance.netlogH2Sessions[id].streams[streamID].start;
+          }
+          if (g_instance.netlogH2Sessions[id].streams[streamID]['firstByte'] !== undefined) {
+            g_instance.netlogRequests[requestId].firstByte = g_instance.netlogH2Sessions[id].streams[streamID].firstByte;
+            delete g_instance.netlogH2Sessions[id].streams[streamID].firstByte;
+          }
+          if (g_instance.netlogH2Sessions[id].streams[streamID]['end'] !== undefined) {
+            g_instance.netlogRequests[requestId].end = g_instance.netlogH2Sessions[id].streams[streamID].end;
+            delete g_instance.netlogH2Sessions[id].streams[streamID].end;
+          }
+          if (g_instance.netlogH2Sessions[id].streams[streamID]['inHeaders'] !== undefined) {
+            g_instance.netlogRequests[requestId].inHeaders = g_instance.netlogH2Sessions[id].streams[streamID].inHeaders;
+            delete g_instance.netlogH2Sessions[id].streams[streamID].inHeaders;
+          }
+          if (g_instance.netlogH2Sessions[id].streams[streamID]['outHeaders'] !== undefined) {
+            g_instance.netlogRequests[requestId].outHeaders = g_instance.netlogH2Sessions[id].streams[streamID].outHeaders;
+            delete g_instance.netlogH2Sessions[id].streams[streamID].outHeaders;
+          }
+          g_instance.netlogH2Sessions[id].streams[streamID].bytesIn = 0;
+          g_instance.netlogH2Sessions[id].streams[streamID].bytesOut = 0;
+          break;
+        }
+      }
+    }
+  }
+};
+
+wpt.chromeDebugger.linkNetlogSocket = function(entry) {
+  if (entry['args'] !== undefined &&
+      entry.args['params'] !== undefined &&
+      entry.args.params['source_dependency'] !== undefined &&
+      entry.args.params.source_dependency['id'] !== undefined) {
+    var id = entry['id'];
+    var dependencyID = entry.args.params.source_dependency.id;
+    if (g_instance.netlogStreamJobs[id] === undefined) {
+      g_instance.netlogStreamJobs[id] = {};
+    }
+    if (entry.name === "HTTP_STREAM_JOB_BOUND_TO_REQUEST") {
+      g_instance.netlogStreamJobs[id].request = dependencyID;
+    } else if (entry.name === "SOCKET_POOL_BOUND_TO_SOCKET") {
+      g_instance.netlogStreamJobs[id].socket = dependencyID;
+    } else if (entry.name === "HTTP2_SESSION_POOL_IMPORTED_SESSION_FROM_SOCKET" ||
+               entry.name === "HTTP2_SESSION_POOL_FOUND_EXISTING_SESSION") {
+      g_instance.netlogStreamJobs[id].h2session = dependencyID;
+    }
+    if (g_instance.netlogStreamJobs[id].socket !== undefined &&
+        g_instance.netlogStreamJobs[id].request !== undefined) {
+      var socket = g_instance.netlogStreamJobs[id].socket;
+      var request = g_instance.netlogStreamJobs[id].request;
+      if (g_instance.netlogRequests[request] !== undefined) {
+        g_instance.netlogRequests[request].socket = socket;
+      }
+      if (g_instance.netlogConnections[socket] !== undefined) {
+        g_instance.netlogConnections[socket].request = request;
+        if (g_instance.netlogConnections[socket]['claimedRequest'] === undefined) {
+          g_instance.netlogConnections[socket].claimedRequest = request;
+          g_instance.netlogRequests[request].socketConnect = socket;
+        }
+      }
+    }
+    if (g_instance.netlogStreamJobs[id].socket !== undefined &&
+        g_instance.netlogStreamJobs[id].h2session !== undefined) {
+      g_instance.netlogConnections[g_instance.netlogStreamJobs[id].socket].h2session = g_instance.netlogStreamJobs[id].h2session;
+      g_instance.netlogH2Sessions[g_instance.netlogStreamJobs[id].h2session].socket = g_instance.netlogStreamJobs[id].socket;
+    }
+    if (g_instance.netlogStreamJobs[id].h2session !== undefined &&
+        g_instance.netlogStreamJobs[id].request !== undefined) {
+      g_instance.netlogRequests[g_instance.netlogStreamJobs[id].request].h2session = g_instance.netlogStreamJobs[id].h2session;
+    }
+  }
+};
+
+wpt.chromeDebugger.claimNetlogDNSRequest = function(requestId) {
+  if (g_instance.netlogRequests[requestId] !== undefined &&
+      g_instance.netlogRequests[requestId]['host'] !== undefined) {
+    for (var dnsid in g_instance.netlogDNS) {
+      if (g_instance.netlogDNS[dnsid]['host'] !== undefined &&
+          g_instance.netlogDNS[dnsid]['claimedRequest'] === undefined &&
+          g_instance.netlogDNS[dnsid].host === g_instance.netlogRequests[requestId].host) {
+        g_instance.netlogDNS[dnsid].claimedRequest = requestId;
+        g_instance.netlogRequests[requestId].dnsLookup = parseInt(dnsid);
+        break;
+      }
+    }
+  }
+};
+
+wpt.chromeDebugger.createPushedRequest = function(sessionId, streamId) {
+  var requestId = 0;
+  var stream = g_instance.netlogH2Sessions[sessionId].streams[streamId];
+  if (stream['start'] !== undefined && stream['url'] !== undefined) {
+    requestId = 900000;
+    while (g_instance.netlogRequests[requestId] !== undefined)
+      requestId++;
+    g_instance.netlogRequests[requestId] = {url: stream.url, start: stream.start};
+    if (stream['firstByte'] !== undefined)
+      g_instance.netlogRequests[requestId].firstByte = stream.firstByte;
+    if (stream['end'] !== undefined)
+      g_instance.netlogRequests[requestId].end = stream.end;
+    if (stream['inHeaders'] !== undefined) {
+      var status = '200';
+      for (var i = 0; i < stream.inHeaders; i++ ) {
+        var match = header.match(/:status: (.*)/);
+        if (match && match.length)
+          status = match[1];
+      }
+      g_instance.netlogRequests[requestId].inHeaders = ['HTTP/1.1 ' + status + ' OK']
+      for (i = 0; i < stream.inHeaders.length; i++ )
+        g_instance.netlogRequests[requestId].inHeaders.push(stream.inHeaders[i]);
+    }
+    if (stream['outHeaders'] !== undefined)
+      g_instance.netlogRequests[requestId].outHeaders = stream.outHeaders;
+    if (g_instance.netlogH2Sessions[sessionId]['socket'] !== undefined)
+      g_instance.netlogRequests[requestId].socket = g_instance.netlogH2Sessions[sessionId].socket;
+    if (stream['method'] !== undefined)
+      g_instance.netlogRequests[requestId].method = stream.method;
+    if (stream['object'] !== undefined)
+      g_instance.netlogRequests[requestId].object = stream.object;
+    if (stream['host'] !== undefined)
+      g_instance.netlogRequests[requestId].host = stream.host;
+    g_instance.netlogRequests[requestId].h2Session = sessionId;
+    g_instance.netlogRequests[requestId].h2Stream = streamId;
+    g_instance.netlogRequests[requestId].h2Push = true;
+    g_instance.netlogRequests[requestId].bytesIn = stream.bytesIn;
+    g_instance.netlogRequests[requestId].objectSize = stream.bytesIn;
+    g_instance.netlogRequests[requestId].bytesOut = stream.bytesOut;
+  }
+  return requestId;
 };
 
 })());  // namespace

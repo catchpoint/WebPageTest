@@ -273,6 +273,7 @@ void Requests::ProcessBrowserRequest(CString request_data) {
           ssl_start = -1, ssl_end = -1;
   long connection = 0, error_code = 0, status = 0, bytes_in = 0, stream_id = 0,
        object_size = 0;
+  bool push = false;
   LARGE_INTEGER now;
   QueryPerformanceCounter(&now);
   bool processing_values = true;
@@ -325,6 +326,8 @@ void Requests::ProcessBrowserRequest(CString request_data) {
               status = _ttol(value);
             else if (!key.CompareNoCase(_T("connectionId")))
               connection = _ttol(value);
+            else if (!key.CompareNoCase(_T("streamId")))
+              stream_id = _ttol(value);
             else if (!key.CompareNoCase(_T("dnsStart")))
               dns_start = _ttof(value);
             else if (!key.CompareNoCase(_T("dnsEnd")))
@@ -337,6 +340,8 @@ void Requests::ProcessBrowserRequest(CString request_data) {
               ssl_start = _ttof(value);
             else if (!key.CompareNoCase(_T("sslEnd")))
               ssl_end = _ttof(value);
+            else if (!key.CompareNoCase(_T("push")) && !value.CompareNoCase(_T("true")))
+              push = true;
           }
         }
       } else if (processing_request) {
@@ -346,6 +351,9 @@ void Requests::ProcessBrowserRequest(CString request_data) {
       }
     }
     line = request_data.Tokenize(_T("\n"), position);
+  }
+  if (push && !initiator.GetLength()) {
+    initiator = _T("HTTP/2 Server Push");
   }
   if (url.GetLength() && initiator.GetLength()) {
     BrowserRequestData data(url);

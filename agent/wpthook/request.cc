@@ -122,9 +122,8 @@ CStringA HttpData::GetHeader(CStringA field_name) {
   POSITION pos = _header_fields.GetHeadPosition();
   while (pos && value.IsEmpty()) {
     HeaderField field = _header_fields.GetNext(pos);
-    if (field.Matches(field_name)) {
+    if (field.Matches(field_name))
       value = field._value;
-    }
   }
   return value;
 }
@@ -666,6 +665,7 @@ bool Request::Process() {
         initiator_column_ = data.initiator_column_;
       }
     }
+
     rtt_ = _sockets.GetRTT(_peer_address);
   }
   LeaveCriticalSection(&cs);
