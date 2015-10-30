@@ -14262,6 +14262,14 @@ wpt.chromeDebugger.processNetlog = function() {
     }
   }
 
+  // Pass the DNS lookup timestamps so we can sync the trace clock to the c++ clock
+  for (var dnsid in g_instance.netlogDNS) {
+    if (g_instance.netlogDNS[dnsid]['host'] !== undefined &&
+        g_instance.netlogDNS[dnsid]['start'] !== undefined) {
+      wpt.chromeDebugger.sendEvent('dns_time', g_instance.netlogDNS[dnsid].host + ' ' + g_instance.netlogDNS[dnsid].start);
+    }
+  }
+
   // Process the individual requests
   for (var requestId in g_instance.netlogRequests) {
     if (g_instance.netlogRequests[requestId]['h2session'] !== undefined &&

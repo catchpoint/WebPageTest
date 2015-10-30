@@ -501,6 +501,32 @@ void Requests::ProcessBrowserRequest(CString request_data) {
 }
 
 /*-----------------------------------------------------------------------------
+  Sync the browser time with our clock
+-----------------------------------------------------------------------------*/
+void Requests::SyncDNSTime(CString message) {
+  if (_start_browser_clock == 0) {
+    int position = 0;
+    CString host = message.Tokenize(_T(" "), position).Trim();
+    if (position >= 0) {
+      CString browser_time = message.Tokenize(_T(" "), position).Trim();
+      if (host.GetLength() && browser_time.GetLength()) {
+        double dns_start = _ttof(browser_time);
+        if (dns_start > 0) {
+          DNSAddressList addresses;
+          LARGE_INTEGER match_dns_start, match_dns_end;
+          if (_dns.Find(host, addresses, match_dns_start, match_dns_end)) {
+            // Figure out what the clock time would have been at our perf
+            // counter start time.
+            _start_browser_clock =
+                dns_start - _test_state.ElapsedMsFromStart(match_dns_start);
+          }
+        }
+      }
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
   Get the browser request information from the URL and optionally remove it
   from the list (claiming it)
 -----------------------------------------------------------------------------*/
