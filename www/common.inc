@@ -42,6 +42,9 @@ if (function_exists('curl_init')) {
 } else
     $CURL_CONTEXT = false;
 
+if ($_SERVER["REMOTE_ADDR"] == '127.0.0.1' && isset($_REQUEST['addr'])) {
+  $_SERVER["REMOTE_ADDR"] = $_REQUEST['addr'];
+}
 if (function_exists('apache_request_headers')) {
     $headers = apache_request_headers();
     if (array_key_exists('X-Forwarded-For', $headers)){
@@ -52,7 +55,7 @@ if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
   $forwarded = explode(',',$_SERVER["HTTP_X_FORWARDED_FOR"]);
   if (isset($forwarded) && is_array($forwarded) && count($forwarded)) {
     $forwarded_ip = trim(end($forwarded));
-    if (strlen($forwarded_ip))
+    if (strlen($forwarded_ip) && $forwarded_ip != "127.0.0.1")
         $_SERVER["REMOTE_ADDR"] = $forwarded_ip;
   }
 }

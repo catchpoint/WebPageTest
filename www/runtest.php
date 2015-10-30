@@ -1134,6 +1134,10 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             // See if we need to force mobile emulation
             if (!$test['mobile'] && isset($locations[$test['location']]['force_mobile']) && $locations[$test['location']]['force_mobile'])
               $test['mobile'] = 1;
+            
+            // See if the location carries a timeout override 
+            if (!$test['timeout'] && isset($locations[$test['location']]['timeout']) && $locations[$test['location']]['timeout'] > 0)
+              $test['timeout'] = intval($locations[$test['location']]['timeout']);
 
             // figure out what the location working directory and friendly name are
             $test['locationText'] = $locations[$test['location']]['label'];
