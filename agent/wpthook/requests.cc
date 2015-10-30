@@ -34,6 +34,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "track_sockets.h"
 #include "../wptdriver/wpt_test.h"
 
+// Base ID for connection ID's from the browser
+static const DWORD BROWSER_CONNECTION_BASE = 1000000;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -272,7 +274,8 @@ void Requests::ProcessBrowserRequest(CString request_data) {
           dns_start = -1, dns_end = -1, connect_start = -1, connect_end = -1,
           ssl_start = -1, ssl_end = -1;
   long connection = 0, error_code = 0, status = 0, bytes_in = 0, stream_id = 0,
-       object_size = 0;
+       object_size = 0, local_port = 0;
+  ULONG ip = 0;
   bool push = false;
   LARGE_INTEGER now;
   QueryPerformanceCounter(&now);
@@ -325,7 +328,7 @@ void Requests::ProcessBrowserRequest(CString request_data) {
             else if (!key.CompareNoCase(_T("status")))
               status = _ttol(value);
             else if (!key.CompareNoCase(_T("connectionId")))
-              connection = _ttol(value);
+              connection = BROWSER_CONNECTION_BASE + _ttol(value);
             else if (!key.CompareNoCase(_T("streamId")))
               stream_id = _ttol(value);
             else if (!key.CompareNoCase(_T("dnsStart")))
@@ -342,6 +345,10 @@ void Requests::ProcessBrowserRequest(CString request_data) {
               ssl_end = _ttof(value);
             else if (!key.CompareNoCase(_T("push")) && !value.CompareNoCase(_T("true")))
               push = true;
+            else if (!key.CompareNoCase(_T("clientPort")))
+              local_port = _ttol(value);
+            else if (!key.CompareNoCase(_T("ip")))
+              ip = inet_addr((LPCSTR)CT2A(value));
           }
         }
       } else if (processing_request) {
@@ -374,6 +381,10 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     request->initiator_column_ = initiator_column;
     request->_bytes_in = bytes_in;
     request->_object_size = object_size;
+    if (local_port)
+      request->_local_port = local_port;
+    if (ip)
+      request->_peer_address = ip;
 
     // See if we can map the browser's internal clock timestamps to our
     // performance counters.  If we have a DNS lookup we can match up or a
