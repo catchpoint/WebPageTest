@@ -210,7 +210,6 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
     }
     
     // Network events
-    // Processing logic largely duplocated from the WebPageTest PHP code
     if (params['requestId'] !== undefined) {
       if (message === 'Network.requestServedFromCache') {
         wpt.chromeDebugger.SendReceivedData();
@@ -456,6 +455,7 @@ wpt.chromeDebugger.sendRequestDetails = function(id) {
     if (request['devToolsRequest'] !== undefined &&
         g_instance.requests[request.devToolsRequest] !== undefined) {
       var r = g_instance.requests[request.devToolsRequest];
+      eventData += "r=" + JSON.stringify(r) + "\n";
       if (r['initiator'] !== undefined &&
           r.initiator['type'] !== undefined) {
         eventData += 'initiatorType=' + r.initiator.type + '\n';
@@ -482,7 +482,67 @@ wpt.chromeDebugger.sendRequestDetails = function(id) {
     // the end of the data is ini-file style for multi-line values
     eventData += '\n';
 
-    if (request['outHeaders'] !== undefined) {
+    // prefer the dev tools headers but fall back to the netlog headers if necessary
+    if (r !== undefined &&
+        r['response'] !== undefined &&
+        r.response['requestHeadersText'] !== undefined) {
+      eventData += '[Request Headers]\n' + r.response.requestHeadersText + '\n';
+    } else if (r !== undefined &&
+               r['response'] !== undefined &&
+               r.response['requestHeaders'] !== undefined) {
+      eventData += '[Request Headers]\n';
+      var method = 'GET';
+      if (r.response.requestHeaders['method'] !== undefined)
+        method = r.response.requestHeaders['method'];
+      else if (r.response.requestHeaders[':method'] !== undefined)
+        method = r.response.requestHeaders[':method'];
+      var version = 'HTTP/1.1';
+      if (r.response.requestHeaders['version'] !== undefined)
+        version = r.response.requestHeaders['version'];
+      else if (r.response.requestHeaders[':version'] !== undefined)
+        version = r.response.requestHeaders[':version'];
+      var matches = r.url.match(/[^\/]*\/\/([^\/]+)(.*)/);
+      if (matches !== undefined && matches.length > 1) {
+        var host = matches[1];
+        if (r.response.requestHeaders['host'] !== undefined)
+          host = r.response.requestHeaders['host'];
+        else if (r.response.requestHeaders[':host'] !== undefined)
+          host = r.response.requestHeaders[':host'];
+        var object = '/';
+        if (matches.length > 2)
+          object = matches[2];
+        if (r.response.requestHeaders['path'] !== undefined)
+          object = r.response.requestHeaders['path'];
+        else if (r.response.requestHeaders[':path'] !== undefined)
+          object = r.response.requestHeaders[':path'];
+        eventData += method + ' ' + object + ' ' + version + '\n';
+        eventData += 'Host: ' + host + '\n';
+        for (tag in r.response.requestHeaders)
+          eventData += tag + ': ' + r.response.requestHeaders[tag] + '\n';
+      }
+      eventData += '\n';
+    } else if (r !== undefined &&
+               r['request'] !== undefined &&
+               r.request['headers'] !== undefined) {
+      eventData += '[Request Headers]\n';
+      var method = 'GET';
+      if (r.request['method'] !== undefined)
+        method = r.request['method'];
+      var matches = r.url.match(/[^\/]*\/\/([^\/]+)(.*)/);
+      if (matches !== undefined && matches.length > 1) {
+        var host = matches[1];
+        var object = '/';
+        if (matches.length > 2)
+          object = matches[2];
+        eventData += method + ' ' + object + ' HTTP/1.1\n';
+        eventData += 'Host: ' + host + '\n';
+        if (r.request['headers'] !== undefined) {
+          for (tag in r.request.headers)
+            eventData += tag + ': ' + r.request.headers[tag] + '\n';
+        }
+      }
+      eventData += '\n';
+    } else if (request['outHeaders'] !== undefined) {
       eventData += '[Request Headers]\n';
       if (request['outHTTP'] !== undefined) {
         eventData += request.outHTTP.trim() + '\n';
@@ -494,7 +554,25 @@ wpt.chromeDebugger.sendRequestDetails = function(id) {
       eventData += '\n';
     }
 
-    if (request['inHeaders'] !== undefined) {
+    if (r !== undefined &&
+        r['response'] !== undefined &&
+        r.response['headersText'] !== undefined) {
+      eventData += '[Response Headers]\n' + r.response.headersText + '\n';
+    } else if (r !== undefined &&
+               r['response'] !== undefined &&
+               r.response['headers'] !== undefined) {
+      eventData += '[Response Headers]\n';
+      if (r.response.headers['version'] !== undefined &&
+          r.response.headers['status'] !== undefined) {
+        eventData += r.response.headers['version'] + ' ' + r.response.headers['status'] + '\n';
+      } else if (r.response.headers['status'] !== undefined) {
+        eventData += 'HTTP/2 ' + r.response.headers['status'] + '\n';
+      }
+      for (tag in r.response.headers) {
+        if (tag !== 'version' && tag !== 'status')
+          eventData += tag + ': ' + r.response.headers[tag] + '\n';
+      }
+    } else if (request['inHeaders'] !== undefined) {
       eventData += '[Response Headers]\n';
       for (var i = 0; i < request.inHeaders.length; i++)
         eventData += request.inHeaders[i] + '\n';
@@ -643,7 +721,6 @@ wpt.chromeDebugger.ParseNetlogRequestEntry = function(entry) {
       if (entry.args.params['method'] !== undefined) {
         g_instance.netlogRequests[id].method = entry.args.params.method;
       }
-      wpt.chromeDebugger.linkNetlogRequest(id);
     }
   }
 
@@ -656,6 +733,7 @@ wpt.chromeDebugger.ParseNetlogRequestEntry = function(entry) {
     if (entry.name === "HTTP_TRANSACTION_SEND_REQUEST" &&
         entry['ph'] === 'b') {
       wpt.chromeDebugger.claimNetlogDNSRequest(id);
+      wpt.chromeDebugger.linkNetlogRequest(id);
       g_instance.netlogRequests[id].start = entry['ts'];
     }
     if ((entry.name === "HTTP_TRANSACTION_SEND_REQUEST_HEADERS" ||
