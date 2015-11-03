@@ -250,6 +250,15 @@ void TestServer::MongooseCallback(enum mg_event event,
       //OutputDebugString(body);
       requests_.ProcessBrowserRequest(body);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/netlog") == 0) {
+      CStringA body = GetPostBodyA(conn, request_info);
+      HANDLE hFile = CreateFile(L"c:\\netlog.json", GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+      if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD bytes;
+        WriteFile(hFile, (LPCSTR)body, body.GetLength(), &bytes, 0);
+        CloseHandle(hFile);
+      }
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/dns_time") == 0) {
       CString body = GetPostBody(conn, request_info);
       requests_.SyncDNSTime(body);
@@ -457,6 +466,30 @@ CString TestServer::GetPostBody(struct mg_connection *conn,
           if (bytes && bytes <= length) {
             buff[bytes] = 0;
             body += CA2T(buff, CP_UTF8);
+            length -= bytes;
+          }
+        }
+        free(buff);
+      }
+    }
+  }
+
+  return body;
+}
+CStringA TestServer::GetPostBodyA(struct mg_connection *conn,
+                                  const struct mg_request_info *request_info){
+  CStringA body;
+  const char * length_string = mg_get_header(conn, "Content-Length");
+  if (length_string) {
+    int length = atoi(length_string);
+    if (length) {
+      char * buff = (char *)malloc(length + 1);
+      if (buff) {
+        while (length) {
+          int bytes = mg_read(conn, buff, length);
+          if (bytes && bytes <= length) {
+            buff[bytes] = 0;
+            body += CStringA(buff);
             length -= bytes;
           }
         }

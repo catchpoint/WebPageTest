@@ -14223,6 +14223,7 @@ g_instance.netlogH2Sessions = {};
 * Process the netlog data into individual requests
 */
 wpt.chromeDebugger.processNetlog = function() {
+  //wpt.chromeDebugger.sendEvent('netlog', JSON.stringify(g_instance.netlog));
   var netlog_len = g_instance.netlog.length;
   for (var i = 0; i < netlog_len; i++) {
     var entry = g_instance.netlog[i];
@@ -14570,8 +14571,8 @@ wpt.chromeDebugger.parseHeaders = function(headers) {
     } else if (key === 'Host:' || key === 'host:') {
       hostExists = true;
     }
+    ret.push(key + ': ' + headers[key]);
   }
-  ret.push(key + ': ' + headers[key]);
   if (!hostExists && host !== undefined) {
       ret.push('Host: ' + host);
   }
@@ -14688,7 +14689,8 @@ wpt.chromeDebugger.ParseHTTP2SessionEntry = function(entry) {
   } else if (g_instance.netlogH2Sessions[id] !== undefined) {
     // Link the stream ID to the actual request
     if (g_instance.netlogH2Sessions[id]['currentRequest'] !== undefined) {
-      if (entry.name === "HTTP2_SESSION_SEND_HEADERS" &&
+      if ((entry.name === "HTTP2_SESSION_SEND_HEADERS" ||
+           entry.name === "HTTP2_SESSION_SYN_STREAM") &&
           entry['args'] !== undefined &&
           entry.args['params'] !== undefined &&
           entry.args.params['stream_id'] !== undefined) {
@@ -14963,6 +14965,7 @@ wpt.chromeDebugger.createPushedRequest = function(sessionId, streamId) {
   }
   return requestId;
 };
+
 
 })());  // namespace
 /******************************************************************************
