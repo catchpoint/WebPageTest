@@ -117,6 +117,7 @@ xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\ex
     <None Include="zlib\zlib.vcxproj.filters" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="globals.h" />
     <ClInclude Include="software_update.h" />
     <ClInclude Include="ipfw.h" />
     <ClInclude Include="Resource.h" />
