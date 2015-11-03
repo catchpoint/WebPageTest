@@ -50,6 +50,9 @@ var wpt_client = require('wpt_client');
  */
 var knownOpts = {
   serverUrl: [String, null],
+  insecure: Boolean,
+  clientCert: [String, null],
+  clientCertPass: [String, null],
   location: [String, null],
   deviceAddr: [String, null],
   deviceSerial: [String, null],

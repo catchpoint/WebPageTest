@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 var events = require('events');
 var fs = require('fs');
 var http = require('http');
+var https = require('https');
 var logger = require('logger');
 var multipart = require('multipart');
 var path = require('path');
@@ -157,6 +158,16 @@ function constructHostsFile(task) {
   }
   hosts += "\n";
   return hosts;
+}
+
+function emptyString(value) {
+  if( typeof value === 'undefined' ||
+        value === null ||
+        value === "null" || 
+        value.length < 1 ) {
+    return true;
+  }
+  return false;
 }
 
 Job.prototype.processScript = function(script) {
@@ -353,6 +364,9 @@ function Client(app, args) {
   }
   this.baseUrl_.path = urlPath;
   this.baseUrl_.pathname = urlPath;
+  this.clientCert_ = args.clientCert;
+  this.clientCertPass_ = args.clientCertPass;
+  this.insecure_ = args.insecure;
   this.location_ = args.location;
   this.deviceSerial_ = args.deviceSerial;
   this.name_ = args.name;
@@ -494,7 +508,8 @@ Client.prototype.requestNextJob_ = function() {
           '&f=json');
 
       logger.info('Get work: %s', getWorkUrl);
-      var request = http.get(url.parse(getWorkUrl), function(res) {
+      var options = url.parse(getWorkUrl);
+      var callback = function(res) {
         exports.processResponse(res, function(e, responseBody) {
           if (e || responseBody === '') {
             this.emit('nojob');
@@ -510,7 +525,14 @@ Client.prototype.requestNextJob_ = function() {
             this.processJobResponse_(responseBody);
           }
         }.bind(this));
-      }.bind(this));
+      }.bind(this);
+      var request;
+      if (options.protocol == 'https:') {
+        this.addHttpsOptions(options);
+        request = https.get(options, callback);
+      } else {
+        request = http.get(options, callback);
+	  }
       request.on('error', function(e) {
         logger.warn('Got error: ' + e.message);
         this.emit('nojob');
@@ -737,6 +759,23 @@ function createZip(zipFileMap, fileNamer) {
 }
 
 /**
+ * Add https specific options to the generic request options
+ *
+ * @private
+ *
+ * @param {Object} generic request options
+ */
+Client.prototype.addHttpsOptions = function(options) {
+  options.rejectUnauthorized = !this.insecure_;
+  if (!emptyString(this.clientCert_)) {
+    options.pfx = fs.readFileSync(this.clientCert_);
+    if (!emptyString(this.clientCertPass_)) {
+      options.passphrase = this.clientCertPass_;
+    }
+  }
+}
+
+/**
  * Submits one part of the job result, with an optional file.
  *
  * @private
@@ -801,9 +840,16 @@ Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
         path: this.baseUrl_.path.replace(/\/+$/, '') + '/' + servlet,
         headers: mpResponse.headers
       };
-    var request = http.request(options, function(res) {
+    var request;
+    var processDataCallback = function(res) {
       exports.processResponse(res, callback);
-    });
+    };
+    if (this.baseUrl_.protocol == 'https:') {
+      this.addHttpsOptions(options);
+      request = https.request(options, processDataCallback);
+    } else {
+      request = http.request(options, processDataCallback);
+    }
     request.on('error', function(e) {
       logger.warn('Unable to post result: ' + e.message);
       if (callback) {
