@@ -60,6 +60,12 @@ static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--disable-save-password-bubble"),
     _T("--disable-component-update"),
     _T("--disable-background-downloads"),
+    _T("--disable-add-to-shelf"),
+    _T("--disable-client-side-phishing-detection"),
+    _T("--disable-datasaver-prompt"),
+    _T("--disable-default-apps"),
+    _T("--disable-domain-reliability"),
+    _T("--safebrowsing-disable-auto-update"),
     _T("--host-rules=\"MAP cache.pack.google.com 127.0.0.1\"")
 };
 static const TCHAR * CHROME_IGNORE_CERT_ERRORS =
