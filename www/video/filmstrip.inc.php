@@ -42,6 +42,7 @@ foreach($compTests as $t) {
             $test['path'] = GetTestPath($test['id']);
             $test['pageData'] = loadAllPageData($test['path']);
 
+            $test_median_metric = $median_metric;
             $info = GetTestInfo($test['id']);
             if ($info) {
                 if (array_key_exists('discard', $info) &&
@@ -51,6 +52,8 @@ foreach($compTests as $t) {
                     $defaultInterval = 100;
                 }
                 $test['url'] = $info['url'];
+                if (isset($info['medianMetric']))
+                  $test_median_metric = $info['medianMetric'];
             }
 
             $testInfo = parse_ini_file("./{$test['path']}/testinfo.ini",true);
@@ -61,7 +64,7 @@ foreach($compTests as $t) {
                     $test['done'] = true;
 
                     if( !array_key_exists('run', $test) || !$test['run'] )
-                        $test['run'] = GetMedianRun($test['pageData'],$test['cached'], $median_metric);
+                        $test['run'] = GetMedianRun($test['pageData'],$test['cached'], $test_median_metric);
                     $test['aft'] = array_key_exists('aft', $test['pageData'][$test['run']][$test['cached']]) ? $test['pageData'][$test['run']][$test['cached']]['aft'] : 0;
 
                     $loadTime = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];
