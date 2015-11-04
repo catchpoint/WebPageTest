@@ -277,6 +277,8 @@ void TestServer::MongooseCallback(enum mg_event event,
       GetIntParam(request_info->query_string, "error",
                   test_state_._test_result);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+      // navigation failed, we should not block next load, if there are some
+      hook_.SetHookReady();
     } else if (strcmp(request_info->uri,"/event/all_dom_elements_loaded")==0) {
       DWORD load_time = 0;
       GetDwordParam(request_info->query_string, "load_time", load_time);
