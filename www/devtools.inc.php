@@ -1097,8 +1097,8 @@ function DevToolsGetCPUSlices($testPath, $run, $cached) {
   $timeline = array();
   $ver = 2;
   $cacheFile = "$testPath/$run.$cached.devToolsCPUSlices.$ver";
-  if (gz_is_file($cacheFile))
-    $slices = json_decode(gz_file_get_contents($cacheFile), true);
+//  if (gz_is_file($cacheFile))
+//    $slices = json_decode(gz_file_get_contents($cacheFile), true);
   if (!isset($slices)) {
     GetTraceTimeline($testPath, $run, $cached, $timeline);
     if (isset($timeline) && is_array($timeline) && count($timeline)) {
