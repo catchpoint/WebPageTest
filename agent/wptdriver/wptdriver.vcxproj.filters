@@ -216,6 +216,9 @@
     <ClInclude Include="web_driver.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="globals.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="small.ico">

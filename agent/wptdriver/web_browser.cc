@@ -27,15 +27,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 #include "StdAfx.h"
 #include "util.h"
+#include "globals.h"
 #include "web_browser.h"
 
 typedef void(__stdcall * LPINSTALLHOOK)(DWORD thread_id);
-
-extern const TCHAR * FLASH_CACHE_DIR;
-extern const TCHAR * SILVERLIGHT_CACHE_DIR;
-extern const TCHAR * GLOBAL_TESTING_MUTEX;
-extern const TCHAR * BROWSER_STARTED_EVENT;
-extern const TCHAR * BROWSER_DONE_EVENT;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
