@@ -132,11 +132,11 @@ wpt.chromeDebugger.StartTrace = function() {
       traceCategories = '*';
     else
       traceCategories = '-*';
-    traceCategories = traceCategories + ',netlog';
+    traceCategories = traceCategories + ',netlog,blink.user_timing,blink.console';
     if (g_instance.timeline)
-      traceCategories = traceCategories + ',blink.console,toplevel,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame';
+      traceCategories = traceCategories + ',toplevel,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame';
     if (g_instance.timelineStackDepth > 0)
-      traceCategories += ',disabled-by-default-devtools.timeline.stack,devtools.timeline.stack,disabled-by-default-v8.cpu_profile';
+      traceCategories += ',disabled-by-default-devtools.timeline.stack,devtools.timeline.stack';
     var params = {categories: traceCategories, options:'record-as-much-as-possible'};
     g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start', params);
   }
@@ -176,14 +176,14 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       var len = params['value'].length;
       for(var i = 0; i < len; i++) {
         if (params['value'][i]['cat'] == 'netlog') {
-          g_instance.netlog.push(params['value'][i]);
+          wpt.chromeDebugger.processNetlogTraceEvent(params['value'][i]);
         }
       }
     }
   }
   if (message === 'Tracing.tracingComplete') {
     tracing = true;
-    wpt.chromeDebugger.processNetlog();
+    wpt.chromeDebugger.finalizeNetlog();
     if (g_instance.statsDoneCallback)
       g_instance.statsDoneCallback();
   }
@@ -324,36 +324,33 @@ g_instance.netlogH2Sessions = {};
 /**
 * Process the netlog data into individual requests
 */
-wpt.chromeDebugger.processNetlog = function() {
-  //wpt.chromeDebugger.sendEvent('netlog', JSON.stringify(g_instance.netlog));
-  var netlog_len = g_instance.netlog.length;
-  for (var i = 0; i < netlog_len; i++) {
-    var entry = g_instance.netlog[i];
-    if (entry.cat === "netlog" && entry['id'] !== undefined && entry['ts'] !== undefined) {
-      entry['id'] = parseInt(entry['id']);
-      entry['ts'] = entry['ts'] / 1000.0; // convert to milliseconds
-      if (entry.name.match(/^HOST_RESOLVER_/)) {
-        wpt.chromeDebugger.ParseNetlogDNSEntry(entry);
-      } else if (entry.name.match(/^TCP_CONNECT/) || entry.name.match(/^SOCKET_BYTES_/)) {
-        wpt.chromeDebugger.ParseNetlogConnectEntry(entry);
-      } else if (entry.name === "SSL_CONNECT") {
-        wpt.chromeDebugger.ParseNetlogSSLEntry(entry);
-      } else if (entry.name.match(/^URL_REQUEST/) ||
-                 entry.name.match(/^HTTP_TRANSACTION/) ||
-                 entry.name === "REQUEST_ALIVE") {
-        wpt.chromeDebugger.ParseNetlogRequestEntry(entry);
-      } else if (entry.name === "HTTP_STREAM_JOB_BOUND_TO_REQUEST" ||
-                 entry.name === "SOCKET_POOL_BOUND_TO_SOCKET" ||
-                 entry.name === "HTTP2_SESSION_POOL_IMPORTED_SESSION_FROM_SOCKET" ||
-                 entry.name === "HTTP2_SESSION_POOL_FOUND_EXISTING_SESSION") {
-        wpt.chromeDebugger.linkNetlogSocket(entry);
-      } else if (entry.name.match(/^HTTP2_SESSION/) ||
-                 entry.name.match(/HTTP2_STREAM/)) {
-        wpt.chromeDebugger.ParseHTTP2SessionEntry(entry);
-      }
+wpt.chromeDebugger.processNetlogTraceEvent = function(entry) {
+  if (entry.cat === "netlog" && entry['id'] !== undefined && entry['ts'] !== undefined) {
+    entry['id'] = parseInt(entry['id']);
+    entry['ts'] = entry['ts'] / 1000.0; // convert to milliseconds
+    if (entry.name.match(/^HOST_RESOLVER_/)) {
+      wpt.chromeDebugger.ParseNetlogDNSEntry(entry);
+    } else if (entry.name.match(/^TCP_CONNECT/) || entry.name.match(/^SOCKET_BYTES_/)) {
+      wpt.chromeDebugger.ParseNetlogConnectEntry(entry);
+    } else if (entry.name === "SSL_CONNECT") {
+      wpt.chromeDebugger.ParseNetlogSSLEntry(entry);
+    } else if (entry.name.match(/^URL_REQUEST/) ||
+               entry.name.match(/^HTTP_TRANSACTION/) ||
+               entry.name === "REQUEST_ALIVE") {
+      wpt.chromeDebugger.ParseNetlogRequestEntry(entry);
+    } else if (entry.name === "HTTP_STREAM_JOB_BOUND_TO_REQUEST" ||
+               entry.name === "SOCKET_POOL_BOUND_TO_SOCKET" ||
+               entry.name === "HTTP2_SESSION_POOL_IMPORTED_SESSION_FROM_SOCKET" ||
+               entry.name === "HTTP2_SESSION_POOL_FOUND_EXISTING_SESSION") {
+      wpt.chromeDebugger.linkNetlogSocket(entry);
+    } else if (entry.name.match(/^HTTP2_SESSION/) ||
+               entry.name.match(/HTTP2_STREAM/)) {
+      wpt.chromeDebugger.ParseHTTP2SessionEntry(entry);
     }
   }
+};
 
+wpt.chromeDebugger.finalizeNetlog = function() {
   // create requests for any push streams that were not adopted
   for (var h2session in g_instance.netlogH2Sessions) {
     for (var h2Stream in g_instance.netlogH2Sessions[h2session].streams) {
