@@ -8,5 +8,5 @@ const TCHAR * FLASH_CACHE_DIR =
                         _T("Macromedia\\Flash Player\\#SharedObjects");
 const TCHAR * SILVERLIGHT_CACHE_DIR = _T("Microsoft\\Silverlight");
 
-int const BROWSER_STARTED_EVENT_TIMEOUT = 20000;
+int const BROWSER_STARTED_EVENT_TIMEOUT = 60000;
 int const RESULTS_PROCESSING_GRACE_PERIOD = 30000;
