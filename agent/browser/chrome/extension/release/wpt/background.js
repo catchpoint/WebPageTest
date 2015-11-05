@@ -14067,15 +14067,21 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
   if (message === 'Tracing.dataCollected') {
     tracing = true;
     if (params['value'] !== undefined) {
-      if (g_instance.trace || g_instance.timeline) {
-        wpt.chromeDebugger.sendEvent('trace', JSON.stringify(params['value']));
-      }
       // Collect the netlog events separately for calculating the request timings
+      var traceEvents = [];
       var len = params['value'].length;
       for(var i = 0; i < len; i++) {
         if (params['value'][i]['cat'] == 'netlog') {
           wpt.chromeDebugger.processNetlogTraceEvent(params['value'][i]);
+          if (g_instance.trace) {
+            traceEvents.push(params['value'][i]);
+          }
+        } else if (g_instance.trace || g_instance.timeline) {
+          traceEvents.push(params['value'][i]);
         }
+      }
+      if (traceEvents.length) {
+        wpt.chromeDebugger.sendEvent('trace', JSON.stringify(traceEvents));
       }
     }
   }
