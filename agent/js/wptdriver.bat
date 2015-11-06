@@ -97,7 +97,10 @@ if NOT "%~0"=="" (
       set MATCHED=1
       echo Usage: %BATCH_NAME% [options]...
       echo.
-      echo         -s, --serverUrl URL         WebPagetest server URL.
+      echo         -s, --serverUrl URL         URL of the local server that the agent will connect to
+      echo                                     Defaults to 'http://localhost:8888'.
+      echo.
+      echo         --server URL                URL of the webpagetest server that the will  be polled for work
       echo                                     Defaults to 'http://localhost:8888'.
       echo.
       echo         -i, --insecure              Ignore invalid server certificate
