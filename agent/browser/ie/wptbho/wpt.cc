@@ -254,8 +254,8 @@ void Wpt::OnLoad() {
 }
 
 void Wpt::OnBeforeNavigate() {
+  _timings_reported = false;
   if (_active && _webdriver_mode) {
-    _timings_reported = false;
     AtlTrace(_T("[wptbho] - Wpt::OnBeforeNavigate()"));
     _wpt_interface.OnBeforeNavigate();
   }
