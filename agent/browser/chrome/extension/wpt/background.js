@@ -146,6 +146,16 @@ wpt.main.startMeasurements = function() {
       if (!isError && response.webdriver) {
         g_webdriver_mode = true;
         g_active = true;
+        // XXXX: THIS IS A HACK! We need a more clean way of getting the headers from the wpthook to the
+        // extension when running in webdriver mode.
+        g_appendUA.push('PTST/Unknown-Version');
+        g_addHeaders.push({'name' : 'appdynamicssnapshotenabled',
+                           'value' : 'true',
+                           'filter' : ''});
+        chrome.webRequest.onBeforeSendHeaders.addListener(wptBeforeSendHeaders,
+          {urls: ['https://*/*']},
+          ['blocking', 'requestHeaders']
+        );
         wpt.LOG.info('WebDriver mode: TRUE');
         // Note: In WebDriver mode, we will not be able to hook the chrome debugger because the Chrome
         // WebDriver installs an automation extension in the browser which also attaches to the debugger
