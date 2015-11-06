@@ -394,10 +394,12 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData, $
             for ($i = 0; $i < count($events); $i++) {
                 $stepEvents = $events[$i];
                 $stepPageData = null;
-                $stepRequests = null;
+                $stepPageRequests = null;
                 $ok = ProcessDevToolsEvents($stepEvents, $stepPageData, $stepPageRequests, $i);
-                $requests[] = $stepPageRequests;
-                $pageData[] = $stepPageData;
+                if ($ok || isset($stepPageData['URL'])) {
+                    $requests[] = $stepPageRequests;
+                    $pageData[] = $stepPageData;
+                }
             }
         } else {
             $ok = ProcessDevToolsEvents($events, $pageData, $requests);
