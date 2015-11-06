@@ -88,6 +88,8 @@ else
                 echo "<latency>{$test['testinfo']['latency']}</latency>\n";
                 echo "<plr>{$test['testinfo']['plr']}</plr>\n";
             }
+            if( isset($test['testinfo']['mobile']) )
+                echo "<mobile>" . xml_entities($test['testinfo']['mobile']) .   "</mobile>\n";
             if( @strlen($test['testinfo']['label']) )
                 echo "<label>" . xml_entities($test['testinfo']['label']) . "</label>\n";
             if( @strlen($test['testinfo']['completed']) )

@@ -37,9 +37,9 @@ foreach( $testIds as &$testId )
 	$cached = 0;
 	
 	RestoreTest($testId);
-        GetTestStatus($testId);
-        $testPath = './' . GetTestPath($testId);
-        $pageData = loadAllPageData($testPath);
+  GetTestStatus($testId);
+  $testPath = './' . GetTestPath($testId);
+  $pageData = loadAllPageData($testPath);
 	$medianRun = GetMedianRun($pageData, $cached);
 
 	$secured = 0;

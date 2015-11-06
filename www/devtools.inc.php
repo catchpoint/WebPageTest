@@ -8,6 +8,8 @@ if(extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('DevToolsGetConsoleLog');
     newrelic_add_custom_tracer('DevToolsGetCPUSlices');
     newrelic_add_custom_tracer('GetDevToolsCPUTime');
+    newrelic_add_custom_tracer('ParseDevToolsEvents');
+    newrelic_add_custom_tracer('DevToolsMatchEvent');
 }
 
 /**
@@ -51,6 +53,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
     $ver = 13;
     $cached = isset($cached) && $cached ? 1 : 0;
     $ok = GetCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
+    $ok = false;
     if (!$ok) {
       if (GetDevToolsEvents(null, $testPath, $run, $cached, $events, $startOffset)) {
           if (DevToolsFilterNetRequests($events, $rawRequests, $rawPageData)) {
@@ -678,19 +681,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
   $hasNet = strpos($json, '"Network.') !== false ? true : false;
   $hasTimeline = strpos($json, '"Timeline.eventRecorded"') !== false ? true : false;
   $hasTrim = strpos($json, $START_MESSAGE) !== false ? true : false;
-  $messages = json_decode($json, true);
-  // try fixing up the file if it doesn't look like it is valid json
-  if (!isset($messages) && substr($json, -1) !== ']') {
-    do {
-      $pos = strrpos($json, '}');
-      if ($pos !== false) {
-        $json = substr($json, 0, $pos);
-        $messages = json_decode($json . '}]', true);
-      } else {
-        $json = '';
-      }
-    } while(!isset($messages) && strlen($json));
-  }
+  $messages = json_decode($json, true, 100000);
   unset($json);
 
   $firstEvent = null;
@@ -737,22 +728,26 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
     }
   }
   
-  if (!$firstEvent && ($hasTimeline || $hasNet)) {
+  if (!$firstEvent && $hasTimeline) {
     foreach ($messages as $message) {
       if (is_array($message) && isset($message['method'])) {
         $eventTime = DevToolsEventTime($message);
-        if ($hasTimeline) {
-          $json = json_encode($message);
-          if (strpos($json, '"type":"Resource') !== false) {
-            $firstEvent = $eventTime;
-            break;
-          }
-        } else {
-          $method_class = substr($message['method'], 0, strpos($message['method'], '.'));
-          if ($eventTime && $method_class === 'Network') {
-            $firstEvent = $eventTime * 1000.0;
-            break;
-          }
+        $json = json_encode($message);
+        if (strpos($json, '"type":"Resource') !== false) {
+          $firstEvent = $eventTime;
+          break;
+        }
+      }
+    }
+  }
+  if (!$firstEvent && $hasNet) {
+    foreach ($messages as $message) {
+      if (is_array($message) && isset($message['method'])) {
+        $eventTime = DevToolsEventTime($message);
+        $method_class = substr($message['method'], 0, strpos($message['method'], '.'));
+        if ($eventTime && $method_class === 'Network') {
+          $firstEvent = $eventTime * 1000.0;
+          break;
         }
       }
     }
@@ -1102,8 +1097,8 @@ function DevToolsGetCPUSlices($testPath, $run, $cached) {
   $timeline = array();
   $ver = 2;
   $cacheFile = "$testPath/$run.$cached.devToolsCPUSlices.$ver";
-  if (gz_is_file($cacheFile))
-    $slices = json_decode(gz_file_get_contents($cacheFile), true);
+//  if (gz_is_file($cacheFile))
+//    $slices = json_decode(gz_file_get_contents($cacheFile), true);
   if (!isset($slices)) {
     GetTraceTimeline($testPath, $run, $cached, $timeline);
     if (isset($timeline) && is_array($timeline) && count($timeline)) {

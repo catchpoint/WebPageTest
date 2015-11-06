@@ -70,8 +70,7 @@ static const char * BLANK_HTML = "HTTP/1.1 200 OK\r\n"
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 TestServer::TestServer(WptHook& hook, WptTestHook &test, TestState& test_state,
-                        Requests& requests, DevTools &dev_tools, Trace &trace,
-                        Trace &trace_netlog)
+                        Requests& requests, DevTools &dev_tools, Trace &trace)
   :mongoose_context_(NULL)
   ,hook_(hook)
   ,test_(test)
@@ -79,7 +78,6 @@ TestServer::TestServer(WptHook& hook, WptTestHook &test, TestState& test_state,
   ,requests_(requests)
   ,dev_tools_(dev_tools)
   ,trace_(trace)
-  ,trace_netlog_(trace_netlog)
   ,started_(false) {
   InitializeCriticalSection(&cs);
   last_cpu_idle_.QuadPart = 0;
@@ -247,13 +245,23 @@ void TestServer::MongooseCallback(enum mg_event event,
         test_state_.OnStatusMessage(status);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/request_data") == 0) {
-      if (test_state_._active) {
-        test_state_.ActivityDetected();
-        CString body = GetPostBody(conn, request_info);
-        requests_.ProcessBrowserRequest(body);
-      } else {
-        OutputDebugStringA("Request data received while not active");
+      CString body = GetPostBody(conn, request_info);
+      //OutputDebugStringA("\n\n*****\n\n");
+      //OutputDebugString(body);
+      requests_.ProcessBrowserRequest(body);
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/netlog") == 0) {
+      CStringA body = GetPostBodyA(conn, request_info);
+      HANDLE hFile = CreateFile(L"c:\\netlog.json", GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+      if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD bytes;
+        WriteFile(hFile, (LPCSTR)body, body.GetLength(), &bytes, 0);
+        CloseHandle(hFile);
       }
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/dns_time") == 0) {
+      CString body = GetPostBody(conn, request_info);
+      requests_.SyncDNSTime(body);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/console_log") == 0) {
       if (test_state_._active) {
@@ -282,11 +290,6 @@ void TestServer::MongooseCallback(enum mg_event event,
       CStringA body = CT2A(GetPostBody(conn, request_info));
       if (body.GetLength())
         trace_.AddEvents(body);
-      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
-    } else if (strcmp(request_info->uri, "/event/trace_netlog") == 0) {
-      CStringA body = CT2A(GetPostBody(conn, request_info));
-      if (body.GetLength())
-        trace_netlog_.AddEvents(body);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/paint") == 0) {
       //test_state_.PaintEvent(0, 0, 0, 0);
@@ -463,6 +466,30 @@ CString TestServer::GetPostBody(struct mg_connection *conn,
           if (bytes && bytes <= length) {
             buff[bytes] = 0;
             body += CA2T(buff, CP_UTF8);
+            length -= bytes;
+          }
+        }
+        free(buff);
+      }
+    }
+  }
+
+  return body;
+}
+CStringA TestServer::GetPostBodyA(struct mg_connection *conn,
+                                  const struct mg_request_info *request_info){
+  CStringA body;
+  const char * length_string = mg_get_header(conn, "Content-Length");
+  if (length_string) {
+    int length = atoi(length_string);
+    if (length) {
+      char * buff = (char *)malloc(length + 1);
+      if (buff) {
+        while (length) {
+          int bytes = mg_read(conn, buff, length);
+          if (bytes && bytes <= length) {
+            buff[bytes] = 0;
+            body += CStringA(buff);
             length -= bytes;
           }
         }

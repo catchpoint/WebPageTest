@@ -109,7 +109,7 @@ $loc = ParseLocations($locations);
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
-                        <li><input type="url" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>
+                        <li><input type="text" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>
                         <li>
                             <label for="location">Test Location</label>
                             <select name="where" id="location">
@@ -316,7 +316,8 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="clearcerts" id="clearcerts" class="checkbox" style="float: left;width: auto;">
                                         <label for="clearcerts" class="auto_width">
-                                            Clear SSL Certificate Caches
+                                            Clear SSL Certificate Caches<br>
+                                            <small>Internet Explorer</small>
                                         </label>
                                     </li>
                                     <li>
@@ -358,6 +359,13 @@ $loc = ParseLocations($locations);
                                             <small>Do not add PTST to the browser UA string</small>
                                         </label>
                                     </li>
+                                    <li>
+                                        <label for="uastring" style="width: auto;">
+                                        User Agent String<br>
+                                        <small>(Custom UA String)</small>
+                                        </label>
+                                        <input type="text" name="uastring" id="uastring" class="text" style="width: 350px;">
+                                    </li>
                                     <?php
                                     if ( isset($settings['fullSizeVideoOn']) && $settings['fullSizeVideoOn'] )
                                     { ?>
@@ -369,17 +377,6 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li><?php } ?>
                                     <li>
-                                        <label for="dom_elements" class="auto_width">DOM Element</label>
-                                        <input type="text" name="domelement" id="dom_elements" class="text">
-                                        <div class="tooltip" style="display:none;">Waits for and records when the indicated DOM element becomes available on the page.  The DOM element 
-                                        is identified in <b>attribute=value</b> format where "attribute" is the attribute to match on (id, className, name, innerText, etc.)
-                                        and "value" is the value of that attribute (case sensitive).  For example, on SNS pages <b>name=loginId</b>
-                                        would be the DOM element for the Screen Name entry field.<br><br>
-                                        There are 3 special  attributes that will match on a HTTP request: <b>RequestEnd</b>, <b>RequestStart</b> and <b>RequestTTFB</b> will mark the End, Start or TTFB of the
-                                        first request that contains the given value in the url. i.e. <b>RequestTTFB=favicon.ico</b> will mark the first byte time of the favicon.ico request.
-                                        </div>
-                                    </li>
-                                    <li>
                                         <label for="time">
                                             Minimum test duration<br>
                                             <small>Capture data for at least...</small>
@@ -387,11 +384,11 @@ $loc = ParseLocations($locations);
                                         <input id="time" type="number" class="text short" name="time" value=""> seconds
                                     </li>
                                     <li>
-                                        <label for="tester">
-                                            Specific Tester<br>
-                                            <small>Run the test on a specific <a href="/getTesters.php">PC</a>.<br>Name must match exactly or the test will not run.</small>
+                                        <label for="customHeaders">
+                                            Custom headers<br>
+                                            <small>Add custom headers to all network requests emitted from the browser</small>
                                         </label>
-                                        <input id="tester" type="text" class="text" name="tester" value="">
+                                        <textarea id="customHeaders" type="text" class="text" name="customHeaders" value=""></textarea>
                                     </li>
                                 </ul>
                             </div>
@@ -401,8 +398,8 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="mobile" id="mobile" class="checkbox" style="float: left;width: auto;">
                                         <label for="mobile" class="auto_width">
-                                            Emulate Mobile Browser (Experimental, Chrome 39+)<br>
-                                            <small>Nexus 5 user agent, 1080x1920 screen, 3x scaling and fixed viewport</small>
+                                            Emulate Mobile Browser<br>
+                                            <small>Nexus 5 user agent, 1080x1920 screen, 3x device pixel ratio</small>
                                         </label>
                                     </li>
                                     <li>
@@ -434,13 +431,30 @@ $loc = ParseLocations($locations);
                                             <small>Chrome 34+ on Android</small>
                                         </label>
                                     </li>
+                                    <?php
+                                    if ($admin && GetSetting('wprDesktop')) {
+                                    ?>
                                     <li>
-                                        <label for="uastring" style="width: auto;">
-                                        User Agent String<br>
-                                        <small>(Custom UA String)</small>
+                                        <input type="checkbox" name="wprDesktop" id="wprDesktop" class="checkbox" style="float: left;width: auto;">
+                                        <label for="wprDesktop" class="auto_width">
+                                            Use Web Page Replay recorded Desktop Page<br>
+                                            <small>Limited list of available <a href="/wprDesktop.txt">URLs</a></small>
                                         </label>
-                                        <input type="text" name="uastring" id="uastring" class="text" style="width: 350px;">
                                     </li>
+                                    <?php
+                                    }
+                                    if ($admin && GetSetting('wprMobile')) {
+                                    ?>
+                                    <li>
+                                        <input type="checkbox" name="wprMobile" id="wprMobile" class="checkbox" style="float: left;width: auto;">
+                                        <label for="wprMobile" class="auto_width">
+                                            Use Web Page Replay recorded Mobile Page<br>
+                                            <small>Limited list of available <a href="/wprMobile.txt">URLs</a></small>
+                                        </label>
+                                    </li>
+                                    <?php
+                                    }
+                                    ?>
                                     <li>
                                         <label for="cmdline" style="width: auto;">
                                         Command-line<br>

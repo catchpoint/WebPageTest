@@ -363,12 +363,19 @@ BrowserIos.prototype.scheduleClearCacheCookies_ = function() {
   }.bind(this));
 
   // iOS 8 uses a different paths
-  var paths = ['/private/var/mobile/Containers/Data/Application/*/Library/Safari/*',
+  var paths = [// iOS 8+
+               '/private/var/mobile/Containers/Data/Application/*/Library/Safari/*',
                '/var/mobile/Downloads/*',
                '/private/var/mobile/Downloads/*',
                '/var/mobile/Library/Safari/*',
                '/private/var/mobile/Library/Safari/*',
-               '/private/var/mobile/Library/Cookies/*'];
+               '/private/var/mobile/Library/Cookies/*',
+               //iOS 9+
+               '/private/var/mobile/Containers/Data/Application/*/Library/Caches/com.apple.mobilesafari',
+               '/private/var/mobile/Containers/Data/Application/*/Library/Caches/Snapshots/com.apple.mobilesafari',
+               '/private/var/mobile/Containers/Data/Application/*/Library/Caches/WebKit',
+               '/private/var/mobile/Containers/Data/Application/*/Library/Caches/com.apple.WebKit.*',
+               '/private/var/mobile/Containers/Data/Application/*/Library/WebKit'];
   for (var i = 0; i < paths.length; i++) {
     this.scheduleSshNoFault_('rm', '-rf', paths[i]);
   }

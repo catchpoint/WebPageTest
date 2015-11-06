@@ -50,8 +50,7 @@ static const DWORD RESPONSIVE_BROWSER_WIDTH = 480;
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 TestState::TestState(Results& results, ScreenCapture& screen_capture, 
-                      WptTestHook &test, DevTools& dev_tools, Trace& trace,
-                      Trace& trace_netlog):
+                      WptTestHook &test, DevTools& dev_tools, Trace& trace):
   _results(results)
   ,_screen_capture(screen_capture)
   ,_frame_window(NULL)
@@ -60,7 +59,6 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   ,_test(test)
   ,_dev_tools(dev_tools)
   ,_trace(trace)
-  ,_trace_netlog(trace_netlog)
   ,no_gdi_(false)
   ,gdi_only_(false)
   ,navigated_(false)

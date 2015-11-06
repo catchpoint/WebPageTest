@@ -54,7 +54,14 @@ var CHROME_FLAGS = [
     // Disable UI bars (location, debugging, etc)
     '--disable-infobars',
     // Disable the save password dialog
-    '--disable-save-password-bubble'
+    '--disable-save-password-bubble',
+    "--disable-background-downloads",
+    "--disable-add-to-shelf",
+    "--disable-client-side-phishing-detection",
+    "--disable-datasaver-prompt",
+    "--disable-default-apps",
+    "--disable-domain-reliability",
+    "--safebrowsing-disable-auto-update"
   ];
 
 var KNOWN_BROWSERS = {

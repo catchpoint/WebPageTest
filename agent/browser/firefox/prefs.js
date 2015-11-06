@@ -50,6 +50,7 @@ user_pref("pref.browser.homepage.disable_button.current_page", false);
 user_pref("privacy.cpd.siteSettings", true);
 user_pref("privacy.sanitize.migrateFx3Prefs", true);
 user_pref("privacy.sanitize.timeSpan", 0);
+user_pref("reader.parse-on-load.enabled", false);
 user_pref("security.enable_java", false);
 user_pref("security.warn_entering_weak", false);
 user_pref("security.warn_viewing_mixed", false);

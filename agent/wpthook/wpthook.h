@@ -90,5 +90,4 @@ private:
   WptTestHook   test_;
   DevTools      dev_tools_;
   Trace         trace_;
-  Trace         trace_netlog_;
 };

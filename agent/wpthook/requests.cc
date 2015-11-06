@@ -34,6 +34,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "track_sockets.h"
 #include "../wptdriver/wpt_test.h"
 
+// Base ID for connection ID's from the browser
+static const DWORD BROWSER_CONNECTION_BASE = 1000000;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -271,7 +273,10 @@ void Requests::ProcessBrowserRequest(CString request_data) {
   double  start_time = 0, end_time = 0, first_byte = 0, request_start = 0,
           dns_start = -1, dns_end = -1, connect_start = -1, connect_end = -1,
           ssl_start = -1, ssl_end = -1;
-  long connection = 0, error_code = 0, status = 0, bytes_in = 0, stream_id = 0;
+  long connection = 0, error_code = 0, status = 0, bytes_in = 0, stream_id = 0,
+       object_size = 0, local_port = 0;
+  ULONG ip = 0;
+  bool push = false;
   LARGE_INTEGER now;
   QueryPerformanceCounter(&now);
   bool processing_values = true;
@@ -312,6 +317,8 @@ void Requests::ProcessBrowserRequest(CString request_data) {
               end_time = _ttof(value);
             else if (!key.CompareNoCase(_T("bytesIn")))
               bytes_in = _ttol(value);
+            else if (!key.CompareNoCase(_T("objectSize")))
+              object_size = _ttol(value);
             else if (!key.CompareNoCase(_T("initiatorUrl")))
               initiator = value;
             else if (!key.CompareNoCase(_T("initiatorLineNumber")))
@@ -321,7 +328,9 @@ void Requests::ProcessBrowserRequest(CString request_data) {
             else if (!key.CompareNoCase(_T("status")))
               status = _ttol(value);
             else if (!key.CompareNoCase(_T("connectionId")))
-              connection = _ttol(value);
+              connection = BROWSER_CONNECTION_BASE + _ttol(value);
+            else if (!key.CompareNoCase(_T("streamId")))
+              stream_id = _ttol(value);
             else if (!key.CompareNoCase(_T("dnsStart")))
               dns_start = _ttof(value);
             else if (!key.CompareNoCase(_T("dnsEnd")))
@@ -334,6 +343,12 @@ void Requests::ProcessBrowserRequest(CString request_data) {
               ssl_start = _ttof(value);
             else if (!key.CompareNoCase(_T("sslEnd")))
               ssl_end = _ttof(value);
+            else if (!key.CompareNoCase(_T("push")) && !value.CompareNoCase(_T("true")))
+              push = true;
+            else if (!key.CompareNoCase(_T("clientPort")))
+              local_port = _ttol(value);
+            else if (!key.CompareNoCase(_T("ip")))
+              ip = inet_addr((LPCSTR)CT2A(value));
           }
         }
       } else if (processing_request) {
@@ -343,6 +358,9 @@ void Requests::ProcessBrowserRequest(CString request_data) {
       }
     }
     line = request_data.Tokenize(_T("\n"), position);
+  }
+  if (push && !initiator.GetLength()) {
+    initiator = _T("HTTP/2 Server Push");
   }
   if (url.GetLength() && initiator.GetLength()) {
     BrowserRequestData data(url);
@@ -362,6 +380,11 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     request->initiator_line_ = initiator_line;
     request->initiator_column_ = initiator_column;
     request->_bytes_in = bytes_in;
+    request->_object_size = object_size;
+    if (local_port)
+      request->_local_port = local_port;
+    if (ip)
+      request->_peer_address = ip;
 
     // See if we can map the browser's internal clock timestamps to our
     // performance counters.  If we have a DNS lookup we can match up or a
@@ -473,6 +496,32 @@ void Requests::ProcessBrowserRequest(CString request_data) {
       EnterCriticalSection(&cs);
       _requests.AddTail(request);
       LeaveCriticalSection(&cs);
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Sync the browser time with our clock
+-----------------------------------------------------------------------------*/
+void Requests::SyncDNSTime(CString message) {
+  if (_start_browser_clock == 0) {
+    int position = 0;
+    CString host = message.Tokenize(_T(" "), position).Trim();
+    if (position >= 0) {
+      CString browser_time = message.Tokenize(_T(" "), position).Trim();
+      if (host.GetLength() && browser_time.GetLength()) {
+        double dns_start = _ttof(browser_time);
+        if (dns_start > 0) {
+          DNSAddressList addresses;
+          LARGE_INTEGER match_dns_start, match_dns_end;
+          if (_dns.Find(host, addresses, match_dns_start, match_dns_end)) {
+            // Figure out what the clock time would have been at our perf
+            // counter start time.
+            _start_browser_clock =
+                dns_start - _test_state.ElapsedMsFromStart(match_dns_start);
+          }
+        }
+      }
     }
   }
 }

@@ -57,7 +57,6 @@ static const TCHAR * CONSOLE_LOG_FILE = _T("_console_log.json");
 static const TCHAR * TIMED_EVENTS_FILE = _T("_timed_events.json");
 static const TCHAR * CUSTOM_METRICS_FILE = _T("_metrics.json");
 static const TCHAR * TRACE_FILE = _T("_trace.json");
-static const TCHAR * TRACE_NETLOG_FILE = _T("_trace_netlog.json");
 static const TCHAR * CUSTOM_RULES_DATA_FILE = _T("_custom_rules.json");
 static const DWORD RIGHT_MARGIN = 25;
 static const DWORD BOTTOM_MARGIN = 25;
@@ -67,7 +66,7 @@ static const DWORD BOTTOM_MARGIN = 25;
 Results::Results(TestState& test_state, WptTest& test, Requests& requests, 
                   TrackSockets& sockets, TrackDns& dns, 
                   ScreenCapture& screen_capture, DevTools &dev_tools,
-                  Trace &trace, Trace &trace_netlog):
+                  Trace &trace):
   _requests(requests)
   , _test_state(test_state)
   , _test(test)
@@ -77,7 +76,6 @@ Results::Results(TestState& test_state, WptTest& test, Requests& requests,
   , _saved(false)
   , _dev_tools(dev_tools)
   , _trace(trace)
-  , _trace_netlog(trace_netlog)
   , reported_step_(0) {
   _file_base = shared_results_file_base;
   _visually_complete.QuadPart = 0;
@@ -151,7 +149,6 @@ void Results::Save(void) {
       SaveTimedEvents();
       SaveCustomMetrics();
       _trace.Write(_file_base + TRACE_FILE);
-      _trace_netlog.Write(_file_base + TRACE_NETLOG_FILE);
     }
     if (shared_result == -1 || shared_result == 0 || shared_result == 99999)
       shared_result = _test_state._test_result;
@@ -1073,6 +1070,8 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   result += buff;
   // Object Size
   DWORD size = request->_response_data.GetBody().GetLength();
+  if (size <= 0 && request->_object_size > 0)
+    size = request->_object_size;
   buff.Format("%d\t", size);
   result += buff;
   // Cookie Size (out)

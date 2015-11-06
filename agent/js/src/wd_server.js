@@ -732,7 +732,7 @@ WebDriverServer.prototype.execBrowserScript_ = function(code) {
       value = response.result.value;
     }
     return value;
-  }.bind(this));
+  }.bind(this), function(){});
 };
 
 /**
@@ -858,7 +858,7 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
     this.traceRunning_ = true;
     var message = {method: 'Tracing.start'};
     message.params = {
-      categories: 'netlog,blink.console,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame',
+      categories: 'netlog,blink.console,blink.user_timing,disabled-by-default-devtools.timeline,devtools.timeline',
       options: 'record-as-much-as-possible'
     };
     if (1 === this.task_.trace) {
@@ -867,8 +867,11 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
     } else {
       message.params.categories = '-*,' + message.params.categories;
     }
-    if (this.task_.timelineStackDepth) {
-      message.params.categories = message.params.categories + ',toplevel,disabled-by-default-devtools.timeline.stack,devtools.timeline.stack,disabled-by-default-v8.cpu_profile';
+    if (1 === this.task_.timeline) {
+      message.params.categories = message.params.categories + ',toplevel,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame';
+      if (this.task_.timelineStackDepth) {
+        message.params.categories = message.params.categories + ',disabled-by-default-devtools.timeline.stack,devtools.timeline.stack';
+      }
     }
     this.devToolsCommand_(message).then(function() {
       logger.debug('Started tracing');
@@ -1208,7 +1211,7 @@ WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
           this.execBrowserScript_('var wptCustomMetric = function() { ' +
               this.task_.customMetrics[metric] +
               '};' +
-              'wptCustomMetric();').then(function(result) {
+              'try{wptCustomMetric();}catch(e){};').then(function(result) {
             if (this.customMetrics_ == undefined)
               this.customMetrics_ = {};
             this.customMetrics_[metric] = result;
@@ -1221,14 +1224,16 @@ WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
 
   this.scheduleNoFault_('Collect User Timing', function() {
     this.execBrowserScript_('(function() {' +
-          'var marks = window.performance.getEntriesByType("mark");' +
           'var m = [];' +
+          'try {' +
+          'var marks = window.performance.getEntriesByType("mark");' +
           'if (marks.length) {' +
           '  for (var i = 0; i < marks.length; i++)' +
           '    m.push({"entryType": marks[i].entryType, ' +
           '            "name": marks[i].name, ' +
           '            "startTime": marks[i].startTime});' +
           '}' +
+          '} catch(e) {};' +
           'return m;' +
           '})();').then(function(result) {
       if (result && result.length) {
@@ -1246,11 +1251,13 @@ WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
         ' domCount = 0;' +
         'pageData["domElements"] = domCount;' +
         'function addTime(name) {'+
+        ' try {' +
         ' if (window.performance.timing[name] > 0) {' +
         '   pageData[name] = Math.max(0, Math.round(' +
         '       window.performance.timing[name] -' +
         '       window.performance.timing["navigationStart"]));' +
         ' }' +
+        ' } catch(e) {}' +
         '};' +
         'addTime("domContentLoadedEventStart");' +
         'addTime("domContentLoadedEventEnd");' +
@@ -1282,7 +1289,7 @@ WebDriverServer.prototype.scheduleProcessVideo_ = function() {
   this.scheduleNoFault_('Process Video', function() {
     if (this.videoFile_ && this.flags_['processvideo'] == 'yes') {
       var videoDir = path.join(this.runTempDir_, 'video');
-      this.histogramFile_ = path.join(this.runTempDir_, 'histograms.json');
+      this.histogramFile_ = path.join(this.runTempDir_, 'histograms.json.gz');
       var traceFile = path.join(this.runTempDir_, 'trace.json');
       var options = ['lib/video/visualmetrics.py', '-i', this.videoFile_, '-d',
           videoDir, '--orange', '--viewport', '--force', '--quality', '75',
@@ -1333,20 +1340,24 @@ WebDriverServer.prototype.done_ = function() {
     this.scheduleNoFault_('Capture Screen Shot', function() {
       this.takeScreenshot_('screen', 'end of run');
     }.bind(this));
-    if (this.videoFile_) {
-      this.scheduleNoFault_('Stop video recording',
-          this.browser_.scheduleStopVideoRecording.bind(this.browser_));
-    }
     this.scheduleStopTracing_();
     if (this.driver_) {
       this.scheduleNoFault_('Get WD Log',
           this.scheduleGetWdDevToolsLog_.bind(this));
     }
-    if (this.pcapFile_) {
-      this.scheduleNoFault_('Stop packet capture',
-          this.browser_.scheduleStopPacketCapture.bind(this.browser_));
+    try {
+      if (this.pcapFile_) {
+        this.scheduleNoFault_('Stop packet capture',
+            this.browser_.scheduleStopPacketCapture.bind(this.browser_));
+      }
+    } catch(e) {}
+    try {
+      this.scheduleCollectMetrics_();
+    } catch(e) {}
+    if (this.videoFile_) {
+      this.scheduleNoFault_('Stop video recording',
+          this.browser_.scheduleStopVideoRecording.bind(this.browser_));
     }
-    this.scheduleCollectMetrics_();
     if (this.videoFile_) {
       // video processing needs to be done after tracing has been stopped and collected
       this.scheduleProcessVideo_();

@@ -122,9 +122,8 @@ CStringA HttpData::GetHeader(CStringA field_name) {
   POSITION pos = _header_fields.GetHeadPosition();
   while (pos && value.IsEmpty()) {
     HeaderField field = _header_fields.GetNext(pos);
-    if (field.Matches(field_name)) {
+    if (field.Matches(field_name))
       value = field._value;
-    }
   }
   return value;
 }
@@ -395,7 +394,8 @@ Request::Request(TestState& test_state, DWORD socket_id, DWORD stream_id,
   , _is_base_page(false)
   , requests_(requests)
   , _bytes_in(0)
-  , _bytes_out(0) {
+  , _bytes_out(0)
+  , _object_size(0) {
   QueryPerformanceCounter(&_start);
   _first_byte.QuadPart = 0;
   _end.QuadPart = 0;
@@ -665,6 +665,7 @@ bool Request::Process() {
         initiator_column_ = data.initiator_column_;
       }
     }
+
     rtt_ = _sockets.GetRTT(_peer_address);
   }
   LeaveCriticalSection(&cs);

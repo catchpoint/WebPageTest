@@ -42,6 +42,9 @@ if (function_exists('curl_init')) {
 } else
     $CURL_CONTEXT = false;
 
+if ($_SERVER["REMOTE_ADDR"] == '127.0.0.1' && isset($_REQUEST['addr'])) {
+  $_SERVER["REMOTE_ADDR"] = $_REQUEST['addr'];
+}
 if (function_exists('apache_request_headers')) {
     $headers = apache_request_headers();
     if (array_key_exists('X-Forwarded-For', $headers)){
@@ -52,7 +55,7 @@ if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
   $forwarded = explode(',',$_SERVER["HTTP_X_FORWARDED_FOR"]);
   if (isset($forwarded) && is_array($forwarded) && count($forwarded)) {
     $forwarded_ip = trim(end($forwarded));
-    if (strlen($forwarded_ip))
+    if (strlen($forwarded_ip) && $forwarded_ip != "127.0.0.1")
         $_SERVER["REMOTE_ADDR"] = $forwarded_ip;
   }
 }
@@ -129,10 +132,6 @@ if (isset($settings['cdn']) && !$is_ssl) {
 $GLOBALS['ptotocol'] = 'http';
 if ($is_ssl) {
     $GLOBALS['ptotocol'] = 'https';
-}
-$median_metric = 'loadTime';
-if (array_key_exists('medianMetric', $_REQUEST)) {
-    $median_metric = $_REQUEST['medianMetric'];
 }
 
 $tz_offset = null;
@@ -221,6 +220,7 @@ if (preg_match('/^[a-zA-Z0-9_]+$/', @$req_test)) {
     $id = $_COOKIE['tid'];
 }
 
+$median_metric = 'loadTime';
 $testLabel = '';
 if (strlen($id)) {
     if (@strlen($req_rkey)) {
@@ -234,6 +234,15 @@ if (strlen($id)) {
       RestoreTest($id);   // restore the test if it is archived (and deleted)
 
     $testPath = './' . GetTestPath($id);
+    $test = array();
+    if (is_file("$testPath/testinfo.ini")) {
+        $test = parse_ini_file("$testPath/testinfo.ini",true);
+        if (!$userIsBot)
+          touch("$testPath/testinfo.ini");
+    }
+    $test['testinfo'] = GetTestInfo($id);
+    if (isset($test['testinfo']['medianMetric']))
+      $median_metric = $test['testinfo']['medianMetric'];
 
     $run = htmlspecialchars(@$req_run);
     if (!$run) {
@@ -243,17 +252,10 @@ if (strlen($id)) {
     if (array_key_exists('run', $_REQUEST) && !strcasecmp($_REQUEST['run'], 'median')) {
       require_once('page_data.inc');
       $pageData = loadAllPageData($testPath, $options);
-      $run = GetMedianRun($pageData, $cached);
+      $run = GetMedianRun($pageData, $cached, $median_metric);
     }
     $cachedText = $cached ? '_Cached' : '';
-    $test = array();
-    if (is_file("$testPath/testinfo.ini")) {
-        $test = parse_ini_file("$testPath/testinfo.ini",true);
-        if (!$userIsBot)
-          touch("$testPath/testinfo.ini");
-    }
     $testDate = null;
-    $test['testinfo'] = GetTestInfo($id);
     if ($test['testinfo']) {
       if( array_key_exists('completed', $test['testinfo']))
           $testDate = strftime('%x %X', (int)$test['testinfo']['completed'] + ($tz_offset * 60));
@@ -295,4 +297,9 @@ if (strlen($id)) {
         $test['testinfo'] = array();
     }
 }
+
+if (array_key_exists('medianMetric', $_REQUEST)) {
+    $median_metric = $_REQUEST['medianMetric'];
+}
+
 ?>

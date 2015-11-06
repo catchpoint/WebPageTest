@@ -105,6 +105,8 @@ if (ValidateTestId($id)) {
     }
   } else {
     $testInfo = GetTestInfo($id);
+    if (isset($testInfo['medianMetric']))
+      $medianMetric = $testInfo['medianMetric'];
     if (!$testInfo || !array_key_exists('location', $testInfo)) {
       $testLock = LockTest($id);
       $testInfo = GetTestInfo($id);
@@ -321,7 +323,7 @@ if (ValidateTestId($id)) {
           
           if (!isset($pageData))
             $pageData = loadAllPageData($testPath);
-          $medianRun = GetMedianRun($pageData, 0);
+          $medianRun = GetMedianRun($pageData, 0, $medianMetric);
           $testInfo['medianRun'] = $medianRun;
           $testInfo_dirty = true;
 

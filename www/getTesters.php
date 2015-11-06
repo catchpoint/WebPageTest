@@ -30,10 +30,10 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
       if ($location['elapsed'] < 30)
         $error = ' success';
     }
-    echo "<tr id=\"$name\"><th class=\"header$error\" colspan=\"14\">" . htmlspecialchars($name) . "$elapsed</th></tr>\n";
+    echo "<tr id=\"$name\"><th class=\"header$error\" colspan=\"15\">" . htmlspecialchars($name) . "$elapsed</th></tr>\n";
     if (array_key_exists('testers', $location)) {
-      echo "<tr><th class=\"tester\">Tester</th><th>Busy?</th><th>Last Check (minutes)</th><th>Last Work (minutes)</th><th>Version</th><th>PC</th><th>EC2 Instance</th><th>CPU Utilization</th><th>Error Rate</th><th>Free Disk (GB)</th><th>IE Version</th>";
-      echo "<th>GPU?</th><th>IP</th><th>DNS Server(s)</th></tr>\n";
+      echo "<tr><th class=\"tester\">Tester</th><th>Busy?</th><th>Last Check (minutes)</th><th>Last Work (minutes)</th><th>Version</th><th>PC</th><th>EC2 Instance</th><th>CPU Utilization</th><th>Error Rate</th><th>Free Disk (GB)</th><th>Screen Size</th>";
+      echo "<th>IE Version</th><th>GPU?</th><th>IP</th><th>DNS Server(s)</th></tr>\n";
       $count = 0;
       foreach($location['testers'] as $tester) {
         $count++;
@@ -47,6 +47,11 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
         echo "<td>" . @htmlspecialchars($tester['cpu']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['errors']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['freedisk']) . "</td>";
+        if (empty($tester['screenwidth']) || empty($tester['screenwidth'])) {
+          echo "<td></td>";
+        } else {
+          echo "<td>" . @htmlspecialchars($tester['screenwidth']) . "x" . @htmlspecialchars($tester['screenheight']) . "</td>";
+        }
         echo "<td>" . @htmlspecialchars($tester['ie']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['GPU']) . "</td>";
         echo "<td>" . @htmlspecialchars($tester['ip']) . "</td>";

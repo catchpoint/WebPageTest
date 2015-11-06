@@ -142,6 +142,10 @@ CDN_PROVIDER cdnList[] = {
   {".cdninstagram.com", "Facebook"},
   {".rlcdn.com", "Reapleaf"},
   {".wp.com", "WordPress Jetpack"},
+  {".aads1.net", "Aryaka"},
+  {".aads-cn.net", "Aryaka"},
+  {".aads-cng.net", "Aryaka"},
+  {".squixa.net", "section.io"},
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -172,5 +176,6 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "Golfe2", "Google"},
   {"server", "tsa_b", "Twitter"},
   {"X-CDN", "Incapsula", "Incapsula"},
-  {"X-Iinfo", "", "Incapsula"}
+  {"X-Iinfo", "", "Incapsula"},
+  {"X-Ar-Debug", "", "Aryaka"}
 };
