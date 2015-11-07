@@ -46,3 +46,4 @@ agent/js/5c2.sh
 */webdriver-support/java/build/
 *.iml
 logs/
+_dist-www/
