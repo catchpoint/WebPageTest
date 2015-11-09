@@ -104,6 +104,7 @@ public:
   void TitleSet(CString title);
   void UpdateBrowserWindow();
   DWORD ElapsedMsFromStart(LARGE_INTEGER end) const;
+  DWORD ElapsedMsFromLaunch(LARGE_INTEGER end) const;
   void FindBrowserNameAndVersion();
   void AddConsoleLogMessage(CString message);
   void AddTimedEvent(CString timed_event);
@@ -118,6 +119,7 @@ public:
   void CheckResponsive();
 
   // times
+  LARGE_INTEGER _launch;
   LARGE_INTEGER _start;
   LARGE_INTEGER _step_start;
   LARGE_INTEGER _first_navigate;

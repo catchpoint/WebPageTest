@@ -13944,7 +13944,7 @@ var IGNORE_NETLOG_EVENTS =
      'ENTRY_',
      'PROXY_SERVICE',
      'URL_REQUEST_DELEGATE'];
-var DEBUG_NETLOG = true;
+var DEBUG_NETLOG = false;
 
 /**
  * Construct an object that connectes to the Chrome debugger.
@@ -14073,20 +14073,17 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       var len = params['value'].length;
       for(var i = 0; i < len; i++) {
         if (params['value'][i]['cat'] == 'netlog') {
-          if (DEBUG_NETLOG) {
+          if (DEBUG_NETLOG)
             g_instance.netlog.push(params['value'][i]);
-          }
           wpt.chromeDebugger.processNetlogTraceEvent(params['value'][i]);
-          if (g_instance.trace) {
+          if (g_instance.trace)
             traceEvents.push(params['value'][i]);
-          }
         } else if (g_instance.trace || g_instance.timeline) {
           traceEvents.push(params['value'][i]);
         }
       }
-      if (traceEvents.length) {
+      if (traceEvents.length)
         wpt.chromeDebugger.sendEvent('trace', JSON.stringify(traceEvents));
-      }
     }
   }
   if (message === 'Tracing.tracingComplete') {
@@ -14378,7 +14375,6 @@ wpt.chromeDebugger.sendRequestDetails = function(id) {
     if (request['devToolsRequest'] !== undefined &&
         g_instance.requests[request.devToolsRequest] !== undefined) {
       var r = g_instance.requests[request.devToolsRequest];
-      eventData += "r=" + JSON.stringify(r) + "\n";
       if (r['initiator'] !== undefined &&
           r.initiator['type'] !== undefined) {
         eventData += 'initiatorType=' + r.initiator.type + '\n';
@@ -14510,23 +14506,20 @@ wpt.chromeDebugger.sendRequestDetails = function(id) {
 wpt.chromeDebugger.ParseNetlogDNSEntry = function(entry) {
   var id = entry['id'];
   if (entry.name === "HOST_RESOLVER_IMPL_JOB") {
-    if (g_instance.netlogDNS[id] === undefined) {
+    if (g_instance.netlogDNS[id] === undefined)
       g_instance.netlogDNS[id] = {};
-    }
-    if (entry['ph'] === 'b') {
+    if (entry['ph'] === 'b')
       g_instance.netlogDNS[id].start = entry['ts'];
-    } else if (entry['ph'] === 'e') {
+    else if (entry['ph'] === 'e')
       g_instance.netlogDNS[id].end = entry['ts'];
-    }
-
   }
-  if (g_instance.netlogDNS[id] !== undefined && entry['args'] !== undefined && entry.args['params'] !== undefined) {
-    if (entry.args.params['host'] !== undefined) {
+  if (g_instance.netlogDNS[id] !== undefined &&
+      entry['args'] !== undefined &&
+      entry.args['params'] !== undefined) {
+    if (entry.args.params['host'] !== undefined)
       g_instance.netlogDNS[id].host = entry.args.params['host'];
-    }
-    if (entry.args.params['address_list'] !== undefined) {
+    if (entry.args.params['address_list'] !== undefined)
       g_instance.netlogDNS[id].address_list = entry.args.params['address_list'];
-    }
   }
 };
 

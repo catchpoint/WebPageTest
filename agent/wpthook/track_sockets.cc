@@ -147,6 +147,7 @@ bool TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
     EnterCriticalSection(&cs);
     SocketInfo* info = GetSocketInfo(s, false);
     memcpy(&info->_addr, ip_name, sizeof(struct sockaddr_in));
+    info->_addr.sin_port = ntohs(info->_addr.sin_port);
     QueryPerformanceCounter(&info->_connect_start);
     localhost = info->IsLocalhost();
     allowed = !info->IsLinkLocal();
@@ -385,6 +386,35 @@ bool TrackSockets::ClaimConnect(DWORD socket_id, LARGE_INTEGER before,
   }
   LeaveCriticalSection(&cs);
   return is_claimed;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool TrackSockets::Find(ULONG server_addr, USHORT server_port,
+                        USHORT client_port,
+                        LARGE_INTEGER &match_connect_start,
+                        LARGE_INTEGER &match_connect_end) {
+  bool found = false;
+  EnterCriticalSection(&cs);
+  POSITION pos = _socketInfo.GetStartPosition();
+  while (pos) {
+    SocketInfo * info = NULL;
+    DWORD key = 0;
+    _socketInfo.GetNextAssoc(pos, key, info);
+    if (info &&
+        info->_addr.sin_addr.S_un.S_addr == server_addr &&
+        info->_addr.sin_port == server_port &&
+        info->_local_port == client_port) {
+      if (info->_connect_start.QuadPart) {
+        found = true;
+        match_connect_start.QuadPart = info->_connect_start.QuadPart;
+        match_connect_end.QuadPart = info->_connect_end.QuadPart;
+      }
+      break;
+    }
+  }
+  LeaveCriticalSection(&cs);
+  return found;
 }
 
 /*-----------------------------------------------------------------------------

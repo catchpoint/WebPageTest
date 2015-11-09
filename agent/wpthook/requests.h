@@ -77,6 +77,7 @@ public:
   bool HasActiveRequest(DWORD socket_id, DWORD stream_id);
   void ProcessBrowserRequest(CString request_data);
   void SyncDNSTime(CString message);
+  void SyncConnectTime(CString message);
 
   // HTTP/2 interface
   void StreamClosed(DWORD socket_id, DWORD stream_id);

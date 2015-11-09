@@ -64,6 +64,7 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   ,navigated_(false)
   ,_started(false)
   ,received_data_(false) {
+  QueryPerformanceCounter(&_launch);
   QueryPerformanceFrequency(&_ms_frequency);
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
   InitializeCriticalSection(&_data_cs);
@@ -685,6 +686,10 @@ void TestState::OnStatusMessage(CString status) {
 -----------------------------------------------------------------------------*/
 DWORD TestState::ElapsedMsFromStart(LARGE_INTEGER end) const {
   return ElapsedMs(_start, end);
+}
+
+DWORD TestState::ElapsedMsFromLaunch(LARGE_INTEGER end) const {
+  return ElapsedMs(_launch, end);
 }
 
 DWORD TestState::ElapsedMs(LARGE_INTEGER start, LARGE_INTEGER end) const {

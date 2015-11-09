@@ -407,7 +407,7 @@ void Requests::ProcessBrowserRequest(CString request_data) {
             // Figure out what the clock time would have been at our perf
             // counter start time.
             _start_browser_clock =
-                dns_end - _test_state.ElapsedMsFromStart(match_dns_end);
+                dns_end - _test_state.ElapsedMsFromLaunch(match_dns_end);
           }
         }
       }
@@ -426,7 +426,7 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     // figure out the conversion from browser time to perf counter
     LONGLONG ms_freq = _test_state._ms_frequency.QuadPart;
     if (_start_browser_clock != 0) {
-      request->_end.QuadPart = _test_state._start.QuadPart +
+      request->_end.QuadPart = _test_state._launch.QuadPart +
           (LONGLONG)((end_time - _start_browser_clock)  * ms_freq);
     } else {
       request->_end.QuadPart = now.QuadPart;
@@ -518,8 +518,67 @@ void Requests::SyncDNSTime(CString message) {
             // Figure out what the clock time would have been at our perf
             // counter start time.
             _start_browser_clock =
-                dns_start - _test_state.ElapsedMsFromStart(match_dns_start);
+                dns_start - _test_state.ElapsedMsFromLaunch(match_dns_start);
           }
+        }
+      }
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Sync the browser time with our clock
+-----------------------------------------------------------------------------*/
+void Requests::SyncConnectTime(CString message) {
+  if (_start_browser_clock == 0) {
+    int position = 0;
+    struct sockaddr_in serverIP;
+    serverIP.sin_addr.S_un.S_addr = 0;
+    serverIP.sin_port = 0;
+    USHORT client_port = 0;
+    CString server, client, browser_time, buff;
+    server = message.Tokenize(_T(" "), position).Trim();
+    if (position >= 0) {
+      client = message.Tokenize(_T(" "), position).Trim();
+      if (position >= 0)
+        browser_time = message.Tokenize(_T(" "), position).Trim();
+    }
+
+    if (server.GetLength()) {
+      position = 0;
+      buff = server.Tokenize(_T(":"), position).Trim();
+      if (position >= 0 && buff.GetLength()) {
+        inet_pton(AF_INET, (LPCSTR)CT2A((LPCTSTR)buff), &(serverIP.sin_addr));
+        buff = server.Tokenize(_T(":"), position).Trim();
+        if (position >= 0 && buff.GetLength())
+          serverIP.sin_port = _ttoi(buff);
+      }
+    }
+
+    if (client.GetLength()) {
+      position = 0;
+      buff = client.Tokenize(_T(":"), position).Trim();
+      if (position >= 0 && buff.GetLength()) {
+        buff = client.Tokenize(_T(":"), position).Trim();
+        if (position >= 0 && buff.GetLength())
+          client_port = _ttoi(buff);
+      }
+    }
+
+    if (serverIP.sin_addr.S_un.S_addr &&
+        serverIP.sin_port &&
+        client_port &&
+        browser_time.GetLength()) {
+      double connect_start = _ttof(browser_time);
+      if (connect_start > 0) {
+        DNSAddressList addresses;
+        LARGE_INTEGER match_connect_start, match_connect_end;
+        if (_sockets.Find(serverIP.sin_addr.S_un.S_addr, serverIP.sin_port,
+            client_port, match_connect_start, match_connect_end)) {
+          // Figure out what the clock time would have been at our perf
+          // counter start time.
+          _start_browser_clock =
+              connect_start - _test_state.ElapsedMsFromLaunch(match_connect_start);
         }
       }
     }

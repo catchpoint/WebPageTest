@@ -112,6 +112,9 @@ public:
   int GetLocalPort(DWORD socket_id);
   LONGLONG GetEarliest(LONGLONG& after);
   CStringA GetRTT(DWORD ipv4_address);
+  bool Find(ULONG server_addr, USHORT server_port, USHORT client_port,
+            LARGE_INTEGER &match_connect_start,
+            LARGE_INTEGER &match_connect_end);
 
   void H2BeginHeaders(DATA_DIRECTION direction, DWORD socket_id, int stream_id);
   void H2CloseStream(DATA_DIRECTION direction, DWORD socket_id, int stream_id);

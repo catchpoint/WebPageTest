@@ -263,6 +263,10 @@ void TestServer::MongooseCallback(enum mg_event event,
       CString body = GetPostBody(conn, request_info);
       requests_.SyncDNSTime(body);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/connect_time") == 0) {
+      CString body = GetPostBody(conn, request_info);
+      requests_.SyncConnectTime(body);
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/console_log") == 0) {
       if (test_state_._active) {
         CString body = GetPostBody(conn, request_info);
