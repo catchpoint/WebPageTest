@@ -171,7 +171,7 @@ void HttpData::ExtractHeaderFields() {
     while (pos > 0) {
       if (line_number > 0) {
         line.Trim();
-        int separator = line.Find(':');
+        int separator = line.Find(':', 1);
         if (separator > 0) {
           _header_fields.AddTail(
               HeaderField(line.Left(separator),
@@ -764,6 +764,8 @@ CStringA Request::GetHost() {
   CStringA host = GetRequestHeader("x-host");
   if (!host.GetLength())
     host = GetRequestHeader("host");
+  if (!host.GetLength())
+    host = GetRequestHeader(":host");
   if (!host.GetLength())
     host = GetRequestHeader(":authority");
   return host;

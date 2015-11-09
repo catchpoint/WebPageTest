@@ -517,7 +517,7 @@ wpt.chromeDebugger.sendRequestDetails = function(id) {
         method = r.response.requestHeaders['method'];
       else if (r.response.requestHeaders[':method'] !== undefined)
         method = r.response.requestHeaders[':method'];
-      var version = 'HTTP/1.1';
+      var version = 'HTTP/2';
       if (r.response.requestHeaders['version'] !== undefined)
         version = r.response.requestHeaders['version'];
       else if (r.response.requestHeaders[':version'] !== undefined)
@@ -537,7 +537,6 @@ wpt.chromeDebugger.sendRequestDetails = function(id) {
         else if (r.response.requestHeaders[':path'] !== undefined)
           object = r.response.requestHeaders[':path'];
         eventData += method + ' ' + object + ' ' + version + '\n';
-        eventData += 'Host: ' + host + '\n';
         for (tag in r.response.requestHeaders)
           eventData += tag + ': ' + r.response.requestHeaders[tag] + '\n';
       }
@@ -556,7 +555,6 @@ wpt.chromeDebugger.sendRequestDetails = function(id) {
         if (matches.length > 2)
           object = matches[2];
         eventData += method + ' ' + object + ' HTTP/1.1\n';
-        eventData += 'Host: ' + host + '\n';
         if (r.request['headers'] !== undefined) {
           for (tag in r.request.headers)
             eventData += tag + ': ' + r.request.headers[tag] + '\n';
@@ -682,18 +680,8 @@ wpt.chromeDebugger.parseHeaders = function(headers) {
     return headers;
   }
   var ret = [];
-  var host = undefined;
-  var hostExists = false;
   for (var key in headers) {
-    if (key === ':host' || key === ':authority') {
-      host = headers[key];
-    } else if (key === 'Host:' || key === 'host:') {
-      hostExists = true;
-    }
     ret.push(key + ': ' + headers[key]);
-  }
-  if (!hostExists && host !== undefined) {
-      ret.push('Host: ' + host);
   }
   return ret;
 };
