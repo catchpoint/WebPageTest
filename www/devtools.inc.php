@@ -420,7 +420,7 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData)
 {
     $pageData = array('startTime' => 0, 'onload' => 0, 'endTime' => 0);
     $requests = array();
-    $rawRequests = array();
+    $allRequests = array(); // indexed by ID
     $idMap = array();
     $endTimestamp = null;
     foreach ($events as $event) {
@@ -463,10 +463,10 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData)
         }
         if ($event['method'] == 'Network.requestServedFromCache' &&
             array_key_exists('requestId', $event) &&
-            array_key_exists($event['requestId'], $rawRequests)
+            array_key_exists($event['requestId'], $allRequests)
         ) {
-            $rawRequests[$event['requestId']]['fromNet'] = false;
-            $rawRequests[$event['requestId']]['fromCache'] = true;
+            $allRequests[$event['requestId']]['fromNet'] = false;
+            $allRequests[$event['requestId']]['fromCache'] = true;
         }
         if (array_key_exists('timestamp', $event) &&
             array_key_exists('requestId', $event)
@@ -485,40 +485,40 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData)
                 if (array_key_exists('initiator', $event))
                     $request['initiator'] = $event['initiator'];
                 // redirects re-use the same request ID
-                if (array_key_exists($id, $rawRequests)) {
+                if (array_key_exists($id, $allRequests)) {
                     if (array_key_exists('redirectResponse', $event)) {
-                        if (!array_key_exists('endTime', $rawRequests[$id]) ||
-                            $event['timestamp'] > $rawRequests[$id]['endTime']
+                        if (!array_key_exists('endTime', $allRequests[$id]) ||
+                            $event['timestamp'] > $allRequests[$id]['endTime']
                         )
-                            $rawRequests[$id]['endTime'] = $event['timestamp'];
-                        if (!array_key_exists('firstByteTime', $rawRequests[$id]))
-                            $rawRequests[$id]['firstByteTime'] = $event['timestamp'];
-                        $rawRequests[$id]['fromNet'] = false;
+                            $allRequests[$id]['endTime'] = $event['timestamp'];
+                        if (!array_key_exists('firstByteTime', $allRequests[$id]))
+                            $allRequests[$id]['firstByteTime'] = $event['timestamp'];
+                        $allRequests[$id]['fromNet'] = false;
                         // iOS incorrectly sets the fromNet flag to false for resources from cache
                         // but it doesn't have any send headers for those requests
                         // so use that as an indicator.
                         if (array_key_exists('fromDiskCache', $event['redirectResponse']) &&
                             !$event['redirectResponse']['fromDiskCache'] &&
-                            array_key_exists('headers', $rawRequests[$id]) &&
-                            is_array($rawRequests[$id]['headers']) &&
-                            count($rawRequests[$id]['headers'])
+                            array_key_exists('headers', $allRequests[$id]) &&
+                            is_array($allRequests[$id]['headers']) &&
+                            count($allRequests[$id]['headers'])
                         )
-                            $rawRequests[$id]['fromNet'] = true;
-                        $rawRequests[$id]['response'] = $event['redirectResponse'];
+                            $allRequests[$id]['fromNet'] = true;
+                        $allRequests[$id]['response'] = $event['redirectResponse'];
 
                         // Encoded data length for redirection is inlined in the
                         // redirect response
                         if (array_key_exists('encodedDataLength', $event['redirectResponse']) && $event['redirectResponse']['encodedDataLength'] > -1) {
-                            if (!array_key_exists('bytesInEncoded', $rawRequests[$id]) || $rawRequests[$id]['bytesInEncoded'] < 0)
-                                $rawRequests[$id]['bytesInEncoded'] = 0;
-                            if (!array_key_exists('bytesInData', $rawRequests[$id]) || $rawRequests[$id]['bytesInData'] < 0)
-                                $rawRequests[$id]['bytesInData'] = 0;
+                            if (!array_key_exists('bytesInEncoded', $allRequests[$id]) || $allRequests[$id]['bytesInEncoded'] < 0)
+                                $allRequests[$id]['bytesInEncoded'] = 0;
+                            if (!array_key_exists('bytesInData', $allRequests[$id]) || $allRequests[$id]['bytesInData'] < 0)
+                                $allRequests[$id]['bytesInData'] = 0;
 
-                            $rawRequests[$id]['bytesInEncoded'] += $event['redirectResponse']['encodedDataLength'];
+                            $allRequests[$id]['bytesInEncoded'] += $event['redirectResponse']['encodedDataLength'];
 
                             // we only get the encoded data length, this is an
                             // approximation
-                            $rawRequests[$id]['bytesInData'] += $event['redirectResponse']['encodedDataLength'];
+                            $allRequests[$id]['bytesInData'] += $event['redirectResponse']['encodedDataLength'];
                         }
                     }
                     $count = 0;
@@ -530,75 +530,75 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData)
                         $main_resource_id = $id;
                 }
                 $request['id'] = $id;
-                $rawRequests[$id] = $request;
-            } elseif (array_key_exists($id, $rawRequests)) {
-                if (!array_key_exists('endTime', $rawRequests[$id]) ||
-                    $event['timestamp'] > $rawRequests[$id]['endTime']
+                $allRequests[$id] = $request;
+            } elseif (array_key_exists($id, $allRequests)) {
+                if (!array_key_exists('endTime', $allRequests[$id]) ||
+                    $event['timestamp'] > $allRequests[$id]['endTime']
                 )
-                    $rawRequests[$id]['endTime'] = $event['timestamp'];
+                    $allRequests[$id]['endTime'] = $event['timestamp'];
                 if ($event['method'] == 'Network.dataReceived') {
-                    if (!array_key_exists('firstByteTime', $rawRequests[$id]))
-                        $rawRequests[$id]['firstByteTime'] = $event['timestamp'];
-                    if (!array_key_exists('bytesInData', $rawRequests[$id]))
-                        $rawRequests[$id]['bytesInData'] = 0;
+                    if (!array_key_exists('firstByteTime', $allRequests[$id]))
+                        $allRequests[$id]['firstByteTime'] = $event['timestamp'];
+                    if (!array_key_exists('bytesInData', $allRequests[$id]))
+                        $allRequests[$id]['bytesInData'] = 0;
                     if (array_key_exists('dataLength', $event))
-                        $rawRequests[$id]['bytesInData'] += $event['dataLength'];
-                    if (!array_key_exists('bytesInEncoded', $rawRequests[$id]) || $rawRequests[$id]['bytesInEncoded'] < 0)
-                        $rawRequests[$id]['bytesInEncoded'] = 0;
+                        $allRequests[$id]['bytesInData'] += $event['dataLength'];
+                    if (!array_key_exists('bytesInEncoded', $allRequests[$id]) || $allRequests[$id]['bytesInEncoded'] < 0)
+                        $allRequests[$id]['bytesInEncoded'] = 0;
                     if (array_key_exists('encodedDataLength', $event))
-                        $rawRequests[$id]['bytesInEncoded'] += $event['encodedDataLength'];
+                        $allRequests[$id]['bytesInEncoded'] += $event['encodedDataLength'];
                 }
                 if ($event['method'] == 'Network.responseReceived' &&
                     array_key_exists('response', $event)
                 ) {
-                    if (!array_key_exists('firstByteTime', $rawRequests[$id]))
-                        $rawRequests[$id]['firstByteTime'] = $event['timestamp'];
-                    $rawRequests[$id]['fromNet'] = false;
+                    if (!array_key_exists('firstByteTime', $allRequests[$id]))
+                        $allRequests[$id]['firstByteTime'] = $event['timestamp'];
+                    $allRequests[$id]['fromNet'] = false;
                     // the timing data for cached resources is completely bogus
-                    if (isset($rawRequests[$id]['fromCache']) && isset($event['response']['timing']))
+                    if (isset($allRequests[$id]['fromCache']) && isset($event['response']['timing']))
                         unset($event['response']['timing']);
                     // iOS incorrectly sets the fromNet flag to false for resources from cache
                     // but it doesn't have any send headers for those requests
                     // so use that as an indicator.
                     if (array_key_exists('fromDiskCache', $event['response']) &&
                         !$event['response']['fromDiskCache'] &&
-                        array_key_exists('headers', $rawRequests[$id]) &&
-                        is_array($rawRequests[$id]['headers']) &&
-                        count($rawRequests[$id]['headers']) &&
-                        !isset($rawRequests[$id]['fromCache'])
+                        array_key_exists('headers', $allRequests[$id]) &&
+                        is_array($allRequests[$id]['headers']) &&
+                        count($allRequests[$id]['headers']) &&
+                        !isset($allRequests[$id]['fromCache'])
                     ) {
-                        $rawRequests[$id]['fromNet'] = true;
+                        $allRequests[$id]['fromNet'] = true;
                     }
                     // adjust the start time
                     if (isset($event['response']['timing']['receiveHeadersEnd']))
-                        $rawRequests[$id]['startTime'] = $event['timestamp'] - $event['response']['timing']['receiveHeadersEnd'];
-                    $rawRequests[$id]['response'] = $event['response'];
+                        $allRequests[$id]['startTime'] = $event['timestamp'] - $event['response']['timing']['receiveHeadersEnd'];
+                    $allRequests[$id]['response'] = $event['response'];
                 }
                 if ($event['method'] == 'Network.loadingFinished') {
-                    if (!array_key_exists('firstByteTime', $rawRequests[$id]))
-                        $rawRequests[$id]['firstByteTime'] = $event['timestamp'];
-                    if (!array_key_exists('endTime', $rawRequests[$id]) ||
-                        $event['timestamp'] > $rawRequests[$id]['endTime']
+                    if (!array_key_exists('firstByteTime', $allRequests[$id]))
+                        $allRequests[$id]['firstByteTime'] = $event['timestamp'];
+                    if (!array_key_exists('endTime', $allRequests[$id]) ||
+                        $event['timestamp'] > $allRequests[$id]['endTime']
                     )
-                        $rawRequests[$id]['endTime'] = $event['timestamp'];
+                        $allRequests[$id]['endTime'] = $event['timestamp'];
                 }
                 if ($event['method'] == 'Network.loadingFailed') {
-                    if (!array_key_exists('response', $rawRequests[$id]) &&
-                        !isset($rawRequests[$id]['fromCache'])
+                    if (!array_key_exists('response', $allRequests[$id]) &&
+                        !isset($allRequests[$id]['fromCache'])
                     ) {
                         if (!isset($event['canceled']) || !$event['canceled']) {
-                            $rawRequests[$id]['fromNet'] = true;
-                            $rawRequests[$id]['errorCode'] = 12999;
-                            if (!array_key_exists('firstByteTime', $rawRequests[$id]))
-                                $rawRequests[$id]['firstByteTime'] = $event['timestamp'];
-                            if (!array_key_exists('endTime', $rawRequests[$id]) ||
-                                $event['timestamp'] > $rawRequests[$id]['endTime']
+                            $allRequests[$id]['fromNet'] = true;
+                            $allRequests[$id]['errorCode'] = 12999;
+                            if (!array_key_exists('firstByteTime', $allRequests[$id]))
+                                $allRequests[$id]['firstByteTime'] = $event['timestamp'];
+                            if (!array_key_exists('endTime', $allRequests[$id]) ||
+                                $event['timestamp'] > $allRequests[$id]['endTime']
                             )
-                                $rawRequests[$id]['endTime'] = $event['timestamp'];
+                                $allRequests[$id]['endTime'] = $event['timestamp'];
                             if (array_key_exists('errorText', $event))
-                                $rawRequests[$id]['error'] = $event['errorText'];
+                                $allRequests[$id]['error'] = $event['errorText'];
                             if (array_key_exists('error', $event))
-                                $rawRequests[$id]['errorCode'] = $event['error'];
+                                $allRequests[$id]['errorCode'] = $event['error'];
                         }
                     }
                 }
@@ -614,7 +614,7 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData)
     }
     // Go through and error-out any requests that were started but never got a response or error
     if (isset($endTimestamp)) {
-        foreach ($rawRequests as &$request) {
+        foreach ($allRequests as &$request) {
             if (!isset($request['endTime'])) {
                 $request['endTime'] = $endTimestamp;
                 $request['firstByteTime'] = $endTimestamp;
@@ -625,7 +625,7 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData)
     }
 
     // pull out just the requests that were served on the wire
-    foreach ($rawRequests as &$request) {
+    foreach ($allRequests as &$request) {
         if (array_key_exists('startTime', $request)) {
             if (!isset($request['fromCache']) && isset($request['response']['timing'])) {
                 if (array_key_exists('requestTime', $request['response']['timing']) &&
