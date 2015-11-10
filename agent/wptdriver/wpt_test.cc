@@ -46,9 +46,9 @@ static const DWORD DEFAULT_MOBILE_HEIGHT = 640;
 static const DWORD CHROME_PADDING_HEIGHT = 108;
 static const DWORD CHROME_PADDING_WIDTH = 6;
 static const char * DEFAULT_MOBILE_USER_AGENT =
-    "Mozilla/5.0 (Linux; Android 4.4.4; Nexus 5 Build/KTU84P) "
-    "AppleWebKit/537.36 (KHTML like Gecko) "
-    "Chrome/37.0.2062.55 Mobile Safari/537.36";
+    "Mozilla/5.0 (Linux; Android 5.0; Nexus 5 Build/LRX21O) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/46.0.2490.76 Mobile Safari/537.36";
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
