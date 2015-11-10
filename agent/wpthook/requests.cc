@@ -371,7 +371,6 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     browser_request_data_.AddTail(data);
     LeaveCriticalSection(&cs);
   }
-  _test_state.ActivityDetected();
   if (end_time > 0 && request_start > 0) {
     Request * request = new Request(_test_state, connection, stream_id,
                                     _sockets, _dns, _test, false, *this);
