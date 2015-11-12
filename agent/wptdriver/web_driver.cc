@@ -2,19 +2,6 @@
 #include "globals.h"
 #include "web_driver.h"
 
-static CStringA UTF16toUTF8(const CStringW& utf16) {
-  CStringA utf8;
-  int len = WideCharToMultiByte(CP_UTF8, 0, utf16, -1, NULL, 0, 0, 0);
-  if (len > 1) {
-    char *ptr = utf8.GetBuffer(len - 1);
-    if (ptr) {
-      WideCharToMultiByte(CP_UTF8, 0, utf16, -1, ptr, len, 0, 0);
-    }
-    utf8.ReleaseBuffer();
-  }
-  return utf8;
-}
-
 WebDriver::WebDriver(WptSettings& settings,
                      WptTestDriver& test,
                      WptStatus &status, 

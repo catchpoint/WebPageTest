@@ -273,10 +273,41 @@ bool FindBrowserWindow( DWORD process_id, HWND& frame_window) {
   return found;
 }
 
+
+CStringA UTF16toUTF8(const CStringW& utf16) {
+  CStringA utf8;
+  int len = WideCharToMultiByte(CP_UTF8, 0, utf16, -1, NULL, 0, 0, 0);
+  if (len > 1) {
+    char *ptr = utf8.GetBuffer(len - 1);
+    if (ptr) {
+      WideCharToMultiByte(CP_UTF8, 0, utf16, -1, ptr, len, 0, 0);
+    }
+    utf8.ReleaseBuffer();
+  }
+  return utf8;
+}
+
+void WriteToLogFile(TCHAR *msg) {
+  DWORD written;
+  CStringW utf16_str;
+  CStringA utf8_str;
+  SYSTEMTIME time;
+
+  EnterCriticalSection(logfile_cs);
+
+  GetSystemTime(&time);
+  utf16_str.Format(_T("[%d:%d:%d.%d] %s\n"), time.wHour, time.wMinute, time.wSecond, time.wMilliseconds, msg);
+  utf8_str = UTF16toUTF8(utf16_str);
+
+  SetFilePointer(logfile_handle, 0, 0, FILE_END);
+  WriteFile(logfile_handle, utf8_str.GetBuffer(), utf8_str.GetLength(), &written, 0);
+
+  LeaveCriticalSection(logfile_cs);
+}
+
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptTrace(int level, LPCTSTR format, ...) {
-  #ifdef DEBUG
   va_list args;
   va_start( args, format );
 
@@ -286,6 +317,9 @@ void WptTrace(int level, LPCTSTR format, ...) {
     if (msg) {
       if (_vstprintf_s( msg, len, format, args ) > 0) {
         if (lstrlen(msg)) {
+          if (logfile_handle && logfile_cs) {
+            WriteToLogFile(msg);
+          }
           OutputDebugString(msg);
         }
       }
@@ -293,7 +327,6 @@ void WptTrace(int level, LPCTSTR format, ...) {
       free( msg );
     }
   }
-  #endif
 }
 
 /*-----------------------------------------------------------------------------
