@@ -56,6 +56,31 @@ function loadPageRunData($testPath, $run, $cached, &$requests = null, $options =
     if (gz_is_file("$testPath/devtools.json")) {
         GetDevToolsRequests($testPath, $run, $cached, $runRequests, $ret, $multistep);
         $requests[$run][$cached] = $runRequests;
+        $ret2 = loadPageData("$testPath/{$run}{$cachedText}_IEWPG.txt", $options, $multistep);
+        if ($multistep && is_array($ret) && is_array($ret2)) {
+          if (count($ret) == count($ret2)) {
+            // the following events are not always correct when retrieved from devtools.json. To report the correct
+            // values for these fields, load the values from the ones collected by the agent and overwrite the ones
+            // collected from devtools.json.
+            $overwrite_fields = array(
+                "domContentLoadedEventStart",
+                "domContentLoadedEventEnd",
+                "loadEventStart",
+                "loadEventEnd"
+            );
+            for ($i = 0; $i < count($ret); $i++) {
+              for ($j = 0; $j < count($overwrite_fields); $j++) {
+                $field = $overwrite_fields[$j];
+                $ret[$i][$field] = $ret2[$i][$field];
+              }
+            }
+          } else {
+            $error_msg =
+                "ERROR: For test: %s, # of steps differ between devtools.json and IEWPG.txt. Please investigate.";
+            logAlways(sprintf($error_msg, $testPath));
+          }
+        }
+
     } else {
         $ret = loadPageData("$testPath/{$run}{$cachedText}_IEWPG.txt", $options, $multistep);
     }
