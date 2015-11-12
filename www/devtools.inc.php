@@ -753,7 +753,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
         }
         if ($foundFirstEvent) {
             if ($multistep && isset($message['method']) && $message['method'] == "Page.frameStartedLoading" &&
-                isset($message['params']['frameId']) && $message['params']['frameId'] == $mainFrameId) {
+                isset($message['params']['frameId']) && $message['params']['frameId'] === $mainFrameId) {
                 $events[] = $step;
                 $step = Array();
                 continue;
