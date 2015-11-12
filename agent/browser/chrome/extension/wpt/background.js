@@ -579,9 +579,13 @@ function wptExecuteTask(task) {
         break;
       case 'collectstats':
         g_processing_task = true;
-        wpt.chromeDebugger.CollectStats(function(){
-          g_commandRunner.doCollectStats(task.target, wptTaskCallback);
-        });
+        try {
+          g_commandRunner.doCollectStats(task.target, function() {
+            wpt.chromeDebugger.CollectStats(wptTaskCallback);
+          });
+        } catch (err) {
+          wpt.chromeDebugger.CollectStats(wptTaskCallback);
+        }
         break;
       case 'emulatemobile':
         wpt.chromeDebugger.EmulateMobile(task.target);
