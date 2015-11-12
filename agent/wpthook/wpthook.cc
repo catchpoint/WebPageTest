@@ -35,6 +35,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "window_messages.h"
 
 WptHook * global_hook = NULL;
+HANDLE logfile_handle = NULL;
+CRITICAL_SECTION *logfile_cs = NULL;
+
 extern HINSTANCE global_dll_handle;
 
 static const UINT_PTR TIMER_DONE = 1;
@@ -44,6 +47,7 @@ static const DWORD INIT_TIMEOUT = 30000;
 static const DWORD TIMER_FORCE_REPORT_INTERVAL = 10000;
 
 static const TCHAR * BROWSER_DONE_EVENT = _T("Global\\wpt_browser_done");
+static const TCHAR * WPTHOOK_LOG = _T("_wpthook.log");
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WptHook::WptHook(void):
@@ -95,6 +99,16 @@ WptHook::WptHook(void):
       }
       free( pVersion );
     }
+  }
+
+  logfile_handle = CreateFile(file_base_ + WPTHOOK_LOG, GENERIC_WRITE, 0,
+    NULL, OPEN_ALWAYS, 0, 0);
+  if (logfile_handle == INVALID_HANDLE_VALUE) {
+    WptTrace(loglevel::kFunction, _T("Failed to open log file. Error: %d"), GetLastError());
+  } else {
+    logfile_cs = (CRITICAL_SECTION *)malloc(sizeof(CRITICAL_SECTION));
+    ZeroMemory(logfile_cs, sizeof(CRITICAL_SECTION));
+    InitializeCriticalSection(logfile_cs);
   }
 }
 
@@ -235,28 +249,41 @@ void WptHook::Save() {
 
 void WptHook::Cleanup() {
   // Let the wptdriver know that the hook is done.
+  WptTrace(loglevel::kTrace, _T("[wpthook] In Cleanup()"));
   HANDLE browser_done_event = OpenEvent(EVENT_MODIFY_STATE, FALSE,
     BROWSER_DONE_EVENT);
   if (browser_done_event) {
+    WptTrace(loglevel::kTrace, _T("[wpthook] OpenEvent call succeeded!"));
     SetEvent(browser_done_event);
+    WptTrace(loglevel::kTrace, _T("[wpthook] SetEvent done!"));
     CloseHandle(browser_done_event);
+  } else {
+    WptTrace(loglevel::kTrace, _T("[wpthook] OpenEvent call failed with error: %d"), GetLastError());
   }
   test_state_._exit = true;
+  WptTrace(loglevel::kTrace, _T("[wpthook] Leaving Cleanup()"));
 }
 
 void WptHook::ShutdownNow() {
+  WptTrace(loglevel::kTrace, _T("[wpthook] In ShutdownNow()"));
   done_ = true;
   test_server_.Stop();
+  WptTrace(loglevel::kTrace, _T("[wpthook] Test server stopped!"));
   if (test_state_._frame_window) {
     WptTrace(loglevel::kTrace, _T("[wpthook] - **** Exiting Hooked Browser\n"));
     ::SendMessage(test_state_._frame_window, WM_CLOSE, 0, 0);
   }
+  WptTrace(loglevel::kTrace, _T("[wpthook] Leaving ShutdownNow()"));
 }
 
 void WptHook::AsyncShutdown() {
+  WptTrace(loglevel::kTrace, _T("[wpthook] - In AsyncShutdown"));
   if (message_window_ && shutdown_message_) {
+    WptTrace(loglevel::kTrace, _T("[wpthook] - Posting shutdown message"));
     ::PostMessage(message_window_, shutdown_message_, 0, 0);
+    WptTrace(loglevel::kTrace, _T("[wpthook] - Done posting shutdown message"));
   }
+  WptTrace(loglevel::kTrace, _T("[wpthook] - Leaving AsyncShutdown"));
 }
 
 /*-----------------------------------------------------------------------------
