@@ -100,9 +100,6 @@ if NOT "%~0"=="" (
       echo         -s, --serverUrl URL         URL of the local server that the agent will connect to
       echo                                     Defaults to 'http://localhost:8888'.
       echo.
-      echo         --server URL                URL of the webpagetest server that the will  be polled for work
-      echo                                     Defaults to 'http://localhost:8888'.
-      echo.
       echo         -i, --insecure              Ignore invalid server certificate
       echo                                     Defaults to require valid server certificate
       echo.
@@ -124,6 +121,9 @@ if NOT "%~0"=="" (
       echo                                     value can either be a number ^(0-8^) or the name of
       echo                                     a loglevel such as critical, warning, or debug.
       echo                                     Defaults to 'info'.
+      echo.
+      echo     More information at https://sites.google.com/a/webpagetest.org/docs/private-instances/node-js-agent/setup#TOC-Start-the-agent
+      echo.
       cd %DP0%
       goto :eof
     )
