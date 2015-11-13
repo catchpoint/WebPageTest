@@ -1,3 +1,14 @@
+<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">
+    <tbody>
+    <tr>
+        <td><table><tbody><tr><td><div class="bar" style="width:15px; background-color:#dfffdf"></div></td><td>Before Start Render</td></tr></tbody></table></td>
+        <td><table><tbody><tr><td><div class="bar" style="width:15px; background-color:#dfdfff"></div></td><td>Before On Load </td></tr></tbody></table></td>
+        <td><table><tbody><tr><td><div class="bar" style="width:15px; background-color:gainsboro"></div></td><td>After On Load</td></tr></tbody></table></td>
+    </tr>
+    </tbody>
+</table>
+<br>
+
 <div class="center">
 <table id="tableDetails" class="details center">
 	<caption>Request Details</caption>
