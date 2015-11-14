@@ -393,7 +393,7 @@ bool WebPagetest::HttpGet(CString url, WptTestDriver& test,
         if (request) {
 
           SetLoginCredentials(request);
-          bool send_request_result = HttpSendRequest(request, NULL, 0, NULL, 0);
+          BOOL send_request_result = HttpSendRequest(request, NULL, 0, NULL, 0);
           if (!send_request_result) {
             DWORD dwError = GetLastError();
             if (dwError == ERROR_INTERNET_CLIENT_AUTH_CERT_NEEDED) {
@@ -517,7 +517,7 @@ bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test,
             buffers.dwStructSize = sizeof(buffers);
             buffers.dwBufferTotal = content_length;
             AtlTrace(_T("[wptdriver] - Sending request"));
-            bool send_request_result = HttpSendRequestEx(request, &buffers, NULL, 0, NULL);
+            BOOL send_request_result = HttpSendRequestEx(request, &buffers, NULL, 0, NULL);
             if (!send_request_result) {
               DWORD dwError = GetLastError();
               if (dwError == ERROR_INTERNET_CLIENT_AUTH_CERT_NEEDED) {
