@@ -81,7 +81,7 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
   }
 };
 
-wpt.chromeDebugger.SetActive = function(active) {
+wpt.chromeDebugger.SetActive = function(active, callback) {
   g_instance.active = active;
   if (active) {
     g_instance.requests = {};
@@ -91,7 +91,9 @@ wpt.chromeDebugger.SetActive = function(active) {
     g_instance.receivedData = false;
     g_instance.devToolsData = '';
     g_instance.statsDoneCallback = undefined;
-    wpt.chromeDebugger.StartTrace();
+    wpt.chromeDebugger.StartTrace(callback);
+  } else {
+    callback();
   }
 };
 
@@ -125,7 +127,7 @@ wpt.chromeDebugger.CaptureTrace = function() {
   }
 };
 
-wpt.chromeDebugger.StartTrace = function() {
+wpt.chromeDebugger.StartTrace = function(callback) {
   if (!g_instance.traceRunning) {
     g_instance.traceRunning = true;
     var traceCategories = '';
@@ -139,20 +141,24 @@ wpt.chromeDebugger.StartTrace = function() {
     if (g_instance.timelineStackDepth > 0)
       traceCategories += ',disabled-by-default-devtools.timeline.stack,devtools.timeline.stack';
     var params = {categories: traceCategories, options:'record-as-much-as-possible'};
-    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start', params);
+    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start', params, callback);
+  } else {
+    callback();
   }
 }
 
 wpt.chromeDebugger.CollectStats = function(callback) {
-  g_instance.statsDoneCallback = callback;
-  wpt.chromeDebugger.SendDevToolsData(function(){
-    if (g_instance.traceRunning) {
-      g_instance.traceRunning = false;
-      g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.end');
-    } else {
-      g_instance.statsDoneCallback();
-    }
-  });
+  if (g_instance.devToolsData.length) {
+    wpt.chromeDebugger.sendEvent('devTools', g_instance.devToolsData, callback);
+    g_instance.devToolsData = '';
+  }
+  if (g_instance.traceRunning) {
+    g_instance.statsDoneCallback = callback;
+    g_instance.traceRunning = false;
+    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.end');
+  } else {
+    callback();
+  }
 };
 
 wpt.chromeDebugger.EmulateMobile = function(deviceString) {
@@ -196,8 +202,10 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       g_instance.netlog = [];
     }
     g_instance.netlogRequests = [];
-    if (g_instance.statsDoneCallback)
+    if (g_instance.statsDoneCallback) {
       g_instance.statsDoneCallback();
+      g_instance.statsDoneCallback = undefined;
+    }
   }
 
   if(message === 'Console.messageAdded') {
@@ -262,15 +270,6 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
         }
       }
     }
-  }
-};
-
-wpt.chromeDebugger.SendDevToolsData = function(callback) {
-  if (g_instance.devToolsData.length) {
-    wpt.chromeDebugger.sendEvent('devTools', g_instance.devToolsData, callback);
-    g_instance.devToolsData = '';
-  } else {
-    callback();
   }
 };
 
@@ -379,8 +378,10 @@ wpt.chromeDebugger.finalizeNetlog = function() {
   // Pass the DNS lookup timestamps so we can sync the trace clock to the c++ clock
   for (var dnsid in g_instance.netlogDNS) {
     if (g_instance.netlogDNS[dnsid]['host'] !== undefined &&
-        g_instance.netlogDNS[dnsid]['start'] !== undefined) {
+        g_instance.netlogDNS[dnsid]['start'] !== undefined &&
+        g_instance.netlogDNS[dnsid]['scynced'] === undefined) {
       wpt.chromeDebugger.sendEvent('dns_time', g_instance.netlogDNS[dnsid].host + ' ' + g_instance.netlogDNS[dnsid].start);
+      g_instance.netlogDNS[dnsid].scynced = true;
     }
   }
 
@@ -388,11 +389,13 @@ wpt.chromeDebugger.finalizeNetlog = function() {
   for (var connectId in g_instance.netlogConnections) {
     if (g_instance.netlogConnections[connectId]['address'] !== undefined &&
         g_instance.netlogConnections[connectId]['sourceAddress'] !== undefined &&
-        g_instance.netlogConnections[connectId]['start'] !== undefined) {
+        g_instance.netlogConnections[connectId]['start'] !== undefined &&
+        g_instance.netlogConnections[connectId]['scynced'] === undefined) {
       wpt.chromeDebugger.sendEvent('connect_time',
           g_instance.netlogConnections[connectId].address + 
           ' ' + g_instance.netlogConnections[connectId].sourceAddress +
           ' ' + g_instance.netlogConnections[connectId].start);
+      g_instance.netlogConnections[connectId].scynced = true;
     }
   }
 

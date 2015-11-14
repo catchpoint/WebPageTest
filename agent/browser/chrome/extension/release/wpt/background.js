@@ -13979,7 +13979,7 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
   }
 };
 
-wpt.chromeDebugger.SetActive = function(active) {
+wpt.chromeDebugger.SetActive = function(active, callback) {
   g_instance.active = active;
   if (active) {
     g_instance.requests = {};
@@ -13989,7 +13989,9 @@ wpt.chromeDebugger.SetActive = function(active) {
     g_instance.receivedData = false;
     g_instance.devToolsData = '';
     g_instance.statsDoneCallback = undefined;
-    wpt.chromeDebugger.StartTrace();
+    wpt.chromeDebugger.StartTrace(callback);
+  } else {
+    callback();
   }
 };
 
@@ -14023,7 +14025,7 @@ wpt.chromeDebugger.CaptureTrace = function() {
   }
 };
 
-wpt.chromeDebugger.StartTrace = function() {
+wpt.chromeDebugger.StartTrace = function(callback) {
   if (!g_instance.traceRunning) {
     g_instance.traceRunning = true;
     var traceCategories = '';
@@ -14037,20 +14039,24 @@ wpt.chromeDebugger.StartTrace = function() {
     if (g_instance.timelineStackDepth > 0)
       traceCategories += ',disabled-by-default-devtools.timeline.stack,devtools.timeline.stack';
     var params = {categories: traceCategories, options:'record-as-much-as-possible'};
-    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start', params);
+    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start', params, callback);
+  } else {
+    callback();
   }
 }
 
 wpt.chromeDebugger.CollectStats = function(callback) {
-  g_instance.statsDoneCallback = callback;
-  wpt.chromeDebugger.SendDevToolsData(function(){
-    if (g_instance.traceRunning) {
-      g_instance.traceRunning = false;
-      g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.end');
-    } else {
-      g_instance.statsDoneCallback();
-    }
-  });
+  if (g_instance.devToolsData.length) {
+    wpt.chromeDebugger.sendEvent('devTools', g_instance.devToolsData, callback);
+    g_instance.devToolsData = '';
+  }
+  if (g_instance.traceRunning) {
+    g_instance.statsDoneCallback = callback;
+    g_instance.traceRunning = false;
+    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.end');
+  } else {
+    callback();
+  }
 };
 
 wpt.chromeDebugger.EmulateMobile = function(deviceString) {
@@ -14094,8 +14100,10 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       g_instance.netlog = [];
     }
     g_instance.netlogRequests = [];
-    if (g_instance.statsDoneCallback)
+    if (g_instance.statsDoneCallback) {
       g_instance.statsDoneCallback();
+      g_instance.statsDoneCallback = undefined;
+    }
   }
 
   if(message === 'Console.messageAdded') {
@@ -14160,15 +14168,6 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
         }
       }
     }
-  }
-};
-
-wpt.chromeDebugger.SendDevToolsData = function(callback) {
-  if (g_instance.devToolsData.length) {
-    wpt.chromeDebugger.sendEvent('devTools', g_instance.devToolsData, callback);
-    g_instance.devToolsData = '';
-  } else {
-    callback();
   }
 };
 
@@ -14277,8 +14276,10 @@ wpt.chromeDebugger.finalizeNetlog = function() {
   // Pass the DNS lookup timestamps so we can sync the trace clock to the c++ clock
   for (var dnsid in g_instance.netlogDNS) {
     if (g_instance.netlogDNS[dnsid]['host'] !== undefined &&
-        g_instance.netlogDNS[dnsid]['start'] !== undefined) {
+        g_instance.netlogDNS[dnsid]['start'] !== undefined &&
+        g_instance.netlogDNS[dnsid]['scynced'] === undefined) {
       wpt.chromeDebugger.sendEvent('dns_time', g_instance.netlogDNS[dnsid].host + ' ' + g_instance.netlogDNS[dnsid].start);
+      g_instance.netlogDNS[dnsid].scynced = true;
     }
   }
 
@@ -14286,11 +14287,13 @@ wpt.chromeDebugger.finalizeNetlog = function() {
   for (var connectId in g_instance.netlogConnections) {
     if (g_instance.netlogConnections[connectId]['address'] !== undefined &&
         g_instance.netlogConnections[connectId]['sourceAddress'] !== undefined &&
-        g_instance.netlogConnections[connectId]['start'] !== undefined) {
+        g_instance.netlogConnections[connectId]['start'] !== undefined &&
+        g_instance.netlogConnections[connectId]['scynced'] === undefined) {
       wpt.chromeDebugger.sendEvent('connect_time',
           g_instance.netlogConnections[connectId].address + 
           ' ' + g_instance.netlogConnections[connectId].sourceAddress +
           ' ' + g_instance.netlogConnections[connectId].start);
+      g_instance.netlogConnections[connectId].scynced = true;
     }
   }
 
@@ -15041,6 +15044,7 @@ var g_setHeaders = [];
 var g_started = false;
 var g_requestsHooked = false;
 var g_appendUA = [];
+var g_task = undefined;
 
 /**
  * Uninstall a given set of extensions.  Run |onComplete| when done.
@@ -15315,7 +15319,7 @@ chrome.webRequest.onErrorOccurred.addListener(function(details) {
           wpt.chromeExtensionUtils.netErrorStringToWptCode(details.error);
       wpt.LOG.info(details.error + ' = ' + error_code);
       g_active = false;
-      wpt.chromeDebugger.SetActive(g_active);
+      wpt.chromeDebugger.SetActive(g_active, function(){} );
       wptSendEvent('navigate_error?error=' + error_code +
                    '&str=' + encodeURIComponent(details.error), '');
     }
@@ -15335,7 +15339,7 @@ chrome.webRequest.onCompleted.addListener(function(details) {
       wpt.LOG.info('Completed, status = ' + details.statusCode);
       if (details.statusCode >= 400) {
         g_active = false;
-        wpt.chromeDebugger.SetActive(g_active);
+        wpt.chromeDebugger.SetActive(g_active, function(){});
         wptSendEvent('navigate_error?error=' + details.statusCode, '');
       }
     }
@@ -15381,7 +15385,7 @@ chrome.extension.onRequest.addListener(
     else if (request.message == 'wptWindowTiming') {
       wpt.logging.closeWindowIfOpen();
       g_active = false;
-      wpt.chromeDebugger.SetActive(g_active);
+      wpt.chromeDebugger.SetActive(g_active, function(){});
       wptSendEvent(
           'window_timing',
           '?domContentLoadedEventStart=' +
@@ -15429,127 +15433,136 @@ var wptTaskCallback = function() {
   g_processing_task = false;
   if (!g_active)
     window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT);
-}
+};
+
+var wptProcessTask = function() {
+  var task = g_task;
+  g_task = undefined;
+  g_processing_task = false;
+
+  // Decode and execute the actual command.
+  // Commands are all lowercase at this point.
+  wpt.LOG.info('Running task ' + task.action + ' ' + task.target);
+  switch (task.action) {
+    case 'navigate':
+      g_processing_task = true;
+      g_commandRunner.doNavigate(task.target, wptTaskCallback);
+      break;
+    case 'exec':
+      g_processing_task = true;
+      wpt.chromeDebugger.Exec(task.target, wptTaskCallback);
+      break;
+    case 'setcookie':
+      g_commandRunner.doSetCookie(task.target, task.value);
+      break;
+    case 'block':
+      g_commandRunner.doBlock(task.target);
+      break;
+    case 'setdomelement':
+      // Sending request to set the DOM element has to happen only at the
+      // navigate event after the content script is loaded. So, this just
+      // sets the global variable.
+      wpt.commands.g_domElements.push(task.target);
+      break;
+    case 'click':
+      g_processing_task = true;
+      g_commandRunner.doClick(task.target, wptTaskCallback);
+      break;
+    case 'setinnerhtml':
+      g_processing_task = true;
+      g_commandRunner.doSetInnerHTML(task.target, task.value, wptTaskCallback);
+      break;
+    case 'setinnertext':
+      g_processing_task = true;
+      g_commandRunner.doSetInnerText(task.target, task.value, wptTaskCallback);
+      break;
+    case 'setvalue':
+      g_processing_task = true;
+      g_commandRunner.doSetValue(task.target, task.value, wptTaskCallback);
+      break;
+    case 'submitform':
+      g_processing_task = true;
+      g_commandRunner.doSubmitForm(task.target, wptTaskCallback);
+      break;
+    case 'clearcache':
+      g_processing_task = true;
+      g_commandRunner.doClearCache(task.target, wptTaskCallback);
+      break;
+    case 'capturetimeline':
+      wpt.chromeDebugger.CaptureTimeline(parseInt(task.target));
+      break;
+    case 'capturetrace':
+      wpt.chromeDebugger.CaptureTrace();
+      break;
+    case 'noscript':
+      g_commandRunner.doNoScript();
+      break;
+    case 'overridehost':
+      wptHookRequests();
+      g_overrideHosts[task.target] = task.value;
+      break;
+    case 'addheader':
+      var separator = task.target.indexOf(":");
+      if (separator > 0)
+        g_addHeaders.push({'name' : task.target.substr(0, separator).trim(),
+                           'value' : task.target.substr(separator + 1).trim(),
+                           'filter' : typeof(task.value) === 'undefined' ? '' : task.value});
+      wptHookRequests();
+      break;
+    case 'setheader':
+      var separator = task.target.indexOf(":");
+      if (separator > 0)
+        g_setHeaders.push({'name' : task.target.substr(0, separator).trim(),
+                           'value' : task.target.substr(separator + 1).trim(),
+                           'filter' : typeof(task.value) === 'undefined' ? '' : task.value});
+      wptHookRequests();
+      break;
+    case 'resetheaders':
+      g_addHeaders = [];
+      g_setHeaders = [];
+      break;
+    case 'appenduseragent':
+      g_appendUA.push(task.target);
+      wptHookRequests();
+      break;
+    case 'collectstats':
+      g_processing_task = true;
+      try {
+        g_commandRunner.doCollectStats(task.target, function() {
+          wpt.chromeDebugger.CollectStats(wptTaskCallback);
+        });
+      } catch (err) {
+        wpt.chromeDebugger.CollectStats(wptTaskCallback);
+      }
+      break;
+    case 'emulatemobile':
+      wpt.chromeDebugger.EmulateMobile(task.target);
+      break;
+    case 'checkresponsive':
+      g_processing_task = true;
+      g_commandRunner.doCheckResponsive(wptTaskCallback);
+      break;
+
+    default:
+      wpt.LOG.error('Unimplemented command: ', task);
+  }
+
+  if (!g_active && !g_processing_task)
+    window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT);
+};
 
 // execute a single task/script command
-function wptExecuteTask(task) {
+var wptExecuteTask = function(task) {
   if (task.action.length) {
+    g_task = task;
+    g_processing_task = true;
     if (task.record) {
       g_active = true;
-      wpt.chromeDebugger.SetActive(g_active);
+      wpt.chromeDebugger.SetActive(g_active, wptProcessTask);
     } else {
       g_active = false;
-      wpt.chromeDebugger.SetActive(g_active);
+      wpt.chromeDebugger.SetActive(g_active, wptProcessTask);
     }
-    // Decode and execute the actual command.
-    // Commands are all lowercase at this point.
-    wpt.LOG.info('Running task ' + task.action + ' ' + task.target);
-    switch (task.action) {
-      case 'navigate':
-        g_processing_task = true;
-        g_commandRunner.doNavigate(task.target, wptTaskCallback);
-        break;
-      case 'exec':
-        g_processing_task = true;
-        wpt.chromeDebugger.Exec(task.target, wptTaskCallback);
-        break;
-      case 'setcookie':
-        g_commandRunner.doSetCookie(task.target, task.value);
-        break;
-      case 'block':
-        g_commandRunner.doBlock(task.target);
-        break;
-      case 'setdomelement':
-        // Sending request to set the DOM element has to happen only at the
-        // navigate event after the content script is loaded. So, this just
-        // sets the global variable.
-        wpt.commands.g_domElements.push(task.target);
-        break;
-      case 'click':
-        g_processing_task = true;
-        g_commandRunner.doClick(task.target, wptTaskCallback);
-        break;
-      case 'setinnerhtml':
-        g_processing_task = true;
-        g_commandRunner.doSetInnerHTML(task.target, task.value, wptTaskCallback);
-        break;
-      case 'setinnertext':
-        g_processing_task = true;
-        g_commandRunner.doSetInnerText(task.target, task.value, wptTaskCallback);
-        break;
-      case 'setvalue':
-        g_processing_task = true;
-        g_commandRunner.doSetValue(task.target, task.value, wptTaskCallback);
-        break;
-      case 'submitform':
-        g_processing_task = true;
-        g_commandRunner.doSubmitForm(task.target, wptTaskCallback);
-        break;
-      case 'clearcache':
-        g_processing_task = true;
-        g_commandRunner.doClearCache(task.target, wptTaskCallback);
-        break;
-      case 'capturetimeline':
-        wpt.chromeDebugger.CaptureTimeline(parseInt(task.target));
-        break;
-      case 'capturetrace':
-        wpt.chromeDebugger.CaptureTrace();
-        break;
-      case 'noscript':
-        g_commandRunner.doNoScript();
-        break;
-      case 'overridehost':
-        wptHookRequests();
-        g_overrideHosts[task.target] = task.value;
-        break;
-      case 'addheader':
-        var separator = task.target.indexOf(":");
-        if (separator > 0)
-          g_addHeaders.push({'name' : task.target.substr(0, separator).trim(),
-                             'value' : task.target.substr(separator + 1).trim(),
-                             'filter' : typeof(task.value) === 'undefined' ? '' : task.value});
-        wptHookRequests();
-        break;
-      case 'setheader':
-        var separator = task.target.indexOf(":");
-        if (separator > 0)
-          g_setHeaders.push({'name' : task.target.substr(0, separator).trim(),
-                             'value' : task.target.substr(separator + 1).trim(),
-                             'filter' : typeof(task.value) === 'undefined' ? '' : task.value});
-        wptHookRequests();
-        break;
-      case 'resetheaders':
-        g_addHeaders = [];
-        g_setHeaders = [];
-        break;
-      case 'appenduseragent':
-        g_appendUA.push(task.target);
-        wptHookRequests();
-        break;
-      case 'collectstats':
-        g_processing_task = true;
-        try {
-          g_commandRunner.doCollectStats(task.target, function() {
-            wpt.chromeDebugger.CollectStats(wptTaskCallback);
-          });
-        } catch (err) {
-          wpt.chromeDebugger.CollectStats(wptTaskCallback);
-        }
-        break;
-      case 'emulatemobile':
-        wpt.chromeDebugger.EmulateMobile(task.target);
-        break;
-      case 'checkresponsive':
-        g_processing_task = true;
-        g_commandRunner.doCheckResponsive(wptTaskCallback);
-        break;
-
-      default:
-        wpt.LOG.error('Unimplemented command: ', task);
-    }
-
-    if (!g_active && !g_processing_task)
-      window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT);
   }
 }
 
