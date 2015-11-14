@@ -48,7 +48,7 @@ Requests::Requests(TestState& test_state, TrackSockets& sockets,
   _active_requests.InitHashTable(257);
   connections_.InitHashTable(257);
   InitializeCriticalSection(&cs);
-  _start_browser_clock = 0;
+  _browser_launch_time = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -70,7 +70,6 @@ void Requests::Reset() {
   LeaveCriticalSection(&cs);
   _dns.ClaimAll();
   _sockets.ClaimAll();
-  _start_browser_clock = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -388,7 +387,7 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     // See if we can map the browser's internal clock timestamps to our
     // performance counters.  If we have a DNS lookup we can match up or a
     // likely socket connect then we should be able to.
-    if (_start_browser_clock == 0) {
+    if (_browser_launch_time == 0) {
       if (dns_end != -1) {
         // get the host name
         URL_COMPONENTS parts;
@@ -405,7 +404,7 @@ void Requests::ProcessBrowserRequest(CString request_data) {
           if (_dns.Find(host, addresses, match_dns_start, match_dns_end)) {
             // Figure out what the clock time would have been at our perf
             // counter start time.
-            _start_browser_clock =
+            _browser_launch_time =
                 dns_end - _test_state.ElapsedMsFromLaunch(match_dns_end);
           }
         }
@@ -424,12 +423,12 @@ void Requests::ProcessBrowserRequest(CString request_data) {
 
     // figure out the conversion from browser time to perf counter
     LONGLONG ms_freq = _test_state._ms_frequency.QuadPart;
-    if (_start_browser_clock != 0) {
+    if (_browser_launch_time != 0) {
       request->_end.QuadPart = _test_state._launch.QuadPart +
-          (LONGLONG)((end_time - _start_browser_clock)  * ms_freq);
+          (LONGLONG)((end_time - _browser_launch_time)  * ms_freq);
     } else {
       request->_end.QuadPart = now.QuadPart;
-      _start_browser_clock = end_time - _test_state.ElapsedMsFromStart(request->_end);
+      _browser_launch_time = end_time - _test_state.ElapsedMsFromStart(request->_end);
     }
     request->_start.QuadPart = request->_end.QuadPart - 
                 (LONGLONG)((end_time - request_start) * ms_freq);
@@ -467,7 +466,7 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     // Chrome bug: https://code.google.com/p/chromium/issues/detail?id=309570
     LONGLONG slop = _test_state._ms_frequency.QuadPart * 10000;
     LARGE_INTEGER earliest, latest;
-    earliest.QuadPart = _test_state._start.QuadPart - slop;
+    earliest.QuadPart = _test_state._step_start.QuadPart - slop;
     latest.QuadPart = now.QuadPart + slop;
     if (request->_start.QuadPart > earliest.QuadPart &&
         request->_end.QuadPart < latest.QuadPart &&
@@ -503,7 +502,7 @@ void Requests::ProcessBrowserRequest(CString request_data) {
   Sync the browser time with our clock
 -----------------------------------------------------------------------------*/
 void Requests::SyncDNSTime(CString message) {
-  if (_start_browser_clock == 0) {
+  if (_browser_launch_time == 0) {
     int position = 0;
     CString host = message.Tokenize(_T(" "), position).Trim();
     if (position >= 0) {
@@ -516,7 +515,7 @@ void Requests::SyncDNSTime(CString message) {
           if (_dns.Find(host, addresses, match_dns_start, match_dns_end)) {
             // Figure out what the clock time would have been at our perf
             // counter start time.
-            _start_browser_clock =
+            _browser_launch_time =
                 dns_start - _test_state.ElapsedMsFromLaunch(match_dns_start);
           }
         }
@@ -529,7 +528,7 @@ void Requests::SyncDNSTime(CString message) {
   Sync the browser time with our clock
 -----------------------------------------------------------------------------*/
 void Requests::SyncConnectTime(CString message) {
-  if (_start_browser_clock == 0) {
+  if (_browser_launch_time == 0) {
     int position = 0;
     struct sockaddr_in serverIP;
     serverIP.sin_addr.S_un.S_addr = 0;
@@ -576,7 +575,7 @@ void Requests::SyncConnectTime(CString message) {
             client_port, match_connect_start, match_connect_end)) {
           // Figure out what the clock time would have been at our perf
           // counter start time.
-          _start_browser_clock =
+          _browser_launch_time =
               connect_start - _test_state.ElapsedMsFromLaunch(match_connect_start);
         }
       }

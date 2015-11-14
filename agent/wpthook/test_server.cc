@@ -164,9 +164,14 @@ void TestServer::MongooseCallback(enum mg_event event,
       if (OkToStart()) {
         bool record = false;
         test_.GetNextTask(task, record);
-        if (record)
+        if (record) {
+          //OutputDebugStringA("\n***************************\n"
+          //                   "*************************** - STARTING STEP\n"
+          //                   "***************************\n\n");
           hook_.Start();
+        }
       }
+      //OutputDebugStringA("Task: " + task);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, task);
     } else if (strcmp(request_info->uri, "/event/load") == 0) {
       CString fixed_viewport = GetParam(request_info->query_string,
@@ -261,10 +266,12 @@ void TestServer::MongooseCallback(enum mg_event event,
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/dns_time") == 0) {
       CString body = GetPostBody(conn, request_info);
+      //OutputDebugString(L"*** DNS: " + body);
       requests_.SyncDNSTime(body);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/connect_time") == 0) {
       CString body = GetPostBody(conn, request_info);
+      //OutputDebugString(L"*** Connect: " + body);
       requests_.SyncConnectTime(body);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/console_log") == 0) {
