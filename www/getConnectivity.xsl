@@ -30,7 +30,6 @@
                             <td><xsl:value-of select="bwOut"/></td>
                             <td><xsl:value-of select="latency"/></td>
                             <td><xsl:value-of select="plr"/></td>
-                            <td><xsl:value-of select="isDefault"/></td>
                         </tr>
                     </xsl:for-each>
                 </table>

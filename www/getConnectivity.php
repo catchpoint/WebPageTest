@@ -28,7 +28,6 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
           <th>bwOut</th>
           <th>latency</th>
           <th>plr</th>
-          <th>isDefault</th>
         </tr>\n";
   foreach( $connectivities as $name => &$connectivity ) {
     $error = '';
@@ -39,7 +38,6 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
     echo "<td>" . @htmlspecialchars($connectivity['bwOut']) . "</td>" . PHP_EOL;
     echo "<td>" . @htmlspecialchars($connectivity['latency']) . "</td>" . PHP_EOL;
     echo "<td>" . @htmlspecialchars($connectivity['plr']) . "</td>" . PHP_EOL;
-    echo "<td>" . @htmlspecialchars($connectivity['isDefault']) . "</td>" . PHP_EOL;
     echo "</tr>";
   }
   echo "</table>\n";
@@ -64,7 +62,6 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
         echo "<bwOut>" . @htmlspecialchars($connectivity['bwOut']) . "</bwOut>\n";
         echo "<latency>" . @htmlspecialchars($connectivity['latency']) . "</latency>\n";
         echo "<plr>" . @htmlspecialchars($connectivity['plr']) . "</plr>\n";
-        echo "<isDefault>" . @htmlspecialchars($connectivity['isDefault']) . "</isDefault>\n";
         echo "</connectivity>\n";
     }
 
