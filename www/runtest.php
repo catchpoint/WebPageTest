@@ -84,9 +84,18 @@ else
 
     // pull in the test parameters
     if( !isset($test) )
-    {
-        $test = array();
-        $test['url'] = trim($req_url);
+    {   $test = array();
+
+        $testUrl = trim($req_url);
+        $testScript = trim($req_script);
+        if( isset($testUrl) && strlen($testUrl) && (!isset($testScript) || !strlen($testScript))) {
+            $fastScript= "setEventName Unnamed Job\nnavigate ".$testUrl;
+            $test['script'] = trim($fastScript);
+        } else {
+            $test['url'] = trim($req_url);
+            $test['script'] = trim($req_script);
+        }
+
         $test['domElement'] = trim($req_domelement);
         $test['login'] = trim($req_login);
         $test['password'] = trim($req_password);
@@ -100,7 +109,6 @@ else
         $test['private'] = $req_private;
         $test['web10'] = $req_web10;
         $test['ignoreSSL'] = $req_ignoreSSL;
-        $test['script'] = trim($req_script);
         $test['block'] = $req_block;
         $test['notify'] = trim($req_notify);
         $test['video'] = $req_video;
