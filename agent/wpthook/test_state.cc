@@ -227,7 +227,6 @@ void TestState::OnNavigate() {
     _dom_elements_time.QuadPart = 0;
     _on_load.QuadPart = 0;
     navigating_ = true;
-    navigated_ = false;
     if (!_current_document) {
       _current_document = _next_document;
       _next_document++;
@@ -350,6 +349,7 @@ bool TestState::IsDone() {
                navigating, navigated);
       bool is_loaded = (navigated_ &&
                         !navigating_ &&
+                        //load_ms > ON_LOAD_GRACE_PERIOD && 
                         !_test._dom_element_check);
       if (_test_result) {
         is_page_done = true;
@@ -366,9 +366,6 @@ bool TestState::IsDone() {
         _test_result = TEST_RESULT_TIMEOUT;
         is_page_done = true;
         done_reason = _T("Meaurement timed out.");
-      } else if (!_first_activity.QuadPart && test_ms > _test._activity_timeout) {
-        is_page_done = true;
-        done_reason = _T("No network activity detected.");
       }
     }
     if (is_page_done) {

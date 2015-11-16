@@ -466,7 +466,7 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     // Chrome bug: https://code.google.com/p/chromium/issues/detail?id=309570
     LONGLONG slop = _test_state._ms_frequency.QuadPart * 10000;
     LARGE_INTEGER earliest, latest;
-    earliest.QuadPart = _test_state._step_start.QuadPart - slop;
+    earliest.QuadPart = _test_state._start.QuadPart - slop;
     latest.QuadPart = now.QuadPart + slop;
     if (request->_start.QuadPart > earliest.QuadPart &&
         request->_end.QuadPart < latest.QuadPart &&
