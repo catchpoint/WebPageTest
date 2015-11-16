@@ -20,7 +20,6 @@
                         <th>bwOut</th>
                         <th>latency</th>
                         <th>plr</th>
-                        <th>isDefault</th>
                     </tr>
                     <xsl:for-each select="response/data/connectivity">
                         <tr>
