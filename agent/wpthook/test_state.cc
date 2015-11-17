@@ -331,27 +331,35 @@ bool TestState::IsDone() {
   if (_active) {
     bool is_page_done = false;
     CString done_reason;
+    DWORD navigated = navigated_ ? 1 : 0;
+    DWORD navigating = navigating_ ? 1 : 0;
     DWORD elapsed_timeout_ms = ElapsedMs(_timeout_start_time, now);
+    bool is_loaded = (navigated_ && !navigating_ && !_test._dom_element_check);
+
     if (elapsed_timeout_ms > _test._test_timeout) {
-      _test_result = TEST_RESULT_TIMEOUT;
+      if (!is_loaded) {
+        _test_result = TEST_RESULT_TIMEOUT;
+        done_reason = _T("Test timed out.");
+        _test._has_test_timed_out = true;
+      } else if (_test_result) {
+        done_reason = _T("Page Error after timeout");
+      }
+      else {
+        done_reason = _T("Measurement completed on time out");
+      }
+
       is_page_done = true;
-      done_reason = _T("Test timed out.");
-      _test._has_test_timed_out = true;
     } else if (test_ms >= _test._minimum_duration) {
       DWORD load_ms = ElapsedMs(_on_load, now);
       DWORD inactive_ms = ElapsedMs(_last_activity, now);
-      DWORD navigated = navigated_ ? 1:0;
-      DWORD navigating = navigating_ ? 1:0;
+      
       WptTrace(loglevel::kFunction,
                _T("[wpthook] - TestState::IsDone() ")
                _T("Test: %dms, load: %dms, inactive: %dms, test timeout:%d,")
                _T(" navigating:%d, navigated: %d\n"),
                test_ms, load_ms, inactive_ms, _test._measurement_timeout,
                navigating, navigated);
-      bool is_loaded = (navigated_ &&
-                        !navigating_ &&
-                        //load_ms > ON_LOAD_GRACE_PERIOD && 
-                        !_test._dom_element_check);
+      
       if (_test_result) {
         is_page_done = true;
         done_reason = _T("Page Error");
@@ -366,7 +374,7 @@ bool TestState::IsDone() {
       } else if (test_ms > _test._measurement_timeout) {
         _test_result = TEST_RESULT_TIMEOUT;
         is_page_done = true;
-        done_reason = _T("Meaurement timed out.");
+        done_reason = _T("Measurement timed out.");
       }
     }
     if (is_page_done) {
