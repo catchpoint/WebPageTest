@@ -37,6 +37,7 @@ function header_link($url, $title) {
                         <ul class="nav navbar-nav">
                             <?php header_link('/getLocations.php?f=html', 'Locations');?>
                             <?php header_link('/getTesters.php?f=html', 'Testers');?>
+                            <?php header_link('/getConnectivity.php?f=html', 'Connectivity');?>
                             <?php header_link('/usage.php', 'Usage');?>
                             <?php header_link('/checkURLs.php', 'Check URLs');?>
                             <?php header_link('/checkIPs.php', 'Check IPs');?>
