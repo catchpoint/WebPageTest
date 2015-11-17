@@ -30,8 +30,7 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
           <th>plr</th>
         </tr>\n";
   foreach( $connectivities as $name => &$connectivity ) {
-    $error = '';
-    echo "<tr id=\"$name\" class=\"$error\">";
+    echo "<tr id=\"$name\">";
     echo "<td class=\"location\">" . @htmlspecialchars($name) . "</td>" . PHP_EOL;
     echo "<td>" . @htmlspecialchars($connectivity['label']) . "</td>" . PHP_EOL;
     echo "<td>" . @htmlspecialchars($connectivity['bwIn']) . "</td>" . PHP_EOL;
