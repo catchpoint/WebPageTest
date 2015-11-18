@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "track_sockets.h"
 #include "requests.h"
 #include "test_state.h"
+#include "ssl_stream.h"
 #include "../wptdriver/wpt_test.h"
 #include <nghttp2/nghttp2.h>
 
@@ -44,6 +45,7 @@ SocketInfo::SocketInfo():
   _id(0)
   , _accounted_for(false)
   , _during_test(false)
+  , _ssl_checked(false)
   , _is_ssl(false)
   , _is_ssl_handshake_complete(false)
   , _local_port(0)
@@ -55,6 +57,8 @@ SocketInfo::SocketInfo():
   _connect_end.QuadPart = 0;
   _ssl_start.QuadPart = 0;
   _ssl_end.QuadPart = 0;
+  _ssl_in = new SSLStream();
+  _ssl_out = new SSLStream();
 }
 
 /*-----------------------------------------------------------------------------
@@ -70,6 +74,8 @@ SocketInfo::~SocketInfo(void) {
       nghttp2_session_del(_h2_out->session);
     delete _h2_out;
   }
+  delete _ssl_in;
+  delete _ssl_out;
 }
 
 /*-----------------------------------------------------------------------------
@@ -460,6 +466,20 @@ int TrackSockets::GetLocalPort(DWORD socket_id) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void TrackSockets::SniffSSL(SOCKET s, DataChunk& chunk) {
+  if (chunk.GetLength() > 0) {
+    EnterCriticalSection(&cs);
+    SocketInfo* info = GetSocketInfo(s);
+    if (!info->IsLocalhost() && !info->_ssl_checked) {
+      info->_ssl_checked = true;
+      info->_is_ssl = IsSSLHandshake(chunk);
+    }
+    LeaveCriticalSection(&cs);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 bool TrackSockets::IsSsl(SOCKET s) {
   EnterCriticalSection(&cs);
   SocketInfo* info = GetSocketInfo(s);
@@ -572,11 +592,28 @@ bool TrackSockets::IsSSLHandshake(const DataChunk& chunk) {
 }
 
 /*-----------------------------------------------------------------------------
+  Call from within critical section.
+-----------------------------------------------------------------------------*/
+void TrackSockets::SslDataOut(SocketInfo* info, const DataChunk& chunk) {
+  SslTrackHandshake(info, chunk);
+  info->_ssl_out->Append(chunk);
+}
+
+/*-----------------------------------------------------------------------------
+  Call from within critical section.
+-----------------------------------------------------------------------------*/
+void TrackSockets::SslDataIn(SocketInfo* info, const DataChunk& chunk) {
+  SslTrackHandshake(info, chunk);
+  info->_ssl_in->Append(chunk);
+}
+
+
+/*-----------------------------------------------------------------------------
   Track the SSL handshake.
   http://en.wikipedia.org/wiki/Transport_Layer_Security#Handshake_protocol
   Call from within critical section.
   -----------------------------------------------------------------------------*/
-void TrackSockets::SslDataOut(SocketInfo* info, const DataChunk& chunk) {
+void TrackSockets::SslTrackHandshake(SocketInfo* info, const DataChunk& chunk) {
   const char *buf = chunk.GetData();
   DWORD len = chunk.GetLength();
   if (info->_is_ssl && !info->_is_ssl_handshake_complete && len > 3) {
@@ -603,18 +640,6 @@ void TrackSockets::SslDataOut(SocketInfo* info, const DataChunk& chunk) {
       info->_is_ssl_handshake_complete = true;
     }
   }
-}
-
-/*-----------------------------------------------------------------------------
-  Track the SSL handshake.
-  http://en.wikipedia.org/wiki/Transport_Layer_Security#Handshake_protocol
-  Call from within critical section.
-
-  TODO: search for 14 (change cipher) or 17 (app data) to end handshake
-  TODO: Save SSL version chosen by server. w
------------------------------------------------------------------------------*/
-void TrackSockets::SslDataIn(SocketInfo* info, const DataChunk& chunk) {
-  SslDataOut(info, chunk);
 }
 
 /*-----------------------------------------------------------------------------

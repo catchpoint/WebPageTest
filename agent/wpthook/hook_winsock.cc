@@ -527,6 +527,7 @@ int CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags) {
     DataChunk chunk(buf, len);
     int original_len = len;
     if (len && !_test_state._exit) {
+      _sockets.SniffSSL(s, chunk);
       _sockets.ModifyDataOut(s, chunk, false);
       _sockets.DataOut(s, chunk, false);
     }
@@ -567,6 +568,7 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
         }
         data += buffer_len;
       }
+      _sockets.SniffSSL(s, chunk);
       is_modified = _sockets.ModifyDataOut(s, chunk, false);
       _sockets.DataOut(s, chunk, false);
     }

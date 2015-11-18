@@ -193,6 +193,7 @@ bool WebBrowser::RunAndWait() {
       // set up the TLS session key log
       SetEnvironmentVariable(L"SSLKEYLOGFILE", _test._file_base + L"_keylog.log");
       DeleteFile(_test._file_base + L"_keylog.log");
+      SetKeyLogFile(_test._file_base + L"_keylog.log");
 
       _status.Set(_T("Launching: %s\n"), cmdLine);
 

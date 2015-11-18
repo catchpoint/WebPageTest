@@ -227,6 +227,7 @@
     <ClInclude Include="results.h" />
     <ClInclude Include="screen_capture.h" />
     <ClInclude Include="shared_mem.h" />
+    <ClInclude Include="ssl_stream.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="test_server.h" />
@@ -1098,6 +1099,7 @@
     <ClCompile Include="results.cc" />
     <ClCompile Include="screen_capture.cc" />
     <ClCompile Include="shared_mem.cc" />
+    <ClCompile Include="ssl_stream.cpp" />
     <ClCompile Include="stdafx.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
