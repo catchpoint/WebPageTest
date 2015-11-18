@@ -858,7 +858,7 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
     this.traceRunning_ = true;
     var message = {method: 'Tracing.start'};
     message.params = {
-      categories: 'netlog,blink.console,blink.user_timing,disabled-by-default-devtools.timeline,devtools.timeline',
+      categories: 'blink.console,blink.user_timing,disabled-by-default-devtools.timeline,devtools.timeline',
       options: 'record-as-much-as-possible'
     };
     if (1 === this.task_.trace) {
