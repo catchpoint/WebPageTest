@@ -286,6 +286,7 @@ function MergeDnsAndConnectionTimes($requests) {
     $dns_ms = null;
     $connect_ms = null;
     foreach($requests as $i => &$request) {
+      if (isset($request['type'])) {
         $request_type = (int)$request['type'];
         if ($request_type == 1) {
             $dns_ms = $request['load_ms'];
@@ -302,6 +303,7 @@ function MergeDnsAndConnectionTimes($requests) {
             unset($connect_ms);
             $merged_requests[] = $request;
         }
+      }
     }
   }
   return $merged_requests;
