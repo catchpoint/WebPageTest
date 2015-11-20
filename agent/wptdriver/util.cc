@@ -329,6 +329,19 @@ void WptTrace(int level, LPCTSTR format, ...) {
   }
 }
 
+DWORD ElapsedMs(LARGE_INTEGER start, LARGE_INTEGER end) {
+  LARGE_INTEGER freq;
+  QueryPerformanceFrequency(&freq);
+  freq.QuadPart = freq.QuadPart / 1000;
+
+  DWORD elapsed_ms = 0;
+  if (start.QuadPart && end.QuadPart > start.QuadPart) {
+    elapsed_ms = static_cast<DWORD>(
+      (end.QuadPart - start.QuadPart) / freq.QuadPart);
+  }
+  return elapsed_ms;
+}
+
 /*-----------------------------------------------------------------------------
   Generate a md5 hash of the provided file
 -----------------------------------------------------------------------------*/

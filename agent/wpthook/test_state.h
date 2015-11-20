@@ -92,9 +92,9 @@ public:
   void OnNavigate();
   void OnNavigateComplete();
   void OnAllDOMElementsLoaded(DWORD load_time);
-  void SetDomContentLoadedEvent(DWORD start, DWORD end);
-  void SetLoadEvent(DWORD load_event_start, DWORD load_event_end);
-  void SetFirstPaint(DWORD first_paint);
+  void SetDomContentLoadedEvent(LONGLONG start, LONGLONG end);
+  void SetLoadEvent(LONGLONG load_event_start, LONGLONG load_event_end);
+  void SetFirstPaint(LONGLONG first_paint);
   void OnLoad(); // browsers either call this or SetLoadEvent
   void OnStatusMessage(CString status);
   void Done(bool force = false);
@@ -124,18 +124,18 @@ public:
   LARGE_INTEGER _step_start;
   LARGE_INTEGER _first_navigate;
   LARGE_INTEGER _dom_elements_time;
-  DWORD _dom_content_loaded_event_start;
-  DWORD _dom_content_loaded_event_end;
+  LONGLONG _dom_content_loaded_event_start;
+  LONGLONG _dom_content_loaded_event_end;
   LARGE_INTEGER _on_load;
-  DWORD _load_event_start;
-  DWORD _load_event_end;
-  DWORD _first_paint;
+  LONGLONG _load_event_start;
+  LONGLONG _load_event_end;
+  LONGLONG _first_paint;
   LARGE_INTEGER _render_start;
   LARGE_INTEGER _first_activity;
   LARGE_INTEGER _last_activity;
   LARGE_INTEGER _ms_frequency;
   LARGE_INTEGER _title_time;
-  SYSTEMTIME    _start_time;
+  FILETIME    _start_time;
 
   //Timeout measurer
   LARGE_INTEGER _timeout_start_time;

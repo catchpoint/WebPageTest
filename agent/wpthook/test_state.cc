@@ -151,7 +151,7 @@ void TestState::Reset(bool cascade) {
     _timed_events.RemoveAll();
     _custom_metrics.Empty();
     navigating_ = false;
-    GetSystemTime(&_start_time);
+    GetSystemTimeAsFileTime(&_start_time);
   }
   LeaveCriticalSection(&_data_cs);
 
@@ -172,7 +172,7 @@ void TestState::Start() {
   WptTrace(loglevel::kFunction, _T("[wpthook] TestState::Start()\n"));
   Reset();
   QueryPerformanceCounter(&_step_start);
-  GetSystemTime(&_start_time);
+  GetSystemTimeAsFileTime(&_start_time);
   if (!_start.QuadPart)
     _start.QuadPart = _step_start.QuadPart;
 
@@ -272,7 +272,7 @@ void TestState::RecordTime(CString name, DWORD time, LARGE_INTEGER *out_time) {
 /*-----------------------------------------------------------------------------
   Save web timings for DOMContentLoaded event.
 -----------------------------------------------------------------------------*/
-void TestState::SetDomContentLoadedEvent(DWORD start, DWORD end) {
+void TestState::SetDomContentLoadedEvent(LONGLONG start, LONGLONG end) {
   _dom_content_loaded_event_start = start;
   _dom_content_loaded_event_end = end;
 }
@@ -280,7 +280,7 @@ void TestState::SetDomContentLoadedEvent(DWORD start, DWORD end) {
 /*-----------------------------------------------------------------------------
   Save web timings for load event.
 -----------------------------------------------------------------------------*/
-void TestState::SetLoadEvent(DWORD start, DWORD end) {
+void TestState::SetLoadEvent(LONGLONG start, LONGLONG end) {
   _load_event_start = start;
   _load_event_end = end;
 }
@@ -288,7 +288,7 @@ void TestState::SetLoadEvent(DWORD start, DWORD end) {
 /*-----------------------------------------------------------------------------
   Save web timings for msFirstPaint.
 -----------------------------------------------------------------------------*/
-void TestState::SetFirstPaint(DWORD first_paint) {
+void TestState::SetFirstPaint(LONGLONG first_paint) {
   _first_paint = first_paint;
 }
 

@@ -667,9 +667,7 @@ wpt.moz.main.collectStats = function(customMetrics, callback) {
 			var timingParams = {};
 			function addTime(name) {
 				if (win.performance.timing[name] > 0) {
-					timingParams[name] = Math.max(0, (
-							win.performance.timing[name] -
-							win.performance.timing['navigationStart']));
+					timingParams[name] = win.performance.timing[name];
 				}
 			};
 			addTime('domContentLoadedEventStart');

@@ -56,9 +56,9 @@ public:
   // extension actions
   void Start();
   void OnAllDOMElementsLoaded(DWORD load_time);
-  void SetDomContentLoadedEvent(DWORD start, DWORD end);
-  void SetLoadEvent(DWORD start, DWORD end);
-  void SetFirstPaint(DWORD first_paint);
+  void SetDomContentLoadedEvent(LONGLONG start, LONGLONG end);
+  void SetLoadEvent(LONGLONG start, LONGLONG end);
+  void SetFirstPaint(LONGLONG first_paint);
   void OnLoad();
   void OnNavigate();
   void OnNavigateComplete();
