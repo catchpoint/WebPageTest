@@ -27,69 +27,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #pragma once
-#include "hook_winsock.h"
-#include "hook_nspr.h"
-#include "hook_schannel.h"
-#include "hook_wininet.h"
-#include "hook_file.h"
-#include "requests.h"
-#include "track_dns.h"
-#include "track_sockets.h"
-#include "test_state.h"
-#include "results.h"
-#include "screen_capture.h"
-#include "test_server.h"
-#include "wpt_test_hook.h"
-#include "dev_tools.h"
-#include "trace.h"
+class DataChunk;
+class SocketInfo;
 
-extern HINSTANCE global_dll_handle; // DLL handle
+typedef enum {
+  SSL_IN,
+  SSL_OUT
+} SSL_DATA_DIRECTION;
 
-class WptHook {
+class SSLStream {
 public:
-  WptHook(void);
-  ~WptHook(void);
-
-  void Init();
-  void BackgroundThread();
-  bool OnMessage(UINT message, WPARAM wParam, LPARAM lParam);
-
-  // extension actions
-  void Start();
-  void OnAllDOMElementsLoaded(DWORD load_time);
-  void SetDomContentLoadedEvent(DWORD start, DWORD end);
-  void SetLoadEvent(DWORD start, DWORD end);
-  void SetFirstPaint(DWORD first_paint);
-  void OnLoad();
-  void OnNavigate();
-  void OnNavigateComplete();
-  void Report();
-  void OnReport();
+  SSLStream(SocketInfo *socket_info, SSL_DATA_DIRECTION direction);
+  ~SSLStream();
+  void Append(const DataChunk& chunk);
 
 private:
-  CWsHook   winsock_hook_;
-  NsprHook  nspr_hook_;
-  SchannelHook  schannel_hook_;
-  WinInetHook wininet_hook_;
-  FileHook  file_hook_;
-  HANDLE    background_thread_;
-  HANDLE    background_thread_started_;
-  HWND      message_window_;
-  CString   file_base_;
-  bool      done_;
-  bool      reported_;
-  UINT      report_message_;
-
-  // winsock event tracking
-  TrackDns      dns_;
-  TrackSockets  sockets_;
-  Requests      requests_;
-
-  TestState     test_state_;
-  Results       results_;
-  ScreenCapture screen_capture_;
-  TestServer    test_server_;
-  WptTestHook   test_;
-  DevTools      dev_tools_;
-  Trace         trace_;
+  unsigned char message_[65540]; // 65535 max TLS message length + 5 byte header
+  __int32 message_size_;         // Total size of the current message once filled (-1 for not set)
+  __int32 message_len_;          // Current size of accumulated message
+  SSL_DATA_DIRECTION direction_;
+  SocketInfo * socket_info_;
 };
+

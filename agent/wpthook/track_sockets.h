@@ -106,6 +106,8 @@ public:
   void ResetSslFd(void);
   void SetSslSocket(SOCKET s);
   bool SslSocketLookup(PRFileDesc* fd, SOCKET& s);
+  void SslKeyLog(CStringA& data);
+  void EnableSsl(SocketInfo *info);
 
   void Reset();
 
@@ -152,4 +154,6 @@ private:
   CAtlMap<DWORD, PRFileDesc*>    _last_ssl_fd;  // per-thread
   CAtlMap<PRFileDesc*, SOCKET>   _ssl_sockets;
   CAtlMap<DWORD, DWORD>          ipv4_rtt_;  // round trip times by address
+
+  CStringA  _ssl_key_log;
 };

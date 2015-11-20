@@ -51,14 +51,14 @@ SocketInfo::SocketInfo():
   , _local_port(0)
   , _protocol(PROTO_NOT_CHECKED)
   , _h2_in(NULL)
-  , _h2_out(NULL) {
+  , _h2_out(NULL)
+  , _ssl_in(NULL)
+  , _ssl_out(NULL) {
   memset(&_addr, 0, sizeof(_addr));
   _connect_start.QuadPart = 0;
   _connect_end.QuadPart = 0;
   _ssl_start.QuadPart = 0;
   _ssl_end.QuadPart = 0;
-  _ssl_in = new SSLStream();
-  _ssl_out = new SSLStream();
 }
 
 /*-----------------------------------------------------------------------------
@@ -74,8 +74,10 @@ SocketInfo::~SocketInfo(void) {
       nghttp2_session_del(_h2_out->session);
     delete _h2_out;
   }
-  delete _ssl_in;
-  delete _ssl_out;
+  if (_ssl_in)
+    delete _ssl_in;
+  if (_ssl_out)
+    delete _ssl_out;
 }
 
 /*-----------------------------------------------------------------------------
@@ -137,6 +139,7 @@ void TrackSockets::Close(SOCKET s) {
 bool TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name, 
                             int namelen) {
   bool allowed = true;
+
   WptTrace(loglevel::kFunction, 
             _T("[wpthook] - TrackSockets::Connect(%d)\n"), s);
 
@@ -472,7 +475,8 @@ void TrackSockets::SniffSSL(SOCKET s, DataChunk& chunk) {
     SocketInfo* info = GetSocketInfo(s);
     if (!info->IsLocalhost() && !info->_ssl_checked) {
       info->_ssl_checked = true;
-      info->_is_ssl = IsSSLHandshake(chunk);
+      if (IsSSLHandshake(chunk))
+        EnableSsl(info);
     }
     LeaveCriticalSection(&cs);
   }
@@ -533,7 +537,7 @@ void TrackSockets::ClaimSslFd(SOCKET s) {
         && s != INVALID_SOCKET) {
     _ssl_sockets.SetAt(fd, s);
     SocketInfo* info = GetSocketInfo(s);
-    info->_is_ssl = true;
+    EnableSsl(info);
   }
   _last_ssl_fd.RemoveKey(thread_id);
   LeaveCriticalSection(&cs);
@@ -564,7 +568,7 @@ void TrackSockets::SetSslSocket(SOCKET s) {
       (!socket_id || !_requests.HasActiveRequest(socket_id, 0))) {
     _ssl_sockets.SetAt(fd, s);
     SocketInfo* info = GetSocketInfo(s);
-    info->_is_ssl = true;
+    EnableSsl(info);
   }
   _last_ssl_fd.RemoveKey(thread_id);
   LeaveCriticalSection(&cs);
@@ -607,6 +611,21 @@ void TrackSockets::SslDataIn(SocketInfo* info, const DataChunk& chunk) {
   info->_ssl_in->Append(chunk);
 }
 
+/*-----------------------------------------------------------------------------
+  Append SSL Keylog data
+-----------------------------------------------------------------------------*/
+void TrackSockets::SslKeyLog(CStringA& data) {
+  _ssl_key_log += data;
+  //OutputDebugStringA(data);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TrackSockets::EnableSsl(SocketInfo *info) {
+  info->_is_ssl = true;
+  info->_ssl_in = new SSLStream(info, SSL_IN);
+  info->_ssl_out = new SSLStream(info, SSL_OUT);
+}
 
 /*-----------------------------------------------------------------------------
   Track the SSL handshake.

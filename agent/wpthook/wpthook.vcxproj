@@ -153,6 +153,7 @@
     <ClInclude Include="distorm\src\textdefs.h" />
     <ClInclude Include="distorm\src\wstring.h" />
     <ClInclude Include="distorm\src\x86defs.h" />
+    <ClInclude Include="hook_file.h" />
     <ClInclude Include="hook_schannel.h" />
     <ClInclude Include="hook_wininet.h" />
     <ClInclude Include="mongoose\mongoose.h" />
@@ -661,6 +662,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="dllmain.cc" />
+    <ClCompile Include="hook_file.cc" />
     <ClCompile Include="hook_schannel.cc" />
     <ClCompile Include="hook_wininet.cc" />
     <ClCompile Include="mongoose\mongoose.c">

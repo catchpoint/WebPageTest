@@ -485,6 +485,9 @@
     <ClInclude Include="ssl_stream.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="hook_file.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cc">
@@ -998,6 +1001,9 @@
       <Filter>Third-Party\mozjpeg</Filter>
     </ClCompile>
     <ClCompile Include="ssl_stream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hook_file.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
