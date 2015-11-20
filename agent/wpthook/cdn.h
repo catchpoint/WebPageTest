@@ -43,6 +43,16 @@ typedef struct {
   CStringA name;
 } CDN_PROVIDER_HEADER;
 
+typedef struct {
+  CStringA response_field;
+  CStringA pattern;
+} CDN_PROVIDER_HEADER_PAIR;
+
+typedef struct {
+  CStringA name;
+  CDN_PROVIDER_HEADER_PAIR headers[3];  // Expand the number of needed headers as needed
+} CDN_PROVIDER_MULTI_HEADER;
+
 CDN_PROVIDER cdnList[] = {
   {".akamai.net", "Akamai"},
   {".akamaiedge.net", "Akamai"},
@@ -178,4 +188,9 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"X-CDN", "Incapsula", "Incapsula"},
   {"X-Iinfo", "", "Incapsula"},
   {"X-Ar-Debug", "", "Aryaka"}
+};
+
+// Specific providers that require multiple headers
+CDN_PROVIDER_MULTI_HEADER cdnMultiHeaderList[] = {
+  {"Fastly", {{"Via", "varnish"}, {"X-Served-By", "cache-"}, {"X-Cache", ""}}}
 };
