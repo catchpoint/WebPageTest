@@ -180,7 +180,6 @@ function GetJob() {
                         }
                         UnlockTest($lock);
                       }
-                      file_put_contents("./tmp/last-test-{$location}-{$tester}.test", $testId);
                   }
 
                   if ($delete)
