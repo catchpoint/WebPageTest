@@ -169,19 +169,19 @@ void WptHook::Start() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void WptHook::SetDomContentLoadedEvent(DWORD start, DWORD end) {
+void WptHook::SetDomContentLoadedEvent(LONGLONG start, LONGLONG end) {
   test_state_.SetDomContentLoadedEvent(start, end);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void WptHook::SetLoadEvent(DWORD start, DWORD end) {
+void WptHook::SetLoadEvent(LONGLONG start, LONGLONG end) {
   test_state_.SetLoadEvent(start, end);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void WptHook::SetFirstPaint(DWORD first_paint) {
+void WptHook::SetFirstPaint(LONGLONG first_paint) {
   test_state_.SetFirstPaint(first_paint);
 }
 

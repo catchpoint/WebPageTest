@@ -71,6 +71,8 @@ private:
                     CStringA response_code_string,
                     CStringA response_data);
   CString GetParam(const CString query_string, const CString key) const;
+  bool GetLongLongParam(const CString query_string, const CString key,
+    LONGLONG& value) const;
   bool GetDwordParam(const CString query_string, const CString key,
                      DWORD& value) const;
   bool GetIntParam(const CString query_string, const CString key,

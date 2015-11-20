@@ -483,15 +483,36 @@ void Results::SavePageData(OptimizationChecks& checks){
     CStringA result;
     CStringA buff;
 
+    // The browser agent sends metrics in milliseconds since UNIX EPOCH. We need to convert the start time to
+    // a UNIX timestamp in MS and account for the offset applied to the requests (_start)
+
+    // we need a UNIX EPOCH of start time in ms. So,
+    // 1. lets convert the FILETIME to a 64 LONGLONG
+    LONGLONG ll_start = (LONGLONG)_test_state._start_time.dwLowDateTime + ((LONGLONG)(_test_state._start_time.dwHighDateTime) << 32LL);
+    // 2. FILE TIME is given in 100ns, we need to convert to ms
+    ll_start = ll_start / 10000LL;
+    // 3. Finally, we need to reach Jan 1, 1970 since FILE TIME is based on Jan 1, 1601
+    ll_start -= 11644473600000LL;
+    // 4. Now we have to adjust the start time by adding interval between _step_start and _start
+    ll_start += (LONGLONG)ElapsedMs(_test_state._step_start, _test_state._start);
+
+    LONGLONG ms_dom_content_loaded_event_start = max(0, _test_state._dom_content_loaded_event_start - ll_start);
+    LONGLONG ms_dom_content_loaded_event_end = max(0, _test_state._dom_content_loaded_event_end - ll_start);
+    LONGLONG ms_first_paint = max(0, _test_state._first_paint - ll_start);
+    LONGLONG ms_load_event_start = max(0, _test_state._load_event_start - ll_start);
+    LONGLONG ms_load_event_end = max(0, _test_state._load_event_end - ll_start);
+
     // build up the string of data fileds for the page result
+    SYSTEMTIME start_time;
+    FileTimeToSystemTime(&_test_state._start_time, &start_time);
 
     // Date
-    buff.Format("%02d/%02d/%d\t", _test_state._start_time.wMonth,
-          _test_state._start_time.wDay, _test_state._start_time.wYear);
+    buff.Format("%02d/%02d/%d\t", start_time.wMonth,
+          start_time.wDay, start_time.wYear);
     result += buff;
     // Time
-    buff.Format("%02d:%02d:%02d\t", _test_state._start_time.wHour,
-          _test_state._start_time.wMinute, _test_state._start_time.wSecond);
+    buff.Format("%02d:%02d:%02d.%d\t", start_time.wHour,
+          start_time.wMinute, start_time.wSecond, start_time.wMilliseconds);
     result += buff;
     // Event Name
     result += current_step_name_ + "\t";
@@ -703,13 +724,13 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Time to title (ms)
     result += FormatTime(_test_state._title_time);
     // W3C Navigation timings
-    buff.Format("%d\t", _test_state._load_event_start);
+    buff.Format("%d\t", ms_load_event_start);
     result += buff;
-    buff.Format("%d\t", _test_state._load_event_end);
+    buff.Format("%d\t", ms_load_event_end);
     result += buff;
-    buff.Format("%d\t", _test_state._dom_content_loaded_event_start);
+    buff.Format("%d\t", ms_dom_content_loaded_event_start);
     result += buff;
-    buff.Format("%d\t", _test_state._dom_content_loaded_event_end);
+    buff.Format("%d\t", ms_dom_content_loaded_event_end);
     result += buff;
     // Visually complete
     result += FormatTime(_visually_complete);
@@ -739,7 +760,7 @@ void Results::SavePageData(OptimizationChecks& checks){
     buff.Format("%d\t", checks._progressive_jpeg_score);
     result += buff;
     // W3C Navigation timing first paint (MS-specific right now)
-    buff.Format("%d\t", _test_state._first_paint);
+    buff.Format("%d\t", ms_first_paint);
     result += buff;
     // Peak memory allocation across all browser processes
     buff.Format("%d\t", peak_memory_);
@@ -1038,14 +1059,16 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   CStringA buff;
 
   WptTrace(loglevel::kFunction, _T("[wpthook] - Saving request %S%S"), (LPCSTR)request->GetHost(), (LPCSTR)request->_request_data.GetObject());
+  SYSTEMTIME start_time;
+  FileTimeToSystemTime(&_test_state._start_time, &start_time);
 
   // Date
-  buff.Format("%02d/%02d/%02d\t", _test_state._start_time.wMonth,
-        _test_state._start_time.wDay, _test_state._start_time.wYear);
+  buff.Format("%02d/%02d/%02d\t", start_time.wMonth,
+        start_time.wDay, start_time.wYear);
   result += buff;
   // Time
-  buff.Format("%02d:%02d:%02d\t", _test_state._start_time.wHour,
-        _test_state._start_time.wMinute, _test_state._start_time.wSecond);
+  buff.Format("%02d:%02d:%02d.%d\t", start_time.wHour,
+        start_time.wMinute, start_time.wSecond, start_time.wMilliseconds);
   result += buff;
   // Event Name
   result += current_step_name_ + "\t";

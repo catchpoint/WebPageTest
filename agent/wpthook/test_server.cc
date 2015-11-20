@@ -237,30 +237,31 @@ void TestServer::MongooseCallback(enum mg_event event,
       hook_.OnLoad();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/window_timing") == 0) {
-      DWORD start = 0;
-      GetDwordParam(request_info->query_string, "domContentLoadedEventStart",
+
+      LONGLONG start = 0LL;
+      GetLongLongParam(request_info->query_string, "domContentLoadedEventStart",
                     start);
-      DWORD end = 0;
-      GetDwordParam(request_info->query_string, "domContentLoadedEventEnd",
+      LONGLONG end = 0LL;
+      GetLongLongParam(request_info->query_string, "domContentLoadedEventEnd",
                     end);
-      if (start < 0 || start > 3600000)
-        start = 0;
-      if (end < 0 || end > 3600000)
-        end = 0;
+      if (start < 0LL)
+        start = 0LL;
+      if (end < 0LL)
+        end = 0LL;
       hook_.SetDomContentLoadedEvent(start, end);
-      start = 0;
-      GetDwordParam(request_info->query_string, "loadEventStart", start);
-      end = 0;
-      GetDwordParam(request_info->query_string, "loadEventEnd", end);
-      if (start < 0 || start > 3600000)
-        start = 0;
-      if (end < 0 || end > 3600000)
-        end = 0;
+      start = 0LL;
+      GetLongLongParam(request_info->query_string, "loadEventStart", start);
+      end = 0LL;
+      GetLongLongParam(request_info->query_string, "loadEventEnd", end);
+      if (start < 0LL)
+        start = 0LL;
+      if (end < 0LL)
+        end = 0LL;
       hook_.SetLoadEvent(start, end);
-      DWORD first_paint = 0;
-      GetDwordParam(request_info->query_string, "msFirstPaint", first_paint);
-      if (first_paint < 0 || first_paint > 3600000)
-        first_paint = 0;
+      LONGLONG first_paint = 0;
+      GetLongLongParam(request_info->query_string, "msFirstPaint", first_paint);
+      if (first_paint < 0LL)
+        first_paint = 0LL;
       hook_.SetFirstPaint(first_paint);
       hook_.OnWindowTimingReceived();
       hook_.SetHookReady();
@@ -468,13 +469,24 @@ CString TestServer::GetParam(const CString query_string,
   return value;
 }
 
+bool TestServer::GetLongLongParam(const CString query_string,
+  const CString key, LONGLONG& value) const {
+  bool found = false;
+  CString string_value = GetParam(query_string, key);
+  if (string_value.GetLength()) {
+    found = true;
+    value = _ttoll(string_value);
+  }
+  return found;
+}
+
 bool TestServer::GetDwordParam(const CString query_string,
                                 const CString key, DWORD& value) const {
   bool found = false;
   CString string_value = GetParam(query_string, key);
   if (string_value.GetLength()) {
     found = true;
-    value = _ttoi(string_value);
+    value = _ttol(string_value);
   }
   return found;
 }
