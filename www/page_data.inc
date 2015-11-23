@@ -361,6 +361,15 @@ function loadPageData($file, $options = null, $multistep=false)
                 $step['fullyLoadedCPUpct'] = (array_key_exists(96, $fields) && strlen(trim($fields[96]))) ? floatval(trim($fields[96])) : 0;
                 $step['isResponsive'] = (array_key_exists(97, $fields) && strlen(trim($fields[97]))) ? intval(trim($fields[97])) : -1;
                 $step['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));
+
+                $startFull = trim($fields[0]) . ' ' . trim($fields[1]);
+                $step['date'] = strtotime($startFull);
+
+                $msStartTime = getMillisecondsFromTime(trim($fields[1]));
+                if ($msStartTime > 0.0) {
+                  $step['date'] = (double)$step['date'] + $msStartTime;
+                }
+
                 $stepName = trim($fields[2]);
                 if (strlen($stepName) && $multistep) {
                   $step['stepName'] = $stepName;
@@ -713,6 +722,22 @@ function values(&$pageData, $cached, $metric, $successfulOnly) {
     }
   }
   return $values;
+}
+
+/**
+ * Extract milliseconds from a date in string format
+ *
+ * @param string timeStr
+ * @return float
+ */
+function getMillisecondsFromTime($timeStr) {
+  if (!preg_match('/^\d+:\d+:\d+\.(\d+)/', $timeStr, $matches)) {
+    return 0.0;
+  }
+  $fractionOfSeconds = $matches[1];
+  $fractionalPartInSec = (double)("0.".$fractionOfSeconds);
+
+  return $fractionalPartInSec;
 }
 
 ?>
