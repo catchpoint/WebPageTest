@@ -108,6 +108,7 @@ public:
   bool SslSocketLookup(PRFileDesc* fd, SOCKET& s);
   void SslKeyLog(CStringA& data);
   void EnableSsl(SocketInfo *info);
+  CStringA GetSslMasterSecret(SocketInfo *info);
 
   void Reset();
 
