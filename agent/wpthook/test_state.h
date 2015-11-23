@@ -109,6 +109,7 @@ public:
   void AddConsoleLogMessage(CString message);
   void AddTimedEvent(CString timed_event);
   void SetCustomMetrics(CString custom_metrics);
+  void SetUserTiming(CString user_timing);
   CString GetConsoleLogJSON();
   CString GetTimedEventsJSON();
   void GetElapsedCPUTimes(double &doc, double &end,
@@ -176,6 +177,7 @@ public:
   CAtlList<ProgressData>   _progress_data;     // CPU, memory and Bandwidth
   CAtlList<StatusMessage>  _status_messages;   // Browser status
   CString                  _custom_metrics;    // JSON-formatted custom metrics data
+  CString                  _user_timing;       // JSON-formatted user timing data (from Chrome traces)
 
 private:
   bool  _started;

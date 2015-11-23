@@ -149,6 +149,7 @@ void TestState::Reset(bool cascade) {
     _console_log_messages.RemoveAll();
     _timed_events.RemoveAll();
     _custom_metrics.Empty();
+    _user_timing.Empty();
     navigating_ = false;
     GetSystemTime(&_start_time);
   }
@@ -781,6 +782,14 @@ void TestState::AddTimedEvent(CString timed_event) {
 void TestState::SetCustomMetrics(CString custom_metrics) {
   EnterCriticalSection(&_data_cs);
   _custom_metrics = custom_metrics;
+  LeaveCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::SetUserTiming(CString user_timing) {
+  EnterCriticalSection(&_data_cs);
+  _user_timing = user_timing;
   LeaveCriticalSection(&_data_cs);
 }
 

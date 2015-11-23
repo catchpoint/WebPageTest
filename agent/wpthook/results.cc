@@ -56,6 +56,7 @@ static const TCHAR * IMAGE_RESPONSIVE_CHECK = _T("_screen_responsive.jpg");
 static const TCHAR * CONSOLE_LOG_FILE = _T("_console_log.json");
 static const TCHAR * TIMED_EVENTS_FILE = _T("_timed_events.json");
 static const TCHAR * CUSTOM_METRICS_FILE = _T("_metrics.json");
+static const TCHAR * USER_TIMING_FILE = _T("_user_timing.json");
 static const TCHAR * TRACE_FILE = _T("_trace.json");
 static const TCHAR * CUSTOM_RULES_DATA_FILE = _T("_custom_rules.json");
 static const DWORD RIGHT_MARGIN = 25;
@@ -148,6 +149,7 @@ void Results::Save(void) {
       SaveConsoleLog();
       SaveTimedEvents();
       SaveCustomMetrics();
+      SaveUserTiming();
       _trace.Write(_file_base + TRACE_FILE);
     }
     if (shared_result == -1 || shared_result == 0 || shared_result == 99999)
@@ -1348,6 +1350,20 @@ void Results::SaveCustomMetrics(void) {
   }
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Results::SaveUserTiming(void) {
+  CStringA user_timing = CT2A(_test_state._user_timing, CP_UTF8);
+  if (user_timing.GetLength()) {
+    HANDLE file = CreateFile(_file_base + USER_TIMING_FILE, GENERIC_WRITE, 0, 
+                              NULL, CREATE_ALWAYS, 0, 0);
+    if (file != INVALID_HANDLE_VALUE) {
+      DWORD written;
+      WriteFile(file, (LPCSTR)user_timing, user_timing.GetLength(), &written, 0);
+      CloseHandle(file);
+    }
+  }
+}
 
 /*-----------------------------------------------------------------------------
   See if a version of the same request exists but not from the browser.

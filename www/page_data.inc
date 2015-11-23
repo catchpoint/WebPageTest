@@ -93,6 +93,17 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
           }
         }
         
+        // See if there is Chrome trace user timing data to load
+        if (gz_is_file("$testPath/{$run}{$cachedText}_user_timing.json")) {
+          $user_timing = ParseUserTiming("$testPath/{$run}{$cachedText}_user_timing.json");
+          if (isset($user_timing) && is_array($user_timing)) {
+            $ret["chromeUserTiming"] = $user_timing;
+            foreach($user_timing as $value) {
+              $ret["chromeUserTiming.{$value['name']}"] = $value['time'];
+            }
+          }
+        }
+        
         // see if we have CSI metrics to load
         if (is_dir('./google') && is_file('./google/google_lib.inc')) {
           require_once('google/google_lib.inc');
@@ -657,4 +668,39 @@ function values(&$pageData, $cached, $metric, $successfulOnly) {
   return $values;
 }
 
+function ParseUserTiming($file) {
+  $user_timing = null;
+  $events = json_decode(gz_file_get_contents($file), true);
+  if (isset($events) && is_array($events)) {
+    $main_frame = null;
+    $start_time = null;
+    // Find the first navigation to determine which is the main frame
+    foreach ($events as $event) {
+      if (is_array($event) && isset($event['name']) && $event['name'] == 'navigationStart') {
+        if (isset($event['args']['frame']) && isset($event['ts'])) {
+          $start_time = $event['ts'];
+          $main_frame = $event['args']['frame'];
+        }
+        break;
+      }
+    }
+    if (isset($main_frame) && isset($start_time)) {
+      foreach ($events as $event) {
+        if (is_array($event) &&
+            isset($event['name']) &&
+            isset($event['args']['frame']) &&
+            isset($event['ts']) &&
+            $event['name'] != 'navigationStart' &&
+            $event['args']['frame'] == $main_frame &&
+            $event['ts'] >= $start_time) {
+          if (!isset($user_timing)) {
+            $user_timing = array();
+          }
+          $user_timing[] = array('name' => $event['name'], 'time' => intval(($event['ts'] - $start_time) / 1000.0));
+        }
+      }
+    }
+  }
+  return $user_timing;
+}
 ?>

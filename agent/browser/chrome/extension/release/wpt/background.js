@@ -13971,6 +13971,7 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.timelineStackDepth = 0;
     g_instance.traceRunning = false;
     g_instance.netlog = [];
+    g_instance.userTiming = [];
     var version = '1.0';
     if (g_instance.chromeApi_['debugger'])
         g_instance.chromeApi_.debugger.attach({tabId: g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachDebugger);
@@ -13986,6 +13987,7 @@ wpt.chromeDebugger.SetActive = function(active) {
     g_instance.netlogRequests = {};
     g_instance.idMap = {};
     g_instance.netlog = [];
+    g_instance.userTiming = [];
     g_instance.receivedData = false;
     g_instance.devToolsData = '';
     g_instance.statsDoneCallback = undefined;
@@ -14072,6 +14074,9 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       var traceEvents = [];
       var len = params['value'].length;
       for(var i = 0; i < len; i++) {
+        if (params['value'][i]['cat'] == 'blink.user_timing') {
+          g_instance.userTiming.push(params['value'][i]);
+        }
         if (params['value'][i]['cat'] == 'netlog') {
           if (DEBUG_NETLOG)
             g_instance.netlog.push(params['value'][i]);
@@ -14094,6 +14099,10 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       g_instance.netlog = [];
     }
     g_instance.netlogRequests = [];
+    if (g_instance.userTiming.length) {
+      wpt.chromeDebugger.sendEvent('user_timing', JSON.stringify(g_instance.userTiming));
+      g_instance.userTiming = [];
+    }
     if (g_instance.statsDoneCallback)
       g_instance.statsDoneCallback();
     }

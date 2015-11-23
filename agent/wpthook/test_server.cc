@@ -259,6 +259,10 @@ void TestServer::MongooseCallback(enum mg_event event,
         CloseHandle(hFile);
       }
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/user_timing") == 0) {
+      CString body = GetPostBody(conn, request_info);
+      test_state_.SetUserTiming(body);
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/dns_time") == 0) {
       CString body = GetPostBody(conn, request_info);
       //OutputDebugString(L"*** DNS: " + body);
