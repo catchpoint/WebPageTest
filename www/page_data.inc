@@ -93,17 +93,6 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
           }
         }
         
-        // See if there is Chrome trace user timing data to load
-        if (gz_is_file("$testPath/{$run}{$cachedText}_user_timing.json")) {
-          $user_timing = ParseUserTiming("$testPath/{$run}{$cachedText}_user_timing.json");
-          if (isset($user_timing) && is_array($user_timing)) {
-            $ret["chromeUserTiming"] = $user_timing;
-            foreach($user_timing as $value) {
-              $ret["chromeUserTiming.{$value['name']}"] = $value['time'];
-            }
-          }
-        }
-        
         // see if we have CSI metrics to load
         if (is_dir('./google') && is_file('./google/google_lib.inc')) {
           require_once('google/google_lib.inc');
@@ -187,6 +176,18 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
               if (isset($processing) && is_array($processing) && count($processing)) {
                 $ret['cpuTimesDoc'] = $processing;
               }
+            }
+          }
+        }
+
+        // See if there is Chrome trace user timing data to load.
+        // Do this after the CPU slice calculations so the trace processing has already run.
+        if (gz_is_file("$testPath/{$run}{$cachedText}_user_timing.json")) {
+          $user_timing = ParseUserTiming("$testPath/{$run}{$cachedText}_user_timing.json");
+          if (isset($user_timing) && is_array($user_timing)) {
+            $ret["chromeUserTiming"] = $user_timing;
+            foreach($user_timing as $value) {
+              $ret["chromeUserTiming.{$value['name']}"] = $value['time'];
             }
           }
         }
@@ -681,7 +682,6 @@ function ParseUserTiming($file) {
           $start_time = $event['ts'];
           $main_frame = $event['args']['frame'];
         }
-        break;
       }
     }
     if (isset($main_frame) && isset($start_time)) {
