@@ -69,9 +69,16 @@ function loadPageRunData($testPath, $run, $cached, &$requests = null, $options =
                 "loadEventEnd"
             );
             for ($i = 0; $i < count($ret); $i++) {
+
+              // Page metrics are relative to the performance timing (navigation
+              // start) whereas request start time is based on the first
+              // request on the page. We need to reconsile start time by
+              // computing the offset and fixing page timing.
+              $offset = (double)($ret[$i]['date'] + $ret[$i]['startTime']) - (double)$ret2[$i]['date'];
+
               for ($j = 0; $j < count($overwrite_fields); $j++) {
                 $field = $overwrite_fields[$j];
-                $ret[$i][$field] = $ret2[$i][$field];
+                $ret[$i][$field] = (double)$ret2[$i][$field] + (double)$offset;
               }
             }
           } else {
@@ -360,7 +367,6 @@ function loadPageData($file, $options = null, $multistep=false)
                 $step['docCPUpct'] = (array_key_exists(95, $fields) && strlen(trim($fields[95]))) ? floatval(trim($fields[95])) : 0;
                 $step['fullyLoadedCPUpct'] = (array_key_exists(96, $fields) && strlen(trim($fields[96]))) ? floatval(trim($fields[96])) : 0;
                 $step['isResponsive'] = (array_key_exists(97, $fields) && strlen(trim($fields[97]))) ? intval(trim($fields[97])) : -1;
-                $step['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));
 
                 $startFull = trim($fields[0]) . ' ' . trim($fields[1]);
                 $step['date'] = strtotime($startFull);
