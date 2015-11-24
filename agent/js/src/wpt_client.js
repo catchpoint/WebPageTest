@@ -278,7 +278,8 @@ exports.ResultFile = ResultFile;
 ResultFile.ResultType = Object.freeze({
   IMAGE: 'image',
   IMAGE_ANNOTATIONS: 'image_annotations',
-  PCAP: 'pcap'
+  PCAP: 'pcap',
+  TRACE: 'trace'
 });
 
 
@@ -772,7 +773,8 @@ Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
     }
     if (resultFile) {
       if (exports.ResultFile.ResultType.IMAGE === resultFile.resultType ||
-          exports.ResultFile.ResultType.PCAP === resultFile.resultType) {
+          exports.ResultFile.ResultType.PCAP === resultFile.resultType ||
+          exports.ResultFile.ResultType.TRACE === resultFile.resultType) {
         // Images and pcaps must be uploaded to the RESULT_IMAGE_SERVLET, with no
         // resultType or run/cache parts.
         //

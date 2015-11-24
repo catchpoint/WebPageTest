@@ -36,6 +36,7 @@ var vm = require('vm');
 var wd_sandbox = require('wd_sandbox');
 var webdriver = require('selenium-webdriver');
 var webdriver_http = require('selenium-webdriver/http');
+var zlib = require('zlib');
 
 /** Allow tests to stub out. */
 exports.process = process;
@@ -165,7 +166,6 @@ WebDriverServer.prototype.init = function(args) {
   this.abortTimer_ = undefined;
   this.agentError_ = undefined;
   this.devToolsMessages_ = [];
-  this.traceData_ = {traceEvents: []};
   this.driver_ = undefined;
   this.exitWhenDone_ = args.exitWhenDone;
   this.isRecordingDevTools_ = false;
@@ -189,6 +189,8 @@ WebDriverServer.prototype.init = function(args) {
   this.customMetrics_ = undefined;
   this.userTimingMarks_ = undefined;
   this.pageData_ = undefined;
+  this.traceFile_ = undefined;
+  this.traceFileStream_ = undefined;
   this.tearDown_();
 };
 
@@ -854,8 +856,11 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
   'use strict';
   // Always enable tracing, at a minimum to capture timeline data
   if (this.browser_.supportsTracing && !this.driver_ && !this.traceRunning_) {
-    this.traceData_ = {traceEvents: []};
     this.traceRunning_ = true;
+    this.traceFile_ = path.join(this.runTempDir_, 'trace.json.gz');
+    this.traceFileStream_ = zlib.createGzip();
+    this.traceFileStream_.pipe(fs.createWriteStream(this.traceFile_));
+    this.traceFileStream_.write('{"traceEvents":[{}');
     var message = {method: 'Tracing.start'};
     message.params = {
       categories: 'blink.console,blink.user_timing,disabled-by-default-devtools.timeline,devtools.timeline',
@@ -889,14 +894,22 @@ WebDriverServer.prototype.onTracingMessage_ = function(message) {
   if (this.traceRunning_) {
     if ('Tracing.dataCollected' === message.method) {
       var value = (message.params || {}).value;
-      if (value instanceof Array) {
+      if (value instanceof Array && this.traceFileStream_ !== undefined) {
         value.forEach(function(item) {
-          this.traceData_.traceEvents.push(item);
+          this.traceFileStream_.write(',' + JSON.stringify(item));
         }.bind(this));
       }
     } else if ('Tracing.tracingComplete' === message.method) {
       logger.debug('Signalling finish of tracing');
-      this.traceRunning_ = false;
+      if (this.traceFileStream_ !== undefined) {
+        this.traceFileStream_.end(']}');
+        this.traceFileStream_.on('finish', function() {
+          this.traceRunning_ = false;
+          this.traceFileStream_ = undefined;
+        }.bind(this));
+      } else {
+        this.traceRunning_ = false;
+      }
     }
   } else {
     logger.debug('Unexpected tracing message - ' + message.method);
@@ -1290,14 +1303,12 @@ WebDriverServer.prototype.scheduleProcessVideo_ = function() {
     if (this.videoFile_ && this.flags_['processvideo'] == 'yes') {
       var videoDir = path.join(this.runTempDir_, 'video');
       this.histogramFile_ = path.join(this.runTempDir_, 'histograms.json.gz');
-      var traceFile = path.join(this.runTempDir_, 'trace.json');
       var options = ['lib/video/visualmetrics.py', '-i', this.videoFile_, '-d',
           videoDir, '--orange', '--viewport', '--force', '--quality', '75',
           '--histogram', this.histogramFile_];
-      if (this.traceData_) {
-        fs.writeFileSync(traceFile, JSON.stringify(this.traceData_));
+      if (this.traceFile_) {
         options.push('--timeline');
-        options.push(traceFile);
+        options.push(this.traceFile_);
       }
       process_utils.scheduleExec(this.app_,
           'python', options, undefined,
@@ -1367,10 +1378,6 @@ WebDriverServer.prototype.done_ = function() {
     if (devToolsFile) {
       fs.writeFileSync(devToolsFile, JSON.stringify(this.devToolsMessages_));
     }
-    var traceFile = this.traceData_ ? path.join(this.runTempDir_, 'trace.json') : undefined;
-    if (traceFile) {
-      fs.writeFileSync(traceFile, JSON.stringify(this.traceData_));
-    }
     this.scheduleNoFault_('Send IPC', function() {
       logger.debug("Sending 'done' IPC")
       exports.process.send({
@@ -1379,7 +1386,7 @@ WebDriverServer.prototype.done_ = function() {
           agentError: this.agentError_,
           devToolsFile: devToolsFile,
           screenshots: this.screenshots_,
-          traceFile: traceFile,
+          traceFile: this.traceFile_,
           videoFile: this.videoFile_,
           videoFrames: this.videoFrames_,
           pcapFile: this.pcapFile_,
