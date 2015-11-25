@@ -253,7 +253,6 @@ void Wpt::OnLoad() {
 }
 
 void Wpt::OnBeforeNavigate() {
-  _timings_reported = false;
   if (_active && _webdriver_mode) {
     AtlTrace(_T("[wptbho] - Wpt::OnBeforeNavigate()"));
     _wpt_interface.OnBeforeNavigate();
@@ -1119,10 +1118,6 @@ DWORD Wpt::CountDOMElements(CComQIPtr<IHTMLDocument2> &document) {
   Collect the stats at the end of a test
 -----------------------------------------------------------------------------*/
 void Wpt::CollectStats(CString custom_metrics) {
-  if (_timings_reported) {
-    return;
-  }
-  _timings_reported = true;
   AtlTrace(_T("[wptbho] - Wpt::CollectStats()"));
   if (_web_browser) {
     CComPtr<IDispatch> dispatch;

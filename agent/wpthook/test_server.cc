@@ -248,23 +248,32 @@ void TestServer::MongooseCallback(enum mg_event event,
         start = 0LL;
       if (end < 0LL)
         end = 0LL;
-      hook_.SetDomContentLoadedEvent(start, end);
-      start = 0LL;
-      GetLongLongParam(request_info->query_string, "loadEventStart", start);
-      end = 0LL;
-      GetLongLongParam(request_info->query_string, "loadEventEnd", end);
-      if (start < 0LL)
+
+      // When running an IE measurement, this endpoint will be called several times.
+      // We need to make sure we are setting the hook ready only when we receive new
+      // page metrics information. By doing so, we ensure we are on a new page and not
+      // receiving timing info from the previous page.
+      if (start != test_state_._dom_content_loaded_event_start) {
+        hook_.SetDomContentLoadedEvent(start, end);
         start = 0LL;
-      if (end < 0LL)
+        GetLongLongParam(request_info->query_string, "loadEventStart", start);
         end = 0LL;
-      hook_.SetLoadEvent(start, end);
-      LONGLONG first_paint = 0;
-      GetLongLongParam(request_info->query_string, "msFirstPaint", first_paint);
-      if (first_paint < 0LL)
-        first_paint = 0LL;
-      hook_.SetFirstPaint(first_paint);
-      hook_.OnWindowTimingReceived();
-      hook_.SetHookReady();
+        GetLongLongParam(request_info->query_string, "loadEventEnd", end);
+        if (start < 0LL)
+          start = 0LL;
+        if (end < 0LL)
+          end = 0LL;
+
+        hook_.SetLoadEvent(start, end);
+        LONGLONG first_paint = 0;
+        GetLongLongParam(request_info->query_string, "msFirstPaint", first_paint);
+        if (first_paint < 0LL)
+          first_paint = 0LL;
+        hook_.SetFirstPaint(first_paint);
+        hook_.OnWindowTimingReceived();
+        hook_.SetHookReady();
+      }
+     
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/navigate") == 0) {
       hook_.OnNavigate();
