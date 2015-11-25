@@ -69,9 +69,16 @@ function loadPageRunData($testPath, $run, $cached, &$requests = null, $options =
                 "loadEventEnd"
             );
             for ($i = 0; $i < count($ret); $i++) {
+
+              // Page metrics are relative to the performance timing (navigation
+              // start) whereas request start time is based on the first
+              // request on the page. We need to reconsile start time by
+              // computing the offset and fixing page timing.
+              $offset = (double)($ret[$i]['date'] + $ret[$i]['startTime']) - (double)$ret2[$i]['date'];
+
               for ($j = 0; $j < count($overwrite_fields); $j++) {
                 $field = $overwrite_fields[$j];
-                $ret[$i][$field] = $ret2[$i][$field];
+                $ret[$i][$field] = (double)$ret2[$i][$field] + (double)$offset;
               }
             }
           } else {
@@ -360,7 +367,15 @@ function loadPageData($file, $options = null, $multistep=false)
                 $step['docCPUpct'] = (array_key_exists(95, $fields) && strlen(trim($fields[95]))) ? floatval(trim($fields[95])) : 0;
                 $step['fullyLoadedCPUpct'] = (array_key_exists(96, $fields) && strlen(trim($fields[96]))) ? floatval(trim($fields[96])) : 0;
                 $step['isResponsive'] = (array_key_exists(97, $fields) && strlen(trim($fields[97]))) ? intval(trim($fields[97])) : -1;
-                $step['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));
+
+                $startFull = trim($fields[0]) . ' ' . trim($fields[1]);
+                $step['date'] = strtotime($startFull);
+
+                $msStartTime = getMillisecondsFromTime(trim($fields[1]));
+                if ($msStartTime > 0.0) {
+                  $step['date'] = (double)$step['date'] + $msStartTime;
+                }
+
                 $stepName = trim($fields[2]);
                 if (strlen($stepName) && $multistep) {
                   $step['stepName'] = $stepName;
@@ -713,6 +728,22 @@ function values(&$pageData, $cached, $metric, $successfulOnly) {
     }
   }
   return $values;
+}
+
+/**
+ * Extract milliseconds from a date in string format
+ *
+ * @param string timeStr
+ * @return float
+ */
+function getMillisecondsFromTime($timeStr) {
+  if (!preg_match('/^\d+:\d+:\d+\.(\d+)/', $timeStr, $matches)) {
+    return 0.0;
+  }
+  $fractionOfSeconds = $matches[1];
+  $fractionalPartInSec = (double)("0.".$fractionOfSeconds);
+
+  return $fractionalPartInSec;
 }
 
 ?>
