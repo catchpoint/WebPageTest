@@ -435,7 +435,7 @@ function imagecreatefromjpeg_by_bitmask($image_file, $eventName) {
 
     $originalImage->setImageFormat( "jpg" );
 
-    $pathToMergedImage = "./tmp/" . uniqid() . ".jpg";
+    $pathToMergedImage = pathinfo($image_file,PATHINFO_DIRNAME)."/".pathinfo($image_file,PATHINFO_BASENAME)."_byBitmask.jpg";
     $originalImage->writeImage($pathToMergedImage);
 
     return $pathToMergedImage;
