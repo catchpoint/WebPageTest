@@ -171,6 +171,13 @@ $userImages = true;
 	                    echo '<img class="center" alt="Screen Shot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="' . substr($testPath, 1) . '/' . $run . $cachedText . $pageString . '_screen.jpg">';
                     echo '</a>';
                 }
+                if( is_file($testPath . '/' . $run . $cachedText . $pageString . '_screen_byBitmask.jpg') )
+                {
+                    echo '<h1>Fully Loaded with Bitmask</h1>';
+                    echo '<a href="' . substr($testPath, 1) . '/' . $run . $cachedText . $pageString . '_screen_byBitmask.jpg">';
+                    echo '<img class="center" alt="Screen Shot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="' . substr($testPath, 1) . '/' . $run . $cachedText . $pageString . '_screen_byBitmask.jpg">';
+                    echo '</a>';
+                }
                 // display the last status message if we have one
                 if( count($messages) )
                 {
@@ -187,6 +194,11 @@ $userImages = true;
                     echo '</h1></a>';
 	                    echo '<img class="center" alt="Start Render Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . $pageString . '_screen_render.jpg">';
                 }
+                if( is_file($testPath . '/' . $run . $cachedText . $pageString . '_screen_render_byBitmask.jpg') )
+                {
+                    echo '<br><br><h1>Start Render with Bitmask</h1>';
+                    echo '<img class="center" alt="Start Render Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . $pageString . '_screen_render_byBitmask.jpg">';
+                }
 	                if( is_file($testPath . '/' . $run . $cachedText . $pageString . '_screen_dom.jpg') )
                 {
                     echo '<br><br><a name="dom_element"><h1>DOM Element';
@@ -195,6 +207,11 @@ $userImages = true;
                     echo '</h1></a>';
 	                    echo '<img class="center" alt="DOM Element Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . $pageString . '_screen_dom.jpg">';
                 }
+                if( is_file($testPath . '/' . $run . $cachedText . $pageString . '_screen_dom_byBitmask.jpg') )
+                {
+                    echo '<br><br><h1>DOM Element with Bitmask</h1>';
+                    echo '<img class="center" alt="DOM Element Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . $pageString . '_screen_dom_byBitmask.jpg">';
+                }
 	                if( is_file($testPath . '/' . $run . $cachedText . $pageString . '_screen_doc.jpg') )
                 {
                     echo '<br><br><a name="doc_complete"><h1>Document Complete';
@@ -202,6 +219,11 @@ $userImages = true;
                         echo ' (' . number_format($pageRunData['docTime'] / 1000.0, 3) . '  sec)';
                     echo '</h1></a>';
 	                    echo '<img class="center" alt="Document Complete Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . $pageString . '_screen_doc.jpg">';
+                }
+                if( is_file($testPath . '/' . $run . $cachedText . $pageString . '_screen_doc_byBitmask.jpg') )
+                {
+                    echo '<br><br><h1>Document Complete with Bitmask</h1>';
+                    echo '<img class="center" alt="Document Complete Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . $pageString . '_screen_doc_byBitmask.jpg">';
                 }
 	                if( is_file($testPath . '/' . $run . $cachedText . $pageString . '_aft.png') )
                 {
@@ -216,6 +238,11 @@ $userImages = true;
                 {
                     echo '<br><br><h1 id="responsive">Responsive Site Check</h1>';
                     echo '<img class="center" alt="Responsive Site Check image" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen_responsive.jpg">';
+                }
+                if( is_file($testPath . '/' . $run . $cachedText . '_screen_responsive_byBitmask.jpg') )
+                {
+                    echo '<br><br><h1 id="responsive">Responsive Site Check with Bitmask</h1>';
+                    echo '<img class="center" alt="Responsive Site Check image" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen_responsive_byBitmask.jpg">';
                 }
                 
                 // display all of the status messages

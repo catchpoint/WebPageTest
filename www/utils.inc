@@ -255,4 +255,15 @@
 		return false;
 	}
 
+	function resultContainsBitmaskedScreenshots($testPath){
+		$allFilesInTestPath = glob($testPath."/*");
+
+		foreach ($allFilesInTestPath as $file) {
+			if (preg_match("/^[\S]*\/(\S*)_byBitmask.jpg)$/", $file) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 ?>
