@@ -30,6 +30,9 @@ private:
   TrackSockets& _sockets;
   NCodeHookIA32* _hook;
   HANDLE  keylog_file_;
+  CStringW download_path_;
+
+  bool IsDownload(LPCWSTR lpFileName);
 
   // Original Functions
   PFN_CREATEFILEW CreateFileW_;

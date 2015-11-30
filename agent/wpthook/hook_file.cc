@@ -49,6 +49,32 @@ void FileHook::Init() {
   if (_hook || g_hook) {
     return;
   }
+
+  // Get the system download path
+  TCHAR path[4096];
+  HKEY hKey;
+  if (SUCCEEDED(RegOpenKeyEx(HKEY_CURRENT_USER,
+      L"Software\\Microsoft\\Windows\\CurrentVersion"
+      L"\\Explorer\\User Shell Folders", 0, KEY_READ, &hKey))) {
+    DWORD len = _countof(path);
+    if (SUCCEEDED(RegQueryValueEx(hKey,
+        _T("{374DE290-123F-4565-9164-39C4925E467B}"), 0, 0,
+        (LPBYTE)path, &len))) {
+      download_path_ = path;
+    } else if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_MYDOCUMENTS,
+                              NULL, SHGFP_TYPE_CURRENT, path))) {
+      PathAppend(path, _T("Downloads"));
+      download_path_ = path;
+    }
+
+    if (!download_path_.IsEmpty()) {
+      if (SHGetSpecialFolderPath(NULL, path, CSIDL_PROFILE, FALSE))
+        download_path_.Replace(_T("%USERPROFILE%"), path);
+    }
+
+    RegCloseKey(hKey);
+  }
+
   _hook = new NCodeHookIA32();
   g_hook = this;
   WptTrace(loglevel::kProcess, _T("[wpthook] FileHook::Init()\n"));
@@ -65,14 +91,18 @@ HANDLE FileHook::CreateFileW(LPCWSTR lpFileName, DWORD dwDesiredAccess,
     DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes,
     HANDLE hTemplateFile) {
   HANDLE hFile = INVALID_HANDLE_VALUE;
-  if (CreateFileW_) {
-    hFile = CreateFileW_(lpFileName, dwDesiredAccess, dwShareMode,
-        lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes,
-        hTemplateFile);
-  }
-  // Detect the keylog file so we can catch writes to it
-  if (!lstrcmpiW(shared_keylog_file, lpFileName)) {
-    keylog_file_ = hFile;
+  if (!IsDownload(lpFileName)) {
+    if (CreateFileW_) {
+      hFile = CreateFileW_(lpFileName, dwDesiredAccess, dwShareMode,
+          lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes,
+          hTemplateFile);
+    }
+    // Detect the keylog file so we can catch writes to it
+    if (!lstrcmpiW(shared_keylog_file, lpFileName)) {
+      keylog_file_ = hFile;
+    }
+  } else {
+    SetLastError(ERROR_ACCESS_DENIED);
   }
   return hFile;
 }
@@ -92,4 +122,33 @@ BOOL FileHook::WriteFile(HANDLE hFile, LPCVOID lpBuffer,
                      lpNumberOfBytesWritten, lpOverlapped);
   }
   return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool FileHook::IsDownload(LPCWSTR lpFileName) {
+  bool is_download = false;
+
+  if (lpFileName) {
+    TCHAR path[4096];
+    lstrcpyn(path, lpFileName, _countof(path));
+    path[_countof(path) - 1] = 0;
+    *PathFindFileName(path) = 0;
+    CStringW dir(path);
+    dir.TrimRight(_T("\\"));
+
+    if (!download_path_.IsEmpty()) {
+      if (!download_path_.CompareNoCase(lpFileName) ||
+          !download_path_.CompareNoCase(dir)) {
+        is_download = true;
+      }
+    }
+
+    if (!lstrcmpi(PathFindFileName(lpFileName), _T("Downloads")) ||
+        !lstrcmpi(PathFindFileName(dir), _T("Downloads"))) {
+      is_download = true;
+    }
+  }
+
+  return is_download;
 }
