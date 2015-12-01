@@ -48,6 +48,84 @@ var IGNORE_NETLOG_EVENTS =
      'URL_REQUEST_DELEGATE'];
 var DEBUG_NETLOG = false;
 
+var NAV_TIMING_SCRIPT = "\
+(function(){\
+  var timing = {};\
+  function addTime(name) {\
+    try {\
+      if (window.performance.timing[name] > 0) {\
+        timing[name] = Math.max(0, (\
+          window.performance.timing[name] -\
+          window.performance.timing['navigationStart']));\
+      }\
+    } catch(e){}\
+  };\
+  addTime('domContentLoadedEventStart');\
+  addTime('domContentLoadedEventEnd');\
+  addTime('loadEventStart');\
+  addTime('loadEventEnd');\
+  try {\
+    timing['msFirstPaint'] = 0;\
+    if (window['chrome'] !== undefined &&\
+        window.chrome['loadTimes'] !== undefined) {\
+      var chromeTimes = window.chrome.loadTimes();\
+      if (chromeTimes['firstPaintTime'] !== undefined &&\
+          chromeTimes['firstPaintTime'] > 0) {\
+        var startTime = chromeTimes['requestTime'] ? chromeTimes['requestTime'] : chromeTimes['startLoadTime'];\
+        if (chromeTimes['firstPaintTime'] >= startTime)\
+          timing['msFirstPaint'] = (chromeTimes['firstPaintTime'] - startTime) * 1000.0;\
+      }\
+    }\
+  } catch(e) {}\
+  return timing;\
+})();";
+
+var USER_TIMING_SCRIPT = '\
+(function(){\
+  var m = [];\
+  try {\
+    if (window["performance"] != undefined &&\
+        (window.performance.getEntriesByType ||\
+         window.performance.webkitGetEntriesByType)) {\
+      if (window.performance.getEntriesByType)\
+        var marks = window.performance.getEntriesByType("mark");\
+      else\
+        var marks = window.performance.webkitGetEntriesByType("mark");\
+      if (marks.length) {\
+        for (var i = 0; i < marks.length; i++)\
+          m.push({"entryType": marks[i].entryType, "name": marks[i].name, "startTime": marks[i].startTime});\
+      }\
+    }\
+  } catch(e) {}\
+  return m;\
+})();';
+
+var DOM_COUNT_SCRIPT = "\
+(function(){\
+  var domCount = 0;\
+  try {\
+    var domCount = document.documentElement.getElementsByTagName('*').length;\
+    if (domCount === undefined)\
+      domCount = 0;\
+  } catch(e) {}\
+  return domCount;\
+})();";
+
+var CUSTOM_METRICS_SCRIPT = '\
+(function(metrics){\
+  var results = {};\
+  for (var i = 0; i < metrics.length; i++) {\
+    try {\
+      var fn = new Function("return function wptCustomMetric" + i + "(){" + metrics[i].code + "};")();\
+      var result = fn();\
+      if (typeof result == "undefined")\
+        result = "";\
+      results[metrics[i].name] = result;\
+    } catch(e){}\
+  }\
+  return results;\
+})';
+
 /**
  * Construct an object that connectes to the Chrome debugger.
  *
@@ -70,6 +148,7 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.timeline = false;
     g_instance.statsDoneCallback = undefined;
     g_instance.mobileEmulation = undefined;
+    g_instance.customMetrics = undefined;
     g_instance.timelineStackDepth = 0;
     g_instance.traceRunning = false;
     g_instance.netlog = [];
@@ -93,6 +172,7 @@ wpt.chromeDebugger.SetActive = function(active) {
     g_instance.receivedData = false;
     g_instance.devToolsData = '';
     g_instance.statsDoneCallback = undefined;
+    g_instance.customMetrics = undefined;
     wpt.chromeDebugger.StartTrace();
   }
 };
@@ -102,7 +182,10 @@ wpt.chromeDebugger.SetActive = function(active) {
  */
 wpt.chromeDebugger.Exec = function(code, callback) {
   g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Runtime.evaluate', {expression: code, returnByValue: true}, function(response){
-    callback(response);
+    var value = undefined;
+    if (response['result'] !== undefined && response.result['value'] !== undefined)
+      value = response.result.value;
+    callback(value);
   });
 };
 
@@ -145,15 +228,24 @@ wpt.chromeDebugger.StartTrace = function() {
   }
 }
 
-wpt.chromeDebugger.CollectStats = function(callback) {
+wpt.chromeDebugger.CollectStats = function(customMetrics, callback) {
     g_instance.statsDoneCallback = callback;
-  wpt.chromeDebugger.SendDevToolsData(function(){
-    if (g_instance.traceRunning) {
-    g_instance.traceRunning = false;
-    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.end');
-  } else {
-      g_instance.statsDoneCallback();
-  }
+    g_instance.customMetrics = customMetrics;
+  wpt.chromeDebugger.collectDOMCount(function(){
+    wpt.chromeDebugger.collectNavigationTiming(function(){
+      wpt.chromeDebugger.collectUserTiming(function(){
+        wpt.chromeDebugger.collectCustomMetrics(function(){
+          wpt.chromeDebugger.SendDevToolsData(function(){
+            if (g_instance.traceRunning) {
+            g_instance.traceRunning = false;
+            g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.end');
+          } else {
+            g_instance.statsDoneCallback();
+          }
+          });
+        });
+      });
+    });
   });
 };
 
@@ -308,6 +400,64 @@ wpt.chromeDebugger.SendReceivedData = function() {
   if (!g_instance.receivedData) {
     g_instance.receivedData = true;
     wpt.chromeDebugger.sendEvent('received_data', '');
+  }
+};
+
+wpt.chromeDebugger.collectDOMCount = function(callback) {
+  wpt.chromeDebugger.Exec(DOM_COUNT_SCRIPT, function(result) {
+    wpt.chromeDebugger.sendEvent('stats?domCount=' + result);
+    callback();
+  });
+};
+
+wpt.chromeDebugger.collectNavigationTiming = function(callback) {
+  wpt.chromeDebugger.Exec(NAV_TIMING_SCRIPT, function(result) {
+    wpt.chromeDebugger.sendEvent(
+        'window_timing?domContentLoadedEventStart=' +
+            result['domContentLoadedEventStart'] +
+        '&domContentLoadedEventEnd=' +
+            result['domContentLoadedEventEnd'] +
+        '&loadEventStart=' + result['loadEventStart'] +
+        '&loadEventEnd=' + result['loadEventEnd'] +
+        '&msFirstPaint=' + result['msFirstPaint']);
+    callback();
+  });
+};
+
+wpt.chromeDebugger.collectUserTiming = function(callback) {
+  wpt.chromeDebugger.Exec(USER_TIMING_SCRIPT, function(result) {
+    if (result !== undefined && result.length) {
+      for (var i = 0; i < result.length; i++) {
+        var mark = result[i];
+        mark.type = 'mark';
+        wpt.chromeDebugger.sendEvent('timed_event', JSON.stringify(mark));
+      }
+    }
+    callback();
+  });
+};
+
+wpt.chromeDebugger.collectCustomMetrics = function(callback) {
+  var metrics = [];
+  if (g_instance['customMetrics'] !== undefined && g_instance.customMetrics.length) {
+    var lines = g_instance.customMetrics.split("\n");
+    var lineCount = lines.length;
+    for (var i = 0; i < lineCount; i++) {
+      var parts = lines[i].split(":");
+      if (parts.length == 2) {
+        metrics.push({"name": parts[0], "code": window.atob(parts[1])});
+      }
+    }
+  }
+
+  if (metrics.length) {
+    var code = CUSTOM_METRICS_SCRIPT + '(' + JSON.stringify(metrics) + ');'
+    wpt.chromeDebugger.Exec(code, function(result) {
+      wpt.chromeDebugger.sendEvent('custom_metrics', JSON.stringify(result));
+      callback();
+    });
+  } else {
+    callback();
   }
 };
 

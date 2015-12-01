@@ -183,6 +183,7 @@ void TestServer::MongooseCallback(enum mg_event event,
       hook_.OnLoad();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/window_timing") == 0) {
+      //OutputDebugStringA(CStringA("Window timing:") + request_info->query_string);
       DWORD start = 0;
       GetDwordParam(request_info->query_string, "domContentLoadedEventStart",
                     start);
@@ -280,13 +281,18 @@ void TestServer::MongooseCallback(enum mg_event event,
       }
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/timed_event") == 0) {
-      test_state_.AddTimedEvent(GetPostBody(conn, request_info));
+      CString body = GetPostBody(conn, request_info);
+      //OutputDebugStringW("Timed event: " + body);
+      test_state_.AddTimedEvent(body);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/custom_metrics") == 0) {
-      test_state_.SetCustomMetrics(GetPostBody(conn, request_info));
+      CString body = GetPostBody(conn, request_info);
+      //OutputDebugStringW("Custom Metrics: " + body);
+      test_state_.SetCustomMetrics(body);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/stats") == 0) {
       DWORD dom_count = 0;
+      //OutputDebugStringA(CStringA("DOM Count:") + request_info->query_string);
       if (GetDwordParam(request_info->query_string, "domCount", dom_count) &&
           dom_count)
         test_state_._dom_element_count = dom_count;

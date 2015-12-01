@@ -428,39 +428,6 @@ chrome.extension.onRequest.addListener(
       wptSendEvent('load', 
                    '?timestamp=' + request.timestamp + 
                    '&fixedViewport=' + request.fixedViewport);
-    }
-    else if (request.message == 'wptWindowTiming') {
-      wpt.logging.closeWindowIfOpen();
-      g_active = false;
-      wpt.chromeDebugger.SetActive(g_active);
-      wptSendEvent(
-          'window_timing',
-          '?domContentLoadedEventStart=' +
-              request.domContentLoadedEventStart +
-          '&domContentLoadedEventEnd=' +
-              request.domContentLoadedEventEnd +
-          '&loadEventStart=' + request.loadEventStart +
-          '&loadEventEnd=' + request.loadEventEnd +
-          '&msFirstPaint=' + request.msFirstPaint);
-    }
-    else if (request.message == 'wptDomCount') {
-      wptSendEvent('domCount', 
-                   '?domCount=' + request.domCount);
-    }
-    else if (request.message == 'wptMarks') {
-      if (request['marks'] !== undefined &&
-          request.marks.length) {
-        for (var i = 0; i < request.marks.length; i++) {
-          var mark = request.marks[i];
-          mark.type = 'mark';
-          wptSendEvent('timed_event', '', JSON.stringify(mark));
-        }
-      }
-    } else if (request.message == 'wptStats') {
-      var stats = '?';
-      if (request['domCount'] !== undefined)
-        stats += 'domCount=' + request.domCount;
-      wptSendEvent('stats', stats);
     } else if (request.message == 'wptResponsive') {
       if (request['isResponsive'] !== undefined)
         wptSendEvent('responsive', '?isResponsive=' + request.isResponsive);
@@ -579,13 +546,7 @@ function wptExecuteTask(task) {
       break;
     case 'collectstats':
       g_processing_task = true;
-      try {
-        g_commandRunner.doCollectStats(task.target, function() {
-          wpt.chromeDebugger.CollectStats(wptTaskCallback);
-        });
-      } catch (err) {
-        wpt.chromeDebugger.CollectStats(wptTaskCallback);
-      }
+      wpt.chromeDebugger.CollectStats(task.target, wptTaskCallback);
       break;
     case 'emulatemobile':
       wpt.chromeDebugger.EmulateMobile(task.target);
