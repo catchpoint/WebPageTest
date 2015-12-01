@@ -681,6 +681,7 @@ function ParseUserTiming($file) {
         if (isset($event['args']['frame']) && isset($event['ts'])) {
           $start_time = $event['ts'];
           $main_frame = $event['args']['frame'];
+          break;
         }
       }
     }
@@ -692,11 +693,17 @@ function ParseUserTiming($file) {
             isset($event['ts']) &&
             $event['name'] != 'navigationStart' &&
             $event['args']['frame'] == $main_frame &&
-            $event['ts'] >= $start_time) {
+            ($event['ts'] >= $start_time || isset($event['args']['value']))) {
           if (!isset($user_timing)) {
             $user_timing = array();
           }
-          $user_timing[] = array('name' => $event['name'], 'time' => intval(($event['ts'] - $start_time) / 1000.0));
+          $entry = array('name' => $event['name']);
+          if (isset($event['args']['value'])) {
+            $entry['time'] = $event['args']['value'];
+          } else {
+            $entry['time'] = intval(($event['ts'] - $start_time) / 1000.0);
+          }
+          $user_timing[] = $entry;
         }
       }
     }
