@@ -5,7 +5,7 @@ extern HINSTANCE dll_hinstance;
 Wpt* global_wpt = NULL;
 
 #define UWM_TASK WM_APP + 1
-const DWORD TASK_INTERVAL = 500;
+const DWORD TASK_INTERVAL = 200;
 static const TCHAR * GLOBAL_TESTING_MUTEX = _T("Global\\wpt_testing_active");
 static const TCHAR * HOOK_DLL = _T("wpthook.dll");
 
@@ -22,6 +22,10 @@ static const TCHAR * REG_DOM_STORAGE_KEY =
 static const TCHAR * REG_SHELL_FOLDERS = 
     _T("Software\\Microsoft\\Windows\\CurrentVersion")
     _T("\\Explorer\\User Shell Folders");
+static const TCHAR * LOAD_EVENT_END_FUNCTION =
+    _T("var wptGetLoadEventEndTiming = (function(){")
+    _T("  return performance.timing['loadEventEnd'];")
+    _T("});");
 static const TCHAR * DOM_SCRIPT_FUNCTIONS =
     _T("var wptGetUserTimings = (function(){")
     _T("  var ret = '';")
@@ -50,6 +54,8 @@ static const TCHAR * DOM_SCRIPT_FUNCTIONS =
     _T("});");
 LPOLESTR GET_USER_TIMINGS = L"wptGetUserTimings";
 LPOLESTR GET_NAV_TIMINGS = L"wptGetNavTimings";
+LPOLESTR GET_LOAD_EVENT_END_TIMING = L"wptGetLoadEventEndTiming";
+
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -63,7 +69,8 @@ Wpt::Wpt(void):
   ,_task_thread(NULL)
   ,_processing_task(false)
   ,_exec_count(0)
-  ,_webdriver_mode(false) {
+  ,_webdriver_mode(false)
+  ,_last_load_event_end(0LL) {
 }
 
 
@@ -175,10 +182,8 @@ void Wpt::Start(void) {
 -----------------------------------------------------------------------------*/
 void Wpt::Stop(void) {
   if (_message_window) {
-    if (!_webdriver_mode) {
-      KillTimer(_message_window, 1);
-      _task_timer = 0;
-    }
+    KillTimer(_message_window, 1);
+    _task_timer = 0;
     DestroyWindow(_message_window);
   }
   _web_browser.Release();
@@ -935,6 +940,29 @@ CComPtr<IHTMLElement> Wpt::FindDomElementInDocument(CString tag,
 }
 
 /*-----------------------------------------------------------------------------
+	Retrieve load event end time
+-----------------------------------------------------------------------------*/
+LONGLONG Wpt::GetLoadEventEnd() {
+  AtlTrace(_T("[wptbho] - Wpt::GetLoadEventEnd()"));
+
+  if (Exec(LOAD_EVENT_END_FUNCTION)) {
+    _variant_t timing;
+    
+    if (Invoke(GET_LOAD_EVENT_END_TIMING, timing)) {
+      if (timing.vt == VT_BSTR) {
+        CString t(timing);
+        LONGLONG end = _ttoll(t);
+
+        if (end < 0LL)
+          end = 0LL;
+        return end;
+      }
+    }
+  }
+  return 0LL;
+}
+
+/*-----------------------------------------------------------------------------
   Expire any items in the cache that will expire within X seconds.
 -----------------------------------------------------------------------------*/
 void  Wpt::ExpireCache(CString target) {
@@ -1232,14 +1260,20 @@ CString Wpt::JSONEscape(CString src) {
 }
 
 /*-----------------------------------------------------------------------------
-  Periodically check the browser state in case it changes to ready but
-  the onload event never fired.
+  Periodically check the browser state
 -----------------------------------------------------------------------------*/
 void Wpt::CheckBrowserState() {
   if (_web_browser) {
-    READYSTATE ready_state = READYSTATE_COMPLETE;
-    if (SUCCEEDED(_web_browser->get_ReadyState(&ready_state)) &&
-        ready_state == READYSTATE_COMPLETE) {
+    LONGLONG end = GetLoadEventEnd();
+
+    // Load event end timing is an absolute unix epoch timestamp that will never change
+    // for a given loaded page.
+    // The following statement will only be true once per page load when the onload 
+    // has been fully executed.
+    if (end > _last_load_event_end) {
+      _last_load_event_end = end;
+
+      // in case onload was not called, call it now
       if (_navigating) {
         OnLoad();
       }
