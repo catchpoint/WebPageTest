@@ -38,6 +38,7 @@ private:
   WptTask       _task;
   int           _exec_count;
   bool          _webdriver_mode;
+  LONGLONG      _last_load_event_end;
 
   typedef enum{
     equal = 0,
@@ -67,6 +68,10 @@ private:
   void  SubmitForm(CString target);
 
   // support routines
+  CString GetParam(const CString query_string, const CString key) const;
+  bool GetLongLongParam(const CString query_string, const CString key,
+    LONGLONG& value) const;
+  LONGLONG	GetLoadEventEnd();
   DWORD CountDOMElements(CComQIPtr<IHTMLDocument2> &document);
   void  ExpireCacheEntry(INTERNET_CACHE_ENTRY_INFO * info, DWORD seconds);
   void  CheckBrowserState();
