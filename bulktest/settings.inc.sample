@@ -6,7 +6,7 @@ set_time_limit(0);
 $video = true;
 $private = false;
 $docComplete = true;
-$runs = 6;
+$runs = 5;
 $iterations = 1;
 $fvonly = true;
 $options = 'shard=0&discard=1&keepua=1';
