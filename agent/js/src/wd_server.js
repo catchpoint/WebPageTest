@@ -1329,6 +1329,17 @@ WebDriverServer.prototype.scheduleProcessVideo_ = function() {
   }.bind(this));
 };
 
+WebDriverServer.prototype.scheduleAssertBrowserIsRunning_ = function() {
+  this.scheduleNoFault_('Process Video', function() {
+    this.browser_.scheduleAssertIsRunning().then(function(running) {
+      if (!running) {
+        logger.info('Browser Crashed (or is no longer in focus)');
+        this.testError_ = "Browser Crashed";
+      }
+    }.bind(this));
+  }.bind(this));
+};
+
 /**
  * @private
  */
@@ -1343,11 +1354,6 @@ WebDriverServer.prototype.done_ = function() {
     this.isDone_ = true;
     this.isRecordingDevTools_ = false;
 
-    if (this.testError_) {
-      logger.error('Test failed: ' + this.testError_);
-    } else {
-      logger.info('Test passed');
-    }
     this.scheduleNoFault_('Capture Screen Shot', function() {
       this.takeScreenshot_('screen', 'end of run');
     }.bind(this));
@@ -1369,10 +1375,18 @@ WebDriverServer.prototype.done_ = function() {
       this.scheduleNoFault_('Stop video recording',
           this.browser_.scheduleStopVideoRecording.bind(this.browser_));
     }
+    this.scheduleAssertBrowserIsRunning_();
     if (this.videoFile_) {
       // video processing needs to be done after tracing has been stopped and collected
       this.scheduleProcessVideo_();
     }
+    this.scheduleNoFault_('End state', function() {
+      if (this.testError_) {
+        logger.error('Test failed: ' + this.testError_);
+      } else {
+        logger.info('Test passed');
+      }
+    }.bind(this));
     logger.debug("Done collecting results")
     var devToolsFile = this.devToolsMessages_ ? path.join(this.runTempDir_, 'devtools.json') : undefined;
     if (devToolsFile) {

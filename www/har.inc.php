@@ -24,15 +24,16 @@ function GenerateHAR($id, $testPath, $options) {
       if (!$run)
         $run = 1;
       $pageData[$run] = array();
+      $testInfo = GetTestInfo($testPath);
       if( isset($options['cached']) ) {
-        $pageData[$run][$options['cached']] = loadPageRunData($testPath, $run, $options['cached']);
+        $pageData[$run][$options['cached']] = loadPageRunData($testPath, $run, $options['cached'], null, $testInfo);
         if (!isset($pageData[$run][$options['cached']]))
           unset($pageData);
       } else {
-        $pageData[$run][0] = loadPageRunData($testPath, $run, 0);
+        $pageData[$run][0] = loadPageRunData($testPath, $run, 0, null, $testInfo);
         if (!isset($pageData[$run][0]))
           unset($pageData);
-        $pageData[$run][1] = loadPageRunData($testPath, $run, 1);
+        $pageData[$run][1] = loadPageRunData($testPath, $run, 1, null, $testInfo);
       }
     }
     

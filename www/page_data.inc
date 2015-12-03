@@ -25,13 +25,13 @@ function loadAllPageData($testPath, $options = null) {
     for( $run = 1; $run <= $runs; $run++ ) {
       // only load page data for individual runs that are complete (or if the whole test is complete)
       if ($completed || !$testInfo || IsTestRunComplete($run, $testInfo)) {
-        $data = loadPageRunData($testPath, $run, 0, $options);
+        $data = loadPageRunData($testPath, $run, 0, $options, $testInfo);
         if( isset($data) )
           $ret[$run][0] = $data;
         
         if( !$fvonly ) {
           unset( $data );
-          $data = loadPageRunData($testPath, $run, 1, $options);
+          $data = loadPageRunData($testPath, $run, 1, $options, $testInfo);
           if( isset($data) )
             $ret[$run][1] = $data;
         }
@@ -50,7 +50,7 @@ function loadAllPageData($testPath, $options = null) {
 * @param mixed $fv
 * @param mixed $rv
 */
-function loadPageRunData($testPath, $run, $cached, $options = null)
+function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = null)
 {
     $ret = null;
 
@@ -239,6 +239,14 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
               $ret[$key] > 3600000 ||
               $ret[$key] < 0)
             $ret[$key] = 0;
+        }
+        
+        // See if there is a test-level error that needs to be exposed
+        if (isset($testInfo) && isset($testInfo['errors'][$run][$cached])) {
+            if (!isset($ret['result']) || $ret['result'] == 0 || $ret['result'] == 99999) {
+                $ret['result'] = 99995;
+            }
+            $ret['error'] = $testInfo['errors'][$run][$cached];
         }
     }
     

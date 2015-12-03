@@ -62,10 +62,11 @@ if( isset($test['test']) && (isset($test['test']['completeTime']) || $test['test
             echo "\r\n";
             $sentHeader = true;
           }
+          $testInfo = GetTestInfo($path);
           for( $i = 1; $i <= $test['test']['runs']; $i++ ) {
-            $additional = array($i, 0, SpeedIndex($path, $i, 0));
+            $additional = array($i, 0, SpeedIndex($path, $i, 0, $testInfo));
             csvFile("$path/{$i}_$fileType", $label, $column_count, $additional);
-            $additional = array($i, 1, SpeedIndex($path, $i, 1));
+            $additional = array($i, 1, SpeedIndex($path, $i, 1, $testInfo));
             csvFile("$path/{$i}_Cached_$fileType", $label, $column_count, $additional);
           }
         } else {
@@ -74,11 +75,12 @@ if( isset($test['test']) && (isset($test['test']['completeTime']) || $test['test
         
         foreach( $testData['v'] as $variationIndex => $variationId ) {
           $path = './' . GetTestPath($variationId);
+          $testInfo = GetTestInfo($path);
           if ($hasCSV) {
             for( $i = 1; $i <= $test['test']['runs']; $i++ ) {
-              $additional = array($i, 0, SpeedIndex($path, $i, 0));
+              $additional = array($i, 0, SpeedIndex($path, $i, 0, $testInfo));
               csvFile("$path/{$i}_$fileType", "$label - {$tests['variations'][$variationIndex]['l']}", $column_count, $additional);
-              $additional = array($i, 1, SpeedIndex($path, $i, 1));
+              $additional = array($i, 1, SpeedIndex($path, $i, 1, $testInfo));
               csvFile("$path/{$i}_Cached_$fileType", "$label - {$tests['variations'][$variationIndex]['l']}", $column_count, $additional);
             }
           } else {
@@ -99,14 +101,15 @@ if( isset($test['test']) && (isset($test['test']['completeTime']) || $test['test
       if (!$is_requests)
         echo ',"Speed Index"';
       echo "\r\n";
+      $testInfo = GetTestInfo($testPath);
       for( $i = 1; $i <= $test['test']['runs']; $i++ ) {
         $additional = array($i, 0);
         if (!$is_requests)
-          $additional[] = SpeedIndex($testPath, $i, 0);
+          $additional[] = SpeedIndex($testPath, $i, 0, $testInfo);
         csvFile("$testPath/{$i}_$fileType", null, $column_count, $additional);
         $additional = array($i, 1);
         if (!$is_requests)
-          $additional[] = SpeedIndex($testPath, $i, 1);
+          $additional[] = SpeedIndex($testPath, $i, 1, $testInfo);
         csvFile("$testPath/{$i}_Cached_$fileType", null, $column_count, $additional);
       }
     } else {
@@ -202,9 +205,9 @@ function printResult() {
   }
 }
 
-function SpeedIndex($testPath, $run, $cached) {
+function SpeedIndex($testPath, $run, $cached, $testInfo) {
   $speed_index = '';
-  $pageData = loadPageRunData($testPath, $run, $cached);
+  $pageData = loadPageRunData($testPath, $run, $cached, null, $testInfo);
   $startOffset = array_key_exists('testStartOffset', $pageData) ? intval(round($pageData['testStartOffset'])) : 0;
   $progress = GetVisualProgress($testPath, $run, $cached, null, null, $startOffset);
   if (isset($progress) && is_array($progress) && array_key_exists('SpeedIndex', $progress)) {

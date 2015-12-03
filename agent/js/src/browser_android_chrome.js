@@ -781,6 +781,29 @@ BrowserAndroidChrome.prototype.scheduleAssertIsReady = function() {
 };
 
 /**
+ * Verifies that the browser is still running and didn't crash.
+ *
+ * @return {webdriver.promise.Promise} resolve() for addErrback.
+ * @override
+ */
+BrowserAndroidChrome.prototype.scheduleAssertIsRunning = function() {
+  'use strict';
+  return this.app_.schedule('Assert isRunning', function() {
+    return this.adb_.shell(['dumpsys', 'activity']).then( function(stdout) {
+      var running = false;
+      stdout.split(/[\r\n]+/).forEach(function(line) {
+        if (line.match(/\(top-activity\)$/)) {
+          if (line.indexOf(this.chromePackage_) >= 0) {
+            running = true;
+          }
+        }
+      }.bind(this));
+      return running;
+    }.bind(this));
+  }.bind(this));
+};
+
+/**
  * Attempts recovery if the device is offline.
  *
  * @return {webdriver.promise.Promise} resolve(boolean) wasOffline.

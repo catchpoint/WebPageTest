@@ -5,7 +5,7 @@ require_once('object_detail.inc');
 require_once('page_data.inc');
 require_once('waterfall.inc');
 
-$page_data = loadPageRunData($testPath, $run, $cached);
+$page_data = loadPageRunData($testPath, $run, $cached, null, $test['testinfo']);
 
 $is_mime = (bool)@$_REQUEST['mime'];
 $is_state = (bool)@$_REQUEST['state'];
