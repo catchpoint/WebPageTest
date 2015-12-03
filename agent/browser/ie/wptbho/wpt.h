@@ -39,6 +39,7 @@ private:
   int           _exec_count;
   bool          _webdriver_mode;
   LONGLONG      _last_load_event_end;
+  int           _onload_wait;
 
   typedef enum{
     equal = 0,
