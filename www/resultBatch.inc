@@ -549,9 +549,9 @@ function DisplayTest($id, $url, $label, $complete)
         $fvMedian = GetMedianRun($pageData, 0, 'docTime');
         $rvMedian = GetMedianRun($pageData, 1, 'docTime');
         $rvMedian_column = '';
-        if ($rvMedian)
+        if ($rvMedian && ($pageData[$rvMedian][1]['result'] == 0 || $pageData[$rvMedian][1]['result'] == 99999))
             $rvMedian_column = number_format($pageData[$rvMedian][1]['loadTime'] / 1000.0, 3);
-        if ($fvMedian) {
+        if ($fvMedian && ($pageData[$fvMedian][0]['result'] == 0 || $pageData[$fvMedian][0]['result'] == 99999)) {
           echo "<td>" . number_format($pageData[$fvMedian][0]['loadTime'] / 1000.0, 3) . "</td>";
           if( $pageData[$fvMedian][0]['loadTime'] )
               $stats['fv'][] = $pageData[$fvMedian][0]['loadTime'];
@@ -565,7 +565,9 @@ function DisplayTest($id, $url, $label, $complete)
             echo "<td>$rvMedian_column</td>";
         }
         echo '<td>';
-        if ($fvMedian && array_key_exists('SpeedIndex', $pageData[$fvMedian][0])) {
+        if ($fvMedian &&
+            array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) &&
+            ($pageData[$fvMedian][0]['result'] == 0 || $pageData[$fvMedian][0]['result'] == 99999)) {
             $siMedian = GetMedianRun($pageData, 0, 'SpeedIndex');
             echo $pageData[$siMedian][0]['SpeedIndex'];
         }
