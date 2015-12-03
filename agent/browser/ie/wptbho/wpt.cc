@@ -56,6 +56,8 @@ LPOLESTR GET_USER_TIMINGS = L"wptGetUserTimings";
 LPOLESTR GET_NAV_TIMINGS = L"wptGetNavTimings";
 LPOLESTR GET_LOAD_EVENT_END_TIMING = L"wptGetLoadEventEndTiming";
 
+int MAX_ONLOAD_WAIT = 100; // 20s
+
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -70,7 +72,8 @@ Wpt::Wpt(void):
   ,_processing_task(false)
   ,_exec_count(0)
   ,_webdriver_mode(false)
-  ,_last_load_event_end(0LL) {
+  ,_last_load_event_end(0LL)
+  ,_onload_wait(0) {
 }
 
 
@@ -237,6 +240,8 @@ void Wpt::OnLoad() {
     AtlTrace(_T("[wptbho] - Wpt::OnLoad(); URL = %s"), current_url);
     int fixed_viewport = 0;
     if (_web_browser) {
+      _onload_wait = 0;
+
       CComPtr<IDispatch> dispatch;
       if (SUCCEEDED(_web_browser->get_Document(&dispatch))) {
         CComQIPtr<IHTMLDocument2> document = dispatch;
@@ -940,14 +945,14 @@ CComPtr<IHTMLElement> Wpt::FindDomElementInDocument(CString tag,
 }
 
 /*-----------------------------------------------------------------------------
-	Retrieve load event end time
+Retrieve load event end time
 -----------------------------------------------------------------------------*/
 LONGLONG Wpt::GetLoadEventEnd() {
   AtlTrace(_T("[wptbho] - Wpt::GetLoadEventEnd()"));
 
   if (Exec(LOAD_EVENT_END_FUNCTION)) {
     _variant_t timing;
-    
+
     if (Invoke(GET_LOAD_EVENT_END_TIMING, timing)) {
       if (timing.vt == VT_BSTR) {
         CString t(timing);
@@ -1265,19 +1270,27 @@ CString Wpt::JSONEscape(CString src) {
 void Wpt::CheckBrowserState() {
   if (_web_browser) {
     LONGLONG end = GetLoadEventEnd();
+    READYSTATE ready_state;
+    HRESULT hr = _web_browser->get_ReadyState(&ready_state);
 
-    // Load event end timing is an absolute unix epoch timestamp that will never change
-    // for a given loaded page.
-    // The following statement will only be true once per page load when the onload 
-    // has been fully executed.
-    if (end > _last_load_event_end) {
-      _last_load_event_end = end;
-
-      // in case onload was not called, call it now
+    if (SUCCEEDED(hr) && hr == READYSTATE_COMPLETE) {
       if (_navigating) {
         OnLoad();
       }
-      if (_webdriver_mode) {
+      // ready state is set to "complete" when page is loaded, immediately after, the onload
+      // event is triggered. We need to wait for the onload event to terminate before collecting
+      // all metrics.
+      // Note that IE10 has a bug where loadEventStart and loadEventEnd are sometime not provided.
+      // we need a fail safe in case this happens.
+      ++_onload_wait;
+
+      // Load event end timing is an absolute unix epoch timestamp that will never change
+      // for a given loaded page.
+      // The end > _last_load_event_end will only be true once per page load when the onload 
+      // has been fully executed.
+      if (_webdriver_mode && (end > _last_load_event_end || _onload_wait == MAX_ONLOAD_WAIT)) {
+        _last_load_event_end = end;
+
         CollectStats(CString());
       }
     }
