@@ -99,6 +99,9 @@ CDN_PROVIDER cdnList[] = {
   {".cloudflare.com", "Cloudflare"},
   {".afxcdn.net", "afxcdn.net"},
   {".lxdns.com", "ChinaNetCenter"},
+  {".wscdns.com", "ChinaNetCenter"},
+  {".wscloudcdn.com", "ChinaNetCenter"},
+  {".ourwebpic.com", "ChinaNetCenter"},
   {".att-dsa.net", "AT&T"},
   {".vo.msecnd.net", "Windows Azure"},
   {".voxcdn.net", "VoxCDN"},
@@ -185,6 +188,7 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "GSE", "Google"},
   {"server", "Golfe2", "Google"},
   {"server", "tsa_b", "Twitter"},
+  {"X-Cache", "cache.51cdn.com", "ChinaNetCenter"},
   {"X-CDN", "Incapsula", "Incapsula"},
   {"X-Iinfo", "", "Incapsula"},
   {"X-Ar-Debug", "", "Aryaka"}
