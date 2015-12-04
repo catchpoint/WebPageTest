@@ -75,7 +75,7 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
         if($eventNumber === false){
             $stepBeginsAt = getRelativeBeginOfEveryStep($testPath,$run,$cached);
         } else {
-            $pageData = loadPageRunData($testPath, $run, $cached, array( 'eventNumberKeys' => true, 'noVisualProgress' => true));
+            $pageData = loadPageRunData($testPath, $run, $cached, array( 'eventNumberKeys' => true, 'allEvents' => true, 'noVisualProgress' => true));
             $eventName = $pageData[$eventNumber]['eventName'];
         }
 
@@ -125,10 +125,10 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
               }
           } elseif (isset($first_file) && strlen($first_file) &&
                     isset($last_file) && strlen($last_file) && count($frames['frames'])) {
-            $start_histogram = GetImageHistogram("$video_directory/$first_file", $options);
-            $final_histogram = GetImageHistogram("$video_directory/$last_file", $options);
+            $start_histogram = GetImageHistogram("$video_directory/$first_file", $options,$eventName);
+            $final_histogram = GetImageHistogram("$video_directory/$last_file", $options,$eventName);
               foreach($frames['frames'] as $time => &$frame) {
-                $histogram = GetImageHistogram("$video_directory/{$frame['file']}", $options);
+                $histogram = GetImageHistogram("$video_directory/{$frame['file']}", $options,$eventName);
                   $frame['progress'] = CalculateFrameProgress($histogram, $start_histogram, $final_histogram, 5);
                   if ($frame['progress'] == 100 && !array_key_exists('complete', $frames))
                       $frames['complete'] = $time;
@@ -222,9 +222,10 @@ function GetImageHistogram($image_file, $options = null, $eventName = null) {
         if(isset($eventName) && $eventName != null) {
             $pathToMergedImage = imagecreatefromjpeg_by_bitmask($image_file, $eventName);
             $im = imagecreatefromjpeg($pathToMergedImage);
+
+        } else {
+            $im = imagecreatefromjpeg($image_file);
         }
-        else
-        $im = imagecreatefromjpeg($image_file);
       if ($im !== false) {
           $width = imagesx($im);
           $height = imagesy($im);
@@ -285,7 +286,6 @@ function GetImageHistogram($image_file, $options = null, $eventName = null) {
           }
           imagedestroy($im);
           unset($im);
-            unlink($pathToMergedImage);
       }
         if ((!isset($options) || array_keys($options) == array( 'eventNumber' )) && isset($histogram_file) && !is_file($histogram_file) && isset($histogram))
         file_put_contents($histogram_file, json_encode($histogram));
@@ -424,9 +424,9 @@ function imagecreatefromjpeg_by_bitmask($image_file, $eventName) {
         $length = $originalImage->getImageHeight();
         $bitmaskImage->scaleImage($width,$length);
 
-        // IMPORTANT! Must activate the opacity channel
-        // See: http://www.php.net/manual/en/function.imagick-setimagematte.php
-        $originalImage->setImageMatte(1);
+//        // IMPORTANT! Must activate the opacity channel
+//        // See: http://www.php.net/manual/en/function.imagick-setimagematte.php
+//        $originalImage->setImageMatte(1);
 
         // Create composite of two images using DSTIN
         // See: http://www.imagemagick.org/Usage/compose/#dstin
@@ -435,7 +435,7 @@ function imagecreatefromjpeg_by_bitmask($image_file, $eventName) {
 
     $originalImage->setImageFormat( "jpg" );
 
-    $pathToMergedImage = pathinfo($image_file,PATHINFO_DIRNAME)."/".pathinfo($image_file,PATHINFO_BASENAME)."_byBitmask.jpg";
+    $pathToMergedImage = pathinfo($image_file,PATHINFO_DIRNAME)."/Bitmask_".pathinfo($image_file,PATHINFO_FILENAME).".".pathinfo($image_file,PATHINFO_EXTENSION);
     $originalImage->writeImage($pathToMergedImage);
 
     return $pathToMergedImage;

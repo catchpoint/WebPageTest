@@ -37,7 +37,8 @@ if (ValidateTestId($id)) {
                             strpos($ext, 'js') === false &&
                             strpos($ext, 'rb') === false &&
                             strpos($ext, 'htaccess') === false &&
-                            strpos($ext, 'jar') === false) {
+                            strpos($ext, 'jar') === false &&
+                            strpos($ext, 'hist') === false) {
                             $ok = true;
                         }
 
