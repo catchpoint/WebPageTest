@@ -92,8 +92,6 @@ var g_setHeaders = [];
 var g_manipulatingHeaders = false;
 var g_started = false;
 var g_requestsHooked = false;
-var g_headersHooked = false;
-var g_appendUA = [];
 
 /**
  * Uninstall a given set of extensions.  Run |onComplete| when done.
@@ -287,7 +285,6 @@ function wptHostMatches(host, filter) {
 
 var wptBeforeSendHeaders = function(details) {
   var response = {};
-  return response;
   if (g_active && details.tabId == g_tabid) {
     var modified = false;
     if (g_manipulatingHeaders) {
@@ -323,17 +320,6 @@ var wptBeforeSendHeaders = function(details) {
             details.requestHeaders.push({'name' : g_addHeaders[i].name, 'value' : g_addHeaders[i].value});
             modified = true;
           }
-        }
-      }
-    }
-    
-    // Append the PTST user agent string as necessary
-    if (g_appendUA.length) {
-      for (i = 0; i < details.requestHeaders.length; i++) {
-        if (details.requestHeaders[i].name.toLowerCase() === 'user-agent') {
-          details.requestHeaders[i].value += ' ' + g_appendUA.join(' ');
-          modified = true;
-          break;
         }
       }
     }
@@ -397,20 +383,13 @@ chrome.webRequest.onCompleted.addListener(function(details) {
   }, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
 );
 
-function wptHookHeaders() {
-  if (!g_headersHooked) {
-    g_headersHooked = true;
+function wptHookRequests() {
+  if (!g_requestsHooked) {
+    g_requestsHooked = true;
     chrome.webRequest.onBeforeSendHeaders.addListener(wptBeforeSendHeaders,
       {urls: ['https://*/*']},
       ['blocking', 'requestHeaders']
     );
-  }
-}
-
-function wptHookRequests() {
-  if (!g_requestsHooked) {
-    g_requestsHooked = true;
-    wptHookHeaders();
     chrome.webRequest.onBeforeRequest.addListener(wptBeforeSendRequest,
       {urls: ['https://*/*']},
       ['blocking']
@@ -557,8 +536,7 @@ function wptExecuteTask(task) {
       g_setHeaders = [];
       break;
     case 'appenduseragent':
-      g_appendUA.push(task.target);
-      wptHookHeaders();
+      wpt.chromeDebugger.SetUserAgent(navigator.userAgent + ' ' + task.target);
       break;
     case 'collectstats':
       g_processing_task = true;

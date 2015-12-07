@@ -14076,6 +14076,10 @@ wpt.chromeDebugger.Exec = function(code, callback) {
   });
 };
 
+wpt.chromeDebugger.SetUserAgent = function(UAString) {
+  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.setUserAgentOverride', {"userAgent": UAString});
+};
+
 /**
  * Capture the network timeline
  */
@@ -14153,6 +14157,7 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
     if (params['value'] !== undefined) {
       // Collect the netlog events separately for calculating the request timings
       var traceEvents = [];
+      var netlogEvents = [];
       var len = params['value'].length;
       for(var i = 0; i < len; i++) {
         if (params['value'][i]['cat'] == 'blink.user_timing') {
@@ -14161,7 +14166,7 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
         if (params['value'][i]['cat'] == 'netlog') {
           if (DEBUG_NETLOG)
             g_instance.netlog.push(params['value'][i]);
-          wpt.chromeDebugger.processNetlogTraceEvent(params['value'][i]);
+          netlogEvents.push(params['value'][i]);
           if (g_instance.trace)
             traceEvents.push(params['value'][i]);
         } else if (g_instance.trace || g_instance.timeline) {
@@ -14170,6 +14175,10 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       }
       if (traceEvents.length)
         wpt.chromeDebugger.sendEvent('trace', JSON.stringify(traceEvents));
+      len = netlogEvents.length;
+      for (var i = 0; i < len; i++) {
+        wpt.chromeDebugger.processNetlogTraceEvent(netlogEvents[i]);
+      }
     }
   }
   if (message === 'Tracing.tracingComplete') {
@@ -15189,8 +15198,6 @@ var g_setHeaders = [];
 var g_manipulatingHeaders = false;
 var g_started = false;
 var g_requestsHooked = false;
-var g_headersHooked = false;
-var g_appendUA = [];
 
 /**
  * Uninstall a given set of extensions.  Run |onComplete| when done.
@@ -15384,7 +15391,6 @@ function wptHostMatches(host, filter) {
 
 var wptBeforeSendHeaders = function(details) {
   var response = {};
-  return response;
   if (g_active && details.tabId == g_tabid) {
     var modified = false;
     if (g_manipulatingHeaders) {
@@ -15420,17 +15426,6 @@ var wptBeforeSendHeaders = function(details) {
             details.requestHeaders.push({'name' : g_addHeaders[i].name, 'value' : g_addHeaders[i].value});
             modified = true;
           }
-        }
-      }
-    }
-    
-    // Append the PTST user agent string as necessary
-    if (g_appendUA.length) {
-      for (i = 0; i < details.requestHeaders.length; i++) {
-        if (details.requestHeaders[i].name.toLowerCase() === 'user-agent') {
-          details.requestHeaders[i].value += ' ' + g_appendUA.join(' ');
-          modified = true;
-          break;
         }
       }
     }
@@ -15494,20 +15489,13 @@ chrome.webRequest.onCompleted.addListener(function(details) {
   }, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
 );
 
-function wptHookHeaders() {
-  if (!g_headersHooked) {
-    g_headersHooked = true;
+function wptHookRequests() {
+  if (!g_requestsHooked) {
+    g_requestsHooked = true;
     chrome.webRequest.onBeforeSendHeaders.addListener(wptBeforeSendHeaders,
       {urls: ['https://*/*']},
       ['blocking', 'requestHeaders']
     );
-  }
-}
-
-function wptHookRequests() {
-  if (!g_requestsHooked) {
-    g_requestsHooked = true;
-    wptHookHeaders();
     chrome.webRequest.onBeforeRequest.addListener(wptBeforeSendRequest,
       {urls: ['https://*/*']},
       ['blocking']
@@ -15654,8 +15642,7 @@ function wptExecuteTask(task) {
       g_setHeaders = [];
       break;
     case 'appenduseragent':
-      g_appendUA.push(task.target);
-      wptHookHeaders();
+      wpt.chromeDebugger.SetUserAgent(navigator.userAgent + ' ' + task.target);
       break;
     case 'collectstats':
       g_processing_task = true;

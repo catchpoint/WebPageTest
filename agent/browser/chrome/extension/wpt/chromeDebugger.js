@@ -189,6 +189,10 @@ wpt.chromeDebugger.Exec = function(code, callback) {
   });
 };
 
+wpt.chromeDebugger.SetUserAgent = function(UAString) {
+  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.setUserAgentOverride', {"userAgent": UAString});
+};
+
 /**
  * Capture the network timeline
  */
@@ -266,6 +270,7 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
     if (params['value'] !== undefined) {
       // Collect the netlog events separately for calculating the request timings
       var traceEvents = [];
+      var netlogEvents = [];
       var len = params['value'].length;
       for(var i = 0; i < len; i++) {
         if (params['value'][i]['cat'] == 'blink.user_timing') {
@@ -274,7 +279,7 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
         if (params['value'][i]['cat'] == 'netlog') {
           if (DEBUG_NETLOG)
             g_instance.netlog.push(params['value'][i]);
-          wpt.chromeDebugger.processNetlogTraceEvent(params['value'][i]);
+          netlogEvents.push(params['value'][i]);
           if (g_instance.trace)
             traceEvents.push(params['value'][i]);
         } else if (g_instance.trace || g_instance.timeline) {
@@ -283,6 +288,10 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
       }
       if (traceEvents.length)
         wpt.chromeDebugger.sendEvent('trace', JSON.stringify(traceEvents));
+      len = netlogEvents.length;
+      for (var i = 0; i < len; i++) {
+        wpt.chromeDebugger.processNetlogTraceEvent(netlogEvents[i]);
+      }
     }
   }
   if (message === 'Tracing.tracingComplete') {
