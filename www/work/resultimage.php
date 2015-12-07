@@ -45,7 +45,7 @@ if (ValidateTestId($id)) {
                         if ($ok) {
                             // put each run of video data in it's own directory
                             if (strpos($fileName, 'progress') !== false) {
-                                if (preg_match("/(?P<runNumber>[0-9]+)_(?P<cached>Cached_)?(?P<pageNumber>[a-z]+)_progress_(?P<fileBase>[\S]+)/",$fileName,$matches)) {
+                                if (preg_match("/^[\S]*\/(?P<runNumber>[0-9]+)_(?P<cached>Cached_)?(?P<pageNumber>[0-9]+)_progress_(?P<fileBase>[\S]+)$/",$fileName,$matches)) {
                                     $runNum = $matches['runNumber'];
                                     $page = $matches['pageNumber'];
                                     $fileBase = $matches['fileBase'];
@@ -61,7 +61,7 @@ if (ValidateTestId($id)) {
                                         mkdir($path, 0777, true);
                                     $fileName = 'frame_' . $page . '_' . $fileBase;
                                 }
-                                if (preg_match("/(?P<runNumber>[0-9]+)(?P<cached>Cached_)?_progress_(?P<fileBase>[\S]+)/",$fileName,$matches)) {
+                                if (preg_match("/^[\S]*\/(?P<runNumber>[0-9]+)_(?P<cached>Cached_)?progress_(?P<fileBase>[\S]+)$/",$fileName,$matches)) {
                                     $runNum = $matches['runNumber'];
                                     $fileBase = $matches['fileBase'];
                                     $cached = '';
