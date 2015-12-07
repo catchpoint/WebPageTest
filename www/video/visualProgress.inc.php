@@ -416,9 +416,9 @@ function RGB_TO_YUV(&$r, &$g, &$b) {
 function imagecreatefromjpeg_by_bitmask($image_file, $eventName) {
     $pathToBitmask = get_path_to_bitmask($eventName);
 
-    // Create PHP-Objects from imagefiles
-    $originalImage = new Imagick($image_file);
     if (file_exists($pathToBitmask)) {
+        // Create PHP-Objects from imagefiles
+        $originalImage = new Imagick($image_file);
         $bitmaskImage = new Imagick($pathToBitmask);
         $width = $originalImage->getImageWidth();
         $length = $originalImage->getImageHeight();
@@ -431,12 +431,15 @@ function imagecreatefromjpeg_by_bitmask($image_file, $eventName) {
         // Create composite of two images using DSTIN
         // See: http://www.imagemagick.org/Usage/compose/#dstin
         $originalImage->compositeImage($bitmaskImage, Imagick::COMPOSITE_DSTIN, 0, 0);
+        $originalImage->setImageFormat( "jpg" );
+
+        $pathToMergedImage = pathinfo($image_file,PATHINFO_DIRNAME)."/Bitmask_".pathinfo($image_file,PATHINFO_FILENAME).".".pathinfo($image_file,PATHINFO_EXTENSION);
+        $originalImage->writeImage($pathToMergedImage);
+    } else {
+        $pathToMergedImage = $image_file;
     }
 
-    $originalImage->setImageFormat( "jpg" );
 
-    $pathToMergedImage = pathinfo($image_file,PATHINFO_DIRNAME)."/Bitmask_".pathinfo($image_file,PATHINFO_FILENAME).".".pathinfo($image_file,PATHINFO_EXTENSION);
-    $originalImage->writeImage($pathToMergedImage);
 
     return $pathToMergedImage;
 }
