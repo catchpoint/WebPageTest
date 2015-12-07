@@ -15186,8 +15186,10 @@ var g_debugWindow = null;  // May create at window onload.
 var g_overrideHosts = {};
 var g_addHeaders = [];
 var g_setHeaders = [];
+var g_manipulatingHeaders = false;
 var g_started = false;
 var g_requestsHooked = false;
+var g_headersHooked = false;
 var g_appendUA = [];
 
 /**
@@ -15382,39 +15384,42 @@ function wptHostMatches(host, filter) {
 
 var wptBeforeSendHeaders = function(details) {
   var response = {};
+  return response;
   if (g_active && details.tabId == g_tabid) {
     var modified = false;
-    var host = details.url.match(URL_REGEX)[2].toString();
-    var scheme = details.url.match(URL_REGEX)[1].toString();
-    for (var originalHost in g_overrideHosts) {
-      if (g_overrideHosts[originalHost] == host) {
-        details.requestHeaders.push({'name' : 'x-Host', 'value' : originalHost});
-        modified = true;
-        break;
-      }
-    }
-    
-    // modify headers for HTTPS requests (non-encrypted will be handled at the network layer)
-    if (scheme.toLowerCase() == "https://") {
-      var i;
-      for (i = 0; i < g_setHeaders.length; i++) {
-        if (wptHostMatches(host, g_setHeaders[i].filter)) {
-          var headerSet = false;
-          for (var j = 0; j < details.requestHeaders.length; j++) {
-            if (g_setHeaders[i].name.toLowerCase() == details.requestHeaders[j].name.toLowerCase()) {
-              details.requestHeaders[j].value = g_setHeaders[i].value;
-              headerSet = true;
-            }
-          }
-          if (!headerSet)
-            details.requestHeaders.push({'name' : g_setHeaders[i].name, 'value' : g_setHeaders[i].value});
+    if (g_manipulatingHeaders) {
+      var host = details.url.match(URL_REGEX)[2].toString();
+      var scheme = details.url.match(URL_REGEX)[1].toString();
+      for (var originalHost in g_overrideHosts) {
+        if (g_overrideHosts[originalHost] == host) {
+          details.requestHeaders.push({'name' : 'x-Host', 'value' : originalHost});
           modified = true;
+          break;
         }
       }
-      for (i = 0; i < g_addHeaders.length; i++) {
-        if (wptHostMatches(host, g_addHeaders[i].filter)) {
-          details.requestHeaders.push({'name' : g_addHeaders[i].name, 'value' : g_addHeaders[i].value});
-          modified = true;
+      
+      // modify headers for HTTPS requests (non-encrypted will be handled at the network layer)
+      if (scheme.toLowerCase() == "https://") {
+        var i;
+        for (i = 0; i < g_setHeaders.length; i++) {
+          if (wptHostMatches(host, g_setHeaders[i].filter)) {
+            var headerSet = false;
+            for (var j = 0; j < details.requestHeaders.length; j++) {
+              if (g_setHeaders[i].name.toLowerCase() == details.requestHeaders[j].name.toLowerCase()) {
+                details.requestHeaders[j].value = g_setHeaders[i].value;
+                headerSet = true;
+              }
+            }
+            if (!headerSet)
+              details.requestHeaders.push({'name' : g_setHeaders[i].name, 'value' : g_setHeaders[i].value});
+            modified = true;
+          }
+        }
+        for (i = 0; i < g_addHeaders.length; i++) {
+          if (wptHostMatches(host, g_addHeaders[i].filter)) {
+            details.requestHeaders.push({'name' : g_addHeaders[i].name, 'value' : g_addHeaders[i].value});
+            modified = true;
+          }
         }
       }
     }
@@ -15425,28 +15430,27 @@ var wptBeforeSendHeaders = function(details) {
         if (details.requestHeaders[i].name.toLowerCase() === 'user-agent') {
           details.requestHeaders[i].value += ' ' + g_appendUA.join(' ');
           modified = true;
+          break;
         }
       }
     }
     
-    if (modified)
+    if (modified) {
       response = {requestHeaders: details.requestHeaders};
+    }
   }
   return response;
 };
 
 var wptBeforeSendRequest = function(details) {
   var action = {};
-  if (g_active && details.tabId == g_tabid) {
+  if (g_active && g_manipulatingHeaders && details.tabId == g_tabid) {
     var urlParts = details.url.match(URL_REGEX);
     var scheme = urlParts[1].toString();
     var host = urlParts[2].toString();
     var object = urlParts[3].toString();
-    wpt.LOG.info('Checking host override for "' + host +
-                 '" in URL ' + details.url);
     if (g_overrideHosts[host] !== undefined) {
       var newHost = g_overrideHosts[host];
-      wpt.LOG.info('Overriding host ' + host + ' to ' + newHost);
       action.redirectUrl = scheme + newHost + object;
     }
   }
@@ -15490,13 +15494,20 @@ chrome.webRequest.onCompleted.addListener(function(details) {
   }, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
 );
 
-function wptHookRequests() {
-  if (!g_requestsHooked) {
-    g_requestsHooked = true;
+function wptHookHeaders() {
+  if (!g_headersHooked) {
+    g_headersHooked = true;
     chrome.webRequest.onBeforeSendHeaders.addListener(wptBeforeSendHeaders,
       {urls: ['https://*/*']},
       ['blocking', 'requestHeaders']
     );
+  }
+}
+
+function wptHookRequests() {
+  if (!g_requestsHooked) {
+    g_requestsHooked = true;
+    wptHookHeaders();
     chrome.webRequest.onBeforeRequest.addListener(wptBeforeSendRequest,
       {urls: ['https://*/*']},
       ['blocking']
@@ -15614,24 +15625,29 @@ function wptExecuteTask(task) {
       g_commandRunner.doNoScript();
       break;
     case 'overridehost':
-      wptHookRequests();
       g_overrideHosts[task.target] = task.value;
+      g_manipulatingHeaders = true;
+      wptHookRequests();
       break;
     case 'addheader':
       var separator = task.target.indexOf(":");
-      if (separator > 0)
+      if (separator > 0) {
         g_addHeaders.push({'name' : task.target.substr(0, separator).trim(),
                            'value' : task.target.substr(separator + 1).trim(),
                            'filter' : typeof(task.value) === 'undefined' ? '' : task.value});
-      wptHookRequests();
+        g_manipulatingHeaders = true;
+        wptHookRequests();
+      }
       break;
     case 'setheader':
       var separator = task.target.indexOf(":");
-      if (separator > 0)
+      if (separator > 0) {
         g_setHeaders.push({'name' : task.target.substr(0, separator).trim(),
                            'value' : task.target.substr(separator + 1).trim(),
                            'filter' : typeof(task.value) === 'undefined' ? '' : task.value});
-      wptHookRequests();
+        g_manipulatingHeaders = true;
+        wptHookRequests();
+      }
       break;
     case 'resetheaders':
       g_addHeaders = [];
@@ -15639,7 +15655,7 @@ function wptExecuteTask(task) {
       break;
     case 'appenduseragent':
       g_appendUA.push(task.target);
-      wptHookRequests();
+      wptHookHeaders();
       break;
     case 'collectstats':
       g_processing_task = true;
