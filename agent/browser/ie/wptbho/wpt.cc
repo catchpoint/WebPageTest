@@ -23,9 +23,25 @@ static const TCHAR * REG_SHELL_FOLDERS =
     _T("Software\\Microsoft\\Windows\\CurrentVersion")
     _T("\\Explorer\\User Shell Folders");
 static const TCHAR * LOAD_EVENT_END_FUNCTION =
-    _T("var wptGetLoadEventEndTiming = (function(){")
-    _T("  return performance.timing['loadEventEnd'];")
-    _T("});");
+    _T("window.wptGetLoadEventEndTiming = function(){")
+    _T("  var t = performance.timing['loadEventEnd'];")
+    _T("  return (!t && window.__loadEventEndTiming ? window.loadEventEndTiming : t);")
+    _T("};");
+
+// Workaround to collect load event start/end when performance nav timing fails due to IE10 bug
+static const TCHAR * REGISTER_LOAD_EVENT_MARKS_FUNCTIONS =
+    _T("window.__loadEventStartTiming = 0;")
+    _T("window.__loadEventEndTiming = 0;")
+    _T("(function(){")
+    _T("  window.addEventListener(\"load\", function () {")
+    _T("    setTimeout(function () { window.__loadEventEndTiming = Date.now(); }, 0);")
+    _T("  });")
+    _T("})();")
+    _T("window.wptMarkLoadEventStartTiming = function(){")
+    _T("  if (!window.__loadEventStartTiming) window.__loadEventStartTiming = Date.now();")
+    _T("};");
+LPOLESTR MARK_LOAD_EVENT_START = L"wptMarkLoadEventStartTiming";
+
 static const TCHAR * DOM_SCRIPT_FUNCTIONS =
     _T("var wptGetUserTimings = (function(){")
     _T("  var ret = '';")
@@ -41,14 +57,15 @@ static const TCHAR * DOM_SCRIPT_FUNCTIONS =
     _T("var wptGetNavTimings = (function(){")
     _T("  var timingParams = \"\";")
     _T("  if (window.performance && window.performance.timing) {")
-    _T("    function addTime(name) {")
-    _T("      return name + '=' + performance.timing[name];")
+    _T("    function addTime(name, failsafe) {")
+    _T("      var t = performance.timing[name];")
+    _T("      return name + '=' + (!t && failsafe ? failsafe : t);")
     _T("    };")
     _T("    timingParams = addTime('domContentLoadedEventStart') + '&' +")
     _T("        addTime('domContentLoadedEventEnd') + '&' +")
     _T("        addTime('msFirstPaint') + '&' +")
-    _T("        addTime('loadEventStart') + '&' +")
-    _T("        addTime('loadEventEnd');")
+    _T("        addTime('loadEventStart', window.__loadEventStartTiming) + '&' +")
+    _T("        addTime('loadEventEnd', window.__loadEventEndTiming);")
     _T("  }")
     _T("  return timingParams;")
     _T("});");
@@ -56,7 +73,7 @@ LPOLESTR GET_USER_TIMINGS = L"wptGetUserTimings";
 LPOLESTR GET_NAV_TIMINGS = L"wptGetNavTimings";
 LPOLESTR GET_LOAD_EVENT_END_TIMING = L"wptGetLoadEventEndTiming";
 
-int MAX_ONLOAD_WAIT = 100; // 20s
+int MAX_ONLOAD_WAIT = 20; // 4s
 
 
 /*-----------------------------------------------------------------------------
@@ -168,6 +185,7 @@ static unsigned __stdcall TaskThreadProc(void* arg) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Wpt::Start(void) {
+  AtlTrace(_T("[wptbho] - Wpt::Start()"));
   if (!_task_timer && _message_window) {
     _webdriver_mode = _wpt_interface.IsWebdriverMode();
     _task_thread = (HANDLE)_beginthreadex(0, 0, ::TaskThreadProc, this, 0, 0);
@@ -181,8 +199,6 @@ void Wpt::Start(void) {
   }
 }
 
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
 void Wpt::Stop(void) {
   if (_message_window) {
     KillTimer(_message_window, 1);
@@ -231,8 +247,11 @@ bool Wpt::InstallHook() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Wpt::OnLoad() {
+void Wpt::OnDocumentComplete() {
   if (_active) {
+    // mark when onload starts in JS
+    MarkLoadEventStart();
+
     // this is just a safety net -- just in case we failed to get the URL
     // via get_LocationURL.
     BSTR current_url = (BSTR)"http://unknown.url";
@@ -240,8 +259,6 @@ void Wpt::OnLoad() {
     AtlTrace(_T("[wptbho] - Wpt::OnLoad(); URL = %s"), current_url);
     int fixed_viewport = 0;
     if (_web_browser) {
-      _onload_wait = 0;
-
       CComPtr<IDispatch> dispatch;
       if (SUCCEEDED(_web_browser->get_Document(&dispatch))) {
         CComQIPtr<IHTMLDocument2> document = dispatch;
@@ -263,18 +280,27 @@ void Wpt::OnLoad() {
 }
 
 void Wpt::OnBeforeNavigate() {
-  if (_active && _webdriver_mode) {
+  if (_active) {
     AtlTrace(_T("[wptbho] - Wpt::OnBeforeNavigate()"));
-    _wpt_interface.OnBeforeNavigate();
+    _navigating = true;
+
+    if (_webdriver_mode) {
+      _wpt_interface.OnBeforeNavigate();
+    }
+    _wpt_interface.OnNavigate();
   }
 }
+
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Wpt::OnNavigate() {
+void Wpt::OnNavigateComplete(CString url) {
   if (_active) {
-    AtlTrace(_T("[wptbho] - Wpt::OnNavigate()"));
-    _navigating = true;
-    _wpt_interface.OnNavigate();
+    AtlTrace(_T("[wptbho] - Wpt::OnNavigateComplete() - %s"), url);
+    _onload_wait = 0;
+
+    // Inject any JS we need
+    Exec(LOAD_EVENT_END_FUNCTION);
+    Exec(REGISTER_LOAD_EVENT_MARKS_FUNCTIONS);
   }
 }
 
@@ -945,27 +971,42 @@ CComPtr<IHTMLElement> Wpt::FindDomElementInDocument(CString tag,
 }
 
 /*-----------------------------------------------------------------------------
+Inject onload listener
+-----------------------------------------------------------------------------*/
+void Wpt::MarkLoadEventStart() {
+  AtlTrace(_T("[wptbho] - Wpt::MarkLoadEventStart()"));
+  _variant_t ret;
+
+  Invoke(MARK_LOAD_EVENT_START, ret);
+}
+
+/*-----------------------------------------------------------------------------
 Retrieve load event end time
 -----------------------------------------------------------------------------*/
 LONGLONG Wpt::GetLoadEventEnd() {
-  AtlTrace(_T("[wptbho] - Wpt::GetLoadEventEnd()"));
+  return GetLongLong(GET_LOAD_EVENT_END_TIMING);
+}
 
-  if (Exec(LOAD_EVENT_END_FUNCTION)) {
-    _variant_t timing;
 
-    if (Invoke(GET_LOAD_EVENT_END_TIMING, timing)) {
-      if (timing.vt == VT_BSTR) {
-        CString t(timing);
-        LONGLONG end = _ttoll(t);
+/*-----------------------------------------------------------------------------
+Helper to invoke a function in JS which returns a longlong
+-----------------------------------------------------------------------------*/
+LONGLONG Wpt::GetLongLong(LPOLESTR fnc) {
+  _variant_t timing;
 
-        if (end < 0LL)
-          end = 0LL;
-        return end;
-      }
+  if (Invoke(fnc, timing)) {
+    if (timing.vt == VT_R8) {
+      LONGLONG value = (LONGLONG)timing;
+
+      if (value < 0LL)
+        value = 0LL;
+      return value;
     }
   }
+
   return 0LL;
 }
+
 
 /*-----------------------------------------------------------------------------
   Expire any items in the cache that will expire within X seconds.
@@ -1273,15 +1314,16 @@ void Wpt::CheckBrowserState() {
     READYSTATE ready_state;
     HRESULT hr = _web_browser->get_ReadyState(&ready_state);
 
-    if (SUCCEEDED(hr) && hr == READYSTATE_COMPLETE) {
+    AtlTrace(_T("[wptbho] - Wpt::CheckBrowserState() - ready state: %d"), ready_state);
+    if (SUCCEEDED(hr) && ready_state == READYSTATE_COMPLETE) {
       if (_navigating) {
-        OnLoad();
+        OnDocumentComplete();
       }
       // ready state is set to "complete" when page is loaded, immediately after, the onload
       // event is triggered. We need to wait for the onload event to terminate before collecting
       // all metrics.
       // Note that IE10 has a bug where loadEventStart and loadEventEnd are sometime not provided.
-      // we need a fail safe in case this happens.
+      //A fail safe is injected on the page to workaround this bug.
       ++_onload_wait;
 
       // Load event end timing is an absolute unix epoch timestamp that will never change

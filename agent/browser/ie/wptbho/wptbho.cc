@@ -65,16 +65,16 @@ STDMETHODIMP_(void) WptBHO::OnBeforeNavigate2(IDispatch *pDisp, VARIANT * vUrl,
   CString url;
   if (vUrl)
     url = *vUrl;
-  AtlTrace(_T("[WptBHO] OnBeforeNavigate2 - %s"), url);
   CComPtr<IUnknown> unknown_browser = _web_browser;
   CComPtr<IUnknown> unknown_frame = pDisp;
   if (unknown_browser && unknown_frame && unknown_browser == unknown_frame) {
+    AtlTrace(_T("[WptBHO] OnBeforeNavigate2 - %s"), url);
     _wpt.OnBeforeNavigate();
-    _wpt.OnNavigate();
   }
 }
 
 /*-----------------------------------------------------------------------------
+Called when READY_STATE is set to complete
 -----------------------------------------------------------------------------*/
 STDMETHODIMP_(void) WptBHO::OnDocumentComplete(IDispatch *pDisp, 
             VARIANT * vUrl) {
@@ -85,12 +85,29 @@ STDMETHODIMP_(void) WptBHO::OnDocumentComplete(IDispatch *pDisp,
   CComPtr<IUnknown> unknown_browser = _web_browser;
   CComPtr<IUnknown> unknown_frame = pDisp;
   if (unknown_browser && unknown_frame && unknown_browser == unknown_frame) {
-    _wpt.OnLoad();
+    _wpt.OnDocumentComplete();
     if (!url.CompareNoCase(_T("about:blank"))) {
       _wpt.Install(_web_browser);
     } else if(!url.CompareNoCase(_T("http://127.0.0.1:8888/blank.html"))) {
       _wpt.Start();
     }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+Called when navigation is done
+-----------------------------------------------------------------------------*/
+STDMETHODIMP_(void) WptBHO::OnNavigateComplete(IDispatch *pDisp,
+  VARIANT * vUrl) {
+  CString url;
+  if (vUrl)
+    url = *vUrl;
+
+  CComPtr<IUnknown> unknown_browser = _web_browser;
+  CComPtr<IUnknown> unknown_frame = pDisp;
+  if (unknown_browser && unknown_frame && unknown_browser == unknown_frame) {
+    AtlTrace(_T("[WptBHO] OnNavigateComplete - %s"), url);
+    _wpt.OnNavigateComplete(url);
   }
 }
 
@@ -128,7 +145,7 @@ STDMETHODIMP_(void) WptBHO::OnNavigateError(IDispatch *pDisp, VARIANT *vUrl,
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 STDMETHODIMP_(void) WptBHO::OnQuit(VOID) {
-  _wpt.OnLoad();
+  _wpt.OnDocumentComplete();
 }
 
 /*-----------------------------------------------------------------------------
