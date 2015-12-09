@@ -84,19 +84,22 @@ $page_description = "Website performance optimization recommendations$testLabel.
 		    <br>
 			
 			<a name="details"></a>
-            <h2>Details (for all Event Names):</h2>
+            <h2>Details (for all Events):</h2>
             <?php
                 require 'optimization.inc';
 
                 require_once('page_data.inc');
-                $pageData = loadPageRunData($testPath, $run, $cached);
+                $pageDataArray = loadPageRunData($testPath, $run, $cached, array('allEvents' => true));
 
                 require_once('object_detail.inc');
                 $secure = false;
                 $haveLocations = false;
-                $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
-
-                dumpOptimizationReport($pageData, $requests, $id, $run, $cached, $test);
+                $requestsArray = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false, false, true);
+                foreach($pageDataArray as $eventName => $pageData) {
+                    echo "<h3>Event $eventName</h3>";
+                    $requests = $requestsArray[$eventName];
+                    dumpOptimizationReport($pageData, $requests, $id, $run, $cached, $test);
+                }
                 echo '<p></p><br>';
                 include('./ads/optimization_bottom.inc');
                 echo '<br>';
