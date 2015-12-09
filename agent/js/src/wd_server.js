@@ -46,6 +46,7 @@ var DEVTOOLS_CONNECT_TIMEOUT_MS_ = 10000;
 var DETACH_TIMEOUT_MS_ = 2000;
 var VIDEO_PROCESSING_TIMEOUT_MS = 600000;
 var TRACING_STOP_TIMEOUT_MS = 120000;
+var DETECT_RE_NAVIGATE_MS = 1000;
 
 /** Allow test access. */
 exports.WAIT_AFTER_ONLOAD_MS = 10000;
@@ -191,6 +192,9 @@ WebDriverServer.prototype.init = function(args) {
   this.pageData_ = undefined;
   this.traceFile_ = undefined;
   this.traceFileStream_ = undefined;
+  this.isNavigating_ = false;
+  this.mainFrame_ = undefined;
+  this.pageLoadCoalesceTimer_ = undefined;
   this.tearDown_();
 };
 
@@ -353,9 +357,28 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
   // If abortTimer_ is set, it means we received an 'Inspector.detached'
   // message, as noted below, so ignore messages until our abortTimer fires.
   if (!this.abortTimer_) {
-    if ('Page.loadEventFired' === message.method) {
+    if ('Page.frameStartedLoading' === message.method) {
+      if (message.params['frameId'] !== undefined) {
+        if (this.isNavigating_ && this.mainFrame_ === undefined) {
+          this.mainFrame_ = message.params.frameId;
+          this.isNavigating_ = false;
+        }
+        if (message.params.frameId == this.mainFrame_) {
+          if (this.pageLoadCoalesceTimer_ !== undefined) {
+            clearTimeout(this.pageLoadCoalesceTimer_);
+            this.pageLoadCoalesceTimer_ = undefined;
+            logger.debug('New navigation after onload detected');
+          }
+        }
+      }
+    } else if ('Page.loadEventFired' === message.method) {
       if (this.isRecordingDevTools_) {
-        this.onPageLoad_();
+        // Allow for up to 1 second after the page load finished for
+        // another navigation to start (in the case of a javascript redirect).
+        this.pageLoadCoalesceTimer_ = setTimeout(function() {
+          this.pageLoadCoalesceTimer_ = undefined;
+          this.onPageLoad_();
+        }.bind(this), DETECT_RE_NAVIGATE_MS);
       }
     } else if ('Page.javascriptDialogOpening' === message.method) {
       var err = new Error('Page opened a modal dailog.', this.runNumber_);
@@ -778,6 +801,7 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
   // Navigate to a blank, to make sure we clear the prior page and cancel
   // all pending events.  This isn't strictly required if startBrowser loads
   // "about:blank", but it's still a good idea.
+  this.isNavigating_ = true;
   this.pageCommand_('navigate', {url: BLANK_PAGE_URL_});
   this.app_.timeout(500, 'Load blank startup page');
   this.networkCommand_('enable');
