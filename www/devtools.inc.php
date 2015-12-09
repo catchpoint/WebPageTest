@@ -348,6 +348,7 @@ function ProcessDevToolsEvents($events, &$pageData, &$requests, $stepName = 0)
                 }
             }
         }
+        $pageData['load_start'] = $requests[0]['load_start'];
         $pageData['connections'] = count($connections);
     }
     if (count($requests)) {
@@ -532,10 +533,12 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData)
                 $request['id'] = $id;
                 $allRequests[$id] = $request;
             } elseif (array_key_exists($id, $allRequests)) {
+
                 if (!array_key_exists('endTime', $allRequests[$id]) ||
-                    $event['timestamp'] > $allRequests[$id]['endTime']
-                )
+                    $event['timestamp'] > $allRequests[$id]['endTime']) {
                     $allRequests[$id]['endTime'] = $event['timestamp'];
+                }
+
                 if ($event['method'] == 'Network.dataReceived') {
                     if (!array_key_exists('firstByteTime', $allRequests[$id]))
                         $allRequests[$id]['firstByteTime'] = $event['timestamp'];
@@ -553,6 +556,7 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData)
                 ) {
                     if (!array_key_exists('firstByteTime', $allRequests[$id]))
                         $allRequests[$id]['firstByteTime'] = $event['timestamp'];
+
                     $allRequests[$id]['fromNet'] = false;
                     // the timing data for cached resources is completely bogus
                     if (isset($allRequests[$id]['fromCache']) && isset($event['response']['timing']))
@@ -577,10 +581,6 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData)
                 if ($event['method'] == 'Network.loadingFinished') {
                     if (!array_key_exists('firstByteTime', $allRequests[$id]))
                         $allRequests[$id]['firstByteTime'] = $event['timestamp'];
-                    if (!array_key_exists('endTime', $allRequests[$id]) ||
-                        $event['timestamp'] > $allRequests[$id]['endTime']
-                    )
-                        $allRequests[$id]['endTime'] = $event['timestamp'];
                 }
                 if ($event['method'] == 'Network.loadingFailed') {
                     if (!array_key_exists('response', $allRequests[$id]) &&
@@ -588,17 +588,13 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData)
                     ) {
                         if (!isset($event['canceled']) || !$event['canceled']) {
                             $allRequests[$id]['fromNet'] = true;
-                            $allRequests[$id]['errorCode'] = 12999;
                             if (!array_key_exists('firstByteTime', $allRequests[$id]))
                                 $allRequests[$id]['firstByteTime'] = $event['timestamp'];
-                            if (!array_key_exists('endTime', $allRequests[$id]) ||
-                                $event['timestamp'] > $allRequests[$id]['endTime']
-                            )
-                                $allRequests[$id]['endTime'] = $event['timestamp'];
                             if (array_key_exists('errorText', $event))
                                 $allRequests[$id]['error'] = $event['errorText'];
                             if (array_key_exists('error', $event))
                                 $allRequests[$id]['errorCode'] = $event['error'];
+
                         }
                     }
                 }
@@ -612,20 +608,18 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData)
             $pageData['domContentLoadedEventEnd'] = $event['timestamp'];
         }
     }
-    // Go through and error-out any requests that were started but never got a response or error
-    if (isset($endTimestamp)) {
-        foreach ($allRequests as &$request) {
-            if (!isset($request['endTime'])) {
-                $request['endTime'] = $endTimestamp;
-                $request['firstByteTime'] = $endTimestamp;
-                $request['fromNet'] = true;
-                $request['errorCode'] = 12999;
-            }
-        }
-    }
 
     // pull out just the requests that were served on the wire
     foreach ($allRequests as &$request) {
+        // Ignore any requests that were started but never got a response or error
+        // since they can be inflight requests
+        if (isset($endTimestamp)) {
+            if (!isset($request['endTime'])) {
+                unset($allRequests[$request['id']]);
+                continue;
+            }
+        }
+
         if (array_key_exists('startTime', $request)) {
             if (!isset($request['fromCache']) && isset($request['response']['timing'])) {
                 if (array_key_exists('requestTime', $request['response']['timing']) &&

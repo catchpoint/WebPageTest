@@ -59,27 +59,11 @@ function loadPageRunData($testPath, $run, $cached, &$requests = null, $options =
         $ret2 = loadPageData("$testPath/{$run}{$cachedText}_IEWPG.txt", $options, $multistep);
         if ($multistep && is_array($ret) && is_array($ret2)) {
           if (count($ret) == count($ret2)) {
-            // the following events are not always correct when retrieved from devtools.json. To report the correct
-            // values for these fields, load the values from the ones collected by the agent and overwrite the ones
-            // collected from devtools.json.
-            $overwrite_fields = array(
-                "domContentLoadedEventStart",
-                "domContentLoadedEventEnd",
-                "loadEventStart",
-                "loadEventEnd"
-            );
+              // devtools don't provide end timings for load event and dom content
+              // loaded event. Retrive event duration from WPT hook.
             for ($i = 0; $i < count($ret); $i++) {
-
-              // Page metrics are relative to the performance timing (navigation
-              // start) whereas request start time is based on the first
-              // request on the page. We need to reconsile start time by
-              // computing the offset and fixing page timing.
-              $offset = (double)($ret[$i]['date'] + $ret[$i]['startTime']) - (double)$ret2[$i]['date'];
-
-              for ($j = 0; $j < count($overwrite_fields); $j++) {
-                $field = $overwrite_fields[$j];
-                $ret[$i][$field] = (double)$ret2[$i][$field] + (double)$offset;
-              }
+                $ret[$i]["domContentLoadedEventEnd"] += $ret2[$i]["domContentLoadedEventEnd"] - $ret2[$i]["domContentLoadedEventStart"];
+                $ret[$i]["loadEventEnd"] += $ret2[$i]["loadEventEnd"] - $ret2[$i]["loadEventStart"];
             }
           } else {
             $error_msg =
