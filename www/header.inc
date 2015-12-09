@@ -199,8 +199,9 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
                         $smaller = ' smaller';
                       echo "<ul class=\"grades$smaller\">";
                       $optlink = FRIENDLY_URLS ? "/result/$id/$gradeRun/performance_optimization/" : "performance_optimization.php?test=$id&run=$gradeRun";
+                      $eventName = $pageData[$gradeRun][0]['eventName'];
                       foreach( $grades as $check => &$grade )
-                          echo "<li class=\"$check\"><a href=\"$optlink#$check\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
+                          echo "<li class=\"$check\"><a href=\"$optlink#{$check}_".getEventNameId($eventName)."\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
                       echo '</ul>';
                   }
               echo '</div>';

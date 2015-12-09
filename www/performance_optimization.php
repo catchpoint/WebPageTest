@@ -63,6 +63,30 @@ $page_description = "Website performance optimization recommendations$testLabel.
             </h1>
             <hr>
             <br>
+            <?php
+                echo '<div id="grades">';
+                echo '<table class="pretty" align="center" border="none">';
+                require_once('page_data.inc');
+                $pageDataArray = loadPageRunData($testPath, $run, $cached, array('allEvents' => true));
+                foreach($pageDataArray as $eventName => $pageData) {
+                    $grades = GetGrades($pageData, $test, $id, $run);
+                    if (count($grades)) {
+                        $smaller = '';
+                        if (count($grades) > 6)
+                            $smaller = ' smaller';
+                        echo "<tr class=\"grades$smaller\">";
+                        echo "<td style=\"border:none;\"><h3>$eventName</h3></td>";
+                        $optlink = FRIENDLY_URLS ? "/result/$id/$gradeRun/performance_optimization/" : "performance_optimization.php?test=$id&run=$gradeRun";
+                        foreach ($grades as $check => &$grade)
+                            echo "<td class=\"$check\" style=\"border:none;\"><a href=\"$optlink#{$check}_".getEventNameId($eventName)."\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</td>";
+                        echo '</tr>';
+                    }
+                }
+                echo '</table>';
+                echo '</div>';
+            ?>
+            <hr>
+            <br>
             <div style="text-align:center;">
             	<?php foreach(array_keys($requests) as $eventName)
             	{ ?>
@@ -87,9 +111,6 @@ $page_description = "Website performance optimization recommendations$testLabel.
             <h2>Details (for all Events):</h2>
             <?php
                 require 'optimization.inc';
-
-                require_once('page_data.inc');
-                $pageDataArray = loadPageRunData($testPath, $run, $cached, array('allEvents' => true));
 
                 require_once('object_detail.inc');
                 $secure = false;

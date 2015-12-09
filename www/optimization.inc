@@ -32,12 +32,12 @@ function ReportTTFB(&$pageData, &$requests, $id, $run, $cached, &$test)
     $score = gradeTTFB($pageData, $test, $id, $run, $cached, $target);
     if( isset($score) )
     {
-        echo "<a  name=\"first_byte_time\"><h4>First Byte Time (back-end processing): $score/100</h4></a><p class=\"indented1\">\n";
+        echo "<a  name=\"first_byte_time_". getEventNameId($pageData['eventName']) ."\"><h4>First Byte Time (back-end processing): $score/100</h4></a><p class=\"indented1\">\n";
         echo "<b>{$pageData['TTFB']} ms</b> First Byte Time<br>\n";
         echo "<b>$target ms</b> Target First Byte Time<br>\n";
     }
     else
-        echo "<a  name=\"first_byte_time\"><h4>First Byte Time (back-end processing): N/A</h4></a><p class=\"indented1\">\n";
+        echo "<a  name=\"first_byte_time_". getEventNameId($pageData['eventName']) ."\"><h4>First Byte Time (back-end processing): N/A</h4></a><p class=\"indented1\">\n";
     echo "</p><br>\n";
 }
 
@@ -70,7 +70,7 @@ function ReportKeepAlive(&$pageData, &$requests)
         ksort($report);
     }
         
-    echo "<a  name=\"keep_alive_enabled\"><h4>Use persistent connections (keep alive): $score</h4></a><p class=\"indented1\">\n";
+    echo "<a  name=\"keep_alive_enabled_". getEventNameId($pageData['eventName']) ."\"><h4>Use persistent connections (keep alive): $score</h4></a><p class=\"indented1\">\n";
     foreach( $report as $entry )
         echo urldecode($entry)."<br>\n";
     echo "</p><br>\n";
@@ -120,7 +120,7 @@ function ReportTransferCompression(&$pageData, &$requests)
         krsort($report, SORT_NUMERIC);
     }
         
-    echo "<a  name=\"compress_text\"><h4>Use gzip compression for transferring compressable responses: $score</h4></a>\n";
+    echo "<a  name=\"compress_text_". getEventNameId($pageData['eventName']) ."\"><h4>Use gzip compression for transferring compressable responses: $score</h4></a>\n";
     if( isset($summary) )
         echo "<p>$summary</p>\n";
     echo "<p class=\"indented1\">";
@@ -173,7 +173,7 @@ function ReportImageCompression(&$pageData, &$requests)
         krsort($report, SORT_NUMERIC);
     }
         
-    echo "<a  name=\"compress_images\"><h4>Compress Images: $score</h4></a>\n";
+    echo "<a  name=\"compress_images_". getEventNameId($pageData['eventName']) ."\"><h4>Compress Images: $score</h4></a>\n";
     if( isset($summary) )
         echo "<p>$summary</p>\n";
     echo "<p class=\"indented1\">";
@@ -224,7 +224,7 @@ function ReportProgressiveJpeg(&$pageData, &$requests)
         krsort($report, SORT_NUMERIC);
     }
         
-    echo "<a  name=\"progressive_jpeg\"><h4>Use Progressive JPEGs: $score</h4></a>\n";
+    echo "<a  name=\"progressive_jpeg_". getEventNameId($pageData['eventName']) ."\"><h4>Use Progressive JPEGs: $score</h4></a>\n";
     if( isset($summary) )
         echo "<p>$summary</p>\n";
     echo "<p class=\"indented1\">";
@@ -282,7 +282,7 @@ function ReportCache(&$pageData, &$requests)
         ksort($report, SORT_NUMERIC);
     }
         
-    echo "<a  name=\"cache_static_content\"><h4>Leverage browser caching of static assets: $score</h4></a>\n";
+    echo "<a  name=\"cache_static_content_". getEventNameId($pageData['eventName']) ."\"><h4>Leverage browser caching of static assets: $score</h4></a>\n";
     echo "<p class=\"indented1\">";
     foreach( $report as $entry )
         echo urldecode($entry)."<br>\n";
@@ -318,7 +318,7 @@ function ReportCombine(&$pageData, &$requests)
         ksort($report);
     }
         
-    echo "<a  name=\"combine_js_css_files\"><h4>Combine static CSS and JS files: $score</h4></a><p class=\"indented1\">\n";
+    echo "<a  name=\"combine_js_css_files_". getEventNameId($pageData['eventName']) ."\"><h4>Combine static CSS and JS files: $score</h4></a><p class=\"indented1\">\n";
     foreach( $report as $entry )
         echo urldecode($entry)."<br>\n";
     echo "</p><br>\n";
@@ -358,7 +358,7 @@ function ReportCDN(&$pageData, &$requests)
         ksort($report);
     }
         
-    echo "<a  name=\"use_of_cdn\"><h4>Use a CDN for all static assets: $score</h4></a><p class=\"indented1\">\n";
+    echo "<a  name=\"use_of_cdn_". getEventNameId($pageData['eventName']) ."\"><h4>Use a CDN for all static assets: $score</h4></a><p class=\"indented1\">\n";
     foreach( $report as $entry )
         echo urldecode($entry)."<br>\n";
     if( count($cdns) )
@@ -414,7 +414,7 @@ function ReportMinify(&$pageData, &$requests)
         krsort($report, SORT_NUMERIC);
     }
         
-    echo "<a  name=\"minify_js\"><h4>Minify JS: $score</h4></a>\n";
+    echo "<a  name=\"minify_js_". getEventNameId($pageData['eventName']) ."\"><h4>Minify JS: $score</h4></a>\n";
     if( isset($summary) )
         echo "<p>$summary</p>\n";
     echo "<p class=\"indented1\">";
@@ -452,7 +452,7 @@ function ReportCookies(&$pageData, &$requests)
         ksort($report);
     }
         
-    echo "<a  name=\"cookies\"><h4>Proper cookie usage: $score</h4></a><p class=\"indented1\">\n";
+    echo "<a  name=\"cookies_". getEventNameId($pageData['eventName']) ."\"><h4>Proper cookie usage: $score</h4></a><p class=\"indented1\">\n";
     foreach( $report as $entry )
         echo urldecode($entry)."<br>\n";
     echo "</p><br>\n";
