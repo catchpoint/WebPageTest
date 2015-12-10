@@ -1202,7 +1202,7 @@ echo '</div>'; // container
 	}
     echo "<script type=\"text/javascript\">\n";
 	echo "var wptRequestCount=" . json_encode($eventCount). ";\n";
-    echo "var wptRequestData=" . json_encode($requests) . ";\n";
+    echo "var wptRequestData=" . json_encode(utf8ize($requests)) . ";\n";
     echo "var wptNoLinks={$settings['nolinks']};\n";
     echo "</script>";
 }
