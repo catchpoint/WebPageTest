@@ -9,10 +9,14 @@ if (isset($_REQUEST['name']) && isset($_FILES['apk']['tmp_name']) && isset($_FIL
   $lock = Lock('BrowserUpload', true, 30);
   if ($lock) {
     $valid = false;
+    $is_chromium_chrome = false;
     $uploadResult = 'Error processing ' . htmlspecialchars($_FILES['apk']['name']);
     $zip = new ZipArchive();
     if ($zip->open($_FILES['apk']['tmp_name'])) {
-      if ($zip->statName('assets/content_shell.pak') !== false) {
+      if ($zip->statName('assets/chrome_100_percent.pak') !== false) {
+        $is_chromium_chrome = true;
+      }
+      if ($is_chromium_chrome || $zip->statName('assets/content_shell.pak') !== false) {
         $name = $_REQUEST['name'];
         if (preg_match('/[a-zA-Z0-9_\-]+/', $name)) {
           if (!is_file("./browsers/$name.apk")) {
@@ -28,10 +32,18 @@ if (isset($_REQUEST['name']) && isset($_FILES['apk']['tmp_name']) && isset($_FIL
     }
     if ($valid) {
       if (move_uploaded_file($_FILES['apk']['tmp_name'], "./browsers/$name.apk")) {
-        $apk_settings = array( 'package' => 'org.chromium.content_shell_apk',
+        $apk_settings = $is_chromium_chrome
+          // Chrome public
+          ? array( 'package' => 'org.chromium.chrome',
+            'activity' => 'com.google.android.apps.chrome.Main',
+            'flagsFile' => '/data/local/chrome-command-line',
+            'socket' => 'localabstract:chrome_devtools_remote')
+          // content shell
+          : array( 'package' => 'org.chromium.content_shell_apk',
             'activity' => 'org.chromium.content_shell_apk.ContentShellActivity',
             'flagsFile' => '/data/local/tmp/content-shell-command-line',
             'socket' => 'localabstract:content_shell_devtools_remote');
+            
         file_put_contents("./browsers/$name.json", json_encode($apk_settings));
         $md5 = md5_file("./browsers/$name.apk");
         if ($md5 !== false) {
@@ -86,7 +98,7 @@ if (isset($_REQUEST['name']) && isset($_FILES['apk']['tmp_name']) && isset($_FIL
                 }
                 ?>
                 <h2>Upload Custom Android Build</h2>
-                Upload an <a href="https://code.google.com/p/chromium/wiki/AndroidBuildInstructions">Android Content Shell apk</a> (content_shell_apk build target).
+                Upload an <a href="https://code.google.com/p/chromium/wiki/AndroidBuildInstructions">Android Content Shell or Chrome public apk</a> (content_shell_apk or chrome_public_apk build target).
                 <form name="upload" method="POST" action="custom_browsers.php" enctype="multipart/form-data">
                 <br>
                 <label for="name">
