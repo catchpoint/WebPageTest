@@ -16,9 +16,9 @@ public:
   bool OnMessage(UINT message, WPARAM wParam, LPARAM lParam);
 
   // browser events
-  void  OnLoad();
+  void  OnDocumentComplete();
   void  OnBeforeNavigate();
-  void  OnNavigate();
+  void  OnNavigateComplete(CString url);
   void  OnNavigateError(DWORD error);
   void  OnTitle(CString title);
   void  OnStatus(CString status);
@@ -76,6 +76,8 @@ private:
   DWORD CountDOMElements(CComQIPtr<IHTMLDocument2> &document);
   void  ExpireCacheEntry(INTERNET_CACHE_ENTRY_INFO * info, DWORD seconds);
   void  CheckBrowserState();
+  void  MarkLoadEventStart();
   CString JSONEscape(CString src);
   CString GetCustomMetric(CString code);
+  LONGLONG GetLongLong(LPOLESTR fnc);
 };
