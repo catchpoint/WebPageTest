@@ -381,6 +381,15 @@ function FixUpRequestTimes(&$requests) {
         // this logic.
         $ttfb_ms = isset($req['ttfb_ms']) ? $req['ttfb_ms'] : 0;
 
+        // make SURE it is a valid request
+        if (isset($req['load_ms']) && isset($req['ttfb_ms']) &&
+            $req['load_ms'] < $req['ttfb_ms']) {
+            // given the approximation of ttfb and load_ms, it is
+            // possible that very close numbers endup being invalid. In
+            // this case, fix load_ms
+            $req['load_ms'] = $req['ttfb_ms'];
+        }
+
         $req['ttfb_start'] = $req['load_start'];
         $req['ttfb_end'] = $req['ttfb_start'] + $req['ttfb_ms'];
 
