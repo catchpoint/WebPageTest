@@ -224,9 +224,9 @@ function CheckTest($testPath, $id, $elapsedDays) {
   echo "\rArc:$archiveCount, Del:$deleted, Kept:$kept, Checking:" . str_pad($id,45);
 
   $delete = false;
-  if (!is_file("$dir/$test/testinfo.ini") &&
-      !is_file("$dir/$test/testinfo.json.gz") &&
-      !is_file("$dir/$test/testinfo.json")) {
+  if (!is_file("$testPath/testinfo.ini") &&
+      !is_file("$testPath/testinfo.json.gz") &&
+      !is_file("$testPath/testinfo.json")) {
       $delete = true;
   } else {
       $elapsed = TestLastAccessed($id);
