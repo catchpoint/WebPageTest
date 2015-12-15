@@ -159,6 +159,7 @@ CDN_PROVIDER cdnList[] = {
   {".aads-cn.net", "Aryaka"},
   {".aads-cng.net", "Aryaka"},
   {".squixa.net", "section.io"},
+  {".bisongrid.net", "Bison Grid"},
   {"END_MARKER", "END_MARKER"}
 };
 

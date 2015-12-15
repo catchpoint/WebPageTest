@@ -107,6 +107,7 @@ CDN_PROVIDER cdnList[] = {
 	{".wp.com", _T("WordPress Jetpack")},
 	{".incapdns.net", _T("Incapsula"}),
 	{".squixa.net", _T("section.io"}),
+	{".bisongrid.net", _T("Bison Grid")},
 	{NULL, NULL}
 };
 
