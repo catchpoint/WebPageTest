@@ -295,57 +295,57 @@ function ProcessDevToolsEvents($events, &$pageData, &$requests, $stepName = 0)
                 $request['server_count'] = null;
 
                 // make SURE it is a valid request
-                $valid = true;
                 if (isset($request['load_ms']) &&
                     isset($request['ttfb_ms']) &&
-                    $request['load_ms'] < $request['ttfb_ms']
-                )
-                    $valid = false;
-
-                if ($valid) {
-                    // page-level stats
-                    if (!isset($pageData['URL']) && strlen($request['full_url']))
-                        $pageData['URL'] = $request['full_url'];
-                    if (isset($rawRequest['startTime'])) {
-                        $startOffset = round(($rawRequest['startTime'] - $rawPageData['startTime']));
-                        if ($startOffset > $pageData['fullyLoaded'])
-                            $pageData['fullyLoaded'] = $startOffset;
-                    }
-                    if (isset($rawRequest['endTime'])) {
-                        $endOffset = round(($rawRequest['endTime'] - $rawPageData['startTime']));
-                        if ($endOffset > $pageData['fullyLoaded'])
-                            $pageData['fullyLoaded'] = $endOffset;
-                    }
-                    if (!isset($pageData['TTFB']) &&
-                        $request['ttfb_ms'] >= 0 &&
-                        ($request['responseCode'] == 200 ||
-                            $request['responseCode'] == 304)
-                    ) {
-                        $pageData['TTFB'] = $request['load_start'] + $request['ttfb_ms'];
-                        if ($request['ssl_end'] >= 0 &&
-                            $request['ssl_start'] >= 0
-                        ) {
-                            $pageData['basePageSSLTime'] = $request['ssl_end'] - $request['ssl_start'];
-                        }
-                    }
-                    $pageData['bytesOut'] += $request['bytesOut'];
-                    $pageData['bytesIn'] += $request['bytesIn'];
-                    $pageData['requests']++;
-                    if ($request['load_start'] < $pageData['docTime']) {
-                        $pageData['bytesOutDoc'] += $request['bytesOut'];
-                        $pageData['bytesInDoc'] += $request['bytesIn'];
-                        $pageData['requestsDoc']++;
-                    }
-                    if ($request['responseCode'] == 200)
-                        $pageData['responses_200']++;
-                    elseif ($request['responseCode'] == 404) {
-                        $pageData['responses_404']++;
-                        $pageData['result'] = 99999;
-                    } else
-                        $pageData['responses_other']++;
-
-                    $requests[] = $request;
+                    $request['load_ms'] < $request['ttfb_ms']) {
+                    // given the approximation of ttfb and load_ms, it is
+                    // possible that very close numbers endup being invalid. In
+                    // this case, fix load_ms
+                    $request['load_ms'] = $request['ttfb_ms'];
                 }
+
+                // page-level stats
+                if (!isset($pageData['URL']) && strlen($request['full_url']))
+                    $pageData['URL'] = $request['full_url'];
+                if (isset($rawRequest['startTime'])) {
+                    $startOffset = round(($rawRequest['startTime'] - $rawPageData['startTime']));
+                    if ($startOffset > $pageData['fullyLoaded'])
+                        $pageData['fullyLoaded'] = $startOffset;
+                }
+                if (isset($rawRequest['endTime'])) {
+                    $endOffset = round(($rawRequest['endTime'] - $rawPageData['startTime']));
+                    if ($endOffset > $pageData['fullyLoaded'])
+                        $pageData['fullyLoaded'] = $endOffset;
+                }
+                if (!isset($pageData['TTFB']) &&
+                    $request['ttfb_ms'] >= 0 &&
+                    ($request['responseCode'] == 200 ||
+                        $request['responseCode'] == 304)
+                ) {
+                    $pageData['TTFB'] = $request['load_start'] + $request['ttfb_ms'];
+                    if ($request['ssl_end'] >= 0 &&
+                        $request['ssl_start'] >= 0
+                    ) {
+                        $pageData['basePageSSLTime'] = $request['ssl_end'] - $request['ssl_start'];
+                    }
+                }
+                $pageData['bytesOut'] += $request['bytesOut'];
+                $pageData['bytesIn'] += $request['bytesIn'];
+                $pageData['requests']++;
+                if ($request['load_start'] < $pageData['docTime']) {
+                    $pageData['bytesOutDoc'] += $request['bytesOut'];
+                    $pageData['bytesInDoc'] += $request['bytesIn'];
+                    $pageData['requestsDoc']++;
+                }
+                if ($request['responseCode'] == 200)
+                    $pageData['responses_200']++;
+                elseif ($request['responseCode'] == 404) {
+                    $pageData['responses_404']++;
+                    $pageData['result'] = 99999;
+                } else
+                    $pageData['responses_other']++;
+
+                $requests[] = $request;
             }
         }
         $pageData['load_start'] = $requests[0]['load_start'];
