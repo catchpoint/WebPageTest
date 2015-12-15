@@ -247,32 +247,13 @@ void TestServer::MongooseCallback(enum mg_event event,
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/request_data") == 0) {
       CString body = GetPostBody(conn, request_info);
-      //OutputDebugStringA("\n\n*****\n\n");
-      //OutputDebugString(body);
+      OutputDebugStringA("\n\n*****\n\n");
+      OutputDebugString(body);
       requests_.ProcessBrowserRequest(body);
-      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
-    } else if (strcmp(request_info->uri, "/event/netlog") == 0) {
-      CStringA body = GetPostBodyA(conn, request_info);
-      HANDLE hFile = CreateFile(L"c:\\netlog.json", GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
-      if (hFile != INVALID_HANDLE_VALUE) {
-        DWORD bytes;
-        WriteFile(hFile, (LPCSTR)body, body.GetLength(), &bytes, 0);
-        CloseHandle(hFile);
-      }
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/user_timing") == 0) {
       CString body = GetPostBody(conn, request_info);
       test_state_.SetUserTiming(body);
-      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
-    } else if (strcmp(request_info->uri, "/event/dns_time") == 0) {
-      CString body = GetPostBody(conn, request_info);
-      //OutputDebugString(L"*** DNS: " + body);
-      requests_.SyncDNSTime(body);
-      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
-    } else if (strcmp(request_info->uri, "/event/connect_time") == 0) {
-      CString body = GetPostBody(conn, request_info);
-      //OutputDebugString(L"*** Connect: " + body);
-      requests_.SyncConnectTime(body);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/console_log") == 0) {
       if (test_state_._active) {
