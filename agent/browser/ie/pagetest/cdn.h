@@ -108,6 +108,7 @@ CDN_PROVIDER cdnList[] = {
 	{".incapdns.net", _T("Incapsula"}),
 	{".squixa.net", _T("section.io"}),
 	{".bisongrid.net", _T("Bison Grid")},
+	{".cdn.gocache.net", _T("GoCache")},
 	{NULL, NULL}
 };
 
@@ -144,5 +145,6 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
 	{"server", "tsa_b", _T("Twitter")},
 	{"X-Cache", "cache.51cdn.com", _T("ChinaNetCenter")},
 	{"X-CDN", "Incapsula", _T("Incapsula")},
-	{"X-Iinfo", "", _T("Incapsula")}
+	{"X-Iinfo", "", _T("Incapsula")},
+	{"server", "gocache", _T("GoCache")}
 };

@@ -160,6 +160,7 @@ CDN_PROVIDER cdnList[] = {
   {".aads-cng.net", "Aryaka"},
   {".squixa.net", "section.io"},
   {".bisongrid.net", "Bison Grid"},
+  {".cdn.gocache.net", "GoCache"},
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -192,7 +193,8 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"X-Cache", "cache.51cdn.com", "ChinaNetCenter"},
   {"X-CDN", "Incapsula", "Incapsula"},
   {"X-Iinfo", "", "Incapsula"},
-  {"X-Ar-Debug", "", "Aryaka"}
+  {"X-Ar-Debug", "", "Aryaka"},
+  {"server", "gocache", "GoCache"}
 };
 
 // Specific providers that require multiple headers
