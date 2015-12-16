@@ -204,6 +204,16 @@ Job.prototype.processScriptCommand = function(command, value, extra) {
       } else {
         logger.debug("Invalid setDns command parameters");
       }
+    } else if (command == 'setdns') {
+      if (value !== undefined &&
+          extra !== undefined) {
+        var host = value.trim();
+        var ip = extra.trim();
+        if (host.length && ip.length)
+          this.task.hostsFile += ip + " " + host + "\n";
+      } else {
+        logger.debug("Invalid setDns command parameters");
+      }
     } else if (command == 'setdnsname') {
       // special-case the SPOF blackhole testing
       if (value !== undefined &&
