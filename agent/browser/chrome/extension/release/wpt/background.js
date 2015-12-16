@@ -13967,13 +13967,20 @@ var USER_TIMING_SCRIPT = '\
     if (window["performance"] != undefined &&\
         (window.performance.getEntriesByType ||\
          window.performance.webkitGetEntriesByType)) {\
-      if (window.performance.getEntriesByType)\
+      if (window.performance.getEntriesByType) {\
         var marks = window.performance.getEntriesByType("mark");\
-      else\
+        var measures = window.performance.getEntriesByType("measure");\
+      } else {\
         var marks = window.performance.webkitGetEntriesByType("mark");\
+        var measures = window.performance.webkitGetEntriesByType("measure");\
+      }\
       if (marks.length) {\
         for (var i = 0; i < marks.length; i++)\
           m.push({"entryType": marks[i].entryType, "name": marks[i].name, "startTime": marks[i].startTime});\
+      }\
+      if (measures.length) {\
+        for (var i = 0; i < measures.length; i++)\
+          m.push({"entryType": measures[i].entryType, "name": measures[i].name, "startTime": measures[i].startTime, "duration": measures[i].duration});\
       }\
     }\
   } catch(e) {}\
@@ -14635,7 +14642,7 @@ wpt.chromeDebugger.collectUserTiming = function(callback) {
     if (result !== undefined && result.length) {
       for (var i = 0; i < result.length; i++) {
         var mark = result[i];
-        mark.type = 'mark';
+        mark.type = result['entryType'];
         wpt.chromeDebugger.sendEvent('timed_event', JSON.stringify(mark));
       }
     }

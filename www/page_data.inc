@@ -282,6 +282,7 @@ function loadPageData($file, $options = null)
                                 'bytesInDoc' => @(int)$fields[46],
                                 'connections' => @(int)$fields[10],
                                 'requests' => @(int)$fields[11],
+                                'requestsFull' => @(int)$fields[11],
                                 'requestsDoc' => @(int)$fields[49],
                                 'responses_200' => @(int)$fields[12],
                                 'responses_404' => @(int)$fields[15],
@@ -625,17 +626,30 @@ function loadUserTimingData(&$pageData, $testPath, $run, $cached) {
       $lastEvent = 0;
       foreach ($events as $event) {
         if (is_array($event) &&
-            array_key_exists('name', $event) &&
-            array_key_exists('startTime', $event)) {
+            isset($event['name']) &&
+            isset($event['startTime']) &&
+            isset($event['entryType'])) {
           $name = preg_replace('/[^a-zA-Z0-9\.\-_\(\) ]/', '_', $event['name']);
-          $time = intval($event['startTime'] + 0.5);
-          if ($time > 0 && $time < 3600000) {
-            if ($event['startTime'] > $lastEvent)
-              $lastEvent = $event['startTime'];
-            $pageData["userTime.$name"] = $time;
-            if (!isset($pageData['userTimes']))
-              $pageData['userTimes'] = array();
-            $pageData['userTimes'][$name] = $time;
+          if ($event['entryType'] == 'mark') {
+            $time = intval($event['startTime'] + 0.5);
+            if ($time > 0 && $time < 3600000) {
+              if ($event['startTime'] > $lastEvent)
+                $lastEvent = $event['startTime'];
+              $pageData["userTime.$name"] = $time;
+              if (!isset($pageData['userTimes']))
+                $pageData['userTimes'] = array();
+              $pageData['userTimes'][$name] = $time;
+            }
+          } elseif ($event['entryType'] == 'measure' &&
+                    isset($event['duration'])) {
+              $duration = intval($event['duration'] + 0.5);
+              $pageData["userTimingMeasure.$name"] = $duration;
+              if (!isset($pageData['userTimingMeasures']))
+                $pageData['userTimingMeasures'] = array();
+              $pageData['userTimingMeasures'][] =
+                  array('name' => $event['name'],
+                        'startTime' => $event['startTime'],
+                        'duration' => $event['duration']);
           }
         }
       }

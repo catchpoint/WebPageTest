@@ -247,8 +247,8 @@ void TestServer::MongooseCallback(enum mg_event event,
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/request_data") == 0) {
       CString body = GetPostBody(conn, request_info);
-      OutputDebugStringA("\n\n*****\n\n");
-      OutputDebugString(body);
+      //OutputDebugStringA("\n\n*****\n\n");
+      //OutputDebugString(body);
       requests_.ProcessBrowserRequest(body);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/user_timing") == 0) {
