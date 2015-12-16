@@ -356,6 +356,8 @@ void WebBrowser::ConfigureFirefoxPrefs() {
         }
       }
     }
+    // Enable http basic auth using http://user:pass@domain.com
+    user_prefs += "user_pref(\"network.http.phishy-userpass-length\", 255);\r\n";
     if (_test._noscript) {
       user_prefs += "user_pref(\"javascript.enabled\", false);\r\n";
     }
