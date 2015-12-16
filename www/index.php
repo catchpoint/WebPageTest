@@ -456,6 +456,13 @@ $loc = ParseLocations($locations);
                                     }
                                     ?>
                                     <li>
+                                        <label for="hostResolverRules" style="width: auto;">
+                                        <a href="https://github.com/atom/electron/blob/master/docs/api/chrome-command-line-switches.md#--host-rulesrules">Host Rules</a><br>
+                                        <small>i.e. MAP * 1.2.3.4</small>
+                                        </label>
+                                        <input type="text" name="hostResolverRules" id="hostResolverRules" class="text" style="width: 400px;">
+                                    </li>
+                                    <li>
                                         <label for="cmdline" style="width: auto;">
                                         Command-line<br>
                                         <small>Custom options</small>

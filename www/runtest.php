@@ -236,6 +236,11 @@
                 $test['ignoreSSL'] = 1;
               }
             }
+            if (isset($req_hostResolverRules) && preg_match('/^[a-zA-Z0-9 \.\:\*,]+$/i', $req_hostResolverRules)) {
+              if (strlen($test['addCmdLine']))
+                $test['addCmdLine'] .= ' ';
+              $test['addCmdLine'] .= "--host-resolver-rules=\"$req_hostResolverRules,EXCLUDE localhost,EXCLUDE 127.0.0.1\"";
+            }
 
             // see if we need to process a template for these requests
             if (isset($req_k) && strlen($req_k)) {
