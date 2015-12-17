@@ -71,7 +71,7 @@ public:
   bool IsWebDriverDone();
   void SetNewPageLoad();
   bool IsNewPageLoad();
-  void Save();
+  void Save(bool merge = false);
   void Cleanup();
   void AsyncShutdown();
   void ShutdownNow();

@@ -83,5 +83,5 @@ private:
                       const struct mg_request_info *request_info);
   bool OkToStart();
 
-  void SaveResultsIfNeeded();
+  void SaveResults();
 };

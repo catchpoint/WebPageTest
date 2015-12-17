@@ -128,30 +128,32 @@ void Results::Reset(void) {
 /*-----------------------------------------------------------------------------
   Save the results out to the appropriate files
 -----------------------------------------------------------------------------*/
-void Results::Save(void) {
+void Results::Save(bool merge) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save()\n"));
   if (!_saved) {
     ProcessRequests();
     if (_test._log_data) {
-      reported_step_++;
-      if (_test._current_event_name.IsEmpty())
-        current_step_name_.Format("Step %d", reported_step_);
-      else
-        current_step_name_ = _test._current_event_name;
-      OptimizationChecks checks(_requests, _test_state, _test, _dns);
-      checks.Check();
-      base_page_CDN_ = checks._base_page_CDN;
-      SaveRequests(checks);
-      SaveImages();
-      SaveProgressData();
-      SaveStatusMessages();
-      SavePageData(checks);
-      SaveResponseBodies();
-      SaveConsoleLog();
-      SaveTimedEvents();
-      SaveCustomMetrics();
-      _trace.Write(_file_base + TRACE_FILE);
-      _trace_netlog.Write(_file_base + TRACE_NETLOG_FILE);
+      if (!merge) {
+        reported_step_++;
+        if (_test._current_event_name.IsEmpty())
+          current_step_name_.Format("Step %d", reported_step_);
+        else
+          current_step_name_ = _test._current_event_name;
+        OptimizationChecks checks(_requests, _test_state, _test, _dns);
+        checks.Check();
+        base_page_CDN_ = checks._base_page_CDN;
+        SaveImages();
+        SaveProgressData();
+        SaveStatusMessages();
+        SavePageData(checks);
+        SaveResponseBodies();
+        SaveConsoleLog();
+        SaveTimedEvents();
+        SaveCustomMetrics();
+        _trace.Write(_file_base + TRACE_FILE);
+        _trace_netlog.Write(_file_base + TRACE_NETLOG_FILE);
+      }
+      SaveRequests();
     }
     if (shared_result == -1 || shared_result == 0 || shared_result == 99999)
       shared_result = _test_state._test_result;
@@ -962,7 +964,7 @@ void Results::ProcessRequests(void) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Results::SaveRequests(OptimizationChecks& checks) {
+void Results::SaveRequests(void) {
   HANDLE file = CreateFile(_file_base + REQUEST_DATA_FILE, GENERIC_WRITE, 0, 
                             NULL, OPEN_ALWAYS, 0, 0);
   if (file != INVALID_HANDLE_VALUE) {

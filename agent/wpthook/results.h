@@ -48,7 +48,7 @@ public:
   ~Results(void);
 
   void Reset(void);
-  void Save(void);
+  void Save(bool merge = false);
 
   // test information
   CString _url;
@@ -97,7 +97,7 @@ private:
 
   void ProcessRequests(void);
   void SavePageData(OptimizationChecks&);
-  void SaveRequests(OptimizationChecks&);
+  void SaveRequests(void);
   void SaveRequest(HANDLE file, HANDLE headers, Request * request, int index);
   void SaveImages(void);
   void SaveVideo(void);
