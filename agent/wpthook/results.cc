@@ -131,7 +131,7 @@ void Results::Reset(void) {
 void Results::Save(bool merge) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save()\n"));
   if (!_saved) {
-    ProcessRequests();
+    ProcessRequests(merge);
     if (_test._log_data) {
       if (!merge) {
         reported_step_++;
@@ -140,7 +140,7 @@ void Results::Save(bool merge) {
         else
           current_step_name_ = _test._current_event_name;
         OptimizationChecks checks(_requests, _test_state, _test, _dns);
-        checks.Check();
+        // checks.Check();
         base_page_CDN_ = checks._base_page_CDN;
         SaveImages();
         SaveProgressData();
@@ -818,7 +818,7 @@ void Results::SavePageData(OptimizationChecks& checks){
   }
 }
 
-void Results::ProcessRequests(void) {
+void Results::ProcessRequests(bool merge) {
   count_connect_ = 0;
   count_connect_doc_ = 0;
   count_dns_ = 0;
@@ -881,7 +881,7 @@ void Results::ProcessRequests(void) {
     WptTrace(loglevel::kFunction, _T("[wpthook] - Processing request %S%S"), (LPCSTR)request->GetHost(), (LPCSTR)request->_request_data.GetObject());
     if (request && 
         (!request->_from_browser || !NativeRequestExists(request))) {
-      request->Process();
+      request->Process(merge ? _test_state._prev_step_start : _test_state._start);
       int result_code = request->GetResult();
       int doc_increment = 0;
       if (request->_start.QuadPart <= _test_state._on_load.QuadPart)

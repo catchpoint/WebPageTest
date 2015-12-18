@@ -241,7 +241,7 @@ public:
   void BytesOut(size_t len);
 
   void MatchConnections();
-  bool Process();
+  bool Process(LARGE_INTEGER step_start_time);
   CStringA GetRequestHeader(CStringA header);
   CStringA GetResponseHeader(CStringA header);
   bool HasResponseHeaders();

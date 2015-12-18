@@ -106,6 +106,7 @@ public:
   void TitleSet(CString title);
   void UpdateBrowserWindow();
   DWORD ElapsedMsFromStart(LARGE_INTEGER end) const;
+  DWORD ElapsedMs(LARGE_INTEGER start, LARGE_INTEGER end) const;
   void FindBrowserNameAndVersion();
   void AddConsoleLogMessage(CString message);
   void AddTimedEvent(CString timed_event);
@@ -120,6 +121,7 @@ public:
   void CheckResponsive();
 
   // times
+  LARGE_INTEGER _prev_step_start;
   LARGE_INTEGER _start;
   LARGE_INTEGER _step_start;
   LARGE_INTEGER _first_navigate;
@@ -213,7 +215,6 @@ private:
   void CheckTitle();
   void FindViewport(bool force = false);
   void RecordTime(CString time_name, DWORD time, LARGE_INTEGER * out_time);
-  DWORD ElapsedMs(LARGE_INTEGER start, LARGE_INTEGER end) const;
   void GetCPUTime(FILETIME &cpu_time, FILETIME &total_time);
   double GetElapsedMilliseconds(FILETIME &start, FILETIME &end);
 };

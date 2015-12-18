@@ -72,6 +72,7 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   FindBrowserNameAndVersion();
   paint_msg_ = RegisterWindowMessage(_T("WPT Browser Paint"));
   _timeout_start_time.QuadPart = 0;
+  _prev_step_start.QuadPart = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -170,6 +171,9 @@ void __stdcall CollectData(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
 -----------------------------------------------------------------------------*/
 void TestState::Start() {
   WptTrace(loglevel::kFunction, _T("[wpthook] TestState::Start()\n"));
+  if (_prev_step_start.QuadPart == 0) {
+    _prev_step_start.QuadPart = _step_start.QuadPart;
+  }
   Reset();
   QueryPerformanceCounter(&_step_start);
   GetSystemTimeAsFileTime(&_start_time);

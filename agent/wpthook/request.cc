@@ -606,7 +606,7 @@ void Request::MatchConnections() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool Request::Process() {
+bool Request::Process(LARGE_INTEGER step_start_time) {
   bool ret = false;
 
   EnterCriticalSection(&cs);
@@ -615,22 +615,22 @@ bool Request::Process() {
 
     // calculate the times
     if (_start.QuadPart && _end.QuadPart) {
-      _ms_start = _test_state.ElapsedMsFromStart(_start);
-      _ms_first_byte = _test_state.ElapsedMsFromStart(_first_byte);
-      _ms_end = _test_state.ElapsedMsFromStart(_end);
+      _ms_start = _test_state.ElapsedMs(step_start_time, _start);
+      _ms_first_byte = _test_state.ElapsedMs(step_start_time, _first_byte);
+      _ms_end = _test_state.ElapsedMs(step_start_time, _end);
       ret = true;
     }
 
     if (_dns_start.QuadPart && _dns_end.QuadPart) {
-      _ms_dns_start = _test_state.ElapsedMsFromStart(_dns_start);
-      _ms_dns_end = _test_state.ElapsedMsFromStart(_dns_end);
+      _ms_dns_start = _test_state.ElapsedMs(step_start_time, _dns_start);
+      _ms_dns_end = _test_state.ElapsedMs(step_start_time, _dns_end);
     }
     if (_connect_start.QuadPart && _connect_end.QuadPart) {
-      _ms_connect_start = _test_state.ElapsedMsFromStart(_connect_start);
-      _ms_connect_end = _test_state.ElapsedMsFromStart(_connect_end);
+      _ms_connect_start = _test_state.ElapsedMs(step_start_time, _connect_start);
+      _ms_connect_end = _test_state.ElapsedMs(step_start_time, _connect_end);
       if (_ssl_start.QuadPart && _ssl_end.QuadPart) {
-        _ms_ssl_start = _test_state.ElapsedMsFromStart(_ssl_start);
-        _ms_ssl_end = _test_state.ElapsedMsFromStart(_ssl_end);
+        _ms_ssl_start = _test_state.ElapsedMs(step_start_time, _ssl_start);
+        _ms_ssl_end = _test_state.ElapsedMs(step_start_time, _ssl_end);
       }
     }
 

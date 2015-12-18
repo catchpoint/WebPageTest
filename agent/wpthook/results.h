@@ -95,7 +95,7 @@ private:
   DWORD peak_memory_;
   DWORD peak_process_count_;
 
-  void ProcessRequests(void);
+  void ProcessRequests(bool merge);
   void SavePageData(OptimizationChecks&);
   void SaveRequests(void);
   void SaveRequest(HANDLE file, HANDLE headers, Request * request, int index);
