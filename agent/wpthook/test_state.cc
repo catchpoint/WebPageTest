@@ -923,3 +923,15 @@ void TestState::CheckResponsive() {
                             false);
   }
 }
+
+void TestState::ResetOverallRequests() {
+  _overall_requests = 0;
+}
+
+void TestState::SetOverallRequests(int n_requests) {
+  _overall_requests = n_requests;
+}
+
+int TestState::GetOverallRequests() {
+  return _overall_requests;
+}

@@ -205,6 +205,7 @@ void TestServer::MongooseCallback(enum mg_event event,
     } else if (strcmp(request_info->uri, "/event/before_unload") == 0) {
       hook_.SetNewPageLoad();
       test_state_._prev_step_start.QuadPart = 0;  // reset since this is going to be a new step
+      test_state_.ResetOverallRequests();
       hook_.ResetHookReady();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/next_webdriver_action") == 0) {

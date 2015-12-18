@@ -119,6 +119,9 @@ public:
   void UnLock();
   void ResizeBrowserForResponsiveTest();
   void CheckResponsive();
+  void ResetOverallRequests(void);
+  void SetOverallRequests(int n_requests);
+  int GetOverallRequests(void);
 
   // times
   LARGE_INTEGER _prev_step_start;
@@ -182,6 +185,7 @@ public:
 private:
   bool  _started;
   int   _next_document;
+  int _overall_requests;
   Results&  _results;
   ScreenCapture& _screen_capture;
   DevTools &_dev_tools;

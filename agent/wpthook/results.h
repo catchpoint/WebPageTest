@@ -97,7 +97,7 @@ private:
 
   void ProcessRequests(bool merge);
   void SavePageData(OptimizationChecks&);
-  void SaveRequests(void);
+  void SaveRequests(bool merge);
   void SaveRequest(HANDLE file, HANDLE headers, Request * request, int index);
   void SaveImages(void);
   void SaveVideo(void);

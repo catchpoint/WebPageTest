@@ -153,7 +153,7 @@ void Results::Save(bool merge) {
         _trace.Write(_file_base + TRACE_FILE);
         _trace_netlog.Write(_file_base + TRACE_NETLOG_FILE);
       }
-      SaveRequests();
+      SaveRequests(merge);
     }
     if (shared_result == -1 || shared_result == 0 || shared_result == 99999)
       shared_result = _test_state._test_result;
@@ -964,7 +964,7 @@ void Results::ProcessRequests(bool merge) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Results::SaveRequests(void) {
+void Results::SaveRequests(bool merge) {
   HANDLE file = CreateFile(_file_base + REQUEST_DATA_FILE, GENERIC_WRITE, 0, 
                             NULL, OPEN_ALWAYS, 0, 0);
   if (file != INVALID_HANDLE_VALUE) {
@@ -987,7 +987,7 @@ void Results::SaveRequests(void) {
     _requests.Lock();
     // now record the results
     // do a selection sort to pick out the requests in order of start time
-    int i = 0;
+    int i = merge ? _test_state.GetOverallRequests() : 0;
     bool first_custom_rule = true;
     Request * request = NULL;
     do {
@@ -1042,6 +1042,7 @@ void Results::SaveRequests(void) {
         }
       }
     } while (request);
+    _test_state.SetOverallRequests(i);
     _requests.Unlock();
     if (custom_rules_file != INVALID_HANDLE_VALUE) {
       WriteFile(custom_rules_file, "}", 1, &bytes, 0);
