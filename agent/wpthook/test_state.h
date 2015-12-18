@@ -119,6 +119,7 @@ public:
   void UnLock();
   void ResizeBrowserForResponsiveTest();
   void CheckResponsive();
+  void ResetPrevStepStart(void);
   void ResetOverallRequests(void);
   void SetOverallRequests(int n_requests);
   int GetOverallRequests(void);

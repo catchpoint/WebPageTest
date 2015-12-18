@@ -924,6 +924,10 @@ void TestState::CheckResponsive() {
   }
 }
 
+void TestState::ResetPrevStepStart() {
+  _prev_step_start.QuadPart = 0;
+}
+
 void TestState::ResetOverallRequests() {
   _overall_requests = 0;
 }
