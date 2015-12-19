@@ -240,10 +240,10 @@ void WptHook::Report() {
   }
 }
 
-void WptHook::Save() {
+void WptHook::Save(bool merge) {
   if (!reported_) {
     reported_ = true;
-    results_.Save();
+    results_.Save(merge);
   }
 }
 

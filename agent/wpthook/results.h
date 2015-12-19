@@ -48,7 +48,7 @@ public:
   ~Results(void);
 
   void Reset(void);
-  void Save(void);
+  void Save(bool merge = false);
 
   // test information
   CString _url;
@@ -95,9 +95,9 @@ private:
   DWORD peak_memory_;
   DWORD peak_process_count_;
 
-  void ProcessRequests(void);
+  void ProcessRequests(bool merge);
   void SavePageData(OptimizationChecks&);
-  void SaveRequests(OptimizationChecks&);
+  void SaveRequests(bool merge);
   void SaveRequest(HANDLE file, HANDLE headers, Request * request, int index);
   void SaveImages(void);
   void SaveVideo(void);

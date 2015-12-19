@@ -148,15 +148,16 @@ void TestServer::Stop(void){
   _globaltest__server = NULL;
 }
 
-void TestServer::SaveResultsIfNeeded(void) {
+void TestServer::SaveResults(void) {
   if (test_state_._active) {
     // Stop the current state.
     test_state_.Done(true);
     if (hook_.IsNewPageLoad()) {
       WptTrace(loglevel::kTrace, _T("[wpthook] An active test state. Saving incremental results"));
-      hook_.Save();
+      hook_.Save(false);
     } else {
-      WptTrace(loglevel::kTrace, _T("[wpthook] An active test state. Discarding incremental results"));
+      WptTrace(loglevel::kTrace, _T("[wpthook] An active test state. Merging incremental results"));
+      hook_.Save(true);
     }
   } else {
     WptTrace(loglevel::kTrace, _T("[wpthook] No active test state."));
@@ -197,16 +198,18 @@ void TestServer::MongooseCallback(enum mg_event event,
         SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, _T("{\"ready\": false}"));
       }
     } else if (strcmp(request_info->uri, "/event/webdriver_done") == 0) {
-      SaveResultsIfNeeded();
+      SaveResults();
       hook_.Cleanup();
       hook_.AsyncShutdown();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/before_unload") == 0) {
       hook_.SetNewPageLoad();
+      test_state_.ResetPrevStepStart();
+      test_state_.ResetOverallRequests();
       hook_.ResetHookReady();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/next_webdriver_action") == 0) {
-      SaveResultsIfNeeded();
+      SaveResults();
       hook_.Start();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/task") == 0) {

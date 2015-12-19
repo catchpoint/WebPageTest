@@ -128,30 +128,32 @@ void Results::Reset(void) {
 /*-----------------------------------------------------------------------------
   Save the results out to the appropriate files
 -----------------------------------------------------------------------------*/
-void Results::Save(void) {
+void Results::Save(bool merge) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save()\n"));
   if (!_saved) {
-    ProcessRequests();
+    ProcessRequests(merge);
     if (_test._log_data) {
-      reported_step_++;
-      if (_test._current_event_name.IsEmpty())
-        current_step_name_.Format("Step %d", reported_step_);
-      else
-        current_step_name_ = _test._current_event_name;
-      OptimizationChecks checks(_requests, _test_state, _test, _dns);
-      checks.Check();
-      base_page_CDN_ = checks._base_page_CDN;
-      SaveRequests(checks);
-      SaveImages();
-      SaveProgressData();
-      SaveStatusMessages();
-      SavePageData(checks);
-      SaveResponseBodies();
-      SaveConsoleLog();
-      SaveTimedEvents();
-      SaveCustomMetrics();
-      _trace.Write(_file_base + TRACE_FILE);
-      _trace_netlog.Write(_file_base + TRACE_NETLOG_FILE);
+      if (!merge) {
+        reported_step_++;
+        if (_test._current_event_name.IsEmpty())
+          current_step_name_.Format("Step %d", reported_step_);
+        else
+          current_step_name_ = _test._current_event_name;
+        OptimizationChecks checks(_requests, _test_state, _test, _dns);
+        // checks.Check();
+        base_page_CDN_ = checks._base_page_CDN;
+        SaveImages();
+        SaveProgressData();
+        SaveStatusMessages();
+        SavePageData(checks);
+        SaveResponseBodies();
+        SaveConsoleLog();
+        SaveTimedEvents();
+        SaveCustomMetrics();
+        _trace.Write(_file_base + TRACE_FILE);
+        _trace_netlog.Write(_file_base + TRACE_NETLOG_FILE);
+      }
+      SaveRequests(merge);
     }
     if (shared_result == -1 || shared_result == 0 || shared_result == 99999)
       shared_result = _test_state._test_result;
@@ -816,7 +818,7 @@ void Results::SavePageData(OptimizationChecks& checks){
   }
 }
 
-void Results::ProcessRequests(void) {
+void Results::ProcessRequests(bool merge) {
   count_connect_ = 0;
   count_connect_doc_ = 0;
   count_dns_ = 0;
@@ -879,7 +881,7 @@ void Results::ProcessRequests(void) {
     WptTrace(loglevel::kFunction, _T("[wpthook] - Processing request %S%S"), (LPCSTR)request->GetHost(), (LPCSTR)request->_request_data.GetObject());
     if (request && 
         (!request->_from_browser || !NativeRequestExists(request))) {
-      request->Process();
+      request->Process(merge ? _test_state._prev_step_start : _test_state._start);
       int result_code = request->GetResult();
       int doc_increment = 0;
       if (request->_start.QuadPart <= _test_state._on_load.QuadPart)
@@ -962,7 +964,7 @@ void Results::ProcessRequests(void) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Results::SaveRequests(OptimizationChecks& checks) {
+void Results::SaveRequests(bool merge) {
   HANDLE file = CreateFile(_file_base + REQUEST_DATA_FILE, GENERIC_WRITE, 0, 
                             NULL, OPEN_ALWAYS, 0, 0);
   if (file != INVALID_HANDLE_VALUE) {
@@ -985,7 +987,7 @@ void Results::SaveRequests(OptimizationChecks& checks) {
     _requests.Lock();
     // now record the results
     // do a selection sort to pick out the requests in order of start time
-    int i = 0;
+    int i = merge ? _test_state.GetOverallRequests() : 0;
     bool first_custom_rule = true;
     Request * request = NULL;
     do {
@@ -1040,6 +1042,7 @@ void Results::SaveRequests(OptimizationChecks& checks) {
         }
       }
     } while (request);
+    _test_state.SetOverallRequests(i);
     _requests.Unlock();
     if (custom_rules_file != INVALID_HANDLE_VALUE) {
       WriteFile(custom_rules_file, "}", 1, &bytes, 0);
