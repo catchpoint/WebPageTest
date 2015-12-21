@@ -59,11 +59,25 @@ function loadPageRunData($testPath, $run, $cached, &$requests = null, $options =
         $ret2 = loadPageData("$testPath/{$run}{$cachedText}_IEWPG.txt", $options, $multistep);
         if ($multistep && is_array($ret) && is_array($ret2)) {
           if (count($ret) == count($ret2)) {
-              // devtools don't provide end timings for load event and dom content
-              // loaded event. Retrive event duration from WPT hook.
             for ($i = 0; $i < count($ret); $i++) {
-                $ret[$i]["domContentLoadedEventEnd"] += $ret2[$i]["domContentLoadedEventEnd"] - $ret2[$i]["domContentLoadedEventStart"];
-                $ret[$i]["loadEventEnd"] += $ret2[$i]["loadEventEnd"] - $ret2[$i]["loadEventStart"];
+              // devtools have an imprecise page metrics that can push dom
+              // content loaded before onload.
+              // For lack of better solution, we use devtools loadEventFired to 
+              // synchronize the clocks between hook timing and devtools timing.
+              // Then use hook timing for load event and dom content loaded.
+
+              // Use loadEventStart as is from devtools and compute load event 
+              // duration from WPT hook.
+              $ret[$i]["loadEventEnd"] += $ret2[$i]["loadEventEnd"] - $ret2[$i]["loadEventStart"];
+
+              // Find dom content loaded start by looking at the difference
+              // between load event and dom content loaded from the hook.
+              $ret[$i]["domContentLoadedEventStart"] = 
+                  $ret[$i]["loadEventStart"] - ($ret2[$i]["loadEventStart"] - $ret2[$i]["domContentLoadedEventStart"]);
+
+              // Retrieve dom content loaded event duration from WPT hook.
+              $ret[$i]["domContentLoadedEventEnd"] = $ret[$i]["domContentLoadedEventStart"] +
+                  ($ret2[$i]["domContentLoadedEventEnd"] - $ret2[$i]["domContentLoadedEventStart"]);
             }
           } else {
             $error_msg =
