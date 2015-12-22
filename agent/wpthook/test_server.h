@@ -77,5 +77,7 @@ private:
                              const CString key) const;
   CString GetPostBody(struct mg_connection *conn,
                       const struct mg_request_info *request_info);
+  CStringA GetPostBodyA(struct mg_connection *conn,
+                        const struct mg_request_info *request_info);
   bool OkToStart();
 };

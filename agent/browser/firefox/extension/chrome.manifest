@@ -1,3 +1,4 @@
 content wptdriver chrome/content/
 
-overlay chrome://browser/content/browser.xul	chrome://wptdriver/content/overlay.xul
+overlay chrome://global/content/commonDialog.xul chrome://wptdriver/content/dialogOverlay.xul
+overlay chrome://browser/content/browser.xul chrome://wptdriver/content/overlay.xul

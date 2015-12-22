@@ -5,6 +5,7 @@
 */
 function UpdateFeeds()
 {
+  if (is_file('./settings/feeds.inc')) {
     if( !is_dir('./tmp') )
         mkdir('./tmp', 0777);
 
@@ -90,6 +91,7 @@ function UpdateFeeds()
         file_put_contents('./tmp/feeds.dat', json_encode($feedData));
         Unlock($lock);
     }
+  }
 }
 
 /**

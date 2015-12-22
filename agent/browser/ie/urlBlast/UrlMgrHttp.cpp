@@ -167,7 +167,7 @@ void CUrlMgrHttp::Start()
 			CString ec2;
 			if( ec2Instance.GetLength() )
 				ec2 = CString(_T("&ec2=")) + ec2Instance;
-			getWork = CString(_T("getwork.php?shards=1")) + videoStr + CString(_T("&location=")) + location + CString(_T("&key=")) + key + ec2;
+			getWork = CString(_T("getwork.php?reboot=1&shards=1")) + videoStr + CString(_T("&location=")) + location + CString(_T("&key=")) + key + ec2;
 			workDone = CString(object) + _T("workdone.php");
 			resultImage = CString(object) + _T("resultimage.php");
 
@@ -227,6 +227,11 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 
 				log.Trace(_T("Retrieved video job '%s' in '%s'"), (LPCTSTR)context->testId, (LPCTSTR)info.zipFileDir);
 			}
+      else if ( job == "Reboot" )
+      {
+        ret = true;
+        info.reboot = true;
+      }
 			else
 			{
 				// default settings

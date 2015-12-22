@@ -104,10 +104,12 @@ public:
   void TitleSet(CString title);
   void UpdateBrowserWindow();
   DWORD ElapsedMsFromStart(LARGE_INTEGER end) const;
+  DWORD ElapsedMsFromLaunch(LARGE_INTEGER end) const;
   void FindBrowserNameAndVersion();
   void AddConsoleLogMessage(CString message);
   void AddTimedEvent(CString timed_event);
   void SetCustomMetrics(CString custom_metrics);
+  void SetUserTiming(CString user_timing);
   CString GetConsoleLogJSON();
   CString GetTimedEventsJSON();
   void GetElapsedCPUTimes(double &doc, double &end,
@@ -118,6 +120,7 @@ public:
   void CheckResponsive();
 
   // times
+  LARGE_INTEGER _launch;
   LARGE_INTEGER _start;
   LARGE_INTEGER _step_start;
   LARGE_INTEGER _first_navigate;
@@ -134,6 +137,9 @@ public:
   LARGE_INTEGER _ms_frequency;
   LARGE_INTEGER _title_time;
   SYSTEMTIME    _start_time;
+
+  //Timeout measurer
+  LARGE_INTEGER _timeout_start_time;
 
   LARGE_INTEGER _first_byte;
   int _doc_requests;
@@ -165,13 +171,13 @@ public:
   bool received_data_;
 
   HWND  _frame_window;
-  HWND  _document_window;
 
   WptTestHook& _test;
   
   CAtlList<ProgressData>   _progress_data;     // CPU, memory and Bandwidth
   CAtlList<StatusMessage>  _status_messages;   // Browser status
   CString                  _custom_metrics;    // JSON-formatted custom metrics data
+  CString                  _user_timing;       // JSON-formatted user timing data (from Chrome traces)
 
 private:
   bool  _started;
@@ -185,6 +191,7 @@ private:
   CAtlList<CString>        _timed_events; // any supported timed events
   CString process_full_path_;
   CString process_base_exe_;
+  CString last_title_;
 
 
   // tracking of the periodic data capture
@@ -205,6 +212,7 @@ private:
 
   void Done(bool force = false);
   void CollectSystemStats(LARGE_INTEGER &now);
+  void CheckTitle();
   void FindViewport(bool force = false);
   void RecordTime(CString time_name, DWORD time, LARGE_INTEGER * out_time);
   DWORD ElapsedMs(LARGE_INTEGER start, LARGE_INTEGER end) const;

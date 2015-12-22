@@ -1,6 +1,6 @@
 <?php
 include 'common.inc';
-include 'domains.inc';
+require_once('domains.inc');
 
 $page_keywords = array('Domains','Webpagetest','Website Speed Test');
 $page_description = "Website domain breakdown$testLabel";
@@ -12,7 +12,51 @@ $breakdownRv = array();
 $requestsRv = array();
 if( (int)$test[test][fvonly] == 0 )
     $breakdownRv = getDomainBreakdown($id, $testPath, $run, 1, $requestsRv);
+
+if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
+    $domains = array();
+    $firstView = array();
+
+    ksort($breakdownFv);
+    foreach($breakdownFv as $domain => $data) {
+        $entry = array();
+        $entry['domain'] = $domain;
+        $entry['bytes'] = $data['bytes'];
+        $entry['requests'] = $data['requests'];
+        $entry['connections'] = $data['connections'];
+        if (isset($data['cdn_provider']))
+          $entry['cdn_provider'] = $data['cdn_provider'];
+        $firstView[] = $entry;
+    }
+    $domains['firstView'] = $firstView;
+
+    if( (int)$test[test][fvonly] == 0 ) {
+        $repeatView = array();
+
+        ksort($breakdownRv);
+        foreach($breakdownRv as $domain => $data) {
+            $entry = array();
+            $entry['domain'] = $domain;
+            $entry['bytes'] = $data['bytes'];
+            $entry['requests'] = $data['requests'];
+            $entry['connections'] = $data['connections'];
+            if (isset($data['cdn_provider']))
+              $entry['cdn_provider'] = $data['cdn_provider'];
+            $repeatView[] = $entry;
+        }
+        $domains['repeatView'] = $repeatView;
+    }
+
+    $output = array();
+    $output['domains'] = $domains;
+
+    json_response($output);
+
+    exit;
+}
 ?>
+
+
 <!DOCTYPE html>
 <html>
     <head>
@@ -124,10 +168,9 @@ if( (int)$test[test][fvonly] == 0 )
             fvBytes.addRows(<?php echo count($breakdownFv); ?>);
             <?php
             $index = 0;
-            ksort($breakdownFv);
             foreach($breakdownFv as $domain => $data)
             {
-                $domain = strrev($domain);
+                $domain = $domain;
                 echo "dataFv.setValue($index, 0, '$domain');\n";
                 echo "dataFv.setValue($index, 1, {$data['requests']});\n";
                 echo "dataFv.setValue($index, 2, {$data['bytes']});\n";
@@ -175,10 +218,9 @@ if( (int)$test[test][fvonly] == 0 )
                 rvBytes.addRows(<?php echo count($breakdownRv); ?>);
                 <?php
                 $index = 0;
-                ksort($breakdownRv);
                 foreach($breakdownRv as $domain => $data)
                 {
-                    $domain = strrev($domain);
+                    $domain = $domain;
                     echo "dataRv.setValue($index, 0, '$domain');\n";
                     echo "dataRv.setValue($index, 1, {$data['requests']});\n";
                     echo "dataRv.setValue($index, 2, {$data['bytes']});\n";

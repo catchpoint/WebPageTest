@@ -100,15 +100,30 @@ void HttpData::AddChunk(DataChunk& chunk) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void HttpData::AddHeader(const char * header, const char * value) {
+  _header_fields.AddTail(HeaderField(header, value));
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void HttpData::AddBodyChunk(DataChunk& chunk) {
+  if (_body_chunks_size < MAX_DATA_TO_RETAIN) {
+    chunk.CopyDataIfUnowned();
+    _body_chunks.AddTail(chunk);
+    _body_chunks_size += chunk.GetLength();
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 CStringA HttpData::GetHeader(CStringA field_name) {
   ExtractHeaderFields();
   CStringA value;
   POSITION pos = _header_fields.GetHeadPosition();
   while (pos && value.IsEmpty()) {
     HeaderField field = _header_fields.GetNext(pos);
-    if (field.Matches(field_name)) {
+    if (field.Matches(field_name))
       value = field._value;
-    }
   }
   return value;
 }
@@ -133,6 +148,15 @@ void HttpData::CopyData() {
       _headers.Append(_data, header_end - _data + 4);
     }
   }
+
+  if (_headers.IsEmpty() && !_header_fields.IsEmpty()) {
+    POSITION pos = _header_fields.GetHeadPosition();
+    while (pos) {
+      HeaderField field = _header_fields.GetNext(pos);
+      _headers += field._field_name + ": " + field._value + "\r\n";
+    }
+    _headers += "\r\n";
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -147,7 +171,7 @@ void HttpData::ExtractHeaderFields() {
     while (pos > 0) {
       if (line_number > 0) {
         line.Trim();
-        int separator = line.Find(':');
+        int separator = line.Find(':', 1);
         if (separator > 0) {
           _header_fields.AddTail(
               HeaderField(line.Left(separator),
@@ -158,6 +182,16 @@ void HttpData::ExtractHeaderFields() {
       line = _headers.Tokenize("\r\n", pos);
     }
   }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void RequestData::AddHeader(const char * header, const char * value) {
+  HttpData::AddHeader(header, value);
+  if (!lstrcmpiA(header, ":method"))
+    _method = value;
+  else if (!lstrcmpiA(header, ":path"))
+    _object = value;
 }
 
 /*-----------------------------------------------------------------------------
@@ -175,6 +209,16 @@ void RequestData::ProcessRequestLine() {
         _object = line.Tokenize(" ", pos).Trim();
       }
     }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void ResponseData::AddHeader(const char * header, const char * value) {
+  HttpData::AddHeader(header, value);
+  if (!lstrcmpiA(header, ":status")) {
+    _result = atoi(value);
+    _protocol_version = 2.0;
   }
 }
 
@@ -217,43 +261,55 @@ void ResponseData::ProcessStatusLine() {
   _data_in member will point to the response data
 ---------------------------------------------------------------------------*/
 void ResponseData::Dechunk() {
-  CopyData();
-  if (!_headers.IsEmpty()) {
-    DWORD headers_len = _headers.GetLength();
-    if (_data_size > headers_len && _body.GetLength() == 0) {
-      if (GetHeader("transfer-encoding").Find("chunked") > -1) {
-        // Build a list of the data chunks before allocating the memory.
-        CAtlList<DataChunk> chunks;
-        DWORD data_size = 0;
-        const char * data = _data + headers_len;
-        const char * end = _data + _data_size;
-        while (data < end) {
-          const char * data_chunk = strstr(data, "\r\n");
-          if (data_chunk) {
-            data_chunk += 2;
-            int chunk_len = strtoul(data, NULL, 16);
-            if (chunk_len > 0 && data_chunk + chunk_len < end) {
-              chunks.AddTail(DataChunk(data_chunk, chunk_len));
-              data = data_chunk + chunk_len + 2;
-              data_size += chunk_len;
-              continue;
+  if (!_body.GetLength()) {
+    CopyData();
+    if (!_body_chunks.IsEmpty() && _body_chunks_size > 0) {
+      char * data = _body.AllocateLength(_body_chunks_size);
+      POSITION pos = _body_chunks.GetHeadPosition();
+      while (pos) {
+        DataChunk chunk = _body_chunks.GetNext(pos);
+        memcpy(data, chunk.GetData(), chunk.GetLength());
+        data += chunk.GetLength();
+      }
+      _body_chunks.RemoveAll();
+      _body_chunks_size = 0;
+    } else if (!_headers.IsEmpty()) {
+      DWORD headers_len = _headers.GetLength();
+      if (_data_size > headers_len && _body.GetLength() == 0) {
+        if (GetHeader("transfer-encoding").Find("chunked") > -1) {
+          // Build a list of the data chunks before allocating the memory.
+          CAtlList<DataChunk> chunks;
+          DWORD data_size = 0;
+          const char * data = _data + headers_len;
+          const char * end = _data + _data_size;
+          while (data < end) {
+            const char * data_chunk = strstr(data, "\r\n");
+            if (data_chunk) {
+              data_chunk += 2;
+              int chunk_len = strtoul(data, NULL, 16);
+              if (chunk_len > 0 && data_chunk + chunk_len < end) {
+                chunks.AddTail(DataChunk(data_chunk, chunk_len));
+                data = data_chunk + chunk_len + 2;
+                data_size += chunk_len;
+                continue;
+              }
+            }
+            break;
+          }
+          // Allocate a new buffer to hold the dechunked body.
+          if (data_size) {
+            char * data = _body.AllocateLength(data_size);
+            POSITION pos = chunks.GetHeadPosition();
+            while (pos) {
+              DataChunk chunk = chunks.GetNext(pos);
+              memcpy(data, chunk.GetData(), chunk.GetLength());
+              data += chunk.GetLength();
             }
           }
-          break;
+        } else {
+          // Point to a substring in _data (data is not copied).
+          _body = DataChunk(_data + headers_len, _data_size - headers_len);
         }
-        // Allocate a new buffer to hold the dechunked body.
-        if (data_size) {
-          char * data = _body.AllocateLength(data_size);
-          POSITION pos = chunks.GetHeadPosition();
-          while (pos) {
-            DataChunk chunk = chunks.GetNext(pos);
-            memcpy(data, chunk.GetData(), chunk.GetLength());
-            data += chunk.GetLength();
-          }
-        }
-      } else {
-        // Point to a substring in _data (data is not copied).
-        _body = DataChunk(_data + headers_len, _data_size - headers_len);
       }
     }
   }
@@ -310,11 +366,12 @@ DataChunk ResponseData::GetBody(bool uncompress) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-Request::Request(TestState& test_state, DWORD socket_id,
+Request::Request(TestState& test_state, DWORD socket_id, DWORD stream_id,
                  TrackSockets& sockets, TrackDns& dns, WptTest& test,
                  bool is_spdy, Requests& requests)
   : _processed(false)
   , _socket_id(socket_id)
+  , _stream_id(stream_id)
   , _is_spdy(is_spdy)
   , _ms_start(0)
   , _ms_first_byte(0)
@@ -337,7 +394,8 @@ Request::Request(TestState& test_state, DWORD socket_id,
   , _is_base_page(false)
   , requests_(requests)
   , _bytes_in(0)
-  , _bytes_out(0) {
+  , _bytes_out(0)
+  , _object_size(0) {
   QueryPerformanceCounter(&_start);
   _first_byte.QuadPart = 0;
   _end.QuadPart = 0;
@@ -352,8 +410,9 @@ Request::Request(TestState& test_state, DWORD socket_id,
   _is_ssl = _sockets.IsSslById(socket_id);
   InitializeCriticalSection(&cs);
 
-  WptTrace(loglevel::kFunction, _T("[wpthook] - new request on socket %d\n"), 
-            socket_id);
+  WptTrace(loglevel::kFunction,
+           _T("[wpthook] - new request on socket %d stream %d\n"), 
+           socket_id, stream_id);
 }
 
 
@@ -425,6 +484,96 @@ void Request::DataOut(DataChunk& chunk) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void Request::HeaderIn(const char * header, const char * value, bool pushed) {
+  WptTrace(loglevel::kFunction, 
+      _T("[wpthook] - Request::HeaderIn('%S', '%S')"), header, value);
+
+  EnterCriticalSection(&cs);
+  if (_is_active) {
+    QueryPerformanceCounter(&_end);
+    if (!_first_byte.QuadPart)
+      _first_byte.QuadPart = _end.QuadPart;
+    _response_data.AddHeader(header, value);
+    if (pushed && initiator_.IsEmpty())
+      initiator_ = "HTTP/2 Server Push";
+  }
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Request::ObjectDataIn(DataChunk& chunk) {
+  WptTrace(loglevel::kFunction, 
+      _T("[wpthook] - Request::ObjectDataIn(len=%d)"), chunk.GetLength());
+
+  EnterCriticalSection(&cs);
+  if (_is_active) {
+    QueryPerformanceCounter(&_end);
+    if (!_first_byte.QuadPart)
+      _first_byte.QuadPart = _end.QuadPart;
+    _response_data.AddBodyChunk(chunk);
+  }
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Request::BytesIn(size_t len) {
+  WptTrace(loglevel::kFunction, _T("[wpthook] - Request::BytesIn(%d)"), len);
+  EnterCriticalSection(&cs);
+  if (_is_active)
+    _bytes_in += len;
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Request::HeaderOut(const char * header, const char * value, bool pushed) {
+  WptTrace(loglevel::kFunction, 
+      _T("[wpthook] - Request::HeaderOut('%S', '%S')"), header, value);
+
+  EnterCriticalSection(&cs);
+  if (!_data_sent) {
+    QueryPerformanceCounter(&_start);
+    _data_sent = true;
+  }
+  if (_is_active) {
+    _request_data.AddHeader(header, value);
+    if (pushed && initiator_.IsEmpty())
+      initiator_ = "HTTP/2 Server Push";
+  }
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Request::ObjectDataOut(DataChunk& chunk) {
+  WptTrace(loglevel::kFunction,
+      _T("[wpthook] - Request::ObjectDataOut(len=%d)"), chunk.GetLength());
+
+  EnterCriticalSection(&cs);
+  if (!_data_sent) {
+    QueryPerformanceCounter(&_start);
+    _data_sent = true;
+  }
+  if (_is_active) {
+    _request_data.AddBodyChunk(chunk);
+  }
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Request::BytesOut(size_t len) {
+  WptTrace(loglevel::kFunction, _T("[wpthook] - Request::BytesOut(%d)"), len);
+  EnterCriticalSection(&cs);
+  if (_is_active)
+    _bytes_out += len;
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 void Request::SocketClosed() {
   WptTrace(loglevel::kFunction, _T("[wpthook] - Request::SocketClosed()\n"));
 
@@ -444,7 +593,7 @@ void Request::MatchConnections() {
   EnterCriticalSection(&cs);
   if (_is_active && !_from_browser) {
     if (!_dns_start.QuadPart) {
-      CString host = CA2T(GetHost());
+      CString host = CA2T(GetHost(), CP_UTF8);
       _dns.Claim(host, _peer_address, _start, _dns_start, _dns_end);
     }
     if (!_connect_start.QuadPart)
@@ -500,14 +649,14 @@ bool Request::Process() {
 
     CStringA user_agent = GetRequestHeader("User-Agent");
     if (user_agent.GetLength())
-      _test_state._user_agent = CA2T(user_agent);
+      _test_state._user_agent = CA2T(user_agent, CP_UTF8);
 
     // see if we have a matching request with browser data
     CString url = _T("http://");
     if (_is_ssl)
       url = _T("https://");
-    url += CA2T(GetHost());
-    url += CA2T(_request_data.GetObject());
+    url += CA2T(GetHost(), CP_UTF8);
+    url += CA2T(_request_data.GetObject(), CP_UTF8);
     if (!_from_browser) {
       BrowserRequestData data(url);
       if (requests_.GetBrowserRequest(data)) {
@@ -516,6 +665,7 @@ bool Request::Process() {
         initiator_column_ = data.initiator_column_;
       }
     }
+
     rtt_ = _sockets.GetRTT(_peer_address);
   }
   LeaveCriticalSection(&cs);
@@ -614,6 +764,10 @@ CStringA Request::GetHost() {
   CStringA host = GetRequestHeader("x-host");
   if (!host.GetLength())
     host = GetRequestHeader("host");
+  if (!host.GetLength())
+    host = GetRequestHeader(":host");
+  if (!host.GetLength())
+    host = GetRequestHeader(":authority");
   return host;
 }
 
@@ -722,3 +876,4 @@ LARGE_INTEGER Request::GetStartTime() {
 ULONG Request::GetPeerAddress() {
   return _peer_address;
 }
+

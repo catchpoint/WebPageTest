@@ -46,10 +46,10 @@ namespace loglevel {
 bool LaunchProcess(CString command_line, HANDLE * process_handle = NULL,
                    const TCHAR *dir = NULL);
 void DeleteDirectory(LPCTSTR directory, bool remove = true);
+void DeleteOldDirectoryEntries(CString directory, int seconds);
 void DeleteRegKey(HKEY hParent, LPCTSTR key, bool remove = true);
 void CopyDirectoryTree(CString source, CString destination);
-bool FindBrowserWindow(DWORD process_id, HWND& frame_window, 
-                       HWND& document_window);
+bool FindBrowserWindow(DWORD process_id, HWND& frame_window);
 void WptTrace(int level, LPCTSTR format, ...);
 
 typedef CAtlList<CStringA> HookSymbolNames;
@@ -62,6 +62,8 @@ DWORD GetParentProcessId(DWORD pid);
 void TerminateProcessAndChildren(DWORD pid);
 void TerminateProcessById(DWORD pid);
 void TerminateProcessesByName(TCHAR * exe);
+void WaitForChildProcesses(DWORD pid, DWORD timeout = 300000);
+void WaitForProcessesByName(TCHAR * exe, DWORD timeout = 300000);
 bool IsBrowserDocument(HWND wnd, bool recurse = true);
 CString HttpGetText(CString url);
 DWORD   HttpSaveFile(CString url, CString file);
@@ -73,3 +75,4 @@ CStringA JSONEscapeA(CStringA src);
 void QueryPerfCounter(__int64 &counter);
 void QueryPerfFrequency(__int64 &freq);
 int ElapsedFileTimeSeconds(FILETIME& check, FILETIME& now);
+void Reboot();

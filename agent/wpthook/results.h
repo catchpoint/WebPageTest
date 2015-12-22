@@ -88,6 +88,8 @@ private:
   int count_not_found_doc_;
   int count_other_;
   int count_other_doc_;
+  int reported_step_;
+  CStringA  current_step_name_;
 
   DWORD peak_memory_;
   DWORD peak_process_count_;
@@ -101,13 +103,15 @@ private:
   void SaveProgressData(void);
   void SaveStatusMessages(void);
   void SaveImage(CxImage& image, CString file, BYTE quality,
-                 bool force_small = false);
+                 bool force_small = false, bool _full_size_video = false);
   bool ImagesAreDifferent(CxImage * img1, CxImage* img2);
   CStringA FormatTime(LARGE_INTEGER t);
   void SaveResponseBodies(void);
   void SaveConsoleLog(void);
   void SaveTimedEvents(void);
   void SaveCustomMetrics(void);
-  void SaveHistogram(CxImage& image, CString file);
+  void SaveUserTiming(void);
+  void SaveHistogram(CStringA& histogram, CString file);
+  CStringA GetHistogramJSON(CxImage& image);
   bool NativeRequestExists(Request * browser_request);
 };

@@ -42,7 +42,9 @@ WptSettings::WptSettings(WptStatus &status):
   ,_polling_delay(DEFAULT_POLLING_DELAY)
   ,_debug(0)
   ,_status(status)
-  ,_software_update(status) {
+  ,_software_update(status)
+  ,_requireValidCertificate(true)
+  ,_keep_resolution(false) {
 }
 
 /*-----------------------------------------------------------------------------
@@ -81,6 +83,18 @@ bool WptSettings::Load(void) {
     _server = buff;
     if( _server.Right(1) != '/' )
       _server += "/";
+    // Automatically re-map www.webpagetest.org to agent.webpagetest.org
+    _server.Replace(_T("www.webpagetest.org"), _T("agent.webpagetest.org"));
+  }
+
+  if (GetPrivateProfileString(_T("WebPagetest"), _T("username"), _T(""), buff,
+    _countof(buff), iniFile)) {
+    _username = buff;
+  }
+
+  if (GetPrivateProfileString(_T("WebPagetest"), _T("password"), _T(""), buff,
+    _countof(buff), iniFile)) {
+    _password = buff;
   }
 
   if (GetPrivateProfileString(_T("WebPagetest"), _T("Location"), _T(""), buff, 
@@ -91,6 +105,14 @@ bool WptSettings::Load(void) {
   if (GetPrivateProfileString(_T("WebPagetest"), _T("Key"), _T(""), buff, 
     _countof(buff), iniFile )) {
     _key = buff;
+  }
+
+  _keep_resolution = GetPrivateProfileInt(_T("WebPagetest"), _T("Keep Resolution"), 0, iniFile) != 0;
+  _requireValidCertificate = GetPrivateProfileInt(_T("WebPagetest"), _T("Valid Certificate"), _requireValidCertificate, iniFile);
+
+  if (GetPrivateProfileString(_T("WebPagetest"), _T("Client Certificate Common Name"), _T(""), buff,
+    _countof(buff), iniFile)) {
+    _clientCertCommonName = buff;
   }
 
   #ifdef DEBUG
@@ -114,6 +136,10 @@ bool WptSettings::Load(void) {
   // see if we need to load settings from EC2 (server and location)
   if (GetPrivateProfileInt(_T("WebPagetest"), _T("ec2"), 0, iniFile)) {
     LoadFromEC2();
+  } else if (GetPrivateProfileInt(_T("WebPagetest"), _T("gce"), 0, iniFile)) {
+    LoadFromGCE();
+  } else if (GetPrivateProfileInt(_T("WebPagetest"), _T("azure"), 0, iniFile)) {
+//    LoadFromAzure();
   }
 
   SetTestTimeout(_timeout * SECONDS_TO_MS);
@@ -127,48 +153,23 @@ bool WptSettings::Load(void) {
 
 /*-----------------------------------------------------------------------------
   Load the settings from EC2 User Data
-  We have to support the old "urlblast" format settings because both may
-  be running on the same machine
 -----------------------------------------------------------------------------*/
 void WptSettings::LoadFromEC2(void) {
 
   CString userData;
   if (GetUrlText(_T("http://169.254.169.254/latest/user-data"), userData)) {
-    int pos = 0;
-    do {
-      CString token = userData.Tokenize(_T(" &"), pos).Trim();
-      if (token.GetLength()) {
-        int split = token.Find(_T('='), 0);
-        if (split > 0) {
-          CString key = token.Left(split).Trim();
-          CString value = token.Mid(split + 1).Trim();
+    ParseInstanceData(userData);
+  }
 
-          if (key.GetLength() && value.GetLength()) {
-            if (!key.CompareNoCase(_T("wpt_server")))
-              _server = CString(_T("http://")) + value + _T("/");
-            else if (!key.CompareNoCase(_T("wpt_loc")))
-              _location = value; 
-            else if (_location.IsEmpty() &&
-                     !key.CompareNoCase(_T("wpt_location")))
-              _location = value + _T("_wptdriver"); 
-            else if (!key.CompareNoCase(_T("wpt_key")) )
-              _key = value; 
-            else if (!key.CompareNoCase(_T("wpt_timeout")))
-              _timeout = _ttol(value); 
-          }
-        }
-      }
-    } while (pos > 0);
-    if (_location.IsEmpty()) {
-      CString zone;
-      if (GetUrlText(_T("http://169.254.169.254/latest/meta-data")
-                     _T("/placement/availability-zone"), zone)) {
-        int pos = zone.Find('-');
-        if (pos > 0) {
-          pos = zone.Find('-', pos + 1);
-          if (pos > 0)
-            _location = CString(_T("ec2-")) + zone.Left(pos).Trim();
-        }
+  if (_location.IsEmpty()) {
+    CString zone;
+    if (GetUrlText(_T("http://169.254.169.254/latest/meta-data")
+                    _T("/placement/availability-zone"), zone)) {
+      int pos = zone.Find('-');
+      if (pos > 0) {
+        pos = zone.Find('-', pos + 1);
+        if (pos > 0)
+          _location = CString(_T("ec2-")) + zone.Left(pos).Trim();
       }
     }
   }
@@ -179,9 +180,103 @@ void WptSettings::LoadFromEC2(void) {
 }
 
 /*-----------------------------------------------------------------------------
+  Load the settings from GCE Meta Data
+-----------------------------------------------------------------------------*/
+void WptSettings::LoadFromGCE(void) {
+  CString userData;
+  if (GetUrlText(
+      L"http://169.254.169.254/computeMetadata/v1/instance/attributes/wpt_data",
+      userData, L"Metadata-Flavor: Google")) {
+    ParseInstanceData(userData);
+  }
+
+  GetUrlText(_T("http://169.254.169.254/computeMetadata/v1/instance/id"), 
+    _ec2_instance, L"Metadata-Flavor: Google");
+  _ec2_instance = _ec2_instance.Trim();
+}
+
+/*-----------------------------------------------------------------------------
+  Load the settings from Azure Custom Data
+-----------------------------------------------------------------------------*/
+void WptSettings::LoadFromAzure(void) {
+  TCHAR drive[1024];
+  if (GetEnvironmentVariable(_T("SystemDrive"), drive, _countof(drive))) {
+    HANDLE file = CreateFile(CString(drive) + _T("\\AzureData\\CustomData.bin"),
+        GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+    if (file != INVALID_HANDLE_VALUE) {
+      DWORD size = GetFileSize(file, NULL);
+      if (size && size < 100000) {
+        char * custom_data = (char *)malloc(size + 1);
+        DWORD bytes_read = 0;
+        if (ReadFile(file, custom_data, size, &bytes_read, 0) &&
+            bytes_read == size) {
+          custom_data[size - 1] = 0;
+          CString user_data = CA2T(custom_data, CP_UTF8);
+          ParseInstanceData(user_data);
+        }
+      }
+      CloseHandle(file);
+    }
+  }
+  TCHAR instance_id[1024];
+  if (GetEnvironmentVariable(_T("RoleInstanceId"), instance_id,
+                             _countof(instance_id))) {
+    _azure_instance = CString(instance_id).Trim();
+    OutputDebugString(CString("Azure Instance ID: ") + _azure_instance);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Parse the custom instance data (EC2 or Azure)
+  We have to support the old "urlblast" format settings because both may
+  be running on the same machine
+-----------------------------------------------------------------------------*/
+void WptSettings::ParseInstanceData(CString &userData) {
+  int pos = 0;
+//  OutputDebugStringA("User Data:");
+//  OutputDebugString(userData);
+  do {
+    CString token = userData.Tokenize(_T(" &"), pos).Trim();
+    if (token.GetLength()) {
+      int split = token.Find(_T('='), 0);
+      if (split > 0) {
+        CString key = token.Left(split).Trim();
+        CString value = token.Mid(split + 1).Trim();
+
+        if (key.GetLength() && value.GetLength()) {
+          if (!key.CompareNoCase(_T("wpt_server"))) {
+            if (value.Find(_T("http://")) == -1 && value.Find(_T("https://")) == -1)
+              _server = CString(_T("http://")) + value + _T("/");
+            else {
+              _server = value;
+              if (_server.Right(1) != '/')
+                _server += "/";
+            }
+          } else if (!key.CompareNoCase(_T("wpt_username")))
+            _username = value;
+          else if (!key.CompareNoCase(_T("wpt_password")))
+            _password = value;
+          else if (!key.CompareNoCase(_T("wpt_validcertificate")))
+            _requireValidCertificate = (0 == value.Compare(_T("1")));
+          else if (!key.CompareNoCase(_T("wpt_loc")))
+            _location = value; 
+          else if (_location.IsEmpty() &&
+                    !key.CompareNoCase(_T("wpt_location")))
+            _location = value + _T("_wptdriver"); 
+          else if (!key.CompareNoCase(_T("wpt_key")) )
+            _key = value; 
+          else if (!key.CompareNoCase(_T("wpt_timeout")))
+            _timeout = _ttol(value); 
+        }
+      }
+    }
+  } while (pos > 0);
+}
+
+/*-----------------------------------------------------------------------------
   Get a string response from the given url
 -----------------------------------------------------------------------------*/
-bool WptSettings::GetUrlText(CString url, CString &response)
+bool WptSettings::GetUrlText(CString url, CString &response, LPCTSTR headers)
 {
   bool ret = false;
   response.Empty();
@@ -190,7 +285,11 @@ bool WptSettings::GetUrlText(CString url, CString &response)
                                     INTERNET_OPEN_TYPE_PRECONFIG,
                                     NULL, NULL, 0);
   if (internet) {
-    HINTERNET http_request = InternetOpenUrl(internet, url, NULL, 0, 
+    DWORD headers_len = 0;
+    if (headers)
+      headers_len = lstrlen(headers);
+    HINTERNET http_request = InternetOpenUrl(internet, url,
+                                headers, headers_len, 
                                 INTERNET_FLAG_NO_CACHE_WRITE | 
                                 INTERNET_FLAG_NO_UI | 
                                 INTERNET_FLAG_PRAGMA_NOCACHE | 
@@ -204,7 +303,7 @@ bool WptSettings::GetUrlText(CString url, CString &response)
               &bytes_read) && bytes_read) {
         // NULL-terminate it and add it to our response string
         buff[bytes_read] = 0;
-        response += CA2T(buff);
+        response += CA2T(buff, CP_UTF8);
       }
       if (file != INVALID_HANDLE_VALUE)
         CloseHandle(file);
@@ -233,15 +332,8 @@ bool WptSettings::SetBrowser(CString browser, CString url,
     ret = _browser.Install(browser, url, md5);
   } else {
     // try loading the settings for the specified browser
-    TCHAR buff[1024];
-    if (!browser.GetLength()) {
-      browser = _T("chrome");  // default to "chrome" to support older ini file
-      if (GetPrivateProfileString(_T("WebPagetest"), _T("browser"), _T(""), buff,
-        _countof(buff), _ini_file )) {
-        browser = buff;
-      }
-    }
-    ret = _browser.Load(browser, _ini_file, client);
+    if (browser.GetLength())
+      ret = _browser.Load(browser, _ini_file, client);
   }
   return ret;
 }
@@ -288,6 +380,7 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
     PathAppend(buff, _T("webpagetest_profiles\\"));
     _profile_directory = buff;
   }
+  _profiles = _profile_directory;
   if (client.GetLength())
     _profile_directory += client + _T("-client-");
   _profile_directory += browser;
@@ -419,25 +512,7 @@ void BrowserSettings::CleanupCustomBrowsers(CString browser) {
   _wpt_directory = buff;
   _wpt_directory.Trim(_T("\\"));
   CString browsers_directory = _wpt_directory + CString(_T("\\browsers"));
-  WIN32_FIND_DATA fd;
-  HANDLE hFind = FindFirstFile(browsers_directory + _T("\\*.*"), &fd);
-  FILETIME now;
-  GetSystemTimeAsFileTime(&now);
-  if (hFind != INVALID_HANDLE_VALUE) {
-    do {
-      if (lstrcmp(fd.cFileName, _T(".")) &&
-          lstrcmp(fd.cFileName, _T("..")) &&
-          lstrcmp(fd.cFileName, browser) &&
-          fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-        if (ElapsedFileTimeSeconds(fd.ftLastWriteTime, now) > 86400)
-          DeleteDirectory(browsers_directory +
-                          CString(_T("\\")) + fd.cFileName);
-      } else if (!CString(fd.cFileName).Right(4).CompareNoCase(_T(".zip"))) {
-        // delete all of the zip files
-        DeleteFile(browsers_directory + CString(_T("\\")) + fd.cFileName);
-      }
-    } while(FindNextFile(hFind, &fd));
-  }
+  DeleteOldDirectoryEntries(browsers_directory, 86400);
 }
 
 /*-----------------------------------------------------------------------------
@@ -480,6 +555,8 @@ void BrowserSettings::ResetProfile(bool clear_certs) {
     DeleteDirectory(recovery_dir_, false);
     DeleteDirectory(flash_dir_, false);
     DeleteDirectory(windows_dir_ + _T("\\temp"), false);
+    DeleteDirectory(app_data_dir_ + _T("\\Roaming\\Mozilla\\Firefox\\Crash Reports"), false);
+    DeleteDirectory(local_app_data_dir_ + _T("\\Microsoft\\Windows\\WER"), false);
     ClearWinInetCache();
     ClearWebCache();
   }
@@ -501,6 +578,18 @@ void BrowserSettings::ResetProfile(bool clear_certs) {
     } while(FindNextFile(find, &fd));
     FindClose(find);
   }
+  find = FindFirstFile(windows_dir_ + _T("\\Temp*-Signatures"), &fd);
+  if (find != INVALID_HANDLE_VALUE) {
+    do {
+      DeleteDirectory(windows_dir_ + fd.cFileName);
+    } while (FindNextFile(find, &fd));
+    FindClose(find);
+  }
+
+  // Clean up old Chrome installers that sometimes accumulate
+  // (anything over 2 days old).
+  //DeleteOldDirectoryEntries(
+  //    local_app_data_dir_ + _T("\\Google\\Update\\Install"), 172800);
 }
 
 /*-----------------------------------------------------------------------------
@@ -705,7 +794,10 @@ void BrowserSettings::ClearWinInetCache() {
   // #define CLEAR_PRESERVE_FAVORITES 0x2000 // Preserves cached data for "favorite" websites
 
   // Use the command-line version of cache clearing in case WinInet didn't work
-  LaunchProcess(_T("RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 6655"));
+  HANDLE async = NULL;
+  LaunchProcess(_T("RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 6655"), &async);
+  if (async)
+    CloseHandle(async);
 }
 
 /*-----------------------------------------------------------------------------

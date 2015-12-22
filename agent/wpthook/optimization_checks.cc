@@ -285,7 +285,6 @@ void OptimizationChecks::CheckImageCompression()
   int total = 0;
   DWORD totalBytes = 0;
   DWORD targetBytes = 0;
-  int imgNum = 0;
 
   _requests.Lock();
   POSITION pos = _requests._requests.GetHeadPosition();
@@ -343,20 +342,8 @@ void OptimizationChecks::CheckImageCompression()
           
             request->_scores._image_compress_total = size;
             request->_scores._image_compress_target = targetRequestBytes;
-            request->_scores._image_compression_score = 100;
-
-            // If the original was within 10%, then give 100
-            // If it's less than 50% bigger then give 50
-            // More than that is a fail
-            if (targetRequestBytes && targetRequestBytes < size && size > 1400) {
-              double ratio = (double)size / (double)targetRequestBytes;
-              if (ratio >= 1.5)
-                request->_scores._image_compression_score = 0;
-              else if (ratio >= 1.1)
-                request->_scores._image_compression_score = 50;
-            }
+            request->_scores._image_compression_score = targetRequestBytes * 100 / size;
           }
-          total += request->_scores._image_compression_score;
         }
       }
     }
@@ -542,7 +529,7 @@ bool OptimizationChecks::IsCDN(Request * request, CStringA &provider) {
   provider.Empty();
   bool ret = false;
 
-  CString host = (LPCTSTR)CA2T(request->GetHost());
+  CString host = (LPCTSTR)CA2T(request->GetHost(), CP_UTF8);
   host.MakeLower();
   if( host.IsEmpty() )
     return ret;
@@ -566,7 +553,32 @@ bool OptimizationChecks::IsCDN(Request * request, CStringA &provider) {
           provider = cdn_header->name;
       }
     }
-
+    // Check HTTP headers for CDN's that require multiple headers in combination
+    int multi_cdn_header_count = _countof(cdnMultiHeaderList);
+    for (int i = 0; i < multi_cdn_header_count && !ret; i++) {
+      CDN_PROVIDER_MULTI_HEADER * cdn_multi_header = &cdnMultiHeaderList[i];
+      bool all_match = true;
+      int header_count = _countof(cdn_multi_header->headers);
+      for (int j = 0; j < header_count && all_match; j++) {
+        CDN_PROVIDER_HEADER_PAIR * cdn_header = &(cdn_multi_header->headers[j]);
+        if (cdn_header->response_field.GetLength()) {
+          CStringA header = request->GetResponseHeader(cdn_header->response_field);
+          if (header.GetLength()) {
+            if (cdn_header->pattern.GetLength()) {
+              CStringA pattern = cdn_header->pattern;
+              if (header.Find(pattern) < 0)
+                all_match = false;
+            }
+          } else {
+            all_match = false;
+          }
+        }
+      }
+      if (all_match) {
+        ret = true;
+        provider = cdn_multi_header->name;
+      }
+    }
   }
 
   return ret;
@@ -605,7 +617,7 @@ void OptimizationChecks::CheckCustomRules() {
               match._count++;
               if (match._value.IsEmpty()) {
                 std::string match_string = *i;
-                match._value = CA2T(match_string.c_str());
+                match._value = CA2T(match_string.c_str(), CP_UTF8);
               }
               i++;
             }

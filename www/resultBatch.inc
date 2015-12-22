@@ -8,6 +8,7 @@ if( !defined('BARE_UI') )
     define('BARE_UI', true);
 $csv = false;
 $json = false;
+$weblite = false;
 if (array_key_exists('f', $_REQUEST)) {
   if( $_REQUEST['f'] == 'csv' )
   {
@@ -54,7 +55,10 @@ elseif ($view == 'pss_path')
     $view = 'pss_path';
 elseif ($view == 'blink')
     $view = 'blink';
-else
+elseif ($view == 'weblite') {
+    $view = 'weblite';
+    $weblite = true;
+} else
     $view = 'bulk';
 $mod_pagespeed = false;
 if (array_key_exists('script', $test['testinfo']) &&
@@ -140,6 +144,7 @@ else
         $gaTemplate = 'Bulk Result';
         include ('head.inc');
         ?>
+        <link rel="stylesheet" href="/video/video-js.3.2.0/video-js.min.css" type="text/css">
         <style type="text/css">
             .player
             {
@@ -155,9 +160,12 @@ else
                 width: 100%;
                 height: 380px;
             }
+            .vjs-default-skin .vjs-controls {height: 0;}
+            .vjs-default-skin .vjs-mute-control {display: none;}
+            .vjs-default-skin .vjs-volume-control {display: none;}
         </style>
         </style>
-        <script type="text/javascript" src="/video/player/flowplayer-3.2.12.min.js"></script>
+        <script type="text/javascript" src="/video/video-js.3.2.0/video.min.js"></script>
     </head>
     <body>
         <div class="page">
@@ -172,6 +180,11 @@ else
                     $navTabs['New Comparison'] = FRIENDLY_URLS ? "/compare?pssid=$id&option=prioritize_visible_content" : "/pss.php?pssid=$id&option=prioritize_visible_content";
                 }
             }
+            elseif ($view == 'weblite')
+            {
+                $navTabs = array(   'New Comparison' => "/optimized?pssid=$id",
+                                    'Test Result' => "/result/$id/");
+            }
             elseif ($view == 'blink')
             {
                 $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? "/blink?bid=$id" : "/blink.php?bid=$id",
@@ -183,7 +196,10 @@ else
                 <div id="download">
                     <div id="testinfo">
                         <?php
-                            if( $test['test']['batch'] )
+                            if ($weblite) {
+                              echo "Tested From: Dulles, VA on a 2G network connection <a href=\"https://github.com/facebook/augmented-traffic-control/blob/master/utils/profiles/2G-DevelopingUrban.json\">(35Kbps, 1.3s RTT)</a>";
+                            }
+                            elseif( $test['test']['batch'] )
                             {
                                 echo "Tested From: $location<br>";
                             }
@@ -208,6 +224,8 @@ else
                     }
 
                     if( $view == 'pss' )
+                        DisplayPSS($tests, $test['testinfo']['video'], $dirty);
+                    elseif( $view == 'weblite' )
                         DisplayPSS($tests, $test['testinfo']['video'], $dirty);
                     elseif( $view == 'pss_path' )
                         DisplayPSSPath($tests, $test['testinfo']['video'], $dirty);
@@ -278,9 +296,14 @@ else
                         </ul>
                         </div>
                         <?php
-                    }
-                    elseif( $view == 'bulk' )
+                    } elseif( $view == 'bulk' ) {
+                        if( FRIENDLY_URLS )
+                            echo "<br>Download Partial Combined Raw: <a href=\"/result/$id/{$id}_bulk_page_data.csv\">Page Data</a> - <a href=\"/result/$id/{$id}_bulk_requests.csv\">Object Data</a>";
+                        else
+                            echo "<br>Download Partial Combined Raw: <a href=\"/csv.php?test=$id\">Page Data</a> - <a href=\"/csv.php?test=$id&requests=1\">Object Data</a>";
+                        echo "<br><br><a href=\"/aggregate.php?test=$id\">Download Partial Aggregate Statistics</a>";
                         echo "<br><br><a href=\"/cancelTest.php?test=$id\">Cancel all pending tests</a>";
+                    }
                 }
                 ?>
             </div>
@@ -513,7 +536,6 @@ function DisplayTest($id, $url, $label, $complete)
     echo '<tr>';
     if ($videoCaptured) {
         echo "<td><input type=\"checkbox\" name=\"t[]\" value=\"$id\" title=\"First View\">";    
-        echo "<input type=\"checkbox\" name=\"t[]\" value=\"$id-c:1\" title=\"Repeat View\"></td>";    
     }
     $safeUrl = htmlspecialchars($url);
     $label = htmlspecialchars($label);
@@ -527,9 +549,9 @@ function DisplayTest($id, $url, $label, $complete)
         $fvMedian = GetMedianRun($pageData, 0, 'docTime');
         $rvMedian = GetMedianRun($pageData, 1, 'docTime');
         $rvMedian_column = '';
-        if ($rvMedian)
+        if ($rvMedian && ($pageData[$rvMedian][1]['result'] == 0 || $pageData[$rvMedian][1]['result'] == 99999))
             $rvMedian_column = number_format($pageData[$rvMedian][1]['loadTime'] / 1000.0, 3);
-        if ($fvMedian) {
+        if ($fvMedian && ($pageData[$fvMedian][0]['result'] == 0 || $pageData[$fvMedian][0]['result'] == 99999)) {
           echo "<td>" . number_format($pageData[$fvMedian][0]['loadTime'] / 1000.0, 3) . "</td>";
           if( $pageData[$fvMedian][0]['loadTime'] )
               $stats['fv'][] = $pageData[$fvMedian][0]['loadTime'];
@@ -543,7 +565,9 @@ function DisplayTest($id, $url, $label, $complete)
             echo "<td>$rvMedian_column</td>";
         }
         echo '<td>';
-        if ($fvMedian && array_key_exists('SpeedIndex', $pageData[$fvMedian][0])) {
+        if ($fvMedian &&
+            array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) &&
+            ($pageData[$fvMedian][0]['result'] == 0 || $pageData[$fvMedian][0]['result'] == 99999)) {
             $siMedian = GetMedianRun($pageData, 0, 'SpeedIndex');
             echo $pageData[$siMedian][0]['SpeedIndex'];
         }
@@ -595,6 +619,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
     global $admin;
     global $median_metric;
     global $showExperimental;
+    global $weblite;
     require_once('object_detail.inc');
     $includeRender = false;
     if( array_key_exists('norender', $_REQUEST) && $_REQUEST['norender'] )
@@ -614,15 +639,16 @@ function DisplayPSS(&$tests, $video, &$dirty)
     $started = 0;
     global $fvonly;
     $url = '';
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     $host  = $_SERVER['HTTP_HOST'];
-    $videoCustom = '';
+    $videoCustom = '2';
     
     // first pass, check the status of all of the tests and calculate the relevant times
     foreach( $tests['urls'] as &$test )
     {
         if (!strlen($url) && array_key_exists('u', $test))
           $url = $test['u'];
-        $test['end'] = 'visual';
+        $test['end'] = $weblite ? 'load' : 'visual';
         if (!$count) {
             if (array_key_exists('endOriginal', $_GET)) {
                 $test['end'] = urlencode(trim($_GET['endOriginal']));
@@ -681,7 +707,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
                         foreach( $frames as $time => $frameFile ) {
                             $entry = array (   
                                 'time' => number_format((double)$time / 1000.0, 3),
-                                'image' => "http://$host$path/video_{$fvMedian}/$frameFile");
+                                'image' => "$protocol://$host$path/video_{$fvMedian}/$frameFile");
                             $ms = $time * 100;
                             if (array_key_exists('frames', $visual) && array_key_exists($ms, $visual['frames']))
                                 $entry['progress'] = $visual['frames'][$ms]['progress'];
@@ -704,7 +730,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
                         foreach( $frames as $time => $frameFile ) {
                             $entry = array (   
                                 'time' => number_format((double)$time / 1000.0, 3),
-                                'image' => "http://$host$path/video_{$fvMedian}/$frameFile");
+                                'image' => "$protocol://$host$path/video_{$fvMedian}/$frameFile");
                             $ms = $time * 100;
                             if (array_key_exists('frames', $visual) && array_key_exists($ms, $visual['frames']))
                                 $entry['progress'] = $visual['frames'][$ms]['progress'];
@@ -733,7 +759,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
                         foreach( $frames as $time => $frameFile ) {
                             $entry = array (   
                                 'time' => number_format((double)$time / 1000.0, 3),
-                                'image' => "http://$host$path/video_{$rvMedian}_cached/$frameFile");
+                                'image' => "$protocol://$host$path/video_{$rvMedian}_cached/$frameFile");
                             $ms = $time * 100;
                             if (array_key_exists('frames', $visual) && array_key_exists($ms, $visual['frames']))
                                 $entry['progress'] = $visual['frames'][$ms]['progress'];
@@ -755,7 +781,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
                         foreach( $frames as $time => $frameFile ) {
                             $entry = array (   
                                 'time' => number_format((double)$time / 1000.0, 3),
-                                'image' => "http://$host$path/video_{$rvMedian}_cached/$frameFile");
+                                'image' => "$protocol://$host$path/video_{$rvMedian}_cached/$frameFile");
                             $ms = $time * 100;
                             if (array_key_exists('frames', $visual) && array_key_exists($ms, $visual['frames']))
                                 $entry['progress'] = $visual['frames'][$ms]['progress'];
@@ -780,13 +806,16 @@ function DisplayPSS(&$tests, $video, &$dirty)
             $rvRenderTimes[$count] = $rvRenderTime;
             $rvFLI[$count] = $rvFLIvalue;
         }
+        if ($weblite)
+          $test['end'] = number_format($fvLoadTime / 1000.0, 3);
+
         $count++;
     }
 
     $baseDomainRedirect = false;
     $baseDomainSSL = false;
     global $mod_pagespeed;
-    if (!$mod_pagespeed) {
+    if (!$mod_pagespeed && !$weblite) {
       if (!strncasecmp($url, 'https://', 8))
         $baseDomainSSL = true;
       $requests = getRequests($tests['urls'][1]['id'], $tests['urls'][1]['path'], $tests['urls'][1]['fvMedian'], 0, $secure, $haveLocations, false);
@@ -970,9 +999,11 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 DisplayMetric('Page Load Time', $fvLoadTimes, $count);
                 if( $includeRender )
                     DisplayMetric('Start Render Time', $fvRenderTimes, $count);
-                DisplayMetric('<a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a> (lower is better)', $fvFLI, $count, false, false);
-                if (isset($fvSpeedIndexDT) && count($fvSpeedIndexDT))
-                    DisplayMetric('<a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a> (Dev Tools)', $fvSpeedIndexDT, $count, false, false);
+                if (!$weblite) {
+                  DisplayMetric('<a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a> (lower is better)', $fvFLI, $count, false, false);
+                  if (isset($fvSpeedIndexDT) && count($fvSpeedIndexDT))
+                      DisplayMetric('<a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a> (Dev Tools)', $fvSpeedIndexDT, $count, false, false);
+                }
                     
                 if( !$fvonly )
                 {
@@ -1041,7 +1072,8 @@ function DisplayPSS(&$tests, $video, &$dirty)
         }
         if( !strlen($videoInfo['vID' . $videoCustom]) )
         {
-            $videoInfo['vID' . $videoCustom] = CreateVideo($tests['urls']);
+            $videoEnd = $weblite ? 'load' : null;
+            $videoInfo['vID' . $videoCustom] = CreateVideo($tests['urls'], $videoEnd);
             $videoDirty = true;
             $videoComplete = false;
             if( !strlen($videoInfo['vID' . $videoCustom]) )
@@ -1066,7 +1098,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
                 $json_response['statusCode'] = 200;
                 $host  = $_SERVER['HTTP_HOST'];
                 $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-                $json_response['data']['videoEmbed'] = "http://$host$uri/video/view.php?embed=1&id=" . $videoInfo['vID' . $videoCustom];
+                $json_response['data']['videoEmbed'] = "$protocol://$host$uri/video/view.php?embed=1&id=" . $videoInfo['vID' . $videoCustom];
             } else {
                 $json_response['statusCode'] = 103;
                 $json_response['statusText'] = 'Creating Video';
@@ -1074,7 +1106,9 @@ function DisplayPSS(&$tests, $video, &$dirty)
         } else {
             if( $videoComplete )
             {
-                if (!array_key_exists('pss_advanced', $testInfo) || !$testInfo['pss_advanced']) {
+                if ($weblite) {
+                    echo "<h2>Visual Comparison (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}&end=load\" target=\"_blank\">view filmstrip comparison</a>)</h2>";
+                } elseif (!array_key_exists('pss_advanced', $testInfo) || !$testInfo['pss_advanced']) {
                     echo "<h2>Visual Comparison* (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']}-e:{$tests['urls'][0]['end']},{$tests['urls'][1]['id']}-e:{$tests['urls'][1]['end']}&end=visual\" target=\"_blank\">view filmstrip comparison</a>)</h2>";
                 } else {
                     echo "<h2>Visual Comparison*</h2>";
@@ -1413,6 +1447,7 @@ function DisplayBlink(&$tests, $video, &$dirty)
                 $tests['videoReady'] = CheckVideo($tests['videoId'], $regenerate_video);
                 if( $tests['videoReady'] )
                     $dirty = true;
+
                 else
                     $videoComplete = false;
             }
@@ -1662,8 +1697,9 @@ function CreateVideo(&$tests, $end = null)
 
     if (!strlen($end))
         $end = 'visual';
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     $host  = $_SERVER['HTTP_HOST'];
-    $request = "http://$host/video/create.php?f=json&force=1&end=$end&tests=";
+    $request = "$protocol://$host/video/create.php?f=json&force=1&end=$end&tests=";
 
     $count = 0;
     foreach( $tests as &$test )
@@ -1730,6 +1766,7 @@ function CheckVideo($videoID, &$regenerate_video)
 function VideoHtml($id)
 {
     global $videoCount;
+    global $weblite;
     $videoCount++;
     $width = 816;
     $height = 384;
@@ -1742,47 +1779,41 @@ function VideoHtml($id)
         list($width, $height) = getimagesize("./$dir/video.png");
     }
     
-    echo "<div style=\"display:block; width:{$width}px; height:{$height}px\" id=\"player$videoCount\" class=\"player\"></div>\n";
-    echo "<script>\n
-                    flowplayer(\"player$videoCount\", \n
-                                    {\n
-                                        src: \"/video/player/flowplayer-3.2.16.swf\",\n
-                                        cachebusting: true,\n
-                                        version: [9, 115]\n
-                                    } , \n
-                                    { \n
-                                        clip:  { \n
-                                            scaling: \"fit\"\n
-                                        } ,\n
-                                        playlist: [";
-    if( $hasThumb )
-    {
-        echo "{ url: '/$dir/video.png'} ,\n";
-        echo "{ url: '/$dir/video.mp4', autoPlay: false, autoBuffering: false}\n";
-    }
+    echo "<script>\n";
+    if (array_key_exists('html', $_REQUEST) && $_REQUEST['html'])
+        echo "_V_.options.techOrder = ['html5', 'flash'];\n";
     else
-        echo "{ url: '/$dir/video.mp4', autoPlay: false, autoBuffering: true}\n";
-    echo "                          ],\n
-                                        plugins: {\n
-                                            controls: {\n
-                                                volume:false,\n
-                                                mute:false,\n
-                                                stop:true,\n
-                                                tooltips: { \n
-                                                    buttons: true, \n
-                                                    fullscreen: 'Enter fullscreen mode' \n
-                                                } \n
-                                            }\n
-                                        } ,\n
-                                        canvas:  { \n
-                                            backgroundColor: '#000000', \n
-                                            backgroundGradient: 'none'\n
-                                        }\n
-                                    }\n
-                                ); \n
-                </script>\n
-                <br>* The video for each page stops when the page is visually complete and may not match the technical load time measurement.\n
-                <br><a class=\"link\" href=\"/video/download.php?id=$id\">Click here to download the video file...</a>\n";
+        echo "_V_.options.techOrder = ['flash', 'html5'];\n";
+    echo "_V_.options.flash.swf = '/video/player/flowplayer-3.2.16.swf';\n";
+    echo "_V_.options.flash.flashVars = {config:\"{";
+    echo "'clip':{'scaling':'fit'},";
+    echo "'plugins':{'controls':{'volume':false,'mute':false,'stop':true,'tooltips':{'buttons':true,'fullscreen':'Enter fullscreen mode'}}},";
+    echo "'canvas':{'backgroundColor':'#000000','backgroundGradient':'none'},";
+    if ($hasThumb) {
+        echo "'playlist':[{'url':'/$dir/video.png'},{'url':'/$dir/video.mp4','autoPlay':false,'autoBuffering':false}]";
+    } else {
+        echo "'playlist':[{'url':'/$dir/video.mp4','autoPlay':false,'autoBuffering':true}]";
+    }
+    echo "}\"};\n";
+    echo "_V_.options.flash.params = {
+           allowfullscreen: 'true',
+           wmode: 'transparent',
+           allowscriptaccess: 'always'
+       };
+       _V_.options.flash.attributes={};\n";
+    echo "</script>\n";
+        
+    echo "<video id=\"player\" class=\"player video-js vjs-default-skin\" controls
+      preload=\"auto\" width=\"$width\" height=\"$height\"";
+    if ($hasThumb)
+        echo " poster=\"/$dir/video.png\"";
+    echo "data-setup=\"{}\">
+        <source src=\"/$dir/video.mp4\" type='video/mp4'>
+    </video>";
+
+    if (!$weblite)
+      echo "<br>* The video for each page stops when the page is visually complete and may not match the technical load time measurement.\n";
+    echo "<br><a class=\"link\" href=\"/video/download.php?id=$id\">Click here to download the video file...</a>\n";
 }
 
 /**

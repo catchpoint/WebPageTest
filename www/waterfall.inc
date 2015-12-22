@@ -64,11 +64,14 @@ function _GetDotsRow() {
 function GetRequestRows($requests, $use_dots, $show_labels = true) {
     $rows = array();
     $filtered_requests = FilterRequests($requests);
-    if ($use_dots && count($filtered_requests) &&
-        !array_key_exists(0, $filtered_requests)) {
-        $rows[] = _GetDotsRow();
-    }
+
+    // Keep track of the number of each request so we can add a dotted row when one is missing
+    $last_request_number = 0;
     foreach ($filtered_requests as $request) {
+        if ($request['number'] > $last_request_number + 1) {
+            $rows[] = _GetDotsRow();
+        }
+        
         $rows[] = array(
             'is_connection' => false,
             'label' => GetRequestLabel($request, $show_labels),
@@ -77,6 +80,8 @@ function GetRequestRows($requests, $use_dots, $show_labels = true) {
             'is_secure' => $request['is_secure'],
             'requests' => array($request)
         );
+
+        $last_request_number = $request['number'];
     }
     if ($use_dots && count($filtered_requests) &&
         !array_key_exists(count($requests) - 1, $filtered_requests)) {
@@ -189,7 +194,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
         array_key_exists('run_id', $options) &&
         array_key_exists('is_cached', $options)) {
       require_once('devtools.inc.php');
-      $cpu_slices = DevToolsGetCPUSlices($options['path'], $options['run_id'], $options['is_cached'], $data_width, $max_ms);
+      $cpu_slices = DevToolsGetCPUSlices($options['path'], $options['run_id'], $options['is_cached']);
       if (isset($cpu_slices) && is_array($cpu_slices) && count($cpu_slices)) {
         $perf_height = $is_thumbnail ? 16 : 50;
         $cpu_slice_info = array();
@@ -223,7 +228,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
 
     // Figure out the scale.
     $max_ms = 0;
-    if ((int)@$_REQUEST['max'] > 0) {
+    if (@$_REQUEST['max'] > 0) {
         $max_ms = (int)($_REQUEST['max'] * 1000.0);
     } else {
         // Include all page events and resource times in time scale.
@@ -321,22 +326,43 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
           $cpu_slice_colors = array();
           $mime_colors = MimeColors();
           
-          $cpu_slice_colors['ParseHTML'] = GetColor($im, 130, 168, 222);
+          $cpu_slice_colors['ParseHTML'] = GetColor($im, 112, 162, 227);
           $cpu_slice_colors['ResourceReceivedData'] = $cpu_slice_colors['ParseHTML'];
+          $cpu_slice_colors['ResourceSendRequest'] = $cpu_slice_colors['ParseHTML'];
+          $cpu_slice_colors['ResourceReceivedResponse'] = $cpu_slice_colors['ParseHTML'];
+          $cpu_slice_colors['ResourceFinish'] = $cpu_slice_colors['ParseHTML'];
+          $cpu_slice_colors['CommitLoad'] = $cpu_slice_colors['ParseHTML'];
 
-          $cpu_slice_colors['Layout'] = GetColor($im, 171, 213, 149);
+          $cpu_slice_colors['Layout'] = GetColor($im, 154, 126, 230);
           $cpu_slice_colors['RecalculateStyles'] = $cpu_slice_colors['Layout'];
+          $cpu_slice_colors['ParseAuthorStyleSheet'] = $cpu_slice_colors['Layout'];
+          $cpu_slice_colors['ScheduleStyleRecalculation'] = $cpu_slice_colors['Layout'];
+          $cpu_slice_colors['InvalidateLayout'] = $cpu_slice_colors['Layout'];
 
-          $cpu_slice_colors['Paint'] = GetColor($im, 194, 219, 181);
+          $cpu_slice_colors['Paint'] = GetColor($im, 113, 179, 99);
+          $cpu_slice_colors['PaintImage'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['PaintSetup'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['CompositeLayers'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['DecodeImage'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['ImageDecodeTask'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['Rasterize'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['GPUTask'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['SetLayerTreeId'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['layerId'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['UpdateLayer'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['UpdateLayerTree'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['Draw LazyPixelRef'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['Decode LazyPixelRef'] = $cpu_slice_colors['Paint'];
 
-          $cpu_slice_colors['EvaluateScript'] = GetColor($im, 228, 185, 136);
+          $cpu_slice_colors['EvaluateScript'] = GetColor($im, 241, 196, 83);
           $cpu_slice_colors['EventDispatch'] = $cpu_slice_colors['EvaluateScript'];
           $cpu_slice_colors['FunctionCall'] = $cpu_slice_colors['EvaluateScript'];
           $cpu_slice_colors['GCEvent'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['TimerInstall'] = $cpu_slice_colors['EvaluateScript'];
           $cpu_slice_colors['TimerFire'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['TimerRemove'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['XHRLoad'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['XHRReadyStateChange'] = $cpu_slice_colors['EvaluateScript'];
 
           $cpu_slice_colors['other'] = GetColor($im, 184, 184, 184);
           $cpu_slice_colors['Program'] = $cpu_slice_colors['other'];

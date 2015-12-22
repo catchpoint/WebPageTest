@@ -58,10 +58,20 @@ function ValidateInput(form)
     // enable tooltips
     $("#DOMElement").tooltip({ position: "top center", offset: [-5, 0]  });  
     
-    // enable tab-input in the script field
-    $("#enter_script").tabby();
-        
-   // handle when the selection changes for the location
+    // Capture tab characters in the script input field
+    $("#enter-script").keydown(function(e) {
+      var $this, end, start;
+      if (e.keyCode === 9) {
+        start = this.selectionStart;
+        end = this.selectionEnd;
+        $this = $(this);
+        $this.val($this.val().substring(0, start) + "\t" + $this.val().substring(end));
+        this.selectionStart = this.selectionEnd = start + 1;
+        return false;
+      }
+    });
+
+    // handle when the selection changes for the location
     $("#location").change(function(){
         LocationChanged();
     });

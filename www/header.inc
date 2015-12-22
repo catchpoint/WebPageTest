@@ -41,17 +41,20 @@ if( $supportsAuth && !defined('EMBED') )
         echo "Welcome, $user &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
     }
     else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) )
-	{
+	  {
         $logoutUrl = 'javascript:ClearOAuthCookies();';
         $google_email = $_COOKIE['google_email'];
         echo "Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
     }
     else
     {
-        echo '<a href="/forums/member.php?action=login">Login</a> &nbsp;|&nbsp; ';
-        echo '<a href="/forums/member.php?action=register">Register</a> &nbsp;|&nbsp; ';
-        $currentPath = $_SERVER['SCRIPT_NAME'];
-        echo '<a href="/oauth/login.php">Login with Google</a> ';
+        if (is_dir('./forums') && (!array_key_exists('disableMybb', $settings) || !$settings['disableMybb'])) {
+          echo '<a href="/forums/member.php?action=login">Login</a> &nbsp;|&nbsp; ';
+          echo '<a href="/forums/member.php?action=register">Register</a> &nbsp;|&nbsp; ';
+        }
+        if (GetSetting('google_oauth_client_id') && GetSetting('google_oauth_client_secret')) {
+          echo '<a href="/oauth/login.php">Login with Google</a> ';
+        }
     }
     echo '</div>';
 }
@@ -67,9 +70,7 @@ if (!defined('EMBED')) {
         {
             // see if we have a location that the test was run from (for a custom ad)
             $testLoc = null;
-            if( isset($adLoc) )
-                $testLoc = $adLoc;
-            elseif( isset($test) && isset($test['test']) && isset($test['test']['loc']) )
+            if( isset($test) && isset($test['test']['loc']) )
                 $testLoc = $test['test']['loc'];
             
             if( strpos($testLoc, '..') === false && strpos($testLoc, '/') === false && strpos($testLoc, '\\') === false && 
@@ -112,9 +113,6 @@ if (!defined('EMBED')) {
                 $navTabs['Forums'] = '/forums/';
             }
             $navTabs['Documentation'] = 'http://sites.google.com/a/webpagetest.org/docs/';
-            //if (!$privateInstall) {
-            //    $navTabs['Try Acceleration'] = 'http://www.webpagetest.org/compare';
-            //}
             $navTabs['About'] = FRIENDLY_URLS ? '/about' : '/about.php';
         }
         foreach ($navTabs as $tabName => $tabUrl) {
@@ -131,44 +129,6 @@ if (!defined('EMBED')) {
                     $opens = ' (opens in a new tab)';
                 }
                 echo "<li$current><a title=\"$tabName$opens\" href=\"$tabUrl\"$target>$tabName</a></li>";
-            }
-        }
-
-        if (!$privateInstall && $_SERVER['HTTP_SSL'] != 'On' && (!defined('NAV_NO_SHARE') || !NAV_NO_SHARE))
-        {
-            echo '<div class="gplusone"><g:plusone size="medium" count="false" href="http://www.webpagetest.org/" actions="+1,addtocircles"></g:plusone>&nbsp;
-                <a href="http://twitter.com/share" class="twitter-share-button" data-count="none" data-text=" "></a>
-                ';
-            if (!array_key_exists('slow', $_REQUEST)) {
-                echo '<script type="text/javascript">
-                        (function() {
-                            var po = document.createElement(\'script\'); po.type = \'text/javascript\'; po.async = true;
-                            po.src = \'https://apis.google.com/js/plusone.js\';
-                            var tw = document.createElement(\'script\'); tw.type = \'text/javascript\'; tw.async = true;
-                            tw.src = \'http://platform.twitter.com/widgets.js\';
-                            var s = document.getElementsByTagName(\'script\')[0]; 
-                            s.parentNode.insertBefore(po, s);
-                            s.parentNode.insertBefore(tw, s);
-                          })();
-                  </script></div>
-                  ';
-            } else {
-                echo '<script type="text/javascript">
-                        (function() {
-                            var po = document.createElement(\'script\'); po.type = \'text/javascript\'; po.async = true;
-                            po.src = \'https://apis.google.com/js/plusone.js\';
-                            var s = document.getElementsByTagName(\'script\')[0]; 
-                            s.parentNode.insertBefore(po, s);
-                          })();
-                  </script></div>
-                  ';
-                if ($_REQUEST['slow'] !== 'bottom') {
-                    $delay = 10;
-                    if (array_key_exists('delay', $_REQUEST)) {
-                        $delay = $_REQUEST['delay'];
-                    }
-                    echo "<script type=\"text/javascript\" src=\"/slowtweet.php?delay=$delay\"></script>";
-                }
             }
         }
 ?></ul>
@@ -211,38 +171,44 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
         }
 
         echo '<div id="header_container">';
-        echo '<div id="optimization">';
-            echo '<div id="optimization_header">';
-            if( gz_is_file("$testPath/{$gradeRun}_pagespeed.txt") )
-            {
-                $score = GetPageSpeedScore("$testPath/{$gradeRun}_pagespeed.txt");
-                if( strlen($score) )
-                {
-                    $pageSpeedUrl = FRIENDLY_URLS ? "/result/$id/$gradeRun/pagespeed/" : "pagespeed.php?test=$id&run=$gradeRun";
-                    echo "<span id=\"headerPagespeedScore\"><a href=\"$pageSpeedUrl\">PageSpeed {$pageData[$gradeRun][0]['pageSpeedVersion']} Score</a>: <b>$score/100</b></span>";
-                }
-            }
-            
-            echo "<div id=\"opthelp\"><a href=\"https://sites.google.com/a/webpagetest.org/docs/other-resources/optimization-resources\" title=\"Optimization Resources\" target=\"_blank\">Need help improving?</a></div>\n";
-            echo '</div>';
-            echo '<div id="grades">';
-                $grades = GetGrades($pageData[$gradeRun][0], $test, $id, $gradeRun);
-                if( count($grades) )
-                {
-                    $smaller = '';
-                    if( count($grades) > 6 )
-                      $smaller = ' smaller';
-                    echo "<ul class=\"grades$smaller\">";
-                    $optlink = FRIENDLY_URLS ? "/result/$id/$gradeRun/performance_optimization/" : "performance_optimization.php?test=$id&run=$gradeRun";
-                    foreach( $grades as $check => &$grade )
-                        echo "<li class=\"$check\"><a href=\"$optlink#$check\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
-                    echo '</ul>';
-                }
-            echo '</div>';
-        echo '</div>';
+        // Only include optimization data for normal tests
+        $data_class = '';
+        if (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type'])) {
+          echo '<div id="optimization">';
+              echo '<div id="optimization_header">';
+              if( gz_is_file("$testPath/{$gradeRun}_pagespeed.txt") )
+              {
+                  $score = GetPageSpeedScore("$testPath/{$gradeRun}_pagespeed.txt");
+                  if( strlen($score) )
+                  {
+                      $pageSpeedUrl = FRIENDLY_URLS ? "/result/$id/$gradeRun/pagespeed/" : "pagespeed.php?test=$id&run=$gradeRun";
+                      echo "<span id=\"headerPagespeedScore\"><a href=\"$pageSpeedUrl\">PageSpeed {$pageData[$gradeRun][0]['pageSpeedVersion']} Score</a>: <b>$score/100</b></span>";
+                  }
+              }
+              
+              echo "<div id=\"opthelp\"><a href=\"https://sites.google.com/a/webpagetest.org/docs/other-resources/optimization-resources\" title=\"Optimization Resources\" target=\"_blank\">Need help improving?</a></div>\n";
+              echo '</div>';
+              echo '<div id="grades">';
+                  $grades = GetGrades($pageData[$gradeRun][0], $test, $id, $gradeRun);
+                  if( count($grades) )
+                  {
+                      $smaller = '';
+                      if( count($grades) > 6 )
+                        $smaller = ' smaller';
+                      echo "<ul class=\"grades$smaller\">";
+                      $optlink = FRIENDLY_URLS ? "/result/$id/$gradeRun/performance_optimization/" : "performance_optimization.php?test=$id&run=$gradeRun";
+                      foreach( $grades as $check => &$grade )
+                          echo "<li class=\"$check\"><a href=\"$optlink#$check\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
+                      echo '</ul>';
+                  }
+              echo '</div>';
+          echo '</div>';
+        } else {
+          $data_class = ' class="header_data_full"';
+        }
         
-        echo '<div id="header_data">';
-            $shortUrl = str_replace('http://', '',  FitText($url, 120));
+        echo "<div id=\"header_data\"$data_class>";
+            $shortUrl = str_replace('http://', '',  FitText($url, 180));
             echo "<h2 class=\"alternate cufon-dincond_regular\">Web Page Performance Test for<br>";
             if ($settings['nolinks']) {
                 echo "<span class=\"medium colored\">$shortUrl</span>";
@@ -251,7 +217,12 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
             }
             echo "</h2>";
             
-            echo "<p class=\"heading_details\"><strong>From:</strong> {$test['test']['location']}<br>";
+            echo "<p class=\"heading_details\"><strong>From:</strong> {$test['test']['location']}";
+            if (isset($test['testinfo']['mobile']) && $test['testinfo']['mobile'] === 1)
+            {
+            	echo " - Mobile";
+            }
+            echo "<br />\n";
             if (isset($test['testinfo']) && (isset($test['testinfo']['completed']) || isset($test['testinfo']['started'])) )
             {
                 if (isset($test['testinfo']['completed'])) {
@@ -313,7 +284,8 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
             $tabs['PageSpeed'] = "/pagespeed.php?test=$id&run=$gradeRun&cached=$cached$end";
         $tabs['Content Breakdown'] = "/breakdown.php?test=$id&run=$gradeRun&cached=$cached$end";
         $tabs['Domains'] = "/domains.php?test=$id&run=$gradeRun&cached=$cached$end";
-        if (gz_is_file("$testPath/$gradeRun{$cTxt2}_devtools.json"))
+        if (isset($test['testinfo']) && $test['testinfo']['timeline'] &&
+            (gz_is_file("$testPath/$gradeRun{$cTxt2}_devtools.json") || gz_is_file("$testPath/$gradeRun{$cTxt2}_trace.json")))
             $tabs['Processing Breakdown'] = "/breakdownTimeline.php?test=$id&run=$gradeRun&cached=$cached$end";
         
         if( !isset($test['testinfo']) || !$test['testinfo']['noimages'] )
@@ -374,8 +346,8 @@ function GetGrades(&$pageData, &$test, $id, $run)
         $grades['keep_alive_enabled'] = array( 'class' => $opt['keep-alive']['class'], 'grade' => $opt['keep-alive']['grade'], 'description' => $opt['keep-alive']['label']);
         $grades['compress_text'] = array( 'class' => $opt['gzip']['class'], 'grade' => $opt['gzip']['grade'], 'description' => $opt['gzip']['label']);
         $grades['compress_images'] = array( 'class' => $opt['image_compression']['class'], 'grade' => $opt['image_compression']['grade'], 'description' => $opt['image_compression']['label']);
-        if (array_key_exists('progressive_jpeg', $opt))
-          $grades['progressive_jpeg'] = array( 'class' => $opt['progressive_jpeg']['class'], 'grade' => $opt['progressive_jpeg']['grade'], 'description' => $opt['progressive_jpeg']['label']);
+        //if (array_key_exists('progressive_jpeg', $opt))
+        //  $grades['progressive_jpeg'] = array( 'class' => $opt['progressive_jpeg']['class'], 'grade' => $opt['progressive_jpeg']['grade'], 'description' => $opt['progressive_jpeg']['label']);
         $grades['cache_static_content'] = array( 'class' => $opt['caching']['class'], 'grade' => $opt['caching']['grade'], 'description' => $opt['caching']['label']);
         $grades['use_of_cdn'] = array( 'class' => $opt['cdn']['class'], 'grade' => $opt['cdn']['grade'], 'description' => $opt['cdn']['label']);
     }

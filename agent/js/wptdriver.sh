@@ -6,32 +6,40 @@ declare server=http://localhost:8888
 declare location=Test
 declare browser=chrome
 declare -a opt_args=()
+declare -a https_args=()
 
 usage() {
   cat <<EOF
 Usage: $0 [OPTION]...
 
-  -s, --serverUrl URL  WebPagetest server URL.
-                       Defaults to 'http://localhost:8888'.
+  -s, --serverUrl URL         WebPagetest server URL.
+                              Defaults to 'http://localhost:8888'.
 
-  -l, --location NAME  Location name for this WebPagetest device.
-                       Defaults to 'Test'.
+  -i, --insecure              Ignore invalid server certificate
+                              Defaults to require valid server certificate
 
-  -b, --browser VALUE  Browser type, which must be one of:
-                         chrome       # Local Chrome browser
-                         osx          # Chrome Canary on OSX
-                         android:DID  # Android device id
-                         ios:UDID     # iOS 40-char device id
-                       Defaults to 'chrome'.
+  -k, --clientCert PATH       Path to PFX client certificate. Only supported for https URLs.
 
-  -q, --quiet          Disable verbose logging to stdout.
+  -p, --clientCertPass VALUE  Password for the client certificate specified in the -c option
 
-  -m, --max_log LEVEL  Sets the maximum loglevel that will be saved, where
-                       value can either be a number (0-8) or the name of
-                       a loglevel such as critical, warning, or debug.
-                       Defaults to 'info'.
+  -l, --location NAME         Location name for this WebPagetest device.
+                              Defaults to 'Test'.
 
-  --*                  Additional browser arguments, passed verbatim
+  -b, --browser VALUE         Browser type, which must be one of:
+                                chrome       # Local Chrome browser
+                                osx          # Chrome Canary on OSX
+                                android:DID  # Android device id
+                                ios:UDID     # iOS 40-char device id
+                              Defaults to 'chrome'.
+
+  -q, --quiet                 Disable verbose logging to stdout.
+
+  -m, --max_log LEVEL         Sets the maximum loglevel that will be saved, where
+                              value can either be a number (0-8) or the name of
+                              a loglevel such as critical, warning, or debug.
+                              Defaults to 'info'.
+
+  --*                         Additional browser arguments, passed verbatim
 EOF
   exit 1
 }
@@ -42,6 +50,12 @@ while [[ $# -gt 0 ]]; do
   case "$OPTION" in
   -s | --serverUrl)
      server="$1"; shift 1;;
+  -i | --insecure)
+      https_args=("${https_args[@]:+${https_args[@]}}" "--insecure" "true");;
+  -k | --clientCert)
+     https_args=("${https_args[@]:+${https_args[@]}}" "--clientCert" "$1"); shift 1;;
+  -p | --clientCertPass)
+     https_args=("${https_args[@]:+${https_args[@]}}" "-clientCertPass" "$1"); shift 1;;
   -l | --location)
      location="$1"; shift 1;;
   -b | --browser | -c)
@@ -91,7 +105,8 @@ case "${browser}" in
     declare -a browser_args=( \
         --browser 'browser_android_chrome.BrowserAndroidChrome' \
         --deviceSerial "$deviceSerial" \
-        ${chromedriver:+--chromedriver "${chromedriver}"});;
+        ${chromedriver:+--chromedriver "${chromedriver}"} \
+        --captureDir "$agent/lib/capture");;
   ios:*)
     declare deviceSerial="${browser#*:}"
     declare -a url_apps=("$agent/lib/ios/openURL/openURL"*.ipa)
@@ -103,6 +118,7 @@ case "${browser}" in
         --iosIDeviceDir "$agent/lib/ios/idevice/$(uname -ms)" \
         --iosDevImageDir "$agent/lib/ios/DeviceSupport" \
         --iosSshProxyDir "$agent/lib/ios/usbmux_python_client" \
+        --iosVideoDir "$agent/lib/ios/video" \
         ${url_app:+--iosUrlOpenerApp "$url_app"});;
   *)
     echo "Unknown browser type \"${browser}\""
@@ -110,8 +126,9 @@ case "${browser}" in
 esac
 
 cd ${agent}
-declare -a cmd=(node src/agent_main \
+declare -a cmd=(node --max-old-space-size=4096 --expose-gc src/agent_main \
     --serverUrl ${server} --location ${location} \
+    "${https_args[@]:+${https_args[@]}}" \
     "${browser_args[@]:+${browser_args[@]}}" \
     "${opt_args[@]:+${opt_args[@]}}")
 

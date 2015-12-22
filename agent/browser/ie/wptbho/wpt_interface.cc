@@ -147,7 +147,7 @@ bool WptInterface::HttpGet(CString url, CString& response) {
               &bytes_read) && bytes_read) {
         // NULL-terminate it and add it to our response string
         buff[bytes_read] = 0;
-        response += CA2T(buff);
+        response += CA2T(buff, CP_UTF8);
       }
       InternetCloseHandle(http_request);
     }

@@ -14,6 +14,23 @@ function GetNumeric($value) {
 }
 
 /**
+ * ChartColumn lightens a color string.
+ *
+ * @param string color Color string in #RRGGBB hex format.
+ *
+ * @return string #RRGGBB string representing lighter version of same color.
+ */
+function lighten($color) {
+  $red = hexdec(substr($color, 1, 2));
+  $green = hexdec(substr($color, 3, 2));
+  $blue = hexdec(substr($color, 5, 2));
+  $new_red = floor($red / 2 + 128);
+  $new_green = floor($green / 2 + 128);
+  $new_blue = floor($blue / 2 + 128);
+  return ("#" . dechex($new_red) . dechex($new_green) . dechex($new_blue));
+}
+
+/**
  * ChartColumn is a class describing a column of a GViz chart.
  */
 class ChartColumn
@@ -62,15 +79,14 @@ class ChartColumn
    *
    * @return ChartColumn
    */
-  public static function medianFromPageData($pageData, $cached, $metric, $color, $label) {
+  public static function medianFromPageData($pageData, $cached, $metric, $color, $label, $num_runs) {
     // For each run in pageData, pull out the data values and compute the median, then can create the instance
-    $runs = count($pageData);
     $values = values($pageData, $cached, $metric, true);
     $value = median($values);
     if (!$value) {
       return null;
     }
-    return new ChartColumn(array_combine(range(1, $runs), array_fill(1, $runs, $value)), $color, true, $label);
+    return new ChartColumn(array_combine(range(1, $num_runs), array_fill(1, $num_runs, $value)), $color, true, $label);
   }
 
   /**
@@ -87,14 +103,13 @@ class ChartColumn
    *
    * @return ChartColumn
    */
-  public static function medianRunFromPageData($pageData, $cached, $metric, $median_metric, $color, $label) {
-    $runs = count($pageData);
+  public static function medianRunFromPageData($pageData, $cached, $metric, $median_metric, $color, $label, $num_runs) {
     $medianRun = $pageData[GetMedianRun($pageData, $cached, $median_metric)][$cached];
     if (!array_key_exists($metric, $medianRun)) {
       return null;
     }
     $value = GetNumeric($medianRun[$metric]);
-    return new ChartColumn(array_combine(range(1, $runs), array_fill(1, $runs, $value)), $color, true, $label);
+    return new ChartColumn(array_combine(range(1, $num_runs), array_fill(1, $num_runs, $value)), $color, true, $label);
   }
 
   /**
@@ -114,18 +129,54 @@ class ChartColumn
    * corresponding to value of $metric on run whose value of $median_metric
    * is median.
    */
-  public static function dataMedianColumns($pageData, $cached, $metric, $median_metric, $color, $color_median_run, $label) {
+  public static function dataMedianColumns($pageData, $cached, $metric, $median_metric, $color, $color_median_run, $labels, $num_runs, $show_median_run, $show_median_value) {
     $chartColumns = array();
+    $label = implode(" ", $labels);
     $chartColumns[] = ChartColumn::fromPageData($pageData, $cached, $metric, $color, $label);
-    $column = ChartColumn::medianRunFromPageData($pageData, $cached, $metric, $median_metric, $color_median_run, $label . ', Run with Median ' . $median_metric);
-    if (!is_null($column)) {
-      $chartColumns[] = $column;
+    if ($show_median_run) {
+      $label_median_run = implode(" ", array_merge($labels, (array)('Run with Median ' . $median_metric)));
+      $column = ChartColumn::medianRunFromPageData($pageData, $cached, $metric, $median_metric, $color_median_run, $label_median_run, $num_runs);
+      if (!is_null($column)) {
+        $chartColumns[] = $column;
+      }
     }
-    $column = ChartColumn::medianFromPageData($pageData, $cached, $metric, $color, $label . ' Median');
-    if (!is_null($column)) {
-      $chartColumns[] = $column;
+    if ($show_median_value) {
+      $label_median_value = implode(" ", array_merge($labels, (array)('Median')));
+      $column = ChartColumn::medianFromPageData($pageData, $cached, $metric, $color, $label_median_value, $num_runs);
+      if (!is_null($column)) {
+        $chartColumns[] = $column;
+      }
     }
     return $chartColumns;
+  }
+}
+
+/**
+ * CompareFrom is a class describing a statistical comparison against a control.
+ */
+class CompareFrom {
+  public $confData; // @var ConfData Mean and confidence interval.
+  public $diff; // @var float Difference from control, or NULL for the control.
+  public $pValue; // @var float P-Value as compared against control, or NULL
+                  // for the control.
+
+  function __construct($confData, $diff, $pValue) {
+    $this->confData = $confData;
+    $this->diff = $diff;
+    $this->pValue = $pValue;
+  }
+}
+
+/**
+ * CompareTable is a class describing a statistical comparison table.
+ */
+class CompareTable {
+  public $div; // @var string name of HTML div element
+  public $compareFrom; // @var CompareFrom[]
+
+  function __construct($div, $compareFrom) {
+    $this->div = $div;
+    $this->compareFrom = $compareFrom;
   }
 }
 
@@ -133,19 +184,14 @@ class ChartColumn
  * Chart is a class describing a GViz chart.
  */
 class Chart {
-  /**
-   * @var string name of HTML div element
-   */
-  public $div; // name of HTML div element
+  public $div; // @var string name of HTML div element
+  public $columns; // @var ChartColumn[] Columns in chart
+  public $compareData; // @var CompareTable Comparison data table
 
-  /**
-   * @var ChartColumn[] Columns in chart
-   */
-  public $columns;
-
-  function __construct($div, $columns) {
+  function __construct($div, $columns, $compareData) {
     $this->div = $div;
     $this->columns = $columns;
+    $this->compareData = $compareData;
   }
 }
 ?>

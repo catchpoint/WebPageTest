@@ -30,11 +30,13 @@ foreach($compTests as $t) {
                     if( $p[0] == 'r' )
                         $test['run'] = (int)$p[1];
                     if( $p[0] == 'l' )
-                        $test['label'] = $p[1];
+                        $test['label'] = preg_replace('/[^a-zA-Z0-9 \-_]/', '', $p[1]);
                     if( $p[0] == 'c' )
                         $test['cached'] = (int)$p[1];
                     if( $p[0] == 'e' )
                         $test['end'] = trim($p[1]);
+                    if( $p[0] == 'i' )
+                        $test['initial'] = intval(trim($p[1]) * 1000.0);
                 }
             }
 
@@ -42,6 +44,7 @@ foreach($compTests as $t) {
             $test['path'] = GetTestPath($test['id']);
             $test['pageData'] = loadAllPageData($test['path']);
 
+            $test_median_metric = $median_metric;
             $info = GetTestInfo($test['id']);
             if ($info) {
                 if (array_key_exists('discard', $info) &&
@@ -51,6 +54,8 @@ foreach($compTests as $t) {
                     $defaultInterval = 100;
                 }
                 $test['url'] = $info['url'];
+                if (isset($info['medianMetric']))
+                  $test_median_metric = $info['medianMetric'];
             }
 
             $testInfo = parse_ini_file("./{$test['path']}/testinfo.ini",true);
@@ -61,7 +66,7 @@ foreach($compTests as $t) {
                     $test['done'] = true;
 
                     if( !array_key_exists('run', $test) || !$test['run'] )
-                        $test['run'] = GetMedianRun($test['pageData'],$test['cached'], $median_metric);
+                        $test['run'] = GetMedianRun($test['pageData'],$test['cached'], $test_median_metric);
                     $test['aft'] = array_key_exists('aft', $test['pageData'][$test['run']][$test['cached']]) ? $test['pageData'][$test['run']][$test['cached']]['aft'] : 0;
 
                     $loadTime = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];
@@ -70,24 +75,28 @@ foreach($compTests as $t) {
 
                     // figure out the real end time (in ms)
                     if (isset($test['end'])) {
-                        if( !strcmp($test['end'], 'visual') && array_key_exists('visualComplete', $test['pageData'][$test['run']][$test['cached']]) )
+                        if( !strcmp($test['end'], 'visual') && array_key_exists('visualComplete', $test['pageData'][$test['run']][$test['cached']]) ) {
                             $test['end'] = $test['pageData'][$test['run']][$test['cached']]['visualComplete'];
-                        elseif( !strcmp($test['end'], 'doc') )
+                        } elseif( !strcmp($test['end'], 'load') ) {
+                            $test['end'] = $test['pageData'][$test['run']][$test['cached']]['loadTime'];
+                        } elseif( !strcmp($test['end'], 'doc') ) {
                             $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'];
-                        elseif(!strncasecmp($test['end'], 'doc+', 4))
+                        } elseif(!strncasecmp($test['end'], 'doc+', 4)) {
                             $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'] + (int)((double)substr($test['end'], 4) * 1000.0);
-                        elseif( !strcmp($test['end'], 'full') )
+                        } elseif( !strcmp($test['end'], 'full') ) {
                             $test['end'] = 0;
-                        elseif( !strcmp($test['end'], 'all') )
+                        } elseif( !strcmp($test['end'], 'all') ) {
                             $test['end'] = -1;
-                        elseif( !strcmp($test['end'], 'aft') ) {
+                        } elseif( !strcmp($test['end'], 'aft') ) {
                             $test['end'] = $test['aft'];
                             if( !$test['end'] )
                                 $test['end'] = -1;
-                        } else
+                        } else {
                             $test['end'] = (int)((double)$test['end'] * 1000.0);
-                    } else
+                        }
+                    } else {
                         $test['end'] = 0;
+                    }
                     if( !$test['end'] )
                         $test['end'] = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];
                 } else {
@@ -109,6 +118,8 @@ foreach($compTests as $t) {
 $count = count($tests);
 if( $count ) {
     setcookie('fs', urlencode($_REQUEST['tests']));
+    setcookie('tid', $tests[0]['id']);
+    $id = $tests[0]['id'];
     LoadTestData();
 }
 else
@@ -197,15 +208,14 @@ function LoadTestData() {
             if (is_numeric($test['end']) && $test['end'] > 0)
                 $end = $test['end'] / 1000.0;
             $startOffset = array_key_exists('testStartOffset', $pageData[$test['run']][$test['cached']]) ? intval(round($pageData[$test['run']][$test['cached']]['testStartOffset'])) : 0;
-            if (isset($testInfo) && is_array($testInfo) && array_key_exists('appurify_tests', $testInfo))
-              $startOffset = 0;
             $test['video']['progress'] = GetVisualProgress("./$testPath", $test['run'], $test['cached'], null, $end, $startOffset);
             if (array_key_exists('frames', $test['video']['progress'])) {
               foreach($test['video']['progress']['frames'] as $ms => $frame) {
                 if (!$supports60fps && is_array($frame) && array_key_exists('file', $frame) && substr($frame['file'], 0, 3) == 'ms_')
                   $supports60fps = true;
                   
-                if( !$test['end'] || $test['end'] == -1 || $ms <= $test['end'] ) {
+                if ((!$test['end'] || $test['end'] == -1 || $ms <= $test['end']) &&
+                    (!isset($test['initial']) || !count($test['video']['frames']) || $ms >= $test['initial']) ) {
                   $path = "$videoPath/{$frame['file']}";
                   if( $ms < $test['video']['start'] )
                       $test['video']['start'] = $ms;

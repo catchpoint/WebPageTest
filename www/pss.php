@@ -48,7 +48,7 @@ $page_description = "Comparison Test$testLabel.";
             <input type="hidden" name="video" value="1">
             <input type="hidden" name="shard" value="1">
             <input type="hidden" name="priority" value="0">
-            <input type="hidden" name="timeline" value="1">
+            <input type="hidden" name="timeline" value="0">
             <input type="hidden" name="mv" value="1">
             <?php
                 if ($mps || (array_key_exists('origin', $_GET) && strlen($_GET['origin']))) {
@@ -69,8 +69,9 @@ $page_description = "Comparison Test$testLabel.";
                 echo "<input type=\"hidden\" name=\"runs\" value=\"8\">\n";
                 echo "<input type=\"hidden\" name=\"discard\" value=\"1\">\n";
             } elseif( array_key_exists('origin', $_GET) && strlen($_GET['origin']) ) {
-                $script = 'setDnsName\t%HOSTR%\t' . htmlspecialchars($_GET['origin']) . '\nnavigate\t%URL%';
-                echo "<input type=\"hidden\" id=\"script\" name=\"script\" value=\"setDnsName&#09;%HOSTR%&#09;{$_GET['origin']}&#10;navigate&#09;%URL%\">\n";
+                $origin = htmlspecialchars($_GET['origin']);
+                $script = 'setDnsName\t%HOSTR%\t' . $origin . '\nnavigate\t%URL%';
+                echo "<input type=\"hidden\" id=\"script\" name=\"script\" value=\"setDnsName&#09;%HOSTR%&#09;$origin&#10;navigate&#09;%URL%\">\n";
                 echo "<input type=\"hidden\" name=\"runs\" value=\"5\">\n";
             } else {
                 $script = 'if\trun\t1\nif\tcached\t0\naddHeader\tX-PSA-Blocking-Rewrite: pss_blocking_rewrite\t%HOST_REGEX%\nendif\nendif\nsetDnsName\t%HOSTR%\tghs.google.com\noverrideHost\t%HOSTR%\tpsa.pssdemos.com\nnavigate\t%URL%';
@@ -113,18 +114,18 @@ $page_description = "Comparison Test$testLabel.";
                         $default = 'Enter a Website URL';
                         $testurl = trim($_GET['url']);
                         if( strlen($testurl) )
-                            $default = $testurl;
+                            $default = htmlspecialchars($testurl);
                         echo "<li><input type=\"text\" name=\"testurl\" id=\"testurl\" value=\"$default\" class=\"text large\" onfocus=\"if (this.value == this.defaultValue) {this.value = '';}\" onblur=\"if (this.value == '') {this.value = this.defaultValue;}\"></li>\n";
                         ?>
                         <li>
                             <label for="location">Test From<br><small id="locinfo">(Using Chrome on Cable)</small></label>
                             <select name="pssloc" id="pssloc">
-                                <option value="US_East" selected>US East (Virginia)</option>
-                                <option value="US_West">US West (California)</option>
-                                <option value="Brazil">South America (Brazil)</option>
-                                <option value="Europe">Europe (Ireland)</option>
-                                <option value="Asia_Singapore">Asia (Singapore)</option>
-                                <option value="Asia_Tokyo">Asia (Tokyo)</option>
+                                <option value="Dulles_VA" selected>US East (Virginia)</option>
+                                <option value="ec2-us-west-1-akamai">US West (California)</option>
+                                <option value="ec2-sa-east-1-akamai">South America (Brazil)</option>
+                                <option value="ec2-eu-west-1-akamai">Europe (Ireland)</option>
+                                <option value="ec2-ap-southeast-1-akamai">Asia (Singapore)</option>
+                                <option value="ec2-ap-northeast-1-akamai">Asia (Tokyo)</option>
                                 <option value="other">More Configurations...</option>
                             </select>
                         </li>
@@ -507,7 +508,7 @@ $page_description = "Comparison Test$testLabel.";
 */
 function LoadLocations()
 {
-    $locations = parse_ini_file('./settings/locations.ini', true);
+    $locations = LoadLocationsIni();
     FilterLocations( $locations, 'pss' );
     
     // strip out any sensitive information

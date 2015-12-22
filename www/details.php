@@ -1,13 +1,13 @@
 <?php
 include 'common.inc';
-include 'object_detail.inc';
+require_once('object_detail.inc');
 require_once('page_data.inc');
 require_once('waterfall.inc');
 
 $options = null;
 if (array_key_exists('end', $_REQUEST))
     $options = array('end' => $_REQUEST['end']);
-$data = loadPageRunData($testPath, $run, $cached, $options);
+$data = loadPageRunData($testPath, $run, $cached, $options, $test['testinfo']);
 
 $page_keywords = array('Performance Test','Details','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website performance test details$testLabel";
@@ -255,7 +255,17 @@ $page_description = "Website performance test details$testLabel";
                 $userTimings = array();
                 foreach($data as $metric => $value)
                   if (substr($metric, 0, 9) == 'userTime.')
-                    $userTimings[substr($metric, 9)] = $value;
+                    $userTimings[substr($metric, 9)] = number_format($value / 1000, 3) . 's';
+                if (isset($data['custom']) && count($data['custom'])) {
+                  foreach($data['custom'] as $metric) {
+                    if (isset($data[$metric])) {
+                      $value = $data[$metric];
+                      if (is_double($value))
+                        $value = number_format($value, 3, '.', '');
+                      $userTimings[$metric] = $value;
+                    }
+                  }
+                }
                 $timingCount = count($userTimings);
                 $navTiming = false;
                 if ((array_key_exists('loadEventStart', $data) && $data['loadEventStart'] > 0) ||
@@ -274,13 +284,13 @@ $page_description = "Website performance test details$testLabel";
                     if ($navTiming) {
                       echo "<th$borderClass>";
                       if ($data['firstPaint'] > 0)
-                        echo "msFirstPaint</th><th>";
+                        echo "RUM First Paint</th><th>";
                       echo "<a href=\"http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#process\">domContentLoaded</a></th><th><a href=\"http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#process\">loadEvent</a></th>";
                     }
                     echo '</tr><tr>';
                     if ($timingCount)
                       foreach($userTimings as $label => $value)
-                        echo '<td>' . number_format($value / 1000, 3) . 's</td>';
+                        echo '<td>' . htmlspecialchars($value) . '</td>';
                     if ($navTiming) {
                       echo "<td$borderClass>";
                       if ($data['firstPaint'] > 0)

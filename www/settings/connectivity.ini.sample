@@ -25,6 +25,7 @@ bwIn=49000
 bwOut=30000
 latency=120
 plr=0
+timeout=300
 
 [3G]
 label="Mobile 3G (1.6 Mbps/768 Kbps 300ms RTT)"
@@ -32,6 +33,47 @@ bwIn=1600000
 bwOut=768000
 latency=300
 plr=0
+timeout=120
+
+[3GFast]
+label="Mobile 3G - Fast (1.6 Mbps/768 Kbps 150ms RTT)"
+bwIn=1600000
+bwOut=768000
+latency=150
+plr=0
+timeout=120
+
+[3GSlow]
+label="Mobile 3G - Slow (780 Kbps/330 Kbps 200ms RTT)"
+bwIn=780000
+bwOut=330000
+latency=200
+plr=0
+timeout=240
+
+[Edge]
+label="Mobile Edge (240 Kbps/200 Kbps 840ms RTT)"
+bwIn=240000
+bwOut=200000
+latency=840
+plr=0
+timeout=300
+
+[2GFast]
+label="Mobile 2G - Fast (150 Kbps/120 Kbps 840ms RTT)"
+bwIn=150000
+bwOut=120000
+latency=840
+plr=0
+timeout=300
+
+[2G]
+label="Mobile 2G - Slow (35 Kbps/32 Kbps 1300ms RTT)"
+bwIn=35000
+bwOut=32000
+latency=1300
+plr=0
+timeout=300
 
 [Native]
 label="Native Connection (No Traffic Shaping)"

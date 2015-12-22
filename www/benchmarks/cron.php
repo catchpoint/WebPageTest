@@ -3,9 +3,9 @@
     This is called every 15 minutes as long as agents are polling for work
 */
 chdir('..');
-require 'common.inc';
-require 'testStatus.inc';
-require 'breakdown.inc';
+include 'common.inc';
+require_once('testStatus.inc');
+require_once('breakdown.inc');
 require_once('archive.inc');
 set_time_limit(36000);
 ignore_user_abort(true);
@@ -114,15 +114,21 @@ function PreProcessBenchmark($benchmark) {
     echo "Benchmark '$benchmark' needs processing, spawning task\n";
     logMsg("Benchmark '$benchmark' needs processing, spawning task", "./log/$logFile", true);
     
-    $url = "http://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?benchmark=' . urlencode($benchmark);
-    $c = curl_init();
-    curl_setopt($c, CURLOPT_URL, $url);
-    curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($c, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 1);
-    curl_setopt($c, CURLOPT_TIMEOUT, 1);
-    curl_exec($c);
-    curl_close($c);
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $url = "$protocol://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?benchmark=' . urlencode($benchmark);
+    if (function_exists('curl_init')) {
+      $c = curl_init();
+      curl_setopt($c, CURLOPT_URL, $url);
+      curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($c, CURLOPT_FOLLOWLOCATION, true);
+      curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 1);
+      curl_setopt($c, CURLOPT_TIMEOUT, 1);
+      curl_exec($c);
+      curl_close($c);
+    } else {
+      $context = stream_context_create(array('http' => array('header'=>'Connection: close', 'timeout' => 1)));
+      file_get_contents($url, false, $context);
+    }
   } else {
     echo "Benchmark '$benchmark' is idle\n";
     logMsg("Benchmark '$benchmark' is idle", "./log/$logFile", true);
@@ -363,6 +369,7 @@ function SubmitBenchmark(&$configurations, &$state, $benchmark) {
     // group all of the tests by URL so that any given URL is tested in all configurations before going to the next URL
     $tests = array();
     foreach ($configurations as $config_label => $config) {
+      if (!isset($config['disabled'])) {
         $urls = file("./settings/benchmarks/{$config['url_file']}", FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         foreach ($urls as $url) {
             $url = trim($url);
@@ -393,6 +400,7 @@ function SubmitBenchmark(&$configurations, &$state, $benchmark) {
               }
             }
         }
+      }
     }
 
     // now submit the actual tests    
@@ -486,7 +494,8 @@ function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
                     ));
 
     $ctx = stream_context_create($params);
-    $fp = fopen("http://{$_SERVER['HTTP_HOST']}/runtest.php", 'rb', false, $ctx);
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $fp = fopen("$protocol://{$_SERVER['HTTP_HOST']}/runtest.php", 'rb', false, $ctx);
     if ($fp) {
         $response = @stream_get_contents($fp);
         if ($response && strlen($response)) {
@@ -528,7 +537,7 @@ function AggregateResults($benchmark, &$state, $options) {
     }
     
     // store a list of metrics that we aggregate in the info block
-    $info['metrics'] = array('TTFB', 'bytesOut', 'bytesOutDoc', 'bytesIn', 'bytesInDoc', 
+    $info['metrics'] = array('TTFB', 'basePageSSLTime', 'bytesOut', 'bytesOutDoc', 'bytesIn', 'bytesInDoc', 
                                 'connections', 'requests', 'requestsDoc', 'render', 
                                 'fullyLoaded', 'docTime', 'domTime', 'score_cache', 'score_cdn',
                                 'score_gzip', 'score_keep-alive', 'score_compress', 'gzip_total', 'gzip_savings',

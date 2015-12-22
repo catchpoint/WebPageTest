@@ -85,7 +85,8 @@ $page_description = "Website performance test result$testLabel.";
                     echo GetTestInfoHtml();
                     if( !$headless && gz_is_file("$testPath/testinfo.json") 
                         && !array_key_exists('published', $test['testinfo'])
-                        && ($isOwner || !$test['testinfo']['sensitive']) )
+                        && ($isOwner || !$test['testinfo']['sensitive'])
+                        && (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type'])) )
                     {
                         // load the secret key (if there is one)
                         $secret = '';
@@ -148,7 +149,7 @@ $page_description = "Website performance test result$testLabel.";
                     strlen($test['testinfo']['test_error'])) {
                     $is_test_error = true;
                 }
-                if( $fvMedian && !$is_test_error )
+                if( $fvMedian  )
                 {
                     if( count($pageData) > 1) 
                         echo '<h2>Performance Results (Median Run)</h2>';
@@ -170,9 +171,12 @@ $page_description = "Website performance test result$testLabel.";
                         <th align="center" class="empty" valign="middle" style="border:1px white solid;"></th>
                         <?php
                         echo "<th align=\"center\" class=\"empty\" valign=\"middle\" colspan=\"$cols\"></th>\n";
+                        echo '<th align="center" class="border" valign="middle" colspan="3">Document Complete</th>';
+                        if (GetSetting('show_cost'))
+                          echo '<th align="center" class="border" valign="middle" colspan="4">Fully Loaded</th>';
+                        else
+                          echo '<th align="center" class="border" valign="middle" colspan="3">Fully Loaded</th>';
                         ?>
-                        <th align="center" class="border" valign="middle" colspan="3">Document Complete</th>
-                        <th align="center" class="border" valign="middle" colspan="3">Fully Loaded</th>
                     </tr>
                     <tr>
                         <th align="center" class="empty" valign="middle"></th>
@@ -200,6 +204,10 @@ $page_description = "Website performance test result$testLabel.";
                         <th align="center" class="border" valign="middle">Time</th>
                         <th align="center" valign="middle">Requests</th>
                         <th align="center" valign="middle">Bytes In</th>
+                        <?php
+                        if (GetSetting('show_cost'))
+                          echo '<th align="center" valign="middle">Cost</th>';
+                        ?>
                     </tr>
                     <tr>
                         <td align="left" valign="middle">First View
@@ -231,6 +239,14 @@ $page_description = "Website performance test result$testLabel.";
                         echo "<td id=\"fvFullyLoaded\" class=\"border\" valign=\"middle\">" . formatMsInterval($pageData[$fvMedian][0]['fullyLoaded'], 3) . "</td>\n";
                         echo "<td id=\"fvRequests\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['requests'],0) . "</td>\n";
                         echo "<td id=\"fvBytes\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['bytesIn'] / 1024, 0) . " KB</td>\n";
+                        if (GetSetting('show_cost')) {
+                          echo "<td id=\"fvCost\" valign=\"middle\"><a title=\"Find out how much it costs for someone to use your site on mobile networks around the world.\" href=\"http://whatdoesmysitecost.com/test/$id\">";
+                          // one dollar sign for every 500KB
+                          $count = max(1, min(5, ceil($pageData[$fvMedian][0]['bytesIn'] / (500 * 1024))));
+                          for ($i = 1; $i <= 5; $i++)
+                            echo $i <= $count ? '$' : '-';
+                          echo "</a></td>\n";
+                        }
                         ?>
                     </tr>
                     <?php if( $rvMedian ) { ?>
@@ -267,13 +283,16 @@ $page_description = "Website performance test result$testLabel.";
                         echo "<td id=\"rvFullyLoaded\" class=\"even border\" valign=\"middle\">" . formatMsInterval($pageData[$rvMedian][1]['fullyLoaded'], 3) . "</td>\n";
                         echo "<td id=\"rvRequests\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['requests'],0) . "</td>\n";
                         echo "<td id=\"rvBytes\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['bytesIn'] / 1024, 0) . " KB</td>\n";
+                        if (GetSetting('show_cost')) {
+                          echo '<td></td>';
+                        }
                         ?>
                     </tr>
                     <?php } ?>
                     </table>
                     <?php
                     if (count($pageData) > 1) {
-                        echo "<a href=\"/graph_page_data.php?test=$id&medianMetric=$median_metric\">Plot Full Results</a>";
+                        echo "<a href=\"/graph_page_data.php?tests=$id&medianMetric=$median_metric\">Plot Full Results</a>";
                     }
                     ?>
                     <br>
@@ -330,7 +349,7 @@ $page_description = "Website performance test result$testLabel.";
 		<?php
 		    }
                 }
-                else {
+                if (!$fvMedian || $is_test_error) {
                     $error = 'The test completed but there were no successful results.';
                     $detail = null;
                     if ($is_test_error) {
@@ -349,7 +368,8 @@ $page_description = "Website performance test result$testLabel.";
                             }
                         }
                     }
-                    echo '<h3>' . htmlspecialchars($error) . '</h3>';
+                    if (!$fvMedian)
+                      echo '<h3>' . htmlspecialchars($error) . '</h3>';
                     if (isset($detail)) {
                         echo '<h4>' . htmlspecialchars($detail) . '</h4>';
                     }
@@ -373,13 +393,7 @@ $page_description = "Website performance test result$testLabel.";
             for( $run = 1; $run <= $runs; $run++)
             {
                 $error_str = null;
-                if (array_key_exists('testinfo', $test) && 
-                    array_key_exists('errors', $test['testinfo']) && 
-                    array_key_exists($run, $test['testinfo']['errors']) && 
-                    array_key_exists(0, $test['testinfo']['errors'][$run]) && 
-                    strlen($test['testinfo']['errors'][$run][0])) {
-                    $error_str = 'Test Error: ' . $test['testinfo']['errors'][$run][0];
-                } elseif (!isset($pageData) || !is_array($pageData) || !array_key_exists($run, $pageData)) {
+                if (!isset($pageData) || !is_array($pageData) || !array_key_exists($run, $pageData)) {
                     if ($testComplete)
                         $error_str = 'Test Error: Data is missing.';
                     else
@@ -415,6 +429,8 @@ $page_description = "Website performance test result$testLabel.";
                         }
                         $first_displayed = true;
                         echo '<td align="left" valign="middle">First View';
+                        if (isset($test['testinfo']['errors'][$run][0]) && strlen($test['testinfo']['errors'][$run][0]))
+                            echo '<br>(Test Error: ' . htmlspecialchars($test['testinfo']['errors'][$run][0]) . ')';
                         if( isset($pageData[$run][0]['result']) && $pageData[$run][0]['result'] !== 0 && $pageData[$run][0]['result'] !== 99999 )
                             echo '<br>(Error: ' . LookupError($pageData[$run][0]['result']) . ')';
                         else if( isset($pageData[$run][0]['loadTime']) )
@@ -434,14 +450,23 @@ $page_description = "Website performance test result$testLabel.";
                                 $view_url = $settings['tcpdump_view'] . urlencode("http://$wpt_host$tcpdump_url");
                                 echo " - (<a href=\"$view_url\" title=\"View tcpdump session capture\">view</a>)";
                             }
+                            if( gz_is_file("$testPath/{$run}_keylog.log") ) {
+                              $keylog = "/getgzip.php?test=$id&file={$run}_keylog.log";
+                              echo "<br>(<a href=\"$keylog\" title=\"TLS key log file\">TLS Key Log</a>)";
+                            }
                         }
-                        if( gz_is_file("$testPath/{$run}_timeline.json") || gz_is_file("$testPath/{$run}_devtools.json") ) {
-                            echo "<br><br><a href=\"/getTimeline.php?test=$id&run=$run&cached=0\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
-                            echo " (<a href=\"/chrome/timeline.php?test=$id&run=$run\" title=\"View Chrome Dev Tools Timeline\">view</a>)";
-                            if (array_key_exists('testinfo', $test) && array_key_exists('timeline', $test['testinfo']) && $test['testinfo']['timeline'])
+                        if ($test['testinfo']['timeline']) {
+                          if( gz_is_file("$testPath/{$run}_trace.json")) {
+                              echo "<br><br><a href=\"/getTimeline.php?test=$id&run=$run&cached=0\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
+                              echo " (<a href=\"/chrome/timeline.php?test=$id&run=$run\" title=\"View Chrome Dev Tools Timeline\">view</a>)";
                               echo "<br><a href=\"/breakdownTimeline.php?test=$id&run=$run&cached=0\" title=\"View browser main thread activity by event type\">Processing Breakdown</a>";
+                          } elseif( gz_is_file("$testPath/{$run}_timeline.json") || gz_is_file("$testPath/{$run}_devtools.json") ) {
+                              echo "<br><br><a href=\"/getTimeline.php?test=$id&run=$run&cached=0\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
+                              echo " (<a href=\"/chrome/timeline.php?test=$id&run=$run\" title=\"View Chrome Dev Tools Timeline\">view</a>)";
+                              echo "<br><a href=\"/breakdownTimeline.php?test=$id&run=$run&cached=0\" title=\"View browser main thread activity by event type\">Processing Breakdown</a>";
+                          }
                         }
-                        if( gz_is_file("$testPath/{$run}_trace.json")) {
+                        if( $test['testinfo']['trace'] && gz_is_file("$testPath/{$run}_trace.json")) {
                             echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_trace.json\" title=\"Download Chrome Trace\">Trace</a>";
                             echo " (<a href=\"/chrome/trace.php?test=$id&run=$run&cached=0\" title=\"View Chrome Trace\">view</a>)";
                         }
@@ -488,6 +513,8 @@ $page_description = "Website performance test result$testLabel.";
                   if( isset($pageData[$run][1]) ) { 
                       if (array_key_exists($run, $pageData) && array_key_exists(1, $pageData[$run]) && count($pageData[$run][1])) {
                           echo '<td align="left" class="even" valign="middle">Repeat View';
+                        if (isset($test['testinfo']['errors'][$run][1]) && strlen($test['testinfo']['errors'][$run][1]))
+                            echo '<br>(Test Error: ' . htmlspecialchars($test['testinfo']['errors'][$run][0]) . ')';
                           if( isset($pageData[$run][1]['result']) && $pageData[$run][1]['result'] !== 0 && $pageData[$run][1]['result'] !== 99999 )
                               echo '<br>(Error: ' . LookupError($pageData[$run][1]['result']) . ')';
                           else if( isset($pageData[$run][1]['loadTime']) )
@@ -507,14 +534,23 @@ $page_description = "Website performance test result$testLabel.";
                                   $view_url = $settings['tcpdump_view'] . urlencode("http://$wpt_host$tcpdump_url");
                                   echo " - (<a href=\"$view_url\" title=\"View tcpdump session capture\">view</a>)";
                               }
+                              if( gz_is_file("$testPath/{$run}_Cached_keylog.log") ) {
+                                $keylog = "/getgzip.php?test=$id&file={$run}_Cached_keylog.log";
+                                echo "<br>(<a href=\"$keylog\" title=\"TLS key log file\">TLS Key Log</a>)";
+                              }
                           }
-                          if( gz_is_file("$testPath/{$run}_Cached_timeline.json") || gz_is_file("$testPath/{$run}_Cached_devtools.json") ) {
-                              echo "<br><br><a href=\"/getTimeline.php?test=$id&run={$run}&cached=1\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
-                              echo " (<a href=\"/chrome/timeline.php?test=$id&run=$run&cached=1\" title=\"View Chrome Dev Tools Timeline\">view</a>)";
-                              if (array_key_exists('testinfo', $test) && array_key_exists('timeline', $test['testinfo']) && $test['testinfo']['timeline'])
-                                echo "<br><a href=\"/breakdownTimeline.php?test=$id&run=$run&cached=1\" title=\"View browser main thread activity by event type\">Processing Breakdown</a>";
+                          if ($test['testinfo']['timeline']) {
+                            if( gz_is_file("$testPath/{$run}_Cached_trace.json")) {
+                                echo "<br><br><a href=\"/getTimeline.php?test=$id&run=$run&cached=1\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
+                                echo " (<a href=\"/chrome/timeline.php?test=$id&run=$run&cached=1\" title=\"View Chrome Dev Tools Timeline\">view</a>)";
+                            } elseif( gz_is_file("$testPath/{$run}_Cached_timeline.json") || gz_is_file("$testPath/{$run}_Cached_devtools.json") ) {
+                                echo "<br><br><a href=\"/getTimeline.php?test=$id&run={$run}&cached=1\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
+                                echo " (<a href=\"/chrome/timeline.php?test=$id&run=$run&cached=1\" title=\"View Chrome Dev Tools Timeline\">view</a>)";
+                                if (array_key_exists('testinfo', $test) && array_key_exists('timeline', $test['testinfo']) && $test['testinfo']['timeline'])
+                                  echo "<br><a href=\"/breakdownTimeline.php?test=$id&run=$run&cached=1\" title=\"View browser main thread activity by event type\">Processing Breakdown</a>";
+                            }
                           }
-                          if( gz_is_file("$testPath/{$run}_Cached_trace.json")) {
+                          if( $test['testinfo']['trace'] && gz_is_file("$testPath/{$run}_Cached_trace.json")) {
                               echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_trace.json\" title=\"Download Chrome Trace\">Trace</a>";
                               echo " (<a href=\"/chrome/trace.php?test=$id&run=$run&cached=1\" title=\"View Chrome Trace\">view</a>)";
                           }

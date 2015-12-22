@@ -1,7 +1,7 @@
 <?php
 chdir('..');
 include 'common.inc';
-include './benchmarks/data.inc.php';
+require_once('./benchmarks/data.inc.php');
 $page_keywords = array('Benchmarks','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "WebPagetest benchmark test details";
 $benchmark = '';
@@ -33,8 +33,10 @@ else {
 $metrics = array('docTime' => 'Load Time (onload)', 
                 'SpeedIndex' => 'Speed Index',
                 'TTFB' => 'Time to First Byte', 
+                'basePageSSLTime' => 'Base Page SSL Time',
                 'titleTime' => 'Time to Title', 
                 'render' => 'Time to Start Render', 
+                'domContentLoadedEventStart' => 'DOM Content Loaded',
                 'visualComplete' => 'Time to Visually Complete', 
                 'lastVisualChange' => 'Last Visual Change',
                 'fullyLoaded' => 'Load Time (Fully Loaded)', 
@@ -315,6 +317,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null) {
             if (isset($tsv) && strlen($tsv)) {
                 $count++;
                 $id = "g$count";
+
                 echo "<br><div class=\"chart-container\"><div id=\"$id\" class=\"benchmark-chart\"></div><div id=\"{$id}_legend\" class=\"benchmark-legend\"></div></div>\n";
                 echo "<script type=\"text/javascript\">
                         var {$id}meta = " . json_encode($meta) . ";

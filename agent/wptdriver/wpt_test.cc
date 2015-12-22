@@ -33,23 +33,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../wpthook/shared_mem.h"
 #include "wpt_settings.h"
 
-static const DWORD SCRIPT_TIMEOUT_MULTIPLIER = 2;
 static const BYTE JPEG_DEFAULT_QUALITY = 30;
 static const DWORD MS_IN_SEC = 1000;
 static const DWORD BROWSER_WIDTH = 1024;
 static const DWORD BROWSER_HEIGHT = 768;
 
-// Mobile emulation defaults (taken from a Droid RAZR).
+// Mobile emulation defaults (taken from a Nexus 5).
 // The height has 36 added pixels to allow for the debugging header.
-static const TCHAR * DEFAULT_MOBILE_SCALE_FACTOR = _T("1.5");
-static const DWORD DEFAULT_MOBILE_WIDTH = 540;
-static const DWORD DEFAULT_MOBILE_HEIGHT = 900;
-static const DWORD CHROME_PADDING_HEIGHT = 115;
-static const DWORD CHROME_PADDING_WIDTH = 4;
+static const TCHAR * DEFAULT_MOBILE_SCALE_FACTOR = _T("3");
+static const DWORD DEFAULT_MOBILE_WIDTH = 360;
+static const DWORD DEFAULT_MOBILE_HEIGHT = 640;
+static const DWORD CHROME_PADDING_HEIGHT = 108;
+static const DWORD CHROME_PADDING_WIDTH = 6;
 static const char * DEFAULT_MOBILE_USER_AGENT =
-    "Mozilla/5.0 (Linux; Android 4.0.4; DROID RAZR "
-    "Build/6.7.2-180_DHD-16_M4-31) AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/31.0.1631.1 Mobile Safari/537.36";
+    "Mozilla/5.0 (Linux; Android 5.0; Nexus 5 Build/LRX21O) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/46.0.2490.76 Mobile Safari/537.36";
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -59,7 +58,8 @@ WptTest::WptTest(void):
   ,_activity_timeout(DEFAULT_ACTIVITY_TIMEOUT)
   ,_measurement_timeout(DEFAULT_TEST_TIMEOUT)
   ,has_gpu_(false)
-  ,lock_count_(0) {
+  ,lock_count_(0),
+  _script_timeout_multiplier(2) {
   QueryPerformanceFrequency(&_perf_frequency);
 
   // figure out what our working diriectory is
@@ -99,6 +99,7 @@ void WptTest::Reset(void) {
   _ignore_ssl = false;
   _tcpdump = false;
   _timeline = false;
+  _timelineStackDepth = 0;
   _trace = false;
   _netlog = false;
   _video = false;
@@ -131,6 +132,7 @@ void WptTest::Reset(void) {
   _combine_steps = 0;
   _image_quality = JPEG_DEFAULT_QUALITY;
   _png_screen_shot = false;
+  _full_size_video = false;
   _minimum_duration = 0;
   _user_agent.Empty();
   _add_headers.RemoveAll();
@@ -156,6 +158,8 @@ void WptTest::Reset(void) {
   _run_error.Empty();
   _test_error.Empty();
   _custom_metrics.Empty();
+  _has_test_timed_out = false;
+  _user_agent_modifier = "PTST";
 }
 
 /*-----------------------------------------------------------------------------
@@ -202,6 +206,8 @@ bool WptTest::Load(CString& test) {
           _tcpdump = true;
         else if (!key.CompareNoCase(_T("timeline")) && _ttoi(value.Trim()))
           _timeline = true;
+        else if (!key.CompareNoCase(_T("timelineStackDepth")))
+          _timelineStackDepth = _ttoi(value.Trim());
         else if (!key.CompareNoCase(_T("trace")) && _ttoi(value.Trim()))
           _trace = true;
         else if (!key.CompareNoCase(_T("netlog")) && _ttoi(value.Trim()))
@@ -243,6 +249,8 @@ bool WptTest::Load(CString& test) {
                                      min(100, _ttoi(value.Trim())));
         else if (!key.CompareNoCase(_T("pngScreenShot")) &&_ttoi(value.Trim()))
           _png_screen_shot = true;
+        else if (!key.CompareNoCase(_T("fullSizeVideo")) &&_ttoi(value.Trim()))
+          _full_size_video = true;
         else if (!key.CompareNoCase(_T("time")))
           _minimum_duration = MS_IN_SEC * max(_minimum_duration, 
                                min(DEFAULT_TEST_TIMEOUT, _ttoi(value.Trim())));
@@ -283,8 +291,26 @@ bool WptTest::Load(CString& test) {
         else if (!key.CompareNoCase(_T("addCmdLine")))
           _browser_additional_command_line = value;
         else if (!key.CompareNoCase(_T("continuousVideo")) &&
-                 _ttoi(value.Trim()))
+          _ttoi(value.Trim()))
           _continuous_video = true;
+        else if (!key.CompareNoCase(_T("timeout"))) {
+          _test_timeout = _ttoi(value.Trim()) * 1000;
+          _script_timeout_multiplier = 1;
+          if (_test_timeout < 0)
+            _test_timeout = 0;
+          else if (_test_timeout > 3600000)
+            _test_timeout = 3600000;
+        } else if (!key.CompareNoCase(_T("UAModifier"))) {
+          _user_agent_modifier = value;
+        } else if (!key.CompareNoCase(_T("UAString"))) {
+          _user_agent = value.Trim();
+        } else if (!key.CompareNoCase(_T("dpr")) && _ttoi(value.Trim())) {
+          _device_scale_factor = value.Trim();
+        } else if (!key.CompareNoCase(_T("width")) && _ttoi(value.Trim())) {
+          _viewport_width = _ttoi(value.Trim());
+        } else if (!key.CompareNoCase(_T("height")) && _ttoi(value.Trim())) {
+          _viewport_height = _ttoi(value.Trim());
+        }
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {
       // grab the rest of the response as the script
@@ -295,12 +321,15 @@ bool WptTest::Load(CString& test) {
     line = test.Tokenize(_T("\r\n"), linePos);
   }
 
+  if (_measurement_timeout < _test_timeout)
+    _measurement_timeout = _test_timeout;
+
   if (_specific_run) {
     _discard = 0;
   }
 
   if (_script.GetLength())
-    _test_timeout *= SCRIPT_TIMEOUT_MULTIPLIER;
+    _test_timeout *= _script_timeout_multiplier;
 
   WptTrace(loglevel::kFunction, _T("WptTest::Load() - Loaded test %s\n"), 
                                                                 (LPCTSTR)_id);
@@ -389,7 +418,7 @@ bool WptTest::Done() {
   bool ret = false;
 
   _active = false;
-  if (_script_commands.IsEmpty())
+  if (_script_commands.IsEmpty() || _has_test_timed_out)
     ret = true;
 
   return ret;
@@ -468,6 +497,7 @@ void WptTest::BuildScript() {
   if (_timeline) {
     ScriptCommand command;
     command.command = _T("captureTimeline");
+    command.target.Format(_T("%d"), _timelineStackDepth);
     command.record = false;
     _script_commands.AddHead(command);
   }
@@ -486,38 +516,34 @@ void WptTest::BuildScript() {
     _script_commands.AddHead(command);
   }
 
+  if(!_preserve_user_agent) {
+    ScriptCommand command;
+    command.command = _T("appendUserAgent");
+    command.target.Format(_T("%S/%d"), (LPCSTR)_user_agent_modifier, _version);
+    command.record = false;
+    _script_commands.AddHead(command);
+  }
+
   if (_emulate_mobile) {
     if (_device_scale_factor.IsEmpty())
       _device_scale_factor = DEFAULT_MOBILE_SCALE_FACTOR;
     if (!_viewport_width && !_viewport_height) {
-      DWORD padding_width = CHROME_PADDING_WIDTH;
-      DWORD padding_height = CHROME_PADDING_HEIGHT;
-      double scale = _ttof(_device_scale_factor);
-      if (scale >= 0.5 && scale <= 10.0) {
-        padding_width = (int)((double)padding_width * scale);
-        padding_height = (int)((double)padding_height * scale);
-      }
-      _browser_width = DEFAULT_MOBILE_WIDTH + padding_width;
-      _browser_height = DEFAULT_MOBILE_HEIGHT + padding_height;
+      _viewport_width = DEFAULT_MOBILE_WIDTH;
+      _viewport_height = DEFAULT_MOBILE_HEIGHT;
     }
+    _browser_width = _viewport_width + CHROME_PADDING_WIDTH;
+    _browser_height = _viewport_height + CHROME_PADDING_HEIGHT;
     if (_user_agent.IsEmpty())
       _user_agent = DEFAULT_MOBILE_USER_AGENT;
-  }
-
-  // Scale the viewport or browser size by the scale factor.
-  // Once the viewport scaling is ACTUALLY working in Chrome then we can ues it
-  // but as of right now it isn't.
-  if (!has_gpu_ && _device_scale_factor.GetLength()) {
-    double scale = _ttof(_device_scale_factor);
-    _device_scale_factor.Empty();
-    if (scale >= 0.5 && scale <= 10.0) {
-      _browser_width = (int)((double)_browser_width / scale);
-      _browser_height = (int)((double)_browser_height / scale);
-      if (_viewport_width)
-        _viewport_width = (int)((double)_viewport_width / scale);
-      if (_viewport_height)
-        _viewport_height = (int)((double)_viewport_height / scale);
-    }
+    ScriptCommand command;
+    command.command = _T("emulatemobile");
+    command.target.Format(
+        _T("{\"width\":%d,\"height\":%d,\"deviceScaleFactor\":%s,\"mobile\":true,\"fitWindow\":true}"),
+          _viewport_width, _viewport_height, _device_scale_factor);
+    command.record = false;
+    _script_commands.AddHead(command);
+    _viewport_width = 0;
+    _viewport_height = 0;
   }
 }
 
@@ -691,6 +717,8 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
     ReportData();
     continue_processing = false;
     consumed = false;
+  } else if (cmd == _T("seteventname")) {
+    _current_event_name = CT2A(command.target.Trim());
   } else {
     continue_processing = false;
     consumed = false;
@@ -766,6 +794,9 @@ bool WptTest::PreProcessScriptCommand(ScriptCommand& command) {
       }
       if (!_device_scale_factor.GetLength())
         _device_scale_factor.Empty();
+    } else if (cmd == _T("setuseragent")) {
+      _user_agent = CT2A(command.target.Trim());
+      processed = false;
     } else {
       processed = false;
     }
@@ -847,9 +878,9 @@ bool WptTest::ModifyRequestHeader(CStringA& header) const {
   if( !tag.CompareNoCase("User-Agent") ) {
     if (_user_agent.GetLength()) {
       header = CStringA("User-Agent: ") + _user_agent;
-    } else if(!_preserve_user_agent) {
+    } else if(!_preserve_user_agent && value.Find(" " + _user_agent_modifier + "/") == -1) {
       CStringA user_agent;
-      user_agent.Format(" PTST/%d", _version);
+      user_agent.Format(" %s/%d", _user_agent_modifier, _version);
       header += user_agent;
     }
   } else if (!tag.CompareNoCase("Host")) {
@@ -915,6 +946,7 @@ bool WptTest::ModifyRequestHeader(CStringA& header) const {
 -----------------------------------------------------------------------------*/
 bool WptTest::BlockRequest(CString host, CString object) {
   bool block = false;
+  EnterCriticalSection(&cs_);
   CString request = host + object;
   POSITION pos = _block_requests.GetHeadPosition();
   while (!block && pos) {
@@ -922,7 +954,72 @@ bool WptTest::BlockRequest(CString host, CString object) {
     if (request.Find(block_pattern) >= 0)
       block = true;
   }
+  LeaveCriticalSection(&cs_);
   return block;
+}
+
+/*-----------------------------------------------------------------------------
+  See if the host for the outbound request needs to be modified
+-----------------------------------------------------------------------------*/
+bool WptTest::OverrideHost(CString host, CString &new_host) {
+  bool override_host = false;
+  if (host.GetLength()) {
+    EnterCriticalSection(&cs_);
+    POSITION pos = _override_hosts.GetHeadPosition();
+    while (pos) {
+      HttpHeaderValue host_override = _override_hosts.GetNext(pos);
+      if (!host_override._tag.CompareNoCase(CT2A(host)) ||
+          !host_override._tag.Compare("*")) {
+        new_host = CA2T(host_override._value, CP_UTF8);
+        override_host = true;
+        break;
+      }
+    }
+    LeaveCriticalSection(&cs_);
+  }
+  return override_host;
+}
+
+/*-----------------------------------------------------------------------------
+  See if the host for the outbound request needs to be modified
+-----------------------------------------------------------------------------*/
+bool WptTest::GetHeadersToSet(CString host, CAtlList<CString> &headers) {
+  if (!headers.IsEmpty())
+    headers.RemoveAll();
+  if (host.GetLength()) {
+    EnterCriticalSection(&cs_);
+    POSITION pos = _set_headers.GetHeadPosition();
+    while (pos) {
+      HttpHeaderValue new_header = _set_headers.GetNext(pos);
+      if (RegexMatch((LPCSTR)CT2A(host), new_header._filter)) {
+        CString header = new_header._tag + CStringA(": ") + new_header._value;
+        headers.AddTail(header);
+      }
+    }
+    LeaveCriticalSection(&cs_);
+  }
+  return !headers.IsEmpty();
+}
+
+/*-----------------------------------------------------------------------------
+  See if the host for the outbound request needs to be modified
+-----------------------------------------------------------------------------*/
+bool WptTest::GetHeadersToAdd(CString host, CAtlList<CString> &headers) {
+  if (!headers.IsEmpty())
+    headers.RemoveAll();
+  if (host.GetLength()) {
+    EnterCriticalSection(&cs_);
+    POSITION pos = _add_headers.GetHeadPosition();
+    while (pos) {
+      HttpHeaderValue new_header = _add_headers.GetNext(pos);
+      if (RegexMatch((LPCSTR)CT2A(host), new_header._filter)) {
+        CString header = new_header._tag + CStringA(": ") + new_header._value;
+        headers.AddTail(header);
+      }
+    }
+    LeaveCriticalSection(&cs_);
+  }
+  return !headers.IsEmpty();
 }
 
 /*-----------------------------------------------------------------------------
@@ -1008,6 +1105,7 @@ void WptTest::ReportData() {
 -----------------------------------------------------------------------------*/
 void WptTest::CollectDataDone() {
   bool removed = false;
+  _current_event_name.Empty();
   do {
     removed = false;
     if (!_script_commands.IsEmpty()) {

@@ -1,7 +1,7 @@
 <?php
 include 'common.inc';
-include 'page_data.inc';
-include 'object_detail.inc';
+require_once('page_data.inc');
+require_once('object_detail.inc');
 require_once('testStatus.inc');
 set_time_limit(300);
 
@@ -37,9 +37,9 @@ foreach( $testIds as &$testId )
 	$cached = 0;
 	
 	RestoreTest($testId);
-        GetTestStatus($testId);
-        $testPath = './' . GetTestPath($testId);
-        $pageData = loadAllPageData($testPath);
+  GetTestStatus($testId);
+  $testPath = './' . GetTestPath($testId);
+  $pageData = loadAllPageData($testPath);
 	$medianRun = GetMedianRun($pageData, $cached);
 
 	$secured = 0;

@@ -255,22 +255,29 @@ int CWsHook::closesocket(SOCKET s)
 int CWsHook::connect(IN SOCKET s, const struct sockaddr FAR * name, IN int namelen)
 {
 	int ret = SOCKET_ERROR;
+  bool allowed = true;
 
 	// we only care about IP sockets at this point
 	if( dlg && namelen >= sizeof(struct sockaddr_in) && name->sa_family == AF_INET)
 	{
 		struct sockaddr_in * ipName = (struct sockaddr_in *)name;
-		dlg->SocketConnect(s, ipName);
+    // Block access to link-local addresses (169.254.x.x)
+    if ((ipName->sin_addr.S_un.S_addr & 0x0000FFFF) == 0x0000FEA9)
+      allowed = false;
+    else
+		  dlg->SocketConnect(s, ipName);
 	}
 
-	if( _connect )
-		ret = _connect(s, name, namelen);
-  if (!ret) {
-    dlg->SocketConnected(s);
-  }
+  if (allowed) {
+	  if( _connect )
+		  ret = _connect(s, name, namelen);
+    if (!ret) {
+      dlg->SocketConnected(s);
+    }
 
     if (tlsIndex != TLS_OUT_OF_INDEXES)
       TlsSetValue(tlsIndex, 0);
+  }
 
 	return ret;
 }

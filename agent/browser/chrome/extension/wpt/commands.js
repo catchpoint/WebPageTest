@@ -98,8 +98,6 @@ wpt.commands.CommandRunner = function(tabId, chromeApi) {
 wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
     commandObject, callback) {
 
-  console.log('Delegate a command to the content script: ', commandObject);
-
   var code = ['wpt.contentScript.InPageCommandRunner.Instance.RunCommand(',
               JSON.stringify(commandObject),
               ');'].join('');
@@ -108,20 +106,6 @@ wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
         if (callback != undefined)
           callback();
       });
-};
-
-/**
- * Implement the exec command.
- * TODO(skerner): Make this use SendCommandToContentScript_(), and
- * wrap it in a try block to avoid breaking the content script on
- * an exception.
- * @param {string} script
- */
-wpt.commands.CommandRunner.prototype.doExec = function(script, callback) {
-  this.chromeApi_.tabs.executeScript(g_tabid, {'code': script}, function(results){
-    if (callback != undefined)
-      callback();
-  });
 };
 
 /**
@@ -173,34 +157,6 @@ wpt.commands.CommandRunner.prototype.doSetCookie = function(cookie_path, data) {
 };
 
 /**
- * Block all urls matching |blockPattern| using the declarative web
- * request API.
- * @param {string} blockPattern
- */
-wpt.commands.CommandRunner.prototype.doBlockUsingDeclarativeApi_ =
-    function(blockPattern) {
-
-  // Match requests where any part of the URL contains |blockPattern|.
-  var requestMatcher = new chrome.declarativeWebRequest.RequestMatcher({
-    url: {
-      urlContains: blockPattern
-    }
-  });
-
-  // Blocking is implemented by canceling any matching request.
-  var blockingRule = {
-    conditions: [
-        requestMatcher
-    ],
-    actions: [
-        new chrome.declarativeWebRequest.CancelRequest()
-    ]
-  };
-
-  this.chromeApi_.declarativeWebRequest.onRequest.addRules([blockingRule]);
-};
-
-/**
  * Block all urls matching |blockPattern| using the non-declarative web
  * request API.
  * @param {string} blockPattern
@@ -238,15 +194,7 @@ wpt.commands.CommandRunner.prototype.doBlock = function(blockPattern) {
   // web request API, the test that we have permission to use it will
   // fail.
   var self = this;
-  this.chromeApi_.permissions.contains(
-      {permissions: ['declarativeWebRequest']},
-      function(hasPermission) {
-        if (hasPermission) {
-          self.doBlockUsingDeclarativeApi_(blockPattern);
-        } else {
-          self.doBlockUsingRequestCallback_(blockPattern);
-        }
-      });
+  self.doBlockUsingRequestCallback_(blockPattern);
 };
 
 /**
@@ -364,17 +312,6 @@ wpt.commands.CommandRunner.prototype.doNoScript = function() {
     'primaryPattern': '<all_urls>',
     'setting': 'block'
   });
-};
-
-/**
- * Implement the collectStats command.
- */
-wpt.commands.CommandRunner.prototype.doCollectStats = function(customMetrics, callback) {
-  chrome.tabs.sendRequest( g_tabid, {'message': 'collectStats', 'customMetrics': customMetrics},
-      function(response) {
-        if (callback != undefined)
-          callback();
-      });
 };
 
 wpt.commands.CommandRunner.prototype.doCheckResponsive = function(callback) {

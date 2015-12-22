@@ -5402,86 +5402,6 @@ window.goog['isNull'] = window.goog['isNull'] || function(val) {
   return (val === null);
 };
 
-/**
- * @private
- */
-wpt.contentScript.collectStats_ = function(customMetrics) {
-  // look for any user timing data
-  try {
-    if (window['performance'] != undefined &&
-        (window.performance.getEntriesByType ||
-         window.performance.webkitGetEntriesByType)) {
-      if (window.performance.getEntriesByType)
-        var marks = window.performance.getEntriesByType("mark");
-      else
-        var marks = window.performance.webkitGetEntriesByType("mark");
-      if (marks.length)
-        chrome.extension.sendRequest({'message': 'wptMarks', 
-                                      'marks': marks },
-                                     function(response) {});
-    }
-		if (customMetrics.length) {
-			var lines = customMetrics.split("\n");
-			var lineCount = lines.length;
-			var out = {};
-			for (var i = 0; i < lineCount; i++) {
-				try {
-					var parts = lines[i].split(":");
-					if (parts.length == 2) {
-						var name = parts[0];
-						var code = window.atob(parts[1]);
-						if (code.length) {
-							var fn = new Function("return function wptCustomMetric" + i + "(){" + code + "};")();
-							var result = fn();
-							if (typeof result == 'undefined')
-								result = '';
-							out[name] = result;
-						}
-					}
-				} catch(e){
-				}
-			}
-			chrome.extension.sendRequest({'message': 'wptCustomMetrics', 
-																		'data': out },
-																		function(response) {});
-		}
-  } catch(e){
-  }
-
-  var domCount = document.documentElement.getElementsByTagName("*").length;
-  if (domCount === undefined)
-    domCount = 0;
-  chrome.extension.sendRequest({'message': 'wptStats',
-                                'domCount': domCount}, function(response) {});
-  
-  var timingRequest = { 'message': 'wptWindowTiming' };
-  function addTime(name) {
-    if (window.performance.timing[name] > 0) {
-      timingRequest[name] = Math.max(0, (
-        window.performance.timing[name] -
-        window.performance.timing['navigationStart']));
-    }
-  };
-  addTime('domContentLoadedEventStart');
-  addTime('domContentLoadedEventEnd');
-  addTime('loadEventStart');
-  addTime('loadEventEnd');
-  timingRequest['msFirstPaint'] = 0;
-  if (window['chrome'] !== undefined &&
-      window.chrome['loadTimes'] !== undefined) {
-    var chromeTimes = window.chrome.loadTimes();
-    if (chromeTimes['firstPaintTime'] !== undefined &&
-        chromeTimes['firstPaintTime'] > 0) {
-      var startTime = chromeTimes['requestTime'] ? chromeTimes['requestTime'] : chromeTimes['startLoadTime'];
-      if (chromeTimes['firstPaintTime'] >= startTime)
-        timingRequest['msFirstPaint'] = (chromeTimes['firstPaintTime'] - startTime) * 1000.0;
-    }
-  }
-
-  // Send the times back to the extension.
-  chrome.extension.sendRequest(timingRequest, function(response) {});
-};
-
 wpt.contentScript.checkResponsive_ = function() {
   var response = { 'message': 'wptResponsive' };
   
@@ -5602,7 +5522,7 @@ chrome.extension.onRequest.addListener(
           function() { pollDOMElement(); },
           DOM_ELEMENT_POLL_INTERVAL);
     } else if (request.message == 'collectStats') {
-			var customMetrics = request['customMetrics'] || '';
+      var customMetrics = request['customMetrics'] || '';
       wpt.contentScript.collectStats_(customMetrics);
     } else if (request.message == 'checkResponsive') {
       wpt.contentScript.checkResponsive_();
@@ -18078,8 +17998,6 @@ wpt.commands.CommandRunner = function(tabId, chromeApi) {
 wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
     commandObject, callback) {
 
-  console.log('Delegate a command to the content script: ', commandObject);
-
   var code = ['wpt.contentScript.InPageCommandRunner.Instance.RunCommand(',
               JSON.stringify(commandObject),
               ');'].join('');
@@ -18088,20 +18006,6 @@ wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
         if (callback != undefined)
           callback();
       });
-};
-
-/**
- * Implement the exec command.
- * TODO(skerner): Make this use SendCommandToContentScript_(), and
- * wrap it in a try block to avoid breaking the content script on
- * an exception.
- * @param {string} script
- */
-wpt.commands.CommandRunner.prototype.doExec = function(script, callback) {
-  this.chromeApi_.tabs.executeScript(g_tabid, {'code': script}, function(results){
-    if (callback != undefined)
-      callback();
-  });
 };
 
 /**
@@ -18153,34 +18057,6 @@ wpt.commands.CommandRunner.prototype.doSetCookie = function(cookie_path, data) {
 };
 
 /**
- * Block all urls matching |blockPattern| using the declarative web
- * request API.
- * @param {string} blockPattern
- */
-wpt.commands.CommandRunner.prototype.doBlockUsingDeclarativeApi_ =
-    function(blockPattern) {
-
-  // Match requests where any part of the URL contains |blockPattern|.
-  var requestMatcher = new chrome.declarativeWebRequest.RequestMatcher({
-    url: {
-      urlContains: blockPattern
-    }
-  });
-
-  // Blocking is implemented by canceling any matching request.
-  var blockingRule = {
-    conditions: [
-        requestMatcher
-    ],
-    actions: [
-        new chrome.declarativeWebRequest.CancelRequest()
-    ]
-  };
-
-  this.chromeApi_.declarativeWebRequest.onRequest.addRules([blockingRule]);
-};
-
-/**
  * Block all urls matching |blockPattern| using the non-declarative web
  * request API.
  * @param {string} blockPattern
@@ -18218,15 +18094,7 @@ wpt.commands.CommandRunner.prototype.doBlock = function(blockPattern) {
   // web request API, the test that we have permission to use it will
   // fail.
   var self = this;
-  this.chromeApi_.permissions.contains(
-      {permissions: ['declarativeWebRequest']},
-      function(hasPermission) {
-        if (hasPermission) {
-          self.doBlockUsingDeclarativeApi_(blockPattern);
-        } else {
-          self.doBlockUsingRequestCallback_(blockPattern);
-        }
-      });
+  self.doBlockUsingRequestCallback_(blockPattern);
 };
 
 /**
@@ -18344,17 +18212,6 @@ wpt.commands.CommandRunner.prototype.doNoScript = function() {
     'primaryPattern': '<all_urls>',
     'setting': 'block'
   });
-};
-
-/**
- * Implement the collectStats command.
- */
-wpt.commands.CommandRunner.prototype.doCollectStats = function(customMetrics, callback) {
-  chrome.tabs.sendRequest( g_tabid, {'message': 'collectStats', 'customMetrics': customMetrics},
-      function(response) {
-        if (callback != undefined)
-          callback();
-      });
 };
 
 wpt.commands.CommandRunner.prototype.doCheckResponsive = function(callback) {

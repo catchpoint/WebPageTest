@@ -15,13 +15,14 @@ if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
         }
     }
 
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     $host  = $_SERVER['HTTP_HOST'];
     $uri = $_SERVER['PHP_SELF'];
     $params = '';
     foreach( $_GET as $key => $value )
         if( $key != 't' )
             $params .= "&$key=" . urlencode($value);
-    header("Location: http://$host$uri?tests=$tests{$params}");
+    header("Location: $protocol://$host$uri?tests=$tests{$params}");
 }
 else
 {
@@ -54,7 +55,7 @@ else
         {
             if( strlen($labels) )
                 $labels .= ", ";
-            $labels .= $test['name'];
+            $labels .= htmlspecialchars($test['name']);
         }
     }
     if( strlen($labels) )
@@ -87,10 +88,10 @@ else
                 $bgcolor = '000000';
                 $color = 'ffffff';
                 if (array_key_exists('bg', $_GET)) {
-                    $bgcolor = $_GET['bg'];
+                    $bgcolor = preg_replace('/[^0-9a-fA-F]/', '', $_GET['bg']);
                 }
                 if (array_key_exists('text', $_GET)) {
-                    $color = $_GET['text'];
+                    $color = preg_replace('/[^0-9a-fA-F]/', '', $_GET['text']);
                 }
             ?>
                 #video
@@ -272,6 +273,7 @@ else
                 <?php
                 $tab = 'Test Result';
                 $nosubheader = true;
+                $headerType = 'video';
                 $filmstrip = $_REQUEST['tests'];
                 include 'header.inc';
 
@@ -360,6 +362,12 @@ function ScreenShotTable()
         echo '<form id="createForm" name="create" method="get" action="/video/create.php">';
         echo "<input type=\"hidden\" name=\"end\" value=\"$endTime\">";
         echo '<input type="hidden" name="tests" value="' . htmlspecialchars($_REQUEST['tests']) . '">';
+        echo "<input type=\"hidden\" name=\"bg\" value=\"$bgcolor\">";
+        echo "<input type=\"hidden\" name=\"text\" value=\"$color\">";
+        if (isset($_REQUEST['labelHeight']) && is_numeric($_REQUEST['labelHeight']))
+          echo '<input type="hidden" name="labelHeight" value="' . htmlspecialchars($_REQUEST['labelHeight']) . '">"';
+        if (isset($_REQUEST['timeHeight']) && is_numeric($_REQUEST['timeHeight']))
+          echo '<input type="hidden" name="timeHeight" value="' . htmlspecialchars($_REQUEST['timeHeight']) . '">"';
         echo '<table id="videoContainer"><tr>';
 
         // build a table with the labels
@@ -396,9 +404,9 @@ function ScreenShotTable()
                 else
                     $href = "/details.php?test={$test['id']}&run={$test['run']}&cached={$test['cached']}";
 
-                echo "<a class=\"pagelink\" id=\"label_{$test['id']}\" href=\"$href\">" . WrapableString($test['name']) . '</a>';
+                echo "<a class=\"pagelink\" id=\"label_{$test['id']}\" href=\"$href\">" . WrapableString(htmlspecialchars($test['name'])) . '</a>';
             } else {
-                echo WrapableString($test['name']);
+                echo WrapableString(htmlspecialchars($test['name']));
             }
 
             // Print out a link to edit the test
@@ -475,7 +483,7 @@ function ScreenShotTable()
                         $cached = '_cached';
                     $imgPath = GetTestPath($test['id']) . "/video_{$test['run']}$cached/$path";
                     echo "<a href=\"/$imgPath\">";
-                    echo "<img title=\"{$test['name']}\"";
+                    echo "<img title=\"" . htmlspecialchars($test['name']) . "\"";
                     $class = 'thumb';
                     if ($lastThumb != $path) {
                         if( !$firstFrame || $frameCount < $firstFrame )
@@ -624,12 +632,15 @@ function ScreenShotTable()
             <tr><td>Specific End Time</td><td>-e:&lt;seconds&gt;</td><td>110606_MJ_RZEY-e:1.1</td></tr>
             </table>
             <br>
+            <p>You can also customize the background and text color by passing HTML color values to <b>bg</b> and <b>text</b> query parameters.</p>
             <p>Examples:</p>
             <ul>
             <li><b>Customizing labels:</b>
             http://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY-l:Original,110606_AE_RZN5-l:No+JS</li>
             <li><b>Compare First vs. Repeat view:</b>
             http://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY, 110606_MJ_RZEY-c:1</li>
+            <li><b>White background with black text:</b>
+            http://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY, 110606_MJ_RZEY-c:1&bg=ffffff&text=000000</li>
             </ul>
             <input id="advanced-ok" type=button class="simplemodal-close" value="OK">
         </div>
@@ -659,7 +670,7 @@ function DisplayStatus()
     echo "<table id=\"statusTable\"><tr><th>Test</th><th>Status</th></tr><tr>";
     foreach($tests as &$test)
     {
-        echo "<tr><td><a href=\"/result/{$test['id']}/\">{$test['name']}</a></td><td>";
+        echo "<tr><td><a href=\"/result/{$test['id']}/\">" . htmlspecialchars($test['name']) . "</a></td><td>";
         if( $test['done'] )
             echo "Done";
         elseif( $test['started'] )
@@ -700,6 +711,7 @@ function DisplayGraphs() {
                         'lastVisualChange' => 'Last Visual Change',
                         'docTime' => 'Load Time (onload)',
                         'fullyLoaded' => 'Load Time (Fully Loaded)',
+                        'domContentLoadedEventStart' => 'DOM Content Loaded',
                         'SpeedIndex' => 'Speed Index',
                         'TTFB' => 'Time to First Byte',
                         'titleTime' => 'Time to Title',
@@ -724,9 +736,18 @@ function DisplayGraphs() {
             $progress_end = intval((intval($progress_end / 100) + 1) * 100);
         echo '<div id="compare_visual_progress" class="compare-graph"></div>';
     }
-    echo '<div id="compare_times" class="compare-graph"></div>';
-    echo '<div id="compare_requests" class="compare-graph"></div>';
-    echo '<div id="compare_bytes" class="compare-graph"></div>';
+    if (count($tests) <= 4) {
+      echo '<div id="compare_times" class="compare-graph"></div>';
+      echo '<div id="compare_requests" class="compare-graph"></div>';
+      echo '<div id="compare_bytes" class="compare-graph"></div>';
+    } else {
+      foreach($timeMetrics as $metric => $label)
+        echo "<div id=\"compare_times_$metric\" class=\"compare-graph\"></div>";
+      foreach($mimeTypes as $type) {
+        echo "<div id=\"compare_requests_$type\" class=\"compare-graph\"></div>";
+        echo "<div id=\"compare_bytes_$type\" class=\"compare-graph\"></div>";
+      }
+    }
     ?>
     <script type="text/javascript" src="<?php echo $GLOBALS['ptotocol']; ?>://www.google.com/jsapi"></script>
     <script type="text/javascript">
@@ -741,9 +762,10 @@ function DisplayGraphs() {
             dataBytes.addColumn('string', 'MIME Type');
             <?php
             foreach($tests as &$test) {
-                echo "dataTimes.addColumn('number', '{$test['name']}');\n";
-                echo "dataRequests.addColumn('number', '{$test['name']}');\n";
-                echo "dataBytes.addColumn('number', '{$test['name']}');\n";
+                $name = htmlspecialchars($test['name']);
+                echo "dataTimes.addColumn('number', '$name');\n";
+                echo "dataRequests.addColumn('number', '$name');\n";
+                echo "dataBytes.addColumn('number', '$name');\n";
             }
             echo 'dataTimes.addRows(' . count($timeMetrics) . ");\n";
             echo 'dataRequests.addRows(' . strval(count($mimeTypes) + 1) . ");\n";
@@ -752,7 +774,7 @@ function DisplayGraphs() {
                 echo "var dataProgress = google.visualization.arrayToDataTable([\n";
                 echo "  ['Time (ms)'";
                 foreach($tests as &$test)
-                    echo ", '{$test['name']}'";
+                    echo ", '" . htmlspecialchars($test['name']) . "'";
                 echo " ]";
                 for ($ms = 0; $ms <= $progress_end; $ms += 100) {
                     echo ",\n  ['" . number_format($ms / 1000, 1) . "'";
@@ -798,6 +820,12 @@ function DisplayGraphs() {
                 }
                 $row++;
             }
+            $row = 0;
+            foreach($timeMetrics as $metric => $label) {
+              echo "var dataTimes$metric = new google.visualization.DataView(dataTimes);\n";
+              echo "dataTimes$metric.setRows($row, $row);\n";
+              $row++;
+            }
             echo "dataRequests.setValue(0, 0, 'Total');\n";
             echo "dataBytes.setValue(0, 0, 'Total');\n";
             $column = 1;
@@ -828,19 +856,38 @@ function DisplayGraphs() {
                 }
                 $row++;
             }
+            $row = 1;
+            foreach($mimeTypes as $mimeType) {
+              echo "var dataRequests$mimeType = new google.visualization.DataView(dataRequests);\n";
+              echo "dataRequests$mimeType.setRows($row, $row);\n";
+              echo "var dataBytes$mimeType = new google.visualization.DataView(dataBytes);\n";
+              echo "dataBytes$mimeType.setRows($row, $row);\n";
+              $row++;
+            }
             if ($progress_end) {
                 echo "var progressChart = new google.visualization.LineChart(document.getElementById('compare_visual_progress'));\n";
                 echo "progressChart.draw(dataProgress, {title: 'Visual Progress (%)', hAxis: {title: 'Time (seconds)'}});\n";
             }
+            if (count($tests) <= 4) {
+              echo "var timesChart = new google.visualization.ColumnChart(document.getElementById('compare_times'));\n";
+              echo "timesChart.draw(dataTimes, {title: 'Timings (ms)'});\n";
+              echo "var requestsChart = new google.visualization.ColumnChart(document.getElementById('compare_requests'));\n";
+              echo "requestsChart.draw(dataRequests, {title: 'Requests'});\n";
+              echo "var bytesChart = new google.visualization.ColumnChart(document.getElementById('compare_bytes'));\n";
+              echo "bytesChart.draw(dataBytes, {title: 'Bytes'});\n";
+            } else {
+              foreach($timeMetrics as $metric => $label) {
+                echo "var timesChart$metric = new google.visualization.ColumnChart(document.getElementById('compare_times_$metric'));\n";
+                echo "timesChart$metric.draw(dataTimes$metric, {title: '$label (ms)'});\n";
+              }
+              foreach($mimeTypes as $type) {
+                echo "var requestsChart$type = new google.visualization.ColumnChart(document.getElementById('compare_requests_$type'));\n";
+                echo "requestsChart$type.draw(dataRequests$type, {title: '$type Requests'});\n";
+                echo "var bytesChart$type = new google.visualization.ColumnChart(document.getElementById('compare_bytes_$type'));\n";
+                echo "bytesChart$type.draw(dataBytes$type, {title: '$type Bytes'});\n";
+              }
+            }
             ?>
-            var timesChart = new google.visualization.ColumnChart(document.getElementById('compare_times'));
-            timesChart.draw(dataTimes, {title: 'Timings (ms)'});
-
-            var requestsChart = new google.visualization.ColumnChart(document.getElementById('compare_requests'));
-            requestsChart.draw(dataRequests, {title: 'Requests'});
-
-            var bytesChart = new google.visualization.ColumnChart(document.getElementById('compare_bytes'));
-            bytesChart.draw(dataBytes, {title: 'Bytes'});
         }
     </script>
     <?php

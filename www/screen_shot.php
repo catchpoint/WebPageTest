@@ -3,7 +3,7 @@ include 'common.inc';
 require_once('video.inc');
 require_once('page_data.inc');
 require_once('devtools.inc.php');
-$pageRunData = loadPageRunData($testPath, $run, $cached);
+$pageRunData = loadPageRunData($testPath, $run, $cached, null, $test['testinfo']);
 
 $videoPath = "$testPath/video_{$run}";
 if( $cached )

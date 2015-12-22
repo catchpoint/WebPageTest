@@ -65,7 +65,7 @@ bool CIpfw::Init() {
             if (pos > 0) {
               CStringA cmd = line.Mid(pos + 1).Trim();
               if (cmd.GetLength()) {
-                initialized_ = Execute((LPCTSTR)CA2T((LPCSTR)cmd));
+                initialized_ = Execute((LPCTSTR)CA2T((LPCSTR)cmd, CP_UTF8));
               }
             }
           }
@@ -84,9 +84,35 @@ bool CIpfw::SetPipe(unsigned int num, unsigned long bandwidth,
   bool ret = Init();
 
   if (ret) {
-    // on 32-bit systems, talk to the driver directly, otherwise use
-    // the ipfw command-line app.
-    if (win32_) {
+    // Always try using the command-line interface if available
+    CString cmd_line, buff;
+
+    // Bandwidth and delay get applied to the pipe
+    cmd_line.Format(_T("pipe %d config"), num);
+    if (bandwidth > 0) {
+      buff.Format(_T(" bw %dKbit/s"), bandwidth);
+      cmd_line += buff;
+    }
+    if (delay >= 0) {
+      buff.Format(_T(" delay %dms"), delay);
+      cmd_line += buff;
+    }
+    ret = Execute(cmd_line);
+
+    // Packet loss needs to be applied to the queue
+    if (ret) {
+      cmd_line.Format(_T("queue %d config"), num);
+      if (plr > 0.0 && plr <= 1.0) {
+        buff.Format(_T(" plr %0.4f"), plr);
+        cmd_line += buff;
+      } else {
+        cmd_line += _T(" plr 0");
+      }
+      Execute(cmd_line);
+    }
+
+    // on 32-bit systems, fall back to talking to the driver directly
+    if (win32_ && !ret) {
       if (hDriver != INVALID_HANDLE_VALUE) {
         #pragma pack(push)
         #pragma pack(1)
@@ -138,22 +164,6 @@ bool CIpfw::SetPipe(unsigned int num, unsigned long bandwidth,
           free(s);
         }
       }
-    } else {
-      CString cmd, buff;
-      cmd.Format(_T("pipe %d config"), num);
-      if (bandwidth > 0) {
-        buff.Format(_T(" bw %dKbit/s"), bandwidth);
-        cmd += buff;
-      }
-      if (delay > 0) {
-        buff.Format(_T(" delay %dms"), delay);
-        cmd += buff;
-      }
-      if (plr > 0.0) {
-        buff.Format(_T(" plr 0.4f"), plr);
-        cmd += buff;
-      }
-      ret = Execute(cmd);
     }
   }
   return ret;

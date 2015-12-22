@@ -6,6 +6,7 @@ require_once('video/visualProgress.inc.php');
 require_once('domains.inc');
 require_once('breakdown.inc');
 require_once('devtools.inc.php');
+require_once('archive.inc');
 
 if (array_key_exists('batch', $test['test']) && $test['test']['batch']) {
     include 'resultBatch.inc';
@@ -29,6 +30,7 @@ function GetTestResult($id) {
     global $median_metric;
 
     $testPath = './' . GetTestPath($id);
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     $host  = $_SERVER['HTTP_HOST'];
     $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
     $path = substr($testPath, 1);
@@ -46,7 +48,7 @@ function GetTestResult($id) {
     $cacheLabels = array('firstView', 'repeatView');
 
     // summary information
-    $ret = array('id' => $id, 'url' => $url, 'summary' => "http://$host$uri/results.php?test=$id");
+    $ret = array('id' => $id, 'url' => $url, 'summary' => "$protocol://$host$uri/results.php?test=$id");
     $runs = max(array_keys($pageData));
     if (isset($testInfo)) {
         if (array_key_exists('url', $testInfo) && strlen($testInfo['url']))
@@ -73,6 +75,8 @@ function GetTestResult($id) {
             $ret['latency'] = $testInfo['latency'];
         if (array_key_exists('plr', $testInfo))
             $ret['plr'] = $testInfo['plr'];
+        if (array_key_exists('mobile', $testInfo))
+            $ret['mobile'] = $testInfo['mobile'];
         if (array_key_exists('label', $testInfo) && strlen($testInfo['label']))
             $ret['label'] = $testInfo['label'];
         if (array_key_exists('completed', $testInfo))
@@ -95,36 +99,87 @@ function GetTestResult($id) {
     if (!$fvOnly)
         $ret['successfulRVRuns'] = CountSuccessfulTests($pageData, 1);
 
-    // average and standard deviation
-    $ret['average'] = array();
-    $ret['standardDeviation'] = array();
-    for ($cached = 0; $cached <= $cachedMax; $cached++) {
-        $label = $cacheLabels[$cached];
-        $ret['average'][$label] = $stats[$cached];
-        $ret['standardDeviation'][$label] = array();
-        foreach($stats[$cached] as $key => $val)
-            $ret['standardDeviation'][$label][$key] = PageDataStandardDeviation($pageData, $key, $cached);
+    // average
+    
+    // check if removing average
+    $addAverage= 1;
+    if(isset($_GET['average'])){
+	    if($_GET['average'] == 0){
+		    $addAverage = 0;
+	    }
     }
+    // add average
+    if($addAverage == 1){
+		$ret['average'] = array();
+		for ($cached = 0; $cached <= $cachedMax; $cached++) {
+        	$label = $cacheLabels[$cached];
+			$ret['average'][$label] = $stats[$cached];
+        }
+    }
+    
+    // standard deviation
+    
+     // check if removing standard deviation
+    $addStandard= 1;
+    if(isset($_GET['standard'])){
+	    if($_GET['standard'] == 0){
+		    $addStandard = 0;
+	    }
+    }
+    // add standard deviation
+    if($addStandard == 1){
+	    $ret['standardDeviation'] = array();
+	    for ($cached = 0; $cached <= $cachedMax; $cached++) {
+	        $label = $cacheLabels[$cached];
+	        $ret['standardDeviation'][$label] = array();
+	        foreach($stats[$cached] as $key => $val)
+	            $ret['standardDeviation'][$label][$key] = PageDataStandardDeviation($pageData, $key, $cached);
+	    }
+	}
     
     // median
-    $ret['median'] = array();
-    for ($cached = 0; $cached <= $cachedMax; $cached++) {
-        $label = $cacheLabels[$cached];
-        $medianRun = GetMedianRun($pageData, $cached, $median_metric);
-        if (array_key_exists($medianRun, $pageData)) {
-            $ret['median'][$label] = GetSingleRunData($id, $testPath, $medianRun, $cached, $pageData, $testInfo);
-        }
+    
+     // check if removing median
+    $addMedian = 1;
+    if(isset($_GET['median'])){
+	    if($_GET['median'] == 0){
+		    $addMedian = 0;
+	    }
+    }
+    // add median
+    if($addMedian == 1){
+	    $ret['median'] = array();
+	    for ($cached = 0; $cached <= $cachedMax; $cached++) {
+	        $label = $cacheLabels[$cached];
+	        $medianRun = GetMedianRun($pageData, $cached, $median_metric);
+	        if (array_key_exists($medianRun, $pageData)) {
+	            $ret['median'][$label] = GetSingleRunData($id, $testPath, $medianRun, $cached, $pageData, $testInfo);
+	        }
+	    }
+	}
+    
+    // runs
+    
+    // check if removing runs
+    $addRuns = 1;
+    if(isset($_GET['runs'])){
+	    if($_GET['runs'] == 0){
+		    $addRuns = 0;
+	    }
+    }
+    // add runs
+    if($addRuns == 1){
+	    $ret['runs'] = array();
+	    for ($run = 1; $run <= $runs; $run++) {
+	        $ret['runs'][$run] = array();
+	        for ($cached = 0; $cached <= $cachedMax; $cached++) {
+	            $label = $cacheLabels[$cached];
+	            $ret['runs'][$run][$label] = GetSingleRunData($id, $testPath, $run, $cached, $pageData, $testInfo);
+	        }
+	    }
     }
     
-    $ret['runs'] = array();
-    for ($run = 1; $run <= $runs; $run++) {
-        $ret['runs'][$run] = array();
-        for ($cached = 0; $cached <= $cachedMax; $cached++) {
-            $label = $cacheLabels[$cached];
-            $ret['runs'][$run][$label] = GetSingleRunData($id, $testPath, $run, $cached, $pageData, $testInfo);
-        }
-    }
-    
+    ArchiveApi($id);
     return $ret;
 }
 
@@ -142,6 +197,7 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
         is_array($pageData[$run]) &&
         array_key_exists($cached, $pageData[$run]) &&
         is_array($pageData[$run][$cached])) {
+      $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
       $host  = $_SERVER['HTTP_HOST'];
       $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
       $path = substr($testPath, 1);
@@ -166,36 +222,36 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
           
       if (!$basic_results && gz_is_file("$testPath/$run{$cachedText}_pagespeed.txt")) {
           $ret['PageSpeedScore'] = GetPageSpeedScore("$testPath/$run{$cachedText}_pagespeed.txt");
-          $ret['PageSpeedData'] = "http://$host$uri//getgzip.php?test=$id&amp;file=$run{$cachedText}_pagespeed.txt";
+          $ret['PageSpeedData'] = "$protocol://$host$uri//getgzip.php?test=$id&amp;file=$run{$cachedText}_pagespeed.txt";
       }
 
       $ret['pages'] = array();
-      $ret['pages']['details'] = "http://$host$uri/details.php?test=$id&run=$run&cached=$cached";
-      $ret['pages']['checklist'] = "http://$host$uri/performance_optimization.php?test=$id&run=$run&cached=$cached";
-      $ret['pages']['breakdown'] = "http://$host$uri/breakdown.php?test=$id&run=$run&cached=$cached";
-      $ret['pages']['domains'] = "http://$host$uri/domains.php?test=$id&run=$run&cached=$cached";
-      $ret['pages']['screenShot'] = "http://$host$uri/screen_shot.php?test=$id&run=$run&cached=$cached";
+      $ret['pages']['details'] = "$protocol://$host$uri/details.php?test=$id&run=$run&cached=$cached";
+      $ret['pages']['checklist'] = "$protocol://$host$uri/performance_optimization.php?test=$id&run=$run&cached=$cached";
+      $ret['pages']['breakdown'] = "$protocol://$host$uri/breakdown.php?test=$id&run=$run&cached=$cached";
+      $ret['pages']['domains'] = "$protocol://$host$uri/domains.php?test=$id&run=$run&cached=$cached";
+      $ret['pages']['screenShot'] = "$protocol://$host$uri/screen_shot.php?test=$id&run=$run&cached=$cached";
 
       $ret['thumbnails'] = array();
-      $ret['thumbnails']['waterfall'] = "http://$host$uri/result/$id/$run{$cachedText}_waterfall_thumb.png";
-      $ret['thumbnails']['checklist'] = "http://$host$uri/result/$id/$run{$cachedText}_optimization_thumb.png";
-      $ret['thumbnails']['screenShot'] = "http://$host$uri/result/$id/$run{$cachedText}_screen_thumb.png";
+      $ret['thumbnails']['waterfall'] = "$protocol://$host$uri/result/$id/$run{$cachedText}_waterfall_thumb.png";
+      $ret['thumbnails']['checklist'] = "$protocol://$host$uri/result/$id/$run{$cachedText}_optimization_thumb.png";
+      $ret['thumbnails']['screenShot'] = "$protocol://$host$uri/result/$id/$run{$cachedText}_screen_thumb.png";
 
       $ret['images'] = array();
-      $ret['images']['waterfall'] = "http://$host$uri$path/$run{$cachedText}_waterfall.png";
-      $ret['images']['connectionView'] = "http://$host$uri$path/$run{$cachedText}_connection.png";
-      $ret['images']['checklist'] = "http://$host$uri$path/$run{$cachedText}_optimization.png";
-      $ret['images']['screenShot'] = "http://$host$uri$path/$run{$cachedText}_screen.jpg";
+      $ret['images']['waterfall'] = "$protocol://$host$uri$path/$run{$cachedText}_waterfall.png";
+      $ret['images']['connectionView'] = "$protocol://$host$uri$path/$run{$cachedText}_connection.png";
+      $ret['images']['checklist'] = "$protocol://$host$uri$path/$run{$cachedText}_optimization.png";
+      $ret['images']['screenShot'] = "$protocol://$host$uri/getfile.php?test=$id&file=$run{$cachedText}_screen.jpg";
       if( is_file("$testPath/$run{$cachedText}_screen.png") )
-          $ret['images']['screenShotPng'] = "http://$host$uri$path/$run{$cachedText}_screen.png";
+          $ret['images']['screenShotPng'] = "$protocol://$host$uri/getfile.php?test=$id&file=$run{$cachedText}_screen.png";
 
       $ret['rawData'] = array();
-      $ret['rawData']['headers'] = "http://$host$uri$path/$run{$cachedText}_report.txt";
-      $ret['rawData']['pageData'] = "http://$host$uri$path/$run{$cachedText}_IEWPG.txt";
-      $ret['rawData']['requestsData'] = "http://$host$uri$path/$run{$cachedText}_IEWTR.txt";
-      $ret['rawData']['utilization'] = "http://$host$uri$path/$run{$cachedText}_progress.csv";
+      $ret['rawData']['headers'] = "$protocol://$host$uri$path/$run{$cachedText}_report.txt";
+      $ret['rawData']['pageData'] = "$protocol://$host$uri$path/$run{$cachedText}_IEWPG.txt";
+      $ret['rawData']['requestsData'] = "$protocol://$host$uri$path/$run{$cachedText}_IEWTR.txt";
+      $ret['rawData']['utilization'] = "$protocol://$host$uri$path/$run{$cachedText}_progress.csv";
       if( is_file("$testPath/$run{$cachedText}_bodies.zip") )
-          $ret['rawData']['bodies'] = "http://$host$uri$path/$run{$cachedText}_bodies.zip";
+          $ret['rawData']['bodies'] = "$protocol://$host$uri$path/$run{$cachedText}_bodies.zip";
 
       if (!$basic_results) {
         $startOffset = array_key_exists('testStartOffset', $ret) ? intval(round($ret['testStartOffset'])) : 0;
@@ -205,25 +261,28 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
           $ret['videoFrames'] = array();
           foreach($progress['frames'] as $ms => $frame) {
               $videoFrame = array('time' => $ms);
-              $videoFrame['image'] = "http://$host$uri$path/video_{$run}$cachedTextLower/{$frame['file']}";
+              $videoFrame['image'] = "http://$host$uri/getfile.php?test=$id&video=video_{$run}$cachedTextLower&file={$frame['file']}";
               $videoFrame['VisuallyComplete'] = $frame['progress'];
               $ret['videoFrames'][] = $videoFrame;
           }
-        }
-        if (isset($progress) &&
-            is_array($progress) &&
-            array_key_exists('DevTools', $progress) &&
-            is_array($progress['DevTools'])) {
-            if (array_key_exists('processing', $progress['DevTools']))
-                $ret['processing'] = $progress['DevTools']['processing'];
-            if (array_key_exists('VisualProgress', $progress['DevTools']))
-                $ret['VisualProgress'] = $progress['DevTools']['VisualProgress'];
         }
         
         $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false, true);
         $ret['domains'] = getDomainBreakdown($id, $testPath, $run, $cached, $requests);
         $ret['breakdown'] = getBreakdown($id, $testPath, $run, $cached, $requests);
-        $ret['requests'] = $requests;
+        
+        // check if removing requests
+        $addRequests= 1;
+		if(isset($_GET['requests'])){
+	   		if($_GET['requests'] == 0){
+		    	$addRequests = 0;
+	    	}
+    	}
+    	// add requests
+    	if($addRequests == 1){
+        	$ret['requests'] = $requests;
+        }
+        
         $console_log = DevToolsGetConsoleLog($testPath, $run, $cached);
         if (isset($console_log))
             $ret['consoleLog'] = $console_log;

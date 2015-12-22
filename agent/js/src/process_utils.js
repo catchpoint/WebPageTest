@@ -27,6 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 var child_process = require('child_process');
+var fs = require('fs');
 var logger = require('logger');
 var net = require('net');
 var system_commands = require('system_commands');
@@ -114,13 +115,20 @@ exports.scheduleKillAll = function(app, description, procs) {
  */
 exports.scheduleGetAll = function(app) {
   'use strict';
-  var cmd = system_commands.get('get all', [process.getuid()]).split(/\s+/);
-  return exports.scheduleExec(app, cmd.shift(), cmd).then(function(psOut) {
-    psOut = psOut.trim();
-    return (!psOut ? [] : psOut.split('\n').map(function(psLine) {
-        return new exports.ProcessInfo(psLine);
-      }));
-  });
+  // Only do this for platforms that support getuid (posix - i.e. not Windows)
+  if (process.getuid) {
+    var cmd = system_commands.get('get all', [process.getuid()]).split(/\s+/);
+    return exports.scheduleExec(app, cmd.shift(), cmd).then(function(psOut) {
+      psOut = psOut.trim();
+      return (!psOut ? [] : psOut.split('\n').map(function(psLine) {
+          return new exports.ProcessInfo(psLine);
+        }));
+    });
+  } else {
+    return app.schedule('Return empty user process list', function() {
+      return [];
+    });
+  }
 };
 
 /**
@@ -165,10 +173,13 @@ exports.scheduleGetTree = function(app, description, rootPid) {
  */
 exports.scheduleKillTree = function(app, description, proc) {
   'use strict';
-  exports.scheduleGetTree(app, 'getTree ' + description, proc.pid).then(
-      function(processInfos) {
-    exports.scheduleKillAll(app, 'killAll ' + description, processInfos);
-  });
+  try {
+    exports.scheduleGetTree(app, 'getTree ' + description, proc.pid).then(
+        function (processInfos) {
+      exports.scheduleKillAll(app, 'killAll ' + description, processInfos);
+    });
+  } catch (e) {
+  }
 };
 
 /**
@@ -259,8 +270,8 @@ exports.scheduleExec = function(app, command, args, options, timeout) {
         return (s.length <= n ? s : s.substring(0, n - 3) + '...');
       }
       var ret = [desc, code && 'code ' + code, signal && 'signal ' + signal,
-          stdout && 'stdout[' + stdout.length + '] ' + crop(stdout, 80),
-          stderr && 'stderr[' + stderr.length + '] ' + crop(stderr, 80)];
+          stdout && 'stdout[' + stdout.length + '] ' + crop(stdout, 1024),
+          stderr && 'stderr[' + stderr.length + '] ' + crop(stderr, 1024)];
       // Comma-separated elements of ret, except the undefined ones.
       return ret.filter(function(v) { return !!v; }).join(', ');
     }
@@ -275,8 +286,8 @@ exports.scheduleExec = function(app, command, args, options, timeout) {
     }
 
     // Spawn
-    var done = new webdriver.promise.Deferred();
     var proc = child_process.spawn(command, args, options);
+    var done = new webdriver.promise.Deferred();
 
     // Start timer
     var timerId = global.setTimeout(function() {
@@ -354,7 +365,7 @@ exports.scheduleSpawn = function(app, command, args, options,
     logger.info('Spawning: %s', cmd);
     var proc = child_process.spawn(command, args, options);
     proc.stdout.on('data', function(data) {
-      (logStdoutFunc || logger.info)('%s STDOUT: %s', command, data);
+      (logStdoutFunc || logger.debug)('%s STDOUT: %s', command, data);
     });
     proc.stderr.on('data', function(data) {
       (logStderrFunc || logger.error)('%s STDERR: %s', command, data);
@@ -372,7 +383,16 @@ exports.scheduleSpawn = function(app, command, args, options,
 function injectWdAppLogging(appName, app) {
   'use strict';
   if (!app.isLoggingInjected) {
-    var realExecute = app.execute;
+    app.isLoggingInjected = true;
+
+    // TODO(klm): Migrate all code to execute().
+    // Monkey-patching the old schedule(desc,fn) API just for gradual migration.
+    if (undefined === app.schedule) {
+      app.schedule = function(description, fn) {
+        return app.execute(fn, description);
+      };
+    }
+
     if (logger.isLogging('extra')) {
       var realGetNextTask = app.getNextTask_;
       app.getNextTask_ = function() {
@@ -385,21 +405,19 @@ function injectWdAppLogging(appName, app) {
         return task;
       };
 
+      var realExecute = app.execute;
       app.execute = function(fn, opt_description) {
         logger.extra('(%s) %s', logger.whoIsMyCaller(),
             opt_description || 'function ' + fn.name);
         return realExecute.apply(app, arguments);
       };
+
+      var realSchedule = app.schedule;
+      app.schedule = function(description) {
+        logger.extra('(%s) %s', logger.whoIsMyCaller(), description);
+        return realSchedule.apply(app, arguments);
+      };
     }
-
-    // TODO(klm): Migrate all code to execute().
-    // Monkey-patching the old schedule(desc,fn) API just for gradual migration.
-    app.schedule = function(description, fn) {
-      logger.extra('(%s) %s', logger.whoIsMyCaller(), description);
-      return realExecute.call(app, fn, description);
-    };
-
-    app.isLoggingInjected = true;
   }
 }
 /** Allow test access. */
@@ -487,8 +505,8 @@ exports.scheduleFunctionNoFault = function(app, description, f,
   'use strict';
   return exports.scheduleFunction.apply(undefined, arguments).addErrback(
       function(e) {
-    logger.error('Exception from "%s": %s', description, e);
-    logger.debug('%s', e.stack);
+    logger.debug('Ignoring Exception from "%s": %s', description, e);
+    //logger.debug('%s', e.stack);
   });
 };
 
@@ -622,6 +640,65 @@ exports.concatPath = function(dir, path) {
     dir += '/';
   }
   return (path ? (dir ? (dir + path) : path) : dir);
+};
+
+/**
+ * Opens a stream for writing.
+ *
+ * @param {webdriver.promise.ControlFlow} app the scheduler.
+ * @param {string} path file path.
+ * @return {webdriver.promise.Promise} fulfill({fs.Stream} stream).
+ */
+exports.scheduleOpenStream = function(app, path) {
+  'use strict';
+  var stream = fs.createWriteStream(path, {encoding: 'utf8'});
+  var done = new webdriver.promise.Deferred();
+  stream.once('open', function() {
+    done.fulfill(stream);
+  });
+  stream.on('error', function(e) {
+    if (done.isPending()) {
+      done.reject(new Error('Unable to open ' + path + ': ' + e));
+    }
+  });
+  return done.promise;
+};
+
+/**
+ * Closes a stream.
+ *
+ * @param {webdriver.promise.ControlFlow} app the scheduler.
+ * @param {fs.Stream} stream a stream.
+ * @param {(string|Buffer)=} data tail data.
+ * @return {webdriver.promise.Promise} fulfill() when flushed and closed.
+ */
+exports.scheduleCloseStream = function(app, stream, data) {
+  'use strict';
+  // Use an end callback instead of "stream.on('finish', ...)".  This is
+  // equivalent and cleaner, but more significantly, for some unknown reason
+  // we never get a 'finish' event on some hosts.
+  return exports.scheduleFunction(app, 'Close stream', stream.end, data,
+      /*encoding*/undefined);  // This ensures that arg[5] is our callback.
+};
+
+/** @see objectId */
+var __next_obj_id = 1;
+
+/**
+ * Gets a unique object identifier, for debugging purposes.
+ *
+ * @param {Object} obj this function adds a '__obj_id' field.
+ * @return {number} unique id.
+ */
+exports.getObjectId = function(obj) {
+  'use strict';
+  if (obj === null) {
+    return null;
+  }
+  if (obj.__obj_id === null) {
+    obj.__obj_id = __next_obj_id++;
+  }
+  return obj.__obj_id;
 };
 
 /**

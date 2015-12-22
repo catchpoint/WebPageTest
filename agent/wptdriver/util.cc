@@ -31,7 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Wincrypt.h>
 #include <TlHelp32.h>
 #include <Wtsapi32.h>
-#include "dbghelp/dbghelp.h"
 #include <WinInet.h>
 #include <regex>
 #include <string>
@@ -103,7 +102,7 @@ void DeleteDirectory( LPCTSTR directory, bool remove ) {
           else
             DeleteFile(path);
         }
-      }while(FindNextFile(hFind, &fd));
+      } while(FindNextFile(hFind, &fd));
       
       FindClose(hFind);
     }
@@ -111,6 +110,30 @@ void DeleteDirectory( LPCTSTR directory, bool remove ) {
     delete [] path;
     if( remove )
       RemoveDirectory(directory);
+  }
+}
+
+
+/*-----------------------------------------------------------------------------
+  Delete anything in the given directory older than the provided age
+-----------------------------------------------------------------------------*/
+void DeleteOldDirectoryEntries(CString directory, int seconds) {
+  WIN32_FIND_DATA fd;
+  HANDLE hFind = FindFirstFile(directory + _T("\\*.*"), &fd);
+  if (hFind != INVALID_HANDLE_VALUE) {
+    FILETIME now;
+    GetSystemTimeAsFileTime(&now);
+    do {
+      if (lstrcmp(fd.cFileName, _T(".")) &&
+          lstrcmp(fd.cFileName, _T("..")) &&
+          ElapsedFileTimeSeconds(fd.ftLastWriteTime, now) > seconds) {
+        if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+          DeleteDirectory(directory + _T("\\") + fd.cFileName);
+        else
+          DeleteFile(directory + _T("\\") + fd.cFileName);
+      }
+    } while (FindNextFile(hFind, &fd));
+    FindClose(hFind);
   }
 }
 
@@ -233,11 +256,10 @@ static HWND FindDocumentWindow(DWORD process_id, HWND parent) {
 /*-----------------------------------------------------------------------------
   Find the top-level and document windows for the browser
 -----------------------------------------------------------------------------*/
-bool FindBrowserWindow( DWORD process_id, HWND& frame_window, 
-                          HWND& document_window) {
+bool FindBrowserWindow( DWORD process_id, HWND& frame_window) {
   bool found = false;
   // find a known document window that belongs to this process
-  document_window = FindDocumentWindow(process_id, ::GetDesktopWindow());
+  HWND document_window = FindDocumentWindow(process_id, ::GetDesktopWindow());
   if (document_window) {
     found = true;
     frame_window = GetAncestor(document_window, GA_ROOTOWNER);
@@ -406,7 +428,7 @@ CString HttpGetText(CString url) {
       while (InternetReadFile(http_request, buff, sizeof(buff) - 1, 
               &bytes_read) && bytes_read) {
         buff[bytes_read] = 0;
-        response += CA2T(buff);
+        response += CA2T(buff, CP_UTF8);
       }
       InternetCloseHandle(http_request);
     }
@@ -619,6 +641,64 @@ void TerminateProcessById(DWORD pid) {
 }
 
 /*-----------------------------------------------------------------------------
+  Wait for all direct children of the given process to finish
+-----------------------------------------------------------------------------*/
+void WaitForChildProcesses(DWORD pid, DWORD timeout) {
+  bool children_found = false;
+  DWORD end_time = GetTickCount() + timeout;
+  do {
+    children_found = false;
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snap != INVALID_HANDLE_VALUE) {
+      PROCESSENTRY32 proc;
+      proc.dwSize = sizeof(proc);
+      if (Process32First(snap, &proc)) {
+        do {
+          if (proc.th32ParentProcessID == pid) {
+            children_found = true;
+            HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, proc.th32ProcessID);
+            if (process) {
+              WaitForSingleObject(process, timeout);
+              CloseHandle(process);
+            }
+          }
+        } while (Process32Next(snap, &proc));
+      }
+      CloseHandle(snap);
+    }
+  } while(children_found && GetTickCount() < end_time);
+}
+
+/*-----------------------------------------------------------------------------
+  Wait for all instances of the given executable to finish
+-----------------------------------------------------------------------------*/
+void WaitForProcessesByName(TCHAR * exe, DWORD timeout) {
+  bool processes_found = false;
+  DWORD end_time = GetTickCount() + timeout;
+  do {
+    processes_found = false;
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snap != INVALID_HANDLE_VALUE) {
+      PROCESSENTRY32 proc;
+      proc.dwSize = sizeof(proc);
+      if (Process32First(snap, &proc)) {
+        do {
+          if (!lstrcmpi(proc.szExeFile, exe)) {
+            processes_found = true;
+            HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, proc.th32ProcessID);
+            if (process) {
+              WaitForSingleObject(process, timeout);
+              CloseHandle(process);
+            }
+          }
+        } while (Process32Next(snap, &proc));
+      }
+      CloseHandle(snap);
+    }
+  } while(processes_found && GetTickCount() < end_time);
+}
+
+/*-----------------------------------------------------------------------------
   Terminate all instances of a process given it's name
 -----------------------------------------------------------------------------*/
 void TerminateProcessesByName(TCHAR * exe) {
@@ -665,4 +745,22 @@ int ElapsedFileTimeSeconds(FILETIME& check, FILETIME& now) {
     elapsed = (int)e.QuadPart;
   }
   return elapsed;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Reboot() {
+  HANDLE hToken;
+  if (OpenProcessToken(GetCurrentProcess(),
+      TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
+    TOKEN_PRIVILEGES tp;
+    if (LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &tp.Privileges[0].Luid)) {
+      tp.PrivilegeCount = 1;
+      tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+      AdjustTokenPrivileges(hToken, FALSE, &tp, 0, (PTOKEN_PRIVILEGES)0, 0) ;
+    }
+    CloseHandle(hToken);
+  }
+  
+  InitiateSystemShutdown(NULL, NULL, 0, TRUE, TRUE);
 }

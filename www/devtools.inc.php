@@ -1,144 +1,16 @@
 <?php
-$DevToolsCacheVersion = '1.6';
+$DevToolsCacheVersion = '1.7';
 
 if(extension_loaded('newrelic')) { 
-    newrelic_add_custom_tracer('GetCachedDevToolsProgress');
-    newrelic_add_custom_tracer('GetDevToolsProgress');
     newrelic_add_custom_tracer('GetTimeline');
     newrelic_add_custom_tracer('GetDevToolsRequests');
     newrelic_add_custom_tracer('GetDevToolsEvents');
     newrelic_add_custom_tracer('DevToolsGetConsoleLog');
+    newrelic_add_custom_tracer('DevToolsGetCPUSlices');
+    newrelic_add_custom_tracer('GetDevToolsCPUTime');
+    newrelic_add_custom_tracer('ParseDevToolsEvents');
+    newrelic_add_custom_tracer('DevToolsMatchEvent');
 }
-
-/**
-* Calculate the visual progress and speed index from the dev tools timeline trace
-* 
-* @param mixed $testPath
-* @param mixed $run
-* @param mixed $cached
-*/
-function GetDevToolsProgress($testPath, $run, $cached) {
-    $progress = GetCachedDevToolsProgress($testPath, $run, $cached);
-    if (!isset($progress) || !is_array($progress)) {
-      $testInfo = GetTestInfo($testPath);
-      $completed = IsTestRunComplete($run, $testInfo);
-      $startOffset = null;
-      if (GetTimeline($testPath, $run, $cached, $timeline, $startOffset)) {
-        $cachedText = '';
-        if( $cached )
-            $cachedText = '_Cached';
-        $console_log_file = "$testPath/$run{$cachedText}_console_log.json";
-        $console_log = array();
-        $progress = array();
-        $startTime = 0;
-        $fullScreen = 0;
-        $regions = array();
-        $viewport = null;
-        if (DevToolsHasLayout($timeline, $viewport)) {
-          $didLayout = false;
-          $didReceiveResponse = false;
-        } else {
-          $didLayout = true;
-          $didReceiveResponse = true;
-        }
-        $startTimes = array();
-        $progress['processing'] = array();
-        foreach($timeline as &$entry) {
-            if (array_key_exists('method', $entry)) {
-              if (array_key_exists('params', $entry) &&
-                  !array_key_exists($entry['method'], $startTimes)) {
-                if (array_key_exists('timestamp', $entry['params']))
-                  $startTimes[$entry['method']] = $entry['params']['timestamp'];
-                elseif (array_key_exists('record', $entry['params']) &&
-                        array_key_exists('startTime', $entry['params']['record']))
-                  $startTimes[$entry['method']] = $entry['params']['record']['startTime'];
-              }
-            } elseif (array_key_exists('timestamp', $entry) &&
-              !array_key_exists('timestamp', $startTimes))
-              $startTimes['timestamp'] = $entry['timestamp'];
-            $frame = '0';
-            ProcessPaintEntry($entry, $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse, $viewport);
-            GetTimelineProcessingTimes($entry, $progress['processing'], $processing_start, $processing_end);
-            if (DevToolsMatchEvent('Console.messageAdded', $entry) &&
-                array_key_exists('message', $entry['params']) &&
-                is_array($entry['params']['message']))
-                $console_log[] = $entry['params']['message'];
-        }
-        if (!gz_is_file($console_log_file))
-          gz_file_put_contents($console_log_file, json_encode($console_log));
-        if (count($progress['processing'])) {
-          $proc_total = 0.0;
-          foreach($progress['processing'] as $type => &$procTime) {
-            $proc_total += $procTime;
-            $procTime = intval(round($procTime));
-          }
-          $progress['processing']['Idle'] = 0;
-          if (isset($processing_start) &&
-              isset($processing_end) &&
-              $processing_end > $processing_start) {
-            $proc_elapsed = $processing_end - $processing_start;
-            if ($proc_elapsed > $proc_total)
-              $progress['processing']['Idle'] = intval(round($proc_elapsed - $proc_total));
-          }
-        } else
-          unset($progress['processing']);
-        foreach($startTimes as $time) {
-          if (!$startTime || $time < $startTime)
-            $startTime = $time;
-        }
-        $regionCount = count($regions);
-        if ($regionCount) {
-            $paintEvents = array();
-            $total = 0.0;
-            foreach($regions as $name => &$region) {
-                $area = $region['width'] * $region['height'];
-                $updateCount = floatval(count($region['times']));
-                $incrementalImpact = floatval($area) / $updateCount;
-                // only count full screen paints for half their value
-                if ($area == $fullScreen)
-                    $incrementalImpact /= 2;
-                foreach($region['times'] as $time) {
-                    $total += $incrementalImpact;
-                    $elapsed = (int)($time - $startTime);
-                    if (!array_key_exists($elapsed, $paintEvents))
-                        $paintEvents[$elapsed] = $incrementalImpact;
-                    else
-                        $paintEvents[$elapsed] += $incrementalImpact;
-                }
-            }
-            if (count($paintEvents)) {
-                ksort($paintEvents, SORT_NUMERIC);
-                $current = 0.0;
-                $lastTime = 0.0;
-                $lastProgress = 0.0;
-                $progress['SpeedIndex'] = 0.0;
-                $progress['VisuallyComplete'] = 0;
-                $progress['StartRender'] = 0;
-                $progress['VisualProgress'] = array();
-                foreach($paintEvents as $time => $increment) {
-                    $current += $increment;
-                    $currentProgress = floatval(floatval($current) / floatval($total));
-                    $currentProgress = floatval(round($currentProgress * 100) / 100.0);
-                    $elapsed = $time - $lastTime;
-                    $siIncrement = floatval($elapsed) * (1.0 - $lastProgress);
-                    $progress['SpeedIndex'] += $siIncrement;
-                    $progress['VisualProgress'][$time] = $currentProgress;
-                    $progress['VisuallyComplete'] = $time;
-                    if (!$progress['StartRender'])
-                        $progress['StartRender'] = $time;
-                    $lastProgress = $currentProgress;
-                    $lastTime = $time;
-                    if ($currentProgress >= 1.0)
-                        break;
-                }
-            }
-        }
-        if ($completed && isset($progress) && is_array($progress))
-            SavedCachedDevToolsProgress($testPath, $run, $cached, $progress);
-      }
-    }
-    return $progress;
-}  
 
 /**
 * Load the timeline data for the given test run (from a timeline file or a raw dev tools dump)
@@ -167,151 +39,6 @@ function GetTimeline($testPath, $run, $cached, &$timeline, &$startOffset) {
 }
 
 /**
-* Pull out the paint entries from the timeline data and group them by the region being painted
-* 
-* @param mixed $entry
-* @param mixed $startTime
-* @param mixed $fullScreen
-* @param mixed $regions
-*/
-function ProcessPaintEntry(&$entry, &$fullScreen, &$regions, $frame, &$didLayout, &$didReceiveResponse, $viewport) {
-    $ret = false;
-    if (isset($entry) && is_array($entry)) {
-        $hadPaintChildren = false;
-        if (!$didReceiveResponse &&
-            array_key_exists('type', $entry) &&
-            !strcasecmp($entry['type'], 'ResourceReceiveResponse')) {
-            $didReceiveResponse = true;
-        }
-        if ($didReceiveResponse &&
-            !$didLayout &&
-            array_key_exists('type', $entry) &&
-            !strcasecmp($entry['type'], 'Layout')) {
-            $didLayout = true;
-        }
-        if (array_key_exists('frameId', $entry))
-            $frame = $entry['frameId'];
-        if (array_key_exists('params', $entry) && array_key_exists('record', $entry['params']))
-            ProcessPaintEntry($entry['params']['record'], $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse, $viewport);
-        if(array_key_exists('children', $entry) &&
-           is_array($entry['children'])) {
-            foreach($entry['children'] as &$child)
-                if (ProcessPaintEntry($child, $fullScreen, $regions, $frame, $didLayout, $didReceiveResponse, $viewport))
-                    $hadPaintChildren = true;
-        } 
-        if (array_key_exists('type', $entry) &&
-          !strcasecmp($entry['type'], 'Paint') &&
-          array_key_exists('data', $entry)) {
-          if (array_key_exists('clip', $entry['data'])) {
-            $entry['data']['x'] = $entry['data']['clip'][0];
-            $entry['data']['y'] = $entry['data']['clip'][1];
-            $entry['data']['width'] = $entry['data']['clip'][4] - $entry['data']['clip'][0];
-            $entry['data']['height'] = $entry['data']['clip'][5] - $entry['data']['clip'][1];
-          }
-          if (array_key_exists('width', $entry['data']) &&
-              array_key_exists('height', $entry['data']) &&
-              array_key_exists('x', $entry['data']) &&
-              array_key_exists('y', $entry['data']) &&
-              ClipPaintRectToViewport($entry['data'], $viewport)) {
-            $ret = true;
-            $area = $entry['data']['width'] * $entry['data']['height'];
-            if ($area > $fullScreen)
-                $fullScreen = $area;
-            if ($didLayout && $didReceiveResponse && !$hadPaintChildren) {
-                $paintEvent = $entry['data'];
-                $paintEvent['endTime'] = $entry['endTime'];
-                $paintEvent['startTime'] = $entry['startTime'];
-                $regionName = "$frame:{$paintEvent['x']},{$paintEvent['y']} - {$paintEvent['width']}x{$paintEvent['height']}";
-                if (!array_key_exists($regionName, $regions)) {
-                    $regions[$regionName] = $paintEvent;
-                    $regions[$regionName]['times'] = array();
-                }
-                $regions[$regionName]['times'][] = $entry['endTime'];
-            }
-          }
-        }
-    }
-    return $ret;
-}
-
-/**
-* Clip the provided paint rect to the viewport and return true if the resulting rect is valid
-* 
-* @param mixed $paintRect
-* @param mixed $viewport
-*/
-function ClipPaintRectToViewport(&$paintRect, $viewport) {
-  $isInside = true;
-  if (isset($viewport)) {
-    $isInside = false;
-    $left = max($paintRect['x'], $viewport['x']);
-    $top = max($paintRect['y'], $viewport['y']);
-    $right = min($paintRect['x'] + $paintRect['width'], $viewport['x'] + $viewport['width']);
-    $bottom = min($paintRect['y'] + $paintRect['height'], $viewport['y'] + $viewport['height']);
-    if ($right > $left && $bottom > $top) {
-      $paintRect['x'] = $left;
-      $paintRect['y'] = $top;
-      $paintRect['width'] = $right - $left;
-      $paintRect['height'] = $bottom - $top;
-      $isInside = true;
-    }
-  }
-  return $isInside;
-}
-
-/**
-* Load a cached version of the calculated visual progress if it exists
-* 
-* @param mixed $testPath
-* @param mixed $run
-* @param mixed $cached
-*/
-function GetCachedDevToolsProgress($testPath, $run, $cached) {
-    global $DevToolsCacheVersion;
-    $progress = null;
-    if (gz_is_file("$testPath/devToolsProgress.json")) {
-        $cache = json_decode(gz_file_get_contents("$testPath/devToolsProgress.json"), true);
-        if (isset($cache) && is_array($cache)) {
-            if (array_key_exists('version', $cache) &&
-                $cache['version'] == $DevToolsCacheVersion) {
-                $key = "$run.$cached";
-                if (array_key_exists($key, $cache))
-                    $progress = $cache[$key];
-            } else {
-                if (is_file("$testPath/devToolsProgress.json"))
-                    unlink("$testPath/devToolsProgress.json");
-                if (is_file("$testPath/devToolsProgress.json.gz"))
-                    unlink("$testPath/devToolsProgress.json.gz");
-            }
-        }
-    }
-    return $progress;
-}
-
-/**
-* Save the cached visual progress to disk
-* 
-* @param mixed $testPath
-* @param mixed $run
-* @param mixed $cached
-* @param mixed $progress
-*/
-function SavedCachedDevToolsProgress($testPath, $run, $cached, $progress) {
-    $key = "$run.$cached";
-    $cache = null;
-    global $DevToolsCacheVersion;
-    if (gz_is_file("$testPath/devToolsProgress.json"))
-        $cache = json_decode(gz_file_get_contents("$testPath/devToolsProgress.json"), true);
-    if (!isset($cache) ||
-        !is_array($cache) ||
-        !array_key_exists('version', $cache) ||
-        $cache['version'] != $DevToolsCacheVersion)
-        $cache = array('version' => $DevToolsCacheVersion);
-    $cache[$key] = $progress;
-    gz_file_put_contents("$testPath/devToolsProgress.json", json_encode($cache));
-}
-
-/**
 * Pull the requests from the dev tools timeline
 * 
 * @param mixed $testPath
@@ -323,11 +50,12 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
     $requests = null;
     $pageData = null;
     $startOffset = null;
-    $ver = 2;
+    $ver = 13;
     $cached = isset($cached) && $cached ? 1 : 0;
     $ok = GetCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
+    $ok = false;
     if (!$ok) {
-      if (GetDevToolsEvents(array('Page.', 'Network.'), $testPath, $run, $cached, $events, $startOffset)) {
+      if (GetDevToolsEvents(null, $testPath, $run, $cached, $events, $startOffset)) {
           if (DevToolsFilterNetRequests($events, $rawRequests, $rawPageData)) {
               $requests = array();
               $pageData = array();
@@ -352,6 +80,21 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
               $pageData['start_epoch'] = $rawPageData['startTime'];
               if (array_key_exists('onload', $rawPageData))
                   $pageData['loadTime'] = $pageData['docTime'] = round(($rawPageData['onload'] - $rawPageData['startTime']));
+              if (isset($rawPageData['domContentLoadedEventStart'])) {
+                $pageData['domContentLoadedEventStart'] = round($rawPageData['domContentLoadedEventStart'] - $rawPageData['startTime']);
+                $pageData['domContentLoadedEventEnd'] = isset($rawPageData['domContentLoadedEventEnd']) ?
+                    round($rawPageData['domContentLoadedEventEnd'] - $rawPageData['startTime']) :
+                    $pageData['domContentLoadedEventStart'];
+              }
+              if (isset($rawPageData['loadEventStart'])) {
+                $pageData['loadEventStart'] = round($rawPageData['loadEventStart'] - $rawPageData['startTime']);
+                $pageData['loadEventEnd'] = isset($rawPageData['loadEventEnd']) ?
+                    round($rawPageData['loadEventEnd'] - $rawPageData['startTime']) :
+                    $pageData['loadEventStart'];
+              } else {
+                $pageData['loadEventStart'] = $pageData['loadTime'];
+                $pageData['loadEventEnd'] = $pageData['loadTime'];
+              }
               
               // go through and pull out the requests, calculating the page stats as we go
               $connections = array();
@@ -365,7 +108,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                       array_key_exists('path', $parts)) {
                     $request = array();
                     $request['ip_addr'] = '';
-                    $request['method'] = array_key_exists('method', $rawRequest) ? $rawRequest['method'] : '';
+                    $request['method'] = isset($rawRequest['method']) ? $rawRequest['method'] : '';
                     $request['host'] = '';
                     $request['url'] = '';
                     $request['full_url'] = '';
@@ -373,50 +116,48 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                     $request['full_url'] = $rawRequest['url'];
                     $request['host'] = $parts['host'];
                     $request['url'] = $parts['path'];
-                    if (array_key_exists('query', $parts) && strlen($parts['query']))
+                    if (isset($parts['query']) && strlen($parts['query']))
                       $request['url'] .= '?' . $parts['query'];
                     if ($parts['scheme'] == 'https')
                       $request['is_secure'] = 1;
+                    $request['id'] = $rawRequest['id'];
 
-                    $request['responseCode'] = array_key_exists('response', $rawRequest) && array_key_exists('status', $rawRequest['response']) ? $rawRequest['response']['status'] : -1;
-                    if (array_key_exists('errorCode', $rawRequest))
+                    $request['responseCode'] = isset($rawRequest['response']['status']) ? $rawRequest['response']['status'] : -1;
+                    if (isset($rawRequest['errorCode']))
                         $request['responseCode'] = $rawRequest['errorCode'];
                     $request['load_ms'] = -1;
-                    if (array_key_exists('response', $rawRequest) &&
-                        array_key_exists('timing', $rawRequest['response']) &&
-                        array_key_exists('sendStart', $rawRequest['response']['timing']) &&
+                    if (isset($rawRequest['response']['timing']['sendStart']) &&
                         $rawRequest['response']['timing']['sendStart'] >= 0)
                         $rawRequest['startTime'] = $rawRequest['response']['timing']['sendStart'];
-                    if (array_key_exists('endTime', $rawRequest)) {
+                    if (isset($rawRequest['endTime'])) {
                         $request['load_ms'] = round(($rawRequest['endTime'] - $rawRequest['startTime']));
                         $endOffset = round(($rawRequest['endTime'] - $rawPageData['startTime']));
                         if ($endOffset > $pageData['fullyLoaded'])
                             $pageData['fullyLoaded'] = $endOffset;
                     }
-                    $request['ttfb_ms'] = array_key_exists('firstByteTime', $rawRequest) ? round(($rawRequest['firstByteTime'] - $rawRequest['startTime'])) : -1;
-                    $request['load_start'] = array_key_exists('startTime', $rawRequest) ? round(($rawRequest['startTime'] - $rawPageData['startTime'])) : 0;
-                    $request['bytesOut'] = array_key_exists('headers', $rawRequest) ? strlen(implode("\r\n", $rawRequest['headers'])) : 0;
+                    $request['ttfb_ms'] = isset($rawRequest['firstByteTime']) ? round(($rawRequest['firstByteTime'] - $rawRequest['startTime'])) : -1;
+                    $request['load_start'] = isset($rawRequest['startTime']) ? round(($rawRequest['startTime'] - $rawPageData['startTime'])) : 0;
+                    $request['bytesOut'] = isset($rawRequest['headers']) ? strlen(implode("\r\n", $rawRequest['headers'])) : 0;
                     $request['bytesIn'] = 0;
                     $request['objectSize'] = '';
-                    if (array_key_exists('bytesIn', $rawRequest)) {
+                    if (isset($rawRequest['bytesIn'])) {
                       $request['bytesIn'] = $rawRequest['bytesIn'];
-                    } elseif (array_key_exists('bytesInEncoded', $rawRequest) && $rawRequest['bytesInEncoded']) {
+                    } elseif (isset($rawRequest['bytesInEncoded']) && $rawRequest['bytesInEncoded']) {
                       $request['objectSize'] = $rawRequest['bytesInEncoded'];
                       $request['bytesIn'] = $rawRequest['bytesInEncoded'];
-                      if (array_key_exists('response', $rawRequest) && array_key_exists('headersText', $rawRequest['response']))
+                      if (isset($rawRequest['response']['headersText']))
                           $request['bytesIn'] += strlen($rawRequest['response']['headersText']);
-                    } elseif (array_key_exists('bytesInData', $rawRequest)) {
+                    } elseif (isset($rawRequest['bytesInData'])) {
                       $request['objectSize'] = $rawRequest['bytesInData'];
                       $request['bytesIn'] = $rawRequest['bytesInData'];
-                      if (array_key_exists('response', $rawRequest) && array_key_exists('headersText', $rawRequest['response']))
+                      if (isset($rawRequest['response']['headersText']))
                           $request['bytesIn'] += strlen($rawRequest['response']['headersText']);
                     }
                     $request['expires'] = '';
                     $request['cacheControl'] = '';
                     $request['contentType'] = '';
                     $request['contentEncoding'] = '';
-                    if (array_key_exists('response', $rawRequest) && 
-                        array_key_exists('headers', $rawRequest['response'])) {
+                    if (isset($rawRequest['response']['headers'])) {
                         GetDevToolsHeaderValue($rawRequest['response']['headers'], 'Expires', $request['expires']);
                         GetDevToolsHeaderValue($rawRequest['response']['headers'], 'Cache-Control', $request['cacheControl']);
                         GetDevToolsHeaderValue($rawRequest['response']['headers'], 'Content-Type', $request['contentType']);
@@ -424,17 +165,16 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                         GetDevToolsHeaderValue($rawRequest['response']['headers'], 'Content-Length', $request['objectSize']);
                     }
                     $request['type'] = 3;
-                    $request['socket'] = array_key_exists('response', $rawRequest) && array_key_exists('connectionId', $rawRequest['response']) ? $rawRequest['response']['connectionId'] : -1;
+                    $request['socket'] = isset($rawRequest['response']['connectionId']) ? $rawRequest['response']['connectionId'] : -1;
                     $request['dns_start'] = -1;
                     $request['dns_end'] = -1;
                     $request['connect_start'] = -1;
                     $request['connect_end'] = -1;
                     $request['ssl_start'] = -1;
                     $request['ssl_end'] = -1;
-                    if (array_key_exists('response', $rawRequest) &&
-                        array_key_exists('timing', $rawRequest['response'])) {
-                      if (array_key_exists('sendStart', $rawRequest['response']['timing']) &&
-                          array_key_exists('receiveHeadersEnd', $rawRequest['response']['timing']) &&
+                    if (isset($rawRequest['response']['timing'])) {
+                      if (isset($rawRequest['response']['timing']['sendStart']) &&
+                          isset($rawRequest['response']['timing']['receiveHeadersEnd']) &&
                           $rawRequest['response']['timing']['receiveHeadersEnd'] >= $rawRequest['response']['timing']['sendStart'])
                         $request['ttfb_ms'] = round(($rawRequest['response']['timing']['receiveHeadersEnd'] - $rawRequest['response']['timing']['sendStart']));
                       
@@ -442,30 +182,30 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                       if ($request['socket'] !== -1 &&
                         !array_key_exists($request['socket'], $connections)) {
                         $connections[$request['socket']] = $rawRequest['response']['timing'];
-                        if (array_key_exists('dnsStart', $rawRequest['response']['timing']) &&
+                        if (isset($rawRequest['response']['timing']['dnsStart']) &&
                             $rawRequest['response']['timing']['dnsStart'] >= 0) {
                           $dnsKey = $request['host'];
                           if (!array_key_exists($dnsKey, $dnsTimes)) {
                             $dnsTimes[$dnsKey] = 1;
                             $request['dns_start'] = round(($rawRequest['response']['timing']['dnsStart'] - $rawPageData['startTime']));
-                            if (array_key_exists('dnsEnd', $rawRequest['response']['timing']) &&
+                            if (isset($rawRequest['response']['timing']['dnsEnd']) &&
                                 $rawRequest['response']['timing']['dnsEnd'] >= 0)
                               $request['dns_end'] = round(($rawRequest['response']['timing']['dnsEnd'] - $rawPageData['startTime']));
                           }
                         }
-                        if (array_key_exists('connectStart', $rawRequest['response']['timing']) &&
+                        if (isset($rawRequest['response']['timing']['connectStart']) &&
                             $rawRequest['response']['timing']['connectStart'] >= 0) {
                           $request['connect_start'] = round(($rawRequest['response']['timing']['connectStart'] - $rawPageData['startTime']));
-                          if (array_key_exists('connectEnd', $rawRequest['response']['timing']) &&
+                          if (isset($rawRequest['response']['timing']['connectEnd']) &&
                               $rawRequest['response']['timing']['connectEnd'] >= 0)
                             $request['connect_end'] = round(($rawRequest['response']['timing']['connectEnd'] - $rawPageData['startTime']));
                         }
-                        if (array_key_exists('sslStart', $rawRequest['response']['timing']) &&
+                        if (isset($rawRequest['response']['timing']['sslStart']) &&
                             $rawRequest['response']['timing']['sslStart'] >= 0) {
                           $request['ssl_start'] = round(($rawRequest['response']['timing']['sslStart'] - $rawPageData['startTime']));
                           if ($request['connect_end'] > $request['ssl_start'])
                             $request['connect_end'] = $request['ssl_start'];
-                          if (array_key_exists('sslEnd', $rawRequest['response']['timing']) &&
+                          if (isset($rawRequest['response']['timing']['sslEnd']) &&
                               $rawRequest['response']['timing']['sslEnd'] >= 0)
                             $request['ssl_end'] = round(($rawRequest['response']['timing']['sslEnd'] - $rawPageData['startTime']));
                         }
@@ -474,16 +214,14 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                     $request['initiator'] = '';
                     $request['initiator_line'] = '';
                     $request['initiator_column'] = '';
-                    if (array_key_exists('initiator', $rawRequest)) {
-                        if (array_key_exists('url', $rawRequest['initiator']))
-                            $request['initiator'] = $rawRequest['initiator']['url'];
-                        if (array_key_exists('lineNumber', $rawRequest['initiator']))
-                            $request['initiator_line'] = $rawRequest['initiator']['lineNumber'];
+                    if (isset($rawRequest['initiator']['url'])) {
+                      $request['initiator'] = $rawRequest['initiator']['url'];
+                      if (isset($rawRequest['initiator']['lineNumber']))
+                        $request['initiator_line'] = $rawRequest['initiator']['lineNumber'];
                     }
                     $request['server_rtt'] = null;
                     $request['headers'] = array('request' => array(), 'response' => array());
-                    if (array_key_exists('response', $rawRequest) &&
-                        array_key_exists('requestHeadersText', $rawRequest['response'])) {
+                    if (isset($rawRequest['response']['requestHeadersText'])) {
                         $request['headers']['request'] = array();
                         $headers = explode("\n", $rawRequest['response']['requestHeadersText']);
                         foreach($headers as $header) {
@@ -491,18 +229,16 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                             if (strlen($header))
                                 $request['headers']['request'][] = $header;
                         }
-                    } elseif (array_key_exists('response', $rawRequest) &&
-                        array_key_exists('requestHeaders', $rawRequest['response'])) {
+                    } elseif (isset($rawRequest['response']['requestHeaders'])) {
                         $request['headers']['request'] = array();
                         foreach($rawRequest['response']['requestHeaders'] as $key => $value)
                             $request['headers']['request'][] = "$key: $value";
-                    } elseif (array_key_exists('headers', $rawRequest)) {
+                    } elseif (isset($rawRequest['headers'])) {
                         $request['headers']['request'] = array();
                         foreach($rawRequest['headers'] as $key => $value)
                             $request['headers']['request'][] = "$key: $value";
                     }
-                    if (array_key_exists('response', $rawRequest) &&
-                        array_key_exists('headersText', $rawRequest['response'])) {
+                    if (isset($rawRequest['response']['headersText'])) {
                         $request['headers']['response'] = array();
                         $headers = explode("\n", $rawRequest['response']['headersText']);
                         foreach($headers as $header) {
@@ -510,8 +246,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                             if (strlen($header))
                                 $request['headers']['response'][] = $header;
                         }
-                    } elseif (array_key_exists('response', $rawRequest) &&
-                        array_key_exists('headers', $rawRequest['response'])) {
+                    } elseif (isset($rawRequest['response']['headers'])) {
                         $request['headers']['response'] = array();
                         foreach($rawRequest['response']['headers'] as $key => $value)
                             $request['headers']['response'][] = "$key: $value";
@@ -542,25 +277,35 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                     
                     // make SURE it is a valid request
                     $valid = true;
-                    if (array_key_exists('load_ms', $request) &&
-                        array_key_exists('ttfb_ms', $request) &&
+                    if (isset($request['load_ms']) &&
+                        isset($request['ttfb_ms']) &&
                         $request['load_ms'] < $request['ttfb_ms'])
                       $valid = false;
                     
                     if ($valid) {
                       // page-level stats
-                      if (!array_key_exists('URL', $pageData) && strlen($request['full_url']))
+                      if (!isset($pageData['URL']) && strlen($request['full_url']))
                           $pageData['URL'] = $request['full_url'];
-                      if (array_key_exists('endTime', $rawRequest)) {
+                      if (isset($rawRequest['startTime'])) {
+                          $startOffset = round(($rawRequest['startTime'] - $rawPageData['startTime']));
+                          if ($startOffset > $pageData['fullyLoaded'])
+                              $pageData['fullyLoaded'] = $startOffset;
+                      }
+                      if (isset($rawRequest['endTime'])) {
                           $endOffset = round(($rawRequest['endTime'] - $rawPageData['startTime']));
                           if ($endOffset > $pageData['fullyLoaded'])
                               $pageData['fullyLoaded'] = $endOffset;
                       }
-                      if (!array_key_exists('TTFB', $pageData) &&
+                      if (!isset($pageData['TTFB']) &&
                           $request['ttfb_ms'] >= 0 &&
                           ($request['responseCode'] == 200 ||
-                           $request['responseCode'] == 304))
+                           $request['responseCode'] == 304)) {
                           $pageData['TTFB'] = $request['load_start'] + $request['ttfb_ms'];
+                          if ($request['ssl_end'] >= 0 &&
+                              $request['ssl_start'] >= 0) {
+                              $pageData['basePageSSLTime'] = $request['ssl_end'] - $request['ssl_start'];
+                          }
+                      }
                       $pageData['bytesOut'] += $request['bytesOut'];
                       $pageData['bytesIn'] += $request['bytesIn'];
                       $pageData['requests']++;
@@ -591,6 +336,17 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
             $pageData['result'] = $requests[0]['responseCode'];
           else
             $pageData['result'] = 12999;
+        }
+        if (isset($rawPageData['mainResourceID'])) {
+          foreach($requests as $index => &$request) {
+            if ($request['id'] == $rawPageData['mainResourceID'])
+              $main_request = $index;
+          }
+          if (isset($main_request)) {
+            $requests[$main_request]['final_base_page'] = true;
+            $pageData['final_base_page_request'] = $index + 1;
+            $pageData['final_base_page_request_id'] = $rawPageData['mainResourceID'];
+          }
         }
         $ok = true;
       }
@@ -642,11 +398,40 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
     $requests = array();
     $rawRequests = array();
     $idMap = array();
+    $endTimestamp = null;
     foreach ($events as $event) {
+      if (isset($event['timestamp']) && (!isset($endTimestamp) || $event['timestamp'] > $endTimestamp))
+        $endTimestamp = $event['timestamp'];
+        if (!isset($main_frame) &&
+            $event['method'] == 'Page.frameStartedLoading' &&
+            isset($event['frameId'])) {
+          $main_frame = $event['frameId'];
+        }
+        if ($event['method'] == 'Page.frameStartedLoading' &&
+            isset($event['frameId']) &&
+            isset($main_frame) &&
+            $event['frameId'] == $main_frame) {
+          $main_resource_id = null;
+        }
+        if (!isset($main_resource_id) &&
+            $event['method'] == 'Network.requestWillBeSent' &&
+            isset($event['requestId']) &&
+            isset($event['frameId']) &&
+            isset($main_frame) &&
+            $event['frameId'] == $main_frame) {
+          $main_resource_id = $event['requestId'];
+        }
         if ($event['method'] == 'Page.loadEventFired' &&
             array_key_exists('timestamp', $event) &&
-            $event['timestamp'] > $pageData['onload'])
-            $pageData['onload'] = $event['timestamp'];
+            $event['timestamp'] > $pageData['onload']) {
+          $pageData['onload'] = $event['timestamp'];
+        }
+        if ($event['method'] == 'Network.requestServedFromCache' &&
+            array_key_exists('requestId', $event) &&
+            array_key_exists($event['requestId'], $rawRequests)) {
+          $rawRequests[$event['requestId']]['fromNet'] = false;
+          $rawRequests[$event['requestId']]['fromCache'] = true;
+        }
         if (array_key_exists('timestamp', $event) &&
             array_key_exists('requestId', $event)) {
             $originalId = $id = $event['requestId'];
@@ -659,7 +444,6 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                 parse_url($event['request']['url']) !== false) {
                 $request = $event['request'];
                 $request['startTime'] = $event['timestamp'];
-                $request['endTime'] = $event['timestamp'];
                 if (array_key_exists('initiator', $event))
                     $request['initiator'] = $event['initiator'];
                 // redirects re-use the same request ID
@@ -687,6 +471,8 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                     $count = $idMap[$originalId];
                   $idMap[$originalId] = $count + 1;
                   $id = "{$originalId}-{$idMap[$originalId]}";
+                  if (isset($main_resource_id) && $main_resource_id == $originalId)
+                    $main_resource_id = $id;
                 }
                 $request['id'] = $id;
                 $rawRequests[$id] = $request;
@@ -711,6 +497,9 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                     if (!array_key_exists('firstByteTime', $rawRequests[$id]))
                         $rawRequests[$id]['firstByteTime'] = $event['timestamp'];
                     $rawRequests[$id]['fromNet'] = false;
+                    // the timing data for cached resources is completely bogus
+                    if (isset($rawRequests[$id]['fromCache']) && isset($event['response']['timing']))
+                      unset($event['response']['timing']);
                     // iOS incorrectly sets the fromNet flag to false for resources from cache
                     // but it doesn't have any send headers for those requests
                     // so use that as an indicator.
@@ -718,19 +507,20 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                         !$event['response']['fromDiskCache'] &&
                         array_key_exists('headers', $rawRequests[$id]) &&
                         is_array($rawRequests[$id]['headers']) &&
-                        count($rawRequests[$id]['headers']))
-                        $rawRequests[$id]['fromNet'] = true;
+                        count($rawRequests[$id]['headers']) &&
+                        !isset($rawRequests[$id]['fromCache'])) {
+                      $rawRequests[$id]['fromNet'] = true;
+                    }
                     // if we didn't get explicit bytes, fall back to any responses that had
                     // content-length headers
                     if ((!array_key_exists('bytesIn', $rawRequests[$id]) || !$rawRequests[$id]['bytesIn']) &&
-                        array_key_exists('response', $event) &&
-                        is_array($event['response']) &&
-                        array_key_exists('headers', $event['response']) &&
-                        is_array($event['response']['headers']) &&
-                        array_key_exists('Content-Length', $event['response']['headers'])) {
+                        isset($event['response']['headers']['Content-Length'])) {
                       $rawRequests[$id]['bytesIn'] = $event['response']['headers']['Content-Length'];
                       $rawRequests[$id]['bytesIn'] += strlen(implode("\n", $rawRequests[$id]['headers']));
                     }
+                    // adjust the start time
+                    if (isset($event['response']['timing']['receiveHeadersEnd']))
+                      $rawRequests[$id]['startTime'] = $event['timestamp'] - $event['response']['timing']['receiveHeadersEnd'];
                     $rawRequests[$id]['response'] = $event['response'];
                 }
                 if ($event['method'] == 'Network.loadingFinished') {
@@ -741,28 +531,57 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
                         $rawRequests[$id]['endTime'] = $event['timestamp'];
                 }
                 if ($event['method'] == 'Network.loadingFailed') {
-                  if (!array_key_exists('response', $rawRequests[$id])) {
-                    $rawRequests[$id]['fromNet'] = true;
-                    $rawRequests[$id]['errorCode'] = 12999;
-                    if (!array_key_exists('firstByteTime', $rawRequests[$id]))
-                        $rawRequests[$id]['firstByteTime'] = $event['timestamp'];
-                    if (!array_key_exists('endTime', $rawRequests[$id]) || 
-                        $event['timestamp'] > $rawRequests[$id]['endTime'])
-                        $rawRequests[$id]['endTime'] = $event['timestamp'];
-                    if (array_key_exists('errorText', $event))
-                        $rawRequests[$id]['error'] = $event['errorText'];
-                    if (array_key_exists('error', $event))
-                        $rawRequests[$id]['errorCode'] = $event['error'];
+                  if (!array_key_exists('response', $rawRequests[$id]) &&
+                      !isset($rawRequests[$id]['fromCache'])) {
+                    if (!isset($event['canceled']) || !$event['canceled']) {
+                      $rawRequests[$id]['fromNet'] = true;
+                      $rawRequests[$id]['errorCode'] = 12999;
+                      if (!array_key_exists('firstByteTime', $rawRequests[$id]))
+                          $rawRequests[$id]['firstByteTime'] = $event['timestamp'];
+                      if (!array_key_exists('endTime', $rawRequests[$id]) || 
+                          $event['timestamp'] > $rawRequests[$id]['endTime'])
+                          $rawRequests[$id]['endTime'] = $event['timestamp'];
+                      if (array_key_exists('errorText', $event))
+                          $rawRequests[$id]['error'] = $event['errorText'];
+                      if (array_key_exists('error', $event))
+                          $rawRequests[$id]['errorCode'] = $event['error'];
+                    }
                   }
                 }
             }
         }
+        if ($event['method'] == 'Page.domContentEventFired' &&
+            array_key_exists('timestamp', $event) &&
+            !isset($pageData['domContentLoadedEventStart'])) {
+          $pageData['domContentLoadedEventStart'] = $event['timestamp'];
+          $pageData['domContentLoadedEventEnd'] = $event['timestamp'];
+        }
+        if (isset($main_frame) &&
+            $event['method'] == 'Timeline.eventRecorded' &&
+            !isset($pageData['domContentLoadedEventStart'])) {
+          $eventString = json_encode($event);
+          if (strpos($eventString, '"type":"DOMContentLoaded"') !== false &&
+              isset($event['record'])) {
+            ParseDevToolsDOMContentLoaded($event['record'], $main_frame, $pageData);
+          }
+        }
     }
+    // Go through and error-out any requests that were started but never got a response or error
+    if (isset($endTimestamp)) {
+      foreach ($rawRequests as &$request) {
+        if (!isset($request['endTime'])) {
+          $request['endTime'] = $endTimestamp;
+          $request['firstByteTime'] = $endTimestamp;
+          $request['fromNet'] = true;
+          $request['errorCode'] = 12999;
+        }
+      }
+    }
+    
     // pull out just the requests that were served on the wire
     foreach ($rawRequests as &$request) {
       if (array_key_exists('startTime', $request)) {
-        if (array_key_exists('response', $request) &&
-            array_key_exists('timing', $request['response'])) {
+        if (!isset($request['fromCache']) && isset($request['response']['timing'])) {
           if (array_key_exists('requestTime', $request['response']['timing']) &&
               array_key_exists('end_time', $request) &&
               $request['response']['timing']['requestTime'] >= $request['startTime'] &&
@@ -792,10 +611,36 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
         $requests[] = $request;
       }
     }
+    if (isset($main_resource_id))
+      $pageData['mainResourceID'] = $main_resource_id;
     $ok = false;
-    if (count($requests))
+    if (count($requests)) {
+        // sort them by start time
+        usort($requests, function($a, $b) {
+          return $a['startTime'] > $b['startTime'];
+        });
         $ok = true;
+    }
     return $ok;
+}
+
+function ParseDevToolsDOMContentLoaded(&$event, $main_frame, &$pageData) {
+  if (isset($event['type']) &&
+      $event['type'] == 'EventDispatch' &&
+      isset($event['data']['type']) &&
+      $event['data']['type'] == 'DOMContentLoaded' &&
+      isset($event['frameId']) &&
+      $event['frameId'] == $main_frame &&
+      isset($event['startTime'])) {
+    $pageData['domContentLoadedEventStart'] = $event['startTime'];
+    $pageData['domContentLoadedEventEnd'] = isset($event['endTime']) ? $event['endTime'] : $event['startTime'];
+  } elseif (isset($event['children'])) {
+    foreach($event['children'] as &$child) {
+      ParseDevToolsDOMContentLoaded($child, $main_frame, $pageData);
+      if (isset($pageData['domContentLoadedEventStart']))
+        break;
+    }
+  }
 }
 
 /**
@@ -815,7 +660,7 @@ function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events, &$startO
       $cachedText = '_Cached';
   $devToolsFile = "$testPath/$run{$cachedText}_devtools.json";
   if (gz_is_file($devToolsFile)){
-    $raw = gz_file_get_contents($devToolsFile);
+    $raw = trim(gz_file_get_contents($devToolsFile));
     ParseDevToolsEvents($raw, $events, $filter, true, $startOffset);
   }
   if (count($events))
@@ -836,7 +681,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
   $hasNet = strpos($json, '"Network.') !== false ? true : false;
   $hasTimeline = strpos($json, '"Timeline.eventRecorded"') !== false ? true : false;
   $hasTrim = strpos($json, $START_MESSAGE) !== false ? true : false;
-  $messages = json_decode($json, true);
+  $messages = json_decode($json, true, 100000);
   unset($json);
 
   $firstEvent = null;
@@ -871,6 +716,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
           $json = json_encode($message);
           if (strpos($json, $firstNetEventURL) !== false) {
             $timelineEventTime = $message['params']['record']['startTime'];
+            $firstEvent = $timelineEventTime;
             break;
           }
         }
@@ -878,6 +724,32 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
     }
     if (isset($firstNetEventTime) && isset($timelineEventTime)) {
       $clockOffset = $timelineEventTime - $firstNetEventTime;
+      $firstEvent = min($firstEvent, $firstNetEventTime + $clockOffset);
+    }
+  }
+  
+  if (!$firstEvent && $hasTimeline) {
+    foreach ($messages as $message) {
+      if (is_array($message) && isset($message['method'])) {
+        $eventTime = DevToolsEventTime($message);
+        $json = json_encode($message);
+        if (strpos($json, '"type":"Resource') !== false) {
+          $firstEvent = $eventTime;
+          break;
+        }
+      }
+    }
+  }
+  if (!$firstEvent && $hasNet) {
+    foreach ($messages as $message) {
+      if (is_array($message) && isset($message['method'])) {
+        $eventTime = DevToolsEventTime($message);
+        $method_class = substr($message['method'], 0, strpos($message['method'], '.'));
+        if ($eventTime && $method_class === 'Network') {
+          $firstEvent = $eventTime * 1000.0;
+          break;
+        }
+      }
     }
   }
   
@@ -887,21 +759,6 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
         $message['params']['timestamp'] *= 1000.0;
         if (isset($clockOffset))
           $message['params']['timestamp'] += $clockOffset;
-      }
-      
-      // See if we got the first valid event in the trace (throw away the timeline
-      // events at the beginning that are from video capture starting).
-      if ($hasNet) {
-        if (!$firstEvent) {
-          if (isset($message['method']) && $message['method'] !== 'Timeline.eventRecorded') {
-            $firstEvent = isset($previousTime) ? $previousTime : 0;
-          } else {
-            $previousTime = DevToolsEventTime($message);
-          }
-        }
-      } elseif (!$firstEvent) {
-        $eventTime = DevToolsEventTime($message);
-        $firstEvent = isset($eventTime) ? $eventTime : 0;
       }
       
       // see if we are waiting for the first net message after a WPT Start
@@ -923,7 +780,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
       // keep any events that we need to keep
       if ($recording && isset($firstEvent)) {
         if (DevToolsMatchEvent($filter, $message, $firstEvent)) {
-          if (!isset($startOffset) && $firstEvent) {
+          if ($hasTrim && !isset($startOffset) && $firstEvent) {
             $eventTime = DevToolsEventTime($message);
             if ($eventTime) {
               $startOffset = $eventTime - $firstEvent;
@@ -1026,10 +883,11 @@ function DevToolsMatchEvent($filter, &$event, $startTime = null, $endTime = null
   $match = true;
   if (isset($event['method']) && isset($event['params'])) {
     if (isset($startTime) && $startTime) {
-      $time = DevToolsEventEndTime($event);
+      $time = DevToolsEventTime($event);
       if (isset($time) && $time &&
           ($time < $startTime ||
-              (isset($endTime) && $endTime && $time >= $endTime)))
+          $time - $startTime > 600000 ||
+          (isset($endTime) && $endTime && $time > $endTime)))
         $match = false;
     }
     if ($match && isset($filter)) {
@@ -1048,70 +906,6 @@ function DevToolsMatchEvent($filter, &$event, $startTime = null, $endTime = null
     }
   }
   return $match;
-}
-
-/**
-* See if there are layout and network events in the trace
-* 
-* @param mixed $timeline
-*/
-function DevToolsHasLayout(&$timeline, &$viewport) {
-  $hasLayout = false;
-  $hasResponse = false;
-  $ret = false;
-  foreach ($timeline as &$entry) {
-    DevToolsEventHasLayout($entry, $hasLayout, $hasResponse, $viewport);
-    if ($hasLayout && $hasResponse) {
-      $ret = true;
-      break;
-    }
-  }
-  return $ret;
-}
-
-/**
-* Recursively check the given event for layout or response
-* 
-* @param mixed $event
-*/
-function DevToolsEventHasLayout(&$entry, &$hasLayout, &$hasResponse, &$viewport) {
-  if (isset($entry) && is_array($entry)) {
-      if (!$hasResponse &&
-          array_key_exists('type', $entry) &&
-          !strcasecmp($entry['type'], 'ResourceReceiveResponse')) {
-          $hasResponse = true;
-      }
-      if ($hasResponse &&
-          !$hasLayout &&
-          array_key_exists('type', $entry) &&
-          !strcasecmp($entry['type'], 'Layout')) {
-          if (array_key_exists('data', $entry) &&
-              is_array($entry['data']) &&
-              array_key_exists('partialLayout', $entry['data'])) {
-            if (!$entry['data']['partialLayout']) {
-              if (array_key_exists('root', $entry['data'])) {
-                $x = $entry['data']['root'][0];
-                $y = $entry['data']['root'][1];
-                $width = $entry['data']['root'][2] - $x;
-                $height = $entry['data']['root'][5] - $y;
-                if ($width > 0 && $height > 0) {
-                  $hasLayout = true;
-                  $viewport = array('x' => $x, 'y' => $y, 'width' => $width, 'height' => $height);
-                }
-              } else
-                $hasLayout = true;
-            }
-          } else
-            $hasLayout = true;
-      }
-      if (array_key_exists('params', $entry) && array_key_exists('record', $entry['params']))
-          DevToolsEventHasLayout($entry['params']['record'], $hasLayout, $hasResponse, $viewport);
-      if(array_key_exists('children', $entry) &&
-         is_array($entry['children'])) {
-          foreach($entry['children'] as &$child)
-              DevToolsEventHasLayout($child, $hasLayout, $hasResponse, $viewport);
-      } 
-  }
 }
 
 function DevToolsGetConsoleLog($testPath, $run, $cached) {
@@ -1138,73 +932,6 @@ function DevToolsGetConsoleLog($testPath, $run, $cached) {
     gz_file_put_contents($console_log_file, json_encode($console_log));
   }
   return $console_log;
-}
-
-/**
-* Get the processing times by event type
-* 
-* @param mixed $entry
-* @param mixed $processingTimes
-*/
-function GetTimelineProcessingTimes(&$entry, &$processingTimes, &$processing_start, &$processing_end) {
-  $duration = 0;
-  if (array_key_exists('type', $entry)) {
-    $type = trim($entry['type']);
-    if (array_key_exists('endTime', $entry) &&
-        array_key_exists('startTime', $entry) &&
-        $entry['endTime'] >= $entry['startTime']) {
-      $duration = $entry['endTime'] - $entry['startTime'];
-      if (!isset($processing_start) || $entry['startTime'] < $processing_start)
-        $processing_start = $entry['startTime'];
-      if (!isset($processing_end) || $entry['endTime'] > $processing_end)
-        $processing_end = $entry['startTime'];
-    }
-    if (array_key_exists('children', $entry) &&
-        is_array($entry['children']) &&
-        count($entry['children'])) {
-      $childTime = 0;
-      foreach($entry['children'] as &$child)
-        $childTime += GetTimelineProcessingTimes($child, $processingTimes, $processing_start, $processing_end);
-      if ($childTime < $duration) {
-        $selfTime = $duration - $childTime;
-        if (array_key_exists($type, $processingTimes))
-          $processingTimes[$type] += $selfTime;
-        else
-          $processingTimes[$type] = $selfTime;
-      }
-    } elseif ($duration) {
-      if (array_key_exists($type, $processingTimes))
-        $processingTimes[$type] += $duration;
-      else
-        $processingTimes[$type] = $duration;
-    }
-  }
-  if (array_key_exists('params', $entry) && array_key_exists('record', $entry['params']))
-      GetTimelineProcessingTimes($entry['params']['record'], $processingTimes, $processing_start, $processing_end);
-  return $duration;
-}
-
-/**
-* Get the baseline start time in dev tools time for the given data.
-* 
-* The start time is the time of the first non-timeline event.
-* 
-* @param mixed $entries
-*/
-function GetDevToolsStartTime(&$entries) {
-  $startOffset = null;
-  foreach ($entries as &$entry) {
-    if (isset($entry) &&
-        is_array($entry) &&
-        array_key_exists('method', $entry) &&
-        $entry['method'] !== 'Timeline.eventRecorded') {
-      $eventTime = DevToolsEventTime($entry);
-      if ($eventTime && (!$startOffset || $eventTime < $startOffset)) {
-        $startOffset = $eventTime;
-      }
-    }
-  }    
-  return $startOffset;
 }
 
 /**
@@ -1235,11 +962,11 @@ function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime) {
           
           // calculate the start time stuff
           if ($method_class === 'Timeline') {
+            $encoded = json_encode($event);
             $eventTime = DevToolsEventEndTime($event);
             if ($eventTime &&
                 (!$startTime || $eventTime <= $startTime) &&
                 (!$lastPaint || $eventTime > $lastPaint)) {
-              $encoded = json_encode($event);
               if (strpos($encoded, '"type":"ResourceSendRequest"') !== false)
                 $startTime = DevToolsEventTime($event);
               if (strpos($encoded, '"type":"Rasterize"') !== false ||
@@ -1248,12 +975,8 @@ function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime) {
                 $lastPaint = $eventTime;
               }
             }
-          }
-          
-          // keep track of the last activity for the end time (for video)
-          if ($method_class === 'Page' || $method_class === 'Network') {
-            $eventTime = DevToolsEventEndTime($event);
-            if ($eventTime > $lastEvent)
+            if ($eventTime > $lastEvent &&
+                strpos($encoded, '"type":"Resource') !== false)
               $lastEvent = $eventTime;
           }
         }
@@ -1270,6 +993,104 @@ function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime) {
   return $offset;
 }
 
+function GetTraceTimeline($testPath, $run, $cached, &$timeline) {
+  $ok = false;
+  $cachedText = '';
+  if( $cached )
+      $cachedText = '_Cached';
+  $traceFile = "$testPath/$run{$cachedText}_trace.json";
+  if (gz_is_file($traceFile)){
+    $events = json_decode(gz_file_get_contents($traceFile), true);
+    if (isset($events) && is_array($events) && isset($events['traceEvents'])) {
+      $timeline = array();
+      $thread_stack = array();
+      $main_thread = null;
+      $threads = array();
+      $ignore_threads = array();
+      $user_timing = array();
+      foreach ($events['traceEvents'] as $event) {
+        if (isset($event['cat']) && isset($event['name']) && isset($event['ts']) && $event['cat'] == 'blink.user_timing') {
+          $user_timing[] = $event;
+        }
+        if (isset($event['cat']) && isset($event['name']) && isset($event['pid']) && isset($event['tid']) && isset($event['ph']) && isset($event['ts']) &&
+            ($event['cat'] == 'disabled-by-default-devtools.timeline' || $event['cat'] == 'devtools.timeline')) {
+          $thread = "{$event['pid']}:{$event['tid']}";
+          if (!isset($main_thread) &&
+              $event['name'] == 'ResourceSendRequest' &&
+              isset($event['args']['data']['url'])) {
+            if (substr($event['args']['data']['url'], 0, 21) == 'http://127.0.0.1:8888') {
+              $ignore_threads[$thread] = true;
+            } else {
+              if (!isset($threads[$thread]))
+                $threads[$thread] = count($threads);
+              $main_thread = $thread;
+              // make sure the navigation event is included so we have the real start time
+              if (!isset($event['dur']))
+                $event['dur'] = 1;
+            }
+          }
+
+          if (isset($main_thread) &&
+              !isset($threads[$thread]) &&
+              $event['name'] !== 'Program' &&
+              !isset($ignore_threads[$thread])) {
+            $threads[$thread] = count($threads);
+          }
+          
+          // ignore any activity before the first navigation
+          if (isset($threads[$thread]) &&
+              ((isset($event['dur']) && isset($thread_stack[$thread]) && count($thread_stack[$thread])) ||
+               $event['ph'] == 'B' || $event['ph'] == 'E')) {
+            $event['thread'] = $threads[$thread];
+            if (!isset($thread_stack[$thread]))
+              $thread_stack[$thread] = array();
+            $e = null;
+            if ($event['ph'] == 'E') {
+              if (count($thread_stack[$thread])) {
+                $e = array_pop($thread_stack[$thread]);
+                // These had BETTER match
+                if ($e['name'] == $event['name'])
+                  $e['endTime'] = $event['ts'] / 1000.0;
+              }
+            } else {
+              $e = $event;
+              $e['type'] = $event['name'];
+              $e['startTime'] = $event['ts'] / 1000.0;
+
+              // Start of an event, just push it to the stack
+              if ($event['ph'] == 'B') {
+                $thread_stack[$thread][] = $e;
+                unset($e);
+              } elseif (isset($event['dur'])) {
+                $e['endTime'] = $e['startTime'] + ($event['dur'] / 1000.0);
+              }
+            }
+            
+            if (isset($e)) {
+              if (count($thread_stack[$thread])) {
+                $parent = array_pop($thread_stack[$thread]);
+                if (!isset($parent['children']))
+                  $parent['children'] = array();
+                $parent['children'][] = $e;
+                $thread_stack[$thread][] = $parent;
+              } else {
+                $timeline[] = $e;
+              }
+            }
+          }
+        }
+      }
+      if (count($timeline))
+        $ok = true;
+        
+      if (count($user_timing) && !gz_is_file("$testPath/$run{$cachedText}_user_timing.json")) {
+        gz_file_put_contents("$testPath/$run{$cachedText}_user_timing.json", json_encode($user_timing));
+      }
+    }
+  }
+  return $ok;
+}
+
 /**
 * If we have a timeline, figure out what each thread was doing at each point in time.
 * Basically CPU utilization from the timeline.
@@ -1281,72 +1102,84 @@ function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime) {
 function DevToolsGetCPUSlices($testPath, $run, $cached) {
   $count = 0;
   $slices = null;
-  $devTools = array();
-  $startOffset = null;
-  GetTimeline($testPath, $run, $cached, $devTools, $startOffset);
-  if (isset($devTools) && is_array($devTools) && count($devTools)) {
-    // Do a first pass to get the start and end times as well as the number of threads
-    $threads = array(0 => true);
-    $startTime = 0;
-    $endTime = 0;
-    foreach ($devTools as &$entry) {
-      if (isset($entry) &&
-          is_array($entry) &&
-          array_key_exists('method', $entry) &&
-          $entry['method'] == 'Timeline.eventRecorded' &&
-          array_key_exists('params', $entry) &&
-          is_array($entry['params']) &&
-          array_key_exists('record', $entry['params']) &&
-          is_array($entry['params']['record'])) {
-        $start = DevToolsEventTime($entry);
-        if ($start && (!$startTime || $start < $startTime))
-          $startTime = $start;
-        $end = DevToolsEventEndTime($entry);
-        if ($end && (!$endTime || $end > $endTime))
-          $endTime = $end;
-        $thread = array_key_exists('thread', $entry['params']['record']) ? $entry['params']['record']['thread'] : 0;
-        $threads[$thread] = true;
+  $timeline = array();
+  $ver = 2;
+  $cacheFile = "$testPath/$run.$cached.devToolsCPUSlices.$ver";
+  if (gz_is_file($cacheFile))
+    $slices = json_decode(gz_file_get_contents($cacheFile), true);
+  if (!isset($slices)) {
+    GetTraceTimeline($testPath, $run, $cached, $timeline);
+    if (isset($timeline) && is_array($timeline) && count($timeline)) {
+      // Do a first pass to get the start and end times as well as the number of threads
+      $threads = array(0 => true);
+      $startTime = 0;
+      $endTime = 0;
+      foreach ($timeline as $entry) {
+        if ($entry['startTime'] && (!$startTime || $entry['startTime'] < $startTime))
+          $startTime = $entry['startTime'];
+        if ($entry['endTime'] && (!$endTime || $entry['endTime'] > $endTime))
+          $endTime = $entry['endTime'];
+        $threads[$entry['thread']] = true;
+      }
+      
+      // create time slice arrays for each thread
+      $slices = array();
+      foreach ($threads as $id => $bogus)
+        $slices[$id] = array();
+        
+      // create 1ms time slices for the full time
+      if ($endTime > $startTime) {
+        $startTime = floor($startTime);
+        $endTime = ceil($endTime);
+        for ($i = $startTime; $i <= $endTime; $i++) {
+          $ms = intval($i - $startTime);
+          foreach ($threads as $id => $bogus)
+            $slices[$id][$ms] = array();
+        }
+
+        // Go through each element and account for the time    
+        foreach ($timeline as $entry)
+          $count += DevToolsGetEventTimes($entry, $startTime, $slices);
       }
     }
     
-    // create time slice arrays for each thread
-    $slices = array();
-    foreach ($threads as $id => $bogus)
-      $slices[$id] = array();
-      
-    // create 1ms time slices for the full time
-    if ($endTime > $startTime) {
-      $startTime = floor($startTime);
-      $endTime = ceil($endTime);
-      for ($i = $startTime; $i <= $endTime; $i++) {
-        $ms = intval($i - $startTime);
-        foreach ($threads as $id => $bogus)
-          $slices[$id][$ms] = array();
-      }
-
-      // Go through each element and account for the time    
-      foreach ($devTools as &$entry) {
-        if (isset($entry) &&
-            is_array($entry) &&
-            array_key_exists('method', $entry) &&
-            $entry['method'] == 'Timeline.eventRecorded' &&
-            array_key_exists('params', $entry) &&
-            is_array($entry['params']) &&
-            array_key_exists('record', $entry['params']) &&
-            is_array($entry['params']['record'])) {
-          $count += DevToolsGetEventTimes($entry['params']['record'], $startTime, $slices);
+    if ($count) {
+      // remove any threads that didn't have actual slices populated
+      $emptyThreads = array();
+      foreach ($slices as $thread => &$records) {
+        $is_empty = true;
+        foreach($records as $ms => &$values) {
+          if (count($values)) {
+            $is_empty = false;
+            break;
+          }
         }
+        if ($is_empty)
+          $emptyThreads[] = $thread;
       }
+      if (count($emptyThreads)) {
+        foreach($emptyThreads as $thread)
+          unset($slices[$thread]);
+      }
+      gz_file_put_contents($cacheFile, json_encode($slices));
+    } else {
+      $slices = null;
     }
   }
   
-  if (!$count)
-    $slices = null;
+  if (!isset($_REQUEST['threads']) && isset($slices) && is_array($slices)) {
+    $threads = array_keys($slices);
+    foreach ($threads as $thread) {
+      if ($thread !== 0)
+        unset($slices[$thread]);
+    }
+  }
     
   return $slices;
 }
 
 function DevToolsAdjustSlice(&$slice, $amount, $type, $parentType) {
+
   if ($type && $amount) {
     if ($amount == 1.0) {
       foreach($slice as $sliceType => $value)
@@ -1430,4 +1263,56 @@ function GetDevToolsHeaderValue($headers, $name, &$value) {
     }
   }
 }
+
+function GetDevToolsCPUTime($testPath, $run, $cached, $endTime = 0) {
+  $times = null;
+  $ver = 1;
+  $ver = 2;
+  $cacheFile = "$testPath/$run.$cached.devToolsCPUTime.$ver";
+  if (gz_is_file($cacheFile))
+    $cache = json_decode(gz_file_get_contents($cacheFile), true);
+  // If an end time wasn't specified, figure out what the fully loaded time is
+  if (!$endTime) {
+    if (GetDevToolsRequests($testPath, $run, $cached, $requests, $pageData) &&
+        isset($pageData) && is_array($pageData) && isset($pageData['fullyLoaded'])) {
+      $endTime = $pageData['fullyLoaded'];
+    }
+  }
+  if (isset($cache[$endTime])) {
+    $times = $cache[$endTime];
+  } else {
+    $slices = DevToolsGetCPUSlices($testPath, $run, $cached);
+    if (isset($slices) && is_array($slices) && isset($slices[0]) &&
+        is_array($slices[0]) && count($slices[0])) {
+      $times = array('Idle' => 0.0);
+      foreach ($slices[0] as $ms => $breakdown) {
+        if (!$endTime || $ms < $endTime) {
+          $idle = 1.0;
+          if (isset($breakdown) && is_array($breakdown) && count($breakdown)) {
+            foreach($breakdown as $event => $ms_time) {
+              if (!isset($times[$event]))
+                $times[$event] = 0;
+              $times[$event] += $ms_time;
+              $idle -= $ms_time;
+            }
+          }
+          $times['Idle'] += $idle;
+        }
+      }
+      // round the times to the nearest millisecond
+      $total = 0;
+      foreach ($times as $event => &$val) {
+        $val = round($val);
+        if ($event !== 'Idle')
+          $total += $val;
+      }
+      if ($endTime && $endTime > $total)
+        $times['Idle'] = $endTime - $total;
+    }
+    $cache[$endTime] = $times;
+    gz_file_put_contents($cacheFile, json_encode($cache));
+  }
+  return $times;
+}
+
 ?>

@@ -1,3 +1,14 @@
+<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">
+    <tbody>
+    <tr>
+        <td><table><tbody><tr><td><div class="bar" style="width:15px; background-color:#dfffdf"></div></td><td>Before Start Render</td></tr></tbody></table></td>
+        <td><table><tbody><tr><td><div class="bar" style="width:15px; background-color:#dfdfff"></div></td><td>Before On Load </td></tr></tbody></table></td>
+        <td><table><tbody><tr><td><div class="bar" style="width:15px; background-color:gainsboro"></div></td><td>After On Load</td></tr></tbody></table></td>
+    </tr>
+    </tbody>
+</table>
+<br>
+
 <div class="center">
 <table id="tableDetails" class="details center">
 	<caption>Request Details</caption>
@@ -6,7 +17,7 @@
 		<th class="reqNum">#</th>
 		<th class="reqUrl">Resource</th>
 		<th class="reqMime">Content Type</th>
-		<th class="reqStart">Start Offset</th>
+		<th class="reqStart">Request Start</th>
 		<th class="reqDNS">DNS Lookup</th>
 		<th class="reqSocket">Initial Connection</th>
 		<?php if( $secure) { ?>
@@ -213,7 +224,7 @@ echo '<div id="headers">';
                         echo "<b>Custom Rule - " . htmlspecialchars($rule_name) . ": </b>(" . htmlspecialchars($rule['count']) . " matches) - " . htmlspecialchars($rule['value']) . "<br>\n";
                     }
                 }
-                echo "<b>Start Offset:</b> " . number_format($request['load_start'] / 1000.0, 3) . " s<br>\n";
+                echo "<b>Request Start:</b> " . number_format($request['load_start'] / 1000.0, 3) . " s<br>\n";
                 if (array_key_exists('dns_ms', $request) && $request['dns_ms'] > 0)
                     echo "<b>DNS Lookup:</b> {$request['dns_ms']} ms<br>\n";
                 if (array_key_exists('connect_ms', $request) && $request['connect_ms'] > 0)

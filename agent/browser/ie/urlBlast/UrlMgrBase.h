@@ -56,6 +56,7 @@ public:
     cpu = 0;
     customRules.Empty();
     customMetrics.Empty();
+    reboot = false;
 	}
 	
 	CString zipFileDir;			  // If we got a custom job (video rendering only currently)
@@ -100,6 +101,7 @@ public:
   DWORD currentRun;
   bool cached;              // are we testing a cached run?
   bool clearCerts;          // do we need to clear the OS certificate cache?
+  bool reboot;              // do we need to reboot?
 
 	DWORD	bwIn;				    // bandwidth in
 	DWORD	bwOut;				  // bandwidth out

@@ -66,6 +66,7 @@ public:
   CString _wpt_directory;
   CString _exe_directory;
   CString _profile_directory;
+  CString _profiles;
   CString _cache_directory;
 
   // Windows/IE directories
@@ -92,13 +93,18 @@ public:
   ~WptSettings(void);
   bool Load(void);
   void LoadFromEC2(void);
+  void LoadFromGCE(void);
+  void LoadFromAzure(void);
+  void ParseInstanceData(CString &userData);
   bool SetBrowser(CString browser, CString url, CString md5, CString client);
   bool PrepareTest(WptTest& test);
-  bool GetUrlText(CString url, CString &response);
+  bool GetUrlText(CString url, CString &response, LPCTSTR headers = NULL);
   bool UpdateSoftware();
   bool ReInstallBrowser();
 
   CString _server;
+  CString _username;
+  CString _password;
   CString _location;
   CString _key;
   DWORD   _timeout;
@@ -108,7 +114,11 @@ public:
   CString _web_page_replay_host;
   CString _ini_file;
   CString _ec2_instance;
+  CString _azure_instance;
   CString _clients_directory;
+  BOOL _requireValidCertificate;
+  CString _clientCertCommonName;
+  bool  _keep_resolution;
 
   BrowserSettings _browser;
   SoftwareUpdate _software_update;

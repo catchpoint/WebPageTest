@@ -1,8 +1,8 @@
 <?php
 include 'common.inc';
-include 'breakdown.inc';
+require_once('breakdown.inc');
 require_once('contentColors.inc');
-include 'waterfall.inc';
+require_once('waterfall.inc');
 require_once('page_data.inc');
 
 $page_keywords = array('Timeline Breakdown','Webpagetest','Website Speed Test','Page Speed');
@@ -50,33 +50,52 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
             $tab = 'Test Result';
             $subtab = 'Processing Breakdown';
             include 'header.inc';
-            $progress = GetVisualProgress($testPath, $run, $cached);
-            if (isset($progress) &&
-                is_array($progress) &&
-                array_key_exists('DevTools', $progress) &&
-                is_array($progress['DevTools']) &&
-                array_key_exists('processing', $progress['DevTools']))
-              $processing = $progress['DevTools']['processing'];
+            $processing = GetDevToolsCPUTime($testPath, $run, $cached);
             if (isset($processing)) {
               arsort($processing);
               $mapping = array('EvaluateScript' => 'Scripting',
                                'FunctionCall' => 'Scripting',
                                'GCEvent' => 'Scripting',
                                'TimerFire' => 'Scripting',
-                               'Layout' => 'Rendering',
-                               'RecalculateStyles' => 'Rendering',
+                               'EventDispatch' => 'Scripting',
+                               'TimerInstall' => 'Scripting',
+                               'TimerRemove' => 'Scripting',
+                               'XHRLoad' => 'Scripting',
+                               'XHRReadyStateChange' => 'Scripting',
+
+                               'Layout' => 'Layout',
+                               'RecalculateStyles' => 'Layout',
+                               'ParseAuthorStyleSheet' => 'Layout',
+                               'ScheduleStyleRecalculation' => 'Layout',
+                               'InvalidateLayout' => 'Layout',
+
                                'Paint' => 'Painting',
                                'DecodeImage' => 'Painting',
                                'ResizeImage' => 'Painting',
                                'CompositeLayers' => 'Painting',
                                'Rasterize' => 'Painting',
-                               'ResourceReceivedData' => 'Loading',
+                               'PaintImage' => 'Painting',
+                               'PaintSetup' => 'Painting',
+                               'ImageDecodeTask' => 'Painting',
+                               'GPUTask' => 'Painting',
+                               'SetLayerTreeId' => 'Painting',
+                               'layerId' => 'Painting',
+                               'UpdateLayer' => 'Painting',
+                               'UpdateLayerTree' => 'Painting',
+                               'Draw LazyPixelRef' => 'Painting',
+                               'Decode LazyPixelRef' => 'Painting',
+
                                'ParseHTML' => 'Loading',
+                               'ResourceReceivedData' => 'Loading',
                                'ResourceReceiveResponse' => 'Loading',
+                               'ResourceSendRequest' => 'Loading',
+                               'ResourceFinish' => 'Loading',
+                               'CommitLoad' => 'Loading',
+
                                'Idle' => 'Idle');
-              $groups = array('Scripting' => 0, 'Rendering' => 0, 'Painting' => 0, 'Loading' => 0, 'Other' => 0, 'Idle' => 0);
+              $groups = array('Scripting' => 0, 'Layout' => 0, 'Painting' => 0, 'Loading' => 0, 'Other' => 0, 'Idle' => 0);
               $groupColors = array('Scripting' => '#f1c453',
-                                   'Rendering' => '#9a7ee6',
+                                   'Layout' => '#9a7ee6',
                                    'Painting' => '#71b363',
                                    'Loading' => '#70a2e3',
                                    'Other' => '#f16161',

@@ -91,6 +91,8 @@ protected:
   CString heartbeatEventName;
   HANDLE  heartbeatEvent;
   CurlBlastDlg &dlg;
+  bool needsReboot;
+  bool rebooting;
 	
 	// directories
 	CString	profile;

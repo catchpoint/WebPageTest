@@ -15,7 +15,7 @@ if(array_key_exists("HTTP_IF_MODIFIED_SINCE",$_SERVER) && strlen(trim($_SERVER['
 else
 {
     include 'common.inc';
-    include 'object_detail.inc'; 
+    require_once('object_detail.inc'); 
     require_once('page_data.inc');
     $file = $_GET['file'];
 
@@ -88,15 +88,16 @@ function tbnDrawWaterfall(&$img)
     global $url;
     global $newWidth;
     global $test;
+    $testInfo = GetTestInfo($testPath);
 
-    include('waterfall.inc');
+    require_once('waterfall.inc');
     $is_secure = false;
     $has_locations = false;
     $requests = getRequests($id, $testPath, $run, $cached, $is_secure,
                             $has_locations, false);
     $use_dots = (!isset($_REQUEST['dots']) || $_REQUEST['dots'] != 0);
     $rows = GetRequestRows($requests, $use_dots);
-    $page_data = loadPageRunData($testPath, $run, $cached);
+    $page_data = loadPageRunData($testPath, $run, $cached, null, $testInfo);
     $page_events = GetPageEvents($page_data);
     $bwIn=0;
     if (isset($test) && array_key_exists('testinfo', $test) && array_key_exists('bwIn', $test['testinfo'])) {
@@ -134,11 +135,12 @@ function tbnDrawChecklist(&$img)
     global $cached;
     global $url;
 
-    include('optimizationChecklist.inc');
+    require_once('optimizationChecklist.inc');
     $is_secure = false;
     $has_locations = false;
+    $testInfo = GetTestInfo($testPath);
     $requests = getRequests($id, $testPath, $run, $cached, $is_secure, $has_locations, false);
-    $page_data = loadPageRunData($testPath, $run, $cached);
+    $page_data = loadPageRunData($testPath, $run, $cached, null, $testInfo);
     $img = drawChecklist($url, $requests, $page_data);
     if (!$requests || !$page_data) {
         $failed = true;

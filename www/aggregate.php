@@ -1,6 +1,6 @@
 <?php
 include 'common.inc';
-include 'page_data.inc';
+require_once('page_data.inc');
 require_once('testStatus.inc');
 set_time_limit(300);
 

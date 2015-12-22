@@ -132,6 +132,25 @@ wpt.moz.main.onStartup = function() {
   windowMediator.addListener(listener);
 })();
 
+/**
+ * Get notifications from the dialog overlay to log a navigation error when
+ * basic auth is required and no credentials have been supplied.
+ */
+(function() {
+  var observerService = Components.classes["@mozilla.org/observer-service;1"].
+    getService(Components.interfaces.nsIObserverService);
+
+  var observeUnauthorizedErrors = {
+    observe: function(aSubject, aTopic, aData) {
+			wpt.moz.main.sendEventToDriver_('navigate_error?error=401');
+      g_active = false;
+      wptExtension.uninit();
+    }
+  };
+
+  observerService.addObserver(observeUnauthorizedErrors, "wpt-unauthorised-errors", false);
+})();
+
 // Get the next task from the wptdriver.
 wpt.moz.main.getTask = function() {
   if (!g_requesting_task && !g_processing_task) {
@@ -555,9 +574,15 @@ wpt.moz.main.collectStats = function(customMetrics, callback) {
 		if (win.performance && win.performance.getEntriesByType) {
 			var marks = win.performance.getEntriesByType("mark");
 			for (var i = 0; i < marks.length; i++) {
-				var mark = marks[i];
+				var mark = {"entryType": marks[i].entryType, "name": marks[i].name, "startTime": marks[i].startTime};
 				mark.type = 'mark';
 				wpt.moz.main.sendEventToDriver_('timed_event', '', JSON.stringify(mark));
+			}
+			var measures = win.performance.getEntriesByType("measure");
+			for (var i = 0; i < measures.length; i++) {
+				var measure = {"entryType": measures[i].entryType, "name": measures[i].name, "startTime": measures[i].startTime, "duration": measures[i].duration};
+				measure.type = 'measure';
+				wpt.moz.main.sendEventToDriver_('timed_event', '', JSON.stringify(measure));
 			}
 		}
 

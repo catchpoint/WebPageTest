@@ -54,7 +54,6 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   _results(results)
   ,_screen_capture(screen_capture)
   ,_frame_window(NULL)
-  ,_document_window(NULL)
   ,_exit(false)
   ,_data_timer(NULL)
   ,_test(test)
@@ -65,11 +64,13 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   ,navigated_(false)
   ,_started(false)
   ,received_data_(false) {
+  QueryPerformanceCounter(&_launch);
   QueryPerformanceFrequency(&_ms_frequency);
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
   InitializeCriticalSection(&_data_cs);
   FindBrowserNameAndVersion();
   paint_msg_ = RegisterWindowMessage(_T("WPT Browser Paint"));
+  _timeout_start_time.QuadPart = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -148,6 +149,7 @@ void TestState::Reset(bool cascade) {
     _console_log_messages.RemoveAll();
     _timed_events.RemoveAll();
     _custom_metrics.Empty();
+    _user_timing.Empty();
     navigating_ = false;
     GetSystemTime(&_start_time);
   }
@@ -173,6 +175,11 @@ void TestState::Start() {
   GetSystemTime(&_start_time);
   if (!_start.QuadPart)
     _start.QuadPart = _step_start.QuadPart;
+
+  //This is only called once, on the first navigate
+  if (!_timeout_start_time.QuadPart)
+    _timeout_start_time.QuadPart = _step_start.QuadPart;
+
   GetCPUTime(_start_cpu_time, _start_total_time);
   _active = true;
   UpdateBrowserWindow();  // the document window may not be available yet
@@ -182,6 +189,10 @@ void TestState::Start() {
   }
 
   if (!_data_timer) {
+    // for repeat view start capturing video immediately
+    if (!shared_cleared_cache)
+      received_data_ = true;
+      
     timeBeginPeriod(1);
     CreateTimerQueueTimer(&_data_timer, NULL, ::CollectData, this, 
         DATA_COLLECTION_INTERVAL, DATA_COLLECTION_INTERVAL, WT_EXECUTEDEFAULT);
@@ -230,7 +241,9 @@ void TestState::OnNavigate() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TestState::OnNavigateComplete() {
-  navigating_ = false;
+  // force an onload if one didn't already fire
+  if (navigating_)
+    OnLoad();
 }
 
 /*-----------------------------------------------------------------------------
@@ -289,7 +302,7 @@ void TestState::OnLoad() {
     QueryPerformanceCounter(&_on_load);
     GetCPUTime(_doc_cpu_time, _doc_total_time);
     ActivityDetected();
-    _screen_capture.Capture(_document_window,
+    _screen_capture.Capture(_frame_window,
                             CapturedImage::DOCUMENT_COMPLETE);
     _current_document = 0;
   }
@@ -318,7 +331,13 @@ bool TestState::IsDone() {
   if (_active) {
     bool is_page_done = false;
     CString done_reason;
-    if (test_ms >= _test._minimum_duration) {
+    DWORD elapsed_timeout_ms = ElapsedMs(_timeout_start_time, now);
+    if (elapsed_timeout_ms > _test._test_timeout) {
+      _test_result = TEST_RESULT_TIMEOUT;
+      is_page_done = true;
+      done_reason = _T("Test timed out.");
+      _test._has_test_timed_out = true;
+    } else if (test_ms >= _test._minimum_duration) {
       DWORD load_ms = ElapsedMs(_on_load, now);
       DWORD inactive_ms = ElapsedMs(_last_activity, now);
       DWORD navigated = navigated_ ? 1:0;
@@ -347,7 +366,7 @@ bool TestState::IsDone() {
       } else if (test_ms > _test._measurement_timeout) {
         _test_result = TEST_RESULT_TIMEOUT;
         is_page_done = true;
-        done_reason = _T("Test timed out.");
+        done_reason = _T("Meaurement timed out.");
       }
     }
     if (is_page_done) {
@@ -367,7 +386,7 @@ void TestState::Done(bool force) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - **** TestState::Done()\n"));
   if (_active) {
     GetCPUTime(_end_cpu_time, _end_total_time);
-    _screen_capture.Capture(_document_window, CapturedImage::FULLY_LOADED);
+    _screen_capture.Capture(_frame_window, CapturedImage::FULLY_LOADED);
 
     if (force || !_test._combine_steps) {
       // kill the timer that was collecting periodic data (cpu, video, etc)
@@ -408,13 +427,9 @@ void TestState::UpdateBrowserWindow() {
     if (no_gdi_)
       browser_process_id = GetParentProcessId(browser_process_id);
     HWND old_frame = _frame_window;
-    if (::FindBrowserWindow(browser_process_id, _frame_window, 
-                            _document_window)) {
+    if (::FindBrowserWindow(browser_process_id, _frame_window)) {
       WptTrace(loglevel::kFunction, 
-                _T("[wpthook] - Frame Window: %08X, Document Window: %08X\n"), 
-                _frame_window, _document_window);
-      if (!_document_window)
-        _document_window = _frame_window;
+                _T("[wpthook] - Frame Window: %08X\n"), _frame_window);
     }
     // position the browser window
     if (_frame_window && old_frame != _frame_window) {
@@ -429,8 +444,6 @@ void TestState::UpdateBrowserWindow() {
         RECT viewport = {0,0,0,0};
         if (_screen_capture.IsViewportSet())
           memcpy(&viewport, &_screen_capture._viewport, sizeof(RECT));
-        else if (_document_window)
-            GetWindowRect(_document_window, &viewport);
         int vp_width = abs(viewport.right - viewport.left);
         int vp_height = abs(viewport.top - viewport.bottom);
         int br_width = abs(browser.right - browser.left);
@@ -455,7 +468,7 @@ void TestState::UpdateBrowserWindow() {
     Grab a video frame if it is appropriate
 -----------------------------------------------------------------------------*/
 void TestState::GrabVideoFrame(bool force) {
-  if (_active && _document_window && (force || received_data_)) {
+  if (_active && _frame_window && (force || received_data_)) {
     // use a falloff on the resolution with which we capture video
     bool grab_video = false;
     LARGE_INTEGER now;
@@ -477,7 +490,7 @@ void TestState::GrabVideoFrame(bool force) {
     if (grab_video) {
       _last_video_time.QuadPart = now.QuadPart;
       _video_capture_count++;
-      _screen_capture.Capture(_document_window, CapturedImage::VIDEO);
+      _screen_capture.Capture(_frame_window, CapturedImage::VIDEO);
     }
   }
 }
@@ -543,12 +556,28 @@ void TestState::CollectData() {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
     if (now.QuadPart > _last_data.QuadPart || !_last_data.QuadPart) {
+      CheckTitle();
       GrabVideoFrame();
       CollectSystemStats(now);
       _last_data.QuadPart = now.QuadPart;
     }
   }
   LeaveCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::CheckTitle() {
+  if (_active && _frame_window && received_data_) {
+    TCHAR title[4096];
+    if (GetWindowText(_frame_window, title, _countof(title))) {
+      if (last_title_.Compare(title)) {
+        last_title_ = title;
+        if (last_title_.Left(5).Compare(_T("Blank")))
+          TitleSet(title);
+      }
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -574,10 +603,9 @@ void TestState::TitleSet(CString title) {
   Find the portion of the document window that represents the document
 -----------------------------------------------------------------------------*/
 void TestState::FindViewport(bool force) {
-  if (_document_window == _frame_window &&
-      (force || !_screen_capture.IsViewportSet())) {
+  if (_frame_window && (force || !_screen_capture.IsViewportSet())) {
     _screen_capture.ClearViewport();
-    CapturedImage captured = _screen_capture.CaptureImage(_document_window);
+    CapturedImage captured = _screen_capture.CaptureImage(_frame_window);
     CxImage image;
     if (captured.Get(image)) {
       // start in the middle of the image and go in each direction 
@@ -659,6 +687,10 @@ void TestState::OnStatusMessage(CString status) {
 -----------------------------------------------------------------------------*/
 DWORD TestState::ElapsedMsFromStart(LARGE_INTEGER end) const {
   return ElapsedMs(_start, end);
+}
+
+DWORD TestState::ElapsedMsFromLaunch(LARGE_INTEGER end) const {
+  return ElapsedMs(_launch, end);
 }
 
 DWORD TestState::ElapsedMs(LARGE_INTEGER start, LARGE_INTEGER end) const {
@@ -750,6 +782,14 @@ void TestState::AddTimedEvent(CString timed_event) {
 void TestState::SetCustomMetrics(CString custom_metrics) {
   EnterCriticalSection(&_data_cs);
   _custom_metrics = custom_metrics;
+  LeaveCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::SetUserTiming(CString user_timing) {
+  EnterCriticalSection(&_data_cs);
+  _user_timing = user_timing;
   LeaveCriticalSection(&_data_cs);
 }
 

@@ -1,5 +1,5 @@
 <?php
-require 'object_detail.inc'; 
+require_once('object_detail.inc'); 
 
 /**
 * Aggregate the individual requests by domain
@@ -20,7 +20,7 @@ function getDomainBreakdown($id, $testPath, $run, $cached, &$requests)
     $connections = array();
     foreach($requests as $request)
     {
-        $domain = strrev(strtok($request['host'],':'));
+        $domain = strtok($request['host'],':');
         $object = strtolower($request['url']);
         if( strlen($domain) && (strstr($object, 'favicon.ico') === FALSE) )
         {
@@ -33,6 +33,9 @@ function getDomainBreakdown($id, $testPath, $run, $cached, &$requests)
             if (array_key_exists('bytesIn', $request))
               $breakdown["$domain"]['bytes'] += $request['bytesIn'];
             $breakdown["$domain"]['requests']++;
+            
+            if (isset($request['cdn_provider']) && strlen($request['cdn_provider']))
+              $breakdown[$domain]['cdn_provider'] = $request['cdn_provider'];
         }
     }
     foreach ($breakdown as $domain => &$data) {
@@ -41,6 +44,9 @@ function getDomainBreakdown($id, $testPath, $run, $cached, &$requests)
             $data['connections'] = count($connections[$domain]);
         }
     }
+    
+    // sort the array by reversed domain so the resources from a given domain are grouped
+    uksort($breakdown, function($a, $b) {return strcmp(strrev($a), strrev($b));});
     
     return $breakdown;
 }

@@ -6,7 +6,10 @@
 <body>
 <div id="pagespeed"></div>
 <?php
-    echo "<script type=\"text/javascript\" src=\"tree.php?test={$_GET['test']}&amp;div=pagespeed\"></script>\n";
+    $testId = $_GET['test'];
+    if (preg_match('/^(?:[a-zA-Z0-9_]+\.?)+$/', $testId)) {
+      echo "<script type=\"text/javascript\" src=\"tree.php?test={$testId}&amp;div=pagespeed\"></script>\n";
+    }
 ?>
 </body>
 </html>

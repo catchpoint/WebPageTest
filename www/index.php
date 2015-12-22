@@ -36,7 +36,7 @@ if (is_file('./settings/keys.ini')) {
 }
 $url = '';
 if (isset($req_url)) {
-  $url = $req_url;
+  $url = htmlspecialchars($req_url);
 }
 if (!strlen($url)) {
     $url = 'Enter a Website URL';
@@ -95,6 +95,8 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="shard" value="' . htmlspecialchars($_REQUEST['shard']) . "\">\n";
             if (array_key_exists('discard', $_REQUEST))
               echo '<input type="hidden" name="discard" value="' . htmlspecialchars($_REQUEST['discard']) . "\">\n";
+            if (array_key_exists('timeout', $_REQUEST))
+              echo '<input type="hidden" name="timeout" value="' . htmlspecialchars($_REQUEST['timeout']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
@@ -236,6 +238,16 @@ $loc = ParseLocations($locations);
                                             </tr>
                                         </table>
                                     </li>
+                                    <?php
+                                    if ($admin) {
+                                      echo '<li>';
+                                      echo '<label for="custom_browser">';
+                                      echo '<a href="/custom_browsers.php">Custom Browser</a>';
+                                      echo '</label>';
+                                      echo '<input id="custom_browser" type="text" class="text" name="custombrowser" value="">';
+                                      echo '</li>';
+                                    }
+                                    ?>
                                     <li>
                                         <label for="number_of_tests">
                                             Number of Tests to Run<br>
@@ -247,7 +259,7 @@ $loc = ParseLocations($locations);
                                             $runs = (int)$req_runs;
                                         $runs = max(1, min($runs, $settings['maxruns']));
                                         ?>
-                                        <input id="number_of_tests" type="text" class="text short" name="runs" value=<?php echo "\"$runs\""; ?>>
+                                        <input id="number_of_tests" type="number" class="text short" name="runs" value=<?php echo "\"$runs\""; ?>>
                                     </li>
                                     <li>
                                         <label for="viewBoth">
@@ -304,7 +316,8 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="clearcerts" id="clearcerts" class="checkbox" style="float: left;width: auto;">
                                         <label for="clearcerts" class="auto_width">
-                                            Clear SSL Certificate Caches
+                                            Clear SSL Certificate Caches<br>
+                                            <small>Internet Explorer</small>
                                         </label>
                                     </li>
                                     <li>
@@ -347,22 +360,35 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
-                                        <label for="dom_elements" class="auto_width">DOM Element</label>
-                                        <input type="text" name="domelement" id="dom_elements" class="text">
-                                        <div class="tooltip" style="display:none;">Waits for and records when the indicated DOM element becomes available on the page.  The DOM element 
-                                        is identified in <b>attribute=value</b> format where "attribute" is the attribute to match on (id, className, name, innerText, etc.)
-                                        and "value" is the value of that attribute (case sensitive).  For example, on SNS pages <b>name=loginId</b>
-                                        would be the DOM element for the Screen Name entry field.<br><br>
-                                        There are 3 special  attributes that will match on a HTTP request: <b>RequestEnd</b>, <b>RequestStart</b> and <b>RequestTTFB</b> will mark the End, Start or TTFB of the
-                                        first request that contains the given value in the url. i.e. <b>RequestTTFB=favicon.ico</b> will mark the first byte time of the favicon.ico request.
-                                        </div>
+                                        <label for="uastring" style="width: auto;">
+                                        User Agent String<br>
+                                        <small>(Custom UA String)</small>
+                                        </label>
+                                        <input type="text" name="uastring" id="uastring" class="text" style="width: 350px;">
                                     </li>
+                                    <?php
+                                    if ( isset($settings['fullSizeVideoOn']) && $settings['fullSizeVideoOn'] )
+                                    { ?>
+                                    <li>
+                                        <input type="checkbox" name="fullsizevideo" id="full_size_video" class="checkbox" <?php if( isset($settings['fullSizeVideoDefault']) && $settings['fullSizeVideoDefault'] )  echo 'checked=checked'; ?> style="float: left;width: auto;">
+                                        <label for="full_size_video" class="auto_width">
+                                            Capture Full Size Video<br>
+                                            <small>Enables full size screenshots in the filmstrip</small>
+                                        </label>
+                                    </li><?php } ?>
                                     <li>
                                         <label for="time">
                                             Minimum test duration<br>
                                             <small>Capture data for at least...</small>
                                         </label>
-                                        <input id="time" type="text" class="text short" name="time" value=""> seconds
+                                        <input id="time" type="number" class="text short" name="time" value=""> seconds
+                                    </li>
+                                    <li>
+                                        <label for="customHeaders">
+                                            Custom headers<br>
+                                            <small>Add custom headers to all network requests emitted from the browser</small>
+                                        </label>
+                                        <textarea id="customHeaders" type="text" class="text" name="customHeaders" value=""></textarea>
                                     </li>
                                 </ul>
                             </div>
@@ -372,8 +398,8 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="mobile" id="mobile" class="checkbox" style="float: left;width: auto;">
                                         <label for="mobile" class="auto_width">
-                                            Emulate Mobile Browser (Experimental)<br>
-                                            <small>Chrome mobile user agent, 640x960 screen, 2x scaling and fixed viewport</small>
+                                            Emulate Mobile Browser<br>
+                                            <small>Nexus 5 user agent, 1080x1920 screen, 3x device pixel ratio</small>
                                         </label>
                                     </li>
                                     <li>
@@ -405,12 +431,36 @@ $loc = ParseLocations($locations);
                                             <small>Chrome 34+ on Android</small>
                                         </label>
                                     </li>
+                                    <?php
+                                    if ($admin && GetSetting('wprDesktop')) {
+                                    ?>
                                     <li>
-                                        <label for="uastring" style="width: auto;">
-                                        User Agent String<br>
-                                        <small>(Custom UA String)</small>
+                                        <input type="checkbox" name="wprDesktop" id="wprDesktop" class="checkbox" style="float: left;width: auto;">
+                                        <label for="wprDesktop" class="auto_width">
+                                            Use Web Page Replay recorded Desktop Page<br>
+                                            <small>Limited list of available <a href="/wprDesktop.txt">URLs</a></small>
                                         </label>
-                                        <input type="text" name="uastring" id="uastring" class="text" style="width: 350px;">
+                                    </li>
+                                    <?php
+                                    }
+                                    if ($admin && GetSetting('wprMobile')) {
+                                    ?>
+                                    <li>
+                                        <input type="checkbox" name="wprMobile" id="wprMobile" class="checkbox" style="float: left;width: auto;">
+                                        <label for="wprMobile" class="auto_width">
+                                            Use Web Page Replay recorded Mobile Page<br>
+                                            <small>Limited list of available <a href="/wprMobile.txt">URLs</a></small>
+                                        </label>
+                                    </li>
+                                    <?php
+                                    }
+                                    ?>
+                                    <li>
+                                        <label for="hostResolverRules" style="width: auto;">
+                                        <a href="https://github.com/atom/electron/blob/master/docs/api/chrome-command-line-switches.md#--host-rulesrules">Host Rules</a><br>
+                                        <small>i.e. MAP * 1.2.3.4</small>
+                                        </label>
+                                        <input type="text" name="hostResolverRules" id="hostResolverRules" class="text" style="width: 400px;">
                                     </li>
                                     <li>
                                         <label for="cmdline" style="width: auto;">
@@ -621,7 +671,7 @@ $loc = ParseLocations($locations);
 */
 function LoadLocations()
 {
-    $locations = parse_ini_file('./settings/locations.ini', true);
+    $locations = LoadLocationsIni();
     FilterLocations( $locations );
     
     // strip out any sensitive information

@@ -22,6 +22,7 @@ if (LoadResults($results)) {
         $rvValid = false;
         $total++;
         if ((@$result['result'] != 0 && @$result['result'] != 99999 ) ||
+            (isset($result['resubmit']) && $result['resubmit']) ||
             !@$result['bytesInDoc'] ||
             !@$result['docTime'] ||
             !@$result['TTFB'] ||

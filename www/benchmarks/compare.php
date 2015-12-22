@@ -2,7 +2,7 @@
 set_time_limit(600);
 chdir('..');
 include 'common.inc';
-include './benchmarks/data.inc.php';
+require_once('./benchmarks/data.inc.php');
 $page_keywords = array('Benchmarks','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "WebPagetest benchmark test comparison";
 $benchmarks = GetBenchmarks();
@@ -87,8 +87,10 @@ if (array_key_exists('configs', $_REQUEST)) {
 $metrics = array('docTime' => 'Load Time (onload)', 
                 'SpeedIndex' => 'Speed Index',
                 'TTFB' => 'Time to First Byte', 
+                'basePageSSLTime' => 'Base Page SSL Time',
                 'titleTime' => 'Time to Title', 
                 'render' => 'Time to Start Render', 
+                'domContentLoadedEventStart' => 'DOM Content Loaded',
                 'visualComplete' => 'Time to Visually Complete', 
                 'lastVisualChange' => 'Last Visual Change',
                 'fullyLoaded' => 'Load Time (Fully Loaded)', 
@@ -186,14 +188,19 @@ foreach ($benchmarks as &$benchmark) {
                         ?>
                         var menu = '<div><h4>View test for ' + url + '</h4>';
                         var compare = "/video/compare.php?ival=100&medianMetric=" + medianMetric + "&tests=";
+                        var graph_compare = "/graph_page_data.php?tests=";
                         for( i = 0; i < tests.length; i++ ) {
                             menu += '<a href="/result/' + tests[i] + '/?medianMetric=' + medianMetric + '" target="_blank">' + seriesData[i].name + '</a><br>';
                             if (i) {
                                 compare += ",";
+                                graph_compare += ",";
                             }
-                            compare += encodeURIComponent(tests[i] + "-l:" + seriesData[i].name.replace("-","").replace(":",""));
+                            compare += encodeURIComponent(tests[i] + "-l:" + seriesData[i].name.replace("-","").replace(":","") + "-c:" + (cached ? 1 : 0));
+                            graph_compare += encodeURIComponent(tests[i] + "-l:" + seriesData[i].name.replace("-","").replace(":",""));
                         }
+                        graph_compare += "&" + (cached ? "rv" : "fv") + "=1";
                         menu += '<br><a href="' + compare + '">Filmstrip Comparison</a>';
+                        menu += '<br><a href="' + graph_compare + '">Graph Comparison</a>';
                         menu += '</div>';
                         $.modal(menu, {overlayClose:true});
                     }

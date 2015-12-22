@@ -50,32 +50,34 @@ if (!array_key_exists('id', $test)) {
 * Get a cached test result
 */
 function PSS_GetCacheEntry($url) {
-  $id = null;
-  $cache_lock = Lock("PSS Cache");
-  if (isset($cache_lock)) {
-      if (is_file('./tmp/pss.cache')) {
-          $cache = json_decode(file_get_contents('./tmp/pss.cache'), true);
+    $id = null;
+    $cache_lock = fopen('./tmp/pss.cache.lock', 'w+');
+    if ($cache_lock) {
+        if (flock($cache_lock, LOCK_EX)) {
+            if (is_file('./tmp/pss.cache')) {
+                $cache = json_decode(file_get_contents('./tmp/pss.cache'), true);
 
-          // delete stale cache entries
-          $now = time();
-          $dirty = false;
-          foreach($cache as $cache_key => &$cache_entry) {
-              if ( $cache_entry['expires'] < $now) {
-                  $dirty = true;
-                  unset($cache[$cache_key]);
-              }
-          }
-          if ($dirty) {
-              file_put_contents('./tmp/pss.cache', json_encode($cache));
-          }
-          $key = md5($url);
-          if (array_key_exists($key, $cache) && array_key_exists('id', $cache[$key])) {
-              $id = $cache[$key]['id'];
-          }
-      }
-      Unlock($cache_lock);
-  }
-  return $id;
+                // delete stale cache entries
+                $now = time();
+                $dirty = false;
+                foreach($cache as $cache_key => &$cache_entry) {
+                    if ( $cache_entry['expires'] < $now) {
+                        $dirty = true;
+                        unset($cache[$cache_key]);
+                    }
+                }
+                if ($dirty) {
+                    file_put_contents('./tmp/pss.cache', json_encode($cache));
+                }
+                $key = md5($url);
+                if (array_key_exists($key, $cache) && array_key_exists('id', $cache[$key])) {
+                    $id = $cache[$key]['id'];
+                }
+            }
+        }
+        fclose($cache_lock);
+    }
+    return $id;
 }
 
 /**
@@ -92,22 +94,24 @@ function PSS_TestSubmitted(&$test) {
         $key = md5($test['url']);
         
         // update the cache
-        $cache_lock = Lock("PSS Cache");
-        if (isset($cache_lock)) {
-            if (is_file('./tmp/pss.cache')) {
-                $cache = json_decode(file_get_contents('./tmp/pss.cache'), true);
-            } else {
-                $cache = array();
-            }
-            // delete stale cache entries
-            foreach($cache as $cache_key => &$cache_entry) {
-                if ( $cache_entry['expires'] < $now) {
-                    unset($cache[$cache_key]);
+        $cache_lock = fopen('./tmp/pss.cache.lock', 'w+');
+        if ($cache_lock) {
+            if (flock($cache_lock, LOCK_EX)) {
+                if (is_file('./tmp/pss.cache')) {
+                    $cache = json_decode(file_get_contents('./tmp/pss.cache'), true);
+                } else {
+                    $cache = array();
                 }
+                // delete stale cache entries
+                foreach($cache as $cache_key => &$cache_entry) {
+                    if ( $cache_entry['expires'] < $now) {
+                        unset($cache[$cache_key]);
+                    }
+                }
+                $cache[$key] = $entry;
+                file_put_contents('./tmp/pss.cache', json_encode($cache));
             }
-            $cache[$key] = $entry;
-            file_put_contents('./tmp/pss.cache', json_encode($cache));
-            Unlock($cache_lock);
+            fclose($cache_lock);
         }
     }
 }

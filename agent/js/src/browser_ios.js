@@ -35,7 +35,6 @@ var os = require('os');
 var path = require('path');
 var process_utils = require('process_utils');
 var util = require('util');
-var video_hdmi = require('video_hdmi');
 var webdriver = require('selenium-webdriver');
 
 
@@ -51,7 +50,6 @@ var webdriver = require('selenium-webdriver');
  *     #param {string} deviceSerial the device to drive.
  *     #param {string=} captureDir capture script dir, defaults to ''.
  *   #param {Object.<String>} task:
- *     #param {string=} pac PAC content.
  * @constructor
  */
 function BrowserIos(app, args) {
@@ -69,12 +67,10 @@ function BrowserIos(app, args) {
   var iDeviceDir = args.flags.iosIDeviceDir;
   var toIDevicePath = process_utils.concatPath.bind(this, iDeviceDir);
   this.iosWebkitDebugProxy_ = toIDevicePath('ios_webkit_debug_proxy');
-  this.iDeviceInstaller_ = toIDevicePath('ideviceinstaller');
-  this.iDeviceAppRunner_ = toIDevicePath('idevice-app-runner');
   this.iDeviceInfo_ = toIDevicePath('ideviceinfo');
   this.iDeviceImageMounter_ = toIDevicePath('ideviceimagemounter');
   this.iDeviceScreenshot_ = toIDevicePath('idevicescreenshot');
-  this.imageConverter_ = '/usr/bin/convert'; // TODO use 'sips' on mac?
+  this.imageConverter_ = 'convert'; // TODO use 'sips' on mac?
   this.devImageDir_ = process_utils.concatPath(args.flags.iosDevImageDir);
   this.devToolsPort_ = args.flags.devToolsPort;
   this.devtoolsPortLock_ = undefined;
@@ -85,20 +81,19 @@ function BrowserIos(app, args) {
       args.flags.iosSshProxy || 'sshproxy.py');
   this.sshCertPath_ = (args.flags.iosSshCert ||
       process.env.HOME + '/.ssh/id_dsa_ios');
-  this.urlOpenerApp_ = process_utils.concatPath(args.flags.iosAppDir,
-      args.flags.iosUrlOpenerApp || 'urlOpener.ipa');
-  this.pac_ = args.task.pac;
-  this.pacServerPort_ = undefined;
-  this.pacServerPortLock_ = undefined;
-  this.pacServer_ = undefined;
-  this.pacUrlPort_ = undefined;
-  this.pacUrlPortLock_ = undefined;
-  this.pacForwardProcess_ = undefined;
-  this.videoCard_ = args.flags.videoCard;
+  this.xrecord_ = process_utils.concatPath(args.flags.iosVideoDir,
+      'xrecord');
+  this.videoProcess_ = undefined;
+  this.videoStarted_ = false;
+  this.pcapFile_ = undefined;
+  this.pcapRemoteFile_ = '/var/logs/webpagetest.pcap';
+  this.pcapProcess_ = undefined;
+  this.pcapStarted_ = false;
   var capturePath = process_utils.concatPath(args.flags.captureDir,
       args.flags.captureScript || 'capture');
-  this.video_ = new video_hdmi.VideoHdmi(this.app_, capturePath);
   this.runTempDir_ = args.runTempDir || '';
+  this.isCacheWarm_ = args.isCacheWarm;
+  this.supportsTracing = false;
 }
 util.inherits(BrowserIos, browser_base.BrowserBase);
 /** Public class. */
@@ -117,11 +112,14 @@ BrowserIos.prototype.startWdServer = function() {
 BrowserIos.prototype.startBrowser = function() {
   'use strict';
   this.scheduleMountDeveloperImageIfNeeded_();
-  this.scheduleInstallHelpersIfNeeded_();
-  this.scheduleClearCacheCookies_();
-  this.scheduleStartPacServer_();
-  this.scheduleConfigurePac_();
-  this.scheduleOpenUrl_('http://');
+  if (!this.isCacheWarm_) {
+    this.scheduleClearCacheCookies_();
+  }
+  this.scheduleOpenUrl_('http://about:blank');
+  this.cleanup_();
+};
+
+BrowserIos.prototype.prepareDevTools = function() {
   this.scheduleSelectDevToolsPort_();
   this.scheduleStartDevToolsProxy_();
 };
@@ -135,26 +133,15 @@ BrowserIos.prototype.startBrowser = function() {
  */
 BrowserIos.prototype.scheduleMountDeveloperImageIfNeeded_ = function() {
   'use strict';
-  if (!this.iDeviceAppRunner_) {
-    return undefined;
-  }
   var done = new webdriver.promise.Deferred();
   function reject(e) {
     done.reject(e instanceof Error ? e : new Error(e));
   }
-  logger.debug('Checking iOS debugserver');
-  process_utils.scheduleExec(this.app_, this.iDeviceAppRunner_,
-      ['-U', this.deviceSerial_, '-r', 'check_gdb'],
-      undefined,  // Use default spawn options.
-      20000).then(function(stdout) {
-    reject('Expecting an error from check_gdb, not ' + stdout);
-  }, function(e) {
-    var stderr = (e.stderr || e.message || '').trim();
-    if (0 === stderr.indexOf('Unknown APPID (check_gdb) is not in:')) {
-      logger.debug('Dev image already mounted');
+  this.scheduleSsh_('mount').then(function(stdout) {
+    var m = stdout.match(/ on \/Developer /);
+    if (m) {
+      logger.debug("Developer image already mounted.")
       done.fulfill();
-    } else if (stderr !== 'Could not start com.apple.debugserver!') {
-      reject('Unexpected stderr: ' + stderr);
     } else {
       this.scheduleGetDeviceInfo_('ProductVersion').then(function(stdout) {
         var version = stdout.trim();
@@ -179,32 +166,8 @@ BrowserIos.prototype.scheduleMountDeveloperImageIfNeeded_ = function() {
         }.bind(this));
       }.bind(this), reject);
     }
-  }.bind(this));
+  }.bind(this), reject);
   return done.promise;
-};
-
-/** @private */
-BrowserIos.prototype.scheduleInstallHelpersIfNeeded_ = function() {
-  'use strict';
-  if (this.shouldInstall_ && this.urlOpenerApp_) {
-    this.app_.schedule('Install openURL app', function() {
-      var done = new webdriver.promise.Deferred();
-      function reject(e) {
-        done.reject(e instanceof Error ? e : new Error(e));
-      }
-      process_utils.scheduleExec(this.app_, this.iDeviceInstaller_,
-          ['-U', this.deviceSerial_, '-i', this.urlOpenerApp_],
-          undefined,  // Use default spawn options.
-          20000).then(function(stdout) {
-        if (stdout.indexOf('Install - Complete') >= 0) {
-          done.fulfill();
-        } else {
-          reject('Install failed: ' + stdout);
-        }
-      }.bind(this), reject);
-      return done.promise;
-    }.bind(this));
-  }
 };
 
 /** @private */
@@ -317,6 +280,38 @@ BrowserIos.prototype.scheduleSsh_ = function(var_args) { // jshint unused:false
 };
 
 /**
+ * Runs an ssh command, treats exit code of 0 or 1 as success.
+ * @param {string} var_args arguments.
+ * @return {webdriver.promise.Promise} fulfill({string} stdout).
+ * @private
+ */
+BrowserIos.prototype.scheduleSshNoFault_ = function(var_args) { // jshint unused:false
+  'use strict';
+  var args = this.getSshArgs_.apply(
+      this, [this.deviceSerial_].concat(Array.prototype.slice.call(arguments)));
+  return process_utils.scheduleExec(this.app_, 'ssh', args).addErrback(
+      function(e) {
+    if (!e.signal && 1 === e.code) {
+      return e.stdout;
+    }
+    return '';
+  }.bind(this));
+};
+
+/**
+ * Spawns a SSH process
+ * @param {string} var_args arguments.
+ * @return {webdriver.promise.Promise} fulfill({string} stdout).
+ * @private
+ */
+BrowserIos.prototype.scheduleSpawnSsh_ = function(var_args) { // jshint unused:false
+  'use strict';
+  var args = this.getSshArgs_.apply(
+      this, [this.deviceSerial_].concat(Array.prototype.slice.call(arguments)));
+  return process_utils.scheduleSpawn(this.app_, 'ssh', args);
+};
+
+/**
  * @param {string} var_args arguments.
  * @private
  */
@@ -326,12 +321,23 @@ BrowserIos.prototype.scheduleScp_ = function(var_args) { // jshint unused:false
       this.app_, 'scp', this.getSshArgs_.apply(this, arguments));
 };
 
+/**
+  Do any device cleanup we'd want to do between, before or after tests.
+  @private
+*/
+BrowserIos.prototype.cleanup_ = function() {
+  this.scheduleSshNoFault_('killall', 'tcpdump');
+  this.scheduleSshNoFault_('killall', 'certui_relay');
+  this.scheduleSshNoFault_('rm', '-rf', '/private/var/logs/webpagetest.pcap');
+  this.scheduleSshNoFault_('rm', '-rf', '/private/var/mobile/Library/Assets/com_apple_MobileAsset_SoftwareUpdate/*.asset');
+}
+
 /** @private */
 BrowserIos.prototype.scheduleClearCacheCookies_ = function() {
   'use strict';
+  this.scheduleSshNoFault_('killall', 'MobileSafari');
   var glob = '/private/var/mobile/Applications/*/MobileSafari.app/Info.plist';
-  this.scheduleSsh_('killall', 'MobileSafari');
-  this.scheduleSsh_('test -f ' + glob + ' | ls ' + glob).then(function(stdout) {
+  this.scheduleSshNoFault_('test -f ' + glob + ' | ls ' + glob).then(function(stdout) {
     var path = stdout.trim();
     if (path) {
       // iOS 7+: Extract the app_id by removing the glob's [0:'*'] prefix
@@ -347,7 +353,7 @@ BrowserIos.prototype.scheduleClearCacheCookies_ = function() {
         (app_id ? '/Applications/' + app_id : '') + '/Library/');
     var cache = (app_id ? 'fsCachedData/*' :
         'com.apple.WebAppCache/ApplicationCache.db');
-    this.scheduleSsh_('rm', '-rf',
+    this.scheduleSshNoFault_('rm', '-rf',
       lib + 'Caches/com.apple.mobilesafari/Cache.db',
       lib + 'Caches/' + cache,
       lib + 'Safari/History.plist',
@@ -355,6 +361,24 @@ BrowserIos.prototype.scheduleClearCacheCookies_ = function() {
       lib + 'WebKit/LocalStorage',
       '/private/var/mobile/Library/Cookies/Cookies.binarycookies');
   }.bind(this));
+
+  // iOS 8 uses a different paths
+  var paths = [// iOS 8+
+               '/private/var/mobile/Containers/Data/Application/*/Library/Safari/*',
+               '/var/mobile/Downloads/*',
+               '/private/var/mobile/Downloads/*',
+               '/var/mobile/Library/Safari/*',
+               '/private/var/mobile/Library/Safari/*',
+               '/private/var/mobile/Library/Cookies/*',
+               //iOS 9+
+               '/private/var/mobile/Containers/Data/Application/*/Library/Caches/com.apple.mobilesafari',
+               '/private/var/mobile/Containers/Data/Application/*/Library/Caches/Snapshots/com.apple.mobilesafari',
+               '/private/var/mobile/Containers/Data/Application/*/Library/Caches/WebKit',
+               '/private/var/mobile/Containers/Data/Application/*/Library/Caches/com.apple.WebKit.*',
+               '/private/var/mobile/Containers/Data/Application/*/Library/WebKit'];
+  for (var i = 0; i < paths.length; i++) {
+    this.scheduleSshNoFault_('rm', '-rf', paths[i]);
+  }
 };
 
 /**
@@ -363,198 +387,10 @@ BrowserIos.prototype.scheduleClearCacheCookies_ = function() {
  */
 BrowserIos.prototype.scheduleOpenUrl_ = function(url) {
   'use strict';
-  if (this.iDeviceAppRunner_) {
-    process_utils.scheduleExec(
-        this.app_, this.iDeviceAppRunner_,
-        ['-u', this.deviceSerial_, '-r', 'com.google.openURL', '--args', url],
-        undefined,  // Use default spawn options.
-        20000);
-  }
-};
-
-/** @private */
-BrowserIos.prototype.scheduleConfigurePac_ = function() {
-  'use strict';
-  // Modify the configd table, which will notify Safari.  This config is not
-  // persisted.
-  //
-  // This doesn't update the "Settings > WiFi > ? > Auto" UI.  Instead, the UI
-  // persists its PAC settings in:
-  //   /private/var/preferences/SystemConfiguration/preferences.plist
-  // When you manually change the settings in the UI, it both (1) saves a new
-  // plist and (2) modifies the configd table, which notifies Safari.
-  this.scheduleSsh_('echo list Setup:/Network/Service/.*/Proxies |scutil').then(
-    function(stdout) {
-      logger.debug((this.pacUrlPort_ ? 'Setting' : 'Clearing') + ' PAC');
-      var commands = [];
-      var lines = stdout.trim().split('\n');
-      lines.forEach(function(line) {
-        var matches = /^\s*subKey\s*\[\d+\]\s*=\s*(.*)\s*$/im.exec(line);
-        if (matches) {
-          var key = matches[1];
-          commands.push('get ' + key);
-          if (this.pacUrlPort_) {
-            commands.push('d.add ProxyAutoConfigEnable # 1');
-            commands.push('d.add ProxyAutoConfigURLString ' +
-                'http://127.0.0.1:' + this.pacUrlPort_ + '/proxy.pac');
-          } else {
-            commands.push('d.remove ProxyAutoConfigEnable');
-            commands.push('d.remove ProxyAutoConfigURLString');
-          }
-          commands.push('set ' + key);
-        }
-      }.bind(this));
-      if (commands.length > 0) {
-        logger.debug('Sending commands to scutil:\n  ' + commands.join('\n  '));
-        return this.scheduleSsh_('echo -e "' + commands.join('\n') +
-            '" | scutil');
-      }
-      if (!this.pacUrlPort_) {
-        return undefined;
-      }
-      throw new Error('scutil lacks PAC Proxies? ' + stdout);
-    }.bind(this));
-
-  // Update the Settings UI.  This is optional but a good idea, since
-  // otherwise the UI won't reflect the PAC settings.
-  this.scheduleConfigurePacUI_();
-};
-
-/** @private */
-BrowserIos.prototype.scheduleConfigurePacUI_ = function() {
-  'use strict';
-  // TODO(klm): Switch from tmp file to 'ssh ... cat' after upgrading NodeJS
-  // to a version where child_process.exec stdout is a Buffer not a string.
-  var remotePrefs =
-      '/private/var/preferences/SystemConfiguration/preferences.plist';
-  var scpRemotePrefs = this.deviceSerial_ + ':' + remotePrefs;
-  var localPrefs = path.join(this.runTempDir_, '.preferences.plist');
-  this.scheduleScp_(scpRemotePrefs, localPrefs);
-
-  process_utils.scheduleFunction(this.app_, 'Read plist', fs.readFile,
-       localPrefs).then(function(data) {
-    return process_utils.scheduleFunction(this.app_, 'Parse',
-        bplist.parseBuffer, data);
-  }.bind(this), function() {}).then(function(result) {
-    return result && result[0];
-  }).then(function(plist) {
-    var modified = false;
-    process_utils.forEachRecursive(plist, function(key, parentObject, keyPath) {
-      var parentKey = keyPath[keyPath.length - 1];
-      if ('signature' === parentKey || 'IOMACAddress' === parentKey) {
-        return true;  // Skip this branch.
-      }
-      if ('Proxies' !== key) {
-        return false;  // Keep going.
-      }
-      var proxies = parentObject.Proxies;
-      modified = true;
-      if (this.pacUrlPort_) {
-        logger.debug('Setting PAC URL in %s/%s', keyPath.join('/'), key);
-        proxies.ProxyAutoConfigEnable = 1;
-        // The URL points to the ssh reverse port forward to the server
-        // from scheduleStartPacServer_, always responding with this.pac_.
-        proxies.ProxyAutoConfigURLString =
-            'http://127.0.0.1:' + this.pacUrlPort_ + '/proxy.pac';
-      } else {
-        logger.debug('Deleting PAC URL in %s/%s', keyPath.join('/'), key);
-        delete proxies.ProxyAutoConfigEnable;
-        delete proxies.ProxyAutoConfigURLString;
-      }
-      return true;  // Skip -- no need to recurse under Proxies.
-    }.bind(this));
-    return (modified ? plist : undefined);
-  }.bind(this)).then(function(plist) {
-    return plist && process_utils.scheduleFunction(this.app_, 'write plist',
-        fs.writeFile, localPrefs, bplist.create(plist));
+  this.app_.schedule('Open URL', function() {
+    logger.debug('Opening URL: ' + url);
+    this.scheduleSsh_('uiopen', url);
   }.bind(this));
-
-  this.scheduleScp_(localPrefs, scpRemotePrefs);
-};
-
-/** @private */
-BrowserIos.prototype.scheduleStartPacServer_ = function() {
-  'use strict';
-  logger.debug('PAC: %s', this.pac_);
-  if (!this.pac_) {
-    // Only need the server and its ssh forward if we have PAC content.
-    return;
-  }
-  // We must dynamically allocate both ports, otherwise Safari thinks that
-  // the PAC content hasn't changed.
-  process_utils.scheduleAllocatePort(this.app_, 'Select PAC Server port').then(
-    function(alloc) {
-      logger.debug('Selected PAC Server port ' + alloc.port);
-      this.pacServerPortLock_ = alloc;
-      this.pacServerPort_ = alloc.port;
-    }.bind(this));
-  this.app_.schedule('Start PAC Server', function() {
-    this.pacServer_ = http.createServer(function(request, response) {
-      logger.debug('Got PAC HTTP request path=%s headers=%j',
-          request.url, request.headers);
-      response.writeHead(200, {
-        'Content-Length': this.pac_.length,
-        'Content-Type': 'application/x-ns-proxy-autoconfig'
-      });
-      response.write(this.pac_);
-      response.end();
-    }.bind(this));
-    return process_utils.scheduleFunction(this.app_,
-        'Start PAC listener on port ' + this.pacServerPort_,
-        this.pacServer_.listen.bind(this.pacServer_), this.pacServerPort_);
-  }.bind(this));
-  process_utils.scheduleAllocatePort(this.app_, 'Select PAC URL port').then(
-    function(alloc) {
-      logger.debug('Selected PAC URL port ' + alloc.port);
-      this.pacUrlPortLock_ = alloc;
-      this.pacUrlPort_ = alloc.port;
-      var args = this.getSshArgs_(
-          this.deviceSerial_,
-          '-R', this.pacUrlPort_ + ':127.0.0.1:' + this.pacServerPort_, '-N');
-      return process_utils.scheduleSpawn(this.app_, 'ssh', args).then(
-        function(proc) {
-          logger.info('Created tunnel from ' +
-              this.deviceSerial_ + ':' + this.pacUrlPort_ + ' to :' +
-              this.pacServerPort_);
-          this.pacForwardProcess_ = proc;
-        }.bind(this));
-    }.bind(this));
-};
-
-/**
- * Stops the PAC server.
- *
- * @private
- */
-BrowserIos.prototype.stopPacServer_ = function() {
-  'use strict';
-  if (this.pacForwardProcess_) {
-    logger.debug('Killing PAC port forwarding');
-    try {
-      this.pacForwardProcess_.kill();
-      logger.debug('Killed PAC port forwarding');
-    } catch (killException) {
-      logger.error('PAC port forwarding kill failed: %s', killException);
-    }
-    this.pacForwardProcess_ = undefined;
-  } else {
-    logger.debug('PAC port forwarding process already unset');
-  }
-  if (this.pacUrlPortLock_) {
-    this.pacUrlPort_ = undefined;
-    this.pacUrlPortLock_.release();
-    this.pacUrlPortLock_ = undefined;
-  }
-  if (this.pacServer_) {
-    process_utils.scheduleFunction(this.app_, 'Stop PAC server',
-        this.pacServer_.close.bind(this.pacServer_));
-    this.pacServer_ = undefined;
-  }
-  if (this.pacServerPortLock_) {
-    this.pacServerPort_ = undefined;
-    this.pacServerPortLock_.release();
-    this.pacServerPortLock_ = undefined;
-  }
 };
 
 /** Kills the browser. */
@@ -563,12 +399,7 @@ BrowserIos.prototype.kill = function() {
   this.devToolsUrl_ = undefined;
   this.stopDevToolsProxy_();
   this.releaseDevToolsPort_();
-  this.stopPacServer_();
-  if (this.pac_) {
-    // Clear the PAC settings
-    this.scheduleConfigurePac_();
-  }
-  this.video_.scheduleStopVideoRecording();
+  this.cleanup_();
 };
 
 /** @return {boolean} */
@@ -592,21 +423,13 @@ BrowserIos.prototype.getDevToolsUrl = function() {
 /** @return {Object} capabilities. */
 BrowserIos.prototype.scheduleGetCapabilities = function() {
   'use strict';
-  return this.video_.scheduleIsSupported().then(function(canRecordVideo) {
-    return process_utils.scheduleFunction(this.app_, 'exists',
-        fs.exists, this.imageConverter_ || '').then(function(canConvertImages) {
-      if (!canConvertImages && ((/convert$/).test(this.imageConverter_))) {
-        logger.debug('Missing ' + this.imageConverter_ + ', possible fix:\n' +
-            (/^darwin/i.test(os.platform()) ?
-             'brew install imagemagick --with-libtiff' :
-             'sudo apt-get install imagemagick'));
-      }
-      return {
-          webdriver: false,
-          videoRecording: canRecordVideo,
-          takeScreenshot: canConvertImages
-        };
-    }.bind(this));
+  return this.app_.schedule('iOS get capabilities', function() {
+    return {
+      webdriver: false,
+      videoRecording: os.platform() == 'darwin' ? true : false,
+      videoFileExtension: 'mp4',
+      takeScreenshot: true
+    };
   }.bind(this));
 };
 
@@ -635,7 +458,8 @@ BrowserIos.prototype.scheduleTakeScreenshot = function(fileNameNoExt) {
       {cwd: this.runTempDir_}).then(function(stdout) {
     var m = stdout.match(/^Screenshot\s+saved\s+to\s+(\S+\.tiff)(\s|$)/i);
     if (!m) {
-      throw new Error('Unable to take screenshot: ' + stdout);
+      //throw new Error('Unable to take screenshot: ' + stdout);
+      logger.debug("Unable to take screenshot: " + stdout)
     }
     return m[1];
   }).then(function(localTiffFilename) {
@@ -653,13 +477,40 @@ BrowserIos.prototype.scheduleTakeScreenshot = function(fileNameNoExt) {
  * @param {string} filename The local filename to write to.
  * @param {Function=} onExit Optional exit callback, as noted in video_hdmi.
  */
-BrowserIos.prototype.scheduleStartVideoRecording = function(filename, onExit) {
-  'use strict';
-  // The video record command needs to know device type for cropping etc.
-  this.scheduleGetDeviceInfo_('ProductType').then(function(stdout) {
-    this.video_.scheduleStartVideoRecording(filename, this.deviceSerial_,
-        stdout.trim(), this.videoCard_, onExit);
+BrowserIos.prototype.prepareVideoCapture = function(filename) {
+  // xrecord breaks the debug proxy connection so we need to start
+  // video capture before starting the proxy.
+  this.app_.schedule('Start video capture', function() {
+    if (this.xrecord_) {
+      process_utils.scheduleSpawn(this.app_, this.xrecord_,
+          ['-q', '-d', '-f', '-i', this.deviceSerial_, '-o', filename]).then(
+          function(proc) {
+        this.videoProcess_ = proc;
+        this.videoProcess_.on('exit', function(code, signal) {
+          logger.info('xrecord EXIT code %s signal %s', code, signal);
+          this.videoProcess_ = undefined;
+        }.bind(this));
+        this.videoStarted_ = false;
+        this.videoProcess_.stderr.on('data', function(data) {
+          if (data.toString().indexOf('Recording started') >= 0) {
+            logger.debug('Video capture started recording');
+            this.videoStarted_ = true;
+          }
+        }.bind(this));
+        // xrecord will wait for up to 10 minutes to acquire an exclusive lock
+        // (only one video at a time is currently possible in OSX)
+        this.app_.wait(function() {return this.videoStarted_ || !this.videoProcess_;}.bind(this), 660000);
+      }.bind(this));
+    }
   }.bind(this));
+};
+
+/**
+ * @param {string} filename The local filename to write to.
+ * @param {Function=} onExit Optional exit callback, as noted in video_hdmi.
+ */
+BrowserIos.prototype.scheduleStartVideoRecording = function(filename) {
+  'use strict';
 };
 
 /**
@@ -667,7 +518,22 @@ BrowserIos.prototype.scheduleStartVideoRecording = function(filename, onExit) {
  */
 BrowserIos.prototype.scheduleStopVideoRecording = function() {
   'use strict';
-  this.video_.scheduleStopVideoRecording();
+  if (this.videoProcess_) {
+    this.app_.schedule('Stop video capture', function() {
+      logger.debug('Killing video capture');
+      try {
+        this.videoProcess_.kill('SIGINT');
+        this.app_.wait(function() {
+          return this.videoProcess_ == undefined;
+        }.bind(this), 30000).then(function() {
+          logger.info('Killed video capture');
+        }.bind(this));
+      } catch (killException) {
+        logger.error('video capture kill failed: %s', killException);
+        this.videoProcess_ = undefined;
+      }
+    }.bind(this));
+  }
 };
 
 /**
@@ -675,9 +541,29 @@ BrowserIos.prototype.scheduleStopVideoRecording = function() {
  *
  * #param {string} filename  local file where to copy the pcap result.
  */
-BrowserIos.prototype.scheduleStartPacketCapture = function() {
+BrowserIos.prototype.scheduleStartPacketCapture = function(filename) {
   'use strict';
-  throw new Error('Packet capture requested, but not implemented for iOS');
+  this.app_.schedule('Start packet capture', function() {
+    this.scheduleSshNoFault_('rm', this.pcapRemoteFile_).then(function() {
+      this.scheduleSpawnSsh_('tcpdump -i en0 -s 0 -p -w ' + this.pcapRemoteFile_).then(
+          function(proc) {
+        this.pcapProcess_ = proc;
+        this.pcapFile_ = filename;
+        this.pcapProcess_.on('exit', function(code, signal) {
+          logger.info('packet capture EXIT code %s signal %s', code, signal);
+          this.pcapProcess_ = undefined;
+        }.bind(this));
+        this.pcapStarted_ = false;
+        this.pcapProcess_.stderr.on('data', function(data) {
+          if (data.toString().indexOf('listening on en0') >= 0) {
+            logger.debug('packet capture started recording');
+            this.pcapStarted_ = true;
+          }
+        }.bind(this));
+        this.app_.wait(function() {return this.pcapStarted_;}.bind(this), 30000);
+      }.bind(this));
+    }.bind(this));
+  }.bind(this));
 };
 
 /**
@@ -685,19 +571,36 @@ BrowserIos.prototype.scheduleStartPacketCapture = function() {
  */
 BrowserIos.prototype.scheduleStopPacketCapture = function() {
   'use strict';
-  throw new Error('Packet capture requested, but not implemented for iOS');
+  if (this.pcapProcess_) {
+    this.app_.schedule('Stop packet capture', function() {
+      logger.debug('Killing packet capture');
+      try {
+        this.scheduleSshNoFault_('killall', '-INT', 'tcpdump');
+        this.app_.wait(function() {
+          return this.pcapProcess_ == undefined;
+        }.bind(this), 30000).then(function() {
+          logger.info('Killed packet capture');
+        }.bind(this));
+      } catch (killException) {
+        logger.error('packet capture kill failed: %s', killException);
+        this.pcapProcess_ = undefined;
+      }
+    }.bind(this));
+    this.scheduleScp_(this.deviceSerial_ + ':' + this.pcapRemoteFile_, this.pcapFile_);
+    this.scheduleSshNoFault_('rm', this.pcapRemoteFile_);
+  }
 };
 
 /**
- * Verifies that the device is attached and has WiFi.
- * Throws an exception if any of the requested checks fail.
+ * Throws an error if the browser is not ready to run tests.
  *
+ * @return {webdriver.promise.Promise} resolve() for addErrback.
  * @override
  */
-BrowserIos.prototype.scheduleIsAvailable = function() {
+BrowserIos.prototype.scheduleAssertIsReady = function() {
   'use strict';
-  this.scheduleSsh_('echo show State:/Network/Interface/en0/IPv4|scutil').then(
-      function(stdout) {
+  return this.scheduleSsh_('echo show State:/Network/Interface/en0/IPv4|scutil'
+      ).then(function(stdout) {
     // If WiFi is disabled we'll get "No such key" stdout.
     var hasWifi = false;
     var insideTag = false;
@@ -711,8 +614,10 @@ BrowserIos.prototype.scheduleIsAvailable = function() {
         insideTag = false;
       }
     });
+    // Make sure Safari is closed if we aren't running a test
+    this.scheduleSshNoFault_('killall', 'MobileSafari');
     if (!hasWifi) {
-      throw new Error('Device offline');
+      throw new Error('Wifi is offline');
     }
   }.bind(this));
 };
