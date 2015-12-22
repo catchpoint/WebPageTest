@@ -169,8 +169,9 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
     $use_bw = (bool)@$options['use_bw'];
     if ($use_cpu || $use_bw) {
         $cached = ((bool)@$options['is_cached']) ? '_Cached' : '';
+        $event_number = array_key_exists('eventNumber',$page_data) ? '_'.$page_data['eventNumber'] : '';
         $perf_file = ("{$options['path']}/" .
-                      "{$options['run_id']}{$cached}_progress.csv");
+                      "{$options['run_id']}{$cached}{$event_number}_progress.csv");
         $max_bw = 0;
         if (isset($options) && array_key_exists('max_bw', $options)) {
             $max_bw = $options['max_bw'];
