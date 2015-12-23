@@ -138,7 +138,7 @@ bool WebBrowser::RunAndWait() {
                           0, NULL, NULL, &si, &pi)) {
           CloseHandle(pi.hThread);
           CloseHandle(pi.hProcess);
-          if (WaitForSingleObject(_browser_started_event, 60000) ==
+          if (WaitForSingleObject(_browser_started_event, 120000) ==
               WAIT_OBJECT_0) {
             DWORD pid = GetBrowserProcessId();
             if (pid) {
