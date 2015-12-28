@@ -6,6 +6,13 @@ ignore_user_abort(true);
 set_time_limit(1200);
 error_reporting(E_ALL);
 
+if(extension_loaded('newrelic')) {
+    newrelic_add_custom_tracer('EC2_TerminateIdleInstances');
+    newrelic_add_custom_tracer('EC2_StartNeededInstances');
+    newrelic_add_custom_tracer('EC2_DeleteOrphanedVolumes');
+    newrelic_add_custom_tracer('SBL_Update');
+}
+
 $lock = Lock("cron-5", false, 1200);
 if (!isset($lock))
   exit(0);
@@ -36,8 +43,9 @@ if (GetSetting('ec2_key')) {
   EC2_DeleteOrphanedVolumes();
 }
 
-if (GetSetting('sbl_api_key'))
+if (GetSetting('sbl_api_key')) {
   SBL_Update();
+}
   
 /**
 * Clean up extraneous getwork.php.xxx files that may be left behind
