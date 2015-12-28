@@ -93,7 +93,6 @@ private:
   bool      webdriver_done_;
   bool      new_page_load_;
   bool      window_timing_received_;
-  UINT      report_message_;
   UINT      shutdown_message_;
 
   // winsock event tracking

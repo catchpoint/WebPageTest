@@ -41,9 +41,11 @@ CRITICAL_SECTION *logfile_cs = NULL;
 extern HINSTANCE global_dll_handle;
 
 static const UINT_PTR TIMER_DONE = 1;
-static const UINT_PTR TIMER_FORCE_REPORT = 2;
+static const UINT_PTR TIMER_REPORT = 2;
+static const UINT_PTR TIMER_FORCE_REPORT = 3;
 static const DWORD TIMER_DONE_INTERVAL = 100;
 static const DWORD INIT_TIMEOUT = 30000;
+static const DWORD TIMER_REPORT_INTERVAL = 1000;
 static const DWORD TIMER_FORCE_REPORT_INTERVAL = 10000;
 
 static const TCHAR * BROWSER_DONE_EVENT = _T("Global\\wpt_browser_done");
@@ -76,7 +78,6 @@ WptHook::WptHook(void):
 
   file_base_ = shared_results_file_base;
   background_thread_started_ = CreateEvent(NULL, TRUE, FALSE, NULL);
-  report_message_ = RegisterWindowMessage(_T("WPT Report Data"));
   shutdown_message_ = RegisterWindowMessage(_T("WPT Shutdown Now"));
 
   // grab the version number of the dll
@@ -234,9 +235,11 @@ void WptHook::OnReport() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptHook::Report() {
-  if (message_window_ && report_message_) {
-    test_.Lock();
-    PostMessage(message_window_, report_message_, 0, 0);
+  if (message_window_) {
+    // This method is usually called after a CollectStats. We use a timer here to leave enough time
+    // to the browser to report the stats.
+    SetTimer(message_window_, TIMER_REPORT,
+      TIMER_REPORT_INTERVAL, NULL);
   }
 }
 
@@ -290,12 +293,12 @@ void WptHook::AsyncShutdown() {
 -----------------------------------------------------------------------------*/
 bool WptHook::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
   bool ret = true;
-
+  
   switch (message){
     case WM_TIMER:{
         switch (wParam){
             case TIMER_DONE:
-                if (test_state_.IsDone()) {
+              if (test_state_.IsDone()) {
                   KillTimer(message_window_, TIMER_DONE);
                   test_.CollectData();
                   SetTimer(message_window_, TIMER_FORCE_REPORT, 
@@ -303,20 +306,22 @@ bool WptHook::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
                   test_.Done();
                 }
                 break;
+            case TIMER_REPORT:
+              KillTimer(message_window_, TIMER_REPORT);
+              test_.Lock();
+              OnReport();
             case TIMER_FORCE_REPORT:
                 OnReport();
                 break;
         }
     }
     default:
-        if (message == report_message_) {
-          OnReport();
-        } else if (message == shutdown_message_) {
+      if (message == shutdown_message_) {
           ShutdownNow();
-        } else {
-          ret = false;
-        }
-        break;
+      } else {
+        ret = false;
+      }
+      break;
   }
 
   return ret;
