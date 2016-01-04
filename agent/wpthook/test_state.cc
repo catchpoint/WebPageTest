@@ -420,7 +420,8 @@ BOOL CALLBACK MakeTopmost(HWND hwnd, LPARAM lParam) {
   if (IsWindowVisible(hwnd) && 
     GetClassName(hwnd, class_name, _countof(class_name))) {
     _tcslwr(class_name);
-    if (_tcsstr(class_name, _T("chrome")) || 
+    if (_tcsstr(class_name, _T("chrome")) ||
+        _tcsstr(class_name, _T("ieframe")) ||
         _tcsstr(class_name, _T("mozilla"))) {
       ::SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, 
           SWP_NOACTIVATE | SWP_NOSIZE | SWP_NOMOVE);
@@ -467,8 +468,14 @@ void TestState::UpdateBrowserWindow() {
         }
         _screen_capture.ClearViewport();
       }
-      ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, 
-                      browser_width, browser_height, SWP_NOACTIVATE);
+      if (_tcsstr(_test._browser, _T("IE"))) {
+        ::SetWindowPos(_frame_window, HWND_TOP, 0, 0,
+          browser_width, browser_height, SWP_NOACTIVATE);
+      } else {
+        ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0,
+          browser_width, browser_height, SWP_NOACTIVATE);
+      }
+      
       ::UpdateWindow(_frame_window);
       EnumWindows(::MakeTopmost, (LPARAM)this);
       FindViewport();
