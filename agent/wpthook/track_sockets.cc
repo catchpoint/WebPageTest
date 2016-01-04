@@ -616,10 +616,11 @@ void TrackSockets::SslDataIn(SocketInfo* info, const DataChunk& chunk) {
 -----------------------------------------------------------------------------*/
 void TrackSockets::SslKeyLog(CStringA& data) {
   _ssl_key_log += data.MakeLower();
-  //OutputDebugStringA(data);
 }
 
 /*-----------------------------------------------------------------------------
+  Match the given "client random" with the keylog to get the TLS session
+  secret for decryption.
 -----------------------------------------------------------------------------*/
 CStringA TrackSockets::GetSslMasterSecret(SocketInfo *info) {
   CStringA secret;
@@ -627,16 +628,15 @@ CStringA TrackSockets::GetSslMasterSecret(SocketInfo *info) {
   // the keylog data.
   if (info->_ssl_out && info->_ssl_out->client_random_.GetLength()) {
     CStringA client_random = info->_ssl_out->client_random_;
-    int start = _ssl_key_log.Find(info->_ssl_out->client_random_);
+    int start = _ssl_key_log.Find(client_random);
     if (start >= 0) {
-      start += info->_ssl_out->client_random_.GetLength();
-      int end = _ssl_key_log.Find("\n");
+      start += client_random.GetLength();
+      int end = _ssl_key_log.Find("\n", start);
       CStringA master_secret;
-      if (end >= 0) {
+      if (end >= start)
         master_secret = _ssl_key_log.Mid(start, end - start);
-      } else {
+      else
         master_secret = _ssl_key_log.Mid(start);
-      }
       master_secret.Trim();
       if (master_secret.GetLength() == 96)
         secret = master_secret;
