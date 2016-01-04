@@ -1223,6 +1223,8 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   // JPEG scan count
   buff.Format("%d\t", request->_scores._jpeg_scans);
   result += buff;
+  // Priority
+  result += request->priority_ + "\t";
 
   result += "\r\n";
 

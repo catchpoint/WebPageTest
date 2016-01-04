@@ -267,6 +267,7 @@ public:
   CString initiator_;
   CString initiator_line_;
   CString initiator_column_;
+  CString priority_;
 
   RequestData  _request_data;
   ResponseData _response_data;

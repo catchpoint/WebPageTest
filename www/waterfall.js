@@ -99,6 +99,8 @@ function SelectRequest(request) {
             details += '<b>Location: </b>' + htmlEncode(r['location']) + '<br>';
         if (r['responseCode'] !== undefined)
             details += '<b>Error/Status Code: </b>' + htmlEncode(r['responseCode']) + '<br>';
+        if (r['priority'] !== undefined && r['priority'].length > 0)
+            details += '<b>Priority: </b>' + htmlEncode(r['priority']) + '<br>';
         if (r['client_port'] !== undefined && r['client_port'] !== null && r['client_port'])
             details += '<b>Client Port: </b>' + htmlEncode(r['client_port']) + '<br>';
         if (r['load_start'] !== undefined)

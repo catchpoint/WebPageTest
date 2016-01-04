@@ -663,6 +663,7 @@ bool Request::Process() {
         initiator_ = data.initiator_;
         initiator_line_ = data.initiator_line_;
         initiator_column_ = data.initiator_column_;
+        priority_ = data.priority_;
       }
     }
 

@@ -44,6 +44,7 @@ public:
     initiator_ = src.initiator_;
     initiator_line_ = src.initiator_line_;
     initiator_column_ = src.initiator_column_;
+    priority_ = src.priority_;
     return src;
   }
 
@@ -51,6 +52,7 @@ public:
   CString  initiator_;
   CString  initiator_line_;
   CString  initiator_column_;
+  CString  priority_;
   long   connection_;
   LARGE_INTEGER end_timestamp_;
   double  end_time_;

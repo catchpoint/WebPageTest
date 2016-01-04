@@ -219,6 +219,9 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                       if (isset($rawRequest['initiator']['lineNumber']))
                         $request['initiator_line'] = $rawRequest['initiator']['lineNumber'];
                     }
+                    if (isset($rawRequest['initialPriority'])) {
+                      $request['priority'] = $rawRequest['initialPriority'];
+                    }
                     $request['server_rtt'] = null;
                     $request['headers'] = array('request' => array(), 'response' => array());
                     if (isset($rawRequest['response']['requestHeadersText'])) {

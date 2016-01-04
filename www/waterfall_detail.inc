@@ -209,6 +209,8 @@ echo '<div id="headers">';
                 if (array_key_exists('location', $request) && strlen($request['location']))
                     echo "<b>Location:</b> " . htmlspecialchars($request['location']) . "<br>\n";
                 echo "<b>Error/Status Code:</b> " . htmlspecialchars($request['responseCode']) . "<br>\n";
+                if (isset($request['priority']) && strlen($request['priority']))
+                    echo "<b>Priority:</b> " . htmlspecialchars($request['priority']) . "<br>\n";
                 if (array_key_exists('initiator', $request) && strlen($request['initiator'])) {
                     echo "<b>Initiated By:</b> " . htmlspecialchars($request['initiator']);
                     if (array_key_exists('initiator_line', $request) && strlen($request['initiator_line']))

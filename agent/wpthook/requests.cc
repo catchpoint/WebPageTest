@@ -267,7 +267,7 @@ LONGLONG Requests::GetRelativeTime(Request * request, double end_time, double ti
   information
 -----------------------------------------------------------------------------*/
 void Requests::ProcessBrowserRequest(CString request_data) {
-  CString browser, url, initiator, initiator_line, initiator_column;
+  CString browser, url, initiator, initiator_line, initiator_column, priority;
   CStringA request_headers, response_headers;
   double  start_time = 0, end_time = 0, first_byte = 0, request_start = 0,
           dns_start = -1, dns_end = -1, connect_start = -1, connect_end = -1,
@@ -318,6 +318,8 @@ void Requests::ProcessBrowserRequest(CString request_data) {
               bytes_in = _ttol(value);
             else if (!key.CompareNoCase(_T("objectSize")))
               object_size = _ttol(value);
+            else if (!key.CompareNoCase(_T("priority")))
+              priority = value;
             else if (!key.CompareNoCase(_T("initiatorUrl")))
               initiator = value;
             else if (!key.CompareNoCase(_T("initiatorLineNumber")))
@@ -361,11 +363,12 @@ void Requests::ProcessBrowserRequest(CString request_data) {
   if (push && !initiator.GetLength()) {
     initiator = _T("HTTP/2 Server Push");
   }
-  if (url.GetLength() && initiator.GetLength()) {
+  if (url.GetLength() && (initiator.GetLength() || priority.GetLength())) {
     BrowserRequestData data(url);
     data.initiator_ = initiator;
     data.initiator_line_ = initiator_line;
     data.initiator_column_ = initiator_column;
+    data.priority_ = priority;
     EnterCriticalSection(&cs);
     browser_request_data_.AddTail(data);
     LeaveCriticalSection(&cs);
@@ -374,6 +377,7 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     Request * request = new Request(_test_state, connection, stream_id,
                                     _sockets, _dns, _test, false, *this);
     request->_from_browser = true;
+    request->priority_ = priority;
     request->initiator_ = initiator;
     request->initiator_line_ = initiator_line;
     request->initiator_column_ = initiator_column;

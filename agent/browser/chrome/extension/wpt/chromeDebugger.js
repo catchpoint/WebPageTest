@@ -551,6 +551,8 @@ wpt.chromeDebugger.sendRequestDetails = function(id) {
       eventData += 'errorCode=' + request.errorCode + '\n';
     if (request['error'] !== undefined)
       eventData += 'errorText=' + request.error + '\n';
+    if (request['initialPriority'] !== undefined)
+      eventData += 'priority=' + request.initialPriority + '\n';
 
     if (request['startTime'] !== undefined)
       eventData += 'startTime=' + request.startTime + '\n';
