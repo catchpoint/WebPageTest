@@ -21,6 +21,14 @@
         newrelic_add_custom_tracer('WriteJob');
         newrelic_add_custom_tracer('AddJobFile');
         newrelic_add_custom_tracer('LogTest');
+        newrelic_add_custom_tracer('ValidateKey');
+        newrelic_add_custom_tracer('ValidateParameters');
+        newrelic_add_custom_tracer('ValidateURL');
+        newrelic_add_custom_tracer('SubmitUrl');
+        newrelic_add_custom_tracer('GetRedirect');
+        newrelic_add_custom_tracer('CheckIp');
+        newrelic_add_custom_tracer('CheckUrl');
+        newrelic_add_custom_tracer('CreateTest');
     }
 
     $redirect_cache = array();

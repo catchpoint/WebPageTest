@@ -1,4 +1,8 @@
 <?php
+if(extension_loaded('newrelic')) {
+    newrelic_add_custom_tracer('UpdateFeeds');
+}
+
 /**
 * Update the feeds
 * 

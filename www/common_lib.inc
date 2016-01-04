@@ -4,6 +4,7 @@ require_once('archive.inc');
 if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('RestoreTest');
   newrelic_add_custom_tracer('SBL_Check');
+  newrelic_add_custom_tracer('SBL_Update');
 }
 
 define('VIDEO_CODE_VERSION', 20);
