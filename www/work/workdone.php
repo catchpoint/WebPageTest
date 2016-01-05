@@ -96,12 +96,6 @@ if (ValidateTestId($id)) {
     $location = $testInfo['location'];
     $locKey = GetLocationKey($location);
     if ((!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADDR'], "127.0.0.1")) {
-      $testErrorStr = '';
-      if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror']))
-        $testErrorStr = ', Test Error: "' . $_REQUEST['testerror'] . '"';
-      if (array_key_exists('error', $_REQUEST) && strlen($_REQUEST['error']))
-        $errorStr = ', Test Run Error: "' . $_REQUEST['error'] . '"';
-      logTestMsg($id, "Test Run Complete. Run: $runNumber, Cached: $cacheWarmed, Done: $done, Tester: $tester$testErrorStr$errorStr");
       $testLock = LockTest($id);
       $testInfo = GetTestInfo($id);
       // update the location time
@@ -181,6 +175,14 @@ if (ValidateTestId($id)) {
           }
         }
       }
+
+      // Log run stats and errors
+      $testErrorStr = '';
+      if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror']))
+        $testErrorStr = ', Test Error: "' . $_REQUEST['testerror'] . '"';
+      if (array_key_exists('error', $_REQUEST) && strlen($_REQUEST['error']))
+        $errorStr = ', Test Run Error: "' . $_REQUEST['error'] . '"';
+      logTestMsg($id, "Test Run Complete. Run: $runNumber, Cached: $cacheWarmed, Done: $done, Tester: $tester$testErrorStr$errorStr");
       //CheckForSpam();
       
       // make sure the test result is valid, otherwise re-run it
