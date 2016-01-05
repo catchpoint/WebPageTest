@@ -46,10 +46,8 @@ var DEVTOOLS_CONNECT_TIMEOUT_MS_ = 10000;
 var DETACH_TIMEOUT_MS_ = 2000;
 var VIDEO_PROCESSING_TIMEOUT_MS = 600000;
 var TRACING_STOP_TIMEOUT_MS = 120000;
-var DETECT_RE_NAVIGATE_MS = 1000;
-
-/** Allow test access. */
-exports.WAIT_AFTER_ONLOAD_MS = 10000;
+var DETECT_ACTIVITY_MS = 2000;
+var DETECT_NO_RE_NAVIGATE_MS = 1000;
 
 var BLANK_PAGE_URL_ = 'data:text/html;charset=utf-8,';
 var GHASTLY_ORANGE_ = '#DE640D';
@@ -357,6 +355,16 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
   // If abortTimer_ is set, it means we received an 'Inspector.detached'
   // message, as noted below, so ignore messages until our abortTimer fires.
   if (!this.abortTimer_) {
+    if (this.pageLoadCoalesceTimer_ !== undefined &&
+        this.task_['web10'] != 1 &&
+        'Network.' === message.method.substring(0, 8)) {
+      logger.debug("Activity detected after onload, waiting for page activity to finish");
+      clearTimeout(this.pageLoadCoalesceTimer_);
+      this.pageLoadCoalesceTimer_ = setTimeout(function() {
+        this.pageLoadCoalesceTimer_ = undefined;
+        this.onPageLoad_();
+      }.bind(this), DETECT_ACTIVITY_MS);
+    }
     if ('Page.frameStartedLoading' === message.method) {
       if (message.params['frameId'] !== undefined) {
         if (this.isNavigating_ && this.mainFrame_ === undefined) {
@@ -373,12 +381,13 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
       }
     } else if ('Page.loadEventFired' === message.method) {
       if (this.isRecordingDevTools_) {
+        var wait_time = this.task_['web10'] == 1 ? DETECT_NO_RE_NAVIGATE_MS : DETECT_ACTIVITY_MS;
         // Allow for up to 1 second after the page load finished for
         // another navigation to start (in the case of a javascript redirect).
         this.pageLoadCoalesceTimer_ = setTimeout(function() {
           this.pageLoadCoalesceTimer_ = undefined;
           this.onPageLoad_();
-        }.bind(this), DETECT_RE_NAVIGATE_MS);
+        }.bind(this), wait_time);
       }
     } else if ('Page.javascriptDialogOpening' === message.method) {
       var err = new Error('Page opened a modal dailog.', this.runNumber_);
@@ -1006,14 +1015,11 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
     // onDevToolsMessage_ resolves this promise when it detects on-load.
     this.pageLoadDonePromise_ = new webdriver.promise.Deferred();
     if (this.timeout_) {
-      var coalesceMillis = (undefined === this.task_.waitAfterOnload ?
-          exports.WAIT_AFTER_ONLOAD_MS :
-          (1000 * Math.floor(parseFloat(this.task_.waitAfterOnload, 10))));
       logger.debug("Waiting up to " + this.timeout_ +
                    "ms for the page to load");
       this.timeoutTimer_ = global.setTimeout(
           this.onPageLoad_.bind(this, new Error('Page load timeout')),
-          this.timeout_ - coalesceMillis);
+          this.timeout_);
     } else {
       logger.debug("No page load timeout set (unexpected)");
     }
@@ -1021,7 +1027,6 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
     this.pageCommand_('navigate', {url: this.task_.url});
     return this.pageLoadDonePromise_.promise;
   }.bind(this));
-  this.waitForCoalesce_(this.app_);
 };
 
 /**
@@ -1038,7 +1043,6 @@ WebDriverServer.prototype.runSandboxedSession_ = function(browserCaps) {
     }
     // Repeat load with an already running WD server and driver.
     this.runScript_(this.wdSandbox_);
-    this.waitForCoalesce_(this.sandboxApp_);
   } else {
     this.startWdServer_(browserCaps);
     // The following needs to be scheduled() because getServerUrl() returns
@@ -1056,7 +1060,6 @@ WebDriverServer.prototype.runSandboxedSession_ = function(browserCaps) {
         }.bind(this));
         // Bring it!
         this.runScript_(wdSandbox);
-        this.waitForCoalesce_.bind(this.sandboxApp_);
       }.bind(this));
     }.bind(this));
   }
@@ -1129,29 +1132,6 @@ WebDriverServer.prototype.runScript_ = function(wdSandbox) {
   }.bind(this)).addErrback(function(e) {
     logger.error('Script failed: ' + e.message);
     this.testError_ = this.testError_ || e.message;
-  }.bind(this));
-};
-
-/**
- * Schedules a wait to allow extra time for post-onLoad activities to finish.
- *
- * @param {Object} app the context in which to set the timeout.
- * @private
- */
-WebDriverServer.prototype.waitForCoalesce_ = function(app) {
-  'use strict';
-  var coalesceMillis = (undefined === this.task_.waitAfterOnload ?
-      exports.WAIT_AFTER_ONLOAD_MS :
-      (1000 * Math.floor(parseFloat(this.task_.waitAfterOnload, 10))));
-  var minMillis = (undefined === this.task_.time ? 0 :
-      (1000 * Math.floor(parseFloat(this.task_.time, 10))));
-  this.app_.schedule('Wait for browser', function() {
-    var currMillis = Math.floor(Date.now() - this.testStartTime_);
-    var waitMillis = Math.max(coalesceMillis, (minMillis - currMillis));
-    if (waitMillis > 0) {
-      logger.info('Test finished, waiting for browser to coalesce');
-      app.timeout(waitMillis, 'Waiting for browser to coalesce');
-    }
   }.bind(this));
 };
 
