@@ -170,6 +170,8 @@
             if (array_key_exists('shard', $_REQUEST))
               $test['shard_test'] = $_REQUEST['shard'];
             $test['mobile'] = array_key_exists('mobile', $_REQUEST) && $_REQUEST['mobile'] ? 1 : 0;
+            if (isset($_REQUEST['mobileDevice']))
+              $test['mobileDevice'] = $_REQUEST['mobileDevice'];
             $test['dpr'] = isset($_REQUEST['dpr']) && $_REQUEST['dpr'] > 0 ? $_REQUEST['dpr'] : 0;
             $test['width'] = isset($_REQUEST['width']) && $_REQUEST['width'] > 0 ? $_REQUEST['width'] : 0;
             $test['height'] = isset($_REQUEST['height']) && $_REQUEST['height'] > 0 ? $_REQUEST['height'] : 0;
@@ -448,6 +450,22 @@
             if (array_key_exists('spam', $test))
                 unset($test['spam']);
             $test['priority'] =  0;
+        }
+        
+        if ($test['mobile'] && isset($test['mobileDevice']) && is_file('./settings/mobile_devices.ini')) {
+          setcookie('mdev', $test['mobileDevice'], time()+60*60*24*365, '/');
+          $devices = parse_ini_file('./settings/mobile_devices.ini', true);
+          if ($devices && isset($devices[$test['mobileDevice']])) {
+            $test['mobileDeviceLabel'] = isset($devices[$test['mobileDevice']]['label']) ? $devices[$test['mobileDevice']]['label'] : $test['mobileDevice'];
+            if (!$test['width'] && isset($devices[$test['mobileDevice']]['width']))
+              $test['width'] = $devices[$test['mobileDevice']]['width'];
+            if (!$test['height'] && isset($devices[$test['mobileDevice']]['height']))
+              $test['height'] = $devices[$test['mobileDevice']]['height'];
+            if (!$test['dpr'] && isset($devices[$test['mobileDevice']]['dpr']))
+              $test['dpr'] = $devices[$test['mobileDevice']]['dpr'];
+            if (!isset($test['uastring']) && isset($devices[$test['mobileDevice']]['ua']))
+              $test['uastring'] = $devices[$test['mobileDevice']]['ua'];
+          }
         }
         
         $test['created'] = time();
@@ -886,6 +904,8 @@ function UpdateLocation(&$test, &$locations, $new_location)
 
   if( isset($test['browser']) && strlen($test['browser']) )
       $test['locationText'] .= " - <b>{$test['browser']}</b>";
+  if (isset($test['mobileDeviceLabel']) && $test['mobile'])
+      $test['locationText'] .= " - <b>Emulated {$test['mobileDeviceLabel']}</b>";
   if( isset($test['connectivity']) )
   {
       $test['locationText'] .= " - <b>{$test['connectivity']}</b>";
@@ -1179,6 +1199,8 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 
                 if( isset($test['browser']) && strlen($test['browser']) )
                     $test['locationText'] .= " - <b>{$test['browser']}</b>";
+                if (isset($test['mobileDeviceLabel']) && $test['mobile'])
+                    $test['locationText'] .= " - <b>Emulated {$test['mobileDeviceLabel']}</b>";
                 if( isset($test['connectivity']) )
                 {
                     $test['locationText'] .= " - <b>{$test['connectivity']}</b>";

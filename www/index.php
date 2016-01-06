@@ -397,9 +397,37 @@ $loc = ParseLocations($locations);
                                 <ul class="input_fields">
                                     <li>
                                         <input type="checkbox" name="mobile" id="mobile" class="checkbox" style="float: left;width: auto;">
+                                        <?php
+                                        if (is_file('./settings/mobile_devices.ini')) {
+                                          $devices = parse_ini_file('./settings/mobile_devices.ini', true);
+                                          if ($devices && count($devices)) {
+                                            $selectedDevice = null;
+                                            if (isset($_COOKIE['mdev']) && isset($devices[$_COOKIE['mdev']]))
+                                              $selectedDevice = $_COOKIE['mdev'];
+                                            echo '<select name="mobileDevice" id="mobileDevice">';
+                                            $lastGroup = null;
+                                            foreach ($devices as $deviceName => $deviceInfo) {
+                                              if (isset($deviceInfo['label'])) {
+                                                if (isset($deviceInfo['group']) && $deviceInfo['group'] != $lastGroup) {
+                                                  if (isset($lastGroup))
+                                                    echo "</optgroup>";
+                                                  $lastGroup = $deviceInfo['group'];
+                                                  echo "<optgroup label=\"" . htmlspecialchars($lastGroup) . "\">";
+                                                }
+                                                $selected = '';
+                                                if (isset($selectedDevice) && $selectedDevice == $deviceName)
+                                                  $selected = 'selected';
+                                                echo "<option value=\"$deviceName\" $selected>" . htmlspecialchars($deviceInfo['label']) . "</option>\n";
+                                              }
+                                            }
+                                            if (isset($lastGroup))
+                                              echo "</optgroup>";
+                                            echo '</select>';
+                                          }
+                                        }
+                                        ?>
                                         <label for="mobile" class="auto_width">
-                                            Emulate Mobile Browser<br>
-                                            <small>Nexus 5 user agent, 1080x1920 screen, 3x device pixel ratio</small>
+                                            Emulate Mobile Browser
                                         </label>
                                     </li>
                                     <li>
