@@ -2384,7 +2384,7 @@ function ValidateCommandLine($cmd, &$error) {
     $flags = explode(' ', $cmd);
     if ($flags && is_array($flags) && count($flags)) {                
       foreach($flags as $flag) {
-        if (!preg_match('/^--(([a-zA-Z0-9\-\.\+=,_ "]+)|((proxy-server|proxy-pac-url|force-fieldtrials|trusted-spdy-proxy)=[a-zA-Z0-9\-\.\+=,_:\/]+))$/', $flag)) {
+        if (!preg_match('/^--(([a-zA-Z0-9\-\.\+=,_ "]+)|((data-reduction-proxy-http-proxies|proxy-server|proxy-pac-url|force-fieldtrials|trusted-spdy-proxy)=[a-zA-Z0-9\-\.\+=,_:\/]+))$/', $flag)) {
           $error = 'Invalid command-line option: "' . htmlspecialchars($flag) . '"';
         }
       }
