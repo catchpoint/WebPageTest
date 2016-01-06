@@ -39,10 +39,9 @@ static const DWORD BROWSER_WIDTH = 1024;
 static const DWORD BROWSER_HEIGHT = 768;
 
 // Mobile emulation defaults (taken from a Nexus 5).
-// The height has 36 added pixels to allow for the debugging header.
 static const TCHAR * DEFAULT_MOBILE_SCALE_FACTOR = _T("3");
 static const DWORD DEFAULT_MOBILE_WIDTH = 360;
-static const DWORD DEFAULT_MOBILE_HEIGHT = 640;
+static const DWORD DEFAULT_MOBILE_HEIGHT = 511;
 static const DWORD CHROME_PADDING_HEIGHT = 108;
 static const DWORD CHROME_PADDING_WIDTH = 6;
 static const char * DEFAULT_MOBILE_USER_AGENT =
