@@ -93,6 +93,7 @@ CDN_PROVIDER cdnList[] = {
   {".netdna-cdn.com", "NetDNA"},
   {".netdna-ssl.com", "NetDNA"},
   {".netdna.com", "NetDNA"},
+  {".kxcdn.com", "KeyCDN"},
   {".cotcdn.net", "Cotendo CDN"},
   {".cachefly.net", "Cachefly"},
   {"bo.lt", "BO.LT"},
