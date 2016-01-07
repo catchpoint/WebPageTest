@@ -97,6 +97,8 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="discard" value="' . htmlspecialchars($_REQUEST['discard']) . "\">\n";
             if (array_key_exists('timeout', $_REQUEST))
               echo '<input type="hidden" name="timeout" value="' . htmlspecialchars($_REQUEST['timeout']) . "\">\n";
+            if (array_key_exists('appendua', $_REQUEST))
+              echo '<input type="hidden" name="appendua" value="' . htmlspecialchars($_REQUEST['appendua']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
@@ -350,7 +352,8 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <?php
                                         $checked = '';
-                                        if (array_key_exists('keepua', $settings) && $settings['keepua'])
+                                        if ((array_key_exists('keepua', $settings) && $settings['keepua']) ||
+                                                (array_key_exists('keepua', $_REQUEST) && $_REQUEST['keepua']))
                                             $checked = ' checked=checked';
                                         echo "<input type=\"checkbox\" name=\"keepua\" id=\"keepua\" class=\"checkbox\" style=\"float: left;width: auto;\"$checked>\n";
                                         ?>
