@@ -223,6 +223,13 @@
                 $test['uastring'] = $req_uastring;
               }
             }
+            if (isset($req_appendua) && strlen($req_appendua)) {
+              if (strpos($req_appendua, '"') !== false) {
+                $error = 'Invalid User Agent String: "' . htmlspecialchars($req_appendua) . '"';
+              } else {
+                $test['appendua'] = $req_appendua;
+              }
+            }
             if (isset($req_wprDesktop) && $req_wprDesktop) {
               $wprDesktop = GetSetting('wprDesktop');
               if ($wprDesktop) {
@@ -2022,6 +2029,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             $UAModifier = GetSetting('UAModifier');
             if ($UAModifier && strlen($UAModifier))
                 $testFile .= "UAModifier=$UAModifier\r\n";
+            if (isset($test['appendua']))
+              $testFile .= "AppendUA={$test['appendua']}\r\n";
 
             // see if we need to add custom scan rules
             if (array_key_exists('custom_rules', $test)) {

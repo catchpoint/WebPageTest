@@ -159,6 +159,7 @@ void WptTest::Reset(void) {
   _custom_metrics.Empty();
   _has_test_timed_out = false;
   _user_agent_modifier = "PTST";
+  _append_user_agent.Empty();
 }
 
 /*-----------------------------------------------------------------------------
@@ -303,6 +304,8 @@ bool WptTest::Load(CString& test) {
           _user_agent_modifier = value;
         } else if (!key.CompareNoCase(_T("UAString"))) {
           _user_agent = value.Trim();
+        } else if (!key.CompareNoCase(_T("AppendUA"))) {
+          _append_user_agent = value.Trim();
         } else if (!key.CompareNoCase(_T("dpr")) && _ttoi(value.Trim())) {
           _device_scale_factor = value.Trim();
         } else if (!key.CompareNoCase(_T("width")) && _ttoi(value.Trim())) {
@@ -515,10 +518,11 @@ void WptTest::BuildScript() {
     _script_commands.AddHead(command);
   }
 
-  if(!_preserve_user_agent) {
+  CStringA append = GetAppendUA();
+  if(!append.IsEmpty()) {
     ScriptCommand command;
     command.command = _T("appendUserAgent");
-    command.target.Format(_T("%S/%d"), (LPCSTR)_user_agent_modifier, _version);
+    command.target = append;
     command.record = false;
     _script_commands.AddHead(command);
   }
@@ -862,6 +866,32 @@ void WptTest::OverridePort(const struct sockaddr FAR * name, int namelen) {
 }
 
 /*-----------------------------------------------------------------------------
+  Get the run-specific UA string that needs to be added the UA string
+-----------------------------------------------------------------------------*/
+CStringA WptTest::GetAppendUA() const {
+  CStringA user_agent;
+
+  // Add the default PTST/version part
+  if (!_preserve_user_agent)
+    user_agent.Format("%s/%d", _user_agent_modifier, _version);
+
+  // See if they requested anything additional
+  if (!_append_user_agent.IsEmpty()) {
+    CStringA buff;
+    CStringA append = _append_user_agent;
+    append.Replace("%TESTID%", CT2A(_id));
+    buff.Format("%d", _run);
+    append.Replace("%RUN%", buff);
+    append.Replace("%CACHED%", _clear_cache ? "0" : "1");
+    buff.Format("%d", _version);
+    append.Replace("%VERSION%", buff);
+    user_agent += " " + append;
+  }
+
+  return user_agent;
+}
+
+/*-----------------------------------------------------------------------------
   Modify an outbound request header.  The modifications can include:
   - Including PTST in the user agent string
   - Adding new headers
@@ -878,9 +908,7 @@ bool WptTest::ModifyRequestHeader(CStringA& header) const {
     if (_user_agent.GetLength()) {
       header = CStringA("User-Agent: ") + _user_agent;
     } else if(!_preserve_user_agent && value.Find(" " + _user_agent_modifier + "/") == -1) {
-      CStringA user_agent;
-      user_agent.Format(" %s/%d", _user_agent_modifier, _version);
-      header += user_agent;
+      header += " " + GetAppendUA();
     }
   } else if (!tag.CompareNoCase("Host")) {
     CStringA new_headers;

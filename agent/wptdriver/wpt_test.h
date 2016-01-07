@@ -204,6 +204,7 @@ public:
   CString _custom_metrics;
   DWORD   _script_timeout_multiplier;
   CStringA _user_agent_modifier;
+  CStringA _append_user_agent;
   
   // current state
   int     _run;
@@ -237,6 +238,7 @@ protected:
   void      ParseBlockCommand(CString block_list, bool add_head);
   int       lock_count_;
   virtual bool ProcessCommand(ScriptCommand& command, bool &consumed);
+  CStringA  GetAppendUA() const;
 
   CRITICAL_SECTION cs_;
 
