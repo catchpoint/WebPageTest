@@ -157,7 +157,7 @@ function getTargetTTFB(&$pageData, &$test, $id, $run, $cached)
 {
     $target = NULL;
 
-    $rtt = null;
+    $rtt = 0;
     if( isset($test['testinfo']['latency']) )
         $rtt = (int)$test['testinfo']['latency'];
 
@@ -170,21 +170,38 @@ function getTargetTTFB(&$pageData, &$test, $id, $run, $cached)
     if( count($requests) )
     {
         // figure out what the RTT is to the server (take the connect time from the first request unless it is over 3 seconds)
-        $connect_ms = $requests[0]['connect_ms'];
-        if( isset($rtt) && (!isset($connect_ms) || $connect_ms > 3000) )
+        if (isset($requests[0]['connect_start']) &&
+            $requests[0]['connect_start'] >= 0 &&
+            isset($requests[0]['connect_end']) &&
+            $requests[0]['connect_end'] > $requests[0]['connect_start']) {
+          $rtt = $requests[0]['connect_end'] - $requests[0]['connect_start'];
+        } else {
+          $connect_ms = $requests[0]['connect_ms'];
+          if ($rtt > 0 && (!isset($connect_ms) || $connect_ms > 3000 || $connect_ms < 0))
             $rtt += 100;    // allow for an additional 100ms to reach the server on top of the traffic-shaped RTT
-        else
+          else
             $rtt = $connect_ms;
-
-        if( isset($rtt) )
-        {
-            $ssl_ms = 0;
-            if( $requests[0]['is_secure'] && (int)$requests[0]['ssl_ms'] > 0 )
-                $ssl_ms = $requests[0]['ssl_ms'];
-
-            // RTT's: DNS + Socket Connect + HTTP Request
-            $target =  ($rtt * 3) + $ssl_ms;
         }
+        
+        // allow for a minimum of 100ms for the RTT
+        $rtt = max($rtt, 100);
+        
+        $ssl_ms = 0;
+        $i = 0;
+        while (isset($requests[$i])) {
+          if (isset($requests[$i]['contentType']) &&
+              (stripos($requests[$i]['contentType'], 'ocsp') !== false ||
+               stripos($requests[$i]['contentType'], 'crl') !== false)) {
+            $i++;
+          } else {
+            if ($requests[$i]['is_secure'])
+              $ssl_ms = $rtt;
+            break;
+          }
+        }
+
+        // RTT's: DNS + Socket Connect + HTTP Request + 100ms allowance
+        $target = ($rtt * 3) + $ssl_ms + 100;
     }
 
     return $target;
