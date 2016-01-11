@@ -18,7 +18,7 @@ if (function_exists("apc_sma_info") && function_exists("apc_clear_cache")) {
     $avail = $info['avail_mem'];
     if ($total > 0) {
       $pct = $avail / $total;
-      if ($avail < 5000000 || $pct < 0.10) {
+      if ($avail < 5000000 || $pct < 0.20) {
         apc_clear_cache("user");
         apc_clear_cache();
       }

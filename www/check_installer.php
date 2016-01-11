@@ -25,9 +25,8 @@ if ($ok) {
   $data = $has_apc ? apc_fetch("installer-$installer") : null;
   if (!$data && is_file($file)) {
     $data = file_get_contents($file);
-    if ($has_apc) {
-      apc_store("installer-$installer", str_pad($data, 1000), 600);
-    }
+    if ($has_apc)
+      apc_store("installer-$installer", $data, 600);
   }
   if (isset($data) && strlen($data)) {
     header("Content-type: text/plain");
@@ -58,7 +57,7 @@ function ApcCheckIp($installer) {
     }
     $history[] = $now;
     // Use 1KB blocks to prevent fragmentation
-    apc_store($key, str_pad(json_encode($history), 1000), 604800);
+    apc_store($key, $history, 604800);
     if (count($history) > 10)
       array_shift($history);
     $count = 0;
