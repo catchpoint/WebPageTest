@@ -1,0 +1,101 @@
+%{header_in}
+
+### Aliases for Common Programs
+AR            = %{ar_command}
+COPY          = copy
+CD            = @cd
+ECHO          = @echo
+INSTALL       = %{install_cmd_exec}
+INSTALL_CMD   = %{install_cmd_exec}
+MKDIR         = @md
+MKDIR_INSTALL = @md
+RM            = @del /Q
+RM_R          = $(RM) /S
+RMDIR         = @rmdir
+
+# Executable targets
+CLI           = %{out_dir}\botan%{program_suffix}
+TEST          = %{out_dir}\botan-test%{program_suffix}
+
+# Library targets
+#
+# LIB_FILENAME is always the .lib file, that is either a static lib or a
+# by-product of the DLL creation used to link the DLL into applications
+LIB_BASENAME  = %{libname}
+LIB_FILENAME  = %{out_dir}\$(LIB_BASENAME).lib
+
+!If "$(SO_OBJ_FLAGS)" == ""
+# static lib
+LIBRARIES     = $(LIB_FILENAME)
+!Else
+# shared lib
+SO_FILENAME   = %{out_dir}\$(LIB_BASENAME).dll
+LIBRARIES     = $(SO_FILENAME)
+!Endif
+
+
+# File Lists
+LIBOBJS       = %{lib_objs}
+
+CLIOBJS       = %{cli_objs}
+
+TESTOBJS      = %{test_objs}
+
+# First make target. Will be used by default
+all: $(CLI) $(TEST)
+
+# Build Commands
+%{lib_build_cmds}
+
+%{cli_build_cmds}
+
+%{test_build_cmds}
+
+# Link Commands
+$(CLI): $(LIBRARIES) $(CLIOBJS)
+	$(CLI_LINK_CMD) /OUT:$@ $(CLIOBJS) $(LIB_FILENAME) $(CLI_LINKS_TO)
+	$(CLI_POST_LINK_CMD)
+
+$(TEST): $(LIBRARIES) $(TESTOBJS)
+	$(TEST_LINK_CMD) /OUT:$@ $(TESTOBJS) $(LIB_FILENAME) $(TEST_LINKS_TO)
+	$(TEST_POST_LINK_CMD)
+
+!If "$(SO_OBJ_FLAGS)" == ""
+# static lib
+$(LIB_FILENAME): $(LIBOBJS)
+	$(AR) /OUT:$@ $(LIBOBJS)
+!Else
+# shared lib
+# Creates the DLL $(SO_FILENAME) and the .lib $(LIB_FILENAME)
+$(SO_FILENAME): $(LIBOBJS)
+	$(LIB_LINK_CMD) /OUT:$@ $(LIBOBJS) $(LIB_LINKS_TO)
+!Endif
+
+# Fake Targets
+
+SPHINX_CONFIG = %{sphinx_config_dir}
+SPHINX_OPTS = -b html
+
+docs:
+%{build_doc_commands}
+
+clean:
+	-$(RM) %{libobj_dir}\*
+	-$(RM) %{cliobj_dir}\*
+	-$(RM) %{testobj_dir}\*
+	-$(RM) %{out_dir}\*.manifest
+	-$(RM) %{out_dir}\*.exp
+	-$(RM) %{out_dir}\*.dll
+	-$(RM) $(LIBRARIES) $(CLI) $(TEST)
+
+distclean: clean
+	$(RM_R) %{build_dir}
+	$(RMDIR) %{build_dir}\include\botan\internal
+	$(RMDIR) %{build_dir}\include\botan
+	$(RMDIR) %{build_dir}\include
+	$(RMDIR) %{build_dir}\lib %{build_dir}\tests
+	$(RMDIR) %{build_dir}
+	$(RM) Makefile $(LIB_BASENAME).* $(CLI).*
+
+install: $(CLI) docs
+	$(SCRIPTS_DIR)\install.py --destdir=%{destdir} --build-dir="%{build_dir}" --bindir=%{bindir} --libdir=%{libdir} --docdir=%{docdir} --includedir=%{includedir}

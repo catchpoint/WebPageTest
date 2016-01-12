@@ -1,0 +1,6 @@
+define DLIES 20131128
+
+<requires>
+kdf
+mac
+</requires>

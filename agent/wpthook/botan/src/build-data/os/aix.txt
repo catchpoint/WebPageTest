@@ -1,0 +1,5 @@
+os_type unix
+
+<target_features>
+gettimeofday
+</target_features>

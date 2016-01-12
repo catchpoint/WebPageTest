@@ -1,0 +1,9 @@
+os_type unix
+
+<target_features>
+posix_mlock
+</target_features>
+
+<aliases>
+gnu
+</aliases>

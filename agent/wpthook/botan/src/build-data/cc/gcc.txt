@@ -1,0 +1,129 @@
+macro_name GCC
+
+binary_name g++
+
+output_to_option "-o "
+add_include_dir_option -I
+add_lib_dir_option -L
+add_lib_option -l
+
+lang_flags "-std=c++11 -D_REENTRANT"
+maintainer_warning_flags "-Wold-style-cast -Werror -Wno-error=old-style-cast -Wno-error=zero-as-null-pointer-constant -Wno-error=unused-parameter -Wno-error=unused-variable -Wno-error=strict-overflow"
+warning_flags "-Wall -Wextra -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wzero-as-null-pointer-constant -Wnon-virtual-dtor"
+
+compile_flags "-c"
+debug_info_flags "-g"
+optimization_flags "-O3"
+
+shared_flags "-fPIC"
+coverage_flags "--coverage"
+
+# GCC 4.8
+sanitizer_flags "-D_GLIBCXX_DEBUG -fsanitize=address"
+
+# GCC 4.9 and later
+#sanitizer_flags "-D_GLIBCXX_DEBUG -fsanitize=address,undefined -fno-sanitize-recover=undefined"
+
+visibility_build_flags "-fvisibility=hidden"
+visibility_attribute '__attribute__((visibility("default")))'
+
+makefile_style gmake
+
+<so_link_commands>
+# The default works for GNU ld and several other Unix linkers
+default       -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME_ABI)"
+default-debug -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME_ABI)"
+
+# Darwin, HP-UX and Solaris linkers use different syntax
+darwin  -> "$(CXX) -dynamiclib -fPIC -install_name $(LIBDIR)/$(SONAME_ABI)"
+hpux    -> "$(CXX) -shared -fPIC -Wl,+h,$(SONAME_ABI)"
+solaris -> "$(CXX) -shared -fPIC -Wl,-h,$(SONAME_ABI)"
+
+# AIX and OpenBSD don't use sonames at all
+aix     -> "$(CXX) -shared -fPIC"
+openbsd -> "$(CXX) -shared -fPIC"
+</so_link_commands>
+
+<binary_link_commands>
+linux         -> "$(LINKER) -Wl,-rpath=\$$ORIGIN"
+linux-debug   -> "$(LINKER) -Wl,-rpath=\$$ORIGIN"
+default       -> "$(LINKER)"
+default-debug -> "$(LINKER)"
+</binary_link_commands>
+
+<isa_flags>
+sse2    -> "-msse2"
+ssse3   -> "-mssse3"
+sse4.1  -> "-msse4.1"
+sse4.2  -> "-msse4.2"
+avx2    -> "-mavx2"
+bmi2    -> "-mbmi2"
+aesni   -> "-maes -mpclmul -mssse3"
+rdrand  -> "-mrdrnd"
+rdseed	-> "-mrdseed"
+sha     -> "-msha"
+altivec -> "-maltivec"
+</isa_flags>
+
+<mach_opt>
+# Avoid using -march=i[3456]86, instead tune for generic
+i386        -> "-mtune=generic"
+i486        -> "-mtune=generic"
+i586        -> "-mtune=generic"
+i686        -> "-mtune=generic"
+
+# Translate to GCC-speak
+nehalem     -> "-march=corei7"
+sandybridge -> "-march=corei7-avx"
+ivybridge   -> "-march=core-avx-i"
+
+ppc601      -> "-mpowerpc -mcpu=601"
+cellppu     -> "-mcpu=cell"
+e500v2      -> "-mcpu=8548"
+
+# No scheduler in GCC for anything after EV67
+alpha-ev68  -> "-mcpu=ev67"
+alpha-ev7   -> "-mcpu=ev67"
+
+# The patch from Debian bug 594159 has this, don't know why though...
+sh4         -> "-m4 -mieee"
+
+# Default family options (SUBMODEL is substitued with the actual
+# submodel name). Anything after the quotes is what should be
+# *removed* from the submodel name before it's put into SUBMODEL.
+
+alpha     -> "-mcpu=SUBMODEL" alpha-
+arm32     -> "-march=SUBMODEL"
+arm64     -> "-march=SUBMODEL"
+superh    -> "-mSUBMODEL" sh
+hppa      -> "-march=SUBMODEL" hppa
+ia64      -> "-mtune=SUBMODEL"
+m68k      -> "-mSUBMODEL"
+mips32    -> "-mips1 -mcpu=SUBMODEL" mips32-
+mips64    -> "-mips3 -mcpu=SUBMODEL" mips64-
+ppc32     -> "-mcpu=SUBMODEL" ppc
+ppc64     -> "-mcpu=SUBMODEL" ppc
+sparc32   -> "-mcpu=SUBMODEL -Wa,-xarch=v8plus" sparc32-
+sparc64   -> "-mcpu=v9 -mtune=SUBMODEL"
+x86_32    -> "-march=SUBMODEL"
+x86_64    -> "-march=SUBMODEL"
+
+all_x86_32 -> "-momit-leaf-frame-pointer"
+all_x86_64 -> "-momit-leaf-frame-pointer"
+</mach_opt>
+
+# Flags set here are included at compile and link time
+<mach_abi_linking>
+all     -> "-pthread -fstack-protector"
+
+mips64  -> "-mabi=64"
+s390    -> "-m31"
+s390x   -> "-m64"
+sparc32 -> "-m32 -mno-app-regs"
+sparc64 -> "-m64 -mno-app-regs"
+ppc64   -> "-m64"
+x86_64  -> "-m64"
+
+netbsd  -> "-D_NETBSD_SOURCE"
+qnx     -> "-fexceptions -D_QNX_SOURCE"
+</mach_abi_linking>

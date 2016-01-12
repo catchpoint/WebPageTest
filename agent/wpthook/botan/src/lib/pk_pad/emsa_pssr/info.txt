@@ -1,0 +1,5 @@
+define EMSA_PSSR 20131128
+
+<requires>
+mgf1
+</requires>

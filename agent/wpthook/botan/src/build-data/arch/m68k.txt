@@ -1,0 +1,16 @@
+endian big
+
+# Except for Coldfire
+#unaligned ok
+
+<aliases>
+680x0
+68k
+</aliases>
+
+<submodels>
+68020
+68030
+68040
+68060
+</submodels>

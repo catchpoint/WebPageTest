@@ -1,0 +1,9 @@
+define COMPRESSION 20141117
+
+<header:internal>
+compress_utils.h
+</header:internal>
+
+<header:public>
+compression.h
+</header:public>

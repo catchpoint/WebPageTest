@@ -1,0 +1,9 @@
+define ECC_GROUP 20131128
+
+<requires>
+asn1
+ec_gfp
+numbertheory
+oid_lookup
+pem
+</requires>
