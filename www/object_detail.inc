@@ -389,6 +389,9 @@ function FixUpRequestTimes(&$requests) {
             // this case, fix load_ms
             $req['load_ms'] = $req['ttfb_ms'];
         }
+        if ($req['load_end'] < $req['load_start'] + $ttfb_ms) {
+            $req['load_end'] = $req['load_start'] + $ttfb_ms;
+        }
 
         $req['ttfb_start'] = $req['load_start'];
         $req['ttfb_end'] = $req['ttfb_start'] + $req['ttfb_ms'];
