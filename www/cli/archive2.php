@@ -95,18 +95,32 @@ function LongTermArchive($dir, $year, $month, $day) {
         $zip_file = "$target_dir/$year$month$day.zip";
         if (isset($target_dir) && strlen($target_dir) &&
             isset($zip_file) && strlen($zip_file)) {
-            if (is_file($zip_file))
-                unlink($zip_file);
-            echo "Archiving $dir to $zip_file...\n";
-            chdir($dir);
-            system("zip -rqD0 $zip_file *", $zipResult);
-            if ($zipResult == 0) {
-                if (is_file($zip_file)) {
-                    $info['archived'] = true;
-                    $dirty = true;
-                }
+            if (!is_file($zip_file)) {
+              echo "Archiving $dir to $zip_file...\n";
+              chdir($dir);
+              system("zip -rqD0 $zip_file *", $zipResult);
+              if ($zipResult == 0) {
+                  if (is_file($zip_file)) {
+                      $info['archived'] = true;
+                      $dirty = true;
+                  }
+              }
+            } else {
+              $info['archived'] = true;
+              $dirty = true;
+              $files = glob("$dir/*.zip");
+              if ($files && is_array($files) && count($files)) {
+                foreach ($files as $file)
+                  unlink("$dir/" . basename($file));
+              }
             }
         }
+    } else {
+      $files = glob("$dir/*.zip");
+      if ($files && is_array($files) && count($files)) {
+        foreach ($files as $file)
+          unlink("$dir/" . basename($file));
+      }
     }
     
     if ($dirty) {
