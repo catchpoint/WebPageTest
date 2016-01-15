@@ -41,7 +41,7 @@ static const UINT_PTR TIMER_DONE = 1;
 static const UINT_PTR TIMER_FORCE_REPORT = 2;
 static const DWORD TIMER_DONE_INTERVAL = 100;
 static const DWORD INIT_TIMEOUT = 30000;
-static const DWORD TIMER_FORCE_REPORT_INTERVAL = 120000;
+static const DWORD TIMER_FORCE_REPORT_INTERVAL = 60000;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
