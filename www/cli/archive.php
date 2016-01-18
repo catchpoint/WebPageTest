@@ -9,15 +9,15 @@ require_once('archive.inc');
 ignore_user_abort(true);
 set_time_limit(3300);   // only allow it to run for 55 minutes - this is the time acting in THIS script, not for any system- or db-calls http://php.net/manual/en/function.set-time-limit.php
 if (function_exists('proc_nice'))
-  proc_nice(19);
+    proc_nice(19);
 
 $startTime = microtime(true);
 
 // bail if we are already running
 $lock = Lock("Archive", false, 3600);
 if (!isset($lock)) {
-  echo "Archive process is already running\n";
-  exit(0);
+    echo "Archive process is already running\n";
+    exit(0);
 }
 
 $archive_days = null;
@@ -53,14 +53,14 @@ $log = fopen('./cli/archive.log', 'w');
 // check the old tests first
 /*
 *   Archive any tests that have not already been archived
-*   We will also keep track of all of the tests that are 
+*   We will also keep track of all of the tests that are
 *   known to have been archived separately so we don't thrash
-*/  
+*/
 $UTC = new DateTimeZone('UTC');
 
 $now = time();
 
-if (isset($media_days) || (isset($archive_dir) && strlen($archive_dir)) ||
+if ( isset($media_days) || (isset($archive_dir) && strlen($archive_dir)) ||
     (array_key_exists('archive_s3_server', $settings) && strlen($settings['archive_s3_server']))) {
     //CheckRelay();
     CheckOldDir('./results/old');
@@ -114,7 +114,7 @@ if (isset($media_days) || (isset($archive_dir) && strlen($archive_dir)) ||
                                 if ($elapsedDays >= ($clear_archive_days)) {
                                     delTree($dayDir);
                                     fwrite($log, "Archives in $dayDir removed \n");
-                                }
+                                    }
                                 if ((microtime(true) - $startTime) > $MAX_RUN_TIME) { //check if maximal allowed runtime reached
                                     exit(0); //if yes, end the archiving immediately
                                 }
@@ -138,9 +138,9 @@ if( $log ) {
 Unlock($lock);
 
 /**
-* Clean up the relay directory of old tests
-* 
-*/
+ * Clean up the relay directory of old tests
+ *
+ */
 function CheckRelay() {
     $dirs = scandir('./results/relay');
     $keys = parse_ini_file('./settings/keys.ini');
@@ -218,10 +218,10 @@ function CheckRelay() {
 }
 
 /**
-* Recursively scan the old directory for tests
-* 
-* @param mixed $path
-*/
+ * Recursively scan the old directory for tests
+ *
+ * @param mixed $path
+ */
 function CheckOldDir($path) {
     $oldDirs = scandir($path);
     foreach( $oldDirs as $oldDir ) {
@@ -237,12 +237,12 @@ function CheckOldDir($path) {
 }
 
 /**
-* Recursively check within a given day
-* 
-* @param mixed $dir
-* @param mixed $baseID
-* @param mixed $archived
-*/
+ * Recursively check within a given day
+ *
+ * @param mixed $dir
+ * @param mixed $baseID
+ * @param mixed $archived
+ */
 function CheckDay($dir, $baseID, $elapsedDays) {
     $tests = scandir($dir);
     foreach( $tests as $test ) {
@@ -260,26 +260,26 @@ function CheckDay($dir, $baseID, $elapsedDays) {
 }
 
 /**
-* Check the given log file for all tests that match
-* 
-* @param mixed $logFile
-* @param mixed $match
-*/
+ * Check the given log file for all tests that match
+ *
+ * @param mixed $logFile
+ * @param mixed $match
+ */
 function CheckTest($testPath, $id, $elapsedDays) {
-  global $archiveCount;
-  global $deleted;
-  global $kept;
-  global $log;
+    global $archiveCount;
+    global $deleted;
+    global $kept;
+    global $log;
     global $archive_dir;
     global $archive_days;
     global $media_days;
     global $media_file_patterns;
     global $settings;
-    $logLine = "$id : ";
+    $logLine = date("Y-m-d-h:i:sa")."  -  ".realpath($testPath)." : ";
 
-  echo "\rArc:$archiveCount, Del:$deleted, Kept:$kept, Checking:" . str_pad($id,45);
+    echo "\rArc:$archiveCount, Del:$deleted, Kept:$kept, Checking:" . str_pad($id,45);
 
-  $delete = false;
+    $delete = false;
     if (isset($elapsedDays)) {
         if( isset($media_days) && $elapsedDays >= $media_days ) {
             echo $testPath;
@@ -287,59 +287,51 @@ function CheckTest($testPath, $id, $elapsedDays) {
             $logLine .= "Last Accessed $elapsedDays days, media-files were been deleted ";
         } else {
             $logLine .= "Last Accessed $elapsedDays days, media-files were not deleted ";
-        }
+            }
       if( isset($archive_days) && $elapsedDays >= $archive_days && ((isset($archive_dir) && strlen($archive_dir)) ||
-      if (ArchiveTest($id) ) {
-        $archiveCount++;
-              $logLine .= "and job results are archived";
-                                                                                      
-              if (!VerifyArchive($id) && $elapsedDays < 30)
-          $delete = true;
-          } else if ($elapsedDays < 60) {
-        $status = GetTestStatus($id, false);
-              $logLine .= "and job result are maybe archived ";
-        if ($status['statusCode'] >= 400 ||
-            ($status['statusCode'] == 102 &&
-             $status['remote'] &&
-                   $elapsedDays > 1))
-          $delete = true;
-        }
-      } elseif ($elapsedDays > 10) {
-            $logLine .= "Old test, Failed to archive, deleting";
-        $delete = true;
-      } else {
-        $logLine .= "Failed to archive";
-      }
-      } else {
-          if( isset($media_days) && $elapsed >= $media_days ) {
-              echo $testPath;
-              delFilesByFileEndingRecursive("$testPath/",$media_file_endings);
-              $logLine .= "Last Accessed $elapsed days, media-files were been deleted";
-          } else {
-              $logLine .= "Last Accessed $elapsed days";
-          }
-    }
-  } else {
-      $logLine .= "Testfolder $testPath couldn't get deleted, because elapsed days couldn't get determined: $elapsedDays";
-  }
+                (array_key_exists('archive_s3_server', $settings) && strlen($settings['archive_s3_server'])))) {
+            if (ArchiveTest($id) ) {
+                $archiveCount++;
+                $logLine .= "and job results are archived";
 
-  if ($delete) {
-    delTree("$testPath/");
-    $deleted++;
-        $logLine .= ",job results are deleted";
-  } else {
-    $kept++;
-  }
-        
-  if( $log ) {
-    $logLine .= "\n";
-    fwrite($log, $logLine);
-  }
+                if (VerifyArchive($id) || $elapsedDays >= 30)
+                    $delete = true;
+            } else if ($elapsedDays < 60) {
+                $status = GetTestStatus($id, false);
+                $logLine .= "and job result are maybe archived ";
+                if ($status['statusCode'] >= 400 ||
+                    ($status['statusCode'] == 102 &&
+                        $status['remote'] &&
+                        $elapsedDays > 1)) {
+                    $delete = true;
+                }
+            } else {
+                $logLine .= "Failed to archive";
+            }
+        } else {
+            $logLine .= "and job result get not archived ";
+        }
+    } else {
+        $logLine .= "Testfolder $testPath couldn't get deleted, because elapsed days couldn't get determined: $elapsedDays";
+    }
+
+    if ($delete) {
+        delTree("$testPath/");
+        $deleted++;
+        $logLine .= " Deleted";
+    } else {
+        $kept++;
+    }
+
+    if( $log ) {
+        $logLine .= "\n";
+        fwrite($log, $logLine);
+    }
 }
 
 /**
-* Calculate how many days have passed since the given day
-*/
+ * Calculate how many days have passed since the given day
+ */
 function ElapsedDays($year, $month, $day) {
     global $now;
     global $UTC;
@@ -350,9 +342,9 @@ function ElapsedDays($year, $month, $day) {
 }
 
 /**
-* For any locations that haven't connected in at least 2 hours, go through and delete any tests in the work queue
-* 
-*/
+ * For any locations that haven't connected in at least 2 hours, go through and delete any tests in the work queue
+ *
+ */
 function CheckLocations() {
     $locations = LoadLocationsIni();
     BuildLocations($locations);
@@ -381,7 +373,7 @@ function CheckLocations() {
             }
         }
     }
-    
+
     // nuke all of the queue files if we had to delete something
     if ($deleted) {
         $files = scandir('./tmp');
