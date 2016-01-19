@@ -192,7 +192,7 @@ void RequestData::AddHeader(const char * header, const char * value) {
     _method = value;
   else if (!lstrcmpiA(header, ":path"))
     _object = value;
-}
+  }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -207,6 +207,14 @@ void RequestData::ProcessRequestLine() {
       _method = line.Tokenize(" ", pos).Trim();
       if (pos > -1) {
         _object = line.Tokenize(" ", pos).Trim();
+        // For proxy cases where the GET is a full URL, parse it into it's pieces
+        if (_object.Find(":") > -1) {
+          CString scheme, host, object;
+          unsigned short port = 0;
+          if (ParseUrl((LPCTSTR)CA2T(_object), scheme, host, port, object)) {
+            _object = object;
+          }
+        }
       }
     }
   }

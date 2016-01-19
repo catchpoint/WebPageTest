@@ -764,3 +764,47 @@ void Reboot() {
   
   InitiateSystemShutdown(NULL, NULL, 0, TRUE, TRUE);
 }
+
+/*-----------------------------------------------------------------------------
+  Helper function to crack an url into it's component parts
+-----------------------------------------------------------------------------*/
+bool ParseUrl(CString url, CString &scheme, CString &host,
+              unsigned short &port, CString& object){
+  bool ret = false;
+
+  URL_COMPONENTS parts;
+  memset(&parts, 0, sizeof(parts));
+  TCHAR szHost[10000];
+  TCHAR path[10000];
+  TCHAR extra[10000];
+  TCHAR szScheme[100];
+    
+  memset(szHost, 0, sizeof(szHost));
+  memset(path, 0, sizeof(path));
+  memset(extra, 0, sizeof(extra));
+  memset(szScheme, 0, sizeof(szScheme));
+
+  parts.lpszHostName = szHost;
+  parts.dwHostNameLength = _countof(szHost);
+  parts.lpszUrlPath = path;
+  parts.dwUrlPathLength = _countof(path);
+  parts.lpszExtraInfo = extra;
+  parts.dwExtraInfoLength = _countof(extra);
+  parts.lpszScheme = szScheme;
+  parts.dwSchemeLength = _countof(szScheme);
+  parts.dwStructSize = sizeof(parts);
+
+  if( InternetCrackUrl((LPCTSTR)url, url.GetLength(), 0, &parts) ){
+    ret = true;
+    scheme = szScheme;
+    host = szHost;
+    port = parts.nPort;
+    object = path;
+    object += extra;
+    if (!port) {
+      port = !lstrcmpi(scheme, _T("https")) ?
+          INTERNET_DEFAULT_HTTPS_PORT : INTERNET_DEFAULT_HTTP_PORT;
+    }
+  }
+  return ret;
+}

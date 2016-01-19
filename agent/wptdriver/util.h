@@ -76,3 +76,5 @@ void QueryPerfCounter(__int64 &counter);
 void QueryPerfFrequency(__int64 &freq);
 int ElapsedFileTimeSeconds(FILETIME& check, FILETIME& now);
 void Reboot();
+bool ParseUrl(CString url, CString &scheme, CString &host,
+              unsigned short &port, CString& object);
