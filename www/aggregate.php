@@ -10,11 +10,6 @@ if (array_key_exists('run', $_REQUEST) && $_REQUEST['run'] == 'median')
 
 $tests = null;
 
-// Support multiple versions of output, for backward compatibility
-$version=1;
-if (isset($_REQUEST['ver']) && strlen($_REQUEST['ver']) ) {
-	$version = $_REQUEST['ver'];
-}
 // Allow for status info to be included as well
 $incStatus=0;
 if (isset($_REQUEST['status']) && strlen($_REQUEST['status']) ) {
@@ -68,10 +63,9 @@ if( isset($tests) )
                             'requestsDoc' => 'Requests (Doc)',
                             'loadEventStart' => 'Load Event Start',
                             'SpeedIndex' => 'Speed Index',
-                            'SpeedIndexDT' => 'Speed IndexDT' );
-	if ($version > 1) {
-		$metrics['visualComplete'] = 'Visually Complete';
-	}
+                            'lastVisualChange' => 'Last Visual Change',
+                            'visualComplete' => 'Visually Complete' );
+
 	// If asked, add status info as well
 	if ($incStatus) {
 	    	echo '"Status Code","Elapsed Time","Completed Time","Behind Count","Tests Expected","Tests Completed",';
