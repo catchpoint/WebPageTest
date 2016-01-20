@@ -174,7 +174,7 @@ void WptDriverCore::WorkThread(void) {
 
     _status.Set(_T("Running..."));
   }
-  while (!_exit && !NeedsReboot()) {
+  while (!_exit && !NeedsReboot() && !NeedsMaintenance()) {
     WaitForSingleObject(_testing_mutex, INFINITE);
     _status.Set(_T("Checking for software updates..."));
     _installing = true;
@@ -428,11 +428,13 @@ void WptDriverCore::Init(void){
 /*-----------------------------------------------------------------------------
   Do our cleanup on exit
 -----------------------------------------------------------------------------*/
-void WptDriverCore::Cleanup(void){
+void WptDriverCore::Cleanup(void) {
   if (housekeeping_timer_) {
     DeleteTimerQueueTimer(NULL, housekeeping_timer_, NULL);
     housekeeping_timer_ = NULL;
   }
+  // self-shutdown
+  SendMessage(_status._wnd, WM_CLOSE, 0, 0);
 }
 
 typedef int (CALLBACK* DNSFLUSHPROC)();
@@ -971,5 +973,19 @@ bool WptDriverCore::NeedsReboot() {
     }
   }
 
+  return _exit;
+}
+
+bool WptDriverCore::NeedsMaintenance() {
+  TCHAR path[4096];
+  CString localAppDataDir;
+  if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA | CSIDL_FLAG_CREATE,
+    NULL, SHGFP_TYPE_CURRENT, path))) {
+    localAppDataDir = path;
+    localAppDataDir += _T("\\appdynamics-maintenance.dat");
+    if (PathFileExists(localAppDataDir.GetBuffer())) {
+      _exit = true;
+    }
+  }
   return _exit;
 }

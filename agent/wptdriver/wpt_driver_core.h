@@ -75,4 +75,5 @@ private:
   bool Startup();
   LPTSTR GetAppInitString(LPCTSTR new_dll);
   bool NeedsReboot();
+  bool NeedsMaintenance();
 };
