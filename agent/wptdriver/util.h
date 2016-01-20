@@ -91,4 +91,3 @@ void Reboot();
 DWORD GetCapabilities(void);
 void ConstructCmdLine(CString& exe, CAtlArray<CString>& options,
   CString& prefix, CString& cmdLine);
-LPTSTR GetErrorDetail(DWORD error);
