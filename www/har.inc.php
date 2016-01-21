@@ -316,11 +316,20 @@ function BuildHAR(&$pageData, $allRequests, $id, $testPath, $options) {
   $entries = array();
   $multistep = $options['multistep'] != 0;
 
+  $testInfo = GetTestInfo($id);
+
+  if (isset($testInfo['tester']) && strlen($testInfo['tester'])) {
+    $tester = $testInfo['tester'];
+  } else {
+    $tester = '';
+  }
+
   $result['log'] = array();
   $result['log']['version'] = '1.1';
   $result['log']['creator'] = array(
       'name' => 'WebPagetest',
-      'version' => VER_WEBPAGETEST
+      'version' => VER_WEBPAGETEST,
+      '_tester' => $tester
       );
   $result['log']['pages'] = array();
   foreach ($pageData as $run => $pageRun) {
