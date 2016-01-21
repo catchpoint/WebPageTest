@@ -72,6 +72,19 @@ WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
       delete [] pVersion;
     }
   }
+  // Get the OS platform and version
+  #pragma warning(disable:4996) // deprecated GetVersionEx
+  OSVERSIONINFOEX osvi;
+  ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
+  osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+  GetVersionEx((LPOSVERSIONINFO)&osvi);
+  _winMajor = osvi.dwMajorVersion;
+  _winMinor = osvi.dwMinorVersion;
+  _isServer = osvi.wProductType == VER_NT_WORKSTATION ? 0 : 1;
+  BOOL isWow64 = FALSE;
+  IsWow64Process(GetCurrentProcess(), &isWow64);
+  _is64Bit = isWow64 ? 1 : 0;
+
   // get the computer name (and escape it)
   TCHAR name[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD len = _countof(name);
@@ -111,7 +124,8 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
   // build the url for the request
   CString buff;
   CString url = _settings._server + _T("work/getwork.php?shards=1&reboot=1");
-  buff.Format(_T("&location=%s&screenwidth=%d&screenheight=%d"), _settings._location, _screenWidth, _screenHeight);
+  buff.Format(_T("&location=%s&screenwidth=%d&screenheight=%d&winver=%d.%d&winserver=%d&is64bit=%d"),
+              _settings._location, _screenWidth, _screenHeight, _winMajor, _winMinor, _isServer, _is64Bit);
   url += buff;
   if (_settings._key.GetLength())
     url += CString(_T("&key=")) + _settings._key;
