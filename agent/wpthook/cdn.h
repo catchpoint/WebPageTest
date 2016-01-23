@@ -146,6 +146,7 @@ CDN_PROVIDER cdnList[] = {
   {".resrc.it", "ReSRC.it"},
   {".zenedge.net", "Zenedge"},
   {".lswcdn.net", "LeaseWeb CDN"},
+  {".lswcdn.eu", "LeaseWeb CDN"},
   {".revcn.net", "Rev Software"},
   {".revdn.net", "Rev Software"},
   {".caspowa.com", "Caspowa"},
@@ -162,6 +163,7 @@ CDN_PROVIDER cdnList[] = {
   {".squixa.net", "section.io"},
   {".bisongrid.net", "Bison Grid"},
   {".cdn.gocache.net", "GoCache"},
+  {".hiberniacdn.com", "HiberniaCDN"},
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -195,7 +197,8 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"X-CDN", "Incapsula", "Incapsula"},
   {"X-Iinfo", "", "Incapsula"},
   {"X-Ar-Debug", "", "Aryaka"},
-  {"server", "gocache", "GoCache"}
+  {"server", "gocache", "GoCache"},
+  {"server", "hiberniacdn", "HiberniaCDN"}
 };
 
 // Specific providers that require multiple headers
