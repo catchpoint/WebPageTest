@@ -156,7 +156,7 @@ CDN_PROVIDER cdnList[] = {
   {".fbcdn.net", "Facebook"},
   {".cdninstagram.com", "Facebook"},
   {".rlcdn.com", "Reapleaf"},
-  {".wp.com", "WordPress Jetpack"},
+  {".wp.com", "WordPress"},
   {".aads1.net", "Aryaka"},
   {".aads-cn.net", "Aryaka"},
   {".aads-cng.net", "Aryaka"},
@@ -164,6 +164,8 @@ CDN_PROVIDER cdnList[] = {
   {".bisongrid.net", "Bison Grid"},
   {".cdn.gocache.net", "GoCache"},
   {".hiberniacdn.com", "HiberniaCDN"},
+  {".cdntel.net", "Telenor"},
+  {".raxcdn.com", "Rackspace"},
   {"END_MARKER", "END_MARKER"}
 };
 
