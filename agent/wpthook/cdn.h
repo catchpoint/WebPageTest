@@ -164,6 +164,9 @@ CDN_PROVIDER cdnList[] = {
   {".bisongrid.net", "Bison Grid"},
   {".cdn.gocache.net", "GoCache"},
   {".hiberniacdn.com", "HiberniaCDN"},
+  {".cdntel.net", "Telenor"},
+  {".raxcdn.com", "Rackspace"},
+  {".videoplaza.tv", "Ooyala"},
   {"END_MARKER", "END_MARKER"}
 };
 
