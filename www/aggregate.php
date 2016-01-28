@@ -78,7 +78,7 @@ if( isset($tests) )
                 echo "\"FV $metric\",";
         } else {
             foreach( $metrics as $metric )
-                echo "\"FV $metric Median\",\"FV $metric Avg\",\"FV $metric Std. Dev\",";
+                echo "\"FV $metric Median\",\"FV $metric Avg\",\"FV $metric Std. Dev\",\"FV $metric Min\",\"FV $metric Max\",";
         }
         if( !$fvOnly )
         {
@@ -89,7 +89,7 @@ if( isset($tests) )
                     echo "\"RV $metric\",";
             } else {
                 foreach( $metrics as $metric )
-                    echo "\"RV $metric Median\",\"RV $metric Avg\",\"RV $metric Std. Dev\",";
+                    echo "\"RV $metric Median\",\"RV $metric Avg\",\"RV $metric Std. Dev\",\"RV $metric Min\",\"RV $metric Max\",";
             }
         }
         foreach( $tests['variations'] as &$variation )
@@ -102,7 +102,7 @@ if( isset($tests) )
                     echo "\"$label FV $metric\",";
             } else {
                 foreach( $metrics as $metric )
-                    echo "\"$label FV $metric Median\",\"$label FV $metric Avg\",\"$label FV $metric Std. Dev\",";
+                    echo "\"$label FV $metric Median\",\"$label FV $metric Avg\",\"$label FV $metric Std. Dev\",\"$label FV $metric Min\",\"$label FV $metric Max\",";
             }
             if( !$fvOnly )
             {
@@ -113,7 +113,7 @@ if( isset($tests) )
                         echo "\"$label RV $metric\",";
                 } else {
                     foreach( $metrics as $metric )
-                        echo "\"$label RV $metric Median\",\"$label RV $metric Avg\",\"$label RV $metric Std. Dev\",";
+                        echo "\"$label RV $metric Median\",\"$label RV $metric Avg\",\"$label RV $metric Std. Dev\",\"$label RV $metric Min\",\"$label RV $metric Max\",";
                 }
             }
         }
@@ -161,8 +161,8 @@ if( isset($tests) )
                         if ($use_median_run) {
                             echo "\"{$pageData[$median_run][$cacheVal][$metric]}\",";
                         } else {
-                            CalculateAggregateStats($pageData, $cacheVal, $metric, $median, $avg, $stdDev);
-                            echo "\"$median\",\"$avg\",\"$stdDev\",";
+                            CalculateAggregateStats($pageData, $cacheVal, $metric, $median, $avg, $stdDev, $min, $max);
+                            echo "\"$median\",\"$avg\",\"$stdDev\",\"$min\",\"$max\",";
                         }
                     }
                 }
@@ -190,8 +190,8 @@ if( isset($tests) )
                                 if ($use_median_run) {
                                     echo "\"{$pageData[$median_run][$cacheVal][$metric]}\",";
                                 } else {
-                                    CalculateAggregateStats($pageData, $cacheVal, $metric, $median, $avg, $stdDev);
-                                    echo "\"$median\",\"$avg\",\"$stdDev\",";
+                                    CalculateAggregateStats($pageData, $cacheVal, $metric, $median, $avg, $stdDev, $min, $max);
+                                    echo "\"$median\",\"$avg\",\"$stdDev\",\"$min\",\"$max\",";
                                 }
                             }
                         }

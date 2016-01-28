@@ -549,12 +549,14 @@ function CountSuccessfulTests(&$pageData, $cached)
 * @param mixed $avg
 * @param mixed $stdDev
 */
-function CalculateAggregateStats(&$pageData, $cached, $metric, &$median, &$avg, &$stdDev)
+function CalculateAggregateStats(&$pageData, $cached, $metric, &$median, &$avg, &$stdDev, &$min, &$max)
 {
     $median = null;
     $avg = null;
     $stdDev = null;
     $count = 0;
+    $min = null;
+    $max = null;
     
     // first pass, calculate the average and array of values for grabbing the median
     $values = values($pageData, $cached, $metric, true);
@@ -566,6 +568,8 @@ function CalculateAggregateStats(&$pageData, $cached, $metric, &$median, &$avg, 
         sort($values, SORT_NUMERIC);
         $medianIndex = (int)($count / 2);
         $median = $values[$medianIndex];
+        $max = end($values);
+        $min = reset($values);
         
         // pass 2, calculate the standard deviation
         $sum = 0;
