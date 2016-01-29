@@ -224,26 +224,7 @@ function CheckTest($testPath, $id, $elapsedDays) {
   $elapsed = TestLastAccessed($id);
   if (isset($elapsed)) {
     if( $elapsed >= $MIN_DAYS ) {
-      if (ArchiveTest($id) ) {
-        $archiveCount++;
-        $logLine .= "Archived";
-                                                                                      
-        if (VerifyArchive($id) || $elapsed >= 30)
-          $delete = true;
-      } else if ($elapsed < 60) {
-        $status = GetTestStatus($id, false);
-        if ($status['statusCode'] >= 400 ||
-            ($status['statusCode'] == 102 &&
-             $status['remote'] &&
-             $elapsed > 1)) {
-          $delete = true;
-        }
-      } elseif ($elapsedDays > 10) {
-        $logLine .= "Old test, Failed to archive, deleting";
         $delete = true;
-      } else {
-        $logLine .= "Failed to archive";
-      }
     } else {
       $logLine .= "Last Accessed $elapsed days";
     }
