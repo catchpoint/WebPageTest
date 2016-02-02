@@ -34,9 +34,11 @@ var util = require('util');
 /** Default adb command timeout. */
 exports.DEFAULT_TIMEOUT = 60000;
 
-var STORAGE_PATHS_ = ['$EXTERNAL_STORAGE',
-    '$SECONDARY_STORAGE',
-    '/data/local/tmp'
+var STORAGE_PATHS_ = [
+    '/data/local/tmp',
+    '/sdcard',
+    '$EXTERNAL_STORAGE',
+    '$SECONDARY_STORAGE'
 ];
 
 /**
