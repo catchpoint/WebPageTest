@@ -214,7 +214,7 @@
             if (isset($req_dataReduction) && $req_dataReduction) {
               if (strlen($test['addCmdLine']))
                 $test['addCmdLine'] .= ' ';
-              $test['addCmdLine'] .= '--enable-spdy-proxy-auth --force-fieldtrials=DataCompressionProxyRollout/Enabled/';
+              $test['addCmdLine'] .= '--enable-spdy-proxy-auth';
             }
             if (isset($req_uastring) && strlen($req_uastring)) {
               if (strpos($req_uastring, '"') !== false) {
@@ -365,10 +365,12 @@
             // default batch and API requests to a lower priority
             if( !isset($req_priority) )
             {
-                if( $test['batch'] || $test['batch_locations'] )
-                    $test['priority'] =  7;
-                elseif( $_SERVER['REQUEST_METHOD'] == 'GET' || $xml || $json )
+                if( $test['batch'] || $test['batch_locations'] ) {
+                    $bulkPriority = GetSetting('bulk_priority');
+                    $test['priority'] =  $bulkPriority ? $bulkPriority : 7;
+                } elseif( $_SERVER['REQUEST_METHOD'] == 'GET' || $xml || $json ) {
                     $test['priority'] =  5;
+                }
             }
 
             // do we need to force the priority to be ignored (needed for the AOL system currently?)
@@ -977,6 +979,7 @@ function ValidateKey(&$test, &$error, $key = null)
     }elseif( isset($key) || (isset($test['key']) && strlen($test['key'])) ){
       if( isset($test['key']) && strlen($test['key']) && !isset($key) )
         $key = $test['key'];
+      
       // see if it was an auto-provisioned key
       if (preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $key, $matches)) {
         $prefix = $matches['prefix'];
@@ -1047,6 +1050,12 @@ function ValidateKey(&$test, &$error, $key = null)
       if (!strlen($error) && $key != $keys['server']['key']) {
           global $usingAPI;
           $usingAPI = true;
+      }
+
+      // Make sure API keys don't exceed the max configured priority
+      $maxApiPriority = GetSetting('maxApiPriority');
+      if ($maxApiPriority) {
+        $test['priority'] = max($test['priority'], $maxApiPriority);
       }
     }elseif (!isset($admin) || !$admin) {
       $error = 'An error occurred processing your request (missing API key).';
