@@ -407,6 +407,18 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
         // TODO detach during coalesce?
         logger.warn('%s after Page.loadEventFired?', message.method);
       }
+    } else if ('Inspector.targetCrashed' === message.method) {
+      if (this.pageLoadDonePromise_ && this.pageLoadDonePromise_.isPending()) {
+        // This message means that the browser has crashed.
+        // Instead of waiting for the timeout, we'll give the browser a couple
+        // seconds to paint an error message (for our screenshot) and then fail
+        // the page load.
+        var err = new Error('Inspector crashed on run ' + this.runNumber_, this.runNumber_);
+        this.abortTimer_ = global.setTimeout(
+            this.onPageLoad_.bind(this, err), DETACH_TIMEOUT_MS_);
+      } else {
+        logger.warn('%s after Page.loadEventFired?', message.method);
+      }
     }
     // We might be able to detect timeouts via Network.loadingFailed and
     // Page.frameStoppedLoading messages. For now we'll let our timeoutTimer
@@ -1319,8 +1331,12 @@ WebDriverServer.prototype.scheduleProcessVideo_ = function() {
     if (this.videoFile_) {
       var videoDir = path.join(this.runTempDir_, 'video');
       this.histogramFile_ = path.join(this.runTempDir_, 'histograms.json.gz');
+      // Force the video JPEG quality level to be between 30 and 95.
+      var imgQ = (this.task_.imageQuality ?
+            parseInt(this.task_.imageQuality, 10) : 0);
+      imgQ = Math.min(Math.max(imgQ, 30), 95);
       var options = ['lib/video/visualmetrics.py', '-i', this.videoFile_, '-d',
-          videoDir, '--orange', '--viewport', '--force', '--quality', '75',
+          videoDir, '--orange', '--viewport', '--force', '--quality', imgQ,
           '--histogram', this.histogramFile_];
       if (this.traceFile_) {
         options.push('--timeline');
