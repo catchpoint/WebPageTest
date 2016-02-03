@@ -640,6 +640,65 @@ def convert_to_jpeg(directory, quality):
 
 
 ########################################################################################################################
+#   Reduce the number of saved video frames if necessary
+########################################################################################################################
+def cap_frame_count(directory, maxframes):
+    directory = os.path.realpath(directory)
+    frames = sorted(glob.glob(os.path.join(directory, 'ms_*.png')))
+    frame_count = len(frames)
+    if frame_count > maxframes:
+        # First pass, sample all video frames at 10fps instead of 60fps
+        logging.debug('Sampling 10fps: Reducing {0:d} frames to target of {1:d}...'.format(frame_count, maxframes))
+        sample_frames(frames, 100, 0)
+
+        frames = sorted(glob.glob(os.path.join(directory, 'ms_*.png')))
+        frame_count = len(frames)
+        if frame_count > maxframes:
+            # Second pass, sample all video frames after the first 5 seconds at 2fps
+            logging.debug('Sampling 2fps: Reducing {0:d} frames to target of {1:d}...'.format(frame_count, maxframes))
+            sample_frames(frames, 500, 5000)
+
+            frames = sorted(glob.glob(os.path.join(directory, 'ms_*.png')))
+            frame_count = len(frames)
+            if frame_count > maxframes:
+                # Third pass, sample all video frames after the first 10 seconds at 1fps
+                logging.debug('Sampling 1fps: Reducing {0:d} frames to target of {1:d}...'.format(frame_count, maxframes))
+                sample_frames(frames, 1000, 10000)
+
+    logging.debug('{0:d} frames final count with a target max of {1:d} frames...'.format(frame_count, maxframes))
+
+
+def sample_frames(frames, interval, start_ms):
+    frame_count = len(frames)
+    if frame_count > 3:
+        # Always keep the first and last frames, only sample in the middle
+        first_frame = frames[0]
+        first_change = frames[1]
+        last_frame = frames[-1]
+        match = re.compile('ms_(?P<ms>[0-9]+)\.')
+        m = re.search(match, first_change)
+        first_change_time = 0
+        if m is not None:
+            first_change_time = int(m.groupdict().get('ms'))
+        last_bucket = None
+        logging.debug('Sapling frames in {0:d}ms intervals after {1:d} ms...'.format(interval,
+                                                                                     first_change_time + start_ms))
+        for frame in frames:
+            m = re.search(match, frame)
+            if m is not None:
+                frame_time = int(m.groupdict().get('ms'))
+                frame_bucket = int(math.floor(frame_time / interval))
+                if (frame_time > first_change_time + start_ms and
+                            frame_bucket == last_bucket and
+                            frame != first_frame and
+                            frame != first_change and
+                            frame != last_frame):
+                    logging.debug('Removing sampled frame ' + frame)
+                    os.remove(frame)
+                last_bucket = frame_bucket
+
+
+########################################################################################################################
 #   Visual Metrics
 ########################################################################################################################
 
@@ -889,6 +948,8 @@ def main():
                                                                  "visual metrics.")
     parser.add_argument('--trimend', type=int, default=0, help="Time to trim from the end of the video "
                                                                "(in milliseconds).")
+    parser.add_argument('--maxframes', type=int, default=0, help="Maximum number of video frames before reducing by "
+                                                                 "sampling (to 10fps, 1fps, etc).")
     parser.add_argument('-k', '--perceptual', action='store_true', default=False,
                         help="Calculate perceptual Speed Index")
 
@@ -945,9 +1006,13 @@ def main():
                 calculate_histograms(directory, histogram_file, options.force)
                 metrics = calculate_visual_metrics(histogram_file, options.start, options.end, options.perceptual,
                                                    directory)
-                # Perceptual SI computation works on png's only
-                if options.dir is not None and options.quality is not None and options.perceptual is False:
-                    convert_to_jpeg(directory, options.quality)
+                # Process the video frames if we are keeping them
+                if options.dir is not None:
+                    if options.maxframes > 0:
+                        cap_frame_count(directory, options.maxframes)
+                    # JPEG conversion
+                    if options.quality is not None:
+                        convert_to_jpeg(directory, options.quality)
 
                 if metrics is not None:
                     ok = True

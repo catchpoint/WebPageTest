@@ -1337,7 +1337,7 @@ WebDriverServer.prototype.scheduleProcessVideo_ = function() {
       imgQ = Math.min(Math.max(imgQ, 30), 95);
       var options = ['lib/video/visualmetrics.py', '-i', this.videoFile_, '-d',
           videoDir, '--orange', '--viewport', '--force', '--quality', imgQ,
-          '--histogram', this.histogramFile_];
+          '--maxframes', 50, '--histogram', this.histogramFile_];
       if (this.traceFile_) {
         options.push('--timeline');
         options.push(this.traceFile_);
