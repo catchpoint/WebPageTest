@@ -156,20 +156,20 @@ def split_videos(directory, orange_file):
 def remove_orange_frames(directory, orange_file):
     frames = sorted(glob.glob(os.path.join(directory, 'video-*.png')))
     if len(frames):
-        remove = []
-        found_orange = False
+        # go through ALL the frames and find the last orange one. Unfortunately
+        # sometimes the video blinks from orange to white and back to orange.
+        logging.debug("Scanning for orange frames...")
+        last_orange = None
         for frame in frames:
             if is_orange_frame(frame, orange_file):
-                found_orange = True
-                remove.append(frame)
-            elif not found_orange:
-                remove.append(frame)
-            else:
-                break
-        if found_orange:
-            for frame in remove:
-                logging.debug("Removing orange frame " + frame)
+                logging.debug("Orange frame detected: " + frame)
+                last_orange = frame
+        if last_orange is not None:
+            for frame in frames:
+                logging.debug("Removing pre-orange frame " + frame)
                 os.remove(frame)
+                if frame is last_orange:
+                    break
         for frame in reversed(frames):
             if is_orange_frame(frame, orange_file):
                 logging.debug("Removing orange frame " + frame + " from the end")
