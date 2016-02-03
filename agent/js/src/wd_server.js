@@ -1316,7 +1316,7 @@ WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
 
 WebDriverServer.prototype.scheduleProcessVideo_ = function() {
   this.scheduleNoFault_('Process Video', function() {
-    if (this.videoFile_ && this.flags_['processvideo'] == 'yes') {
+    if (this.videoFile_) {
       var videoDir = path.join(this.runTempDir_, 'video');
       this.histogramFile_ = path.join(this.runTempDir_, 'histograms.json.gz');
       var options = ['lib/video/visualmetrics.py', '-i', this.videoFile_, '-d',
