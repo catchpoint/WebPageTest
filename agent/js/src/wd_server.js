@@ -1337,7 +1337,7 @@ WebDriverServer.prototype.scheduleProcessVideo_ = function() {
           var filePath = path.join(videoDir, fileName);
           this.videoFrames_.push({'fileName' : fileName, 'diskPath' : filePath});
         }.bind(this));
-        this.videoFile_ = undefined;
+        //this.videoFile_ = undefined;
       }.bind(this), function(err) {
         logger.info('Video processing error: ' + err.message);
       }.bind(this));
