@@ -279,15 +279,6 @@ void WptHook::ShutdownNow() {
   WptTrace(loglevel::kTrace, _T("[wpthook] Leaving ShutdownNow()"));
 }
 
-void WptHook::AsyncShutdown() {
-  WptTrace(loglevel::kTrace, _T("[wpthook] - In AsyncShutdown"));
-  if (message_window_ && shutdown_message_) {
-    WptTrace(loglevel::kTrace, _T("[wpthook] - Posting shutdown message"));
-    ::PostMessage(message_window_, shutdown_message_, 0, 0);
-    WptTrace(loglevel::kTrace, _T("[wpthook] - Done posting shutdown message"));
-  }
-  WptTrace(loglevel::kTrace, _T("[wpthook] - Leaving AsyncShutdown"));
-}
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
