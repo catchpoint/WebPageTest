@@ -71,7 +71,7 @@ PacketCaptureAndroid.prototype.schedulePrepare_ = function() {
       process_utils.scheduleFunction(this.app_, 'Check local tcpdump',
           fs.exists, this.localTcpdumpBinary_).then(function(exists) {
         if (exists) {
-          this.deviceTcpdumpCommand_ = '/data/local/tmp/tcpdump';
+          this.deviceTcpdumpCommand_ = '/data/local/tmp/tcpdump474';
         } else {
           this.localTcpdumpBinary_ = undefined;  // Triggers /system/xbin below.
         }
@@ -129,15 +129,15 @@ PacketCaptureAndroid.prototype.scheduleStart = function(localPcapFile) {
   this.schedulePrepare_();
   this.scheduleStop();  // Cleanup possible leftovers.
   this.schedulePushTcpdumpIfNeeded_();
-  this.adb_.scheduleDetectConnectedInterface().then(function(iface) {
-    logger.debug('Starting tcpdump of %s to %s', iface, this.devicePcapFile_);
+  this.app_.schedule('Start tcpdump', function() {
+    logger.debug('Starting tcpdump to %s', this.devicePcapFile_);
     // -p = don't put into promiscuous mode.
     // -s 0 = capture entire packets.
-    this.adb_.spawnSu([this.deviceTcpdumpCommand_, '-i', iface, '-p',
+    this.adb_.spawnSu([this.deviceTcpdumpCommand_, '-i', 'any', '-p',
          '-s', '0', '-w', this.devicePcapFile_]).then(function(proc) {
       this.tcpdumpAdbProcess_ = proc;
       var listenBuffer = ''; // Defined until we get our "listening on" line
-      var listenRegex = new RegExp('\\n?listening on ' + iface + ',');
+      var listenRegex = new RegExp('\\n?listening on ');
       proc.stdout.on('data', function(data) {
         logger.info('%s STDOUT: %s', this.deviceTcpdumpCommand_, data);
         if (undefined !== listenBuffer) {
