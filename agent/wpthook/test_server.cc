@@ -200,7 +200,6 @@ void TestServer::MongooseCallback(enum mg_event event,
     } else if (strcmp(request_info->uri, "/event/webdriver_done") == 0) {
       SaveResults();
       hook_.Cleanup();
-      hook_.AsyncShutdown();
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/before_unload") == 0) {
       hook_.SetNewPageLoad();

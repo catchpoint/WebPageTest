@@ -73,7 +73,6 @@ public:
   bool IsNewPageLoad();
   void Save(bool merge = false);
   void Cleanup();
-  void AsyncShutdown();
   void ShutdownNow();
   void OnWindowTimingReceived();
   bool IsWindowTimingReceived();
