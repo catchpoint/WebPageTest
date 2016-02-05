@@ -468,8 +468,9 @@ function AddResponseBodyFlags(&$requests, $bodies_file_name) {
     if ($zip->open($bodies_file_name) === TRUE) {
       for ($i = 0; $i < $zip->numFiles; $i++) {
         $name = $zip->getNameIndex($i);
-        if (stripos($name, '-body.txt') !== false) {
-          $id = intval($name, 10);
+        $parts = explode('-', $name);
+        if (count($parts) >= 3 && stripos($name, '-body.txt') !== false) {
+          $id = intval($parts[1], 10);
           foreach ($requests as &$request) {
             if (isset($request['request_id']) && $request['request_id'] == $id) {
               $request['body_id'] = $id;

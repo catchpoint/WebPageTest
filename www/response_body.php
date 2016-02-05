@@ -31,8 +31,9 @@ if ($request || $body_id) {
     if ($zip->open($bodies_file) === TRUE) {
       for( $i = 0; $i < $zip->numFiles; $i++ ) {
         $name = $zip->getNameIndex($i);
+        $parts = explode('-', $name);
         if (isset($body_id)) {
-          $id = intval($name, 10);
+          $id = intval($parts[1], 10);
           if ($id == $body_id) {
             $body = $zip->getFromIndex($i);
             break;

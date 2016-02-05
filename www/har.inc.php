@@ -340,8 +340,9 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
           if ($zip->open($bodies_file) === TRUE) {
             for( $i = 0; $i < $zip->numFiles; $i++ ) {
               $name = $zip->getNameIndex($i);
-              if (stripos($name, '-body.txt') !== false) {
-                $id = intval($name, 10);
+              $parts = explode('-', $name);
+              if (count($parts) >= 3 && stripos($name, '-body.txt') !== false) {
+                $id = intval($parts[1], 10);
                 foreach ($entries as &$entry) {
                   if (isset($entry['_request_id']) && $entry['_request_id'] == $id) {
                     $entry['response']['content']['text'] = utf8_encode($zip->getFromIndex($i));

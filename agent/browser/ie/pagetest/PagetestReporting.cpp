@@ -1286,7 +1286,7 @@ void CPagetestReporting::SaveBodies(CString file)
                (mime.Find(_T("text/")) >= 0 || mime.Find(_T("javascript")) >= 0 || mime.Find(_T("json")) >= 0) && !IsBinaryContent(r->body, r->bodyLen))
 			      {
               CStringA name;
-			  name.Format("%d-body.txt", r->requestId);
+			  name.Format("%03d-%d-body.txt", count, r->requestId);
 						  // add the file to the archive
 						  if( !zipOpenNewFileInZip( zip, name, 0, 0, 0, 0, 0, 0, Z_DEFLATED, Z_BEST_COMPRESSION ) )
 						  {

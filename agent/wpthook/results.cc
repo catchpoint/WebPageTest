@@ -1290,7 +1290,7 @@ void Results::SaveResponseBodies(void) {
             DWORD body_len = body.GetLength();
             if (body_data && body_len && !IsBinaryContent(body_data, body_len)) {
               CStringA name;
-              name.Format("%d-body.txt", request->_request_id);
+              name.Format("%03d-%d-body.txt", count, request->_request_id);
               if (!zipOpenNewFileInZip(zip, name, 0, 0, 0, 0, 0, 0, Z_DEFLATED, 
                   Z_BEST_COMPRESSION)) {
                 zipWriteInFileInZip(zip, body_data, body_len);
