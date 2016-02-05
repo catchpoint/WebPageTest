@@ -67,3 +67,38 @@ void QueryPerfFrequency(__int64 &freq) {
   QueryPerformanceFrequency(&freq_struct);
   freq = freq_struct.QuadPart;
 }
+
+/*-----------------------------------------------------------------------------
+  Scan the content to see if it is a binary content type
+  https://mimesniff.spec.whatwg.org/#sniffing-a-mislabeled-binary-resource
+-----------------------------------------------------------------------------*/
+bool IsBinaryContent(LPBYTE content, DWORD len) {
+  bool is_binary = false;
+
+  if (content) {
+    if (len >= 2 &&
+        (content[0] == 0xFE && content[1] == 0xFF) ||
+        (content[0] == 0xFF && content[1] == 0xFE)) {
+      // UTF 16 BOM
+      is_binary = false;
+    } else if (len >= 3 && content[0] == 0xEF &&
+               content[1] == 0xBB && content[2] == 0xBF) {
+      // UTF 8 BOM
+      is_binary = false;
+    } else if (len > 0) {
+      DWORD index = 0;
+      while (index < len && !is_binary) {
+        BYTE val = content[index];
+        if (val <= 0x08 || 
+            val == 0x0B ||
+            (val >= 0x0E && val <= 0x1A) ||
+            (val >= 0x1C && val <= 0x1F)) {
+          is_binary = true;
+        }
+        index++;
+      }
+    }
+  }
+
+  return is_binary;
+}

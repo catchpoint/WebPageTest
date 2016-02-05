@@ -1283,7 +1283,7 @@ void CPagetestReporting::SaveBodies(CString file)
           {
 				    count++;
             if(r->result == 200 && r->body && r->bodyLen &&
-               (mime.Find(_T("text/")) >= 0 || mime.Find(_T("javascript")) >= 0 || mime.Find(_T("json")) >= 0) )
+               (mime.Find(_T("text/")) >= 0 || mime.Find(_T("javascript")) >= 0 || mime.Find(_T("json")) >= 0) && !IsBinaryContent(r->body, r->bodyLen))
 			      {
               CStringA name;
 			  name.Format("%d-body.txt", r->requestId);

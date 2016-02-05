@@ -1288,7 +1288,7 @@ void Results::SaveResponseBodies(void) {
             DataChunk body = request->_response_data.GetBody(true);
             LPBYTE body_data = (LPBYTE)body.GetData();
             DWORD body_len = body.GetLength();
-            if (body_data && body_len) {
+            if (body_data && body_len && !IsBinaryContent(body_data, body_len)) {
               CStringA name;
               name.Format("%d-body.txt", request->_request_id);
               if (!zipOpenNewFileInZip(zip, name, 0, 0, 0, 0, 0, 0, Z_DEFLATED, 
