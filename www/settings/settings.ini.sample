@@ -54,6 +54,9 @@ allowPrivate=1
 ;save png full-resolution screen shots
 ;pngss=1
 
+;maximum number of test-steps per script
+maxNumberStepsPerScript=20
+
 ; *************
 ; Server Config
 ; *************

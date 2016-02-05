@@ -1200,6 +1200,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 function ValidateScript(&$script, &$error)
 {
     global $test;
+    global $settings;
     $url = null;
     if (stripos($script, 'webdriver.Builder(') === false) {
         global $test;
@@ -1236,7 +1237,7 @@ function ValidateScript(&$script, &$error)
 
         if( !$ok )
             $error = "Invalid Script (make sure there is at least one navigate command and that the commands are tab-delimited).  Please contact us if you need help with your test script.";
-        else if( $navigateCount > 20 )
+        else if( $settings['maxNumberStepsPerScript'] && $navigateCount > $settings['maxNumberStepsPerScript'] )
             $error = "Sorry, your test has been blocked.  Please contact us if you have any questions";
 
         if( strlen($error) )

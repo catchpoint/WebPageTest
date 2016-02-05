@@ -111,6 +111,8 @@ if (!array_key_exists('nolinks', $settings))
     $settings['nolinks'] = 0;
 if (!array_key_exists('shard_tests', $settings))
     $settings['shard_tests'] = 0;
+if (!array_key_exists('maxNumberStepsPerScript', $settings))
+    $settings['maxNumberStepsPerScript'] = 20;
 $max_load = GetSetting('render_max_load');
 
 $privateInstall = true;
