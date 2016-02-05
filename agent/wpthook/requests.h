@@ -105,6 +105,7 @@ private:
   TrackDns&         _dns;
   WptTest&          _test;
   double            _browser_launch_time;
+  DWORD	            _nextRequestId;	// ID to assign to the next request
   CAtlList<BrowserRequestData>  browser_request_data_;
   CAtlMap<ULONGLONG, Request *> _active_requests; // requests indexed by socket
 

@@ -375,11 +375,12 @@ DataChunk ResponseData::GetBody(bool uncompress) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 Request::Request(TestState& test_state, DWORD socket_id, DWORD stream_id,
-                 TrackSockets& sockets, TrackDns& dns, WptTest& test,
-                 bool is_spdy, Requests& requests)
+                 DWORD request_id, TrackSockets& sockets, TrackDns& dns,
+                 WptTest& test, bool is_spdy, Requests& requests)
   : _processed(false)
   , _socket_id(socket_id)
   , _stream_id(stream_id)
+  , _request_id(request_id)
   , _is_spdy(is_spdy)
   , _ms_start(0)
   , _ms_first_byte(0)

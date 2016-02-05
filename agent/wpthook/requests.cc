@@ -44,7 +44,8 @@ Requests::Requests(TestState& test_state, TrackSockets& sockets,
   _test_state(test_state)
   , _sockets(sockets)
   , _dns(dns)
-  , _test(test) {
+  , _test(test)
+  , _nextRequestId(1) {
   _active_requests.InitHashTable(257);
   connections_.InitHashTable(257);
   InitializeCriticalSection(&cs);
@@ -228,9 +229,11 @@ Request * Requests::GetOrCreateRequest(DWORD socket_id, DWORD stream_id,
 -----------------------------------------------------------------------------*/
 Request * Requests::NewRequest(DWORD socket_id, DWORD stream_id,
                                bool is_spdy) {
-  Request * request = new Request(_test_state, socket_id, stream_id,
-                                  _sockets, _dns, _test, is_spdy, *this);
   EnterCriticalSection(&cs);
+  Request * request = new Request(_test_state, socket_id, stream_id,
+                                  _nextRequestId, _sockets, _dns, _test,
+                                  is_spdy, *this);
+  _nextRequestId++;
   ULARGE_INTEGER key;
   key.HighPart = socket_id;
   key.LowPart = stream_id;
@@ -375,7 +378,9 @@ void Requests::ProcessBrowserRequest(CString request_data) {
   }
   if (end_time > 0 && request_start > 0) {
     Request * request = new Request(_test_state, connection, stream_id,
-                                    _sockets, _dns, _test, false, *this);
+                                    _nextRequestId, _sockets, _dns, _test,
+                                    false, *this);
+    _nextRequestId++;
     request->_from_browser = true;
     request->priority_ = priority;
     request->initiator_ = initiator;
