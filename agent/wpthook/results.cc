@@ -1237,7 +1237,7 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   // write out the raw headers
   if (headers != INVALID_HANDLE_VALUE) {
     buff.Format("Request details:\r\nRequest %d:\r\n"
-                "Request ID %d:\r\nRequest Headers:\r\n", 
+                "RID: %d\r\nRequest Headers:\r\n", 
                 index, request->_request_id);
     buff += request->_request_data.GetHeaders();
     buff.Trim("\r\n");
@@ -1290,7 +1290,7 @@ void Results::SaveResponseBodies(void) {
             DWORD body_len = body.GetLength();
             if (body_data && body_len) {
               CStringA name;
-              name.Format("%d-response.txt", request->_request_id);
+              name.Format("%d-body.txt", request->_request_id);
               if (!zipOpenNewFileInZip(zip, name, 0, 0, 0, 0, 0, 0, Z_DEFLATED, 
                   Z_BEST_COMPRESSION)) {
                 zipWriteInFileInZip(zip, body_data, body_len);

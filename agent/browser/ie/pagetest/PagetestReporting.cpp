@@ -1286,7 +1286,7 @@ void CPagetestReporting::SaveBodies(CString file)
                (mime.Find(_T("text/")) >= 0 || mime.Find(_T("javascript")) >= 0 || mime.Find(_T("json")) >= 0) )
 			      {
               CStringA name;
-			  name.Format("%d-response.txt", r->requestId);
+			  name.Format("%d-body.txt", r->requestId);
 						  // add the file to the archive
 						  if( !zipOpenNewFileInZip( zip, name, 0, 0, 0, 0, 0, 0, Z_DEFLATED, Z_BEST_COMPRESSION ) )
 						  {
@@ -1346,7 +1346,7 @@ void CPagetestReporting::ReportRequest(CString & szReport, CWinInetRequest * r)
 		szReport += szBuff;
 		szBuff.Format(_T("      Response Object Size (bodylen): %d Bytes\n"), r->bodyLen );
 		szReport += szBuff;
-		szBuff.Format(_T("      Request ID: %d\n"), r->requestId );
+		szBuff.Format(_T("      RID: %d\n"), r->requestId );
 		szReport += szBuff;
 
 		szReport +=   _T("  Request Headers:\n");

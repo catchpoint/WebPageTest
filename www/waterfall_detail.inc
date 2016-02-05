@@ -237,7 +237,10 @@ echo '<div id="headers">';
                     echo "<b>Content Download:</b> {$request['download_ms']} ms<br>\n";
                 echo "<b>Bytes In (downloaded):</b> " . number_format($request['bytesIn'] / 1024.0, 1) . " KB<br>\n";
                 echo "<b>Bytes Out (uploaded):</b> " . number_format($request['bytesOut'] / 1024.0, 1) . " KB<br>\n";
-                if (array_key_exists('body', $request) && $request['body']) {
+                if (isset($request['body_id']) && $request['body_id'] > 0) {
+                    $cached = (int)@$_GET["cached"];
+                    echo "<a href=\"/response_body.php?test=$id&run=$run&cached=$cached&bodyid={$request['body_id']}\">View Response Body</a><br>\n";
+                } elseif (array_key_exists('body', $request) && $request['body']) {
                     $cached = (int)@$_GET["cached"];
                     echo "<a href=\"/response_body.php?test=$id&run=$run&cached=$cached&request=$requestNum\">View Response Body</a><br>\n";
                 }
