@@ -36,20 +36,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "cdn.h"
 #include "zlib/zlib.h"
 #include "jsmin/JSMin.h"
-#include "PageSpeed/include/pagespeed/core/engine.h"
-#include "PageSpeed/include/pagespeed/core/pagespeed_init.h"
-#include "PageSpeed/include/pagespeed/core/pagespeed_input.h"
-#include "PageSpeed/include/pagespeed/core/pagespeed_version.h"
-#include "PageSpeed/include/pagespeed/formatters/proto_formatter.h"
-#include "PageSpeed/include/pagespeed/image_compression/image_attributes_factory.h"
-#include "PageSpeed/include/pagespeed/l10n/localizer.h"
-#include "PageSpeed/include/pagespeed/platform/ie/ie_dom.h"
-#include "PageSpeed/include/pagespeed/proto/formatted_results_to_json_converter.h"
-#include "PageSpeed/include/pagespeed/proto/formatted_results_to_text_converter.h"
-#include "PageSpeed/include/pagespeed/proto/pagespeed_output.pb.h"
-#include "PageSpeed/include/pagespeed/proto/pagespeed_proto_formatter.pb.h"
-#include "PageSpeed/include/pagespeed/rules/rule_provider.h"
-#include "PageSpeed/include/googleurl/base/logging.h"
 #include <regex>
 #include <string>
 #include <sstream>
@@ -82,7 +68,6 @@ CPagetestReporting::CPagetestReporting(void):
 	, minifyTarget(0)
 	, compressTotal(0)
 	, compressTarget(0)
-	, pagespeedResults(NULL)
 {
 	descriptor[0] = 0;
 	logUrl[0] = 0;
@@ -193,66 +178,11 @@ void CPagetestReporting::Reset(void)
 		
 		blockedRequests.RemoveAll();
 		blockedAdRequests.RemoveAll();
-		if (pagespeedResults != NULL) {
-			delete pagespeedResults;
-			pagespeedResults = NULL;
-		}
 	}__except(EXCEPTION_EXECUTE_HANDLER)
 	{
 	}
 	
 	LeaveCriticalSection(&cs);
-}
-
-// Helper that populates the set of Page Speed rules used by Page Test.
-void PopulatePageSpeedRules(std::vector<pagespeed::Rule*>* rules)
-{
-	// Don't save the optimized versions of resources in the 
-	// results structure, in order to conserve memory.
-	const bool save_optimized_content = false;
-	pagespeed::rule_provider::AppendPageSpeedRules(
-		save_optimized_content,
-		rules);
-
-	// Now remove any incompatible rules.
-	std::vector<std::string> incompatible_rule_names;
-	pagespeed::InputCapabilities capabilities(
-		pagespeed::InputCapabilities::DOM |
-		pagespeed::InputCapabilities::ONLOAD |
-		pagespeed::InputCapabilities::PARENT_CHILD_RESOURCE_MAP |
-		pagespeed::InputCapabilities::REQUEST_HEADERS |
-		pagespeed::InputCapabilities::RESPONSE_BODY |
-		pagespeed::InputCapabilities::REQUEST_START_TIMES);
-	pagespeed::rule_provider::RemoveIncompatibleRules(
-		rules,
-		&incompatible_rule_names,
-		capabilities);
-	if (!incompatible_rule_names.empty())
-	{
-		ATLTRACE(_T("[Pagetest] - Removing %d incompatible rules.\n"), 
-			incompatible_rule_names.size());
-	}
-}
-
-/*-----------------------------------------------------------------------------
-	Protected formatting - crashes at times when running against amazon.com
------------------------------------------------------------------------------*/
-bool PageSpeedFormatResults(pagespeed::Engine& engine, pagespeed::Results& pagespeedResults, pagespeed::Formatter * formatter)
-{
-  bool ret = false;
-
-  ATLTRACE(_T("[Pagetest] - PageSpeedFormatResults\n"));
-
-  __try
-  {
-    ret = engine.FormatResults(pagespeedResults, formatter);
-  }__except(EXCEPTION_EXECUTE_HANDLER)
-	{
-	}
-
-  ATLTRACE(_T("[Pagetest] - PageSpeedFormatResults Complete\n"));
-
-  return ret;
 }
 
 /*-----------------------------------------------------------------------------
@@ -355,39 +285,6 @@ void CPagetestReporting::FlushResults(void)
 						  }
             }
 						
-						// save the page speed report
-						hFile = CreateFile(logFile+step+_T("_pagespeed.txt"), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, &nullDacl, CREATE_ALWAYS, 0, 0);
-						if( hFile != INVALID_HANDLE_VALUE )
-						{
-							std::vector<pagespeed::Rule*> rules;
-							PopulatePageSpeedRules(&rules);
-	
-							ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Initializing Page Speed engine\n"));
-
-							// Ownership of rules is transferred to the Engine instance.
-							pagespeed::Engine engine(&rules);
-							engine.Init();
-
-							ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Formatting Page Speed results\n"));
-
-							pagespeed::l10n::BasicLocalizer localizer;
-							pagespeed::FormattedResults formatted_results;
-							formatted_results.set_locale(localizer.GetLocale());
-							pagespeed::formatters::ProtoFormatter formatter(&localizer, &formatted_results);
-							if ( pagespeedResults && PageSpeedFormatResults(engine, *pagespeedResults, &formatter) )
-							{
-								DWORD written;
-								std::string pagespeedReport;
-								pagespeed::proto::FormattedResultsToJsonConverter::Convert(formatted_results, &pagespeedReport);
-								WriteFile(hFile, pagespeedReport.c_str(), pagespeedReport.size(), &written, 0);
-							}
-							else
-							{
-								ATLTRACE(_T("[Pagetest] - ***** Failed to write PageSpeed results."));
-							}
-							CloseHandle(hFile);
-						}
-
 						// save out the status updates
             ATLTRACE(_T("[Pagetest] - ***** CPagetestReporting::FlushResults - Saving Status Updates\n"));
             if( !noHeaders )
@@ -988,13 +885,6 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 	CString szDate = startTime.FormatGmt(_T("%m/%d/%Y"));
 	CString szTime = startTime.FormatGmt(_T("%H:%M:%S"));
 
-  // get the Page Speed version
-  CString pageSpeedVersion;
-  pagespeed::Version ver;
-  pagespeed::GetPageSpeedVersion(&ver);
-  if( ver.has_major() && ver.has_minor() )
-    pageSpeedVersion.Format(_T("%d.%d"), ver.major(), ver.minor());
-
   // Get the IE version
   CString browserVersion;
 	CRegKey key;
@@ -1062,7 +952,7 @@ void CPagetestReporting::ReportPageData(CString & buff, bool fIncludeHeader)
 			nRequest_doc, nReq200_doc, nReq302_doc, nReq304_doc, nReq404_doc, nReqOther_doc, compressionScore,
 			host, (LPCTSTR)ip, etagScore, flaggedRequests, totalFlagged, maxSimFlagged,
 			msBasePage, basePageResult, gzipTotal, gzipTotal - gzipTarget, minifyTotal, minifyTotal - minifyTarget,
-			compressTotal, compressTotal - compressTarget, basePageRedirects, checkOpt, 0, domElements, (LPCTSTR)pageSpeedVersion,
+			compressTotal, compressTotal - compressTarget, basePageRedirects, checkOpt, 0, domElements, _T(""),
 			(LPCTSTR)pageTitle, msTitle, load_start, load_end, dcl_start, dcl_end, msVisualComplete,
       _T("Internet Explorer"), browserVersion, basePageAddressCount, basePageRTT, basePageCDN, adultSite, -1, progressiveJpegScore,
       first_paint, 0, 0, GetElapsedMilliseconds(startCPU, docCPU), GetElapsedMilliseconds(startCPU, endCPU), docUtilization, fullUtilization);
@@ -1111,7 +1001,7 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 					_T("Secure\tDNS Time\tConnect Time\tSSL Time\tGzip Total Bytes\tGzip Savings\tMinify Total Bytes\tMinify Savings\tImage Total Bytes\tImage Savings\tCache Time (sec)")
 					_T("\tReal Start Time (ms)\tFull Time to Load (ms)\tOptimization Checked\tCDN Provider")
           _T("\tDNS Start\tDNS End\tConnect Start\tConnect End\tSSL Start\tSSL End\tInitiator\tInitiator Line\tInitiator Column")
-          _T("\tServer Count\tServer RTT\tClient Port")
+          _T("\tServer Count\tServer RTT\tClient Port\tJPEG Scan Count\tRequest Priority\tRequest ID")
 					_T("\r\n");
 		}
 		else
@@ -1186,8 +1076,8 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 									_T("%d\t%s\t%s\t%s")
 									_T("\t%d\t%d\t%d\t%d\t%d\t%d\t%s")
 									_T("\t%d\t%d\t%d\t%s")
-                  _T("\t\t\t\t\t\t\t\t\t")
-                  _T("\t%d\t%s\t%d\t%d")
+									_T("\t\t\t\t\t\t\t\t\t")
+									_T("\t%d\t%s\t%d\t%d\t\t%d")
 									_T("\r\n"),
 							(LPCTSTR)szDate, (LPCTSTR)szTime, (LPCTSTR)somEventName, (LPTSTR)ip, 
 							(LPCTSTR)w->verb, (LPCTSTR)w->host, (LPCTSTR)w->object,
@@ -1202,7 +1092,7 @@ void CPagetestReporting::ReportObjectData(CString & buff, bool fIncludeHeader)
 							w->doctypeScore, w->minifyScore, w->combineScore, w->compressionScore, w->etagScore, w->flagged?1:0,
 							w->secure, (LPCTSTR)tmDns, (LPCTSTR)tmSocket, (LPCTSTR)tmSSL,
 							w->gzipTotal, w->gzipTotal - w->gzipTarget, w->minifyTotal, w->minifyTotal - w->minifyTarget, w->compressTotal, w->compressTotal - w->compressTarget, (LPCTSTR)ttl,
-              msRealOffset, msFullLoad, checkOpt, (LPCTSTR)w->cdnProvider, GetAddressCount(w->host), (LPCTSTR)GetRTT(w->peer.sin_addr.S_un.S_addr), localPort, w->jpegScans );
+              msRealOffset, msFullLoad, checkOpt, (LPCTSTR)w->cdnProvider, GetAddressCount(w->host), (LPCTSTR)GetRTT(w->peer.sin_addr.S_un.S_addr), localPort, w->jpegScans, w->requestId );
 					buff += result;
 				}
 			}
@@ -1396,7 +1286,7 @@ void CPagetestReporting::SaveBodies(CString file)
                (mime.Find(_T("text/")) >= 0 || mime.Find(_T("javascript")) >= 0 || mime.Find(_T("json")) >= 0) )
 			      {
               CStringA name;
-              name.Format("%03d-response.txt", count);
+			  name.Format("%d-response.txt", r->requestId);
 						  // add the file to the archive
 						  if( !zipOpenNewFileInZip( zip, name, 0, 0, 0, 0, 0, 0, Z_DEFLATED, Z_BEST_COMPRESSION ) )
 						  {
@@ -1455,6 +1345,8 @@ void CPagetestReporting::ReportRequest(CString & szReport, CWinInetRequest * r)
 		szBuff.Format(_T("      Response Object Size (in): %d Bytes\n"), r->in - r->inHeaders.GetLength() );
 		szReport += szBuff;
 		szBuff.Format(_T("      Response Object Size (bodylen): %d Bytes\n"), r->bodyLen );
+		szReport += szBuff;
+		szBuff.Format(_T("      Request ID: %d\n"), r->requestId );
 		szReport += szBuff;
 
 		szReport +=   _T("  Request Headers:\n");
@@ -1515,17 +1407,6 @@ void CPagetestReporting::GenerateGUID(void)
 }
 
 /*-----------------------------------------------------------------------------
-	Wrap the pagespeed check in an exception filter just in case something
-	goes horribly wrong
------------------------------------------------------------------------------*/
-void CPagetestReporting::ProtectedCheckPageSpeed()
-{
-	__try{
-		CheckPageSpeed();
-	}__except(1){}
-}
-
-/*-----------------------------------------------------------------------------
 	Check the various optimization rules to see how the page did
 -----------------------------------------------------------------------------*/
 void CPagetestReporting::CheckOptimization(void)
@@ -1541,14 +1422,8 @@ void CPagetestReporting::CheckOptimization(void)
 		CheckMinify();
 		CheckCookie();
 		CheckEtags();
-    CheckCustomRules();
+		CheckCustomRules();
 		CheckCDN();
-
-		// Run all Page Speed checks.
-		// This is the entry point that invokes the Page Speed engine.
-		// only run them if we are running in one-off mode
-		if( saveEverything )
-			ProtectedCheckPageSpeed();
 
 		RepaintWaterfall();
 	}
@@ -1629,209 +1504,6 @@ CString SynthesizeDateHeaderForResource(const CString& url)
 		}
 	}
 	return retVal;
-}
-
-/*-----------------------------------------------------------------------------
-	Copy the necessary data about resources (i.e. headers, response bodies,
-	etc) into the PagespeedInput structure.
------------------------------------------------------------------------------*/
-void CPagetestReporting::PopulatePageSpeedInput(pagespeed::PagespeedInput* input)
-{
-	ATLTRACE(_T("[Pagetest] - PopulatePageSpeedInput\n"));
-
-	POSITION pos = events.GetHeadPosition();
-	while( pos )
-	{
-		CTrackedEvent * e = events.GetNext(pos);
-		// TODO: should we skip e->ignore responses? 
-		if( e && e->type == CTrackedEvent::etWinInetRequest )
-		{
-			CWinInetRequest * w = (CWinInetRequest *)e;
-			pagespeed::Resource* resource = new pagespeed::Resource();
-			const std::string response_body(reinterpret_cast<char*>(w->body), w->bodyLen);
-			resource->SetResponseBody(response_body);
-
-			if ( w->start > 0 )
-			{
-				int startMillis = (int)((w->start - start)/msFreq);
-				resource->SetRequestStartTimeMillis(startMillis);
-			}
-
-			resource->SetRequestMethod(static_cast<LPSTR>(CT2CA(w->verb)));
-			// NOTE: the scheme sometimes includes a colon, which we trim.
-			CString obUrl = w->scheme;
-			obUrl.TrimRight(':');
-			obUrl += _T("://") + w->host + w->object;
-			resource->SetRequestUrl(static_cast<LPSTR>(CT2CA(obUrl)));
-			resource->SetResponseStatusCode(w->result);
-
-			// Populate HTTP request headers.
-			int headerPos = 0;
-			CString key, value;
-			// Skip the first header line (e.g. GET /foo HTTP/1.1).
-			w->outHeaders.Tokenize(_T("\r\n"), headerPos);
-			if (headerPos >= 0) 
-			{
-				while (GetNextHttpHeader(w->outHeaders, &headerPos, &key, &value)) 
-				{
-					resource->AddRequestHeader(
-						static_cast<LPSTR>(CT2CA(key)),
-						static_cast<LPSTR>(CT2CA(value)));
-				}
-			}
-
-			// Populate HTTP response headers.
-			headerPos = 0;
-			// Skip the first header line (e.g. HTTP/1.1 200 OK).
-			w->inHeaders.Tokenize(_T("\r\n"), headerPos);
-			if (headerPos >= 0) 
-			{
-				while (GetNextHttpHeader(w->inHeaders, &headerPos, &key, &value)) 
-				{
-					resource->AddResponseHeader(
-						static_cast<LPSTR>(CT2CA(key)),
-						static_cast<LPSTR>(CT2CA(value)));
-				}
-			}
-
-			// Next, merge the cached response headers from wininet.
-			//
-			// Note that by default wininet removes certain headers. See 
-            // http://code.google.com/p/page-speed/issues/detail?id=321 for
-			// information on how this impacts Page Speed.
-
-			headerPos = 0;
-			// Skip the first header line (e.g. HTTP/1.1 200 OK).
-			w->cachedInHeaders.Tokenize(_T("\r\n"), headerPos);
-			if (headerPos >= 0) 
-			{
-				while (GetNextHttpHeader(w->cachedInHeaders, &headerPos, &key, &value)) 
-				{
-					// Only add a cached header if it wasn't already present in the network
-					// headers.
-					// See http://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.5.3 
-					// for additional information about merging response headers.
-					if (resource->GetResponseHeader(static_cast<LPSTR>(CT2CA(key))).empty()) {
-						resource->AddResponseHeader(
-							static_cast<LPSTR>(CT2CA(key)),
-							static_cast<LPSTR>(CT2CA(value)));
-					}
-				}
-			}
-
-			// Check to see if the response includes a Date header. Responses 
-			// served from the wininet cache have their Date header removed. Since
-			// Page Speed wants to compute freshness lifetimes of resources, it needs
-			// a Date header.
-			if (resource->GetResponseHeader("Date").empty())
-			{
-				CString dateStr = SynthesizeDateHeaderForResource(obUrl);
-				if (!dateStr.IsEmpty())
-				{
-					resource->AddResponseHeader("Date", static_cast<LPSTR>(CT2CA(dateStr)));
-				}
-			}
-			if (input->AddResource(resource)) {
-				if (w->basePage)
-					input->SetPrimaryResourceUrl(resource->GetRequestUrl());
-			}
-		}
-	}
-
-	if (endDoc > 0) {
-		if (endDoc > start) {
-			input->SetOnloadTimeMillis((int)((endDoc - start)/msFreq));
-		}
-	} else {
-		// Onload didn't fire yet.
-		input->SetOnloadState(pagespeed::PagespeedInput::ONLOAD_NOT_YET_FIRED);
-	}
-
-	pos = browsers.GetHeadPosition();
-	while( pos )
-	{
-		CBrowserTracker tracker = browsers.GetNext(pos);
-		if( tracker.threadId == GetCurrentThreadId() && tracker.browser )
-		{
-			CComPtr<IDispatch> spDoc;
-			if( SUCCEEDED(tracker.browser->get_Document(&spDoc)) && spDoc )
-			{
-				CComQIPtr<IHTMLDocument3> doc = spDoc;
-				if ( doc )
-				{
-					pagespeed::DomDocument* psDoc = pagespeed::ie::CreateDocument(doc);
-					if ( psDoc ) 
-					{
-						input->AcquireDomDocument(psDoc);
-						break;
-					}
-				}
-			}
-		}
-	}
-
-	ATLTRACE(_T("[Pagetest] - CPagetestReporting::PopulatePageSpeedInput - complete\n"));
-}
-
-/*-----------------------------------------------------------------------------
-	Run Page Speed checks
------------------------------------------------------------------------------*/
-void CPagetestReporting::CheckPageSpeed()
-{
-	ATLTRACE(_T("[Pagetest] - CheckPageSpeed\n"));
-
-	// Instantiate an AtExitManager, which is required by some of the
-	// internals of the Page Speed ruleset.
-	if ( pagespeedResults != NULL ) 
-	{
-		delete pagespeedResults;
-	}
-	pagespeedResults = new pagespeed::Results();
-
-	// TODO(bmcquade): we should only do this once, and should ShutDown on exit.
-	// Ask Pat if there is a hook that gets invoked just once at startup.
-	static bool didInit = false;
-	if (!didInit) {
-		didInit = true;
-    #ifndef DEBUG
-    logging::SetMinLogLevel(logging::LOG_NUM_SEVERITIES);
-    #endif
-		pagespeed::Init();
-	}
-
-	std::vector<pagespeed::Rule*> rules;
-	PopulatePageSpeedRules(&rules);
-
-	// Ownership of rules is transferred to the Engine instance.
-	pagespeed::Engine engine(&rules);
-	engine.Init();
-
-	pagespeed::PagespeedInput input;
-	PopulatePageSpeedInput(&input);
-	input.AcquireImageAttributesFactory(
-		new pagespeed::image_compression::ImageAttributesFactory());
-	input.Freeze();
-
-	// NOTE: ComputeResults may return false in cases where it successfully
-	// computed results (e.g. the engine attempted to optimize an invalid
-	// image response). Thus we need to ignore the return value. Future
-	// versions of Page Speed will return false on actual failures, at
-	// which point we should start looking at the return value.
-	engine.ComputeResults(input, pagespeedResults);
-
-	// Generate a plaintext version of the results to include with the text
-	// optimization report (appended to buff).
-	pagespeed::l10n::BasicLocalizer localizer;
-	pagespeed::FormattedResults formatted_results;
-	formatted_results.set_locale(localizer.GetLocale());
-	pagespeed::formatters::ProtoFormatter formatter(&localizer, &formatted_results);
-	if ( engine.FormatResults(*pagespeedResults, &formatter) )
-	{
-		std::string pagespeedReport;
-		pagespeed::proto::FormattedResultsToTextConverter::Convert(formatted_results, &pagespeedReport);
-	}
-
-	ATLTRACE(_T("[Pagetest] - CheckPageSpeed complete\n"));
 }
 
 /*-----------------------------------------------------------------------------
