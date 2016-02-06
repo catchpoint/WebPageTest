@@ -1,0 +1,13 @@
+define SERPENT 20131128
+
+<header:public>
+serpent.h
+</header:public>
+
+<header:internal>
+serpent_sbox.h
+</header:internal>
+
+<source>
+serpent.cpp
+</source>

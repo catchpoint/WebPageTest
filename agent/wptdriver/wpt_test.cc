@@ -39,16 +39,15 @@ static const DWORD BROWSER_WIDTH = 1024;
 static const DWORD BROWSER_HEIGHT = 768;
 
 // Mobile emulation defaults (taken from a Nexus 5).
-// The height has 36 added pixels to allow for the debugging header.
 static const TCHAR * DEFAULT_MOBILE_SCALE_FACTOR = _T("3");
 static const DWORD DEFAULT_MOBILE_WIDTH = 360;
-static const DWORD DEFAULT_MOBILE_HEIGHT = 640;
+static const DWORD DEFAULT_MOBILE_HEIGHT = 511;
 static const DWORD CHROME_PADDING_HEIGHT = 108;
 static const DWORD CHROME_PADDING_WIDTH = 6;
 static const char * DEFAULT_MOBILE_USER_AGENT =
-    "Mozilla/5.0 (Linux; Android 4.4.4; Nexus 5 Build/KTU84P) "
-    "AppleWebKit/537.36 (KHTML like Gecko) "
-    "Chrome/37.0.2062.55 Mobile Safari/537.36";
+    "Mozilla/5.0 (Linux; Android 5.0; Nexus 5 Build/LRX21O) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/46.0.2490.76 Mobile Safari/537.36";
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -160,6 +159,7 @@ void WptTest::Reset(void) {
   _custom_metrics.Empty();
   _has_test_timed_out = false;
   _user_agent_modifier = "PTST";
+  _append_user_agent.Empty();
 }
 
 /*-----------------------------------------------------------------------------
@@ -304,6 +304,8 @@ bool WptTest::Load(CString& test) {
           _user_agent_modifier = value;
         } else if (!key.CompareNoCase(_T("UAString"))) {
           _user_agent = value.Trim();
+        } else if (!key.CompareNoCase(_T("AppendUA"))) {
+          _append_user_agent = value.Trim();
         } else if (!key.CompareNoCase(_T("dpr")) && _ttoi(value.Trim())) {
           _device_scale_factor = value.Trim();
         } else if (!key.CompareNoCase(_T("width")) && _ttoi(value.Trim())) {
@@ -516,10 +518,11 @@ void WptTest::BuildScript() {
     _script_commands.AddHead(command);
   }
 
-  if(!_preserve_user_agent) {
+  CStringA append = GetAppendUA();
+  if(!append.IsEmpty()) {
     ScriptCommand command;
     command.command = _T("appendUserAgent");
-    command.target.Format(_T("%S/%d"), (LPCSTR)_user_agent_modifier, _version);
+    command.target = append;
     command.record = false;
     _script_commands.AddHead(command);
   }
@@ -863,6 +866,32 @@ void WptTest::OverridePort(const struct sockaddr FAR * name, int namelen) {
 }
 
 /*-----------------------------------------------------------------------------
+  Get the run-specific UA string that needs to be added the UA string
+-----------------------------------------------------------------------------*/
+CStringA WptTest::GetAppendUA() const {
+  CStringA user_agent;
+
+  // Add the default PTST/version part
+  if (!_preserve_user_agent)
+    user_agent.Format("%s/%d", _user_agent_modifier, _version);
+
+  // See if they requested anything additional
+  if (!_append_user_agent.IsEmpty()) {
+    CStringA buff;
+    CStringA append = _append_user_agent;
+    append.Replace("%TESTID%", CT2A(_id));
+    buff.Format("%d", _run);
+    append.Replace("%RUN%", buff);
+    append.Replace("%CACHED%", _clear_cache ? "0" : "1");
+    buff.Format("%d", _version);
+    append.Replace("%VERSION%", buff);
+    user_agent += " " + append;
+  }
+
+  return user_agent;
+}
+
+/*-----------------------------------------------------------------------------
   Modify an outbound request header.  The modifications can include:
   - Including PTST in the user agent string
   - Adding new headers
@@ -879,9 +908,7 @@ bool WptTest::ModifyRequestHeader(CStringA& header) const {
     if (_user_agent.GetLength()) {
       header = CStringA("User-Agent: ") + _user_agent;
     } else if(!_preserve_user_agent && value.Find(" " + _user_agent_modifier + "/") == -1) {
-      CStringA user_agent;
-      user_agent.Format(" %s/%d", _user_agent_modifier, _version);
-      header += user_agent;
+      header += " " + GetAppendUA();
     }
   } else if (!tag.CompareNoCase("Host")) {
     CStringA new_headers;

@@ -553,7 +553,32 @@ bool OptimizationChecks::IsCDN(Request * request, CStringA &provider) {
           provider = cdn_header->name;
       }
     }
-
+    // Check HTTP headers for CDN's that require multiple headers in combination
+    int multi_cdn_header_count = _countof(cdnMultiHeaderList);
+    for (int i = 0; i < multi_cdn_header_count && !ret; i++) {
+      CDN_PROVIDER_MULTI_HEADER * cdn_multi_header = &cdnMultiHeaderList[i];
+      bool all_match = true;
+      int header_count = _countof(cdn_multi_header->headers);
+      for (int j = 0; j < header_count && all_match; j++) {
+        CDN_PROVIDER_HEADER_PAIR * cdn_header = &(cdn_multi_header->headers[j]);
+        if (cdn_header->response_field.GetLength()) {
+          CStringA header = request->GetResponseHeader(cdn_header->response_field);
+          if (header.GetLength()) {
+            if (cdn_header->pattern.GetLength()) {
+              CStringA pattern = cdn_header->pattern;
+              if (header.Find(pattern) < 0)
+                all_match = false;
+            }
+          } else {
+            all_match = false;
+          }
+        }
+      }
+      if (all_match) {
+        ret = true;
+        provider = cdn_multi_header->name;
+      }
+    }
   }
 
   return ret;

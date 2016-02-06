@@ -1,0 +1,33 @@
+define UTIL_FUNCTIONS 20150919
+
+load_on always
+
+<header:public>
+assert.h
+bswap.h
+calendar.h
+charset.h
+cpuid.h
+data_src.h
+database.h
+exceptn.h
+loadstor.h
+mem_ops.h
+mul128.h
+parsing.h
+rotate.h
+types.h
+version.h
+</header:public>
+
+<header:internal>
+bit_ops.h
+ct_utils.h
+donna128.h
+filesystem.h
+os_utils.h
+prefetch.h
+rounding.h
+semaphore.h
+stl_util.h
+</header:internal>

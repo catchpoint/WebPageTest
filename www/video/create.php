@@ -98,6 +98,11 @@ else
                 $test['bg'] = $bgColor;
                 $test['text'] = $textColor;
                 
+                if (isset($_REQUEST['labelHeight']) && is_numeric($_REQUEST['labelHeight']))
+                  $test['labelHeight'] = intval($_REQUEST['labelHeight']);
+                if (isset($_REQUEST['timeHeight']) && is_numeric($_REQUEST['timeHeight']))
+                  $test['timeHeight'] = intval($_REQUEST['timeHeight']);
+                
                 if (isset($_REQUEST['slow']) && $_REQUEST['slow'])
                   $test['speed'] = 0.2;
 
@@ -114,6 +119,8 @@ else
                             $test['cached'] = (int)$p[1];
                         if( $p[0] == 'e' )
                             $test['end'] = trim($p[1]);
+                        if( $p[0] == 'i' )
+                            $test['initial'] = intval(trim($p[1]) * 1000.0);
                         // Optional Extra info to sync the video with
                         if( $p[0] == 's' )
                             $test['syncStartRender'] = (int)$p[1];

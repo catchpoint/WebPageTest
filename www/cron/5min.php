@@ -10,6 +10,22 @@ $lock = Lock("cron-5", false, 1200);
 if (!isset($lock))
   exit(0);
 
+  // Clear the user cache if we drop below 10% or 5MB available
+if (function_exists("apc_sma_info") && function_exists("apc_clear_cache")) {
+  $info = apc_sma_info(true);
+  if (isset($info['num_seg']) && isset($info['seg_size']) && isset($info['avail_mem'])) {
+    $total = $info['seg_size'] * $info['num_seg'];
+    $avail = $info['avail_mem'];
+    if ($total > 0) {
+      $pct = $avail / $total;
+      if ($avail < 5000000 || $pct < 0.20) {
+        apc_clear_cache("user");
+        apc_clear_cache();
+      }
+    }
+  }
+}
+
 if (GetSetting('ec2'))
   CleanGetWork();
 
@@ -17,12 +33,8 @@ require_once('./ec2/ec2.inc.php');
 if (GetSetting('ec2_key')) {
   EC2_TerminateIdleInstances();
   EC2_StartNeededInstances();
-  EC2_DeleteOrphanedVolumes();
 }
 
-if (GetSetting('sbl_api_key'))
-  SBL_Update();
-  
 /**
 * Clean up extraneous getwork.php.xxx files that may be left behind
 * from using wget in a cron job.  The server AMI was supposed to run wget

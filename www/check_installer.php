@@ -47,9 +47,16 @@ function ApcCheckIp($installer) {
     $now = time();
     $key = "inst-ip-$ip-$installer";
     $history = apc_fetch($key);
-    if (!$history)
+    if (!$history) {
       $history = array();
+    } elseif (!is_array($history)) {
+      $history = json_decode($history, true);
+      if (!$history) {
+        $history = array();
+      }
+    }
     $history[] = $now;
+    // Use 1KB blocks to prevent fragmentation
     apc_store($key, $history, 604800);
     if (count($history) > 10)
       array_shift($history);

@@ -219,6 +219,9 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
                       if (isset($rawRequest['initiator']['lineNumber']))
                         $request['initiator_line'] = $rawRequest['initiator']['lineNumber'];
                     }
+                    if (isset($rawRequest['initialPriority'])) {
+                      $request['priority'] = $rawRequest['initialPriority'];
+                    }
                     $request['server_rtt'] = null;
                     $request['headers'] = array('request' => array(), 'response' => array());
                     if (isset($rawRequest['response']['requestHeadersText'])) {
@@ -1007,7 +1010,11 @@ function GetTraceTimeline($testPath, $run, $cached, &$timeline) {
       $main_thread = null;
       $threads = array();
       $ignore_threads = array();
+      $user_timing = array();
       foreach ($events['traceEvents'] as $event) {
+        if (isset($event['cat']) && isset($event['name']) && isset($event['ts']) && $event['cat'] == 'blink.user_timing') {
+          $user_timing[] = $event;
+        }
         if (isset($event['cat']) && isset($event['name']) && isset($event['pid']) && isset($event['tid']) && isset($event['ph']) && isset($event['ts']) &&
             ($event['cat'] == 'disabled-by-default-devtools.timeline' || $event['cat'] == 'devtools.timeline')) {
           $thread = "{$event['pid']}:{$event['tid']}";
@@ -1078,6 +1085,10 @@ function GetTraceTimeline($testPath, $run, $cached, &$timeline) {
       }
       if (count($timeline))
         $ok = true;
+        
+      if (count($user_timing) && !gz_is_file("$testPath/$run{$cachedText}_user_timing.json")) {
+        gz_file_put_contents("$testPath/$run{$cachedText}_user_timing.json", json_encode($user_timing));
+      }
     }
   }
   return $ok;
@@ -1097,8 +1108,8 @@ function DevToolsGetCPUSlices($testPath, $run, $cached) {
   $timeline = array();
   $ver = 2;
   $cacheFile = "$testPath/$run.$cached.devToolsCPUSlices.$ver";
-//  if (gz_is_file($cacheFile))
-//    $slices = json_decode(gz_file_get_contents($cacheFile), true);
+  if (gz_is_file($cacheFile))
+    $slices = json_decode(gz_file_get_contents($cacheFile), true);
   if (!isset($slices)) {
     GetTraceTimeline($testPath, $run, $cached, $timeline);
     if (isset($timeline) && is_array($timeline) && count($timeline)) {

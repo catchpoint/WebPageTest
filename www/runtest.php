@@ -18,9 +18,11 @@
     set_time_limit(300);
 
     if(extension_loaded('newrelic')) {
-        newrelic_add_custom_tracer('WriteJob');
-        newrelic_add_custom_tracer('AddJobFile');
-        newrelic_add_custom_tracer('LogTest');
+        newrelic_add_custom_tracer('ValidateKey');
+        newrelic_add_custom_tracer('ValidateURL');
+        newrelic_add_custom_tracer('SubmitUrl');
+        newrelic_add_custom_tracer('GetRedirect');
+        newrelic_add_custom_tracer('CheckIp');
     }
 
     $redirect_cache = array();
@@ -168,6 +170,8 @@
             if (array_key_exists('shard', $_REQUEST))
               $test['shard_test'] = $_REQUEST['shard'];
             $test['mobile'] = array_key_exists('mobile', $_REQUEST) && $_REQUEST['mobile'] ? 1 : 0;
+            if (isset($_REQUEST['mobileDevice']))
+              $test['mobileDevice'] = $_REQUEST['mobileDevice'];
             $test['dpr'] = isset($_REQUEST['dpr']) && $_REQUEST['dpr'] > 0 ? $_REQUEST['dpr'] : 0;
             $test['width'] = isset($_REQUEST['width']) && $_REQUEST['width'] > 0 ? $_REQUEST['width'] : 0;
             $test['height'] = isset($_REQUEST['height']) && $_REQUEST['height'] > 0 ? $_REQUEST['height'] : 0;
@@ -210,13 +214,20 @@
             if (isset($req_dataReduction) && $req_dataReduction) {
               if (strlen($test['addCmdLine']))
                 $test['addCmdLine'] .= ' ';
-              $test['addCmdLine'] .= '--enable-spdy-proxy-auth --force-fieldtrials=DataCompressionProxyRollout/Enabled/';
+              $test['addCmdLine'] .= '--enable-spdy-proxy-auth';
             }
             if (isset($req_uastring) && strlen($req_uastring)) {
               if (strpos($req_uastring, '"') !== false) {
                 $error = 'Invalid User Agent String: "' . htmlspecialchars($req_uastring) . '"';
               } else {
                 $test['uastring'] = $req_uastring;
+              }
+            }
+            if (isset($req_appendua) && strlen($req_appendua)) {
+              if (strpos($req_appendua, '"') !== false) {
+                $error = 'Invalid User Agent String: "' . htmlspecialchars($req_appendua) . '"';
+              } else {
+                $test['appendua'] = $req_appendua;
               }
             }
             if (isset($req_wprDesktop) && $req_wprDesktop) {
@@ -235,6 +246,11 @@
                 $test['addCmdLine'] .= "--host-resolver-rules=\"MAP * $wprMobile,EXCLUDE localhost,EXCLUDE 127.0.0.1\"";
                 $test['ignoreSSL'] = 1;
               }
+            }
+            if (isset($req_hostResolverRules) && preg_match('/^[a-zA-Z0-9 \.\:\*,]+$/i', $req_hostResolverRules)) {
+              if (strlen($test['addCmdLine']))
+                $test['addCmdLine'] .= ' ';
+              $test['addCmdLine'] .= "--host-resolver-rules=\"$req_hostResolverRules,EXCLUDE localhost,EXCLUDE 127.0.0.1\"";
             }
 
             // see if we need to process a template for these requests
@@ -349,10 +365,12 @@
             // default batch and API requests to a lower priority
             if( !isset($req_priority) )
             {
-                if( $test['batch'] || $test['batch_locations'] )
-                    $test['priority'] =  7;
-                elseif( $_SERVER['REQUEST_METHOD'] == 'GET' || $xml || $json )
+                if( $test['batch'] || $test['batch_locations'] ) {
+                    $bulkPriority = GetSetting('bulk_priority');
+                    $test['priority'] =  $bulkPriority ? $bulkPriority : 7;
+                } elseif( $_SERVER['REQUEST_METHOD'] == 'GET' || $xml || $json ) {
                     $test['priority'] =  5;
+                }
             }
 
             // do we need to force the priority to be ignored (needed for the AOL system currently?)
@@ -441,6 +459,22 @@
             if (array_key_exists('spam', $test))
                 unset($test['spam']);
             $test['priority'] =  0;
+        }
+        
+        if ($test['mobile'] && isset($test['mobileDevice']) && is_file('./settings/mobile_devices.ini')) {
+          setcookie('mdev', $test['mobileDevice'], time()+60*60*24*365, '/');
+          $devices = parse_ini_file('./settings/mobile_devices.ini', true);
+          if ($devices && isset($devices[$test['mobileDevice']])) {
+            $test['mobileDeviceLabel'] = isset($devices[$test['mobileDevice']]['label']) ? $devices[$test['mobileDevice']]['label'] : $test['mobileDevice'];
+            if (!$test['width'] && isset($devices[$test['mobileDevice']]['width']))
+              $test['width'] = $devices[$test['mobileDevice']]['width'];
+            if (!$test['height'] && isset($devices[$test['mobileDevice']]['height']))
+              $test['height'] = $devices[$test['mobileDevice']]['height'];
+            if (!$test['dpr'] && isset($devices[$test['mobileDevice']]['dpr']))
+              $test['dpr'] = $devices[$test['mobileDevice']]['dpr'];
+            if (!isset($test['uastring']) && isset($devices[$test['mobileDevice']]['ua']))
+              $test['uastring'] = $devices[$test['mobileDevice']]['ua'];
+          }
         }
         
         $test['created'] = time();
@@ -879,6 +913,8 @@ function UpdateLocation(&$test, &$locations, $new_location)
 
   if( isset($test['browser']) && strlen($test['browser']) )
       $test['locationText'] .= " - <b>{$test['browser']}</b>";
+  if (isset($test['mobileDeviceLabel']) && $test['mobile'])
+      $test['locationText'] .= " - <b>Emulated {$test['mobileDeviceLabel']}</b>";
   if( isset($test['connectivity']) )
   {
       $test['locationText'] .= " - <b>{$test['connectivity']}</b>";
@@ -943,6 +979,7 @@ function ValidateKey(&$test, &$error, $key = null)
     }elseif( isset($key) || (isset($test['key']) && strlen($test['key'])) ){
       if( isset($test['key']) && strlen($test['key']) && !isset($key) )
         $key = $test['key'];
+      
       // see if it was an auto-provisioned key
       if (preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $key, $matches)) {
         $prefix = $matches['prefix'];
@@ -1013,6 +1050,12 @@ function ValidateKey(&$test, &$error, $key = null)
       if (!strlen($error) && $key != $keys['server']['key']) {
           global $usingAPI;
           $usingAPI = true;
+      }
+
+      // Make sure API keys don't exceed the max configured priority
+      $maxApiPriority = GetSetting('maxApiPriority');
+      if ($maxApiPriority) {
+        $test['priority'] = max($test['priority'], $maxApiPriority);
       }
     }elseif (!isset($admin) || !$admin) {
       $error = 'An error occurred processing your request (missing API key).';
@@ -1172,6 +1215,8 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 
                 if( isset($test['browser']) && strlen($test['browser']) )
                     $test['locationText'] .= " - <b>{$test['browser']}</b>";
+                if (isset($test['mobileDeviceLabel']) && $test['mobile'])
+                    $test['locationText'] .= " - <b>Emulated {$test['mobileDeviceLabel']}</b>";
                 if( isset($test['connectivity']) )
                 {
                     $test['locationText'] .= " - <b>{$test['connectivity']}</b>";
@@ -1775,7 +1820,7 @@ function CheckUrl($url)
         }
     }
     
-    if ($ok && !$admin) {
+    if ($ok && !$admin && !$usingAPI) {
       $ok = SBL_Check($url, $message);
       if (!$ok) {
         $error = "<br>Sorry, your test was blocked because $url is suspected of being used for <a href=\"http://www.antiphishing.org/\">phishing</a> or <a href=\"http://www.stopbadware.org/\">hosting malware</a>.<br><br>Advisory provided by <a href=\"http://code.google.com/apis/safebrowsing/safebrowsing_faq.html#whyAdvisory\">Google</a>.";
@@ -1993,6 +2038,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             $UAModifier = GetSetting('UAModifier');
             if ($UAModifier && strlen($UAModifier))
                 $testFile .= "UAModifier=$UAModifier\r\n";
+            if (isset($test['appendua']))
+              $testFile .= "AppendUA={$test['appendua']}\r\n";
 
             // see if we need to add custom scan rules
             if (array_key_exists('custom_rules', $test)) {
@@ -2377,7 +2424,7 @@ function ValidateCommandLine($cmd, &$error) {
     $flags = explode(' ', $cmd);
     if ($flags && is_array($flags) && count($flags)) {                
       foreach($flags as $flag) {
-        if (!preg_match('/^--(([a-zA-Z0-9\-\.\+=,_ "]+)|((proxy-server|proxy-pac-url|force-fieldtrials)=[a-zA-Z0-9\-\.\+=,_:\/]+))$/', $flag)) {
+        if (!preg_match('/^--(([a-zA-Z0-9\-\.\+=,_ "]+)|((data-reduction-proxy-http-proxies|proxy-server|proxy-pac-url|force-fieldtrials|trusted-spdy-proxy)=[a-zA-Z0-9\-\.\+=,_:\/]+))$/', $flag)) {
           $error = 'Invalid command-line option: "' . htmlspecialchars($flag) . '"';
         }
       }

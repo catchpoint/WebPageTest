@@ -75,6 +75,9 @@ xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\ex
     <PostBuildEvent>
       <Message>Copying support files</Message>
     </PostBuildEvent>
+    <Manifest>
+      <AdditionalManifestFiles>Compatibility.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -108,6 +111,9 @@ xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\ex
     <PostBuildEvent>
       <Message>Copying support files</Message>
     </PostBuildEvent>
+    <Manifest>
+      <AdditionalManifestFiles>Compatibility.manifest</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="small.ico" />
@@ -253,6 +259,9 @@ xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\ex
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="wptdriver.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="Compatibility.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -15,8 +15,15 @@ header("Cache-Control: no-cache, must-revalidate");
 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
   
 echo "Running hourly cron...\n";
+
+require_once('./ec2/ec2.inc.php');
+if (GetSetting('ec2_key')) {
+  EC2_DeleteOrphanedVolumes();
+}
+
 GitUpdate();
 AgentUpdate();
+
 echo "Done\n";
 
 /**

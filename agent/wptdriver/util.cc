@@ -764,3 +764,165 @@ void Reboot() {
   
   InitiateSystemShutdown(NULL, NULL, 0, TRUE, TRUE);
 }
+
+/*-----------------------------------------------------------------------------
+  Helper function to crack an url into it's component parts
+-----------------------------------------------------------------------------*/
+bool ParseUrl(CString url, CString &scheme, CString &host,
+              unsigned short &port, CString& object){
+  bool ret = false;
+
+  URL_COMPONENTS parts;
+  memset(&parts, 0, sizeof(parts));
+  TCHAR szHost[10000];
+  TCHAR path[10000];
+  TCHAR extra[10000];
+  TCHAR szScheme[100];
+    
+  memset(szHost, 0, sizeof(szHost));
+  memset(path, 0, sizeof(path));
+  memset(extra, 0, sizeof(extra));
+  memset(szScheme, 0, sizeof(szScheme));
+
+  parts.lpszHostName = szHost;
+  parts.dwHostNameLength = _countof(szHost);
+  parts.lpszUrlPath = path;
+  parts.dwUrlPathLength = _countof(path);
+  parts.lpszExtraInfo = extra;
+  parts.dwExtraInfoLength = _countof(extra);
+  parts.lpszScheme = szScheme;
+  parts.dwSchemeLength = _countof(szScheme);
+  parts.dwStructSize = sizeof(parts);
+
+  if( InternetCrackUrl((LPCTSTR)url, url.GetLength(), 0, &parts) ){
+    ret = true;
+    scheme = szScheme;
+    host = szHost;
+    port = parts.nPort;
+    object = path;
+    object += extra;
+    if (!port) {
+      port = !lstrcmpi(scheme, _T("https")) ?
+          INTERNET_DEFAULT_HTTPS_PORT : INTERNET_DEFAULT_HTTP_PORT;
+    }
+  }
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  See if we can sniff the real content type by looking for a file signature
+  https://mimesniff.spec.whatwg.org/#matching-an-image-type-pattern
+-----------------------------------------------------------------------------*/
+CString SniffMimeType(LPBYTE content, DWORD len) {
+  CString mime_type;
+  if (len && content) {
+    LPBYTE b = content;
+
+    // Image Types
+    if (len > 4 &&
+        b[0] == 0x00 && b[1] == 0x00 && b[2] == 0x01 && b[3] == 0x00) {
+      mime_type = _T("image/x-icon"); // Windows Icon
+    } else if (len > 4 &&
+        b[0] == 0x00 && b[1] == 0x00 && b[2] == 0x02 && b[3] == 0x00) {
+      mime_type = _T("image/x-icon"); // Windows Cursor
+    } else if (len > 6 && !memcmp(b, "GIF87a", 6)) {
+      mime_type = _T("image/gif");
+    } else if (len > 14 &&
+        !memcmp(b, "RIFF", 4) && !memcmp(&b[8], "WEBPVP", 6)) {
+      mime_type = _T("image/webp");
+    } else if (len > 8 &&
+        b[0] == 0x89 && b[1] == 0x50 && b[2] == 0x4E && b[3] == 0x47 &&
+        b[4] == 0x0D && b[5] == 0x0A && b[6] == 0x1A && b[7] == 0x0A) {
+      mime_type = _T("image/png");
+    } else if (len > 3 &&
+        b[0] == 0xFF && b[1] == 0xD8 && b[2] == 0xFF) {
+      mime_type = _T("image/jpeg");
+    // Video/Audio types
+    } else if (len > 4 &&
+        b[0] == 0x1A && b[1] == 0x45 && b[2] == 0xDF && b[3] == 0xA3) {
+      mime_type = _T("video/webm");
+    } else if (len > 4 && !memcmp(b, ".snd", 4)) {
+      mime_type = _T("audio/basic");
+    } else if (len > 12 &&
+        !memcmp(b, "FORM", 4) && !memcmp(&b[8], "AIFF", 4)) {
+      mime_type = _T("audio/aiff");
+    } else if (len > 3 && !memcmp(b, "ID3", 4)) {
+      mime_type = _T("audio/mpeg");
+    } else if (len > 5 && !memcmp(b, "OggS", 5)) {
+      mime_type = _T("application/ogg");
+    } else if (len > 8 &&
+        b[0] == 0x4D && b[1] == 0x54 && b[2] == 0x68 && b[3] == 0x64 &&
+        b[4] == 0x00 && b[5] == 0x00 && b[6] == 0x00 && b[7] == 0x06) {
+      mime_type = _T("audio/midi");
+    } else if (len > 12 &&
+        !memcmp(b, "RIFF", 4) && !memcmp(&b[8], "AVI ", 4)) {
+      mime_type = _T("video/avi");
+    } else if (len > 12 &&
+        !memcmp(b, "RIFF", 4) && !memcmp(&b[8], "WAVE", 4)) {
+      mime_type = _T("audio/wave");
+    // Fonts
+    } else if (len > 4 &&
+        b[0] == 0x00 && b[1] == 0x01 && b[2] == 0x00 && b[3] == 0x00) {
+      mime_type = _T("application/x-font-truetype");
+    } else if (len > 4 && !memcmp(b, "OTTO", 4)) {
+      mime_type = _T("application/x-font-opentype");
+    } else if (len > 4 && !memcmp(b, "ttcf", 4)) {
+      mime_type = _T("application/x-font-truetype");
+    } else if (len > 4 && !memcmp(b, "wOFF", 4)) {
+      mime_type = _T("application/font-woff");
+    // Compressed file formats
+    } else if (len > 3 &&
+        b[0] == 0x1F && b[1] == 0x8B && b[2] == 0x08) {
+      mime_type = _T("application/x-gzip");
+    } else if (len > 4 &&
+        b[0] == 0x50 && b[1] == 0x4B && b[2] == 0x03 && b[3] == 0x04) {
+      mime_type = _T("application/zip");
+    } else if (len > 7 &&
+        b[0] == 0x52 && b[1] == 0x61 && b[2] == 0x72 && b[3] == 0x20 &&
+        b[4] == 0x1A && b[5] == 0x07 && b[6] == 0x00) {
+      mime_type = _T("application/x-rar-compressed");
+    // Misc
+    } else if (len > 5 && !memcmp(b, "%PDF-", 5)) {
+      mime_type = _T("application/pdf");
+    } else if (len > 11 && !memcmp(b, "%!PS-Adobe-", 11)) {
+      mime_type = _T("application/postscript");
+    }
+  }
+
+  return mime_type;
+}
+
+/*-----------------------------------------------------------------------------
+  Scan the content to see if it is a binary content type
+  https://mimesniff.spec.whatwg.org/#sniffing-a-mislabeled-binary-resource
+-----------------------------------------------------------------------------*/
+bool IsBinaryContent(LPBYTE content, DWORD len) {
+  bool is_binary = false;
+
+  if (content) {
+    if (len >= 2 &&
+        (content[0] == 0xFE && content[1] == 0xFF) ||
+        (content[0] == 0xFF && content[1] == 0xFE)) {
+      // UTF 16 BOM
+      is_binary = false;
+    } else if (len >= 3 && content[0] == 0xEF &&
+               content[1] == 0xBB && content[2] == 0xBF) {
+      // UTF 8 BOM
+      is_binary = false;
+    } else if (len > 0) {
+      DWORD index = 0;
+      while (index < len && !is_binary) {
+        BYTE val = content[index];
+        if (val <= 0x08 || 
+            val == 0x0B ||
+            (val >= 0x0E && val <= 0x1A) ||
+            (val >= 0x1C && val <= 0x1F)) {
+          is_binary = true;
+        }
+        index++;
+      }
+    }
+  }
+
+  return is_binary;
+}

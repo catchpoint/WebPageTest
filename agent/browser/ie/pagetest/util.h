@@ -31,3 +31,4 @@ CStringA JSONEscape(CString src);
 CStringA JSONEscapeA(CStringA src);
 void QueryPerfCounter(__int64 &counter);
 void QueryPerfFrequency(__int64 &freq);
+bool IsBinaryContent(LPBYTE content, DWORD len);

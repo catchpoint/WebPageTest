@@ -44,11 +44,12 @@ Requests::Requests(TestState& test_state, TrackSockets& sockets,
   _test_state(test_state)
   , _sockets(sockets)
   , _dns(dns)
-  , _test(test) {
+  , _test(test)
+  , _nextRequestId(1) {
   _active_requests.InitHashTable(257);
   connections_.InitHashTable(257);
   InitializeCriticalSection(&cs);
-  _start_browser_clock = 0;
+  _browser_launch_time = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -70,7 +71,6 @@ void Requests::Reset() {
   LeaveCriticalSection(&cs);
   _dns.ClaimAll();
   _sockets.ClaimAll();
-  _start_browser_clock = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -229,9 +229,11 @@ Request * Requests::GetOrCreateRequest(DWORD socket_id, DWORD stream_id,
 -----------------------------------------------------------------------------*/
 Request * Requests::NewRequest(DWORD socket_id, DWORD stream_id,
                                bool is_spdy) {
-  Request * request = new Request(_test_state, socket_id, stream_id,
-                                  _sockets, _dns, _test, is_spdy, *this);
   EnterCriticalSection(&cs);
+  Request * request = new Request(_test_state, socket_id, stream_id,
+                                  _nextRequestId, _sockets, _dns, _test,
+                                  is_spdy, *this);
+  _nextRequestId++;
   ULARGE_INTEGER key;
   key.HighPart = socket_id;
   key.LowPart = stream_id;
@@ -268,7 +270,7 @@ LONGLONG Requests::GetRelativeTime(Request * request, double end_time, double ti
   information
 -----------------------------------------------------------------------------*/
 void Requests::ProcessBrowserRequest(CString request_data) {
-  CString browser, url, initiator, initiator_line, initiator_column;
+  CString browser, url, initiator, initiator_line, initiator_column, priority;
   CStringA request_headers, response_headers;
   double  start_time = 0, end_time = 0, first_byte = 0, request_start = 0,
           dns_start = -1, dns_end = -1, connect_start = -1, connect_end = -1,
@@ -319,6 +321,8 @@ void Requests::ProcessBrowserRequest(CString request_data) {
               bytes_in = _ttol(value);
             else if (!key.CompareNoCase(_T("objectSize")))
               object_size = _ttol(value);
+            else if (!key.CompareNoCase(_T("priority")))
+              priority = value;
             else if (!key.CompareNoCase(_T("initiatorUrl")))
               initiator = value;
             else if (!key.CompareNoCase(_T("initiatorLineNumber")))
@@ -362,20 +366,23 @@ void Requests::ProcessBrowserRequest(CString request_data) {
   if (push && !initiator.GetLength()) {
     initiator = _T("HTTP/2 Server Push");
   }
-  if (url.GetLength() && initiator.GetLength()) {
+  if (url.GetLength() && (initiator.GetLength() || priority.GetLength())) {
     BrowserRequestData data(url);
     data.initiator_ = initiator;
     data.initiator_line_ = initiator_line;
     data.initiator_column_ = initiator_column;
+    data.priority_ = priority;
     EnterCriticalSection(&cs);
     browser_request_data_.AddTail(data);
     LeaveCriticalSection(&cs);
   }
-  _test_state.ActivityDetected();
   if (end_time > 0 && request_start > 0) {
     Request * request = new Request(_test_state, connection, stream_id,
-                                    _sockets, _dns, _test, false, *this);
+                                    _nextRequestId, _sockets, _dns, _test,
+                                    false, *this);
+    _nextRequestId++;
     request->_from_browser = true;
+    request->priority_ = priority;
     request->initiator_ = initiator;
     request->initiator_line_ = initiator_line;
     request->initiator_column_ = initiator_column;
@@ -389,7 +396,7 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     // See if we can map the browser's internal clock timestamps to our
     // performance counters.  If we have a DNS lookup we can match up or a
     // likely socket connect then we should be able to.
-    if (_start_browser_clock == 0) {
+    if (_browser_launch_time == 0) {
       if (dns_end != -1) {
         // get the host name
         URL_COMPONENTS parts;
@@ -406,8 +413,8 @@ void Requests::ProcessBrowserRequest(CString request_data) {
           if (_dns.Find(host, addresses, match_dns_start, match_dns_end)) {
             // Figure out what the clock time would have been at our perf
             // counter start time.
-            _start_browser_clock =
-                dns_end - _test_state.ElapsedMsFromStart(match_dns_end);
+            _browser_launch_time =
+                dns_end - _test_state.ElapsedMsFromLaunch(match_dns_end);
           }
         }
       }
@@ -425,12 +432,12 @@ void Requests::ProcessBrowserRequest(CString request_data) {
 
     // figure out the conversion from browser time to perf counter
     LONGLONG ms_freq = _test_state._ms_frequency.QuadPart;
-    if (_start_browser_clock != 0) {
-      request->_end.QuadPart = _test_state._start.QuadPart +
-          (LONGLONG)((end_time - _start_browser_clock)  * ms_freq);
+    if (_browser_launch_time != 0) {
+      request->_end.QuadPart = _test_state._launch.QuadPart +
+          (LONGLONG)((end_time - _browser_launch_time)  * ms_freq);
     } else {
       request->_end.QuadPart = now.QuadPart;
-      _start_browser_clock = end_time - _test_state.ElapsedMsFromStart(request->_end);
+      _browser_launch_time = end_time - _test_state.ElapsedMsFromLaunch(request->_end);
     }
     request->_start.QuadPart = request->_end.QuadPart - 
                 (LONGLONG)((end_time - request_start) * ms_freq);
@@ -470,7 +477,8 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     LARGE_INTEGER earliest, latest;
     earliest.QuadPart = _test_state._start.QuadPart - slop;
     latest.QuadPart = now.QuadPart + slop;
-    if (request->_start.QuadPart > earliest.QuadPart &&
+    if (_test_state._active &&
+        request->_start.QuadPart > earliest.QuadPart &&
         request->_end.QuadPart < latest.QuadPart &&
         (!request->_first_byte.QuadPart ||
          (request->_first_byte.QuadPart > earliest.QuadPart &&
@@ -496,32 +504,6 @@ void Requests::ProcessBrowserRequest(CString request_data) {
       EnterCriticalSection(&cs);
       _requests.AddTail(request);
       LeaveCriticalSection(&cs);
-    }
-  }
-}
-
-/*-----------------------------------------------------------------------------
-  Sync the browser time with our clock
------------------------------------------------------------------------------*/
-void Requests::SyncDNSTime(CString message) {
-  if (_start_browser_clock == 0) {
-    int position = 0;
-    CString host = message.Tokenize(_T(" "), position).Trim();
-    if (position >= 0) {
-      CString browser_time = message.Tokenize(_T(" "), position).Trim();
-      if (host.GetLength() && browser_time.GetLength()) {
-        double dns_start = _ttof(browser_time);
-        if (dns_start > 0) {
-          DNSAddressList addresses;
-          LARGE_INTEGER match_dns_start, match_dns_end;
-          if (_dns.Find(host, addresses, match_dns_start, match_dns_end)) {
-            // Figure out what the clock time would have been at our perf
-            // counter start time.
-            _start_browser_clock =
-                dns_start - _test_state.ElapsedMsFromStart(match_dns_start);
-          }
-        }
-      }
     }
   }
 }

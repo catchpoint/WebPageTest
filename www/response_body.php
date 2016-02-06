@@ -1,7 +1,10 @@
 <?php
 include 'common.inc';
 $body = null;
-if (isset($_GET['request'])) {
+$body_id = null;
+if (isset($_GET['bodyid'])) {
+  $body_id = $_GET['bodyid'];
+} elseif (isset($_GET['request'])) {
   $request = (int)$_GET['request'];
 } elseif (isset($_GET['url'])) {
   // figure out the request ID from the URL
@@ -19,20 +22,32 @@ if (isset($_GET['request'])) {
     }
   }
 }
-if ($request) {
-    $bodies_file = $testPath . '/' . $run . $cachedText . '_bodies.zip';
-    if (is_file($bodies_file)) {
-        $zip = new ZipArchive;
-        if ($zip->open($bodies_file) === TRUE) {
-            for( $i = 0; $i < $zip->numFiles; $i++ ) {
-                $index = intval($zip->getNameIndex($i), 10);
-                if ($index == $request) {
-                    $body = $zip->getFromIndex($i);
-                    break;
-                }
-            }
+
+// get the actual body
+if ($request || $body_id) {
+  $bodies_file = $testPath . '/' . $run . $cachedText . '_bodies.zip';
+  if (is_file($bodies_file)) {
+    $zip = new ZipArchive;
+    if ($zip->open($bodies_file) === TRUE) {
+      for( $i = 0; $i < $zip->numFiles; $i++ ) {
+        $name = $zip->getNameIndex($i);
+        $parts = explode('-', $name);
+        if (isset($body_id)) {
+          $id = intval($parts[1], 10);
+          if ($id == $body_id) {
+            $body = $zip->getFromIndex($i);
+            break;
+          }
+        } elseif (isset($request)) {
+          $index = intval($name, 10);
+          if ($index == $request) {
+            $body = $zip->getFromIndex($i);
+            break;
+          }
         }
+      }
     }
+  }
 }
 
 if (isset($body)) {

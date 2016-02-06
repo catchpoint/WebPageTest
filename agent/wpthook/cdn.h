@@ -43,6 +43,16 @@ typedef struct {
   CStringA name;
 } CDN_PROVIDER_HEADER;
 
+typedef struct {
+  CStringA response_field;
+  CStringA pattern;
+} CDN_PROVIDER_HEADER_PAIR;
+
+typedef struct {
+  CStringA name;
+  CDN_PROVIDER_HEADER_PAIR headers[3];  // Expand the number of needed headers as needed
+} CDN_PROVIDER_MULTI_HEADER;
+
 CDN_PROVIDER cdnList[] = {
   {".akamai.net", "Akamai"},
   {".akamaiedge.net", "Akamai"},
@@ -83,12 +93,16 @@ CDN_PROVIDER cdnList[] = {
   {".netdna-cdn.com", "NetDNA"},
   {".netdna-ssl.com", "NetDNA"},
   {".netdna.com", "NetDNA"},
+  {".kxcdn.com", "KeyCDN"},
   {".cotcdn.net", "Cotendo CDN"},
   {".cachefly.net", "Cachefly"},
   {"bo.lt", "BO.LT"},
   {".cloudflare.com", "Cloudflare"},
   {".afxcdn.net", "afxcdn.net"},
   {".lxdns.com", "ChinaNetCenter"},
+  {".wscdns.com", "ChinaNetCenter"},
+  {".wscloudcdn.com", "ChinaNetCenter"},
+  {".ourwebpic.com", "ChinaNetCenter"},
   {".att-dsa.net", "AT&T"},
   {".vo.msecnd.net", "Windows Azure"},
   {".voxcdn.net", "VoxCDN"},
@@ -132,6 +146,7 @@ CDN_PROVIDER cdnList[] = {
   {".resrc.it", "ReSRC.it"},
   {".zenedge.net", "Zenedge"},
   {".lswcdn.net", "LeaseWeb CDN"},
+  {".lswcdn.eu", "LeaseWeb CDN"},
   {".revcn.net", "Rev Software"},
   {".revdn.net", "Rev Software"},
   {".caspowa.com", "Caspowa"},
@@ -141,11 +156,16 @@ CDN_PROVIDER cdnList[] = {
   {".fbcdn.net", "Facebook"},
   {".cdninstagram.com", "Facebook"},
   {".rlcdn.com", "Reapleaf"},
-  {".wp.com", "WordPress Jetpack"},
+  {".wp.com", "WordPress"},
   {".aads1.net", "Aryaka"},
   {".aads-cn.net", "Aryaka"},
   {".aads-cng.net", "Aryaka"},
   {".squixa.net", "section.io"},
+  {".bisongrid.net", "Bison Grid"},
+  {".cdn.gocache.net", "GoCache"},
+  {".hiberniacdn.com", "HiberniaCDN"},
+  {".cdntel.net", "Telenor"},
+  {".raxcdn.com", "Rackspace"},
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -175,7 +195,15 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "GSE", "Google"},
   {"server", "Golfe2", "Google"},
   {"server", "tsa_b", "Twitter"},
+  {"X-Cache", "cache.51cdn.com", "ChinaNetCenter"},
   {"X-CDN", "Incapsula", "Incapsula"},
   {"X-Iinfo", "", "Incapsula"},
-  {"X-Ar-Debug", "", "Aryaka"}
+  {"X-Ar-Debug", "", "Aryaka"},
+  {"server", "gocache", "GoCache"},
+  {"server", "hiberniacdn", "HiberniaCDN"}
+};
+
+// Specific providers that require multiple headers
+CDN_PROVIDER_MULTI_HEADER cdnMultiHeaderList[] = {
+  {"Fastly", {{"Via", "varnish"}, {"X-Served-By", "cache-"}, {"X-Cache", ""}}}
 };

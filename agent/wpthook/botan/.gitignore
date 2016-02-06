@@ -1,0 +1,54 @@
+Makefile*
+libbotan*.so.*
+*.a
+*.so
+*.dylib
+*.exp
+*.lib
+*.dll
+*.exe
+*.manifest
+build
+build.log
+botan
+botan-test
+
+# Text file backups (e.g. gedit, joe)
+*~
+\#*\#
+.\#*
+
+# Archive files
+*.tgz
+*.tar
+
+# Logs
+*.log
+
+# Patch files
+*.patch
+*.diff
+*.orig
+*.rej
+
+# Cache and temporary files
+*.pyc
+.DS_Store
+*.swp
+
+# Amalgamation code
+botan_all.h
+botan_all_internal.h
+botan_all.cpp
+botan_all_*.cpp
+
+# Coverage output
+coverage.info
+coverage/
+
+# Profiler outputs
+cachegrind.*
+callgrind.*
+
+# Test output
+src/tests/outdata

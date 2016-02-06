@@ -171,7 +171,7 @@ void HttpData::ExtractHeaderFields() {
     while (pos > 0) {
       if (line_number > 0) {
         line.Trim();
-        int separator = line.Find(':');
+        int separator = line.Find(':', 1);
         if (separator > 0) {
           _header_fields.AddTail(
               HeaderField(line.Left(separator),
@@ -192,7 +192,7 @@ void RequestData::AddHeader(const char * header, const char * value) {
     _method = value;
   else if (!lstrcmpiA(header, ":path"))
     _object = value;
-}
+  }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -207,6 +207,14 @@ void RequestData::ProcessRequestLine() {
       _method = line.Tokenize(" ", pos).Trim();
       if (pos > -1) {
         _object = line.Tokenize(" ", pos).Trim();
+        // For proxy cases where the GET is a full URL, parse it into it's pieces
+        if (_object.Find(":") > -1) {
+          CString scheme, host, object;
+          unsigned short port = 0;
+          if (ParseUrl((LPCTSTR)CA2T(_object), scheme, host, port, object)) {
+            _object = object;
+          }
+        }
       }
     }
   }
@@ -367,11 +375,12 @@ DataChunk ResponseData::GetBody(bool uncompress) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 Request::Request(TestState& test_state, DWORD socket_id, DWORD stream_id,
-                 TrackSockets& sockets, TrackDns& dns, WptTest& test,
-                 bool is_spdy, Requests& requests)
+                 DWORD request_id, TrackSockets& sockets, TrackDns& dns,
+                 WptTest& test, bool is_spdy, Requests& requests)
   : _processed(false)
   , _socket_id(socket_id)
   , _stream_id(stream_id)
+  , _request_id(request_id)
   , _is_spdy(is_spdy)
   , _ms_start(0)
   , _ms_first_byte(0)
@@ -663,6 +672,7 @@ bool Request::Process() {
         initiator_ = data.initiator_;
         initiator_line_ = data.initiator_line_;
         initiator_column_ = data.initiator_column_;
+        priority_ = data.priority_;
       }
     }
 
@@ -764,6 +774,8 @@ CStringA Request::GetHost() {
   CStringA host = GetRequestHeader("x-host");
   if (!host.GetLength())
     host = GetRequestHeader("host");
+  if (!host.GetLength())
+    host = GetRequestHeader(":host");
   if (!host.GetLength())
     host = GetRequestHeader(":authority");
   return host;

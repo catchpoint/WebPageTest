@@ -50,6 +50,9 @@ var wpt_client = require('wpt_client');
  */
 var knownOpts = {
   serverUrl: [String, null],
+  insecure: Boolean,
+  clientCert: [String, null],
+  clientCertPass: [String, null],
   location: [String, null],
   deviceAddr: [String, null],
   deviceSerial: [String, null],
@@ -165,9 +168,6 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
     if (ipcMsg.devToolsFile) {
       job.zipResultFiles['devtools.json'] = fs.readFileSync(ipcMsg.devToolsFile, "utf8");
     }
-    if (ipcMsg.traceFile) {
-      job.zipResultFiles['trace.json'] = fs.readFileSync(ipcMsg.traceFile, "utf8");
-    }
     if (ipcMsg.customMetrics) {
       job.zipResultFiles['metrics.json'] = JSON.stringify(ipcMsg.customMetrics);
     }
@@ -188,6 +188,17 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
               buffer));
         }
         fs.unlinkSync(ipcMsg.histogramFile);
+      } catch(e) {}
+    }
+    if (ipcMsg.traceFile) {
+      try {
+        var buffer = fs.readFileSync(ipcMsg.traceFile);
+        if (buffer) {
+          job.resultFiles.push(new wpt_client.ResultFile(
+              wpt_client.ResultFile.ResultType.TRACE,
+              'trace.json.gz', 'application/x-gzip', buffer));
+        }
+        fs.unlinkSync(ipcMsg.traceFile);
       } catch(e) {}
     }
     if (ipcMsg.screenshots && ipcMsg.screenshots.length > 0) {

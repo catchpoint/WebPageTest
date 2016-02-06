@@ -44,6 +44,7 @@ public:
     initiator_ = src.initiator_;
     initiator_line_ = src.initiator_line_;
     initiator_column_ = src.initiator_column_;
+    priority_ = src.priority_;
     return src;
   }
 
@@ -51,6 +52,7 @@ public:
   CString  initiator_;
   CString  initiator_line_;
   CString  initiator_column_;
+  CString  priority_;
   long   connection_;
   LARGE_INTEGER end_timestamp_;
   double  end_time_;
@@ -76,7 +78,6 @@ public:
   void DataOut(DWORD socket_id, DataChunk& chunk);
   bool HasActiveRequest(DWORD socket_id, DWORD stream_id);
   void ProcessBrowserRequest(CString request_data);
-  void SyncDNSTime(CString message);
 
   // HTTP/2 interface
   void StreamClosed(DWORD socket_id, DWORD stream_id);
@@ -103,7 +104,8 @@ private:
   TrackSockets&     _sockets;
   TrackDns&         _dns;
   WptTest&          _test;
-  double            _start_browser_clock;
+  double            _browser_launch_time;
+  DWORD	            _nextRequestId;	// ID to assign to the next request
   CAtlList<BrowserRequestData>  browser_request_data_;
   CAtlMap<ULONGLONG, Request *> _active_requests; // requests indexed by socket
 

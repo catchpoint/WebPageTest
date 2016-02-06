@@ -34,9 +34,11 @@ var util = require('util');
 /** Default adb command timeout. */
 exports.DEFAULT_TIMEOUT = 60000;
 
-var STORAGE_PATHS_ = ['$EXTERNAL_STORAGE',
-    '$SECONDARY_STORAGE',
-    '/data/local/tmp'
+var STORAGE_PATHS_ = [
+    '/data/local/tmp',
+    '/sdcard',
+    '$EXTERNAL_STORAGE',
+    '$SECONDARY_STORAGE'
 ];
 
 /**
@@ -368,29 +370,84 @@ Adb.prototype.scheduleGetNetworkConfiguration = function() {
   'use strict';
   return this.shell(['netcfg']).then(function(stdout) {
     var ret = [];
+    var ok = true;
     stdout.split(/[\r\n]+/).forEach(function(line, lineNumber) {
-      line = line.trim();
-      if (!line) {
-        return;  // Skip empty lines.
+      if (ok) {
+        line = line.trim();
+        if (!line) {
+          return;  // Skip empty lines.
+        }
+        var fields = line.split(/\s+/);
+        if (fields.length !== 5) {
+          ok = false;
+          return;
+        }
+        var ifc = {};
+        ifc.name = fields[0];
+        ifc.isUp = (fields[1] == 'UP');
+        var ip = fields[2].replace(/\/\d+$/, '');
+        if (ip !== '0.0.0.0') {
+          ifc.ip = ip;
+        }
+        if (/^0x/.test(fields[3])) {
+          ifc.mac = fields[4];
+        }
+        ret.push(ifc);
       }
-      var fields = line.split(/\s+/);
-      if (fields.length !== 5) {
-        throw new Error(util.format('netcfg output unrecognized at line %d: %j',
-            lineNumber, stdout));
-      }
-      var ifc = {};
-      ifc.name = fields[0];
-      ifc.isUp = (fields[1] == 'UP');
-      var ip = fields[2].replace(/\/\d+$/, '');
-      if (ip !== '0.0.0.0') {
-        ifc.ip = ip;
-      }
-      if (/^0x/.test(fields[3])) {
-        ifc.mac = fields[4];
-      }
-      ret.push(ifc);
     }.bind(this));
-    return ret;
+
+    if (ok ) {
+      return ret;
+    } else {
+      return this.shell(['ifconfig']).then(function(stdout) {
+        ret = [];
+        var iface = undefined;
+        var mac = undefined;
+        var isUp = false;
+        var addr = undefined;
+        stdout.split(/[\r\n]+/).forEach(function(line, lineNumber) {
+          line = line.trim();
+          if (!line) {
+            if (iface && addr) {
+              var ifc = {name: iface, ip: addr, isUp: isUp};
+              if (mac) {
+                ifc.mac = mac;
+              }
+              ret.push(ifc);
+            }
+            iface = undefined;
+            mac = undefined;
+            isUp = false;
+            addr = undefined;
+            return;  // Skip empty lines.
+          }
+          var fields = line.match(/^([^\s]+)[\s]+Link encap/);
+          if (fields && fields.length == 2) {
+            iface = fields[1];
+            fields = line.match(/HWaddr ([A-Fa-f0-9\:]+)$/);
+            if (fields && fields.length == 2) {
+              mac = fields[1];
+            }
+          }
+          fields = line.match(/^inet addr\:([0-9\.]+)/);
+          if (fields && fields.length == 2) {
+            addr = fields[1];
+          }
+          if (line.match(/^UP /)) {
+            isUp = true;
+          }
+        }.bind(this));
+        if (iface && addr) {
+          var ifc = {name: iface, ip: addr, isUp: isUp};
+          if (mac) {
+            ifc.mac = mac;
+          }
+          ret.push(ifc);
+        }
+        logger.debug(JSON.stringify(ret));
+        return ret;
+      }.bind(this));
+    }
   }.bind(this));
 };
 

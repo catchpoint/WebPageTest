@@ -64,6 +64,7 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   ,navigated_(false)
   ,_started(false)
   ,received_data_(false) {
+  QueryPerformanceCounter(&_launch);
   QueryPerformanceFrequency(&_ms_frequency);
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
   InitializeCriticalSection(&_data_cs);
@@ -148,6 +149,7 @@ void TestState::Reset(bool cascade) {
     _console_log_messages.RemoveAll();
     _timed_events.RemoveAll();
     _custom_metrics.Empty();
+    _user_timing.Empty();
     navigating_ = false;
     GetSystemTime(&_start_time);
   }
@@ -687,6 +689,10 @@ DWORD TestState::ElapsedMsFromStart(LARGE_INTEGER end) const {
   return ElapsedMs(_start, end);
 }
 
+DWORD TestState::ElapsedMsFromLaunch(LARGE_INTEGER end) const {
+  return ElapsedMs(_launch, end);
+}
+
 DWORD TestState::ElapsedMs(LARGE_INTEGER start, LARGE_INTEGER end) const {
   DWORD elapsed_ms = 0;
   if (start.QuadPart && end.QuadPart > start.QuadPart) {
@@ -776,6 +782,14 @@ void TestState::AddTimedEvent(CString timed_event) {
 void TestState::SetCustomMetrics(CString custom_metrics) {
   EnterCriticalSection(&_data_cs);
   _custom_metrics = custom_metrics;
+  LeaveCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::SetUserTiming(CString user_timing) {
+  EnterCriticalSection(&_data_cs);
+  _user_timing = user_timing;
   LeaveCriticalSection(&_data_cs);
 }
 

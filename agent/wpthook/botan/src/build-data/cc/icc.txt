@@ -1,0 +1,33 @@
+macro_name INTEL
+
+binary_name icpc
+
+output_to_option "-o "
+add_include_dir_option -I
+add_lib_dir_option -L
+add_lib_option -l
+
+compile_flags "-c"
+debug_info_flags "-g"
+optimization_flags "-O2"
+
+lang_flags "-std=c++0x"
+warning_flags "-w1"
+shared_flags "-fPIC"
+
+makefile_style gmake
+
+<mach_opt>
+pentium3  -> "-march=pentium3"
+pentium4  -> "-march=pentium4"
+pentium-m -> "-march=pentium3"
+core2     -> "-march=core2"
+
+# ICC 11.1 doesn't have native Nehalem or Westmere support
+nehalem   -> "-march=core2"
+westmere  -> "-march=core2"
+</mach_opt>
+
+<so_link_commands>
+default -> "$(CXX) -fPIC -shared -Wl,-soname,$(SONAME_ABI)"
+</so_link_commands>

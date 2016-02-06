@@ -224,8 +224,8 @@ public:
 class Request {
 public:
   Request(TestState& test_state, DWORD socket_id, DWORD stream_id,
-          TrackSockets& sockets, TrackDns& dns, WptTest& test, bool is_spdy,
-          Requests& requests);
+          DWORD request_id, TrackSockets& sockets, TrackDns& dns,
+          WptTest& test, bool is_spdy, Requests& requests);
   ~Request(void);
 
   void DataIn(DataChunk& chunk);
@@ -260,6 +260,7 @@ public:
   bool  _reported;
   DWORD _socket_id;
   DWORD _stream_id;
+  DWORD _request_id;
   ULONG _peer_address;
   int   _local_port;
   bool  _is_ssl;
@@ -267,6 +268,7 @@ public:
   CString initiator_;
   CString initiator_line_;
   CString initiator_column_;
+  CString priority_;
 
   RequestData  _request_data;
   ResponseData _response_data;

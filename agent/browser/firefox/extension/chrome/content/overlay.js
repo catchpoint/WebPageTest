@@ -578,6 +578,12 @@ wpt.moz.main.collectStats = function(customMetrics, callback) {
 				mark.type = 'mark';
 				wpt.moz.main.sendEventToDriver_('timed_event', '', JSON.stringify(mark));
 			}
+			var measures = win.performance.getEntriesByType("measure");
+			for (var i = 0; i < measures.length; i++) {
+				var measure = {"entryType": measures[i].entryType, "name": measures[i].name, "startTime": measures[i].startTime, "duration": measures[i].duration};
+				measure.type = 'measure';
+				wpt.moz.main.sendEventToDriver_('timed_event', '', JSON.stringify(measure));
+			}
 		}
 
 		var domCount = win.document.getElementsByTagName("*").length;

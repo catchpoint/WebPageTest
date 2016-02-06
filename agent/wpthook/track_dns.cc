@@ -32,8 +32,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../wptdriver/wpt_test.h"
 
 static LPCTSTR blocked_domains[] = {
-  _T(".pack.google.com"),  // Chrome crx update URL
-  _T(".gvt1.com"),         // Chrome crx update URL
+  _T(".pack.google.com"),     // Chrome crx update URL
+  _T(".gvt1.com"),            // Chrome crx update URL
+  _T("clients1.google.com"),  // Autofill update downloads
   _T("shavar.services.mozilla.com"), // Firefox tracking protection updates
   NULL
 };

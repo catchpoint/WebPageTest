@@ -118,6 +118,7 @@ public:
   CString _clients_directory;
   BOOL _requireValidCertificate;
   CString _clientCertCommonName;
+  bool  _keep_resolution;
 
   BrowserSettings _browser;
   SoftwareUpdate _software_update;

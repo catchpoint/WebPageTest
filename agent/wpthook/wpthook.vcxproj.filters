@@ -54,6 +54,21 @@
     <Filter Include="Third-Party\mozjpeg">
       <UniqueIdentifier>{a8a7b766-a9f6-4269-9ecf-6a47702ec069}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Third-Party\Botan">
+      <UniqueIdentifier>{5e2f0f7c-c498-455b-80da-2d344d641bc3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\Botan\Header Files">
+      <UniqueIdentifier>{eb8eac6a-bd9e-4b4a-9f1b-c089c315f7ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\Botan\Source Files">
+      <UniqueIdentifier>{3a921313-7b38-4bec-82d5-81adbd822abd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\Botan\Header Files\build">
+      <UniqueIdentifier>{7454b1d3-bb6c-4523-9e64-4c64a18cb1ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\Botan\Header Files\internal">
+      <UniqueIdentifier>{fe85fcf1-6bd9-44bd-9b2c-f64c0c45990a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NCodeHook\NCodeHook.h">
@@ -481,6 +496,879 @@
     </ClInclude>
     <ClInclude Include="mozjpeg\transupp.h">
       <Filter>Third-Party\mozjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="ssl_stream.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hook_file.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\build.h">
+      <Filter>Third-Party\Botan\Header Files\build</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\adler32.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\aead.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\aes.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\aes_ni.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\aes_ssse3.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\alg_id.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\asn1_alt_name.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\asn1_attribute.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\asn1_obj.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\asn1_oid.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\asn1_str.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\asn1_time.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\assert.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\auto_rng.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\b64_filt.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\base64.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\basefilt.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\bcrypt.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\ber_dec.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\bigint.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\blinding.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\block_cipher.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\blowfish.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\botan.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\bswap.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\buf_comp.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\buf_filt.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\build.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\calendar.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\camellia.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\cascade.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\cast128.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\cast256.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\cbc.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\cbc_mac.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\ccm.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\cert_status.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\certstor.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\cfb.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\chacha.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\chacha20poly1305.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\charset.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\cipher_mode.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\cmac.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\comb4p.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\comp_filter.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\compression.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\cpuid.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\crc24.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\crc32.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\credentials_manager.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\crl_ent.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\cryptobox.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\ctr.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\curve_gfp.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\curve_nistp.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\curve25519.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\data_snk.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\data_src.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\database.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\datastor.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\der_enc.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\des.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\desx.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\dh.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\divide.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\dl_algo.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\dl_group.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\dlies.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\dsa.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\eax.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\ec_group.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\ecb.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\ecc_key.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\ecdh.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\ecdsa.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\elgamal.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\eme.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\eme_pkcs.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\eme_raw.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\emsa.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\emsa_pkcs1.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\emsa_raw.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\emsa_x931.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\emsa1.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\emsa1_bsi.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\entropy_src.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\exceptn.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\ffi.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\filter.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\filters.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\fpe_fe1.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\gcm.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\gf2m_small_m.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\gost_3410.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\gost_3411.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\gost_28147.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\has160.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\hash.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\hash_id.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\hex.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\hex_filt.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\hkdf.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\hmac.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\hmac_drbg.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\hmac_rng.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\http_util.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\idea.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\idea_sse2.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\if_algo.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\init.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\kasumi.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\kdf.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\kdf1.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\kdf2.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\keccak.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\key_constraint.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\key_filt.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\key_spec.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\keypair.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\lion.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\loadstor.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\locking_allocator.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\lookup.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\mac.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\mars.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\mceies.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\mceliece.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\md2.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\md4.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\md5.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\mdx_hash.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\mem_ops.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\mgf1.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\misty1.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\mode_pad.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\mp_types.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\mul128.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\noekeon.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\noekeon_simd.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\nr.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\numthry.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\oaep.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\ocb.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\ocsp.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\ocsp_types.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\ofb.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\oids.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\openpgp.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\package.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\par_hash.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\parsing.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\passhash9.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\pbes2.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\pbkdf.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\pbkdf1.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\pbkdf2.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\pem.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\pipe.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\pk_keys.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\pk_ops.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\pkcs8.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\pkcs10.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\point_gfp.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\poly1305.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\polyn_gf2m.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\pow_mod.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\prf_tls.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\prf_x942.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\pssr.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\pubkey.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\rc2.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\rc4.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\rc5.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\rc6.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\reducer.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\rfc3394.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\rfc6979.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\rmd128.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\rmd160.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\rng.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\rotate.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\rsa.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\rw.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\safer_sk.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\salsa20.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\scan_name.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\secmem.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\secqueue.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\seed.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\serp_simd.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\serpent.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\sha1_sse2.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\sha2_32.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\sha2_64.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\sha160.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\siphash.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\siv.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\skein_512.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\srp6.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\srp6_files.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\stream_cipher.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\stream_mode.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\sym_algo.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\symkey.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\system_rng.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\tea.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\threefish.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\tiger.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\tls_alert.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\tls_blocking.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\tls_channel.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\tls_ciphersuite.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\tls_client.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\tls_exceptn.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\tls_handshake_msg.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\tls_magic.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\tls_policy.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\tls_server.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\tls_server_info.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\tls_session.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\tls_session_manager.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\tls_session_manager_sql.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\tls_version.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\transform.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\transform_filter.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\tss.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\twofish.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\types.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\version.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\whrlpool.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\workfactor.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\x509_ca.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\x509_crl.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\x509_dn.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\x509_ext.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\x509_key.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\x509_obj.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\x509cert.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\x509path.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\x509self.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\x919_mac.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\x931_rng.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\xtea.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\xtea_simd.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\xts.h">
+      <Filter>Third-Party\Botan\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\algo_registry.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\bit_ops.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\cast_sboxes.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\clmul.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\code_based_util.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\compress_utils.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\ct_utils.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\def_powm.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\donna128.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\es_capi.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\es_win32.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\filesystem.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\hres_timer.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\mce_internal.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\mode_utils.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\mp_asmi.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\mp_core.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\mp_madd.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\os_utils.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\out_buf.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\pk_algs.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\pk_ops_impl.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\pk_utils.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\prefetch.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\rdrand.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\rdseed.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\rounding.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\semaphore.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\serpent_sbox.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\simd_32.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\simd_sse2.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\stl_util.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\tls_extensions.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\tls_handshake_hash.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\tls_handshake_io.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\tls_handshake_state.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\tls_heartbeats.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\tls_messages.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\tls_reader.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\tls_record.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\tls_seq_numbers.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="botan\build\include\botan\internal\tls_session_key.h">
+      <Filter>Third-Party\Botan\Header Files\internal</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -970,9 +1858,6 @@
     <ClCompile Include="mozjpeg\jmemnobs.c">
       <Filter>Third-Party\mozjpeg</Filter>
     </ClCompile>
-    <ClCompile Include="mozjpeg\jpegyuv.c">
-      <Filter>Third-Party\mozjpeg</Filter>
-    </ClCompile>
     <ClCompile Include="mozjpeg\jquant1.c">
       <Filter>Third-Party\mozjpeg</Filter>
     </ClCompile>
@@ -993,6 +1878,885 @@
     </ClCompile>
     <ClCompile Include="mozjpeg\jdsample.c">
       <Filter>Third-Party\mozjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="ssl_stream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hook_file.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\asn1\alg_id.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\asn1\asn1_alt_name.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\asn1\asn1_attribute.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\asn1\asn1_obj.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\asn1\asn1_oid.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\asn1\asn1_str.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\asn1\asn1_time.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\asn1\ber_dec.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\asn1\der_enc.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\asn1\x509_dn.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\asn1\oid_lookup\default.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\asn1\oid_lookup\oids.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\base\init.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\base\scan_name.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\base\symkey.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\base\transform.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\aes\aes.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\aes_ni\aes_ni.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\aes_ssse3\aes_ssse3.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\blowfish\blfs_tab.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\blowfish\blowfish.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\camellia\camellia.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\cascade\cascade.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\cast\cast128.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\cast\cast256.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\des\des.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\des\des_tab.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\des\desx.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\gost_28147\gost_28147.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\idea\idea.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\idea_sse2\idea_sse2.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\kasumi\kasumi.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\lion\lion.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\mars\mars.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\misty1\misty1.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\noekeon\noekeon.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\noekeon_simd\noekeon_simd.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\rc2\rc2.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\rc5\rc5.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\rc6\rc6.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\safer\safer_sk.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\seed\seed.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\serpent\serpent.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\serpent_simd\serp_simd.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\tea\tea.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\threefish\threefish.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\twofish\two_tab.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\twofish\twofish.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\xtea\xtea.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\xtea_simd\xtea_simd.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\block\block_cipher.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\cert\x509\certstor.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\cert\x509\crl_ent.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\cert\x509\key_constraint.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\cert\x509\ocsp.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\cert\x509\ocsp_types.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\cert\x509\pkcs10.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\cert\x509\x509_ca.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\cert\x509\x509_crl.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\cert\x509\x509_ext.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\cert\x509\x509_obj.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\cert\x509\x509cert.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\cert\x509\x509opt.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\cert\x509\x509path.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\cert\x509\x509self.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\codec\base64\base64.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\codec\hex\hex.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\compression\compression.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\entropy\cryptoapi_rng\es_capi.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\entropy\hres_timer\hres_timer.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\entropy\rdrand\rdrand.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\entropy\rdseed\rdseed.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\entropy\win32_stats\es_win32.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\entropy\entropy_srcs.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\ffi\ffi.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\filters\codec_filt\b64_filt.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\filters\codec_filt\hex_filt.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\filters\algo_filt.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\filters\basefilt.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\filters\buf_filt.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\filters\comp_filter.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\filters\data_snk.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\filters\filter.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\filters\key_filt.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\filters\out_buf.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\filters\pipe.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\filters\pipe_io.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\filters\pipe_rw.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\filters\secqueue.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\filters\threaded_fork.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\filters\transform_filter.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\checksum\crc24\crc24.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\comb4p\comb4p.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\gost_3411\gost_3411.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\has160\has160.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\keccak\keccak.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\md2\md2.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\md4\md4.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\md5\md5.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\mdx_hash\mdx_hash.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\par_hash\par_hash.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\rmd128\rmd128.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\rmd160\rmd160.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\sha1\sha160.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\sha1_sse2\sha1_sse2.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\sha2_32\sha2_32.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\sha2_64\sha2_64.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\skein\skein_512.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\tiger\tig_tab.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\tiger\tiger.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\whirlpool\whirlpool.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\whirlpool\whrl_tab.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\hash.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\kdf\hkdf\hkdf.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\kdf\kdf1\kdf1.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\kdf\kdf2\kdf2.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\kdf\prf_tls\prf_tls.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\kdf\prf_x942\prf_x942.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\kdf\kdf.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\mac\cbc_mac\cbc_mac.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\mac\cmac\cmac.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\mac\hmac\hmac.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\mac\poly1305\poly1305.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\mac\siphash\siphash.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\mac\x919_mac\x919_mac.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\mac\mac.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\bigint\big_code.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\bigint\big_io.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\bigint\big_ops2.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\bigint\big_ops3.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\bigint\big_rand.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\bigint\bigint.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\bigint\divide.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\ec_gfp\curve_gfp.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\ec_gfp\curve_nistp.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\ec_gfp\point_gfp.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\mp\mp_karat.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\mp\mp_misc.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\mp\mp_monty.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\mp\mp_shift.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\mp\mp_asm.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\mp\mp_comba.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\numbertheory\pow_mod.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\numbertheory\powm_fw.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\numbertheory\powm_mnt.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\numbertheory\primes.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\numbertheory\reducer.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\numbertheory\ressol.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\numbertheory\dsa_gen.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\numbertheory\jacobi.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\numbertheory\make_prm.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\numbertheory\mp_numth.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\math\numbertheory\numthry.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\misc\aont\package.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\misc\cryptobox\cryptobox.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\misc\fpe_fe1\fpe_fe1.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\misc\openpgp\openpgp.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\misc\pbes2\pbes2.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\misc\pem\pem.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\misc\rfc3394\rfc3394.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\misc\srp6\srp6.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\misc\srp6\srp6_files.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\misc\tss\tss.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\modes\aead\ccm\ccm.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\modes\aead\chacha20poly1305\chacha20poly1305.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\modes\aead\eax\eax.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\modes\aead\gcm\gcm.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\modes\aead\gcm\clmul\clmul.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\modes\aead\ocb\ocb.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\modes\aead\siv\siv.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\modes\aead\aead.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\modes\cbc\cbc.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\modes\cfb\cfb.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\modes\ecb\ecb.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\modes\mode_pad\mode_pad.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\modes\xts\xts.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\modes\cipher_mode.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\passhash\bcrypt\bcrypt.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\passhash\passhash9\passhash9.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pbkdf\pbkdf1\pbkdf1.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pbkdf\pbkdf2\pbkdf2.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pbkdf\pbkdf.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pk_pad\eme_oaep\oaep.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pk_pad\eme_pkcs1\eme_pkcs.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pk_pad\eme_raw\eme_raw.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pk_pad\emsa_pkcs1\emsa_pkcs1.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pk_pad\emsa_pssr\pssr.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pk_pad\emsa_raw\emsa_raw.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pk_pad\emsa_x931\emsa_x931.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pk_pad\emsa1\emsa1.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pk_pad\emsa1_bsi\emsa1_bsi.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pk_pad\hash_id\hash_id.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pk_pad\mgf1\mgf1.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pk_pad\eme.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pk_pad\emsa.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\curve25519\curve25519.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\curve25519\donna.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\dh\dh.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\dl_algo\dl_algo.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\dl_group\dl_group.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\dl_group\named.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\dlies\dlies.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\dsa\dsa.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\ec_group\ec_group.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\ecc_key\ecc_key.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\ecdh\ecdh.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\ecdsa\ecdsa.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\elgamal\elgamal.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\gost_3410\gost_3410.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\if_algo\if_algo.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\keypair\keypair.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\mce\gf2m_small_m.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\mce\goppa_code.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\mce\mceliece.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\mce\mceliece_key.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\mce\polyn_gf2m.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\mce\code_based_key_gen.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\mce\gf2m_rootfind_dcmp.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\mceies\mceies.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\nr\nr.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\rfc6979\rfc6979.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\rsa\rsa.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\rw\rw.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\pk_ops.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\pkcs8.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\pubkey.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\workfactor.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\x509_key.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\blinding.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\pk_algs.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\pk_keys.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\rng\hmac_drbg\hmac_drbg.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\rng\hmac_rng\hmac_rng.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\rng\system_rng\system_rng.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\rng\x931_rng\x931_rng.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\rng\rng.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\stream\chacha\chacha.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\stream\ctr\ctr.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\stream\ofb\ofb.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\stream\rc4\rc4.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\stream\salsa20\salsa20.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\stream\stream_cipher.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\sessions_sql\tls_session_manager_sql.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\tls_extensions.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\tls_handshake_hash.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\tls_handshake_io.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\tls_handshake_state.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\tls_heartbeats.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\tls_policy.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\tls_record.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\tls_server.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\tls_session.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\tls_session_key.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\tls_session_manager_memory.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\tls_suite_info.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\tls_version.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\credentials_manager.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\msg_cert_req.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\msg_cert_verify.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\msg_certificate.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\msg_client_hello.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\msg_client_kex.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\msg_finished.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\msg_hello_verify.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\msg_server_hello.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\msg_server_kex.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\msg_session_ticket.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\tls_alert.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\tls_blocking.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\tls_channel.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\tls_ciphersuite.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\tls\tls_client.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\utils\datastor\datastor.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\utils\http_util\http_util.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\utils\locking_allocator\locking_allocator.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\utils\os_utils.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\utils\parsing.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\utils\read_cfg.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\utils\semaphore.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\utils\version.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\utils\zero_mem.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\utils\assert.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\utils\calendar.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\utils\charset.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\utils\cpuid.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\utils\data_src.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\utils\filesystem.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\mce\workfactor2.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\pubkey\ec_group\named_ecc.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\checksum\adler32\adler32_botan.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="botan\src\lib\hash\checksum\crc32\crc32_botan.cpp">
+      <Filter>Third-Party\Botan\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

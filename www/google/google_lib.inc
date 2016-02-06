@@ -32,7 +32,7 @@ function ParseCsiInfo($id, $testPath, $run, $cached, $getAll, $generate = true) 
 	    foreach ( $requests as &$request ) {
 		    // Parse the individual url parts.
 		    $url_parts = parse_url('http://' . $request['host'] . $request['url']);
-		    if ($url_parts['path'] == '/csi' ||
+		    if ($url_parts['path'] == '/csi' || $url_parts['path'] == '/csi_204' ||
             ($url_parts['path'] == '/gen_204' &&
              strpos($request['url'], 'atyp=csi') !== false)) {
 			    $csi_query = $url_parts['query'];

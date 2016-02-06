@@ -34,7 +34,7 @@ if ($newTimeline) {
   $cdn = GetSetting('cdn');
   $url = $cdn ? $cdn : "$protocol://$host";
   $url .= $uri;
-  $url .= "/inspector-20151104/inspector.html?loadTimelineFromURL=/getTimeline.php?test=$id&run=$run&cached=$cached";
+  $url .= "/inspector-20151104/inspector.html?experiments=true&loadTimelineFromURL=/getTimeline.php?test=$id&run=$run&cached=$cached";
   header("Location: $url");
 } else {
   echo '<iframe id="devtools" frameborder="0" height="100%" width="100%" src="/chrome/inspector-20140603/devtools.html" onload="DevToolsLoaded();"></iframe>';

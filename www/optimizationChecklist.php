@@ -4,7 +4,7 @@ include 'common.inc';
 require_once('object_detail.inc'); 
 require_once('optimizationChecklist.inc');
 require_once('page_data.inc');
-$pageData = loadPageRunData($testPath, $run, $cached);
+$pageData = loadPageRunData($testPath, $run, $cached, null, $test['testinfo']);
 
 // get all of the requests
 $secure = false;

@@ -43,7 +43,8 @@ WptSettings::WptSettings(WptStatus &status):
   ,_debug(0)
   ,_status(status)
   ,_software_update(status)
-  ,_requireValidCertificate(true) {
+  ,_requireValidCertificate(true)
+  ,_keep_resolution(false) {
 }
 
 /*-----------------------------------------------------------------------------
@@ -106,6 +107,7 @@ bool WptSettings::Load(void) {
     _key = buff;
   }
 
+  _keep_resolution = GetPrivateProfileInt(_T("WebPagetest"), _T("Keep Resolution"), 0, iniFile) != 0;
   _requireValidCertificate = GetPrivateProfileInt(_T("WebPagetest"), _T("Valid Certificate"), _requireValidCertificate, iniFile);
 
   if (GetPrivateProfileString(_T("WebPagetest"), _T("Client Certificate Common Name"), _T(""), buff,

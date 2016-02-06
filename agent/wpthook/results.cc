@@ -56,6 +56,7 @@ static const TCHAR * IMAGE_RESPONSIVE_CHECK = _T("_screen_responsive.jpg");
 static const TCHAR * CONSOLE_LOG_FILE = _T("_console_log.json");
 static const TCHAR * TIMED_EVENTS_FILE = _T("_timed_events.json");
 static const TCHAR * CUSTOM_METRICS_FILE = _T("_metrics.json");
+static const TCHAR * USER_TIMING_FILE = _T("_user_timing.json");
 static const TCHAR * TRACE_FILE = _T("_trace.json");
 static const TCHAR * CUSTOM_RULES_DATA_FILE = _T("_custom_rules.json");
 static const DWORD RIGHT_MARGIN = 25;
@@ -148,6 +149,7 @@ void Results::Save(void) {
       SaveConsoleLog();
       SaveTimedEvents();
       SaveCustomMetrics();
+      SaveUserTiming();
       _trace.Write(_file_base + TRACE_FILE);
     }
     if (shared_result == -1 || shared_result == 0 || shared_result == 99999)
@@ -1221,6 +1223,11 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   // JPEG scan count
   buff.Format("%d\t", request->_scores._jpeg_scans);
   result += buff;
+  // Priority
+  result += request->priority_ + "\t";
+  // Request ID
+  buff.Format("%d\t", request->_request_id);
+  result += buff;
 
   result += "\r\n";
 
@@ -1229,8 +1236,9 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
 
   // write out the raw headers
   if (headers != INVALID_HANDLE_VALUE) {
-    buff.Format("Request details:\r\nRequest %d:\r\nRequest Headers:\r\n", 
-                  index);
+    buff.Format("Request details:\r\nRequest %d:\r\n"
+                "RID: %d\r\nRequest Headers:\r\n", 
+                index, request->_request_id);
     buff += request->_request_data.GetHeaders();
     buff.Trim("\r\n");
     buff += "\r\nResponse Headers:\r\n";
@@ -1280,9 +1288,9 @@ void Results::SaveResponseBodies(void) {
             DataChunk body = request->_response_data.GetBody(true);
             LPBYTE body_data = (LPBYTE)body.GetData();
             DWORD body_len = body.GetLength();
-            if (body_data && body_len) {
+            if (body_data && body_len && !IsBinaryContent(body_data, body_len)) {
               CStringA name;
-              name.Format("%03d-response.txt", count);
+              name.Format("%03d-%d-body.txt", count, request->_request_id);
               if (!zipOpenNewFileInZip(zip, name, 0, 0, 0, 0, 0, 0, Z_DEFLATED, 
                   Z_BEST_COMPRESSION)) {
                 zipWriteInFileInZip(zip, body_data, body_len);
@@ -1348,6 +1356,20 @@ void Results::SaveCustomMetrics(void) {
   }
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Results::SaveUserTiming(void) {
+  CStringA user_timing = CT2A(_test_state._user_timing, CP_UTF8);
+  if (user_timing.GetLength()) {
+    HANDLE file = CreateFile(_file_base + USER_TIMING_FILE, GENERIC_WRITE, 0, 
+                              NULL, CREATE_ALWAYS, 0, 0);
+    if (file != INVALID_HANDLE_VALUE) {
+      DWORD written;
+      WriteFile(file, (LPCSTR)user_timing, user_timing.GetLength(), &written, 0);
+      CloseHandle(file);
+    }
+  }
+}
 
 /*-----------------------------------------------------------------------------
   See if a version of the same request exists but not from the browser.

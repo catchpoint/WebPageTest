@@ -193,6 +193,7 @@ bool WebBrowser::RunAndWait() {
       // set up the TLS session key log
       SetEnvironmentVariable(L"SSLKEYLOGFILE", _test._file_base + L"_keylog.log");
       DeleteFile(_test._file_base + L"_keylog.log");
+      SetKeyLogFile(_test._file_base + L"_keylog.log");
 
       _status.Set(_T("Launching: %s\n"), cmdLine);
 
@@ -249,7 +250,7 @@ bool WebBrowser::RunAndWait() {
           ret = true;
           _status.Set(_T("Waiting up to %d seconds for the test to complete"), 
                       (_test._test_timeout / SECONDS_TO_MS));
-          DWORD wait_time = _test._test_timeout + 30000;  // Allow for a little extra time for results processing
+          DWORD wait_time = _test._test_timeout + 180000;  // Allow extra time for results processing
           #ifdef DEBUG
           wait_time = INFINITE;
           #endif

@@ -10,6 +10,9 @@ $lock = Lock("cron-15", false, 1200);
 if (!isset($lock))
   exit(0);
 
+// Update the safe browsing black list
+SBL_Update();
+
 // update the feeds
 require_once('updateFeeds.php');
 UpdateFeeds();

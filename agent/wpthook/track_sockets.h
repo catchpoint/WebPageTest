@@ -32,6 +32,7 @@ class DataChunk;
 class Requests;
 class TestState;
 class WptTest;
+class SSLStream;
 struct PRFileDesc;
 struct nghttp2_session;
 
@@ -70,6 +71,7 @@ public:
   bool                _during_test;
   bool                _is_ssl;
   bool                _is_ssl_handshake_complete;
+  bool                _ssl_checked;
   LARGE_INTEGER       _connect_start;
   LARGE_INTEGER       _connect_end;
   LARGE_INTEGER       _ssl_start;
@@ -77,6 +79,8 @@ public:
   SOCKET_PROTOCOL     _protocol;
   H2_USER_DATA *      _h2_in;
   H2_USER_DATA *      _h2_out;
+  SSLStream *         _ssl_in;
+  SSLStream *         _ssl_out;
 };
 
 class TrackSockets {
@@ -93,6 +97,7 @@ public:
   void DataOut(SOCKET s, DataChunk& chunk, bool is_unencrypted);
   void DataIn(SOCKET s, DataChunk& chunk, bool is_unencrypted);
 
+  void SniffSSL(SOCKET s, DataChunk& chunk);
   bool IsSsl(SOCKET s);
   bool IsSslById(DWORD socket_id);
   void SetSslFd(PRFileDesc* fd);
@@ -101,6 +106,9 @@ public:
   void ResetSslFd(void);
   void SetSslSocket(SOCKET s);
   bool SslSocketLookup(PRFileDesc* fd, SOCKET& s);
+  void SslKeyLog(CStringA& data);
+  void EnableSsl(SocketInfo *info);
+  CStringA GetSslMasterSecret(SocketInfo *info);
 
   void Reset();
 
@@ -112,6 +120,9 @@ public:
   int GetLocalPort(DWORD socket_id);
   LONGLONG GetEarliest(LONGLONG& after);
   CStringA GetRTT(DWORD ipv4_address);
+  bool Find(ULONG server_addr, USHORT server_port, USHORT client_port,
+            LARGE_INTEGER &match_connect_start,
+            LARGE_INTEGER &match_connect_end);
 
   void H2BeginHeaders(DATA_DIRECTION direction, DWORD socket_id, int stream_id);
   void H2CloseStream(DATA_DIRECTION direction, DWORD socket_id, int stream_id);
@@ -128,6 +139,7 @@ private:
 
   void SslDataOut(SocketInfo* info, const DataChunk& chunk);
   void SslDataIn(SocketInfo* info, const DataChunk& chunk);
+  void SslTrackHandshake(SocketInfo* info, const DataChunk& chunk);
   bool IsSSLHandshake(const DataChunk& chunk);
   H2_USER_DATA * NewHttp2Session(DWORD socket_id,
                                  DATA_DIRECTION direction);
@@ -143,4 +155,6 @@ private:
   CAtlMap<DWORD, PRFileDesc*>    _last_ssl_fd;  // per-thread
   CAtlMap<PRFileDesc*, SOCKET>   _ssl_sockets;
   CAtlMap<DWORD, DWORD>          ipv4_rtt_;  // round trip times by address
+
+  CStringA  _ssl_key_log;
 };

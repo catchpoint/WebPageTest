@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hook_nspr.h"
 #include "hook_schannel.h"
 #include "hook_wininet.h"
+#include "hook_file.h"
 #include "requests.h"
 #include "track_dns.h"
 #include "track_sockets.h"
@@ -70,6 +71,7 @@ private:
   NsprHook  nspr_hook_;
   SchannelHook  schannel_hook_;
   WinInetHook wininet_hook_;
+  FileHook  file_hook_;
   HANDLE    background_thread_;
   HANDLE    background_thread_started_;
   HWND      message_window_;

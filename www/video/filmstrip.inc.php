@@ -35,6 +35,8 @@ foreach($compTests as $t) {
                         $test['cached'] = (int)$p[1];
                     if( $p[0] == 'e' )
                         $test['end'] = trim($p[1]);
+                    if( $p[0] == 'i' )
+                        $test['initial'] = intval(trim($p[1]) * 1000.0);
                 }
             }
 
@@ -73,26 +75,28 @@ foreach($compTests as $t) {
 
                     // figure out the real end time (in ms)
                     if (isset($test['end'])) {
-                        if( !strcmp($test['end'], 'visual') && array_key_exists('visualComplete', $test['pageData'][$test['run']][$test['cached']]) )
+                        if( !strcmp($test['end'], 'visual') && array_key_exists('visualComplete', $test['pageData'][$test['run']][$test['cached']]) ) {
                             $test['end'] = $test['pageData'][$test['run']][$test['cached']]['visualComplete'];
-                        elseif( !strcmp($test['end'], 'load') )
+                        } elseif( !strcmp($test['end'], 'load') ) {
                             $test['end'] = $test['pageData'][$test['run']][$test['cached']]['loadTime'];
-                        elseif( !strcmp($test['end'], 'doc') )
+                        } elseif( !strcmp($test['end'], 'doc') ) {
                             $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'];
-                        elseif(!strncasecmp($test['end'], 'doc+', 4))
+                        } elseif(!strncasecmp($test['end'], 'doc+', 4)) {
                             $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'] + (int)((double)substr($test['end'], 4) * 1000.0);
-                        elseif( !strcmp($test['end'], 'full') )
+                        } elseif( !strcmp($test['end'], 'full') ) {
                             $test['end'] = 0;
-                        elseif( !strcmp($test['end'], 'all') )
+                        } elseif( !strcmp($test['end'], 'all') ) {
                             $test['end'] = -1;
-                        elseif( !strcmp($test['end'], 'aft') ) {
+                        } elseif( !strcmp($test['end'], 'aft') ) {
                             $test['end'] = $test['aft'];
                             if( !$test['end'] )
                                 $test['end'] = -1;
-                        } else
+                        } else {
                             $test['end'] = (int)((double)$test['end'] * 1000.0);
-                    } else
+                        }
+                    } else {
                         $test['end'] = 0;
+                    }
                     if( !$test['end'] )
                         $test['end'] = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];
                 } else {
@@ -210,7 +214,8 @@ function LoadTestData() {
                 if (!$supports60fps && is_array($frame) && array_key_exists('file', $frame) && substr($frame['file'], 0, 3) == 'ms_')
                   $supports60fps = true;
                   
-                if( !$test['end'] || $test['end'] == -1 || $ms <= $test['end'] ) {
+                if ((!$test['end'] || $test['end'] == -1 || $ms <= $test['end']) &&
+                    (!isset($test['initial']) || !count($test['video']['frames']) || $ms >= $test['initial']) ) {
                   $path = "$videoPath/{$frame['file']}";
                   if( $ms < $test['video']['start'] )
                       $test['video']['start'] = $ms;

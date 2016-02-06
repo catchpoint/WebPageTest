@@ -26,11 +26,15 @@ static const TCHAR * DOM_SCRIPT_FUNCTIONS =
     _T("var wptGetUserTimings = (function(){")
     _T("  var ret = '';")
     _T("  if (window.performance && window.performance.getEntriesByType) {")
-    _T("    var marks = JSON.stringify(performance.getEntriesByType('mark'));")
-    _T("    if (marks.length > 2) {")
-    _T("      ret = marks.substring(1, marks.length - 1);")
-    _T("      ret = ret.replace(/\"name\":/g,'\"type\":\"mark\",\"name\":');")
-    _T("    }")
+    _T("    var m = [];")
+    _T("    var marks = performance.getEntriesByType('mark');")
+    _T("    for (var i = 0; i < marks.length; i++)")
+    _T("      m.push({'type': 'mark', 'entryType': marks[i].entryType, 'name': marks[i].name, 'startTime': marks[i].startTime});")
+    _T("    var measures = performance.getEntriesByType('measure');")
+    _T("    for (var i = 0; i < measures.length; i++)")
+    _T("      m.push({'type': 'measure', 'entryType': measures[i].entryType, 'name': measures[i].name, 'startTime': measures[i].startTime, 'duration': measures[i].duration});")
+    _T("    if (m.length)")
+    _T("      ret = JSON.stringify(m);")
     _T("  }")
     _T("  return ret;")
     _T("});")
@@ -1108,7 +1112,7 @@ void Wpt::CollectStats(CString custom_metrics) {
     if (Invoke(GET_USER_TIMINGS, timings)) {
       if (timings.vt == VT_BSTR) {
         CString user_timings(timings);
-        _wpt_interface.ReportUserTiming(user_timings);
+        _wpt_interface.ReportUserTiming(user_timings.Trim(_T("[]")));
       }
     }
     if (Invoke(GET_NAV_TIMINGS, timings)) {

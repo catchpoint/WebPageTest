@@ -36,6 +36,7 @@ var vm = require('vm');
 var wd_sandbox = require('wd_sandbox');
 var webdriver = require('selenium-webdriver');
 var webdriver_http = require('selenium-webdriver/http');
+var zlib = require('zlib');
 
 /** Allow tests to stub out. */
 exports.process = process;
@@ -45,9 +46,8 @@ var DEVTOOLS_CONNECT_TIMEOUT_MS_ = 10000;
 var DETACH_TIMEOUT_MS_ = 2000;
 var VIDEO_PROCESSING_TIMEOUT_MS = 600000;
 var TRACING_STOP_TIMEOUT_MS = 120000;
-
-/** Allow test access. */
-exports.WAIT_AFTER_ONLOAD_MS = 10000;
+var DETECT_ACTIVITY_MS = 2000;
+var DETECT_NO_RE_NAVIGATE_MS = 1000;
 
 var BLANK_PAGE_URL_ = 'data:text/html;charset=utf-8,';
 var GHASTLY_ORANGE_ = '#DE640D';
@@ -165,7 +165,6 @@ WebDriverServer.prototype.init = function(args) {
   this.abortTimer_ = undefined;
   this.agentError_ = undefined;
   this.devToolsMessages_ = [];
-  this.traceData_ = {traceEvents: []};
   this.driver_ = undefined;
   this.exitWhenDone_ = args.exitWhenDone;
   this.isRecordingDevTools_ = false;
@@ -189,6 +188,11 @@ WebDriverServer.prototype.init = function(args) {
   this.customMetrics_ = undefined;
   this.userTimingMarks_ = undefined;
   this.pageData_ = undefined;
+  this.traceFile_ = undefined;
+  this.traceFileStream_ = undefined;
+  this.isNavigating_ = false;
+  this.mainFrame_ = undefined;
+  this.pageLoadCoalesceTimer_ = undefined;
   this.tearDown_();
 };
 
@@ -351,9 +355,39 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
   // If abortTimer_ is set, it means we received an 'Inspector.detached'
   // message, as noted below, so ignore messages until our abortTimer fires.
   if (!this.abortTimer_) {
-    if ('Page.loadEventFired' === message.method) {
-      if (this.isRecordingDevTools_) {
+    if (this.pageLoadCoalesceTimer_ !== undefined &&
+        this.task_['web10'] != 1 &&
+        'Network.' === message.method.substring(0, 8)) {
+      logger.debug("Activity detected after onload, waiting for page activity to finish");
+      clearTimeout(this.pageLoadCoalesceTimer_);
+      this.pageLoadCoalesceTimer_ = setTimeout(function() {
+        this.pageLoadCoalesceTimer_ = undefined;
         this.onPageLoad_();
+      }.bind(this), DETECT_ACTIVITY_MS);
+    }
+    if ('Page.frameStartedLoading' === message.method) {
+      if (message.params['frameId'] !== undefined) {
+        if (this.isNavigating_ && this.mainFrame_ === undefined) {
+          this.mainFrame_ = message.params.frameId;
+          this.isNavigating_ = false;
+        }
+        if (message.params.frameId == this.mainFrame_) {
+          if (this.pageLoadCoalesceTimer_ !== undefined) {
+            clearTimeout(this.pageLoadCoalesceTimer_);
+            this.pageLoadCoalesceTimer_ = undefined;
+            logger.debug('New navigation after onload detected');
+          }
+        }
+      }
+    } else if ('Page.loadEventFired' === message.method) {
+      if (this.isRecordingDevTools_) {
+        var wait_time = this.task_['web10'] == 1 ? DETECT_NO_RE_NAVIGATE_MS : DETECT_ACTIVITY_MS;
+        // Allow for up to 1 second after the page load finished for
+        // another navigation to start (in the case of a javascript redirect).
+        this.pageLoadCoalesceTimer_ = setTimeout(function() {
+          this.pageLoadCoalesceTimer_ = undefined;
+          this.onPageLoad_();
+        }.bind(this), wait_time);
       }
     } else if ('Page.javascriptDialogOpening' === message.method) {
       var err = new Error('Page opened a modal dailog.', this.runNumber_);
@@ -371,6 +405,18 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
             this.onPageLoad_.bind(this, err), DETACH_TIMEOUT_MS_);
       } else {
         // TODO detach during coalesce?
+        logger.warn('%s after Page.loadEventFired?', message.method);
+      }
+    } else if ('Inspector.targetCrashed' === message.method) {
+      if (this.pageLoadDonePromise_ && this.pageLoadDonePromise_.isPending()) {
+        // This message means that the browser has crashed.
+        // Instead of waiting for the timeout, we'll give the browser a couple
+        // seconds to paint an error message (for our screenshot) and then fail
+        // the page load.
+        var err = new Error('Inspector crashed on run ' + this.runNumber_, this.runNumber_);
+        this.abortTimer_ = global.setTimeout(
+            this.onPageLoad_.bind(this, err), DETACH_TIMEOUT_MS_);
+      } else {
         logger.warn('%s after Page.loadEventFired?', message.method);
       }
     }
@@ -776,6 +822,7 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
   // Navigate to a blank, to make sure we clear the prior page and cancel
   // all pending events.  This isn't strictly required if startBrowser loads
   // "about:blank", but it's still a good idea.
+  this.isNavigating_ = true;
   this.pageCommand_('navigate', {url: BLANK_PAGE_URL_});
   this.app_.timeout(500, 'Load blank startup page');
   this.networkCommand_('enable');
@@ -854,11 +901,14 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
   'use strict';
   // Always enable tracing, at a minimum to capture timeline data
   if (this.browser_.supportsTracing && !this.driver_ && !this.traceRunning_) {
-    this.traceData_ = {traceEvents: []};
     this.traceRunning_ = true;
+    this.traceFile_ = path.join(this.runTempDir_, 'trace.json.gz');
+    this.traceFileStream_ = zlib.createGzip();
+    this.traceFileStream_.pipe(fs.createWriteStream(this.traceFile_));
+    this.traceFileStream_.write('{"traceEvents":[{}');
     var message = {method: 'Tracing.start'};
     message.params = {
-      categories: 'netlog,blink.console,blink.user_timing,disabled-by-default-devtools.timeline,devtools.timeline',
+      categories: 'blink.console,blink.user_timing,disabled-by-default-devtools.timeline,devtools.timeline',
       options: 'record-as-much-as-possible'
     };
     if (1 === this.task_.trace) {
@@ -889,14 +939,22 @@ WebDriverServer.prototype.onTracingMessage_ = function(message) {
   if (this.traceRunning_) {
     if ('Tracing.dataCollected' === message.method) {
       var value = (message.params || {}).value;
-      if (value instanceof Array) {
+      if (value instanceof Array && this.traceFileStream_ !== undefined) {
         value.forEach(function(item) {
-          this.traceData_.traceEvents.push(item);
+          this.traceFileStream_.write(',' + JSON.stringify(item));
         }.bind(this));
       }
     } else if ('Tracing.tracingComplete' === message.method) {
       logger.debug('Signalling finish of tracing');
-      this.traceRunning_ = false;
+      if (this.traceFileStream_ !== undefined) {
+        this.traceFileStream_.end(']}');
+        this.traceFileStream_.on('finish', function() {
+          this.traceRunning_ = false;
+          this.traceFileStream_ = undefined;
+        }.bind(this));
+      } else {
+        this.traceRunning_ = false;
+      }
     }
   } else {
     logger.debug('Unexpected tracing message - ' + message.method);
@@ -969,14 +1027,11 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
     // onDevToolsMessage_ resolves this promise when it detects on-load.
     this.pageLoadDonePromise_ = new webdriver.promise.Deferred();
     if (this.timeout_) {
-      var coalesceMillis = (undefined === this.task_.waitAfterOnload ?
-          exports.WAIT_AFTER_ONLOAD_MS :
-          (1000 * Math.floor(parseFloat(this.task_.waitAfterOnload, 10))));
       logger.debug("Waiting up to " + this.timeout_ +
                    "ms for the page to load");
       this.timeoutTimer_ = global.setTimeout(
           this.onPageLoad_.bind(this, new Error('Page load timeout')),
-          this.timeout_ - coalesceMillis);
+          this.timeout_);
     } else {
       logger.debug("No page load timeout set (unexpected)");
     }
@@ -984,7 +1039,6 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
     this.pageCommand_('navigate', {url: this.task_.url});
     return this.pageLoadDonePromise_.promise;
   }.bind(this));
-  this.waitForCoalesce_(this.app_);
 };
 
 /**
@@ -1001,7 +1055,6 @@ WebDriverServer.prototype.runSandboxedSession_ = function(browserCaps) {
     }
     // Repeat load with an already running WD server and driver.
     this.runScript_(this.wdSandbox_);
-    this.waitForCoalesce_(this.sandboxApp_);
   } else {
     this.startWdServer_(browserCaps);
     // The following needs to be scheduled() because getServerUrl() returns
@@ -1019,7 +1072,6 @@ WebDriverServer.prototype.runSandboxedSession_ = function(browserCaps) {
         }.bind(this));
         // Bring it!
         this.runScript_(wdSandbox);
-        this.waitForCoalesce_.bind(this.sandboxApp_);
       }.bind(this));
     }.bind(this));
   }
@@ -1092,29 +1144,6 @@ WebDriverServer.prototype.runScript_ = function(wdSandbox) {
   }.bind(this)).addErrback(function(e) {
     logger.error('Script failed: ' + e.message);
     this.testError_ = this.testError_ || e.message;
-  }.bind(this));
-};
-
-/**
- * Schedules a wait to allow extra time for post-onLoad activities to finish.
- *
- * @param {Object} app the context in which to set the timeout.
- * @private
- */
-WebDriverServer.prototype.waitForCoalesce_ = function(app) {
-  'use strict';
-  var coalesceMillis = (undefined === this.task_.waitAfterOnload ?
-      exports.WAIT_AFTER_ONLOAD_MS :
-      (1000 * Math.floor(parseFloat(this.task_.waitAfterOnload, 10))));
-  var minMillis = (undefined === this.task_.time ? 0 :
-      (1000 * Math.floor(parseFloat(this.task_.time, 10))));
-  this.app_.schedule('Wait for browser', function() {
-    var currMillis = Math.floor(Date.now() - this.testStartTime_);
-    var waitMillis = Math.max(coalesceMillis, (minMillis - currMillis));
-    if (waitMillis > 0) {
-      logger.info('Test finished, waiting for browser to coalesce');
-      app.timeout(waitMillis, 'Waiting for browser to coalesce');
-    }
   }.bind(this));
 };
 
@@ -1229,9 +1258,21 @@ WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
           'var marks = window.performance.getEntriesByType("mark");' +
           'if (marks.length) {' +
           '  for (var i = 0; i < marks.length; i++)' +
-          '    m.push({"entryType": marks[i].entryType, ' +
+          '    m.push({"type": "mark",'+
+          '            "entryType": marks[i].entryType, ' +
           '            "name": marks[i].name, ' +
           '            "startTime": marks[i].startTime});' +
+          '}' +
+          '} catch(e) {};' +
+          'try {' +
+          'var measures = window.performance.getEntriesByType("measure");' +
+          'if (measures.length) {' +
+          '  for (var i = 0; i < measures.length; i++)' +
+          '    m.push({"type": "measure",' +
+          '            "entryType": measures[i].entryType, ' +
+          '            "name": measures[i].name, ' +
+          '            "startTime": measures[i].startTime,' +
+          '            "duration": measures[i].duration});' +
           '}' +
           '} catch(e) {};' +
           'return m;' +
@@ -1287,17 +1328,19 @@ WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
 
 WebDriverServer.prototype.scheduleProcessVideo_ = function() {
   this.scheduleNoFault_('Process Video', function() {
-    if (this.videoFile_ && this.flags_['processvideo'] == 'yes') {
+    if (this.videoFile_) {
       var videoDir = path.join(this.runTempDir_, 'video');
       this.histogramFile_ = path.join(this.runTempDir_, 'histograms.json.gz');
-      var traceFile = path.join(this.runTempDir_, 'trace.json');
+      // Force the video JPEG quality level to be between 30 and 95.
+      var imgQ = (this.task_.imageQuality ?
+            parseInt(this.task_.imageQuality, 10) : 0);
+      imgQ = Math.min(Math.max(imgQ, 30), 95);
       var options = ['lib/video/visualmetrics.py', '-i', this.videoFile_, '-d',
-          videoDir, '--orange', '--viewport', '--force', '--quality', '75',
-          '--histogram', this.histogramFile_];
-      if (this.traceData_) {
-        fs.writeFileSync(traceFile, JSON.stringify(this.traceData_));
+          videoDir, '--orange', '--viewport', '--force', '--quality', imgQ,
+          '--maxframes', 50, '--histogram', this.histogramFile_];
+      if (this.traceFile_) {
         options.push('--timeline');
-        options.push(traceFile);
+        options.push(this.traceFile_);
       }
       process_utils.scheduleExec(this.app_,
           'python', options, undefined,
@@ -1318,6 +1361,17 @@ WebDriverServer.prototype.scheduleProcessVideo_ = function() {
   }.bind(this));
 };
 
+WebDriverServer.prototype.scheduleAssertBrowserIsRunning_ = function() {
+  this.scheduleNoFault_('Process Video', function() {
+    this.browser_.scheduleAssertIsRunning().then(function(running) {
+      if (!running) {
+        logger.info('Browser Crashed (or is no longer in focus)');
+        this.testError_ = "Browser Crashed";
+      }
+    }.bind(this));
+  }.bind(this));
+};
+
 /**
  * @private
  */
@@ -1332,11 +1386,6 @@ WebDriverServer.prototype.done_ = function() {
     this.isDone_ = true;
     this.isRecordingDevTools_ = false;
 
-    if (this.testError_) {
-      logger.error('Test failed: ' + this.testError_);
-    } else {
-      logger.info('Test passed');
-    }
     this.scheduleNoFault_('Capture Screen Shot', function() {
       this.takeScreenshot_('screen', 'end of run');
     }.bind(this));
@@ -1358,18 +1407,22 @@ WebDriverServer.prototype.done_ = function() {
       this.scheduleNoFault_('Stop video recording',
           this.browser_.scheduleStopVideoRecording.bind(this.browser_));
     }
+    this.scheduleAssertBrowserIsRunning_();
     if (this.videoFile_) {
       // video processing needs to be done after tracing has been stopped and collected
       this.scheduleProcessVideo_();
     }
+    this.scheduleNoFault_('End state', function() {
+      if (this.testError_) {
+        logger.error('Test failed: ' + this.testError_);
+      } else {
+        logger.info('Test passed');
+      }
+    }.bind(this));
     logger.debug("Done collecting results")
     var devToolsFile = this.devToolsMessages_ ? path.join(this.runTempDir_, 'devtools.json') : undefined;
     if (devToolsFile) {
       fs.writeFileSync(devToolsFile, JSON.stringify(this.devToolsMessages_));
-    }
-    var traceFile = this.traceData_ ? path.join(this.runTempDir_, 'trace.json') : undefined;
-    if (traceFile) {
-      fs.writeFileSync(traceFile, JSON.stringify(this.traceData_));
     }
     this.scheduleNoFault_('Send IPC', function() {
       logger.debug("Sending 'done' IPC")
@@ -1379,7 +1432,7 @@ WebDriverServer.prototype.done_ = function() {
           agentError: this.agentError_,
           devToolsFile: devToolsFile,
           screenshots: this.screenshots_,
-          traceFile: traceFile,
+          traceFile: this.traceFile_,
           videoFile: this.videoFile_,
           videoFrames: this.videoFrames_,
           pcapFile: this.pcapFile_,

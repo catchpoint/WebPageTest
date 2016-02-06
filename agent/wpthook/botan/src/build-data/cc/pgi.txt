@@ -1,0 +1,28 @@
+macro_name PORTLAND_GROUP
+
+binary_name pgCC
+
+output_to_option "-o "
+add_include_dir_option -I
+add_lib_dir_option -L
+add_lib_option -l
+
+compile_flags "-c"
+debug_info_flags "-g"
+optimization_flags "-fast -Minline"
+shared_flags "-fPIC"
+
+makefile_style gmake
+
+<so_link_commands>
+linux   -> "$(CXX) -shared -fPIC -Wl,-soname,$(SONAME_ABI)"
+solaris -> "$(CXX) -G -fPIC -Wl,-h,$(SONAME_ABI)"
+</so_link_commands>
+
+<mach_opt>
+i586     -> "-tp p5"
+i686     -> "-tp p6"
+athlon   -> "-tp k7"
+pentium4 -> "-tp p6"
+x86_32   -> "-tp px"
+</mach_opt>

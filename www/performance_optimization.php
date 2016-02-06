@@ -72,7 +72,7 @@ $page_description = "Website performance optimization recommendations$testLabel.
                 require 'optimization.inc';
 
                 require_once('page_data.inc');
-                $pageData = loadPageRunData($testPath, $run, $cached);
+                $pageData = loadPageRunData($testPath, $run, $cached, null, $test['testinfo']);
 
                 require_once('object_detail.inc');
                 $secure = false;

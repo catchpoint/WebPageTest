@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "track_sockets.h"
 #include "requests.h"
 #include "test_state.h"
+#include "ssl_stream.h"
 #include "../wptdriver/wpt_test.h"
 #include <nghttp2/nghttp2.h>
 
@@ -44,12 +45,15 @@ SocketInfo::SocketInfo():
   _id(0)
   , _accounted_for(false)
   , _during_test(false)
+  , _ssl_checked(false)
   , _is_ssl(false)
   , _is_ssl_handshake_complete(false)
   , _local_port(0)
   , _protocol(PROTO_NOT_CHECKED)
   , _h2_in(NULL)
-  , _h2_out(NULL) {
+  , _h2_out(NULL)
+  , _ssl_in(NULL)
+  , _ssl_out(NULL) {
   memset(&_addr, 0, sizeof(_addr));
   _connect_start.QuadPart = 0;
   _connect_end.QuadPart = 0;
@@ -70,6 +74,10 @@ SocketInfo::~SocketInfo(void) {
       nghttp2_session_del(_h2_out->session);
     delete _h2_out;
   }
+  if (_ssl_in)
+    delete _ssl_in;
+  if (_ssl_out)
+    delete _ssl_out;
 }
 
 /*-----------------------------------------------------------------------------
@@ -131,6 +139,7 @@ void TrackSockets::Close(SOCKET s) {
 bool TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name, 
                             int namelen) {
   bool allowed = true;
+
   WptTrace(loglevel::kFunction, 
             _T("[wpthook] - TrackSockets::Connect(%d)\n"), s);
 
@@ -147,6 +156,7 @@ bool TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
     EnterCriticalSection(&cs);
     SocketInfo* info = GetSocketInfo(s, false);
     memcpy(&info->_addr, ip_name, sizeof(struct sockaddr_in));
+    info->_addr.sin_port = ntohs(info->_addr.sin_port);
     QueryPerformanceCounter(&info->_connect_start);
     localhost = info->IsLocalhost();
     allowed = !info->IsLinkLocal();
@@ -283,6 +293,7 @@ void TrackSockets::DataOut(SOCKET s, DataChunk& chunk, bool is_unencrypted) {
   }
   DWORD socket_id = info->_id;
   if (!info->IsLocalhost()) {
+    _test_state.ActivityDetected();
     if (_test_state._active && !is_unencrypted) {
       _test_state._bytes_out += chunk.GetLength();
       if (!_test_state._on_load.QuadPart)
@@ -317,6 +328,7 @@ void TrackSockets::DataIn(SOCKET s, DataChunk& chunk, bool is_unencrypted) {
   SocketInfo* info = GetSocketInfo(s);
   DWORD socket_id = info->_id;
   if (!info->IsLocalhost()) {
+    _test_state.ActivityDetected();
     if (_test_state._active && !is_unencrypted) {
       _test_state._bytes_in_bandwidth += chunk.GetLength();
       if (!_test_state.received_data_ && !IsSSLHandshake(chunk))
@@ -389,6 +401,35 @@ bool TrackSockets::ClaimConnect(DWORD socket_id, LARGE_INTEGER before,
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+bool TrackSockets::Find(ULONG server_addr, USHORT server_port,
+                        USHORT client_port,
+                        LARGE_INTEGER &match_connect_start,
+                        LARGE_INTEGER &match_connect_end) {
+  bool found = false;
+  EnterCriticalSection(&cs);
+  POSITION pos = _socketInfo.GetStartPosition();
+  while (pos) {
+    SocketInfo * info = NULL;
+    DWORD key = 0;
+    _socketInfo.GetNextAssoc(pos, key, info);
+    if (info &&
+        info->_addr.sin_addr.S_un.S_addr == server_addr &&
+        info->_addr.sin_port == server_port &&
+        info->_local_port == client_port) {
+      if (info->_connect_start.QuadPart) {
+        found = true;
+        match_connect_start.QuadPart = info->_connect_start.QuadPart;
+        match_connect_end.QuadPart = info->_connect_end.QuadPart;
+      }
+      break;
+    }
+  }
+  LeaveCriticalSection(&cs);
+  return found;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 void TrackSockets::ClaimAll() {
   EnterCriticalSection(&cs);
   POSITION pos = _socketInfo.GetStartPosition();
@@ -424,6 +465,21 @@ int TrackSockets::GetLocalPort(DWORD socket_id) {
     local_port = info->_local_port;
   LeaveCriticalSection(&cs);
   return local_port;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TrackSockets::SniffSSL(SOCKET s, DataChunk& chunk) {
+  if (chunk.GetLength() > 0) {
+    EnterCriticalSection(&cs);
+    SocketInfo* info = GetSocketInfo(s);
+    if (!info->IsLocalhost() && !info->_ssl_checked) {
+      info->_ssl_checked = true;
+      if (IsSSLHandshake(chunk))
+        EnableSsl(info);
+    }
+    LeaveCriticalSection(&cs);
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -481,7 +537,7 @@ void TrackSockets::ClaimSslFd(SOCKET s) {
         && s != INVALID_SOCKET) {
     _ssl_sockets.SetAt(fd, s);
     SocketInfo* info = GetSocketInfo(s);
-    info->_is_ssl = true;
+    EnableSsl(info);
   }
   _last_ssl_fd.RemoveKey(thread_id);
   LeaveCriticalSection(&cs);
@@ -512,7 +568,7 @@ void TrackSockets::SetSslSocket(SOCKET s) {
       (!socket_id || !_requests.HasActiveRequest(socket_id, 0))) {
     _ssl_sockets.SetAt(fd, s);
     SocketInfo* info = GetSocketInfo(s);
-    info->_is_ssl = true;
+    EnableSsl(info);
   }
   _last_ssl_fd.RemoveKey(thread_id);
   LeaveCriticalSection(&cs);
@@ -540,11 +596,69 @@ bool TrackSockets::IsSSLHandshake(const DataChunk& chunk) {
 }
 
 /*-----------------------------------------------------------------------------
+  Call from within critical section.
+-----------------------------------------------------------------------------*/
+void TrackSockets::SslDataOut(SocketInfo* info, const DataChunk& chunk) {
+  SslTrackHandshake(info, chunk);
+  info->_ssl_out->Append(chunk);
+}
+
+/*-----------------------------------------------------------------------------
+  Call from within critical section.
+-----------------------------------------------------------------------------*/
+void TrackSockets::SslDataIn(SocketInfo* info, const DataChunk& chunk) {
+  SslTrackHandshake(info, chunk);
+  info->_ssl_in->Append(chunk);
+}
+
+/*-----------------------------------------------------------------------------
+  Append SSL Keylog data
+-----------------------------------------------------------------------------*/
+void TrackSockets::SslKeyLog(CStringA& data) {
+  _ssl_key_log += data.MakeLower();
+}
+
+/*-----------------------------------------------------------------------------
+  Match the given "client random" with the keylog to get the TLS session
+  secret for decryption.
+-----------------------------------------------------------------------------*/
+CStringA TrackSockets::GetSslMasterSecret(SocketInfo *info) {
+  CStringA secret;
+  // Get the client random which is the index for the master secret in
+  // the keylog data.
+  if (info->_ssl_out && info->_ssl_out->client_random_.GetLength()) {
+    CStringA client_random = info->_ssl_out->client_random_;
+    int start = _ssl_key_log.Find(client_random);
+    if (start >= 0) {
+      start += client_random.GetLength();
+      int end = _ssl_key_log.Find("\n", start);
+      CStringA master_secret;
+      if (end >= start)
+        master_secret = _ssl_key_log.Mid(start, end - start);
+      else
+        master_secret = _ssl_key_log.Mid(start);
+      master_secret.Trim();
+      if (master_secret.GetLength() == 96)
+        secret = master_secret;
+    }
+  }
+  return secret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TrackSockets::EnableSsl(SocketInfo *info) {
+  info->_is_ssl = true;
+  info->_ssl_in = new SSLStream(*this, info, SSL_IN);
+  info->_ssl_out = new SSLStream(*this, info, SSL_OUT);
+}
+
+/*-----------------------------------------------------------------------------
   Track the SSL handshake.
   http://en.wikipedia.org/wiki/Transport_Layer_Security#Handshake_protocol
   Call from within critical section.
   -----------------------------------------------------------------------------*/
-void TrackSockets::SslDataOut(SocketInfo* info, const DataChunk& chunk) {
+void TrackSockets::SslTrackHandshake(SocketInfo* info, const DataChunk& chunk) {
   const char *buf = chunk.GetData();
   DWORD len = chunk.GetLength();
   if (info->_is_ssl && !info->_is_ssl_handshake_complete && len > 3) {
@@ -571,18 +685,6 @@ void TrackSockets::SslDataOut(SocketInfo* info, const DataChunk& chunk) {
       info->_is_ssl_handshake_complete = true;
     }
   }
-}
-
-/*-----------------------------------------------------------------------------
-  Track the SSL handshake.
-  http://en.wikipedia.org/wiki/Transport_Layer_Security#Handshake_protocol
-  Call from within critical section.
-
-  TODO: search for 14 (change cipher) or 17 (app data) to end handshake
-  TODO: Save SSL version chosen by server. w
------------------------------------------------------------------------------*/
-void TrackSockets::SslDataIn(SocketInfo* info, const DataChunk& chunk) {
-  SslDataOut(info, chunk);
 }
 
 /*-----------------------------------------------------------------------------

@@ -97,6 +97,8 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="discard" value="' . htmlspecialchars($_REQUEST['discard']) . "\">\n";
             if (array_key_exists('timeout', $_REQUEST))
               echo '<input type="hidden" name="timeout" value="' . htmlspecialchars($_REQUEST['timeout']) . "\">\n";
+            if (array_key_exists('appendua', $_REQUEST))
+              echo '<input type="hidden" name="appendua" value="' . htmlspecialchars($_REQUEST['appendua']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
@@ -350,7 +352,8 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <?php
                                         $checked = '';
-                                        if (array_key_exists('keepua', $settings) && $settings['keepua'])
+                                        if ((array_key_exists('keepua', $settings) && $settings['keepua']) ||
+                                                (array_key_exists('keepua', $_REQUEST) && $_REQUEST['keepua']))
                                             $checked = ' checked=checked';
                                         echo "<input type=\"checkbox\" name=\"keepua\" id=\"keepua\" class=\"checkbox\" style=\"float: left;width: auto;\"$checked>\n";
                                         ?>
@@ -397,9 +400,37 @@ $loc = ParseLocations($locations);
                                 <ul class="input_fields">
                                     <li>
                                         <input type="checkbox" name="mobile" id="mobile" class="checkbox" style="float: left;width: auto;">
+                                        <?php
+                                        if (is_file('./settings/mobile_devices.ini')) {
+                                          $devices = parse_ini_file('./settings/mobile_devices.ini', true);
+                                          if ($devices && count($devices)) {
+                                            $selectedDevice = null;
+                                            if (isset($_COOKIE['mdev']) && isset($devices[$_COOKIE['mdev']]))
+                                              $selectedDevice = $_COOKIE['mdev'];
+                                            echo '<select name="mobileDevice" id="mobileDevice">';
+                                            $lastGroup = null;
+                                            foreach ($devices as $deviceName => $deviceInfo) {
+                                              if (isset($deviceInfo['label'])) {
+                                                if (isset($deviceInfo['group']) && $deviceInfo['group'] != $lastGroup) {
+                                                  if (isset($lastGroup))
+                                                    echo "</optgroup>";
+                                                  $lastGroup = $deviceInfo['group'];
+                                                  echo "<optgroup label=\"" . htmlspecialchars($lastGroup) . "\">";
+                                                }
+                                                $selected = '';
+                                                if (isset($selectedDevice) && $selectedDevice == $deviceName)
+                                                  $selected = 'selected';
+                                                echo "<option value=\"$deviceName\" $selected>" . htmlspecialchars($deviceInfo['label']) . "</option>\n";
+                                              }
+                                            }
+                                            if (isset($lastGroup))
+                                              echo "</optgroup>";
+                                            echo '</select>';
+                                          }
+                                        }
+                                        ?>
                                         <label for="mobile" class="auto_width">
-                                            Emulate Mobile Browser<br>
-                                            <small>Nexus 5 user agent, 1080x1920 screen, 3x device pixel ratio</small>
+                                            Emulate Mobile Browser
                                         </label>
                                     </li>
                                     <li>
@@ -455,6 +486,13 @@ $loc = ParseLocations($locations);
                                     <?php
                                     }
                                     ?>
+                                    <li>
+                                        <label for="hostResolverRules" style="width: auto;">
+                                        <a href="https://github.com/atom/electron/blob/master/docs/api/chrome-command-line-switches.md#--host-rulesrules">Host Rules</a><br>
+                                        <small>i.e. MAP * 1.2.3.4</small>
+                                        </label>
+                                        <input type="text" name="hostResolverRules" id="hostResolverRules" class="text" style="width: 400px;">
+                                    </li>
                                     <li>
                                         <label for="cmdline" style="width: auto;">
                                         Command-line<br>

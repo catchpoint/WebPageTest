@@ -89,9 +89,9 @@ var g_debugWindow = null;  // May create at window onload.
 var g_overrideHosts = {};
 var g_addHeaders = [];
 var g_setHeaders = [];
+var g_manipulatingHeaders = false;
 var g_started = false;
 var g_requestsHooked = false;
-var g_appendUA = [];
 
 /**
  * Uninstall a given set of extensions.  Run |onComplete| when done.
@@ -287,69 +287,59 @@ var wptBeforeSendHeaders = function(details) {
   var response = {};
   if (g_active && details.tabId == g_tabid) {
     var modified = false;
-    var host = details.url.match(URL_REGEX)[2].toString();
-    var scheme = details.url.match(URL_REGEX)[1].toString();
-    for (var originalHost in g_overrideHosts) {
-      if (g_overrideHosts[originalHost] == host) {
-        details.requestHeaders.push({'name' : 'x-Host', 'value' : originalHost});
-        modified = true;
-        break;
+    if (g_manipulatingHeaders) {
+      var host = details.url.match(URL_REGEX)[2].toString();
+      var scheme = details.url.match(URL_REGEX)[1].toString();
+      for (var originalHost in g_overrideHosts) {
+        if (g_overrideHosts[originalHost] == host) {
+          details.requestHeaders.push({'name' : 'x-Host', 'value' : originalHost});
+          modified = true;
+          break;
+        }
       }
-    }
-    
-    // modify headers for HTTPS requests (non-encrypted will be handled at the network layer)
-    if (scheme.toLowerCase() == "https://") {
-      var i;
-      for (i = 0; i < g_setHeaders.length; i++) {
-        if (wptHostMatches(host, g_setHeaders[i].filter)) {
-          var headerSet = false;
-          for (var j = 0; j < details.requestHeaders.length; j++) {
-            if (g_setHeaders[i].name.toLowerCase() == details.requestHeaders[j].name.toLowerCase()) {
-              details.requestHeaders[j].value = g_setHeaders[i].value;
-              headerSet = true;
+      
+      // modify headers for HTTPS requests (non-encrypted will be handled at the network layer)
+      if (scheme.toLowerCase() == "https://") {
+        var i;
+        for (i = 0; i < g_setHeaders.length; i++) {
+          if (wptHostMatches(host, g_setHeaders[i].filter)) {
+            var headerSet = false;
+            for (var j = 0; j < details.requestHeaders.length; j++) {
+              if (g_setHeaders[i].name.toLowerCase() == details.requestHeaders[j].name.toLowerCase()) {
+                details.requestHeaders[j].value = g_setHeaders[i].value;
+                headerSet = true;
+              }
             }
+            if (!headerSet)
+              details.requestHeaders.push({'name' : g_setHeaders[i].name, 'value' : g_setHeaders[i].value});
+            modified = true;
           }
-          if (!headerSet)
-            details.requestHeaders.push({'name' : g_setHeaders[i].name, 'value' : g_setHeaders[i].value});
-          modified = true;
         }
-      }
-      for (i = 0; i < g_addHeaders.length; i++) {
-        if (wptHostMatches(host, g_addHeaders[i].filter)) {
-          details.requestHeaders.push({'name' : g_addHeaders[i].name, 'value' : g_addHeaders[i].value});
-          modified = true;
+        for (i = 0; i < g_addHeaders.length; i++) {
+          if (wptHostMatches(host, g_addHeaders[i].filter)) {
+            details.requestHeaders.push({'name' : g_addHeaders[i].name, 'value' : g_addHeaders[i].value});
+            modified = true;
+          }
         }
       }
     }
     
-    // Append the PTST user agent string as necessary
-    if (g_appendUA.length) {
-      for (i = 0; i < details.requestHeaders.length; i++) {
-        if (details.requestHeaders[i].name.toLowerCase() === 'user-agent') {
-          details.requestHeaders[i].value += ' ' + g_appendUA.join(' ');
-          modified = true;
-        }
-      }
-    }
-    
-    if (modified)
+    if (modified) {
       response = {requestHeaders: details.requestHeaders};
+    }
   }
   return response;
 };
 
 var wptBeforeSendRequest = function(details) {
   var action = {};
-  if (g_active && details.tabId == g_tabid) {
+  if (g_active && g_manipulatingHeaders && details.tabId == g_tabid) {
     var urlParts = details.url.match(URL_REGEX);
     var scheme = urlParts[1].toString();
     var host = urlParts[2].toString();
     var object = urlParts[3].toString();
-    wpt.LOG.info('Checking host override for "' + host +
-                 '" in URL ' + details.url);
     if (g_overrideHosts[host] !== undefined) {
       var newHost = g_overrideHosts[host];
-      wpt.LOG.info('Overriding host ' + host + ' to ' + newHost);
       action.redirectUrl = scheme + newHost + object;
     }
   }
@@ -428,39 +418,6 @@ chrome.extension.onRequest.addListener(
       wptSendEvent('load', 
                    '?timestamp=' + request.timestamp + 
                    '&fixedViewport=' + request.fixedViewport);
-    }
-    else if (request.message == 'wptWindowTiming') {
-      wpt.logging.closeWindowIfOpen();
-      g_active = false;
-      wpt.chromeDebugger.SetActive(g_active);
-      wptSendEvent(
-          'window_timing',
-          '?domContentLoadedEventStart=' +
-              request.domContentLoadedEventStart +
-          '&domContentLoadedEventEnd=' +
-              request.domContentLoadedEventEnd +
-          '&loadEventStart=' + request.loadEventStart +
-          '&loadEventEnd=' + request.loadEventEnd +
-          '&msFirstPaint=' + request.msFirstPaint);
-    }
-    else if (request.message == 'wptDomCount') {
-      wptSendEvent('domCount', 
-                   '?domCount=' + request.domCount);
-    }
-    else if (request.message == 'wptMarks') {
-      if (request['marks'] !== undefined &&
-          request.marks.length) {
-        for (var i = 0; i < request.marks.length; i++) {
-          var mark = request.marks[i];
-          mark.type = 'mark';
-          wptSendEvent('timed_event', '', JSON.stringify(mark));
-        }
-      }
-    } else if (request.message == 'wptStats') {
-      var stats = '?';
-      if (request['domCount'] !== undefined)
-        stats += 'domCount=' + request.domCount;
-      wptSendEvent('stats', stats);
     } else if (request.message == 'wptResponsive') {
       if (request['isResponsive'] !== undefined)
         wptSendEvent('responsive', '?isResponsive=' + request.isResponsive);
@@ -492,113 +449,115 @@ function wptExecuteTask(task) {
       g_active = false;
       wpt.chromeDebugger.SetActive(g_active);
     }
-    // Decode and execute the actual command.
-    // Commands are all lowercase at this point.
-    wpt.LOG.info('Running task ' + task.action + ' ' + task.target);
-    switch (task.action) {
-      case 'navigate':
-        g_processing_task = true;
-        g_commandRunner.doNavigate(task.target, wptTaskCallback);
-        break;
-      case 'exec':
-        g_processing_task = true;
-        wpt.chromeDebugger.Exec(task.target, wptTaskCallback);
-        break;
-      case 'setcookie':
-        g_commandRunner.doSetCookie(task.target, task.value);
-        break;
-      case 'block':
-        g_commandRunner.doBlock(task.target);
-        break;
-      case 'setdomelement':
-        // Sending request to set the DOM element has to happen only at the
-        // navigate event after the content script is loaded. So, this just
-        // sets the global variable.
-        wpt.commands.g_domElements.push(task.target);
-        break;
-      case 'click':
-        g_processing_task = true;
-        g_commandRunner.doClick(task.target, wptTaskCallback);
-        break;
-      case 'setinnerhtml':
-        g_processing_task = true;
-        g_commandRunner.doSetInnerHTML(task.target, task.value, wptTaskCallback);
-        break;
-      case 'setinnertext':
-        g_processing_task = true;
-        g_commandRunner.doSetInnerText(task.target, task.value, wptTaskCallback);
-        break;
-      case 'setvalue':
-        g_processing_task = true;
-        g_commandRunner.doSetValue(task.target, task.value, wptTaskCallback);
-        break;
-      case 'submitform':
-        g_processing_task = true;
-        g_commandRunner.doSubmitForm(task.target, wptTaskCallback);
-        break;
-      case 'clearcache':
-        g_processing_task = true;
-        g_commandRunner.doClearCache(task.target, wptTaskCallback);
-        break;
-      case 'capturetimeline':
-        wpt.chromeDebugger.CaptureTimeline(parseInt(task.target));
-        break;
-      case 'capturetrace':
-        wpt.chromeDebugger.CaptureTrace();
-        break;
-      case 'noscript':
-        g_commandRunner.doNoScript();
-        break;
-      case 'overridehost':
+  // Decode and execute the actual command.
+  // Commands are all lowercase at this point.
+  wpt.LOG.info('Running task ' + task.action + ' ' + task.target);
+  switch (task.action) {
+    case 'navigate':
+      g_processing_task = true;
+      g_commandRunner.doNavigate(task.target, wptTaskCallback);
+      break;
+    case 'exec':
+      g_processing_task = true;
+      wpt.chromeDebugger.Exec(task.target, wptTaskCallback);
+      break;
+    case 'setcookie':
+      g_commandRunner.doSetCookie(task.target, task.value);
+      break;
+    case 'block':
+      g_commandRunner.doBlock(task.target);
+      break;
+    case 'setdomelement':
+      // Sending request to set the DOM element has to happen only at the
+      // navigate event after the content script is loaded. So, this just
+      // sets the global variable.
+      wpt.commands.g_domElements.push(task.target);
+      break;
+    case 'click':
+      g_processing_task = true;
+      g_commandRunner.doClick(task.target, wptTaskCallback);
+      break;
+    case 'setinnerhtml':
+      g_processing_task = true;
+      g_commandRunner.doSetInnerHTML(task.target, task.value, wptTaskCallback);
+      break;
+    case 'setinnertext':
+      g_processing_task = true;
+      g_commandRunner.doSetInnerText(task.target, task.value, wptTaskCallback);
+      break;
+    case 'setvalue':
+      g_processing_task = true;
+      g_commandRunner.doSetValue(task.target, task.value, wptTaskCallback);
+      break;
+    case 'submitform':
+      g_processing_task = true;
+      g_commandRunner.doSubmitForm(task.target, wptTaskCallback);
+      break;
+    case 'clearcache':
+      g_processing_task = true;
+      g_commandRunner.doClearCache(task.target, wptTaskCallback);
+      break;
+    case 'capturetimeline':
+      wpt.chromeDebugger.CaptureTimeline(parseInt(task.target));
+      break;
+    case 'capturetrace':
+      wpt.chromeDebugger.CaptureTrace();
+      break;
+    case 'noscript':
+      g_commandRunner.doNoScript();
+      break;
+    case 'overridehost':
+      g_overrideHosts[task.target] = task.value;
+      g_manipulatingHeaders = true;
+      wptHookRequests();
+      break;
+    case 'addheader':
+      var separator = task.target.indexOf(":");
+      if (separator > 0) {
+        g_addHeaders.push({'name' : task.target.substr(0, separator).trim(),
+                           'value' : task.target.substr(separator + 1).trim(),
+                           'filter' : typeof(task.value) === 'undefined' ? '' : task.value});
+        g_manipulatingHeaders = true;
         wptHookRequests();
-        g_overrideHosts[task.target] = task.value;
-        break;
-      case 'addheader':
-        var separator = task.target.indexOf(":");
-        if (separator > 0)
-          g_addHeaders.push({'name' : task.target.substr(0, separator).trim(),
-                             'value' : task.target.substr(separator + 1).trim(),
-                             'filter' : typeof(task.value) === 'undefined' ? '' : task.value});
+      }
+      break;
+    case 'setheader':
+      var separator = task.target.indexOf(":");
+      if (separator > 0) {
+        g_setHeaders.push({'name' : task.target.substr(0, separator).trim(),
+                           'value' : task.target.substr(separator + 1).trim(),
+                           'filter' : typeof(task.value) === 'undefined' ? '' : task.value});
+        g_manipulatingHeaders = true;
         wptHookRequests();
-        break;
-      case 'setheader':
-        var separator = task.target.indexOf(":");
-        if (separator > 0)
-          g_setHeaders.push({'name' : task.target.substr(0, separator).trim(),
-                             'value' : task.target.substr(separator + 1).trim(),
-                             'filter' : typeof(task.value) === 'undefined' ? '' : task.value});
-        wptHookRequests();
-        break;
-      case 'resetheaders':
-        g_addHeaders = [];
-        g_setHeaders = [];
-        break;
-      case 'appenduseragent':
-        g_appendUA.push(task.target);
-        wptHookRequests();
-        break;
-      case 'collectstats':
-        g_processing_task = true;
-        wpt.chromeDebugger.CollectStats(function(){
-          g_commandRunner.doCollectStats(task.target, wptTaskCallback);
-        });
-        break;
-      case 'emulatemobile':
-        wpt.chromeDebugger.EmulateMobile(task.target);
-        break;
-      case 'checkresponsive':
-        g_processing_task = true;
-        g_commandRunner.doCheckResponsive(wptTaskCallback);
-        break;
+      }
+      break;
+    case 'resetheaders':
+      g_addHeaders = [];
+      g_setHeaders = [];
+      break;
+    case 'appenduseragent':
+      wpt.chromeDebugger.SetUserAgent(navigator.userAgent + ' ' + task.target);
+      break;
+    case 'collectstats':
+      g_processing_task = true;
+      wpt.chromeDebugger.CollectStats(task.target, wptTaskCallback);
+      break;
+    case 'emulatemobile':
+      wpt.chromeDebugger.EmulateMobile(task.target);
+      break;
+    case 'checkresponsive':
+      g_processing_task = true;
+      g_commandRunner.doCheckResponsive(wptTaskCallback);
+      break;
 
-      default:
-        wpt.LOG.error('Unimplemented command: ', task);
-    }
-
-    if (!g_active && !g_processing_task)
-      window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT);
+    default:
+      wpt.LOG.error('Unimplemented command: ', task);
   }
-}
+
+  if (!g_active && !g_processing_task)
+    window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT);
+    }
+  }
 
 // start out by grabbing the main tab and forcing a navigation to
 // the local blank page so we are guaranteed to see the navigation

@@ -31,6 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 #include "HttpHeader.h"
 
+static DWORD g_nextRequestId = 1;
+
 /*-----------------------------------------------------------------------------
   Custom Regex matches
 -----------------------------------------------------------------------------*/
@@ -237,7 +239,8 @@ public:
 		,fromNet(false)
 	{
 		memset(&peer, 0, sizeof(peer));
-
+		requestId = g_nextRequestId;
+		g_nextRequestId++;
 		QueryPerfFrequency(msFreq);
 		msFreq = msFreq / (__int64)1000;
 	}
@@ -291,6 +294,7 @@ public:
 	bool			valid;			// is it a real request?
 	bool			basePage;		// is this the base page?
 	bool			fromNet;		// Was it a network request?
+	DWORD			requestId;
 
   // custom checks
   CAtlList<CCustomMatch>  customMatches;

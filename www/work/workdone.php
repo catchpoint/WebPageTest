@@ -269,11 +269,13 @@ if (ValidateTestId($id)) {
               $testInfo['test_runs'][$runNumber] = array('done' => true);
             $testInfo_dirty = true;
           }
-          if ($testInfo['video'])
-            $workdone_video_start = microtime(true);
-          ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed, $max_load);
-          if ($testInfo['video'])
-            $workdone_video_end = microtime(true);
+          if (!GetSetting('disable_video_processing')) {
+            if ($testInfo['video'])
+              $workdone_video_start = microtime(true);
+            ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed, $max_load);
+            if ($testInfo['video'])
+              $workdone_video_end = microtime(true);
+          }
         }
 
         if (strlen($location) && strlen($tester)) {

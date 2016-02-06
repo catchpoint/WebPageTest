@@ -125,6 +125,11 @@ if (isset($_REQUEST['id'])) {
 if (isset($tests) && count($tests)) {
   $lock = Lock("video-$videoId", false, 600);
   if ($lock) {
+    // override any settings specified in the test data
+    if (isset($tests[0]['labelHeight']))
+      $labelHeight = intval($tests[0]['labelHeight']);
+    if (isset($tests[0]['timeHeight']))
+      $timeHeight = intval($tests[0]['timeHeight']);
     RenderVideo($tests);
     if (is_file("$videoPath/render.mp4"))
       rename("$videoPath/render.mp4", "$videoPath/video.mp4");
@@ -494,7 +499,9 @@ function DrawTest(&$test, $frameTime, $im) {
   // find the closest video frame <= the target time
   $frame_ms = null;
   foreach ($test['frames'] as $ms => $frame) {
-    if ($ms <= $frameTime && $ms <= $test['end'] && (!isset($frame_ms) || $ms > $frame_ms))
+    if ($ms <= $frameTime && $ms <= $test['end'] &&
+        (!isset($frame_ms) || $ms > $frame_ms) &&
+        (!isset($test['initial']) || !isset($frame_ms) || $ms >= $test['initial']))
       $frame_ms = $ms;
   }
   $path = null;

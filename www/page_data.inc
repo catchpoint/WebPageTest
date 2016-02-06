@@ -25,13 +25,13 @@ function loadAllPageData($testPath, $options = null) {
     for( $run = 1; $run <= $runs; $run++ ) {
       // only load page data for individual runs that are complete (or if the whole test is complete)
       if ($completed || !$testInfo || IsTestRunComplete($run, $testInfo)) {
-        $data = loadPageRunData($testPath, $run, 0, $options);
+        $data = loadPageRunData($testPath, $run, 0, $options, $testInfo);
         if( isset($data) )
           $ret[$run][0] = $data;
         
         if( !$fvonly ) {
           unset( $data );
-          $data = loadPageRunData($testPath, $run, 1, $options);
+          $data = loadPageRunData($testPath, $run, 1, $options, $testInfo);
           if( isset($data) )
             $ret[$run][1] = $data;
         }
@@ -50,7 +50,7 @@ function loadAllPageData($testPath, $options = null) {
 * @param mixed $fv
 * @param mixed $rv
 */
-function loadPageRunData($testPath, $run, $cached, $options = null)
+function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = null)
 {
     $ret = null;
 
@@ -179,6 +179,18 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
             }
           }
         }
+
+        // See if there is Chrome trace user timing data to load.
+        // Do this after the CPU slice calculations so the trace processing has already run.
+        if (gz_is_file("$testPath/{$run}{$cachedText}_user_timing.json")) {
+          $user_timing = ParseUserTiming("$testPath/{$run}{$cachedText}_user_timing.json");
+          if (isset($user_timing) && is_array($user_timing)) {
+            $ret["chromeUserTiming"] = $user_timing;
+            foreach($user_timing as $value) {
+              $ret["chromeUserTiming.{$value['name']}"] = $value['time'];
+            }
+          }
+        }
     }
 
     if (isset($ret)) {
@@ -228,6 +240,14 @@ function loadPageRunData($testPath, $run, $cached, $options = null)
               $ret[$key] < 0)
             $ret[$key] = 0;
         }
+        
+        // See if there is a test-level error that needs to be exposed
+        if (isset($testInfo) && isset($testInfo['errors'][$run][$cached])) {
+            if (!isset($ret['result']) || $ret['result'] == 0 || $ret['result'] == 99999) {
+                $ret['result'] = 99995;
+            }
+            $ret['error'] = $testInfo['errors'][$run][$cached];
+        }
     }
     
     return $ret;
@@ -262,6 +282,7 @@ function loadPageData($file, $options = null)
                                 'bytesInDoc' => @(int)$fields[46],
                                 'connections' => @(int)$fields[10],
                                 'requests' => @(int)$fields[11],
+                                'requestsFull' => @(int)$fields[11],
                                 'requestsDoc' => @(int)$fields[49],
                                 'responses_200' => @(int)$fields[12],
                                 'responses_404' => @(int)$fields[15],
@@ -528,12 +549,14 @@ function CountSuccessfulTests(&$pageData, $cached)
 * @param mixed $avg
 * @param mixed $stdDev
 */
-function CalculateAggregateStats(&$pageData, $cached, $metric, &$median, &$avg, &$stdDev)
+function CalculateAggregateStats(&$pageData, $cached, $metric, &$median, &$avg, &$stdDev, &$min, &$max)
 {
     $median = null;
     $avg = null;
     $stdDev = null;
     $count = 0;
+    $min = null;
+    $max = null;
     
     // first pass, calculate the average and array of values for grabbing the median
     $values = values($pageData, $cached, $metric, true);
@@ -545,6 +568,8 @@ function CalculateAggregateStats(&$pageData, $cached, $metric, &$median, &$avg, 
         sort($values, SORT_NUMERIC);
         $medianIndex = (int)($count / 2);
         $median = $values[$medianIndex];
+        $max = end($values);
+        $min = reset($values);
         
         // pass 2, calculate the standard deviation
         $sum = 0;
@@ -605,17 +630,30 @@ function loadUserTimingData(&$pageData, $testPath, $run, $cached) {
       $lastEvent = 0;
       foreach ($events as $event) {
         if (is_array($event) &&
-            array_key_exists('name', $event) &&
-            array_key_exists('startTime', $event)) {
+            isset($event['name']) &&
+            isset($event['startTime']) &&
+            isset($event['entryType'])) {
           $name = preg_replace('/[^a-zA-Z0-9\.\-_\(\) ]/', '_', $event['name']);
-          $time = intval($event['startTime'] + 0.5);
-          if ($time > 0 && $time < 3600000) {
-            if ($event['startTime'] > $lastEvent)
-              $lastEvent = $event['startTime'];
-            $pageData["userTime.$name"] = $time;
-            if (!isset($pageData['userTimes']))
-              $pageData['userTimes'] = array();
-            $pageData['userTimes'][$name] = $time;
+          if ($event['entryType'] == 'mark') {
+            $time = intval($event['startTime'] + 0.5);
+            if ($time > 0 && $time < 3600000) {
+              if ($event['startTime'] > $lastEvent)
+                $lastEvent = $event['startTime'];
+              $pageData["userTime.$name"] = $time;
+              if (!isset($pageData['userTimes']))
+                $pageData['userTimes'] = array();
+              $pageData['userTimes'][$name] = $time;
+            }
+          } elseif ($event['entryType'] == 'measure' &&
+                    isset($event['duration'])) {
+              $duration = intval($event['duration'] + 0.5);
+              $pageData["userTimingMeasure.$name"] = $duration;
+              if (!isset($pageData['userTimingMeasures']))
+                $pageData['userTimingMeasures'] = array();
+              $pageData['userTimingMeasures'][] =
+                  array('name' => $event['name'],
+                        'startTime' => $event['startTime'],
+                        'duration' => $event['duration']);
           }
         }
       }
@@ -657,4 +695,45 @@ function values(&$pageData, $cached, $metric, $successfulOnly) {
   return $values;
 }
 
+function ParseUserTiming($file) {
+  $user_timing = null;
+  $events = json_decode(gz_file_get_contents($file), true);
+  if (isset($events) && is_array($events)) {
+    $main_frame = null;
+    $start_time = null;
+    // Find the first navigation to determine which is the main frame
+    foreach ($events as $event) {
+      if (is_array($event) && isset($event['name']) && $event['name'] == 'navigationStart') {
+        if (isset($event['args']['frame']) && isset($event['ts'])) {
+          $start_time = $event['ts'];
+          $main_frame = $event['args']['frame'];
+          break;
+        }
+      }
+    }
+    if (isset($main_frame) && isset($start_time)) {
+      foreach ($events as $event) {
+        if (is_array($event) &&
+            isset($event['name']) &&
+            isset($event['args']['frame']) &&
+            isset($event['ts']) &&
+            $event['name'] != 'navigationStart' &&
+            $event['args']['frame'] == $main_frame &&
+            ($event['ts'] >= $start_time || isset($event['args']['value']))) {
+          if (!isset($user_timing)) {
+            $user_timing = array();
+          }
+          $entry = array('name' => $event['name']);
+          if (isset($event['args']['value'])) {
+            $entry['time'] = $event['args']['value'];
+          } else {
+            $entry['time'] = intval(($event['ts'] - $start_time) / 1000.0);
+          }
+          $user_timing[] = $entry;
+        }
+      }
+    }
+  }
+  return $user_timing;
+}
 ?>

@@ -54,6 +54,10 @@ private:
   CString       _dns_servers;
   int           _screenWidth;
   int           _screenHeight;
+  DWORD         _winMajor;
+  DWORD         _winMinor;
+  DWORD         _isServer;
+  DWORD         _is64Bit;
 
   void LoadClientCertificateFromStore(HINTERNET request);
   void SetLoginCredentials(HINTERNET request);

@@ -4,6 +4,7 @@ require_once('archive.inc');
 if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('RestoreTest');
   newrelic_add_custom_tracer('SBL_Check');
+  newrelic_add_custom_tracer('SBL_Update');
 }
 
 define('VIDEO_CODE_VERSION', 20);
@@ -720,20 +721,48 @@ function BuildLocations( &$locations )
 */
 function FilterLocations(&$locations, $includeHidden = '',
                          $stripBrowser = null) {
+    global $user;
     BuildLocations($locations);
     // drop the main index of any hidden locations so they don't show up in the map view
     foreach ($locations as $name => &$locRef) {
-        if (isset($locRef['hidden']) && !isset($_REQUEST['hidden'])) {
-            $hide = true;
-            if (strlen($includeHidden) &&
-                stripos($locRef['hidden'], $includeHidden) !== false) {
-                $hide = false;
-            }
-            if ($hide) {
-                unset( $locations[$name] );
-            }
+      if (isset($locRef['hidden']) && !isset($_REQUEST['hidden'])) {
+        $hide = true;
+        if (strlen($includeHidden) &&
+            stripos($locRef['hidden'], $includeHidden) !== false) {
+          $hide = false;
         }
-        unset($locRef['hidden']);
+        if ($hide) {
+          unset($locations[$name]);
+        }
+      }
+      unset($locRef['hidden']);
+      
+      // see if the location is restricted
+      if (isset($locations[$name]) && isset($locRef['restricted'])) {
+        $remove = true;
+        if (isset($_COOKIE['google_email']) || isset($user)) {
+          $currentUser = isset($_COOKIE['google_email']) ? trim($_COOKIE['google_email']) : $user;
+          $userLen = strlen($currentUser);
+          $users = explode(',', $locRef['restricted']);
+          if ($userLen && $users && is_array($users) && count($users)) {
+            foreach($users as $allow) {
+              $allow = trim($allow);
+              $len = strlen($allow);
+              if ($userLen >= $len) {
+                $match = substr($currentUser, -$len);
+                if (!strcasecmp($match, $allow)) {
+                  $remove = false;
+                  break;
+                }
+              }
+            }
+          }
+        }
+        if ($remove) {
+          unset($locations[$name]);
+        }
+        unset($locRef['restricted']);
+      }
     }
 
     // only do it if we aren't displaying hidden locations and we're not running on Windows (busted filetime())
@@ -1633,6 +1662,9 @@ function GetTesters($locationId, $includeOffline = false)
                                    'version' => @$tester['ver'],
                                    'freedisk' => @$tester['freedisk'],
                                    'ie' => @$tester['ie'],
+                                   'winver' => @$tester['winver'],
+                                   'isWinServer' => @$tester['isWinServer'],
+                                   'isWin64' => @$tester['isWin64'],
                                    'dns' => @$tester['dns'],
                                    'GPU' => @$tester['GPU'],
                                    'offline' => @$tester['offline'],
