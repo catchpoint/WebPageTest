@@ -973,6 +973,15 @@ WebDriverServer.prototype.scheduleStopTracing_ = function() {
     this.app_.wait(function() {return !this.traceRunning_;}.bind(this),
         TRACING_STOP_TIMEOUT_MS);
     }
+    this.app_.schedule('Force trace closed', function() {
+      if (this.traceFileStream_ !== undefined) {
+        this.traceFileStream_.end(']}');
+        this.traceFileStream_.on('finish', function() {
+          this.traceRunning_ = false;
+          this.traceFileStream_ = undefined;
+        }.bind(this));
+      }
+    }.bind(this));
   }.bind(this));
 };
 
