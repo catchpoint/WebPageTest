@@ -2208,8 +2208,9 @@ function ShardKey($test_num) {
 * @param mixed $relative_url
 */
 function SendAsyncRequest($relative_url) {
-  $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
-  $url = "$protocol://{$_SERVER['HTTP_HOST']}$relative_url";
+  // hardcode protocol and URL to force using the loopack interface
+  $port = $_SERVER['SERVER_PORT'] != "" ? $_SERVER['SERVER_PORT'] : 80;
+  $url = "http://localhost:$port$relative_url";
   $local = GetSetting('local_server');
   if ($local)
     $url = "$local$relative_url";
