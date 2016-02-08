@@ -99,6 +99,8 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="timeout" value="' . htmlspecialchars($_REQUEST['timeout']) . "\">\n";
             if (array_key_exists('appendua', $_REQUEST))
               echo '<input type="hidden" name="appendua" value="' . htmlspecialchars($_REQUEST['appendua']) . "\">\n";
+            if (array_key_exists('keepvideo', $_REQUEST))
+              echo '<input type="hidden" name="keepvideo" value="' . htmlspecialchars($_REQUEST['keepvideo']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>

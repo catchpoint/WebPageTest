@@ -107,6 +107,7 @@
             $test['block'] = $req_block;
             $test['notify'] = trim($req_notify);
             $test['video'] = $req_video;
+            $test['keepvideo'] = isset($req_keepvideo) && $req_keepvideo ? 1 : 0;
             $test['continuousVideo'] = isset($req_continuousVideo) && $req_continuousVideo ? 1 : 0;
             $test['label'] = preg_replace('/[^a-zA-Z0-9 \-_\.]/', '', trim($req_label));
             $test['industry'] = trim($req_ig);
@@ -1956,6 +1957,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "\r\nblockads=1";
             if( $test['video'] )
                 $testFile .= "\r\nCapture Video=1";
+            if (GetSetting('save_mp4') || $test['keepvideo'])
+                $testFile .= "\r\nkeepvideo=1";
             if( strlen($test['type']) )
                 $testFile .= "\r\ntype={$test['type']}";
             if( $test['block'] ) {
