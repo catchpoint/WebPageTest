@@ -61,6 +61,7 @@ static const TCHAR * TRACE_FILE = _T("_trace.json");
 static const TCHAR * CUSTOM_RULES_DATA_FILE = _T("_custom_rules.json");
 static const DWORD RIGHT_MARGIN = 25;
 static const DWORD BOTTOM_MARGIN = 25;
+static const DWORD INITIAL_BOTTOM_MARGIN = 75;  // Ignore for the first frame
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -249,6 +250,7 @@ void Results::SaveVideo(void) {
   DWORD width, height;
   CString file_name;
   POSITION pos = _screen_capture._captured_images.GetHeadPosition();
+  DWORD bottom_margin = INITIAL_BOTTOM_MARGIN;
   while (pos) {
     CStringA histogram;
     CapturedImage& image = _screen_capture._captured_images.GetNext(pos);
@@ -269,7 +271,8 @@ void Results::SaveVideo(void) {
             img->Expand(0, 0, width - img->GetWidth(), 0, black);
           if (img->GetHeight() < height)
             img->Expand(0, 0, 0, height - img->GetHeight(), black);
-          if (ImagesAreDifferent(last_image, img)) {
+          if (ImagesAreDifferent(last_image, img, bottom_margin)) {
+            bottom_margin = BOTTOM_MARGIN;
             if (!_test_state._render_start.QuadPart)
               _test_state._render_start.QuadPart = image._capture_time.QuadPart;
             histogram = GetHistogramJSON(*img);
@@ -342,7 +345,7 @@ void Results::SaveVideo(void) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2) {
+bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2, DWORD bottom_margin) {
   bool different = false;
   if (img1 && img2 && img1->GetWidth() == img2->GetWidth() && 
       img1->GetHeight() == img2->GetHeight() && 
@@ -355,7 +358,7 @@ bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2) {
         DWORD height = img1->GetHeight();
         DWORD row_bytes = img1->GetEffWidth();
         DWORD row_length = width * (DWORD)(row_bytes / width);
-        for (DWORD row = BOTTOM_MARGIN; row < height && !different; row++) {
+        for (DWORD row = bottom_margin; row < height && !different; row++) {
           BYTE * r1 = img1->GetBits(row);
           BYTE * r2 = img2->GetBits(row);
           if (r1 && r2 && memcmp(r1, r2, row_length))
