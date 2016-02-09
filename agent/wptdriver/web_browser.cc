@@ -249,9 +249,9 @@ bool WebBrowser::RunAndWait() {
         // wait for the browser to finish (infinite timeout if we are debugging)
         if (_browser_process && ok) {
           ret = true;
+          DWORD wait_time = _test._max_test_time ? _test._max_test_time : _test._test_timeout + 180000;  // Allow extra time for results processing
           _status.Set(_T("Waiting up to %d seconds for the test to complete"), 
-                      (_test._test_timeout / SECONDS_TO_MS));
-          DWORD wait_time = _test._test_timeout + 180000;  // Allow extra time for results processing
+                      (wait_time / SECONDS_TO_MS));
           #ifdef DEBUG
           wait_time = INFINITE;
           #endif

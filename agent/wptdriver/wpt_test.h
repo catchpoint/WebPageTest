@@ -205,6 +205,7 @@ public:
   DWORD   _script_timeout_multiplier;
   CStringA _user_agent_modifier;
   CStringA _append_user_agent;
+  DWORD    _max_test_time;
   
   // current state
   int     _run;

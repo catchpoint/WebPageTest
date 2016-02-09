@@ -182,89 +182,89 @@ bool WptTest::Load(CString& test) {
       CString value = line.Mid(keyEnd + 1);
       if (key.GetLength()) {
         // check against all of the known options
-        if (!key.CompareNoCase(_T("Test ID")))
+        if (!key.CompareNoCase(_T("Test ID"))) {
           _id = value.Trim();
-        else if (!key.CompareNoCase(_T("url")))
+        } else if (!key.CompareNoCase(_T("url"))) {
           _url = value.Trim();
-        else if (!key.CompareNoCase(_T("fvonly")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("fvonly")) && _ttoi(value.Trim())) {
           _fv_only = true;
-        else if (!key.CompareNoCase(_T("run")))
+        } else if (!key.CompareNoCase(_T("run"))) {
           _specific_run = _ttoi(value.Trim());
-        else if (!key.CompareNoCase(_T("index")))
+        } else if (!key.CompareNoCase(_T("index"))) {
           _specific_index = _ttoi(value.Trim());
-        else if (!key.CompareNoCase(_T("discardTest")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("discardTest")) && _ttoi(value.Trim())) {
           _discard_test = true;
-        else if (!key.CompareNoCase(_T("runs")))
+        } else if (!key.CompareNoCase(_T("runs"))) {
           _runs = _ttoi(value.Trim());
-        else if (!key.CompareNoCase(_T("discard")) && !_specific_run)
+        } else if (!key.CompareNoCase(_T("discard")) && !_specific_run) {
           _discard = _ttoi(value.Trim());
-        else if (!key.CompareNoCase(_T("web10")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("web10")) && _ttoi(value.Trim())) {
           _doc_complete = true;
-        else if (!key.CompareNoCase(_T("ignoreSSL")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("ignoreSSL")) && _ttoi(value.Trim())) {
           _ignore_ssl = true;
-        else if (!key.CompareNoCase(_T("tcpdump")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("tcpdump")) && _ttoi(value.Trim())) {
           _tcpdump = true;
-        else if (!key.CompareNoCase(_T("timeline")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("timeline")) && _ttoi(value.Trim())) {
           _timeline = true;
-        else if (!key.CompareNoCase(_T("timelineStackDepth")))
+        } else if (!key.CompareNoCase(_T("timelineStackDepth"))) {
           _timelineStackDepth = _ttoi(value.Trim());
-        else if (!key.CompareNoCase(_T("trace")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("trace")) && _ttoi(value.Trim())) {
           _trace = true;
-        else if (!key.CompareNoCase(_T("netlog")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("netlog")) && _ttoi(value.Trim())) {
           _netlog = true;
-        else if (!key.CompareNoCase(_T("spdy3")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("spdy3")) && _ttoi(value.Trim())) {
           _spdy3 = true;
-        else if (!key.CompareNoCase(_T("noscript")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("noscript")) && _ttoi(value.Trim())) {
           _noscript = true;
-        else if (!key.CompareNoCase(_T("Capture Video")) &&_ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("Capture Video")) &&_ttoi(value.Trim())) {
           _video = true;
-        else if (!key.CompareNoCase(_T("clearcerts")) &&_ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("clearcerts")) &&_ttoi(value.Trim())) {
           _clear_certs = true;
-        else if (!key.CompareNoCase(_T("mobile")) &&_ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("mobile")) &&_ttoi(value.Trim())) {
           _emulate_mobile = true;
-        else if (!key.CompareNoCase(_T("swRender")) &&_ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("swRender")) &&_ttoi(value.Trim())) {
           _force_software_render = true;
-        else if (!key.CompareNoCase(_T("type")))
+        } else if (!key.CompareNoCase(_T("type"))) {
           _test_type = value.Trim();
-        else if (!key.CompareNoCase(_T("block")))
+        } else if (!key.CompareNoCase(_T("block"))) {
           _block = value.Trim();
-        else if (!key.CompareNoCase(_T("bwIn")))
+        } else if (!key.CompareNoCase(_T("bwIn"))) {
           _bwIn = _ttoi(value.Trim());
-        else if (!key.CompareNoCase(_T("bwOut")))
+        } else if (!key.CompareNoCase(_T("bwOut"))) {
           _bwOut = _ttoi(value.Trim());
-        else if (!key.CompareNoCase(_T("latency")))
+        } else if (!key.CompareNoCase(_T("latency"))) {
           _latency = _ttoi(value.Trim());
-        else if (!key.CompareNoCase(_T("plr")))
+        } else if (!key.CompareNoCase(_T("plr"))) {
           _plr = _ttof(value.Trim());
-        else if (!key.CompareNoCase(_T("browser")))
+        } else if (!key.CompareNoCase(_T("browser"))) {
           _browser = value.Trim();
-        else if (!key.CompareNoCase(_T("customBrowserUrl")))
+        } else if (!key.CompareNoCase(_T("customBrowserUrl"))) {
           _browser_url = value.Trim();
-        else if (!key.CompareNoCase(_T("customBrowserMD5")))
+        } else if (!key.CompareNoCase(_T("customBrowserMD5"))) {
           _browser_md5 = value.Trim();
-        else if (!key.CompareNoCase(_T("Basic Auth")))
+        } else if (!key.CompareNoCase(_T("Basic Auth"))) {
           _basic_auth = value.Trim();
-        else if (!key.CompareNoCase(_T("imageQuality")))
+        } else if (!key.CompareNoCase(_T("imageQuality"))) {
           _image_quality = (BYTE)max(_image_quality, 
                                      min(100, _ttoi(value.Trim())));
-        else if (!key.CompareNoCase(_T("pngScreenShot")) &&_ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("pngScreenShot")) &&_ttoi(value.Trim())) {
           _png_screen_shot = true;
-        else if (!key.CompareNoCase(_T("fullSizeVideo")) &&_ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("fullSizeVideo")) &&_ttoi(value.Trim())) {
           _full_size_video = true;
-        else if (!key.CompareNoCase(_T("time")))
+        } else if (!key.CompareNoCase(_T("time"))) {
           _minimum_duration = MS_IN_SEC * max(_minimum_duration, 
                                min(DEFAULT_TEST_TIMEOUT, _ttoi(value.Trim())));
-        else if (!key.CompareNoCase(_T("bodies")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("bodies")) && _ttoi(value.Trim())) {
           _save_response_bodies = true;
-        else if (!key.CompareNoCase(_T("htmlbody")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("htmlbody")) && _ttoi(value.Trim())) {
           _save_html_body = true;
-        else if (!key.CompareNoCase(_T("keepua")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("keepua")) && _ttoi(value.Trim())) {
           _preserve_user_agent = true;
-        else if (!key.CompareNoCase(_T("responsive")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("responsive")) && _ttoi(value.Trim())) {
           _check_responsive = true;
-        else if (!key.CompareNoCase(_T("client")))
+        } else if (!key.CompareNoCase(_T("client"))) {
           _client = value.Trim();
-        else if (!key.CompareNoCase(_T("customRule"))) {
+        } else if (!key.CompareNoCase(_T("customRule"))) {
           int separator = value.Find(_T('='));
           if (separator > 0) {
             CString name = value.Left(separator).Trim();
@@ -286,20 +286,22 @@ bool WptTest::Load(CString& test) {
           if (!_custom_metrics.IsEmpty())
             _custom_metrics += _T("\n");
           _custom_metrics += value;
-        } else if (!key.CompareNoCase(_T("cmdLine")))
+        } else if (!key.CompareNoCase(_T("cmdLine"))) {
           _browser_command_line = value;
-        else if (!key.CompareNoCase(_T("addCmdLine")))
+        } else if (!key.CompareNoCase(_T("addCmdLine"))) {
           _browser_additional_command_line = value;
-        else if (!key.CompareNoCase(_T("continuousVideo")) &&
-          _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("continuousVideo")) &&
+                   _ttoi(value.Trim())) {
           _continuous_video = true;
-        else if (!key.CompareNoCase(_T("timeout"))) {
+        } else if (!key.CompareNoCase(_T("timeout"))) {
           _test_timeout = _ttoi(value.Trim()) * 1000;
           _script_timeout_multiplier = 1;
           if (_test_timeout < 0)
             _test_timeout = 0;
           else if (_test_timeout > 3600000)
             _test_timeout = 3600000;
+        } else if (!key.CompareNoCase(_T("maxTestTime"))) {
+          _max_test_time = min(max(_ttoi(value.Trim()), 0), 3600) * 1000;
         } else if (!key.CompareNoCase(_T("UAModifier"))) {
           _user_agent_modifier = value;
         } else if (!key.CompareNoCase(_T("UAString"))) {
