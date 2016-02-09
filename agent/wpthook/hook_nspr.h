@@ -57,6 +57,7 @@ public:
   NsprHook(TrackSockets& sockets, TestState& test_state, WptTestHook& test);
   ~NsprHook();
   void Init();
+  void Unregister();
 
   void SetSslFd(PRFileDesc *fd);
 

@@ -202,6 +202,24 @@ void WinInetHook::Init() {
                   "HttpAddRequestHeadersA", HttpAddRequestHeadersA_Hook);
 }
 
+void WinInetHook::Unregister() {
+  WptTrace(loglevel::kProcess, _T("[wpthook] WinInetHook::Unregister()\n"));
+
+  if (_InternetConnectW) _hook->removeHook(InternetConnectW_Hook);
+  if (_InternetConnectA) _hook->removeHook(InternetConnectA_Hook);
+  if (_HttpOpenRequestA) _hook->removeHook(HttpOpenRequestA_Hook);
+  if (_HttpOpenRequestW) _hook->removeHook(HttpOpenRequestW_Hook);
+  if (_InternetOpenW) _hook->removeHook(InternetOpenW_Hook);
+  if (_InternetOpenA) _hook->removeHook(InternetOpenA_Hook);
+  if (_InternetCloseHandle) _hook->removeHook(InternetCloseHandle_Hook);
+  if (_InternetSetStatusCallback) _hook->removeHook(InternetSetStatusCallback_Hook);
+  if (_HttpSendRequestW) _hook->removeHook(HttpSendRequestW_Hook);
+  if (_HttpSendRequestA) _hook->removeHook(HttpSendRequestA_Hook);
+  if (_FtpOpenFileW) _hook->removeHook(FtpOpenFileW_Hook);
+  if (_FtpOpenFileA) _hook->removeHook(FtpOpenFileA_Hook);
+  if (_HttpAddRequestHeadersW) _hook->removeHook(HttpAddRequestHeadersW_Hook);
+  if (_HttpAddRequestHeadersA) _hook->removeHook(HttpAddRequestHeadersA_Hook);
+}
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 HINTERNET WinInetHook::InternetOpenW(LPCWSTR lpszAgent, DWORD dwAccessType,

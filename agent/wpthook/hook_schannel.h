@@ -18,6 +18,7 @@ public:
   SchannelHook(TrackSockets& sockets, TestState& test_state, WptTestHook& test);
   ~SchannelHook(void);
   void Init();
+  void Unregister();
 
   SECURITY_STATUS InitializeSecurityContextW(PCredHandle phCredential,
       PCtxtHandle phContext, SEC_WCHAR * pszTargetName, 

@@ -72,6 +72,7 @@ public:
   void SetNewPageLoad();
   bool IsNewPageLoad();
   void Save(bool merge = false);
+  void UnregisterHooks();
   void Cleanup();
   void ShutdownNow();
   void OnWindowTimingReceived();

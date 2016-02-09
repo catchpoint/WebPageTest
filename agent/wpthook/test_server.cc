@@ -178,7 +178,25 @@ void TestServer::MongooseCallback(enum mg_event event,
                     (LPCTSTR)CA2T(request_info->uri, CP_UTF8));
     WptTrace(loglevel::kFrequentEvent, _T("[wpthook] HTTP Query String: %s\n"), 
                     (LPCTSTR)CA2T(request_info->query_string));
-    if (strcmp(request_info->uri, "/mode") == 0) {
+
+    if (strcmp(request_info->uri, "/event/trace_netlog") == 0) {
+      if (test_state_._active) {
+        CStringA body = CT2A(GetPostBody(conn, request_info));
+        if (body.GetLength())
+          trace_netlog_.AddEvents(body);
+      }
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/request_data") == 0) {
+      if (test_state_._active) {
+        test_state_.ActivityDetected();
+        CString body = GetPostBody(conn, request_info);
+        requests_.ProcessBrowserRequest(body);
+      }
+      else {
+        OutputDebugStringA("Request data received while not active");
+      }
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/mode") == 0) {
       // Extension loaded.
       if (shared_webdriver_mode) {
         SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, _T("{\"webdriver\": true}"));
@@ -308,15 +326,6 @@ void TestServer::MongooseCallback(enum mg_event event,
       if (!status.IsEmpty())
         test_state_.OnStatusMessage(status);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
-    } else if (strcmp(request_info->uri, "/event/request_data") == 0) {
-      if (test_state_._active) {
-        test_state_.ActivityDetected();
-        CString body = GetPostBody(conn, request_info);
-        requests_.ProcessBrowserRequest(body);
-      } else {
-        OutputDebugStringA("Request data received while not active");
-      }
-      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/console_log") == 0) {
       if (test_state_._active) {
         CString body = GetPostBody(conn, request_info);
@@ -344,11 +353,6 @@ void TestServer::MongooseCallback(enum mg_event event,
       CStringA body = CT2A(GetPostBody(conn, request_info));
       if (body.GetLength())
         trace_.AddEvents(body);
-      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
-    } else if (strcmp(request_info->uri, "/event/trace_netlog") == 0) {
-      CStringA body = CT2A(GetPostBody(conn, request_info));
-      if (body.GetLength())
-        trace_netlog_.AddEvents(body);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/paint") == 0) {
       //test_state_.PaintEvent(0, 0, 0, 0);

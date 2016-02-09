@@ -49,6 +49,7 @@ public:
   WinInetHook(TrackSockets& sockets, TestState& test_state, WptTest& test);
   ~WinInetHook(void);
   void Init();
+  void Unregister();
 
   HINTERNET	InternetOpenW(LPCWSTR lpszAgent,DWORD dwAccessType,
                       LPCWSTR lpszProxy,LPCWSTR lpszProxyBypass,DWORD dwFlags);

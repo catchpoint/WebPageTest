@@ -138,6 +138,19 @@ void SchannelHook::Init() {
         CertVerifyCertificateChainPolicy_Hook);
 }
 
+void SchannelHook::Unregister() {
+  WptTrace(loglevel::kProcess, _T("[wpthook] SchannelHook::Unregister()\n"));
+
+  if (InitializeSecurityContextW_) _hook->removeHook(InitializeSecurityContextW_Hook);
+  if (InitializeSecurityContextA_) _hook->removeHook(InitializeSecurityContextA_Hook);
+  if (DeleteSecurityContext_) _hook->removeHook(DeleteSecurityContext_Hook);
+  if (DecryptMessage_) _hook->removeHook(DecryptMessage_Hook);
+  if (EncryptMessage_) _hook->removeHook(EncryptMessage_Hook);
+
+  if (CertVerifyCertificateChainPolicy_)
+    _hook->removeHook(CertVerifyCertificateChainPolicy_Hook);
+}
+
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 SECURITY_STATUS SchannelHook::InitializeSecurityContextW(
