@@ -193,6 +193,9 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
     if (ipcMsg.pageData) {
       job.zipResultFiles['page_data.json'] = JSON.stringify(ipcMsg.pageData);
     }
+    if (ipcMsg.netlogFile) {
+      job.zipResultFiles['netlog.txt'] = fs.readFileSync(ipcMsg.netlogFile, "utf8");
+    }
     if (ipcMsg.histogramFile) {
       try {
         var buffer = fs.readFileSync(ipcMsg.histogramFile);

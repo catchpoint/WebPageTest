@@ -123,6 +123,17 @@ BrowserBase.prototype.scheduleAssertIsRunning = function() {
 };
 
 /**
+ * Copy the netlog to the given file
+ *
+ * @return {webdriver.promise.Promise} resolve() for addErrback.
+ * @override
+ */
+BrowserBase.prototype.scheduleGetNetlog = function(log) {
+  'use strict';
+  return webdriver.promise.fulfilled(false);  // Assume it's running.
+};
+
+/**
  * Attempts recovery if the browser is not ready to run tests.
  *
  * @return {webdriver.promise.Promise} resolve(boolean) wasOffline,

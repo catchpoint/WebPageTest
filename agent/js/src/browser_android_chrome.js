@@ -178,6 +178,8 @@ function BrowserAndroidChrome(app, args) {
   }
   this.isCacheWarm_ = args.isCacheWarm;
   this.supportsTracing = true;
+  this.remoteNetlog_ = undefined;
+  this.netlogEnabled_ = args.task['netlog'] ? true : false;
 }
 util.inherits(BrowserAndroidChrome, browser_base.BrowserBase);
 /** Public class. */
@@ -302,7 +304,9 @@ BrowserAndroidChrome.prototype.clearProfile_ = function() {
 BrowserAndroidChrome.prototype.clearDownloads_ = function() {
   this.app_.schedule('Clear Downloads', function() {
     this.adb_.getStoragePath().then(function(storagePath) {
-      this.adb_.su(['rm', storagePath + '/Download/*']);
+      this.adb_.shell(['rm', storagePath + '/Download/*']);
+      this.adb_.shell(['rm', '/sdcard/Download/*']);
+      this.adb_.su(['rm', '/data/media/0/Download/*']);
     }.bind(this));
   }.bind(this));
 };
@@ -418,9 +422,14 @@ BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
     if (this.additionalFlags_) {
       flagsString += ' ' + this.additionalFlags_;
     }
-    process_utils.scheduleFunction(this.app_, 'Write local flags file',
-        fs.writeFile, localFlagsFile, flagsString);
     this.adb_.getStoragePath().then(function(storagePath) {
+      if (this.netlogEnabled_) {
+        this.remoteNetlog_ = '/sdcard/netlog.txt';
+        this.adb_.shell(['rm', this.remoteNetlog_]);
+        flagsString +=' --log-net-log=' + this.remoteNetlog_;
+      }
+      logger.debug("Chrome command line: " + flagsString);
+      fs.writeFileSync(localFlagsFile, flagsString);
       var tempFlagsFile = storagePath + '/wpt_chrome_command_line';
       this.adb_.adb(['push', localFlagsFile, tempFlagsFile]);
       this.adb_.su(['cp', tempFlagsFile, this.flagsFile_]);
@@ -747,6 +756,25 @@ BrowserAndroidChrome.prototype.scheduleStartPacketCapture = function(filename) {
 BrowserAndroidChrome.prototype.scheduleStopPacketCapture = function() {
   'use strict';
   this.pcap_.scheduleStop();
+};
+
+/**
+ * Pull the netlog from the remote device.
+ *
+ * @return {webdriver.promise.Promise} resolve() for addErrback.
+ * @override
+ */
+BrowserAndroidChrome.prototype.scheduleGetNetlog = function(localNetlog) {
+  'use strict';
+  logger.debug("scheduleGetNetlog - " + this.remoteNetlog_ + ' to ' + localNetlog);
+  if (this.remoteNetlog_) {
+    return this.adb_.adb(['pull', this.remoteNetlog_, localNetlog]).then(function() {
+      return true;
+    }.bind(this));
+  } else {
+    logger.debug("scheduleGetNetlog, remoteNetlog not set");
+    return webdriver.promise.fulfilled(false);
+  }
 };
 
 /**

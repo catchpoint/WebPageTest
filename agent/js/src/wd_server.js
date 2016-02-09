@@ -185,11 +185,13 @@ WebDriverServer.prototype.init = function(args) {
   this.histogramFile_ = undefined;
   this.runTempDir_ = args.runTempDir || '';
   this.workDir_ = args.workDir || '';
+  this.netLogFile_ = undefined;
   this.customMetrics_ = undefined;
   this.userTimingMarks_ = undefined;
   this.pageData_ = undefined;
   this.traceFile_ = undefined;
   this.traceFileStream_ = undefined;
+  this.netlogFile_ = undefined;
   this.isNavigating_ = false;
   this.mainFrame_ = undefined;
   this.pageLoadCoalesceTimer_ = undefined;
@@ -1371,6 +1373,19 @@ WebDriverServer.prototype.scheduleProcessVideo_ = function() {
   }.bind(this));
 };
 
+WebDriverServer.prototype.scheduleGetNetlog_ = function() {
+  if (this.task_['netlog']) {
+    this.scheduleNoFault_('Get netlog', function() {
+      var localNetlog = this.runTempDir_ + '/netlog.txt';
+      this.browser_.scheduleGetNetlog(localNetlog).then(function(copied) {
+        if (copied) {
+          this.netlogFile_ = localNetlog;
+        }
+      }.bind(this));
+    }.bind(this));
+  }
+};
+
 WebDriverServer.prototype.scheduleAssertBrowserIsRunning_ = function() {
   this.scheduleNoFault_('Process Video', function() {
     this.browser_.scheduleAssertIsRunning().then(function(running) {
@@ -1422,6 +1437,7 @@ WebDriverServer.prototype.done_ = function() {
       // video processing needs to be done after tracing has been stopped and collected
       this.scheduleProcessVideo_();
     }
+    this.scheduleGetNetlog_();
     this.scheduleNoFault_('End state', function() {
       if (this.testError_) {
         logger.error('Test failed: ' + this.testError_);
@@ -1443,6 +1459,7 @@ WebDriverServer.prototype.done_ = function() {
           devToolsFile: devToolsFile,
           screenshots: this.screenshots_,
           traceFile: this.traceFile_,
+          netlogFile: this.netlogFile_,
           videoFile: this.videoFile_,
           videoFrames: this.videoFrames_,
           pcapFile: this.pcapFile_,
