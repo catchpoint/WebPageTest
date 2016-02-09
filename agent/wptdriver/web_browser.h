@@ -48,6 +48,7 @@ private:
                         LPCTSTR browser_exe);
   void ConfigureFirefoxPrefs();
   void ConfigureIESettings();
+  void ConfigureChromePreferences();
   HANDLE FindAdditionalHookProcess(HANDLE launched_process, CString exe);
 
   WptSettings&    _settings;

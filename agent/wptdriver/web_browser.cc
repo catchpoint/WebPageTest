@@ -55,9 +55,9 @@ static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--process-per-tab"),
     _T("--new-window"),
     _T("--disable-translate"),
+    _T("--disable-notifications"),
     _T("--disable-desktop-notifications"),
     _T("--allow-running-insecure-content"),
-    _T("--disable-save-password-bubble"),
     _T("--disable-component-update"),
     _T("--disable-background-downloads"),
     _T("--disable-add-to-shelf"),
@@ -129,6 +129,7 @@ bool WebBrowser::RunAndWait() {
       CString exe(_browser._exe);
       exe.MakeLower();
       if (exe.Find(_T("chrome.exe")) >= 0) {
+        ConfigureChromePreferences();
         if (_test._browser_command_line.GetLength()) {
           lstrcat(cmdLine, CString(_T(" ")) +
                   _test._browser_command_line);
@@ -707,4 +708,37 @@ void WebBrowser::ConfigureIESettings() {
                     (const LPBYTE)&val, sizeof(val));
       RegCloseKey(hKey);
     }
+}
+
+/*-----------------------------------------------------------------------------
+  Write to both the profile prefs file and the master_preferences file
+  that is used as a template
+-----------------------------------------------------------------------------*/
+void WebBrowser::ConfigureChromePreferences() {
+  HKEY hKey;
+  CString prefs_file =
+      _browser._profile_directory + _T("\\Default\\Preferences");
+  TCHAR master_prefs_file[10240];
+  lstrcpy(master_prefs_file, _browser._exe);
+  lstrcpy(PathFindFileName(master_prefs_file), _T("master_preferences"));
+
+  LPCSTR prefs =
+    "{"
+      "\"profile\":{"
+        "\"password_manager_enabled\":false"
+      "}"
+    "}";
+  SHCreateDirectoryEx(NULL, _browser._profile_directory + _T("\\Default"), NULL);
+  HANDLE file = CreateFile(prefs_file, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+  if (file != INVALID_HANDLE_VALUE) {
+    DWORD written = 0;
+    WriteFile(file, prefs, strlen(prefs), &written, 0);
+    CloseHandle(file);
+  }
+  file = CreateFile(master_prefs_file, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+  if (file != INVALID_HANDLE_VALUE) {
+    DWORD written = 0;
+    WriteFile(file, prefs, strlen(prefs), &written, 0);
+    CloseHandle(file);
+  }
 }
