@@ -286,6 +286,7 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
         fs.unlinkSync(ipcMsg.pcapFile);
       } catch(e) {}
     }
+    this.stopTrafficShaper_();
     if (job.isReplay) {
       this.webPageReplay_.scheduleGetErrorLog().then(function(log) {
         if (log) {
@@ -307,7 +308,9 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
  */
 Agent.prototype.prepareJob_ = function(job) {
   var done = new webdriver.promise.Deferred();
-  this.stopTrafficShaper_();
+  process_utils.scheduleNoFault(this.app_, 'Clear Traffic shaper', function() {
+    this.stopTrafficShaper_();
+  }.bind(this));
   process_utils.scheduleNoFault(this.app_, 'Stop WPR', function() {
     this.webPageReplay_.scheduleStop();
   }.bind(this));
@@ -656,9 +659,6 @@ Agent.prototype.scheduleCleanup_ = function(job, isEndOfJob) {
           this.app_, 'Stop WPR', function() {
         this.webPageReplay_.scheduleStop();
       }.bind(this));
-    }
-    if (this.isTrafficShaping_(job)) {
-      this.stopTrafficShaper_();
     }
   }
   if (1 === parseInt(this.flags_.killall || '0', 10)) {
