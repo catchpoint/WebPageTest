@@ -121,9 +121,7 @@ wpt.contentScript.collectStats_ = function(customMetrics) {
   var timingRequest = { 'message': 'wptWindowTiming' };
   function addTime(name) {
     if (window.performance.timing[name] > 0) {
-      timingRequest[name] = Math.max(0, (
-        window.performance.timing[name] -
-        window.performance.timing['navigationStart']));
+      timingRequest[name] = window.performance.timing[name];
     }
   };
   addTime('domContentLoadedEventStart');

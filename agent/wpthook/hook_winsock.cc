@@ -324,6 +324,35 @@ void CWsHook::Init() {
                                          getaddrinfo_Hook);
 }
 
+void CWsHook::Unregister() {
+  WptTrace(loglevel::kProcess, _T("[wpthook] CWsHook::Unregister()\n"));
+
+  // remove the code hooks
+  if (_WSASocketW) hook.removeHook(WSASocketW_Hook);
+  if (_closesocket) hook.removeHook(closesocket_Hook);
+  if (_connect) hook.removeHook(connect_Hook);
+  if (_recv) hook.removeHook(recv_Hook);
+  if (_send) hook.removeHook(send_Hook);
+  if (_select) hook.removeHook(select_Hook);
+  if (_GetAddrInfoW) hook.removeHook(GetAddrInfoW_Hook);
+  if (_gethostbyname) hook.removeHook(gethostbyname_Hook);
+  if (_GetAddrInfoExA) hook.removeHook(GetAddrInfoExA_Hook);
+  if (_GetAddrInfoExW) hook.removeHook(GetAddrInfoExW_Hook);
+  if (_WSARecv) hook.removeHook(WSARecv_Hook);
+  if (_WSASend) hook.removeHook(WSASend_Hook);
+  if (_WSAGetOverlappedResult) hook.removeHook(WSAGetOverlappedResult_Hook);
+  if (_WSAEventSelect) hook.removeHook(WSAEventSelect_Hook);
+  if (_WSAEnumNetworkEvents) hook.removeHook(WSAEnumNetworkEvents_Hook);
+  if (_CreateThreadpoolIo) hook.removeHook(CreateThreadpoolIo_Hook);
+  if (_CreateThreadpoolIo_base) hook.removeHook(CreateThreadpoolIo_base_Hook);
+  if (_CloseThreadpoolIo) hook.removeHook(CloseThreadpoolIo_Hook);
+  if (_CloseThreadpoolIo_base) hook.removeHook(CloseThreadpoolIo_base_Hook);
+  if (_StartThreadpoolIo) hook.removeHook(StartThreadpoolIo_Hook);
+  if (_StartThreadpoolIo_base) hook.removeHook(StartThreadpoolIo_base_Hook);
+  if (_WSAIoctl) hook.removeHook(WSAIoctl_Hook);
+  if (_getaddrinfo) hook.removeHook(getaddrinfo_Hook);
+}
+
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 CWsHook::~CWsHook(void) {

@@ -89,6 +89,7 @@ public:
   CWsHook(TrackDns& dns, TrackSockets& sockets, TestState& test_state);
   virtual ~CWsHook(void);
   void Init();
+  void Unregister();
 
   // straight winsock hooks
   SOCKET	WSASocketW(int af, int type, int protocol, 

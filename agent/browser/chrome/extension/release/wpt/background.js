@@ -14027,7 +14027,7 @@ wpt.chromeDebugger.StartTrace = function() {
       traceCategories = '*';
     else
       traceCategories = '-*';
-    traceCategories = traceCategories + ',netlog';
+    //traceCategories = traceCategories + ',netlog';
     if (g_instance.timeline)
       traceCategories = traceCategories + ',blink.console,toplevel,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame';
     if (g_instance.timelineStackDepth > 0)

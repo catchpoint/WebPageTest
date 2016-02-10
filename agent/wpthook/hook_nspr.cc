@@ -149,6 +149,26 @@ void NsprHook::Init() {
   }
 }
 
+void NsprHook::Unregister() {
+  WptTrace(loglevel::kProcess, _T("[wpthook] NsprHook::Unregister()\n"));
+
+  if (_SSL_ImportFD)
+    _hook->removeHook(SSL_ImportFD_Hook);
+
+  if (_PR_Close)
+    _hook->removeHook(PR_Close_Hook);
+
+
+  if (_PR_Write)
+    _hook->removeHook(PR_Close_Hook);
+
+  if (_PR_Read)
+    _hook->removeHook(PR_Read_Hook);
+
+  if (_SSL_SetURL)
+    _hook->removeHook(SSL_SetURL_Hook);
+}
+
 void NsprHook::SetSslFd(PRFileDesc *fd) {
   _sockets.SetSslFd(fd);
 }

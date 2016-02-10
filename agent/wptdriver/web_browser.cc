@@ -163,6 +163,13 @@ bool WebBrowser::RunAndWait() {
           _status.Set(_T("Waiting up to %d seconds for the test to complete"), 
                       (_test._test_timeout / SECONDS_TO_MS));
           DWORD wait_time = _test._test_timeout + 30000;  // Allow for a little extra time for results processing
+
+          // Devtools requests takes more time to process, make sure we are not killing the browser
+          // at the wrong time
+          if (_browser.IsChrome()) {
+            wait_time += 30000;
+          }
+
           #ifdef DEBUG
           wait_time = INFINITE;
           #endif

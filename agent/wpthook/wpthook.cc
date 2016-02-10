@@ -211,9 +211,20 @@ void WptHook::OnNavigateComplete() {
   test_state_.OnNavigateComplete();
 }
 
+void WptHook::UnregisterHooks() {
+  if (!test_state_.gdi_only_) {
+    winsock_hook_.Unregister();
+    nspr_hook_.Unregister();
+    schannel_hook_.Unregister();
+    wininet_hook_.Unregister();
+  }
+}
+
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptHook::OnReport() {
+  WptTrace(loglevel::kProcess, _T("[wpthook] WptHook::OnReport()\n"));
+
   KillTimer(message_window_, TIMER_FORCE_REPORT);
   if (!reported_) {
     reported_ = true;
@@ -291,10 +302,14 @@ bool WptHook::OnMessage(UINT message, WPARAM wParam, LPARAM lParam) {
             case TIMER_DONE:
               if (test_state_.IsDone()) {
                   KillTimer(message_window_, TIMER_DONE);
-                  test_.CollectData();
-                  SetTimer(message_window_, TIMER_FORCE_REPORT, 
-                  TIMER_FORCE_REPORT_INTERVAL, NULL);
+
+                  // Measurement is done, unregister all hooks and wait for the collect
+                  // data info before shutting down
                   test_.Done();
+                  UnregisterHooks();
+                  test_.CollectData();
+                  SetTimer(message_window_, TIMER_FORCE_REPORT,
+                      TIMER_FORCE_REPORT_INTERVAL, NULL);
                 }
                 break;
             case TIMER_REPORT:
