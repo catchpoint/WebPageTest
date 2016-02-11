@@ -84,15 +84,17 @@ function loadPageRunData($testPath, $run, $cached, &$requests = null, $options =
                 "ERROR: For test: %s, # of steps differ between devtools.json and IEWPG.txt. Please investigate.";
             logAlways(sprintf($error_msg, $testPath));
 
-            if ($ret[$i]["domContentLoadedEventEnd"] > $ret[$i]["loadEventStart"]) {
-              $diff = $ret[$i]["domContentLoadedEventEnd"] - $ret[$i]["domContentLoadedEventStart"];
+            for ($i = 0; $i < count($ret); $i++) {
+              if ($ret[$i]["domContentLoadedEventEnd"] > $ret[$i]["loadEventStart"]) {
+                $diff = $ret[$i]["domContentLoadedEventEnd"] - $ret[$i]["domContentLoadedEventStart"];
 
-              $ret[$i]["domContentLoadedEventEnd"] = $ret[$i]["loadEventStart"];
-              $ret[$i]["domContentLoadedEventStart"] = $ret[$i]["domContentLoadedEventEnd"] - $diff;
+                $ret[$i]["domContentLoadedEventEnd"] = $ret[$i]["loadEventStart"];
+                $ret[$i]["domContentLoadedEventStart"] = $ret[$i]["domContentLoadedEventEnd"] - $diff;
 
-              $error_msg =
+                $error_msg =
                   "ERROR: DOM content event after load event";
-              logAlways(sprintf($error_msg, $testPath));
+                logAlways(sprintf($error_msg, $testPath));
+              }
             }
 
           }
