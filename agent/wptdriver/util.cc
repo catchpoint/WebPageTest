@@ -837,3 +837,18 @@ void ConstructCmdLine(CString& exe, CAtlArray<CString>& options,
     cmdLine.Append(_T(" ") + prefix + options[i]);
   }
 }
+
+void DeleteAllFiles(CString dir) {
+  WIN32_FIND_DATA fd;
+  HANDLE find_handle = FindFirstFile(dir + _T("\\*.*"), &fd);
+  if (find_handle != INVALID_HANDLE_VALUE) {
+    do {
+      if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+        CString file = dir + _T("\\") + fd.cFileName;
+        if (!DeleteFile(file)) {
+          WptTrace(loglevel::kError, _T("Cannot delete file: %s: %d"), file, GetLastError());
+        }
+      }
+    } while (FindNextFile(find_handle, &fd));
+  }
+}

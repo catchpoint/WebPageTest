@@ -91,3 +91,4 @@ void Reboot();
 DWORD GetCapabilities(void);
 void ConstructCmdLine(CString& exe, CAtlArray<CString>& options,
   CString& prefix, CString& cmdLine);
+void DeleteAllFiles(CString dir);
