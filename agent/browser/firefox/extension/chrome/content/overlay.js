@@ -252,6 +252,27 @@ wpt.moz.main.onLoad = function(win) {
   }
 };
 
+// detect error on load
+wpt.moz.main.onDomContentLoaded = function(event) {
+
+    var win = event.originalTarget.defaultView;
+    var webnav = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
+    var docuri = webnav.document.documentURI;
+    var location = win.location + ''; // make sure it's a string
+
+    if (win.frameElement) {
+        // iframe error, ignore
+        return;
+    } else {
+        if (docuri.indexOf('about:neterror') == 0) {
+            // a problem was detected
+            Components.utils.reportError('IN TAB - PROBLEM LOADING PAGE LOADED docuri = "' + docuri + '"');
+			wpt.moz.main.sendEventToDriver_('navigate_error?error=' + 12345);
+        }
+    }
+}
+
+
 wpt.moz.main.onBeforeUnload = function() {
   wpt.moz.main.sendEventToDriver_('before_unload');
 }
@@ -355,6 +376,9 @@ var wptExtension = {
         if (!g_started)
           onPageLoad();
       }, STARTUP_FAILSAFE_INTERVAL);
+
+      gBrowser.addEventListener('DOMContentLoaded', onDomContentLoaded, false);
+
     }
   },
   uninit: function() {
@@ -362,6 +386,7 @@ var wptExtension = {
       gBrowser.removeEventListener('load', onPageLoad, true);
       gBrowser.removeEventListener('pagehide', onPageHide, true);
       gBrowser.removeEventListener('beforeunload', onBeforeUnload, true);
+      gBrowser.removeEventListener('DOMContentLoaded', onDomContentLoaded, false);
       gBrowser.removeProgressListener(progressListener);
     }
   },
