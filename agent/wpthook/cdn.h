@@ -150,7 +150,7 @@ CDN_PROVIDER cdnList[] = {
   {".revcn.net", "Rev Software"},
   {".revdn.net", "Rev Software"},
   {".caspowa.com", "Caspowa"},
-  {".twimg.net", "Twitter"},
+  {".twimg.com", "Twitter"},
   {".facebook.com", "Facebook"},
   {".facebook.net", "Facebook"},
   {".fbcdn.net", "Facebook"},
