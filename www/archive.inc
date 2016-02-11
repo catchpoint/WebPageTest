@@ -250,64 +250,66 @@ function VerifyArchive($id) {
     $valid = true;
     global $settings;
     
-    if (isset($settings['archive_dir'])) {
-        // local
-        $valid = false;
-        $testPath = realpath('./' . GetTestPath($id));
-        $archive = GetArchiveFile($id);
-        if (is_dir($testPath) && is_file($archive)) {
-            chmod($archive, 0777);
-            $zip = new ZipArchive;
-            if ($zip->open($archive) === TRUE) {
-                // check for some basic files
-                if ($zip->locateName('testinfo.ini') !== false &&
-                    ($zip->locateName('testinfo.json') !== false || $zip->locateName('testinfo.json.gz') !== false)) {
-                    $valid = true;
-                    // now loop through the original directory and make sure all of the data files are present in the archive
-                    $files = scandir($testPath);
-                    foreach ($files as $file) {
-                        if (strpos($file, '.txt') !== false && strpos($file, '_status.txt') === false) {
-                            $index = $zip->locateName($file);
-                            if ($index === false) {
-                                logMsg("$id - Missing $file ($archive)");
-                                $valid = false;
-                                break;
-                            } else {
-                                $info = $zip->statIndex($index);
-                                if (!$info['size']) {
-                                    logMsg("$id - Invalid file size for $file ($archive)");
+    if (!GetSetting('trust_archive')) {
+        if (isset($settings['archive_dir'])) {
+            // local
+            $valid = false;
+            $testPath = realpath('./' . GetTestPath($id));
+            $archive = GetArchiveFile($id);
+            if (is_dir($testPath) && is_file($archive)) {
+                chmod($archive, 0777);
+                $zip = new ZipArchive;
+                if ($zip->open($archive) === TRUE) {
+                    // check for some basic files
+                    if ($zip->locateName('testinfo.ini') !== false &&
+                        ($zip->locateName('testinfo.json') !== false || $zip->locateName('testinfo.json.gz') !== false)) {
+                        $valid = true;
+                        // now loop through the original directory and make sure all of the data files are present in the archive
+                        $files = scandir($testPath);
+                        foreach ($files as $file) {
+                            if (strpos($file, '.txt') !== false && strpos($file, '_status.txt') === false) {
+                                $index = $zip->locateName($file);
+                                if ($index === false) {
+                                    logMsg("$id - Missing $file ($archive)");
                                     $valid = false;
                                     break;
+                                } else {
+                                    $info = $zip->statIndex($index);
+                                    if (!$info['size']) {
+                                        logMsg("$id - Invalid file size for $file ($archive)");
+                                        $valid = false;
+                                        break;
+                                    }
                                 }
                             }
                         }
+                    } else {
+                        logMsg("$id - Missing key files ($archive)");
                     }
+                    $zip->close();
                 } else {
-                    logMsg("$id - Missing key files ($archive)");
+                    logMsg("$id - Zip file failed to open ($archive)");
                 }
-                $zip->close();
             } else {
-                logMsg("$id - Zip file failed to open ($archive)");
+                logMsg("$id - Zip file missing ($archive)");
             }
-        } else {
-            logMsg("$id - Zip file missing ($archive)");
-        }
-    } elseif (array_key_exists('archive_s3_server', $settings) && 
-                array_key_exists('archive_s3_key', $settings) && 
-                array_key_exists('archive_s3_secret', $settings) && 
-                array_key_exists('archive_s3_bucket', $settings) &&
-                trim($settings['archive_s3_server']) != 's3.us.archive.org') {
-        // S3
-        $valid = false;
-        require_once('./lib/S3.php');
-        $s3 = new S3(trim($settings['archive_s3_key']), trim($settings['archive_s3_secret']), false, trim($settings['archive_s3_server']));
-        $bucket = $settings['archive_s3_bucket'];
-        $file = "$id.zip";
-        if (($info = $s3->getObjectInfo($bucket, $file)) !== false) {
-            $valid = true;
+        } elseif (array_key_exists('archive_s3_server', $settings) && 
+                    array_key_exists('archive_s3_key', $settings) && 
+                    array_key_exists('archive_s3_secret', $settings) && 
+                    array_key_exists('archive_s3_bucket', $settings) &&
+                    trim($settings['archive_s3_server']) != 's3.us.archive.org') {
+            // S3
+            $valid = false;
+            require_once('./lib/S3.php');
+            $s3 = new S3(trim($settings['archive_s3_key']), trim($settings['archive_s3_secret']), false, trim($settings['archive_s3_server']));
+            $bucket = $settings['archive_s3_bucket'];
+            $file = "$id.zip";
+            if (($info = $s3->getObjectInfo($bucket, $file)) !== false) {
+                $valid = true;
+            }
         }
     }
-    
+        
     return $valid;
 }
 
