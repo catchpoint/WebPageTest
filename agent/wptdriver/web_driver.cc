@@ -73,6 +73,9 @@ bool WebDriver::RunAndWait() {
     active_event = CreateMutex(&null_dacl, TRUE, GLOBAL_TESTING_MUTEX);
   }
 
+  // Delete all scripts from the scripts directory, just in case there are left-overs
+  DeleteAllFiles(_scripts_dir);
+
   if (!SpawnWebDriverServer()) {
     ok = false;
   }
@@ -200,7 +203,9 @@ bool WebDriver::RunAndWait() {
   }
   // Delete the script
   CString filepath = _scripts_dir + _T("\\script_") + _test._id;
-  DeleteFile(filepath);
+  if (!DeleteFile(filepath)) {
+    WptTrace(loglevel::kError, _T("Unable to delete the file %s: %d"), filepath, GetLastError());
+  }
 
   return ok;
 }
