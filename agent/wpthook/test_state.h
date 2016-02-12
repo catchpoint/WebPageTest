@@ -159,6 +159,9 @@ public:
   int _dom_element_count;
   int _is_responsive;
   int _viewport_specified;
+  DWORD _working_set_main_proc;
+  DWORD _working_set_child_procs;
+  DWORD _process_count;
 
   bool  _active;
   int   _current_document;
@@ -218,4 +221,5 @@ private:
   DWORD ElapsedMs(LARGE_INTEGER start, LARGE_INTEGER end) const;
   void GetCPUTime(FILETIME &cpu_time, FILETIME &total_time);
   double GetElapsedMilliseconds(FILETIME &start, FILETIME &end);
+  void CollectMemoryStats();
 };

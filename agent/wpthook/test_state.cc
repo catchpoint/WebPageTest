@@ -140,6 +140,9 @@ void TestState::Reset(bool cascade) {
     _end_cpu_time.dwHighDateTime = _end_cpu_time.dwLowDateTime = 0;
     _start_total_time.dwHighDateTime = _start_total_time.dwLowDateTime = 0;
     _end_total_time.dwHighDateTime = _end_total_time.dwLowDateTime = 0;
+    _working_set_main_proc = 0;
+    _working_set_child_procs = 0;
+    _process_count = 0;
     _progress_data.RemoveAll();
     _test_result = 0;
     _title_time.QuadPart = 0;
@@ -386,7 +389,7 @@ void TestState::Done(bool force) {
   if (_active) {
     GetCPUTime(_end_cpu_time, _end_total_time);
     _screen_capture.Capture(_frame_window, CapturedImage::FULLY_LOADED);
-
+    CollectMemoryStats();
     if (force || !_test._combine_steps) {
       // kill the timer that was collecting periodic data (cpu, video, etc)
       if (_data_timer) {
@@ -920,5 +923,90 @@ void TestState::CheckResponsive() {
   if (_frame_window) {
     _screen_capture.Capture(_frame_window, CapturedImage::RESPONSIVE_CHECK,
                             false);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Collect the memory stats for the top-level process and all child processes
+-----------------------------------------------------------------------------*/
+void TestState::CollectMemoryStats() {
+  // Build a list of all of the processes involved
+  DWORD main_proc = GetCurrentProcessId();
+  CAtlList<DWORD> procs;
+  HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  if (snap != INVALID_HANDLE_VALUE) {
+    PROCESSENTRY32 proc;
+    proc.dwSize = sizeof(proc);
+    procs.AddHead(main_proc);
+    CAtlList<DWORD> new_procs;
+    do {
+      new_procs.RemoveAll();
+      if (Process32First(snap, &proc)) {
+        do {
+          if (procs.Find(proc.th32ProcessID) &&
+              proc.th32ParentProcessID &&
+              !procs.Find(proc.th32ParentProcessID) &&
+              StrStrI(proc.szExeFile, _T("wptdriver.exe"))) {
+            procs.AddHead(proc.th32ParentProcessID);
+          }
+          if (!procs.Find(proc.th32ProcessID) && procs.Find(proc.th32ParentProcessID))
+            new_procs.AddTail(proc.th32ProcessID);
+        } while (Process32Next(snap, &proc));
+      }
+      if (!new_procs.IsEmpty()) {
+        POSITION pos = new_procs.GetHeadPosition();
+        while (pos)
+          procs.AddTail(new_procs.GetNext(pos));
+      }
+    } while(!new_procs.IsEmpty());
+    CloseHandle(snap);
+  }
+
+  // Get the full working set for the main process
+  _working_set_main_proc = 0;
+  if (main_proc) {
+    HANDLE hProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, main_proc);
+    if (hProc) {
+      PROCESS_MEMORY_COUNTERS mem;
+      memset(&mem, 0, sizeof(mem));
+      mem.cb = sizeof(mem);
+      if (GetProcessMemoryInfo(hProc, &mem, sizeof(mem))) {
+        // keep track in KB which will limit us to 4TB in a DWORD
+        _working_set_main_proc = mem.WorkingSetSize / 1024;
+      }
+      CloseHandle(hProc);
+    }
+  }
+
+  // Add up the private working sets for all the child procs
+  _working_set_child_procs = 0;
+  _process_count = procs.GetCount();
+  if (!procs.IsEmpty()) {
+    // This will limit us to 4GB which is fin
+    DWORD len = sizeof(ULONG_PTR) + 1000000 * sizeof(PSAPI_WORKING_SET_BLOCK);
+    PSAPI_WORKING_SET_INFORMATION * mem = (PSAPI_WORKING_SET_INFORMATION *)malloc(len);
+    if (mem) {
+      POSITION pos = procs.GetHeadPosition();
+      while (pos) {
+        DWORD pid = procs.GetNext(pos);
+        if (pid != main_proc) {
+          HANDLE hProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
+          if (hProc) {
+            if (QueryWorkingSet(hProc, mem, len)) {
+              DWORD count = 0;
+              for (ULONG_PTR i = 0; i < mem->NumberOfEntries; i++) {
+                if (!mem->WorkingSetInfo[i].Shared)
+                  count++;
+              }
+              // Each page is 4kb for x86/amd64
+              DWORD ws = count * 4;
+              _working_set_child_procs += ws;
+            }
+            CloseHandle(hProc);
+          }
+        }
+      }
+      free(mem);
+    }
   }
 }

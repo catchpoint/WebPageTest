@@ -337,6 +337,9 @@ function loadPageData($file, $options = null)
                 $ret['docCPUpct'] = (array_key_exists(95, $fields) && strlen(trim($fields[95]))) ? floatval(trim($fields[95])) : 0;
                 $ret['fullyLoadedCPUpct'] = (array_key_exists(96, $fields) && strlen(trim($fields[96]))) ? floatval(trim($fields[96])) : 0;
                 $ret['isResponsive'] = (array_key_exists(97, $fields) && strlen(trim($fields[97]))) ? intval(trim($fields[97])) : -1;
+                if ((isset($fields[98]) && strlen(trim($fields[98])))) $ret['browser_process_count'] = intval(trim($fields[98]));
+                if ((isset($fields[99]) && strlen(trim($fields[99])))) $ret['browser_main_memory_kb'] = intval(trim($fields[99]));
+                if ((isset($fields[100]) && strlen(trim($fields[100])))) $ret['browser_other_private_memory_kb'] = intval(trim($fields[100]));
                 
                 $ret['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));
                 if (!strlen($ret['pageSpeedVersion']))

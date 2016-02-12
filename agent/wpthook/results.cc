@@ -769,6 +769,15 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Is Responsive
     buff.Format("%d\t", _test_state._is_responsive);
     result += buff;
+    // Browser Process Count
+    buff.Format("%u\t", _test_state._process_count);
+    result += buff;
+    // Main Process Working Set
+    buff.Format("%u\t", _test_state._working_set_main_proc);
+    result += buff;
+    // Other Processes Private Working Set
+    buff.Format("%u\t", _test_state._working_set_child_procs);
+    result += buff;
 
     result += "\r\n";
 
