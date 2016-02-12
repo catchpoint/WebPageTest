@@ -252,6 +252,7 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
   this.clearProfile_();
   this.clearDownloads_();
   this.clearNotifications_();
+  this.clearMotorolaUpdateNotifications_();
 
   // Flush the DNS cache
   this.adb_.su(['ndc', 'resolver', 'flushdefaultif']);
@@ -314,6 +315,12 @@ BrowserAndroidChrome.prototype.clearDownloads_ = function() {
 BrowserAndroidChrome.prototype.clearNotifications_ = function() {
   this.app_.schedule('Clear Notifications', function() {
     this.adb_.su(['service', 'call', 'notification', '1']);
+  }.bind(this));
+};
+
+BrowserAndroidChrome.prototype.clearMotorolaUpdateNotifications_ = function() {
+  this.app_.schedule('Clear Motorola Update Notifications', function() {
+    this.adb_.shell(['am', 'force-stop', 'com.motorola.ccc.ota']);
   }.bind(this));
 };
 
