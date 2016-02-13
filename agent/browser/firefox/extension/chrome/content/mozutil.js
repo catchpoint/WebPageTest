@@ -286,4 +286,43 @@ wpt.moz.logJson = function() {
       JSON.stringify(Array.prototype.slice.call(arguments), null, 2));
 };
 
+var ERROR_STRING_TO_WPT_CODE = {
+    'generic': 12999, // Navigation error
+    'dnsNotFound': 12007,
+    'fileNotFound': -1, // handled by request HTTP status
+    'malformedURI': 12029, // Connection error
+    'unknownProtocolFound': 12029, // Connection error
+    'connectionFailure': 12029, // connection error
+    'netTimeout': 99997,
+    'redirectLoop': 13000,
+    'unknownSocketType': 12029, // connection error
+    'netReset': 12031,
+    'notCached': 12999, // navigation error
+    'netOffline': 12029, // connection error
+    'netInterrupt': 12031, // Connection reset
+    'deniedPortAccess': 12029,
+    'proxyResolveFailure': 12029,
+    'proxyConnectFailure': 12029,
+    'contentEncodingError': 12999,
+    'unsafeContentType': 12999,
+    'nssFailure2': 7,
+    'nssBadCert': 7,
+    'malwareBlocked': 12999,
+    'unwantedBlocked': 12999,
+    'cspBlocked': 12999,
+    'remoteXUL': 12999,
+    'corruptedContentError': 12999,
+    'sslv3Used': 7,
+};
+
+    /**
+     * Map chrome's network error strings to the numeric codes expected by
+     * WebpageTest.
+     */
+wpt.moz.errorStringToWptCode = function (errorString) {
+    var errorCodeFromMap = ERROR_STRING_TO_WPT_CODE[errorString];
+    return (errorCodeFromMap === undefined ? 12999 : errorCodeFromMap);
+};
+
+
 })();  // End closure

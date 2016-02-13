@@ -55,6 +55,8 @@ var g_processing_task = false;
 var g_started = false;
 var g_initialized = false;
 var g_webdriver_mode = false;
+var g_lastError = -1;
+
 // Set to true to pull commands from a static list in fakeCommandSource.js.
 var RUN_FAKE_COMMAND_SEQUENCE = false;
 
@@ -151,7 +153,7 @@ wpt.moz.main.onStartup = function() {
 
   var observeUnauthorizedErrors = {
     observe: function(aSubject, aTopic, aData) {
-			wpt.moz.main.sendEventToDriver_('navigate_error?error=401');
+      wpt.moz.main.sendEventToDriver_('navigate_error?error=401');
       g_active = false;
       wptExtension.uninit();
     }
@@ -252,7 +254,36 @@ wpt.moz.main.onLoad = function(win) {
   }
 };
 
-wpt.moz.main.onBeforeUnload = function() {
+// detect error on load
+onDomContentLoaded = function(event) {
+    var win = event.originalTarget.defaultView;
+    var webnav = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
+    var docuri = webnav.document.documentURI;
+    var location = win.location + ''; // make sure it's a string
+
+    if (win.frameElement) {
+        // iframe error, ignore
+        return;
+    } else {
+      if (docuri.indexOf('about:neterror') == 0) {
+        // a problem was detected
+        var errCode = /about:neterror\?e=(\w*)/.exec(docuri)[1];
+        if (errCode) {
+          g_lastError = wpt.moz.errorStringToWptCode(errCode);
+        }
+      }
+
+      if (g_lastError != -1) {
+          wpt.moz.main.sendEventToDriver_('navigate_error?error=' + g_lastError);
+      }
+    }
+
+    g_lastError = -1;
+}
+
+
+wpt.moz.main.onBeforeUnload = function () {
+  g_lastError = -1;
   wpt.moz.main.sendEventToDriver_('before_unload');
 }
 
@@ -313,12 +344,13 @@ var progressListener =
    throw Components.results.NS_NOINTERFACE;  
   },  
   
-  onStateChange: function(aWebProgress, aRequest, aFlag, aStatus) {},  
-  onLocationChange: function(aProgress, aRequest, aURI) {
-		if (aRequest && !Components.isSuccessCode(aRequest.status)) {
-			wpt.moz.main.sendEventToDriver_('navigate_error?error=' + aRequest.status);
-		}
-	},
+  onStateChange: function (aWebProgress, aRequest, aFlag, aStatus) {
+  },
+  onLocationChange: function (aProgress, aRequest, aURI) {
+      if (aRequest && !Components.isSuccessCode(aRequest.status)) {
+        g_lastError = aRequest.status;
+      }
+  },
   onProgressChange: function(aWebProgress, aRequest, curSelf, maxSelf, curTot, maxTot) { },  
   onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) { },  
   onSecurityChange: function(aWebProgress, aRequest, aState) { }  
@@ -355,6 +387,9 @@ var wptExtension = {
         if (!g_started)
           onPageLoad();
       }, STARTUP_FAILSAFE_INTERVAL);
+
+      gBrowser.addEventListener('DOMContentLoaded', onDomContentLoaded, true);
+
     }
   },
   uninit: function() {
@@ -362,6 +397,7 @@ var wptExtension = {
       gBrowser.removeEventListener('load', onPageLoad, true);
       gBrowser.removeEventListener('pagehide', onPageHide, true);
       gBrowser.removeEventListener('beforeunload', onBeforeUnload, true);
+      gBrowser.removeEventListener('DOMContentLoaded', onDomContentLoaded, true);
       gBrowser.removeProgressListener(progressListener);
     }
   },
@@ -375,7 +411,7 @@ var wptExtension = {
     wpt.moz.main.onBeforeUnload();
   }
 };
-window.addEventListener('load', function() { wptExtension.init(); }, false);
+window.addEventListener('load', function () { wptExtension.init(); }, false);
 window.addEventListener('unload', function() { wptExtension.uninit(); }, false);
 
 // Create a startup failsafe in case the events we attach to have already fired
