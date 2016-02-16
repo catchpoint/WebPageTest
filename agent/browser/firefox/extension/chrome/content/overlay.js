@@ -271,6 +271,8 @@ onDomContentLoaded = function(event) {
         if (errCode) {
           g_lastError = wpt.moz.errorStringToWptCode(errCode);
         }
+      } else if (docuri.indexOf('about:certerror') == 0) {
+          g_lastError = 7; // invalid SSL/TLS certificate
       }
 
       if (g_lastError != -1) {
