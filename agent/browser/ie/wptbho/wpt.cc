@@ -309,8 +309,59 @@ void Wpt::OnNavigateComplete(CString url) {
 void Wpt::OnNavigateError(DWORD error) {
   if (_active) {
     AtlTrace(_T("[wptbho] - Wpt::OnNavigateError(%d)"), error);
+    DWORD code = error;
+
+    switch (error) {
+    case INET_E_INVALID_URL:
+    case INET_E_NO_SESSION:
+    case INET_E_RESOURCE_NOT_FOUND:
+    case INET_E_OBJECT_NOT_FOUND:
+    case INET_E_DATA_NOT_AVAILABLE:
+    case INET_E_DOWNLOAD_FAILURE:
+    case INET_E_NO_VALID_MEDIA:
+    case INET_E_INVALID_REQUEST:
+    case INET_E_UNKNOWN_PROTOCOL:
+    case INET_E_SECURITY_PROBLEM:
+    case INET_E_CANNOT_LOAD_DATA:
+    case INET_E_CANNOT_INSTANTIATE_OBJECT:
+    case INET_E_REDIRECT_TO_DIR:
+    case INET_E_CANNOT_LOCK_REQUEST:
+    case INET_E_USE_EXTEND_BINDING:
+    case INET_E_TERMINATED_BIND:
+    case INET_E_CODE_DOWNLOAD_DECLINED:
+    case INET_E_RESULT_DISPATCHED:
+    case INET_E_CANNOT_REPLACE_SFP_FILE:
+    case INET_E_BLOCKED_REDIRECT_XSECURITYID:
+    case INET_E_DOMINJECTIONVALIDATION:
+    case INET_E_CODE_INSTALL_BLOCKED_BY_HASH_POLICY:
+    case INET_E_FORBIDFRAMING:
+    case INET_E_CODE_INSTALL_BLOCKED_ARM:
+    case INET_E_BLOCKED_PLUGGABLE_PROTOCOL:
+    case INET_E_CODE_INSTALL_BLOCKED_BITNESS:
+    case INET_E_BLOCKED_ENHANCEDPROTECTEDMODE:
+    case INET_E_DOWNLOAD_BLOCKED_BY_INPRIVATE:
+    case INET_E_CODE_INSTALL_BLOCKED_IMMERSIVE:
+      code = 12999L;
+      break;
+    case INET_E_CONNECTION_TIMEOUT:
+    case INET_E_CANNOT_CONNECT:
+      code = 12029L;
+      break;
+    case INET_E_AUTHENTICATION_REQUIRED:
+      code = 401L;
+      break;
+    case INET_E_REDIRECT_FAILED:
+      code = 13000L;
+      break;
+    case INET_E_INVALID_CERTIFICATE:
+    case 6L: // based on E2E testing, 6L is the error code for SSL errors
+      code = 7L;
+      break;
+    }
+
+
     CString options;
-    options.Format(_T("error=%d"), error);
+    options.Format(_T("error=%d"), code);
     _wpt_interface.OnNavigateError(options);
     if (!_webdriver_mode) {
       // in webdriver mode, the bho should stay active even on a navigation
