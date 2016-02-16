@@ -438,7 +438,7 @@ chrome.webRequest.onAuthRequired.addListener(function(details, cb) {
     }
 }, {urls: ["<all_urls>"]}, ["blocking"]);
 
-chrome.webRequest.onCompleted.addListener(function(details) {
+chrome.webRequest.onCompleted.addListener(function (details) {
     if (g_active && details.tabId == g_tabid) {
       wpt.LOG.info('Completed, status = ' + details.statusCode);
       if (details.statusCode >= 400) {

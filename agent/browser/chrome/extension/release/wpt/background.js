@@ -13960,6 +13960,7 @@ var IGNORE_NETLOG_EVENTS =
  */
 wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
   try {
+    g_instance.mainFrame = -1;
     g_instance.tabId_ = tabId;
     g_instance.chromeApi_ = chromeApi;
     g_instance.startedCallback = callback;
@@ -14111,9 +14112,12 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
     // Page events
     if (message === 'Page.frameNavigated' &&
         params['frame'] !== undefined &&
-        params.frame['parentId'] === undefined &&
-        g_instance.mobileEmulation != undefined) {
-      g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.setDeviceMetricsOverride', g_instance.mobileEmulation);
+        params.frame['parentId'] === undefined) {
+        g_instance.mainFrame = params.frame.id;
+
+      
+      if (g_instance.mobileEmulation != undefined)
+        g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.setDeviceMetricsOverride', g_instance.mobileEmulation);
     }
     
     // Network events
@@ -14178,6 +14182,19 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
               g_instance.requests[id].bytesInEncoded += params.encodedDataLength;
           } else if (message === 'Network.responseReceived' && params['response'] !== undefined) {
             wpt.chromeDebugger.SendReceivedData();
+
+            // Detect invalid certificate errors
+            if (params.frameId = g_instance.mainFrame &&
+                params.type == 'Document' &&
+                params.response.securityState &&
+                params.response.securityState == 'insecure' &&
+                g_instance.requests[id].initiator &&
+                g_instance.requests[id].initiator.type == 'other') {
+                // An insecure document is loaded on the main frame. The initiator type check
+                // ensure we are only considering document loaded by the browser as a result
+                // of a page navigation.
+                wpt.chromeDebugger.sendEvent('navigate_error?error=7');
+            }
             if (g_instance.requests[id]['firstByteTime'] === undefined)
               g_instance.requests[id].firstByteTime = params.timestamp;
             g_instance.requests[id].fromNet = false;
@@ -15005,7 +15022,7 @@ chrome.webRequest.onAuthRequired.addListener(function(details, cb) {
     }
 }, {urls: ["<all_urls>"]}, ["blocking"]);
 
-chrome.webRequest.onCompleted.addListener(function(details) {
+chrome.webRequest.onCompleted.addListener(function (details) {
     if (g_active && details.tabId == g_tabid) {
       wpt.LOG.info('Completed, status = ' + details.statusCode);
       if (details.statusCode >= 400) {
