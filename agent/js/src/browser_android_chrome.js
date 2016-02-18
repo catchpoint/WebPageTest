@@ -252,7 +252,7 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
   this.clearProfile_();
   this.clearDownloads_();
   this.clearNotifications_();
-  this.clearMotorolaUpdateNotifications_();
+  this.clearKnownApps_();
 
   // Flush the DNS cache
   this.adb_.su(['ndc', 'resolver', 'flushdefaultif']);
@@ -318,9 +318,12 @@ BrowserAndroidChrome.prototype.clearNotifications_ = function() {
   }.bind(this));
 };
 
-BrowserAndroidChrome.prototype.clearMotorolaUpdateNotifications_ = function() {
-  this.app_.schedule('Clear Motorola Update Notifications', function() {
+BrowserAndroidChrome.prototype.clearKnownApps_ = function() {
+  this.app_.schedule('Clear Known Apps', function() {
+    // Motorola update notification
     this.adb_.shell(['am', 'force-stop', 'com.motorola.ccc.ota']);
+    // Google docs pdf viewer
+    this.adb_.shell(['am', 'force-stop', 'com.google.android.apps.docs']);
   }.bind(this));
 };
 
