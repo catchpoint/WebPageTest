@@ -162,7 +162,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
             
         $gradeRun = 1;
         if( array_key_exists('run', $_GET) && $_GET["run"] )
-            $gradeRun = $_GET["run"];
+            $gradeRun = intval($_GET["run"]);
         else
         {
             $medianRun = GetMedianRun($pageData, 0, $median_metric);

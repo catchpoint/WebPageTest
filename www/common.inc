@@ -244,7 +244,7 @@ if (strlen($id)) {
     if (isset($test['testinfo']['medianMetric']))
       $median_metric = $test['testinfo']['medianMetric'];
 
-    $run = htmlspecialchars(@$req_run);
+    $run = isset($req_run) ? intval($req_run) : 0;
     if (!$run) {
         $run = (int)1;
     }
@@ -299,7 +299,7 @@ if (strlen($id)) {
 }
 
 if (array_key_exists('medianMetric', $_REQUEST)) {
-    $median_metric = $_REQUEST['medianMetric'];
+    $median_metric = htmlspecialchars($_REQUEST['medianMetric']);
 }
 
 ?>

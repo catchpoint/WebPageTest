@@ -345,7 +345,7 @@ function ScreenShotTable()
     global $supports60fps;
     $endTime = 'visual';
     if( array_key_exists('end', $_REQUEST) && strlen($_REQUEST['end']) )
-        $endTime = trim($_REQUEST['end']);
+        $endTime = htmlspecialchars(trim($_REQUEST['end']));
 
     $filmstrip_end_time = 0;
     if( count($tests) )
@@ -512,7 +512,7 @@ function ScreenShotTable()
         // end of the container table
         echo "</td></tr></table>\n";
         echo "<div id=\"image\">";
-        echo "<a id=\"export\" class=\"pagelink\" href=\"filmstrip.php?tests={$_REQUEST['tests']}&thumbSize=$thumbSize&ival=$interval&end=$endTime&text=$color&bg=$bgcolor\">Export filmstrip as an image...</a>";
+        echo "<a id=\"export\" class=\"pagelink\" href=\"filmstrip.php?tests=" . htmlspecialchars($_REQUEST['tests']) . "&thumbSize=$thumbSize&ival=$interval&end=$endTime&text=$color&bg=$bgcolor\">Export filmstrip as an image...</a>";
         echo "</div>";
         echo '<div id="bottom"><input type="checkbox" name="slow" value="1"> Slow Motion<br><br>';
         echo "<input id=\"SubmitBtn\" type=\"submit\" value=\"Create Video\">";
@@ -523,7 +523,7 @@ function ScreenShotTable()
         <div id="layout">
             <form id="layoutForm" name="layout" method="get" action="/video/compare.php">
             <?php
-                echo "<input type=\"hidden\" name=\"tests\" value=\"{$_REQUEST['tests']}\">\n";
+                echo "<input type=\"hidden\" name=\"tests\" value=\"" . htmlspecialchars($_REQUEST['tests']) . "\">\n";
             ?>
                 <table id="layoutTable">
                     <tr><th>Thumbnail Size</th><th>Thumbnail Interval</th><th>Comparison End Point</th></th></tr>

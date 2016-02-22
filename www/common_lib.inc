@@ -1082,7 +1082,7 @@ function GetTestInfoHtml($includeScript = true)
     $html = '';
     $run = null;
     if (array_key_exists('run', $_REQUEST))
-      $run = $_REQUEST['run'];
+      $run = intval($_REQUEST['run']);
     if (isset($run) &&
         array_key_exists('testinfo', $test) &&
         array_key_exists('test_runs', $test['testinfo']) &&
