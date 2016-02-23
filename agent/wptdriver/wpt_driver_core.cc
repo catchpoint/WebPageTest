@@ -53,10 +53,10 @@ const TCHAR * DIALOG_WHITELIST[] = {
 
 const DWORD SOFTWARE_INSTALL_RETRY_DELAY = 30000; // try every 30 seconds
 const DWORD HOUSEKEEPING_INTERVAL = 500;
-
 WptDriverCore * global_core = NULL;
 extern HINSTANCE hInst;
 
+#define URL_WEBDRIVER_FEATURE_STR _T("URL_WEBDRIVER_FEATURE")
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WptDriverCore::WptDriverCore(WptStatus &status):
@@ -299,7 +299,12 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
 
   SetCursorPos(0,0);
   ShowCursor(FALSE);
-  if (test._webdriver_mode) {
+  bool url_webdriver_feature = false;
+  if (test._url.Right(21) == URL_WEBDRIVER_FEATURE_STR) {
+      test._url.Replace(URL_WEBDRIVER_FEATURE_STR, NULL);
+      url_webdriver_feature = true;
+  }
+  if (test._webdriver_mode || url_webdriver_feature) {
     if (!_settings._webdriver_supported) {
       test._run_error = _T("This agent doesn't support webdriver tests");
     } else {
