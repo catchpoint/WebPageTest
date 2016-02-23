@@ -35,6 +35,8 @@ agent/js/results/
 agent/js/src-cov/
 agent/js/runtmp_*
 agent/js/lib/ios/DeviceSupport
+agent/*/Release
+agent/browser/ie/*/Release
 .vagrant
 /www/installers/browsers/nightly.dat
 /www/cli/archive-ia.php
