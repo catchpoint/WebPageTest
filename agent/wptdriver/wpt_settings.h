@@ -133,5 +133,6 @@ public:
   CString _webdriver_server_command;
   CString _webdriver_client_command;
   CString _webdriver_server_url;
+  CString _imagetools_command;
   bool _webdriver_supported;
 };

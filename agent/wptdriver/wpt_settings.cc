@@ -172,6 +172,12 @@ bool WptSettings::Load(void) {
     _webdriver_supported = true;
   }
 
+  if (GetPrivateProfileString(
+    _T("WebPageTest"), _T("ImageTools"), _T(""), buff, _countof(buff), iniFile)) {
+    _imagetools_command = buff;
+    _imagetools_command.Trim(_T("\""));
+  }
+
   if (_webdriver_supported) {
     if (GetPrivateProfileString(
       _T("WebPageTest"), _T("WebDriverServer"), _T(""), buff, _countof(buff), iniFile)) {

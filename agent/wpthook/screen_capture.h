@@ -38,6 +38,7 @@ public:
     DOCUMENT_COMPLETE,
     FULLY_LOADED,
     RESPONSIVE_CHECK,
+    RESULT,
     UNKNOWN
   } TYPE;
 

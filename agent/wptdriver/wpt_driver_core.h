@@ -60,6 +60,8 @@ private:
   bool WebDriverTest(WptTestDriver& test, WebBrowser &browser);
   bool BrowserTest(WptTestDriver& test, WebBrowser &browser);
   bool SetupWebPageReplay(WptTestDriver& test, WebBrowser &browser);
+  bool RunImageHash(WptTestDriver& test);
+  bool RunVisuallyComplete(WptTestDriver& test);
   void Init(void);
   void Cleanup(void);
   void FlushDNS(void);

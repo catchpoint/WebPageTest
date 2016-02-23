@@ -1,5 +1,6 @@
 <?php
 require_once('page_data.inc');
+require_once('logging.inc');
 require_once('object_detail.inc');
 require_once('lib/json.php');
 
@@ -409,7 +410,114 @@ function BuildHAR(&$pageData, $allRequests, $id, $testPath, $options) {
   }
   
   $result['log']['entries'] = $entries;
+
+  AddImages($id, $testPath, $result);
   
   return $result;
+}
+
+function AddImages($id, $testPath, &$result) {
+
+    // retrieve custom screenshots labels from the output.json
+    $labels = getCustomScreenshotsLabels($testPath);
+    $labelIndex = 0;
+    $labelsCount = count($labels);
+
+    // scan all images in result dir
+    $files = scandir($testPath);
+    foreach ($files as $file) { 
+        $matches = array();
+
+        // visually complete
+        if (preg_match('/^(?P<step>\d+)_visuallycomplete_(?P<hash>[a-f0-9]{40})\.jpg$/', $file, $matches) == 1) {
+            $page = intval($matches['step']) - 1;
+            if (isset($result['log']['pages'][$page]['_pageScreenshots'])) {
+                $images = $result['log']['pages'][$page]['_pageScreenshots'];
+            } else {
+                $images = array();
+            }
+            $image = array();
+            $image['fileName'] = ltrim($testPath, '.') . '/' . basename($file);
+            $image['hash'] = $matches['hash'];
+            $image['type'] = 'VISUALLY_COMPLETE';
+            $image['taken_ms'] = $result['log']['pages'][$page]['_visualComplete'];
+
+            $images[] = $image;
+            $result['log']['pages'][$page]['_pageScreenshots'] = $images;
+        }
+
+        // Custom image
+        if (preg_match('/^(?P<timestamp>\d+)_screenshot_(?P<hash>[a-f0-9]{40})\.jpg$/', $file, $matches) == 1) {
+            $time = intval($matches['timestamp']);
+            $page = pageFromTimestamp($result, $time);
+            if (isset($result['log']['pages'][$page]['_pageScreenshots'])) {
+                $images = $result['log']['pages'][$page]['_pageScreenshots'];
+            } else {
+                $images = array();
+            }
+            $image = array();
+            $image['fileName'] = ltrim($testPath, '.') . '/' . basename($file);
+            $image['hash'] = $matches['hash'];
+            $image['type'] = 'SCRIPT';
+            $image['taken_ms'] = $time - $result['log']['pages'][$page]['_date'] * 1000;
+
+            if ($labelIndex < $labelsCount) {
+                $image['label'] = $labels[$labelIndex];
+                ++$labelIndex;
+            } else {
+                $image['label'] = "";
+            }
+
+
+            $images[] = $image;
+            $result['log']['pages'][$page]['_pageScreenshots'] = $images;
+        }
+
+        // result image
+        if (preg_match('/^result_(?P<hash>[a-f0-9]{40})\.jpg$/', $file, $matches) == 1) {
+            $image = array();
+            $image['fileName'] = ltrim($testPath, '.') . '/' . basename($file);
+            $image['hash'] = $matches['hash'];
+
+            $result['log']['_resultScreenshot'] = $image;
+        }
+    }
+}
+
+function pageFromTimestamp(&$result, $time) {
+    $pages = $result['log']['pages'];
+
+    for ($i = count($pages) - 1; $i >= 0; $i--) {
+        if ($pages[$i]['_date'] * 1000 <= $time) {
+            return $i;
+        }
+    }
+}
+
+function getCustomScreenshotsLabels($testPath) {
+    $output_file = $testPath . "/output.json.gz";
+    $labels = array();
+    if (gz_is_file($output_file)) {
+        $output = json_decode(gz_file_get_contents($output_file), true);
+        if (isset($output['screenshots'])) {
+            $labels_obj = $output['screenshots'];
+            $labels_obj_count = count($labels_obj);
+
+            if ($labels_obj_count > 0) {
+                $len = intval($labels_obj[$labels_obj_count - 1]['id']) + 1;
+
+                // set all labels to empty strings
+                $labels = array_pad(array(), $len, "");
+
+                // set label
+                foreach ($labels_obj as $l) {
+                    $labels[intval($l['id'])] = preg_replace('/\\.[^.\\s]{3,4}$/', '', $l['fileName']);
+                }
+            }
+            
+        }
+    }
+
+    return $labels;
 }
 ?>
