@@ -24,6 +24,12 @@ if (GetSetting('ec2_key')) {
 GitUpdate();
 AgentUpdate();
 
+Unlock($lock);
+if (GetSetting('cron_archive')) {
+  chdir('./cli');
+  include 'archive.php';
+}
+
 echo "Done\n";
 
 /**
