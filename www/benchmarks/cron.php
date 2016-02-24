@@ -1012,10 +1012,11 @@ function ImportS3Benchmark($info) {
     if (isset($info['tests']) && is_array($info['tests'])) {
       foreach ($info['tests'] as $test) {
         logMsg("Imported S3 test {$test['id']} ({$test['label']} with config {$test['config']} for url {$test['url']}", "./log/$logFile", true);
+        $location = isset($test['location']) ? $test['location'] : 'Imported';
         $state['tests'][] = array(  'id' => $test['id'], 
                                     'label' => $test['label'],
                                     'url' => $test['url'], 
-                                    'location' => $test['config'], 
+                                    'location' => $location, 
                                     'config' => $test['config'],
                                     'submitted' => $state['last_run'], 
                                     'completed' => 0);
