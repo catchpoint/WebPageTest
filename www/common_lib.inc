@@ -453,7 +453,7 @@ function gz_file_get_contents($file)
 {
     $data = null;
 
-    $fileSize = filesize("$file.gz");
+    $fileSize = @filesize("$file.gz");
     if (!$fileSize)
       $fileSize = filesize($file);
     $chunkSize = min(4096, max(1024000, $fileSize * 10));
