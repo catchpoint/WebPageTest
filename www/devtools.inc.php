@@ -712,8 +712,8 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
 
     $foundFirstEvent = false;
     $foundHookPage = false;
-    $mainFrameId = null; // the frame id of the hook page blank2.html gives us the id for the main frame
     $events = Array(); // list of events for each step
+    $iFrames = Array(); // list of iFrame frameId
     foreach ($messages as $entry) {
         $message = $entry['message'];
         if (isset($message['params']['timestamp'])) {
@@ -744,12 +744,17 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
             }
         }
         if ($foundFirstEvent) {
-            if ($multistep && isset($message['method']) && $message['method'] == "Page.frameStartedLoading" &&
-                isset($message['params']['frameId']) && (
-                    $mainFrameId === null || $message['params']['frameId'] === $mainFrameId)) {
+            // If an iFrame is attached to a parent frame, keep a reference of
+            // this iFrame frameId. With all iFrame ids, we can differentiate 
+            // frameStartedLoading producing a new step from the ones just
+            // loading data in an iframe.
+            if ($multistep && isset($message['method']) && $message['method'] == "Page.frameAttached") {
+                $iFrames[$message['params']['frameId']] = $iFrame[$message['params']['parentFrameId']];
+            }
 
-                if ($mainFrameId === null)
-                    $mainFrameId = $message['params']['frameId'];
+            if ($multistep && isset($message['method']) && $message['method'] == "Page.frameStartedLoading" &&
+                isset($message['params']['frameId']) && 
+                    !array_key_exists($message['params']['frameId'], $iFrames)) {
 
                 $events[] = $step;
                 $step = Array();
