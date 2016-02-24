@@ -1011,6 +1011,7 @@ function ImportS3Benchmark($info) {
     
     if (isset($info['tests']) && is_array($info['tests'])) {
       foreach ($info['tests'] as $test) {
+        logMsg("Imported S3 test {$test['id']} ({$test['label']} with config {$test['config']} for url {$test['url']}", "./log/$logFile", true);
         $state['tests'][] = array(  'id' => $test['id'], 
                                     'label' => $test['label'],
                                     'url' => $test['url'], 
@@ -1022,7 +1023,6 @@ function ImportS3Benchmark($info) {
     }
 
     if (count($state['tests'])) {
-      logMsg("Imported S3 benchmark {$info['id']} for $benchmark", "./log/$logFile", true);
       $state['running'] = true;
       $imported = true;
       file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
