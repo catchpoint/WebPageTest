@@ -199,7 +199,9 @@ void TestServer::MongooseCallback(enum mg_event event,
     } else if (strcmp(request_info->uri, "/mode") == 0) {
       // Extension loaded.
       if (shared_webdriver_mode) {
-        SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, _T("{\"webdriver\": true}"));
+        CStringA response;
+        response.Format(CT2A(_T("{\"webdriver\": true, \"version\":%d}")), test_._version);
+        SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, response);
         // Wait for the browser to cool down.
         while (!OkToStart()) {
           WptTrace(loglevel::kFrequentEvent, _T("[wpthook] Waiting for browser to cool down..."));
@@ -207,7 +209,9 @@ void TestServer::MongooseCallback(enum mg_event event,
         }
         hook_.SetHookReady();
       } else {
-        SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, _T("{\"webdriver\": false}"));
+        CStringA response;
+        response.Format(CT2A(_T("{\"webdriver\": false, \"version\":%d}")), test_._version);
+        SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, response);
       }
     } else if (strcmp(request_info->uri, "/is_hook_ready") == 0) {
       if (hook_.IsHookReady()) {

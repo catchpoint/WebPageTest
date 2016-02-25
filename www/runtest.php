@@ -91,7 +91,6 @@
             $test['domElement'] = trim($req_domelement);
             $test['login'] = trim($req_login);
             $test['password'] = trim($req_password);
-            $test['customHeaders'] = trim($req_customHeaders);
             $test['runs'] = (int)$req_runs;
             $test['fvonly'] = (int)$req_fvonly;
             $test['timeout'] = (int)$req_timeout;
@@ -2016,17 +2015,6 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "customMetric=$name:$code\r\n";
             }
 
-            // Add Custom Headers
-            if ($test['script'] && isset($test['webdriver']) && $test['webdriver']) {
-              if (strlen($test['customHeaders'])) {
-                $headers = preg_split("/\r\n|\n|\r/", $test['customHeaders']);
-                $testFile .= "\r\n[StartHeaders]\r\n";
-                foreach ($headers as $header) {
-                  $testFile .= $header . "\r\n";
-                }
-                $testFile .= "[EndHeaders]\r\n";
-              }
-            }
             if( !SubmitUrl($testId, $testFile, $test, $url) )
                 $testId = null;
         }
@@ -2367,19 +2355,7 @@ function ProcessTestScript($url, &$test) {
       $script = "navigate\t$url";
     $script = "addHeader\t$header\r\n" . $script;
   }
-  // Add custom headers
-  if (!isset($test['webdriver']) || $test['webdriver'] == '') {
-    if (strlen($test['customHeaders'])) {
-      if (!isset($script) || !strlen($script))
-        $script = "navigate\t$url";
-      $headers = preg_split("/\r\n|\n|\r/", $test['customHeaders']);
-      $headerCommands = "";
-      foreach ($headers as $header) {
-        $headerCommands = $headerCommands . "addHeader\t".$header."\r\n";
-      }
-      $script = $headerCommands . $script;
-    }
-  }
+  
   return $script;
 }
 

@@ -14727,12 +14727,8 @@ wpt.main.startMeasurements = function() {
     window.setInterval(wptFeedFakeTasks, FAKE_TASK_INTERVAL);
   } else {
     wptQuery('http://127.0.0.1:8888/mode', function(isError, response) {
-      if (!isError && response.webdriver) {
-        g_webdriver_mode = true;
-        g_active = true;
-        // XXXX: THIS IS A HACK! We need a more clean way of getting the headers from the wpthook to the
-        // extension when running in webdriver mode.
-        g_appendUA.push('PTST/Unknown-Version');
+      if (!isError) {
+        g_appendUA.push('PTST/' + response.version);
         g_addHeaders.push({'name' : 'appdynamicssnapshotenabled',
                            'value' : 'true',
                            'filter' : ''});
@@ -14740,21 +14736,25 @@ wpt.main.startMeasurements = function() {
           {urls: ['https://*/*']},
           ['blocking', 'requestHeaders']
         );
-        wpt.LOG.info('WebDriver mode: TRUE');
-        // Note: In WebDriver mode, we will not be able to hook the chrome debugger because the Chrome
-        // WebDriver installs an automation extension in the browser which also attaches to the debugger
-        // and since only one client can attach to the debugger, we refrain ourselves. The downside is
-        // that we won't be able to capture timeline and other chrome dev-tools related stuff from the
-        // extension and send them to the hook. But, this is okay, since WebDriver supports mechanism to
-        // retrieve the same.
-      } else {
-        // Setup the debugger.
-        wpt.LOG.info('WebDriver mode: FALSE');
-        wpt.chromeDebugger.Init(g_tabid, window.chrome, function() {
-          wpt.LOG.info('Chrome debugger successfully attached to tabId: ' + g_tabid);
-        });
-        // Fetch tasks from wptdriver.exe.
-        window.setInterval(wptGetTask, TASK_INTERVAL);
+        if (response.webdriver) {
+          g_webdriver_mode = true;
+          g_active = true;
+          wpt.LOG.info('WebDriver mode: TRUE');
+          // Note: In WebDriver mode, we will not be able to hook the chrome debugger because the Chrome
+          // WebDriver installs an automation extension in the browser which also attaches to the debugger
+          // and since only one client can attach to the debugger, we refrain ourselves. The downside is
+          // that we won't be able to capture timeline and other chrome dev-tools related stuff from the
+          // extension and send them to the hook. But, this is okay, since WebDriver supports mechanism to
+          // retrieve the same.
+        } else {
+          // Setup the debugger.
+          wpt.LOG.info('WebDriver mode: FALSE');
+          wpt.chromeDebugger.Init(g_tabid, window.chrome, function() {
+            wpt.LOG.info('Chrome debugger successfully attached to tabId: ' + g_tabid);
+          });
+          // Fetch tasks from wptdriver.exe.
+          window.setInterval(wptGetTask, TASK_INTERVAL);      
+        }
       }
     });
   }
