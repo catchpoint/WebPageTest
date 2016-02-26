@@ -340,6 +340,8 @@ function loadPageData($file, $options = null)
                 if ((isset($fields[98]) && strlen(trim($fields[98])))) $ret['browser_process_count'] = intval(trim($fields[98]));
                 if ((isset($fields[99]) && strlen(trim($fields[99])))) $ret['browser_main_memory_kb'] = intval(trim($fields[99]));
                 if ((isset($fields[100]) && strlen(trim($fields[100])))) $ret['browser_other_private_memory_kb'] = intval(trim($fields[100]));
+                if (isset($ret['browser_main_memory_kb']) && isset($ret['browser_other_private_memory_kb']))
+                  $ret['browser_working_set_kb'] = $ret['browser_main_memory_kb'] + $ret['browser_other_private_memory_kb'];
                 
                 $ret['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));
                 if (!strlen($ret['pageSpeedVersion']))
