@@ -139,6 +139,7 @@ private:
   bool IsSSLHandshake(const DataChunk& chunk);
   H2_USER_DATA * NewHttp2Session(DWORD socket_id,
                                  DATA_DIRECTION direction);
+  void SniffProtocol(SocketInfo* info, DataChunk& chunk);
 
   CRITICAL_SECTION cs;
   Requests&                   _requests;

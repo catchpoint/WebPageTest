@@ -217,6 +217,56 @@ void TrackSockets::Connected(SOCKET s) {
 }
 
 /*-----------------------------------------------------------------------------
+  Sniff for H2/SPDY/HTTP1 on encrypted connections
+-----------------------------------------------------------------------------*/
+void TrackSockets::SniffProtocol(SocketInfo* info, DataChunk& chunk) {
+  if (info->_is_ssl &&
+      !info->IsLocalhost() &&
+      info->_protocol == PROTO_NOT_CHECKED) {
+    const char * data = chunk.GetData();
+    DWORD len = chunk.GetLength();
+    DWORD socket_id = info->_id;
+
+    info->_protocol = PROTO_UNKNOWN;
+
+    const char * HTTP2_HEADER = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
+    if (info->_protocol == PROTO_UNKNOWN &&
+        len >= (DWORD)lstrlenA(HTTP2_HEADER) &&
+        !memcmp(data, HTTP2_HEADER, lstrlenA(HTTP2_HEADER))) {
+      AtlTrace(_T("[%d] ********* HTTP 2 Connection detected"), socket_id);
+      info->_protocol = PROTO_H2;
+      info->_h2_in = NewHttp2Session(socket_id, DATA_IN);
+      info->_h2_out = NewHttp2Session(socket_id, DATA_OUT);
+    }
+
+    if (info->_protocol == PROTO_UNKNOWN) {
+      const char * HTTP_METHODS[] = {"GET ", "HEAD ", "POST ", "PUT ",
+          "OPTIONS ", "DELETE ", "TRACE ", "CONNECT ", "PATCH "};
+      for (int i = 0; i < _countof(HTTP_METHODS); i++) {
+        const char * method = HTTP_METHODS[i];
+        unsigned long method_len = strlen(method);
+        if (len >= method_len && !memcmp(data, method, method_len)) {
+          AtlTrace(_T("[%d] ********* HTTP 1 Connection detected"),
+                    socket_id);
+          info->_protocol = PROTO_HTTP;
+          break;
+        }
+      }
+    }
+
+    if (info->_protocol == PROTO_UNKNOWN && len >= 8 &&
+        data[0] == '\x80' && data[1] == '\x02') {
+      AtlTrace(_T("[%d] ********* SPDY Connection detected"), socket_id);
+      info->_protocol = PROTO_SPDY;
+    }
+
+    if (info->_protocol == PROTO_UNKNOWN) {
+      AtlTrace(_T("[%d] ********* Unknown connection protocol"), socket_id);
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
   Allow data to be modified.
 -----------------------------------------------------------------------------*/
 bool TrackSockets::ModifyDataOut(SOCKET s, DataChunk& chunk,
@@ -227,49 +277,8 @@ bool TrackSockets::ModifyDataOut(SOCKET s, DataChunk& chunk,
     EnterCriticalSection(&cs);
     SocketInfo* info = GetSocketInfo(s);
     DWORD socket_id = info->_id;
-
-    // see if we need to sniff the protocol
-    if (is_unencrypted && info->_is_ssl && !info->IsLocalhost()) {
-      const char * data = chunk.GetData();
-      if (info->_protocol == PROTO_NOT_CHECKED) {
-        info->_protocol = PROTO_UNKNOWN;
-
-        const char * HTTP2_HEADER = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
-        if (info->_protocol == PROTO_UNKNOWN &&
-            len >= (DWORD)lstrlenA(HTTP2_HEADER) &&
-            !memcmp(data, HTTP2_HEADER, lstrlenA(HTTP2_HEADER))) {
-          AtlTrace(_T("[%d] ********* HTTP 2 Connection detected"), socket_id);
-          info->_protocol = PROTO_H2;
-          info->_h2_in = NewHttp2Session(socket_id, DATA_IN);
-          info->_h2_out = NewHttp2Session(socket_id, DATA_OUT);
-        }
-
-        if (info->_protocol == PROTO_UNKNOWN) {
-          const char * HTTP_METHODS[] = {"GET ", "HEAD ", "POST ", "PUT ",
-              "OPTIONS ", "DELETE ", "TRACE ", "CONNECT ", "PATCH "};
-          for (int i = 0; i < _countof(HTTP_METHODS); i++) {
-            const char * method = HTTP_METHODS[i];
-            unsigned long method_len = strlen(method);
-            if (len >= method_len && !memcmp(data, method, method_len)) {
-              AtlTrace(_T("[%d] ********* HTTP 1 Connection detected"),
-                       socket_id);
-              info->_protocol = PROTO_HTTP;
-              break;
-            }
-          }
-        }
-
-        if (info->_protocol == PROTO_UNKNOWN && len >= 8 &&
-            data[0] == '\x80' && data[1] == '\x02') {
-          AtlTrace(_T("[%d] ********* SPDY Connection detected"), socket_id);
-          info->_protocol = PROTO_SPDY;
-        }
-
-        if (info->_protocol == PROTO_UNKNOWN) {
-          AtlTrace(_T("[%d] ********* Unknown connection protocol"), socket_id);
-        }
-      }
-    }
+    if (is_unencrypted)
+      SniffProtocol(info, chunk);
 
     if (!info->IsLocalhost() &&
         ((is_unencrypted && info->_protocol == PROTO_HTTP) || !info->_is_ssl)) {
@@ -294,6 +303,8 @@ void TrackSockets::DataOut(SOCKET s, DataChunk& chunk, bool is_unencrypted) {
   DWORD socket_id = info->_id;
   if (!info->IsLocalhost()) {
     _test_state.ActivityDetected();
+    if (is_unencrypted)
+      SniffProtocol(info, chunk);
     if (_test_state._active && !is_unencrypted) {
       _test_state._bytes_out += chunk.GetLength();
       if (!_test_state._on_load.QuadPart)

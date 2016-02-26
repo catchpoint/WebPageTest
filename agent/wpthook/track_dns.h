@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class TestState;
 class WptTest;
+class WptHook;
 
 typedef struct {
   ADDRINFOA			info;
@@ -104,7 +105,7 @@ public:
 
 class TrackDns {
 public:
-  TrackDns(TestState& test_state, WptTest& test);
+  TrackDns(WptHook& hook, TestState& test_state, WptTest& test);
   ~TrackDns(void);
 
   bool BlockLookup(CString name);
@@ -126,6 +127,7 @@ public:
   CAtlMap<void *, DnsInfo *>  _dns_lookups;
   CAtlMap<ULONG, CString>     _dns_hosts;
   CRITICAL_SECTION            cs;
+  WptHook&                    _hook;
   TestState&                  _test_state;
   WptTest&                    _test;
   CAtlList<DnsHostAddresses>  _host_addresses;

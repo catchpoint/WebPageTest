@@ -52,6 +52,7 @@ public:
   ~WptHook(void);
 
   void Init();
+  void LateInit();
   void BackgroundThread();
   bool OnMessage(UINT message, WPARAM wParam, LPARAM lParam);
 
@@ -81,6 +82,7 @@ private:
   bool      done_;
   bool      reported_;
   UINT      report_message_;
+  bool      late_initialized_;
 
   // winsock event tracking
   TrackDns      dns_;

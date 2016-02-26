@@ -287,14 +287,13 @@ int ChromeSSLHook::Connect(void *ssl) {
 -----------------------------------------------------------------------------*/
 int ChromeSSLHook::ReadAppData(void *ssl, uint8_t *buf, int len, int peek) {
   int ret = -1;
-  if (ReadAppData_) {
+  if (ReadAppData_)
     ret = ReadAppData_(ssl, buf, len, peek);
-  }
   if (ret > 0) {
     SOCKET s = INVALID_SOCKET;
     if (sockets_.SslSocketLookup(ssl, s)) {
       if (buf && !test_state_._exit) {
-        DataChunk chunk((LPCSTR)buf, len);
+        DataChunk chunk((LPCSTR)buf, ret);
         sockets_.DataIn(s, chunk, true);
       }
     } else {

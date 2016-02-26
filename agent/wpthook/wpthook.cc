@@ -60,10 +60,11 @@ WptHook::WptHook(void):
   ,requests_(test_state_, sockets_, dns_, test_)
   ,results_(test_state_, test_, requests_, sockets_, dns_, screen_capture_,
             dev_tools_, trace_)
-  ,dns_(test_state_, test_)
+  ,dns_(*this, test_state_, test_)
   ,done_(false)
   ,test_server_(*this, test_, test_state_, requests_, dev_tools_, trace_)
-  ,test_(*this, test_state_, shared_test_timeout) {
+  ,test_(*this, test_state_, shared_test_timeout)
+  ,late_initialized_(false) {
 
   file_base_ = shared_results_file_base;
   background_thread_started_ = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -134,6 +135,17 @@ void WptHook::Init(){
     WptTrace(loglevel::kFunction, _T("[wpthook] Init() Completed\n"));
   } else {
     WptTrace(loglevel::kFunction, _T("[wpthook] Init() Timed out\n"));
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptHook::LateInit() {
+  if (!late_initialized_) {
+    late_initialized_ = true;
+    if (!test_state_.gdi_only_) {
+      chrome_ssl_hook_.Init();
+    }
   }
 }
 
