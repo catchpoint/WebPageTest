@@ -154,7 +154,7 @@ SECURITY_STATUS SchannelHook::InitializeSecurityContextW(
             pszTargetName, fContextReq, Reserved1, TargetDataRep, pInput,
             Reserved2, phNewContext, pOutput, pfContextAttr, ptsExpiry);
     if (!phContext && phNewContext) {
-      _sockets.SetSslFd((PRFileDesc *)phNewContext);
+      _sockets.SetSslFd(phNewContext);
     }
   }
   return ret;
@@ -176,7 +176,7 @@ SECURITY_STATUS SchannelHook::InitializeSecurityContextA(
             pszTargetName, fContextReq, Reserved1, TargetDataRep, pInput,
             Reserved2, phNewContext, pOutput, pfContextAttr, ptsExpiry);
     if (!phContext && phNewContext) {
-      _sockets.SetSslFd((PRFileDesc *)phNewContext);
+      _sockets.SetSslFd(phNewContext);
     }
   }
   return ret;
@@ -187,7 +187,7 @@ SECURITY_STATUS SchannelHook::InitializeSecurityContextA(
 SECURITY_STATUS SchannelHook::DeleteSecurityContext(PCtxtHandle phContext) {
   SECURITY_STATUS ret = SEC_E_INTERNAL_ERROR;
   if (phContext) {
-    _sockets.ClearSslFd((PRFileDesc *)phContext);
+    _sockets.ClearSslFd(phContext);
   }
   if (DeleteSecurityContext_)
     ret = DeleteSecurityContext_(phContext);
@@ -201,7 +201,7 @@ SECURITY_STATUS SchannelHook::EncryptMessage(PCtxtHandle phContext,
   SECURITY_STATUS ret = SEC_E_INTERNAL_ERROR;
   if (EncryptMessage_) {
     SOCKET s = INVALID_SOCKET;
-    _sockets.SslSocketLookup((PRFileDesc *)phContext, s);
+    _sockets.SslSocketLookup(phContext, s);
     if (pMessage && !_test_state._exit) {
       for (ULONG i = 0; i < pMessage->cBuffers; i++) {
         unsigned long len = pMessage->pBuffers[i].cbBuffer;
@@ -229,7 +229,7 @@ SECURITY_STATUS SchannelHook::DecryptMessage(PCtxtHandle phContext,
     SOCKET s = INVALID_SOCKET;
     ret = DecryptMessage_(phContext, pMessage, MessageSeqNo, pfQOP);
     if (ret == SEC_E_OK && pMessage && !_test_state._exit) {
-      if (_sockets.SslSocketLookup((PRFileDesc *)phContext, s) && 
+      if (_sockets.SslSocketLookup(phContext, s) && 
             s != INVALID_SOCKET) {
         for (ULONG i = 0; i < pMessage->cBuffers; i++) {
           unsigned long len = pMessage->pBuffers[i].cbBuffer;

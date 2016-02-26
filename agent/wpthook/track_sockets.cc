@@ -510,19 +510,19 @@ bool TrackSockets::IsSslById(DWORD socket_id) {
   Chrome uses this (from NsprHook::SSL_ImportFD) to map the fd to a SOCKET.
   The SOCKET is set when Chrome calls CWsHook::recv to check the SOCKET.
 -----------------------------------------------------------------------------*/
-void TrackSockets::SetSslFd(PRFileDesc* fd) {
+void TrackSockets::SetSslFd(void* ssl) {
   EnterCriticalSection(&cs);
-  _ssl_sockets.RemoveKey(fd);
-  _last_ssl_fd.SetAt(GetCurrentThreadId(), fd);
+  _ssl_sockets.RemoveKey(ssl);
+  _last_ssl_fd.SetAt(GetCurrentThreadId(), ssl);
   LeaveCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------
   Drop the fd to SOCKET mapping (called from NsprHook::PR_Close).
 -----------------------------------------------------------------------------*/
-void TrackSockets::ClearSslFd(PRFileDesc* fd) {
+void TrackSockets::ClearSslFd(void* ssl) {
   EnterCriticalSection(&cs);
-  _ssl_sockets.RemoveKey(fd);
+  _ssl_sockets.RemoveKey(ssl);
   _last_ssl_fd.RemoveKey(GetCurrentThreadId());
   LeaveCriticalSection(&cs);
 }
@@ -532,10 +532,10 @@ void TrackSockets::ClearSslFd(PRFileDesc* fd) {
 void TrackSockets::ClaimSslFd(SOCKET s) {
   DWORD thread_id = GetCurrentThreadId();
   EnterCriticalSection(&cs);
-  PRFileDesc * fd = NULL;
-  if (_last_ssl_fd.Lookup(thread_id, fd) && fd 
+  void * ssl = NULL;
+  if (_last_ssl_fd.Lookup(thread_id, ssl) && ssl 
         && s != INVALID_SOCKET) {
-    _ssl_sockets.SetAt(fd, s);
+    _ssl_sockets.SetAt(ssl, s);
     SocketInfo* info = GetSocketInfo(s);
     EnableSsl(info);
   }
@@ -560,13 +560,13 @@ void TrackSockets::SetSslSocket(SOCKET s) {
   EnterCriticalSection(&cs);
   SOCKET lookup_socket;
   DWORD socket_id = 0;
-  PRFileDesc * fd = NULL;
+  void * ssl = NULL;
   _openSockets.Lookup(s, socket_id);
-  _last_ssl_fd.Lookup(thread_id, fd);
-  if (fd && s != INVALID_SOCKET &&
-      !_ssl_sockets.Lookup(fd, lookup_socket) &&
+  _last_ssl_fd.Lookup(thread_id, ssl);
+  if (ssl && s != INVALID_SOCKET &&
+      !_ssl_sockets.Lookup(ssl, lookup_socket) &&
       (!socket_id || !_requests.HasActiveRequest(socket_id, 0))) {
-    _ssl_sockets.SetAt(fd, s);
+    _ssl_sockets.SetAt(ssl, s);
     SocketInfo* info = GetSocketInfo(s);
     EnableSsl(info);
   }
@@ -576,10 +576,10 @@ void TrackSockets::SetSslSocket(SOCKET s) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool TrackSockets::SslSocketLookup(PRFileDesc* fd, SOCKET& s) {
+bool TrackSockets::SslSocketLookup(void* ssl, SOCKET& s) {
   EnterCriticalSection(&cs);
   _last_ssl_fd.RemoveKey(GetCurrentThreadId());
-  bool ret = _ssl_sockets.Lookup(fd, s);
+  bool ret = _ssl_sockets.Lookup(ssl, s);
   LeaveCriticalSection(&cs);
   return ret;
 }
@@ -599,7 +599,6 @@ bool TrackSockets::IsSSLHandshake(const DataChunk& chunk) {
   Call from within critical section.
 -----------------------------------------------------------------------------*/
 void TrackSockets::SslDataOut(SocketInfo* info, const DataChunk& chunk) {
-  SslTrackHandshake(info, chunk);
   info->_ssl_out->Append(chunk);
 }
 
@@ -607,7 +606,6 @@ void TrackSockets::SslDataOut(SocketInfo* info, const DataChunk& chunk) {
   Call from within critical section.
 -----------------------------------------------------------------------------*/
 void TrackSockets::SslDataIn(SocketInfo* info, const DataChunk& chunk) {
-  SslTrackHandshake(info, chunk);
   info->_ssl_in->Append(chunk);
 }
 
@@ -617,40 +615,6 @@ void TrackSockets::EnableSsl(SocketInfo *info) {
   info->_is_ssl = true;
   info->_ssl_in = new SSLStream(*this, info, SSL_IN);
   info->_ssl_out = new SSLStream(*this, info, SSL_OUT);
-}
-
-/*-----------------------------------------------------------------------------
-  Track the SSL handshake.
-  http://en.wikipedia.org/wiki/Transport_Layer_Security#Handshake_protocol
-  Call from within critical section.
-  -----------------------------------------------------------------------------*/
-void TrackSockets::SslTrackHandshake(SocketInfo* info, const DataChunk& chunk) {
-  const char *buf = chunk.GetData();
-  DWORD len = chunk.GetLength();
-  if (info->_is_ssl && !info->_is_ssl_handshake_complete && len > 3) {
-    bool is_handshake = (
-        buf[0] == 0x16 && buf[1] == 3 && buf[2] >= 0 && buf[2] <= 3);
-    bool is_application_data = (
-        buf[0] == 0x17 && buf[1] == 3 && buf[2] >= 0 && buf[2] <= 3);
-      // Handshake data starts with 0x16, then major/minor version.
-    if (is_handshake) {
-      if (!info->_ssl_start.QuadPart) {
-        QueryPerformanceCounter(&info->_ssl_start);
-        WptTrace(loglevel::kProcess, _T(
-            "handshake start(socket_id=%d)"), info->_id);
-      } else {
-        QueryPerformanceCounter(&info->_ssl_end);
-        WptTrace(loglevel::kProcess, _T(
-            "handshake end updated(socket_id=%d)"), info->_id);
-        // TODO: search for 14 (cipher) or 17 (app data) to end handshake
-        // Chrome makes the initial HTTP request when finishing the handshake.
-      }
-    } else if (is_application_data) {
-      WptTrace(loglevel::kProcess, _T(
-          "handshake complete(socket_id=%d)"), info->_id);
-      info->_is_ssl_handshake_complete = true;
-    }
-  }
 }
 
 /*-----------------------------------------------------------------------------

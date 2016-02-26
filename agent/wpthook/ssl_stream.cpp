@@ -61,24 +61,13 @@ SSLStream::SSLStream(TrackSockets &sockets, SocketInfo *socket_info, SSL_DATA_DI
   ,message_len_(0)
   ,sockets_(sockets)
   ,socket_info_(socket_info)
-  ,direction_(direction)
-  ,cipher_suite_(0)
-  ,compression_(0) {
+  ,direction_(direction) {
 }
 
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 SSLStream::~SSLStream() {
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void SSLStream::OutputDebugStringA(CStringA message) {
-  CStringA buff;
-  buff.Format("SSL [%d] ", socket_info_->_id);
-  buff += direction_ == SSL_IN ? "<<< " : ">>> ";
-  ::OutputDebugStringA(buff + message);
 }
 
 /*-----------------------------------------------------------------------------
@@ -148,9 +137,7 @@ void SSLStream::ProcessMessage() {
     case MSG_HANDSHAKE: ProcessHandshake(); break;
     case MSG_APPLICATION_DATA: ProcessApplicationData(); break;
     default: {
-      CStringA msg;
-      msg.Format("Unknown Message 0x%02X - %d bytes", header->type, message_size_);
-      OutputDebugStringA(msg);
+      AtlTrace("SSLStream: Unknown Message 0x%02X - %d bytes", header->type, message_size_);
     } break;
   }
 }
@@ -158,29 +145,10 @@ void SSLStream::ProcessMessage() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void SSLStream::ProcessHandshake() {
-  if (message_size_ >= sizeof(SSL_HANDSHAKE)) {
-    SSL_HANDSHAKE * handshake = (SSL_HANDSHAKE *)message_;
-    switch (handshake->type) {
-      case HANDSHAKE_HELLO_REQUEST: HandshakeHelloRequest(); break;
-      case HANDSHAKE_CLIENT_HELLO: HandshakeClientHello(); break;
-      case HANDSHAKE_SERVER_HELLO: HandshakeServerHello(); break;
-      case HANDSHAKE_CERTIFICATE: HandshakeCertificate(); break;
-      case HANDSHAKE_SERVER_KEY_EXCHANGE: HandshakeServerKeyExchange(); break;
-      case HANDSHAKE_CERTIFICATE_REQUEST: HandshakeCertificateRequest(); break;
-      case HANDSHAKE_SERVER_DONE: HandshakeServerDone(); break;
-      case HANDSHAKE_CERTIFICATE_VERIFY: HandshakeCertificateVerify(); break;
-      case HANDSHAKE_CLIENT_KEY_EXCHANGE: HandshakeClientKeyExchange(); break;
-      case HANDSHAKE_FINISHED: HandshakeFinished(); break;
-      default: {
-        CStringA msg;
-        msg.Format("Unknown Handshake message 0x%02X- %d bytes", handshake->type, message_size_);
-        OutputDebugStringA(msg);
-      } break;
-    }
-  } else {
-    CStringA msg;
-    msg.Format("Invalid Handshake - %d bytes", message_size_);
-    OutputDebugStringA(msg);
+  if (socket_info_ && !socket_info_->_is_ssl_handshake_complete) {
+    if (!socket_info_->_ssl_start.QuadPart)
+      QueryPerformanceCounter(&socket_info_->_ssl_start);
+    QueryPerformanceCounter(&socket_info_->_ssl_end);
   }
 }
 
@@ -188,116 +156,22 @@ void SSLStream::ProcessHandshake() {
 -----------------------------------------------------------------------------*/
 void SSLStream::ProcessApplicationData() {
   SSL_HEADER * header = (SSL_HEADER *)message_;
-  CStringA msg;
-  msg.Format("Application Data 0x%02X - %d bytes", header->type, message_size_);
-  OutputDebugStringA(msg);
+  if (socket_info_ && !socket_info_->_is_ssl_handshake_complete)
+    socket_info_->_is_ssl_handshake_complete = true;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void SSLStream::ProcessChangeCipherSpec() {
   SSL_HEADER * header = (SSL_HEADER *)message_;
-  CStringA msg;
-  msg.Format("Change Cipher Spec 0x%02X - %d bytes", header->type, message_size_);
-  OutputDebugStringA(msg);
+  if (socket_info_ && !socket_info_->_is_ssl_handshake_complete) {
+    if (!socket_info_->_ssl_start.QuadPart)
+      QueryPerformanceCounter(&socket_info_->_ssl_start);
+    QueryPerformanceCounter(&socket_info_->_ssl_end);
+  }
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void SSLStream::ProcessAlert() {
-  SSL_HEADER * header = (SSL_HEADER *)message_;
-  CStringA msg;
-  msg.Format("Alert 0x%02X - %d bytes", header->type, message_size_);
-  OutputDebugStringA(msg);
-}
-
-/******************************************************************************
-                            SSL/TLS Handshake
-******************************************************************************/
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void SSLStream::HandshakeHelloRequest() {
-  OutputDebugStringA("Handshake Hello Request");
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void SSLStream::HandshakeClientHello() {
-  if (message_size_ >= sizeof(SSL_CLIENT_HELLO)) {
-    SSL_CLIENT_HELLO * hello = (SSL_CLIENT_HELLO *)message_;
-    CStringA buff;
-    random_ = "";
-    for (int i = 0; i < _countof(hello->client_random); i++) {
-      buff.Format("%02x", hello->client_random[i]);
-      random_ += buff;
-    }
-    client_random_ = random_;
-    OutputDebugStringA("Handshake Client Hello - client random = " + random_);
-  } else {
-    CStringA msg;
-    msg.Format("Invalid Client Hello - %d bytes", message_size_);
-    OutputDebugStringA(msg);
-  }
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void SSLStream::HandshakeServerHello() {
-  if (message_size_ >= sizeof(SSL_SERVER_HELLO)) {
-    SSL_SERVER_HELLO * hello = (SSL_SERVER_HELLO *)message_;
-    CStringA buff;
-    random_ = "";
-    for (int i = 0; i < _countof(hello->server_random); i++) {
-      buff.Format("%02x", hello->server_random[i]);
-      random_ += buff;
-    }
-    OutputDebugStringA("Handshake Server Hello - server random = " + random_);
-  } else {
-    CStringA msg;
-    msg.Format("Invalid Server Hello - %d bytes", message_size_);
-    OutputDebugStringA(msg);
-  }
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void SSLStream::HandshakeCertificate() {
-  OutputDebugStringA("Handshake Certificate");
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void SSLStream::HandshakeServerKeyExchange() {
-  OutputDebugStringA("Handshake Server Key Exchange");
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void SSLStream::HandshakeCertificateRequest() {
-  OutputDebugStringA("Handshake Certificate Request");
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void SSLStream::HandshakeServerDone() {
-  OutputDebugStringA("Handshake Server Done");
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void SSLStream::HandshakeCertificateVerify() {
-  OutputDebugStringA("Handshake Certificate Verify");
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void SSLStream::HandshakeClientKeyExchange() {
-  OutputDebugStringA("Handshake Client Key Exchange");
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void SSLStream::HandshakeFinished() {
-  OutputDebugStringA("Handshake Finished");
 }

@@ -33,7 +33,6 @@ class Requests;
 class TestState;
 class WptTest;
 class SSLStream;
-struct PRFileDesc;
 struct nghttp2_session;
 
 typedef enum {
@@ -100,12 +99,12 @@ public:
   void SniffSSL(SOCKET s, DataChunk& chunk);
   bool IsSsl(SOCKET s);
   bool IsSslById(DWORD socket_id);
-  void SetSslFd(PRFileDesc* fd);
-  void ClearSslFd(PRFileDesc* fd);
+  void SetSslFd(void* ssl);
+  void ClearSslFd(void* ssl);
   void ClaimSslFd(SOCKET s);
   void ResetSslFd(void);
   void SetSslSocket(SOCKET s);
-  bool SslSocketLookup(PRFileDesc* fd, SOCKET& s);
+  bool SslSocketLookup(void* ssl, SOCKET& s);
   void EnableSsl(SocketInfo *info);
 
   void Reset();
@@ -137,7 +136,6 @@ private:
 
   void SslDataOut(SocketInfo* info, const DataChunk& chunk);
   void SslDataIn(SocketInfo* info, const DataChunk& chunk);
-  void SslTrackHandshake(SocketInfo* info, const DataChunk& chunk);
   bool IsSSLHandshake(const DataChunk& chunk);
   H2_USER_DATA * NewHttp2Session(DWORD socket_id,
                                  DATA_DIRECTION direction);
@@ -150,7 +148,7 @@ private:
   CAtlMap<SOCKET, DWORD>	    _openSockets;
   CAtlMap<DWORD, SocketInfo*>  _socketInfo;
 
-  CAtlMap<DWORD, PRFileDesc*>    _last_ssl_fd;  // per-thread
-  CAtlMap<PRFileDesc*, SOCKET>   _ssl_sockets;
-  CAtlMap<DWORD, DWORD>          ipv4_rtt_;  // round trip times by address
+  CAtlMap<DWORD, void*>    _last_ssl_fd;  // per-thread
+  CAtlMap<void*, SOCKET>   _ssl_sockets;
+  CAtlMap<DWORD, DWORD>    ipv4_rtt_;  // round trip times by address
 };

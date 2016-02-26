@@ -41,12 +41,8 @@ public:
   SSLStream(TrackSockets &sockets, SocketInfo *socket_info, SSL_DATA_DIRECTION direction);
   ~SSLStream();
   void Append(const DataChunk& chunk);
-  CStringA          client_random_;       // 32-byte client random in hex format (includes the time)
-  unsigned __int16  cipher_suite_;
-  __int8            compression_;
 
 private:
-  void OutputDebugStringA(CStringA message);
   void ProcessMessage();
 
   // Different SSL message types
@@ -55,24 +51,11 @@ private:
   void ProcessChangeCipherSpec();
   void ProcessAlert();
 
-  // SSL Handshake processing
-  void HandshakeHelloRequest();
-  void HandshakeClientHello();
-  void HandshakeServerHello();
-  void HandshakeCertificate();
-  void HandshakeServerKeyExchange();
-  void HandshakeCertificateRequest();
-  void HandshakeServerDone();
-  void HandshakeCertificateVerify();
-  void HandshakeClientKeyExchange();
-  void HandshakeFinished();
-
   unsigned char message_[65540]; // 65535 max TLS message length + 5 byte header
   __int32 message_size_;         // Total size of the current message once filled (-1 for not set)
   __int32 message_len_;          // Current size of accumulated message
   SSL_DATA_DIRECTION direction_;
   TrackSockets &sockets_;
   SocketInfo * socket_info_;
-  CStringA     random_;       // client or server random IV data depending on direction
 };
 

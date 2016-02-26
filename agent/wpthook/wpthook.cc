@@ -123,6 +123,7 @@ void WptHook::Init(){
     nspr_hook_.Init();
     schannel_hook_.Init();
     wininet_hook_.Init();
+    chrome_ssl_hook_.Init();
   }
   test_state_.Init();
   ResetEvent(background_thread_started_);
@@ -276,8 +277,10 @@ static LRESULT CALLBACK WptHookWindowProc(HWND hwnd, UINT uMsg,
 void WptHook::BackgroundThread() {
   WptTrace(loglevel::kFunction, _T("[wpthook] BackgroundThread()\n"));
 
-  if (!test_state_.gdi_only_)
+  if (!test_state_.gdi_only_) {
+    chrome_ssl_hook_.Init();
     test_server_.Start();
+  }
 
   // create a hidden window for processing messages from wptdriver
   WNDCLASS wndClass;

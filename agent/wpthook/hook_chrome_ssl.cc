@@ -103,28 +103,53 @@ static const DWORD max_methods_struct_size = 60;
 
 
 // Stub Functions
+int __cdecl New_Hook(void *ssl) {
+  return g_hook ? g_hook->New(ssl) : -1;
+}
+
+void __cdecl Free_Hook(void *ssl) {
+  if (g_hook)
+    g_hook->Free(ssl);
+}
+
+int __cdecl Connect_Hook(void *ssl) {
+  return g_hook ? g_hook->Connect(ssl) : -1;
+}
+
+int __cdecl ReadAppData_Hook(void *ssl, uint8_t *buf, int len, int peek) {
+  return g_hook ? g_hook->ReadAppData(ssl, buf, len, peek) : -1;
+}
+
+int __cdecl WriteAppData_Hook(void *ssl, const void *buf, int len) {
+  return g_hook ? g_hook->WriteAppData(ssl, buf, len) : -1;
+}
 
 // end of C hook functions
-
-
 ChromeSSLHook::ChromeSSLHook(TrackSockets& sockets, TestState& test_state,
                              WptTestHook& test) :
-    _sockets(sockets),
-    _test_state(test_state),
-    _test(test),
-    _hook(NULL) {
+    sockets_(sockets),
+    test_state_(test_state),
+    test_(test),
+    hook_(NULL),
+    New_(NULL),
+    Free_(NULL),
+    Connect_(NULL),
+    ReadAppData_(NULL),
+    WriteAppData_(NULL) {
 }
 
 ChromeSSLHook::~ChromeSSLHook() {
   if (g_hook == this) {
     g_hook = NULL;
   }
-  delete _hook;  // remove all the hooks
+  delete hook_;  // remove all the hooks
 }
 
+/*-----------------------------------------------------------------------------
+  Scan through memory for the static mapping of ssl functions
+-----------------------------------------------------------------------------*/
 void ChromeSSLHook::Init() {
-  OutputDebugStringA("ChromeSSLHook::Init");
-  if (_hook || g_hook) {
+  if (hook_ || g_hook) {
     return;
   }
 
@@ -135,9 +160,6 @@ void ChromeSSLHook::Init() {
     return;
   }
 
-  _hook = new NCodeHookIA32();
-  g_hook = this; 
-
   // Locate the global SSL_METHODS structure from s3_meth.c in memory
   // - in the .rdata section of chrome.dll
   // - starting with a 0 DWORD (for dtls)
@@ -145,6 +167,8 @@ void ChromeSSLHook::Init() {
   // - with all other entries pointing to addresses within chrome.dll
   CStringA buff;
   HMODULE module = GetModuleHandleA("chrome.dll");
+  DWORD * methods_addr = NULL;
+  DWORD signature = 0;
   if (module) {
     DWORD base_addr = (DWORD)module;
     MODULEINFO module_info;
@@ -184,8 +208,8 @@ void ChromeSSLHook::Init() {
                       }
                     }
                     if (ok) {
-                      buff.Format("******* match found of signature %d at 0x%08X (offset %d)", i, (DWORD)addr, (DWORD)addr - base_addr);
-                      OutputDebugStringA(buff);
+                      methods_addr = compare;
+                      signature = i;
                       break;
                     }
                   }
@@ -201,5 +225,101 @@ void ChromeSSLHook::Init() {
       }
     }
   }
-  OutputDebugStringA("ChromeSSLHook::Init - Done");
+
+  if (methods_addr) {
+    hook_ = new NCodeHookIA32();
+    g_hook = this; 
+
+    AtlTrace("Chrome ssl methods structure found (signature %d) at 0x%08X", signature, (DWORD)methods_addr);
+
+    // Hook the functions now that we have in-memory addresses for them
+    New_ = (PFN_SSL3_NEW)hook_->createHook(
+        (PFN_SSL3_NEW)methods_addr[methods_signatures[signature].ssl_new_index],
+        New_Hook);
+    Free_ = (PFN_SSL3_FREE)hook_->createHook(
+        (PFN_SSL3_FREE)methods_addr[methods_signatures[signature].ssl_free_index],
+        Free_Hook);
+    Connect_ = (PFN_SSL3_CONNECT)hook_->createHook(
+        (PFN_SSL3_CONNECT)methods_addr[methods_signatures[signature].ssl_connect_index],
+        Connect_Hook);
+    ReadAppData_ = (PFN_SSL3_READ_APP_DATA)hook_->createHook(
+        (PFN_SSL3_READ_APP_DATA)methods_addr[methods_signatures[signature].ssl_read_app_data_index],
+        ReadAppData_Hook);
+    WriteAppData_ = (PFN_SSL3_WRITE_APP_DATA)hook_->createHook(
+        (PFN_SSL3_WRITE_APP_DATA)methods_addr[methods_signatures[signature].ssl_write_app_data_index],
+        WriteAppData_Hook);
+  } else {
+    AtlTrace("Chrome ssl methods structure NOT found");
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int ChromeSSLHook::New(void *ssl) {
+  int ret = -1;
+  sockets_.SetSslFd(ssl);
+  if (New_)
+    ret = New_(ssl);
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void ChromeSSLHook::Free(void *ssl) {
+  if (Free_)
+    Free_(ssl);
+  sockets_.ClearSslFd(ssl);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int ChromeSSLHook::Connect(void *ssl) {
+  int ret = -1;
+  SOCKET s;
+  if (!sockets_.SslSocketLookup(ssl, s))
+    sockets_.SetSslFd(ssl);
+  if (Connect_)
+    ret = Connect_(ssl);
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int ChromeSSLHook::ReadAppData(void *ssl, uint8_t *buf, int len, int peek) {
+  int ret = -1;
+  if (ReadAppData_) {
+    ret = ReadAppData_(ssl, buf, len, peek);
+  }
+  if (ret > 0) {
+    SOCKET s = INVALID_SOCKET;
+    if (sockets_.SslSocketLookup(ssl, s)) {
+      if (buf && !test_state_._exit) {
+        DataChunk chunk((LPCSTR)buf, len);
+        sockets_.DataIn(s, chunk, true);
+      }
+    } else {
+      AtlTrace("0x%08X - ChromeSSLHook::ReadAppData - Unmapped socket", ssl);
+    }
+  }
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int ChromeSSLHook::WriteAppData(void *ssl, const void *buf, int len) {
+  int ret = -1;
+  if (WriteAppData_) {
+    SOCKET s = INVALID_SOCKET;
+    if (sockets_.SslSocketLookup(ssl, s)) {
+      if (buf && !test_state_._exit) {
+        DataChunk chunk((LPCSTR)buf, len);
+        sockets_.DataOut(s, chunk, true);
+      }
+    } else {
+      AtlTrace("0x%08X - ChromeSSLHook::WriteAppData - Unmapped socket", ssl);
+      sockets_.SetSslFd(ssl);
+    }
+    ret = WriteAppData_(ssl, buf, len);
+  }
+  return ret;
 }
