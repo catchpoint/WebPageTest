@@ -1,1 +1,0 @@
-define LION 20131128

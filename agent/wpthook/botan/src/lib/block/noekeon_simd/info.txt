@@ -1,6 +1,0 @@
-define NOEKEON_SIMD 20131128
-
-<requires>
-noekeon
-simd
-</requires>

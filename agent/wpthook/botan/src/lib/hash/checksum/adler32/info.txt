@@ -1,1 +1,0 @@
-define ADLER32 20131128

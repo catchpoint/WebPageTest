@@ -54,6 +54,7 @@ WptHook::WptHook(void):
   ,nspr_hook_(sockets_, test_state_, test_)
   ,schannel_hook_(sockets_, test_state_, test_)
   ,wininet_hook_(sockets_, test_state_, test_)
+  ,chrome_ssl_hook_(sockets_, test_state_, test_)
   ,file_hook_(sockets_, test_state_)
   ,sockets_(requests_, test_state_, test_)
   ,requests_(test_state_, sockets_, dns_, test_)
@@ -138,6 +139,9 @@ void WptHook::Init(){
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptHook::Start() {
+  if (!test_state_.gdi_only_) {
+    chrome_ssl_hook_.Init();
+  }
   reported_ = false;
   test_state_.Start();
   SetTimer(message_window_, TIMER_DONE, TIMER_DONE_INTERVAL, NULL);

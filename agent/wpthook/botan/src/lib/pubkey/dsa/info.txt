@@ -1,9 +1,0 @@
-define DSA 20131128
-
-<requires>
-dl_algo
-dl_group
-keypair
-numbertheory
-rfc6979
-</requires>

@@ -1,1 +1,0 @@
-define KASUMI 20131128

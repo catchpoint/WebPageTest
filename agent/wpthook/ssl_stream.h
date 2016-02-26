@@ -47,8 +47,7 @@ public:
 
 private:
   void OutputDebugStringA(CStringA message);
-  void PrecessMessage();
-  CStringA GetCipherSuiteName(unsigned __int16 cipher_suite);
+  void ProcessMessage();
 
   // Different SSL message types
   void ProcessHandshake();
@@ -74,5 +73,6 @@ private:
   SSL_DATA_DIRECTION direction_;
   TrackSockets &sockets_;
   SocketInfo * socket_info_;
+  CStringA     random_;       // client or server random IV data depending on direction
 };
 

@@ -1,7 +1,0 @@
-define ZLIB_TRANSFORM 20141118
-
-load_on vendor
-
-<libs>
-all -> z
-</libs>

@@ -28,26 +28,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#ifdef WPTDRIVER
-#define _import __declspec( dllimport )
-#else
-#define _import __declspec( dllexport )
-#endif
+#include "ncodehook/NCodeHookInstantiation.h"
 
-extern "C" {
-_import void WINAPI InstallHook(void);
-_import void WINAPI SetResultsFileBase(const WCHAR * file_base);
-_import void WINAPI SetTestTimeout(DWORD timeout);
-_import void WINAPI SetEnableUserSetTimeout(bool enableUserSetTimeout);
-_import void WINAPI SetClearedCache(bool cleared_cache);
-_import bool WINAPI GetClearedCache();
-_import void WINAPI SetCurrentRun(DWORD run);
-_import void WINAPI SetDebugLevel(int level, const WCHAR * log_file);
-_import int  WINAPI GetCPUUtilization();
-_import void WINAPI SetCPUUtilization(int utilization);
-_import void WINAPI SetHasGPU(bool has_gpu);
-_import void WINAPI ResetTestResult();
-_import int  WINAPI GetTestResult();
-_import void WINAPI SetBrowserExe(const WCHAR * exe);
-_import DWORD WINAPI GetBrowserProcessId();
-}
+class TestState;
+class TrackSockets;
+class WptTestHook;
+
+class ChromeSSLHook
+{
+public:
+  ChromeSSLHook(TrackSockets& sockets, TestState& test_state, WptTestHook& test);
+  ~ChromeSSLHook();
+  void Init();
+
+private:
+  TestState& _test_state;
+  TrackSockets& _sockets;
+  WptTestHook& _test;
+  NCodeHookIA32* _hook;
+};

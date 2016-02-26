@@ -1,5 +1,0 @@
-define BLOCK_CIPHER 20131128
-
-<header:public>
-block_cipher.h
-</header:public>
