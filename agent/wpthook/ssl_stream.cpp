@@ -61,7 +61,8 @@ SSLStream::SSLStream(TrackSockets &sockets, SocketInfo *socket_info, SSL_DATA_DI
   ,message_len_(0)
   ,sockets_(sockets)
   ,socket_info_(socket_info)
-  ,direction_(direction) {
+  ,direction_(direction)
+  ,process_data_(true) {
 }
 
 
@@ -74,50 +75,52 @@ SSLStream::~SSLStream() {
   Append data to the SSL/TLS stream and handle packet framing.
 -----------------------------------------------------------------------------*/
 void SSLStream::Append(const DataChunk& chunk) {
-  DWORD len = chunk.GetLength();
-  const char * buff = chunk.GetData();
+  if (process_data_) {
+    DWORD len = chunk.GetLength();
+    const char * buff = chunk.GetData();
   
-  while (len && buff) {
-    DWORD copy_bytes = 0;
+    while (len && buff) {
+      DWORD copy_bytes = 0;
 
-    // are we starting a new frame?
-    if (message_size_ < 0) {
-      // see if we can at least copy over the size of the initial frame
-      DWORD needed = sizeof(SSL_HEADER) - message_len_;
-      copy_bytes = min(needed, len);
-      if (copy_bytes) {
+      // are we starting a new frame?
+      if (message_size_ < 0) {
+        // see if we can at least copy over the size of the initial frame
+        DWORD needed = sizeof(SSL_HEADER) - message_len_;
+        copy_bytes = min(needed, len);
+        if (copy_bytes) {
+          memcpy(&message_[message_len_], buff, copy_bytes);
+          message_len_ += copy_bytes;
+          len -= copy_bytes;
+          buff += copy_bytes;
+        }
+
+        // see if we have a header to parse and get the actual message size
+        if (message_len_ >= sizeof(SSL_HEADER)) {
+          SSL_HEADER * header = (SSL_HEADER *)message_;
+          message_size_ = htons(header->record_length) + sizeof(SSL_HEADER);
+        }
+      }
+
+      // see if we have bytes remaining in the current message
+      if (message_size_ > 0 &&
+          message_len_ < message_size_ &&
+          len > 0 &&
+          buff) {
+        copy_bytes = min(message_size_ - message_len_, (__int32)len);
         memcpy(&message_[message_len_], buff, copy_bytes);
         message_len_ += copy_bytes;
         len -= copy_bytes;
         buff += copy_bytes;
       }
 
-      // see if we have a header to parse and get the actual message size
-      if (message_len_ >= sizeof(SSL_HEADER)) {
-        SSL_HEADER * header = (SSL_HEADER *)message_;
-        message_size_ = htons(header->record_length) + sizeof(SSL_HEADER);
+      // see if we have a full message
+      if (message_size_ == message_len_) {
+        ProcessMessage();
+
+        // reset state for the next message
+        message_size_ = -1;
+        message_len_ = 0;
       }
-    }
-
-    // see if we have bytes remaining in the current message
-    if (message_size_ > 0 &&
-        message_len_ < message_size_ &&
-        len > 0 &&
-        buff) {
-      copy_bytes = min(message_size_ - message_len_, (__int32)len);
-      memcpy(&message_[message_len_], buff, copy_bytes);
-      message_len_ += copy_bytes;
-      len -= copy_bytes;
-      buff += copy_bytes;
-    }
-
-    // see if we have a full message
-    if (message_size_ == message_len_) {
-      ProcessMessage();
-
-      // reset state for the next message
-      message_size_ = -1;
-      message_len_ = 0;
     }
   }
 }
@@ -158,6 +161,10 @@ void SSLStream::ProcessApplicationData() {
   SSL_HEADER * header = (SSL_HEADER *)message_;
   if (socket_info_ && !socket_info_->_is_ssl_handshake_complete)
     socket_info_->_is_ssl_handshake_complete = true;
+
+  // Stop processing stream data to save memory and CPU since we don't do
+  // anything more with it.
+  process_data_ = false;
 }
 
 /*-----------------------------------------------------------------------------

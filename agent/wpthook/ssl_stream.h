@@ -57,5 +57,6 @@ private:
   SSL_DATA_DIRECTION direction_;
   TrackSockets &sockets_;
   SocketInfo * socket_info_;
+  bool process_data_;
 };
 
