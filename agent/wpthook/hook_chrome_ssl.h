@@ -58,6 +58,7 @@ private:
   TrackSockets& sockets_;
   WptTestHook& test_;
   NCodeHookIA32* hook_;
+  CRITICAL_SECTION cs;
 
   PFN_SSL3_NEW            New_;
   PFN_SSL3_FREE           Free_;

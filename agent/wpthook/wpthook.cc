@@ -60,7 +60,7 @@ WptHook::WptHook(void):
   ,requests_(test_state_, sockets_, dns_, test_)
   ,results_(test_state_, test_, requests_, sockets_, dns_, screen_capture_,
             dev_tools_, trace_)
-  ,dns_(*this, test_state_, test_)
+  ,dns_(test_state_, test_)
   ,done_(false)
   ,test_server_(*this, test_, test_state_, requests_, dev_tools_, trace_)
   ,test_(*this, test_state_, shared_test_timeout)

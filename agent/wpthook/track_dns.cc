@@ -42,10 +42,9 @@ static LPCTSTR blocked_domains[] = {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-TrackDns::TrackDns(WptHook& hook, TestState& test_state, WptTest& test):
+TrackDns::TrackDns(TestState& test_state, WptTest& test):
   _test_state(test_state)
-  , _test(test)
-  , _hook(hook) {
+  , _test(test) {
   _dns_lookups.InitHashTable(257);
   InitializeCriticalSection(&cs);
 }
@@ -81,8 +80,6 @@ void * TrackDns::LookupStart(CString& name) {
             _T("[wshook] (%d) DNS Lookup for '%s' started\n"), 
               GetCurrentThreadId(), (LPCTSTR)name);
   CheckCDN(name, name);
-
-  _hook.LateInit();
 
   // we need to check for overrides even if we aren't active
   DnsInfo * info = new DnsInfo(name);

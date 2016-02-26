@@ -136,6 +136,7 @@ ChromeSSLHook::ChromeSSLHook(TrackSockets& sockets, TestState& test_state,
     Connect_(NULL),
     ReadAppData_(NULL),
     WriteAppData_(NULL) {
+  InitializeCriticalSection(&cs);
 }
 
 ChromeSSLHook::~ChromeSSLHook() {
@@ -143,13 +144,16 @@ ChromeSSLHook::~ChromeSSLHook() {
     g_hook = NULL;
   }
   delete hook_;  // remove all the hooks
+  DeleteCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------
   Scan through memory for the static mapping of ssl functions
 -----------------------------------------------------------------------------*/
 void ChromeSSLHook::Init() {
+  EnterCriticalSection(&cs);
   if (hook_ || g_hook) {
+    LeaveCriticalSection(&cs);
     return;
   }
 
@@ -157,6 +161,7 @@ void ChromeSSLHook::Init() {
   TCHAR path[MAX_PATH];
   GetModuleFileName(NULL, path, _countof(path));
   if (lstrcmpi(PathFindFileName(path), _T("chrome.exe"))) {
+    LeaveCriticalSection(&cs);
     return;
   }
 
@@ -251,6 +256,7 @@ void ChromeSSLHook::Init() {
   } else {
     AtlTrace("Chrome ssl methods structure NOT found");
   }
+  LeaveCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------
