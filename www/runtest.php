@@ -137,8 +137,12 @@
             $test['timelineStackDepth'] = array_key_exists('timelineStack', $_REQUEST) && $_REQUEST['timelineStack'] ? 5 : 0;
             $test['swrender'] = $req_swrender;
             $test['trace'] = array_key_exists('trace', $_REQUEST) && $_REQUEST['trace'] ? 1 : 0;
-            if (isset($_REQUEST['trace']) && strlen($_REQUEST['traceCategories']) && strpos($test['traceCategories'], "\n") === false)
+            if (isset($_REQUEST['trace']) &&
+                strlen($_REQUEST['traceCategories']) &&
+                strpos($test['traceCategories'], "\n") === false &&
+                trim($test['traceCategories']) != "*") {
               $test['traceCategories'] = $_REQUEST['traceCategories'];
+            }                                                                                                           
             $test['standards'] = $req_standards;
             $test['netlog'] = $req_netlog;
             $test['spdy3'] = $req_spdy3;
