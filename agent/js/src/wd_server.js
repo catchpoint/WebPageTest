@@ -914,7 +914,9 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
       options: 'record-as-much-as-possible'
     };
     if (1 === this.task_.trace) {
-      var trace_categories = this.task_.traceCategories || '*';
+      var trace_categories = "*";
+      if (this.task_['traceCategories'] !== undefined && this.task_.traceCategories.length)
+        trace_categories = '-*,' + this.task_.traceCategories;
       message.params.categories = trace_categories + ',' + message.params.categories;
     } else {
       message.params.categories = '-*,' + message.params.categories;

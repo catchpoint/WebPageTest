@@ -452,6 +452,13 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
+                                        <label for="traceCategories" style="width: auto;">
+                                        Trace Categories<br>
+                                        <small>(when tracing is enabled)</small>
+                                        </label>
+                                        <input type="text" name="traceCategories" id="traceCategories" class="text" style="width: 400px;" value="*">
+                                    </li>
+                                    <li>
                                         <input type="checkbox" name="netlog" id="netlog" class="checkbox" style="float: left;width: auto;">
                                         <label for="netlog" class="auto_width">
                                             Capture Network Log
