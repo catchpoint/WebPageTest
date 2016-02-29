@@ -253,6 +253,8 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
       $ret['rawData']['utilization'] = "$protocol://$host$uri$path/$run{$cachedText}_progress.csv";
       if( is_file("$testPath/$run{$cachedText}_bodies.zip") )
           $ret['rawData']['bodies'] = "$protocol://$host$uri$path/$run{$cachedText}_bodies.zip";
+      if( gz_is_file("$testPath/$run{$cachedText}_trace.json") )
+          $ret['rawData']['trace'] = "$protocol://$host$uri//getgzip.php?test=$id&amp;file=$run{$cachedText}_trace.json";
 
       if (!$basic_results) {
         $startOffset = array_key_exists('testStartOffset', $ret) ? intval(round($ret['testStartOffset'])) : 0;
