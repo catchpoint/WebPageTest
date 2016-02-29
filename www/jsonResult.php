@@ -9,7 +9,8 @@ require_once('devtools.inc.php');
 require_once('archive.inc');
 
 if (array_key_exists('batch', $test['test']) && $test['test']['batch']) {
-    include 'resultBatch.inc';
+  $_REQUEST['f'] = 'json';
+  include 'resultBatch.inc';
 } else {
     $ret = array('data' => GetTestStatus($id));
     $ret['statusCode'] = $ret['data']['statusCode'];
