@@ -1160,9 +1160,11 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                 $def = $locations['locations']['default'];
                 if( !$def )
                     $def = $locations['locations']['1'];
-                $loc = $locations[$def]['default'];
+               // $loc = $locations[$def]['default'];
+                $loc = $locations[$locations[$def]['default']]['location'];
                 if( !$loc )
-                    $loc = $locations[$def]['1'];
+                $loc = $locations[$locations[$def]['1']]['location'];
+                //    $loc = $locations[$def]['1'];
                 $test['location'] = $loc;
             }
             
