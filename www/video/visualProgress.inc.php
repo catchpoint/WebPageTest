@@ -53,14 +53,14 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
             unset($frames);
         elseif(array_key_exists('version', $frames) && $frames['version'] !== $current_version)
             unset($frames);
-    }    
+    }
     $base_path = substr($video_directory, 1);
     if($eventNumber !== false){
         $histograms_file = "$testPath/$run.$eventNumber.$cached.histograms.json";
     } else {
         $histograms_file = "$testPath/$run.$cached.histograms.json";
     }
-    if ((!isset($frames) || !count($frames)) && (is_dir($video_directory) || gz_is_file($histograms_file))) {
+    if ((!isset($frames) || !count($frames)) && (is_dir($video_directory))) {
         $frames = array('version' => $current_version);
         $frames['frames'] = array();
         $dirty = true;
@@ -178,7 +178,7 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
 */
 function GetImageHistogram($image_file, $options = null, $eventName = null) {
   $histogram = null;
-  
+
   $ext = strripos($image_file, '.jpg');
   if ($ext !== false) {
       $histogram_file = substr($image_file, 0, $ext) . '.hist';
@@ -187,7 +187,7 @@ function GetImageHistogram($image_file, $options = null, $eventName = null) {
     if ($ext !== false)
         $histogram_file = substr($image_file, 0, $ext) . '.hist';
   }
-  
+
   if (isset($histograms)) {
     // figure out the timestamp for the video frame in ms
     $ms = null;
@@ -202,7 +202,7 @@ function GetImageHistogram($image_file, $options = null, $eventName = null) {
       }
     }
   }
-  
+
   // See if we have the old-style histograms (separate files)
   if (!isset($histogram) && !isset($options) && isset($histogram_file) && is_file($histogram_file)) {
       $histogram = json_decode(file_get_contents($histogram_file), true);
@@ -304,7 +304,7 @@ function CalculateFrameProgress(&$histogram, &$start_histogram, &$final_histogra
     $total = 0;
     $matched = 0;
     $buckets = count($histogram[$channel]);
-    
+
     // First build an array of the actual changes in the current histogram.
     $available = array();
     for ($i = 0; $i < $buckets; $i++)
