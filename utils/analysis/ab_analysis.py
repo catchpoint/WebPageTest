@@ -84,6 +84,19 @@ def groupByUrl(data):
       continue
     parse_time = parse_end - parse_start
     group['ParseTime'].append(parse_time)
+
+    # Generate a custom 'SpeedIndexAfterFirstByte' metric which calculates
+    # Speed Index with the TTFB removed, as many experiments can do nothing
+    # about time, so it is effectively noise in trials.
+    speed_index = row['SpeedIndex']
+    ttfb = row['TTFB']
+    if not speed_index or not ttfb:
+      continue
+    speed_index = int(speed_index)
+    ttfb = int(ttfb)
+    if speed_index <= 0 or ttfb <= 0:
+      continue
+    group['SpeedIndexAfterFirstByte'].append(speed_index - ttfb)
   return grouped
 
 def mergeControlAndExperiment(control_data, experiment_data):
@@ -135,7 +148,7 @@ def computeMeanAndConfidenceInterval(samples):
                            scale=numpy.std(samples)/math.sqrt(len(samples)))
   return (mean, mean - ci[0])
 
-def writeOutput(merged_data, metric):
+def writeOutput(csv_writer, merged_data, metric, only_significant=False):
   for url, url_data in merged_data.iteritems():
     if 'control' not in url_data or 'experiment' not in url_data:
       continue
@@ -162,7 +175,11 @@ def writeOutput(merged_data, metric):
         mean_delta - combined_ci if mean_delta > 0 else mean_delta + combined_ci
     percent_improvement = 100.0 * mean_delta_less_ci/max(control_mean, exp_mean)
     is_significant = abs(mean_delta) > combined_ci
-    print u'{: >6.0f}ms {: >6.0f}ms {: >5.1f}% {} {: <60} {: >6.0f}ms \u00b1{:2.0f}% {: >6.0f}ms \u00b1{:2.0f}%   {} {} {} {}'.format(
+
+    if not is_significant and only_significant:
+      continue
+
+    csv_writer.writerow([
         mean_delta,
         mean_delta_less_ci if is_significant else 0,
         percent_improvement if is_significant else 0,
@@ -175,12 +192,12 @@ def writeOutput(merged_data, metric):
         control_samples,
         experiment_samples,
         sorted(list(set(orig_control_samples) - set(control_samples))),
-        sorted(list(set(orig_experiment_samples) - set(experiment_samples)))).encode('utf-8')
+        sorted(list(set(orig_experiment_samples) - set(experiment_samples)))])
 
 
 def main(argv):
   try:
-    opts, args = getopt.getopt(argv[1:], "c:e:m:")
+    opts, args = getopt.getopt(argv[1:], "c:e:m:s")
   except getopt.GetoptError as err:
     print str(err)
     sys.exit(1)
@@ -188,6 +205,7 @@ def main(argv):
   metric = _DEFAULT_METRIC
   control_filename = None
   experiment_filename = None
+  only_significant = False
   for k, v in opts:
     if k == '-c':
       control_filename = v
@@ -195,6 +213,8 @@ def main(argv):
       experiment_filename = v
     elif k == '-m':
       metric = v
+    elif k == '-s':
+      only_significant = True
     else:
       print 'Unexpected arg %s' % k
       sys.exit(1)
@@ -206,7 +226,9 @@ def main(argv):
   control_data = groupByUrl(populateCsvData(control_filename))
   experiment_data = groupByUrl(populateCsvData(experiment_filename))
   merged_data = mergeControlAndExperiment(control_data, experiment_data)
-  writeOutput(merged_data, metric)
+
+  csv_writer = csv.writer(sys.stdout, delimiter='\t')
+  writeOutput(csv_writer, merged_data, metric, only_significant)
 
 
 if __name__ == "__main__":
