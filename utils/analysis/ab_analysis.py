@@ -18,6 +18,7 @@ If -m is not present, then SpeedIndex is the default metric.
 
 """
 from collections import defaultdict
+from collections import namedtuple
 import csv
 import getopt
 import math
@@ -25,12 +26,16 @@ import numpy
 import sys
 from scipy import stats
 
-# The standard WPT metrics we are interested in. Note that we provide some
-# additional custom metrics, such as 'ParseTime'.
-_METRICS = [
-  'SpeedIndex',
-  'render'       # time to first paint
-]
+# Set of metrics we are interested in, along with a function to extract that
+# metric from a WPT result row.
+_METRICS = {
+    'SpeedIndex': lambda x: sanitizeInt(x['SpeedIndex']),
+    'TTFP': lambda x: sanitizeInt(x['render']),
+    'ParseTime': lambda x: sanitizeIntDiff(
+        x['chromeUserTiming.domInteractive'], x['chromeUserTiming.domLoading']),
+    'SpeedIndexAfterFirstByte':
+        lambda x: sanitizeIntDiff(x['SpeedIndex'], x['TTFB'])
+}
 
 # Default metric to perform analysis on, if no metric is specified on the
 # command line.
@@ -38,6 +43,95 @@ _DEFAULT_METRIC = 'SpeedIndex'
 
 # Minimum number of samples we require in order to perform analysis.
 _MIN_SAMPLES = 4
+
+# CoreStatData contains the core stat data for a given metric.
+CoreStatData = namedtuple(
+    'CoreStatData', [
+        # Control and experiment WPT result ids.
+        'control_wpt_result_ids', 'experiment_wpt_result_ids',
+
+        # Control and experiment samples used to compute stats.
+        'control_samples', 'experiment_samples',
+
+        # Control and experiment samples excluded from stat computation due to
+        # being outliers.
+        'outlier_control_samples', 'outlier_experiment_samples'])
+
+# DerivedStatData contains stat data that can be derived from a CoreStatData.
+DerivedStatData = namedtuple(
+    'DerivedStatData', [
+        # Control and experiment mean and half confidence intervals.
+        'control_mean', 'control_ci', 'experiment_mean', 'experiment_ci',
+
+        # Delta between control and experiment means. Positive if
+        # control_mean>experiment_mean. Negative if
+        # control_mean<experiment_mean.
+        'mean_delta',
+
+        # Sum of half confidence intervals for control and experiment.
+        'combined_ci',
+
+        # Ratio between mean_delta and combined_ci values. >=1 indicates that
+        # the result is statistically significant.
+        'mean_delta_ci_ratio',
+
+        # Whether the result is statistically significant. Technically redundant
+        # since mean_delta_ci_ratio can be used to determine if the result is
+        # significant, but provided for convenience.
+        'is_significant',
+
+        # mean_delta-combined_ci if mean_delta>0 else mean_delta+combined_ci, or
+        # None if not is_significant. This tends to be a better statistic than
+        # mean_delta to understand the real impact of a change, as it discounts
+        # the effect of large confidence intervals on the delta between means.
+        'mean_delta_less_ci',
+
+        # Percentage change in means, excluding the half confidence interval, or
+        # None if not is_significant.
+        'percent_change_less_ci'])
+
+# Returns a positive int for the given value, or None if the value cannot be
+# converted to a positive int value.
+def sanitizeInt(val):
+  if not val:
+    return None
+  val = int(val)
+  return val if val > 0 else None
+
+# Returns a positive int difference for the given values, or None if the a
+# positive diff can't be computed for the given values.
+def sanitizeIntDiff(a, b):
+  a = sanitizeInt(a)
+  b = sanitizeInt(b)
+  if not a or not b:
+    return None
+  return a - b if a >= b else None;
+
+# Given a CoreStatData, returns a DerivedStatData.
+def computeDerivedStatData(data):
+  control_mean, control_ci = computeMeanAndConfidenceInterval(
+      data.control_samples)
+  experiment_mean, experiment_ci = computeMeanAndConfidenceInterval(
+      data.experiment_samples)
+  mean_delta = control_mean - experiment_mean
+  combined_ci = control_ci + experiment_ci
+  mean_delta_less_ci = mean_delta - combined_ci if mean_delta > 0 \
+      else mean_delta + combined_ci
+  percent_change_less_ci = 100.0 * mean_delta_less_ci / max(
+      control_mean, experiment_mean)
+  mean_delta_ci_ratio = float(abs(mean_delta)) / float(combined_ci)
+  is_significant = mean_delta_ci_ratio >= 1.0
+  return DerivedStatData(
+      control_mean=control_mean,
+      control_ci=control_ci,
+      experiment_mean=experiment_mean,
+      experiment_ci=experiment_ci,
+      mean_delta=mean_delta,
+      combined_ci=combined_ci,
+      mean_delta_ci_ratio=mean_delta_ci_ratio,
+      is_significant=is_significant,
+      mean_delta_less_ci=mean_delta_less_ci if is_significant else None,
+      percent_change_less_ci=percent_change_less_ci if is_significant else None)
 
 # Populate CSV data as a list of dictionaries
 def populateCsvData(filename):
@@ -62,50 +156,18 @@ def groupByUrl(data):
     # pmeenan says that only results with codes of 0 or 99999 are valid.
     if result_code not in (0, 99999):
       continue
+    id = row['id']
+    if not id:
+      continue
     group = grouped[url]
-    for metric in _METRICS:
-      val = row[metric]
-      if not val:
-        continue
-      val = int(val)
-      if val <= 0:
-        continue
-      group[metric].append(val)
-
-    # Generate a custom 'ParseTime' metric which looks at the delta between
-    # domInteractive and domLoading.
-    parse_start = row['chromeUserTiming.domLoading']
-    parse_end = row['chromeUserTiming.domInteractive']
-    if not parse_start or not parse_end:
-      continue
-    parse_start = int(parse_start)
-    parse_end = int(parse_end)
-    if parse_start <= 0 or parse_end <= 0:
-      continue
-    parse_time = parse_end - parse_start
-    group['ParseTime'].append(parse_time)
-
-    # Generate a custom 'SpeedIndexAfterFirstByte' metric which calculates
-    # Speed Index with the TTFB removed, as many experiments can do nothing
-    # about time, so it is effectively noise in trials.
-    speed_index = row['SpeedIndex']
-    ttfb = row['TTFB']
-    if not speed_index or not ttfb:
-      continue
-    speed_index = int(speed_index)
-    ttfb = int(ttfb)
-    if speed_index <= 0 or ttfb <= 0:
-      continue
-    group['SpeedIndexAfterFirstByte'].append(speed_index - ttfb)
+    unique_ids = group['id']
+    if id not in unique_ids:
+      unique_ids.append(id)
+    for metric, fn in _METRICS.iteritems():
+      val = fn(row)
+      if val:
+        group[metric].append(val)
   return grouped
-
-def mergeControlAndExperiment(control_data, experiment_data):
-  merged = defaultdict(dict)
-  for k, v in control_data.iteritems():
-    merged[k]['control'] = v
-  for k, v in experiment_data.iteritems():
-    merged[k]['experiment'] = v
-  return merged
 
 def discardOutliers(control_samples, experiment_samples):
   def computeScore(candidate_samples, full_samples):
@@ -146,53 +208,67 @@ def computeMeanAndConfidenceInterval(samples):
   ci = stats.norm.interval(0.95,
                            loc=mean,
                            scale=numpy.std(samples)/math.sqrt(len(samples)))
-  return (mean, mean - ci[0])
+  # stats.norm.interval returns the upper and lower bounds of the confidence
+  # interval. For our purposes, it's more useful to work with the half ci, so we
+  # convert here.
+  half_ci = mean - ci[0]
+  return (mean, half_ci)
 
-def writeOutput(csv_writer, merged_data, metric, only_significant=False):
-  for url, url_data in merged_data.iteritems():
-    if 'control' not in url_data or 'experiment' not in url_data:
+def generateResults(control, experiment):
+  results = {}
+  for url, control_data in control.iteritems():
+    if url not in experiment:
       continue
-    control_data = url_data['control']
-    experiment_data = url_data['experiment']
-    orig_control_samples = control_data[metric]
-    orig_experiment_samples = experiment_data[metric]
-    if (not orig_control_samples or not orig_experiment_samples or
-        len(orig_control_samples) < _MIN_SAMPLES or
-        len(orig_experiment_samples) < _MIN_SAMPLES):
+    experiment_data = experiment[url]
+    result = {}
+    for metric in _METRICS.iterkeys():
+      if metric not in control_data or metric not in experiment_data:
+        continue
+      orig_control_samples = control_data[metric]
+      orig_experiment_samples = experiment_data[metric]
+      if (len(orig_control_samples) < _MIN_SAMPLES or
+          len(orig_experiment_samples) < _MIN_SAMPLES):
+        continue
+      control_samples, experiment_samples = discardOutliers(
+          orig_control_samples, orig_experiment_samples)
+
+      result[metric] = CoreStatData(
+          control_wpt_result_ids=control_data['id'],
+          experiment_wpt_result_ids=experiment_data['id'],
+          control_samples=control_samples,
+          experiment_samples=experiment_samples,
+          outlier_control_samples=sorted(
+              list(set(orig_control_samples) - set(control_samples))),
+          outlier_experiment_samples=sorted(
+              list(set(orig_experiment_samples) - set(experiment_samples))))
+    if result:
+      results[url] = result
+  return results
+
+def writeOutput(csv_writer, results, metric, only_significant=False):
+  for url, result in results.iteritems():
+    if metric not in result:
       continue
-    control_samples, experiment_samples = discardOutliers(
-        orig_control_samples, orig_experiment_samples)
-    control_mean, control_ci = computeMeanAndConfidenceInterval(control_samples)
-    exp_mean, exp_ci = computeMeanAndConfidenceInterval(experiment_samples)
+    stat = result[metric]
+    derived_stat = computeDerivedStatData(stat)
 
-    # The delta in means, less the combined confidence intervals. This tends to
-    # be a better metric to understand impact as it discounts the impact of
-    # large confidence intervals on the mean.
-    mean_delta = control_mean - exp_mean
-    combined_ci = control_ci + exp_ci
-
-    mean_delta_less_ci = \
-        mean_delta - combined_ci if mean_delta > 0 else mean_delta + combined_ci
-    percent_improvement = 100.0 * mean_delta_less_ci/max(control_mean, exp_mean)
-    is_significant = abs(mean_delta) > combined_ci
-
-    if not is_significant and only_significant:
+    if not derived_stat.is_significant and only_significant:
       continue
 
     csv_writer.writerow([
-        mean_delta,
-        mean_delta_less_ci if is_significant else 0,
-        percent_improvement if is_significant else 0,
-        u'+' if is_significant else u' ',
+        derived_stat.mean_delta,
+        derived_stat.mean_delta_less_ci or 0,
+        derived_stat.percent_change_less_ci or 0,
+        '+' if derived_stat.is_significant else ' ',
         unicode((url[:57] + '...') if len(url) > 60 else url),
-        control_mean,
-        100.0 * control_ci / control_mean,
-        exp_mean,
-        100.0 * exp_ci / exp_mean,
-        control_samples,
-        experiment_samples,
-        sorted(list(set(orig_control_samples) - set(control_samples))),
-        sorted(list(set(orig_experiment_samples) - set(experiment_samples)))])
+        derived_stat.control_mean,
+        100.0 * derived_stat.control_ci / derived_stat.control_mean,
+        derived_stat.experiment_mean,
+        100.0 * derived_stat.experiment_ci / derived_stat.experiment_mean,
+        stat.control_samples,
+        stat.experiment_samples,
+        stat.outlier_control_samples,
+        stat.outlier_experiment_samples])
 
 
 def main(argv):
@@ -223,12 +299,17 @@ def main(argv):
     print 'Must specify -c and -e.'
     sys.exit(1)
 
+  valid_metrics = _METRICS.keys()
+  if metric not in valid_metrics:
+    print 'Must specify valid metric: {}'.format(valid_metrics)
+    sys.exit(1)
+
   control_data = groupByUrl(populateCsvData(control_filename))
   experiment_data = groupByUrl(populateCsvData(experiment_filename))
-  merged_data = mergeControlAndExperiment(control_data, experiment_data)
+  results = generateResults(control_data, experiment_data)
 
   csv_writer = csv.writer(sys.stdout, delimiter='\t')
-  writeOutput(csv_writer, merged_data, metric, only_significant)
+  writeOutput(csv_writer, results, metric, only_significant)
 
 
 if __name__ == "__main__":
