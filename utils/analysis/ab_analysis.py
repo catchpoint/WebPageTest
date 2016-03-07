@@ -21,8 +21,10 @@ from collections import defaultdict
 from collections import namedtuple
 import csv
 import getopt
+import glob
 import math
 import numpy
+import os
 import sys
 from scipy import stats
 
@@ -133,13 +135,19 @@ def computeDerivedStatData(data):
       mean_delta_less_ci=mean_delta_less_ci if is_significant else None,
       percent_change_less_ci=percent_change_less_ci if is_significant else None)
 
-# Populate CSV data as a list of dictionaries
-def populateCsvData(filename):
+# Populate CSV data as a list of dictionaries. fileglobs is a comma-separated
+# list of filenames or filename globs.
+def populateCsvData(fileglobs):
   data = list()
-  with open(filename,'rb') as f:
-    dict_reader = csv.DictReader(f)
-    for row in dict_reader:
-      data.append(row)
+  for fileglob in fileglobs.split(','):
+    # If a path includes a ~, expand it to the user's home directory. Also
+    # expand environment variables.
+    fileglob = os.path.expandvars(os.path.expanduser(fileglob))
+    for filename in glob.iglob(fileglob):
+      with open(filename,'rb') as f:
+        dict_reader = csv.DictReader(f)
+        for row in dict_reader:
+          data.append(row)
   return data
 
 # Groups all runs for same URL together
@@ -317,14 +325,14 @@ def main(argv):
 
   metric = _DEFAULT_METRIC
   output_format = 'text'
-  control_filename = None
-  experiment_filename = None
+  control_filenames = None
+  experiment_filenames = None
   only_significant = False
   for k, v in opts:
     if k == '-c':
-      control_filename = v
+      control_filenames = v
     elif k == '-e':
-      experiment_filename = v
+      experiment_filenames = v
     elif k == '-m':
       metric = v
     elif k == '-f':
@@ -335,7 +343,7 @@ def main(argv):
       print 'Unexpected arg %s' % k
       sys.exit(1)
 
-  if not control_filename or not experiment_filename:
+  if not control_filenames or not experiment_filenames:
     print 'Must specify -c and -e.'
     sys.exit(1)
 
@@ -344,8 +352,8 @@ def main(argv):
     print 'Must specify valid metric: {}'.format(valid_metrics)
     sys.exit(1)
 
-  control_data = groupByUrl(populateCsvData(control_filename))
-  experiment_data = groupByUrl(populateCsvData(experiment_filename))
+  control_data = groupByUrl(populateCsvData(control_filenames))
+  experiment_data = groupByUrl(populateCsvData(experiment_filenames))
   results = generateResults(control_data, experiment_data)
 
   if output_format == 'csv':
