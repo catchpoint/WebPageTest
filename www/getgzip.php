@@ -16,7 +16,11 @@ if( isset($_GET['file']) &&
         header ("Content-type: application/json");
     else
         header ("Content-type: application/octet-stream");
-    gz_readfile_chunked($file);
+    if (isset($_REQUEST['compressed'])) {
+      readfile($file);
+    } else {
+      gz_readfile_chunked($file);
+    }
 }
 else
     header("HTTP/1.0 404 Not Found");  

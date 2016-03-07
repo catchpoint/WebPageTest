@@ -501,7 +501,7 @@ function wptExecuteTask(task) {
       wpt.chromeDebugger.CaptureTimeline(parseInt(task.target));
       break;
     case 'capturetrace':
-      wpt.chromeDebugger.CaptureTrace();
+      wpt.chromeDebugger.CaptureTrace(task.target);
       break;
     case 'noscript':
       g_commandRunner.doNoScript();

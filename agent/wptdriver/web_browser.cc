@@ -714,7 +714,6 @@ void WebBrowser::ConfigureIESettings() {
   that is used as a template
 -----------------------------------------------------------------------------*/
 void WebBrowser::ConfigureChromePreferences() {
-  HKEY hKey;
   CString prefs_file =
       _browser._profile_directory + _T("\\Default\\Preferences");
   TCHAR master_prefs_file[10240];

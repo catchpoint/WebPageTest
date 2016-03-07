@@ -155,6 +155,7 @@ public:
   bool    _timeline;
   int     _timelineStackDepth;
   bool    _trace;
+  CString _traceCategories;
   bool    _netlog;
   bool    _video;
   bool    _spdy3;

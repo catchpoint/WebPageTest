@@ -145,6 +145,7 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.startedCallback = callback;
     g_instance.devToolsData = '';
     g_instance.trace = false;
+    g_instance.traceCategories = "*";
     g_instance.timeline = false;
     g_instance.statsDoneCallback = undefined;
     g_instance.mobileEmulation = undefined;
@@ -204,8 +205,10 @@ wpt.chromeDebugger.CaptureTimeline = function(timelineStackDepth, callback) {
 /**
  * Capture a trace
  */
-wpt.chromeDebugger.CaptureTrace = function() {
+wpt.chromeDebugger.CaptureTrace = function(categories) {
   g_instance.trace = true;
+  if (categories != undefined && categories.length)
+    g_instance.traceCategories = "-*," + categories;
   if (g_instance.active) {
     wpt.chromeDebugger.StartTrace();
   }
@@ -216,7 +219,7 @@ wpt.chromeDebugger.StartTrace = function() {
     g_instance.traceRunning = true;
     var traceCategories = '';
     if (g_instance.trace)
-      traceCategories = '*';
+      traceCategories = g_instance.traceCategories;
     else
       traceCategories = '-*';
     traceCategories = traceCategories + ',blink.user_timing';

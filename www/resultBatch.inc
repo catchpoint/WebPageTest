@@ -124,6 +124,11 @@ elseif($json && $view == 'pss')
         DisplayProgress($tests);
     json_response($json_response);
 }
+elseif($json)
+{
+  $json_response['tests'] = $testIds;
+  json_response($json_response);
+}
 else
 {
 ?>

@@ -166,6 +166,7 @@ CDN_PROVIDER cdnList[] = {
   {".hiberniacdn.com", "HiberniaCDN"},
   {".cdntel.net", "Telenor"},
   {".raxcdn.com", "Rackspace"},
+  {".unicorncdn.net", "UnicornCDN"},
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -201,6 +202,7 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"X-Ar-Debug", "", "Aryaka"},
   {"server", "gocache", "GoCache"},
   {"server", "hiberniacdn", "HiberniaCDN"}
+  {"server", "UnicornCDN","UnicornCDN"}
 };
 
 // Specific providers that require multiple headers

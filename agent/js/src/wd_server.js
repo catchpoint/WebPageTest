@@ -1416,10 +1416,9 @@ WebDriverServer.prototype.done_ = function() {
     this.scheduleNoFault_('Capture Screen Shot', function() {
       this.takeScreenshot_('screen', 'end of run');
     }.bind(this));
-    this.scheduleStopTracing_();
-    if (this.driver_) {
-      this.scheduleNoFault_('Get WD Log',
-          this.scheduleGetWdDevToolsLog_.bind(this));
+    if (this.videoFile_) {
+      this.scheduleNoFault_('Stop video recording',
+          this.browser_.scheduleStopVideoRecording.bind(this.browser_));
     }
     try {
       if (this.pcapFile_) {
@@ -1430,10 +1429,11 @@ WebDriverServer.prototype.done_ = function() {
     try {
       this.scheduleCollectMetrics_();
     } catch(e) {}
-    if (this.videoFile_) {
-      this.scheduleNoFault_('Stop video recording',
-          this.browser_.scheduleStopVideoRecording.bind(this.browser_));
+    if (this.driver_) {
+      this.scheduleNoFault_('Get WD Log',
+          this.scheduleGetWdDevToolsLog_.bind(this));
     }
+    this.scheduleStopTracing_();
     this.scheduleAssertBrowserIsRunning_();
     if (this.videoFile_) {
       // video processing needs to be done after tracing has been stopped and collected

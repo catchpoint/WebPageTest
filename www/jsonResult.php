@@ -9,7 +9,8 @@ require_once('devtools.inc.php');
 require_once('archive.inc');
 
 if (array_key_exists('batch', $test['test']) && $test['test']['batch']) {
-    include 'resultBatch.inc';
+  $_REQUEST['f'] = 'json';
+  include 'resultBatch.inc';
 } else {
     $ret = array('data' => GetTestStatus($id));
     $ret['statusCode'] = $ret['data']['statusCode'];
@@ -222,7 +223,7 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
           
       if (!$basic_results && gz_is_file("$testPath/$run{$cachedText}_pagespeed.txt")) {
           $ret['PageSpeedScore'] = GetPageSpeedScore("$testPath/$run{$cachedText}_pagespeed.txt");
-          $ret['PageSpeedData'] = "$protocol://$host$uri//getgzip.php?test=$id&amp;file=$run{$cachedText}_pagespeed.txt";
+          $ret['PageSpeedData'] = "$protocol://$host$uri//getgzip.php?test=$id&file=$run{$cachedText}_pagespeed.txt";
       }
 
       $ret['pages'] = array();
@@ -252,6 +253,8 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
       $ret['rawData']['utilization'] = "$protocol://$host$uri$path/$run{$cachedText}_progress.csv";
       if( is_file("$testPath/$run{$cachedText}_bodies.zip") )
           $ret['rawData']['bodies'] = "$protocol://$host$uri$path/$run{$cachedText}_bodies.zip";
+      if( gz_is_file("$testPath/$run{$cachedText}_trace.json") )
+          $ret['rawData']['trace'] = "$protocol://$host$uri//getgzip.php?test=$id&compressed=1&file=$run{$cachedText}_trace.json.gz";
 
       if (!$basic_results) {
         $startOffset = array_key_exists('testStartOffset', $ret) ? intval(round($ret['testStartOffset'])) : 0;
