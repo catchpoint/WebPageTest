@@ -55,7 +55,7 @@ CoreStatData = namedtuple(
 
         # Control and experiment samples excluded from stat computation due to
         # being outliers.
-        'outlier_control_samples', 'outlier_experiment_samples'])
+        'control_outliers', 'experiment_outliers'])
 
 # DerivedStatData contains stat data that can be derived from a CoreStatData.
 DerivedStatData = namedtuple(
@@ -237,15 +237,15 @@ def generateResults(control, experiment):
           experiment_wpt_result_ids=experiment_data['id'],
           control_samples=control_samples,
           experiment_samples=experiment_samples,
-          outlier_control_samples=sorted(
+          control_outliers=sorted(
               list(set(orig_control_samples) - set(control_samples))),
-          outlier_experiment_samples=sorted(
+          experiment_outliers=sorted(
               list(set(orig_experiment_samples) - set(experiment_samples))))
     if result:
       results[url] = result
   return results
 
-def writeOutput(csv_writer, results, metric, only_significant=False):
+def writeCsvOutput(csv_writer, results, metric, only_significant=False):
   for url, result in results.iteritems():
     if metric not in result:
       continue
@@ -256,29 +256,67 @@ def writeOutput(csv_writer, results, metric, only_significant=False):
       continue
 
     csv_writer.writerow([
+        url,
         derived_stat.mean_delta,
-        derived_stat.mean_delta_less_ci or 0,
-        derived_stat.percent_change_less_ci or 0,
-        '+' if derived_stat.is_significant else ' ',
-        unicode((url[:57] + '...') if len(url) > 60 else url),
+        derived_stat.mean_delta_less_ci or '',
+        derived_stat.percent_change_less_ci or '',
+        '+' if derived_stat.is_significant else '',
+        derived_stat.control_mean,
+        derived_stat.control_ci,
+        derived_stat.experiment_mean,
+        derived_stat.experiment_ci,
+        stat.control_samples,
+        stat.experiment_samples,
+        stat.control_outliers,
+        stat.experiment_outliers])
+
+
+def writeTextOutput(outstream, results, metric, only_significant):
+  # Columns in the output format string:
+  # mean_delta, mean_delta_less_ci, percent_change_less_ci, url
+  # control_mean, control_ci_percent_mean,
+  # experiment_mean, experiment_ci_percent_mean
+  # control_samples, experiment_samples, control_outliers, experiment_outliers
+  _FORMAT_STR = (
+      '{: >6.0f}ms {} {}  {: <60} '
+      u'{: >6.0f}ms \u00b1{:2.0f}% '
+      u'{: >6.0f}ms \u00b1{:2.0f}%   '
+      '{} {} {} {}')
+  for url, result in results.iteritems():
+    if metric not in result:
+      continue
+    stat = result[metric]
+    derived_stat = computeDerivedStatData(stat)
+
+    if not derived_stat.is_significant and only_significant:
+      continue
+
+    print >> outstream, _FORMAT_STR.format(
+        derived_stat.mean_delta,
+        ('{:.0f}ms'.format(derived_stat.mean_delta_less_ci)
+         if derived_stat.mean_delta_less_ci else '').rjust(7),
+        ('{:.1f}%'.format(derived_stat.percent_change_less_ci)
+         if derived_stat.percent_change_less_ci else '').rjust(6),
+        (url[:57] + '...') if len(url) > 60 else url,
         derived_stat.control_mean,
         100.0 * derived_stat.control_ci / derived_stat.control_mean,
         derived_stat.experiment_mean,
         100.0 * derived_stat.experiment_ci / derived_stat.experiment_mean,
         stat.control_samples,
         stat.experiment_samples,
-        stat.outlier_control_samples,
-        stat.outlier_experiment_samples])
+        stat.control_outliers,
+        stat.experiment_outliers).encode('utf-8')
 
 
 def main(argv):
   try:
-    opts, args = getopt.getopt(argv[1:], "c:e:m:s")
+    opts, args = getopt.getopt(argv[1:], "c:e:m:f:s")
   except getopt.GetoptError as err:
     print str(err)
     sys.exit(1)
 
   metric = _DEFAULT_METRIC
+  output_format = 'text'
   control_filename = None
   experiment_filename = None
   only_significant = False
@@ -289,6 +327,8 @@ def main(argv):
       experiment_filename = v
     elif k == '-m':
       metric = v
+    elif k == '-f':
+      output_format = v
     elif k == '-s':
       only_significant = True
     else:
@@ -308,8 +348,14 @@ def main(argv):
   experiment_data = groupByUrl(populateCsvData(experiment_filename))
   results = generateResults(control_data, experiment_data)
 
-  csv_writer = csv.writer(sys.stdout, delimiter='\t')
-  writeOutput(csv_writer, results, metric, only_significant)
+  if output_format == 'csv':
+    csv_writer = csv.writer(sys.stdout)
+    writeCsvOutput(csv_writer, results, metric, only_significant)
+  elif output_format == 'text':
+    writeTextOutput(sys.stdout, results, metric, only_significant)
+  else:
+    print 'Unexpected output format: {}'.format(output_format)
+    sys.exit(1)
 
 
 if __name__ == "__main__":
