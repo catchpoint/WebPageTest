@@ -10,6 +10,18 @@ if (extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('GetDevToolsCPUTime');
 }
 
+$DEBUG_DEV_TOOLS = true;
+function debugDevTools($msg, $logFile = './log.txt') {
+    global $DEBUG_DEV_TOOLS;
+    if ($DEBUG_DEV_TOOLS == true) {
+        $backtrace = debug_backtrace();
+        $file = basename($backtrace[0]["file"]);
+        $line = $backtrace[0]["line"];
+        $function = $backtrace[1]["function"];
+        logMsg("$file:$function:$line: $msg", $logFile, true);
+    }
+}
+
 /**
  * Load the timeline data for the given test run (from a timeline file or a raw dev tools dump)
  *
@@ -45,6 +57,7 @@ function ProcessDevToolsEvents($events, &$pageData, &$requests, $stepName = 0)
         $requests = array();
         $pageData = array();
 
+
         // initialize the page data records
         $pageData['stepName'] = "Step " . ($stepName + 1);
         $pageData['date'] = $rawPageData['date'];
@@ -65,20 +78,25 @@ function ProcessDevToolsEvents($events, &$pageData, &$requests, $stepName = 0)
         $pageData['cached'] = $cached;
         $pageData['optimization_checked'] = 0;
         $pageData['start_epoch'] = $rawPageData['startTime'];
-        if (array_key_exists('onload', $rawPageData))
+        if (array_key_exists('onload', $rawPageData)) {
             $pageData['loadTime'] = $pageData['docTime'] = round(($rawPageData['onload'] - $rawPageData['startTime']));
+            debugDevTools("Setting loadTime and docTime to onload - startTime");
+        }
         if (isset($rawPageData['domContentLoadedEventStart'])) {
+            debugDevTools("domContentLoadedEventStart is present in rawPageData");
             $pageData['domContentLoadedEventStart'] = round($rawPageData['domContentLoadedEventStart'] - $rawPageData['startTime']);
             $pageData['domContentLoadedEventEnd'] = isset($rawPageData['domContentLoadedEventEnd']) ?
                 round($rawPageData['domContentLoadedEventEnd'] - $rawPageData['startTime']) :
                 $pageData['domContentLoadedEventStart'];
         }
         if (isset($rawPageData['loadEventStart'])) {
+            debugDevTools("loadEventStart is present in rawPageData");
             $pageData['loadEventStart'] = round($rawPageData['loadEventStart'] - $rawPageData['startTime']);
             $pageData['loadEventEnd'] = isset($rawPageData['loadEventEnd']) ?
                 round($rawPageData['loadEventEnd'] - $rawPageData['startTime']) :
                 $pageData['loadEventStart'];
         } else {
+            debugDevTools("Setting loadEvent(Start|End) to the value of loadTime");
             $pageData['loadEventStart'] = $pageData['loadTime'];
             $pageData['loadEventEnd'] = $pageData['loadTime'];
         }
@@ -350,6 +368,20 @@ function ProcessDevToolsEvents($events, &$pageData, &$requests, $stepName = 0)
         }
         $pageData['load_start'] = $requests[0]['load_start'];
         $pageData['connections'] = count($connections);
+
+        // If we did not see a Page.domContentLoadEventFired, use the fullyLoaded time. This happens on rare occasions
+        // with pages that are just javascript redirects
+        if (!isset($pageData['domContentLoadedEventStart']) && !isset($pageData['domContentLoadedEventEnd'])) {
+            $pageData['domContentLoadedEventStart'] = $pageData['domContentLoadedEventEnd'] = $pageData['fullyLoaded'];
+        }
+
+        // If we did not see a Page.loadEventFired event, these metrics will be 0. Set them to a value identical to
+        // domContentLoadedEventStart
+        if ($pageData['loadEventStart'] == 0 && $pageData['loadEventEnd'] == 0) {
+            debugDevTools("Setting loadEvent(Start|End) to the value of domContentLoaded(Start|End)");
+            $pageData['loadEventStart'] = $pageData['domContentLoadedEventStart'];
+            $pageData['loadEventEnd'] = $pageData['domContentLoadedEventEnd'];
+        }
     }
     if (count($requests)) {
         if ($pageData['responses_200'] == 0) {
@@ -384,6 +416,7 @@ function ProcessDevToolsEvents($events, &$pageData, &$requests, $stepName = 0)
  */
 function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData, $multistep = false)
 {
+    debugDevTools("*");
     $requests = null;
     $pageData = null;
     $startOffset = null;
@@ -395,6 +428,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData, $
     if (GetDevToolsEvents(null, $testPath, $run, $cached, $events, $startOffset, $multistep)) {
         if ($multistep) {
             for ($i = 0; $i < count($events); $i++) {
+                debugDevTools("<------ Step: " . ($i + 1) . "----->");
                 $stepEvents = $events[$i];
                 $stepPageData = null;
                 $stepPageRequests = null;
@@ -419,7 +453,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData, $
  */
 function DevToolsFilterNetRequests($events, &$requests, &$pageData)
 {
-    $pageData = array('startTime' => 0, 'onload' => 0, 'endTime' => 0);
+    $pageData = array('startTime' => 0, 'endTime' => 0);
     $requests = array();
     $allRequests = array(); // indexed by ID
     $idMap = array();
@@ -693,6 +727,22 @@ function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events, &$startO
 }
 
 /**
+ * Compares a requestId with the requestId of the step.
+ * @param $requestId
+ * @param $stepRequestId
+ * @return bool True of requestId < stepRequestId, false otherwise
+ */
+function compareRequestId($requestId, $stepRequestId) {
+    $requestIdSplit = explode(".", $requestId);
+    $stepRequestIdSplit = explode(".", $stepRequestId);
+    if ($requestIdSplit[0] < $stepRequestIdSplit[0])
+        return true;
+    if ($requestIdSplit[1] < $stepRequestIdSplit[1])
+        return true;
+    return false;
+}
+
+/**
  * Parse and trim raw timeline data.
  * Remove everything before the first non-timeline event.
  *
@@ -713,7 +763,11 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
     $foundFirstEvent = false;
     $foundHookPage = false;
     $events = Array(); // list of events for each step
+    $events[] = $step;
+    $currentStepIndex = 0;
+    $previousStepIndex = 0;
     $iFrames = Array(); // list of iFrame frameId
+    $thisStepRequestId = null;
     foreach ($messages as $entry) {
         $message = $entry['message'];
         if (isset($message['params']['timestamp'])) {
@@ -749,32 +803,43 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
             // frameStartedLoading producing a new step from the ones just
             // loading data in an iframe.
             if ($multistep && isset($message['method']) && $message['method'] == "Page.frameAttached") {
-                $iFrames[$message['params']['frameId']] = $iFrame[$message['params']['parentFrameId']];
+                $iFrames[$message['params']['frameId']] = $message['params']['parentFrameId'];
             }
 
             if ($multistep && isset($message['method']) && $message['method'] == "Page.frameStartedLoading" &&
                 isset($message['params']['frameId']) && 
                     !array_key_exists($message['params']['frameId'], $iFrames)) {
 
-                $events[] = $step;
-                $step = Array();
+                $events[] = Array();
+                $previousStepIndex = $currentStepIndex;
+                $currentStepIndex++;
+                $thisStepRequestId = null;
                 continue;
             }
+            if ($thisStepRequestId == null && isset($message['method']) &&
+                $message['method'] == "Network.requestWillBeSent" &&
+                isset($message['params']['requestId'])) {
+                $thisStepRequestId = $message['params']['requestId'];
+                debugDevTools("* RequestId for Step " . ($currentStepIndex + 1) . ": " . $thisStepRequestId);
+            }
             if (DevToolsMatchEvent($filter, $message)) {
+                $stepIndexToInsertEvent = $currentStepIndex;
+                if ($thisStepRequestId != null && isset($message['params']['requestId']) &&
+                    compareRequestId($message['params']['requestId'], $thisStepRequestId)) {
+                    $stepIndexToInsertEvent = $previousStepIndex;
+                }
                 if ($removeParams && array_key_exists('params', $message)) {
                     $event = $message['params'];
                     $event['method'] = $message['method'];
-                    $step[] = $event;
+                    $events[$stepIndexToInsertEvent][] = $event;
                 } else {
-                    $step[] = $message;
+                    $events[$stepIndexToInsertEvent][] = $message;
                 }
             }
         }
     }
-    if ($multistep) {
-        $events[] = $step;
-    } else {
-        $events = $step;
+    if (!$multistep) {
+        $events = $events[0];
     }
 }
 

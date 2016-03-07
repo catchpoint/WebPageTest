@@ -51,6 +51,7 @@ function loadAllPageData($testPath, &$requests, $options = null, $multistep = fa
 */
 function loadPageRunData($testPath, $run, $cached, &$requests = null, $options = null, $multistep=false)
 {
+    $nbPagesMatchBetweenDevtoolsAndHook = true;
     $ret = null;
     $cachedText = $cached ? '_Cached' : '';
     if (gz_is_file("$testPath/devtools.json")) {
@@ -59,6 +60,7 @@ function loadPageRunData($testPath, $run, $cached, &$requests = null, $options =
         $ret2 = loadPageData("$testPath/{$run}{$cachedText}_IEWPG.txt", $options, $multistep);
         if ($multistep && is_array($ret) && is_array($ret2)) {
           if (count($ret) == count($ret2)) {
+            $nbPagesMatchBetweenDevtoolsAndHook = true;
             for ($i = 0; $i < count($ret); $i++) {
               // devtools have an imprecise page metrics that can push dom
               // content loaded before onload.
@@ -80,6 +82,7 @@ function loadPageRunData($testPath, $run, $cached, &$requests = null, $options =
                   ($ret2[$i]["domContentLoadedEventEnd"] - $ret2[$i]["domContentLoadedEventStart"]);
             }
           } else {
+            $nbPagesMatchBetweenDevtoolsAndHook = false;
             $error_msg =
                 "ERROR: For test: %s, # of steps differ between devtools.json and IEWPG.txt. Please investigate.";
             logAlways(sprintf($error_msg, $testPath));
@@ -195,31 +198,33 @@ function loadPageRunData($testPath, $run, $cached, &$requests = null, $options =
               $step['render'] = $first;
           }
         }
-        require_once('./video/visualProgress.inc.php');
-        $progress = GetVisualProgress($testPath, $run, $cached, null, null, $startOffset, $stepNum);
-        if (isset($progress) && is_array($progress)) {
-          if (array_key_exists('SpeedIndex', $progress))
-            $step['SpeedIndex'] = $progress['SpeedIndex'];
-          if (array_key_exists('visualComplete', $progress))
-            $step['visualComplete'] = $progress['visualComplete'];
-          if (array_key_exists('startRender', $progress) && (!array_key_exists('render', $step) || !$step['render']))
-            $step['render'] = $progress['startRender'];
-          if ((!array_key_exists('lastVisualChange', $step) ||
-                  !$step['lastVisualChange']) &&
-              array_key_exists('visualComplete', $step)
-          )
-            $step['lastVisualChange'] = $step['visualComplete'];
-        }
-        // see if we need a custom Speed Index as well
-        $end = null;
-        if (isset($options) && array_key_exists('end', $options)) {
-          $end = $options['end'];
-          $progress = GetVisualProgress($testPath, $run, $cached, null, $end, $startOffset);
-          if (isset($progress) && is_array($progress)) {
-            if (array_key_exists('SpeedIndex', $progress))
-              $step['SpeedIndexCustom'] = $progress['SpeedIndex'];
-            $step['visualCompleteCustom'] = $progress['visualComplete'];
-          }
+        if ($nbPagesMatchBetweenDevtoolsAndHook == true) {
+            require_once('./video/visualProgress.inc.php');
+            $progress = GetVisualProgress($testPath, $run, $cached, null, null, $startOffset, $stepNum);
+            if (isset($progress) && is_array($progress)) {
+                if (array_key_exists('SpeedIndex', $progress))
+                    $step['SpeedIndex'] = $progress['SpeedIndex'];
+                if (array_key_exists('visualComplete', $progress))
+                    $step['visualComplete'] = $progress['visualComplete'];
+                if (array_key_exists('startRender', $progress) && (!array_key_exists('render', $step) || !$step['render']))
+                    $step['render'] = $progress['startRender'];
+                if ((!array_key_exists('lastVisualChange', $step) ||
+                        !$step['lastVisualChange']) &&
+                    array_key_exists('visualComplete', $step)
+                )
+                    $step['lastVisualChange'] = $step['visualComplete'];
+            }
+            // see if we need a custom Speed Index as well
+            $end = null;
+            if (isset($options) && array_key_exists('end', $options)) {
+                $end = $options['end'];
+                $progress = GetVisualProgress($testPath, $run, $cached, null, $end, $startOffset);
+                if (isset($progress) && is_array($progress)) {
+                    if (array_key_exists('SpeedIndex', $progress))
+                        $step['SpeedIndexCustom'] = $progress['SpeedIndex'];
+                    $step['visualCompleteCustom'] = $progress['visualComplete'];
+                }
+            }
         }
 
         if (isset($step) && is_array($step) && isset($step['fullyLoaded']) && $step['fullyLoaded']) {
