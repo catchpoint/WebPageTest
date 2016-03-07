@@ -1000,7 +1000,7 @@ function ImportS3Benchmark($info) {
   
   if (!$state['running'] && !$state['needs_aggregation']) {
     if (isset($info['epoch'])) {
-      $state['last_run'] = $epoch;
+      $state['last_run'] = $info['epoch'];
     } elseif (isset($info['id'])) {
       $date = DateTime::createFromFormat('ymd', substr($info['id'], 0, 6));
       $state['last_run'] = $date->getTimestamp();
