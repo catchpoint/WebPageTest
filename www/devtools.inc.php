@@ -53,7 +53,8 @@ function GetTimeline($testPath, $run, $cached, &$timeline, &$startOffset)
 function ProcessDevToolsEvents($events, &$pageData, &$requests, $stepName = 0)
 {
     $ok = false;
-    if (DevToolsFilterNetRequests($events, $rawRequests, $rawPageData)) {
+    $base_page_cert_result = 0;
+    if (DevToolsFilterNetRequests($events, $rawRequests, $rawPageData, $base_page_cert_result)) {
         $requests = array();
         $pageData = array();
 
@@ -403,6 +404,10 @@ function ProcessDevToolsEvents($events, &$pageData, &$requests, $stepName = 0)
         }
         $ok = true;
     }
+    if ($base_page_cert_result != 0) {
+      $pageData['result'] = $base_page_cert_result;
+    }
+
     return $ok;
 }
 
@@ -451,14 +456,25 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData, $
  * @param mixed $events
  * @param mixed $requests
  */
-function DevToolsFilterNetRequests($events, &$requests, &$pageData)
+function DevToolsFilterNetRequests($events, &$requests, &$pageData, &$cert_result=0)
 {
     $pageData = array('startTime' => 0, 'endTime' => 0);
     $requests = array();
     $allRequests = array(); // indexed by ID
     $idMap = array();
     $endTimestamp = null;
+    $certResultSet = false;
     foreach ($events as $event) {
+        if (!$certResultSet && $event['method'] == 'Network.responseReceived') {
+          if (isset($event['response']) && isset($event['response']['securityState'])) {
+            if ($event['response']['securityState'] == 'insecure') {
+              $cert_result = 7;
+            } else {
+              $cert_result = 0;
+            }
+            $certResultSet = true;
+          }
+        }
         if ($event['method'] == 'Network.requestWillBeSent' &&
             isset($event['wallTime']) &&
             (!isset($pageData['date']) || $event['wallTime'] < $pageData['date'])
