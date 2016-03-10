@@ -3,6 +3,7 @@ include 'common.inc';
 require_once('page_data.inc');
 require_once('object_detail.inc');
 require_once('./video/visualProgress.inc.php');
+set_time_limit(3600);
 
 $sentHeader = false;
 $hasCSV = null;
