@@ -910,7 +910,7 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
     this.traceFileStream_.write('{"traceEvents":[{}');
     var message = {method: 'Tracing.start'};
     message.params = {
-      categories: 'blink.console,blink.user_timing,disabled-by-default-devtools.timeline,devtools.timeline',
+      categories: 'blink.console,disabled-by-default-devtools.timeline,devtools.timeline',
       options: 'record-as-much-as-possible'
     };
     if (1 === this.task_.trace) {
@@ -1420,6 +1420,7 @@ WebDriverServer.prototype.done_ = function() {
       this.scheduleNoFault_('Stop video recording',
           this.browser_.scheduleStopVideoRecording.bind(this.browser_));
     }
+    this.scheduleAssertBrowserIsRunning_();
     try {
       if (this.pcapFile_) {
         this.scheduleNoFault_('Stop packet capture',
@@ -1434,7 +1435,6 @@ WebDriverServer.prototype.done_ = function() {
           this.scheduleGetWdDevToolsLog_.bind(this));
     }
     this.scheduleStopTracing_();
-    this.scheduleAssertBrowserIsRunning_();
     if (this.videoFile_) {
       // video processing needs to be done after tracing has been stopped and collected
       this.scheduleProcessVideo_();
