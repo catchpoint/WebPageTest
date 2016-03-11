@@ -140,7 +140,7 @@ void SSLStream::ProcessMessage() {
     case MSG_HANDSHAKE: ProcessHandshake(); break;
     case MSG_APPLICATION_DATA: ProcessApplicationData(); break;
     default: {
-      AtlTrace("SSLStream: Unknown Message 0x%02X - %d bytes", header->type, message_size_);
+      ATLTRACE("SSLStream: Unknown Message 0x%02X - %d bytes", header->type, message_size_);
     } break;
   }
 }

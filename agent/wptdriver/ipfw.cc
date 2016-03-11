@@ -177,7 +177,7 @@ bool CIpfw::Execute(CString cmd) {
   if (!ipfw_dir_.IsEmpty()) {
     CString command;
     command.Format(_T("cmd /C \"ipfw.exe %s\""), (LPCTSTR)cmd);
-    AtlTrace(_T("Configuring dummynet: '%s'"), (LPCTSTR)command);
+    ATLTRACE(_T("Configuring dummynet: '%s'"), (LPCTSTR)command);
     ret = LaunchProcess(command, NULL, ipfw_dir_);
   }
   return ret;

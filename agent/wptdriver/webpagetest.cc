@@ -191,7 +191,7 @@ bool WebPagetest::DeleteIncrementalResults(WptTestDriver& test) {
 bool WebPagetest::UploadIncrementalResults(WptTestDriver& test) {
   bool ret = true;
 
-  AtlTrace(_T("[wptdriver] - UploadIncrementalResults"));
+  ATLTRACE(_T("[wptdriver] - UploadIncrementalResults"));
 
   if (!test._discard_test) {
     CString directory = test._directory + CString(_T("\\"));
@@ -225,7 +225,7 @@ bool WebPagetest::TestDone(WptTestDriver& test){
     SetCPUUtilization(0);
   }
 
-  AtlTrace(_T("[wptdriver] - Test Done"));
+  ATLTRACE(_T("[wptdriver] - Test Done"));
 
   return ret;
 }
@@ -483,7 +483,7 @@ bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test,
     }
   }
 
-  AtlTrace(_T("[wptdriver] - Uploading '%s' (%d bytes) to '%s'"), (LPCTSTR)file, file_size, (LPCTSTR)url);
+  ATLTRACE(_T("[wptdriver] - Uploading '%s' (%d bytes) to '%s'"), (LPCTSTR)file, file_size, (LPCTSTR)url);
 
   BuildFormData(_settings, test, done, file_name, file_size, 
                 headers, footer, form_data, content_length);
@@ -508,11 +508,11 @@ bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test,
     unsigned short port;
     DWORD secure_flag;
     if (CrackUrl(url, host, port, object, secure_flag)) {
-      AtlTrace(_T("[wptdriver] - Connecting to '%s' port %d"), (LPCTSTR)host, port);
+      ATLTRACE(_T("[wptdriver] - Connecting to '%s' port %d"), (LPCTSTR)host, port);
       HINTERNET connect = InternetConnect(internet, host, port, NULL, NULL,
                                           INTERNET_SERVICE_HTTP, 0, 0);
       if (connect) {
-        AtlTrace(_T("[wptdriver] - POSTing to %s"), (LPCTSTR)object);
+        ATLTRACE(_T("[wptdriver] - POSTing to %s"), (LPCTSTR)object);
         HINTERNET request = HttpOpenRequest(connect, _T("POST"), object, 
                                               NULL, NULL, NULL, 
                                               INTERNET_FLAG_NO_CACHE_WRITE |
@@ -530,7 +530,7 @@ bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test,
             memset( &buffers, 0, sizeof(buffers) );
             buffers.dwStructSize = sizeof(buffers);
             buffers.dwBufferTotal = content_length;
-            AtlTrace(_T("[wptdriver] - Sending request"));
+            ATLTRACE(_T("[wptdriver] - Sending request"));
             BOOL send_request_result = HttpSendRequestEx(request, &buffers, NULL, 0, NULL);
             if (!send_request_result) {
               DWORD dwError = GetLastError();
@@ -542,10 +542,10 @@ bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test,
 
             if (send_request_result) {
               DWORD bytes_written;
-              AtlTrace(_T("[wptdriver] - Writing data"));
+              ATLTRACE(_T("[wptdriver] - Writing data"));
               if (InternetWriteFile(request, (LPCSTR)form_data, 
                                     form_data.GetLength(), &bytes_written)) {
-                AtlTrace(_T("[wptdriver] - Uploading the file"));
+                ATLTRACE(_T("[wptdriver] - Uploading the file"));
                 // upload the file itself
                 if (file_handle != INVALID_HANDLE_VALUE && file_size) {
                     DWORD chunkSize = min(64 * 1024, file_size);
@@ -569,10 +569,10 @@ bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test,
                   }
                 }
               } else {
-                AtlTrace(_T("InternetWriteFile failed: %d"), GetLastError());
+                ATLTRACE(_T("InternetWriteFile failed: %d"), GetLastError());
               }
             } else {
-              AtlTrace(_T("HttpSendRequestEx failed: %d"), GetLastError());
+              ATLTRACE(_T("HttpSendRequestEx failed: %d"), GetLastError());
             }
           }
           InternetCloseHandle(request);
@@ -589,7 +589,7 @@ bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test,
   if (ret)
     DeleteFile(file);
 
-  AtlTrace(_T("[wptdriver] - Upload %s"), ret ? _T("SUCCEEDED") : _T("FAILED"));
+  ATLTRACE(_T("[wptdriver] - Upload %s"), ret ? _T("SUCCEEDED") : _T("FAILED"));
 
   return ret;
 }

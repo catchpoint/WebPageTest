@@ -208,7 +208,7 @@ HINTERNET WinInetHook::InternetOpenW(LPCWSTR lpszAgent, DWORD dwAccessType,
   LPCWSTR lpszProxy, LPCWSTR lpszProxyBypass, DWORD dwFlags) {
   HINTERNET ret = NULL;
 
-  AtlTrace(_T("WinInetHook::InternetOpenW"));
+  ATLTRACE(_T("WinInetHook::InternetOpenW"));
 
   CString agent(lpszAgent);
   if( _InternetOpenW )
@@ -224,7 +224,7 @@ HINTERNET WinInetHook::InternetOpenA(LPCSTR lpszAgent, DWORD dwAccessType,
   LPCSTR lpszProxy, LPCSTR lpszProxyBypass, DWORD dwFlags) {
   HINTERNET ret = NULL;
 
-  AtlTrace(_T("WinInetHook::InternetOpenA"));
+  ATLTRACE(_T("WinInetHook::InternetOpenA"));
 
   CString agent((LPCTSTR)CA2T(lpszAgent, CP_UTF8));
   if( _InternetOpenA )
@@ -239,7 +239,7 @@ HINTERNET WinInetHook::InternetOpenA(LPCSTR lpszAgent, DWORD dwAccessType,
 BOOL WinInetHook::InternetCloseHandle(HINTERNET hInternet) {
   BOOL ret = FALSE;
 
-  AtlTrace(_T("WinInetHook::InternetCloseHandle"));
+  ATLTRACE(_T("WinInetHook::InternetCloseHandle"));
 
   if( _InternetCloseHandle )
     ret = _InternetCloseHandle(hInternet);
@@ -272,7 +272,7 @@ INTERNET_STATUS_CALLBACK WinInetHook::InternetSetStatusCallback(
   HINTERNET hInternet, INTERNET_STATUS_CALLBACK lpfnInternetCallback) {
   INTERNET_STATUS_CALLBACK ret = NULL;
 
-  AtlTrace(_T("WinInetHook::InternetSetStatusCallback"));
+  ATLTRACE(_T("WinInetHook::InternetSetStatusCallback"));
 
   EnterCriticalSection(&cs);
   _status_callbacks.SetAt(hInternet, lpfnInternetCallback);
@@ -290,23 +290,23 @@ void WinInetHook::InternetStatusCallback(HINTERNET hInternet,
   DWORD_PTR dwContext, DWORD dwInternetStatus, LPVOID lpvStatusInformation, 
   DWORD dwStatusInformationLength) {
 
-  AtlTrace(_T("WinInetHook::InternetStatusCallback"));
+  ATLTRACE(_T("WinInetHook::InternetStatusCallback"));
 
   switch (dwInternetStatus) {
     case INTERNET_STATUS_RESOLVING_NAME: 
-        AtlTrace(_T("INTERNET_STATUS_RESOLVING_NAME"));
+        ATLTRACE(_T("INTERNET_STATUS_RESOLVING_NAME"));
         break;
     case INTERNET_STATUS_NAME_RESOLVED:
-        AtlTrace(_T("INTERNET_STATUS_NAME_RESOLVED"));
+        ATLTRACE(_T("INTERNET_STATUS_NAME_RESOLVED"));
         break;
     case INTERNET_STATUS_CONNECTING_TO_SERVER:
-        AtlTrace(_T("INTERNET_STATUS_CONNECTING_TO_SERVER"));
+        ATLTRACE(_T("INTERNET_STATUS_CONNECTING_TO_SERVER"));
         break;
     case INTERNET_STATUS_CONNECTED_TO_SERVER:
-        AtlTrace(_T("INTERNET_STATUS_CONNECTED_TO_SERVER"));
+        ATLTRACE(_T("INTERNET_STATUS_CONNECTED_TO_SERVER"));
         break;
     case INTERNET_STATUS_SENDING_REQUEST: {
-          AtlTrace(_T("INTERNET_STATUS_SENDING_REQUEST"));
+          ATLTRACE(_T("INTERNET_STATUS_SENDING_REQUEST"));
           // check if the request is secure
           DWORD flags = 0;
           DWORD len = sizeof(flags);
@@ -319,13 +319,13 @@ void WinInetHook::InternetStatusCallback(HINTERNET hInternet,
         }
         break;
     case INTERNET_STATUS_REQUEST_SENT:
-        AtlTrace(_T("INTERNET_STATUS_REQUEST_SENT"));
+        ATLTRACE(_T("INTERNET_STATUS_REQUEST_SENT"));
         break;
     case INTERNET_STATUS_RECEIVING_RESPONSE:
-        AtlTrace(_T("INTERNET_STATUS_RECEIVING_RESPONSE"));
+        ATLTRACE(_T("INTERNET_STATUS_RECEIVING_RESPONSE"));
         break;
     case INTERNET_STATUS_REDIRECT:
-        AtlTrace(_T("INTERNET_STATUS_REDIRECT"));
+        ATLTRACE(_T("INTERNET_STATUS_REDIRECT"));
         if (lpvStatusInformation) {
           CString url = CA2T((LPCSTR)lpvStatusInformation);
           CString scheme, host, object, extra;
@@ -340,10 +340,10 @@ void WinInetHook::InternetStatusCallback(HINTERNET hInternet,
         }
         break;
     case INTERNET_STATUS_RESPONSE_RECEIVED:
-        AtlTrace(_T("INTERNET_STATUS_RESPONSE_RECEIVED"));
+        ATLTRACE(_T("INTERNET_STATUS_RESPONSE_RECEIVED"));
         break;
     case INTERNET_STATUS_REQUEST_COMPLETE:
-        AtlTrace(_T("INTERNET_STATUS_REQUEST_COMPLETE"));
+        ATLTRACE(_T("INTERNET_STATUS_REQUEST_COMPLETE"));
         break;
   }
 
@@ -375,7 +375,7 @@ HINTERNET WinInetHook::InternetConnectW(HINTERNET hInternet,
   CString server((LPCTSTR)CW2T(lpszServerName));
   CString originalServer = server;
 
-  AtlTrace(_T("WinInetHook::InternetConnectW"));
+  ATLTRACE(_T("WinInetHook::InternetConnectW"));
 
   EnterCriticalSection(&cs);
   INTERNET_STATUS_CALLBACK cb = NULL;
@@ -410,7 +410,7 @@ HINTERNET WinInetHook::InternetConnectA(HINTERNET hInternet,
   CString server((LPCTSTR)CA2T(lpszServerName));
   CString originalServer = server;
 
-  AtlTrace(_T("WinInetHook::InternetConnectA"));
+  ATLTRACE(_T("WinInetHook::InternetConnectA"));
 
   if (_InternetConnectA)
     ret = _InternetConnectA(hInternet, (LPCSTR)CT2A(server), nServerPort, 
@@ -470,7 +470,7 @@ HINTERNET WinInetHook::HttpOpenRequestA(HINTERNET hConnect, LPCSTR lpszVerb,
   LPCSTR lpszObjectName, LPCSTR lpszVersion, LPCSTR lpszReferrer, 
   LPCSTR FAR * lplpszAcceptTypes, DWORD dwFlags, DWORD_PTR dwContext) {
 
-  AtlTrace(_T("WinInetHook::HttpOpenRequestA"));
+  ATLTRACE(_T("WinInetHook::HttpOpenRequestA"));
 
   HINTERNET ret = NULL;
   bool block = false;
@@ -509,7 +509,7 @@ BOOL WinInetHook::HttpSendRequestW(HINTERNET hRequest, LPCWSTR lpszHeaders,
   DWORD dwHeadersLength, LPVOID lpOptional, DWORD dwOptionalLength) {
   BOOL ret = FALSE;
 
-  AtlTrace(_T("WinInetHook::HttpSendRequestW"));
+  ATLTRACE(_T("WinInetHook::HttpSendRequestW"));
 
   SetHeaders(hRequest);  
   CString headers(lpszHeaders);
@@ -526,7 +526,7 @@ BOOL WinInetHook::HttpSendRequestA(HINTERNET hRequest, LPCSTR lpszHeaders,
   DWORD dwHeadersLength, LPVOID lpOptional, DWORD dwOptionalLength) {
   BOOL ret = FALSE;
   
-  AtlTrace(_T("WinInetHook::HttpSendRequestA"));
+  ATLTRACE(_T("WinInetHook::HttpSendRequestA"));
 
   SetHeaders(hRequest);
   CString headers((LPCTSTR)CA2T(lpszHeaders));
@@ -544,7 +544,7 @@ HINTERNET WinInetHook::FtpOpenFileW(HINTERNET hConnect, LPCWSTR lpszFileName,
   DWORD dwAccess, DWORD dwFlags, DWORD_PTR dwContext) {
   HINTERNET ret = NULL;
 
-  AtlTrace(_T("WinInetHook::FtpOpenFileW"));
+  ATLTRACE(_T("WinInetHook::FtpOpenFileW"));
 
   if (_FtpOpenFileW) {
     ret = _FtpOpenFileW(hConnect, lpszFileName, dwAccess, dwFlags, dwContext);
@@ -565,7 +565,7 @@ HINTERNET WinInetHook::FtpOpenFileA(HINTERNET hConnect, LPCSTR lpszFileName,
   DWORD dwAccess, DWORD dwFlags, DWORD_PTR dwContext) {
   HINTERNET ret = NULL;
 
-  AtlTrace(_T("WinInetHook::FtpOpenFileA"));
+  ATLTRACE(_T("WinInetHook::FtpOpenFileA"));
 
   if (_FtpOpenFileA) {
     ret = _FtpOpenFileA(hConnect, lpszFileName, dwAccess, dwFlags, dwContext);
@@ -585,7 +585,7 @@ BOOL WinInetHook::HttpAddRequestHeadersW(HINTERNET hRequest,
   LPCWSTR lpszHeaders, DWORD dwHeadersLength, DWORD dwModifiers) {
   BOOL ret = FALSE;
 
-  AtlTrace(_T("WinInetHook::HttpAddRequestHeadersW"));
+  ATLTRACE(_T("WinInetHook::HttpAddRequestHeadersW"));
 
   CString headers = CW2CT(lpszHeaders);
   if( _HttpAddRequestHeadersW )
@@ -601,7 +601,7 @@ BOOL WinInetHook::HttpAddRequestHeadersA(HINTERNET hRequest,
   LPCSTR lpszHeaders, DWORD dwHeadersLength, DWORD dwModifiers) {
   BOOL ret = FALSE;
 
-  AtlTrace(_T("WinInetHook::HttpAddRequestHeadersA"));
+  ATLTRACE(_T("WinInetHook::HttpAddRequestHeadersA"));
 
   CString headers = CA2CT(lpszHeaders);
   if( _HttpAddRequestHeadersA )
@@ -629,7 +629,7 @@ void WinInetHook::SetHeaders(HINTERNET hRequest, bool also_add) {
       POSITION pos = headers.GetHeadPosition();
       while (pos) {
         CString header = headers.GetNext(pos);
-        AtlTrace(_T("WinInetHook::SetHeaders - Setting header : %s"), (LPCTSTR)header);
+        ATLTRACE(_T("WinInetHook::SetHeaders - Setting header : %s"), (LPCTSTR)header);
         header += _T("\r\n");
         HttpAddRequestHeaders(hRequest, header, header.GetLength(), HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE);
       }
@@ -639,14 +639,14 @@ void WinInetHook::SetHeaders(HINTERNET hRequest, bool also_add) {
       POSITION pos = headers.GetHeadPosition();
       while (pos) {
         CString header = headers.GetNext(pos);
-        AtlTrace(_T("WinInetHook::SetHeaders - Adding header : %s"), (LPCTSTR)header);
+        ATLTRACE(_T("WinInetHook::SetHeaders - Adding header : %s"), (LPCTSTR)header);
         header += _T("\r\n");
         HttpAddRequestHeaders(hRequest, header, header.GetLength(), HTTP_ADDREQ_FLAG_ADD);
       }
     }
     CString new_host;
     if (_test.OverrideHost(host, new_host)) {
-      AtlTrace(_T("WinInetHook::SetHeaders - Overriding host : %s -> %s"), (LPCTSTR)host, (LPCTSTR)new_host);
+      ATLTRACE(_T("WinInetHook::SetHeaders - Overriding host : %s -> %s"), (LPCTSTR)host, (LPCTSTR)new_host);
       CString header = CString("Host: ") + new_host + _T("\r\n");
       HttpAddRequestHeaders(hRequest, header, header.GetLength(), HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE);
       header = CString("x-Host: ") + host + _T("\r\n");

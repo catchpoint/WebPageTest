@@ -359,7 +359,7 @@ bool WebBrowser::ConfigureIpfw(WptTestDriver& test) {
     buff.Format(_T("[wptdriver] - Throttling: %d Kbps in, %d Kbps out, ")
                 _T("%d ms latency, %0.2f plr"), test._bwIn, test._bwOut, 
                 test._latency, test._plr );
-    AtlTrace(buff);
+    ATLTRACE(buff);
 
     if (_ipfw.SetPipe(PIPE_IN, test._bwIn, latency,test._plr/100.0)) {
       // make up for odd values
@@ -376,7 +376,7 @@ bool WebBrowser::ConfigureIpfw(WptTestDriver& test) {
     ret = true;
 
   if (!ret) {
-    AtlTrace(_T("[wptdriver] - Error Configuring dummynet"));
+    ATLTRACE(_T("[wptdriver] - Error Configuring dummynet"));
   }
 
   return ret;

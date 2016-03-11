@@ -12,7 +12,7 @@
   Main entry point that is called when IE starts up
 -----------------------------------------------------------------------------*/
 STDMETHODIMP WptBHO::SetSite(IUnknown *pUnkSite) {
-  AtlTrace(_T("[WptBHO] SetSite\n"));
+  ATLTRACE(_T("[WptBHO] SetSite\n"));
   if (pUnkSite) {
     if (!_web_browser) {
       _web_browser = pUnkSite;
@@ -36,7 +36,7 @@ STDMETHODIMP WptBHO::SetSite(IUnknown *pUnkSite) {
     _wpt.Stop();
     _web_browser.Release();
   }
-  AtlTrace(_T("[WptBHO] SetSite complete\n"));
+  ATLTRACE(_T("[WptBHO] SetSite complete\n"));
   return IObjectWithSiteImpl<WptBHO>::SetSite(pUnkSite);
 }
 
@@ -45,7 +45,7 @@ HRESULT STDMETHODCALLTYPE WptBHO::Authenticate(
   __RPC__deref_out_opt HWND *phwnd,
   __RPC__deref_out_opt LPWSTR *pszUsername,
   __RPC__deref_out_opt LPWSTR *pszPassword) {
-  AtlTrace(_T("[WptBHO] Request for Authentication"));
+  ATLTRACE(_T("[WptBHO] Request for Authentication"));
   basicAuthDismissed = true;
   return E_ACCESSDENIED;
 }
@@ -65,7 +65,7 @@ STDMETHODIMP_(void) WptBHO::OnBeforeNavigate2(IDispatch *pDisp, VARIANT * vUrl,
   CString url;
   if (vUrl)
     url = *vUrl;
-  AtlTrace(_T("[WptBHO] OnBeforeNavigate2 - %s"), url);
+  ATLTRACE(_T("[WptBHO] OnBeforeNavigate2 - %s"), url);
   CComPtr<IUnknown> unknown_browser = _web_browser;
   CComPtr<IUnknown> unknown_frame = pDisp;
   if (unknown_browser && unknown_frame && unknown_browser == unknown_frame) {
@@ -118,8 +118,8 @@ STDMETHODIMP_(void) WptBHO::OnNavigateError(IDispatch *pDisp, VARIANT *vUrl,
   CComPtr<IUnknown> unknown_frame = pDisp;
   if (unknown_browser && unknown_frame && unknown_browser == unknown_frame) {
     CString buff;
-    buff.Format(_T("[WptBHO] - NavigateError (%d): "), code);
-    AtlTrace(buff + url);
+    buff.Format(_T("[WptBHO] - NavigateError (%d)"), code);
+    ATLTRACE(buff);
     _wpt.OnNavigateError(code);
   }
 }

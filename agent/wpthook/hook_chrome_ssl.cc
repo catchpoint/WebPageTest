@@ -235,7 +235,7 @@ void ChromeSSLHook::Init() {
     hook_ = new NCodeHookIA32();
     g_hook = this; 
 
-    AtlTrace("Chrome ssl methods structure found (signature %d) at 0x%08X", signature, (DWORD)methods_addr);
+    ATLTRACE("Chrome ssl methods structure found (signature %d) at 0x%08X", signature, (DWORD)methods_addr);
 
     // Hook the functions now that we have in-memory addresses for them
     New_ = (PFN_SSL3_NEW)hook_->createHook(
@@ -254,7 +254,7 @@ void ChromeSSLHook::Init() {
         (PFN_SSL3_WRITE_APP_DATA)methods_addr[methods_signatures[signature].ssl_write_app_data_index],
         WriteAppData_Hook);
   } else {
-    AtlTrace("Chrome ssl methods structure NOT found");
+    ATLTRACE("Chrome ssl methods structure NOT found");
   }
   LeaveCriticalSection(&cs);
 }
@@ -303,7 +303,7 @@ int ChromeSSLHook::ReadAppData(void *ssl, uint8_t *buf, int len, int peek) {
         sockets_.DataIn(s, chunk, true);
       }
     } else {
-      AtlTrace("0x%08X - ChromeSSLHook::ReadAppData - Unmapped socket", ssl);
+      ATLTRACE("0x%08X - ChromeSSLHook::ReadAppData - Unmapped socket", ssl);
     }
   }
   return ret;
@@ -321,7 +321,7 @@ int ChromeSSLHook::WriteAppData(void *ssl, const void *buf, int len) {
         sockets_.DataOut(s, chunk, true);
       }
     } else {
-      AtlTrace("0x%08X - ChromeSSLHook::WriteAppData - Unmapped socket", ssl);
+      ATLTRACE("0x%08X - ChromeSSLHook::WriteAppData - Unmapped socket", ssl);
       sockets_.SetSslFd(ssl);
     }
     ret = WriteAppData_(ssl, buf, len);

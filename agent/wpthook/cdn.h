@@ -201,7 +201,7 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"X-Iinfo", "", "Incapsula"},
   {"X-Ar-Debug", "", "Aryaka"},
   {"server", "gocache", "GoCache"},
-  {"server", "hiberniacdn", "HiberniaCDN"}
+  {"server", "hiberniacdn", "HiberniaCDN"},
   {"server", "UnicornCDN","UnicornCDN"}
 };
 
