@@ -778,6 +778,9 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Other Processes Private Working Set
     buff.Format("%u\t", _test_state._working_set_child_procs);
     result += buff;
+    // DOM Interactive
+    buff.Format("%d\t", _test_state._dom_interactive);
+    result += buff;
 
     result += "\r\n";
 

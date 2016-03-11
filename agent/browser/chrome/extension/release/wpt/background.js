@@ -13940,6 +13940,7 @@ var NAV_TIMING_SCRIPT = "\
       }\
     } catch(e){}\
   };\
+  addTime('domInteractive');\
   addTime('domContentLoadedEventStart');\
   addTime('domContentLoadedEventEnd');\
   addTime('loadEventStart');\
@@ -14109,7 +14110,6 @@ wpt.chromeDebugger.StartTrace = function() {
       traceCategories = g_instance.traceCategories;
     else
       traceCategories = '-*';
-    traceCategories = traceCategories + ',blink.user_timing';
     if (g_instance.timeline)
       traceCategories = traceCategories + ',toplevel,blink.console,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame';
     if (g_instance.timelineStackDepth > 0)
@@ -14635,6 +14635,7 @@ wpt.chromeDebugger.collectNavigationTiming = function(callback) {
             result['domContentLoadedEventStart'] +
         '&domContentLoadedEventEnd=' +
             result['domContentLoadedEventEnd'] +
+        '&domInteractive=' + result['domInteractive'] +
         '&loadEventStart=' + result['loadEventStart'] +
         '&loadEventEnd=' + result['loadEventEnd'] +
         '&msFirstPaint=' + result['msFirstPaint']);

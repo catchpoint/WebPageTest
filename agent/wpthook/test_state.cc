@@ -90,6 +90,7 @@ void TestState::Init() {
 void TestState::Reset(bool cascade) {
   EnterCriticalSection(&_data_cs);
   _step_start.QuadPart = 0;
+  _dom_interactive = 0;
   _dom_content_loaded_event_start = 0;
   _dom_content_loaded_event_end = 0;
   _load_event_start = 0;
@@ -120,6 +121,7 @@ void TestState::Reset(bool cascade) {
     _video_capture_count = 0;
     _start.QuadPart = 0;
     _on_load.QuadPart = 0;
+    _dom_interactive = 0;
     _dom_content_loaded_event_start = 0;
     _dom_content_loaded_event_end = 0;
     _load_event_start = 0;
@@ -222,6 +224,7 @@ void TestState::OnNavigate() {
     WptTrace(loglevel::kFunction,
              _T("[wpthook] TestState::OnNavigate()\n"));
     UpdateBrowserWindow();
+    _dom_interactive = 0;
     _dom_content_loaded_event_start = 0;
     _dom_content_loaded_event_end = 0;
     _load_event_start = 0;
@@ -269,6 +272,13 @@ void TestState::RecordTime(CString name, DWORD time, LARGE_INTEGER *out_time) {
              _T("[wpthook] - Record %s from hook: %dms (instead of %dms)\n"),
              name, elapsed_time, time);
   }
+}
+
+/*-----------------------------------------------------------------------------
+  Save web timings for DOMInteractive event.
+-----------------------------------------------------------------------------*/
+void TestState::SetDomInteractiveEvent(DWORD domInteractive) {
+  _dom_interactive = domInteractive;
 }
 
 /*-----------------------------------------------------------------------------

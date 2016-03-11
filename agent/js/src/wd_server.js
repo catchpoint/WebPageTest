@@ -1313,6 +1313,7 @@ WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
         ' }' +
         ' } catch(e) {}' +
         '};' +
+        'addTime("domInteractive");' +
         'addTime("domContentLoadedEventStart");' +
         'addTime("domContentLoadedEventEnd");' +
         'addTime("loadEventStart");' +

@@ -47,6 +47,7 @@ static const TCHAR * DOM_SCRIPT_FUNCTIONS =
     _T("    };")
     _T("    timingParams = addTime('domContentLoadedEventStart') + '&' +")
     _T("        addTime('domContentLoadedEventEnd') + '&' +")
+    _T("        addTime('domInteractive') + '&' +")
     _T("        addTime('msFirstPaint') + '&' +")
     _T("        addTime('loadEventStart') + '&' +")
     _T("        addTime('loadEventEnd');")

@@ -210,6 +210,11 @@ void TestServer::MongooseCallback(enum mg_event event,
       if (first_paint < 0 || first_paint > 3600000)
         first_paint = 0;
       hook_.SetFirstPaint(first_paint);
+      DWORD dom_interactive = 0;
+      GetDwordParam(request_info->query_string, "domInteractive", dom_interactive);
+      if (dom_interactive < 0 || dom_interactive > 3600000)
+        dom_interactive = 0;
+      hook_.SetDomInteractiveEvent(dom_interactive);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/navigate") == 0) {
       hook_.OnNavigate();

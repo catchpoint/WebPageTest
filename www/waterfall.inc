@@ -103,6 +103,7 @@ function GetPageEvents($page_data) {
                             $page_data['loadEventEnd']),
         'nav_dom' => array($page_data['domContentLoadedEventStart'],
                            $page_data['domContentLoadedEventEnd']),
+        'nav_dom_interactive' => $page_data['domInteractive'],
         'load' => $page_data['docTime']
         );
 }
@@ -460,6 +461,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                 'nav_load' => GetColor($im, 192, 192, 255),
                 'nav_dom' => GetColor($im, 216, 136, 223),
                 'nav_first_paint' => GetColor($im, 143, 188, 131),
+                'nav_dom_interactive' => GetColor($im, 255, 198, 26),
                 'aft' => GetColor($im, 255, 0, 0),
                 'user' => GetColor($im, 105, 0, 158)
                 );

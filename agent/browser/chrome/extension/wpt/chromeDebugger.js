@@ -53,6 +53,7 @@ var NAV_TIMING_SCRIPT = "\
       }\
     } catch(e){}\
   };\
+  addTime('domInteractive');\
   addTime('domContentLoadedEventStart');\
   addTime('domContentLoadedEventEnd');\
   addTime('loadEventStart');\
@@ -747,6 +748,7 @@ wpt.chromeDebugger.collectNavigationTiming = function(callback) {
             result['domContentLoadedEventStart'] +
         '&domContentLoadedEventEnd=' +
             result['domContentLoadedEventEnd'] +
+        '&domInteractive=' + result['domInteractive'] +
         '&loadEventStart=' + result['loadEventStart'] +
         '&loadEventEnd=' + result['loadEventEnd'] +
         '&msFirstPaint=' + result['msFirstPaint']);
