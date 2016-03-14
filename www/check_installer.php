@@ -25,6 +25,7 @@ if ($ok) {
   $data = $has_apc ? apc_fetch("installer-$installer") : null;
   if (!$data && is_file($file)) {
     $data = file_get_contents($file);
+    ModifyInstaller($data);
     if ($has_apc)
       apc_store("installer-$installer", $data, 600);
   }
@@ -130,5 +131,19 @@ function CheckIp($installer) {
     }
   }
   return $ok;
+}
+
+/**
+* Override installer options from settings
+* 
+* @param mixed $data
+*/
+function ModifyInstaller(&$data) {
+  $always_update = GetSetting('installer-always-update');
+  if ($always_update)
+    $data = str_replace('update=0', 'update=1', $data);
+  $base_url = GetSetting('installer-base-url');
+  if ($base_url && strlen($base_url))
+    $data = str_replace('http://cdn.webpagetest.org/', $base_url, $data);
 }
 ?>
