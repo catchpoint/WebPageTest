@@ -1,6 +1,6 @@
 browser=Chrome
-url=http://cdn.webpagetest.org/installers/browsers/chrome_49.exe
+url=http://cdn.webpagetest.org/installers/browsers/chrome_48b.exe
 md5=9DAB84B33ECE2C656C36C73306729A51
-version=49
-command=chrome_49.exe /silent /install
+version=48
+command=chrome_48b.exe /silent /install
 update=0
