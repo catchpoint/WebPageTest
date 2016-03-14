@@ -331,6 +331,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
           $cpu_slice_colors['ResourceReceivedData'] = $cpu_slice_colors['ParseHTML'];
           $cpu_slice_colors['ResourceSendRequest'] = $cpu_slice_colors['ParseHTML'];
           $cpu_slice_colors['ResourceReceivedResponse'] = $cpu_slice_colors['ParseHTML'];
+          $cpu_slice_colors['ResourceReceiveResponse'] = $cpu_slice_colors['ParseHTML'];
           $cpu_slice_colors['ResourceFinish'] = $cpu_slice_colors['ParseHTML'];
           $cpu_slice_colors['CommitLoad'] = $cpu_slice_colors['ParseHTML'];
 
@@ -339,12 +340,14 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
           $cpu_slice_colors['ParseAuthorStyleSheet'] = $cpu_slice_colors['Layout'];
           $cpu_slice_colors['ScheduleStyleRecalculation'] = $cpu_slice_colors['Layout'];
           $cpu_slice_colors['InvalidateLayout'] = $cpu_slice_colors['Layout'];
+          $cpu_slice_colors['UpdateLayoutTree'] = $cpu_slice_colors['Layout'];
 
           $cpu_slice_colors['Paint'] = GetColor($im, 113, 179, 99);
           $cpu_slice_colors['PaintImage'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['PaintSetup'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['CompositeLayers'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['DecodeImage'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['Decode Image'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['ImageDecodeTask'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['Rasterize'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['GPUTask'] = $cpu_slice_colors['Paint'];
@@ -364,6 +367,10 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
           $cpu_slice_colors['TimerRemove'] = $cpu_slice_colors['EvaluateScript'];
           $cpu_slice_colors['XHRLoad'] = $cpu_slice_colors['EvaluateScript'];
           $cpu_slice_colors['XHRReadyStateChange'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['v8.compile'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['MinorGC'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['MajorGC'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['FireAnimationFrame'] = $cpu_slice_colors['EvaluateScript'];
 
           $cpu_slice_colors['other'] = GetColor($im, 184, 184, 184);
           $cpu_slice_colors['Program'] = $cpu_slice_colors['other'];
@@ -572,9 +579,9 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                         // draw the line for this data point in the order the colors are defined
                         $y = $cpu_bottom;
                         foreach ($cpu_slice_colors as $type => $color) {
-                          if (array_key_exists($type, $cpu_times)) {
+                          if (isset($cpu_times[$type])) {
                             $pixels = $cpu_height * $cpu_times[$type];
-                            $y2 = max($cpu_bottom - $pixels, $cpu_top);
+                            $y2 = max($y - $pixels, $cpu_top);
                             imageline($im, $x, $y, $x, $y2, $color);
                             $y = $y2;
                           }
@@ -799,9 +806,10 @@ function AverageCpuSlices($ms_start, $bins, &$slices, &$known_types) {
         foreach ($slices[$ms] as $type => $value) {
           if ($value > 0) {
             $valid = true;
-            if (!array_key_exists($type, $known_types))
+            if (!isset($known_types[$type])) {
               $type = 'other';
-            if (!array_key_exists($type, $totals))
+            }
+            if (!isset($totals[$type]))
               $totals[$type] = 0;
             $totals[$type] += $value;
           }
