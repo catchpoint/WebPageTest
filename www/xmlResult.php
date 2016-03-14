@@ -599,6 +599,9 @@ function StatusMessages($id, $testPath, $run, $cached) {
 * @param mixed $cached
 */
 function ConsoleLog($id, $testPath, $run, $cached) {
+    if(isset($_GET['console']) && $_GET['console'] == 0) {
+        return;
+    }
     $consoleLog = DevToolsGetConsoleLog($testPath, $run, $cached);
     if (isset($consoleLog) && is_array($consoleLog) && count($consoleLog)) {
         echo "<consoleLog>\n";

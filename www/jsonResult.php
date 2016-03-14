@@ -286,9 +286,22 @@ function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) 
         	$ret['requests'] = $requests;
         }
         
-        $console_log = DevToolsGetConsoleLog($testPath, $run, $cached);
-        if (isset($console_log))
-            $ret['consoleLog'] = $console_log;
+        // Check to see if we're adding the console log
+        $addConsole = 1;
+        if(isset($_GET['console'])){
+            if($_GET['console'] == 0){
+               $addConsole = 0;
+            }
+        }
+
+        // add requests
+        if($addConsole == 1) {
+            $console_log = DevToolsGetConsoleLog($testPath, $run, $cached);
+            if (isset($console_log)) {
+                $ret['consoleLog'] = $console_log;
+            }
+        }
+
         if (gz_is_file("$testPath/$run{$cachedText}_status.txt")) {
             $ret['status'] = array();
             $lines = gz_file("$testPath/$run{$cachedText}_status.txt");
