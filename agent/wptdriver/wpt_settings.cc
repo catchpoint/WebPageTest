@@ -56,6 +56,9 @@ static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
   _T("disable-component-update"),
   _T("disable-background-downloads"),
   _T("ignore-certificate-errors"),
+  _T("test-type"),
+  _T("allow-running-insecure-content"),
+  _T("silent-debugger-extension-api"),
   _T("host-rules=\"MAP cache.pack.google.com 127.0.0.1\"")
 };
 static const TCHAR * CHROME_IGNORE_CERT_ERRORS =
