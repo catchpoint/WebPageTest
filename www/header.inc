@@ -245,6 +245,48 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
                 echo '<b>Scripted test</b><br>';
             if( strlen($blockString) )
                 echo "Blocked: <b>$blockString</b><br>";
+            if (isset($test['testinfo']['benchmark']) && strlen($test['testinfo']['benchmark'])) {
+                echo 'Benchmark: ';
+                $benchmark = $test['testinfo']['benchmark'];
+                if (isset($test['testinfo']['epoch'])) {
+                    $epochStr = $test['testinfo']['epoch'];
+                    $epoch = (int)$epochStr + ($tz_offset * 60);
+                    $epochTime = strftime('%x %X', $epoch);
+                    $benchmarkStr = "$benchmark - <span class=\"jsdate\" date=\"$epochStr\">$epochTime</span>";
+                } else {
+                    $benchmarkStr = $benchmark;
+                }
+                if ($settings['nolinks']) {
+                    echo "<span class=\"medium colored\">$benchmarkStr</span>";
+                } else {
+                    if (isset($test['testinfo']['epoch'])) {
+                        $benchmarkUrl = "/benchmarks/viewtest.php?benchmark=$benchmark&metric=docTime&time=$epoch";
+                    } else {
+                        $benchmarkUrl = "/benchmarks/view.php?benchmark=$benchmark&aggregate=median";
+                    }
+                    echo "<a class=\"url\" rel=\"nofollow\" title=\"$benchmarkUrl\" href=\"$benchmarkUrl\">$benchmarkStr</a>";
+                }
+                echo '<br>';
+            }
+            if (isset($test['testinfo']['status']) && strlen($test['testinfo']['status']))
+            {
+                if (isset($test['testinfo']['status_key']) && strlen($test['testinfo']['status_key']))
+                    echo $test['testinfo']['status_key'] . ': ';
+                else
+                    echo 'Status: ';
+                $statusText = htmlspecialchars($test['testinfo']['status']);
+                if (isset($test['testinfo']['status_url']) && strlen($test['testinfo']['status_url'])) {
+                    $logUrl = $test['testinfo']['status_url'];
+                    if ($settings['nolinks']) {
+                        echo "<span class=\"medium colored\">$statusText</span>";
+                    } else {
+                        echo "<a class=\"url\" rel=\"nofollow\" title=\"$logUrl\" href=\"$logUrl\">$statusText</a>";
+                    }
+                } else {
+                    echo $statusText;
+                }
+                echo '<br>';
+            }
         echo '</div>';
         echo '</div>';
         
