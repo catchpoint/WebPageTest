@@ -322,12 +322,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageDataArr
                             }
                             $pageData['bytesOut'] += $request['bytesOut'];
                             $pageData['bytesIn'] += $request['bytesIn'];
-                            $pageData['requests']++;
-                            if ($request['load_start'] < $pageData['docTime']) {
-                                $pageData['bytesOutDoc'] += $request['bytesOut'];
-                                $pageData['bytesInDoc'] += $request['bytesIn'];
-                                $pageData['requestsDoc']++;
-                            }
+
                             if ($request['responseCode'] == 200)
                                 $pageData['responses_200']++;
                             elseif ($request['responseCode'] == 404) {
@@ -345,6 +340,28 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageDataArr
                 }
               }
             }
+            foreach($requests as $eventName => $eventRequests) {
+                $requestDocCounter = 0;
+                $bytesOutDocCounter = 0;
+                $bytesInDocCounter = 0;
+                $pageData = $pageDataArray[$eventName];
+
+                foreach($eventRequests as $request) {
+                    if ($request['load_start'] < $pageData['docTime']) {
+                        $bytesOutDocCounter += $request['bytesOut'];
+                        $bytesInDocCounter += $request['bytesIn'];
+                        $requestDocCounter++;
+                    }
+                }
+
+                $pageData['requests'] = count($eventRequests);
+                $pageData['requestsDoc'] = $requestDocCounter;
+                $pageData['bytesOutDoc'] = $bytesOutDocCounter;
+                $pageData['bytesInDoc'] = $bytesInDocCounter;
+
+                $pageDataArray[$eventName] = $pageData;
+            }
+
               foreach ($pageDataArray as $eventName => $pageData){
                 $pageData['connections'] = count($connections);
                 $pageDataArray[$eventName] = $pageData;
