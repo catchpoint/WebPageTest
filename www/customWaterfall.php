@@ -2,6 +2,7 @@
 include 'common.inc';
 $page_keywords = array('Custom','Waterfall','Webpagetest','Website Speed Test');
 $page_description = "Website speed test custom waterfall$testLabel";
+$eventName = $_REQUEST['eventName'];
 ?>
 <!DOCTYPE html>
 <html>
@@ -46,7 +47,9 @@ $page_description = "Website speed test custom waterfall$testLabel";
 
         <script type="text/javascript">
             $(document).ready(function(){ 
-                
+
+                UpdateWaterfall();
+
                 // handle when the selection changes for the location
                 $("input[name=type]").click(function(){
                     // disable the requests for connection view
@@ -101,6 +104,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 echo "var testRun='$run';\n";
                 echo "var cached='$cached';\n";
                 echo "var extension='$extension';\n";
+                echo "var eventName='$eventName';\n"
                 ?>
                 
                 var src = '/waterfall.' + extension + '?test=' + testId + 
@@ -115,6 +119,9 @@ $page_description = "Website speed test custom waterfall$testLabel";
                           '&dots=' + showDots + 
                           '&labels=' + showLabels + 
                           '&requests=' + requests;
+                          <?php if(array_key_exists('eventName',$_REQUEST)){ ?>
+                          src = src + '&eventName=' + eventName;
+                          <?php }?>
                 $('#waterfallImage').attr("src", src);
             };
         </script>
