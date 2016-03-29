@@ -79,7 +79,6 @@ WptTest::WptTest(void):
     CreateDirectory(_screenshots_dir, NULL);
 
     _progress_dir.Format(_T("%s\\progress\\"), _directory);
-    //_progress_dir = _T("C:\\Users\\Public\\webpagetest\\Debug\\screenshots\\");
     CreateDirectory(_progress_dir, NULL);
   }
   InitializeCriticalSection(&cs_);
