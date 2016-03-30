@@ -640,11 +640,12 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData, &$cert_resul
                             $allRequests[$id]['fromNet'] = true;
                             if (!array_key_exists('firstByteTime', $allRequests[$id]))
                                 $allRequests[$id]['firstByteTime'] = $event['timestamp'];
-                            if (array_key_exists('errorText', $event))
+                            if (array_key_exists('errorText', $event)) {
                                 $allRequests[$id]['error'] = $event['errorText'];
+                                $allRequests[$id]['errorCode'] = GetErrorCode($event['errorText']);
+                            }
                             if (array_key_exists('error', $event))
                                 $allRequests[$id]['errorCode'] = $event['error'];
-
                         }
                     }
                 }
@@ -1384,5 +1385,23 @@ function GetDevToolsCPUTime($testPath, $run, $cached, $endTime = 0)
     }
     return $times;
 }
+
+function GetErrorCode($errorText) {
+
+    switch ($errorText) {
+    case 'net::ERR_NAME_NOT_RESOLVED': return 12007;
+    case 'net::ERR_CONNECTION_ABORTED': return 12030;
+    case 'net::ERR_ADDRESS_UNREACHABLE': return 12029;
+    case 'net::ERR_CONNECTION_REFUSED': return 12029;
+    case 'net::ERR_CONNECTION_TIMED_OUT': return 12029;
+    case 'net::ERR_CONNECTION_RESET': return 12031;
+    case 'net::ERR_TOO_MANY_REDIRECTS': return 13000;
+    }
+
+    if (strncmp($errorText, 'net::ERR_', 9)) {
+        return 12029;
+    }
+    return 0;
+};
 
 ?>
