@@ -146,6 +146,8 @@ public:
   CString _id;
   CString _file_base;
   CString _directory;
+  CString _screenshots_dir;
+  CString _progress_dir;
   CString _url;
   int     _runs;
   int     _discard;

@@ -330,10 +330,70 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
       ret = false;
   }
 
+  // process images
+  RunVisuallyComplete(test);
+  RunImageHash(test);
+
   WptTrace(loglevel::kFunction, 
             _T("[wptdriver] WptDriverCore::BrowserTest done\n"));
 
   return ret;
+}
+
+bool WptDriverCore::RunImageHash(WptTestDriver& test) {
+  STARTUPINFO si;
+  PROCESS_INFORMATION it_info;
+
+  ZeroMemory(&si, sizeof(STARTUPINFO));
+
+  si.cb = sizeof(STARTUPINFO);
+  si.dwFlags = STARTF_USESHOWWINDOW;
+  _settings._imagetools_command.Replace(_T("%RESULTDIR%"), test._directory);
+
+  CString cmd;
+  cmd.Format(_T("%s imagehash -s %s -d %s -j -q %0.2f"), _settings._imagetools_command, test._screenshots_dir, test._directory, (float)test._image_quality / 100.0f);
+  _status.Set(_T("Launching: %s"), cmd);
+  if (!CreateProcess(NULL, cmd.GetBuffer(), NULL, NULL, TRUE, 0, NULL,
+    NULL, &si, &it_info)) {
+    CString err_msg;
+    err_msg.Format(_T("Failed to launch ImageTools to process images. Error code: %u"), GetLastError());
+    _status.Set(err_msg);
+    test._run_error = err_msg;
+    return false;
+  } else {
+    // wait for image tool to complete
+    WaitForSingleObject(it_info.hProcess, 30000);
+  }
+
+  return true;
+}
+
+bool WptDriverCore::RunVisuallyComplete(WptTestDriver& test) {
+  STARTUPINFO si;
+  PROCESS_INFORMATION it_info;
+
+  ZeroMemory(&si, sizeof(STARTUPINFO));
+
+  si.cb = sizeof(STARTUPINFO);
+  si.dwFlags = STARTF_USESHOWWINDOW;
+  _settings._imagetools_command.Replace(_T("%RESULTDIR%"), test._directory);
+
+  CString cmd;
+  cmd.Format(_T("%s visuallycomplete -s %s -d %s"), _settings._imagetools_command, test._progress_dir, test._screenshots_dir);
+  _status.Set(_T("Launching: %s"), cmd);
+  if (!CreateProcess(NULL, cmd.GetBuffer(), NULL, NULL, TRUE, 0, NULL,
+    NULL, &si, &it_info)) {
+    CString err_msg;
+    err_msg.Format(_T("Failed to launch ImageTools to compute visually complete. Error code: %u"), GetLastError());
+    _status.Set(err_msg);
+    test._run_error = err_msg;
+    return false;
+  } else {
+    // wait for image tool to complete
+    WaitForSingleObject(it_info.hProcess, 30000);
+  }
+
+  return true;
 }
 
 typedef HRESULT (STDAPICALLTYPE* DLLREG)(void);

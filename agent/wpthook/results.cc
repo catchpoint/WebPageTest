@@ -42,6 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <zlib.h>
 #include <zip.h>
 #include <regex>
+#include <Wincrypt.h>
 
 static const TCHAR * PAGE_DATA_FILE = _T("_IEWPG.txt");
 static const TCHAR * REQUEST_DATA_FILE = _T("_IEWTR.txt");
@@ -50,6 +51,8 @@ static const TCHAR * PROGRESS_DATA_FILE = _T("_progress.csv");
 static const TCHAR * STATUS_MESSAGE_DATA_FILE = _T("_status.txt");
 static const TCHAR * IMAGE_DOC_COMPLETE = _T("_screen_doc.jpg");
 static const TCHAR * IMAGE_FULLY_LOADED = _T("_screen.jpg");
+static const TCHAR * IMAGE_RESULT = _T("_screen.jpg");
+static const TCHAR * IMAGE_RESULT_PNG = _T("result.png");
 static const TCHAR * IMAGE_FULLY_LOADED_PNG = _T("_screen.png");
 static const TCHAR * IMAGE_START_RENDER = _T("_screen_render.jpg");
 static const TCHAR * IMAGE_RESPONSIVE_CHECK = _T("_screen_responsive.jpg");
@@ -61,6 +64,7 @@ static const TCHAR * TRACE_NETLOG_FILE = _T("_trace_netlog.json");
 static const TCHAR * CUSTOM_RULES_DATA_FILE = _T("_custom_rules.json");
 static const DWORD RIGHT_MARGIN = 25;
 static const DWORD BOTTOM_MARGIN = 25;
+
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -224,19 +228,13 @@ void Results::SaveStatusMessages(void) {
 -----------------------------------------------------------------------------*/
 void Results::SaveImages(void) {
   // save the event-based images
-  CxImage image;
-  if (_screen_capture.GetImage(CapturedImage::START_RENDER, image))
-    SaveImage(image, _file_base + IMAGE_START_RENDER, _test._image_quality, false, _test._full_size_video);
-  if (_screen_capture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image))
-    SaveImage(image, _file_base + IMAGE_DOC_COMPLETE, _test._image_quality, false, _test._full_size_video);
-  if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, image)) {
-    if (_test._png_screen_shot)
-      image.Save(_file_base + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
-    SaveImage(image, _file_base + IMAGE_FULLY_LOADED, _test._image_quality, false, _test._full_size_video);
-  }
-  if (_screen_capture.GetImage(CapturedImage::RESPONSIVE_CHECK, image)) {
-    SaveImage(image, _file_base + IMAGE_RESPONSIVE_CHECK, _test._image_quality,
-              true, _test._full_size_video);
+  CxImage image; 
+
+  if (_screen_capture.GetImage(CapturedImage::RESULT, image)) {
+    // for lagacy WPT server UI
+    SaveImage(image, _file_base + IMAGE_RESULT, _test._image_quality, false, _test._full_size_video);
+
+    SaveImage(image, _test._screenshots_dir + IMAGE_RESULT_PNG, _test._image_quality, false, _test._full_size_video);
   }
 
   SaveVideo();
@@ -244,7 +242,7 @@ void Results::SaveImages(void) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Results::SaveVideo(void) {
+void Results::SaveVideo() {
   _screen_capture.Lock();
   CStringA histograms = "[";
   DWORD histogram_count = 0;
@@ -279,13 +277,11 @@ void Results::SaveVideo(void) {
             if (_test._video) {
               _visually_complete.QuadPart = image._capture_time.QuadPart;
               if (!_test.IsServerMultistepCapable()) {
-                file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base,
-                  image_time);
+                file_name.Format(_T("progress_%04d.png"), image_time);
               } else {
-                file_name.Format(_T("%s_progress_%d_%04d.jpg"), (LPCTSTR)_file_base,
-                  reported_step_, image_time);
+                file_name.Format(_T("progress_%d_%04d.png"), reported_step_, image_time);
               }
-              SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_video);
+              SaveImage(*img, _test._progress_dir + file_name, _test._image_quality, false, _test._full_size_video);
             }
           }
         } else {
@@ -297,13 +293,14 @@ void Results::SaveVideo(void) {
           histogram = GetHistogramJSON(*img);
           if (_test._video) {
             if (!_test.IsServerMultistepCapable()) {
-              file_name.Format(_T("%s_progress_0000.jpg"), (LPCTSTR)_file_base);
+              file_name.Format(_T("progress_0000.png"));
             } else {
-              file_name.Format(_T("%s_progress_%d_0000.jpg"), (LPCTSTR)_file_base, reported_step_);
+              file_name.Format(_T("progress_%d_0000.png"), reported_step_);
             }
-            SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_video);
+            SaveImage(*img, _test._progress_dir + file_name, _test._image_quality, false, _test._full_size_video);
           }
         }
+
 
         if (!histogram.IsEmpty()) {
           if (histogram_count)
@@ -321,8 +318,7 @@ void Results::SaveVideo(void) {
               file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_file_base,
                 image_time);
             } else {
-              file_name.Format(_T("%s_progress_%d_%04d.hist"), (LPCTSTR)_file_base,
-                reported_step_, image_time);
+              file_name.Format(_T("%s_progress_%d_%04d.hist"), (LPCTSTR)_file_base, reported_step_, image_time);
             }
             SaveHistogram(histogram, file_name);
           }
@@ -339,7 +335,7 @@ void Results::SaveVideo(void) {
 
   if (last_image)
     delete last_image;
-
+  
   if (histogram_count > 1) {
     histograms += "]";
     TCHAR path[MAX_PATH];
@@ -364,29 +360,20 @@ void Results::SaveVideo(void) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2) {
-  bool different = false;
-  if (img1 && img2 && img1->GetWidth() == img2->GetWidth() && 
-      img1->GetHeight() == img2->GetHeight() && 
-      img1->GetBpp() == img2->GetBpp()) {
-      if (img1->GetBpp() >= 15) {
-        DWORD pixel_bytes = 3;
-        if (img1->GetBpp() == 32)
-          pixel_bytes = 4;
-        DWORD width = max(img1->GetWidth() - RIGHT_MARGIN, 0);
-        DWORD height = img1->GetHeight();
-        DWORD row_bytes = img1->GetEffWidth();
-        DWORD row_length = width * (DWORD)(row_bytes / width);
-        for (DWORD row = BOTTOM_MARGIN; row < height && !different; row++) {
-          BYTE * r1 = img1->GetBits(row);
-          BYTE * r2 = img2->GetBits(row);
-          if (r1 && r2 && memcmp(r1, r2, row_length))
-            different = true;
-        }
-      }
+  if (img1 && img2 && img1->GetWidth() == img2->GetWidth() && img1->GetHeight() == img2->GetHeight()) {
+    DWORD width = max(img1->GetWidth() - RIGHT_MARGIN, 0);
+    DWORD height = img1->GetHeight();
+    DWORD row_bytes = img1->GetEffWidth();
+    DWORD row_length = width * (DWORD)(row_bytes / width);
+    for (DWORD row = BOTTOM_MARGIN; row < height; row++) {
+      BYTE * r1 = img1->GetBits(row);
+      BYTE * r2 = img2->GetBits(row);
+      if (r1 && r2 && memcmp(r1, r2, row_length))
+        return true;
+    }
   }
-  else
-    different = true;
-  return different;
+ 
+  return false;
 }
 
 /*-----------------------------------------------------------------------------
@@ -394,15 +381,23 @@ bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2) {
 void Results::SaveImage(CxImage& image, CString file, BYTE quality,
                         bool force_small, bool _full_size_video) {
   if (image.IsValid()) {
+    WptTrace(loglevel::kFunction, _T("[wpthook] - Save image %s"), file);
+
     CxImage img(image);
     if (!_full_size_video)
       if (force_small || (img.GetWidth() > 600 && img.GetHeight() > 600))
         img.Resample2(img.GetWidth() / 2, img.GetHeight() / 2);
 
-    img.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
-    img.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
-    img.SetJpegQuality((BYTE)quality);
-    img.Save(file, CXIMAGE_FORMAT_JPG);
+    if (file.Right(4) == _T(".png")) {
+      img.SetCodecOption(2, CXIMAGE_FORMAT_PNG);  // no compression
+      img.Save(file, CXIMAGE_FORMAT_PNG);
+    } else if (file.Right(4) == _T(".jpg")) {
+      img.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
+      img.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
+      img.SetJpegQuality((BYTE)quality);
+      img.Save(file, CXIMAGE_FORMAT_JPG);
+    }
+
   }
 }
 

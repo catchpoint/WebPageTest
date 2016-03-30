@@ -12,6 +12,8 @@ public:
   void Terminate();
 
 private:
+  bool RunImageHash();
+  bool RunVisuallyComplete();
   bool SpawnWebDriverServer();
   bool SpawnWebDriverClient();
   void TerminateWebDriverServer();

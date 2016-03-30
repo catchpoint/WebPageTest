@@ -65,8 +65,8 @@ WptTest::WptTest(void):
 
   // figure out what our working diriectory is
   TCHAR path[MAX_PATH];
-  if( SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
-                                NULL, SHGFP_TYPE_CURRENT, path)) ) {
+  if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
+    NULL, SHGFP_TYPE_CURRENT, path))) {
     PathAppend(path, _T("webpagetest"));
     CreateDirectory(path, NULL);
     _directory = path;
@@ -74,6 +74,12 @@ WptTest::WptTest(void):
     lstrcat(path, _T("_data"));
     CreateDirectory(path, NULL);
     _test_file = CString(path) + _T("\\test.dat");
+
+    _screenshots_dir.Format(_T("%s\\screenshots\\"), _directory);
+    CreateDirectory(_screenshots_dir, NULL);
+
+    _progress_dir.Format(_T("%s\\progress\\"), _directory);
+    CreateDirectory(_progress_dir, NULL);
   }
   InitializeCriticalSection(&cs_);
   _tcp_port_override.InitHashTable(257);

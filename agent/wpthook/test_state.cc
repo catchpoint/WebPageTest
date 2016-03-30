@@ -398,7 +398,7 @@ void TestState::Done(bool force) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - **** TestState::Done()\n"));
   if (_active) {
     GetCPUTime(_end_cpu_time, _end_total_time);
-    _screen_capture.Capture(_frame_window, CapturedImage::FULLY_LOADED);
+    
 
     if (force || !_test._combine_steps) {
       // kill the timer that was collecting periodic data (cpu, video, etc)
@@ -429,6 +429,13 @@ BOOL CALLBACK MakeTopmost(HWND hwnd, LPARAM lParam) {
     }
   }
   return TRUE;
+}
+
+/*-----------------------------------------------------------------------------
+Capture session result image
+-----------------------------------------------------------------------------*/
+void TestState::GrabResultScreenshot() {
+  _screen_capture.Capture(_frame_window, CapturedImage::RESULT);
 }
 
 /*-----------------------------------------------------------------------------

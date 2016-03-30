@@ -100,6 +100,7 @@ public:
   void Done(bool force = false);
   bool IsDone();
   void GrabVideoFrame(bool force = false);
+  void GrabResultScreenshot();
   void CollectData();
   void Reset(bool cascade = true);
   void Init();

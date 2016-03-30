@@ -54,7 +54,26 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
         $frames = array('version' => $current_version);
         $frames['frames'] = array();
         $dirty = true;
-        if (is_dir($video_directory)) {
+
+        if (gz_is_file($histograms_file)) {
+          $raw = json_decode(gz_file_get_contents($histograms_file), true);
+          $histograms = array();
+          foreach ($raw as $h) {
+            if (isset($h['time']) && isset($h['histogram']))
+              $histograms[$h['time']] = $h['histogram'];
+          }
+          ksort($histograms, SORT_NUMERIC);
+          $final_histogram = end($histograms);
+          $start_histogram = reset($histograms);
+          foreach ($histograms as $time => $histogram) {
+            $frames['frames'][$time] = array();
+            $progress = CalculateFrameProgress($histogram, $start_histogram, $final_histogram, 5);
+            $frames['frames'][$time]['progress'] = $progress;
+            if ($progress == 100 && !isset($frames['complete']))
+              $frames['complete'] = $time;
+          }
+        }
+    } elseif (is_dir($video_directory)) {
           $files = scandir($video_directory);
           $last_file = null;
           $first_file = null;
@@ -116,24 +135,6 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
                       $frames['complete'] = $time;
               }
           }
-        } elseif (gz_is_file($histograms_file)) {
-          $raw = json_decode(gz_file_get_contents($histograms_file), true);
-          $histograms = array();
-          foreach ($raw as $h) {
-            if (isset($h['time']) && isset($h['histogram']))
-              $histograms[$h['time']] = $h['histogram'];
-          }
-          ksort($histograms, SORT_NUMERIC);
-          $final_histogram = end($histograms);
-          $start_histogram = reset($histograms);
-          foreach ($histograms as $time => $histogram) {
-            $frames['frames'][$time] = array();
-            $progress = CalculateFrameProgress($histogram, $start_histogram, $final_histogram, 5);
-            $frames['frames'][$time]['progress'] = $progress;
-            if ($progress == 100 && !isset($frames['complete']))
-              $frames['complete'] = $time;
-          }
-        }
     }
     if (isset($frames) && !array_key_exists('SpeedIndex', $frames)) {
         $dirty = true;
