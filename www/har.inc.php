@@ -423,14 +423,29 @@ function AddImages($id, $testPath, &$result) {
     $labelIndex = 0;
     $labelsCount = count($labels);
 
-    // scan all images in result dir
-    $files = scandir($testPath);
+    $pagesCount = count($result['log']['pages']);
+    $includeVC = true;
+
+    // Scan all images in result dir. Sort in descending order to make sure we
+    // start with the last visually complete image. This will allow detection of
+    // discrepency between HAR page count and WPT hook page count.
+    $files = scandir($testPath, 1);
     foreach ($files as $file) { 
         $matches = array();
 
         // visually complete
-        if (preg_match('/^(?P<step>\d+)_visuallycomplete_(?P<hash>[a-f0-9]{40})\.jpg$/', $file, $matches) == 1) {
+        if ($includeVC && preg_match('/^(?P<step>\d+)_visuallycomplete_(?P<hash>[a-f0-9]{40})\.jpg$/', $file, $matches) == 1) {
             $page = intval($matches['step']) - 1;
+            if ($page > $pagesCount - 1) {
+                // We have a discrepency between the number of pages in the HAR
+                // and the page number from the visually complete imagetools.
+                // This is probably a Chrome devtools vs WPT hook page
+                // detection problem. When this happens, ignore all visually complete
+                // images.
+                $includeVC = false;
+                continue;
+            }
+
             if (isset($result['log']['pages'][$page]['_pageScreenshots'])) {
                 $images = $result['log']['pages'][$page]['_pageScreenshots'];
             } else {
@@ -447,7 +462,7 @@ function AddImages($id, $testPath, &$result) {
         }
 
         // Custom image
-        if (preg_match('/^(?P<timestamp>\d+)_screenshot_(?P<hash>[a-f0-9]{40})\.jpg$/', $file, $matches) == 1) {
+        elseif (preg_match('/^(?P<timestamp>\d+)_screenshot_(?P<hash>[a-f0-9]{40})\.jpg$/', $file, $matches) == 1) {
             $time = intval($matches['timestamp']);
             $page = pageFromTimestamp($result, $time);
             if (isset($result['log']['pages'][$page]['_pageScreenshots'])) {
@@ -474,7 +489,7 @@ function AddImages($id, $testPath, &$result) {
         }
 
         // result image
-        if (preg_match('/^result_(?P<hash>[a-f0-9]{40})\.jpg$/', $file, $matches) == 1) {
+        elseif (preg_match('/^result_(?P<hash>[a-f0-9]{40})\.jpg$/', $file, $matches) == 1) {
             $image = array();
             $image['fileName'] = ltrim($testPath, '.') . '/' . basename($file);
             $image['hash'] = $matches['hash'];
