@@ -2726,4 +2726,22 @@ function WaitForSystemLoad($max_load, $timeout) {
     } while ($wait);
   }
 }
+
+/**
+* See if the system is running over the configured max load setting.
+* This allows for bailing out of some optional CPU-intensive operations.
+* 
+*/
+function OverSystemLoad() {
+  $over = false;
+  $max_load = GetSetting('render_max_load');
+  if ($max_load !== false && $max_load > 0 && function_exists('sys_getloadavg')) {
+    $load = sys_getloadavg();
+    if ($load[0] > $max_load) {
+      $over = true;
+    }
+  }
+
+  return $over;
+}
 ?>

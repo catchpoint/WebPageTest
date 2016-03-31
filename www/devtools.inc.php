@@ -1138,7 +1138,7 @@ function DevToolsGetCPUSlices($testPath, $run, $cached) {
     $slices = json_decode(gz_file_get_contents($cacheFile), true);
   elseif (gz_is_file("$cacheFile.$ver"))
     $slices = json_decode(gz_file_get_contents("$cacheFile.$ver"), true);
-  if (!isset($slices)) {
+  if (!isset($slices) && !OverSystemLoad()) {
     GetTraceTimeline($testPath, $run, $cached, $timeline);
     if (isset($timeline) && is_array($timeline) && count($timeline)) {
       // Do a first pass to get the start and end times as well as the number of threads
