@@ -68,6 +68,7 @@ void Requests::Reset() {
   while (!_requests.IsEmpty())
     delete _requests.RemoveHead();
   browser_request_data_.RemoveAll();
+  _initiators.RemoveAll();
   LeaveCriticalSection(&cs);
   _dns.ClaimAll();
   _sockets.ClaimAll();
@@ -270,7 +271,7 @@ LONGLONG Requests::GetRelativeTime(Request * request, double end_time, double ti
   information
 -----------------------------------------------------------------------------*/
 void Requests::ProcessBrowserRequest(CString request_data) {
-  CString browser, url, initiator, initiator_line, initiator_column, priority;
+  CString browser, url, priority;
   CStringA request_headers, response_headers;
   double  start_time = 0, end_time = 0, first_byte = 0, request_start = 0,
           dns_start = -1, dns_end = -1, connect_start = -1, connect_end = -1,
@@ -323,12 +324,6 @@ void Requests::ProcessBrowserRequest(CString request_data) {
               object_size = _ttol(value);
             else if (!key.CompareNoCase(_T("priority")))
               priority = value;
-            else if (!key.CompareNoCase(_T("initiatorUrl")))
-              initiator = value;
-            else if (!key.CompareNoCase(_T("initiatorLineNumber")))
-              initiator_line = value;
-            else if (!key.CompareNoCase(_T("initiatorColumnNumber")))
-              initiator_column = value;
             else if (!key.CompareNoCase(_T("status")))
               status = _ttol(value);
             else if (!key.CompareNoCase(_T("connectionId")))
@@ -363,14 +358,8 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     }
     line = request_data.Tokenize(_T("\n"), position);
   }
-  if (push && !initiator.GetLength()) {
-    initiator = _T("HTTP/2 Server Push");
-  }
-  if (url.GetLength() && (initiator.GetLength() || priority.GetLength())) {
+  if (url.GetLength() && priority.GetLength()) {
     BrowserRequestData data(url);
-    data.initiator_ = initiator;
-    data.initiator_line_ = initiator_line;
-    data.initiator_column_ = initiator_column;
     data.priority_ = priority;
     EnterCriticalSection(&cs);
     browser_request_data_.AddTail(data);
@@ -383,9 +372,6 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     _nextRequestId++;
     request->_from_browser = true;
     request->priority_ = priority;
-    request->initiator_ = initiator;
-    request->initiator_line_ = initiator_line;
-    request->initiator_column_ = initiator_column;
     request->_bytes_in = bytes_in;
     request->_object_size = object_size;
     if (local_port)
@@ -505,6 +491,55 @@ void Requests::ProcessBrowserRequest(CString request_data) {
       _requests.AddTail(request);
       LeaveCriticalSection(&cs);
     }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Requests::ProcessInitiatorData(CStringA initiator_data) {
+  InitiatorData initiator;
+  int position = 0;
+  CStringA line = initiator_data.Tokenize("\n", position);
+  while (position >= 0) {
+    line = line.Trim();
+    if (line.GetLength()) {
+      int separator = line.Find('=');
+      if (separator > 0) {
+        CStringA key = line.Left(separator).Trim();
+        CStringA value = line.Mid(separator + 1).Trim();
+        value.Replace('\t', ' ');
+        if (key.GetLength() && value.GetLength()) {
+          if (!key.CompareNoCase("requestUrl")) {
+            initiator.url_ = value;
+            initiator.valid_ = true;
+          } else if (!key.CompareNoCase("requestID")) {
+            initiator.request_id_ = atoi(value);
+          } else if (!key.CompareNoCase("initiatorUrl")) {
+            initiator.initiator_url_ = value;
+          } else if (!key.CompareNoCase("initiatorLineNumber")) {
+            initiator.initiator_line_ = value;
+          } else if (!key.CompareNoCase("initiatorColumnNumber")) {
+            initiator.initiator_column_ = value;
+          } else if (!key.CompareNoCase("initiatorFunctionName")) {
+            initiator.initiator_function_ = value;
+          } else if (!key.CompareNoCase("initiatorType")) {
+            initiator.initiator_type_ = value;
+          } else if (!key.CompareNoCase("initiatorDetail")) {
+            initiator.initiator_detail_ = value;
+          }
+        }
+      }
+    }
+    line = initiator_data.Tokenize("\n", position);
+  }
+  if (initiator.valid_) {
+    EnterCriticalSection(&cs);
+    InitiatorData i;
+    CString url = CA2T(initiator.url_);
+    // First occurence for a given URL wins (for now anyway)
+    if (!_initiators.Lookup(url, i))
+      _initiators.SetAt(url, initiator);
+    LeaveCriticalSection(&cs);
   }
 }
 

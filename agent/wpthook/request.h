@@ -221,6 +221,35 @@ public:
   int _count;
 };
 
+class InitiatorData {
+public:
+  InitiatorData():request_id_(0), valid_(false){}
+  InitiatorData(const InitiatorData& src){*this = src;}
+  ~InitiatorData(){}
+  const InitiatorData& operator=(const InitiatorData& src) {
+    valid_ = src.valid_;
+    url_ = src.url_;
+    request_id_ = src.request_id_;
+    initiator_url_ = src.initiator_url_;
+    initiator_line_ = src.initiator_line_;
+    initiator_column_ = src.initiator_column_;
+    initiator_function_ = src.initiator_function_;
+    initiator_type_ = src.initiator_type_;
+    initiator_detail_ = src.initiator_detail_;
+    return src;
+  }
+
+  bool valid_;
+  DWORD request_id_;
+  CStringA  url_;
+  CStringA  initiator_url_;
+  CStringA  initiator_line_;
+  CStringA  initiator_column_;
+  CStringA  initiator_function_;
+  CStringA  initiator_type_;
+  CStringA  initiator_detail_;
+};
+
 class Request {
 public:
   Request(TestState& test_state, DWORD socket_id, DWORD stream_id,
@@ -265,10 +294,9 @@ public:
   int   _local_port;
   bool  _is_ssl;
   bool  _is_spdy;
-  CString initiator_;
-  CString initiator_line_;
-  CString initiator_column_;
+  bool  _was_pushed;
   CString priority_;
+  InitiatorData initiator_;
 
   RequestData  _request_data;
   ResponseData _response_data;

@@ -35,7 +35,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "track_dns.h"
 #include "test_state.h"
 #include "screen_capture.h"
-#include "dev_tools.h"
 #include "trace.h"
 #include "../wptdriver/wpt_test.h"
 #include "cximage/ximage.h"
@@ -67,8 +66,7 @@ static const DWORD INITIAL_BOTTOM_MARGIN = 75;  // Ignore for the first frame
 -----------------------------------------------------------------------------*/
 Results::Results(TestState& test_state, WptTest& test, Requests& requests, 
                   TrackSockets& sockets, TrackDns& dns, 
-                  ScreenCapture& screen_capture, DevTools &dev_tools,
-                  Trace &trace):
+                  ScreenCapture& screen_capture, Trace &trace):
   _requests(requests)
   , _test_state(test_state)
   , _test(test)
@@ -76,7 +74,6 @@ Results::Results(TestState& test_state, WptTest& test, Requests& requests,
   , _dns(dns)
   , _screen_capture(screen_capture)
   , _saved(false)
-  , _dev_tools(dev_tools)
   , _trace(trace)
   , reported_step_(0) {
   _file_base = shared_results_file_base;
@@ -96,7 +93,6 @@ Results::~Results(void) {
 void Results::Reset(void) {
   _requests.Reset();
   _screen_capture.Reset();
-  _dev_tools.Reset();
   _trace.Reset();
   _saved = false;
   _visually_complete.QuadPart = 0;
@@ -1223,9 +1219,12 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   buff.Format("%d\t", request->_ms_ssl_end);
   result += buff;
   // initiator
-  result += request->initiator_ + _T("\t");
-  result += request->initiator_line_ + _T("\t");
-  result += request->initiator_column_ + _T("\t");
+  result += request->initiator_.valid_ ? CA2T(request->initiator_.initiator_url_) : _T("");
+  result += _T("\t");
+  result += request->initiator_.valid_ ? CA2T(request->initiator_.initiator_line_) : _T("");
+  result += _T("\t");
+  result += request->initiator_.valid_ ? CA2T(request->initiator_.initiator_column_) : _T("");
+  result += _T("\t");
   // Server Count
   buff.Format("%d\t",
       _dns.GetAddressCount((LPCTSTR)CA2T(request->GetHost(), CP_UTF8)));
@@ -1243,6 +1242,16 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   // Request ID
   buff.Format("%d\t", request->_request_id);
   result += buff;
+  // Server push
+  buff.Format("%d\t", request->_was_pushed ? 1:0);
+  result += buff;
+  // initiator+
+  result += request->initiator_.valid_ ? CA2T(request->initiator_.initiator_type_) : _T("");
+  result += _T("\t");
+  result += request->initiator_.valid_ ? CA2T(request->initiator_.initiator_function_) : _T("");
+  result += _T("\t");
+  result += request->initiator_.valid_ ? CA2T(request->initiator_.initiator_detail_) : _T("");
+  result += _T("\t");
 
   result += "\r\n";
 

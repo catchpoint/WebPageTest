@@ -359,9 +359,6 @@
     <ClInclude Include="hook_wininet.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="dev_tools.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="trace.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -773,9 +770,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hook_wininet.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dev_tools.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dllmain.cc">

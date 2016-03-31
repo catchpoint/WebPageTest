@@ -184,7 +184,11 @@ function LoadRequests($request_file_name) {
         73 => 'client_port',
         74 => 'jpeg_scan_count',
         75 => 'priority',
-        76 => 'request_id'
+        76 => 'request_id',
+        77 => 'was_pushed',
+        78 => 'initiator_type',
+        79 => 'initiator_function'
+        //80 => 'initiator_detail'
         );
     $request_lines = gz_file($request_file_name);
     if( isset($request_lines) && is_array($request_lines)) {

@@ -36,7 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Mmsystem.h>
 #include <WtsApi32.h>
 #include "wpt_test_hook.h"
-#include "dev_tools.h"
 #include "trace.h"
 
 static const DWORD ON_LOAD_GRACE_PERIOD = 100;
@@ -49,14 +48,13 @@ static const DWORD RESPONSIVE_BROWSER_WIDTH = 480;
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 TestState::TestState(Results& results, ScreenCapture& screen_capture, 
-                      WptTestHook &test, DevTools& dev_tools, Trace& trace):
+                      WptTestHook &test, Trace& trace):
   _results(results)
   ,_screen_capture(screen_capture)
   ,_frame_window(NULL)
   ,_exit(false)
   ,_data_timer(NULL)
   ,_test(test)
-  ,_dev_tools(dev_tools)
   ,_trace(trace)
   ,no_gdi_(false)
   ,gdi_only_(false)

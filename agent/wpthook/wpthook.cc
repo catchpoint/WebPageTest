@@ -49,7 +49,7 @@ WptHook::WptHook(void):
   background_thread_(NULL)
   ,background_thread_started_(NULL)
   ,message_window_(NULL)
-  ,test_state_(results_, screen_capture_, test_, dev_tools_, trace_)
+  ,test_state_(results_, screen_capture_, test_, trace_)
   ,winsock_hook_(dns_, sockets_, test_state_)
   ,nspr_hook_(sockets_, test_state_, test_)
   ,schannel_hook_(sockets_, test_state_, test_)
@@ -59,10 +59,10 @@ WptHook::WptHook(void):
   ,sockets_(requests_, test_state_, test_)
   ,requests_(test_state_, sockets_, dns_, test_)
   ,results_(test_state_, test_, requests_, sockets_, dns_, screen_capture_,
-            dev_tools_, trace_)
+            trace_)
   ,dns_(test_state_, test_)
   ,done_(false)
-  ,test_server_(*this, test_, test_state_, requests_, dev_tools_, trace_)
+  ,test_server_(*this, test_, test_state_, requests_, trace_)
   ,test_(*this, test_state_, shared_test_timeout)
   ,late_initialized_(false) {
 

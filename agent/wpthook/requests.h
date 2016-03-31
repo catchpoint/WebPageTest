@@ -41,17 +41,11 @@ public:
   ~BrowserRequestData(){}
   const BrowserRequestData& operator=(const BrowserRequestData& src) {
     url_ = src.url_;
-    initiator_ = src.initiator_;
-    initiator_line_ = src.initiator_line_;
-    initiator_column_ = src.initiator_column_;
     priority_ = src.priority_;
     return src;
   }
 
   CString  url_;
-  CString  initiator_;
-  CString  initiator_line_;
-  CString  initiator_column_;
   CString  priority_;
   long   connection_;
   LARGE_INTEGER end_timestamp_;
@@ -78,6 +72,7 @@ public:
   void DataOut(DWORD socket_id, DataChunk& chunk);
   bool HasActiveRequest(DWORD socket_id, DWORD stream_id);
   void ProcessBrowserRequest(CString request_data);
+  void ProcessInitiatorData(CStringA initiator_data);
 
   // HTTP/2 interface
   void StreamClosed(DWORD socket_id, DWORD stream_id);
@@ -95,8 +90,9 @@ public:
   void Reset();
   bool GetBrowserRequest(BrowserRequestData &data, bool remove = true);
 
-  CAtlList<Request *>       _requests;        // all requests
-  CAtlMap<DWORD, bool>      connections_;     // Connection IDs
+  CAtlList<Request *>       _requests;                // all requests
+  CAtlMap<CString, InitiatorData>   _initiators;      // initiator data indexed by URL
+  CAtlMap<DWORD, bool>      connections_;             // Connection IDs
 
 private:
   CRITICAL_SECTION  cs;

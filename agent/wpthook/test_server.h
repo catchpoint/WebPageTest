@@ -32,13 +32,12 @@ class WptHook;
 class WptTestHook;
 class TestState;
 class Requests;
-class DevTools;
 class Trace;
 
 class TestServer {
 public:
   TestServer(WptHook& hook, WptTestHook &test, TestState& test_state, 
-             Requests& requests, DevTools &dev_tools, Trace &trace);
+             Requests& requests, Trace &trace);
   ~TestServer(void);
 
   bool Start(void);
@@ -53,7 +52,6 @@ private:
   WptTestHook&      test_;
   TestState&        test_state_;
   Requests&         requests_;
-  DevTools          &dev_tools_;
   Trace             &trace_;
   CRITICAL_SECTION  cs;
   bool              started_;
