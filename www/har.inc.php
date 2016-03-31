@@ -442,6 +442,7 @@ function AddImages($id, $testPath, &$result) {
                 // This is probably a Chrome devtools vs WPT hook page
                 // detection problem. When this happens, ignore all visually complete
                 // images.
+                logAlways("Page discrepency in visually complete screenshot. HAR has " . $pagesCount . " and Visually complete image filename has " . ($page + 1));
                 $includeVC = false;
                 continue;
             }
