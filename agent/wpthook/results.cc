@@ -815,6 +815,8 @@ void Results::ProcessRequests(void) {
     while (pos) {
       Request * request = _requests._requests.GetNext(pos);
       if (request &&
+          request->_start.QuadPart &&
+          request->_end.QuadPart &&
           (!request->_from_browser || !NativeRequestExists(request))) {
         request->MatchConnections();
         if (request->_start.QuadPart &&

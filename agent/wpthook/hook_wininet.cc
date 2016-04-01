@@ -438,6 +438,8 @@ HINTERNET WinInetHook::HttpOpenRequestW(HINTERNET hConnect, LPCWSTR lpszVerb,
   void * dlgContext = NULL;
   _hook_OpenA = false;
 
+  _test_state.SendingRequest();
+
   CString host;
   _host_names.Lookup(hConnect, host);
   if (_test.BlockRequest(host, lpszObjectName)) {
@@ -475,6 +477,8 @@ HINTERNET WinInetHook::HttpOpenRequestA(HINTERNET hConnect, LPCSTR lpszVerb,
   HINTERNET ret = NULL;
   bool block = false;
   CString host;
+
+  _test_state.SendingRequest();
 
   if (_hook_OpenA) {
     _host_names.Lookup(hConnect, host);

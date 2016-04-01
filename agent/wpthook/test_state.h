@@ -86,6 +86,7 @@ public:
   ~TestState(void);
 
   void Start();
+  void SendingRequest();
   void ActivityDetected();
   void OnNavigate();
   void OnNavigateComplete();
@@ -184,6 +185,7 @@ public:
   CString                  _user_timing;       // JSON-formatted user timing data (from Chrome traces)
 
 private:
+  bool  _first_request_sent;
   bool  _started;
   int   _next_document;
   Results&  _results;

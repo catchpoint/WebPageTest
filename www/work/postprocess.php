@@ -1,6 +1,6 @@
 <?php
 chdir('..');
-include('common_lib.inc');
+include('common.inc');
 error_reporting(E_ERROR | E_PARSE);
 require_once('archive.inc');
 require_once 'page_data.inc';

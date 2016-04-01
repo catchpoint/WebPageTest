@@ -153,6 +153,7 @@ void TestState::Reset(bool cascade) {
     _custom_metrics.Empty();
     _user_timing.Empty();
     navigating_ = false;
+    _first_request_sent = false;
     GetSystemTime(&_start_time);
   }
   LeaveCriticalSection(&_data_cs);
@@ -239,6 +240,18 @@ void TestState::OnNavigate() {
       QueryPerformanceCounter(&_first_navigate);
     ActivityDetected();
   }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::SendingRequest() {
+  EnterCriticalSection(&_data_cs);
+  if (_active && navigating_ && !_first_request_sent) {
+    _first_request_sent = true;
+    // fix up the navigation start time to match when the first event was sent
+    QueryPerformanceCounter(&_first_navigate);
+  }
+  LeaveCriticalSection(&_data_cs);
 }
 
 /*-----------------------------------------------------------------------------
