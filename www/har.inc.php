@@ -411,15 +411,43 @@ function BuildHAR(&$pageData, $allRequests, $id, $testPath, $options) {
   
   $result['log']['entries'] = $entries;
 
-  AddImages($id, $testPath, $result);
+  $output_file = $testPath . "/output.json.gz";
+  $output = array();
+  if (gz_is_file($output_file)) {
+      $output = json_decode(gz_file_get_contents($output_file), true);
+  }
+
+  AddImages($id, $testPath, $result, $output);
+  AddExceptions($id, $testPath, $result, $output);
   
   return $result;
 }
 
-function AddImages($id, $testPath, &$result) {
+function AddExceptions($id, $testPath, &$result, &$output) {
+    if (isset($output['exception'])) {
+        $start = (count($result['log']['pages']) > 0 ? $result['log']['pages'][0]['_date'] * 1000 : 0);
+        $diff =  $start - $output['wallTime'];
+        $result['log']['_scriptException'] = $output['exception'];
+
+        # sync clocks
+        $result['log']['_scriptException']['timeStamp'] += $diff;
+
+        # set relative time
+        $result['log']['_scriptException']['relativeTime'] = $result['log']['_scriptException']['timeStamp'] - $start;
+
+        # set abs time
+        $result['log']['_scriptException']['wallTime'] = $result['log']['_scriptException']['timeStamp'];
+
+        $result['log']['_scriptException']['pageref'] = pageRefFromTimestamp($result, $result['log']['_scriptException']['timeStamp']);
+
+        unset($result['log']['_scriptException']['timeStamp']);
+    }
+}
+
+function AddImages($id, $testPath, &$result, &$output) {
 
     // retrieve custom screenshots labels from the output.json
-    $labels = getCustomScreenshotsLabels($testPath);
+    $labels = getCustomScreenshotsLabels($testPath, $output);
     $labelIndex = 0;
     $labelsCount = count($labels);
 
@@ -510,27 +538,31 @@ function pageFromTimestamp(&$result, $time) {
     }
 }
 
-function getCustomScreenshotsLabels($testPath) {
-    $output_file = $testPath . "/output.json.gz";
-    $labels = array();
-    if (gz_is_file($output_file)) {
-        $output = json_decode(gz_file_get_contents($output_file), true);
-        if (isset($output['screenshots'])) {
-            $labels_obj = $output['screenshots'];
-            $labels_obj_count = count($labels_obj);
+function pageRefFromTimestamp(&$result, $time) {
+    if (count($result['log']['pages']) == 0) {
+        return '';
+    }
 
-            if ($labels_obj_count > 0) {
-                $len = intval($labels_obj[$labels_obj_count - 1]['id']) + 1;
+    $pageIndex = pageFromTimestamp($result, $time);
+    return $result['log']['pages'][$pageIndex]['id'];
+}
 
-                // set all labels to empty strings
-                $labels = array_pad(array(), $len, "");
+function getCustomScreenshotsLabels($testPath, &$output) {
+    $lables = array();
+    if (isset($output['screenshots'])) {
+        $labels_obj = $output['screenshots'];
+        $labels_obj_count = count($labels_obj);
 
-                // set label
-                foreach ($labels_obj as $l) {
-                    $labels[intval($l['id'])] = preg_replace('/\\.[^.\\s]{3,4}$/', '', $l['fileName']);
-                }
+        if ($labels_obj_count > 0) {
+            $len = intval($labels_obj[$labels_obj_count - 1]['id']) + 1;
+
+            // set all labels to empty strings
+            $labels = array_pad(array(), $len, "");
+
+            // set label
+            foreach ($labels_obj as $l) {
+                $labels[intval($l['id'])] = preg_replace('/\\.[^.\\s]{3,4}$/', '', $l['fileName']);
             }
-            
         }
     }
 
