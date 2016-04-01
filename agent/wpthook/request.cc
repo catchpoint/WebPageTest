@@ -208,7 +208,8 @@ void RequestData::ProcessRequestLine() {
       if (pos > -1) {
         _object = line.Tokenize(" ", pos).Trim();
         // For proxy cases where the GET is a full URL, parse it into it's pieces
-        if (_object.Find(":") > -1) {
+        if (!_object.Left(5).CompareNoCase("http:") ||
+            !_object.Left(6).CompareNoCase("https:")) {
           CString scheme, host, object;
           unsigned short port = 0;
           if (ParseUrl((LPCTSTR)CA2T(_object), scheme, host, port, object)) {
