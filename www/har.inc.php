@@ -49,15 +49,19 @@ function GenerateHAR($id, $testPath, $options) {
     if (isset($options['pretty']) && $options['pretty'])
       $pretty_print = true;
     if (isset($options['php']) && $options['php']) {
-      if ($pretty_print && $json_encode_good)
-        $json = json_encode($harData, JSON_PRETTY_PRINT);
-      else
-        $json = json_encode($harData);
+      if ($pretty_print && $json_encode_good) {
+        $json = json_encode($harData, JSON_PRETTY_PRINT | JSON_PARTIAL_OUTPUT_ON_ERROR);
+      }
+      else {
+        $json = json_encode($harData, JSON_PARTIAL_OUTPUT_ON_ERROR);
+      }
     } elseif ($json_encode_good) {
-      if ($pretty_print)
-        $json = json_encode($harData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
-      else
-        $json = json_encode($harData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+      if ($pretty_print) {
+        $json = json_encode($harData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_PARTIAL_OUTPUT_ON_ERROR);
+      }
+      else {
+        $json = json_encode($harData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR);
+      }
     } else {    
       $jsonLib = new Services_JSON();
       $json = $jsonLib->encode($harData);
