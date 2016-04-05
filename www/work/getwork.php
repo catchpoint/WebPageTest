@@ -55,6 +55,15 @@ if (isset($locations) && is_array($locations) && count($locations) &&
     $location = trim($loc);
     if (!$is_done && strlen($location))
       $is_done = GetJob();
+    // see if there are fallbacks specified for the given location (for idle)
+    $fallbacks = GetLocationFallbacks($location);
+    if (is_array($fallbacks) && count($fallbacks)) {
+      foreach($fallbacks as $loc) {
+        $location = trim($loc);
+        if (!$is_done && strlen($location))
+          $is_done = GetJob();
+      }
+    }
   }
 } elseif (isset($_GET['freedisk']) && (float)$_GET['freedisk'] <= 0.1) {
   if (isset($_GET['reboot']) && GetSetting("lowDiskReboot")) {

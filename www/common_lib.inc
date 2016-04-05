@@ -103,6 +103,40 @@ function GetLocationKey($location) {
   return $key;
 }
 
+function GetLocationFallbacks($location) {
+  $fallback = null;
+  if (isset($location) && strlen($location)) {
+    if (function_exists('apc_fetch') &&
+        function_exists('apc_store')) {
+      $fallback = apc_fetch("fallback_$location");
+      if ($fallback === false) {
+        $fallback = '';
+        $locations = LoadLocationsIni();
+        if ($locations !== false &&
+            is_array($locations) &&
+            isset($locations[$location]) &&
+            isset($locations[$location]['fallback'])) {
+          $fallback = $locations[$location]['fallback'];
+        }
+        apc_store("fallback_$location", $key, 60);
+      }
+    } else {
+      $locations = LoadLocationsIni();
+      if ($locations !== false &&
+          is_array($locations) &&
+          isset($locations[$location]) &&
+          isset($locations[$location]['fallback'])) {
+        $fallback = $locations[$location]['fallback'];
+      }
+    }
+  }
+  
+  $fallbacks = array();
+  if (isset($fallback) && strlen($fallback))
+    $fallbacks = explode(',', $fallback);
+  return $fallbacks;
+}
+
 // Load the locations from locations.ini and merge-in the ec2 locations if necessary
 function LoadLocationsIni() {
   $ec2_allow = GetSetting('ec2_allow');
