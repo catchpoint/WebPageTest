@@ -553,6 +553,12 @@ void WptTest::BuildScript() {
     _viewport_width = 0;
     _viewport_height = 0;
   }
+
+  if (!_user_agent.IsEmpty() &&
+      !_preserve_user_agent &&
+      _user_agent.Find(" " + _user_agent_modifier + "/") == -1) {
+    _user_agent += " " + GetAppendUA();
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -804,7 +810,6 @@ bool WptTest::PreProcessScriptCommand(ScriptCommand& command) {
         _device_scale_factor.Empty();
     } else if (cmd == _T("setuseragent")) {
       _user_agent = CT2A(command.target.Trim());
-      processed = false;
     } else {
       processed = false;
     }
