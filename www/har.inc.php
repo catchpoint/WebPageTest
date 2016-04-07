@@ -419,13 +419,35 @@ function BuildHAR(&$pageData, $allRequests, $id, $testPath, $options) {
 
   AddImages($id, $testPath, $result, $output);
   AddExceptions($id, $testPath, $result, $output);
+  AddScriptLogs($id, $testPath, $result, $output);
   
   return $result;
 }
 
+function AddScriptLogs($id, $testPath, &$result, &$output) {
+    if (isset($output['logs'])) {
+        $start = floor((count($result['log']['pages']) > 0 ? $result['log']['pages'][0]['_date'] * 1000 : 0));
+        $diff =  $start - $output['wallTime'];
+        logAlways('Output wall time diff: ' . $diff);
+
+        foreach ($output['logs'] as &$log){
+            # set relative time
+            $log['relativeTime'] = max(0, $log['wallTime'] - $output['wallTime']);
+            logAlways('Log relative time: ' . $log['relativeTime']);
+
+            # sync clocks for absolute time
+            $log['wallTime'] += $diff;
+
+            $log['pageIndex'] = pageFromTimestamp($result, $log['wallTime']);
+        }
+
+        $result['log']['_scriptLogs'] = $output['logs'];
+    }
+}
+
 function AddExceptions($id, $testPath, &$result, &$output) {
     if (isset($output['exception'])) {
-        $start = (count($result['log']['pages']) > 0 ? $result['log']['pages'][0]['_date'] * 1000 : 0);
+        $start = floor((count($result['log']['pages']) > 0 ? $result['log']['pages'][0]['_date'] * 1000 : 0));
         $diff =  $start - $output['wallTime'];
         $result['log']['_scriptException'] = $output['exception'];
 
@@ -435,7 +457,7 @@ function AddExceptions($id, $testPath, &$result, &$output) {
         # set relative time
         $result['log']['_scriptException']['relativeTime'] = $result['log']['_scriptException']['wallTime'] - $start;
 
-        $result['log']['_scriptException']['pageref'] = pageRefFromTimestamp($result, $result['log']['_scriptException']['wallTime']);
+        $result['log']['_scriptException']['pageIndex'] = pageFromTimestamp($result, $result['log']['_scriptException']['wallTime']);
     }
 }
 
@@ -527,19 +549,12 @@ function pageFromTimestamp(&$result, $time) {
     $pages = $result['log']['pages'];
 
     for ($i = count($pages) - 1; $i >= 0; $i--) {
-        if ($pages[$i]['_date'] * 1000 <= $time) {
+        if (($time - $pages[$i]['_date'] * 1000) >= 0) {
             return $i;
         }
     }
-}
-
-function pageRefFromTimestamp(&$result, $time) {
-    if (count($result['log']['pages']) == 0) {
-        return '';
-    }
-
-    $pageIndex = pageFromTimestamp($result, $time);
-    return $result['log']['pages'][$pageIndex]['id'];
+    
+    return -1;
 }
 
 function getCustomScreenshotsLabels($testPath, &$output) {
