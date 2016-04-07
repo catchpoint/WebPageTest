@@ -429,18 +429,13 @@ function AddExceptions($id, $testPath, &$result, &$output) {
         $diff =  $start - $output['wallTime'];
         $result['log']['_scriptException'] = $output['exception'];
 
-        # sync clocks
-        $result['log']['_scriptException']['timeStamp'] += $diff;
+        # sync clocks for absolute time
+        $result['log']['_scriptException']['wallTime'] += $diff;
 
         # set relative time
-        $result['log']['_scriptException']['relativeTime'] = $result['log']['_scriptException']['timeStamp'] - $start;
+        $result['log']['_scriptException']['relativeTime'] = $result['log']['_scriptException']['wallTime'] - $start;
 
-        # set abs time
-        $result['log']['_scriptException']['wallTime'] = $result['log']['_scriptException']['timeStamp'];
-
-        $result['log']['_scriptException']['pageref'] = pageRefFromTimestamp($result, $result['log']['_scriptException']['timeStamp']);
-
-        unset($result['log']['_scriptException']['timeStamp']);
+        $result['log']['_scriptException']['pageref'] = pageRefFromTimestamp($result, $result['log']['_scriptException']['wallTime']);
     }
 }
 
