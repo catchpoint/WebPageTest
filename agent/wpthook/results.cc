@@ -147,6 +147,9 @@ void Results::Save(void) {
       SaveTimedEvents();
       SaveCustomMetrics();
       SaveUserTiming();
+      if (_test._timeline) {
+        _trace.Process();
+      }
       _trace.Write(_file_base + TRACE_FILE);
     }
     if (shared_result == -1 || shared_result == 0 || shared_result == 99999)
