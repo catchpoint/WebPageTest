@@ -64,7 +64,10 @@ static const char * BLANK_HTML = "HTTP/1.1 200 OK\r\n"
     "<script type=\"text/javascript\">\r\n"
     "var dummy=1;\r\n"
     "</script>\r\n"
-    "</head><body></body></html>";
+    "</head><body>\r\n"
+    "<img style=\"position: fixed; left: -2px; width: 1px; height: 1px\" "
+    "src=\"https://www.google.com/favicon.ico\">\r\n"
+    "</body></html>";
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
