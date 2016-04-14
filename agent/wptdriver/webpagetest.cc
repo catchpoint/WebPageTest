@@ -105,18 +105,18 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
   HWND wnd = GetForegroundWindow();
   if (wnd == NULL) {
     // Lock screen is active, we need to reboot
-    AtlTrace(_T("[wptdriver] - Lock screen detected. Agent need to reboot!"));
+    WptTrace(loglevel::kError, _T("[wptdriver] - Lock screen detected. Agent need to reboot!"));
+
 
     if (_settings._reboot_on_lock_screen) {
       if (RebootWatchDog()){
         Reboot();
-        return false;
       } else {
-        AtlTrace(_T("[wptdriver] - Maximum number of consecutive reboot exeeded!"));
+        WptTrace(loglevel::kError, _T("[wptdriver] - Maximum number of consecutive reboot exeeded!"));
       }
     } else {
-      AtlTrace(_T("[wptdriver] - RebootOnLockScreen not set in ini file. Will not reboot!"));
-      AtlTrace(_T("[wptdriver] - Don't fetch new work, this agent is broken"));
+      WptTrace(loglevel::kError, _T("[wptdriver] - RebootOnLockScreen not set in ini file. Will not reboot!"));
+      WptTrace(loglevel::kError, _T("[wptdriver] - Don't fetch new work, this agent is broken"));
     }
 
     return false;

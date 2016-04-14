@@ -58,7 +58,7 @@ void WptStatus::Set(const TCHAR * format, ...) {
       free( buff );
     }
   }
-  OutputDebugString(_status + _T("\n"));
+  WptTrace(loglevel::kFunction, _status + _T("\n"));
 
   PostMessage(_wnd, UWM_UPDATE_STATUS, 0, 0);
 }

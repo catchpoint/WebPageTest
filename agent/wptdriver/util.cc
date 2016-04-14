@@ -305,6 +305,24 @@ void WriteToLogFile(TCHAR *msg) {
   LeaveCriticalSection(logfile_cs);
 }
 
+void WriteToGlobalLogFile(TCHAR *msg) {
+  DWORD written;
+  CStringW utf16_str;
+  CStringA utf8_str;
+  SYSTEMTIME time;
+
+  EnterCriticalSection(global_logfile_cs);
+
+  GetSystemTime(&time);
+  utf16_str.Format(_T("[%d:%d:%d.%d] %s\n"), time.wHour, time.wMinute, time.wSecond, time.wMilliseconds, msg);
+  utf8_str = UTF16toUTF8(utf16_str);
+
+  SetFilePointer(global_logfile_handle, 0, 0, FILE_END);
+  WriteFile(global_logfile_handle, utf8_str.GetBuffer(), utf8_str.GetLength(), &written, 0);
+
+  LeaveCriticalSection(global_logfile_cs);
+}
+
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptTrace(int level, LPCTSTR format, ...) {
@@ -319,6 +337,9 @@ void WptTrace(int level, LPCTSTR format, ...) {
         if (lstrlen(msg)) {
           if (logfile_handle && logfile_cs) {
             WriteToLogFile(msg);
+          }
+          if (global_logfile_handle && global_logfile_cs) {
+            WriteToGlobalLogFile(msg);
           }
           OutputDebugString(msg);
         }

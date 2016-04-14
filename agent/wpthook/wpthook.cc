@@ -37,6 +37,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 WptHook * global_hook = NULL;
 HANDLE logfile_handle = NULL;
 CRITICAL_SECTION *logfile_cs = NULL;
+HANDLE global_logfile_handle = NULL;
+CRITICAL_SECTION *global_logfile_cs = NULL;
 
 extern HINSTANCE global_dll_handle;
 
@@ -101,11 +103,10 @@ WptHook::WptHook(void):
       free( pVersion );
     }
   }
-
   logfile_handle = CreateFile(file_base_ + WPTHOOK_LOG, GENERIC_WRITE, 0,
     NULL, OPEN_ALWAYS, 0, 0);
   if (logfile_handle == INVALID_HANDLE_VALUE) {
-    WptTrace(loglevel::kFunction, _T("Failed to open log file. Error: %d"), GetLastError());
+    WptTrace(loglevel::kFunction, _T("[wpthook] Failed to open log file. Error: %d"), GetLastError());
   } else {
     logfile_cs = (CRITICAL_SECTION *)malloc(sizeof(CRITICAL_SECTION));
     ZeroMemory(logfile_cs, sizeof(CRITICAL_SECTION));

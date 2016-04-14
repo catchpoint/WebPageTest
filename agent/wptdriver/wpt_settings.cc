@@ -103,8 +103,20 @@ bool WptSettings::Load(void) {
   lstrcpy( PathFindFileName(iniFile), _T("wptdriver.ini") );
   _ini_file = iniFile;
   lstrcpy(logFile, iniFile);
-  lstrcpy( PathFindFileName(logFile), _T("wpt.log") );
+
+  // setting logs
+  lstrcpy(PathFindFileName(logFile), _T("wpt.log"));
   DeleteFile(logFile);
+  global_logfile_handle = CreateFile(logFile, GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ,
+    NULL, OPEN_ALWAYS, 0, 0);
+  if (logfile_handle == INVALID_HANDLE_VALUE) {
+    WptTrace(loglevel::kFunction, _T("Failed to open log file. Error: %d"), GetLastError());
+  }
+  else {
+    global_logfile_cs = (CRITICAL_SECTION *)malloc(sizeof(CRITICAL_SECTION));
+    ZeroMemory(global_logfile_cs, sizeof(CRITICAL_SECTION));
+    InitializeCriticalSection(global_logfile_cs);
+  }
 
   if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
                                 NULL, SHGFP_TYPE_CURRENT, buff))) {
