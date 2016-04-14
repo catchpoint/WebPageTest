@@ -174,6 +174,7 @@ void TerminateProcs(void) {
   // (wait long enough for them to exit gracefully first)
   const TCHAR * procs[] = { 
     _T("wptdriver.exe")
+    , _T("wptwatchdog.exe")
     , _T("chrome.exe")
   };
 
@@ -192,11 +193,41 @@ void TerminateProcs(void) {
         HANDLE process = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE, FALSE, 
                                       proc[i].ProcessId);
         if (process) {
-          // give it 2 minutes to exit on it's own
-          if (WaitForSingleObject(process, 120000) != WAIT_OBJECT_0)
+          // give it 10 seconds to exit on it's own
+          if (WaitForSingleObject(process, 10000) != WAIT_OBJECT_0)
             TerminateProcess(process, 0);
           CloseHandle(process);
         }
+      }
+    }
+
+    WTSFreeMemory(proc);
+  }
+
+  // Find any process that may have wpthook.dll loaded
+  if (WTSEnumerateProcesses(WTS_CURRENT_SERVER_HANDLE, 0, 1, &proc, &count)) {
+    for (DWORD i = 0; i < count; i++) {
+      HANDLE process = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_TERMINATE,
+                                   FALSE, proc[i].ProcessId);
+      if (process) {
+        HMODULE modules[1024];
+        DWORD cbNeeded;
+        TCHAR module_path[MAX_PATH];
+        bool kill = false;
+        if (EnumProcessModules(process, modules, sizeof(modules), &cbNeeded)) {
+          for (i = 0; i < (cbNeeded / sizeof(HMODULE)); i++) {
+            if (GetModuleFileNameEx(process, modules[i], module_path, _countof(module_path))) {
+              if (!lstrcmpi(PathFindFileName(module_path), _T("wpthook.dll"))) {
+                kill = true;
+                break;
+              }
+            }
+          }
+        }
+
+        if (kill)
+          TerminateProcess(process, 0);
+        CloseHandle(process);
       }
     }
 
