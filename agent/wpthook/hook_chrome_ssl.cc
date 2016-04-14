@@ -143,7 +143,6 @@ void ChromeSSLHook::Init() {
     LeaveCriticalSection(&cs);
     return;
   }
-  g_hook = this; 
 
   // only install for chrome.exe
   TCHAR path[MAX_PATH];
@@ -215,6 +214,8 @@ void ChromeSSLHook::Init() {
                           methods_addr = compare;
                           signature = signum;
                         }
+                      } else {
+                        ATLTRACE("Signature match but ssl_lib.c string not found (signature %d) at 0x%08X\n", signum, (DWORD)compare);
                       }
                     }
                   }
@@ -234,6 +235,7 @@ void ChromeSSLHook::Init() {
   // To be safe, only hook if we find EXACTLY one match
   if (match_count == 1 && methods_addr) {
     hook_ = new NCodeHookIA32();
+    g_hook = this; 
 
     ATLTRACE("Overwriting Chrome ssl methods structure (signature %d) at 0x%08X", signature, (DWORD)methods_addr);
 
@@ -247,8 +249,11 @@ void ChromeSSLHook::Init() {
     WriteAppData_ = (PFN_SSL3_WRITE_APP_DATA)hook_->createHook(
         (PFN_SSL3_WRITE_APP_DATA)methods_addr[methods_signatures[signature].ssl_write_app_data_index],
         WriteAppData_Hook);
+  } else if (match_count > 1) {
+    g_hook = this; 
+    ATLTRACE("Too many Chrome ssl methods structures found (%d matches)", match_count);
   } else {
-    ATLTRACE("Chrome ssl methods structure NOT found (%d matches)", match_count);
+    ATLTRACE("Chrome ssl methods structure NOT found");
   }
   LeaveCriticalSection(&cs);
 }

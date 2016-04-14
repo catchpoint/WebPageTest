@@ -51,6 +51,7 @@ public:
   ~WptHook(void);
 
   void Init();
+  void LateInit();
   void BackgroundThread();
   bool OnMessage(UINT message, WPARAM wParam, LPARAM lParam);
 

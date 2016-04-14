@@ -153,6 +153,7 @@ void TestServer::MongooseCallback(enum mg_event event,
                       struct mg_connection *conn,
                       const struct mg_request_info *request_info){
 
+  hook_.LateInit();
   EnterCriticalSection(&cs);
   if (event == MG_NEW_REQUEST) {
     //OutputDebugStringA(CStringA(request_info->uri) + CStringA("?") + request_info->query_string);
