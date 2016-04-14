@@ -226,7 +226,11 @@ bool WebBrowser::RunAndWait() {
                           0, NULL, NULL, &si, &pi)) {
           CloseHandle(pi.hThread);
           CloseHandle(pi.hProcess);
-          if (WaitForSingleObject(_browser_started_event, 60000) ==
+          DWORD wait_time = 60000;
+          #ifdef DEBUG
+          wait_time = INFINITE;
+          #endif
+          if (WaitForSingleObject(_browser_started_event, wait_time) ==
               WAIT_OBJECT_0) {
             DWORD pid = GetBrowserProcessId();
             if (pid) {

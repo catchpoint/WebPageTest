@@ -115,7 +115,7 @@ static unsigned __stdcall ThreadProc( void* arg ) {
 void WptHook::Init(){
   WptTrace(loglevel::kFunction, _T("[wpthook] Init()\n"));
 #ifdef DEBUG
-  //MessageBox(NULL, L"Attach Debugger", L"Attach Debugger", MB_OK);
+  MessageBox(NULL, L"Attach Debugger", L"Attach Debugger", MB_OK);
 #endif
   test_.LoadFromFile();
   if (!test_state_.gdi_only_) {
@@ -124,7 +124,6 @@ void WptHook::Init(){
     nspr_hook_.Init();
     schannel_hook_.Init();
     wininet_hook_.Init();
-    chrome_ssl_hook_.Init();
   }
   test_state_.Init();
   ResetEvent(background_thread_started_);
@@ -135,17 +134,6 @@ void WptHook::Init(){
     WptTrace(loglevel::kFunction, _T("[wpthook] Init() Completed\n"));
   } else {
     WptTrace(loglevel::kFunction, _T("[wpthook] Init() Timed out\n"));
-  }
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void WptHook::LateInit() {
-  if (!late_initialized_) {
-    late_initialized_ = true;
-    if (!test_state_.gdi_only_) {
-      chrome_ssl_hook_.Init();
-    }
   }
 }
 
