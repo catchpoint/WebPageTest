@@ -14842,7 +14842,14 @@ chrome.tabs.onUpdated.addListener(function(tabId, props) {
     // handle the startup sequencing (attach the debugger
     // after the browser loads and then start testing).
     g_started = true;
-    wpt.main.onStartup();
+    // Fetch something from a Google domain to initialize the local TLS
+    // channel ID database so the delay isn't included in tests.  This requires
+    // a TLS connection to a server that requests channel ID.
+    fetch('https://www.google.com/').then(function(response) {
+      wpt.main.onStartup();
+    }).catch(function(err) {
+      wpt.main.onStartup();
+    });
   }else if (g_active && tabId == g_tabid) {
     if (props.status == 'loading') {
       g_start = new Date().getTime();

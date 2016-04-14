@@ -321,7 +321,7 @@ $loc = ParseLocations($locations);
                                         <input type="checkbox" name="clearcerts" id="clearcerts" class="checkbox" style="float: left;width: auto;">
                                         <label for="clearcerts" class="auto_width">
                                             Clear SSL Certificate Caches<br>
-                                            <small>Internet Explorer</small>
+                                            <small>Internet Explorer and Chrome</small>
                                         </label>
                                     </li>
                                     <li>
