@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "util.h"
 
 static const TCHAR * NO_FILE = _T("");
+static const short MAX_REBOOT = 3;
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -100,13 +101,37 @@ WebPagetest::~WebPagetest(void) {
 bool WebPagetest::GetTest(WptTestDriver& test) {
   bool ret = false;
 
+  // Test if lock screen is active. If lockscreen is active, wnd will be NULL
+  HWND wnd = GetForegroundWindow();
+  if (wnd == NULL) {
+    // Lock screen is active, we need to reboot
+    AtlTrace(_T("[wptdriver] - Lock screen detected. Agent need to reboot!"));
+
+    if (_settings._reboot_on_lock_screen) {
+      if (RebootWatchDog()){
+        Reboot();
+        return false;
+      } else {
+        AtlTrace(_T("[wptdriver] - Maximum number of consecutive reboot exeeded!"));
+      }
+    } else {
+      AtlTrace(_T("[wptdriver] - RebootOnLockScreen not set in ini file. Will not reboot!"));
+      AtlTrace(_T("[wptdriver] - Don't fetch new work, this agent is broken"));
+    }
+
+    return false;
+  }
+
   if (rebooting_) {
     // We should never get here, but if we do make sure to keep trying to reboot
     Reboot();
     return false;
   }
 
+  ResetRebootWatchDog();
+
   DeleteDirectory(test._directory, false);
+
 
   // build the url for the request
   CString buff;
@@ -158,6 +183,57 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
   }
 
   return ret;
+}
+
+/*-----------------------------------------------------------------------------
+Call just before rebooting. If return false, reboot is cancelled
+-----------------------------------------------------------------------------*/
+bool WebPagetest::RebootWatchDog() {
+  short reboots = LoadRebootWatchDog();
+  if (reboots >= MAX_REBOOT) {
+    return false;
+  }
+  SaveRebootWatchDog(reboots + 1);
+  return true;
+}
+
+/*-----------------------------------------------------------------------------
+Reset reboot count
+-----------------------------------------------------------------------------*/
+void WebPagetest::ResetRebootWatchDog() {
+  SaveRebootWatchDog(0);
+}
+
+void WebPagetest::SaveRebootWatchDog(short nb) {
+  CString val;
+  val.Format(_T("%d"), nb);
+  HANDLE file_handle = CreateFile(_T("reboot_count.txt"), GENERIC_WRITE, 0, 0,
+    CREATE_ALWAYS, 0, 0);
+  if (file_handle != INVALID_HANDLE_VALUE) {
+    DWORD bytes;
+    WriteFile(file_handle, val, val.GetLength(), &bytes, 0);
+    CloseHandle(file_handle);
+  }
+}
+
+short WebPagetest::LoadRebootWatchDog() {
+  byte ReadBuffer[1] = { 0 };
+
+  HANDLE file_handle = CreateFile(_T("reboot_count.txt"), GENERIC_READ, FILE_SHARE_READ,
+    0, OPEN_EXISTING, 0, 0);
+
+  DWORD bytes;
+  if (file_handle != INVALID_HANDLE_VALUE && ReadFile(file_handle, ReadBuffer, sizeof(ReadBuffer), &bytes, 0) && bytes) {
+    CloseHandle(file_handle);
+
+    // convert from ASCII
+    short nb = ReadBuffer[0] - 48;
+    AtlTrace(_T("[wptdriver] - Reboot count %d"), nb);
+
+    return nb;
+  }
+
+  return 0;
 }
 
 /*-----------------------------------------------------------------------------

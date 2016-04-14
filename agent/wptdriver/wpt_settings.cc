@@ -80,7 +80,8 @@ WptSettings::WptSettings(WptStatus &status):
   ,_status(status)
   ,_software_update(status)
   ,_requireValidCertificate(true)
-  ,_webdriver_supported(false) {
+  ,_webdriver_supported(false)
+  ,_reboot_on_lock_screen(false) {
 }
 
 /*-----------------------------------------------------------------------------
@@ -166,6 +167,10 @@ bool WptSettings::Load(void) {
       _T("WebPagetest"), _T("web_page_replay_host"), _T(""), buff,
       _countof(buff), iniFile )) {
     _web_page_replay_host = buff;
+  }
+
+  if (GetPrivateProfileInt(_T("WebPagetest"), _T("RebootOnLockScreen"), 0, iniFile)) {
+    _reboot_on_lock_screen = true;
   }
 
   if (GetPrivateProfileInt(_T("WebPagetest"), _T("WebDriver"), 0, iniFile)) {

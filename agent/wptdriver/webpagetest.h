@@ -80,4 +80,8 @@ private:
   bool GetClient(WptTestDriver& test);
   bool UnzipTo(CString zip_file, CString dest);
   void UpdateDNSServers();
+  bool RebootWatchDog();
+  void ResetRebootWatchDog();
+  void SaveRebootWatchDog(short);
+  short LoadRebootWatchDog();
 };
