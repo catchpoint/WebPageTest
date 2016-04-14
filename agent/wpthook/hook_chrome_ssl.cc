@@ -103,24 +103,24 @@ static const DWORD max_methods_struct_size = 60;
 
 
 // Stub Functions
-int __cdecl New_Hook(void *ssl) {
+int __stdcall New_Hook(void *ssl) {
   return g_hook ? g_hook->New(ssl) : -1;
 }
 
-void __cdecl Free_Hook(void *ssl) {
+void __stdcall Free_Hook(void *ssl) {
   if (g_hook)
     g_hook->Free(ssl);
 }
 
-int __cdecl Connect_Hook(void *ssl) {
+int __stdcall Connect_Hook(void *ssl) {
   return g_hook ? g_hook->Connect(ssl) : -1;
 }
 
-int __cdecl ReadAppData_Hook(void *ssl, uint8_t *buf, int len, int peek) {
+int __stdcall ReadAppData_Hook(void *ssl, uint8_t *buf, int len, int peek) {
   return g_hook ? g_hook->ReadAppData(ssl, buf, len, peek) : -1;
 }
 
-int __cdecl WriteAppData_Hook(void *ssl, const void *buf, int len) {
+int __stdcall WriteAppData_Hook(void *ssl, const void *buf, int len) {
   return g_hook ? g_hook->WriteAppData(ssl, buf, len) : -1;
 }
 
@@ -151,6 +151,7 @@ ChromeSSLHook::~ChromeSSLHook() {
   Scan through memory for the static mapping of ssl functions
 -----------------------------------------------------------------------------*/
 void ChromeSSLHook::Init() {
+  return;
   EnterCriticalSection(&cs);
   if (hook_ || g_hook) {
     LeaveCriticalSection(&cs);
