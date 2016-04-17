@@ -50,6 +50,8 @@ const DWORD CAPABILITIES[::nCapabilities] = {
   0x0001    // kMultistepSupport bitmask value
 };
 
+const LONGLONG MAX_LOG_SIZE = 20LL * 1024LL * 1024LL; // 20mb
+
 /*-----------------------------------------------------------------------------
   Launch the provided process and wait for it to finish 
   (unless process_handle is provided in which case it will return immediately)
@@ -339,6 +341,13 @@ void WptTrace(int level, LPCTSTR format, ...) {
             WriteToLogFile(msg);
           }
           if (global_logfile_handle && global_logfile_cs) {
+            LARGE_INTEGER size;
+            GetFileSizeEx(global_logfile_handle, &size);
+            if (size.QuadPart > MAX_LOG_SIZE) {
+              // truncate the logs
+              SetFilePointer(global_logfile_handle, 0l, NULL, FILE_BEGIN);
+              SetEndOfFile(global_logfile_handle);
+            }
             WriteToGlobalLogFile(msg);
           }
           OutputDebugString(msg);
