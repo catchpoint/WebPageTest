@@ -565,12 +565,12 @@ Adb.prototype.computeMacForRndis_ = function() {
  * @return {Object} member of netcfg, or undefined.
  * @private
  */
-Adb.prototype.getRndisIfc_ = function(netcfg) {
+Adb.prototype.getRndisIfc_ = function(netcfg, onlyrndis) {
   'use strict';
   var ret;
   netcfg.forEach(function(ifc) {
     if ('rndis0' === ifc.name ||  // Prefer rndis0 over usb0.
-        ('usb0' === ifc.name && undefined === ret)) {
+        (!onlyrndis && 'usb0' === ifc.name && undefined === ret)) {
       ret = ifc;
     }
   });
@@ -585,7 +585,7 @@ Adb.prototype.getRndisIfc_ = function(netcfg) {
 Adb.prototype.scheduleAssertRndisIsEnabled = function() {
   'use strict';
   return this.scheduleGetNetworkConfiguration().then(function(netcfg) {
-    var ifc = this.getRndisIfc_(netcfg);
+    var ifc = this.getRndisIfc_(netcfg, false);
     var mac = this.computeMacForRndis_();
     var badNames = netcfg.filter(function(o) {
       return (o.isUp && 'lo' !== o.name && (!ifc || ifc.name !== o.name));
@@ -622,7 +622,7 @@ Adb.prototype.scheduleEnableRndis = function() {
     }.bind(this));
 
     this.scheduleGetNetworkConfiguration().then(function(netcfg) {
-      var ifc = this.getRndisIfc_(netcfg);
+      var ifc = this.getRndisIfc_(netcfg, false);
       if (!ifc) {
         throw new Error('netcfg lacks rndis interface');
       }
@@ -672,11 +672,74 @@ Adb.prototype.scheduleEnableRndis = function() {
 };
 
 /**
- * Disables Reverse USB Tethering via RNDIS.
+ * Enables Reverse USB Tethering via RNDIS on KitKat 4.4.4.
+ *
+ * @return {webdriver.promise.Promise} resolve() for addErrback.
  */
-Adb.prototype.scheduleDisableRndis = function() {
+Adb.prototype.scheduleEnableRndis444 = function(config) {
   'use strict';
-  this.su(['setprop', 'sys.usb.config', 'adb']);
+  return this.app_.schedule('Enable rndis', function() {
+    this.su(['service', 'call', 'connectivity', '34', 'i32', '1']).then(function(stdout) {
+      // Wait for device to come back online (<1s).
+      this.adb(['wait-for-device']);
+    }.bind(this));
+
+    var config_parts = config.split(",");
+    if (config_parts.length === 4) {
+      var ip = config_parts[0];
+      var gateway = config_parts[1];
+      var dns1 = config_parts[2];
+      var dns2 = config_parts[3];
+    } else {
+      throw new Error('Invalid rndis config. Should be --rndis444="<ip>/24,<gateway>,<dns1>,<dns2>"');
+    }
+
+    this.scheduleGetNetworkConfiguration().then(function(netcfg) {
+      var ifc = this.getRndisIfc_(netcfg, true);
+      if (!ifc) {
+        throw new Error('netcfg lacks rndis interface');
+      }
+      var ifname = ifc.name;
+
+      // Stop WiFi if enabled.
+      var hasWifi = netcfg.some(function(ifc2) {
+        return ifc2.isUp && (/^wlan\d+$/).test(ifc2.name);
+      });
+      if (hasWifi) {
+        this.su(['svc', 'wifi', 'disable']);
+      }
+
+      // Take all other interfaces down.
+      netcfg.forEach(function(ifc2) {
+        if (ifc2.isUp && 'lo' !== ifc2.name && ifname !== ifc2.name) {
+          this.su(['ip', 'link', 'set', ifc2.name, 'down']);
+        }
+      }.bind(this));
+
+      // Set ip address.
+      this.su(['ip', 'link', 'set', ifname, 'down']);
+      this.su(['netcfg', ifname, 'hwaddr', this.computeMacForRndis_()]);
+      this.su(['ip', 'addr', 'flush', 'dev', ifname]);
+      this.su(['ip', 'addr', 'add', ip, 'dev', ifname]);
+      this.su(['ip', 'link', 'set', ifname, 'up']);
+
+      // Configure DNS.
+      this.su(['setprop', 'net.dns1', dns1]);
+      this.su(['setprop', 'net.dns2', dns2]);
+      this.su(['setprop', 'net.' + ifname + '.dns1', dns1]);
+      this.su(['setprop', 'net.' + ifname + '.dns2', dns1]);
+      this.su(['ndc', 'resolver', 'setifdns', ifname, dns1, dns2]);
+
+      // set up default route
+      this.su(['setprop', 'net.' + ifname + '.gw', gateway]);
+      this.su(['route', 'add', '-net', '0.0.0.0', 'netmask', '0.0.0.0', 'gw', gateway, 'dev', ifname]);
+      this.su(['ndc', 'resolver', 'setdefaultif', ifname]);
+    }.bind(this));
+
+    // Sanity check -- sometimes the above 'up' and/or 'dhcp' commands randomly
+    // fail.  We'll let our caller retry if desired.
+    this.scheduleAssertRndisIsEnabled();
+  }.bind(this));
 };
 
 /**

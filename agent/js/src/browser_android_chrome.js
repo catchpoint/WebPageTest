@@ -160,6 +160,7 @@ function BrowserAndroidChrome(app, args) {
   this.maxTemp = args.flags.maxtemp ? parseFloat(args.flags.maxtemp) : 0;
   this.checkNet = 'yes' === args.flags.checknet;
   this.useRndis = this.checkNet && 'yes' === args.flags.useRndis;
+  this.rndis444 = args.flags['rndis444'] ? args.flags.rndis444 : undefined;
   this.deviceVideoPath_ = undefined;
   this.recordProcess_ = undefined;
   function toDir(s) {
@@ -797,7 +798,7 @@ BrowserAndroidChrome.prototype.scheduleAssertIsReady = function() {
   'use strict';
   return this.app_.schedule('Assert isReady', function() {
     if (this.checkNet) {
-      if (this.useRndis) {
+      if (this.rndis444 || this.useRndis) {
         this.adb_.scheduleAssertRndisIsEnabled();
       } else {
         this.adb_.scheduleDetectConnectedInterface();
@@ -852,7 +853,12 @@ BrowserAndroidChrome.prototype.scheduleMakeReady = function() {
   return this.scheduleAssertIsReady().then(function() {
     return false;  // Was already online.
   }, function(e) {
-    if (this.checkNet && this.useRndis) {
+    if (this.checkNet && this.rndis444) {
+      return this.adb_.scheduleEnableRndis444(this.rndis444).then(
+          this.scheduleAssertIsReady.bind(this)).then(function() {
+        return true;  // Was offline but we're back online now.
+      });
+    } else if (this.checkNet && this.useRndis) {
       return this.adb_.scheduleEnableRndis().then(
           this.scheduleAssertIsReady.bind(this)).then(function() {
         return true;  // Was offline but we're back online now.
