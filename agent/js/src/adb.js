@@ -723,16 +723,16 @@ Adb.prototype.scheduleEnableRndis444 = function(config) {
       this.su(['ip', 'addr', 'add', ip, 'dev', ifname]);
       this.su(['ip', 'link', 'set', ifname, 'up']);
 
+      // set up default route
+      this.su(['route', 'add', '-net', '0.0.0.0', 'netmask', '0.0.0.0', 'gw', gateway, 'dev', ifname]);
+      this.su(['setprop', 'net.' + ifname + '.gw', gateway]);
+
       // Configure DNS.
       this.su(['setprop', 'net.dns1', dns1]);
       this.su(['setprop', 'net.dns2', dns2]);
       this.su(['setprop', 'net.' + ifname + '.dns1', dns1]);
       this.su(['setprop', 'net.' + ifname + '.dns2', dns1]);
       this.su(['ndc', 'resolver', 'setifdns', ifname, dns1, dns2]);
-
-      // set up default route
-      this.su(['setprop', 'net.' + ifname + '.gw', gateway]);
-      this.su(['route', 'add', '-net', '0.0.0.0', 'netmask', '0.0.0.0', 'gw', gateway, 'dev', ifname]);
       this.su(['ndc', 'resolver', 'setdefaultif', ifname]);
     }.bind(this));
 
