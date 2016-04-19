@@ -289,40 +289,22 @@ CStringA UTF16toUTF8(const CStringW& utf16) {
   return utf8;
 }
 
-void WriteToLogFile(TCHAR *msg) {
+void WriteToLogFile(HANDLE hFile, LPCRITICAL_SECTION cs, TCHAR *msg) {
   DWORD written;
   CStringW utf16_str;
   CStringA utf8_str;
   SYSTEMTIME time;
 
-  EnterCriticalSection(logfile_cs);
+  EnterCriticalSection(cs);
 
   GetSystemTime(&time);
-  utf16_str.Format(_T("[%d:%d:%d.%d] %s\n"), time.wHour, time.wMinute, time.wSecond, time.wMilliseconds, msg);
+  utf16_str.Format(_T("[%d-%02d-%02d %d:%d:%d.%d] %s\n"), time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute, time.wSecond, time.wMilliseconds, CString(msg).Trim());
   utf8_str = UTF16toUTF8(utf16_str);
 
-  SetFilePointer(logfile_handle, 0, 0, FILE_END);
-  WriteFile(logfile_handle, utf8_str.GetBuffer(), utf8_str.GetLength(), &written, 0);
-
-  LeaveCriticalSection(logfile_cs);
-}
-
-void WriteToGlobalLogFile(TCHAR *msg) {
-  DWORD written;
-  CStringW utf16_str;
-  CStringA utf8_str;
-  SYSTEMTIME time;
-
-  EnterCriticalSection(global_logfile_cs);
-
-  GetSystemTime(&time);
-  utf16_str.Format(_T("[%d:%d:%d.%d] %s\n"), time.wHour, time.wMinute, time.wSecond, time.wMilliseconds, msg);
-  utf8_str = UTF16toUTF8(utf16_str);
-
-  SetFilePointer(global_logfile_handle, 0, 0, FILE_END);
-  WriteFile(global_logfile_handle, utf8_str.GetBuffer(), utf8_str.GetLength(), &written, 0);
-
-  LeaveCriticalSection(global_logfile_cs);
+  SetFilePointer(hFile, 0, 0, FILE_END);
+  WriteFile(hFile, utf8_str.GetBuffer(), utf8_str.GetLength(), &written, 0);
+  LeaveCriticalSection(cs);
+  FlushFileBuffers(hFile);
 }
 
 /*-----------------------------------------------------------------------------
@@ -338,7 +320,7 @@ void WptTrace(int level, LPCTSTR format, ...) {
       if (_vstprintf_s( msg, len, format, args ) > 0) {
         if (lstrlen(msg)) {
           if (logfile_handle && logfile_cs) {
-            WriteToLogFile(msg);
+            WriteToLogFile(logfile_handle, logfile_cs, msg);
           }
           if (global_logfile_handle && global_logfile_cs) {
             LARGE_INTEGER size;
@@ -348,7 +330,7 @@ void WptTrace(int level, LPCTSTR format, ...) {
               SetFilePointer(global_logfile_handle, 0l, NULL, FILE_BEGIN);
               SetEndOfFile(global_logfile_handle);
             }
-            WriteToGlobalLogFile(msg);
+            WriteToLogFile(global_logfile_handle, global_logfile_cs, msg);
           }
           OutputDebugString(msg);
         }

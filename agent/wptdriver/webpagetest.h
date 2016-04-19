@@ -55,6 +55,7 @@ private:
   CString       _dns_servers;
   int           _screenWidth;
   int           _screenHeight;
+  int           _lockScreen;
 
   void LoadClientCertificateFromStore(HINTERNET request);
   void SetLoginCredentials(HINTERNET request);

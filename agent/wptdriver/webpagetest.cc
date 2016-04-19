@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static const TCHAR * NO_FILE = _T("");
 static const short MAX_REBOOT = 3;
+static const short MAX_LOCKSCREEN_WAIT = 60 * 10; // reboot after 10min of lock screen
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -49,7 +50,8 @@ WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
   ,_revisionNo(0)
   ,_exit(false)
   ,has_gpu_(false)
-  ,rebooting_(false) {
+  ,rebooting_(false)
+  ,_lockScreen(0) {
   SetErrorMode(SEM_FAILCRITICALERRORS);
   // get the version number of the binary (for software updates)
   TCHAR file[MAX_PATH];
@@ -104,19 +106,30 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
   // Test if lock screen is active. If lockscreen is active, wnd will be NULL
   HWND wnd = GetForegroundWindow();
   if (wnd == NULL) {
+   
     // Lock screen is active, we need to reboot
-    WptTrace(loglevel::kError, _T("[wptdriver] - Lock screen detected. Agent need to reboot!"));
-
+    WptTrace(loglevel::kError, _T("[wptdriver] - Lock screen detected."));
 
     if (_settings._reboot_on_lock_screen) {
+
+      // As a safety measure, we don't want to reboot right away in case we need to run an emergency maintenance
+      ++_lockScreen;
+      short sec = _lockScreen * _settings._polling_delay;
+      if (sec < MAX_LOCKSCREEN_WAIT) {
+        WptTrace(loglevel::kError, _T("[wptdriver] - Lock screen detected. Will reboot in %ds"), (MAX_LOCKSCREEN_WAIT - sec));
+        return false;
+      }
+
       if (RebootWatchDog()){
+        WptTrace(loglevel::kError, _T("[wptdriver] - Rebooting agent!"));
         Reboot();
       } else {
-        WptTrace(loglevel::kError, _T("[wptdriver] - Maximum number of consecutive reboot exeeded!"));
+        WptTrace(loglevel::kError, _T("[wptdriver] - Maximum number of consecutive reboot exceeded! Agent won't reboot but won't take new jobs."));
+        WptTrace(loglevel::kError, _T("[wptdriver] - This agent won't fetch new work, this agent is broken and require investigations."));
       }
     } else {
       WptTrace(loglevel::kError, _T("[wptdriver] - RebootOnLockScreen not set in ini file. Will not reboot!"));
-      WptTrace(loglevel::kError, _T("[wptdriver] - Don't fetch new work, this agent is broken"));
+      WptTrace(loglevel::kError, _T("[wptdriver] - This agent won't fetch new work, this agent is broken and require a manual reboot."));
     }
 
     return false;
@@ -129,6 +142,10 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
   }
 
   ResetRebootWatchDog();
+
+  // reset the number of consecutive lock screen detected
+  _lockScreen = 0;
+
 
   DeleteDirectory(test._directory, false);
 
@@ -218,22 +235,28 @@ void WebPagetest::SaveRebootWatchDog(short nb) {
 
 short WebPagetest::LoadRebootWatchDog() {
   byte ReadBuffer[1] = { 0 };
+  short nb;
 
   HANDLE file_handle = CreateFile(_T("reboot_count.txt"), GENERIC_READ, FILE_SHARE_READ,
     0, OPEN_EXISTING, 0, 0);
 
   DWORD bytes;
-  if (file_handle != INVALID_HANDLE_VALUE && ReadFile(file_handle, ReadBuffer, sizeof(ReadBuffer), &bytes, 0) && bytes) {
-    CloseHandle(file_handle);
-
+  if (file_handle == INVALID_HANDLE_VALUE) {
+    // something bad is happening. Make sure we don't restart
+    nb = SHRT_MAX;
+    WptTrace(loglevel::kError, _T("[wptdriver] - Failed to load reboot_count.txt with an invalid handle. %d"), GetLastError());
+  } else if (ReadFile(file_handle, ReadBuffer, sizeof(ReadBuffer), &bytes, 0) && bytes) {
     // convert from ASCII
     short nb = ReadBuffer[0] - 48;
-    AtlTrace(_T("[wptdriver] - Reboot count %d"), nb);
-
-    return nb;
+    WptTrace(loglevel::kFunction, _T("[wptdriver] - Reboot count %d"), nb);
+  } else {
+    // this is the first time we read this file (file empty)
+    WptTrace(loglevel::kFunction, _T("[wptdriver] - First run of the agent. Will create reboot_count.txt file"));
+    nb = 0;
   }
+  CloseHandle(file_handle);
 
-  return 0;
+  return nb;
 }
 
 /*-----------------------------------------------------------------------------
