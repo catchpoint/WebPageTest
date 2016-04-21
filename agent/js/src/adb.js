@@ -689,17 +689,10 @@ Adb.prototype.scheduleEnableRndis444 = function(config) {
       throw new Error('Invalid rndis config. Should be --rndis444="<ip>/24,<gateway>,<dns1>,<dns2>"');
     }
 
-    // Enable USB tether if the rndis interface is not already present
-    this.scheduleGetNetworkConfiguration().then(function(netcfg) {
-      var ifc = this.getRndisIfc_(netcfg, true);
-      if (!ifc) {
-        this.su(['setprop', 'sys.usb.config', 'rndis,adb']);
-        this.adb(['wait-for-device']);
-        this.su(['service', 'call', 'connectivity', '34', 'i32', '1']).then(function(stdout) {
-          // Wait for device to come back online (<1s).
-          this.adb(['wait-for-device']);
-        }.bind(this));
-      }
+    // Enable USB tethering
+    this.su(['service', 'call', 'connectivity', '34', 'i32', '1']).then(function(stdout) {
+      // Wait for device to come back online (<1s).
+      this.adb(['wait-for-device']);
     }.bind(this));
 
     this.scheduleGetNetworkConfiguration().then(function(netcfg) {
