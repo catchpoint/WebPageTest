@@ -302,4 +302,7 @@ if (array_key_exists('medianMetric', $_REQUEST)) {
     $median_metric = htmlspecialchars($_REQUEST['medianMetric']);
 }
 
+if (is_file('./settings/custom_common.inc.php')) {
+    include('./settings/custom_common.inc.php');
+}
 ?>
