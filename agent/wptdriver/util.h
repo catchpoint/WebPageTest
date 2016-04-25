@@ -37,7 +37,9 @@ enum {
 
 extern const DWORD CAPABILITIES[::nCapabilities];
 extern HANDLE logfile_handle;
+extern HANDLE global_logfile_handle;
 extern CRITICAL_SECTION *logfile_cs;
+extern CRITICAL_SECTION *global_logfile_cs;
 
 namespace loglevel {
   const int kError = 1;

@@ -80,7 +80,8 @@ WptSettings::WptSettings(WptStatus &status):
   ,_status(status)
   ,_software_update(status)
   ,_requireValidCertificate(true)
-  ,_webdriver_supported(false) {
+  ,_webdriver_supported(false)
+  ,_reboot_on_lock_screen(false) {
 }
 
 /*-----------------------------------------------------------------------------
@@ -102,8 +103,20 @@ bool WptSettings::Load(void) {
   lstrcpy( PathFindFileName(iniFile), _T("wptdriver.ini") );
   _ini_file = iniFile;
   lstrcpy(logFile, iniFile);
-  lstrcpy( PathFindFileName(logFile), _T("wpt.log") );
+
+  // setting logs
+  lstrcpy(PathFindFileName(logFile), _T("wpt.log"));
   DeleteFile(logFile);
+  global_logfile_handle = CreateFile(logFile, GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ,
+    NULL, OPEN_ALWAYS, 0, 0);
+  if (logfile_handle == INVALID_HANDLE_VALUE) {
+    WptTrace(loglevel::kFunction, _T("Failed to open log file. Error: %d"), GetLastError());
+  }
+  else {
+    global_logfile_cs = (CRITICAL_SECTION *)malloc(sizeof(CRITICAL_SECTION));
+    ZeroMemory(global_logfile_cs, sizeof(CRITICAL_SECTION));
+    InitializeCriticalSection(global_logfile_cs);
+  }
 
   if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
                                 NULL, SHGFP_TYPE_CURRENT, buff))) {
@@ -166,6 +179,10 @@ bool WptSettings::Load(void) {
       _T("WebPagetest"), _T("web_page_replay_host"), _T(""), buff,
       _countof(buff), iniFile )) {
     _web_page_replay_host = buff;
+  }
+
+  if (GetPrivateProfileInt(_T("WebPagetest"), _T("RebootOnLockScreen"), 0, iniFile)) {
+    _reboot_on_lock_screen = true;
   }
 
   if (GetPrivateProfileInt(_T("WebPagetest"), _T("WebDriver"), 0, iniFile)) {

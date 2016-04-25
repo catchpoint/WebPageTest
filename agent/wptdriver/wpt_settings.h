@@ -135,4 +135,5 @@ public:
   CString _webdriver_server_url;
   CString _imagetools_command;
   bool _webdriver_supported;
+  bool _reboot_on_lock_screen;
 };

@@ -47,8 +47,10 @@ HWND				InitInstance(HINSTANCE, int);
 LRESULT CALLBACK	WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK	About(HWND, UINT, WPARAM, LPARAM);
 
-HANDLE logfile_handle;
-CRITICAL_SECTION *logfile_cs;
+HANDLE logfile_handle = NULL;
+HANDLE global_logfile_handle = NULL;
+CRITICAL_SECTION *logfile_cs = NULL;
+CRITICAL_SECTION *global_logfile_cs = NULL;
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,

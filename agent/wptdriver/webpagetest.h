@@ -55,6 +55,7 @@ private:
   CString       _dns_servers;
   int           _screenWidth;
   int           _screenHeight;
+  int           _lockScreen;
 
   void LoadClientCertificateFromStore(HINTERNET request);
   void SetLoginCredentials(HINTERNET request);
@@ -80,4 +81,8 @@ private:
   bool GetClient(WptTestDriver& test);
   bool UnzipTo(CString zip_file, CString dest);
   void UpdateDNSServers();
+  bool RebootWatchDog();
+  void ResetRebootWatchDog();
+  void SaveRebootWatchDog(short);
+  short LoadRebootWatchDog();
 };
