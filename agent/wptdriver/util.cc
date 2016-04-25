@@ -298,7 +298,7 @@ void WriteToLogFile(HANDLE hFile, LPCRITICAL_SECTION cs, TCHAR *msg) {
   EnterCriticalSection(cs);
 
   GetSystemTime(&time);
-  utf16_str.Format(_T("[%d-%02d-%02d %d:%d:%d.%d] %s\n"), time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute, time.wSecond, time.wMilliseconds, CString(msg).Trim());
+  utf16_str.Format(_T("[%d-%02d-%02d %d:%d:%d.%d] %s\r\n"), time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute, time.wSecond, time.wMilliseconds, CString(msg).Trim());
   utf8_str = UTF16toUTF8(utf16_str);
 
   SetFilePointer(hFile, 0, 0, FILE_END);
