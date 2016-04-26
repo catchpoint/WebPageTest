@@ -106,7 +106,6 @@ bool WptSettings::Load(void) {
 
   // setting logs
   lstrcpy(PathFindFileName(logFile), _T("wpt.log"));
-  DeleteFile(logFile);
   global_logfile_handle = CreateFile(logFile, GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ,
     NULL, OPEN_ALWAYS, 0, 0);
   if (logfile_handle == INVALID_HANDLE_VALUE) {
