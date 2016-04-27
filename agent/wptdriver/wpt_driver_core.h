@@ -74,6 +74,7 @@ private:
   bool DetectGPU();
   void PreTest();
   void PostTest();
+  void CleanupUnwantedProcesses();
   bool Startup();
   LPTSTR GetAppInitString(LPCTSTR new_dll);
   bool NeedsReboot();

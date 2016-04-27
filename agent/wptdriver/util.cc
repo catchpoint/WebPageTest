@@ -692,6 +692,28 @@ DWORD FindProcessIds(TCHAR * exe, CAtlList<DWORD> &pids) {
 }
 
 /*-----------------------------------------------------------------------------
+  Build a list of process ID's for all executable whose name contains the
+  string given as parameter
+-----------------------------------------------------------------------------*/
+DWORD FindProcessIdsByPartialName(TCHAR * partial, CAtlList<DWORD> &pids) {
+  DWORD count = 0;
+  WTS_PROCESS_INFO * proc = NULL;
+  DWORD process_count = 0;
+  if (WTSEnumerateProcesses(WTS_CURRENT_SERVER_HANDLE, 0, 1, &proc, &process_count)) {
+    for (DWORD i = 0; i < process_count; i++) {
+      TCHAR * process = PathFindFileName(proc[i].pProcessName);
+      if (wcsstr(process, partial)) {
+        count++;
+        pids.AddTail(proc[i].ProcessId);
+      }
+    }
+    if (proc)
+      WTSFreeMemory(proc);
+  }
+  return count;
+}
+
+/*-----------------------------------------------------------------------------
   Terminate a process given it's process ID
 -----------------------------------------------------------------------------*/
 void TerminateProcessById(DWORD pid) {
@@ -768,6 +790,20 @@ void WaitForProcessesByName(TCHAR * exe, DWORD timeout) {
 void TerminateProcessesByName(TCHAR * exe) {
   CAtlList<DWORD> processes;
   FindProcessIds(exe, processes);
+  if (!processes.IsEmpty()) {
+    POSITION pos = processes.GetHeadPosition();
+    while (pos) {
+      DWORD pid = processes.GetNext(pos);
+      TerminateProcessById(pid);
+    }
+  }
+}
+
+// Same as TerminateProcessesByName, except that it kills all processes that contain
+// the partial string given as parameter in their exe name
+void TerminateProcessesByPartialName(TCHAR *partial) {
+  CAtlList<DWORD> processes;
+  FindProcessIdsByPartialName(partial, processes);
   if (!processes.IsEmpty()) {
     POSITION pos = processes.GetHeadPosition();
     while (pos) {
