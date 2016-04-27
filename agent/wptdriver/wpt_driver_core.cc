@@ -242,6 +242,7 @@ void WptDriverCore::WorkThread(void) {
           Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
       }
       PostTest();
+      CleanupUnwantedProcesses();
       ReleaseMutex(_testing_mutex);
     } else {
       ReleaseMutex(_testing_mutex);
@@ -968,6 +969,10 @@ void WptDriverCore::PostTest() {
     }
     RegCloseKey(hKey);
   }
+}
+
+void WptDriverCore::CleanupUnwantedProcesses() {
+  TerminateProcessesByPartialName(_T("FlashPlayerPlugin"));
 }
 
 /*-----------------------------------------------------------------------------

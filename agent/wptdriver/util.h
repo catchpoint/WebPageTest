@@ -72,10 +72,12 @@ CString CreateAppDataDir();
 bool GetModuleByName(HANDLE process, LPCTSTR module_name,
     MODULEENTRY32 * module);
 DWORD FindProcessIds(TCHAR * exe, CAtlList<DWORD> &pids);
+DWORD FindProcessIdsByPartialName(TCHAR * partial, CAtlList<DWORD> &pids);
 DWORD GetParentProcessId(DWORD pid);
 void TerminateProcessAndChildren(DWORD pid);
 void TerminateProcessById(DWORD pid);
 void TerminateProcessesByName(TCHAR * exe);
+void TerminateProcessesByPartialName(TCHAR * partial);
 void WaitForChildProcesses(DWORD pid, DWORD timeout = 300000);
 void WaitForProcessesByName(TCHAR * exe, DWORD timeout = 300000);
 bool IsBrowserDocument(HWND wnd, bool recurse = true);
