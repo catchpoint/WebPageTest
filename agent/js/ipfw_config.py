@@ -68,7 +68,7 @@ def main():
     parser.add_argument('--device', help="Device ID.")
 
     options = parser.parse_args()
-    if not options.action or not options.server or not options.user or not options.down_pipe or not options.up_pipe:
+    if not options.action or not options.server or not options.down_pipe or not options.up_pipe:
         parser.error("Invalid options.\n\n"
                      "Use -h to see available options")
 
