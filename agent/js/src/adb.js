@@ -689,6 +689,12 @@ Adb.prototype.scheduleEnableRndis444 = function(config) {
     }
 
     // Enable USB tethering
+    this.shell(['getprop', 'sys.usb.config']).then(function(stdout) {
+      if ('rndis,adb' !== stdout.trim()) {
+        this.su(['setprop', 'sys.usb.config', 'rndis,adb']);
+        this.adb(['wait-for-device']);
+      }
+    }.bind(this));
     this.su(['service', 'call', 'connectivity', '34', 'i32', '1']).then(function(stdout) {
       // Wait for device to come back online (<1s).
       this.adb(['wait-for-device']);
