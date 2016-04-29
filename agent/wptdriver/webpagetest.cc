@@ -103,6 +103,9 @@ WebPagetest::~WebPagetest(void) {
 bool WebPagetest::GetTest(WptTestDriver& test) {
   bool ret = false;
 
+  // Rotate global logs if needed
+  _settings.RotateGlobalLogs();
+
   // Test if lock screen is active. If lockscreen is active, wnd will be NULL
   HWND wnd = GetForegroundWindow();
   if (wnd == NULL) {

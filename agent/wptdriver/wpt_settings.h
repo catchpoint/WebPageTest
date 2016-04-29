@@ -109,12 +109,14 @@ public:
   bool GetUrlText(CString url, CString &response, LPCTSTR headers = NULL);
   bool UpdateSoftware();
   bool ReInstallBrowser();
+  void RotateGlobalLogs();
 
   CString _server;
   CString _username;
   CString _password;
   CString _location;
   CString _key;
+  CString _logFile;
   DWORD   _timeout;
   DWORD   _startup_delay;
   DWORD   _polling_delay;

@@ -50,8 +50,6 @@ const DWORD CAPABILITIES[::nCapabilities] = {
   0x0001    // kMultistepSupport bitmask value
 };
 
-const LONGLONG MAX_LOG_SIZE = 20LL * 1024LL * 1024LL; // 20mb
-
 /*-----------------------------------------------------------------------------
   Launch the provided process and wait for it to finish 
   (unless process_handle is provided in which case it will return immediately)
@@ -295,16 +293,15 @@ void WriteToLogFile(HANDLE hFile, LPCRITICAL_SECTION cs, TCHAR *msg) {
   CStringA utf8_str;
   SYSTEMTIME time;
 
-  EnterCriticalSection(cs);
 
   GetSystemTime(&time);
   utf16_str.Format(_T("[%d-%02d-%02d %02d:%02d:%02d.%d] %s\r\n"), time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute, time.wSecond, time.wMilliseconds, CString(msg).Trim());
   utf8_str = UTF16toUTF8(utf16_str);
 
-  SetFilePointer(hFile, 0, 0, FILE_END);
+  // hFile is assumed to be open for FILE_APPEND_DATA with the FILE_FLAG_WRITE_THROUGH.
+  // FILE_APPEND_DATA guaranties non-overlapping writes and FILE_FLAG_WRITE_THROUGH
+  // is equivalent of doing a write followed by a flush.
   WriteFile(hFile, utf8_str.GetBuffer(), utf8_str.GetLength(), &written, 0);
-  LeaveCriticalSection(cs);
-  FlushFileBuffers(hFile);
 }
 
 /*-----------------------------------------------------------------------------
@@ -323,13 +320,6 @@ void WptTrace(int level, LPCTSTR format, ...) {
             WriteToLogFile(logfile_handle, logfile_cs, msg);
           }
           if (global_logfile_handle && global_logfile_cs) {
-            LARGE_INTEGER size;
-            GetFileSizeEx(global_logfile_handle, &size);
-            if (size.QuadPart > MAX_LOG_SIZE) {
-              // truncate the logs
-              SetFilePointer(global_logfile_handle, 0l, NULL, FILE_BEGIN);
-              SetEndOfFile(global_logfile_handle);
-            }
             WriteToLogFile(global_logfile_handle, global_logfile_cs, msg);
           }
           OutputDebugString(msg);
