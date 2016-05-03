@@ -289,9 +289,9 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
   test.SetFileBase();
 
   // activate logs
-  logfile_handle = CreateFile(test._file_base + _T("_wptdriver.log"), GENERIC_WRITE,
+  logfile_handle = CreateFile(test._file_base + _T("_wptdriver.log"), FILE_APPEND_DATA,
     FILE_SHARE_READ | FILE_SHARE_WRITE,
-    NULL, OPEN_ALWAYS, 0, 0);
+    NULL, OPEN_ALWAYS, FILE_FLAG_WRITE_THROUGH, 0);
   if (logfile_handle == INVALID_HANDLE_VALUE) {
     WptTrace(loglevel::kFunction, _T("Failed to open log file. Error: %d"), GetLastError());
   } else {

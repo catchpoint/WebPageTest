@@ -103,8 +103,8 @@ WptHook::WptHook(void):
       free( pVersion );
     }
   }
-  logfile_handle = CreateFile(file_base_ + WPTHOOK_LOG, GENERIC_WRITE, 0,
-    NULL, OPEN_ALWAYS, 0, 0);
+  logfile_handle = CreateFile(file_base_ + WPTHOOK_LOG, FILE_APPEND_DATA, 0,
+    NULL, OPEN_ALWAYS, FILE_FLAG_WRITE_THROUGH, 0);
   if (logfile_handle == INVALID_HANDLE_VALUE) {
     WptTrace(loglevel::kFunction, _T("[wpthook] Failed to open log file. Error: %d"), GetLastError());
   } else {

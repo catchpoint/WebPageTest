@@ -32,6 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <WinInet.h>
 #include "zlib/contrib/minizip/unzip.h"
 
+const LONGLONG MAX_LOG_SIZE = 20LL * 1024LL * 1024LL; // 20mb
+
 static const TCHAR * CHROME_NETLOG = _T("log-net-log=\"%s_netlog.txt\"");
 static const TCHAR * CHROME_SPDY3 = _T("enable-spdy3");
 static const TCHAR * CHROME_SOFTWARE_RENDER =
@@ -90,6 +92,25 @@ WptSettings::~WptSettings(void) {
 }
 
 /*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptSettings::RotateGlobalLogs() {
+  HANDLE hFile = CreateFile(_logFile, GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ,
+    NULL, OPEN_ALWAYS, FILE_FLAG_WRITE_THROUGH, 0);
+  if (logfile_handle == INVALID_HANDLE_VALUE) {
+    WptTrace(loglevel::kFunction, _T("Failed to open log file. Error: %d"), GetLastError());
+  }
+  else {
+    LARGE_INTEGER size;
+    GetFileSizeEx(hFile, &size);
+    if (size.QuadPart > MAX_LOG_SIZE) {
+      // truncate the logs
+      SetFilePointer(hFile, 0l, NULL, FILE_BEGIN);
+      SetEndOfFile(hFile);
+    }
+  }
+  CloseHandle(hFile);
+}
+/*-----------------------------------------------------------------------------
   Load the settings file
 -----------------------------------------------------------------------------*/
 bool WptSettings::Load(void) {
@@ -106,8 +127,9 @@ bool WptSettings::Load(void) {
 
   // setting logs
   lstrcpy(PathFindFileName(logFile), _T("wpt.log"));
-  global_logfile_handle = CreateFile(logFile, GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ,
-    NULL, OPEN_ALWAYS, 0, 0);
+  _logFile = logFile;
+  global_logfile_handle = CreateFile(logFile, FILE_APPEND_DATA, FILE_SHARE_WRITE | FILE_SHARE_READ,
+    NULL, OPEN_ALWAYS, FILE_FLAG_WRITE_THROUGH, 0);
   if (logfile_handle == INVALID_HANDLE_VALUE) {
     WptTrace(loglevel::kFunction, _T("Failed to open log file. Error: %d"), GetLastError());
   }
