@@ -1074,6 +1074,7 @@ static int start_thread(struct mg_context *ctx, mg_thread_func_t func,
 
   hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) func, param, 0,
                          NULL);
+  SetThreadPriority(hThread, THREAD_PRIORITY_ABOVE_NORMAL);
   if (hThread != NULL) {
     (void) CloseHandle(hThread);
   }

@@ -41,7 +41,7 @@ __declspec( dllexport ) void __stdcall InstallHook(void);
 }
 
 static DWORD WINAPI HookThreadProc(void* arg) {
-  SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
+  SetPriorityClass(GetCurrentProcess(), BELOW_NORMAL_PRIORITY_CLASS);
 
   // actually do the startup work
   global_hook = new WptHook;
