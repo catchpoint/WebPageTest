@@ -133,6 +133,8 @@ void Results::Reset(void) {
   Save the results out to the appropriate files
 -----------------------------------------------------------------------------*/
 void Results::Save(bool merge) {
+  DWORD priority = GetThreadPriority(GetCurrentThread());
+  SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save()\n"));
   if (!_saved) {
     ProcessRequests(merge);
@@ -164,6 +166,7 @@ void Results::Save(bool merge) {
     _saved = true;
   }
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));
+  SetThreadPriority(GetCurrentThread(), priority);
 }
 
 /*-----------------------------------------------------------------------------
