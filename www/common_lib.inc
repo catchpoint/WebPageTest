@@ -1287,52 +1287,52 @@ function fastimagecopyresampled (&$dst_image, $src_image, $dst_x, $dst_y, $src_x
 */
 function GetPendingTests($loc, &$count, &$avgTime)
 {
-    $total = 0;
-    $locations = explode(',', $loc);
-    foreach($locations as $location) {
-        $parts = explode(':', $location);
-        $location = $parts[0];
-        $count = 0;
-        $avgTime = 0;
-        if (is_file("./tmp/$location.tests"))
-          $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
-        if( isset($tests) && is_array($tests) && array_key_exists('times', $tests) )
-        {
-            $count = (int)$tests['tests'];
-            $timeCount = count($tests['times']);
-            if( $timeCount )
-            {
-                $timeTotal = 0;
-                foreach( $tests['times'] as $time )
-                    $timeTotal += $time;
-                $avgTime = ceil($timeTotal / $timeCount);
-            }
-        }
-        // now count just the low priority tests
-        $beanstalkd = GetSetting('beanstalkd');
-        if ($beanstalkd && strlen($beanstalkd)) {
-            require_once('./lib/beanstalkd/pheanstalk_init.php');
-            $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
-            for ($priority = 0; $priority < 9; $priority++) {
-                $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
-                try {
-                    $stats = $pheanstalk->statsTube($tube);
-                    $total += intval($stats['current-jobs-ready']);
-                    if (!$priority)
-                        $count += intval($stats['current-jobs-ready']);
-                } catch(Exception $e) {
-                }
-            }
-        }
-        if( LoadJobQueue("./work/jobs/$location", $queue) ) {
-            foreach( $queue as $priority => &$q ) {
-                if ($priority < 9)
-                    $total += count($q);
-            }
-            $count += count($queue[0]);
-        }
+  $total = 0;
+  $locations = explode(',', $loc);
+  foreach($locations as $location) {
+    $parts = explode(':', $location);
+    $location = $parts[0];
+    $count = 0;
+    $avgTime = 0;
+    if (is_file("./tmp/$location.tests"))
+      $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
+    if( isset($tests) && is_array($tests) && array_key_exists('times', $tests) )
+    {
+      $count = (int)$tests['tests'];
+      $timeCount = count($tests['times']);
+      if( $timeCount )
+      {
+        $timeTotal = 0;
+        foreach( $tests['times'] as $time )
+          $timeTotal += $time;
+        $avgTime = ceil($timeTotal / $timeCount);
+      }
     }
-    return $total;
+    // now count just the low priority tests
+    $beanstalkd = GetSetting('beanstalkd');
+    if ($beanstalkd && strlen($beanstalkd)) {
+      require_once('./lib/beanstalkd/pheanstalk_init.php');
+      $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
+      for ($priority = 0; $priority < 9; $priority++) {
+        $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
+        try {
+          $stats = $pheanstalk->statsTube($tube);
+          $total += intval($stats['current-jobs-ready']);
+          if (!$priority)
+            $count += intval($stats['current-jobs-ready']);
+        } catch(Exception $e) {
+        }
+      }
+    }
+    if( LoadJobQueue("./work/jobs/$location", $queue) ) {
+      foreach( $queue as $priority => &$q ) {
+        if ($priority < 9)
+          $total += count($q);
+      }
+      $count += count($queue[0]);
+    }
+  }
+  return $total;
 }
 
 /**
@@ -1341,28 +1341,28 @@ function GetPendingTests($loc, &$count, &$avgTime)
 * @param mixed $location
 */
 function GetQueueLengths($location) {
-    $queues = array();
-    for ($priority = 0; $priority <= 9; $priority++)
-      $queues[$priority] = 0;
-    $beanstalkd = GetSetting('beanstalkd');
-    if ($beanstalkd && strlen($beanstalkd)) {
-        require_once('./lib/beanstalkd/pheanstalk_init.php');
-        $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
-        for ($priority = 0; $priority <= 9; $priority++) {
-            $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
-            try {
-                $stats = $pheanstalk->statsTube($tube);
-                $queues[$priority] += intval($stats['current-jobs-ready']);
-            } catch(Exception $e) {
-            }
-        }
+  $queues = array();
+  for ($priority = 0; $priority <= 9; $priority++)
+    $queues[$priority] = 0;
+  $beanstalkd = GetSetting('beanstalkd');
+  if ($beanstalkd && strlen($beanstalkd)) {
+    require_once('./lib/beanstalkd/pheanstalk_init.php');
+    $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
+    for ($priority = 0; $priority <= 9; $priority++) {
+      $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
+      try {
+        $stats = $pheanstalk->statsTube($tube);
+        $queues[$priority] += intval($stats['current-jobs-ready']);
+      } catch(Exception $e) {
+      }
     }
-    if( LoadJobQueue("./work/jobs/$location", $queue) ) {
-        foreach( $queue as $priority => &$q )
-            $queues[$priority] += count($q);
-    }
-    
-    return $queues;
+  }
+  if( LoadJobQueue("./work/jobs/$location", $queue) ) {
+    foreach( $queue as $priority => &$q )
+      $queues[$priority] += count($q);
+  }
+  
+  return $queues;
 }
 
 /**
@@ -1603,23 +1603,9 @@ function LoadJobQueue($workDir, &$queue)
       }
 
       if (!isset($queue) && !GetSetting('beanstalkd')) {
-        // build the queue from disk
-        $files = array();
-        $f = scandir($workDir);
-        if ($f !== false) {
-          foreach( $f as $file ) {
-            if( is_file("$workDir/$file") ) {
-              $fileTime = filemtime("$workDir/$file");
-              if( $fileTime && !isset($files[$fileTime]) )
-                $files[$fileTime] = $file;
-              else
-                $files[] = $file;
-            }
-          }
-        }
-
-        // sort it by time
-        ksort($files);
+        // build the queue from disk (files will be sortable by the order they were submitted)
+        $files = scandir($workDir);
+        sort($files);
 
         // now add them to the various priority queues
         $queue = array();
@@ -1652,12 +1638,12 @@ function LoadJobQueue($workDir, &$queue)
 */
 function SaveJobQueue($workDir, &$queue)
 {
-    $ret = false;
-    $queueName = sha1($workDir);
-    if (gz_file_put_contents("./tmp/$queueName.queue", json_encode($queue)) )
-        $ret = true;
+  $ret = false;
+  $queueName = sha1($workDir);
+  if (gz_file_put_contents("./tmp/$queueName.queue", json_encode($queue)) )
+    $ret = true;
 
-    return $ret;
+  return $ret;
 }
 
 /**

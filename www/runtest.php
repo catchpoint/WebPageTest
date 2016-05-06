@@ -1510,6 +1510,9 @@ function WriteJob($location, &$test, &$job, $testId)
         {
             if (isset($test['affinity']))
               $test['job'] = "Affinity{$test['affinity']}.{$test['job']}";
+            $testNum = GetDailyTestNum();
+            $sortableIndex = date('ymd') . GetSortableString($testNum);
+            $test['job'] = "$sortableIndex.{$test['job']}";
             $fileName = $test['job'];
             $file = "$workDir/$fileName";
             if( file_put_contents($file, $job) ) {
@@ -2443,5 +2446,45 @@ function ValidateCommandLine($cmd, &$error) {
       }
     }
   }
+}
+
+function GetSortableString($num, $targetLen = 6) {
+  $str = '';
+  if ($num > 0) {
+    $digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    $len = strlen($digits);
+    while($num > 0) {
+      $digitValue = $num % $len;
+      $num = (int)($num / $len);
+      $str .= $digits[$digitValue];
+    }
+    $str = strrev($str);
+  }
+  $str = str_pad($str, $targetLen, '0', STR_PAD_LEFT);
+  return $str;
+}
+
+function GetDailyTestNum() {
+  $lock = Lock("TestNum");
+  if ($lock) {
+    $num = 0;
+    if (!$num) {
+      $filename = './dat/testnum.dat';
+      $day = date ('ymd');
+      $testData = array('day' => $day, 'num' => 0);
+      $newData = json_decode(file_get_contents($filename), true);
+      if (isset($newData) && is_array($newData) &&
+          array_key_exists('day', $newData) &&
+          array_key_exists('num', $newData) &&
+          $newData['day'] == $day) {
+        $testData['num'] = $newData['num'];
+      }
+      $testData['num']++;
+      $num = $testData['num'];
+      file_put_contents($filename, json_encode($testData));
+    }
+    Unlock($lock);
+  }
+  return $num;
 }
 ?>
