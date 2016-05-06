@@ -77,6 +77,7 @@ public:
   void ShutdownNow();
   void OnWindowTimingReceived();
   bool IsWindowTimingReceived();
+  void FlushLogs();
 
 private:
   CWsHook   winsock_hook_;

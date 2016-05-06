@@ -50,6 +50,9 @@ const DWORD CAPABILITIES[::nCapabilities] = {
   0x0001    // kMultistepSupport bitmask value
 };
 
+CRITICAL_SECTION logs_cs;
+bool logs_cs_initialized = false;
+CStringA log_buffer = "";
 /*-----------------------------------------------------------------------------
   Launch the provided process and wait for it to finish 
   (unless process_handle is provided in which case it will return immediately)
@@ -287,7 +290,7 @@ CStringA UTF16toUTF8(const CStringW& utf16) {
   return utf8;
 }
 
-void WriteToLogFile(HANDLE hFile, LPCRITICAL_SECTION cs, TCHAR *msg) {
+void WriteToLogFile(TCHAR *msg) {
   DWORD written;
   CStringW utf16_str;
   CStringA utf8_str;
@@ -298,15 +301,39 @@ void WriteToLogFile(HANDLE hFile, LPCRITICAL_SECTION cs, TCHAR *msg) {
   utf16_str.Format(_T("[%d-%02d-%02d %02d:%02d:%02d.%d] %s\r\n"), time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute, time.wSecond, time.wMilliseconds, CString(msg).Trim());
   utf8_str = UTF16toUTF8(utf16_str);
 
-  // hFile is assumed to be open for FILE_APPEND_DATA with the FILE_FLAG_WRITE_THROUGH.
-  // FILE_APPEND_DATA guaranties non-overlapping writes and FILE_FLAG_WRITE_THROUGH
-  // is equivalent of doing a write followed by a flush.
-  WriteFile(hFile, utf8_str.GetBuffer(), utf8_str.GetLength(), &written, 0);
+  EnterCriticalSection(&logs_cs);
+  log_buffer.Append(utf8_str);
+  LeaveCriticalSection(&logs_cs);
 }
 
 /*-----------------------------------------------------------------------------
+Flush logs to disk
+-----------------------------------------------------------------------------*/
+void WptTraceFlush() {
+  DWORD written;
+  // hFile is assumed to be open for FILE_APPEND_DATA with the FILE_FLAG_WRITE_THROUGH.
+  // FILE_APPEND_DATA guaranties non-overlapping writes and FILE_FLAG_WRITE_THROUGH
+  // is equivalent of doing a write followed by a flush.
+
+  EnterCriticalSection(&logs_cs);
+  if (logfile_handle != NULL && logfile_handle != INVALID_HANDLE_VALUE) {
+    WriteFile(logfile_handle, log_buffer.GetBuffer(), log_buffer.GetLength(), &written, 0);
+  }
+  if (global_logfile_handle != NULL && global_logfile_handle != INVALID_HANDLE_VALUE) {
+    WriteFile(global_logfile_handle, log_buffer.GetBuffer(), log_buffer.GetLength(), &written, 0);
+  }
+  log_buffer.Truncate(0);
+  LeaveCriticalSection(&logs_cs);
+}
+/*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptTrace(int level, LPCTSTR format, ...) {
+  // initialize critical section if needed
+  if (!logs_cs_initialized) {
+    InitializeCriticalSection(&logs_cs);
+    logs_cs_initialized = true;
+  }
+
   va_list args;
   va_start( args, format );
 
@@ -316,12 +343,7 @@ void WptTrace(int level, LPCTSTR format, ...) {
     if (msg) {
       if (_vstprintf_s( msg, len, format, args ) > 0) {
         if (lstrlen(msg)) {
-          if (logfile_handle && logfile_cs) {
-            WriteToLogFile(logfile_handle, logfile_cs, msg);
-          }
-          if (global_logfile_handle && global_logfile_cs) {
-            WriteToLogFile(global_logfile_handle, global_logfile_cs, msg);
-          }
+          WriteToLogFile(msg);
           OutputDebugString(msg);
         }
       }

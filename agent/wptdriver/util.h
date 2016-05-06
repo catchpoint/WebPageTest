@@ -38,8 +38,6 @@ enum {
 extern const DWORD CAPABILITIES[::nCapabilities];
 extern HANDLE logfile_handle;
 extern HANDLE global_logfile_handle;
-extern CRITICAL_SECTION *logfile_cs;
-extern CRITICAL_SECTION *global_logfile_cs;
 
 namespace loglevel {
   const int kError = 1;
@@ -65,6 +63,7 @@ DWORD ElapsedMs(LARGE_INTEGER start, LARGE_INTEGER end);
 CStringA UTF16toUTF8(const CStringW& utf16);
 void WriteToLogFile(CStringA &msg);
 void WptTrace(int level, LPCTSTR format, ...);
+void WptTraceFlush();
 
 typedef CAtlList<CStringA> HookSymbolNames;
 typedef CAtlMap<CStringA, DWORD64> HookOffsets;
