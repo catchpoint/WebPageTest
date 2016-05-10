@@ -679,10 +679,13 @@ function ScreenShotTable()
         } else {
           $waterfalls = array();
           foreach ($tests as &$test) {
+            $data = loadPageRunData($test['path'], $test['run'], $test['cached'], array('allEvents' => true, 'eventNumberKeys' => true));
+            $eventName = $data[$test['eventNumber']]['eventName'];
             $waterfalls[] = array('id' => $test['id'],
                                   'label' => $test['name'],
                                   'run' => $test['run'],
-                                  'cached' => $test['cached']);
+                                  'cached' => $test['cached'],
+                                  'eventName' => $eventName);
           }
           $labels='';
           if (array_key_exists('hideurls', $_REQUEST) && $_REQUEST['hideurls'])

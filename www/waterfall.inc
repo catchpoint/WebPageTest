@@ -1230,7 +1230,8 @@ function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
   $row_count = 0;
   foreach($waterfalls as $index => &$waterfall) {
     $test_path = null;
-    $requests = getRequests($waterfall['id'], $test_path, $waterfall['run'], $waterfall['cached'], $has_secure_requests, $has_locations, false, false);
+    $requestData = getRequests($waterfall['id'], $test_path, $waterfall['run'], $waterfall['cached'], $has_secure_requests, $has_locations, false, false,true);
+    $requests = $requestData[$waterfall['eventName']];
     if (isset($requests) && is_array($requests)) {
       $count = count($requests);
       if ($count > $row_count)
@@ -1251,7 +1252,7 @@ function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
   echo "<div style=\"background-color: #fff;$height_style\" class=\"waterfall-container\">";
   foreach($waterfalls as $index => &$waterfall) {
     $o = $index ? $opacity : '1.0';
-    echo "<img style=\"display:block;opacity:$o;position:absolute;top:0;left:0;\" class=\"waterfall-image\" alt=\"\" id=\"waterfall-$index\" src=\"/waterfall.php?test={$waterfall['id']}&run={$waterfall['run']}&cached={$waterfall['cached']}&rowcount=$row_count$waterfall_options\">";
+    echo "<img style=\"display:block;opacity:$o;position:absolute;top:0;left:0;\" class=\"waterfall-image\" alt=\"\" id=\"waterfall-$index\" src=\"/waterfall.php?test={$waterfall['id']}&run={$waterfall['run']}&cached={$waterfall['cached']}&eventName={$waterfall['eventName']}&rowcount=$row_count$waterfall_options\">";
   }
   echo '<div id="marker"></div>';
   echo '</div>';
