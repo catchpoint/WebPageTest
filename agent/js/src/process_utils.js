@@ -311,6 +311,7 @@ exports.scheduleExec = function(app, command, args, options, timeout) {
       stdout += data;
     });
     proc.stderr.on('data', function(data) {
+      logger.debug('stderr: ' + data);
       stderr += data;
     });
 

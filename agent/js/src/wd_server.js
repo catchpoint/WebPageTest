@@ -1349,7 +1349,7 @@ WebDriverServer.prototype.scheduleProcessVideo_ = function() {
       var imgQ = (this.task_.imageQuality ?
             parseInt(this.task_.imageQuality, 10) : 0);
       imgQ = Math.min(Math.max(imgQ, 30), 95);
-      var options = ['lib/video/visualmetrics.py', '-i', this.videoFile_, '-d',
+      var options = ['lib/video/visualmetrics.py', '-vvvv', '-i', this.videoFile_, '-d',
           videoDir, '--orange', '--viewport', '--force', '--quality', imgQ,
           '--maxframes', 50, '--histogram', this.histogramFile_];
       if (this.traceFile_) {
