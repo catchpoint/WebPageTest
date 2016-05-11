@@ -26,6 +26,7 @@ PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
 LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."""
+import gc
 import glob
 import gzip
 import json
@@ -56,6 +57,7 @@ def video_to_frames(video, directory, force, orange_file, multiple, find_viewpor
             if os.path.isdir(directory):
                 directory = os.path.realpath(directory)
                 viewport = find_video_viewport(video, directory, find_viewport, viewport_time)
+                gc.collect()
                 if extract_frames(video, directory, full_resolution, viewport):
                     if multiple and orange_file is not None:
                         directories = split_videos(directory, orange_file)
@@ -69,6 +71,7 @@ def video_to_frames(video, directory, force, orange_file, multiple, find_viewpor
                         if timeline_file is not None and not multiple:
                             synchronize_to_timeline(dir, timeline_file)
                         eliminate_duplicate_frames(dir)
+                        gc.collect()
                 else:
                     logging.critical("Error extracting the video frames from " + video)
             else:
@@ -305,6 +308,7 @@ def eliminate_duplicate_frames(directory):
 
             im = Image.open(blank)
             width, height = im.size
+            im = None
             top = 6
             right_margin = 6
             bottom_margin = 6
@@ -575,6 +579,7 @@ def calculate_histograms(directory, histograms_file, force):
                     if m is not None:
                         frame_time = int(m.groupdict().get('ms'))
                         histogram = calculate_image_histogram(frame)
+                        gc.collect()
                         if histogram is not None:
                             histograms.append({'time': frame_time, 'histogram': histogram})
                 if os.path.isfile(histograms_file):
@@ -845,6 +850,7 @@ def calculate_perceptual_speed_index(progress, directory):
         # Takes full path of PNG frames to compute SSIM value
         per_si += elapsed * (1.0 - ssim)
         ssim = compute_ssim(current_frame, target_frame)
+        gc.collect()
         last_ms = p['time']
     return int(per_si)
 
