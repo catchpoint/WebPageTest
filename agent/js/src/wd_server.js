@@ -907,7 +907,7 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
     this.traceFile_ = path.join(this.runTempDir_, 'trace.json.gz');
     this.traceFileStream_ = zlib.createGzip();
     this.traceFileStream_.pipe(fs.createWriteStream(this.traceFile_));
-    this.traceFileStream_.write('{"traceEvents":[{}');
+    this.traceFileStream_.write('{"traceEvents":[{}\n');
     var message = {method: 'Tracing.start'};
     message.params = {
       categories: 'blink.console,disabled-by-default-devtools.timeline,devtools.timeline',
@@ -945,7 +945,7 @@ WebDriverServer.prototype.onTracingMessage_ = function(message) {
       var value = (message.params || {}).value;
       if (value instanceof Array && this.traceFileStream_ !== undefined) {
         value.forEach(function(item) {
-          this.traceFileStream_.write(',' + JSON.stringify(item));
+          this.traceFileStream_.write(',' + JSON.stringify(item) + '\n');
         }.bind(this));
       }
     } else if ('Tracing.tracingComplete' === message.method) {

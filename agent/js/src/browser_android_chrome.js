@@ -113,10 +113,7 @@ function BrowserAndroidChrome(app, args) {
   'use strict';
   browser_base.BrowserBase.call(this, app);
   logger.info('BrowserAndroidChrome(%j)', args);
-  if (!args.flags.deviceSerial) {
-    throw new Error('Missing deviceSerial');
-  }
-  this.deviceSerial_ = args.flags.deviceSerial;
+  this.deviceSerial_ = args.flags['deviceSerial'];
   this.workDir_ = args.workDir || '';
   var lastInstall = undefined;
   try {
@@ -156,7 +153,6 @@ function BrowserAndroidChrome(app, args) {
   this.serverUrl_ = undefined;
   this.pac_ = args.task.pac;
   this.pacFile_ = undefined;
-  this.pacServer_ = undefined;
   this.maxTemp = args.flags.maxtemp ? parseFloat(args.flags.maxtemp) : 0;
   this.checkNet = 'yes' === args.flags.checknet;
   this.useRndis = this.checkNet && 'yes' === args.flags.useRndis;
@@ -239,27 +235,34 @@ BrowserAndroidChrome.prototype.startWdServer = function(browserCaps) {
 };
 
 /**
+ *  Do infrequent device cleanup operations (clear downloads, pdf viewer, etc)
+ */
+BrowserAndroidChrome.prototype.deviceCleanup = function() {
+  this.clearDownloads_();
+  this.clearNotifications_();
+  this.clearKnownApps_();
+}
+
+/**
  * Launches the browser with about:blank, enables DevTools.
  */
 BrowserAndroidChrome.prototype.startBrowser = function() {
   'use strict';
   // Stop Chrome at the start of each run.
-  // TODO(wrightt): could keep the devToolsPort and pacServer up
+  // TODO(wrightt): could keep the devToolsPort up
   this.kill();
   this.scheduleConfigureHostsFile_();
   this.scheduleInstallIfNeeded_();
-  this.scheduleStartPacServer_();
   this.scheduleSetStartupFlags_();
   this.clearProfile_();
-  this.clearDownloads_();
-  this.clearNotifications_();
-  this.clearKnownApps_();
 
   // Flush the DNS cache
   this.adb_.su(['ndc', 'resolver', 'flushdefaultif']);
+
+  // Start the browser
   var activity = this.chromePackage_ + '/' + this.chromeActivity_;
   this.adb_.shell(['am', 'start', '-n', activity, '-d', 'about:blank']);
-  // TODO(wrightt): check start error
+
   this.scheduleConfigureDevToolsPort_();
 };
 
@@ -290,24 +293,24 @@ BrowserAndroidChrome.prototype.clearProfile_ = function() {
         function(files) {
       var lines = files.split('\n');
       var count = lines.length;
+      var directories = '';
       for (var i = 0; i < count; i++) {
         var file = lines[i].trim();
         if (file.length && file !== '.' && file !== '..' &&
             file !== 'lib' && file !== 'shared_prefs') {
-          this.adb_.su(['rm', '-r /data/data/' + this.chromePackage_ + '/' +
-                       file]);
+          directories += ' /data/data/' + this.chromePackage_ + '/' + file;
         }
       }
+      if (directories.length)
+        this.adb_.su(['rm', '-r ' + directories]);
     }.bind(this));
-    //this.adb_.su(['rm', '/data/local/chrome-command-line']);
   }
 };
 
 BrowserAndroidChrome.prototype.clearDownloads_ = function() {
   this.app_.schedule('Clear Downloads', function() {
     this.adb_.getStoragePath().then(function(storagePath) {
-      this.adb_.shell(['rm', storagePath + '/Download/*']);
-      this.adb_.shell(['rm', '/sdcard/Download/*']);
+      this.adb_.shell(['rm', '/sdcard/Download/*', storagePath + '/Download/*']);
       this.adb_.su(['rm', '/data/media/0/Download/*']);
     }.bind(this));
   }.bind(this));
@@ -551,78 +554,6 @@ BrowserAndroidChrome.prototype.releaseDevToolsPortIfNeeded_ = function() {
 };
 
 /**
- * Starts the PAC server.
- *
- * @private
- */
-BrowserAndroidChrome.prototype.scheduleStartPacServer_ = function() {
-  'use strict';
-  if (!this.pac_) {
-    return;
-  }
-  // We use netcat to serve the PAC HTTP from on the device:
-  //   adb shell ... nc -l PAC_PORT < pacFile
-  // Several other options were considered:
-  //   1) 'data://' + base64-encoded-pac isn't supported
-  //   2) 'file://' + path-on-device isn't supported
-  //   3) 'http://' + desktop http.createServer assumes a route from the
-  //       device to the desktop, which won't work in general
-  //
-  // We copy our HTTP response to the device as a "pacFile".  Ideally we'd
-  // avoid this temp file, but the following alternatives don't work:
-  //   a) `echo RESPONSE | nc -l PAC_PORT` doesn't close the socket
-  //   b) `cat <<EOF | nc -l PAC_PORT\nRESPONSE\nEOF` can't create a temp
-  //      file; see http://stackoverflow.com/questions/15283220
-  //
-  // We must use port 80, otherwise Chrome silently blocks the PAC.
-  // This can be seen by visiting the proxy URL on the device, which displays:
-  //   Error 312 (net::ERR_UNSAFE_PORT): Unknown error.
-  //
-  // Lastly, to verify that the proxy was set, visit:
-  //   chrome://net-internals/proxyservice.config#proxy
-  var localPac = this.deviceSerial_ + '.pac_body';
-  this.pacFile_ = '/data/local/tmp/pac_body';
-  var response = 'HTTP/1.1 200 OK\n' +
-      'Content-Length: ' + this.pac_.length + '\n' +
-      'Content-Type: application/x-ns-proxy-autoconfig\n' +
-      '\n' + this.pac_;
-  process_utils.scheduleFunction(this.app_, 'Write local PAC file',
-      fs.writeFile, localPac, response);
-  this.adb_.adb(['push', localPac, this.pacFile_]);
-  // Start netcat server
-  logger.debug('Starting pacServer on device port %s', PAC_PORT);
-  this.adb_.spawnSu(['while true; do nc -l ' + PAC_PORT + ' < ' +
-       this.pacFile_ + '; done']).then(function(proc) {
-    this.pacServer_ = proc;
-    proc.on('exit', function(code) {
-      if (this.pacServer_) {
-        logger.error('Unexpected pacServer exit: ' + code);
-        this.pacServer_ = undefined;
-      }
-    }.bind(this));
-  }.bind(this));
-};
-
-/**
- * Stops the PAC server.
- *
- * @private
- */
-BrowserAndroidChrome.prototype.stopPacServerIfNeeded_ = function() {
-  'use strict';
-  if (this.pacServer_) {
-    var proc = this.pacServer_;
-    this.pacServer_ = undefined;
-    process_utils.scheduleKillTree(this.app_, 'Kill PAC server', proc);
-  }
-  if (this.pacFile_) {
-    var file = this.pacFile_;
-    this.pacFile_ = undefined;
-    this.adb_.shell(['rm', file]);
-  }
-};
-
-/**
  * Kills the browser and cleans up.
  */
 BrowserAndroidChrome.prototype.kill = function() {
@@ -632,7 +563,6 @@ BrowserAndroidChrome.prototype.kill = function() {
   this.serverUrl_ = undefined;
   this.releaseDevToolsPortIfNeeded_();
   this.releaseServerPortIfNeeded_();
-  this.stopPacServerIfNeeded_();
   this.adb_.scheduleForceStopMatchingPackages(/^\S*\.chrome[^:]*$/);
   this.adb_.shell(['am', 'force-stop', this.chromePackage_]);
   this.adb_.scheduleDismissSystemDialog();
@@ -704,7 +634,7 @@ BrowserAndroidChrome.prototype.scheduleTakeScreenshot =
 
 /**
  * @param {string} filename The local filename to write to.
- * @param {Function=} onExit Optional exit callback, as noted in video_hdmi.
+ * @param {Function=} onExit Optional exit callback.
  */
 BrowserAndroidChrome.prototype.scheduleStartVideoRecording = function(
     filename) {

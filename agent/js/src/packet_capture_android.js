@@ -50,7 +50,7 @@ var LISTENING_ON_TIMEOUT = 5000;
 function PacketCaptureAndroid(app, args) {
   'use strict';
   this.app_ = app;
-  this.deviceSerial_ = args.flags.deviceSerial;
+  this.deviceSerial_ = args.flags['deviceSerial'];
   this.localTcpdumpBinary_ = args.flags.tcpdumpBinary;
   this.localPcapFile_ = undefined;
   this.deviceTcpdumpCommand_ = undefined;

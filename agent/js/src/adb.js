@@ -53,9 +53,11 @@ function Adb(app, serial, adbCommand) {
   'use strict';
   this.app_ = app;
   this.adbCommand = adbCommand || process.env.ANDROID_ADB || 'adb';
-  this.serial = serial;
+  this.serial = serial || undefined;
   this.isUserDebug_ = undefined;
   this.storagePath_ = undefined;
+  if (this.serial == 'android')
+    this.serial = undefined;
 }
 /** Public class. */
 exports.Adb = Adb;
@@ -89,7 +91,10 @@ Adb.prototype.command_ = function(args, options, timeout) {
  */
 Adb.prototype.adb = function(args, options, timeout) {
   'use strict';
-  return this.command_(['-s', this.serial].concat(args), options, timeout);
+  if (this.serial !== undefined)
+    return this.command_(['-s', this.serial].concat(args), options, timeout);
+  else
+    return this.command_(args, options, timeout);
 };
 
 /**
@@ -187,7 +192,10 @@ Adb.prototype.spawn_ = function(args) {
  */
 Adb.prototype.spawnAdb = function(args) {
   'use strict';
-  return this.spawn_(['-s', this.serial].concat(args));
+  if (this.serial !== undefined)
+    return this.spawn_(['-s', this.serial].concat(args));
+  else
+    return this.spawn_(args);
 };
 
 /**
@@ -523,42 +531,6 @@ Adb.prototype.scheduleDismissSystemDialog = function() {
 };
 
 /**
- * Returns a MAC address based on our device's serial id.
- *
- * Our only requirements are that the returned MAC address must be
- *   (1) deterministic (to support lease renewal and static DHCP), and
- *   (2) unique (impossible in theory, but works fine in practice).
- * so we use a hash, e.g.:
- *   serial='HT7c123abcf7'
- *   h="$(echo -n $serial | md5sum -)"  # ffd8c274e4...; on Mac use |md5)"
- *   mac="02:00:${h::2}:${h:2:2}:${h:4:2}:${h:6:2}"  # '02:00:ff:d8:c2:74'
- *
- * @return {string} A MAC address.
- * @private
- */
-Adb.prototype.computeMacForRndis_ = function() {
-  'use strict';
-  // e.g. serial = '05912b170024c3bd'
-  var hc = murmurhash(this.serial, 0);
-  // e.g. hc = 113472323
-  var s = hc.toString(16);
-  // e.g. s = '6c37343'
-  while (s.length < 8) {
-    s = '0' + s;
-  }
-  // e.g. s = '06c37343'
-  var ret = '';
-  var i;
-  for (i = 6; i >= 0; i -= 2) {
-    ret += ':' + s.substring(i, i + 2);
-  }
-  // e.g. s = ':43:73:c3:06'
-  ret = '02:00' + ret;
-  // e.g. s = '02:00:43:73:c3:06'
-  return ret;
-};
-
-/**
  * Returns the RNDIS entry.
  *
  * @param {Array.<Object>} netcfg from scheduleGetNetworkConfiguration().
@@ -586,7 +558,6 @@ Adb.prototype.scheduleAssertRndisIsEnabled = function() {
   'use strict';
   return this.scheduleGetNetworkConfiguration().then(function(netcfg) {
     var ifc = this.getRndisIfc_(netcfg, false);
-    var mac = this.computeMacForRndis_();
     var badNames = netcfg.filter(function(o) {
       return (o.isUp && 'lo' !== o.name && (!ifc || ifc.name !== o.name));
     }).map(function(o) { return o.name; });
@@ -595,7 +566,6 @@ Adb.prototype.scheduleAssertRndisIsEnabled = function() {
         !ifc ? 'netcfg lacks rndis interface' :
         !ifc.isUp ? ifc.name + ' is DOWN' :
         !ifc.ip ? ifc.name + ' lacks IP address' :
-        mac !== ifc.mac ? ifc.name + ' MAC ' + ifc.mac + ' != ' + mac :
         undefined);
     if (undefined !== err) {
       throw new Error(err);
@@ -643,9 +613,8 @@ Adb.prototype.scheduleEnableRndis = function() {
         }
       }.bind(this));
 
-      // Set MAC address.
+      // Bring up the interface
       this.su(['ifconfig', ifname, 'down']);
-      this.su(['netcfg', ifname, 'hwaddr', this.computeMacForRndis_()]);
       this.su(['ifconfig', ifname, 'up']);
 
       // Enable DHCP -- this will timeout after 10s.
@@ -724,7 +693,6 @@ Adb.prototype.scheduleEnableRndis444 = function(config) {
 
       // Set ip address.
       this.su(['ip', 'link', 'set', ifname, 'down']);
-      this.su(['netcfg', ifname, 'hwaddr', this.computeMacForRndis_()]);
       this.su(['ip', 'addr', 'flush', 'dev', ifname]);
       this.su(['ip', 'addr', 'add', ip, 'dev', ifname]);
       this.su(['ip', 'link', 'set', ifname, 'up']);

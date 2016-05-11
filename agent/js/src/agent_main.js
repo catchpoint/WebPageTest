@@ -102,6 +102,9 @@ function Agent(app, client, flags) {
   this.client_.onAbortJob = this.abortJob_.bind(this);
   this.client_.onMakeReady = this.onMakeReady_.bind(this);
   this.client_.onAlive = this.onAlive_.bind(this);
+
+  // do the one-time device cleanup at startup
+  this.browser_.deviceCleanup();
 }
 /** Public class. */
 exports.Agent = Agent;
@@ -566,14 +569,8 @@ Agent.prototype.scheduleCleanRunTempDir_ = function() {
 Agent.prototype.scheduleCleanWorkDir_ = function() {
   'use strict';
   this.scheduleNoFault_('Clean work dir', function() {
+    deleteFolderRecursive(this.workDir_);
     this.scheduleMakeDirs_(this.workDir_);
-    process_utils.scheduleFunctionNoFault(this.app_, 'Work read',
-        fs.readdir, this.workDir_).then(function(files) {
-      files.forEach(function(fileName) {
-        var filePath = path.join(this.workDir_, fileName);
-        try {fs.unlinkSync(filePath);} catch(e) {}
-      }.bind(this));
-    }.bind(this));
   }.bind(this));
 };
 
