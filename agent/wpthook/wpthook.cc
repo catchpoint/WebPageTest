@@ -36,9 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 WptHook * global_hook = NULL;
 HANDLE logfile_handle = NULL;
-CRITICAL_SECTION *logfile_cs = NULL;
 HANDLE global_logfile_handle = NULL;
-CRITICAL_SECTION *global_logfile_cs = NULL;
 
 extern HINSTANCE global_dll_handle;
 
@@ -102,15 +100,6 @@ WptHook::WptHook(void):
       }
       free( pVersion );
     }
-  }
-  logfile_handle = CreateFile(file_base_ + WPTHOOK_LOG, FILE_APPEND_DATA, 0,
-    NULL, OPEN_ALWAYS, FILE_FLAG_WRITE_THROUGH, 0);
-  if (logfile_handle == INVALID_HANDLE_VALUE) {
-    WptTrace(loglevel::kFunction, _T("[wpthook] Failed to open log file. Error: %d"), GetLastError());
-  } else {
-    logfile_cs = (CRITICAL_SECTION *)malloc(sizeof(CRITICAL_SECTION));
-    ZeroMemory(logfile_cs, sizeof(CRITICAL_SECTION));
-    InitializeCriticalSection(logfile_cs);
   }
 }
 
@@ -296,6 +285,17 @@ void WptHook::ShutdownNow() {
     ::SendMessage(test_state_._frame_window, WM_CLOSE, 0, 0);
   }
   WptTrace(loglevel::kTrace, _T("[wpthook] Leaving ShutdownNow()"));
+}
+
+void WptHook::FlushLogs() {
+  logfile_handle = CreateFile(file_base_ + WPTHOOK_LOG, FILE_APPEND_DATA, 0,
+    NULL, OPEN_ALWAYS, FILE_FLAG_WRITE_THROUGH, 0);
+  if (logfile_handle == INVALID_HANDLE_VALUE) {
+    WptTrace(loglevel::kFunction, _T("[wpthook] Failed to open log file. Error: %d"), GetLastError());
+  } else {
+    WptTraceFlush();
+    CloseHandle(logfile_handle);
+  }
 }
 
 

@@ -103,6 +103,9 @@ WebPagetest::~WebPagetest(void) {
 bool WebPagetest::GetTest(WptTestDriver& test) {
   bool ret = false;
 
+  // flush previous logs
+  WptTraceFlush();
+
   // Rotate global logs if needed
   _settings.RotateGlobalLogs();
 

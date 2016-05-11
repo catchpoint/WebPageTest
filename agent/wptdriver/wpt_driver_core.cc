@@ -288,18 +288,6 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
 
   test.SetFileBase();
 
-  // activate logs
-  logfile_handle = CreateFile(test._file_base + _T("_wptdriver.log"), FILE_APPEND_DATA,
-    FILE_SHARE_READ | FILE_SHARE_WRITE,
-    NULL, OPEN_ALWAYS, FILE_FLAG_WRITE_THROUGH, 0);
-  if (logfile_handle == INVALID_HANDLE_VALUE) {
-    WptTrace(loglevel::kFunction, _T("Failed to open log file. Error: %d"), GetLastError());
-  } else {
-    logfile_cs = (CRITICAL_SECTION *)malloc(sizeof(CRITICAL_SECTION));
-    ZeroMemory(logfile_cs, sizeof(CRITICAL_SECTION));
-    InitializeCriticalSection(logfile_cs);
-  }
-
   WptTrace(loglevel::kFunction, _T("[wptdriver] WptDriverCore::BrowserTest\n"));
 
   test._run_error.Empty();
@@ -351,12 +339,18 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
   WptTrace(loglevel::kFunction, 
             _T("[wptdriver] WptDriverCore::BrowserTest done\n"));
 
+  // activate logs
+  logfile_handle = CreateFile(test._file_base + _T("_wptdriver.log"), FILE_APPEND_DATA,
+    FILE_SHARE_READ | FILE_SHARE_WRITE,
+    NULL, OPEN_ALWAYS, FILE_FLAG_WRITE_THROUGH, 0);
+  if (logfile_handle == INVALID_HANDLE_VALUE) {
+    WptTrace(loglevel::kFunction, _T("Failed to open log file. Error: %d"), GetLastError());
+  }
+
+  WptTraceFlush();
   // close log file handles
   if (logfile_handle != INVALID_HANDLE_VALUE) {
     CloseHandle(logfile_handle);
-    DeleteCriticalSection(logfile_cs);
-    free(logfile_cs);
-    logfile_cs = NULL;
     logfile_handle = NULL;
   }
 

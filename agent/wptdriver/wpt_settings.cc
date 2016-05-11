@@ -133,11 +133,6 @@ bool WptSettings::Load(void) {
   if (logfile_handle == INVALID_HANDLE_VALUE) {
     WptTrace(loglevel::kFunction, _T("Failed to open log file. Error: %d"), GetLastError());
   }
-  else {
-    global_logfile_cs = (CRITICAL_SECTION *)malloc(sizeof(CRITICAL_SECTION));
-    ZeroMemory(global_logfile_cs, sizeof(CRITICAL_SECTION));
-    InitializeCriticalSection(global_logfile_cs);
-  }
 
   if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
                                 NULL, SHGFP_TYPE_CURRENT, buff))) {
