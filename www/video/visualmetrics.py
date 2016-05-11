@@ -644,28 +644,31 @@ def cap_frame_count(directory, maxframes):
     frames = sorted(glob.glob(os.path.join(directory, 'ms_*.png')))
     frame_count = len(frames)
     if frame_count > maxframes:
-        # First pass, sample all video frames at 10fps instead of 60fps
+        # First pass, sample all video frames at 10fps instead of 60fps, keeping the first 20% of the target
         logging.debug('Sampling 10fps: Reducing {0:d} frames to target of {1:d}...'.format(frame_count, maxframes))
-        sample_frames(frames, 100, 0)
+        skip_frames = int(maxframes * 0.2)
+        sample_frames(frames, 100, 0, skip_frames)
 
         frames = sorted(glob.glob(os.path.join(directory, 'ms_*.png')))
         frame_count = len(frames)
         if frame_count > maxframes:
-            # Second pass, sample all video frames after the first 5 seconds at 2fps
+            # Second pass, sample all video frames after the first 5 seconds at 2fps, keeping the first 40% of the target
             logging.debug('Sampling 2fps: Reducing {0:d} frames to target of {1:d}...'.format(frame_count, maxframes))
-            sample_frames(frames, 500, 5000)
+            skip_frames = int(maxframes * 0.4)
+            sample_frames(frames, 500, 5000, skip_frames)
 
             frames = sorted(glob.glob(os.path.join(directory, 'ms_*.png')))
             frame_count = len(frames)
             if frame_count > maxframes:
-                # Third pass, sample all video frames after the first 10 seconds at 1fps
+                # Third pass, sample all video frames after the first 10 seconds at 1fps, keeping the first 60% of the target
                 logging.debug('Sampling 1fps: Reducing {0:d} frames to target of {1:d}...'.format(frame_count, maxframes))
-                sample_frames(frames, 1000, 10000)
+                skip_frames = int(maxframes * 0.6)
+                sample_frames(frames, 1000, 10000, skip_frames)
 
     logging.debug('{0:d} frames final count with a target max of {1:d} frames...'.format(frame_count, maxframes))
 
 
-def sample_frames(frames, interval, start_ms):
+def sample_frames(frames, interval, start_ms, skip_frames):
     frame_count = len(frames)
     if frame_count > 3:
         # Always keep the first and last frames, only sample in the middle
@@ -678,18 +681,21 @@ def sample_frames(frames, interval, start_ms):
         if m is not None:
             first_change_time = int(m.groupdict().get('ms'))
         last_bucket = None
-        logging.debug('Sapling frames in {0:d}ms intervals after {1:d} ms...'.format(interval,
-                                                                                     first_change_time + start_ms))
+        logging.debug('Sapling frames in {0:d}ms intervals after {1:d} ms, skipping {2:d} frames...'.format(interval,
+                                                                        first_change_time + start_ms, skip_frames))
+        frame_count = 0;
         for frame in frames:
             m = re.search(match, frame)
             if m is not None:
+                frame_count += 1
                 frame_time = int(m.groupdict().get('ms'))
                 frame_bucket = int(math.floor(frame_time / interval))
                 if (frame_time > first_change_time + start_ms and
                             frame_bucket == last_bucket and
                             frame != first_frame and
                             frame != first_change and
-                            frame != last_frame):
+                            frame != last_frame and
+                            frame_count > skip_frames):
                     logging.debug('Removing sampled frame ' + frame)
                     os.remove(frame)
                 last_bucket = frame_bucket
@@ -1006,16 +1012,17 @@ def main():
                 video_to_frames(options.video, directory, options.force, orange_file, options.multiple,
                                 options.viewport, options.viewporttime, options.full, options.timeline, options.trimend)
             if not options.multiple:
+                # See if we are limiting the number of frames to keep (before processing them to save processing time)
+                if options.dir is not None and options.maxframes > 0:
+                    cap_frame_count(directory, options.maxframes)
+
+                # Calculate the histograms and visual metrics
                 calculate_histograms(directory, histogram_file, options.force)
                 metrics = calculate_visual_metrics(histogram_file, options.start, options.end, options.perceptual,
                                                    directory)
-                # Process the video frames if we are keeping them
-                if options.dir is not None:
-                    if options.maxframes > 0:
-                        cap_frame_count(directory, options.maxframes)
-                    # JPEG conversion
-                    if options.quality is not None:
-                        convert_to_jpeg(directory, options.quality)
+                # JPEG conversion
+                if options.dir is not None and options.quality is not None:
+                    convert_to_jpeg(directory, options.quality)
 
                 if metrics is not None:
                     ok = True
