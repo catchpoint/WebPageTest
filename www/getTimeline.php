@@ -24,6 +24,12 @@ if (gz_is_file("$testPath/$run{$cachedText}_trace.json")) {
         $pos = strpos($buffer, '[');
         if ($pos !== false)
           $buffer = substr($buffer, $pos);
+        // remove the empty element at the beginning
+        if (substr($buffer, 0,  4) == '[{},') {
+          $buffer = '[' . substr($buffer, 4);
+        } elseif (substr($buffer, 0,  5) == "[{}\n,") {
+          $buffer = '[' . substr($buffer, 5);
+        }
       }
       ob_flush();
       flush();
