@@ -372,11 +372,18 @@ bool WptDriverCore::RunImageHash(WptTestDriver& test) {
   _status.Set(_T("Launching: %s"), cmd);
   if (!CreateProcess(NULL, cmd.GetBuffer(), NULL, NULL, TRUE, 0, NULL,
     NULL, &si, &it_info)) {
-    CString err_msg;
-    err_msg.Format(_T("Failed to launch ImageTools to process images. Error code: %u"), GetLastError());
-    _status.Set(err_msg);
-    test._run_error = err_msg;
-    return false;
+
+    // Since inmage tools are optional, they are not necessarily available.
+    // If error is ERROR_FILE_NOT_FOUND, ignore the error
+    if (GetLastError() == ERROR_FILE_NOT_FOUND) {
+      WptTrace(loglevel::kFunction, _T("[wptdriver] ImageTools not available, skipping image hash computation"));
+    } else {
+      CString err_msg;
+      err_msg.Format(_T("Failed to launch ImageTools to process images. Error code: %u"), GetLastError());
+      _status.Set(err_msg);
+      test._run_error = err_msg;
+      return false;
+    }
   } else {
     // wait for image tool to complete
     WaitForSingleObject(it_info.hProcess, 30000);
@@ -400,11 +407,17 @@ bool WptDriverCore::RunVisuallyComplete(WptTestDriver& test) {
   _status.Set(_T("Launching: %s"), cmd);
   if (!CreateProcess(NULL, cmd.GetBuffer(), NULL, NULL, TRUE, 0, NULL,
     NULL, &si, &it_info)) {
-    CString err_msg;
-    err_msg.Format(_T("Failed to launch ImageTools to compute visually complete. Error code: %u"), GetLastError());
-    _status.Set(err_msg);
-    test._run_error = err_msg;
-    return false;
+    // Since inmage tools are optional, they are not necessarily available.
+    // If error is ERROR_FILE_NOT_FOUND, ignore the error
+    if (GetLastError() == ERROR_FILE_NOT_FOUND) {
+      WptTrace(loglevel::kFunction, _T("[wptdriver] ImageTools not available, skipping visually complete image election"));
+    } else {
+      CString err_msg;
+      err_msg.Format(_T("Failed to launch ImageTools to compute visually complete. Error code: %u"), GetLastError());
+      _status.Set(err_msg);
+      test._run_error = err_msg;
+      return false;
+    }
   } else {
     // wait for image tool to complete
     WaitForSingleObject(it_info.hProcess, 30000);
