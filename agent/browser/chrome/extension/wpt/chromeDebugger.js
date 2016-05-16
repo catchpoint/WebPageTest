@@ -763,7 +763,16 @@ wpt.chromeDebugger.SendInitiator = function(requestId, url, initiator_json) {
     detail += "initiatorLineNumber=" + initiator.lineNumber + '\n';
   if (initiator['type'])
     detail += "initiatorType=" + initiator.type + '\n';
-  if (initiator['stackTrace'] && initiator.stackTrace[0]) {
+  if (initiator['stack'] && initiator.stack['callFrames'] && initiator.stack.callFrames[0]) {
+    if (initiator.stack.callFrames[0]['url'])
+      detail += 'initiatorUrl=' + initiator.stack.callFrames[0].url + '\n';
+    if (initiator.stack.callFrames[0]['lineNumber'] !== undefined)
+      detail += 'initiatorLineNumber=' + initiator.stack.callFrames[0].lineNumber + '\n';
+    if (initiator.stack.callFrames[0]['columnNumber'] !== undefined)
+      detail += 'initiatorColumnNumber=' + initiator.stack.callFrames[0].columnNumber + '\n';
+    if (initiator.stack.callFrames[0]['functionName'])
+      detail += 'initiatorFunctionName=' + initiator.stack.callFrames[0].functionName + '\n';
+  } else if (initiator['stackTrace'] && initiator.stackTrace[0]) {
     if (initiator.stackTrace[0]['url'])
       detail += 'initiatorUrl=' + initiator.stackTrace[0].url + '\n';
     if (initiator.stackTrace[0]['lineNumber'] !== undefined)
