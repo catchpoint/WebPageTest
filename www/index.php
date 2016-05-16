@@ -101,6 +101,8 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="appendua" value="' . htmlspecialchars($_REQUEST['appendua']) . "\">\n";
             if (array_key_exists('keepvideo', $_REQUEST))
               echo '<input type="hidden" name="keepvideo" value="' . htmlspecialchars($_REQUEST['keepvideo']) . "\">\n";
+            if (array_key_exists('medianMetric', $_REQUEST))
+              echo '<input type="hidden" name="medianMetric" value="' . htmlspecialchars($_REQUEST['medianMetric']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
