@@ -1,4 +1,19 @@
 <?php
+// pre-process the "timeline" param to extract the test, run and cached state.
+// This is a hack for now because the Chrome timeline viewer doesn't urldecode
+// URLs so it all needs to be passed as a single query param
+if (isset($_REQUEST['timeline'])) {
+  $params = explode(',', $_REQUEST['timeline']);
+  foreach ($params as $param) {
+    list($key, $value) = explode(':', $param);
+    if ($key == 't')
+      $_REQUEST['test'] = $value;
+    elseif ($key == 'r')
+      $_REQUEST['run'] = $value;
+    elseif ($key == 'c')
+      $_REQUEST['cached'] = $value;
+  }
+}
 include 'common.inc'; 
 $ok = false;
 if (gz_is_file("$testPath/$run{$cachedText}_trace.json")) {

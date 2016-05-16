@@ -34,7 +34,9 @@ if ($newTimeline) {
   $cdn = GetSetting('cdn');
   $url = $cdn ? $cdn : "$protocol://$host";
   $url .= $uri;
-  $url .= "/inspector-20160510/inspector.html?experiments=true&loadTimelineFromURL=/getTimeline.php?test=$id&run=$run&cached=$cached";
+  // short-term hack because the timeline code doesn't URLdecode query params and we can't pass any URL with a &
+  $timelineUrlParam = "/getTimeline.php?timeline=t:$id,r:$run,c:$cached";
+  $url .= "/inspector-20160510/inspector.html?experiments=true&loadTimelineFromURL=$timelineUrlParam";
   header("Location: $url");
 } else {
   echo '<iframe id="devtools" frameborder="0" height="100%" width="100%" src="/chrome/inspector-20140603/devtools.html" onload="DevToolsLoaded();"></iframe>';

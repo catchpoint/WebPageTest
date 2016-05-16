@@ -93,11 +93,11 @@ if (!is_dir($tempDir))
     mkdir($tempDir, 0777, true);
 $tempDir = realpath($tempDir) . '/';
 
-if (isset($req_embed)) {
+if (isset($_REQUEST['embed'])) {
     define('EMBED', true);
     define('BARE_UI', true);
     define('NAV_NO_SHARE', true);
-} elseif (isset($req_bare)) {
+} elseif (isset($_REQUEST['bare'])) {
     define('BARE_UI', true);
     define('NAV_NO_SHARE', true);
     $noanalytics = true;
@@ -121,7 +121,7 @@ if( array_key_exists('HTTP_HOST', $_SERVER) && stristr($_SERVER['HTTP_HOST'] , '
     $privateInstall = false;
 
 // override some settings from the URI
-if (isset($req_bulk)) {
+if (isset($_REQUEST['bulk'])) {
     $settings['noBulk'] = 0;
 }
 $is_ssl = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? true : false;
@@ -207,15 +207,15 @@ if( $supportsAuth && ($admin || (array_key_exists('google_email', $_COOKIE) && s
 }
 
 // set their color selection as a cookie
-if (isset($req_color)) {
-    setcookie('color', $req_color, time()+60*60*24*365, '/');
-    $_REQUEST['color'] = $req_color;
+if (isset($_REQUEST['color'])) {
+    setcookie('color', $_REQUEST['color'], time()+60*60*24*365, '/');
+    $_REQUEST['color'] = $_REQUEST['color'];
 }
 
 // Load the test-specific data
 $id = '';
-if (preg_match('/^[a-zA-Z0-9_]+$/', @$req_test)) {
-    $id = $req_test;
+if (preg_match('/^[a-zA-Z0-9_]+$/', @$_REQUEST['test'])) {
+    $id = $_REQUEST['test'];
 } elseif (preg_match('/^[a-zA-Z0-9_]+$/', @$_COOKIE['tid'])) {
     $id = $_COOKIE['tid'];
 }
@@ -223,9 +223,9 @@ if (preg_match('/^[a-zA-Z0-9_]+$/', @$req_test)) {
 $median_metric = 'loadTime';
 $testLabel = '';
 if (strlen($id)) {
-    if (@strlen($req_rkey)) {
+    if (@strlen($_REQUEST['rkey'])) {
         // We are serving a relay request, so munge the id accordingly.
-        $id = trim(htmlspecialchars($req_rkey)) . ".$id";
+        $id = trim(htmlspecialchars($_REQUEST['rkey'])) . ".$id";
     }
     if ($id !== @$_COOKIE['tid']) {
         setcookie('tid', $id);  // update session cookie
@@ -244,11 +244,11 @@ if (strlen($id)) {
     if (isset($test['testinfo']['medianMetric']))
       $median_metric = $test['testinfo']['medianMetric'];
 
-    $run = isset($req_run) ? intval($req_run) : 0;
+    $run = isset($_REQUEST['run']) ? intval($_REQUEST['run']) : 0;
     if (!$run) {
         $run = (int)1;
     }
-    $cached = @(int)$req_cached;  // define a global used in other files
+    $cached = @(int)$_REQUEST['cached'];  // define a global used in other files
     if (array_key_exists('run', $_REQUEST) && !strcasecmp($_REQUEST['run'], 'median')) {
       require_once('page_data.inc');
       $pageData = loadAllPageData($testPath, $options);
