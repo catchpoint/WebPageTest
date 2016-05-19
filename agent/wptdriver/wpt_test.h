@@ -140,6 +140,7 @@ public:
   void Lock();
   void Unlock();
   bool IsLocked();
+  CStringA  GetAppendUA() const;
 
   // overall test settings
   CString _id;
@@ -240,7 +241,6 @@ protected:
   void      ParseBlockCommand(CString block_list, bool add_head);
   int       lock_count_;
   virtual bool ProcessCommand(ScriptCommand& command, bool &consumed);
-  CStringA  GetAppendUA() const;
 
   CRITICAL_SECTION cs_;
 
