@@ -190,7 +190,7 @@ function GetJob() {
                               $testInfoJson['test_runs'][$run] = array('done' => false);
                           }
                           $testInfoJson['id'] = $testId;
-                          ProcessTestShard($testInfoJson, $testInfo, $delete);
+                          ProcessTestShard($testInfoJson, $testInfo, $delete, $priority);
                           SaveTestInfo($testId, $testInfoJson);
                         }
                         UnlockTest($lock);
@@ -433,12 +433,12 @@ function CheckCron() {
 * 
 * @param mixed $testInfo
 */
-function ProcessTestShard(&$testInfo, &$test, &$delete) {
+function ProcessTestShard(&$testInfo, &$test, &$delete, $priority) {
   global $supports_sharding;
   global $tester;
   if (array_key_exists('shard_test', $testInfo) && $testInfo['shard_test']) {
     if ((array_key_exists('type', $testInfo) && $testInfo['type'] == 'traceroute') ||
-        !$supports_sharding) {
+        !$supports_sharding || $priority > 0) {
       $testInfo['shard_test'] = 0;
     } else {
       $done = true;
