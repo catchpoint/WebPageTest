@@ -33,7 +33,7 @@ if (LoadResults($results)) {
 }
 
 // go through and submit tests for any url where we don't have a test ID or where the test failed
-if (!$pending && count($results)) {
+if (/*!$pending &&*/ count($results)) {
     // first count the number of tests we are going to have to submit (to give some progress indication)
     $testCount = 0;
     foreach ($results as &$result) {

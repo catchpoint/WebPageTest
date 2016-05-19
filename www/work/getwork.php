@@ -244,6 +244,12 @@ function GetJob() {
                       }
                       if( strlen($script) )
                           $testJson['script'] = $script;
+                      // See if we need to include apk information
+                      if (isset($_REQUEST['apk']) && is_file(__DIR__ . '/update/apk.dat')) {
+                        $apk_info = json_decode(file_get_contents(__DIR__ . '/update/apk.dat'), true);
+                        if (isset($apk_info) && is_array($apk_info))
+                          $testJson['apk_info'] = $apk_info;
+                      }
                       echo json_encode($testJson);
                   }
                   else
