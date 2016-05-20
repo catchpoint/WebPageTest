@@ -247,8 +247,14 @@ function GetJob() {
                       // See if we need to include apk information
                       if (isset($_REQUEST['apk']) && is_file(__DIR__ . '/update/apk.dat')) {
                         $apk_info = json_decode(file_get_contents(__DIR__ . '/update/apk.dat'), true);
-                        if (isset($apk_info) && is_array($apk_info))
+                        if (isset($apk_info) && is_array($apk_info) && isset($apk_info['packages']) && is_array($apk_info['packages'])) {
+                          $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+                          $update_path = dirname($_SERVER['PHP_SELF']) . '/update/';
+                          $base_uri = "$protocol://{$_SERVER['HTTP_HOST']}$update_path";
+                          foreach ($apk_info['packages'] as $package => $info)
+                            $apk_info['packages'][$package]['apk_url'] = "$base_uri{$apk_info['packages'][$package]['file_name']}?md5={$apk_info['packages'][$package]['md5']}";
                           $testJson['apk_info'] = $apk_info;
+                        }
                       }
                       echo json_encode($testJson);
                   }

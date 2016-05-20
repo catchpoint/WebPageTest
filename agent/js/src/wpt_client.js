@@ -516,7 +516,7 @@ Client.prototype.requestNextJob_ = function() {
             ('&pc=' + encodeURIComponent(this.name_)) : (this.deviceSerial_ ?
             ('&pc=' + encodeURIComponent(this.deviceSerial_)) : '')) +
           (this.apiKey_ ? ('&key=' + encodeURIComponent(this.apiKey_)) : '') +
-          '&f=json');
+          '&f=json&apk=1');
 
       logger.info('Get work: %s', getWorkUrl);
       var options = url.parse(getWorkUrl);

@@ -18,7 +18,7 @@ if (!isset($apk_data) || !is_array($apk_data))
 foreach ($packages as $package)
   UpdateApk($package, $apk_data);
 $apk_data['last_update'] = time();
-file_put_contents($data_file, json_encode($apk_data));
+file_put_contents($data_file, json_encode($apk_data, JSON_PRETTY_PRINT));
 chdir($old_dir);
 
 function  UpdateApk($package, &$apk_data) {
@@ -36,7 +36,7 @@ function  UpdateApk($package, &$apk_data) {
         $temp_file = "$update_path/tmp.apk";
         $md5 = FetchDeviceApk($path, $temp_file, $size);
         if (isset($md5)) {
-          $file_name = "$package.$md5.apk";
+          $file_name = "$package.apk";
           $local_file = "$update_path/$file_name";
           if (is_file($local_file))
             unlink($local_file);

@@ -28,7 +28,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 var adb = require('adb');
 var browser_base = require('browser_base');
+var crypto = require('crypto');
 var fs = require('fs');
+var http = require('http');
 var logger = require('logger');
 var packet_capture_android = require('packet_capture_android');
 var path = require('path');
@@ -116,9 +118,12 @@ function BrowserAndroidChrome(app, args) {
   this.deviceSerial_ = args.flags['deviceSerial'];
   this.workDir_ = args.workDir || '';
   var lastInstall = undefined;
+  this.device_status_file_ = 'device_status_' + this.deviceSerial_ + '.json';
   try {
     lastInstall = fs.readFileSync(path.join(this.workDir_, LAST_INSTALL_FILE));
   } catch(e) {}
+  this.apk_packages_ = args.task['apk_info'] ? args.task.apk_info['packages'] : undefined;
+  this.shouldUninstall_ = true;
   this.shouldInstall_ =
       args.customBrowser && (args.customBrowser != lastInstall);
   if (this.shouldInstall_)
@@ -210,6 +215,7 @@ BrowserAndroidChrome.prototype.startWdServer = function(browserCaps) {
   }
   this.kill();
   this.scheduleConfigureHostsFile_();
+  this.scheduleDownloadApkIfNeeded_();
   this.scheduleInstallIfNeeded_();
   this.scheduleConfigureServerPort_();
   // Must be scheduled, since serverPort_ is assigned in a scheduled function.
@@ -252,6 +258,7 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
   // TODO(wrightt): could keep the devToolsPort up
   this.kill();
   this.scheduleConfigureHostsFile_();
+  this.scheduleDownloadApkIfNeeded_();
   this.scheduleInstallIfNeeded_();
   this.scheduleSetStartupFlags_();
   this.clearProfile_();
@@ -365,6 +372,94 @@ BrowserAndroidChrome.prototype.scheduleConfigureHostsFile_ = function() {
   }.bind(this));
 };
 
+BrowserAndroidChrome.prototype.scheduleHttpDownload_ = function(url, local_file, md5Hash) {
+  logger.debug('Downloading ' + url + ' to ' + local_file);
+  var done = new webdriver.promise.Deferred();
+  var active = true;
+  var md5 = crypto.createHash('md5');
+  var file = fs.createWriteStream(local_file);
+  var onError = function(e) {
+    if (active) {
+      active = false;
+      file.end();
+      logger.warn('Failed to download ' + url);
+      done.fulfill(false);
+    }
+  }.bind(this);
+  var onDone = function() {
+    if (active) {
+      active = false;
+      file.end();
+      var md5hex = md5.digest('hex').toUpperCase();
+      logger.debug('Finished download - md5: ' + md5hex);
+      done.fulfill(md5hex == md5Hash.toUpperCase());
+    }
+  }.bind(this);
+  var request = http.get(url, function(response) {
+    response.pipe(file);
+    response.on('data', function(chunk) {md5.update(chunk);}.bind(this));
+    response.on('error', onError);
+    response.on('end', onDone);
+    response.on('close', onDone);
+  }.bind(this));
+  request.on('error', onError);
+  request.end();
+  return done.promise;
+}
+
+/**
+ * Downloads the apk for the requested package and sets up install if needed.
+ * This is not for custom browsers but for auto-updating the play-store
+ * installed ones.
+ */
+BrowserAndroidChrome.prototype.scheduleDownloadApkIfNeeded_ = function() {
+  this.app_.schedule('Download APK if needed', function() {
+    if (this.apk_packages_ &&
+        this.chromePackage_ &&
+        this.apk_packages_[this.chromePackage_] &&
+        this.apk_packages_[this.chromePackage_]['md5'] &&
+        this.apk_packages_[this.chromePackage_]['apk_url']) {
+      var status = {};
+      try {
+        status = JSON.parse(fs.readFileSync(this.device_status_file_, "utf8"))
+      } catch(e) {}
+      if (status['apk'] == undefined ||
+          status.apk[this.chromePackage_] == undefined ||
+          status.apk[this.chromePackage_]['md5'] !== this.apk_packages_[this.chromePackage_]['md5']) {
+        logger.debug('APK Update available for ' + this.chromePackage_ + ' md5: ' + this.apk_packages_[this.chromePackage_]['md5'].toUpperCase());
+        var local_file = path.join(this.workDir_, 'browser.apk');
+        try {fs.unlinkSync(local_file);} catch(e) {}
+        this.download_complete_ = false;
+        this.download_ok_ = false;
+        this.scheduleHttpDownload_(this.apk_packages_[this.chromePackage_]['apk_url'], local_file, this.apk_packages_[this.chromePackage_]['md5']).then(function(ok) {
+          this.download_ok_ = ok;
+          this.download_complete_ = true;
+        }.bind(this));
+        this.app_.wait(function() {return this.download_complete_;}.bind(this), 600000);
+        this.app_.schedule('Install', function() {
+          if (this.download_ok_) {
+            // install the apk
+            this.adb_.adb(['install', '-rg', local_file], {}, 120000).addBoth(function() {
+              logger.debug('Install complete');
+              if (status['apk'] == undefined)
+                status.apk = {};
+              if (status.apk[this.chromePackage_] == undefined)
+                status.apk[this.chromePackage_] = {};
+              status.apk[this.chromePackage_]['md5'] = this.apk_packages_[this.chromePackage_]['md5'];
+              fs.writeFileSync(this.device_status_file_, JSON.stringify(status));
+            }.bind(this));
+          }
+        }.bind(this));
+
+        // Make sure not to leave the downloaded apk around
+        this.app_.schedule('Download cleanup', function() {
+          try {fs.unlinkSync(local_file);} catch(e) {}
+        }.bind(this));
+      }
+    }
+  }.bind(this));
+};
+
 /**
  * Installs Chrome apk if this is the first run, and the apk was provided.
  * @private
@@ -374,9 +469,11 @@ BrowserAndroidChrome.prototype.scheduleInstallIfNeeded_ = function() {
   if (this.shouldInstall_ && this.chrome_) {
     // Explicitly uninstall, as "install -r" fails if the installed package
     // was signed differently than the new apk being installed.
-    this.adb_.adb(['uninstall', this.chromePackage_]).addErrback(function() {
-      logger.debug('Ignoring failed uninstall');
-    }.bind(this));
+    if (this.shouldUninstall_) {
+      this.adb_.adb(['uninstall', this.chromePackage_]).addErrback(function() {
+        logger.debug('Ignoring failed uninstall');
+      }.bind(this));
+    }
     // Delete ALL of the existing app data for the package before installing
     this.adb_.su(['rm', '-rf', '/data/data/' + this.chromePackage_]);
     // Chrome install on an emulator takes a looong time.
