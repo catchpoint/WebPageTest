@@ -58,8 +58,8 @@ if (isset($locations) && is_array($locations) && count($locations) &&
     // see if there are fallbacks specified for the given location (for idle)
     $fallbacks = GetLocationFallbacks($location);
     if (is_array($fallbacks) && count($fallbacks)) {
-      foreach($fallbacks as $loc) {
-        $location = trim($loc);
+      foreach($fallbacks as $fallback) {
+        $location = trim($fallback);
         if (!$is_done && strlen($location))
           $is_done = GetJob();
       }

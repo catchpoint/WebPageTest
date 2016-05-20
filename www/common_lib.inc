@@ -118,7 +118,7 @@ function GetLocationFallbacks($location) {
             isset($locations[$location]['fallback'])) {
           $fallback = $locations[$location]['fallback'];
         }
-        apc_store("fallback_$location", $key, 60);
+        apc_store("fallback_$location", $fallback, 60);
       }
     } else {
       $locations = LoadLocationsIni();
