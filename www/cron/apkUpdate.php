@@ -3,26 +3,27 @@ header("Content-type: text/plain");
 header("Cache-Control: no-cache, must-revalidate");
 header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 $old_dir = getcwd();
-chdir(__DIR__ . '/..');
+chdir(__DIR__);
+chdir('..');
+$docroot = getcwd();
 require_once('common.inc');
 $package_list = GetSetting('apkPackages');
 $packages = explode(',', $package_list);
-if (!is_dir(__DIR__ . "/../work/update"))
-  mkdir(__DIR__ . "/../work/update", 0777, true);
-$update_path = realpath(__DIR__ . '/../work/update');
+if (!is_dir("$docroot/work/update"))
+  mkdir("$docroot/work/update", 0777, true);
+$update_path = "$docroot/work/update";
 $data_file = "$update_path/apk.dat";
 if (is_file($data_file))
   $apk_data = json_decode(file_get_contents($data_file), true);
 if (!isset($apk_data) || !is_array($apk_data))
   $apk_data = array('packages' => array());
 foreach ($packages as $package)
-  UpdateApk($package, $apk_data);
+  UpdateApk($update_path, $package, $apk_data);
 $apk_data['last_update'] = time();
-file_put_contents($data_file, json_encode($apk_data, JSON_PRETTY_PRINT));
+file_put_contents($data_file, json_encode($apk_data));
 chdir($old_dir);
 
-function  UpdateApk($package, &$apk_data) {
-  global $update_path;
+function  UpdateApk($update_path, $package, &$apk_data) {
   echo "Checking for update for $package...\n";
   if (!isset($apk_data['packages'][$package]))
     $apk_data['packages'][$package] = array('device_path' => '', 'size' => 0, 'date' => '', 'time' => '', 'md5' => '');
@@ -34,6 +35,7 @@ function  UpdateApk($package, &$apk_data) {
           $date != $apk_data['packages'][$package]['date'] ||
           $time != $apk_data['packages'][$package]['time']) {
         $temp_file = "$update_path/tmp.apk";
+        echo "$package updated, downloading\n";
         $md5 = FetchDeviceApk($path, $temp_file, $size);
         if (isset($md5)) {
           $file_name = "$package.apk";
@@ -52,6 +54,8 @@ function  UpdateApk($package, &$apk_data) {
             );
           }
         }
+      } else {
+        echo "$package not updated\n";
       }
     }
   }
@@ -62,15 +66,21 @@ function GetApkDevicePath($package) {
   exec("adb shell pm path $package", $output, $result);
   if (!$result && isset($output) && is_array($output)) {
     $last = end($output);
-    if (substr($last, 0, 8) == 'package:')
+    if (substr($last, 0, 8) == 'package:') {
       $path = trim(substr($last, 8));
+      echo "$package apk path is $path\n";
+    }
+  } else {
+    echo "Error fetching path for $package\n";
   }
   return $path;
 }
 
 function GetApkFileInfo($path, &$size, &$date, &$time) {
   $ok = false;
-  exec("adb shell ls -l " . escapeshellarg($path), $output, $result);
+  $command = "adb shell ls -l " . escapeshellarg($path);
+  echo "$command\n";
+  exec($command, $output, $result);
   if (!$result && isset($output) && is_array($output)) {
     $last = end($output);
     $parts = preg_split('/\s+/', $last);
@@ -81,6 +91,8 @@ function GetApkFileInfo($path, &$size, &$date, &$time) {
       if ($size > 0 && strlen($date) && strlen($time))
         $ok = true;
     }
+  } else {
+    echo "Error listing APK info";
   }
   return $ok;
 }
@@ -90,11 +102,19 @@ function FetchDeviceApk($path, $local_file, $size) {
   if (is_file($local_file))
     unlink($local_file);
   if (!is_file($local_file)) {
-    exec("adb pull " . escapeshellarg($path) . ' ' . escapeshellarg($local_file), $output, $result);
+    $command = "adb pull " . escapeshellarg($path) . ' ' . escapeshellarg($local_file);
+    echo "$command\n";
+    exec($command, $output, $result);
     if (!$result && is_file($local_file)) {
       $pulled_size = filesize($local_file);
-      if ($pulled_size == $size)
+      if ($pulled_size == $size) {
         $md5 = md5_file($local_file);
+        echo "Pulled $path to $local_file - md5: $md5\n";
+      } else {
+        echo "Wrong file size downloading $path ($size) to $local_file ($pulled_size)\n";
+      }
+    } else {
+      echo "Failed to pull $path to $local_file\n";
     }
   }
   return $md5;
