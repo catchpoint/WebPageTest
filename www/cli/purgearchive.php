@@ -11,9 +11,9 @@ ignore_user_abort(true);
 set_time_limit(86400);   // only allow it to run for 1 day
 
 // bail if we are already running
-$lock = Lock("Remove Archive");
+$lock = Lock("purgearchive");
 if (!isset($lock)) {
-  echo "removearchive process is already running\n";
+  echo "purgearchive process is already running\n";
   exit(0);
 }
 
