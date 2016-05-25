@@ -129,11 +129,7 @@ void Results::Save(void) {
   if (!_saved) {
     ProcessRequests();
     if (_test._log_data) {
-      reported_step_++;
-      if (_test._current_event_name.IsEmpty())
-        current_step_name_.Format("Step %d", reported_step_);
-      else
-        current_step_name_ = _test._current_event_name;
+      IncrementStep();
       OptimizationChecks checks(_requests, _test_state, _test, _dns);
       checks.Check();
       base_page_CDN_ = checks._base_page_CDN;
@@ -157,6 +153,25 @@ void Results::Save(void) {
     _saved = true;
   }
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));
+}
+
+/*------------------------------------------------------------------------------
+  Increment the reported_step, the event name, and the _file_base
+-----------------------------------------------------------------------------*/
+void Results::IncrementStep(void) {
+  reported_step_++;
+  // for multistep measurements, all following results get a prefix
+  if (reported_step_ > 1) {
+    _file_base.Format(_T("%s_%d"), shared_results_file_base, reported_step_);
+  } else {
+    _file_base = shared_results_file_base;
+  }
+  // Event name: Either default or set by command
+  if (_test._current_event_name.IsEmpty()) {
+    current_step_name_.Format("Step %d", reported_step_);
+  } else {
+    current_step_name_ = _test._current_event_name;
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -334,7 +349,14 @@ void Results::SaveVideo(void) {
     if (run) {
       int cached = _tcsstr(file, _T("_Cached")) ? 1 : 0;
       *file = 0;
-      file_name.Format(_T("%s%d.%d.histograms.json"), path, run, cached);
+
+      // file_name needs to include step prefix for multistep measurements
+      if (reported_step_ > 1) {
+        file_name.Format(_T("%s%d.%d.%d.histograms.json"),
+                         path, run, reported_step_, cached);
+      } else {
+        file_name.Format(_T("%s%d.%d.histograms.json"), path, run, cached);
+      }
       SaveHistogram(histograms, file_name);
     }
   }

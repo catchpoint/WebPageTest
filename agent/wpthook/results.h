@@ -92,6 +92,7 @@ private:
   DWORD peak_memory_;
   DWORD peak_process_count_;
 
+  void IncrementStep(void);
   void ProcessRequests(void);
   void SavePageData(OptimizationChecks&);
   void SaveRequests(OptimizationChecks&);
