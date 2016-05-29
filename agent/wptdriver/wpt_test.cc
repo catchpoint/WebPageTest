@@ -909,15 +909,18 @@ CStringA WptTest::GetAppendUA() const {
   - Overriding the host header for a specific host
 -----------------------------------------------------------------------------*/
 bool WptTest::ModifyRequestHeader(CStringA& header) const {
-  bool modified = true;
+  bool modified = false;
 
   int pos = header.Find(':');
   CStringA tag = header.Left(pos);
   CStringA value = header.Mid(pos + 1).Trim();
+  ATLTRACE(_T("Checking header '%S', value '%S'"), (LPCSTR)tag, (LPCSTR)value);
   if( !tag.CompareNoCase("User-Agent") ) {
     if (_user_agent.GetLength()) {
+      modified = true;
       header = CStringA("User-Agent: ") + _user_agent;
     } else if(!_preserve_user_agent && value.Find(" " + _user_agent_modifier + "/") == -1) {
+      modified = true;
       header += " " + GetAppendUA();
     }
   } else if (!tag.CompareNoCase("Host")) {
@@ -958,17 +961,15 @@ bool WptTest::ModifyRequestHeader(CStringA& header) const {
       }
     }
     if (new_headers.GetLength()) {
+      modified = true;
       header += new_headers;
-    } else {
-      modified = false;
     }
   } else {
-    modified = false;
     // Delete headers that were being overriden
     POSITION pos = _set_headers.GetHeadPosition();
     while (pos && !modified) {
       HttpHeaderValue new_header = _set_headers.GetNext(pos);
-      if (!new_header._tag.CompareNoCase(tag)) {
+      if (!new_header._tag.CompareNoCase(tag) && new_header._value.CompareNoCase(value)) {
         header.Empty();
         modified = true;
       }

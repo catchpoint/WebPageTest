@@ -115,7 +115,7 @@ static unsigned __stdcall ThreadProc( void* arg ) {
 void WptHook::Init(){
   WptTrace(loglevel::kFunction, _T("[wpthook] Init()\n"));
 #ifdef DEBUG
-  MessageBox(NULL, L"Attach Debugger", L"Attach Debugger", MB_OK);
+  //MessageBox(NULL, L"Attach Debugger", L"Attach Debugger", MB_OK);
 #endif
   test_.LoadFromFile();
   if (!test_state_.gdi_only_) {
