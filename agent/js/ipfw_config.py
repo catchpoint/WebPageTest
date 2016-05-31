@@ -29,29 +29,38 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."""
 import subprocess
 
 def SetPipe(options, pipe, bw, delay, plr):
+    ok = True
     ipfw = 'ipfw pipe {0} config'.format(pipe)
     if bw > 0:
         ipfw = ipfw + ' bw {0:d}Kbit/s'.format(int(int(bw)/1000))
     if delay > 0:
         ipfw = ipfw + ' delay {0}ms'.format(delay)
-    RunCommand(options, ipfw)
+    if not RunCommand(options, ipfw):
+        ok = False
 
     ipfw = 'ipfw queue {0} config'.format(pipe)
     if plr > 0 and plr <= 1.0:
         ipfw = ipfw + ' plr {0}'.format(plr)
     else:
         ipfw = ipfw + ' plr 0'
-    RunCommand(options, ipfw)
+    if not RunCommand(options, ipfw):
+        ok = False
 
+    return ok
 
 def RunCommand(options, command):
+    ok = True
     ssh = ['ssh', '-o', 'StrictHostKeyChecking=no', options.user + '@' + options.server, command]
     print ' '.join(ssh)
-    subprocess.check_call(ssh)
-
+    try:
+        subprocess.check_call(ssh)
+    except:
+        ok = False
+    return ok
 
 def main():
     import argparse
+    ok = True
     parser = argparse.ArgumentParser(description='Configure ipfw on a remote system.',
                                      prog='ipfw_config')
     parser.add_argument('--action', help="Action (set/clear).")
@@ -76,13 +85,19 @@ def main():
         options.user = 'root'
 
     if options.action == 'clear':
-        SetPipe(options, options.down_pipe, 0, 0, 0)
-        SetPipe(options, options.up_pipe, 0, 0, 0)
+        if not SetPipe(options, options.down_pipe, 0, 0, 0):
+            ok = False
+        if not SetPipe(options, options.up_pipe, 0, 0, 0):
+            ok = False
 
     if options.action == 'set':
-        SetPipe(options, options.down_pipe, options.down_bw, options.down_delay, options.down_plr)
-        SetPipe(options, options.up_pipe, options.up_bw, options.up_delay, options.up_plr)
+        if not SetPipe(options, options.down_pipe, options.down_bw, options.down_delay, options.down_plr):
+            ok = False
+        if not SetPipe(options, options.up_pipe, options.up_bw, options.up_delay, options.up_plr):
+            ok = False
 
+    if not ok:
+        exit(1)
 
 if '__main__' == __name__:
     main()
