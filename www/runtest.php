@@ -1727,9 +1727,11 @@ function LogTest(&$test, $testId, $url)
 */
 function CheckIp(&$test)
 {
-    $ok = true;
-    global $user;
-    global $usingAPI;
+  global $admin;
+  global $user;
+  global $usingAPI;
+  $ok = true;
+  if (!$admin) {
     $date = gmdate("Ymd");
     $ip2 = @$test['ip'];
     $ip = $_SERVER['REMOTE_ADDR'];
@@ -1739,24 +1741,25 @@ function CheckIp(&$test)
       if (isset($blockIpsAuto) && is_array($blockIpsAuto) && count($blockIpsAuto))
         $blockIps = array_merge($blockIps, $blockIpsAuto);
       foreach( $blockIps as $block ) {
-          $block = trim($block);
-          if( strlen($block) ) {
-              if( ereg($block, $ip) ) {
-                  logMsg("$ip: matched $block for url {$test['url']}", "./log/{$date}-blocked.log", true);
-                  $ok = false;
-                  break;
-              }
-
-              if( $ip2 && strlen($ip2) && ereg($block, $ip2) ) {
-                  logMsg("$ip2: matched(2) $block for url {$test['url']}", "./log/{$date}-blocked.log", true);
-                  $ok = false;
-                  break;
-              }
+        $block = trim($block);
+        if( strlen($block) ) {
+          if( ereg($block, $ip) ) {
+            logMsg("$ip: matched $block for url {$test['url']}", "./log/{$date}-blocked.log", true);
+            $ok = false;
+            break;
           }
+
+          if( $ip2 && strlen($ip2) && ereg($block, $ip2) ) {
+            logMsg("$ip2: matched(2) $block for url {$test['url']}", "./log/{$date}-blocked.log", true);
+            $ok = false;
+            break;
+          }
+        }
       }
     }
+  }
 
-    return $ok;
+  return $ok;
 }
 
 /**
@@ -1766,81 +1769,81 @@ function CheckIp(&$test)
 */
 function CheckUrl($url)
 {
-    $ok = true;
-    global $user;
-    global $usingAPI;
-    global $error;
-    global $admin;
-    $date = gmdate("Ymd");
-    if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
-        $url = 'http://' . $url;
-    if (!$usingAPI && !$admin) {
-        $blockUrls = file('./settings/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        $blockHosts = file('./settings/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        $blockAuto = file('./settings/blockdomainsauto.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        if ($blockUrls !== false && count($blockUrls) ||
-            $blockHosts !== false && count($blockHosts) ||
-            $blockAuto !== false && count($blockAuto)) {
-            // Follow redirects to see if they are obscuring the site being tested
-            GetRedirect($url, $rhost, $rurl);
-            foreach( $blockUrls as $block ) {
-                $block = trim($block);
-                if( strlen($block) && preg_match("/$block/i", $url)) {
-                    logMsg("{$_SERVER['REMOTE_ADDR']}: url $url matched $block", "./log/{$date}-blocked.log", true);
-                    $ok = false;
-                    break;
-                } elseif( strlen($block) && strlen($rurl) && preg_match("/$block/i", $rurl)) {
-                    logMsg("{$_SERVER['REMOTE_ADDR']}: url $url redirected to $rurl matched $block", "./log/{$date}-blocked.log", true);
-                    $ok = false;
-                    break;
-                }
-            }
-            if ($ok) {
-                $parts = parse_url($url);
-                $host = trim($parts['host']);
-                foreach( $blockHosts as $block ) {
-                    $block = trim($block);
-                    if( strlen($block) &&
-                        (!strcasecmp($host, $block) ||
-                         !strcasecmp($host, "www.$block"))) {
-                         logMsg("{$_SERVER['REMOTE_ADDR']}: $url matched $block", "./log/{$date}-blocked.log", true);
-                        $ok = false;
-                        break;
-                    } elseif( strlen($block) &&
-                        (!strcasecmp($rhost, $block) ||
-                         !strcasecmp($rhost, "www.$block"))) {
-                         logMsg("{$_SERVER['REMOTE_ADDR']}: $url redirected to $rhost which matched $block", "./log/{$date}-blocked.log", true);
-                        $ok = false;
-                        break;
-                    }
-                }
-            }
-            if ($ok) {
-                $parts = parse_url($url);
-                $host = trim($parts['host']);
-                foreach( $blockAuto as $block ) {
-                    $block = trim($block);
-                    if( strlen($block) &&
-                        (!strcasecmp($host, $block) ||
-                         !strcasecmp($host, "www.$block"))) {
-                         logMsg("{$_SERVER['REMOTE_ADDR']}: $url matched auto-block $block", "./log/{$date}-blocked.log", true);
-                        $ok = false;
-                        break;
-                    }
-                }
-            }
+  $ok = true;
+  global $user;
+  global $usingAPI;
+  global $error;
+  global $admin;
+  $date = gmdate("Ymd");
+  if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
+    $url = 'http://' . $url;
+  if (!$usingAPI && !$admin) {
+    $blockUrls = file('./settings/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    $blockHosts = file('./settings/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    $blockAuto = file('./settings/blockdomainsauto.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if ($blockUrls !== false && count($blockUrls) ||
+        $blockHosts !== false && count($blockHosts) ||
+        $blockAuto !== false && count($blockAuto)) {
+      // Follow redirects to see if they are obscuring the site being tested
+      GetRedirect($url, $rhost, $rurl);
+      foreach( $blockUrls as $block ) {
+        $block = trim($block);
+        if( strlen($block) && preg_match("/$block/i", $url)) {
+          logMsg("{$_SERVER['REMOTE_ADDR']}: url $url matched $block", "./log/{$date}-blocked.log", true);
+          $ok = false;
+          break;
+        } elseif( strlen($block) && strlen($rurl) && preg_match("/$block/i", $rurl)) {
+          logMsg("{$_SERVER['REMOTE_ADDR']}: url $url redirected to $rurl matched $block", "./log/{$date}-blocked.log", true);
+          $ok = false;
+          break;
         }
-    }
-    
-    if ($ok && !$admin && !$usingAPI) {
-      $ok = SBL_Check($url, $message);
-      if (!$ok) {
-        $error = "<br>Sorry, your test was blocked because $url is suspected of being used for <a href=\"http://www.antiphishing.org/\">phishing</a> or <a href=\"http://www.stopbadware.org/\">hosting malware</a>.<br><br>Advisory provided by <a href=\"http://code.google.com/apis/safebrowsing/safebrowsing_faq.html#whyAdvisory\">Google</a>.";
-        logMsg("{$_SERVER['REMOTE_ADDR']}: $url failed Safe Browsing check: $message", "./log/{$date}-blocked.log", true);
+      }
+      if ($ok) {
+        $parts = parse_url($url);
+        $host = trim($parts['host']);
+        foreach( $blockHosts as $block ) {
+          $block = trim($block);
+          if( strlen($block) &&
+              (!strcasecmp($host, $block) ||
+               !strcasecmp($host, "www.$block"))) {
+             logMsg("{$_SERVER['REMOTE_ADDR']}: $url matched $block", "./log/{$date}-blocked.log", true);
+            $ok = false;
+            break;
+          } elseif( strlen($block) &&
+              (!strcasecmp($rhost, $block) ||
+               !strcasecmp($rhost, "www.$block"))) {
+             logMsg("{$_SERVER['REMOTE_ADDR']}: $url redirected to $rhost which matched $block", "./log/{$date}-blocked.log", true);
+            $ok = false;
+            break;
+          }
+        }
+      }
+      if ($ok) {
+        $parts = parse_url($url);
+        $host = trim($parts['host']);
+        foreach( $blockAuto as $block ) {
+          $block = trim($block);
+          if( strlen($block) &&
+              (!strcasecmp($host, $block) ||
+               !strcasecmp($host, "www.$block"))) {
+             logMsg("{$_SERVER['REMOTE_ADDR']}: $url matched auto-block $block", "./log/{$date}-blocked.log", true);
+            $ok = false;
+            break;
+          }
+        }
       }
     }
+  }
+  
+  if ($ok && !$admin && !$usingAPI) {
+    $ok = SBL_Check($url, $message);
+    if (!$ok) {
+      $error = "<br>Sorry, your test was blocked because $url is suspected of being used for <a href=\"http://www.antiphishing.org/\">phishing</a> or <a href=\"http://www.stopbadware.org/\">hosting malware</a>.<br><br>Advisory provided by <a href=\"http://code.google.com/apis/safebrowsing/safebrowsing_faq.html#whyAdvisory\">Google</a>.";
+      logMsg("{$_SERVER['REMOTE_ADDR']}: $url failed Safe Browsing check: $message", "./log/{$date}-blocked.log", true);
+    }
+  }
 
-    return $ok;
+  return $ok;
 }
 
 /**
