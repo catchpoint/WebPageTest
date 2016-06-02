@@ -27,6 +27,7 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."""
 import subprocess
+import time
 
 def SetPipe(options, pipe, bw, delay, plr):
     ok = True
@@ -49,13 +50,17 @@ def SetPipe(options, pipe, bw, delay, plr):
     return ok
 
 def RunCommand(options, command):
-    ok = True
+    ok = False
     ssh = ['ssh', '-o', 'StrictHostKeyChecking=no', options.user + '@' + options.server, command]
     print ' '.join(ssh)
-    try:
-        subprocess.check_call(ssh)
-    except:
-        ok = False
+    count = 0
+    while not ok and count < 30:
+        count += 1
+        try:
+            subprocess.check_call(ssh)
+            ok = True
+        except:
+            time.sleep(1)
     return ok
 
 def main():
