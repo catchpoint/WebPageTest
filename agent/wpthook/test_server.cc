@@ -299,9 +299,11 @@ void TestServer::MongooseCallback(enum mg_event event,
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/received_data") == 0) {
       test_state_.received_data_ = true;
-    } else if (strncmp(request_info->uri, "/blank", 6) == 0) {
+	} else if (strncmp(request_info->uri, "/blank2", 7) == 0) {
       test_state_.UpdateBrowserWindow();
-      mg_printf(conn, BLANK_HTML);
+	  mg_printf(conn, BLANK_HTML);
+	} else if (strncmp(request_info->uri, "/blank", 6) == 0) {
+	  mg_printf(conn, BLANK_HTML);
     } else if (strcmp(request_info->uri, "/event/responsive") == 0) {
       GetIntParam(request_info->query_string, "isResponsive",
                   test_state_._is_responsive);

@@ -461,7 +461,7 @@ void TestState::UpdateBrowserWindow() {
       ::ShowWindow(_frame_window, SW_RESTORE);
       if (_test._viewport_width && _test._viewport_height) {
         ::UpdateWindow(_frame_window);
-        FindViewport();
+        FindViewport(true);
         RECT browser;
         GetWindowRect(_frame_window, &browser);
         RECT viewport = {0,0,0,0};
@@ -659,7 +659,7 @@ void TestState::FindViewport(bool force) {
           pixel = middle;
           while (y && !viewport.bottom) {
             if (memcmp(background, pixel, 3))
-              viewport.bottom = height - y;
+              viewport.bottom = height - y - 1;
             pixel -= row_bytes;
             y--;
           }
@@ -669,7 +669,7 @@ void TestState::FindViewport(bool force) {
           pixel = middle;
           while (x && !viewport.left) {
             if (memcmp(background, pixel, 3))
-              viewport.left = x + 1;
+              viewport.left = x;
             pixel -= pixel_bytes;
             x--;
           }
