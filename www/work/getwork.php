@@ -336,7 +336,7 @@ function GetVideoJob()
       Unlock($lock);
     }
   }
-  
+
   return $ret;
 }
 
@@ -344,41 +344,49 @@ function GetVideoJob()
 * See if there is a software update
 * 
 */
-function GetUpdate()
-{
-    global $location;
-    $ret = false;
+function GetUpdate() {
+  global $location;
+  global $tester;
+  $ret = false;
+
+  // see if the client sent a version number
+  if ($_GET['ver']) {
+    $fileBase = '';
+    if( isset($_GET['software']) && strlen($_GET['software']) )
+      $fileBase = trim($_GET['software']);
     
-    // see if the client sent a version number
-    if( $_GET['ver'] )
-    {
-        $fileBase = '';
-        if( isset($_GET['software']) && strlen($_GET['software']) )
-            $fileBase = trim($_GET['software']);
+    $updateDir = './work/update';
+    if( is_dir("$updateDir/$location") )
+      $updateDir = "$updateDir/$location";
         
-        $updateDir = './work/update';
-        if( is_dir("$updateDir/$location") )
-            $updateDir = "$updateDir/$location";
-            
-        // see if we have any software updates
-        if( is_file("$updateDir/{$fileBase}update.ini") && is_file("$updateDir/{$fileBase}update.zip") )
-        {
-            $update = parse_ini_file("$updateDir/{$fileBase}update.ini");
+    // see if we have any software updates
+    if (is_file("$updateDir/{$fileBase}update.ini") && is_file("$updateDir/{$fileBase}update.zip")) {
+      $update = parse_ini_file("$updateDir/{$fileBase}update.ini");
 
-            // Check for inequality allows both upgrade and quick downgrade
-            if( $update['ver'] && intval($update['ver']) !== intval($_GET['ver']) )
-            {
-                header('Content-Type: application/zip');
-                header("Cache-Control: no-cache, must-revalidate");
-                header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+      // Check for inequality allows both upgrade and quick downgrade
+      if ($update['ver'] && intval($update['ver']) !== intval($_GET['ver'])) {
+        header('Content-Type: application/zip');
+        header("Cache-Control: no-cache, must-revalidate");
+        header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
-                readfile_chunked("$updateDir/{$fileBase}update.zip");
-                $ret = true;
-            }
-        }
+        readfile_chunked("$updateDir/{$fileBase}update.zip");
+        $ret = true;
+      }
     }
     
-    return $ret;
+    // Keep track of the number of times in a row we sent down an update
+    if (function_exists('apc_fetch') && function_exists('apc_store')) {
+      $updateCount = apc_fetch("uc-$location-$tester");
+      if (!$updateCount)
+        $updateCount = 0;
+      $oldCount = $updateCount;
+      $updateCount = $ret ? $updateCount + 1 : 0;
+      if ($updateCount != $oldCount)
+        apc_store("uc-$location-$tester", $updateCount, 3600);
+    }
+  }
+  
+  return $ret;
 }
 
 /**
@@ -538,6 +546,16 @@ function GetReboot() {
         }
         break;
       }
+    }
+  }
+
+  // If we sent down more than 3 updates sequentially, reboot the tester
+  if (!$reboot && function_exists('apc_fetch') && function_exists('apc_store')) {
+    $updateCount = apc_fetch("uc-$location-$tester");
+    if ($updateCount && $updateCount >= 3) {
+      $reboot = true;
+      $updateCount = 0;
+      apc_store("uc-$location-$tester", $updateCount, 3600);
     }
   }
   
