@@ -50,9 +50,10 @@ WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
   ,has_gpu_(false)
   ,rebooting_(false) {
   SetErrorMode(SEM_FAILCRITICALERRORS);
-  // get the version number of the binary (for software updates)
+  // get the version number of the wpthook.dll binary (for software updates)
   TCHAR file[MAX_PATH];
   if (GetModuleFileName(NULL, file, _countof(file))) {
+    lstrcpy(PathFindFileName(file), _T("wpthook.dll"));
     DWORD unused;
     DWORD infoSize = GetFileVersionInfoSize(file, &unused);
     if (infoSize) {
