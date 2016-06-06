@@ -51,22 +51,33 @@ static const char * RESPONSE_ERROR_NOtest__STR = "ERROR: No Test";
 static const DWORD RESPONSE_ERROR_NOT_IMPLEMENTED = 403;
 static const char * RESPONSE_ERROR_NOT_IMPLEMENTED_STR = 
                                                       "ERROR: Not Implemented";
+static const char * BLANK_RESPONSE = "HTTP/1.1 200 OK\r\n"
+    "Cache: no-cache\r\n"
+    "\r\n";
+
 static const char * BLANK_HTML = "HTTP/1.1 200 OK\r\n"
     "Cache: no-cache\r\n"
     "Content-Type:text/html\r\n"
     "\r\n"
-    "<html><head><title>Blank</title>\r\n"
+    "<html><head><title>Blank</title>\n"
     "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, "
-    "maximum-scale=1.0, user-scalable=0;\">\r\n"
-    "<style type=\"text/css\">\r\n"
-    "body {background-color: #FFF;}\r\n"
-    "</style>\r\n"
-    "<script type=\"text/javascript\">\r\n"
-    "var dummy=1;\r\n"
-    "</script>\r\n"
-    "</head><body>\r\n"
+    "maximum-scale=1.0, user-scalable=0;\">\n"
+    "<style type=\"text/css\">\n"
+    "body {background-color: #FFF;}\n"
+    "</style>\n"
+    "</head><body>\n"
+    "<div id=\"viewport\" "
+    "style=\"position: fixed;top: 0;left: 0;bottom: 0;right: 0;\"></div>\n"
+    "<script>"
+    "var v = document.getElementById(\"viewport\");\n"
+    "var s = document.createElement('script');\n"
+    "s.src = 'viewport.js?w=' + v.offsetWidth + "
+    "'&h=' + v.offsetHeight + "
+    "'&rnd=' + (Date.now() + Math.random());\n"
+    "v.appendChild(s);\n"
+    "</script>\n"
     "<img style=\"position: fixed; left: -2px; width: 1px; height: 1px\" "
-    "src=\"https://www.google.com/favicon.ico\">\r\n"
+    "src=\"https://www.google.com/favicon.ico\">\n"
     "</body></html>";
 
 /*-----------------------------------------------------------------------------
@@ -299,11 +310,16 @@ void TestServer::MongooseCallback(enum mg_event event,
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/received_data") == 0) {
       test_state_.received_data_ = true;
-	} else if (strncmp(request_info->uri, "/blank2", 7) == 0) {
+	  } else if (strncmp(request_info->uri, "/blank", 6) == 0) {
       test_state_.UpdateBrowserWindow();
-	  mg_printf(conn, BLANK_HTML);
-	} else if (strncmp(request_info->uri, "/blank", 6) == 0) {
-	  mg_printf(conn, BLANK_HTML);
+	    mg_write(conn, BLANK_HTML, lstrlenA(BLANK_HTML));
+	  } else if (strncmp(request_info->uri, "/viewport.js", 12) == 0) {
+      DWORD width = 0;
+      DWORD height = 0;
+      GetDwordParam(request_info->query_string, "w", width);
+      GetDwordParam(request_info->query_string, "h", height);
+      test_state_.UpdateBrowserWindow(width, height);
+      mg_write(conn, BLANK_RESPONSE, lstrlenA(BLANK_RESPONSE));
     } else if (strcmp(request_info->uri, "/event/responsive") == 0) {
       GetIntParam(request_info->query_string, "isResponsive",
                   test_state_._is_responsive);

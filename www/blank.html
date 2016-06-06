@@ -4,11 +4,15 @@
 	<style type="text/css">
 		body {background-color: #FFF;}
 	</style>
-	<script type="text/javascript">
-		var dummy=1;
-	</script>
 </head>
 <body>
+<div id="viewport" style="position: fixed;top: 0;left: 0;bottom: 0;right: 0;"></div>
 <img style="position: fixed; left: -2px; width: 1px; height: 1px" src="https://www.google.com/favicon.ico">
+<script type="text/javascript">
+var viewport = document.getElementById("viewport");
+var s = document.createElement('script');
+s.src = 'viewport.js?w=' + viewport.offsetWidth + '&h=' + viewport.offsetHeight + '&rnd=' + (Date.now() + Math.random());
+viewport.appendChild(s);
+</script>
 </body>
 </html>
