@@ -391,6 +391,25 @@ void WptDriverCore::Init(void){
 		RegCloseKey(hKey);
 	}
 
+	// Disable OS Upgrade in Windows Update
+	if (SUCCEEDED(RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+		_T("SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate"), 0, 0, 0,
+		KEY_READ | KEY_WRITE, NULL, &hKey, NULL))) {
+		DWORD val = 1;
+		RegSetValueEx(hKey, _T("DisableOSUpgrade"), 0, REG_DWORD,
+			(LPBYTE)&val, sizeof(val));
+		RegCloseKey(hKey);
+	}
+
+	// Disable Windows 10 upgrade nag dialog
+	if (SUCCEEDED(RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+		_T("SOFTWARE\\Policies\\Microsoft\\Windows\\GWX"), 0, 0, 0,
+		KEY_READ | KEY_WRITE, NULL, &hKey, NULL))) {
+		DWORD val = 1;
+		RegSetValueEx(hKey, _T("DisableGWX"), 0, REG_DWORD,
+			(LPBYTE)&val, sizeof(val));
+		RegCloseKey(hKey);
+	}
 
   // Get WinPCap ready (install it if necessary)
   _winpcap.Initialize();
