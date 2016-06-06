@@ -838,6 +838,10 @@ void WptDriverCore::PreTest() {
       CloseHandle(process);
   }
 
+  // Minimise all windows on desktop
+  HWND hwnd = FindWindow(_T("Shell_TrayWnd"), NULL);
+  LRESULT res = SendMessage(hwnd, WM_COMMAND, (WPARAM)419, 0);
+
   // Install a global appinit hook for wpthook (actual loading will be
   // controlled by a shared memory state)
   TCHAR path[MAX_PATH];
