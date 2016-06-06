@@ -458,54 +458,35 @@ void TestState::UpdateBrowserWindow(DWORD current_width,
     }
     // position the browser window
     bool updated = false;
-    if (!_viewport_adjusted) {
+    if (_test._viewport_width && _test._viewport_height) {
       if (current_width && current_height &&
-          _test._viewport_width && _test._viewport_height) {
-        if (_test._viewport_width != current_width ||
-            _test._viewport_height != current_height) {
-          WptTrace(loglevel::kFunction, 
-                    _T("[wpthook] - Adjusting viewport from %dx%d to %dx%d\n"),
-                    current_width, current_height,
-                    _test._viewport_width, _test._viewport_height);
-          RECT browser;
-          GetWindowRect(_frame_window, &browser);
-          int browser_width = abs(browser.right - browser.left);
-          int browser_height = abs(browser.top - browser.bottom);
-          int width_delta = _test._viewport_width - current_width;
-          int height_delta = _test._viewport_height - current_height;
-          ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, 
-                          browser_width + width_delta,
-                          browser_height + height_delta, SWP_NOACTIVATE);
-          updated = true;
-          _viewport_adjusted = true;
-        }
-      } else if (_frame_window && old_frame != _frame_window) {
-        DWORD browser_width = _test._browser_width;
-        DWORD browser_height = _test._browser_height;
+          (_test._viewport_width != current_width ||
+           _test._viewport_height != current_height)) {
+        WptTrace(loglevel::kFunction, 
+                  _T("[wpthook] - Adjusting viewport from %dx%d to %dx%d\n"),
+                  current_width, current_height,
+                  _test._viewport_width, _test._viewport_height);
+        RECT browser;
+        GetWindowRect(_frame_window, &browser);
+        int browser_width = abs(browser.right - browser.left);
+        int browser_height = abs(browser.top - browser.bottom);
+        int width_delta = _test._viewport_width - current_width;
+        int height_delta = _test._viewport_height - current_height;
         ::ShowWindow(_frame_window, SW_RESTORE);
-        if (_test._viewport_width && _test._viewport_height) {
-          ::UpdateWindow(_frame_window);
-          FindViewport(true);
-          RECT browser;
-          GetWindowRect(_frame_window, &browser);
-          RECT viewport = {0,0,0,0};
-          if (_screen_capture.IsViewportSet())
-            memcpy(&viewport, &_screen_capture._viewport, sizeof(RECT));
-          int vp_width = abs(viewport.right - viewport.left);
-          int vp_height = abs(viewport.top - viewport.bottom);
-          int br_width = abs(browser.right - browser.left);
-          int br_height = abs(browser.top - browser.bottom);
-          if (vp_width && vp_height && br_width && br_height && 
-            br_width >= vp_width && br_height >= vp_height) {
-            browser_width = _test._viewport_width + (br_width - vp_width);
-            browser_height = _test._viewport_height + (br_height - vp_height);
-          }
-          _screen_capture.ClearViewport();
-        }
         ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, 
-                        browser_width, browser_height, SWP_NOACTIVATE);
+                        browser_width + width_delta,
+                        browser_height + height_delta, SWP_NOACTIVATE);
         updated = true;
+        _viewport_adjusted = true;
       }
+    } else if (!_viewport_adjusted && _frame_window &&
+                old_frame != _frame_window) {
+      DWORD browser_width = _test._browser_width;
+      DWORD browser_height = _test._browser_height;
+      ::ShowWindow(_frame_window, SW_RESTORE);
+      ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, 
+                      browser_width, browser_height, SWP_NOACTIVATE);
+      updated = true;
     }
     if (updated) {
       _screen_capture.ClearViewport();

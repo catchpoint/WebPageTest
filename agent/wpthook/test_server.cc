@@ -90,8 +90,7 @@ TestServer::TestServer(WptHook& hook, WptTestHook &test, TestState& test_state,
   ,test_state_(test_state)
   ,requests_(requests)
   ,trace_(trace)
-  ,started_(false)
-  ,blank2_loaded_(false) {
+  ,started_(false) {
   InitializeCriticalSection(&cs);
   last_cpu_idle_.QuadPart = 0;
   last_cpu_kernel_.QuadPart = 0;
@@ -311,21 +310,15 @@ void TestServer::MongooseCallback(enum mg_event event,
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/received_data") == 0) {
       test_state_.received_data_ = true;
-	  } else if (strncmp(request_info->uri, "/blank2", 7) == 0) {
-      blank2_loaded_ = true;
-      test_state_.UpdateBrowserWindow();
-	    mg_write(conn, BLANK_HTML, lstrlenA(BLANK_HTML));
 	  } else if (strncmp(request_info->uri, "/blank", 6) == 0) {
       test_state_.UpdateBrowserWindow();
 	    mg_write(conn, BLANK_HTML, lstrlenA(BLANK_HTML));
 	  } else if (strncmp(request_info->uri, "/viewport.js", 12) == 0) {
-      if (blank2_loaded_) {
-        DWORD width = 0;
-        DWORD height = 0;
-        GetDwordParam(request_info->query_string, "w", width);
-        GetDwordParam(request_info->query_string, "h", height);
-        test_state_.UpdateBrowserWindow(width, height);
-      }
+      DWORD width = 0;
+      DWORD height = 0;
+      GetDwordParam(request_info->query_string, "w", width);
+      GetDwordParam(request_info->query_string, "h", height);
+      test_state_.UpdateBrowserWindow(width, height);
       mg_write(conn, BLANK_RESPONSE, lstrlenA(BLANK_RESPONSE));
     } else if (strcmp(request_info->uri, "/event/responsive") == 0) {
       GetIntParam(request_info->query_string, "isResponsive",
