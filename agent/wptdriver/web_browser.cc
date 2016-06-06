@@ -365,15 +365,15 @@ bool WebBrowser::ConfigureIpfw(WptTestDriver& test) {
                 test._latency, test._plr );
     ATLTRACE(buff);
 
-    if (_ipfw.SetPipe(PIPE_IN, test._bwIn, latency,test._plr/100.0)) {
+    if (_ipfw.SetPipe(PIPE_IN, test._bwIn, latency, test._plr/100.0, true)) {
       // make up for odd values
       if( test._latency % 2 )
         latency++;
 
-      if (_ipfw.SetPipe(PIPE_OUT, test._bwOut,latency,test._plr/100.0))
+      if (_ipfw.SetPipe(PIPE_OUT, test._bwOut,latency,test._plr/100.0, false))
         ret = true;
       else
-        _ipfw.SetPipe(PIPE_IN, 0, 0, 0);
+        _ipfw.SetPipe(PIPE_IN, 0, 0, 0, true);
     }
   }
   else
@@ -390,8 +390,8 @@ bool WebBrowser::ConfigureIpfw(WptTestDriver& test) {
   Remove the bandwidth throttling
 -----------------------------------------------------------------------------*/
 void WebBrowser::ResetIpfw(void) {
-  _ipfw.SetPipe(PIPE_IN, 0, 0, 0);
-  _ipfw.SetPipe(PIPE_OUT, 0, 0, 0);
+  _ipfw.SetPipe(PIPE_IN, 0, 0, 0, true);
+  _ipfw.SetPipe(PIPE_OUT, 0, 0, 0, false);
 }
 
 /*-----------------------------------------------------------------------------
