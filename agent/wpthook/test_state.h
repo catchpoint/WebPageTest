@@ -103,7 +103,7 @@ public:
   void Reset(bool cascade = true);
   void Init();
   void TitleSet(CString title);
-  void UpdateBrowserWindow();
+  void UpdateBrowserWindow(DWORD current_width = 0, DWORD current_height = 0);
   DWORD ElapsedMsFromStart(LARGE_INTEGER end) const;
   DWORD ElapsedMsFromLaunch(LARGE_INTEGER end) const;
   void FindBrowserNameAndVersion();
@@ -187,6 +187,7 @@ public:
 private:
   bool  _first_request_sent;
   bool  _started;
+  bool  _viewport_adjusted;
   int   _next_document;
   Results&  _results;
   ScreenCapture& _screen_capture;

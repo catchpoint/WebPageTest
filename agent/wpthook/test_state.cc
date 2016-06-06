@@ -60,7 +60,8 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   ,gdi_only_(false)
   ,navigated_(false)
   ,_started(false)
-  ,received_data_(false) {
+  ,received_data_(false)
+  ,_viewport_adjusted(false) {
   QueryPerformanceCounter(&_launch);
   QueryPerformanceFrequency(&_ms_frequency);
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
@@ -444,7 +445,8 @@ BOOL CALLBACK MakeTopmost(HWND hwnd, LPARAM lParam) {
 /*-----------------------------------------------------------------------------
     Find the browser window that we are going to capture
 -----------------------------------------------------------------------------*/
-void TestState::UpdateBrowserWindow() {
+void TestState::UpdateBrowserWindow(DWORD current_width,
+                                    DWORD current_height) {
   if (!_started) {
     DWORD browser_process_id = GetCurrentProcessId();
     if (no_gdi_)
@@ -455,31 +457,58 @@ void TestState::UpdateBrowserWindow() {
                 _T("[wpthook] - Frame Window: %08X\n"), _frame_window);
     }
     // position the browser window
-    if (_frame_window && old_frame != _frame_window) {
-      DWORD browser_width = _test._browser_width;
-      DWORD browser_height = _test._browser_height;
-      ::ShowWindow(_frame_window, SW_RESTORE);
-      if (_test._viewport_width && _test._viewport_height) {
-        ::UpdateWindow(_frame_window);
-        FindViewport(true);
-        RECT browser;
-        GetWindowRect(_frame_window, &browser);
-        RECT viewport = {0,0,0,0};
-        if (_screen_capture.IsViewportSet())
-          memcpy(&viewport, &_screen_capture._viewport, sizeof(RECT));
-        int vp_width = abs(viewport.right - viewport.left);
-        int vp_height = abs(viewport.top - viewport.bottom);
-        int br_width = abs(browser.right - browser.left);
-        int br_height = abs(browser.top - browser.bottom);
-        if (vp_width && vp_height && br_width && br_height && 
-          br_width >= vp_width && br_height >= vp_height) {
-          browser_width = _test._viewport_width + (br_width - vp_width);
-          browser_height = _test._viewport_height + (br_height - vp_height);
+    bool updated = false;
+    if (!_viewport_adjusted) {
+      if (current_width && current_height &&
+          _test._viewport_width && _test._viewport_height) {
+        if (_test._viewport_width != current_width ||
+            _test._viewport_height != current_height) {
+          WptTrace(loglevel::kFunction, 
+                    _T("[wpthook] - Adjusting viewport from %dx%d to %dx%d\n"),
+                    current_width, current_height,
+                    _test._viewport_width, _test._viewport_height);
+          RECT browser;
+          GetWindowRect(_frame_window, &browser);
+          int browser_width = abs(browser.right - browser.left);
+          int browser_height = abs(browser.top - browser.bottom);
+          int width_delta = _test._viewport_width - current_width;
+          int height_delta = _test._viewport_height - current_height;
+          ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, 
+                          browser_width + width_delta,
+                          browser_height + height_delta, SWP_NOACTIVATE);
+          updated = true;
+          _viewport_adjusted = true;
         }
-        _screen_capture.ClearViewport();
+      } else if (_frame_window && old_frame != _frame_window) {
+        DWORD browser_width = _test._browser_width;
+        DWORD browser_height = _test._browser_height;
+        ::ShowWindow(_frame_window, SW_RESTORE);
+        if (_test._viewport_width && _test._viewport_height) {
+          ::UpdateWindow(_frame_window);
+          FindViewport(true);
+          RECT browser;
+          GetWindowRect(_frame_window, &browser);
+          RECT viewport = {0,0,0,0};
+          if (_screen_capture.IsViewportSet())
+            memcpy(&viewport, &_screen_capture._viewport, sizeof(RECT));
+          int vp_width = abs(viewport.right - viewport.left);
+          int vp_height = abs(viewport.top - viewport.bottom);
+          int br_width = abs(browser.right - browser.left);
+          int br_height = abs(browser.top - browser.bottom);
+          if (vp_width && vp_height && br_width && br_height && 
+            br_width >= vp_width && br_height >= vp_height) {
+            browser_width = _test._viewport_width + (br_width - vp_width);
+            browser_height = _test._viewport_height + (br_height - vp_height);
+          }
+          _screen_capture.ClearViewport();
+        }
+        ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, 
+                        browser_width, browser_height, SWP_NOACTIVATE);
+        updated = true;
       }
-      ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, 
-                      browser_width, browser_height, SWP_NOACTIVATE);
+    }
+    if (updated) {
+      _screen_capture.ClearViewport();
       ::UpdateWindow(_frame_window);
       EnumWindows(::MakeTopmost, (LPARAM)this);
       FindViewport();
