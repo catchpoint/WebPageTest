@@ -196,18 +196,16 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
         array_key_exists('is_cached', $options)) {
       require_once('devtools.inc.php');
       $cpu_slices = DevToolsGetCPUSlices($options['path'], $options['run_id'], $options['is_cached']);
-      if (isset($cpu_slices) && is_array($cpu_slices) && count($cpu_slices)) {
+      if (isset($cpu_slices) && is_array($cpu_slices) && isset($cpu_slices['main_thread'])) {
         $perf_height = $is_thumbnail ? 16 : 50;
         $cpu_slice_info = array();
-        foreach (array_keys($cpu_slices) as $thread) {
-          $cpu_slice_info[] = array('thread' => $thread,
-                                    'x1' => 0,
-                                    'x2' => $width - 1,
-                                    'y1' => $height - 1,
-                                    'y2' => $height + $perf_height - 2,
-                                    'height' => $perf_height);
-          $height += $perf_height - 1;
-        }
+        $cpu_slice_info[] = array('thread' => $cpu_slices['main_thread'],
+                                  'x1' => 0,
+                                  'x2' => $width - 1,
+                                  'y1' => $height - 1,
+                                  'y2' => $height + $perf_height - 2,
+                                  'height' => $perf_height);
+        $height += $perf_height - 1;
       }
     }
     
@@ -371,6 +369,9 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
           $cpu_slice_colors['MinorGC'] = $cpu_slice_colors['EvaluateScript'];
           $cpu_slice_colors['MajorGC'] = $cpu_slice_colors['EvaluateScript'];
           $cpu_slice_colors['FireAnimationFrame'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['ThreadState::completeSweep'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['Heap::collectGarbage'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['ThreadState::performIdleLazySweep'] = $cpu_slice_colors['EvaluateScript'];
 
           $cpu_slice_colors['other'] = GetColor($im, 184, 184, 184);
           $cpu_slice_colors['Program'] = $cpu_slice_colors['other'];
@@ -566,25 +567,23 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                 $cpu_top = $p['y1'] + 1;
                 $cpu_bottom = $p['y2'] - 1;
                 $cpu_height = $cpu_bottom - $cpu_top + 1;
-                $bins = intval(ceil($max_ms / $data_width));
-                $slices = $cpu_slices[$p['thread']];
-                $max_slices_ms = count($slices);
+                $slices = $cpu_slices['slices'][$p['thread']];
+                $slice_usecs = $cpu_slices['slice_usecs'];
+                $end_slice = intval($max_ms * 1000 / $slice_usecs);
                 if ($x1 < $x2) {
                   for ($x = $x1; $x <= $x2; $x++) {
-                    $ms = intval(floor(((($x - $x1) / $data_width) * $max_ms)));
-                    if ($ms <= $max_slices_ms) {
-                      $slice_bins = min($bins, $max_slices_ms - $ms);
-                      $cpu_times = AverageCpuSlices($ms, $slice_bins, $slices, $cpu_slice_colors);
-                      if ($cpu_times) {
-                        // draw the line for this data point in the order the colors are defined
-                        $y = $cpu_bottom;
-                        foreach ($cpu_slice_colors as $type => $color) {
-                          if (isset($cpu_times[$type])) {
-                            $pixels = $cpu_height * $cpu_times[$type];
-                            $y2 = max($y - $pixels, $cpu_top);
-                            imageline($im, $x, $y, $x, $y2, $color);
-                            $y = $y2;
-                          }
+                    $first_slice = intval(floor(((($x - $x1) / $data_width) * $end_slice)));
+                    $last_slice = intval(floor(((($x + 1- $x1) / $data_width) * $end_slice)));
+                    $cpu_times = AverageCpuSlices($slices, $first_slice, $last_slice, $slice_usecs, $cpu_slice_colors);
+                    if ($cpu_times) {
+                      // draw the line for this data point in the order the colors are defined
+                      $y = $cpu_bottom;
+                      foreach ($cpu_slice_colors as $type => $color) {
+                        if (isset($cpu_times[$type])) {
+                          $pixels = $cpu_height * $cpu_times[$type];
+                          $y2 = max($y - $pixels, $cpu_top);
+                          imageline($im, $x, $y, $x, $y2, $color);
+                          $y = $y2;
                         }
                       }
                     }
@@ -795,15 +794,16 @@ class XScaler
     }
 }
 
-function AverageCpuSlices($ms_start, $bins, &$slices, &$known_types) {
+function AverageCpuSlices(&$slices, $first_slice, $last_slice, $slice_usecs, &$known_types) {
   $avg = null;
-  if ($bins) {
+  if ($last_slice >= $first_slice) {
     $valid = false;
     $totals = array();
-    $ms_end = $ms_start + $bins;
-    for ($ms = $ms_start; $ms < $ms_end; $ms++) {
-      if (count($slices[$ms])) {
-        foreach ($slices[$ms] as $type => $value) {
+    $total_time = ($last_slice - $first_slice + 1) * $slice_usecs;
+    for ($slice = $first_slice; $slice <= $last_slice; $slice++) {
+      foreach ($slices as $type => &$times) {
+        if (isset($times[$slice])) {
+          $value = $times[$slice];
           if ($value > 0) {
             $valid = true;
             if (!isset($known_types[$type])) {
@@ -819,7 +819,7 @@ function AverageCpuSlices($ms_start, $bins, &$slices, &$known_types) {
     if ($valid) {
       $avg = array();
       foreach($totals as $type => $total)
-        $avg[$type] = $total / $bins;
+        $avg[$type] = $total / $total_time;
     }
   }
   return $avg;

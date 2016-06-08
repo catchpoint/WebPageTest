@@ -996,130 +996,6 @@ function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime) {
   return $offset;
 }
 
-function GetTraceTimeline($testPath, $run, $cached, &$timeline) {
-  $ok = false;
-  $cachedText = '';
-  if( $cached )
-      $cachedText = '_Cached';
-  $traceFile = "$testPath/$run{$cachedText}_trace.json";
-  if (gz_is_file($traceFile)){
-    $events = json_decode(gz_file_get_contents($traceFile), true);
-    if (isset($events) && is_array($events) && isset($events['traceEvents'])) {
-      $timeline = array();
-      $thread_stack = array();
-      $main_thread = null;
-      $threads = array();
-      $ignore_threads = array();
-      $user_timing = array();
-      foreach ($events['traceEvents'] as $event) {
-        if (isset($event['cat']) && isset($event['name']) && isset($event['ts']) && strpos($event['cat'], 'blink.user_timing') !== false) {
-          $user_timing[] = $event;
-        }
-        if (isset($event['cat']) &&
-            isset($event['name']) &&
-            isset($event['pid']) &&
-            isset($event['tid']) &&
-            isset($event['ph']) &&
-            isset($event['ts']) &&
-            strpos($event['cat'], 'devtools.timeline') !== false) {
-          $thread = "{$event['pid']}:{$event['tid']}";
-          if (!isset($main_thread) &&
-              $event['name'] == 'ResourceSendRequest' &&
-              isset($event['args']['data']['url'])) {
-            if (substr($event['args']['data']['url'], 0, 21) == 'http://127.0.0.1:8888') {
-              $ignore_threads[$thread] = true;
-            } else {
-              if (!isset($threads[$thread]))
-                $threads[$thread] = count($threads);
-              $main_thread = $thread;
-              // make sure the navigation event is included so we have the real start time
-              if (!isset($event['dur']))
-                $event['dur'] = 1;
-            }
-          }
-
-          if (isset($main_thread) &&
-              !isset($threads[$thread]) &&
-              $event['name'] !== 'Program' &&
-              !isset($ignore_threads[$thread])) {
-            $threads[$thread] = count($threads);
-          }
-          
-          // ignore any activity before the first navigation
-          if (isset($threads[$thread]) &&
-              (isset($event['dur']) || $event['ph'] == 'B' || $event['ph'] == 'E')) {
-            $event['thread'] = $threads[$thread];
-            if (!isset($thread_stack[$thread]))
-              $thread_stack[$thread] = array();
-            $e = null;
-            if ($event['ph'] == 'E') {
-              if (count($thread_stack[$thread])) {
-                $e = array_pop($thread_stack[$thread]);
-                // These had BETTER match
-                if ($e['name'] == $event['name'])
-                  $e['endTime'] = $event['ts'] / 1000.0;
-              }
-            } else {
-              $e = $event;
-              $e['type'] = $event['name'];
-              $e['startTime'] = $event['ts'] / 1000.0;
-
-              // Start of an event, just push it to the stack
-              if ($event['ph'] == 'B') {
-                $thread_stack[$thread][] = $e;
-                unset($e);
-              } elseif (isset($event['dur'])) {
-                $e['endTime'] = $e['startTime'] + ($event['dur'] / 1000.0);
-              }
-            }
-            
-            if (isset($e)) {
-              if (count($thread_stack[$thread])) {
-                $parent = array_pop($thread_stack[$thread]);
-                if (!isset($parent['children']))
-                  $parent['children'] = array();
-                $parent['children'][] = $e;
-                $thread_stack[$thread][] = $parent;
-              } else {
-                $timeline[] = $e;
-              }
-            }
-          }
-        }
-      }
-      if (count($timeline))
-        $ok = true;
-        
-      if (count($user_timing) && !gz_is_file("$testPath/$run{$cachedText}_user_timing.json")) {
-        gz_file_put_contents("$testPath/$run{$cachedText}_user_timing.json", json_encode($user_timing));
-      }
-    }
-  }
-  return $ok;
-}
-
-function DevToolsGetThreadId($currentThread, $entry) {
-  if (isset($entry['thread']))
-    return $entry['thread'];
-  if (isset($entry['pid']) && isset($entry['tid']))
-    return "{$entry['pid']}.{$entry['tid']}";
-  if (isset($currentThread))
-    return $currentThread;
-  return 0;
-}
-
-function DevToolsGetThreads(&$threads, $entry, $current_thread = null) {
-  if ($entry['endTime'] > $entry['startTime']) {
-    $thread = DevToolsGetThreadId($current_thread, $entry);
-    $threads[$thread] = true;
-    if (isset($entry['children']) && count($entry['children'])) {
-      foreach($entry['children'] as $child) {
-        $count += DevToolsGetThreads($threads, $child, $thread);
-      }
-    }
-  }
-}
-
 /**
 * If we have a timeline, figure out what each thread was doing at each point in time.
 * Basically CPU utilization from the timeline.
@@ -1129,137 +1005,37 @@ function DevToolsGetThreads(&$threads, $entry, $current_thread = null) {
 * slice that they consumed (with a total maximum of 1 for any slice).
 */
 function DevToolsGetCPUSlices($testPath, $run, $cached) {
-  $count = 0;
   $slices = null;
-  $timeline = array();
-  $ver = 2;
-  $cacheFile = "$testPath/$run.$cached.devToolsCPUSlices";
-  if (gz_is_file($cacheFile))
-    $slices = json_decode(gz_file_get_contents($cacheFile), true);
-  elseif (gz_is_file("$cacheFile.$ver"))
-    $slices = json_decode(gz_file_get_contents("$cacheFile.$ver"), true);
-  if (!isset($slices)) {
-    GetTraceTimeline($testPath, $run, $cached, $timeline);
-    if (isset($timeline) && is_array($timeline) && count($timeline)) {
-      // Do a first pass to get the start and end times as well as the number of threads
-      $threads = array();
-      $startTime = 0;
-      $endTime = 0;
-      foreach ($timeline as $entry) {
-        if ($entry['startTime'] && (!$startTime || $entry['startTime'] < $startTime))
-          $startTime = $entry['startTime'];
-        if ($entry['endTime'] && (!$endTime || $entry['endTime'] > $endTime))
-          $endTime = $entry['endTime'];
-        DevToolsGetThreads($threads, $entry);
-      }
-      
-      // create time slice arrays for each thread
-      $slices = array();
-      foreach ($threads as $id => $bogus)
-        $slices[$id] = array();
-        
-      // create 1ms time slices for the full time
-      if ($endTime > $startTime) {
-        $startTime = floor($startTime);
-        $endTime = ceil($endTime);
-        foreach ($threads as $id => $bogus) {
-          for ($i = $startTime; $i <= $endTime; $i++) {
-            $ms = intval($i - $startTime);
-            $slices[$id][$ms] = array();
-          }
-        }
-
-        // Go through each element and account for the time    
-        foreach ($timeline as $entry) {
-          $count += DevToolsGetEventTimes($entry, $startTime, $slices);
-        }
-      }
+  $cachedText = $cached ? '_Cached' : '';
+  $slices_file = "$testPath/$run{$cachedText}_timeline_cpu.json.gz";
+  $trace_file = "$testPath/$run{$cachedText}_trace.json.gz";
+  if (!is_file($slices_file) && is_file($trace_file) && is_file(__DIR__ . '/lib/trace/trace-parser.py')) {
+    $script = realpath(__DIR__ . '/lib/trace/trace-parser.py');
+    touch($slices_file);
+    if (is_file($slices_file)) {
+      $slices_file = realpath($slices_file);
+      unlink($slices_file);
     }
+    $user_timing = "$testPath/$run{$cachedText}_user_timing.json.gz";
+    touch($user_timing);
+    if (is_file($user_timing)) {
+      $user_timing = realpath($user_timing);
+      unlink($user_timing);
+    }
+    $trace_file = realpath($trace_file);
+
+    $command = "python \"$script\" -t \"$trace_file\" -u \"$user_timing\" -c \"$slices_file\" 2>&1";
+    exec($command, $output, $result);
+    if (!is_file($slices_file))
+      touch($slices_file);
+  }
+  $slices_file = "$testPath/$run{$cachedText}_timeline_cpu.json";
+  if (gz_is_file($slices_file))
+    $slices = json_decode(gz_file_get_contents($slices_file), true);
+  if (isset($slices) && !is_array($slices))
+    $slices = null;
     
-    if ($count) {
-      gz_file_put_contents($cacheFile, json_encode($slices));
-    } else {
-      $slices = null;
-    }
-  }
-
-  // Delete data for everything but the main thread (for now anyway)
-  if (isset($slices)) {
-    $threads = array_keys($slices);
-    foreach ($threads as $thread) {
-      if ($thread != 0)
-        unset($slices[$thread]);
-    }
-  }
-  
   return $slices;
-}
-
-function DevToolsAdjustSlice(&$slice, $amount, $type, $parentType) {
-  if ($amount >= 1.0) {
-    $slice = array($type => $amount);
-  } else {
-    if (isset($parentType)) {
-      $slice[$parentType] = max(0, $slice[$parentType] - $amount);
-    }
-    $slice[$type] = $amount;
-  }
-}
-
-/**
-* Break out all of the individual times of an event and it's children
-* 
-* @param mixed $entry
-*/
-function DevToolsGetEventTimes($record, $startTime, &$slices, $thread = null, $parentType = null) {
-  $count = 0;
-  if (array_key_exists('startTime', $record) &&
-      array_key_exists('endTime', $record) &&
-      array_key_exists('type', $record)) {
-    $start = $record['startTime'];
-    $end = $record['endTime'];
-    $type = $record['type'];
-    $thread = DevToolsGetThreadId($thread, $record);
-    
-    if ($end && $start && $end > $start) {
-      // check to make sure it spans at least more than 1ms
-      $startWhole = ceil($start);
-      $endWhole = floor($end);
-      if ($endWhole >= $startWhole) {
-        // set the time slices for this event
-        for ($i = $startWhole; $i <= $endWhole; $i++) {
-          $ms = intval($i - $startTime);
-          DevToolsAdjustSlice($slices[$thread][$ms], 1.0, $type, $parentType);
-          $count++;
-        }
-        $elapsed = $startWhole - $start;
-        if ($elapsed > 0) {
-          $ms = intval(floor($start) - $startTime);
-          DevToolsAdjustSlice($slices[$thread][$ms], $elapsed, $type, $parentType);
-          $count++;
-        }
-        $elapsed = $end - $endWhole;
-        if ($elapsed > 0) {
-          $ms = intval(ceil($end) - $startTime);
-          DevToolsAdjustSlice($slices[$thread][$ms], $elapsed, $type, $parentType);
-          $count++;
-        }
-      } else {
-        $elapsed = $end - $start;
-        if ($elapsed < 1 && $elapsed > 0) {
-          $ms = intval(floor($start) - $startTime);
-          DevToolsAdjustSlice($slices[$thread][$ms], $elapsed, $type, $parentType);
-          $count++;
-        }
-      }
-      // recursively process any child events
-      if (isset($record['children']) && count($record['children'])) {
-        foreach($record['children'] as &$child)
-          $count += DevToolsGetEventTimes($child, $startTime, $slices, $thread, $type);
-      }
-    }
-  }
-  return $count;
 }
 
 /**
@@ -1295,36 +1071,20 @@ function GetDevToolsCPUTime($testPath, $run, $cached, $endTime = 0) {
   if (isset($cache[$endTime])) {
     $times = $cache[$endTime];
   } else {
-    $slices = DevToolsGetCPUSlices($testPath, $run, $cached);
-    if (isset($slices) && is_array($slices) && isset($slices[0]) &&
-        is_array($slices[0]) && count($slices[0])) {
-      $times = array('Idle' => 0.0);
-      foreach ($slices[0] as $ms => $breakdown) {
-        if (!$endTime || $ms < $endTime) {
-          $idle = 1.0;
-          if (isset($breakdown) && is_array($breakdown) && count($breakdown)) {
-            foreach($breakdown as $event => $ms_time) {
-              if (!isset($times[$event]))
-                $times[$event] = 0;
-              $times[$event] += $ms_time;
-              $idle -= $ms_time;
-            }
-          }
-          $times['Idle'] += $idle;
-        }
+    $cpu = DevToolsGetCPUSlices($testPath, $run, $cached);
+    if (isset($cpu) && is_array($cpu) && isset($cpu['main_thread']) && isset($cpu['slices'][$cpu['main_thread']]) && isset($cpu['slice_usecs'])) {
+      $busy = 0;
+      $times = array();
+      foreach ($cpu['slices'][$cpu['main_thread']] as $name => $slices) {
+        $last_slice = min(intval(ceil(($endTime * 1000) / $cpu['slice_usecs'])), count($slices));
+        $times[$name] = 0;
+        for ($i = 0; $i < $last_slice; $i++)
+          $times[$name] += floatval($slices[$i]) / 1000.0;
+        $busy += $times[$name];
+        $times[$name] = intval(round($times[$name]));
       }
-      // round the times to the nearest millisecond
-      $total = 0;
-      foreach ($times as $event => &$val) {
-        $val = round($val);
-        if ($event !== 'Idle')
-          $total += $val;
-      }
-      if ($endTime && $endTime > $total)
-        $times['Idle'] = $endTime - $total;
+      $times['Idle'] = max($endTime - intval(round($busy)), 0);
     }
-    $cache[$endTime] = $times;
-    gz_file_put_contents($cacheFile, json_encode($cache));
   }
   return $times;
 }
