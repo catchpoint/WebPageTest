@@ -15,6 +15,7 @@ if (array_key_exists('key', $_REQUEST))
 $id = $_REQUEST['id'];
 
 $testPath = './' . GetTestPath($id);
+
 if (ValidateTestId($id)) {
   $testInfo = GetTestInfo($id);
   if ($testInfo && is_array($testInfo) && isset($testInfo['location'])) {
@@ -24,39 +25,9 @@ if (ValidateTestId($id)) {
       if ((!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADDR'], "127.0.0.1")) {
         if (array_key_exists('file', $_FILES) && array_key_exists('name', $_FILES['file'])) {
           $fileName = $_FILES['file']['name'];
-          if (strpos($fileName, '..') === false &&
-              strpos($fileName, '/') === false &&
-              strpos($fileName, '\\') === false) {
-            // make sure the file is an acceptable type
-            $parts = pathinfo($fileName);
-            $ext = strtolower($parts['extension']);
-            $ok = false;
-            if (strpos($ext, 'php') === false &&
-                strpos($ext, 'pl') === false &&
-                strpos($ext, 'py') === false &&
-                strpos($ext, 'cgi') === false &&
-                strpos($ext, 'asp') === false &&
-                strpos($ext, 'js') === false &&
-                strpos($ext, 'rb') === false &&
-                strpos($ext, 'htaccess') === false &&
-                strpos($ext, 'jar') === false) {
-                $ok = true;
-            }
-            
-            if ($ok) {
-              if (isVideoFile($fileName)) {
-                // put each run of video data in it's own directory
-                $testPaths = TestPaths::fromUnderscoreFileName($testPath, $fileName);
-                // make sure video dir exists
-                $videoDir = $testPaths->videoDir();
-                if (!is_dir($videoDir)) {
-                  mkdir($videoDir, 0777, true);
-                }
-                MoveUploadedFile($_FILES['file']['tmp_name'], getVideoFilePath($testPaths));
-              } else {
-                MoveUploadedFile($_FILES['file']['tmp_name'], $testPath . "/" . $fileName);
-              }
-            }
+          if (validateUploadFileName($fileName)) {
+            $fileDestination = getFileDestination($testPath, $fileName);
+            MoveUploadedFile($_FILES['file']['tmp_name'], $fileDestination);
           }
         }
       }
@@ -64,6 +35,49 @@ if (ValidateTestId($id)) {
   }
 }
 
+
+/**
+ * Checks if the fileName contains invalid characters or has an invalid extension
+ * @param $fileName string The filename to check
+ * @return bool true if accepted for an upload, false otherwise
+ */
+function validateUploadFileName($fileName) {
+  if (strpos($fileName, '..') !== false ||
+      strpos($fileName, '/') !== false ||
+      strpos($fileName, '\\') !== false) {
+    return false;
+  }
+  $parts = pathinfo($fileName);
+  $ext = strtolower($parts['extension']);
+  // TODO: shouldn't this be a whitelist?
+  return !in_array($ext, array('php', 'pl', 'py', 'cgi', 'asp', 'js', 'rb', 'htaccess', 'jar'));
+}
+
+/**
+ * @param $testRoot string Root directory for the test
+ * @param $fileName string Name of the uploaded file
+ * @return string Destination path for the uploaded file
+ */
+function getFileDestination($testRoot, $fileName) {
+  if (!isVideoFile($fileName)) {
+    // non-video files are simply copied to the test root
+    return $testRoot . "/" . $fileName;
+  }
+
+  // put each run of video data in it's own directory
+  $testPaths = TestPaths::fromUnderscoreFileName($testRoot, $fileName);
+  // make sure video dir exists
+  $videoDir = $testPaths->videoDir();
+  if (!is_dir($videoDir)) {
+    mkdir($videoDir, 0777, true);
+  }
+  return getVideoFilePath($testPaths);
+}
+
+/**
+ * @param $fileName string fileName to check
+ * @return bool True if the file is part of a video, false otherwise
+ */
 function isVideoFile($fileName) {
   return (strpos($fileName, "progress_") !== false) ||
          (strpos($fileName, "_ms_") !== false);
