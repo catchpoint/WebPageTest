@@ -54,6 +54,8 @@ static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--no-first-run"),
     _T("--process-per-tab"),
     _T("--new-window"),
+    _T("--silent-debugger-extension-api"),
+    _T("--disable-infobars"),
     _T("--disable-translate"),
     _T("--disable-notifications"),
     _T("--disable-desktop-notifications"),
