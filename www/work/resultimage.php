@@ -6,13 +6,15 @@ header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 set_time_limit(300);
 chdir('..');
 include 'common_lib.inc';
+
+require_once 'TestPaths.inc';
+
 $key = '';
 if (array_key_exists('key', $_REQUEST))
   $key = $_REQUEST['key'];
 $id = $_REQUEST['id'];
 
-$path = './' . GetTestPath($id);
-$testPath = $path;
+$testPath = './' . GetTestPath($id);
 if (ValidateTestId($id)) {
   $testInfo = GetTestInfo($id);
   if ($testInfo && is_array($testInfo) && isset($testInfo['location'])) {
@@ -42,41 +44,41 @@ if (ValidateTestId($id)) {
             }
             
             if ($ok) {
-              // put each run of video data in it's own directory
-              if (strpos($fileName, 'progress') !== false) {
-                $parts = explode('_', $fileName);
-                if (count($parts)) {
-                  $runNum = $parts[0];
-                  $fileBase = $parts[count($parts) - 1];
-                  $cached = '';
-                  if( strpos($fileName, '_Cached') )
-                    $cached = '_cached';
-                  $path .= "/video_$runNum$cached";
-                  if( !is_dir($path) )
-                    mkdir($path, 0777, true);
-                  $fileName = 'frame_' . $fileBase;
+              if (isVideoFile($fileName)) {
+                // put each run of video data in it's own directory
+                $testPaths = TestPaths::fromUnderscoreFileName($testPath, $fileName);
+                // make sure video dir exists
+                $videoDir = $testPaths->videoDir();
+                if (!is_dir($videoDir)) {
+                  mkdir($videoDir, 0777, true);
                 }
-              } elseif (strpos($fileName, '_ms_') !== false) {
-                $parts = explode('_', $fileName);
-                if (count($parts)) {
-                  $runNum = $parts[0];
-                  $fileBase = $parts[count($parts) - 1];
-                  $cached = '';
-                  if( strpos($fileName, '_Cached') )
-                    $cached = '_cached';
-                  $path .= "/video_$runNum$cached";
-                  if( !is_dir($path) )
-                    mkdir($path, 0777, true);
-                  $fileName = 'ms_' . $fileBase;
-                }
+                MoveUploadedFile($_FILES['file']['tmp_name'], getVideoFilePath($testPaths));
+              } else {
+                MoveUploadedFile($_FILES['file']['tmp_name'], $testPath . "/" . $fileName);
               }
-              MoveUploadedFile($_FILES['file']['tmp_name'], "$path/$fileName");
             }
           }
         }
       }
     }
   }
+}
+
+function isVideoFile($fileName) {
+  return (strpos($fileName, "progress_") !== false) ||
+         (strpos($fileName, "_ms_") !== false);
+}
+
+/**
+ * @param $testPaths TestPaths The TestPaths object corresponding created from the uploaded file
+ * @return string  The destination path for the image file of this video
+ */
+function getVideoFilePath($testPaths) {
+  $baseName = $testPaths->getParsedBaseName();
+  // parsed file names either include "progress_<frameNumber>" or "_ms_<milliSeconds>"
+  $namePrefix = strpos($baseName, "progress") !== false ? "frame_" : "ms_";
+  $parts = explode('_', $baseName);
+  return $testPaths->videoDir() . "/" . $namePrefix . $parts[count($parts) - 1];
 }
 
 /**
