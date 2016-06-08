@@ -168,6 +168,7 @@ CDN_PROVIDER cdnList[] = {
   {".cdntel.net", "Telenor"},
   {".raxcdn.com", "Rackspace"},
   {".unicorncdn.net", "UnicornCDN"},
+  {".optimalcdn.com", "Optimal CDN"},
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -203,7 +204,8 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"X-Ar-Debug", "", "Aryaka"},
   {"server", "gocache", "GoCache"},
   {"server", "hiberniacdn", "HiberniaCDN"},
-  {"server", "UnicornCDN","UnicornCDN"}
+  {"server", "UnicornCDN", "UnicornCDN"},
+  {"server", "Optimal CDN", "Optimal CDN"}
 };
 
 // Specific providers that require multiple headers
