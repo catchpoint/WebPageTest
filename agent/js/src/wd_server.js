@@ -45,6 +45,7 @@ var WD_CONNECT_TIMEOUT_MS_ = 120000;
 var DEVTOOLS_CONNECT_TIMEOUT_MS_ = 10000;
 var DETACH_TIMEOUT_MS_ = 2000;
 var VIDEO_PROCESSING_TIMEOUT_MS = 600000;
+var TRACE_PROCESSING_TIMEOUT_MS = 600000;
 var TRACING_STOP_TIMEOUT_MS = 120000;
 var DETECT_ACTIVITY_MS = 2000;
 var DETECT_NO_RE_NAVIGATE_MS = 1000;
@@ -191,6 +192,8 @@ WebDriverServer.prototype.init = function(args) {
   this.pageData_ = undefined;
   this.traceFile_ = undefined;
   this.traceFileStream_ = undefined;
+  this.userTimingFile_ = undefined;
+  this.cpuSlicesFile_ = undefined;
   this.netlogFile_ = undefined;
   this.isNavigating_ = false;
   this.mainFrame_ = undefined;
@@ -989,6 +992,25 @@ WebDriverServer.prototype.scheduleStopTracing_ = function() {
   }.bind(this));
 };
 
+WebDriverServer.prototype.scheduleProcessTrace_ = function() {
+  'use strict';
+  this.scheduleNoFault_('Process Trace', function() {
+    if (this.traceFile_) {
+      this.userTimingFile_ = path.join(this.runTempDir_, 'user_timing.json.gz');
+      this.cpuSlicesFile_ = path.join(this.runTempDir_, 'timeline_cpu.json.gz');
+      var options = ['lib/trace/trace-parser.py', '-vvvv',
+          '-t', this.traceFile_, '-u', this.userTimingFile_,
+          '-c', this.cpuSlicesFile_];
+      process_utils.scheduleExec(this.app_,
+          'python', options, undefined,
+          TRACE_PROCESSING_TIMEOUT_MS).then(function(stdout) {
+      }.bind(this), function(err) {
+        logger.info('Trace processing error: ' + err.message);
+      }.bind(this));
+    }
+  }.bind(this));
+};
+
 /**
  * Starts video recording, sets the video file, registers video stop handler.
  * @private
@@ -1435,11 +1457,12 @@ WebDriverServer.prototype.done_ = function() {
       this.scheduleNoFault_('Get WD Log',
           this.scheduleGetWdDevToolsLog_.bind(this));
     }
+    // video processing needs to be done after tracing has been stopped and collected
     this.scheduleStopTracing_();
-    if (this.videoFile_) {
-      // video processing needs to be done after tracing has been stopped and collected
+    if (this.traceFile_)
+      this.scheduleProcessTrace_();
+    if (this.videoFile_)
       this.scheduleProcessVideo_();
-    }
     this.scheduleGetNetlog_();
     this.scheduleNoFault_('End state', function() {
       if (this.testError_) {
@@ -1462,6 +1485,8 @@ WebDriverServer.prototype.done_ = function() {
           devToolsFile: devToolsFile,
           screenshots: this.screenshots_,
           traceFile: this.traceFile_,
+          userTimingFile: this.userTimingFile_,
+          cpuSlicesFile: this.cpuSlicesFile_,
           netlogFile: this.netlogFile_,
           videoFile: this.videoFile_,
           videoFrames: this.videoFrames_,
