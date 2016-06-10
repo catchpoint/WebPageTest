@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."""
 import subprocess
 import time
 
-def SetPipe(options, pipe, bw, delay, plr):
+def SetPipe(options, pipe, bw, delay, plr, is_inbound):
     ok = True
     ipfw = 'ipfw pipe {0} config'.format(pipe)
     if bw > 0:
@@ -39,11 +39,13 @@ def SetPipe(options, pipe, bw, delay, plr):
     if not RunCommand(options, ipfw):
         ok = False
 
-    ipfw = 'ipfw queue {0} config'.format(pipe)
+    ipfw = 'ipfw queue {0} config pipe {0} queue 100'.format(pipe)
     if plr > 0 and plr <= 1.0:
         ipfw = ipfw + ' plr {0}'.format(plr)
-    else:
-        ipfw = ipfw + ' plr 0'
+    port = 'dst'
+    if is_inbound:
+        port = 'src'
+    ipfw = ipfw + ' mask {0}-port 0xffff'.format(port)
     if not RunCommand(options, ipfw):
         ok = False
 
@@ -90,15 +92,15 @@ def main():
         options.user = 'root'
 
     if options.action == 'clear':
-        if not SetPipe(options, options.down_pipe, 0, 0, 0):
+        if not SetPipe(options, options.down_pipe, 0, 0, 0, True):
             ok = False
-        if not SetPipe(options, options.up_pipe, 0, 0, 0):
+        if not SetPipe(options, options.up_pipe, 0, 0, 0, False):
             ok = False
 
     if options.action == 'set':
-        if not SetPipe(options, options.down_pipe, options.down_bw, options.down_delay, options.down_plr):
+        if not SetPipe(options, options.down_pipe, options.down_bw, options.down_delay, options.down_plr, True):
             ok = False
-        if not SetPipe(options, options.up_pipe, options.up_bw, options.up_delay, options.up_plr):
+        if not SetPipe(options, options.up_pipe, options.up_bw, options.up_delay, options.up_plr, False):
             ok = False
 
     if not ok:
