@@ -7,7 +7,7 @@ set_time_limit(300);
 chdir('..');
 include 'common_lib.inc';
 
-require_once 'TestPaths.inc';
+require_once 'include/TestPaths.php';
 
 $key = '';
 if (array_key_exists('key', $_REQUEST))

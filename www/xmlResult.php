@@ -21,7 +21,8 @@ require_once('breakdown.inc');
 require_once('devtools.inc.php');
 require_once('archive.inc');
 
-require_once 'XmlResultGenerator.inc';
+require_once 'include/XmlResultGenerator.php';
+
 
 // see if we are sending abbreviated results
 $pagespeed = 0;

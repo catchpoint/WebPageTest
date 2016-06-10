@@ -1,7 +1,7 @@
 <?php
 
-require_once 'TestPaths.inc';
-require_once 'UrlGenerator.inc';
+require_once __DIR__ . '/TestPaths.php';
+require_once __DIR__ . '/UrlGenerator.php';
 
 class XmlResultGenerator {
 
