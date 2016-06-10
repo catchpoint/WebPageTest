@@ -200,7 +200,7 @@ if (ValidateTestId($id)) {
             $expected_runs = $expected_runs * 2;
           $files = scandir($testPath);
           foreach ($files as $file) {
-            if (stripos($file, 'IEWPG'))
+            if (preg_match('/^[0-9]+_(Cached_)?IEWPG.txt/', $file) === true)
               $available_runs++;
             if ($file == 'test.job')
               $testfile = "$testPath/$file";
