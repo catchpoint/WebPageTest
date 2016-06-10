@@ -160,6 +160,7 @@ void WptTest::Reset(void) {
   _has_test_timed_out = false;
   _user_agent_modifier = "PTST";
   _append_user_agent.Empty();
+  _max_test_time = 0;
 }
 
 /*-----------------------------------------------------------------------------
