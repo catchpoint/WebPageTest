@@ -9,7 +9,10 @@ class XmlResultGenerator {
    * @var TestInfo Information about the test
    */
   private $testInfo;
-  private $pageData;
+  /**
+   * @var TestRunResult
+   */
+  private $result;
   private $baseUrl;
   private $pagespeed;
   private $fileHandler;
@@ -17,24 +20,27 @@ class XmlResultGenerator {
   /**
    * XmlResultGenerator constructor.
    * @param TestInfo $testInfo Information about the test
-   * @param array $pageData Data about results
    * @param string $urlStart Start for test related URLS
    * @param FileHandler $fileHandler FileHandler to be used
    * @param bool $pagespeed True if pagespeed data should be generated
    */
-  public function __construct($testInfo, &$pageData, $urlStart, $fileHandler, $pagespeed) {
+  public function __construct($testInfo, $urlStart, $fileHandler, $pagespeed) {
     $this->testInfo = $testInfo;
-    $this->pageData = $pageData;
     $this->baseUrl = $urlStart;
     $this->pagespeed = $pagespeed;
     $this->fileHandler = $fileHandler;
   }
 
 
-  function printRun($run, $cached = false) {
-    $cached = $cached ? 1 : 0;
+  /**
+   * @param TestRunResult $testResult Result of this run
+   */
+  function printRun($testResult) {
+    $run = $testResult->getRunNumber();
+    $cached = $testResult->isCached() ? 1 : 0;
     $testRoot = $this->testInfo->getRootDirectory();
     $testId = $this->testInfo->getId();
+
     $localPaths = new TestPaths($testRoot, $run, $cached);
     $nameOnlyPaths = new TestPaths("", $run, $cached);
     $urlPaths = new TestPaths($this->baseUrl . substr($testRoot, 1), $run, $cached);
@@ -45,9 +51,9 @@ class XmlResultGenerator {
     }
 
     echo "<results>\n";
-    echo ArrayToXML($this->pageData[$run][$cached]);
+    echo ArrayToXML($testResult->getRawResults());
     if ($this->pagespeed) {
-      $score = GetPageSpeedScore($localPaths->pageSpeedFile());
+      $score = $testResult->getPageSpeedScore();
       if (strlen($score))
         echo "<PageSpeedScore>$score</PageSpeedScore>\n";
     }
@@ -101,7 +107,7 @@ class XmlResultGenerator {
     echo "</rawData>\n";
 
     // video frames
-    $progress = GetVisualProgress($testRoot, $run, $cached, null, null, $this->getStartOffset($run, $cached));
+    $progress = $testResult->getVisualProgress();
     if (array_key_exists('frames', $progress) && is_array($progress['frames']) && count($progress['frames'])) {
       echo "<videoFrames>\n";
       foreach ($progress['frames'] as $ms => $frame) {
@@ -124,12 +130,6 @@ class XmlResultGenerator {
     ConsoleLog($testId, $testRoot, $run, $cached ? 1 : 0);
   }
 
-  private function getStartOffset($run, $cached) {
-    if (!array_key_exists('testStartOffset', $this->pageData[$run][$cached])) {
-      return 0;
-    }
-    return intval(round($this->pageData[$run][$cached]['testStartOffset']));
-  }
 
 }
 

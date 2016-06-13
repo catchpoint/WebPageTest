@@ -24,6 +24,9 @@ require_once('archive.inc');
 require_once 'include/XmlResultGenerator.php';
 require_once 'include/FileHandler.php';
 require_once 'include/TestInfo.php';
+require_once 'include/TestRunResult.php';
+
+error_reporting(E_ALL);
 
 // see if we are sending abbreviated results
 $pagespeed = 0;
@@ -227,8 +230,8 @@ else
             echo "</median>\n";
         }
 
-        $xmlGenerator = new XmlResultGenerator(TestInfo::fromValues($id, $testPath, $test), $pageData,
-                                               "$protocol://$host$uri", new FileHandler(), $pagespeed);
+        $testInfo = TestInfo::fromValues($id, $testPath, $test);
+        $xmlGenerator = new XmlResultGenerator($testInfo, "$protocol://$host$uri", new FileHandler(), $pagespeed);
         // spit out the raw data for each run
         for( $i = 1; $i <= $runs; $i++ )
         {
@@ -240,14 +243,14 @@ else
             {
                 if (isset($pageData[$i][0])) {
                     echo "<firstView>\n";
-                    $xmlGenerator->printRun($i, false);
+                    $xmlGenerator->printRun(TestRunResult::fromPageData($testInfo, $pageData, $i, false));
                     echo "</firstView>\n";
                 }
 
                 // repeat view
                 if( isset( $pageData[$i][1] ) ) {
                     echo "<repeatView>\n";
-                    $xmlGenerator->printRun($i, true);
+                    $xmlGenerator->printRun(TestRunResult::fromPageData($testInfo, $pageData, $i, true));
                     echo "</repeatView>\n";
                 }
             }
