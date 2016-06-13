@@ -5,29 +5,26 @@ require_once __DIR__ . '/UrlGenerator.php';
 
 class XmlResultGenerator {
 
-  private $test;
+  /**
+   * @var TestInfo Information about the test
+   */
+  private $testInfo;
   private $pageData;
-  private $testRoot;
-  private $testId;
   private $baseUrl;
   private $pagespeed;
   private $fileHandler;
 
   /**
    * XmlResultGenerator constructor.
-   * @param array $test Data about the test
+   * @param TestInfo $testInfo Information about the test
    * @param array $pageData Data about results
-   * @param string $testId Test identifier
-   * @param string $testRoot Root directory of test data
    * @param string $urlStart Start for test related URLS
    * @param FileHandler $fileHandler FileHandler to be used
    * @param bool $pagespeed True if pagespeed data should be generated
    */
-  public function __construct(&$test, &$pageData, $testId, $testRoot, $urlStart, $fileHandler, $pagespeed) {
-    $this->test = $test;
+  public function __construct($testInfo, &$pageData, $urlStart, $fileHandler, $pagespeed) {
+    $this->testInfo = $testInfo;
     $this->pageData = $pageData;
-    $this->testId = $testId;
-    $this->testRoot = $testRoot;
     $this->baseUrl = $urlStart;
     $this->pagespeed = $pagespeed;
     $this->fileHandler = $fileHandler;
@@ -36,11 +33,13 @@ class XmlResultGenerator {
 
   function printRun($run, $cached = false) {
     $cached = $cached ? 1 : 0;
-    $localPaths = new TestPaths($this->testRoot, $run, $cached);
+    $testRoot = $this->testInfo->getRootDirectory();
+    $testId = $this->testInfo->getId();
+    $localPaths = new TestPaths($testRoot, $run, $cached);
     $nameOnlyPaths = new TestPaths("", $run, $cached);
-    $urlPaths = new TestPaths($this->baseUrl . substr($this->testRoot, 1), $run, $cached);
+    $urlPaths = new TestPaths($this->baseUrl . substr($testRoot, 1), $run, $cached);
 
-    $tester = $this->getTester($run);
+    $tester = $this->testInfo->getTester($run);
     if ($tester) {
       echo "<tester>" . xml_entities($tester) . "</tester>\n";
     }
@@ -55,7 +54,7 @@ class XmlResultGenerator {
     echo "</results>\n";
 
     // links to the relevant pages
-    $urlGenerator = UrlGenerator::create(FRIENDLY_URLS, $this->baseUrl, $this->testId, $run, $cached);
+    $urlGenerator = UrlGenerator::create(FRIENDLY_URLS, $this->baseUrl, $testId, $run, $cached);
     echo "<pages>\n";
     echo "<details>" . htmlspecialchars($urlGenerator->resultPage("details")) . "</details>\n";
     echo "<checklist>" . htmlspecialchars($urlGenerator->resultPage("performance_optimization")) . "</checklist>\n";
@@ -102,7 +101,7 @@ class XmlResultGenerator {
     echo "</rawData>\n";
 
     // video frames
-    $progress = GetVisualProgress($this->testRoot, $run, $cached, null, null, $this->getStartOffset($run, $cached));
+    $progress = GetVisualProgress($testRoot, $run, $cached, null, null, $this->getStartOffset($run, $cached));
     if (array_key_exists('frames', $progress) && is_array($progress['frames']) && count($progress['frames'])) {
       echo "<videoFrames>\n";
       foreach ($progress['frames'] as $ms => $frame) {
@@ -117,12 +116,12 @@ class XmlResultGenerator {
       echo "</videoFrames>\n";
     }
 
-    xmlDomains($this->testId, $this->testRoot, $run, $cached ? 1 : 0);
-    xmlBreakdown($this->testId, $this->testRoot, $run, $cached ? 1 : 0);
+    xmlDomains($testId, $testRoot, $run, $cached ? 1 : 0);
+    xmlBreakdown($testId, $testRoot, $run, $cached ? 1 : 0);
     if (array_key_exists('requests', $_REQUEST) && $_REQUEST['requests'] != 'median')
-      xmlRequests($this->testId, $this->testRoot, $run, $cached ? 1 : 0);
-    StatusMessages($this->testId, $this->testRoot, $run, $cached ? 1 : 0);
-    ConsoleLog($this->testId, $this->testRoot, $run, $cached ? 1 : 0);
+      xmlRequests($testId, $testRoot, $run, $cached ? 1 : 0);
+    StatusMessages($testId, $testRoot, $run, $cached ? 1 : 0);
+    ConsoleLog($testId, $testRoot, $run, $cached ? 1 : 0);
   }
 
   private function getStartOffset($run, $cached) {
@@ -132,20 +131,6 @@ class XmlResultGenerator {
     return intval(round($this->pageData[$run][$cached]['testStartOffset']));
   }
 
-  private function getTester($run) {
-    if (!array_key_exists('testinfo', $this->test)) {
-      return null;
-    }
-    $tester = null;
-    if (array_key_exists('tester', $this->test['testinfo']))
-      $tester = $this->test['testinfo']['tester'];
-    if (array_key_exists('test_runs', $this->test['testinfo']) &&
-      array_key_exists($run, $this->test['testinfo']['test_runs']) &&
-      array_key_exists('tester', $this->test['testinfo']['test_runs'][$run])
-    )
-      $tester = $this->test['testinfo']['test_runs'][$run]['tester'] . '<br>';
-    return $tester;
-  }
 }
 
 /**
