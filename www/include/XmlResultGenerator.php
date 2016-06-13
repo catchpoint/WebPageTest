@@ -11,14 +11,26 @@ class XmlResultGenerator {
   private $testId;
   private $baseUrl;
   private $pagespeed;
+  private $fileHandler;
 
-  public function __construct(&$test, &$pageData, $testId, $testRoot, $urlStart, $pagespeed) {
+  /**
+   * XmlResultGenerator constructor.
+   * @param array $test Data about the test
+   * @param array $pageData Data about results
+   * @param string $testId Test identifier
+   * @param string $testRoot Root directory of test data
+   * @param string $urlStart Start for test related URLS
+   * @param FileHandler $fileHandler FileHandler to be used
+   * @param bool $pagespeed True if pagespeed data should be generated
+   */
+  public function __construct(&$test, &$pageData, $testId, $testRoot, $urlStart, $fileHandler, $pagespeed) {
     $this->test = $test;
     $this->pageData = $pageData;
     $this->testId = $testId;
     $this->testRoot = $testRoot;
     $this->baseUrl = $urlStart;
     $this->pagespeed = $pagespeed;
+    $this->fileHandler = $fileHandler;
   }
 
 
@@ -56,33 +68,36 @@ class XmlResultGenerator {
     echo "<thumbnails>\n";
     echo "<waterfall>" . htmlspecialchars($urlGenerator->thumbnail("waterfall.png")) . "</waterfall>\n";
     echo "<checklist>" . htmlspecialchars($urlGenerator->thumbnail("optimization.png")) . "</checklist>\n";
-    if( is_file($localPaths->screenShotFile()) )
+    if ($this->fileHandler->FileExists($localPaths->screenShotFile())) {
       echo "<screenShot>" . htmlspecialchars($urlGenerator->thumbnail("screen.jpg")) . "</screenShot>\n";
+    }
     echo "</thumbnails>\n";
 
     echo "<images>\n";
     echo "<waterfall>" . htmlspecialchars($urlGenerator->generatedImage("waterfall")) . "</waterfall>\n";
     echo "<connectionView>" . htmlspecialchars($urlGenerator->generatedImage("connection")) . "</connectionView>\n";
     echo "<checklist>" . htmlspecialchars($urlGenerator->generatedImage("optimization")) . "</checklist>\n";
-    if(is_file($localPaths->screenShotFile()) )
+    if ($this->fileHandler->FileExists($localPaths->screenShotFile())) {
       echo "<screenShot>" . htmlspecialchars($urlGenerator->getFile($nameOnlyPaths->screenShotFile())) . "</screenShot>\n";
-    if(is_file($localPaths->screenShotPngFile()) )
+    }
+    if ($this->fileHandler->FileExists($localPaths->screenShotPngFile())) {
       echo "<screenShotPng>" . htmlspecialchars($urlGenerator->getFile($nameOnlyPaths->screenShotPngFile())) . "</screenShotPng>\n";
+    }
     echo "</images>\n";
 
     // raw results (files accessed directly on the file system, but via URL)
     echo "<rawData>\n";
-    if (gz_is_file($localPaths->headersFile()))
+    if ($this->fileHandler->GzFileExists($localPaths->headersFile()))
       echo "<headers>" . $urlPaths->headersFile() . "</headers>\n";
-    if (is_file($localPaths->bodiesFile()))
+    if ($this->fileHandler->GzFileExists($localPaths->bodiesFile()))
       echo "<bodies>" . $urlPaths->bodiesFile() . "</bodies>\n";
-    if (gz_is_file($localPaths->pageDataFile()))
+    if ($this->fileHandler->GzFileExists($localPaths->pageDataFile()))
       echo "<pageData>" . $urlPaths->pageDataFile() . "</pageData>\n";
-    if (gz_is_file($localPaths->requestDataFile()))
+    if ($this->fileHandler->GzFileExists($localPaths->requestDataFile()))
       echo "<requestsData>" . $urlPaths->requestDataFile() . "</requestsData>\n";
-    if (gz_is_file($localPaths->utilizationFile()))
+    if ($this->fileHandler->GzFileExists($localPaths->utilizationFile()))
       echo "<utilization>" . $urlPaths->utilizationFile() . "</utilization>\n";
-    if (gz_is_file($localPaths->pageSpeedFile()))
+    if ($this->fileHandler->GzFileExists($localPaths->pageSpeedFile()))
       echo "<PageSpeedData>" . $urlPaths->pageSpeedFile() . "</PageSpeedData>\n";
     echo "</rawData>\n";
 

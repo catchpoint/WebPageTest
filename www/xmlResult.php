@@ -22,7 +22,7 @@ require_once('devtools.inc.php');
 require_once('archive.inc');
 
 require_once 'include/XmlResultGenerator.php';
-
+require_once 'include/FileHandler.php';
 
 // see if we are sending abbreviated results
 $pagespeed = 0;
@@ -226,7 +226,7 @@ else
             echo "</median>\n";
         }
 
-        $xmlGenerator = new XmlResultGenerator($test, $pageData, $id, $testPath, "$protocol://$host$uri", $pagespeed);
+        $xmlGenerator = new XmlResultGenerator($test, $pageData, $id, $testPath, "$protocol://$host$uri", new FileHandler(), $pagespeed);
         // spit out the raw data for each run
         for( $i = 1; $i <= $runs; $i++ )
         {
