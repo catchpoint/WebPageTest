@@ -157,6 +157,12 @@ else
                 $additionalInfo[] = XmlResultGenerator::INFO_REQUESTS;
             }
         }
+        if (array_key_exists('breakdown', $_REQUEST) && $_REQUEST['breakdown']) {
+            $additionalInfo[] = XmlResultGenerator::INFO_MIMETYPE_BREAKDOWN;
+        }
+        if (array_key_exists('domains', $_REQUEST) && $_REQUEST['domains']) {
+            $additionalInfo[] = XmlResultGenerator::INFO_DOMAIN_BREAKDOWN;
+        }
 
         $testInfo = TestInfo::fromValues($id, $testPath, $test);
         $xmlGenerator = new XmlResultGenerator($testInfo, "$protocol://$host$uri", new FileHandler(), $additionalInfo);

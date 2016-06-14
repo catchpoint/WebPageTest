@@ -8,8 +8,8 @@ class XmlResultGenerator {
   const INFO_PAGESPEED = 0;
   const INFO_REQUESTS = 1;
   const INFO_MEDIAN_REQUESTS = 2;
-  const INFO_DOMAINS = 3;
-  const INFO_BREAKDOWN = 4;
+  const INFO_DOMAIN_BREAKDOWN = 3;
+  const INFO_MIMETYPE_BREAKDOWN = 4;
   const INFO_CONSOLE = 5;
 
   /**
@@ -178,8 +178,8 @@ class XmlResultGenerator {
     $run = $testResult->getRunNumber();
     $cached = $testResult->isCachedRun();
 
-    $this->printDomains($testResult);
-    xmlBreakdown($testId, $testRoot, $run, $cached ? 1 : 0);
+    $this->printDomainBreakdown($testResult);
+    $this->printMimeTypeBreakdown($testResult);
     $this->printRequests($testResult, $forMedian);
 
     StatusMessages($testId, $testRoot, $run, $cached ? 1 : 0);
@@ -195,6 +195,7 @@ class XmlResultGenerator {
   }
 
   /**
+   * Print information about all of the requests
    * @param TestRunResult $testResult Result Data for affected run
    * @param $forMedian True if the output is for median, false otherwise
    */
@@ -233,10 +234,11 @@ class XmlResultGenerator {
   }
 
   /**
+   * Print a breakdown of the requests and bytes by domain
    * @param TestRunResult $testResult Result data of affected run
    */
-  function printDomains($testResult) {
-    if (!$this->shouldPrintInfo(self::INFO_DOMAINS)) {
+  function printDomainBreakdown($testResult) {
+    if (!$this->shouldPrintInfo(self::INFO_DOMAIN_BREAKDOWN)) {
       return;
     }
     echo "<domains>\n";
@@ -253,26 +255,27 @@ class XmlResultGenerator {
     }
     echo "</domains>\n";
   }
+
+  /**
+   * Print a breakdown of the requests and bytes by mime type
+   * @param TestRunResult $testResult Result data of affected run
+   */
+  function printMimeTypeBreakdown($testResult) {
+    if (!$this->shouldPrintInfo(self::INFO_MIMETYPE_BREAKDOWN)) {
+      return;
+    }
+    echo "<breakdown>\n";
+    $breakdown = $testResult->getMimeTypeBreakdown();
+    foreach ($breakdown as $mime => &$values) {
+      echo "<$mime>\n";
+      echo "<requests>{$values['requests']}</requests>\n";
+      echo "<bytes>{$values['bytes']}</bytes>\n";
+      echo "</$mime>\n";
+    }
+    echo "</breakdown>\n";
+  }
 }
 
-/**
-* Dump a breakdown of the requests and bytes by mime type
-*/
-function xmlBreakdown($id, $testPath, $run, $cached) {
-    if (array_key_exists('breakdown', $_REQUEST) && $_REQUEST['breakdown']) {
-        echo "<breakdown>\n";
-        $requests;
-        $breakdown = getBreakdown($id, $testPath, $run, $cached, $requests);
-        foreach ($breakdown as $mime => &$values) {
-            $domain = strrev($domain);
-            echo "<$mime>\n";
-            echo "<requests>{$values['requests']}</requests>\n";
-            echo "<bytes>{$values['bytes']}</bytes>\n";
-            echo "</$mime>\n";
-        }
-        echo "</breakdown>\n";
-    }
-}
 
 /**
 * Dump any logged browser status messages

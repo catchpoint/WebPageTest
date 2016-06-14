@@ -81,6 +81,13 @@ class TestRunResult {
                               $this->cached ? 1 : 0, $requests);
   }
 
+  public function getMimeTypeBreakdown() {
+    // TODO: move implementation to this method
+    $requests = null;
+    return getBreakdown($this->testInfo->getId(), $this->testInfo->getRootDirectory(), $this->run,
+                        $this->cached ? 1 : 0, $requests);
+  }
+
 
   private function getStartOffset() {
     if (!array_key_exists('testStartOffset', $this->pageData[$this->run][$this->cached ? 1 : 0])) {
