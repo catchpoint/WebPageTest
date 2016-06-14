@@ -181,8 +181,7 @@ class XmlResultGenerator {
     $this->printDomainBreakdown($testResult);
     $this->printMimeTypeBreakdown($testResult);
     $this->printRequests($testResult, $forMedian);
-
-    StatusMessages($testId, $testRoot, $run, $cached ? 1 : 0);
+    $this->printStatusMessages($testResult);
     ConsoleLog($testId, $testRoot, $run, $cached ? 1 : 0);
   }
 
@@ -237,7 +236,7 @@ class XmlResultGenerator {
    * Print a breakdown of the requests and bytes by domain
    * @param TestRunResult $testResult Result data of affected run
    */
-  function printDomainBreakdown($testResult) {
+  private function printDomainBreakdown($testResult) {
     if (!$this->shouldPrintInfo(self::INFO_DOMAIN_BREAKDOWN)) {
       return;
     }
@@ -260,7 +259,7 @@ class XmlResultGenerator {
    * Print a breakdown of the requests and bytes by mime type
    * @param TestRunResult $testResult Result data of affected run
    */
-  function printMimeTypeBreakdown($testResult) {
+  private function printMimeTypeBreakdown($testResult) {
     if (!$this->shouldPrintInfo(self::INFO_MIMETYPE_BREAKDOWN)) {
       return;
     }
@@ -274,40 +273,34 @@ class XmlResultGenerator {
     }
     echo "</breakdown>\n";
   }
-}
 
-
-/**
-* Dump any logged browser status messages
-*
-* @param mixed $id
-* @param mixed $testPath
-* @param mixed $run
-* @param mixed $cached
-*/
-function StatusMessages($id, $testPath, $run, $cached) {
-    $cachedText = '';
-    if ($cached)
-        $cachedText = '_Cached';
-    $statusFile = "$testPath/$run{$cachedText}_status.txt";
-    if (gz_is_file($statusFile)) {
-        echo "<status>\n";
-        $messages = array();
-        $lines = gz_file($statusFile);
-        foreach($lines as $line) {
-            $line = trim($line);
-            if (strlen($line)) {
-                $parts = explode("\t", $line);
-                $time = xml_entities(trim($parts[0]));
-                $message = xml_entities(trim($parts[1]));
-                echo "<entry>\n";
-                echo "<time>$time</time>\n";
-                echo "<message>$message</message>\n";
-                echo "</entry>\n";
-            }
-        }
-        echo "</status>\n";
+  /**
+   * Print any logged browser status messages
+   * @param TestRunResult $testResult Result data of affected run
+   */
+  private function printStatusMessages($testResult) {
+    $localPaths = new TestPaths($this->testInfo->getRootDirectory(), $testResult->getRunNumber(),
+                                $testResult->isCachedRun());
+    $statusFile = $localPaths->statusFile();
+    if (!$this->fileHandler->GzFileExists($statusFile)) {
+      return;
     }
+    echo "<status>\n";
+    $lines = $this->fileHandler->gzRead($statusFile);
+    foreach($lines as $line) {
+      $line = trim($line);
+      if (strlen($line)) {
+        $parts = explode("\t", $line);
+        $time = xml_entities(trim($parts[0]));
+        $message = xml_entities(trim($parts[1]));
+        echo "<entry>\n";
+        echo "<time>$time</time>\n";
+        echo "<message>$message</message>\n";
+        echo "</entry>\n";
+      }
+    }
+    echo "</status>\n";
+  }
 }
 
 /**

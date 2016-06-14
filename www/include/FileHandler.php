@@ -20,4 +20,13 @@ class FileHandler {
   public function GzFileExists($path) {
     return $this->FileExists($path . ".gz") || $this->FileExists($path);
   }
+
+  public function gzReadFile($path) {
+    if ($this->FileExists("$path.gz")) {
+      return gzfile("$path.gz");
+    } elseif ($this->FileExists($path)) {
+      return file($path);
+    }
+    return null;
+  }
 }

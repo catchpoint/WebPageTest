@@ -128,6 +128,13 @@ class TestPaths {
     return $this->testRoot . $this->underscoreIdentifier() . "_screen.png";
   }
 
+  /**
+   * @return string Path for status file
+   */
+  public function statusFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_status.txt";
+  }
+
   protected function underscoreIdentifier() {
     return $this->run . ($this->cached ? "_Cached" : "") . ($this->step > 1 ? "_" . $this->step : "");
   }
