@@ -82,7 +82,7 @@ class XmlResultGenerator {
     echo "<thumbnails>\n";
     echo "<waterfall>" . htmlspecialchars($urlGenerator->thumbnail("waterfall.png")) . "</waterfall>\n";
     echo "<checklist>" . htmlspecialchars($urlGenerator->thumbnail("optimization.png")) . "</checklist>\n";
-    if ($this->fileHandler->FileExists($localPaths->screenShotFile())) {
+    if ($this->fileHandler->fileExists($localPaths->screenShotFile())) {
       echo "<screenShot>" . htmlspecialchars($urlGenerator->thumbnail("screen.jpg")) . "</screenShot>\n";
     }
     echo "</thumbnails>\n";
@@ -91,25 +91,25 @@ class XmlResultGenerator {
     echo "<waterfall>" . htmlspecialchars($urlGenerator->generatedImage("waterfall")) . "</waterfall>\n";
     echo "<connectionView>" . htmlspecialchars($urlGenerator->generatedImage("connection")) . "</connectionView>\n";
     echo "<checklist>" . htmlspecialchars($urlGenerator->generatedImage("optimization")) . "</checklist>\n";
-    if ($this->fileHandler->FileExists($localPaths->screenShotFile())) {
+    if ($this->fileHandler->fileExists($localPaths->screenShotFile())) {
       echo "<screenShot>" . htmlspecialchars($urlGenerator->getFile($nameOnlyPaths->screenShotFile())) . "</screenShot>\n";
     }
-    if ($this->fileHandler->FileExists($localPaths->screenShotPngFile())) {
+    if ($this->fileHandler->fileExists($localPaths->screenShotPngFile())) {
       echo "<screenShotPng>" . htmlspecialchars($urlGenerator->getFile($nameOnlyPaths->screenShotPngFile())) . "</screenShotPng>\n";
     }
     echo "</images>\n";
 
     // raw results (files accessed directly on the file system, but via URL)
     echo "<rawData>\n";
-    if ($this->fileHandler->GzFileExists($localPaths->headersFile()))
+    if ($this->fileHandler->gzFileExists($localPaths->headersFile()))
       echo "<headers>" . $urlPaths->headersFile() . "</headers>\n";
-    if ($this->fileHandler->GzFileExists($localPaths->bodiesFile()))
+    if ($this->fileHandler->gzFileExists($localPaths->bodiesFile()))
       echo "<bodies>" . $urlPaths->bodiesFile() . "</bodies>\n";
-    if ($this->fileHandler->GzFileExists($localPaths->pageDataFile()))
+    if ($this->fileHandler->gzFileExists($localPaths->pageDataFile()))
       echo "<pageData>" . $urlPaths->pageDataFile() . "</pageData>\n";
-    if ($this->fileHandler->GzFileExists($localPaths->requestDataFile()))
+    if ($this->fileHandler->gzFileExists($localPaths->requestDataFile()))
       echo "<requestsData>" . $urlPaths->requestDataFile() . "</requestsData>\n";
-    if ($this->fileHandler->GzFileExists($localPaths->utilizationFile()))
+    if ($this->fileHandler->gzFileExists($localPaths->utilizationFile()))
       echo "<utilization>" . $urlPaths->utilizationFile() . "</utilization>\n";
     $this->printPageSpeedData($testResult);
     echo "</rawData>\n";
@@ -163,7 +163,7 @@ class XmlResultGenerator {
     $localPaths = new TestPaths($testRoot, $testResult->getRunNumber(), $testResult->isCachedRun());
     $urlPaths = new TestPaths($this->baseUrl . substr($testRoot, 1), $testResult->isCachedRun());
 
-    if ($this->fileHandler->GzFileExists($localPaths->pageSpeedFile())) {
+    if ($this->fileHandler->gzFileExists($localPaths->pageSpeedFile())) {
       echo "<PageSpeedData>" . $urlPaths->pageSpeedFile() . "</PageSpeedData>\n";
     }
   }
@@ -277,7 +277,7 @@ class XmlResultGenerator {
     $localPaths = new TestPaths($this->testInfo->getRootDirectory(), $testResult->getRunNumber(),
                                 $testResult->isCachedRun());
     $statusFile = $localPaths->statusFile();
-    if (!$this->fileHandler->GzFileExists($statusFile)) {
+    if (!$this->fileHandler->gzFileExists($statusFile)) {
       return;
     }
     echo "<status>\n";
