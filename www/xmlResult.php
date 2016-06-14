@@ -147,8 +147,19 @@ else
         }
         echo "</standardDeviation>\n";
 
+        $additionalInfo = array();
+        if ($pagespeed) {
+            $additionalInfo[] = XmlResultGenerator::INFO_PAGESPEED;
+        }
+        if (array_key_exists("requests", $_REQUEST) && $_REQUEST["requests"]) {
+            $additionalInfo[] = XmlResultGenerator::INFO_MEDIAN_REQUESTS;
+            if ($_REQUEST["requests"] != "median") {
+                $additionalInfo[] = XmlResultGenerator::INFO_REQUESTS;
+            }
+        }
+
         $testInfo = TestInfo::fromValues($id, $testPath, $test);
-        $xmlGenerator = new XmlResultGenerator($testInfo, "$protocol://$host$uri", new FileHandler(), $pagespeed);
+        $xmlGenerator = new XmlResultGenerator($testInfo, "$protocol://$host$uri", new FileHandler(), $additionalInfo);
 
         // output the median run data
         $fvMedian = GetMedianRun($pageData, 0, $median_metric);

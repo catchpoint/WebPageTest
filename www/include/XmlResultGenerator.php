@@ -5,16 +5,19 @@ require_once __DIR__ . '/UrlGenerator.php';
 
 class XmlResultGenerator {
 
+  const INFO_PAGESPEED = 0;
+  const INFO_REQUESTS = 1;
+  const INFO_MEDIAN_REQUESTS = 2;
+  const INFO_DOMAINS = 3;
+  const INFO_BREAKDOWN = 4;
+  const INFO_CONSOLE = 5;
+
   /**
    * @var TestInfo Information about the test
    */
   private $testInfo;
-  /**
-   * @var TestRunResult
-   */
-  private $result;
   private $baseUrl;
-  private $pagespeed;
+  private $additionalInfo;
   private $fileHandler;
 
   /**
@@ -22,12 +25,12 @@ class XmlResultGenerator {
    * @param TestInfo $testInfo Information about the test
    * @param string $urlStart Start for test related URLS
    * @param FileHandler $fileHandler FileHandler to be used
-   * @param bool $pagespeed True if pagespeed data should be generated
+   * @param array $additionalInfo Array of INFO_* constants to define which additional information should be printed
    */
-  public function __construct($testInfo, $urlStart, $fileHandler, $pagespeed) {
+  public function __construct($testInfo, $urlStart, $fileHandler, $additionalInfo) {
     $this->testInfo = $testInfo;
     $this->baseUrl = $urlStart;
-    $this->pagespeed = $pagespeed;
+    $this->additionalInfo = $additionalInfo;
     $this->fileHandler = $fileHandler;
   }
 
@@ -144,7 +147,7 @@ class XmlResultGenerator {
    * @param TestRunResult $testResult Result of the run
    */
   private function printPageSpeed($testResult) {
-    if ($this->pagespeed) {
+    if ($this->shouldPrintInfo(self::INFO_PAGESPEED)) {
       $score = $testResult->getPageSpeedScore();
       if (strlen($score)) {
         echo "<PageSpeedScore>$score</PageSpeedScore>\n";
@@ -177,10 +180,22 @@ class XmlResultGenerator {
 
     xmlDomains($testId, $testRoot, $run, $cached ? 1 : 0);
     xmlBreakdown($testId, $testRoot, $run, $cached ? 1 : 0);
-    if (array_key_exists('requests', $_REQUEST) && ($forMedian || $_REQUEST['requests'] != 'median'))
+    if ($this->shouldPrintInfo(self::INFO_REQUESTS) ||
+        ($forMedian && $this->shouldPrintInfo(self::INFO_MEDIAN_REQUESTS))
+       ) {
       xmlRequests($testId, $testRoot, $run, $cached ? 1 : 0);
+    }
+
     StatusMessages($testId, $testRoot, $run, $cached ? 1 : 0);
     ConsoleLog($testId, $testRoot, $run, $cached ? 1 : 0);
+  }
+
+  /**
+   * @param int $infotype The kind of info to check for (see INFO_* constants)
+   * @return bool True if this type of information should be printed, false otherwise
+   */
+  private function shouldPrintInfo($infotype) {
+    return in_array($infotype, $this->additionalInfo, true);
   }
 
 }
