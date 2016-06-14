@@ -178,7 +178,7 @@ class XmlResultGenerator {
     $run = $testResult->getRunNumber();
     $cached = $testResult->isCachedRun();
 
-    xmlDomains($testId, $testRoot, $run, $cached ? 1 : 0);
+    $this->printDomains($testResult);
     xmlBreakdown($testId, $testRoot, $run, $cached ? 1 : 0);
     $this->printRequests($testResult, $forMedian);
 
@@ -231,28 +231,28 @@ class XmlResultGenerator {
     }
     echo "</requests>\n";
   }
-}
 
-/**
-* Dump a breakdown of the requests and bytes by domain
-*/
-function xmlDomains($id, $testPath, $run, $cached) {
-    if (array_key_exists('domains', $_REQUEST) && $_REQUEST['domains']) {
-        echo "<domains>\n";
-        $requests;
-        $breakdown = getDomainBreakdown($id, $testPath, $run, $cached, $requests);
-        foreach ($breakdown as $domain => &$values) {
-            $domain = $domain;
-            echo "<domain host=\"" . xml_entities($domain) . "\">\n";
-            echo "<requests>{$values['requests']}</requests>\n";
-            echo "<bytes>{$values['bytes']}</bytes>\n";
-            echo "<connections>{$values['connections']}</connections>\n";
-            if (isset($values['cdn_provider']))
-              echo "<cdn_provider>{$values['cdn_provider']}</cdn_provider>\n";
-            echo "</domain>\n";
-        }
-        echo "</domains>\n";
+  /**
+   * @param TestRunResult $testResult Result data of affected run
+   */
+  function printDomains($testResult) {
+    if (!$this->shouldPrintInfo(self::INFO_DOMAINS)) {
+      return;
     }
+    echo "<domains>\n";
+    $breakdown = $testResult->getDomainBreakdown();
+    foreach ($breakdown as $domain => &$values) {
+      echo "<domain host=\"" . xml_entities($domain) . "\">\n";
+      echo "<requests>{$values['requests']}</requests>\n";
+      echo "<bytes>{$values['bytes']}</bytes>\n";
+      echo "<connections>{$values['connections']}</connections>\n";
+      if (isset($values['cdn_provider'])) {
+        echo "<cdn_provider>{$values['cdn_provider']}</cdn_provider>\n";
+      }
+      echo "</domain>\n";
+    }
+    echo "</domains>\n";
+  }
 }
 
 /**
@@ -273,12 +273,6 @@ function xmlBreakdown($id, $testPath, $run, $cached) {
         echo "</breakdown>\n";
     }
 }
-
-
-/**
-* Dump information about all of the requests
-*/
-
 
 /**
 * Dump any logged browser status messages

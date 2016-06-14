@@ -70,8 +70,15 @@ class TestRunResult {
     // TODO: move implementation to this method
     $secure = false;
     $haveLocations = false;
-    return getRequests($this->testInfo->getId(), $this->testInfo->getRootDirectory(), $this->run, $this->cached,
-                       $secure, $haveLocations, false, true);
+    return getRequests($this->testInfo->getId(), $this->testInfo->getRootDirectory(), $this->run,
+                       $this->cached ? 1 : 0, $secure, $haveLocations, false, true);
+  }
+
+  public function getDomainBreakdown() {
+    // TODO: move implementation to this method
+    $requests = null;
+    return getDomainBreakdown($this->testInfo->getId(), $this->testInfo->getRootDirectory(), $this->run,
+                              $this->cached ? 1 : 0, $requests);
   }
 
 
