@@ -66,6 +66,14 @@ class TestRunResult {
                              null, null, $this->getStartOffset());
   }
 
+  public function getRequests() {
+    // TODO: move implementation to this method
+    $secure = false;
+    $haveLocations = false;
+    return getRequests($this->testInfo->getId(), $this->testInfo->getRootDirectory(), $this->run, $this->cached,
+                       $secure, $haveLocations, false, true);
+  }
+
 
   private function getStartOffset() {
     if (!array_key_exists('testStartOffset', $this->pageData[$this->run][$this->cached ? 1 : 0])) {

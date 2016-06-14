@@ -180,11 +180,7 @@ class XmlResultGenerator {
 
     xmlDomains($testId, $testRoot, $run, $cached ? 1 : 0);
     xmlBreakdown($testId, $testRoot, $run, $cached ? 1 : 0);
-    if ($this->shouldPrintInfo(self::INFO_REQUESTS) ||
-        ($forMedian && $this->shouldPrintInfo(self::INFO_MEDIAN_REQUESTS))
-       ) {
-      xmlRequests($testId, $testRoot, $run, $cached ? 1 : 0);
-    }
+    $this->printRequests($testResult, $forMedian);
 
     StatusMessages($testId, $testRoot, $run, $cached ? 1 : 0);
     ConsoleLog($testId, $testRoot, $run, $cached ? 1 : 0);
@@ -198,6 +194,43 @@ class XmlResultGenerator {
     return in_array($infotype, $this->additionalInfo, true);
   }
 
+  /**
+   * @param TestRunResult $testResult Result Data for affected run
+   * @param $forMedian True if the output is for median, false otherwise
+   */
+  private function printRequests($testResult, $forMedian) {
+    if (!$this->shouldPrintInfo(self::INFO_REQUESTS) &&
+        !($forMedian && $this->shouldPrintInfo(self::INFO_MEDIAN_REQUESTS))) {
+      return;
+    }
+    echo "<requests>\n";
+    $requests = $testResult->getRequests();
+    foreach ($requests as &$request) {
+      echo "<request number=\"{$request['number']}\">\n";
+      foreach ($request as $field => $value) {
+        if (!is_array($value))
+          echo "<$field>" . xml_entities($value) . "</$field>\n";
+      }
+      if (array_key_exists('headers', $request) && is_array($request['headers'])) {
+        echo "<headers>\n";
+        if (array_key_exists('request', $request['headers']) && is_array($request['headers']['request'])) {
+          echo "<request>\n";
+          foreach ($request['headers']['request'] as $value)
+            echo "<header>" . xml_entities($value) . "</header>\n";
+          echo "</request>\n";
+        }
+        if (array_key_exists('response', $request['headers']) && is_array($request['headers']['response'])) {
+          echo "<response>\n";
+          foreach ($request['headers']['response'] as $value)
+            echo "<header>" . xml_entities($value) . "</header>\n";
+          echo "</response>\n";
+        }
+        echo "</headers>\n";
+      }
+      echo "</request>\n";
+    }
+    echo "</requests>\n";
+  }
 }
 
 /**
@@ -245,39 +278,7 @@ function xmlBreakdown($id, $testPath, $run, $cached) {
 /**
 * Dump information about all of the requests
 */
-function xmlRequests($id, $testPath, $run, $cached) {
-    if (array_key_exists('requests', $_REQUEST) && $_REQUEST['requests']) {
-        echo "<requests>\n";
-        $secure = false;
-        $haveLocations = false;
-        $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false, true);
-        foreach ($requests as &$request) {
-            echo "<request number=\"{$request['number']}\">\n";
-            foreach ($request as $field => $value) {
-                if (!is_array($value))
-                  echo "<$field>" . xml_entities($value) . "</$field>\n";
-            }
-            if (array_key_exists('headers', $request) && is_array($request['headers'])) {
-              echo "<headers>\n";
-              if (array_key_exists('request', $request['headers']) && is_array($request['headers']['request'])) {
-                echo "<request>\n";
-                foreach ($request['headers']['request'] as $value)
-                  echo "<header>" . xml_entities($value) . "</header>\n";
-                echo "</request>\n";
-              }
-              if (array_key_exists('response', $request['headers']) && is_array($request['headers']['response'])) {
-                echo "<response>\n";
-                foreach ($request['headers']['response'] as $value)
-                  echo "<header>" . xml_entities($value) . "</header>\n";
-                echo "</response>\n";
-              }
-              echo "</headers>\n";
-            }
-            echo "</request>\n";
-        }
-        echo "</requests>\n";
-    }
-}
+
 
 /**
 * Dump any logged browser status messages
