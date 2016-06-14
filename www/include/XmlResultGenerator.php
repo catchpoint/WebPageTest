@@ -173,16 +173,11 @@ class XmlResultGenerator {
    * @param bool $forMedian True if the printing is for median output, false otherwise
    */
   private function printAdditionalInformation($testResult, $forMedian) {
-    $testId = $this->testInfo->getId();
-    $testRoot = $this->testInfo->getRootDirectory();
-    $run = $testResult->getRunNumber();
-    $cached = $testResult->isCachedRun();
-
     $this->printDomainBreakdown($testResult);
     $this->printMimeTypeBreakdown($testResult);
     $this->printRequests($testResult, $forMedian);
     $this->printStatusMessages($testResult);
-    ConsoleLog($testId, $testRoot, $run, $cached ? 1 : 0);
+    $this->printConsoleLog($testResult);
   }
 
   /**
@@ -286,7 +281,7 @@ class XmlResultGenerator {
       return;
     }
     echo "<status>\n";
-    $lines = $this->fileHandler->gzRead($statusFile);
+    $lines = $this->fileHandler->gzReadFile($statusFile);
     foreach($lines as $line) {
       $line = trim($line);
       if (strlen($line)) {
@@ -301,32 +296,28 @@ class XmlResultGenerator {
     }
     echo "</status>\n";
   }
-}
 
-/**
-* Dump the console log if we have one
-*
-* @param mixed $id
-* @param mixed $testPath
-* @param mixed $run
-* @param mixed $cached
-*/
-function ConsoleLog($id, $testPath, $run, $cached) {
-    if(isset($_GET['console']) && $_GET['console'] == 0) {
-        return;
+  /**
+   * Print the console log if requested
+   * @param TestRunResult $testResult Result data of affected run
+   */
+  private function printConsoleLog($testResult) {
+    if (!$this->shouldPrintInfo(self::INFO_CONSOLE)) {
+      return;
     }
-    $consoleLog = DevToolsGetConsoleLog($testPath, $run, $cached);
+    $consoleLog = $testResult->getConsoleLog();
     if (isset($consoleLog) && is_array($consoleLog) && count($consoleLog)) {
-        echo "<consoleLog>\n";
-        foreach( $consoleLog as &$entry ) {
-            echo "<entry>\n";
-            echo "<source>" . xml_entities($entry['source']) . "</source>\n";
-            echo "<level>" . xml_entities($entry['level']) . "</level>\n";
-            echo "<message>" . xml_entities($entry['text']) . "</message>\n";
-            echo "<url>" . xml_entities($entry['url']) . "</url>\n";
-            echo "<line>" . xml_entities($entry['line']) . "</line>\n";
-            echo "</entry>\n";
-        }
-        echo "</consoleLog>\n";
+      echo "<consoleLog>\n";
+      foreach( $consoleLog as &$entry ) {
+        echo "<entry>\n";
+        echo "<source>" . xml_entities($entry['source']) . "</source>\n";
+        echo "<level>" . xml_entities($entry['level']) . "</level>\n";
+        echo "<message>" . xml_entities($entry['text']) . "</message>\n";
+        echo "<url>" . xml_entities($entry['url']) . "</url>\n";
+        echo "<line>" . xml_entities($entry['line']) . "</line>\n";
+        echo "</entry>\n";
+      }
+      echo "</consoleLog>\n";
     }
+  }
 }

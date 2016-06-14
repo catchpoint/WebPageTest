@@ -88,6 +88,11 @@ class TestRunResult {
                         $this->cached ? 1 : 0, $requests);
   }
 
+  public function getConsoleLog() {
+    // TODO: move implementation to this method, or encapsulate in another object
+    return DevToolsGetConsoleLog($this->testInfo->getRootDirectory(), $this->run, $this->cached ? 1 : 0);
+  }
+
 
   private function getStartOffset() {
     if (!array_key_exists('testStartOffset', $this->pageData[$this->run][$this->cached ? 1 : 0])) {

@@ -163,6 +163,9 @@ else
         if (array_key_exists('domains', $_REQUEST) && $_REQUEST['domains']) {
             $additionalInfo[] = XmlResultGenerator::INFO_DOMAIN_BREAKDOWN;
         }
+        if (!isset($_GET['console']) || $_GET['console'] != 0) {
+            $additionalInfo[] = XmlResultGenerator::INFO_CONSOLE;
+        }
 
         $testInfo = TestInfo::fromValues($id, $testPath, $test);
         $xmlGenerator = new XmlResultGenerator($testInfo, "$protocol://$host$uri", new FileHandler(), $additionalInfo);
