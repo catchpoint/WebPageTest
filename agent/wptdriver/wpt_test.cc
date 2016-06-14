@@ -73,6 +73,11 @@ WptTest::WptTest(void):
     CreateDirectory(path, NULL);
     _test_file = CString(path) + _T("\\test.dat");
   }
+  _is_chrome = false;
+  GetModuleFileName(NULL, path, _countof(path));
+  if (!lstrcmpi(PathFindFileName(path), _T("chrome.exe")))
+    _is_chrome = true;
+
   InitializeCriticalSection(&cs_);
   _tcp_port_override.InitHashTable(257);
 
@@ -533,6 +538,13 @@ void WptTest::BuildScript() {
     _script_commands.AddHead(command);
   }
 
+  if (HasCustomCommandLine()) {
+    ScriptCommand command;
+    command.command = _T("hasCustomCommandLine");
+    command.record = false;
+    _script_commands.AddHead(command);
+  }
+
   if (_emulate_mobile) {
     if (_device_scale_factor.IsEmpty())
       _device_scale_factor = DEFAULT_MOBILE_SCALE_FACTOR;
@@ -926,26 +938,29 @@ bool WptTest::ModifyRequestHeader(CStringA& header) const {
     }
   } else if (!tag.CompareNoCase("Host")) {
     CStringA new_headers;
-    // Add new headers after the host header.
-    POSITION pos = _add_headers.GetHeadPosition();
-    while (pos) {
-      HttpHeaderValue new_header = _add_headers.GetNext(pos);
-      if (RegexMatch(value, new_header._filter)) {
-        new_headers += CStringA("\r\n") + new_header._tag + CStringA(": ") + 
-                        new_header._value;
+    POSITION pos;
+    if (!HasCustomCommandLine() || !_is_chrome) {
+      // Add new headers after the host header.
+      pos = _add_headers.GetHeadPosition();
+      while (pos) {
+        HttpHeaderValue new_header = _add_headers.GetNext(pos);
+        if (RegexMatch(value, new_header._filter)) {
+          new_headers += CStringA("\r\n") + new_header._tag + CStringA(": ") + 
+                          new_header._value;
+        }
       }
-    }
-    // Override existing headers (they are added here and the original
-    // version is removed below when it is processed)
-    pos = _set_headers.GetHeadPosition();
-    while (pos) {
-      HttpHeaderValue new_header = _set_headers.GetNext(pos);
-      if (RegexMatch(value, new_header._filter)) {
-        new_headers += CStringA("\r\n") + new_header._tag + CStringA(": ") + 
-                        new_header._value;
-        if (!new_header._tag.CompareNoCase("Host")) {
-          header.Empty();
-          new_headers.TrimLeft();
+      // Override existing headers (they are added here and the original
+      // version is removed below when it is processed)
+      pos = _set_headers.GetHeadPosition();
+      while (pos) {
+        HttpHeaderValue new_header = _set_headers.GetNext(pos);
+        if (RegexMatch(value, new_header._filter)) {
+          new_headers += CStringA("\r\n") + new_header._tag + CStringA(": ") + 
+                          new_header._value;
+          if (!new_header._tag.CompareNoCase("Host")) {
+            header.Empty();
+            new_headers.TrimLeft();
+          }
         }
       }
     }

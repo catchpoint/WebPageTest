@@ -141,6 +141,7 @@ public:
   void Unlock();
   bool IsLocked();
   CStringA  GetAppendUA() const;
+  bool HasCustomCommandLine() const {return _browser_command_line.GetLength() || _browser_additional_command_line.GetLength();}
 
   // overall test settings
   CString _id;
@@ -225,6 +226,7 @@ public:
   bool    _dom_element_check;
   int     _no_run;  // conditional block support - if/else/endif
   CStringA _current_event_name;
+  bool    _is_chrome;
 
   // system information
   bool      has_gpu_;

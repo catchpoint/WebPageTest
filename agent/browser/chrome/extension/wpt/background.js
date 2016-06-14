@@ -90,6 +90,7 @@ var g_overrideHosts = {};
 var g_addHeaders = [];
 var g_setHeaders = [];
 var g_manipulatingHeaders = false;
+var g_hasCustomCommandLine = false;
 var g_started = false;
 var g_requestsHooked = false;
 
@@ -299,7 +300,7 @@ var wptBeforeSendHeaders = function(details) {
       }
       
       // modify headers for HTTPS requests (non-encrypted will be handled at the network layer)
-      if (scheme.toLowerCase() == "https://") {
+      if (g_hasCustomCommandLine || scheme.toLowerCase() == "https://") {
         var i;
         for (i = 0; i < g_setHeaders.length; i++) {
           if (wptHostMatches(host, g_setHeaders[i].filter)) {
@@ -386,12 +387,13 @@ chrome.webRequest.onCompleted.addListener(function(details) {
 function wptHookRequests() {
   if (!g_requestsHooked) {
     g_requestsHooked = true;
+    var urlHooks = g_hasCustomCommandLine ? ["<all_urls>"] : ['https://*/*'];
     chrome.webRequest.onBeforeSendHeaders.addListener(wptBeforeSendHeaders,
-      {urls: ['https://*/*']},
+      {urls: urlHooks},
       ['blocking', 'requestHeaders']
     );
     chrome.webRequest.onBeforeRequest.addListener(wptBeforeSendRequest,
-      {urls: ['https://*/*']},
+      {urls: urlHooks},
       ['blocking']
     );
   }
@@ -548,6 +550,9 @@ function wptExecuteTask(task) {
     case 'checkresponsive':
       g_processing_task = true;
       g_commandRunner.doCheckResponsive(wptTaskCallback);
+      break;
+    case 'hascustomcommandline':
+      g_hasCustomCommandLine = true;
       break;
 
     default:
