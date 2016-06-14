@@ -31,13 +31,26 @@ class XmlResultGenerator {
     $this->fileHandler = $fileHandler;
   }
 
+  /**
+   * @param TestRunResult $testResult Result for the median run
+   */
+  public function printMedianRun($testResult) {
+    $run = $testResult->getRunNumber();
+
+    echo "<run>" . $run . "</run>\n";
+    $this->printTester($run);
+    echo ArrayToXML($testResult->getRawResults());
+    $this->printPageSpeed($testResult);
+    $this->printPageSpeedData($testResult);
+    $this->printAdditionalInformation($testResult, true);
+  }
 
   /**
    * @param TestRunResult $testResult Result of this run
    */
-  function printRun($testResult) {
+  public function printRun($testResult) {
     $run = $testResult->getRunNumber();
-    $cached = $testResult->isCached() ? 1 : 0;
+    $cached = $testResult->isCachedRun() ? 1 : 0;
     $testRoot = $this->testInfo->getRootDirectory();
     $testId = $this->testInfo->getId();
 
@@ -45,18 +58,11 @@ class XmlResultGenerator {
     $nameOnlyPaths = new TestPaths("", $run, $cached);
     $urlPaths = new TestPaths($this->baseUrl . substr($testRoot, 1), $run, $cached);
 
-    $tester = $this->testInfo->getTester($run);
-    if ($tester) {
-      echo "<tester>" . xml_entities($tester) . "</tester>\n";
-    }
+    $this->printTester($run);
 
     echo "<results>\n";
     echo ArrayToXML($testResult->getRawResults());
-    if ($this->pagespeed) {
-      $score = $testResult->getPageSpeedScore();
-      if (strlen($score))
-        echo "<PageSpeedScore>$score</PageSpeedScore>\n";
-    }
+    $this->printPageSpeed($testResult);
     echo "</results>\n";
 
     // links to the relevant pages
@@ -102,8 +108,7 @@ class XmlResultGenerator {
       echo "<requestsData>" . $urlPaths->requestDataFile() . "</requestsData>\n";
     if ($this->fileHandler->GzFileExists($localPaths->utilizationFile()))
       echo "<utilization>" . $urlPaths->utilizationFile() . "</utilization>\n";
-    if ($this->fileHandler->GzFileExists($localPaths->pageSpeedFile()))
-      echo "<PageSpeedData>" . $urlPaths->pageSpeedFile() . "</PageSpeedData>\n";
+    $this->printPageSpeedData($testResult);
     echo "</rawData>\n";
 
     // video frames
@@ -122,14 +127,61 @@ class XmlResultGenerator {
       echo "</videoFrames>\n";
     }
 
+    $this->printAdditionalInformation($testResult, false);
+  }
+
+  /**
+   * @param int $run The run to print the tester for
+   */
+  private function printTester($run) {
+    $tester = $this->testInfo->getTester($run);
+    if ($tester) {
+      echo "<tester>" . xml_entities($tester) . "</tester>\n";
+    }
+  }
+
+  /**
+   * @param TestRunResult $testResult Result of the run
+   */
+  private function printPageSpeed($testResult) {
+    if ($this->pagespeed) {
+      $score = $testResult->getPageSpeedScore();
+      if (strlen($score)) {
+        echo "<PageSpeedScore>$score</PageSpeedScore>\n";
+      }
+    }
+  }
+
+  /**
+   * @param TestRunResult $testResult Result Data
+   */
+  private function printPageSpeedData($testResult) {
+    $testRoot = $this->testInfo->getRootDirectory();
+    $localPaths = new TestPaths($testRoot, $testResult->getRunNumber(), $testResult->isCachedRun());
+    $urlPaths = new TestPaths($this->baseUrl . substr($testRoot, 1), $testResult->isCachedRun());
+
+    if ($this->fileHandler->GzFileExists($localPaths->pageSpeedFile())) {
+      echo "<PageSpeedData>" . $urlPaths->pageSpeedFile() . "</PageSpeedData>\n";
+    }
+  }
+
+  /**
+   * @param TestRunResult $testResult Result Data
+   * @param bool $forMedian True if the printing is for median output, false otherwise
+   */
+  private function printAdditionalInformation($testResult, $forMedian) {
+    $testId = $this->testInfo->getId();
+    $testRoot = $this->testInfo->getRootDirectory();
+    $run = $testResult->getRunNumber();
+    $cached = $testResult->isCachedRun();
+
     xmlDomains($testId, $testRoot, $run, $cached ? 1 : 0);
     xmlBreakdown($testId, $testRoot, $run, $cached ? 1 : 0);
-    if (array_key_exists('requests', $_REQUEST) && $_REQUEST['requests'] != 'median')
+    if (array_key_exists('requests', $_REQUEST) && ($forMedian || $_REQUEST['requests'] != 'median'))
       xmlRequests($testId, $testRoot, $run, $cached ? 1 : 0);
     StatusMessages($testId, $testRoot, $run, $cached ? 1 : 0);
     ConsoleLog($testId, $testRoot, $run, $cached ? 1 : 0);
   }
-
 
 }
 

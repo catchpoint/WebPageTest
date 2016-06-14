@@ -147,42 +147,16 @@ else
         }
         echo "</standardDeviation>\n";
 
+        $testInfo = TestInfo::fromValues($id, $testPath, $test);
+        $xmlGenerator = new XmlResultGenerator($testInfo, "$protocol://$host$uri", new FileHandler(), $pagespeed);
+
         // output the median run data
         $fvMedian = GetMedianRun($pageData, 0, $median_metric);
         if( $fvMedian )
         {
             echo "<median>\n";
             echo "<firstView>\n";
-            echo "<run>$fvMedian</run>\n";
-            if (array_key_exists('testinfo', $test)) {
-              $tester = null;
-              if (array_key_exists('tester', $test['testinfo']))
-                $tester = $test['testinfo']['tester'];
-              if (array_key_exists('test_runs', $test['testinfo']) &&
-                  array_key_exists($fvMedian, $test['testinfo']['test_runs']) &&
-                  array_key_exists('tester', $test['testinfo']['test_runs'][$fvMedian]))
-                $tester = $test['testinfo']['test_runs'][$fvMedian]['tester'] . '<br>';
-              if (isset($tester))
-                echo "<tester>" . xml_entities($tester) . "</tester>\n";
-            }
-            echo ArrayToXML($pageData[$fvMedian][0]);
-            if (gz_is_file("$testPath/{$fvMedian}_pagespeed.txt")) {
-              if( $pagespeed )
-              {
-                  $score = GetPageSpeedScore("$testPath/{$fvMedian}_pagespeed.txt");
-                  if( strlen($score) )
-                      echo "<PageSpeedScore>$score</PageSpeedScore>\n";
-              }
-              if( FRIENDLY_URLS )
-                  echo "<PageSpeedData>$protocol://$host$uri/result/$id/{$fvMedian}_pagespeed.txt</PageSpeedData>\n";
-              else
-                  echo "<PageSpeedData>$protocol://$host$uri//getgzip.php?test=$id&amp;file={$fvMedian}_pagespeed.txt</PageSpeedData>\n";
-            }
-            xmlDomains($id, $testPath, $fvMedian, 0);
-            xmlBreakdown($id, $testPath, $fvMedian, 0);
-            xmlRequests($id, $testPath, $fvMedian, 0);
-            StatusMessages($id, $testPath, $fvMedian, 0);
-            ConsoleLog($id, $testPath, $fvMedian, 0);
+            $xmlGenerator->printMedianRun(TestRunResult::fromPageData($testInfo, $pageData, $fvMedian, false));
             echo "</firstView>\n";
             
             if( isset($rv) )
@@ -194,44 +168,13 @@ else
                 if($rvMedian)
                 {
                     echo "<repeatView>\n";
-                    echo "<run>$rvMedian</run>\n";
-                    if (array_key_exists('testinfo', $test)) {
-                      $tester = null;
-                      if (array_key_exists('tester', $test['testinfo']))
-                        $tester = $test['testinfo']['tester'];
-                      if (array_key_exists('test_runs', $test['testinfo']) &&
-                          array_key_exists($rvMedian, $test['testinfo']['test_runs']) &&
-                          array_key_exists('tester', $test['testinfo']['test_runs'][$rvMedian]))
-                        $tester = $test['testinfo']['test_runs'][$rvMedian]['tester'] . '<br>';
-                      if (isset($tester))
-                        echo "<tester>" . xml_entities($tester) . "</tester>\n";
-                    }
-                    echo ArrayToXML($pageData[$rvMedian][1]);
-                    if (gz_is_file("$testPath/{$fvMedian}_Cached_pagespeed.txt")) {
-                      if( $pagespeed )
-                      {
-                          $score = GetPageSpeedScore("$testPath/{$rvMedian}_Cached_pagespeed.txt");
-                          if( strlen($score) )
-                              echo "<PageSpeedScore>$score</PageSpeedScore>\n";
-                      }
-                      if( FRIENDLY_URLS )
-                          echo "<PageSpeedData>$protocol://$host$uri/result/$id/{$rvMedian}_Cached_pagespeed.txt</PageSpeedData>\n";
-                      else
-                          echo "<PageSpeedData>$protocol://$host$uri//getgzip.php?test=$id&amp;file={$rvMedian}_Cached_pagespeed.txt</PageSpeedData>\n";
-                    }
-                    xmlDomains($id, $testPath, $rvMedian, 1);
-                    xmlBreakdown($id, $testPath, $rvMedian, 1);
-                    xmlRequests($id, $testPath, $rvMedian, 1);
-                    StatusMessages($id, $testPath, $rvMedian, 1);
-                    ConsoleLog($id, $testPath, $rvMedian, 1);
+                    $xmlGenerator->printMedianRun(TestRunResult::fromPageData($testInfo, $pageData, $rvMedian, true));
                     echo "</repeatView>\n";
                 }
             }
             echo "</median>\n";
         }
 
-        $testInfo = TestInfo::fromValues($id, $testPath, $test);
-        $xmlGenerator = new XmlResultGenerator($testInfo, "$protocol://$host$uri", new FileHandler(), $pagespeed);
         // spit out the raw data for each run
         for( $i = 1; $i <= $runs; $i++ )
         {

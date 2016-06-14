@@ -40,7 +40,7 @@ class TestRunResult {
   /**
    * @return boolean False if first view, true if repeat view
    */
-  public function isCached() {
+  public function isCachedRun() {
     return $this->cached;
   }
 
