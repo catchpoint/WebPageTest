@@ -345,21 +345,4 @@ function BatchResult($id, $testPath)
     echo "</response>";
 }
 
-function ArrayToXML($array) {
-  $ret = '';
-  if (is_array($array)) {
-    foreach($array as $key => $val ) {
-      if (is_numeric($key))
-        $key = 'value';
-      $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
-      $ret .= "<$key>";
-      if (is_array($val))
-        $ret .= "\n" . ArrayToXML($val);
-      else
-        $ret .= xml_entities($val);
-      $ret .= "</$key>\n";
-    }
-  }
-  return $ret;
-}
 ?>

@@ -3,6 +3,9 @@
 require_once __DIR__ . '/TestPaths.php';
 require_once __DIR__ . '/UrlGenerator.php';
 
+// TODO: get rid of this in the long run (for xml_entities)
+require_once __DIR__ . '/../common_lib.inc';
+
 class XmlResultGenerator {
 
   const INFO_PAGESPEED = 0;
@@ -320,4 +323,22 @@ class XmlResultGenerator {
       echo "</consoleLog>\n";
     }
   }
+}
+
+function ArrayToXML($array) {
+  $ret = '';
+  if (is_array($array)) {
+    foreach($array as $key => $val ) {
+      if (is_numeric($key))
+        $key = 'value';
+      $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
+      $ret .= "<$key>";
+      if (is_array($val))
+        $ret .= "\n" . ArrayToXML($val);
+      else
+        $ret .= xml_entities($val);
+      $ret .= "</$key>\n";
+    }
+  }
+  return $ret;
 }
