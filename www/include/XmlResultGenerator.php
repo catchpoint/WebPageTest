@@ -43,12 +43,14 @@ class XmlResultGenerator {
   public function printMedianRun($testResult) {
     $run = $testResult->getRunNumber();
 
+    $this->printViewRootStartTag($testResult->isCachedRun());
     echo "<run>" . $run . "</run>\n";
     $this->printTester($run);
     echo ArrayToXML($testResult->getRawResults());
     $this->printPageSpeed($testResult);
     $this->printPageSpeedData($testResult);
     $this->printAdditionalInformation($testResult, true);
+    $this->printViewRootEndTag($testResult->isCachedRun());
   }
 
   /**
@@ -64,6 +66,7 @@ class XmlResultGenerator {
     $nameOnlyPaths = new TestPaths("", $run, $cached);
     $urlPaths = new TestPaths($this->baseUrl . substr($testRoot, 1), $run, $cached);
 
+    $this->printViewRootStartTag($testResult->isCachedRun());
     $this->printTester($run);
 
     echo "<results>\n";
@@ -134,6 +137,23 @@ class XmlResultGenerator {
     }
 
     $this->printAdditionalInformation($testResult, false);
+    $this->printViewRootEndTag($testResult->isCachedRun());
+  }
+
+  private function printViewRootStartTag($isCachedRun) {
+    if (!$isCachedRun) {
+      echo "<firstView>\n";
+    } else {
+      echo "<repeatView>\n";
+    }
+  }
+
+  private function printViewRootEndTag($isCachedRun) {
+    if (!$isCachedRun) {
+      echo "</firstView>\n";
+    } else {
+      echo "</repeatView>\n";
+    }
   }
 
   /**

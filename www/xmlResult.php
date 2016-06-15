@@ -175,10 +175,8 @@ else
         if( $fvMedian )
         {
             echo "<median>\n";
-            echo "<firstView>\n";
             $xmlGenerator->printMedianRun(TestRunResult::fromPageData($testInfo, $pageData, $fvMedian, false));
-            echo "</firstView>\n";
-            
+
             if( isset($rv) )
             {
                 if (array_key_exists('rvmedian', $_REQUEST) && $_REQUEST['rvmedian'] == 'fv')
@@ -187,9 +185,7 @@ else
                   $rvMedian = GetMedianRun($pageData, 1, $median_metric);
                 if($rvMedian)
                 {
-                    echo "<repeatView>\n";
                     $xmlGenerator->printMedianRun(TestRunResult::fromPageData($testInfo, $pageData, $rvMedian, true));
-                    echo "</repeatView>\n";
                 }
             }
             echo "</median>\n";
@@ -205,16 +201,12 @@ else
             if( isset( $pageData[$i] ) )
             {
                 if (isset($pageData[$i][0])) {
-                    echo "<firstView>\n";
                     $xmlGenerator->printRun(TestRunResult::fromPageData($testInfo, $pageData, $i, false));
-                    echo "</firstView>\n";
                 }
 
                 // repeat view
                 if( isset( $pageData[$i][1] ) ) {
-                    echo "<repeatView>\n";
                     $xmlGenerator->printRun(TestRunResult::fromPageData($testInfo, $pageData, $i, true));
-                    echo "</repeatView>\n";
                 }
             }
 
