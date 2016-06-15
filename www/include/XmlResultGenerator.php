@@ -277,25 +277,16 @@ class XmlResultGenerator {
    * @param TestRunResult $testResult Result data of affected run
    */
   private function printStatusMessages($testResult) {
-    $localPaths = new TestPaths($this->testInfo->getRootDirectory(), $testResult->getRunNumber(),
-                                $testResult->isCachedRun());
-    $statusFile = $localPaths->statusFile();
-    if (!$this->fileHandler->gzFileExists($statusFile)) {
+    $messages = $testResult->getStatusMessages();
+    if (!$messages) {
       return;
     }
     echo "<status>\n";
-    $lines = $this->fileHandler->gzReadFile($statusFile);
-    foreach($lines as $line) {
-      $line = trim($line);
-      if (strlen($line)) {
-        $parts = explode("\t", $line);
-        $time = xml_entities(trim($parts[0]));
-        $message = xml_entities(trim($parts[1]));
-        echo "<entry>\n";
-        echo "<time>$time</time>\n";
-        echo "<message>$message</message>\n";
-        echo "</entry>\n";
-      }
+    foreach($messages as $message) {
+      echo "<entry>\n";
+      echo "<time>" . xml_entities($message["time"]) . "</time>\n";
+      echo "<message>" . xml_entities($message["message"]) . "</message>\n";
+      echo "</entry>\n";
     }
     echo "</status>\n";
   }
