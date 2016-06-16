@@ -168,7 +168,8 @@ else
         }
 
         $testInfo = TestInfo::fromValues($id, $testPath, $test);
-        $xmlGenerator = new XmlResultGenerator($testInfo, "$protocol://$host$uri", new FileHandler(), $additionalInfo);
+        $xmlGenerator = new XmlResultGenerator($testInfo, "$protocol://$host$uri",
+          new FileHandler(), $additionalInfo, FRIENDLY_URLS);
 
         // output the median run data
         $fvMedian = GetMedianRun($pageData, 0, $median_metric);

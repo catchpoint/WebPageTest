@@ -10,8 +10,19 @@ require __DIR__ . '/data/singlestepRunResultData.inc.php';
 
 class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
 
+  private $testInfoMock;
+  private $testResultMock;
+  private $fileHandlerMock;
+
+  private $allAdditionalInfo =  array(XmlResultGenerator::INFO_CONSOLE, XmlResultGenerator::INFO_REQUESTS,
+    XmlResultGenerator::INFO_DOMAIN_BREAKDOWN, XmlResultGenerator::INFO_MIMETYPE_BREAKDOWN,
+    XmlResultGenerator::INFO_PAGESPEED);
+
   public function setUp() {
     ob_start();
+    $this->testInfoMock = $this->getTestInfoMock();
+    $this->testResultMock = $this->getSinglestepTestRunResultMock();
+    $this->fileHandlerMock = $this->getFileHandlerMock();
   }
 
   public function tearDown() {
@@ -19,17 +30,22 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
   }
 
   public function testSinglestepMedianRunOutput() {
-    $testInfo = $this->getTestInfoMock();
-    $testResult = $this->getSinglestepTestRunResultMock();
-    $fileHandler = $this->getFileHandlerMock(array());
-    $additionalInfo = array(XmlResultGenerator::INFO_CONSOLE, XmlResultGenerator::INFO_REQUESTS,
-      XmlResultGenerator::INFO_DOMAIN_BREAKDOWN, XmlResultGenerator::INFO_MIMETYPE_BREAKDOWN,
-      XmlResultGenerator::INFO_PAGESPEED);
-    $xmlGenerator = new XmlResultGenerator($testInfo, "https://unitTest", $fileHandler, $additionalInfo);
-    $xmlGenerator->printMedianRun($testResult);
+    $xmlGenerator = new XmlResultGenerator($this->testInfoMock, "https://unitTest", $this->fileHandlerMock,
+      $this->allAdditionalInfo, true);
+    $xmlGenerator->printMedianRun($this->testResultMock);
 
     $resultXml = simplexml_load_string(ob_get_contents());
     $expectedXml = simplexml_load_file(__DIR__ . '/data/singlestepMedianOutput.xml');
+    $this->assertXmlIsCompatible($expectedXml, $resultXml);
+  }
+
+  public function testSinglestepRunOutput() {
+    $xmlGenerator = new XmlResultGenerator($this->testInfoMock, "https://unitTest", $this->fileHandlerMock,
+      $this->allAdditionalInfo, true);
+    $xmlGenerator->printRun($this->testResultMock);
+
+    $resultXml = simplexml_load_string(ob_get_contents());
+    $expectedXml = simplexml_load_file(__DIR__ . '/data/singlestepRunOutput.xml');
     $this->assertXmlIsCompatible($expectedXml, $resultXml);
   }
 
@@ -43,7 +59,8 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
       // use xpath to iterate properly identify multiple children with the same name
       $realChilds = $expected->xpath("./$name");
       for ($i = 0; $i < count($realChilds); $i++) {
-        $this->assertXmlIsCompatible($realChilds[$i], $actual->{$name}[$i], $path . "/" . $name . "[" . ($i+1). "]");
+        $xpathSuffix = count($realChilds) > 1 ? "[" . ($i+1). "]" : "";
+        $this->assertXmlIsCompatible($realChilds[$i], $actual->{$name}[$i], $path . "/" . $name . $xpathSuffix );
       }
     }
   }
@@ -53,6 +70,7 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
    * @param SimpleXMLElement $actual
    */
   private function assertNodeEquals($expected, $actual, $path) {
+    $this->assertNotNull($actual, "Node '$path' not found in actual result");
     $this->assertEquals($expected->getName(), $actual->getName(),
       "Name of node '$path'' is '" . $actual->getName() . "'");
     foreach ($expected->attributes() as $attributeName => $attributeValue) {
@@ -70,11 +88,10 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
       "Value of '$path' was expected to be '$expectedValue', but is '$actualValue'");
   }
 
-  private function getFileHandlerMock($gzReadReturns) {
+  private function getFileHandlerMock() {
     $mock = $this->getMock("FileHandler");
     $mock->method("fileExists")->willReturn(true);
     $mock->method("gzFileExists")->willReturn(true);
-    $mock->method("gzReadFile")->willReturnMap($gzReadReturns);
     return $mock;
   }
 
@@ -94,7 +111,7 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
   private function getTestInfoMock() {
     $mock = $this->getMockBuilder("TestInfo")->disableOriginalConstructor()->getMock();
     $mock->method("getId")->willReturn("160608_PF_A");
-    $mock->method("getRootDirectory")->willReturn("./16/06/08/PF/A");
+    $mock->method("getRootDirectory")->willReturn("./results/16/06/08/PF/A");
     $mock->method("getTester")->willReturn("dummyTester");
     return $mock;
   }

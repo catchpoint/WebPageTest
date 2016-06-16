@@ -22,6 +22,7 @@ class XmlResultGenerator {
   private $baseUrl;
   private $additionalInfo;
   private $fileHandler;
+  private $friendlyUrls;
 
   /**
    * XmlResultGenerator constructor.
@@ -29,12 +30,14 @@ class XmlResultGenerator {
    * @param string $urlStart Start for test related URLS
    * @param FileHandler $fileHandler FileHandler to be used
    * @param array $additionalInfo Array of INFO_* constants to define which additional information should be printed
+   * @param bool $friendlyUrls True if friendly urls should be used (mod_rewrite), false otherwise
    */
-  public function __construct($testInfo, $urlStart, $fileHandler, $additionalInfo) {
+  public function __construct($testInfo, $urlStart, $fileHandler, $additionalInfo, $friendlyUrls) {
     $this->testInfo = $testInfo;
     $this->baseUrl = $urlStart;
     $this->additionalInfo = $additionalInfo;
     $this->fileHandler = $fileHandler;
+    $this->friendlyUrls = $friendlyUrls;
   }
 
   /**
@@ -75,7 +78,7 @@ class XmlResultGenerator {
     echo "</results>\n";
 
     // links to the relevant pages
-    $urlGenerator = UrlGenerator::create(FRIENDLY_URLS, $this->baseUrl, $testId, $run, $cached);
+    $urlGenerator = UrlGenerator::create($this->friendlyUrls, $this->baseUrl, $testId, $run, $cached);
     echo "<pages>\n";
     echo "<details>" . htmlspecialchars($urlGenerator->resultPage("details")) . "</details>\n";
     echo "<checklist>" . htmlspecialchars($urlGenerator->resultPage("performance_optimization")) . "</checklist>\n";
