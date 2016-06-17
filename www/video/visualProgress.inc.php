@@ -10,7 +10,8 @@ require_once('devtools.inc.php');
 */
 function GetVisualProgress($testPath, $run, $cached, $options = null, $end = null, $startOffset = null) {
     $frames = null;
-    if (substr($testPath, 0, 1) !== '.')
+    $firstChar = substr($testPath, 0, 1);
+    if ($firstChar !== '.' && $firstChar != "/")
       $testPath = './' . $testPath;
     $testInfo = GetTestInfo($testPath);
     $completed = IsTestRunComplete($run, $testInfo);
