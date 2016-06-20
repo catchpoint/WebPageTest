@@ -150,9 +150,16 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for user timed events
+   */
+  public function userTimedEventsFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_timed_events.json";
+  }
+
+  /**
    * @return string Path for Chrome trace user timing
    */
-  public function userTimingFile() {
+  public function chromeUserTimingFile() {
     return $this->testRoot . $this->underscoreIdentifier() . "_user_timing.json";
   }
 

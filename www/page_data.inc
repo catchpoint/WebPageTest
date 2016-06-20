@@ -76,7 +76,7 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = 
 
   if (isset($ret) && !$basic_results) {
     $startOffset = array_key_exists('testStartOffset', $ret) ? intval(round($ret['testStartOffset'])) : 0;
-    loadUserTimingData($ret, $testPath, $run, $cached);
+    loadUserTimingData($ret, $localPaths->userTimedEventsFile());
 
     // see if we have custom metrics to load
     if (gz_is_file($localPaths->customMetricsFile())) {
@@ -181,8 +181,8 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = 
 
     // See if there is Chrome trace user timing data to load.
     // Do this after the CPU slice calculations so the trace processing has already run.
-    if (gz_is_file($localPaths->userTimingFile())) {
-      $user_timing = ParseUserTiming($localPaths->userTimingFile());
+    if (gz_is_file($localPaths->chromeUserTimingFile())) {
+      $user_timing = ParseUserTiming($localPaths->chromeUserTimingFile());
       if (isset($user_timing) && is_array($user_timing)) {
         $ret["chromeUserTiming"] = $user_timing;
         foreach($user_timing as $value) {
@@ -619,19 +619,14 @@ function PageDataStandardDeviation($pageData, $metric, $cached) {
 }
 
 /**
-* Load the reported user timings data for the given run
-* 
-* @param mixed $testPath
-* @param mixed $run
-* @param mixed $cached
-*/
-function loadUserTimingData(&$pageData, $testPath, $run, $cached) {
-  if( $cached )
-    $file = "$testPath/{$run}_Cached_timed_events.json";
-  else
-    $file = "$testPath/{$run}_timed_events.json";
-  if (gz_is_file($file)) {
-    $events = json_decode(gz_file_get_contents($file), true);
+ * Load the reported user timings data for the given run
+ * 
+ * @param array $pageData A reference to the pageData array to load the user timing data into 
+ * @param mixed $userTimingFile
+ */
+function loadUserTimingData(&$pageData, $userTimingFile) {
+  if (gz_is_file($userTimingFile)) {
+    $events = json_decode(gz_file_get_contents($userTimingFile), true);
     if (isset($events) && is_array($events) && count($events)) {
       $lastEvent = 0;
       foreach ($events as $event) {
