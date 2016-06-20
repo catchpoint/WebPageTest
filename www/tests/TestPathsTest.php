@@ -1,6 +1,6 @@
 <?php
 
-require_once '../include/TestPaths.php';
+require_once __DIR__ . '/../include/TestPaths.php';
 
 class TestPathsTest extends PHPUnit_Framework_TestCase {
 

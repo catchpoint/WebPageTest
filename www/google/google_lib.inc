@@ -1,6 +1,6 @@
 <?php
 
-require_once('./object_detail.inc');
+require_once __DIR__ . '/../object_detail.inc';
 
 /**
  * Function for parsing the CSI data for a given run

@@ -4,7 +4,7 @@
 // directory where this file is located, run:
 // php $PHPUNIT_LOCATION/phpunit.phar commonLibTest
 
-include_once '../common_lib.inc';
+include_once __DIR__ . '/../common_lib.inc';
 
 class CommonLibTest extends PHPUnit_Framework_TestCase
 {

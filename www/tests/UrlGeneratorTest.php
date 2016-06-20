@@ -1,6 +1,6 @@
 <?php
 
-require_once '../include/UrlGenerator.php';
+require_once __DIR__ . '/../include/UrlGenerator.php';
 
 class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
 

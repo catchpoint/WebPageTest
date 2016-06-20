@@ -1,7 +1,5 @@
 <?php
 
-chdir(".."); // otherwise requirements can't resolve their dependencies
-
 require_once __DIR__ . '/../common_lib.inc';
 require_once __DIR__ . '/../page_data.inc';
 

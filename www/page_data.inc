@@ -1,5 +1,6 @@
 <?php
-require_once('devtools.inc.php');
+require_once 'devtools.inc.php';
+require_once __DIR__ . '/include/TestPaths.php';
 
 /**
 * Load the page results directly from the results files
@@ -95,8 +96,8 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = 
     }
 
     // see if we have CSI metrics to load
-    if (is_dir('./google') && is_file('./google/google_lib.inc')) {
-      require_once('google/google_lib.inc');
+    if (is_dir(__DIR__ . '/google') && is_file(__DIR__ . '/google/google_lib.inc')) {
+      require_once(__DIR__ . '/google/google_lib.inc');
       $csi = ParseCsiInfo(0, $testPath, $run, $cached, true, false);
       if (isset($csi) && is_array($csi) && count($csi)) {
         $ret['CSI'] = array();
@@ -139,7 +140,7 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = 
         }
       }
     }
-    require_once('./video/visualProgress.inc.php');
+    require_once(__DIR__ . '/video/visualProgress.inc.php');
     $progress = GetVisualProgress($testPath, $run, $cached, null, null, $startOffset);
     if (isset($progress) && is_array($progress)) {
       if (array_key_exists('SpeedIndex', $progress))
