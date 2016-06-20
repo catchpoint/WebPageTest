@@ -101,6 +101,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for page data JSON file
+   */
+  public function pageDataJsonFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_page_data.json";
+  }
+
+  /**
    * @return string Path for request data file
    */
   public function requestDataFile() {
@@ -133,6 +140,20 @@ class TestPaths {
    */
   public function statusFile() {
     return $this->testRoot . $this->underscoreIdentifier() . "_status.txt";
+  }
+
+  /**
+   * @return string Path for custom metrics file
+   */
+  public function customMetricsFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_metrics.json";
+  }
+
+  /**
+   * @return string Path for Chrome trace user timing
+   */
+  public function userTimingFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_user_timing.json";
   }
 
   protected function underscoreIdentifier() {

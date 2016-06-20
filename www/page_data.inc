@@ -55,9 +55,8 @@ function loadAllPageData($testPath, $options = null) {
 function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = null)
 {
   $ret = null;
-
-  $cachedText = $cached ? '_Cached' : '';
-  $ret = loadPageData("$testPath/{$run}{$cachedText}_IEWPG.txt", $options);
+  $localPaths = new TestPaths($testPath, $run, $cached);
+  $ret = loadPageData($localPaths->pageDataFile(), $options);
   if (!isset($ret) || !is_array($ret) || !count($ret))
     GetDevToolsRequests($testPath, $run, $cached, $requests, $ret);
 
@@ -65,8 +64,8 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = 
   $basic_results = false;
   if (array_key_exists('basic', $_REQUEST) && $_REQUEST['basic'])
     $basic_results = true;
-  if (gz_is_file("$testPath/{$run}{$cachedText}_page_data.json")) {
-    $pd = json_decode(gz_file_get_contents("$testPath/{$run}{$cachedText}_page_data.json"), true);
+  if (gz_is_file($localPaths->pageDataJsonFile())) {
+    $pd = json_decode(gz_file_get_contents($localPaths->pageDataJsonFile()), true);
     if ($pd && is_array($pd) && count($pd)) {
       foreach($pd as $key => $value) {
         $ret[$key] = $value;
@@ -79,8 +78,8 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = 
     loadUserTimingData($ret, $testPath, $run, $cached);
 
     // see if we have custom metrics to load
-    if (gz_is_file("$testPath/{$run}{$cachedText}_metrics.json")) {
-      $custom_metrics = json_decode(gz_file_get_contents("$testPath/{$run}{$cachedText}_metrics.json"), true);
+    if (gz_is_file($localPaths->customMetricsFile())) {
+      $custom_metrics = json_decode(gz_file_get_contents($localPaths->customMetricsFile()), true);
       if ($custom_metrics && is_array($custom_metrics) && count($custom_metrics)) {
         $ret["custom"] = array();
         foreach ($custom_metrics as $metric => $value) {
@@ -117,12 +116,9 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = 
       array_key_exists('fullyLoaded', $ret) &&
       $ret['fullyLoaded'] > 0)
       $ret['loadTime'] = $ret['fullyLoaded'];
-    $video_dir = "$testPath/video_$run";
-    if ($cached)
-      $video_dir .= '_cached';
-    if (is_dir($video_dir)) {
+    if (is_dir($localPaths->videoDir())) {
       $frames = null;
-      loadVideo($video_dir, $frames);
+      loadVideo($localPaths->videoDir(), $frames);
       if( isset($frames) && is_array($frames) && count($frames) ) {
         if (!array_key_exists('lastVisualChange', $ret) || !$ret['lastVisualChange']) {
           end($frames);
@@ -184,8 +180,8 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = 
 
     // See if there is Chrome trace user timing data to load.
     // Do this after the CPU slice calculations so the trace processing has already run.
-    if (gz_is_file("$testPath/{$run}{$cachedText}_user_timing.json")) {
-      $user_timing = ParseUserTiming("$testPath/{$run}{$cachedText}_user_timing.json");
+    if (gz_is_file($localPaths->userTimingFile())) {
+      $user_timing = ParseUserTiming($localPaths->userTimingFile());
       if (isset($user_timing) && is_array($user_timing)) {
         $ret["chromeUserTiming"] = $user_timing;
         foreach($user_timing as $value) {
