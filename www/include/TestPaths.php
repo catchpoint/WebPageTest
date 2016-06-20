@@ -163,8 +163,33 @@ class TestPaths {
     return $this->testRoot . $this->underscoreIdentifier() . "_user_timing.json";
   }
 
+  /**
+   * @return string Path to the visual data cache file
+   */
+  public function visualDataCacheFile() {
+    return $this->testRoot . $this->dotIdentifier() . ".visual.dat";
+  }
+
+  /**
+   * @return string Path to the visual data file
+   */
+  public function visualDataFile() {
+    return $this->testRoot . "llab_" . $this->dotIdentifier() . ".visual.dat";
+  }
+
+  /**
+   * @return string Path to histograms file
+   */
+  public function histogramsFile() {
+    return $this->testRoot . $this->dotIdentifier() . ".histograms.json";
+  }
+
   protected function underscoreIdentifier() {
     return $this->run . ($this->cached ? "_Cached" : "") . ($this->step > 1 ? "_" . $this->step : "");
+  }
+
+  protected function dotIdentifier() {
+    return $this->run . "." . ($this->cached ? "1" : "0") . ($this->step > 1 ? ("." . $this->step) : "");
   }
 
 }

@@ -57,6 +57,7 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = 
 {
   $ret = null;
   $localPaths = new TestPaths($testPath, $run, $cached);
+  $runCompleted = IsTestRunComplete($run, $testInfo);
   $ret = loadPageData($localPaths->pageDataFile(), $options);
   if (!isset($ret) || !is_array($ret) || !count($ret))
     GetDevToolsRequests($testPath, $run, $cached, $requests, $ret);
@@ -141,7 +142,7 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = 
       }
     }
     require_once(__DIR__ . '/video/visualProgress.inc.php');
-    $progress = GetVisualProgress($testPath, $run, $cached, null, null, $startOffset);
+    $progress = GetVisualProgressForStep($localPaths, $runCompleted, null, null, $startOffset);
     if (isset($progress) && is_array($progress)) {
       if (array_key_exists('SpeedIndex', $progress))
         $ret['SpeedIndex'] = $progress['SpeedIndex'];
@@ -158,7 +159,7 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = 
     $end = null;
     if (isset($options) && array_key_exists('end', $options)) {
       $end = $options['end'];
-      $progress = GetVisualProgress($testPath, $run, $cached, null, $end, $startOffset);
+      $progress = GetVisualProgressForStep($localPaths, $runCompleted, null, $end, $startOffset);
       if (isset($progress) && is_array($progress)) {
         if (array_key_exists('SpeedIndex', $progress))
           $ret['SpeedIndexCustom'] = $progress['SpeedIndex'];
