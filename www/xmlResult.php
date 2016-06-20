@@ -176,7 +176,7 @@ else
         if( $fvMedian )
         {
             echo "<median>\n";
-            $xmlGenerator->printMedianRun(TestRunResult::fromPageData($testInfo, $pageData, $fvMedian, false));
+            $xmlGenerator->printMedianRun(TestRunResult::fromPageData($testInfo, $pageData[$fvMedian][0], $fvMedian, false));
 
             if( isset($rv) )
             {
@@ -186,7 +186,7 @@ else
                   $rvMedian = GetMedianRun($pageData, 1, $median_metric);
                 if($rvMedian)
                 {
-                    $xmlGenerator->printMedianRun(TestRunResult::fromPageData($testInfo, $pageData, $rvMedian, true));
+                    $xmlGenerator->printMedianRun(TestRunResult::fromPageData($testInfo, $pageData[$rvMedian][1], $rvMedian, true));
                 }
             }
             echo "</median>\n";
@@ -202,12 +202,12 @@ else
             if( isset( $pageData[$i] ) )
             {
                 if (isset($pageData[$i][0])) {
-                    $xmlGenerator->printRun(TestRunResult::fromPageData($testInfo, $pageData, $i, false));
+                    $xmlGenerator->printRun(TestRunResult::fromPageData($testInfo, $pageData[$i][0], $i, false));
                 }
 
                 // repeat view
                 if( isset( $pageData[$i][1] ) ) {
-                    $xmlGenerator->printRun(TestRunResult::fromPageData($testInfo, $pageData, $i, true));
+                    $xmlGenerator->printRun(TestRunResult::fromPageData($testInfo, $pageData[$i][1], $i, true));
                 }
             }
 

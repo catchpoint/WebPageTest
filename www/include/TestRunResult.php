@@ -1,6 +1,8 @@
 <?php
 
 require_once __DIR__ . '/FileHandler.php';
+require_once __DIR__ . '/../devtools.inc.php';
+require_once __DIR__ . '/../common_lib.inc';
 
 class TestRunResult {
 
@@ -12,14 +14,14 @@ class TestRunResult {
    * @var FileHandler
    */
   private $fileHandler;
-  private $pageData;
+  private $rawData;
   private $run;
   private $cached;
 
   private function __construct($testInfo, &$pageData, $run, $cached, $fileHandler = null) {
     // This isn't likely to stay the standard constructor, so we name it explicitly as a static function below
     $this->testInfo = $testInfo;
-    $this->pageData = &$pageData;
+    $this->rawData = &$pageData;
     $this->run = intval($run);
     $this->cached = $cached ? true : false;
     $this->fileHandler = $fileHandler ? $fileHandler : new FileHandler();
@@ -55,7 +57,7 @@ class TestRunResult {
    * @return array Raw result data
    */
   public function getRawResults() {
-    return $this->pageData[$this->run][$this->cached ? 1 : 0];
+    return $this->rawData;
   }
 
   /**
@@ -125,9 +127,9 @@ class TestRunResult {
 
 
   private function getStartOffset() {
-    if (!array_key_exists('testStartOffset', $this->pageData[$this->run][$this->cached ? 1 : 0])) {
+    if (!array_key_exists('testStartOffset', $this->rawData)) {
       return 0;
     }
-    return intval(round($this->pageData[$this->run][$this->cached ? 1 : 0]['testStartOffset']));
+    return intval(round($this->rawData['testStartOffset']));
   }
 }
