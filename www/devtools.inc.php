@@ -48,15 +48,28 @@ function GetTimeline($testPath, $run, $cached, &$timeline, &$startOffset) {
 * @param mixed $requests
 */
 function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
+  // TODO: remove function if not needed anymore and the version below is used everywhere
+  $localPaths = new TestPaths($testPath, $run, $cached);
+  return GetDevToolsRequestsForStep($localPaths, $requests, $pageData);
+}
+
+/**
+ * Pull the requests from the dev tools timeline
+ *
+ * @param TestPaths $localPaths Paths for the run or step to get the data for
+ * @param array $requests Gets set with the request data if successful
+ * @param array $pageData Gets set with the page data if successful
+ * @return bool True if successful, false otherwise
+ */
+function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData) {
     $requests = null;
     $pageData = null;
     $startOffset = null;
     $ver = 13;
-    $cached = isset($cached) && $cached ? 1 : 0;
-    $ok = GetCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
+    $ok = GetCachedDevToolsRequests($localPaths, $requests, $pageData, $ver);
     $ok = false;
     if (!$ok) {
-      if (GetDevToolsEvents(null, $testPath, $run, $cached, $events, $startOffset)) {
+      if (GetDevToolsEventsForStep(null, $localPaths, $events, $startOffset)) {
           if (DevToolsFilterNetRequests($events, $rawRequests, $rawPageData)) {
               $requests = array();
               $pageData = array();
@@ -76,7 +89,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
               $pageData['responses_other'] = 0;
               $pageData['result'] = 0;
               $pageData['testStartOffset'] = isset($startOffset) && $startOffset > 0 ? $startOffset : 0;
-              $pageData['cached'] = $cached;
+              $pageData['cached'] = $localPaths->isCachedResult();
               $pageData['optimization_checked'] = 0;
               $pageData['start_epoch'] = $rawPageData['startTime'];
               if (array_key_exists('onload', $rawPageData))
@@ -355,37 +368,50 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
         $ok = true;
       }
       if ($ok) {
-        SaveCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
+        SaveCachedDevToolsRequests($localPaths, $requests, $pageData, $ver);
       }
     }
     return $ok;
 }
 
-function GetCachedDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData, $ver) {
+/**
+ * @param TestPaths $localPaths Paths for the step or run to get the cached requests for
+ * @param array $requests Gets set with cached requests data, if the cache is found and valid
+ * @param array $pageData Gets set with cached page data, if the cache is found and valid
+ * @param int $ver Cache version
+ * @return bool True if successful, false otherwise
+ */
+function GetCachedDevToolsRequests($localPaths, &$requests, &$pageData, $ver) {
   $ok = false;
-  $cacheFile = "$testPath/$run.$cached.devToolsRequests.$ver";
+  $cacheFile = $localPaths->devtoolsRequestsCacheFile($ver);
   if (gz_is_file($cacheFile)) {
     $cache = json_decode(gz_file_get_contents($cacheFile), true);
-    if (isset($cache[$run][$cached]['requests']) &&
-        isset($cache[$run][$cached]['pageData'])) {
+    if (isset($cache['requests']) &&
+        isset($cache['pageData'])) {
       $ok = true;
-      $requests = $cache[$run][$cached]['requests'];
-      $pageData = $cache[$run][$cached]['pageData'];
+      $requests = $cache['requests'];
+      $pageData = $cache['pageData'];
     }
   }
   return $ok;
 }
 
-function SaveCachedDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData, $ver) {
-  $cacheFile = "$testPath/$run.$cached.devToolsRequests.$ver";
+/**
+ * @param TestPaths $localPaths Paths for step or run to save the cached data
+ * @param array $requests The requests to save
+ * @param array $pageData The page data to save
+ * @param int $ver Cache version
+ */
+function SaveCachedDevToolsRequests($localPaths, &$requests, &$pageData, $ver) {
+  $cacheFile = $localPaths->devtoolsRequestsCacheFile($ver);
   $lock = Lock($cacheFile);
   if (isset($lock)) {
     if (gz_is_file($cacheFile))
       $cache = json_decode(gz_file_get_contents($cacheFile), true);
     if (!isset($cache) || !is_array($cache))
       $cache = array();
-    $cache[$run][$cached]['requests'] = $requests;
-    $cache[$run][$cached]['pageData'] = $pageData;
+    $cache['requests'] = $requests;
+    $cache['pageData'] = $pageData;
     gz_file_put_contents($cacheFile, json_encode($cache));
     Unlock($lock);
   }
@@ -657,12 +683,24 @@ function ParseDevToolsDOMContentLoaded(&$event, $main_frame, &$pageData) {
 * @param mixed $events
 */
 function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events, &$startOffset) {
+  // TODO: remove function if not needed anymore and the version below is used everywhere
+  $localPaths = new TestPaths($testPath, $run, $cached);
+  return GetDevToolsEventsForStep($filter, $localPaths, $events, $startOffset);
+}
+
+/**
+ * Load a filtered list of events from the dev tools capture
+ *
+ * @param mixed $filter
+ * @param TestPaths $localPaths Paths of the run or step to get the events for
+ * @param array $events Gets set to an array containing the events
+ * @param int $startOffset Gets set to the start offset
+ * @return bool True if successful, false otherwise
+ */
+function GetDevToolsEventsForStep($filter, $localPaths, &$events, &$startOffset) {
   $ok = false;
   $events = array();
-  $cachedText = '';
-  if( $cached )
-      $cachedText = '_Cached';
-  $devToolsFile = "$testPath/$run{$cachedText}_devtools.json";
+  $devToolsFile = $localPaths->devtoolsFile();
   if (gz_is_file($devToolsFile)){
     $raw = trim(gz_file_get_contents($devToolsFile));
     ParseDevToolsEvents($raw, $events, $filter, true, $startOffset);

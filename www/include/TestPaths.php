@@ -59,6 +59,14 @@ class TestPaths {
   }
 
   /**
+   * @return bool True if the paths are for a cached run (repeat view), false otherwise (first view)
+   */
+  public function isCachedResult() {
+    // It's not very nice to have this function in this class, but this information is actually needed and contained here
+    return $this->cached;
+  }
+
+  /**
    * @return string The base name of the file (without run information), e.g. when instantiated by from*Name methods
    */
   public function getParsedBaseName() {
@@ -164,6 +172,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for devtools results
+   */
+  public function devtoolsFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_devtools.json";
+  }
+
+  /**
    * @return string Path for devtools CPU timeline
    */
   public function devtoolsCPUTimelineFile() {
@@ -204,6 +219,14 @@ class TestPaths {
    */
   public function devtoolsCPUTimeCacheFile($version) {
     return $this->testRoot . $this->dotIdentifier() . ".devToolsCPUTime." . $version;
+  }
+
+  /**
+   * @param int $version The version of the cache format
+   * @return string Path to cache file for devtools requests
+   */
+  public function devtoolsRequestsCacheFile($version) {
+    return $this->testRoot . $this->dotIdentifier() . ".devToolsRequests." . $version;
   }
 
   protected function underscoreIdentifier() {
