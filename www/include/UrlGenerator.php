@@ -62,8 +62,28 @@ abstract class UrlGenerator {
     return $url;
   }
 
+  /**
+   * @param string|int $requestNumber The request number to identify the response body
+   * @return string The generated URL
+   */
+  public function responseBodyWithRequestNumber($requestNumber) {
+    return $this->baseUrl . "/response_body.php?" . $this->urlParams() . "&request=" . strval($requestNumber);
+  }
+
+  /**
+   * @param int $bodyId The body id to identify the response body
+   * @return string The generated URL
+   */
+  public function responseBodyWithBodyId($bodyId) {
+    return $this->baseUrl . "/response_body.php?" . $this->urlParams() . "&bodyid=" . strval($bodyId);
+  }
+
   protected function underscorePrefix() {
     return strval($this->run) . "_" . ($this->cached ? "Cached_" : "");
+  }
+
+  protected function urlParams() {
+    return "test=" . $this->testId . "&run=" . $this->run . ($this->cached ? "&cached=1" : "");
   }
 }
 
@@ -111,9 +131,5 @@ class StandardUrlGenerator extends UrlGenerator {
 
   public function generatedImage($image) {
     return $this->baseUrl . "/" . $image . ".php?" . $this->urlParams();
-  }
-
-  protected function urlParams() {
-    return "test=" . $this->testId . "&run=" . $this->run . ($this->cached ? "&cached=1" : "");
   }
 }

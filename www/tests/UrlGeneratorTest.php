@@ -18,6 +18,15 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals($expectedWithVideo, $ug->getFile("testFile", "foo"));
   }
 
+  public function testPartialResponseBodyUrl() {
+    // doesn't matter if friendly or not, as this is implemented by the base class
+    $ug = UrlGenerator::create(false, "", "TEST_ID", 3, true);
+    $expectedWithRequestNumber = "/response_body.php?test=TEST_ID&run=3&cached=1&request=5";
+    $expectedWithBodyId = "/response_body.php?test=TEST_ID&run=3&cached=1&bodyid=90653";
+    $this->assertEquals($expectedWithRequestNumber, $ug->responseBodyWithRequestNumber(5));
+    $this->assertEquals($expectedWithBodyId, $ug->responseBodyWithBodyId(90653));
+  }
+
   public function testResultPageStandardUrl() {
     $expected = "https://test/details.php?test=qwerty&run=3";
     $expectedCached = $expected . "&cached=1";
