@@ -5,7 +5,7 @@
 // php $PHPUNIT_LOCATION/phpunit.phar graphPageDataTest
 
 include_once __DIR__ . '/../stat.inc';
-include '../lib/PHPStats/PHPStats.phar';
+include __DIR__ . '/../lib/PHPStats/PHPStats.phar';
 
 class StatTest extends PHPUnit_Framework_TestCase
 {
