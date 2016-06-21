@@ -1,5 +1,6 @@
 <?php
 $DevToolsCacheVersion = '1.7';
+require_once __DIR__ . '/include/TestPaths.php';
 
 if(extension_loaded('newrelic')) { 
     newrelic_add_custom_tracer('GetTimeline');
@@ -1005,10 +1006,21 @@ function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime) {
 * slice that they consumed (with a total maximum of 1 for any slice).
 */
 function DevToolsGetCPUSlices($testPath, $run, $cached) {
+  // TODO: remove this version once not needed anymore and use the one below
+  $localPaths = new TestPaths($testPath, $run, $cached);
+  return DevToolsGetCPUSlicesForStep($localPaths);
+}
+
+/**
+ * @param TestPaths $localPaths Paths related to this run/step
+ * @return array|null An array of threads with each thread being an array of slices (one for
+ * each time period).  Each slice is an array of events and the fraction of that
+ * slice that they consumed (with a total maximum of 1 for any slice).
+ */
+function DevToolsGetCPUSlicesForStep($localPaths) {
   $slices = null;
-  $cachedText = $cached ? '_Cached' : '';
-  $slices_file = "$testPath/$run{$cachedText}_timeline_cpu.json.gz";
-  $trace_file = "$testPath/$run{$cachedText}_trace.json.gz";
+  $slices_file = $localPaths->devtoolsCPUTimelineFile() . ".gz";
+  $trace_file = $localPaths->devtoolsTraceFile() . ".gz";
   if (!is_file($slices_file) && is_file($trace_file) && is_file(__DIR__ . '/lib/trace/trace-parser.py')) {
     $script = realpath(__DIR__ . '/lib/trace/trace-parser.py');
     touch($slices_file);
@@ -1016,7 +1028,7 @@ function DevToolsGetCPUSlices($testPath, $run, $cached) {
       $slices_file = realpath($slices_file);
       unlink($slices_file);
     }
-    $user_timing = "$testPath/$run{$cachedText}_user_timing.json.gz";
+    $user_timing = $localPaths->chromeUserTimingFile() . ".gz";
     touch($user_timing);
     if (is_file($user_timing)) {
       $user_timing = realpath($user_timing);
@@ -1029,7 +1041,6 @@ function DevToolsGetCPUSlices($testPath, $run, $cached) {
     if (!is_file($slices_file))
       touch($slices_file);
   }
-  $slices_file = "$testPath/$run{$cachedText}_timeline_cpu.json";
   if (gz_is_file($slices_file))
     $slices = json_decode(gz_file_get_contents($slices_file), true);
   if (isset($slices) && !is_array($slices))
@@ -1055,23 +1066,34 @@ function GetDevToolsHeaderValue($headers, $name, &$value) {
 }
 
 function GetDevToolsCPUTime($testPath, $run, $cached, $endTime = 0) {
-  $times = null;
-  $ver = 1;
-  $ver = 2;
-  $cacheFile = "$testPath/$run.$cached.devToolsCPUTime.$ver";
-  if (gz_is_file($cacheFile))
-    $cache = json_decode(gz_file_get_contents($cacheFile), true);
+  // TODO: remove once not used anymore
+  $localPaths = new TestPaths($testPath, $run, $cached);
   // If an end time wasn't specified, figure out what the fully loaded time is
   if (!$endTime) {
     if (GetDevToolsRequests($testPath, $run, $cached, $requests, $pageData) &&
-        isset($pageData) && is_array($pageData) && isset($pageData['fullyLoaded'])) {
+      isset($pageData) && is_array($pageData) && isset($pageData['fullyLoaded'])) {
       $endTime = $pageData['fullyLoaded'];
     }
   }
+  return GetDevToolsCPUTimeForStep($localPaths, $endTime);
+}
+
+/**
+ * @param TestPaths $localPaths Paths for this run/step to get the CPU time for
+ * @param int $endTime End time to consider (mandatory)
+ * @return array
+ */
+function GetDevToolsCPUTimeForStep($localPaths, $endTime) {
+  $times = null;
+  $ver = 2;
+  $cacheFile = $localPaths->devtoolsCPUTimeCacheFile($ver);
+  if (gz_is_file($cacheFile))
+    $cache = json_decode(gz_file_get_contents($cacheFile), true);
+
   if (isset($cache[$endTime])) {
     $times = $cache[$endTime];
   } else {
-    $cpu = DevToolsGetCPUSlices($testPath, $run, $cached);
+    $cpu = DevToolsGetCPUSlicesForStep($localPaths);
     if (isset($cpu) && is_array($cpu) && isset($cpu['main_thread']) && isset($cpu['slices'][$cpu['main_thread']]) && isset($cpu['slice_usecs'])) {
       $busy = 0;
       $times = array();

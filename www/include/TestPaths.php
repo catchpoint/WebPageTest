@@ -164,6 +164,20 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for devtools CPU timeline
+   */
+  public function devtoolsCPUTimelineFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_timeline_cpu.json";
+  }
+
+  /**
+   * @return string Path for devtools CPU timeline
+   */
+  public function devtoolsTraceFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_trace.json";
+  }
+
+  /**
    * @return string Path to the visual data cache file
    */
   public function visualDataCacheFile() {
@@ -182,6 +196,14 @@ class TestPaths {
    */
   public function histogramsFile() {
     return $this->testRoot . $this->dotIdentifier() . ".histograms.json";
+  }
+
+  /**
+   * @param int $version The version of the cache format
+   * @return string Path to cache file for devtools CPU times
+   */
+  public function devtoolsCPUTimeCacheFile($version) {
+    return $this->testRoot . $this->dotIdentifier() . ".devToolsCPUTime." . $version;
   }
 
   protected function underscoreIdentifier() {
