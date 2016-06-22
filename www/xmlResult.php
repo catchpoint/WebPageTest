@@ -54,6 +54,27 @@ else
         if( !strlen($url) )
             $url = $pageData[1][0]['URL'];
 
+        $additionalInfo = array();
+        if ($pagespeed) {
+            $additionalInfo[] = XmlResultGenerator::INFO_PAGESPEED;
+        }
+        if (array_key_exists("requests", $_REQUEST) && $_REQUEST["requests"]) {
+            $additionalInfo[] = XmlResultGenerator::INFO_MEDIAN_REQUESTS;
+            if ($_REQUEST["requests"] != "median") {
+                $additionalInfo[] = XmlResultGenerator::INFO_REQUESTS;
+            }
+        }
+        if (array_key_exists('breakdown', $_REQUEST) && $_REQUEST['breakdown']) {
+            $additionalInfo[] = XmlResultGenerator::INFO_MIMETYPE_BREAKDOWN;
+        }
+        if (array_key_exists('domains', $_REQUEST) && $_REQUEST['domains']) {
+            $additionalInfo[] = XmlResultGenerator::INFO_DOMAIN_BREAKDOWN;
+        }
+        if (!isset($_GET['console']) || $_GET['console'] != 0) {
+            $additionalInfo[] = XmlResultGenerator::INFO_CONSOLE;
+        }
+        $urlStart = "$protocol://$host$uri";
+
         header ('Content-type: text/xml');
         header("Cache-Control: no-cache, must-revalidate");
         header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
@@ -72,9 +93,9 @@ else
         
         echo "<testId>$id</testId>\n";
         if( FRIENDLY_URLS )
-            echo "<summary>$protocol://$host$uri/result/$id/</summary>\n";
+            echo "<summary>$urlStart/result/$id/</summary>\n";
         else
-            echo "<summary>$protocol://$host$uri/results.php?test=$id</summary>\n";
+            echo "<summary>$urlStart/results.php?test=$id</summary>\n";
         if (isset($test['testinfo']))
         {
             if( @strlen($test['testinfo']['url']) )
@@ -147,29 +168,8 @@ else
         }
         echo "</standardDeviation>\n";
 
-        $additionalInfo = array();
-        if ($pagespeed) {
-            $additionalInfo[] = XmlResultGenerator::INFO_PAGESPEED;
-        }
-        if (array_key_exists("requests", $_REQUEST) && $_REQUEST["requests"]) {
-            $additionalInfo[] = XmlResultGenerator::INFO_MEDIAN_REQUESTS;
-            if ($_REQUEST["requests"] != "median") {
-                $additionalInfo[] = XmlResultGenerator::INFO_REQUESTS;
-            }
-        }
-        if (array_key_exists('breakdown', $_REQUEST) && $_REQUEST['breakdown']) {
-            $additionalInfo[] = XmlResultGenerator::INFO_MIMETYPE_BREAKDOWN;
-        }
-        if (array_key_exists('domains', $_REQUEST) && $_REQUEST['domains']) {
-            $additionalInfo[] = XmlResultGenerator::INFO_DOMAIN_BREAKDOWN;
-        }
-        if (!isset($_GET['console']) || $_GET['console'] != 0) {
-            $additionalInfo[] = XmlResultGenerator::INFO_CONSOLE;
-        }
-
         $testInfo = TestInfo::fromValues($id, $testPath, $test);
-        $xmlGenerator = new XmlResultGenerator($testInfo, "$protocol://$host$uri",
-          new FileHandler(), $additionalInfo, FRIENDLY_URLS);
+        $xmlGenerator = new XmlResultGenerator($testInfo, $urlStart, new FileHandler(), $additionalInfo, FRIENDLY_URLS);
 
         // output the median run data
         $fvMedian = GetMedianRun($pageData, 0, $median_metric);
