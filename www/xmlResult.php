@@ -24,6 +24,7 @@ require_once('archive.inc');
 require_once 'include/XmlResultGenerator.php';
 require_once 'include/FileHandler.php';
 require_once 'include/TestInfo.php';
+require_once 'include/TestResults.php';
 require_once 'include/TestRunResult.php';
 
 error_reporting(E_ALL);
@@ -46,13 +47,15 @@ else
         $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
         $path = substr($testPath, 1);
 
-        $pageData = loadAllPageData($testPath);
+        $testInfo = TestInfo::fromValues($id, $testPath, $test);
+        $testResults = new TestResults($testInfo);
+        $pageData = $testResults->getPageData();
 
         $msLoad = microtime(true);
 
         // if we don't have an url, try to get it from the page results
         if( !strlen($url) )
-            $url = $pageData[1][0]['URL'];
+            $url = $testResults->getUrlFromRun();
 
         $additionalInfo = array();
         if ($pagespeed) {
@@ -90,7 +93,7 @@ else
         $fv = null;
         $rv = null;
         $pageStats = calculatePageStats($pageData, $fv, $rv);
-        
+
         echo "<testId>$id</testId>\n";
         if( FRIENDLY_URLS )
             echo "<summary>$urlStart/result/$id/</summary>\n";
@@ -168,7 +171,6 @@ else
         }
         echo "</standardDeviation>\n";
 
-        $testInfo = TestInfo::fromValues($id, $testPath, $test);
         $xmlGenerator = new XmlResultGenerator($testInfo, $urlStart, new FileHandler(), $additionalInfo, FRIENDLY_URLS);
 
         // output the median run data
