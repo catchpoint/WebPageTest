@@ -46,7 +46,6 @@ class XmlResultGenerator {
    * @param string $requestId
    */
   public function printAllResults($testResults, $median_metric, $requestId = null) {
-    $pageData = $testResults->getPageData();
     $test = $this->testInfo->getRawData();
     $urlGenerator = UrlGenerator::create($this->friendlyUrls, $this->baseUrl, $this->testInfo->getId(), 0, 0);
 
@@ -59,9 +58,8 @@ class XmlResultGenerator {
     echo "<data>\n";
 
     // spit out the calculated averages
-    $fv = null;
-    $rv = null;
-    $pageStats = calculatePageStats($pageData, $fv, $rv);
+    $fv = $testResults->getFirstViewAverage();
+    $rv = $testResults->getRepeatViewAverage();
 
     echo "<testId>" . $this->testInfo->getId() . "</testId>\n";
     echo "<summary>" . $urlGenerator->resultSummary() . "</summary>\n";
@@ -97,11 +95,11 @@ class XmlResultGenerator {
       if( @strlen($test['testinfo']['testerDNS']) )
         echo "<testerDNS>" . xml_entities($test['testinfo']['testerDNS']) . "</testerDNS>\n";
     }
-    $runs = max(array_keys($pageData));
+    $runs = $testResults->countRuns();
     echo "<runs>$runs</runs>\n";
-    echo "<successfulFVRuns>" . CountSuccessfulTests($pageData, 0) . "</successfulFVRuns>\n";
+    echo "<successfulFVRuns>" . $testResults->countSuccessfulRuns(false) . "</successfulFVRuns>\n";
     if( isset($rv) ) {
-      echo "<successfulRVRuns>" . CountSuccessfulTests($pageData, 1) . "</successfulRVRuns>\n";
+      echo "<successfulRVRuns>" . $testResults->countSuccessfulRuns(true) . "</successfulRVRuns>\n";
     }
     echo "<average>\n";
     echo "<firstView>\n";
@@ -124,7 +122,7 @@ class XmlResultGenerator {
     echo "<firstView>\n";
     foreach( $fv as $key => $val ) {
       $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
-      echo "<$key>" . PageDataStandardDeviation($pageData, $key, 0) . "</$key>\n";
+      echo "<$key>" . $testResults->getStandardDeviation($key, false) . "</$key>\n";
     }
     echo "</firstView>\n";
     if( isset($rv) )
@@ -132,14 +130,14 @@ class XmlResultGenerator {
       echo "<repeatView>\n";
       foreach( $rv as $key => $val ) {
         $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
-        echo "<$key>" . PageDataStandardDeviation($pageData, $key, 1) . "</$key>\n";
+        echo "<$key>" . $testResults->getStandardDeviation($key, true) . "</$key>\n";
       }
       echo "</repeatView>\n";
     }
     echo "</standardDeviation>\n";
 
     // output the median run data
-    $fvMedian = GetMedianRun($pageData, 0, $median_metric);
+    $fvMedian = $testResults->getMedianRunNumber($median_metric, false);
     if( $fvMedian )
     {
       echo "<median>\n";
@@ -150,7 +148,7 @@ class XmlResultGenerator {
         if (array_key_exists('rvmedian', $_REQUEST) && $_REQUEST['rvmedian'] == 'fv')
           $rvMedian = $fvMedian;
         else
-          $rvMedian = GetMedianRun($pageData, 1, $median_metric);
+          $rvMedian = $testResults->getMedianRunNumber($median_metric, true);
         if($rvMedian)
         {
           $this->printMedianRun($testResults->getRunResult($rvMedian, true));
