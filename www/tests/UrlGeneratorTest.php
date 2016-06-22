@@ -92,4 +92,16 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
     $ug = UrlGenerator::create(true, "https://test/", "160609_a7_b8", 3, true);
     $this->assertEquals($expectedCached, $ug->generatedImage("waterfall"));
   }
+
+  public function testResultSummaryFriendlyUrl() {
+    $expected = "https://test/result/160609_a7_b8/";
+    $ug = UrlGenerator::create(true, "https://test/", "160609_a7_b8", 3, true);
+    $this->assertEquals($expected, $ug->resultSummary());
+  }
+
+  public function testResultSummaryStandardUrl() {
+    $expected = "https://test/results.php?test=160609_a7_b8";
+    $ug = UrlGenerator::create(false, "https://test/", "160609_a7_b8", 3, true);
+    $this->assertEquals($expected, $ug->resultSummary());
+  }
 }

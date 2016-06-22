@@ -117,6 +117,10 @@ class FriendlyUrlGenerator extends UrlGenerator {
     }
     return $this->baseUrl . "/results/" . $testPath . "/" . $this->underscorePrefix() . $image . ".png";
   }
+
+  public function resultSummary() {
+    return $this->baseUrl . "/result/" . $this->testId . "/";
+  }
 }
 
 class StandardUrlGenerator extends UrlGenerator {
@@ -131,5 +135,9 @@ class StandardUrlGenerator extends UrlGenerator {
 
   public function generatedImage($image) {
     return $this->baseUrl . "/" . $image . ".php?" . $this->urlParams();
+  }
+
+  public function resultSummary() {
+    return $this->baseUrl . "/results.php?test=" . $this->testId;
   }
 }

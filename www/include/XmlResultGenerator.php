@@ -47,11 +47,9 @@ class XmlResultGenerator {
    */
   public function printAllResults($testResults, $median_metric, $requestId = null) {
     $pageData = $testResults->getPageData();
-    $id = $this->testInfo->getId();
-    $urlStart = $this->baseUrl;
     $testInfo = $this->testInfo;
-    $additionalInfo = $this->additionalInfo;
     $test = $this->testInfo->getRawData();
+    $urlGenerator = UrlGenerator::create($this->friendlyUrls, $this->baseUrl, $this->testInfo->getId(), 0, 0);
 
     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     echo "<response>\n";
@@ -66,11 +64,9 @@ class XmlResultGenerator {
     $rv = null;
     $pageStats = calculatePageStats($pageData, $fv, $rv);
 
-    echo "<testId>$id</testId>\n";
-    if( $this->friendlyUrls )
-      echo "<summary>$urlStart/result/$id/</summary>\n";
-    else
-      echo "<summary>$urlStart/results.php?test=$id</summary>\n";
+    echo "<testId>" . $this->testInfo->getId() . "</testId>\n";
+    echo "<summary>" . $urlGenerator->resultSummary() . "</summary>\n";
+
     if (isset($test['testinfo']))
     {
       if( @strlen($test['testinfo']['url']) )
