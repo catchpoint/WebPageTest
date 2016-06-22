@@ -43,14 +43,14 @@ class XmlResultGenerator {
   /**
    * @param TestResults $testResults
    * @param string $median_metric
-   * @param array $additionalInfo
    * @param string $requestId
    */
-  public function printAllResults($testResults, $median_metric, $additionalInfo, $requestId = null) {
+  public function printAllResults($testResults, $median_metric, $requestId = null) {
     $pageData = $testResults->getPageData();
     $id = $this->testInfo->getId();
     $urlStart = $this->baseUrl;
     $testInfo = $this->testInfo;
+    $additionalInfo = $this->additionalInfo;
     $test = $this->testInfo->getRawData();
 
     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
@@ -143,7 +143,7 @@ class XmlResultGenerator {
     }
     echo "</standardDeviation>\n";
 
-    $xmlGenerator = new XmlResultGenerator($testInfo, $urlStart, new FileHandler(), $additionalInfo, FRIENDLY_URLS);
+    $xmlGenerator = new XmlResultGenerator($testInfo, $urlStart, new FileHandler(), $additionalInfo, $this->friendlyUrls);
 
     // output the median run data
     $fvMedian = GetMedianRun($pageData, 0, $median_metric);

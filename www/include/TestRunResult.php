@@ -3,6 +3,8 @@
 require_once __DIR__ . '/FileHandler.php';
 require_once __DIR__ . '/../devtools.inc.php';
 require_once __DIR__ . '/../common_lib.inc';
+require_once __DIR__ . '/../domains.inc';
+require_once __DIR__ . '/../breakdown.inc';
 
 class TestRunResult {
 
@@ -66,7 +68,9 @@ class TestRunResult {
   public function getPageSpeedScore() {
     // TODO: move implementation to this method
     $testPaths = new TestPaths($this->testInfo->getRootDirectory(), $this->run, $this->cached);
-    return GetPageSpeedScore($testPaths->pageSpeedFile());
+    if ($this->fileHandler->gzFileExists($testPaths->pageSpeedFile())) {
+      return GetPageSpeedScore($testPaths->pageSpeedFile());
+    }
   }
 
   public function getVisualProgress() {

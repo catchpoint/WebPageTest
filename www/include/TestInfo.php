@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../common_lib.inc'; // TODO: remove if we don't use GetTestInfo anymore
+
 class TestInfo {
 
   private $id;
@@ -22,6 +24,18 @@ class TestInfo {
    */
   public static function fromValues($id, $rootDirectory, &$testInfo) {
     return new self($id, $rootDirectory, $testInfo);
+  }
+
+  public static function fromFiles($rootDirectory, $touchFile = true) {
+    $test = array();
+    $iniPath = $rootDirectory . "/testinfo.ini";
+    if (is_file($iniPath)) {
+      $test = parse_ini_file($iniPath, true);
+      if (!$touchFile)
+        touch($iniPath);
+    }
+    $test["testinfo"] = GetTestInfo($rootDirectory);
+    return new self($test['testinfo']["id"], $rootDirectory, $test);
   }
 
   /**

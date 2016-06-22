@@ -27,8 +27,6 @@ require_once 'include/TestInfo.php';
 require_once 'include/TestResults.php';
 require_once 'include/TestRunResult.php';
 
-error_reporting(E_ALL);
-
 // see if we are sending abbreviated results
 $pagespeed = 0;
 if (array_key_exists('pagespeed', $_REQUEST))
@@ -49,14 +47,12 @@ else
 
         $testInfo = TestInfo::fromValues($id, $testPath, $test);
         $testResults = new TestResults($testInfo);
-        $pageData = $testResults->getPageData();
 
         $msLoad = microtime(true);
 
         // if we don't have an url, try to get it from the page results
         if( !strlen($url) )
             $url = $testResults->getUrlFromRun();
-
         $additionalInfo = array();
         if ($pagespeed) {
             $additionalInfo[] = XmlResultGenerator::INFO_PAGESPEED;
@@ -84,7 +80,7 @@ else
 
         $requestId = empty($_REQUEST['r']) ? "" : $_REQUEST['r'];
         $xmlGenerator = new XmlResultGenerator($testInfo, $urlStart, new FileHandler(), $additionalInfo, FRIENDLY_URLS);
-        $xmlGenerator->printAllResults($testResults, $median_metric, $additionalInfo, $requestId);
+        $xmlGenerator->printAllResults($testResults, $median_metric, $requestId);
 
         $msElapsed = number_format( microtime(true) - $msStart, 3 );
         $msElapsedLoad = number_format( $msLoad - $msStart, 3 );

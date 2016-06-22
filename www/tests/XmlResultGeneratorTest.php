@@ -1,8 +1,11 @@
 <?php
 
+require_once __DIR__ . '/TestUtil.php';
+
 require_once __DIR__ . '/../include/XmlResultGenerator.php';
 
 require_once __DIR__ . '/../include/TestInfo.php';
+require_once __DIR__ . '/../include/TestResults.php';
 require_once __DIR__ . '/../include/TestRunResult.php';
 require_once __DIR__ . '/../include/FileHandler.php';
 
@@ -13,12 +16,14 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
   private $testInfoMock;
   private $testResultMock;
   private $fileHandlerMock;
+  private $tempDir;
 
   private $allAdditionalInfo =  array(XmlResultGenerator::INFO_CONSOLE, XmlResultGenerator::INFO_REQUESTS,
     XmlResultGenerator::INFO_DOMAIN_BREAKDOWN, XmlResultGenerator::INFO_MIMETYPE_BREAKDOWN,
     XmlResultGenerator::INFO_PAGESPEED);
 
   public function setUp() {
+    date_default_timezone_set("UTC"); // to make the test consistent with the result
     ob_start();
     $this->testInfoMock = $this->getTestInfoMock();
     $this->testResultMock = $this->getSinglestepTestRunResultMock();
@@ -27,6 +32,23 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
 
   public function tearDown() {
     ob_end_clean();
+    if (!empty($this->tempDir) && is_dir($this->tempDir)) {
+      TestUtil::removeDirRecursive($this->tempDir);
+    }
+  }
+
+  public function testCompleteXmlGeneration() {
+    $this->tempDir = TestUtil::extractToTemp(__DIR__ . '/data/singlestepResults.zip');
+    $testRoot = $this->tempDir . '/singlestepResults';
+    $testInfo = TestInfo::fromFiles($testRoot);
+    $testResults = new TestResults($testInfo);
+    $xmlGenerator = new XmlResultGenerator($testInfo, "http://wpt-test-vm", new FileHandler(),
+      $this->allAdditionalInfo, true);
+    $xmlGenerator->printAllResults($testResults, "loadTime", null);
+
+    $resultXml = simplexml_load_string(ob_get_contents());
+    $expectedXml = simplexml_load_file(__DIR__ . '/data/singlestepXmlResult.xml');
+    $this->assertXmlIsCompatible($expectedXml, $resultXml);
   }
 
   public function testSinglestepMedianRunOutput() {
