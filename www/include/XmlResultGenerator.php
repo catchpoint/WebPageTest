@@ -44,8 +44,9 @@ class XmlResultGenerator {
    * @param TestResults $testResults
    * @param string $median_metric
    * @param string $requestId
+   * @param bool $medianFvOnly 
    */
-  public function printAllResults($testResults, $median_metric, $requestId = null) {
+  public function printAllResults($testResults, $median_metric, $requestId = null, $medianFvOnly = false) {
     $test = $this->testInfo->getRawData();
     $urlGenerator = UrlGenerator::create($this->friendlyUrls, $this->baseUrl, $this->testInfo->getId(), 0, 0);
 
@@ -56,10 +57,6 @@ class XmlResultGenerator {
     if (!empty($requestId))
       echo "<requestId>$requestId</requestId>\n";
     echo "<data>\n";
-
-    // spit out the calculated averages
-    $fv = $testResults->getFirstViewAverage();
-    $rv = $testResults->getRepeatViewAverage();
 
     echo "<testId>" . $this->testInfo->getId() . "</testId>\n";
     echo "<summary>" . $urlGenerator->resultSummary() . "</summary>\n";
@@ -101,6 +98,11 @@ class XmlResultGenerator {
     if( isset($rv) ) {
       echo "<successfulRVRuns>" . $testResults->countSuccessfulRuns(true) . "</successfulRVRuns>\n";
     }
+
+
+    // spit out the calculated averages
+    $fv = $testResults->getFirstViewAverage();
+    $rv = $testResults->getRepeatViewAverage();
     echo "<average>\n";
     echo "<firstView>\n";
     foreach( $fv as $key => $val ) {
@@ -145,10 +147,7 @@ class XmlResultGenerator {
 
       if( isset($rv) )
       {
-        if (array_key_exists('rvmedian', $_REQUEST) && $_REQUEST['rvmedian'] == 'fv')
-          $rvMedian = $fvMedian;
-        else
-          $rvMedian = $testResults->getMedianRunNumber($median_metric, true);
+        $rvMedian = $medianFvOnly ? $fvMedian : $testResults->getMedianRunNumber($median_metric, true);
         if($rvMedian)
         {
           $this->printMedianRun($testResults->getRunResult($rvMedian, true));

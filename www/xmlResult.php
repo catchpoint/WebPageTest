@@ -80,7 +80,8 @@ else
 
         $requestId = empty($_REQUEST['r']) ? "" : $_REQUEST['r'];
         $xmlGenerator = new XmlResultGenerator($testInfo, $urlStart, new FileHandler(), $additionalInfo, FRIENDLY_URLS);
-        $xmlGenerator->printAllResults($testResults, $median_metric, $requestId);
+        $medianFvOnly = (array_key_exists('rvmedian', $_REQUEST) && $_REQUEST['rvmedian'] == 'fv');
+        $xmlGenerator->printAllResults($testResults, $median_metric, $requestId, $medianFvOnly);
 
         $msElapsed = number_format( microtime(true) - $msStart, 3 );
         $msElapsedLoad = number_format( $msLoad - $msStart, 3 );
