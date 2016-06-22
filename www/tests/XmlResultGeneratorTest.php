@@ -17,6 +17,7 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
   private $testResultMock;
   private $fileHandlerMock;
   private $tempDir;
+  private $orgDir;
 
   private $allAdditionalInfo =  array(XmlResultGenerator::INFO_CONSOLE, XmlResultGenerator::INFO_REQUESTS,
     XmlResultGenerator::INFO_DOMAIN_BREAKDOWN, XmlResultGenerator::INFO_MIMETYPE_BREAKDOWN,
@@ -28,9 +29,14 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
     $this->testInfoMock = $this->getTestInfoMock();
     $this->testResultMock = $this->getSinglestepTestRunResultMock();
     $this->fileHandlerMock = $this->getFileHandlerMock();
+    $this->orgDir = null;
+    $this->tempDir = null;
   }
 
   public function tearDown() {
+    if (!empty($this->orgDir)) {
+      chdir($this->orgDir);
+    }
     ob_end_clean();
     if (!empty($this->tempDir) && is_dir($this->tempDir)) {
       TestUtil::removeDirRecursive($this->tempDir);
@@ -39,15 +45,28 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
 
   public function testCompleteXmlGeneration() {
     $this->tempDir = TestUtil::extractToTemp(__DIR__ . '/data/singlestepResults.zip');
-    $testRoot = $this->tempDir . '/singlestepResults';
+    $testInfo = TestInfo::fromFiles($this->tempDir . '/singlestepResults');
+    $imitatedPath = $this->imitatedResultPath($testInfo->getId());
+
+    // we need to move the results to a directory structure that equal to the real one.
+    // Then, we can go into the parent directory, so the relatece "testRoot" is the same as it would be in production
+    // This is important, as during XML generation, some URLs contain the test path
+    mkdir($this->tempDir . $imitatedPath, 0777, true);
+    rename($this->tempDir . '/singlestepResults', $this->tempDir . $imitatedPath);
+    $this->orgDir = getcwd();
+    chdir($this->tempDir);
+    $testRoot = "." . $imitatedPath;
     $testInfo = TestInfo::fromFiles($testRoot);
+
     $testResults = new TestResults($testInfo);
     $xmlGenerator = new XmlResultGenerator($testInfo, "http://wpt-test-vm", new FileHandler(),
       $this->allAdditionalInfo, true);
+
     $xmlGenerator->printAllResults($testResults, "loadTime", null);
 
     $resultXml = simplexml_load_string(ob_get_contents());
-    $expectedXml = simplexml_load_file(__DIR__ . '/data/singlestepXmlResult.xml');
+    $expectedContents = file_get_contents("compress.zlib://" . __DIR__ . '/data/singlestepXmlResult.xml.gz');
+    $expectedXml = simplexml_load_string($expectedContents);
     $this->assertXmlIsCompatible($expectedXml, $resultXml);
   }
 
@@ -107,6 +126,12 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
     $actualValue = trim((string) $actual);
     $this->assertEquals($expectedValue, $actualValue,
       "Value of '$path' was expected to be '$expectedValue', but is '$actualValue'");
+  }
+
+  private function imitatedResultPath($testId) {
+    $parts = explode("_", $testId);
+    $pathParts = array(substr($parts[0], 0, 2), substr($parts[0], 2, 2), substr($parts[0], 4, 2), $parts[1], $parts[2]);
+    return "/results/" . implode("/", $pathParts);
   }
 
   private function getFileHandlerMock() {
