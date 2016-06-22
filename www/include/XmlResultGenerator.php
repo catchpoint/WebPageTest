@@ -143,14 +143,12 @@ class XmlResultGenerator {
     }
     echo "</standardDeviation>\n";
 
-    $xmlGenerator = new XmlResultGenerator($testInfo, $urlStart, new FileHandler(), $additionalInfo, $this->friendlyUrls);
-
     // output the median run data
     $fvMedian = GetMedianRun($pageData, 0, $median_metric);
     if( $fvMedian )
     {
       echo "<median>\n";
-      $xmlGenerator->printMedianRun(TestRunResult::fromPageData($testInfo, $pageData[$fvMedian][0], $fvMedian, false));
+      $this->printMedianRun(TestRunResult::fromPageData($testInfo, $pageData[$fvMedian][0], $fvMedian, false));
 
       if( isset($rv) )
       {
@@ -160,7 +158,7 @@ class XmlResultGenerator {
           $rvMedian = GetMedianRun($pageData, 1, $median_metric);
         if($rvMedian)
         {
-          $xmlGenerator->printMedianRun(TestRunResult::fromPageData($testInfo, $pageData[$rvMedian][1], $rvMedian, true));
+          $this->printMedianRun(TestRunResult::fromPageData($testInfo, $pageData[$rvMedian][1], $rvMedian, true));
         }
       }
       echo "</median>\n";
@@ -176,12 +174,12 @@ class XmlResultGenerator {
       if( isset( $pageData[$i] ) )
       {
         if (isset($pageData[$i][0])) {
-          $xmlGenerator->printRun(TestRunResult::fromPageData($testInfo, $pageData[$i][0], $i, false));
+          $this->printRun(TestRunResult::fromPageData($testInfo, $pageData[$i][0], $i, false));
         }
 
         // repeat view
         if( isset( $pageData[$i][1] ) ) {
-          $xmlGenerator->printRun(TestRunResult::fromPageData($testInfo, $pageData[$i][1], $i, true));
+          $this->printRun(TestRunResult::fromPageData($testInfo, $pageData[$i][1], $i, true));
         }
       }
 
