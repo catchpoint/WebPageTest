@@ -6,14 +6,14 @@ class TestInfo {
 
   private $id;
   private $rootDirectory;
-  private $testInfo;
+  private $rawData;
 
 
   private function __construct($id, $rootDirectory, &$testInfo) {
     // This isn't likely to stay the standard constructor, so we name it explicitly as a static function below
     $this->id = $id;
     $this->rootDirectory = $rootDirectory;
-    $this->testInfo = &$testInfo;
+    $this->rawData = &$testInfo;
   }
 
   /**
@@ -53,11 +53,20 @@ class TestInfo {
   }
 
   /**
-   * only temporary to enable testing
-   * TODO(sburnicki): Remove
+   * @return string|null The location as saved in the ini file or null if not set
    */
-  public function getRawData() {
-    return $this->testInfo;
+  public function getTestLocation() {
+    if (empty($this->rawData['test']['location'])) {
+      return null;
+    }
+    return $this->rawData['test']['location'];
+  }
+
+  /**
+   * @return array The test info as saved in testinfo.json
+   */
+  public function getInfoArray() {
+    return empty($this->rawData["testinfo"]) ? null : $this->rawData["testinfo"];
   }
 
   /**
@@ -65,17 +74,17 @@ class TestInfo {
    * @return null|string Tester for specified run
    */
   public function getTester($run) {
-    if (!array_key_exists('testinfo', $this->testInfo)) {
+    if (!array_key_exists('testinfo', $this->rawData)) {
       return null;
     }
     $tester = null;
-    if (array_key_exists('tester', $this->testInfo['testinfo']))
-      $tester = $this->testInfo['testinfo']['tester'];
-    if (array_key_exists('test_runs', $this->testInfo['testinfo']) &&
-      array_key_exists($run, $this->testInfo['testinfo']['test_runs']) &&
-      array_key_exists('tester', $this->testInfo['testinfo']['test_runs'][$run])
+    if (array_key_exists('tester', $this->rawData['testinfo']))
+      $tester = $this->rawData['testinfo']['tester'];
+    if (array_key_exists('test_runs', $this->rawData['testinfo']) &&
+      array_key_exists($run, $this->rawData['testinfo']['test_runs']) &&
+      array_key_exists('tester', $this->rawData['testinfo']['test_runs'][$run])
     )
-      $tester = $this->testInfo['testinfo']['test_runs'][$run]['tester'];
+      $tester = $this->rawData['testinfo']['test_runs'][$run]['tester'];
     return $tester;
   }
 }

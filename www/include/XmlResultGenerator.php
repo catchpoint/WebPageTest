@@ -47,7 +47,6 @@ class XmlResultGenerator {
    * @param bool $medianFvOnly 
    */
   public function printAllResults($testResults, $median_metric, $requestId = null, $medianFvOnly = false) {
-    $test = $this->testInfo->getRawData();
     $urlGenerator = UrlGenerator::create($this->friendlyUrls, $this->baseUrl, $this->testInfo->getId(), 0, 0);
 
     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
@@ -61,36 +60,38 @@ class XmlResultGenerator {
     echo "<testId>" . $this->testInfo->getId() . "</testId>\n";
     echo "<summary>" . $urlGenerator->resultSummary() . "</summary>\n";
 
-    if (isset($test['testinfo']))
+    $testInfo = $this->testInfo->getInfoArray();
+    if ($testInfo)
     {
-      if( @strlen($test['testinfo']['url']) )
-        echo "<testUrl>" . xml_entities($test['testinfo']['url']) . "</testUrl>\n";
-      if( @strlen($test['testinfo']['location']) ) {
-        $locstring = $test['testinfo']['location'];
-        if( @strlen($test['testinfo']['browser']) )
-          $locstring .= ':' . $test['testinfo']['browser'];
+      if( @strlen($testInfo['url']) )
+        echo "<testUrl>" . xml_entities($testInfo['url']) . "</testUrl>\n";
+      if( @strlen($testInfo['location']) ) {
+        $locstring = $testInfo['location'];
+        if( @strlen($testInfo['browser']) )
+          $locstring .= ':' . $testInfo['browser'];
         echo "<location>$locstring</location>\n";
       }
-      if ( @strlen($test['test']['location']) )
-        echo "<from>" . xml_entities($test['test']['location']) . "</from>\n";
-      if( @strlen($test['testinfo']['connectivity']) )
+      $location = $this->testInfo->getTestLocation();
+      if ($location)
+        echo "<from>" . xml_entities($location) . "</from>\n";
+      if( @strlen($testInfo['connectivity']) )
       {
-        echo "<connectivity>{$test['testinfo']['connectivity']}</connectivity>\n";
-        echo "<bwDown>{$test['testinfo']['bwIn']}</bwDown>\n";
-        echo "<bwUp>{$test['testinfo']['bwOut']}</bwUp>\n";
-        echo "<latency>{$test['testinfo']['latency']}</latency>\n";
-        echo "<plr>{$test['testinfo']['plr']}</plr>\n";
+        echo "<connectivity>{$testInfo['connectivity']}</connectivity>\n";
+        echo "<bwDown>{$testInfo['bwIn']}</bwDown>\n";
+        echo "<bwUp>{$testInfo['bwOut']}</bwUp>\n";
+        echo "<latency>{$testInfo['latency']}</latency>\n";
+        echo "<plr>{$testInfo['plr']}</plr>\n";
       }
-      if( isset($test['testinfo']['mobile']) )
-        echo "<mobile>" . xml_entities($test['testinfo']['mobile']) .   "</mobile>\n";
-      if( @strlen($test['testinfo']['label']) )
-        echo "<label>" . xml_entities($test['testinfo']['label']) . "</label>\n";
-      if( @strlen($test['testinfo']['completed']) )
-        echo "<completed>" . gmdate("r",$test['testinfo']['completed']) . "</completed>\n";
-      if( @strlen($test['testinfo']['tester']) )
-        echo "<tester>" . xml_entities($test['testinfo']['tester']) . "</tester>\n";
-      if( @strlen($test['testinfo']['testerDNS']) )
-        echo "<testerDNS>" . xml_entities($test['testinfo']['testerDNS']) . "</testerDNS>\n";
+      if( isset($testInfo['mobile']) )
+        echo "<mobile>" . xml_entities($testInfo['mobile']) .   "</mobile>\n";
+      if( @strlen($testInfo['label']) )
+        echo "<label>" . xml_entities($testInfo['label']) . "</label>\n";
+      if( @strlen($testInfo['completed']) )
+        echo "<completed>" . gmdate("r",$testInfo['completed']) . "</completed>\n";
+      if( @strlen($testInfo['tester']) )
+        echo "<tester>" . xml_entities($testInfo['tester']) . "</tester>\n";
+      if( @strlen($testInfo['testerDNS']) )
+        echo "<testerDNS>" . xml_entities($testInfo['testerDNS']) . "</testerDNS>\n";
     }
     $runs = $testResults->countRuns();
     echo "<runs>$runs</runs>\n";
