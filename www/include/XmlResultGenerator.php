@@ -93,17 +93,18 @@ class XmlResultGenerator {
       if( @strlen($testInfo['testerDNS']) )
         echo "<testerDNS>" . xml_entities($testInfo['testerDNS']) . "</testerDNS>\n";
     }
+
+    // spit out the calculated averages
+    $fv = $testResults->getFirstViewAverage();
+    $rv = $testResults->getRepeatViewAverage();
     $runs = $testResults->countRuns();
+
     echo "<runs>$runs</runs>\n";
     echo "<successfulFVRuns>" . $testResults->countSuccessfulRuns(false) . "</successfulFVRuns>\n";
     if( isset($rv) ) {
       echo "<successfulRVRuns>" . $testResults->countSuccessfulRuns(true) . "</successfulRVRuns>\n";
     }
 
-
-    // spit out the calculated averages
-    $fv = $testResults->getFirstViewAverage();
-    $rv = $testResults->getRepeatViewAverage();
     echo "<average>\n";
     echo "<firstView>\n";
     foreach( $fv as $key => $val ) {
