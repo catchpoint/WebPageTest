@@ -53,11 +53,21 @@ function loadAllPageData($testPath, $options = null) {
  * @param array|null $testInfo Optional testInfo to expose a test-level error
  * @return array|null Associative array with data for the given run or null on failure
  */
-function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = null)
-{
+function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = null) {
   $ret = null;
   $localPaths = new TestPaths($testPath, $run, $cached);
   $runCompleted = IsTestRunComplete($run, $testInfo);
+  return loadPageStepData($localPaths, $runCompleted, $options, $testInfo);
+}
+
+/**
+ * @param TestPaths $localPaths Paths for the step or run to load the page data for
+ * @param bool $runCompleted If the run that includes this step was completed or not
+ * @param array|null $options Optional options. Currently supported "end" to set the end of GetVisualProgress for custom SpeedIndex
+ * @param array|null $testInfo Optional testInfo to expose a test-level error
+ * @return array|null Associative array with data for the given run or null on failure
+ */
+function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo = null) {
   $ret = loadPageData($localPaths->pageDataFile(), $options);
   if (!isset($ret) || !is_array($ret) || !count($ret))
     GetDevToolsRequestsForStep($localPaths, $requests, $ret);
@@ -99,7 +109,8 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = 
     // see if we have CSI metrics to load
     if (is_dir(__DIR__ . '/google') && is_file(__DIR__ . '/google/google_lib.inc')) {
       require_once(__DIR__ . '/google/google_lib.inc');
-      $csi = ParseCsiInfo(0, $testPath, $run, $cached, true, false);
+      $urlGenerator = UrlGenerator::create(false, "", 0, $localPaths->getRunNumber(), $localPaths->isCachedResult());
+      $csi = ParseCsiInfoForStep($urlGenerator, $localPaths, true, false);
       if (isset($csi) && is_array($csi) && count($csi)) {
         $ret['CSI'] = array();
         foreach($csi as $metric => $value) {
@@ -193,9 +204,13 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = 
     }
   }
 
+  $run = $localPaths->getRunNumber();
+  $cached = $localPaths->isCachedResult();
   if (isset($ret)) {
-    $ret['run'] = $run;
-    $ret['cached'] = $cached;
+    $ret['run'] = $localPaths->getRunNumber();
+    $ret['cached'] = $localPaths->isCachedResult() ? 1 : 0;
+    // TODO(sburnicki): Enable for multistep support
+    // $ret['step'] = $localPaths->getStepNumber();
 
     // calculate the effective bps
     if (array_key_exists('fullyLoaded', $ret) &&

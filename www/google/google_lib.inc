@@ -6,10 +6,28 @@ require_once __DIR__ . '/../object_detail.inc';
  * Function for parsing the CSI data for a given run
  */
 function ParseCsiInfo($id, $testPath, $run, $cached, $getAll, $generate = true) {
+  if (!isset($testPath) || !strlen($testPath))
+    $testPath = './' . GetTestPath($id);
+  $localPaths = new TestPaths($testPath, $run, $cached);
+  $rootUrlGenerator = UrlGenerator::create(false, "", $id, $run, $cached);
+  return ParseCsiInfoForStep($rootUrlGenerator, $localPaths, $getAll, $generate);
+}
+
+/**
+ * @param UrlGenerator $rootUrlGenerator To generate root URLS (without protocol & host) for this run / step
+ * @param TestPaths $localPaths Paths of run or step to get the CSI Info for
+ * @param $getAll
+ * @param bool $generate
+ * @return array|null
+ */
+function ParseCsiInfoForStep($rootUrlGenerator, $localPaths, $getAll, $generate = true) {
   $params = null;
-  $cacheFile = "$testPath/csi.json";
+  $cacheFile = $localPaths->csiCacheFile();
+  $run = $localPaths->getRunNumber();
+  $cached = $localPaths->isCachedResult() ? 1 : 0;
   if (gz_is_file($cacheFile)) {
     $cache = json_decode(gz_file_get_contents($cacheFile), true);
+    // TODO(sburnicki): Adjust for multistep
     if (isset($cache) &&
         is_array($cache) &&
         array_key_exists($run, $cache) &&
@@ -25,9 +43,9 @@ function ParseCsiInfo($id, $testPath, $run, $cached, $getAll, $generate = true) 
         $cache = array();
         
 	    // Secure and haveLocations are not used but required by getRequests function.
-	    $secure;
-	    $haveLocations;
-	    $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
+	    $secure = null;
+	    $haveLocations = null;
+	    $requests = getRequestsForStep($localPaths, $rootUrlGenerator, $secure, $haveLocations, false);
       $params = array();
 	    foreach ( $requests as &$request ) {
 		    // Parse the individual url parts.
@@ -52,6 +70,7 @@ function ParseCsiInfo($id, $testPath, $run, $cached, $getAll, $generate = true) 
 	    }
       if (!array_key_exists($run, $cache))
         $cache[$run] = array();
+      // TODO(sburnicki): Adjust for multistep
       $cache[$run][$cached] = $params;
       gz_file_put_contents($cacheFile, json_encode($cache));
       Unlock($lock);

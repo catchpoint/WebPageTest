@@ -59,11 +59,21 @@ class TestPaths {
   }
 
   /**
-   * @return bool True if the paths are for a cached run (repeat view), false otherwise (first view)
+   * Returns if the paths are for a cached run (repeat view), or not (first view). Try to avoid direct access
+   * and use the other public methods if possible.
+   * @return bool True if the paths are for a cached run, false otherwise
    */
   public function isCachedResult() {
-    // It's not very nice to have this function in this class, but this information is actually needed and contained here
     return $this->cached;
+  }
+
+  /**
+   * Returns the run number which the paths are used for. Try to avoid direct access
+   * and use the other public methods if possible.
+   * @return int The run number
+   */
+  public function getRunNumber() {
+    return $this->run;
   }
 
   /**
@@ -197,6 +207,13 @@ class TestPaths {
    */
   public function devtoolsTraceFile() {
     return $this->testRoot . $this->underscoreIdentifier() . "_trace.json";
+  }
+
+  /**
+   * @return string Path for CSI cache (is the same for all runs and steps)
+   */
+  public function csiCacheFile() {
+    return $this->testRoot . "csi.json";
   }
 
   /**
