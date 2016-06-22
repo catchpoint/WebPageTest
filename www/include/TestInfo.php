@@ -39,6 +39,14 @@ class TestInfo {
   }
 
   /**
+   * only temporary to enable testing
+   * TODO(sburnicki): Remove
+   */
+  public function getRawData() {
+    return $this->testInfo;
+  }
+
+  /**
    * @param int $run The run number
    * @return null|string Tester for specified run
    */
