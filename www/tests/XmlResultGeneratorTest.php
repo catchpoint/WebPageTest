@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/TestUtil.php';
+require_once __DIR__ . '/IsCompatibleXMLConstraint.php';
 
 require_once __DIR__ . '/../include/XmlResultGenerator.php';
 
@@ -57,75 +58,32 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
     chdir($this->tempDir);
     $testRoot = "." . $imitatedPath;
     $testInfo = TestInfo::fromFiles($testRoot);
+    $expectedXmlFile = __DIR__ . '/data/singlestepXmlResult.xml.gz';
 
     $testResults = new TestResults($testInfo);
     $xmlGenerator = new XmlResultGenerator($testInfo, "http://wpt-test-vm", new FileHandler(),
       $this->allAdditionalInfo, true);
-
     $xmlGenerator->printAllResults($testResults, "loadTime", null);
 
-    $resultXml = simplexml_load_string(ob_get_contents());
-    $expectedContents = file_get_contents("compress.zlib://" . __DIR__ . '/data/singlestepXmlResult.xml.gz');
-    $expectedXml = simplexml_load_string($expectedContents);
-    $this->assertXmlIsCompatible($expectedXml, $resultXml);
+    $this->assertThat(ob_get_contents(), IsCompatibleXMLConstraint::fromFile($expectedXmlFile));
   }
 
   public function testSinglestepMedianRunOutput() {
     $xmlGenerator = new XmlResultGenerator($this->testInfoMock, "https://unitTest", $this->fileHandlerMock,
       $this->allAdditionalInfo, true);
     $xmlGenerator->printMedianRun($this->testResultMock);
+    $expectedXmlFile = __DIR__ . '/data/singlestepMedianOutput.xml';
 
-    $resultXml = simplexml_load_string(ob_get_contents());
-    $expectedXml = simplexml_load_file(__DIR__ . '/data/singlestepMedianOutput.xml');
-    $this->assertXmlIsCompatible($expectedXml, $resultXml);
+    $this->assertThat(ob_get_contents(), IsCompatibleXMLConstraint::fromFile($expectedXmlFile));
   }
 
   public function testSinglestepRunOutput() {
     $xmlGenerator = new XmlResultGenerator($this->testInfoMock, "https://unitTest", $this->fileHandlerMock,
       $this->allAdditionalInfo, true);
     $xmlGenerator->printRun($this->testResultMock);
+    $expectedXmlFile = __DIR__ . '/data/singlestepRunOutput.xml';
 
-    $resultXml = simplexml_load_string(ob_get_contents());
-    $expectedXml = simplexml_load_file(__DIR__ . '/data/singlestepRunOutput.xml');
-    $this->assertXmlIsCompatible($expectedXml, $resultXml);
-  }
-
-  /**
-   * @param SimpleXMLElement $expected
-   * @param SimpleXMLElement $actual
-   */
-  private function assertXmlIsCompatible($expected, $actual, $path = "") {
-    $this->assertNodeEquals($expected, $actual, $path);
-    foreach ($expected->children() as $name => $child) {
-      $countSameName = count($expected->{$name});
-      for ($i = 0; $i < $countSameName; $i++) {
-        $xpathSuffix = $countSameName > 1 ? "[" . ($i+1). "]" : "";
-        $this->assertXmlIsCompatible($expected->{$name}[$i], $actual->{$name}[$i], $path . "/" . $name . $xpathSuffix );
-      }
-    }
-  }
-
-  /**
-   * @param SimpleXMLElement $expected
-   * @param SimpleXMLElement $actual
-   */
-  private function assertNodeEquals($expected, $actual, $path) {
-    $this->assertNotNull($actual, "Node '$path' not found in actual result");
-    $this->assertEquals($expected->getName(), $actual->getName(),
-      "Name of node '$path'' is '" . $actual->getName() . "'");
-    foreach ($expected->attributes() as $attributeName => $attributeValue) {
-      $actualValue = $actual[$attributeName];
-      $this->assertEquals($actual[$attributeName], $attributeValue,
-        "Attribute '$path@$attributeName' was expected to be '$attributeValue', but is '$actualValue''");
-    }
-    $this->assertNodeValueEquals($expected, $actual, $path);
-  }
-
-  private function assertNodeValueEquals($expected, $actual, $path) {
-    $expectedValue = trim((string) $expected);
-    $actualValue = trim((string) $actual);
-    $this->assertEquals($expectedValue, $actualValue,
-      "Value of '$path' was expected to be '$expectedValue', but is '$actualValue'");
+    $this->assertThat(ob_get_contents(), IsCompatibleXMLConstraint::fromFile($expectedXmlFile));
   }
 
   private function imitatedResultPath($testId) {
