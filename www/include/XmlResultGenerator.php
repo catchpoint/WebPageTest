@@ -47,7 +47,6 @@ class XmlResultGenerator {
    */
   public function printAllResults($testResults, $median_metric, $requestId = null) {
     $pageData = $testResults->getPageData();
-    $testInfo = $this->testInfo;
     $test = $this->testInfo->getRawData();
     $urlGenerator = UrlGenerator::create($this->friendlyUrls, $this->baseUrl, $this->testInfo->getId(), 0, 0);
 
@@ -144,7 +143,7 @@ class XmlResultGenerator {
     if( $fvMedian )
     {
       echo "<median>\n";
-      $this->printMedianRun(TestRunResult::fromPageData($testInfo, $pageData[$fvMedian][0], $fvMedian, false));
+      $this->printMedianRun($testResults->getRunResult($fvMedian, false));
 
       if( isset($rv) )
       {
@@ -154,7 +153,7 @@ class XmlResultGenerator {
           $rvMedian = GetMedianRun($pageData, 1, $median_metric);
         if($rvMedian)
         {
-          $this->printMedianRun(TestRunResult::fromPageData($testInfo, $pageData[$rvMedian][1], $rvMedian, true));
+          $this->printMedianRun($testResults->getRunResult($rvMedian, true));
         }
       }
       echo "</median>\n";
@@ -166,18 +165,8 @@ class XmlResultGenerator {
       echo "<run>\n";
       echo "<id>$i</id>\n";
 
-      // first view
-      if( isset( $pageData[$i] ) )
-      {
-        if (isset($pageData[$i][0])) {
-          $this->printRun(TestRunResult::fromPageData($testInfo, $pageData[$i][0], $i, false));
-        }
-
-        // repeat view
-        if( isset( $pageData[$i][1] ) ) {
-          $this->printRun(TestRunResult::fromPageData($testInfo, $pageData[$i][1], $i, true));
-        }
-      }
+      $this->printRun($testResults->getRunResult($i, false));
+      $this->printRun($testResults->getRunResult($i, true));
 
       echo "</run>\n";
     }
@@ -206,6 +195,10 @@ class XmlResultGenerator {
    * @param TestRunResult $testResult Result of this run
    */
   public function printRun($testResult) {
+    if (empty($testResult)) {
+      return;
+    }
+
     $run = $testResult->getRunNumber();
     $cached = $testResult->isCachedRun() ? 1 : 0;
     $testRoot = $this->testInfo->getRootDirectory();

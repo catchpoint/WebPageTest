@@ -32,6 +32,18 @@ class TestResults {
   }
 
   /**
+   * @param int $run The run number
+   * @param bool $cached False for first view, true for repeat view
+   * @return TestRunResult|null Result of the run, if exists. null otherwise
+   */
+  public function getRunResult($run, $cached) {
+    if (empty($this->pageData[$run][$cached ? 1 : 0] ) ) {
+      return null;
+    }
+    return TestRunResult::fromPageData($this->testInfo, $this->pageData[$run][$cached ? 1 : 0], $run, $cached);
+  }
+
+  /**
    * Exists only temporary until we got tests
    */
   public function getPageData() {

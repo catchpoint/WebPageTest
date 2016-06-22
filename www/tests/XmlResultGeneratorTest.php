@@ -86,6 +86,13 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
     $this->assertThat(ob_get_contents(), IsCompatibleXMLConstraint::fromFile($expectedXmlFile));
   }
 
+  public function testPrintRunWithNull() {
+    $xmlGenerator = new XmlResultGenerator($this->testInfoMock, "https://unitTest", $this->fileHandlerMock,
+      $this->allAdditionalInfo, true);
+    $xmlGenerator->printRun(null);
+    $this->assertSame("", ob_get_contents());
+  }
+
   private function imitatedResultPath($testId) {
     $parts = explode("_", $testId);
     $pathParts = array(substr($parts[0], 0, 2), substr($parts[0], 2, 2), substr($parts[0], 4, 2), $parts[1], $parts[2]);
