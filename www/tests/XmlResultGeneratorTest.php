@@ -78,11 +78,10 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
   private function assertXmlIsCompatible($expected, $actual, $path = "") {
     $this->assertNodeEquals($expected, $actual, $path);
     foreach ($expected->children() as $name => $child) {
-      // use xpath to iterate properly identify multiple children with the same name
-      $realChilds = $expected->xpath("./$name");
-      for ($i = 0; $i < count($realChilds); $i++) {
-        $xpathSuffix = count($realChilds) > 1 ? "[" . ($i+1). "]" : "";
-        $this->assertXmlIsCompatible($realChilds[$i], $actual->{$name}[$i], $path . "/" . $name . $xpathSuffix );
+      $countSameName = count($expected->{$name});
+      for ($i = 0; $i < $countSameName; $i++) {
+        $xpathSuffix = $countSameName > 1 ? "[" . ($i+1). "]" : "";
+        $this->assertXmlIsCompatible($expected->{$name}[$i], $actual->{$name}[$i], $path . "/" . $name . $xpathSuffix );
       }
     }
   }
