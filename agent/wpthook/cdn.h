@@ -55,6 +55,7 @@ typedef struct {
 
 CDN_PROVIDER cdnList[] = {
   {".akamai.net", "Akamai"},
+  {".akamaized.net", "Akamai"},
   {".akamaiedge.net", "Akamai"},
   {".akamaihd.net", "Akamai"},
   {".edgesuite.net", "Akamai"},
