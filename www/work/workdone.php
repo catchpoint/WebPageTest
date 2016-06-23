@@ -243,19 +243,7 @@ if (ValidateTestId($id)) {
 
         // Do any post-processing on this individual run that doesn't requre the test to be locked
         if (isset($runNumber) && isset($cacheWarmed)) {
-          $secure = false;
-          $haveLocations = false;
-          $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure, $haveLocations, false);
-          if (isset($requests) && is_array($requests) && count($requests)) {
-            getBreakdown($id, $testPath, $runNumber, $cacheWarmed, $requests);
-          } else {
-            $testerError = 'Missing Results';
-          }
-          if (is_dir('./google') && is_file('./google/google_lib.inc')) {
-            require_once('google/google_lib.inc');
-            ParseCsiInfo($id, $testPath, $runNumber, $cacheWarmed, true);
-          }
-          GetDevToolsCPUTime($testPath, $runNumber, $cacheWarmed);
+          $testerError = postProcessRun($id, $testPath, $runNumber, $cacheWarmed);
         }
 
         // mark this run as complete
@@ -423,6 +411,32 @@ if (isset($workdone_video_start) && isset($workdone_video_end)) {
     logMsg("$elapsed ms - video processing: $video_elapsed ms - Test $id, Run $runNumber:$cacheWarmed", './work/workdone.log', true);
 }
 */
+
+/**
+ * @param string $id Test ID
+ * @param string $testPath Path to test directory
+ * @param int $runNumber Run number
+ * @param int $cacheWarmed False for first view, true for repeat view (cached run)
+ * @return string|null null on success or an error description
+ */
+function postProcessRun($id, $testPath, $runNumber, $cacheWarmed) {
+  $testerError = null;
+  $secure = false;
+  $haveLocations = false;
+  // TODO: enable for multistep
+  $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure, $haveLocations, false);
+  if (isset($requests) && is_array($requests) && count($requests)) {
+    getBreakdown($id, $testPath, $runNumber, $cacheWarmed, $requests);
+  } else {
+    $testerError = 'Missing Results';
+  }
+  if (is_dir('./google') && is_file('./google/google_lib.inc')) {
+    require_once('google/google_lib.inc');
+    ParseCsiInfo($id, $testPath, $runNumber, $cacheWarmed, true);
+  }
+  GetDevToolsCPUTime($testPath, $runNumber, $cacheWarmed);
+  return $testerError;
+}
 
 /**
 * Delete all of the video files except for the median run
