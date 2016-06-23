@@ -5,7 +5,7 @@ require_once __DIR__ . '/include/TestPaths.php';
 if(extension_loaded('newrelic')) { 
     newrelic_add_custom_tracer('GetTimeline');
     newrelic_add_custom_tracer('GetDevToolsRequests');
-    newrelic_add_custom_tracer('GetDevToolsEvents');
+    newrelic_add_custom_tracer('GetDevToolsEventsForStep');
     newrelic_add_custom_tracer('DevToolsGetConsoleLog');
     newrelic_add_custom_tracer('DevToolsGetCPUSlices');
     newrelic_add_custom_tracer('GetDevToolsCPUTime');
@@ -674,21 +674,6 @@ function ParseDevToolsDOMContentLoaded(&$event, $main_frame, &$pageData) {
 }
 
 /**
-* Load a filtered list of events from the dev tools capture
-* 
-* @param mixed $filter
-* @param mixed $testPath
-* @param mixed $run
-* @param mixed $cached
-* @param mixed $events
-*/
-function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events, &$startOffset) {
-  // TODO: remove function if not needed anymore and the version below is used everywhere
-  $localPaths = new TestPaths($testPath, $run, $cached);
-  return GetDevToolsEventsForStep($filter, $localPaths, $events, $startOffset);
-}
-
-/**
  * Load a filtered list of events from the dev tools capture
  *
  * @param mixed $filter
@@ -951,17 +936,23 @@ function DevToolsMatchEvent($filter, &$event, $startTime = null, $endTime = null
 }
 
 function DevToolsGetConsoleLog($testPath, $run, $cached) {
+  $localPaths = new TestPaths($testPath, $run, $cached);
+  return DevToolsGetConsoleLogForStep($localPaths);
+}
+
+/**
+ * @param TestPaths $localPaths The paths for the run or step to get the console log for
+ * @return array|null The console log or null, if it couldn't be retrieved
+ */
+function DevToolsGetConsoleLogForStep($localPaths) {
   $console_log = null;
-  $cachedText = '';
-  if( $cached )
-      $cachedText = '_Cached';
-  $console_log_file = "$testPath/$run{$cachedText}_console_log.json";
+  $console_log_file = $localPaths->consoleLogFile();
   if (gz_is_file($console_log_file))
       $console_log = json_decode(gz_file_get_contents($console_log_file), true);
-  elseif (gz_is_file("$testPath/$run{$cachedText}_devtools.json")) {
+  elseif (gz_is_file($localPaths->devtoolsFile())) {
     $console_log = array();
     $startOffset = null;
-    if (GetDevToolsEvents('Console.messageAdded', $testPath, $run, $cached, $events, $startOffset) &&
+    if (GetDevToolsEventsForStep('Console.messageAdded', $localPaths, $events, $startOffset) &&
           is_array($events) &&
           count($events)) {
       foreach ($events as $event) {

@@ -210,6 +210,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for the console log
+   */
+  public function consoleLogFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_console_log.json";
+  }
+
+  /**
    * @return string Path for CSI cache (is the same for all runs and steps)
    */
   public function csiCacheFile() {

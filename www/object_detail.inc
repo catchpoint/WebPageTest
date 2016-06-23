@@ -27,14 +27,14 @@ function getRequests($id, $test_path, $run, $is_cached,
 
 /**
  * @param TestPaths $localPaths Paths for the run or step to load the requests for
- * @param UrlGenerator $urlGenerator Generator for the run or step related URLs
+ * @param UrlGenerator $rootUrlGenerator Generator for the run or step related root URLs (i.e. without host)
  * @param bool $has_secure_requests Gets set to true if at least one request is secure
  * @param bool $has_locations Gets set to true if location data is included in the requests
  * @param bool $use_location_check If true, location data will be added to the requests
  * @param bool $use_raw_headers If true, raw headers are added. False by default
  * @return array The loaded requests
  */
-function getRequestsForStep($localPaths, $urlGenerator, &$has_secure_requests, &$has_locations,
+function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_requests, &$has_locations,
                             $use_location_check, $use_raw_headers = false) {
     $request_file_name =  $localPaths->requestDataFile();
     $headers_file_name = $localPaths->headersFile();
@@ -69,9 +69,9 @@ function getRequestsForStep($localPaths, $urlGenerator, &$has_secure_requests, &
         $request['index'] = $index;
         $request['number'] = $index + 1;
         if (isset($request['body_id']) && $request['body_id'] > 0) {
-            $request['body_url'] = $urlGenerator->responseBodyWithBodyId($request['body_id']);
+            $request['body_url'] = $rootUrlGenerator->responseBodyWithBodyId($request['body_id']);
         } elseif (@$request['body']) {
-            $request['body_url'] = $urlGenerator->responseBodyWithRequestNumber($request['number']);
+            $request['body_url'] = $rootUrlGenerator->responseBodyWithRequestNumber($request['number']);
         }
         if ($request['is_secure'])
             $has_secure_requests = true;
