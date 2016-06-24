@@ -413,32 +413,6 @@ if (isset($workdone_video_start) && isset($workdone_video_end)) {
 */
 
 /**
- * @param string $id Test ID
- * @param string $testPath Path to test directory
- * @param int $runNumber Run number
- * @param int $cacheWarmed False for first view, true for repeat view (cached run)
- * @return string|null null on success or an error description
- */
-function postProcessRun($id, $testPath, $runNumber, $cacheWarmed) {
-  $testerError = null;
-  $secure = false;
-  $haveLocations = false;
-  // TODO: enable for multistep
-  $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure, $haveLocations, false);
-  if (isset($requests) && is_array($requests) && count($requests)) {
-    getBreakdown($id, $testPath, $runNumber, $cacheWarmed, $requests);
-  } else {
-    $testerError = 'Missing Results';
-  }
-  if (is_dir('./google') && is_file('./google/google_lib.inc')) {
-    require_once('google/google_lib.inc');
-    ParseCsiInfo($id, $testPath, $runNumber, $cacheWarmed, true);
-  }
-  GetDevToolsCPUTime($testPath, $runNumber, $cacheWarmed);
-  return $testerError;
-}
-
-/**
 * Delete all of the video files except for the median run
 * 
 * @param mixed $id

@@ -6,6 +6,9 @@ if(extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('getBreakdown');
     newrelic_add_custom_tracer('getBreakdownCombined');
 }
+
+define('BREAKDOWN_CACHE_VERSION', 2);
+
 /**
 * Aggregate the individual requests by mime type
 * 
@@ -13,9 +16,8 @@ if(extension_loaded('newrelic')) {
 */
 function getBreakdown($id, $testPath, $run, $cached, &$requests)
 {
-    $version = 2;
     $cache = array();
-    $cache_file = "$testPath/breakdown$version.json";
+    $cache_file = "$testPath/breakdown" . BREAKDOWN_CACHE_VERSION . ".json";
     if (is_file($cache_file)) {
         $cache = json_decode(file_get_contents($cache_file), true);
     }

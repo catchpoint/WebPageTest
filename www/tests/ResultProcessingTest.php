@@ -1,6 +1,8 @@
 <?php
 
+require_once __DIR__ . '/../include/TestPaths.php';
 require_once __DIR__ . '/../include/ResultProcessing.php';
+require_once __DIR__ . '/../breakdown.inc';
 require_once __DIR__ . '/TestUtil.php';
 
 class ResultProcessingTest extends PHPUnit_Framework_TestCase {
@@ -38,4 +40,21 @@ class ResultProcessingTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals(0, $resultProcessing->countSteps());
   }
 
+  public function testPostProcessRun() {
+    $firstStepPaths = new TestPaths($this->resultDir, 1, true, 1);
+    $secondStepPaths = new TestPaths($this->resultDir, 1, true, 2);
+    $this->assertFileNotExists($firstStepPaths->csiCacheFile() . ".gz");
+    $this->assertFileNotExists($secondStepPaths->csiCacheFile() . ".gz");
+    $this->assertFileNotExists($firstStepPaths->breakdownCacheFile(BREAKDOWN_CACHE_VERSION));
+    $this->assertFileNotExists($secondStepPaths->breakdownCacheFile(BREAKDOWN_CACHE_VERSION));
+
+    $resultProcessing = new ResultProcessing($this->resultDir, $this->testId, 1, true);
+    $error = $resultProcessing->postProcessRun();
+    $this->assertNull($error);
+
+    $this->assertFileExists($firstStepPaths->csiCacheFile() . ".gz");
+    $this->assertFileExists($secondStepPaths->csiCacheFile() . ".gz");
+    $this->assertFileExists($firstStepPaths->breakdownCacheFile(BREAKDOWN_CACHE_VERSION));
+    $this->assertFileExists($secondStepPaths->breakdownCacheFile(BREAKDOWN_CACHE_VERSION));
+  }
 }

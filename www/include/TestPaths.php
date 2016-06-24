@@ -260,6 +260,14 @@ class TestPaths {
     return $this->testRoot . $this->dotIdentifier() . ".devToolsRequests." . $version;
   }
 
+  /**
+   * @param int $version The version of the cache format
+   * @return string Path to cache file for breakdown requests
+   */
+  public function breakdownCacheFile($version) {
+    return $this->testRoot . "breakdown" . $version . ".json";
+  }
+
   protected function underscoreIdentifier() {
     return $this->run . ($this->cached ? "_Cached" : "") . ($this->step > 1 ? "_" . $this->step : "");
   }

@@ -1,5 +1,10 @@
 <?php
 
+require_once __DIR__ . '/../common_lib.inc';
+require_once __DIR__ . '/../object_detail.inc';
+require_once __DIR__ . '/../breakdown.inc';
+require_once __DIR__ . '/../devtools.inc.php';
+
 class ResultProcessing {
   private $testRoot;
   private $id;
@@ -38,5 +43,28 @@ class ResultProcessing {
       }
     }
     return $steps;
+  }
+
+  public function postProcessRun() {
+    $testerError = null;
+    $secure = false;
+    $haveLocations = false;
+    $steps = $this->countSteps();
+    for ($i = 1; $i <= $steps; $i++) {
+      $rootUrls = UrlGenerator::create(true, "", $this->id, $this->run, $this->cached, $i);
+      $stepPaths = new TestPaths($this->testRoot, $this->run, $this->cached, $i);
+      $requests = getRequestsForStep($stepPaths, $rootUrls, $secure, $haveLocations, false, false);
+      if (isset($requests) && is_array($requests) && count($requests)) {
+        getBreakdown($this->id, $this->testRoot, $this->run, $this->cached, $requests);
+      } else {
+        $testerError = 'Missing Results';
+      }
+      if (is_dir(__DIR__ . '/../google') && is_file(__DIR__ . '/../google/google_lib.inc')) {
+        require_once(__DIR__ . '/../google/google_lib.inc');
+        ParseCsiInfoForStep($rootUrls, $stepPaths, true, true);
+      }
+      GetDevToolsCPUTimeForStep($stepPaths);
+    }
+    return $testerError;
   }
 }
