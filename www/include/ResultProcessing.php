@@ -55,13 +55,13 @@ class ResultProcessing {
       $stepPaths = new TestPaths($this->testRoot, $this->run, $this->cached, $i);
       $requests = getRequestsForStep($stepPaths, $rootUrls, $secure, $haveLocations, false, false);
       if (isset($requests) && is_array($requests) && count($requests)) {
-        getBreakdown($this->id, $this->testRoot, $this->run, $this->cached, $requests);
+        getBreakdownForStep($stepPaths, $rootUrls, $requests);
       } else {
         $testerError = 'Missing Results';
       }
       if (is_dir(__DIR__ . '/../google') && is_file(__DIR__ . '/../google/google_lib.inc')) {
         require_once(__DIR__ . '/../google/google_lib.inc');
-        ParseCsiInfoForStep($rootUrls, $stepPaths, true, true);
+        ParseCsiInfoForStep($rootUrls, $stepPaths, true);
       }
       GetDevToolsCPUTimeForStep($stepPaths);
     }

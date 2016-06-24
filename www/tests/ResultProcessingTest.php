@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../include/TestPaths.php';
 require_once __DIR__ . '/../include/ResultProcessing.php';
 require_once __DIR__ . '/../breakdown.inc';
+require_once __DIR__ . '/../google/google_lib.inc';
 require_once __DIR__ . '/TestUtil.php';
 
 class ResultProcessingTest extends PHPUnit_Framework_TestCase {
@@ -43,18 +44,29 @@ class ResultProcessingTest extends PHPUnit_Framework_TestCase {
   public function testPostProcessRun() {
     $firstStepPaths = new TestPaths($this->resultDir, 1, true, 1);
     $secondStepPaths = new TestPaths($this->resultDir, 1, true, 2);
-    $this->assertFileNotExists($firstStepPaths->csiCacheFile() . ".gz");
-    $this->assertFileNotExists($secondStepPaths->csiCacheFile() . ".gz");
-    $this->assertFileNotExists($firstStepPaths->breakdownCacheFile(BREAKDOWN_CACHE_VERSION));
-    $this->assertFileNotExists($secondStepPaths->breakdownCacheFile(BREAKDOWN_CACHE_VERSION));
+
+    $csiCacheFile = $firstStepPaths->csiCacheFile(CSI_CACHE_VERSION) . ".gz";
+    $breakdownCacheFile = $firstStepPaths->breakdownCacheFile(BREAKDOWN_CACHE_VERSION) . ".gz";
+    $this->assertEquals($csiCacheFile, $secondStepPaths->csiCacheFile(CSI_CACHE_VERSION) . ".gz");
+    $this->assertEquals($breakdownCacheFile, $secondStepPaths->breakdownCacheFile(BREAKDOWN_CACHE_VERSION) . ".gz");
+    $this->assertNotEquals($firstStepPaths->cacheKey(), $secondStepPaths->cacheKey());
+
+    $this->assertFileNotExists($csiCacheFile);
+    $this->assertFileNotExists($breakdownCacheFile);
 
     $resultProcessing = new ResultProcessing($this->resultDir, $this->testId, 1, true);
     $error = $resultProcessing->postProcessRun();
     $this->assertNull($error);
 
-    $this->assertFileExists($firstStepPaths->csiCacheFile() . ".gz");
-    $this->assertFileExists($secondStepPaths->csiCacheFile() . ".gz");
-    $this->assertFileExists($firstStepPaths->breakdownCacheFile(BREAKDOWN_CACHE_VERSION));
-    $this->assertFileExists($secondStepPaths->breakdownCacheFile(BREAKDOWN_CACHE_VERSION));
+    $this->assertFileExists($csiCacheFile);
+    $cache = json_decode(gz_file_get_contents($csiCacheFile), true);
+    $this->assertNotEmpty(@$cache[$firstStepPaths->cacheKey()], "CSI Cache for step 1 is empty");
+    // actually, the second step doesn't contain CSI info. But it should be in the cache anyway
+    $this->assertArrayHasKey($secondStepPaths->cacheKey(), $cache, "CSI Cache for step 2 is empty");
+
+    $this->assertFileExists($breakdownCacheFile);
+    $cache = json_decode(gz_file_get_contents($breakdownCacheFile), true);
+    $this->assertNotEmpty(@$cache[$firstStepPaths->cacheKey()], "Breakdown Cache for step 1 is empty");
+    $this->assertNotEmpty(@$cache[$secondStepPaths->cacheKey()], "Breakdown Cache for step 2 is empty");
   }
 }

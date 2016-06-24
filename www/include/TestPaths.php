@@ -217,10 +217,12 @@ class TestPaths {
   }
 
   /**
+   * @param int $version Cache format version
    * @return string Path for CSI cache (is the same for all runs and steps)
    */
-  public function csiCacheFile() {
-    return $this->testRoot . "csi.json";
+  public function csiCacheFile($version = 1) {
+    $versionStr = $version > 1 ? (".". $version) : "";
+    return $this->testRoot . "csi" . $versionStr . ".json";
   }
 
   /**
@@ -266,6 +268,10 @@ class TestPaths {
    */
   public function breakdownCacheFile($version) {
     return $this->testRoot . "breakdown" . $version . ".json";
+  }
+
+  public function cacheKey() {
+    return "run" . $this->run . ".cached" . ($this->cached ? 1 : 0) . ".step" . $this->step;
   }
 
   protected function underscoreIdentifier() {
