@@ -52,7 +52,7 @@ class TestRunResults {
   }
 
   /**
-   * @param int $stepNum The step number to get the result for
+   * @param int $stepNum The step number to get the result for, starting from 1
    * @return TestStepResult Step result data
    */
   public function getStepResult($stepNum) {
@@ -63,12 +63,29 @@ class TestRunResults {
   }
 
   /**
+   * @return bool True if all steps are successful, false otherwise
+   */
+  public function isSuccessful() {
+    foreach ($this->stepResults as $stepResult) {
+      /* @var TestStepResult $stepResult */
+      if (!$stepResult->isSuccessful()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * @return array The aggregated numeric raw results of the different steps
    */
   public function aggregateRawResults() {
     $aggregated = array();
     foreach ($this->stepResults as $step) {
       /* @var TestStepResult $step */
+      if (!$step->isSuccessful()) {
+        continue;
+      }
+
       $rawData = $step->getRawResults();
       foreach ($rawData as $metric => $value) {
         if (!isset($aggregated[$metric])) {

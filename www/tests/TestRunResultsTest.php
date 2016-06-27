@@ -5,6 +5,12 @@ require_once __DIR__ . '/../include/TestInfo.php';
 require_once __DIR__ . '/../include/TestStepResult.php';
 
 class TestRunResultsTest extends PHPUnit_Framework_TestCase {
+  private $testInfo;
+
+  public function setUp() {
+    $rawTestInfo = array();
+    $this->testInfo = TestInfo::fromValues("testId", "/test/path", $rawTestInfo);
+  }
 
   public function testGetRunNumber() {
     $runResults = $this->getTestRunResults();
@@ -45,20 +51,43 @@ class TestRunResultsTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals(900, $aggregated["TTFB"]);
   }
 
-  private function getTestRunResults() {
+  public function testAggregateRawResultsWithInvalid() {
+    // same results as invalid steps should be ignored
+    $runResults = $this->getTestRunResultsWithInvalid();
+    $aggregated = $runResults->aggregateRawResults();
+    $this->assertEquals(9000, $aggregated["loadTime"]);
+    $this->assertEquals(900, $aggregated["TTFB"]);
+  }
+
+  public function testIsSuccessful() {
+    $this->assertTrue($this->getTestRunResults()->isSuccessful());
+    $this->assertFalse($this->getTestRunResultsWithInvalid()->isSuccessful());
+  }
+
+  private function getTestStepArray() {
     $step1 = array('result' => 0, 'TTFB' => 300, 'loadTime' => 6000);
     $step2 = array('result' => 0, 'TTFB' => 100, 'loadTime' => 2000);
     $step3 = array('result' => 99999, 'TTFB' => 500, 'loadTime' => 1000);
 
-    $rawTestInfo = array();
-    $testInfo = TestInfo::fromValues("testId", "/test/path", $rawTestInfo);
-
     $stepResults = array(
-      1 => TestStepResult::fromPageData($testInfo, $step1, 2, false, 1),
-      2 => TestStepResult::fromPageData($testInfo, $step2, 2, false, 2),
-      3 => TestStepResult::fromPageData($testInfo, $step3, 2, false, 3)
+      1 => TestStepResult::fromPageData($this->testInfo, $step1, 2, false, 1),
+      2 => TestStepResult::fromPageData($this->testInfo, $step2, 2, false, 2),
+      3 => TestStepResult::fromPageData($this->testInfo, $step3, 2, false, 3)
     );
-
-    return TestRunResults::fromStepResults($testInfo, 2, false, $stepResults);
+    return $stepResults;
   }
+
+  private function getTestRunResults() {
+    $steps = $this->getTestStepArray();
+    return TestRunResults::fromStepResults($this->testInfo, 2, false, $steps);
+  }
+
+  private function getTestRunResultsWithInvalid() {
+    $step4 = array('result' => 404, 'TTFB' => 500, 'loadTime' => 1000); // result is error
+    $steps = $this->getTestStepArray();
+    $steps[] = TestStepResult::fromPageData($this->testInfo, $step4, 2, false, 4);
+    return TestRunResults::fromStepResults($this->testInfo, 2, false, $steps);
+  }
+
+
 }

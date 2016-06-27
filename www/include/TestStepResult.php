@@ -79,6 +79,16 @@ class TestStepResult {
   }
 
   /**
+   * @return bool True if the step is successful, false otherwise
+   */
+  public function isSuccessful() {
+    if (!isset($this->rawData["result"])) {
+      return false;
+    }
+    return $this->rawData["result"] == 0 || $this->rawData["result"] == 99999;
+  }
+
+  /**
    * @return string The score
    */
   public function getPageSpeedScore() {

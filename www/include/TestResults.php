@@ -26,6 +26,9 @@ class TestResults {
   private $numRuns;
 
   private $pageData;
+  /**
+   * @var array 2D-Array of TestRunResults. First dimensions is the run number starting from 0, second if cached (0/1)
+   */
   private $runResults;
 
 
@@ -38,15 +41,21 @@ class TestResults {
     $this->runResults = array();
     $run = 1;
     foreach ($pageData as $runs) {
-      $fv = empty($runs[0]) ? null : TestStepResult::fromPageData($testInfo, $runs[0], $run, false, 1);
-      $rv = empty($runs[1]) ? null : TestStepResult::fromPageData($testInfo, $runs[1], $run, true, 1);
-      $this->runResults[] = array(
-        TestRunResults::fromStepResults($testInfo, $run, false, array($fv)),
-        TestRunResults::fromStepResults($testInfo, $run, true, array($rv))
-      );
+      $fv = self::singlestepRunFromPageData($testInfo, $run, false, $runs);
+      $rv = self::singlestepRunFromPageData($testInfo, $run, true, $runs);
+      $this->runResults[] = array($fv, $rv);
       $run++;
     }
     $this->numRuns = count($this->runResults);
+  }
+
+  private static function singlestepRunFromPageData($testInfo, $runNumber, $cached, &$runs) {
+    $cacheIdx = $cached ? 1 : 0;
+    if (empty($runs[$cacheIdx])) {
+      return null;
+    }
+    $step = TestStepResult::fromPageData($testInfo, $runs[$cacheIdx], $runNumber, $cached, 1);
+    return TestRunResults::fromStepResults($testInfo, $runNumber, $cached, array($step));
   }
 
   public static function fromFiles($testInfo, $fileHandler = null) {
@@ -70,7 +79,14 @@ class TestResults {
    * @return int Number of successful (cached) runs in this test
    */
   public function countSuccessfulRuns($cached = false) {
-    return CountSuccessfulTests($this->pageData, $cached ? 1 : 0);
+    $successful = 0;
+    for ($i = 0; $i <= $this->numRuns; $i++) {
+      $runResult = $this->getRunResult($i + 1, $cached);
+      if (!empty($runResult) && $runResult->isSuccessful()) {
+        $successful += 1;
+      }
+    }
+    return $successful;
   }
 
   /**
