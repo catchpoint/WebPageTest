@@ -97,8 +97,7 @@ class TestRunResult {
   public function getMimeTypeBreakdown() {
     // TODO: move implementation to this method
     $requests = null;
-    return getBreakdown($this->testInfo->getId(), $this->testInfo->getRootDirectory(), $this->run,
-                        $this->cached ? 1 : 0, $requests);
+    return getBreakdownForStep($this->localPaths, $this->getUrlGenerator(""), $requests);
   }
 
   public function getConsoleLog() {
