@@ -38,6 +38,13 @@ class TestRunResultsTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals(1000, $rawData["loadTime"]);
   }
 
+  public function testAggregateRawResults() {
+    $runResults = $this->getTestRunResults();
+    $aggregated = $runResults->aggregateRawResults();
+    $this->assertEquals(9000, $aggregated["loadTime"]);
+    $this->assertEquals(900, $aggregated["TTFB"]);
+  }
+
   private function getTestRunResults() {
     $step1 = array('result' => 0, 'TTFB' => 300, 'loadTime' => 6000);
     $step2 = array('result' => 0, 'TTFB' => 100, 'loadTime' => 2000);

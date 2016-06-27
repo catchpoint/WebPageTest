@@ -61,4 +61,22 @@ class TestRunResults {
     }
     return $this->stepResults[$stepNum - 1];
   }
+
+  /**
+   * @return array The aggregated numeric raw results of the different steps
+   */
+  public function aggregateRawResults() {
+    $aggregated = array();
+    foreach ($this->stepResults as $step) {
+      /* @var TestStepResult $step */
+      $rawData = $step->getRawResults();
+      foreach ($rawData as $metric => $value) {
+        if (!isset($aggregated[$metric])) {
+          $aggregated[$metric] = 0;
+        }
+        $aggregated[$metric] += $value;
+      }
+    }
+    return $aggregated;
+  }
 }
