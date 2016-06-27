@@ -46,7 +46,7 @@ else
         $path = substr($testPath, 1);
 
         $testInfo = TestInfo::fromValues($id, $testPath, $test);
-        $testResults = new TestResults($testInfo);
+        $testResults = TestResults::fromFiles($testInfo);
 
         $msLoad = microtime(true);
 

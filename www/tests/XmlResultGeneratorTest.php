@@ -60,7 +60,7 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
     $testInfo = TestInfo::fromFiles($testRoot);
     $expectedXmlFile = __DIR__ . '/data/singlestepXmlResult.xml.gz';
 
-    $testResults = new TestResults($testInfo);
+    $testResults = TestResults::fromFiles($testInfo);
     $xmlGenerator = new XmlResultGenerator($testInfo, "http://wpt-test-vm", new FileHandler(),
       $this->allAdditionalInfo, true);
     $xmlGenerator->printAllResults($testResults, "loadTime", null);
