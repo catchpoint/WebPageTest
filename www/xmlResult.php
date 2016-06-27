@@ -25,7 +25,7 @@ require_once 'include/XmlResultGenerator.php';
 require_once 'include/FileHandler.php';
 require_once 'include/TestInfo.php';
 require_once 'include/TestResults.php';
-require_once 'include/TestRunResult.php';
+require_once 'include/TestStepResult.php';
 
 // see if we are sending abbreviated results
 $pagespeed = 0;

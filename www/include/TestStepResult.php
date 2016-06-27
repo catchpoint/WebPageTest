@@ -6,7 +6,7 @@ require_once __DIR__ . '/../common_lib.inc';
 require_once __DIR__ . '/../domains.inc';
 require_once __DIR__ . '/../breakdown.inc';
 
-class TestRunResult {
+class TestStepResult {
 
   /**
    * @var TestInfo
@@ -37,7 +37,7 @@ class TestRunResult {
    * @param array $pageData The pageData array with test results
    * @param int $run The run to return the data for
    * @param bool $cached False for first view, true for repeat view
-   * @return TestRunResult The created instance
+   * @return TestStepResult The created instance
    */
   public static function fromPageData($testInfo, &$pageData, $run, $cached) {
     return new self($testInfo, $pageData, $run, $cached);

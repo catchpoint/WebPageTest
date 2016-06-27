@@ -175,7 +175,7 @@ class XmlResultGenerator {
   }
 
   /**
-   * @param TestRunResult $testResult Result for the median run
+   * @param TestStepResult $testResult Result for the median run
    */
   public function printMedianRun($testResult) {
     $run = $testResult->getRunNumber();
@@ -191,7 +191,7 @@ class XmlResultGenerator {
   }
 
   /**
-   * @param TestRunResult $testResult Result of this run
+   * @param TestStepResult $testResult Result of this run
    */
   public function printRun($testResult) {
     if (empty($testResult)) {
@@ -308,7 +308,7 @@ class XmlResultGenerator {
   }
 
   /**
-   * @param TestRunResult $testResult Result of the run
+   * @param TestStepResult $testResult Result of the run
    */
   private function printPageSpeed($testResult) {
     if ($this->shouldPrintInfo(self::INFO_PAGESPEED)) {
@@ -320,7 +320,7 @@ class XmlResultGenerator {
   }
 
   /**
-   * @param TestRunResult $testResult Result Data
+   * @param TestStepResult $testResult Result Data
    */
   private function printPageSpeedData($testResult) {
     $testRoot = $this->testInfo->getRootDirectory();
@@ -333,7 +333,7 @@ class XmlResultGenerator {
   }
 
   /**
-   * @param TestRunResult $testResult Result Data
+   * @param TestStepResult $testResult Result Data
    * @param bool $forMedian True if the printing is for median output, false otherwise
    */
   private function printAdditionalInformation($testResult, $forMedian) {
@@ -354,7 +354,7 @@ class XmlResultGenerator {
 
   /**
    * Print information about all of the requests
-   * @param TestRunResult $testResult Result Data for affected run
+   * @param TestStepResult $testResult Result Data for affected run
    * @param $forMedian True if the output is for median, false otherwise
    */
   private function printRequests($testResult, $forMedian) {
@@ -393,7 +393,7 @@ class XmlResultGenerator {
 
   /**
    * Print a breakdown of the requests and bytes by domain
-   * @param TestRunResult $testResult Result data of affected run
+   * @param TestStepResult $testResult Result data of affected run
    */
   private function printDomainBreakdown($testResult) {
     if (!$this->shouldPrintInfo(self::INFO_DOMAIN_BREAKDOWN)) {
@@ -416,7 +416,7 @@ class XmlResultGenerator {
 
   /**
    * Print a breakdown of the requests and bytes by mime type
-   * @param TestRunResult $testResult Result data of affected run
+   * @param TestStepResult $testResult Result data of affected run
    */
   private function printMimeTypeBreakdown($testResult) {
     if (!$this->shouldPrintInfo(self::INFO_MIMETYPE_BREAKDOWN)) {
@@ -435,7 +435,7 @@ class XmlResultGenerator {
 
   /**
    * Print any logged browser status messages
-   * @param TestRunResult $testResult Result data of affected run
+   * @param TestStepResult $testResult Result data of affected run
    */
   private function printStatusMessages($testResult) {
     $messages = $testResult->getStatusMessages();
@@ -454,7 +454,7 @@ class XmlResultGenerator {
 
   /**
    * Print the console log if requested
-   * @param TestRunResult $testResult Result data of affected run
+   * @param TestStepResult $testResult Result data of affected run
    */
   private function printConsoleLog($testResult) {
     if (!$this->shouldPrintInfo(self::INFO_CONSOLE)) {
