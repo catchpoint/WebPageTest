@@ -79,14 +79,7 @@ class TestResults {
    * @return int Number of successful (cached) runs in this test
    */
   public function countSuccessfulRuns($cached = false) {
-    $successful = 0;
-    for ($i = 0; $i <= $this->numRuns; $i++) {
-      $runResult = $this->getRunResult($i + 1, $cached);
-      if (!empty($runResult) && $runResult->isSuccessful()) {
-        $successful += 1;
-      }
-    }
-    return $successful;
+    return count($this->filterRunResults($cached, true));
   }
 
   /**
@@ -173,8 +166,7 @@ class TestResults {
     $loadTimes = array();
     $countRuns = 0;
 
-    for ($runNumber = 1; $runNumber <= $this->numRuns; $runNumber++) {
-      $run = $this->getRunResult($runNumber, $cached);
+    foreach ($this->filterRunResults($cached, true) as $run) {
       if (!$run || !$run->isSuccessful()) {
         continue;
       }
@@ -186,7 +178,7 @@ class TestResults {
         }
         $avgResults[$metric] += $value;
         if ($metric == "loadTime") {
-          $loadTimes[$runNumber] = $value;
+          $loadTimes[$run->getRunNumber()] = $value;
         }
       }
     }
