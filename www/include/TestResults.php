@@ -90,10 +90,11 @@ class TestResults {
   }
 
   /**
-   * @return string Returns the URL from the first view of the first run
+   * @return string Returns the URL from the first step of the first view of the first run
    */
   public function getUrlFromRun() {
-    return empty($this->pageData[1][0]['URL']) ? "" : $this->pageData[1][0]['URL'];
+    $rawData = $this->getRunResult(1, false)->getStepResult(1)->getRawResults();
+    return empty($rawData['URL']) ? "" : $rawData['URL'];
   }
 
   /**
