@@ -97,15 +97,17 @@ class TestResults {
   }
 
   /**
-   * @param int $run The run number
+   * @param int $run The run number, starting from 1
    * @param bool $cached False for first view, true for repeat view
-   * @return TestStepResult|null Result of the run, if exists. null otherwise
+   * @return TestRunResults|null Result of the run, if exists. null otherwise
    */
   public function getRunResult($run, $cached) {
-    if (empty($this->pageData[$run][$cached ? 1 : 0] ) ) {
+    $runIdx = $run - 1;
+    $cacheIdx = $cached ? 1 : 0;
+    if (empty($this->runResults[$runIdx][$cacheIdx] ) ) {
       return null;
     }
-    return TestStepResult::fromPageData($this->testInfo, $this->pageData[$run][$cached ? 1 : 0], $run, $cached, 0);
+    return $this->runResults[$runIdx][$cacheIdx];
   }
 
   /**

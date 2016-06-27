@@ -8,6 +8,7 @@ require_once __DIR__ . '/../include/XmlResultGenerator.php';
 require_once __DIR__ . '/../include/TestInfo.php';
 require_once __DIR__ . '/../include/TestResults.php';
 require_once __DIR__ . '/../include/TestStepResult.php';
+require_once __DIR__ . '/../include/TestRunResults.php';
 require_once __DIR__ . '/../include/FileHandler.php';
 
 require __DIR__ . '/data/singlestepRunResultData.inc.php';
@@ -116,7 +117,7 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
 
     $mock->method("isCachedRun")->willReturn(false);
     $mock->method("getRunNumber")->willReturn(1);
-    return $mock;
+    return TestRunResults::fromStepResults($this->testInfoMock, 1, false, array($mock));
   }
 
   private function getTestInfoMock() {

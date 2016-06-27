@@ -175,9 +175,10 @@ class XmlResultGenerator {
   }
 
   /**
-   * @param TestStepResult $testResult Result for the median run
+   * @param TestRunResults $testResult Result for the median run
    */
   public function printMedianRun($testResult) {
+    $testResult = $testResult->getStepResult(1);
     $run = $testResult->getRunNumber();
 
     $this->printViewRootStartTag($testResult->isCachedRun());
@@ -191,12 +192,13 @@ class XmlResultGenerator {
   }
 
   /**
-   * @param TestStepResult $testResult Result of this run
+   * @param TestRunResults $testResult Result of this run
    */
   public function printRun($testResult) {
     if (empty($testResult)) {
       return;
     }
+    $testResult = $testResult->getStepResult(1);
 
     $run = $testResult->getRunNumber();
     $cached = $testResult->isCachedRun() ? 1 : 0;
