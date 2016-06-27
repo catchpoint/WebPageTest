@@ -1,6 +1,8 @@
 <?php
 
 require_once __DIR__ . '/FileHandler.php';
+require_once __DIR__ . '/TestStepResult.php';
+require_once __DIR__ . '/TestRunResults.php';
 
 // TODO: get rid of this as soon as we don't use loadAllPageData, etc anymore
 require_once __DIR__ . '/../common_lib.inc';
@@ -21,6 +23,8 @@ class TestResults {
   private $firstViewAverage;
   private $repeatViewAverage;
 
+  private $numRuns;
+
   private $pageData;
   private $runResults;
 
@@ -29,6 +33,20 @@ class TestResults {
     $this->testInfo = $testInfo;
     $this->fileHandler = $fileHandler;
     $this->pageData = $pageData;
+
+    // for now this is singlestep until changes for multistep are finished in this class
+    $this->runResults = array();
+    $run = 1;
+    foreach ($pageData as $runs) {
+      $fv = empty($runs[0]) ? null : TestStepResult::fromPageData($testInfo, $runs[0], $run, false, 1);
+      $rv = empty($runs[1]) ? null : TestStepResult::fromPageData($testInfo, $runs[1], $run, true, 1);
+      $this->runResults[] = array(
+        TestRunResults::fromStepResults($testInfo, $run, false, array($fv)),
+        TestRunResults::fromStepResults($testInfo, $run, true, array($rv))
+      );
+      $run++;
+    }
+    $this->numRuns = count($this->runResults);
   }
 
   public static function fromFiles($testInfo, $fileHandler = null) {
@@ -44,7 +62,7 @@ class TestResults {
    * @return int Number of runs in this test
    */
   public function countRuns() {
-    return max(array_keys($this->pageData));
+    return $this->numRuns;
   }
 
   /**

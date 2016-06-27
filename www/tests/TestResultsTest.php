@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/../include/TestInfo.php';
 require_once __DIR__ . '/../include/TestResults.php';
 
 class TestResultsTest extends PHPUnit_Framework_TestCase {
@@ -62,6 +63,7 @@ class TestResultsTest extends PHPUnit_Framework_TestCase {
         $pageData[$key][1]["cached"] = 1;
       }
     }
-    return TestResults::fromPageData(null, $pageData);
+    $testinfo = array();
+    return TestResults::fromPageData(TestInfo::fromValues("testId", "/test/path" , $testinfo), $pageData);
   }
 }
