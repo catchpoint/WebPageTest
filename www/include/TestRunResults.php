@@ -99,4 +99,22 @@ class TestRunResults {
     }
     return $aggregated;
   }
+
+  /**
+   * @param string $metric The numeric metric to aggregate
+   * @param bool $successfulOnly True if only successful steps should be considered (default), false otherwise
+   * @return double|null The aggregated metric from all (succesful) steps of this run
+   */
+  public function aggregateMetric($metric, $successfulOnly = true) {
+    $aggregated = (double) 0;
+    foreach ($this->stepResults as $step) {
+      /* @var TestStepResult $step */
+      if ($successfulOnly && !$step->isSuccessful()) {
+        continue;
+      }
+      $value = $step->getMetric($metric);
+      $aggregated += ($value && is_numeric($value)) ? $value : 0;
+    }
+    return $aggregated;
+  }
 }

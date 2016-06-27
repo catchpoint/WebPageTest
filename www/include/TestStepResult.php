@@ -89,6 +89,17 @@ class TestStepResult {
   }
 
   /**
+   * @var string $metric The metric to return
+   * @return mixed|null The metric value or null if not set
+   */
+  public function getMetric($metric) {
+    if (!isset($this->rawData[$metric])) {
+      return null;
+    }
+    return $this->rawData[$metric];
+  }
+
+  /**
    * @return string The score
    */
   public function getPageSpeedScore() {

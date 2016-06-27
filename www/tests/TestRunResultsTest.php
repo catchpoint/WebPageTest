@@ -59,6 +59,21 @@ class TestRunResultsTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals(900, $aggregated["TTFB"]);
   }
 
+  public function testAggregateMetric() {
+    $runResults = $this->getTestRunResults();
+    $this->assertEquals(9000, $runResults->aggregateMetric("loadTime"));
+    $this->assertEquals(900, $runResults->aggregateMetric("TTFB"));
+  }
+
+  public function testAggregateMetricWithInvalid() {
+    // same results as invalid steps should be ignored
+    $runResults = $this->getTestRunResultsWithInvalid();
+    $this->assertEquals(9000, $runResults->aggregateMetric("loadTime"));
+    $this->assertEquals(900, $runResults->aggregateMetric("TTFB"));
+    $this->assertEquals(10000, $runResults->aggregateMetric("loadTime", false));
+    $this->assertEquals(1400, $runResults->aggregateMetric("TTFB", false));
+  }
+
   public function testIsSuccessful() {
     $this->assertTrue($this->getTestRunResults()->isSuccessful());
     $this->assertFalse($this->getTestRunResultsWithInvalid()->isSuccessful());
