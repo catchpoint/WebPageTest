@@ -25,14 +25,19 @@ class TestResults {
 
 
 
-  private function __construct($testInfo, $fileHandler = null) {
+  private function __construct($testInfo, $pageData, $fileHandler = null) {
     $this->testInfo = $testInfo;
     $this->fileHandler = $fileHandler;
-    $this->pageData = loadAllPageData($this->testInfo->getRootDirectory());
+    $this->pageData = $pageData;
   }
 
   public static function fromFiles($testInfo, $fileHandler = null) {
-    return new self($testInfo, $fileHandler);
+    $pageData = loadAllPageData($testInfo->getRootDirectory());
+    return new self($testInfo, $pageData, $fileHandler);
+  }
+
+  public static function fromPageData($testInfo, $pageData) {
+    return new self($testInfo, $pageData);
   }
 
   /**

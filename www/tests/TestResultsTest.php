@@ -1,0 +1,48 @@
+<?php
+
+require_once __DIR__ . '/../include/TestResults.php';
+
+class TestResultsTest extends PHPUnit_Framework_TestCase {
+
+  public function testCountRuns() {
+    $results = $this->testResultsFromPageData();
+    $this->assertEquals(4, $results->countRuns());
+  }
+
+  public function testGetMedianRunNumber() {
+    $results = $this->testResultsFromPageData();
+
+    $this->assertEquals(3, $results->getMedianRunNumber("loadTime", false));
+    $this->assertEquals(1, $results->getMedianRunNumber("TTFB", false));
+    $this->assertEquals(4, $results->getMedianRunNumber("loadTime", true));
+    $this->assertEquals(3, $results->getMedianRunNumber("TTFB", true));
+  }
+
+  public function testGetFirstViewAverage() {
+    $results = $this->testResultsFromPageData();
+    $fvAverages = $results->getFirstViewAverage();
+    $this->assertEquals(300, $fvAverages["TTFB"]);
+    $this->assertEquals(3000, $fvAverages["loadTime"]);
+    $this->assertEquals(3, $fvAverages["avgRun"]);
+  }
+
+  public function testResultsFromPageData() {
+    $run1 = array('result' => 0, 'TTFB' => 300, 'loadTime' => 6000);
+    $run2 = array('result' => 404, 'TTFB' => 200, 'loadTime' => 3000);
+    $run3 = array('result' => 0, 'TTFB' => 100, 'loadTime' => 2000);
+    $run4 = array('result' => 99999, 'TTFB' => 500, 'loadTime' => 1000);
+    $pageData = array(
+      1 => array($run1), // missing repeat view
+      2 => array($run2, $run4), // failed first view
+      3 => array($run3, $run1),
+      4 => array($run4, $run3)
+    );
+    foreach (array_keys($pageData) as $key) {
+      $pageData[$key][0]["cached"] = 0;
+      if (isset($pageData[$key][1])) {
+        $pageData[$key][1]["cached"] = 1;
+      }
+    }
+    return TestResults::fromPageData(null, $pageData);
+  }
+}
