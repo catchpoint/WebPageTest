@@ -9,18 +9,32 @@ require_once('devtools.inc.php');
 * Calculate the progress for all of the images in a given directory
 */
 function GetVisualProgress($testPath, $run, $cached, $options = null, $end = null, $startOffset = null) {
-    $frames = null;
-    if (substr($testPath, 0, 1) !== '.')
-      $testPath = './' . $testPath;
-    $testInfo = GetTestInfo($testPath);
-    $completed = IsTestRunComplete($run, $testInfo);
-    $video_directory = "$testPath/video_{$run}";
-    if ($cached)
-        $video_directory .= '_cached';
-    $cache_file = "$testPath/$run.$cached.visual.dat";
+  // TODO: in the long run this function might get redundant as the version below is more flexible
+  $frames = null;
+  $testPath = $testPath[0] == '.' || $testPath[0] == "/" ? $testPath : "./$testPath";
+  $localPaths = new TestPaths($testPath, $run, $cached);
+  $testInfo = GetTestInfo($testPath);
+  $completed = IsTestRunComplete($run, $testInfo);
+  return GetVisualProgressForStep($localPaths, $completed, $options, $end, $startOffset);
+}
+
+/**
+ * Retrieves the visual progress for a run/step, based on the files passed through $localPaths
+ *
+ * @param TestPaths $localPaths TestPaths object for this step/run
+ * @param bool $runCompleted If the run was completed
+ * @param array $options Options for image histogram
+ * @param float|int $end Optional end value
+ * @param float|int $startOffset Optional start offset
+ * @return array|null The visual progress as an array or null
+ */
+function GetVisualProgressForStep($localPaths, $runCompleted, $options = null, $end = null, $startOffset = null) {
+    $video_directory = $localPaths->videoDir();
+    $cache_file = $localPaths->visualDataCacheFile();
     if (!isset($startOffset))
       $startOffset = 0;
-    $visual_data_file = "$testPath/llab_$run.$cached.visual.dat";
+    $visual_data_file = $localPaths->visualDataFile();
+    $histograms_file = $localPaths->histogramsFile();
     if (gz_is_file($visual_data_file)) {
       $visual_data = json_decode(gz_file_get_contents($visual_data_file), true);
       // see if we are processing an externally-uploaded visual data file
@@ -43,7 +57,7 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
             unset($frames);
     }    
     $base_path = substr($video_directory, 1);
-    if ((!isset($frames) || !count($frames)) && (is_dir($video_directory) || gz_is_file("$testPath/$run.$cached.histograms.json"))) {
+    if ((!isset($frames) || !count($frames)) && (is_dir($video_directory) || gz_is_file($histograms_file))) {
         $frames = array('version' => $current_version);
         $frames['frames'] = array();
         $dirty = true;
@@ -97,8 +111,8 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
           } elseif (isset($first_file) && strlen($first_file) &&
                     isset($last_file) && strlen($last_file) && count($frames['frames'])) {
               $histograms = null;
-              if (gz_is_file("$testPath/$run.$cached.histograms.json"))
-                $histograms = json_decode(gz_file_get_contents("$testPath/$run.$cached.histograms.json"), true);
+              if (gz_is_file($histograms_file))
+                $histograms = json_decode(gz_file_get_contents($histograms_file), true);
               $start_histogram = GetImageHistogram("$video_directory/$first_file", $options, $histograms);
               $final_histogram = GetImageHistogram("$video_directory/$last_file", $options, $histograms);
               foreach($frames['frames'] as $time => &$frame) {
@@ -108,8 +122,8 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
                       $frames['complete'] = $time;
               }
           }
-        } elseif (gz_is_file("$testPath/$run.$cached.histograms.json")) {
-          $raw = json_decode(gz_file_get_contents("$testPath/$run.$cached.histograms.json"), true);
+        } elseif (gz_is_file($histograms_file)) {
+          $raw = json_decode(gz_file_get_contents($histograms_file), true);
           $histograms = array();
           foreach ($raw as $h) {
             if (isset($h['time']) && isset($h['histogram']))
@@ -143,7 +157,7 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
               $frame['path'] = $base_path . '/' . basename($frame['path']);
         }
     }
-    if ($completed && !isset($end) && !isset($options) && $dirty && isset($frames) && count($frames))
+    if ($runCompleted && !isset($end) && !isset($options) && $dirty && isset($frames) && count($frames))
         gz_file_put_contents($cache_file,json_encode($frames));
     return $frames;
 }

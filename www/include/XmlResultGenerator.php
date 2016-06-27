@@ -41,6 +41,140 @@ class XmlResultGenerator {
   }
 
   /**
+   * @param TestResults $testResults
+   * @param string $median_metric
+   * @param string $requestId
+   * @param bool $medianFvOnly 
+   */
+  public function printAllResults($testResults, $median_metric, $requestId = null, $medianFvOnly = false) {
+    $urlGenerator = UrlGenerator::create($this->friendlyUrls, $this->baseUrl, $this->testInfo->getId(), 0, 0);
+
+    echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+    echo "<response>\n";
+    echo "<statusCode>200</statusCode>\n";
+    echo "<statusText>Ok</statusText>\n";
+    if (!empty($requestId))
+      echo "<requestId>$requestId</requestId>\n";
+    echo "<data>\n";
+
+    echo "<testId>" . $this->testInfo->getId() . "</testId>\n";
+    echo "<summary>" . $urlGenerator->resultSummary() . "</summary>\n";
+
+    $testInfo = $this->testInfo->getInfoArray();
+    if ($testInfo)
+    {
+      if( @strlen($testInfo['url']) )
+        echo "<testUrl>" . xml_entities($testInfo['url']) . "</testUrl>\n";
+      if( @strlen($testInfo['location']) ) {
+        $locstring = $testInfo['location'];
+        if( @strlen($testInfo['browser']) )
+          $locstring .= ':' . $testInfo['browser'];
+        echo "<location>$locstring</location>\n";
+      }
+      $location = $this->testInfo->getTestLocation();
+      if ($location)
+        echo "<from>" . xml_entities($location) . "</from>\n";
+      if( @strlen($testInfo['connectivity']) )
+      {
+        echo "<connectivity>{$testInfo['connectivity']}</connectivity>\n";
+        echo "<bwDown>{$testInfo['bwIn']}</bwDown>\n";
+        echo "<bwUp>{$testInfo['bwOut']}</bwUp>\n";
+        echo "<latency>{$testInfo['latency']}</latency>\n";
+        echo "<plr>{$testInfo['plr']}</plr>\n";
+      }
+      if( isset($testInfo['mobile']) )
+        echo "<mobile>" . xml_entities($testInfo['mobile']) .   "</mobile>\n";
+      if( @strlen($testInfo['label']) )
+        echo "<label>" . xml_entities($testInfo['label']) . "</label>\n";
+      if( @strlen($testInfo['completed']) )
+        echo "<completed>" . gmdate("r",$testInfo['completed']) . "</completed>\n";
+      if( @strlen($testInfo['tester']) )
+        echo "<tester>" . xml_entities($testInfo['tester']) . "</tester>\n";
+      if( @strlen($testInfo['testerDNS']) )
+        echo "<testerDNS>" . xml_entities($testInfo['testerDNS']) . "</testerDNS>\n";
+    }
+
+    // spit out the calculated averages
+    $fv = $testResults->getFirstViewAverage();
+    $rv = $testResults->getRepeatViewAverage();
+    $runs = $testResults->countRuns();
+
+    echo "<runs>$runs</runs>\n";
+    echo "<successfulFVRuns>" . $testResults->countSuccessfulRuns(false) . "</successfulFVRuns>\n";
+    if( isset($rv) ) {
+      echo "<successfulRVRuns>" . $testResults->countSuccessfulRuns(true) . "</successfulRVRuns>\n";
+    }
+
+    echo "<average>\n";
+    echo "<firstView>\n";
+    foreach( $fv as $key => $val ) {
+      $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
+      echo "<$key>" . number_format($val,0, '.', '') . "</$key>\n";
+    }
+    echo "</firstView>\n";
+    if( isset($rv) )
+    {
+      echo "<repeatView>\n";
+      foreach( $rv as $key => $val ) {
+        $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
+        echo "<$key>" . number_format($val,0, '.', '') . "</$key>\n";
+      }
+      echo "</repeatView>\n";
+    }
+    echo "</average>\n";
+    echo "<standardDeviation>\n";
+    echo "<firstView>\n";
+    foreach( $fv as $key => $val ) {
+      $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
+      echo "<$key>" . $testResults->getStandardDeviation($key, false) . "</$key>\n";
+    }
+    echo "</firstView>\n";
+    if( isset($rv) )
+    {
+      echo "<repeatView>\n";
+      foreach( $rv as $key => $val ) {
+        $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
+        echo "<$key>" . $testResults->getStandardDeviation($key, true) . "</$key>\n";
+      }
+      echo "</repeatView>\n";
+    }
+    echo "</standardDeviation>\n";
+
+    // output the median run data
+    $fvMedian = $testResults->getMedianRunNumber($median_metric, false);
+    if( $fvMedian )
+    {
+      echo "<median>\n";
+      $this->printMedianRun($testResults->getRunResult($fvMedian, false));
+
+      if( isset($rv) )
+      {
+        $rvMedian = $medianFvOnly ? $fvMedian : $testResults->getMedianRunNumber($median_metric, true);
+        if($rvMedian)
+        {
+          $this->printMedianRun($testResults->getRunResult($rvMedian, true));
+        }
+      }
+      echo "</median>\n";
+    }
+
+    // spit out the raw data for each run
+    for( $i = 1; $i <= $runs; $i++ )
+    {
+      echo "<run>\n";
+      echo "<id>$i</id>\n";
+
+      $this->printRun($testResults->getRunResult($i, false));
+      $this->printRun($testResults->getRunResult($i, true));
+
+      echo "</run>\n";
+    }
+
+    echo "</data>\n";
+    echo "</response>\n";
+  }
+
+  /**
    * @param TestRunResult $testResult Result for the median run
    */
   public function printMedianRun($testResult) {
@@ -60,6 +194,10 @@ class XmlResultGenerator {
    * @param TestRunResult $testResult Result of this run
    */
   public function printRun($testResult) {
+    if (empty($testResult)) {
+      return;
+    }
+
     $run = $testResult->getRunNumber();
     $cached = $testResult->isCachedRun() ? 1 : 0;
     $testRoot = $this->testInfo->getRootDirectory();

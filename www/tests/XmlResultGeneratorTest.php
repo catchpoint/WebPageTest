@@ -1,8 +1,12 @@
 <?php
 
+require_once __DIR__ . '/TestUtil.php';
+require_once __DIR__ . '/IsCompatibleXMLConstraint.php';
+
 require_once __DIR__ . '/../include/XmlResultGenerator.php';
 
 require_once __DIR__ . '/../include/TestInfo.php';
+require_once __DIR__ . '/../include/TestResults.php';
 require_once __DIR__ . '/../include/TestRunResult.php';
 require_once __DIR__ . '/../include/FileHandler.php';
 
@@ -13,79 +17,86 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
   private $testInfoMock;
   private $testResultMock;
   private $fileHandlerMock;
+  private $tempDir;
+  private $orgDir;
 
   private $allAdditionalInfo =  array(XmlResultGenerator::INFO_CONSOLE, XmlResultGenerator::INFO_REQUESTS,
     XmlResultGenerator::INFO_DOMAIN_BREAKDOWN, XmlResultGenerator::INFO_MIMETYPE_BREAKDOWN,
     XmlResultGenerator::INFO_PAGESPEED);
 
   public function setUp() {
+    date_default_timezone_set("UTC"); // to make the test consistent with the result
     ob_start();
     $this->testInfoMock = $this->getTestInfoMock();
     $this->testResultMock = $this->getSinglestepTestRunResultMock();
     $this->fileHandlerMock = $this->getFileHandlerMock();
+    $this->orgDir = null;
+    $this->tempDir = null;
   }
 
   public function tearDown() {
+    if (!empty($this->orgDir)) {
+      chdir($this->orgDir);
+    }
     ob_end_clean();
+    if (!empty($this->tempDir) && is_dir($this->tempDir)) {
+      TestUtil::removeDirRecursive($this->tempDir);
+    }
+  }
+
+  public function testCompleteXmlGeneration() {
+    $this->tempDir = TestUtil::extractToTemp(__DIR__ . '/data/singlestepResults.zip');
+    $testInfo = TestInfo::fromFiles($this->tempDir . '/singlestepResults');
+    $imitatedPath = $this->imitatedResultPath($testInfo->getId());
+
+    // we need to move the results to a directory structure that equal to the real one.
+    // Then, we can go into the parent directory, so the relatece "testRoot" is the same as it would be in production
+    // This is important, as during XML generation, some URLs contain the test path
+    mkdir($this->tempDir . $imitatedPath, 0777, true);
+    rename($this->tempDir . '/singlestepResults', $this->tempDir . $imitatedPath);
+    $this->orgDir = getcwd();
+    chdir($this->tempDir);
+    $testRoot = "." . $imitatedPath;
+    $testInfo = TestInfo::fromFiles($testRoot);
+    $expectedXmlFile = __DIR__ . '/data/singlestepXmlResult.xml.gz';
+
+    $testResults = new TestResults($testInfo);
+    $xmlGenerator = new XmlResultGenerator($testInfo, "http://wpt-test-vm", new FileHandler(),
+      $this->allAdditionalInfo, true);
+    $xmlGenerator->printAllResults($testResults, "loadTime", null);
+
+    $this->assertThat(ob_get_contents(), IsCompatibleXMLConstraint::fromFile($expectedXmlFile));
   }
 
   public function testSinglestepMedianRunOutput() {
     $xmlGenerator = new XmlResultGenerator($this->testInfoMock, "https://unitTest", $this->fileHandlerMock,
       $this->allAdditionalInfo, true);
     $xmlGenerator->printMedianRun($this->testResultMock);
+    $expectedXmlFile = __DIR__ . '/data/singlestepMedianOutput.xml';
 
-    $resultXml = simplexml_load_string(ob_get_contents());
-    $expectedXml = simplexml_load_file(__DIR__ . '/data/singlestepMedianOutput.xml');
-    $this->assertXmlIsCompatible($expectedXml, $resultXml);
+    $this->assertThat(ob_get_contents(), IsCompatibleXMLConstraint::fromFile($expectedXmlFile));
   }
 
   public function testSinglestepRunOutput() {
     $xmlGenerator = new XmlResultGenerator($this->testInfoMock, "https://unitTest", $this->fileHandlerMock,
       $this->allAdditionalInfo, true);
     $xmlGenerator->printRun($this->testResultMock);
+    $expectedXmlFile = __DIR__ . '/data/singlestepRunOutput.xml';
 
-    $resultXml = simplexml_load_string(ob_get_contents());
-    $expectedXml = simplexml_load_file(__DIR__ . '/data/singlestepRunOutput.xml');
-    $this->assertXmlIsCompatible($expectedXml, $resultXml);
+    $this->assertThat(ob_get_contents(), IsCompatibleXMLConstraint::fromFile($expectedXmlFile));
   }
 
-  /**
-   * @param SimpleXMLElement $expected
-   * @param SimpleXMLElement $actual
-   */
-  private function assertXmlIsCompatible($expected, $actual, $path = "") {
-    $this->assertNodeEquals($expected, $actual, $path);
-    foreach ($expected->children() as $name => $child) {
-      // use xpath to iterate properly identify multiple children with the same name
-      $realChilds = $expected->xpath("./$name");
-      for ($i = 0; $i < count($realChilds); $i++) {
-        $xpathSuffix = count($realChilds) > 1 ? "[" . ($i+1). "]" : "";
-        $this->assertXmlIsCompatible($realChilds[$i], $actual->{$name}[$i], $path . "/" . $name . $xpathSuffix );
-      }
-    }
+  public function testPrintRunWithNull() {
+    $xmlGenerator = new XmlResultGenerator($this->testInfoMock, "https://unitTest", $this->fileHandlerMock,
+      $this->allAdditionalInfo, true);
+    $xmlGenerator->printRun(null);
+    $this->assertSame("", ob_get_contents());
   }
 
-  /**
-   * @param SimpleXMLElement $expected
-   * @param SimpleXMLElement $actual
-   */
-  private function assertNodeEquals($expected, $actual, $path) {
-    $this->assertNotNull($actual, "Node '$path' not found in actual result");
-    $this->assertEquals($expected->getName(), $actual->getName(),
-      "Name of node '$path'' is '" . $actual->getName() . "'");
-    foreach ($expected->attributes() as $attributeName => $attributeValue) {
-      $actualValue = $actual[$attributeName];
-      $this->assertEquals($actual[$attributeName], $attributeValue,
-        "Attribute '$path@$attributeName' was expected to be '$attributeValue', but is '$actualValue''");
-    }
-    $this->assertNodeValueEquals($expected, $actual, $path);
-  }
-
-  private function assertNodeValueEquals($expected, $actual, $path) {
-    $expectedValue = trim((string) $expected);
-    $actualValue = trim((string) $actual);
-    $this->assertEquals($expectedValue, $actualValue,
-      "Value of '$path' was expected to be '$expectedValue', but is '$actualValue'");
+  private function imitatedResultPath($testId) {
+    $parts = explode("_", $testId);
+    $pathParts = array(substr($parts[0], 0, 2), substr($parts[0], 2, 2), substr($parts[0], 4, 2), $parts[1], $parts[2]);
+    return "/results/" . implode("/", $pathParts);
   }
 
   private function getFileHandlerMock() {

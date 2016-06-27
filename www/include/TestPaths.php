@@ -59,6 +59,24 @@ class TestPaths {
   }
 
   /**
+   * Returns if the paths are for a cached run (repeat view), or not (first view). Try to avoid direct access
+   * and use the other public methods if possible.
+   * @return bool True if the paths are for a cached run, false otherwise
+   */
+  public function isCachedResult() {
+    return $this->cached;
+  }
+
+  /**
+   * Returns the run number which the paths are used for. Try to avoid direct access
+   * and use the other public methods if possible.
+   * @return int The run number
+   */
+  public function getRunNumber() {
+    return $this->run;
+  }
+
+  /**
    * @return string The base name of the file (without run information), e.g. when instantiated by from*Name methods
    */
   public function getParsedBaseName() {
@@ -101,6 +119,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for page data JSON file
+   */
+  public function pageDataJsonFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_page_data.json";
+  }
+
+  /**
    * @return string Path for request data file
    */
   public function requestDataFile() {
@@ -135,8 +160,112 @@ class TestPaths {
     return $this->testRoot . $this->underscoreIdentifier() . "_status.txt";
   }
 
+  /**
+   * @return string Path for custom metrics file
+   */
+  public function customMetricsFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_metrics.json";
+  }
+
+  /**
+   * @return string Path for custom metrics file
+   */
+  public function customRulesFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_custom_rules.json";
+  }
+
+  /**
+   * @return string Path for user timed events
+   */
+  public function userTimedEventsFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_timed_events.json";
+  }
+
+  /**
+   * @return string Path for Chrome trace user timing
+   */
+  public function chromeUserTimingFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_user_timing.json";
+  }
+
+  /**
+   * @return string Path for devtools results
+   */
+  public function devtoolsFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_devtools.json";
+  }
+
+  /**
+   * @return string Path for devtools CPU timeline
+   */
+  public function devtoolsCPUTimelineFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_timeline_cpu.json";
+  }
+
+  /**
+   * @return string Path for devtools CPU timeline
+   */
+  public function devtoolsTraceFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_trace.json";
+  }
+
+  /**
+   * @return string Path for the console log
+   */
+  public function consoleLogFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_console_log.json";
+  }
+
+  /**
+   * @return string Path for CSI cache (is the same for all runs and steps)
+   */
+  public function csiCacheFile() {
+    return $this->testRoot . "csi.json";
+  }
+
+  /**
+   * @return string Path to the visual data cache file
+   */
+  public function visualDataCacheFile() {
+    return $this->testRoot . $this->dotIdentifier() . ".visual.dat";
+  }
+
+  /**
+   * @return string Path to the visual data file
+   */
+  public function visualDataFile() {
+    return $this->testRoot . "llab_" . $this->dotIdentifier() . ".visual.dat";
+  }
+
+  /**
+   * @return string Path to histograms file
+   */
+  public function histogramsFile() {
+    return $this->testRoot . $this->dotIdentifier() . ".histograms.json";
+  }
+
+  /**
+   * @param int $version The version of the cache format
+   * @return string Path to cache file for devtools CPU times
+   */
+  public function devtoolsCPUTimeCacheFile($version) {
+    return $this->testRoot . $this->dotIdentifier() . ".devToolsCPUTime." . $version;
+  }
+
+  /**
+   * @param int $version The version of the cache format
+   * @return string Path to cache file for devtools requests
+   */
+  public function devtoolsRequestsCacheFile($version) {
+    return $this->testRoot . $this->dotIdentifier() . ".devToolsRequests." . $version;
+  }
+
   protected function underscoreIdentifier() {
     return $this->run . ($this->cached ? "_Cached" : "") . ($this->step > 1 ? "_" . $this->step : "");
+  }
+
+  protected function dotIdentifier() {
+    return $this->run . "." . ($this->cached ? "1" : "0") . ($this->step > 1 ? ("." . $this->step) : "");
   }
 
 }

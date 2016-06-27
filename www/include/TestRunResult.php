@@ -1,6 +1,10 @@
 <?php
 
 require_once __DIR__ . '/FileHandler.php';
+require_once __DIR__ . '/../devtools.inc.php';
+require_once __DIR__ . '/../common_lib.inc';
+require_once __DIR__ . '/../domains.inc';
+require_once __DIR__ . '/../breakdown.inc';
 
 class TestRunResult {
 
@@ -12,17 +16,19 @@ class TestRunResult {
    * @var FileHandler
    */
   private $fileHandler;
-  private $pageData;
+  private $rawData;
   private $run;
   private $cached;
+  private $localPaths;
 
   private function __construct($testInfo, &$pageData, $run, $cached, $fileHandler = null) {
     // This isn't likely to stay the standard constructor, so we name it explicitly as a static function below
     $this->testInfo = $testInfo;
-    $this->pageData = &$pageData;
+    $this->rawData = &$pageData;
     $this->run = intval($run);
     $this->cached = $cached ? true : false;
     $this->fileHandler = $fileHandler ? $fileHandler : new FileHandler();
+    $this->localPaths = new TestPaths($this->testInfo->getRootDirectory(), $this->run, $this->cached);
   }
 
   /**
@@ -35,6 +41,10 @@ class TestRunResult {
    */
   public static function fromPageData($testInfo, &$pageData, $run, $cached) {
     return new self($testInfo, $pageData, $run, $cached);
+  }
+
+  public function getUrlGenerator($baseUrl, $friendly = true) {
+    return UrlGenerator::create($friendly, $baseUrl, $this->testInfo->getRootDirectory(), $this->run, $this->cached);
   }
 
   /**
@@ -55,7 +65,7 @@ class TestRunResult {
    * @return array Raw result data
    */
   public function getRawResults() {
-    return $this->pageData[$this->run][$this->cached ? 1 : 0];
+    return $this->rawData;
   }
 
   /**
@@ -63,29 +73,25 @@ class TestRunResult {
    */
   public function getPageSpeedScore() {
     // TODO: move implementation to this method
-    $testPaths = new TestPaths($this->testInfo->getRootDirectory(), $this->run, $this->cached);
-    return GetPageSpeedScore($testPaths->pageSpeedFile());
+    if ($this->fileHandler->gzFileExists($this->localPaths->pageSpeedFile())) {
+      return GetPageSpeedScore($this->localPaths->pageSpeedFile());
+    }
   }
 
   public function getVisualProgress() {
     // TODO: move implementation to this method
-    return GetVisualProgress($this->testInfo->getRootDirectory(), $this->run, $this->cached ? 1 : 0,
-                             null, null, $this->getStartOffset());
+    return GetVisualProgressForStep($this->localPaths, $this->testInfo->isRunComplete($this->run), null, null,
+      $this->getStartOffset());
   }
 
   public function getRequests() {
     // TODO: move implementation to this method
-    $secure = false;
-    $haveLocations = false;
-    return getRequests($this->testInfo->getId(), $this->testInfo->getRootDirectory(), $this->run,
-                       $this->cached ? 1 : 0, $secure, $haveLocations, false, true);
+    return getRequestsForStep($this->localPaths, $this->getUrlGenerator(""), $secure, $haveLocations, false, true);
   }
 
   public function getDomainBreakdown() {
     // TODO: move implementation to this method
-    $requests = null;
-    return getDomainBreakdown($this->testInfo->getId(), $this->testInfo->getRootDirectory(), $this->run,
-                              $this->cached ? 1 : 0, $requests);
+    return getDomainBreakdownForRequests($this->getRequests());
   }
 
   public function getMimeTypeBreakdown() {
@@ -97,7 +103,7 @@ class TestRunResult {
 
   public function getConsoleLog() {
     // TODO: move implementation to this method, or encapsulate in another object
-    return DevToolsGetConsoleLog($this->testInfo->getRootDirectory(), $this->run, $this->cached ? 1 : 0);
+    return DevToolsGetConsoleLogForStep($this->localPaths);
   }
 
   /**
@@ -105,8 +111,7 @@ class TestRunResult {
    * @return array An array with array("time" => <timestamp>, "message" => <the actual Message>) for each message, or null
    */
   public function getStatusMessages() {
-    $localPaths = new TestPaths($this->testInfo->getRootDirectory(), $this->run, $this->cached);
-    $statusFile = $localPaths->statusFile();
+    $statusFile = $this->localPaths->statusFile();
     if (!$this->fileHandler->gzFileExists($statusFile)) {
       return null;
     }
@@ -125,9 +130,9 @@ class TestRunResult {
 
 
   private function getStartOffset() {
-    if (!array_key_exists('testStartOffset', $this->pageData[$this->run][$this->cached ? 1 : 0])) {
+    if (!array_key_exists('testStartOffset', $this->rawData)) {
       return 0;
     }
-    return intval(round($this->pageData[$this->run][$this->cached ? 1 : 0]['testStartOffset']));
+    return intval(round($this->rawData['testStartOffset']));
   }
 }
