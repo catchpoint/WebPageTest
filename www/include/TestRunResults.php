@@ -106,6 +106,7 @@ class TestRunResults {
    * @return double|null The aggregated metric from all (succesful) steps of this run
    */
   public function aggregateMetric($metric, $successfulOnly = true) {
+    $foundMetric = false;
     $aggregated = (double) 0;
     foreach ($this->stepResults as $step) {
       /* @var TestStepResult $step */
@@ -113,8 +114,12 @@ class TestRunResults {
         continue;
       }
       $value = $step->getMetric($metric);
-      $aggregated += ($value && is_numeric($value)) ? $value : 0;
+      if ($value === null || !is_numeric($value)) {
+        continue;
+      }
+      $aggregated += $value;
+      $foundMetric = true;
     }
-    return $aggregated;
+    return $foundMetric ? $aggregated : null;
   }
 }

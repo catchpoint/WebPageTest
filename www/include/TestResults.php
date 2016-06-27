@@ -137,7 +137,26 @@ class TestResults {
    * @return float The standard deviation of the metric in all (cached) runs
    */
   public function getStandardDeviation($metric, $cached) {
-    return PageDataStandardDeviation($this->pageData, $metric, $cached ? 1 : 0);
+    $values = array();
+    $sum = 0.0;
+    foreach ($this->filterRunResults($cached, true) as $runResult) {
+      $value = $runResult->aggregateMetric($metric);
+      if ($value !== null) {
+        $values[] = $value;
+        $sum += $value;
+      }
+    }
+    $numValues = count($values);
+    if ($numValues < 1) {
+      return null;
+    }
+
+    $average = $sum / $numValues;
+    $stdDev = 0.0;
+    foreach ($values as $value) {
+      $stdDev += pow($value - $average, 2);
+    }
+    return (int) sqrt($stdDev/$numValues);
   }
 
   /**
@@ -186,6 +205,29 @@ class TestResults {
     }
 
     return $avgResults;
+  }
+
+  /**
+   * @param bool $cached False for first views, true for repeat views (cached)
+   * @param bool $successfulOnly True if only successful runs should be returned
+   * @return TestRunResults[] An array of TestRunResults objects, the indices don't match the run number
+   */
+  private function filterRunResults($cached, $successfulOnly = true) {
+    $runResults = array();
+    $cachedIdx = $cached ? 1 : 0;
+    for ($i = 0; $i < $this->numRuns; $i++) {
+      if (empty($this->runResults[$i][$cachedIdx])) {
+        continue;
+      }
+
+      $runResult = $this->runResults[$i][$cachedIdx];
+      if ($successfulOnly && !$runResult->isSuccessful()) {
+        continue;
+      }
+
+      $runResults[] = $runResult;
+    }
+    return $runResults;
   }
 
 }
