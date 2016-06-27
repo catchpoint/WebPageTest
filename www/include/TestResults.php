@@ -22,7 +22,7 @@ class TestResults {
   private $repeatViewAverage;
 
   private $pageData;
-
+  private $runResults;
 
 
   private function __construct($testInfo, $pageData, $fileHandler = null) {
@@ -71,7 +71,7 @@ class TestResults {
     if (empty($this->pageData[$run][$cached ? 1 : 0] ) ) {
       return null;
     }
-    return TestStepResult::fromPageData($this->testInfo, $this->pageData[$run][$cached ? 1 : 0], $run, $cached);
+    return TestStepResult::fromPageData($this->testInfo, $this->pageData[$run][$cached ? 1 : 0], $run, $cached, 0);
   }
 
   /**

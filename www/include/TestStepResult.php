@@ -19,16 +19,18 @@ class TestStepResult {
   private $rawData;
   private $run;
   private $cached;
+  private $step;
   private $localPaths;
 
-  private function __construct($testInfo, &$pageData, $run, $cached, $fileHandler = null) {
+  private function __construct($testInfo, &$pageData, $run, $cached, $step, $fileHandler = null) {
     // This isn't likely to stay the standard constructor, so we name it explicitly as a static function below
     $this->testInfo = $testInfo;
     $this->rawData = &$pageData;
     $this->run = intval($run);
     $this->cached = $cached ? true : false;
+    $this->step = $step;
     $this->fileHandler = $fileHandler ? $fileHandler : new FileHandler();
-    $this->localPaths = new TestPaths($this->testInfo->getRootDirectory(), $this->run, $this->cached);
+    $this->localPaths = new TestPaths($this->testInfo->getRootDirectory(), $this->run, $this->cached, $this->step);
   }
 
   /**
@@ -37,10 +39,11 @@ class TestStepResult {
    * @param array $pageData The pageData array with test results
    * @param int $run The run to return the data for
    * @param bool $cached False for first view, true for repeat view
+   * @param int $step The step number
    * @return TestStepResult The created instance
    */
-  public static function fromPageData($testInfo, &$pageData, $run, $cached) {
-    return new self($testInfo, $pageData, $run, $cached);
+  public static function fromPageData($testInfo, &$pageData, $run, $cached, $step) {
+    return new self($testInfo, $pageData, $run, $cached, $step);
   }
 
   public function getUrlGenerator($baseUrl, $friendly = true) {
@@ -59,6 +62,13 @@ class TestStepResult {
    */
   public function isCachedRun() {
     return $this->cached;
+  }
+
+  /**
+   * @return int The step number
+   */
+  public function getStepNumber() {
+    return $this->step;
   }
 
   /**
