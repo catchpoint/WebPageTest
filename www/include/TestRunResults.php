@@ -88,6 +88,9 @@ class TestRunResults {
 
       $rawData = $step->getRawResults();
       foreach ($rawData as $metric => $value) {
+        if (!is_numeric($value)) {
+          continue;
+        }
         if (!isset($aggregated[$metric])) {
           $aggregated[$metric] = 0;
         }

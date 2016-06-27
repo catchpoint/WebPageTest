@@ -116,7 +116,7 @@ class TestResults {
    */
   public function getFirstViewAverage() {
     if (empty($this->firstViewAverage)) {
-      $this->calculateAverages();
+      $this->firstViewAverage = $this->calculateAverages(false);
     }
     return $this->firstViewAverage;
   }
@@ -126,7 +126,7 @@ class TestResults {
    */
   public function getRepeatViewAverage() {
     if (empty($this->repeatViewAverage)) {
-      $this->calculateAverages();
+      $this->repeatViewAverage = $this->calculateAverages(true);
     }
     return $this->repeatViewAverage;
   }
@@ -149,10 +149,43 @@ class TestResults {
     return GetMedianRun($this->pageData, $cached ? 1 : 0, $metric);
   }
 
-  private function calculateAverages() {
-    calculatePageStats($this->pageData, $fv, $rv);
-    $this->firstViewAverage = $fv;
-    $this->repeatViewAverage = $rv;
+  private function calculateAverages($cached) {
+    $avgResults = array();
+    $loadTimes = array();
+    $countRuns = 0;
+
+    for ($runNumber = 1; $runNumber <= $this->numRuns; $runNumber++) {
+      $run = $this->getRunResult($runNumber, $cached);
+      if (!$run || !$run->isSuccessful()) {
+        continue;
+      }
+      $countRuns++;
+
+      foreach ($run->aggregateRawResults() as $metric => $value) {
+        if (!isset($avgResults[$metric])) {
+          $avgResults[$metric] = 0;
+        }
+        $avgResults[$metric] += $value;
+        if ($metric == "loadTime") {
+          $loadTimes[$runNumber] = $value;
+        }
+      }
+    }
+
+    foreach ($avgResults as $metric => $value) {
+      $avgResults[$metric] /= (double) $countRuns;
+    }
+
+    $minDist = 10000000000;
+    foreach ($loadTimes as $runNumber => $loadTime) {
+      $dist = abs($loadTime - $avgResults["loadTime"]);
+      if ($dist < $minDist) {
+        $avgResults["avgRun"] = $runNumber;
+        $minDist = $dist;
+      }
+    }
+
+    return $avgResults;
   }
 
 }
