@@ -1006,6 +1006,8 @@ function ValidateKey(&$test, &$error, $key = null)
             $test['location'] = $keys[$key]['default location'];
         if (isset($keys[$key]['priority']))
             $test['priority'] = $keys[$key]['priority'];
+        if (isset($keys[$key]['max-priority']))
+            $test['priority'] = max($keys[$key]['max-priority'], $test['priority']);
         if( isset($keys[$key]['limit']) ){
           $limit = (int)$keys[$key]['limit'];
 
@@ -2231,6 +2233,8 @@ function RelayTest()
 
     $rkey = $_POST['rkey'];
     $test = json_decode($_POST['testinfo'], true);
+    $test['vd'] = '';
+    $test['vh'] = '';
     $job = trim($_POST['job']);
     $ini = trim($_POST['ini']);
     $location = trim($_POST['location']);
