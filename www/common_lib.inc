@@ -1991,7 +1991,7 @@ function ValidateTestId(&$id) {
   }
 
   if (preg_match('/^(?:[a-zA-Z0-9_]+\.?)+$/', @$testId)) {
-    if (intval(substr($testId, 0, 2)) < intval(date("y")) - 1)
+    if (!defined('OLD_TEST') && intval(substr($testId, 0, 2)) < intval(date("y")) - 1)
       define('OLD_TEST', true);
     $valid = true;
   } else {
