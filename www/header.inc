@@ -1,32 +1,46 @@
 <?php
 require_once('page_data.inc');
 if( !isset($pageData) && isset($id) && isset($testPath) ) {
-    $options = null;
-    if (array_key_exists('end', $_REQUEST))
-        $options = array('end' => $_REQUEST['end']);
-    $pageData = loadAllPageData($testPath, $options);
+  $options = null;
+  if (array_key_exists('end', $_REQUEST))
+    $options = array('end' => $_REQUEST['end']);
+  $pageData = loadAllPageData($testPath, $options);
 }
 if (isset($pageData) && is_array($pageData)) {
   $adultKeywords = array();
   if (is_file('./settings/adult.txt'))
     $adultKeywords = file('./settings/adult.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-  foreach($pageData as &$run_data) {
-      foreach($run_data as &$test_data) {
-          $isAdult = false;
-          if (array_key_exists('URL', $test_data))
-            foreach ($adultKeywords as $keyword)
-              if ((stripos($test_data['URL'], $keyword) !== false) ||
-                  (array_key_exists('title', $test_data) &&
-                  stripos($test_data['title'], $keyword) !== false)) {
-                $isAdult = true;
-                break;
-              }
-          if ($isAdult || (array_key_exists('adult_site', $test_data) && $test_data['adult_site'])) {
-              define('ADULT_SITE', true);
-              $adult_site = true;
-              break 2;
-          }
+  $isAdult = false;
+  if (isset($url)) {
+    foreach ($adultKeywords as $keyword) {
+      if (stripos($url, $keyword) !== false) {
+        $isAdult = true;
+        define('ADULT_SITE', true);
+        $adult_site = true;
+        break;
       }
+    }
+  }
+  if (!$isAdult) {
+    foreach($pageData as &$run_data) {
+      foreach($run_data as &$test_data) {
+        if (array_key_exists('URL', $test_data)) {
+          foreach ($adultKeywords as $keyword) {
+            if ((stripos($test_data['URL'], $keyword) !== false) ||
+                (array_key_exists('title', $test_data) &&
+                stripos($test_data['title'], $keyword) !== false)) {
+              $isAdult = true;
+              break;
+            }
+          }
+        }
+        if ($isAdult || (array_key_exists('adult_site', $test_data) && $test_data['adult_site'])) {
+          define('ADULT_SITE', true);
+          $adult_site = true;
+          break 2;
+        }
+      }
+    }
   }
 }
 
@@ -74,10 +88,11 @@ if (!defined('EMBED')) {
                 $testLoc = $test['test']['loc'];
             
             if( strpos($testLoc, '..') === false && strpos($testLoc, '/') === false && strpos($testLoc, '\\') === false && 
-                isset($testLoc) && strlen($testLoc) && is_file("./custom/$testLoc/headerAd.inc") )
+                isset($testLoc) && strlen($testLoc) && is_file("./custom/$testLoc/headerAd.inc") ) {
                 include("./custom/$testLoc/headerAd.inc");
-            elseif( is_file('./ads/header.inc') && (!array_key_exists('HTTP_SSL', $_SERVER) || $_SERVER['HTTP_SSL'] != 'On') )
+            } elseif( is_file('./ads/header.inc') && (!array_key_exists('HTTP_SSL', $_SERVER) || $_SERVER['HTTP_SSL'] != 'On') ) {
                 include('./ads/header.inc');
+            }
         }
     ?>
     </div>

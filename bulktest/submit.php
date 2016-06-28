@@ -80,6 +80,7 @@ function SubmitTests(&$results, $testCount) {
     global $permutations;
     global $priority;
     global $bodies;
+    global $testerAffinity;
 
     $count = 0;
     foreach ($results as &$result) {
@@ -99,7 +100,8 @@ function SubmitTests(&$results, $testCount) {
             
             $location = $permutations[$result['label']]['location'];
             $request = $server . "runtest.php?f=json&runs=$runs&url=" . urlencode($result['url']) . '&location=' . urlencode($location);
-            $request .= "&affinity=" . urlencode($result['url']);
+            if ($testerAffinity)
+              $request .= "&affinity=" . urlencode($result['url']);
             if( $private )
                 $request .= '&private=1';
             if( $video )

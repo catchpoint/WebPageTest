@@ -1980,22 +1980,23 @@ function json_response(&$response) {
  * @param mixed $id
  */
 function ValidateTestId(&$id) {
-    $valid = false;
-    $testId = $id;
-    // see if it is a relay test (includes the key)
-    if( strpos($id, '.') !== false ) {
-        $parts = explode('.', $id);
-        if( count($parts) == 2 ) {
-            $testId = trim($parts[1]);
-        }
-    }
+  $valid = false;
+  $testId = $id;
+  // see if it is a relay test (includes the key)
+  if( strpos($id, '.') !== false ) {
+    $parts = explode('.', $id);
+    if( count($parts) == 2 )
+      $testId = trim($parts[1]);
+  }
 
-    if (preg_match('/^(?:[a-zA-Z0-9_]+\.?)+$/', @$testId)) {
-        $valid = true;
-    } else {
-        $id = '';
-    }
-    return $valid;
+  if (preg_match('/^(?:[a-zA-Z0-9_]+\.?)+$/', @$testId)) {
+    if (intval(substr($testId, 0, 2)) < intval(date("y")) - 1)
+      define('OLD_TEST', true);
+    $valid = true;
+  } else {
+    $id = '';
+  }
+  return $valid;
 }
 
 function arrayLookupWithDefault($key, $searchArray, $default) {
