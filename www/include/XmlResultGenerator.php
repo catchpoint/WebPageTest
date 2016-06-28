@@ -210,13 +210,13 @@ class XmlResultGenerator {
   }
 
   /**
-   * @param TestRunResults $testResult Result of this run
+   * @param TestRunResults $runResult Result of this run
    */
-  public function printRun($testResult) {
-    if (empty($testResult)) {
+  public function printRun($runResult) {
+    if (empty($runResult)) {
       return;
     }
-    $testResult = $testResult->getStepResult(1);
+    $testResult = $runResult->getStepResult(1);
 
     $run = $testResult->getRunNumber();
     $cached = $testResult->isCachedRun() ? 1 : 0;
@@ -229,6 +229,7 @@ class XmlResultGenerator {
 
     $this->printViewRootStartTag($testResult->isCachedRun());
     $this->printTester($run);
+    echo "<numSteps>" . $runResult->countSteps() . "</numSteps>\n";
 
     echo "<results>\n";
     echo ArrayToXML($testResult->getRawResults());

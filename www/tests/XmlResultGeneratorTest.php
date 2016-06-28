@@ -71,6 +71,7 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals("lorem", $xml->results->foo);
     $this->assertTrue(isset($xml->domains));
     $this->assertEquals("/result/160628_AB_C/2/screen_shot/cached/", $xml->pages->screenShot);
+    $this->assertEquals("1", $xml->numSteps);
   }
 
   private function getTestStepArray() {
