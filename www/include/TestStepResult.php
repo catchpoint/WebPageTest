@@ -5,6 +5,7 @@ require_once __DIR__ . '/../devtools.inc.php';
 require_once __DIR__ . '/../common_lib.inc';
 require_once __DIR__ . '/../domains.inc';
 require_once __DIR__ . '/../breakdown.inc';
+require_once __DIR__ . '/../video/visualProgress.inc.php';
 
 class TestStepResult {
 
@@ -128,6 +129,9 @@ class TestStepResult {
 
   public function getVisualProgress() {
     // TODO: move implementation to this method
+    if (!$this->fileHandler->dirExists($this->localPaths->videoDir())) {
+      return array();
+    }
     return GetVisualProgressForStep($this->localPaths, $this->testInfo->isRunComplete($this->run), null, null,
       $this->getStartOffset());
   }
