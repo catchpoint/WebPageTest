@@ -27,7 +27,7 @@ class TestResults {
 
   private $pageData;
   /**
-   * @var array 2D-Array of TestRunResults. First dimensions is the run number starting from 0, second if cached (0/1)
+   * @var TestRunResults[][] First dimensions is the run number starting from 0, second if cached (0/1)
    */
   private $runResults;
 

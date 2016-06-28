@@ -7,6 +7,9 @@ class TestRunResults {
   private $testInfo;
   private $runNumber;
   private $isCached;
+  /**
+   * @var TestStepResult[] Step results in this run
+   */
   private $stepResults;
   private $numSteps;
 
@@ -67,7 +70,6 @@ class TestRunResults {
    */
   public function isSuccessful() {
     foreach ($this->stepResults as $stepResult) {
-      /* @var TestStepResult $stepResult */
       if (!$stepResult->isSuccessful()) {
         return false;
       }
@@ -81,7 +83,6 @@ class TestRunResults {
   public function aggregateRawResults() {
     $aggregated = array();
     foreach ($this->stepResults as $step) {
-      /* @var TestStepResult $step */
       if (!$step->isSuccessful()) {
         continue;
       }
@@ -109,7 +110,6 @@ class TestRunResults {
     $foundMetric = false;
     $aggregated = (double) 0;
     foreach ($this->stepResults as $step) {
-      /* @var TestStepResult $step */
       if ($successfulOnly && !$step->isSuccessful()) {
         continue;
       }
