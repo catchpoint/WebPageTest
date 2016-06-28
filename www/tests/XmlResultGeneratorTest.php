@@ -20,7 +20,7 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
     ob_end_clean();
   }
 
-  public function testMedianSinglestep() {
+  public function testPrintMedianRunSinglestep() {
     $run = $this->getTestRunResults(1);
     $xmlGenerator = new XmlResultGenerator($this->testInfo, "", new FileHandler(), $this->xmlInfoDomainBreakdown, true);
     $xmlGenerator->printMedianRun($run);
@@ -33,7 +33,7 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
     $this->assertTrue(isset($xml->domains));
   }
 
-  public function testMedianSinglestepForceMultistep() {
+  public function testPrintMedianRunSinglestepForceMultistep() {
     $run = $this->getTestRunResults(1);
     $xmlGenerator = new XmlResultGenerator($this->testInfo, "", new FileHandler(), $this->xmlInfoDomainBreakdown, true);
     $xmlGenerator->forceMultistepFormat(true);
@@ -46,7 +46,7 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
     $this->assertFalse(isset($xml->domains));
   }
 
-  public function testMedianMultistep() {
+  public function testPrintMedianRunMultistep() {
     $run = $this->getTestRunResults(3);
     $xmlGenerator = new XmlResultGenerator($this->testInfo, "", new FileHandler(), $this->xmlInfoDomainBreakdown, true);
     $xmlGenerator->printMedianRun($run);
