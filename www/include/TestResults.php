@@ -155,10 +155,30 @@ class TestResults {
   /**
    * @param string $metric Name of the metric to consider for selecting the median
    * @param bool $cached False if first views should be considered for selecting, true for repeat views
+   * @param string $medianMode Can be set to "fastest" to consider the fastest run and not the median. Defaults to "median".
    * @return float The run number of the median run
    */
-  public function getMedianRunNumber($metric, $cached) {
-    return GetMedianRun($this->pageData, $cached ? 1 : 0, $metric);
+  public function getMedianRunNumber($metric, $cached, $medianMode = "median") {
+    $values = $this->getMetricFromRuns($metric, $cached, true);
+    if (count($values) == 0) {
+      $values = $this->getMetricFromRuns($metric, $cached, false);
+    }
+    $numValues = count($values);
+    if ($numValues == 0) {
+      // fall back to loadTime if possible
+      if ($metric != "loadTime") {
+        return $this->getMedianRunNumber("loadTime", $cached, $medianMode);
+      }
+      return null;
+    }
+    // we are interested in the keys (run numbers), but sort by value
+    asort($values);
+    $runNumbers = array_keys($values);
+    if ($numValues == 1 || $medianMode == "fastest") {
+      return $runNumbers[0];
+    }
+    $medianIndex = (int)floor($numValues / 2.0);
+    return $runNumbers[$medianIndex];
   }
 
   private function calculateAverages($cached) {
@@ -220,6 +240,17 @@ class TestResults {
       $runResults[] = $runResult;
     }
     return $runResults;
+  }
+
+  private function getMetricFromRuns($metric, $cached, $successfulOnly) {
+    $values = array();
+    foreach ($this->filterRunResults($cached, $successfulOnly) as $run) {
+      $value = $run->aggregateMetric($metric, $successfulOnly);
+      if ($value !== null) {
+        $values[$run->getRunNumber()] = $value;
+      }
+    }
+    return $values;
   }
 
 }

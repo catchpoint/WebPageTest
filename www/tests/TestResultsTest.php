@@ -19,6 +19,16 @@ class TestResultsTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals(4, $results->getMedianRunNumber("TTFB", true));
   }
 
+  public function testGetMedianRunNumberFastestMode() {
+    $results = $this->testResultsFromPageData();
+
+    $this->assertEquals(4, $results->getMedianRunNumber("loadTime", false, "fastest"));
+    $this->assertEquals(3, $results->getMedianRunNumber("TTFB", false, "fastest"));
+
+    $this->assertEquals(2, $results->getMedianRunNumber("loadTime", true, "fastest"));
+    $this->assertEquals(3, $results->getMedianRunNumber("TTFB", true, "fastest"));
+  }
+
   public function testGetFirstViewAverage() {
     $results = $this->testResultsFromPageData();
     $fvAverages = $results->getFirstViewAverage();

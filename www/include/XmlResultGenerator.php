@@ -141,7 +141,8 @@ class XmlResultGenerator {
     echo "</standardDeviation>\n";
 
     // output the median run data
-    $fvMedian = $testResults->getMedianRunNumber($median_metric, false);
+    $medianMode = (!empty($_REQUEST["medianRun"]) && $_REQUEST["medianRun"] == "fastest") ? "fastest" : "median";
+    $fvMedian = $testResults->getMedianRunNumber($median_metric, false, $medianMode);
     if( $fvMedian )
     {
       echo "<median>\n";
@@ -149,7 +150,7 @@ class XmlResultGenerator {
 
       if( isset($rv) )
       {
-        $rvMedian = $medianFvOnly ? $fvMedian : $testResults->getMedianRunNumber($median_metric, true);
+        $rvMedian = $medianFvOnly ? $fvMedian : $testResults->getMedianRunNumber($median_metric, true, $medianMode);
         if($rvMedian)
         {
           $this->printMedianRun($testResults->getRunResult($rvMedian, true));
