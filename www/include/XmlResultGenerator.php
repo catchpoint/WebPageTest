@@ -218,26 +218,38 @@ class XmlResultGenerator {
     }
     $testResult = $runResult->getStepResult(1);
 
-    $run = $testResult->getRunNumber();
-    $cached = $testResult->isCachedRun() ? 1 : 0;
+    $this->printViewRootStartTag($testResult->isCachedRun());
+    $this->printTester($runResult->getRunNumber());
+    echo "<numSteps>" . $runResult->countSteps() . "</numSteps>\n";
+
+    $this->printStepResults($runResult->getStepResult(1));
+
+    $this->printViewRootEndTag($testResult->isCachedRun());
+  }
+
+  /**
+   * @param TestStepResult $stepResult Results for the step to be printed
+   */
+  private function printStepResults($stepResult) {
+    $run = $stepResult->getRunNumber();
+    $cached = $stepResult->isCachedRun() ? 1 : 0;
+    $step = $stepResult->getStepNumber();
+
     $testRoot = $this->testInfo->getRootDirectory();
     $testId = $this->testInfo->getId();
 
-    $localPaths = new TestPaths($testRoot, $run, $cached);
-    $nameOnlyPaths = new TestPaths("", $run, $cached);
-    $urlPaths = new TestPaths($this->baseUrl . substr($testRoot, 1), $run, $cached);
+    $localPaths = new TestPaths($testRoot, $run, $cached, $step);
+    $nameOnlyPaths = new TestPaths("", $run, $cached, $step);
+    $urlPaths = new TestPaths($this->baseUrl . substr($testRoot, 1), $run, $cached, $step);
 
-    $this->printViewRootStartTag($testResult->isCachedRun());
-    $this->printTester($run);
-    echo "<numSteps>" . $runResult->countSteps() . "</numSteps>\n";
 
     echo "<results>\n";
-    echo ArrayToXML($testResult->getRawResults());
-    $this->printPageSpeed($testResult);
+    echo ArrayToXML($stepResult->getRawResults());
+    $this->printPageSpeed($stepResult);
     echo "</results>\n";
 
     // links to the relevant pages
-    $urlGenerator = UrlGenerator::create($this->friendlyUrls, $this->baseUrl, $testId, $run, $cached);
+    $urlGenerator = UrlGenerator::create($this->friendlyUrls, $this->baseUrl, $testId, $run, $cached, $step);
     echo "<pages>\n";
     echo "<details>" . htmlspecialchars($urlGenerator->resultPage("details")) . "</details>\n";
     echo "<checklist>" . htmlspecialchars($urlGenerator->resultPage("performance_optimization")) . "</checklist>\n";
@@ -279,11 +291,11 @@ class XmlResultGenerator {
       echo "<requestsData>" . $urlPaths->requestDataFile() . "</requestsData>\n";
     if ($this->fileHandler->gzFileExists($localPaths->utilizationFile()))
       echo "<utilization>" . $urlPaths->utilizationFile() . "</utilization>\n";
-    $this->printPageSpeedData($testResult);
+    $this->printPageSpeedData($stepResult);
     echo "</rawData>\n";
 
     // video frames
-    $progress = $testResult->getVisualProgress();
+    $progress = $stepResult->getVisualProgress();
     if (array_key_exists('frames', $progress) && is_array($progress['frames']) && count($progress['frames'])) {
       echo "<videoFrames>\n";
       foreach ($progress['frames'] as $ms => $frame) {
@@ -298,8 +310,7 @@ class XmlResultGenerator {
       echo "</videoFrames>\n";
     }
 
-    $this->printAdditionalInformation($testResult, false);
-    $this->printViewRootEndTag($testResult->isCachedRun());
+    $this->printAdditionalInformation($stepResult, false);
   }
 
   private function printViewRootStartTag($isCachedRun) {
