@@ -15,6 +15,9 @@ if (!$ok) {
 $url = str_replace('"', '', $_REQUEST['url']);
 if (substr($url, 0, 4) != 'http')
   $url = 'http://' . $url;
+$delay = 500;
+if (isset($_REQUEST['delay']))
+  $delay = min(max(0, $_REQUEST['delay']), 600000);
 ?>
 <html>
 <head>
@@ -36,6 +39,7 @@ if (substr($url, 0, 4) != 'http')
 <script>
 <?php
   echo "var url = \"$url\";\n";
+  echo "var delay = $delay;\n";
 ?>
 if (!Date.now)
   Date.now = function() {return new Date().getTime();};
@@ -43,7 +47,7 @@ if (!window.requestAnimationFrame)
   window.requestAnimationFrame = function(callback) {return setTimeout(callback, 16);}
 
 function loaded() {
-  // Leave the orange screen up for 500ms
+  // Leave the orange screen up for the configured delay
   setTimeout(function(){
     // Wait until the next animation frame to remove the orange screen
     window.requestAnimationFrame(function() {
@@ -54,7 +58,7 @@ function loaded() {
         window.location = url;
       });
     });
-  }, 500);
+  }, delay);
 }
 
 if (window.addEventListener)
