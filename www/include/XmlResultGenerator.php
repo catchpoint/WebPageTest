@@ -223,7 +223,7 @@ class XmlResultGenerator {
     $this->printTester($runResult->getRunNumber());
     echo "<numSteps>" . $numSteps . "</numSteps>\n";
 
-    if ($numSteps > 1) {
+    if ($this->forceMultistep || $numSteps > 1) {
       for ($step = 1; $step <= $numSteps; $step++) {
         echo "<step>\n";
         echo "<id>" . $step . "</id>";

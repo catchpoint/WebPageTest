@@ -101,6 +101,30 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
     $this->assertTrue(isset($xml->step[1]->domains));
     // TODO: enable to check step specific URLs
     // $this->assertEquals("/result/160628_AB_C/2/screen_shot/cached#2", $xml->step[1]->pages->screenShot);
+
+    $this->assertFalse(isset($xml->step[2]));
+  }
+
+  public function testPrintRunSinglestepForceMultistep() {
+    $run = $this->getTestRunResults(1);
+    $xmlGenerator = new XmlResultGenerator($this->testInfo, "", new FileHandler(), $this->xmlInfoDomainBreakdown, true);
+    $xmlGenerator->forceMultistepFormat(true);
+    $xmlGenerator->printRun($run);
+    $xml = simplexml_load_string(ob_get_contents());
+
+    $this->assertFalse(isset($xml->results));
+    $this->assertFalse(isset($xml->domains));
+    $this->assertFalse(isset($xml->pages));
+    $this->assertEquals("1", $xml->numSteps);
+
+    $this->assertTrue(isset($xml->step[0]));
+    $this->assertEquals("1", $xml->step[0]->id);
+    $this->assertEquals("300", $xml->step[0]->results->TTFB);
+    $this->assertEquals("6000", $xml->step[0]->results->loadTime);
+    $this->assertEquals("lorem", $xml->step[0]->results->foo);
+    $this->assertTrue(isset($xml->step[0]->domains));
+    $this->assertEquals("/result/160628_AB_C/2/screen_shot/cached/", $xml->step[0]->pages->screenShot);
+    $this->assertFalse(isset($xml->step[1]));
   }
 
   private function getTestStepArray() {
