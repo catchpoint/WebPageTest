@@ -217,12 +217,22 @@ class XmlResultGenerator {
       return;
     }
     $testResult = $runResult->getStepResult(1);
+    $numSteps = $runResult->countSteps();
 
     $this->printViewRootStartTag($testResult->isCachedRun());
     $this->printTester($runResult->getRunNumber());
-    echo "<numSteps>" . $runResult->countSteps() . "</numSteps>\n";
+    echo "<numSteps>" . $numSteps . "</numSteps>\n";
 
-    $this->printStepResults($runResult->getStepResult(1));
+    if ($numSteps > 1) {
+      for ($step = 1; $step <= $numSteps; $step++) {
+        echo "<step>\n";
+        echo "<id>" . $step . "</id>";
+        $this->printStepResults($runResult->getStepResult($step));
+        echo "</step>\n";
+      }
+    } else {
+      $this->printStepResults($runResult->getStepResult(1));
+    }
 
     $this->printViewRootEndTag($testResult->isCachedRun());
   }
@@ -231,6 +241,9 @@ class XmlResultGenerator {
    * @param TestStepResult $stepResult Results for the step to be printed
    */
   private function printStepResults($stepResult) {
+    if (empty($stepResult)) {
+      return;
+    }
     $run = $stepResult->getRunNumber();
     $cached = $stepResult->isCachedRun() ? 1 : 0;
     $step = $stepResult->getStepNumber();
