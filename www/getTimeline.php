@@ -82,11 +82,12 @@ if (gz_is_file("$testPath/$run{$cachedText}_trace.json")) {
       echo "\n]";
   }
 }
-if (!$ok)
+if (!$ok) {
   header("HTTP/1.0 404 Not Found");
+}
 
 function GetEvents($entry) {
-  $events = [];
+  $events = array();
   if (is_array($entry) &&
       isset($entry['method']) &&
       $entry['method'] == 'Timeline.eventRecorded' &&
