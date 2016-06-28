@@ -33,6 +33,19 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
     $this->assertTrue(isset($xml->domains));
   }
 
+  public function testMedianSinglestepForceMultistep() {
+    $run = $this->getTestRunResults(1);
+    $xmlGenerator = new XmlResultGenerator($this->testInfo, "", new FileHandler(), $this->xmlInfoDomainBreakdown, true);
+    $xmlGenerator->forceMultistepFormat(true);
+    $xmlGenerator->printMedianRun($run);
+    $xml = simplexml_load_string(ob_get_contents());
+    $this->assertEquals("2", $xml->run);
+    $this->assertEquals("300", $xml->TTFB);
+    $this->assertEquals("6000", $xml->loadTime);
+    $this->assertFalse(isset($xml->foo));
+    $this->assertFalse(isset($xml->domains));
+  }
+
   public function testMedianMultistep() {
     $run = $this->getTestRunResults(3);
     $xmlGenerator = new XmlResultGenerator($this->testInfo, "", new FileHandler(), $this->xmlInfoDomainBreakdown, true);

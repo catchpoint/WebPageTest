@@ -23,6 +23,7 @@ class XmlResultGenerator {
   private $additionalInfo;
   private $fileHandler;
   private $friendlyUrls;
+  private $forceMultistep;
 
   /**
    * XmlResultGenerator constructor.
@@ -38,6 +39,16 @@ class XmlResultGenerator {
     $this->additionalInfo = $additionalInfo;
     $this->fileHandler = $fileHandler;
     $this->friendlyUrls = $friendlyUrls;
+    $this->forceMultistep = false;
+  }
+
+  /**
+   * For singlestep measurement, the output is still in singlestep format. With this method, the behavior can
+   * be changed.
+   * @param $force True if the output should be always in multistep format, false otherwise.
+   */
+  public function forceMultistepFormat($force) {
+    $this->forceMultistep = $force;
   }
 
   /**
@@ -185,7 +196,7 @@ class XmlResultGenerator {
     echo "<run>" . $run . "</run>\n";
     $this->printTester($run);
 
-    if ($testResult->countSteps() > 1) {
+    if ($this->forceMultistep || $testResult->countSteps() > 1) {
       echo ArrayToXML($testResult->aggregateRawResults());
     } else {
       $singlestepResult = $testResult->getStepResult(1);
