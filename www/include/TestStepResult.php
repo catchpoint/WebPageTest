@@ -46,6 +46,23 @@ class TestStepResult {
     return new self($testInfo, $pageData, $run, $cached, $step);
   }
 
+  /**
+   * Creates a TestResult instance by loading the results from file system
+   * @param TestInfo $testInfo Related test information
+   * @param int $runNumber The run to return the data for, starting from 1
+   * @param bool $isCached False for first view, true for repeat view
+   * @param int $stepNumber The step number, starting from 1
+   * @param FileHandler $fileHandler The FileHandler to use
+   * @return TestStepResult|null The created instance on success, null otherwise
+   */
+  public static function fromFiles($testInfo, $runNumber, $isCached, $stepNumber, $fileHandler = null) {
+    // no support to use FileHandler so far
+    $localPaths = new TestPaths($testInfo->getRootDirectory(), $runNumber, $isCached, $stepNumber);
+    $runCompleted = $testInfo->isRunComplete($runNumber);
+    $pageData = loadPageStepData($localPaths, $runCompleted, null, $testInfo->getInfoArray());
+    return new self($testInfo, $pageData, $runNumber, $isCached, $stepNumber);
+  }
+
   public function getUrlGenerator($baseUrl, $friendly = true) {
     return UrlGenerator::create($friendly, $baseUrl, $this->testInfo->getRootDirectory(), $this->run, $this->cached);
   }

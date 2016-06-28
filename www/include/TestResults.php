@@ -45,8 +45,20 @@ class TestResults {
    * @return TestResults The new instance
    */
   public static function fromFiles($testInfo, $fileHandler = null) {
-    $pageData = loadAllPageData($testInfo->getRootDirectory());
-    return self::fromPageData($testInfo, $pageData);
+    $runResults = array();
+    $numRuns = $testInfo->getRuns();
+    $firstViewOnly = $testInfo->isFirstViewOnly();
+    $testComplete = $testInfo->isComplete();
+    for ($runNumber = 1; $runNumber <= $numRuns; $runNumber++) {
+      if (!$testComplete && !$testInfo->isRunComplete($runNumber)) {
+        continue;
+      }
+      $firstView = TestRunResults::fromFiles($testInfo, $runNumber, false, $fileHandler);
+      $repeatView = $firstViewOnly ? null : TestRunResults::fromFiles($testInfo, $runNumber, true, $fileHandler);
+      $runResults[] = array($firstView, $repeatView);
+    }
+
+    return new self($testInfo, $runResults, $fileHandler);
   }
 
   /**

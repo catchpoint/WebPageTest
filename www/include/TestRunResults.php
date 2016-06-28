@@ -34,6 +34,25 @@ class TestRunResults {
   }
 
   /**
+   * Constructs a new TestRunResults object by loading the results from the file system
+   * @param TestInfo $testInfo Associated test info
+   * @param int $runNumber The run number
+   * @param bool $isCached False for first view, true for repeat view (cached)
+   * @param FileHandler $fileHandler The FileHandler to use
+   * @return TestRunResults|null The initialized object or null if it failed
+   */
+  public static function fromFiles($testInfo, $runNumber, $isCached, $fileHandler = null) {
+    $stepResults = array();
+    $isValid = false;
+    for ($stepNumber = 1; $stepNumber <= $testInfo->stepsInRun($runNumber); $stepNumber++) {
+      $stepResult = TestStepResult::fromFiles($testInfo, $runNumber, $isCached, $stepNumber, $fileHandler);
+      $stepResults[] = $stepResult;
+      $isValid = $isValid || ($stepResult !== null);
+    }
+    return $isValid ? new self($testInfo, $runNumber, $isCached, $stepResults) : null;
+  }
+
+  /**
    * @return int The run number
    */
   public function getRunNumber() {
