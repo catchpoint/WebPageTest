@@ -309,8 +309,9 @@ else
                                                       $link = $guid;
 
                                                   $labelTxt = $label;
-                                                  if( strlen($labelTxt) > 30 )
-                                                      $labelTxt = substr($labelTxt, 0, 27) . '...';
+                                                  if( mb_strlen($labelTxt) > 30 ) {
+                                                      $labelTxt = mb_substr($labelTxt, 0, 27) . '...';
+                                                  }
 
                                                   echo "<td title=\"$label\" class=\"label\">";
                                                   echo "<a href=\"$link\" id=\"label_$guid\">$labelTxt</a>&nbsp;";

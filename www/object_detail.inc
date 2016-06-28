@@ -1,6 +1,8 @@
 <?php
-require_once('devtools.inc.php');
-if(extension_loaded('newrelic')) { 
+require_once __DIR__ . '/devtools.inc.php';
+require_once __DIR__ . '/include/UrlGenerator.php';
+
+if(extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('LoadRequests');
     newrelic_add_custom_tracer('FixUpRequestTimes');
     newrelic_add_custom_tracer('AddLocationData');
@@ -15,14 +17,29 @@ if(extension_loaded('newrelic')) {
 function getRequests($id, $test_path, $run, $is_cached,
                      &$has_secure_requests, &$has_locations,
                      $use_location_check, $use_raw_headers = false) {
-    if (!isset($test_path) || !strlen($test_path))
-        $test_path = './' . GetTestPath($id);
-    $cached_text = ((bool)@$is_cached) ? '_Cached' : '';
-    $file_prefix = $test_path . '/' . $run . $cached_text . '_';
-    $request_file_name =  $file_prefix . 'IEWTR.txt';
-    $headers_file_name = $file_prefix . 'report.txt';
-    $bodies_file_name = $file_prefix . 'bodies.zip';
-    $custom_rules_file_name = $file_prefix . 'custom_rules.json';
+  if (!isset($test_path) || !strlen($test_path))
+    $test_path = './' . GetTestPath($id);
+  $localPaths = new TestPaths($test_path, $run, $is_cached);
+  $urlGenerator = UrlGenerator::create(false, "", $id, $run, $is_cached);
+  return getRequestsForStep($localPaths, $urlGenerator, $has_secure_requests,
+    $has_locations, $use_location_check, $use_raw_headers);
+}
+
+/**
+ * @param TestPaths $localPaths Paths for the run or step to load the requests for
+ * @param UrlGenerator $rootUrlGenerator Generator for the run or step related root URLs (i.e. without host)
+ * @param bool $has_secure_requests Gets set to true if at least one request is secure
+ * @param bool $has_locations Gets set to true if location data is included in the requests
+ * @param bool $use_location_check If true, location data will be added to the requests
+ * @param bool $use_raw_headers If true, raw headers are added. False by default
+ * @return array The loaded requests
+ */
+function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_requests, &$has_locations,
+                            $use_location_check, $use_raw_headers = false) {
+    $request_file_name =  $localPaths->requestDataFile();
+    $headers_file_name = $localPaths->headersFile();
+    $bodies_file_name = $localPaths->bodiesFile();
+    $custom_rules_file_name = $localPaths->customRulesFile();
 
     $needHeaders = false;
     $requests = LoadRequests($request_file_name);
@@ -37,7 +54,7 @@ function getRequests($id, $test_path, $run, $is_cached,
         if (gz_is_file($custom_rules_file_name))
             $custom_rules = json_decode(gz_file_get_contents($custom_rules_file_name), true);
     } else
-        GetDevToolsRequests($test_path, $run, $is_cached, $requests, $pageData);
+        GetDevToolsRequestsForStep($localPaths, $requests, $pageData);
     FixUpRequestTimes($requests);
     if ($needHeaders)
         AddHeaders($requests, $headers_file_name);
@@ -52,9 +69,9 @@ function getRequests($id, $test_path, $run, $is_cached,
         $request['index'] = $index;
         $request['number'] = $index + 1;
         if (isset($request['body_id']) && $request['body_id'] > 0) {
-            $request['body_url'] = "/response_body.php?test=$id&run=$run&cached=$is_cached&bodyid={$request['body_id']}";
+            $request['body_url'] = $rootUrlGenerator->responseBodyWithBodyId($request['body_id']);
         } elseif (@$request['body']) {
-            $request['body_url'] = "/response_body.php?test=$id&run=$run&cached=$is_cached&request={$request['number']}";
+            $request['body_url'] = $rootUrlGenerator->responseBodyWithRequestNumber($request['number']);
         }
         if ($request['is_secure'])
             $has_secure_requests = true;

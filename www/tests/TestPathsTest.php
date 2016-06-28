@@ -1,6 +1,6 @@
 <?php
 
-require_once '../include/TestPaths.php';
+require_once __DIR__ . '/../include/TestPaths.php';
 
 class TestPathsTest extends PHPUnit_Framework_TestCase {
 
@@ -35,5 +35,18 @@ class TestPathsTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals("test/video_3_2", $fn->videoDir());
   }
 
+  public function testDotFileName() {
+    $fn = new TestPaths("test/", 2, true, 3);
+    $this->assertEquals("test/llab_2.1.3.visual.dat", $fn->visualDataFile());
+
+    $fn = new TestPaths("test", 1, false, 3);
+    $this->assertEquals("test/llab_1.0.3.visual.dat", $fn->visualDataFile());
+
+    $fn = new TestPaths("test", 4, true, 1);
+    $this->assertEquals("test/llab_4.1.visual.dat", $fn->visualDataFile());
+
+    $fn = new TestPaths("test", 5, false, 1);
+    $this->assertEquals("test/llab_5.0.visual.dat", $fn->visualDataFile());
+  }
 
 }

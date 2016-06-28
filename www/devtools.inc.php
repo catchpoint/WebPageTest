@@ -1,10 +1,11 @@
 <?php
 $DevToolsCacheVersion = '1.7';
+require_once __DIR__ . '/include/TestPaths.php';
 
 if(extension_loaded('newrelic')) { 
     newrelic_add_custom_tracer('GetTimeline');
     newrelic_add_custom_tracer('GetDevToolsRequests');
-    newrelic_add_custom_tracer('GetDevToolsEvents');
+    newrelic_add_custom_tracer('GetDevToolsEventsForStep');
     newrelic_add_custom_tracer('DevToolsGetConsoleLog');
     newrelic_add_custom_tracer('DevToolsGetCPUSlices');
     newrelic_add_custom_tracer('GetDevToolsCPUTime');
@@ -47,15 +48,28 @@ function GetTimeline($testPath, $run, $cached, &$timeline, &$startOffset) {
 * @param mixed $requests
 */
 function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
+  // TODO: remove function if not needed anymore and the version below is used everywhere
+  $localPaths = new TestPaths($testPath, $run, $cached);
+  return GetDevToolsRequestsForStep($localPaths, $requests, $pageData);
+}
+
+/**
+ * Pull the requests from the dev tools timeline
+ *
+ * @param TestPaths $localPaths Paths for the run or step to get the data for
+ * @param array $requests Gets set with the request data if successful
+ * @param array $pageData Gets set with the page data if successful
+ * @return bool True if successful, false otherwise
+ */
+function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData) {
     $requests = null;
     $pageData = null;
     $startOffset = null;
     $ver = 13;
-    $cached = isset($cached) && $cached ? 1 : 0;
-    $ok = GetCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
+    $ok = GetCachedDevToolsRequests($localPaths, $requests, $pageData, $ver);
     $ok = false;
     if (!$ok) {
-      if (GetDevToolsEvents(null, $testPath, $run, $cached, $events, $startOffset)) {
+      if (GetDevToolsEventsForStep(null, $localPaths, $events, $startOffset)) {
           if (DevToolsFilterNetRequests($events, $rawRequests, $rawPageData)) {
               $requests = array();
               $pageData = array();
@@ -75,7 +89,7 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
               $pageData['responses_other'] = 0;
               $pageData['result'] = 0;
               $pageData['testStartOffset'] = isset($startOffset) && $startOffset > 0 ? $startOffset : 0;
-              $pageData['cached'] = $cached;
+              $pageData['cached'] = $localPaths->isCachedResult();
               $pageData['optimization_checked'] = 0;
               $pageData['start_epoch'] = $rawPageData['startTime'];
               if (array_key_exists('onload', $rawPageData))
@@ -354,37 +368,50 @@ function GetDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData) {
         $ok = true;
       }
       if ($ok) {
-        SaveCachedDevToolsRequests($testPath, $run, $cached, $requests, $pageData, $ver);
+        SaveCachedDevToolsRequests($localPaths, $requests, $pageData, $ver);
       }
     }
     return $ok;
 }
 
-function GetCachedDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData, $ver) {
+/**
+ * @param TestPaths $localPaths Paths for the step or run to get the cached requests for
+ * @param array $requests Gets set with cached requests data, if the cache is found and valid
+ * @param array $pageData Gets set with cached page data, if the cache is found and valid
+ * @param int $ver Cache version
+ * @return bool True if successful, false otherwise
+ */
+function GetCachedDevToolsRequests($localPaths, &$requests, &$pageData, $ver) {
   $ok = false;
-  $cacheFile = "$testPath/$run.$cached.devToolsRequests.$ver";
+  $cacheFile = $localPaths->devtoolsRequestsCacheFile($ver);
   if (gz_is_file($cacheFile)) {
     $cache = json_decode(gz_file_get_contents($cacheFile), true);
-    if (isset($cache[$run][$cached]['requests']) &&
-        isset($cache[$run][$cached]['pageData'])) {
+    if (isset($cache['requests']) &&
+        isset($cache['pageData'])) {
       $ok = true;
-      $requests = $cache[$run][$cached]['requests'];
-      $pageData = $cache[$run][$cached]['pageData'];
+      $requests = $cache['requests'];
+      $pageData = $cache['pageData'];
     }
   }
   return $ok;
 }
 
-function SaveCachedDevToolsRequests($testPath, $run, $cached, &$requests, &$pageData, $ver) {
-  $cacheFile = "$testPath/$run.$cached.devToolsRequests.$ver";
+/**
+ * @param TestPaths $localPaths Paths for step or run to save the cached data
+ * @param array $requests The requests to save
+ * @param array $pageData The page data to save
+ * @param int $ver Cache version
+ */
+function SaveCachedDevToolsRequests($localPaths, &$requests, &$pageData, $ver) {
+  $cacheFile = $localPaths->devtoolsRequestsCacheFile($ver);
   $lock = Lock($cacheFile);
   if (isset($lock)) {
     if (gz_is_file($cacheFile))
       $cache = json_decode(gz_file_get_contents($cacheFile), true);
     if (!isset($cache) || !is_array($cache))
       $cache = array();
-    $cache[$run][$cached]['requests'] = $requests;
-    $cache[$run][$cached]['pageData'] = $pageData;
+    $cache['requests'] = $requests;
+    $cache['pageData'] = $pageData;
     gz_file_put_contents($cacheFile, json_encode($cache));
     Unlock($lock);
   }
@@ -647,21 +674,18 @@ function ParseDevToolsDOMContentLoaded(&$event, $main_frame, &$pageData) {
 }
 
 /**
-* Load a filtered list of events from the dev tools capture
-* 
-* @param mixed $filter
-* @param mixed $testPath
-* @param mixed $run
-* @param mixed $cached
-* @param mixed $events
-*/
-function GetDevToolsEvents($filter, $testPath, $run, $cached, &$events, &$startOffset) {
+ * Load a filtered list of events from the dev tools capture
+ *
+ * @param mixed $filter
+ * @param TestPaths $localPaths Paths of the run or step to get the events for
+ * @param array $events Gets set to an array containing the events
+ * @param int $startOffset Gets set to the start offset
+ * @return bool True if successful, false otherwise
+ */
+function GetDevToolsEventsForStep($filter, $localPaths, &$events, &$startOffset) {
   $ok = false;
   $events = array();
-  $cachedText = '';
-  if( $cached )
-      $cachedText = '_Cached';
-  $devToolsFile = "$testPath/$run{$cachedText}_devtools.json";
+  $devToolsFile = $localPaths->devtoolsFile();
   if (gz_is_file($devToolsFile)){
     $raw = trim(gz_file_get_contents($devToolsFile));
     ParseDevToolsEvents($raw, $events, $filter, true, $startOffset);
@@ -912,17 +936,23 @@ function DevToolsMatchEvent($filter, &$event, $startTime = null, $endTime = null
 }
 
 function DevToolsGetConsoleLog($testPath, $run, $cached) {
+  $localPaths = new TestPaths($testPath, $run, $cached);
+  return DevToolsGetConsoleLogForStep($localPaths);
+}
+
+/**
+ * @param TestPaths $localPaths The paths for the run or step to get the console log for
+ * @return array|null The console log or null, if it couldn't be retrieved
+ */
+function DevToolsGetConsoleLogForStep($localPaths) {
   $console_log = null;
-  $cachedText = '';
-  if( $cached )
-      $cachedText = '_Cached';
-  $console_log_file = "$testPath/$run{$cachedText}_console_log.json";
+  $console_log_file = $localPaths->consoleLogFile();
   if (gz_is_file($console_log_file))
       $console_log = json_decode(gz_file_get_contents($console_log_file), true);
-  elseif (gz_is_file("$testPath/$run{$cachedText}_devtools.json")) {
+  elseif (gz_is_file($localPaths->devtoolsFile())) {
     $console_log = array();
     $startOffset = null;
-    if (GetDevToolsEvents('Console.messageAdded', $testPath, $run, $cached, $events, $startOffset) &&
+    if (GetDevToolsEventsForStep('Console.messageAdded', $localPaths, $events, $startOffset) &&
           is_array($events) &&
           count($events)) {
       foreach ($events as $event) {
@@ -1005,10 +1035,21 @@ function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime) {
 * slice that they consumed (with a total maximum of 1 for any slice).
 */
 function DevToolsGetCPUSlices($testPath, $run, $cached) {
+  // TODO: remove this version once not needed anymore and use the one below
+  $localPaths = new TestPaths($testPath, $run, $cached);
+  return DevToolsGetCPUSlicesForStep($localPaths);
+}
+
+/**
+ * @param TestPaths $localPaths Paths related to this run/step
+ * @return array|null An array of threads with each thread being an array of slices (one for
+ * each time period).  Each slice is an array of events and the fraction of that
+ * slice that they consumed (with a total maximum of 1 for any slice).
+ */
+function DevToolsGetCPUSlicesForStep($localPaths) {
   $slices = null;
-  $cachedText = $cached ? '_Cached' : '';
-  $slices_file = "$testPath/$run{$cachedText}_timeline_cpu.json.gz";
-  $trace_file = "$testPath/$run{$cachedText}_trace.json.gz";
+  $slices_file = $localPaths->devtoolsCPUTimelineFile() . ".gz";
+  $trace_file = $localPaths->devtoolsTraceFile() . ".gz";
   if (!is_file($slices_file) && is_file($trace_file) && is_file(__DIR__ . '/lib/trace/trace-parser.py')) {
     $script = realpath(__DIR__ . '/lib/trace/trace-parser.py');
     touch($slices_file);
@@ -1016,7 +1057,7 @@ function DevToolsGetCPUSlices($testPath, $run, $cached) {
       $slices_file = realpath($slices_file);
       unlink($slices_file);
     }
-    $user_timing = "$testPath/$run{$cachedText}_user_timing.json.gz";
+    $user_timing = $localPaths->chromeUserTimingFile() . ".gz";
     touch($user_timing);
     if (is_file($user_timing)) {
       $user_timing = realpath($user_timing);
@@ -1029,7 +1070,6 @@ function DevToolsGetCPUSlices($testPath, $run, $cached) {
     if (!is_file($slices_file))
       touch($slices_file);
   }
-  $slices_file = "$testPath/$run{$cachedText}_timeline_cpu.json";
   if (gz_is_file($slices_file))
     $slices = json_decode(gz_file_get_contents($slices_file), true);
   if (isset($slices) && !is_array($slices))
@@ -1055,23 +1095,34 @@ function GetDevToolsHeaderValue($headers, $name, &$value) {
 }
 
 function GetDevToolsCPUTime($testPath, $run, $cached, $endTime = 0) {
-  $times = null;
-  $ver = 1;
-  $ver = 2;
-  $cacheFile = "$testPath/$run.$cached.devToolsCPUTime.$ver";
-  if (gz_is_file($cacheFile))
-    $cache = json_decode(gz_file_get_contents($cacheFile), true);
+  // TODO: remove once not used anymore
+  $localPaths = new TestPaths($testPath, $run, $cached);
   // If an end time wasn't specified, figure out what the fully loaded time is
   if (!$endTime) {
     if (GetDevToolsRequests($testPath, $run, $cached, $requests, $pageData) &&
-        isset($pageData) && is_array($pageData) && isset($pageData['fullyLoaded'])) {
+      isset($pageData) && is_array($pageData) && isset($pageData['fullyLoaded'])) {
       $endTime = $pageData['fullyLoaded'];
     }
   }
+  return GetDevToolsCPUTimeForStep($localPaths, $endTime);
+}
+
+/**
+ * @param TestPaths $localPaths Paths for this run/step to get the CPU time for
+ * @param int $endTime End time to consider (mandatory)
+ * @return array
+ */
+function GetDevToolsCPUTimeForStep($localPaths, $endTime) {
+  $times = null;
+  $ver = 2;
+  $cacheFile = $localPaths->devtoolsCPUTimeCacheFile($ver);
+  if (gz_is_file($cacheFile))
+    $cache = json_decode(gz_file_get_contents($cacheFile), true);
+
   if (isset($cache[$endTime])) {
     $times = $cache[$endTime];
   } else {
-    $cpu = DevToolsGetCPUSlices($testPath, $run, $cached);
+    $cpu = DevToolsGetCPUSlicesForStep($localPaths);
     if (isset($cpu) && is_array($cpu) && isset($cpu['main_thread']) && isset($cpu['slices'][$cpu['main_thread']]) && isset($cpu['slice_usecs'])) {
       $busy = 0;
       $times = array();

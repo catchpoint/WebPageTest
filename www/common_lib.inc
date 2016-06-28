@@ -214,7 +214,7 @@ function GetSetting($setting) {
     }
   } else {
     if (!isset($settings) || !is_array($settings))
-      $settings = parse_ini_file('./settings/settings.ini');
+      $settings = parse_ini_file(__DIR__ . '/settings/settings.ini');
     if (isset($settings) && is_array($settings) && array_key_exists($setting, $settings))
       $ret = $settings[$setting];
   }
@@ -1786,13 +1786,14 @@ function CleanupLocks() {
 function Lock($name, $blocking = true, $maxLockSeconds = 300) {
   global $RemainingLocks;
   $lock = null;
+  $tmpdir =  __DIR__ . '/tmp';
   if (strlen($name)) {
-    if( !is_dir('./tmp') )
-      mkdir('./tmp', 0777, true);
+    if( !is_dir($tmpdir) )
+      mkdir($tmpdir, 0777, true);
     if (preg_match('/^[a-zA-Z0-9-_ ]+$/', $name))
-      $lockFile = __DIR__ . '/tmp/named-' . str_replace(' ', '-', $name) . '.lock';
+      $lockFile = $tmpdir . '/named-' . str_replace(' ', '-', $name) . '.lock';
     else
-      $lockFile = __DIR__ . '/tmp/lock-' . sha1($name) . '.lock';
+      $lockFile = $tmpdir . '/lock-' . sha1($name) . '.lock';
     $start = time();
     do {
       $file = @fopen($lockFile, 'x');

@@ -14,9 +14,12 @@ function getDomainBreakdown($id, $testPath, $run, $cached, &$requests)
         $haveLocations = false;
         $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
     }
-    
+    return getDomainBreakdownForRequests($requests);
+}
+
+function getDomainBreakdownForRequests($requests) {
     $breakdown = array();
-    
+
     $connections = array();
     foreach($requests as $request)
     {
