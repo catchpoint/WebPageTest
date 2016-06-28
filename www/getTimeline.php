@@ -63,27 +63,19 @@ if (gz_is_file("$testPath/$run{$cachedText}_trace.json")) {
   $startOffset = null;
   GetTimeline($testPath, $run, $cached, $devTools, $startOffset);
   if (isset($devTools) && is_array($devTools) && count($devTools)) {
-    $timeline = array();
-    // do a quick pass to see if we have non-timeline entries and
-    // to get the timestamp of the first non-timeline entry
-    foreach ($devTools as &$entry) {
-      if (isset($entry) &&
-          is_array($entry) &&
-          array_key_exists('method', $entry) &&
-          $entry['method'] == 'Timeline.eventRecorded' &&
-          array_key_exists('params', $entry) &&
-          is_array($entry['params']) &&
-          array_key_exists('record', $entry['params']) &&
-          is_array($entry['params']['record']) &&
-          count($entry['params']['record'])) {
+    foreach ($devTools as $entry) {
+      $events = GetEvents($entry);
+      if (count($events)) {
         if (!$ok) {
           $ok = true;
           header("Content-disposition: attachment; filename=timeline.json");
           header ("Content-type: application/json");
-          echo "[\"WebPagetest\",\n";
-        } else
+          echo "[\"WebPagetest\"";
+        }
+        foreach ($events as $event) {
           echo ",\n";
-        echo json_encode($entry['params']['record']);
+          echo json_encode($event);
+        }
       }
     }
     if ($ok)
@@ -92,4 +84,38 @@ if (gz_is_file("$testPath/$run{$cachedText}_trace.json")) {
 }
 if (!$ok)
   header("HTTP/1.0 404 Not Found");
+
+function GetEvents($entry) {
+  $events = [];
+  if (is_array($entry) &&
+      isset($entry['method']) &&
+      $entry['method'] == 'Timeline.eventRecorded' &&
+      isset($entry['params']['record']['type'])) {
+    AdjustTimes($entry['params']['record']);
+    if ($entry['params']['record']['type'] == 'RenderingFrame') {
+      if (isset($entry['params']['record']['children']) &&
+          count($entry['params']['record']['children'])) {
+        $events = $entry['params']['record']['children'];
+      }
+    } else {
+      $events[] = $entry['params']['record'];
+    }
+  }
+  return $events;
+}
+
+function AdjustTimes(&$entry) {
+  if (isset($entry) && is_array($entry)) {
+    if (isset($entry['startTime']))
+      $entry['startTime'] *= 1000.0;
+    if (isset($entry['endTime']))
+      $entry['endTime'] *= 1000.0;
+    if (isset($entry['children']) &&
+        is_array($entry['children']) &&
+        count($entry['children'])) {
+      foreach($entry['children'] as &$child)
+        AdjustTimes($child);
+    }
+  }
+}
 ?>

@@ -5,6 +5,7 @@
 chdir('..');
 include 'common.inc';
 $newTimeline = gz_is_file("$testPath/{$run}{$cachedText}_trace.json");
+$timelineUrlParam = "/getTimeline.php?timeline=t:$id,r:$run,c:$cached";
 ?>
 <!DOCTYPE html>
 <html>
@@ -21,7 +22,7 @@ function DevToolsLoaded() {
   var devTools = document.getElementById("devtools").contentWindow;
 <?php
 if (!$newTimeline) {
-  echo "devTools.InspectorFrontendAPI._runOnceLoaded(function(){(devTools.WebInspector.inspectorView.showPanel(\"timeline\")).loadFromURL(\"/getTimeline.php?test=$id&run=$run&cached=$cached\");});\n";
+  echo "devTools.InspectorFrontendAPI._runOnceLoaded(function(){(devTools.WebInspector.inspectorView.showPanel(\"timeline\")).loadFromURL(\"$timelineUrlParam\");});\n";
 }
 ?>
 }
@@ -35,7 +36,6 @@ if ($newTimeline) {
   $url = $cdn ? $cdn : "$protocol://$host";
   $url .= $uri;
   // short-term hack because the timeline code doesn't URLdecode query params and we can't pass any URL with a &
-  $timelineUrlParam = "/getTimeline.php?timeline=t:$id,r:$run,c:$cached";
   $url .= "/inspector-20160510/inspector.html?experiments=true&loadTimelineFromURL=$timelineUrlParam";
   header("Location: $url");
 } else {
