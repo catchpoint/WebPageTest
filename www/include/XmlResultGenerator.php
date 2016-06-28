@@ -179,16 +179,22 @@ class XmlResultGenerator {
    * @param TestRunResults $testResult Result for the median run
    */
   public function printMedianRun($testResult) {
-    $testResult = $testResult->getStepResult(1);
     $run = $testResult->getRunNumber();
 
     $this->printViewRootStartTag($testResult->isCachedRun());
     echo "<run>" . $run . "</run>\n";
     $this->printTester($run);
-    echo ArrayToXML($testResult->getRawResults());
-    $this->printPageSpeed($testResult);
-    $this->printPageSpeedData($testResult);
-    $this->printAdditionalInformation($testResult, true);
+
+    if ($testResult->countSteps() > 1) {
+      echo ArrayToXML($testResult->aggregateRawResults());
+    } else {
+      $singlestepResult = $testResult->getStepResult(1);
+      echo ArrayToXML($singlestepResult->getRawResults());
+      $this->printPageSpeed($singlestepResult);
+      $this->printPageSpeedData($singlestepResult);
+      $this->printAdditionalInformation($singlestepResult, true);
+    }
+
     $this->printViewRootEndTag($testResult->isCachedRun());
   }
 
