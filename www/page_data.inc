@@ -340,7 +340,8 @@ function loadPageData($file, $options = null)
                                 'server_count' => @(int)trim($fields[84]),
                                 'server_rtt' => @(int)trim($fields[85]),
                                 'base_page_cdn' => @trim($fields[86]),
-                                'adult_site' => @(int)trim($fields[87])
+                                'adult_site' => @(int)trim($fields[87]),
+                                'eventName' => @trim($fields[2])
                             );
 
                 $ret['fixed_viewport'] = (array_key_exists(88, $fields) && strlen(trim($fields[88]))) ? (int)trim($fields[88]) : -1;

@@ -118,6 +118,16 @@ class TestStepResult {
   }
 
   /**
+   * @return string The event name if set, or an empty string
+   */
+  public function getEventName() {
+    if (!isset($this->rawData["eventName"])) {
+      return "";
+    }
+    return $this->rawData["eventName"];
+  }
+
+  /**
    * @return string The score
    */
   public function getPageSpeedScore() {

@@ -225,9 +225,12 @@ class XmlResultGenerator {
 
     if ($this->forceMultistep || $numSteps > 1) {
       for ($step = 1; $step <= $numSteps; $step++) {
+        $testStepResult = $runResult->getStepResult($step);
+        $eventName = empty($testStepResult) ? "" : $testStepResult->getEventName();
         echo "<step>\n";
         echo "<id>" . $step . "</id>";
-        $this->printStepResults($runResult->getStepResult($step));
+        echo "<eventName>" . $eventName . "</eventName>";
+        $this->printStepResults($testStepResult);
         echo "</step>\n";
       }
     } else {

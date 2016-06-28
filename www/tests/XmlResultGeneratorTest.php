@@ -87,6 +87,8 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
 
     $this->assertTrue(isset($xml->step[0]));
     $this->assertEquals("1", $xml->step[0]->id);
+    $this->assertTrue(isset($xml->step[0]->eventName));
+    $this->assertEquals("", $xml->step[0]->eventName);
     $this->assertEquals("300", $xml->step[0]->results->TTFB);
     $this->assertEquals("6000", $xml->step[0]->results->loadTime);
     $this->assertEquals("lorem", $xml->step[0]->results->foo);
@@ -95,6 +97,7 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
 
     $this->assertTrue(isset($xml->step[1]));
     $this->assertEquals("2", $xml->step[1]->id);
+    $this->assertEquals("MyEvent", $xml->step[1]->eventName);
     $this->assertEquals("100", $xml->step[1]->results->TTFB);
     $this->assertEquals("2000", $xml->step[1]->results->loadTime);
     $this->assertEquals("ipsum", $xml->step[1]->results->foo);
@@ -128,7 +131,7 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
 
   private function getTestStepArray() {
     $step1 = array('result' => 0, 'TTFB' => 300, 'loadTime' => 6000, 'foo' => 'lorem');
-    $step2 = array('result' => 0, 'TTFB' => 100, 'loadTime' => 2000, 'foo' => 'ipsum');
+    $step2 = array('result' => 0, 'TTFB' => 100, 'loadTime' => 2000, 'foo' => 'ipsum', 'eventName' => "MyEvent");
     $step3 = array('result' => 99999, 'TTFB' => 500, 'loadTime' => 1000, 'foo' => 'dolor');
 
     $stepResults = array(
