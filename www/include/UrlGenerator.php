@@ -82,11 +82,13 @@ abstract class UrlGenerator {
   }
 
   protected function underscorePrefix() {
-    return strval($this->run) . "_" . ($this->cached ? "Cached_" : "");
+    $stepSuffix = $this->step > 1 ? ($this->step . "_") : "";
+    return strval($this->run) . "_" . ($this->cached ? "Cached_" : "") . $stepSuffix;
   }
 
   protected function urlParams() {
-    return "test=" . $this->testId . "&run=" . $this->run . ($this->cached ? "&cached=1" : "");
+    $stepParam = $this->step > 1 ? ("&step=" . $this->step) : "";
+    return "test=" . $this->testId . "&run=" . $this->run . ($this->cached ? "&cached=1" : "") . $stepParam;
   }
 }
 
@@ -96,6 +98,9 @@ class FriendlyUrlGenerator extends UrlGenerator {
     $url = $this->baseUrl . "/result/" . $this->testId . "/" . $this->run . "/" . $page . "/";
     if ($this->cached) {
       $url .= "cached/";
+    }
+    if ($this->step > 1) {
+      $url .= $this->step . "/";
     }
     return $url;
   }

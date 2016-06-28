@@ -99,8 +99,7 @@ class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals("2000", $xml->step[1]->results->loadTime);
     $this->assertEquals("ipsum", $xml->step[1]->results->foo);
     $this->assertTrue(isset($xml->step[1]->domains));
-    // TODO: enable to check step specific URLs
-    // $this->assertEquals("/result/160628_AB_C/2/screen_shot/cached#2", $xml->step[1]->pages->screenShot);
+    $this->assertEquals("/result/160628_AB_C/2/screen_shot/cached/2/", $xml->step[1]->pages->screenShot);
 
     $this->assertFalse(isset($xml->step[2]));
   }
