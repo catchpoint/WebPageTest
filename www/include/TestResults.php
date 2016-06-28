@@ -5,7 +5,6 @@ require_once __DIR__ . '/TestStepResult.php';
 require_once __DIR__ . '/TestRunResults.php';
 
 // TODO: get rid of this as soon as we don't use loadAllPageData, etc anymore
-require_once __DIR__ . '/../common_lib.inc';
 require_once __DIR__ . '/../page_data.inc';
 
 class TestResults {
@@ -25,46 +24,47 @@ class TestResults {
 
   private $numRuns;
 
-  private $pageData;
   /**
    * @var TestRunResults[][] First dimensions is the run number starting from 0, second if cached (0/1)
    */
   private $runResults;
 
 
-  private function __construct($testInfo, $pageData, $fileHandler = null) {
+  private function __construct($testInfo, $runResults, $fileHandler = null) {
     $this->testInfo = $testInfo;
     $this->fileHandler = $fileHandler;
-    $this->pageData = $pageData;
 
-    // for now this is singlestep until changes for multistep are finished in this class
-    $this->runResults = array();
+    $this->runResults = $runResults;
+    $this->numRuns = count($this->runResults);
+  }
+
+  /**
+   * Constructs a TestResults object by loading the information from result files
+   * @param TestInfo $testInfo Test information used to load the data
+   * @param FileHandler $fileHandler FileHandler to use
+   * @return TestResults The new instance
+   */
+  public static function fromFiles($testInfo, $fileHandler = null) {
+    $pageData = loadAllPageData($testInfo->getRootDirectory());
+    return self::fromPageData($testInfo, $pageData);
+  }
+
+  /**
+   * Constructs a TestResults object with the given pageData (singlestep support only)
+   * @param TestInfo $testInfo Test information used to load the data
+   * @param array $pageData Array with the pageData of all runs
+   * @return TestResults The new instance
+   */
+  public static function fromPageData($testInfo, $pageData) {
+    $runResults = array();
     $run = 1;
     foreach ($pageData as $runs) {
       $fv = self::singlestepRunFromPageData($testInfo, $run, false, $runs);
       $rv = self::singlestepRunFromPageData($testInfo, $run, true, $runs);
-      $this->runResults[] = array($fv, $rv);
+      $runResults[] = array($fv, $rv);
       $run++;
     }
-    $this->numRuns = count($this->runResults);
-  }
-
-  private static function singlestepRunFromPageData($testInfo, $runNumber, $cached, &$runs) {
-    $cacheIdx = $cached ? 1 : 0;
-    if (empty($runs[$cacheIdx])) {
-      return null;
-    }
-    $step = TestStepResult::fromPageData($testInfo, $runs[$cacheIdx], $runNumber, $cached, 1);
-    return TestRunResults::fromStepResults($testInfo, $runNumber, $cached, array($step));
-  }
-
-  public static function fromFiles($testInfo, $fileHandler = null) {
-    $pageData = loadAllPageData($testInfo->getRootDirectory());
-    return new self($testInfo, $pageData, $fileHandler);
-  }
-
-  public static function fromPageData($testInfo, $pageData) {
-    return new self($testInfo, $pageData);
+    return new self($testInfo, $runResults);
   }
 
   /**
@@ -253,4 +253,12 @@ class TestResults {
     return $values;
   }
 
+  private static function singlestepRunFromPageData($testInfo, $runNumber, $cached, &$runs) {
+    $cacheIdx = $cached ? 1 : 0;
+    if (empty($runs[$cacheIdx])) {
+      return null;
+    }
+    $step = TestStepResult::fromPageData($testInfo, $runs[$cacheIdx], $runNumber, $cached, 1);
+    return TestRunResults::fromStepResults($testInfo, $runNumber, $cached, array($step));
+  }
 }
