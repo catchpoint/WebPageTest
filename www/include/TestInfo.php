@@ -63,7 +63,7 @@ class TestInfo {
    * @return bool True if the test is complete, false otherwise
    */
   public function isComplete() {
-    return !empty($this->rawData['completed']); // empty also checks for false or null
+    return !empty($this->rawData['testinfo']['completed']); // empty also checks for false or null
   }
 
   /**
@@ -72,7 +72,18 @@ class TestInfo {
    */
   public function isRunComplete($run) {
     // TODO: move implementation here
-    return IsTestRunComplete($run, $this->rawData);
+    return $run <= $this->getRuns() && IsTestRunComplete($run, $this->rawData['testinfo']);
+  }
+
+  /**
+   * @param int $run The run number, starting from 1
+   * @return int The number of steps in this run
+   */
+  public function stepsInRun($run) {
+    if (empty($this->rawData['testinfo']['test_runs'][$run]['steps'])) {
+      return 1;
+    }
+    return $this->rawData['testinfo']['test_runs'][$run]['steps'];
   }
 
   /**

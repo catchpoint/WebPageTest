@@ -23,6 +23,7 @@ class XmlResultGenerator {
   private $additionalInfo;
   private $fileHandler;
   private $friendlyUrls;
+  private $forceMultistep;
 
   /**
    * XmlResultGenerator constructor.
@@ -38,6 +39,16 @@ class XmlResultGenerator {
     $this->additionalInfo = $additionalInfo;
     $this->fileHandler = $fileHandler;
     $this->friendlyUrls = $friendlyUrls;
+    $this->forceMultistep = false;
+  }
+
+  /**
+   * For singlestep measurement, the output is still in singlestep format. With this method, the behavior can
+   * be changed.
+   * @param $force True if the output should be always in multistep format, false otherwise.
+   */
+  public function forceMultistepFormat($force) {
+    $this->forceMultistep = $force;
   }
 
   /**
@@ -55,6 +66,9 @@ class XmlResultGenerator {
     echo "<statusText>Ok</statusText>\n";
     if (!empty($requestId))
       echo "<requestId>$requestId</requestId>\n";
+    if (defined("VER_WEBPAGETEST")) {
+      echo "<webPagetestVersion>" . VER_WEBPAGETEST . "</webPagetestVersion>";
+    }
     echo "<data>\n";
 
     echo "<testId>" . $this->testInfo->getId() . "</testId>\n";
@@ -141,7 +155,8 @@ class XmlResultGenerator {
     echo "</standardDeviation>\n";
 
     // output the median run data
-    $fvMedian = $testResults->getMedianRunNumber($median_metric, false);
+    $medianMode = (!empty($_REQUEST["medianRun"]) && $_REQUEST["medianRun"] == "fastest") ? "fastest" : "median";
+    $fvMedian = $testResults->getMedianRunNumber($median_metric, false, $medianMode);
     if( $fvMedian )
     {
       echo "<median>\n";
@@ -149,7 +164,7 @@ class XmlResultGenerator {
 
       if( isset($rv) )
       {
-        $rvMedian = $medianFvOnly ? $fvMedian : $testResults->getMedianRunNumber($median_metric, true);
+        $rvMedian = $medianFvOnly ? $fvMedian : $testResults->getMedianRunNumber($median_metric, true, $medianMode);
         if($rvMedian)
         {
           $this->printMedianRun($testResults->getRunResult($rvMedian, true));
@@ -175,7 +190,7 @@ class XmlResultGenerator {
   }
 
   /**
-   * @param TestRunResult $testResult Result for the median run
+   * @param TestRunResults $testResult Result for the median run
    */
   public function printMedianRun($testResult) {
     $run = $testResult->getRunNumber();
@@ -183,40 +198,77 @@ class XmlResultGenerator {
     $this->printViewRootStartTag($testResult->isCachedRun());
     echo "<run>" . $run . "</run>\n";
     $this->printTester($run);
-    echo ArrayToXML($testResult->getRawResults());
-    $this->printPageSpeed($testResult);
-    $this->printPageSpeedData($testResult);
-    $this->printAdditionalInformation($testResult, true);
+
+    if ($this->forceMultistep || $testResult->countSteps() > 1) {
+      echo ArrayToXML($testResult->aggregateRawResults());
+    } else {
+      $singlestepResult = $testResult->getStepResult(1);
+      echo ArrayToXML($singlestepResult->getRawResults());
+      $this->printPageSpeed($singlestepResult);
+      $this->printPageSpeedData($singlestepResult);
+      $this->printAdditionalInformation($singlestepResult, true);
+    }
+
     $this->printViewRootEndTag($testResult->isCachedRun());
   }
 
   /**
-   * @param TestRunResult $testResult Result of this run
+   * @param TestRunResults $runResult Result of this run
    */
-  public function printRun($testResult) {
-    if (empty($testResult)) {
+  public function printRun($runResult) {
+    if (empty($runResult)) {
       return;
     }
+    $testResult = $runResult->getStepResult(1);
+    $numSteps = $runResult->countSteps();
 
-    $run = $testResult->getRunNumber();
-    $cached = $testResult->isCachedRun() ? 1 : 0;
+    $this->printViewRootStartTag($testResult->isCachedRun());
+    $this->printTester($runResult->getRunNumber());
+    echo "<numSteps>" . $numSteps . "</numSteps>\n";
+
+    if ($this->forceMultistep || $numSteps > 1) {
+      for ($step = 1; $step <= $numSteps; $step++) {
+        $testStepResult = $runResult->getStepResult($step);
+        $eventName = empty($testStepResult) ? "" : $testStepResult->getEventName();
+        echo "<step>\n";
+        echo "<id>" . $step . "</id>";
+        echo "<eventName>" . $eventName . "</eventName>";
+        $this->printStepResults($testStepResult);
+        echo "</step>\n";
+      }
+    } else {
+      $this->printStepResults($runResult->getStepResult(1));
+    }
+
+    $this->printViewRootEndTag($testResult->isCachedRun());
+  }
+
+  /**
+   * @param TestStepResult $stepResult Results for the step to be printed
+   */
+  private function printStepResults($stepResult) {
+    if (empty($stepResult)) {
+      return;
+    }
+    $run = $stepResult->getRunNumber();
+    $cached = $stepResult->isCachedRun() ? 1 : 0;
+    $step = $stepResult->getStepNumber();
+
     $testRoot = $this->testInfo->getRootDirectory();
     $testId = $this->testInfo->getId();
 
-    $localPaths = new TestPaths($testRoot, $run, $cached);
-    $nameOnlyPaths = new TestPaths("", $run, $cached);
-    $urlPaths = new TestPaths($this->baseUrl . substr($testRoot, 1), $run, $cached);
+    $localPaths = new TestPaths($testRoot, $run, $cached, $step);
+    $nameOnlyPaths = new TestPaths("", $run, $cached, $step);
+    $urlPaths = new TestPaths($this->baseUrl . substr($testRoot, 1), $run, $cached, $step);
 
-    $this->printViewRootStartTag($testResult->isCachedRun());
-    $this->printTester($run);
 
     echo "<results>\n";
-    echo ArrayToXML($testResult->getRawResults());
-    $this->printPageSpeed($testResult);
+    echo ArrayToXML($stepResult->getRawResults());
+    $this->printPageSpeed($stepResult);
     echo "</results>\n";
 
     // links to the relevant pages
-    $urlGenerator = UrlGenerator::create($this->friendlyUrls, $this->baseUrl, $testId, $run, $cached);
+    $urlGenerator = UrlGenerator::create($this->friendlyUrls, $this->baseUrl, $testId, $run, $cached, $step);
     echo "<pages>\n";
     echo "<details>" . htmlspecialchars($urlGenerator->resultPage("details")) . "</details>\n";
     echo "<checklist>" . htmlspecialchars($urlGenerator->resultPage("performance_optimization")) . "</checklist>\n";
@@ -258,11 +310,11 @@ class XmlResultGenerator {
       echo "<requestsData>" . $urlPaths->requestDataFile() . "</requestsData>\n";
     if ($this->fileHandler->gzFileExists($localPaths->utilizationFile()))
       echo "<utilization>" . $urlPaths->utilizationFile() . "</utilization>\n";
-    $this->printPageSpeedData($testResult);
+    $this->printPageSpeedData($stepResult);
     echo "</rawData>\n";
 
     // video frames
-    $progress = $testResult->getVisualProgress();
+    $progress = $stepResult->getVisualProgress();
     if (array_key_exists('frames', $progress) && is_array($progress['frames']) && count($progress['frames'])) {
       echo "<videoFrames>\n";
       foreach ($progress['frames'] as $ms => $frame) {
@@ -277,8 +329,7 @@ class XmlResultGenerator {
       echo "</videoFrames>\n";
     }
 
-    $this->printAdditionalInformation($testResult, false);
-    $this->printViewRootEndTag($testResult->isCachedRun());
+    $this->printAdditionalInformation($stepResult, false);
   }
 
   private function printViewRootStartTag($isCachedRun) {
@@ -308,7 +359,7 @@ class XmlResultGenerator {
   }
 
   /**
-   * @param TestRunResult $testResult Result of the run
+   * @param TestStepResult $testResult Result of the run
    */
   private function printPageSpeed($testResult) {
     if ($this->shouldPrintInfo(self::INFO_PAGESPEED)) {
@@ -320,7 +371,7 @@ class XmlResultGenerator {
   }
 
   /**
-   * @param TestRunResult $testResult Result Data
+   * @param TestStepResult $testResult Result Data
    */
   private function printPageSpeedData($testResult) {
     $testRoot = $this->testInfo->getRootDirectory();
@@ -333,7 +384,7 @@ class XmlResultGenerator {
   }
 
   /**
-   * @param TestRunResult $testResult Result Data
+   * @param TestStepResult $testResult Result Data
    * @param bool $forMedian True if the printing is for median output, false otherwise
    */
   private function printAdditionalInformation($testResult, $forMedian) {
@@ -354,7 +405,7 @@ class XmlResultGenerator {
 
   /**
    * Print information about all of the requests
-   * @param TestRunResult $testResult Result Data for affected run
+   * @param TestStepResult $testResult Result Data for affected run
    * @param $forMedian True if the output is for median, false otherwise
    */
   private function printRequests($testResult, $forMedian) {
@@ -393,7 +444,7 @@ class XmlResultGenerator {
 
   /**
    * Print a breakdown of the requests and bytes by domain
-   * @param TestRunResult $testResult Result data of affected run
+   * @param TestStepResult $testResult Result data of affected run
    */
   private function printDomainBreakdown($testResult) {
     if (!$this->shouldPrintInfo(self::INFO_DOMAIN_BREAKDOWN)) {
@@ -416,7 +467,7 @@ class XmlResultGenerator {
 
   /**
    * Print a breakdown of the requests and bytes by mime type
-   * @param TestRunResult $testResult Result data of affected run
+   * @param TestStepResult $testResult Result data of affected run
    */
   private function printMimeTypeBreakdown($testResult) {
     if (!$this->shouldPrintInfo(self::INFO_MIMETYPE_BREAKDOWN)) {
@@ -435,7 +486,7 @@ class XmlResultGenerator {
 
   /**
    * Print any logged browser status messages
-   * @param TestRunResult $testResult Result data of affected run
+   * @param TestStepResult $testResult Result data of affected run
    */
   private function printStatusMessages($testResult) {
     $messages = $testResult->getStatusMessages();
@@ -454,7 +505,7 @@ class XmlResultGenerator {
 
   /**
    * Print the console log if requested
-   * @param TestRunResult $testResult Result data of affected run
+   * @param TestStepResult $testResult Result data of affected run
    */
   private function printConsoleLog($testResult) {
     if (!$this->shouldPrintInfo(self::INFO_CONSOLE)) {

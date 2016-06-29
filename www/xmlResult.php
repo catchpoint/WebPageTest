@@ -25,7 +25,7 @@ require_once 'include/XmlResultGenerator.php';
 require_once 'include/FileHandler.php';
 require_once 'include/TestInfo.php';
 require_once 'include/TestResults.php';
-require_once 'include/TestRunResult.php';
+require_once 'include/TestStepResult.php';
 
 // see if we are sending abbreviated results
 $pagespeed = 0;
@@ -46,7 +46,7 @@ else
         $path = substr($testPath, 1);
 
         $testInfo = TestInfo::fromValues($id, $testPath, $test);
-        $testResults = new TestResults($testInfo);
+        $testResults = TestResults::fromFiles($testInfo);
 
         $msLoad = microtime(true);
 
@@ -80,6 +80,11 @@ else
 
         $requestId = empty($_REQUEST['r']) ? "" : $_REQUEST['r'];
         $xmlGenerator = new XmlResultGenerator($testInfo, $urlStart, new FileHandler(), $additionalInfo, FRIENDLY_URLS);
+
+        if (!empty($_REQUEST["multistepFormat"])) {
+            $xmlGenerator->forceMultistepFormat(true);
+        }
+
         $medianFvOnly = (array_key_exists('rvmedian', $_REQUEST) && $_REQUEST['rvmedian'] == 'fv');
         $xmlGenerator->printAllResults($testResults, $median_metric, $requestId, $medianFvOnly);
 

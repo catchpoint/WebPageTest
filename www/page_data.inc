@@ -110,7 +110,7 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
     if (is_dir(__DIR__ . '/google') && is_file(__DIR__ . '/google/google_lib.inc')) {
       require_once(__DIR__ . '/google/google_lib.inc');
       $urlGenerator = UrlGenerator::create(false, "", 0, $localPaths->getRunNumber(), $localPaths->isCachedResult());
-      $csi = ParseCsiInfoForStep($urlGenerator, $localPaths, true, false);
+      $csi = ParseCsiInfoForStep($urlGenerator, $localPaths, true);
       if (isset($csi) && is_array($csi) && count($csi)) {
         $ret['CSI'] = array();
         foreach($csi as $metric => $value) {
@@ -209,8 +209,7 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
   if (isset($ret)) {
     $ret['run'] = $localPaths->getRunNumber();
     $ret['cached'] = $localPaths->isCachedResult() ? 1 : 0;
-    // TODO(sburnicki): Enable for multistep support
-    // $ret['step'] = $localPaths->getStepNumber();
+    $ret['step'] = $localPaths->getStepNumber();
 
     // calculate the effective bps
     if (array_key_exists('fullyLoaded', $ret) &&
@@ -340,7 +339,8 @@ function loadPageData($file, $options = null)
                                 'server_count' => @(int)trim($fields[84]),
                                 'server_rtt' => @(int)trim($fields[85]),
                                 'base_page_cdn' => @trim($fields[86]),
-                                'adult_site' => @(int)trim($fields[87])
+                                'adult_site' => @(int)trim($fields[87]),
+                                'eventName' => @trim($fields[2])
                             );
 
                 $ret['fixed_viewport'] = (array_key_exists(88, $fields) && strlen(trim($fields[88]))) ? (int)trim($fields[88]) : -1;

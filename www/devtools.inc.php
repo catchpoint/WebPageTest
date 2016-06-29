@@ -1097,22 +1097,22 @@ function GetDevToolsHeaderValue($headers, $name, &$value) {
 function GetDevToolsCPUTime($testPath, $run, $cached, $endTime = 0) {
   // TODO: remove once not used anymore
   $localPaths = new TestPaths($testPath, $run, $cached);
-  // If an end time wasn't specified, figure out what the fully loaded time is
-  if (!$endTime) {
-    if (GetDevToolsRequests($testPath, $run, $cached, $requests, $pageData) &&
-      isset($pageData) && is_array($pageData) && isset($pageData['fullyLoaded'])) {
-      $endTime = $pageData['fullyLoaded'];
-    }
-  }
   return GetDevToolsCPUTimeForStep($localPaths, $endTime);
 }
 
 /**
  * @param TestPaths $localPaths Paths for this run/step to get the CPU time for
- * @param int $endTime End time to consider (mandatory)
+ * @param int $endTime End time to consider (optional, will be retrieved from requests otherwise)
  * @return array
  */
-function GetDevToolsCPUTimeForStep($localPaths, $endTime) {
+function GetDevToolsCPUTimeForStep($localPaths, $endTime = 0) {
+  if (!$endTime) {
+    if (GetDevToolsRequestsForStep($localPaths, $requests, $pageData) &&
+      isset($pageData) && is_array($pageData) && isset($pageData['fullyLoaded'])) {
+      $endTime = $pageData['fullyLoaded'];
+    }
+  }
+
   $times = null;
   $ver = 2;
   $cacheFile = $localPaths->devtoolsCPUTimeCacheFile($ver);

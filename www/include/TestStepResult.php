@@ -5,8 +5,9 @@ require_once __DIR__ . '/../devtools.inc.php';
 require_once __DIR__ . '/../common_lib.inc';
 require_once __DIR__ . '/../domains.inc';
 require_once __DIR__ . '/../breakdown.inc';
+require_once __DIR__ . '/../video/visualProgress.inc.php';
 
-class TestRunResult {
+class TestStepResult {
 
   /**
    * @var TestInfo
@@ -19,16 +20,18 @@ class TestRunResult {
   private $rawData;
   private $run;
   private $cached;
+  private $step;
   private $localPaths;
 
-  private function __construct($testInfo, &$pageData, $run, $cached, $fileHandler = null) {
+  private function __construct($testInfo, &$pageData, $run, $cached, $step, $fileHandler = null) {
     // This isn't likely to stay the standard constructor, so we name it explicitly as a static function below
     $this->testInfo = $testInfo;
     $this->rawData = &$pageData;
     $this->run = intval($run);
     $this->cached = $cached ? true : false;
+    $this->step = $step;
     $this->fileHandler = $fileHandler ? $fileHandler : new FileHandler();
-    $this->localPaths = new TestPaths($this->testInfo->getRootDirectory(), $this->run, $this->cached);
+    $this->localPaths = new TestPaths($this->testInfo->getRootDirectory(), $this->run, $this->cached, $this->step);
   }
 
   /**
@@ -37,10 +40,28 @@ class TestRunResult {
    * @param array $pageData The pageData array with test results
    * @param int $run The run to return the data for
    * @param bool $cached False for first view, true for repeat view
-   * @return TestRunResult The created instance
+   * @param int $step The step number
+   * @return TestStepResult The created instance
    */
-  public static function fromPageData($testInfo, &$pageData, $run, $cached) {
-    return new self($testInfo, $pageData, $run, $cached);
+  public static function fromPageData($testInfo, &$pageData, $run, $cached, $step) {
+    return new self($testInfo, $pageData, $run, $cached, $step);
+  }
+
+  /**
+   * Creates a TestResult instance by loading the results from file system
+   * @param TestInfo $testInfo Related test information
+   * @param int $runNumber The run to return the data for, starting from 1
+   * @param bool $isCached False for first view, true for repeat view
+   * @param int $stepNumber The step number, starting from 1
+   * @param FileHandler $fileHandler The FileHandler to use
+   * @return TestStepResult|null The created instance on success, null otherwise
+   */
+  public static function fromFiles($testInfo, $runNumber, $isCached, $stepNumber, $fileHandler = null) {
+    // no support to use FileHandler so far
+    $localPaths = new TestPaths($testInfo->getRootDirectory(), $runNumber, $isCached, $stepNumber);
+    $runCompleted = $testInfo->isRunComplete($runNumber);
+    $pageData = loadPageStepData($localPaths, $runCompleted, null, $testInfo->getInfoArray());
+    return new self($testInfo, $pageData, $runNumber, $isCached, $stepNumber);
   }
 
   public function getUrlGenerator($baseUrl, $friendly = true) {
@@ -62,10 +83,48 @@ class TestRunResult {
   }
 
   /**
+   * @return int The step number
+   */
+  public function getStepNumber() {
+    return $this->step;
+  }
+
+  /**
    * @return array Raw result data
    */
   public function getRawResults() {
     return $this->rawData;
+  }
+
+  /**
+   * @return bool True if the step is successful, false otherwise
+   */
+  public function isSuccessful() {
+    if (!isset($this->rawData["result"])) {
+      return false;
+    }
+    return $this->rawData["result"] == 0 || $this->rawData["result"] == 99999;
+  }
+
+  /**
+   * @var string $metric The metric to return
+   * @return mixed|null The metric value or null if not set
+   */
+  public function getMetric($metric) {
+    if (!isset($this->rawData[$metric])) {
+      return null;
+    }
+    return $this->rawData[$metric];
+  }
+
+  /**
+   * @return string The event name if set, or an empty string
+   */
+  public function getEventName() {
+    if (!isset($this->rawData["eventName"])) {
+      return "";
+    }
+    return $this->rawData["eventName"];
   }
 
   /**
@@ -80,6 +139,9 @@ class TestRunResult {
 
   public function getVisualProgress() {
     // TODO: move implementation to this method
+    if (!$this->fileHandler->dirExists($this->localPaths->videoDir())) {
+      return array();
+    }
     return GetVisualProgressForStep($this->localPaths, $this->testInfo->isRunComplete($this->run), null, null,
       $this->getStartOffset());
   }
@@ -97,8 +159,7 @@ class TestRunResult {
   public function getMimeTypeBreakdown() {
     // TODO: move implementation to this method
     $requests = null;
-    return getBreakdown($this->testInfo->getId(), $this->testInfo->getRootDirectory(), $this->run,
-                        $this->cached ? 1 : 0, $requests);
+    return getBreakdownForStep($this->localPaths, $this->getUrlGenerator(""), $requests);
   }
 
   public function getConsoleLog() {
