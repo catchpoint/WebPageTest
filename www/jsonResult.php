@@ -31,6 +31,8 @@ if (array_key_exists('batch', $test['test']) && $test['test']['batch']) {
 
       $jsonResultGenerator = new JsonResultGenerator($testInfo, $urlStart);
       $ret['data'] = $jsonResultGenerator->resultDataArray($testResults, $median_metric);
+
+      ArchiveApi($id);
     }
 
     json_response($ret);

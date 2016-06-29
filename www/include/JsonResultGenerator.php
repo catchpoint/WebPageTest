@@ -170,8 +170,6 @@ class JsonResultGenerator {
         }
       }
     }
-
-    ArchiveApi($id);
     return $ret;
   }
 
