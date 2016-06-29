@@ -34,23 +34,24 @@ class JsonResultGenerator {
     $this->friendlyUrls = $friendlyUrls;
   }
 
+  /**
+   * @param TestResults $testResults The test results to use for constructing the data array
+   * @param string $medianMetric Metric to consider when selecting the median run
+   * @return array An array containing all data about the test, in a form that can be encoded with JSON
+   */
   public function resultDataArray($testResults, $medianMetric = "loadTime") {
     $id = $this->testInfo->getId();
-
     $url = $this->testInfo->getUrl();
-
-    $testPath = './' . GetTestPath($id);
+    $testPath = $this->testInfo->getRootDirectory();
     $pageData = loadAllPageData($testPath);
+
     $stats = array(0 => array(), 1 => array());
     $pageStats = calculatePageStats($pageData, $stats[0], $stats[1]);
-    if( !strlen($url) )
-      $url = $pageData[1][0]['URL'];
-    $testInfo = GetTestInfo($id);
-    if (is_file("$testPath/testinfo.ini"))
-      $test = parse_ini_file("$testPath/testinfo.ini", true);
-    $fvOnly = false;
-    if (!count($stats[1]))
-      $fvOnly = true;
+
+    if(!$url)
+      $url = $testResults->getUrlFromRun();
+    $testInfo = $this->testInfo->getInfoArray();
+    $fvOnly = $this->testInfo->isFirstViewOnly();
     $cacheLabels = array('firstView', 'repeatView');
 
     // summary information
@@ -65,12 +66,9 @@ class JsonResultGenerator {
           $locstring .= ':' . $testInfo['browser'];
         $ret['location'] = $locstring;
       }
-      if (isset($test) &&
-        array_key_exists('test', $test) &&
-        is_array($test['test']) &&
-        array_key_exists('location', $test['test']) &&
-        strlen($test['test']['location']))
-        $ret['from'] = $test['test']['location'];
+      $testLocation = $this->testInfo->getTestLocation();
+      if ($testLocation)
+        $ret['from'] = $testLocation;
       if (array_key_exists('connectivity', $testInfo) && strlen($testInfo['connectivity']))
         $ret['connectivity'] = $testInfo['connectivity'];
       if (array_key_exists('bwIn', $testInfo))
@@ -101,9 +99,9 @@ class JsonResultGenerator {
       $cachedMax = 1;
     $ret['runs'] = $runs;
     $ret['fvonly'] = $fvOnly;
-    $ret['successfulFVRuns'] = CountSuccessfulTests($pageData, 0);
+    $ret['successfulFVRuns'] = $testResults->countSuccessfulRuns(false);
     if (!$fvOnly)
-      $ret['successfulRVRuns'] = CountSuccessfulTests($pageData, 1);
+      $ret['successfulRVRuns'] = $testResults->countSuccessfulRuns(true);
 
     // average
     if (!$this->hasInfoFlag(self::WITHOUT_AVERAGE)) {
