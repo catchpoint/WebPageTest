@@ -182,6 +182,8 @@
             $test['dpr'] = isset($_REQUEST['dpr']) && $_REQUEST['dpr'] > 0 ? $_REQUEST['dpr'] : 0;
             $test['width'] = isset($_REQUEST['width']) && $_REQUEST['width'] > 0 ? $_REQUEST['width'] : 0;
             $test['height'] = isset($_REQUEST['height']) && $_REQUEST['height'] > 0 ? $_REQUEST['height'] : 0;
+            $test['browser_width'] = isset($_REQUEST['browser_width']) && $_REQUEST['browser_width'] > 0 ? $_REQUEST['browser_width'] : 0;
+            $test['browser_height'] = isset($_REQUEST['browser_height']) && $_REQUEST['browser_height'] > 0 ? $_REQUEST['browser_height'] : 0;
             $test['clearcerts'] = array_key_exists('clearcerts', $_REQUEST) && $_REQUEST['clearcerts'] ? 1 : 0;
             $test['orientation'] = array_key_exists('orientation', $_REQUEST) ? trim($_REQUEST['orientation']) : 'default';
             $test['responsive'] = array_key_exists('responsive', $_REQUEST) && $_REQUEST['responsive'] ? 1 : 0;
@@ -359,6 +361,21 @@
             // login tests are forced to be private
             if( strlen($test['login']) )
                 $test['private'] = 1;
+                
+            if (!$test['browser_width'] || !$test['browser_height']) {
+              $browser_size = GetSetting('default_browser_size');
+              if ($browser_size) {
+                $parts = explode('x', $browser_size);
+                if (count($parts) == 2) {
+                  $browser_width = intval($parts[0]);
+                  $browser_height = intval($parts[1]);
+                  if ($browser_width > 0 && $browser_height > 0) {
+                    $test['browser_width'] = $browser_width;
+                    $test['browser_height'] = $browser_height;
+                  }
+                }
+              }
+            }
             
             // Tests that include credentials in the URL (usually indicated by @ in the host section) are forced to be private
             $atPos = strpos($test['url'], '@');
@@ -2032,6 +2049,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "width={$test['width']}\r\n";
             if( isset($test['height']) && $test['height'] > 0 )
                 $testFile .= "height={$test['height']}\r\n";
+            if( isset($test['browser_width']) && $test['browser_width'] > 0 )
+                $testFile .= "browser_width={$test['browser_width']}\r\n";
+            if( isset($test['browser_height']) && $test['browser_height'] > 0 )
+                $testFile .= "browser_height={$test['browser_height']}\r\n";
             if( $test['clearcerts'] )
                 $testFile .= "clearcerts=1\r\n";
             if( $test['orientation'] )

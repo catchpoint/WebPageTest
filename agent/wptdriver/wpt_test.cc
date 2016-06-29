@@ -322,6 +322,10 @@ bool WptTest::Load(CString& test) {
           _viewport_width = _ttoi(value.Trim());
         } else if (!key.CompareNoCase(_T("height")) && _ttoi(value.Trim())) {
           _viewport_height = _ttoi(value.Trim());
+        } else if (!key.CompareNoCase(_T("browser_width")) && _ttoi(value.Trim())) {
+          _browser_width = _ttoi(value.Trim());
+        } else if (!key.CompareNoCase(_T("browser_height")) && _ttoi(value.Trim())) {
+          _browser_height = _ttoi(value.Trim());
         }
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {
