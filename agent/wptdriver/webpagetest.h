@@ -83,4 +83,5 @@ private:
   bool GetClient(WptTestDriver& test);
   bool UnzipTo(CString zip_file, CString dest);
   void UpdateDNSServers();
+  bool GetNameFromMAC(LPTSTR name, DWORD &len);
 };

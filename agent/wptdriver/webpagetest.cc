@@ -90,7 +90,9 @@ WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
   TCHAR name[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD len = _countof(name);
   name[0] = 0;
-  if (GetComputerName(name, &len) && lstrlen(name)) {
+  if (!GetNameFromMAC(name, len))
+    GetComputerName(name, &len);
+  if (lstrlen(name)) {
     TCHAR escaped[INTERNET_MAX_URL_LENGTH];
     len = _countof(escaped);
     if ((UrlEscape(name, escaped, &len, URL_ESCAPE_SEGMENT_ONLY | 
@@ -101,6 +103,56 @@ WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
 
   _screenWidth = GetSystemMetrics(SM_CXSCREEN);
   _screenHeight = GetSystemMetrics(SM_CYSCREEN);
+}
+
+/*-----------------------------------------------------------------------------
+  For special cases where we use VMWare-reserved MAC addresses we can auto-name
+  the PC based on the assigned MAC address in the form of:
+  00:50:56:00:<vm server number>:<machine number>
+-----------------------------------------------------------------------------*/
+bool WebPagetest::GetNameFromMAC(LPTSTR name, DWORD &len) {
+  bool ret = false;
+  ULONG addr_len = 15000;
+  IP_ADAPTER_ADDRESSES * addresses = NULL;
+  DWORD ret_val = NO_ERROR;
+  DWORD attempts = 0;
+  do {
+    attempts++;
+    addresses = (IP_ADAPTER_ADDRESSES *)malloc(addr_len);
+    if (addresses) {
+      ret_val = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX,
+                                     NULL, addresses, &addr_len);
+      if (ret_val != NO_ERROR) {
+        free(addresses);
+        addresses = NULL;
+      }
+    } else {
+      break;
+    }
+  } while ((ret_val == ERROR_BUFFER_OVERFLOW) && (attempts <= 2));
+
+  if (ret_val == NO_ERROR && addresses) {
+    IP_ADAPTER_ADDRESSES * addr = addresses;
+    while (addr) {
+      if (addr->PhysicalAddressLength == 6 &&
+          addr->PhysicalAddress[0] == 0x00 &&
+          addr->PhysicalAddress[1] == 0x50 &&
+          addr->PhysicalAddress[2] == 0x56 &&
+          addr->PhysicalAddress[3] == 0x00) {
+        DWORD server = addr->PhysicalAddress[4];
+        DWORD machine = addr->PhysicalAddress[5];
+        wsprintf(name, _T("VM%X-%02X"), server, machine);
+        len = lstrlen(name);
+        ret = true;
+      }
+      addr = addr->Next;
+    }
+  }
+
+  if (addresses)
+    free(addresses);
+
+  return ret;
 }
 
 /*-----------------------------------------------------------------------------
