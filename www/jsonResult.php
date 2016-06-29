@@ -29,13 +29,37 @@ if (array_key_exists('batch', $test['test']) && $test['test']['batch']) {
       $testInfo = TestInfo::fromValues($id, $testPath, $test);
       $testResults = TestResults::fromFiles($testInfo);
 
-      $jsonResultGenerator = new JsonResultGenerator($testInfo, $urlStart);
+      $infoFlags = getRequestInfoFlags();
+
+      $jsonResultGenerator = new JsonResultGenerator($testInfo, $urlStart, new FileHandler(), $infoFlags, FRIENDLY_URLS);
       $ret['data'] = $jsonResultGenerator->resultDataArray($testResults, $median_metric);
 
       ArchiveApi($id);
     }
 
     json_response($ret);
+}
+
+function getRequestInfoFlags() {
+  $getFlags = array(
+    "average" => JsonResultGenerator::WITHOUT_AVERAGE,
+    "standard" => JsonResultGenerator::WITHOUT_STDDEV,
+    "median" => JsonResultGenerator::WITHOUT_MEDIAN,
+    "runs" => JsonResultGenerator::WITHOUT_RUNS,
+    "requests" => JsonResultGenerator::WITHOUT_REQUESTS,
+    "console" => JsonResultGenerator::WITHOUT_CONSOLE
+  );
+
+  $infoFlags = array();
+  foreach ($getFlags as $key => $flag) {
+    if (isset($_GET[$key]) && $_GET[$key] == 0) {
+      $infoFlags[] = $flag;
+    }
+  }
+  if (!empty($_REQUEST["basic"])) {
+    $infoFlags[] = JsonResultGenerator::BASIC_INFO_ONLY;
+  }
+  return $infoFlags;
 }
 
 ?>

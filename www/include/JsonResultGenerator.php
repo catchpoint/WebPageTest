@@ -2,28 +2,42 @@
 
 class JsonResultGenerator {
 
+  const BASIC_INFO_ONLY = 1;
+  const WITHOUT_AVERAGE = 2;
+  const WITHOUT_STDDEV = 3;
+  const WITHOUT_MEDIAN = 4;
+  const WITHOUT_RUNS = 5;
+  const WITHOUT_REQUESTS = 6;
+  const WITHOUT_CONSOLE = 7;
+
   /* @var TestInfo */
   private $testInfo;
   private $urlStart;
+  /* @var FileHandler */
+  private $fileHandler;
+  private $infoFlags;
+  private $friendlyUrls;
 
-  public function __construct($testInfo, $urlStart) {
+  /**
+   * JsonResultGenerator constructor.
+   * @param TestInfo $testInfo Information about the test
+   * @param string $urlStart Start for test related URLS
+   * @param FileHandler $fileHandler FileHandler to be used. Optional
+   * @param array $infoFlags Array of WITHOUT_* and BASIC_* constants to define if some info should be left out. Optional
+   * @param bool $friendlyUrls True if friendly urls should be used (mod_rewrite), false otherwise
+   */
+  public function __construct($testInfo, $urlStart, $fileHandler = null, $infoFlags = array(), $friendlyUrls = true) {
     $this->testInfo = $testInfo;
     $this->urlStart = $urlStart;
+    $this->fileHandler = $fileHandler ? $fileHandler : new FileHandler();
+    $this->infoFlags = $infoFlags;
+    $this->friendlyUrls = $friendlyUrls;
   }
 
   public function resultDataArray($testResults, $medianMetric = "loadTime") {
-    return $this->GetTestResult($this->testInfo->getId());
-  }
+    $id = $this->testInfo->getId();
 
-
-  /**
-   * Gather all of the data for a given test and return it as an array
-   *
-   * @param mixed $id
-   */
-  private function GetTestResult($id) {
-    global $url;
-    global $median_metric;
+    $url = $this->testInfo->getUrl();
 
     $testPath = './' . GetTestPath($id);
     $pageData = loadAllPageData($testPath);
@@ -92,16 +106,7 @@ class JsonResultGenerator {
       $ret['successfulRVRuns'] = CountSuccessfulTests($pageData, 1);
 
     // average
-
-    // check if removing average
-    $addAverage= 1;
-    if(isset($_GET['average'])){
-      if($_GET['average'] == 0){
-        $addAverage = 0;
-      }
-    }
-    // add average
-    if($addAverage == 1){
+    if (!$this->hasInfoFlag(self::WITHOUT_AVERAGE)) {
       $ret['average'] = array();
       for ($cached = 0; $cached <= $cachedMax; $cached++) {
         $label = $cacheLabels[$cached];
@@ -110,16 +115,7 @@ class JsonResultGenerator {
     }
 
     // standard deviation
-
-    // check if removing standard deviation
-    $addStandard= 1;
-    if(isset($_GET['standard'])){
-      if($_GET['standard'] == 0){
-        $addStandard = 0;
-      }
-    }
-    // add standard deviation
-    if($addStandard == 1){
+    if (!$this->hasInfoFlag(self::WITHOUT_STDDEV)) {
       $ret['standardDeviation'] = array();
       for ($cached = 0; $cached <= $cachedMax; $cached++) {
         $label = $cacheLabels[$cached];
@@ -130,20 +126,11 @@ class JsonResultGenerator {
     }
 
     // median
-
-    // check if removing median
-    $addMedian = 1;
-    if(isset($_GET['median'])){
-      if($_GET['median'] == 0){
-        $addMedian = 0;
-      }
-    }
-    // add median
-    if($addMedian == 1){
+    if (!$this->hasInfoFlag(self::WITHOUT_MEDIAN)) {
       $ret['median'] = array();
       for ($cached = 0; $cached <= $cachedMax; $cached++) {
         $label = $cacheLabels[$cached];
-        $medianRun = GetMedianRun($pageData, $cached, $median_metric);
+        $medianRun = GetMedianRun($pageData, $cached, $medianMetric);
         if (array_key_exists($medianRun, $pageData)) {
           $ret['median'][$label] = $this->GetSingleRunData($id, $testPath, $medianRun, $cached, $pageData, $testInfo);
         }
@@ -151,16 +138,7 @@ class JsonResultGenerator {
     }
 
     // runs
-
-    // check if removing runs
-    $addRuns = 1;
-    if(isset($_GET['runs'])){
-      if($_GET['runs'] == 0){
-        $addRuns = 0;
-      }
-    }
-    // add runs
-    if($addRuns == 1){
+    if (!$this->hasInfoFlag(self::WITHOUT_RUNS)) {
       $ret['runs'] = array();
       for ($run = 1; $run <= $runs; $run++) {
         $ret['runs'][$run] = array();
@@ -205,9 +183,7 @@ class JsonResultGenerator {
           $ret['tester'] = $testInfo['test_runs'][$run]['tester'];
       }
 
-      $basic_results = false;
-      if (array_key_exists('basic', $_REQUEST) && $_REQUEST['basic'])
-        $basic_results = true;
+      $basic_results = $this->hasInfoFlag(self::BASIC_INFO_ONLY);
 
       if (!$basic_results && gz_is_file("$testPath/$run{$cachedText}_pagespeed.txt")) {
         $ret['PageSpeedScore'] = GetPageSpeedScore("$testPath/$run{$cachedText}_pagespeed.txt");
@@ -262,28 +238,13 @@ class JsonResultGenerator {
         $ret['domains'] = getDomainBreakdown($id, $testPath, $run, $cached, $requests);
         $ret['breakdown'] = getBreakdown($id, $testPath, $run, $cached, $requests);
 
-        // check if removing requests
-        $addRequests = 1;
-        if (isset($_GET['requests'])) {
-          if ($_GET['requests'] == 0) {
-            $addRequests = 0;
-          }
-        }
         // add requests
-        if ($addRequests == 1) {
+        if (!$this->hasInfoFlag(self::WITHOUT_REQUESTS)) {
           $ret['requests'] = $requests;
         }
 
         // Check to see if we're adding the console log
-        $addConsole = 1;
-        if (isset($_GET['console'])) {
-          if ($_GET['console'] == 0) {
-            $addConsole = 0;
-          }
-        }
-
-        // add requests
-        if ($addConsole == 1) {
+        if (!$this->hasInfoFlag(self::WITHOUT_CONSOLE)) {
           $console_log = DevToolsGetConsoleLog($testPath, $run, $cached);
           if (isset($console_log)) {
             $ret['consoleLog'] = $console_log;
@@ -306,5 +267,9 @@ class JsonResultGenerator {
     }
 
     return $ret;
+  }
+
+  private function hasInfoFlag($flag) {
+    return in_array($flag, $this->infoFlags);
   }
 }
