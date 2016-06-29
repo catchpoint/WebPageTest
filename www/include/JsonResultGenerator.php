@@ -4,9 +4,11 @@ class JsonResultGenerator {
 
   /* @var TestInfo */
   private $testInfo;
+  private $urlStart;
 
-  public function __construct($testInfo, $urlStart, $fileHandler = null) {
+  public function __construct($testInfo, $urlStart) {
     $this->testInfo = $testInfo;
+    $this->urlStart = $urlStart;
   }
 
   public function resultDataArray($testResults, $medianMetric = "loadTime") {
@@ -24,10 +26,6 @@ class JsonResultGenerator {
     global $median_metric;
 
     $testPath = './' . GetTestPath($id);
-    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
-    $host  = $_SERVER['HTTP_HOST'];
-    $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-    $path = substr($testPath, 1);
     $pageData = loadAllPageData($testPath);
     $stats = array(0 => array(), 1 => array());
     $pageStats = calculatePageStats($pageData, $stats[0], $stats[1]);
@@ -42,7 +40,7 @@ class JsonResultGenerator {
     $cacheLabels = array('firstView', 'repeatView');
 
     // summary information
-    $ret = array('id' => $id, 'url' => $url, 'summary' => "$protocol://$host$uri/results.php?test=$id");
+    $ret = array('id' => $id, 'url' => $url, 'summary' => $this->urlStart . "/results.php?test=$id");
     $runs = max(array_keys($pageData));
     if (isset($testInfo)) {
       if (array_key_exists('url', $testInfo) && strlen($testInfo['url']))
@@ -192,9 +190,6 @@ class JsonResultGenerator {
       array_key_exists($cached, $pageData[$run]) &&
       is_array($pageData[$run][$cached])
     ) {
-      $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
-      $host = $_SERVER['HTTP_HOST'];
-      $uri = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
       $path = substr($testPath, 1);
       $ret = $pageData[$run][$cached];
       $ret['run'] = $run;
@@ -218,38 +213,38 @@ class JsonResultGenerator {
 
       if (!$basic_results && gz_is_file("$testPath/$run{$cachedText}_pagespeed.txt")) {
         $ret['PageSpeedScore'] = GetPageSpeedScore("$testPath/$run{$cachedText}_pagespeed.txt");
-        $ret['PageSpeedData'] = "$protocol://$host$uri//getgzip.php?test=$id&file=$run{$cachedText}_pagespeed.txt";
+        $ret['PageSpeedData'] = $this->urlStart . "//getgzip.php?test=$id&file=$run{$cachedText}_pagespeed.txt";
       }
 
       $ret['pages'] = array();
-      $ret['pages']['details'] = "$protocol://$host$uri/details.php?test=$id&run=$run&cached=$cached";
-      $ret['pages']['checklist'] = "$protocol://$host$uri/performance_optimization.php?test=$id&run=$run&cached=$cached";
-      $ret['pages']['breakdown'] = "$protocol://$host$uri/breakdown.php?test=$id&run=$run&cached=$cached";
-      $ret['pages']['domains'] = "$protocol://$host$uri/domains.php?test=$id&run=$run&cached=$cached";
-      $ret['pages']['screenShot'] = "$protocol://$host$uri/screen_shot.php?test=$id&run=$run&cached=$cached";
+      $ret['pages']['details'] = $this->urlStart . "/details.php?test=$id&run=$run&cached=$cached";
+      $ret['pages']['checklist'] = $this->urlStart . "/performance_optimization.php?test=$id&run=$run&cached=$cached";
+      $ret['pages']['breakdown'] = $this->urlStart . "/breakdown.php?test=$id&run=$run&cached=$cached";
+      $ret['pages']['domains'] = $this->urlStart . "/domains.php?test=$id&run=$run&cached=$cached";
+      $ret['pages']['screenShot'] = $this->urlStart . "/screen_shot.php?test=$id&run=$run&cached=$cached";
 
       $ret['thumbnails'] = array();
-      $ret['thumbnails']['waterfall'] = "$protocol://$host$uri/result/$id/$run{$cachedText}_waterfall_thumb.png";
-      $ret['thumbnails']['checklist'] = "$protocol://$host$uri/result/$id/$run{$cachedText}_optimization_thumb.png";
-      $ret['thumbnails']['screenShot'] = "$protocol://$host$uri/result/$id/$run{$cachedText}_screen_thumb.png";
+      $ret['thumbnails']['waterfall'] = $this->urlStart . "/result/$id/$run{$cachedText}_waterfall_thumb.png";
+      $ret['thumbnails']['checklist'] = $this->urlStart . "/result/$id/$run{$cachedText}_optimization_thumb.png";
+      $ret['thumbnails']['screenShot'] = $this->urlStart . "/result/$id/$run{$cachedText}_screen_thumb.png";
 
       $ret['images'] = array();
-      $ret['images']['waterfall'] = "$protocol://$host$uri$path/$run{$cachedText}_waterfall.png";
-      $ret['images']['connectionView'] = "$protocol://$host$uri$path/$run{$cachedText}_connection.png";
-      $ret['images']['checklist'] = "$protocol://$host$uri$path/$run{$cachedText}_optimization.png";
-      $ret['images']['screenShot'] = "$protocol://$host$uri/getfile.php?test=$id&file=$run{$cachedText}_screen.jpg";
+      $ret['images']['waterfall'] = $this->urlStart . "$path/$run{$cachedText}_waterfall.png";
+      $ret['images']['connectionView'] = $this->urlStart . "$path/$run{$cachedText}_connection.png";
+      $ret['images']['checklist'] = $this->urlStart . "$path/$run{$cachedText}_optimization.png";
+      $ret['images']['screenShot'] = $this->urlStart . "/getfile.php?test=$id&file=$run{$cachedText}_screen.jpg";
       if (is_file("$testPath/$run{$cachedText}_screen.png"))
-        $ret['images']['screenShotPng'] = "$protocol://$host$uri/getfile.php?test=$id&file=$run{$cachedText}_screen.png";
+        $ret['images']['screenShotPng'] = $this->urlStart . "/getfile.php?test=$id&file=$run{$cachedText}_screen.png";
 
       $ret['rawData'] = array();
-      $ret['rawData']['headers'] = "$protocol://$host$uri$path/$run{$cachedText}_report.txt";
-      $ret['rawData']['pageData'] = "$protocol://$host$uri$path/$run{$cachedText}_IEWPG.txt";
-      $ret['rawData']['requestsData'] = "$protocol://$host$uri$path/$run{$cachedText}_IEWTR.txt";
-      $ret['rawData']['utilization'] = "$protocol://$host$uri$path/$run{$cachedText}_progress.csv";
+      $ret['rawData']['headers'] = $this->urlStart . "$path/$run{$cachedText}_report.txt";
+      $ret['rawData']['pageData'] = $this->urlStart . "$path/$run{$cachedText}_IEWPG.txt";
+      $ret['rawData']['requestsData'] = $this->urlStart . "$path/$run{$cachedText}_IEWTR.txt";
+      $ret['rawData']['utilization'] = $this->urlStart . "$path/$run{$cachedText}_progress.csv";
       if (is_file("$testPath/$run{$cachedText}_bodies.zip"))
-        $ret['rawData']['bodies'] = "$protocol://$host$uri$path/$run{$cachedText}_bodies.zip";
+        $ret['rawData']['bodies'] = $this->urlStart . "$path/$run{$cachedText}_bodies.zip";
       if (gz_is_file("$testPath/$run{$cachedText}_trace.json"))
-        $ret['rawData']['trace'] = "$protocol://$host$uri//getgzip.php?test=$id&compressed=1&file=$run{$cachedText}_trace.json.gz";
+        $ret['rawData']['trace'] = $this->urlStart . "//getgzip.php?test=$id&compressed=1&file=$run{$cachedText}_trace.json.gz";
 
       if (!$basic_results) {
         $startOffset = array_key_exists('testStartOffset', $ret) ? intval(round($ret['testStartOffset'])) : 0;
@@ -259,7 +254,7 @@ class JsonResultGenerator {
           $ret['videoFrames'] = array();
           foreach ($progress['frames'] as $ms => $frame) {
             $videoFrame = array('time' => $ms);
-            $videoFrame['image'] = "http://$host$uri/getfile.php?test=$id&video=video_{$run}$cachedTextLower&file={$frame['file']}";
+            $videoFrame['image'] = $this->urlStart . "/getfile.php?test=$id&video=video_{$run}$cachedTextLower&file={$frame['file']}";
             $videoFrame['VisuallyComplete'] = $frame['progress'];
             $ret['videoFrames'][] = $videoFrame;
           }
