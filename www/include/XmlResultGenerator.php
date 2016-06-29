@@ -66,6 +66,9 @@ class XmlResultGenerator {
     echo "<statusText>Ok</statusText>\n";
     if (!empty($requestId))
       echo "<requestId>$requestId</requestId>\n";
+    if (defined("VER_WEBPAGETEST")) {
+      echo "<webPagetestVersion>" . VER_WEBPAGETEST . "</webPagetestVersion>";
+    }
     echo "<data>\n";
 
     echo "<testId>" . $this->testInfo->getId() . "</testId>\n";
