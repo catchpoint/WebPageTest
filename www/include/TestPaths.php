@@ -77,6 +77,15 @@ class TestPaths {
   }
 
   /**
+   * Returns the step number which the paths are used for. Try to avoid direct access
+   * and use the other public methods if possible.
+   * @return int The run number
+   */
+  public function getStepNumber() {
+    return $this->step;
+  }
+
+  /**
    * @return string The base name of the file (without run information), e.g. when instantiated by from*Name methods
    */
   public function getParsedBaseName() {

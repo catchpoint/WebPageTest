@@ -209,8 +209,7 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
   if (isset($ret)) {
     $ret['run'] = $localPaths->getRunNumber();
     $ret['cached'] = $localPaths->isCachedResult() ? 1 : 0;
-    // TODO(sburnicki): Enable for multistep support
-    // $ret['step'] = $localPaths->getStepNumber();
+    $ret['step'] = $localPaths->getStepNumber();
 
     // calculate the effective bps
     if (array_key_exists('fullyLoaded', $ret) &&

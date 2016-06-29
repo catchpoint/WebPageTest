@@ -80,6 +80,11 @@ else
 
         $requestId = empty($_REQUEST['r']) ? "" : $_REQUEST['r'];
         $xmlGenerator = new XmlResultGenerator($testInfo, $urlStart, new FileHandler(), $additionalInfo, FRIENDLY_URLS);
+
+        if (!empty($_REQUEST["multistepFormat"])) {
+            $xmlGenerator->forceMultistepFormat(true);
+        }
+
         $medianFvOnly = (array_key_exists('rvmedian', $_REQUEST) && $_REQUEST['rvmedian'] == 'fv');
         $xmlGenerator->printAllResults($testResults, $median_metric, $requestId, $medianFvOnly);
 

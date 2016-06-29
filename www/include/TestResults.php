@@ -4,9 +4,6 @@ require_once __DIR__ . '/FileHandler.php';
 require_once __DIR__ . '/TestStepResult.php';
 require_once __DIR__ . '/TestRunResults.php';
 
-// TODO: get rid of this as soon as we don't use loadAllPageData, etc anymore
-require_once __DIR__ . '/../page_data.inc';
-
 class TestResults {
 
   /**
