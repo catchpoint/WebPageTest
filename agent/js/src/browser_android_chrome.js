@@ -79,6 +79,13 @@ var KNOWN_BROWSERS = {
     'Chrome 38': 'com.chrome.beta'
   };
 
+// Browsers that we can only test by firing navigation intents
+var BLACK_BOX_BROWSERS = {
+    'UC Mini': {'package': 'com.uc.browser.en', 'activity': 'com.uc.browser.ActivityBrowser'},
+    'UC Browser': {'package': 'com.UCMobile.intl', 'activity': 'com.UCMobile.main.UCMobile'},
+    'Opera Mini': {'package': 'com.opera.mini.native', 'activity': 'com.opera.mini.android.Browser'},
+  };
+
 var LAST_INSTALL_FILE = 'lastInstall.txt';
 
 
@@ -131,20 +138,32 @@ function BrowserAndroidChrome(app, args) {
         '" needed.  Last install: "' + lastInstall + '"');
   this.chrome_ = args.customBrowser || args.flags.chrome;  // Chrome.apk.
   this.chromedriver_ = args.flags.chromedriver;
+  this.supportsTracing = true;
+  this.isBlackBox = false;
   if (args.flags.chromePackage) {
-    this.chromePackage_ = args.flags.chromePackage;
+    this.browserPackage_ = args.flags.chromePackage;
   } else if (args.task.browser) {
     var browserName = args.task.browser;
     var separator = browserName.lastIndexOf('-');
     if (separator >= 0) {
       browserName = browserName.substr(separator + 1).trim();
     }
-    this.chromePackage_ = KNOWN_BROWSERS[browserName];
+    this.browserPackage_ = KNOWN_BROWSERS[browserName];
+    if (!this.browserPackage_ && BLACK_BOX_BROWSERS[browserName] != undefined) {
+      this.browserPackage_ = BLACK_BOX_BROWSERS[browserName].package;
+      this.browserActivity_ = BLACK_BOX_BROWSERS[browserName].activity;
+      this.blank_page_ = args.flags.blankPage ||
+                         'http://www.webpagetest.org/blank.html';
+      this.isBlackBox = true;
+      this.supportsTracing = false;
+    }
   }
-  this.chromePackage_ = args.task.customBrowser_package ||
-      args.chromePackage_ || this.chromePackage_ || 'com.android.chrome';
-  this.chromeActivity_ = args.task.customBrowser_activity ||
-      args.chromeActivity || 'com.google.android.apps.chrome.Main';
+  this.blank_page_ = this.blank_page_ || 'about:blank';
+  this.browserPackage_ = args.task.customBrowser_package ||
+      args.chromePackage_ || this.browserPackage_ || 'com.android.chrome';
+  this.browserActivity_ = args.task.customBrowser_activity ||
+      args.chromeActivity || this.browserActivity_ ||
+      'com.google.android.apps.chrome.Main';
   this.flagsFile_ = args.task.customBrowser_flagsFile ||
       args.flagsFile || '/data/local/chrome-command-line';
   this.devToolsPort_ = args.flags.devToolsPort;
@@ -163,6 +182,7 @@ function BrowserAndroidChrome(app, args) {
   this.useRndis = this.checkNet && 'yes' === args.flags.useRndis;
   this.rndis444 = args.flags['rndis444'] ? args.flags.rndis444 : undefined;
   this.deviceVideoPath_ = undefined;
+  this.deviceTcpdumpPath_ = undefined;
   this.recordProcess_ = undefined;
   function toDir(s) {
     return (s ? (s[s.length - 1] === '/' ? s : s + '/') : '');
@@ -179,7 +199,6 @@ function BrowserAndroidChrome(app, args) {
     this.chromeFlags_.push('--ignore-certificate-errors');
   }
   this.isCacheWarm_ = args.isCacheWarm;
-  this.supportsTracing = true;
   this.remoteNetlog_ = undefined;
   this.netlogEnabled_ = args.task['netlog'] ? true : false;
 }
@@ -201,7 +220,7 @@ BrowserAndroidChrome.prototype.startWdServer = function(browserCaps) {
   browserCaps[webdriver.Capability.BROWSER_NAME] = webdriver.Browser.CHROME;
   browserCaps.chromeOptions = {
     args: this.chromeFlags_.slice(),  // FIXME(wrightt): additionalFlags_
-    androidPackage: this.chromePackage_,
+    androidPackage: this.browserPackage_,
     androidDeviceSerial: this.deviceSerial_
   };
   if (this.pac_) {
@@ -250,7 +269,7 @@ BrowserAndroidChrome.prototype.deviceCleanup = function() {
 }
 
 /**
- * Launches the browser with about:blank, enables DevTools.
+ * Launches the browser to a blank page, enables DevTools.
  */
 BrowserAndroidChrome.prototype.startBrowser = function() {
   'use strict';
@@ -267,11 +286,27 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
   this.adb_.su(['ndc', 'resolver', 'flushdefaultif']);
 
   // Start the browser
-  var activity = this.chromePackage_ + '/' + this.chromeActivity_;
-  this.adb_.shell(['am', 'start', '-n', activity, '-d', 'about:blank']);
+  this.navigateTo(this.blank_page_);
+  if (this.isBlackBox) {
+    // Get around first-launch UI
+    this.app_.timeout(500, 'Wait for first browser startup');
+    this.kill();
+    this.navigateTo(this.blank_page_);
+    this.app_.timeout(2000, 'Wait for browser startup');
+  }
 
   this.scheduleConfigureDevToolsPort_();
 };
+
+BrowserAndroidChrome.prototype.navigateTo = function(url) {
+  'use strict';
+  this.app_.schedule('Navigate', function() {
+    var activity = this.browserPackage_ + '/' + this.browserActivity_;
+    this.adb_.shell(['am', 'start', '-n', activity,
+        '-a', 'android.intent.action.VIEW', '-d', url]);
+  }.bind(this));
+};
+
 
 /**
  * Callback when the child chromedriver process exits.
@@ -291,26 +326,32 @@ BrowserAndroidChrome.prototype.onChildProcessExit = function() {
  */
 BrowserAndroidChrome.prototype.clearProfile_ = function() {
   'use strict';
-  if (this.isCacheWarm_) {
-    this.adb_.su(['rm', '-r', '/data/data/' + this.chromePackage_ +
-                 '/app_tabs']);
+  if (this.isBlackBox) {
+    if (!this.isCacheWarm_) {
+      this.adb_.shell(['pm', 'clear', this.browserPackage_]);
+    }
   } else {
-    // Delete everything except the lib directory
-    this.adb_.su(['ls', '/data/data/' + this.chromePackage_]).then(
-        function(files) {
-      var lines = files.split('\n');
-      var count = lines.length;
-      var directories = '';
-      for (var i = 0; i < count; i++) {
-        var file = lines[i].trim();
-        if (file.length && file !== '.' && file !== '..' &&
-            file !== 'lib' && file !== 'shared_prefs') {
-          directories += ' /data/data/' + this.chromePackage_ + '/' + file;
+    if (this.isCacheWarm_) {
+      this.adb_.su(['rm', '-r', '/data/data/' + this.browserPackage_ +
+                   '/app_tabs']);
+    } else {
+      // Delete everything except the lib directory
+      this.adb_.su(['ls', '/data/data/' + this.browserPackage_]).then(
+          function(files) {
+        var lines = files.split('\n');
+        var count = lines.length;
+        var directories = '';
+        for (var i = 0; i < count; i++) {
+          var file = lines[i].trim();
+          if (file.length && file !== '.' && file !== '..' &&
+              file !== 'lib' && file !== 'shared_prefs') {
+            directories += ' /data/data/' + this.browserPackage_ + '/' + file;
+          }
         }
-      }
-      if (directories.length)
-        this.adb_.su(['rm', '-r ' + directories]);
-    }.bind(this));
+        if (directories.length)
+          this.adb_.su(['rm', '-r ' + directories]);
+      }.bind(this));
+    }
   }
 };
 
@@ -415,23 +456,23 @@ BrowserAndroidChrome.prototype.scheduleHttpDownload_ = function(url, local_file,
 BrowserAndroidChrome.prototype.scheduleDownloadApkIfNeeded_ = function() {
   this.app_.schedule('Download APK if needed', function() {
     if (this.apk_packages_ &&
-        this.chromePackage_ &&
-        this.apk_packages_[this.chromePackage_] &&
-        this.apk_packages_[this.chromePackage_]['md5'] &&
-        this.apk_packages_[this.chromePackage_]['apk_url']) {
+        this.browserPackage_ &&
+        this.apk_packages_[this.browserPackage_] &&
+        this.apk_packages_[this.browserPackage_]['md5'] &&
+        this.apk_packages_[this.browserPackage_]['apk_url']) {
       var status = {};
       try {
         status = JSON.parse(fs.readFileSync(this.device_status_file_, "utf8"))
       } catch(e) {}
       if (status['apk'] == undefined ||
-          status.apk[this.chromePackage_] == undefined ||
-          status.apk[this.chromePackage_]['md5'] !== this.apk_packages_[this.chromePackage_]['md5']) {
-        logger.debug('APK Update available for ' + this.chromePackage_ + ' md5: ' + this.apk_packages_[this.chromePackage_]['md5'].toUpperCase());
+          status.apk[this.browserPackage_] == undefined ||
+          status.apk[this.browserPackage_]['md5'] !== this.apk_packages_[this.browserPackage_]['md5']) {
+        logger.debug('APK Update available for ' + this.browserPackage_ + ' md5: ' + this.apk_packages_[this.browserPackage_]['md5'].toUpperCase());
         var local_file = path.join(this.workDir_, 'browser.apk');
         try {fs.unlinkSync(local_file);} catch(e) {}
         this.download_complete_ = false;
         this.download_ok_ = false;
-        this.scheduleHttpDownload_(this.apk_packages_[this.chromePackage_]['apk_url'], local_file, this.apk_packages_[this.chromePackage_]['md5']).then(function(ok) {
+        this.scheduleHttpDownload_(this.apk_packages_[this.browserPackage_]['apk_url'], local_file, this.apk_packages_[this.browserPackage_]['md5']).then(function(ok) {
           this.download_ok_ = ok;
           this.download_complete_ = true;
         }.bind(this));
@@ -443,9 +484,9 @@ BrowserAndroidChrome.prototype.scheduleDownloadApkIfNeeded_ = function() {
               logger.debug('Install complete');
               if (status['apk'] == undefined)
                 status.apk = {};
-              if (status.apk[this.chromePackage_] == undefined)
-                status.apk[this.chromePackage_] = {};
-              status.apk[this.chromePackage_]['md5'] = this.apk_packages_[this.chromePackage_]['md5'];
+              if (status.apk[this.browserPackage_] == undefined)
+                status.apk[this.browserPackage_] = {};
+              status.apk[this.browserPackage_]['md5'] = this.apk_packages_[this.browserPackage_]['md5'];
               fs.writeFileSync(this.device_status_file_, JSON.stringify(status));
             }.bind(this));
           }
@@ -470,12 +511,12 @@ BrowserAndroidChrome.prototype.scheduleInstallIfNeeded_ = function() {
     // Explicitly uninstall, as "install -r" fails if the installed package
     // was signed differently than the new apk being installed.
     if (this.shouldUninstall_) {
-      this.adb_.adb(['uninstall', this.chromePackage_]).addErrback(function() {
+      this.adb_.adb(['uninstall', this.browserPackage_]).addErrback(function() {
         logger.debug('Ignoring failed uninstall');
       }.bind(this));
     }
     // Delete ALL of the existing app data for the package before installing
-    this.adb_.su(['rm', '-rf', '/data/data/' + this.chromePackage_]);
+    this.adb_.su(['rm', '-rf', '/data/data/' + this.browserPackage_]);
     // Chrome install on an emulator takes a looong time.
     this.adb_.adb(['install', '-r', this.chrome_], {}, /*timeout=*/120000);
     fs.writeFileSync(path.join(this.workDir_, LAST_INSTALL_FILE), this.chrome_);
@@ -519,34 +560,36 @@ BrowserAndroidChrome.prototype.scheduleNeedsXvfb_ = function() {
 BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
   'use strict';
   this.app_.schedule('Configure startup flags', function() {
-    var flags = this.chromeFlags_.concat('--enable-remote-debugging');
-    if (this.pac_) {
-      flags.push('--proxy-pac-url=http://127.0.0.1:' + PAC_PORT + '/from_netcat');
-      if (PAC_PORT !== 80) {
-        logger.warn('Non-standard PAC port might not work: ' + PAC_PORT);
-        flags.push('--explicitly-allowed-ports=' + PAC_PORT);
+    if (!this.isBlackBox) {
+      var flags = this.chromeFlags_.concat('--enable-remote-debugging');
+      if (this.pac_) {
+        flags.push('--proxy-pac-url=http://127.0.0.1:' + PAC_PORT + '/from_netcat');
+        if (PAC_PORT !== 80) {
+          logger.warn('Non-standard PAC port might not work: ' + PAC_PORT);
+          flags.push('--explicitly-allowed-ports=' + PAC_PORT);
+        }
       }
-    }
-    var localFlagsFile = path.join(this.runTempDir_, 'wpt_chrome_command_line');
-    try {fs.unlinkSync(localFlagsFile);} catch(e) {}
-    var flagsString = 'chrome ' + flags.join(' ');
-    if (this.additionalFlags_) {
-      flagsString += ' ' + this.additionalFlags_;
-    }
-    this.adb_.getStoragePath().then(function(storagePath) {
-      if (this.netlogEnabled_) {
-        this.remoteNetlog_ = '/sdcard/netlog.txt';
-        this.adb_.shell(['rm', this.remoteNetlog_]);
-        flagsString +=' --log-net-log=' + this.remoteNetlog_;
+      var localFlagsFile = path.join(this.runTempDir_, 'wpt_chrome_command_line');
+      try {fs.unlinkSync(localFlagsFile);} catch(e) {}
+      var flagsString = 'chrome ' + flags.join(' ');
+      if (this.additionalFlags_) {
+        flagsString += ' ' + this.additionalFlags_;
       }
-      logger.debug("Chrome command line: " + flagsString);
-      fs.writeFileSync(localFlagsFile, flagsString);
-      var tempFlagsFile = storagePath + '/wpt_chrome_command_line';
-      this.adb_.adb(['push', localFlagsFile, tempFlagsFile]);
-      this.adb_.su(['cp', tempFlagsFile, this.flagsFile_]);
-      this.adb_.shell(['rm', tempFlagsFile]);
-      this.adb_.su(['chmod', '666', this.flagsFile_]);
-    }.bind(this));
+      this.adb_.getStoragePath().then(function(storagePath) {
+        if (this.netlogEnabled_) {
+          this.remoteNetlog_ = '/sdcard/netlog.txt';
+          this.adb_.shell(['rm', this.remoteNetlog_]);
+          flagsString +=' --log-net-log=' + this.remoteNetlog_;
+        }
+        logger.debug("Chrome command line: " + flagsString);
+        fs.writeFileSync(localFlagsFile, flagsString);
+        var tempFlagsFile = storagePath + '/wpt_chrome_command_line';
+        this.adb_.adb(['push', localFlagsFile, tempFlagsFile]);
+        this.adb_.su(['cp', tempFlagsFile, this.flagsFile_]);
+        this.adb_.shell(['rm', tempFlagsFile]);
+        this.adb_.su(['chmod', '666', this.flagsFile_]);
+      }.bind(this));
+    }
   }.bind(this));
 };
 
@@ -558,7 +601,7 @@ BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
 BrowserAndroidChrome.prototype.scheduleConfigureServerPort_ = function() {
   'use strict';
   this.app_.schedule('Configure WD port', function() {
-    if (this.serverPort_) {
+    if (this.serverPort_ || this.isBlackBox) {
       return;
     }
     process_utils.scheduleAllocatePort(this.app_, 'Select WD port').then(
@@ -593,28 +636,30 @@ BrowserAndroidChrome.prototype.releaseServerPortIfNeeded_ = function() {
 BrowserAndroidChrome.prototype.scheduleConfigureDevToolsPort_ = function() {
   'use strict';
   this.app_.schedule('Configure DevTools port', function() {
-    if (!this.devToolsPort_) {
-      process_utils.scheduleAllocatePort(this.app_, 'Select DevTools port')
-          .then(function(alloc) {
-        logger.debug('Selected DevTools port ' + alloc.port);
-        this.devtoolsPortLock_ = alloc;
-        this.devToolsPort_ = alloc.port;
-      }.bind(this));
-    }
-    // The following must be done even if devToolsPort_ is fixed, not allocated.
-    if (!this.devToolsUrl_) {
-      // The adb call must be scheduled, because devToolsPort_ is only assigned
-      // when the above scheduled port allocation completes.
-      this.app_.schedule('Forward DevTools socket to local port', function() {
-        // TODO(wrightt): if below `adb --help` lacks '--remove', reuse the
-        // existing `adb forward` process if it already exists.
-        this.adb_.adb(
-            ['forward', 'tcp:' + this.devToolsPort_, this.devToolsSocket_]);
-      }.bind(this));
-      // Make sure we set devToolsUrl_ only after the adb forward succeeds.
-      this.app_.schedule('Set DevTools URL', function() {
-        this.devToolsUrl_ = 'http://localhost:' + this.devToolsPort_ + '/json';
-      }.bind(this));
+    if (!this.isBlackBox) {
+      if (!this.devToolsPort_) {
+        process_utils.scheduleAllocatePort(this.app_, 'Select DevTools port')
+            .then(function(alloc) {
+          logger.debug('Selected DevTools port ' + alloc.port);
+          this.devtoolsPortLock_ = alloc;
+          this.devToolsPort_ = alloc.port;
+        }.bind(this));
+      }
+      // The following must be done even if devToolsPort_ is fixed, not allocated.
+      if (!this.devToolsUrl_) {
+        // The adb call must be scheduled, because devToolsPort_ is only assigned
+        // when the above scheduled port allocation completes.
+        this.app_.schedule('Forward DevTools socket to local port', function() {
+          // TODO(wrightt): if below `adb --help` lacks '--remove', reuse the
+          // existing `adb forward` process if it already exists.
+          this.adb_.adb(
+              ['forward', 'tcp:' + this.devToolsPort_, this.devToolsSocket_]);
+        }.bind(this));
+        // Make sure we set devToolsUrl_ only after the adb forward succeeds.
+        this.app_.schedule('Set DevTools URL', function() {
+          this.devToolsUrl_ = 'http://localhost:' + this.devToolsPort_ + '/json';
+        }.bind(this));
+      }
     }
   }.bind(this));
 };
@@ -661,7 +706,7 @@ BrowserAndroidChrome.prototype.kill = function() {
   this.releaseDevToolsPortIfNeeded_();
   this.releaseServerPortIfNeeded_();
   this.adb_.scheduleForceStopMatchingPackages(/^\S*\.chrome[^:]*$/);
-  this.adb_.shell(['am', 'force-stop', this.chromePackage_]);
+  this.adb_.shell(['am', 'force-stop', this.browserPackage_]);
   this.adb_.scheduleDismissSystemDialog();
 };
 
@@ -785,6 +830,7 @@ BrowserAndroidChrome.prototype.scheduleStopVideoRecording = function() {
  */
 BrowserAndroidChrome.prototype.scheduleStartPacketCapture = function(filename) {
   'use strict';
+  this.deviceTcpdumpPath_ = filename;
   this.pcap_.scheduleStart(filename);
 };
 
@@ -859,7 +905,7 @@ BrowserAndroidChrome.prototype.scheduleAssertIsRunning = function() {
       var running = false;
       stdout.split(/[\r\n]+/).forEach(function(line) {
         if (line.match(/\(top-activity\)$/)) {
-          if (line.indexOf(this.chromePackage_) >= 0) {
+          if (line.indexOf(this.browserPackage_) >= 0) {
             running = true;
           }
         }
@@ -894,4 +940,30 @@ BrowserAndroidChrome.prototype.scheduleMakeReady = function() {
       throw e;  // We're offline and can't recover.
     }
   }.bind(this));
+};
+
+/**
+ * Checks to see if activity has been detected since the last check.
+ * This is (planned to be) done by checking the video capture
+ * and tcpdump files for significant increases in size.
+ *
+ * @return {webdriver.promise.Promise} resolve(boolean) activityDetected.
+ * @override
+ */
+BrowserAndroidChrome.prototype.scheduleActivityDetected = function() {
+  'use strict';
+  logger.debug('Checking for activity from adb');
+  var done = new webdriver.promise.Deferred();
+  if (this.deviceTcpdumpPath_ && this.deviceVideoPath_) {
+    this.adb_.shell(['stat', '-c', '%s', this.deviceTcpdumpPath_]).addBoth(function(stdout) {
+      logger.debug('tcpdump size: ' + stdout);
+      this.adb_.shell(['stat', '-c', '%s', this.deviceVideoPath_]).addBoth(function(stdout) {
+        logger.debug('video size: ' + stdout);
+        done.fulfill(true);
+      }.bind(this));
+    }.bind(this));
+  } else {
+    done.fulfill(false);
+  }
+  return done.promise;
 };
