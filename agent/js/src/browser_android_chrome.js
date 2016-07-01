@@ -81,9 +81,24 @@ var KNOWN_BROWSERS = {
 
 // Browsers that we can only test by firing navigation intents
 var BLACK_BOX_BROWSERS = {
-    'UC Mini': {'package': 'com.uc.browser.en', 'activity': 'com.uc.browser.ActivityBrowser'},
-    'UC Browser': {'package': 'com.UCMobile.intl', 'activity': 'com.UCMobile.main.UCMobile'},
-    'Opera Mini': {'package': 'com.opera.mini.native', 'activity': 'com.opera.mini.android.Browser'},
+    'UC Mini': {
+      'package': 'com.uc.browser.en', 
+      'activity': 'com.uc.browser.ActivityBrowser',
+      'relaunch': true,
+      'clearProfile': true,
+      'startupDelay': 4000
+    },
+    'UC Browser': {
+      'package': 'com.UCMobile.intl',
+      'activity': 'com.UCMobile.main.UCMobile',
+      'clearProfile' : true,
+      'startupDelay': 4000
+    },
+    'Opera Mini': {
+      'package': 'com.opera.mini.native',
+      'activity': 'com.opera.mini.android.Browser',
+      'startupDelay': 10000
+    },
   };
 
 var LAST_INSTALL_FILE = 'lastInstall.txt';
@@ -156,6 +171,7 @@ function BrowserAndroidChrome(app, args) {
                          'http://www.webpagetest.org/blank.html';
       this.isBlackBox = true;
       this.supportsTracing = false;
+      this.browserConfig_ = BLACK_BOX_BROWSERS[browserName];
     }
   }
   this.blank_page_ = this.blank_page_ || 'about:blank';
@@ -182,7 +198,6 @@ function BrowserAndroidChrome(app, args) {
   this.useRndis = this.checkNet && 'yes' === args.flags.useRndis;
   this.rndis444 = args.flags['rndis444'] ? args.flags.rndis444 : undefined;
   this.deviceVideoPath_ = undefined;
-  this.deviceTcpdumpPath_ = undefined;
   this.recordProcess_ = undefined;
   function toDir(s) {
     return (s ? (s[s.length - 1] === '/' ? s : s + '/') : '');
@@ -201,6 +216,7 @@ function BrowserAndroidChrome(app, args) {
   this.isCacheWarm_ = args.isCacheWarm;
   this.remoteNetlog_ = undefined;
   this.netlogEnabled_ = args.task['netlog'] ? true : false;
+  this.lastVideoSize_ = 0;
 }
 util.inherits(BrowserAndroidChrome, browser_base.BrowserBase);
 /** Public class. */
@@ -288,11 +304,13 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
   // Start the browser
   this.navigateTo(this.blank_page_);
   if (this.isBlackBox) {
-    // Get around first-launch UI
-    this.app_.timeout(500, 'Wait for first browser startup');
-    this.kill();
-    this.navigateTo(this.blank_page_);
-    this.app_.timeout(2000, 'Wait for browser startup');
+    if (this.browserConfig_['relaunch']) {
+      // Get around first-launch UI
+      this.app_.timeout(1000, 'Wait for first browser startup');
+      this.kill();
+      this.navigateTo(this.blank_page_);
+    }
+    this.app_.timeout(this.browserConfig_['startupDelay'], 'Wait for browser startup');
   }
 
   this.scheduleConfigureDevToolsPort_();
@@ -328,7 +346,12 @@ BrowserAndroidChrome.prototype.clearProfile_ = function() {
   'use strict';
   if (this.isBlackBox) {
     if (!this.isCacheWarm_) {
-      this.adb_.shell(['pm', 'clear', this.browserPackage_]);
+      if (this.browserConfig_['clearProfile']) {
+        // Nuke all of the application data
+        this.adb_.shell(['pm', 'clear', this.browserPackage_]);
+      } else {
+        // Just clear out the cache directories
+      }
     }
   } else {
     if (this.isCacheWarm_) {
@@ -830,7 +853,6 @@ BrowserAndroidChrome.prototype.scheduleStopVideoRecording = function() {
  */
 BrowserAndroidChrome.prototype.scheduleStartPacketCapture = function(filename) {
   'use strict';
-  this.deviceTcpdumpPath_ = filename;
   this.pcap_.scheduleStart(filename);
 };
 
@@ -952,18 +974,16 @@ BrowserAndroidChrome.prototype.scheduleMakeReady = function() {
  */
 BrowserAndroidChrome.prototype.scheduleActivityDetected = function() {
   'use strict';
-  logger.debug('Checking for activity from adb');
-  var done = new webdriver.promise.Deferred();
-  if (this.deviceTcpdumpPath_ && this.deviceVideoPath_) {
-    this.adb_.shell(['stat', '-c', '%s', this.deviceTcpdumpPath_]).addBoth(function(stdout) {
-      logger.debug('tcpdump size: ' + stdout);
-      this.adb_.shell(['stat', '-c', '%s', this.deviceVideoPath_]).addBoth(function(stdout) {
-        logger.debug('video size: ' + stdout);
-        done.fulfill(true);
-      }.bind(this));
-    }.bind(this));
-  } else {
-    done.fulfill(false);
-  }
-  return done.promise;
+  return this.adb_.shell(['stat', '-c', '%s', this.deviceVideoPath_]).addBoth(function(stdout) {
+    var video_size = parseInt(stdout);
+    var video_delta = video_size - this.lastVideoSize_;
+    logger.debug('video size: ' + video_size + ' (+' + video_delta + ')');
+    this.lastVideoSize_ = video_size;
+
+    if (video_size < 100000 || video_delta > 20000) {
+      return true;
+    } else {
+      return false;
+    }
+  }.bind(this));
 };

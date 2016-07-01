@@ -49,8 +49,7 @@ var TRACE_PROCESSING_TIMEOUT_MS = 600000;
 var TRACING_STOP_TIMEOUT_MS = 120000;
 var DETECT_ACTIVITY_MS = 2000;
 var DETECT_NO_RE_NAVIGATE_MS = 1000;
-var BLACKBOX_MIN_TEST_TIME = 5000;
-var BLACKBOX_DETECT_ACTIVITY_TIME = 2000;
+var BLACKBOX_DETECT_ACTIVITY_TIME = 5000;
 
 var BLANK_PAGE_URL_ = 'data:text/html;charset=utf-8,';
 var GHASTLY_ORANGE_ = '#DE640D';
@@ -181,7 +180,6 @@ WebDriverServer.prototype.init = function(args) {
   this.testError_ = undefined;
   this.testStartTime_ = undefined;
   this.timeoutTimer_ = undefined;
-  this.checkActivityTimer_ = undefined;
   this.timeout_ = args.timeout;
   this.traceRunning_ = false;
   this.videoFile_ = undefined;
@@ -325,10 +323,6 @@ WebDriverServer.prototype.onPageLoad_ = function(err) {
     if (this.timeoutTimer_) {
       global.clearTimeout(this.timeoutTimer_);
       this.timeoutTimer_ = undefined;
-    }
-    if (this.checkActivityTimer_) {
-      global.clearTimeout(this.checkActivityTimer_);
-      this.checkActivityTimer_ = undefined;
     }
     if (this.abortTimer_) {
       global.clearTimeout(this.abortTimer_);
@@ -1101,8 +1095,8 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
     this.onTestStarted_();
     if (this.browser_.isBlackBox) {
       this.browser_.navigateTo(this.task_.url);
-      this.checkActivityTimer_ = global.setTimeout(
-          this.onCheckActivity_.bind(this), BLACKBOX_MIN_TEST_TIME);
+      this.app_.timeout(BLACKBOX_DETECT_ACTIVITY_TIME, 'wait');
+      this.onCheckActivity_();
     } else {
       this.pageCommand_('navigate', {url: this.task_.url});
     }
@@ -1111,14 +1105,14 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
 };
 
 WebDriverServer.prototype.onCheckActivity_ = function() {
-  logger.debug('Checking for activity');
-  this.browser_.scheduleActivityDetected().then(function(activityDetected){
+  return this.browser_.scheduleActivityDetected().then(function(activityDetected) {
     if (activityDetected) {
-      logger.debug('Activity Detected');
-      this.checkActivityTimer_ = global.setTimeout(
-          this.onCheckActivity_.bind(this), BLACKBOX_DETECT_ACTIVITY_TIME);
+      this.app_.timeout(BLACKBOX_DETECT_ACTIVITY_TIME, 'wait');
+      // This needs to be done as a recursive call with delays instead of a
+      // timer because the flow control in webdriver promises is buggy in the
+      // bundled version.
+      return this.onCheckActivity_();
     } else {
-      logger.debug('Activity not Detected');
       this.onPageLoad_();
     }
   }.bind(this));
