@@ -6,33 +6,41 @@ if(extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('getBreakdown');
     newrelic_add_custom_tracer('getBreakdownCombined');
 }
+
+define('BREAKDOWN_CACHE_VERSION', 3);
+
 /**
 * Aggregate the individual requests by mime type
 * 
 * @param mixed $requests
 */
-function getBreakdown($id, $testPath, $run, $cached, &$requests)
-{
-    $version = 2;
-    $cache = array();
-    $cache_file = "$testPath/breakdown$version.json";
-    if (is_file($cache_file)) {
-        $cache = json_decode(file_get_contents($cache_file), true);
-    }
-    
-    if (array_key_exists("run_$run", $cache)) {
-        if (array_key_exists("cached_$cached", $cache["run_$run"])) {
-            $breakdown = $cache["run_$run"]["cached_$cached"];
-        }
-    } else {
-        $cache["run_$run"] = array("cached_$cached" => array());
-    }
+function getBreakdown($id, $testPath, $run, $cached, &$requests) {
+    $rootUrlGenerator = UrlGenerator::create(true, "", $id, $run, $cached);
+    $localPaths = new TestPaths($testPath, $run, $cached);
+    return getBreakdownForStep($localPaths, $rootUrlGenerator, $requests);
+}
 
+/**
+ * @param TestPaths $localPaths
+ * @param UrlGenerator $rootUrlGenerator
+ * @param array $requests
+ * @return array
+ */
+function getBreakdownForStep($localPaths, $rootUrlGenerator, &$requests) {
+    $cache = array();
+    $cache_file = $localPaths->breakdownCacheFile(BREAKDOWN_CACHE_VERSION);
+    $cacheKey = $localPaths->cacheKey();
+    if (gz_is_file($cache_file)) {
+      $cache = json_decode(gz_file_get_contents($cache_file), true);
+    }
+    if (!empty($cache[$cacheKey])) {
+      $breakdown = $cache[$cacheKey];
+    }
     if (!isset($breakdown)) {
         // get all of the requests
         $secure = false;
         $haveLocations = false;
-        $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
+        $requests = getRequestsForStep($localPaths, $rootUrlGenerator, $secure, $haveLocations, false);
         
         $breakdown = array();
         $mime_colors = MimeColors();
@@ -55,8 +63,8 @@ function getBreakdown($id, $testPath, $run, $cached, &$requests)
             }
           }
         }
-        $cache["run_$run"]["cached_$cached"] = $breakdown;
-        file_put_contents($cache_file, json_encode($cache));
+        $cache[$cacheKey] = $breakdown;
+        gz_file_put_contents($cache_file, json_encode($cache));
     }
     
     return $breakdown;

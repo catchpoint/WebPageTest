@@ -15,6 +15,14 @@ class FileHandler {
 
   /**
    * @param string $path The path to check
+   * @return bool True if the directory exists, false otherwise
+   */
+  public function dirExists($path) {
+    return is_dir($path);
+  }
+
+  /**
+   * @param string $path The path to check
    * @return bool True if the file exists with given path, or with additional ".gz" extension, false otherwise
    */
   public function gzFileExists($path) {

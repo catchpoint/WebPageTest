@@ -32,6 +32,6 @@ class LoadPageRunDataTest extends PHPUnit_Framework_TestCase {
   public function testLoadPageRunData() {
     echo $this->resultPath . "\n";
     $pageRunData = loadPageRunData($this->resultPath, 1, 0);
-    $this->assertEquals($this->expectedData, $pageRunData);
+    $this->assertArraySubset($this->expectedData, $pageRunData);
   }
 }

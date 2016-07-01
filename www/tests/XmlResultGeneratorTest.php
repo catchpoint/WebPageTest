@@ -1,130 +1,149 @@
 <?php
 
-require_once __DIR__ . '/TestUtil.php';
-require_once __DIR__ . '/IsCompatibleXMLConstraint.php';
-
+require_once __DIR__ . '/../include/TestInfo.php';
+require_once __DIR__ . '/../include/TestStepResult.php';
+require_once __DIR__ . '/../include/TestRunResults.php';
 require_once __DIR__ . '/../include/XmlResultGenerator.php';
 
-require_once __DIR__ . '/../include/TestInfo.php';
-require_once __DIR__ . '/../include/TestResults.php';
-require_once __DIR__ . '/../include/TestRunResult.php';
-require_once __DIR__ . '/../include/FileHandler.php';
-
-require __DIR__ . '/data/singlestepRunResultData.inc.php';
-
 class XmlResultGeneratorTest extends PHPUnit_Framework_TestCase {
-
-  private $testInfoMock;
-  private $testResultMock;
-  private $fileHandlerMock;
-  private $tempDir;
-  private $orgDir;
-
-  private $allAdditionalInfo =  array(XmlResultGenerator::INFO_CONSOLE, XmlResultGenerator::INFO_REQUESTS,
-    XmlResultGenerator::INFO_DOMAIN_BREAKDOWN, XmlResultGenerator::INFO_MIMETYPE_BREAKDOWN,
-    XmlResultGenerator::INFO_PAGESPEED);
+  /* @var TestInfo */
+  private $testInfo;
+  private $xmlInfoDomainBreakdown;
 
   public function setUp() {
-    date_default_timezone_set("UTC"); // to make the test consistent with the result
+    $rawTestInfo = array();
+    $this->testInfo = TestInfo::fromValues("160628_AB_C", "/test/path", $rawTestInfo);
+    $this->xmlInfoDomainBreakdown = array(XmlResultGenerator::INFO_DOMAIN_BREAKDOWN);
     ob_start();
-    $this->testInfoMock = $this->getTestInfoMock();
-    $this->testResultMock = $this->getSinglestepTestRunResultMock();
-    $this->fileHandlerMock = $this->getFileHandlerMock();
-    $this->orgDir = null;
-    $this->tempDir = null;
   }
 
   public function tearDown() {
-    if (!empty($this->orgDir)) {
-      chdir($this->orgDir);
-    }
     ob_end_clean();
-    if (!empty($this->tempDir) && is_dir($this->tempDir)) {
-      TestUtil::removeDirRecursive($this->tempDir);
-    }
   }
 
-  public function testCompleteXmlGeneration() {
-    $this->tempDir = TestUtil::extractToTemp(__DIR__ . '/data/singlestepResults.zip');
-    $testInfo = TestInfo::fromFiles($this->tempDir . '/singlestepResults');
-    $imitatedPath = $this->imitatedResultPath($testInfo->getId());
-
-    // we need to move the results to a directory structure that equal to the real one.
-    // Then, we can go into the parent directory, so the relatece "testRoot" is the same as it would be in production
-    // This is important, as during XML generation, some URLs contain the test path
-    mkdir($this->tempDir . $imitatedPath, 0777, true);
-    rename($this->tempDir . '/singlestepResults', $this->tempDir . $imitatedPath);
-    $this->orgDir = getcwd();
-    chdir($this->tempDir);
-    $testRoot = "." . $imitatedPath;
-    $testInfo = TestInfo::fromFiles($testRoot);
-    $expectedXmlFile = __DIR__ . '/data/singlestepXmlResult.xml.gz';
-
-    $testResults = new TestResults($testInfo);
-    $xmlGenerator = new XmlResultGenerator($testInfo, "http://wpt-test-vm", new FileHandler(),
-      $this->allAdditionalInfo, true);
-    $xmlGenerator->printAllResults($testResults, "loadTime", null);
-
-    $this->assertThat(ob_get_contents(), IsCompatibleXMLConstraint::fromFile($expectedXmlFile));
+  public function testPrintMedianRunSinglestep() {
+    $run = $this->getTestRunResults(1);
+    $xmlGenerator = new XmlResultGenerator($this->testInfo, "", new FileHandler(), $this->xmlInfoDomainBreakdown, true);
+    $xmlGenerator->printMedianRun($run);
+    $xml = simplexml_load_string(ob_get_contents());
+    $this->assertEquals("2", $xml->run);
+    $this->assertEquals("300", $xml->TTFB);
+    $this->assertEquals("6000", $xml->loadTime);
+    $this->assertTrue(isset($xml->foo));
+    $this->assertEquals("lorem", $xml->foo);
+    $this->assertTrue(isset($xml->domains));
   }
 
-  public function testSinglestepMedianRunOutput() {
-    $xmlGenerator = new XmlResultGenerator($this->testInfoMock, "https://unitTest", $this->fileHandlerMock,
-      $this->allAdditionalInfo, true);
-    $xmlGenerator->printMedianRun($this->testResultMock);
-    $expectedXmlFile = __DIR__ . '/data/singlestepMedianOutput.xml';
-
-    $this->assertThat(ob_get_contents(), IsCompatibleXMLConstraint::fromFile($expectedXmlFile));
+  public function testPrintMedianRunSinglestepForceMultistep() {
+    $run = $this->getTestRunResults(1);
+    $xmlGenerator = new XmlResultGenerator($this->testInfo, "", new FileHandler(), $this->xmlInfoDomainBreakdown, true);
+    $xmlGenerator->forceMultistepFormat(true);
+    $xmlGenerator->printMedianRun($run);
+    $xml = simplexml_load_string(ob_get_contents());
+    $this->assertEquals("2", $xml->run);
+    $this->assertEquals("300", $xml->TTFB);
+    $this->assertEquals("6000", $xml->loadTime);
+    $this->assertFalse(isset($xml->foo));
+    $this->assertFalse(isset($xml->domains));
   }
 
-  public function testSinglestepRunOutput() {
-    $xmlGenerator = new XmlResultGenerator($this->testInfoMock, "https://unitTest", $this->fileHandlerMock,
-      $this->allAdditionalInfo, true);
-    $xmlGenerator->printRun($this->testResultMock);
-    $expectedXmlFile = __DIR__ . '/data/singlestepRunOutput.xml';
-
-    $this->assertThat(ob_get_contents(), IsCompatibleXMLConstraint::fromFile($expectedXmlFile));
+  public function testPrintMedianRunMultistep() {
+    $run = $this->getTestRunResults(3);
+    $xmlGenerator = new XmlResultGenerator($this->testInfo, "", new FileHandler(), $this->xmlInfoDomainBreakdown, true);
+    $xmlGenerator->printMedianRun($run);
+    $xml = simplexml_load_string(ob_get_contents());
+    $this->assertEquals("2", $xml->run);
+    $this->assertEquals("900", $xml->TTFB);
+    $this->assertEquals("9000", $xml->loadTime);
+    $this->assertFalse(isset($xml->foo));
+    $this->assertFalse(isset($xml->domains));
   }
 
-  public function testPrintRunWithNull() {
-    $xmlGenerator = new XmlResultGenerator($this->testInfoMock, "https://unitTest", $this->fileHandlerMock,
-      $this->allAdditionalInfo, true);
-    $xmlGenerator->printRun(null);
-    $this->assertSame("", ob_get_contents());
+  public function testPrintRunSinglestep() {
+    $run = $this->getTestRunResults(1);
+    $xmlGenerator = new XmlResultGenerator($this->testInfo, "", new FileHandler(), $this->xmlInfoDomainBreakdown, true);
+    $xmlGenerator->printRun($run);
+    $xml = simplexml_load_string(ob_get_contents());
+
+    $this->assertEquals("300", $xml->results->TTFB);
+    $this->assertEquals("6000", $xml->results->loadTime);
+    $this->assertTrue(isset($xml->results->foo));
+    $this->assertEquals("lorem", $xml->results->foo);
+    $this->assertTrue(isset($xml->domains));
+    $this->assertEquals("/result/160628_AB_C/2/screen_shot/cached/", $xml->pages->screenShot);
+    $this->assertEquals("1", $xml->numSteps);
   }
 
-  private function imitatedResultPath($testId) {
-    $parts = explode("_", $testId);
-    $pathParts = array(substr($parts[0], 0, 2), substr($parts[0], 2, 2), substr($parts[0], 4, 2), $parts[1], $parts[2]);
-    return "/results/" . implode("/", $pathParts);
+  public function testPrintRunMultistep() {
+    $run = $this->getTestRunResults(2);
+    $xmlGenerator = new XmlResultGenerator($this->testInfo, "", new FileHandler(), $this->xmlInfoDomainBreakdown, true);
+    $xmlGenerator->printRun($run);
+    $xml = simplexml_load_string(ob_get_contents());
+
+    $this->assertFalse(isset($xml->results));
+    $this->assertFalse(isset($xml->domains));
+    $this->assertFalse(isset($xml->pages));
+    $this->assertEquals("2", $xml->numSteps);
+
+    $this->assertTrue(isset($xml->step[0]));
+    $this->assertEquals("1", $xml->step[0]->id);
+    $this->assertTrue(isset($xml->step[0]->eventName));
+    $this->assertEquals("", $xml->step[0]->eventName);
+    $this->assertEquals("300", $xml->step[0]->results->TTFB);
+    $this->assertEquals("6000", $xml->step[0]->results->loadTime);
+    $this->assertEquals("lorem", $xml->step[0]->results->foo);
+    $this->assertTrue(isset($xml->step[0]->domains));
+    $this->assertEquals("/result/160628_AB_C/2/screen_shot/cached/", $xml->step[0]->pages->screenShot);
+
+    $this->assertTrue(isset($xml->step[1]));
+    $this->assertEquals("2", $xml->step[1]->id);
+    $this->assertEquals("MyEvent", $xml->step[1]->eventName);
+    $this->assertEquals("100", $xml->step[1]->results->TTFB);
+    $this->assertEquals("2000", $xml->step[1]->results->loadTime);
+    $this->assertEquals("ipsum", $xml->step[1]->results->foo);
+    $this->assertTrue(isset($xml->step[1]->domains));
+    $this->assertEquals("/result/160628_AB_C/2/screen_shot/cached/2/", $xml->step[1]->pages->screenShot);
+
+    $this->assertFalse(isset($xml->step[2]));
   }
 
-  private function getFileHandlerMock() {
-    $mock = $this->getMock("FileHandler");
-    $mock->method("fileExists")->willReturn(true);
-    $mock->method("gzFileExists")->willReturn(true);
-    return $mock;
+  public function testPrintRunSinglestepForceMultistep() {
+    $run = $this->getTestRunResults(1);
+    $xmlGenerator = new XmlResultGenerator($this->testInfo, "", new FileHandler(), $this->xmlInfoDomainBreakdown, true);
+    $xmlGenerator->forceMultistepFormat(true);
+    $xmlGenerator->printRun($run);
+    $xml = simplexml_load_string(ob_get_contents());
+
+    $this->assertFalse(isset($xml->results));
+    $this->assertFalse(isset($xml->domains));
+    $this->assertFalse(isset($xml->pages));
+    $this->assertEquals("1", $xml->numSteps);
+
+    $this->assertTrue(isset($xml->step[0]));
+    $this->assertEquals("1", $xml->step[0]->id);
+    $this->assertEquals("300", $xml->step[0]->results->TTFB);
+    $this->assertEquals("6000", $xml->step[0]->results->loadTime);
+    $this->assertEquals("lorem", $xml->step[0]->results->foo);
+    $this->assertTrue(isset($xml->step[0]->domains));
+    $this->assertEquals("/result/160628_AB_C/2/screen_shot/cached/", $xml->step[0]->pages->screenShot);
+    $this->assertFalse(isset($xml->step[1]));
   }
 
-  private function getSinglestepTestRunResultMock() {
-    global $SINGLESTEP_RUN_RESULT_DATA;
-    $mock = $this->getMockBuilder("TestRunResult")->disableOriginalConstructor()->getMock();
+  private function getTestStepArray() {
+    $step1 = array('result' => 0, 'TTFB' => 300, 'loadTime' => 6000, 'foo' => 'lorem');
+    $step2 = array('result' => 0, 'TTFB' => 100, 'loadTime' => 2000, 'foo' => 'ipsum', 'eventName' => "MyEvent");
+    $step3 = array('result' => 99999, 'TTFB' => 500, 'loadTime' => 1000, 'foo' => 'dolor');
 
-    foreach ($SINGLESTEP_RUN_RESULT_DATA as $key => &$value) {
-      $mock->method($key)->willReturn($value);
-    };
-
-    $mock->method("isCachedRun")->willReturn(false);
-    $mock->method("getRunNumber")->willReturn(1);
-    return $mock;
+    $stepResults = array(
+      1 => TestStepResult::fromPageData($this->testInfo, $step1, 2, true, 1),
+      2 => TestStepResult::fromPageData($this->testInfo, $step2, 2, true, 2),
+      3 => TestStepResult::fromPageData($this->testInfo, $step3, 2, true, 3)
+    );
+    return $stepResults;
   }
 
-  private function getTestInfoMock() {
-    $mock = $this->getMockBuilder("TestInfo")->disableOriginalConstructor()->getMock();
-    $mock->method("getId")->willReturn("160608_PF_A");
-    $mock->method("getRootDirectory")->willReturn("./results/16/06/08/PF/A");
-    $mock->method("getTester")->willReturn("dummyTester");
-    return $mock;
+  private function getTestRunResults($numSteps) {
+    $steps = $this->getTestStepArray();
+    return TestRunResults::fromStepResults($this->testInfo, 2, true, array_slice($steps, 0, $numSteps));
   }
 }
-

@@ -7,14 +7,16 @@ abstract class UrlGenerator {
 
   protected $run;
   protected $cached;
+  protected $step;
   protected $baseUrl;
   protected $testId;
 
-  protected function __construct($baseUrl, $testId, $run, $cached) {
+  protected function __construct($baseUrl, $testId, $run, $cached, $step = 1) {
     $this->baseUrl = rtrim(strval($baseUrl), "/");
     $this->testId = $testId;
     $this->run = intval($run);
     $this->cached = $cached ? true : false;
+    $this->step = $step;
   }
 
   /**
@@ -23,13 +25,14 @@ abstract class UrlGenerator {
    * @param string $testId ID of the test
    * @param int $run Run number
    * @param bool $cached True if cached run, false otherwise
+   * @param int $step The step number (1 by default)
    * @return FriendlyUrlGenerator|StandardUrlGenerator A UrlGenerator for friendly or standard URLs
    */
-  public static function create($friendlyUrls, $baseUrl, $testId, $run, $cached) {
+  public static function create($friendlyUrls, $baseUrl, $testId, $run, $cached, $step = 1) {
     if ($friendlyUrls) {
-      return new FriendlyUrlGenerator($baseUrl, $testId, $run, $cached);
+      return new FriendlyUrlGenerator($baseUrl, $testId, $run, $cached, $step);
     } else {
-      return new StandardUrlGenerator($baseUrl, $testId, $run, $cached);
+      return new StandardUrlGenerator($baseUrl, $testId, $run, $cached, $step);
     }
   }
 
@@ -79,11 +82,13 @@ abstract class UrlGenerator {
   }
 
   protected function underscorePrefix() {
-    return strval($this->run) . "_" . ($this->cached ? "Cached_" : "");
+    $stepSuffix = $this->step > 1 ? ($this->step . "_") : "";
+    return strval($this->run) . "_" . ($this->cached ? "Cached_" : "") . $stepSuffix;
   }
 
   protected function urlParams() {
-    return "test=" . $this->testId . "&run=" . $this->run . ($this->cached ? "&cached=1" : "");
+    $stepParam = $this->step > 1 ? ("&step=" . $this->step) : "";
+    return "test=" . $this->testId . "&run=" . $this->run . ($this->cached ? "&cached=1" : "") . $stepParam;
   }
 }
 
@@ -93,6 +98,9 @@ class FriendlyUrlGenerator extends UrlGenerator {
     $url = $this->baseUrl . "/result/" . $this->testId . "/" . $this->run . "/" . $page . "/";
     if ($this->cached) {
       $url .= "cached/";
+    }
+    if ($this->step > 1) {
+      $url .= $this->step . "/";
     }
     return $url;
   }
