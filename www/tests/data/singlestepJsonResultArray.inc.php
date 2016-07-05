@@ -1647,11 +1647,11 @@ $SINGLESTEP_JSON_RESULT_ARRAY = array (
               'tester' => 'ITERAHH-VBOX-01-192.168.188.112',
               'pages' =>
                 array (
-                  'details' => 'http://wpt-test-vm/details.php?test=160620_DQ_7&run=1&cached=0',
-                  'checklist' => 'http://wpt-test-vm/performance_optimization.php?test=160620_DQ_7&run=1&cached=0',
-                  'breakdown' => 'http://wpt-test-vm/breakdown.php?test=160620_DQ_7&run=1&cached=0',
-                  'domains' => 'http://wpt-test-vm/domains.php?test=160620_DQ_7&run=1&cached=0',
-                  'screenShot' => 'http://wpt-test-vm/screen_shot.php?test=160620_DQ_7&run=1&cached=0',
+                  'details' => 'http://wpt-test-vm/details.php?test=160620_DQ_7&run=1',
+                  'checklist' => 'http://wpt-test-vm/performance_optimization.php?test=160620_DQ_7&run=1',
+                  'breakdown' => 'http://wpt-test-vm/breakdown.php?test=160620_DQ_7&run=1',
+                  'domains' => 'http://wpt-test-vm/domains.php?test=160620_DQ_7&run=1',
+                  'screenShot' => 'http://wpt-test-vm/screen_shot.php?test=160620_DQ_7&run=1',
                 ),
               'thumbnails' =>
                 array (
@@ -1672,7 +1672,7 @@ $SINGLESTEP_JSON_RESULT_ARRAY = array (
                   'pageData' => 'http://wpt-test-vm/results/16/06/20/DQ/7/1_IEWPG.txt',
                   'requestsData' => 'http://wpt-test-vm/results/16/06/20/DQ/7/1_IEWTR.txt',
                   'utilization' => 'http://wpt-test-vm/results/16/06/20/DQ/7/1_progress.csv',
-                  'trace' => 'http://wpt-test-vm//getgzip.php?test=160620_DQ_7&compressed=1&file=1_trace.json.gz',
+                  'trace' => 'http://wpt-test-vm/getgzip.php?test=160620_DQ_7&compressed=1&file=1_trace.json.gz',
                 ),
               'videoFrames' =>
                 array (
@@ -3241,11 +3241,11 @@ $SINGLESTEP_JSON_RESULT_ARRAY = array (
           'tester' => 'ITERAHH-VBOX-01-192.168.188.112',
           'pages' =>
             array (
-              'details' => 'http://wpt-test-vm/details.php?test=160620_DQ_7&run=1&cached=0',
-              'checklist' => 'http://wpt-test-vm/performance_optimization.php?test=160620_DQ_7&run=1&cached=0',
-              'breakdown' => 'http://wpt-test-vm/breakdown.php?test=160620_DQ_7&run=1&cached=0',
-              'domains' => 'http://wpt-test-vm/domains.php?test=160620_DQ_7&run=1&cached=0',
-              'screenShot' => 'http://wpt-test-vm/screen_shot.php?test=160620_DQ_7&run=1&cached=0',
+              'details' => 'http://wpt-test-vm/details.php?test=160620_DQ_7&run=1',
+              'checklist' => 'http://wpt-test-vm/performance_optimization.php?test=160620_DQ_7&run=1',
+              'breakdown' => 'http://wpt-test-vm/breakdown.php?test=160620_DQ_7&run=1',
+              'domains' => 'http://wpt-test-vm/domains.php?test=160620_DQ_7&run=1',
+              'screenShot' => 'http://wpt-test-vm/screen_shot.php?test=160620_DQ_7&run=1',
             ),
           'thumbnails' =>
             array (
@@ -3266,7 +3266,7 @@ $SINGLESTEP_JSON_RESULT_ARRAY = array (
               'pageData' => 'http://wpt-test-vm/results/16/06/20/DQ/7/1_IEWPG.txt',
               'requestsData' => 'http://wpt-test-vm/results/16/06/20/DQ/7/1_IEWTR.txt',
               'utilization' => 'http://wpt-test-vm/results/16/06/20/DQ/7/1_progress.csv',
-              'trace' => 'http://wpt-test-vm//getgzip.php?test=160620_DQ_7&compressed=1&file=1_trace.json.gz',
+              'trace' => 'http://wpt-test-vm/getgzip.php?test=160620_DQ_7&compressed=1&file=1_trace.json.gz',
             ),
           'videoFrames' =>
             array (
