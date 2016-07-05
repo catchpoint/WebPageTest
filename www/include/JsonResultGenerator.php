@@ -171,8 +171,22 @@ class JsonResultGenerator {
    */
   public function runDataArray($testRunResults) {
     $runInfo = $this->basicRunInfoArray($testRunResults);
-    // in singlestep we simply give back the results of the first step
-    $stepResults = $this->stepDataArray($testRunResults->getStepResult(1));
+    $numSteps = $testRunResults->countSteps();
+
+    if ($numSteps > 1) {
+      $stepResults = array("steps" => array());
+      for ($step = 1; $step <= $numSteps; $step++) {
+        $testStepResult = $testRunResults->getStepResult($step);
+        $eventName = empty($testStepResult) ? "" : $testStepResult->getEventName();
+        $stepArray = $this->stepDataArray($testStepResult);
+        $stepArray["id"] = $step;
+        $stepArray["eventName"] = $eventName;
+        $stepResults["steps"][] = $stepArray;
+      }
+    } else {
+      // in singlestep we simply give back the results of the first step
+      $stepResults = $this->stepDataArray($testRunResults->getStepResult(1));
+    }
     return array_merge($runInfo, $stepResults);
   }
 
@@ -196,18 +210,20 @@ class JsonResultGenerator {
    * @return array Array with run information which can be serialized as JSON
    */
   private function stepDataArray($testStepResult) {
-    $ret = null;
     if (!$testStepResult) {
       return null;
     }
     $ret = $testStepResult->getRawResults();
+
     $run = $testStepResult->getRunNumber();
     $cached = $testStepResult->isCachedRun();
-    $localPaths = new TestPaths($this->testInfo->getRootDirectory(), $run, $cached);
-    $nameOnlyPaths = new TestPaths("", $run, $cached);
-    $urlGenerator = UrlGenerator::create(false, $this->urlStart, $this->testInfo->getId(), $run, $cached);
-    $friendlyUrlGenerator = UrlGenerator::create(true, $this->urlStart, $this->testInfo->getId(), $run, $cached);
-    $urlPaths = new TestPaths($this->urlStart . substr($this->testInfo->getRootDirectory(), 1), $run, $cached, 1);
+    $step = $testStepResult->getStepNumber();
+
+    $localPaths = new TestPaths($this->testInfo->getRootDirectory(), $run, $cached, $step);
+    $nameOnlyPaths = new TestPaths("", $run, $cached, $step);
+    $urlGenerator = UrlGenerator::create(false, $this->urlStart, $this->testInfo->getId(), $run, $cached, $step);
+    $friendlyUrlGenerator = UrlGenerator::create(true, $this->urlStart, $this->testInfo->getId(), $run, $cached, $step);
+    $urlPaths = new TestPaths($this->urlStart . substr($this->testInfo->getRootDirectory(), 1), $run, $cached, $step);
 
 
     $basic_results = $this->hasInfoFlag(self::BASIC_INFO_ONLY);
