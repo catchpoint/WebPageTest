@@ -40,23 +40,23 @@ class JsonResultGenerator {
    * @return array An array containing all data about the test, in a form that can be encoded with JSON
    */
   public function resultDataArray($testResults, $medianMetric = "loadTime") {
-    $id = $this->testInfo->getId();
-    $url = $this->testInfo->getUrl();
-    $testPath = $this->testInfo->getRootDirectory();
-    $pageData = loadAllPageData($testPath);
-
-    $stats = array(0 => array(), 1 => array());
-    $pageStats = calculatePageStats($pageData, $stats[0], $stats[1]);
-
-    if(!$url)
-      $url = $testResults->getUrlFromRun();
     $testInfo = $this->testInfo->getInfoArray();
     $fvOnly = $this->testInfo->isFirstViewOnly();
     $cacheLabels = array('firstView', 'repeatView');
 
     // summary information
-    $ret = array('id' => $id, 'url' => $url, 'summary' => $this->urlStart . "/results.php?test=$id");
-    $runs = max(array_keys($pageData));
+    $ret = array();
+    $ret['id'] = $this->testInfo->getId();
+
+    $url = $this->testInfo->getUrl();
+    if(!$url)
+      $url = $testResults->getUrlFromRun();
+    $ret['url'] = $url;
+
+    $urlGenerator = UrlGenerator::create(false, $this->urlStart, $this->testInfo->getId(), 0, 0);
+    $ret['summary'] = $urlGenerator->resultSummary();
+
+    $runs = $testResults->countRuns();
     if (isset($testInfo)) {
       if (array_key_exists('url', $testInfo) && strlen($testInfo['url']))
         $ret['testUrl'] = $testInfo['url'];
@@ -104,6 +104,7 @@ class JsonResultGenerator {
       $ret['successfulRVRuns'] = $testResults->countSuccessfulRuns(true);
 
     // average
+    $stats = array($testResults->getFirstViewAverage(), $testResults->getRepeatViewAverage());
     if (!$this->hasInfoFlag(self::WITHOUT_AVERAGE)) {
       $ret['average'] = array();
       for ($cached = 0; $cached <= $cachedMax; $cached++) {
@@ -119,7 +120,7 @@ class JsonResultGenerator {
         $label = $cacheLabels[$cached];
         $ret['standardDeviation'][$label] = array();
         foreach($stats[$cached] as $key => $val)
-          $ret['standardDeviation'][$label][$key] = PageDataStandardDeviation($pageData, $key, $cached);
+          $ret['standardDeviation'][$label][$key] = $testResults->getStandardDeviation($key, $cached);
       }
     }
 
@@ -128,9 +129,9 @@ class JsonResultGenerator {
       $ret['median'] = array();
       for ($cached = 0; $cached <= $cachedMax; $cached++) {
         $label = $cacheLabels[$cached];
-        $medianRun = GetMedianRun($pageData, $cached, $medianMetric);
-        if (array_key_exists($medianRun, $pageData)) {
-          $testStepResult = TestStepResult::fromPageData($this->testInfo, $pageData[$medianRun][$cached], $medianRun, $cached, 1);
+        $medianRun = $testResults->getMedianRunNumber($medianMetric, $cached == 1 ? true : false);
+        if ($medianRun) {
+          $testStepResult = $testResults->getRunResult($medianRun, $cached)->getStepResult(1);
           $ret['median'][$label] = $this->GetSingleRunData($testStepResult);
         }
       }
@@ -143,7 +144,7 @@ class JsonResultGenerator {
         $ret['runs'][$run] = array();
         for ($cached = 0; $cached <= $cachedMax; $cached++) {
           $label = $cacheLabels[$cached];
-          $testStepResult = TestStepResult::fromPageData($this->testInfo, $pageData[$run][$cached], $run, $cached, 1);
+          $testStepResult = $testResults->getRunResult($run, $cached)->getStepResult(1);
           $ret['runs'][$run][$label] = $this->GetSingleRunData($testStepResult);
         }
       }
