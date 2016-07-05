@@ -42,6 +42,21 @@ class JsonResultGeneratorTest extends PHPUnit_Framework_TestCase {
     $this->assertFalse(array_key_exists("pages", $result));
   }
 
+  public function testMedianRunDataArraySinglestepForceMultistep() {
+    $run = $this->getTestRunResults(1);
+    $jsonGenerator = new JsonResultGenerator($this->testInfo, "", new FileHandler(), array(), true);
+    $jsonGenerator->forceMultistepFormat(true);
+    $result = $jsonGenerator->medianRunDataArray($run);
+
+    $this->assertEquals("2", $result["run"]);
+    $this->assertEquals("300", $result["TTFB"]);
+    $this->assertEquals("6000", $result["loadTime"]);
+    $this->assertFalse(array_key_exists("foo", $result));
+    $this->assertFalse(array_key_exists("domains", $result));
+    $this->assertFalse(array_key_exists("rawData", $result));
+    $this->assertFalse(array_key_exists("pages", $result));
+  }
+
   public function testRunDataArraySinglestep() {
     $run = $this->getTestRunResults(1);
     $jsonGenerator = new JsonResultGenerator($this->testInfo, "", new FileHandler(), array(), false);
@@ -90,6 +105,32 @@ class JsonResultGeneratorTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals("/screen_shot.php?test=160628_AB_C&run=2&cached=1&step=2", $result["steps"][1]["pages"]["screenShot"]);
 
     $this->assertFalse(array_key_exists(2, $result["steps"]));
+  }
+
+  public function testRunDataArraySinglestepForceMultistep() {
+    $run = $this->getTestRunResults(1);
+    $jsonGenerator = new JsonResultGenerator($this->testInfo, "", new FileHandler(), array(), false);
+    $jsonGenerator->forceMultistepFormat(true);
+    $result = $jsonGenerator->runDataArray($run);
+
+    $this->assertFalse(array_key_exists("TTFB", $result));
+    $this->assertFalse(array_key_exists("loadTime", $result));
+    $this->assertFalse(array_key_exists("domains", $result));
+    $this->assertFalse(array_key_exists("pages", $result));
+    $this->assertFalse(array_key_exists("rawData", $result));
+    $this->assertEquals("1", $result["numSteps"]);
+
+    $this->assertTrue(array_key_exists(0, $result["steps"]));
+    $this->assertEquals("1", $result["steps"][0]["id"]);
+    $this->assertTrue(array_key_exists("eventName", $result["steps"][0]));
+    $this->assertEquals("", $result["steps"][0]["eventName"]);
+    $this->assertEquals("300", $result["steps"][0]["TTFB"]);
+    $this->assertEquals("6000", $result["steps"][0]["loadTime"]);
+    $this->assertEquals("lorem", $result["steps"][0]["foo"]);
+    $this->assertTrue(array_key_exists("domains", $result["steps"][0]));
+    $this->assertEquals("/screen_shot.php?test=160628_AB_C&run=2&cached=1", $result["steps"][0]["pages"]["screenShot"]);
+
+    $this->assertFalse(array_key_exists(1, $result["steps"]));
   }
 
   private function getTestStepArray() {

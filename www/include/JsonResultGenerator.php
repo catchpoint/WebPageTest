@@ -17,6 +17,7 @@ class JsonResultGenerator {
   private $fileHandler;
   private $infoFlags;
   private $friendlyUrls;
+  private $forceMultistep;
 
   /**
    * JsonResultGenerator constructor.
@@ -32,6 +33,13 @@ class JsonResultGenerator {
     $this->fileHandler = $fileHandler ? $fileHandler : new FileHandler();
     $this->infoFlags = $infoFlags ? $infoFlags : array();
     $this->friendlyUrls = $friendlyUrls;
+  }
+
+  /**
+   * @param bool $force True if multistep format should be used even with singlestep results, false otherwise (compatible format)
+   */
+  public function forceMultistepFormat($force) {
+    $this->forceMultistep = $force ? true : false;
   }
 
   /**
@@ -156,7 +164,7 @@ class JsonResultGenerator {
    */
   public function medianRunDataArray($testRunResults) {
     $runInfo = $this->basicRunInfoArray($testRunResults);
-    if ($testRunResults->countSteps() > 1) {
+    if ($this->forceMultistep || $testRunResults->countSteps() > 1) {
       $medianInfo = $testRunResults->aggregateRawResults();
     } else {
       // in singlestep we simply give back the results of the first step
@@ -173,7 +181,7 @@ class JsonResultGenerator {
     $runInfo = $this->basicRunInfoArray($testRunResults);
     $numSteps = $testRunResults->countSteps();
 
-    if ($numSteps > 1) {
+    if ($this->forceMultistep || $numSteps > 1) {
       $stepResults = array("steps" => array());
       for ($step = 1; $step <= $numSteps; $step++) {
         $testStepResult = $testRunResults->getStepResult($step);
