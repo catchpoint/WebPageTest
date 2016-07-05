@@ -164,12 +164,13 @@ class JsonResultGenerator {
       array_key_exists($cached, $pageData[$run]) &&
       is_array($pageData[$run][$cached])
     ) {
-      $path = substr($testPath, 1);
       $ret = $pageData[$run][$cached];
       $ret['run'] = $run;
-      $cachedText = '';
-      if ($cached)
-        $cachedText = '_Cached';
+      $localPaths = new TestPaths($testPath, $run, $cached);
+      $nameOnlyPaths = new TestPaths("", $run, $cached);
+      $urlGenerator = UrlGenerator::create(false, $this->urlStart, $this->testInfo->getId(), $run, $cached);
+      $friendlyUrlGenerator = UrlGenerator::create(true, $this->urlStart, $this->testInfo->getId(), $run, $cached);
+      $urlPaths = new TestPaths($this->urlStart . substr($testPath, 1), $run, $cached, 1);
 
       if (isset($testInfo)) {
         if (array_key_exists('tester', $testInfo))
@@ -183,50 +184,52 @@ class JsonResultGenerator {
 
       $basic_results = $this->hasInfoFlag(self::BASIC_INFO_ONLY);
 
-      if (!$basic_results && gz_is_file("$testPath/$run{$cachedText}_pagespeed.txt")) {
-        $ret['PageSpeedScore'] = GetPageSpeedScore("$testPath/$run{$cachedText}_pagespeed.txt");
-        $ret['PageSpeedData'] = $this->urlStart . "//getgzip.php?test=$id&file=$run{$cachedText}_pagespeed.txt";
+      if (!$basic_results && $this->fileHandler->gzFileExists($localPaths->pageSpeedFile())) {
+        $ret['PageSpeedScore'] = GetPageSpeedScore($localPaths->pageSpeedFile());
+        $ret['PageSpeedData'] = $urlGenerator->getGZip($nameOnlyPaths->pageSpeedFile());
       }
 
       $ret['pages'] = array();
-      $ret['pages']['details'] = $this->urlStart . "/details.php?test=$id&run=$run&cached=$cached";
-      $ret['pages']['checklist'] = $this->urlStart . "/performance_optimization.php?test=$id&run=$run&cached=$cached";
-      $ret['pages']['breakdown'] = $this->urlStart . "/breakdown.php?test=$id&run=$run&cached=$cached";
-      $ret['pages']['domains'] = $this->urlStart . "/domains.php?test=$id&run=$run&cached=$cached";
-      $ret['pages']['screenShot'] = $this->urlStart . "/screen_shot.php?test=$id&run=$run&cached=$cached";
+      $ret['pages']['details'] = $urlGenerator->resultPage("details");
+      $ret['pages']['checklist'] = $urlGenerator->resultPage("performance_optimization");
+      $ret['pages']['breakdown'] = $urlGenerator->resultPage("breakdown");
+      $ret['pages']['domains'] = $urlGenerator->resultPage("domains");
+      $ret['pages']['screenShot'] = $urlGenerator->resultPage("screen_shot");
 
       $ret['thumbnails'] = array();
-      $ret['thumbnails']['waterfall'] = $this->urlStart . "/result/$id/$run{$cachedText}_waterfall_thumb.png";
-      $ret['thumbnails']['checklist'] = $this->urlStart . "/result/$id/$run{$cachedText}_optimization_thumb.png";
-      $ret['thumbnails']['screenShot'] = $this->urlStart . "/result/$id/$run{$cachedText}_screen_thumb.png";
+      $ret['thumbnails']['waterfall'] = $friendlyUrlGenerator->thumbnail("waterfall.png");
+      $ret['thumbnails']['checklist'] = $friendlyUrlGenerator->thumbnail("optimization.png");
+      $ret['thumbnails']['screenShot'] = $friendlyUrlGenerator->thumbnail("screen.png");
 
       $ret['images'] = array();
-      $ret['images']['waterfall'] = $this->urlStart . "$path/$run{$cachedText}_waterfall.png";
-      $ret['images']['connectionView'] = $this->urlStart . "$path/$run{$cachedText}_connection.png";
-      $ret['images']['checklist'] = $this->urlStart . "$path/$run{$cachedText}_optimization.png";
-      $ret['images']['screenShot'] = $this->urlStart . "/getfile.php?test=$id&file=$run{$cachedText}_screen.jpg";
-      if (is_file("$testPath/$run{$cachedText}_screen.png"))
-        $ret['images']['screenShotPng'] = $this->urlStart . "/getfile.php?test=$id&file=$run{$cachedText}_screen.png";
+      $ret['images']['waterfall'] = $friendlyUrlGenerator->generatedImage("waterfall");
+      $ret['images']['connectionView'] = $friendlyUrlGenerator->generatedImage("connection");
+      $ret['images']['checklist'] = $friendlyUrlGenerator->generatedImage("optimization");
+      $ret['images']['screenShot'] = $urlGenerator->getFile($nameOnlyPaths->screenShotFile());
+      if ($this->fileHandler->fileExists($localPaths->screenShotPngFile())) {
+        $ret['images']['screenShotPng'] = $urlGenerator->getFile($nameOnlyPaths->screenShotPngFile());
+      }
 
       $ret['rawData'] = array();
-      $ret['rawData']['headers'] = $this->urlStart . "$path/$run{$cachedText}_report.txt";
-      $ret['rawData']['pageData'] = $this->urlStart . "$path/$run{$cachedText}_IEWPG.txt";
-      $ret['rawData']['requestsData'] = $this->urlStart . "$path/$run{$cachedText}_IEWTR.txt";
-      $ret['rawData']['utilization'] = $this->urlStart . "$path/$run{$cachedText}_progress.csv";
-      if (is_file("$testPath/$run{$cachedText}_bodies.zip"))
-        $ret['rawData']['bodies'] = $this->urlStart . "$path/$run{$cachedText}_bodies.zip";
-      if (gz_is_file("$testPath/$run{$cachedText}_trace.json"))
-        $ret['rawData']['trace'] = $this->urlStart . "//getgzip.php?test=$id&compressed=1&file=$run{$cachedText}_trace.json.gz";
+      $ret['rawData']['headers'] = $urlPaths->headersFile();
+      $ret['rawData']['pageData'] = $urlPaths->pageDataFile();
+      $ret['rawData']['requestsData'] = $urlPaths->requestDataFile();
+      $ret['rawData']['utilization'] = $urlPaths->utilizationFile();
+      if ($this->fileHandler->fileExists($localPaths->bodiesFile())) {
+        $ret['rawData']['bodies'] = $urlPaths->bodiesFile();
+      }
+      if ($this->fileHandler->gzFileExists($localPaths->devtoolsTraceFile())) {
+        $ret['rawData']['trace'] = $urlGenerator->getGZip($nameOnlyPaths->devtoolsTraceFile() . ".gz");
+      }
 
       if (!$basic_results) {
         $startOffset = array_key_exists('testStartOffset', $ret) ? intval(round($ret['testStartOffset'])) : 0;
         $progress = GetVisualProgress($testPath, $run, $cached, null, null, $startOffset);
         if (array_key_exists('frames', $progress) && is_array($progress['frames']) && count($progress['frames'])) {
-          $cachedTextLower = strtolower($cachedText);
           $ret['videoFrames'] = array();
           foreach ($progress['frames'] as $ms => $frame) {
             $videoFrame = array('time' => $ms);
-            $videoFrame['image'] = $this->urlStart . "/getfile.php?test=$id&video=video_{$run}$cachedTextLower&file={$frame['file']}";
+            $videoFrame['image'] = $urlGenerator->getFile($frame['file'], $nameOnlyPaths->videoDir());
             $videoFrame['VisuallyComplete'] = $frame['progress'];
             $ret['videoFrames'][] = $videoFrame;
           }
@@ -249,9 +252,9 @@ class JsonResultGenerator {
           }
         }
 
-        if (gz_is_file("$testPath/$run{$cachedText}_status.txt")) {
+        if ($this->fileHandler->gzFileExists($localPaths->statusFile())) {
           $ret['status'] = array();
-          $lines = gz_file("$testPath/$run{$cachedText}_status.txt");
+          $lines = $this->fileHandler->gzReadFile($localPaths->statusFile());
           foreach ($lines as $line) {
             $line = trim($line);
             if (strlen($line)) {
