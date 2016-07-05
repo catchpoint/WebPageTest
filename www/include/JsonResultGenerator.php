@@ -215,43 +215,56 @@ class JsonResultGenerator {
     }
 
     if (!$basic_results) {
-      $progress = $testStepResult->getVisualProgress();
-      if (array_key_exists('frames', $progress) && is_array($progress['frames']) && count($progress['frames'])) {
-        $ret['videoFrames'] = array();
-        foreach ($progress['frames'] as $ms => $frame) {
-          $videoFrame = array('time' => $ms);
-          $videoFrame['image'] = $urlGenerator->getFile($frame['file'], $nameOnlyPaths->videoDir());
-          $videoFrame['VisuallyComplete'] = $frame['progress'];
-          $ret['videoFrames'][] = $videoFrame;
-        }
-      }
-
-      $requests = $testStepResult->getRequests();
-      $ret['domains'] = $testStepResult->getDomainBreakdown();
-      $ret['breakdown'] = $testStepResult->getMimeTypeBreakdown();
-
-      // add requests
-      if (!$this->hasInfoFlag(self::WITHOUT_REQUESTS)) {
-        $ret['requests'] = $requests;
-      }
-
-      // Check to see if we're adding the console log
-      if (!$this->hasInfoFlag(self::WITHOUT_CONSOLE)) {
-        $console_log = $testStepResult->getConsoleLog();
-        if (isset($console_log)) {
-          $ret['consoleLog'] = $console_log;
-        }
-      }
-
-      $statusMessages = $testStepResult->getStatusMessages();
-      if ($statusMessages) {
-        $ret['status'] = $statusMessages;
-      }
+      $ret = array_merge($ret, $this->getAdditionalInfoArray($testStepResult, $urlGenerator, $nameOnlyPaths));
     }
     return $ret;
   }
 
   private function hasInfoFlag($flag) {
     return in_array($flag, $this->infoFlags);
+  }
+
+  /**
+   * @param TestStepResult $testStepResult The test results of this step
+   * @param UrlGenerator $urlGenerator For video frame URL generation for this tep
+   * @param TestPaths $nameOnlyPaths To get the name of the video dir for this step
+   * @return array Array with the additional information about this step
+   */
+  private function getAdditionalInfoArray($testStepResult, $urlGenerator, $nameOnlyPaths) {
+    $ret = array();
+    $progress = $testStepResult->getVisualProgress();
+    if (array_key_exists('frames', $progress) && is_array($progress['frames']) && count($progress['frames'])) {
+      $ret['videoFrames'] = array();
+      foreach ($progress['frames'] as $ms => $frame) {
+        $videoFrame = array('time' => $ms);
+        $videoFrame['image'] = $urlGenerator->getFile($frame['file'], $nameOnlyPaths->videoDir());
+        $videoFrame['VisuallyComplete'] = $frame['progress'];
+        $ret['videoFrames'][] = $videoFrame;
+      }
+    }
+
+    $requests = $testStepResult->getRequests();
+    $ret['domains'] = $testStepResult->getDomainBreakdown();
+    $ret['breakdown'] = $testStepResult->getMimeTypeBreakdown();
+
+    // add requests
+    if (!$this->hasInfoFlag(self::WITHOUT_REQUESTS)) {
+      $ret['requests'] = $requests;
+    }
+
+    // Check to see if we're adding the console log
+    if (!$this->hasInfoFlag(self::WITHOUT_CONSOLE)) {
+      $console_log = $testStepResult->getConsoleLog();
+      if (isset($console_log)) {
+        $ret['consoleLog'] = $console_log;
+      }
+    }
+
+    $statusMessages = $testStepResult->getStatusMessages();
+    if ($statusMessages) {
+      $ret['status'] = $statusMessages;
+      return $ret;
+    }
+    return $ret;
   }
 }
