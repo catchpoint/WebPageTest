@@ -25,6 +25,21 @@ class JsonResultGeneratorTest extends PHPUnit_Framework_TestCase {
     $this->assertTrue(array_key_exists("foo", $result));
     $this->assertEquals("lorem", $result["foo"]);
     $this->assertTrue(array_key_exists("domains", $result));
+    $this->assertTrue(array_key_exists("rawData", $result));
+    $this->assertTrue(array_key_exists("pages", $result));
+  }
+
+  public function testPrintMedianRunMultistep() {
+    $run = $this->getTestRunResults(3);
+    $jsonGenerator = new JsonResultGenerator($this->testInfo, "", new FileHandler(), array(), true);
+    $result = $jsonGenerator->medianRunDataArray($run);
+    $this->assertEquals("2", $result["run"]);
+    $this->assertEquals("900", $result["TTFB"]);
+    $this->assertEquals("9000", $result["loadTime"]);
+    $this->assertFalse(array_key_exists("foo", $result));
+    $this->assertFalse(array_key_exists("domains", $result));
+    $this->assertFalse(array_key_exists("rawData", $result));
+    $this->assertFalse(array_key_exists("pages", $result));
   }
 
   public function testPrintRunSinglestep() {

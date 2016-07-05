@@ -155,8 +155,14 @@ class JsonResultGenerator {
    * @return array Array with data about the median run that can be serialized as JSON
    */
   public function medianRunDataArray($testRunResults) {
-    // in singlestep we simply give back the results of the first step
-    return $this->stepDataArray($testRunResults->getStepResult(1));
+    $runInfo = $this->basicRunInfoArray($testRunResults);
+    if ($testRunResults->countSteps() > 1) {
+      $medianInfo = $testRunResults->aggregateRawResults();
+    } else {
+      // in singlestep we simply give back the results of the first step
+      $medianInfo = $this->stepDataArray($testRunResults->getStepResult(1));
+    }
+    return array_merge($runInfo, $medianInfo);
   }
 
   /**
@@ -164,9 +170,22 @@ class JsonResultGenerator {
    * @return array Array with data about the run that can be serialized as JSON
    */
   public function runDataArray($testRunResults) {
+    $runInfo = $this->basicRunInfoArray($testRunResults);
     // in singlestep we simply give back the results of the first step
-    $ret = $this->stepDataArray($testRunResults->getStepResult(1));
+    $stepResults = $this->stepDataArray($testRunResults->getStepResult(1));
+    return array_merge($runInfo, $stepResults);
+  }
+
+  /**
+   * @param TestRunResults $testRunResults
+   * @return array With numSteps, run, and tester info
+   */
+  private function basicRunInfoArray($testRunResults) {
+    $ret = array();
+    $run = $testRunResults->getRunNumber();
     $ret["numSteps"] = $testRunResults->countSteps();
+    $ret['run'] = $run;
+    $ret['tester'] = $this->testInfo->getTester($run);
     return $ret;
   }
 
@@ -184,14 +203,12 @@ class JsonResultGenerator {
     $ret = $testStepResult->getRawResults();
     $run = $testStepResult->getRunNumber();
     $cached = $testStepResult->isCachedRun();
-    $ret['run'] = $run;
     $localPaths = new TestPaths($this->testInfo->getRootDirectory(), $run, $cached);
     $nameOnlyPaths = new TestPaths("", $run, $cached);
     $urlGenerator = UrlGenerator::create(false, $this->urlStart, $this->testInfo->getId(), $run, $cached);
     $friendlyUrlGenerator = UrlGenerator::create(true, $this->urlStart, $this->testInfo->getId(), $run, $cached);
     $urlPaths = new TestPaths($this->urlStart . substr($this->testInfo->getRootDirectory(), 1), $run, $cached, 1);
 
-    $ret['tester'] = $this->testInfo->getTester($run);
 
     $basic_results = $this->hasInfoFlag(self::BASIC_INFO_ONLY);
 
