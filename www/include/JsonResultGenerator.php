@@ -30,7 +30,7 @@ class JsonResultGenerator {
     $this->testInfo = $testInfo;
     $this->urlStart = $urlStart;
     $this->fileHandler = $fileHandler ? $fileHandler : new FileHandler();
-    $this->infoFlags = $infoFlags;
+    $this->infoFlags = $infoFlags ? $infoFlags : array();
     $this->friendlyUrls = $friendlyUrls;
   }
 
@@ -131,8 +131,7 @@ class JsonResultGenerator {
         $label = $cacheLabels[$cached];
         $medianRun = $testResults->getMedianRunNumber($medianMetric, $cached == 1 ? true : false);
         if ($medianRun) {
-          $testStepResult = $testResults->getRunResult($medianRun, $cached)->getStepResult(1);
-          $ret['median'][$label] = $this->GetSingleRunData($testStepResult);
+          $ret['median'][$label] = $this->medianRunDataArray($testResults->getRunResult($medianRun, $cached));
         }
       }
     }
@@ -144,11 +143,30 @@ class JsonResultGenerator {
         $ret['runs'][$run] = array();
         for ($cached = 0; $cached <= $cachedMax; $cached++) {
           $label = $cacheLabels[$cached];
-          $testStepResult = $testResults->getRunResult($run, $cached)->getStepResult(1);
-          $ret['runs'][$run][$label] = $this->GetSingleRunData($testStepResult);
+          $ret['runs'][$run][$label] = $this->runDataArray($testResults->getRunResult($run, $cached));
         }
       }
     }
+    return $ret;
+  }
+
+  /**
+   * @param TestRunResults $testRunResults Results of the median run
+   * @return array Array with data about the median run that can be serialized as JSON
+   */
+  public function medianRunDataArray($testRunResults) {
+    // in singlestep we simply give back the results of the first step
+    return $this->stepDataArray($testRunResults->getStepResult(1));
+  }
+
+  /**
+   * @param TestRunResults $testRunResults Results of the run
+   * @return array Array with data about the run that can be serialized as JSON
+   */
+  public function runDataArray($testRunResults) {
+    // in singlestep we simply give back the results of the first step
+    $ret = $this->stepDataArray($testRunResults->getStepResult(1));
+    $ret["numSteps"] = $testRunResults->countSteps();
     return $ret;
   }
 
@@ -158,7 +176,7 @@ class JsonResultGenerator {
    * @param TestStepResult $testStepResult
    * @return array Array with run information which can be serialized as JSON
    */
-  private function GetSingleRunData($testStepResult) {
+  private function stepDataArray($testStepResult) {
     $ret = null;
     if (!$testStepResult) {
       return null;
