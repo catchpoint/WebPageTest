@@ -32,6 +32,15 @@ if (array_key_exists('batch', $test['test']) && $test['test']['batch']) {
       $infoFlags = getRequestInfoFlags();
 
       $jsonResultGenerator = new JsonResultGenerator($testInfo, $urlStart, new FileHandler(), $infoFlags, FRIENDLY_URLS);
+
+      if (!empty($_REQUEST["multistepFormat"])) {
+        $jsonResultGenerator->forceMultistepFormat(true);
+      }
+
+      if (defined("VER_WEBPAGETEST")) {
+        $ret["webPagetestVersion"] = VER_WEBPAGETEST;
+      }
+
       $ret['data'] = $jsonResultGenerator->resultDataArray($testResults, $median_metric);
 
       ArchiveApi($id);
