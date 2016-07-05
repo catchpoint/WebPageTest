@@ -130,7 +130,8 @@ class JsonResultGenerator {
         $label = $cacheLabels[$cached];
         $medianRun = GetMedianRun($pageData, $cached, $medianMetric);
         if (array_key_exists($medianRun, $pageData)) {
-          $ret['median'][$label] = $this->GetSingleRunData($id, $testPath, $medianRun, $cached, $pageData, $testInfo);
+          $testStepResult = TestStepResult::fromPageData($this->testInfo, $pageData[$medianRun][$cached], $medianRun, $cached, 1);
+          $ret['median'][$label] = $this->GetSingleRunData($testStepResult);
         }
       }
     }
@@ -142,7 +143,8 @@ class JsonResultGenerator {
         $ret['runs'][$run] = array();
         for ($cached = 0; $cached <= $cachedMax; $cached++) {
           $label = $cacheLabels[$cached];
-          $ret['runs'][$run][$label] = $this->GetSingleRunData($id, $testPath, $run, $cached, $pageData, $testInfo);
+          $testStepResult = TestStepResult::fromPageData($this->testInfo, $pageData[$run][$cached], $run, $cached, 1);
+          $ret['runs'][$run][$label] = $this->GetSingleRunData($testStepResult);
         }
       }
     }
@@ -152,42 +154,30 @@ class JsonResultGenerator {
   /**
    * Gather all of the data that we collect for a single run
    *
-   * @param mixed $id
-   * @param mixed $testPath
-   * @param mixed $run
-   * @param mixed $cached
+   * @param TestStepResult $testStepResult
+   * @return array Array with run information which can be serialized as JSON
    */
-  private function GetSingleRunData($id, $testPath, $run, $cached, &$pageData, $testInfo) {
+  private function GetSingleRunData($testStepResult) {
     $ret = null;
-    if (!array_key_exists($run, $pageData) ||
-      !is_array($pageData[$run]) ||
-      !array_key_exists($cached, $pageData[$run]) ||
-      !is_array($pageData[$run][$cached])
-    ) {
+    if (!$testStepResult) {
       return null;
     }
-    $ret = $pageData[$run][$cached];
+    $ret = $testStepResult->getRawResults();
+    $run = $testStepResult->getRunNumber();
+    $cached = $testStepResult->isCachedRun();
     $ret['run'] = $run;
-    $localPaths = new TestPaths($testPath, $run, $cached);
+    $localPaths = new TestPaths($this->testInfo->getRootDirectory(), $run, $cached);
     $nameOnlyPaths = new TestPaths("", $run, $cached);
     $urlGenerator = UrlGenerator::create(false, $this->urlStart, $this->testInfo->getId(), $run, $cached);
     $friendlyUrlGenerator = UrlGenerator::create(true, $this->urlStart, $this->testInfo->getId(), $run, $cached);
-    $urlPaths = new TestPaths($this->urlStart . substr($testPath, 1), $run, $cached, 1);
+    $urlPaths = new TestPaths($this->urlStart . substr($this->testInfo->getRootDirectory(), 1), $run, $cached, 1);
 
-    if (isset($testInfo)) {
-      if (array_key_exists('tester', $testInfo))
-        $ret['tester'] = $testInfo['tester'];
-      if (array_key_exists('test_runs', $testInfo) &&
-        array_key_exists($run, $testInfo['test_runs']) &&
-        array_key_exists('tester', $testInfo['test_runs'][$run])
-      )
-        $ret['tester'] = $testInfo['test_runs'][$run]['tester'];
-    }
+    $ret['tester'] = $this->testInfo->getTester($run);
 
     $basic_results = $this->hasInfoFlag(self::BASIC_INFO_ONLY);
 
     if (!$basic_results && $this->fileHandler->gzFileExists($localPaths->pageSpeedFile())) {
-      $ret['PageSpeedScore'] = GetPageSpeedScore($localPaths->pageSpeedFile());
+      $ret['PageSpeedScore'] = $testStepResult->getPageSpeedScore();
       $ret['PageSpeedData'] = $urlGenerator->getGZip($nameOnlyPaths->pageSpeedFile());
     }
 
@@ -225,8 +215,7 @@ class JsonResultGenerator {
     }
 
     if (!$basic_results) {
-      $startOffset = array_key_exists('testStartOffset', $ret) ? intval(round($ret['testStartOffset'])) : 0;
-      $progress = GetVisualProgress($testPath, $run, $cached, null, null, $startOffset);
+      $progress = $testStepResult->getVisualProgress();
       if (array_key_exists('frames', $progress) && is_array($progress['frames']) && count($progress['frames'])) {
         $ret['videoFrames'] = array();
         foreach ($progress['frames'] as $ms => $frame) {
@@ -237,9 +226,9 @@ class JsonResultGenerator {
         }
       }
 
-      $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false, true);
-      $ret['domains'] = getDomainBreakdown($id, $testPath, $run, $cached, $requests);
-      $ret['breakdown'] = getBreakdown($id, $testPath, $run, $cached, $requests);
+      $requests = $testStepResult->getRequests();
+      $ret['domains'] = $testStepResult->getDomainBreakdown();
+      $ret['breakdown'] = $testStepResult->getMimeTypeBreakdown();
 
       // add requests
       if (!$this->hasInfoFlag(self::WITHOUT_REQUESTS)) {
@@ -248,23 +237,15 @@ class JsonResultGenerator {
 
       // Check to see if we're adding the console log
       if (!$this->hasInfoFlag(self::WITHOUT_CONSOLE)) {
-        $console_log = DevToolsGetConsoleLog($testPath, $run, $cached);
+        $console_log = $testStepResult->getConsoleLog();
         if (isset($console_log)) {
           $ret['consoleLog'] = $console_log;
         }
       }
 
-      if ($this->fileHandler->gzFileExists($localPaths->statusFile())) {
-        $ret['status'] = array();
-        $lines = $this->fileHandler->gzReadFile($localPaths->statusFile());
-        foreach ($lines as $line) {
-          $line = trim($line);
-          if (strlen($line)) {
-            list($time, $message) = explode("\t", $line);
-            if (strlen($time) && strlen($message))
-              $ret['status'][] = array('time' => $time, 'message' => $message);
-          }
-        }
+      $statusMessages = $testStepResult->getStatusMessages();
+      if ($statusMessages) {
+        $ret['status'] = $statusMessages;
       }
     }
     return $ret;
