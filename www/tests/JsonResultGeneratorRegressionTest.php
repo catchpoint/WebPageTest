@@ -1,7 +1,10 @@
 <?php
 
 require_once __DIR__ . '/TestUtil.php';
+require_once __DIR__ . '/IsArraySubsetConstraint.php';
 require_once __DIR__ . '/../include/JsonResultGenerator.php';
+require_once __DIR__ . '/../include/TestInfo.php';
+require_once __DIR__ . '/../include/TestResults.php';
 
 require __DIR__ . '/data/singlestepJsonResultArray.inc.php';
 
@@ -44,7 +47,7 @@ class JsonResultGeneratorRegressionTest extends PHPUnit_Framework_TestCase {
     $jsonGenerator = new JsonResultGenerator($testInfo, "http://wpt-test-vm", new FileHandler());
     $resultArray = $jsonGenerator->resultDataArray($testResults, "loadTime");
 
-    $this->assertArraySubset($SINGLESTEP_JSON_RESULT_ARRAY, $resultArray);
+    $this->assertThat($resultArray, new IsArraySubsetConstraint($SINGLESTEP_JSON_RESULT_ARRAY));
   }
 
   private function imitatedResultPath($testId) {
