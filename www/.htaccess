@@ -110,6 +110,13 @@
     RewriteRule ^results/([0-9][0-9])/([0-9][0-9])/([0-9][0-9])/([a-zA-Z0-9_]+)/([0-9]+)_Cached_optimization.png$ /optimizationChecklist.php?test=$1$2$3_$4&run=$5&cached=1
     RewriteRule ^results/([0-9][0-9])/([0-9][0-9])/([0-9][0-9])/([a-zA-Z0-9_]+)/([a-zA-Z0-9_]+)/([0-9]+)_Cached_optimization.png$ /optimizationChecklist.php?test=$1$2$3_$4_$5&run=$6&cached=1
 
+    #optimization checklists with multistep support
+    RewriteRule ^results/([0-9][0-9])/([0-9][0-9])/([0-9][0-9])/([a-zA-Z0-9_]+)/([0-9]+)_([0-9]+)_optimization.png$ /optimizationChecklist.php?test=$1$2$3_$4&run=$5&step=$6
+    RewriteRule ^results/([0-9][0-9])/([0-9][0-9])/([0-9][0-9])/([a-zA-Z0-9_]+)/([a-zA-Z0-9_]+)/([0-9]+)_([0-9]+)_optimization.png$ /optimizationChecklist.php?test=$1$2$3_$4_$5&run=$6&step=$7
+    RewriteRule ^results/([0-9][0-9])/([0-9][0-9])/([0-9][0-9])/([a-zA-Z0-9_]+)/([0-9]+)_Cached_([0-9]+)_optimization.png$ /optimizationChecklist.php?test=$1$2$3_$4&run=$5&cached=1&step=$6
+    RewriteRule ^results/([0-9][0-9])/([0-9][0-9])/([0-9][0-9])/([a-zA-Z0-9_]+)/([a-zA-Z0-9_]+)/([0-9]+)_Cached_([0-9]+)_optimization.png$ /optimizationChecklist.php?test=$1$2$3_$4_$5&run=$6&cached=1&step=$7
+
+
     #location cookie dropping
     RewriteRule ^loc/([a-zA-Z0-9_]+)$ /util/setloc.php?location=$1 
     RewriteRule ^loc/([a-zA-Z0-9_]+)$/ /util/setloc.php?location=$1 
