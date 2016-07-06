@@ -64,6 +64,14 @@
     RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_optimization_thumb.png$ /thumbnail.php?test=$1&run=$2&file=$2_optimization.png
     RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_Cached_optimization_thumb.png$ /thumbnail.php?test=$1&run=$2&cached=1&file=$2_Cached_optimization.png
 
+    #thumbnails with multistep support
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_([0-9]+)_screen_thumb.jpg$ /thumbnail.php?test=$1&run=$2&step=$3&file=$2_$3_screen.jpg
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_Cached_([0-9]+)_screen_thumb.jpg$ /thumbnail.php?test=$1&run=$2&cached=1&step=$3&file=$2_Cached_$3_screen.jpg
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_([0-9]+)_waterfall_thumb.png$ /thumbnail.php?test=$1&run=$2&step=$3&file=$2_$3_waterfall.png
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_Cached_([0-9]+)_waterfall_thumb.png$ /thumbnail.php?test=$1&run=$2&cached=1&step=$3&file=$2_Cached_$3_waterfall.png
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_([0-9]+)_optimization_thumb.png$ /thumbnail.php?test=$1&run=$2&step=$3&file=$2_$3_optimization.png
+    RewriteRule ^result/([a-zA-Z0-9_]+)/([0-9]+)_Cached_([0-9]+)_optimization_thumb.png$ /thumbnail.php?test=$1&run=$2&cached=1&step=$3&file=$2_Cached_$3_optimization.png
+
     #old direct thumbnail paths
     RewriteRule ^results/old/([a-zA-Z0-9_]+)/([0-9]+)_screen_thumb.jpg$ /thumbnail.php?test=$1&run=$2&file=$2_screen.jpg
     RewriteRule ^results/old/([a-zA-Z0-9_]+)/([0-9]+)_Cached_screen_thumb.jpg$ /thumbnail.php?test=$1&run=$2&cached=1&file=$2_Cached_screen.jpg
