@@ -1081,6 +1081,10 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
       logger.debug("Waiting up to " + this.timeout_ +
                    "ms for the page to load");
       if (this.browser_.isBlackBox) {
+        // Set some default test result fields to mark the test as successful
+        // TODO(pmeenan): Construct this after the test from processing the
+        // video and tcpdump files
+        this.pageData_ = {"result":0};
         // Don't error on timeout for black-box tests
         this.timeoutTimer_ = global.setTimeout(
             this.onPageLoad_.bind(this), this.timeout_);
@@ -1524,8 +1528,9 @@ WebDriverServer.prototype.done_ = function() {
       }
     }.bind(this));
     logger.debug("Done collecting results")
-    var devToolsFile = this.devToolsMessages_ ? path.join(this.runTempDir_, 'devtools.json') : undefined;
-    if (devToolsFile) {
+    var devToolsFile = undefined;
+    if (this.devToolsMessages_ && this.devToolsMessages_.length > 0) {
+      devToolsFile = path.join(this.runTempDir_, 'devtools.json');
       fs.writeFileSync(devToolsFile, JSON.stringify(this.devToolsMessages_));
     }
     this.scheduleNoFault_('Send IPC', function() {
