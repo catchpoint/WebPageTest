@@ -7,7 +7,7 @@ if(extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('GetDevToolsRequests');
     newrelic_add_custom_tracer('GetDevToolsEventsForStep');
     newrelic_add_custom_tracer('DevToolsGetConsoleLog');
-    newrelic_add_custom_tracer('DevToolsGetCPUSlices');
+    newrelic_add_custom_tracer('DevToolsGetCPUSlicesForStep');
     newrelic_add_custom_tracer('GetDevToolsCPUTime');
     newrelic_add_custom_tracer('ParseDevToolsEvents');
     newrelic_add_custom_tracer('DevToolsMatchEvent');
@@ -1027,20 +1027,9 @@ function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime) {
 }
 
 /**
-* If we have a timeline, figure out what each thread was doing at each point in time.
-* Basically CPU utilization from the timeline.
-* 
-* returns an array of threads with each thread being an array of slices (one for
-* each time period).  Each slice is an array of events and the fraction of that
-* slice that they consumed (with a total maximum of 1 for any slice).
-*/
-function DevToolsGetCPUSlices($testPath, $run, $cached) {
-  // TODO: remove this version once not needed anymore and use the one below
-  $localPaths = new TestPaths($testPath, $run, $cached);
-  return DevToolsGetCPUSlicesForStep($localPaths);
-}
-
-/**
+ * If we have a timeline, figure out what each thread was doing at each point in time.
+ * Basically CPU utilization from the timeline.
+ *
  * @param TestPaths $localPaths Paths related to this run/step
  * @return array|null An array of threads with each thread being an array of slices (one for
  * each time period).  Each slice is an array of events and the fraction of that
