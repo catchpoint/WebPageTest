@@ -1422,13 +1422,15 @@ WebDriverServer.prototype.scheduleProcessVideo_ = function() {
             parseInt(this.task_.imageQuality, 10) : 0);
       imgQ = Math.min(Math.max(imgQ, 30), 95);
       var options = ['lib/video/visualmetrics.py', '-vvvv', '-i', this.videoFile_, '-d',
-          videoDir, '--force', '--quality', imgQ,
+          videoDir, '--force', '--quality', imgQ, '--viewport',
           '--maxframes', 50, '--histogram', this.histogramFile_];
       if (this.browser_.isBlackBox) {
         // TODO (pmeenan): add video processing options for UC/Opera
+        options.push('--notification');
+        options.push('--findstart');
+        options.push(25);
       } else {
         options.push('--orange');
-        options.push('--viewport');
       }
       if (this.traceFile_) {
         options.push('--timeline');
