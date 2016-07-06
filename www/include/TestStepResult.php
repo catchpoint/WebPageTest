@@ -107,6 +107,13 @@ class TestStepResult {
   }
 
   /**
+   * @return string The URL of this step
+   */
+  public function getUrl() {
+    return isset($this->rawData["URL"]) ? $this->rawData["URL"] : null;
+  }
+
+  /**
    * @var string $metric The metric to return
    * @return mixed|null The metric value or null if not set
    */
