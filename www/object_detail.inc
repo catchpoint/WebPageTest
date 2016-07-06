@@ -68,10 +68,12 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
     foreach ($requests as $index => &$request) {
         $request['index'] = $index;
         $request['number'] = $index + 1;
-        if (isset($request['body_id']) && $request['body_id'] > 0) {
+        if ($rootUrlGenerator) {
+          if (isset($request['body_id']) && $request['body_id'] > 0) {
             $request['body_url'] = $rootUrlGenerator->responseBodyWithBodyId($request['body_id']);
-        } elseif (@$request['body']) {
+          } elseif (@$request['body']) {
             $request['body_url'] = $rootUrlGenerator->responseBodyWithRequestNumber($request['number']);
+          }
         }
         if ($request['is_secure'])
             $has_secure_requests = true;

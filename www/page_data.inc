@@ -109,8 +109,7 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
     // see if we have CSI metrics to load
     if (is_dir(__DIR__ . '/google') && is_file(__DIR__ . '/google/google_lib.inc')) {
       require_once(__DIR__ . '/google/google_lib.inc');
-      $urlGenerator = UrlGenerator::create(false, "", 0, $localPaths->getRunNumber(), $localPaths->isCachedResult());
-      $csi = ParseCsiInfoForStep($urlGenerator, $localPaths, true);
+      $csi = ParseCsiInfoForStep($localPaths, true);
       if (isset($csi) && is_array($csi) && count($csi)) {
         $ret['CSI'] = array();
         foreach($csi as $metric => $value) {

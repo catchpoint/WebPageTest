@@ -11,17 +11,15 @@ function ParseCsiInfo($id, $testPath, $run, $cached, $getAll, $generate = true) 
   if (!isset($testPath) || !strlen($testPath))
     $testPath = './' . GetTestPath($id);
   $localPaths = new TestPaths($testPath, $run, $cached);
-  $rootUrlGenerator = UrlGenerator::create(false, "", $id, $run, $cached);
-  return ParseCsiInfoForStep($rootUrlGenerator, $localPaths, $getAll);
+  return ParseCsiInfoForStep($localPaths, $getAll);
 }
 
 /**
- * @param UrlGenerator $rootUrlGenerator To generate root URLS (without protocol & host) for this run / step
  * @param TestPaths $localPaths Paths of run or step to get the CSI Info for
  * @param $getAll
  * @return array|null
  */
-function ParseCsiInfoForStep($rootUrlGenerator, $localPaths, $getAll) {
+function ParseCsiInfoForStep($localPaths, $getAll) {
   $params = null;
   $cacheFile = $localPaths->csiCacheFile(CSI_CACHE_VERSION);
   $cacheKey = $localPaths->cacheKey();
@@ -42,7 +40,7 @@ function ParseCsiInfoForStep($rootUrlGenerator, $localPaths, $getAll) {
 	    // Secure and haveLocations are not used but required by getRequests function.
 	    $secure = null;
 	    $haveLocations = null;
-	    $requests = getRequestsForStep($localPaths, $rootUrlGenerator, $secure, $haveLocations, false);
+	    $requests = getRequestsForStep($localPaths, null, $secure, $haveLocations, false);
       $params = array();
 	    foreach ( $requests as &$request ) {
 		    // Parse the individual url parts.
