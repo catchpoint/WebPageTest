@@ -1,17 +1,18 @@
 <?php
 header ("Content-type: image/png");
-include 'common.inc';
-require_once('object_detail.inc'); 
-require_once('optimizationChecklist.inc');
-require_once('page_data.inc');
-$pageData = loadPageRunData($testPath, $run, $cached, null, $test['testinfo']);
+include __DIR__ . '/common.inc';
+require_once __DIR__ . '/optimizationChecklist.inc';
+require_once __DIR__ . '/include/TestInfo.php';
+require_once __DIR__ . '/include/TestStepResult.php';
 
-// get all of the requests
-$secure = false;
-$haveLocations = false;
-$requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
+// not functional, but to declare what to expect from common.inc
+global $testPath, $run, $cached, $step, $id, $url, $test;
 
-$im = drawChecklist($url, $requests, $pageData);
+$testInfo = TestInfo::fromFiles($testPath);
+$testStepResult = TestStepResult::fromFiles($testInfo, $run, $cached, $step);
+$requests = $testStepResult->getRequests();
+
+$im = drawChecklist($testStepResult->readableIdentifier($url), $requests, $testStepResult->getRawResults());
 
 // spit the image out to the browser
 imagepng($im);
