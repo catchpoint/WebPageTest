@@ -61,7 +61,7 @@ class ResultProcessing {
       }
       if (is_dir(__DIR__ . '/../google') && is_file(__DIR__ . '/../google/google_lib.inc')) {
         require_once(__DIR__ . '/../google/google_lib.inc');
-        ParseCsiInfoForStep($rootUrls, $stepPaths, true);
+        ParseCsiInfoForStep($stepPaths, true);
       }
       GetDevToolsCPUTimeForStep($stepPaths);
     }

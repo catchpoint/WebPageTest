@@ -248,8 +248,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
             $filter = array();
         }
         $use_all = false;
-        $rootUrlGenerator = UrlGenerator::create(false, "", "", $options['run_id'], $isCached, $stepId);
-        $csi_params = ParseCsiInfoForStep($rootUrlGenerator, $localPaths, $use_all);
+        $csi_params = ParseCsiInfoForStep($localPaths, $use_all);
         $csi_info = TailorRtParamsForVisualization($csi_params, $filter);
     }
     // get any user timings
