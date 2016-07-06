@@ -134,6 +134,10 @@ class TestStepResult {
     return $this->rawData["eventName"];
   }
 
+  public function hasCustomEventName() {
+    return (!empty($this->rawData["eventName"]) && $this->rawData["eventName"] != $this->standardEventName());
+  }
+
   /**
    * @return string The score
    */
@@ -202,5 +206,9 @@ class TestStepResult {
       return 0;
     }
     return intval(round($this->rawData['testStartOffset']));
+  }
+
+  private function standardEventName() {
+    return "Step " . $this->step;
   }
 }
