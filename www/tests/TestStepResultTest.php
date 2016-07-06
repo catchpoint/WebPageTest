@@ -28,11 +28,13 @@ class TestStepResultTest extends PHPUnit_Framework_TestCase {
     $this->assertTrue($firstStep->hasCustomEventName());
     $this->assertNotEmpty($firstStep->getRawResults());
     $this->assertEquals("http://google.com", $firstStep->getUrl());
+    $this->assertEquals("google", $firstStep->readableIdentifier());
 
     $secondStep = TestStepResult::fromFiles($testInfo, 1, true, 2);
     $this->assertEquals("Step 2", $secondStep->getEventName());
     $this->assertFalse($secondStep->hasCustomEventName());
     $this->assertNotEmpty($secondStep->getRawResults());
     $this->assertEquals("http://duckduckgo.com", $secondStep->getUrl());
+    $this->assertEquals("http://duckduckgo.com", $secondStep->readableIdentifier());
   }
 }

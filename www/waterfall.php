@@ -51,9 +51,7 @@ $options = array(
   'rowcount' => $rowcount
 );
 
-// use the EventName for the waterfall, if it's specifically set. Otherwise the step's URL
-$stepUrl = $testStepResult->hasCustomEventName() ? $testStepResult->getEventName() : $testStepResult->getUrl();
-$url = $stepUrl ? $stepUrl : $url; // use step url if exists
+$url = $testStepResult->readableIdentifier($url);
 
 $im = GetWaterfallImage($rows, $url, $page_events, $options, $testStepResult->getRawResults());
 

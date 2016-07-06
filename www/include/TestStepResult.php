@@ -134,8 +134,20 @@ class TestStepResult {
     return $this->rawData["eventName"];
   }
 
+  /**
+   * @return bool True if a custom event name was set for this step, false otherwise
+   */
   public function hasCustomEventName() {
     return (!empty($this->rawData["eventName"]) && $this->rawData["eventName"] != $this->standardEventName());
+  }
+
+  /**
+   * @param string $default Optional. A default value if no custom event name or URL is set
+   * @return string A readable identifier for this step (EIther custom event name, URL, or $default)
+   */
+  public function readableIdentifier($default = "") {
+    $nameOrUrl = $this->hasCustomEventName() ? $this->getEventName() : $this->getUrl();
+    return empty($nameOrUrl) ? $default : $nameOrUrl;
   }
 
   /**
