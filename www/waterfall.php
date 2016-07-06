@@ -23,33 +23,33 @@ $rowcount = array_key_exists('rowcount', $_REQUEST) ? $_REQUEST['rowcount'] : 0;
 $requests = $testStepResult->getRequests();
 
 if (@$_REQUEST['type'] == 'connection') {
-    $is_state = true;
-    $rows = GetConnectionRows($requests, $show_labels);
+  $is_state = true;
+  $rows = GetConnectionRows($requests, $show_labels);
 } else {
-    $rows = GetRequestRows($requests, $use_dots, $show_labels);
+  $rows = GetRequestRows($requests, $use_dots, $show_labels);
 }
 $page_events = GetPageEvents($testStepResult->getRawResults());
 $bwIn=0;
 if (isset($test) && array_key_exists('testinfo', $test) && array_key_exists('bwIn', $test['testinfo'])) {
-    $bwIn = $test['testinfo']['bwIn'];
+  $bwIn = $test['testinfo']['bwIn'];
 } else if(isset($test) && array_key_exists('test', $test) && array_key_exists('bwIn', $test['test'])) {
-    $bwIn = $test['test']['bwIn'];
+  $bwIn = $test['test']['bwIn'];
 }
 
 $options = array(
-    'id' => $id,
-    'path' => $testPath,
-    'run_id' => $run,
-    'is_cached' => $cached,
-    'step_id' => $step,
-    'use_cpu' =>     (!isset($_REQUEST['cpu'])    || $_REQUEST['cpu'] != 0),
-    'use_bw' =>      (!isset($_REQUEST['bw'])     || $_REQUEST['bw'] != 0),
-    'show_labels' => $show_labels,
-    'max_bw' => $bwIn,
-    'is_mime' => $is_mime,
-    'is_state' => $is_state,
-    'rowcount' => $rowcount
-    );
+  'id' => $id,
+  'path' => $testPath,
+  'run_id' => $run,
+  'is_cached' => $cached,
+  'step_id' => $step,
+  'use_cpu' =>     (!isset($_REQUEST['cpu'])    || $_REQUEST['cpu'] != 0),
+  'use_bw' =>      (!isset($_REQUEST['bw'])     || $_REQUEST['bw'] != 0),
+  'show_labels' => $show_labels,
+  'max_bw' => $bwIn,
+  'is_mime' => $is_mime,
+  'is_state' => $is_state,
+  'rowcount' => $rowcount
+);
 
 // use the EventName for the waterfall, if it's specifically set. Otherwise the step's URL
 $stepUrl = $testStepResult->hasCustomEventName() ? $testStepResult->getEventName() : $testStepResult->getUrl();
