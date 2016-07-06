@@ -1,9 +1,9 @@
 <?php
 header ("Content-type: image/png");
 include 'common.inc';
-require_once('object_detail.inc');
-require_once('page_data.inc');
-require_once('waterfall.inc');
+require_once __DIR__ . '/object_detail.inc';
+require_once __DIR__ . '/page_data.inc';
+require_once __DIR__ . '/waterfall.inc';
 
 $page_data = loadPageRunData($testPath, $run, $cached, null, $test['testinfo']);
 
