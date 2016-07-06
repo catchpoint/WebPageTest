@@ -66,6 +66,16 @@ abstract class UrlGenerator {
   }
 
   /**
+   * @param string $file The name of the file to get with the URL
+   * @return string The generated URL
+   */
+  public function getGZip($file) {
+    $compressedParam = (substr($file, -3) == ".gz") ? "&compressed=1" : "";
+    $url = $this->baseUrl . "/getgzip.php?test=" . $this->testId . $compressedParam . "&file=" . $file;
+    return $url;
+  }
+
+  /**
    * @param string|int $requestNumber The request number to identify the response body
    * @return string The generated URL
    */

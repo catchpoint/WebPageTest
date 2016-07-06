@@ -30,6 +30,7 @@ class TestInfoTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals($resultdir, $testInfo->getRootDirectory());
 
     // these values are static from a test, but the assertions make sure we don't break the methods
+    $this->assertEquals("http://duckduckgo.com", $testInfo->getUrl());
     $this->assertEquals("160623_K8_3", $testInfo->getId());
     $this->assertEquals("Firefox, Internet Explorer and Chrome - <b>Chrome</b> - <b>Cable</b>", $testInfo->getTestLocation());
     $this->assertEquals("ITERAHH-VBOX-01-192.168.188.112", $testInfo->getTester(1));
@@ -53,6 +54,7 @@ class TestInfoTest extends PHPUnit_Framework_TestCase {
 
     // these values are static from a test, but the assertions make sure we don't break the methods
     $this->assertEquals("160620_DQ_7", $testInfo->getId());
+    $this->assertEquals("http://www.google.de", $testInfo->getUrl());
     $this->assertEquals("Firefox, Internet Explorer and Chrome - <b>Chrome</b> - <b>Cable</b>", $testInfo->getTestLocation());
     $this->assertEquals("ITERAHH-VBOX-01-192.168.188.112", $testInfo->getTester(1));
   }

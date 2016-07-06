@@ -168,4 +168,16 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
     $ug = UrlGenerator::create(false, "https://test/", "160609_a7_b8", 3, true, 2);
     $this->assertEquals($expected, $ug->resultSummary());
   }
+
+  public function testGetGZipUrl() {
+    $expected = "https://test/getgzip.php?test=160609_a7_b8&file=foobar.txt";
+    $ug = UrlGenerator::create(true, "https://test/", "160609_a7_b8", 3, true);
+    $this->assertEquals($expected, $ug->getGZip("foobar.txt"));
+  }
+
+  public function testGetGZipUrlFromCompressed() {
+    $expected = "https://test/getgzip.php?test=160609_a7_b8&compressed=1&file=foobar.txt.gz";
+    $ug = UrlGenerator::create(true, "https://test/", "160609_a7_b8", 3, true);
+    $this->assertEquals($expected, $ug->getGZip("foobar.txt.gz"));
+  }
 }

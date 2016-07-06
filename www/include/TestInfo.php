@@ -46,6 +46,13 @@ class TestInfo {
   }
 
   /**
+   * @return string The test URL, if set. null otherwise
+   */
+  public function getUrl() {
+    return empty($this->rawData['testinfo']['url']) ? null : $this->rawData['testinfo']['url'];
+  }
+
+  /**
    * @return int The number of runs in this test
    */
   public function getRuns() {
