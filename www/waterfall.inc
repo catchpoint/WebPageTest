@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/draw.inc';
 require_once __DIR__ . '/contentColors.inc';
+require_once __DIR__ . '/include/TestPaths.php';
 
 /**
 * Regroup requests into connection rows.
@@ -167,10 +168,11 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
     $data_height = $height;
     $use_cpu = (bool)@$options['use_cpu'];
     $use_bw = (bool)@$options['use_bw'];
+    $stepId = array_key_exists('step_id', $options) ? (int) $options['step_id'] : 1;
+    $isCached = array_key_exists('is_cached', $options) ? $options['is_cached'] : false;
+    $localPaths = new TestPaths($options['path'], $options['run_id'], $isCached, $stepId);
     if ($use_cpu || $use_bw) {
-        $cached = ((bool)@$options['is_cached']) ? '_Cached' : '';
-        $perf_file = ("{$options['path']}/" .
-                      "{$options['run_id']}{$cached}_progress.csv");
+        $perf_file = $localPaths->utilizationFile();
         $max_bw = 0;
         if (isset($options) && array_key_exists('max_bw', $options)) {
             $max_bw = $options['max_bw'];
@@ -190,12 +192,9 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
             }
         }
     }
-    if ($use_cpu && !$is_image_map && isset($options) && is_array($options) &&
-        array_key_exists('path', $options) &&
-        array_key_exists('run_id', $options) &&
-        array_key_exists('is_cached', $options)) {
+    if ($use_cpu && !$is_image_map) {
       require_once('devtools.inc.php');
-      $cpu_slices = DevToolsGetCPUSlices($options['path'], $options['run_id'], $options['is_cached']);
+      $cpu_slices = DevToolsGetCPUSlicesForStep($localPaths);
       if (isset($cpu_slices) && is_array($cpu_slices) && isset($cpu_slices['main_thread'])) {
         $perf_height = $is_thumbnail ? 16 : 50;
         $cpu_slice_info = array();
@@ -249,9 +248,8 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
             $filter = array();
         }
         $use_all = false;
-        $csi_params = ParseCsiInfo($options['id'], $options['path'],
-                                   $options['run_id'], $options['is_cached'],
-                                   $use_all);
+        $rootUrlGenerator = UrlGenerator::create(false, "", "", $options['run_id'], $isCached, $stepId);
+        $csi_params = ParseCsiInfoForStep($rootUrlGenerator, $localPaths, $use_all);
         $csi_info = TailorRtParamsForVisualization($csi_params, $filter);
     }
     // get any user timings
