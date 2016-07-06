@@ -248,6 +248,7 @@ if (strlen($id)) {
     if (!$run) {
         $run = (int)1;
     }
+    $step = max(1, @(int)$_REQUEST['step']); // default is step=1
     $cached = @(int)$_REQUEST['cached'];  // define a global used in other files
     if (array_key_exists('run', $_REQUEST) && !strcasecmp($_REQUEST['run'], 'median')) {
       require_once('page_data.inc');
