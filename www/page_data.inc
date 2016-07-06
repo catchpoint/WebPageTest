@@ -71,6 +71,8 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
   $ret = loadPageData($localPaths->pageDataFile(), $options);
   if (!isset($ret) || !is_array($ret) || !count($ret))
     GetDevToolsRequestsForStep($localPaths, $requests, $ret);
+  if (!isset($ret) || !is_array($ret))
+    $ret = array();
 
   // see if we have video files to calculate a visually complete time from
   $basic_results = false;
