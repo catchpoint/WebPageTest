@@ -1,6 +1,6 @@
 <?php
-require_once('draw.inc');
-require_once('contentColors.inc');
+require_once __DIR__ . '/draw.inc';
+require_once __DIR__ . '/contentColors.inc';
 
 /**
 * Regroup requests into connection rows.
