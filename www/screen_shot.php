@@ -90,106 +90,8 @@ $userImages = true;
             $tab = 'Test Result';
             $subtab = 'Screen Shot';
             include 'header.inc';
-            ?>
-            <?php
-                if( is_dir("./$videoPath") )
-                {
-                    $createPath = "/video/create.php?tests=$id-r:$run-c:$cached&id={$id}.{$run}.{$cached}";
-                    echo "<a href=\"$createPath\">Create Video</a> &#8226; ";
-                    echo "<a href=\"/video/downloadFrames.php?test=$id&run=$run&cached=$cached\">Download Video Frames</a>";
-                }
-                    
-                if($cached == 1)
-                    $cachedText='_Cached';
-                if( is_file($testPath . '/' . $run . $cachedText . '_screen.png') )
-                {
-                    echo '<h1>Fully Loaded</h1>';
-                    echo '<a href="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen.png">';
-                    echo '<img class="center" alt="Screen Shot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen.png">';
-                    echo '</a>';
-                }
-                elseif( is_file($testPath . '/' . $run . $cachedText . '_screen.jpg') )
-                {
-                    echo '<h1>Fully Loaded</h1>';
-		            echo '<a href="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen.jpg">';
-                    echo '<img class="center" alt="Screen Shot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen.jpg">';
-                    echo '</a>';
-                }
-                // display the last status message if we have one
-                if( count($messages) )
-                {
-                    $lastMessage = end($messages);
-                    if( strlen($lastMessage['message']) )
-                        echo "\n<br>Last Status Message: \"{$lastMessage['message']}\"\n";
-                }
-                
-                if( is_file($testPath . '/' . $run . $cachedText . '_screen_render.jpg') )
-                {
-                    echo '<br><br><a name="start_render"><h1>Start Render';
-                    if( isset($pageRunData) && isset($pageRunData['render']) )
-                        echo ' (' . number_format($pageRunData['render'] / 1000.0, 3) . '  sec)';
-                    echo '</h1></a>';
-                    echo '<img class="center" alt="Start Render Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen_render.jpg">';
-                }
-                if( is_file($testPath . '/' . $run . $cachedText . '_screen_dom.jpg') )
-                {
-                    echo '<br><br><a name="dom_element"><h1>DOM Element';
-                    if( isset($pageRunData) && isset($pageRunData['domTime']) )
-                        echo ' (' . number_format($pageRunData['domTime'] / 1000.0, 3) . '  sec)';
-                    echo '</h1></a>';
-                    echo '<img class="center" alt="DOM Element Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen_dom.jpg">';
-                }
-                if( is_file($testPath . '/' . $run . $cachedText . '_screen_doc.jpg') )
-                {
-                    echo '<br><br><a name="doc_complete"><h1>Document Complete';
-                    if( isset($pageRunData) && isset($pageRunData['docTime']) )
-                        echo ' (' . number_format($pageRunData['docTime'] / 1000.0, 3) . '  sec)';
-                    echo '</h1></a>';
-                    echo '<img class="center" alt="Document Complete Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen_doc.jpg">';
-                }
-                if( is_file($testPath . '/' . $run . $cachedText . '_aft.png') )
-                {
-                    echo '<br><br><a name="aft"><h1>AFT Details';
-                    if( isset($pageRunData) && isset($pageRunData['aft']) )
-                        echo ' (' . number_format($pageRunData['aft'] / 1000.0, 3) . '  sec)';
-                    echo '</h1></a>';
-                    echo 'White = Stabilized Early, Blue = Dynamic, Red = Late Static (failed AFT), Green = AFT<br>';
-                    echo '<img class="center" alt="AFT Diagnostic image" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_aft.png">';
-                }
-                if( is_file($testPath . '/' . $run . $cachedText . '_screen_responsive.jpg') )
-                {
-                    echo '<br><br><h1 id="responsive">Responsive Site Check</h1>';
-                    echo '<img class="center" alt="Responsive Site Check image" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen_responsive.jpg">';
-                }
-                
-                // display all of the status messages
-                if( count($messages) )
-                {
-                    echo "\n<br><br><a name=\"status_messages\"><h1>Status Messages</h1></a>\n";
-                    echo "<table id=\"messages\" class=\"translucent\"><tr><th>Time</th><th>Message</th></tr>\n";
-                    foreach( $messages as $message )
-                        echo "<tr><td class=\"time\">{$message['time']} sec.</td><td>{$message['message']}</td></tr>";
-                    echo "</table>\n";
-                }
-                
-                $row = 0;
-                if (isset($console_log) && count($console_log)) {
-                    echo "\n<br><br><a name=\"console-log\"><h1>Console Log</h1></a>\n";
-                    echo "<table id=\"console-log\" class=\"translucent\"><tr><th>Source</th><th>Level</th><th>Message</th><th>URL</th><th>Line</th></tr>\n";
-                    foreach( $console_log as &$log_entry ) {
-                        $row++;
-                        $rowClass = '';
-                        if ($row % 2 == 0)
-                            $rowClass = ' class="even"';
-                        echo "<tr$rowClass><td class=\"source\">" . htmlspecialchars($log_entry['source']) .
-                             "</td><td class=\"level\">" . htmlspecialchars($log_entry['level']) .
-                             "</td><td class=\"message\"><div>" . htmlspecialchars($log_entry['text']) . 
-                             "</div></td><td class=\"url\"><div><a href=\"" . htmlspecialchars($log_entry['url']) . 
-                             "\">" . htmlspecialchars($log_entry['url']) .
-                             "</a></div></td><td class=\"line\">" . htmlspecialchars($log_entry['line']) . "</td></tr>\n";
-                    }
-                    echo "</table>\n";
-                }
+
+            printContent($videoPath, $id, $run, $cached, $testPath, $messages, $pageRunData, $console_log, $log_entry);
             ?>
             
             </div>
@@ -200,6 +102,108 @@ $userImages = true;
 </html>
 
 <?php
+/**
+ * @param $videoPath
+ * @param $id
+ * @param $run
+ * @param $cached
+ * @param $testPath
+ * @param $messages
+ * @param $pageRunData
+ * @param $console_log
+ * @param $log_entry
+ * @return mixed
+ */
+function printContent($videoPath, $id, $run, $cached, $testPath, $messages, $pageRunData, $console_log, $log_entry) {
+    if (is_dir("./$videoPath")) {
+        $createPath = "/video/create.php?tests=$id-r:$run-c:$cached&id={$id}.{$run}.{$cached}";
+        echo "<a href=\"$createPath\">Create Video</a> &#8226; ";
+        echo "<a href=\"/video/downloadFrames.php?test=$id&run=$run&cached=$cached\">Download Video Frames</a>";
+    }
+
+    if ($cached == 1)
+        $cachedText = '_Cached';
+    if (is_file($testPath . '/' . $run . $cachedText . '_screen.png')) {
+        echo '<h1>Fully Loaded</h1>';
+        echo '<a href="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen.png">';
+        echo '<img class="center" alt="Screen Shot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen.png">';
+        echo '</a>';
+    } elseif (is_file($testPath . '/' . $run . $cachedText . '_screen.jpg')) {
+        echo '<h1>Fully Loaded</h1>';
+        echo '<a href="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen.jpg">';
+        echo '<img class="center" alt="Screen Shot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen.jpg">';
+        echo '</a>';
+    }
+    // display the last status message if we have one
+    if (count($messages)) {
+        $lastMessage = end($messages);
+        if (strlen($lastMessage['message']))
+            echo "\n<br>Last Status Message: \"{$lastMessage['message']}\"\n";
+    }
+
+    if (is_file($testPath . '/' . $run . $cachedText . '_screen_render.jpg')) {
+        echo '<br><br><a name="start_render"><h1>Start Render';
+        if (isset($pageRunData) && isset($pageRunData['render']))
+            echo ' (' . number_format($pageRunData['render'] / 1000.0, 3) . '  sec)';
+        echo '</h1></a>';
+        echo '<img class="center" alt="Start Render Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen_render.jpg">';
+    }
+    if (is_file($testPath . '/' . $run . $cachedText . '_screen_dom.jpg')) {
+        echo '<br><br><a name="dom_element"><h1>DOM Element';
+        if (isset($pageRunData) && isset($pageRunData['domTime']))
+            echo ' (' . number_format($pageRunData['domTime'] / 1000.0, 3) . '  sec)';
+        echo '</h1></a>';
+        echo '<img class="center" alt="DOM Element Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen_dom.jpg">';
+    }
+    if (is_file($testPath . '/' . $run . $cachedText . '_screen_doc.jpg')) {
+        echo '<br><br><a name="doc_complete"><h1>Document Complete';
+        if (isset($pageRunData) && isset($pageRunData['docTime']))
+            echo ' (' . number_format($pageRunData['docTime'] / 1000.0, 3) . '  sec)';
+        echo '</h1></a>';
+        echo '<img class="center" alt="Document Complete Screen Shot" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen_doc.jpg">';
+    }
+    if (is_file($testPath . '/' . $run . $cachedText . '_aft.png')) {
+        echo '<br><br><a name="aft"><h1>AFT Details';
+        if (isset($pageRunData) && isset($pageRunData['aft']))
+            echo ' (' . number_format($pageRunData['aft'] / 1000.0, 3) . '  sec)';
+        echo '</h1></a>';
+        echo 'White = Stabilized Early, Blue = Dynamic, Red = Late Static (failed AFT), Green = AFT<br>';
+        echo '<img class="center" alt="AFT Diagnostic image" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_aft.png">';
+    }
+    if (is_file($testPath . '/' . $run . $cachedText . '_screen_responsive.jpg')) {
+        echo '<br><br><h1 id="responsive">Responsive Site Check</h1>';
+        echo '<img class="center" alt="Responsive Site Check image" src="' . substr($testPath, 1) . '/' . $run . $cachedText . '_screen_responsive.jpg">';
+    }
+
+    // display all of the status messages
+    if (count($messages)) {
+        echo "\n<br><br><a name=\"status_messages\"><h1>Status Messages</h1></a>\n";
+        echo "<table id=\"messages\" class=\"translucent\"><tr><th>Time</th><th>Message</th></tr>\n";
+        foreach ($messages as $message)
+            echo "<tr><td class=\"time\">{$message['time']} sec.</td><td>{$message['message']}</td></tr>";
+        echo "</table>\n";
+    }
+
+    $row = 0;
+    if (isset($console_log) && count($console_log)) {
+        echo "\n<br><br><a name=\"console-log\"><h1>Console Log</h1></a>\n";
+        echo "<table id=\"console-log\" class=\"translucent\"><tr><th>Source</th><th>Level</th><th>Message</th><th>URL</th><th>Line</th></tr>\n";
+        foreach ($console_log as &$log_entry) {
+            $row++;
+            $rowClass = '';
+            if ($row % 2 == 0)
+                $rowClass = ' class="even"';
+            echo "<tr$rowClass><td class=\"source\">" . htmlspecialchars($log_entry['source']) .
+              "</td><td class=\"level\">" . htmlspecialchars($log_entry['level']) .
+              "</td><td class=\"message\"><div>" . htmlspecialchars($log_entry['text']) .
+              "</div></td><td class=\"url\"><div><a href=\"" . htmlspecialchars($log_entry['url']) .
+              "\">" . htmlspecialchars($log_entry['url']) .
+              "</a></div></td><td class=\"line\">" . htmlspecialchars($log_entry['line']) . "</td></tr>\n";
+        }
+        echo "</table>\n";
+    }
+}
+
 /**
 * Load the status messages into an array
 * 
