@@ -163,6 +163,18 @@ class TestPaths {
   }
 
   /**
+   * @param string $type One of 'render', 'dom', 'doc', 'responsive'
+   * @return string Path for the additional screenshot file
+   */
+  public function additionalScreenShotFile($type) {
+    return $this->testRoot . $this->underscoreIdentifier() . "_screen_ ". $type . ".jpg";
+  }
+
+  public function aftDiagnosticImageFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_aft.png";
+  }
+
+  /**
    * @return string Path for status file
    */
   public function statusFile() {
