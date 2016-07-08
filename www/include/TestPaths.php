@@ -167,7 +167,7 @@ class TestPaths {
    * @return string Path for the additional screenshot file
    */
   public function additionalScreenShotFile($type) {
-    return $this->testRoot . $this->underscoreIdentifier() . "_screen_ ". $type . ".jpg";
+    return $this->testRoot . $this->underscoreIdentifier() . "_screen_". $type . ".jpg";
   }
 
   public function aftDiagnosticImageFile() {

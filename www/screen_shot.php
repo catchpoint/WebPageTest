@@ -1,8 +1,13 @@
 <?php 
-include 'common.inc';
-require_once('video.inc');
-require_once('page_data.inc');
-require_once('devtools.inc.php');
+include __DIR__ . '/common.inc';
+require_once __DIR__ . '/video.inc';
+require_once __DIR__ . '/page_data.inc';
+require_once __DIR__ . '/devtools.inc.php';
+require_once __DIR__ . '/include/FileHandler.php';
+require_once __DIR__ . '/include/TestPaths.php';
+require_once __DIR__ . '/include/UrlGenerator.php';
+
+
 $pageRunData = loadPageRunData($testPath, $run, $cached, null, $test['testinfo']);
 
 $videoPath = "$testPath/video_{$run}";
@@ -107,9 +112,9 @@ function printContent($id, $run, $cached, $testPath, $messages, $pageRunData, $c
     $localPaths = new TestPaths($testPath, $run, $cached, $step);
     $fileHandler = new FileHandler();
     if ($fileHandler->dirExists($localPaths->videoDir())) {
-        $createPath = "/video/create.php?tests=$id-r:$run-c:$cached&id={$id}.{$run}.{$cached}";
-        echo "<a href=\"$createPath\">Create Video</a> &#8226; ";
-        echo "<a href=\"/video/downloadFrames.php?test=$id&run=$run&cached=$cached\">Download Video Frames</a>";
+        $rootUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $id, $run, $cached, $step);
+        echo "<a href=\"" . $rootUrlGenerator->createVideo() . "\">Create Video</a> &#8226; ";
+        echo "<a href=\"" . $rootUrlGenerator->downloadVideoFrames() . "\">Download Video Frames</a>";
     }
     $urlPaths = new TestPaths(substr($testPath, 1), $run, $cached, $step);
 
