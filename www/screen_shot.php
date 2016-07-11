@@ -109,17 +109,41 @@ $userImages = true;
  * @param TestRunResults $testRunResults The run results to be printed
  */
 function printContent($fileHandler, $testInfo, $testRunResults) {
-    for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
-        printStep($fileHandler, $testInfo, $testRunResults->getStepResult($i));
+    $numSteps = $testRunResults->countSteps();
+    $useQuicklinks = $numSteps > 1;
+    if ($useQuicklinks) {
+        printQuicklinks($testRunResults);
     }
+    for ($i = 1; $i <= $numSteps; $i++) {
+        printStep($fileHandler, $testInfo, $testRunResults->getStepResult($i), $useQuicklinks);
+    }
+}
+
+/**
+ * @param TestRunResults $testRunResults The run results to generate quicklinks for
+ */
+function printQuicklinks($testRunResults) {
+    echo '<a name="quicklinks"><h1>Quicklinks</h1></a>';
+    echo '<div style="text-align: center;"><table class="pretty">';
+    echo '<thead><tr><th>Step Name</th><th>Screen Shots</th></tr></thead>';
+    echo '<tbody>';
+    for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
+        echo '<tr>';
+        echo '<td>' . $testRunResults->getStepResult($i)->readableIdentifier() . '</td>';
+        echo '<td><a href="#step_' . $i . '">Screen Shots (Step ' . $i . ')</a></td>';
+        echo '</tr>';
+    }
+    echo '</tbody>';
+    echo "</table></div>";
 }
 
 /**
  * @param FileHandler $fileHandler FileHandler to use
  * @param TestInfo $testInfo Information about the test
  * @param TestStepResult $testStepResult Results of the specific test
+ * @param bool $useQuicklinks True if quicklinks are used, false otherwise
  */
-function printStep($fileHandler, $testInfo, $testStepResult) {
+function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
     $pageRunData = $testStepResult->getRawResults();
 
     $localPaths = $testStepResult->createTestPaths();
@@ -133,6 +157,12 @@ function printStep($fileHandler, $testInfo, $testStepResult) {
     if ($fileHandler->dirExists($localPaths->videoDir())) {
         echo "<a href=\"" . $urlGenerator->createVideo() . "\">Create Video</a> &#8226; ";
         echo "<a href=\"" . $urlGenerator->downloadVideoFrames() . "\">Download Video Frames</a>";
+        if ($useQuicklinks) {
+            echo " &#8226; ";
+        }
+    }
+    if ($useQuicklinks) {
+        echo '<a href="#quicklinks">Back to Quicklinks</a>';
     }
 
     $screenShotUrl = null;
