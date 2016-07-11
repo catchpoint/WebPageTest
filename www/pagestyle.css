@@ -256,4 +256,4 @@ table.pretty td.even { background: whitesmoke; }
 #pagespeed_results {width: 960px; background-color: #fff; padding: 0px 10px 10px; margin: -15px -20px 0px;}
 #pagespeed_results h2 {text-align: center; padding: 10px 0 0 0;}
 
-h1.stepName { border-left: 4px #007 solid; border-right: 4px #007 solid; background: gainsboro; }
+h1.stepName { border-left: 4px #007 solid; border-right: 4px #007 solid; background: gainsboro; margin-top: 1em; }

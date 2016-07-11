@@ -104,19 +104,31 @@ $userImages = true;
 <?php
 
 /**
- * @param FileHandler $fileHandler
- * @param TestInfo $testInfo
- * @param TestRunResults $testRunResults
+ * @param FileHandler $fileHandler FileHandler to use
+ * @param TestInfo $testInfo Information about the test
+ * @param TestRunResults $testRunResults The run results to be printed
  */
 function printContent($fileHandler, $testInfo, $testRunResults) {
-    $testStepResult = $testRunResults->getStepResult(1);
+    for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
+        printStep($fileHandler, $testInfo, $testRunResults->getStepResult($i));
+    }
+}
+
+/**
+ * @param FileHandler $fileHandler FileHandler to use
+ * @param TestInfo $testInfo Information about the test
+ * @param TestStepResult $testStepResult Results of the specific test
+ */
+function printStep($fileHandler, $testInfo, $testStepResult) {
     $pageRunData = $testStepResult->getRawResults();
 
     $localPaths = $testStepResult->createTestPaths();
     $urlPaths = $testStepResult->createTestPaths(substr($testInfo->getRootDirectory(), 1));
     $urlGenerator = $testStepResult->createUrlGenerator("", FRIENDLY_URLS);
 
+    echo "<a name=\"step" . $testStepResult->getStepNumber() . "\">";
     echo "<h1 class='stepName'>" . $testStepResult->readableIdentifier() . "</h1>";
+    echo "</a>";
 
     if ($fileHandler->dirExists($localPaths->videoDir())) {
         echo "<a href=\"" . $urlGenerator->createVideo() . "\">Create Video</a> &#8226; ";
