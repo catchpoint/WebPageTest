@@ -217,6 +217,8 @@ function BrowserAndroidChrome(app, args) {
   this.remoteNetlog_ = undefined;
   this.netlogEnabled_ = args.task['netlog'] ? true : false;
   this.lastVideoSize_ = 0;
+  this.videoStarted_ = false;
+  this.videoIdleCount_ = 0;
 }
 util.inherits(BrowserAndroidChrome, browser_base.BrowserBase);
 /** Public class. */
@@ -975,15 +977,24 @@ BrowserAndroidChrome.prototype.scheduleMakeReady = function() {
 BrowserAndroidChrome.prototype.scheduleActivityDetected = function() {
   'use strict';
   return this.adb_.shell(['stat', '-c', '%s', this.deviceVideoPath_]).addBoth(function(stdout) {
+    var activity_detected = true;
     var video_size = parseInt(stdout);
     var video_delta = video_size - this.lastVideoSize_;
     logger.debug('video size: ' + video_size + ' (+' + video_delta + ')');
     this.lastVideoSize_ = video_size;
 
-    if (video_size < 100000 || video_delta > 20000) {
-      return true;
+    if (!this.videoStarted_) {
+      if (video_delta > 100000)
+        this.videoStarted_ = true;
     } else {
-      return false;
+      if (video_delta > 10000) {
+        this.videoIdleCount_ = 0;
+      } else {
+        this.videoIdleCount_++;
+        if (this.videoIdleCount_ > 3)
+          activity_detected = false;
+      }
     }
+    return activity_detected;
   }.bind(this));
 };
