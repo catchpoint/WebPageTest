@@ -70,7 +70,7 @@ class TestStepResult {
    * @return UrlGenerator The created URL generator for this step
    */
   public function createUrlGenerator($baseUrl, $friendly = true) {
-    return UrlGenerator::create($friendly, $baseUrl, $this->testInfo->getId(), $this->run, $this->cached);
+    return UrlGenerator::create($friendly, $baseUrl, $this->testInfo->getId(), $this->run, $this->cached, $this->step);
   }
 
   /**
