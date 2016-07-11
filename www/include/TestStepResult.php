@@ -64,8 +64,22 @@ class TestStepResult {
     return new self($testInfo, $pageData, $runNumber, $isCached, $stepNumber);
   }
 
-  public function getUrlGenerator($baseUrl, $friendly = true) {
-    return UrlGenerator::create($friendly, $baseUrl, $this->testInfo->getRootDirectory(), $this->run, $this->cached);
+  /**
+   * @param string $baseUrl The base URL to use for the UrlGenerator
+   * @param bool $friendly Optional. True for friendly URLS (default), false for standard URLs
+   * @return UrlGenerator The created URL generator for this step
+   */
+  public function createUrlGenerator($baseUrl, $friendly = true) {
+    return UrlGenerator::create($friendly, $baseUrl, $this->testInfo->getId(), $this->run, $this->cached);
+  }
+
+  /**
+   * @param string $testRoot Optional. A different test root path. If null, it's set to the default test root for local paths.
+   * @return TestPaths The created TestPaths object for this step
+   */
+  public function createTestPaths($testRoot = null) {
+    $testRoot = ($testRoot === null) ? $this->testInfo->getRootDirectory() : $testRoot;
+    return new TestPaths($testRoot, $this->run, $this->cached, $this->step);
   }
 
   /**
@@ -171,7 +185,7 @@ class TestStepResult {
 
   public function getRequests() {
     // TODO: move implementation to this method
-    return getRequestsForStep($this->localPaths, $this->getUrlGenerator(""), $secure, $haveLocations, false, true);
+    return getRequestsForStep($this->localPaths, $this->createUrlGenerator(""), $secure, $haveLocations, false, true);
   }
 
   public function getDomainBreakdown() {
@@ -182,7 +196,7 @@ class TestStepResult {
   public function getMimeTypeBreakdown() {
     // TODO: move implementation to this method
     $requests = null;
-    return getBreakdownForStep($this->localPaths, $this->getUrlGenerator(""), $requests);
+    return getBreakdownForStep($this->localPaths, $this->createUrlGenerator(""), $requests);
   }
 
   public function getConsoleLog() {
