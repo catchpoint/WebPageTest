@@ -126,7 +126,7 @@ function printStep($fileHandler, $testInfo, $testStepResult) {
     $urlPaths = $testStepResult->createTestPaths(substr($testInfo->getRootDirectory(), 1));
     $urlGenerator = $testStepResult->createUrlGenerator("", FRIENDLY_URLS);
 
-    echo "<a name=\"step" . $testStepResult->getStepNumber() . "\">";
+    echo "<a name=\"step_" . $testStepResult->getStepNumber() . "\">";
     echo "<h1 class='stepName'>" . $testStepResult->readableIdentifier() . "</h1>";
     echo "</a>";
 
@@ -156,29 +156,31 @@ function printStep($fileHandler, $testInfo, $testStepResult) {
             echo "\n<br>Last Status Message: \"{$lastMessage['message']}\"\n";
     }
 
+    $stepNumber = $testStepResult->getStepNumber();
+    $linkSuffix = $stepNumber > 1 ? ("_" . $stepNumber) : "";
     if ($fileHandler->fileExists($localPaths->additionalScreenShotFile("render"))) {
-        echo '<br><br><a name="start_render"><h2>Start Render';
+        echo '<br><br><a name="start_render' . $linkSuffix . '"><h2>Start Render';
         if (isset($pageRunData) && isset($pageRunData['render']))
             echo ' (' . number_format($pageRunData['render'] / 1000.0, 3) . '  sec)';
         echo '</h2></a>';
         echo '<img class="center" alt="Start Render Screen Shot" src="' . $urlPaths->additionalScreenShotFile("render") . '">';
     }
     if ($fileHandler->fileExists($localPaths->additionalScreenShotFile("dom"))) {
-        echo '<br><br><a name="dom_element"><h2>DOM Element';
+        echo '<br><br><a name="dom_element' . $linkSuffix . '"><h2>DOM Element';
         if (isset($pageRunData) && isset($pageRunData['domTime']))
             echo ' (' . number_format($pageRunData['domTime'] / 1000.0, 3) . '  sec)';
         echo '</h2></a>';
         echo '<img class="center" alt="DOM Element Screen Shot" src="' . $urlPaths->additionalScreenShotFile("dom") . '">';
     }
     if ($fileHandler->fileExists($localPaths->additionalScreenShotFile("doc"))) {
-        echo '<br><br><a name="doc_complete"><h2>Document Complete';
+        echo '<br><br><a name="doc_complete' . $linkSuffix . '"><h2>Document Complete';
         if (isset($pageRunData) && isset($pageRunData['docTime']))
             echo ' (' . number_format($pageRunData['docTime'] / 1000.0, 3) . '  sec)';
         echo '</h2></a>';
         echo '<img class="center" alt="Document Complete Screen Shot" src="' . $urlPaths->additionalScreenShotFile("doc") . '">';
     }
     if ($fileHandler->fileExists($localPaths->aftDiagnosticImageFile())) {
-        echo '<br><br><a name="aft"><h2>AFT Details';
+        echo '<br><br><a name="aft' . $linkSuffix . '"><h2>AFT Details';
         if (isset($pageRunData) && isset($pageRunData['aft']))
             echo ' (' . number_format($pageRunData['aft'] / 1000.0, 3) . '  sec)';
         echo '</h2></a>';
@@ -192,7 +194,7 @@ function printStep($fileHandler, $testInfo, $testStepResult) {
 
     // display all of the status messages
     if (count($messages)) {
-        echo "\n<br><br><a name=\"status_messages\"><h2>Status Messages</h2></a>\n";
+        echo "\n<br><br><a name=\"status_messages" . $linkSuffix . "\"><h2>Status Messages</h2></a>\n";
         echo "<table id=\"messages\" class=\"translucent\"><tr><th>Time</th><th>Message</th></tr>\n";
         foreach ($messages as $message) {
             $time = $message['time'] / 1000.0;
@@ -206,7 +208,7 @@ function printStep($fileHandler, $testInfo, $testStepResult) {
     $row = 0;
     $console_log = $testStepResult->getConsoleLog();
     if (isset($console_log) && count($console_log)) {
-        echo "\n<br><br><a name=\"console-log\"><h2>Console Log</h2></a>\n";
+        echo "\n<br><br><a name=\"console-log" . $linkSuffix . "\"><h2>Console Log</h2></a>\n";
         echo "<table id=\"console-log\" class=\"translucent\"><tr><th>Source</th><th>Level</th><th>Message</th><th>URL</th><th>Line</th></tr>\n";
         foreach ($console_log as &$log_entry) {
             $row++;
