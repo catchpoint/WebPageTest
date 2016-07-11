@@ -40,6 +40,7 @@ import tempfile
 
 # Globals
 options = None
+client_viewport = None
 
 
 # #######################################################################################################################
@@ -370,20 +371,20 @@ def find_first_frame(directory):
 
 def eliminate_duplicate_frames(directory):
   global options
+  global client_viewport
 
   try:
     files = sorted(glob.glob(os.path.join(directory, 'ms_*.png')))
     if len(files) > 1:
       from PIL import Image
       blank = files[0]
-      im = Image.open(blank)
-      width, height = im.size
-      if options.viewport:
-        viewport = find_image_viewport(im);
-      im = None
+      client_viewport = None
+      with Image.open(blank) as im:
+        width, height = im.size
+        if options.viewport:
+          client_viewport = find_image_viewport(im)
 
-      # Do a pass looking for the first non-blank frame with an allowance
-      # for up to a 2% per-pixel difference for noise in the white field.
+      # Figure out the region of the image that we care about
       top = 6
       right_margin = 6
       bottom_margin = 6
@@ -395,21 +396,20 @@ def eliminate_duplicate_frames(directory):
       left = 0
       width = max(width - right_margin, 1)
 
-      if options.viewport:
-        with Image.open(blank) as im:
-          viewport = find_image_viewport(im)
-          if viewport is not None:
-            height = max(viewport['height'] - top - bottom_margin, 1)
-            width = max(viewport['width'] - right_margin, 1)
-            left += viewport['x']
-            top += viewport['y']
+      if client_viewport is not None:
+        height = max(client_viewport['height'] - top - bottom_margin, 1)
+        width = max(client_viewport['width'] - right_margin, 1)
+        left += client_viewport['x']
+        top += client_viewport['y']
 
       crop = '{0:d}x{1:d}+{2:d}+{3:d}'.format(width, height, left, top)
       logging.debug('Viewport cropping set to ' + crop)
 
+      # Do a pass looking for the first non-blank frame with an allowance
+      # for up to a 10% per-pixel difference for noise in the white field.
       count = len(files)
       for i in range(1, count):
-        if frames_match(blank, files[i], 2, crop):
+        if frames_match(blank, files[i], 10, crop):
           logging.debug('Removing duplicate frame {0} from the beginning'.format(files[i]))
           os.remove(files[i])
         else:
@@ -681,18 +681,26 @@ def calculate_histograms(directory, histograms_file, force):
 
 
 def calculate_image_histogram(file):
+  global client_viewport
   logging.debug('Calculating histogram for ' + file)
   try:
     from PIL import Image
 
     im = Image.open(file)
     width, height = im.size
+    left = 0
+    top = 0
+    if client_viewport is not None:
+      left = client_viewport['x']
+      top = client_viewport['y']
+      width = client_viewport['width']
+      height = client_viewport['height']
     pixels = im.load()
     histogram = {'r': [0 for i in range(256)],
                  'g': [0 for i in range(256)],
                  'b': [0 for i in range(256)]}
-    for y in range(0, height):
-      for x in range(0, width):
+    for y in range(top, top + height):
+      for x in range(left, left + width):
         pixel = pixels[x, y]
         # Don't include White pixels (with a tiny bit of slop for compression artifacts)
         if pixel[0] < 250 or pixel[1] < 250 or pixel[2] < 250:
