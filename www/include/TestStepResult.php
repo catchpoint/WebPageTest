@@ -157,11 +157,12 @@ class TestStepResult {
 
   /**
    * @param string $default Optional. A default value if no custom event name or URL is set
-   * @return string A readable identifier for this step (EIther custom event name, URL, or $default)
+   * @return string A readable identifier for this step (Either custom event name, URL, $default, or "Step x")
    */
   public function readableIdentifier($default = "") {
-    $nameOrUrl = $this->hasCustomEventName() ? $this->getEventName() : $this->getUrl();
-    return empty($nameOrUrl) ? $default : $nameOrUrl;
+    $identifier = $this->hasCustomEventName() ? $this->getEventName() : $this->getUrl();
+    $identifier = empty($identifier) ? $default : $identifier;
+    return empty($identifier) ? ("Step " . $this->step) : $identifier;
   }
 
   /**

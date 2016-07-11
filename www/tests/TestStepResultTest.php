@@ -37,4 +37,19 @@ class TestStepResultTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals("http://duckduckgo.com", $secondStep->getUrl());
     $this->assertEquals("http://duckduckgo.com", $secondStep->readableIdentifier());
   }
+
+  public function testReadableIdentifier() {
+    $testInfo = TestInfo::fromValues("testId", "/root/path", array());
+    $step = TestStepResult::fromPageData($testInfo, array("eventName" => "testEvent", "URL" => "testUrl"), 1, 1, 1);
+    $this->assertEquals("testEvent", $step->readableIdentifier("default"));
+
+    $step = TestStepResult::fromPageData($testInfo, array("eventName" => "Step 1", "URL" => "testUrl"), 1, 1, 1);
+    $this->assertEquals("testUrl", $step->readableIdentifier("default"));
+
+    $step = TestStepResult::fromPageData($testInfo, array("eventName" => "Step 1", "URL" => ""), 1, 1, 1);
+    $this->assertEquals("default", $step->readableIdentifier("default"));
+
+    $step = TestStepResult::fromPageData($testInfo, array("eventName" => "Step 1", "URL" => ""), 1, 1, 1);
+    $this->assertEquals("Step 1", $step->readableIdentifier(""));
+  }
 }
