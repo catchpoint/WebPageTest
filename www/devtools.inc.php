@@ -935,11 +935,6 @@ function DevToolsMatchEvent($filter, &$event, $startTime = null, $endTime = null
   return $match;
 }
 
-function DevToolsGetConsoleLog($testPath, $run, $cached) {
-  $localPaths = new TestPaths($testPath, $run, $cached);
-  return DevToolsGetConsoleLogForStep($localPaths);
-}
-
 /**
  * @param TestPaths $localPaths The paths for the run or step to get the console log for
  * @return array|null The console log or null, if it couldn't be retrieved
