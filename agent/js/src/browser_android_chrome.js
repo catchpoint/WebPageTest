@@ -976,23 +976,26 @@ BrowserAndroidChrome.prototype.scheduleMakeReady = function() {
  */
 BrowserAndroidChrome.prototype.scheduleActivityDetected = function() {
   'use strict';
-  return this.adb_.shell(['stat', '-c', '%s', this.deviceVideoPath_]).addBoth(function(stdout) {
+  return this.adb_.shell(['ls', '-l', this.deviceVideoPath_]).addBoth(function(stdout) {
     var activity_detected = true;
-    var video_size = parseInt(stdout);
-    var video_delta = video_size - this.lastVideoSize_;
-    logger.debug('video size: ' + video_size + ' (+' + video_delta + ')');
-    this.lastVideoSize_ = video_size;
+    var matches = stdout.match(/[^\d]*([\d]+)/);
+    if (matches && matches.length > 1) {
+      var video_size = parseInt(matches[1]);
+      var video_delta = video_size - this.lastVideoSize_;
+      logger.debug('video size: ' + video_size + ' (+' + video_delta + ')');
+      this.lastVideoSize_ = video_size;
 
-    if (!this.videoStarted_) {
-      if (video_delta > 100000)
-        this.videoStarted_ = true;
-    } else {
-      if (video_delta > 10000) {
-        this.videoIdleCount_ = 0;
+      if (!this.videoStarted_) {
+        if (video_delta > 100000)
+          this.videoStarted_ = true;
       } else {
-        this.videoIdleCount_++;
-        if (this.videoIdleCount_ > 3)
-          activity_detected = false;
+        if (video_delta > 10000) {
+          this.videoIdleCount_ = 0;
+        } else {
+          this.videoIdleCount_++;
+          if (this.videoIdleCount_ > 3)
+            activity_detected = false;
+        }
       }
     }
     return activity_detected;
