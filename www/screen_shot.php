@@ -6,17 +6,12 @@ require_once __DIR__ . '/devtools.inc.php';
 require_once __DIR__ . '/include/FileHandler.php';
 require_once __DIR__ . '/include/TestPaths.php';
 require_once __DIR__ . '/include/UrlGenerator.php';
+require_once __DIR__ . '/include/TestInfo.php';
+require_once __DIR__ . '/include/TestRunResults.php';
 
-
-$pageRunData = loadPageRunData($testPath, $run, $cached, null, $test['testinfo']);
-
-$videoPath = "$testPath/video_{$run}";
-if( $cached )
-    $videoPath .= '_cached';
-
-// get the status messages
-$messages = LoadStatusMessages($testPath . '/' . $run . $cachedText . '_status.txt');
-$console_log = DevToolsGetConsoleLog($testPath, $run, $cached);
+$fileHandler = new FileHandler();
+$testInfo = TestInfo::fromFiles($testPath);
+$testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, $fileHandler);
 
 $page_keywords = array('Screen Shot','Webpagetest','Website Speed Test');
 $page_description = "Website performance test screen shots$testLabel.";
@@ -96,7 +91,7 @@ $userImages = true;
             $subtab = 'Screen Shot';
             include 'header.inc';
 
-            printContent($id, $run, $cached, $testPath, $messages, $pageRunData, $console_log, $log_entry, $step);
+            printContent($fileHandler, $testInfo, $testRunResults);
             ?>
             
             </div>
@@ -108,15 +103,23 @@ $userImages = true;
 
 <?php
 
-function printContent($id, $run, $cached, $testPath, $messages, $pageRunData, $console_log, $log_entry, $step) {
-    $localPaths = new TestPaths($testPath, $run, $cached, $step);
-    $fileHandler = new FileHandler();
+/**
+ * @param FileHandler $fileHandler
+ * @param TestInfo $testInfo
+ * @param TestRunResults $testRunResults
+ */
+function printContent($fileHandler, $testInfo, $testRunResults) {
+    $testStepResult = $testRunResults->getStepResult(1);
+    $pageRunData = $testStepResult->getRawResults();
+
+    $localPaths = $testStepResult->createTestPaths();
+    $urlPaths = $testStepResult->createTestPaths(substr($testInfo->getRootDirectory(), 1));
+    $urlGenerator = $testStepResult->createUrlGenerator("", FRIENDLY_URLS);
+
     if ($fileHandler->dirExists($localPaths->videoDir())) {
-        $rootUrlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $id, $run, $cached, $step);
-        echo "<a href=\"" . $rootUrlGenerator->createVideo() . "\">Create Video</a> &#8226; ";
-        echo "<a href=\"" . $rootUrlGenerator->downloadVideoFrames() . "\">Download Video Frames</a>";
+        echo "<a href=\"" . $urlGenerator->createVideo() . "\">Create Video</a> &#8226; ";
+        echo "<a href=\"" . $urlGenerator->downloadVideoFrames() . "\">Download Video Frames</a>";
     }
-    $urlPaths = new TestPaths(substr($testPath, 1), $run, $cached, $step);
 
     $screenShotUrl = null;
     if ($fileHandler->fileExists($localPaths->screenShotPngFile())) {
@@ -132,6 +135,7 @@ function printContent($id, $run, $cached, $testPath, $messages, $pageRunData, $c
     }
 
     // display the last status message if we have one
+    $messages = $testStepResult->getStatusMessages();
     if (count($messages)) {
         $lastMessage = end($messages);
         if (strlen($lastMessage['message']))
@@ -176,12 +180,17 @@ function printContent($id, $run, $cached, $testPath, $messages, $pageRunData, $c
     if (count($messages)) {
         echo "\n<br><br><a name=\"status_messages\"><h1>Status Messages</h1></a>\n";
         echo "<table id=\"messages\" class=\"translucent\"><tr><th>Time</th><th>Message</th></tr>\n";
-        foreach ($messages as $message)
-            echo "<tr><td class=\"time\">{$message['time']} sec.</td><td>{$message['message']}</td></tr>";
+        foreach ($messages as $message) {
+            $time = $message['time'] / 1000.0;
+            if ($time > 0.0) {
+                echo "<tr><td class=\"time\">{$time} sec.</td><td>{$message['message']}</td></tr>";
+            }
+        }
         echo "</table>\n";
     }
 
     $row = 0;
+    $console_log = $testStepResult->getConsoleLog();
     if (isset($console_log) && count($console_log)) {
         echo "\n<br><br><a name=\"console-log\"><h1>Console Log</h1></a>\n";
         echo "<table id=\"console-log\" class=\"translucent\"><tr><th>Source</th><th>Level</th><th>Message</th><th>URL</th><th>Line</th></tr>\n";
@@ -199,36 +208,6 @@ function printContent($id, $run, $cached, $testPath, $messages, $pageRunData, $c
         }
         echo "</table>\n";
     }
-}
-
-/**
-* Load the status messages into an array
-* 
-* @param mixed $path
-*/
-function LoadStatusMessages($path)
-{
-    $messages = array();
-    if (is_file($path)) {
-      $lines = gz_file($path);
-      if (isset($lines) && is_array($lines)) {
-        foreach( $lines as $line ) {
-          $line = trim($line);
-          if( strlen($line) ) {
-            $parts = explode("\t", $line);
-            $time = (float)$parts[0] / 1000.0;
-            $message = trim($parts[1]);
-            if( $time >= 0.0 ) {
-                $msg = array(   'time' => $time,
-                                'message' => $message );
-                $messages[] = $msg;
-            }
-          }
-        }
-      }
-    }
-
-    return $messages;
 }
 
 ?>
