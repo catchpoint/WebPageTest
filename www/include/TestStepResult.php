@@ -43,7 +43,7 @@ class TestStepResult {
    * @param int $step The step number
    * @return TestStepResult The created instance
    */
-  public static function fromPageData($testInfo, &$pageData, $run, $cached, $step) {
+  public static function fromPageData($testInfo, $pageData, $run, $cached, $step) {
     return new self($testInfo, $pageData, $run, $cached, $step);
   }
 

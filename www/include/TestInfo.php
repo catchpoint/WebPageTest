@@ -9,11 +9,11 @@ class TestInfo {
   private $rawData;
 
 
-  private function __construct($id, $rootDirectory, &$testInfo) {
+  private function __construct($id, $rootDirectory, $testInfo) {
     // This isn't likely to stay the standard constructor, so we name it explicitly as a static function below
     $this->id = $id;
     $this->rootDirectory = $rootDirectory;
-    $this->rawData = &$testInfo;
+    $this->rawData = $testInfo;
   }
 
   /**
@@ -22,7 +22,7 @@ class TestInfo {
    * @param array $testInfo Array with information about the test
    * @return TestInfo The created instance
    */
-  public static function fromValues($id, $rootDirectory, &$testInfo) {
+  public static function fromValues($id, $rootDirectory, $testInfo) {
     return new self($id, $rootDirectory, $testInfo);
   }
 
