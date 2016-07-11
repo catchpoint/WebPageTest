@@ -116,6 +116,8 @@ function printContent($fileHandler, $testInfo, $testRunResults) {
     $urlPaths = $testStepResult->createTestPaths(substr($testInfo->getRootDirectory(), 1));
     $urlGenerator = $testStepResult->createUrlGenerator("", FRIENDLY_URLS);
 
+    echo "<h1 class='stepName'>" . $testStepResult->readableIdentifier() . "</h1>";
+
     if ($fileHandler->dirExists($localPaths->videoDir())) {
         echo "<a href=\"" . $urlGenerator->createVideo() . "\">Create Video</a> &#8226; ";
         echo "<a href=\"" . $urlGenerator->downloadVideoFrames() . "\">Download Video Frames</a>";
@@ -128,7 +130,7 @@ function printContent($fileHandler, $testInfo, $testRunResults) {
         $screenShotUrl = $urlPaths->screenShotFile();
     }
     if ($screenShotUrl) {
-        echo '<h1>Fully Loaded</h1>';
+        echo '<h2>Fully Loaded</h2>';
         echo '<a href="' . $screenShotUrl . '">';
         echo '<img class="center" alt="Screen Shot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="' . $screenShotUrl .'">';
         echo '</a>';
@@ -143,42 +145,42 @@ function printContent($fileHandler, $testInfo, $testRunResults) {
     }
 
     if ($fileHandler->fileExists($localPaths->additionalScreenShotFile("render"))) {
-        echo '<br><br><a name="start_render"><h1>Start Render';
+        echo '<br><br><a name="start_render"><h2>Start Render';
         if (isset($pageRunData) && isset($pageRunData['render']))
             echo ' (' . number_format($pageRunData['render'] / 1000.0, 3) . '  sec)';
-        echo '</h1></a>';
+        echo '</h2></a>';
         echo '<img class="center" alt="Start Render Screen Shot" src="' . $urlPaths->additionalScreenShotFile("render") . '">';
     }
     if ($fileHandler->fileExists($localPaths->additionalScreenShotFile("dom"))) {
-        echo '<br><br><a name="dom_element"><h1>DOM Element';
+        echo '<br><br><a name="dom_element"><h2>DOM Element';
         if (isset($pageRunData) && isset($pageRunData['domTime']))
             echo ' (' . number_format($pageRunData['domTime'] / 1000.0, 3) . '  sec)';
-        echo '</h1></a>';
+        echo '</h2></a>';
         echo '<img class="center" alt="DOM Element Screen Shot" src="' . $urlPaths->additionalScreenShotFile("dom") . '">';
     }
     if ($fileHandler->fileExists($localPaths->additionalScreenShotFile("doc"))) {
-        echo '<br><br><a name="doc_complete"><h1>Document Complete';
+        echo '<br><br><a name="doc_complete"><h2>Document Complete';
         if (isset($pageRunData) && isset($pageRunData['docTime']))
             echo ' (' . number_format($pageRunData['docTime'] / 1000.0, 3) . '  sec)';
-        echo '</h1></a>';
+        echo '</h2></a>';
         echo '<img class="center" alt="Document Complete Screen Shot" src="' . $urlPaths->additionalScreenShotFile("doc") . '">';
     }
     if ($fileHandler->fileExists($localPaths->aftDiagnosticImageFile())) {
-        echo '<br><br><a name="aft"><h1>AFT Details';
+        echo '<br><br><a name="aft"><h2>AFT Details';
         if (isset($pageRunData) && isset($pageRunData['aft']))
             echo ' (' . number_format($pageRunData['aft'] / 1000.0, 3) . '  sec)';
-        echo '</h1></a>';
+        echo '</h2></a>';
         echo 'White = Stabilized Early, Blue = Dynamic, Red = Late Static (failed AFT), Green = AFT<br>';
         echo '<img class="center" alt="AFT Diagnostic image" src="' . $urlPaths->aftDiagnosticImageFile() . '">';
     }
     if ($fileHandler->fileExists($localPaths->additionalScreenShotFile("responsive"))) {
-        echo '<br><br><h1 id="responsive">Responsive Site Check</h1>';
+        echo '<br><br><h2 id="responsive">Responsive Site Check</h2>';
         echo '<img class="center" alt="Responsive Site Check image" src="' . $urlPaths->additionalScreenShotFile("responsive") . '">';
     }
 
     // display all of the status messages
     if (count($messages)) {
-        echo "\n<br><br><a name=\"status_messages\"><h1>Status Messages</h1></a>\n";
+        echo "\n<br><br><a name=\"status_messages\"><h2>Status Messages</h2></a>\n";
         echo "<table id=\"messages\" class=\"translucent\"><tr><th>Time</th><th>Message</th></tr>\n";
         foreach ($messages as $message) {
             $time = $message['time'] / 1000.0;
@@ -192,7 +194,7 @@ function printContent($fileHandler, $testInfo, $testRunResults) {
     $row = 0;
     $console_log = $testStepResult->getConsoleLog();
     if (isset($console_log) && count($console_log)) {
-        echo "\n<br><br><a name=\"console-log\"><h1>Console Log</h1></a>\n";
+        echo "\n<br><br><a name=\"console-log\"><h2>Console Log</h2></a>\n";
         echo "<table id=\"console-log\" class=\"translucent\"><tr><th>Source</th><th>Level</th><th>Message</th><th>URL</th><th>Line</th></tr>\n";
         foreach ($console_log as &$log_entry) {
             $row++;
