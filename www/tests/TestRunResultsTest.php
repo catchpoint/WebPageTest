@@ -101,6 +101,30 @@ class TestRunResultsTest extends PHPUnit_Framework_TestCase {
     $this->assertFalse($runResults->isAdultSite(array("bar", "foo")));
   }
 
+  public function testAggregatePageSpeedScore() {
+    $stepNoScore = $this->getMock("TestStepResult", array(), array(), "", false);
+    $stepNoScore->method('getPageSpeedScore')->willReturn(null);
+    $stepScore55 = $this->getMock("TestStepResult", array(), array(), "", false);
+    $stepScore55->method('getPageSpeedScore')->willReturn("55");
+    $stepScore40 = $this->getMock("TestStepResult", array(), array(), "", false);
+    $stepScore40->method('getPageSpeedScore')->willReturn(40);
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array($stepNoScore, $stepScore55, $stepScore40));
+    $this->assertEquals(48, $runResults->averagePageSpeedScore());
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array($stepNoScore, $stepNoScore, $stepNoScore));
+    $this->assertEquals(null, $runResults->averagePageSpeedScore());
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array($stepNoScore, $stepScore55, $stepNoScore));
+    $this->assertEquals(55, $runResults->averagePageSpeedScore());
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array($stepScore40, $stepScore40, $stepScore40));
+    $this->assertEquals(40, $runResults->averagePageSpeedScore());
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array($stepScore40, $stepScore40, $stepScore55));
+    $this->assertEquals(45, $runResults->averagePageSpeedScore());
+  }
+
   private function getTestStepArray() {
     $step1 = array('result' => 0, 'TTFB' => 300, 'loadTime' => 6000);
     $step2 = array('result' => 0, 'TTFB' => 100, 'loadTime' => 2000);

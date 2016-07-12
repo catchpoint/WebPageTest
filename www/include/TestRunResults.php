@@ -146,6 +146,22 @@ class TestRunResults {
     return $foundMetric ? $aggregated : null;
   }
 
+  public function averagePageSpeedScore() {
+    $numScores = 0;
+    $scoreSum = 0.0;
+    foreach ($this->stepResults as $step) {
+      $score = $step->getPageSpeedScore();
+      if ($score) {
+        $numScores += 1;
+        $scoreSum += intval($score);
+      }
+    }
+    if ($numScores == 0) {
+      return null;
+    }
+    return ceil($scoreSum / $numScores);
+  }
+
   /**
    * @param string[] $keywords Keywords to use for the check
    * @return bool True if the checked site is an adult site, false otherwise

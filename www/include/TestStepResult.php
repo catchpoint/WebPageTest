@@ -174,6 +174,7 @@ class TestStepResult {
     if ($this->fileHandler->gzFileExists($this->localPaths->pageSpeedFile())) {
       return GetPageSpeedScore($this->localPaths->pageSpeedFile());
     }
+    return null;
   }
 
   public function getVisualProgress() {
