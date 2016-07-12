@@ -99,6 +99,7 @@ var BLACK_BOX_BROWSERS = {
       'package': 'com.opera.mini.native',
       'activity': 'com.opera.mini.android.Browser',
       'videoFlags': ['--findstart', 95, '--renderignore', 30, '--forceblank'],
+      'directories': ['cache', 'databases'],
       'startupDelay': 10000
     },
   };
@@ -356,8 +357,12 @@ BrowserAndroidChrome.prototype.clearProfile_ = function() {
       if (this.browserConfig_['clearProfile']) {
         // Nuke all of the application data
         this.adb_.shell(['pm', 'clear', this.browserPackage_]);
-      } else {
+      } else if (this.browserConfig_['directories']) {
         // Just clear out the cache directories
+        for (var i = 0; i < this.browserConfig_.directories.length; i++) {
+          this.adb_.su(['rm', '-r', '/data/data/' + this.browserPackage_ +
+                       '/' + this.browserConfig_.directories[i]]);
+        }
       }
     }
   } else {
