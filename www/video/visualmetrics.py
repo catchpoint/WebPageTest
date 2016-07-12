@@ -192,9 +192,10 @@ def remove_orange_frames(directory, orange_file):
         break
 
 
-def find_image_viewport(im):
+def find_image_viewport(file):
   try:
     from PIL import Image
+    im = Image.open(file)
     width, height = im.size
     x = int(math.floor(width / 2))
     y = int(math.floor(height / 2))
@@ -274,42 +275,43 @@ def find_video_viewport(video, directory, find_viewport, viewport_time):
       with Image.open(frame) as im:
         width, height = im.size
         logging.debug('{0} is {1:d}x{2:d}'.format(frame, width, height))
-        if options.notification:
-          pixels = im.load()
-          middle = int(math.floor(height / 2))
-          # Find the top edge
-          x = 0
-          y = 0
-          background = pixels[x, y]
-          top = None
-          while top is None and y < middle:
-            if not colors_are_similar(background, pixels[x, y]):
-              top = y
-            else:
-              y += 1
-          if top is None:
-            top = 0
-          logging.debug('Window top edge is {0:d}'.format(top))
+      if options.notification:
+        im = Image.open(frame)
+        pixels = im.load()
+        middle = int(math.floor(height / 2))
+        # Find the top edge
+        x = 0
+        y = 0
+        background = pixels[x, y]
+        top = None
+        while top is None and y < middle:
+          if not colors_are_similar(background, pixels[x, y]):
+            top = y
+          else:
+            y += 1
+        if top is None:
+          top = 0
+        logging.debug('Window top edge is {0:d}'.format(top))
 
-          # Find the bottom edge
-          y = height - 1
-          background = pixels[x, y]
-          bottom = None
-          while bottom is None and y > middle:
-            if not colors_are_similar(background, pixels[x, y]):
-              bottom = y
-            else:
-              y -= 1
-          if bottom is None:
-            bottom = height - 1
-          logging.debug('Window bottom edge is {0:d}'.format(bottom))
+        # Find the bottom edge
+        y = height - 1
+        background = pixels[x, y]
+        bottom = None
+        while bottom is None and y > middle:
+          if not colors_are_similar(background, pixels[x, y]):
+            bottom = y
+          else:
+            y -= 1
+        if bottom is None:
+          bottom = height - 1
+        logging.debug('Window bottom edge is {0:d}'.format(bottom))
 
-          viewport = {'x': 0, 'y': top, 'width': width, 'height': (bottom - top)}
+        viewport = {'x': 0, 'y': top, 'width': width, 'height': (bottom - top)}
 
-        elif find_viewport:
-          viewport = find_image_viewport(im)
-        else:
-          viewport = {'x': 0, 'y': 0, 'width': width, 'height': height}
+      elif find_viewport:
+        viewport = find_image_viewport(frame)
+      else:
+        viewport = {'x': 0, 'y': 0, 'width': width, 'height': height}
       os.remove(frame)
 
   except Exception as e:
@@ -415,10 +417,10 @@ def eliminate_duplicate_frames(directory):
       client_viewport = None
       with Image.open(blank) as im:
         width, height = im.size
-        if options.viewport:
-          client_viewport = find_image_viewport(im)
-          if client_viewport['width'] == width and client_viewport['height'] == height:
-            client_viewport = None
+      if options.viewport:
+        client_viewport = find_image_viewport(blank)
+        if client_viewport['width'] == width and client_viewport['height'] == height:
+          client_viewport = None
 
       # Figure out the region of the image that we care about
       top = 6
