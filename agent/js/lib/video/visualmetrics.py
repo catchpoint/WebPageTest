@@ -73,10 +73,13 @@ def video_to_frames(video, directory, force, orange_file, multiple, find_viewpor
             if orange_file is not None:
               remove_orange_frames(dir, orange_file)
             find_first_frame(dir)
+            find_render_start(dir)
             adjust_frame_times(dir)
             if timeline_file is not None and not multiple:
               synchronize_to_timeline(dir, timeline_file)
             eliminate_duplicate_frames(dir)
+            eliminate_similar_frames(dir)
+            blank_first_frame(dir)
             # See if we are limiting the number of frames to keep (before processing them to save processing time)
             if options.maxframes > 0:
               cap_frame_count(dir, options.maxframes)
@@ -108,7 +111,7 @@ def extract_frames(video, directory, full_resolution, viewport):
                os.path.join(directory, 'img-%d.png')]
     logging.debug(' '.join(command))
     lines = []
-    p = subprocess.Popen(command, stderr=subprocess.PIPE)
+    p = subprocess.Popen(command, stderr=subprocess.PIPE, shell=True)
     while p.poll() is None:
       lines.extend(iter(p.stderr.readline, ""))
 
@@ -266,7 +269,7 @@ def find_video_viewport(video, directory, find_viewport, viewport_time):
     if (viewport_time):
       command.extend(['-ss', viewport_time])
     command.extend(['-frames:v', '1', frame])
-    subprocess.check_output(command)
+    subprocess.check_output(command, shell=True)
     if os.path.isfile(frame):
       with Image.open(frame) as im:
         width, height = im.size
@@ -365,13 +368,40 @@ def find_first_frame(directory):
         match_height = int(math.ceil(height * options.findstart / 100.0))
         crop = '{0:d}x{1:d}+{2:d}+{3:d}'.format(width, match_height, 0, 0)
         for i in xrange(count):
-          different = not frames_match(files[i], files[i + 1], 20, crop)
+          different = not frames_match(files[i], files[i + 1], 5, 100, crop, None)
           logging.debug('Removing early frame {0} from the beginning'.format(files[i]))
           os.remove(files[i])
           if different:
             break
   except:
     logging.exception('Error finding first frame')
+
+
+def find_render_start(directory):
+  global options
+  try:
+    if options.renderignore > 0 and options.renderignore <= 100:
+      files = sorted(glob.glob(os.path.join(directory, 'video-*.png')))
+      count = len(files)
+      if count > 1:
+        from PIL import Image
+        first = files[0]
+        with Image.open(first) as im:
+          width, height = im.size
+        mask = {}
+        mask['width'] = int(math.floor(width * options.renderignore / 100))
+        mask['height'] = int(math.floor(height * options.renderignore / 100))
+        mask['x'] = int(math.floor(width / 2 - mask['width'] / 2))
+        mask['y'] = int(math.floor(height / 2 - mask['height'] / 2))
+        for i in xrange(1, count):
+          if frames_match(first, files[i], 5, 100, None, mask):
+            logging.debug('Removing pre-render frame {0}'.format(files[i]))
+            os.remove(files[i])
+          else:
+            break
+  except:
+    logging.exception('Error finding first frame')
+
 
 def eliminate_duplicate_frames(directory):
   global options
@@ -415,7 +445,7 @@ def eliminate_duplicate_frames(directory):
       # for up to a 10% per-pixel difference for noise in the white field.
       count = len(files)
       for i in xrange(1, count):
-        if frames_match(blank, files[i], 10, crop):
+        if frames_match(blank, files[i], 10, 0, crop, None):
           logging.debug('Removing duplicate frame {0} from the beginning'.format(files[i]))
           os.remove(files[i])
         else:
@@ -431,7 +461,7 @@ def eliminate_duplicate_frames(directory):
         baseline = files[0]
         previous_frame = baseline
         for i in xrange(1, count):
-          if frames_match(baseline, files[i], 10, crop):
+          if frames_match(baseline, files[i], 10, 0, crop, None):
             if previous_frame is baseline:
               duplicates.append(previous_frame)
             else:
@@ -446,6 +476,46 @@ def eliminate_duplicate_frames(directory):
 
   except:
     logging.exception('Error processing frames for duplicates')
+
+
+def eliminate_similar_frames(directory):
+  global client_viewport
+  global options
+  try:
+    # only do this when decimate couldn't be used to eliminate similar frames
+    if options.notification:
+      files = sorted(glob.glob(os.path.join(directory, 'ms_*.png')))
+      count = len(files)
+      if count > 3:
+        crop = None
+        if client_viewport is not None:
+          crop = '{0:d}x{1:d}+{2:d}+{3:d}'.format(client_viewport['width'], client_viewport['height'],
+                                                  client_viewport['x'], client_viewport['y'])
+        baseline = files[1]
+        for i in xrange(2, count - 1):
+          if frames_match(baseline, files[i], 1, 0, crop, None):
+            logging.debug('Removing similar frame {0}'.format(files[i]))
+            os.remove(files[i])
+          else:
+            baseline = files[i]
+  except:
+    logging.exception('Error removing similar frames')
+
+
+def blank_first_frame(directory):
+  global options
+  try:
+    if options.forceblank:
+      files = sorted(glob.glob(os.path.join(directory, 'ms_*.png')))
+      count = len(files)
+      if count > 1:
+        from PIL import Image
+        with Image.open(files[0]) as im:
+          width, height = im.size
+        command = 'convert -size {0}x{1} xc:white PNG24:"{2}"'.format(width, height, files[0])
+        subprocess.call(command, shell=True)
+  except:
+    logging.exception('Error blanking first frame')
 
 
 def crop_viewport(directory):
@@ -468,7 +538,7 @@ def crop_viewport(directory):
 def get_decimate_filter():
   decimate = None
   try:
-    filters = subprocess.check_output(['ffmpeg', '-filters'], stderr=subprocess.STDOUT)
+    filters = subprocess.check_output(['ffmpeg', '-filters'], stderr=subprocess.STDOUT, shell=True)
     lines = filters.split("\n")
     match = re.compile('(?P<filter>[\w]*decimate).*V->V.*Remove near-duplicate frames')
     for line in lines:
@@ -518,7 +588,7 @@ def colors_are_similar(a, b):
   return similar
 
 
-def frames_match(image1, image2, fuzz_percent, crop_region):
+def frames_match(image1, image2, fuzz_percent, max_differences, crop_region, mask_rect):
   match = False
   fuzz = ''
   if fuzz_percent > 0:
@@ -526,12 +596,20 @@ def frames_match(image1, image2, fuzz_percent, crop_region):
   crop = ''
   if crop_region is not None:
     crop = '-crop {0} '.format(crop_region)
-  command = 'convert "{0}" "{1}" {2}miff:- | compare -metric AE - {3}null:'.format(image1, image2, crop, fuzz)
+  if mask_rect is None:
+    img1 = '"{0}"'.format(image1)
+    img2 = '"{0}"'.format(image2)
+  else:
+    img1 = '( "{0}" -size {1}x{2} xc:white -geometry +{3}+{4} -compose over -composite )'.format(
+      image1, mask_rect['width'], mask_rect['height'], mask_rect['x'], mask_rect['y'])
+    img2 = '( "{0}" -size {1}x{2} xc:white -geometry +{3}+{4} -compose over -composite )'.format(
+      image2, mask_rect['width'], mask_rect['height'], mask_rect['x'], mask_rect['y'])
+  command = 'convert {0} {1} {2}miff:- | compare -metric AE - {3}null:'.format(img1, img2, crop, fuzz)
   compare = subprocess.Popen(command, stderr=subprocess.PIPE, shell=True)
   out, err = compare.communicate()
   if re.match('^[0-9]+$', err):
     different_pixels = int(err)
-    if different_pixels == 0:
+    if different_pixels <= max_differences:
       match = True
 
   return match
@@ -708,20 +786,20 @@ def calculate_image_histogram(file):
   try:
     from PIL import Image
 
-    with Image.open(file) as im:
-      width, height = im.size
-      pixels = im.load()
-      histogram = {'r': [0 for i in xrange(256)],
-                   'g': [0 for i in xrange(256)],
-                   'b': [0 for i in xrange(256)]}
-      for y in xrange(height):
-        for x in xrange(width):
-          pixel = pixels[x, y]
-          # Don't include White pixels (with a tiny bit of slop for compression artifacts)
-          if pixel[0] < 250 or pixel[1] < 250 or pixel[2] < 250:
-            histogram['r'][pixel[0]] += 1
-            histogram['g'][pixel[1]] += 1
-            histogram['b'][pixel[2]] += 1
+    im = Image.open(file)
+    width, height = im.size
+    pixels = im.load()
+    histogram = {'r': [0 for i in xrange(256)],
+                 'g': [0 for i in xrange(256)],
+                 'b': [0 for i in xrange(256)]}
+    for y in xrange(height):
+      for x in xrange(width):
+        pixel = pixels[x, y]
+        # Don't include White pixels (with a tiny bit of slop for compression artifacts)
+        if pixel[0] < 250 or pixel[1] < 250 or pixel[2] < 250:
+          histogram['r'][pixel[0]] += 1
+          histogram['g'][pixel[1]] += 1
+          histogram['b'][pixel[2]] += 1
   except:
     histogram = None
     logging.exception('Error calculating histogram for ' + file)
@@ -1073,6 +1151,10 @@ def main():
                                                                "visual metrics.")
   parser.add_argument('--findstart', type=int, default=0, help="Find the start of activity by looking at the top X% "
                                                                "of the video (like a browser address bar).")
+  parser.add_argument('--renderignore', type=int, default=0, help="Ignore the center X% of the frame when looking for "
+                                                                  "the first rendered frame (useful for Opera mini).")
+  parser.add_argument('--forceblank', action='store_true', default=False,
+                      help="Force the first frame to be blank white.")
   parser.add_argument('--trimend', type=int, default=0, help="Time to trim from the end of the video "
                                                              "(in milliseconds).")
   parser.add_argument('--maxframes', type=int, default=0, help="Maximum number of video frames before reducing by "
