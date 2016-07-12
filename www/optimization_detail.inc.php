@@ -155,18 +155,23 @@ function gradeTTFB(&$pageData, &$test, $id, $run, $cached, &$target)
 */
 function getTargetTTFB(&$pageData, &$test, $id, $run, $cached)
 {
-    $target = NULL;
-
+    $testPath = './' . GetTestPath($id);
+    $localPaths = new TestPaths($testPath, $id, $run, $cached, 1);
     $rtt = 0;
     if( isset($test['testinfo']['latency']) )
         $rtt = (int)$test['testinfo']['latency'];
 
+    return getTargetTTFBForStep($localPaths, $rtt);
+}
+
+function getTargetTTFBForStep($localPaths, $rtt) {
+    $target = NULL;
+
     // load the object data (unavoidable, we need the socket connect time to the first host)
     require_once('object_detail.inc');
-    $testPath = './' . GetTestPath($id);
+
     $secure = false;
-    $haveLocations;
-    $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
+    $requests = getRequestsForStep($localPaths, null, $secure, $haveLocations, false);
     if( count($requests) )
     {
         // figure out what the RTT is to the server (take the connect time from the first request unless it is over 3 seconds)
