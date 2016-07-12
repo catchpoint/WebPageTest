@@ -146,6 +146,9 @@ class TestRunResults {
     return $foundMetric ? $aggregated : null;
   }
 
+  /**
+   * @return float|null The average page speed score of all steps (if set)
+   */
   public function averagePageSpeedScore() {
     $numScores = 0;
     $scoreSum = 0.0;
@@ -160,6 +163,19 @@ class TestRunResults {
       return null;
     }
     return ceil($scoreSum / $numScores);
+  }
+
+  /**
+   * @return null|string The first valid pageSpeedVersion of a step, or null
+   */
+  public function getPageSpeedVersion() {
+    foreach ($this->stepResults as $step) {
+      $version = $step->getMetric("pageSpeedVersion");
+      if ($version) {
+        return $version;
+      }
+    }
+    return null;
   }
 
   /**

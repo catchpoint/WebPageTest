@@ -125,6 +125,16 @@ class TestRunResultsTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals(45, $runResults->averagePageSpeedScore());
   }
 
+  public function testGetPageSpeedVersion() {
+    $steps = array(
+      TestStepResult::fromPageData($this->testInfo, array(), 2, false, 1),
+      TestStepResult::fromPageData($this->testInfo, array("pageSpeedVersion" => "52.3"), 2, false, 2),
+      TestStepResult::fromPageData($this->testInfo, array("pageSpeedVersion" => "2222"), 2, false, 3),
+    );
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, $steps);
+    $this->assertEquals("52.3", $runResults->getPageSpeedVersion());
+  }
+
   private function getTestStepArray() {
     $step1 = array('result' => 0, 'TTFB' => 300, 'loadTime' => 6000);
     $step2 = array('result' => 0, 'TTFB' => 100, 'loadTime' => 2000);
