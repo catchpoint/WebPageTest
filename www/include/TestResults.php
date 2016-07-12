@@ -190,6 +190,25 @@ class TestResults {
     return $runNumbers[$medianIndex];
   }
 
+  /**
+   * @param string[] $keywords Keywords to use for the check
+   * @return bool True if the checked site is an adult site, false otherwise
+   */
+  public function isAdultSite($keywords) {
+    if ($this->testInfo->isAdultSite($keywords)) {
+      return true;
+    }
+    for ($i = 0; $i < $this->numRuns; $i++) {
+      if (isset($this->runResults[$i][0]) && $this->runResults[$i][0]->isAdultSite($keywords)) {
+        return true;
+      }
+      if (isset($this->runResults[$i][1]) && $this->runResults[$i][0]->isAdultSite($keywords)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private function calculateAverages($cached) {
     $avgResults = array();
     $loadTimes = array();

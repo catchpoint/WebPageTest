@@ -54,6 +54,21 @@ class TestResultsTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals(81, $results->getStandardDeviation("TTFB", true));
   }
 
+  public function testIsAdultSite() {
+    $pageData = array(
+      1 => array(array("title" => "normalPage")),
+      2 => array(array("title" => "aduLtpage"))
+    );
+    $results = TestResults::fromPageData(TestInfo::fromValues("testId", "/test/path" , array()), $pageData);
+    $this->assertTrue($results->isAdultSite(array("foo", "adult")));
+    $this->assertFalse($results->isAdultSite(array("foo", "bar")));
+
+    $testInfo = TestInfo::fromValues("testId", "/test/path", array("testinfo" => array("url" => "adultSite")));
+    $results = TestResults::fromPageData($testInfo, array(1 => $pageData[1]));
+    $this->assertTrue($results->isAdultSite(array("foo", "adult")));
+    $this->assertFalse($results->isAdultSite(array("foo", "bar")));
+  }
+
   public function testResultsFromPageData() {
     $run1 = array('result' => 0, 'TTFB' => 300, 'loadTime' => 6000);
     $run2 = array('result' => 404, 'TTFB' => 200, 'loadTime' => 3000);
