@@ -128,6 +128,13 @@ function gradeTTFB(&$pageData, &$test, $id, $run, $cached, &$target)
     return gradeTTFBForStep($ttfb, $latency, $localPaths, $target);
 }
 
+/**
+ * @param int $ttfb The TTFB of this step
+ * @param int|null $latency The latency or null if it's unknown
+ * @param TestPaths $localPaths Paths corresponding to this step
+ * @param int $target Gets set to the target TTFB
+ * @return int|null The TTFB score or null, if it can't get determined
+ */
 function gradeTTFBForStep($ttfb, $latency, $localPaths, &$target) {
     $score = null;
     if( $ttfb )
@@ -154,24 +161,11 @@ function gradeTTFBForStep($ttfb, $latency, $localPaths, &$target) {
 }
 
 /**
-* Determine the target TTFB for the given test
-*
-* @param mixed $pageData
-* @param mixed $test
-* @param mixed $id
-* @param mixed $run
-*/
-function getTargetTTFB(&$pageData, &$test, $id, $run, $cached)
-{
-    $testPath = './' . GetTestPath($id);
-    $localPaths = new TestPaths($testPath, $id, $run, $cached, 1);
-    $rtt = 0;
-    if( isset($test['testinfo']['latency']) )
-        $rtt = (int)$test['testinfo']['latency'];
-
-    return getTargetTTFBForStep($localPaths, $rtt);
-}
-
+ * Determine the target TTFB for the given test step
+ * @param TestPaths $localPaths Paths corresponding to this step
+ * @param int $rtt The latency if set, or null
+ * @return int|null The target TTFB or null if it can't get determined
+ */
 function getTargetTTFBForStep($localPaths, $rtt) {
     $target = NULL;
 
