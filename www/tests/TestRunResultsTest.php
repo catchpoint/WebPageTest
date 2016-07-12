@@ -79,6 +79,28 @@ class TestRunResultsTest extends PHPUnit_Framework_TestCase {
     $this->assertFalse($this->getTestRunResultsWithInvalid()->isSuccessful());
   }
 
+  public function testIsAdultSite() {
+    $stepAdult = TestStepResult::fromPageData($this->testInfo, array("title" => "myadUltPage"), 2, false, 1);
+    $stepNonAdult = TestStepResult::fromPageData($this->testInfo, array("title" => "normalSite"), 2, false, 2);
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array($stepAdult, $stepNonAdult));
+    $this->assertTrue($runResults->isAdultSite(array("adult", "foo")));
+    $this->assertFalse($runResults->isAdultSite(array("bar", "foo")));
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array($stepNonAdult, $stepNonAdult));
+    $this->assertFalse($runResults->isAdultSite(array("adult", "foo")));
+    $this->assertFalse($runResults->isAdultSite(array("bar", "foo")));
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array($stepNonAdult, $stepNonAdult));
+    $this->assertFalse($runResults->isAdultSite(array("adult", "foo")));
+    $this->assertFalse($runResults->isAdultSite(array("bar", "foo")));
+
+    $testInfo = TestInfo::fromValues("testId", "/test/path", array("testinfo" => array("url" => "adultSite")));
+    $runResults = TestRunResults::fromStepResults($testInfo, 2, false, array($stepNonAdult, $stepNonAdult));
+    $this->assertTrue($runResults->isAdultSite(array("adult", "foo")));
+    $this->assertFalse($runResults->isAdultSite(array("bar", "foo")));
+  }
+
   private function getTestStepArray() {
     $step1 = array('result' => 0, 'TTFB' => 300, 'loadTime' => 6000);
     $step2 = array('result' => 0, 'TTFB' => 100, 'loadTime' => 2000);

@@ -4,6 +4,9 @@ require_once __DIR__ . '/TestStepResult.php';
 
 class TestRunResults {
 
+  /**
+   * @var TestInfo
+   */
   private $testInfo;
   private $runNumber;
   private $isCached;
@@ -141,5 +144,21 @@ class TestRunResults {
       $foundMetric = true;
     }
     return $foundMetric ? $aggregated : null;
+  }
+
+  /**
+   * @param string[] $keywords Keywords to use for the check
+   * @return bool True if the checked site is an adult site, false otherwise
+   */
+  public function isAdultSite($keywords) {
+    if ($this->testInfo->isAdultSite($keywords)) {
+      return true;
+    }
+    foreach ($this->stepResults as $step) {
+      if ($step->isAdultSite($keywords)) {
+        return true;
+      }
+    }
+    return false;
   }
 }
