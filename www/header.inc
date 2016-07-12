@@ -1,46 +1,23 @@
 <?php
-require_once('page_data.inc');
-if( !isset($pageData) && isset($id) && isset($testPath) ) {
+require_once __DIR__ . '/page_data.inc';
+require_once __DIR__ . '/include/TestInfo.php';
+require_once __DIR__ . '/include/TestResults.php';
+
+if(isset($testPath) ) {
   $options = null;
   if (array_key_exists('end', $_REQUEST))
     $options = array('end' => $_REQUEST['end']);
-  $pageData = loadAllPageData($testPath, $options);
+  $testInfo = TestInfo::fromFiles($testPath);
+  $testResults = TestResults::fromFiles($testInfo, null, $options);
 }
-if (isset($pageData) && is_array($pageData)) {
+if (isset($testResults)) {
   $adultKeywords = array();
   if (is_file('./settings/adult.txt'))
     $adultKeywords = file('./settings/adult.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-  $isAdult = false;
-  if (isset($url)) {
-    foreach ($adultKeywords as $keyword) {
-      if (stripos($url, $keyword) !== false) {
-        $isAdult = true;
-        define('ADULT_SITE', true);
-        $adult_site = true;
-        break;
-      }
-    }
-  }
-  if (!$isAdult) {
-    foreach($pageData as &$run_data) {
-      foreach($run_data as &$test_data) {
-        if (array_key_exists('URL', $test_data)) {
-          foreach ($adultKeywords as $keyword) {
-            if ((stripos($test_data['URL'], $keyword) !== false) ||
-                (array_key_exists('title', $test_data) &&
-                stripos($test_data['title'], $keyword) !== false)) {
-              $isAdult = true;
-              break;
-            }
-          }
-        }
-        if ($isAdult || (array_key_exists('adult_site', $test_data) && $test_data['adult_site'])) {
-          define('ADULT_SITE', true);
-          $adult_site = true;
-          break 2;
-        }
-      }
-    }
+  $isAdult = $testResults->isAdultSite($adultKeywords);
+  if ($isAdult) {
+    define('ADULT_SITE', true);
+    $adult_site = true;
   }
 }
 
