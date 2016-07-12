@@ -121,23 +121,31 @@ function getOptimizationGrades(&$pageData, &$test, $id, $run)
 */
 function gradeTTFB(&$pageData, &$test, $id, $run, $cached, &$target)
 {
-    $score = null;
-
     $ttfb = (int)$pageData['TTFB'];
+    $latency = isset($test['testinfo']['latency']) ? $test['testinfo']['latency'] : null;
+    $testPath = './' . GetTestPath($id);
+    $localPaths = new TestPaths($testPath, $id, $run, $cached, 1);
+    return gradeTTFBForStep($ttfb, $latency, $localPaths, $target);
+}
+
+function gradeTTFBForStep($ttfb, $latency, $localPaths, &$target) {
+    $score = null;
     if( $ttfb )
     {
         // see if we can fast-path fail this test without loading the object data
-        if( isset($test['testinfo']['latency']) )
+        if( isset($latency) )
         {
-            $rtt = (int)$test['testinfo']['latency'] + 100;
+            $rtt = (int)$latency + 100;
             $worstCase = $rtt * 7 + 1000;  // 7 round trips including dns, socket, request and ssl + 1 second back-end
             if( $ttfb > $worstCase )
                 $score = 0;
+        } else {
+            $latency = 0;
         }
 
         if( !isset($score) )
         {
-            $target = getTargetTTFB($pageData, $test, $id, $run, $cached);
+            $target = getTargetTTFBForStep($localPaths, $latency);
             $score = (int)min(max(100 - (($ttfb - $target) / 10), 0), 100);
         }
     }
