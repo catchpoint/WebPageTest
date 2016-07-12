@@ -54,13 +54,14 @@ class TestStepResult {
    * @param bool $isCached False for first view, true for repeat view
    * @param int $stepNumber The step number, starting from 1
    * @param FileHandler $fileHandler The FileHandler to use
+   * @param array $options Options for the loadPageStepData
    * @return TestStepResult|null The created instance on success, null otherwise
    */
-  public static function fromFiles($testInfo, $runNumber, $isCached, $stepNumber, $fileHandler = null) {
+  public static function fromFiles($testInfo, $runNumber, $isCached, $stepNumber, $fileHandler = null, $options = null) {
     // no support to use FileHandler so far
     $localPaths = new TestPaths($testInfo->getRootDirectory(), $runNumber, $isCached, $stepNumber);
     $runCompleted = $testInfo->isRunComplete($runNumber);
-    $pageData = loadPageStepData($localPaths, $runCompleted, null, $testInfo->getInfoArray());
+    $pageData = loadPageStepData($localPaths, $runCompleted, $options, $testInfo->getInfoArray());
     return new self($testInfo, $pageData, $runNumber, $isCached, $stepNumber);
   }
 

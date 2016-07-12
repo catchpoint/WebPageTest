@@ -39,13 +39,14 @@ class TestRunResults {
    * @param int $runNumber The run number
    * @param bool $isCached False for first view, true for repeat view (cached)
    * @param FileHandler $fileHandler The FileHandler to use
+   * @param array $options Options for loading the TestStepData
    * @return TestRunResults|null The initialized object or null if it failed
    */
-  public static function fromFiles($testInfo, $runNumber, $isCached, $fileHandler = null) {
+  public static function fromFiles($testInfo, $runNumber, $isCached, $fileHandler = null, $options = null) {
     $stepResults = array();
     $isValid = false;
     for ($stepNumber = 1; $stepNumber <= $testInfo->stepsInRun($runNumber); $stepNumber++) {
-      $stepResult = TestStepResult::fromFiles($testInfo, $runNumber, $isCached, $stepNumber, $fileHandler);
+      $stepResult = TestStepResult::fromFiles($testInfo, $runNumber, $isCached, $stepNumber, $fileHandler, $options);
       $stepResults[] = $stepResult;
       $isValid = $isValid || ($stepResult !== null);
     }

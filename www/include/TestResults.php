@@ -39,9 +39,10 @@ class TestResults {
    * Constructs a TestResults object by loading the information from result files
    * @param TestInfo $testInfo Test information used to load the data
    * @param FileHandler $fileHandler FileHandler to use
+   * @param array $options Options to load the TestRunResults
    * @return TestResults The new instance
    */
-  public static function fromFiles($testInfo, $fileHandler = null) {
+  public static function fromFiles($testInfo, $fileHandler = null, $options = null) {
     $runResults = array();
     $numRuns = $testInfo->getRuns();
     $firstViewOnly = $testInfo->isFirstViewOnly();
@@ -50,8 +51,8 @@ class TestResults {
       if (!$testComplete && !$testInfo->isRunComplete($runNumber)) {
         continue;
       }
-      $firstView = TestRunResults::fromFiles($testInfo, $runNumber, false, $fileHandler);
-      $repeatView = $firstViewOnly ? null : TestRunResults::fromFiles($testInfo, $runNumber, true, $fileHandler);
+      $firstView = TestRunResults::fromFiles($testInfo, $runNumber, false, $fileHandler, $options);
+      $repeatView = $firstViewOnly ? null : TestRunResults::fromFiles($testInfo, $runNumber, true, $fileHandler, $options);
       $runResults[] = array($firstView, $repeatView);
     }
 
