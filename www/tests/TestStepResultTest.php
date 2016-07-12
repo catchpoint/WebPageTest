@@ -52,4 +52,31 @@ class TestStepResultTest extends PHPUnit_Framework_TestCase {
     $step = TestStepResult::fromPageData($testInfo, array("eventName" => "Step 1", "URL" => ""), 1, 1, 1);
     $this->assertEquals("Step 1", $step->readableIdentifier(""));
   }
+
+  public function testIsAdultSite() {
+    // testInfo matches
+    $testInfo = TestInfo::fromValues("testId", "/root/path", array("testinfo" => array("url" => "http://adultsite.com")));
+    $step = TestStepResult::fromPageData($testInfo, array("title" => "testEvent", "URL" => "testUrl"), 1, 1, 1);
+    $this->assertTrue($step->isAdultSite(array("adult", "foo")));
+
+    // not an adult site
+    $testInfo = TestInfo::fromValues("testId", "/root/path", array());
+    $step = TestStepResult::fromPageData($testInfo, array("title" => "testEvent", "URL" => "testUrl"), 1, 1, 1);
+    $this->assertFalse($step->isAdultSite(array("adult", "foo")));
+
+    // title matches, adult_site = 0 is ignored
+    $step = TestStepResult::fromPageData($testInfo, array("title" => "the AdulT site", "URL" => "testUrl", "adult_site" => 0), 1, 1, 1);
+    $this->assertTrue($step->isAdultSite(array("adult", "foo")));
+    $this->assertFalse($step->isAdultSite(array("bar", "foo")));
+
+    // URL matches
+    $step = TestStepResult::fromPageData($testInfo, array("title" => "testEvent", "URL" => "http://mysite.com/adults/"), 1, 1, 1);
+    $this->assertTrue($step->isAdultSite(array("adult", "foo")));
+    $this->assertFalse($step->isAdultSite(array("bar", "foo")));
+
+    // explicitly set
+    $step = TestStepResult::fromPageData($testInfo, array("adult_site" => 1), 1, 1, 1);
+    $this->assertTrue($step->isAdultSite(array("adult", "foo")));
+    $this->assertTrue($step->isAdultSite(array("bar", "foo")));
+  }
 }
