@@ -1100,7 +1100,7 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
     if (this.browser_.isBlackBox) {
       this.browser_.navigateTo(this.task_.url);
       this.app_.timeout(BLACKBOX_DETECT_ACTIVITY_TIME, 'wait');
-      this.onCheckActivity_();
+      this.scheduleCheckActivity_();
     } else {
       this.pageCommand_('navigate', {url: this.task_.url});
     }
@@ -1108,18 +1108,20 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
   }.bind(this));
 };
 
-WebDriverServer.prototype.onCheckActivity_ = function() {
-  return this.browser_.scheduleActivityDetected().then(function(activityDetected) {
-    if (activityDetected) {
-      this.app_.timeout(BLACKBOX_DETECT_ACTIVITY_TIME, 'wait');
-      // This needs to be done as a recursive call with delays instead of a
-      // timer because the flow control in webdriver promises is buggy in the
-      // bundled version.
-      return this.onCheckActivity_();
-    } else {
-      this.onPageLoad_();
-    }
-  }.bind(this));
+WebDriverServer.prototype.scheduleCheckActivity_ = function() {
+  if (this.pageLoadDonePromise_ && this.pageLoadDonePromise_.isPending()) {
+    this.browser_.scheduleActivityDetected().then(function(activityDetected) {
+      if (activityDetected) {
+        this.app_.timeout(BLACKBOX_DETECT_ACTIVITY_TIME, 'wait');
+        // This needs to be done as a recursive call with delays instead of a
+        // timer because the flow control in webdriver promises is buggy in the
+        // bundled version.
+        this.scheduleCheckActivity_();
+      } else {
+        this.onPageLoad_();
+      }
+    }.bind(this));
+  }
 };
 
 /**
