@@ -77,6 +77,10 @@ def video_to_frames(video, directory, force, orange_file, multiple, find_viewpor
             if timeline_file is not None and not multiple:
               synchronize_to_timeline(dir, timeline_file)
             eliminate_duplicate_frames(dir)
+            # See if we are limiting the number of frames to keep (before processing them to save processing time)
+            if options.maxframes > 0:
+              cap_frame_count(dir, options.maxframes)
+            crop_viewport(dir)
             gc.collect()
         else:
           logging.critical("Error extracting the video frames from " + video)
@@ -360,7 +364,7 @@ def find_first_frame(directory):
           width, height = im.size
         match_height = int(math.ceil(height * options.findstart / 100.0))
         crop = '{0:d}x{1:d}+{2:d}+{3:d}'.format(width, match_height, 0, 0)
-        for i in range(0, count):
+        for i in xrange(count):
           different = not frames_match(files[i], files[i + 1], 20, crop)
           logging.debug('Removing early frame {0} from the beginning'.format(files[i]))
           os.remove(files[i])
@@ -383,6 +387,8 @@ def eliminate_duplicate_frames(directory):
         width, height = im.size
         if options.viewport:
           client_viewport = find_image_viewport(im)
+          if client_viewport['width'] == width and client_viewport['height'] == height:
+            client_viewport = None
 
       # Figure out the region of the image that we care about
       top = 6
@@ -408,7 +414,7 @@ def eliminate_duplicate_frames(directory):
       # Do a pass looking for the first non-blank frame with an allowance
       # for up to a 10% per-pixel difference for noise in the white field.
       count = len(files)
-      for i in range(1, count):
+      for i in xrange(1, count):
         if frames_match(blank, files[i], 10, crop):
           logging.debug('Removing duplicate frame {0} from the beginning'.format(files[i]))
           os.remove(files[i])
@@ -424,7 +430,7 @@ def eliminate_duplicate_frames(directory):
         files.reverse()
         baseline = files[0]
         previous_frame = baseline
-        for i in range(1, count):
+        for i in xrange(1, count):
           if frames_match(baseline, files[i], 10, crop):
             if previous_frame is baseline:
               duplicates.append(previous_frame)
@@ -440,6 +446,23 @@ def eliminate_duplicate_frames(directory):
 
   except:
     logging.exception('Error processing frames for duplicates')
+
+
+def crop_viewport(directory):
+  global client_viewport
+  if client_viewport is not None:
+    try:
+      files = sorted(glob.glob(os.path.join(directory, 'ms_*.png')))
+      count = len(files)
+      if count > 0:
+        crop = '{0:d}x{1:d}+{2:d}+{3:d}'.format(client_viewport['width'], client_viewport['height'],
+                                                client_viewport['x'], client_viewport['y'])
+        for i in xrange(count):
+          command = 'convert "{0}" -crop {1} "{0}'.format(files[i], crop)
+          subprocess.call(command, shell=True)
+
+    except:
+      logging.exception('Error cropping to viewport')
 
 
 def get_decimate_filter():
@@ -488,7 +511,7 @@ def is_orange_frame(file, orange_file):
 
 def colors_are_similar(a, b):
   similar = True
-  for x in range(0, 3):
+  for x in xrange(3):
     if abs(a[x] - b[x]) > 25:
       similar = False
 
@@ -681,32 +704,24 @@ def calculate_histograms(directory, histograms_file, force):
 
 
 def calculate_image_histogram(file):
-  global client_viewport
   logging.debug('Calculating histogram for ' + file)
   try:
     from PIL import Image
 
-    im = Image.open(file)
-    width, height = im.size
-    left = 0
-    top = 0
-    if client_viewport is not None:
-      left = client_viewport['x']
-      top = client_viewport['y']
-      width = client_viewport['width']
-      height = client_viewport['height']
-    pixels = im.load()
-    histogram = {'r': [0 for i in range(256)],
-                 'g': [0 for i in range(256)],
-                 'b': [0 for i in range(256)]}
-    for y in range(top, top + height):
-      for x in range(left, left + width):
-        pixel = pixels[x, y]
-        # Don't include White pixels (with a tiny bit of slop for compression artifacts)
-        if pixel[0] < 250 or pixel[1] < 250 or pixel[2] < 250:
-          histogram['r'][pixel[0]] += 1
-          histogram['g'][pixel[1]] += 1
-          histogram['b'][pixel[2]] += 1
+    with Image.open(file) as im:
+      width, height = im.size
+      pixels = im.load()
+      histogram = {'r': [0 for i in xrange(256)],
+                   'g': [0 for i in xrange(256)],
+                   'b': [0 for i in xrange(256)]}
+      for y in xrange(height):
+        for x in xrange(width):
+          pixel = pixels[x, y]
+          # Don't include White pixels (with a tiny bit of slop for compression artifacts)
+          if pixel[0] < 250 or pixel[1] < 250 or pixel[2] < 250:
+            histogram['r'][pixel[0]] += 1
+            histogram['g'][pixel[1]] += 1
+            histogram['b'][pixel[2]] += 1
   except:
     histogram = None
     logging.exception('Error calculating histogram for ' + file)
@@ -880,16 +895,16 @@ def calculate_frame_progress(histogram, start, final):
     channel_total = 0
     channel_matched = 0
     buckets = 256
-    available = [0 for i in range(buckets)]
-    for i in range(buckets):
+    available = [0 for i in xrange(buckets)]
+    for i in xrange(buckets):
       available[i] = abs(histogram[channel][i] - start[channel][i])
-    for i in range(buckets):
+    for i in xrange(buckets):
       target = abs(final[channel][i] - start[channel][i])
       if (target):
         channel_total += target
         low = max(0, i - slop)
         high = min(buckets, i + slop)
-        for j in range(low, high):
+        for j in xrange(low, high):
           this_match = min(target, available[j])
           available[j] -= this_match
           channel_matched += this_match
@@ -1116,10 +1131,6 @@ def main():
         video_to_frames(options.video, directory, options.force, orange_file, options.multiple,
                         options.viewport, options.viewporttime, options.full, options.timeline, options.trimend)
       if not options.multiple:
-        # See if we are limiting the number of frames to keep (before processing them to save processing time)
-        if options.dir is not None and options.maxframes > 0:
-          cap_frame_count(directory, options.maxframes)
-
         # Calculate the histograms and visual metrics
         calculate_histograms(directory, histogram_file, options.force)
         metrics = calculate_visual_metrics(histogram_file, options.start, options.end, options.perceptual,
