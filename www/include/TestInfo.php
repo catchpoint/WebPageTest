@@ -135,4 +135,21 @@ class TestInfo {
       $tester = $this->rawData['testinfo']['test_runs'][$run]['tester'];
     return $tester;
   }
+
+  /**
+   * @param string[] $keywords Keywords to check the info for
+   * @return True if the TestInfo matches the keywords, false otherwise
+   */
+  public function isAdultSite($keywords) {
+    $url = $this->getUrl();
+    if (!$url) {
+      return false;
+    }
+    foreach ($keywords as $keyword) {
+      if (stripos($url, $keyword) !== false) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

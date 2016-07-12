@@ -58,4 +58,13 @@ class TestInfoTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals("Firefox, Internet Explorer and Chrome - <b>Chrome</b> - <b>Cable</b>", $testInfo->getTestLocation());
     $this->assertEquals("ITERAHH-VBOX-01-192.168.188.112", $testInfo->getTester(1));
   }
+
+  public function testIsAdultSite() {
+    $testInfo = TestInfo::fromValues("test", "/test/root", array("testinfo" => array("url" => "http://adultsite.com/test")));
+    $this->assertTrue($testInfo->isAdultSite(array("adult", "foo")));
+    $this->assertFalse($testInfo->isAdultSite(array("bar", "foo")));
+    $testInfo = TestInfo::fromValues("test", "/test/root", array("testinfo" => array("url" => "http://anysite.com/test")));
+    $this->assertFalse($testInfo->isAdultSite(array("adult", "foo")));
+    $this->assertFalse($testInfo->isAdultSite(array("bar", "foo")));
+  }
 }
