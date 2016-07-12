@@ -1039,7 +1039,7 @@ function DevToolsGetCPUSlicesForStep($localPaths) {
   $slices = null;
   $slices_file = $localPaths->devtoolsCPUTimelineFile() . ".gz";
   $trace_file = $localPaths->devtoolsTraceFile() . ".gz";
-  if (!is_file($slices_file) && is_file($trace_file) && is_file(__DIR__ . '/lib/trace/trace-parser.py')) {
+  if (!GetSetting('disable_timeline_processing') && !is_file($slices_file) && is_file($trace_file) && is_file(__DIR__ . '/lib/trace/trace-parser.py')) {
     $script = realpath(__DIR__ . '/lib/trace/trace-parser.py');
     touch($slices_file);
     if (is_file($slices_file)) {
