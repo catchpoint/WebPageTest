@@ -1425,10 +1425,9 @@ WebDriverServer.prototype.scheduleProcessVideo_ = function() {
           videoDir, '--force', '--quality', imgQ, '--viewport',
           '--maxframes', 50, '--histogram', this.histogramFile_];
       if (this.browser_.isBlackBox) {
-        // TODO (pmeenan): add video processing options for UC/Opera
-        options.push('--notification');
-        options.push('--findstart');
-        options.push(25);
+        if (this.browser_.videoFlags && this.browser_.videoFlags.length)
+          for (var i = 0; i < this.browser_.videoFlags.length; i++)
+            options.push(this.browser_.videoFlags[i]);
       } else {
         options.push('--orange');
       }

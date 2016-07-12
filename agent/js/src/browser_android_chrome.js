@@ -86,6 +86,7 @@ var BLACK_BOX_BROWSERS = {
       'activity': 'com.uc.browser.ActivityBrowser',
       'relaunch': true,
       'clearProfile': true,
+      'videoFlags': ['--findstart', 25, '--notification'],
       'startupDelay': 4000
     },
     'UC Browser': {
@@ -97,6 +98,7 @@ var BLACK_BOX_BROWSERS = {
     'Opera Mini': {
       'package': 'com.opera.mini.native',
       'activity': 'com.opera.mini.android.Browser',
+      'videoFlags': ['--findstart', 95, '--renderignore', 30, '--forceblank'],
       'startupDelay': 10000
     },
   };
@@ -155,6 +157,7 @@ function BrowserAndroidChrome(app, args) {
   this.chromedriver_ = args.flags.chromedriver;
   this.supportsTracing = true;
   this.isBlackBox = false;
+  this.videoFlags = undefined;
   if (args.flags.chromePackage) {
     this.browserPackage_ = args.flags.chromePackage;
   } else if (args.task.browser) {
@@ -172,6 +175,8 @@ function BrowserAndroidChrome(app, args) {
       this.isBlackBox = true;
       this.supportsTracing = false;
       this.browserConfig_ = BLACK_BOX_BROWSERS[browserName];
+      if (BLACK_BOX_BROWSERS[browserName]['videoFlags'] != undefined)
+        this.videoFlags = BLACK_BOX_BROWSERS[browserName].videoFlags;
     }
   }
   this.blank_page_ = this.blank_page_ || 'about:blank';
