@@ -98,7 +98,7 @@ var BLACK_BOX_BROWSERS = {
     'Opera Mini': {
       'package': 'com.opera.mini.native',
       'activity': 'com.opera.mini.android.Browser',
-      'videoFlags': ['--findstart', 95, '--renderignore', 30, '--forceblank'],
+      'videoFlags': ['--findstart', 95, '--renderignore', 40, '--forceblank'],
       'directories': ['cache', 'databases'],
       'startupDelay': 10000
     },
