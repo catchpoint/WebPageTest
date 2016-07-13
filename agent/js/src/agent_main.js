@@ -102,6 +102,7 @@ function Agent(app, client, flags) {
   this.client_.onAbortJob = this.abortJob_.bind(this);
   this.client_.onMakeReady = this.onMakeReady_.bind(this);
   this.client_.onAlive = this.onAlive_.bind(this);
+  this.startTime_ = process.hrtime();
 
   // do the one-time device cleanup at startup
   this.browser_.deviceCleanup();
@@ -719,6 +720,17 @@ Agent.prototype.scheduleCleanup_ = function(job, isEndOfJob) {
  */
 Agent.prototype.onMakeReady_ = function() {
   'use strict';
+  // When configured to exit after a given number of tests, also force an exit
+  // every hour.
+  if (this.flags_.exitTests) {
+    var elapsed = process.hrtime(this.startTime_);
+    logger.debug('Uptime (seconds): ' + elapsed[0]);
+    if (elapsed[0] >= 3600) {
+      logger.info('Runtime of 1 hour has been reached (enabled with exitTests), exiting...');
+      process.exit(0);
+    }
+  }
+
   try {global.gc();} catch (e) {}
   deleteFolderRecursive(this.runTempRoot_);
   return this.browser_.scheduleMakeReady(this.browser_).addBoth(
