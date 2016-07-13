@@ -111,7 +111,7 @@ def extract_frames(video, directory, full_resolution, viewport):
                os.path.join(directory, 'img-%d.png')]
     logging.debug(' '.join(command))
     lines = []
-    p = subprocess.Popen(command, stderr=subprocess.PIPE, shell=True)
+    p = subprocess.Popen(command, stderr=subprocess.PIPE)
     while p.poll() is None:
       lines.extend(iter(p.stderr.readline, ""))
 
@@ -270,7 +270,7 @@ def find_video_viewport(video, directory, find_viewport, viewport_time):
     if (viewport_time):
       command.extend(['-ss', viewport_time])
     command.extend(['-frames:v', '1', frame])
-    subprocess.check_output(command, shell=True)
+    subprocess.check_output(command)
     if os.path.isfile(frame):
       with Image.open(frame) as im:
         width, height = im.size
@@ -540,7 +540,7 @@ def crop_viewport(directory):
 def get_decimate_filter():
   decimate = None
   try:
-    filters = subprocess.check_output(['ffmpeg', '-filters'], stderr=subprocess.STDOUT, shell=True)
+    filters = subprocess.check_output(['ffmpeg', '-filters'], stderr=subprocess.STDOUT)
     lines = filters.split("\n")
     match = re.compile('(?P<filter>[\w]*decimate).*V->V.*Remove near-duplicate frames')
     for line in lines:
