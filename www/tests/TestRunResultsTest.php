@@ -135,6 +135,19 @@ class TestRunResultsTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals("52.3", $runResults->getPageSpeedVersion());
   }
 
+  public function testAverageMetric() {
+    $steps = array(
+      TestStepResult::fromPageData($this->testInfo, array(), 2, false, 1),
+      TestStepResult::fromPageData($this->testInfo, array("myMetric" => "40"), 2, false, 2),
+      TestStepResult::fromPageData($this->testInfo, array("myMetric" => 53), 2, false, 3),
+    );
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, $steps);
+    $this->assertEquals(46.5, $runResults->averageMetric("myMetric"));
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array_slice($steps, 0, 1));
+    $this->assertNull($runResults->averageMetric("myMetric"));
+  }
+
   private function getTestStepArray() {
     $step1 = array('result' => 0, 'TTFB' => 300, 'loadTime' => 6000);
     $step2 = array('result' => 0, 'TTFB' => 100, 'loadTime' => 2000);

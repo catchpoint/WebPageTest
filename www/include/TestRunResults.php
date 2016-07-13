@@ -193,4 +193,24 @@ class TestRunResults {
     }
     return false;
   }
+
+  /**
+   * @param string $metric The metric to compute the average of all steps
+   * @return float|null The average metric for all steps having it set or null if not set in any step
+   */
+  public function averageMetric($metric) {
+    $sum = 0.0;
+    $numValues = 0;
+    foreach ($this->stepResults as $stepResult) {
+      $value = $stepResult->getMetric($metric);
+      if (isset($value)) {
+        $numValues++;
+        $sum += floatval($value);
+      }
+    }
+    if ($numValues == 0) {
+      return null;
+    }
+    return $sum / $numValues;
+  }
 }
