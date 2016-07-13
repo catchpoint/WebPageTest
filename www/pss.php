@@ -16,9 +16,8 @@ $loc = ParseLocations($locations);
 $preview = false;
 if( array_key_exists('preview', $_GET) && strlen($_GET['preview']) && $_GET['preview'] )
     $preview = true;
-$mps = false;
-if (array_key_exists('mps', $_REQUEST))
-    $mps = true;
+// Put it into mod_pagespeed mode all the time
+$mps = true;
 
 $page_keywords = array('Comparison','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Comparison Test$testLabel.";
@@ -36,7 +35,6 @@ $page_description = "Comparison Test$testLabel.";
             $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? '/compare' : '/pss.php' );
             if( array_key_exists('pssid', $_GET) && strlen($_GET['pssid']) )
                 $navTabs['Test Result'] = FRIENDLY_URLS ? "/result/{$_GET['pssid']}/" : "/results.php?test={$_GET['pssid']}";
-            $navTabs += array('PageSpeed Service' => 'https://developers.google.com/speed/pagespeed/service');
             $tab = 'New Comparison';
             include 'header.inc';
             ?>
@@ -117,20 +115,8 @@ $page_description = "Comparison Test$testLabel.";
                             $default = htmlspecialchars($testurl);
                         echo "<li><input type=\"text\" name=\"testurl\" id=\"testurl\" value=\"$default\" class=\"text large\" onfocus=\"if (this.value == this.defaultValue) {this.value = '';}\" onblur=\"if (this.value == '') {this.value = this.defaultValue;}\"></li>\n";
                         ?>
-                        <li>
-                            <label for="location">Test From<br><small id="locinfo">(Using Chrome on Cable)</small></label>
-                            <select name="pssloc" id="pssloc">
-                                <option value="Dulles_VA" selected>US East (Virginia)</option>
-                                <option value="ec2-us-west-1-akamai">US West (California)</option>
-                                <option value="ec2-sa-east-1-akamai">South America (Brazil)</option>
-                                <option value="ec2-eu-west-1-akamai">Europe (Ireland)</option>
-                                <option value="ec2-ap-southeast-1-akamai">Asia (Singapore)</option>
-                                <option value="ec2-ap-northeast-1-akamai">Asia (Tokyo)</option>
-                                <option value="other">More Configurations...</option>
-                            </select>
-                        </li>
                     </ul>
-                    <ul class="input_fields hidden" id="morelocs">
+                    <ul class="input_fields" id="morelocs">
                         <li>
                             <label for="location">Location</label>
                             <select name="where" id="location">
@@ -474,26 +460,7 @@ $page_description = "Comparison Test$testLabel.";
                 return true;
             }
             
-            function PSSLocChanged(){
-                var loc = $('#pssloc').val(); 
-                if( loc == 'other' )
-                {
-                    $('#morelocs').show();
-                    $('#locinfo').hide();
-                }
-                else
-                {
-                    $('#morelocs').hide();
-                    $('#locinfo').show();
-                    $('#location').val(loc); 
-                    LocationChanged();
-                }
-            }
-            PSSLocChanged();
-
-            $("#pssloc").change(function(){
-                PSSLocChanged();
-            });
+            LocationChanged();
             
             $('#script').val(originalScript);
         </script>
