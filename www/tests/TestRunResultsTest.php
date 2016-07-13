@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/../include/FileHandler.php';
 require_once __DIR__ . '/../include/TestRunResults.php';
 require_once __DIR__ . '/../include/TestInfo.php';
 require_once __DIR__ . '/../include/TestStepResult.php';
@@ -160,6 +161,19 @@ class TestRunResultsTest extends PHPUnit_Framework_TestCase {
 
     $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array_slice($steps, 0, 1));
     $this->assertNull($runResults->averageMetric("myMetric"));
+  }
+
+  public function testHasBreakdownTimeline() {
+    $stepNoTimeline = $this->getMock("TestStepResult", array(), array(), "", false);
+    $stepNoTimeline->method('hasBreakdownTimeline')->willReturn(false);
+    $stepWithTimeline = $this->getMock("TestStepResult", array(), array(), "", false);
+    $stepWithTimeline->method('hasBreakdownTimeline')->willReturn(true);
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array($stepNoTimeline, $stepWithTimeline));
+    $this->assertTrue($runResults->hasBreakdownTimeline());
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array($stepNoTimeline, $stepNoTimeline));
+    $this->assertFalse($runResults->hasBreakdownTimeline());
   }
 
   private function getTestStepArray() {

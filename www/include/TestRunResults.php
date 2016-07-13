@@ -225,4 +225,13 @@ class TestRunResults {
     }
     return false;
   }
+
+  public function hasBreakdownTimeline() {
+    foreach ($this->stepResults as $stepResult) {
+      if ($stepResult->hasBreakdownTimeline()) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

@@ -41,10 +41,11 @@ class TestStepResult {
    * @param int $run The run to return the data for
    * @param bool $cached False for first view, true for repeat view
    * @param int $step The step number
+   * @param FileHandler $fileHandler The FileHandler to use
    * @return TestStepResult The created instance
    */
-  public static function fromPageData($testInfo, $pageData, $run, $cached, $step) {
-    return new self($testInfo, $pageData, $run, $cached, $step);
+  public static function fromPageData($testInfo, $pageData, $run, $cached, $step, $fileHandler = null) {
+    return new self($testInfo, $pageData, $run, $cached, $step, $fileHandler);
   }
 
   /**
@@ -62,7 +63,7 @@ class TestStepResult {
     $localPaths = new TestPaths($testInfo->getRootDirectory(), $runNumber, $isCached, $stepNumber);
     $runCompleted = $testInfo->isRunComplete($runNumber);
     $pageData = loadPageStepData($localPaths, $runCompleted, $options, $testInfo->getInfoArray());
-    return new self($testInfo, $pageData, $runNumber, $isCached, $stepNumber);
+    return new self($testInfo, $pageData, $runNumber, $isCached, $stepNumber, $fileHandler);
   }
 
   /**
@@ -249,6 +250,17 @@ class TestStepResult {
       }
     }
     return false;
+  }
+
+  /**
+   * @return bool True if the step has a breakdown timeline, false otherwise
+   */
+  public function hasBreakdownTimeline() {
+    if (empty($this->testInfo->getInfoArray()["timeline"])) {
+      return false;
+    }
+    return $this->fileHandler->gzFileExists($this->localPaths->devtoolsFile()) ||
+           $this->fileHandler->gzFileExists($this->localPaths->devtoolsTraceFile());
   }
 
   private function getStartOffset() {

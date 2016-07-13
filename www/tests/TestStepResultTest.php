@@ -79,4 +79,26 @@ class TestStepResultTest extends PHPUnit_Framework_TestCase {
     $this->assertTrue($step->isAdultSite(array("adult", "foo")));
     $this->assertTrue($step->isAdultSite(array("bar", "foo")));
   }
+
+  public function testHsBreakdownTimeline() {
+    $fileHandlerExists = $this->getMock("FileHandler");
+    $fileHandlerExists->method("gzFileExists")->willReturn(true);
+    $fileHandlerDoesntExists = $this->getMock("FileHandler");
+    $fileHandlerDoesntExists->method("gzFileExists")->willReturn(false);
+
+    $testInfoWithTimeline = TestInfo::fromValues("testId", "/root/path", array("testinfo" => array("timeline" => "1")));
+    $testInfoWithoutTimeline = TestInfo::fromValues("testId", "/root/path", array("testinfo" => array()));
+
+    $step = TestStepResult::fromPageData($testInfoWithTimeline, array(), 1, 1, 1, $fileHandlerExists);
+    $this->assertTrue($step->hasBreakdownTimeline());
+
+    $step = TestStepResult::fromPageData($testInfoWithTimeline, array(), 1, 1, 1, $fileHandlerDoesntExists);
+    $this->assertFalse($step->hasBreakdownTimeline());
+
+    $step = TestStepResult::fromPageData($testInfoWithoutTimeline, array(), 1, 1, 1, $fileHandlerExists);
+    $this->assertFalse($step->hasBreakdownTimeline());
+
+    $step = TestStepResult::fromPageData($testInfoWithoutTimeline, array(), 1, 1, 1, $fileHandlerDoesntExists);
+    $this->assertFalse($step->hasBreakdownTimeline());
+  }
 }
