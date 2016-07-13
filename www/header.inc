@@ -149,18 +149,21 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
     // make sure the test is actually complete
     if( (isset($test['test']) && isset($test['test']['completeTime'])) )
     {
-        if( !isset($pageData) )
-            $pageData = loadAllPageData($testPath);
+        if (!isset($testResults) || !isset($testInfo)) {
+          $testInfo = TestInfo::fromFiles($testPath);
+          $testResults = TestResults::fromFiles($testInfo);
+        }
             
         $gradeRun = 1;
         if( array_key_exists('run', $_GET) && $_GET["run"] )
             $gradeRun = intval($_GET["run"]);
         else
         {
-            $medianRun = GetMedianRun($pageData, 0, $median_metric);
+            $medianRun = $testResults->getMedianRunNumber($median_metric, false);
             if( $medianRun )
                 $gradeRun = $medianRun;
         }
+        $gradeRunResults = $testResults->getRunResult($gradeRun, false);
 
         echo '<div id="header_container">';
         // Only include optimization data for normal tests
@@ -168,20 +171,19 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
         if (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type'])) {
           echo '<div id="optimization">';
               echo '<div id="optimization_header">';
-              if( gz_is_file("$testPath/{$gradeRun}_pagespeed.txt") )
-              {
-                  $score = GetPageSpeedScore("$testPath/{$gradeRun}_pagespeed.txt");
-                  if( strlen($score) )
-                  {
-                      $pageSpeedUrl = FRIENDLY_URLS ? "/result/$id/$gradeRun/pagespeed/" : "pagespeed.php?test=$id&run=$gradeRun";
-                      echo "<span id=\"headerPagespeedScore\"><a href=\"$pageSpeedUrl\">PageSpeed {$pageData[$gradeRun][0]['pageSpeedVersion']} Score</a>: <b>$score/100</b></span>";
-                  }
+              $localPaths = new TestPaths($testPath, $gradeRun, false);
+              $urlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $id, $gradeRun, false);
+              $pageSpeedScore = $gradeRunResults->averagePageSpeedScore();
+              if ($pageSpeedScore !== null) {
+                $pageSpeedUrl = $urlGenerator->resultPage("pagespeed");
+                $pageSpeedVersion = $gradeRunResults->getPageSpeedVersion();
+                echo "<span id=\"headerPagespeedScore\"><a href=\"$pageSpeedUrl\">PageSpeed $pageSpeedVersion Score</a>: <b>$pageSpeedScore/100</b></span>";
               }
               
               echo "<div id=\"opthelp\"><a href=\"https://sites.google.com/a/webpagetest.org/docs/other-resources/optimization-resources\" title=\"Optimization Resources\" target=\"_blank\">Need help improving?</a></div>\n";
               echo '</div>';
               echo '<div id="grades">';
-                  $grades = GetGrades($pageData[$gradeRun][0], $test, $id, $gradeRun);
+                  $grades = GetGrades($testInfo, $gradeRunResults);
                   if( count($grades) )
                   {
                       $smaller = '';
@@ -305,7 +307,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
         }
         $tabs = array( 'Summary' => $resultUrl, 'Details' => $details);
                     
-        if( $pageData[$gradeRun][$cached]['optimization_checked'] )
+        if( $testResults->getRunResult($gradeRun, $cached)->isOptimizationChecked())
             $tabs['Performance Review'] = "/performance_optimization.php?test=$id&run=$gradeRun&cached=$cached$end";
         
         $cTxt2 = '';
@@ -360,19 +362,19 @@ if( !strcasecmp('Test Result', $tab) || (array_key_exists('compare', $_COOKIE) &
 
 /**
 * Calculate the grades for the given test
-* 
+* @param TestInfo $testInfo Information about the test
+* @param TestRunResults $testRunResults Run results to compute the grades for
+* @return array An array with the different grades
 */
-function GetGrades(&$pageData, &$test, $id, $run)
+function GetGrades($testInfo, $testRunResults)
 {
-    global $test;
     $grades = array();
-    if($pageData['optimization_checked'])
-    {
+    if ($testRunResults->isOptimizationChecked()) {
         require_once('optimization_detail.inc.php');
 
-        $opt = getOptimizationGrades($pageData, $test, $id, $run);
-
-        if( $test['testinfo']['view'] != 'simple' && $test['testinfo']['view'] != 'pss' )
+        $opt = getOptimizationGradesForRun($testRunResults);
+        $infoArray = $testInfo->getInfoArray();
+        if( $infoArray['view'] != 'simple' && $infoArray['view'] != 'pss' )
             $grades['first_byte_time'] = array( 'class' => $opt['ttfb']['class'], 'grade' => $opt['ttfb']['grade'], 'description' => $opt['ttfb']['label']);
         $grades['keep_alive_enabled'] = array( 'class' => $opt['keep-alive']['class'], 'grade' => $opt['keep-alive']['grade'], 'description' => $opt['keep-alive']['label']);
         $grades['compress_text'] = array( 'class' => $opt['gzip']['class'], 'grade' => $opt['gzip']['grade'], 'description' => $opt['gzip']['label']);
