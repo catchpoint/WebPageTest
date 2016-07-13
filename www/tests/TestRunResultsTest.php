@@ -135,6 +135,20 @@ class TestRunResultsTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals("52.3", $runResults->getPageSpeedVersion());
   }
 
+  public function testIsOptimizationChecked() {
+    $steps = array(
+      TestStepResult::fromPageData($this->testInfo, array(), 2, false, 1),
+      TestStepResult::fromPageData($this->testInfo, array("optimization_checked" => null), 2, false, 2),
+      TestStepResult::fromPageData($this->testInfo, array("optimization_checked" => "2222"), 2, false, 3),
+      TestStepResult::fromPageData($this->testInfo, array(), 2, false, 4)
+    );
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, $steps);
+    $this->assertTrue($runResults->isOptimizationChecked());
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array_slice($steps, 0, 2));
+    $this->assertFalse($runResults->isOptimizationChecked());
+  }
+
   public function testAverageMetric() {
     $steps = array(
       TestStepResult::fromPageData($this->testInfo, array(), 2, false, 1),

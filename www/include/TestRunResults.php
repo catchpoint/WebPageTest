@@ -213,4 +213,16 @@ class TestRunResults {
     }
     return $sum / $numValues;
   }
+
+  /**
+   * @return bool True if any step si optimization checked, false otherwise
+   */
+  public function isOptimizationChecked() {
+    foreach ($this->stepResults as $stepResult) {
+      if ($stepResult->getMetric("optimization_checked")) {
+        return true;
+      }
+    }
+    return false;
+  }
 }
