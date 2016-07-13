@@ -435,7 +435,7 @@ def eliminate_duplicate_frames(directory):
       client_viewport = None
       with Image.open(blank) as im:
         width, height = im.size
-      if options.viewport:
+      if options.viewport and options.notification:
         client_viewport = find_image_viewport(blank)
         if client_viewport['width'] == width and client_viewport['height'] == height:
           client_viewport = None
