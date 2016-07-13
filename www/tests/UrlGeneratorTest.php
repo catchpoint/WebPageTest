@@ -45,6 +45,8 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
 
     $ug = UrlGenerator::create(false, "https://test/", "qwerty", 3, true);
     $this->assertEquals($expectedCached, $ug->resultPage("details"));
+
+    $this->assertEquals($expectedCached . "&param=value", $ug->resultPage("details", "param=value"));
   }
 
   public function testResultPageStandardUrlWithStep() {
@@ -56,6 +58,8 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
 
     $ug = UrlGenerator::create(false, "https://test/", "qwerty", 3, true, 2);
     $this->assertEquals($expectedCached, $ug->resultPage("details"));
+
+    $this->assertEquals($expectedCached . "&param=value", $ug->resultPage("details", "param=value"));
   }
 
   public function testResultPageFriendlyUrl() {
@@ -67,6 +71,8 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
 
     $ug = UrlGenerator::create(true, "https://test/", "qwerty", 3, true);
     $this->assertEquals($expectedCached, $ug->resultPage("details"));
+
+    $this->assertEquals($expectedCached . "?param=value", $ug->resultPage("details", "param=value"));
   }
 
   public function testResultPageFriendlyUrlWithStep() {
@@ -78,6 +84,8 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
 
     $ug = UrlGenerator::create(true, "https://test/", "qwerty", 3, true, 2);
     $this->assertEquals($expectedCached, $ug->resultPage("details"));
+
+    $this->assertEquals($expectedCached . "?param=value", $ug->resultPage("details", "param=value"));
   }
 
   public function testThumbStandardUrl() {
@@ -161,12 +169,14 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
     $expected = "https://test/result/160609_a7_b8/";
     $ug = UrlGenerator::create(true, "https://test/", "160609_a7_b8", 3, true, 2);
     $this->assertEquals($expected, $ug->resultSummary());
+    $this->assertEquals($expected . "?param=value", $ug->resultSummary("param=value"));
   }
 
   public function testResultSummaryStandardUrl() {
     $expected = "https://test/results.php?test=160609_a7_b8";
     $ug = UrlGenerator::create(false, "https://test/", "160609_a7_b8", 3, true, 2);
     $this->assertEquals($expected, $ug->resultSummary());
+    $this->assertEquals($expected . "&param=value", $ug->resultSummary("param=value"));
   }
 
   public function testGetGZipUrl() {
