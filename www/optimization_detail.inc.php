@@ -9,10 +9,33 @@ require_once('object_detail.inc');
 */
 function getOptimizationGrades(&$pageData, &$test, $id, $run)
 {
-    $opt = null;
+  if (!isset($pageData)) {
+    return null;
+  }
+  $scores = array();
+  $scores['ttfb'] = gradeTTFB($pageData, $test, $id, $run, 0, $target);
+  $scores['keep-alive'] = $pageData['score_keep-alive'];
+  $scores['gzip'] = $pageData['score_gzip'];
+  $scores['image_compression'] = $pageData['score_compress'];
+  $scores['caching'] = $pageData['score_cache'];
+  $scores['combine'] = $pageData['score_combine'];
+  $scores['cdn'] = $pageData['score_cdn'];
+  $scores['cookies'] = $pageData['score_cookies'];
+  $scores['minify'] = $pageData['score_minify'];
+  $scores['e-tags'] = $pageData['score_etags'];
+  if (array_key_exists('score_progressive_jpeg', $pageData) && $pageData['score_progressive_jpeg'] >= 0) {
+    $scores['progressive_jpeg'] = $pageData['score_progressive_jpeg'];
+  }
+  return createGradeArray($scores);
+}
 
-    if( $pageData )
-    {
+/**
+ * @param int[] $scores Numeric scores for ttfb, keep-alive, gzip, image_compression, caching, combine, cdn, cookies,
+ *                                         minify, e-tags, progressive_jpeg
+ * @return array|null An array with all labels, scores, grades, weights, etc per score
+ */
+function createGradeArray($scores) {
+
         $opt = array();
 
         // put them in rank-order
@@ -27,21 +50,17 @@ function getOptimizationGrades(&$pageData, &$test, $id, $run)
         $opt['minify'] = array();
         $opt['e-tags'] = array();
 
-        // get the scores
-        $opt['ttfb']['score'] = gradeTTFB($pageData, $test, $id, $run, 0, $target);
-        $opt['keep-alive']['score'] = $pageData['score_keep-alive'];
-        $opt['gzip']['score'] = $pageData['score_gzip'];
-        $opt['image_compression']['score'] = $pageData['score_compress'];
-        $opt['caching']['score'] = $pageData['score_cache'];
-        $opt['combine']['score'] = $pageData['score_combine'];
-        $opt['cdn']['score'] = $pageData['score_cdn'];
-        $opt['cookies']['score'] = $pageData['score_cookies'];
-        $opt['minify']['score'] = $pageData['score_minify'];
-        $opt['e-tags']['score'] = $pageData['score_etags'];
-        if (array_key_exists('score_progressive_jpeg', $pageData) && $pageData['score_progressive_jpeg'] >= 0) {
-          $opt['progressive_jpeg'] = array('score' => $pageData['score_progressive_jpeg'],
-                                           'label' => 'Progressive JPEGs',
-                                           'important' => true);
+        foreach (array_keys($opt) as $scoreName) {
+          if (array_key_exists($scoreName, $scores) && $scores[$scoreName] >= 0) {
+              $opt[$scoreName]['score'] = $scores[$scoreName];
+          }
+        }
+        if (array_key_exists('progressive_jpeg', $scores) && $scores['progressive_jpeg'] >= 0) {
+          $opt['progressive_jpeg'] = array(
+            'score' => $scores['progressive_jpeg'],
+            'label' => 'Progressive JPEGs',
+            'important' => true
+          );
         }
 
         // define the labels for all  of them
@@ -108,7 +127,6 @@ function getOptimizationGrades(&$pageData, &$test, $id, $run)
             }
             $item['weight'] = $weight;
         }
-    }
 
     return $opt;
 }
