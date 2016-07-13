@@ -30,6 +30,50 @@ function getOptimizationGrades(&$pageData, &$test, $id, $run)
 }
 
 /**
+ * Parse the page data and load the optimization-specific details
+ *
+ * @param TestRunResults $testRunResults Results of the run to get the grades for
+ * @return array|null An array with all labels, scores, grades, weights, etc per score
+ */
+function getOptimizationGradesForRun($testRunResults)
+{
+  if (!isset($testRunResults)) {
+    return null;
+  }
+  $scores = array();
+
+  $scores['keep-alive'] = $testRunResults->averageMetric('score_keep-alive');
+  $scores['gzip'] = $testRunResults->averageMetric('score_gzip');
+  $scores['image_compression'] = $testRunResults->averageMetric('score_compress');
+  $scores['caching'] = $testRunResults->averageMetric('score_cache');
+  $scores['combine'] = $testRunResults->averageMetric('score_combine');
+  $scores['cdn'] = $testRunResults->averageMetric('score_cdn');
+  $scores['cookies'] = $testRunResults->averageMetric('score_cookies');
+  $scores['minify'] = $testRunResults->averageMetric('score_minify');
+  $scores['e-tags'] = $testRunResults->averageMetric('score_etags');
+  $scores['progressive_jpeg'] = $testRunResults->averageMetric('score_progressive_jpeg');
+
+  $numTTFBScores = 0;
+  $sumTTFBScores = 0.0;
+  for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
+    $stepResult = $testRunResults->getStepResult($i);
+    $pageData = $stepResult->getRawResults();
+    $ttfb = (int)$pageData['TTFB'];
+    $latency = isset($test['testinfo']['latency']) ? $test['testinfo']['latency'] : null;
+    $ttfbScore = gradeTTFBForStep($ttfb, $latency, $stepResult->createTestPaths(), $target);
+    if (isset($ttfbScore)) {
+      $numTTFBScores++;
+      $sumTTFBScores += $ttfbScore;
+    }
+  }
+  if ($numTTFBScores > 0) {
+    $scores['ttfb'] = $sumTTFBScores / $numTTFBScores;
+  }
+
+  return createGradeArray($scores);
+}
+
+/**
  * @param int[] $scores Numeric scores for ttfb, keep-alive, gzip, image_compression, caching, combine, cdn, cookies,
  *                                         minify, e-tags, progressive_jpeg
  * @return array|null An array with all labels, scores, grades, weights, etc per score
