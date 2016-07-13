@@ -33,6 +33,7 @@ import json
 import logging
 import math
 import os
+import platform
 import re
 import shutil
 import subprocess
@@ -381,6 +382,7 @@ def find_first_frame(directory):
 
 def find_render_start(directory):
   global options
+  global client_viewport
   try:
     if options.renderignore > 0 and options.renderignore <= 100:
       files = sorted(glob.glob(os.path.join(directory, 'video-*.png')))
@@ -395,14 +397,30 @@ def find_render_start(directory):
         mask['height'] = int(math.floor(height * options.renderignore / 100))
         mask['x'] = int(math.floor(width / 2 - mask['width'] / 2))
         mask['y'] = int(math.floor(height / 2 - mask['height'] / 2))
+        top = 10
+        right_margin = 10
+        bottom_margin = 10
+        if height > 400 or width > 400:
+          top = int(math.ceil(float(height) * 0.03))
+          right_margin = int(math.ceil(float(width) * 0.04))
+          bottom_margin = int(math.ceil(float(width) * 0.04))
+        height = max(height - top - bottom_margin, 1)
+        left = 0
+        width = max(width - right_margin, 1)
+        if client_viewport is not None:
+          height = max(client_viewport['height'] - top - bottom_margin, 1)
+          width = max(client_viewport['width'] - right_margin, 1)
+          left += client_viewport['x']
+          top += client_viewport['y']
+        crop = '{0:d}x{1:d}+{2:d}+{3:d}'.format(width, height, left, top)
         for i in xrange(1, count):
-          if frames_match(first, files[i], 5, 100, None, mask):
+          if frames_match(first, files[i], 10, 100, crop, mask):
             logging.debug('Removing pre-render frame {0}'.format(files[i]))
             os.remove(files[i])
           else:
             break
   except:
-    logging.exception('Error finding first frame')
+    logging.exception('Error getting render start')
 
 
 def eliminate_duplicate_frames(directory):
@@ -607,12 +625,16 @@ def frames_match(image1, image2, fuzz_percent, max_differences, crop_region, mas
     img2 = '( "{0}" -size {1}x{2} xc:white -geometry +{3}+{4} -compose over -composite )'.format(
       image2, mask_rect['width'], mask_rect['height'], mask_rect['x'], mask_rect['y'])
   command = 'convert {0} {1} {2}miff:- | compare -metric AE - {3}null:'.format(img1, img2, crop, fuzz)
+  if platform.system() != 'Windows':
+    command = command.replace('(', '\\(').replace(')', '\\)')
   compare = subprocess.Popen(command, stderr=subprocess.PIPE, shell=True)
   out, err = compare.communicate()
   if re.match('^[0-9]+$', err):
     different_pixels = int(err)
     if different_pixels <= max_differences:
       match = True
+  else:
+    logging.debug('Unexpected compare result: out: "{0}", err: "{1}"'.format(out, err))
 
   return match
 
