@@ -190,7 +190,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
                       if( count($grades) > 6 )
                         $smaller = ' smaller';
                       echo "<ul class=\"grades$smaller\">";
-                      $optlink = FRIENDLY_URLS ? "/result/$id/$gradeRun/performance_optimization/" : "performance_optimization.php?test=$id&run=$gradeRun";
+                      $optlink = $urlGenerator->resultPage("performance_optimization");
                       foreach( $grades as $check => &$grade )
                           echo "<li class=\"$check\"><a href=\"$optlink#$check\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
                       echo '</ul>';
@@ -202,12 +202,16 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
         }
         
         echo "<div id=\"header_data\"$data_class>";
-            $shortUrl = str_replace('http://', '',  FitText($url, 180));
+        // for multistep, link the first URL and show additional text. Otherwise take the test URL
+        $isMultistep = $gradeRunResults->countSteps() > 1;
+        $showUrl = $isMultistep ? $gradeRunResults->getStepResult(1)->getUrl() : $url;
+        $shortUrl = str_replace('http://', '',  FitText($showUrl, 180));
+        $shortUrl = $isMultistep ? ($shortUrl . " (multiple steps)") : $shortUrl;
             echo "<h2 class=\"alternate cufon-dincond_regular\">Web Page Performance Test for<br>";
             if ($settings['nolinks']) {
                 echo "<span class=\"medium colored\">$shortUrl</span>";
             } else {
-                echo "<a class=\"url cufon-dincond_black\"  rel=\"nofollow\" title=\"$url\" href=\"$url\">$shortUrl</a>";
+                echo "<a class=\"url cufon-dincond_black\"  rel=\"nofollow\" title=\"$showUrl\" href=\"$showUrl\">$shortUrl</a>";
             }
             echo "</h2>";
             
@@ -234,7 +238,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
             if( array_key_exists('authenticated', $test['test']) && (int)$test['test']['authenticated'] == 1)
                 echo '<b>Authenticated: ' . $login . '</b><br>';
             if( (int)$test['test']['connections'] !== 0)
-                 echo '<b>' . $test[test][connections] . ' Browser connections</b><br>';
+                 echo '<b>' . $test['test']['connections'] . ' Browser connections</b><br>';
             if( array_key_exists('script', $test['test']) && strlen($test['test']['script']) ) 
                 echo '<b>Scripted test</b><br>';
             if( strlen($blockString) )
@@ -285,44 +289,32 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
 
         echo '<div id="test-1" class="test_results">';
         echo '<ul class="test_menu">';
-        
+
         if( !$run )
             $run = $gradeRun;
-        
-        $cTxt = '';
-        if( $cached )
-            $cTxt = 'cached/';
+        $useFriendlyUrls = !isset($_REQUEST['end']) && FRIENDLY_URLS;
+        $menuUrlGenerator = UrlGenerator::create($useFriendlyUrls, "", $id, $run, !empty($cached));
+        $endParams = isset($_REQUEST['end']) ? ("end=" . $_REQUEST['end']) : "";
 
-        $resultUrl = "/results.php?test=$id";
-        $details = "/details.php?test=$id&run=$gradeRun&cached=$cached";
-        $domains = "/domains.php?test=$id&run=$gradeRun&cached=$cached";
-        $end = '';
-        if (array_key_exists('end', $_REQUEST)) {
-            $resultUrl .= "&end={$_REQUEST['end']}";
-            $details .= "&end={$_REQUEST['end']}";
-            $end = "&end={$_REQUEST['end']}";
-        } elseif (FRIENDLY_URLS) {
-            $resultUrl = "/result/$id/";
-            $details = "/result/$id/$gradeRun/details/$cTxt";
+        $tabs = array( 'Summary' => $menuUrlGenerator->resultSummary($endParams),
+                       'Details' => $menuUrlGenerator->resultPage("details", $endParams));
+        $gradedRunResults = $testResults->getRunResult($gradeRun, !empty($cached));
+
+        if ($gradedRunResults->isOptimizationChecked())
+            $tabs['Performance Review'] = $menuUrlGenerator->resultPage("performance_optimization", $endParams);
+
+        if ($gradedRunResults->averagePageSpeedScore() !== null)
+            $tabs['PageSpeed'] = $menuUrlGenerator->resultPage("pagespeed", $endParams);
+        $tabs['Content Breakdown'] = $menuUrlGenerator->resultPage("breakdown", $endParams);
+        $tabs['Domains'] = $menuUrlGenerator->resultPage("domains", $endParams);
+        if ($gradedRunResults->hasBreakdownTimeline()) {
+          // currently only supported by standard urls
+          $menuStandardUrlGenerator = UrlGenerator::create(false, "", $id, $run, !empty($cached));
+          $tabs['Processing Breakdown'] = $menuStandardUrlGenerator->resultPage("breakdownTimeline");
         }
-        $tabs = array( 'Summary' => $resultUrl, 'Details' => $details);
-                    
-        if( $testResults->getRunResult($gradeRun, $cached)->isOptimizationChecked())
-            $tabs['Performance Review'] = "/performance_optimization.php?test=$id&run=$gradeRun&cached=$cached$end";
-        
-        $cTxt2 = '';
-        if( $cached )
-            $cTxt2 = '_Cached';
-        if( gz_is_file("$testPath/$gradeRun{$cTxt2}_pagespeed.txt") )
-            $tabs['PageSpeed'] = "/pagespeed.php?test=$id&run=$gradeRun&cached=$cached$end";
-        $tabs['Content Breakdown'] = "/breakdown.php?test=$id&run=$gradeRun&cached=$cached$end";
-        $tabs['Domains'] = "/domains.php?test=$id&run=$gradeRun&cached=$cached$end";
-        if (isset($test['testinfo']) && $test['testinfo']['timeline'] &&
-            (gz_is_file("$testPath/$gradeRun{$cTxt2}_devtools.json") || gz_is_file("$testPath/$gradeRun{$cTxt2}_trace.json")))
-            $tabs['Processing Breakdown'] = "/breakdownTimeline.php?test=$id&run=$gradeRun&cached=$cached$end";
-        
+
         if( !isset($test['testinfo']) || !$test['testinfo']['noimages'] )
-            $tabs['Screen Shot'] = "/screen_shot.php?test=$id&run=$gradeRun&cached=$cached$end";
+            $tabs['Screen Shot'] = $menuUrlGenerator->resultPage("screen_shot", $endParams);
         //$tabs['More Checks'] = "/moreChecks.php?test=$id";
 
         foreach( $tabs as $tabName => $tabUrl )
