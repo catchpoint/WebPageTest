@@ -67,7 +67,6 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData) {
     $startOffset = null;
     $ver = 13;
     $ok = GetCachedDevToolsRequests($localPaths, $requests, $pageData, $ver);
-    $ok = false;
     if (!$ok) {
       if (GetDevToolsEventsForStep(null, $localPaths, $events, $startOffset)) {
           if (DevToolsFilterNetRequests($events, $rawRequests, $rawPageData)) {
