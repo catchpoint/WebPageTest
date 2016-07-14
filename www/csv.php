@@ -43,6 +43,7 @@ if( isset($test['test']) && (isset($test['test']['completeTime']) || $test['test
     }
     if( isset($tests) ) {
       foreach( $tests['urls'] as &$testData ) {
+        RestoreTest($testData['id']);
         $path = './' . GetTestPath($testData['id']);
         if (!isset($hasCSV)) {
           $files = glob("$path/*$fileType");
