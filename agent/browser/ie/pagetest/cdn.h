@@ -9,7 +9,7 @@ CDN_PROVIDER cdnList[] = {
 	{".akamaihd.net", _T("Akamai")},
 	{".edgesuite.net", _T("Akamai")},
 	{".edgekey.net", _T("Akamai")},
-	{".srip.ne", _T("Akamai")},
+	{".srip.net", _T("Akamai")},
 	{".akamaitechnologies.com", _T("Akamai")},
 	{".akamaitechnologies.fr", _T("Akamai")},
 	{".llnwd.net", _T("Limelight")},
