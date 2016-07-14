@@ -483,28 +483,28 @@ function gz_readfile_chunked($filename, $retbytes = TRUE)
 *
 * @param mixed $file
 */
-function gz_file_get_contents($file)
-{
-    $data = null;
+function gz_file_get_contents($file) {
+  $data = null;
 
-    $fileSize = @filesize("$file.gz");
-    if (!$fileSize)
-      $fileSize = filesize($file);
+  $fileSize = @filesize("$file.gz");
+  if (!$fileSize)
+    $fileSize = @filesize($file);
+  if ($fileSize) {
     $chunkSize = min(4096, max(1024000, $fileSize * 10));
     $zip = @gzopen("$file.gz", 'rb');
     if( $zip === false )
-        $zip = @gzopen($file, 'rb');
+      $zip = @gzopen($file, 'rb');
 
     if( $zip !== false ) {
-        while ($string = gzread($zip, $chunkSize)) {
-            $data .= $string;
-        }
-        gzclose($zip);
+      while ($string = gzread($zip, $chunkSize))
+        $data .= $string;
+      gzclose($zip);
+    } else {
+      $data = false;
     }
-    else
-        $data = false;
+  }
 
-    return $data;
+  return $data;
 }
 
 /**

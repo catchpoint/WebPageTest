@@ -256,7 +256,8 @@ class TestStepResult {
    * @return bool True if the step has a breakdown timeline, false otherwise
    */
   public function hasBreakdownTimeline() {
-    if (empty($this->testInfo->getInfoArray()["timeline"])) {
+    $info = $this->testInfo->getInfoArray();
+    if (!isset($info) || empty($info["timeline"])) {
       return false;
     }
     return $this->fileHandler->gzFileExists($this->localPaths->devtoolsFile()) ||
