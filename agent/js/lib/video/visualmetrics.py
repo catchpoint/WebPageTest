@@ -548,7 +548,7 @@ def crop_viewport(directory):
         crop = '{0:d}x{1:d}+{2:d}+{3:d}'.format(client_viewport['width'], client_viewport['height'],
                                                 client_viewport['x'], client_viewport['y'])
         for i in xrange(count):
-          command = 'convert "{0}" -crop {1} "{0}'.format(files[i], crop)
+          command = 'convert "{0}" -crop {1} "{0}"'.format(files[i], crop)
           subprocess.call(command, shell=True)
 
     except:
@@ -818,12 +818,15 @@ def calculate_image_histogram(file):
                  'b': [0 for i in xrange(256)]}
     for y in xrange(height):
       for x in xrange(width):
-        pixel = pixels[x, y]
-        # Don't include White pixels (with a tiny bit of slop for compression artifacts)
-        if pixel[0] < 250 or pixel[1] < 250 or pixel[2] < 250:
-          histogram['r'][pixel[0]] += 1
-          histogram['g'][pixel[1]] += 1
-          histogram['b'][pixel[2]] += 1
+        try:
+          pixel = pixels[x, y]
+          # Don't include White pixels (with a tiny bit of slop for compression artifacts)
+          if pixel[0] < 250 or pixel[1] < 250 or pixel[2] < 250:
+            histogram['r'][pixel[0]] += 1
+            histogram['g'][pixel[1]] += 1
+            histogram['b'][pixel[2]] += 1
+        except:
+          pass
   except:
     histogram = None
     logging.exception('Error calculating histogram for ' + file)
