@@ -380,17 +380,26 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData) {
  * @param int $ver Cache version
  * @return bool True if successful, false otherwise
  */
+$MEMCACHE_GetCachedDevToolsRequests = array();
 function GetCachedDevToolsRequests($localPaths, &$requests, &$pageData, $ver) {
+  global $MEMCACHE_GetCachedDevToolsRequests;
   $ok = false;
+  $cache = null;
+  if (count($MEMCACHE_GetCachedDevToolsRequests) > 100)
+    $MEMCACHE_GetCachedDevToolsRequests = array();
   $cacheFile = $localPaths->devtoolsRequestsCacheFile($ver);
-  if (gz_is_file($cacheFile)) {
+  if (isset($MEMCACHE_GetCachedDevToolsRequests[$cacheFile])) {
+    $cache = $MEMCACHE_GetCachedDevToolsRequests[$cacheFile];
+  } elseif (gz_is_file($cacheFile)) {
     $cache = json_decode(gz_file_get_contents($cacheFile), true);
-    if (isset($cache['requests']) &&
-        isset($cache['pageData'])) {
-      $ok = true;
-      $requests = $cache['requests'];
-      $pageData = $cache['pageData'];
-    }
+    $MEMCACHE_GetCachedDevToolsRequests[$cacheFile] = $cache;
+  }
+  if (isset($cache) &&
+      isset($cache['requests']) &&
+      isset($cache['pageData'])) {
+    $ok = true;
+    $requests = $cache['requests'];
+    $pageData = $cache['pageData'];
   }
   return $ok;
 }
@@ -766,7 +775,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
       }
     }
   }
-  if (!$firstEvent && $hasNet) {
+  if (!$firstEvent && $hasNet && isset($messages) && is_array($messages)) {
     foreach ($messages as $message) {
       if (is_array($message) && isset($message['method'])) {
         $eventTime = DevToolsEventTime($message);
@@ -778,59 +787,61 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
       }
     }
   }
-  
-  foreach ($messages as $message) {
-    if (is_array($message)) {
-      if (isset($message['params']['timestamp'])) {
-        $message['params']['timestamp'] *= 1000.0;
-        if (isset($clockOffset))
-          $message['params']['timestamp'] += $clockOffset;
-      }
-      
-      // see if we are waiting for the first net message after a WPT Start
-      if  ($recordPending && array_key_exists('method', $message)) {
-        $method_class = substr($message['method'], 0, strpos($message['method'], '.'));
-        if ($method_class === 'Network' || $method_class === 'Page') {
-          $recordPending = false;
-          $recording = true;
+
+  if (isset($messages) && is_array($messages)) {  
+    foreach ($messages as $message) {
+      if (is_array($message)) {
+        if (isset($message['params']['timestamp'])) {
+          $message['params']['timestamp'] *= 1000.0;
+          if (isset($clockOffset))
+            $message['params']['timestamp'] += $clockOffset;
         }
-      }
+        
+        // see if we are waiting for the first net message after a WPT Start
+        if  ($recordPending && array_key_exists('method', $message)) {
+          $method_class = substr($message['method'], 0, strpos($message['method'], '.'));
+          if ($method_class === 'Network' || $method_class === 'Page') {
+            $recordPending = false;
+            $recording = true;
+          }
+        }
 
-      // see if we got a stop message (do this before capture so we don't include it)
-      if ($recording && $hasTrim) {
-        $encoded = json_encode($message);
-        if (strpos($encoded, $STOP_MESSAGE) !== false)
-          $recording = false;
-      }
+        // see if we got a stop message (do this before capture so we don't include it)
+        if ($recording && $hasTrim) {
+          $encoded = json_encode($message);
+          if (strpos($encoded, $STOP_MESSAGE) !== false)
+            $recording = false;
+        }
 
-      // keep any events that we need to keep
-      if ($recording && isset($firstEvent)) {
-        if (DevToolsMatchEvent($filter, $message, $firstEvent)) {
-          if ($hasTrim && !isset($startOffset) && $firstEvent) {
-            $eventTime = DevToolsEventTime($message);
-            if ($eventTime) {
-              $startOffset = $eventTime - $firstEvent;
+        // keep any events that we need to keep
+        if ($recording && isset($firstEvent)) {
+          if (DevToolsMatchEvent($filter, $message, $firstEvent)) {
+            if ($hasTrim && !isset($startOffset) && $firstEvent) {
+              $eventTime = DevToolsEventTime($message);
+              if ($eventTime) {
+                $startOffset = $eventTime - $firstEvent;
+              }
+            }
+
+            if ($removeParams && array_key_exists('params', $message)) {
+              $event = $message['params'];
+              $event['method'] = $message['method'];
+              $events[] = $event;
+            } else {
+              $events[] = $message;
             }
           }
-
-          if ($removeParams && array_key_exists('params', $message)) {
-            $event = $message['params'];
-            $event['method'] = $message['method'];
-            $events[] = $event;
-          } else {
-            $events[] = $message;
-          }
+        }
+                      
+        // see if we got a start message (do this after capture so we don't include it)
+        if (!$recording && !$recordPending && $hasTrim) {
+          $encoded = json_encode($message);
+          if (strpos($encoded, $START_MESSAGE) !== false)
+            $recordPending = true;
         }
       }
-                    
-      // see if we got a start message (do this after capture so we don't include it)
-      if (!$recording && !$recordPending && $hasTrim) {
-        $encoded = json_encode($message);
-        if (strpos($encoded, $START_MESSAGE) !== false)
-          $recordPending = true;
-      }
     }
-  }  
+  }
 }
 
 function DevToolsEventTime(&$event) {
