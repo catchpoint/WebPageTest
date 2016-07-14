@@ -105,7 +105,6 @@ CDN_PROVIDER cdnList[] = {
 	{".cdninstagram.com", _T("Facebook")},
 	{".rlcdn.com", _T("Reapleaf")},
 	{".wp.com", _T("WordPress")},
-	{".incapdns.net", _T("Incapsula"}),
 	{".squixa.net", _T("section.io"}),
 	{".bisongrid.net", _T("Bison Grid")},
 	{".cdn.gocache.net", _T("GoCache")},
