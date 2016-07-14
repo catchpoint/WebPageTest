@@ -284,33 +284,35 @@ function CalculateFrameProgress(&$histogram, &$start_histogram, &$final_histogra
   $progress = 0;
   $channels = array_keys($histogram);
   $channelCount = count($channels);
-  foreach ($channels as $index => $channel) {
-    $total = 0;
-    $matched = 0;
-    $buckets = count($histogram[$channel]);
-    
-    // First build an array of the actual changes in the current histogram.
-    $available = array();
-    for ($i = 0; $i < $buckets; $i++)
-      $available[$i] = abs($histogram[$channel][$i] - $start_histogram[$channel][$i]);
+  if ($channelCount > 0) {
+    foreach ($channels as $index => $channel) {
+      $total = 0;
+      $matched = 0;
+      $buckets = count($histogram[$channel]);
+      
+      // First build an array of the actual changes in the current histogram.
+      $available = array();
+      for ($i = 0; $i < $buckets; $i++)
+        $available[$i] = abs($histogram[$channel][$i] - $start_histogram[$channel][$i]);
 
-    // Go through the target differences and subtract any matches from the array as we go,
-    // counting how many matches we made.
-    for ($i = 0; $i < $buckets; $i++) {
-      $target = abs($final_histogram[$channel][$i] - $start_histogram[$channel][$i]);
-      if ($target) {
-        $total += $target;
-        $min = max(0, $i - $slop);
-        $max = min($buckets - 1, $i + $slop);
-        for ($j = $min; $j <= $max; $j++) {
-          $thisMatch = min($target, $available[$j]);
-          $available[$j] -= $thisMatch;
-          $matched += $thisMatch;
-          $target -= $thisMatch;
+      // Go through the target differences and subtract any matches from the array as we go,
+      // counting how many matches we made.
+      for ($i = 0; $i < $buckets; $i++) {
+        $target = abs($final_histogram[$channel][$i] - $start_histogram[$channel][$i]);
+        if ($target) {
+          $total += $target;
+          $min = max(0, $i - $slop);
+          $max = min($buckets - 1, $i + $slop);
+          for ($j = $min; $j <= $max; $j++) {
+            $thisMatch = min($target, $available[$j]);
+            $available[$j] -= $thisMatch;
+            $matched += $thisMatch;
+            $target -= $thisMatch;
+          }
         }
       }
+      $progress += ($matched / $total) / $channelCount;
     }
-    $progress += ($matched / $total) / $channelCount;
   }
   return floor($progress * 100);
 }
