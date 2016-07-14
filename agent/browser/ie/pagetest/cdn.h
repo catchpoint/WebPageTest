@@ -5,6 +5,7 @@ typedef struct {
 
 CDN_PROVIDER cdnList[] = {
 	{".akamai.net", _T("Akamai")},
+	{".akamaized.net", _T("Akamai")},
 	{".akamaiedge.net", _T("Akamai")},
 	{".akamaihd.net", _T("Akamai")},
 	{".edgesuite.net", _T("Akamai")},
@@ -43,6 +44,7 @@ CDN_PROVIDER cdnList[] = {
 	{".netdna-cdn.com", _T("NetDNA")},
 	{".netdna-ssl.com", _T("NetDNA")},
 	{".netdna.com", _T("NetDNA")},
+	{".kxcdn.com", _T("KeyCDN")},
 	{".cotcdn.net", _T("Cotendo CDN")},
 	{".cachefly.net", _T("Cachefly")},
 	{"bo.lt", _T("BO.LT")},
@@ -54,6 +56,7 @@ CDN_PROVIDER cdnList[] = {
 	{".ourwebpic.com", _T("ChinaNetCenter")},
 	{".att-dsa.net", _T("AT&T")},
 	{".vo.msecnd.net", _T("Microsoft Azure")},
+	{".azureedge.net", _T("Microsoft Azure")},
 	{".voxcdn.net", _T("VoxCDN")},
 	{".bluehatnetwork.com", _T("Blue Hat Network")},
 	{".swiftcdn1.com", _T("SwiftCDN")},
@@ -95,6 +98,7 @@ CDN_PROVIDER cdnList[] = {
 	{".resrc.it", _T("ReSRC.it")},
 	{".zenedge.net", _T("Zenedge")},
 	{".lswcdn.net", _T("LeaseWeb CDN")},
+	{".lswcdn.eu", _T("LeaseWeb CDN")},
 	{".revcn.net", _T("Rev Software")},
 	{".revdn.net", _T("Rev Software")},
 	{".caspowa.com", _T("Caspowa")},
@@ -105,9 +109,17 @@ CDN_PROVIDER cdnList[] = {
 	{".cdninstagram.com", _T("Facebook")},
 	{".rlcdn.com", _T("Reapleaf")},
 	{".wp.com", _T("WordPress")},
+	{".aads1.net", _T("Aryaka")},
+	{".aads-cn.net", _T("Aryaka")},
+	{".aads-cng.net", _T("Aryaka")},
 	{".squixa.net", _T("section.io"}),
 	{".bisongrid.net", _T("Bison Grid")},
 	{".cdn.gocache.net", _T("GoCache")},
+	{".hiberniacdn.com", "HiberniaCDN"},
+	{".cdntel.net", _T("Telenor")},
+	{".raxcdn.com", _T("Rackspace")},
+	{".unicorncdn.net", _T("UnicornCDN")},
+	{".optimalcdn.com", _T("Optimal CDN")},
 	{NULL, NULL}
 };
 
