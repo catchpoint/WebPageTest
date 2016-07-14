@@ -104,7 +104,7 @@ CDN_PROVIDER cdnList[] = {
 	{".fbcdn.net", _T("Facebook")},
 	{".cdninstagram.com", _T("Facebook")},
 	{".rlcdn.com", _T("Reapleaf")},
-	{".wp.com", _T("WordPress Jetpack")},
+	{".wp.com", _T("WordPress")},
 	{".incapdns.net", _T("Incapsula"}),
 	{".squixa.net", _T("section.io"}),
 	{".bisongrid.net", _T("Bison Grid")},
