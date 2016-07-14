@@ -4,6 +4,9 @@ require_once __DIR__ . '/TestStepResult.php';
 
 class TestRunResults {
 
+  /**
+   * @var TestInfo
+   */
   private $testInfo;
   private $runNumber;
   private $isCached;
@@ -39,13 +42,14 @@ class TestRunResults {
    * @param int $runNumber The run number
    * @param bool $isCached False for first view, true for repeat view (cached)
    * @param FileHandler $fileHandler The FileHandler to use
+   * @param array $options Options for loading the TestStepData
    * @return TestRunResults|null The initialized object or null if it failed
    */
-  public static function fromFiles($testInfo, $runNumber, $isCached, $fileHandler = null) {
+  public static function fromFiles($testInfo, $runNumber, $isCached, $fileHandler = null, $options = null) {
     $stepResults = array();
     $isValid = false;
     for ($stepNumber = 1; $stepNumber <= $testInfo->stepsInRun($runNumber); $stepNumber++) {
-      $stepResult = TestStepResult::fromFiles($testInfo, $runNumber, $isCached, $stepNumber, $fileHandler);
+      $stepResult = TestStepResult::fromFiles($testInfo, $runNumber, $isCached, $stepNumber, $fileHandler, $options);
       $stepResults[] = $stepResult;
       $isValid = $isValid || ($stepResult !== null);
     }
@@ -140,5 +144,94 @@ class TestRunResults {
       $foundMetric = true;
     }
     return $foundMetric ? $aggregated : null;
+  }
+
+  /**
+   * @return float|null The average page speed score of all steps (if set)
+   */
+  public function averagePageSpeedScore() {
+    $numScores = 0;
+    $scoreSum = 0.0;
+    foreach ($this->stepResults as $step) {
+      $score = $step->getPageSpeedScore();
+      if ($score) {
+        $numScores += 1;
+        $scoreSum += intval($score);
+      }
+    }
+    if ($numScores == 0) {
+      return null;
+    }
+    return ceil($scoreSum / $numScores);
+  }
+
+  /**
+   * @return null|string The first valid pageSpeedVersion of a step, or null
+   */
+  public function getPageSpeedVersion() {
+    foreach ($this->stepResults as $step) {
+      $version = $step->getMetric("pageSpeedVersion");
+      if ($version) {
+        return $version;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * @param string[] $keywords Keywords to use for the check
+   * @return bool True if the checked site is an adult site, false otherwise
+   */
+  public function isAdultSite($keywords) {
+    if ($this->testInfo->isAdultSite($keywords)) {
+      return true;
+    }
+    foreach ($this->stepResults as $step) {
+      if ($step->isAdultSite($keywords)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * @param string $metric The metric to compute the average of all steps
+   * @return float|null The average metric for all steps having it set or null if not set in any step
+   */
+  public function averageMetric($metric) {
+    $sum = 0.0;
+    $numValues = 0;
+    foreach ($this->stepResults as $stepResult) {
+      $value = $stepResult->getMetric($metric);
+      if (isset($value)) {
+        $numValues++;
+        $sum += floatval($value);
+      }
+    }
+    if ($numValues == 0) {
+      return null;
+    }
+    return $sum / $numValues;
+  }
+
+  /**
+   * @return bool True if any step si optimization checked, false otherwise
+   */
+  public function isOptimizationChecked() {
+    foreach ($this->stepResults as $stepResult) {
+      if ($stepResult->getMetric("optimization_checked")) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public function hasBreakdownTimeline() {
+    foreach ($this->stepResults as $stepResult) {
+      if ($stepResult->hasBreakdownTimeline()) {
+        return true;
+      }
+    }
+    return false;
   }
 }

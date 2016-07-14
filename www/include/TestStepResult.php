@@ -41,10 +41,11 @@ class TestStepResult {
    * @param int $run The run to return the data for
    * @param bool $cached False for first view, true for repeat view
    * @param int $step The step number
+   * @param FileHandler $fileHandler The FileHandler to use
    * @return TestStepResult The created instance
    */
-  public static function fromPageData($testInfo, &$pageData, $run, $cached, $step) {
-    return new self($testInfo, $pageData, $run, $cached, $step);
+  public static function fromPageData($testInfo, $pageData, $run, $cached, $step, $fileHandler = null) {
+    return new self($testInfo, $pageData, $run, $cached, $step, $fileHandler);
   }
 
   /**
@@ -54,18 +55,33 @@ class TestStepResult {
    * @param bool $isCached False for first view, true for repeat view
    * @param int $stepNumber The step number, starting from 1
    * @param FileHandler $fileHandler The FileHandler to use
+   * @param array $options Options for the loadPageStepData
    * @return TestStepResult|null The created instance on success, null otherwise
    */
-  public static function fromFiles($testInfo, $runNumber, $isCached, $stepNumber, $fileHandler = null) {
+  public static function fromFiles($testInfo, $runNumber, $isCached, $stepNumber, $fileHandler = null, $options = null) {
     // no support to use FileHandler so far
     $localPaths = new TestPaths($testInfo->getRootDirectory(), $runNumber, $isCached, $stepNumber);
     $runCompleted = $testInfo->isRunComplete($runNumber);
-    $pageData = loadPageStepData($localPaths, $runCompleted, null, $testInfo->getInfoArray());
-    return new self($testInfo, $pageData, $runNumber, $isCached, $stepNumber);
+    $pageData = loadPageStepData($localPaths, $runCompleted, $options, $testInfo->getInfoArray());
+    return new self($testInfo, $pageData, $runNumber, $isCached, $stepNumber, $fileHandler);
   }
 
-  public function getUrlGenerator($baseUrl, $friendly = true) {
-    return UrlGenerator::create($friendly, $baseUrl, $this->testInfo->getRootDirectory(), $this->run, $this->cached);
+  /**
+   * @param string $baseUrl The base URL to use for the UrlGenerator
+   * @param bool $friendly Optional. True for friendly URLS (default), false for standard URLs
+   * @return UrlGenerator The created URL generator for this step
+   */
+  public function createUrlGenerator($baseUrl, $friendly = true) {
+    return UrlGenerator::create($friendly, $baseUrl, $this->testInfo->getId(), $this->run, $this->cached, $this->step);
+  }
+
+  /**
+   * @param string $testRoot Optional. A different test root path. If null, it's set to the default test root for local paths.
+   * @return TestPaths The created TestPaths object for this step
+   */
+  public function createTestPaths($testRoot = null) {
+    $testRoot = ($testRoot === null) ? $this->testInfo->getRootDirectory() : $testRoot;
+    return new TestPaths($testRoot, $this->run, $this->cached, $this->step);
   }
 
   /**
@@ -143,11 +159,12 @@ class TestStepResult {
 
   /**
    * @param string $default Optional. A default value if no custom event name or URL is set
-   * @return string A readable identifier for this step (EIther custom event name, URL, or $default)
+   * @return string A readable identifier for this step (Either custom event name, URL, $default, or "Step x")
    */
   public function readableIdentifier($default = "") {
-    $nameOrUrl = $this->hasCustomEventName() ? $this->getEventName() : $this->getUrl();
-    return empty($nameOrUrl) ? $default : $nameOrUrl;
+    $identifier = $this->hasCustomEventName() ? $this->getEventName() : $this->getUrl();
+    $identifier = empty($identifier) ? $default : $identifier;
+    return empty($identifier) ? ("Step " . $this->step) : $identifier;
   }
 
   /**
@@ -158,6 +175,7 @@ class TestStepResult {
     if ($this->fileHandler->gzFileExists($this->localPaths->pageSpeedFile())) {
       return GetPageSpeedScore($this->localPaths->pageSpeedFile());
     }
+    return null;
   }
 
   public function getVisualProgress() {
@@ -171,7 +189,7 @@ class TestStepResult {
 
   public function getRequests() {
     // TODO: move implementation to this method
-    return getRequestsForStep($this->localPaths, $this->getUrlGenerator(""), $secure, $haveLocations, false, true);
+    return getRequestsForStep($this->localPaths, $this->createUrlGenerator(""), $secure, $haveLocations, false, true);
   }
 
   public function getDomainBreakdown() {
@@ -182,7 +200,7 @@ class TestStepResult {
   public function getMimeTypeBreakdown() {
     // TODO: move implementation to this method
     $requests = null;
-    return getBreakdownForStep($this->localPaths, $this->getUrlGenerator(""), $requests);
+    return getBreakdownForStep($this->localPaths, $this->createUrlGenerator(""), $requests);
   }
 
   public function getConsoleLog() {
@@ -212,6 +230,38 @@ class TestStepResult {
     return $statusMessages;
   }
 
+  /**
+   * @param string[] $keywords Keywords to use for the check
+   * @return bool True if the checked site is an adult site, false otherwise
+   */
+  public function isAdultSite($keywords) {
+    if ($this->testInfo->isAdultSite($keywords)) {
+      return true;
+    }
+    foreach ($keywords as $keyword) {
+      if (!empty($this->rawData["adult_site"])) {
+        return true;
+      }
+      if (!empty($this->rawData["URL"]) && stripos($this->rawData["URL"], $keyword) !== false) {
+        return true;
+      }
+      if (!empty($this->rawData["title"]) && stripos($this->rawData["title"], $keyword) !== false) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * @return bool True if the step has a breakdown timeline, false otherwise
+   */
+  public function hasBreakdownTimeline() {
+    if (empty($this->testInfo->getInfoArray()["timeline"])) {
+      return false;
+    }
+    return $this->fileHandler->gzFileExists($this->localPaths->devtoolsFile()) ||
+           $this->fileHandler->gzFileExists($this->localPaths->devtoolsTraceFile());
+  }
 
   private function getStartOffset() {
     if (!array_key_exists('testStartOffset', $this->rawData)) {

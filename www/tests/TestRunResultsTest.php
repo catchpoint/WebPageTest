@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/../include/FileHandler.php';
 require_once __DIR__ . '/../include/TestRunResults.php';
 require_once __DIR__ . '/../include/TestInfo.php';
 require_once __DIR__ . '/../include/TestStepResult.php';
@@ -77,6 +78,102 @@ class TestRunResultsTest extends PHPUnit_Framework_TestCase {
   public function testIsSuccessful() {
     $this->assertTrue($this->getTestRunResults()->isSuccessful());
     $this->assertFalse($this->getTestRunResultsWithInvalid()->isSuccessful());
+  }
+
+  public function testIsAdultSite() {
+    $stepAdult = TestStepResult::fromPageData($this->testInfo, array("title" => "myadUltPage"), 2, false, 1);
+    $stepNonAdult = TestStepResult::fromPageData($this->testInfo, array("title" => "normalSite"), 2, false, 2);
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array($stepAdult, $stepNonAdult));
+    $this->assertTrue($runResults->isAdultSite(array("adult", "foo")));
+    $this->assertFalse($runResults->isAdultSite(array("bar", "foo")));
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array($stepNonAdult, $stepNonAdult));
+    $this->assertFalse($runResults->isAdultSite(array("adult", "foo")));
+    $this->assertFalse($runResults->isAdultSite(array("bar", "foo")));
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array($stepNonAdult, $stepNonAdult));
+    $this->assertFalse($runResults->isAdultSite(array("adult", "foo")));
+    $this->assertFalse($runResults->isAdultSite(array("bar", "foo")));
+
+    $testInfo = TestInfo::fromValues("testId", "/test/path", array("testinfo" => array("url" => "adultSite")));
+    $runResults = TestRunResults::fromStepResults($testInfo, 2, false, array($stepNonAdult, $stepNonAdult));
+    $this->assertTrue($runResults->isAdultSite(array("adult", "foo")));
+    $this->assertFalse($runResults->isAdultSite(array("bar", "foo")));
+  }
+
+  public function testAggregatePageSpeedScore() {
+    $stepNoScore = $this->getMock("TestStepResult", array(), array(), "", false);
+    $stepNoScore->method('getPageSpeedScore')->willReturn(null);
+    $stepScore55 = $this->getMock("TestStepResult", array(), array(), "", false);
+    $stepScore55->method('getPageSpeedScore')->willReturn("55");
+    $stepScore40 = $this->getMock("TestStepResult", array(), array(), "", false);
+    $stepScore40->method('getPageSpeedScore')->willReturn(40);
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array($stepNoScore, $stepScore55, $stepScore40));
+    $this->assertEquals(48, $runResults->averagePageSpeedScore());
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array($stepNoScore, $stepNoScore, $stepNoScore));
+    $this->assertEquals(null, $runResults->averagePageSpeedScore());
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array($stepNoScore, $stepScore55, $stepNoScore));
+    $this->assertEquals(55, $runResults->averagePageSpeedScore());
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array($stepScore40, $stepScore40, $stepScore40));
+    $this->assertEquals(40, $runResults->averagePageSpeedScore());
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array($stepScore40, $stepScore40, $stepScore55));
+    $this->assertEquals(45, $runResults->averagePageSpeedScore());
+  }
+
+  public function testGetPageSpeedVersion() {
+    $steps = array(
+      TestStepResult::fromPageData($this->testInfo, array(), 2, false, 1),
+      TestStepResult::fromPageData($this->testInfo, array("pageSpeedVersion" => "52.3"), 2, false, 2),
+      TestStepResult::fromPageData($this->testInfo, array("pageSpeedVersion" => "2222"), 2, false, 3),
+    );
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, $steps);
+    $this->assertEquals("52.3", $runResults->getPageSpeedVersion());
+  }
+
+  public function testIsOptimizationChecked() {
+    $steps = array(
+      TestStepResult::fromPageData($this->testInfo, array(), 2, false, 1),
+      TestStepResult::fromPageData($this->testInfo, array("optimization_checked" => null), 2, false, 2),
+      TestStepResult::fromPageData($this->testInfo, array("optimization_checked" => "2222"), 2, false, 3),
+      TestStepResult::fromPageData($this->testInfo, array(), 2, false, 4)
+    );
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, $steps);
+    $this->assertTrue($runResults->isOptimizationChecked());
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array_slice($steps, 0, 2));
+    $this->assertFalse($runResults->isOptimizationChecked());
+  }
+
+  public function testAverageMetric() {
+    $steps = array(
+      TestStepResult::fromPageData($this->testInfo, array(), 2, false, 1),
+      TestStepResult::fromPageData($this->testInfo, array("myMetric" => "40"), 2, false, 2),
+      TestStepResult::fromPageData($this->testInfo, array("myMetric" => 53), 2, false, 3),
+    );
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, $steps);
+    $this->assertEquals(46.5, $runResults->averageMetric("myMetric"));
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array_slice($steps, 0, 1));
+    $this->assertNull($runResults->averageMetric("myMetric"));
+  }
+
+  public function testHasBreakdownTimeline() {
+    $stepNoTimeline = $this->getMock("TestStepResult", array(), array(), "", false);
+    $stepNoTimeline->method('hasBreakdownTimeline')->willReturn(false);
+    $stepWithTimeline = $this->getMock("TestStepResult", array(), array(), "", false);
+    $stepWithTimeline->method('hasBreakdownTimeline')->willReturn(true);
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array($stepNoTimeline, $stepWithTimeline));
+    $this->assertTrue($runResults->hasBreakdownTimeline());
+
+    $runResults = TestRunResults::fromStepResults($this->testInfo, 2, false, array($stepNoTimeline, $stepNoTimeline));
+    $this->assertFalse($runResults->hasBreakdownTimeline());
   }
 
   private function getTestStepArray() {

@@ -37,4 +37,68 @@ class TestStepResultTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals("http://duckduckgo.com", $secondStep->getUrl());
     $this->assertEquals("http://duckduckgo.com", $secondStep->readableIdentifier());
   }
+
+  public function testReadableIdentifier() {
+    $testInfo = TestInfo::fromValues("testId", "/root/path", array());
+    $step = TestStepResult::fromPageData($testInfo, array("eventName" => "testEvent", "URL" => "testUrl"), 1, 1, 1);
+    $this->assertEquals("testEvent", $step->readableIdentifier("default"));
+
+    $step = TestStepResult::fromPageData($testInfo, array("eventName" => "Step 1", "URL" => "testUrl"), 1, 1, 1);
+    $this->assertEquals("testUrl", $step->readableIdentifier("default"));
+
+    $step = TestStepResult::fromPageData($testInfo, array("eventName" => "Step 1", "URL" => ""), 1, 1, 1);
+    $this->assertEquals("default", $step->readableIdentifier("default"));
+
+    $step = TestStepResult::fromPageData($testInfo, array("eventName" => "Step 1", "URL" => ""), 1, 1, 1);
+    $this->assertEquals("Step 1", $step->readableIdentifier(""));
+  }
+
+  public function testIsAdultSite() {
+    // testInfo matches
+    $testInfo = TestInfo::fromValues("testId", "/root/path", array("testinfo" => array("url" => "http://adultsite.com")));
+    $step = TestStepResult::fromPageData($testInfo, array("title" => "testEvent", "URL" => "testUrl"), 1, 1, 1);
+    $this->assertTrue($step->isAdultSite(array("adult", "foo")));
+
+    // not an adult site
+    $testInfo = TestInfo::fromValues("testId", "/root/path", array());
+    $step = TestStepResult::fromPageData($testInfo, array("title" => "testEvent", "URL" => "testUrl"), 1, 1, 1);
+    $this->assertFalse($step->isAdultSite(array("adult", "foo")));
+
+    // title matches, adult_site = 0 is ignored
+    $step = TestStepResult::fromPageData($testInfo, array("title" => "the AdulT site", "URL" => "testUrl", "adult_site" => 0), 1, 1, 1);
+    $this->assertTrue($step->isAdultSite(array("adult", "foo")));
+    $this->assertFalse($step->isAdultSite(array("bar", "foo")));
+
+    // URL matches
+    $step = TestStepResult::fromPageData($testInfo, array("title" => "testEvent", "URL" => "http://mysite.com/adults/"), 1, 1, 1);
+    $this->assertTrue($step->isAdultSite(array("adult", "foo")));
+    $this->assertFalse($step->isAdultSite(array("bar", "foo")));
+
+    // explicitly set
+    $step = TestStepResult::fromPageData($testInfo, array("adult_site" => 1), 1, 1, 1);
+    $this->assertTrue($step->isAdultSite(array("adult", "foo")));
+    $this->assertTrue($step->isAdultSite(array("bar", "foo")));
+  }
+
+  public function testHsBreakdownTimeline() {
+    $fileHandlerExists = $this->getMock("FileHandler");
+    $fileHandlerExists->method("gzFileExists")->willReturn(true);
+    $fileHandlerDoesntExists = $this->getMock("FileHandler");
+    $fileHandlerDoesntExists->method("gzFileExists")->willReturn(false);
+
+    $testInfoWithTimeline = TestInfo::fromValues("testId", "/root/path", array("testinfo" => array("timeline" => "1")));
+    $testInfoWithoutTimeline = TestInfo::fromValues("testId", "/root/path", array("testinfo" => array()));
+
+    $step = TestStepResult::fromPageData($testInfoWithTimeline, array(), 1, 1, 1, $fileHandlerExists);
+    $this->assertTrue($step->hasBreakdownTimeline());
+
+    $step = TestStepResult::fromPageData($testInfoWithTimeline, array(), 1, 1, 1, $fileHandlerDoesntExists);
+    $this->assertFalse($step->hasBreakdownTimeline());
+
+    $step = TestStepResult::fromPageData($testInfoWithoutTimeline, array(), 1, 1, 1, $fileHandlerExists);
+    $this->assertFalse($step->hasBreakdownTimeline());
+
+    $step = TestStepResult::fromPageData($testInfoWithoutTimeline, array(), 1, 1, 1, $fileHandlerDoesntExists);
+    $this->assertFalse($step->hasBreakdownTimeline());
+  }
 }

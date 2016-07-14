@@ -39,9 +39,10 @@ class TestResults {
    * Constructs a TestResults object by loading the information from result files
    * @param TestInfo $testInfo Test information used to load the data
    * @param FileHandler $fileHandler FileHandler to use
+   * @param array $options Options to load the TestRunResults
    * @return TestResults The new instance
    */
-  public static function fromFiles($testInfo, $fileHandler = null) {
+  public static function fromFiles($testInfo, $fileHandler = null, $options = null) {
     $runResults = array();
     $numRuns = $testInfo->getRuns();
     $firstViewOnly = $testInfo->isFirstViewOnly();
@@ -50,8 +51,8 @@ class TestResults {
       if (!$testComplete && !$testInfo->isRunComplete($runNumber)) {
         continue;
       }
-      $firstView = TestRunResults::fromFiles($testInfo, $runNumber, false, $fileHandler);
-      $repeatView = $firstViewOnly ? null : TestRunResults::fromFiles($testInfo, $runNumber, true, $fileHandler);
+      $firstView = TestRunResults::fromFiles($testInfo, $runNumber, false, $fileHandler, $options);
+      $repeatView = $firstViewOnly ? null : TestRunResults::fromFiles($testInfo, $runNumber, true, $fileHandler, $options);
       $runResults[] = array($firstView, $repeatView);
     }
 
@@ -187,6 +188,25 @@ class TestResults {
     }
     $medianIndex = (int)floor($numValues / 2.0);
     return $runNumbers[$medianIndex];
+  }
+
+  /**
+   * @param string[] $keywords Keywords to use for the check
+   * @return bool True if the checked site is an adult site, false otherwise
+   */
+  public function isAdultSite($keywords) {
+    if ($this->testInfo->isAdultSite($keywords)) {
+      return true;
+    }
+    for ($i = 0; $i < $this->numRuns; $i++) {
+      if (isset($this->runResults[$i][0]) && $this->runResults[$i][0]->isAdultSite($keywords)) {
+        return true;
+      }
+      if (isset($this->runResults[$i][1]) && $this->runResults[$i][0]->isAdultSite($keywords)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private function calculateAverages($cached) {

@@ -38,9 +38,10 @@ abstract class UrlGenerator {
 
   /**
    * @param string $page Result page to generate the URL for
+   * @param string $extraParams|null Extra parameters to append (without '?' or '&' at start)
    * @return string The generated URL
    */
-  public abstract function resultPage($page);
+  public abstract function resultPage($page, $extraParams = null);
 
   /**
    * @param string $image Image name to generate the thumbnail URL for
@@ -50,9 +51,15 @@ abstract class UrlGenerator {
 
   /**
    * @param string $image Generated image name to generate the URL for
-   * @return mixed The generated URL
+   * @return string The generated URL
    */
   public abstract function generatedImage($image);
+
+  /**
+   * @param string $extraParams|null Extra parameters to append (without '?' or '&' at start)
+   * @return string The generated URL
+   */
+  public abstract function resultSummary($extraParams = null);
 
   /**
    * @param string $file The name of the file to get with the URL
@@ -91,6 +98,24 @@ abstract class UrlGenerator {
     return $this->baseUrl . "/response_body.php?" . $this->urlParams() . "&bodyid=" . strval($bodyId);
   }
 
+  /**
+   * @return string The generated URL to create a video
+   */
+  public function createVideo() {
+    $testSuffix = ($this->step > 1) ? ("-s:" . $this->step) : "";
+    $idSuffix = ($this->step > 1) ? ("." . $this->step) : "";
+    $tests = $this->testId . "-r:" . $this->run . "-c:" . ($this->cached ? 1 : 0) . $testSuffix;
+    $id = $this->testId . "." . $this->run . "." . ($this->cached ? 1 : 0) . $idSuffix;
+    return $this->baseUrl . "/video/create.php?tests=" . $tests . "&id=" . $id;
+  }
+
+  /**
+   * @return string The generated URL to download all video frames
+   */
+  public function downloadVideoFrames() {
+    return $this->baseUrl . "/video/downloadFrames.php?" . $this->urlParams();
+  }
+
   protected function underscorePrefix() {
     $stepSuffix = $this->step > 1 ? ($this->step . "_") : "";
     return strval($this->run) . "_" . ($this->cached ? "Cached_" : "") . $stepSuffix;
@@ -104,13 +129,16 @@ abstract class UrlGenerator {
 
 class FriendlyUrlGenerator extends UrlGenerator {
 
-  public function resultPage($page) {
+  public function resultPage($page, $extraParams = null) {
     $url = $this->baseUrl . "/result/" . $this->testId . "/" . $this->run . "/" . $page . "/";
     if ($this->cached) {
       $url .= "cached/";
     }
     if ($this->step > 1) {
       $url .= $this->step . "/";
+    }
+    if ($extraParams != null) {
+      $url .= "?" . $extraParams;
     }
     return $url;
   }
@@ -136,15 +164,20 @@ class FriendlyUrlGenerator extends UrlGenerator {
     return $this->baseUrl . "/results/" . $testPath . "/" . $this->underscorePrefix() . $image . ".png";
   }
 
-  public function resultSummary() {
-    return $this->baseUrl . "/result/" . $this->testId . "/";
+  public function resultSummary($extraParams = null) {
+    $url = $this->baseUrl . "/result/" . $this->testId . "/";
+    if ($extraParams != null) {
+      $url .= "?" . $extraParams;
+    }
+    return $url;
   }
 }
 
 class StandardUrlGenerator extends UrlGenerator {
 
-  public function resultPage($page) {
-    return $this->baseUrl . "/" . $page . ".php?" . $this->urlParams();
+  public function resultPage($page, $extraParams = null) {
+    $extraParams = $extraParams ? ("&" . $extraParams) : "";
+    return $this->baseUrl . "/" . $page . ".php?" . $this->urlParams() . $extraParams;
   }
 
   public function thumbnail($image) {
@@ -155,7 +188,8 @@ class StandardUrlGenerator extends UrlGenerator {
     return $this->baseUrl . "/" . $image . ".php?" . $this->urlParams();
   }
 
-  public function resultSummary() {
-    return $this->baseUrl . "/results.php?test=" . $this->testId;
+  public function resultSummary($extraParams = null) {
+    $extraParams = $extraParams ? ("&" . $extraParams) : "";
+    return $this->baseUrl . "/results.php?test=" . $this->testId . $extraParams;
   }
 }

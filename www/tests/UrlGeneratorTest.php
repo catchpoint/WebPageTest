@@ -45,6 +45,8 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
 
     $ug = UrlGenerator::create(false, "https://test/", "qwerty", 3, true);
     $this->assertEquals($expectedCached, $ug->resultPage("details"));
+
+    $this->assertEquals($expectedCached . "&param=value", $ug->resultPage("details", "param=value"));
   }
 
   public function testResultPageStandardUrlWithStep() {
@@ -56,6 +58,8 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
 
     $ug = UrlGenerator::create(false, "https://test/", "qwerty", 3, true, 2);
     $this->assertEquals($expectedCached, $ug->resultPage("details"));
+
+    $this->assertEquals($expectedCached . "&param=value", $ug->resultPage("details", "param=value"));
   }
 
   public function testResultPageFriendlyUrl() {
@@ -67,6 +71,8 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
 
     $ug = UrlGenerator::create(true, "https://test/", "qwerty", 3, true);
     $this->assertEquals($expectedCached, $ug->resultPage("details"));
+
+    $this->assertEquals($expectedCached . "?param=value", $ug->resultPage("details", "param=value"));
   }
 
   public function testResultPageFriendlyUrlWithStep() {
@@ -78,6 +84,8 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
 
     $ug = UrlGenerator::create(true, "https://test/", "qwerty", 3, true, 2);
     $this->assertEquals($expectedCached, $ug->resultPage("details"));
+
+    $this->assertEquals($expectedCached . "?param=value", $ug->resultPage("details", "param=value"));
   }
 
   public function testThumbStandardUrl() {
@@ -161,12 +169,14 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
     $expected = "https://test/result/160609_a7_b8/";
     $ug = UrlGenerator::create(true, "https://test/", "160609_a7_b8", 3, true, 2);
     $this->assertEquals($expected, $ug->resultSummary());
+    $this->assertEquals($expected . "?param=value", $ug->resultSummary("param=value"));
   }
 
   public function testResultSummaryStandardUrl() {
     $expected = "https://test/results.php?test=160609_a7_b8";
     $ug = UrlGenerator::create(false, "https://test/", "160609_a7_b8", 3, true, 2);
     $this->assertEquals($expected, $ug->resultSummary());
+    $this->assertEquals($expected . "&param=value", $ug->resultSummary("param=value"));
   }
 
   public function testGetGZipUrl() {
@@ -179,5 +189,23 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
     $expected = "https://test/getgzip.php?test=160609_a7_b8&compressed=1&file=foobar.txt.gz";
     $ug = UrlGenerator::create(true, "https://test/", "160609_a7_b8", 3, true);
     $this->assertEquals($expected, $ug->getGZip("foobar.txt.gz"));
+  }
+
+  public function testCreateVideoUrl() {
+    $expected = "https://test/video/create.php?tests=160609_a7_b8-r:3-c:1&id=160609_a7_b8.3.1";
+    $ug = UrlGenerator::create(false, "https://test/", "160609_a7_b8", 3, true, 1);
+    $this->assertEquals($expected, $ug->createVideo());
+  }
+
+  public function testCreateVideoUrlMultistep() {
+    $expected = "https://test/video/create.php?tests=160609_a7_b8-r:3-c:1-s:2&id=160609_a7_b8.3.1.2";
+    $ug = UrlGenerator::create(false, "https://test/", "160609_a7_b8", 3, true, 2);
+    $this->assertEquals($expected, $ug->createVideo());
+  }
+
+  public function testDownloadVideoFrames() {
+    $expected = "https://test/video/downloadFrames.php?test=160609_a7_b8&run=3&cached=1&step=2";
+    $ug = UrlGenerator::create(false, "https://test/", "160609_a7_b8", 3, true, 2);
+    $this->assertEquals($expected, $ug->downloadVideoFrames());
   }
 }

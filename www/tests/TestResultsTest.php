@@ -6,12 +6,12 @@ require_once __DIR__ . '/../include/TestResults.php';
 class TestResultsTest extends PHPUnit_Framework_TestCase {
 
   public function testCountRuns() {
-    $results = $this->testResultsFromPageData();
+    $results = $this->getTestResultsFromPageData();
     $this->assertEquals(4, $results->countRuns());
   }
 
   public function testGetMedianRunNumber() {
-    $results = $this->testResultsFromPageData();
+    $results = $this->getTestResultsFromPageData();
 
     $this->assertEquals(3, $results->getMedianRunNumber("loadTime", false));
     $this->assertEquals(1, $results->getMedianRunNumber("TTFB", false));
@@ -20,7 +20,7 @@ class TestResultsTest extends PHPUnit_Framework_TestCase {
   }
 
   public function testGetMedianRunNumberFastestMode() {
-    $results = $this->testResultsFromPageData();
+    $results = $this->getTestResultsFromPageData();
 
     $this->assertEquals(4, $results->getMedianRunNumber("loadTime", false, "fastest"));
     $this->assertEquals(3, $results->getMedianRunNumber("TTFB", false, "fastest"));
@@ -30,7 +30,7 @@ class TestResultsTest extends PHPUnit_Framework_TestCase {
   }
 
   public function testGetFirstViewAverage() {
-    $results = $this->testResultsFromPageData();
+    $results = $this->getTestResultsFromPageData();
     $fvAverages = $results->getFirstViewAverage();
     $this->assertEquals(300, $fvAverages["TTFB"]);
     $this->assertEquals(3000, $fvAverages["loadTime"]);
@@ -38,7 +38,7 @@ class TestResultsTest extends PHPUnit_Framework_TestCase {
   }
 
   public function testGetRepeatViewAverage() {
-    $results = $this->testResultsFromPageData();
+    $results = $this->getTestResultsFromPageData();
     $fvAverages = $results->getRepeatViewAverage();
     $this->assertEquals(400, $fvAverages["TTFB"]);
     $this->assertEquals(4000, $fvAverages["loadTime"]);
@@ -46,7 +46,7 @@ class TestResultsTest extends PHPUnit_Framework_TestCase {
   }
 
   public function testGetStandardDeviation() {
-    $results = $this->testResultsFromPageData();
+    $results = $this->getTestResultsFromPageData();
 
     $this->assertEquals(2160, $results->getStandardDeviation("loadTime", false));
     $this->assertEquals(163, $results->getStandardDeviation("TTFB", false));
@@ -54,7 +54,22 @@ class TestResultsTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals(81, $results->getStandardDeviation("TTFB", true));
   }
 
-  public function testResultsFromPageData() {
+  public function testIsAdultSite() {
+    $pageData = array(
+      1 => array(array("title" => "normalPage")),
+      2 => array(array("title" => "aduLtpage"))
+    );
+    $results = TestResults::fromPageData(TestInfo::fromValues("testId", "/test/path" , array()), $pageData);
+    $this->assertTrue($results->isAdultSite(array("foo", "adult")));
+    $this->assertFalse($results->isAdultSite(array("foo", "bar")));
+
+    $testInfo = TestInfo::fromValues("testId", "/test/path", array("testinfo" => array("url" => "adultSite")));
+    $results = TestResults::fromPageData($testInfo, array(1 => $pageData[1]));
+    $this->assertTrue($results->isAdultSite(array("foo", "adult")));
+    $this->assertFalse($results->isAdultSite(array("foo", "bar")));
+  }
+
+  private function getTestResultsFromPageData() {
     $run1 = array('result' => 0, 'TTFB' => 300, 'loadTime' => 6000);
     $run2 = array('result' => 404, 'TTFB' => 200, 'loadTime' => 3000);
     $run3 = array('result' => 0, 'TTFB' => 100, 'loadTime' => 2000);
