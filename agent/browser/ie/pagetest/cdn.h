@@ -112,7 +112,7 @@ CDN_PROVIDER cdnList[] = {
 	{".aads1.net", _T("Aryaka")},
 	{".aads-cn.net", _T("Aryaka")},
 	{".aads-cng.net", _T("Aryaka")},
-	{".squixa.net", _T("section.io"}),
+	{".squixa.net", _T("section.io")},
 	{".bisongrid.net", _T("Bison Grid")},
 	{".cdn.gocache.net", _T("GoCache")},
 	{".hiberniacdn.com", "HiberniaCDN"},
