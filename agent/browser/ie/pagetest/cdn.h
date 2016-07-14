@@ -53,7 +53,7 @@ CDN_PROVIDER cdnList[] = {
 	{".wscloudcdn.com", _T("ChinaNetCenter")},
 	{".ourwebpic.com", _T("ChinaNetCenter")},
 	{".att-dsa.net", _T("AT&T")},
-	{".vo.msecnd.net", _T("Windows Azure")},
+	{".vo.msecnd.net", _T("Microsoft Azure")},
 	{".voxcdn.net", _T("VoxCDN")},
 	{".bluehatnetwork.com", _T("Blue Hat Network")},
 	{".swiftcdn1.com", _T("SwiftCDN")},
