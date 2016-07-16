@@ -224,10 +224,26 @@ void RequestData::ProcessRequestLine() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void ResponseData::AddHeader(const char * header, const char * value) {
-  HttpData::AddHeader(header, value);
-  if (!lstrcmpiA(header, ":status")) {
-    _result = atoi(value);
-    _protocol_version = 2.0;
+  // validate that the header and value are both valid/printable ascii
+  if (header && value) {
+    int hlen = lstrlenA(header);
+    int vlen = lstrlenA(value);
+    if (hlen > 0 && vlen >= 0 && hlen < 100000 && vlen < 100000) {
+      CStringA hFiltered, vFiltered;
+      for (int i = 0; i < hlen; i++)
+        if (isprint(header[i]))
+          hFiltered += header[i];
+      for (int i = 0; i < vlen; i++)
+        if (isprint(value[i]))
+          vFiltered += value[i];
+      if (hFiltered.GetLength()) {
+        HttpData::AddHeader(hFiltered, vFiltered);
+        if (!lstrcmpiA(header, ":status")) {
+          _result = atoi(value);
+          _protocol_version = 2.0;
+        }
+      }
+    }
   }
 }
 
