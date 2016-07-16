@@ -286,8 +286,8 @@ $page_description = "Website performance test details$testLabel";
                       if ($data['firstPaint'] > 0)
                         echo "RUM First Paint</th><th>";
                       if (isset($data['domInteractive']) && $data['domInteractive'] > 0)
-                        echo "<a href=\"http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#process\">domInteractive</a></th><th>";
-                      echo "<a href=\"http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#process\">domContentLoaded</a></th><th><a href=\"http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#process\">loadEvent</a></th>";
+                        echo "<a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">domInteractive</a></th><th>";
+                      echo "<a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">domContentLoaded</a></th><th><a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">loadEvent</a></th>";
                     }
                     echo '</tr><tr>';
                     if ($timingCount)
