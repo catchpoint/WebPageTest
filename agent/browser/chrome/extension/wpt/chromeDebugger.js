@@ -265,13 +265,20 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
     tracing = true;
     if (params['value'] !== undefined) {
       // Collect the netlog events separately for calculating the request timings
+      var jsonStr = '';
       var len = params['value'].length;
+      var first = true;
       for(var i = 0; i < len; i++) {
         if (params['value'][i]['cat'] == 'blink.user_timing')
           g_instance.userTiming.push(params['value'][i]);
+        if (!first)
+          jsonStr += ",\n";
+        jsonStr += JSON.stringify(params['value'][i]);
+        first = false;
       }
-      if (g_instance.trace || g_instance.timeline)
-        wpt.chromeDebugger.sendEvent('trace', JSON.stringify(params['value']));
+      if (g_instance.trace || g_instance.timeline) {
+        wpt.chromeDebugger.sendEvent('trace', jsonStr);
+      }
     }
   }
   if (message === 'Tracing.tracingComplete') {

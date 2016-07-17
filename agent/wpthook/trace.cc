@@ -63,22 +63,21 @@ bool Trace::Write(CString file) {
       DWORD bytes_written;
       ok = true;
       bool first = true;
-      CStringA event_string = "{\"traceEvents\": [";
+      CStringA event_string = "{\"traceEvents\": [\n";
       WriteFile(file_handle, (LPCSTR)event_string, event_string.GetLength(), &bytes_written, 0);
       POSITION pos = events_.GetHeadPosition();
       while (pos) {
         event_string = events_.GetNext(pos);
-        event_string.Trim("[]");
+        event_string.Trim("[],\n");
         if (event_string.GetLength()) {
-          if (first)
-            first = false;
-          else
-            event_string = CStringA(",") + event_string;
+          if (!first)
+            event_string = CStringA(",\n") + event_string;
+          first = false;
           WriteFile(file_handle, (LPCSTR)event_string,
                     event_string.GetLength(), &bytes_written, 0);
         }
       }
-      event_string = "]}";
+      event_string = "\n]}";
       WriteFile(file_handle, (LPCSTR)event_string, event_string.GetLength(), &bytes_written, 0);
       CloseHandle(file_handle);
     }
@@ -126,22 +125,21 @@ bool Trace::GetJSON(CStringA &json) {
   EnterCriticalSection(&cs_);
   if (!events_.IsEmpty()) {
     ok = true;
-    json = "{\"traceEvents\": [";
+    json = "{\"traceEvents\": [\n";
     bool first = true;
     CStringA chunk;
     POSITION pos = events_.GetHeadPosition();
     while (pos) {
       chunk = events_.GetNext(pos);
-      chunk.Trim("[]");
+      chunk.Trim("[],\n");
       if (chunk.GetLength()) {
-        if (first)
-          first = false;
-        else
-          chunk = CStringA(",") + chunk;
+        if (!first)
+          chunk = CStringA(",\n") + chunk;
+        first = false;
         json += chunk;
       }
     }
-    json = "]}";
+    json = "\n]}";
   }
   LeaveCriticalSection(&cs_);
   return ok;
