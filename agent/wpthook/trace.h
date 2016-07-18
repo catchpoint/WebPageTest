@@ -40,5 +40,4 @@ private:
   CRITICAL_SECTION cs_;
   CAtlList<CStringA> events_;
   bool processed_;
-  bool GetJSON(CStringA &json);
 };

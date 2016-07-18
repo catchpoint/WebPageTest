@@ -57,8 +57,9 @@ WptTest::WptTest(void):
   ,_activity_timeout(DEFAULT_ACTIVITY_TIMEOUT)
   ,_measurement_timeout(DEFAULT_TEST_TIMEOUT)
   ,has_gpu_(false)
-  ,lock_count_(0),
-  _script_timeout_multiplier(2) {
+  ,lock_count_(0)
+  ,_script_timeout_multiplier(2)
+  ,overrode_ua_string_(false) {
   QueryPerformanceFrequency(&_perf_frequency);
 
   // figure out what our working diriectory is
@@ -533,13 +534,15 @@ void WptTest::BuildScript() {
     _script_commands.AddHead(command);
   }
 
-  CStringA append = GetAppendUA();
-  if(!append.IsEmpty()) {
-    ScriptCommand command;
-    command.command = _T("appendUserAgent");
-    command.target = append;
-    command.record = false;
-    _script_commands.AddHead(command);
+  if (!overrode_ua_string_) {
+    CStringA append = GetAppendUA();
+    if(!append.IsEmpty()) {
+      ScriptCommand command;
+      command.command = _T("appendUserAgent");
+      command.target = append;
+      command.record = false;
+      _script_commands.AddHead(command);
+    }
   }
 
   if (HasCustomCommandLine()) {
@@ -571,7 +574,8 @@ void WptTest::BuildScript() {
     _viewport_height = 0;
   }
 
-  if (!_user_agent.IsEmpty() &&
+  if (!overrode_ua_string_ &&
+      !_user_agent.IsEmpty() &&
       !_preserve_user_agent &&
       _user_agent.Find(" " + _user_agent_modifier + "/") == -1) {
     _user_agent += " " + GetAppendUA();
@@ -933,12 +937,14 @@ bool WptTest::ModifyRequestHeader(CStringA& header) const {
   CStringA value = header.Mid(pos + 1).Trim();
   ATLTRACE(_T("Checking header '%S', value '%S'"), (LPCSTR)tag, (LPCSTR)value);
   if( !tag.CompareNoCase("User-Agent") ) {
-    if (_user_agent.GetLength()) {
-      modified = true;
-      header = CStringA("User-Agent: ") + _user_agent;
-    } else if(!_preserve_user_agent && value.Find(" " + _user_agent_modifier + "/") == -1) {
-      modified = true;
-      header += " " + GetAppendUA();
+    if (!overrode_ua_string_) {
+      if (_user_agent.GetLength()) {
+        modified = true;
+        header = CStringA("User-Agent: ") + _user_agent;
+      } else if(!_preserve_user_agent && value.Find(" " + _user_agent_modifier + "/") == -1) {
+        modified = true;
+        header += " " + GetAppendUA();
+      }
     }
   } else if (!tag.CompareNoCase("Host")) {
     CStringA new_headers;

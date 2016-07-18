@@ -225,4 +225,5 @@ private:
   void GetCPUTime(FILETIME &cpu_time, FILETIME &total_time);
   double GetElapsedMilliseconds(FILETIME &start, FILETIME &end);
   void CollectMemoryStats();
+  void UpdateStoredBrowserVersion();
 };

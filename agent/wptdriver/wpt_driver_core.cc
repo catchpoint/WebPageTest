@@ -191,7 +191,7 @@ void WptDriverCore::WorkThread(void) {
         if (profiles_dir.GetLength())
           DeleteDirectory(profiles_dir, false);
         WebBrowser browser(_settings, test, _status, _settings._browser, 
-                           _ipfw);
+                           _ipfw, _webpagetest.WptVersion());
         if (SetupWebPageReplay(test, browser) &&
             !TracerouteTest(test)) {
           test._index = test._specific_index ? test._specific_index : 1;

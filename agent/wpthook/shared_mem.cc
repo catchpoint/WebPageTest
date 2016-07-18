@@ -44,6 +44,7 @@ bool  shared_has_gpu = false;
 int   shared_result = -1;
 WCHAR shared_browser_exe[MAX_PATH] = {NULL};
 DWORD shared_browser_process_id = 0;
+bool  shared_overrode_ua_string = false;
 #pragma data_seg ()
 
 #pragma comment(linker,"/SECTION:.shared,RWS")
@@ -132,5 +133,17 @@ void WINAPI SetBrowserExe(const WCHAR * exe) {
 -----------------------------------------------------------------------------*/
 DWORD WINAPI GetBrowserProcessId() {
   return shared_browser_process_id;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WINAPI SetOverrodeUAString(bool overrode_ua_string) {
+  shared_overrode_ua_string = overrode_ua_string;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool WINAPI GetOverrodeUAString() {
+  return shared_overrode_ua_string;
 }
 

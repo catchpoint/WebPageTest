@@ -90,7 +90,8 @@ TestServer::TestServer(WptHook& hook, WptTestHook &test, TestState& test_state,
   ,test_state_(test_state)
   ,requests_(requests)
   ,trace_(trace)
-  ,started_(false) {
+  ,started_(false)
+  ,stored_ua_string_(false) {
   InitializeCriticalSection(&cs);
   last_cpu_idle_.QuadPart = 0;
   last_cpu_kernel_.QuadPart = 0;
@@ -173,6 +174,27 @@ void TestServer::MongooseCallback(enum mg_event event,
     WptTrace(loglevel::kFrequentEvent, _T("[wpthook] HTTP Query String: %s\n"), 
                     (LPCTSTR)CA2T(request_info->query_string, CP_UTF8));
     if (strcmp(request_info->uri, "/task") == 0) {
+      if (!stored_ua_string_) {
+        if (!shared_overrode_ua_string) {
+          for (int i = 0; i < request_info->num_headers; i++) {
+            if (request_info->http_headers[i].name && request_info->http_headers[i].value) {
+              if (!lstrcmpiA(request_info->http_headers[i].name, "User-Agent")) {
+                CString user_agent = CA2T(request_info->http_headers[i].value, CP_UTF8);
+                HKEY ua_key;
+                if (RegCreateKeyEx(HKEY_CURRENT_USER,
+                    _T("Software\\WebPagetest\\wptdriver\\BrowserUAStrings"), 0, 0, 0, 
+                    KEY_READ | KEY_WRITE, 0, &ua_key, 0) == ERROR_SUCCESS) {
+                  RegSetValueEx(ua_key, test_._browser, 0, REG_SZ,
+                                (const LPBYTE)(LPCTSTR)user_agent, 
+                                (user_agent.GetLength() + 1) * sizeof(TCHAR));
+                  RegCloseKey(ua_key);
+                }
+              }
+            }
+          }
+        }
+        stored_ua_string_ = true;
+      }
       CStringA task;
       if (OkToStart()) {
         bool record = false;

@@ -55,6 +55,7 @@ private:
   Trace             &trace_;
   CRITICAL_SECTION  cs;
   bool              started_;
+  bool              stored_ua_string_;
   ULARGE_INTEGER    last_cpu_idle_;
   ULARGE_INTEGER    last_cpu_kernel_;
   ULARGE_INTEGER    last_cpu_user_;

@@ -227,6 +227,7 @@ public:
   int     _no_run;  // conditional block support - if/else/endif
   CStringA _current_event_name;
   bool    _is_chrome;
+  bool    overrode_ua_string_;
 
   // system information
   bool      has_gpu_;

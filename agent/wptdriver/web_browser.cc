@@ -81,13 +81,14 @@ static const TCHAR * FIREFOX_REQUIRED_OPTIONS[] = {
 -----------------------------------------------------------------------------*/
 WebBrowser::WebBrowser(WptSettings& settings, WptTestDriver& test, 
                        WptStatus &status, BrowserSettings& browser,
-                       CIpfw &ipfw):
+                       CIpfw &ipfw, DWORD wpt_ver):
   _settings(settings)
   ,_test(test)
   ,_status(status)
   ,_browser_process(NULL)
   ,_browser(browser)
-  ,_ipfw(ipfw) {
+  ,_ipfw(ipfw)
+  ,_wpt_ver(wpt_ver) {
 
   InitializeCriticalSection(&cs);
 
@@ -117,6 +118,7 @@ bool WebBrowser::RunAndWait() {
 
   // signal to the IE BHO that it needs to inject the code
   HANDLE active_event = CreateMutex(&null_dacl, TRUE, GLOBAL_TESTING_MUTEX);
+  SetOverrodeUAString(false);
 
   if (_test.Start() && ConfigureIpfw(_test)) {
     if (_browser._exe.GetLength()) {
@@ -155,12 +157,39 @@ bool WebBrowser::RunAndWait() {
             lstrcat(cmdLine, CHROME_SOFTWARE_RENDER);
           if (_test._emulate_mobile)
             lstrcat(cmdLine, CHROME_DISABLE_PLUGINS);
+
+          CString user_agent;
           if (_test._user_agent.GetLength() &&
               _test._user_agent.Find(_T('"')) == -1) {
+            user_agent = CA2T(_test._user_agent, CP_UTF8);
+          } else if (!_test._preserve_user_agent) {
+            // See if we have a stored version of what the UA string should be
+            HKEY ua_key;
+            if (RegCreateKeyEx(HKEY_CURRENT_USER,
+                _T("Software\\WebPagetest\\wptdriver\\BrowserUAStrings"), 0, 0, 0, 
+                KEY_READ, 0, &ua_key, 0) == ERROR_SUCCESS) {
+                TCHAR buff[10000];
+                DWORD len = sizeof(buff);
+                if (RegQueryValueEx(ua_key, _test._browser, 0, 0, (LPBYTE)buff, &len) 
+                    == ERROR_SUCCESS) {
+                  user_agent = buff;
+                }
+              RegCloseKey(ua_key);
+            }
+          }
+          if (user_agent.GetLength()) {
+            if (!_test._preserve_user_agent) {
+              CString append;
+              CString product = _test._append_user_agent.GetLength() ? 
+                  CA2T(_test._append_user_agent, CP_UTF8) : _T("PTST");
+              append.Format(_T(" %s/%d"), (LPCTSTR)product, _wpt_ver);
+              user_agent += append;
+            }
             lstrcat(cmdLine, CHROME_USER_AGENT);
             lstrcat(cmdLine, _T("\""));
-            lstrcat(cmdLine, CA2T(_test._user_agent, CP_UTF8));
+            lstrcat(cmdLine, user_agent);
             lstrcat(cmdLine, _T("\""));
+            SetOverrodeUAString(true);
           }
         }
         if (_test._browser_additional_command_line.GetLength()) {

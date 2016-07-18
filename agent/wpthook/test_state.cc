@@ -175,6 +175,7 @@ void __stdcall CollectData(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
 void TestState::Start() {
   WptTrace(loglevel::kFunction, _T("[wpthook] TestState::Start()\n"));
   Reset();
+  UpdateStoredBrowserVersion();
   QueryPerformanceCounter(&_step_start);
   GetSystemTime(&_start_time);
   if (!_start.QuadPart)
@@ -1038,6 +1039,42 @@ void TestState::CollectMemoryStats() {
         }
       }
       free(mem);
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Collect the memory stats for the top-level process and all child processes
+-----------------------------------------------------------------------------*/
+void TestState::UpdateStoredBrowserVersion() {
+  // Update the registry key we use for tracking the version (and the default UA string)
+  if (_browser_version.GetLength() && _test._browser.GetLength()) {
+    HKEY key;
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
+        _T("Software\\WebPagetest\\wptdriver\\BrowserVersions"), 0, 0, 0, 
+        KEY_READ | KEY_WRITE, 0, &key, 0) == ERROR_SUCCESS) {
+      TCHAR buff[1024];
+      DWORD len = sizeof(buff);
+      bool same_version = false;
+      if (RegQueryValueEx(key, _test._browser, 0, 0, (LPBYTE)buff, &len) 
+          == ERROR_SUCCESS) {
+        if (!_browser_version.Compare(buff))
+          same_version = true;
+      }
+      if (!same_version) {
+        RegSetValueEx(key, _test._browser, 0, REG_SZ,
+                      (const LPBYTE)(LPCTSTR)_browser_version, 
+                      (_browser_version.GetLength() + 1) * sizeof(TCHAR));
+        // If the browser version changed, delete the now-invalid stored UA string
+        HKEY ua_key;
+        if (RegCreateKeyEx(HKEY_CURRENT_USER,
+            _T("Software\\WebPagetest\\wptdriver\\BrowserUAStrings"), 0, 0, 0, 
+            KEY_READ | KEY_WRITE, 0, &ua_key, 0) == ERROR_SUCCESS) {
+          RegDeleteValue(ua_key, _test._browser);
+          RegCloseKey(ua_key);
+        }
+      }
+      RegCloseKey(key);
     }
   }
 }
