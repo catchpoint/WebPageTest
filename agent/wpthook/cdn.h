@@ -63,6 +63,7 @@ CDN_PROVIDER cdnList[] = {
   {".srip.net", "Akamai"},
   {".akamaitechnologies.com", "Akamai"},
   {".akamaitechnologies.fr", "Akamai"},
+  {".tl88.net", "Akamai China CDN"},
   {".llnwd.net", "Limelight"},
   {"edgecastcdn.net", "Edgecast"},
   {".systemcdn.net", "Edgecast"},
