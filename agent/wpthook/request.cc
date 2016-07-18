@@ -660,18 +660,20 @@ bool Request::Process() {
       }
     }
 
-    _test_state._requests++;
-    if (_start.QuadPart <= _test_state._on_load.QuadPart)
-      _test_state._doc_requests++;
-    int result = GetResult();
-    if (!_test_state._first_byte.QuadPart && result == 200 && 
-        _first_byte.QuadPart )
-      _test_state._first_byte.QuadPart = _first_byte.QuadPart;
-    if (result != 401 && (result >= 400 || result < 0)) {
-      if (_test_state._test_result == TEST_RESULT_NO_ERROR)
-        _test_state._test_result = TEST_RESULT_CONTENT_ERROR;
-      else if (_test_state._test_result == TEST_RESULT_TIMEOUT)
-        _test_state._test_result = TEST_RESULT_TIMEOUT_CONTENT_ERROR;
+    if (ret) {
+      _test_state._requests++;
+      if (_start.QuadPart <= _test_state._on_load.QuadPart)
+        _test_state._doc_requests++;
+      int result = GetResult();
+      if (!_test_state._first_byte.QuadPart && result == 200 && 
+          _first_byte.QuadPart )
+        _test_state._first_byte.QuadPart = _first_byte.QuadPart;
+      if (result != 401 && (result >= 400 || result < 0)) {
+        if (_test_state._test_result == TEST_RESULT_NO_ERROR)
+          _test_state._test_result = TEST_RESULT_CONTENT_ERROR;
+        else if (_test_state._test_result == TEST_RESULT_TIMEOUT)
+          _test_state._test_result = TEST_RESULT_TIMEOUT_CONTENT_ERROR;
+      }
     }
 
     CStringA user_agent = GetRequestHeader("User-Agent");
