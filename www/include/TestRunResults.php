@@ -215,6 +215,20 @@ class TestRunResults {
   }
 
   /**
+   * @param string $metric The metric to check for
+   * @return bool True if the metric is present and > 0 in any step, false otherwise
+   */
+  public function hasValidMetric($metric) {
+    foreach ($this->stepResults as $stepResult) {
+      $value = $stepResult->getMetric($metric);
+      if (!empty($value)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * @return bool True if any step si optimization checked, false otherwise
    */
   public function isOptimizationChecked() {
