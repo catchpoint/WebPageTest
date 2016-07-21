@@ -4,9 +4,15 @@ require_once('object_detail.inc');
 require_once('page_data.inc');
 require_once('waterfall.inc');
 
+require_once __DIR__ . '/include/TestInfo.php';
+require_once __DIR__ . '/include/TestRunResults.php';
+require_once __DIR__ . '/include/RunResultHtmlTable.php';
+
 $options = null;
 if (array_key_exists('end', $_REQUEST))
     $options = array('end' => $_REQUEST['end']);
+$testInfo = TestInfo::fromFiles($testPath);
+$testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, null, $options);
 $data = loadPageRunData($testPath, $run, $cached, $options, $test['testinfo']);
 
 $page_keywords = array('Performance Test','Details','Webpagetest','Website Speed Test','Page Speed');
@@ -132,97 +138,12 @@ $page_description = "Website performance test details$testLabel";
                 </div>
                 <div class="cleared"></div>
                 <br>
-                <table id="tableResults" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
-                    <tr>
-                        <?php
-                        $cols = 4;
-                        if (array_key_exists('userTime', $data) && (float)$data['userTime'] > 0.0)
-                            $cols++;
-                        if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0)
-                            $cols++;
-                        if (array_key_exists('aft', $test['test']) && $test['test']['aft'] )
-                            $cols++;
-                        if (array_key_exists('domElements', $data) && $data['domElements'] > 0)
-                            $cols++;
-                        if (array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0)
-                            $cols++;
-                        if (array_key_exists('visualComplete', $data) && (float)$data['visualComplete'] > 0.0)
-                            $cols++;
-                        ?>
-                        <th align="center" class="empty" valign="middle" colspan=<?php echo "\"$cols\"";?> ></th>
-                        <th align="center" class="border" valign="middle" colspan="3">Document Complete</th>
-                        <th align="center" class="border" valign="middle" colspan="3">Fully Loaded</th>
-                    </tr>
-                    <tr>
-                        <th align="center" valign="middle">Load Time</th>
-                        <th align="center" valign="middle">First Byte</th>
-                        <th align="center" valign="middle">Start Render</th>
-                        <?php if (array_key_exists('userTime', $data) && (float)$data['userTime'] > 0.0 ) { ?>
-                        <th align="center" valign="middle">User Time</th>
-                        <?php } ?>
-                        <?php if( array_key_exists('aft', $test['test']) && $test['test']['aft'] ) { ?>
-                        <th align="center" valign="middle">Above the Fold</th>
-                        <?php } ?>
-                        <?php if (array_key_exists('visualComplete', $data) && (float)$data['visualComplete'] > 0.0) { ?>
-                        <th align="center" valign="middle">Visually Complete</th>
-                        <?php } ?>
-                        <?php if (array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0) { ?>
-                        <th align="center" valign="middle"><a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a></th>
-                        <?php } ?>
-                        <?php if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 ) { ?>
-                        <th align="center" valign="middle">DOM Element</th>
-                        <?php } ?>
-                        <?php if (array_key_exists('domElements', $data) && $data['domElements'] > 0 ) { ?>
-                        <th align="center" valign="middle">DOM Elements</th>
-                        <?php } ?>
-                        <th align="center" valign="middle">Result (error code)</th>
 
-                        <th align="center" class="border" valign="middle">Time</th>
-                        <th align="center" valign="middle">Requests</th>
-                        <th align="center" valign="middle">Bytes In</th>
-
-                        <th align="center" class="border" valign="middle">Time</th>
-                        <th align="center" valign="middle">Requests</th>
-                        <th align="center" valign="middle">Bytes In</th>
-                    </tr>
-                    <tr>
-                        <?php
-                        echo "<td id=\"LoadTime\" valign=\"middle\">" . formatMsInterval($data['loadTime'], 3) . "</td>\n";
-                        echo "<td id=\"TTFB\" valign=\"middle\">" . formatMsInterval($data['TTFB'], 3) . "</td>\n";
-                        //echo "<td id=\"startRender\" valign=\"middle\">" . number_format($data['render'] / 1000.0, 3) . "s</td>\n";
-                        echo "<td id=\"startRender\" valign=\"middle\">" . formatMsInterval($data['render'], 3) . "</td>\n";
-                        if (array_key_exists('userTime', $data) && (float)$data['userTime'] > 0.0 )
-                            echo "<td id=\"userTime\" valign=\"middle\">" . formatMsInterval($data['userTime'], 3) . "</td>\n";
-                        if (array_key_exists('aft', $test['test']) && $test['test']['aft'] ) {
-                            $aft = number_format($data['aft'] / 1000.0, 1) . 's';
-                            if( !$data['aft'] )
-                                $aft = 'N/A';
-                            echo "<td id=\"aft\" valign=\"middle\">$aft</th>";
-                        }
-                        if( array_key_exists('visualComplete', $data) && (float)$data['visualComplete'] > 0.0 )
-                            echo "<td id=\"visualComplate\" valign=\"middle\">" . formatMsInterval($data['visualComplete'], 3) . "</td>\n";
-                        if( array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0 ) {
-                            if (array_key_exists('SpeedIndexCustom', $data))
-                                echo "<td id=\"speedIndex\" valign=\"middle\">{$data['SpeedIndexCustom']}</td>\n";
-                            else
-                                echo "<td id=\"speedIndex\" valign=\"middle\">{$data['SpeedIndex']}</td>\n";
-                        }
-                        if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 )
-                            echo "<td id=\"domTime\" valign=\"middle\">" . formatMsInterval($data['domTime'], 3) . "</td>\n";
-                        if (array_key_exists('domElements', $data) && $data['domElements'] > 0 )
-                            echo "<td id=\"domElements\" valign=\"middle\">{$data['domElements']}</td>\n";
-                        echo "<td id=\"result\" valign=\"middle\">{$data['result']}</td>\n";
-
-                        echo "<td id=\"docComplete\" class=\"border\" valign=\"middle\">" . formatMsInterval($data['docTime'], 3) . "</td>\n";
-                        echo "<td id=\"requestsDoc\" valign=\"middle\">{$data['requestsDoc']}</td>\n";
-                        echo "<td id=\"bytesInDoc\" valign=\"middle\">" . number_format($data['bytesInDoc'] / 1024, 0) . " KB</td>\n";
-
-                        echo "<td id=\"fullyLoaded\" class=\"border\" valign=\"middle\">" . formatMsInterval($data['fullyLoaded'], 3) . "</td>\n";
-                        echo "<td id=\"requests\" valign=\"middle\">{$data['requests']}</td>\n";
-                        echo "<td id=\"bytesIn\" valign=\"middle\">" . number_format($data['bytesIn'] / 1024, 0) . " KB</td>\n";
-                        ?>
-                    </tr>
-                </table><br>
+                <?php
+                  $htmlTable = new RunResultHtmlTable($testInfo, $testRunResults);
+                  echo $htmlTable->create();
+                ?>
+                <br>
                 <?php
                 if( is_dir('./google') && isset($test['testinfo']['extract_csi']) )
                 {
