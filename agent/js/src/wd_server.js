@@ -1084,7 +1084,7 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
         // Set some default test result fields to mark the test as successful
         // TODO(pmeenan): Construct this after the test from processing the
         // video and tcpdump files
-        this.pageData_ = {"result":0};
+        this.pageData_ = {"result":0, "visualTest":1};
         // Don't error on timeout for black-box tests
         this.timeoutTimer_ = global.setTimeout(
             this.onPageLoad_.bind(this), this.timeout_);
