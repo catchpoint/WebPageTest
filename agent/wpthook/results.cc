@@ -375,11 +375,11 @@ bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2, DWORD bottom_mar
         DWORD width = max(img1->GetWidth() - RIGHT_MARGIN, 0);
         DWORD height = img1->GetHeight();
         DWORD row_bytes = img1->GetEffWidth();
-        DWORD row_length = width * (DWORD)(row_bytes / width);
+        DWORD compare_length = min(width * pixel_bytes, row_bytes);
         for (DWORD row = bottom_margin; row < height && !different; row++) {
           BYTE * r1 = img1->GetBits(row);
           BYTE * r2 = img2->GetBits(row);
-          if (r1 && r2 && memcmp(r1, r2, row_length))
+          if (r1 && r2 && memcmp(r1, r2, compare_length))
             different = true;
         }
       }

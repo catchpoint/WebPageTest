@@ -559,6 +559,9 @@ bool TestServer::OkToStart() {
     }
     if (elapsed > 30) {
       started_ = true;
+    } else if (elapsed < 5) {
+      // TODO (pmeenan): remove this when we bypass the "disable extensions" dialog Chrome 52 started popping
+      started_ = false;
     } else {
       // calculate CPU utilization
       FILETIME idle_time, kernel_time, user_time;
