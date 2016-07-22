@@ -3,15 +3,26 @@
 require_once __DIR__ . '/../common_lib.inc';
 
 class RunResultHtmlTable {
+  const SPEED_INDEX_URL = "https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index";
 
   /* @var TestInfo */
   private $testInfo;
   /* @var TestRunResults */
   private $runResults;
 
+  private $hasAboveTheFoldTime;
+  private $isMultistep;
+
+  /**
+   * RunResultHtmlTable constructor.
+   * @param TestInfo $testInfo
+   * @param TestRunResults $runResults
+   */
   public function __construct($testInfo, $runResults) {
     $this->testInfo = $testInfo;
     $this->runResults = $runResults;
+    $this->hasAboveTheFoldTime = $testInfo->hasAboveTheFoldTime();
+    $this->isMultistep = $runResults->isMultistep();
   }
 
   public function create() {
@@ -24,14 +35,13 @@ class RunResultHtmlTable {
 
   private function _create_head() {
     $data = $this->runResults->getStepResult(1)->getRawResults();
-    $hasAft = $this->testInfo->hasAboveTheFoldTime();
     $out = "<tr>\n";
     $cols = 4;
     if (array_key_exists('userTime', $data) && (float)$data['userTime'] > 0.0)
       $cols++;
     if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0)
       $cols++;
-    if ($hasAft)
+    if ($this->hasAboveTheFoldTime)
       $cols++;
     if (array_key_exists('domElements', $data) && $data['domElements'] > 0)
       $cols++;
@@ -52,14 +62,14 @@ EOT;
     if (array_key_exists('userTime', $data) && (float)$data['userTime'] > 0.0 ) {
       $out .= '<th align="center" valign="middle">User Time</th>' . "\n";
     }
-    if($hasAft) {
+    if($this->hasAboveTheFoldTime) {
       $out .= '<th align="center" valign="middle">Above the Fold</th>' . "\n";
     }
     if (array_key_exists('visualComplete', $data) && (float)$data['visualComplete'] > 0.0) {
       $out .= '<th align="center" valign="middle">Visually Complete</th>' . "\n";
     }
     if (array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0) {
-      $out .= '<th align="center" valign="middle"><a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a></th>' . "\n";
+      $out .= '<th align="center" valign="middle"><a href="' . self::SPEED_INDEX_URL . '" target="_blank">Speed Index</a></th>' . "\n";
     }
     if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 ) {
       $out .= '<th align="center" valign="middle">DOM Element</th>' . "\n";
@@ -84,7 +94,6 @@ EOT;
 
   private function _create_body() {
     $data = $this->runResults->getStepResult(1)->getRawResults();
-    $hasAft = $this->testInfo->hasAboveTheFoldTime();
     $out = "<tr>\n";
     $out .= "<td id=\"LoadTime\" valign=\"middle\">" . formatMsInterval($data['loadTime'], 3) . "</td>\n";
     $out .= "<td id=\"TTFB\" valign=\"middle\">" . formatMsInterval($data['TTFB'], 3) . "</td>\n";
@@ -92,7 +101,7 @@ EOT;
     $out .= "<td id=\"startRender\" valign=\"middle\">" . formatMsInterval($data['render'], 3) . "</td>\n";
     if (array_key_exists('userTime', $data) && (float)$data['userTime'] > 0.0 )
       $out .= "<td id=\"userTime\" valign=\"middle\">" . formatMsInterval($data['userTime'], 3) . "</td>\n";
-    if ($hasAft) {
+    if ($this->hasAboveTheFoldTime) {
       $aft = number_format($data['aft'] / 1000.0, 1) . 's';
       if( !$data['aft'] )
         $aft = 'N/A';
