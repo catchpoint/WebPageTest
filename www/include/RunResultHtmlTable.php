@@ -35,7 +35,6 @@ class RunResultHtmlTable {
 
   private function _create_head() {
     $data = $this->runResults->getStepResult(1)->getRawResults();
-    $out = "<tr>\n";
     $cols = 4;
     if (array_key_exists('userTime', $data) && (float)$data['userTime'] > 0.0)
       $cols++;
@@ -49,46 +48,43 @@ class RunResultHtmlTable {
       $cols++;
     if (array_key_exists('visualComplete', $data) && (float)$data['visualComplete'] > 0.0)
       $cols++;
-    $out .= <<<EOT
-      <th align="center" class="empty" valign="middle" colspan="$cols"</th>
-      <th align="center" class="border" valign="middle" colspan="3">Document Complete</th>
-      <th align="center" class="border" valign="middle" colspan="3">Fully Loaded</th>
-      </tr>
-      <tr>
-        <th align="center" valign="middle">Load Time</th>
-        <th align="center" valign="middle">First Byte</th>
-        <th align="center" valign="middle">Start Render</th>
-EOT;
+
+    $out = "<tr>\n";
+    $out .= $this->_head_cell("", "empty", $cols);
+    $out .= $this->_head_cell("Document Complete", "border", 3);
+    $out .= $this->_head_cell("Fully Loaded", "border", 3);
+    $out .= "</tr>\n";
+
+    $out .= "<tr>";
+    $out .= $this->_head_cell("Load Time");
+    $out .= $this->_head_cell("First Byte");
+    $out .= $this->_head_cell("Start Render");
     if (array_key_exists('userTime', $data) && (float)$data['userTime'] > 0.0 ) {
-      $out .= '<th align="center" valign="middle">User Time</th>' . "\n";
+      $out .= $this->_head_cell("User Time");
     }
     if($this->hasAboveTheFoldTime) {
-      $out .= '<th align="center" valign="middle">Above the Fold</th>' . "\n";
+      $out .= $this->_head_cell("Above the Fold");
     }
     if (array_key_exists('visualComplete', $data) && (float)$data['visualComplete'] > 0.0) {
-      $out .= '<th align="center" valign="middle">Visually Complete</th>' . "\n";
+      $out .= $this->_head_cell("Visually Complete");
     }
     if (array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0) {
-      $out .= '<th align="center" valign="middle"><a href="' . self::SPEED_INDEX_URL . '" target="_blank">Speed Index</a></th>' . "\n";
+      $out .= $this->_head_cell('<a href="' . self::SPEED_INDEX_URL . '" target="_blank">Speed Index</a>');
     }
     if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 ) {
-      $out .= '<th align="center" valign="middle">DOM Element</th>' . "\n";
+      $out .= $this->_head_cell("DOM Element");
     }
     if (array_key_exists('domElements', $data) && $data['domElements'] > 0 ) {
-      $out .= '<th align="center" valign="middle">DOM Elements</th>' . "\n";
+      $out .= $this->_head_cell("DOM Elements");
     }
-    $out .= <<<EOT
-        <th align="center" valign="middle">Result (error code)</th>
+    $out .= $this->_head_cell("Result (error code)");
 
-        <th align="center" class="border" valign="middle">Time</th>
-        <th align="center" valign="middle">Requests</th>
-        <th align="center" valign="middle">Bytes In</th>
+    for ($i = 0; $i < 2; $i++) {
+      $out .= $this->_head_cell("Time", "border");
+      $out .= $this->_head_cell("Requests");
+      $out .= $this->_head_cell("Bytes In");
+    }
 
-        <th align="center" class="border" valign="middle">Time</th>
-        <th align="center" valign="middle">Requests</th>
-        <th align="center" valign="middle">Bytes In</th>
-      </tr>
-EOT;
     return $out;
   }
 
@@ -130,5 +126,12 @@ EOT;
     $out .= "<td id=\"bytesIn\" valign=\"middle\">" . number_format($data['bytesIn'] / 1024, 0) . " KB</td>\n";
     $out .= "</tr>\n";
     return $out;
+  }
+
+  private function _head_cell($innerHtml, $classNames = null, $colspan = 0) {
+    $attributes = '';
+    $attributes .= $classNames ? ('class="' . $classNames . '" ') : '';
+    $attributes .= $colspan > 1 ? ('colspan="' . $colspan . '" ') : '';
+    return '<th align="center" ' . $attributes . 'valign="middle">' . $innerHtml . "</th>\n";
   }
 }
