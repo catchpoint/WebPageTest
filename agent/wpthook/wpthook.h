@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hook_wininet.h"
 #include "hook_chrome_ssl.h"
 #include "hook_file.h"
+#include "hook_windows.h"
 #include "requests.h"
 #include "track_dns.h"
 #include "track_sockets.h"
@@ -75,6 +76,7 @@ private:
   WinInetHook wininet_hook_;
   ChromeSSLHook chrome_ssl_hook_;
   FileHook  file_hook_;
+  WindowsHook  windows_hook_;
   HANDLE    background_thread_;
   HANDLE    background_thread_started_;
   HWND      message_window_;

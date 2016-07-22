@@ -488,6 +488,9 @@
     <ClInclude Include="hook_chrome_ssl.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="hook_windows.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cc">
@@ -1001,6 +1004,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hook_chrome_ssl.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hook_windows.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

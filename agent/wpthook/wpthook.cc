@@ -56,6 +56,7 @@ WptHook::WptHook(void):
   ,wininet_hook_(sockets_, test_state_, test_)
   ,chrome_ssl_hook_(sockets_, test_state_, test_)
   ,file_hook_(sockets_, test_state_)
+  ,windows_hook_(test_state_)
   ,sockets_(requests_, test_state_, test_)
   ,requests_(test_state_, sockets_, dns_, test_)
   ,results_(test_state_, test_, requests_, sockets_, dns_, screen_capture_,
@@ -120,6 +121,7 @@ void WptHook::Init(){
   test_.LoadFromFile();
   if (!test_state_.gdi_only_) {
     file_hook_.Init();
+    windows_hook_.Init();
     winsock_hook_.Init();
     nspr_hook_.Init();
     schannel_hook_.Init();
