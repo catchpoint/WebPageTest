@@ -47,10 +47,8 @@ BOOL WindowsHook::ShowWindow(HWND hWnd, int nCmdShow) {
   BOOL ret = FALSE;
 
   CString name;
-  DWORD dwExStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
-  DWORD dwStyle = GetWindowLong(hWnd, GWL_STYLE);
-
-  if (dwExStyle & WS_EX_TOOLWINDOW && nCmdShow == SW_SHOWNORMAL) {
+  DWORD hWndParent = GetWindowLong(hWnd, GWL_HWNDPARENT);
+  if (hWndParent) {
     TCHAR class_name[1024];
     class_name[0] = 0;
     if (GetClassName(hWnd, class_name, _countof(class_name))) {
