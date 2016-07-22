@@ -91,9 +91,10 @@ class RunResultHtmlTable {
   }
 
   private function _createBody() {
-    $stepResult = $this->runResults->getStepResult(1);
     $out = "";
-    $out .= $this->_createRow($stepResult);
+    for ($i = 1; $i <= $this->runResults->countSteps(); $i++) {
+      $out .= $this->_createRow($this->runResults->getStepResult($i));
+    }
     return $out;
   }
 
