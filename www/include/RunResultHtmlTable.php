@@ -55,6 +55,9 @@ class RunResultHtmlTable {
     $out .= "</tr>\n";
 
     $out .= "<tr>";
+    if ($this->isMultistep) {
+      $out .= $this->_headCell("Step");
+    }
     $out .= $this->_headCell("Load Time");
     $out .= $this->_headCell("First Byte");
     $out .= $this->_headCell("Start Render");
@@ -76,7 +79,7 @@ class RunResultHtmlTable {
     if ($this->hasDomElements) {
       $out .= $this->_headCell("DOM Elements");
     }
-    $out .= $this->_headCell("Result (error code)");
+    $out .= $this->_headCell("Result (error&nbsp;code)");
 
     for ($i = 0; $i < 2; $i++) {
       $out .= $this->_headCell("Time", "border");
@@ -91,6 +94,9 @@ class RunResultHtmlTable {
     $stepResult = $this->runResults->getStepResult(1);
 
     $out = "<tr>\n";
+    if ($this->isMultistep) {
+      $out .= $this->_bodyCell("", FitText($stepResult->readableIdentifier(), 30));
+    }
     $out .= $this->_bodyCell("LoadTime", $this->_getIntervalMetric($stepResult, 'loadTime'));
     $out .= $this->_bodyCell("TTFB", $this->_getIntervalMetric($stepResult, 'TTFB'));
     $out .= $this->_bodyCell("startRender", $this->_getIntervalMetric($stepResult, 'render'));
@@ -143,7 +149,8 @@ class RunResultHtmlTable {
   }
 
   private function _bodyCell($id, $innerHtml, $classNames = null) {
-    $attributes = 'id="' . $id . '" ';
+    $attributes = '';
+    $attributes .= $id ? 'id="' . $id . '" ' : '';
     $attributes .= $classNames ? ('class="' . $classNames . '" ') : '';
     return '<td '. $attributes . 'valign="middle">' . $innerHtml . "</td>\n";
   }
@@ -161,6 +168,8 @@ class RunResultHtmlTable {
     if ($this->hasSpeedIndex)
       $cols++;
     if ($this->hasVisualComplete)
+      $cols++;
+    if ($this->isMultistep)
       $cols++;
     return $cols;
   }
