@@ -49,6 +49,7 @@ private:
   void ConfigureFirefoxPrefs();
   void ConfigureIESettings();
   void ConfigureChromePreferences();
+  void CreateChromeSymlink();
   HANDLE FindAdditionalHookProcess(HANDLE launched_process, CString exe);
 
   WptSettings&    _settings;

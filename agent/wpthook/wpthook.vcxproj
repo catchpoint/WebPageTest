@@ -155,7 +155,6 @@
     <ClInclude Include="hook_chrome_ssl.h" />
     <ClInclude Include="hook_file.h" />
     <ClInclude Include="hook_schannel.h" />
-    <ClInclude Include="hook_windows.h" />
     <ClInclude Include="hook_wininet.h" />
     <ClInclude Include="mongoose\mongoose.h" />
     <ClInclude Include="mozjpeg\jchuff.h" />
@@ -665,7 +664,6 @@
     <ClCompile Include="hook_chrome_ssl.cc" />
     <ClCompile Include="hook_file.cc" />
     <ClCompile Include="hook_schannel.cc" />
-    <ClCompile Include="hook_windows.cc" />
     <ClCompile Include="hook_wininet.cc" />
     <ClCompile Include="mongoose\mongoose.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
