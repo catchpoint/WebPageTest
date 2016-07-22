@@ -98,50 +98,56 @@ class RunResultHtmlTable {
     return $out;
   }
 
+  /**
+   * @param TestStepResult $stepResult
+   * @return string HTML Table row
+   */
   private function _createRow($stepResult) {
+    $stepNum = $stepResult->getStepNumber();
+    $idSuffix = $this->isMultistep ? ("-step" . $stepNum) : "";
     $out = "<tr>\n";
     if ($this->isMultistep) {
       $out .= $this->_bodyCell("", FitText($stepResult->readableIdentifier(), 30));
     }
-    $out .= $this->_bodyCell("LoadTime", $this->_getIntervalMetric($stepResult, 'loadTime'));
-    $out .= $this->_bodyCell("TTFB", $this->_getIntervalMetric($stepResult, 'TTFB'));
-    $out .= $this->_bodyCell("startRender", $this->_getIntervalMetric($stepResult, 'render'));
+    $out .= $this->_bodyCell("LoadTime" . $idSuffix, $this->_getIntervalMetric($stepResult, 'loadTime'));
+    $out .= $this->_bodyCell("TTFB" . $idSuffix, $this->_getIntervalMetric($stepResult, 'TTFB'));
+    $out .= $this->_bodyCell("startRender" . $idSuffix, $this->_getIntervalMetric($stepResult, 'render'));
 
     if ($this->hasUserTime) {
-      $out .= $this->_bodyCell("userTime", $this->_getIntervalMetric($stepResult, "userTime"));
+      $out .= $this->_bodyCell("userTime" . $idSuffix, $this->_getIntervalMetric($stepResult, "userTime"));
     }
     if ($this->hasAboveTheFoldTime) {
       $aft = $stepResult->getMetric("aft");
       $aft = $aft !== null ? (number_format($aft / 1000.0, 1) . 's') : "N/A";
-      $out .= $this->_bodyCell("aft", $aft);
+      $out .= $this->_bodyCell("aft" . $idSuffix, $aft);
     }
     if ($this->hasVisualComplete) {
-      $out .= $this->_bodyCell("visualComplete", $this->_getIntervalMetric($stepResult, "visualComplete"));
+      $out .= $this->_bodyCell("visualComplete" . $idSuffix, $this->_getIntervalMetric($stepResult, "visualComplete"));
     }
     if($this->hasSpeedIndex) {
       $speedIndex = $stepResult->getMetric("SpeedIndexCustom");
       $speedIndex = $speedIndex !== null ? $speedIndex : $stepResult->getMetric("SpeedIndex");
       $speedIndex = $speedIndex !== null ? $speedIndex : "-";
-      $out .= $this->_bodyCell("speedIndex", $speedIndex);
+      $out .= $this->_bodyCell("speedIndex" . $idSuffix, $speedIndex);
     }
     if ($this->hasDomTime) {
-      $out .= $this->_bodyCell("domTime", $this->_getIntervalMetric($stepResult, "domTime"));
+      $out .= $this->_bodyCell("domTime" . $idSuffix, $this->_getIntervalMetric($stepResult, "domTime"));
     }
     if ($this->hasDomElements) {
       $domElements = $stepResult->getMetric("domElements");
       $domElements = $domElements !== null ? $domElements : "-";
-      $out .= $this->_bodyCell("domElements", $domElements);
+      $out .= $this->_bodyCell("domElements" . $idSuffix, $domElements);
     }
-    $out .= $this->_bodyCell("result", $this->_getSimpleMetric($stepResult, "result"));
+    $out .= $this->_bodyCell("result" . $idSuffix, $this->_getSimpleMetric($stepResult, "result"));
 
-    $out .= $this->_bodyCell("docComplete", $this->_getIntervalMetric($stepResult, "docTime"), "border");
-    $out .= $this->_bodyCell("requestsDoc", $this->_getSimpleMetric($stepResult, "requestsDoc"));
-    $out .= $this->_bodyCell("bytesInDoc", $this->_getByteMetricInKbyte($stepResult, "bytesInDoc"));
+    $out .= $this->_bodyCell("docComplete" . $idSuffix, $this->_getIntervalMetric($stepResult, "docTime"), "border");
+    $out .= $this->_bodyCell("requestsDoc" . $idSuffix, $this->_getSimpleMetric($stepResult, "requestsDoc"));
+    $out .= $this->_bodyCell("bytesInDoc" . $idSuffix, $this->_getByteMetricInKbyte($stepResult, "bytesInDoc"));
 
 
-    $out .= $this->_bodyCell("fullyLoaded", $this->_getIntervalMetric($stepResult, "fullyLoaded"), "border");
-    $out .= $this->_bodyCell("requests", $this->_getSimpleMetric($stepResult, "requests"));
-    $out .= $this->_bodyCell("bytesIn", $this->_getByteMetricInKbyte($stepResult, "bytesIn"));
+    $out .= $this->_bodyCell("fullyLoaded" . $idSuffix, $this->_getIntervalMetric($stepResult, "fullyLoaded"), "border");
+    $out .= $this->_bodyCell("requests" . $idSuffix, $this->_getSimpleMetric($stepResult, "requests"));
+    $out .= $this->_bodyCell("bytesIn" . $idSuffix, $this->_getByteMetricInKbyte($stepResult, "bytesIn"));
 
     $out .= "</tr>\n";
     return $out;
