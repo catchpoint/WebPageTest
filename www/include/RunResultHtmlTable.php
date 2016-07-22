@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../common_lib.inc';
+
 class RunResultHtmlTable {
 
   /* @var TestInfo */
@@ -13,10 +15,17 @@ class RunResultHtmlTable {
   }
 
   public function create() {
+    $out = '<table id="tableResults" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">' . "\n";
+    $out .= $this->_create_head();
+    $out .= $this->_create_body();
+    $out .= "</table>\n";
+    return $out;
+  }
+
+  private function _create_head() {
     $data = $this->runResults->getStepResult(1)->getRawResults();
     $hasAft = $this->testInfo->hasAboveTheFoldTime();
-    $out = '<table id="tableResults" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">' . "\n";
-    $out .= "<tr>\n";
+    $out = "<tr>\n";
     $cols = 4;
     if (array_key_exists('userTime', $data) && (float)$data['userTime'] > 0.0)
       $cols++;
@@ -69,9 +78,14 @@ EOT;
         <th align="center" valign="middle">Requests</th>
         <th align="center" valign="middle">Bytes In</th>
       </tr>
-      <tr>
 EOT;
+    return $out;
+  }
 
+  private function _create_body() {
+    $data = $this->runResults->getStepResult(1)->getRawResults();
+    $hasAft = $this->testInfo->hasAboveTheFoldTime();
+    $out = "<tr>\n";
     $out .= "<td id=\"LoadTime\" valign=\"middle\">" . formatMsInterval($data['loadTime'], 3) . "</td>\n";
     $out .= "<td id=\"TTFB\" valign=\"middle\">" . formatMsInterval($data['TTFB'], 3) . "</td>\n";
     //echo "<td id=\"startRender\" valign=\"middle\">" . number_format($data['render'] / 1000.0, 3) . "s</td>\n";
@@ -105,7 +119,7 @@ EOT;
     $out .= "<td id=\"fullyLoaded\" class=\"border\" valign=\"middle\">" . formatMsInterval($data['fullyLoaded'], 3) . "</td>\n";
     $out .= "<td id=\"requests\" valign=\"middle\">{$data['requests']}</td>\n";
     $out .= "<td id=\"bytesIn\" valign=\"middle\">" . number_format($data['bytesIn'] / 1024, 0) . " KB</td>\n";
-    $out .= "</tr>\n</table>\n";
+    $out .= "</tr>\n";
     return $out;
   }
 }
