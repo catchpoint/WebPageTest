@@ -10,8 +10,14 @@ class RunResultHtmlTable {
   /* @var TestRunResults */
   private $runResults;
 
-  private $hasAboveTheFoldTime;
   private $isMultistep;
+
+  private $hasAboveTheFoldTime;
+  private $hasUserTime;
+  private $hasDomTime;
+  private $hasDomElements;
+  private $hasSpeedIndex;
+  private $hasVisualComplete;
 
   /**
    * RunResultHtmlTable constructor.
@@ -21,8 +27,15 @@ class RunResultHtmlTable {
   public function __construct($testInfo, $runResults) {
     $this->testInfo = $testInfo;
     $this->runResults = $runResults;
-    $this->hasAboveTheFoldTime = $testInfo->hasAboveTheFoldTime();
     $this->isMultistep = $runResults->isMultistep();
+
+    // optional columns
+    $this->hasAboveTheFoldTime = $testInfo->hasAboveTheFoldTime();
+    $this->hasUserTime = $runResults->hasValidMetric("userTime");
+    $this->hasDomTime = $runResults->hasValidMetric("domTime");
+    $this->hasDomElements = $runResults->hasValidMetric("domElements");
+    $this->hasSpeedIndex = $runResults->hasValidMetric("SpeedIndex");
+    $this->hasVisualComplete = $runResults->hasValidMetric("visualComplete");
   }
 
   public function create() {
@@ -34,23 +47,9 @@ class RunResultHtmlTable {
   }
 
   private function _create_head() {
-    $data = $this->runResults->getStepResult(1)->getRawResults();
-    $cols = 4;
-    if (array_key_exists('userTime', $data) && (float)$data['userTime'] > 0.0)
-      $cols++;
-    if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0)
-      $cols++;
-    if ($this->hasAboveTheFoldTime)
-      $cols++;
-    if (array_key_exists('domElements', $data) && $data['domElements'] > 0)
-      $cols++;
-    if (array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0)
-      $cols++;
-    if (array_key_exists('visualComplete', $data) && (float)$data['visualComplete'] > 0.0)
-      $cols++;
-
+    $colspan = 4 + $this->_countOptionalColumns();
     $out = "<tr>\n";
-    $out .= $this->_head_cell("", "empty", $cols);
+    $out .= $this->_head_cell("", "empty", $colspan);
     $out .= $this->_head_cell("Document Complete", "border", 3);
     $out .= $this->_head_cell("Fully Loaded", "border", 3);
     $out .= "</tr>\n";
@@ -59,22 +58,22 @@ class RunResultHtmlTable {
     $out .= $this->_head_cell("Load Time");
     $out .= $this->_head_cell("First Byte");
     $out .= $this->_head_cell("Start Render");
-    if (array_key_exists('userTime', $data) && (float)$data['userTime'] > 0.0 ) {
+    if ($this->hasUserTime) {
       $out .= $this->_head_cell("User Time");
     }
     if($this->hasAboveTheFoldTime) {
       $out .= $this->_head_cell("Above the Fold");
     }
-    if (array_key_exists('visualComplete', $data) && (float)$data['visualComplete'] > 0.0) {
+    if ($this->hasVisualComplete) {
       $out .= $this->_head_cell("Visually Complete");
     }
-    if (array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0) {
+    if ($this->hasSpeedIndex) {
       $out .= $this->_head_cell('<a href="' . self::SPEED_INDEX_URL . '" target="_blank">Speed Index</a>');
     }
-    if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 ) {
+    if ($this->hasDomTime) {
       $out .= $this->_head_cell("DOM Element");
     }
-    if (array_key_exists('domElements', $data) && $data['domElements'] > 0 ) {
+    if ($this->hasDomElements) {
       $out .= $this->_head_cell("DOM Elements");
     }
     $out .= $this->_head_cell("Result (error code)");
@@ -133,5 +132,22 @@ class RunResultHtmlTable {
     $attributes .= $classNames ? ('class="' . $classNames . '" ') : '';
     $attributes .= $colspan > 1 ? ('colspan="' . $colspan . '" ') : '';
     return '<th align="center" ' . $attributes . 'valign="middle">' . $innerHtml . "</th>\n";
+  }
+
+  private function _countOptionalColumns() {
+    $cols = 0;
+    if ($this->hasUserTime)
+      $cols++;
+    if ($this->hasDomTime)
+      $cols++;
+    if ($this->hasAboveTheFoldTime)
+      $cols++;
+    if ($this->hasDomElements)
+      $cols++;
+    if ($this->hasSpeedIndex)
+      $cols++;
+    if ($this->hasVisualComplete)
+      $cols++;
+    return $cols;
   }
 }
