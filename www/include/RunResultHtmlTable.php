@@ -92,7 +92,12 @@ class RunResultHtmlTable {
 
   private function _createBody() {
     $stepResult = $this->runResults->getStepResult(1);
+    $out = "";
+    $out .= $this->_createRow($stepResult);
+    return $out;
+  }
 
+  private function _createRow($stepResult) {
     $out = "<tr>\n";
     if ($this->isMultistep) {
       $out .= $this->_bodyCell("", FitText($stepResult->readableIdentifier(), 30));
