@@ -187,6 +187,7 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"Via", "CloudFront", "Amazon CloudFront"},
   {"X-Edge-IP", "", "CDN"},
   {"X-Edge-Location", "", "CDN"},
+  {"X-HW", "", "Highwinds"},
   {"X-Powered-By", "NYI FTW", "NYI FTW"},
   {"server", "ReSRC", "ReSRC.it"},
   {"X-Cdn", "Zenedge", "Zenedge"},
