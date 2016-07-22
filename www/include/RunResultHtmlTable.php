@@ -40,54 +40,54 @@ class RunResultHtmlTable {
 
   public function create() {
     $out = '<table id="tableResults" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">' . "\n";
-    $out .= $this->_create_head();
-    $out .= $this->_create_body();
+    $out .= $this->_createHead();
+    $out .= $this->_createBody();
     $out .= "</table>\n";
     return $out;
   }
 
-  private function _create_head() {
+  private function _createHead() {
     $colspan = 4 + $this->_countOptionalColumns();
     $out = "<tr>\n";
-    $out .= $this->_head_cell("", "empty", $colspan);
-    $out .= $this->_head_cell("Document Complete", "border", 3);
-    $out .= $this->_head_cell("Fully Loaded", "border", 3);
+    $out .= $this->_headCell("", "empty", $colspan);
+    $out .= $this->_headCell("Document Complete", "border", 3);
+    $out .= $this->_headCell("Fully Loaded", "border", 3);
     $out .= "</tr>\n";
 
     $out .= "<tr>";
-    $out .= $this->_head_cell("Load Time");
-    $out .= $this->_head_cell("First Byte");
-    $out .= $this->_head_cell("Start Render");
+    $out .= $this->_headCell("Load Time");
+    $out .= $this->_headCell("First Byte");
+    $out .= $this->_headCell("Start Render");
     if ($this->hasUserTime) {
-      $out .= $this->_head_cell("User Time");
+      $out .= $this->_headCell("User Time");
     }
     if($this->hasAboveTheFoldTime) {
-      $out .= $this->_head_cell("Above the Fold");
+      $out .= $this->_headCell("Above the Fold");
     }
     if ($this->hasVisualComplete) {
-      $out .= $this->_head_cell("Visually Complete");
+      $out .= $this->_headCell("Visually Complete");
     }
     if ($this->hasSpeedIndex) {
-      $out .= $this->_head_cell('<a href="' . self::SPEED_INDEX_URL . '" target="_blank">Speed Index</a>');
+      $out .= $this->_headCell('<a href="' . self::SPEED_INDEX_URL . '" target="_blank">Speed Index</a>');
     }
     if ($this->hasDomTime) {
-      $out .= $this->_head_cell("DOM Element");
+      $out .= $this->_headCell("DOM Element");
     }
     if ($this->hasDomElements) {
-      $out .= $this->_head_cell("DOM Elements");
+      $out .= $this->_headCell("DOM Elements");
     }
-    $out .= $this->_head_cell("Result (error code)");
+    $out .= $this->_headCell("Result (error code)");
 
     for ($i = 0; $i < 2; $i++) {
-      $out .= $this->_head_cell("Time", "border");
-      $out .= $this->_head_cell("Requests");
-      $out .= $this->_head_cell("Bytes In");
+      $out .= $this->_headCell("Time", "border");
+      $out .= $this->_headCell("Requests");
+      $out .= $this->_headCell("Bytes In");
     }
 
     return $out;
   }
 
-  private function _create_body() {
+  private function _createBody() {
     $data = $this->runResults->getStepResult(1)->getRawResults();
     $out = "<tr>\n";
     $out .= "<td id=\"LoadTime\" valign=\"middle\">" . formatMsInterval($data['loadTime'], 3) . "</td>\n";
@@ -127,7 +127,7 @@ class RunResultHtmlTable {
     return $out;
   }
 
-  private function _head_cell($innerHtml, $classNames = null, $colspan = 0) {
+  private function _headCell($innerHtml, $classNames = null, $colspan = 0) {
     $attributes = '';
     $attributes .= $classNames ? ('class="' . $classNames . '" ') : '';
     $attributes .= $colspan > 1 ? ('colspan="' . $colspan . '" ') : '';
