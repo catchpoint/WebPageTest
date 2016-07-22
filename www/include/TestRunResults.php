@@ -101,6 +101,13 @@ class TestRunResults {
   }
 
   /**
+   * @return bool True if the run contains more than one step, false otherwise.
+   */
+  public function isMultistep() {
+    return $this->countSteps() > 1;
+  }
+
+  /**
    * @return array The aggregated numeric raw results of the different steps
    */
   public function aggregateRawResults() {
