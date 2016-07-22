@@ -88,41 +88,49 @@ class RunResultHtmlTable {
   }
 
   private function _createBody() {
-    $data = $this->runResults->getStepResult(1)->getRawResults();
+    $stepResult = $this->runResults->getStepResult(1);
+
     $out = "<tr>\n";
-    $out .= "<td id=\"LoadTime\" valign=\"middle\">" . formatMsInterval($data['loadTime'], 3) . "</td>\n";
-    $out .= "<td id=\"TTFB\" valign=\"middle\">" . formatMsInterval($data['TTFB'], 3) . "</td>\n";
-    //echo "<td id=\"startRender\" valign=\"middle\">" . number_format($data['render'] / 1000.0, 3) . "s</td>\n";
-    $out .= "<td id=\"startRender\" valign=\"middle\">" . formatMsInterval($data['render'], 3) . "</td>\n";
-    if (array_key_exists('userTime', $data) && (float)$data['userTime'] > 0.0 )
-      $out .= "<td id=\"userTime\" valign=\"middle\">" . formatMsInterval($data['userTime'], 3) . "</td>\n";
+    $out .= $this->_bodyCell("LoadTime", $this->_getIntervalMetric($stepResult, 'loadTime'));
+    $out .= $this->_bodyCell("TTFB", $this->_getIntervalMetric($stepResult, 'TTFB'));
+    $out .= $this->_bodyCell("startRender", $this->_getIntervalMetric($stepResult, 'render'));
+
+    if ($this->hasUserTime) {
+      $out .= $this->_bodyCell("userTime", $this->_getIntervalMetric($stepResult, "userTime"));
+    }
     if ($this->hasAboveTheFoldTime) {
-      $aft = number_format($data['aft'] / 1000.0, 1) . 's';
-      if( !$data['aft'] )
-        $aft = 'N/A';
-      $out .= "<td id=\"aft\" valign=\"middle\">$aft</th>";
+      $aft = $stepResult->getMetric("aft");
+      $aft = $aft !== null ? (number_format($aft / 1000.0, 1) . 's') : "N/A";
+      $out .= $this->_bodyCell("aft", $aft);
     }
-    if( array_key_exists('visualComplete', $data) && (float)$data['visualComplete'] > 0.0 )
-      $out .= "<td id=\"visualComplate\" valign=\"middle\">" . formatMsInterval($data['visualComplete'], 3) . "</td>\n";
-    if( array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0 ) {
-      if (array_key_exists('SpeedIndexCustom', $data))
-        $out .= "<td id=\"speedIndex\" valign=\"middle\">{$data['SpeedIndexCustom']}</td>\n";
-      else
-        $out .= "<td id=\"speedIndex\" valign=\"middle\">{$data['SpeedIndex']}</td>\n";
+    if ($this->hasVisualComplete) {
+      $out .= $this->_bodyCell("visualComplete", $this->_getIntervalMetric($stepResult, "visualComplete"));
     }
-    if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 )
-      $out .= "<td id=\"domTime\" valign=\"middle\">" . formatMsInterval($data['domTime'], 3) . "</td>\n";
-    if (array_key_exists('domElements', $data) && $data['domElements'] > 0 )
-      $out .= "<td id=\"domElements\" valign=\"middle\">{$data['domElements']}</td>\n";
-    $out .= "<td id=\"result\" valign=\"middle\">{$data['result']}</td>\n";
+    if($this->hasSpeedIndex) {
+      $speedIndex = $stepResult->getMetric("SpeedIndexCustom");
+      $speedIndex = $speedIndex !== null ? $speedIndex : $stepResult->getMetric("SpeedIndex");
+      $speedIndex = $speedIndex !== null ? $speedIndex : "-";
+      $out .= $this->_bodyCell("speedIndex", $speedIndex);
+    }
+    if ($this->hasDomTime) {
+      $out .= $this->_bodyCell("domTime", $this->_getIntervalMetric($stepResult, "domTime"));
+    }
+    if ($this->hasDomElements) {
+      $domElements = $stepResult->getMetric("domElements");
+      $domElements = $domElements !== null ? $domElements : "-";
+      $out .= $this->_bodyCell("domElements", $domElements);
+    }
+    $out .= $this->_bodyCell("result", $this->_getSimpleMetric($stepResult, "result"));
 
-    $out .= "<td id=\"docComplete\" class=\"border\" valign=\"middle\">" . formatMsInterval($data['docTime'], 3) . "</td>\n";
-    $out .= "<td id=\"requestsDoc\" valign=\"middle\">{$data['requestsDoc']}</td>\n";
-    $out .= "<td id=\"bytesInDoc\" valign=\"middle\">" . number_format($data['bytesInDoc'] / 1024, 0) . " KB</td>\n";
+    $out .= $this->_bodyCell("docComplete", $this->_getIntervalMetric($stepResult, "docTime"), "border");
+    $out .= $this->_bodyCell("requestsDoc", $this->_getSimpleMetric($stepResult, "requestsDoc"));
+    $out .= $this->_bodyCell("bytesInDoc", $this->_getByteMetricInKbyte($stepResult, "bytesInDoc"));
 
-    $out .= "<td id=\"fullyLoaded\" class=\"border\" valign=\"middle\">" . formatMsInterval($data['fullyLoaded'], 3) . "</td>\n";
-    $out .= "<td id=\"requests\" valign=\"middle\">{$data['requests']}</td>\n";
-    $out .= "<td id=\"bytesIn\" valign=\"middle\">" . number_format($data['bytesIn'] / 1024, 0) . " KB</td>\n";
+
+    $out .= $this->_bodyCell("fullyLoaded", $this->_getIntervalMetric($stepResult, "fullyLoaded"), "border");
+    $out .= $this->_bodyCell("requests", $this->_getSimpleMetric($stepResult, "requests"));
+    $out .= $this->_bodyCell("bytesIn", $this->_getByteMetricInKbyte($stepResult, "bytesIn"));
+
     $out .= "</tr>\n";
     return $out;
   }
@@ -132,6 +140,12 @@ class RunResultHtmlTable {
     $attributes .= $classNames ? ('class="' . $classNames . '" ') : '';
     $attributes .= $colspan > 1 ? ('colspan="' . $colspan . '" ') : '';
     return '<th align="center" ' . $attributes . 'valign="middle">' . $innerHtml . "</th>\n";
+  }
+
+  private function _bodyCell($id, $innerHtml, $classNames = null) {
+    $attributes = 'id="' . $id . '" ';
+    $attributes .= $classNames ? ('class="' . $classNames . '" ') : '';
+    return '<td '. $attributes . 'valign="middle">' . $innerHtml . "</td>\n";
   }
 
   private function _countOptionalColumns() {
@@ -149,5 +163,21 @@ class RunResultHtmlTable {
     if ($this->hasVisualComplete)
       $cols++;
     return $cols;
+  }
+
+  private function _getIntervalMetric($step, $metric) {
+    $value = $step->getMetric($metric);
+    $value = $value > 0 ? $value : -1; // -1 is UNKNOWN_TIME, but we can't include common.inc
+    return formatMsInterval($value, 3);
+  }
+
+  private function _getSimpleMetric($step, $metric) {
+    $value = $step->getMetric($metric);
+    return $value !== null ? $value : "-";
+  }
+
+  private function _getByteMetricInKbyte($step, $metric) {
+    $value = $step->getMetric($metric);
+    return $value !== null ? number_format($value / 1024, 0) . " KB" : "-";
   }
 }
