@@ -74,10 +74,11 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
   if (!isset($ret) || !is_array($ret))
     $ret = array();
 
-  // see if we have video files to calculate a visually complete time from
   $basic_results = false;
   if (array_key_exists('basic', $_REQUEST) && $_REQUEST['basic'])
     $basic_results = true;
+
+  // Load any raw result data from the test    
   if (gz_is_file($localPaths->pageDataJsonFile())) {
     $pd = json_decode(gz_file_get_contents($localPaths->pageDataJsonFile()), true);
     if ($pd && is_array($pd) && count($pd)) {
@@ -204,6 +205,26 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
       }
     }
   }
+  
+  // For visual tests (black-box browser testing) use the visual metrics as the base timings
+  if (isset($ret) &&
+      isset($ret['visualTest']) &&
+      $ret['visualTest'] &&
+      isset($ret['visualComplete'])) {
+    $ret['loadTime'] = $ret['visualComplete'];
+    $ret['docTime'] = $ret['visualComplete'];
+    $ret['fullyLoaded'] = $ret['lastVisualChange'];
+  }
+  
+  // See if we have pcap-based versions of the various metrics
+  if (!$ret['bytesIn'] && $ret['pcapBytesIn'])
+    $ret['bytesIn'] = $ret['pcapBytesIn'];
+  if (!$ret['bytesInDoc'] && $ret['pcapBytesIn'])
+    $ret['bytesInDoc'] = $ret['pcapBytesIn'];
+  if (!$ret['bytesOut'] && $ret['pcapBytesOut'])
+    $ret['bytesOut'] = $ret['pcapBytesOut'];
+  if (!$ret['bytesOutDoc'] && $ret['pcapBytesOut'])
+    $ret['bytesOutDoc'] = $ret['pcapBytesOut'];
 
   $run = $localPaths->getRunNumber();
   $cached = $localPaths->isCachedResult();
