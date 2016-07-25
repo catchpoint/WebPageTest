@@ -30,10 +30,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "StdAfx.h"
 #include "track_sockets.h"
 #include "requests.h"
-#include "test_state.h"
 #include "ssl_stream.h"
 #include "../wptdriver/wpt_test.h"
 #include <nghttp2/nghttp2.h>
+#include "test_state.h"
 
 const DWORD LOCALHOST = 0x0100007F; // 127.0.0.1
 const DWORD LINK_LOCAL_MASK = 0x0000FFFF;

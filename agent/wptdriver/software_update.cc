@@ -73,6 +73,8 @@ void SoftwareUpdate::LoadSettings(CString settings_ini) {
 -----------------------------------------------------------------------------*/
 bool SoftwareUpdate::UpdateSoftware(bool force) {
   bool ok = true;
+  WptTrace(loglevel::kFunction,
+            _T("[wptdriver] SoftwareUpdate::UpdateSoftware\n"));
   if (force || TimeToCheck()) {
     ok = UpdateBrowsers();
     if (ok && _software_url.GetLength()) {

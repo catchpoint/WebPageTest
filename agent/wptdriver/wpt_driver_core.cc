@@ -293,16 +293,11 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
     FlushDNS();
     browser.ClearUserData();
   }
-  if (test._tcpdump)
-    _winpcap.StartCapture( test._file_base + _T(".cap") );
 
   SetCursorPos(0,0);
   ShowCursor(FALSE);
   ret = browser.RunAndWait();
   ShowCursor(TRUE);
-
-  if (test._tcpdump)
-    _winpcap.StopCapture();
 
   _webpagetest.UploadIncrementalResults(test);
   KillBrowsers();
@@ -410,9 +405,6 @@ void WptDriverCore::Init(void){
 			(LPBYTE)&val, sizeof(val));
 		RegCloseKey(hKey);
 	}
-
-  // Get WinPCap ready (install it if necessary)
-  _winpcap.Initialize();
 
   KillBrowsers();
 

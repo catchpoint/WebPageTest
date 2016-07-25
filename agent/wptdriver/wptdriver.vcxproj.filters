@@ -34,13 +34,13 @@
     <ClCompile Include="traceroute.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="winpcap.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="wpt_test_driver.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="web_page_replay.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="software_update.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="zlib\adler32.c">
@@ -79,32 +79,29 @@
     <ClCompile Include="zlib\inftrees.c">
       <Filter>Third-Party\zlib</Filter>
     </ClCompile>
-    <ClCompile Include="zlib\contrib\minizip\ioapi.c">
-      <Filter>Third-Party\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="zlib\contrib\minizip\iowin32.c">
-      <Filter>Third-Party\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="zlib\contrib\minizip\mztools.c">
-      <Filter>Third-Party\zlib</Filter>
-    </ClCompile>
     <ClCompile Include="zlib\trees.c">
       <Filter>Third-Party\zlib</Filter>
     </ClCompile>
     <ClCompile Include="zlib\uncompr.c">
       <Filter>Third-Party\zlib</Filter>
     </ClCompile>
-    <ClCompile Include="zlib\contrib\minizip\unzip.c">
-      <Filter>Third-Party\zlib</Filter>
-    </ClCompile>
-    <ClCompile Include="zlib\contrib\minizip\zip.c">
-      <Filter>Third-Party\zlib</Filter>
-    </ClCompile>
     <ClCompile Include="zlib\zutil.c">
       <Filter>Third-Party\zlib</Filter>
     </ClCompile>
-    <ClCompile Include="software_update.cc">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="zlib\contrib\minizip\ioapi.c">
+      <Filter>Third-Party\zlib\minizip</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\contrib\minizip\iowin32.c">
+      <Filter>Third-Party\zlib\minizip</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\contrib\minizip\mztools.c">
+      <Filter>Third-Party\zlib\minizip</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\contrib\minizip\unzip.c">
+      <Filter>Third-Party\zlib\minizip</Filter>
+    </ClCompile>
+    <ClCompile Include="zlib\contrib\minizip\zip.c">
+      <Filter>Third-Party\zlib\minizip</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -138,9 +135,6 @@
     <ClInclude Include="webpagetest.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="winpcap.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="wpt_driver_core.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -156,16 +150,16 @@
     <ClInclude Include="wpt_test_driver.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="zlib\zutil.h">
-      <Filter>Third-Party\zlib</Filter>
+    <ClInclude Include="software_update.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="zlib\crc32.h">
       <Filter>Third-Party\zlib</Filter>
     </ClInclude>
-    <ClInclude Include="zlib\contrib\minizip\crypt.h">
+    <ClInclude Include="zlib\deflate.h">
       <Filter>Third-Party\zlib</Filter>
     </ClInclude>
-    <ClInclude Include="zlib\deflate.h">
+    <ClInclude Include="zlib\gzguts.h">
       <Filter>Third-Party\zlib</Filter>
     </ClInclude>
     <ClInclude Include="zlib\inffast.h">
@@ -180,32 +174,35 @@
     <ClInclude Include="zlib\inftrees.h">
       <Filter>Third-Party\zlib</Filter>
     </ClInclude>
-    <ClInclude Include="zlib\contrib\minizip\ioapi.h">
-      <Filter>Third-Party\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="zlib\contrib\minizip\iowin32.h">
-      <Filter>Third-Party\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="zlib\contrib\minizip\mztools.h">
-      <Filter>Third-Party\zlib</Filter>
-    </ClInclude>
     <ClInclude Include="zlib\trees.h">
-      <Filter>Third-Party\zlib</Filter>
-    </ClInclude>
-    <ClInclude Include="zlib\contrib\minizip\unzip.h">
       <Filter>Third-Party\zlib</Filter>
     </ClInclude>
     <ClInclude Include="zlib\zconf.h">
       <Filter>Third-Party\zlib</Filter>
     </ClInclude>
-    <ClInclude Include="zlib\contrib\minizip\zip.h">
-      <Filter>Third-Party\zlib</Filter>
-    </ClInclude>
     <ClInclude Include="zlib\zlib.h">
       <Filter>Third-Party\zlib</Filter>
     </ClInclude>
-    <ClInclude Include="software_update.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="zlib\zutil.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\contrib\minizip\crypt.h">
+      <Filter>Third-Party\zlib\minizip</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\contrib\minizip\ioapi.h">
+      <Filter>Third-Party\zlib\minizip</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\contrib\minizip\iowin32.h">
+      <Filter>Third-Party\zlib\minizip</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\contrib\minizip\mztools.h">
+      <Filter>Third-Party\zlib\minizip</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\contrib\minizip\unzip.h">
+      <Filter>Third-Party\zlib\minizip</Filter>
+    </ClInclude>
+    <ClInclude Include="zlib\contrib\minizip\zip.h">
+      <Filter>Third-Party\zlib\minizip</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -220,6 +217,9 @@
       <Filter>Third-Party</Filter>
     </None>
     <None Include="wptdriver.ini.sample" />
+    <None Include="zlib\zconf.h.in">
+      <Filter>Third-Party\zlib</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source Files">
@@ -233,7 +233,10 @@
       <UniqueIdentifier>{ed1face4-e056-4fc9-a4c0-70e27b58510e}</UniqueIdentifier>
     </Filter>
     <Filter Include="Third-Party\zlib">
-      <UniqueIdentifier>{acc57133-2a97-41a2-9d4d-b960de240cee}</UniqueIdentifier>
+      <UniqueIdentifier>{97f18cad-5b8b-4c06-8006-0a7dd665adb2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\zlib\minizip">
+      <UniqueIdentifier>{1f4ec463-c483-431c-845e-77cf572bc059}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

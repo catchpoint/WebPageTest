@@ -54,6 +54,12 @@
     <Filter Include="Third-Party\mozjpeg">
       <UniqueIdentifier>{a8a7b766-a9f6-4269-9ecf-6a47702ec069}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Third-Party\winpcap">
+      <UniqueIdentifier>{008d51b7-181c-4c6c-99d2-d1e795300ae7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\winpcap\pcap">
+      <UniqueIdentifier>{31f31a0f-f1ec-4329-acab-a46bf2c9ee24}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NCodeHook\NCodeHook.h">
@@ -487,6 +493,57 @@
     </ClInclude>
     <ClInclude Include="hook_chrome_ssl.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WinPCap.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\bittypes.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\ip6_misc.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\Packet32.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap-bpf.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap-namedb.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap-stdinc.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\remote-ext.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\Win32-Extensions.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap\bluetooth.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap\bpf.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap\namedb.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap\pcap.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap\sll.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap\usb.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap\vlan.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1002,6 +1059,21 @@
     </ClCompile>
     <ClCompile Include="hook_chrome_ssl.cc">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WinPCap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\gzlib.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\gzread.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\gzwrite.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\gzclose.c">
+      <Filter>Third-Party\zlib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

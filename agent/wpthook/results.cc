@@ -74,12 +74,8 @@ Results::Results(TestState& test_state, WptTest& test, Requests& requests,
   , _dns(dns)
   , _screen_capture(screen_capture)
   , _saved(false)
-  , _trace(trace)
-  , reported_step_(0) {
-  _file_base = shared_results_file_base;
+  , _trace(trace) {
   _visually_complete.QuadPart = 0;
-  WptTrace(loglevel::kFunction, _T("[wpthook] - Results base file: %s"), 
-            (LPCTSTR)_file_base);
 }
 
 /*-----------------------------------------------------------------------------
@@ -129,7 +125,6 @@ void Results::Save(void) {
   if (!_saved) {
     ProcessRequests();
     if (_test._log_data) {
-      IncrementStep();
       OptimizationChecks checks(_requests, _test_state, _test, _dns);
       checks.Check();
       base_page_CDN_ = checks._base_page_CDN;
@@ -143,32 +138,13 @@ void Results::Save(void) {
       SaveTimedEvents();
       SaveCustomMetrics();
       SaveUserTiming();
-      _trace.Write(_file_base + TRACE_FILE);
+      _trace.Write(_test_state._file_base + TRACE_FILE);
     }
     if (shared_result == -1 || shared_result == 0 || shared_result == 99999)
       shared_result = _test_state._test_result;
     _saved = true;
   }
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));
-}
-
-/*------------------------------------------------------------------------------
-  Increment the reported_step, the event name, and the _file_base
------------------------------------------------------------------------------*/
-void Results::IncrementStep(void) {
-  reported_step_++;
-  // for multistep measurements, all following results get a prefix
-  if (reported_step_ > 1) {
-    _file_base.Format(_T("%s_%d"), shared_results_file_base, reported_step_);
-  } else {
-    _file_base = shared_results_file_base;
-  }
-  // Event name: Either default or set by command
-  if (_test._current_event_name.IsEmpty()) {
-    current_step_name_.Format("Step %d", reported_step_);
-  } else {
-    current_step_name_ = _test._current_event_name;
-  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -195,8 +171,8 @@ void Results::SaveProgressData(void) {
       peak_process_count_ = data._process_count;
   }
   _test_state.UnLock();
-  HANDLE hFile = CreateFile(_file_base + PROGRESS_DATA_FILE, GENERIC_WRITE, 0, 
-                                NULL, CREATE_ALWAYS, 0, 0);
+  HANDLE hFile = CreateFile(_test_state._file_base + PROGRESS_DATA_FILE,
+                            GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
   if (hFile != INVALID_HANDLE_VALUE) {
     DWORD dwBytes;
     WriteFile(hFile, (LPCSTR)progress, progress.GetLength(), &dwBytes, 0);
@@ -219,7 +195,7 @@ void Results::SaveStatusMessages(void) {
     status += "\r\n";
   }
   _test_state.UnLock();
-  HANDLE hFile = CreateFile(_file_base + STATUS_MESSAGE_DATA_FILE, 
+  HANDLE hFile = CreateFile(_test_state._file_base + STATUS_MESSAGE_DATA_FILE, 
                             GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
   if( hFile != INVALID_HANDLE_VALUE )
   {
@@ -235,16 +211,16 @@ void Results::SaveImages(void) {
   // save the event-based images
   CxImage image;
   if (_screen_capture.GetImage(CapturedImage::START_RENDER, image))
-    SaveImage(image, _file_base + IMAGE_START_RENDER, _test._image_quality, false, _test._full_size_video);
+    SaveImage(image, _test_state._file_base + IMAGE_START_RENDER, _test._image_quality, false, _test._full_size_video);
   if (_screen_capture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image))
-    SaveImage(image, _file_base + IMAGE_DOC_COMPLETE, _test._image_quality, false, _test._full_size_video);
+    SaveImage(image, _test_state._file_base + IMAGE_DOC_COMPLETE, _test._image_quality, false, _test._full_size_video);
   if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, image)) {
     if (_test._png_screen_shot)
-      image.Save(_file_base + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
-    SaveImage(image, _file_base + IMAGE_FULLY_LOADED, _test._image_quality, false, _test._full_size_video);
+      image.Save(_test_state._file_base + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
+    SaveImage(image, _test_state._file_base + IMAGE_FULLY_LOADED, _test._image_quality, false, _test._full_size_video);
   }
   if (_screen_capture.GetImage(CapturedImage::RESPONSIVE_CHECK, image)) {
-    SaveImage(image, _file_base + IMAGE_RESPONSIVE_CHECK, _test._image_quality,
+    SaveImage(image, _test_state._file_base + IMAGE_RESPONSIVE_CHECK, _test._image_quality,
               true, _test._full_size_video);
   }
 
@@ -289,7 +265,7 @@ void Results::SaveVideo(void) {
             histogram = GetHistogramJSON(*img);
             if (_test._video) {
               _visually_complete.QuadPart = image._capture_time.QuadPart;
-              file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_file_base, 
+              file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_test_state._file_base, 
                                 image_time);
               SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_video);
             }
@@ -302,7 +278,7 @@ void Results::SaveVideo(void) {
           image_time_ms = 0;
           histogram = GetHistogramJSON(*img);
           if (_test._video) {
-            file_name = _file_base + _T("_progress_0000.jpg");
+            file_name = _test_state._file_base + _T("_progress_0000.jpg");
             SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_video);
           }
         }
@@ -319,7 +295,7 @@ void Results::SaveVideo(void) {
           histograms += "}";
           histogram_count++;
           if (_test._video) {
-            file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_file_base,
+            file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_test_state._file_base,
                              image_time);
             SaveHistogram(histogram, file_name);
           }
@@ -340,7 +316,7 @@ void Results::SaveVideo(void) {
   if (histogram_count > 1) {
     histograms += "]";
     TCHAR path[MAX_PATH];
-    lstrcpy(path, _file_base);
+    lstrcpy(path, _test_state._file_base);
     TCHAR * file = PathFindFileName(path);
     int run = _tstoi(file);
     if (run) {
@@ -348,9 +324,9 @@ void Results::SaveVideo(void) {
       *file = 0;
 
       // file_name needs to include step prefix for multistep measurements
-      if (reported_step_ > 1) {
+      if (_test_state.reported_step_ > 1) {
         file_name.Format(_T("%s%d.%d.%d.histograms.json"),
-                         path, run, reported_step_, cached);
+                         path, run, _test_state.reported_step_, cached);
       } else {
         file_name.Format(_T("%s%d.%d.histograms.json"), path, run, cached);
       }
@@ -477,8 +453,8 @@ void Results::SaveHistogram(CStringA& histogram, CString file) {
   Save the page-level data
 -----------------------------------------------------------------------------*/
 void Results::SavePageData(OptimizationChecks& checks){
-  HANDLE file = CreateFile(_file_base + PAGE_DATA_FILE, GENERIC_WRITE, 0, 
-                            NULL, OPEN_ALWAYS, 0, 0);
+  HANDLE file = CreateFile(_test_state._file_base + PAGE_DATA_FILE,
+                           GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, 0, 0);
   if (file != INVALID_HANDLE_VALUE) {
     SetFilePointer( file, 0, 0, FILE_END );
 
@@ -496,7 +472,7 @@ void Results::SavePageData(OptimizationChecks& checks){
           _test_state._start_time.wMinute, _test_state._start_time.wSecond);
     result += buff;
     // Event Name
-    result += current_step_name_ + "\t";
+    result += _test_state.current_step_name_ + "\t";
     // URL
     result += CStringA((LPCSTR)CT2A(_test._navigated_url)) + "\t";
     // Load Time (ms)
@@ -958,19 +934,19 @@ void Results::ProcessRequests(void) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Results::SaveRequests(OptimizationChecks& checks) {
-  HANDLE file = CreateFile(_file_base + REQUEST_DATA_FILE, GENERIC_WRITE, 0, 
-                            NULL, OPEN_ALWAYS, 0, 0);
+  HANDLE file = CreateFile(_test_state._file_base + REQUEST_DATA_FILE,
+                           GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, 0, 0);
   if (file != INVALID_HANDLE_VALUE) {
     DWORD bytes;
     CStringA buff;
     SetFilePointer( file, 0, 0, FILE_END );
 
-    HANDLE headers_file = CreateFile(_file_base + REQUEST_HEADERS_DATA_FILE,
+    HANDLE headers_file = CreateFile(_test_state._file_base + REQUEST_HEADERS_DATA_FILE,
                             GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
 
     HANDLE custom_rules_file = INVALID_HANDLE_VALUE;
     if (!_test._custom_rules.IsEmpty()) {
-      custom_rules_file = CreateFile(_file_base +CUSTOM_RULES_DATA_FILE,
+      custom_rules_file = CreateFile(_test_state._file_base +CUSTOM_RULES_DATA_FILE,
                                     GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
       if (custom_rules_file != INVALID_HANDLE_VALUE) {
         WriteFile(custom_rules_file, "{", 1, &bytes, 0);
@@ -1064,7 +1040,7 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
         _test_state._start_time.wMinute, _test_state._start_time.wSecond);
   result += buff;
   // Event Name
-  result += current_step_name_ + "\t";
+  result += _test_state.current_step_name_ + "\t";
   // IP Address
   struct sockaddr_in addr;
   addr.sin_addr.S_un.S_addr = request->_peer_address;
@@ -1315,7 +1291,7 @@ CStringA Results::FormatTime(LARGE_INTEGER t) {
 -----------------------------------------------------------------------------*/
 void Results::SaveResponseBodies(void) {
   if (_test._save_response_bodies || _test._save_html_body) {
-    CString file = _file_base + _T("_bodies.zip");
+    CString file = _test_state._file_base + _T("_bodies.zip");
     zipFile zip = zipOpen(CT2A(file), APPEND_STATUS_CREATE);
     if (zip) {
       DWORD count = 0;
@@ -1364,7 +1340,7 @@ void Results::SaveResponseBodies(void) {
 void Results::SaveConsoleLog(void) {
   CStringA log = CT2A(_test_state.GetConsoleLogJSON());
   if (log.GetLength()) {
-    HANDLE file = CreateFile(_file_base + CONSOLE_LOG_FILE, GENERIC_WRITE, 0, 
+    HANDLE file = CreateFile(_test_state._file_base + CONSOLE_LOG_FILE, GENERIC_WRITE, 0, 
                               NULL, CREATE_ALWAYS, 0, 0);
     if (file != INVALID_HANDLE_VALUE) {
       DWORD written;
@@ -1379,7 +1355,7 @@ void Results::SaveConsoleLog(void) {
 void Results::SaveTimedEvents(void) {
   CStringA log = CT2A(_test_state.GetTimedEventsJSON(), CP_UTF8);
   if (log.GetLength()) {
-    HANDLE file = CreateFile(_file_base + TIMED_EVENTS_FILE, GENERIC_WRITE, 0, 
+    HANDLE file = CreateFile(_test_state._file_base + TIMED_EVENTS_FILE, GENERIC_WRITE, 0, 
                               NULL, CREATE_ALWAYS, 0, 0);
     if (file != INVALID_HANDLE_VALUE) {
       DWORD written;
@@ -1394,7 +1370,7 @@ void Results::SaveTimedEvents(void) {
 void Results::SaveCustomMetrics(void) {
   CStringA custom_metrics = CT2A(_test_state._custom_metrics, CP_UTF8);
   if (custom_metrics.GetLength()) {
-    HANDLE file = CreateFile(_file_base + CUSTOM_METRICS_FILE, GENERIC_WRITE, 0, 
+    HANDLE file = CreateFile(_test_state._file_base + CUSTOM_METRICS_FILE, GENERIC_WRITE, 0, 
                               NULL, CREATE_ALWAYS, 0, 0);
     if (file != INVALID_HANDLE_VALUE) {
       DWORD written;
@@ -1409,7 +1385,7 @@ void Results::SaveCustomMetrics(void) {
 void Results::SaveUserTiming(void) {
   CStringA user_timing = CT2A(_test_state._user_timing, CP_UTF8);
   if (user_timing.GetLength()) {
-    HANDLE file = CreateFile(_file_base + USER_TIMING_FILE, GENERIC_WRITE, 0, 
+    HANDLE file = CreateFile(_test_state._file_base + USER_TIMING_FILE, GENERIC_WRITE, 0, 
                               NULL, CREATE_ALWAYS, 0, 0);
     if (file != INVALID_HANDLE_VALUE) {
       DWORD written;

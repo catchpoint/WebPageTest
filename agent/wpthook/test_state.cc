@@ -61,7 +61,8 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   ,navigated_(false)
   ,_started(false)
   ,received_data_(false)
-  ,_viewport_adjusted(false) {
+  ,_viewport_adjusted(false)
+  , reported_step_(0) {
   QueryPerformanceCounter(&_launch);
   QueryPerformanceFrequency(&_ms_frequency);
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
@@ -81,6 +82,9 @@ TestState::~TestState(void) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TestState::Init() {
+  _winpcap.Initialize();
+  _file_base = shared_results_file_base;
+  OutputDebugString(L"Results base file: " + _file_base);
   Reset(false);
 }
 
@@ -170,12 +174,36 @@ void __stdcall CollectData(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
     ((TestState *)lpParameter)->CollectData();
 }
 
+/*------------------------------------------------------------------------------
+  Increment the reported_step, the event name, and the _file_base
+-----------------------------------------------------------------------------*/
+void TestState::IncrementStep(void) {
+  reported_step_++;
+  // for multistep measurements, all following results get a prefix
+  if (reported_step_ > 1) {
+    _file_base.Format(_T("%s_%d"), shared_results_file_base, reported_step_);
+  } else {
+    _file_base = shared_results_file_base;
+  }
+  // Event name: Either default or set by command
+  if (_test._current_event_name.IsEmpty()) {
+    current_step_name_.Format("Step %d", reported_step_);
+  } else {
+    current_step_name_ = _test._current_event_name;
+  }
+}
+
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TestState::Start() {
   WptTrace(loglevel::kFunction, _T("[wpthook] TestState::Start()\n"));
   Reset();
   UpdateStoredBrowserVersion();
+  if (_test._log_data) {
+    IncrementStep();
+    if (_test._tcpdump)
+      _winpcap.StartCapture(_file_base + _T(".cap") );
+  }
   QueryPerformanceCounter(&_step_start);
   GetSystemTime(&_start_time);
   if (!_start.QuadPart)
@@ -412,6 +440,7 @@ void TestState::Done(bool force) {
   if (_active) {
     GetCPUTime(_end_cpu_time, _end_total_time);
     _screen_capture.Capture(_frame_window, CapturedImage::FULLY_LOADED);
+    _winpcap.StopCapture();
     CollectMemoryStats();
     if (force || !_test._combine_steps) {
       // kill the timer that was collecting periodic data (cpu, video, etc)

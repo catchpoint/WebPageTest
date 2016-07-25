@@ -162,6 +162,8 @@ bool CWinPCap::StartCapture(CString file) {
       if( WaitForSingleObject(hCaptureStarted, 10000) == WAIT_OBJECT_0 )
         ret = true;
     }
+  } else {
+    OutputDebugStringA("pcap not loaded");
   }
 
   return ret;
@@ -172,6 +174,7 @@ bool CWinPCap::StartCapture(CString file) {
 bool CWinPCap::StopCapture() {
   bool ret = false;
 
+  OutputDebugString(L"Stopping pcap: " + captureFile);
   if (pcapLoaded && hCaptureThread) {
     // stop the thread (give it a long time since it will also be 
     // compressing the capture file)
@@ -191,6 +194,8 @@ void CWinPCap::CaptureThread(void) {
   if (pcapLoaded) {
     pcap_t *        pcapSession;
     pcap_dumper_t * pcapFile;
+
+    OutputDebugString(L"pcap started to: " + captureFile);
 
     // get the list of all of the interfaces
     pcap_if_t *alldevs;
@@ -246,6 +251,7 @@ void CWinPCap::CaptureThread(void) {
 void CWinPCap::CompressCapture(void) {
   bool ok = false;
 
+  OutputDebugString(L"Compressing pcap: " + captureFile);
   HANDLE hSrc = CreateFile(captureFile, GENERIC_READ, 0, 0, OPEN_EXISTING,0,0);
   if (hSrc != INVALID_HANDLE_VALUE) {
     gzFile dst = gzopen((LPCSTR)CT2A(captureFile + _T(".gz")), "wb9");
