@@ -149,6 +149,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for pcap-based utilization file
+   */
+  public function pcapUtilizationFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_pcap_slices.json";
+  }
+
+  /**
    * @return string Path for JPG screenshot file
    */
   public function screenShotFile() {

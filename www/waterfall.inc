@@ -171,13 +171,16 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
     $stepId = array_key_exists('step_id', $options) ? (int) $options['step_id'] : 1;
     $isCached = array_key_exists('is_cached', $options) ? $options['is_cached'] : false;
     $localPaths = new TestPaths($options['path'], $options['run_id'], $isCached, $stepId);
+    // Load the pcap-based bandwidth information if we have it
+    if ($use_bw) {
+      $max_bw = 0;
+      if (isset($options) && array_key_exists('max_bw', $options))
+          $max_bw = $options['max_bw'];
+      $pcap_slices = LoadPcapSlices($localPaths->pcapUtilizationFile(), $max_bw);
+    }
     if ($use_cpu || $use_bw) {
         $perf_file = $localPaths->utilizationFile();
-        $max_bw = 0;
-        if (isset($options) && array_key_exists('max_bw', $options)) {
-            $max_bw = $options['max_bw'];
-        }
-        $perfs = LoadPerfData($perf_file, $use_cpu, $use_bw, false, $max_bw);
+        $perfs = LoadPerfData($perf_file, $use_cpu, !isset($pcap_slices) && $use_bw, false, $max_bw);
         $perf_height = $is_thumbnail ? 16 : 50;
         if (isset($perfs) && is_array($perfs)) {
             foreach (array_keys($perfs) as $key) {
@@ -191,6 +194,15 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                 }
             }
         }
+    }
+    if (isset($pcap_slices) && is_array($pcap_slices)) {
+      $perf_height = $is_thumbnail ? 16 : 50;
+      $pcap_slices['x1'] = 0;
+      $pcap_slices['x2'] = $width - 1;
+      $pcap_slices['y1'] = $height - 1;  // share border with above
+      $pcap_slices['y2'] = $height + $perf_height - 2;
+      $pcap_slices['height'] = $perf_height;
+      $height += $perf_height - 1;
     }
     if ($use_cpu && !$is_image_map) {
       require_once('devtools.inc.php');
@@ -306,6 +318,10 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                     $perfs['bw']['color'] = GetColor($im, 137, 200, 137);
                 }
             }
+            if (isset($pcap_slices)) {
+              $pcap_slices['in_color'] = GetColor($im, 52, 150, 255);
+              $pcap_slices['in_dup_color'] = GetColor($im, 192, 64, 64);
+            }
         } else {
             $time_scale_color = $dark_grey;
             $border_color = $black;
@@ -316,6 +332,10 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                 if (array_key_exists('bw', $perfs)) {
                     $perfs['bw']['color'] = GetColor($im, 0, 127, 0);
                 }
+            }
+            if (isset($pcap_slices)) {
+              $pcap_slices['in_color'] = GetColor($im, 52, 150, 255);
+              $pcap_slices['in_dup_color'] = GetColor($im, 192, 64, 64);
             }
         }
         if (isset($cpu_slice_info)) {
@@ -408,6 +428,13 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
             }
         }
         
+        // Draw pcap-based bandwidth backgrounds, labels and borders
+        if (isset($pcap_slices)) {
+          if (!$is_thumbnail && $show_labels)
+              DrawPerfLabel($im, 'pcap_bw', $pcap_slices, $font, $black);
+          DrawPerfBackground($im, $pcap_slices, $data_x, $border_color, $bg_colors['alt']);
+        }
+        
         // Draw timeline backgrounds, labels and borders
         if (isset($cpu_slice_info)) {
           foreach ($cpu_slice_info as $thread => $p) {
@@ -443,6 +470,9 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                             imageline($im, $x, $p['y1'] + 1, $x, $p['y2'] - 1, $time_scale_color);
                         }
                     }
+                }
+                if (isset($pcap_slices)) {
+                  imageline($im, $x, $pcap_slices['y1'] + 1, $x, $pcap_slices['y2'] - 1, $time_scale_color);
                 }
                 if (isset($cpu_slice_info)) {
                   foreach ($cpu_slice_info as $p)
@@ -483,6 +513,10 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                                                  'y2' => $p['y2'] - 1);
                         }
                     }
+                }
+                if (isset($pcap_slices)) {
+                  $endpoints[] = array('y1' => $pcap_slices['y1'] + 1,
+                                       'y2' => $pcap_slices['y2'] - 1);
                 }
                 if (isset($cpu_slice_info)) {
                   foreach ($cpu_slice_info as $p)
@@ -553,6 +587,35 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                         }
                     }
                 }
+            }
+            
+            // Draw the pcap-based bandwidth data
+            if (isset($pcap_slices)) {
+              // go through each pixel and draw bars individually
+              $x1 = $data_x + 1;
+              $x2 = $data_x + $data_width;
+              $pcap_top = $pcap_slices['y1'] + 1;
+              $pcap_bottom = $pcap_slices['y2'] - 1;
+              $pcap_height = $pcap_bottom - $pcap_top + 1;
+              $max_val = $pcap_slices['max'];
+              $end_slice_time = floatval($max_ms) / 1000.0;
+              $slice_time = $end_slice_time / floatval($data_width);
+              if ($x1 < $x2) {
+                $slices = array('in', 'in_dup');
+                foreach ($slices as $slice) {
+                  $index = 0;
+                  for ($x = $x1; $x <= $x2; $x++) {
+                    $start_time = (floatval($x - $x1) / floatval($data_width)) * $end_slice_time;
+                    $value = GetAverageSliceValue($pcap_slices[$slice], $start_time, $start_time + $slice_time);
+                    $pixels = min(intval((floatval($value) / floatval($max_val)) * floatval($pcap_height)), $pcap_height);
+                    if ($pixels > 0) {
+                      $y2 = max($pcap_bottom - $pixels, $pcap_top);
+                      imageline($im, $x, $pcap_bottom, $x, $y2, $pcap_slices["{$slice}_color"]);
+                    }
+                    $index++;
+                  }
+                }
+              }
             }
             
             // Draw the Timeline information
@@ -870,14 +933,27 @@ function DrawPerfLabel($im, $key, $perf, $font, $label_color) {
 
   $label = $key;
   if ($key == 'cpu') {
-      $label = 'CPU Utilization';
+    $label = 'CPU Utilization';
   } elseif ($key == 'bw') {
-      $max_kbps = number_format($perf['max'] / 1000);
-      $label = "BandwidthIn (0 - $max_kbps Kbps)";
+    $max_kbps = number_format($perf['max'] / 1000);
+    $label = "Bandwidth In (0 - $max_kbps Kbps)";
+  } elseif ($key == 'pcap_bw') {
+    $max_kbps = number_format($perf['max'] / 1000);
+    $label = "Bandwidth In (0 - $max_kbps Kbps)";
   }
   $font_height = imagefontheight($font);
   $label_y = $perf['y1'] + ($height / 2) - ($font_height / 2);
+  if (isset($perf['in_dup']))
+    $label_y = $perf['y1'] + ($height / 2) - intval(2.25 * $font_height / 2);
   imagestring($im, $font, $x + 50, $label_y, $label, $label_color);
+  if (isset($perf['in_color']))
+    imagefilledrectangle($im, $x + 40, $label_y + 2, $x + 30, $label_y + $font_height - 2, $perf['in_color']);
+  if (isset($perf['in_dup'])) {
+    $label_y += intval($font_height * 1.25);
+    imagestring($im, $font, $x + 50, $label_y, "Duplicate (wasted) Data", $label_color);
+    if (isset($perf['in_dup_color']))
+      imagefilledrectangle($im, $x + 40, $label_y + 2, $x + 30, $label_y + $font_height - 2, $perf['in_dup_color']);
+  }
 }
 
 /**
@@ -1191,5 +1267,119 @@ function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
   }
   echo '<div id="marker"></div>';
   echo '</div>';
+}
+
+function LoadPcapSlices($slices_file, $max_bw) {
+  $slices = null;
+  if (gz_is_file($slices_file)) {
+    $original = json_decode(gz_file_get_contents($slices_file), true);
+    if (isset($original) && is_array($original) && isset($original['in'])) {
+      // The data is stored as bytes in 100ms buckets.  Convert that to bps values
+      $data = array();
+      foreach ($original as $series => $values) {
+        $data[$series] = array();
+        foreach ($values as $bucket => $value) {
+          $time = number_format(floatval($bucket) / 10.0, 1, '.', '');
+          $data[$series]["$time"] = $value * 80; // 8 bits per byte, 10 100ms buckets per second
+        }
+      }
+      
+      // Smooth out the bandwidth as needed to not exceed the configured bandwidth
+      if ($max_bw) {
+        $max_bw *= 1000;
+        foreach ($data as $series => $values) {
+          // figure out the real max
+          $measured_max = max($data[$series]);
+          if ($measured_max > $max_bw) {
+            $extra = 0;
+            $last_time = 0;
+            $last_value = 0;
+            krsort($data[$series], SORT_NUMERIC);
+            foreach($data[$series] as $time => $value) {
+              if ($last_time > $time) {
+                $elapsed = $last_time - $time;
+                if ($last_value > $max_bw) {
+                  $data[$series][$last_time] = $max_bw;
+                  $extra += ($last_value - $max_bw) * $elapsed;
+                } elseif ($extra) {
+                  $available = ($max_bw - $last_value) * $elapsed;
+                  if ($extra > $available) {
+                    $extra -= $available;
+                    $data[$series][$last_time] = $max_bw;
+                  } else {
+                    $extra = 0;
+                    $bw = $extra / $elapsed;
+                    $data[$series][$last_time] += $bw;
+                  }
+                }
+              }
+              $last_time = $time;
+              $last_value = $value;
+            }
+            ksort($data[$series], SORT_NUMERIC);
+          }
+        }
+      }
+      
+      $count = count($data['in']);
+      if ($count) {
+        $slices = array('count' => $count);
+        if ($max_bw) {
+          $slices['max'] = $max_bw;
+        } elseif ($count) {
+          $slices['max'] = max($data['in']);
+          if (isset($data['in_dup']))
+            $slices['max'] = max($slices['max'], max($data['in_dup']));
+        } else {
+          $slices['max'] = 0;
+        }
+        $slices['in'] = $data['in'];
+        if (isset($data['in_dup']))
+          $slices['in_dup'] = $data['in_dup'];
+      }
+    }    
+  }
+  return $slices;
+}
+
+function GetAverageSliceValue($slices, $start, $end) {
+  $avg = 0.0;
+  
+  $start_bucket = floatval(floor($start * 10.0)) / 10.0;
+  $end_bucket = floatval(ceil($end * 10.0)) / 10.0;
+  $slice_width = $end - $start;
+  
+  if ($slice_width > 0.1) {
+    // Spans multiple buckets
+    $count = 0;
+    $total = 0.0;
+    for ($bucket = $start_bucket; $bucket <= $end_bucket; $bucket += 0.1) {
+      $key = number_format($bucket, 1, '.', '');
+      if (isset($slices[$key])) {
+        $count++;
+        $total += floatval($slices[$key]);
+      }
+    }
+    if ($count)
+      $avg = $total / floatval($count);
+  } elseif ($end == $start) {
+    // One value exactly (unlikely)
+    $key = number_format($start_bucket, 1, '.', '');
+    if (isset($slices[$key]))
+      $avg = floatval($slices[$key]);
+  } else {
+    // Falls between two buckets
+    $start_key = number_format($start_bucket, 1, '.', '');
+    $end_key = number_format($end_bucket, 1, '.', '');
+    if (isset($slices[$start_key]) && isset($slices[$end_key])) {
+      $start_value = floatval($slices[$start_key]);
+      $end_value = floatval($slices[$end_key]);
+      $end_weight = floatval($start - $start_bucket) / 0.1;
+      $start_weight = 1.0 - $distance_from_start;
+      $avg = $start_weight * $start_value + $end_weight * $end_value;
+    }
+  }
+  
+  return $avg;
 }
 ?>
