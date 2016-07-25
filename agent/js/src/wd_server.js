@@ -195,6 +195,7 @@ WebDriverServer.prototype.init = function(args) {
   this.traceFileStream_ = undefined;
   this.userTimingFile_ = undefined;
   this.cpuSlicesFile_ = undefined;
+  this.pcapSlicesFile_ = undefined;
   this.netlogFile_ = undefined;
   this.isNavigating_ = false;
   this.mainFrame_ = undefined;
@@ -1022,6 +1023,32 @@ WebDriverServer.prototype.scheduleProcessTrace_ = function() {
   }.bind(this));
 };
 
+WebDriverServer.prototype.scheduleProcessPcap_ = function() {
+  'use strict';
+  this.scheduleNoFault_('Process pcap', function() {
+    if (this.pcapFile_) {
+      this.pcapSlicesFile_ = path.join(this.runTempDir_, 'pcap_slices.json.gz');
+      var options = ['lib/pcap/pcap-parser.py', '--json',
+          '-i', this.pcapFile_, '-d', this.pcapSlicesFile_];
+      process_utils.scheduleExec(this.app_,
+          'python', options, undefined,
+          TRACE_PROCESSING_TIMEOUT_MS).then(function(stdout) {
+        var bytes = JSON.parse(stdout);
+        if (bytes) {
+          if (bytes['in'] != undefined)
+            this.pageData_['pcapBytesIn'] = bytes['in'];
+          if (bytes['out'] != undefined)
+            this.pageData_['pcapBytesOut'] = bytes['out'];
+          if (bytes['in_dup'] != undefined)
+            this.pageData_['pcapBytesInDup'] = bytes['in_dup'];
+        }
+      }.bind(this), function(err) {
+        logger.info('Pcap processing error: ' + err.message);
+      }.bind(this));
+    }
+  }.bind(this));
+};
+
 /**
  * Starts video recording, sets the video file, registers video stop handler.
  * @private
@@ -1522,6 +1549,8 @@ WebDriverServer.prototype.done_ = function() {
       this.scheduleProcessTrace_();
     if (this.videoFile_)
       this.scheduleProcessVideo_();
+    if (this.pcapFile_)
+      this.scheduleProcessPcap_();
     this.scheduleGetNetlog_();
     this.scheduleNoFault_('End state', function() {
       if (this.testError_) {
@@ -1547,6 +1576,7 @@ WebDriverServer.prototype.done_ = function() {
           traceFile: this.traceFile_,
           userTimingFile: this.userTimingFile_,
           cpuSlicesFile: this.cpuSlicesFile_,
+          pcapSlicesFile: this.pcapSlicesFile_,
           netlogFile: this.netlogFile_,
           videoFile: this.videoFile_,
           videoFrames: this.videoFrames_,
