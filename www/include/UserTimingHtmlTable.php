@@ -55,11 +55,16 @@ class UserTimingHtmlTable {
   }
 
   private function _createBody() {
+    $out = $this->_createRow($this->runResults->getStepResult(1), $this->userTimings[0]);
+    return $out;
+  }
+
+  private function _createRow($stepResult, $stepUserTiming) {
+    $data = $stepResult->getRawResults();
     $borderClass = $this->hasUserTiming ? ' class="border"' : '';
-    $data = $this->runResults->getStepResult(1)->getRawResults();
     $out = "<tr>\n";
     if ($this->hasUserTiming)
-      foreach ($this->userTimings[0] as $label => $value)
+      foreach ($stepUserTiming as $label => $value)
         $out .= '<td>' . htmlspecialchars($value) . '</td>';
     if ($this->hasNavTiming) {
       $out .= "<td$borderClass>";
