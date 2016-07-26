@@ -99,7 +99,7 @@ private:
   void SaveStatusMessages(void);
   void SaveImage(CxImage& image, CString file, BYTE quality,
                  bool force_small = false, bool _full_size_video = false);
-  bool ImagesAreDifferent(CxImage * img1, CxImage* img2, DWORD bottom_margin);
+  bool ImagesAreDifferent(CxImage * img1, CxImage* img2, DWORD bottom_margin, DWORD margin);
   CStringA FormatTime(LARGE_INTEGER t);
   void SaveResponseBodies(void);
   void SaveConsoleLog(void);
