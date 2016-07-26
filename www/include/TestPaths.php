@@ -298,6 +298,22 @@ class TestPaths {
     return $this->testRoot . "breakdown" . $version . ".json";
   }
 
+  /**
+   * @param int $version The version of the cache format
+   * @return string Path to cache file for page data
+   */
+  public function pageDataCacheFile($version) {
+    return $this->testRoot . $this->dotIdentifier() . ".pageData." . $version;
+  }
+
+  /**
+   * @param int $version The version of the cache format
+   * @return string Path to cache file for request data
+   */
+  public function requestsCacheFile($version) {
+    return $this->testRoot . $this->dotIdentifier() . ".requests." . $version;
+  }
+
   public function cacheKey() {
     return "run" . $this->run . ".cached" . ($this->cached ? 1 : 0) . ".step" . $this->step;
   }

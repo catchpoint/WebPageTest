@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../common_lib.inc';
+require_once __DIR__ . '/../page_data.inc';
 require_once __DIR__ . '/../object_detail.inc';
 require_once __DIR__ . '/../breakdown.inc';
 require_once __DIR__ . '/../devtools.inc.php';
@@ -49,11 +50,12 @@ class ResultProcessing {
     $testerError = null;
     $secure = false;
     $haveLocations = false;
+    loadPageRunData($this->testRoot, $this->run, $this->cached);
     $steps = $this->countSteps();
     for ($i = 1; $i <= $steps; $i++) {
       $rootUrls = UrlGenerator::create(true, "", $this->id, $this->run, $this->cached, $i);
       $stepPaths = new TestPaths($this->testRoot, $this->run, $this->cached, $i);
-      $requests = getRequestsForStep($stepPaths, $rootUrls, $secure, $haveLocations, false, false);
+      $requests = getRequestsForStep($stepPaths, $rootUrls, $secure, $haveLocations, true, true);
       if (isset($requests) && is_array($requests) && count($requests)) {
         getBreakdownForStep($stepPaths, $rootUrls, $requests);
       } else {

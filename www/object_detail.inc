@@ -40,50 +40,65 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
     $headers_file_name = $localPaths->headersFile();
     $bodies_file_name = $localPaths->bodiesFile();
     $custom_rules_file_name = $localPaths->customRulesFile();
+    $cache_version = 1;
+    $cache_file = $localPaths->requestsCacheFile($cache_version);
+    $requests = null;
+    $cached = true;
+    if (gz_is_file($cache_file))
+      $requests = json_decode(gz_file_get_contents($cache_file), true);
+    if (!isset($requests) || !is_array($requests)) {
+      $cached = false;
+      $needHeaders = false;
+      $requests = LoadRequests($request_file_name);
+      if (isset($requests) && is_array($requests) && count($requests)) {
+          if ($use_raw_headers)
+              $needHeaders = true;
 
-    $needHeaders = false;
-    $requests = LoadRequests($request_file_name);
-    if (isset($requests) && is_array($requests) && count($requests)) {
-        if ($use_raw_headers)
-            $needHeaders = true;
+          AddResponseBodyFlags($requests, $bodies_file_name);
+      } else {
+          GetDevToolsRequestsForStep($localPaths, $requests, $pageData);
+      }
+      FixUpRequestTimes($requests);
+      if ($needHeaders)
+          AddHeaders($requests, $headers_file_name);
 
-        AddResponseBodyFlags($requests, $bodies_file_name);
-
-        // load any custom checks if they are available
-        $custom_rules = array();
-        if (gz_is_file($custom_rules_file_name))
-            $custom_rules = json_decode(gz_file_get_contents($custom_rules_file_name), true);
-    } else
-        GetDevToolsRequestsForStep($localPaths, $requests, $pageData);
-    FixUpRequestTimes($requests);
-    if ($needHeaders)
-        AddHeaders($requests, $headers_file_name);
-
-    $has_locations = false;
-    if ($use_location_check) {
-        $has_locations = AddLocationData($requests);
+      $has_locations = false;
+      if ($use_location_check) {
+          $has_locations = AddLocationData($requests);
+      }
     }
 
-    $has_secure_requests = false;
-    foreach ($requests as $index => &$request) {
-        $request['index'] = $index;
-        $request['number'] = $index + 1;
-        if ($rootUrlGenerator) {
-          if (isset($request['body_id']) && $request['body_id'] > 0) {
-            $request['body_url'] = $rootUrlGenerator->responseBodyWithBodyId($request['body_id']);
-          } elseif (@$request['body']) {
-            $request['body_url'] = $rootUrlGenerator->responseBodyWithRequestNumber($request['number']);
+    if (isset($requests) && is_array($requests)) {
+      // load any custom checks if they are available
+      $custom_rules = array();
+      if (gz_is_file($custom_rules_file_name))
+          $custom_rules = json_decode(gz_file_get_contents($custom_rules_file_name), true);
+
+      $has_secure_requests = false;
+      foreach ($requests as $index => &$request) {
+          $request['index'] = $index;
+          $request['number'] = $index + 1;
+          if ($rootUrlGenerator) {
+            if (isset($request['body_id']) && $request['body_id'] > 0) {
+              $request['body_url'] = $rootUrlGenerator->responseBodyWithBodyId($request['body_id']);
+            } elseif (@$request['body']) {
+              $request['body_url'] = $rootUrlGenerator->responseBodyWithRequestNumber($request['number']);
+            }
           }
-        }
-        if ($request['is_secure'])
-            $has_secure_requests = true;
-        if (isset($custom_rules) && is_array($custom_rules) && array_key_exists($index + 1, $custom_rules))
-            $request['custom_rules'] = $custom_rules[$index + 1];
-    }
+          if ($request['is_secure'])
+              $has_secure_requests = true;
+          if (isset($custom_rules) && is_array($custom_rules) && array_key_exists($index + 1, $custom_rules))
+              $request['custom_rules'] = $custom_rules[$index + 1];
+      }
     
-    // this is disabled for right now - there were indications that it was
-    // spiking CPU to 100% on WPT so there may be a loop condition of some kind
-    //BuildRequestDependencies($requests);
+      // this is disabled for right now - there were indications that it was
+      // spiking CPU to 100% on WPT so there may be a loop condition of some kind
+      //BuildRequestDependencies($requests);
+      
+      if (!$cached && $use_raw_headers) {
+        gz_file_put_contents($cache_file, json_encode($requests));
+      }
+    }
     
     return $requests;
 }
