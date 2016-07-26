@@ -1060,14 +1060,19 @@ function AddBarIfValid(&$bars, $key, $request, $x_scaler, $y1, $y2) {
 * 
 */
 function InsertWaterfall($url, &$requests, $id, $run, $cached, &$page_data, $waterfall_options = '') {
+  echo CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $waterfall_options);
+}
+
+function CreateWaterfallHtml($url, &$requests, $id, $run, $cached, &$page_data, $waterfall_options = '', $step = 1) {
     global $settings;
-    
+
     // create the image map (this is for fallback when Javascript isn't enabled
     // but also gives us the position for each request)
-    echo '<map name="waterfall_map">';
+    $out = '<map name="waterfall_map">';
     $options = array(
         'id' => $id,
         'path' => './' . GetTestPath($id),
+        'step' => $step,
         'run_id' => $run,
         'is_cached' => @$_GET['cached'],
         'use_cpu' => true,
@@ -1080,18 +1085,18 @@ function InsertWaterfall($url, &$requests, $id, $run, $cached, &$page_data, $wat
         if (array_key_exists('request', $entry)) {
             $index = $entry['request'] + 1;
             $title = $index . ': ' . htmlspecialchars($entry['url']);
-            echo '<area href="#request' . $index . '" alt="' . $title . '" title="' . $title . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
+            $out .= '<area href="#request' . $index . '" alt="' . $title . '" title="' . $title . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
         } elseif (array_key_exists('url', $entry)) {
-            echo '<area href="#request" alt="' . $entry['url'] . '" title="' . $entry['url'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
+            $out .= '<area href="#request" alt="' . $entry['url'] . '" title="' . $entry['url'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
         } elseif (array_key_exists('userTime', $entry)) {
-            echo '<area nohref="nohref" alt="' . $entry['userTime'] . '" title="' . $entry['userTime'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
+            $out .= '<area nohref="nohref" alt="' . $entry['userTime'] . '" title="' . $entry['userTime'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
         }
     }
-    echo '</map>';
+    $out .= '</map>';
     
     // main container for the waterfall
-    echo '<div class="waterfall-container">';
-    echo "<img class=\"waterfall-image\" alt=\"\" onload=\"markUserTime('aft.Waterfall')\" usemap=\"#waterfall_map\" id=\"waterfall\" src=\"/waterfall.php?test=$id&run=$run&cached=$cached$waterfall_options\">";
+    $out .= '<div class="waterfall-container">';
+    $out .= "<img class=\"waterfall-image\" alt=\"\" onload=\"markUserTime('aft.Waterfall')\" usemap=\"#waterfall_map\" id=\"waterfall\" src=\"/waterfall.php?test=$id&run=$run&cached=$cached$waterfall_options\">";
 
     // draw div's over each of the waterfall elements (use the image map as a reference)
     foreach($map as $entry) {
@@ -1106,11 +1111,11 @@ function InsertWaterfall($url, &$requests, $id, $run, $cached, &$page_data, $wat
                     $tooltip = substr($tooltip, 0, $split) . '...';
                 $tooltip = FitText($tooltip, 100);
             }
-            echo "<div class=\"transparent request-overlay\" id=\"request-overlay-$index\" title=\"$tooltip\" onclick=\"SelectRequest($index)\" style=\"position: absolute; top: {$top}px; height: {$height}px;\"></div>\n";
+            $out .= "<div class=\"transparent request-overlay\" id=\"request-overlay-$index\" title=\"$tooltip\" onclick=\"SelectRequest($index)\" style=\"position: absolute; top: {$top}px; height: {$height}px;\"></div>\n";
         }
     }
 
-    ?>
+    $out .= <<<EOT
     <div id="request-dialog" class="jqmDialog">
         <div id="dialog-header" class="jqmdTC jqDrag">
             <div id="dialog-title"></div>
@@ -1132,16 +1137,17 @@ function InsertWaterfall($url, &$requests, $id, $run, $cached, &$page_data, $wat
         <div class="jqmdX jqmClose"></div>
     </div>
     <div id="marker"></div>
-    <?php
+EOT;
 
-    echo '</div>'; // container
+    $out .= '</div>'; // container
     
     // script support
-    echo "<script type=\"text/javascript\">\n";
-    echo "var wptRequestCount=" . count($requests) . ";\n";
-    echo "var wptRequestData=" . json_encode($requests) . ";\n";
-    echo "var wptNoLinks={$settings['nolinks']};\n";
-    echo "</script>";
+    $out .= "<script type=\"text/javascript\">\n";
+    $out .= "var wptRequestCount=" . count($requests) . ";\n";
+    $out .= "var wptRequestData=" . json_encode($requests) . ";\n";
+    $out .= "var wptNoLinks={$settings['nolinks']};\n";
+    $out .= "</script>";
+    return $out;
 }
 
 function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
