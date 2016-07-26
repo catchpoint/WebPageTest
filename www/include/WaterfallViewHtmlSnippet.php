@@ -47,20 +47,20 @@ EOT;
       <tr>
         <td><table><tr><td><div class="bar" style="width:2px; background-color:#28BC00"></div></td><td>Start Render</td></tr></table></td>
 EOT;
-    if (array_key_exists('aft', $data) && $data['aft'] )
+    if ($this->stepResult->getMetric("aft"))
       $out .= '<td><table><tr><td><div class="bar" style="width:2px; background-color:#FF0000"></div></td><td>Above the Fold</td></tr></table></td>';
-    if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 )
+    if ((float) $this->stepResult->getMetric("domTime"))
       $out .= '<td><table><tr><td><div class="bar" style="width:2px; background-color:#F28300"></div></td><td>DOM Element</td></tr></table></td>';
-    if(array_key_exists('firstPaint', $data) && (float)$data['firstPaint'] > 0.0 )
+    if((float) $this->stepResult->getMetric("firstPaint"))
       $out .= '<td><table><tr><td><div class="bar" style="width:2px; background-color:#8FBC83"></div></td><td>msFirstPaint</td></tr></table></td>';
-    if(array_key_exists('domInteractive', $data) && (float)$data['domInteractive'] > 0.0 )
+    if((float) $this->stepResult->getMetric("domInteractive"))
       $out .= '<td><table><tr><td><div class="bar" style="width:2px; background-color:#FFC61A"></div></td><td>DOM Interactive</td></tr></table></td>';
-    if(array_key_exists('domContentLoadedEventStart', $data) && (float)$data['domContentLoadedEventStart'] > 0.0 )
+    if((float) $this->stepResult->getMetric("domContentLoadedEventStart"))
       $out .= '<td><table><tr><td><div class="bar" style="width:15px; background-color:#D888DF"></div></td><td>DOM Content Loaded</td></tr></table></td>';
-    if(array_key_exists('loadEventStart', $data) && (float)$data['loadEventStart'] > 0.0 )
+    if((float) $this->stepResult->getMetric("loadEventStart"))
       $out .= '<td><table><tr><td><div class="bar" style="width:15px; background-color:#C0C0FF"></div></td><td>On Load</td></tr></table></td>';
     $out .= '<td><table><tr><td><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td>Document Complete</td></tr></table></td>';
-    if(array_key_exists('userTime', $data) || $this->hasCsi)
+    if($this->stepResult->getMetric('userTime') || $this->hasCsi)
       $out .= '<td><table><tr><td><div class="arrow-down"></div></td><td>User Timings</td></tr></table></td>';
     $out .= "</tr>\n</table>\n<br>";
     $out .= CreateWaterfallHtml($url, $requests, $id, $run, $cached, $data);
