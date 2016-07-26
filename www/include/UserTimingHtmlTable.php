@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../common_lib.inc';
+
 class UserTimingHtmlTable {
 
   const NO_METRIC_STRING = "-";
@@ -8,6 +10,7 @@ class UserTimingHtmlTable {
   private $runResults;
   private $userTimings;
 
+  private $isMultistep;
   private $hasNavTiming;
   private $hasUserTiming;
   private $hasFirstPaint;
@@ -24,6 +27,7 @@ class UserTimingHtmlTable {
     $this->hasUserTiming = $this->_initUserTimings();
     $this->hasFirstPaint = $this->runResults->hasValidMetric("firstPaint");
     $this->hasDomInteractive = $this->runResults->hasValidMetric("domInteractive");
+    $this->isMultistep = $runResults->countSteps() > 1;
   }
 
   public function create() {
@@ -40,6 +44,9 @@ class UserTimingHtmlTable {
   private function _createHead() {
     $borderClass = $this->hasUserTiming ? ' class="border"' : '';
     $out = "<tr>\n";
+    if ($this->isMultistep) {
+      $out .= "<th>Step</th>";
+    }
     if ($this->hasUserTiming) {
       foreach ($this->userTimings[0] as $label => $value)
         $out .= '<th>' . htmlspecialchars($label) . '</th>';
@@ -64,6 +71,9 @@ class UserTimingHtmlTable {
   private function _createRow($stepResult, $stepUserTiming) {
     $borderClass = $this->hasUserTiming ? ' class="border"' : '';
     $out = "<tr>\n";
+    if ($this->isMultistep) {
+      $out .= "<td>" . FitText($stepResult->readableIdentifier(), 30) . "</td>";
+    }
     if ($this->hasUserTiming)
       foreach ($stepUserTiming as $label => $value)
         $out .= '<td>' . htmlspecialchars($value) . '</td>';
@@ -134,7 +144,7 @@ class UserTimingHtmlTable {
     $out = $startValue . " - " . $endValue;
     if ($startValue !== "?" && $endValue !== "?") {
       $diff = $stepResult->getMetric($endMetric) - $stepResult->getMetric($startMetric);
-      $out .= number_format($diff / 1000.0, 3) . 's';
+      $out .= ' (' . number_format($diff / 1000.0, 3) . 's)';
     }
     return $out;
   }
