@@ -178,7 +178,7 @@ $page_description = "Website performance test details$testLabel";
                 <?php
                 }
                 $userTimingTable = new UserTimingHtmlTable($testRunResults);
-                $userTimingTable->create();
+                echo $userTimingTable->create();
 
                 $secure = false;
                 $haveLocations = false;
