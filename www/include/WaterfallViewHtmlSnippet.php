@@ -21,17 +21,16 @@ class WaterfallViewHtmlSnippet {
   }
 
   public function create() {
-    $data = $this->stepResult->getRawResults();
-    $url = $this->stepResult->readableIdentifier($this->testInfo->getUrl());
-    $id = $this->testInfo->getId();
-    $run = $this->stepResult->getRunNumber();
-    $cached = $this->stepResult->isCachedRun();
-
     $out = $this->_createLegend();
 
-    $out .= CreateWaterfallHtml($url, $requests, $id, $run, $cached, $data);
-    $out .=  "<br><a href=\"/customWaterfall.php?width=930&test=$id&run=$run&cached=$cached\">customize waterfall</a> &#8226; ";
-    $out .=  "<a id=\"view-images\" href=\"/pageimages.php?test=$id&run=$run&cached=$cached\">View all Images</a>";
+    $label = $this->stepResult->readableIdentifier($this->testInfo->getUrl());
+    $out .= CreateWaterfallHtml($label, $this->requests->getRequests(), $this->testInfo->getId(),
+      $this->stepResult->getRunNumber(), $this->stepResult->isCachedRun(), $this->stepResult->getRawResults(),
+      '', $this->stepResult->getStepNumber());
+
+    $urlGenerator = $this->stepResult->createUrlGenerator("", false);
+    $out .=  "<br><a href=\"" . $urlGenerator->resultPage("customWaterfall", "width=930") . "\">customize waterfall</a> &#8226; ";
+    $out .=  "<a id=\"view-images\" href=\"" . $urlGenerator->resultPage("pageimages") . "\">View all Images</a>";
     return $out;
   }
 
