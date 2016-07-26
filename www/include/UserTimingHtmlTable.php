@@ -4,6 +4,7 @@ class UserTimingHtmlTable {
 
   /* @var TestRunResults */
   private $runResults;
+  private $hasNavTiming;
 
   /**
    * UserTimingHtmlTable constructor.
@@ -11,6 +12,8 @@ class UserTimingHtmlTable {
    */
   public function __construct($runResults) {
     $this->runResults = $runResults;
+    $this->hasNavTiming = $runResults->hasValidMetric("loadEventStart") ||
+                          $runResults->hasValidMetric("domContentLoadedEventStart");
   }
 
   public function create() {
@@ -31,11 +34,7 @@ class UserTimingHtmlTable {
       }
     }
     $timingCount = count($userTimings);
-    $navTiming = false;
-    if ((array_key_exists('loadEventStart', $data) && $data['loadEventStart'] > 0) ||
-      (array_key_exists('domContentLoadedEventStart', $data) && $data['domContentLoadedEventStart'] > 0))
-      $navTiming = true;
-    if ($timingCount || $navTiming)
+    if ($timingCount || $this->hasNavTiming)
     {
       $borderClass = '';
       if ($timingCount)
@@ -45,7 +44,7 @@ class UserTimingHtmlTable {
       if ($timingCount)
         foreach($userTimings as $label => $value)
           $out .= '<th>' . htmlspecialchars($label) . '</th>';
-      if ($navTiming) {
+      if ($this->hasNavTiming) {
         $out .= "<th$borderClass>";
         if ($data['firstPaint'] > 0)
           $out .= "RUM First Paint</th><th>";
@@ -53,11 +52,12 @@ class UserTimingHtmlTable {
           $out .= "<a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">domInteractive</a></th><th>";
         $out .= "<a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">domContentLoaded</a></th><th><a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">loadEvent</a></th>";
       }
-      $out .= '</tr><tr>';
+      $out .= '</tr>';
+      $out .= '<tr>';
       if ($timingCount)
         foreach($userTimings as $label => $value)
           $out .= '<td>' . htmlspecialchars($value) . '</td>';
-      if ($navTiming) {
+      if ($this->hasNavTiming) {
         $out .= "<td$borderClass>";
         if ($data['firstPaint'] > 0)
           $out .= number_format($data['firstPaint'] / 1000.0, 3) . 's</td><td>';
