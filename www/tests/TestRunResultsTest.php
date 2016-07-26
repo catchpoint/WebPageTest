@@ -196,6 +196,13 @@ class TestRunResultsTest extends PHPUnit_Framework_TestCase {
     $this->assertTrue($this->getTestRunResults(3)->isMultistep());
   }
 
+  public function testGetSteps() {
+    $results = $this->getTestRunResults();
+    $this->assertSame($results->getStepResults()[0], $results->getStepResult(1));
+    $this->assertSame($results->getStepResults()[1], $results->getStepResult(2));
+    $this->assertSame($results->getStepResults()[2], $results->getStepResult(3));
+  }
+
   private function getTestStepArray() {
     $step1 = array('result' => 0, 'TTFB' => 300, 'loadTime' => 6000);
     $step2 = array('result' => 0, 'TTFB' => 100, 'loadTime' => 2000, "testMetric" => 0);

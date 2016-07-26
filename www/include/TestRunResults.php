@@ -89,6 +89,13 @@ class TestRunResults {
   }
 
   /**
+   * @return TestStepResult[] Step result data for all steps in order. Keys are *not* step number
+   */
+  public function getStepResults() {
+    return $this->stepResults;
+  }
+
+  /**
    * @return bool True if all steps are successful, false otherwise
    */
   public function isSuccessful() {
