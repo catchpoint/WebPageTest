@@ -64,7 +64,10 @@ class UserTimingHtmlTable {
   }
 
   private function _createBody() {
-    $out = $this->_createRow($this->runResults->getStepResult(1), $this->userTimings[0]);
+    $out = "";
+    for ($i = 0; $i < $this->runResults->countSteps(); $i++) {
+      $out .= $this->_createRow($this->runResults->getStepResult($i + 1), $this->userTimings[$i]);
+    }
     return $out;
   }
 
