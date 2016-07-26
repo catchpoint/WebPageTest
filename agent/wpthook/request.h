@@ -254,7 +254,8 @@ class Request {
 public:
   Request(TestState& test_state, DWORD socket_id, DWORD stream_id,
           DWORD request_id, TrackSockets& sockets, TrackDns& dns,
-          WptTest& test, bool is_spdy, Requests& requests);
+          WptTest& test, bool is_spdy, Requests& requests,
+          CString protocol);
   ~Request(void);
 
   void DataIn(DataChunk& chunk);
@@ -268,6 +269,7 @@ public:
   void HeaderOut(const char * header, const char * value, bool pushed);
   void ObjectDataOut(DataChunk& chunk);
   void BytesOut(size_t len);
+  void SetPriority(int depends_on, int weight, int exclusive);
 
   void MatchConnections();
   bool Process();
@@ -297,6 +299,10 @@ public:
   bool  _was_pushed;
   CString priority_;
   InitiatorData initiator_;
+  int   _h2_priority_depends_on;
+  int   _h2_priority_weight;
+  int   _h2_priority_exclusive;
+  CString _protocol;
 
   RequestData  _request_data;
   ResponseData _response_data;

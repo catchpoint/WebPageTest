@@ -1256,6 +1256,36 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
   result += _T("\t");
   result += request->initiator_.valid_ ? CA2T(request->initiator_.initiator_detail_) : _T("");
   result += _T("\t");
+  // Protocol
+  result += request->_protocol + _T("\t");
+  // HTTP/2 Stream ID
+  if (request->_stream_id > 0) {
+    buff.Format("%d\t", request->_stream_id);
+    result += buff;
+  } else {
+    result += _T("\t");
+  }
+  // HTTP/2 Priority depends on
+  if (request->_h2_priority_depends_on >= 0) {
+    buff.Format("%d\t", request->_h2_priority_depends_on);
+    result += buff;
+  } else {
+    result += _T("\t");
+  }
+  // HTTP/2 Priority weight
+  if (request->_h2_priority_weight >= 0) {
+    buff.Format("%d\t", request->_h2_priority_weight);
+    result += buff;
+  } else {
+    result += _T("\t");
+  }
+  // HTTP/2 Priority exclusive
+  if (request->_h2_priority_exclusive >= 0) {
+    buff.Format("%d\t", request->_h2_priority_exclusive);
+    result += buff;
+  } else {
+    result += _T("\t");
+  }
 
   result += "\r\n";
 

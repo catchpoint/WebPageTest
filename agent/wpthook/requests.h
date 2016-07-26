@@ -84,6 +84,8 @@ public:
                  const char * header, const char * value, bool pushed);
   void ObjectDataOut(DWORD socket_id, DWORD stream_id, DataChunk& chunk);
   void BytesOut(DWORD socket_id, DWORD stream_id, size_t len);
+  void SetPriority(DWORD socket_id, DWORD stream_id, int depends_on,
+                   int weight, int exclusive);
 
   void Lock();
   void Unlock();
@@ -111,7 +113,8 @@ private:
   // GetOrCreateRequest must be called within a critical section.
   Request * GetOrCreateRequest(DWORD socket_id, DWORD stream_id,
                                const DataChunk& chunk);
-  Request * NewRequest(DWORD socket_id, DWORD stream_id, bool is_spdy);
+  Request * NewRequest(DWORD socket_id, DWORD stream_id, bool is_spdy,
+                       CString protocol);
   Request * GetActiveRequest(DWORD socket_id, DWORD stream_id);
   LONGLONG GetRelativeTime(Request * request, double end_time, double time);
 };

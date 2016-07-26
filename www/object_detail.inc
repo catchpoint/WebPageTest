@@ -222,7 +222,12 @@ function LoadRequests($request_file_name) {
         77 => 'was_pushed',
         78 => 'initiator_type',
         79 => 'initiator_function',
-        80 => 'initiator_detail'
+        80 => 'initiator_detail',
+        81 => 'protocol',
+        82 => 'http2_stream_id',
+        83 => 'http2_stream_dependency',
+        84 => 'http2_stream_weight',
+        85 => 'http2_stream_exclusive'
         );
     $request_lines = gz_file($request_file_name);
     if( isset($request_lines) && is_array($request_lines)) {

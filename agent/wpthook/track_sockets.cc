@@ -740,6 +740,14 @@ void TrackSockets::H2Bytes(DATA_DIRECTION direction, DWORD socket_id, int stream
     _requests.BytesOut(socket_id, stream_id, len);
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TrackSockets::H2Priority(DATA_DIRECTION direction, DWORD socket_id, int stream_id,
+              int depends_on, int weight, int exclusive) {
+  _requests.SetPriority(socket_id, stream_id, depends_on, weight, exclusive);
+}
+
+
 /******************************************************************************
   nghttp2 c-interface callbacks (trampoline back to TrackSockets callbacks)
 *******************************************************************************/
@@ -777,12 +785,29 @@ int h2_on_frame_recv_callback(nghttp2_session *session,
            h2_frame_type(frame->hd.type), frame->hd.stream_id,
            frame->hd.length);
   // Keep track of the bytes-in for headers by looking at the frame
-  if (user_data && frame->hd.type == NGHTTP2_HEADERS) {
-    H2_USER_DATA * u = (H2_USER_DATA *)user_data;
-    if (u->connection) {
-      TrackSockets * c = (TrackSockets *)u->connection;
-      c->H2Bytes(u->direction, u->socket_id, frame->hd.stream_id,
-                 frame->hd.length);
+  if (user_data) {
+    if (frame->hd.type == NGHTTP2_HEADERS) {
+      H2_USER_DATA * u = (H2_USER_DATA *)user_data;
+      if (u->connection) {
+        TrackSockets * c = (TrackSockets *)u->connection;
+        c->H2Bytes(u->direction, u->socket_id, frame->hd.stream_id,
+                   frame->hd.length);
+        if (frame->hd.flags & NGHTTP2_FLAG_PRIORITY) {
+          c->H2Priority(u->direction, u->socket_id, frame->hd.stream_id,
+                        frame->headers.pri_spec.stream_id,
+                        frame->headers.pri_spec.weight,
+                        frame->headers.pri_spec.exclusive);
+        }
+      }
+    } else if (frame->hd.type == NGHTTP2_PRIORITY) {
+      H2_USER_DATA * u = (H2_USER_DATA *)user_data;
+      if (u->connection) {
+        TrackSockets * c = (TrackSockets *)u->connection;
+        c->H2Priority(u->direction, u->socket_id, frame->hd.stream_id,
+                      frame->priority.pri_spec.stream_id,
+                      frame->priority.pri_spec.weight,
+                      frame->priority.pri_spec.exclusive);
+      }
     }
   }
   return 0;
