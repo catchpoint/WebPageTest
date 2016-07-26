@@ -5,6 +5,8 @@ class UserTimingHtmlTable {
   /* @var TestRunResults */
   private $runResults;
   private $hasNavTiming;
+  private $hasUserTiming;
+  private $userTimings;
 
   /**
    * UserTimingHtmlTable constructor.
@@ -14,35 +16,21 @@ class UserTimingHtmlTable {
     $this->runResults = $runResults;
     $this->hasNavTiming = $runResults->hasValidMetric("loadEventStart") ||
                           $runResults->hasValidMetric("domContentLoadedEventStart");
+    $this->hasUserTiming = $this->_initUserTimings();
   }
 
   public function create() {
     $data = $this->runResults->getStepResult(1)->getRawResults();
-    $userTimings = array();
     $out = "";
-    foreach($data as $metric => $value)
-      if (substr($metric, 0, 9) == 'userTime.')
-        $userTimings[substr($metric, 9)] = number_format($value / 1000, 3) . 's';
-    if (isset($data['custom']) && count($data['custom'])) {
-      foreach($data['custom'] as $metric) {
-        if (isset($data[$metric])) {
-          $value = $data[$metric];
-          if (is_double($value))
-            $value = number_format($value, 3, '.', '');
-          $userTimings[$metric] = $value;
-        }
-      }
-    }
-    $timingCount = count($userTimings);
-    if ($timingCount || $this->hasNavTiming)
+    if ($this->hasUserTiming || $this->hasNavTiming)
     {
       $borderClass = '';
-      if ($timingCount)
+      if ($this->hasUserTiming)
         $borderClass = ' class="border"';
       $out .= '<table id="tableW3CTiming" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">';
       $out .= '<tr>';
-      if ($timingCount)
-        foreach($userTimings as $label => $value)
+      if ($this->hasUserTiming)
+        foreach($this->userTimings[0] as $label => $value)
           $out .= '<th>' . htmlspecialchars($label) . '</th>';
       if ($this->hasNavTiming) {
         $out .= "<th$borderClass>";
@@ -54,8 +42,8 @@ class UserTimingHtmlTable {
       }
       $out .= '</tr>';
       $out .= '<tr>';
-      if ($timingCount)
-        foreach($userTimings as $label => $value)
+      if ($this->hasUserTiming)
+        foreach($this->userTimings[0] as $label => $value)
           $out .= '<td>' . htmlspecialchars($value) . '</td>';
       if ($this->hasNavTiming) {
         $out .= "<td$borderClass>";
@@ -74,5 +62,43 @@ class UserTimingHtmlTable {
       $out .= '</table><br>';
       return $out;
     }
+  }
+
+  private function _initUserTimings() {
+    $userTimings = array();
+    $userMetrics = array();
+
+    foreach ($this->runResults->getStepResults() as $stepResult) {
+      $stepUserTimings = $this->_userTimingsForStep($stepResult);
+      $userTimings[] = $stepUserTimings;
+      $userMetrics = array_merge($userMetrics, array_keys($stepUserTimings));
+    }
+    $userMetrics = array_unique($userMetrics);
+    $defaultValues = array_combine($userMetrics, array_fill(0, count($userMetrics), "-"));
+
+    $this->userTimings = array();
+    foreach ($userTimings as &$stepUserTimings) {
+      $this->userTimings[] = array_merge($defaultValues, $stepUserTimings);
+    }
+    return count($userMetrics) > 0;
+  }
+
+  private function _userTimingsForStep($stepResult) {
+    $data = $stepResult->getRawResults();
+    $userTimings = array();
+    foreach($data as $metric => $value)
+      if (substr($metric, 0, 9) == 'userTime.')
+        $userTimings[substr($metric, 9)] = number_format($value / 1000, 3) . 's';
+    if (isset($data['custom']) && count($data['custom'])) {
+      foreach($data['custom'] as $metric) {
+        if (isset($data[$metric])) {
+          $value = $data[$metric];
+          if (is_double($value))
+            $value = number_format($value, 3, '.', '');
+          $userTimings[$metric] = $value;
+        }
+      }
+    }
+    return $userTimings;
   }
 }
