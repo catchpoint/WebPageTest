@@ -21,16 +21,19 @@ class ConnectionViewHtmlSnippet {
     $out = $this->_createMap();
     $out .= $this->_createLegend();
     $out .= "<br>\n";
-    $out .= '<img class="progress" alt="Connection View waterfall diagram" usemap="#connection_map" id="connectionView" src="';
-    $extenstion = 'php';
-    if( FRIENDLY_URLS )
-      $extenstion = 'png';
-    $out .= "/waterfall.$extenstion?type=connection&width=930&test=$id&run=$run&cached=$cached&mime=1\">";
+
+    $friendlyUrls = defined("FRIENDLY_URLS") && FRIENDLY_URLS;
+    $urlGenerator = $this->stepResult->createUrlGenerator("", $friendlyUrls);
+    $waterfallImage = $urlGenerator->waterfallImage(true, 930, true);
+    $out .= '<img class="progress" alt="Connection View waterfall diagram"' .
+            ' usemap="#connection_map_' . $this->stepResult->getStepNumber() . '"' .
+            ' id="connectionView" src="' . $waterfallImage . '">';
+
     return $out;
   }
 
   private function _createMap() {
-    $out = "<map name=\"connection_map\">\n";
+    $out = "<map name=\"connection_map_" . $this->stepResult->getStepNumber() . "\">\n";
     $connection_rows = GetConnectionRows($this->requests->getRequests());
     $options = array(
       'id' => $this->testInfo->getId(),
