@@ -57,7 +57,8 @@ class UserTimingHtmlTable {
         $out .= "RUM First Paint</th><th>";
       if ($this->hasDomInteractive)
         $out .= "<a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">domInteractive</a></th><th>";
-      $out .= "<a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">domContentLoaded</a></th><th><a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">loadEvent</a></th>";
+      $out .= "<a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">domContentLoaded</a></th>";
+      $out .= "<th><a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">loadEvent</a></th>";
     }
     $out .= "</tr>\n";
     return $out;
