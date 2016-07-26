@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../waterfall.inc';
+
 class WaterfallViewHtmlSnippet {
 
   private $testInfo;
