@@ -148,15 +148,17 @@ $page_description = "Website performance test details$testLabel";
                 if( is_dir('./google') && isset($test['testinfo']['extract_csi']) )
                 {
                     require_once('google/google_lib.inc');
-                    $params = ParseCsiInfo($id, $testPath, $run, $_GET["cached"], true);
                 ?>
                     <h2>Csi Metrics</h2>
                             <table id="tableCustomMetrics" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
                                <tr>
                             <?php
-                                    foreach ( $test['testinfo']['extract_csi'] as $csi_param )
-                                        echo '<th align="center" class="border" valign="middle">' . $csi_param . '</th>';
-                                    echo '</tr><tr>';
+                                foreach ( $test['testinfo']['extract_csi'] as $csi_param )
+                                    echo '<th align="center" class="border" valign="middle">' . $csi_param . '</th>';
+                                echo "</tr>\n";
+                                foreach ($testRunResults->getStepResults() as $stepResult) {
+                                    echo "<tr>\n";
+                                    $params = ParseCsiInfoForStep($stepResult->createTestPaths(), true);
                                     foreach ( $test['testinfo']['extract_csi'] as $csi_param )
                                     {
                                         if( array_key_exists($csi_param, $params) )
@@ -165,10 +167,11 @@ $page_description = "Website performance test details$testLabel";
                                         }
                                         else
                                         {
-                                            echo '<td class="even" valign="middle"></td>';
+                                            echo '<td class="even" valign="middle">&nbsp;</td>';
                                         }
                                     }
-                                    echo '</tr>';
+                                    echo "</tr>\n";
+                                }
                             ?>
                     </table><br>
                 <?php
