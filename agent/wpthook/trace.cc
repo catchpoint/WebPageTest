@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "StdAfx.h"
 #include "trace.h"
 #include "rapidjson/document.h"
+#include <zlib.h>
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -57,14 +58,12 @@ bool Trace::Write(CString file) {
   bool ok = false;
   EnterCriticalSection(&cs_);
   if (!events_.IsEmpty()) {
-    HANDLE file_handle = CreateFile(file, GENERIC_WRITE, 0, 0,
-                                    CREATE_ALWAYS, 0, 0);
-    if (file_handle != INVALID_HANDLE_VALUE) {
-      DWORD bytes_written;
+    gzFile dst = gzopen((LPCSTR)CT2A(file + _T(".gz")), "wb9");
+    if (dst) {
       ok = true;
       bool first = true;
       CStringA event_string = "{\"traceEvents\": [\n";
-      WriteFile(file_handle, (LPCSTR)event_string, event_string.GetLength(), &bytes_written, 0);
+      gzwrite(dst, (voidpc)(LPCSTR)event_string, (unsigned int)event_string.GetLength());
       POSITION pos = events_.GetHeadPosition();
       while (pos) {
         event_string = events_.GetNext(pos);
@@ -73,13 +72,12 @@ bool Trace::Write(CString file) {
           if (!first)
             event_string = CStringA(",\n") + event_string;
           first = false;
-          WriteFile(file_handle, (LPCSTR)event_string,
-                    event_string.GetLength(), &bytes_written, 0);
+          gzwrite(dst, (voidpc)(LPCSTR)event_string, (unsigned int)event_string.GetLength());
         }
       }
       event_string = "\n]}";
-      WriteFile(file_handle, (LPCSTR)event_string, event_string.GetLength(), &bytes_written, 0);
-      CloseHandle(file_handle);
+      gzwrite(dst, (voidpc)(LPCSTR)event_string, (unsigned int)event_string.GetLength());
+      gzclose(dst);
     }
   }
   LeaveCriticalSection(&cs_);

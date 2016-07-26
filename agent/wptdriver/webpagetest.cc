@@ -323,8 +323,20 @@ bool WebPagetest::UploadImages(WptTestDriver& test,
   POSITION pos = image_files.GetHeadPosition();
   while (ret && pos) {
     CString file = image_files.GetNext(pos);
-    if (!test._discard_test)
-      ret = UploadFile(url, false, test, file);
+    if (!test._discard_test) {
+      CAtlList<CString> newFiles;
+      if (ProcessFile(file, newFiles)) {
+        POSITION newFilePos = newFiles.GetHeadPosition();
+        while (ret && newFilePos) {
+          CString newFile = newFiles.GetNext(newFilePos);
+          ret = UploadFile(url, false, test, newFile);
+          if (ret)
+            DeleteFile(newFile);
+        }
+      }
+      if (ret)
+        ret = UploadFile(url, false, test, file);
+    }
     if (ret)
       DeleteFile(file);
   }
@@ -1163,4 +1175,64 @@ void WebPagetest::UpdateDNSServers() {
     if (addresses)
       free(addresses);
   }
+}
+
+/*-----------------------------------------------------------------------------
+  Run python-based post-processing on the trace, pcap, etc files
+-----------------------------------------------------------------------------*/
+bool WebPagetest::ProcessFile(CString file, CAtlList<CString> &newFiles) {
+  bool hasNewFiles = false;
+  int pos = -1;
+  if ((pos = file.Find(_T("trace.json"))) >= 0) {
+    CString cpuFile = file.Left(pos) + _T("timeline_cpu.json.gz");
+    CString userTimingFile = file.Left(pos) + _T("user_timing.json.gz");
+    CString options;
+    options.Format(_T("-t \"%s\" -c \"%s\" -u \"%s\""),
+                   (LPCTSTR)file, (LPCTSTR)cpuFile, (LPCTSTR)userTimingFile);
+    if (RunPythonScript(_T("trace-parser.py"), options)) {
+      if (FileExists(cpuFile)) {
+        hasNewFiles = true;
+        newFiles.AddTail(cpuFile);
+      }
+      if (FileExists(userTimingFile)) {
+        hasNewFiles = true;
+        newFiles.AddTail(userTimingFile);
+      }
+    }
+  } else if ((pos = file.Find(_T(".cap"))) >= 0) {
+    CString slicesFile = file.Left(pos) + _T("_pcap_slices.json.gz");
+    CString options;
+    options.Format(_T("-i \"%s\" -d \"%s\""),
+                   (LPCTSTR)file, (LPCTSTR)slicesFile);
+    if (RunPythonScript(_T("pcap-parser.py"), options)) {
+      if (FileExists(slicesFile)) {
+        hasNewFiles = true;
+        newFiles.AddTail(slicesFile);
+      }
+    }
+  }
+  return hasNewFiles;
+}
+
+/*-----------------------------------------------------------------------------
+  Run the given python script and wait for a result (assume C:\Python27)
+-----------------------------------------------------------------------------*/
+bool WebPagetest::RunPythonScript(CString script, CString options) {
+  bool ok = false;
+  CString command_line = _T("C:\\Python27\\python.exe");
+  if (FileExists(command_line)) {
+    TCHAR dir[MAX_PATH];
+    if (GetModuleFileName(NULL, dir, _countof(dir))) {
+      *PathFindFileName(dir) = 0;
+      CString script_path = dir;
+      script_path += _T("support\\") + script;
+      if (FileExists(script_path)) {
+        command_line += _T(" \"") + script_path + _T("\"");
+        if (options.GetLength())
+          command_line += _T(" ") + options;
+        ok = LaunchProcess(command_line);
+      }
+    }
+  }
+  return ok;
 }

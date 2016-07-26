@@ -84,7 +84,6 @@ TestState::~TestState(void) {
 void TestState::Init() {
   _winpcap.Initialize();
   _file_base = shared_results_file_base;
-  OutputDebugString(L"Results base file: " + _file_base);
   Reset(false);
 }
 
