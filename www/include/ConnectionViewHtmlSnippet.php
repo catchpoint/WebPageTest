@@ -18,6 +18,18 @@ class ConnectionViewHtmlSnippet {
     $this->requests = $stepResult->getRequestsWithInfo(true, true);
   }
   public function create() {
+    $out = $this->_createMap();
+    $out .= $this->_createLegend();
+    $out .= "<br>\n";
+    $out .= '<img class="progress" alt="Connection View waterfall diagram" usemap="#connection_map" id="connectionView" src="';
+    $extenstion = 'php';
+    if( FRIENDLY_URLS )
+      $extenstion = 'png';
+    $out .= "/waterfall.$extenstion?type=connection&width=930&test=$id&run=$run&cached=$cached&mime=1\">";
+    return $out;
+  }
+
+  private function _createMap() {
     $out = "<map name=\"connection_map\">\n";
     $connection_rows = GetConnectionRows($this->requests->getRequests());
     $options = array(
@@ -30,45 +42,41 @@ class ConnectionViewHtmlSnippet {
       'show_labels' => true,
       'width' => 930
     );
-    $data = $this->stepResult->getRawResults();
-    $map = GetWaterfallMap($connection_rows, $this->stepResult->readableIdentifier(), $options, $data);
-    foreach($map as $entry) {
+    $map = GetWaterfallMap($connection_rows, $this->stepResult->readableIdentifier(), $options, $this->stepResult->getRawResults());
+    foreach ($map as $entry) {
       if (array_key_exists('request', $entry)) {
         $index = $entry['request'] + 1;
         $title = "$index: " . htmlspecialchars($entry['url']);
         $out .= "<area href=\"#request$index\" alt=\"$title\" title=\"$title\" shape=RECT coords=\"{$entry['left']},{$entry['top']},{$entry['right']},{$entry['bottom']}\">\n";
-      } elseif(array_key_exists('url', $entry)) {
+      } elseif (array_key_exists('url', $entry)) {
         $out .= "<area href=\"#request\" alt=\"{$entry['url']}\" title=\"{$entry['url']}\" shape=RECT coords=\"{$entry['left']},{$entry['top']},{$entry['right']},{$entry['bottom']}\">\n";
       }
     }
     $out .= "</map>\n";
+    return $out;
+  }
 
-    $out .= '<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" ' .
-            'style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">';
+  private function _createLegend() {
+    $out = '<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" ' .
+           'style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">';
     $out .= "\n<tr>\n";
     $out .= $this->_legendBarTableCell("#007B84", "DNS Lookup", 15);
     $out .= $this->_legendBarTableCell("#FF7B00", "Initial Connection", 15);
-
-    if($this->requests->hasSecureRequests()) {
+    if ($this->requests->hasSecureRequests()) {
       $out .= $this->_legendBarTableCell("#CF25DF", "SSL Negotiation", 15);
     }
     $out .= $this->_legendBarTableCell("#28BC00", "Start Render", 15);
-    if(array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 ) {
+    if ((float) $this->stepResult->getMetric("domTime")) {
       $out .= $this->_legendBarTableCell("#F28300", "DOM Element", 15);
     }
-    if(array_key_exists('domContentLoadedEventStart', $data) && (float)$data['domContentLoadedEventStart'] > 0.0 ) {
+    if ((float) $this->stepResult->getMetric("domContentLoadedEventStart")) {
       $out .= $this->_legendBarTableCell("#D888DF", "DOM Content Loaded", 15);
     }
-    if(array_key_exists('loadEventStart', $data) && (float)$data['loadEventStart'] > 0.0 ) {
+    if ((float) $this->stepResult->getMetric("loadEventStart")) {
       $out .= $this->_legendBarTableCell("#C0C0FF", "On Load", 15);
     }
     $out .= $this->_legendBarTableCell("#0000FF", "Document Complete", 2);
-    $out .= "\n</tr>\n</table>\n<br>";
-    $out .= '<img class="progress" alt="Connection View waterfall diagram" usemap="#connection_map" id="connectionView" src="';
-    $extenstion = 'php';
-    if( FRIENDLY_URLS )
-      $extenstion = 'png';
-    $out .= "/waterfall.$extenstion?type=connection&width=930&test=$id&run=$run&cached=$cached&mime=1\">";
+    $out .= "\n</tr>\n</table>\n";
     return $out;
   }
 
