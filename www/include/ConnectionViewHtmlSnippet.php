@@ -46,24 +46,25 @@ class ConnectionViewHtmlSnippet {
     $out .= <<<EOT
 <table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">
   <tr>
-    <td><table><tr><td><div class="bar" style="width:15px; background-color:#007B84"></div></td><td>DNS Lookup</td></tr></table></td>
-    <td><table><tr><td><div class="bar" style="width:15px; background-color:#FF7B00"></div></td><td>Initial Connection</td></tr></table></td>
 EOT;
+    $out .= $this->_legendBarTableCell("#007B84", "DNS Lookup", 15);
+    $out .= $this->_legendBarTableCell("#FF7B00", "Initial Connection", 15);
+
     if($this->requests->hasSecureRequests()) {
-      $out .= '<td><table><tr><td><div class="bar" style="width:15px; background-color:#CF25DF"></div></td><td>SSL Negotiation</td></tr></table></td>';
+      $out .= $this->_legendBarTableCell("#CF25DF", "SSL Negotiation", 15);
     }
-    $out .= '<td><table><tr><td><div class="bar" style="width:2px; background-color:#28BC00"></div></td><td>Start Render</td></tr></table></td>';
+    $out .= $this->_legendBarTableCell("#28BC00", "Start Render", 15);
     if(array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 ) {
-      $out .= '<td><table><tr><td><div class="bar" style="width:2px; background-color:#F28300"></div></td><td>DOM Element</td></tr></table></td>';
+      $out .= $this->_legendBarTableCell("#F28300", "DOM Element", 15);
     }
     if(array_key_exists('domContentLoadedEventStart', $data) && (float)$data['domContentLoadedEventStart'] > 0.0 ) {
-      $out .= '<td><table><tr><td><div class="bar" style="width:15px; background-color:#D888DF"></div></td><td>DOM Content Loaded</td></tr></table></td>';
+      $out .= $this->_legendBarTableCell("#D888DF", "DOM Content Loaded", 15);
     }
     if(array_key_exists('loadEventStart', $data) && (float)$data['loadEventStart'] > 0.0 ) {
-      $out .= '<td><table><tr><td><div class="bar" style="width:15px; background-color:#C0C0FF"></div></td><td>On Load</td></tr></table></td>';
+      $out .= $this->_legendBarTableCell("#C0C0FF", "On Load", 15);
     }
+    $out .= $this->_legendBarTableCell("#0000FF", "Document Complete", 2);
     $out .= <<<EOT
-    <td><table><tr><td><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td>Document Complete</td></tr></table></td>
   </tr>
 </table>
 <br>
@@ -75,4 +76,10 @@ EOT;
     $out .= "/waterfall.$extenstion?type=connection&width=930&test=$id&run=$run&cached=$cached&mime=1\">";
     return $out;
   }
+
+  private function _legendBarTableCell($color, $label, $width) {
+    $style = "style=\"width:" . $width . "px; background-color:" . $color . "\"";
+    return "<td><table><tr><td><div class=\"bar\" " . $style . "></div></td><td>" . $label . "</td></tr></table></td>\n";
+  }
+
 }
