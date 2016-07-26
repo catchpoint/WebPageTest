@@ -4,9 +4,12 @@ class UserTimingHtmlTable {
 
   /* @var TestRunResults */
   private $runResults;
+  private $userTimings;
+
   private $hasNavTiming;
   private $hasUserTiming;
-  private $userTimings;
+  private $hasFirstPaint;
+  private $hasDomInteractive;
 
   /**
    * UserTimingHtmlTable constructor.
@@ -17,6 +20,8 @@ class UserTimingHtmlTable {
     $this->hasNavTiming = $runResults->hasValidMetric("loadEventStart") ||
                           $runResults->hasValidMetric("domContentLoadedEventStart");
     $this->hasUserTiming = $this->_initUserTimings();
+    $this->hasFirstPaint = $this->runResults->hasValidMetric("firstPaint");
+    $this->hasDomInteractive = $this->runResults->hasValidMetric("domInteractive");
   }
 
   public function create() {
@@ -28,19 +33,7 @@ class UserTimingHtmlTable {
       if ($this->hasUserTiming)
         $borderClass = ' class="border"';
       $out .= '<table id="tableW3CTiming" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">';
-      $out .= '<tr>';
-      if ($this->hasUserTiming)
-        foreach($this->userTimings[0] as $label => $value)
-          $out .= '<th>' . htmlspecialchars($label) . '</th>';
-      if ($this->hasNavTiming) {
-        $out .= "<th$borderClass>";
-        if ($data['firstPaint'] > 0)
-          $out .= "RUM First Paint</th><th>";
-        if (isset($data['domInteractive']) && $data['domInteractive'] > 0)
-          $out .= "<a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">domInteractive</a></th><th>";
-        $out .= "<a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">domContentLoaded</a></th><th><a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">loadEvent</a></th>";
-      }
-      $out .= '</tr>';
+      $out .= $this->_createHead();
       $out .= '<tr>';
       if ($this->hasUserTiming)
         foreach($this->userTimings[0] as $label => $value)
@@ -62,6 +55,25 @@ class UserTimingHtmlTable {
       $out .= '</table><br>';
       return $out;
     }
+  }
+
+  private function _createHead() {
+    $borderClass = $this->hasUserTiming ? ' class="border"' : '';
+    $out = "<tr>\n";
+    if ($this->hasUserTiming) {
+      foreach ($this->userTimings[0] as $label => $value)
+        $out .= '<th>' . htmlspecialchars($label) . '</th>';
+    }
+    if ($this->hasNavTiming) {
+      $out .= "<th$borderClass>";
+      if ($this->hasFirstPaint)
+        $out .= "RUM First Paint</th><th>";
+      if ($this->hasDomInteractive)
+        $out .= "<a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">domInteractive</a></th><th>";
+      $out .= "<a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">domContentLoaded</a></th><th><a href=\"http://w3c.github.io/navigation-timing/#h-processing-model\">loadEvent</a></th>";
+    }
+    $out .= "</tr>\n";
+    return $out;
   }
 
   private function _initUserTimings() {
@@ -101,4 +113,5 @@ class UserTimingHtmlTable {
     }
     return $userTimings;
   }
+
 }
