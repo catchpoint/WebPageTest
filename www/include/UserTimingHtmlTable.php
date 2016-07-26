@@ -2,6 +2,8 @@
 
 class UserTimingHtmlTable {
 
+  const NO_METRIC_STRING = "-";
+
   /* @var TestRunResults */
   private $runResults;
   private $userTimings;
@@ -60,7 +62,6 @@ class UserTimingHtmlTable {
   }
 
   private function _createRow($stepResult, $stepUserTiming) {
-    $data = $stepResult->getRawResults();
     $borderClass = $this->hasUserTiming ? ' class="border"' : '';
     $out = "<tr>\n";
     if ($this->hasUserTiming)
@@ -69,15 +70,13 @@ class UserTimingHtmlTable {
     if ($this->hasNavTiming) {
       $out .= "<td$borderClass>";
       if ($this->hasFirstPaint)
-        $out .= number_format($data['firstPaint'] / 1000.0, 3) . 's</td><td>';
+        $out .= $this->_getTimeMetric($stepResult, "firstPaint") . '</td><td>';
       if ($this->hasDomInteractive)
-        $out .= number_format($data['domInteractive'] / 1000.0, 3) . 's</td><td>';
-      $out .= number_format($data['domContentLoadedEventStart'] / 1000.0, 3) . 's - ' .
-        number_format($data['domContentLoadedEventEnd'] / 1000.0, 3) . 's (' .
-        number_format(($data['domContentLoadedEventEnd'] - $data['domContentLoadedEventStart']) / 1000.0, 3) . 's)' . '</td>';
-      $out .= '<td>' . number_format($data['loadEventStart'] / 1000.0, 3) . 's - ' .
-        number_format($data['loadEventEnd'] / 1000.0, 3) . 's (' .
-        number_format(($data['loadEventEnd'] - $data['loadEventStart']) / 1000.0, 3) . 's)' . '</td>';
+        $out .= $this->_getTimeMetric($stepResult, "domInteractive") . '</td><td>';
+      $out .= $this->_getTimeRangeMetric($stepResult, 'domContentLoadedEventStart', 'domContentLoadedEventEnd');
+      $out .= "</td><td>";
+      $out .= $this->_getTimeRangeMetric($stepResult, 'loadEventStart', 'loadEventEnd');
+      $out .= "</td>";
     }
     $out .= "</tr>\n";
     return $out;
@@ -93,7 +92,7 @@ class UserTimingHtmlTable {
       $userMetrics = array_merge($userMetrics, array_keys($stepUserTimings));
     }
     $userMetrics = array_unique($userMetrics);
-    $defaultValues = array_combine($userMetrics, array_fill(0, count($userMetrics), "-"));
+    $defaultValues = array_combine($userMetrics, array_fill(0, count($userMetrics), self::NO_METRIC_STRING));
 
     $this->userTimings = array();
     foreach ($userTimings as &$stepUserTimings) {
@@ -121,4 +120,22 @@ class UserTimingHtmlTable {
     return $userTimings;
   }
 
+  private function _getTimeMetric($stepResult, $metric, $default = self::NO_METRIC_STRING) {
+    $value = $stepResult->getMetric($metric);
+    if ($value === null) {
+      return $default;
+    }
+    return number_format($value / 1000.0, 3) . "s";
+  }
+
+  private function _getTimeRangeMetric($stepResult, $startMetric, $endMetric) {
+    $startValue = $this->_getTimeMetric($stepResult, $startMetric, "?");
+    $endValue = $this->_getTimeMetric($stepResult, $endMetric, "?");
+    $out = $startValue . " - " . $endValue;
+    if ($startValue !== "?" && $endValue !== "?") {
+      $diff = $stepResult->getMetric($endMetric) - $stepResult->getMetric($startMetric);
+      $out .= number_format($diff / 1000.0, 3) . 's';
+    }
+    return $out;
+  }
 }
