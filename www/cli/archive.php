@@ -188,22 +188,26 @@ function CheckOldDir($path) {
 * @param mixed $archived
 */
 function CheckDay($dir, $baseID, $elapsedDays) {
+  if (is_dir($dir)) {
     $tests = scandir($dir);
-    foreach( $tests as $test ) {
+    if (isset($tests) && is_array($tests) && count($tests)) {
+      foreach( $tests as $test ) {
         if( $test != '.' && $test != '..' ) {
-            // see if it is a test or a higher-level directory
-            if( is_file("$dir/$test/testinfo.ini") ||
-                is_file("$dir/$test/testinfo.json.gz") ||
-                is_file("$dir/$test/testinfo.json") ||
-                is_dir("$dir/$test/video_1")) {
-                CheckTest("$dir/$test", "{$baseID}_$test", $elapsedDays);
-            } else {
-                // check for bogus stray test directories
-                CheckDay("$dir/$test", "{$baseID}_$test", $elapsedDays);
-            }
+          // see if it is a test or a higher-level directory
+          if( is_file("$dir/$test/testinfo.ini") ||
+              is_file("$dir/$test/testinfo.json.gz") ||
+              is_file("$dir/$test/testinfo.json") ||
+              is_dir("$dir/$test/video_1")) {
+            CheckTest("$dir/$test", "{$baseID}_$test", $elapsedDays);
+          } else {
+            // check for bogus stray test directories
+            CheckDay("$dir/$test", "{$baseID}_$test", $elapsedDays);
+          }
         }
+      }
     }
     @rmdir($dir);
+  }
 }
 
 /**
