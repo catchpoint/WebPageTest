@@ -27,42 +27,8 @@ class WaterfallViewHtmlSnippet {
     $run = $this->stepResult->getRunNumber();
     $cached = $this->stepResult->isCachedRun();
 
-    $out = <<<EOT
-    <table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">
-      <tr>
-EOT;
-    $out .= $this->_legendBarTableCell("#1f7c83", "DNS Lookup", 15);
-    $out .= $this->_legendBarTableCell("#e58226", "Initial Connection", 15);
-    if($this->requests->hasSecureRequests()) {
-      $out .= $this->_legendBarTableCell("#c141cd", "SSL Negotiation", 15);
-    }
-    $out .= $this->_legendBarTableCell("#1fe11f", "Time to First Byte", 15);
-    $out .= $this->_legendBarTableCell("#1977dd", "Content Download", 15);
-    $out .= $this->_legendHighlightTableCell("#ffff60", "3xx response");
-    $out .= $this->_legendHighlightTableCell("#ff6060", "4xx+ response");
-    $out .= <<<EOT
-    </tr>
-    </table>
-    <table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto; margin-top:11px;">
-      <tr>
-EOT;
-    $out .= $this->_legendBarTableCell("#28BC00", "Start Render", 2);
-    if ($this->stepResult->getMetric("aft"))
-      $out .= $this->_legendBarTableCell("#FF0000", "Above the Fold", 2);
-    if ((float) $this->stepResult->getMetric("domTime"))
-      $out .= $this->_legendBarTableCell("#F28300", "DOM Element", 2);
-    if ((float) $this->stepResult->getMetric("firstPaint"))
-      $out .= $this->_legendBarTableCell("#8FBC83", "msFirstPaint", 2);
-    if ((float) $this->stepResult->getMetric("domInteractive"))
-      $out .= $this->_legendBarTableCell("#FFC61A", "DOM Interactive", 2);
-    if ((float) $this->stepResult->getMetric("domContentLoadedEventStart"))
-      $out .= $this->_legendBarTableCell("#D888DF", "DOM Content Loaded", 15);
-    if ((float) $this->stepResult->getMetric("loadEventStart"))
-      $out .= $this->_legendBarTableCell("#C0C0FF", "On Load", 15);
-    $out .= $this->_legendBarTableCell("#0000FF", "Document Complete", 2);
-    if ($this->stepResult->getMetric('userTime') || $this->hasCsi)
-      $out .= '<td><table><tr><td><div class="arrow-down"></div></td><td>User Timings</td></tr></table></td>';
-    $out .= "</tr>\n</table>\n<br>";
+    $out = $this->_createLegend();
+
     $out .= CreateWaterfallHtml($url, $requests, $id, $run, $cached, $data);
     $out .=  "<br><a href=\"/customWaterfall.php?width=930&test=$id&run=$run&cached=$cached\">customize waterfall</a> &#8226; ";
     $out .=  "<a id=\"view-images\" href=\"/pageimages.php?test=$id&run=$run&cached=$cached\">View all Images</a>";
@@ -77,5 +43,43 @@ EOT;
   private function _legendHighlightTableCell($color, $label) {
     $style = "style=\"background-color:" . $color . "\"";
     return "<td style=\"vertical-align:middle; padding: 4px;\"><div ". $style . ">&nbsp;" . $label . "&nbsp;</div></td>";
+  }
+
+  private function _createLegend() {
+    $out = '<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" ' .
+      'style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">';
+    $out .= "\n<tr>\n";
+    $out .= $this->_legendBarTableCell("#1f7c83", "DNS Lookup", 15);
+    $out .= $this->_legendBarTableCell("#e58226", "Initial Connection", 15);
+    if ($this->requests->hasSecureRequests()) {
+      $out .= $this->_legendBarTableCell("#c141cd", "SSL Negotiation", 15);
+    }
+    $out .= $this->_legendBarTableCell("#1fe11f", "Time to First Byte", 15);
+    $out .= $this->_legendBarTableCell("#1977dd", "Content Download", 15);
+    $out .= $this->_legendHighlightTableCell("#ffff60", "3xx response");
+    $out .= $this->_legendHighlightTableCell("#ff6060", "4xx+ response");
+    $out .= "</tr>\n</table>\n";
+
+    $out .= '<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" ' .
+      'style="width:auto; font-size:11px; margin-left:auto; margin-right:auto; margin-top:11px;">';
+    $out .= "\n<tr>\n";
+    $out .= $this->_legendBarTableCell("#28BC00", "Start Render", 2);
+    if ($this->stepResult->getMetric("aft"))
+      $out .= $this->_legendBarTableCell("#FF0000", "Above the Fold", 2);
+    if ((float)$this->stepResult->getMetric("domTime"))
+      $out .= $this->_legendBarTableCell("#F28300", "DOM Element", 2);
+    if ((float)$this->stepResult->getMetric("firstPaint"))
+      $out .= $this->_legendBarTableCell("#8FBC83", "msFirstPaint", 2);
+    if ((float)$this->stepResult->getMetric("domInteractive"))
+      $out .= $this->_legendBarTableCell("#FFC61A", "DOM Interactive", 2);
+    if ((float)$this->stepResult->getMetric("domContentLoadedEventStart"))
+      $out .= $this->_legendBarTableCell("#D888DF", "DOM Content Loaded", 15);
+    if ((float)$this->stepResult->getMetric("loadEventStart"))
+      $out .= $this->_legendBarTableCell("#C0C0FF", "On Load", 15);
+    $out .= $this->_legendBarTableCell("#0000FF", "Document Complete", 2);
+    if ($this->stepResult->getMetric('userTime') || $this->hasCsi)
+      $out .= '<td><table><tr><td><div class="arrow-down"></div></td><td>User Timings</td></tr></table></td>';
+    $out .= "</tr>\n</table>\n<br>";
+    return $out;
   }
 }
