@@ -43,10 +43,9 @@ class ConnectionViewHtmlSnippet {
     }
     $out .= "</map>\n";
 
-    $out .= <<<EOT
-<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">
-  <tr>
-EOT;
+    $out .= '<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" ' .
+            'style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">';
+    $out .= "\n<tr>\n";
     $out .= $this->_legendBarTableCell("#007B84", "DNS Lookup", 15);
     $out .= $this->_legendBarTableCell("#FF7B00", "Initial Connection", 15);
 
@@ -64,11 +63,7 @@ EOT;
       $out .= $this->_legendBarTableCell("#C0C0FF", "On Load", 15);
     }
     $out .= $this->_legendBarTableCell("#0000FF", "Document Complete", 2);
-    $out .= <<<EOT
-  </tr>
-</table>
-<br>
-EOT;
+    $out .= "\n</tr>\n</table>\n<br>";
     $out .= '<img class="progress" alt="Connection View waterfall diagram" usemap="#connection_map" id="connectionView" src="';
     $extenstion = 'php';
     if( FRIENDLY_URLS )
