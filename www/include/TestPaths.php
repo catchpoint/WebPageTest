@@ -210,6 +210,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for HTTP/2 priority streams
+   */
+  public function priorityStreamsFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_priority_streams.json";
+  }
+
+  /**
    * @return string Path for Chrome trace user timing
    */
   public function chromeUserTimingFile() {

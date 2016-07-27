@@ -56,6 +56,17 @@ Requests::Requests(TestState& test_state, TrackSockets& sockets,
 -----------------------------------------------------------------------------*/
 Requests::~Requests(void) {
   Reset();
+  if (!priority_streams_.IsEmpty()) {
+    POSITION pos = priority_streams_.GetStartPosition();
+    while (pos) {
+      DWORD key;
+      PriorityStreams *value = NULL;
+      priority_streams_.GetNextAssoc(pos, key, value);
+      if (value)
+        delete value;
+    }
+    priority_streams_.RemoveAll();
+  }
 
   DeleteCriticalSection(&cs);
 }
@@ -662,9 +673,23 @@ void Requests::ObjectDataOut(DWORD socket_id, DWORD stream_id,
 -----------------------------------------------------------------------------*/
 void Requests::SetPriority(DWORD socket_id, DWORD stream_id, int depends_on,
                   int weight, int exclusive) {
+  WptTrace(loglevel::kFrequentEvent, 
+            _T("[wpthook] - Requests::SetPriority(socket_id=%d, stream_id=%d, depends_on=%d, weight=%d, exclusive=%d)"),
+            socket_id, stream_id, depends_on, weight, exclusive);
   EnterCriticalSection(&cs);
   Request * request = GetActiveRequest(socket_id, stream_id);
-  if (request)
+  if (request) {
     request->SetPriority(depends_on, weight, exclusive);
+  } else {
+    // This is a priority-only stream without a request tied to it.
+    // Keep track of them for separate logging.
+    PriorityStreams * streams = NULL;
+    if (!priority_streams_.Lookup(socket_id, streams) || !streams) {
+      streams = new PriorityStreams();
+      priority_streams_.SetAt(socket_id, streams);
+    }
+    if (streams)
+      streams->streams_.SetAt(stream_id, new HTTP2PriorityStream(depends_on, weight, exclusive));
+  }
   LeaveCriticalSection(&cs);
 }

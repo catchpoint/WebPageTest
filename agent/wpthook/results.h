@@ -109,4 +109,5 @@ private:
   void SaveHistogram(CStringA& histogram, CString file);
   CStringA GetHistogramJSON(CxImage& image);
   bool NativeRequestExists(Request * browser_request);
+  void SavePriorityStreams();
 };

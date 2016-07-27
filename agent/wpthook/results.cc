@@ -58,6 +58,7 @@ static const TCHAR * CUSTOM_METRICS_FILE = _T("_metrics.json");
 static const TCHAR * USER_TIMING_FILE = _T("_user_timing.json");
 static const TCHAR * TRACE_FILE = _T("_trace.json");
 static const TCHAR * CUSTOM_RULES_DATA_FILE = _T("_custom_rules.json");
+static const TCHAR * PRIORITY_STREAMS_FILE = _T("_priority_streams.json");
 static const DWORD RIGHT_MARGIN = 25;
 static const DWORD BOTTOM_MARGIN = 25;
 static const DWORD INITIAL_MARGIN = 25;
@@ -139,6 +140,7 @@ void Results::Save(void) {
       SaveTimedEvents();
       SaveCustomMetrics();
       SaveUserTiming();
+      SavePriorityStreams();
       _trace.Write(_test_state._file_base + TRACE_FILE);
     }
     if (shared_result == -1 || shared_result == 0 || shared_result == 99999)
@@ -1452,4 +1454,51 @@ bool Results::NativeRequestExists(Request * browser_request) {
   } else
     ret = true;
   return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Results::SavePriorityStreams() {
+  if (!_requests.priority_streams_.IsEmpty()) {
+    CStringA json = "{\"connections\":{";
+    CStringA buff;
+    POSITION connection_pos = _requests.priority_streams_.GetStartPosition();
+    bool first_connection = true;
+    while (connection_pos) {
+      DWORD connection_id = 0;
+      PriorityStreams * streams = NULL;
+      _requests.priority_streams_.GetNextAssoc(connection_pos, connection_id, streams);
+      if (streams && !streams->streams_.IsEmpty()) {
+        if (!first_connection)
+          json += ",";
+        buff.Format("\"%d\":{\"streams\":{", connection_id);
+        json += buff;
+        POSITION streams_pos = streams->streams_.GetStartPosition();
+        bool first_stream = true;
+        while (streams_pos) {
+          DWORD stream_id = 0;
+          HTTP2PriorityStream * stream = NULL;
+          streams->streams_.GetNextAssoc(streams_pos, stream_id, stream);
+          if (stream && stream->depends_on_ >= 0) {
+            if (!first_stream)
+              json += ",";
+            buff.Format("\"%d\":{\"depends_on\":%d,\"weight\":%d,\"exclusive\":%d}",
+                stream_id, stream->depends_on_, stream->weight_, stream->exclusive_);
+            json += buff;
+            first_stream = false;
+          }
+        }
+        json += "}}";
+        first_connection = false;
+      }
+    }
+    json += "}}";
+    HANDLE file = CreateFile(_test_state._file_base + PRIORITY_STREAMS_FILE, GENERIC_WRITE, 0, 
+                              NULL, CREATE_ALWAYS, 0, 0);
+    if (file != INVALID_HANDLE_VALUE) {
+      DWORD written;
+      WriteFile(file, (LPCSTR)json, json.GetLength(), &written, 0);
+      CloseHandle(file);
+    }
+  }
 }

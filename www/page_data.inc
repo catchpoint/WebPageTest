@@ -211,6 +211,14 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
           }
         }
       }
+
+      // See if there is HTTP/2 Priority-only stream data
+      if (gz_is_file($localPaths->priorityStreamsFile())) {
+        $priority_streams = json_decode(gz_file_get_contents($localPaths->priorityStreamsFile()), true);
+        if (isset($priority_streams) && is_array($priority_streams) && count($priority_streams)) {
+          $ret["priorityStreams"] = $priority_streams;
+        }
+      }
     }
     
     // For visual tests (black-box browser testing) use the visual metrics as the base timings
