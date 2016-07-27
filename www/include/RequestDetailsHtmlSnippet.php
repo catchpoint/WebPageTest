@@ -86,7 +86,6 @@ EOT;
   }
 
   private function _createTableBody() {
-    $data = $this->stepResult->getRawResults();
     $out = "<tbody>\n";
 
     // loop through all of the requests and spit out a data table
@@ -96,22 +95,7 @@ EOT;
 
         $requestNum = $reqNum + 1;
 
-        $highlight = '';
-        $result = (int)$request['responseCode'];
-        if ($result != 401 && $result >= 400)
-          $highlight = 'error ';
-        elseif ($result >= 300)
-          $highlight = 'warning ';
-
-        if ((int)$requestNum % 2 == 1)
-          $highlight .= 'odd';
-        else
-          $highlight .= 'even';
-
-        if ($request['load_start'] < $data['render'])
-          $highlight .= 'Render';
-        elseif ($request['load_start'] < $data['docTime'])
-          $highlight .= 'Doc';
+        $highlight = $this->_getRowHighlightClass($requestNum, $request);
 
         if (!$this->useLinks) {
           $out .= '<td class="reqNum ' . $highlight . '">' . $requestNum . '</td>';
@@ -207,6 +191,24 @@ EOT;
     }
     $out .= "</tbody>\n";
     return $out;
+  }
+
+  private function _getRowHighlightClass($requestNum, $request) {
+    $highlight = '';
+    $result = (int)$request['responseCode'];
+    if ($result != 401 && $result >= 400)
+      $highlight = 'error ';
+    elseif ($result >= 300)
+      $highlight = 'warning ';
+
+    $highlight .= (int)$requestNum % 2 == 1 ? 'odd' : 'even';
+
+    if ($request['load_start'] < (int) $this->stepResult->getMetric("render"))
+      $highlight .= 'Render';
+    elseif ($request['load_start'] < (int) $this->stepResult->getMetric("docTime"))
+      $highlight .= 'Doc';
+
+    return $highlight;
   }
 
 }
