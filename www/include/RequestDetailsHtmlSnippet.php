@@ -90,104 +90,104 @@ EOT;
 
     // loop through all of the requests and spit out a data table
     foreach ($this->requests->getRequests() as $reqNum => $request) {
-      if ($request) {
-        $out .= '<tr>';
-
-        $requestNum = $reqNum + 1;
-
-        $highlight = $this->_getRowHighlightClass($requestNum, $request);
-
-        if (!$this->useLinks) {
-          $out .= '<td class="reqNum ' . $highlight . '">' . $requestNum . '</td>';
-        } else {
-          $out .= '<td class="reqNum ' . $highlight . '"><a href="#request' . $requestNum . '">' . $requestNum . '</a></td>';
-        }
-
-        if ($request['host'] || $request['url']) {
-          $protocol = 'http://';
-          if ($request['is_secure'] && $request['is_secure'] == 1)
-            $protocol = 'https://';
-          $url = $protocol . $request['host'] . $request['url'];
-          $displayurl = ShortenUrl($url);
-          if (!$this->useLinks) {
-            $out .= "<td class=\"reqUrl $highlight\"><a title=\"$url\" href=\"#request$requestNum\">$displayurl</a></td>";
-          } else {
-            $out .= '<td class="reqUrl ' . $highlight . '"><a rel="nofollow" href="' . $url . '">' . $displayurl . '</a></td>';
-          }
-        } else
-          $out .= '<td class="reqUrl ' . $highlight . '">-</td>';
-
-        if (array_key_exists('contentType', $request) && strlen($request['contentType']))
-          $out .= '<td class="reqMime ' . $highlight . '">' . $request['contentType'] . '</td>';
-        else
-          $out .= '<td class="reqMime ' . $highlight . '">-</td>';
-
-        if ($request['load_start'])
-          $out .= '<td class="reqStart ' . $highlight . '">' . $request['load_start'] / 1000.0 . ' s</td>';
-        else
-          $out .= '<td class="reqStart ' . $highlight . '">-</td>';
-
-        if ($request['dns_ms'] && (int)$request['dns_ms'] !== -1)
-          $out .= '<td class="reqDNS ' . $highlight . '">' . $request['dns_ms'] . ' ms</td>';
-        elseif ($request['dns_end'] > 0) {
-          $time = $request['dns_end'] - $request['dns_start'];
-          $out .= '<td class="reqDNS ' . $highlight . '">' . $time . ' ms</td>';
-        } else
-          $out .= '<td class="reqDNS ' . $highlight . '">-</td>';
-
-        if ($request['connect_ms'] && (int)$request['connect_ms'] !== -1) {
-          $out .= '<td class="reqSocket ' . $highlight . '">' . $request['connect_ms'] . ' ms</td>';
-          if ($request['is_secure'] && $request['is_secure'] == 1) {
-            $out .= '<td class="reqSSL ' . $highlight . '">' . (int)$request['ssl_ms'] . ' ms</td>';
-          } elseif ($this->requests->hasSecureRequests())
-            $out .= '<td class="reqSSL ' . $highlight . '">-</td>';
-        } elseif ($request['connect_end'] > 0) {
-          $time = $request['connect_end'] - $request['connect_start'];
-          $out .= '<td class="reqSocket ' . $highlight . '">' . $time . ' ms</td>';
-          if ($this->requests->hasSecureRequests()) {
-            if ($request['ssl_end'] > 0) {
-              $time = $request['ssl_end'] - $request['ssl_start'];
-              $out .= '<td class="reqSSL ' . $highlight . '">' . $time . ' ms</td>';
-            } else {
-              $out .= '<td class="reqSSL ' . $highlight . '">-</td>';
-            }
-          }
-        } else {
-          $out .= '<td class="reqSocket ' . $highlight . '">-</td>';
-          if ($this->requests->hasSecureRequests())
-            $out .= '<td class="reqSSL ' . $highlight . '">-</td>';
-        }
-
-        if (array_key_exists('ttfb_ms', $request) && $request['ttfb_ms'])
-          $out .= '<td class="reqTTFB ' . $highlight . '">' . $request['ttfb_ms'] . ' ms</td>';
-        else
-          $out .= '<td class="reqTTFB ' . $highlight . '">-</td>';
-
-        if (array_key_exists('download_ms', $request) && $request['download_ms'])
-          $out .= '<td class="reqDownload ' . $highlight . '">' . $request['download_ms'] . ' ms</td>';
-        else
-          $out .= '<td class="reqDownload ' . $highlight . '">-</td>';
-
-        if (array_key_exists('bytesIn', $request) && $request['bytesIn'])
-          $out .= '<td class="reqBytes ' . $highlight . '">' . number_format($request['bytesIn'] / 1024, 1) . ' KB</td>';
-        else
-          $out .= '<td class="reqBytes ' . $highlight . '">-</td>';
-
-        if (array_key_exists('responseCode', $request) && $request['responseCode'])
-          $out .= '<td class="reqResult ' . $highlight . '">' . $request['responseCode'] . '</td>';
-        else
-          $out .= '<td class="reqResult ' . $highlight . '">-</td>';
-
-        if (array_key_exists('ip_addr', $request) && $request['ip_addr'])
-          $out .= '<td class="reqIP ' . $highlight . '">' . $request['ip_addr'] . '</td>';
-        else
-          $out .= '<td class="reqIP ' . $highlight . '">-</td>';
-
-        if ($this->requests->hasLocationData())
-          $out .= '<td class="reqLocation ' . $highlight . '">' . $request['location'] . "</td>\n";
-
-        $out .= '</tr>';
+      if (!$request) {
+        continue;
       }
+
+      $out .= '<tr>';
+      $requestNum = $reqNum + 1;
+      $highlight = $this->_getRowHighlightClass($requestNum, $request);
+
+      if (!$this->useLinks) {
+        $out .= '<td class="reqNum ' . $highlight . '">' . $requestNum . '</td>';
+      } else {
+        $out .= '<td class="reqNum ' . $highlight . '"><a href="#request' . $requestNum . '">' . $requestNum . '</a></td>';
+      }
+
+      if ($request['host'] || $request['url']) {
+        $protocol = 'http://';
+        if ($request['is_secure'] && $request['is_secure'] == 1)
+          $protocol = 'https://';
+        $url = $protocol . $request['host'] . $request['url'];
+        $displayurl = ShortenUrl($url);
+        if (!$this->useLinks) {
+          $out .= "<td class=\"reqUrl $highlight\"><a title=\"$url\" href=\"#request$requestNum\">$displayurl</a></td>";
+        } else {
+          $out .= '<td class="reqUrl ' . $highlight . '"><a rel="nofollow" href="' . $url . '">' . $displayurl . '</a></td>';
+        }
+      } else
+        $out .= '<td class="reqUrl ' . $highlight . '">-</td>';
+
+      if (array_key_exists('contentType', $request) && strlen($request['contentType']))
+        $out .= '<td class="reqMime ' . $highlight . '">' . $request['contentType'] . '</td>';
+      else
+        $out .= '<td class="reqMime ' . $highlight . '">-</td>';
+
+      if ($request['load_start'])
+        $out .= '<td class="reqStart ' . $highlight . '">' . $request['load_start'] / 1000.0 . ' s</td>';
+      else
+        $out .= '<td class="reqStart ' . $highlight . '">-</td>';
+
+      if ($request['dns_ms'] && (int)$request['dns_ms'] !== -1)
+        $out .= '<td class="reqDNS ' . $highlight . '">' . $request['dns_ms'] . ' ms</td>';
+      elseif ($request['dns_end'] > 0) {
+        $time = $request['dns_end'] - $request['dns_start'];
+        $out .= '<td class="reqDNS ' . $highlight . '">' . $time . ' ms</td>';
+      } else
+        $out .= '<td class="reqDNS ' . $highlight . '">-</td>';
+
+      if ($request['connect_ms'] && (int)$request['connect_ms'] !== -1) {
+        $out .= '<td class="reqSocket ' . $highlight . '">' . $request['connect_ms'] . ' ms</td>';
+        if ($request['is_secure'] && $request['is_secure'] == 1) {
+          $out .= '<td class="reqSSL ' . $highlight . '">' . (int)$request['ssl_ms'] . ' ms</td>';
+        } elseif ($this->requests->hasSecureRequests())
+          $out .= '<td class="reqSSL ' . $highlight . '">-</td>';
+      } elseif ($request['connect_end'] > 0) {
+        $time = $request['connect_end'] - $request['connect_start'];
+        $out .= '<td class="reqSocket ' . $highlight . '">' . $time . ' ms</td>';
+        if ($this->requests->hasSecureRequests()) {
+          if ($request['ssl_end'] > 0) {
+            $time = $request['ssl_end'] - $request['ssl_start'];
+            $out .= '<td class="reqSSL ' . $highlight . '">' . $time . ' ms</td>';
+          } else {
+            $out .= '<td class="reqSSL ' . $highlight . '">-</td>';
+          }
+        }
+      } else {
+        $out .= '<td class="reqSocket ' . $highlight . '">-</td>';
+        if ($this->requests->hasSecureRequests())
+          $out .= '<td class="reqSSL ' . $highlight . '">-</td>';
+      }
+
+      if (array_key_exists('ttfb_ms', $request) && $request['ttfb_ms'])
+        $out .= '<td class="reqTTFB ' . $highlight . '">' . $request['ttfb_ms'] . ' ms</td>';
+      else
+        $out .= '<td class="reqTTFB ' . $highlight . '">-</td>';
+
+      if (array_key_exists('download_ms', $request) && $request['download_ms'])
+        $out .= '<td class="reqDownload ' . $highlight . '">' . $request['download_ms'] . ' ms</td>';
+      else
+        $out .= '<td class="reqDownload ' . $highlight . '">-</td>';
+
+      if (array_key_exists('bytesIn', $request) && $request['bytesIn'])
+        $out .= '<td class="reqBytes ' . $highlight . '">' . number_format($request['bytesIn'] / 1024, 1) . ' KB</td>';
+      else
+        $out .= '<td class="reqBytes ' . $highlight . '">-</td>';
+
+      if (array_key_exists('responseCode', $request) && $request['responseCode'])
+        $out .= '<td class="reqResult ' . $highlight . '">' . $request['responseCode'] . '</td>';
+      else
+        $out .= '<td class="reqResult ' . $highlight . '">-</td>';
+
+      if (array_key_exists('ip_addr', $request) && $request['ip_addr'])
+        $out .= '<td class="reqIP ' . $highlight . '">' . $request['ip_addr'] . '</td>';
+      else
+        $out .= '<td class="reqIP ' . $highlight . '">-</td>';
+
+      if ($this->requests->hasLocationData())
+        $out .= '<td class="reqLocation ' . $highlight . '">' . $request['location'] . "</td>\n";
+
+      $out .= '</tr>';
     }
     $out .= "</tbody>\n";
     return $out;
