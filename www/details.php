@@ -156,12 +156,19 @@ $page_description = "Website performance test details$testLabel";
                             <table id="tableCustomMetrics" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
                                <tr>
                             <?php
+                                $isMultistep = $testRunResults->countSteps() > 1;
+                                if ($isMultistep) {
+                                    echo '<th align="center" class="border" valign="middle">Step</th>';
+                                }
                                 foreach ( $test['testinfo']['extract_csi'] as $csi_param )
                                     echo '<th align="center" class="border" valign="middle">' . $csi_param . '</th>';
                                 echo "</tr>\n";
                                 foreach ($testRunResults->getStepResults() as $stepResult) {
                                     echo "<tr>\n";
                                     $params = ParseCsiInfoForStep($stepResult->createTestPaths(), true);
+                                    if ($isMultistep) {
+                                        echo '<td class="even" valign="middle">' . $stepResult->readableIdentifier() . '</td>';
+                                    }
                                     foreach ( $test['testinfo']['extract_csi'] as $csi_param )
                                     {
                                         if( array_key_exists($csi_param, $params) )
