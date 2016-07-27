@@ -93,7 +93,8 @@ var BLACK_BOX_BROWSERS = {
       'package': 'com.UCMobile.intl',
       'activity': 'com.UCMobile.main.UCMobile',
       'clearProfile' : true,
-      'startupDelay': 4000
+      'videoFlags': ['--findstart', 25, '--notification'],
+      'startupDelay': 10000
     },
     'Opera Mini': {
       'package': 'com.opera.mini.native',
@@ -395,6 +396,10 @@ BrowserAndroidChrome.prototype.clearDownloads_ = function() {
     this.adb_.getStoragePath().then(function(storagePath) {
       this.adb_.shell(['rm', '/sdcard/Download/*', storagePath + '/Download/*']);
       this.adb_.su(['rm', '/data/media/0/Download/*']);
+      // UC Browser backup data
+      this.adb_.shell(['rm', '-rf', '/sdcard/Backucup', storagePath + '/Backucup',
+                       '/sdcard/UCDownloads', storagePath + '/UCDownloads']);
+      this.adb_.su(['rm', '-rf', '/data/media/0/Backucup', '/data/media/0/UCDownloads']);
     }.bind(this));
   }.bind(this));
 };
