@@ -1216,6 +1216,7 @@ function InsertWaterfall($url, &$requests, $id, $run, $cached, &$page_data, $wat
     echo "<script type=\"text/javascript\">\n";
     echo "var wptRequestCount=" . count($requests) . ";\n";
     echo "var wptRequestData=" . json_encode($requests) . ";\n";
+    echo "var wptPageData=" . json_encode($page_data) . ";\n";
     echo "var wptNoLinks={$settings['nolinks']};\n";
     echo "</script>";
 }
