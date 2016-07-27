@@ -20,7 +20,20 @@ class RequestDetailsHtmlSnippet {
   }
 
   public function create() {
-    $data = $this->stepResult->getRawResults();
+    $out = $this->_createLegend();
+    $out .= "<br>\n";
+    $out .= "<div class=\"center\">\n";
+    $out .= $this->_createTable();
+    $out .= "</div>\n";
+
+    if ($this->requests->hasLocationData()) {
+      $out .= '<p class="center">*This product includes GeoLite data created by MaxMind, available from ' .
+              '<a href="http://maxmind.com/">http://maxmind.com/</a>.</p>';
+    }
+    return $out;
+  }
+
+  private function _createLegend() {
     $out = <<<EOT
 <table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">
     <tbody>
@@ -31,11 +44,21 @@ class RequestDetailsHtmlSnippet {
     </tr>
     </tbody>
 </table>
-<br>
+EOT;
+    return $out;
+  }
 
-<div class="center">
-<table class="tableDetails details center">
-	<caption>Request Details</caption>
+  private function _createTable() {
+    $out = "<table class=\"tableDetails details center\">\n";
+    $out .= "<caption>Request Details</caption>\n";
+    $out .= $this->_createTableHead();
+    $out .= $this->_createTableBody();
+    $out .= "</table>\n";
+    return $out;
+  }
+
+  private function _createTableHead() {
+    $out = <<< EOT
     <thead>
 	<tr>
 		<th class="reqNum">#</th>
@@ -59,8 +82,12 @@ EOT;
       $out .= "<th class=\"reqLocation\">Location*</th>";
     }
     $out .= "</tr>\n</thead>\n";
-    $out .= "<tbody>\n";
+    return $out;
+  }
 
+  private function _createTableBody() {
+    $data = $this->stepResult->getRawResults();
+    $out = "<tbody>\n";
 
     // loop through all of the requests and spit out a data table
     foreach ($this->requests->getRequests() as $reqNum => $request) {
@@ -178,11 +205,8 @@ EOT;
         $out .= '</tr>';
       }
     }
-    $out .= "</tbody>\n</table>\n</div>\n";
-
-
-    if ($this->requests->hasLocationData())
-      $out .= '<p class="center">*This product includes GeoLite data created by MaxMind, available from <a href="http://maxmind.com/">http://maxmind.com/</a>.</p>';
+    $out .= "</tbody>\n";
     return $out;
   }
+
 }
