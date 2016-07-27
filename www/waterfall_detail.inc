@@ -10,7 +10,7 @@
 <br>
 
 <div class="center">
-<table id="tableDetails" class="details center">
+<table class="tableDetails details center">
 	<caption>Request Details</caption>
     <thead>
 	<tr>

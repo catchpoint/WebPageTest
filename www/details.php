@@ -237,7 +237,7 @@ $page_description = "Website performance test details$testLabel";
           }
         }
 
-        $(document).ready(function() { $("#tableDetails").tablesorter({
+        $(document).ready(function() { $(".tableDetails").tablesorter({
             headers: { 3: { sorter:'currency' } ,
                        4: { sorter:'currency' } ,
                        5: { sorter:'currency' } ,
