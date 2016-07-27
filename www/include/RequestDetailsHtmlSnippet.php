@@ -34,17 +34,13 @@ class RequestDetailsHtmlSnippet {
   }
 
   private function _createLegend() {
-    $out = <<<EOT
-<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">
-    <tbody>
-    <tr>
-        <td><table><tbody><tr><td><div class="bar" style="width:15px; background-color:#dfffdf"></div></td><td>Before Start Render</td></tr></tbody></table></td>
-        <td><table><tbody><tr><td><div class="bar" style="width:15px; background-color:#dfdfff"></div></td><td>Before On Load </td></tr></tbody></table></td>
-        <td><table><tbody><tr><td><div class="bar" style="width:15px; background-color:gainsboro"></div></td><td>After On Load</td></tr></tbody></table></td>
-    </tr>
-    </tbody>
-</table>
-EOT;
+    $out = '<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" ' .
+           'style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">';
+    $out .= "\n<tbody>\n<tr>\n";
+    $out .= $this->_createLegendCell("#dfffdf", "Before Start Render");
+    $out .= $this->_createLegendCell("#dfdfff", "Before On Load");
+    $out .= $this->_createLegendCell("gainsboro", "After On Load");
+    $out .= "\n</tr>\n</tbody>\n</table>\n";
     return $out;
   }
 
@@ -58,26 +54,22 @@ EOT;
   }
 
   private function _createTableHead() {
-    $out = <<< EOT
-    <thead>
-	<tr>
-		<th class="reqNum">#</th>
-		<th class="reqUrl">Resource</th>
-		<th class="reqMime">Content Type</th>
-		<th class="reqStart">Request Start</th>
-		<th class="reqDNS">DNS Lookup</th>
-		<th class="reqSocket">Initial Connection</th>
-EOT;
+    $out = "<thead>\n<tr>\n";
+    $out .= "<th class=\"reqNum\">#</th>\n";
+    $out .= "<th class=\"reqUrl\">Resource</th>\n";
+    $out .= "<th class=\"reqMime\">Content Type</th>\n";
+    $out .= "<th class=\"reqStart\">Request Start</th>\n";
+    $out .= "<th class=\"reqDNS\">DNS Lookup</th>\n";
+    $out .= "<th class=\"reqSocket\">Initial Connection</th>\n";
     if ($this->requests->hasSecureRequests()) {
       $out .= "<th class=\"reqSSL\">SSL Negotiation</th>\n";
     }
-    $out .= <<<EOT
-<th class="reqTTFB">Time to First Byte</th>
-<th class="reqDownload">Content Download</th>
-<th class="reqBytes">Bytes Downloaded</th>
-<th class="reqResult">Error/Status Code</th>
-<th class="reqIP">IP</th>
-EOT;
+    $out .= "<th class=\"reqTTFB\">Time to First Byte</th>\n";
+    $out .= "<th class=\"reqDownload\">Content Download</th>\n";
+    $out .= "<th class=\"reqBytes\">Bytes Downloaded</th>\n";
+    $out .= "<th class=\"reqResult\">Error/Status Code</th>\n";
+    $out .= "<th class=\"reqIP\">IP</th>\n";
+
     if ($this->requests->hasLocationData()) {
       $out .= "<th class=\"reqLocation\">Location*</th>";
     }
@@ -202,6 +194,12 @@ EOT;
     if ($this->requests->hasSecureRequests()) {
       $out .= $this->_createDataCell($reqSSL, "reqSSL", $highlight);
     }
+    return $out;
+  }
+
+  private function _createLegendCell($color, $label) {
+    $out = '<td><table><tbody><tr><td><div class="bar" style="width:15px; background-color:' . $color . '"></div></td>';
+    $out .= "<td>" . $label . "</td></tr></tbody></table></td>\n";
     return $out;
   }
 
