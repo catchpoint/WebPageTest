@@ -87,56 +87,60 @@ EOT;
 
   private function _createTableBody() {
     $out = "<tbody>\n";
-
     // loop through all of the requests and spit out a data table
     foreach ($this->requests->getRequests() as $reqNum => $request) {
       if (!$request) {
         continue;
       }
 
-      $out .= '<tr>';
-      $requestNum = $reqNum + 1;
-      $highlight = $this->_getRowHighlightClass($requestNum, $request);
-
-      $reqNumValue = $this->useLinks ? ('<a href="#request' . $requestNum . '">' . $requestNum . '</a>') : $requestNum;
-      $out .= $this->_createDataCell($reqNumValue, "reqNum", $highlight);
-
-      $reqUrl = $this->_createRequestUrlLink($request, $requestNum);
-      $out .= $this->_createDataCell($reqUrl, "reqUrl", $highlight);
-
-      $out .= $this->_createDataCell(@$request["contentType"], "reqMime", $highlight);
-
-      $loadStart = empty($request["load_start"]) ? "-" : (($request["load_start"] / 1000.0) . " s");
-      $out .= $this->_createDataCell($loadStart, "reqStart", $highlight);
-
-      $reqDns = null;
-      if (!empty($request['dns_ms']) && (int)$request['dns_ms'] !== -1) {
-        $reqDns = $request['dns_ms'] . " ms";
-      } else if (!empty($request['dns_end']) && $request['dns_end'] > 0) {
-        $reqDns = ($request['dns_end'] - $request['dns_start']) . " ms";
-      }
-      $out .= $this->_createDataCell($reqDns, "reqDNS", $highlight);
-
-      $out .= $this->_createSocketSSLCells($request, $highlight);
-
-      $ttfbMs = empty($request["ttfb_ms"]) ? "-" : ($request["ttfb_ms"] . " ms");
-      $out .= $this->_createDataCell($ttfbMs, "reqTTFB", $highlight);
-
-      $downloadMs = empty($request["download_ms"]) ? "-" : ($request["download_ms"] . " ms");
-      $out .= $this->_createDataCell($downloadMs, "reqDownload", $highlight);
-
-      $bytesIn = empty($request["bytesIn"]) ? null : (number_format($request['bytesIn'] / 1024, 1) . "KB");
-      $out .= $this->_createDataCell($bytesIn, "reqBytes", $highlight);
-
-      $out .= $this->_createDataCell(@$request["responseCode"], "reqResult", $highlight);
-      $out .= $this->_createDataCell(@$request["ip_addr"], "reqIP", $highlight);
-
-      if ($this->requests->hasLocationData())
-        $out .= $this->_createDataCell(@$request["location"], "reqLocation", $highlight);
-
-      $out .= '</tr>';
+      $out .= $this->_createTableRow($reqNum, $request);
     }
     $out .= "</tbody>\n";
+    return $out;
+  }
+
+  private function _createTableRow($reqNum, $request) {
+    $out = '<tr>';
+    $requestNum = $reqNum + 1;
+    $highlight = $this->_getRowHighlightClass($requestNum, $request);
+
+    $reqNumValue = $this->useLinks ? ('<a href="#request' . $requestNum . '">' . $requestNum . '</a>') : $requestNum;
+    $out .= $this->_createDataCell($reqNumValue, "reqNum", $highlight);
+
+    $reqUrl = $this->_createRequestUrlLink($request, $requestNum);
+    $out .= $this->_createDataCell($reqUrl, "reqUrl", $highlight);
+
+    $out .= $this->_createDataCell(@$request["contentType"], "reqMime", $highlight);
+
+    $loadStart = empty($request["load_start"]) ? "-" : (($request["load_start"] / 1000.0) . " s");
+    $out .= $this->_createDataCell($loadStart, "reqStart", $highlight);
+
+    $reqDns = null;
+    if (!empty($request['dns_ms']) && (int)$request['dns_ms'] !== -1) {
+      $reqDns = $request['dns_ms'] . " ms";
+    } else if (!empty($request['dns_end']) && $request['dns_end'] > 0) {
+      $reqDns = ($request['dns_end'] - $request['dns_start']) . " ms";
+    }
+    $out .= $this->_createDataCell($reqDns, "reqDNS", $highlight);
+
+    $out .= $this->_createSocketSSLCells($request, $highlight);
+
+    $ttfbMs = empty($request["ttfb_ms"]) ? "-" : ($request["ttfb_ms"] . " ms");
+    $out .= $this->_createDataCell($ttfbMs, "reqTTFB", $highlight);
+
+    $downloadMs = empty($request["download_ms"]) ? "-" : ($request["download_ms"] . " ms");
+    $out .= $this->_createDataCell($downloadMs, "reqDownload", $highlight);
+
+    $bytesIn = empty($request["bytesIn"]) ? null : (number_format($request['bytesIn'] / 1024, 1) . "KB");
+    $out .= $this->_createDataCell($bytesIn, "reqBytes", $highlight);
+
+    $out .= $this->_createDataCell(@$request["responseCode"], "reqResult", $highlight);
+    $out .= $this->_createDataCell(@$request["ip_addr"], "reqIP", $highlight);
+
+    if ($this->requests->hasLocationData())
+      $out .= $this->_createDataCell(@$request["location"], "reqLocation", $highlight);
+
+    $out .= '</tr>';
     return $out;
   }
 
