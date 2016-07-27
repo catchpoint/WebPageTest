@@ -98,99 +98,51 @@ EOT;
       $requestNum = $reqNum + 1;
       $highlight = $this->_getRowHighlightClass($requestNum, $request);
 
-      if (!$this->useLinks) {
-        $out .= '<td class="reqNum ' . $highlight . '">' . $requestNum . '</td>';
-      } else {
-        $out .= '<td class="reqNum ' . $highlight . '"><a href="#request' . $requestNum . '">' . $requestNum . '</a></td>';
+      $reqNumValue = $this->useLinks ? ('<a href="#request' . $requestNum . '">' . $requestNum . '</a>') : $requestNum;
+      $out .= $this->_createDataCell($reqNumValue, "reqNum", $highlight);
+
+      $reqUrl = $this->_createRequestUrlLink($request, $requestNum);
+      $out .= $this->_createDataCell($reqUrl, "reqUrl", $highlight);
+
+      $out .= $this->_createDataCell(@$request["contentType"], "reqMime", $highlight);
+
+      $loadStart = empty($request["load_start"]) ? "-" : (($request["load_start"] / 1000.0) . " s");
+      $out .= $this->_createDataCell($loadStart, "reqStart", $highlight);
+
+      $reqDns = null;
+      if (!empty($request['dns_ms']) && (int)$request['dns_ms'] !== -1) {
+        $reqDns = $request['dns_ms'] . " ms";
+      } else if (!empty($request['dns_end']) && $request['dns_end'] > 0) {
+        $reqDns = ($request['dns_end'] - $request['dns_start']) . " ms";
       }
+      $out .= $this->_createDataCell($reqDns, "reqDNS", $highlight);
 
-      if ($request['host'] || $request['url']) {
-        $protocol = 'http://';
-        if ($request['is_secure'] && $request['is_secure'] == 1)
-          $protocol = 'https://';
-        $url = $protocol . $request['host'] . $request['url'];
-        $displayurl = ShortenUrl($url);
-        if (!$this->useLinks) {
-          $out .= "<td class=\"reqUrl $highlight\"><a title=\"$url\" href=\"#request$requestNum\">$displayurl</a></td>";
-        } else {
-          $out .= '<td class="reqUrl ' . $highlight . '"><a rel="nofollow" href="' . $url . '">' . $displayurl . '</a></td>';
-        }
-      } else
-        $out .= '<td class="reqUrl ' . $highlight . '">-</td>';
+      $out .= $this->_createSocketSSLCells($request, $highlight);
 
-      if (array_key_exists('contentType', $request) && strlen($request['contentType']))
-        $out .= '<td class="reqMime ' . $highlight . '">' . $request['contentType'] . '</td>';
-      else
-        $out .= '<td class="reqMime ' . $highlight . '">-</td>';
+      $ttfbMs = empty($request["ttfb_ms"]) ? "-" : ($request["ttfb_ms"] . " ms");
+      $out .= $this->_createDataCell($ttfbMs, "reqTTFB", $highlight);
 
-      if ($request['load_start'])
-        $out .= '<td class="reqStart ' . $highlight . '">' . $request['load_start'] / 1000.0 . ' s</td>';
-      else
-        $out .= '<td class="reqStart ' . $highlight . '">-</td>';
+      $downloadMs = empty($request["download_ms"]) ? "-" : ($request["download_ms"] . " ms");
+      $out .= $this->_createDataCell($downloadMs, "reqDownload", $highlight);
 
-      if ($request['dns_ms'] && (int)$request['dns_ms'] !== -1)
-        $out .= '<td class="reqDNS ' . $highlight . '">' . $request['dns_ms'] . ' ms</td>';
-      elseif ($request['dns_end'] > 0) {
-        $time = $request['dns_end'] - $request['dns_start'];
-        $out .= '<td class="reqDNS ' . $highlight . '">' . $time . ' ms</td>';
-      } else
-        $out .= '<td class="reqDNS ' . $highlight . '">-</td>';
+      $bytesIn = empty($request["bytesIn"]) ? null : (number_format($request['bytesIn'] / 1024, 1) . "KB");
+      $out .= $this->_createDataCell($bytesIn, "reqBytes", $highlight);
 
-      if ($request['connect_ms'] && (int)$request['connect_ms'] !== -1) {
-        $out .= '<td class="reqSocket ' . $highlight . '">' . $request['connect_ms'] . ' ms</td>';
-        if ($request['is_secure'] && $request['is_secure'] == 1) {
-          $out .= '<td class="reqSSL ' . $highlight . '">' . (int)$request['ssl_ms'] . ' ms</td>';
-        } elseif ($this->requests->hasSecureRequests())
-          $out .= '<td class="reqSSL ' . $highlight . '">-</td>';
-      } elseif ($request['connect_end'] > 0) {
-        $time = $request['connect_end'] - $request['connect_start'];
-        $out .= '<td class="reqSocket ' . $highlight . '">' . $time . ' ms</td>';
-        if ($this->requests->hasSecureRequests()) {
-          if ($request['ssl_end'] > 0) {
-            $time = $request['ssl_end'] - $request['ssl_start'];
-            $out .= '<td class="reqSSL ' . $highlight . '">' . $time . ' ms</td>';
-          } else {
-            $out .= '<td class="reqSSL ' . $highlight . '">-</td>';
-          }
-        }
-      } else {
-        $out .= '<td class="reqSocket ' . $highlight . '">-</td>';
-        if ($this->requests->hasSecureRequests())
-          $out .= '<td class="reqSSL ' . $highlight . '">-</td>';
-      }
-
-      if (array_key_exists('ttfb_ms', $request) && $request['ttfb_ms'])
-        $out .= '<td class="reqTTFB ' . $highlight . '">' . $request['ttfb_ms'] . ' ms</td>';
-      else
-        $out .= '<td class="reqTTFB ' . $highlight . '">-</td>';
-
-      if (array_key_exists('download_ms', $request) && $request['download_ms'])
-        $out .= '<td class="reqDownload ' . $highlight . '">' . $request['download_ms'] . ' ms</td>';
-      else
-        $out .= '<td class="reqDownload ' . $highlight . '">-</td>';
-
-      if (array_key_exists('bytesIn', $request) && $request['bytesIn'])
-        $out .= '<td class="reqBytes ' . $highlight . '">' . number_format($request['bytesIn'] / 1024, 1) . ' KB</td>';
-      else
-        $out .= '<td class="reqBytes ' . $highlight . '">-</td>';
-
-      if (array_key_exists('responseCode', $request) && $request['responseCode'])
-        $out .= '<td class="reqResult ' . $highlight . '">' . $request['responseCode'] . '</td>';
-      else
-        $out .= '<td class="reqResult ' . $highlight . '">-</td>';
-
-      if (array_key_exists('ip_addr', $request) && $request['ip_addr'])
-        $out .= '<td class="reqIP ' . $highlight . '">' . $request['ip_addr'] . '</td>';
-      else
-        $out .= '<td class="reqIP ' . $highlight . '">-</td>';
+      $out .= $this->_createDataCell(@$request["responseCode"], "reqResult", $highlight);
+      $out .= $this->_createDataCell(@$request["ip_addr"], "reqIP", $highlight);
 
       if ($this->requests->hasLocationData())
-        $out .= '<td class="reqLocation ' . $highlight . '">' . $request['location'] . "</td>\n";
+        $out .= $this->_createDataCell(@$request["location"], "reqLocation", $highlight);
 
       $out .= '</tr>';
     }
     $out .= "</tbody>\n";
     return $out;
+  }
+
+  private function _createDataCell($value, $class, $highlight) {
+    $value = empty($value) ? "-" : $value;
+    return "<td class=\"" . $class . " " . $highlight . "\">" . $value . "</td>\n";
   }
 
   private function _getRowHighlightClass($requestNum, $request) {
@@ -209,6 +161,44 @@ EOT;
       $highlight .= 'Doc';
 
     return $highlight;
+  }
+
+  private function _createRequestUrlLink($request, $requestNum) {
+    if (!$request['host'] && !$request['url']) {
+      return null;
+    }
+    $protocol = $request['is_secure'] == 1 ? "https://" : "http://";
+    $url = $protocol . $request['host'] . $request['url'];
+    $displayurl = ShortenUrl($url);
+    if ($this->useLinks) {
+      $reqUrl = '<a rel="nofollow" href="' . $url . '">' . $displayurl . '</a>';
+    } else {
+      $reqUrl = "<a title=\"$url\" href=\"#request$requestNum\">$displayurl</a>";
+    }
+    return $reqUrl;
+  }
+
+  private function _createSocketSSLCells($request, $highlight) {
+    $reqSocket = null;
+    $reqSSL = null;
+
+    if (!empty($request['connect_ms']) && (int)$request['connect_ms'] !== -1) {
+      $reqSocket = $request['connect_ms'] . ' ms';
+      if (!empty($request['is_secure']) && $request['is_secure'] == 1) {
+        $reqSSL = (int)$request['ssl_ms'] . ' ms';
+      }
+    } elseif (!empty($request['connect_end']) && $request['connect_end'] > 0) {
+      $reqSocket = $request['connect_end'] - $request['connect_start'];
+      if (!empty($request['ssl_end']) && $request['ssl_end'] > 0) {
+        $reqSSL = $request['ssl_end'] - $request['ssl_start'];
+      }
+    }
+
+    $out = $this->_createDataCell($reqSocket, "reqSocket", $highlight);
+    if ($this->requests->hasSecureRequests()) {
+      $out .= $this->_createDataCell($reqSSL, "reqSSL", $highlight);
+    }
+    return $out;
   }
 
 }
