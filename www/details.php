@@ -124,7 +124,6 @@ $page_description = "Website performance test details$testLabel";
         }
         .accordion_opened {
             background: url(/images/accordion_opened.png) no-repeat 10px 50%;
-            border-bottom: 1px #eee solid;
         }
         .accordion_loading {
             background: url(/images/activity_indicator.gif) no-repeat 10px 50%;
@@ -235,8 +234,12 @@ $page_description = "Website performance test details$testLabel";
                 <br>
                 <h3 name="connection_view">Connection View</h3>
                     <?php
-                    $waterfallSnippet = new ConnectionViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1));
-                    echo $waterfallSnippet->create();
+                    if ($isMultistep) {
+                        printAccordion("connection_view", "connection", $testRunResults);
+                    } else {
+                        $waterfallSnippet = new ConnectionViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1));
+                        echo $waterfallSnippet->create();
+                    }
                     ?>
                 </div>
                 <br><br>
