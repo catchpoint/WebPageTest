@@ -246,10 +246,15 @@ $page_description = "Website performance test details$testLabel";
                 <?php include('./ads/details_middle.inc'); ?>
 
                 <br>
+                <h3 name="request_details_view">Request Details</h3>
                 <?php
-                    $useLinks = !$settings['nolinks'];
-                    $requestDetailsSnippet = new RequestDetailsHtmlSnippet($testInfo, $testRunResults->getStepResult(1), $useLinks);
-                    echo $requestDetailsSnippet->create();
+                    if ($isMultistep) {
+                        printAccordion("request_details_view", "requestDetails", $testRunResults);
+                    } else {
+                        $useLinks = !$settings['nolinks'];
+                        $requestDetailsSnippet = new RequestDetailsHtmlSnippet($testInfo, $testRunResults->getStepResult(1), $useLinks);
+                        echo $requestDetailsSnippet->create();
+                    }
                 ?>
 
                 <br>
@@ -305,13 +310,17 @@ $page_description = "Website performance test details$testLabel";
                     // trigger animation when all images in the snippet loaded
                     var images = snippetNode.find("img");
                     var noOfImages = images.length;
-                    var noLoaded = 0;
-                    images.on('load', function(){
-                        noLoaded++;
-                        if(noOfImages === noLoaded) {
-                            animateAccordion(targetNode, snippetNode);
-                        }
-                    });
+                    if (noOfImages > 0) {
+                        var noLoaded = 0;
+                        images.on('load', function(){
+                            noLoaded++;
+                            if(noOfImages === noLoaded) {
+                                animateAccordion(targetNode, snippetNode);
+                            }
+                        });
+                    } else {
+                        animateAccordion(targetNode, snippetNode);
+                    }
                 })
             } else {
                 animateAccordion(targetNode, snippetNode);
