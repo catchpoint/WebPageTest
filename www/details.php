@@ -105,6 +105,30 @@ $page_description = "Website performance test details$testLabel";
         .a_request {
             cursor: pointer;
         }
+        .snippet_container {
+            display: none;
+            margin: 1em 0;
+        }
+        .accordion_block {
+            border: 1px solid #aaa;
+            border-radius: 5px;
+            width:930px;
+        }
+        .accordion_opener {
+            cursor: pointer;
+            display: block;
+            padding: 0.2em;
+        }
+        .accordion_closed {
+            background: url(/images/accordion_closed.png) no-repeat 10px 50%;
+        }
+        .accordion_opened {
+            background: url(/images/accordion_opened.png) no-repeat 10px 50%;
+            border-bottom: 1px #eee solid;
+        }
+        .accordion_loading {
+            background: url(/images/activity_indicator.gif) no-repeat 10px 50%;
+        }
         <?php
         include "waterfall.css";
         ?>
@@ -199,9 +223,23 @@ $page_description = "Website performance test details$testLabel";
                 <div style="text-align:center;">
                 <h3 name="waterfall_view">Waterfall View</h3>
                 <?php
-                    $enableCsi = (array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi']);
-                    $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1), $enableCsi);
-                    echo $waterfallSnippet->create();
+                    if ($isMultistep) {
+                        for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
+                            $stepResult = $testRunResults->getStepResult($i);
+                            $toggleFunction = "toggleSnippet('waterfall', $i)";
+                            echo "<div class=\"accordion_block\">\n";
+                            echo "<a name=\"waterfall_view_step" . $i . "\">";
+                            echo "<h2 class=\"accordion_opener accordion_closed\" data-snippettype='waterfall' data-step='$i'>";
+                            echo $stepResult->readableIdentifier();
+                            echo "</h2></a>\n";
+                            echo "<div id=\"snippet_waterfall_step$i\" class='snippet_container'></div>\n";
+                            echo "</div>\n";
+                        }
+                    } else {
+                        $enableCsi = (array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi']);
+                        $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1), $enableCsi);
+                        echo $waterfallSnippet->create();
+                    }
                 ?>
                 <br>
                 <br>
@@ -244,6 +282,55 @@ $page_description = "Website performance test details$testLabel";
         </div>
 
         <script type="text/javascript">
+        var testId = "<?php echo $testInfo->getId(); ?>";
+        var testRun = <?php echo $testRunResults->getRunNumber(); ?>;
+        var testIsCached = <?php echo $testRunResults->isCachedRun() ? 1 : 0; ?>;
+
+        $(document).ready(function() {
+            $(".accordion_opener").click(function(event) {
+               toggleAccordion(event.target);
+            });
+        });
+
+        function toggleAccordion(targetNode) {
+            targetNode = $(targetNode);
+            var snippetType = targetNode.data("snippettype");
+            var stepNumber = targetNode.data("step");
+            var snippetNode = $("#snippet_" + snippetType + "_step" + stepNumber);
+            if (snippetNode.data("loaded") !== "true") {
+                var args = {
+                    'snippet': snippetType,
+                    'test' : testId,
+                    'run' : testRun,
+                    'cached' : testIsCached,
+                    'step': stepNumber
+                };
+                targetNode.addClass("accordion_loading");
+                snippetNode.load("/details_snippet.php", args, function () {
+                    snippetNode.data("loaded", "true");
+                    targetNode.removeClass("accordion_loading");
+                    // trigger animation when all images in the snippet loaded
+                    var images = snippetNode.find("img");
+                    var noOfImages = images.length;
+                    var noLoaded = 0;
+                    images.on('load', function(){
+                        noLoaded++;
+                        if(noOfImages === noLoaded) {
+                            animateAccordion(targetNode, snippetNode);
+                        }
+                    });
+                })
+            } else {
+                animateAccordion(targetNode, snippetNode);
+            }
+        }
+
+        function animateAccordion(openerNode, snippetNode) {
+            openerNode.toggleClass("accordion_opened");
+            openerNode.toggleClass("accordion_closed");
+            snippetNode.slideToggle();
+        }
+
         function expandRequest(targetNode) {
           if (targetNode.length) {
             var div_to_expand = $('#' + targetNode.attr('data-target-id'));
