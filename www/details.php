@@ -191,9 +191,6 @@ $page_description = "Website performance test details$testLabel";
                 $userTimingTable = new UserTimingHtmlTable($testRunResults);
                 echo $userTimingTable->create();
 
-                $secure = false;
-                $haveLocations = false;
-                $requests = getRequests($id, $testPath, $run, @$_GET['cached'], $secure, $haveLocations, true, true);
                 ?>
                 <script type="text/javascript">
                   markUserTime('aft.Detail Table');
