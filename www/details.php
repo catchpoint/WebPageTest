@@ -115,6 +115,7 @@ $page_description = "Website performance test details$testLabel";
             width:930px;
         }
         .accordion_opener {
+            text-align: center;
             cursor: pointer;
             display: block;
             padding: 0.2em;
@@ -266,11 +267,16 @@ $page_description = "Website performance test details$testLabel";
                     if (array_key_exists('testinfo', $test) && array_key_exists('testerDNS', $test['testinfo']) && strlen($test['testinfo']['testerDNS']))
                         echo "<p>Test Machine DNS Server(s): {$test['testinfo']['testerDNS']}</p>\n";
 
-                    $requestHeadersSnippet = new RequestHeadersHtmlSnippet($testRunResults->getStepResult(1), $useLinks);
-                    $snippet = $requestHeadersSnippet->create();
-                    if ($snippet) {
-                        echo '<br><hr><h2>Request Headers</h2>';
-                        echo $snippet;
+                    if ($isMultistep) {
+                        echo "<br><h3 name=\"request_headers_view\" class='center'>Request Headers</h3>\n";
+                        printAccordion("request_headers_view", "requestHeaders", $testRunResults);
+                    } else {
+                        $requestHeadersSnippet = new RequestHeadersHtmlSnippet($testRunResults->getStepResult(1), $useLinks);
+                        $snippet = $requestHeadersSnippet->create();
+                        if ($snippet) {
+                            echo '<br><hr><h2>Request Headers</h2>';
+                            echo $snippet;
+                        }
                     }
                 ?>
                 </div>
