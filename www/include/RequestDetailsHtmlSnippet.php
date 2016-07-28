@@ -123,7 +123,7 @@ class RequestDetailsHtmlSnippet {
     $downloadMs = empty($request["download_ms"]) ? "-" : ($request["download_ms"] . " ms");
     $out .= $this->_createDataCell($downloadMs, "reqDownload", $highlight);
 
-    $bytesIn = empty($request["bytesIn"]) ? null : (number_format($request['bytesIn'] / 1024, 1) . "KB");
+    $bytesIn = empty($request["bytesIn"]) ? null : (number_format($request['bytesIn'] / 1024, 1) . " KB");
     $out .= $this->_createDataCell($bytesIn, "reqBytes", $highlight);
 
     $out .= $this->_createDataCell(@$request["responseCode"], "reqResult", $highlight);
