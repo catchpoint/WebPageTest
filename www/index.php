@@ -690,17 +690,12 @@ $loc = ParseLocations($locations);
             $sponsors = parse_ini_file('./settings/sponsors.ini', true);
             foreach( $sponsors as &$sponsor )
             {
-                if( strlen($GLOBALS['cdnPath']) )
-                {
-                    if( isset($sponsor['logo']) )
-                        $sponsor['logo'] = $GLOBALS['cdnPath'] . $sponsor['logo'];
-                    if( isset($sponsor['logo_big']) )
-                        $sponsor['logo_big'] = $GLOBALS['cdnPath'] . $sponsor['logo_big'];
-                }
-                $offset = 0;
-                if( $sponsor['index'] )
-                    $offset = -40 * $sponsor['index'];
-                $sponsor['offset'] = $offset;
+              if( strlen($GLOBALS['cdnPath']) && isset($sponsor['logo']) )
+                $sponsor['logo'] = $GLOBALS['cdnPath'] . $sponsor['logo'];
+              $offset = 0;
+              if( $sponsor['index'] )
+                $offset = -40 * $sponsor['index'];
+              $sponsor['offset'] = $offset;
             }
             echo "var sponsors = " . @json_encode($sponsors) . ";\n";
         ?>

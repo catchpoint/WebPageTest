@@ -152,17 +152,16 @@ $page_description = "Test network path from multiple locations around the world 
             echo "var connectivity = " . json_encode($connectivity) . ";\n";
 
             $sponsors = parse_ini_file('./settings/sponsors.ini', true);
-            if( strlen($GLOBALS['cdnPath']) )
+            foreach( $sponsors as &$sponsor )
             {
-                foreach( $sponsors as &$sponsor )
-                {
-                    if( isset($sponsor['logo']) )
-                        $sponsor['logo'] = $GLOBALS['cdnPath'] . $sponsor['logo'];
-                    if( isset($sponsor['logo_big']) )
-                        $sponsor['logo_big'] = $GLOBALS['cdnPath'] . $sponsor['logo_big'];
-                }
+              if( strlen($GLOBALS['cdnPath']) && isset($sponsor['logo']) )
+                $sponsor['logo'] = $GLOBALS['cdnPath'] . $sponsor['logo'];
+              $offset = 0;
+              if( $sponsor['index'] )
+                $offset = -40 * $sponsor['index'];
+              $sponsor['offset'] = $offset;
             }
-            echo "var sponsors = " . json_encode($sponsors) . ";\n";
+            echo "var sponsors = " . @json_encode($sponsors) . ";\n";
         ?>
         </script>
         <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script> 
