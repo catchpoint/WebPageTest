@@ -17,19 +17,14 @@ class RequestHeadersHtmlSnippet {
   }
 
   public function create() {
-    $out = "";
-    if (isset($this->requests) &&
-      is_array($this->requests) &&
-      count($this->requests) &&
-      array_key_exists(0, $this->requests) &&
-      array_key_exists('headers', $this->requests[0])
-    ) {
-      $out .= '<p>+ <a id="all" href="javascript:expandAll();">Expand All</a></p>';
-      foreach ($this->requests as $reqNum => $request) {
-        if ($request) {
-          $requestNum = $reqNum + 1;
-          $out .= $this->_createRequestSnippet($requestNum, $request);
-        }
+    if (empty($this->requests[0]["headers"])) {
+      return "";
+    }
+    $out = '<p>+ <a id="all" href="javascript:expandAll();">Expand All</a></p>';
+    foreach ($this->requests as $reqNum => $request) {
+      if ($request) {
+        $requestNum = $reqNum + 1;
+        $out .= $this->_createRequestSnippet($requestNum, $request);
       }
     }
     return $out;
