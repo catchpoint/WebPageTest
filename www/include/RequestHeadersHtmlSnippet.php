@@ -1,35 +1,31 @@
 <?php
 
 class RequestHeadersHtmlSnippet {
-  private $testInfo;
   private $stepResult;
   private $requests;
   private $useLinks;
 
   /**
    * RequestDetailsHtmlSnippet constructor.
-   * @param TestInfo $testInfo
    * @param TestStepResult $stepResult
    * @param bool $useLinks
    */
-  public function __construct($testInfo, $stepResult, $useLinks) {
-    $this->testInfo = $testInfo;
+  public function __construct($stepResult, $useLinks) {
     $this->stepResult = $stepResult;
-    $this->requests = $stepResult->getRequestsWithInfo(true, true);
+    $this->requests = $stepResult->getRequestsWithInfo(true, true)->getRequests();
     $this->useLinks = $useLinks;
   }
 
   public function create() {
-    $requests = $this->requests->getRequests();
     $out = "";
-    if (isset($requests) &&
-      is_array($requests) &&
-      count($requests) &&
-      array_key_exists(0, $requests) &&
-      array_key_exists('headers', $requests[0])
+    if (isset($this->requests) &&
+      is_array($this->requests) &&
+      count($this->requests) &&
+      array_key_exists(0, $this->requests) &&
+      array_key_exists('headers', $this->requests[0])
     ) {
       $out .= '<p>+ <a id="all" href="javascript:expandAll();">Expand All</a></p>';
-      foreach ($requests as $reqNum => $request) {
+      foreach ($this->requests as $reqNum => $request) {
         if ($request) {
           $requestNum = $reqNum + 1;
           $out .= "<h4><span class=\"a_request\" id=\"request$requestNum\" data-target-id=\"headers_$requestNum\">";
@@ -74,13 +70,16 @@ class RequestHeadersHtmlSnippet {
             $out .= "<b>Content Download:</b> {$request['download_ms']} ms<br>\n";
           $out .= "<b>Bytes In (downloaded):</b> " . number_format($request['bytesIn'] / 1024.0, 1) . " KB<br>\n";
           $out .= "<b>Bytes Out (uploaded):</b> " . number_format($request['bytesOut'] / 1024.0, 1) . " KB<br>\n";
-          $id = $this->testInfo->getId();
-          $run = $this->stepResult->getRunNumber();
-          $cached = $this->stepResult->isCachedRun();
+          $urlGenerator = $this->stepResult->createUrlGenerator("", false);
+
+          $responseBodyUrl = null;
           if (isset($request['body_id']) && $request['body_id'] > 0) {
-            $out .= "<a href=\"/response_body.php?test=$id&run=$run&cached=$cached&bodyid={$request['body_id']}\">View Response Body</a><br>\n";
+            $responseBodyUrl = $urlGenerator->responseBodyWithBodyId($request['body_id']);
           } elseif (array_key_exists('body', $request) && $request['body']) {
-            $out .= "<a href=\"/response_body.php?test=$id&run=$run&cached=$cached&request=$requestNum\">View Response Body</a><br>\n";
+            $responseBodyUrl = $urlGenerator->responseBodyWithRequestNumber($requestNum);
+          }
+          if ($responseBodyUrl) {
+            $out .= "<a href=\"$responseBodyUrl\">View Response Body</a><br>\n";
           }
           $out .= "</p>";
           if (array_key_exists('headers', $request)) {

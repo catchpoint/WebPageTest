@@ -15,7 +15,7 @@ echo $requestDetailsSnippet->create();
   echo '<div id="headers">';
   if (array_key_exists('testinfo', $test) && array_key_exists('testerDNS', $test['testinfo']) && strlen($test['testinfo']['testerDNS']))
     echo "<p>Test Machine DNS Server(s): {$test['testinfo']['testerDNS']}</p>\n";
-  $requestHeadersSnippet = new RequestHeadersHtmlSnippet($testInfo, $testRunResults->getStepResult(1), $useLinks);
+  $requestHeadersSnippet = new RequestHeadersHtmlSnippet($testRunResults->getStepResult(1), $useLinks);
   $snippet = $requestHeadersSnippet->create();
   if ($snippet) {
     echo '<br><hr><h2>Request Headers</h2>';
