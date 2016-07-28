@@ -67,6 +67,13 @@ class TestStepResult {
   }
 
   /**
+   * @return bool True if there is valid test step result data, false otherwise.
+   */
+  public function isValid() {
+    return !empty($this->rawData) && is_array($this->rawData);
+  }
+
+  /**
    * @param string $baseUrl The base URL to use for the UrlGenerator
    * @param bool $friendly Optional. True for friendly URLS (default), false for standard URLs
    * @return UrlGenerator The created URL generator for this step
