@@ -1,30 +1,40 @@
-var CloseRequestDialog = function(hash) {
-    hash.w.hide();
-    for (i=1;i<=wptRequestCount;i++) {
-        $("#request-overlay-" + i).removeClass("selected");
-        $("#request-overlay-" + i).addClass("transparent");
-    }
-    $('#radio1').attr('checked', 'checked');
-    $("#request-dialog-radio").buttonset('refresh');
-    $("#dialog-contents div.dialog-tab-content").hide();
-    $("#request-details").show();
-}
+var wptRequestDialogInited = {};
 
-// initialize the pop-up dialog        
-$('#request-dialog').jqm({overlay: 0, onHide: CloseRequestDialog})
-      .jqDrag('.jqDrag');
-$('input.jqmdX')
-    .hover( function(){ $(this).addClass('jqmdXFocus'); }, 
-            function(){ $(this).removeClass('jqmdXFocus'); })
-    .focus( function(){ this.hideFocus=true; $(this).addClass('jqmdXFocus'); })
-    .blur( function(){ $(this).removeClass('jqmdXFocus'); });
-    
-$("#request-dialog-radio").buttonset();
-$("#request-dialog-radio").change(function() {
-    var panel=$('#request-dialog-radio input[type=radio]:checked').val();
-    $("#dialog-contents div.dialog-tab-content").hide();
-    $("#" + panel).show();
-});
+function InitRequestDialog(step) {
+    var stepLabel = "step" + step;
+    if (wptRequestDialogInited[stepLabel] === true) {
+        return;
+    }
+
+    var CloseRequestDialog = function(hash) {
+        hash.w.hide();
+        for (i=1;i<=wptRequestCount[stepLabel];i++) {
+            $("#request-overlay-" + stepLabel + "-" + i).removeClass("selected");
+            $("#request-overlay-" + stepLabel + "-" + i).addClass("transparent");
+        }
+        $('#radio1-' + stepLabel).attr('checked', 'checked');
+        $("#request-dialog-radio-" + stepLabel).buttonset('refresh');
+        $("#dialog-contents-" + stepLabel + " div.dialog-tab-content").hide();
+        $("#request-details-" + stepLabel).show();
+    }
+
+    // initialize the pop-up dialog
+    $('#request-dialog-' + stepLabel).jqm({overlay: 0, onHide: CloseRequestDialog})
+          .jqDrag('.jqDrag');
+    $('input.jqmdX')
+        .hover( function(){ $(this).addClass('jqmdXFocus'); },
+                function(){ $(this).removeClass('jqmdXFocus'); })
+        .focus( function(){ this.hideFocus=true; $(this).addClass('jqmdXFocus'); })
+        .blur( function(){ $(this).removeClass('jqmdXFocus'); });
+
+    $("#request-dialog-radio-" + stepLabel).buttonset();
+    $("#request-dialog-radio-" + stepLabel).change(function() {
+        var panel=$('#request-dialog-radio-' + stepLabel + ' input[type=radio]:checked').val();
+        $("#dialog-contents-" + stepLabel + " div.dialog-tab-content").hide();
+        $("#" + panel).show();
+    });
+    wptRequestDialogInited[stepLabel] = true;
+}
 
 var wptBodyRequest;
 
@@ -64,20 +74,22 @@ function htmlEncode(value){
     }
 }
 
-function SelectRequest(request) {
-    $('#request-dialog').css('top', $("#request-overlay-" + request).position().top + 20);
-    $("#dialog-title").html('<a href="#request' + request + '">Request #' + request + '</a>');
+function SelectRequest(step, request) {
+    InitRequestDialog(step);
+    var stepLabel = "step" + step;
+    $('#request-dialog-' + stepLabel).css('top', $("#request-overlay-" + stepLabel + "-" + request).position().top + 20);
+    $("#dialog-title-" + stepLabel).html('<a href="#' + stepLabel + '_request' + request + '">Request #' + request + '</a>');
     var details='';
     var requestHeaders='';
     var responseHeaders='';
-    $("#response-body").html('');
+    $("#response-body-" + stepLabel).html('');
     try {
         if (wptBodyRequest !== undefined)
             wptBodyRequest.abort();
     } catch (err) {
     }
-    if (wptRequestData[request - 1] !== undefined) {
-        var r = wptRequestData[request - 1];
+    if (wptRequestData[stepLabel][request - 1] !== undefined) {
+        var r = wptRequestData[stepLabel][request - 1];
         if (r['full_url'] !== undefined) {
             if (wptNoLinks) {
                 details += '<b>URL:</b> ' + htmlEncode(r['full_url']) + '<br>';
@@ -155,15 +167,15 @@ function SelectRequest(request) {
         if (r['body_url'] !== undefined && r['body_url'].length) {
             details += '<a href="' + htmlEncode(r['body_url']) + '" target="_blank">Open response body in new window</a><br>'
             try {
-                $("#response-body").text('Loading...');
+                $("#response-body-" + stepLabel).text('Loading...');
                 wptBodyRequest = new XMLHttpRequest();
                 wptBodyRequest.open('GET', r['body_url'], true);
                 wptBodyRequest.onreadystatechange = function() {
                 if (wptBodyRequest.readyState == 4) {
                     if (wptBodyRequest.status == 200) {
-                        $("#response-body").text(wptBodyRequest.responseText);
+                        $("#response-body-" + stepLabel).text(wptBodyRequest.responseText);
                     } else {
-                        $("#response-body").text('');
+                        $("#response-body-" + stepLabel).text('');
                     }
                 }
               }
@@ -172,25 +184,25 @@ function SelectRequest(request) {
             }
         } else if (r['contentType'] !== undefined && r['contentType'].indexOf('image') >= 0) {
             if (wptNoLinks) {
-                $("#response-body").html('<img style="max-width:100%; max-height:100%;" src="' + r['full_url'] + '">');
+                $("#response-body-" + stepLabel).html('<img style="max-width:100%; max-height:100%;" src="' + r['full_url'] + '">');
             } else {
-                $("#response-body").html('<a href="' + r['full_url'] + '"><img style="max-width:100%; max-height:100%;" src="' + r['full_url'] + '"></a>');
+                $("#response-body-" + stepLabel).html('<a href="' + r['full_url'] + '"><img style="max-width:100%; max-height:100%;" src="' + r['full_url'] + '"></a>');
             }
         } else {
-            $("#response-body").html('Not Available.<br><br>Turn on the "Save Response Bodies" option in the advanced settings to capture text resources.');
+            $("#response-body-" + stepLabel).html('Not Available.<br><br>Turn on the "Save Response Bodies" option in the advanced settings to capture text resources.');
         }
     }
-    $("#request-details").html(details);
-    $("#request-headers").html(requestHeaders);
-    $("#response-headers").html(responseHeaders);
-    $('#request-dialog').jqmShow();
+    $("#request-details-" + stepLabel).html(details);
+    $("#request-headers-" + stepLabel).html(requestHeaders);
+    $("#response-headers-" + stepLabel).html(responseHeaders);
+    $('#request-dialog-' + stepLabel).jqmShow();
 
     // highlight the selected request
-    for (i=1;i<=wptRequestCount;i++) {
+    for (i=1;i<=wptRequestCount[stepLabel];i++) {
         if (i == request)
-            $("#request-overlay-" + i).addClass("selected");
+            $("#request-overlay-" + stepLabel + "-" + i).addClass("selected");
         else
-            $("#request-overlay-" + i).removeClass("selected");
+            $("#request-overlay-" + stepLabel + "-" + i).removeClass("selected");
     }
 }
 

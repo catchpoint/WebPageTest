@@ -20,20 +20,24 @@ class RequestHeadersHtmlSnippet {
     if (empty($this->requests[0]["headers"])) {
       return "";
     }
-    $out = '<p>+ <a id="all" href="javascript:expandAll();">Expand All</a></p>';
+    $stepNumber = $this->stepResult->getStepNumber();
+    $out = '<p>+ <a id="step' . $stepNumber . '_all" href="javascript:expandAll(' . $stepNumber . ');">Expand All</a></p>';
+    $out .= '<div id="header_details_step' . $stepNumber . '">';
     foreach ($this->requests as $reqNum => $request) {
       if ($request) {
         $requestNum = $reqNum + 1;
         $out .= $this->_createRequestSnippet($requestNum, $request);
       }
     }
+    $out .= '</div>';
     return $out;
   }
 
   private function _createRequestSnippet($requestNum, $request) {
-    $out = "<h4><span class=\"a_request\" id=\"request$requestNum\" data-target-id=\"headers_$requestNum\">";
+    $stepNum = $this->stepResult->getStepNumber();
+    $out = "<h4><span class=\"a_request\" id=\"step${stepNum}_request$requestNum\" data-target-id=\"step${stepNum}_headers_$requestNum\">";
     $out .= "+ Request $requestNum: " . htmlspecialchars($request['full_url']) . "</span></h4>";
-    $out .= '<div class="header_details" id="headers_' . $requestNum . '">';
+    $out .= '<div class="header_details" id="step' . $stepNum . '_headers_' . $requestNum . '">';
     $out .= "<p class=\"indented2\">\n";
     if (!$this->useLinks)
       $out .= "<b>URL:</b> {$request['full_url']}<br>\n";

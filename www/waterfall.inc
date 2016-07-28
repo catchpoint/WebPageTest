@@ -1068,7 +1068,7 @@ function CreateWaterfallHtml($url, &$requests, $id, $run, $cached, &$page_data, 
 
     // create the image map (this is for fallback when Javascript isn't enabled
     // but also gives us the position for each request)
-    $out = '<map name="waterfall_map">';
+    $out = '<map name="waterfall_map_step' . $step . '">';
     $options = array(
         'id' => $id,
         'path' => './' . GetTestPath($id),
@@ -1085,9 +1085,9 @@ function CreateWaterfallHtml($url, &$requests, $id, $run, $cached, &$page_data, 
         if (array_key_exists('request', $entry)) {
             $index = $entry['request'] + 1;
             $title = $index . ': ' . htmlspecialchars($entry['url']);
-            $out .= '<area href="#request' . $index . '" alt="' . $title . '" title="' . $title . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
+            $out .= '<area href="#step' . $step . '_request' . $index . '" alt="' . $title . '" title="' . $title . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
         } elseif (array_key_exists('url', $entry)) {
-            $out .= '<area href="#request" alt="' . $entry['url'] . '" title="' . $entry['url'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
+            $out .= '<area href="#step' . $step . '_request" alt="' . $entry['url'] . '" title="' . $entry['url'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
         } elseif (array_key_exists('userTime', $entry)) {
             $out .= '<area nohref="nohref" alt="' . $entry['userTime'] . '" title="' . $entry['userTime'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
         }
@@ -1096,8 +1096,10 @@ function CreateWaterfallHtml($url, &$requests, $id, $run, $cached, &$page_data, 
     
     // main container for the waterfall
     $out .= '<div class="waterfall-container">';
-    $out .= "<img class=\"waterfall-image\" alt=\"\" onload=\"markUserTime('aft.Waterfall')\" usemap=\"#waterfall_map\" id=\"waterfall\" src=\"/waterfall.php?test=$id&run=$run&cached=$cached$waterfall_options\">";
+    $out .= "<img class=\"waterfall-image\" alt=\"\" onload=\"markUserTime('aft.Waterfall')\" usemap=\"#waterfall_map_step$step\" " .
+            "id=\"waterfall_step$step\" src=\"/waterfall.php?test=$id&run=$run&cached=$cached&step=$step$waterfall_options\">";
 
+    $stepSuffix = "-step" . $step;
     // draw div's over each of the waterfall elements (use the image map as a reference)
     foreach($map as $entry) {
         if (isset($entry['request'])) {
@@ -1111,41 +1113,43 @@ function CreateWaterfallHtml($url, &$requests, $id, $run, $cached, &$page_data, 
                     $tooltip = substr($tooltip, 0, $split) . '...';
                 $tooltip = FitText($tooltip, 100);
             }
-            $out .= "<div class=\"transparent request-overlay\" id=\"request-overlay-$index\" title=\"$tooltip\" onclick=\"SelectRequest($index)\" style=\"position: absolute; top: {$top}px; height: {$height}px;\"></div>\n";
+            $out .= "<div class=\"transparent request-overlay\" id=\"request-overlay$stepSuffix-$index\" title=\"$tooltip\" onclick=\"SelectRequest($step, $index)\" style=\"position: absolute; top: {$top}px; height: {$height}px;\"></div>\n";
         }
     }
 
     $out .= <<<EOT
-    <div id="request-dialog" class="jqmDialog">
-        <div id="dialog-header" class="jqmdTC jqDrag">
-            <div id="dialog-title"></div>
-            <div id="request-dialog-radio">
-                <span id="request-details-button"><input type="radio" id="radio1" value="request-details" name="radio" checked="checked" /><label for="radio1">Details</label></span>
-                <span id="request-headers-button"><input type="radio" id="radio2" value="request-headers" name="radio" /><label for="radio2">Request</label></span>
-                <span id="response-headers-button"><input type="radio" id="radio3" value="response-headers" name="radio" /><label for="radio3">Response</label></span>
-                <span id="response-body-button"><input type="radio" id="radio4" value="response-body" name="radio" /><label for="radio4">Object</label></span>
+    <div id="request-dialog$stepSuffix" class="jqmDialog">
+        <div id="dialog-header$stepSuffix" class="jqmdTC jqDrag">
+            <div id="dialog-title$stepSuffix" class="dialog-title"></div>
+            <div id="request-dialog-radio$stepSuffix" class="request-dialog-radio">
+                <span id="request-details-button$stepSuffix"><input type="radio" id="radio1$stepSuffix" value="request-details$stepSuffix" name="radio" checked="checked" /><label for="radio1$stepSuffix">Details</label></span>
+                <span id="request-headers-button$stepSuffix"><input type="radio" id="radio2$stepSuffix" value="request-headers$stepSuffix" name="radio" /><label for="radio2$stepSuffix">Request</label></span>
+                <span id="response-headers-button$stepSuffix"><input type="radio" id="radio3$stepSuffix" value="response-headers$stepSuffix" name="radio" /><label for="radio3$stepSuffix">Response</label></span>
+                <span id="response-body-button$stepSuffix"><input type="radio" id="radio4$stepSuffix" value="response-body$stepSuffix" name="radio" /><label for="radio4$stepSuffix">Object</label></span>
             </div>
         </div>
         <div class="jqmdBC">
-            <div id="dialog-contents" class="jqmdMSG">
-                <div id="request-details" class="dialog-tab-content"></div>
-                <div id="request-headers" class="dialog-tab-content"></div>
-                <div id="response-headers" class="dialog-tab-content"></div>
-                <div id="response-body" class="dialog-tab-content"></div>
+            <div id="dialog-contents$stepSuffix" class="jqmdMSG">
+                <div id="request-details$stepSuffix" class="dialog-tab-content request-details"></div>
+                <div id="request-headers$stepSuffix" class="dialog-tab-content request-headers"></div>
+                <div id="response-headers$stepSuffix" class="dialog-tab-content response-headers"></div>
+                <div id="response-body$stepSuffix" class="dialog-tab-content response-body"></div>
             </div>
         </div>
         <div class="jqmdX jqmClose"></div>
     </div>
-    <div id="marker"></div>
+    <div id="marker$stepSuffix"></div>
 EOT;
 
     $out .= '</div>'; // container
     
     // script support
     $out .= "<script type=\"text/javascript\">\n";
-    $out .= "var wptRequestCount=" . count($requests) . ";\n";
-    $out .= "var wptRequestData=" . json_encode($requests) . ";\n";
-    $out .= "var wptNoLinks={$settings['nolinks']};\n";
+    $out .= "if (typeof wptRequestCount == 'undefined') var wptRequestCount = {};\n";
+    $out .= "if (typeof wptRequestData == 'undefined') var wptRequestData = {};\n";
+    $out .= "if (typeof wptNoLinks == 'undefined') var wptNoLinks={$settings['nolinks']};\n";
+    $out .= "wptRequestCount['step$step']=" . count($requests) . ";\n";
+    $out .= "wptRequestData['step$step']=" . json_encode($requests) . ";\n";
     $out .= "</script>";
     return $out;
 }

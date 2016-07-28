@@ -276,14 +276,21 @@ $page_description = "Website performance test details$testLabel";
             expandRequest($(this));
         });
 
-        function expandAll() {
-          $(".header_details").each(function(index) {
+        function expandAll(step) {
+          $("#header_details_step" + step + " .header_details").each(function(index) {
             $(this).show();
           });
         }
-        
-        if (window.location.hash == '#all') {
-          expandAll();
+
+        var hashLength = window.location.hash.length;
+        var stepNum = -1;
+        if (hashLength > 4 && window.location.hash.substring(hashLength - 4) == "_all") {
+            stepNum = window.location.hash.substring("#step".length, hashLength - 4);
+        } else if (window.location.hash == '#all') {
+            stepNum = 1;
+        }
+        if (stepNum > 0) {
+          expandAll(stepNum);
         } else
           expandRequest($(window.location.hash));
 

@@ -46,13 +46,14 @@ class ConnectionViewHtmlSnippet {
       'width' => 930
     );
     $map = GetWaterfallMap($connection_rows, $this->stepResult->readableIdentifier(), $options, $this->stepResult->getRawResults());
+    $stepNumber = $this->stepResult->getStepNumber();
     foreach ($map as $entry) {
       if (array_key_exists('request', $entry)) {
         $index = $entry['request'] + 1;
         $title = "$index: " . htmlspecialchars($entry['url']);
-        $out .= "<area href=\"#request$index\" alt=\"$title\" title=\"$title\" shape=RECT coords=\"{$entry['left']},{$entry['top']},{$entry['right']},{$entry['bottom']}\">\n";
+        $out .= "<area href=\"#step${stepNumber}_request$index\" alt=\"$title\" title=\"$title\" shape=RECT coords=\"{$entry['left']},{$entry['top']},{$entry['right']},{$entry['bottom']}\">\n";
       } elseif (array_key_exists('url', $entry)) {
-        $out .= "<area href=\"#request\" alt=\"{$entry['url']}\" title=\"{$entry['url']}\" shape=RECT coords=\"{$entry['left']},{$entry['top']},{$entry['right']},{$entry['bottom']}\">\n";
+        $out .= "<area href=\"#step${stepNumber}_request\" alt=\"{$entry['url']}\" title=\"{$entry['url']}\" shape=RECT coords=\"{$entry['left']},{$entry['top']},{$entry['right']},{$entry['bottom']}\">\n";
       }
     }
     $out .= "</map>\n";

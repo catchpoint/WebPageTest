@@ -92,11 +92,12 @@ class RequestDetailsHtmlSnippet {
   }
 
   private function _createTableRow($reqNum, $request) {
+    $stepNum = $this->stepResult->getStepNumber();
     $out = '<tr>';
     $requestNum = $reqNum + 1;
     $highlight = $this->_getRowHighlightClass($requestNum, $request);
 
-    $reqNumValue = $this->useLinks ? ('<a href="#request' . $requestNum . '">' . $requestNum . '</a>') : $requestNum;
+    $reqNumValue = $this->useLinks ? ('<a href="#step' . $stepNum . '_request' . $requestNum . '">' . $requestNum . '</a>') : $requestNum;
     $out .= $this->_createDataCell($reqNumValue, "reqNum", $highlight);
 
     $reqUrl = $this->_createRequestUrlLink($request, $requestNum);
@@ -169,7 +170,7 @@ class RequestDetailsHtmlSnippet {
     if ($this->useLinks) {
       $reqUrl = '<a rel="nofollow" href="' . $url . '">' . $displayurl . '</a>';
     } else {
-      $reqUrl = "<a title=\"$url\" href=\"#request$requestNum\">$displayurl</a>";
+      $reqUrl = "<a title=\"$url\" href=\"#step" + $this->stepResult->getStepNumber() + "_request$requestNum\">$displayurl</a>";
     }
     return $reqUrl;
   }
