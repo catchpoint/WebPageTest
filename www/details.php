@@ -224,17 +224,7 @@ $page_description = "Website performance test details$testLabel";
                 <h3 name="waterfall_view">Waterfall View</h3>
                 <?php
                     if ($isMultistep) {
-                        for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
-                            $stepResult = $testRunResults->getStepResult($i);
-                            $toggleFunction = "toggleSnippet('waterfall', $i)";
-                            echo "<div class=\"accordion_block\">\n";
-                            echo "<a name=\"waterfall_view_step" . $i . "\">";
-                            echo "<h2 class=\"accordion_opener accordion_closed\" data-snippettype='waterfall' data-step='$i'>";
-                            echo $stepResult->readableIdentifier();
-                            echo "</h2></a>\n";
-                            echo "<div id=\"snippet_waterfall_step$i\" class='snippet_container'></div>\n";
-                            echo "</div>\n";
-                        }
+                        printAccordion("waterfall_view", "waterfall", $testRunResults);
                     } else {
                         $enableCsi = (array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi']);
                         $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1), $enableCsi);
@@ -384,3 +374,23 @@ $page_description = "Website performance test details$testLabel";
         </script>
     </body>
 </html>
+
+<?php
+/**
+ * Prints an accordion of a given snippetType for all steps of the run
+ * @param string $namePrefix Name prefix of the anchor
+ * @param string $snippetType Type of the snipper: "waterfall", "connection", "requestDetails", or "requestHeaders"
+ * @param TestRunResults $testRunResults The run results
+ */
+function printAccordion($namePrefix, $snippetType, $testRunResults) {
+    for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
+        $stepResult = $testRunResults->getStepResult($i);
+        echo "<div class=\"accordion_block\">\n";
+        echo "<a name=\"". $namePrefix . "_step" . $i . "\">";
+        echo "<h2 class=\"accordion_opener accordion_closed\" data-snippettype='$snippetType' data-step='$i'>";
+        echo $stepResult->readableIdentifier();
+        echo "</h2></a>\n";
+        echo "<div id=\"snippet_" . $snippetType . "_step$i\" class='snippet_container'></div>\n";
+        echo "</div>\n";
+    }
+}
