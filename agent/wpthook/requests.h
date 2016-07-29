@@ -60,6 +60,59 @@ public:
   long  ssl_end_;
 };
 
+class HTTP2PriorityStream {
+public:
+  HTTP2PriorityStream():depends_on_(-1), weight_(-1), exclusive_(-1){}
+  HTTP2PriorityStream(int depends_on, int weight, int exclusive):depends_on_(depends_on), weight_(weight), exclusive_(exclusive){}
+  HTTP2PriorityStream(const HTTP2PriorityStream& src){*this = src;}
+  ~HTTP2PriorityStream(){}
+  const HTTP2PriorityStream& operator=(const HTTP2PriorityStream& src) {
+    depends_on_ = src.depends_on_;
+    weight_ = src.weight_;
+    exclusive_ = src.exclusive_;
+    return src;
+  }
+
+  int depends_on_;
+  int weight_;
+  int exclusive_;
+};
+
+class PriorityStreams {
+public:
+  PriorityStreams(){}
+  PriorityStreams(const PriorityStreams& src){*this = src;}
+  ~PriorityStreams(){
+    if (!streams_.IsEmpty()) {
+      POSITION pos = streams_.GetStartPosition();
+      while (pos) {
+        DWORD key;
+        HTTP2PriorityStream *value = NULL;
+        streams_.GetNextAssoc(pos, key, value);
+        if (value)
+          delete value;
+      }
+      streams_.RemoveAll();
+    }
+  }
+  const PriorityStreams& operator=(const PriorityStreams& src) {
+    streams_.RemoveAll();
+    POSITION pos = src.streams_.GetStartPosition();
+    while (pos) {
+      DWORD key;
+      HTTP2PriorityStream *value = NULL;
+      src.streams_.GetNextAssoc(pos, key, value);
+      if (value)
+        streams_.SetAt(key, new HTTP2PriorityStream(*value));
+    }
+    return src;
+  }
+
+  CAtlMap<DWORD, HTTP2PriorityStream *> streams_;
+};
+
+typedef CAtlMap<DWORD, PriorityStreams *> ConnectionStreams;
+
 class Requests {
 public:
   Requests(TestState& test_state, TrackSockets& sockets, TrackDns& dns,
@@ -84,15 +137,18 @@ public:
                  const char * header, const char * value, bool pushed);
   void ObjectDataOut(DWORD socket_id, DWORD stream_id, DataChunk& chunk);
   void BytesOut(DWORD socket_id, DWORD stream_id, size_t len);
+  void SetPriority(DWORD socket_id, DWORD stream_id, int depends_on,
+                   int weight, int exclusive);
 
   void Lock();
   void Unlock();
   void Reset();
   bool GetBrowserRequest(BrowserRequestData &data, bool remove = true);
 
-  CAtlList<Request *>       _requests;                // all requests
-  CAtlMap<CString, InitiatorData>   _initiators;      // initiator data indexed by URL
-  CAtlMap<DWORD, bool>      connections_;             // Connection IDs
+  CAtlList<Request *>       _requests;            // all requests
+  CAtlMap<CString, InitiatorData>   _initiators;  // initiator data indexed by URL
+  CAtlMap<DWORD, bool>      connections_;         // Connection IDs
+  ConnectionStreams         priority_streams_;    // Priority-only streams for the given connection
 
 private:
   CRITICAL_SECTION  cs;
@@ -111,7 +167,8 @@ private:
   // GetOrCreateRequest must be called within a critical section.
   Request * GetOrCreateRequest(DWORD socket_id, DWORD stream_id,
                                const DataChunk& chunk);
-  Request * NewRequest(DWORD socket_id, DWORD stream_id, bool is_spdy);
+  Request * NewRequest(DWORD socket_id, DWORD stream_id, bool is_spdy,
+                       CString protocol);
   Request * GetActiveRequest(DWORD socket_id, DWORD stream_id);
   LONGLONG GetRelativeTime(Request * request, double end_time, double time);
 };

@@ -1113,7 +1113,7 @@ function GetDevToolsCPUTimeForStep($localPaths, $endTime = 0) {
   if (gz_is_file($cacheFile))
     $cache = json_decode(gz_file_get_contents($cacheFile), true);
 
-  if (isset($cache[$endTime])) {
+  if (isset($cache) && is_array($cache) && isset($cache[$endTime])) {
     $times = $cache[$endTime];
   } else {
     $cpu = DevToolsGetCPUSlicesForStep($localPaths);
@@ -1124,12 +1124,17 @@ function GetDevToolsCPUTimeForStep($localPaths, $endTime = 0) {
         $last_slice = min(intval(ceil(($endTime * 1000) / $cpu['slice_usecs'])), count($slices));
         $times[$name] = 0;
         for ($i = 0; $i < $last_slice; $i++)
-          $times[$name] += floatval($slices[$i]) / 1000.0;
+          $times[$name] += $slices[$i] / 1000.0;
         $busy += $times[$name];
         $times[$name] = intval(round($times[$name]));
       }
       $times['Idle'] = max($endTime - intval(round($busy)), 0);
     }
+    // Cache the result
+    if (!isset($cache) || !is_array($cache))
+      $cache = array();
+    $cache[$endTime] = $times;
+    gz_file_put_contents($cacheFile, json_encode($cache));
   }
   return $times;
 }

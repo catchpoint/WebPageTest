@@ -59,5 +59,4 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "webpagetest.h"
 #include "web_browser.h"
 #include "TraceRoute.h"
-#include "WinPCap.h"
 #include "util.h"

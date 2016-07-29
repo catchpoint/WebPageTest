@@ -53,7 +53,6 @@ public:
   CString _url;
 
 private:
-  CString       _file_base;
   Requests&     _requests;
   TestState&    _test_state;
   TrackSockets& _sockets;
@@ -86,13 +85,10 @@ private:
   int count_not_found_doc_;
   int count_other_;
   int count_other_doc_;
-  int reported_step_;
-  CStringA  current_step_name_;
 
   DWORD peak_memory_;
   DWORD peak_process_count_;
 
-  void IncrementStep(void);
   void ProcessRequests(void);
   void SavePageData(OptimizationChecks&);
   void SaveRequests(OptimizationChecks&);
@@ -103,7 +99,7 @@ private:
   void SaveStatusMessages(void);
   void SaveImage(CxImage& image, CString file, BYTE quality,
                  bool force_small = false, bool _full_size_video = false);
-  bool ImagesAreDifferent(CxImage * img1, CxImage* img2, DWORD bottom_margin);
+  bool ImagesAreDifferent(CxImage * img1, CxImage* img2, DWORD bottom_margin, DWORD margin);
   CStringA FormatTime(LARGE_INTEGER t);
   void SaveResponseBodies(void);
   void SaveConsoleLog(void);
@@ -113,4 +109,5 @@ private:
   void SaveHistogram(CStringA& histogram, CString file);
   CStringA GetHistogramJSON(CxImage& image);
   bool NativeRequestExists(Request * browser_request);
+  void SavePriorityStreams();
 };

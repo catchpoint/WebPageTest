@@ -176,6 +176,7 @@ CDN_PROVIDER cdnList[] = {
 
 CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "cloudflare", "Cloudflare"},
+  {"server", "yunjiasu", "Yunjiasu"},
   {"server", "ECS", "Edgecast"},
   {"server", "ECAcc", "Edgecast"},
   {"server", "ECD", "Edgecast"},
@@ -187,6 +188,7 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"Via", "CloudFront", "Amazon CloudFront"},
   {"X-Edge-IP", "", "CDN"},
   {"X-Edge-Location", "", "CDN"},
+  {"X-HW", "", "Highwinds"},
   {"X-Powered-By", "NYI FTW", "NYI FTW"},
   {"server", "ReSRC", "ReSRC.it"},
   {"X-Cdn", "Zenedge", "Zenedge"},

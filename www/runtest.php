@@ -2082,6 +2082,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "UAModifier=$UAModifier\r\n";
             if (isset($test['appendua']))
               $testFile .= "AppendUA={$test['appendua']}\r\n";
+            if (GetSetting('enable_agent_processing'))
+              $testFile .= "processResults=1\r\n";
 
             // see if we need to add custom scan rules
             if (array_key_exists('custom_rules', $test)) {

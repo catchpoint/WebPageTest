@@ -54,7 +54,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;WPTDRIVER;_WINSOCK_DEPRECATED_NO_WARNINGS;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>.\zlib;.\zlib\contrib;.\zlib\contrib\minizip;.\winpcap\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\zlib;.\zlib\contrib;.\zlib\contrib\minizip;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
@@ -88,7 +88,7 @@ xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\ex
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;WPTDRIVER;_WINSOCK_DEPRECATED_NO_WARNINGS;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>.\zlib;.\winpcap\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
@@ -120,6 +120,7 @@ xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\ex
     <None Include="wptdriver.ico" />
     <None Include="wptdriver.ini" />
     <None Include="wptdriver.ini.sample" />
+    <None Include="zlib\zconf.h.in" />
     <None Include="zlib\zlib.vcxproj.filters" />
   </ItemGroup>
   <ItemGroup>
@@ -133,7 +134,6 @@ xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\ex
     <ClInclude Include="webpagetest.h" />
     <ClInclude Include="web_browser.h" />
     <ClInclude Include="web_page_replay.h" />
-    <ClInclude Include="winpcap.h" />
     <ClInclude Include="wptdriver.h" />
     <ClInclude Include="wpt_driver_core.h" />
     <ClInclude Include="wpt_settings.h" />
@@ -148,6 +148,7 @@ xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\ex
     <ClInclude Include="zlib\contrib\minizip\zip.h" />
     <ClInclude Include="zlib\crc32.h" />
     <ClInclude Include="zlib\deflate.h" />
+    <ClInclude Include="zlib\gzguts.h" />
     <ClInclude Include="zlib\inffast.h" />
     <ClInclude Include="zlib\inffixed.h" />
     <ClInclude Include="zlib\inflate.h" />
@@ -169,7 +170,6 @@ xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\ex
     <ClCompile Include="webpagetest.cc" />
     <ClCompile Include="web_browser.cc" />
     <ClCompile Include="web_page_replay.cc" />
-    <ClCompile Include="winpcap.cpp" />
     <ClCompile Include="wptdriver.cc" />
     <ClCompile Include="wpt_driver_core.cc" />
     <ClCompile Include="wpt_settings.cc" />

@@ -70,14 +70,14 @@ if (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE
 $userIsBot = false;
 if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
     strlen($_SERVER['HTTP_USER_AGENT']) &&
-    preg_match('/robot|spider|crawler|indexer|WeSEE|AppEngine-Google|Googlebot|^$/i', $_SERVER['HTTP_USER_AGENT']))
+    preg_match('/robot|spider|crawler|indexer|WeSEE|Googlebot|^$/i', $_SERVER['HTTP_USER_AGENT']))
   $userIsBot = true;
 
 // constants
 define('VER_WEBPAGETEST', '2.19');   // webpagetest version
 define('VER_CSS', 68);           // version of the sitewide css file
 define('VER_JS', 32);            // version of the sitewide javascript file
-define('VER_JS_TEST', 30);       // version of the javascript specific to the test pages
+define('VER_JS_TEST', 31);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);     // version of the javascript specific to the test running status page
 define('UNKNOWN_TIME', -1);      // Value used as a flag for an unknown time.
                                  // To find code that fails to check that a time

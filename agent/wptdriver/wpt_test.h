@@ -209,6 +209,7 @@ public:
   CStringA _user_agent_modifier;
   CStringA _append_user_agent;
   DWORD    _max_test_time;
+  bool     _process_results;
   
   // current state
   int     _run;

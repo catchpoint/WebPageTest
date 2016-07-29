@@ -32,6 +32,7 @@ class Results;
 class ScreenCapture;
 class WptTestHook;
 class Trace;
+#include "WinPCap.h"
 
 const int TEST_RESULT_NO_ERROR = 0;
 const int TEST_RESULT_TIMEOUT = 99997;
@@ -183,6 +184,9 @@ public:
   CAtlList<StatusMessage>  _status_messages;   // Browser status
   CString                  _custom_metrics;    // JSON-formatted custom metrics data
   CString                  _user_timing;       // JSON-formatted user timing data (from Chrome traces)
+  CString                  _file_base;         // Base path for writing results files
+  int reported_step_;
+  CStringA  current_step_name_;
 
 private:
   bool  _first_request_sent;
@@ -198,6 +202,8 @@ private:
   CString process_full_path_;
   CString process_base_exe_;
   CString last_title_;
+  CWinPCap    _winpcap;
+
 
 
   // tracking of the periodic data capture
@@ -226,4 +232,5 @@ private:
   double GetElapsedMilliseconds(FILETIME &start, FILETIME &end);
   void CollectMemoryStats();
   void UpdateStoredBrowserVersion();
+  void IncrementStep(void);
 };

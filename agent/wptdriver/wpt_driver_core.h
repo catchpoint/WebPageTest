@@ -45,7 +45,6 @@ private:
   WptStatus&  _status;
   WebPagetest _webpagetest;
   WebBrowser *_browser;
-  CWinPCap    _winpcap;
   bool        _exit;
   bool        _installing;
   HANDLE      _work_thread;

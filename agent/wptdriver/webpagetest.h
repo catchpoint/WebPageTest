@@ -85,4 +85,6 @@ private:
   bool UnzipTo(CString zip_file, CString dest);
   void UpdateDNSServers();
   bool GetNameFromMAC(LPTSTR name, DWORD &len);
+  bool ProcessFile(CString file, CAtlList<CString> &newFiles);
+  bool RunPythonScript(CString script, CString options);
 };

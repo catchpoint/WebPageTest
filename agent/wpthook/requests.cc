@@ -56,6 +56,17 @@ Requests::Requests(TestState& test_state, TrackSockets& sockets,
 -----------------------------------------------------------------------------*/
 Requests::~Requests(void) {
   Reset();
+  if (!priority_streams_.IsEmpty()) {
+    POSITION pos = priority_streams_.GetStartPosition();
+    while (pos) {
+      DWORD key;
+      PriorityStreams *value = NULL;
+      priority_streams_.GetNextAssoc(pos, key, value);
+      if (value)
+        delete value;
+    }
+    priority_streams_.RemoveAll();
+  }
 
   DeleteCriticalSection(&cs);
 }
@@ -210,17 +221,18 @@ Request * Requests::GetOrCreateRequest(DWORD socket_id, DWORD stream_id,
   ULARGE_INTEGER key;
   key.HighPart = socket_id;
   key.LowPart = stream_id;
+  CString protocol = stream_id ? "HTTP/2" : "";
   if (_active_requests.Lookup(key.QuadPart, request) && request) {
     // We have an existing request on this socket, however, if data has been
     // received already, then this may be a new request.
     if (!request->_is_spdy && request->_response_data.GetDataSize() &&
         IsHttpRequest(chunk)) {
-      request = NewRequest(socket_id, stream_id, false);
+      request = NewRequest(socket_id, stream_id, false, protocol);
     }
   } else {
     bool is_spdy = IsSpdyRequest(chunk);
     if (is_spdy || IsHttpRequest(chunk)) {
-      request = NewRequest(socket_id, stream_id, is_spdy);
+      request = NewRequest(socket_id, stream_id, is_spdy, protocol);
     }
   }
   return request;
@@ -229,11 +241,11 @@ Request * Requests::GetOrCreateRequest(DWORD socket_id, DWORD stream_id,
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 Request * Requests::NewRequest(DWORD socket_id, DWORD stream_id,
-                               bool is_spdy) {
+                               bool is_spdy, CString protocol) {
   EnterCriticalSection(&cs);
   Request * request = new Request(_test_state, socket_id, stream_id,
                                   _nextRequestId, _sockets, _dns, _test,
-                                  is_spdy, *this);
+                                  is_spdy, *this, protocol);
   _nextRequestId++;
   ULARGE_INTEGER key;
   key.HighPart = socket_id;
@@ -271,7 +283,7 @@ LONGLONG Requests::GetRelativeTime(Request * request, double end_time, double ti
   information
 -----------------------------------------------------------------------------*/
 void Requests::ProcessBrowserRequest(CString request_data) {
-  CString browser, url, priority;
+  CString browser, url, priority, protocol;
   CStringA request_headers, response_headers;
   double  start_time = 0, end_time = 0, first_byte = 0, request_start = 0,
           dns_start = -1, dns_end = -1, connect_start = -1, connect_end = -1,
@@ -368,7 +380,7 @@ void Requests::ProcessBrowserRequest(CString request_data) {
   if (end_time > 0 && request_start > 0) {
     Request * request = new Request(_test_state, connection, stream_id,
                                     _nextRequestId, _sockets, _dns, _test,
-                                    false, *this);
+                                    false, *this, protocol);
     _nextRequestId++;
     request->_from_browser = true;
     request->priority_ = priority;
@@ -588,10 +600,11 @@ void Requests::StreamClosed(DWORD socket_id, DWORD stream_id) {
 -----------------------------------------------------------------------------*/
 void Requests::HeaderIn(DWORD socket_id, DWORD stream_id,
                         const char * header, const char * value, bool pushed) {
+  CString protocol = stream_id ? "HTTP/2" : "";
   EnterCriticalSection(&cs);
   Request * request = GetActiveRequest(socket_id, stream_id);
   if (!request)
-    request = NewRequest(socket_id, stream_id, false);
+    request = NewRequest(socket_id, stream_id, false, protocol);
   if (request)
     request->HeaderIn(header, value, pushed);
   LeaveCriticalSection(&cs);
@@ -632,10 +645,11 @@ void Requests::BytesOut(DWORD socket_id, DWORD stream_id, size_t len) {
 -----------------------------------------------------------------------------*/
 void Requests::HeaderOut(DWORD socket_id, DWORD stream_id, const char * header,
                          const char * value, bool pushed) {
+  CString protocol = stream_id ? "HTTP/2" : "";
   EnterCriticalSection(&cs);
   Request * request = GetActiveRequest(socket_id, stream_id);
   if (!request)
-    request = NewRequest(socket_id, stream_id, false);
+    request = NewRequest(socket_id, stream_id, false, protocol);
   if (request)
     request->HeaderOut(header, value, pushed);
   LeaveCriticalSection(&cs);
@@ -645,11 +659,37 @@ void Requests::HeaderOut(DWORD socket_id, DWORD stream_id, const char * header,
 -----------------------------------------------------------------------------*/
 void Requests::ObjectDataOut(DWORD socket_id, DWORD stream_id,
                              DataChunk& chunk) {
+  CString protocol = stream_id ? "HTTP/2" : "";
   EnterCriticalSection(&cs);
   Request * request = GetActiveRequest(socket_id, stream_id);
   if (!request)
-    request = NewRequest(socket_id, stream_id, false);
+    request = NewRequest(socket_id, stream_id, false, protocol);
   if (request)
     request->ObjectDataOut(chunk);
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Requests::SetPriority(DWORD socket_id, DWORD stream_id, int depends_on,
+                  int weight, int exclusive) {
+  WptTrace(loglevel::kFrequentEvent, 
+            _T("[wpthook] - Requests::SetPriority(socket_id=%d, stream_id=%d, depends_on=%d, weight=%d, exclusive=%d)"),
+            socket_id, stream_id, depends_on, weight, exclusive);
+  EnterCriticalSection(&cs);
+  Request * request = GetActiveRequest(socket_id, stream_id);
+  if (request) {
+    request->SetPriority(depends_on, weight, exclusive);
+  } else {
+    // This is a priority-only stream without a request tied to it.
+    // Keep track of them for separate logging.
+    PriorityStreams * streams = NULL;
+    if (!priority_streams_.Lookup(socket_id, streams) || !streams) {
+      streams = new PriorityStreams();
+      priority_streams_.SetAt(socket_id, streams);
+    }
+    if (streams)
+      streams->streams_.SetAt(stream_id, new HTTP2PriorityStream(depends_on, weight, exclusive));
+  }
   LeaveCriticalSection(&cs);
 }

@@ -6,8 +6,8 @@ ignore_user_abort(true);
 set_time_limit(3600);
 error_reporting(E_ALL);
 
-$lock = Lock("cron-60", false, 3600);
-if (!isset($lock))
+$cron_lock = Lock("cron-60", false, 3600);
+if (!isset($cron_lock))
   exit(0);
 
 header("Content-type: text/plain");
@@ -25,7 +25,7 @@ GitUpdate();
 AgentUpdate();
 ApkUpdate();
 
-Unlock($lock);
+Unlock($cron_lock);
 
 if (GetSetting('cron_archive')) {
   chdir('./cli');

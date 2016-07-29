@@ -393,7 +393,8 @@ DataChunk ResponseData::GetBody(bool uncompress) {
 -----------------------------------------------------------------------------*/
 Request::Request(TestState& test_state, DWORD socket_id, DWORD stream_id,
                  DWORD request_id, TrackSockets& sockets, TrackDns& dns,
-                 WptTest& test, bool is_spdy, Requests& requests)
+                 WptTest& test, bool is_spdy, Requests& requests,
+                 CString protocol)
   : _processed(false)
   , _socket_id(socket_id)
   , _stream_id(stream_id)
@@ -422,7 +423,11 @@ Request::Request(TestState& test_state, DWORD socket_id, DWORD stream_id,
   , requests_(requests)
   , _bytes_in(0)
   , _bytes_out(0)
-  , _object_size(0) {
+  , _object_size(0)
+  , _h2_priority_depends_on(-1)
+  , _h2_priority_weight(-1)
+  , _h2_priority_exclusive(-1)
+  , _protocol(protocol) {
   QueryPerformanceCounter(&_start);
   _first_byte.QuadPart = 0;
   _end.QuadPart = 0;
@@ -905,3 +910,11 @@ ULONG Request::GetPeerAddress() {
   return _peer_address;
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Request::SetPriority(int depends_on, int weight, int exclusive) {
+  WptTrace(loglevel::kFunction, _T("[wpthook] - Request::SetPriority(), depends on %d, weight %d, exclusive %d"), depends_on, weight, exclusive);
+  _h2_priority_depends_on = depends_on;
+  _h2_priority_weight = weight;
+  _h2_priority_exclusive = exclusive;
+}

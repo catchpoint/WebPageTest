@@ -167,6 +167,7 @@ void WptTest::Reset(void) {
   _user_agent_modifier = "PTST";
   _append_user_agent.Empty();
   _max_test_time = 0;
+  _process_results = false;
 }
 
 /*-----------------------------------------------------------------------------
@@ -327,6 +328,8 @@ bool WptTest::Load(CString& test) {
           _browser_width = _ttoi(value.Trim());
         } else if (!key.CompareNoCase(_T("browser_height")) && _ttoi(value.Trim())) {
           _browser_height = _ttoi(value.Trim());
+        } else if (!key.CompareNoCase(_T("processResults")) && _ttoi(value.Trim())) {
+          _process_results = true;
         }
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {

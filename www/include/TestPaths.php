@@ -149,6 +149,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for pcap-based utilization file
+   */
+  public function pcapUtilizationFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_pcap_slices.json";
+  }
+
+  /**
    * @return string Path for JPG screenshot file
    */
   public function screenShotFile() {
@@ -200,6 +207,13 @@ class TestPaths {
    */
   public function userTimedEventsFile() {
     return $this->testRoot . $this->underscoreIdentifier() . "_timed_events.json";
+  }
+
+  /**
+   * @return string Path for HTTP/2 priority streams
+   */
+  public function priorityStreamsFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_priority_streams.json";
   }
 
   /**
@@ -289,6 +303,22 @@ class TestPaths {
    */
   public function breakdownCacheFile($version) {
     return $this->testRoot . "breakdown" . $version . ".json";
+  }
+
+  /**
+   * @param int $version The version of the cache format
+   * @return string Path to cache file for page data
+   */
+  public function pageDataCacheFile($version) {
+    return $this->testRoot . $this->dotIdentifier() . ".pageData." . $version;
+  }
+
+  /**
+   * @param int $version The version of the cache format
+   * @return string Path to cache file for request data
+   */
+  public function requestsCacheFile($version) {
+    return $this->testRoot . $this->dotIdentifier() . ".requests." . $version;
   }
 
   public function cacheKey() {
