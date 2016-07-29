@@ -29,6 +29,23 @@ $page_description = "Website performance test details$testLabel";
         <title>WebPagetest Test Details<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Details'; include ('head.inc'); ?>
         <style type="text/css">
+        #quicklinks_table {
+            margin: 0 auto;
+            line-height: 1.5em;
+            border-collapse: collapse;
+        }
+        #quicklinks_table tr.even {
+            background: whitesmoke;
+        }
+        #quicklinks_table td, #quicklinks_table th {
+            border: 1px silver solid;
+            padding: 0.5em;
+        }
+        #quicklinks_table th {
+            font-weight: bold;
+            background: gainsboro;
+        }
+
         div.bar {
             height:12px;
             margin-top:auto;
@@ -224,6 +241,29 @@ $page_description = "Website performance test details$testLabel";
                 <script type="text/javascript">
                   markUserTime('aft.Detail Table');
                 </script>
+
+                <?php
+                if ($isMultistep) {
+                    echo "<a name='quicklinks'><h3>Quicklinks</h3></a>\n";
+                    echo "<table id='quicklinks_table'>\n";
+                    for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
+                        $stepResult = $testRunResults->getStepResult($i);
+                        $urlGenerator = $stepResult->createUrlGenerator("", false);
+                        $stepSuffix = "step" . $i;
+                        $class = $i % 2 == 0 ? " class='even'" : "";
+                        echo "<tr$class>\n";
+                        echo "<th>" . $stepResult->readableIdentifier() . "</th>";
+                        echo "<td><a href='#waterfall_view_$stepSuffix'>Waterfall View</a></td>";
+                        echo "<td><a href='#connection_view_$stepSuffix'>Connection View</a></td>";
+                        echo "<td><a href='#request_details_$stepSuffix'>Request Details</a></td>";
+                        echo "<td><a href='#request_headers_$stepSuffix'>Request Headers</a></td>";
+                        echo "<td><a href='" . $urlGenerator->resultPage("customWaterfall", "width=930") . "'>Customize Waterfall</a></td>";
+                        echo "<td><a href='" . $urlGenerator->resultPage("pageimages") . "'>All Images</a></td>";
+                        echo "</tr>";
+                    }
+                    echo "</table>\n<br>\n";
+                }
+                ?>
 
                 <div style="text-align:center;">
                 <h3 name="waterfall_view">Waterfall View</h3>
