@@ -151,15 +151,19 @@ $page_description = "Website performance test details$testLabel";
             cursor: pointer;
             display: block;
             padding: 0.2em;
+            background: no-repeat 10px 50% transparent;
+        }
+        .accordion_opener.jkActive {
+            background-color: whitesmoke;
         }
         .accordion_closed {
-            background: url(/images/accordion_closed.png) no-repeat 10px 50%;
+            background-image: url(/images/accordion_closed.png);
         }
         .accordion_opened {
-            background: url(/images/accordion_opened.png) no-repeat 10px 50%;
+            background-image: url(/images/accordion_opened.png);
         }
         .accordion_loading {
-            background: url(/images/activity_indicator.gif) no-repeat 10px 50%;
+            background-image: url(/images/activity_indicator.gif);
         }
         <?php
         include "waterfall.css";
@@ -502,14 +506,16 @@ if ($isMultistep) {
                 }
                 return;
             }
-            if (hash.startsWith("#waterfall_view_") ||
-                hash.startsWith("#connection_view") ||
-                hash.startsWith("#request_details") ||
-                hash.startsWith("#request_headers")) {
-
-                toggleAccordion($(hash), true, function() {
-                    scrollTo($(hash));
-                });
+            if (hash.startsWith("#waterfall_view_step") ||
+                hash.startsWith("#connection_view_step") ||
+                hash.startsWith("#request_details_step") ||
+                hash.startsWith("#request_headers_step")) {
+                var targetNode = $(hash);
+                if (targetNode.length) {
+                    toggleAccordion(targetNode, true, function() {
+                        scrollTo(targetNode);
+                    });
+                }
             }
             handleRequestHash();
         }
