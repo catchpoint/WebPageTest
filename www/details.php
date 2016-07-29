@@ -46,6 +46,16 @@ $page_description = "Website performance test details$testLabel";
             background: gainsboro;
         }
 
+        #back_to_top {
+            background:white;
+            position: fixed;
+            bottom:1em;
+            left:50%;
+            margin-left: 510px; /* 980px/2+20 */
+            padding:1em;
+            display: none;
+        }
+
         div.bar {
             height:12px;
             margin-top:auto;
@@ -329,7 +339,7 @@ $page_description = "Website performance test details$testLabel";
 
             <?php include('footer.inc'); ?>
         </div>
-
+        <a href="#top" id="back_to_top">Back to top</a>
         <script type="text/javascript">
 <?php
 include __DIR__ . '/js/jk-navigation.js';
@@ -504,10 +514,26 @@ if ($isMultistep) {
             handleRequestHash();
         }
 
+        function initBackToTop() {
+            $(window).scroll(function() {
+                var button = $("#back_to_top");
+                if ($(this).scrollTop() > 300) {
+                    button.fadeIn();
+                } else {
+                    button.fadeOut();
+                }
+            });
+            $("#back_to_top").click(function() {
+                $('body,html').animate({ scrollTop: 0 }, 'fast');
+                return false;
+            });
+        }
+
         // init existing snippets
         $(document).ready(function() {
             initDetailsTable($(document));
             initHeaderRequestExpander($(document));
+            initBackToTop();
             addJKNavigation(".accordion_opener", function(selected) {
                 toggleAccordion(selected, true, function() {
                     scrollTo(selected);
@@ -528,6 +554,7 @@ if ($isMultistep) {
                 });
             }
         });
+
         <?php
         include "waterfall.js";
         ?>
