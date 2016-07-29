@@ -109,6 +109,11 @@ $page_description = "Website performance test details$testLabel";
             display: none;
             margin: 1em 0;
         }
+        .snippet_container_requestHeaders {
+            text-align: left;
+            overflow: auto;
+            padding: 0 1em;
+        }
         .accordion_block {
             border: 1px solid #aaa;
             border-radius: 5px;
@@ -250,7 +255,7 @@ $page_description = "Website performance test details$testLabel";
                 <h3 name="request_details_view">Request Details</h3>
                 <?php
                     if ($isMultistep) {
-                        printAccordion("request_details_view", "requestDetails", $testRunResults);
+                        printAccordion("request_details_view", "requestDetails", $testRunResults, "initDetailsTable");
                     } else {
                         $useLinks = !$settings['nolinks'];
                         $requestDetailsSnippet = new RequestDetailsHtmlSnippet($testInfo, $testRunResults->getStepResult(1), $useLinks);
@@ -261,7 +266,6 @@ $page_description = "Website performance test details$testLabel";
                 <br>
                 <?php include('./ads/details_bottom.inc'); ?>
                 <br>
-                <div id="headers">
                 <?php
                     echo '';
                     if (array_key_exists('testinfo', $test) && array_key_exists('testerDNS', $test['testinfo']) && strlen($test['testinfo']['testerDNS']))
@@ -269,17 +273,18 @@ $page_description = "Website performance test details$testLabel";
 
                     if ($isMultistep) {
                         echo "<br><h3 name=\"request_headers_view\" class='center'>Request Headers</h3>\n";
-                        printAccordion("request_headers_view", "requestHeaders", $testRunResults);
+                        printAccordion("request_headers_view", "requestHeaders", $testRunResults, "initHeaderRequestExpander");
                     } else {
                         $requestHeadersSnippet = new RequestHeadersHtmlSnippet($testRunResults->getStepResult(1), $useLinks);
                         $snippet = $requestHeadersSnippet->create();
                         if ($snippet) {
+                            echo '<div id="headers">';
                             echo '<br><hr><h2>Request Headers</h2>';
                             echo $snippet;
+                            echo '</div>';
                         }
                     }
                 ?>
-                </div>
             </div>
 
             <?php include('footer.inc'); ?>
@@ -311,9 +316,13 @@ $page_description = "Website performance test details$testLabel";
                     'step': stepNumber
                 };
                 targetNode.addClass("accordion_loading");
+                var initFunction = targetNode.data("jsinit");
                 snippetNode.load("/details_snippet.php", args, function () {
                     snippetNode.data("loaded", "true");
                     targetNode.removeClass("accordion_loading");
+                    if (initFunction) {
+                        window[initFunction](snippetNode);
+                    }
                     // trigger animation when all images in the snippet loaded
                     var images = snippetNode.find("img");
                     var noOfImages = images.length;
@@ -355,26 +364,38 @@ $page_description = "Website performance test details$testLabel";
           }
         }
 
-        $(document).ready(function() { $(".tableDetails").tablesorter({
-            headers: { 3: { sorter:'currency' } ,
-                       4: { sorter:'currency' } ,
-                       5: { sorter:'currency' } ,
-                       6: { sorter:'currency' } ,
-                       7: { sorter:'currency' } ,
-                       8: { sorter:'currency' } ,
-                       9: { sorter:'currency' }
-                     }
-        }); } );
+        function initDetailsTable(targetNode) {
+             $(targetNode).find(".tableDetails").tablesorter({
+                headers: { 3: { sorter:'currency' } ,
+                    4: { sorter:'currency' } ,
+                    5: { sorter:'currency' } ,
+                    6: { sorter:'currency' } ,
+                    7: { sorter:'currency' } ,
+                    8: { sorter:'currency' } ,
+                    9: { sorter:'currency' }
+                }
+            });
+        }
 
-        $('.a_request').click(function () {
-            expandRequest($(this));
-        });
+        function initHeaderRequestExpander(targetNode) {
+            $(targetNode).find('.a_request').click(function () {
+                expandRequest($(this));
+            });
+        }
+
+
 
         function expandAll(step) {
           $("#header_details_step" + step + " .header_details").each(function(index) {
             $(this).show();
           });
         }
+
+        // init existing snippets
+        $(document).ready(function() {
+            initDetailsTable($(document));
+            initHeaderRequestExpander($(document));
+        });
 
         var hashLength = window.location.hash.length;
         var stepNum = -1;
@@ -401,16 +422,18 @@ $page_description = "Website performance test details$testLabel";
  * @param string $namePrefix Name prefix of the anchor
  * @param string $snippetType Type of the snipper: "waterfall", "connection", "requestDetails", or "requestHeaders"
  * @param TestRunResults $testRunResults The run results
+ * @param string $jsInitCall Javascript function to call after init. Optional
  */
-function printAccordion($namePrefix, $snippetType, $testRunResults) {
+function printAccordion($namePrefix, $snippetType, $testRunResults, $jsInitCall = "") {
     for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
         $stepResult = $testRunResults->getStepResult($i);
         echo "<div class=\"accordion_block\">\n";
         echo "<a name=\"". $namePrefix . "_step" . $i . "\">";
-        echo "<h2 class=\"accordion_opener accordion_closed\" data-snippettype='$snippetType' data-step='$i'>";
+        echo "<h2 class=\"accordion_opener accordion_closed\" data-snippettype='$snippetType' data-step='$i'".
+             " data-jsinit='$jsInitCall'>";
         echo $stepResult->readableIdentifier();
         echo "</h2></a>\n";
-        echo "<div id=\"snippet_" . $snippetType . "_step$i\" class='snippet_container'></div>\n";
+        echo "<div id=\"snippet_" . $snippetType . "_step$i\" class='snippet_container snippet_container_$snippetType'></div>\n";
         echo "</div>\n";
     }
 }
