@@ -255,7 +255,7 @@ $page_description = "Website performance test details$testLabel";
                 <h3 name="request_details_view">Request Details</h3>
                 <?php
                     if ($isMultistep) {
-                        printAccordion("request_details_view", "requestDetails", $testRunResults, "initDetailsTable");
+                        printAccordion("request_details", "requestDetails", $testRunResults, "initDetailsTable");
                     } else {
                         $useLinks = !$settings['nolinks'];
                         $requestDetailsSnippet = new RequestDetailsHtmlSnippet($testInfo, $testRunResults->getStepResult(1), $useLinks);
@@ -273,7 +273,7 @@ $page_description = "Website performance test details$testLabel";
 
                     if ($isMultistep) {
                         echo "<br><h3 name=\"request_headers_view\" class='center'>Request Headers</h3>\n";
-                        printAccordion("request_headers_view", "requestHeaders", $testRunResults, "initHeaderRequestExpander");
+                        printAccordion("request_headers", "requestHeaders", $testRunResults, "initHeaderRequestExpander");
                     } else {
                         $requestHeadersSnippet = new RequestHeadersHtmlSnippet($testRunResults->getStepResult(1), $useLinks);
                         $snippet = $requestHeadersSnippet->create();
@@ -302,7 +302,7 @@ $page_description = "Website performance test details$testLabel";
             });
         });
 
-        function toggleAccordion(targetNode, onComplete, forceOpen) {
+        function toggleAccordion(targetNode, forceOpen, onComplete) {
             targetNode = $(targetNode);
             if ((forceOpen === true && targetNode.hasClass("accordion_opened")) ||
                 (forceOpen === false && targetNode.hasClass("accordion_closed"))) {
@@ -404,7 +404,7 @@ $page_description = "Website performance test details$testLabel";
         function handleRequestHash() {
             var stepNum = -1;
             var doExpandAll = false;
-            if (window.location.hash.substring(0, 5) == "#step") {
+            if (window.location.hash.startsWith("#step")) {
                 var parts = window.location.hash.split("_");
                 stepNum = parts[0].substring("#step".length);
                 doExpandAll = parts[1] == "all";
@@ -425,15 +425,25 @@ $page_description = "Website performance test details$testLabel";
                 }
                 window.scrollTo(0, scrollToNode.offset().top); // manually as the element was probably not present before
             };
-            var slide_opener = $("#request_headers_view_opener_step" + stepNum);
+            var slide_opener = $("#request_headers_step" + stepNum);
             if (slide_opener.length) {
-                toggleAccordion(slide_opener, expand, true);
+                toggleAccordion(slide_opener, true, expand);
             } else {
                 expand();
             }
         }
 
         function handleHash() {
+            var hash = window.location.hash;
+            if (hash.startsWith("#waterfall_view_") ||
+                hash.startsWith("#connection_view") ||
+                hash.startsWith("#request_details") ||
+                hash.startsWith("#request_headers")) {
+
+                toggleAccordion($(hash), true, function() {
+                    window.scrollTo(0, $(hash).offset().top);
+                });
+            }
             handleRequestHash();
         }
 
@@ -464,7 +474,7 @@ function printAccordion($namePrefix, $snippetType, $testRunResults, $jsInitCall 
     for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
         $stepResult = $testRunResults->getStepResult($i);
         echo "<div class=\"accordion_block\">\n";
-        echo "<h2 id=\"". $namePrefix . "_opener_step" . $i . "\" class=\"accordion_opener accordion_closed\" " .
+        echo "<h2 id=\"". $namePrefix . "_step" . $i . "\" class=\"accordion_opener accordion_closed\" " .
              "data-snippettype='$snippetType' data-step='$i' data-jsinit='$jsInitCall'>";
         echo $stepResult->readableIdentifier();
         echo "</h2>\n";
