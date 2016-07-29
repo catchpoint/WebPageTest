@@ -57,8 +57,9 @@ WptTest::WptTest(void):
   ,_activity_timeout(DEFAULT_ACTIVITY_TIMEOUT)
   ,_measurement_timeout(DEFAULT_TEST_TIMEOUT)
   ,has_gpu_(false)
-  ,lock_count_(0),
-  _script_timeout_multiplier(2) {
+  ,lock_count_(0)
+  ,_script_timeout_multiplier(2)
+  ,overrode_ua_string_(false) {
   QueryPerformanceFrequency(&_perf_frequency);
 
   // figure out what our working diriectory is
@@ -73,6 +74,11 @@ WptTest::WptTest(void):
     CreateDirectory(path, NULL);
     _test_file = CString(path) + _T("\\test.dat");
   }
+  _is_chrome = false;
+  GetModuleFileName(NULL, path, _countof(path));
+  if (!lstrcmpi(PathFindFileName(path), _T("chrome.exe")))
+    _is_chrome = true;
+
   InitializeCriticalSection(&cs_);
   _tcp_port_override.InitHashTable(257);
 
@@ -160,6 +166,8 @@ void WptTest::Reset(void) {
   _has_test_timed_out = false;
   _user_agent_modifier = "PTST";
   _append_user_agent.Empty();
+  _max_test_time = 0;
+  _process_results = false;
 }
 
 /*-----------------------------------------------------------------------------
@@ -316,6 +324,12 @@ bool WptTest::Load(CString& test) {
           _viewport_width = _ttoi(value.Trim());
         } else if (!key.CompareNoCase(_T("height")) && _ttoi(value.Trim())) {
           _viewport_height = _ttoi(value.Trim());
+        } else if (!key.CompareNoCase(_T("browser_width")) && _ttoi(value.Trim())) {
+          _browser_width = _ttoi(value.Trim());
+        } else if (!key.CompareNoCase(_T("browser_height")) && _ttoi(value.Trim())) {
+          _browser_height = _ttoi(value.Trim());
+        } else if (!key.CompareNoCase(_T("processResults")) && _ttoi(value.Trim())) {
+          _process_results = true;
         }
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {
@@ -523,11 +537,20 @@ void WptTest::BuildScript() {
     _script_commands.AddHead(command);
   }
 
-  CStringA append = GetAppendUA();
-  if(!append.IsEmpty()) {
+  if (!overrode_ua_string_) {
+    CStringA append = GetAppendUA();
+    if(!append.IsEmpty()) {
+      ScriptCommand command;
+      command.command = _T("appendUserAgent");
+      command.target = append;
+      command.record = false;
+      _script_commands.AddHead(command);
+    }
+  }
+
+  if (HasCustomCommandLine()) {
     ScriptCommand command;
-    command.command = _T("appendUserAgent");
-    command.target = append;
+    command.command = _T("hasCustomCommandLine");
     command.record = false;
     _script_commands.AddHead(command);
   }
@@ -552,6 +575,13 @@ void WptTest::BuildScript() {
     _script_commands.AddHead(command);
     _viewport_width = 0;
     _viewport_height = 0;
+  }
+
+  if (!overrode_ua_string_ &&
+      !_user_agent.IsEmpty() &&
+      !_preserve_user_agent &&
+      _user_agent.Find(" " + _user_agent_modifier + "/") == -1) {
+    _user_agent += " " + GetAppendUA();
   }
 }
 
@@ -804,7 +834,6 @@ bool WptTest::PreProcessScriptCommand(ScriptCommand& command) {
         _device_scale_factor.Empty();
     } else if (cmd == _T("setuseragent")) {
       _user_agent = CT2A(command.target.Trim());
-      processed = false;
     } else {
       processed = false;
     }
@@ -904,39 +933,47 @@ CStringA WptTest::GetAppendUA() const {
   - Overriding the host header for a specific host
 -----------------------------------------------------------------------------*/
 bool WptTest::ModifyRequestHeader(CStringA& header) const {
-  bool modified = true;
+  bool modified = false;
 
   int pos = header.Find(':');
   CStringA tag = header.Left(pos);
   CStringA value = header.Mid(pos + 1).Trim();
+  ATLTRACE(_T("Checking header '%S', value '%S'"), (LPCSTR)tag, (LPCSTR)value);
   if( !tag.CompareNoCase("User-Agent") ) {
-    if (_user_agent.GetLength()) {
-      header = CStringA("User-Agent: ") + _user_agent;
-    } else if(!_preserve_user_agent && value.Find(" " + _user_agent_modifier + "/") == -1) {
-      header += " " + GetAppendUA();
+    if (!overrode_ua_string_) {
+      if (_user_agent.GetLength()) {
+        modified = true;
+        header = CStringA("User-Agent: ") + _user_agent;
+      } else if(!_preserve_user_agent && value.Find(" " + _user_agent_modifier + "/") == -1) {
+        modified = true;
+        header += " " + GetAppendUA();
+      }
     }
   } else if (!tag.CompareNoCase("Host")) {
     CStringA new_headers;
-    // Add new headers after the host header.
-    POSITION pos = _add_headers.GetHeadPosition();
-    while (pos) {
-      HttpHeaderValue new_header = _add_headers.GetNext(pos);
-      if (RegexMatch(value, new_header._filter)) {
-        new_headers += CStringA("\r\n") + new_header._tag + CStringA(": ") + 
-                        new_header._value;
+    POSITION pos;
+    if (!HasCustomCommandLine() || !_is_chrome) {
+      // Add new headers after the host header.
+      pos = _add_headers.GetHeadPosition();
+      while (pos) {
+        HttpHeaderValue new_header = _add_headers.GetNext(pos);
+        if (RegexMatch(value, new_header._filter)) {
+          new_headers += CStringA("\r\n") + new_header._tag + CStringA(": ") + 
+                          new_header._value;
+        }
       }
-    }
-    // Override existing headers (they are added here and the original
-    // version is removed below when it is processed)
-    pos = _set_headers.GetHeadPosition();
-    while (pos) {
-      HttpHeaderValue new_header = _set_headers.GetNext(pos);
-      if (RegexMatch(value, new_header._filter)) {
-        new_headers += CStringA("\r\n") + new_header._tag + CStringA(": ") + 
-                        new_header._value;
-        if (!new_header._tag.CompareNoCase("Host")) {
-          header.Empty();
-          new_headers.TrimLeft();
+      // Override existing headers (they are added here and the original
+      // version is removed below when it is processed)
+      pos = _set_headers.GetHeadPosition();
+      while (pos) {
+        HttpHeaderValue new_header = _set_headers.GetNext(pos);
+        if (RegexMatch(value, new_header._filter)) {
+          new_headers += CStringA("\r\n") + new_header._tag + CStringA(": ") + 
+                          new_header._value;
+          if (!new_header._tag.CompareNoCase("Host")) {
+            header.Empty();
+            new_headers.TrimLeft();
+          }
         }
       }
     }
@@ -953,17 +990,15 @@ bool WptTest::ModifyRequestHeader(CStringA& header) const {
       }
     }
     if (new_headers.GetLength()) {
+      modified = true;
       header += new_headers;
-    } else {
-      modified = false;
     }
   } else {
-    modified = false;
     // Delete headers that were being overriden
     POSITION pos = _set_headers.GetHeadPosition();
     while (pos && !modified) {
       HttpHeaderValue new_header = _set_headers.GetNext(pos);
-      if (!new_header._tag.CompareNoCase(tag)) {
+      if (!new_header._tag.CompareNoCase(tag) && new_header._value.CompareNoCase(value)) {
         header.Empty();
         modified = true;
       }

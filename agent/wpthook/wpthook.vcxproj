@@ -56,7 +56,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <AdditionalIncludeDirectories>..\wptdriver\zlib;..\wptdriver\zlib\contrib;..\wptdriver\zlib\contrib\minizip;nspr;png;mozjpeg;nghttp2/lib/includes</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\wptdriver\zlib;..\wptdriver\zlib\contrib;..\wptdriver\zlib\contrib\minizip;nspr;png;mozjpeg;nghttp2/lib/includes;.\winpcap\Include;</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
@@ -81,7 +81,7 @@
       <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;NO_SSL;_WINSOCK_DEPRECATED_NO_WARNINGS;NGHTTP2_STATICLIB;NDEBUG;_WINDOWS;_USRDLL;WPTHOOK_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <AdditionalIncludeDirectories>..\wptdriver\zlib;..\wptdriver\zlib\contrib;..\wptdriver\zlib\contrib\minizip;nspr;png;mozjpeg;nghttp2/lib/includes</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\wptdriver\zlib;..\wptdriver\zlib\contrib;..\wptdriver\zlib\contrib\minizip;nspr;png;mozjpeg;nghttp2/lib/includes;.\winpcap\Include;</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
@@ -141,7 +141,6 @@
     <ClInclude Include="cximage\ximawmf.h" />
     <ClInclude Include="cximage\xiofile.h" />
     <ClInclude Include="cximage\xmemfile.h" />
-    <ClInclude Include="dev_tools.h" />
     <ClInclude Include="distorm\include\distorm.h" />
     <ClInclude Include="distorm\include\mnemonics.h" />
     <ClInclude Include="distorm\src\config.h" />
@@ -238,6 +237,23 @@
     <ClInclude Include="track_dns.h" />
     <ClInclude Include="track_sockets.h" />
     <ClInclude Include="window_messages.h" />
+    <ClInclude Include="WinPCap.h" />
+    <ClInclude Include="winpcap\Include\bittypes.h" />
+    <ClInclude Include="winpcap\Include\ip6_misc.h" />
+    <ClInclude Include="winpcap\Include\Packet32.h" />
+    <ClInclude Include="winpcap\Include\pcap-bpf.h" />
+    <ClInclude Include="winpcap\Include\pcap-namedb.h" />
+    <ClInclude Include="winpcap\Include\pcap-stdinc.h" />
+    <ClInclude Include="winpcap\Include\pcap.h" />
+    <ClInclude Include="winpcap\Include\pcap\bluetooth.h" />
+    <ClInclude Include="winpcap\Include\pcap\bpf.h" />
+    <ClInclude Include="winpcap\Include\pcap\namedb.h" />
+    <ClInclude Include="winpcap\Include\pcap\pcap.h" />
+    <ClInclude Include="winpcap\Include\pcap\sll.h" />
+    <ClInclude Include="winpcap\Include\pcap\usb.h" />
+    <ClInclude Include="winpcap\Include\pcap\vlan.h" />
+    <ClInclude Include="winpcap\Include\remote-ext.h" />
+    <ClInclude Include="winpcap\Include\Win32-Extensions.h" />
     <ClInclude Include="wpthook.h" />
     <ClInclude Include="hook_winsock.h" />
     <ClInclude Include="hook_nspr.h" />
@@ -280,6 +296,22 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\wptdriver\zlib\deflate.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\gzclose.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\gzlib.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\gzread.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\gzwrite.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -621,7 +653,6 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">ximage.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)$(TargetName)_ximage.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
-    <ClCompile Include="dev_tools.cc" />
     <ClCompile Include="distorm\include\mnemonics.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -1109,6 +1140,7 @@
     <ClCompile Include="trace.cc" />
     <ClCompile Include="track_dns.cc" />
     <ClCompile Include="track_sockets.cc" />
+    <ClCompile Include="WinPCap.cpp" />
     <ClCompile Include="wpthook.cc" />
     <ClCompile Include="hook_winsock.cc" />
     <ClCompile Include="hook_nspr.cc" />

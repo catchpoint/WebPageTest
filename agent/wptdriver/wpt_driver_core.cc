@@ -191,7 +191,7 @@ void WptDriverCore::WorkThread(void) {
         if (profiles_dir.GetLength())
           DeleteDirectory(profiles_dir, false);
         WebBrowser browser(_settings, test, _status, _settings._browser, 
-                           _ipfw);
+                           _ipfw, _webpagetest.WptVersion());
         if (SetupWebPageReplay(test, browser) &&
             !TracerouteTest(test)) {
           test._index = test._specific_index ? test._specific_index : 1;
@@ -293,16 +293,11 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
     FlushDNS();
     browser.ClearUserData();
   }
-  if (test._tcpdump)
-    _winpcap.StartCapture( test._file_base + _T(".cap") );
 
   SetCursorPos(0,0);
   ShowCursor(FALSE);
   ret = browser.RunAndWait();
   ShowCursor(TRUE);
-
-  if (test._tcpdump)
-    _winpcap.StopCapture();
 
   _webpagetest.UploadIncrementalResults(test);
   KillBrowsers();
@@ -391,9 +386,25 @@ void WptDriverCore::Init(void){
 		RegCloseKey(hKey);
 	}
 
+	// Disable OS Upgrade in Windows Update
+	if (SUCCEEDED(RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+		_T("SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate"), 0, 0, 0,
+		KEY_READ | KEY_WRITE, NULL, &hKey, NULL))) {
+		DWORD val = 1;
+		RegSetValueEx(hKey, _T("DisableOSUpgrade"), 0, REG_DWORD,
+			(LPBYTE)&val, sizeof(val));
+		RegCloseKey(hKey);
+	}
 
-  // Get WinPCap ready (install it if necessary)
-  _winpcap.Initialize();
+	// Disable Windows 10 upgrade nag dialog
+	if (SUCCEEDED(RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+		_T("SOFTWARE\\Policies\\Microsoft\\Windows\\GWX"), 0, 0, 0,
+		KEY_READ | KEY_WRITE, NULL, &hKey, NULL))) {
+		DWORD val = 1;
+		RegSetValueEx(hKey, _T("DisableGWX"), 0, REG_DWORD,
+			(LPBYTE)&val, sizeof(val));
+		RegCloseKey(hKey);
+	}
 
   KillBrowsers();
 

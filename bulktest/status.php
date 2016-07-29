@@ -131,8 +131,8 @@ function UpdateResults(&$results, $testCount) {
             $count++;
             echo "\rUpdating the status of test $count of $testCount...                  ";
 
-            $url = "{$server}jsonResult.php?test={$result['id']}&medianRun=fastest";
-            //$url = "{$server}jsonResult.php?test={$result['id']}";
+            //$url = "{$server}jsonResult.php?test={$result['id']}&medianRun=fastest";
+            $url = "{$server}jsonResult.php?test={$result['id']}";
             if ($video)
               $url .= "&medianMetric=SpeedIndex";
             $response = http_fetch($url);

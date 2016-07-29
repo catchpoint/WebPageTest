@@ -17,13 +17,12 @@ if( strlen($page_description) )
     if (is_file('./settings/customhead.inc.php')) {
         include('./settings/customhead.inc.php');
     }
-    if (!isset($noanalytics) && is_file('./js/user-timing-min.js')) {
-      echo "<script type=\"text/javascript\">\n";
+    echo "<script type=\"text/javascript\">\n";
+    if (is_file('./js/user-timing-min.js'))
       include('./js/user-timing-min.js');
-      if (is_file('./js/user-timing-rum-min.js'))
-        include('./js/user-timing-rum-min.js');
-      echo "\n</script>\n";
-    }        
+    if (!isset($noanalytics) && is_file('./js/user-timing-rum-min.js'))
+      include('./js/user-timing-rum-min.js');
+    echo "\n</script>\n";
     echo "<link rel=\"stylesheet\" href=\"{$GLOBALS['cdnPath']}/pagestyle.css?v=" . VER_CSS . "\" type=\"text/css\">\n";
     echo "<style type=\"text/css\">\n";
     

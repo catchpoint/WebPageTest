@@ -27,11 +27,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 #include "StdAfx.h"
 #include "trace.h"
+#include "rapidjson/document.h"
+#include <zlib.h>
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 Trace::Trace(void) {
   InitializeCriticalSection(&cs_);
+  Reset();
 }
 
 /*-----------------------------------------------------------------------------
@@ -45,6 +48,7 @@ Trace::~Trace(void) {
 void Trace::Reset() {
   EnterCriticalSection(&cs_);
   events_.RemoveAll();
+  processed_ = false;
   LeaveCriticalSection(&cs_);
 }
 
@@ -54,30 +58,26 @@ bool Trace::Write(CString file) {
   bool ok = false;
   EnterCriticalSection(&cs_);
   if (!events_.IsEmpty()) {
-    HANDLE file_handle = CreateFile(file, GENERIC_WRITE, 0, 0,
-                                    CREATE_ALWAYS, 0, 0);
-    if (file_handle != INVALID_HANDLE_VALUE) {
-      DWORD bytes_written;
+    gzFile dst = gzopen((LPCSTR)CT2A(file + _T(".gz")), "wb9");
+    if (dst) {
       ok = true;
       bool first = true;
-      CStringA event_string = "{\"traceEvents\": [";
-      WriteFile(file_handle, (LPCSTR)event_string, event_string.GetLength(), &bytes_written, 0);
+      CStringA event_string = "{\"traceEvents\": [\n";
+      gzwrite(dst, (voidpc)(LPCSTR)event_string, (unsigned int)event_string.GetLength());
       POSITION pos = events_.GetHeadPosition();
       while (pos) {
         event_string = events_.GetNext(pos);
-        event_string.Trim("[]");
+        event_string.Trim("[],\n");
         if (event_string.GetLength()) {
-          if (first)
-            first = false;
-          else
-            event_string = CStringA(",") + event_string;
-          WriteFile(file_handle, (LPCSTR)event_string,
-                    event_string.GetLength(), &bytes_written, 0);
+          if (!first)
+            event_string = CStringA(",\n") + event_string;
+          first = false;
+          gzwrite(dst, (voidpc)(LPCSTR)event_string, (unsigned int)event_string.GetLength());
         }
       }
-      event_string = "]}";
-      WriteFile(file_handle, (LPCSTR)event_string, event_string.GetLength(), &bytes_written, 0);
-      CloseHandle(file_handle);
+      event_string = "\n]}";
+      gzwrite(dst, (voidpc)(LPCSTR)event_string, (unsigned int)event_string.GetLength());
+      gzclose(dst);
     }
   }
   LeaveCriticalSection(&cs_);

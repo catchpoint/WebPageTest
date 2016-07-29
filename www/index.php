@@ -101,6 +101,12 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="appendua" value="' . htmlspecialchars($_REQUEST['appendua']) . "\">\n";
             if (array_key_exists('keepvideo', $_REQUEST))
               echo '<input type="hidden" name="keepvideo" value="' . htmlspecialchars($_REQUEST['keepvideo']) . "\">\n";
+            if (array_key_exists('medianMetric', $_REQUEST))
+              echo '<input type="hidden" name="medianMetric" value="' . htmlspecialchars($_REQUEST['medianMetric']) . "\">\n";
+            if (array_key_exists('affinity', $_REQUEST))
+              echo '<input type="hidden" name="affinity" value="' . htmlspecialchars($_REQUEST['affinity']) . "\">\n";
+            if (array_key_exists('tester', $_REQUEST))
+              echo '<input type="hidden" name="tester" value="' . htmlspecialchars($_REQUEST['tester']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
@@ -321,7 +327,7 @@ $loc = ParseLocations($locations);
                                         <input type="checkbox" name="clearcerts" id="clearcerts" class="checkbox" style="float: left;width: auto;">
                                         <label for="clearcerts" class="auto_width">
                                             Clear SSL Certificate Caches<br>
-                                            <small>Internet Explorer</small>
+                                            <small>Internet Explorer and Chrome</small>
                                         </label>
                                     </li>
                                     <li>
@@ -497,7 +503,7 @@ $loc = ParseLocations($locations);
                                     ?>
                                     <li>
                                         <label for="hostResolverRules" style="width: auto;">
-                                        <a href="https://github.com/atom/electron/blob/master/docs/api/chrome-command-line-switches.md#--host-rulesrules">Host Rules</a><br>
+                                        <a href="https://github.com/atom/electron/blob/master/docs/api/chrome-command-line-switches.md#--host-rulesrules">Host Resolver Rules</a><br>
                                         <small>i.e. MAP * 1.2.3.4</small>
                                         </label>
                                         <input type="text" name="hostResolverRules" id="hostResolverRules" class="text" style="width: 400px;">
@@ -684,17 +690,12 @@ $loc = ParseLocations($locations);
             $sponsors = parse_ini_file('./settings/sponsors.ini', true);
             foreach( $sponsors as &$sponsor )
             {
-                if( strlen($GLOBALS['cdnPath']) )
-                {
-                    if( isset($sponsor['logo']) )
-                        $sponsor['logo'] = $GLOBALS['cdnPath'] . $sponsor['logo'];
-                    if( isset($sponsor['logo_big']) )
-                        $sponsor['logo_big'] = $GLOBALS['cdnPath'] . $sponsor['logo_big'];
-                }
-                $offset = 0;
-                if( $sponsor['index'] )
-                    $offset = -40 * $sponsor['index'];
-                $sponsor['offset'] = $offset;
+              if( strlen($GLOBALS['cdnPath']) && isset($sponsor['logo']) )
+                $sponsor['logo'] = $GLOBALS['cdnPath'] . $sponsor['logo'];
+              $offset = 0;
+              if( $sponsor['index'] )
+                $offset = -40 * $sponsor['index'];
+              $sponsor['offset'] = $offset;
             }
             echo "var sponsors = " . @json_encode($sponsors) . ";\n";
         ?>

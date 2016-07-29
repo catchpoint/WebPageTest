@@ -37,14 +37,13 @@ class ScreenCapture;
 class CxImage;
 class WptTest;
 class OptimizationChecks;
-class DevTools;
 class Trace;
 
 class Results {
 public:
   Results(TestState& test_state, WptTest& test, Requests& requests, 
           TrackSockets& sockets, TrackDns& dns, ScreenCapture& screen_capture,
-          DevTools &dev_tools, Trace &trace);
+          Trace &trace);
   ~Results(void);
 
   void Reset(void);
@@ -54,14 +53,12 @@ public:
   CString _url;
 
 private:
-  CString       _file_base;
   Requests&     _requests;
   TestState&    _test_state;
   TrackSockets& _sockets;
   TrackDns&     _dns;
   ScreenCapture& _screen_capture;
   WptTest&      _test;
-  DevTools      &_dev_tools;
   Trace         &_trace;
   bool          _saved;
   LARGE_INTEGER _visually_complete;
@@ -88,8 +85,6 @@ private:
   int count_not_found_doc_;
   int count_other_;
   int count_other_doc_;
-  int reported_step_;
-  CStringA  current_step_name_;
 
   DWORD peak_memory_;
   DWORD peak_process_count_;
@@ -104,7 +99,7 @@ private:
   void SaveStatusMessages(void);
   void SaveImage(CxImage& image, CString file, BYTE quality,
                  bool force_small = false, bool _full_size_video = false);
-  bool ImagesAreDifferent(CxImage * img1, CxImage* img2, DWORD bottom_margin);
+  bool ImagesAreDifferent(CxImage * img1, CxImage* img2, DWORD bottom_margin, DWORD margin);
   CStringA FormatTime(LARGE_INTEGER t);
   void SaveResponseBodies(void);
   void SaveConsoleLog(void);
@@ -114,4 +109,5 @@ private:
   void SaveHistogram(CStringA& histogram, CString file);
   CStringA GetHistogramJSON(CxImage& image);
   bool NativeRequestExists(Request * browser_request);
+  void SavePriorityStreams();
 };

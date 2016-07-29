@@ -35,7 +35,7 @@ bool WptInterface::GetTask(WptTask& task) {
   bool has_task = false;
   CString response;
   if (HttpGet(TASK_REQUEST, response)) {
-    AtlTrace(_T("[wptbho] Task String: %s"), response);
+    ATLTRACE(_T("[wptbho] Task String: %s"), response);
     has_task = task.ParseTask(response);
   }
 

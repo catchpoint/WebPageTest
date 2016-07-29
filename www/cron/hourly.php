@@ -1,13 +1,13 @@
 <?php
 // Jobs that need to run every hour
 chdir('..');
-include 'common.inc';
+require_once('common.inc');
 ignore_user_abort(true);
 set_time_limit(3600);
 error_reporting(E_ALL);
 
-$lock = Lock("cron-60", false, 3600);
-if (!isset($lock))
+$cron_lock = Lock("cron-60", false, 3600);
+if (!isset($cron_lock))
   exit(0);
 
 header("Content-type: text/plain");
@@ -23,8 +23,10 @@ if (GetSetting('ec2_key')) {
 
 GitUpdate();
 AgentUpdate();
+ApkUpdate();
 
-Unlock($lock);
+Unlock($cron_lock);
+
 if (GetSetting('cron_archive')) {
   chdir('./cli');
   include 'archive.php';
@@ -40,6 +42,13 @@ function GitUpdate() {
   if (GetSetting('gitUpdate')) {
     echo "Updating from GitHub...\n";
     echo shell_exec('git pull origin master');
+  }
+}
+
+function ApkUpdate() {
+  if (GetSetting('apkPackages')) {
+    echo "Updating APKs from attached device...\n";
+    include __DIR__ . '/apkUpdate.php';
   }
 }
 

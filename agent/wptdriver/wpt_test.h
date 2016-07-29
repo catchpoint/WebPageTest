@@ -140,6 +140,8 @@ public:
   void Lock();
   void Unlock();
   bool IsLocked();
+  CStringA  GetAppendUA() const;
+  bool HasCustomCommandLine() const {return _browser_command_line.GetLength() || _browser_additional_command_line.GetLength();}
 
   // overall test settings
   CString _id;
@@ -207,6 +209,7 @@ public:
   CStringA _user_agent_modifier;
   CStringA _append_user_agent;
   DWORD    _max_test_time;
+  bool     _process_results;
   
   // current state
   int     _run;
@@ -224,6 +227,8 @@ public:
   bool    _dom_element_check;
   int     _no_run;  // conditional block support - if/else/endif
   CStringA _current_event_name;
+  bool    _is_chrome;
+  bool    overrode_ua_string_;
 
   // system information
   bool      has_gpu_;
@@ -240,7 +245,6 @@ protected:
   void      ParseBlockCommand(CString block_list, bool add_head);
   int       lock_count_;
   virtual bool ProcessCommand(ScriptCommand& command, bool &consumed);
-  CStringA  GetAppendUA() const;
 
   CRITICAL_SECTION cs_;
 

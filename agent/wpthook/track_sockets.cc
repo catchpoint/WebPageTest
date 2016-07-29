@@ -30,10 +30,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "StdAfx.h"
 #include "track_sockets.h"
 #include "requests.h"
-#include "test_state.h"
 #include "ssl_stream.h"
 #include "../wptdriver/wpt_test.h"
 #include <nghttp2/nghttp2.h>
+#include "test_state.h"
 
 const DWORD LOCALHOST = 0x0100007F; // 127.0.0.1
 const DWORD LINK_LOCAL_MASK = 0x0000FFFF;
@@ -233,7 +233,7 @@ void TrackSockets::SniffProtocol(SocketInfo* info, DataChunk& chunk) {
     if (info->_protocol == PROTO_UNKNOWN &&
         len >= (DWORD)lstrlenA(HTTP2_HEADER) &&
         !memcmp(data, HTTP2_HEADER, lstrlenA(HTTP2_HEADER))) {
-      AtlTrace(_T("[%d] ********* HTTP 2 Connection detected"), socket_id);
+      ATLTRACE(_T("[%d] ********* HTTP 2 Connection detected"), socket_id);
       info->_protocol = PROTO_H2;
       info->_h2_in = NewHttp2Session(socket_id, DATA_IN);
       info->_h2_out = NewHttp2Session(socket_id, DATA_OUT);
@@ -246,7 +246,7 @@ void TrackSockets::SniffProtocol(SocketInfo* info, DataChunk& chunk) {
         const char * method = HTTP_METHODS[i];
         unsigned long method_len = strlen(method);
         if (len >= method_len && !memcmp(data, method, method_len)) {
-          AtlTrace(_T("[%d] ********* HTTP 1 Connection detected"),
+          ATLTRACE(_T("[%d] ********* HTTP 1 Connection detected"),
                     socket_id);
           info->_protocol = PROTO_HTTP;
           break;
@@ -256,12 +256,12 @@ void TrackSockets::SniffProtocol(SocketInfo* info, DataChunk& chunk) {
 
     if (info->_protocol == PROTO_UNKNOWN && len >= 8 &&
         data[0] == '\x80' && data[1] == '\x02') {
-      AtlTrace(_T("[%d] ********* SPDY Connection detected"), socket_id);
+      ATLTRACE(_T("[%d] ********* SPDY Connection detected"), socket_id);
       info->_protocol = PROTO_SPDY;
     }
 
     if (info->_protocol == PROTO_UNKNOWN) {
-      AtlTrace(_T("[%d] ********* Unknown connection protocol"), socket_id);
+      ATLTRACE(_T("[%d] ********* Unknown connection protocol"), socket_id);
     }
   }
 }
@@ -317,7 +317,7 @@ void TrackSockets::DataOut(SOCKET s, DataChunk& chunk, bool is_unencrypted) {
         if (buff && len && info->_h2_out && info->_h2_out->session) {
           int r = nghttp2_session_mem_recv(info->_h2_out->session, buff, len);
           if (r < 0) {
-            AtlTrace("nghttp2_session_mem_recv - DataOut Error %d", r);
+            ATLTRACE("nghttp2_session_mem_recv - DataOut Error %d", r);
           }
         }
       } else {
@@ -355,7 +355,7 @@ void TrackSockets::DataIn(SOCKET s, DataChunk& chunk, bool is_unencrypted) {
         if (buff && len && info->_h2_in && info->_h2_in->session) {
           int r = nghttp2_session_mem_recv(info->_h2_in->session, buff, len);
           if (r < 0) {
-            AtlTrace("nghttp2_session_mem_recv - DataIn Error %d", r);
+            ATLTRACE("nghttp2_session_mem_recv - DataIn Error %d", r);
           }
         }
       } else {
@@ -740,6 +740,14 @@ void TrackSockets::H2Bytes(DATA_DIRECTION direction, DWORD socket_id, int stream
     _requests.BytesOut(socket_id, stream_id, len);
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TrackSockets::H2Priority(DATA_DIRECTION direction, DWORD socket_id, int stream_id,
+              int depends_on, int weight, int exclusive) {
+  _requests.SetPriority(socket_id, stream_id, depends_on, weight, exclusive);
+}
+
+
 /******************************************************************************
   nghttp2 c-interface callbacks (trampoline back to TrackSockets callbacks)
 *******************************************************************************/
@@ -766,23 +774,40 @@ const char * h2_frame_type(int type) {
 
 int h2_on_begin_frame_callback(nghttp2_session *session,
                                const nghttp2_frame_hd *hd, void *user_data) {
-  AtlTrace("h2_on_begin_frame_callback [%s] - stream %d, %d bytes",
+  ATLTRACE("h2_on_begin_frame_callback [%s] - stream %d, %d bytes",
            h2_frame_type(hd->type), hd->stream_id, hd->length);
   return 0;
 }
 
 int h2_on_frame_recv_callback(nghttp2_session *session,
                               const nghttp2_frame *frame, void *user_data) {
-  AtlTrace("h2_on_frame_recv_callback [%s] - stream %d, %d bytes",
+  ATLTRACE("h2_on_frame_recv_callback [%s] - stream %d, %d bytes",
            h2_frame_type(frame->hd.type), frame->hd.stream_id,
            frame->hd.length);
   // Keep track of the bytes-in for headers by looking at the frame
-  if (user_data && frame->hd.type == NGHTTP2_HEADERS) {
-    H2_USER_DATA * u = (H2_USER_DATA *)user_data;
-    if (u->connection) {
-      TrackSockets * c = (TrackSockets *)u->connection;
-      c->H2Bytes(u->direction, u->socket_id, frame->hd.stream_id,
-                 frame->hd.length);
+  if (user_data) {
+    if (frame->hd.type == NGHTTP2_HEADERS) {
+      H2_USER_DATA * u = (H2_USER_DATA *)user_data;
+      if (u->connection) {
+        TrackSockets * c = (TrackSockets *)u->connection;
+        c->H2Bytes(u->direction, u->socket_id, frame->hd.stream_id,
+                   frame->hd.length);
+        if (frame->hd.flags & NGHTTP2_FLAG_PRIORITY) {
+          c->H2Priority(u->direction, u->socket_id, frame->hd.stream_id,
+                        frame->headers.pri_spec.stream_id,
+                        frame->headers.pri_spec.weight,
+                        frame->headers.pri_spec.exclusive);
+        }
+      }
+    } else if (frame->hd.type == NGHTTP2_PRIORITY) {
+      H2_USER_DATA * u = (H2_USER_DATA *)user_data;
+      if (u->connection) {
+        TrackSockets * c = (TrackSockets *)u->connection;
+        c->H2Priority(u->direction, u->socket_id, frame->hd.stream_id,
+                      frame->priority.pri_spec.stream_id,
+                      frame->priority.pri_spec.weight,
+                      frame->priority.pri_spec.exclusive);
+      }
     }
   }
   return 0;
@@ -791,7 +816,7 @@ int h2_on_frame_recv_callback(nghttp2_session *session,
 int h2_on_data_chunk_recv_callback(nghttp2_session *session, uint8_t flags,
                                    int32_t stream_id, const uint8_t *data,
                                    size_t len, void *user_data) {
-  AtlTrace("h2_on_data_chunk_recv_callback - stream %d, %d bytes", stream_id, len);
+  ATLTRACE("h2_on_data_chunk_recv_callback - stream %d, %d bytes", stream_id, len);
   if (user_data) {
     H2_USER_DATA * u = (H2_USER_DATA *)user_data;
     if (u->connection) {
@@ -805,7 +830,7 @@ int h2_on_data_chunk_recv_callback(nghttp2_session *session, uint8_t flags,
 
 int h2_on_stream_close_callback(nghttp2_session *session, int32_t stream_id,
                                 uint32_t error_code, void *user_data) {
-  AtlTrace("h2_on_stream_close_callback - stream %d", stream_id);
+  ATLTRACE("h2_on_stream_close_callback - stream %d", stream_id);
   if (user_data) {
     H2_USER_DATA * u = (H2_USER_DATA *)user_data;
     if (u->connection) {
@@ -818,7 +843,7 @@ int h2_on_stream_close_callback(nghttp2_session *session, int32_t stream_id,
 
 int h2_on_begin_headers_callback(nghttp2_session *session,
                                  const nghttp2_frame *frame, void *user_data) {
-  AtlTrace("h2_on_begin_headers_callback - stream %d, %d bytes", frame->hd.stream_id, frame->hd.length);
+  ATLTRACE("h2_on_begin_headers_callback - stream %d, %d bytes", frame->hd.stream_id, frame->hd.length);
   if (user_data) {
     H2_USER_DATA * u = (H2_USER_DATA *)user_data;
     if (u->connection) {
@@ -837,9 +862,9 @@ int h2_on_header_callback(nghttp2_session *session, const nghttp2_frame *frame,
   if (frame->hd.type == NGHTTP2_PUSH_PROMISE)
     stream_id = frame->push_promise.promised_stream_id;
 
-  AtlTrace("h2_on_header_callback - stream %d '%S' : '%S'",
-           stream_id, name, value);
   if (user_data && name && value) {
+    ATLTRACE("h2_on_header_callback - stream %d '%S' : '%S'",
+             stream_id, name, value);
     H2_USER_DATA * u = (H2_USER_DATA *)user_data;
     if (u->connection) {
       DATA_DIRECTION direction = u->direction;

@@ -50,4 +50,6 @@ _import void WINAPI ResetTestResult();
 _import int  WINAPI GetTestResult();
 _import void WINAPI SetBrowserExe(const WCHAR * exe);
 _import DWORD WINAPI GetBrowserProcessId();
+_import void WINAPI SetOverrodeUAString(bool overrode_ua_string);
+_import bool WINAPI GetOverrodeUAString();
 }

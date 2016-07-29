@@ -41,6 +41,34 @@ static ChromeSSLHook* g_hook = NULL;
 
 /*
 // From Chrome /src/third_party/boringssl/src/ssl/internal.h
+// July 2016
+struct ssl_protocol_method_st {
+  char is_dtls; // 0 (2 byte padded) - 0
+  uint16_t min_version; // (2 bytes) - 0
+  uint16_t max_version; // (4 bytes padded) - 1
+  uint16_t (*version_from_wire)(uint16_t wire_version); // 2
+  uint16_t (*version_to_wire)(uint16_t version); // 3
+  int (*ssl_new)(SSL *ssl); // 4
+  void (*ssl_free)(SSL *ssl); // 5
+  int (*begin_handshake)(SSL *ssl); // 6
+  void (*finish_handshake)(SSL *ssl); // 7
+  int (*ssl_get_message)(SSL *ssl, int msg_type,
+                         enum ssl_hash_message_t hash_message); // 8
+  int (*hash_current_message)(SSL *ssl); // 9
+  int (*read_app_data)(SSL *ssl, uint8_t *buf, int len, int peek); // 10
+  int (*read_change_cipher_spec)(SSL *ssl); // 11
+  void (*read_close_notify)(SSL *ssl); // 12
+  int (*write_app_data)(SSL *ssl, const void *buf_, int len); // 13
+  int (*dispatch_alert)(SSL *ssl); // 14
+  int (*supports_cipher)(const SSL_CIPHER *cipher); // 15
+  int (*init_message)(SSL *ssl, CBB *cbb, CBB *body, uint8_t type); // 16
+  int (*finish_message)(SSL *ssl, CBB *cbb); // 17
+  int (*write_message)(SSL *ssl); // 18
+  int (*send_change_cipher_spec)(SSL *ssl); // 19
+  void (*expect_flight)(SSL *ssl); // 20
+  void (*received_flight)(SSL *ssl);  // 21
+};
+
 // Nov 2015
 typedef struct ssl_protocol_method_st {
   char is_dtls;     // 0 (DWORD)
@@ -85,35 +113,32 @@ typedef struct ssl_protocol_method_st {
 
 typedef struct {
   DWORD count;
+  DWORD signature;
   DWORD hhlen;
   DWORD hhlen_index;
-  DWORD ssl_new_index;
+  DWORD addr_start_index;
   DWORD ssl_connect_index;
-  DWORD ssl_free_index;
+  DWORD ssl_begin_handshake_index;
   DWORD ssl_read_app_data_index;
   DWORD ssl_write_app_data_index;
 } SSL_METHODS_SIGNATURE;
 
 static SSL_METHODS_SIGNATURE methods_signatures[] = {
-  {15, 4, 12, 1, 4, 2, 6, 9},  // Nov 2015
-  {14, 4, 11, 1, 4, 2, 6, 8}   // May 2015
+  {20, 0x03000000, 0x00000304, 1, 2, 0, 6, 10, 13},  // July 2016 - hhlen is switched for ssl max DWORD
+  {15, 0x00000000, 4, 12, 1, 4, 0, 6, 9},  // Nov 2015
+  {14, 0x00000000, 4, 11, 1, 4, 0, 6, 8}   // May 2015
 };
 
-static const DWORD max_methods_struct_size = 60;
+static const DWORD max_methods_struct_size = 80;
 
 
 // Stub Functions
-int __cdecl New_Hook(void *ssl) {
-  return g_hook ? g_hook->New(ssl) : -1;
-}
-
-void __cdecl Free_Hook(void *ssl) {
-  if (g_hook)
-    g_hook->Free(ssl);
-}
-
 int __cdecl Connect_Hook(void *ssl) {
   return g_hook ? g_hook->Connect(ssl) : -1;
+}
+
+int __cdecl BeginHandshake_Hook(void *ssl) {
+  return g_hook ? g_hook->BeginHandshake(ssl) : 0;
 }
 
 int __cdecl ReadAppData_Hook(void *ssl, uint8_t *buf, int len, int peek) {
@@ -131,9 +156,8 @@ ChromeSSLHook::ChromeSSLHook(TrackSockets& sockets, TestState& test_state,
     test_state_(test_state),
     test_(test),
     hook_(NULL),
-    New_(NULL),
-    Free_(NULL),
     Connect_(NULL),
+    BeginHandshake_(NULL),
     ReadAppData_(NULL),
     WriteAppData_(NULL) {
   InitializeCriticalSection(&cs);
@@ -167,13 +191,14 @@ void ChromeSSLHook::Init() {
 
   // Locate the global SSL_METHODS structure from s3_meth.c in memory
   // - in the .rdata section of chrome.dll
-  // - starting with a 0 DWORD (for dtls)
+  // - starting with a 0 DWORD (for dtls) or 0x03000000 for newer packed version
   // - with a 4 DWORD for the hhlen at the appropriate offset
   // - with all other entries pointing to addresses within chrome.dll
   CStringA buff;
   HMODULE module = GetModuleHandleA("chrome.dll");
   DWORD * methods_addr = NULL;
   DWORD signature = 0;
+  DWORD match_count = 0;
   if (module) {
     DWORD base_addr = (DWORD)module;
     MODULEINFO module_info;
@@ -183,8 +208,7 @@ void ChromeSSLHook::Init() {
       PIMAGE_NT_HEADERS pNT = (PIMAGE_NT_HEADERS)(pDos->e_lfanew + base_addr);
       if (pNT->Signature == IMAGE_NT_SIGNATURE) {
         PIMAGE_SECTION_HEADER pSection = 0;
-        int i = 0;
-        for (i = 0 ;i < pNT->FileHeader.NumberOfSections; i ++) {
+        for (int i = 0 ;i < pNT->FileHeader.NumberOfSections; i ++) {
           pSection = (PIMAGE_SECTION_HEADER)((DWORD)pNT + sizeof(IMAGE_NT_HEADERS) + (sizeof(IMAGE_SECTION_HEADER)*i));
           if (!strcmp((char*)pSection->Name, ".rdata") && pSection->SizeOfRawData > max_methods_struct_size) {
             // Scan for a matching signature
@@ -196,26 +220,43 @@ void ChromeSSLHook::Init() {
               compare = (DWORD *)addr;
 
               // Starts with 0 for dtls and 2nd entry in the address range
-              if (compare[0] == 0 && compare[1] >= base_addr && compare[1] <= end_addr) {
+              if ((compare[0] == 0 || compare[0] == 0x03000000) && compare[6] >= base_addr && compare[6] <= end_addr) {
                 // go through our list of matching signatures
-                for (int i = 0; i < _countof(methods_signatures); i++) {
-                  SSL_METHODS_SIGNATURE * sig = &methods_signatures[i];
-                  // see if hhlen matches
-                  if (compare[sig->hhlen_index] == sig->hhlen) {
-                    // see if all other entries are addresses in the chrome.dll address range
-                    bool ok = true;
-                    for (DWORD entry = 1; entry < sig->count; entry++) {
-                      if (entry != sig->hhlen_index) {
-                        if (compare[entry] < base_addr || compare[entry] > end_addr) {
-                          ok = false;
-                          break;
+                for (int signum = 0; signum < _countof(methods_signatures); signum++) {
+                  SSL_METHODS_SIGNATURE * sig = &methods_signatures[signum];
+                  // see if the first dword matches
+                  if (compare[0] == sig->signature) {
+                    // see if hhlen matches
+                    if (compare[sig->hhlen_index] == sig->hhlen) {
+                      // see if all other entries are addresses in the chrome.dll address range
+                      bool ok = true;
+                      for (DWORD entry = sig->addr_start_index; entry < sig->count; entry++) {
+                        if (entry != sig->hhlen_index) {
+                          if (compare[entry] < base_addr || compare[entry] > end_addr) {
+                            ok = false;
+                            break;
+                          }
                         }
                       }
-                    }
-                    if (ok) {
-                      methods_addr = compare;
-                      signature = i;
-                      break;
+                      if (ok) {
+                        // Scan the next 1KB to see if the reference to boringssl is present (possibly flaky, verify with several builds)
+                        char * mem = (char *)compare;
+                        bool found = false;
+                        for (int str_offset = 0; str_offset < 1024 && !found && (DWORD)mem < end_addr; str_offset++) {
+                          if (!memcmp(&mem[str_offset], "boringssl", 9))
+                            found = true;
+                        }
+                        if (found) {
+                          match_count++;
+                          ATLTRACE("Chrome ssl methods structure found (signature %d) at 0x%08X\n", signum, (DWORD)compare);
+                          if (!methods_addr) {
+                            methods_addr = compare;
+                            signature = signum;
+                          }
+                        } else {
+                          ATLTRACE("Signature match but ssl_lib.c string not found (signature %d) at 0x%08X\n", signum, (DWORD)compare);
+                        }
+                      }
                     }
                   }
                 }
@@ -231,50 +272,39 @@ void ChromeSSLHook::Init() {
     }
   }
 
-  if (methods_addr) {
+  // To be safe, only hook if we find EXACTLY one match
+  if (match_count == 1 && methods_addr) {
     hook_ = new NCodeHookIA32();
     g_hook = this; 
 
-    AtlTrace("Chrome ssl methods structure found (signature %d) at 0x%08X", signature, (DWORD)methods_addr);
+    ATLTRACE("Overwriting Chrome ssl methods structure (signature %d) at 0x%08X", signature, (DWORD)methods_addr);
 
     // Hook the functions now that we have in-memory addresses for them
-    New_ = (PFN_SSL3_NEW)hook_->createHook(
-        (PFN_SSL3_NEW)methods_addr[methods_signatures[signature].ssl_new_index],
-        New_Hook);
-    Free_ = (PFN_SSL3_FREE)hook_->createHook(
-        (PFN_SSL3_FREE)methods_addr[methods_signatures[signature].ssl_free_index],
-        Free_Hook);
-    Connect_ = (PFN_SSL3_CONNECT)hook_->createHook(
-        (PFN_SSL3_CONNECT)methods_addr[methods_signatures[signature].ssl_connect_index],
-        Connect_Hook);
+    if (methods_signatures[signature].ssl_connect_index) {
+      ATLTRACE("Hooking Connect");
+      Connect_ = (PFN_SSL3_CONNECT)hook_->createHook(
+          (PFN_SSL3_CONNECT)methods_addr[methods_signatures[signature].ssl_connect_index],
+          Connect_Hook);
+    }
+    if (methods_signatures[signature].ssl_begin_handshake_index) {
+      ATLTRACE("Hooking BeginHandshake");
+      BeginHandshake_ = (PFN_SSL3_BEGIN_HANDSHAKE)hook_->createHook(
+          (PFN_SSL3_BEGIN_HANDSHAKE)methods_addr[methods_signatures[signature].ssl_begin_handshake_index],
+          BeginHandshake_Hook);
+    }
     ReadAppData_ = (PFN_SSL3_READ_APP_DATA)hook_->createHook(
         (PFN_SSL3_READ_APP_DATA)methods_addr[methods_signatures[signature].ssl_read_app_data_index],
         ReadAppData_Hook);
     WriteAppData_ = (PFN_SSL3_WRITE_APP_DATA)hook_->createHook(
         (PFN_SSL3_WRITE_APP_DATA)methods_addr[methods_signatures[signature].ssl_write_app_data_index],
         WriteAppData_Hook);
+  } else if (match_count > 1) {
+    g_hook = this; 
+    ATLTRACE("Too many Chrome ssl methods structures found (%d matches)", match_count);
   } else {
-    AtlTrace("Chrome ssl methods structure NOT found");
+    ATLTRACE("Chrome ssl methods structure NOT found");
   }
   LeaveCriticalSection(&cs);
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-int ChromeSSLHook::New(void *ssl) {
-  int ret = -1;
-  sockets_.SetSslFd(ssl);
-  if (New_)
-    ret = New_(ssl);
-  return ret;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void ChromeSSLHook::Free(void *ssl) {
-  if (Free_)
-    Free_(ssl);
-  sockets_.ClearSslFd(ssl);
 }
 
 /*-----------------------------------------------------------------------------
@@ -286,6 +316,18 @@ int ChromeSSLHook::Connect(void *ssl) {
     sockets_.SetSslFd(ssl);
   if (Connect_)
     ret = Connect_(ssl);
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int ChromeSSLHook::BeginHandshake(void *ssl) {
+  int ret = 0;
+  SOCKET s;
+  if (!sockets_.SslSocketLookup(ssl, s))
+    sockets_.SetSslFd(ssl);
+  if (BeginHandshake_)
+    ret = BeginHandshake_(ssl);
   return ret;
 }
 
@@ -303,7 +345,7 @@ int ChromeSSLHook::ReadAppData(void *ssl, uint8_t *buf, int len, int peek) {
         sockets_.DataIn(s, chunk, true);
       }
     } else {
-      AtlTrace("0x%08X - ChromeSSLHook::ReadAppData - Unmapped socket", ssl);
+      ATLTRACE("0x%08X - ChromeSSLHook::ReadAppData - Unmapped socket", ssl);
     }
   }
   return ret;
@@ -321,7 +363,7 @@ int ChromeSSLHook::WriteAppData(void *ssl, const void *buf, int len) {
         sockets_.DataOut(s, chunk, true);
       }
     } else {
-      AtlTrace("0x%08X - ChromeSSLHook::WriteAppData - Unmapped socket", ssl);
+      ATLTRACE("0x%08X - ChromeSSLHook::WriteAppData - Unmapped socket", ssl);
       sockets_.SetSslFd(ssl);
     }
     ret = WriteAppData_(ssl, buf, len);

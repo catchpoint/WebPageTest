@@ -1,22 +1,35 @@
 <?php
 
-require_once('./object_detail.inc');
+require_once __DIR__ . '/../object_detail.inc';
+
+define("CSI_CACHE_VERSION", 2);
 
 /**
  * Function for parsing the CSI data for a given run
  */
 function ParseCsiInfo($id, $testPath, $run, $cached, $getAll, $generate = true) {
+  if (!isset($testPath) || !strlen($testPath))
+    $testPath = './' . GetTestPath($id);
+  $localPaths = new TestPaths($testPath, $run, $cached);
+  return ParseCsiInfoForStep($localPaths, $getAll);
+}
+
+/**
+ * @param TestPaths $localPaths Paths of run or step to get the CSI Info for
+ * @param $getAll
+ * @return array|null
+ */
+function ParseCsiInfoForStep($localPaths, $getAll) {
   $params = null;
-  $cacheFile = "$testPath/csi.json";
+  $cacheFile = $localPaths->csiCacheFile(CSI_CACHE_VERSION);
+  $cacheKey = $localPaths->cacheKey();
   if (gz_is_file($cacheFile)) {
     $cache = json_decode(gz_file_get_contents($cacheFile), true);
-    if (isset($cache) &&
-        is_array($cache) &&
-        array_key_exists($run, $cache) &&
-        array_key_exists($cached, $cache[$run]))
-      $params = $cache[$run][$cached];
+    if (!empty($cache[$cacheKey])) {
+      $params = $cache[$cacheKey];
+    }
   }
-  if (!isset($params) && $generate) {
+  if (!isset($params)) {
     $lock = Lock("CSI $cacheFile");
     if (isset($lock)) {
       if (gz_is_file($cacheFile))
@@ -25,9 +38,9 @@ function ParseCsiInfo($id, $testPath, $run, $cached, $getAll, $generate = true) 
         $cache = array();
         
 	    // Secure and haveLocations are not used but required by getRequests function.
-	    $secure;
-	    $haveLocations;
-	    $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
+	    $secure = null;
+	    $haveLocations = null;
+	    $requests = getRequestsForStep($localPaths, null, $secure, $haveLocations, false);
       $params = array();
 	    foreach ( $requests as &$request ) {
 		    // Parse the individual url parts.
@@ -50,9 +63,7 @@ function ParseCsiInfo($id, $testPath, $run, $cached, $getAll, $generate = true) 
 			    }
 		    }
 	    }
-      if (!array_key_exists($run, $cache))
-        $cache[$run] = array();
-      $cache[$run][$cached] = $params;
+      $cache[$cacheKey] = $params;
       gz_file_put_contents($cacheFile, json_encode($cache));
       Unlock($lock);
     }

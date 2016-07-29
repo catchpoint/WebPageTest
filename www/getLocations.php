@@ -195,6 +195,9 @@ function LoadLocations()
 
                         if( $default == $loc['locations'][$i] && $def == $group[$j] )
                             $locations[$group[$j]]['default'] = true;
+
+                        if( isset($group['group']) )
+                            $locations[$group[$j]]['group'] = $group['group'];
                     }
                 }
                 $j++;

@@ -211,6 +211,20 @@ echo '<div id="headers">';
                 echo "<b>Error/Status Code:</b> " . htmlspecialchars($request['responseCode']) . "<br>\n";
                 if (isset($request['priority']) && strlen($request['priority']))
                     echo "<b>Priority:</b> " . htmlspecialchars($request['priority']) . "<br>\n";
+                if (isset($request['protocol']) && strlen($request['protocol']))
+                    echo '<b>Protocol: </b>' . htmlspecialchars($request['protocol']) . "<br>\n";
+                if (isset($request['http2_stream_id']) && $request['http2_stream_id'] > 0) {
+                  echo "<b>HTTP/2 Stream: </b>" . htmlspecialchars($request['http2_stream_id']);
+                  if (isset($request['http2_stream_weight']))
+                    echo ", weight " . htmlspecialchars($request['http2_stream_weight']);
+                  if (isset($request['http2_stream_dependency']))
+                    echo ", depends on " . htmlspecialchars($request['http2_stream_dependency']);
+                  if (isset($request['http2_stream_exclusive']) && $request['http2_stream_exclusive'] > 0)
+                    echo ", EXCLUSIVE";
+                  echo '<br>';
+                }
+                if (isset($request['was_pushed']) && $request['was_pushed'] > 0)
+                    echo '<b>SERVER PUSHED</b>';
                 if (array_key_exists('initiator', $request) && strlen($request['initiator'])) {
                     echo "<b>Initiated By:</b> " . htmlspecialchars($request['initiator']);
                     if (array_key_exists('initiator_line', $request) && strlen($request['initiator_line']))

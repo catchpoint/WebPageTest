@@ -41,7 +41,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "screen_capture.h"
 #include "test_server.h"
 #include "wpt_test_hook.h"
-#include "dev_tools.h"
 #include "trace.h"
 
 extern HINSTANCE global_dll_handle; // DLL handle
@@ -59,6 +58,7 @@ public:
   // extension actions
   void Start();
   void OnAllDOMElementsLoaded(DWORD load_time);
+  void SetDomInteractiveEvent(DWORD domInteractive);
   void SetDomContentLoadedEvent(DWORD start, DWORD end);
   void SetLoadEvent(DWORD start, DWORD end);
   void SetFirstPaint(DWORD first_paint);
@@ -94,6 +94,5 @@ private:
   ScreenCapture screen_capture_;
   TestServer    test_server_;
   WptTestHook   test_;
-  DevTools      dev_tools_;
   Trace         trace_;
 };

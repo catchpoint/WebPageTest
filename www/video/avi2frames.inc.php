@@ -61,7 +61,7 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
   if (!is_file($videoFile))
     $videoFile = "$testPath/$run{$cachedText}_video.avi";
     
-  if (is_file($videoFile)) {
+  if (!GetSetting('disable_video_processing') && is_file($videoFile)) {
     $videoDir = "$testPath/video_$run" . strtolower($cachedText);
     if (!is_file("$videoDir/video.json")) {
       if (isset($max_load) && $max_load > 0)

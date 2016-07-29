@@ -54,6 +54,8 @@ static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--no-first-run"),
     _T("--process-per-tab"),
     _T("--new-window"),
+    _T("--silent-debugger-extension-api"),
+    _T("--disable-infobars"),
     _T("--disable-translate"),
     _T("--disable-notifications"),
     _T("--disable-desktop-notifications"),
@@ -79,13 +81,14 @@ static const TCHAR * FIREFOX_REQUIRED_OPTIONS[] = {
 -----------------------------------------------------------------------------*/
 WebBrowser::WebBrowser(WptSettings& settings, WptTestDriver& test, 
                        WptStatus &status, BrowserSettings& browser,
-                       CIpfw &ipfw):
+                       CIpfw &ipfw, DWORD wpt_ver):
   _settings(settings)
   ,_test(test)
   ,_status(status)
   ,_browser_process(NULL)
   ,_browser(browser)
-  ,_ipfw(ipfw) {
+  ,_ipfw(ipfw)
+  ,_wpt_ver(wpt_ver) {
 
   InitializeCriticalSection(&cs);
 
@@ -115,9 +118,14 @@ bool WebBrowser::RunAndWait() {
 
   // signal to the IE BHO that it needs to inject the code
   HANDLE active_event = CreateMutex(&null_dacl, TRUE, GLOBAL_TESTING_MUTEX);
+  SetOverrodeUAString(false);
 
   if (_test.Start() && ConfigureIpfw(_test)) {
     if (_browser._exe.GetLength()) {
+      CString exe(_browser._exe);
+      exe.MakeLower();
+      if (exe.Find(_T("chrome.exe")) >= 0)
+        CreateChromeSymlink();
       bool hook = true;
       bool hook_child = false;
       TCHAR cmdLine[32768];
@@ -126,7 +134,7 @@ bool WebBrowser::RunAndWait() {
         lstrcat( cmdLine, CString(_T(" ")) + _browser._options );
       // if we are running chrome, make sure the command line options that our 
       // extension NEEDS are present
-      CString exe(_browser._exe);
+      exe = _browser._exe;
       exe.MakeLower();
       if (exe.Find(_T("chrome.exe")) >= 0) {
         ConfigureChromePreferences();
@@ -153,12 +161,39 @@ bool WebBrowser::RunAndWait() {
             lstrcat(cmdLine, CHROME_SOFTWARE_RENDER);
           if (_test._emulate_mobile)
             lstrcat(cmdLine, CHROME_DISABLE_PLUGINS);
+
+          CString user_agent;
           if (_test._user_agent.GetLength() &&
               _test._user_agent.Find(_T('"')) == -1) {
+            user_agent = CA2T(_test._user_agent, CP_UTF8);
+          } else if (!_test._preserve_user_agent) {
+            // See if we have a stored version of what the UA string should be
+            HKEY ua_key;
+            if (RegCreateKeyEx(HKEY_CURRENT_USER,
+                _T("Software\\WebPagetest\\wptdriver\\BrowserUAStrings"), 0, 0, 0, 
+                KEY_READ, 0, &ua_key, 0) == ERROR_SUCCESS) {
+                TCHAR buff[10000];
+                DWORD len = sizeof(buff);
+                if (RegQueryValueEx(ua_key, _test._browser, 0, 0, (LPBYTE)buff, &len) 
+                    == ERROR_SUCCESS) {
+                  user_agent = buff;
+                }
+              RegCloseKey(ua_key);
+            }
+          }
+          if (user_agent.GetLength()) {
+            if (!_test._preserve_user_agent) {
+              CString append;
+              CString product = _test._append_user_agent.GetLength() ? 
+                  CA2T(_test._append_user_agent, CP_UTF8) : _T("PTST");
+              append.Format(_T(" %s/%d"), (LPCTSTR)product, _wpt_ver);
+              user_agent += append;
+            }
             lstrcat(cmdLine, CHROME_USER_AGENT);
             lstrcat(cmdLine, _T("\""));
-            lstrcat(cmdLine, CA2T(_test._user_agent, CP_UTF8));
+            lstrcat(cmdLine, user_agent);
             lstrcat(cmdLine, _T("\""));
+            SetOverrodeUAString(true);
           }
         }
         if (_test._browser_additional_command_line.GetLength()) {
@@ -226,7 +261,11 @@ bool WebBrowser::RunAndWait() {
                           0, NULL, NULL, &si, &pi)) {
           CloseHandle(pi.hThread);
           CloseHandle(pi.hProcess);
-          if (WaitForSingleObject(_browser_started_event, 60000) ==
+          DWORD wait_time = 60000;
+          #ifdef DEBUG
+          wait_time = INFINITE;
+          #endif
+          if (WaitForSingleObject(_browser_started_event, wait_time) ==
               WAIT_OBJECT_0) {
             DWORD pid = GetBrowserProcessId();
             if (pid) {
@@ -359,24 +398,24 @@ bool WebBrowser::ConfigureIpfw(WptTestDriver& test) {
     buff.Format(_T("[wptdriver] - Throttling: %d Kbps in, %d Kbps out, ")
                 _T("%d ms latency, %0.2f plr"), test._bwIn, test._bwOut, 
                 test._latency, test._plr );
-    AtlTrace(buff);
+    ATLTRACE(buff);
 
-    if (_ipfw.SetPipe(PIPE_IN, test._bwIn, latency,test._plr/100.0)) {
+    if (_ipfw.SetPipe(PIPE_IN, test._bwIn, latency, test._plr/100.0, true)) {
       // make up for odd values
       if( test._latency % 2 )
         latency++;
 
-      if (_ipfw.SetPipe(PIPE_OUT, test._bwOut,latency,test._plr/100.0))
+      if (_ipfw.SetPipe(PIPE_OUT, test._bwOut,latency,test._plr/100.0, false))
         ret = true;
       else
-        _ipfw.SetPipe(PIPE_IN, 0, 0, 0);
+        _ipfw.SetPipe(PIPE_IN, 0, 0, 0, true);
     }
   }
   else
     ret = true;
 
   if (!ret) {
-    AtlTrace(_T("[wptdriver] - Error Configuring dummynet"));
+    ATLTRACE(_T("[wptdriver] - Error Configuring dummynet"));
   }
 
   return ret;
@@ -386,8 +425,8 @@ bool WebBrowser::ConfigureIpfw(WptTestDriver& test) {
   Remove the bandwidth throttling
 -----------------------------------------------------------------------------*/
 void WebBrowser::ResetIpfw(void) {
-  _ipfw.SetPipe(PIPE_IN, 0, 0, 0);
-  _ipfw.SetPipe(PIPE_OUT, 0, 0, 0);
+  _ipfw.SetPipe(PIPE_IN, 0, 0, 0, true);
+  _ipfw.SetPipe(PIPE_OUT, 0, 0, 0, false);
 }
 
 /*-----------------------------------------------------------------------------
@@ -738,5 +777,22 @@ void WebBrowser::ConfigureChromePreferences() {
     DWORD written = 0;
     WriteFile(file, prefs, strlen(prefs), &written, 0);
     CloseHandle(file);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Run Chrome from inside of a "Chrome SxS\\Application
+-----------------------------------------------------------------------------*/
+void WebBrowser::CreateChromeSymlink() {
+  CString lower(_browser._exe);
+  lower.MakeLower();
+  int pos = lower.Find(_T("chrome\\application\\chrome.exe"));
+  if (pos > 0 && lower.Find(_T("chrome sxs\\application")) == -1) {
+    CString dir = _browser._exe.Left(pos) + _T("Chrome");
+    CString newDir = dir + _T(" SxS");
+
+    RemoveDirectory(newDir);
+    if (CreateSymbolicLink(newDir, dir, SYMBOLIC_LINK_FLAG_DIRECTORY))
+      _browser._exe = newDir + "\\Application\\chrome.exe";
   }
 }

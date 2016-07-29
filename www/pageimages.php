@@ -61,7 +61,10 @@ $userImages = true;
                           $analyze_url = 'jpeginfo/jpeginfo.php?url=' . urlencode($reqUrl);
                           echo " - <a href=\"$analyze_url\">Analyze JPEG</a><br>";
                         }
-                        echo "<img src=\"$reqUrl\">";
+                        if (stristr($request['contentType'], 'svg') !== false)
+                          echo "<img width=100 height=100 src=\"$reqUrl\">";
+                        else
+                          echo "<img src=\"$reqUrl\">";
                         echo "</td></tr>\n";
                     }
                 }

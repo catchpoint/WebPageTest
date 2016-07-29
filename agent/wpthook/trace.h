@@ -34,8 +34,10 @@ public:
   void Reset();
   bool Write(CString file);
   void AddEvents(CStringA data);
+  void Process();
 
 private:
   CRITICAL_SECTION cs_;
   CAtlList<CStringA> events_;
+  bool processed_;
 };

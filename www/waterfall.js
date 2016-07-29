@@ -57,7 +57,7 @@ function NumBytesAsDisplayString(numBytes) {
 }
 
 function htmlEncode(value){
-    if (value) {
+    if (value !== undefined) {
         return jQuery('<div />').text(value).html();
     } else {
         return '';
@@ -101,6 +101,20 @@ function SelectRequest(request) {
             details += '<b>Error/Status Code: </b>' + htmlEncode(r['responseCode']) + '<br>';
         if (r['priority'] !== undefined && r['priority'].length > 0)
             details += '<b>Priority: </b>' + htmlEncode(r['priority']) + '<br>';
+        if (r['protocol'] !== undefined)
+            details += '<b>Protocol: </b>' + htmlEncode(r['protocol']) + '<br>';
+        if (r['http2_stream_id'] !== undefined && r['http2_stream_id'] > 0) {
+          details += "<b>HTTP/2 Stream: </b>" + htmlEncode(r['http2_stream_id']);
+          if (r['http2_stream_weight'] !== undefined)
+            details += ", weight " + htmlEncode(parseInt(r['http2_stream_weight']));
+          if (r['http2_stream_dependency'] !== undefined)
+            details += ", depends on " + htmlEncode(r['http2_stream_dependency']);
+          if (r['http2_stream_exclusive'] !== undefined && r['http2_stream_exclusive'] > 0)
+            details += ", EXCLUSIVE";
+          details += '<br>';
+        }
+        if (r['was_pushed'] !== undefined && r['was_pushed'] > 0)
+            details += '<b>SERVER PUSHED</b>';
         if (r['client_port'] !== undefined && r['client_port'] !== null && r['client_port'])
             details += '<b>Client Port: </b>' + htmlEncode(r['client_port']) + '<br>';
         if (r['load_start'] !== undefined)
@@ -139,6 +153,24 @@ function SelectRequest(request) {
                 details += htmlEncode(r['custom_rules'][rule]['count']) + ' matches) - ';
                 details += htmlEncode(r['custom_rules'][rule]['value']) + '<br>';
             }
+        }
+        if (wptPageData['priorityStreams'] !== undefined &&
+            wptPageData['priorityStreams']['connections'] !== undefined &&
+            r['socket'] !== undefined &&
+            wptPageData['priorityStreams']['connections'][r['socket']] !== undefined &&
+            wptPageData['priorityStreams']['connections'][r['socket']]['streams'] !== undefined) {
+          var priority_streams = wptPageData['priorityStreams']['connections'][r['socket']]['streams'];
+          details += '<b>HTTP/2 Priority-Only Streams: </b><br>';
+          for (stream in priority_streams) {
+            details += '&nbsp;&nbsp;&nbsp;&nbsp;' + htmlEncode(stream) + ':';
+            if (priority_streams[stream]['weight'] !== undefined)
+              details += " weight = " + htmlEncode(priority_streams[stream]['weight']);
+            if (priority_streams[stream]['depends_on'] !== undefined)
+              details += " depends on " + htmlEncode(priority_streams[stream]['depends_on']);
+            if (priority_streams[stream]['exclusive'] !== undefined && priority_streams[stream]['exclusive'] > 0)
+              details += " EXCLUSIVE";
+            details += '<br>';
+          }
         }
         if (r['headers'] !== undefined){
             if (r.headers['request'] !== undefined){

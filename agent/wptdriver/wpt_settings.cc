@@ -364,7 +364,7 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
   _exe_directory.Empty();
   _options.Empty();
 
-  AtlTrace(_T("Loading settings for %s"), (LPCTSTR)browser);
+  ATLTRACE(_T("Loading settings for %s"), (LPCTSTR)browser);
 
   GetModuleFileName(NULL, buff, _countof(buff));
   *PathFindFileName(buff) = NULL;
@@ -446,7 +446,7 @@ bool BrowserSettings::Install(CString browser, CString url, CString md5) {
   _exe_directory.Empty();
   _options.Empty();
 
-  AtlTrace(_T("Checking custom browser: %s"), (LPCTSTR)browser);
+  ATLTRACE(_T("Checking custom browser: %s"), (LPCTSTR)browser);
 
   GetModuleFileName(NULL, buff, _countof(buff));
   *PathFindFileName(buff) = NULL;

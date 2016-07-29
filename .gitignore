@@ -51,3 +51,6 @@ agent/js/5c2.sh
 /www/dat
 /www/settings/uniqueId.dat
 /www/ec2/log
+
+# specific wptdriver settings
+agent/wptdriver/*.ini

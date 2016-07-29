@@ -598,6 +598,7 @@ wpt.moz.main.collectStats = function(customMetrics, callback) {
 							win.performance.timing['navigationStart']));
 				}
 			};
+			addTime('domInteractive');
 			addTime('domContentLoadedEventStart');
 			addTime('domContentLoadedEventEnd');
 			addTime('loadEventStart');

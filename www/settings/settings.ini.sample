@@ -57,6 +57,13 @@ allowPrivate=1
 ;Software identification string to include in the user agent string of tests
 ;UAModifier=PTST
 
+; Default browser dimensions if not specified as part of a test.
+; Defaults to the agent default if not specified (1024x768 usually).
+;default_browser_size=1024x768
+
+; Enables trace and pcap processing directly on the test agents.
+enable_agent_processing=1
+
 ; *************
 ; Server Config
 ; *************
@@ -90,6 +97,12 @@ allowPrivate=1
 
 ; Automatically update test agents hourly (pulls the latest test agents from the provided server)
 ;agentUpdate=http://cdn.webpagetest.org/
+
+; If an android device is connected to the server, scrape updated APK's off of the
+; device to be installed on the test agents automatically (for cases where
+; play auto-updating doesn't work - i.e. reverse-tethered devices)
+;apkPackages=com.android.chrome,com.chrome.dev,com.chrome.beta
+
 
 ; For multi-server installs, an ID that gets added to the test ID for server affinity.
 ; Must be alpha-numeric and will end up as part of the hash string in the test ID:

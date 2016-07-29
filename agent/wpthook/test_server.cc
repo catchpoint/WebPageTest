@@ -33,7 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "shared_mem.h"
 #include "mongoose/mongoose.h"
 #include "test_state.h"
-#include "dev_tools.h"
 #include "trace.h"
 #include "requests.h"
 #include <atlutil.h>
@@ -52,33 +51,47 @@ static const char * RESPONSE_ERROR_NOtest__STR = "ERROR: No Test";
 static const DWORD RESPONSE_ERROR_NOT_IMPLEMENTED = 403;
 static const char * RESPONSE_ERROR_NOT_IMPLEMENTED_STR = 
                                                       "ERROR: Not Implemented";
+static const char * BLANK_RESPONSE = "HTTP/1.1 200 OK\r\n"
+    "Cache: no-cache\r\n"
+    "\r\n";
+
 static const char * BLANK_HTML = "HTTP/1.1 200 OK\r\n"
     "Cache: no-cache\r\n"
     "Content-Type:text/html\r\n"
     "\r\n"
-    "<html><head><title>Blank</title>\r\n"
+    "<html><head><title>Blank</title>\n"
     "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, "
-    "maximum-scale=1.0, user-scalable=0;\">\r\n"
-    "<style type=\"text/css\">\r\n"
-    "body {background-color: #FFF;}\r\n"
-    "</style>\r\n"
-    "<script type=\"text/javascript\">\r\n"
-    "var dummy=1;\r\n"
-    "</script>\r\n"
-    "</head><body></body></html>";
+    "maximum-scale=1.0, user-scalable=0;\">\n"
+    "<style type=\"text/css\">\n"
+    "body {background-color: #FFF;}\n"
+    "</style>\n"
+    "</head><body>\n"
+    "<div id=\"viewport\" "
+    "style=\"position: fixed;top: 0;left: 0;bottom: 0;right: 0;\"></div>\n"
+    "<script>"
+    "var v = document.getElementById(\"viewport\");\n"
+    "var s = document.createElement('script');\n"
+    "s.src = 'viewport.js?w=' + v.offsetWidth + "
+    "'&h=' + v.offsetHeight + "
+    "'&rnd=' + (Date.now() + Math.random());\n"
+    "v.appendChild(s);\n"
+    "</script>\n"
+    "<img style=\"position: fixed; left: -2px; width: 1px; height: 1px\" "
+    "src=\"https://www.google.com/favicon.ico\">\n"
+    "</body></html>";
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 TestServer::TestServer(WptHook& hook, WptTestHook &test, TestState& test_state,
-                        Requests& requests, DevTools &dev_tools, Trace &trace)
+                        Requests& requests, Trace &trace)
   :mongoose_context_(NULL)
   ,hook_(hook)
   ,test_(test)
   ,test_state_(test_state)
   ,requests_(requests)
-  ,dev_tools_(dev_tools)
   ,trace_(trace)
-  ,started_(false) {
+  ,started_(false)
+  ,stored_ua_string_(false) {
   InitializeCriticalSection(&cs);
   last_cpu_idle_.QuadPart = 0;
   last_cpu_kernel_.QuadPart = 0;
@@ -161,6 +174,27 @@ void TestServer::MongooseCallback(enum mg_event event,
     WptTrace(loglevel::kFrequentEvent, _T("[wpthook] HTTP Query String: %s\n"), 
                     (LPCTSTR)CA2T(request_info->query_string, CP_UTF8));
     if (strcmp(request_info->uri, "/task") == 0) {
+      if (!stored_ua_string_) {
+        if (!shared_overrode_ua_string) {
+          for (int i = 0; i < request_info->num_headers; i++) {
+            if (request_info->http_headers[i].name && request_info->http_headers[i].value) {
+              if (!lstrcmpiA(request_info->http_headers[i].name, "User-Agent")) {
+                CString user_agent = CA2T(request_info->http_headers[i].value, CP_UTF8);
+                HKEY ua_key;
+                if (RegCreateKeyEx(HKEY_CURRENT_USER,
+                    _T("Software\\WebPagetest\\wptdriver\\BrowserUAStrings"), 0, 0, 0, 
+                    KEY_READ | KEY_WRITE, 0, &ua_key, 0) == ERROR_SUCCESS) {
+                  RegSetValueEx(ua_key, test_._browser, 0, REG_SZ,
+                                (const LPBYTE)(LPCTSTR)user_agent, 
+                                (user_agent.GetLength() + 1) * sizeof(TCHAR));
+                  RegCloseKey(ua_key);
+                }
+              }
+            }
+          }
+        }
+        stored_ua_string_ = true;
+      }
       CStringA task;
       if (OkToStart()) {
         bool record = false;
@@ -210,6 +244,11 @@ void TestServer::MongooseCallback(enum mg_event event,
       if (first_paint < 0 || first_paint > 3600000)
         first_paint = 0;
       hook_.SetFirstPaint(first_paint);
+      DWORD dom_interactive = 0;
+      GetDwordParam(request_info->query_string, "domInteractive", dom_interactive);
+      if (dom_interactive < 0 || dom_interactive > 3600000)
+        dom_interactive = 0;
+      hook_.SetDomInteractiveEvent(dom_interactive);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/navigate") == 0) {
       hook_.OnNavigate();
@@ -252,6 +291,10 @@ void TestServer::MongooseCallback(enum mg_event event,
       //OutputDebugString(body);
       requests_.ProcessBrowserRequest(body);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
+    } else if (strcmp(request_info->uri, "/event/initiator") == 0) {
+      CStringA body = GetPostBodyA(conn, request_info);
+      requests_.ProcessInitiatorData(body);
+      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/user_timing") == 0) {
       CString body = GetPostBody(conn, request_info);
       test_state_.SetUserTiming(body);
@@ -279,11 +322,6 @@ void TestServer::MongooseCallback(enum mg_event event,
           dom_count)
         test_state_._dom_element_count = dom_count;
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
-    } else if (strcmp(request_info->uri, "/event/devTools") == 0) {
-      CStringA body = CT2A(GetPostBody(conn, request_info));
-      if (body.GetLength())
-        dev_tools_.AddRawEvents(body);
-      SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/trace") == 0) {
       CStringA body = CT2A(GetPostBody(conn, request_info));
       if (body.GetLength())
@@ -294,9 +332,16 @@ void TestServer::MongooseCallback(enum mg_event event,
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/received_data") == 0) {
       test_state_.received_data_ = true;
-    } else if (strncmp(request_info->uri, "/blank", 6) == 0) {
+	  } else if (strncmp(request_info->uri, "/blank", 6) == 0) {
       test_state_.UpdateBrowserWindow();
-      mg_printf(conn, BLANK_HTML);
+	    mg_write(conn, BLANK_HTML, lstrlenA(BLANK_HTML));
+	  } else if (strncmp(request_info->uri, "/viewport.js", 12) == 0) {
+      DWORD width = 0;
+      DWORD height = 0;
+      GetDwordParam(request_info->query_string, "w", width);
+      GetDwordParam(request_info->query_string, "h", height);
+      test_state_.UpdateBrowserWindow(width, height);
+      mg_write(conn, BLANK_RESPONSE, lstrlenA(BLANK_RESPONSE));
     } else if (strcmp(request_info->uri, "/event/responsive") == 0) {
       GetIntParam(request_info->query_string, "isResponsive",
                   test_state_._is_responsive);
