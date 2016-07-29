@@ -291,7 +291,10 @@ $page_description = "Website performance test details$testLabel";
         </div>
 
         <script type="text/javascript">
-<?php if ($isMultistep) { ?>
+<?php
+include __DIR__ . '/js/jk-navigation.js';
+if ($isMultistep) {
+?>
         var testId = "<?php echo $testInfo->getId(); ?>";
         var testRun = <?php echo $testRunResults->getRunNumber(); ?>;
         var testIsCached = <?php echo $testRunResults->isCachedRun() ? 1 : 0; ?>;
@@ -401,6 +404,16 @@ $page_description = "Website performance test details$testLabel";
           });
         }
 
+        function scrollTo(node) {
+            $('html, body').animate({scrollTop: node.offset().top + 'px'}, 'fast');
+        }
+
+        function scrollToAndSelect(node) {
+            scrollTo(node);
+            $('.accordion_opener.jkActive').removeClass("jkActive");
+            node.addClass("jkActive");
+        }
+
         function handleRequestHash() {
             var stepNum = -1;
             var doExpandAll = false;
@@ -423,7 +436,7 @@ $page_description = "Website performance test details$testLabel";
                 } else {
                     expandRequest(scrollToNode);
                 }
-                window.scrollTo(0, scrollToNode.offset().top); // manually as the element was probably not present before
+                scrollToAndSelect(scrollToNode);
             };
             var slide_opener = $("#request_headers_step" + stepNum);
             if (slide_opener.length) {
@@ -448,7 +461,7 @@ $page_description = "Website performance test details$testLabel";
                 hash.startsWith("#request_headers")) {
 
                 toggleAccordion($(hash), true, function() {
-                    window.scrollTo(0, $(hash).offset().top);
+                    scrollToAndSelect($(hash));
                 });
             }
             handleRequestHash();
@@ -458,6 +471,11 @@ $page_description = "Website performance test details$testLabel";
         $(document).ready(function() {
             initDetailsTable($(document));
             initHeaderRequestExpander($(document));
+            addJKNavigation(".accordion_opener", function(selected) {
+                toggleAccordion(selected, true, function() {
+                    scrollTo(selected);
+                });
+            });
             handleHash();
         });
         window.onhashchange = handleHash;
