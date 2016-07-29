@@ -286,6 +286,7 @@ $page_description = "Website performance test details$testLabel";
         </div>
 
         <script type="text/javascript">
+<?php if ($isMultistep) { ?>
         var testId = "<?php echo $testInfo->getId(); ?>";
         var testRun = <?php echo $testRunResults->getRunNumber(); ?>;
         var testIsCached = <?php echo $testRunResults->isCachedRun() ? 1 : 0; ?>;
@@ -338,6 +339,7 @@ $page_description = "Website performance test details$testLabel";
             openerNode.toggleClass("accordion_closed");
             snippetNode.slideToggle();
         }
+<?php } ?>
 
         function expandRequest(targetNode) {
           if (targetNode.length) {
