@@ -435,6 +435,13 @@ $page_description = "Website performance test details$testLabel";
 
         function handleHash() {
             var hash = window.location.hash;
+            if (!hash) {
+                var defaultAccordion = $("#waterfall_view_step1");
+                if (defaultAccordion.length) {
+                    toggleAccordion(defaultAccordion);
+                }
+                return;
+            }
             if (hash.startsWith("#waterfall_view_") ||
                 hash.startsWith("#connection_view") ||
                 hash.startsWith("#request_details") ||
