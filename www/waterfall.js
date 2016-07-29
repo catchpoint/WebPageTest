@@ -55,7 +55,7 @@ function IsValidDuration(value) {
     return (!isNaN(num) && num !== -1);
 }
 
-function NumBytesAsDisplayStrProtocing(numBytes) {
+function NumBytesAsDisplayString(numBytes) {
     var numKb = numBytes / 1024.0;
 
     // We display kilobytes with one decimal point.  If the value with that
