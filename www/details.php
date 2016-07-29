@@ -302,8 +302,16 @@ $page_description = "Website performance test details$testLabel";
             });
         });
 
-        function toggleAccordion(targetNode) {
+        function toggleAccordion(targetNode, onComplete, forceOpen) {
             targetNode = $(targetNode);
+            if ((forceOpen === true && targetNode.hasClass("accordion_opened")) ||
+                (forceOpen === false && targetNode.hasClass("accordion_closed"))) {
+                    if (typeof onComplete == "function") {
+                        onComplete();
+                    }
+                    return;
+            }
+
             var snippetType = targetNode.data("snippettype");
             var stepNumber = targetNode.data("step");
             var snippetNode = $("#snippet_" + snippetType + "_step" + stepNumber);
@@ -331,22 +339,22 @@ $page_description = "Website performance test details$testLabel";
                         images.on('load', function(){
                             noLoaded++;
                             if(noOfImages === noLoaded) {
-                                animateAccordion(targetNode, snippetNode);
+                                animateAccordion(targetNode, snippetNode, onComplete);
                             }
                         });
                     } else {
-                        animateAccordion(targetNode, snippetNode);
+                        animateAccordion(targetNode, snippetNode, onComplete);
                     }
                 })
             } else {
-                animateAccordion(targetNode, snippetNode);
+                animateAccordion(targetNode, snippetNode, onComplete);
             }
         }
 
-        function animateAccordion(openerNode, snippetNode) {
+        function animateAccordion(openerNode, snippetNode, onComplete) {
             openerNode.toggleClass("accordion_opened");
             openerNode.toggleClass("accordion_closed");
-            snippetNode.slideToggle();
+            snippetNode.slideToggle(400, onComplete);
         }
 <?php } ?>
 
@@ -383,8 +391,6 @@ $page_description = "Website performance test details$testLabel";
             });
         }
 
-
-
         function expandAll(step) {
           var expandAllNode = $("#step" + step + "_all");
           var expandText = expandAllNode.html();
@@ -395,23 +401,49 @@ $page_description = "Website performance test details$testLabel";
           });
         }
 
+        function handleRequestHash() {
+            var stepNum = -1;
+            var doExpandAll = false;
+            if (window.location.hash.substring(0, 5) == "#step") {
+                var parts = window.location.hash.split("_");
+                stepNum = parts[0].substring("#step".length);
+                doExpandAll = parts[1] == "all";
+            } else if (window.location.hash == '#all') {
+                stepNum = 1;
+                doExpandAll = true;
+            }
+            if (stepNum <= 0) {
+                return;
+            }
+            var expand = function() {
+                var scrollToNode = $(window.location.hash);
+                if (doExpandAll) {
+                    scrollToNode = $("#step" + stepNum + "_all");
+                    expandAll(stepNum);
+                } else {
+                    expandRequest(scrollToNode);
+                }
+                window.scrollTo(0, scrollToNode.offset().top); // manually as the element was probably not present before
+            };
+            var slide_opener = $("#request_headers_view_opener_step" + stepNum);
+            if (slide_opener.length) {
+                toggleAccordion(slide_opener, expand, true);
+            } else {
+                expand();
+            }
+        }
+
+        function handleHash() {
+            handleRequestHash();
+        }
+
         // init existing snippets
         $(document).ready(function() {
             initDetailsTable($(document));
             initHeaderRequestExpander($(document));
+            handleHash();
         });
-
-        var hashLength = window.location.hash.length;
-        var stepNum = -1;
-        if (hashLength > 4 && window.location.hash.substring(hashLength - 4) == "_all") {
-            stepNum = window.location.hash.substring("#step".length, hashLength - 4);
-        } else if (window.location.hash == '#all') {
-            stepNum = 1;
-        }
-        if (stepNum > 0) {
-          expandAll(stepNum);
-        } else
-          expandRequest($(window.location.hash));
+        window.onhashchange = handleHash;
 
         <?php
         include "waterfall.js";
@@ -432,11 +464,10 @@ function printAccordion($namePrefix, $snippetType, $testRunResults, $jsInitCall 
     for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
         $stepResult = $testRunResults->getStepResult($i);
         echo "<div class=\"accordion_block\">\n";
-        echo "<a name=\"". $namePrefix . "_step" . $i . "\">";
-        echo "<h2 class=\"accordion_opener accordion_closed\" data-snippettype='$snippetType' data-step='$i'".
-             " data-jsinit='$jsInitCall'>";
+        echo "<h2 id=\"". $namePrefix . "_opener_step" . $i . "\" class=\"accordion_opener accordion_closed\" " .
+             "data-snippettype='$snippetType' data-step='$i' data-jsinit='$jsInitCall'>";
         echo $stepResult->readableIdentifier();
-        echo "</h2></a>\n";
+        echo "</h2>\n";
         echo "<div id=\"snippet_" . $snippetType . "_step$i\" class='snippet_container snippet_container_$snippetType'></div>\n";
         echo "</div>\n";
     }
