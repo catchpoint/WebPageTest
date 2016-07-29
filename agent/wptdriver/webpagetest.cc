@@ -324,14 +324,16 @@ bool WebPagetest::UploadImages(WptTestDriver& test,
   while (ret && pos) {
     CString file = image_files.GetNext(pos);
     if (!test._discard_test) {
-      CAtlList<CString> newFiles;
-      if (ProcessFile(file, newFiles)) {
-        POSITION newFilePos = newFiles.GetHeadPosition();
-        while (ret && newFilePos) {
-          CString newFile = newFiles.GetNext(newFilePos);
-          ret = UploadFile(url, false, test, newFile);
-          if (ret)
-            DeleteFile(newFile);
+      if (test._process_results) {
+        CAtlList<CString> newFiles;
+        if (ProcessFile(file, newFiles)) {
+          POSITION newFilePos = newFiles.GetHeadPosition();
+          while (ret && newFilePos) {
+            CString newFile = newFiles.GetNext(newFilePos);
+            ret = UploadFile(url, false, test, newFile);
+            if (ret)
+              DeleteFile(newFile);
+          }
         }
       }
       if (ret)

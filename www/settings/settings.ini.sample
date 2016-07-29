@@ -61,6 +61,9 @@ allowPrivate=1
 ; Defaults to the agent default if not specified (1024x768 usually).
 ;default_browser_size=1024x768
 
+; Enables trace and pcap processing directly on the test agents.
+enable_agent_processing=1
+
 ; *************
 ; Server Config
 ; *************
