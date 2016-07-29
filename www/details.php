@@ -307,6 +307,9 @@ if ($isMultistep) {
 
         function toggleAccordion(targetNode, forceOpen, onComplete) {
             targetNode = $(targetNode);
+            $('.accordion_opener.jkActive').removeClass("jkActive");
+            targetNode.addClass("jkActive");
+
             if ((forceOpen === true && targetNode.hasClass("accordion_opened")) ||
                 (forceOpen === false && targetNode.hasClass("accordion_closed"))) {
                     if (typeof onComplete == "function") {
@@ -408,12 +411,6 @@ if ($isMultistep) {
             $('html, body').animate({scrollTop: node.offset().top + 'px'}, 'fast');
         }
 
-        function scrollToAndSelect(node) {
-            scrollTo(node);
-            $('.accordion_opener.jkActive').removeClass("jkActive");
-            node.addClass("jkActive");
-        }
-
         function handleRequestHash() {
             var stepNum = -1;
             var doExpandAll = false;
@@ -436,7 +433,7 @@ if ($isMultistep) {
                 } else {
                     expandRequest(scrollToNode);
                 }
-                scrollToAndSelect(scrollToNode);
+                scrollTo(scrollToNode);
             };
             var slide_opener = $("#request_headers_step" + stepNum);
             if (slide_opener.length) {
@@ -461,7 +458,7 @@ if ($isMultistep) {
                 hash.startsWith("#request_headers")) {
 
                 toggleAccordion($(hash), true, function() {
-                    scrollToAndSelect($(hash));
+                    scrollTo($(hash));
                 });
             }
             handleRequestHash();
@@ -479,7 +476,18 @@ if ($isMultistep) {
             handleHash();
         });
         window.onhashchange = handleHash;
-
+        $(document).keydown(function (e) {
+            if (e.keyCode != 32 || e.target != document.body) {
+                return;
+            }
+            e.preventDefault();
+            var active = $(".jkActive");
+            if (active.length) {
+                toggleAccordion(active, undefined, function() {
+                    scrollTo(active);
+                });
+            }
+        });
         <?php
         include "waterfall.js";
         ?>
