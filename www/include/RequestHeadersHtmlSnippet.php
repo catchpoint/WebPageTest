@@ -21,7 +21,7 @@ class RequestHeadersHtmlSnippet {
       return "";
     }
     $stepNumber = $this->stepResult->getStepNumber();
-    $out = '<p>+ <a id="step' . $stepNumber . '_all" href="javascript:expandAll(' . $stepNumber . ');">Expand All</a></p>';
+    $out = '<p><a id="step' . $stepNumber . '_all" href="javascript:expandAll(' . $stepNumber . ');">+ Expand All</a></p>';
     $out .= '<div id="header_details_step' . $stepNumber . '">';
     foreach ($this->requests as $reqNum => $request) {
       if ($request) {

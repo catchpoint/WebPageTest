@@ -386,8 +386,12 @@ $page_description = "Website performance test details$testLabel";
 
 
         function expandAll(step) {
+          var expandAllNode = $("#step" + step + "_all");
+          var expandText = expandAllNode.html();
+          var doShow = expandText.substring(0, 1) == "+";
+          expandAllNode.html(doShow ? "- Collapse All" : "+ Expand All");
           $("#header_details_step" + step + " .header_details").each(function(index) {
-            $(this).show();
+            $(this).toggle(doShow);
           });
         }
 
