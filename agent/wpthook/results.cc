@@ -781,6 +781,9 @@ void Results::SavePageData(OptimizationChecks& checks){
     // DOM Interactive
     buff.Format("%d\t", _test_state._dom_interactive);
     result += buff;
+    // DOM Loading
+    buff.Format("%d\t", _test_state._dom_loading);
+    result += buff;
 
     result += "\r\n";
 

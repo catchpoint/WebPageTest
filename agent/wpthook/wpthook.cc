@@ -166,6 +166,12 @@ void WptHook::SetDomInteractiveEvent(DWORD domInteractive) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void WptHook::SetDomLoadingEvent(DWORD domLoading) {
+  test_state_.SetDomLoadingEvent(domLoading);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 void WptHook::SetDomContentLoadedEvent(DWORD start, DWORD end) {
   test_state_.SetDomContentLoadedEvent(start, end);
 }

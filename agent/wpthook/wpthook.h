@@ -59,6 +59,7 @@ public:
   void Start();
   void OnAllDOMElementsLoaded(DWORD load_time);
   void SetDomInteractiveEvent(DWORD domInteractive);
+  void SetDomLoadingEvent(DWORD domLoading);
   void SetDomContentLoadedEvent(DWORD start, DWORD end);
   void SetLoadEvent(DWORD start, DWORD end);
   void SetFirstPaint(DWORD first_paint);

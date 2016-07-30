@@ -92,6 +92,7 @@ public:
   void OnNavigate();
   void OnNavigateComplete();
   void OnAllDOMElementsLoaded(DWORD load_time);
+  void SetDomLoadingEvent(DWORD domLoading);
   void SetDomInteractiveEvent(DWORD domInteractive);
   void SetDomContentLoadedEvent(DWORD start, DWORD end);
   void SetLoadEvent(DWORD load_event_start, DWORD load_event_end);
@@ -128,6 +129,7 @@ public:
   LARGE_INTEGER _first_navigate;
   LARGE_INTEGER _dom_elements_time;
   DWORD _dom_interactive;
+  DWORD _dom_loading;
   DWORD _dom_content_loaded_event_start;
   DWORD _dom_content_loaded_event_end;
   LARGE_INTEGER _on_load;

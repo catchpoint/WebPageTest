@@ -249,6 +249,11 @@ void TestServer::MongooseCallback(enum mg_event event,
       if (dom_interactive < 0 || dom_interactive > 3600000)
         dom_interactive = 0;
       hook_.SetDomInteractiveEvent(dom_interactive);
+      DWORD dom_loading = 0;
+      GetDwordParam(request_info->query_string, "domLoading", dom_loading);
+      if (dom_loading < 0 || dom_loading > 3600000)
+        dom_loading = 0;
+      hook_.SetDomLoadingEvent(dom_loading);
       SendResponse(conn, request_info, RESPONSE_OK, RESPONSE_OK_STR, "");
     } else if (strcmp(request_info->uri, "/event/navigate") == 0) {
       hook_.OnNavigate();
