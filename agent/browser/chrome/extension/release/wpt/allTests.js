@@ -17939,27 +17939,6 @@ goog.provide('wpt.commands');
 wpt.commands.g_domElements = [];
 
 /**
- * Chrome APIs move from experimental to supported without notice.
- * Keep our code from breaking by declaring that some experimental
- * APIs can be used in the non-experimental namespace.
- * @param {string} apiName The name of the chrome extensons API.
- */
-function moveOutOfexperimentalIfNeeded(apiName) {
-  // Prefer the real API.  If it exists, do nothing.
-  if (!chrome[apiName]) {
-    // Use the experimental version if it exists.
-    if (chrome.experimental[apiName]) {
-      chrome[apiName] = chrome.experimental[apiName];
-    } else {
-      throw 'Requested chrome API ' + apiName + ' does not exist!';
-    }
-  }
-}
-
-moveOutOfexperimentalIfNeeded('webNavigation');
-moveOutOfexperimentalIfNeeded('webRequest');
-
-/**
  * Remove leading and trailing whitespace.
  * @param {string} stringToTrim
  * @return {string}
