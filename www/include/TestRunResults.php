@@ -89,6 +89,13 @@ class TestRunResults {
   }
 
   /**
+   * @return TestStepResult[] Step result data for all steps in order. Keys are *not* step number
+   */
+  public function getStepResults() {
+    return $this->stepResults;
+  }
+
+  /**
    * @return bool True if all steps are successful, false otherwise
    */
   public function isSuccessful() {
@@ -98,6 +105,13 @@ class TestRunResults {
       }
     }
     return true;
+  }
+
+  /**
+   * @return bool True if the run contains more than one step, false otherwise.
+   */
+  public function isMultistep() {
+    return $this->countSteps() > 1;
   }
 
   /**
@@ -212,6 +226,20 @@ class TestRunResults {
       return null;
     }
     return $sum / $numValues;
+  }
+
+  /**
+   * @param string $metric The metric to check for
+   * @return bool True if the metric is present and > 0 in any step, false otherwise
+   */
+  public function hasValidMetric($metric) {
+    foreach ($this->stepResults as $stepResult) {
+      $value = $stepResult->getMetric($metric);
+      if (!empty($value)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

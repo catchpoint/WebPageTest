@@ -67,6 +67,13 @@ class TestStepResult {
   }
 
   /**
+   * @return bool True if there is valid test step result data, false otherwise.
+   */
+  public function isValid() {
+    return !empty($this->rawData) && is_array($this->rawData);
+  }
+
+  /**
    * @param string $baseUrl The base URL to use for the UrlGenerator
    * @param bool $friendly Optional. True for friendly URLS (default), false for standard URLs
    * @return UrlGenerator The created URL generator for this step
@@ -187,6 +194,12 @@ class TestStepResult {
       $this->getStartOffset());
   }
 
+  public function getRequestsWithInfo($addLocationData, $addRawHeaders) {
+    $requests = getRequestsForStep($this->localPaths, $this->createUrlGenerator(""), $secure, $haveLocations,
+                                   $addLocationData, $addRawHeaders);
+    return new RequestsWithInfo($requests, $haveLocations, $secure);
+  }
+
   public function getRequests() {
     // TODO: move implementation to this method
     return getRequestsForStep($this->localPaths, $this->createUrlGenerator(""), $secure, $haveLocations, false, true);
@@ -273,5 +286,29 @@ class TestStepResult {
 
   private function standardEventName() {
     return "Step " . $this->step;
+  }
+}
+
+class RequestsWithInfo {
+  private $requests;
+  private $locationData;
+  private $secureRequests;
+
+  public function __construct($requests, $hasLocationData, $hasSecureRequests) {
+    $this->requests = $requests;
+    $this->locationData = $hasLocationData;
+    $this->secureRequests = $hasSecureRequests;
+  }
+
+  public function getRequests() {
+    return $this->requests;
+  }
+
+  public function hasLocationData() {
+    return $this->locationData;
+  }
+
+  public function hasSecureRequests() {
+    return $this->secureRequests;
   }
 }

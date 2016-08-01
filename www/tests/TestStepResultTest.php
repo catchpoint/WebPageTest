@@ -53,6 +53,19 @@ class TestStepResultTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals("Step 1", $step->readableIdentifier(""));
   }
 
+  public function testIsValid() {
+    $testInfo = TestInfo::fromValues("testId", "/root/path", array());
+    $step = TestStepResult::fromPageData($testInfo, array(), 1, 132, 1000);
+    $this->assertFalse($step->isValid());
+    $step = TestStepResult::fromPageData($testInfo, null, 1, 132, 1000);
+    $this->assertFalse($step->isValid());
+    $step = TestStepResult::fromPageData($testInfo, "foo", 1, 132, 1000);
+    $this->assertFalse($step->isValid());
+
+    $step = TestStepResult::fromPageData($testInfo, array("foo" => "bar"), 1, 132, 1000);
+    $this->assertTrue($step->isValid());
+  }
+
   public function testIsAdultSite() {
     // testInfo matches
     $testInfo = TestInfo::fromValues("testId", "/root/path", array("testinfo" => array("url" => "http://adultsite.com")));
@@ -80,7 +93,7 @@ class TestStepResultTest extends PHPUnit_Framework_TestCase {
     $this->assertTrue($step->isAdultSite(array("bar", "foo")));
   }
 
-  public function testHsBreakdownTimeline() {
+  public function testHasBreakdownTimeline() {
     $fileHandlerExists = $this->getMock("FileHandler");
     $fileHandlerExists->method("gzFileExists")->willReturn(true);
     $fileHandlerDoesntExists = $this->getMock("FileHandler");
@@ -101,4 +114,5 @@ class TestStepResultTest extends PHPUnit_Framework_TestCase {
     $step = TestStepResult::fromPageData($testInfoWithoutTimeline, array(), 1, 1, 1, $fileHandlerDoesntExists);
     $this->assertFalse($step->hasBreakdownTimeline());
   }
+
 }
