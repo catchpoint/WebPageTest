@@ -185,12 +185,12 @@ class TestStepResult {
     return null;
   }
 
-  public function getVisualProgress() {
+  public function getVisualProgress($end = null) {
     // TODO: move implementation to this method
     if (!$this->fileHandler->dirExists($this->localPaths->videoDir())) {
       return array();
     }
-    return GetVisualProgressForStep($this->localPaths, $this->testInfo->isRunComplete($this->run), null, null,
+    return GetVisualProgressForStep($this->localPaths, $this->testInfo->isRunComplete($this->run), null, $end,
       $this->getStartOffset());
   }
 
