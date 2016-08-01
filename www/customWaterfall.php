@@ -38,7 +38,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 $extension = 'php';
                 if( FRIENDLY_URLS )
                     $extension = 'png';
-                echo "<img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached\">";
+                echo "<img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step\">";
             ?>
             
             <?php include('footer.inc'); ?>
@@ -101,11 +101,13 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 echo "var testRun='$run';\n";
                 echo "var cached='$cached';\n";
                 echo "var extension='$extension';\n";
+                echo "var step='$step';\n";
                 ?>
                 
                 var src = '/waterfall.' + extension + '?test=' + testId + 
                           '&run=' + testRun + 
-                          '&cached=' + cached + 
+                          '&cached=' + cached +
+                          '&step=' + step +
                           '&max=' + max + 
                           '&width=' + width + 
                           '&type=' + type + 
