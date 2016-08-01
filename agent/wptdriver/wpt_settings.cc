@@ -359,7 +359,7 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
   bool ret = false;
   TCHAR buff[10240];
   _browser = browser;
-  _template = _browser;
+  _template.Empty();
   _exe.Empty();
   _exe_directory.Empty();
   _options.Empty();
@@ -410,12 +410,11 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
     ret = true;
   }
 
-  if (GetPrivateProfileString(browser, _T("options"), _T(""), buff, 
+  CString command_line;
+  if (GetPrivateProfileString(browser, _T("command-line"), _T(""), buff, 
     _countof(buff), iniFile )) {
-    _options = buff;
-    _options.Trim(_T("\""));
-    _options.Replace(_T("%WPTDIR%"), _wpt_directory);
-    _options.Replace(_T("%PROFILE%"), _profile_directory);
+    command_line = buff;
+    command_line.Trim(_T("\""));
   }
 
   // set up some browser-specific settings
@@ -423,12 +422,26 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
   exe.MakeLower();
   if (exe.Find(_T("safari.exe")) >= 0) {
     _profile_directory = app_data_dir_ + _T("\\Apple Computer");
-    if (_template.IsEmpty()) {
+    if (!_template.GetLength())
       _template = _T("Safari");
-    }
     if (_cache_directory.IsEmpty()) {
       _cache_directory = local_app_data_dir_ + _T("\\Apple Computer\\Safari");
     }
+  } else if (exe.Find(_T("chrome.exe")) >= 0) {
+    if (!_template.GetLength())
+      _template = _T("Chrome");
+    _options = _T("--user-data-dir=\"") + _profile_directory + _T("\"");
+    if (!command_line.GetLength())
+      _options += _T(" --no-proxy-server");
+  } else if (exe.Find(_T("firefox.exe")) >= 0) {
+    if (!_template.GetLength())
+      _template = _T("Firefox");
+    _options = _T("-profile \"") + _profile_directory + _T("\" -no-remote");
+  }
+
+  // Add user-specified command-line options
+  if (command_line.GetLength()) {
+    _options += _T(" ") + command_line;
   }
 
   return ret;
@@ -523,11 +536,14 @@ void BrowserSettings::ResetProfile(bool clear_certs) {
   if (_cache_directory.GetLength()) {
     DeleteDirectory(_cache_directory, false);
   }
-  if (_profile_directory.GetLength() ) {
+  if (_profile_directory.GetLength()) {
     SHCreateDirectoryEx(NULL, _profile_directory, NULL);
     DeleteDirectory(_profile_directory, false);
-    CopyDirectoryTree(_wpt_directory + CString(_T("\\templates\\"))+_template,
-                      _profile_directory);
+    if (_template.GetLength()) {
+      CString src = _wpt_directory + CString(_T("\\templates\\")) + _template;
+      OutputDebugString(L"Copying '" + src + L"' to '" + _profile_directory + L"'");
+      CopyDirectoryTree(src, _profile_directory);
+    }
   }
 
   // flush the certificate revocation caches
