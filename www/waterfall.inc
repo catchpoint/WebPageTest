@@ -1214,7 +1214,7 @@ function CreateWaterfallHtml($url, &$requests, $id, $run, $cached, &$page_data, 
         </div>
         <div class="jqmdX jqmClose"></div>
     </div>
-    <div id="marker$stepSuffix"></div>
+    <div class="waterfall_marker"></div>
 EOT;
 
     $out .= '</div>'; // container
@@ -1277,7 +1277,7 @@ function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
     $o = $index ? $opacity : '1.0';
     echo "<img style=\"display:block;opacity:$o;position:absolute;top:0;left:0;\" class=\"waterfall-image\" alt=\"\" id=\"waterfall-$index\" src=\"/waterfall.php?test={$waterfall['id']}&run={$waterfall['run']}&cached={$waterfall['cached']}&rowcount=$row_count$waterfall_options\">";
   }
-  echo '<div id="marker"></div>';
+  echo '<div class="waterfall_marker"></div>';
   echo '</div>';
 }
 
