@@ -1,10 +1,20 @@
 <?php
-include 'common.inc';
-require_once('object_detail.inc'); 
-require_once('page_data.inc');
+include __DIR__ . '/common.inc';
+require_once __DIR__ . '/object_detail.inc';
+require_once __DIR__ . '/page_data.inc';
+require_once __DIR__ . '/include/TestInfo.php';
+require_once __DIR__ . '/include/TestPaths.php';
+require_once __DIR__ . '/include/TestStepResult.php';
+require_once __DIR__ . '/include/UrlGenerator.php';
+
+global $testPath, $id, $run, $cached, $step; // defined in common.inc
+
 $secure = false;
 $haveLocations = false;
-$requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, true);
+$testInfo = TestInfo::fromFiles($testPath);
+$localPaths = new TestPaths($testPath, $run, $cached, $step);
+$urlGenerator = UrlGenerator::create(false, "", $id, $run, $cached, $step);
+$requests = getRequestsForStep($localPaths, $urlGenerator, $secure, $haveLocations, true);
 $page_keywords = array('Images','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website speed test images$testLabel.";
 $userImages = true;
@@ -30,6 +40,13 @@ $userImages = true;
             include 'header.inc';
             ?>
             <div class="translucent">
+                <?php
+                    $stepsInRun = $testInfo->stepsInRun($run);
+                    if ($stepsInRun > 1) {
+                        $stepResult = TestStepResult::fromFiles($testInfo, $run, $cached, $step);
+                        echo "<h3>Step " . $stepResult->readableIdentifier($step) . "</h3>";
+                    }
+                ?>
                 <p>Images are what are currently being served from the given url and may not necessarily match what was loaded at the time of the test.</p>
                 <table class="images">
                 <?php
