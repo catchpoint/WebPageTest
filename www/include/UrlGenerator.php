@@ -118,6 +118,16 @@ abstract class UrlGenerator {
   }
 
   /**
+   * @param string $frame The thumbnail name
+   * @param int $fit Maximum size of the thumbnail
+   * @return string The URL for a thumbnail of the video frame
+   */
+  public function videoFrameThumbnail($frame, $fit) {
+    $file = "video_" . rtrim(strtolower($this->underscorePrefix()), "_") . "/" . $frame;
+    return $this->baseUrl . "/thumbnail.php?test=" . $this->testId . "&fit=" . $fit . "&file=" . $file;
+  }
+
+  /**
    * @return string The generated URL to download all video frames
    */
   public function downloadVideoFrames() {

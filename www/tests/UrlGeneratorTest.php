@@ -221,4 +221,10 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals($expected, $ug->waterfallImage(true, 90, true));
   }
 
+  public function testVideoFramesThumbnail() {
+    $expected = "https://test/thumbnail.php?test=160609_a7_b8&fit=1234&file=video_3_cached_2/myframe.png";
+    $ug = UrlGenerator::create(false, "https://test/", "160609_a7_b8", 3, true, 2);
+    $this->assertEquals($expected, $ug->videoFrameThumbnail("myframe.png", 1234));
+  }
+
 }
