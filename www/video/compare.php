@@ -600,11 +600,11 @@ function ScreenShotTable()
         // display the waterfall if there is only one test
         $end_seconds = $filmstrip_end_time / 1000;
         if( count($tests) == 1 ) {
-            $data = loadPageRunData($tests[0]['path'], $tests[0]['run'], $tests[0]['cached']);
-            $secure = false;
-            $haveLocations = false;
-            $requests = getRequests($tests[0]['id'], $tests[0]['path'], $tests[0]['run'], $tests[0]['cached'], $secure, $haveLocations, true, true);
-            InsertWaterfall('', $requests, $tests[0]['id'], $tests[0]['run'], $tests[0]['cached'], $data, "&max=$end_seconds&mime=1&state=1&cpu=1&bw=1" );
+            /* @var TestStepResult $stepResult */
+            $stepResult = $tests[0]["stepResult"];
+            $requests = $stepResult->getRequestsWithInfo(true, true)->getRequests();
+            echo CreateWaterfallHtml('', $requests, $tests[0]['id'], $tests[0]['run'], $tests[0]['cached'], $data,
+                                     "&max=$end_seconds&mime=1&state=1&cpu=1&bw=1", $tests[0]['step']);
             echo '<br><br>';
         } else {
           $waterfalls = array();
@@ -612,6 +612,7 @@ function ScreenShotTable()
             $waterfalls[] = array('id' => $test['id'],
                                   'label' => $test['name'],
                                   'run' => $test['run'],
+                                  'step' => $test['step'],
                                   'cached' => $test['cached']);
           }
           $labels='';
@@ -630,6 +631,7 @@ function ScreenShotTable()
             <tr><td>Custom label</td><td>-l:&lt;label&gt;</td><td>110606_MJ_RZEY-l:Original</td></tr>
             <tr><td>Specific run</td><td>-r:&lt;run&gt;</td><td>110606_MJ_RZEY-r:3</td></tr>
             <tr><td>Repeat view</td><td>-c:1</td><td>110606_MJ_RZEY-c:1</td></tr>
+            <tr><td>Specific step</td><td>-s:3</td><td>110606_MJ_RZEY-s:3</td></tr>
             <tr><td>Specific End Time</td><td>-e:&lt;seconds&gt;</td><td>110606_MJ_RZEY-e:1.1</td></tr>
             </table>
             <br>
