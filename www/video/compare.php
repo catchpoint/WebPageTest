@@ -458,6 +458,8 @@ function ScreenShotTable()
             $frameCount = 0;
             $progress = null;
             $ms = 0;
+            $localPaths = new TestPaths(GetTestPath($test['id']), $test['run'], $test['cached'], $test['step']);
+            $urlGenerator = UrlGenerator::create(false, "", $test['id'], $test['run'], $test['cached'], $test['step']);
             while( $ms < $filmstrip_end_time ) {
                 $ms = $frameCount * $interval;
                 // find the closest video frame <= the target time
@@ -477,11 +479,9 @@ function ScreenShotTable()
                     $lastThumb = $path;
 
                 echo '<td>';
+
                 if ($ms <= $testEnd) {
-                    $cached = '';
-                    if( $test['cached'] )
-                        $cached = '_cached';
-                    $imgPath = GetTestPath($test['id']) . "/video_{$test['run']}$cached/$path";
+                    $imgPath = $localPaths->videoDir() . "/" . $path;
                     echo "<a href=\"/$imgPath\">";
                     echo "<img title=\"" . htmlspecialchars($test['name']) . "\"";
                     $class = 'thumb';
@@ -494,7 +494,8 @@ function ScreenShotTable()
                     echo " width=\"$width\"";
                     if( $height )
                         echo " height=\"$height\"";
-                    echo " src=\"/thumbnail.php?test={$test['id']}&fit=$thumbSize&file=video_{$test['run']}$cached/$path\"></a>";
+                    $imgUrl = $urlGenerator->videoFrameThumbnail($path, $thumbSize);
+                    echo " src=\"$imgUrl\"></a>";
                     if (isset($progress))
                         echo "<br>$progress%";
                     $lastThumb = $path;
