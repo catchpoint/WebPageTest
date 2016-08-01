@@ -53,6 +53,8 @@ static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--no-first-run"),
     _T("--process-per-tab"),
     _T("--new-window"),
+    _T("--silent-debugger-extension-api"),
+    _T("--disable-infobars"),
     _T("--disable-translate"),
     _T("--disable-notifications"),
     _T("--disable-desktop-notifications"),
@@ -121,6 +123,8 @@ bool WebBrowser::RunAndWait() {
     if (_browser._exe.GetLength()) {
       CString exe(_browser._exe);
       exe.MakeLower();
+      if (exe.Find(_T("chrome.exe")) >= 0)
+        CreateChromeSymlink();
       bool hook = true;
       bool hook_child = false;
       TCHAR cmdLine[32768];
@@ -129,6 +133,8 @@ bool WebBrowser::RunAndWait() {
         lstrcat( cmdLine, CString(_T(" ")) + _browser._options );
       // if we are running chrome, make sure the command line options that our 
       // extension NEEDS are present
+      exe = _browser._exe;
+      exe.MakeLower();
       if (exe.Find(_T("chrome.exe")) >= 0) {
         ConfigureChromePreferences();
         if (_test._browser_command_line.GetLength()) {
@@ -770,5 +776,22 @@ void WebBrowser::ConfigureChromePreferences() {
     DWORD written = 0;
     WriteFile(file, prefs, strlen(prefs), &written, 0);
     CloseHandle(file);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Run Chrome from inside of a "Chrome SxS\\Application
+-----------------------------------------------------------------------------*/
+void WebBrowser::CreateChromeSymlink() {
+  CString lower(_browser._exe);
+  lower.MakeLower();
+  int pos = lower.Find(_T("chrome\\application\\chrome.exe"));
+  if (pos > 0 && lower.Find(_T("chrome sxs\\application")) == -1) {
+    CString dir = _browser._exe.Left(pos) + _T("Chrome");
+    CString newDir = dir + _T(" SxS");
+
+    RemoveDirectory(newDir);
+    if (CreateSymbolicLink(newDir, dir, SYMBOLIC_LINK_FLAG_DIRECTORY))
+      _browser._exe = newDir + "\\Application\\chrome.exe";
   }
 }

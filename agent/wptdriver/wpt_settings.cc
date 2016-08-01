@@ -428,9 +428,7 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
       _cache_directory = local_app_data_dir_ + _T("\\Apple Computer\\Safari");
     }
   } else if (exe.Find(_T("chrome.exe")) >= 0) {
-    if (!_template.GetLength())
-      _template = _T("Chrome");
-    _options = _T("--user-data-dir=\"") + _profile_directory + _T("\"");
+    _options = _T("--load-extension \"") + _wpt_directory + _T("\\extension\" --user-data-dir=\"") + _profile_directory + _T("\"");
     if (!command_line.GetLength())
       _options += _T(" --no-proxy-server");
   } else if (exe.Find(_T("firefox.exe")) >= 0) {
