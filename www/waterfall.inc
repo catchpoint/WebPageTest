@@ -1136,14 +1136,19 @@ function AddBarIfValid(&$bars, $key, $request, $x_scaler, $y1, $y2) {
 * 
 */
 function InsertWaterfall($url, &$requests, $id, $run, $cached, &$page_data, $waterfall_options = '') {
+  echo CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $waterfall_options);
+}
+
+function CreateWaterfallHtml($url, &$requests, $id, $run, $cached, &$page_data, $waterfall_options = '', $step = 1) {
     global $settings;
-    
+
     // create the image map (this is for fallback when Javascript isn't enabled
     // but also gives us the position for each request)
-    echo '<map name="waterfall_map">';
+    $out = '<map name="waterfall_map_step' . $step . '">';
     $options = array(
         'id' => $id,
         'path' => './' . GetTestPath($id),
+        'step_id' => $step,
         'run_id' => $run,
         'is_cached' => @$_GET['cached'],
         'use_cpu' => true,
@@ -1156,19 +1161,21 @@ function InsertWaterfall($url, &$requests, $id, $run, $cached, &$page_data, $wat
         if (array_key_exists('request', $entry)) {
             $index = $entry['request'] + 1;
             $title = $index . ': ' . htmlspecialchars($entry['url']);
-            echo '<area href="#request' . $index . '" alt="' . $title . '" title="' . $title . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
+            $out .= '<area href="#step' . $step . '_request' . $index . '" alt="' . $title . '" title="' . $title . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
         } elseif (array_key_exists('url', $entry)) {
-            echo '<area href="#request" alt="' . $entry['url'] . '" title="' . $entry['url'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
+            $out .= '<area href="#step' . $step . '_request" alt="' . $entry['url'] . '" title="' . $entry['url'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
         } elseif (array_key_exists('userTime', $entry)) {
-            echo '<area nohref="nohref" alt="' . $entry['userTime'] . '" title="' . $entry['userTime'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
+            $out .= '<area nohref="nohref" alt="' . $entry['userTime'] . '" title="' . $entry['userTime'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
         }
     }
-    echo '</map>';
+    $out .= '</map>';
     
     // main container for the waterfall
-    echo '<div class="waterfall-container">';
-    echo "<img class=\"waterfall-image\" alt=\"\" onload=\"markUserTime('aft.Waterfall')\" usemap=\"#waterfall_map\" id=\"waterfall\" src=\"/waterfall.php?test=$id&run=$run&cached=$cached$waterfall_options\">";
+    $out .= '<div class="waterfall-container">';
+    $out .= "<img class=\"waterfall-image\" alt=\"\" onload=\"markUserTime('aft.Waterfall')\" usemap=\"#waterfall_map_step$step\" " .
+            "id=\"waterfall_step$step\" src=\"/waterfall.php?test=$id&run=$run&cached=$cached&step=$step$waterfall_options\">";
 
+    $stepSuffix = "-step" . $step;
     // draw div's over each of the waterfall elements (use the image map as a reference)
     foreach($map as $entry) {
         if (isset($entry['request'])) {
@@ -1182,43 +1189,47 @@ function InsertWaterfall($url, &$requests, $id, $run, $cached, &$page_data, $wat
                     $tooltip = substr($tooltip, 0, $split) . '...';
                 $tooltip = FitText($tooltip, 100);
             }
-            echo "<div class=\"transparent request-overlay\" id=\"request-overlay-$index\" title=\"$tooltip\" onclick=\"SelectRequest($index)\" style=\"position: absolute; top: {$top}px; height: {$height}px;\"></div>\n";
+            $out .= "<div class=\"transparent request-overlay\" id=\"request-overlay$stepSuffix-$index\" title=\"$tooltip\" onclick=\"SelectRequest($step, $index)\" style=\"position: absolute; top: {$top}px; height: {$height}px;\"></div>\n";
         }
     }
 
-    ?>
-    <div id="request-dialog" class="jqmDialog">
-        <div id="dialog-header" class="jqmdTC jqDrag">
-            <div id="dialog-title"></div>
-            <div id="request-dialog-radio">
-                <span id="request-details-button"><input type="radio" id="radio1" value="request-details" name="radio" checked="checked" /><label for="radio1">Details</label></span>
-                <span id="request-headers-button"><input type="radio" id="radio2" value="request-headers" name="radio" /><label for="radio2">Request</label></span>
-                <span id="response-headers-button"><input type="radio" id="radio3" value="response-headers" name="radio" /><label for="radio3">Response</label></span>
-                <span id="response-body-button"><input type="radio" id="radio4" value="response-body" name="radio" /><label for="radio4">Object</label></span>
+    $out .= <<<EOT
+    <div id="request-dialog$stepSuffix" class="jqmDialog">
+        <div id="dialog-header$stepSuffix" class="jqmdTC jqDrag">
+            <div id="dialog-title$stepSuffix" class="dialog-title"></div>
+            <div id="request-dialog-radio$stepSuffix" class="request-dialog-radio">
+                <span id="request-details-button$stepSuffix"><input type="radio" id="radio1$stepSuffix" value="request-details$stepSuffix" name="radio" checked="checked" /><label for="radio1$stepSuffix">Details</label></span>
+                <span id="request-headers-button$stepSuffix"><input type="radio" id="radio2$stepSuffix" value="request-headers$stepSuffix" name="radio" /><label for="radio2$stepSuffix">Request</label></span>
+                <span id="response-headers-button$stepSuffix"><input type="radio" id="radio3$stepSuffix" value="response-headers$stepSuffix" name="radio" /><label for="radio3$stepSuffix">Response</label></span>
+                <span id="response-body-button$stepSuffix"><input type="radio" id="radio4$stepSuffix" value="response-body$stepSuffix" name="radio" /><label for="radio4$stepSuffix">Object</label></span>
             </div>
         </div>
         <div class="jqmdBC">
-            <div id="dialog-contents" class="jqmdMSG">
-                <div id="request-details" class="dialog-tab-content"></div>
-                <div id="request-headers" class="dialog-tab-content"></div>
-                <div id="response-headers" class="dialog-tab-content"></div>
-                <div id="response-body" class="dialog-tab-content"></div>
+            <div id="dialog-contents$stepSuffix" class="jqmdMSG">
+                <div id="request-details$stepSuffix" class="dialog-tab-content request-details"></div>
+                <div id="request-headers$stepSuffix" class="dialog-tab-content request-headers"></div>
+                <div id="response-headers$stepSuffix" class="dialog-tab-content response-headers"></div>
+                <div id="response-body$stepSuffix" class="dialog-tab-content response-body"></div>
             </div>
         </div>
         <div class="jqmdX jqmClose"></div>
     </div>
-    <div id="marker"></div>
-    <?php
+    <div class="waterfall_marker"></div>
+EOT;
 
-    echo '</div>'; // container
+    $out .= '</div>'; // container
     
     // script support
-    echo "<script type=\"text/javascript\">\n";
-    echo "var wptRequestCount=" . count($requests) . ";\n";
-    echo "var wptRequestData=" . json_encode($requests) . ";\n";
-    echo "var wptPageData=" . json_encode($page_data) . ";\n";
-    echo "var wptNoLinks={$settings['nolinks']};\n";
-    echo "</script>";
+    $out .= "<script type=\"text/javascript\">\n";
+    $out .= "if (typeof wptRequestCount == 'undefined') var wptRequestCount = {};\n";
+    $out .= "if (typeof wptRequestData == 'undefined') var wptRequestData = {};\n";
+    $out .= "if (typeof wptPageData == 'undefined') var wptPageData = {};\n";
+    $out .= "if (typeof wptNoLinks == 'undefined') var wptNoLinks={$settings['nolinks']};\n";
+    $out .= "wptRequestCount['step$step']=" . count($requests) . ";\n";
+    $out .= "wptRequestData['step$step']=" . json_encode($requests) . ";\n";
+    $out .= "wptPageData['step$step']=" . json_encode($page_data) . ";\n";
+    $out .= "</script>";
+    return $out;
 }
 
 function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
@@ -1266,7 +1277,7 @@ function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
     $o = $index ? $opacity : '1.0';
     echo "<img style=\"display:block;opacity:$o;position:absolute;top:0;left:0;\" class=\"waterfall-image\" alt=\"\" id=\"waterfall-$index\" src=\"/waterfall.php?test={$waterfall['id']}&run={$waterfall['run']}&cached={$waterfall['cached']}&rowcount=$row_count$waterfall_options\">";
   }
-  echo '<div id="marker"></div>';
+  echo '<div class="waterfall_marker"></div>';
   echo '</div>';
 }
 

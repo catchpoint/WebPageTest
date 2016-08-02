@@ -208,4 +208,17 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
     $ug = UrlGenerator::create(false, "https://test/", "160609_a7_b8", 3, true, 2);
     $this->assertEquals($expected, $ug->downloadVideoFrames());
   }
+
+  public function testWaterfallImageFriendly() {
+    $expected = "https://test/waterfall.png?test=TEST_ID&run=3&cached=1&step=2&width=90&type=connection&mime=1";
+    $ug = UrlGenerator::create(true, "https://test/", "TEST_ID", 3, true, 2);
+    $this->assertEquals($expected, $ug->waterfallImage(true, 90, true));
+  }
+
+  public function testWaterfallImageStandard() {
+    $expected = "https://test/waterfall.php?test=TEST_ID&run=3&cached=1&step=2&width=90&type=connection&mime=1";
+    $ug = UrlGenerator::create(false, "https://test/", "TEST_ID", 3, true, 2);
+    $this->assertEquals($expected, $ug->waterfallImage(true, 90, true));
+  }
+
 }

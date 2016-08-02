@@ -67,6 +67,13 @@ class TestInfo {
   }
 
   /**
+   * @return bool True if the test contains AFT values, false otherwise
+   */
+  public function hasAboveTheFoldTime() {
+    return !empty($this->rawData['test']['aft']);
+  }
+
+  /**
    * @return bool True if the test is complete, false otherwise
    */
   public function isComplete() {

@@ -176,10 +176,37 @@ class TestRunResultsTest extends PHPUnit_Framework_TestCase {
     $this->assertFalse($runResults->hasBreakdownTimeline());
   }
 
+  public function testHasValidMetric() {
+    $runResults = $this->getTestRunResults(1);
+    $this->assertFalse($runResults->hasValidMetric("testMetric"));
+    $this->assertFalse($runResults->hasValidMetric("invalidMetric"));
+    $this->assertTrue($runResults->hasValidMetric("TTFB"));
+
+    $runResults = $this->getTestRunResults(2);
+    $this->assertFalse($runResults->hasValidMetric("testMetric"));
+
+    $runResults = $this->getTestRunResults(3);
+    $this->assertTrue($runResults->hasValidMetric("testMetric"));
+  }
+
+  public function testIsMultistep() {
+    $this->assertFalse($this->getTestRunResults(0)->isMultistep());
+    $this->assertFalse($this->getTestRunResults(1)->isMultistep());
+    $this->assertTrue($this->getTestRunResults(2)->isMultistep());
+    $this->assertTrue($this->getTestRunResults(3)->isMultistep());
+  }
+
+  public function testGetSteps() {
+    $results = $this->getTestRunResults();
+    $this->assertSame($results->getStepResults()[0], $results->getStepResult(1));
+    $this->assertSame($results->getStepResults()[1], $results->getStepResult(2));
+    $this->assertSame($results->getStepResults()[2], $results->getStepResult(3));
+  }
+
   private function getTestStepArray() {
     $step1 = array('result' => 0, 'TTFB' => 300, 'loadTime' => 6000);
-    $step2 = array('result' => 0, 'TTFB' => 100, 'loadTime' => 2000);
-    $step3 = array('result' => 99999, 'TTFB' => 500, 'loadTime' => 1000);
+    $step2 = array('result' => 0, 'TTFB' => 100, 'loadTime' => 2000, "testMetric" => 0);
+    $step3 = array('result' => 99999, 'TTFB' => 500, 'loadTime' => 1000, "testMetric" => 0.1);
 
     $stepResults = array(
       1 => TestStepResult::fromPageData($this->testInfo, $step1, 2, false, 1),
@@ -189,9 +216,9 @@ class TestRunResultsTest extends PHPUnit_Framework_TestCase {
     return $stepResults;
   }
 
-  private function getTestRunResults() {
+  private function getTestRunResults($length = null) {
     $steps = $this->getTestStepArray();
-    return TestRunResults::fromStepResults($this->testInfo, 2, false, $steps);
+    return TestRunResults::fromStepResults($this->testInfo, 2, false, array_slice($steps, 0, $length));
   }
 
   private function getTestRunResultsWithInvalid() {

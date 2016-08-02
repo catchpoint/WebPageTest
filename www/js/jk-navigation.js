@@ -1,5 +1,5 @@
 
-function addJKNavigation(selector) {
+function addJKNavigation(selector, selectedHandler) {
     $(document).keydown(function (e) {
         var JKey = 74;
         var KKey = 75;
@@ -24,7 +24,11 @@ function addJKNavigation(selector) {
                 active.removeClass('jkActive');
             }
             newActive.addClass('jkActive');
-            $('html, body').animate({scrollTop: newActive.offset().top + 'px'}, 'fast');
+            if (typeof selectedHandler == "function") {
+                selectedHandler(newActive);
+            } else {
+                $('html, body').animate({scrollTop: newActive.offset().top + 'px'}, 'fast');
+            }
         }
     });
 }

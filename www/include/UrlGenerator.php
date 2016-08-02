@@ -56,6 +56,14 @@ abstract class UrlGenerator {
   public abstract function generatedImage($image);
 
   /**
+   * @param bool $connectionView True for a connection view waterfall, false for the normal one.
+   * @param int $width Width of the generated image
+   * @param bool $withMime True if mime data should be generated, false otherwise
+   * @return string The generated URL
+   */
+  public abstract function waterfallImage($connectionView, $width, $withMime);
+
+  /**
    * @param string $extraParams|null Extra parameters to append (without '?' or '&' at start)
    * @return string The generated URL
    */
@@ -171,6 +179,13 @@ class FriendlyUrlGenerator extends UrlGenerator {
     }
     return $url;
   }
+
+  public function waterfallImage($connectionView, $width, $withMime) {
+    $params = "&width=" . $width;
+    $params .= $connectionView ? "&type=connection" : "";
+    $params .= $withMime ? "&mime=1" : "";
+    return $this->baseUrl . "/waterfall.png?" . $this->urlParams() . $params;
+  }
 }
 
 class StandardUrlGenerator extends UrlGenerator {
@@ -191,5 +206,12 @@ class StandardUrlGenerator extends UrlGenerator {
   public function resultSummary($extraParams = null) {
     $extraParams = $extraParams ? ("&" . $extraParams) : "";
     return $this->baseUrl . "/results.php?test=" . $this->testId . $extraParams;
+  }
+
+  public function waterfallImage($connectionView, $width, $withMime) {
+    $params = "&width=" . $width;
+    $params .= $connectionView ? "&type=connection" : "";
+    $params .= $withMime ? "&mime=1" : "";
+    return $this->baseUrl . "/waterfall.php?" . $this->urlParams() . $params;
   }
 }
