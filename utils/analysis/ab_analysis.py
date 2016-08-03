@@ -35,7 +35,7 @@ _METRICS = {
     'SpeedIndex': lambda x: sanitizeInt(x['SpeedIndex']),
     'TTFP': lambda x: sanitizeInt(x['render']),
     'ParseTime': lambda x:
-        sanitizeInt(x['domInteractive'], x['domLoading']),
+        sanitizeIntDiff(x['domInteractive'], x['domLoading']),
     'SpeedIndexAfterFirstByte':
         lambda x: sanitizeIntDiff(x['SpeedIndex'], x['TTFB'])
 }
