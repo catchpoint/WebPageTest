@@ -30,11 +30,12 @@ from scipy import stats
 
 # Set of metrics we are interested in, along with a function to extract that
 # metric from a WPT result row.
+# TODO(csharrison): Add ParseTime when we have valid start/end parse times.
 _METRICS = {
     'SpeedIndex': lambda x: sanitizeInt(x['SpeedIndex']),
     'TTFP': lambda x: sanitizeInt(x['render']),
-    'ParseTime': lambda x: sanitizeIntDiff(
-        x['chromeUserTiming.domInteractive'], x['chromeUserTiming.domLoading']),
+    'ParseTime': lambda x:
+        sanitizeIntDiff(x['domInteractive'], x['domLoading']),
     'SpeedIndexAfterFirstByte':
         lambda x: sanitizeIntDiff(x['SpeedIndex'], x['TTFB'])
 }
@@ -254,6 +255,23 @@ def generateResults(control, experiment):
   return results
 
 def writeCsvOutput(csv_writer, results, metric, only_significant=False):
+  csv_writer.writerow([
+      "url",
+      "mean delta",
+      "mean delta less CI",
+      "percent change less CI",
+      "significance",
+      "control mean",
+      "control CI",
+      "experiment mean",
+      "experiment CI",
+      "control samples",
+      "experiment samples",
+      "control outliers",
+      "experiment outliers",
+      "control urls",
+      "experiment urls"
+  ])
   for url, result in results.iteritems():
     if metric not in result:
       continue
@@ -262,6 +280,9 @@ def writeCsvOutput(csv_writer, results, metric, only_significant=False):
 
     if not derived_stat.is_significant and only_significant:
       continue
+
+    experiment_urls = ["http://www.webpagetest.org/result/%s/" % id for id in stat.experiment_wpt_result_ids]
+    control_urls = ["http://www.webpagetest.org/result/%s/" % id for id in stat.control_wpt_result_ids]
 
     csv_writer.writerow([
         url,
@@ -276,7 +297,9 @@ def writeCsvOutput(csv_writer, results, metric, only_significant=False):
         stat.control_samples,
         stat.experiment_samples,
         stat.control_outliers,
-        stat.experiment_outliers])
+        stat.experiment_outliers,
+        control_urls,
+        experiment_urls])
 
 
 def writeTextOutput(outstream, results, metric, only_significant):
