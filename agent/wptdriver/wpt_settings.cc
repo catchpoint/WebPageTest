@@ -81,10 +81,6 @@ bool WptSettings::Load(void) {
   if (GetPrivateProfileString(_T("WebPagetest"), _T("Url"), _T(""), buff, 
     _countof(buff), iniFile )) {
     _server = buff;
-    if( _server.Right(1) != '/' )
-      _server += "/";
-    // Automatically re-map www.webpagetest.org to agent.webpagetest.org
-    _server.Replace(_T("www.webpagetest.org"), _T("agent.webpagetest.org"));
   }
 
   if (GetPrivateProfileString(_T("WebPagetest"), _T("username"), _T(""), buff,
@@ -142,9 +138,15 @@ bool WptSettings::Load(void) {
 //    LoadFromAzure();
   }
 
+
   SetTestTimeout(_timeout * SECONDS_TO_MS);
-  if (_server.GetLength() && _location.GetLength())
+  if (_server.GetLength() && _location.GetLength()) {
+    if( _server.Right(1) != '/' )
+      _server += "/";
+    // Automatically re-map www.webpagetest.org to agent.webpagetest.org
+    _server.Replace(_T("www.webpagetest.org"), _T("agent.webpagetest.org"));
     ret = true;
+  }
 
   _software_update.LoadSettings(iniFile);
 

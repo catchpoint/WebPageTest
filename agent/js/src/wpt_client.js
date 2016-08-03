@@ -363,6 +363,7 @@ function Client(app, args) {
   if (-1 === serverUrl.indexOf('://')) {
     serverUrl = 'http://' + serverUrl;
   }
+  serverUrl = serverUrl.replace('www.webpagetest.org', 'agent.webpagetest.org');
   this.baseUrl_ = url.parse(serverUrl || '');
   // Bring the URL path into a normalized form ending with /
   // The trailing / is for url.resolve not to strip the last path component
