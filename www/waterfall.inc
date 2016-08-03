@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/common_lib.inc';
 require_once __DIR__ . '/draw.inc';
 require_once __DIR__ . '/contentColors.inc';
 require_once __DIR__ . '/include/TestPaths.php';
@@ -1253,8 +1254,9 @@ function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
 
   $row_count = 0;
   foreach($waterfalls as $index => &$waterfall) {
-    $test_path = null;
-    $requests = getRequests($waterfall['id'], $test_path, $waterfall['run'], $waterfall['cached'], $has_secure_requests, $has_locations, false, false);
+    $test_path = './' . GetTestPath($waterfall['id']);
+    $localPaths = new TestPaths($test_path, $waterfall['run'], $waterfall['cached'], $waterfall['step']);
+    $requests = getRequestsForStep($localPaths, null, $has_secure_requests, $has_locations, false, false);
     if (isset($requests) && is_array($requests)) {
       $count = count($requests);
       if ($count > $row_count)
@@ -1275,7 +1277,8 @@ function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
   echo "<div style=\"background-color: #fff;$height_style\" class=\"waterfall-container\">";
   foreach($waterfalls as $index => &$waterfall) {
     $o = $index ? $opacity : '1.0';
-    echo "<img style=\"display:block;opacity:$o;position:absolute;top:0;left:0;\" class=\"waterfall-image\" alt=\"\" id=\"waterfall-$index\" src=\"/waterfall.php?test={$waterfall['id']}&run={$waterfall['run']}&cached={$waterfall['cached']}&rowcount=$row_count$waterfall_options\">";
+    $waterfallUrl = "/waterfall.php?test={$waterfall['id']}&run={$waterfall['run']}&cached={$waterfall['cached']}&step={$waterfall['step']}&rowcount=$row_count$waterfall_options";
+    echo "<img style=\"display:block;opacity:$o;position:absolute;top:0;left:0;\" class=\"waterfall-image\" alt=\"\" id=\"waterfall-$index\" src=\"$waterfallUrl\">";
   }
   echo '<div class="waterfall_marker"></div>';
   echo '</div>';
