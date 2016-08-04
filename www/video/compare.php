@@ -26,6 +26,7 @@ if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
 }
 else
 {
+    require_once __DIR__ . '/../include/UrlGenerator.php';
     chdir('..');
     include 'common.inc';
     require_once('page_data.inc');
@@ -387,23 +388,13 @@ function ScreenShotTable()
             if( !strpos($test['name'], ' ') )
                 $break = ' style="word-break: break-all;"';
             echo "<tr width=10% height={$height}px ><td$break class=\"pagelinks\">";
-            $name = urlencode($test['name']);
-            $cached = 0;
-            if( $test['cached'] )
-                $cached = 1;
 
             // Print the index outside of the link tag
             echo $test['index'] . ': ';
 
             if (!defined('EMBED')) {
-                $cached = '';
-                if( $test['cached'] )
-                    $cached = 'cached/';
-                if( FRIENDLY_URLS )
-                    $href = "/result/{$test['id']}/{$test['run']}/details/$cached";
-                else
-                    $href = "/details.php?test={$test['id']}&run={$test['run']}&cached={$test['cached']}";
-
+                $urlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $test['id'], $test['run'], $test['cached'], $test['step']);
+                $href = $urlGenerator->resultPage("details");
                 echo "<a class=\"pagelink\" id=\"label_{$test['id']}\" href=\"$href\">" . WrapableString(htmlspecialchars($test['name'])) . '</a>';
             } else {
                 echo WrapableString(htmlspecialchars($test['name']));
