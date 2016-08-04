@@ -114,6 +114,7 @@ WebBrowser::~WebBrowser(void) {
 -----------------------------------------------------------------------------*/
 bool WebBrowser::RunAndWait() {
   bool ret = false;
+  bool is_chrome = false;
 
   // signal to the IE BHO that it needs to inject the code
   HANDLE active_event = CreateMutex(&null_dacl, TRUE, GLOBAL_TESTING_MUTEX);
@@ -136,6 +137,7 @@ bool WebBrowser::RunAndWait() {
       exe = _browser._exe;
       exe.MakeLower();
       if (exe.Find(_T("chrome.exe")) >= 0) {
+        is_chrome = true;
         ConfigureChromePreferences();
         if (_test._browser_command_line.GetLength()) {
           lstrcat(cmdLine, CString(_T(" ")) +
@@ -258,12 +260,25 @@ bool WebBrowser::RunAndWait() {
 
         if (CreateProcess(_browser._exe, cmdLine, NULL, NULL, FALSE,
                           0, NULL, NULL, &si, &pi)) {
-          CloseHandle(pi.hThread);
-          CloseHandle(pi.hProcess);
           DWORD wait_time = 60000;
           #ifdef DEBUG
           wait_time = INFINITE;
           #endif
+          // see if we need to do a re-launch of Chrome (seems to be necessary with the latest canary)
+          if (is_chrome) {
+            HANDLE events[2];
+            events[0] = pi.hProcess;
+            events[1] = _browser_started_event;
+            if (WaitForMultipleObjects(2, events, FALSE, wait_time) == WAIT_OBJECT_0) {
+              CloseHandle(pi.hThread);
+              CloseHandle(pi.hProcess);
+              Sleep(5000);
+              CreateProcess(_browser._exe, cmdLine, NULL, NULL, FALSE,
+                          0, NULL, NULL, &si, &pi);
+            }
+          }
+          CloseHandle(pi.hThread);
+          CloseHandle(pi.hProcess);
           if (WaitForSingleObject(_browser_started_event, wait_time) ==
               WAIT_OBJECT_0) {
             DWORD pid = GetBrowserProcessId();
