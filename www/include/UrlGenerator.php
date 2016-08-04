@@ -118,10 +118,30 @@ abstract class UrlGenerator {
   }
 
   /**
+   * @param string $frame The thumbnail name
+   * @param int $fit Maximum size of the thumbnail
+   * @return string The URL for a thumbnail of the video frame
+   */
+  public function videoFrameThumbnail($frame, $fit) {
+    $file = "video_" . rtrim(strtolower($this->underscorePrefix()), "_") . "/" . $frame;
+    return $this->baseUrl . "/thumbnail.php?test=" . $this->testId . "&fit=" . $fit . "&file=" . $file;
+  }
+
+  /**
    * @return string The generated URL to download all video frames
    */
   public function downloadVideoFrames() {
     return $this->baseUrl . "/video/downloadFrames.php?" . $this->urlParams();
+  }
+
+  /**
+   * @param string $page Step-independent Result page to generate the URL for
+   * @param string $extraParams|null Extra parameters to append (without '?' or '&' at start)
+   * @return string The generated URL
+   */
+  public function stepDetailPage($page, $extraParams = null) {
+    $extraParams = $extraParams ? ("&" . $extraParams) : "";
+    return $this->baseUrl . "/" . $page . ".php?" . $this->urlParams() . $extraParams;
   }
 
   protected function underscorePrefix() {
@@ -141,9 +161,6 @@ class FriendlyUrlGenerator extends UrlGenerator {
     $url = $this->baseUrl . "/result/" . $this->testId . "/" . $this->run . "/" . $page . "/";
     if ($this->cached) {
       $url .= "cached/";
-    }
-    if ($this->step > 1) {
-      $url .= $this->step . "/";
     }
     if ($extraParams != null) {
       $url .= "?" . $extraParams;

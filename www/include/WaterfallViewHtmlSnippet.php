@@ -31,8 +31,8 @@ class WaterfallViewHtmlSnippet {
       '', $this->stepResult->getStepNumber());
 
     $urlGenerator = $this->stepResult->createUrlGenerator("", false);
-    $out .=  "<br><a href=\"" . $urlGenerator->resultPage("customWaterfall", "width=930") . "\">customize waterfall</a> &#8226; ";
-    $out .=  "<a id=\"view-images\" href=\"" . $urlGenerator->resultPage("pageimages") . "\">View all Images</a>";
+    $out .=  "<br><a href=\"" . $urlGenerator->stepDetailPage("customWaterfall", "width=930") . "\">customize waterfall</a> &#8226; ";
+    $out .=  "<a id=\"view-images\" href=\"" . $urlGenerator->stepDetailPage("pageimages") . "\">View all Images</a>";
     return $out;
   }
 
