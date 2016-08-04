@@ -633,6 +633,8 @@ function ScreenShotTable()
             http://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY-l:Original,110606_AE_RZN5-l:No+JS</li>
             <li><b>Compare First vs. Repeat view:</b>
             http://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY, 110606_MJ_RZEY-c:1</li>
+            <li><b>Second step of first run vs. Second step of second run:</b>
+            http://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY-r:1-s:2,110606_MJ_RZEY-r:2-s:2</li>
             <li><b>White background with black text:</b>
             http://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY, 110606_MJ_RZEY-c:1&bg=ffffff&text=000000</li>
             </ul>
