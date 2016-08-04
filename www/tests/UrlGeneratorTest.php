@@ -76,8 +76,9 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
   }
 
   public function testResultPageFriendlyUrlWithStep() {
-    $expected = "https://test/result/qwerty/3/details/2/";
-    $expectedCached = "https://test/result/qwerty/3/details/cached/2/";
+    // step should actually be in the URL
+    $expected = "https://test/result/qwerty/3/details/";
+    $expectedCached = "https://test/result/qwerty/3/details/cached/";
 
     $ug = UrlGenerator::create(true, "https://test/", "qwerty", 3, false, 2);
     $this->assertEquals($expected, $ug->resultPage("details"));
@@ -86,6 +87,19 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals($expectedCached, $ug->resultPage("details"));
 
     $this->assertEquals($expectedCached . "?param=value", $ug->resultPage("details", "param=value"));
+  }
+
+  public function testStepDetailPage() {
+    $expected = "https://test/stepDetail.php?test=qwerty&run=3&step=2";
+    $expectedCached = "https://test/stepDetail.php?test=qwerty&run=3&cached=1&step=2";
+
+    $ug = UrlGenerator::create(false, "https://test/", "qwerty", 3, false, 2);
+    $this->assertEquals($expected, $ug->resultPage("stepDetail"));
+
+    $ug = UrlGenerator::create(false, "https://test/", "qwerty", 3, true, 2);
+    $this->assertEquals($expectedCached, $ug->resultPage("stepDetail"));
+
+    $this->assertEquals($expectedCached . "&param=value", $ug->resultPage("stepDetail", "param=value"));
   }
 
   public function testThumbStandardUrl() {

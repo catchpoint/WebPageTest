@@ -134,6 +134,16 @@ abstract class UrlGenerator {
     return $this->baseUrl . "/video/downloadFrames.php?" . $this->urlParams();
   }
 
+  /**
+   * @param string $page Step-independent Result page to generate the URL for
+   * @param string $extraParams|null Extra parameters to append (without '?' or '&' at start)
+   * @return string The generated URL
+   */
+  public function stepDetailPage($page, $extraParams = null) {
+    $extraParams = $extraParams ? ("&" . $extraParams) : "";
+    return $this->baseUrl . "/" . $page . ".php?" . $this->urlParams() . $extraParams;
+  }
+
   protected function underscorePrefix() {
     $stepSuffix = $this->step > 1 ? ($this->step . "_") : "";
     return strval($this->run) . "_" . ($this->cached ? "Cached_" : "") . $stepSuffix;
@@ -151,9 +161,6 @@ class FriendlyUrlGenerator extends UrlGenerator {
     $url = $this->baseUrl . "/result/" . $this->testId . "/" . $this->run . "/" . $page . "/";
     if ($this->cached) {
       $url .= "cached/";
-    }
-    if ($this->step > 1) {
-      $url .= $this->step . "/";
     }
     if ($extraParams != null) {
       $url .= "?" . $extraParams;
