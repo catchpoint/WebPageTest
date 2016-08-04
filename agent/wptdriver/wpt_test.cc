@@ -42,12 +42,12 @@ static const DWORD BROWSER_HEIGHT = 768;
 static const TCHAR * DEFAULT_MOBILE_SCALE_FACTOR = _T("3");
 static const DWORD DEFAULT_MOBILE_WIDTH = 360;
 static const DWORD DEFAULT_MOBILE_HEIGHT = 511;
-static const DWORD CHROME_PADDING_HEIGHT = 108;
+static const DWORD CHROME_PADDING_HEIGHT = 75;
 static const DWORD CHROME_PADDING_WIDTH = 6;
 static const char * DEFAULT_MOBILE_USER_AGENT =
-    "Mozilla/5.0 (Linux; Android 5.0; Nexus 5 Build/LRX21O) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/46.0.2490.76 Mobile Safari/537.36";
+    "Mozilla/5.0 (Linux; Android 4.4.4; Nexus 5 Build/KTU84Q) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.81 "
+    "Mobile Safari/537.36";
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -575,13 +575,6 @@ void WptTest::BuildScript() {
     _script_commands.AddHead(command);
     _viewport_width = 0;
     _viewport_height = 0;
-  }
-
-  if (!overrode_ua_string_ &&
-      !_user_agent.IsEmpty() &&
-      !_preserve_user_agent &&
-      _user_agent.Find(" " + _user_agent_modifier + "/") == -1) {
-    _user_agent += " " + GetAppendUA();
   }
 }
 
