@@ -776,6 +776,9 @@ void WebBrowser::ConfigureChromePreferences() {
   LPCSTR prefs =
     "{"
       "\"profile\":{"
+        "\"default_content_setting_values\":{"
+          "\"geolocation\":2"
+        "},"
         "\"password_manager_enabled\":false"
       "}"
     "}";
