@@ -4,9 +4,16 @@ require_once __DIR__ . '/breakdown.inc';
 require_once __DIR__ . '/contentColors.inc';
 require_once __DIR__ . '/waterfall.inc';
 require_once __DIR__ . '/page_data.inc';
+require_once __DIR__ . '/include/TestInfo.php';
+require_once __DIR__ . '/include/TestRunResults.php';
+require_once __DIR__ . '/include/ConnectionViewHtmlSnippet.php';
 
 $page_keywords = array('Content Breakdown','MIME Types','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website content breakdown by mime type$testLabel";
+
+$testInfo = TestInfo::fromFiles($testPath);
+$firstViewResults = TestRunResults::fromFiles($testInfo, $run, false);
+$repeatViewResults = null;
 
 $extension = 'php';
 if( FRIENDLY_URLS )
@@ -17,8 +24,10 @@ $requestsFv;
 $breakdownFv = getBreakdown($id, $testPath, $run, 0, $requestsFv);
 $breakdownRv = array();
 $requestsRv = array();
-if( (int)$test[test][fvonly] == 0 )
+if(!$testInfo->isFirstViewOnly()) {
+    $repeatViewResults = TestRunResults::fromFiles($testInfo, $run, true);
     $breakdownRv = getBreakdown($id, $testPath, $run, 1, $requestsRv);
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -38,7 +47,7 @@ if( (int)$test[test][fvonly] == 0 )
                 margin-bottom:auto;
             }
 
-            td.legend {
+            table.legend td {
                 white-space:nowrap; 
                 text-align:left; 
                 vertical-align:top; 
@@ -79,47 +88,13 @@ if( (int)$test[test][fvonly] == 0 )
             </table>
             <div style="text-align:center;">
             <h3 name="connection">Connection View (First View)</h3>
-            <map name="connection_map">
             <?php
-                $connection_rows = GetConnectionRows($requestsFv, $summary);
-                $options = array(
-                    'id' => $id,
-                    'path' => $testPath,
-                    'run_id' => $run,
-                    'is_cached' => $cached,
-                    'use_cpu' => true,
-                    'show_labels' => true,
-                    'is_mime' => $mime
-                    );
-                $map = GetWaterfallMap($connection_rows, $url, $options, $pageData);
-                foreach($map as $entry)
-                {
-                    if( $entry['request'] !== NULL )
-                    {
-                        $index = $entry['request'] + 1;
-                        $title = $index . ': ' . $entry['url'];
-                        echo '<area href="#request' . $index . '" alt="' . $title . '" title="' . $title . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
-                    }
-                    else
-                        echo '<area href="#request" alt="' . $entry['url'] . '" title="' . $entry['url'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
-                }
+                $snippet = new ConnectionViewHtmlSnippet($testInfo, $firstViewResults->getStepResult(1));
+                echo $snippet->create();
             ?>
-            </map>
-            <table border="1" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">
-                <tr>
-                    <td class="legend"><table><tr><td class="legend"><div class="bar" style="width:2px; background-color:#28BC00"></div></td><td class="legend">Start Render</td></tr></table></td>
-                    <?php if((float)$test[$section][domElement] > 0.0) { ?>
-                    <td class="legend"><table><tr><td class="legend"><div class="bar" style="width:2px; background-color:#F28300"></div></td><td class="legend">DOM Element</td></tr></table></td>
-                    <?php } ?>
-                    <td class="legend"><table><tr><td class="legend"><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td class="legend">Document Complete</td></tr></table></td>
-                </tr>
-            </table>
-            <br>
-            <img class="progress" usemap="#connection_map" id="connectionView" src="<?php 
-                echo "/waterfall.$extension?width=930&type=connection&test=$id&run=$run&mime=1&cached=0";?>">
             </div>
 
-            <?php if( count($breakdownRv) ) { ?>
+            <?php if ($repeatViewResults) { ?>
             <br><hr><br>
             <table align="center">
                 <tr>
@@ -146,46 +121,12 @@ if( (int)$test[test][fvonly] == 0 )
             </table>
             <div style="text-align:center;">
             <h3 name="connection">Connection View (Repeat View)</h3>
-            <map name="connection_map_rv">
             <?php
-                $connection_rows = GetConnectionRows($requestsFv, $summary);
-                $options = array(
-                    'id' => $id,
-                    'path' => $testPath,
-                    'run_id' => $run,
-                    'is_cached' => $cached,
-                    'use_cpu' => true,
-                    'show_labels' => true,
-                    'is_mime' => $mime
-                    );
-                $map = GetWaterfallMap($connection_rows, $url, $options, $pageData);
-                foreach($map as $entry)
-                {
-                    if( $entry['request'] !== NULL )
-                    {
-                        $index = $entry['request'] + 1;
-                        $title = $index . ': ' . $entry['url'];
-                        echo '<area href="#request' . $index . '" alt="' . $title . '" title="' . $title . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
-                    }
-                    else
-                        echo '<area href="#request" alt="' . $entry['url'] . '" title="' . $entry['url'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
-                }
+            $snippet = new ConnectionViewHtmlSnippet($testInfo, $repeatViewResults->getStepResult(1));
+            echo $snippet->create();
             ?>
-            </map>
-            <table border="1" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">
-                <tr>
-                    <td class="legend"><table><tr><td class="legend"><div class="bar" style="width:2px; background-color:#28BC00"></div></td><td class="legend">Start Render</td></tr></table></td>
-                    <?php if((float)$test[$section][domElement] > 0.0) { ?>
-                    <td class="legend"><table><tr><td class="legend"><div class="bar" style="width:2px; background-color:#F28300"></div></td><td class="legend">DOM Element</td></tr></table></td>
-                    <?php } ?>
-                    <td class="legend"><table><tr><td class="legend"><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td class="legend">Document Complete</td></tr></table></td>
-                </tr>
-            </table>
-            <br>
-            <img class="progress" usemap="#connection_map_rv" id="connectionViewRv" src="<?php 
-                echo "/waterfall.$extension?width=930&type=connection&test=$id&run=$run&mime=1&cached=1";?>">
             </div>
-            <?php } ?>
+        <?php } ?>
         </div>
         
         <?php include('footer.inc'); ?>
