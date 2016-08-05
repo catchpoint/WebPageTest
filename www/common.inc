@@ -251,9 +251,11 @@ if (strlen($id)) {
     $step = max(1, @(int)$_REQUEST['step']); // default is step=1
     $cached = @(int)$_REQUEST['cached'];  // define a global used in other files
     if (array_key_exists('run', $_REQUEST) && !strcasecmp($_REQUEST['run'], 'median')) {
-      require_once('page_data.inc');
-      $pageData = loadAllPageData($testPath, $options);
-      $run = GetMedianRun($pageData, $cached, $median_metric);
+      require_once 'include/TestInfo.php';
+      require_once 'include/TestResults.php';
+      $testInfo = TestInfo::fromFiles($testPath);
+      $testResults = TestResults::fromFiles($testInfo, null, $options);
+      $run = $testResults->getMedianRunNumber($median_metric, $cached);
     }
     $cachedText = $cached ? '_Cached' : '';
     $testDate = null;
