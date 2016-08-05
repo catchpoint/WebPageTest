@@ -1,9 +1,9 @@
 <?php
-include 'common.inc';
-require_once('breakdown.inc');
-require_once('contentColors.inc');
-require_once('waterfall.inc');
-require_once('page_data.inc');
+include __DIR__ . '/common.inc';
+require_once __DIR__ . '/breakdown.inc';
+require_once __DIR__ . '/contentColors.inc';
+require_once __DIR__ . '/waterfall.inc';
+require_once __DIR__ . '/page_data.inc';
 
 $page_keywords = array('Content Breakdown','MIME Types','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website content breakdown by mime type$testLabel";
