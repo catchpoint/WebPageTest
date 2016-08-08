@@ -50,7 +50,7 @@ if ($ok) {
     header('HTTP/1.0 404 Not Found');
   }
 } else {
-  logMsg("BLOCKED - $ip : {$_REQUEST['installer']}", "log/software.log", true);
+  //logMsg("BLOCKED - $ip : {$_REQUEST['installer']}", "log/software.log", true);
   header('HTTP/1.0 403 Forbidden');
 }
 
