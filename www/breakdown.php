@@ -48,6 +48,10 @@ if(!$testInfo->isFirstViewOnly()) {
                 vertical-align:top; 
                 padding:0;
             }
+
+            h2 {
+                text-align: center;
+            }
         </style>
     </head>
     <body>
@@ -57,27 +61,22 @@ if(!$testInfo->isFirstViewOnly()) {
             $subtab = 'Content Breakdown';
             include 'header.inc';
             ?>
-            
-            <table align="center">
-                <tr>
-                    <th colspan="2">
-                    <h2>Content breakdown by MIME type (First  View)</h2>
-                    </th>
-                </tr>
+            <h2>Content breakdown by MIME type (First  View)</h2>
+            <table align="center" id="breakdownFv">
                 <tr>
                     <td>
-                        <div id="pieRequestsFv_div" style="width:450px; height:300px;"></div>
+                        <div class="pieRequests" style="width:450px; height:300px;"></div>
                     </td>
                     <td>
-                        <div id="pieBytesFv_div" style="width:450px; height:300px;"></div>
+                        <div class="pieBytes" style="width:450px; height:300px;"></div>
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <div id="tableRequestsFv_div" style="width: 100%;"></div>
+                        <div class="tableRequests" style="width: 100%;"></div>
                     </td>
                     <td>
-                        <div id="tableBytesFv_div" style="width: 100%;"></div>
+                        <div class="tableBytes" style="width: 100%;"></div>
                     </td>
                 </tr>
             </table>
@@ -91,26 +90,22 @@ if(!$testInfo->isFirstViewOnly()) {
 
             <?php if ($repeatViewResults) { ?>
             <br><hr><br>
-            <table align="center">
-                <tr>
-                    <th colspan="2">
-                    <h2>Content breakdown by MIME type (Repeat  View)</h2>
-                    </th>
-                </tr>
+            <h2>Content breakdown by MIME type (Repeat  View)</h2>
+            <table align="center" id="breakdownRv">
                 <tr>
                     <td>
-                        <div id="pieRequestsRv_div" style="width:450px; height:300px;"></div>
+                        <div class="pieRequests" style="width:450px; height:300px;"></div>
                     </td>
                     <td>
-                        <div id="pieBytesRv_div" style="width:450px; height:300px;"></div>
+                        <div class="pieBytes" style="width:450px; height:300px;"></div>
                     </td>
                 </tr>
                 <tr>
                     <td>
-                        <div id="tableRequestsRv_div" style="width: 100%;"></div>
+                        <div class="tableRequests" style="width: 100%;"></div>
                     </td>
                     <td>
-                        <div id="tableBytesRv_div" style="width: 100%;"></div>
+                        <div class="tableBytes" style="width: 100%;"></div>
                     </td>
                 </tr>
             </table>
@@ -136,10 +131,10 @@ if(!$testInfo->isFirstViewOnly()) {
 
         function initTables() {
             var breakdownFv = <?php echo json_encode($breakdownFv); ?>;
-            drawTable(breakdownFv, 'tableRequestsFv_div', 'tableBytesFv_div', 'pieRequestsFv_div', 'pieBytesFv_div');
+            drawTable(breakdownFv, $('#breakdownFv'));
             <?php if (count($breakdownRv)) { ?>
             var breakdownRv = <?php echo json_encode($breakdownRv); ?>;
-            drawTable(breakdownRv, 'tableRequestsRv_div', 'tableBytesRv_div', 'pieRequestsRv_div', 'pieBytesRv_div');
+            drawTable(breakdownRv, $('#breakdownRv'));
             <?php } ?>
         }
 
@@ -147,7 +142,8 @@ if(!$testInfo->isFirstViewOnly()) {
             return "#" + ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1);
         }
 
-        function drawTable(breakdown, tableRequestDiv, tableBytesDiv, pieRequestsDiv, pieBytesDiv) {
+        function drawTable(breakdown, parentNode) {
+            parentNode = $(parentNode);
             var numData = breakdown.length;
             var data = new google.visualization.DataTable();
             data.addColumn('string', 'MIME Type');
@@ -177,20 +173,20 @@ if(!$testInfo->isFirstViewOnly()) {
             var viewRequests = new google.visualization.DataView(data);
             viewRequests.setColumns([0, 1]);
             
-            var tableRequests = new google.visualization.Table(document.getElementById(tableRequestDiv));
+            var tableRequests = new google.visualization.Table(parentNode.find('div.tableRequests')[0]);
             tableRequests.draw(viewRequests, {showRowNumber: false, sortColumn: 1, sortAscending: false});
 
             var viewBytes = new google.visualization.DataView(data);
             viewBytes.setColumns([0, 2]);
             
-            var tableBytes = new google.visualization.Table(document.getElementById(tableBytesDiv));
+            var tableBytes = new google.visualization.Table(parentNode.find('div.tableBytes')[0]);
             tableBytes.draw(viewBytes, {showRowNumber: false, sortColumn: 1, sortAscending: false});
             
-            var pieRequests = new google.visualization.PieChart(document.getElementById(pieRequestsDiv));
+            var pieRequests = new google.visualization.PieChart(parentNode.find('div.pieRequests')[0]);
             google.visualization.events.addListener(pieRequests, 'ready', function(){markUserTime('aft.Requests Pie');});
             pieRequests.draw(requests, {width: 450, height: 300, title: 'Requests', colors: colors});
 
-            var pieBytes = new google.visualization.PieChart(document.getElementById(pieBytesDiv));
+            var pieBytes = new google.visualization.PieChart(parentNode.find('div.pieBytes')[0]);
             google.visualization.events.addListener(pieBytes, 'ready', function(){markUserTime('aft.Bytes Pie');});
             pieBytes.draw(bytes, {width: 450, height: 300, title: 'Bytes', colors: colors});
         }
