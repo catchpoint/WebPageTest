@@ -175,7 +175,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
               $urlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $id, $gradeRun, false);
               $pageSpeedScore = $gradeRunResults->averagePageSpeedScore();
               if ($pageSpeedScore !== null) {
-                $pageSpeedUrl = $urlGenerator->resultPage("pagespeed");
+                $pageSpeedUrl = $urlGenerator->stepDetailPage("pagespeed");
                 $pageSpeedVersion = $gradeRunResults->getPageSpeedVersion();
                 echo "<span id=\"headerPagespeedScore\"><a href=\"$pageSpeedUrl\">PageSpeed $pageSpeedVersion Score</a>: <b>$pageSpeedScore/100</b></span>";
               }

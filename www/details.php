@@ -271,8 +271,8 @@ $page_description = "Website performance test details$testLabel";
                         echo "<td><a href='#connection_view_$stepSuffix'>Connection View</a></td>";
                         echo "<td><a href='#request_details_$stepSuffix'>Request Details</a></td>";
                         echo "<td><a href='#request_headers_$stepSuffix'>Request Headers</a></td>";
-                        echo "<td><a href='" . $urlGenerator->resultPage("customWaterfall", "width=930") . "'>Customize Waterfall</a></td>";
-                        echo "<td><a href='" . $urlGenerator->resultPage("pageimages") . "'>All Images</a></td>";
+                        echo "<td><a href='" . $urlGenerator->stepDetailPage("customWaterfall", "width=930") . "'>Customize Waterfall</a></td>";
+                        echo "<td><a href='" . $urlGenerator->stepDetailPage("pageimages") . "'>All Images</a></td>";
                         echo "</tr>";
                     }
                     echo "</table>\n<br>\n";

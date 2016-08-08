@@ -1,11 +1,11 @@
 <?php
+require_once __DIR__ . '/../include/TestPaths.php';
 chdir('..');
 include 'common.inc';
 require_once('video.inc');
 
-$dir = "$testPath/video_$run";
-if( $cached )
-    $dir .= "_cached";
+$localPaths = new TestPaths($testPath, $run, $cached, $step);
+$dir = $localPaths->videoDir();
 $ok = false;
 
 if( is_dir($dir) )
