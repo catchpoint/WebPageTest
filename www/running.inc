@@ -83,12 +83,6 @@
         </div>
         <script type="text/javascript">
             var testId = "<?php echo $id; ?>";
-            <?php
-            $polling_interval_testing = 1000;
-            $polling_interval = 15000;
-            echo "var pollingInterval = $polling_interval;\n";
-            echo "var pollingIntervalTesting = $polling_interval_testing;\n";
-            ?>
             var waitingImage = '<?php echo "{$GLOBALS['cdnPath']}/images/status_waiting.png"; ?>';
             var testingImage = '<?php echo "{$GLOBALS['cdnPath']}/images/status_testing.png"; ?>';
             var lastStatusCode = 0;
@@ -101,7 +95,7 @@
                     if (xhr.readyState != 4)
                       return;
                     var reload = false;
-                    var interval = pollingInterval;
+                    var interval = 15000;
                     if (xhr.status == 200) {
                         var response = JSON.parse(xhr.responseText);
                         if (response['statusCode'] != undefined &&
@@ -115,7 +109,7 @@
                                 reload = true;
                         }
                         if (lastStatusCode == 100) {
-                            interval = pollingIntervalTesting;
+                            interval = 1000;
                             if (response['data'] != undefined &&
                                 !response.data['remote'] && 
                                 response.data['testsCompleted'] != undefined &&
@@ -128,20 +122,21 @@
                             $('#statusText').text(lastStatusText);
                         }
                     }
-                    if (reload)
+                    if (reload) {
                         window.location.reload(true);
-                    else
+                    } else {
                         setTimeout('UpdateStatus()', interval);
+                    }
                   };
                   xhr.onerror = function() {
-                    setTimeout('UpdateStatus()', pollingInterval);
+                    setTimeout('UpdateStatus()', 15000);
                   };
                   xhr.send();
                 } catch (err) {
-                    setTimeout('UpdateStatus()', pollingInterval);
+                    setTimeout('UpdateStatus()', 15000);
                 }
             }
-            setTimeout('UpdateStatus()', pollingInterval);
+            setTimeout('UpdateStatus()', 15000);
         </script>
     </body>
 </html>

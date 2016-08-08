@@ -72,6 +72,7 @@ def video_to_frames(video, directory, force, orange_file, multiple, find_viewpor
           for dir in directories:
             trim_video_end(dir, trim_end)
             if orange_file is not None:
+              remove_frames_before_orange(dir, orange_file)
               remove_orange_frames(dir, orange_file)
             find_first_frame(dir)
             find_render_start(dir)
@@ -169,6 +170,29 @@ def split_videos(directory, orange_file):
         os.remove(frame)
   return directories
 
+
+def remove_frames_before_orange(directory, orange_file):
+  frames = sorted(glob.glob(os.path.join(directory, 'video-*.png')))
+  if len(frames):
+    # go through the first 20 frames and remove any that come before the first orange frame.
+    # iOS video capture starts with a blank white frame and then flips to orange before starting.
+    logging.debug("Scanning for non-orange frames...")
+    found_orange = False
+    remove_frames = []
+    frame_count = 0
+    for frame in frames:
+      frame_count += 1
+      if is_orange_frame(frame, orange_file):
+        found_orange = True
+        break
+      if frame_count > 20:
+        break
+      remove_frames.append(frame)
+
+    if found_orange and len(remove_frames):
+      for frame in remove_frames:
+        logging.debug("Removing pre-orange frame {0}".format(frame ))
+        os.remove(frame)
 
 def remove_orange_frames(directory, orange_file):
   frames = sorted(glob.glob(os.path.join(directory, 'video-*.png')))
