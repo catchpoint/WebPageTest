@@ -7,7 +7,7 @@ require_once __DIR__ . '/page_data.inc';
 require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/include/TestPaths.php';
 require_once __DIR__ . '/include/TestRunResults.php';
-require_once __DIR__ . '/include/ConnectionViewHtmlSnippet.php';
+require_once __DIR__ . '/include/MimetypeBreakdownHtmlSnippet.php';
 
 $page_keywords = array('Content Breakdown','MIME Types','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website content breakdown by mime type$testLabel";
@@ -62,61 +62,18 @@ if(!$testInfo->isFirstViewOnly()) {
             include 'header.inc';
             ?>
             <h2>Content breakdown by MIME type (First  View)</h2>
-            <table align="center" id="breakdownFv">
-                <tr>
-                    <td>
-                        <div class="pieRequests" style="width:450px; height:300px;"></div>
-                    </td>
-                    <td>
-                        <div class="pieBytes" style="width:450px; height:300px;"></div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="tableRequests" style="width: 100%;"></div>
-                    </td>
-                    <td>
-                        <div class="tableBytes" style="width: 100%;"></div>
-                    </td>
-                </tr>
-            </table>
-            <div style="text-align:center;">
-            <h3 name="connection">Connection View (First View)</h3>
             <?php
-                $snippet = new ConnectionViewHtmlSnippet($testInfo, $firstViewResults->getStepResult(1));
-                echo $snippet->create();
+                $snippetFv = new MimetypeBreakdownHtmlSnippet($testInfo, $firstViewResults->getStepResult(1));
+                echo $snippetFv->create();
             ?>
-            </div>
-
             <?php if ($repeatViewResults) { ?>
-            <br><hr><br>
-            <h2>Content breakdown by MIME type (Repeat  View)</h2>
-            <table align="center" id="breakdownRv">
-                <tr>
-                    <td>
-                        <div class="pieRequests" style="width:450px; height:300px;"></div>
-                    </td>
-                    <td>
-                        <div class="pieBytes" style="width:450px; height:300px;"></div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="tableRequests" style="width: 100%;"></div>
-                    </td>
-                    <td>
-                        <div class="tableBytes" style="width: 100%;"></div>
-                    </td>
-                </tr>
-            </table>
-            <div style="text-align:center;">
-            <h3 name="connection">Connection View (Repeat View)</h3>
-            <?php
-            $snippet = new ConnectionViewHtmlSnippet($testInfo, $repeatViewResults->getStepResult(1));
-            echo $snippet->create();
-            ?>
-            </div>
-        <?php } ?>
+                <br><hr><br>
+                <h2>Content breakdown by MIME type (Repeat  View)</h2>
+                <?php
+                    $snippetRv = new MimetypeBreakdownHtmlSnippet($testInfo, $repeatViewResults->getStepResult(1));
+                    echo $snippetRv->create();
+                ?>
+            <?php } ?>
         </div>
         
         <?php include('footer.inc'); ?>
@@ -131,10 +88,10 @@ if(!$testInfo->isFirstViewOnly()) {
 
         function initTables() {
             var breakdownFv = <?php echo json_encode($breakdownFv); ?>;
-            drawTable(breakdownFv, $('#breakdownFv'));
+            drawTable(breakdownFv, $('#<?php echo $snippetFv->getBreakdownId(); ?>'));
             <?php if (count($breakdownRv)) { ?>
             var breakdownRv = <?php echo json_encode($breakdownRv); ?>;
-            drawTable(breakdownRv, $('#breakdownRv'));
+            drawTable(breakdownRv, $('#<?php echo $snippetRv->getBreakdownId(); ?>'));
             <?php } ?>
         }
 
