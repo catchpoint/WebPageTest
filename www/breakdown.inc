@@ -71,6 +71,25 @@ function getBreakdownForStep($localPaths, $rootUrlGenerator, &$requests) {
 }
 
 /**
+ * @param TestPaths $localPaths Paths to get the correct step related files
+ * @return array Array with array of "type", "requests", "bytes", and "color" per mimetype
+ */
+function getJSFriendlyBreakdown($localPaths) {
+    $breakdown = getBreakdownForStep($localPaths, null, $requests);
+    ksort($breakdown);
+    $jsFriendly = array();
+    foreach ($breakdown as $type => $values) {
+        $jsFriendly[] = array(
+          "type" => $type,
+          "requests" => $values["requests"],
+          "bytes" => $values["bytes"],
+          "color" => $values["color"]
+        );
+    }
+    return $jsFriendly;
+}
+
+/**
 * Get a combined result that has both first and repeat view data
 * 
 * @param mixed $id

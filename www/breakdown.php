@@ -5,6 +5,7 @@ require_once __DIR__ . '/contentColors.inc';
 require_once __DIR__ . '/waterfall.inc';
 require_once __DIR__ . '/page_data.inc';
 require_once __DIR__ . '/include/TestInfo.php';
+require_once __DIR__ . '/include/TestPaths.php';
 require_once __DIR__ . '/include/TestRunResults.php';
 require_once __DIR__ . '/include/ConnectionViewHtmlSnippet.php';
 
@@ -15,18 +16,12 @@ $testInfo = TestInfo::fromFiles($testPath);
 $firstViewResults = TestRunResults::fromFiles($testInfo, $run, false);
 $repeatViewResults = null;
 
-$extension = 'php';
-if( FRIENDLY_URLS )
-    $extension = 'png';
-
 // walk through the requests and group them by mime type
-$requestsFv;
-$breakdownFv = getBreakdown($id, $testPath, $run, 0, $requestsFv);
+$breakdownFv = getJSFriendlyBreakdown(new TestPaths($testPath, $run, false, 1));
 $breakdownRv = array();
-$requestsRv = array();
 if(!$testInfo->isFirstViewOnly()) {
     $repeatViewResults = TestRunResults::fromFiles($testInfo, $run, true);
-    $breakdownRv = getBreakdown($id, $testPath, $run, 1, $requestsRv);
+    $breakdownRv = getJSFriendlyBreakdown(new TestPaths($testPath, $run, true, 1));
 }
 ?>
 <!DOCTYPE html>
@@ -137,132 +132,68 @@ if(!$testInfo->isFirstViewOnly()) {
     
         // Load the Visualization API and the table package.
         google.load('visualization', '1', {'packages':['table', 'corechart']});
-        google.setOnLoadCallback(drawTable);
-        function drawTable() {
-            var dataFv = new google.visualization.DataTable();
-            dataFv.addColumn('string', 'MIME Type');
-            dataFv.addColumn('number', 'Requests');
-            dataFv.addColumn('number', 'Bytes');
-            dataFv.addRows(<?php echo count($breakdownFv); ?>);
-            var fvRequests = new google.visualization.DataTable();
-            fvRequests.addColumn('string', 'Content Type');
-            fvRequests.addColumn('number', 'Requests');
-            fvRequests.addRows(<?php echo count($breakdownFv); ?>);
-            var fvColors = new Array();
-            var fvBytes = new google.visualization.DataTable();
-            fvBytes.addColumn('string', 'Content Type');
-            fvBytes.addColumn('number', 'Bytes');
-            fvBytes.addRows(<?php echo count($breakdownFv); ?>);
-            <?php
-            $index = 0;
-            ksort($breakdownFv);
-            foreach($breakdownFv as $type => $data)
-            {
-                echo "dataFv.setValue($index, 0, '$type');\n";
-                echo "dataFv.setValue($index, 1, {$data['requests']});\n";
-                echo "dataFv.setValue($index, 2, {$data['bytes']});\n";
-                echo "fvRequests.setValue($index, 0, '$type');\n";
-                echo "fvRequests.setValue($index, 1, {$data['requests']});\n";
-                echo "fvBytes.setValue($index, 0, '$type');\n";
-                echo "fvBytes.setValue($index, 1, {$data['bytes']});\n";
-                $color = rgb2html($data['color'][0], $data['color'][1], $data['color'][2]);
-                echo "fvColors.push('$color');\n";
-                $index++;
-            }
-            ?>
+        google.setOnLoadCallback(initTables);
 
-            var viewRequestsFv = new google.visualization.DataView(dataFv);
-            viewRequestsFv.setColumns([0, 1]);
-            
-            var tableRequestsFv = new google.visualization.Table(document.getElementById('tableRequestsFv_div'));
-            tableRequestsFv.draw(viewRequestsFv, {showRowNumber: false, sortColumn: 1, sortAscending: false});
-
-            var viewBytesFv = new google.visualization.DataView(dataFv);
-            viewBytesFv.setColumns([0, 2]);
-            
-            var tableBytesFv = new google.visualization.Table(document.getElementById('tableBytesFv_div'));
-            tableBytesFv.draw(viewBytesFv, {showRowNumber: false, sortColumn: 1, sortAscending: false});
-            
-            var pieRequestsFv = new google.visualization.PieChart(document.getElementById('pieRequestsFv_div'));
-            google.visualization.events.addListener(pieRequestsFv, 'ready', function(){markUserTime('aft.Requests Pie');});
-            pieRequestsFv.draw(fvRequests, {width: 450, height: 300, title: 'Requests', colors: fvColors});
-
-            var pieBytesFv = new google.visualization.PieChart(document.getElementById('pieBytesFv_div'));
-            google.visualization.events.addListener(pieBytesFv, 'ready', function(){markUserTime('aft.Bytes Pie');});
-            pieBytesFv.draw(fvBytes, {width: 450, height: 300, title: 'Bytes', colors: fvColors});
-
-            <?php if( count($breakdownRv) ) { ?>
-                var dataRv = new google.visualization.DataTable();
-                dataRv.addColumn('string', 'MIME Type');
-                dataRv.addColumn('number', 'Requests');
-                dataRv.addColumn('number', 'Bytes');
-                dataRv.addRows(<?php echo count($breakdownRv); ?>);
-                var rvRequests = new google.visualization.DataTable();
-                rvRequests.addColumn('string', 'Content Type');
-                rvRequests.addColumn('number', 'Requests');
-                rvRequests.addRows(<?php echo count($breakdownRv); ?>);
-                var rvColors = new Array();
-                var rvBytes = new google.visualization.DataTable();
-                rvBytes.addColumn('string', 'Content Type');
-                rvBytes.addColumn('number', 'Bytes');
-                rvBytes.addRows(<?php echo count($breakdownRv); ?>);
-                <?php
-                $index = 0;
-                ksort($breakdownRv);
-                foreach($breakdownRv as $type => $data)
-                {
-                    echo "dataRv.setValue($index, 0, '$type');\n";
-                    echo "dataRv.setValue($index, 1, {$data['requests']});\n";
-                    echo "dataRv.setValue($index, 2, {$data['bytes']});\n";
-                    echo "rvRequests.setValue($index, 0, '$type');\n";
-                    echo "rvRequests.setValue($index, 1, {$data['requests']});\n";
-                    echo "rvBytes.setValue($index, 0, '$type');\n";
-                    echo "rvBytes.setValue($index, 1, {$data['bytes']});\n";
-                    $color = rgb2html($data['color'][0], $data['color'][1], $data['color'][2]);
-                    echo "rvColors.push('$color');\n";
-                    $index++;
-                }
-                ?>
-
-                var viewRequestsRv = new google.visualization.DataView(dataRv);
-                viewRequestsRv.setColumns([0, 1]);
-                
-                var tableRequestsRv = new google.visualization.Table(document.getElementById('tableRequestsRv_div'));
-                tableRequestsRv.draw(viewRequestsRv, {showRowNumber: false, sortColumn: 1, sortAscending: false});
-
-                var viewBytesRv = new google.visualization.DataView(dataRv);
-                viewBytesRv.setColumns([0, 2]);
-                
-                var tableBytesRv = new google.visualization.Table(document.getElementById('tableBytesRv_div'));
-                tableBytesRv.draw(viewBytesRv, {showRowNumber: false, sortColumn: 1, sortAscending: false});
-
-                var pieRequestsRv = new google.visualization.PieChart(document.getElementById('pieRequestsRv_div'));
-                pieRequestsRv.draw(rvRequests, {width: 450, height: 300, title: 'Requests', colors: rvColors});
-
-                var pieBytesRv = new google.visualization.PieChart(document.getElementById('pieBytesRv_div'));
-                pieBytesRv.draw(rvBytes, {width: 450, height: 300, title: 'Bytes', colors: rvColors});
+        function initTables() {
+            var breakdownFv = <?php echo json_encode($breakdownFv); ?>;
+            drawTable(breakdownFv, 'tableRequestsFv_div', 'tableBytesFv_div', 'pieRequestsFv_div', 'pieBytesFv_div');
+            <?php if (count($breakdownRv)) { ?>
+            var breakdownRv = <?php echo json_encode($breakdownRv); ?>;
+            drawTable(breakdownRv, 'tableRequestsRv_div', 'tableBytesRv_div', 'pieRequestsRv_div', 'pieBytesRv_div');
             <?php } ?>
+        }
+
+        function rgb2html(rgb) {
+            return "#" + ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1);
+        }
+
+        function drawTable(breakdown, tableRequestDiv, tableBytesDiv, pieRequestsDiv, pieBytesDiv) {
+            var numData = breakdown.length;
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'MIME Type');
+            data.addColumn('number', 'Requests');
+            data.addColumn('number', 'Bytes');
+            data.addRows(numData);
+            var requests = new google.visualization.DataTable();
+            requests.addColumn('string', 'Content Type');
+            requests.addColumn('number', 'Requests');
+            requests.addRows(numData);
+            var colors = new Array();
+            var bytes = new google.visualization.DataTable();
+            bytes.addColumn('string', 'Content Type');
+            bytes.addColumn('number', 'Bytes');
+            bytes.addRows(numData);
+            for (var i = 0; i < numData; i++) {
+                data.setValue(i, 0, breakdown[i]['type']);
+                data.setValue(i, 1, breakdown[i]['requests']);
+                data.setValue(i, 2, breakdown[i]['bytes']);
+                requests.setValue(i, 0, breakdown[i]['type']);
+                requests.setValue(i, 1, breakdown[i]['requests']);
+                bytes.setValue(i, 0, breakdown[i]['type']);
+                bytes.setValue(i, 1, breakdown[i]['bytes']);
+                colors.push(rgb2html(breakdown[i]['color']));
+            }
+
+            var viewRequests = new google.visualization.DataView(data);
+            viewRequests.setColumns([0, 1]);
+            
+            var tableRequests = new google.visualization.Table(document.getElementById(tableRequestDiv));
+            tableRequests.draw(viewRequests, {showRowNumber: false, sortColumn: 1, sortAscending: false});
+
+            var viewBytes = new google.visualization.DataView(data);
+            viewBytes.setColumns([0, 2]);
+            
+            var tableBytes = new google.visualization.Table(document.getElementById(tableBytesDiv));
+            tableBytes.draw(viewBytes, {showRowNumber: false, sortColumn: 1, sortAscending: false});
+            
+            var pieRequests = new google.visualization.PieChart(document.getElementById(pieRequestsDiv));
+            google.visualization.events.addListener(pieRequests, 'ready', function(){markUserTime('aft.Requests Pie');});
+            pieRequests.draw(requests, {width: 450, height: 300, title: 'Requests', colors: colors});
+
+            var pieBytes = new google.visualization.PieChart(document.getElementById(pieBytesDiv));
+            google.visualization.events.addListener(pieBytes, 'ready', function(){markUserTime('aft.Bytes Pie');});
+            pieBytes.draw(bytes, {width: 450, height: 300, title: 'Bytes', colors: colors});
         }
         </script>
     </body>
 </html>
-
-<?php
-function rgb2html($r, $g=-1, $b=-1)
-{
-    if (is_array($r) && sizeof($r) == 3)
-        list($r, $g, $b) = $r;
-
-    $r = intval($r); $g = intval($g);
-    $b = intval($b);
-
-    $r = dechex($r<0?0:($r>255?255:$r));
-    $g = dechex($g<0?0:($g>255?255:$g));
-    $b = dechex($b<0?0:($b>255?255:$b));
-
-    $color = (strlen($r) < 2?'0':'').$r;
-    $color .= (strlen($g) < 2?'0':'').$g;
-    $color .= (strlen($b) < 2?'0':'').$b;
-    return '#'.$color;
-}
-?>
