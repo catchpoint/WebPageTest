@@ -203,10 +203,10 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
         
         echo "<div id=\"header_data\"$data_class>";
         // for multistep, link the first URL and show additional text. Otherwise take the test URL
-        $isMultistep = $gradeRunResults->countSteps() > 1;
-        $showUrl = $isMultistep ? $gradeRunResults->getStepResult(1)->getUrl() : $url;
+        $numSteps = $gradeRunResults->countSteps();
+        $showUrl = $numSteps > 1 ? $gradeRunResults->getStepResult(1)->getUrl() : $url;
         $shortUrl = str_replace('http://', '',  FitText($showUrl, 180));
-        $shortUrl = $isMultistep ? ($shortUrl . " (multiple steps)") : $shortUrl;
+        $shortUrl = $numSteps > 1 ? ($shortUrl . " ($numSteps steps)") : $shortUrl;
             echo "<h2 class=\"alternate cufon-dincond_regular\">Web Page Performance Test for<br>";
             if ($settings['nolinks']) {
                 echo "<span class=\"medium colored\">$shortUrl</span>";
