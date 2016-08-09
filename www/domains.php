@@ -65,6 +65,9 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
             .breakdownFramePies td {
               padding: 0;
             }
+            <?php
+            include __DIR__ . "/css/accordion.css";
+            ?>
         </style>
     </head>
     <body>
@@ -76,22 +79,44 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
             ?>
             <h1>Content breakdown by domain (First  View)</h1>
             <?php
-              $snippetFv = new DomainBreakdownHtmlSnippet($testInfo, $firstViewResults->getStepResult(1));
-              echo $snippetFv->create();
+              if ($isMultistep) {
+                $accordionHelper = new AccordionHtmlHelper($firstViewResults);
+                echo $accordionHelper->createAccordion("breakdown_fv", "domainBreakdown", "drawTable");
+              } else {
+                $snippetFv = new DomainBreakdownHtmlSnippet($testInfo, $firstViewResults->getStepResult(1));
+                echo $snippetFv->create();
+              }
 
               if ($repeatViewResults) {
                 echo "<br><hr><br>\n";
                 echo "<h1>Content breakdown by domain (Repeat  View)</h1>\n";
-                $snippetRv = new DomainBreakdownHtmlSnippet($testInfo, $repeatViewResults->getStepResult(1));
-                echo $snippetRv->create();
+                if ($isMultistep) {
+                  $accordionHelper = new AccordionHtmlHelper($repeatViewResults);
+                  echo $accordionHelper->createAccordion("breakdown_rv", "domainBreakdown", "drawTable");
+                } else {
+                  $snippetRv = new DomainBreakdownHtmlSnippet($testInfo, $repeatViewResults->getStepResult(1));
+                  echo $snippetRv->create();
+                }
               }
             ?>
             
             <?php include('footer.inc'); ?>
         </div>
+        <a href="#top" id="back_to_top">Back to top</a>
 
         <!--Load the AJAX API-->
         <script type="text/javascript" src="<?php echo $GLOBALS['ptotocol']; ?>://www.google.com/jsapi"></script>
+        <?php
+        if ($isMultistep) {
+          echo '<script type="text/javascript" src="/js/jk-navigation.js"></script>';
+          echo '<script type="text/javascript" src="/js/accordion.js"></script>';
+          $testId = $testInfo->getId();
+          $testRun = $firstViewResults->getRunNumber();
+          echo '<script type="text/javascript">';
+          echo "var accordionHandler = new AccordionHandler('$testId', $testRun);";
+          echo '</script>';
+        }
+        ?>
         <script type="text/javascript">
     
         // Load the Visualization API and the table package.
@@ -99,10 +124,20 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
         google.setOnLoadCallback(initJS);
 
         function initJS() {
+          <?php if ($isMultistep) { ?>
+          accordionHandler.connect();
+          window.onhashchange = function() { accordionHandler.handleHash() };
+          if (window.location.hash.length > 0) {
+            accordionHandler.handleHash();
+          } else {
+            accordionHandler.toggleAccordion($('#breakdown_fv_step1'), true);
+          }
+          <?php } else { ?>
             drawTable($('#<?php echo $snippetFv->getBreakdownId(); ?>'));
             <?php if ($repeatViewResults) { ?>
             drawTable($('#<?php echo $snippetRv->getBreakdownId(); ?>'));
             <?php } ?>
+          <?php } ?>
         }
 
         function drawTable(parentNode) {

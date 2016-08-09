@@ -1,11 +1,5 @@
 <?php
 
-$validSnippets = array("waterfall", "connection", "requestDetails", "requestHeaders", "mimetypeBreakdown");
-if (empty($_REQUEST["snippet"]) || !in_array($_REQUEST["snippet"], $validSnippets)) {
-  header($_SERVER["SERVER_PROTOCOL"]." 404 Not Found", true, 404);
-  exit(0);
-}
-
 require 'common.inc';
 require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/include/TestStepResult.php';
@@ -58,4 +52,14 @@ switch ($requestedSnippet) {
     $snippetRv = new MimetypeBreakdownHtmlSnippet($testInfo, $stepResult);
     echo $snippetRv->create();
     break;
+
+  case "domainBreakdown":
+    require_once __DIR__ . '/include/DomainBreakdownHtmlSnippet.php';
+    $snippetRv = new DomainBreakdownHtmlSnippet($testInfo, $stepResult);
+    echo $snippetRv->create();
+    break;
+
+  default:
+    header($_SERVER["SERVER_PROTOCOL"]." 404 Not Found", true, 404);
+    exit(0);
 }
