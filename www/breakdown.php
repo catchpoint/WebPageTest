@@ -8,6 +8,7 @@ require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/include/TestPaths.php';
 require_once __DIR__ . '/include/TestRunResults.php';
 require_once __DIR__ . '/include/MimetypeBreakdownHtmlSnippet.php';
+require_once __DIR__ . '/include/AccordingHtmlHelper.php';
 
 $page_keywords = array('Content Breakdown','MIME Types','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website content breakdown by mime type$testLabel";
@@ -45,9 +46,13 @@ if(!$testInfo->isFirstViewOnly()) {
                 padding:0;
             }
 
-            h2 {
+            h1 {
                 text-align: center;
+                font-size: 2.5em;
             }
+            <?php
+            include __DIR__ . "/css/accordion.css";
+            ?>
         </style>
     </head>
     <body>
@@ -57,37 +62,63 @@ if(!$testInfo->isFirstViewOnly()) {
             $subtab = 'Content Breakdown';
             include 'header.inc';
             ?>
-            <h2>Content breakdown by MIME type (First  View)</h2>
+            <h1>Content breakdown by MIME type (First  View)</h1>
             <?php
-                $snippetFv = new MimetypeBreakdownHtmlSnippet($testInfo, $firstViewResults->getStepResult(1));
-                echo $snippetFv->create();
-                // defines the global JS object wptBreakdownData which contains the breakdown data at key
-                // $snippetFv->getBreakdownId(), so it can be globally found from JS
+                if ($isMultistep) {
+                    $accordionHelper = new AccordingHtmlHelper($firstViewResults);
+                    echo $accordionHelper->createAccordion("breakdown_fv", "mimetypeBreakdown", "drawTable");
+                } else {
+                    $snippetFv = new MimetypeBreakdownHtmlSnippet($testInfo, $firstViewResults->getStepResult(1));
+                    echo $snippetFv->create();
+                    // defines the global JS object wptBreakdownData which contains the breakdown data at key
+                    // $snippetFv->getBreakdownId(), so it can be globally found from JS
+                }
             ?>
             <?php if ($repeatViewResults) { ?>
                 <br><hr><br>
-                <h2>Content breakdown by MIME type (Repeat  View)</h2>
+                <h1>Content breakdown by MIME type (Repeat  View)</h1>
                 <?php
-                    $snippetRv = new MimetypeBreakdownHtmlSnippet($testInfo, $repeatViewResults->getStepResult(1));
-                    echo $snippetRv->create();
+                    if ($isMultistep) {
+                        $accordionHelper = new AccordingHtmlHelper($repeatViewResults);
+                        echo $accordionHelper->createAccordion("breakdown_rv", "mimetypeBreakdown", "drawTable");
+                    } else {
+                        $snippetRv = new MimetypeBreakdownHtmlSnippet($testInfo, $repeatViewResults->getStepResult(1));
+                        echo $snippetRv->create();
+                    }
                 ?>
             <?php } ?>
         </div>
         
         <?php include('footer.inc'); ?>
+        <a href="#top" id="back_to_top">Back to top</a>
 
         <!--Load the AJAX API-->
         <script type="text/javascript" src="<?php echo $GLOBALS['ptotocol']; ?>://www.google.com/jsapi"></script>
+        <?php
+        if ($isMultistep) {
+            echo '<script type="text/javascript" src="/js/jk-navigation.js"></script>';
+            echo '<script type="text/javascript" src="/js/accordion.js"></script>';
+            $testId = $testInfo->getId();
+            $testRun = $firstViewResults->getRunNumber();
+            echo '<script type="text/javascript">';
+            echo "var accordionHandler = new AccordionHandler('$testId', $testRun, 0);";
+            echo '</script>';
+        }
+        ?>
         <script type="text/javascript">
     
         // Load the Visualization API and the table package.
         google.load('visualization', '1', {'packages':['table', 'corechart']});
-        google.setOnLoadCallback(initTables);
+        google.setOnLoadCallback(initJS);
 
-        function initTables() {
-            drawTable($('#<?php echo $snippetFv->getBreakdownId(); ?>'));
-            <?php if ($repeatViewResults) { ?>
-            drawTable($('#<?php echo $snippetRv->getBreakdownId(); ?>'));
+        function initJS() {
+            <?php if ($isMultistep) { ?>
+                accordionHandler.connect();
+            <?php } else { ?>
+                drawTable($('#<?php echo $snippetFv->getBreakdownId(); ?>'));
+                <?php if ($repeatViewResults) { ?>
+                drawTable($('#<?php echo $snippetRv->getBreakdownId(); ?>'));
+                <?php } ?>
             <?php } ?>
         }
 
@@ -97,7 +128,7 @@ if(!$testInfo->isFirstViewOnly()) {
 
         function drawTable(parentNode) {
             parentNode = $(parentNode);
-            var breakdownId = parentNode.data('breakdown-id');
+            var breakdownId = parentNode.find(".breakdownFrame").data('breakdown-id');
             if (!breakdownId) {
                 return;
             }

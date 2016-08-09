@@ -1,6 +1,6 @@
 <?php
 
-$validSnippets = array("waterfall", "connection", "requestDetails", "requestHeaders");
+$validSnippets = array("waterfall", "connection", "requestDetails", "requestHeaders", "mimetypeBreakdown");
 if (empty($_REQUEST["snippet"]) || !in_array($_REQUEST["snippet"], $validSnippets)) {
   header($_SERVER["SERVER_PROTOCOL"]." 404 Not Found", true, 404);
   exit(0);
@@ -51,5 +51,11 @@ switch ($requestedSnippet) {
 
     $requestHeadersSnippet = new RequestHeadersHtmlSnippet($stepResult, $useLinks);
     echo $requestHeadersSnippet->create();
+    break;
+
+  case "mimetypeBreakdown":
+    require_once __DIR__ . '/include/MimetypeBreakdownHtmlSnippet.php';
+    $snippetRv = new MimetypeBreakdownHtmlSnippet($testInfo, $stepResult);
+    echo $snippetRv->create();
     break;
 }

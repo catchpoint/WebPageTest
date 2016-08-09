@@ -31,7 +31,8 @@ class MimetypeBreakdownHtmlSnippet {
   public function _createChartMarkup() {
     $id = $this->breakdownId;
     return <<<EOT
-      <table align="center" id="$id" data-breakdown-id="$id">
+      <div id="$id">
+      <table align="center" data-breakdown-id="$id" class="breakdownFrame">
           <tr>
               <td>
                   <div class="pieRequests" style="width:450px; height:300px;"></div>
@@ -49,6 +50,7 @@ class MimetypeBreakdownHtmlSnippet {
               </td>
           </tr>
       </table>
+      </div>
 EOT;
   }
 
