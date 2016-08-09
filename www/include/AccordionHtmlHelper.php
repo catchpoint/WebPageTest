@@ -1,10 +1,10 @@
 <?php
 
-class AccordingHtmlHelper {
+class AccordionHtmlHelper {
   private $runResults;
 
   /**
-   * AccordingHtmlHelper constructor.
+   * AccordionHtmlHelper constructor.
    * @param TestRunResults $testRunResults The run results
    */
   public function __construct($testRunResults) {

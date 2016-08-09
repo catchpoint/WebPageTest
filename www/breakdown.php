@@ -8,7 +8,7 @@ require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/include/TestPaths.php';
 require_once __DIR__ . '/include/TestRunResults.php';
 require_once __DIR__ . '/include/MimetypeBreakdownHtmlSnippet.php';
-require_once __DIR__ . '/include/AccordingHtmlHelper.php';
+require_once __DIR__ . '/include/AccordionHtmlHelper.php';
 
 $page_keywords = array('Content Breakdown','MIME Types','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website content breakdown by mime type$testLabel";
@@ -95,7 +95,7 @@ if(!$testInfo->isFirstViewOnly()) {
             <h1>Content breakdown by MIME type (First  View)</h1>
             <?php
                 if ($isMultistep) {
-                    $accordionHelper = new AccordingHtmlHelper($firstViewResults);
+                    $accordionHelper = new AccordionHtmlHelper($firstViewResults);
                     echo $accordionHelper->createAccordion("breakdown_fv", "mimetypeBreakdown", "drawTable");
                 } else {
                     $snippetFv = new MimetypeBreakdownHtmlSnippet($testInfo, $firstViewResults->getStepResult(1));
@@ -109,7 +109,7 @@ if(!$testInfo->isFirstViewOnly()) {
                 <h1>Content breakdown by MIME type (Repeat  View)</h1>
                 <?php
                     if ($isMultistep) {
-                        $accordionHelper = new AccordingHtmlHelper($repeatViewResults);
+                        $accordionHelper = new AccordionHtmlHelper($repeatViewResults);
                         echo $accordionHelper->createAccordion("breakdown_rv", "mimetypeBreakdown", "drawTable");
                     } else {
                         $snippetRv = new MimetypeBreakdownHtmlSnippet($testInfo, $repeatViewResults->getStepResult(1));

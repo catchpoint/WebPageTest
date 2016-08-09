@@ -12,7 +12,7 @@ require_once __DIR__ . '/include/WaterfallViewHtmlSnippet.php';
 require_once __DIR__ . '/include/ConnectionViewHtmlSnippet.php';
 require_once __DIR__ . '/include/RequestDetailsHtmlSnippet.php';
 require_once __DIR__ . '/include/RequestHeadersHtmlSnippet.php';
-require_once __DIR__ . '/include/AccordingHtmlHelper.php';
+require_once __DIR__ . '/include/AccordionHtmlHelper.php';
 
 $options = null;
 if (array_key_exists('end', $_REQUEST))
@@ -219,7 +219,7 @@ $page_description = "Website performance test details$testLabel";
                         echo "</tr>";
                     }
                     echo "</table>\n<br>\n";
-                    $accordionHelper = new AccordingHtmlHelper($testRunResults);
+                    $accordionHelper = new AccordionHtmlHelper($testRunResults);
                 }
                 ?>
 
