@@ -210,6 +210,25 @@ class TestStepResult {
     return getDomainBreakdownForRequests($this->getRequests());
   }
 
+  public function getJSFriendlyDomainBreakdown($sorted=false) {
+    $breakdown = $this->getDomainBreakdown();
+    if ($sorted) {
+      ksort($breakdown);
+    }
+    $jsFriendly = array();
+    foreach ($breakdown as $domain => $data) {
+      $entry = array();
+      $entry['domain'] = $domain;
+      $entry['bytes'] = $data['bytes'];
+      $entry['requests'] = $data['requests'];
+      $entry['connections'] = $data['connections'];
+      if (isset($data['cdn_provider']))
+        $entry['cdn_provider'] = $data['cdn_provider'];
+      $jsFriendly[] = $entry;
+    }
+    return $jsFriendly;
+  }
+
   public function getMimeTypeBreakdown() {
     // TODO: move implementation to this method
     $requests = null;
