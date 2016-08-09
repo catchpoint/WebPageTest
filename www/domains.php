@@ -61,6 +61,9 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
               text-align: center;
               font-size: 2.5em;
             }
+            h3 {
+              text-align: center;
+            }
 
             .breakdownFramePies td {
               padding: 0;
@@ -76,6 +79,27 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
             $tab = 'Test Result';
             $subtab = 'Domains';
             include 'header.inc';
+            ?>
+            <?php
+            if ($isMultistep) {
+              echo "<a name='quicklinks'><h3>Quicklinks</h3></a>\n";
+              echo "<table id='quicklinks_table'>\n";
+              $rvSteps = $repeatViewResults ? $repeatViewResults->countSteps() : 0;
+              $maxSteps = max($firstViewResults->countSteps(), $rvSteps);
+              for ($i = 1; $i <= $maxSteps; $i++) {
+                $stepResult = $firstViewResults->getStepResult($i);
+                $stepSuffix = "step" . $i;
+                $class = $i % 2 == 0 ? " class='even'" : "";
+                echo "<tr$class>\n";
+                echo "<th>" . $stepResult->readableIdentifier() . "</th>";
+                echo "<td><a href='#breakdown_fv_$stepSuffix'>First View Breakdown</a></td>";
+                if ($repeatViewResults) {
+                  echo "<td><a href='#breakdown_rv_$stepSuffix'>Repeat View Breakdown</a></td>";
+                }
+                echo "</tr>";
+              }
+              echo "</table>\n<br>\n";
+            }
             ?>
             <h1>Content breakdown by domain (First  View)</h1>
             <?php
