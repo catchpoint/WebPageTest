@@ -1,6 +1,5 @@
 <?php
 include 'common.inc';
-require_once('domains.inc');
 
 require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/include/TestPaths.php';

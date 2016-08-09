@@ -3,7 +3,6 @@
 require_once __DIR__ . '/FileHandler.php';
 require_once __DIR__ . '/../devtools.inc.php';
 require_once __DIR__ . '/../common_lib.inc';
-require_once __DIR__ . '/../domains.inc';
 require_once __DIR__ . '/../breakdown.inc';
 require_once __DIR__ . '/../video/visualProgress.inc.php';
 
@@ -206,8 +205,39 @@ class TestStepResult {
   }
 
   public function getDomainBreakdown() {
-    // TODO: move implementation to this method
-    return getDomainBreakdownForRequests($this->getRequests());
+    $requests = $this->getRequests();
+    $breakdown = array();
+    $connections = array();
+    foreach($requests as $request)
+    {
+      $domain = strtok($request['host'],':');
+      $object = strtolower($request['url']);
+      if( strlen($domain) && (strstr($object, 'favicon.ico') === FALSE) )
+      {
+        if( !array_key_exists($domain, $breakdown))
+          $breakdown["$domain"] = array('bytes' => 0, 'requests' => 0);
+        if( !array_key_exists($domain, $connections))
+          $connections["$domain"] = array();
+        $connections["$domain"][$request['socket']] = 1;
+
+        if (array_key_exists('bytesIn', $request))
+          $breakdown["$domain"]['bytes'] += $request['bytesIn'];
+        $breakdown["$domain"]['requests']++;
+
+        if (isset($request['cdn_provider']) && strlen($request['cdn_provider']))
+          $breakdown[$domain]['cdn_provider'] = $request['cdn_provider'];
+      }
+    }
+    foreach ($breakdown as $domain => &$data) {
+      $data['connections'] = 0;
+      if( array_key_exists($domain, $connections)) {
+        $data['connections'] = count($connections[$domain]);
+      }
+    }
+
+    // sort the array by reversed domain so the resources from a given domain are grouped
+    uksort($breakdown, function($a, $b) {return strcmp(strrev($a), strrev($b));});
+    return $breakdown;
   }
 
   public function getJSFriendlyDomainBreakdown($sorted=false) {

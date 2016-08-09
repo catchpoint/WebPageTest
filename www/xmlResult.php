@@ -16,7 +16,6 @@ require_once('common.inc');
 require_once('page_data.inc');
 require_once('testStatus.inc');
 require_once('video/visualProgress.inc.php');
-require_once('domains.inc');
 require_once('breakdown.inc');
 require_once('devtools.inc.php');
 require_once('archive.inc');
