@@ -30,33 +30,6 @@ $page_description = "Website performance test details$testLabel";
         <title>WebPagetest Test Details<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Details'; include ('head.inc'); ?>
         <style type="text/css">
-        #quicklinks_table {
-            margin: 0 auto;
-            line-height: 1.5em;
-            border-collapse: collapse;
-        }
-        #quicklinks_table tr.even {
-            background: whitesmoke;
-        }
-        #quicklinks_table td, #quicklinks_table th {
-            border: 1px silver solid;
-            padding: 0.5em;
-        }
-        #quicklinks_table th {
-            font-weight: bold;
-            background: gainsboro;
-        }
-
-        #back_to_top {
-            background:white;
-            position: fixed;
-            bottom:1em;
-            left:50%;
-            margin-left: 510px; /* 980px/2+20 */
-            padding:1em;
-            display: none;
-        }
-
         div.bar {
             height:12px;
             margin-top:auto;
@@ -133,40 +106,9 @@ $page_description = "Website performance test details$testLabel";
         .a_request {
             cursor: pointer;
         }
-        .snippet_container {
-            display: none;
-            margin: 1em 0;
-        }
-        .snippet_container_requestHeaders {
-            text-align: left;
-            overflow: auto;
-            padding: 0 1em;
-        }
-        .accordion_block {
-            border: 1px solid #aaa;
-            border-radius: 5px;
-            width:930px;
-        }
-        .accordion_opener {
-            text-align: center;
-            cursor: pointer;
-            display: block;
-            padding: 0.2em;
-            background: no-repeat 10px 50% transparent;
-        }
-        .accordion_opener.jkActive {
-            background-color: whitesmoke;
-        }
-        .accordion_closed {
-            background-image: url(/images/accordion_closed.png);
-        }
-        .accordion_opened {
-            background-image: url(/images/accordion_opened.png);
-        }
-        .accordion_loading {
-            background-image: url(/images/activity_indicator.gif);
-        }
+
         <?php
+        include __DIR__ . "/css/accordion.css";
         include "waterfall.css";
         ?>
         </style>
