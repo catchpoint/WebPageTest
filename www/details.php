@@ -20,6 +20,7 @@ if (array_key_exists('end', $_REQUEST))
 $testInfo = TestInfo::fromFiles($testPath);
 $testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, null, $options);
 $data = loadPageRunData($testPath, $run, $cached, $options, $test['testinfo']);
+$isMultistep = $testRunResults->countSteps() > 1;
 
 $page_keywords = array('Performance Test','Details','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website performance test details$testLabel";
@@ -161,7 +162,6 @@ $page_description = "Website performance test details$testLabel";
                             <table id="tableCustomMetrics" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
                                <tr>
                             <?php
-                                $isMultistep = $testRunResults->countSteps() > 1;
                                 if ($isMultistep) {
                                     echo '<th align="center" class="border" valign="middle">Step</th>';
                                 }
