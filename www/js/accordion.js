@@ -1,8 +1,7 @@
 
-function AccordionHandler(testId, testRun, testIsCached) {
+function AccordionHandler(testId, testRun) {
     this.testId = testId;
     this.testRun = testRun;
-    this.testIsCached = testIsCached;
     this.onSnippetLoaded = this._onSnippetLoaded;
 }
 
@@ -34,13 +33,15 @@ AccordionHandler.prototype.toggleAccordion = function(targetNode, forceOpen, onC
 
     var snippetType = targetNode.data("snippettype");
     var stepNumber = targetNode.data("step");
-    var snippetNode = $("#snippet_" + snippetType + "_step" + stepNumber);
+    var isCached = targetNode.data("cachedrun");
+    var snippetNodeSelector = targetNode.data("snippetnode");
+    var snippetNode = $(snippetNodeSelector);
     if (snippetNode.data("loaded") !== "true") {
         var args = {
             'snippet': snippetType,
             'test' : this.testId,
             'run' : this.testRun,
-            'cached' : this.testIsCached,
+            'cached' : isCached,
             'step': stepNumber
         };
         targetNode.addClass("accordion_loading");

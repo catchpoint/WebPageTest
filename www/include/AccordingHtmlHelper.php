@@ -20,14 +20,17 @@ class AccordingHtmlHelper {
    */
   function createAccordion($namePrefix, $snippetType, $jsInitCall = "") {
     $out = "";
+    $cached = $this->runResults->isCachedRun() ? 1 : 0;
     for ($i = 1; $i <= $this->runResults->countSteps(); $i++) {
+      $snippetNodeId = "snippet_" . $snippetType . "_step" . $i . "_" . ($cached ? "rv" : "fv");
       $stepResult = $this->runResults->getStepResult($i);
       $out .= "<div class=\"accordion_block\">\n";
       $out .= "<h2 id=\"". $namePrefix . "_step" . $i . "\" class=\"accordion_opener accordion_closed\" " .
-        "data-snippettype='$snippetType' data-step='$i' data-jsinit='$jsInitCall'>";
+        "data-snippettype='$snippetType' data-step='$i' data-cachedrun='$cached' data-jsinit='$jsInitCall' ".
+        "data-snippetnode='#$snippetNodeId'>";
       $out .= $stepResult->readableIdentifier();
       $out .= "</h2>\n";
-      $out .= "<div id=\"snippet_" . $snippetType . "_step$i\" class='snippet_container snippet_container_$snippetType'></div>\n";
+      $out .= "<div id=\"$snippetNodeId\" class='snippet_container snippet_container_$snippetType'></div>\n";
       $out .= "</div>\n";
     }
     return $out;

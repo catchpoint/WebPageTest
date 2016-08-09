@@ -295,9 +295,8 @@ $page_description = "Website performance test details$testLabel";
           echo '<script type="text/javascript" src="/js/accordion.js"></script>';
           $testId = $testInfo->getId();
           $testRun = $testRunResults->getRunNumber();
-          $runIsCached = $testRunResults->isCachedRun() ? 1 : 0;
           echo '<script type="text/javascript">';
-          echo "var accordionHandler = new AccordionHandler('$testId', $testRun, $runIsCached);";
+          echo "var accordionHandler = new AccordionHandler('$testId', $testRun);";
           echo '</script>';
         }
         ?>

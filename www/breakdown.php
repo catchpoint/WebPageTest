@@ -101,7 +101,7 @@ if(!$testInfo->isFirstViewOnly()) {
             $testId = $testInfo->getId();
             $testRun = $firstViewResults->getRunNumber();
             echo '<script type="text/javascript">';
-            echo "var accordionHandler = new AccordionHandler('$testId', $testRun, 0);";
+            echo "var accordionHandler = new AccordionHandler('$testId', $testRun);";
             echo '</script>';
         }
         ?>
