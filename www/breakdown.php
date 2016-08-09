@@ -14,6 +14,7 @@ $page_description = "Website content breakdown by mime type$testLabel";
 
 $testInfo = TestInfo::fromFiles($testPath);
 $firstViewResults = TestRunResults::fromFiles($testInfo, $run, false);
+$isMultistep = $firstViewResults->countSteps() > 1;
 $repeatViewResults = null;
 if(!$testInfo->isFirstViewOnly()) {
     $repeatViewResults = TestRunResults::fromFiles($testInfo, $run, true);

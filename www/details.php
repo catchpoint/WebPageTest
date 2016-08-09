@@ -12,6 +12,7 @@ require_once __DIR__ . '/include/WaterfallViewHtmlSnippet.php';
 require_once __DIR__ . '/include/ConnectionViewHtmlSnippet.php';
 require_once __DIR__ . '/include/RequestDetailsHtmlSnippet.php';
 require_once __DIR__ . '/include/RequestHeadersHtmlSnippet.php';
+require_once __DIR__ . '/include/AccordingHtmlHelper.php';
 
 $options = null;
 if (array_key_exists('end', $_REQUEST))
@@ -276,6 +277,7 @@ $page_description = "Website performance test details$testLabel";
                         echo "</tr>";
                     }
                     echo "</table>\n<br>\n";
+                    $accordionHelper = new AccordingHtmlHelper($testRunResults);
                 }
                 ?>
 
@@ -283,7 +285,7 @@ $page_description = "Website performance test details$testLabel";
                 <h3 name="waterfall_view">Waterfall View</h3>
                 <?php
                     if ($isMultistep) {
-                        printAccordion("waterfall_view", "waterfall", $testRunResults);
+                        echo $accordionHelper->createAccordion("waterfall_view", "waterfall");
                     } else {
                         $enableCsi = (array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi']);
                         $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1), $enableCsi);
@@ -295,7 +297,7 @@ $page_description = "Website performance test details$testLabel";
                 <h3 name="connection_view">Connection View</h3>
                     <?php
                     if ($isMultistep) {
-                        printAccordion("connection_view", "connection", $testRunResults);
+                        echo $accordionHelper->createAccordion("connection_view", "connection");
                     } else {
                         $waterfallSnippet = new ConnectionViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1));
                         echo $waterfallSnippet->create();
@@ -309,7 +311,7 @@ $page_description = "Website performance test details$testLabel";
                 <h3 name="request_details_view">Request Details</h3>
                 <?php
                     if ($isMultistep) {
-                        printAccordion("request_details", "requestDetails", $testRunResults, "initDetailsTable");
+                        echo $accordionHelper->createAccordion("request_details", "requestDetails", "initDetailsTable");
                     } else {
                         $useLinks = !$settings['nolinks'];
                         $requestDetailsSnippet = new RequestDetailsHtmlSnippet($testInfo, $testRunResults->getStepResult(1), $useLinks);
@@ -327,7 +329,7 @@ $page_description = "Website performance test details$testLabel";
 
                     if ($isMultistep) {
                         echo "<br><h3 name=\"request_headers_view\" class='center'>Request Headers</h3>\n";
-                        printAccordion("request_headers", "requestHeaders", $testRunResults, "initHeaderRequestExpander");
+                        echo $accordionHelper->createAccordion("request_headers", "requestHeaders", "initHeaderRequestExpander");
                     } else {
                         $requestHeadersSnippet = new RequestHeadersHtmlSnippet($testRunResults->getStepResult(1), $useLinks);
                         $snippet = $requestHeadersSnippet->create();
@@ -568,23 +570,3 @@ if ($isMultistep) {
     </body>
 </html>
 
-<?php
-/**
- * Prints an accordion of a given snippetType for all steps of the run
- * @param string $namePrefix Name prefix of the anchor
- * @param string $snippetType Type of the snipper: "waterfall", "connection", "requestDetails", or "requestHeaders"
- * @param TestRunResults $testRunResults The run results
- * @param string $jsInitCall Javascript function to call after init. Optional
- */
-function printAccordion($namePrefix, $snippetType, $testRunResults, $jsInitCall = "") {
-    for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
-        $stepResult = $testRunResults->getStepResult($i);
-        echo "<div class=\"accordion_block\">\n";
-        echo "<h2 id=\"". $namePrefix . "_step" . $i . "\" class=\"accordion_opener accordion_closed\" " .
-             "data-snippettype='$snippetType' data-step='$i' data-jsinit='$jsInitCall'>";
-        echo $stepResult->readableIdentifier();
-        echo "</h2>\n";
-        echo "<div id=\"snippet_" . $snippetType . "_step$i\" class='snippet_container snippet_container_$snippetType'></div>\n";
-        echo "</div>\n";
-    }
-}
