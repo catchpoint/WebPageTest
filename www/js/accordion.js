@@ -56,10 +56,7 @@ AccordionHandler.prototype.toggleAccordion = function(targetNode, forceOpen, onC
 AccordionHandler.prototype._onSnippetLoaded = function(targetNode, snippetNode, onComplete) {
     snippetNode.data("loaded", "true");
     targetNode.removeClass("accordion_loading");
-    var initFunction = targetNode.data("jsinit");
-    if (initFunction) {
-        window[initFunction](snippetNode);
-    }
+
     // trigger animation when all images in the snippet loaded
     var images = snippetNode.find("img");
     var noOfImages = images.length;
@@ -80,6 +77,10 @@ AccordionHandler.prototype._animateAccordion = function(openerNode, snippetNode,
     openerNode.toggleClass("accordion_opened");
     openerNode.toggleClass("accordion_closed");
     snippetNode.slideToggle(400, onComplete);
+    var initFunction = openerNode.data("jsinit");
+    if (initFunction) {
+        window[initFunction](snippetNode);
+    }
 };
 
 AccordionHandler.prototype._initBackToTop = function () {
