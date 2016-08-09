@@ -50,6 +50,11 @@ if(!$testInfo->isFirstViewOnly()) {
                 text-align: center;
                 font-size: 2.5em;
             }
+
+            .breakdownFramePies td {
+                padding: 0;
+            }
+
             <?php
             include __DIR__ . "/css/accordion.css";
             ?>

@@ -21,7 +21,7 @@ class MimetypeBreakdownHtmlSnippet {
   public function create() {
     $out = $this->_createChartMarkup();
     $out .= "<div style=\"text-align:center;\">\n";
-    $out .= "<h4 name=\"connection\">Connection View</h4>\n";
+    $out .= "<h3 name=\"connection\">Connection View</h3>\n";
     $out .= $this->connectionView->create();
     $out .= "</div>\n";
     $out .= $this->_createJavascript();
@@ -33,7 +33,7 @@ class MimetypeBreakdownHtmlSnippet {
     return <<<EOT
       <div id="$id">
       <table align="center" data-breakdown-id="$id" class="breakdownFrame">
-          <tr>
+          <tr class="breakdownFramePies">
               <td>
                   <div class="pieRequests" style="width:450px; height:300px;"></div>
               </td>
