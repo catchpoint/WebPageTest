@@ -119,6 +119,12 @@ if(!$testInfo->isFirstViewOnly()) {
         function initJS() {
             <?php if ($isMultistep) { ?>
                 accordionHandler.connect();
+                window.onhashchange = function() { accordionHandler.handleHash() };
+                if (window.location.hash.length > 0) {
+                    accordionHandler.handleHash();
+                } else {
+                    accordionHandler.toggleAccordion($('#breakdown_fv_step1'), true);
+                }
             <?php } else { ?>
                 drawTable($('#<?php echo $snippetFv->getBreakdownId(); ?>'));
                 <?php if ($repeatViewResults) { ?>
