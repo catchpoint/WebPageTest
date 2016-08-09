@@ -15,13 +15,8 @@ $page_description = "Website content breakdown by mime type$testLabel";
 $testInfo = TestInfo::fromFiles($testPath);
 $firstViewResults = TestRunResults::fromFiles($testInfo, $run, false);
 $repeatViewResults = null;
-
-// walk through the requests and group them by mime type
-$breakdownFv = getJSFriendlyBreakdown(new TestPaths($testPath, $run, false, 1));
-$breakdownRv = array();
 if(!$testInfo->isFirstViewOnly()) {
     $repeatViewResults = TestRunResults::fromFiles($testInfo, $run, true);
-    $breakdownRv = getJSFriendlyBreakdown(new TestPaths($testPath, $run, true, 1));
 }
 ?>
 <!DOCTYPE html>
@@ -65,6 +60,8 @@ if(!$testInfo->isFirstViewOnly()) {
             <?php
                 $snippetFv = new MimetypeBreakdownHtmlSnippet($testInfo, $firstViewResults->getStepResult(1));
                 echo $snippetFv->create();
+                // defines the global JS object wptBreakdownData which contains the breakdown data at key
+                // $snippetFv->getBreakdownId(), so it can be globally found from JS
             ?>
             <?php if ($repeatViewResults) { ?>
                 <br><hr><br>
@@ -87,11 +84,9 @@ if(!$testInfo->isFirstViewOnly()) {
         google.setOnLoadCallback(initTables);
 
         function initTables() {
-            var breakdownFv = <?php echo json_encode($breakdownFv); ?>;
-            drawTable(breakdownFv, $('#<?php echo $snippetFv->getBreakdownId(); ?>'));
-            <?php if (count($breakdownRv)) { ?>
-            var breakdownRv = <?php echo json_encode($breakdownRv); ?>;
-            drawTable(breakdownRv, $('#<?php echo $snippetRv->getBreakdownId(); ?>'));
+            drawTable($('#<?php echo $snippetFv->getBreakdownId(); ?>'));
+            <?php if ($repeatViewResults) { ?>
+            drawTable($('#<?php echo $snippetRv->getBreakdownId(); ?>'));
             <?php } ?>
         }
 
@@ -99,8 +94,13 @@ if(!$testInfo->isFirstViewOnly()) {
             return "#" + ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1);
         }
 
-        function drawTable(breakdown, parentNode) {
+        function drawTable(parentNode) {
             parentNode = $(parentNode);
+            var breakdownId = parentNode.data('breakdown-id');
+            if (!breakdownId) {
+                return;
+            }
+            var breakdown = wptBreakdownData[breakdownId];
             var numData = breakdown.length;
             var data = new google.visualization.DataTable();
             data.addColumn('string', 'MIME Type');

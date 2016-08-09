@@ -5,6 +5,7 @@ require_once __DIR__ . '/ConnectionViewHtmlSnippet.php';
 class MimetypeBreakdownHtmlSnippet {
   private $breakdownId;
   private $connectionView;
+  private $stepResult;
 
   /**
    * MimetypeBreakdownHtmlSnippet constructor.
@@ -12,14 +13,25 @@ class MimetypeBreakdownHtmlSnippet {
    * @param TestStepResult $stepResult
    */
   public function __construct($testInfo, $stepResult) {
+    $this->stepResult = $stepResult;
     $this->breakdownId = "breakdown_" . ($stepResult->isCachedRun() ? "rv" : "fv") . "_step_" . $stepResult->getStepNumber();
     $this->connectionView = new ConnectionViewHtmlSnippet($testInfo, $stepResult);
   }
 
   public function create() {
+    $out = $this->_createChartMarkup();
+    $out .= "<div style=\"text-align:center;\">\n";
+    $out .= "<h4 name=\"connection\">Connection View</h4>\n";
+    $out .= $this->connectionView->create();
+    $out .= "</div>\n";
+    $out .= $this->_createJavascript();
+    return $out;
+  }
+
+  public function _createChartMarkup() {
     $id = $this->breakdownId;
-    $out = <<<EOT
-      <table align="center" id="$id">
+    return <<<EOT
+      <table align="center" id="$id" data-breakdown-id="$id">
           <tr>
               <td>
                   <div class="pieRequests" style="width:450px; height:300px;"></div>
@@ -37,11 +49,32 @@ class MimetypeBreakdownHtmlSnippet {
               </td>
           </tr>
       </table>
-      <div style="text-align:center;">
-        <h4 name="connection">Connection View</h4>
 EOT;
-    $out .= $this->connectionView->create();
-    $out .= "</div>\n";
+  }
+
+  private function _getJSONBreakdown() {
+    $breakdown = $this->stepResult->getMimeTypeBreakdown();
+    ksort($breakdown);
+    $jsFriendly = array();
+    foreach ($breakdown as $type => $values) {
+      $jsFriendly[] = array(
+        "type" => $type,
+        "requests" => $values["requests"],
+        "bytes" => $values["bytes"],
+        "color" => $values["color"]
+      );
+    }
+    return json_encode($jsFriendly);
+  }
+
+
+  public function _createJavascript() {
+    $jsonData = $this->_getJSONBreakdown();
+    $id = $this->breakdownId;
+    $out = "<script type=\"text/javascript\">";
+    $out .= "if (typeof wptBreakdownData == 'undefined') var wptBreakdownData = {};";
+    $out .= "wptBreakdownData['$id'] = $jsonData;";
+    $out .= "</script>";
     return $out;
   }
 
