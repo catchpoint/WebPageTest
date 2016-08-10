@@ -54,10 +54,7 @@ class PerformanceOptimizationHtmlSnippet {
     $pageData = $this->stepResult->getRawResults();
     $requests = $this->stepResult->getRequestsWithInfo(false, false)->getRequests();
     $infoArray = $this->testInfo->getInfoArray();
-    ob_start();
-    dumpOptimizationReportForStep($this->stepResult->createTestPaths(), $pageData, $requests, $infoArray);
-    $out .= ob_get_contents();
-    ob_end_clean();
+    $out .= dumpOptimizationReportForStep($this->stepResult->createTestPaths(), $pageData, $requests, $infoArray);
     return $out;
   }
 }
