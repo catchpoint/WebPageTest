@@ -89,6 +89,16 @@ $isMultistep = $testRunResults->countSteps() > 1;
                 font-size: 1.2em;
                 max-width: 100px;
             }
+
+            .snippet_container .details {
+                padding: 1em;
+                overflow-x: auto;
+            }
+
+            .snippet_container .details h2 {
+                text-align: center;
+            }
+
             <?php
             if ($isMultistep) {
                 include __DIR__ . "/css/accordion.css";

@@ -51,13 +51,15 @@ class PerformanceOptimizationHtmlSnippet {
   }
 
   private function _createDetailSnippet() {
-    $out = "<h2>Details</h2>";
+    $out = "<div class='details'>\n";
+    $out .= "<h2>Details</h2>";
     $pageData = $this->stepResult->getRawResults();
     $requests = $this->stepResult->getRequestsWithInfo(false, false)->getRequests();
     $infoArray = $this->testInfo->getInfoArray();
     $localPaths = $this->stepResult->createTestPaths();
     $stepNum = $this->stepResult->getStepNumber();
     $out .= dumpOptimizationReportForStep($localPaths, $pageData, $requests, $infoArray, $stepNum);
+    $out .= "</div>\n";
     return $out;
   }
 }
