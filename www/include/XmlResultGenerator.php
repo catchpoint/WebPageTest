@@ -289,7 +289,7 @@ class XmlResultGenerator {
     echo "<images>\n";
     echo "<waterfall>" . htmlspecialchars($urlGenerator->generatedImage("waterfall")) . "</waterfall>\n";
     echo "<connectionView>" . htmlspecialchars($urlGenerator->generatedImage("connection")) . "</connectionView>\n";
-    echo "<checklist>" . htmlspecialchars($urlGenerator->generatedImage("optimization")) . "</checklist>\n";
+    echo "<checklist>" . htmlspecialchars($urlGenerator->optimizationChecklistImage()) . "</checklist>\n";
     if ($this->fileHandler->fileExists($localPaths->screenShotFile())) {
       echo "<screenShot>" . htmlspecialchars($urlGenerator->getFile($nameOnlyPaths->screenShotFile())) . "</screenShot>\n";
     }

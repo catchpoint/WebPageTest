@@ -1,36 +1,25 @@
 <?php
-require_once('page_data.inc');
-require_once('object_detail.inc');
+require_once __DIR__ . '/page_data.inc';
+require_once __DIR__ . '/object_detail.inc';
+require_once __DIR__ . '/include/TestRunResults.php';
 
 /**
-* Parse the page data and load the optimization-specific details
-*
-* @param mixed $pagedata
-*/
-function getOptimizationGrades(&$pageData, &$test, $id, $run)
-{
-  if (!isset($pageData)) {
-    return null;
-  }
-  $scores = array();
-  $scores['ttfb'] = gradeTTFB($pageData, $test, $id, $run, 0, $target);
-  $scores['keep-alive'] = $pageData['score_keep-alive'];
-  $scores['gzip'] = $pageData['score_gzip'];
-  $scores['image_compression'] = $pageData['score_compress'];
-  $scores['caching'] = $pageData['score_cache'];
-  $scores['combine'] = $pageData['score_combine'];
-  $scores['cdn'] = $pageData['score_cdn'];
-  $scores['cookies'] = $pageData['score_cookies'];
-  $scores['minify'] = $pageData['score_minify'];
-  $scores['e-tags'] = $pageData['score_etags'];
-  if (array_key_exists('score_progressive_jpeg', $pageData) && $pageData['score_progressive_jpeg'] >= 0) {
-    $scores['progressive_jpeg'] = $pageData['score_progressive_jpeg'];
-  }
-  return createGradeArray($scores);
+ * Parse the page data and load the optimization-specific details for one step
+ *
+ * @param TestInfo $testInfo Test information
+ * @param TestStepResult $testStepResult Results of the step to get the grades for
+ * @return array|null An array with all labels, scores, grades, weights, etc per score
+ */
+function getOptimizationGradesForStep($testInfo, $testStepResult) {
+  // The function getOptimizationGradesForRun is more powerful as it can compute averages.
+  // With one step, it will do exactly what we want, so we create an artificial run
+  $singlestepRunResult = TestRunResults::fromStepResults($testInfo, $testStepResult->getRunNumber(),
+    $testStepResult->isCachedRun(), array($testStepResult));
+  return getOptimizationGradesForRun($singlestepRunResult);
 }
 
 /**
- * Parse the page data and load the optimization-specific details
+ * Parse the page data and load the optimization-specific details for a complete run
  *
  * @param TestRunResults $testRunResults Results of the run to get the grades for
  * @return array|null An array with all labels, scores, grades, weights, etc per score

@@ -256,7 +256,7 @@ class JsonResultGenerator {
     $ret['images'] = array();
     $ret['images']['waterfall'] = $friendlyUrlGenerator->generatedImage("waterfall");
     $ret['images']['connectionView'] = $friendlyUrlGenerator->generatedImage("connection");
-    $ret['images']['checklist'] = $friendlyUrlGenerator->generatedImage("optimization");
+    $ret['images']['checklist'] = $friendlyUrlGenerator->optimizationChecklistImage();
     $ret['images']['screenShot'] = $urlGenerator->getFile($nameOnlyPaths->screenShotFile());
     if ($this->fileHandler->fileExists($localPaths->screenShotPngFile())) {
       $ret['images']['screenShotPng'] = $urlGenerator->getFile($nameOnlyPaths->screenShotPngFile());

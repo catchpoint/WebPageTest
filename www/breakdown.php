@@ -1,24 +1,25 @@
 <?php
-include 'common.inc';
-require_once('breakdown.inc');
-require_once('contentColors.inc');
-require_once('waterfall.inc');
-require_once('page_data.inc');
+include __DIR__ . '/common.inc';
+require_once __DIR__ . '/breakdown.inc';
+require_once __DIR__ . '/contentColors.inc';
+require_once __DIR__ . '/waterfall.inc';
+require_once __DIR__ . '/page_data.inc';
+require_once __DIR__ . '/include/TestInfo.php';
+require_once __DIR__ . '/include/TestPaths.php';
+require_once __DIR__ . '/include/TestRunResults.php';
+require_once __DIR__ . '/include/MimetypeBreakdownHtmlSnippet.php';
+require_once __DIR__ . '/include/AccordionHtmlHelper.php';
 
 $page_keywords = array('Content Breakdown','MIME Types','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website content breakdown by mime type$testLabel";
 
-$extension = 'php';
-if( FRIENDLY_URLS )
-    $extension = 'png';
-
-// walk through the requests and group them by mime type
-$requestsFv;
-$breakdownFv = getBreakdown($id, $testPath, $run, 0, $requestsFv);
-$breakdownRv = array();
-$requestsRv = array();
-if( (int)$test[test][fvonly] == 0 )
-    $breakdownRv = getBreakdown($id, $testPath, $run, 1, $requestsRv);
+$testInfo = TestInfo::fromFiles($testPath);
+$firstViewResults = TestRunResults::fromFiles($testInfo, $run, false);
+$isMultistep = $firstViewResults->countSteps() > 1;
+$repeatViewResults = null;
+if(!$testInfo->isFirstViewOnly()) {
+    $repeatViewResults = TestRunResults::fromFiles($testInfo, $run, true);
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -38,12 +39,29 @@ if( (int)$test[test][fvonly] == 0 )
                 margin-bottom:auto;
             }
 
-            td.legend {
+            table.legend td {
                 white-space:nowrap; 
                 text-align:left; 
                 vertical-align:top; 
                 padding:0;
             }
+
+            h1 {
+                text-align: center;
+                font-size: 2.5em;
+            }
+            
+            h3 {
+                text-align: center;
+            }
+
+            .breakdownFramePies td {
+                padding: 0;
+            }
+
+            <?php
+            include __DIR__ . "/css/accordion.css";
+            ?>
         </style>
     </head>
     <body>
@@ -53,275 +71,150 @@ if( (int)$test[test][fvonly] == 0 )
             $subtab = 'Content Breakdown';
             include 'header.inc';
             ?>
-            
-            <table align="center">
-                <tr>
-                    <th colspan="2">
-                    <h2>Content breakdown by MIME type (First  View)</h2>
-                    </th>
-                </tr>
-                <tr>
-                    <td>
-                        <div id="pieRequestsFv_div" style="width:450px; height:300px;"></div>
-                    </td>
-                    <td>
-                        <div id="pieBytesFv_div" style="width:450px; height:300px;"></div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div id="tableRequestsFv_div" style="width: 100%;"></div>
-                    </td>
-                    <td>
-                        <div id="tableBytesFv_div" style="width: 100%;"></div>
-                    </td>
-                </tr>
-            </table>
-            <div style="text-align:center;">
-            <h3 name="connection">Connection View (First View)</h3>
-            <map name="connection_map">
             <?php
-                $connection_rows = GetConnectionRows($requestsFv, $summary);
-                $options = array(
-                    'id' => $id,
-                    'path' => $testPath,
-                    'run_id' => $run,
-                    'is_cached' => $cached,
-                    'use_cpu' => true,
-                    'show_labels' => true,
-                    'is_mime' => $mime
-                    );
-                $map = GetWaterfallMap($connection_rows, $url, $options, $pageData);
-                foreach($map as $entry)
-                {
-                    if( $entry['request'] !== NULL )
-                    {
-                        $index = $entry['request'] + 1;
-                        $title = $index . ': ' . $entry['url'];
-                        echo '<area href="#request' . $index . '" alt="' . $title . '" title="' . $title . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
+            if ($isMultistep) {
+                echo "<a name='quicklinks'><h3>Quicklinks</h3></a>\n";
+                echo "<table id='quicklinks_table'>\n";
+                $rvSteps = $repeatViewResults ? $repeatViewResults->countSteps() : 0;
+                $maxSteps = max($firstViewResults->countSteps(), $rvSteps);
+                for ($i = 1; $i <= $maxSteps; $i++) {
+                    $stepResult = $firstViewResults->getStepResult($i);
+                    $stepSuffix = "step" . $i;
+                    $class = $i % 2 == 0 ? " class='even'" : "";
+                    echo "<tr$class>\n";
+                    echo "<th>" . $stepResult->readableIdentifier() . "</th>";
+                    echo "<td><a href='#breakdown_fv_$stepSuffix'>First View Breakdown</a></td>";
+                    if ($repeatViewResults) {
+                        echo "<td><a href='#breakdown_rv_$stepSuffix'>Repeat View Breakdown</a></td>";
                     }
-                    else
-                        echo '<area href="#request" alt="' . $entry['url'] . '" title="' . $entry['url'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
+                    echo "</tr>";
+                }
+                echo "</table>\n<br>\n";
+            }
+            ?>
+            <h1>Content breakdown by MIME type (First  View)</h1>
+            <?php
+                if ($isMultistep) {
+                    $accordionHelper = new AccordionHtmlHelper($firstViewResults);
+                    echo $accordionHelper->createAccordion("breakdown_fv", "mimetypeBreakdown", "drawTable");
+                } else {
+                    $snippetFv = new MimetypeBreakdownHtmlSnippet($testInfo, $firstViewResults->getStepResult(1));
+                    echo $snippetFv->create();
+                    // defines the global JS object wptBreakdownData which contains the breakdown data at key
+                    // $snippetFv->getBreakdownId(), so it can be globally found from JS
                 }
             ?>
-            </map>
-            <table border="1" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">
-                <tr>
-                    <td class="legend"><table><tr><td class="legend"><div class="bar" style="width:2px; background-color:#28BC00"></div></td><td class="legend">Start Render</td></tr></table></td>
-                    <?php if((float)$test[$section][domElement] > 0.0) { ?>
-                    <td class="legend"><table><tr><td class="legend"><div class="bar" style="width:2px; background-color:#F28300"></div></td><td class="legend">DOM Element</td></tr></table></td>
-                    <?php } ?>
-                    <td class="legend"><table><tr><td class="legend"><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td class="legend">Document Complete</td></tr></table></td>
-                </tr>
-            </table>
-            <br>
-            <img class="progress" usemap="#connection_map" id="connectionView" src="<?php 
-                echo "/waterfall.$extension?width=930&type=connection&test=$id&run=$run&mime=1&cached=0";?>">
-            </div>
-
-            <?php if( count($breakdownRv) ) { ?>
-            <br><hr><br>
-            <table align="center">
-                <tr>
-                    <th colspan="2">
-                    <h2>Content breakdown by MIME type (Repeat  View)</h2>
-                    </th>
-                </tr>
-                <tr>
-                    <td>
-                        <div id="pieRequestsRv_div" style="width:450px; height:300px;"></div>
-                    </td>
-                    <td>
-                        <div id="pieBytesRv_div" style="width:450px; height:300px;"></div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div id="tableRequestsRv_div" style="width: 100%;"></div>
-                    </td>
-                    <td>
-                        <div id="tableBytesRv_div" style="width: 100%;"></div>
-                    </td>
-                </tr>
-            </table>
-            <div style="text-align:center;">
-            <h3 name="connection">Connection View (Repeat View)</h3>
-            <map name="connection_map_rv">
-            <?php
-                $connection_rows = GetConnectionRows($requestsFv, $summary);
-                $options = array(
-                    'id' => $id,
-                    'path' => $testPath,
-                    'run_id' => $run,
-                    'is_cached' => $cached,
-                    'use_cpu' => true,
-                    'show_labels' => true,
-                    'is_mime' => $mime
-                    );
-                $map = GetWaterfallMap($connection_rows, $url, $options, $pageData);
-                foreach($map as $entry)
-                {
-                    if( $entry['request'] !== NULL )
-                    {
-                        $index = $entry['request'] + 1;
-                        $title = $index . ': ' . $entry['url'];
-                        echo '<area href="#request' . $index . '" alt="' . $title . '" title="' . $title . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
+            <?php if ($repeatViewResults) { ?>
+                <br><hr><br>
+                <h1>Content breakdown by MIME type (Repeat  View)</h1>
+                <?php
+                    if ($isMultistep) {
+                        $accordionHelper = new AccordionHtmlHelper($repeatViewResults);
+                        echo $accordionHelper->createAccordion("breakdown_rv", "mimetypeBreakdown", "drawTable");
+                    } else {
+                        $snippetRv = new MimetypeBreakdownHtmlSnippet($testInfo, $repeatViewResults->getStepResult(1));
+                        echo $snippetRv->create();
                     }
-                    else
-                        echo '<area href="#request" alt="' . $entry['url'] . '" title="' . $entry['url'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
-                }
-            ?>
-            </map>
-            <table border="1" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">
-                <tr>
-                    <td class="legend"><table><tr><td class="legend"><div class="bar" style="width:2px; background-color:#28BC00"></div></td><td class="legend">Start Render</td></tr></table></td>
-                    <?php if((float)$test[$section][domElement] > 0.0) { ?>
-                    <td class="legend"><table><tr><td class="legend"><div class="bar" style="width:2px; background-color:#F28300"></div></td><td class="legend">DOM Element</td></tr></table></td>
-                    <?php } ?>
-                    <td class="legend"><table><tr><td class="legend"><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td class="legend">Document Complete</td></tr></table></td>
-                </tr>
-            </table>
-            <br>
-            <img class="progress" usemap="#connection_map_rv" id="connectionViewRv" src="<?php 
-                echo "/waterfall.$extension?width=930&type=connection&test=$id&run=$run&mime=1&cached=1";?>">
-            </div>
+                ?>
             <?php } ?>
         </div>
         
         <?php include('footer.inc'); ?>
+        <a href="#top" id="back_to_top">Back to top</a>
 
         <!--Load the AJAX API-->
         <script type="text/javascript" src="<?php echo $GLOBALS['ptotocol']; ?>://www.google.com/jsapi"></script>
+        <?php
+        if ($isMultistep) {
+            echo '<script type="text/javascript" src="/js/jk-navigation.js"></script>';
+            echo '<script type="text/javascript" src="/js/accordion.js"></script>';
+            $testId = $testInfo->getId();
+            $testRun = $firstViewResults->getRunNumber();
+            echo '<script type="text/javascript">';
+            echo "var accordionHandler = new AccordionHandler('$testId', $testRun);";
+            echo '</script>';
+        }
+        ?>
         <script type="text/javascript">
     
         // Load the Visualization API and the table package.
         google.load('visualization', '1', {'packages':['table', 'corechart']});
-        google.setOnLoadCallback(drawTable);
-        function drawTable() {
-            var dataFv = new google.visualization.DataTable();
-            dataFv.addColumn('string', 'MIME Type');
-            dataFv.addColumn('number', 'Requests');
-            dataFv.addColumn('number', 'Bytes');
-            dataFv.addRows(<?php echo count($breakdownFv); ?>);
-            var fvRequests = new google.visualization.DataTable();
-            fvRequests.addColumn('string', 'Content Type');
-            fvRequests.addColumn('number', 'Requests');
-            fvRequests.addRows(<?php echo count($breakdownFv); ?>);
-            var fvColors = new Array();
-            var fvBytes = new google.visualization.DataTable();
-            fvBytes.addColumn('string', 'Content Type');
-            fvBytes.addColumn('number', 'Bytes');
-            fvBytes.addRows(<?php echo count($breakdownFv); ?>);
-            <?php
-            $index = 0;
-            ksort($breakdownFv);
-            foreach($breakdownFv as $type => $data)
-            {
-                echo "dataFv.setValue($index, 0, '$type');\n";
-                echo "dataFv.setValue($index, 1, {$data['requests']});\n";
-                echo "dataFv.setValue($index, 2, {$data['bytes']});\n";
-                echo "fvRequests.setValue($index, 0, '$type');\n";
-                echo "fvRequests.setValue($index, 1, {$data['requests']});\n";
-                echo "fvBytes.setValue($index, 0, '$type');\n";
-                echo "fvBytes.setValue($index, 1, {$data['bytes']});\n";
-                $color = rgb2html($data['color'][0], $data['color'][1], $data['color'][2]);
-                echo "fvColors.push('$color');\n";
-                $index++;
-            }
-            ?>
+        google.setOnLoadCallback(initJS);
 
-            var viewRequestsFv = new google.visualization.DataView(dataFv);
-            viewRequestsFv.setColumns([0, 1]);
-            
-            var tableRequestsFv = new google.visualization.Table(document.getElementById('tableRequestsFv_div'));
-            tableRequestsFv.draw(viewRequestsFv, {showRowNumber: false, sortColumn: 1, sortAscending: false});
-
-            var viewBytesFv = new google.visualization.DataView(dataFv);
-            viewBytesFv.setColumns([0, 2]);
-            
-            var tableBytesFv = new google.visualization.Table(document.getElementById('tableBytesFv_div'));
-            tableBytesFv.draw(viewBytesFv, {showRowNumber: false, sortColumn: 1, sortAscending: false});
-            
-            var pieRequestsFv = new google.visualization.PieChart(document.getElementById('pieRequestsFv_div'));
-            google.visualization.events.addListener(pieRequestsFv, 'ready', function(){markUserTime('aft.Requests Pie');});
-            pieRequestsFv.draw(fvRequests, {width: 450, height: 300, title: 'Requests', colors: fvColors});
-
-            var pieBytesFv = new google.visualization.PieChart(document.getElementById('pieBytesFv_div'));
-            google.visualization.events.addListener(pieBytesFv, 'ready', function(){markUserTime('aft.Bytes Pie');});
-            pieBytesFv.draw(fvBytes, {width: 450, height: 300, title: 'Bytes', colors: fvColors});
-
-            <?php if( count($breakdownRv) ) { ?>
-                var dataRv = new google.visualization.DataTable();
-                dataRv.addColumn('string', 'MIME Type');
-                dataRv.addColumn('number', 'Requests');
-                dataRv.addColumn('number', 'Bytes');
-                dataRv.addRows(<?php echo count($breakdownRv); ?>);
-                var rvRequests = new google.visualization.DataTable();
-                rvRequests.addColumn('string', 'Content Type');
-                rvRequests.addColumn('number', 'Requests');
-                rvRequests.addRows(<?php echo count($breakdownRv); ?>);
-                var rvColors = new Array();
-                var rvBytes = new google.visualization.DataTable();
-                rvBytes.addColumn('string', 'Content Type');
-                rvBytes.addColumn('number', 'Bytes');
-                rvBytes.addRows(<?php echo count($breakdownRv); ?>);
-                <?php
-                $index = 0;
-                ksort($breakdownRv);
-                foreach($breakdownRv as $type => $data)
-                {
-                    echo "dataRv.setValue($index, 0, '$type');\n";
-                    echo "dataRv.setValue($index, 1, {$data['requests']});\n";
-                    echo "dataRv.setValue($index, 2, {$data['bytes']});\n";
-                    echo "rvRequests.setValue($index, 0, '$type');\n";
-                    echo "rvRequests.setValue($index, 1, {$data['requests']});\n";
-                    echo "rvBytes.setValue($index, 0, '$type');\n";
-                    echo "rvBytes.setValue($index, 1, {$data['bytes']});\n";
-                    $color = rgb2html($data['color'][0], $data['color'][1], $data['color'][2]);
-                    echo "rvColors.push('$color');\n";
-                    $index++;
+        function initJS() {
+            <?php if ($isMultistep) { ?>
+                accordionHandler.connect();
+                window.onhashchange = function() { accordionHandler.handleHash() };
+                if (window.location.hash.length > 0) {
+                    accordionHandler.handleHash();
+                } else {
+                    accordionHandler.toggleAccordion($('#breakdown_fv_step1'), true);
                 }
-                ?>
-
-                var viewRequestsRv = new google.visualization.DataView(dataRv);
-                viewRequestsRv.setColumns([0, 1]);
-                
-                var tableRequestsRv = new google.visualization.Table(document.getElementById('tableRequestsRv_div'));
-                tableRequestsRv.draw(viewRequestsRv, {showRowNumber: false, sortColumn: 1, sortAscending: false});
-
-                var viewBytesRv = new google.visualization.DataView(dataRv);
-                viewBytesRv.setColumns([0, 2]);
-                
-                var tableBytesRv = new google.visualization.Table(document.getElementById('tableBytesRv_div'));
-                tableBytesRv.draw(viewBytesRv, {showRowNumber: false, sortColumn: 1, sortAscending: false});
-
-                var pieRequestsRv = new google.visualization.PieChart(document.getElementById('pieRequestsRv_div'));
-                pieRequestsRv.draw(rvRequests, {width: 450, height: 300, title: 'Requests', colors: rvColors});
-
-                var pieBytesRv = new google.visualization.PieChart(document.getElementById('pieBytesRv_div'));
-                pieBytesRv.draw(rvBytes, {width: 450, height: 300, title: 'Bytes', colors: rvColors});
+            <?php } else { ?>
+                drawTable($('#<?php echo $snippetFv->getBreakdownId(); ?>'));
+                <?php if ($repeatViewResults) { ?>
+                drawTable($('#<?php echo $snippetRv->getBreakdownId(); ?>'));
+                <?php } ?>
             <?php } ?>
+        }
+
+        function rgb2html(rgb) {
+            return "#" + ((1 << 24) + (rgb[0] << 16) + (rgb[1] << 8) + rgb[2]).toString(16).slice(1);
+        }
+
+        function drawTable(parentNode) {
+            parentNode = $(parentNode);
+            var breakdownId = parentNode.find(".breakdownFrame").data('breakdown-id');
+            if (!breakdownId) {
+                return;
+            }
+            var breakdown = wptBreakdownData[breakdownId];
+            var numData = breakdown.length;
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'MIME Type');
+            data.addColumn('number', 'Requests');
+            data.addColumn('number', 'Bytes');
+            data.addRows(numData);
+            var requests = new google.visualization.DataTable();
+            requests.addColumn('string', 'Content Type');
+            requests.addColumn('number', 'Requests');
+            requests.addRows(numData);
+            var colors = new Array();
+            var bytes = new google.visualization.DataTable();
+            bytes.addColumn('string', 'Content Type');
+            bytes.addColumn('number', 'Bytes');
+            bytes.addRows(numData);
+            for (var i = 0; i < numData; i++) {
+                data.setValue(i, 0, breakdown[i]['type']);
+                data.setValue(i, 1, breakdown[i]['requests']);
+                data.setValue(i, 2, breakdown[i]['bytes']);
+                requests.setValue(i, 0, breakdown[i]['type']);
+                requests.setValue(i, 1, breakdown[i]['requests']);
+                bytes.setValue(i, 0, breakdown[i]['type']);
+                bytes.setValue(i, 1, breakdown[i]['bytes']);
+                colors.push(rgb2html(breakdown[i]['color']));
+            }
+
+            var viewRequests = new google.visualization.DataView(data);
+            viewRequests.setColumns([0, 1]);
+            
+            var tableRequests = new google.visualization.Table(parentNode.find('div.tableRequests')[0]);
+            tableRequests.draw(viewRequests, {showRowNumber: false, sortColumn: 1, sortAscending: false});
+
+            var viewBytes = new google.visualization.DataView(data);
+            viewBytes.setColumns([0, 2]);
+            
+            var tableBytes = new google.visualization.Table(parentNode.find('div.tableBytes')[0]);
+            tableBytes.draw(viewBytes, {showRowNumber: false, sortColumn: 1, sortAscending: false});
+            
+            var pieRequests = new google.visualization.PieChart(parentNode.find('div.pieRequests')[0]);
+            google.visualization.events.addListener(pieRequests, 'ready', function(){markUserTime('aft.Requests Pie');});
+            pieRequests.draw(requests, {width: 450, height: 300, title: 'Requests', colors: colors});
+
+            var pieBytes = new google.visualization.PieChart(parentNode.find('div.pieBytes')[0]);
+            google.visualization.events.addListener(pieBytes, 'ready', function(){markUserTime('aft.Bytes Pie');});
+            pieBytes.draw(bytes, {width: 450, height: 300, title: 'Bytes', colors: colors});
         }
         </script>
     </body>
 </html>
-
-<?php
-function rgb2html($r, $g=-1, $b=-1)
-{
-    if (is_array($r) && sizeof($r) == 3)
-        list($r, $g, $b) = $r;
-
-    $r = intval($r); $g = intval($g);
-    $b = intval($b);
-
-    $r = dechex($r<0?0:($r>255?255:$r));
-    $g = dechex($g<0?0:($g>255?255:$g));
-    $b = dechex($b<0?0:($b>255?255:$b));
-
-    $color = (strlen($r) < 2?'0':'').$r;
-    $color .= (strlen($g) < 2?'0':'').$g;
-    $color .= (strlen($b) < 2?'0':'').$b;
-    return '#'.$color;
-}
-?>

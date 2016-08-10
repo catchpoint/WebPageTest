@@ -235,6 +235,18 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals($expected, $ug->waterfallImage(true, 90, true));
   }
 
+  public function testOptimizationChecklistImageFriendly() {
+    $expected = "https://test/results/16/08/10/AB/CDE/3_Cached_2_optimization.png";
+    $ug = UrlGenerator::create(true, "https://test/", "160810_AB_CDE", 3, true, 2);
+    $this->assertEquals($expected, $ug->optimizationChecklistImage());
+  }
+
+  public function testOptimizationChecklistImageStandard() {
+    $expected = "https://test/optimizationChecklist.php?test=160810_AB_CDE&run=3&cached=1&step=2";
+    $ug = UrlGenerator::create(false, "https://test/", "160810_AB_CDE", 3, true, 2);
+    $this->assertEquals($expected, $ug->optimizationChecklistImage());
+  }
+
   public function testVideoFramesThumbnail() {
     $expected = "https://test/thumbnail.php?test=160609_a7_b8&fit=1234&file=video_3_cached_2/myframe.png";
     $ug = UrlGenerator::create(false, "https://test/", "160609_a7_b8", 3, true, 2);

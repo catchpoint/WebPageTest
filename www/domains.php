@@ -1,59 +1,35 @@
 <?php
 include 'common.inc';
-require_once('domains.inc');
+
+require_once __DIR__ . '/include/TestInfo.php';
+require_once __DIR__ . '/include/TestPaths.php';
+require_once __DIR__ . '/include/TestRunResults.php';
+require_once __DIR__ . '/include/DomainBreakdownHtmlSnippet.php';
+require_once __DIR__ . '/include/AccordionHtmlHelper.php';
 
 $page_keywords = array('Domains','Webpagetest','Website Speed Test');
 $page_description = "Website domain breakdown$testLabel";
 
-// walk through the requests and group them by domain
-$requestsFv;
-$breakdownFv = getDomainBreakdown($id, $testPath, $run, 0, $requestsFv);
-$breakdownRv = array();
-$requestsRv = array();
-if( (int)$test[test][fvonly] == 0 )
-    $breakdownRv = getDomainBreakdown($id, $testPath, $run, 1, $requestsRv);
+$testInfo = TestInfo::fromFiles($testPath);
+$firstViewResults = TestRunResults::fromFiles($testInfo, $run, false);
+$isMultistep = $firstViewResults->countSteps() > 1;
+$repeatViewResults = null;
+if (!$testInfo->isFirstViewOnly()) {
+  $repeatViewResults = TestRunResults::fromFiles($testInfo, $run, true);
+}
 
 if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
-    $domains = array();
-    $firstView = array();
-
-    ksort($breakdownFv);
-    foreach($breakdownFv as $domain => $data) {
-        $entry = array();
-        $entry['domain'] = $domain;
-        $entry['bytes'] = $data['bytes'];
-        $entry['requests'] = $data['requests'];
-        $entry['connections'] = $data['connections'];
-        if (isset($data['cdn_provider']))
-          $entry['cdn_provider'] = $data['cdn_provider'];
-        $firstView[] = $entry;
-    }
-    $domains['firstView'] = $firstView;
-
-    if( (int)$test[test][fvonly] == 0 ) {
-        $repeatView = array();
-
-        ksort($breakdownRv);
-        foreach($breakdownRv as $domain => $data) {
-            $entry = array();
-            $entry['domain'] = $domain;
-            $entry['bytes'] = $data['bytes'];
-            $entry['requests'] = $data['requests'];
-            $entry['connections'] = $data['connections'];
-            if (isset($data['cdn_provider']))
-              $entry['cdn_provider'] = $data['cdn_provider'];
-            $repeatView[] = $entry;
-        }
-        $domains['repeatView'] = $repeatView;
-    }
-
-    $output = array();
-    $output['domains'] = $domains;
-
-    json_response($output);
-
-    exit;
+  $domains = array(
+    'firstView' => $firstViewResults->getStepResult(1)->getJSFriendlyDomainBreakdown(true)
+  );
+  if ($repeatViewResults) {
+    $domains['repeatView'] = $repeatViewResults->getStepResult(1)->getJSFriendlyDomainBreakdown(true);
+  }
+  $output = array('domains' => $domains);
+  json_response($output);
+  exit;
 }
+
 ?>
 
 
@@ -81,6 +57,20 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
                 vertical-align:top; 
                 padding:0;
             }
+            h1 {
+              text-align: center;
+              font-size: 2.5em;
+            }
+            h3 {
+              text-align: center;
+            }
+
+            .breakdownFramePies td {
+              padding: 0;
+            }
+            <?php
+            include __DIR__ . "/css/accordion.css";
+            ?>
         </style>
     </head>
     <body>
@@ -90,166 +80,140 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
             $subtab = 'Domains';
             include 'header.inc';
             ?>
+            <?php
+            if ($isMultistep) {
+              echo "<a name='quicklinks'><h3>Quicklinks</h3></a>\n";
+              echo "<table id='quicklinks_table'>\n";
+              $rvSteps = $repeatViewResults ? $repeatViewResults->countSteps() : 0;
+              $maxSteps = max($firstViewResults->countSteps(), $rvSteps);
+              for ($i = 1; $i <= $maxSteps; $i++) {
+                $stepResult = $firstViewResults->getStepResult($i);
+                $stepSuffix = "step" . $i;
+                $class = $i % 2 == 0 ? " class='even'" : "";
+                echo "<tr$class>\n";
+                echo "<th>" . $stepResult->readableIdentifier() . "</th>";
+                echo "<td><a href='#breakdown_fv_$stepSuffix'>First View Breakdown</a></td>";
+                if ($repeatViewResults) {
+                  echo "<td><a href='#breakdown_rv_$stepSuffix'>Repeat View Breakdown</a></td>";
+                }
+                echo "</tr>";
+              }
+              echo "</table>\n<br>\n";
+            }
+            ?>
+            <h1>Content breakdown by domain (First  View)</h1>
+            <?php
+              if ($isMultistep) {
+                $accordionHelper = new AccordionHtmlHelper($firstViewResults);
+                echo $accordionHelper->createAccordion("breakdown_fv", "domainBreakdown", "drawTable");
+              } else {
+                $snippetFv = new DomainBreakdownHtmlSnippet($testInfo, $firstViewResults->getStepResult(1));
+                echo $snippetFv->create();
+              }
 
-            <table align="center">
-                <tr>
-                    <th colspan="2">
-                    <h2>Content breakdown by domain (First  View)</h2>
-                    </th>
-                </tr>
-                <tr>
-                    <td>
-                        <div id="pieRequestsFv_div" style="width:450px; height:300px;"></div>
-                    </td>
-                    <td>
-                        <div id="pieBytesFv_div" style="width:450px; height:300px;"></div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div id="tableRequestsFv_div" style="width: 100%;"></div>
-                    </td>
-                    <td>
-                        <div id="tableBytesFv_div" style="width: 100%;"></div>
-                    </td>
-                </tr>
-            </table>
-
-            <?php if( count($breakdownRv) ) { ?>
-            <br><hr><br>
-            <table align="center">
-                <tr>
-                    <th colspan="2">
-                    <h2>Content breakdown by domain (Repeat  View)</h2>
-                    </th>
-                </tr>
-                <tr>
-                    <td>
-                        <div id="pieRequestsRv_div" style="width:450px; height:300px;"></div>
-                    </td>
-                    <td>
-                        <div id="pieBytesRv_div" style="width:450px; height:300px;"></div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <div id="tableRequestsRv_div" style="width: 100%;"></div>
-                    </td>
-                    <td>
-                        <div id="tableBytesRv_div" style="width: 100%;"></div>
-                    </td>
-                </tr>
-            </table>
-            <?php } ?>
+              if ($repeatViewResults) {
+                echo "<br><hr><br>\n";
+                echo "<h1>Content breakdown by domain (Repeat  View)</h1>\n";
+                if ($isMultistep) {
+                  $accordionHelper = new AccordionHtmlHelper($repeatViewResults);
+                  echo $accordionHelper->createAccordion("breakdown_rv", "domainBreakdown", "drawTable");
+                } else {
+                  $snippetRv = new DomainBreakdownHtmlSnippet($testInfo, $repeatViewResults->getStepResult(1));
+                  echo $snippetRv->create();
+                }
+              }
+            ?>
             
             <?php include('footer.inc'); ?>
         </div>
+        <a href="#top" id="back_to_top">Back to top</a>
 
         <!--Load the AJAX API-->
         <script type="text/javascript" src="<?php echo $GLOBALS['ptotocol']; ?>://www.google.com/jsapi"></script>
+        <?php
+        if ($isMultistep) {
+          echo '<script type="text/javascript" src="/js/jk-navigation.js"></script>';
+          echo '<script type="text/javascript" src="/js/accordion.js"></script>';
+          $testId = $testInfo->getId();
+          $testRun = $firstViewResults->getRunNumber();
+          echo '<script type="text/javascript">';
+          echo "var accordionHandler = new AccordionHandler('$testId', $testRun);";
+          echo '</script>';
+        }
+        ?>
         <script type="text/javascript">
     
         // Load the Visualization API and the table package.
         google.load('visualization', '1', {'packages':['table', 'corechart']});
-        google.setOnLoadCallback(drawTable);
-        function drawTable() {
-            var dataFv = new google.visualization.DataTable();
-            dataFv.addColumn('string', 'Domain');
-            dataFv.addColumn('number', 'Requests');
-            dataFv.addColumn('number', 'Bytes');
-            dataFv.addRows(<?php echo count($breakdownFv); ?>);
-            var fvRequests = new google.visualization.DataTable();
-            fvRequests.addColumn('string', 'Domain');
-            fvRequests.addColumn('number', 'Requests');
-            fvRequests.addRows(<?php echo count($breakdownFv); ?>);
-            var fvBytes = new google.visualization.DataTable();
-            fvBytes.addColumn('string', 'Domain');
-            fvBytes.addColumn('number', 'Bytes');
-            fvBytes.addRows(<?php echo count($breakdownFv); ?>);
-            <?php
-            $index = 0;
-            foreach($breakdownFv as $domain => $data)
-            {
-                $domain = $domain;
-                echo "dataFv.setValue($index, 0, '$domain');\n";
-                echo "dataFv.setValue($index, 1, {$data['requests']});\n";
-                echo "dataFv.setValue($index, 2, {$data['bytes']});\n";
-                echo "fvRequests.setValue($index, 0, '$domain');\n";
-                echo "fvRequests.setValue($index, 1, {$data['requests']});\n";
-                echo "fvBytes.setValue($index, 0, '$domain');\n";
-                echo "fvBytes.setValue($index, 1, {$data['bytes']});\n";
-                $index++;
-            }
-            ?>
+        google.setOnLoadCallback(initJS);
 
-            var viewRequestsFv = new google.visualization.DataView(dataFv);
-            viewRequestsFv.setColumns([0, 1]);
-            
-            var tableRequestsFv = new google.visualization.Table(document.getElementById('tableRequestsFv_div'));
-            tableRequestsFv.draw(viewRequestsFv, {showRowNumber: false, sortColumn: 1, sortAscending: false});
-
-            var viewBytesFv = new google.visualization.DataView(dataFv);
-            viewBytesFv.setColumns([0, 2]);
-            
-            var tableBytesFv = new google.visualization.Table(document.getElementById('tableBytesFv_div'));
-            tableBytesFv.draw(viewBytesFv, {showRowNumber: false, sortColumn: 1, sortAscending: false});
-
-            var pieRequestsFv = new google.visualization.PieChart(document.getElementById('pieRequestsFv_div'));
-            google.visualization.events.addListener(pieRequestsFv, 'ready', function(){markUserTime('aft.Requests Pie');});
-            pieRequestsFv.draw(fvRequests, {width: 450, height: 300, title: 'Requests'});
-
-            var pieBytesFv = new google.visualization.PieChart(document.getElementById('pieBytesFv_div'));
-            google.visualization.events.addListener(pieBytesFv, 'ready', function(){markUserTime('aft.Bytes Pie');});
-            pieBytesFv.draw(fvBytes, {width: 450, height: 300, title: 'Bytes'});
-
-            <?php if( count($breakdownRv) ) { ?>
-                var dataRv = new google.visualization.DataTable();
-                dataRv.addColumn('string', 'Domain');
-                dataRv.addColumn('number', 'Requests');
-                dataRv.addColumn('number', 'Bytes');
-                dataRv.addRows(<?php echo count($breakdownRv); ?>);
-                var rvRequests = new google.visualization.DataTable();
-                rvRequests.addColumn('string', 'Domain');
-                rvRequests.addColumn('number', 'Requests');
-                rvRequests.addRows(<?php echo count($breakdownRv); ?>);
-                var rvBytes = new google.visualization.DataTable();
-                rvBytes.addColumn('string', 'Domain');
-                rvBytes.addColumn('number', 'Bytes');
-                rvBytes.addRows(<?php echo count($breakdownRv); ?>);
-                <?php
-                $index = 0;
-                foreach($breakdownRv as $domain => $data)
-                {
-                    $domain = $domain;
-                    echo "dataRv.setValue($index, 0, '$domain');\n";
-                    echo "dataRv.setValue($index, 1, {$data['requests']});\n";
-                    echo "dataRv.setValue($index, 2, {$data['bytes']});\n";
-                    echo "rvRequests.setValue($index, 0, '$domain');\n";
-                    echo "rvRequests.setValue($index, 1, {$data['requests']});\n";
-                    echo "rvBytes.setValue($index, 0, '$domain');\n";
-                    echo "rvBytes.setValue($index, 1, {$data['bytes']});\n";
-                    $index++;
-                }
-                ?>
-
-                var viewRequestsRv = new google.visualization.DataView(dataRv);
-                viewRequestsRv.setColumns([0, 1]);
-                
-                var tableRequestsRv = new google.visualization.Table(document.getElementById('tableRequestsRv_div'));
-                tableRequestsRv.draw(viewRequestsRv, {showRowNumber: false, sortColumn: 1, sortAscending: false});
-
-                var viewBytesRv = new google.visualization.DataView(dataRv);
-                viewBytesRv.setColumns([0, 2]);
-                
-                var tableBytesRv = new google.visualization.Table(document.getElementById('tableBytesRv_div'));
-                tableBytesRv.draw(viewBytesRv, {showRowNumber: false, sortColumn: 1, sortAscending: false});
-
-                var pieRequestsRv = new google.visualization.PieChart(document.getElementById('pieRequestsRv_div'));
-                pieRequestsRv.draw(rvRequests, {width: 450, height: 300, title: 'Requests'});
-
-                var pieBytesRv = new google.visualization.PieChart(document.getElementById('pieBytesRv_div'));
-                pieBytesRv.draw(rvBytes, {width: 450, height: 300, title: 'Bytes'});
+        function initJS() {
+          <?php if ($isMultistep) { ?>
+          accordionHandler.connect();
+          window.onhashchange = function() { accordionHandler.handleHash() };
+          if (window.location.hash.length > 0) {
+            accordionHandler.handleHash();
+          } else {
+            accordionHandler.toggleAccordion($('#breakdown_fv_step1'), true);
+          }
+          <?php } else { ?>
+            drawTable($('#<?php echo $snippetFv->getBreakdownId(); ?>'));
+            <?php if ($repeatViewResults) { ?>
+            drawTable($('#<?php echo $snippetRv->getBreakdownId(); ?>'));
             <?php } ?>
+          <?php } ?>
+        }
+
+        function drawTable(parentNode) {
+            parentNode = $(parentNode);
+            var breakdownId = parentNode.find(".breakdownFrame").data('breakdown-id');
+            if (!breakdownId) {
+                return;
+            }
+            var breakdown = wptDomainBreakdownData[breakdownId];
+            var numData = breakdown.length;
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'Domain');
+            data.addColumn('number', 'Requests');
+            data.addColumn('number', 'Bytes');
+            data.addRows(numData);
+            var requests = new google.visualization.DataTable();
+            requests.addColumn('string', 'Domain');
+            requests.addColumn('number', 'Requests');
+            requests.addRows(numData);
+            var bytes = new google.visualization.DataTable();
+            bytes.addColumn('string', 'Domain');
+            bytes.addColumn('number', 'Bytes');
+            bytes.addRows(numData);
+            for (var i = 0; i < numData; i++) {
+                data.setValue(i, 0, breakdown[i]['domain']);
+                data.setValue(i, 1, breakdown[i]['requests']);
+                data.setValue(i, 2, breakdown[i]['bytes']);
+                requests.setValue(i, 0, breakdown[i]['domain']);
+                requests.setValue(i, 1, breakdown[i]['requests']);
+                bytes.setValue(i, 0, breakdown[i]['domain']);
+                bytes.setValue(i, 1, breakdown[i]['bytes']);
+            }
+
+            var viewRequests = new google.visualization.DataView(data);
+            viewRequests.setColumns([0, 1]);
+
+            var tableRequests = new google.visualization.Table(parentNode.find('div.tableRequests')[0]);
+            tableRequests.draw(viewRequests, {showRowNumber: false, sortColumn: 1, sortAscending: false});
+
+            var viewBytes = new google.visualization.DataView(data);
+            viewBytes.setColumns([0, 2]);
+
+            var tableBytes = new google.visualization.Table(parentNode.find('div.tableBytes')[0]);
+            tableBytes.draw(viewBytes, {showRowNumber: false, sortColumn: 1, sortAscending: false});
+
+            var pieRequests = new google.visualization.PieChart(parentNode.find('div.pieRequests')[0]);
+            google.visualization.events.addListener(pieRequests, 'ready', function(){markUserTime('aft.Requests Pie');});
+            pieRequests.draw(requests, {width: 450, height: 300, title: 'Requests'});
+
+            var pieBytes = new google.visualization.PieChart(parentNode.find('div.pieBytes')[0]);
+            google.visualization.events.addListener(pieBytes, 'ready', function(){markUserTime('aft.Bytes Pie');});
+            pieBytes.draw(bytes, {width: 450, height: 300, title: 'Bytes'});
         }
         </script>
     </body>

@@ -12,6 +12,7 @@ require_once __DIR__ . '/include/WaterfallViewHtmlSnippet.php';
 require_once __DIR__ . '/include/ConnectionViewHtmlSnippet.php';
 require_once __DIR__ . '/include/RequestDetailsHtmlSnippet.php';
 require_once __DIR__ . '/include/RequestHeadersHtmlSnippet.php';
+require_once __DIR__ . '/include/AccordionHtmlHelper.php';
 
 $options = null;
 if (array_key_exists('end', $_REQUEST))
@@ -19,6 +20,7 @@ if (array_key_exists('end', $_REQUEST))
 $testInfo = TestInfo::fromFiles($testPath);
 $testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, null, $options);
 $data = loadPageRunData($testPath, $run, $cached, $options, $test['testinfo']);
+$isMultistep = $testRunResults->countSteps() > 1;
 
 $page_keywords = array('Performance Test','Details','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website performance test details$testLabel";
@@ -29,33 +31,6 @@ $page_description = "Website performance test details$testLabel";
         <title>WebPagetest Test Details<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Details'; include ('head.inc'); ?>
         <style type="text/css">
-        #quicklinks_table {
-            margin: 0 auto;
-            line-height: 1.5em;
-            border-collapse: collapse;
-        }
-        #quicklinks_table tr.even {
-            background: whitesmoke;
-        }
-        #quicklinks_table td, #quicklinks_table th {
-            border: 1px silver solid;
-            padding: 0.5em;
-        }
-        #quicklinks_table th {
-            font-weight: bold;
-            background: gainsboro;
-        }
-
-        #back_to_top {
-            background:white;
-            position: fixed;
-            bottom:1em;
-            left:50%;
-            margin-left: 510px; /* 980px/2+20 */
-            padding:1em;
-            display: none;
-        }
-
         div.bar {
             height:12px;
             margin-top:auto;
@@ -132,40 +107,9 @@ $page_description = "Website performance test details$testLabel";
         .a_request {
             cursor: pointer;
         }
-        .snippet_container {
-            display: none;
-            margin: 1em 0;
-        }
-        .snippet_container_requestHeaders {
-            text-align: left;
-            overflow: auto;
-            padding: 0 1em;
-        }
-        .accordion_block {
-            border: 1px solid #aaa;
-            border-radius: 5px;
-            width:930px;
-        }
-        .accordion_opener {
-            text-align: center;
-            cursor: pointer;
-            display: block;
-            padding: 0.2em;
-            background: no-repeat 10px 50% transparent;
-        }
-        .accordion_opener.jkActive {
-            background-color: whitesmoke;
-        }
-        .accordion_closed {
-            background-image: url(/images/accordion_closed.png);
-        }
-        .accordion_opened {
-            background-image: url(/images/accordion_opened.png);
-        }
-        .accordion_loading {
-            background-image: url(/images/activity_indicator.gif);
-        }
+
         <?php
+        include __DIR__ . "/css/accordion.css";
         include "waterfall.css";
         ?>
         </style>
@@ -218,7 +162,6 @@ $page_description = "Website performance test details$testLabel";
                             <table id="tableCustomMetrics" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
                                <tr>
                             <?php
-                                $isMultistep = $testRunResults->countSteps() > 1;
                                 if ($isMultistep) {
                                     echo '<th align="center" class="border" valign="middle">Step</th>';
                                 }
@@ -276,6 +219,7 @@ $page_description = "Website performance test details$testLabel";
                         echo "</tr>";
                     }
                     echo "</table>\n<br>\n";
+                    $accordionHelper = new AccordionHtmlHelper($testRunResults);
                 }
                 ?>
 
@@ -283,7 +227,7 @@ $page_description = "Website performance test details$testLabel";
                 <h3 name="waterfall_view">Waterfall View</h3>
                 <?php
                     if ($isMultistep) {
-                        printAccordion("waterfall_view", "waterfall", $testRunResults);
+                        echo $accordionHelper->createAccordion("waterfall_view", "waterfall");
                     } else {
                         $enableCsi = (array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi']);
                         $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1), $enableCsi);
@@ -295,7 +239,7 @@ $page_description = "Website performance test details$testLabel";
                 <h3 name="connection_view">Connection View</h3>
                     <?php
                     if ($isMultistep) {
-                        printAccordion("connection_view", "connection", $testRunResults);
+                        echo $accordionHelper->createAccordion("connection_view", "connection");
                     } else {
                         $waterfallSnippet = new ConnectionViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1));
                         echo $waterfallSnippet->create();
@@ -309,7 +253,7 @@ $page_description = "Website performance test details$testLabel";
                 <h3 name="request_details_view">Request Details</h3>
                 <?php
                     if ($isMultistep) {
-                        printAccordion("request_details", "requestDetails", $testRunResults, "initDetailsTable");
+                        echo $accordionHelper->createAccordion("request_details", "requestDetails", "initDetailsTable");
                     } else {
                         $useLinks = !$settings['nolinks'];
                         $requestDetailsSnippet = new RequestDetailsHtmlSnippet($testInfo, $testRunResults->getStepResult(1), $useLinks);
@@ -327,7 +271,7 @@ $page_description = "Website performance test details$testLabel";
 
                     if ($isMultistep) {
                         echo "<br><h3 name=\"request_headers_view\" class='center'>Request Headers</h3>\n";
-                        printAccordion("request_headers", "requestHeaders", $testRunResults, "initHeaderRequestExpander");
+                        echo $accordionHelper->createAccordion("request_headers", "requestHeaders", "initHeaderRequestExpander");
                     } else {
                         $requestHeadersSnippet = new RequestHeadersHtmlSnippet($testRunResults->getStepResult(1), $useLinks);
                         $snippet = $requestHeadersSnippet->create();
@@ -344,80 +288,19 @@ $page_description = "Website performance test details$testLabel";
             <?php include('footer.inc'); ?>
         </div>
         <a href="#top" id="back_to_top">Back to top</a>
+
+        <?php
+        if ($isMultistep) {
+          echo '<script type="text/javascript" src="/js/jk-navigation.js"></script>';
+          echo '<script type="text/javascript" src="/js/accordion.js"></script>';
+          $testId = $testInfo->getId();
+          $testRun = $testRunResults->getRunNumber();
+          echo '<script type="text/javascript">';
+          echo "var accordionHandler = new AccordionHandler('$testId', $testRun);";
+          echo '</script>';
+        }
+        ?>
         <script type="text/javascript">
-<?php
-include __DIR__ . '/js/jk-navigation.js';
-if ($isMultistep) {
-?>
-        var testId = "<?php echo $testInfo->getId(); ?>";
-        var testRun = <?php echo $testRunResults->getRunNumber(); ?>;
-        var testIsCached = <?php echo $testRunResults->isCachedRun() ? 1 : 0; ?>;
-
-        $(document).ready(function() {
-            $(".accordion_opener").click(function(event) {
-               toggleAccordion(event.target);
-            });
-        });
-
-        function toggleAccordion(targetNode, forceOpen, onComplete) {
-            targetNode = $(targetNode);
-            $('.accordion_opener.jkActive').removeClass("jkActive");
-            targetNode.addClass("jkActive");
-
-            if ((forceOpen === true && targetNode.hasClass("accordion_opened")) ||
-                (forceOpen === false && targetNode.hasClass("accordion_closed"))) {
-                    if (typeof onComplete == "function") {
-                        onComplete();
-                    }
-                    return;
-            }
-
-            var snippetType = targetNode.data("snippettype");
-            var stepNumber = targetNode.data("step");
-            var snippetNode = $("#snippet_" + snippetType + "_step" + stepNumber);
-            if (snippetNode.data("loaded") !== "true") {
-                var args = {
-                    'snippet': snippetType,
-                    'test' : testId,
-                    'run' : testRun,
-                    'cached' : testIsCached,
-                    'step': stepNumber
-                };
-                targetNode.addClass("accordion_loading");
-                var initFunction = targetNode.data("jsinit");
-                snippetNode.load("/details_snippet.php", args, function () {
-                    snippetNode.data("loaded", "true");
-                    targetNode.removeClass("accordion_loading");
-                    if (initFunction) {
-                        window[initFunction](snippetNode);
-                    }
-                    // trigger animation when all images in the snippet loaded
-                    var images = snippetNode.find("img");
-                    var noOfImages = images.length;
-                    if (noOfImages > 0) {
-                        var noLoaded = 0;
-                        images.on('load', function(){
-                            noLoaded++;
-                            if(noOfImages === noLoaded) {
-                                animateAccordion(targetNode, snippetNode, onComplete);
-                            }
-                        });
-                    } else {
-                        animateAccordion(targetNode, snippetNode, onComplete);
-                    }
-                })
-            } else {
-                animateAccordion(targetNode, snippetNode, onComplete);
-            }
-        }
-
-        function animateAccordion(openerNode, snippetNode, onComplete) {
-            openerNode.toggleClass("accordion_opened");
-            openerNode.toggleClass("accordion_closed");
-            snippetNode.slideToggle(400, onComplete);
-        }
-<?php } ?>
-
         function expandRequest(targetNode) {
           if (targetNode.length) {
             var div_to_expand = $('#' + targetNode.attr('data-target-id'));
@@ -491,7 +374,7 @@ if ($isMultistep) {
             };
             var slide_opener = $("#request_headers_step" + stepNum);
             if (slide_opener.length) {
-                toggleAccordion(slide_opener, true, expand);
+              accordionHandler.toggleAccordion(slide_opener, true, expand);
             } else {
                 expand();
             }
@@ -502,7 +385,7 @@ if ($isMultistep) {
             if (!hash) {
                 var defaultAccordion = $("#waterfall_view_step1");
                 if (defaultAccordion.length) {
-                    toggleAccordion(defaultAccordion);
+                  accordionHandler.toggleAccordion(defaultAccordion);
                 }
                 return;
             }
@@ -510,56 +393,23 @@ if ($isMultistep) {
                 hash.startsWith("#connection_view_step") ||
                 hash.startsWith("#request_details_step") ||
                 hash.startsWith("#request_headers_step")) {
-                var targetNode = $(hash);
-                if (targetNode.length) {
-                    toggleAccordion(targetNode, true, function() {
-                        scrollTo(targetNode);
-                    });
-                }
+              accordionHandler.handleHash();
             }
             handleRequestHash();
         }
 
-        function initBackToTop() {
-            $(window).scroll(function() {
-                var button = $("#back_to_top");
-                if ($(this).scrollTop() > 300) {
-                    button.fadeIn();
-                } else {
-                    button.fadeOut();
-                }
-            });
-            $("#back_to_top").click(function() {
-                $('body,html').animate({ scrollTop: 0 }, 'fast');
-                return false;
-            });
-        }
+
 
         // init existing snippets
         $(document).ready(function() {
             initDetailsTable($(document));
             initHeaderRequestExpander($(document));
-            initBackToTop();
-            addJKNavigation(".accordion_opener", function(selected) {
-                toggleAccordion(selected, true, function() {
-                    scrollTo(selected);
-                });
-            });
+            <?php if ($isMultistep) { ?>
+              accordionHandler.connect();
+            <?php } ?>
             handleHash();
         });
         window.onhashchange = handleHash;
-        $(document).keydown(function (e) {
-            if (e.keyCode != 32 || e.target != document.body) {
-                return;
-            }
-            e.preventDefault();
-            var active = $(".jkActive");
-            if (active.length) {
-                toggleAccordion(active, undefined, function() {
-                    scrollTo(active);
-                });
-            }
-        });
 
         <?php
         include "waterfall.js";
@@ -568,23 +418,3 @@ if ($isMultistep) {
     </body>
 </html>
 
-<?php
-/**
- * Prints an accordion of a given snippetType for all steps of the run
- * @param string $namePrefix Name prefix of the anchor
- * @param string $snippetType Type of the snipper: "waterfall", "connection", "requestDetails", or "requestHeaders"
- * @param TestRunResults $testRunResults The run results
- * @param string $jsInitCall Javascript function to call after init. Optional
- */
-function printAccordion($namePrefix, $snippetType, $testRunResults, $jsInitCall = "") {
-    for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
-        $stepResult = $testRunResults->getStepResult($i);
-        echo "<div class=\"accordion_block\">\n";
-        echo "<h2 id=\"". $namePrefix . "_step" . $i . "\" class=\"accordion_opener accordion_closed\" " .
-             "data-snippettype='$snippetType' data-step='$i' data-jsinit='$jsInitCall'>";
-        echo $stepResult->readableIdentifier();
-        echo "</h2>\n";
-        echo "<div id=\"snippet_" . $snippetType . "_step$i\" class='snippet_container snippet_container_$snippetType'></div>\n";
-        echo "</div>\n";
-    }
-}

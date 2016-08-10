@@ -6,6 +6,7 @@ class ConnectionViewHtmlSnippet {
   private $testInfo;
   private $stepResult;
   private $requests;
+  private $mapName;
 
   /**
    * ConnectionViewHtmlSnippet constructor.
@@ -16,6 +17,9 @@ class ConnectionViewHtmlSnippet {
     $this->testInfo = $testInfo;
     $this->stepResult = $stepResult;
     $this->requests = $stepResult->getRequestsWithInfo(true, true);
+    $cached = $this->stepResult->isCachedRun() ? "rv_" : "fv_";
+    $this->mapName = "#connection_map_" . $cached . $this->stepResult->getStepNumber();
+    $this->imageId = "connectionView_" . $cached . $this->stepResult->getStepNumber();
   }
   public function create() {
     $out = $this->_createMap();
@@ -26,14 +30,13 @@ class ConnectionViewHtmlSnippet {
     $urlGenerator = $this->stepResult->createUrlGenerator("", $friendlyUrls);
     $waterfallImage = $urlGenerator->waterfallImage(true, 930, true);
     $out .= '<img class="progress" alt="Connection View waterfall diagram"' .
-            ' usemap="#connection_map_' . $this->stepResult->getStepNumber() . '"' .
-            ' id="connectionView" src="' . $waterfallImage . '">';
+            ' usemap="' . $this->mapName . '" id="' . $this->imageId .'" src="' . $waterfallImage . '">';
 
     return $out;
   }
 
   private function _createMap() {
-    $out = "<map name=\"connection_map_" . $this->stepResult->getStepNumber() . "\">\n";
+    $out = "<map name=\"" . $this->mapName . "\">\n";
     $connection_rows = GetConnectionRows($this->requests->getRequests());
     $options = array(
       'id' => $this->testInfo->getId(),
@@ -61,7 +64,7 @@ class ConnectionViewHtmlSnippet {
   }
 
   private function _createLegend() {
-    $out = '<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" ' .
+    $out = '<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" class="legend" ' .
            'style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">';
     $out .= "\n<tr>\n";
     $out .= $this->_legendBarTableCell("#007B84", "DNS Lookup", 15);
@@ -69,7 +72,7 @@ class ConnectionViewHtmlSnippet {
     if ($this->requests->hasSecureRequests()) {
       $out .= $this->_legendBarTableCell("#CF25DF", "SSL Negotiation", 15);
     }
-    $out .= $this->_legendBarTableCell("#28BC00", "Start Render", 15);
+    $out .= $this->_legendBarTableCell("#28BC00", "Start Render", 2);
     if ((float) $this->stepResult->getMetric("domTime")) {
       $out .= $this->_legendBarTableCell("#F28300", "DOM Element", 15);
     }

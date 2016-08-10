@@ -1,11 +1,5 @@
 <?php
 
-$validSnippets = array("waterfall", "connection", "requestDetails", "requestHeaders");
-if (empty($_REQUEST["snippet"]) || !in_array($_REQUEST["snippet"], $validSnippets)) {
-  header($_SERVER["SERVER_PROTOCOL"]." 404 Not Found", true, 404);
-  exit(0);
-}
-
 require 'common.inc';
 require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/include/TestStepResult.php';
@@ -52,4 +46,26 @@ switch ($requestedSnippet) {
     $requestHeadersSnippet = new RequestHeadersHtmlSnippet($stepResult, $useLinks);
     echo $requestHeadersSnippet->create();
     break;
+
+  case "mimetypeBreakdown":
+    require_once __DIR__ . '/include/MimetypeBreakdownHtmlSnippet.php';
+    $snippetRv = new MimetypeBreakdownHtmlSnippet($testInfo, $stepResult);
+    echo $snippetRv->create();
+    break;
+
+  case "domainBreakdown":
+    require_once __DIR__ . '/include/DomainBreakdownHtmlSnippet.php';
+    $snippetRv = new DomainBreakdownHtmlSnippet($testInfo, $stepResult);
+    echo $snippetRv->create();
+    break;
+
+  case "performanceOptimization":
+    require_once __DIR__ . '/include/PerformanceOptimizationHtmlSnippet.php';
+    $snippet = new PerformanceOptimizationHtmlSnippet($testInfo, $stepResult);
+    echo $snippet->create();
+    break;
+
+  default:
+    header($_SERVER["SERVER_PROTOCOL"]." 404 Not Found", true, 404);
+    exit(0);
 }

@@ -251,11 +251,8 @@ function notify( $mailto, $from,  $id, $testPath, $host )
         $secure = false;
         $haveLocations = false;
         $requests = getRequests($id, $testPath, 1, 0, $secure, $haveLocations, false);
-        ob_start();
-        dumpOptimizationReport($pageData[$fv][0], $requests, $id, 1, 0, $test);
-        $optimization = ob_get_contents();
-        ob_end_clean();
-        
+        $optimization = dumpOptimizationReport($pageData[$fv][0], $requests, $id, 1, 0, $test);
+
         // build the message body
         $body = 
         "<html>
