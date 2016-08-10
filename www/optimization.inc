@@ -1,17 +1,32 @@
 <?php
+require_once __DIR__ . '/include/TestPaths.php';
 
 /**
 * Re-format the optimization report to make it prettier
-* 
+*
 * @param mixed $testPath
 * @param mixed $run
 * @param mixed $cached
 */
 function dumpOptimizationReport(&$pageData, &$requests, $id, $run, $cached, &$test)
 {
+    $localPaths = new TestPaths(GetTestPath($id), $run, $cached, 1);
+    dumpOptimizationReportForStep($localPaths, $pageData, $requests, $test["testinfo"]);
+}
+
+/**
+ * Re-format the optimization report to make it prettier
+ *
+ * @param TestPaths $localPaths Step specific test paths
+ * @param array $pageData Raw step results array
+ * @param array $requests Requests of the result
+ * @param array $testinfoArray The "testinfo" array
+ */
+function dumpOptimizationReportForStep($localPaths, &$pageData, &$requests, $testinfoArray)
+{
     if( $pageData && $requests )
     {
-        ReportTTFB($pageData, $requests, $id, $run, $cached, $test);
+        ReportTTFB($localPaths, $pageData, $testinfoArray);
         ReportKeepAlive($pageData, $requests);
         ReportTransferCompression($pageData, $requests);
         ReportImageCompression($pageData, $requests);
@@ -22,18 +37,20 @@ function dumpOptimizationReport(&$pageData, &$requests, $id, $run, $cached, &$te
 }
 
 /**
-* 
-* 
-* @param mixed $requests
-*/
-function ReportTTFB(&$pageData, &$requests, $id, $run, $cached, &$test)
+ * @param TestPaths $localPaths
+ * @param array $pageData
+ * @param array $infoArray
+ */
+function ReportTTFB($localPaths, $pageData, $testinfoArray)
 {
-    require_once('optimization_detail.inc.php');
-    $score = gradeTTFB($pageData, $test, $id, $run, $cached, $target);
+    require_once __DIR__ . '/optimization_detail.inc.php';
+    $ttfb = (int) $pageData["TTFB"];
+    $latency = isset($testinfoArray['latency']) ? $testinfoArray['latency'] : null;
+    $score = gradeTTFBForStep($ttfb, $latency, $localPaths, $target);
     if( isset($score) )
     {
         echo "<a  name=\"first_byte_time\"><h3>First Byte Time (back-end processing): $score/100</h3></a><p class=\"indented1\">\n";
-        echo "<b>{$pageData['TTFB']} ms</b> First Byte Time<br>\n";
+        echo "<b>$ttfb ms</b> First Byte Time<br>\n";
         echo "<b>$target ms</b> Target First Byte Time<br>\n";
     }
     else
