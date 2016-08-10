@@ -20,6 +20,9 @@ AccordionHandler.prototype.connect = function() {
 
 AccordionHandler.prototype.toggleAccordion = function(targetNode, forceOpen, onComplete) {
     targetNode = $(targetNode);
+    if (!targetNode.hasClass("accordion_opener")) {
+        return; // avoid dealing with non-accordions
+    }
     $('.accordion_opener.jkActive').removeClass("jkActive");
     targetNode.addClass("jkActive");
 

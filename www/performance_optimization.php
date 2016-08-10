@@ -191,7 +191,16 @@ $isMultistep = $testRunResults->countSteps() > 1;
         }
 
         function handleHash() {
-            accordionHandler.handleHash();
+            var hash = window.location.hash;
+            var hashParts = hash.split("_", 2);
+            if (hashParts[0] == "#review") {
+                accordionHandler.handleHash();
+            } else if (hashParts[1].startsWith("step")) {
+                // open accordion and load content before scrolling to it
+                accordionHandler.toggleAccordion($('#review_' + hashParts[1]), true, function() {
+                    $('html, body').animate({scrollTop: $(hash).offset().top + 'px'}, 'fast');
+                });
+            }
         }
 
         </script>

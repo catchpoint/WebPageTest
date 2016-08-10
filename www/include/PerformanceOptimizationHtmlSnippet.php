@@ -29,11 +29,12 @@ class PerformanceOptimizationHtmlSnippet {
   }
 
   private function _createChecklistSnippet() {
+    $stepNum = $this->stepResult->getStepNumber();
     $urlGenerator = $this->stepResult->createUrlGenerator("", defined("FRIENDLY_URLS") && FRIENDLY_URLS);
     $imageUrl = $urlGenerator->optimizationChecklistImage();
     $out = "<div style=\"text-align:center;\">\n";
     $out .= "<h1>Full Optimization Checklist</h1>\n";
-    $out .= "<img alt=\"Optimization Checklist\" id=\"image\" src=\"$imageUrl\">\n";
+    $out .= "<img alt=\"Optimization Checklist\" src=\"$imageUrl\" id=\"checklist_step$stepNum\">\n";
     $out .= "<br></div>";
     return $out;
   }
@@ -54,7 +55,9 @@ class PerformanceOptimizationHtmlSnippet {
     $pageData = $this->stepResult->getRawResults();
     $requests = $this->stepResult->getRequestsWithInfo(false, false)->getRequests();
     $infoArray = $this->testInfo->getInfoArray();
-    $out .= dumpOptimizationReportForStep($this->stepResult->createTestPaths(), $pageData, $requests, $infoArray);
+    $localPaths = $this->stepResult->createTestPaths();
+    $stepNum = $this->stepResult->getStepNumber();
+    $out .= dumpOptimizationReportForStep($localPaths, $pageData, $requests, $infoArray, $stepNum);
     return $out;
   }
 }

@@ -12,7 +12,7 @@ require_once __DIR__ . '/include/TestPaths.php';
 function dumpOptimizationReport(&$pageData, &$requests, $id, $run, $cached, &$test)
 {
     $localPaths = new TestPaths(GetTestPath($id), $run, $cached, 1);
-    return dumpOptimizationReportForStep($localPaths, $pageData, $requests, $test["testinfo"]);
+    return dumpOptimizationReportForStep($localPaths, $pageData, $requests, $test["testinfo"], 1);
 }
 
 /**
@@ -22,20 +22,21 @@ function dumpOptimizationReport(&$pageData, &$requests, $id, $run, $cached, &$te
  * @param array $pageData Raw step results array
  * @param array $requests Requests of the result
  * @param array $testinfoArray The "testinfo" array
+ * @param int $step The step number (used for ids)
  * @return string The optimization report
  */
-function dumpOptimizationReportForStep($localPaths, &$pageData, &$requests, $testinfoArray)
+function dumpOptimizationReportForStep($localPaths, &$pageData, &$requests, $testinfoArray, $step)
 {
     $out = "";
     if( $pageData && $requests )
     {
-        $out .= ReportTTFB($localPaths, $pageData, $testinfoArray);
-        $out .= ReportKeepAlive($pageData, $requests);
-        $out .= ReportTransferCompression($pageData, $requests);
-        $out .= ReportImageCompression($pageData, $requests);
-        $out .= ReportProgressiveJpeg($pageData, $requests);
-        $out .= ReportCache($pageData, $requests);
-        $out .= ReportCDN($pageData, $requests);
+        $out .= ReportTTFB($localPaths, $pageData, $testinfoArray, $step);
+        $out .= ReportKeepAlive($pageData, $requests, $step);
+        $out .= ReportTransferCompression($pageData, $requests, $step);
+        $out .= ReportImageCompression($pageData, $requests, $step);
+        $out .= ReportProgressiveJpeg($pageData, $requests, $step);
+        $out .= ReportCache($pageData, $requests, $step);
+        $out .= ReportCDN($pageData, $requests, $step);
     }
     return $out;
 }
@@ -44,9 +45,10 @@ function dumpOptimizationReportForStep($localPaths, &$pageData, &$requests, $tes
  * @param TestPaths $localPaths
  * @param array $pageData
  * @param array $testinfoArray
+ * @param int $step The step number (used for id)
  * @return string The TTFB report
  */
-function ReportTTFB($localPaths, $pageData, $testinfoArray)
+function ReportTTFB($localPaths, $pageData, $testinfoArray, $step)
 {
     require_once __DIR__ . '/optimization_detail.inc.php';
     $ttfb = (int) $pageData["TTFB"];
@@ -55,7 +57,7 @@ function ReportTTFB($localPaths, $pageData, $testinfoArray)
     $out = "";
     if( isset($score) )
     {
-        $out .= "<a  name=\"first_byte_time\"><h3>First Byte Time (back-end processing): $score/100</h3></a><p class=\"indented1\">\n";
+        $out .= "<a  name=\"first_byte_time\"><h3 id='ttfb_step$step'>First Byte Time (back-end processing): $score/100</h3></a><p class=\"indented1\">\n";
         $out .= "<b>$ttfb ms</b> First Byte Time<br>\n";
         $out .= "<b>$target ms</b> Target First Byte Time<br>\n";
     }
@@ -70,7 +72,7 @@ function ReportTTFB($localPaths, $pageData, $testinfoArray)
 * 
 * @param mixed $requests
 */
-function ReportKeepAlive(&$pageData, &$requests)
+function ReportKeepAlive(&$pageData, &$requests, $step)
 {
     $out = "";
     $score = 'N/A';
@@ -95,7 +97,7 @@ function ReportKeepAlive(&$pageData, &$requests)
         ksort($report);
     }
         
-    $out .= "<a  name=\"keep_alive_enabled\"><h3>Use persistent connections (keep alive): $score</h3></a><p class=\"indented1\">\n";
+    $out .= "<a  name=\"keep_alive_enabled\"><h3 id='keep-alive_step$step'>Use persistent connections (keep alive): $score</h3></a><p class=\"indented1\">\n";
     foreach( $report as $entry )
         $out .= "$entry<br>\n";
     $out .= "</p><br>\n";
@@ -107,7 +109,7 @@ function ReportKeepAlive(&$pageData, &$requests)
 * 
 * @param mixed $requests
 */
-function ReportTransferCompression(&$pageData, &$requests)
+function ReportTransferCompression(&$pageData, &$requests, $step)
 {
     $out = "";
     $score = 'N/A';
@@ -147,7 +149,7 @@ function ReportTransferCompression(&$pageData, &$requests)
         krsort($report, SORT_NUMERIC);
     }
         
-    $out .= "<a  name=\"compress_text\"><h3>Use gzip compression for transferring compressable responses: $score</h3></a>\n";
+    $out .= "<a  name=\"compress_text\"><h3 id='gzip_step$step'>Use gzip compression for transferring compressable responses: $score</h3></a>\n";
     if( isset($summary) )
         $out .= "<p>$summary</p>\n";
     $out .= "<p class=\"indented1\">";
@@ -162,7 +164,7 @@ function ReportTransferCompression(&$pageData, &$requests)
 * 
 * @param mixed $requests
 */
-function ReportImageCompression(&$pageData, &$requests)
+function ReportImageCompression(&$pageData, &$requests, $step)
 {
     $out = "";
     $score = 'N/A';
@@ -202,7 +204,7 @@ function ReportImageCompression(&$pageData, &$requests)
         krsort($report, SORT_NUMERIC);
     }
         
-    $out .= "<a  name=\"compress_images\"><h3>Compress Images: $score</h3></a>\n";
+    $out .= "<a  name=\"compress_images\"><h3 id='image_compression_step$step'>Compress Images: $score</h3></a>\n";
     if( isset($summary) )
         $out .= "<p>$summary</p>\n";
     $out .= "<p class=\"indented1\">";
@@ -212,7 +214,7 @@ function ReportImageCompression(&$pageData, &$requests)
     return $out;
 }
 
-function ReportProgressiveJpeg(&$pageData, &$requests)
+function ReportProgressiveJpeg(&$pageData, &$requests, $step)
 {
     $out = "";
     $score = 'N/A';
@@ -255,7 +257,7 @@ function ReportProgressiveJpeg(&$pageData, &$requests)
         krsort($report, SORT_NUMERIC);
     }
 
-    $out .= "<a  name=\"progressive_jpeg\"><h3>Use Progressive JPEGs: $score</h3></a>\n";
+    $out .= "<a  name=\"progressive_jpeg\"><h3 id='progressive_jpeg_step$step'>Use Progressive JPEGs: $score</h3></a>\n";
     if( isset($summary) )
         $out .= "<p>$summary</p>\n";
     $out .= "<p class=\"indented1\">";
@@ -270,7 +272,7 @@ function ReportProgressiveJpeg(&$pageData, &$requests)
 * 
 * @param mixed $requests
 */
-function ReportCache(&$pageData, &$requests)
+function ReportCache(&$pageData, &$requests, $step)
 {
     $out = "";
     $score = 'N/A';
@@ -315,7 +317,7 @@ function ReportCache(&$pageData, &$requests)
         ksort($report, SORT_NUMERIC);
     }
 
-    $out .= "<a  name=\"cache_static_content\"><h3>Leverage browser caching of static assets: $score</h3></a>\n";
+    $out .= "<a  name=\"cache_static_content\"><h3 id='caching_step$step'>Leverage browser caching of static assets: $score</h3></a>\n";
     $out .= "<p class=\"indented1\">";
     foreach( $report as $entry )
         $out .= "$entry<br>\n";
@@ -328,7 +330,7 @@ function ReportCache(&$pageData, &$requests)
 * 
 * @param mixed $requests
 */
-function ReportCombine(&$pageData, &$requests)
+function ReportCombine(&$pageData, &$requests, $step)
 {
     $out = "";
     $score = 'N/A';
@@ -353,7 +355,7 @@ function ReportCombine(&$pageData, &$requests)
         ksort($report);
     }
 
-    $out .= "<a  name=\"combine_js_css_files\"><h3>Combine static CSS and JS files: $score</h3></a><p class=\"indented1\">\n";
+    $out .= "<a  name=\"combine_js_css_files\"><h3 id='combine_step$step'>Combine static CSS and JS files: $score</h3></a><p class=\"indented1\">\n";
     foreach( $report as $entry )
         $out .= "$entry<br>\n";
     $out .= "</p><br>\n";
@@ -365,7 +367,7 @@ function ReportCombine(&$pageData, &$requests)
 * 
 * @param mixed $requests
 */
-function ReportCDN(&$pageData, &$requests)
+function ReportCDN(&$pageData, &$requests, $step)
 {
     $out = "";
     $score = 'N/A';
@@ -395,7 +397,7 @@ function ReportCDN(&$pageData, &$requests)
         ksort($report);
     }
 
-    $out .= "<a  name=\"use_of_cdn\"><h3>Use a CDN for all static assets: $score</h3></a><p class=\"indented1\">\n";
+    $out .= "<a  name=\"use_of_cdn\"><h3 id='cdn_step$step'>Use a CDN for all static assets: $score</h3></a><p class=\"indented1\">\n";
     foreach( $report as $entry )
         $out .= "$entry<br>\n";
     if( count($cdns) )
@@ -413,7 +415,7 @@ function ReportCDN(&$pageData, &$requests)
 * 
 * @param mixed $requests
 */
-function ReportMinify(&$pageData, &$requests)
+function ReportMinify(&$pageData, &$requests, $step)
 {
     $out = "";
     $score = 'N/A';
@@ -453,7 +455,7 @@ function ReportMinify(&$pageData, &$requests)
         krsort($report, SORT_NUMERIC);
     }
 
-    $out .= "<a  name=\"minify_js\"><h3>Minify JS: $score</h3></a>\n";
+    $out .= "<a  name=\"minify_js\"><h3 id='minify_step$step'>Minify JS: $score</h3></a>\n";
     if( isset($summary) )
         $out .= "<p>$summary</p>\n";
     $out .= "<p class=\"indented1\">";
@@ -468,7 +470,7 @@ function ReportMinify(&$pageData, &$requests)
 * 
 * @param mixed $requests
 */
-function ReportCookies(&$pageData, &$requests)
+function ReportCookies(&$pageData, &$requests, $step)
 {
     $out = "";
     $score = 'N/A';
@@ -493,7 +495,7 @@ function ReportCookies(&$pageData, &$requests)
         ksort($report);
     }
 
-    $out .= "<a  name=\"cookies\"><h3>Proper cookie usage: $score</h3></a><p class=\"indented1\">\n";
+    $out .= "<a  name=\"cookies\"><h3 id='cookies_step$step'>Proper cookie usage: $score</h3></a><p class=\"indented1\">\n";
     foreach( $report as $entry )
         $out .= "$entry<br>\n";
     $out .= "</p><br>\n";
