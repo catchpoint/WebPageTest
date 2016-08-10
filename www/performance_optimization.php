@@ -3,6 +3,7 @@ include __DIR__ . '/common.inc';
 require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/include/TestRunResults.php';
 require_once __DIR__ . '/optimization_detail.inc.php';
+require_once __DIR__ . '/include/PerformanceOptimizationHtmlSnippet.php';
 
 $page_keywords = array('Optimization','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website performance optimization recommendations$testLabel.";
@@ -139,38 +140,19 @@ $isMultistep = $testRunResults->countSteps() > 1;
             <br>
             <?php include('./ads/optimization_middle.inc'); ?>
             <br>
-            <?php } // isMultistep ?>
-
-            <div style="text-align:center;">
-                <h1>Full Optimization Checklist</h1>
-                <?php
-                    echo '<img alt="Optimization Checklist" id="image" src="';
-                    if( FRIENDLY_URLS )
-                        echo substr($testPath, 1) . '/' . $run . $cachedText . '_optimization.png';
-                    else
-                        echo "/optimizationChecklist.php?test=$id&run=$run&cached=$cached";
-                    echo '">';
-                ?>
-                <br>
-            </div>
-
-		    <br>
-            <?php include('./ads/optimization_middle.inc'); ?>
-		    <br>
-
-            <h2>Details:</h2>
             <?php
-                require 'optimization.inc';
+                // still multistep
 
-                require_once('page_data.inc');
-                $pageData = loadPageRunData($testPath, $run, $cached, null, $test['testinfo']);
 
-                require_once('object_detail.inc');
-                $secure = false;
-                $haveLocations = false;
-                $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
+            } else {
+                // singlestep
+                $snippet = new PerformanceOptimizationHtmlSnippet($testInfo, $testRunResults->getStepResult(1));
+                $snippet->setAdsFile(__DIR__ . '/ads/optimization_middle.inc');
+                echo $snippet->create();
+            }
+            ?>
 
-                dumpOptimizationReport($pageData, $requests, $id, $run, $cached, $test);
+            <?php
                 echo '<p></p><br>';
                 include('./ads/optimization_bottom.inc');
                 echo '<br>';
