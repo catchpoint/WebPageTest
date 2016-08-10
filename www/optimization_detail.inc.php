@@ -4,7 +4,22 @@ require_once __DIR__ . '/object_detail.inc';
 require_once __DIR__ . '/include/TestRunResults.php';
 
 /**
- * Parse the page data and load the optimization-specific details
+ * Parse the page data and load the optimization-specific details for one step
+ *
+ * @param TestInfo $testInfo Test information
+ * @param TestStepResult $testStepResult Results of the step to get the grades for
+ * @return array|null An array with all labels, scores, grades, weights, etc per score
+ */
+function getOptimizationGradesForStep($testInfo, $testStepResult) {
+  // The function getOptimizationGradesForRun is more powerful as it can compute averages.
+  // With one step, it will do exactly what we want, so we create an artificial run
+  $singlestepRunResult = TestRunResults::fromStepResults($testInfo, $testStepResult->getRunNumber(),
+    $testStepResult->isCachedRun(), array($testStepResult));
+  return getOptimizationGradesForRun($singlestepRunResult);
+}
+
+/**
+ * Parse the page data and load the optimization-specific details for a complete run
  *
  * @param TestRunResults $testRunResults Results of the run to get the grades for
  * @return array|null An array with all labels, scores, grades, weights, etc per score
