@@ -70,6 +70,11 @@ abstract class UrlGenerator {
   public abstract function resultSummary($extraParams = null);
 
   /**
+   * @return string The generated URL
+   */
+  public abstract function optimizationChecklistImage();
+
+  /**
    * @param string $file The name of the file to get with the URL
    * @param string $video If it's a video-related file, this can be set to the corresponding video directory name
    * @return string The generated URL
@@ -203,6 +208,10 @@ class FriendlyUrlGenerator extends UrlGenerator {
     $params .= $withMime ? "&mime=1" : "";
     return $this->baseUrl . "/waterfall.png?" . $this->urlParams() . $params;
   }
+
+  public function optimizationChecklistImage() {
+    return $this->generatedImage("optimization");
+  }
 }
 
 class StandardUrlGenerator extends UrlGenerator {
@@ -230,5 +239,9 @@ class StandardUrlGenerator extends UrlGenerator {
     $params .= $connectionView ? "&type=connection" : "";
     $params .= $withMime ? "&mime=1" : "";
     return $this->baseUrl . "/waterfall.php?" . $this->urlParams() . $params;
+  }
+
+  public function optimizationChecklistImage() {
+    return $this->generatedImage("optimizationChecklist");
   }
 }
