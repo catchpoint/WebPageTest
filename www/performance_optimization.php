@@ -4,6 +4,7 @@ require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/include/TestRunResults.php';
 require_once __DIR__ . '/optimization_detail.inc.php';
 require_once __DIR__ . '/include/PerformanceOptimizationHtmlSnippet.php';
+require_once __DIR__ . '/include/AccordionHtmlHelper.php';
 
 $page_keywords = array('Optimization','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website performance optimization recommendations$testLabel.";
@@ -88,7 +89,11 @@ $isMultistep = $testRunResults->countSteps() > 1;
                 font-size: 1.2em;
                 max-width: 100px;
             }
-
+            <?php
+            if ($isMultistep) {
+                include __DIR__ . "/css/accordion.css";
+            }
+            ?>
         </style>
     </head>
     <body>
@@ -142,8 +147,8 @@ $isMultistep = $testRunResults->countSteps() > 1;
             <br>
             <?php
                 // still multistep
-
-
+                $accordionHelper = new AccordionHtmlHelper($testRunResults);
+                echo $accordionHelper->createAccordion("review", "performanceOptimization");
             } else {
                 // singlestep
                 $snippet = new PerformanceOptimizationHtmlSnippet($testInfo, $testRunResults->getStepResult(1));
@@ -161,5 +166,36 @@ $isMultistep = $testRunResults->countSteps() > 1;
             
             <?php include('footer.inc'); ?>
         </div>
+        <a href="#top" id="back_to_top">Back to top</a>
+
+        <!--Load the AJAX API-->
+        <?php
+        if ($isMultistep) {
+            echo '<script type="text/javascript" src="/js/jk-navigation.js"></script>';
+            echo '<script type="text/javascript" src="/js/accordion.js"></script>';
+            $testId = $testInfo->getId();
+            $testRun = $testRunResults->getRunNumber();
+        ?>
+        <script type="text/javascript">
+        var accordionHandler = new AccordionHandler('<?php echo $testId ?>', <?php echo $testRun ?>);
+        $(document).ready(initJS);
+
+        function initJS() {
+            accordionHandler.connect();
+            window.onhashchange = handleHash;
+            if (window.location.hash.length > 0) {
+                handleHash();
+            } else {
+                accordionHandler.toggleAccordion($('#review_step1'), true);
+            }
+        }
+
+        function handleHash() {
+            accordionHandler.handleHash();
+        }
+
+        </script>
+
+        <?php } //isMultistep ?>
     </body>
 </html>

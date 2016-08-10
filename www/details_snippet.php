@@ -59,6 +59,12 @@ switch ($requestedSnippet) {
     echo $snippetRv->create();
     break;
 
+  case "performanceOptimization":
+    require_once __DIR__ . '/include/PerformanceOptimizationHtmlSnippet.php';
+    $snippet = new PerformanceOptimizationHtmlSnippet($testInfo, $stepResult);
+    echo $snippet->create();
+    break;
+
   default:
     header($_SERVER["SERVER_PROTOCOL"]." 404 Not Found", true, 404);
     exit(0);
