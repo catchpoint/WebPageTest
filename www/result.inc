@@ -1,8 +1,10 @@
 <?php
-require_once('optimization_detail.inc.php');
-require_once('breakdown.inc');
-require_once('testStatus.inc');
-require_once('common.inc');
+require_once __DIR__ . '/optimization_detail.inc.php';
+require_once __DIR__ . '/breakdown.inc';
+require_once __DIR__ . '/testStatus.inc';
+require_once __DIR__ . '/common.inc';
+require_once __DIR__ . '/include/TestInfo.php';
+require_once __DIR__ . '/include/TestResults.php';
 
 $breakdown = array();
 $video = false;
@@ -18,6 +20,9 @@ $headless = false;
 if (array_key_exists('headless', $settings) && $settings['headless']) {
     $headless = true;
 }
+
+$testInfo = TestInfo::fromFiles($testPath);
+$testResults = TestResults::fromFiles($testInfo);
 
 $page_keywords = array('Results','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website performance test result$testLabel.";
