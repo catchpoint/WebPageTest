@@ -13,6 +13,7 @@ class RunResultHtmlTable {
   const COL_SPEED_INDEX = "SpeedIndex";
   const COL_VISUAL_COMPLETE = "visualComplete";
   const COL_RESULT = "result";
+  const COL_COST = "cost";
 
   /* @var TestInfo */
   private $testInfo;
@@ -22,7 +23,8 @@ class RunResultHtmlTable {
 
   private $isMultistep;
 
-  private $allOptionalColumns;
+  private $leftOptionalColumns;
+  private $rightOptionalColumns;
   private $enabledColumns;
 
   /**
@@ -36,8 +38,9 @@ class RunResultHtmlTable {
     $this->runResults = $runResults;
     $this->rvRunResults = $rvRunResults;
     $this->isMultistep = $runResults->isMultistep();
-    $this->allOptionalColumns = array(self::COL_LABEL, self::COL_ABOVE_THE_FOLD, self::COL_USER_TIME,
+    $this->leftOptionalColumns = array(self::COL_LABEL, self::COL_ABOVE_THE_FOLD, self::COL_USER_TIME,
       self::COL_DOM_TIME, self::COL_DOM_ELEMENTS, self::COL_SPEED_INDEX, self::COL_VISUAL_COMPLETE, self::COL_RESULT);
+    $this->rightOptionalColumns = array(self::COL_COST);
     $this->enabledColumns = array();
 
     // optional columns default setting based on data
@@ -87,11 +90,11 @@ class RunResultHtmlTable {
   }
 
   private function _createHead() {
-    $colspan = 3 + $this->_countEnabledColumns();
+    $colspan = 3 + $this->_countLeftEnabledColumns();
     $out = "<tr>\n";
     $out .= $this->_headCell("", "empty", $colspan);
     $out .= $this->_headCell("Document Complete", "border", 3);
-    $out .= $this->_headCell("Fully Loaded", "border", 3);
+    $out .= $this->_headCell("Fully Loaded", "border", 3 + $this->_countRightEnabledColumns());
     $out .= "</tr>\n";
 
     $out .= "<tr>";
@@ -133,6 +136,10 @@ class RunResultHtmlTable {
       $out .= $this->_headCell("Bytes In");
     }
 
+    if ($this->isColumnEnabled(self::COL_COST)) {
+      $out .= $this->_headCell("Cost");
+    }
+
     return $out;
   }
 
@@ -157,7 +164,7 @@ class RunResultHtmlTable {
 
   private function _headlineRow($isRepeatView, $runNumber) {
     $label = $this->_rvLabel($isRepeatView, $runNumber);
-    $colspan = 9 + $this->_countEnabledColumns();
+    $colspan = 9 + $this->_countLeftEnabledColumns() + $this->_countRightEnabledColumns();
     return "<tr><td colspan='$colspan'>$label</td></tr>\n";
   }
 
@@ -230,6 +237,22 @@ class RunResultHtmlTable {
     $out .= $this->_bodyCell($idPrefix . "Requests" . $idSuffix, $this->_getSimpleMetric($stepResult, "requests"), $class);
     $out .= $this->_bodyCell($idPrefix . "BytesIn" . $idSuffix, $this->_getByteMetricInKbyte($stepResult, "bytesIn"), $class);
 
+    if ($this->isColumnEnabled(self::COL_COST)) {
+      if ($cachedRun) {
+        $out .= "<td>&nbsp;</td>";
+      } else {
+        // one dollar sign for every 500KB
+        $dollars = "";
+        $count = max(1, min(5, ceil($stepResult->getMetric("bytesIn")/ (500 * 1024))));
+        for ($i = 1; $i <= 5; $i++)
+          $dollars .= $i <= $count ? '$' : '-';
+        $id = $this->testInfo->getId();
+        $text = "<a title=\"Find out how much it costs for someone to use your site on mobile networks around the world.\" " .
+                "href=\"http://whatdoesmysitecost.com/test/$id\">$dollars</a>";
+        $out .= $this->_bodyCell($idPrefix . "Cost" . $idSuffix, $text, $class);
+      }
+    }
+
     $out .= "</tr>\n";
     return $out;
   }
@@ -248,9 +271,19 @@ class RunResultHtmlTable {
     return '<td '. $attributes . 'valign="middle">' . $innerHtml . "</td>\n";
   }
 
-  private function _countEnabledColumns() {
+  private function _countLeftEnabledColumns() {
     $enabled = 0;
-    foreach ($this->allOptionalColumns as $col) {
+    foreach ($this->leftOptionalColumns as $col) {
+      if ($this->isColumnEnabled($col)) {
+        $enabled++;
+      }
+    }
+    return $enabled;
+  }
+
+  private function _countRightEnabledColumns() {
+    $enabled = 0;
+    foreach ($this->rightOptionalColumns as $col) {
       if ($this->isColumnEnabled($col)) {
         $enabled++;
       }
