@@ -74,7 +74,7 @@ $page_description = "Website performance test result$testLabel.";
                 </p>
                 <?php 
                 $expected = $test['test']['runs'];
-                $available = count($pageData);
+                $available = $testResults->countRuns();
                 echo "<h3>Test is partially complete ($available of $expected tests).<br>This page will refresh as tests complete.</h3>";
                 echo "<script>\n";
                 echo "var availableTests=$available;\n";
@@ -145,18 +145,13 @@ $page_description = "Website performance test result$testLabel.";
             </div>
             <div class="cleared"></div>
             <div id="average">
-                <?php 
-                $fvMedian = GetMedianRun($pageData, 0, $median_metric);
-                $rvMedian = GetMedianRun($pageData, 1, $median_metric);
-                $is_test_error = false;
-                if (array_key_exists('testinfo', $test) && 
-                    array_key_exists('test_error', $test['testinfo']) &&
-                    strlen($test['testinfo']['test_error'])) {
-                    $is_test_error = true;
-                }
+                <?php
+                $fvMedian = $testResults->getMedianRunNumber($median_metric, false);
+                $rvMedian = $testResults->getMedianRunNumber($median_metric, true);
+                $is_test_error = $testInfo->isTestError();
                 if( $fvMedian  )
                 {
-                    if( count($pageData) > 1) 
+                    if ($testResults->countRuns() > 1)
                         echo '<h2>Performance Results (Median Run)</h2>';
                 ?>
                     <table id="tableResults" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
