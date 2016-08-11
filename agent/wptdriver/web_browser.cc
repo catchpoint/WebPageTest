@@ -184,10 +184,16 @@ bool WebBrowser::RunAndWait() {
           }
           if (user_agent.GetLength()) {
             if (!_test._preserve_user_agent) {
-              CString append;
+              CString append, buff;
               CString product = _test._append_user_agent.GetLength() ? 
                   CA2T(_test._append_user_agent, CP_UTF8) : _T("PTST");
               append.Format(_T(" %s/%d"), (LPCTSTR)product, _wpt_ver);
+              append.Replace(_T("%TESTID%"), _test._id);
+              buff.Format(_T("%d"), _test._run);
+              append.Replace(_T("%RUN%"), buff);
+              append.Replace(_T("%CACHED%"), _test._clear_cache ? _T("0") : _T("1"));
+              buff.Format(_T("%d"), _test._version);
+              append.Replace(_T("%VERSION%"), buff);
               user_agent += append;
             }
             lstrcat(cmdLine, CHROME_USER_AGENT);
