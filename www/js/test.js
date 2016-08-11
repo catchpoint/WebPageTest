@@ -387,43 +387,37 @@ function UpdateSponsor()
             var s = sponsors[sponsor];
             if( s != undefined )
             {
-                var sponsorImg = null;
                 var sponsorTxt = '';
                 var sponsorHref = '';
-                var sponsorStyle = '';
+                var sponsorDiv = '';
 
-                if( s["logo_big"] != undefined && s["logo_big"].length )
-                    sponsorImg = s["logo_big"];
-                else if( s["logo"] != undefined && s["logo"].length ) {
-                    sponsorImg = s["logo"];
-                    sponsorStyle = ' style="top: ' + s["offset"] + 'px;" ';
+                if( s["logo"] != undefined && s["logo"].length ) {
+                    sponsorDiv = '<div class="sponsor_logo" style="background-image: url(' +
+                                  s["logo"] + '); background-position: 0px ' + s["offset"] + 'px; margin-left: auto; margin-right: auto;"></div>';
                 }
                     
                 if( s["alt"] != undefined && s["alt"].length )
-                    sponsorTxt = s["alt"];
+                    sponsorTxt = ' title="' + s["alt"] + '"';
 
                 if( s["href"] != undefined && s["href"].length )
                     sponsorHref = s["href"];
                 
-                if( sponsorImg && sponsorImg.length )
+                if(sponsorDiv.length)
                 {
                     if( count )
                         html += '<p class="centered nomargin"><small>and</small></p>';
 
-                    html += '<p class="centered nomargin">';
-                    if( sponsorStyle.length )
-                        html += '<div class="sponsor_logo">';
-                    if( sponsorHref.length )
-                        html += '<a class="sponsor_link" href="' + sponsorHref + '">';
+                    html += '<div class="centered nomargin">';
+                    if( sponsorHref.length ) {
+                        html += '<a class="sponsor_link" href="' + sponsorHref + '"' + sponsorTxt + '>';
+                    }
                     
-                    html += '<img title="' + sponsorTxt + '" alt="' + sponsorTxt + '" src="' + sponsorImg + '" ' + sponsorStyle + '>';
+                    html += sponsorDiv;
                     
                     if( sponsorHref.length )
                         html += '</a>';
-                    if( sponsorStyle.length )
-                        html += '</div>';
                     
-                    html += '</p>';
+                    html += '</div>';
                 
                     count++;
                 }

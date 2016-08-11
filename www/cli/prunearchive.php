@@ -1,4 +1,6 @@
 <?php
+if (php_sapi_name() != 'cli')
+  exit(1);
 chdir('..');
 $MIN_DAYS = 7;
 

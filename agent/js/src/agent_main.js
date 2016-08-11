@@ -81,7 +81,9 @@ function Agent(app, client, flags) {
   if (!/^[a-z0-9\-]*$/i.test(runTempSuffix)) {
     throw new Error('--deviceSerial may contain only letters and digits');
   }
-  this.runTempDir_ = 'runtmp/' + (runTempSuffix || '_wpt');
+  this.runTempRoot_ = 'runtmp/' + (runTempSuffix || '_wpt');
+  deleteFolderRecursive(this.runTempRoot_);
+  this.runTempDir_ = this.runTempRoot_;
   this.workDir_ = 'work/' + (runTempSuffix || '_wpt');
   this.scheduleCleanWorkDir_();
   this.aliveFile_ = undefined;
@@ -100,6 +102,10 @@ function Agent(app, client, flags) {
   this.client_.onAbortJob = this.abortJob_.bind(this);
   this.client_.onMakeReady = this.onMakeReady_.bind(this);
   this.client_.onAlive = this.onAlive_.bind(this);
+  this.startTime_ = process.hrtime();
+
+  // do the one-time device cleanup at startup
+  this.browser_.deviceCleanup();
 }
 /** Public class. */
 exports.Agent = Agent;
@@ -121,6 +127,22 @@ Agent.prototype.run = function() {
 Agent.prototype.scheduleNoFault_ = function(description, f) {
   'use strict';
   return process_utils.scheduleNoFault(this.app_, description, f);
+};
+
+var deleteFolderRecursive = function(path) {
+  try {
+    if (fs.existsSync(path)) {
+      fs.readdirSync(path).forEach(function(file,index){
+        var curPath = path + "/" + file;
+        if(fs.lstatSync(curPath).isDirectory()) { // recurse
+          deleteFolderRecursive(curPath);
+        } else { // delete file
+          fs.unlinkSync(curPath);
+        }
+      });
+      fs.rmdirSync(path);
+    }
+  } catch(e) {}
 };
 
 /**
@@ -165,18 +187,16 @@ Agent.prototype.startWdServer_ = function(job) {
 Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
   'use strict';
   this.app_.schedule('Process job results', function() {
-    if (ipcMsg.devToolsFile) {
+    if (ipcMsg.devToolsFile)
       job.zipResultFiles['devtools.json'] = fs.readFileSync(ipcMsg.devToolsFile, "utf8");
-    }
-    if (ipcMsg.customMetrics) {
+    if (ipcMsg.customMetrics)
       job.zipResultFiles['metrics.json'] = JSON.stringify(ipcMsg.customMetrics);
-    }
-    if (ipcMsg.userTimingMarks) {
+    if (ipcMsg.userTimingMarks)
       job.zipResultFiles['timed_events.json'] = JSON.stringify(ipcMsg.userTimingMarks);
-    }
-    if (ipcMsg.pageData) {
+    if (ipcMsg.pageData)
       job.zipResultFiles['page_data.json'] = JSON.stringify(ipcMsg.pageData);
-    }
+    if (ipcMsg.netlogFile)
+      job.zipResultFiles['netlog.txt'] = fs.readFileSync(ipcMsg.netlogFile, "utf8");
     if (ipcMsg.histogramFile) {
       try {
         var buffer = fs.readFileSync(ipcMsg.histogramFile);
@@ -195,10 +215,43 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
         var buffer = fs.readFileSync(ipcMsg.traceFile);
         if (buffer) {
           job.resultFiles.push(new wpt_client.ResultFile(
-              wpt_client.ResultFile.ResultType.TRACE,
+              wpt_client.ResultFile.ResultType.GZIP,
               'trace.json.gz', 'application/x-gzip', buffer));
         }
         fs.unlinkSync(ipcMsg.traceFile);
+      } catch(e) {}
+    }
+    if (ipcMsg.userTimingFile) {
+      try {
+        var buffer = fs.readFileSync(ipcMsg.userTimingFile);
+        if (buffer) {
+          job.resultFiles.push(new wpt_client.ResultFile(
+              wpt_client.ResultFile.ResultType.GZIP,
+              'user_timing.json.gz', 'application/x-gzip', buffer));
+        }
+        fs.unlinkSync(ipcMsg.userTimingFile);
+      } catch(e) {}
+    }
+    if (ipcMsg.cpuSlicesFile) {
+      try {
+        var buffer = fs.readFileSync(ipcMsg.cpuSlicesFile);
+        if (buffer) {
+          job.resultFiles.push(new wpt_client.ResultFile(
+              wpt_client.ResultFile.ResultType.GZIP,
+              'timeline_cpu.json.gz', 'application/x-gzip', buffer));
+        }
+        fs.unlinkSync(ipcMsg.cpuSlicesFile);
+      } catch(e) {}
+    }
+    if (ipcMsg.pcapSlicesFile) {
+      try {
+        var buffer = fs.readFileSync(ipcMsg.pcapSlicesFile);
+        if (buffer) {
+          job.resultFiles.push(new wpt_client.ResultFile(
+              wpt_client.ResultFile.ResultType.GZIP,
+              'pcap_slices.json.gz', 'application/x-gzip', buffer));
+        }
+        fs.unlinkSync(ipcMsg.pcapSlicesFile);
       } catch(e) {}
     }
     if (ipcMsg.screenshots && ipcMsg.screenshots.length > 0) {
@@ -267,6 +320,7 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
         fs.unlinkSync(ipcMsg.pcapFile);
       } catch(e) {}
     }
+    this.stopTrafficShaper_();
     if (job.isReplay) {
       this.webPageReplay_.scheduleGetErrorLog().then(function(log) {
         if (log) {
@@ -288,6 +342,9 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
  */
 Agent.prototype.prepareJob_ = function(job) {
   var done = new webdriver.promise.Deferred();
+  process_utils.scheduleNoFault(this.app_, 'Stop WPR', function() {
+    this.webPageReplay_.scheduleStop();
+  }.bind(this));
   if (job.task.customBrowserUrl && job.task.customBrowserMD5) {
     var browserName = path.basename(job.task.customBrowserUrl);
     logger.debug("Custom Browser: " + browserName);
@@ -383,6 +440,9 @@ Agent.prototype.prepareJob_ = function(job) {
 Agent.prototype.startJobRun_ = function(job) {
   'use strict';
   this.app_.schedule('Start run', function() {
+    this.runTempDir_ = this.runTempRoot_ + "/" + job.id + "." + job.runNumber;
+    if (job.isCacheWarm)
+        this.runTempDir_ += ".rv";
     // Validate job
     var script = job.task.script;
     var url = job.task.url;
@@ -481,7 +541,7 @@ Agent.prototype.startJobRun_ = function(job) {
   }.bind(this));
 };
 
-/**
+ /**
  * Create the requested directory if it doesn't already exist.
  *
  * @param {webdriver.promise.ControlFlow} app the scheduler.
@@ -525,28 +585,8 @@ Agent.prototype.scheduleMakeDirs_ = function(dir) {
 Agent.prototype.scheduleCleanRunTempDir_ = function() {
   'use strict';
   this.scheduleNoFault_('Clean temp dir', function() {
+    deleteFolderRecursive(this.runTempRoot_);
     this.scheduleMakeDirs_(this.runTempDir_);
-    var videoDir = path.join(this.runTempDir_, 'video');
-    process_utils.scheduleFunction(this.app_, 'Clean video dir', fs.exists, videoDir).then(
-        function(exists) {
-      if (exists) {
-        var videoDir = path.join(this.runTempDir_, 'video');
-        var files = fs.readdirSync(videoDir);
-        files.forEach(function(fileName) {
-          var filePath = path.join(videoDir, fileName);
-          try {fs.unlinkSync(filePath);} catch(e) {}
-        }.bind(this));
-        process_utils.scheduleFunctionNoFault(this.app_, 'rmdir ' + videoDir,
-            fs.rmdir, videoDir);
-      }
-    }.bind(this));
-    process_utils.scheduleFunctionNoFault(this.app_, 'Tmp read',
-        fs.readdir, this.runTempDir_).then(function(files) {
-      files.forEach(function(fileName) {
-        var filePath = path.join(this.runTempDir_, fileName);
-        try {fs.unlinkSync(filePath);} catch(e) {}
-      }.bind(this));
-    }.bind(this));
   }.bind(this));
 };
 
@@ -558,14 +598,8 @@ Agent.prototype.scheduleCleanRunTempDir_ = function() {
 Agent.prototype.scheduleCleanWorkDir_ = function() {
   'use strict';
   this.scheduleNoFault_('Clean work dir', function() {
+    deleteFolderRecursive(this.workDir_);
     this.scheduleMakeDirs_(this.workDir_);
-    process_utils.scheduleFunctionNoFault(this.app_, 'Work read',
-        fs.readdir, this.workDir_).then(function(files) {
-      files.forEach(function(fileName) {
-        var filePath = path.join(this.workDir_, fileName);
-        try {fs.unlinkSync(filePath);} catch(e) {}
-      }.bind(this));
-    }.bind(this));
   }.bind(this));
 };
 
@@ -651,9 +685,6 @@ Agent.prototype.scheduleCleanup_ = function(job, isEndOfJob) {
         this.webPageReplay_.scheduleStop();
       }.bind(this));
     }
-    if (this.isTrafficShaping_(job)) {
-      this.stopTrafficShaper_();
-    }
   }
   if (1 === parseInt(this.flags_.killall || '0', 10)) {
     // Kill all processes for this user, except our own process and parent(s).
@@ -690,7 +721,6 @@ Agent.prototype.scheduleCleanup_ = function(job, isEndOfJob) {
       logger.error('Unable to killall pids: ' + e.message);
     });
   }
-  this.scheduleCleanRunTempDir_();
 };
 
 /**
@@ -701,17 +731,25 @@ Agent.prototype.scheduleCleanup_ = function(job, isEndOfJob) {
  */
 Agent.prototype.onMakeReady_ = function() {
   'use strict';
+  // When configured to exit after a given number of tests, also force an exit
+  // every hour.
+  if (this.flags_.exitTests) {
+    var elapsed = process.hrtime(this.startTime_);
+    logger.debug('Uptime (seconds): ' + elapsed[0]);
+    if (elapsed[0] >= 3600) {
+      logger.info('Runtime of 1 hour has been reached (enabled with exitTests), exiting...');
+      process.exit(0);
+    }
+  }
+
   try {global.gc();} catch (e) {}
+  deleteFolderRecursive(this.runTempRoot_);
   return this.browser_.scheduleMakeReady(this.browser_).addBoth(
       function(errOrBool) {
     if (!(errOrBool instanceof Error)) {
       return errOrBool;  // is online.
     }
     var done = new webdriver.promise.Deferred();
-    this.stopTrafficShaper_();
-    process_utils.scheduleNoFault(this.app_, 'Stop WPR', function() {
-      this.webPageReplay_.scheduleStop();
-    }.bind(this));
     this.app_.schedule('Not ready', function() { done.reject(errOrBool); });
     return done.promise;
   }.bind(this));

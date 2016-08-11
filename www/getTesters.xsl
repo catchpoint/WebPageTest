@@ -21,7 +21,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <body>
     <table id="locations">
       <xsl:for-each select="response/data/location">
-        <tr><th class="header" colspan="15"><xsl:attribute name="id"><xsl:value-of select="id"/></xsl:attribute><xsl:value-of select="id"/> (<xsl:value-of select="elapsed"/> minutes)</th></tr>
+        <tr><th class="header" colspan="16"><xsl:attribute name="id"><xsl:value-of select="id"/></xsl:attribute><xsl:value-of select="id"/> (<xsl:value-of select="elapsed"/> minutes)</th></tr>
         <xsl:if test="testers">
           <tr>
             <th class="tester">Tester</th>
@@ -29,13 +29,14 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
             <th>Last Check (minutes)</th>
             <th>Last Work (minutes)</th>
             <th>Version</th>
-            <th>PC</th>
+            <th>Computer Name</th>
             <th>EC2 Instance</th>
             <th>CPU Utilization</th>
             <th>Error Rate</th>
             <th>Free Disk (GB)</th>
             <th>Screen Size</th>
             <th>IE Version</th>
+            <th>Windows Version</th>
             <th>GPU?</th>
             <th>IP</th>
             <th>DNS Server(s)</th>
@@ -54,6 +55,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
                 <td><xsl:value-of select="freedisk"/></td>
                 <td><xsl:if test="string-length(screenwidth)!=0 and string-length(screenheight)!=0"><xsl:value-of select="screenwidth"/>x<xsl:value-of select="screenheight"/></xsl:if></td>
                 <td><xsl:value-of select="ie"/></td>
+                <td><xsl:value-of select="winver"/></td>
                 <td><xsl:value-of select="GPU"/></td>
                 <td><xsl:value-of select="ip"/></td>
                 <td><xsl:value-of select="dns"/></td>

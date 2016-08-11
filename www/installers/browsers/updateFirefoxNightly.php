@@ -5,13 +5,12 @@ set_time_limit(3600);
 $remote_file = null;
 $remote_file_ver = 0;
 $remote_file_time = 0;
-$base_url = 'http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/';
-$html_list = file_get_contents($base_url);
-if ($html_list) {
-  if (preg_match_all('/<tr>[^\n]+<\/tr>/', $html_list, $matches) &&
-      isset($matches[0]) && is_array($matches[0]) && count($matches[0])) {
-    foreach ($matches[0] as $line) {
-      if (preg_match('/href=\"(?P<file>firefox-(?P<ver>[0-9]+)[a-zA-Z0-9\.]+\.en-US\.win32\.installer\.exe).*<\/a><\/td><td align="right">(?P<time>[^<]+)/', $line, $matches)) {
+$base_url = 'http://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central/';
+$html = file_get_contents($base_url);
+if ($html) {
+  if (preg_match_all('/<tr>.*?<\/tr>/ms', $html, $rows) && isset($rows[0]) && is_array($rows[0])) {
+    foreach ($rows[0] as $row) {
+      if (preg_match('/href=\"(?P<path>[^\"]*(?P<file>firefox-(?P<ver>[0-9]+)[a-zA-Z0-9\.]+\.en-US\.win32\.installer\.exe))[^\n]*\n[^\n]*\n[^>]*>(?P<time>[^<]*)/', $row, $matches)) {
         $file = $matches['file'];
         $ver = intval($matches['ver']);
         $time = strtotime(trim($matches['time']));
@@ -22,37 +21,37 @@ if ($html_list) {
         }
       }
     }
-    
-    if (isset($remote_file)) {
-      // see if it is a new file
-      $local_file = "nightly-$ver-$time.exe";
-      if (!is_file($local_file)) {
-        $valid_md5 = strtoupper(GetMD5());
-        if ($valid_md5) {
-          if (file_put_contents($local_file, file_get_contents("$base_url$remote_file"))) {
-            $md5 = strtoupper(md5_file($local_file));
-            if ($md5 == $valid_md5) {
-              // write out the new nightly dat file
-              file_put_contents('nightly.dat',
-                "browser=Nightly\r\n" .
-                "url=http://www.webpagetest.org/installers/browsers/$local_file\r\n" .
-                "md5=$md5\r\n" .
-                "version=$remote_file_ver.$remote_file_time\r\n" .
-                "command=$local_file -ms\r\n" .
-                "update=1\r\n");
-              
-              // delete any nightlies more than a week old
-              $files = glob("nightly-*");
-              if ($files) {
-                $earliest = time() - 604800; // 1 week
-                foreach($files as $file) {
-                  if (filemtime($file) < $earliest)
-                    unlink($file);
-                }
+  }
+  
+  if (isset($remote_file)) {
+    // see if it is a new file
+    $local_file = "nightly-$ver-$time.exe";
+    if (!is_file($local_file)) {
+      $valid_md5 = strtoupper(GetMD5());
+      if ($valid_md5) {
+        if (file_put_contents($local_file, file_get_contents("$base_url$remote_file"))) {
+          $md5 = strtoupper(md5_file($local_file));
+          if ($md5 == $valid_md5) {
+            // write out the new nightly dat file
+            file_put_contents('nightly.dat',
+              "browser=Nightly\r\n" .
+              "url=http://www.webpagetest.org/installers/browsers/$local_file\r\n" .
+              "md5=$md5\r\n" .
+              "version=$remote_file_ver.$remote_file_time\r\n" .
+              "command=$local_file -ms\r\n" .
+              "update=1\r\n");
+            
+            // delete any nightlies more than a week old
+            $files = glob("nightly-*");
+            if ($files) {
+              $earliest = time() - 604800; // 1 week
+              foreach($files as $file) {
+                if (filemtime($file) < $earliest)
+                  unlink($file);
               }
-            } elseif (is_file($local_file)) {
-              unlink($local_file);
             }
+          } elseif (is_file($local_file)) {
+            unlink($local_file);
           }
         }
       }

@@ -1,14 +1,14 @@
 There is now a server AMI for WebPagetest for quickly spinning up a private instance.
 
-* us-east-1: ami-fcfd6194
-* us-west-1: ami-e44853a1
-* us-west-2: ami-d7bde6e7
-* sa-east-1: ami-0fce7112
-* eu-west-1: ami-9978f6ee
-* eu-central-1: ami-22cefd3f
-* ap-southeast-1: ami-88bd97da
-* ap-southeast-2: ami-eb3542d1
-* ap-northeast-1: ami-66233967
+* us-east-1: [ami-fcfd6194](https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#LaunchInstanceWizard:ami=ami-fcfd6194)
+* us-west-1: [ami-e44853a1](https://console.aws.amazon.com/ec2/v2/home?region=us-west-1#LaunchInstanceWizard:ami=ami-e44853a1)
+* us-west-2: [ami-d7bde6e7](https://console.aws.amazon.com/ec2/v2/home?region=us-west-2#LaunchInstanceWizard:ami=ami-d7bde6e7)
+* sa-east-1: [ami-0fce7112](https://console.aws.amazon.com/ec2/v2/home?region=sa-east-1#LaunchInstanceWizard:ami=ami-0fce7112)
+* eu-west-1: [ami-9978f6ee](https://console.aws.amazon.com/ec2/v2/home?region=eu-west-1#LaunchInstanceWizard:ami=ami-9978f6ee)
+* eu-central-1: [ami-22cefd3f](https://console.aws.amazon.com/ec2/v2/home?region=eu-central-1#LaunchInstanceWizard:ami=ami-22cefd3f)
+* ap-southeast-1: [ami-88bd97da](https://console.aws.amazon.com/ec2/v2/home?region=ap-southeast-1#LaunchInstanceWizard:ami=ami-88bd97da)
+* ap-southeast-2: [ami-eb3542d1](https://console.aws.amazon.com/ec2/v2/home?region=ap-southeast-2#LaunchInstanceWizard:ami=ami-eb3542d1)
+* ap-northeast-1: [ami-66233967](https://console.aws.amazon.com/ec2/v2/home?region=ap-northeast-1#LaunchInstanceWizard:ami=ami-66233967)
 
 When you launch the instance, make sure to allow HTTP traffic through your EC2 firewall configuration/security group.  You should probably also check /home/ubuntu/.ssh/authorized_keys and make sure previous keys from when the instances were created are not carried forward.
 

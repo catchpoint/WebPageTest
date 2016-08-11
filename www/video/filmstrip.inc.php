@@ -1,7 +1,10 @@
 <?php
 
 // Shared code for creating the visual filmstrips
-require_once('visualProgress.inc.php');
+require_once __DIR__ . '/visualProgress.inc.php';
+require_once __DIR__ . '/../include/TestInfo.php';
+require_once __DIR__ . '/../include/TestResults.php';
+require_once __DIR__ . '/../include/TestStepResult.php';
 
 // build up the actual test data (needs to include testID and RUN in the requests)
 $defaultInterval = 0;
@@ -22,6 +25,7 @@ foreach($compTests as $t) {
         $test['id'] = $parts[0];
         if (ValidateTestId($test['id'])) {
             $test['cached'] = 0;
+            $test['step'] = 1;
             $test['end'] = $endTime;
 
             for ($i = 1; $i < count($parts); $i++) {
@@ -33,6 +37,8 @@ foreach($compTests as $t) {
                         $test['label'] = preg_replace('/[^a-zA-Z0-9 \-_]/', '', $p[1]);
                     if( $p[0] == 'c' )
                         $test['cached'] = (int)$p[1];
+                    if( $p[0] == 's')
+                        $test['step'] = (int)$p[1];
                     if( $p[0] == 'e' )
                         $test['end'] = trim($p[1]);
                     if( $p[0] == 'i' )
@@ -42,7 +48,6 @@ foreach($compTests as $t) {
 
             RestoreTest($test['id']);
             $test['path'] = GetTestPath($test['id']);
-            $test['pageData'] = loadAllPageData($test['path']);
 
             $test_median_metric = $median_metric;
             $info = GetTestInfo($test['id']);
@@ -64,25 +69,34 @@ foreach($compTests as $t) {
                     $test['location'] = $testInfo['test']['location'];
                 if (isset($testInfo['test']) && isset($testInfo['test']['completeTime'])) {
                     $test['done'] = true;
+                    $testInfoObject = TestInfo::fromFiles("./" . $test['path']);
 
-                    if( !array_key_exists('run', $test) || !$test['run'] )
-                        $test['run'] = GetMedianRun($test['pageData'],$test['cached'], $test_median_metric);
-                    $test['aft'] = array_key_exists('aft', $test['pageData'][$test['run']][$test['cached']]) ? $test['pageData'][$test['run']][$test['cached']]['aft'] : 0;
+                    if( !array_key_exists('run', $test) || !$test['run'] ) {
+                        $testResults = TestResults::fromFiles($testInfoObject);
+                        $test['run'] = $testResults->getMedianRunNumber($test_median_metric, $test['cached']);
+                        $runResults = $testResults->getRunResult($test['run'], $test['cached']);
+                        $stepResult = $runResults->getStepResult($test['step']);
+                    } else {
+                        $stepResult = TestStepResult::fromFiles($testInfoObject, $test['run'], $test['cached'], $test['step']);
+                    }
+                    $test['stepResult'] = $stepResult;
+                    $test['aft'] = (int) $stepResult->getMetric('aft');
 
-                    $loadTime = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];
+                    $loadTime = $stepResult->getMetric('fullyLoaded');
                     if( isset($loadTime) && (!isset($fastest) || $loadTime < $fastest) )
                         $fastest = $loadTime;
 
                     // figure out the real end time (in ms)
                     if (isset($test['end'])) {
-                        if( !strcmp($test['end'], 'visual') && array_key_exists('visualComplete', $test['pageData'][$test['run']][$test['cached']]) ) {
-                            $test['end'] = $test['pageData'][$test['run']][$test['cached']]['visualComplete'];
+                        $visualComplete = $stepResult->getMetric("visualComplte");
+                        if( !strcmp($test['end'], 'visual') && $visualComplete !== null ) {
+                            $test['end'] = $visualComplete;
                         } elseif( !strcmp($test['end'], 'load') ) {
-                            $test['end'] = $test['pageData'][$test['run']][$test['cached']]['loadTime'];
+                            $test['end'] = $stepResult->getMetric('loadTime');
                         } elseif( !strcmp($test['end'], 'doc') ) {
-                            $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'];
+                            $test['end'] = $stepResult->getMetric('docTime');
                         } elseif(!strncasecmp($test['end'], 'doc+', 4)) {
-                            $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'] + (int)((double)substr($test['end'], 4) * 1000.0);
+                            $test['end'] = $stepResult->getMetric('docTime') + (int)((double)substr($test['end'], 4) * 1000.0);
                         } elseif( !strcmp($test['end'], 'full') ) {
                             $test['end'] = 0;
                         } elseif( !strcmp($test['end'], 'all') ) {
@@ -98,7 +112,7 @@ foreach($compTests as $t) {
                         $test['end'] = 0;
                     }
                     if( !$test['end'] )
-                        $test['end'] = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];
+                        $test['end'] = $stepResult->getMetric('fullyLoaded');
                 } else {
                     $test['done'] = false;
                     $ready = false;
@@ -167,10 +181,11 @@ function LoadTestData() {
         $count++;
         $testInfo = null;
         $testPath = &$test['path'];
-        $pageData = &$test['pageData'];
-        $url = trim($pageData[1][0]['URL']);
-        if (strlen($url)) {
-            $test['url'] = $url;
+        if (!empty($test['stepResult'])) {
+            $url = trim($test['stepResult']->getUrl());
+            if (strlen($url)) {
+                $test['url'] = $url;
+            }
         }
 
         if (array_key_exists('label', $test) && strlen($test['label'])) {
@@ -194,9 +209,8 @@ function LoadTestData() {
         }
         $test['index'] = $count;
 
-        $videoPath = "./$testPath/video_{$test['run']}";
-        if( $test['cached'] )
-            $videoPath .= '_cached';
+        $localPaths = new TestPaths("./$testPath", $test["run"], $test["cached"], $test["step"]);
+        $videoPath = $localPaths->videoDir();
 
         $test['video'] = array();
         if( is_dir($videoPath) ) {
@@ -207,9 +221,10 @@ function LoadTestData() {
             $end = null;
             if (is_numeric($test['end']) && $test['end'] > 0)
                 $end = $test['end'] / 1000.0;
-            $startOffset = array_key_exists('testStartOffset', $pageData[$test['run']][$test['cached']]) ? intval(round($pageData[$test['run']][$test['cached']]['testStartOffset'])) : 0;
-            $test['video']['progress'] = GetVisualProgress("./$testPath", $test['run'], $test['cached'], null, $end, $startOffset);
-            if (array_key_exists('frames', $test['video']['progress'])) {
+            if (!empty($test["stepResult"])) {
+                $test['video']['progress'] = $test["stepResult"]->getVisualProgress($end);
+            }
+            if (!empty($test['video']['progress']['frames'])) {
               foreach($test['video']['progress']['frames'] as $ms => $frame) {
                 if (!$supports60fps && is_array($frame) && array_key_exists('file', $frame) && substr($frame['file'], 0, 3) == 'ms_')
                   $supports60fps = true;

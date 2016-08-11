@@ -14,16 +14,19 @@ $testQueue = array();
 function GetTestStatus($id, $includePosition = true) {
   global $testQueue;
   
+  if (isset($_REQUEST['noposition']) && $_REQUEST['noposition'])
+    $includePosition = false;
+  
   $ret = array('statusCode' => 400, 'statusText' => 'Test not found', 'id' => $id);
   $now = time();
   RestoreTest($id);
   $testPath = './' . GetTestPath($id);
   if (is_dir($testPath) && is_file("$testPath/testinfo.ini")) {
-    $ret = array('statusCode' => 101, 'statusText' => 'Test status unavailable', 'id' => $id);
     $testInfoJson = GetTestInfo($id);
     if ($testInfoJson) {
       $ret['testInfo'] = PopulateTestInfo($testInfoJson);
       if (isset($testInfoJson['relayId'])) {
+        $ret = array('statusCode' => 101, 'statusText' => 'Test status unavailable', 'id' => $id);
         $ret = GetRelayStatus($id, $testPath, $testInfoJson);
         $ret['remote'] = true;
       } else {

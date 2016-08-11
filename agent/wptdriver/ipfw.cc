@@ -80,7 +80,7 @@ bool CIpfw::Init() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool CIpfw::SetPipe(unsigned int num, unsigned long bandwidth, 
-                    unsigned long delay, double plr) {
+                    unsigned long delay, double plr, bool pipe_in) {
   bool ret = Init();
 
   if (ret) {
@@ -101,13 +101,13 @@ bool CIpfw::SetPipe(unsigned int num, unsigned long bandwidth,
 
     // Packet loss needs to be applied to the queue
     if (ret) {
-      cmd_line.Format(_T("queue %d config"), num);
+      cmd_line.Format(_T("queue %d config pipe %d queue 100"), num, num);
       if (plr > 0.0 && plr <= 1.0) {
         buff.Format(_T(" plr %0.4f"), plr);
         cmd_line += buff;
-      } else {
-        cmd_line += _T(" plr 0");
       }
+      buff.Format(_T(" mask %s-port 0xffff"), pipe_in ? _T("dst") : _T("src"));
+      cmd_line += buff;
       Execute(cmd_line);
     }
 
@@ -177,7 +177,7 @@ bool CIpfw::Execute(CString cmd) {
   if (!ipfw_dir_.IsEmpty()) {
     CString command;
     command.Format(_T("cmd /C \"ipfw.exe %s\""), (LPCTSTR)cmd);
-    AtlTrace(_T("Configuring dummynet: '%s'"), (LPCTSTR)command);
+    ATLTRACE(_T("Configuring dummynet: '%s'"), (LPCTSTR)command);
     ret = LaunchProcess(command, NULL, ipfw_dir_);
   }
   return ret;

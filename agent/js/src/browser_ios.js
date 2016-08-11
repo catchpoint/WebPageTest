@@ -108,6 +108,10 @@ BrowserIos.prototype.startWdServer = function() {
   throw new Error('LOL Applz');
 };
 
+// Infrequent device cleanup/health
+BrowserIos.prototype.deviceCleanup = function() {
+}
+
 /** Starts browser. */
 BrowserIos.prototype.startBrowser = function() {
   'use strict';
@@ -475,7 +479,7 @@ BrowserIos.prototype.scheduleTakeScreenshot = function(fileNameNoExt) {
 
 /**
  * @param {string} filename The local filename to write to.
- * @param {Function=} onExit Optional exit callback, as noted in video_hdmi.
+ * @param {Function=} onExit Optional exit callback.
  */
 BrowserIos.prototype.prepareVideoCapture = function(filename) {
   // xrecord breaks the debug proxy connection so we need to start
@@ -507,7 +511,7 @@ BrowserIos.prototype.prepareVideoCapture = function(filename) {
 
 /**
  * @param {string} filename The local filename to write to.
- * @param {Function=} onExit Optional exit callback, as noted in video_hdmi.
+ * @param {Function=} onExit Optional exit callback.
  */
 BrowserIos.prototype.scheduleStartVideoRecording = function(filename) {
   'use strict';

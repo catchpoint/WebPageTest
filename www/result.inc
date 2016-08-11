@@ -499,9 +499,11 @@ $page_description = "Website performance test result$testLabel.";
                                 }
                                 echo "<a href=\"/video/compare.php?tests=$id-r:$run-c:0$end\">Filmstrip View</a><br>-<br>";
                                 echo "<a href=\"/video/create.php?tests=$id-r:$run-c:0$end&id={$id}.{$run}.0$endId\">Watch Video</a>";
-                                //echo "<br>-<br><a href=\"/video/?tid=$id&run=$run&cached=0\">Compare to</a>";
-                            } else
+                                if (is_file("$testPath/{$run}_video.mp4"))
+                                  echo "<br>-<br><a href=\"/$testPath/{$run}_video.mp4\">Raw Device Video</a>";
+                            } else {
                                 echo "not available";
+                            }
                             echo '</td>';
                         }
                     } else {

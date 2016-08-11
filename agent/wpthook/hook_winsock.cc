@@ -348,7 +348,7 @@ SOCKET CWsHook::WSASocketW(int af, int type, int protocol,
     ret = _WSASocketW(af, type, protocol, lpProtocolInfo, g, dwFlags);
     if( ret != INVALID_SOCKET && !_test_state._exit )
       _sockets.Create(ret);
-  }
+    }
 #ifdef TRACE_WINSOCK
   ATLTRACE(_T("%d - WSASocketW, socket created"), ret);
 #endif
@@ -671,7 +671,7 @@ int	CWsHook::GetAddrInfoW(PCWSTR pNodeName, PCWSTR pServiceName,
   if (!_dns.BlockLookup(name)) {
     if (!_test_state._exit)
         context = _dns.LookupStart(name);
-    if (pHints)
+    if (pHints && !(pHints->ai_flags & AI_FQDN))
       pHints->ai_flags |= AI_CANONNAME;
 
     if (_GetAddrInfoW)
@@ -838,7 +838,7 @@ int CWsHook::GetAddrInfoExA(PCSTR pName, PCSTR pServiceName, DWORD dwNameSpace,
   if (!_dns.BlockLookup(name)) {
     if (!_test_state._exit)
         context = _dns.LookupStart(name);
-    if (hints)
+    if (hints  && !(hints->ai_flags & AI_FQDN))
       hints->ai_flags |= AI_CANONNAME;
 
     if (_GetAddrInfoExA)
@@ -887,7 +887,7 @@ int CWsHook::GetAddrInfoExW(PCWSTR pName, PCWSTR pServiceName, DWORD dwNameSpace
   if (!_dns.BlockLookup(name)) {
     if (!_test_state._exit)
         context = _dns.LookupStart(name);
-    if (hints)
+    if (hints && !(hints->ai_flags & AI_FQDN))
       hints->ai_flags |= AI_CANONNAME;
 
     if (_GetAddrInfoExW)

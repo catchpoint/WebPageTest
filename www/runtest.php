@@ -18,9 +18,11 @@
     set_time_limit(300);
 
     if(extension_loaded('newrelic')) {
-        newrelic_add_custom_tracer('WriteJob');
-        newrelic_add_custom_tracer('AddJobFile');
-        newrelic_add_custom_tracer('LogTest');
+        newrelic_add_custom_tracer('ValidateKey');
+        newrelic_add_custom_tracer('ValidateURL');
+        newrelic_add_custom_tracer('SubmitUrl');
+        newrelic_add_custom_tracer('GetRedirect');
+        newrelic_add_custom_tracer('CheckIp');
     }
 
     $redirect_cache = array();
@@ -105,8 +107,9 @@
             $test['block'] = $req_block;
             $test['notify'] = trim($req_notify);
             $test['video'] = $req_video;
+            $test['keepvideo'] = isset($req_keepvideo) && $req_keepvideo ? 1 : 0;
             $test['continuousVideo'] = isset($req_continuousVideo) && $req_continuousVideo ? 1 : 0;
-            $test['label'] = preg_replace('/[^a-zA-Z0-9 \-_\.]/', '', trim($req_label));
+            $test['label'] = preg_replace('/[^\w\d \-_\.]/', '', trim($req_label));
             $test['industry'] = trim($req_ig);
             $test['industry_page'] = trim($req_ip);
             $test['median_video'] = (int)$req_mv;
@@ -134,6 +137,12 @@
             $test['timelineStackDepth'] = array_key_exists('timelineStack', $_REQUEST) && $_REQUEST['timelineStack'] ? 5 : 0;
             $test['swrender'] = $req_swrender;
             $test['trace'] = array_key_exists('trace', $_REQUEST) && $_REQUEST['trace'] ? 1 : 0;
+            if (isset($_REQUEST['trace']) &&
+                strlen($_REQUEST['traceCategories']) &&
+                strpos($test['traceCategories'], "\n") === false &&
+                trim($test['traceCategories']) != "*") {
+              $test['traceCategories'] = $_REQUEST['traceCategories'];
+            }                                                                                                           
             $test['standards'] = $req_standards;
             $test['netlog'] = $req_netlog;
             $test['spdy3'] = $req_spdy3;
@@ -168,9 +177,13 @@
             if (array_key_exists('shard', $_REQUEST))
               $test['shard_test'] = $_REQUEST['shard'];
             $test['mobile'] = array_key_exists('mobile', $_REQUEST) && $_REQUEST['mobile'] ? 1 : 0;
+            if (isset($_REQUEST['mobileDevice']))
+              $test['mobileDevice'] = $_REQUEST['mobileDevice'];
             $test['dpr'] = isset($_REQUEST['dpr']) && $_REQUEST['dpr'] > 0 ? $_REQUEST['dpr'] : 0;
             $test['width'] = isset($_REQUEST['width']) && $_REQUEST['width'] > 0 ? $_REQUEST['width'] : 0;
             $test['height'] = isset($_REQUEST['height']) && $_REQUEST['height'] > 0 ? $_REQUEST['height'] : 0;
+            $test['browser_width'] = isset($_REQUEST['browser_width']) && $_REQUEST['browser_width'] > 0 ? $_REQUEST['browser_width'] : 0;
+            $test['browser_height'] = isset($_REQUEST['browser_height']) && $_REQUEST['browser_height'] > 0 ? $_REQUEST['browser_height'] : 0;
             $test['clearcerts'] = array_key_exists('clearcerts', $_REQUEST) && $_REQUEST['clearcerts'] ? 1 : 0;
             $test['orientation'] = array_key_exists('orientation', $_REQUEST) ? trim($_REQUEST['orientation']) : 'default';
             $test['responsive'] = array_key_exists('responsive', $_REQUEST) && $_REQUEST['responsive'] ? 1 : 0;
@@ -210,13 +223,20 @@
             if (isset($req_dataReduction) && $req_dataReduction) {
               if (strlen($test['addCmdLine']))
                 $test['addCmdLine'] .= ' ';
-              $test['addCmdLine'] .= '--enable-spdy-proxy-auth --force-fieldtrials=DataCompressionProxyRollout/Enabled/';
+              $test['addCmdLine'] .= '--enable-spdy-proxy-auth';
             }
             if (isset($req_uastring) && strlen($req_uastring)) {
               if (strpos($req_uastring, '"') !== false) {
                 $error = 'Invalid User Agent String: "' . htmlspecialchars($req_uastring) . '"';
               } else {
                 $test['uastring'] = $req_uastring;
+              }
+            }
+            if (isset($req_appendua) && strlen($req_appendua)) {
+              if (strpos($req_appendua, '"') !== false) {
+                $error = 'Invalid User Agent String: "' . htmlspecialchars($req_appendua) . '"';
+              } else {
+                $test['appendua'] = $req_appendua;
               }
             }
             if (isset($req_wprDesktop) && $req_wprDesktop) {
@@ -341,6 +361,21 @@
             // login tests are forced to be private
             if( strlen($test['login']) )
                 $test['private'] = 1;
+                
+            if (!$test['browser_width'] || !$test['browser_height']) {
+              $browser_size = GetSetting('default_browser_size');
+              if ($browser_size) {
+                $parts = explode('x', $browser_size);
+                if (count($parts) == 2) {
+                  $browser_width = intval($parts[0]);
+                  $browser_height = intval($parts[1]);
+                  if ($browser_width > 0 && $browser_height > 0) {
+                    $test['browser_width'] = $browser_width;
+                    $test['browser_height'] = $browser_height;
+                  }
+                }
+              }
+            }
             
             // Tests that include credentials in the URL (usually indicated by @ in the host section) are forced to be private
             $atPos = strpos($test['url'], '@');
@@ -354,10 +389,12 @@
             // default batch and API requests to a lower priority
             if( !isset($req_priority) )
             {
-                if( $test['batch'] || $test['batch_locations'] )
-                    $test['priority'] =  7;
-                elseif( $_SERVER['REQUEST_METHOD'] == 'GET' || $xml || $json )
+                if( $test['batch'] || $test['batch_locations'] ) {
+                    $bulkPriority = GetSetting('bulk_priority');
+                    $test['priority'] =  $bulkPriority ? $bulkPriority : 7;
+                } elseif( $_SERVER['REQUEST_METHOD'] == 'GET' || $xml || $json ) {
                     $test['priority'] =  5;
+                }
             }
 
             // do we need to force the priority to be ignored (needed for the AOL system currently?)
@@ -446,6 +483,22 @@
             if (array_key_exists('spam', $test))
                 unset($test['spam']);
             $test['priority'] =  0;
+        }
+        
+        if ($test['mobile'] && isset($test['mobileDevice']) && is_file('./settings/mobile_devices.ini')) {
+          setcookie('mdev', $test['mobileDevice'], time()+60*60*24*365, '/');
+          $devices = parse_ini_file('./settings/mobile_devices.ini', true);
+          if ($devices && isset($devices[$test['mobileDevice']])) {
+            $test['mobileDeviceLabel'] = isset($devices[$test['mobileDevice']]['label']) ? $devices[$test['mobileDevice']]['label'] : $test['mobileDevice'];
+            if (!$test['width'] && isset($devices[$test['mobileDevice']]['width']))
+              $test['width'] = $devices[$test['mobileDevice']]['width'];
+            if (!$test['height'] && isset($devices[$test['mobileDevice']]['height']))
+              $test['height'] = $devices[$test['mobileDevice']]['height'];
+            if (!$test['dpr'] && isset($devices[$test['mobileDevice']]['dpr']))
+              $test['dpr'] = $devices[$test['mobileDevice']]['dpr'];
+            if (!isset($test['uastring']) && isset($devices[$test['mobileDevice']]['ua']))
+              $test['uastring'] = $devices[$test['mobileDevice']]['ua'];
+          }
         }
         
         $test['created'] = time();
@@ -884,6 +937,8 @@ function UpdateLocation(&$test, &$locations, $new_location)
 
   if( isset($test['browser']) && strlen($test['browser']) )
       $test['locationText'] .= " - <b>{$test['browser']}</b>";
+  if (isset($test['mobileDeviceLabel']) && $test['mobile'])
+      $test['locationText'] .= " - <b>Emulated {$test['mobileDeviceLabel']}</b>";
   if( isset($test['connectivity']) )
   {
       $test['locationText'] .= " - <b>{$test['connectivity']}</b>";
@@ -948,6 +1003,7 @@ function ValidateKey(&$test, &$error, $key = null)
     }elseif( isset($key) || (isset($test['key']) && strlen($test['key'])) ){
       if( isset($test['key']) && strlen($test['key']) && !isset($key) )
         $key = $test['key'];
+      
       // see if it was an auto-provisioned key
       if (preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $key, $matches)) {
         $prefix = $matches['prefix'];
@@ -967,6 +1023,8 @@ function ValidateKey(&$test, &$error, $key = null)
             $test['location'] = $keys[$key]['default location'];
         if (isset($keys[$key]['priority']))
             $test['priority'] = $keys[$key]['priority'];
+        if (isset($keys[$key]['max-priority']))
+            $test['priority'] = max($keys[$key]['max-priority'], $test['priority']);
         if( isset($keys[$key]['limit']) ){
           $limit = (int)$keys[$key]['limit'];
 
@@ -1018,6 +1076,12 @@ function ValidateKey(&$test, &$error, $key = null)
       if (!strlen($error) && $key != $keys['server']['key']) {
           global $usingAPI;
           $usingAPI = true;
+      }
+
+      // Make sure API keys don't exceed the max configured priority
+      $maxApiPriority = GetSetting('maxApiPriority');
+      if ($maxApiPriority) {
+        $test['priority'] = max($test['priority'], $maxApiPriority);
       }
     }elseif (!isset($admin) || !$admin) {
       $error = 'An error occurred processing your request (missing API key).';
@@ -1115,9 +1179,11 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                 $def = $locations['locations']['default'];
                 if( !$def )
                     $def = $locations['locations']['1'];
-                $loc = $locations[$def]['default'];
+               // $loc = $locations[$def]['default'];
+                $loc = $locations[$locations[$def]['default']]['location'];
                 if( !$loc )
-                    $loc = $locations[$def]['1'];
+                $loc = $locations[$locations[$def]['1']]['location'];
+                //    $loc = $locations[$def]['1'];
                 $test['location'] = $loc;
             }
             
@@ -1177,6 +1243,8 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 
                 if( isset($test['browser']) && strlen($test['browser']) )
                     $test['locationText'] .= " - <b>{$test['browser']}</b>";
+                if (isset($test['mobileDeviceLabel']) && $test['mobile'])
+                    $test['locationText'] .= " - <b>Emulated {$test['mobileDeviceLabel']}</b>";
                 if( isset($test['connectivity']) )
                 {
                     $test['locationText'] .= " - <b>{$test['connectivity']}</b>";
@@ -1461,6 +1529,9 @@ function WriteJob($location, &$test, &$job, $testId)
         {
             if (isset($test['affinity']))
               $test['job'] = "Affinity{$test['affinity']}.{$test['job']}";
+            $testNum = GetDailyTestNum();
+            $sortableIndex = date('ymd') . GetSortableString($testNum);
+            $test['job'] = "$sortableIndex.{$test['job']}";
             $fileName = $test['job'];
             $file = "$workDir/$fileName";
             if( file_put_contents($file, $job) ) {
@@ -1675,9 +1746,11 @@ function LogTest(&$test, $testId, $url)
 */
 function CheckIp(&$test)
 {
-    $ok = true;
-    global $user;
-    global $usingAPI;
+  global $admin;
+  global $user;
+  global $usingAPI;
+  $ok = true;
+  if (!$admin) {
     $date = gmdate("Ymd");
     $ip2 = @$test['ip'];
     $ip = $_SERVER['REMOTE_ADDR'];
@@ -1687,24 +1760,25 @@ function CheckIp(&$test)
       if (isset($blockIpsAuto) && is_array($blockIpsAuto) && count($blockIpsAuto))
         $blockIps = array_merge($blockIps, $blockIpsAuto);
       foreach( $blockIps as $block ) {
-          $block = trim($block);
-          if( strlen($block) ) {
-              if( ereg($block, $ip) ) {
-                  logMsg("$ip: matched $block for url {$test['url']}", "./log/{$date}-blocked.log", true);
-                  $ok = false;
-                  break;
-              }
-
-              if( $ip2 && strlen($ip2) && ereg($block, $ip2) ) {
-                  logMsg("$ip2: matched(2) $block for url {$test['url']}", "./log/{$date}-blocked.log", true);
-                  $ok = false;
-                  break;
-              }
+        $block = trim($block);
+        if( strlen($block) ) {
+          if( ereg($block, $ip) ) {
+            logMsg("$ip: matched $block for url {$test['url']}", "./log/{$date}-blocked.log", true);
+            $ok = false;
+            break;
           }
+
+          if( $ip2 && strlen($ip2) && ereg($block, $ip2) ) {
+            logMsg("$ip2: matched(2) $block for url {$test['url']}", "./log/{$date}-blocked.log", true);
+            $ok = false;
+            break;
+          }
+        }
       }
     }
+  }
 
-    return $ok;
+  return $ok;
 }
 
 /**
@@ -1714,81 +1788,81 @@ function CheckIp(&$test)
 */
 function CheckUrl($url)
 {
-    $ok = true;
-    global $user;
-    global $usingAPI;
-    global $error;
-    global $admin;
-    $date = gmdate("Ymd");
-    if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
-        $url = 'http://' . $url;
-    if (!$usingAPI && !$admin) {
-        $blockUrls = file('./settings/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        $blockHosts = file('./settings/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        $blockAuto = file('./settings/blockdomainsauto.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        if ($blockUrls !== false && count($blockUrls) ||
-            $blockHosts !== false && count($blockHosts) ||
-            $blockAuto !== false && count($blockAuto)) {
-            // Follow redirects to see if they are obscuring the site being tested
-            GetRedirect($url, $rhost, $rurl);
-            foreach( $blockUrls as $block ) {
-                $block = trim($block);
-                if( strlen($block) && preg_match("/$block/i", $url)) {
-                    logMsg("{$_SERVER['REMOTE_ADDR']}: url $url matched $block", "./log/{$date}-blocked.log", true);
-                    $ok = false;
-                    break;
-                } elseif( strlen($block) && strlen($rurl) && preg_match("/$block/i", $rurl)) {
-                    logMsg("{$_SERVER['REMOTE_ADDR']}: url $url redirected to $rurl matched $block", "./log/{$date}-blocked.log", true);
-                    $ok = false;
-                    break;
-                }
-            }
-            if ($ok) {
-                $parts = parse_url($url);
-                $host = trim($parts['host']);
-                foreach( $blockHosts as $block ) {
-                    $block = trim($block);
-                    if( strlen($block) &&
-                        (!strcasecmp($host, $block) ||
-                         !strcasecmp($host, "www.$block"))) {
-                         logMsg("{$_SERVER['REMOTE_ADDR']}: $url matched $block", "./log/{$date}-blocked.log", true);
-                        $ok = false;
-                        break;
-                    } elseif( strlen($block) &&
-                        (!strcasecmp($rhost, $block) ||
-                         !strcasecmp($rhost, "www.$block"))) {
-                         logMsg("{$_SERVER['REMOTE_ADDR']}: $url redirected to $rhost which matched $block", "./log/{$date}-blocked.log", true);
-                        $ok = false;
-                        break;
-                    }
-                }
-            }
-            if ($ok) {
-                $parts = parse_url($url);
-                $host = trim($parts['host']);
-                foreach( $blockAuto as $block ) {
-                    $block = trim($block);
-                    if( strlen($block) &&
-                        (!strcasecmp($host, $block) ||
-                         !strcasecmp($host, "www.$block"))) {
-                         logMsg("{$_SERVER['REMOTE_ADDR']}: $url matched auto-block $block", "./log/{$date}-blocked.log", true);
-                        $ok = false;
-                        break;
-                    }
-                }
-            }
+  $ok = true;
+  global $user;
+  global $usingAPI;
+  global $error;
+  global $admin;
+  $date = gmdate("Ymd");
+  if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
+    $url = 'http://' . $url;
+  if (!$usingAPI && !$admin) {
+    $blockUrls = file('./settings/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    $blockHosts = file('./settings/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    $blockAuto = file('./settings/blockdomainsauto.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if ($blockUrls !== false && count($blockUrls) ||
+        $blockHosts !== false && count($blockHosts) ||
+        $blockAuto !== false && count($blockAuto)) {
+      // Follow redirects to see if they are obscuring the site being tested
+      GetRedirect($url, $rhost, $rurl);
+      foreach( $blockUrls as $block ) {
+        $block = trim($block);
+        if( strlen($block) && preg_match("/$block/i", $url)) {
+          logMsg("{$_SERVER['REMOTE_ADDR']}: url $url matched $block", "./log/{$date}-blocked.log", true);
+          $ok = false;
+          break;
+        } elseif( strlen($block) && strlen($rurl) && preg_match("/$block/i", $rurl)) {
+          logMsg("{$_SERVER['REMOTE_ADDR']}: url $url redirected to $rurl matched $block", "./log/{$date}-blocked.log", true);
+          $ok = false;
+          break;
         }
-    }
-    
-    if ($ok && !$admin) {
-      $ok = SBL_Check($url, $message);
-      if (!$ok) {
-        $error = "<br>Sorry, your test was blocked because $url is suspected of being used for <a href=\"http://www.antiphishing.org/\">phishing</a> or <a href=\"http://www.stopbadware.org/\">hosting malware</a>.<br><br>Advisory provided by <a href=\"http://code.google.com/apis/safebrowsing/safebrowsing_faq.html#whyAdvisory\">Google</a>.";
-        logMsg("{$_SERVER['REMOTE_ADDR']}: $url failed Safe Browsing check: $message", "./log/{$date}-blocked.log", true);
+      }
+      if ($ok) {
+        $parts = parse_url($url);
+        $host = trim($parts['host']);
+        foreach( $blockHosts as $block ) {
+          $block = trim($block);
+          if( strlen($block) &&
+              (!strcasecmp($host, $block) ||
+               !strcasecmp($host, "www.$block"))) {
+             logMsg("{$_SERVER['REMOTE_ADDR']}: $url matched $block", "./log/{$date}-blocked.log", true);
+            $ok = false;
+            break;
+          } elseif( strlen($block) &&
+              (!strcasecmp($rhost, $block) ||
+               !strcasecmp($rhost, "www.$block"))) {
+             logMsg("{$_SERVER['REMOTE_ADDR']}: $url redirected to $rhost which matched $block", "./log/{$date}-blocked.log", true);
+            $ok = false;
+            break;
+          }
+        }
+      }
+      if ($ok) {
+        $parts = parse_url($url);
+        $host = trim($parts['host']);
+        foreach( $blockAuto as $block ) {
+          $block = trim($block);
+          if( strlen($block) &&
+              (!strcasecmp($host, $block) ||
+               !strcasecmp($host, "www.$block"))) {
+             logMsg("{$_SERVER['REMOTE_ADDR']}: $url matched auto-block $block", "./log/{$date}-blocked.log", true);
+            $ok = false;
+            break;
+          }
+        }
       }
     }
+  }
+  
+  if ($ok && !$admin && !$usingAPI) {
+    $ok = SBL_Check($url, $message);
+    if (!$ok) {
+      $error = "<br>Sorry, your test was blocked because $url is suspected of being used for <a href=\"http://www.antiphishing.org/\">phishing</a> or <a href=\"http://www.stopbadware.org/\">hosting malware</a>.<br><br>Advisory provided by <a href=\"http://code.google.com/apis/safebrowsing/safebrowsing_faq.html#whyAdvisory\">Google</a>.";
+      logMsg("{$_SERVER['REMOTE_ADDR']}: $url failed Safe Browsing check: $message", "./log/{$date}-blocked.log", true);
+    }
+  }
 
-    return $ok;
+  return $ok;
 }
 
 /**
@@ -1902,6 +1976,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             }
             if( $test['trace'] )
                 $testFile .= "\r\ntrace=1";
+            if (isset($test['traceCategories']))
+                $testFile .= "\r\ntraceCategories={$test['traceCategories']}";
             if( $test['swrender'] )
                 $testFile .= "\r\nswRender=1";
             if( $test['netlog'] )
@@ -1916,6 +1992,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "\r\nblockads=1";
             if( $test['video'] )
                 $testFile .= "\r\nCapture Video=1";
+            if (GetSetting('save_mp4') || $test['keepvideo'])
+                $testFile .= "\r\nkeepvideo=1";
             if( strlen($test['type']) )
                 $testFile .= "\r\ntype={$test['type']}";
             if( $test['block'] ) {
@@ -1971,6 +2049,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "width={$test['width']}\r\n";
             if( isset($test['height']) && $test['height'] > 0 )
                 $testFile .= "height={$test['height']}\r\n";
+            if( isset($test['browser_width']) && $test['browser_width'] > 0 )
+                $testFile .= "browser_width={$test['browser_width']}\r\n";
+            if( isset($test['browser_height']) && $test['browser_height'] > 0 )
+                $testFile .= "browser_height={$test['browser_height']}\r\n";
             if( $test['clearcerts'] )
                 $testFile .= "clearcerts=1\r\n";
             if( $test['orientation'] )
@@ -1998,6 +2080,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             $UAModifier = GetSetting('UAModifier');
             if ($UAModifier && strlen($UAModifier))
                 $testFile .= "UAModifier=$UAModifier\r\n";
+            if (isset($test['appendua']))
+              $testFile .= "AppendUA={$test['appendua']}\r\n";
+            if (GetSetting('enable_agent_processing'))
+              $testFile .= "processResults=1\r\n";
 
             // see if we need to add custom scan rules
             if (array_key_exists('custom_rules', $test)) {
@@ -2170,6 +2256,8 @@ function RelayTest()
 
     $rkey = $_POST['rkey'];
     $test = json_decode($_POST['testinfo'], true);
+    $test['vd'] = '';
+    $test['vh'] = '';
     $job = trim($_POST['job']);
     $ini = trim($_POST['ini']);
     $location = trim($_POST['location']);
@@ -2382,11 +2470,51 @@ function ValidateCommandLine($cmd, &$error) {
     $flags = explode(' ', $cmd);
     if ($flags && is_array($flags) && count($flags)) {                
       foreach($flags as $flag) {
-        if (!preg_match('/^--(([a-zA-Z0-9\-\.\+=,_ "]+)|((proxy-server|proxy-pac-url|force-fieldtrials|trusted-spdy-proxy)=[a-zA-Z0-9\-\.\+=,_:\/]+))$/', $flag)) {
+        if (strlen($flag) && !preg_match('/^--(([a-zA-Z0-9\-\.\+=,_ "]+)|((data-reduction-proxy-http-proxies|proxy-server|proxy-pac-url|force-fieldtrials|force-fieldtrial-params|trusted-spdy-proxy|origin-to-force-quic-on)=[a-zA-Z0-9\-\.\+=,_:\/"]+))$/', $flag)) {
           $error = 'Invalid command-line option: "' . htmlspecialchars($flag) . '"';
         }
       }
     }
   }
+}
+
+function GetSortableString($num, $targetLen = 6) {
+  $str = '';
+  if ($num > 0) {
+    $digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    $len = strlen($digits);
+    while($num > 0) {
+      $digitValue = $num % $len;
+      $num = (int)($num / $len);
+      $str .= $digits[$digitValue];
+    }
+    $str = strrev($str);
+  }
+  $str = str_pad($str, $targetLen, '0', STR_PAD_LEFT);
+  return $str;
+}
+
+function GetDailyTestNum() {
+  $lock = Lock("TestNum");
+  if ($lock) {
+    $num = 0;
+    if (!$num) {
+      $filename = './dat/testnum.dat';
+      $day = date ('ymd');
+      $testData = array('day' => $day, 'num' => 0);
+      $newData = json_decode(file_get_contents($filename), true);
+      if (isset($newData) && is_array($newData) &&
+          array_key_exists('day', $newData) &&
+          array_key_exists('num', $newData) &&
+          $newData['day'] == $day) {
+        $testData['num'] = $newData['num'];
+      }
+      $testData['num']++;
+      $num = $testData['num'];
+      file_put_contents($filename, json_encode($testData));
+    }
+    Unlock($lock);
+  }
+  return $num;
 }
 ?>

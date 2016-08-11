@@ -38,6 +38,7 @@ public:
   bool DeleteIncrementalResults(WptTestDriver& test);
   bool UploadIncrementalResults(WptTestDriver& test);
   bool TestDone(WptTestDriver& test);
+  DWORD WptVersion(){ return _revisionNo; }
 
   bool _exit;
   bool has_gpu_;
@@ -54,6 +55,10 @@ private:
   CString       _dns_servers;
   int           _screenWidth;
   int           _screenHeight;
+  DWORD         _winMajor;
+  DWORD         _winMinor;
+  DWORD         _isServer;
+  DWORD         _is64Bit;
 
   void LoadClientCertificateFromStore(HINTERNET request);
   void SetLoginCredentials(HINTERNET request);
@@ -79,4 +84,7 @@ private:
   bool GetClient(WptTestDriver& test);
   bool UnzipTo(CString zip_file, CString dest);
   void UpdateDNSServers();
+  bool GetNameFromMAC(LPTSTR name, DWORD &len);
+  bool ProcessFile(CString file, CAtlList<CString> &newFiles);
+  bool RunPythonScript(CString script, CString options);
 };

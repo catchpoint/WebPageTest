@@ -4,7 +4,8 @@
 // directory where this file is located, run:
 // php $PHPUNIT_LOCATION/phpunit.phar graphPageDataTest
 
-include_once '../graph_page_data.inc';
+require_once __DIR__ . '/../page_data.inc';
+require_once __DIR__ . '/../graph_page_data.inc';
 
 class GraphPageDataTest extends PHPUnit_Framework_TestCase
 {
@@ -29,7 +30,7 @@ class GraphPageDataTest extends PHPUnit_Framework_TestCase
             array(1 => 100, 2 => 100, 3 => 100),
             'lightblue',
             true,
-            'TTFB, Run with Median docTime');
+            'TTFB Run with Median docTime');
     $this->expectedRuns = new ChartColumn(
       array(1 => 1, 2 => 2),
       null,
@@ -43,12 +44,12 @@ class GraphPageDataTest extends PHPUnit_Framework_TestCase
   }
 
   public function testMedianFromPageData() {
-    $result = ChartColumn::medianFromPageData($this->pageData, 0, 'TTFB', 'blue', 'TTFB Median');
+    $result = ChartColumn::medianFromPageData($this->pageData, 0, 'TTFB', 'blue', 'TTFB Median', count($this->pageData));
     $this->assertEquals($this->expectedMedianFromPageData, $result);
   }
 
   public function testMedianRunFromPageData() {
-    $result = ChartColumn::medianRunFromPageData($this->pageData, 0, 'TTFB', 'docTime', 'lightblue', 'TTFB, Run with Median docTime');
+    $result = ChartColumn::medianRunFromPageData($this->pageData, 0, 'TTFB', 'docTime', 'lightblue', 'TTFB Run with Median docTime', count($this->pageData));
     $this->assertEquals($this->expectedMedianRunFromPageData, $result);
   }
 
@@ -62,7 +63,7 @@ class GraphPageDataTest extends PHPUnit_Framework_TestCase
       $this->expectedFromPageData,
       $this->expectedMedianRunFromPageData,
       $this->expectedMedianFromPageData);
-    $result = ChartColumn::dataMedianColumns($this->pageData, 0, 'TTFB', 'docTime', 'blue', 'lightblue', 'TTFB');
+    $result = ChartColumn::dataMedianColumns($this->pageData, 0, 'TTFB', 'docTime', 'blue', 'lightblue', array('TTFB'), count($this->pageData), true, true);
     $this->assertEquals($expectedResult, $result);
   }
 

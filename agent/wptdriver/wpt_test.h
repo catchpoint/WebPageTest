@@ -140,6 +140,8 @@ public:
   void Lock();
   void Unlock();
   bool IsLocked();
+  CStringA  GetAppendUA() const;
+  bool HasCustomCommandLine() const {return _browser_command_line.GetLength() || _browser_additional_command_line.GetLength();}
 
   // overall test settings
   CString _id;
@@ -155,6 +157,7 @@ public:
   bool    _timeline;
   int     _timelineStackDepth;
   bool    _trace;
+  CString _traceCategories;
   bool    _netlog;
   bool    _video;
   bool    _spdy3;
@@ -204,6 +207,9 @@ public:
   CString _custom_metrics;
   DWORD   _script_timeout_multiplier;
   CStringA _user_agent_modifier;
+  CStringA _append_user_agent;
+  DWORD    _max_test_time;
+  bool     _process_results;
   
   // current state
   int     _run;
@@ -221,6 +227,8 @@ public:
   bool    _dom_element_check;
   int     _no_run;  // conditional block support - if/else/endif
   CStringA _current_event_name;
+  bool    _is_chrome;
+  bool    overrode_ua_string_;
 
   // system information
   bool      has_gpu_;

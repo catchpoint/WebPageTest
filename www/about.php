@@ -44,7 +44,7 @@ $page_description = "More information about WebPagetest website speed testing an
                 <a href="https://sites.google.com/a/webpagetest.org/docs/other-resources/hosting-a-test-location">Hosting a test location</a> is open to anyone who is interested and 
                 does not constitute an endorsement of the services offered by the partner (however, I think you will find that the partners providing test locations 
                 tend to be very involved in the web performance community).</p>
-                <p>If you are having any problems of just have questions about the site, please feel free to <a href="mailto:pmeenan@webpagetest.org">contact me</a>.</p>
+                <p>If you are having any problems or just have questions about the site, please feel free to <a href="mailto:pmeenan@webpagetest.org">contact me</a>.</p>
                 <?php
                 }
                 ?>

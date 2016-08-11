@@ -98,6 +98,10 @@ BrowserLocalChrome.prototype.startWdServer = function(browserCaps) {
   }.bind(this));
 };
 
+// Infrequent device cleanup/health
+BrowserLocalChrome.prototype.deviceCleanup = function() {
+}
+
 /**
  * Starts the standard non-webdriver Chrome, which can't run scripts.
  */

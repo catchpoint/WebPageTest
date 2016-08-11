@@ -3,7 +3,7 @@ require_once('testStatus.inc');
 require_once('./video/visualProgress.inc.php');
 //error_reporting(E_ALL);
 
-set_time_limit(300);
+set_time_limit(3600);
 if( !defined('BARE_UI') )
     define('BARE_UI', true);
 $csv = false;
@@ -123,6 +123,11 @@ elseif($json && $view == 'pss')
     else
         DisplayProgress($tests);
     json_response($json_response);
+}
+elseif($json)
+{
+  $json_response['tests'] = $testIds;
+  json_response($json_response);
 }
 else
 {

@@ -192,7 +192,7 @@ void RequestData::AddHeader(const char * header, const char * value) {
     _method = value;
   else if (!lstrcmpiA(header, ":path"))
     _object = value;
-}
+  }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -207,6 +207,15 @@ void RequestData::ProcessRequestLine() {
       _method = line.Tokenize(" ", pos).Trim();
       if (pos > -1) {
         _object = line.Tokenize(" ", pos).Trim();
+        // For proxy cases where the GET is a full URL, parse it into it's pieces
+        if (!_object.Left(5).CompareNoCase("http:") ||
+            !_object.Left(6).CompareNoCase("https:")) {
+          CString scheme, host, object;
+          unsigned short port = 0;
+          if (ParseUrl((LPCTSTR)CA2T(_object), scheme, host, port, object)) {
+            _object = object;
+          }
+        }
       }
     }
   }
@@ -215,10 +224,26 @@ void RequestData::ProcessRequestLine() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void ResponseData::AddHeader(const char * header, const char * value) {
-  HttpData::AddHeader(header, value);
-  if (!lstrcmpiA(header, ":status")) {
-    _result = atoi(value);
-    _protocol_version = 2.0;
+  // validate that the header and value are both valid/printable ascii
+  if (header && value) {
+    int hlen = lstrlenA(header);
+    int vlen = lstrlenA(value);
+    if (hlen > 0 && vlen >= 0 && hlen < 100000 && vlen < 100000) {
+      CStringA hFiltered, vFiltered;
+      for (int i = 0; i < hlen; i++)
+        if (isprint(header[i]))
+          hFiltered += header[i];
+      for (int i = 0; i < vlen; i++)
+        if (isprint(value[i]))
+          vFiltered += value[i];
+      if (hFiltered.GetLength()) {
+        HttpData::AddHeader(hFiltered, vFiltered);
+        if (!lstrcmpiA(header, ":status")) {
+          _result = atoi(value);
+          _protocol_version = 2.0;
+        }
+      }
+    }
   }
 }
 
@@ -367,12 +392,15 @@ DataChunk ResponseData::GetBody(bool uncompress) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 Request::Request(TestState& test_state, DWORD socket_id, DWORD stream_id,
-                 TrackSockets& sockets, TrackDns& dns, WptTest& test,
-                 bool is_spdy, Requests& requests)
+                 DWORD request_id, TrackSockets& sockets, TrackDns& dns,
+                 WptTest& test, bool is_spdy, Requests& requests,
+                 CString protocol)
   : _processed(false)
   , _socket_id(socket_id)
   , _stream_id(stream_id)
+  , _request_id(request_id)
   , _is_spdy(is_spdy)
+  , _was_pushed(false)
   , _ms_start(0)
   , _ms_first_byte(0)
   , _ms_end(0)
@@ -395,7 +423,11 @@ Request::Request(TestState& test_state, DWORD socket_id, DWORD stream_id,
   , requests_(requests)
   , _bytes_in(0)
   , _bytes_out(0)
-  , _object_size(0) {
+  , _object_size(0)
+  , _h2_priority_depends_on(-1)
+  , _h2_priority_weight(-1)
+  , _h2_priority_exclusive(-1)
+  , _protocol(protocol) {
   QueryPerformanceCounter(&_start);
   _first_byte.QuadPart = 0;
   _end.QuadPart = 0;
@@ -494,8 +526,8 @@ void Request::HeaderIn(const char * header, const char * value, bool pushed) {
     if (!_first_byte.QuadPart)
       _first_byte.QuadPart = _end.QuadPart;
     _response_data.AddHeader(header, value);
-    if (pushed && initiator_.IsEmpty())
-      initiator_ = "HTTP/2 Server Push";
+    if (pushed)
+      _was_pushed = true;
   }
   LeaveCriticalSection(&cs);
 }
@@ -539,8 +571,8 @@ void Request::HeaderOut(const char * header, const char * value, bool pushed) {
   }
   if (_is_active) {
     _request_data.AddHeader(header, value);
-    if (pushed && initiator_.IsEmpty())
-      initiator_ = "HTTP/2 Server Push";
+    if (pushed)
+      _was_pushed = true;
   }
   LeaveCriticalSection(&cs);
 }
@@ -633,18 +665,20 @@ bool Request::Process() {
       }
     }
 
-    _test_state._requests++;
-    if (_start.QuadPart <= _test_state._on_load.QuadPart)
-      _test_state._doc_requests++;
-    int result = GetResult();
-    if (!_test_state._first_byte.QuadPart && result == 200 && 
-        _first_byte.QuadPart )
-      _test_state._first_byte.QuadPart = _first_byte.QuadPart;
-    if (result != 401 && (result >= 400 || result < 0)) {
-      if (_test_state._test_result == TEST_RESULT_NO_ERROR)
-        _test_state._test_result = TEST_RESULT_CONTENT_ERROR;
-      else if (_test_state._test_result == TEST_RESULT_TIMEOUT)
-        _test_state._test_result = TEST_RESULT_TIMEOUT_CONTENT_ERROR;
+    if (ret) {
+      _test_state._requests++;
+      if (_start.QuadPart <= _test_state._on_load.QuadPart)
+        _test_state._doc_requests++;
+      int result = GetResult();
+      if (!_test_state._first_byte.QuadPart && result == 200 && 
+          _first_byte.QuadPart )
+        _test_state._first_byte.QuadPart = _first_byte.QuadPart;
+      if (result != 401 && (result >= 400 || result < 0)) {
+        if (_test_state._test_result == TEST_RESULT_NO_ERROR)
+          _test_state._test_result = TEST_RESULT_CONTENT_ERROR;
+        else if (_test_state._test_result == TEST_RESULT_TIMEOUT)
+          _test_state._test_result = TEST_RESULT_TIMEOUT_CONTENT_ERROR;
+      }
     }
 
     CStringA user_agent = GetRequestHeader("User-Agent");
@@ -659,12 +693,11 @@ bool Request::Process() {
     url += CA2T(_request_data.GetObject(), CP_UTF8);
     if (!_from_browser) {
       BrowserRequestData data(url);
-      if (requests_.GetBrowserRequest(data)) {
-        initiator_ = data.initiator_;
-        initiator_line_ = data.initiator_line_;
-        initiator_column_ = data.initiator_column_;
-      }
+      if (requests_.GetBrowserRequest(data))
+        priority_ = data.priority_;
     }
+    // see if we have matching initiator data
+    requests_._initiators.Lookup(url, initiator_);
 
     rtt_ = _sockets.GetRTT(_peer_address);
   }
@@ -877,3 +910,11 @@ ULONG Request::GetPeerAddress() {
   return _peer_address;
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Request::SetPriority(int depends_on, int weight, int exclusive) {
+  WptTrace(loglevel::kFunction, _T("[wpthook] - Request::SetPriority(), depends on %d, weight %d, exclusive %d"), depends_on, weight, exclusive);
+  _h2_priority_depends_on = depends_on;
+  _h2_priority_weight = weight;
+  _h2_priority_exclusive = exclusive;
+}

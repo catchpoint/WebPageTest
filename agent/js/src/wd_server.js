@@ -45,11 +45,11 @@ var WD_CONNECT_TIMEOUT_MS_ = 120000;
 var DEVTOOLS_CONNECT_TIMEOUT_MS_ = 10000;
 var DETACH_TIMEOUT_MS_ = 2000;
 var VIDEO_PROCESSING_TIMEOUT_MS = 600000;
+var TRACE_PROCESSING_TIMEOUT_MS = 600000;
 var TRACING_STOP_TIMEOUT_MS = 120000;
-var DETECT_RE_NAVIGATE_MS = 1000;
-
-/** Allow test access. */
-exports.WAIT_AFTER_ONLOAD_MS = 10000;
+var DETECT_ACTIVITY_MS = 2000;
+var DETECT_NO_RE_NAVIGATE_MS = 1000;
+var BLACKBOX_DETECT_ACTIVITY_TIME = 5000;
 
 var BLANK_PAGE_URL_ = 'data:text/html;charset=utf-8,';
 var GHASTLY_ORANGE_ = '#DE640D';
@@ -187,11 +187,16 @@ WebDriverServer.prototype.init = function(args) {
   this.histogramFile_ = undefined;
   this.runTempDir_ = args.runTempDir || '';
   this.workDir_ = args.workDir || '';
+  this.netLogFile_ = undefined;
   this.customMetrics_ = undefined;
   this.userTimingMarks_ = undefined;
   this.pageData_ = undefined;
   this.traceFile_ = undefined;
   this.traceFileStream_ = undefined;
+  this.userTimingFile_ = undefined;
+  this.cpuSlicesFile_ = undefined;
+  this.pcapSlicesFile_ = undefined;
+  this.netlogFile_ = undefined;
   this.isNavigating_ = false;
   this.mainFrame_ = undefined;
   this.pageLoadCoalesceTimer_ = undefined;
@@ -283,27 +288,29 @@ WebDriverServer.prototype.prepareVideoCapture_ = function() {
  */
 WebDriverServer.prototype.connectDevTools_ = function() {
   'use strict';
-  this.app_.wait(function() {
-    var connected = new webdriver.promise.Deferred();
-    var devToolsUrl = this.browser_.getDevToolsUrl();
-    if (devToolsUrl) {  // Browser exit resets the URL to undefined.
-      var devTools = new devtools.DevTools(devToolsUrl);
-      devTools.connect(function() {
-        this.devTools_ = devTools;
-        this.devTools_.onMessage(this.onDevToolsMessage_.bind(this));
-        connected.fulfill(true);
-      }.bind(this), function() {
+  if (!this.browser_.isBlackBox) {
+    this.app_.wait(function() {
+      var devToolsUrl = this.browser_.getDevToolsUrl();
+      var connected = new webdriver.promise.Deferred();
+      if (devToolsUrl) {  // Browser exit resets the URL to undefined.
+        var devTools = new devtools.DevTools(devToolsUrl);
+        devTools.connect(function() {
+          this.devTools_ = devTools;
+          this.devTools_.onMessage(this.onDevToolsMessage_.bind(this));
+          connected.fulfill(true);
+        }.bind(this), function() {
+          connected.fulfill(false);
+        });
+      } else {
         connected.fulfill(false);
-      });
-    } else {
-      connected.fulfill(false);
+      }
+      return connected.promise;
+    }.bind(this), DEVTOOLS_CONNECT_TIMEOUT_MS_, 'Connect DevTools');
+    if (1 === this.task_.timeline || 1 === this.task_['Capture Video']) {
+      var timelineStackDepth = (this.task_.timelineStackDepth ?
+          parseInt(this.task_.timelineStackDepth, 10) : 0);
+      this.timelineCommand_('start', {maxCallStackDepth: timelineStackDepth});
     }
-    return connected.promise;
-  }.bind(this), DEVTOOLS_CONNECT_TIMEOUT_MS_, 'Connect DevTools');
-  if (1 === this.task_.timeline || 1 === this.task_['Capture Video']) {
-    var timelineStackDepth = (this.task_.timelineStackDepth ?
-        parseInt(this.task_.timelineStackDepth, 10) : 0);
-    this.timelineCommand_('start', {maxCallStackDepth: timelineStackDepth});
   }
 };
 
@@ -357,6 +364,16 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
   // If abortTimer_ is set, it means we received an 'Inspector.detached'
   // message, as noted below, so ignore messages until our abortTimer fires.
   if (!this.abortTimer_) {
+    if (this.pageLoadCoalesceTimer_ !== undefined &&
+        this.task_['web10'] != 1 &&
+        'Network.' === message.method.substring(0, 8)) {
+      logger.debug("Activity detected after onload, waiting for page activity to finish");
+      clearTimeout(this.pageLoadCoalesceTimer_);
+      this.pageLoadCoalesceTimer_ = setTimeout(function() {
+        this.pageLoadCoalesceTimer_ = undefined;
+        this.onPageLoad_();
+      }.bind(this), DETECT_ACTIVITY_MS);
+    }
     if ('Page.frameStartedLoading' === message.method) {
       if (message.params['frameId'] !== undefined) {
         if (this.isNavigating_ && this.mainFrame_ === undefined) {
@@ -373,12 +390,13 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
       }
     } else if ('Page.loadEventFired' === message.method) {
       if (this.isRecordingDevTools_) {
+        var wait_time = this.task_['web10'] == 1 ? DETECT_NO_RE_NAVIGATE_MS : DETECT_ACTIVITY_MS;
         // Allow for up to 1 second after the page load finished for
         // another navigation to start (in the case of a javascript redirect).
         this.pageLoadCoalesceTimer_ = setTimeout(function() {
           this.pageLoadCoalesceTimer_ = undefined;
           this.onPageLoad_();
-        }.bind(this), DETECT_RE_NAVIGATE_MS);
+        }.bind(this), wait_time);
       }
     } else if ('Page.javascriptDialogOpening' === message.method) {
       var err = new Error('Page opened a modal dailog.', this.runNumber_);
@@ -396,6 +414,18 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
             this.onPageLoad_.bind(this, err), DETACH_TIMEOUT_MS_);
       } else {
         // TODO detach during coalesce?
+        logger.warn('%s after Page.loadEventFired?', message.method);
+      }
+    } else if ('Inspector.targetCrashed' === message.method) {
+      if (this.pageLoadDonePromise_ && this.pageLoadDonePromise_.isPending()) {
+        // This message means that the browser has crashed.
+        // Instead of waiting for the timeout, we'll give the browser a couple
+        // seconds to paint an error message (for our screenshot) and then fail
+        // the page load.
+        var err = new Error('Inspector crashed on run ' + this.runNumber_, this.runNumber_);
+        this.abortTimer_ = global.setTimeout(
+            this.onPageLoad_.bind(this, err), DETACH_TIMEOUT_MS_);
+      } else {
         logger.warn('%s after Page.loadEventFired?', message.method);
       }
     }
@@ -802,47 +832,55 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
   // all pending events.  This isn't strictly required if startBrowser loads
   // "about:blank", but it's still a good idea.
   this.isNavigating_ = true;
-  this.pageCommand_('navigate', {url: BLANK_PAGE_URL_});
-  this.app_.timeout(500, 'Load blank startup page');
-  this.networkCommand_('enable');
-  this.pageCommand_('enable');
+  if (!this.browser_.isBlackBox) {
+    this.pageCommand_('navigate', {url: BLANK_PAGE_URL_});
+    this.app_.timeout(500, 'Load blank startup page');
+    this.networkCommand_('enable');
+    this.pageCommand_('enable');
+  }
   if (1 === this.task_['Capture Video']) {  // Emit video sync, start recording
     this.getCapabilities_().then(function(caps) {
       if (!caps.videoRecording) {
         return;
       }
-      // Get the root frameId
-      this.pageCommand_('getResourceTree').then(function(result) {
-        var frameId = result.frameTree.frame.id;
-        // Hold orange(500ms)->white: anchor video to DevTools.
-        this.app_.schedule('Setting background to orange', function() {logger.debug('Setting background to orange');});
-        this.setPageBackground_(frameId, GHASTLY_ORANGE_);
-        this.app_.timeout(500, 'Set orange background');
+      if (!this.browser_.isBlackBox) {
+        // Get the root frameId
+        this.pageCommand_('getResourceTree').then(function(result) {
+          var frameId = result.frameTree.frame.id;
+          // Hold orange(500ms)->white: anchor video to DevTools.
+          this.app_.schedule('Setting background to orange', function() {logger.debug('Setting background to orange');});
+          this.setPageBackground_(frameId, GHASTLY_ORANGE_);
+          this.app_.timeout(500, 'Set orange background');
+          this.scheduleStartVideoRecording_();
+          // Begin recording DevTools before onTestStarted_ fires,
+          // to make sure we get the paint event from the below switch to white.
+          // This allows us to sync the DevTools trace vs. the video by matching
+          // the first DevTools paint event timestamp to the video frame where
+          // the background changed from non-white to white.
+          this.app_.schedule('Start recording DevTools with video', function() {
+            this.isRecordingDevTools_ = true;
+          }.bind(this));
+          this.app_.schedule('Start recording tracing', function() {
+            this.scheduleStartTracingIfRequested_();
+          }.bind(this));
+          this.app_.timeout(500, 'Hold orange background');
+          this.app_.schedule('Setting background to white', function() {logger.debug('Setting background to white');});
+          this.setPageBackground_(frameId);  // White
+        }.bind(this));
+      } else {
         this.scheduleStartVideoRecording_();
-        // Begin recording DevTools before onTestStarted_ fires,
-        // to make sure we get the paint event from the below switch to white.
-        // This allows us to sync the DevTools trace vs. the video by matching
-        // the first DevTools paint event timestamp to the video frame where
-        // the background changed from non-white to white.
-        this.app_.schedule('Start recording DevTools with video', function() {
-          this.isRecordingDevTools_ = true;
-        }.bind(this));
-        this.app_.schedule('Start recording tracing', function() {
-          this.scheduleStartTracingIfRequested_();
-        }.bind(this));
-        this.app_.timeout(500, 'Hold orange background');
-        this.app_.schedule('Setting background to white', function() {logger.debug('Setting background to white');});
-        this.setPageBackground_(frameId);  // White
-      }.bind(this));
+      }
     }.bind(this));
   }
   // Make sure we start recording DevTools regardless of the video.
-  this.app_.schedule('Start recording DevTools', function() {
-    this.isRecordingDevTools_ = true;
-  }.bind(this));
-  this.app_.schedule('Start recording tracing', function() {
-    this.scheduleStartTracingIfRequested_();
-  }.bind(this));
+  if (!this.browser_.isBlackBox) {
+    this.app_.schedule('Start recording DevTools', function() {
+      this.isRecordingDevTools_ = true;
+    }.bind(this));
+    this.app_.schedule('Start recording tracing', function() {
+      this.scheduleStartTracingIfRequested_();
+    }.bind(this));
+  }
 };
 
 /**
@@ -887,11 +925,13 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
     this.traceFileStream_.write('{"traceEvents":[{}');
     var message = {method: 'Tracing.start'};
     message.params = {
-      categories: 'blink.console,blink.user_timing,disabled-by-default-devtools.timeline,devtools.timeline',
+      categories: 'blink.console,disabled-by-default-devtools.timeline,devtools.timeline',
       options: 'record-as-much-as-possible'
     };
     if (1 === this.task_.trace) {
-      var trace_categories = this.task_.traceCategories || '*';
+      var trace_categories = "*";
+      if (this.task_['traceCategories'] !== undefined && this.task_.traceCategories.length)
+        trace_categories = '-*,' + this.task_.traceCategories;
       message.params.categories = trace_categories + ',' + message.params.categories;
     } else {
       message.params.categories = '-*,' + message.params.categories;
@@ -920,13 +960,13 @@ WebDriverServer.prototype.onTracingMessage_ = function(message) {
       var value = (message.params || {}).value;
       if (value instanceof Array && this.traceFileStream_ !== undefined) {
         value.forEach(function(item) {
-          this.traceFileStream_.write(',' + JSON.stringify(item));
+          this.traceFileStream_.write(",\n" + JSON.stringify(item));
         }.bind(this));
       }
     } else if ('Tracing.tracingComplete' === message.method) {
       logger.debug('Signalling finish of tracing');
       if (this.traceFileStream_ !== undefined) {
-        this.traceFileStream_.end(']}');
+        this.traceFileStream_.end("\n]}");
         this.traceFileStream_.on('finish', function() {
           this.traceRunning_ = false;
           this.traceFileStream_ = undefined;
@@ -948,9 +988,63 @@ WebDriverServer.prototype.scheduleStopTracing_ = function() {
   'use strict';
   this.scheduleNoFault_('Stop tracing', function() {
     if (this.traceRunning_) {
-    this.devToolsCommand_({method: 'Tracing.end'});
-    this.app_.wait(function() {return !this.traceRunning_;}.bind(this),
-        TRACING_STOP_TIMEOUT_MS);
+      this.devToolsCommand_({method: 'Tracing.end'});
+      this.app_.wait(function() {return !this.traceRunning_;}.bind(this),
+          TRACING_STOP_TIMEOUT_MS);
+    }
+    this.app_.schedule('Force trace closed', function() {
+      if (this.traceFileStream_ !== undefined) {
+        this.traceFileStream_.end("\n]}");
+        this.traceFileStream_.on('finish', function() {
+          this.traceRunning_ = false;
+          this.traceFileStream_ = undefined;
+        }.bind(this));
+      }
+    }.bind(this));
+  }.bind(this));
+};
+
+WebDriverServer.prototype.scheduleProcessTrace_ = function() {
+  'use strict';
+  this.scheduleNoFault_('Process Trace', function() {
+    if (this.traceFile_) {
+      this.userTimingFile_ = path.join(this.runTempDir_, 'user_timing.json.gz');
+      this.cpuSlicesFile_ = path.join(this.runTempDir_, 'timeline_cpu.json.gz');
+      var options = ['lib/trace/trace-parser.py', '-vvvv',
+          '-t', this.traceFile_, '-u', this.userTimingFile_,
+          '-c', this.cpuSlicesFile_];
+      process_utils.scheduleExec(this.app_,
+          'python', options, undefined,
+          TRACE_PROCESSING_TIMEOUT_MS).then(function(stdout) {
+      }.bind(this), function(err) {
+        logger.info('Trace processing error: ' + err.message);
+      }.bind(this));
+    }
+  }.bind(this));
+};
+
+WebDriverServer.prototype.scheduleProcessPcap_ = function() {
+  'use strict';
+  this.scheduleNoFault_('Process pcap', function() {
+    if (this.pcapFile_) {
+      this.pcapSlicesFile_ = path.join(this.runTempDir_, 'pcap_slices.json.gz');
+      var options = ['lib/pcap/pcap-parser.py', '--json',
+          '-i', this.pcapFile_, '-d', this.pcapSlicesFile_];
+      process_utils.scheduleExec(this.app_,
+          'python', options, undefined,
+          TRACE_PROCESSING_TIMEOUT_MS).then(function(stdout) {
+        var bytes = JSON.parse(stdout);
+        if (bytes) {
+          if (bytes['in'] != undefined)
+            this.pageData_['pcapBytesIn'] = bytes['in'];
+          if (bytes['out'] != undefined)
+            this.pageData_['pcapBytesOut'] = bytes['out'];
+          if (bytes['in_dup'] != undefined)
+            this.pageData_['pcapBytesInDup'] = bytes['in_dup'];
+        }
+      }.bind(this), function(err) {
+        logger.info('Pcap processing error: ' + err.message);
+      }.bind(this));
     }
   }.bind(this));
 };
@@ -994,6 +1088,11 @@ WebDriverServer.prototype.scheduleStartPacketCaptureIfRequested_ = function() {
  */
 WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
   'use strict';
+  if (this.browser_.isBlackBox) {
+    // Force video capture and tcpdump for black-box testing
+    this.task_['Capture Video'] = 1;
+    this.task_.tcpdump = 1;
+  }
   if (!this.devTools_) {
     this.startChrome_(browserCaps);
   }
@@ -1006,22 +1105,50 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
     // onDevToolsMessage_ resolves this promise when it detects on-load.
     this.pageLoadDonePromise_ = new webdriver.promise.Deferred();
     if (this.timeout_) {
-      var coalesceMillis = (undefined === this.task_.waitAfterOnload ?
-          exports.WAIT_AFTER_ONLOAD_MS :
-          (1000 * Math.floor(parseFloat(this.task_.waitAfterOnload, 10))));
       logger.debug("Waiting up to " + this.timeout_ +
                    "ms for the page to load");
-      this.timeoutTimer_ = global.setTimeout(
-          this.onPageLoad_.bind(this, new Error('Page load timeout')),
-          this.timeout_ - coalesceMillis);
+      if (this.browser_.isBlackBox) {
+        // Set some default test result fields to mark the test as successful
+        // TODO(pmeenan): Construct this after the test from processing the
+        // video and tcpdump files
+        this.pageData_ = {"result":0, "visualTest":1};
+        // Don't error on timeout for black-box tests
+        this.timeoutTimer_ = global.setTimeout(
+            this.onPageLoad_.bind(this), this.timeout_);
+      } else {
+        this.timeoutTimer_ = global.setTimeout(
+            this.onPageLoad_.bind(this, new Error('Page load timeout')),
+            this.timeout_);
+      }
     } else {
       logger.debug("No page load timeout set (unexpected)");
     }
     this.onTestStarted_();
-    this.pageCommand_('navigate', {url: this.task_.url});
+    if (this.browser_.isBlackBox) {
+      this.browser_.navigateTo(this.task_.url);
+      this.app_.timeout(BLACKBOX_DETECT_ACTIVITY_TIME, 'wait');
+      this.scheduleCheckActivity_();
+    } else {
+      this.pageCommand_('navigate', {url: this.task_.url});
+    }
     return this.pageLoadDonePromise_.promise;
   }.bind(this));
-  this.waitForCoalesce_(this.app_);
+};
+
+WebDriverServer.prototype.scheduleCheckActivity_ = function() {
+  if (this.pageLoadDonePromise_ && this.pageLoadDonePromise_.isPending()) {
+    this.browser_.scheduleActivityDetected().then(function(activityDetected) {
+      if (activityDetected) {
+        this.app_.timeout(BLACKBOX_DETECT_ACTIVITY_TIME, 'wait');
+        // This needs to be done as a recursive call with delays instead of a
+        // timer because the flow control in webdriver promises is buggy in the
+        // bundled version.
+        this.scheduleCheckActivity_();
+      } else {
+        this.onPageLoad_();
+      }
+    }.bind(this));
+  }
 };
 
 /**
@@ -1038,7 +1165,6 @@ WebDriverServer.prototype.runSandboxedSession_ = function(browserCaps) {
     }
     // Repeat load with an already running WD server and driver.
     this.runScript_(this.wdSandbox_);
-    this.waitForCoalesce_(this.sandboxApp_);
   } else {
     this.startWdServer_(browserCaps);
     // The following needs to be scheduled() because getServerUrl() returns
@@ -1056,7 +1182,6 @@ WebDriverServer.prototype.runSandboxedSession_ = function(browserCaps) {
         }.bind(this));
         // Bring it!
         this.runScript_(wdSandbox);
-        this.waitForCoalesce_.bind(this.sandboxApp_);
       }.bind(this));
     }.bind(this));
   }
@@ -1133,29 +1258,6 @@ WebDriverServer.prototype.runScript_ = function(wdSandbox) {
 };
 
 /**
- * Schedules a wait to allow extra time for post-onLoad activities to finish.
- *
- * @param {Object} app the context in which to set the timeout.
- * @private
- */
-WebDriverServer.prototype.waitForCoalesce_ = function(app) {
-  'use strict';
-  var coalesceMillis = (undefined === this.task_.waitAfterOnload ?
-      exports.WAIT_AFTER_ONLOAD_MS :
-      (1000 * Math.floor(parseFloat(this.task_.waitAfterOnload, 10))));
-  var minMillis = (undefined === this.task_.time ? 0 :
-      (1000 * Math.floor(parseFloat(this.task_.time, 10))));
-  this.app_.schedule('Wait for browser', function() {
-    var currMillis = Math.floor(Date.now() - this.testStartTime_);
-    var waitMillis = Math.max(coalesceMillis, (minMillis - currMillis));
-    if (waitMillis > 0) {
-      logger.info('Test finished, waiting for browser to coalesce');
-      app.timeout(waitMillis, 'Waiting for browser to coalesce');
-    }
-  }.bind(this));
-};
-
-/**
  * Unsets per-run variables.
  *
  * @private
@@ -1174,6 +1276,10 @@ WebDriverServer.prototype.tearDown_ = function() {
   if (this.timeoutTimer_) {
     global.clearTimeout(this.timeoutTimer_);
     this.timeoutTimer_ = undefined;
+  }
+  if (this.checkActivityTimer_) {
+    global.clearTimeout(this.checkActivityTimer_);
+    this.checkActivityTimer_ = undefined;
   }
   if (this.abortTimer_) {
     global.clearTimeout(this.abortTimer_);
@@ -1308,6 +1414,7 @@ WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
         ' }' +
         ' } catch(e) {}' +
         '};' +
+        'addTime("domInteractive");' +
         'addTime("domContentLoadedEventStart");' +
         'addTime("domContentLoadedEventEnd");' +
         'addTime("loadEventStart");' +
@@ -1336,12 +1443,23 @@ WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
 
 WebDriverServer.prototype.scheduleProcessVideo_ = function() {
   this.scheduleNoFault_('Process Video', function() {
-    if (this.videoFile_ && this.flags_['processvideo'] == 'yes') {
+    if (this.videoFile_) {
       var videoDir = path.join(this.runTempDir_, 'video');
       this.histogramFile_ = path.join(this.runTempDir_, 'histograms.json.gz');
-      var options = ['lib/video/visualmetrics.py', '-i', this.videoFile_, '-d',
-          videoDir, '--orange', '--viewport', '--force', '--quality', '75',
-          '--histogram', this.histogramFile_];
+      // Force the video JPEG quality level to be between 30 and 95.
+      var imgQ = (this.task_.imageQuality ?
+            parseInt(this.task_.imageQuality, 10) : 0);
+      imgQ = Math.min(Math.max(imgQ, 30), 95);
+      var options = ['lib/video/visualmetrics.py', '-vvvv', '-i', this.videoFile_, '-d',
+          videoDir, '--force', '--quality', imgQ, '--viewport',
+          '--maxframes', 50, '--histogram', this.histogramFile_];
+      if (this.browser_.isBlackBox) {
+        if (this.browser_.videoFlags && this.browser_.videoFlags.length)
+          for (var i = 0; i < this.browser_.videoFlags.length; i++)
+            options.push(this.browser_.videoFlags[i]);
+      } else {
+        options.push('--orange');
+      }
       if (this.traceFile_) {
         options.push('--timeline');
         options.push(this.traceFile_);
@@ -1357,12 +1475,26 @@ WebDriverServer.prototype.scheduleProcessVideo_ = function() {
           var filePath = path.join(videoDir, fileName);
           this.videoFrames_.push({'fileName' : fileName, 'diskPath' : filePath});
         }.bind(this));
-        this.videoFile_ = undefined;
+        if (!this.task_['keepvideo'])
+          this.videoFile_ = undefined;
       }.bind(this), function(err) {
         logger.info('Video processing error: ' + err.message);
       }.bind(this));
     }
   }.bind(this));
+};
+
+WebDriverServer.prototype.scheduleGetNetlog_ = function() {
+  if (this.task_['netlog']) {
+    this.scheduleNoFault_('Get netlog', function() {
+      var localNetlog = this.runTempDir_ + '/netlog.txt';
+      this.browser_.scheduleGetNetlog(localNetlog).then(function(copied) {
+        if (copied) {
+          this.netlogFile_ = localNetlog;
+        }
+      }.bind(this));
+    }.bind(this));
+  }
 };
 
 WebDriverServer.prototype.scheduleAssertBrowserIsRunning_ = function() {
@@ -1393,11 +1525,11 @@ WebDriverServer.prototype.done_ = function() {
     this.scheduleNoFault_('Capture Screen Shot', function() {
       this.takeScreenshot_('screen', 'end of run');
     }.bind(this));
-    this.scheduleStopTracing_();
-    if (this.driver_) {
-      this.scheduleNoFault_('Get WD Log',
-          this.scheduleGetWdDevToolsLog_.bind(this));
+    if (this.videoFile_) {
+      this.scheduleNoFault_('Stop video recording',
+          this.browser_.scheduleStopVideoRecording.bind(this.browser_));
     }
+    this.scheduleAssertBrowserIsRunning_();
     try {
       if (this.pcapFile_) {
         this.scheduleNoFault_('Stop packet capture',
@@ -1407,15 +1539,19 @@ WebDriverServer.prototype.done_ = function() {
     try {
       this.scheduleCollectMetrics_();
     } catch(e) {}
-    if (this.videoFile_) {
-      this.scheduleNoFault_('Stop video recording',
-          this.browser_.scheduleStopVideoRecording.bind(this.browser_));
+    if (this.driver_) {
+      this.scheduleNoFault_('Get WD Log',
+          this.scheduleGetWdDevToolsLog_.bind(this));
     }
-    this.scheduleAssertBrowserIsRunning_();
-    if (this.videoFile_) {
-      // video processing needs to be done after tracing has been stopped and collected
+    // video processing needs to be done after tracing has been stopped and collected
+    this.scheduleStopTracing_();
+    if (this.traceFile_)
+      this.scheduleProcessTrace_();
+    if (this.videoFile_)
       this.scheduleProcessVideo_();
-    }
+    if (this.pcapFile_)
+      this.scheduleProcessPcap_();
+    this.scheduleGetNetlog_();
     this.scheduleNoFault_('End state', function() {
       if (this.testError_) {
         logger.error('Test failed: ' + this.testError_);
@@ -1424,8 +1560,9 @@ WebDriverServer.prototype.done_ = function() {
       }
     }.bind(this));
     logger.debug("Done collecting results")
-    var devToolsFile = this.devToolsMessages_ ? path.join(this.runTempDir_, 'devtools.json') : undefined;
-    if (devToolsFile) {
+    var devToolsFile = undefined;
+    if (this.devToolsMessages_ && this.devToolsMessages_.length > 0) {
+      devToolsFile = path.join(this.runTempDir_, 'devtools.json');
       fs.writeFileSync(devToolsFile, JSON.stringify(this.devToolsMessages_));
     }
     this.scheduleNoFault_('Send IPC', function() {
@@ -1437,6 +1574,10 @@ WebDriverServer.prototype.done_ = function() {
           devToolsFile: devToolsFile,
           screenshots: this.screenshots_,
           traceFile: this.traceFile_,
+          userTimingFile: this.userTimingFile_,
+          cpuSlicesFile: this.cpuSlicesFile_,
+          pcapSlicesFile: this.pcapSlicesFile_,
+          netlogFile: this.netlogFile_,
           videoFile: this.videoFile_,
           videoFrames: this.videoFrames_,
           pcapFile: this.pcapFile_,

@@ -73,24 +73,24 @@ void SoftwareUpdate::LoadSettings(CString settings_ini) {
 -----------------------------------------------------------------------------*/
 bool SoftwareUpdate::UpdateSoftware(bool force) {
   bool ok = true;
+  WptTrace(loglevel::kFunction,
+            _T("[wptdriver] SoftwareUpdate::UpdateSoftware\n"));
   if (force || TimeToCheck()) {
     ok = UpdateBrowsers();
     if (ok && _software_url.GetLength()) {
       CString info = HttpGetText(_software_url);
       if (info.GetLength()) {
-        CString app, version, command, file_url, md5;
+        CString app, version, command, url, md5;
         int token_position = 0;
         CString line = info.Tokenize(_T("\r\n"), token_position).Trim();
         while (ok && token_position >= 0) {
           if (line.Left(1) == _T('[')) {
-            if (app.GetLength()) {
-              ok = InstallSoftware(app, file_url, md5, version, command, 1, 
-                                    _T(""));
-            }
+            if (app.GetLength())
+              ok = InstallSoftware(app, url, md5, version, command, _T(""));
             app = line.Trim(_T("[] \t"));
             version.Empty();
             command.Empty();
-            file_url.Empty();
+            url.Empty();
             md5.Empty();
           } else if (app.GetLength()) {
             int separator = line.Find(_T('='));
@@ -98,7 +98,7 @@ bool SoftwareUpdate::UpdateSoftware(bool force) {
               CString tag = line.Left(separator).Trim().MakeLower();
               CString value = line.Mid(separator + 1).Trim();
               if (tag == _T("url"))
-                file_url = value;
+                url = value;
               else if (tag == _T("md5"))
                 md5 = value;
               else if (tag == _T("version"))
@@ -109,10 +109,8 @@ bool SoftwareUpdate::UpdateSoftware(bool force) {
           }
           line = info.Tokenize(_T("\r\n"), token_position).Trim();
         }
-        if (ok && app.GetLength()) {
-          ok = InstallSoftware(app, file_url, md5, version, command, 1, 
-                                _T(""));
-        }
+        if (ok && app.GetLength())
+          ok = InstallSoftware(app, url, md5, version, command, _T(""));
       }
     }
     if (ok) {
@@ -130,7 +128,6 @@ bool SoftwareUpdate::UpdateBrowsers(void) {
             _T("[wptdriver] SoftwareUpdate::UpdateBrowsers\n"));
   POSITION pos = _browsers.GetHeadPosition();
   while (ok && pos) {
-    DWORD update = 1;
     POSITION current_pos = pos;
     BrowserInfo browser_info = _browsers.GetNext(pos);
     CString url = browser_info._installer.Trim();
@@ -157,20 +154,18 @@ bool SoftwareUpdate::UpdateBrowsers(void) {
               version = value;
             else if (tag == _T("command"))
               command = value;
-            else if (tag == _T("update"))
-              update = _ttoi(value);
           }
           line = info.Tokenize(_T("\r\n"), token_position);
         }
 
-        ok = InstallSoftware(browser, file_url, md5, version, command, update,
+        ok = InstallSoftware(browser, file_url, md5, version, command,
                               browser_info._exe);
       }
     }
 
     // if we don't need to automatically update the browser then 
     // remove it from the list
-    if (ok && !update) {
+    if (ok) {
       _browsers.RemoveAt(current_pos);
     }
   }
@@ -184,7 +179,7 @@ bool SoftwareUpdate::UpdateBrowsers(void) {
   Download and install the software if necessary
 -----------------------------------------------------------------------------*/
 bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
-          CString version, CString command, DWORD update, CString check_file) {
+          CString version, CString command, CString check_file) {
   bool ok = true;
   bool already_installed = false;
 
@@ -204,7 +199,7 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
       if (RegQueryValueEx(key, app, 0, 0, (LPBYTE)buff, &len) 
           == ERROR_SUCCESS) {
         already_installed = true;
-        if (!version.Compare(buff) || !update)
+        if (!version.Compare(buff))
           install = false;
       }
 

@@ -33,7 +33,6 @@ class Requests;
 class TestState;
 class WptTest;
 class SSLStream;
-struct PRFileDesc;
 struct nghttp2_session;
 
 typedef enum {
@@ -100,15 +99,13 @@ public:
   void SniffSSL(SOCKET s, DataChunk& chunk);
   bool IsSsl(SOCKET s);
   bool IsSslById(DWORD socket_id);
-  void SetSslFd(PRFileDesc* fd);
-  void ClearSslFd(PRFileDesc* fd);
+  void SetSslFd(void* ssl);
+  void ClearSslFd(void* ssl);
   void ClaimSslFd(SOCKET s);
   void ResetSslFd(void);
   void SetSslSocket(SOCKET s);
-  bool SslSocketLookup(PRFileDesc* fd, SOCKET& s);
-  void SslKeyLog(CStringA& data);
+  bool SslSocketLookup(void* ssl, SOCKET& s);
   void EnableSsl(SocketInfo *info);
-  CStringA GetSslMasterSecret(SocketInfo *info);
 
   void Reset();
 
@@ -132,6 +129,8 @@ public:
               size_t len, const char * data);
   void H2Bytes(DATA_DIRECTION direction, DWORD socket_id, int stream_id,
                size_t len);
+  void H2Priority(DATA_DIRECTION direction, DWORD socket_id, int stream_id,
+                int depends_on, int weight, int exclusive);
 
 private:
   SocketInfo* GetSocketInfo(SOCKET s, bool lookup_peer = true);
@@ -139,10 +138,10 @@ private:
 
   void SslDataOut(SocketInfo* info, const DataChunk& chunk);
   void SslDataIn(SocketInfo* info, const DataChunk& chunk);
-  void SslTrackHandshake(SocketInfo* info, const DataChunk& chunk);
   bool IsSSLHandshake(const DataChunk& chunk);
   H2_USER_DATA * NewHttp2Session(DWORD socket_id,
                                  DATA_DIRECTION direction);
+  void SniffProtocol(SocketInfo* info, DataChunk& chunk);
 
   CRITICAL_SECTION cs;
   Requests&                   _requests;
@@ -152,9 +151,7 @@ private:
   CAtlMap<SOCKET, DWORD>	    _openSockets;
   CAtlMap<DWORD, SocketInfo*>  _socketInfo;
 
-  CAtlMap<DWORD, PRFileDesc*>    _last_ssl_fd;  // per-thread
-  CAtlMap<PRFileDesc*, SOCKET>   _ssl_sockets;
-  CAtlMap<DWORD, DWORD>          ipv4_rtt_;  // round trip times by address
-
-  CStringA  _ssl_key_log;
+  CAtlMap<DWORD, void*>    _last_ssl_fd;  // per-thread
+  CAtlMap<void*, SOCKET>   _ssl_sockets;
+  CAtlMap<DWORD, DWORD>    ipv4_rtt_;  // round trip times by address
 };

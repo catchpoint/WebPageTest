@@ -105,6 +105,9 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
   $result = array();
   $entries = array();
   
+  $includePageArrays = array('priorityStreams' => true);
+  $includeRequestArrays = array();
+  
   $result['log'] = array();
   $result['log']['version'] = '1.1';
   $result['log']['creator'] = array(
@@ -136,7 +139,7 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
       
       // dump all of our metrics into the har data as custom fields
       foreach($data as $name => $value) {
-        if (!is_array($value))
+        if (!is_array($value) || isset($includePageArrays[$name]))
           $pd["_$name"] = $value;
       }
       
@@ -204,13 +207,13 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
           parse_str($parts['query'], $qs);
           foreach($qs as $name => $val) {
             if (is_string($name) && is_string($val)) {
-              if (!mb_detect_encoding($name, 'UTF-8', true)) {
-                // not a valid UTF-8 string. URL encode it again so it can be safely consumed by the client.
-                $name = urlencode($name);
-              }
-              if (!mb_detect_encoding($val, 'UTF-8', true)) {
-                // not a valid UTF-8 string. URL encode it again so it can be safely consumed by the client.
-                $val = urlencode($val);
+              if (function_exists('mb_detect_encoding')) {
+                if (!mb_detect_encoding($name, 'UTF-8', true)) {
+                  $name = urlencode($name);
+                }
+                if (!mb_detect_encoding($val, 'UTF-8', true)) {
+                  $val = urlencode($val);
+                }
               }
               $request['queryString'][] = array('name' => (string)$name, 'value' => (string)$val);
             }
@@ -324,7 +327,7 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
 
         // dump all of our metrics into the har data as custom fields
         foreach($r as $name => $value) {
-          if (!is_array($value))
+          if (!is_array($value) || isset($includeRequestArrays[$name]))
             $entry["_$name"] = $value;
         }
         
@@ -339,9 +342,21 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
           $zip = new ZipArchive;
           if ($zip->open($bodies_file) === TRUE) {
             for( $i = 0; $i < $zip->numFiles; $i++ ) {
-              $index = intval($zip->getNameIndex($i), 10) - 1;
-              if (array_key_exists($index, $entries))
-                $entries[$index]['response']['content']['text'] = utf8_encode($zip->getFromIndex($i));
+              $name = $zip->getNameIndex($i);
+              $parts = explode('-', $name);
+              if (count($parts) >= 3 && stripos($name, '-body.txt') !== false) {
+                $id = intval($parts[1], 10);
+                foreach ($entries as &$entry) {
+                  if (isset($entry['_request_id']) && $entry['_request_id'] == $id) {
+                    $entry['response']['content']['text'] = utf8_encode($zip->getFromIndex($i));
+                    break;
+                  }
+                }
+              } else {
+                $index = intval($name, 10) - 1;
+                if (array_key_exists($index, $entries))
+                  $entries[$index]['response']['content']['text'] = utf8_encode($zip->getFromIndex($i));
+              }
             }
           }
         }

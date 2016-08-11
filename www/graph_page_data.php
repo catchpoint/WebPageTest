@@ -103,6 +103,19 @@ $common_label = implode(" ", $common_labels);
           text-align: left;
           font-size:  large;
         }
+        .chartStats {
+          clear: both;
+          text-align: left;
+        }
+        .chartStats table {
+          margin-left: 0;
+        }
+        .chartStats td {
+          text-align: right !important;
+        }
+        .chart {
+          min-height: 500px;
+        }
         </style>
     </head>
     <body>
@@ -289,6 +302,39 @@ function InsertChart($metric, $label) {
   $compareTable = array();
   $view_index = 0;
 
+  if (count($pagesData) == 1 && $num_runs >= 3) {
+    echo '<div class="chartStats"><table class="pretty">';
+    echo '<tr><td></td><th>Mean</th><th>Median</th><th>p25</th><th>p75</th><th>p75-p25</th><th>StdDev</th><th>CV</th></tr>';
+    foreach ($views as $cached) {
+      $pageData = reset($pagesData);
+      echo '<tr>';
+      $label = ($cached == '1') ? 'Repeat View' : 'First View';
+      echo "<th style=\"text-align: right;\">$label</th>";
+      $values = values($pageData, $cached, $metric, true);
+      sort($values, SORT_NUMERIC);
+      $sum = array_sum($values);
+      $count = count($values);
+      $mean = number_format($sum / $count, 3, '.', '');
+      echo "<td>$mean</td>";
+      $median = $values[intval($count / 2)];
+      echo "<td>$median</td>";
+      $p25 = $values[intval($count * 0.25)];
+      echo "<td>$p25</td>";
+      $p75 = $values[intval($count * 0.75)];
+      echo "<td>$p75</td>";
+      echo "<td>" . ($p75 - $p25) . "</td>";
+      $sqsum = 0;
+      foreach ($values as $value)
+          $sqsum += pow($value - $mean, 2);
+      $stddev = number_format(sqrt($sqsum / $count), 3, '.', '');
+      echo "<td>$stddev</td>";
+      echo "<td>" . number_format(($stddev/$mean) * 100, 3, '.', '') . "%</td>";
+
+      echo '</tr>';
+    }
+    echo '</table></div>';
+  }
+  
   // For each view (first / repeat) that we want to show
   foreach ($views as $cached) {
     $statValues = array();

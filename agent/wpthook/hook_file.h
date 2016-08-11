@@ -29,7 +29,6 @@ private:
   TestState& _test_state;
   TrackSockets& _sockets;
   NCodeHookIA32* _hook;
-  HANDLE  keylog_file_;
   CStringW download_path_;
 
   bool IsDownload(LPCWSTR lpFileName);

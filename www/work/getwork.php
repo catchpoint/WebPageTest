@@ -22,6 +22,9 @@ $pc = array_key_exists('pc', $_GET) ? $_GET['pc'] : '';
 $ec2 = array_key_exists('ec2', $_GET) ? $_GET['ec2'] : '';
 $screenwidth = array_key_exists('screenwidth', $_GET) ? $_GET['screenwidth'] : '';
 $screenheight = array_key_exists('screenheight', $_GET) ? $_GET['screenheight'] : '';
+$winver = isset($_GET['winver']) ? $_GET['winver'] : '';
+$isWinServer = isset($_GET['winserver']) ? $_GET['winserver'] : '';
+$isWin64 = isset($_GET['is64bit']) ? $_GET['is64bit'] : '';
 $tester = null;
 if (strlen($ec2))
   $tester = $ec2;
@@ -52,6 +55,15 @@ if (isset($locations) && is_array($locations) && count($locations) &&
     $location = trim($loc);
     if (!$is_done && strlen($location))
       $is_done = GetJob();
+    // see if there are fallbacks specified for the given location (for idle)
+    $fallbacks = GetLocationFallbacks($location);
+    if (is_array($fallbacks) && count($fallbacks)) {
+      foreach($fallbacks as $fallback) {
+        $location = trim($fallback);
+        if (!$is_done && strlen($location))
+          $is_done = GetJob();
+      }
+    }
   }
 } elseif (isset($_GET['freedisk']) && (float)$_GET['freedisk'] <= 0.1) {
   if (isset($_GET['reboot']) && GetSetting("lowDiskReboot")) {
@@ -91,6 +103,9 @@ function GetJob() {
     global $dnsServers;
     global $screenwidth;
     global $screenheight;
+    global $winver;
+    global $isWinServer;
+    global $isWin64;
 
     $workDir = "./work/jobs/$location";
     $locKey = GetLocationKey($location);
@@ -175,7 +190,7 @@ function GetJob() {
                               $testInfoJson['test_runs'][$run] = array('done' => false);
                           }
                           $testInfoJson['id'] = $testId;
-                          ProcessTestShard($testInfoJson, $testInfo, $delete);
+                          ProcessTestShard($testInfoJson, $testInfo, $delete, $priority);
                           SaveTestInfo($testId, $testInfoJson);
                         }
                         UnlockTest($lock);
@@ -229,6 +244,18 @@ function GetJob() {
                       }
                       if( strlen($script) )
                           $testJson['script'] = $script;
+                      // See if we need to include apk information
+                      if (isset($_REQUEST['apk']) && is_file(__DIR__ . '/update/apk.dat')) {
+                        $apk_info = json_decode(file_get_contents(__DIR__ . '/update/apk.dat'), true);
+                        if (isset($apk_info) && is_array($apk_info) && isset($apk_info['packages']) && is_array($apk_info['packages'])) {
+                          $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+                          $update_path = dirname($_SERVER['PHP_SELF']) . '/update/';
+                          $base_uri = "$protocol://{$_SERVER['HTTP_HOST']}$update_path";
+                          foreach ($apk_info['packages'] as $package => $info)
+                            $apk_info['packages'][$package]['apk_url'] = "$base_uri{$apk_info['packages'][$package]['file_name']}?md5={$apk_info['packages'][$package]['md5']}";
+                          $testJson['apk_info'] = $apk_info;
+                        }
+                      }
                       echo json_encode($testJson);
                   }
                   else
@@ -260,6 +287,9 @@ function GetJob() {
         $testerInfo['GPU'] = @$_GET['GPU'];
         $testerInfo['screenwidth'] = $screenwidth;
         $testerInfo['screenheight'] = $screenheight;
+        $testerInfo['winver'] = $winver;
+        $testerInfo['isWinServer'] = $isWinServer;
+        $testerInfo['isWin64'] = $isWin64;
         $testerInfo['test'] = '';
         if (isset($testId))
             $testerInfo['test'] = $testId;
@@ -306,7 +336,7 @@ function GetVideoJob()
       Unlock($lock);
     }
   }
-  
+
   return $ret;
 }
 
@@ -314,41 +344,49 @@ function GetVideoJob()
 * See if there is a software update
 * 
 */
-function GetUpdate()
-{
-    global $location;
-    $ret = false;
+function GetUpdate() {
+  global $location;
+  global $tester;
+  $ret = false;
+
+  // see if the client sent a version number
+  if ($_GET['ver']) {
+    $fileBase = '';
+    if( isset($_GET['software']) && strlen($_GET['software']) )
+      $fileBase = trim($_GET['software']);
     
-    // see if the client sent a version number
-    if( $_GET['ver'] )
-    {
-        $fileBase = '';
-        if( isset($_GET['software']) && strlen($_GET['software']) )
-            $fileBase = trim($_GET['software']);
+    $updateDir = './work/update';
+    if( is_dir("$updateDir/$location") )
+      $updateDir = "$updateDir/$location";
         
-        $updateDir = './work/update';
-        if( is_dir("$updateDir/$location") )
-            $updateDir = "$updateDir/$location";
-            
-        // see if we have any software updates
-        if( is_file("$updateDir/{$fileBase}update.ini") && is_file("$updateDir/{$fileBase}update.zip") )
-        {
-            $update = parse_ini_file("$updateDir/{$fileBase}update.ini");
+    // see if we have any software updates
+    if (is_file("$updateDir/{$fileBase}update.ini") && is_file("$updateDir/{$fileBase}update.zip")) {
+      $update = parse_ini_file("$updateDir/{$fileBase}update.ini");
 
-            // Check for inequality allows both upgrade and quick downgrade
-            if( $update['ver'] && intval($update['ver']) !== intval($_GET['ver']) )
-            {
-                header('Content-Type: application/zip');
-                header("Cache-Control: no-cache, must-revalidate");
-                header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+      // Check for inequality allows both upgrade and quick downgrade
+      if ($update['ver'] && intval($update['ver']) !== intval($_GET['ver'])) {
+        header('Content-Type: application/zip');
+        header("Cache-Control: no-cache, must-revalidate");
+        header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 
-                readfile_chunked("$updateDir/{$fileBase}update.zip");
-                $ret = true;
-            }
-        }
+        readfile_chunked("$updateDir/{$fileBase}update.zip");
+        $ret = true;
+      }
     }
     
-    return $ret;
+    // Keep track of the number of times in a row we sent down an update
+    if (function_exists('apc_fetch') && function_exists('apc_store')) {
+      $updateCount = apc_fetch("uc-$location-$tester");
+      if (!$updateCount)
+        $updateCount = 0;
+      $oldCount = $updateCount;
+      $updateCount = $ret ? $updateCount + 1 : 0;
+      if ($updateCount != $oldCount)
+        apc_store("uc-$location-$tester", $updateCount, 3600);
+    }
+  }
+  
+  return $ret;
 }
 
 /**
@@ -415,12 +453,12 @@ function CheckCron() {
 * 
 * @param mixed $testInfo
 */
-function ProcessTestShard(&$testInfo, &$test, &$delete) {
+function ProcessTestShard(&$testInfo, &$test, &$delete, $priority) {
   global $supports_sharding;
   global $tester;
   if (array_key_exists('shard_test', $testInfo) && $testInfo['shard_test']) {
     if ((array_key_exists('type', $testInfo) && $testInfo['type'] == 'traceroute') ||
-        !$supports_sharding) {
+        !$supports_sharding || $priority > 0) {
       $testInfo['shard_test'] = 0;
     } else {
       $done = true;
@@ -508,6 +546,16 @@ function GetReboot() {
         }
         break;
       }
+    }
+  }
+
+  // If we sent down more than 3 updates sequentially, reboot the tester
+  if (!$reboot && function_exists('apc_fetch') && function_exists('apc_store')) {
+    $updateCount = apc_fetch("uc-$location-$tester");
+    if ($updateCount && $updateCount >= 3) {
+      $reboot = true;
+      $updateCount = 0;
+      apc_store("uc-$location-$tester", $updateCount, 3600);
     }
   }
   

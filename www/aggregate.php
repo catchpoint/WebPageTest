@@ -2,7 +2,7 @@
 include 'common.inc';
 require_once('page_data.inc');
 require_once('testStatus.inc');
-set_time_limit(300);
+set_time_limit(3600);
 
 $use_median_run = false;
 if (array_key_exists('run', $_REQUEST) && $_REQUEST['run'] == 'median')
@@ -10,11 +10,6 @@ if (array_key_exists('run', $_REQUEST) && $_REQUEST['run'] == 'median')
 
 $tests = null;
 
-// Support multiple versions of output, for backward compatibility
-$version=1;
-if (isset($_REQUEST['ver']) && strlen($_REQUEST['ver']) ) {
-	$version = $_REQUEST['ver'];
-}
 // Allow for status info to be included as well
 $incStatus=0;
 if (isset($_REQUEST['status']) && strlen($_REQUEST['status']) ) {
@@ -68,10 +63,9 @@ if( isset($tests) )
                             'requestsDoc' => 'Requests (Doc)',
                             'loadEventStart' => 'Load Event Start',
                             'SpeedIndex' => 'Speed Index',
-                            'SpeedIndexDT' => 'Speed IndexDT' );
-	if ($version > 1) {
-		$metrics['visualComplete'] = 'Visually Complete';
-	}
+                            'lastVisualChange' => 'Last Visual Change',
+                            'visualComplete' => 'Visually Complete' );
+
 	// If asked, add status info as well
 	if ($incStatus) {
 	    	echo '"Status Code","Elapsed Time","Completed Time","Behind Count","Tests Expected","Tests Completed",';
@@ -84,7 +78,7 @@ if( isset($tests) )
                 echo "\"FV $metric\",";
         } else {
             foreach( $metrics as $metric )
-                echo "\"FV $metric Median\",\"FV $metric Avg\",\"FV $metric Std. Dev\",";
+                echo "\"FV $metric Median\",\"FV $metric Avg\",\"FV $metric Std. Dev\",\"FV $metric Min\",\"FV $metric Max\",";
         }
         if( !$fvOnly )
         {
@@ -95,7 +89,7 @@ if( isset($tests) )
                     echo "\"RV $metric\",";
             } else {
                 foreach( $metrics as $metric )
-                    echo "\"RV $metric Median\",\"RV $metric Avg\",\"RV $metric Std. Dev\",";
+                    echo "\"RV $metric Median\",\"RV $metric Avg\",\"RV $metric Std. Dev\",\"RV $metric Min\",\"RV $metric Max\",";
             }
         }
         foreach( $tests['variations'] as &$variation )
@@ -108,7 +102,7 @@ if( isset($tests) )
                     echo "\"$label FV $metric\",";
             } else {
                 foreach( $metrics as $metric )
-                    echo "\"$label FV $metric Median\",\"$label FV $metric Avg\",\"$label FV $metric Std. Dev\",";
+                    echo "\"$label FV $metric Median\",\"$label FV $metric Avg\",\"$label FV $metric Std. Dev\",\"$label FV $metric Min\",\"$label FV $metric Max\",";
             }
             if( !$fvOnly )
             {
@@ -119,7 +113,7 @@ if( isset($tests) )
                         echo "\"$label RV $metric\",";
                 } else {
                     foreach( $metrics as $metric )
-                        echo "\"$label RV $metric Median\",\"$label RV $metric Avg\",\"$label RV $metric Std. Dev\",";
+                        echo "\"$label RV $metric Median\",\"$label RV $metric Avg\",\"$label RV $metric Std. Dev\",\"$label RV $metric Min\",\"$label RV $metric Max\",";
                 }
             }
         }
@@ -167,8 +161,8 @@ if( isset($tests) )
                         if ($use_median_run) {
                             echo "\"{$pageData[$median_run][$cacheVal][$metric]}\",";
                         } else {
-                            CalculateAggregateStats($pageData, $cacheVal, $metric, $median, $avg, $stdDev);
-                            echo "\"$median\",\"$avg\",\"$stdDev\",";
+                            CalculateAggregateStats($pageData, $cacheVal, $metric, $median, $avg, $stdDev, $min, $max);
+                            echo "\"$median\",\"$avg\",\"$stdDev\",\"$min\",\"$max\",";
                         }
                     }
                 }
@@ -196,8 +190,8 @@ if( isset($tests) )
                                 if ($use_median_run) {
                                     echo "\"{$pageData[$median_run][$cacheVal][$metric]}\",";
                                 } else {
-                                    CalculateAggregateStats($pageData, $cacheVal, $metric, $median, $avg, $stdDev);
-                                    echo "\"$median\",\"$avg\",\"$stdDev\",";
+                                    CalculateAggregateStats($pageData, $cacheVal, $metric, $median, $avg, $stdDev, $min, $max);
+                                    echo "\"$median\",\"$avg\",\"$stdDev\",\"$min\",\"$max\",";
                                 }
                             }
                         }
