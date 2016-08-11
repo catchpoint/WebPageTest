@@ -165,21 +165,6 @@ function createGradeArray($scores) {
 }
 
 /**
-* Generate a grade for the TTFB
-*
-* @param mixed $id
-* @param mixed $run
-*/
-function gradeTTFB(&$pageData, &$test, $id, $run, $cached, &$target)
-{
-  $ttfb = (int)$pageData['TTFB'];
-  $latency = isset($test['testinfo']['latency']) ? $test['testinfo']['latency'] : null;
-  $testPath = './' . GetTestPath($id);
-  $localPaths = new TestPaths($testPath, $id, $run, $cached, 1);
-  return gradeTTFBForStep($ttfb, $latency, $localPaths, $target);
-}
-
-/**
  * @param int $ttfb The TTFB of this step
  * @param int|null $latency The latency or null if it's unknown
  * @param TestPaths $localPaths Paths corresponding to this step
