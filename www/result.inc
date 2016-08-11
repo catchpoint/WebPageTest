@@ -5,6 +5,7 @@ require_once __DIR__ . '/testStatus.inc';
 require_once __DIR__ . '/common.inc';
 require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/include/TestResults.php';
+require_once __DIR__ . '/include/RunResultHtmlTable.php';
 
 $breakdown = array();
 $video = false;
@@ -149,149 +150,24 @@ $page_description = "Website performance test result$testLabel.";
                 $fvMedian = $testResults->getMedianRunNumber($median_metric, false);
                 $rvMedian = $testResults->getMedianRunNumber($median_metric, true);
                 $is_test_error = $testInfo->isTestError();
-                if( $fvMedian  )
+                if ($fvMedian)
                 {
                     if ($testResults->countRuns() > 1)
                         echo '<h2>Performance Results (Median Run)</h2>';
-                ?>
-                    <table id="tableResults" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
-                    <tr>
-                        <?php
-                        $cols = 3;
-                        if (array_key_exists('userTime', $pageData[$fvMedian][0]) && (float)$pageData[$fvMedian][0]['userTime'] > 0.0)
-                            $cols++;
-                        if (array_key_exists('domTime', $pageData[$fvMedian][0]) && (float)$pageData[$fvMedian][0]['domTime'] > 0.0)
-                            $cols++;
-                        if (array_key_exists('domElements', $pageData[$fvMedian][0]) && $pageData[$fvMedian][0]['domElements'] > 0)
-                            $cols++;
-                        if((array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0) ||
-                           (array_key_exists('SpeedIndexDT', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndexDT'] > 0))
-                            $cols++;
-                        ?>
-                        <th align="center" class="empty" valign="middle" style="border:1px white solid;"></th>
-                        <?php
-                        echo "<th align=\"center\" class=\"empty\" valign=\"middle\" colspan=\"$cols\"></th>\n";
-                        echo '<th align="center" class="border" valign="middle" colspan="3">Document Complete</th>';
-                        if (GetSetting('show_cost'))
-                          echo '<th align="center" class="border" valign="middle" colspan="4">Fully Loaded</th>';
-                        else
-                          echo '<th align="center" class="border" valign="middle" colspan="3">Fully Loaded</th>';
-                        ?>
-                    </tr>
-                    <tr>
-                        <th align="center" class="empty" valign="middle"></th>
-                        <th align="center" valign="middle">Load Time</th>
-                        <th align="center" valign="middle">First Byte</th>
-                        <th align="center" valign="middle">Start Render</th>
-                        <?php if(array_key_exists('userTime', $pageData[$fvMedian][0]) && (float)$pageData[$fvMedian][0]['userTime'] > 0.0) { ?>
-                        <th align="center" valign="middle">User Time</th>
-                        <?php } ?>
-                        <?php if((array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0) || 
-                                 (array_key_exists('SpeedIndexDT', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndexDT'] > 0)){ ?>
-                        <th align="center" valign="middle"><a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a></th>
-                        <?php } ?>
-                        <?php if(array_key_exists('domTime', $pageData[$fvMedian][0]) && (float)$pageData[$fvMedian][0]['domTime'] > 0.0) { ?>
-                        <th align="center" valign="middle">DOM Element</th>
-                        <?php } ?>
-                        <?php if(array_key_exists('domElements', $pageData[$fvMedian][0]) && $pageData[$fvMedian][0]['domElements'] > 0) { ?>
-                        <th align="center" valign="middle">DOM Elements</th>
-                        <?php } ?>
+                    $fvRunResults = $testResults->getRunResult($fvMedian, false);
+                    $rvRunResults = $rvMedian ? $testResults->getRunResult($rvMedian, true) : null;
+                    $resultTable = new RunResultHtmlTable($testInfo, $fvRunResults, $rvRunResults);
+                    $resultTable->disableColumns(array(
+                      RunResultHtmlTable::COL_ABOVE_THE_FOLD,
+                      RunResultHtmlTable::COL_VISUAL_COMPLETE,
+                      RunResultHtmlTable::COL_RESULT
+                    ));
+                    if (GetSetting('show_cost')) {
+                        $resultTable->enableColumns(array(RunResultHtmlTable::COL_COST));
+                    }
+                    echo $resultTable->create();
 
-                        <th align="center" class="border" valign="middle">Time</th>
-                        <th align="center" valign="middle">Requests</th>
-                        <th align="center" valign="middle">Bytes In</th>
-
-                        <th align="center" class="border" valign="middle">Time</th>
-                        <th align="center" valign="middle">Requests</th>
-                        <th align="center" valign="middle">Bytes In</th>
-                        <?php
-                        if (GetSetting('show_cost'))
-                          echo '<th align="center" valign="middle">Cost</th>';
-                        ?>
-                    </tr>
-                    <tr>
-                        <td align="left" valign="middle">First View
-                        <?php
-                        if( count($pageData) > 1) 
-                            echo " (<a href=\"#run$fvMedian\">Run $fvMedian</a>)";
-                        echo "</td><td id=\"fvLoadTime\" valign=\"middle\">" . formatMsInterval($pageData[$fvMedian][0]['loadTime'], 3) . "</td>\n";
-                        echo "<td id=\"fvTTFB\" valign=\"middle\">" . formatMsInterval($pageData[$fvMedian][0]['TTFB'], 3) . "</td>\n";
-                        echo "<td id=\"fvStartRender\" valign=\"middle\">" . formatMsInterval($pageData[$fvMedian][0]['render'], 3) . "</td>\n";
-                        if(array_key_exists('userTime', $pageData[$fvMedian][0]) && (float)$pageData[$fvMedian][0]['userTime'] > 0.0)
-                            echo "<td id=\"fvUserTime\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['userTime'] / 1000.0, 3) . "s</td>\n";
-                        if(array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0) {
-                            if(array_key_exists('SpeedIndexCustom', $pageData[$fvMedian][0]))
-                                echo "<td id=\"fvVisual\" valign=\"middle\">{$pageData[$fvMedian][0]['SpeedIndexCustom']}</td>\n";
-                            else
-                                echo "<td id=\"fvVisual\" valign=\"middle\">{$pageData[$fvMedian][0]['SpeedIndex']}</td>\n";
-                        } elseif(array_key_exists('SpeedIndexDT', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndexDT'] > 0) {
-                            echo "<td id=\"fvVisual\" valign=\"middle\">{$pageData[$fvMedian][0]['SpeedIndexDT']}</td>\n";
-                        }
-                        if(array_key_exists('domTime', $pageData[$fvMedian][0]) && (float)$pageData[$fvMedian][0]['domTime'] > 0.0)
-                            echo "<td id=\"fvDomElement\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['domTime'] / 1000.0, 3) . "s</td>\n";
-                        if(array_key_exists('domElements', $pageData[$fvMedian][0]) && $pageData[$fvMedian][0]['domElements'] > 0)
-                            echo "<td id=\"fvDomElements\" valign=\"middle\">{$pageData[$fvMedian][0]['domElements']}</td>\n";
-
-                        echo "<td id=\"fvDocComplete\" class=\"border\" valign=\"middle\">" . formatMsInterval($pageData[$fvMedian][0]['docTime'], 3) . "</td>\n";
-                        echo "<td id=\"fvRequestsDoc\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['requestsDoc'],0) . "</td>\n";
-                        echo "<td id=\"fvBytesDoc\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['bytesInDoc'] / 1024, 0) . " KB</td>\n";
-
-                        echo "<td id=\"fvFullyLoaded\" class=\"border\" valign=\"middle\">" . formatMsInterval($pageData[$fvMedian][0]['fullyLoaded'], 3) . "</td>\n";
-                        echo "<td id=\"fvRequests\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['requests'],0) . "</td>\n";
-                        echo "<td id=\"fvBytes\" valign=\"middle\">" . number_format($pageData[$fvMedian][0]['bytesIn'] / 1024, 0) . " KB</td>\n";
-                        if (GetSetting('show_cost')) {
-                          echo "<td id=\"fvCost\" valign=\"middle\"><a title=\"Find out how much it costs for someone to use your site on mobile networks around the world.\" href=\"http://whatdoesmysitecost.com/test/$id\">";
-                          // one dollar sign for every 500KB
-                          $count = max(1, min(5, ceil($pageData[$fvMedian][0]['bytesIn'] / (500 * 1024))));
-                          for ($i = 1; $i <= 5; $i++)
-                            echo $i <= $count ? '$' : '-';
-                          echo "</a></td>\n";
-                        }
-                        ?>
-                    </tr>
-                    <?php if( $rvMedian ) { ?>
-                    <tr>
-                        <td align="left" class="even" valign="middle">Repeat View
-                        <?php
-                        if( count($pageData) > 1) 
-                            echo " (<a href=\"#run$rvMedian\">Run $rvMedian</a>)";
-                        echo "</td><td id=\"rvLoadTime\" class=\"even\" valign=\"middle\">" . formatMsInterval($pageData[$rvMedian][1]['loadTime'], 3) . "</td>\n";
-                        echo "<td id=\"rvTTFB\" class=\"even\" valign=\"middle\">" . formatMsInterval($pageData[$rvMedian][1]['TTFB'], 3) . "</td>\n";
-                        echo "<td id=\"rvStartRender\" class=\"even\" valign=\"middle\">" . formatMsInterval($pageData[$rvMedian][1]['render'], 3) . "</td>\n";
-                        if(array_key_exists('userTime', $pageData[$fvMedian][0]) && (float)$pageData[$fvMedian][0]['userTime'] > 0.0)
-                            echo "<td id=\"rvUserTime\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['userTime'] / 1000.0, 3) . "s</td>\n";
-                        if(array_key_exists('SpeedIndex', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndex'] > 0) {
-                            $disp = '-';
-                            if(array_key_exists('SpeedIndex', $pageData[$rvMedian][1]) && (int)$pageData[$rvMedian][1]['SpeedIndex'] > 0)
-                                $disp = $pageData[$rvMedian][1]['SpeedIndex'];
-                            echo "<td id=\"rvVisual\" class=\"even\" valign=\"middle\">$disp</td>\n";
-                        } elseif (array_key_exists('SpeedIndexDT', $pageData[$fvMedian][0]) && (int)$pageData[$fvMedian][0]['SpeedIndexDT'] > 0) {
-                            $disp = '-';
-                            if(array_key_exists('SpeedIndexDT', $pageData[$rvMedian][1]) && (int)$pageData[$rvMedian][1]['SpeedIndexDT'] > 0)
-                                $disp = $pageData[$rvMedian][1]['SpeedIndexDT'];
-                            echo "<td id=\"rvVisual\" class=\"even\" valign=\"middle\">$disp</td>\n";
-                        }
-                        if(array_key_exists('domTime', $pageData[$fvMedian][0]) && (float)$pageData[$fvMedian][0]['domTime'] > 0.0)
-                            echo "<td id=\"rvDomElement\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['domTime'] / 1000.0, 3) . "s</td>\n";
-                        if(array_key_exists('domElements', $pageData[$fvMedian][0]) && $pageData[$fvMedian][0]['domElements'] > 0)
-                            echo "<td id=\"rvDomElements\" class=\"even\" valign=\"middle\">{$pageData[$rvMedian][1]['domElements']}</td>\n";
-
-                        echo "<td id=\"rvDocComplete\" class=\"even border\" valign=\"middle\">" . formatMsInterval($pageData[$rvMedian][1]['docTime'], 3) . "</td>\n";
-                        echo "<td id=\"rvRequestsDoc\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['requestsDoc'],0) . "</td>\n";
-                        echo "<td id=\"rvBytesDoc\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['bytesInDoc'] / 1024, 0) . " KB</td>\n";
-
-                        echo "<td id=\"rvFullyLoaded\" class=\"even border\" valign=\"middle\">" . formatMsInterval($pageData[$rvMedian][1]['fullyLoaded'], 3) . "</td>\n";
-                        echo "<td id=\"rvRequests\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['requests'],0) . "</td>\n";
-                        echo "<td id=\"rvBytes\" class=\"even\" valign=\"middle\">" . number_format($pageData[$rvMedian][1]['bytesIn'] / 1024, 0) . " KB</td>\n";
-                        if (GetSetting('show_cost')) {
-                          echo '<td></td>';
-                        }
-                        ?>
-                    </tr>
-                    <?php } ?>
-                    </table>
-                    <?php
-                    if (count($pageData) > 1) {
+                    if ($testResults->countRuns() > 1) {
                         echo "<a href=\"/graph_page_data.php?tests=$id&medianMetric=$median_metric\">Plot Full Results</a>";
                     }
                     ?>
@@ -347,8 +223,8 @@ $page_description = "Website performance test result$testLabel.";
 		?>
 		    </table><br>
 		<?php
-		    }
-                }
+		    } // csi
+                } // fbMedian
                 if (!$fvMedian || $is_test_error) {
                     $error = 'The test completed but there were no successful results.';
                     $detail = null;
