@@ -190,7 +190,6 @@ class RunResultHtmlTable {
   private function _createRow($stepResult, $row) {
     $stepNum = $stepResult->getStepNumber();
     $cachedRun = $stepResult->isCachedRun();
-    $runNumber = $stepResult->getRunNumber();
     $idPrefix = "";
     $class = $row % 2 == 0 ? "even" : null;
     if ($this->rvRunResults) {
@@ -199,7 +198,7 @@ class RunResultHtmlTable {
     $idSuffix = $this->isMultistep ? ("-step" . $stepNum) : "";
     $out = "<tr>\n";
     if ($this->isColumnEnabled(self::COL_LABEL)) {
-      $out .= $this->_bodyCell("", $this->_createLabelColumnText($stepResult), $class);
+      $out .= $this->_bodyCell("", $this->_labelColumnText($stepResult), $class);
     }
     $out .= $this->_bodyCell($idPrefix . "LoadTime" . $idSuffix, $this->_getIntervalMetric($stepResult, 'loadTime'), $class);
     $out .= $this->_bodyCell($idPrefix . "TTFB" . $idSuffix, $this->_getIntervalMetric($stepResult, 'TTFB'), $class);
@@ -248,15 +247,7 @@ class RunResultHtmlTable {
       if ($cachedRun) {
         $out .= "<td>&nbsp;</td>";
       } else {
-        // one dollar sign for every 500KB
-        $dollars = "";
-        $count = max(1, min(5, ceil($stepResult->getMetric("bytesIn")/ (500 * 1024))));
-        for ($i = 1; $i <= 5; $i++)
-          $dollars .= $i <= $count ? '$' : '-';
-        $id = $this->testInfo->getId();
-        $text = "<a title=\"Find out how much it costs for someone to use your site on mobile networks around the world.\" " .
-                "href=\"http://whatdoesmysitecost.com/test/$id\">$dollars</a>";
-        $out .= $this->_bodyCell($idPrefix . "Cost" . $idSuffix, $text, $class);
+        $out .= $this->_bodyCell($idPrefix . "Cost" . $idSuffix, $this->_costColumnText($stepResult), $class);
       }
     }
 
@@ -318,7 +309,7 @@ class RunResultHtmlTable {
    * @param TestStepResult $stepResult
    * @return string
    */
-  private function _createLabelColumnText($stepResult) {
+  private function _labelColumnText($stepResult) {
     $runNumber = $stepResult->getRunNumber();
     if (!$this->isMultistep) {
       return $this->_rvLabel($stepResult->isCachedRun(), $runNumber);
@@ -328,5 +319,21 @@ class RunResultHtmlTable {
       $label = "<a href='#run" . $runNumber . "_step" . $stepResult->getStepNumber() . "'>" . $label . "</a>";
     }
     return $label;
+  }
+
+  /**
+   * @param $stepResult
+   * @return string
+   */
+  private function _costColumnText($stepResult) {
+    // one dollar sign for every 500KB
+    $dollars = "";
+    $count = max(1, min(5, ceil($stepResult->getMetric("bytesIn") / (500 * 1024))));
+    for ($i = 1; $i <= 5; $i++)
+      $dollars .= $i <= $count ? '$' : '-';
+    $id = $this->testInfo->getId();
+    $text = "<a title=\"Find out how much it costs for someone to use your site on mobile networks around the world.\" " .
+      "href=\"http://whatdoesmysitecost.com/test/$id\">$dollars</a>";
+    return $text;
   }
 }
