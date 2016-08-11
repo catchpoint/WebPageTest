@@ -18,6 +18,7 @@ class RunResultHtmlTable {
   private $testInfo;
   /* @var TestRunResults */
   private $runResults;
+  private $rvRunResults;
 
   private $isMultistep;
 
@@ -28,23 +29,26 @@ class RunResultHtmlTable {
    * RunResultHtmlTable constructor.
    * @param TestInfo $testInfo
    * @param TestRunResults $runResults
+   * @param TestRunResults $rvRunResults Optional. Run results of the repeat view
    */
-  public function __construct($testInfo, $runResults) {
+  public function __construct($testInfo, $runResults, $rvRunResults=null) {
     $this->testInfo = $testInfo;
     $this->runResults = $runResults;
+    $this->rvRunResults = $rvRunResults;
     $this->isMultistep = $runResults->isMultistep();
     $this->allOptionalColumns = array(self::COL_LABEL, self::COL_ABOVE_THE_FOLD, self::COL_USER_TIME,
       self::COL_DOM_TIME, self::COL_DOM_ELEMENTS, self::COL_SPEED_INDEX, self::COL_VISUAL_COMPLETE, self::COL_RESULT);
     $this->enabledColumns = array();
 
     // optional columns default setting based on data
-    $this->enabledColumns[self::COL_LABEL] = $this->isMultistep;
+    $this->enabledColumns[self::COL_LABEL] = $this->isMultistep || $this->rvRunResults;
     $this->enabledColumns[self::COL_ABOVE_THE_FOLD] = $testInfo->hasAboveTheFoldTime();
     $this->enabledColumns[self::COL_RESULT] = true;
     $checkByMetric = array(self::COL_USER_TIME, self::COL_DOM_TIME, self::COL_DOM_ELEMENTS, self::COL_SPEED_INDEX,
                            self::COL_VISUAL_COMPLETE);
     foreach ($checkByMetric as $col) {
-      $this->enabledColumns[$col] = $runResults->hasValidMetric($col);
+      $this->enabledColumns[$col] = $runResults->hasValidMetric($col) ||
+                                   ($rvRunResults && $rvRunResults->hasValidMetric($col));
     }
   }
 
@@ -92,7 +96,11 @@ class RunResultHtmlTable {
 
     $out .= "<tr>";
     if ($this->isColumnEnabled(self::COL_LABEL)) {
-      $out .= $this->_headCell("Step");
+      if ($this->isMultistep) {
+        $out .= $this->_headCell("Step");
+      } else {
+        $out .= $this->_headCell("", "empty", 1);
+      }
     }
     $out .= $this->_headCell("Load Time");
     $out .= $this->_headCell("First Byte");
@@ -130,64 +138,97 @@ class RunResultHtmlTable {
 
   private function _createBody() {
     $out = "";
+    if ($this->isMultistep && $this->rvRunResults) {
+      $out .= $this->_headlineRow($this->rvRunResults->isCachedRun(), $this->runResults->getRunNumber());
+    }
     for ($i = 1; $i <= $this->runResults->countSteps(); $i++) {
-      $out .= $this->_createRow($this->runResults->getStepResult($i));
+      $out .= $this->_createRow($this->runResults->getStepResult($i), $i);
+    }
+    if ($this->rvRunResults) {
+      if ($this->isMultistep) {
+        $out .= $this->_headlineRow($this->rvRunResults->isCachedRun(), $this->rvRunResults->getRunNumber());
+      }
+      for ($i = 1; $i <= $this->rvRunResults->countSteps(); $i++) {
+        $out .= $this->_createRow($this->rvRunResults->getStepResult($i), $i);
+      }
     }
     return $out;
   }
 
+  private function _headlineRow($isRepeatView, $runNumber) {
+    $label = $this->_rvLabel($isRepeatView, $runNumber);
+    $colspan = 9 + $this->_countEnabledColumns();
+    return "<tr><td colspan='$colspan'>$label</td></tr>\n";
+  }
+
+  private function _rvLabel($isRepeatView, $runNumber) {
+    $label = $isRepeatView ? "Repeat View" : "First View";
+    $label .= $this->testInfo->getRuns() > 1 ? " (<a href='#run$runNumber'>Run $runNumber</a>)" : "";
+    return $label;
+  }
+
   /**
    * @param TestStepResult $stepResult
+   * @param int $row Row number
    * @return string HTML Table row
    */
-  private function _createRow($stepResult) {
+  private function _createRow($stepResult, $row) {
     $stepNum = $stepResult->getStepNumber();
+    $cachedRun = $stepResult->isCachedRun();
+    $runNumber = $stepResult->getRunNumber();
+    $idPrefix = "";
+    $class = $row % 2 == 0 ? "even" : null;
+    if ($this->rvRunResults) {
+      $idPrefix = $stepResult->isCachedRun() ? "rv" : "fv";
+    }
     $idSuffix = $this->isMultistep ? ("-step" . $stepNum) : "";
     $out = "<tr>\n";
     if ($this->isColumnEnabled(self::COL_LABEL)) {
-      $out .= $this->_bodyCell("", FitText($stepResult->readableIdentifier(), 30));
+      $label = $this->isMultistep ? FitText($stepResult->readableIdentifier(), 30) : $this->_rvLabel($cachedRun, $runNumber);
+      $out .= $this->_bodyCell("", $label, $class);
     }
-    $out .= $this->_bodyCell("LoadTime" . $idSuffix, $this->_getIntervalMetric($stepResult, 'loadTime'));
-    $out .= $this->_bodyCell("TTFB" . $idSuffix, $this->_getIntervalMetric($stepResult, 'TTFB'));
-    $out .= $this->_bodyCell("startRender" . $idSuffix, $this->_getIntervalMetric($stepResult, 'render'));
+    $out .= $this->_bodyCell($idPrefix . "LoadTime" . $idSuffix, $this->_getIntervalMetric($stepResult, 'loadTime'), $class);
+    $out .= $this->_bodyCell($idPrefix . "TTFB" . $idSuffix, $this->_getIntervalMetric($stepResult, 'TTFB'), $class);
+    $out .= $this->_bodyCell($idPrefix . "StartRender" . $idSuffix, $this->_getIntervalMetric($stepResult, 'render'), $class);
 
     if ($this->isColumnEnabled(self::COL_USER_TIME)) {
-      $out .= $this->_bodyCell("userTime" . $idSuffix, $this->_getIntervalMetric($stepResult, "userTime"));
+      $out .= $this->_bodyCell($idPrefix . "UserTime" . $idSuffix, $this->_getIntervalMetric($stepResult, "userTime"), $class);
     }
     if ($this->isColumnEnabled(self::COL_ABOVE_THE_FOLD)) {
       $aft = $stepResult->getMetric("aft");
       $aft = $aft !== null ? (number_format($aft / 1000.0, 1) . 's') : "N/A";
-      $out .= $this->_bodyCell("aft" . $idSuffix, $aft);
+      $out .= $this->_bodyCell($idPrefix . "aft" . $idSuffix, $aft, $class);
     }
     if ($this->isColumnEnabled(self::COL_VISUAL_COMPLETE)) {
-      $out .= $this->_bodyCell("visualComplete" . $idSuffix, $this->_getIntervalMetric($stepResult, "visualComplete"));
+      $out .= $this->_bodyCell($idPrefix. "visualComplete" . $idSuffix, $this->_getIntervalMetric($stepResult, "visualComplete"), $class);
     }
     if($this->isColumnEnabled(self::COL_SPEED_INDEX)) {
       $speedIndex = $stepResult->getMetric("SpeedIndexCustom");
       $speedIndex = $speedIndex !== null ? $speedIndex : $stepResult->getMetric("SpeedIndex");
       $speedIndex = $speedIndex !== null ? $speedIndex : "-";
-      $out .= $this->_bodyCell("speedIndex" . $idSuffix, $speedIndex);
+      $out .= $this->_bodyCell($idPrefix . "SpeedIndex" . $idSuffix, $speedIndex, $class);
     }
     if ($this->isColumnEnabled(self::COL_DOM_TIME)) {
-      $out .= $this->_bodyCell("domTime" . $idSuffix, $this->_getIntervalMetric($stepResult, "domTime"));
+      $out .= $this->_bodyCell($idPrefix . "DomTime" . $idSuffix, $this->_getIntervalMetric($stepResult, "domTime"), $class);
     }
     if ($this->isColumnEnabled(self::COL_DOM_ELEMENTS)) {
       $domElements = $stepResult->getMetric("domElements");
       $domElements = $domElements !== null ? $domElements : "-";
-      $out .= $this->_bodyCell("domElements" . $idSuffix, $domElements);
+      $out .= $this->_bodyCell($idPrefix . "DomElements" . $idSuffix, $domElements, $class);
     }
     if ($this->isColumnEnabled(self::COL_RESULT)) {
-      $out .= $this->_bodyCell("result" . $idSuffix, $this->_getSimpleMetric($stepResult, "result"));
+      $out .= $this->_bodyCell($idPrefix . "result" . $idSuffix, $this->_getSimpleMetric($stepResult, "result"), $class);
     }
 
-    $out .= $this->_bodyCell("docComplete" . $idSuffix, $this->_getIntervalMetric($stepResult, "docTime"), "border");
-    $out .= $this->_bodyCell("requestsDoc" . $idSuffix, $this->_getSimpleMetric($stepResult, "requestsDoc"));
-    $out .= $this->_bodyCell("bytesInDoc" . $idSuffix, $this->_getByteMetricInKbyte($stepResult, "bytesInDoc"));
+    $borderClass = $class ? ("border " . $class) : "border";
+    $out .= $this->_bodyCell($idPrefix . "DocComplete" . $idSuffix, $this->_getIntervalMetric($stepResult, "docTime"), $borderClass);
+    $out .= $this->_bodyCell($idPrefix . "RequestsDoc" . $idSuffix, $this->_getSimpleMetric($stepResult, "requestsDoc"), $class);
+    $out .= $this->_bodyCell($idPrefix . "BytesInDoc" . $idSuffix, $this->_getByteMetricInKbyte($stepResult, "bytesInDoc"), $class);
 
 
-    $out .= $this->_bodyCell("fullyLoaded" . $idSuffix, $this->_getIntervalMetric($stepResult, "fullyLoaded"), "border");
-    $out .= $this->_bodyCell("requests" . $idSuffix, $this->_getSimpleMetric($stepResult, "requests"));
-    $out .= $this->_bodyCell("bytesIn" . $idSuffix, $this->_getByteMetricInKbyte($stepResult, "bytesIn"));
+    $out .= $this->_bodyCell($idPrefix . "FullyLoaded" . $idSuffix, $this->_getIntervalMetric($stepResult, "fullyLoaded"), $borderClass);
+    $out .= $this->_bodyCell($idPrefix . "Requests" . $idSuffix, $this->_getSimpleMetric($stepResult, "requests"), $class);
+    $out .= $this->_bodyCell($idPrefix . "BytesIn" . $idSuffix, $this->_getByteMetricInKbyte($stepResult, "bytesIn"), $class);
 
     $out .= "</tr>\n";
     return $out;
