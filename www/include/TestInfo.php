@@ -159,4 +159,11 @@ class TestInfo {
     }
     return false;
   }
+
+  /**
+   * @return bool True if the test is marked as an test_error, false otherwise
+   */
+  public function isTestError() {
+    return !empty($this->rawData['test_error']);
+  }
 }

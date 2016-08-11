@@ -78,4 +78,15 @@ class TestInfoTest extends PHPUnit_Framework_TestCase {
     $testInfo = TestInfo::fromValues("test", "/test/root", array("test" => array("aft" => 1)));
     $this->assertTrue($testInfo->hasAboveTheFoldTime());
   }
+
+  public function testIsTestError() {
+    $testInfo = TestInfo::fromValues("test", "/test/root", array());
+    $this->assertFalse($testInfo->isTestError());
+
+    $testInfo = TestInfo::fromValues("test", "/test/root", array("test_error" => ""));
+    $this->assertFalse($testInfo->isTestError());
+
+    $testInfo = TestInfo::fromValues("test", "/test/root", array("test_error" => 1));
+    $this->assertTrue($testInfo->isTestError());
+  }
 }
