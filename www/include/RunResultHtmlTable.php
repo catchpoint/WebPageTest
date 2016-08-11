@@ -26,6 +26,7 @@ class RunResultHtmlTable {
   private $leftOptionalColumns;
   private $rightOptionalColumns;
   private $enabledColumns;
+  private $enableLabelLinks;
 
   /**
    * RunResultHtmlTable constructor.
@@ -53,6 +54,13 @@ class RunResultHtmlTable {
       $this->enabledColumns[$col] = $runResults->hasValidMetric($col) ||
                                    ($rvRunResults && $rvRunResults->hasValidMetric($col));
     }
+  }
+
+  /**
+   * @param bool $use True to use links for the labels, false otherwise
+   */
+  public function useLabelLinks($use) {
+    $this->enableLabelLinks = $use;
   }
 
   /**
@@ -146,7 +154,7 @@ class RunResultHtmlTable {
   private function _createBody() {
     $out = "";
     if ($this->isMultistep && $this->rvRunResults) {
-      $out .= $this->_headlineRow($this->rvRunResults->isCachedRun(), $this->runResults->getRunNumber());
+      $out .= $this->_headlineRow($this->runResults->isCachedRun(), $this->runResults->getRunNumber());
     }
     for ($i = 1; $i <= $this->runResults->countSteps(); $i++) {
       $out .= $this->_createRow($this->runResults->getStepResult($i), $i);
@@ -191,8 +199,7 @@ class RunResultHtmlTable {
     $idSuffix = $this->isMultistep ? ("-step" . $stepNum) : "";
     $out = "<tr>\n";
     if ($this->isColumnEnabled(self::COL_LABEL)) {
-      $label = $this->isMultistep ? FitText($stepResult->readableIdentifier(), 30) : $this->_rvLabel($cachedRun, $runNumber);
-      $out .= $this->_bodyCell("", $label, $class);
+      $out .= $this->_bodyCell("", $this->_createLabelColumnText($stepResult), $class);
     }
     $out .= $this->_bodyCell($idPrefix . "LoadTime" . $idSuffix, $this->_getIntervalMetric($stepResult, 'loadTime'), $class);
     $out .= $this->_bodyCell($idPrefix . "TTFB" . $idSuffix, $this->_getIntervalMetric($stepResult, 'TTFB'), $class);
@@ -305,5 +312,21 @@ class RunResultHtmlTable {
   private function _getByteMetricInKbyte($step, $metric) {
     $value = $step->getMetric($metric);
     return $value !== null ? number_format($value / 1024, 0) . " KB" : "-";
+  }
+
+  /**
+   * @param TestStepResult $stepResult
+   * @return string
+   */
+  private function _createLabelColumnText($stepResult) {
+    $runNumber = $stepResult->getRunNumber();
+    if (!$this->isMultistep) {
+      return $this->_rvLabel($stepResult->isCachedRun(), $runNumber);
+    }
+    $label = FitText($stepResult->readableIdentifier(), 30);
+    if ($this->enableLabelLinks) {
+      $label = "<a href='#run" . $runNumber . "_step" . $stepResult->getStepNumber() . "'>" . $label . "</a>";
+    }
+    return $label;
   }
 }
