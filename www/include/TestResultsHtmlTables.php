@@ -57,16 +57,8 @@ class TestResultsHtmlTables {
     $table_columns = $this->_createTableHead();
     echo '<tr>';
     if (array_key_exists($run, $pageData) && array_key_exists(0, $pageData[$run]) && count($pageData[$run][0])) {
-      echo '<td align="left" valign="middle">First View';
       $stepResult = $this->testResults->getRunResult($run, false)->getStepResult(1);
-      echo $this->_getResultLabel($stepResult);
-      echo $this->_getDynatraceLinks($stepResult);
-      echo $this->_getCaptureLinks($stepResult, $tcpDumpView);
-      echo $this->_getTimelineLinks($stepResult);
-      echo $this->_getTraceLinks($stepResult);
-      echo $this->_getNetlogLinks($stepResult);
-      echo "</td>\n";
-
+      $this->_createResultCell($stepResult, $tcpDumpView, false);
       $this->_createWaterfallCell($stepResult, false);
       if ($this->hasScreenshots) {
         $this->_createScreenshotCell($stepResult, false);
@@ -82,18 +74,9 @@ class TestResultsHtmlTables {
       echo '<tr>';
       if (isset($pageData[$run][1])) {
         if (array_key_exists($run, $pageData) && array_key_exists(1, $pageData[$run]) && count($pageData[$run][1])) {
-          echo '<td align="left" class="even" valign="middle">Repeat View';
           $stepResult = $this->testResults->getRunResult($run, true)->getStepResult(1);
-          echo $this->_getResultLabel($stepResult);
-          echo $this->_getDynatraceLinks($stepResult);
-          echo $this->_getCaptureLinks($stepResult, $tcpDumpView);
-          echo $this->_getTimelineLinks($stepResult);
-          echo $this->_getTraceLinks($stepResult);
-          echo $this->_getNetlogLinks($stepResult);
-          echo '</td>';
-
+          $this->_createResultCell($stepResult, $tcpDumpView, true);
           $this->_createWaterfallCell($stepResult, true);
-
           if ($this->hasScreenshots) {
             $this->_createScreenshotCell($stepResult, true);
           }
@@ -175,7 +158,25 @@ class TestResultsHtmlTables {
     }
     echo '</tr>';
     return $table_columns;
-}
+  }
+
+  /**
+   * @param TestStepResult $stepResult
+   * @param string|null $tcpDumpView TcpDumpView URL from settings or null
+   * @param bool $even true for even rows
+   */
+  private function _createResultCell($stepResult, $tcpDumpView, $even) {
+    $class = $even ? "class='even'" : "";
+    echo "<td align=\"left\" $class valign=\"middle\">\n";
+    echo $stepResult->isCachedRun() ? "Repeat View" : "First View";
+    echo $this->_getResultLabel($stepResult);
+    echo $this->_getDynatraceLinks($stepResult);
+    echo $this->_getCaptureLinks($stepResult, $tcpDumpView);
+    echo $this->_getTimelineLinks($stepResult);
+    echo $this->_getTraceLinks($stepResult);
+    echo $this->_getNetlogLinks($stepResult);
+    echo '</td>';
+  }
 
   /**
    * @param TestStepResult $stepResult
