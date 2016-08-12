@@ -239,15 +239,13 @@ class TestResultsHtmlTables {
         if (is_array($b)) {
           $this->breakdown[] = array('run' => $stepResult->getRunNumber(), 'data' => $b);
         }
-        ?>
-      <tr>
-        <td align="left" valign="middle">
-          <?php
+
+            echo "<tr>\n";
+            echo "<td align=\"left\" valign=\"middle\">\n";
             $breakdownUrl = $urlGenerator->resultPage("breakdown");
             echo "<a href=\"$breakdownUrl\">Content Breakdown</a>";
-          ?>
-        </td>
-        <?php
+            echo "</td>";
+
         $span = 2;
         if ($stepResult->getMetric('optimization_checked'))
           $span++;
@@ -259,11 +257,8 @@ class TestResultsHtmlTables {
         $run = $stepResult->getRunNumber();
         echo "<table><tr><td style=\"border:none;\"><div id=\"requests_$run\"></div></td>";
         echo "<td style=\"border:none;\"><div id=\"bytes_$run\"></div></td></tr></table>";
-        ?>
-        </td>
-      </tr>
-    <?php
-
+        echo "</td>\n";
+    echo "</tr>\n";
   }
 
   public function getBreakdown() {
