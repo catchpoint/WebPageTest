@@ -13,6 +13,7 @@ class TestResultsHtmlTables {
   private $firstViewMedianRun;
 
   private $waterfallDisplayed;
+  private $screenshotDisplayed;
   private $pageData;
 
   public function __construct($testInfo, $testResults, $testComplete, $median_metric) {
@@ -28,6 +29,7 @@ class TestResultsHtmlTables {
   public function create(&$pageData, $tcpDumpView) {
     $runs = $this->testInfo->getRuns();
     $this->waterfallDisplayed = false;
+    $this->screenshotDisplayed = false;
     $this->pageData = $pageData;
     for ($run = 1; $run <= $runs; $run++) {
       $runResults = $this->testResults->getRunResult($run, false);
@@ -56,13 +58,6 @@ class TestResultsHtmlTables {
     $table_columns = $this->_createTableHead();
     echo '<tr>';
     if (array_key_exists($run, $pageData) && array_key_exists(0, $pageData[$run]) && count($pageData[$run][0])) {
-      $onloadWaterfall = '';
-      $onloadScreenShot = '';
-      if (!$this->waterfallDisplayed) {
-        $onloadWaterfall = " onload=\"markUserTime('aft.First Waterfall')\"";
-        $onloadScreenShot = " onload=\"markUserTime('aft.First Screen Shot')\"";
-      }
-      $this->waterfallDisplayed = true;
       echo '<td align="left" valign="middle">First View';
       if (isset($test['testinfo']['errors'][$run][0]) && strlen($test['testinfo']['errors'][$run][0]))
         echo '<br>(Test Error: ' . htmlspecialchars($test['testinfo']['errors'][$run][0]) . ')';
@@ -108,16 +103,13 @@ class TestResultsHtmlTables {
       }
       echo "</td>\n";
 
-      $this->_createWaterfallCell($this->testResults->getRunResult($run, false)->getStepResult(1), false);
-
+      $stepResult = $this->testResults->getRunResult($run, false)->getStepResult(1);
+      $this->_createWaterfallCell($stepResult, false);
       if ($this->hasScreenshots) {
-        if (FRIENDLY_URLS)
-          echo "<td align=\"center\" valign=\"middle\"><a href=\"/result/$id/$run/screen_shot/\"><img class=\"progress\"$onloadScreenShot width=250 src=\"/result/$id/{$run}_screen_thumb.jpg\"></a></td>";
-        else
-          echo "<td align=\"center\" valign=\"middle\"><a href=\"/screen_shot.php?test=$id&run=$run\"><img class=\"progress\"$onloadScreenShot width=250 src=\"/thumbnail.php?test=$id&run=$run&file={$run}_screen.jpg\"></a></td>";
+        $this->_createScreenshotCell($stepResult, false);
       }
       if ($this->hasVideo) {
-        $this->_createVideoCell($this->testResults->getRunResult($run, false)->getStepResult(1), false);
+        $this->_createVideoCell($stepResult, false);
       }
     } else {
       echo "<td colspan=\"$table_columns\" align=\"left\" valign=\"middle\">First View: Test Data Missing</td>";
@@ -172,16 +164,14 @@ class TestResultsHtmlTables {
           }
           echo '</td>';
 
-          $this->_createWaterfallCell($this->testResults->getRunResult($run, true)->getStepResult(1), true);
+          $stepResult = $this->testResults->getRunResult($run, true)->getStepResult(1);
+          $this->_createWaterfallCell($stepResult, true);
 
           if ($this->hasScreenshots) {
-            if (FRIENDLY_URLS)
-              echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/screen_shot/cached/\"><img class=\"progress\" width=250 src=\"/result/$id/{$run}_Cached_screen_thumb.jpg\"></a></td>";
-            else
-              echo "<td align=\"center\" valign=\"middle\"><a href=\"/screen_shot.php?test=$id&run=$run&cached=1\"><img class=\"progress\" width=250 src=\"/thumbnail.php?test=$id&run=$run&cached=1&file={$run}_Cached_screen.jpg\"></a></td>";
+            $this->_createScreenshotCell($stepResult, true);
           }
           if ($this->hasVideo) {
-            $this->_createVideoCell($this->testResults->getRunResult($run, true)->getStepResult(1), true);
+            $this->_createVideoCell($stepResult, true);
           }
         }
       } else if (array_key_exists('testinfo', $test) &&
@@ -316,6 +306,21 @@ class TestResultsHtmlTables {
       return $_REQUEST['end'];
     }
     return null;
+  }
+
+  /**
+   * @param TestStepResult $stepResult
+   * @param bool $even
+   */
+  private function _createScreenshotCell($stepResult, $even) {
+    $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS);
+    $class = $even ? 'class="even"' : '';
+    $onload = $this->screenshotDisplayed ? "" : " onload=\"markUserTime('aft.First Screen Shot')\"";
+    $screenShotUrl = $urlGenerator->resultPage("screen_shot");
+    $thumbnailUrl = $urlGenerator->thumbnail("screen.jpg");
+    echo "<td align=\"center\" valign=\"middle\" $class>\n";
+    echo "<a href=\"$screenShotUrl\"><img class=\"progress\"$onload width=\"250\" src=\"$thumbnailUrl\"></a>\n";
+    echo "</td>\n";
   }
 
 }
