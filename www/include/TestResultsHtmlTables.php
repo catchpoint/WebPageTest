@@ -24,17 +24,12 @@ class TestResultsHtmlTables {
     $this->waterfallDisplayed = false;
     $this->pageData = $pageData;
     for ($run = 1; $run <= $runs; $run++) {
-      $error_str = null;
       $runResults = $this->testResults->getRunResult($run, false);
-      if (!$runResults) {
-        if ($this->testComplete)
-          $error_str = 'Test Error: Data is missing.';
-        else
-          $error_str = 'Waiting for test result...';
-      }
-      if ($runs > 1)
+      if ($runs > 1) {
         echo '<h4><a name="run' . $run . '">Run ' . $run . ':</a></h4>';
-      if (isset($error_str)) {
+      }
+      if (!$runResults) {
+        $error_str = $this->testComplete ? 'Test Error: Data is missing.' : 'Waiting for test result...';
         echo '<p>' . htmlspecialchars($error_str) . '</p>';
       } else {
         $this->_createTableForRun($run, $median_metric, $tcpDumpView);
