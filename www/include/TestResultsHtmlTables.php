@@ -29,36 +29,39 @@ class TestResultsHtmlTables {
     $runs = $this->testInfo->getRuns();
     $this->waterfallDisplayed = false;
     $this->screenshotDisplayed = false;
+    $out = "";
     for ($run = 1; $run <= $runs; $run++) {
       $runResults = $this->testResults->getRunResult($run, false);
       if ($runs > 1) {
-        echo '<h4><a name="run' . $run . '">Run ' . $run . ':</a></h4>';
+        $out .=  '<h4><a name="run' . $run . '">Run ' . $run . ':</a></h4>';
       }
       if (!$runResults) {
         $error_str = $this->testComplete ? 'Test Error: Data is missing.' : 'Waiting for test result...';
-        echo '<p>' . htmlspecialchars($error_str) . '</p>';
+        $out .=  '<p>' . htmlspecialchars($error_str) . '</p>';
       } else {
-        $this->_createTableForRun($run, $tcpDumpView);
+        $out .= $this->_createTableForRun($run, $tcpDumpView);
       }
     }
+    return $out;
   }
 
   private function _createTableForRun($run, $tcpDumpView) {
     $fvMedian = $this->firstViewMedianRun;
-    echo "<table id=\"table$run\" class=\"pretty result\" align=\"center\" border=\"1\" cellpadding=\"20\" cellspacing=\"0\">\n";
+    $out = "<table id=\"table$run\" class=\"pretty result\" align=\"center\" border=\"1\" cellpadding=\"20\" cellspacing=\"0\">\n";
     $columns = $this->_countTableColumns();
-    $this->_createTableHead();
+    $out .= $this->_createTableHead();
 
     $firstViewResults = $this->testResults->getRunResult($run, false);
-    $this->_createRunResultRows($run, false, $tcpDumpView, $columns);
+    $out .= $this->_createRunResultRows($run, false, $tcpDumpView, $columns);
     if (!$this->testInfo->isFirstViewOnly() || $this->testResults->getRunResult($run, true)) {
-      $this->_createRunResultRows($run, true, $tcpDumpView, $columns);
+      $out .= $this->_createRunResultRows($run, true, $tcpDumpView, $columns);
     }
     if ($this->testComplete && $run == $fvMedian && $firstViewResults) {
-      $this->_createBreakdownRow($firstViewResults->getStepResult(1), $columns);
+      $out .= $this->_createBreakdownRow($firstViewResults->getStepResult(1), $columns);
     }
 
-    echo "</table>\n<br>\n";
+    $out .= "</table>\n<br>\n";
+    return $out;
   }
 
   private function _countTableColumns() {
@@ -77,34 +80,37 @@ class TestResultsHtmlTables {
    * @param bool $cached False for first view, true for repeat view
    * @param string|null $tcpDumpView From settings
    * @param int $tableColumns number of columns in the table
+   * @return string The created markup
    */
   private function _createRunResultRows($run, $cached, $tcpDumpView, $tableColumns) {
     $cachedLabel = $cached ? "Repeat View" : "First View";
     $rvError = $this->testInfo->getRunError($run, $cached);
     $runResults = $this->testResults->getRunResult($run, $cached);
-    echo '<tr>';
+    $out = '<tr>';
     if ($runResults) {
       $stepResult = $runResults->getStepResult(1);
-      $this->_createResultCell($stepResult, $tcpDumpView, $cached);
-      $this->_createWaterfallCell($stepResult, $cached);
+      $out .= $this->_createResultCell($stepResult, $tcpDumpView, $cached);
+      $out .= $this->_createWaterfallCell($stepResult, $cached);
       if ($this->hasScreenshots) {
-        $this->_createScreenshotCell($stepResult, $cached);
+        $out .= $this->_createScreenshotCell($stepResult, $cached);
       }
       if ($this->hasVideo) {
-        $this->_createVideoCell($stepResult, $cached);
+        $out .= $this->_createVideoCell($stepResult, $cached);
       }
     } else if ($rvError) {
       $error_str = htmlspecialchars('Test Error: ' . $rvError);
-      echo "<td colspan=\"$tableColumns\" align=\"left\" valign=\"middle\">$cachedLabel: $error_str</td>";
+      $out .= "<td colspan=\"$tableColumns\" align=\"left\" valign=\"middle\">$cachedLabel: $error_str</td>";
     } else {
-      echo "<td colspan=\"$tableColumns\" align=\"left\" valign=\"middle\">$cachedLabel: Test Data Missing</td>";
+      $out .= "<td colspan=\"$tableColumns\" align=\"left\" valign=\"middle\">$cachedLabel: Test Data Missing</td>";
     }
-    echo '</tr>';
+    $out .= '</tr>';
+    return $out;
   }
 
   /**
    * @param TestStepResult $stepResult
    * @param int $tableColumns Number of columsn in the table
+   * @return string The created markup
    */
   private function _createBreakdownRow($stepResult, $tableColumns) {
     $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS);
@@ -112,21 +118,22 @@ class TestResultsHtmlTables {
     if (is_array($b)) {
       $this->breakdown[] = array('run' => $stepResult->getRunNumber(), 'data' => $b);
     }
-    echo "<tr>\n";
+    $out = "<tr>\n";
 
-    echo "<td align=\"left\" valign=\"middle\">\n";
+    $out .= "<td align=\"left\" valign=\"middle\">\n";
     $breakdownUrl = $urlGenerator->resultPage("breakdown");
-    echo "<a href=\"$breakdownUrl\">Content Breakdown</a>";
-    echo "</td>";
+    $out .= "<a href=\"$breakdownUrl\">Content Breakdown</a>";
+    $out .= "</td>";
 
     $span = $tableColumns - 1;
-    echo "<td align=\"left\" valign=\"middle\" colspan=\"$span\">";
+    $out .= "<td align=\"left\" valign=\"middle\" colspan=\"$span\">";
     $run = $stepResult->getRunNumber();
-    echo "<table><tr><td style=\"border:none;\"><div id=\"requests_$run\"></div></td>";
-    echo "<td style=\"border:none;\"><div id=\"bytes_$run\"></div></td></tr></table>";
-    echo "</td>\n";
+    $out .= "<table><tr><td style=\"border:none;\"><div id=\"requests_$run\"></div></td>";
+    $out .= "<td style=\"border:none;\"><div id=\"bytes_$run\"></div></td></tr></table>";
+    $out .= "</td>\n";
 
-    echo "</tr>\n";
+    $out .= "</tr>\n";
+    return $out;
   }
 
   public function getBreakdown() {
@@ -134,65 +141,71 @@ class TestResultsHtmlTables {
   }
 
   private function _createTableHead() {
-    echo "<tr>\n";
-    echo "<th align=\"center\" class=\"empty\" valign=\"middle\"></th>\n";
-    echo "<th align=\"center\" valign=\"middle\">Waterfall</th>\n";
+    $out =  "<tr>\n";
+    $out .=  "<th align=\"center\" class=\"empty\" valign=\"middle\"></th>\n";
+    $out .=  "<th align=\"center\" valign=\"middle\">Waterfall</th>\n";
     if ($this->hasScreenshots) {
-      echo '<th align="center" valign="middle">Screen Shot</th>';
+      $out .=  '<th align="center" valign="middle">Screen Shot</th>';
     }
     if ($this->hasVideo) {
-      echo '<th align="center" valign="middle">Video</th>';
+      $out .=  '<th align="center" valign="middle">Video</th>';
     }
-    echo '</tr>';
+    $out .=  '</tr>';
+    return $out;
   }
 
   /**
    * @param TestStepResult $stepResult
    * @param string|null $tcpDumpView TcpDumpView URL from settings or null
    * @param bool $even true for even rows
+   * @return string The created markup
    */
   private function _createResultCell($stepResult, $tcpDumpView, $even) {
     $class = $even ? "class='even'" : "";
-    echo "<td align=\"left\" $class valign=\"middle\">\n";
-    echo $stepResult->isCachedRun() ? "Repeat View" : "First View";
-    echo $this->_getResultLabel($stepResult);
-    echo $this->_getDynatraceLinks($stepResult);
-    echo $this->_getCaptureLinks($stepResult, $tcpDumpView);
-    echo $this->_getTimelineLinks($stepResult);
-    echo $this->_getTraceLinks($stepResult);
-    echo $this->_getNetlogLinks($stepResult);
-    echo '</td>';
+    $out = "<td align=\"left\" $class valign=\"middle\">\n";
+    $out .=  $stepResult->isCachedRun() ? "Repeat View" : "First View";
+    $out .=  $this->_getResultLabel($stepResult);
+    $out .=  $this->_getDynatraceLinks($stepResult);
+    $out .=  $this->_getCaptureLinks($stepResult, $tcpDumpView);
+    $out .=  $this->_getTimelineLinks($stepResult);
+    $out .=  $this->_getTraceLinks($stepResult);
+    $out .=  $this->_getNetlogLinks($stepResult);
+    $out .=  '</td>';
+    return $out;
   }
 
   /**
    * @param TestStepResult $stepResult
+   * @return string The created markup
    */
   private function _createVideoCell($stepResult, $even) {
     $localPaths = $stepResult->createTestPaths();
     $class = $even ? 'class="even"' : '';
-    echo "<td align=\"center\" valign=\"middle\" $class>";
+    $out = "<td align=\"center\" valign=\"middle\" $class>";
     if (is_dir($localPaths->videoDir())) {
       $urlGenerator = $stepResult->createUrlGenerator("", false);
       $end = $this->getRequestEndParam($stepResult);
 
       $filmstripUrl = $urlGenerator->filmstripView($end);
-      echo "<a href=\"$filmstripUrl\">Filmstrip View</a><br>-<br>";
+      $out .=  "<a href=\"$filmstripUrl\">Filmstrip View</a><br>-<br>";
 
       $createUrl = $urlGenerator->createVideo($end);
-      echo "<a href=\"$createUrl\">Watch Video</a>";
+      $out .=  "<a href=\"$createUrl\">Watch Video</a>";
 
       $rawVideoPath = $localPaths->rawDeviceVideo();
       if (is_file($rawVideoPath))
-        echo "<br>-<br><a href=\"/$rawVideoPath\">Raw Device Video</a>";
+        $out .=  "<br>-<br><a href=\"/$rawVideoPath\">Raw Device Video</a>";
     } else {
-      echo "not available";
+      $out .=  "not available";
     }
-    echo '</td>';
+    $out .=  '</td>';
+    return $out;
   }
 
   /**
    * @param TestStepResult $stepResult
    * @param bool $even
+   * @return string The created markup
    */
   private function _createWaterfallCell($stepResult, $even) {
     $end = $this->getRequestEndParam($stepResult);
@@ -204,11 +217,12 @@ class TestResultsHtmlTables {
     $class = $even ? 'class="even"' : '';
     $onload =  $this->waterfallDisplayed ? "" : " onload=\"markUserTime('aft.First Waterfall')\"";
 
-    echo "<td align=\"center\" $class valign=\"middle\">\n";
-    echo "<a href=\"$detailsUrl\"><img class=\"progress\" width=\"250\" src=\"$thumbUrl\" $onload></a>\n";
-    echo "</td>\n";
+    $out = "<td align=\"center\" $class valign=\"middle\">\n";
+    $out .=  "<a href=\"$detailsUrl\"><img class=\"progress\" width=\"250\" src=\"$thumbUrl\" $onload></a>\n";
+    $out .=  "</td>\n";
 
     $this->waterfallDisplayed = true;
+    return $out;
   }
 
   /**
@@ -225,6 +239,7 @@ class TestResultsHtmlTables {
   /**
    * @param TestStepResult $stepResult
    * @param bool $even
+   * @return string The created markup
    */
   private function _createScreenshotCell($stepResult, $even) {
     $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS);
@@ -232,9 +247,10 @@ class TestResultsHtmlTables {
     $onload = $this->screenshotDisplayed ? "" : " onload=\"markUserTime('aft.First Screen Shot')\"";
     $screenShotUrl = $urlGenerator->resultPage("screen_shot");
     $thumbnailUrl = $urlGenerator->thumbnail("screen.jpg");
-    echo "<td align=\"center\" valign=\"middle\" $class>\n";
-    echo "<a href=\"$screenShotUrl\"><img class=\"progress\"$onload width=\"250\" src=\"$thumbnailUrl\"></a>\n";
-    echo "</td>\n";
+    $out = "<td align=\"center\" valign=\"middle\" $class>\n";
+    $out .= "<a href=\"$screenShotUrl\"><img class=\"progress\"$onload width=\"250\" src=\"$thumbnailUrl\"></a>\n";
+    $out .= "</td>\n";
+    return $out;
   }
 
   /**
