@@ -47,7 +47,6 @@ class TestResultsHtmlTables {
 
   private function _createTableForRun($run, $tcpDumpView) {
     $pageData = $this->pageData;
-    $wpt_host = trim($_SERVER['HTTP_HOST']);
     $video = $this->testInfo->hasVideo();
     $testPath = $this->testInfo->getRootDirectory();
     $id = $this->testInfo->getId();
@@ -69,31 +68,10 @@ class TestResultsHtmlTables {
         echo "<br><br><div><a href=\"/$testPath/{$run}_dynaTrace.dtas\" title=\"Download dynaTrace Session\"><img src=\"{$GLOBALS['cdnPath']}/images/dynatrace_session_v3.png\" alt=\"Download dynaTrace Session\"></a></div><br>";
         echo "<a href=\"http://ajax.dynatrace.com/pages/\" target=\"_blank\" title=\"Get dynaTrace AJAX Edition\"><img src=\"{$GLOBALS['cdnPath']}/images/dynatrace_ajax.png\" alt=\"Get dynaTrace Ajax Edition\"></a>";
       }
-      if (gz_is_file("$testPath/{$run}.cap")) {
-        $tcpdump_url = "/getgzip.php?test=$id&file=$run.cap";
-        if (FRIENDLY_URLS)
-          $tcpdump_url = "/result/$id/{$run}.cap";
-        echo "<br><br><a href=\"$tcpdump_url\" title=\"Download tcpdump session capture\">tcpdump</a>";
-        if ($tcpDumpView) {
-          $view_url = $tcpDumpView . urlencode("http://$wpt_host$tcpdump_url");
-          echo " - (<a href=\"$view_url\" title=\"View tcpdump session capture\">view</a>)";
-        }
-        if (gz_is_file("$testPath/{$run}_keylog.log")) {
-          $keylog = "/getgzip.php?test=$id&file={$run}_keylog.log";
-          echo "<br>(<a href=\"$keylog\" title=\"TLS key log file\">TLS Key Log</a>)";
-        }
-      }
-      if ($infoArray['timeline']) {
-        if (gz_is_file("$testPath/{$run}_trace.json")) {
-          echo "<br><br><a href=\"/getTimeline.php?test=$id&run=$run&cached=0\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
-          echo " (<a href=\"/chrome/timeline.php?test=$id&run=$run\" title=\"View Chrome Dev Tools Timeline\">view</a>)";
-          echo "<br><a href=\"/breakdownTimeline.php?test=$id&run=$run&cached=0\" title=\"View browser main thread activity by event type\">Processing Breakdown</a>";
-        } elseif (gz_is_file("$testPath/{$run}_timeline.json") || gz_is_file("$testPath/{$run}_devtools.json")) {
-          echo "<br><br><a href=\"/getTimeline.php?test=$id&run=$run&cached=0\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
-          echo " (<a href=\"/chrome/timeline.php?test=$id&run=$run\" title=\"View Chrome Dev Tools Timeline\">view</a>)";
-          echo "<br><a href=\"/breakdownTimeline.php?test=$id&run=$run&cached=0\" title=\"View browser main thread activity by event type\">Processing Breakdown</a>";
-        }
-      }
+
+      $stepResult = $this->testResults->getRunResult($run, false)->getStepResult(1);
+      echo $this->_getCaptureLinks($stepResult, $tcpDumpView);
+      echo $this->_getTimelineLinks($stepResult);
       if ($infoArray['trace'] && gz_is_file("$testPath/{$run}_trace.json")) {
         echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_trace.json\" title=\"Download Chrome Trace\">Trace</a>";
         echo " (<a href=\"/chrome/trace.php?test=$id&run=$run&cached=0\" title=\"View Chrome Trace\">view</a>)";
@@ -103,7 +81,6 @@ class TestResultsHtmlTables {
       }
       echo "</td>\n";
 
-      $stepResult = $this->testResults->getRunResult($run, false)->getStepResult(1);
       $this->_createWaterfallCell($stepResult, false);
       if ($this->hasScreenshots) {
         $this->_createScreenshotCell($stepResult, false);
@@ -130,31 +107,10 @@ class TestResultsHtmlTables {
             echo "<br><br><div><a href=\"/$testPath/{$run}_Cached_dynaTrace.dtas\" title=\"Download dynaTrace Session\"><img src=\"{$GLOBALS['cdnPath']}/images/dynatrace_session_v3.png\" alt=\"Download dynaTrace Session\"></a></div><br>";
             echo "<a href=\"http://ajax.dynatrace.com/pages/\" target=\"_blank\" title=\"Get dynaTrace AJAX Edition\"><img src=\"{$GLOBALS['cdnPath']}/images/dynatrace_ajax.png\" alt=\"Get dynaTrace Ajax Edition\"></a>";
           }
-          if (gz_is_file("$testPath/{$run}_Cached.cap")) {
-            $tcpdump_url = "/getgzip.php?test=$id&file={$run}_Cached.cap";
-            if (FRIENDLY_URLS)
-              $tcpdump_url = "/result/$id/{$run}_Cached.cap";
-            echo "<br><br><a href=\"$tcpdump_url\" title=\"Download tcpdump session capture\">tcpdump</a>";
-            if ($tcpDumpView) {
-              $view_url = $tcpDumpView . urlencode("http://$wpt_host$tcpdump_url");
-              echo " - (<a href=\"$view_url\" title=\"View tcpdump session capture\">view</a>)";
-            }
-            if (gz_is_file("$testPath/{$run}_Cached_keylog.log")) {
-              $keylog = "/getgzip.php?test=$id&file={$run}_Cached_keylog.log";
-              echo "<br>(<a href=\"$keylog\" title=\"TLS key log file\">TLS Key Log</a>)";
-            }
-          }
-          if ($infoArray['timeline']) {
-            if (gz_is_file("$testPath/{$run}_Cached_trace.json")) {
-              echo "<br><br><a href=\"/getTimeline.php?test=$id&run=$run&cached=1\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
-              echo " (<a href=\"/chrome/timeline.php?test=$id&run=$run&cached=1\" title=\"View Chrome Dev Tools Timeline\">view</a>)";
-            } elseif (gz_is_file("$testPath/{$run}_Cached_timeline.json") || gz_is_file("$testPath/{$run}_Cached_devtools.json")) {
-              echo "<br><br><a href=\"/getTimeline.php?test=$id&run={$run}&cached=1\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>";
-              echo " (<a href=\"/chrome/timeline.php?test=$id&run=$run&cached=1\" title=\"View Chrome Dev Tools Timeline\">view</a>)";
-              if (array_key_exists('testinfo', $test) && array_key_exists('timeline', $test['testinfo']) && $test['testinfo']['timeline'])
-                echo "<br><a href=\"/breakdownTimeline.php?test=$id&run=$run&cached=1\" title=\"View browser main thread activity by event type\">Processing Breakdown</a>";
-            }
-          }
+
+          $stepResult = $this->testResults->getRunResult($run, true)->getStepResult(1);
+          echo $this->_getCaptureLinks($stepResult, $tcpDumpView);
+          echo $this->_getTimelineLinks($stepResult);
           if ($infoArray['trace'] && gz_is_file("$testPath/{$run}_Cached_trace.json")) {
             echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_trace.json\" title=\"Download Chrome Trace\">Trace</a>";
             echo " (<a href=\"/chrome/trace.php?test=$id&run=$run&cached=1\" title=\"View Chrome Trace\">view</a>)";
@@ -164,7 +120,6 @@ class TestResultsHtmlTables {
           }
           echo '</td>';
 
-          $stepResult = $this->testResults->getRunResult($run, true)->getStepResult(1);
           $this->_createWaterfallCell($stepResult, true);
 
           if ($this->hasScreenshots) {
@@ -321,6 +276,61 @@ class TestResultsHtmlTables {
     echo "<td align=\"center\" valign=\"middle\" $class>\n";
     echo "<a href=\"$screenShotUrl\"><img class=\"progress\"$onload width=\"250\" src=\"$thumbnailUrl\"></a>\n";
     echo "</td>\n";
+  }
+
+  /**
+   * @param TestStepResult $stepResult
+   * @return string Markup with links
+   */
+  private function _getTimelineLinks($stepResult) {
+    if (!$this->testInfo->hasTimeline()) {
+      return "";
+    }
+    $localPaths = $stepResult->createTestPaths();
+    if (!gz_is_file($localPaths->devtoolsTraceFile()) &&
+        !gz_is_file($localPaths->devtoolsTimelineFile()) &&
+        !gz_file($localPaths->devtoolsFile())) {
+        return "";
+        }
+    $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS);
+    $downloadUrl = $urlGenerator->stepDetailPage("getTimeline");
+    $viewUrl = $urlGenerator->stepDetailPage("chrome/timeline");
+    $breakdownUrl = $urlGenerator->stepDetailPage("breakdownTimeline");
+
+    $out = "<br><br>\n";
+    $out .= "<a href=\"$downloadUrl\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>\n";
+    $out .= " (<a href=\"$viewUrl\" title=\"View Chrome Dev Tools Timeline\">view</a>)\n";
+    $out .= "<br>\n";
+    $out .= "<a href=\"$breakdownUrl\" title=\"View browser main thread activity by event type\">Processing Breakdown</a>";
+    return $out;
+  }
+
+  /**
+   * @param TestStepResult $stepResult
+   * @param string|null $tcpDumpView TcpDumpView URL from settings or null
+   * @return string Markup with links
+   */
+  private function _getCaptureLinks($stepResult, $tcpDumpView) {
+    $localPaths = $stepResult->createTestPaths();
+    if (!gz_is_file($localPaths->captureFile())) {
+      return "";
+    }
+    $wpt_host = trim($_SERVER['HTTP_HOST']);
+    $filenamePaths = $stepResult->createTestPaths("");
+    $urlGenerator = $stepResult->createUrlGenerator("", false);
+
+    $tcpdump_url = $urlGenerator->getGZip($filenamePaths->captureFile());
+    $out = "<br><br>\n";
+    $out .= "<a href=\"$tcpdump_url\" title=\"Download tcpdump session capture\">tcpdump</a>\n";
+    if ($tcpDumpView) {
+      $view_url = $tcpDumpView . urlencode("http://$wpt_host$tcpdump_url");
+      $out .= " - (<a href=\"$view_url\" title=\"View tcpdump session capture\">view</a>)";
+    }
+    if (gz_is_file($localPaths->keylogFile())) {
+      $keylogUrl = $urlGenerator->getGZip($filenamePaths->keylogFile());
+      $out .= "<br>(<a href=\"$keylogUrl\" title=\"TLS key log file\">TLS Key Log</a>)";
+    }
+    return $out;
   }
 
 }
