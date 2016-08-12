@@ -70,9 +70,7 @@ class TestResultsHtmlTables {
       echo $this->_getCaptureLinks($stepResult, $tcpDumpView);
       echo $this->_getTimelineLinks($stepResult);
       echo $this->_getTraceLinks($stepResult);
-      if (gz_is_file("$testPath/{$run}_netlog.txt")) {
-        echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_netlog.txt\" title=\"Download Network Log\">Net Log</a>";
-      }
+      echo $this->_getNetlogLinks($stepResult);
       echo "</td>\n";
 
       $this->_createWaterfallCell($stepResult, false);
@@ -103,9 +101,7 @@ class TestResultsHtmlTables {
           echo $this->_getCaptureLinks($stepResult, $tcpDumpView);
           echo $this->_getTimelineLinks($stepResult);
           echo $this->_getTraceLinks($stepResult);
-          if (gz_is_file("$testPath/{$run}_Cached_netlog.txt")) {
-            echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_netlog.txt\" title=\"Download Network Log\">Net Log</a>";
-          }
+          echo $this->_getNetlogLinks($stepResult);
           echo '</td>';
 
           $this->_createWaterfallCell($stepResult, true);
@@ -356,6 +352,20 @@ class TestResultsHtmlTables {
     $out = "<br><br><a href=\"$zipUrl\" title=\"Download Chrome Trace\">Trace</a>\n";
     $out .= " (<a href=\"$viewUrl\" title=\"View Chrome Trace\">view</a>)\n";
     return $out;
+  }
+
+  /**
+   * @param TestStepResult $stepResult
+   * @return string Markup with links
+   */
+  private function _getNetlogLinks($stepResult) {
+    $localPaths = $stepResult->createTestPaths();
+    if (!gz_is_file($localPaths->netlogFile())) {
+      return "";
+    }
+    $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS);
+    $zipUrl = $urlGenerator->getGZip( $stepResult->createTestPaths("")->netlogFile());
+    return "<br><br><a href=\"$zipUrl\" title=\"Download Network Log\">Net Log</a>";
   }
 
 }
