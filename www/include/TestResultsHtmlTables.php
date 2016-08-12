@@ -107,14 +107,9 @@ class TestResultsHtmlTables {
         echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_netlog.txt\" title=\"Download Network Log\">Net Log</a>";
       }
       echo "</td>\n";
-      echo '<td align="center" valign="middle">';
-      $testUrl = "/details.php?test=$id&run=$run";
-      if ($run == $fvMedian && array_key_exists('end', $_REQUEST))
-        $testUrl .= "&end={$_REQUEST['end']}";
-      elseif (FRIENDLY_URLS)
-        $testUrl = "/result/$id/$run/details/";
-      echo "<a href=\"$testUrl\">";
-      echo "<img class=\"progress\"$onloadWaterfall width=250 src=\"/thumbnail.php?test=$id&run=$run&file={$run}_waterfall.png\"></a></td>\n";
+
+      $this->_createWaterfallCell($this->testResults->getRunResult($run, false)->getStepResult(1), false);
+
       if ($this->hasScreenshots) {
         if (FRIENDLY_URLS)
           echo "<td align=\"center\" valign=\"middle\"><a href=\"/result/$id/$run/screen_shot/\"><img class=\"progress\"$onloadScreenShot width=250 src=\"/result/$id/{$run}_screen_thumb.jpg\"></a></td>";
@@ -122,7 +117,7 @@ class TestResultsHtmlTables {
           echo "<td align=\"center\" valign=\"middle\"><a href=\"/screen_shot.php?test=$id&run=$run\"><img class=\"progress\"$onloadScreenShot width=250 src=\"/thumbnail.php?test=$id&run=$run&file={$run}_screen.jpg\"></a></td>";
       }
       if ($this->hasVideo) {
-        $this->_createVideoCell($this->testResults->getRunResult($run, false)->getStepResult(1));
+        $this->_createVideoCell($this->testResults->getRunResult($run, false)->getStepResult(1), false);
       }
     } else {
       echo "<td colspan=\"$table_columns\" align=\"left\" valign=\"middle\">First View: Test Data Missing</td>";
@@ -176,10 +171,8 @@ class TestResultsHtmlTables {
             echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_netlog.txt\" title=\"Download Network Log\">Net Log</a>";
           }
           echo '</td>';
-          if (FRIENDLY_URLS)
-            echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/details/cached/\"><img class=\"progress\" width=250 src=\"/result/$id/{$run}_Cached_waterfall_thumb.png\"></a></td>";
-          else
-            echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/details.php?test=$id&run=$run&cached=1\"><img class=\"progress\" width=250 src=\"/thumbnail.php?test=$id&run=$run&cached=1&file={$run}_Cached_waterfall.png\"></a></td>";
+
+          $this->_createWaterfallCell($this->testResults->getRunResult($run, true)->getStepResult(1), true);
 
           if ($this->hasScreenshots) {
             if (FRIENDLY_URLS)
@@ -188,7 +181,7 @@ class TestResultsHtmlTables {
               echo "<td align=\"center\" valign=\"middle\"><a href=\"/screen_shot.php?test=$id&run=$run&cached=1\"><img class=\"progress\" width=250 src=\"/thumbnail.php?test=$id&run=$run&cached=1&file={$run}_Cached_screen.jpg\"></a></td>";
           }
           if ($this->hasVideo) {
-            $this->_createVideoCell($this->testResults->getRunResult($run, true)->getStepResult(1));
+            $this->_createVideoCell($this->testResults->getRunResult($run, true)->getStepResult(1), true);
           }
         }
       } else if (array_key_exists('testinfo', $test) &&
@@ -270,15 +263,13 @@ class TestResultsHtmlTables {
   /**
    * @param TestStepResult $stepResult
    */
-  private function _createVideoCell($stepResult) {
+  private function _createVideoCell($stepResult, $even) {
     $localPaths = $stepResult->createTestPaths();
-    echo '<td align="center" valign="middle">';
+    $class = $even ? 'class="even"' : '';
+    echo "<td align=\"center\" valign=\"middle\" $class>";
     if (is_dir($localPaths->videoDir())) {
       $urlGenerator = $stepResult->createUrlGenerator("", false);
-      $end = null;
-      if (!$stepResult->isCachedRun() && $stepResult->getRunNumber() == $this->firstViewMedianRun && array_key_exists('end', $_REQUEST)) {
-        $end = $_REQUEST['end'];
-      }
+      $end = $this->getRequestEndParam($stepResult);
 
       $filmstripUrl = $urlGenerator->filmstripView($end);
       echo "<a href=\"$filmstripUrl\">Filmstrip View</a><br>-<br>";
@@ -293,6 +284,38 @@ class TestResultsHtmlTables {
       echo "not available";
     }
     echo '</td>';
+  }
+
+  /**
+   * @param TestStepResult $stepResult
+   * @param bool $even
+   */
+  private function _createWaterfallCell($stepResult, $even) {
+    $end = $this->getRequestEndParam($stepResult);
+    $endParam = $end ? "end=$end" : null;
+
+    $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS && !$endParam);
+    $detailsUrl = $urlGenerator->resultPage("details", $endParam);
+    $thumbUrl = $urlGenerator->thumbnail("waterfall.png");
+    $class = $even ? 'class="even"' : '';
+    $onload =  $this->waterfallDisplayed ? "" : " onload=\"markUserTime('aft.First Waterfall')\"";
+
+    echo "<td align=\"center\" $class valign=\"middle\">\n";
+    echo "<a href=\"$detailsUrl\"><img class=\"progress\" width=\"250\" src=\"$thumbUrl\" $onload></a>\n";
+    echo "</td>\n";
+
+    $this->waterfallDisplayed = true;
+  }
+
+  /**
+   * @param TestStepResult $stepResult
+   * @return string|null The $_REQUEST["end"] parameter if set and the run is the first view median run, null otherwise
+   */
+  private function getRequestEndParam($stepResult) {
+    if (!$stepResult->isCachedRun() && $stepResult->getRunNumber() == $this->firstViewMedianRun && array_key_exists('end', $_REQUEST)) {
+      return $_REQUEST['end'];
+    }
+    return null;
   }
 
 }
