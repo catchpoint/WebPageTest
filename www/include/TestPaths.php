@@ -266,6 +266,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for netlog file
+   */
+  public function netlogFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_netlog.txt";
+  }
+
+  /**
    * @return string Path for dynatrace file
    */
   public function dynatraceFile() {
