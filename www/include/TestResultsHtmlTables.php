@@ -47,57 +47,47 @@ class TestResultsHtmlTables {
     $fvMedian = $this->firstViewMedianRun;
     echo "<table id=\"table<?php echo $run; ?>\" class=\"pretty result\" align=\"center\" border=\"1\" cellpadding=\"20\" cellspacing=\"0\">\n";
     $table_columns = $this->_createTableHead();
-    echo '<tr>';
-    $firstViewResults = $this->testResults->getRunResult($run, false);
-    $fvError = $this->testInfo->getRunError($run, false);
-    if ($firstViewResults) {
-      $stepResult = $firstViewResults->getStepResult(1);
-      $this->_createResultCell($stepResult, $tcpDumpView, false);
-      $this->_createWaterfallCell($stepResult, false);
-      if ($this->hasScreenshots) {
-        $this->_createScreenshotCell($stepResult, false);
-      }
-      if ($this->hasVideo) {
-        $this->_createVideoCell($stepResult, false);
-      }
-    } else if ($fvError) {
-      $error_str = htmlspecialchars('Test Error: ' . $fvError);
-      echo "<td colspan=\"$table_columns\" align=\"left\" valign=\"middle\">First View: $error_str</td>";
-    } else {
-      echo "<td colspan=\"$table_columns\" align=\"left\" valign=\"middle\">First View: Test Data Missing</td>";
-    }
-    echo '</tr>';
 
-    $repeatViewResults = $this->testResults->getRunResult($run, true);
-    if (!$this->testInfo->isFirstViewOnly() || $repeatViewResults) {
-      echo '<tr>';
-      $rvError = $this->testInfo->getRunError($run, true);
-      if ($repeatViewResults) {
-          $stepResult = $repeatViewResults->getStepResult(1);
-          $this->_createResultCell($stepResult, $tcpDumpView, true);
-          $this->_createWaterfallCell($stepResult, true);
-          if ($this->hasScreenshots) {
-            $this->_createScreenshotCell($stepResult, true);
-          }
-          if ($this->hasVideo) {
-            $this->_createVideoCell($stepResult, true);
-          }
-      } else if ($rvError) {
-        $error_str = htmlspecialchars('Test Error: ' . $rvError);
-        echo "<td colspan=\"$table_columns\" align=\"left\" valign=\"middle\">Repeat View: $error_str</td>";
-      } else {
-        echo "<td colspan=\"$table_columns\" align=\"left\" valign=\"middle\">Repeat View: Test Data Missing</td>";
-      }
-      echo '</tr>';
+    $this->_createRunResultRows($run, false, $tcpDumpView, $table_columns);
+    if (!$this->testInfo->isFirstViewOnly() || $this->testResults->getRunResult($run, true)) {
+      $this->_createRunResultRows($run, true, $tcpDumpView, $table_columns);
     }
     if ($this->testComplete && $run == $fvMedian) {
       $this->_createBreakdownRow($this->testResults->getRunResult($run, false)->getStepResult(1));
     }
 
     echo "</table>\n<br>\n";
-
   }
 
+  /**
+   * @param int $run Run number
+   * @param bool $cached False for first view, true for repeat view
+   * @param string|null $tcpDumpView From settings
+   * @param int $tableColumns number of columns in the table
+   */
+  private function _createRunResultRows($run, $cached, $tcpDumpView, $tableColumns) {
+    $cachedLabel = $cached ? "Repeat View" : "First View";
+    $rvError = $this->testInfo->getRunError($run, $cached);
+    $runResults = $this->testResults->getRunResult($run, $cached);
+    echo '<tr>';
+    if ($runResults) {
+      $stepResult = $runResults->getStepResult(1);
+      $this->_createResultCell($stepResult, $tcpDumpView, $cached);
+      $this->_createWaterfallCell($stepResult, $cached);
+      if ($this->hasScreenshots) {
+        $this->_createScreenshotCell($stepResult, $cached);
+      }
+      if ($this->hasVideo) {
+        $this->_createVideoCell($stepResult, $cached);
+      }
+    } else if ($rvError) {
+      $error_str = htmlspecialchars('Test Error: ' . $rvError);
+      echo "<td colspan=\"$tableColumns\" align=\"left\" valign=\"middle\">$cachedLabel: $error_str</td>";
+    } else {
+      echo "<td colspan=\"$tableColumns\" align=\"left\" valign=\"middle\">$cachedLabel: Test Data Missing</td>";
+    }
+    echo '</tr>';
+  }
 
   /**
    * @param TestStepResult $stepResult
