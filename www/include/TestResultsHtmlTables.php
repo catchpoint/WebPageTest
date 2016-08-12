@@ -64,12 +64,9 @@ class TestResultsHtmlTables {
         echo '<br>(Error: ' . LookupError($pageData[$run][0]['result']) . ')';
       else if (isset($pageData[$run][0]['loadTime']))
         echo '<br>(' . number_format($pageData[$run][0]['loadTime'] / 1000.0, 3) . 's)';
-      if (is_file("$testPath/{$run}_dynaTrace.dtas")) {
-        echo "<br><br><div><a href=\"/$testPath/{$run}_dynaTrace.dtas\" title=\"Download dynaTrace Session\"><img src=\"{$GLOBALS['cdnPath']}/images/dynatrace_session_v3.png\" alt=\"Download dynaTrace Session\"></a></div><br>";
-        echo "<a href=\"http://ajax.dynatrace.com/pages/\" target=\"_blank\" title=\"Get dynaTrace AJAX Edition\"><img src=\"{$GLOBALS['cdnPath']}/images/dynatrace_ajax.png\" alt=\"Get dynaTrace Ajax Edition\"></a>";
-      }
 
       $stepResult = $this->testResults->getRunResult($run, false)->getStepResult(1);
+      echo $this->_getDynatraceLinks($stepResult);
       echo $this->_getCaptureLinks($stepResult, $tcpDumpView);
       echo $this->_getTimelineLinks($stepResult);
       if ($infoArray['trace'] && gz_is_file("$testPath/{$run}_trace.json")) {
@@ -103,12 +100,9 @@ class TestResultsHtmlTables {
             echo '<br>(Error: ' . LookupError($pageData[$run][1]['result']) . ')';
           else if (isset($pageData[$run][1]['loadTime']))
             echo '<br>(' . number_format($pageData[$run][1]['loadTime'] / 1000.0, 3) . 's)';
-          if (is_file("$testPath/{$run}_Cached_dynaTrace.dtas")) {
-            echo "<br><br><div><a href=\"/$testPath/{$run}_Cached_dynaTrace.dtas\" title=\"Download dynaTrace Session\"><img src=\"{$GLOBALS['cdnPath']}/images/dynatrace_session_v3.png\" alt=\"Download dynaTrace Session\"></a></div><br>";
-            echo "<a href=\"http://ajax.dynatrace.com/pages/\" target=\"_blank\" title=\"Get dynaTrace AJAX Edition\"><img src=\"{$GLOBALS['cdnPath']}/images/dynatrace_ajax.png\" alt=\"Get dynaTrace Ajax Edition\"></a>";
-          }
 
           $stepResult = $this->testResults->getRunResult($run, true)->getStepResult(1);
+          echo $this->_getDynatraceLinks($stepResult);
           echo $this->_getCaptureLinks($stepResult, $tcpDumpView);
           echo $this->_getTimelineLinks($stepResult);
           if ($infoArray['trace'] && gz_is_file("$testPath/{$run}_Cached_trace.json")) {
@@ -330,6 +324,23 @@ class TestResultsHtmlTables {
       $keylogUrl = $urlGenerator->getGZip($filenamePaths->keylogFile());
       $out .= "<br>(<a href=\"$keylogUrl\" title=\"TLS key log file\">TLS Key Log</a>)";
     }
+    return $out;
+  }
+
+  /**
+   * @param TestStepResult $stepResult
+   * @return string Markup with links
+   */
+  private function _getDynatraceLinks($stepResult) {
+    $dynatracePath = $stepResult->createTestPaths()->dynatraceFile();
+    if (!is_file($dynatracePath)) {
+      return "";
+    }
+    $out = "<br><br><div><a href=\"/$dynatracePath\" title=\"Download dynaTrace Session\">\n";
+    $out .= "<img src=\"{$GLOBALS['cdnPath']}/images/dynatrace_session_v3.png\" alt=\"Download dynaTrace Session\">\n";
+    $out .= "</a></div><br>\n";
+    $out .= "<a href=\"http://ajax.dynatrace.com/pages/\" target=\"_blank\" title=\"Get dynaTrace AJAX Edition\">\n";
+    $out .= "<img src=\"{$GLOBALS['cdnPath']}/images/dynatrace_ajax.png\" alt=\"Get dynaTrace Ajax Edition\"></a>\n";
     return $out;
   }
 
