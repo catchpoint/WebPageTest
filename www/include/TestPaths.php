@@ -252,6 +252,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path to the raw video
+   */
+  public function rawDeviceVideo() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_video.mp4";
+  }
+
+  /**
    * @param int $version Cache format version
    * @return string Path for CSI cache (is the same for all runs and steps)
    */
