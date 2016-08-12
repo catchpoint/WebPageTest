@@ -9,6 +9,7 @@ class TestResultsHtmlTables {
   private $testComplete;
   private $breakdown;
   private $hasVideo;
+  private $hasScreenshots;
 
   private $waterfallDisplayed;
   private $pageData;
@@ -19,6 +20,7 @@ class TestResultsHtmlTables {
     $this->testComplete = $testComplete;
     $this->breakdown = null;
     $this->hasVideo = $this->testInfo->hasVideo();
+    $this->hasScreenshots = $this->testInfo->hasScreenshots();
   }
 
   public function create(&$pageData, $median_metric, $tcpDumpView) {
@@ -111,7 +113,7 @@ class TestResultsHtmlTables {
         $testUrl = "/result/$id/$run/details/";
       echo "<a href=\"$testUrl\">";
       echo "<img class=\"progress\"$onloadWaterfall width=250 src=\"/thumbnail.php?test=$id&run=$run&file={$run}_waterfall.png\"></a></td>\n";
-      if (!isset($test['testinfo']) || !$test['testinfo']['noimages']) {
+      if ($this->hasScreenshots) {
         if (FRIENDLY_URLS)
           echo "<td align=\"center\" valign=\"middle\"><a href=\"/result/$id/$run/screen_shot/\"><img class=\"progress\"$onloadScreenShot width=250 src=\"/result/$id/{$run}_screen_thumb.jpg\"></a></td>";
         else
@@ -192,7 +194,7 @@ class TestResultsHtmlTables {
           else
             echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/details.php?test=$id&run=$run&cached=1\"><img class=\"progress\" width=250 src=\"/thumbnail.php?test=$id&run=$run&cached=1&file={$run}_Cached_waterfall.png\"></a></td>";
 
-          if (!isset($test['testinfo']) || !$test['testinfo']['noimages']) {
+          if ($this->hasScreenshots) {
             if (FRIENDLY_URLS)
               echo "<td align=\"center\" class=\"even\" valign=\"middle\"><a href=\"/result/$id/$run/screen_shot/cached/\"><img class=\"progress\" width=250 src=\"/result/$id/{$run}_Cached_screen_thumb.jpg\"></a></td>";
             else
@@ -249,7 +251,7 @@ class TestResultsHtmlTables {
     $span = 2;
     if ($stepResult->getMetric('optimization_checked'))
       $span++;
-    if (!isset($test['testinfo']) || !$test['testinfo']['noimages'])
+    if ($this->hasScreenshots)
       $span++;
     if ($this->hasVideo)
       $span++;
@@ -272,8 +274,7 @@ class TestResultsHtmlTables {
     echo "<th align=\"center\" class=\"empty\" valign=\"middle\"></th>\n";
     echo "<th align=\"center\" valign=\"middle\">Waterfall</th>\n";
     $table_columns = 2;
-    $infoArray = $this->testInfo->getInfoArray();
-    if (empty($infoArray['noimages'])) {
+    if ($this->hasScreenshots) {
       echo '<th align="center" valign="middle">Screen Shot</th>';
       $table_columns++;
     }

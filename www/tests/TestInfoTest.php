@@ -90,6 +90,17 @@ class TestInfoTest extends PHPUnit_Framework_TestCase {
     $this->assertTrue($testInfo->isTestError());
   }
 
+  public function testHasScreenshots() {
+    $testInfo = TestInfo::fromValues("test", "/test/root", array());
+    $this->assertTrue($testInfo->hasScreenshots());
+
+    $testInfo = TestInfo::fromValues("test", "/test/root", array("testinfo" => array("noimages" => "")));
+    $this->assertTrue($testInfo->hasScreenshots());
+
+    $testInfo = TestInfo::fromValues("test", "/test/root", array("testinfo" => array("noimages" => true)));
+    $this->assertFalse($testInfo->hasScreenshots());
+  }
+
   public function testHasVideo() {
     $testInfo = TestInfo::fromValues("test", "/test/root", array());
     $this->assertFalse($testInfo->hasVideo());

@@ -175,4 +175,11 @@ class TestInfo {
            (isset($this->rawData['test']['Video']) && $this->rawData['test']['Video']) ||
            (isset($this->rawData['test']['video']) && $this->rawData['test']['video']);
   }
+
+  /**
+   * @return bool True if the test is supposed to have screenshots (images), false otherwise
+   */
+  public function hasScreenshots() {
+    return empty($this->rawData["testinfo"]["noimages"]);
+  }
 }
