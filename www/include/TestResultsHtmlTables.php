@@ -58,14 +58,8 @@ class TestResultsHtmlTables {
     echo '<tr>';
     if (array_key_exists($run, $pageData) && array_key_exists(0, $pageData[$run]) && count($pageData[$run][0])) {
       echo '<td align="left" valign="middle">First View';
-      if (isset($test['testinfo']['errors'][$run][0]) && strlen($test['testinfo']['errors'][$run][0]))
-        echo '<br>(Test Error: ' . htmlspecialchars($test['testinfo']['errors'][$run][0]) . ')';
-      if (isset($pageData[$run][0]['result']) && $pageData[$run][0]['result'] !== 0 && $pageData[$run][0]['result'] !== 99999)
-        echo '<br>(Error: ' . LookupError($pageData[$run][0]['result']) . ')';
-      else if (isset($pageData[$run][0]['loadTime']))
-        echo '<br>(' . number_format($pageData[$run][0]['loadTime'] / 1000.0, 3) . 's)';
-
       $stepResult = $this->testResults->getRunResult($run, false)->getStepResult(1);
+      echo $this->_getResultLabel($stepResult);
       echo $this->_getDynatraceLinks($stepResult);
       echo $this->_getCaptureLinks($stepResult, $tcpDumpView);
       echo $this->_getTimelineLinks($stepResult);
@@ -89,14 +83,8 @@ class TestResultsHtmlTables {
       if (isset($pageData[$run][1])) {
         if (array_key_exists($run, $pageData) && array_key_exists(1, $pageData[$run]) && count($pageData[$run][1])) {
           echo '<td align="left" class="even" valign="middle">Repeat View';
-          if (isset($test['testinfo']['errors'][$run][1]) && strlen($test['testinfo']['errors'][$run][1]))
-            echo '<br>(Test Error: ' . htmlspecialchars($test['testinfo']['errors'][$run][0]) . ')';
-          if (isset($pageData[$run][1]['result']) && $pageData[$run][1]['result'] !== 0 && $pageData[$run][1]['result'] !== 99999)
-            echo '<br>(Error: ' . LookupError($pageData[$run][1]['result']) . ')';
-          else if (isset($pageData[$run][1]['loadTime']))
-            echo '<br>(' . number_format($pageData[$run][1]['loadTime'] / 1000.0, 3) . 's)';
-
           $stepResult = $this->testResults->getRunResult($run, true)->getStepResult(1);
+          echo $this->_getResultLabel($stepResult);
           echo $this->_getDynatraceLinks($stepResult);
           echo $this->_getCaptureLinks($stepResult, $tcpDumpView);
           echo $this->_getTimelineLinks($stepResult);
@@ -366,6 +354,26 @@ class TestResultsHtmlTables {
     $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS);
     $zipUrl = $urlGenerator->getGZip( $stepResult->createTestPaths("")->netlogFile());
     return "<br><br><a href=\"$zipUrl\" title=\"Download Network Log\">Net Log</a>";
+  }
+
+  /**
+   * @param TestStepResult $stepResult
+   * @return string Markup with label
+   */
+  private function _getResultLabel($stepResult) {
+    $out = "";
+    $error = $this->testInfo->getRunError($stepResult->getRunNumber(), $stepResult->isCachedRun());
+    if ($error) {
+      $out .= '<br>(Test Error: ' . htmlspecialchars($error) . ')';
+    }
+    $result = $stepResult->getMetric("result");
+    $loadTime = $stepResult->getMetric("loadTime");
+    if ($result !== null && $result !== 0 && $result !== 99999) {
+      $out .= '<br>(Error: ' . LookupError($result) . ')';
+    } else if ($loadTime !== null) {
+      $out .= '<br>(' . number_format($loadTime / 1000.0, 3) . 's)';
+    }
+    return $out;
   }
 
 }

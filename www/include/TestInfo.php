@@ -168,6 +168,17 @@ class TestInfo {
   }
 
   /**
+   * @return string|null The error (if exists) or null if there is no error
+   */
+  public function getRunError($run, $cached) {
+    $cachedIdx = $cached ? 1 : 0;
+    if (empty($this->rawData['testinfo']['errors'][$run][$cachedIdx])) {
+      return null;
+    }
+    return $this->rawData['testinfo']['errors'][$run][$cachedIdx];
+  }
+
+  /**
    * @return bool True if the test is supposed to have a video, false otherwise
    */
   public function hasVideo() {
