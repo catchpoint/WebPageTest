@@ -166,4 +166,13 @@ class TestInfo {
   public function isTestError() {
     return !empty($this->rawData['testinfo']['test_error']);
   }
+
+  /**
+   * @return bool True if the test is supposed to have a video, false otherwise
+   */
+  public function hasVideo() {
+    return (isset($this->rawData['test']['Capture Video']) && $this->rawData['test']['Capture Video']) ||
+           (isset($this->rawData['test']['Video']) && $this->rawData['test']['Video']) ||
+           (isset($this->rawData['test']['video']) && $this->rawData['test']['video']);
+  }
 }
