@@ -235,29 +235,31 @@ class TestResultsHtmlTables {
    */
   private function _createBreakdownRow($stepResult) {
     $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS);
-        $b = getBreakdownForStep($stepResult->createTestPaths(), $urlGenerator, $requests);
-        if (is_array($b)) {
-          $this->breakdown[] = array('run' => $stepResult->getRunNumber(), 'data' => $b);
-        }
+    $b = getBreakdownForStep($stepResult->createTestPaths(), $urlGenerator, $requests);
+    if (is_array($b)) {
+      $this->breakdown[] = array('run' => $stepResult->getRunNumber(), 'data' => $b);
+    }
+    echo "<tr>\n";
 
-            echo "<tr>\n";
-            echo "<td align=\"left\" valign=\"middle\">\n";
-            $breakdownUrl = $urlGenerator->resultPage("breakdown");
-            echo "<a href=\"$breakdownUrl\">Content Breakdown</a>";
-            echo "</td>";
+    echo "<td align=\"left\" valign=\"middle\">\n";
+    $breakdownUrl = $urlGenerator->resultPage("breakdown");
+    echo "<a href=\"$breakdownUrl\">Content Breakdown</a>";
+    echo "</td>";
 
-        $span = 2;
-        if ($stepResult->getMetric('optimization_checked'))
-          $span++;
-        if (!isset($test['testinfo']) || !$test['testinfo']['noimages'])
-          $span++;
-        if ($this->hasVideo)
-          $span++;
-        echo "<td align=\"left\" valign=\"middle\" colspan=\"$span\">";
-        $run = $stepResult->getRunNumber();
-        echo "<table><tr><td style=\"border:none;\"><div id=\"requests_$run\"></div></td>";
-        echo "<td style=\"border:none;\"><div id=\"bytes_$run\"></div></td></tr></table>";
-        echo "</td>\n";
+    $span = 2;
+    if ($stepResult->getMetric('optimization_checked'))
+      $span++;
+    if (!isset($test['testinfo']) || !$test['testinfo']['noimages'])
+      $span++;
+    if ($this->hasVideo)
+      $span++;
+
+    echo "<td align=\"left\" valign=\"middle\" colspan=\"$span\">";
+    $run = $stepResult->getRunNumber();
+    echo "<table><tr><td style=\"border:none;\"><div id=\"requests_$run\"></div></td>";
+    echo "<td style=\"border:none;\"><div id=\"bytes_$run\"></div></td></tr></table>";
+    echo "</td>\n";
+
     echo "</tr>\n";
   }
 
