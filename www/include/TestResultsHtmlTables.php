@@ -45,19 +45,31 @@ class TestResultsHtmlTables {
 
   private function _createTableForRun($run, $tcpDumpView) {
     $fvMedian = $this->firstViewMedianRun;
-    echo "<table id=\"table<?php echo $run; ?>\" class=\"pretty result\" align=\"center\" border=\"1\" cellpadding=\"20\" cellspacing=\"0\">\n";
-    $table_columns = $this->_createTableHead();
+    echo "<table id=\"table$run\" class=\"pretty result\" align=\"center\" border=\"1\" cellpadding=\"20\" cellspacing=\"0\">\n";
+    $columns = $this->_countTableColumns();
+    $this->_createTableHead();
 
     $firstViewResults = $this->testResults->getRunResult($run, false);
-    $this->_createRunResultRows($run, false, $tcpDumpView, $table_columns);
+    $this->_createRunResultRows($run, false, $tcpDumpView, $columns);
     if (!$this->testInfo->isFirstViewOnly() || $this->testResults->getRunResult($run, true)) {
-      $this->_createRunResultRows($run, true, $tcpDumpView, $table_columns);
+      $this->_createRunResultRows($run, true, $tcpDumpView, $columns);
     }
     if ($this->testComplete && $run == $fvMedian && $firstViewResults) {
-      $this->_createBreakdownRow($firstViewResults->getStepResult(1), $table_columns);
+      $this->_createBreakdownRow($firstViewResults->getStepResult(1), $columns);
     }
 
     echo "</table>\n<br>\n";
+  }
+
+  private function _countTableColumns() {
+    $columns = 2;
+    if ($this->hasScreenshots) {
+      $columns++;
+    }
+    if ($this->hasVideo) {
+      $columns++;
+    }
+    return $columns;
   }
 
   /**
@@ -125,17 +137,13 @@ class TestResultsHtmlTables {
     echo "<tr>\n";
     echo "<th align=\"center\" class=\"empty\" valign=\"middle\"></th>\n";
     echo "<th align=\"center\" valign=\"middle\">Waterfall</th>\n";
-    $table_columns = 2;
     if ($this->hasScreenshots) {
       echo '<th align="center" valign="middle">Screen Shot</th>';
-      $table_columns++;
     }
     if ($this->hasVideo) {
       echo '<th align="center" valign="middle">Video</th>';
-      $table_columns++;
     }
     echo '</tr>';
-    return $table_columns;
   }
 
   /**
