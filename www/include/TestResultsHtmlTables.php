@@ -47,10 +47,8 @@ class TestResultsHtmlTables {
     $id = $this->testInfo->getId();
     $fvMedian = $this->testResults->getMedianRunNumber($median_metric, false);
     $infoArray = $this->testInfo->getInfoArray();
-    ?>
-    <table id="table<?php echo $run; ?>" class="pretty result" align="center" border="1" cellpadding="20"
-           cellspacing="0">
-      <?php
+    echo "<table id=\"table<?php echo $run; ?>\" class=\"pretty result\" align=\"center\" border=\"1\" cellpadding=\"20\" cellspacing=\"0\">\n";
+
       $table_columns = $this->_createTableHead();
       echo '<tr>';
         if (array_key_exists($run, $pageData) && array_key_exists(0, $pageData[$run]) && count($pageData[$run][0])) {
@@ -226,11 +224,9 @@ class TestResultsHtmlTables {
         if ($this->testComplete && $run == $fvMedian) {
           $this->_createBreakdownRow($this->testResults->getRunResult($run, false)->getStepResult(1));
         }
-        ?>
 
-    </table>
-    <br>
-    <?php
+    echo "</table>\n<br>\n";
+
   }
 
 
