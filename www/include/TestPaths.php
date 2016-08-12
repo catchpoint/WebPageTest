@@ -252,6 +252,20 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for capture file
+   */
+  public function captureFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . ".cap";
+  }
+
+  /**
+   * @return string Path for keylog file
+   */
+  public function keylogFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_keylog.log";
+  }
+
+  /**
    * @return string Path for the console log
    */
   public function consoleLogFile() {
