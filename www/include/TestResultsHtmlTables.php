@@ -48,12 +48,13 @@ class TestResultsHtmlTables {
     echo "<table id=\"table<?php echo $run; ?>\" class=\"pretty result\" align=\"center\" border=\"1\" cellpadding=\"20\" cellspacing=\"0\">\n";
     $table_columns = $this->_createTableHead();
 
+    $firstViewResults = $this->testResults->getRunResult($run, false);
     $this->_createRunResultRows($run, false, $tcpDumpView, $table_columns);
     if (!$this->testInfo->isFirstViewOnly() || $this->testResults->getRunResult($run, true)) {
       $this->_createRunResultRows($run, true, $tcpDumpView, $table_columns);
     }
-    if ($this->testComplete && $run == $fvMedian) {
-      $this->_createBreakdownRow($this->testResults->getRunResult($run, false)->getStepResult(1));
+    if ($this->testComplete && $run == $fvMedian && $firstViewResults) {
+      $this->_createBreakdownRow($firstViewResults->getStepResult(1), $table_columns);
     }
 
     echo "</table>\n<br>\n";
@@ -91,8 +92,9 @@ class TestResultsHtmlTables {
 
   /**
    * @param TestStepResult $stepResult
+   * @param int $tableColumns Number of columsn in the table
    */
-  private function _createBreakdownRow($stepResult) {
+  private function _createBreakdownRow($stepResult, $tableColumns) {
     $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS);
     $b = getBreakdownForStep($stepResult->createTestPaths(), $urlGenerator, $requests);
     if (is_array($b)) {
@@ -105,14 +107,7 @@ class TestResultsHtmlTables {
     echo "<a href=\"$breakdownUrl\">Content Breakdown</a>";
     echo "</td>";
 
-    $span = 2;
-    if ($stepResult->getMetric('optimization_checked'))
-      $span++;
-    if ($this->hasScreenshots)
-      $span++;
-    if ($this->hasVideo)
-      $span++;
-
+    $span = $tableColumns - 1;
     echo "<td align=\"left\" valign=\"middle\" colspan=\"$span\">";
     $run = $stepResult->getRunNumber();
     echo "<table><tr><td style=\"border:none;\"><div id=\"requests_$run\"></div></td>";
