@@ -266,6 +266,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for dynatrace file
+   */
+  public function dynatraceFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_dynaTrace.dtas";
+  }
+
+  /**
    * @return string Path for the console log
    */
   public function consoleLogFile() {
