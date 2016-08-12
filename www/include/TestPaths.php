@@ -231,6 +231,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for devtools timeline
+   */
+  public function devtoolsTimelineFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_timeline.json";
+  }
+
+  /**
    * @return string Path for devtools CPU timeline
    */
   public function devtoolsCPUTimelineFile() {
@@ -238,7 +245,7 @@ class TestPaths {
   }
 
   /**
-   * @return string Path for devtools CPU timeline
+   * @return string Path for devtools trace file
    */
   public function devtoolsTraceFile() {
     return $this->testRoot . $this->underscoreIdentifier() . "_trace.json";
