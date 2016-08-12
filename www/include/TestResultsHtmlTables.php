@@ -9,6 +9,9 @@ class TestResultsHtmlTables {
   private $testComplete;
   private $breakdown;
 
+  private $waterfallDisplayed;
+  private $pageData;
+
   public function __construct($testInfo, $testResults, $testComplete) {
     $this->testInfo = $testInfo;
     $this->testResults = $testResults;
@@ -17,14 +20,9 @@ class TestResultsHtmlTables {
   }
 
   public function create(&$pageData, $median_metric, $tcpDumpView) {
-    $wpt_host = trim($_SERVER['HTTP_HOST']);
-    $video = $this->testInfo->hasVideo();
-    $testPath = $this->testInfo->getRootDirectory();
-    $id = $this->testInfo->getId();
-    $fvMedian = $this->testResults->getMedianRunNumber($median_metric, false);
     $runs = $this->testInfo->getRuns();
-    $infoArray = $this->testInfo->getInfoArray();
-    $first_displayed = false;
+    $this->waterfallDisplayed = false;
+    $this->pageData = $pageData;
     for ($run = 1; $run <= $runs; $run++) {
       $error_str = null;
       $runResults = $this->testResults->getRunResult($run, false);
@@ -39,6 +37,19 @@ class TestResultsHtmlTables {
       if (isset($error_str)) {
         echo '<p>' . htmlspecialchars($error_str) . '</p>';
       } else {
+        $this->_createTableForRun($run, $median_metric, $tcpDumpView);
+      }
+    }
+  }
+
+  private function _createTableForRun($run, $median_metric, $tcpDumpView) {
+    $pageData = $this->pageData;
+    $wpt_host = trim($_SERVER['HTTP_HOST']);
+    $video = $this->testInfo->hasVideo();
+    $testPath = $this->testInfo->getRootDirectory();
+    $id = $this->testInfo->getId();
+    $fvMedian = $this->testResults->getMedianRunNumber($median_metric, false);
+    $infoArray = $this->testInfo->getInfoArray();
         ?>
         <table id="table<?php echo $run; ?>" class="pretty result" align="center" border="1" cellpadding="20"
                cellspacing="0">
@@ -59,11 +70,11 @@ class TestResultsHtmlTables {
             if (array_key_exists($run, $pageData) && array_key_exists(0, $pageData[$run]) && count($pageData[$run][0])) {
               $onloadWaterfall = '';
               $onloadScreenShot = '';
-              if (!$first_displayed) {
+              if (!$this->waterfallDisplayed) {
                 $onloadWaterfall = " onload=\"markUserTime('aft.First Waterfall')\"";
                 $onloadScreenShot = " onload=\"markUserTime('aft.First Screen Shot')\"";
               }
-              $first_displayed = true;
+              $this->waterfallDisplayed = true;
               echo '<td align="left" valign="middle">First View';
               if (isset($test['testinfo']['errors'][$run][0]) && strlen($test['testinfo']['errors'][$run][0]))
                 echo '<br>(Test Error: ' . htmlspecialchars($test['testinfo']['errors'][$run][0]) . ')';
@@ -263,8 +274,7 @@ class TestResultsHtmlTables {
         </table>
         <br>
         <?php
-      }   // $error_str
-    }
+
   }
 
   public function getBreakdown() {
