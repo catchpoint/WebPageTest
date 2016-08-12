@@ -182,4 +182,11 @@ class TestInfo {
   public function hasScreenshots() {
     return empty($this->rawData["testinfo"]["noimages"]);
   }
+
+  /**
+   * @return bool True if the test is supposed to have a timeline, false otherwise
+   */
+  public function hasTimeline() {
+    return !empty($this->rawData["testinfo"]["timeline"]);
+  }
 }
