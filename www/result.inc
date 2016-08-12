@@ -258,8 +258,8 @@ $page_description = "Website performance test result$testLabel.";
             if ($testResults->countRuns() > 1)
                 echo '<h3 style="text-align:center;">Test Results</h3>';
             $tcpDumpView = !empty($settings['tcpdump_view']) ? $settings['tcpdump_view'] : null;
-            $resultTables = new TestResultsHtmlTables($testInfo, $testResults, $testComplete);
-            $resultTables->create($pageData, $median_metric, $tcpDumpView);
+            $resultTables = new TestResultsHtmlTables($testInfo, $testResults, $testComplete, $median_metric);
+            $resultTables->create($pageData, $tcpDumpView);
             ?>
             </div>
             </div>

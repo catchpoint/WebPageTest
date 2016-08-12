@@ -10,20 +10,22 @@ class TestResultsHtmlTables {
   private $breakdown;
   private $hasVideo;
   private $hasScreenshots;
+  private $firstViewMedianRun;
 
   private $waterfallDisplayed;
   private $pageData;
 
-  public function __construct($testInfo, $testResults, $testComplete) {
+  public function __construct($testInfo, $testResults, $testComplete, $median_metric) {
     $this->testInfo = $testInfo;
     $this->testResults = $testResults;
     $this->testComplete = $testComplete;
     $this->breakdown = null;
     $this->hasVideo = $this->testInfo->hasVideo();
     $this->hasScreenshots = $this->testInfo->hasScreenshots();
+    $this->firstViewMedianRun = $this->testResults->getMedianRunNumber($median_metric, false);
   }
 
-  public function create(&$pageData, $median_metric, $tcpDumpView) {
+  public function create(&$pageData, $tcpDumpView) {
     $runs = $this->testInfo->getRuns();
     $this->waterfallDisplayed = false;
     $this->pageData = $pageData;
@@ -36,18 +38,18 @@ class TestResultsHtmlTables {
         $error_str = $this->testComplete ? 'Test Error: Data is missing.' : 'Waiting for test result...';
         echo '<p>' . htmlspecialchars($error_str) . '</p>';
       } else {
-        $this->_createTableForRun($run, $median_metric, $tcpDumpView);
+        $this->_createTableForRun($run, $tcpDumpView);
       }
     }
   }
 
-  private function _createTableForRun($run, $median_metric, $tcpDumpView) {
+  private function _createTableForRun($run, $tcpDumpView) {
     $pageData = $this->pageData;
     $wpt_host = trim($_SERVER['HTTP_HOST']);
     $video = $this->testInfo->hasVideo();
     $testPath = $this->testInfo->getRootDirectory();
     $id = $this->testInfo->getId();
-    $fvMedian = $this->testResults->getMedianRunNumber($median_metric, false);
+    $fvMedian = $this->firstViewMedianRun;
     $infoArray = $this->testInfo->getInfoArray();
     echo "<table id=\"table<?php echo $run; ?>\" class=\"pretty result\" align=\"center\" border=\"1\" cellpadding=\"20\" cellspacing=\"0\">\n";
 
