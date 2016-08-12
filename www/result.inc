@@ -259,7 +259,7 @@ $page_description = "Website performance test result$testLabel.";
                 echo '<h3 style="text-align:center;">Test Results</h3>';
             $tcpDumpView = !empty($settings['tcpdump_view']) ? $settings['tcpdump_view'] : null;
             $resultTables = new TestResultsHtmlTables($testInfo, $testResults, $testComplete, $median_metric);
-            $resultTables->create($pageData, $tcpDumpView);
+            $resultTables->create($tcpDumpView);
             ?>
             </div>
             </div>

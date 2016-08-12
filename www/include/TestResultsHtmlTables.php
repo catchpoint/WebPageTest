@@ -14,7 +14,6 @@ class TestResultsHtmlTables {
 
   private $waterfallDisplayed;
   private $screenshotDisplayed;
-  private $pageData;
 
   public function __construct($testInfo, $testResults, $testComplete, $median_metric) {
     $this->testInfo = $testInfo;
@@ -26,11 +25,10 @@ class TestResultsHtmlTables {
     $this->firstViewMedianRun = $this->testResults->getMedianRunNumber($median_metric, false);
   }
 
-  public function create(&$pageData, $tcpDumpView) {
+  public function create($tcpDumpView) {
     $runs = $this->testInfo->getRuns();
     $this->waterfallDisplayed = false;
     $this->screenshotDisplayed = false;
-    $this->pageData = $pageData;
     for ($run = 1; $run <= $runs; $run++) {
       $runResults = $this->testResults->getRunResult($run, false);
       if ($runs > 1) {
@@ -46,18 +44,14 @@ class TestResultsHtmlTables {
   }
 
   private function _createTableForRun($run, $tcpDumpView) {
-    $pageData = $this->pageData;
-    $video = $this->testInfo->hasVideo();
-    $testPath = $this->testInfo->getRootDirectory();
-    $id = $this->testInfo->getId();
     $fvMedian = $this->firstViewMedianRun;
-    $infoArray = $this->testInfo->getInfoArray();
     echo "<table id=\"table<?php echo $run; ?>\" class=\"pretty result\" align=\"center\" border=\"1\" cellpadding=\"20\" cellspacing=\"0\">\n";
-
     $table_columns = $this->_createTableHead();
     echo '<tr>';
-    if (array_key_exists($run, $pageData) && array_key_exists(0, $pageData[$run]) && count($pageData[$run][0])) {
-      $stepResult = $this->testResults->getRunResult($run, false)->getStepResult(1);
+    $firstViewResults = $this->testResults->getRunResult($run, false);
+    $fvError = $this->testInfo->getRunError($run, false);
+    if ($firstViewResults) {
+      $stepResult = $firstViewResults->getStepResult(1);
       $this->_createResultCell($stepResult, $tcpDumpView, false);
       $this->_createWaterfallCell($stepResult, false);
       if ($this->hasScreenshots) {
@@ -66,15 +60,20 @@ class TestResultsHtmlTables {
       if ($this->hasVideo) {
         $this->_createVideoCell($stepResult, false);
       }
+    } else if ($fvError) {
+      $error_str = htmlspecialchars('Test Error: ' . $fvError);
+      echo "<td colspan=\"$table_columns\" align=\"left\" valign=\"middle\">First View: $error_str</td>";
     } else {
       echo "<td colspan=\"$table_columns\" align=\"left\" valign=\"middle\">First View: Test Data Missing</td>";
     }
     echo '</tr>';
-    if (!$this->testInfo->isFirstViewOnly() || isset($pageData[$run][1])) {
+
+    $repeatViewResults = $this->testResults->getRunResult($run, true);
+    if (!$this->testInfo->isFirstViewOnly() || $repeatViewResults) {
       echo '<tr>';
-      if (isset($pageData[$run][1])) {
-        if (array_key_exists($run, $pageData) && array_key_exists(1, $pageData[$run]) && count($pageData[$run][1])) {
-          $stepResult = $this->testResults->getRunResult($run, true)->getStepResult(1);
+      $rvError = $this->testInfo->getRunError($run, true);
+      if ($repeatViewResults) {
+          $stepResult = $repeatViewResults->getStepResult(1);
           $this->_createResultCell($stepResult, $tcpDumpView, true);
           $this->_createWaterfallCell($stepResult, true);
           if ($this->hasScreenshots) {
@@ -83,14 +82,8 @@ class TestResultsHtmlTables {
           if ($this->hasVideo) {
             $this->_createVideoCell($stepResult, true);
           }
-        }
-      } else if (array_key_exists('testinfo', $test) &&
-        array_key_exists('errors', $test['testinfo']) &&
-        array_key_exists($run, $test['testinfo']['errors']) &&
-        array_key_exists(0, $test['testinfo']['errors'][$run]) &&
-        strlen($test['testinfo']['errors'][$run][1])
-      ) {
-        $error_str = htmlspecialchars('Test Error: ' . $test['testinfo']['errors'][$run][1]);
+      } else if ($rvError) {
+        $error_str = htmlspecialchars('Test Error: ' . $rvError);
         echo "<td colspan=\"$table_columns\" align=\"left\" valign=\"middle\">Repeat View: $error_str</td>";
       } else {
         echo "<td colspan=\"$table_columns\" align=\"left\" valign=\"middle\">Repeat View: Test Data Missing</td>";
