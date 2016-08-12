@@ -157,6 +157,7 @@ $page_description = "Website performance test result$testLabel.";
                     $fvRunResults = $testResults->getRunResult($fvMedian, false);
                     $rvRunResults = $rvMedian ? $testResults->getRunResult($rvMedian, true) : null;
                     $resultTable = new RunResultHtmlTable($testInfo, $fvRunResults, $rvRunResults);
+                    $resultTable->useLabelLinks(true);
                     $resultTable->disableColumns(array(
                       RunResultHtmlTable::COL_ABOVE_THE_FOLD,
                       RunResultHtmlTable::COL_VISUAL_COMPLETE,
@@ -224,7 +225,7 @@ $page_description = "Website performance test result$testLabel.";
 		    </table><br>
 		<?php
 		    } // csi
-                } // fbMedian
+                } // fvMedian
                 if (!$fvMedian || $is_test_error) {
                     $error = 'The test completed but there were no successful results.';
                     $detail = null;
@@ -258,7 +259,7 @@ $page_description = "Website performance test result$testLabel.";
             <?php } ?>
             <div id="tables" style="text-align:left;">
             <?php
-            if( count($pageData) > 1) 
+            if ($testResults->countRuns() > 1)
                 echo '<h3 style="text-align:center;">Test Results</h3>';
 
             $runs = $test['test']['runs'];
@@ -515,7 +516,7 @@ $page_description = "Website performance test result$testLabel.";
             </div>
 
 		    <br>
-            <?php include('./ads/results_bottom.inc'); ?>
+            <?php if (file_exists('./ads/results_bottom.inc')) include('./ads/results_bottom.inc'); ?>
 		    <br>
             
             <?php include('footer.inc'); ?>
