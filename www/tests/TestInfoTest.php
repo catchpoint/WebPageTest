@@ -83,10 +83,10 @@ class TestInfoTest extends PHPUnit_Framework_TestCase {
     $testInfo = TestInfo::fromValues("test", "/test/root", array());
     $this->assertFalse($testInfo->isTestError());
 
-    $testInfo = TestInfo::fromValues("test", "/test/root", array("test_error" => ""));
+    $testInfo = TestInfo::fromValues("test", "/test/root", array("testinfo" => array("test_error" => "")));
     $this->assertFalse($testInfo->isTestError());
 
-    $testInfo = TestInfo::fromValues("test", "/test/root", array("test_error" => 1));
+    $testInfo = TestInfo::fromValues("test", "/test/root", array("testinfo" => array("test_error" => 1)));
     $this->assertTrue($testInfo->isTestError());
   }
 }
