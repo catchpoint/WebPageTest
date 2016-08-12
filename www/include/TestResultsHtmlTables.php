@@ -69,10 +69,7 @@ class TestResultsHtmlTables {
       echo $this->_getDynatraceLinks($stepResult);
       echo $this->_getCaptureLinks($stepResult, $tcpDumpView);
       echo $this->_getTimelineLinks($stepResult);
-      if ($infoArray['trace'] && gz_is_file("$testPath/{$run}_trace.json")) {
-        echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_trace.json\" title=\"Download Chrome Trace\">Trace</a>";
-        echo " (<a href=\"/chrome/trace.php?test=$id&run=$run&cached=0\" title=\"View Chrome Trace\">view</a>)";
-      }
+      echo $this->_getTraceLinks($stepResult);
       if (gz_is_file("$testPath/{$run}_netlog.txt")) {
         echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_netlog.txt\" title=\"Download Network Log\">Net Log</a>";
       }
@@ -105,10 +102,7 @@ class TestResultsHtmlTables {
           echo $this->_getDynatraceLinks($stepResult);
           echo $this->_getCaptureLinks($stepResult, $tcpDumpView);
           echo $this->_getTimelineLinks($stepResult);
-          if ($infoArray['trace'] && gz_is_file("$testPath/{$run}_Cached_trace.json")) {
-            echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_trace.json\" title=\"Download Chrome Trace\">Trace</a>";
-            echo " (<a href=\"/chrome/trace.php?test=$id&run=$run&cached=1\" title=\"View Chrome Trace\">view</a>)";
-          }
+          echo $this->_getTraceLinks($stepResult);
           if (gz_is_file("$testPath/{$run}_Cached_netlog.txt")) {
             echo "<br><br><a href=\"/getgzip.php?test=$id&file={$run}_Cached_netlog.txt\" title=\"Download Network Log\">Net Log</a>";
           }
@@ -341,6 +335,26 @@ class TestResultsHtmlTables {
     $out .= "</a></div><br>\n";
     $out .= "<a href=\"http://ajax.dynatrace.com/pages/\" target=\"_blank\" title=\"Get dynaTrace AJAX Edition\">\n";
     $out .= "<img src=\"{$GLOBALS['cdnPath']}/images/dynatrace_ajax.png\" alt=\"Get dynaTrace Ajax Edition\"></a>\n";
+    return $out;
+  }
+
+  /**
+   * @param TestStepResult $stepResult
+   * @return string Markup with links
+   */
+  private function _getTraceLinks($stepResult) {
+    $infoArray = $this->testInfo->getInfoArray();
+    $localPaths = $stepResult->createTestPaths();
+    if (empty($infoArray["trace"]) || !gz_is_file($localPaths->devtoolsTraceFile())) {
+      return "";
+    }
+    $filenamePaths = $stepResult->createTestPaths("");
+    $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS);
+    $zipUrl = $urlGenerator->getGZip($filenamePaths->devtoolsTraceFile());
+    $viewUrl = $urlGenerator->stepDetailPage("chrome/trace");
+
+    $out = "<br><br><a href=\"$zipUrl\" title=\"Download Chrome Trace\">Trace</a>\n";
+    $out .= " (<a href=\"$viewUrl\" title=\"View Chrome Trace\">view</a>)\n";
     return $out;
   }
 
