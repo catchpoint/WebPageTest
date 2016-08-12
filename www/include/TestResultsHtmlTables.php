@@ -121,23 +121,8 @@ class TestResultsHtmlTables {
         else
           echo "<td align=\"center\" valign=\"middle\"><a href=\"/screen_shot.php?test=$id&run=$run\"><img class=\"progress\"$onloadScreenShot width=250 src=\"/thumbnail.php?test=$id&run=$run&file={$run}_screen.jpg\"></a></td>";
       }
-      if ($video) {
-        echo '<td align="center" valign="middle">';
-        if (is_dir("$testPath/video_$run")) {
-          $end = '';
-          $endId = '';
-          if ($run == $fvMedian && array_key_exists('end', $_REQUEST)) {
-            $end = "-e:{$_REQUEST['end']}";
-            $endId = "-e{$_REQUEST['end']}";
-          }
-          echo "<a href=\"/video/compare.php?tests=$id-r:$run-c:0$end\">Filmstrip View</a><br>-<br>";
-          echo "<a href=\"/video/create.php?tests=$id-r:$run-c:0$end&id={$id}.{$run}.0$endId\">Watch Video</a>";
-          if (is_file("$testPath/{$run}_video.mp4"))
-            echo "<br>-<br><a href=\"/$testPath/{$run}_video.mp4\">Raw Device Video</a>";
-        } else {
-          echo "not available";
-        }
-        echo '</td>';
+      if ($this->hasVideo) {
+        $this->_createVideoCell($this->testResults->getRunResult($run, false)->getStepResult(1));
       }
     } else {
       echo "<td colspan=\"$table_columns\" align=\"left\" valign=\"middle\">First View: Test Data Missing</td>";
@@ -202,14 +187,8 @@ class TestResultsHtmlTables {
             else
               echo "<td align=\"center\" valign=\"middle\"><a href=\"/screen_shot.php?test=$id&run=$run&cached=1\"><img class=\"progress\" width=250 src=\"/thumbnail.php?test=$id&run=$run&cached=1&file={$run}_Cached_screen.jpg\"></a></td>";
           }
-          if ($video) {
-            echo '<td align="center" valign="middle">';
-            if (is_dir("$testPath/video_{$run}_cached")) {
-              echo "<a href=\"/video/compare.php?tests=$id-r:$run-c:1\">Filmstrip View</a><br>-<br>";
-              echo "<a href=\"/video/create.php?tests=$id-r:$run-c:1&id={$id}.{$run}.1\">Watch Video</a>";
-            } else
-              echo "not available";
-            echo '</td>';
+          if ($this->hasVideo) {
+            $this->_createVideoCell($this->testResults->getRunResult($run, true)->getStepResult(1));
           }
         }
       } else if (array_key_exists('testinfo', $test) &&
@@ -287,5 +266,33 @@ class TestResultsHtmlTables {
     echo '</tr>';
     return $table_columns;
 }
+
+  /**
+   * @param TestStepResult $stepResult
+   */
+  private function _createVideoCell($stepResult) {
+    $localPaths = $stepResult->createTestPaths();
+    echo '<td align="center" valign="middle">';
+    if (is_dir($localPaths->videoDir())) {
+      $urlGenerator = $stepResult->createUrlGenerator("", false);
+      $end = null;
+      if (!$stepResult->isCachedRun() && $stepResult->getRunNumber() == $this->firstViewMedianRun && array_key_exists('end', $_REQUEST)) {
+        $end = $_REQUEST['end'];
+      }
+
+      $filmstripUrl = $urlGenerator->filmstripView($end);
+      echo "<a href=\"$filmstripUrl\">Filmstrip View</a><br>-<br>";
+
+      $createUrl = $urlGenerator->createVideo($end);
+      echo "<a href=\"$createUrl\">Watch Video</a>";
+
+      $rawVideoPath = $localPaths->rawDeviceVideo();
+      if (is_file($rawVideoPath))
+        echo "<br>-<br><a href=\"/$rawVideoPath\">Raw Device Video</a>";
+    } else {
+      echo "not available";
+    }
+    echo '</td>';
+  }
 
 }
