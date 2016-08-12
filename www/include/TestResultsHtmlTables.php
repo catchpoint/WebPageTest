@@ -8,6 +8,7 @@ class TestResultsHtmlTables {
   private $testResults;
   private $testComplete;
   private $breakdown;
+  private $hasVideo;
 
   private $waterfallDisplayed;
   private $pageData;
@@ -17,6 +18,7 @@ class TestResultsHtmlTables {
     $this->testResults = $testResults;
     $this->testComplete = $testComplete;
     $this->breakdown = null;
+    $this->hasVideo = $this->testInfo->hasVideo();
   }
 
   public function create(&$pageData, $median_metric, $tcpDumpView) {
@@ -48,20 +50,9 @@ class TestResultsHtmlTables {
     ?>
     <table id="table<?php echo $run; ?>" class="pretty result" align="center" border="1" cellpadding="20"
            cellspacing="0">
-      <tr>
-        <th align="center" class="empty" valign="middle"></th>
-        <th align="center" valign="middle">Waterfall</th>
-        <?php
-        $table_columns = 2;
-        if (!isset($test['testinfo']) || !$test['testinfo']['noimages']) {
-          echo '<th align="center" valign="middle">Screen Shot</th>';
-          $table_columns++;
-        }
-        if ($video) {
-          echo '<th align="center" valign="middle">Video</th>';
-          $table_columns++;
-        }
-        echo '</tr><tr>';
+      <?php
+      $table_columns = $this->_createTableHead();
+      echo '<tr>';
         if (array_key_exists($run, $pageData) && array_key_exists(0, $pageData[$run]) && count($pageData[$run][0])) {
           $onloadWaterfall = '';
           $onloadScreenShot = '';
@@ -275,5 +266,23 @@ class TestResultsHtmlTables {
   public function getBreakdown() {
     return $this->breakdown;
   }
+
+  private function _createTableHead() {
+    echo "<tr>\n";
+    echo "<th align=\"center\" class=\"empty\" valign=\"middle\"></th>\n";
+    echo "<th align=\"center\" valign=\"middle\">Waterfall</th>\n";
+    $table_columns = 2;
+    $infoArray = $this->testInfo->getInfoArray();
+    if (empty($infoArray['noimages'])) {
+      echo '<th align="center" valign="middle">Screen Shot</th>';
+      $table_columns++;
+    }
+    if ($this->hasVideo) {
+      echo '<th align="center" valign="middle">Video</th>';
+      $table_columns++;
+    }
+    echo '</tr>';
+    return $table_columns;
+}
 
 }
