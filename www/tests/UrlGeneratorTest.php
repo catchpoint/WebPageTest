@@ -223,6 +223,18 @@ class UrlGeneratorTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals($expected, $ug->createVideo(400));
   }
 
+  public function filmstripViewUrlSinglestep() {
+    $expected = "https://test/video/compare.php?tests=160609_a7_b8-r:3-c:1";
+    $ug = UrlGenerator::create(false, "https://test/", "160609_a7_b8", 3, true, 1);
+    $this->assertEquals($expected, $ug->createVideo());
+  }
+
+  public function filmstripViewUrlMultistepWithEnd() {
+    $expected = "https://test/video/compare.php?tests=160609_a7_b8-r:3-c:1-s:2-e:400";
+    $ug = UrlGenerator::create(false, "https://test/", "160609_a7_b8", 3, true, 2);
+    $this->assertEquals($expected, $ug->createVideo(400));
+  }
+
   public function testDownloadVideoFrames() {
     $expected = "https://test/video/downloadFrames.php?test=160609_a7_b8&run=3&cached=1&step=2";
     $ug = UrlGenerator::create(false, "https://test/", "160609_a7_b8", 3, true, 2);
