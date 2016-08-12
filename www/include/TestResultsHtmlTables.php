@@ -224,41 +224,48 @@ class TestResultsHtmlTables {
           echo '</tr>';
         }
         if ($this->testComplete && $run == $fvMedian) {
-        $b = getBreakdown($id, $testPath, $run, 0, $requests);
+          $this->_createBreakdownRow($this->testResults->getRunResult($run, false)->getStepResult(1));
+        }
+        ?>
+
+    </table>
+    <br>
+    <?php
+  }
+
+
+  /**
+   * @param TestStepResult $stepResult
+   */
+  private function _createBreakdownRow($stepResult) {
+    $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS);
+        $b = getBreakdownForStep($stepResult->createTestPaths(), $urlGenerator, $requests);
         if (is_array($b)) {
-          $this->breakdown[] = array('run' => $run, 'data' => $b);
+          $this->breakdown[] = array('run' => $stepResult->getRunNumber(), 'data' => $b);
         }
         ?>
       <tr>
         <td align="left" valign="middle">
-          <?php if (FRIENDLY_URLS) {
-            echo "<a href=\"/result/$id/$run/breakdown/\">Content Breakdown</a>";
-          } else {
-            echo "<a href=\"/breakdown.php?id=$id&run=$run&cached=0\">Content Breakdown</a>";
-          }
+          <?php
+            $breakdownUrl = $urlGenerator->resultPage("breakdown");
+            echo "<a href=\"$breakdownUrl\">Content Breakdown</a>";
           ?>
         </td>
         <?php
         $span = 2;
-        if ($pageData[$run][0]['optimization_checked'])
+        if ($stepResult->getMetric('optimization_checked'))
           $span++;
         if (!isset($test['testinfo']) || !$test['testinfo']['noimages'])
           $span++;
-        if ($video)
+        if ($this->hasVideo)
           $span++;
         echo "<td align=\"left\" valign=\"middle\" colspan=\"$span\">";
-        $extension = 'php';
-        if (FRIENDLY_URLS)
-          $extension = 'png';
+        $run = $stepResult->getRunNumber();
         echo "<table><tr><td style=\"border:none;\"><div id=\"requests_$run\"></div></td>";
         echo "<td style=\"border:none;\"><div id=\"bytes_$run\"></div></td></tr></table>";
         ?>
         </td>
       </tr>
-      <?php } // breakdown ?>
-
-    </table>
-    <br>
     <?php
 
   }
