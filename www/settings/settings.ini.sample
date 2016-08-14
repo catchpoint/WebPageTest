@@ -48,6 +48,9 @@ render_max_load=8
 ; Allow (1) or disable (0) testing of sites on private IP addresses (http://192.168.0.1/ for example).
 allowPrivate=1
 
+; Allow (1) or disallow (0) non fully qualified domain names for URL hostnames (commonly found on private intranets)
+allowNonFQDN=0
+
 ; image quality (defaults to 30)
 ;iq=75
 
