@@ -259,18 +259,18 @@ class Pcap():
       packet_info['tcp_sequence'] = tcp_header[2]
       packet_info['stream_id'] = '{0}:{1:d}->{2}:{3:d}'.format(packet_info['ip_src_str'], packet_info['src_port'],
                                                                packet_info['ip_dst_str'], packet_info['dst_port'])
-      # Use traffic <> to port 80 or 443 as a starting point if timing hasn't already started.
-      # Assume the server is the one on 80/443 for determining the local machine MAC for ethernet direction.
-      if self.start_time is None and\
-          (packet_info['src_port'] == 80 or packet_info['dst_port'] == 80 or
-           packet_info['src_port'] == 443 or packet_info['dst_port'] == 443):
-        self.start_time = packet_info['time']
-        if 'ethernet_dst' in packet_info and self.local_ethernet_mac is None and\
-            (packet_info['src_port'] == 80 or packet_info['src_port'] == 443):
-          self.local_ethernet_mac = packet_info['ethernet_dst']
-        elif 'ethernet_src' in packet_info and self.local_ethernet_mac is None and \
-            (packet_info['dst_port'] == 80 or packet_info['dst_port'] == 443):
-          self.local_ethernet_mac = packet_info['ethernet_src']
+      # If DNS didn't trigger a start yet and we see outbound TCP traffic, use that to identify the starting point.
+      # Outbound can be explicit (if we have a cooked capture like android) or implicit if dest port is 80, 443, 1080.
+      if self.start_time is None:
+        is_outbound = False
+        if 'direction' in packet_info and packet_info['direction'] == 'out':
+          is_outbound = True
+        elif packet_info['dst_port'] == 80 or packet_info['dst_port'] == 443 or packet_info['dst_port'] == 1080:
+          is_outbound = True
+        if is_outbound:
+          self.start_time = packet_info['time']
+          if 'ethernet_src' in packet_info and self.local_ethernet_mac is None:
+            self.local_ethernet_mac = packet_info['ethernet_src']
     else:
       packet_info['valid'] = False
 
