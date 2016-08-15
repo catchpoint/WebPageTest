@@ -69,7 +69,8 @@ class TestStepResult {
    * @return bool True if there is valid test step result data, false otherwise.
    */
   public function isValid() {
-    return !empty($this->rawData) && is_array($this->rawData);
+    return !empty($this->rawData) && is_array($this->rawData) &&
+           ($this->getMetric("loadTime") || $this->getMetric("fullyLoaded"));
   }
 
   /**
