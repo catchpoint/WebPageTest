@@ -270,10 +270,14 @@ $page_description = "Website performance test result$testLabel.";
             
             <?php include('footer.inc'); ?>
         </div>
+        <?php
+        $breakdown = $resultTables->getBreakdown();
+        if ($breakdown) {
+        ?>
         <script type="text/javascript" src="//www.google.com/jsapi"></script>
         <script type="text/javascript">
           <?php
-          echo 'var wptBreakdown=' . json_encode($resultTables->getBreakdown()) . ";\n";
+          echo 'var wptBreakdown=' . json_encode($breakdown) . ";\n";
           ?>
 
           google.load("visualization", "1", {packages:["corechart"]});
@@ -324,6 +328,8 @@ $page_description = "Website performance test result$testLabel.";
             }
           }
         <?php
+        } // $breakdown
+
         if( !$testComplete ) {
             echo "testId = '$id';\n";
         ?>
