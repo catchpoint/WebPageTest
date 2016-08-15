@@ -2789,5 +2789,3 @@ function OverSystemLoad() {
 
   return $over;
 }
-?>
-
