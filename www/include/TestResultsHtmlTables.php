@@ -112,10 +112,7 @@ class TestResultsHtmlTables {
   private function _createRunResultRows($run, $cached, $tableColumns) {
     $runResults = $this->testResults->getRunResult($run, $cached);
     if (!$runResults) {
-      $error = $this->testInfo->getRunError($run, $cached);
-      $error_str = $error ? htmlspecialchars('Test Error: ' . $error) : "Test Data Missing";
-      $cachedLabel = $cached ? "Repeat View" : "First View";
-      return "<tr><td colspan=\"$tableColumns\" align=\"left\" valign=\"middle\">$cachedLabel: $error_str</td></tr>";
+      return $this->_createErrorRow($run, $cached, $tableColumns);
     }
 
     $evenRow = false;
@@ -418,6 +415,15 @@ class TestResultsHtmlTables {
     } else if ($loadTime !== null) {
       $out .= '<br>(' . number_format($loadTime / 1000.0, 3) . 's)';
     }
+    return $out;
+  }
+
+  private function _createErrorRow($run, $cached, $tableColumns) {
+    $error = $this->testInfo->getRunError($run, $cached);
+    $error_str = $error ? htmlspecialchars('Test Error: ' . $error) : "Test Data Missing";
+    $cachedLabel = $cached ? "Repeat View" : "First View";
+    $out = "<tr id='run${run}_step1'>";
+    $out .= "<td colspan=\"$tableColumns\" align=\"left\" valign=\"middle\">$cachedLabel: $error_str</td></tr>\n";
     return $out;
   }
 
