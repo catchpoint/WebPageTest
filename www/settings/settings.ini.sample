@@ -175,6 +175,9 @@ enable_agent_processing=1
 ;Number of days to keep tests locally before archiving
 ;archive_days=2
 
+;Run archive script hourly automatically as agents poll for work
+;cron_archive=1
+
 ; *************
 ; EC2 Instances
 ; *************
