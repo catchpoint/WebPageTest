@@ -254,7 +254,8 @@ class TestResultsHtmlTables {
     $endParam = $end ? "end=$end" : null;
 
     $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS && !$endParam);
-    $detailsUrl = $urlGenerator->resultPage("details", $endParam);
+    $hash = "#waterfall_view_step" . $stepResult->getStepNumber();
+    $detailsUrl = $urlGenerator->resultPage("details", $endParam) . $hash;
     $thumbUrl = $urlGenerator->thumbnail("waterfall.png");
     $class = $even ? 'class="even"' : '';
     $onload =  $this->waterfallDisplayed ? "" : " onload=\"markUserTime('aft.First Waterfall')\"";
@@ -287,7 +288,7 @@ class TestResultsHtmlTables {
     $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS);
     $class = $even ? 'class="even"' : '';
     $onload = $this->screenshotDisplayed ? "" : " onload=\"markUserTime('aft.First Screen Shot')\"";
-    $screenShotUrl = $urlGenerator->resultPage("screen_shot");
+    $screenShotUrl = $urlGenerator->resultPage("screen_shot") . "#step_" . $stepResult->getStepNumber();
     $thumbnailUrl = $urlGenerator->thumbnail("screen.jpg");
     $out = "<td align=\"center\" valign=\"middle\" $class>\n";
     $out .= "<a href=\"$screenShotUrl\"><img class=\"progress\"$onload width=\"250\" src=\"$thumbnailUrl\"></a>\n";
