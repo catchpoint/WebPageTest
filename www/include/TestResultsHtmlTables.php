@@ -100,8 +100,12 @@ class TestResultsHtmlTables {
       return "<tr><td colspan=\"$tableColumns\" align=\"left\" valign=\"middle\">$cachedLabel: $error_str</td></tr>";
     }
 
-    $stepResult = $runResults->getStepResult(1);
-    $out = $this->_createStepResultRow($stepResult, $cached);
+    $evenRow = false;
+    $out = "";
+    foreach ($runResults->getStepResults() as $stepResult) {
+      $out .= $this->_createStepResultRow($stepResult, $evenRow);
+      $evenRow = !$evenRow;
+    }
     return $out;
   }
 
