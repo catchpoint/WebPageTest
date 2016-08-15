@@ -125,6 +125,13 @@ class TestInfo {
   }
 
   /**
+   * @return int The maximum number of steps executed in one of the runs
+   */
+  public function getSteps() {
+    return empty($this->rawData['testinfo']['steps']) ? 1 : $this->rawData['testinfo']['steps'];
+  }
+
+  /**
    * @param int $run The run number
    * @return null|string Tester for specified run
    */
@@ -158,5 +165,46 @@ class TestInfo {
       }
     }
     return false;
+  }
+
+  /**
+   * @return bool True if the test is marked as an test_error, false otherwise
+   */
+  public function isTestError() {
+    return !empty($this->rawData['testinfo']['test_error']);
+  }
+
+  /**
+   * @return string|null The error (if exists) or null if there is no error
+   */
+  public function getRunError($run, $cached) {
+    $cachedIdx = $cached ? 1 : 0;
+    if (empty($this->rawData['testinfo']['errors'][$run][$cachedIdx])) {
+      return null;
+    }
+    return $this->rawData['testinfo']['errors'][$run][$cachedIdx];
+  }
+
+  /**
+   * @return bool True if the test is supposed to have a video, false otherwise
+   */
+  public function hasVideo() {
+    return (isset($this->rawData['test']['Capture Video']) && $this->rawData['test']['Capture Video']) ||
+           (isset($this->rawData['test']['Video']) && $this->rawData['test']['Video']) ||
+           (isset($this->rawData['test']['video']) && $this->rawData['test']['video']);
+  }
+
+  /**
+   * @return bool True if the test is supposed to have screenshots (images), false otherwise
+   */
+  public function hasScreenshots() {
+    return empty($this->rawData["testinfo"]["noimages"]);
+  }
+
+  /**
+   * @return bool True if the test is supposed to have a timeline, false otherwise
+   */
+  public function hasTimeline() {
+    return !empty($this->rawData["testinfo"]["timeline"]);
   }
 }

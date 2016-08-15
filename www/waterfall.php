@@ -53,7 +53,8 @@ $options = array(
 
 $url = $testStepResult->readableIdentifier($url);
 
-$im = GetWaterfallImage($rows, $url, $page_events, $options, $testStepResult->getRawResults());
+$pageData = $testStepResult->getRawResults();
+$im = GetWaterfallImage($rows, $url, $page_events, $options, $pageData);
 
 // Spit the image out to the browser.
 imagepng($im);

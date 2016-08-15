@@ -78,6 +78,18 @@ class TestRunResults {
   }
 
   /**
+   * @return bool True if there is at least one valid step, false otherwise
+   */
+  public function isValid() {
+    foreach ($this->getStepResults() as $stepResult) {
+      if ($stepResult->isValid()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * @param int $stepNum The step number to get the result for, starting from 1
    * @return TestStepResult Step result data
    */

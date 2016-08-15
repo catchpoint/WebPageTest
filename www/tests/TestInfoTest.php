@@ -78,4 +78,54 @@ class TestInfoTest extends PHPUnit_Framework_TestCase {
     $testInfo = TestInfo::fromValues("test", "/test/root", array("test" => array("aft" => 1)));
     $this->assertTrue($testInfo->hasAboveTheFoldTime());
   }
+
+  public function testIsTestError() {
+    $testInfo = TestInfo::fromValues("test", "/test/root", array());
+    $this->assertFalse($testInfo->isTestError());
+
+    $testInfo = TestInfo::fromValues("test", "/test/root", array("testinfo" => array("test_error" => "")));
+    $this->assertFalse($testInfo->isTestError());
+
+    $testInfo = TestInfo::fromValues("test", "/test/root", array("testinfo" => array("test_error" => 1)));
+    $this->assertTrue($testInfo->isTestError());
+  }
+
+  public function testHasScreenshots() {
+    $testInfo = TestInfo::fromValues("test", "/test/root", array());
+    $this->assertTrue($testInfo->hasScreenshots());
+
+    $testInfo = TestInfo::fromValues("test", "/test/root", array("testinfo" => array("noimages" => "")));
+    $this->assertTrue($testInfo->hasScreenshots());
+
+    $testInfo = TestInfo::fromValues("test", "/test/root", array("testinfo" => array("noimages" => true)));
+    $this->assertFalse($testInfo->hasScreenshots());
+  }
+
+  public function testHasTimeline() {
+    $testInfo = TestInfo::fromValues("test", "/test/root", array());
+    $this->assertFalse($testInfo->hasTimeline());
+
+    $testInfo = TestInfo::fromValues("test", "/test/root", array("testinfo" => array("timeline" => "")));
+    $this->assertFalse($testInfo->hasTimeline());
+
+    $testInfo = TestInfo::fromValues("test", "/test/root", array("testinfo" => array("timeline" => true)));
+    $this->assertTrue($testInfo->hasTimeline());
+  }
+
+  public function testHasVideo() {
+    $testInfo = TestInfo::fromValues("test", "/test/root", array());
+    $this->assertFalse($testInfo->hasVideo());
+
+    $testInfo = TestInfo::fromValues("test", "/test/root", array("test" => array("video" => false)));
+    $this->assertFalse($testInfo->hasVideo());
+
+    $testInfo = TestInfo::fromValues("test", "/test/root", array("test" => array("video" => true)));
+    $this->assertTrue($testInfo->hasVideo());
+
+    $testInfo = TestInfo::fromValues("test", "/test/root", array("test" => array("Video" => true)));
+    $this->assertTrue($testInfo->hasVideo());
+
+    $testInfo = TestInfo::fromValues("test", "/test/root", array("test" => array("Capture Video" => true)));
+    $this->assertTrue($testInfo->hasVideo());
+  }
 }
