@@ -83,18 +83,16 @@ class TestResultsHtmlTables {
    * @return string The created markup
    */
   private function _createRunResultRows($run, $cached, $tcpDumpView, $tableColumns) {
-    $cachedLabel = $cached ? "Repeat View" : "First View";
-    $rvError = $this->testInfo->getRunError($run, $cached);
     $runResults = $this->testResults->getRunResult($run, $cached);
-    if ($runResults) {
-      $stepResult = $runResults->getStepResult(1);
-      $out = $this->_createStepResultRow($stepResult, $cached, $tcpDumpView);
-    } else if ($rvError) {
-      $error_str = htmlspecialchars('Test Error: ' . $rvError);
-      $out = "<tr><td colspan=\"$tableColumns\" align=\"left\" valign=\"middle\">$cachedLabel: $error_str</td></tr>";
-    } else {
-      $out = "<tr><td colspan=\"$tableColumns\" align=\"left\" valign=\"middle\">$cachedLabel: Test Data Missing</td></tr>";
+    if (!$runResults) {
+      $error = $this->testInfo->getRunError($run, $cached);
+      $error_str = $error ? htmlspecialchars('Test Error: ' . $error) : "Test Data Missing";
+      $cachedLabel = $cached ? "Repeat View" : "First View";
+      return "<tr><td colspan=\"$tableColumns\" align=\"left\" valign=\"middle\">$cachedLabel: $error_str</td></tr>";
     }
+
+    $stepResult = $runResults->getStepResult(1);
+    $out = $this->_createStepResultRow($stepResult, $cached, $tcpDumpView);
     return $out;
   }
 
