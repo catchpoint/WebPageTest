@@ -36,7 +36,7 @@ class TestResultsHtmlTables {
     $this->hasScreenshots = $this->testInfo->hasScreenshots();
     $this->firstViewMedianRun = $this->testResults->getMedianRunNumber($median_metric, false);
     $this->tcpDumpViewSettings = $tcpDumpViewSettings;
-    $this->isMultistep = $this->testInfo->getSteps();
+    $this->isMultistep = $this->testInfo->getSteps() > 1;
   }
 
   public function create() {
