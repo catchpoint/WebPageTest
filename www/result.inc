@@ -32,6 +32,9 @@ $page_description = "Website performance test result$testLabel.";
             tr.stepResultRow.jkActive td.resultCell {
                 border-left: 2px #181741 solid;
             }
+            td.separation {
+                height: 2em;
+            }
         </style>
         <script language="JavaScript">
             <?php
