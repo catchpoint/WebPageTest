@@ -80,7 +80,7 @@ class TestResultsHtmlTables {
       $out .= $this->_createRunResultRows($run, true, $columns);
     }
 
-    if ($this->testComplete && $run == $fvMedian && $firstViewResults && !$this->isMultistep) {
+    if ($this->testComplete && $run == $fvMedian && $firstViewResults && $firstViewResults->isValid() && !$this->isMultistep) {
       $out .= $this->_createBreakdownRow($firstViewResults->getStepResult(1), $columns);
     }
 
@@ -111,7 +111,7 @@ class TestResultsHtmlTables {
    */
   private function _createRunResultRows($run, $cached, $tableColumns) {
     $runResults = $this->testResults->getRunResult($run, $cached);
-    if (!$runResults) {
+    if (!$runResults || !$runResults->isValid()) {
       return $this->_createErrorRow($run, $cached, $tableColumns);
     }
 
