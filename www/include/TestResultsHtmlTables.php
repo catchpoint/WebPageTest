@@ -86,24 +86,15 @@ class TestResultsHtmlTables {
     $cachedLabel = $cached ? "Repeat View" : "First View";
     $rvError = $this->testInfo->getRunError($run, $cached);
     $runResults = $this->testResults->getRunResult($run, $cached);
-    $out = '<tr>';
     if ($runResults) {
       $stepResult = $runResults->getStepResult(1);
-      $out .= $this->_createResultCell($stepResult, $tcpDumpView, $cached);
-      $out .= $this->_createWaterfallCell($stepResult, $cached);
-      if ($this->hasScreenshots) {
-        $out .= $this->_createScreenshotCell($stepResult, $cached);
-      }
-      if ($this->hasVideo) {
-        $out .= $this->_createVideoCell($stepResult, $cached);
-      }
+      $out = $this->_createStepResultRow($stepResult, $cached, $tcpDumpView);
     } else if ($rvError) {
       $error_str = htmlspecialchars('Test Error: ' . $rvError);
-      $out .= "<td colspan=\"$tableColumns\" align=\"left\" valign=\"middle\">$cachedLabel: $error_str</td>";
+      $out = "<tr><td colspan=\"$tableColumns\" align=\"left\" valign=\"middle\">$cachedLabel: $error_str</td></tr>";
     } else {
-      $out .= "<td colspan=\"$tableColumns\" align=\"left\" valign=\"middle\">$cachedLabel: Test Data Missing</td>";
+      $out = "<tr><td colspan=\"$tableColumns\" align=\"left\" valign=\"middle\">$cachedLabel: Test Data Missing</td></tr>";
     }
-    $out .= '</tr>';
     return $out;
   }
 
@@ -151,6 +142,26 @@ class TestResultsHtmlTables {
       $out .=  '<th align="center" valign="middle">Video</th>';
     }
     $out .=  '</tr>';
+    return $out;
+  }
+
+  /**
+   * @param TestStepResult $stepResult
+   * @param string $tcpDumpView
+   * @param bool $evenRow
+   * @return string Created markup
+   */
+  private function _createStepResultRow($stepResult, $tcpDumpView, $evenRow) {
+    $out = "<tr>\n";
+    $out .= $this->_createResultCell($stepResult, $tcpDumpView, $evenRow);
+    $out .= $this->_createWaterfallCell($stepResult, $evenRow);
+    if ($this->hasScreenshots) {
+      $out .= $this->_createScreenshotCell($stepResult, $evenRow);
+    }
+    if ($this->hasVideo) {
+      $out .= $this->_createVideoCell($stepResult, $evenRow);
+    }
+    $out .= "</tr>\n";
     return $out;
   }
 
