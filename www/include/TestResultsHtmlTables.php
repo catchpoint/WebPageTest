@@ -11,11 +11,20 @@ class TestResultsHtmlTables {
   private $hasVideo;
   private $hasScreenshots;
   private $firstViewMedianRun;
+  private $tcpDumpViewSettings;
 
   private $waterfallDisplayed;
   private $screenshotDisplayed;
 
-  public function __construct($testInfo, $testResults, $testComplete, $median_metric) {
+  /**
+   * TestResultsHtmlTables constructor.
+   * @param TestInfo $testInfo Test information
+   * @param TestResults $testResults The results of the test
+   * @param bool $testComplete True if the test is complete, false otherwise
+   * @param string|null $median_metric The metric to use to determine the median. (load time by default)
+   * @param string|null $tcpDumpViewSettings The settings for viewing a TCP dump (URL or null)
+   */
+  public function __construct($testInfo, $testResults, $testComplete, $median_metric, $tcpDumpViewSettings) {
     $this->testInfo = $testInfo;
     $this->testResults = $testResults;
     $this->testComplete = $testComplete;
@@ -23,9 +32,10 @@ class TestResultsHtmlTables {
     $this->hasVideo = $this->testInfo->hasVideo();
     $this->hasScreenshots = $this->testInfo->hasScreenshots();
     $this->firstViewMedianRun = $this->testResults->getMedianRunNumber($median_metric, false);
+    $this->tcpDumpViewSettings = $tcpDumpViewSettings;
   }
 
-  public function create($tcpDumpView) {
+  public function create() {
     $runs = $this->testInfo->getRuns();
     $this->waterfallDisplayed = false;
     $this->screenshotDisplayed = false;
@@ -39,22 +49,22 @@ class TestResultsHtmlTables {
         $error_str = $this->testComplete ? 'Test Error: Data is missing.' : 'Waiting for test result...';
         $out .=  '<p>' . htmlspecialchars($error_str) . '</p>';
       } else {
-        $out .= $this->_createTableForRun($run, $tcpDumpView);
+        $out .= $this->_createTableForRun($run);
       }
     }
     return $out;
   }
 
-  private function _createTableForRun($run, $tcpDumpView) {
+  private function _createTableForRun($run) {
     $fvMedian = $this->firstViewMedianRun;
     $out = "<table id=\"table$run\" class=\"pretty result\" align=\"center\" border=\"1\" cellpadding=\"20\" cellspacing=\"0\">\n";
     $columns = $this->_countTableColumns();
     $out .= $this->_createTableHead();
 
     $firstViewResults = $this->testResults->getRunResult($run, false);
-    $out .= $this->_createRunResultRows($run, false, $tcpDumpView, $columns);
+    $out .= $this->_createRunResultRows($run, false, $columns);
     if (!$this->testInfo->isFirstViewOnly() || $this->testResults->getRunResult($run, true)) {
-      $out .= $this->_createRunResultRows($run, true, $tcpDumpView, $columns);
+      $out .= $this->_createRunResultRows($run, true, $columns);
     }
     if ($this->testComplete && $run == $fvMedian && $firstViewResults) {
       $out .= $this->_createBreakdownRow($firstViewResults->getStepResult(1), $columns);
@@ -78,11 +88,10 @@ class TestResultsHtmlTables {
   /**
    * @param int $run Run number
    * @param bool $cached False for first view, true for repeat view
-   * @param string|null $tcpDumpView From settings
    * @param int $tableColumns number of columns in the table
    * @return string The created markup
    */
-  private function _createRunResultRows($run, $cached, $tcpDumpView, $tableColumns) {
+  private function _createRunResultRows($run, $cached, $tableColumns) {
     $runResults = $this->testResults->getRunResult($run, $cached);
     if (!$runResults) {
       $error = $this->testInfo->getRunError($run, $cached);
@@ -92,7 +101,7 @@ class TestResultsHtmlTables {
     }
 
     $stepResult = $runResults->getStepResult(1);
-    $out = $this->_createStepResultRow($stepResult, $cached, $tcpDumpView);
+    $out = $this->_createStepResultRow($stepResult, $cached);
     return $out;
   }
 
@@ -145,13 +154,12 @@ class TestResultsHtmlTables {
 
   /**
    * @param TestStepResult $stepResult
-   * @param string $tcpDumpView
    * @param bool $evenRow
    * @return string Created markup
    */
-  private function _createStepResultRow($stepResult, $tcpDumpView, $evenRow) {
+  private function _createStepResultRow($stepResult, $evenRow) {
     $out = "<tr>\n";
-    $out .= $this->_createResultCell($stepResult, $tcpDumpView, $evenRow);
+    $out .= $this->_createResultCell($stepResult, $evenRow);
     $out .= $this->_createWaterfallCell($stepResult, $evenRow);
     if ($this->hasScreenshots) {
       $out .= $this->_createScreenshotCell($stepResult, $evenRow);
@@ -165,17 +173,16 @@ class TestResultsHtmlTables {
 
   /**
    * @param TestStepResult $stepResult
-   * @param string|null $tcpDumpView TcpDumpView URL from settings or null
    * @param bool $even true for even rows
    * @return string The created markup
    */
-  private function _createResultCell($stepResult, $tcpDumpView, $even) {
+  private function _createResultCell($stepResult, $even) {
     $class = $even ? "class='even'" : "";
     $out = "<td align=\"left\" $class valign=\"middle\">\n";
     $out .=  $stepResult->isCachedRun() ? "Repeat View" : "First View";
     $out .=  $this->_getResultLabel($stepResult);
     $out .=  $this->_getDynatraceLinks($stepResult);
-    $out .=  $this->_getCaptureLinks($stepResult, $tcpDumpView);
+    $out .=  $this->_getCaptureLinks($stepResult);
     $out .=  $this->_getTimelineLinks($stepResult);
     $out .=  $this->_getTraceLinks($stepResult);
     $out .=  $this->_getNetlogLinks($stepResult);
@@ -291,10 +298,9 @@ class TestResultsHtmlTables {
 
   /**
    * @param TestStepResult $stepResult
-   * @param string|null $tcpDumpView TcpDumpView URL from settings or null
    * @return string Markup with links
    */
-  private function _getCaptureLinks($stepResult, $tcpDumpView) {
+  private function _getCaptureLinks($stepResult) {
     $localPaths = $stepResult->createTestPaths();
     if (!gz_is_file($localPaths->captureFile())) {
       return "";
@@ -306,8 +312,8 @@ class TestResultsHtmlTables {
     $tcpdump_url = $urlGenerator->getGZip($filenamePaths->captureFile());
     $out = "<br><br>\n";
     $out .= "<a href=\"$tcpdump_url\" title=\"Download tcpdump session capture\">tcpdump</a>\n";
-    if ($tcpDumpView) {
-      $view_url = $tcpDumpView . urlencode("http://$wpt_host$tcpdump_url");
+    if ($this->tcpDumpViewSettings) {
+      $view_url = $this->tcpDumpViewSettings . urlencode("http://$wpt_host$tcpdump_url");
       $out .= " - (<a href=\"$view_url\" title=\"View tcpdump session capture\">view</a>)";
     }
     if (gz_is_file($localPaths->keylogFile())) {
