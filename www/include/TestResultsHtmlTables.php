@@ -177,7 +177,8 @@ class TestResultsHtmlTables {
    * @return string Created markup
    */
   private function _createStepResultRow($stepResult, $evenRow) {
-    $out = "<tr>\n";
+    $rowId = "run" . $stepResult->getRunNumber() . "_step" . $stepResult->getStepNumber();
+    $out = "<tr id='$rowId' class='stepResultRow'>\n";
     $out .= $this->_createResultCell($stepResult, $evenRow);
     $out .= $this->_createWaterfallCell($stepResult, $evenRow);
     if ($this->hasScreenshots) {
@@ -422,7 +423,7 @@ class TestResultsHtmlTables {
     $error = $this->testInfo->getRunError($run, $cached);
     $error_str = $error ? htmlspecialchars('Test Error: ' . $error) : "Test Data Missing";
     $cachedLabel = $cached ? "Repeat View" : "First View";
-    $out = "<tr id='run${run}_step1'>";
+    $out = "<tr id='run${run}_step1' class='stepResultRow'>";
     $out .= "<td colspan=\"$tableColumns\" align=\"left\" valign=\"middle\">$cachedLabel: $error_str</td></tr>\n";
     return $out;
   }
