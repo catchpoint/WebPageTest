@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../common_lib.inc';
+
 class TestResultsHtmlTables {
 
   /** @var TestInfo */
@@ -199,7 +201,11 @@ class TestResultsHtmlTables {
   private function _createResultCell($stepResult, $even) {
     $class = $even ? "class='even'" : "";
     $out = "<td align=\"left\" $class valign=\"middle\">\n";
-    $out .=  $stepResult->isCachedRun() ? "Repeat View" : "First View";
+    if ($this->isMultistep) {
+      $out .= FitText($stepResult->readableIdentifier(), 30);
+    } else {
+      $out .=  $stepResult->isCachedRun() ? "Repeat View" : "First View";
+    }
     $out .=  $this->_getResultLabel($stepResult);
     $out .=  $this->_getDynatraceLinks($stepResult);
     $out .=  $this->_getCaptureLinks($stepResult);
