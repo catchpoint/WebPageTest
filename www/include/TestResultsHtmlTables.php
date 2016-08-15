@@ -62,11 +62,12 @@ class TestResultsHtmlTables {
     $out .= $this->_createTableHead();
 
     $firstViewResults = $this->testResults->getRunResult($run, false);
+    $isMultistep = $firstViewResults && ($firstViewResults->countSteps() > 1);
     $out .= $this->_createRunResultRows($run, false, $columns);
     if (!$this->testInfo->isFirstViewOnly() || $this->testResults->getRunResult($run, true)) {
       $out .= $this->_createRunResultRows($run, true, $columns);
     }
-    if ($this->testComplete && $run == $fvMedian && $firstViewResults) {
+    if ($this->testComplete && $run == $fvMedian && $firstViewResults && !$isMultistep) {
       $out .= $this->_createBreakdownRow($firstViewResults->getStepResult(1), $columns);
     }
 
