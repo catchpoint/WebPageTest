@@ -238,6 +238,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for devtools timeline
+   */
+  public function devtoolsTimelineFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_timeline.json";
+  }
+
+  /**
    * @return string Path for devtools CPU timeline
    */
   public function devtoolsCPUTimelineFile() {
@@ -245,10 +252,38 @@ class TestPaths {
   }
 
   /**
-   * @return string Path for devtools CPU timeline
+   * @return string Path for devtools trace file
    */
   public function devtoolsTraceFile() {
     return $this->testRoot . $this->underscoreIdentifier() . "_trace.json";
+  }
+
+  /**
+   * @return string Path for capture file
+   */
+  public function captureFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . ".cap";
+  }
+
+  /**
+   * @return string Path for keylog file
+   */
+  public function keylogFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_keylog.log";
+  }
+
+  /**
+   * @return string Path for netlog file
+   */
+  public function netlogFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_netlog.txt";
+  }
+
+  /**
+   * @return string Path for dynatrace file
+   */
+  public function dynatraceFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_dynaTrace.dtas";
   }
 
   /**
@@ -256,6 +291,13 @@ class TestPaths {
    */
   public function consoleLogFile() {
     return $this->testRoot . $this->underscoreIdentifier() . "_console_log.json";
+  }
+
+  /**
+   * @return string Path to the raw video
+   */
+  public function rawDeviceVideo() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_video.mp4";
   }
 
   /**

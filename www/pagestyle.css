@@ -236,7 +236,7 @@ table.result {width: 920px;}
 table.pretty { margin-left:auto; margin-right:auto; background-color: #fff; border-collapse: collapse; border: 0px white solid; }
 table.pretty th, table.pretty td {border: 1px silver solid; padding: 0.4em; text-align: center; }
 table.pretty th { background: gainsboro; }
-table.pretty th.empty { background: #fff; border-top:1px white solid; border-left:1px white solid; }
+table.pretty th.empty { background: #fff; border:0; }
 table.pretty th.border, table.pretty td.border { border-left: 2px black solid; }
 table.pretty td.even { background: whitesmoke; }
 

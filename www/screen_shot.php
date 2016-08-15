@@ -133,12 +133,12 @@ function printContent($fileHandler, $testInfo, $testRunResults) {
 function printQuicklinks($testRunResults) {
     echo '<a name="quicklinks"><h1>Quicklinks</h1></a>';
     echo '<div style="text-align: center;"><table class="pretty">';
-    echo '<thead><tr><th>Step Name</th><th>Screen Shots</th></tr></thead>';
     echo '<tbody>';
     for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
-        echo '<tr>';
-        echo '<td>' . $testRunResults->getStepResult($i)->readableIdentifier() . '</td>';
-        echo '<td><a href="#step_' . $i . '">Screen Shots (Step ' . $i . ')</a></td>';
+        $class = ($i % 2 == 0) ? " class='even'" : "";
+        echo '<tr' . $class . '>';
+        echo '<th>' . $testRunResults->getStepResult($i)->readableIdentifier() . '</th>';
+        echo '<td><a href="#step_' . $i . '">Screen Shots</a></td>';
         echo '</tr>';
     }
     echo '</tbody>';

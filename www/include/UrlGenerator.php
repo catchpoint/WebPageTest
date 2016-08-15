@@ -112,14 +112,29 @@ abstract class UrlGenerator {
   }
 
   /**
+   * @param string $end Optional. A specific "end" to use for video creation
    * @return string The generated URL to create a video
    */
-  public function createVideo() {
-    $testSuffix = ($this->step > 1) ? ("-s:" . $this->step) : "";
-    $idSuffix = ($this->step > 1) ? ("." . $this->step) : "";
-    $tests = $this->testId . "-r:" . $this->run . "-c:" . ($this->cached ? 1 : 0) . $testSuffix;
-    $id = $this->testId . "." . $this->run . "." . ($this->cached ? 1 : 0) . $idSuffix;
+  public function createVideo($end = null) {
+    $tests = $this->testId . "-r:" . $this->run . "-c:" . ($this->cached ? 1 : 0);
+    $tests .= ($this->step > 1) ? ("-p:" . $this->step) : "";
+    $tests .= $end ? "-e:$end" : "";
+
+    $id = $this->testId . "." . $this->run . "." . ($this->cached ? 1 : 0);
+    $id .= ($this->step > 1) ? ("." . $this->step) : "";
+    $id .= $end ? "-e$end" : "";
     return $this->baseUrl . "/video/create.php?tests=" . $tests . "&id=" . $id;
+  }
+
+  /**
+   * @param string $end Optional. A specific "end" to use for filmstrip view
+   * @return string The generated URL for the filmstrip view
+   */
+  public function filmstripView($end = null) {
+    $tests = $this->testId . "-r:" . $this->run . "-c:" . ($this->cached ? 1 : 0);
+    $tests .= ($this->step > 1) ? ("-s:" . $this->step) : "";
+    $tests .= $end ? "-e:$end" : "";
+    return $this->baseUrl . "/video/compare.php?tests=" . $tests;
   }
 
   /**

@@ -74,6 +74,7 @@ RUN chmod +x /scripts/migrate-settings && \
 
 VOLUME /var/www/html/settings
 VOLUME /var/www/html/results
+VOLUME /var/www/html/logs
 
 EXPOSE 80 443
 
