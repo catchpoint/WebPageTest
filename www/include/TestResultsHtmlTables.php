@@ -197,8 +197,8 @@ class TestResultsHtmlTables {
    * @return string The created markup
    */
   private function _createResultCell($stepResult, $even) {
-    $class = $even ? "class='even'" : "";
-    $out = "<td align=\"left\" $class valign=\"middle\">\n";
+    $evenClass = $even ? " even" : "";
+    $out = "<td align=\"left\" valign=\"middle\" class='resultCell$evenClass'>\n";
     if ($this->isMultistep) {
       $out .= FitText($stepResult->readableIdentifier(), 30);
     } else {

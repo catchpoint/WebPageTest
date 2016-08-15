@@ -28,6 +28,11 @@ $page_description = "Website performance test result$testLabel.";
 <html>
     <head>
         <title>WebPagetest Test Result<?php echo $testLabel; ?></title>
+        <style type="text/css">
+            tr.stepResultRow.jkActive td.resultCell {
+                border-left: 2px #181741 solid;
+            }
+        </style>
         <script language="JavaScript">
             <?php
                 $wpt_host = trim($_SERVER['HTTP_HOST']);
@@ -270,6 +275,10 @@ $page_description = "Website performance test result$testLabel.";
             
             <?php include('footer.inc'); ?>
         </div>
+        <script type="text/javascript" src="/js/jk-navigation.js"></script>
+        <script type="text/javascript">
+            addJKNavigation("tr.stepResultRow");
+        </script>
         <?php
         $breakdown = $resultTables->getBreakdown();
         if ($breakdown) {
