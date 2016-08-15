@@ -12,6 +12,7 @@ class TestResultsHtmlTables {
   private $hasScreenshots;
   private $firstViewMedianRun;
   private $tcpDumpViewSettings;
+  private $isMultistep;
 
   private $waterfallDisplayed;
   private $screenshotDisplayed;
@@ -33,6 +34,7 @@ class TestResultsHtmlTables {
     $this->hasScreenshots = $this->testInfo->hasScreenshots();
     $this->firstViewMedianRun = $this->testResults->getMedianRunNumber($median_metric, false);
     $this->tcpDumpViewSettings = $tcpDumpViewSettings;
+    $this->isMultistep = $this->testInfo->getSteps();
   }
 
   public function create() {
@@ -62,12 +64,21 @@ class TestResultsHtmlTables {
     $out .= $this->_createTableHead();
 
     $firstViewResults = $this->testResults->getRunResult($run, false);
-    $isMultistep = $firstViewResults && ($firstViewResults->countSteps() > 1);
+    $hasRepeatView = !$this->testInfo->isFirstViewOnly() || $this->testResults->getRunResult($run, true);
+
+    if ($this->isMultistep) {
+      $out .= $this->_createSeparationRow("First View", $columns);
+    }
     $out .= $this->_createRunResultRows($run, false, $columns);
-    if (!$this->testInfo->isFirstViewOnly() || $this->testResults->getRunResult($run, true)) {
+
+    if ($hasRepeatView) {
+      if ($this->isMultistep) {
+        $out .= $this->_createSeparationRow("Repeat View", $columns);
+      }
       $out .= $this->_createRunResultRows($run, true, $columns);
     }
-    if ($this->testComplete && $run == $fvMedian && $firstViewResults && !$isMultistep) {
+
+    if ($this->testComplete && $run == $fvMedian && $firstViewResults && !$this->isMultistep) {
       $out .= $this->_createBreakdownRow($firstViewResults->getStepResult(1), $columns);
     }
 
@@ -84,6 +95,10 @@ class TestResultsHtmlTables {
       $columns++;
     }
     return $columns;
+  }
+
+  private function _createSeparationRow($label, $colspan) {
+    return "<tr><td colspan='$colspan' class='separation'>$label</td></tr>\n";
   }
 
   /**

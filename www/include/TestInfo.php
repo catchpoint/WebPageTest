@@ -125,6 +125,13 @@ class TestInfo {
   }
 
   /**
+   * @return int The maximum number of steps executed in one of the runs
+   */
+  public function getSteps() {
+    return empty($this->rawData['testinfo']['steps']) ? 1 : $this->rawData['testinfo']['steps'];
+  }
+
+  /**
    * @param int $run The run number
    * @return null|string Tester for specified run
    */
