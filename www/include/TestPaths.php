@@ -210,6 +210,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for blink feature usage
+   */
+  public function featureUsageFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_feature_usage.json";
+  }
+
+  /**
    * @return string Path for HTTP/2 priority streams
    */
   public function priorityStreamsFile() {

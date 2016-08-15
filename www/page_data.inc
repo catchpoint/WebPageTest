@@ -212,6 +212,14 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
         }
       }
 
+      // See if there is Blink feature usage data
+      if (gz_is_file($localPaths->featureUsageFile())) {
+        $feature_usage = json_decode(gz_file_get_contents($localPaths->featureUsageFile()), true);
+        if (isset($feature_usage) && is_array($feature_usage)) {
+          $ret["blinkFeatureFirstUsed"] = $feature_usage;
+        }
+      }
+
       // See if there is HTTP/2 Priority-only stream data
       if (gz_is_file($localPaths->priorityStreamsFile())) {
         $priority_streams = json_decode(gz_file_get_contents($localPaths->priorityStreamsFile()), true);
