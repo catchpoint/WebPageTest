@@ -68,7 +68,7 @@ class TestResultsHtmlTables {
     $firstViewResults = $this->testResults->getRunResult($run, false);
     $hasRepeatView = !$this->testInfo->isFirstViewOnly() || $this->testResults->getRunResult($run, true);
 
-    if ($this->isMultistep) {
+    if ($this->isMultistep && $hasRepeatView) {
       $out .= $this->_createSeparationRow("First View", $columns);
     }
     $out .= $this->_createRunResultRows($run, false, $columns);
