@@ -170,7 +170,7 @@ class RequestDetailsHtmlSnippet {
     if ($this->useLinks) {
       $reqUrl = '<a rel="nofollow" href="' . $url . '">' . $displayurl . '</a>';
     } else {
-      $reqUrl = "<a title=\"$url\" href=\"#step" + $this->stepResult->getStepNumber() + "_request$requestNum\">$displayurl</a>";
+      $reqUrl = "<a title=\"$url\" href=\"#step" . $this->stepResult->getStepNumber() . "_request$requestNum\">$displayurl</a>";
     }
     return $reqUrl;
   }
