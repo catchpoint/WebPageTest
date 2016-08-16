@@ -286,8 +286,8 @@ $page_description = "Website performance test result$testLabel.";
         $breakdown = $resultTables->getBreakdown();
         if ($breakdown) {
         ?>
-        <script type="text/javascript" src="//www.google.com/jsapi"></script>
-        <script type="text/javascript">
+          <script type="text/javascript" src="//www.google.com/jsapi"></script>
+          <script type="text/javascript">
           <?php
           echo 'var wptBreakdown=' . json_encode($breakdown) . ";\n";
           ?>
@@ -339,13 +339,14 @@ $page_description = "Website performance test result$testLabel.";
                 requestsChart.draw(requests, requestsOptions);
             }
           }
+          </script>
         <?php
         } // $breakdown
 
         if( !$testComplete ) {
+            echo "<script type=\"text/javascript\">\n";
             echo "testId = '$id';\n";
         ?>
-            var pollingInterval = 15000;
             function UpdateStatus(){
                 try {
                   var xhr = new XMLHttpRequest();
@@ -354,7 +355,6 @@ $page_description = "Website performance test result$testLabel.";
                     if (xhr.readyState != 4)
                       return;
                     var reload = false;
-                    var interval = pollingInterval;
                     if (xhr.status == 200) {
                         var response = JSON.parse(xhr.responseText);
                         if (response['statusCode'] != undefined) {
@@ -368,23 +368,24 @@ $page_description = "Website performance test result$testLabel.";
                                 reload = true;
                         }
                     }
-                    if (reload)
+                    if (reload) {
                         window.location.reload(true);
-                    else
-                        setTimeout('UpdateStatus()', pollingInterval);
+                    } else {
+                        setTimeout('UpdateStatus()', 15000);
+                    }
                   };
                   xhr.onerror = function() {
-                    setTimeout('UpdateStatus()', pollingInterval);
+                    setTimeout('UpdateStatus()', 15000);
                   };
                   xhr.send();
                 } catch (err) {
-                    setTimeout('UpdateStatus()', pollingInterval);
+                    setTimeout('UpdateStatus()', 15000);
                 }
             }
-            setTimeout('UpdateStatus()', pollingInterval);
+            setTimeout('UpdateStatus()', 15000);
+          </script>
         <?php
         }
         ?>
-        </script>
     </body>
 </html>
