@@ -175,20 +175,21 @@ void OptimizationChecks::CheckGzip()
       CStringA encoding = request->GetResponseHeader("content-encoding");
       encoding.MakeLower();
       request->_scores._gzip_score = 0;
-      DWORD numRequestBytes = request->_response_data.GetDataSize();
-      DWORD targetRequestBytes = numRequestBytes;
+      DataChunk body = request->_response_data.GetBody();
+      DWORD headSize = request->_response_data.GetHeaders().GetLength();
+      DWORD responseBodySize = body.GetLength();
+      DWORD targetResponseSize = responseBodySize;
 
       // If there is gzip encoding, then we are all set.
       // Spare small (<1 packet) responses.
       if( encoding.Find("gzip") >= 0 || encoding.Find("deflate") >= 0 ) 
         request->_scores._gzip_score = 100;
-      else if (numRequestBytes < 1400)
+      else if (responseBodySize + headSize < 1400)
         request->_scores._gzip_score = -1;
 
       if( !request->_scores._gzip_score ) {
         // Try gzipping to see how smaller it will be.
-        DWORD origSize = numRequestBytes;
-        DataChunk body = request->_response_data.GetBody();
+        DWORD origSize = responseBodySize;
         LPBYTE bodyData = (LPBYTE)body.GetData();
         DWORD bodyLen = body.GetLength();
         // don't try gzip for known image formats that shouldn't be gzipped
@@ -213,7 +214,6 @@ void OptimizationChecks::CheckGzip()
              bodyData[5] == 0x61)) {
           request->_scores._gzip_score = -1;
         } else {
-          DWORD headSize = request->_response_data.GetHeaders().GetLength();
           if (bodyLen && bodyData) {
             DWORD len = compressBound(bodyLen);
             if( len ) {
@@ -221,14 +221,14 @@ void OptimizationChecks::CheckGzip()
               if( buff ) {
                 // Do the compression and check the target bytes to set for this.
                 if (compress2((LPBYTE)buff, &len, bodyData, bodyLen, 7) == Z_OK)
-                  targetRequestBytes = len + headSize;
+                  targetResponseSize = len;
                 free(buff);
               }
             }
             // allow a pass if we don't get 10% savings or less than 1400 bytes
-            if( targetRequestBytes >= (origSize * 0.9) || 
-                origSize - targetRequestBytes < 1400 ) {
-              targetRequestBytes = origSize;
+            if( targetResponseSize >= (origSize * 0.9) || 
+                origSize - targetResponseSize < 1400 ) {
+              targetResponseSize = origSize;
               request->_scores._gzip_score = -1;
             }
           }
@@ -238,10 +238,10 @@ void OptimizationChecks::CheckGzip()
       if( request->_scores._gzip_score != -1 ) {
         count++;
         total += request->_scores._gzip_score;
-        request->_scores._gzip_total = numRequestBytes;
-        request->_scores._gzip_target = targetRequestBytes;
-        targetBytes += targetRequestBytes;
-        totalBytes += numRequestBytes;
+        request->_scores._gzip_total = responseBodySize;
+        request->_scores._gzip_target = targetResponseSize;
+        targetBytes += targetResponseSize;
+        totalBytes += responseBodySize;
       }
     }
   }
