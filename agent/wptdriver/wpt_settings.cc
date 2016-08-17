@@ -163,22 +163,28 @@ void WptSettings::LoadFromEC2(void) {
     ParseInstanceData(userData);
   }
 
-  if (_location.IsEmpty()) {
-    CString zone;
-    if (GetUrlText(_T("http://169.254.169.254/latest/meta-data")
-                    _T("/placement/availability-zone"), zone)) {
-      int pos = zone.Find('-');
-      if (pos > 0) {
-        pos = zone.Find('-', pos + 1);
-        if (pos > 0)
-          _location = CString(_T("ec2-")) + zone.Left(pos).Trim();
-      }
-    }
+  if (GetUrlText(_T("http://169.254.169.254/latest/meta-data/instance-id"), 
+    _ec2_instance)) {
+    _ec2_instance = _ec2_instance.Trim();
+    _software_update._ec2_instance = _ec2_instance;
   }
 
-  GetUrlText(_T("http://169.254.169.254/latest/meta-data/instance-id"), 
-    _ec2_instance);
-  _ec2_instance = _ec2_instance.Trim();
+  if (GetUrlText(
+    _T("http://169.254.169.254/latest/meta-data/placement/availability-zone"), 
+    _ec2_availability_zone)) {
+    _ec2_availability_zone = _ec2_availability_zone.Trim();
+    _software_update._ec2_availability_zone = _ec2_availability_zone;
+  }
+
+  if (_location.IsEmpty() && _ec2_availability_zone.GetLength()) {
+    int pos = _ec2_availability_zone.Find('-');
+    if (pos > 0) {
+      pos = _ec2_availability_zone.Find('-', pos + 1);
+      if (pos > 0)
+        _location = CString(_T("ec2-")) +
+                    _ec2_availability_zone.Left(pos).Trim();
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------

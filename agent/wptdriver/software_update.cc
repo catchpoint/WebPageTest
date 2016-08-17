@@ -71,6 +71,27 @@ void SoftwareUpdate::LoadSettings(CString settings_ini) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+CString SoftwareUpdate::GetUpdateInfo(CString url) {
+  CString info, buff;
+  if (_ec2_instance.GetLength())
+    info += _T("ec2instance=") + _ec2_instance;
+  if (_ec2_availability_zone.GetLength()) {
+    if (info.GetLength())
+      info += _T("&");
+    info += _T("ec2zone=") + _ec2_availability_zone;
+  }
+  if (info.GetLength()) {
+    if (url.Find(_T("?")) > 0)
+      url += _T("&");
+    else
+      url += _T("?");
+    url += info;
+  }
+  return HttpGetText(url);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 bool SoftwareUpdate::UpdateSoftware(bool force) {
   bool ok = true;
   WptTrace(loglevel::kFunction,
@@ -78,7 +99,7 @@ bool SoftwareUpdate::UpdateSoftware(bool force) {
   if (force || TimeToCheck()) {
     ok = UpdateBrowsers();
     if (ok && _software_url.GetLength()) {
-      CString info = HttpGetText(_software_url);
+      CString info = GetUpdateInfo(_software_url);
       if (info.GetLength()) {
         CString app, version, command, url, md5;
         int token_position = 0;
@@ -134,7 +155,7 @@ bool SoftwareUpdate::UpdateBrowsers(void) {
     if (url.GetLength()) {
       WptTrace(loglevel::kFunction,
                 _T("[wptdriver] Checking browser - %s\n"), (LPCTSTR)url);
-      CString info = HttpGetText(url);
+      CString info = GetUpdateInfo(url);
       if (info.GetLength()) {
         CString browser, version, command, file_url, md5;
         int token_position = 0;

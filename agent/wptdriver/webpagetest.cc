@@ -192,6 +192,8 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
     url += CString(_T("&pc=")) + _computer_name;
   if (_settings._ec2_instance.GetLength())
     url += CString(_T("&ec2=")) + _settings._ec2_instance;
+  if (_settings._ec2_availability_zone.GetLength())
+    url += CString(_T("&ec2zone=")) + _settings._ec2_availability_zone;
   if (_settings._azure_instance.GetLength())
     url += CString(_T("&azure=")) + _settings._azure_instance;
   if (_dns_servers.GetLength())
