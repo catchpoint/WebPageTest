@@ -168,6 +168,10 @@ void WptTest::Reset(void) {
   _append_user_agent.Empty();
   _max_test_time = 0;
   _process_results = false;
+  if (!_block_domains.IsEmpty())
+    _block_domains.RemoveAll();
+  if (!_block_domains_except.IsEmpty())
+    _block_domains_except.RemoveAll();
 }
 
 /*-----------------------------------------------------------------------------
@@ -727,6 +731,24 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
     _block_requests.AddTail(command.target);
     continue_processing = false;
     consumed = false;
+  } else if (cmd == _T("blockdomains")) {
+    int pos = 0;
+    if (!_block_domains.IsEmpty())
+      _block_domains.RemoveAll();
+    do {
+      CString domain = command.target.Tokenize(_T(" ,"), pos);
+      if (pos > 0)
+        _block_domains.AddTail(domain);
+    } while(pos >= 0);
+  } else if (cmd == _T("blockdomainsexcept")) {
+    int pos = 0;
+    if (!_block_domains_except.IsEmpty())
+      _block_domains_except.RemoveAll();
+    do {
+      CString domain = command.target.Tokenize(_T(" ,"), pos);
+      if (pos > 0)
+        _block_domains_except.AddTail(domain);
+    } while(pos >= 0);
   } else if (cmd == _T("setdomelement")) {
     if (command.target.Trim().GetLength()) {
       _dom_element_check = true;

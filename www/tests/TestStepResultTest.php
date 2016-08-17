@@ -63,6 +63,13 @@ class TestStepResultTest extends PHPUnit_Framework_TestCase {
     $this->assertFalse($step->isValid());
 
     $step = TestStepResult::fromPageData($testInfo, array("foo" => "bar"), 1, 132, 1000);
+    $this->assertFalse($step->isValid());
+    $step = TestStepResult::fromPageData($testInfo, array("loadTime" => 0), 1, 132, 1000);
+    $this->assertFalse($step->isValid());
+
+    $step = TestStepResult::fromPageData($testInfo, array("loadTime" => 1), 1, 132, 1000);
+    $this->assertTrue($step->isValid());
+    $step = TestStepResult::fromPageData($testInfo, array("fullyLoaded" => 112), 1, 132, 1000);
     $this->assertTrue($step->isValid());
   }
 

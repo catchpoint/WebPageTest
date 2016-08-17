@@ -105,7 +105,7 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
   $result = array();
   $entries = array();
   
-  $includePageArrays = array('priorityStreams' => true);
+  $includePageArrays = array('priorityStreams' => true, 'blinkFeatureFirstUsed' => true);
   $includeRequestArrays = array();
   
   $result['log'] = array();

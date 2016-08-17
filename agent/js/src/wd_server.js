@@ -197,6 +197,7 @@ WebDriverServer.prototype.init = function(args) {
   this.cpuSlicesFile_ = undefined;
   this.pcapSlicesFile_ = undefined;
   this.netlogFile_ = undefined;
+  this.featureUsageFile_ = undefined;
   this.isNavigating_ = false;
   this.mainFrame_ = undefined;
   this.pageLoadCoalesceTimer_ = undefined;
@@ -1010,9 +1011,10 @@ WebDriverServer.prototype.scheduleProcessTrace_ = function() {
     if (this.traceFile_) {
       this.userTimingFile_ = path.join(this.runTempDir_, 'user_timing.json.gz');
       this.cpuSlicesFile_ = path.join(this.runTempDir_, 'timeline_cpu.json.gz');
+      this.featureUsageFile_ = path.join(this.runTempDir_, 'feature_usage.json.gz');
       var options = ['lib/trace/trace-parser.py', '-vvvv',
           '-t', this.traceFile_, '-u', this.userTimingFile_,
-          '-c', this.cpuSlicesFile_];
+          '-c', this.cpuSlicesFile_, '-f', this.featureUsageFile_];
       process_utils.scheduleExec(this.app_,
           'python', options, undefined,
           TRACE_PROCESSING_TIMEOUT_MS).then(function(stdout) {
@@ -1577,6 +1579,7 @@ WebDriverServer.prototype.done_ = function() {
           userTimingFile: this.userTimingFile_,
           cpuSlicesFile: this.cpuSlicesFile_,
           pcapSlicesFile: this.pcapSlicesFile_,
+          featureUsageFile: this.featureUsageFile_,
           netlogFile: this.netlogFile_,
           videoFile: this.videoFile_,
           videoFrames: this.videoFrames_,

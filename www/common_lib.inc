@@ -2750,6 +2750,29 @@ function WaitForSystemLoad($max_load, $timeout) {
 }
 
 /**
+ * Translate an error code into the text description
+ * @param int $error The error code
+ * @return string The error description
+ */
+function LookupError($error)
+{
+  $errorText = $error;
+
+  switch($error)
+  {
+    case 7: $errorText = "Invalid SSL Cert."; break;
+    case 99996: $errorText = "Timed Out waiting for DOM element"; break;
+    case 99997: $errorText = "Timed Out"; break;
+    case 99998: $errorText = "Timed Out"; break;
+    case 88888: $errorText = "Script Error"; break;
+    case 12999: $errorText = "Navigation Error"; break;
+    case -2146697211: $errorText = "Failed to Connect"; break;
+  }
+
+  return $errorText;
+}
+
+/**
 * See if the system is running over the configured max load setting.
 * This allows for bailing out of some optional CPU-intensive operations.
 * 
@@ -2766,4 +2789,3 @@ function OverSystemLoad() {
 
   return $over;
 }
-?>

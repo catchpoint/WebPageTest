@@ -51,6 +51,7 @@ client_viewport = None
 def video_to_frames(video, directory, force, orange_file, multiple, find_viewport, viewport_time, full_resolution,
                     timeline_file, trim_end):
   global options
+  global client_viewport
   first_frame = os.path.join(directory, 'ms_000000')
   if (not os.path.isfile(first_frame + '.png') and not os.path.isfile(first_frame + '.jpg')) or force:
     if os.path.isfile(video):
@@ -65,6 +66,9 @@ def video_to_frames(video, directory, force, orange_file, multiple, find_viewpor
         viewport = find_video_viewport(video, directory, find_viewport, viewport_time)
         gc.collect()
         if extract_frames(video, directory, full_resolution, viewport):
+          client_viewport = None
+          if find_viewport and options.notification:
+            client_viewport = find_image_viewport(os.path.join(directory, 'video-000000.png'))
           if multiple and orange_file is not None:
             directories = split_videos(directory, orange_file)
           else:
@@ -456,11 +460,9 @@ def eliminate_duplicate_frames(directory):
     if len(files) > 1:
       from PIL import Image
       blank = files[0]
-      client_viewport = None
       with Image.open(blank) as im:
         width, height = im.size
       if options.viewport and options.notification:
-        client_viewport = find_image_viewport(blank)
         if client_viewport['width'] == width and client_viewport['height'] == height:
           client_viewport = None
 
