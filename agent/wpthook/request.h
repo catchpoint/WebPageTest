@@ -285,7 +285,6 @@ public:
   LARGE_INTEGER GetStartTime();
   bool GetExpiresRemaining(bool& expiration_set, int& seconds_remaining);
   ULONG GetPeerAddress();
-  CString GetUrl();
 
   bool  _processed;
   bool  _reported;
