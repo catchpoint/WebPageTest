@@ -325,6 +325,10 @@ if (ValidateTestId($id)) {
 
           // do pre-complete post-processing
           MoveVideoFiles($testPath);
+
+          if (file_exists('custom/hooks/precompletePostprocess.php')) {
+            include 'custom/hooks/precompletePostprocess.php';
+          }
           
           if (!isset($pageData))
             $pageData = loadAllPageData($testPath);
