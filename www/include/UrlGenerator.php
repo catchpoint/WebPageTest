@@ -10,7 +10,6 @@ abstract class UrlGenerator {
   protected $step;
   protected $baseUrl;
   protected $testId;
-  protected $testIdWithoutRelayKey;
 
   protected function __construct($baseUrl, $testId, $run, $cached, $step = 1) {
     $this->baseUrl = rtrim(strval($baseUrl), "/");
@@ -18,8 +17,6 @@ abstract class UrlGenerator {
     $this->run = intval($run);
     $this->cached = $cached ? true : false;
     $this->step = $step;
-    $dotPos = stripos($testId, ".");
-    $this->testIdWithoutRelayKey = $dotPos === false ? $testId : substr($testId, $dotPos + 1);
   }
 
   /**
@@ -181,7 +178,7 @@ abstract class UrlGenerator {
 class FriendlyUrlGenerator extends UrlGenerator {
 
   public function resultPage($page, $extraParams = null) {
-    $url = $this->baseUrl . "/result/" . $this->testIdWithoutRelayKey . "/" . $this->run . "/" . $page . "/";
+    $url = $this->baseUrl . "/result/" . $this->testId . "/" . $this->run . "/" . $page . "/";
     if ($this->cached) {
       $url .= "cached/";
     }
@@ -199,11 +196,11 @@ class FriendlyUrlGenerator extends UrlGenerator {
       $thumbName = substr($image, 0, $dotPos) . "_thumb" . substr($image, $dotPos);
     }
 
-    return $this->baseUrl . "/result/" . $this->testIdWithoutRelayKey . "/" . $this->underscorePrefix() . $thumbName;
+    return $this->baseUrl . "/result/" . $this->testId . "/" . $this->underscorePrefix() . $thumbName;
   }
 
   public function generatedImage($image) {
-    $parts = explode("_", $this->testIdWithoutRelayKey);
+    $parts = explode("_", $this->testId);
     $testPath = substr($parts[0], 0, 2) . "/" . substr($parts[0], 2, 2) . "/" . substr($parts[0], 4, 2) .
                 "/" . $parts[1];
     if (sizeof($parts) > 2) {
@@ -213,7 +210,7 @@ class FriendlyUrlGenerator extends UrlGenerator {
   }
 
   public function resultSummary($extraParams = null) {
-    $url = $this->baseUrl . "/result/" . $this->testIdWithoutRelayKey . "/";
+    $url = $this->baseUrl . "/result/" . $this->testId . "/";
     if ($extraParams != null) {
       $url .= "?" . $extraParams;
     }
