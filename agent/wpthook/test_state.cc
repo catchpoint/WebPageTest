@@ -179,18 +179,20 @@ void __stdcall CollectData(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
   Increment the reported_step, the event name, and the _file_base
 -----------------------------------------------------------------------------*/
 void TestState::IncrementStep(void) {
-  reported_step_++;
-  // for multistep measurements, all following results get a prefix
-  if (reported_step_ > 1) {
-    _file_base.Format(_T("%s_%d"), shared_results_file_base, reported_step_);
-  } else {
-    _file_base = shared_results_file_base;
-  }
-  // Event name: Either default or set by command
-  if (_test._current_event_name.IsEmpty()) {
-    current_step_name_.Format("Step %d", reported_step_);
-  } else {
-    current_step_name_ = _test._current_event_name;
+  if (!_test._combine_steps || !reported_step_) {
+    reported_step_++;
+    // for multistep measurements, all following results get a prefix
+    if (reported_step_ > 1) {
+      _file_base.Format(_T("%s_%d"), shared_results_file_base, reported_step_);
+    } else {
+      _file_base = shared_results_file_base;
+    }
+    // Event name: Either default or set by command
+    if (_test._current_event_name.IsEmpty()) {
+      current_step_name_.Format("Step %d", reported_step_);
+    } else {
+      current_step_name_ = _test._current_event_name;
+    }
   }
 }
 
