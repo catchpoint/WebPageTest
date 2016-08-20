@@ -92,18 +92,8 @@ void TestState::Init() {
 void TestState::Reset(bool cascade) {
   EnterCriticalSection(&_data_cs);
   _step_start.QuadPart = 0;
-  _dom_interactive = 0;
-  _dom_loading = 0;
-  _dom_content_loaded_event_start = 0;
-  _dom_content_loaded_event_end = 0;
-  _load_event_start = 0;
-  _load_event_end = 0;
-  _first_paint = 0;
-  _on_load.QuadPart = 0;
   _fixed_viewport = -1;
-  _dom_element_count = 0;
   _is_responsive = -1;
-  _viewport_specified = -1;
   if (cascade && _test._combine_steps) {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
@@ -124,6 +114,8 @@ void TestState::Reset(bool cascade) {
     _video_capture_count = 0;
     _start.QuadPart = 0;
     _on_load.QuadPart = 0;
+    _viewport_specified = -1;
+    _dom_element_count = 0;
     _dom_interactive = 0;
     _dom_loading = 0;
     _dom_content_loaded_event_start = 0;
