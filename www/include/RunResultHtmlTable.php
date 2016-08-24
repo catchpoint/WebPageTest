@@ -173,7 +173,7 @@ class RunResultHtmlTable {
   private function _headlineRow($isRepeatView, $runNumber) {
     $label = $this->_rvLabel($isRepeatView, $runNumber);
     $colspan = 9 + $this->_countLeftEnabledColumns() + $this->_countRightEnabledColumns();
-    return "<tr><td colspan='$colspan'>$label</td></tr>\n";
+    return "<tr><td colspan='$colspan' class='separation'>$label</td></tr>\n";
   }
 
   private function _rvLabel($isRepeatView, $runNumber) {
