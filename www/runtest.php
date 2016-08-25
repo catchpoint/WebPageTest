@@ -590,20 +590,25 @@
                     {
                         $testData = $test;
                         // Create a test with the given location and applicable connectivity.
-                        UpdateLocation($testData, $locations, $location_string);
+                        UpdateLocation($testData, $locations, $location_string, $error);
+                        if (strlen($error))
+                          break;
+                          
                         $id = CreateTest($testData, $testData['url']);
                         if( isset($id) )
                             $test['tests'][] = array('url' => $test['url'], 'id' => $id);
                     }
 
                     // write out the list of urls and the test ID for each
-                    if( count($test['tests']) )
-                    {
-                        $path = GetTestPath($test['id']);
-                        file_put_contents("./$path/tests.json", json_encode($test['tests']));
+                    if (!strlen($error)) {
+                      if( count($test['tests']) )
+                      {
+                          $path = GetTestPath($test['id']);
+                          file_put_contents("./$path/tests.json", json_encode($test['tests']));
+                      } else {
+                          $error = 'Locations could not be submitted for testing';
+                      }
                     }
-                    else
-                        $error = 'Locations could not be submitted for testing';
                 }
                 elseif( $test['batch'] )
                 {
@@ -904,7 +909,7 @@
 * @param mixed $test
 * @param mixed $new_location
 */
-function UpdateLocation(&$test, &$locations, $new_location)
+function UpdateLocation(&$test, &$locations, $new_location, &$error)
 {
   // Update the location.
   $test['location'] = $new_location;
@@ -955,6 +960,8 @@ function UpdateLocation(&$test, &$locations, $new_location)
 
           if( isset($connectivity[$test['connectivity']]['aftCutoff']) && !$test['aftEarlyCutoff'] )
               $test['aftEarlyCutoff'] = $connectivity[$test['connectivity']]['aftCutoff'];
+      } else {
+        $error = 'Unknown connectivity type: ' . htmlspecialchars($test['connectivity']);
       }
   }
 
@@ -1261,6 +1268,8 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 
                         if( isset($connectivity[$test['connectivity']]['aftCutoff']) && !$test['aftEarlyCutoff'] )
                             $test['aftEarlyCutoff'] = $connectivity[$test['connectivity']]['aftCutoff'];
+                    } else {
+                      $error = 'Unknown connectivity type: ' . htmlspecialchars($test['connectivity']);
                     }
                 }
 
@@ -1272,9 +1281,9 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             if( !$test['aftEarlyCutoff'] && $settings['aftEarlyCutoff'] )
                 $test['aftEarlyCutoff'] = $settings['aftEarlyCutoff'];
         }
-    }
-    elseif( !strlen($error) )
+    } elseif( !strlen($error) ) {
         $error = "Invalid URL, please try submitting your test request again.";
+    }
 
     return $ret;
 }
