@@ -345,41 +345,65 @@ $page_description = "Website performance test result$testLabel.";
 
         if( !$testComplete ) {
             echo "<script type=\"text/javascript\">\n";
-            echo "testId = '$id';\n";
+            echo "var testId = '$id';\n";
         ?>
+            // polyfill performance.now
+            if ("performance" in window == false) {
+                window.performance = {};
+            }
+            Date.now = (Date.now || function () {  // thanks IE8
+              return new Date().getTime();
+            });
+            if ("now" in window.performance == false){
+              var nowOffset = Date.now();
+              if (performance.timing && performance.timing.navigationStart){
+                nowOffset = performance.timing.navigationStart
+              }
+              window.performance.now = function now(){
+                return Date.now() - nowOffset;
+              }
+            }
+            var lastUpdate = window.performance.now();
             function UpdateStatus(){
-                try {
-                  var xhr = new XMLHttpRequest();
-                  xhr.open('GET', '/testStatus.php?f=json&pos=1&test=' + testId, true);
-                  xhr.onreadystatechange = function() {
-                    if (xhr.readyState != 4)
-                      return;
-                    var reload = false;
-                    if (xhr.status == 200) {
-                        var response = JSON.parse(xhr.responseText);
-                        if (response['statusCode'] != undefined) {
-                            if (response['statusCode'] == 100) {
-                                if (response['data'] != undefined &&
-                                    availableTests != undefined &&
-                                    response.data['testsCompleted'] != undefined &&
-                                    response.data['testsCompleted'] > availableTests)
-                                    reload = true;
-                            } else
-                                reload = true;
-                        }
-                    }
-                    if (reload) {
-                        window.location.reload(true);
-                    } else {
-                        setTimeout('UpdateStatus()', 15000);
-                    }
-                  };
-                  xhr.onerror = function() {
-                    setTimeout('UpdateStatus()', 15000);
-                  };
-                  xhr.send();
-                } catch (err) {
-                    setTimeout('UpdateStatus()', 15000);
+                var now = window.performance.now();
+                var elapsed = now - lastUpdate;
+                lastUpdate = now;
+                if (elapsed < 0 || elapsed > 10000) {
+                  try {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('GET', '/testStatus.php?f=json&pos=1&test=' + testId, true);
+                    xhr.onreadystatechange = function() {
+                      if (xhr.readyState != 4)
+                        return;
+                      var reload = false;
+                      if (xhr.status == 200) {
+                          var response = JSON.parse(xhr.responseText);
+                          if (response['statusCode'] != undefined) {
+                              if (response['statusCode'] == 100) {
+                                  if (response['data'] != undefined &&
+                                      availableTests != undefined &&
+                                      response.data['testsCompleted'] != undefined &&
+                                      response.data['testsCompleted'] > availableTests)
+                                      reload = true;
+                              } else
+                                  reload = true;
+                          }
+                      }
+                      if (reload) {
+                          window.location.reload(true);
+                      } else {
+                          setTimeout('UpdateStatus()', 15000);
+                      }
+                    };
+                    xhr.onerror = function() {
+                      setTimeout('UpdateStatus()', 15000);
+                    };
+                    xhr.send();
+                  } catch (err) {
+                      setTimeout('UpdateStatus()', 15000);
+                  }
+                } else {
+                  setTimeout('UpdateStatus()', 15000);
                 }
             }
             setTimeout('UpdateStatus()', 15000);
