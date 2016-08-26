@@ -1,7 +1,0 @@
-define PASSHASH9 20131128
-
-<requires>
-pbkdf2
-rng
-base64
-</requires>

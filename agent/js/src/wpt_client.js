@@ -300,7 +300,7 @@ ResultFile.ResultType = Object.freeze({
   IMAGE: 'image',
   IMAGE_ANNOTATIONS: 'image_annotations',
   PCAP: 'pcap',
-  TRACE: 'trace'
+  GZIP: 'gzip'
 });
 
 
@@ -363,6 +363,7 @@ function Client(app, args) {
   if (-1 === serverUrl.indexOf('://')) {
     serverUrl = 'http://' + serverUrl;
   }
+  serverUrl = serverUrl.replace('www.webpagetest.org', 'agent.webpagetest.org');
   this.baseUrl_ = url.parse(serverUrl || '');
   // Bring the URL path into a normalized form ending with /
   // The trailing / is for url.resolve not to strip the last path component
@@ -516,7 +517,7 @@ Client.prototype.requestNextJob_ = function() {
             ('&pc=' + encodeURIComponent(this.name_)) : (this.deviceSerial_ ?
             ('&pc=' + encodeURIComponent(this.deviceSerial_)) : '')) +
           (this.apiKey_ ? ('&key=' + encodeURIComponent(this.apiKey_)) : '') +
-          '&f=json');
+          '&f=json&apk=1');
 
       logger.info('Get work: %s', getWorkUrl);
       var options = url.parse(getWorkUrl);
@@ -823,7 +824,7 @@ Client.prototype.postResultFile_ = function(job, resultFile, fields, callback) {
     if (resultFile) {
       if (exports.ResultFile.ResultType.IMAGE === resultFile.resultType ||
           exports.ResultFile.ResultType.PCAP === resultFile.resultType ||
-          exports.ResultFile.ResultType.TRACE === resultFile.resultType) {
+          exports.ResultFile.ResultType.GZIP === resultFile.resultType) {
         // Images and pcaps must be uploaded to the RESULT_IMAGE_SERVLET, with no
         // resultType or run/cache parts.
         //

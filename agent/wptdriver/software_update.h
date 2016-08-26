@@ -25,6 +25,10 @@ public:
   void LoadSettings(CString settings_ini);
   bool UpdateSoftware(bool force = false);
   bool ReInstallBrowser(CString browser);
+  CString GetUpdateInfo(CString url);
+
+  CString _ec2_instance;
+  CString _ec2_availability_zone;
 
 protected:
   CAtlList<BrowserInfo> _browsers;
@@ -36,7 +40,7 @@ protected:
 
   bool UpdateBrowsers(void);
   bool InstallSoftware(CString browser, CString file_url, CString md5,
-           CString version, CString command, DWORD update, CString check_file);
+           CString version, CString command, CString check_file);
   bool TimeToCheck(void);
 };
 

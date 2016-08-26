@@ -1,8 +1,0 @@
-define BCRYPT 20131128
-
-<requires>
-blowfish
-rng
-base64
-</requires>
-

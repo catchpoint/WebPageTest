@@ -4,7 +4,7 @@
 // directory where this file is located, run:
 // php $PHPUNIT_LOCATION/phpunit.phar pageDataTest
 
-include_once '../page_data.inc';
+include_once __DIR__ . '/../page_data.inc';
 
 class PageDataTest extends PHPUnit_Framework_TestCase
 {

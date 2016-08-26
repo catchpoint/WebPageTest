@@ -8,14 +8,18 @@ $remote_file_time = 0;
 $base_url = 'http://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central/';
 $html = file_get_contents($base_url);
 if ($html) {
-  if (preg_match('/href=\"(?P<path>[^\"]*(?P<file>firefox-(?P<ver>[0-9]+)[a-zA-Z0-9\.]+\.en-US\.win32\.installer\.exe))[^\n]*\n[^\n]*\n[^>]*>(?P<time>[^<]*)/', $html, $matches)) {
-    $file = $matches['file'];
-    $ver = intval($matches['ver']);
-    $time = strtotime(trim($matches['time']));
-    if ($ver && $time && $time > $remote_file_time) {
-      $remote_file = $file;
-      $remote_file_ver = $ver;
-      $remote_file_time = $time;
+  if (preg_match_all('/<tr>.*?<\/tr>/ms', $html, $rows) && isset($rows[0]) && is_array($rows[0])) {
+    foreach ($rows[0] as $row) {
+      if (preg_match('/href=\"(?P<path>[^\"]*(?P<file>firefox-(?P<ver>[0-9]+)[a-zA-Z0-9\.]+\.en-US\.win32\.installer\.exe))[^\n]*\n[^\n]*\n[^>]*>(?P<time>[^<]*)/', $row, $matches)) {
+        $file = $matches['file'];
+        $ver = intval($matches['ver']);
+        $time = strtotime(trim($matches['time']));
+        if ($ver && $time && $time > $remote_file_time) {
+          $remote_file = $file;
+          $remote_file_ver = $ver;
+          $remote_file_time = $time;
+        }
+      }
     }
   }
   

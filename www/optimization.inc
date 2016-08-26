@@ -1,44 +1,70 @@
 <?php
+require_once __DIR__ . '/include/TestPaths.php';
 
 /**
 * Re-format the optimization report to make it prettier
-* 
+*
 * @param mixed $testPath
 * @param mixed $run
 * @param mixed $cached
+* @return string The optimization report
 */
 function dumpOptimizationReport(&$pageData, &$requests, $id, $run, $cached, &$test)
 {
+    $localPaths = new TestPaths(GetTestPath($id), $run, $cached, 1);
+    return dumpOptimizationReportForStep($localPaths, $pageData, $requests, $test["testinfo"], 1);
+}
+
+/**
+ * Re-format the optimization report to make it prettier
+ *
+ * @param TestPaths $localPaths Step specific test paths
+ * @param array $pageData Raw step results array
+ * @param array $requests Requests of the result
+ * @param array $testinfoArray The "testinfo" array
+ * @param int $step The step number (used for ids)
+ * @return string The optimization report
+ */
+function dumpOptimizationReportForStep($localPaths, &$pageData, &$requests, $testinfoArray, $step)
+{
+    $out = "";
     if( $pageData && $requests )
     {
-        ReportTTFB($pageData, $requests, $id, $run, $cached, $test);
-        ReportKeepAlive($pageData, $requests);
-        ReportTransferCompression($pageData, $requests);
-        ReportImageCompression($pageData, $requests);
-        ReportProgressiveJpeg($pageData, $requests);
-        ReportCache($pageData, $requests);
-        ReportCDN($pageData, $requests);
+        $out .= ReportTTFB($localPaths, $pageData, $testinfoArray, $step);
+        $out .= ReportKeepAlive($pageData, $requests, $step);
+        $out .= ReportTransferCompression($pageData, $requests, $step);
+        $out .= ReportImageCompression($pageData, $requests, $step);
+        $out .= ReportProgressiveJpeg($pageData, $requests, $step);
+        $out .= ReportCache($pageData, $requests, $step);
+        $out .= ReportCDN($pageData, $requests, $step);
     }
+    return $out;
 }
 
 /**
-* 
-* 
-* @param mixed $requests
-*/
-function ReportTTFB(&$pageData, &$requests, $id, $run, $cached, &$test)
+ * @param TestPaths $localPaths
+ * @param array $pageData
+ * @param array $testinfoArray
+ * @param int $step The step number (used for id)
+ * @return string The TTFB report
+ */
+function ReportTTFB($localPaths, $pageData, $testinfoArray, $step)
 {
-    require_once('optimization_detail.inc.php');
-    $score = gradeTTFB($pageData, $test, $id, $run, $cached, $target);
+    require_once __DIR__ . '/optimization_detail.inc.php';
+    $ttfb = (int) $pageData["TTFB"];
+    $latency = isset($testinfoArray['latency']) ? $testinfoArray['latency'] : null;
+    $score = gradeTTFBForStep($ttfb, $latency, $localPaths, $target);
+    $out = "";
     if( isset($score) )
     {
-        echo "<a  name=\"first_byte_time\"><h3>First Byte Time (back-end processing): $score/100</h3></a><p class=\"indented1\">\n";
-        echo "<b>{$pageData['TTFB']} ms</b> First Byte Time<br>\n";
-        echo "<b>$target ms</b> Target First Byte Time<br>\n";
+        $out .= "<a  name=\"first_byte_time\"><h3 id='ttfb_step$step'>First Byte Time (back-end processing): $score/100</h3></a><p class=\"indented1\">\n";
+        $out .= "<b>$ttfb ms</b> First Byte Time<br>\n";
+        $out .= "<b>$target ms</b> Target First Byte Time<br>\n";
     }
     else
-        echo "<a  name=\"first_byte_time\"><h3>First Byte Time (back-end processing): N/A</h3></a><p class=\"indented1\">\n";
-    echo "</p><br>\n";
+        $out .= "<a  name=\"first_byte_time\"><h3>First Byte Time (back-end processing): N/A</h3></a><p class=\"indented1\">\n";
+    $out .= "</p><br>\n";
+    return $out;
 }
 
 /**
@@ -46,8 +72,9 @@ function ReportTTFB(&$pageData, &$requests, $id, $run, $cached, &$test)
 * 
 * @param mixed $requests
 */
-function ReportKeepAlive(&$pageData, &$requests)
+function ReportKeepAlive(&$pageData, &$requests, $step)
 {
+    $out = "";
     $score = 'N/A';
     $report = array();
     if( isset($pageData['score_keep-alive']) && $pageData['score_keep-alive'] >= 0 )
@@ -70,10 +97,11 @@ function ReportKeepAlive(&$pageData, &$requests)
         ksort($report);
     }
         
-    echo "<a  name=\"keep_alive_enabled\"><h3>Use persistent connections (keep alive): $score</h3></a><p class=\"indented1\">\n";
+    $out .= "<a  name=\"keep_alive_enabled\"><h3 id='keep-alive_step$step'>Use persistent connections (keep alive): $score</h3></a><p class=\"indented1\">\n";
     foreach( $report as $entry )
-        echo "$entry<br>\n";
-    echo "</p><br>\n";
+        $out .= "$entry<br>\n";
+    $out .= "</p><br>\n";
+    return $out;
 }
 
 /**
@@ -81,8 +109,9 @@ function ReportKeepAlive(&$pageData, &$requests)
 * 
 * @param mixed $requests
 */
-function ReportTransferCompression(&$pageData, &$requests)
+function ReportTransferCompression(&$pageData, &$requests, $step)
 {
+    $out = "";
     $score = 'N/A';
     $report = array();
     if( isset($pageData['score_gzip']) && $pageData['score_gzip'] >= 0 )
@@ -120,13 +149,14 @@ function ReportTransferCompression(&$pageData, &$requests)
         krsort($report, SORT_NUMERIC);
     }
         
-    echo "<a  name=\"compress_text\"><h3>Use gzip compression for transferring compressable responses: $score</h3></a>\n";
+    $out .= "<a  name=\"compress_text\"><h3 id='gzip_step$step'>Use gzip compression for transferring compressable responses: $score</h3></a>\n";
     if( isset($summary) )
-        echo "<p>$summary</p>\n";
-    echo "<p class=\"indented1\">";
+        $out .= "<p>$summary</p>\n";
+    $out .= "<p class=\"indented1\">";
     foreach( $report as $entry )
-        echo "$entry<br>\n";
-    echo "</p><br>\n";
+        $out .= "$entry<br>\n";
+    $out .= "</p><br>\n";
+    return $out;
 }
 
 /**
@@ -134,8 +164,9 @@ function ReportTransferCompression(&$pageData, &$requests)
 * 
 * @param mixed $requests
 */
-function ReportImageCompression(&$pageData, &$requests)
+function ReportImageCompression(&$pageData, &$requests, $step)
 {
+    $out = "";
     $score = 'N/A';
     $report = array();
     if( isset($pageData['score_compress']) && $pageData['score_compress'] >= 0 )
@@ -173,17 +204,19 @@ function ReportImageCompression(&$pageData, &$requests)
         krsort($report, SORT_NUMERIC);
     }
         
-    echo "<a  name=\"compress_images\"><h3>Compress Images: $score</h3></a>\n";
+    $out .= "<a  name=\"compress_images\"><h3 id='image_compression_step$step'>Compress Images: $score</h3></a>\n";
     if( isset($summary) )
-        echo "<p>$summary</p>\n";
-    echo "<p class=\"indented1\">";
+        $out .= "<p>$summary</p>\n";
+    $out .= "<p class=\"indented1\">";
     foreach( $report as $entry )
-        echo "$entry<br>\n";
-    echo "</p><br>\n";
+        $out .= "$entry<br>\n";
+    $out .= "</p><br>\n";
+    return $out;
 }
 
-function ReportProgressiveJpeg(&$pageData, &$requests)
+function ReportProgressiveJpeg(&$pageData, &$requests, $step)
 {
+    $out = "";
     $score = 'N/A';
     $report = array();
     if( isset($pageData['score_progressive_jpeg']) && $pageData['score_progressive_jpeg'] >= 0 )
@@ -223,14 +256,15 @@ function ReportProgressiveJpeg(&$pageData, &$requests)
         
         krsort($report, SORT_NUMERIC);
     }
-        
-    echo "<a  name=\"progressive_jpeg\"><h3>Use Progressive JPEGs: $score</h3></a>\n";
+
+    $out .= "<a  name=\"progressive_jpeg\"><h3 id='progressive_jpeg_step$step'>Use Progressive JPEGs: $score</h3></a>\n";
     if( isset($summary) )
-        echo "<p>$summary</p>\n";
-    echo "<p class=\"indented1\">";
+        $out .= "<p>$summary</p>\n";
+    $out .= "<p class=\"indented1\">";
     foreach( $report as $entry )
-        echo "$entry<br>\n";
-    echo "</p><br>\n";
+        $out .= "$entry<br>\n";
+    $out .= "</p><br>\n";
+    return $out;
 }
 
 /**
@@ -238,8 +272,9 @@ function ReportProgressiveJpeg(&$pageData, &$requests)
 * 
 * @param mixed $requests
 */
-function ReportCache(&$pageData, &$requests)
+function ReportCache(&$pageData, &$requests, $step)
 {
+    $out = "";
     $score = 'N/A';
     $report = array();
     if( isset($pageData['score_cache']) && $pageData['score_cache'] >= 0 )
@@ -281,12 +316,13 @@ function ReportCache(&$pageData, &$requests)
         
         ksort($report, SORT_NUMERIC);
     }
-        
-    echo "<a  name=\"cache_static_content\"><h3>Leverage browser caching of static assets: $score</h3></a>\n";
-    echo "<p class=\"indented1\">";
+
+    $out .= "<a  name=\"cache_static_content\"><h3 id='caching_step$step'>Leverage browser caching of static assets: $score</h3></a>\n";
+    $out .= "<p class=\"indented1\">";
     foreach( $report as $entry )
-        echo "$entry<br>\n";
-    echo "</p><br>\n";
+        $out .= "$entry<br>\n";
+    $out .= "</p><br>\n";
+    return $out;
 }
 
 /**
@@ -294,8 +330,9 @@ function ReportCache(&$pageData, &$requests)
 * 
 * @param mixed $requests
 */
-function ReportCombine(&$pageData, &$requests)
+function ReportCombine(&$pageData, &$requests, $step)
 {
+    $out = "";
     $score = 'N/A';
     $report = array();
     if( isset($pageData['score_combine']) && $pageData['score_combine'] >= 0 )
@@ -317,11 +354,12 @@ function ReportCombine(&$pageData, &$requests)
         
         ksort($report);
     }
-        
-    echo "<a  name=\"combine_js_css_files\"><h3>Combine static CSS and JS files: $score</h3></a><p class=\"indented1\">\n";
+
+    $out .= "<a  name=\"combine_js_css_files\"><h3 id='combine_step$step'>Combine static CSS and JS files: $score</h3></a><p class=\"indented1\">\n";
     foreach( $report as $entry )
-        echo "$entry<br>\n";
-    echo "</p><br>\n";
+        $out .= "$entry<br>\n";
+    $out .= "</p><br>\n";
+    return $out;
 }
 
 /**
@@ -329,8 +367,9 @@ function ReportCombine(&$pageData, &$requests)
 * 
 * @param mixed $requests
 */
-function ReportCDN(&$pageData, &$requests)
+function ReportCDN(&$pageData, &$requests, $step)
 {
+    $out = "";
     $score = 'N/A';
     $report = array();
     $cdns = array();
@@ -357,17 +396,18 @@ function ReportCDN(&$pageData, &$requests)
         
         ksort($report);
     }
-        
-    echo "<a  name=\"use_of_cdn\"><h3>Use a CDN for all static assets: $score</h3></a><p class=\"indented1\">\n";
+
+    $out .= "<a  name=\"use_of_cdn\"><h3 id='cdn_step$step'>Use a CDN for all static assets: $score</h3></a><p class=\"indented1\">\n";
     foreach( $report as $entry )
-        echo "$entry<br>\n";
+        $out .= "$entry<br>\n";
     if( count($cdns) )
     {
-        echo "<br>CDN's Used:<br>";
+        $out .= "<br>CDN's Used:<br>";
         foreach( $cdns as $host => $provider )
-            echo "$host : $provider<br>";
+            $out .= "$host : $provider<br>";
     }
-    echo "</p><br>\n";
+    $out .= "</p><br>\n";
+    return $out;
 }
 
 /**
@@ -375,8 +415,9 @@ function ReportCDN(&$pageData, &$requests)
 * 
 * @param mixed $requests
 */
-function ReportMinify(&$pageData, &$requests)
+function ReportMinify(&$pageData, &$requests, $step)
 {
+    $out = "";
     $score = 'N/A';
     $report = array();
     if( isset($pageData['score_minify']) && $pageData['score_minify'] >= 0 )
@@ -413,14 +454,15 @@ function ReportMinify(&$pageData, &$requests)
         
         krsort($report, SORT_NUMERIC);
     }
-        
-    echo "<a  name=\"minify_js\"><h3>Minify JS: $score</h3></a>\n";
+
+    $out .= "<a  name=\"minify_js\"><h3 id='minify_step$step'>Minify JS: $score</h3></a>\n";
     if( isset($summary) )
-        echo "<p>$summary</p>\n";
-    echo "<p class=\"indented1\">";
+        $out .= "<p>$summary</p>\n";
+    $out .= "<p class=\"indented1\">";
     foreach( $report as $entry )
-        echo "$entry<br>\n";
-    echo "</p><br>\n";
+        $out .= "$entry<br>\n";
+    $out .= "</p><br>\n";
+    return $out;
 }
 
 /**
@@ -428,8 +470,9 @@ function ReportMinify(&$pageData, &$requests)
 * 
 * @param mixed $requests
 */
-function ReportCookies(&$pageData, &$requests)
+function ReportCookies(&$pageData, &$requests, $step)
 {
+    $out = "";
     $score = 'N/A';
     $report = array();
     if( isset($pageData['score_cookies']) && $pageData['score_cookies'] >= 0 )
@@ -451,11 +494,12 @@ function ReportCookies(&$pageData, &$requests)
         
         ksort($report);
     }
-        
-    echo "<a  name=\"cookies\"><h3>Proper cookie usage: $score</h3></a><p class=\"indented1\">\n";
+
+    $out .= "<a  name=\"cookies\"><h3 id='cookies_step$step'>Proper cookie usage: $score</h3></a><p class=\"indented1\">\n";
     foreach( $report as $entry )
-        echo "$entry<br>\n";
-    echo "</p><br>\n";
+        $out .= "$entry<br>\n";
+    $out .= "</p><br>\n";
+    return $out;
 }
 
 /**
@@ -547,7 +591,7 @@ function dumpOptimizationGlossary(&$settings)
         </tr>
         <tr>
             <td class="nowrap">What is checked</td>
-            <td >Checked to see if it is hosted on a known CDN (CNAME mapped to a known CDN network).  80% of the static resources need to be served from a CDN for the overall page to be considered using a CDN. The current list of known CDN's is <a href="http://webpagetest.googlecode.com/svn/trunk/agent/wpthook/cdn.h">here</a></td>
+            <td >Checked to see if it is hosted on a known CDN (CNAME mapped to a known CDN network).  80% of the static resources need to be served from a CDN for the overall page to be considered using a CDN. The current list of known CDN's is <a href="https://github.com/WPO-Foundation/webpagetest/blob/master/agent/wpthook/cdn.h">here</a></td>
         </tr>
 
     </table>

@@ -236,7 +236,7 @@ table.result {width: 920px;}
 table.pretty { margin-left:auto; margin-right:auto; background-color: #fff; border-collapse: collapse; border: 0px white solid; }
 table.pretty th, table.pretty td {border: 1px silver solid; padding: 0.4em; text-align: center; }
 table.pretty th { background: gainsboro; }
-table.pretty th.empty { background: #fff; border-top:1px white solid; border-left:1px white solid; }
+table.pretty th.empty { background: #fff; border:0; }
 table.pretty th.border, table.pretty td.border { border-left: 2px black solid; }
 table.pretty td.even { background: whitesmoke; }
 
@@ -255,3 +255,5 @@ table.pretty td.even { background: whitesmoke; }
 /*pagespeed results*/
 #pagespeed_results {width: 960px; background-color: #fff; padding: 0px 10px 10px; margin: -15px -20px 0px;}
 #pagespeed_results h2 {text-align: center; padding: 10px 0 0 0;}
+
+h1.stepName { border-left: 4px #007 solid; border-right: 4px #007 solid; background: gainsboro; margin-top: 1em; }

@@ -1,6 +1,8 @@
 <?php
-require_once('draw.inc');
-require_once('contentColors.inc');
+require_once __DIR__ . '/common_lib.inc';
+require_once __DIR__ . '/draw.inc';
+require_once __DIR__ . '/contentColors.inc';
+require_once __DIR__ . '/include/TestPaths.php';
 
 /**
 * Regroup requests into connection rows.
@@ -103,6 +105,7 @@ function GetPageEvents($page_data) {
                             $page_data['loadEventEnd']),
         'nav_dom' => array($page_data['domContentLoadedEventStart'],
                            $page_data['domContentLoadedEventEnd']),
+        'nav_dom_interactive' => $page_data['domInteractive'],
         'load' => $page_data['docTime']
         );
 }
@@ -166,15 +169,19 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
     $data_height = $height;
     $use_cpu = (bool)@$options['use_cpu'];
     $use_bw = (bool)@$options['use_bw'];
+    $stepId = array_key_exists('step_id', $options) ? (int) $options['step_id'] : 1;
+    $isCached = array_key_exists('is_cached', $options) ? $options['is_cached'] : false;
+    $localPaths = new TestPaths($options['path'], $options['run_id'], $isCached, $stepId);
+    // Load the pcap-based bandwidth information if we have it
+    if ($use_bw) {
+      $max_bw = 0;
+      if (isset($options) && array_key_exists('max_bw', $options))
+          $max_bw = $options['max_bw'];
+      $pcap_slices = LoadPcapSlices($localPaths->pcapUtilizationFile(), $max_bw);
+    }
     if ($use_cpu || $use_bw) {
-        $cached = ((bool)@$options['is_cached']) ? '_Cached' : '';
-        $perf_file = ("{$options['path']}/" .
-                      "{$options['run_id']}{$cached}_progress.csv");
-        $max_bw = 0;
-        if (isset($options) && array_key_exists('max_bw', $options)) {
-            $max_bw = $options['max_bw'];
-        }
-        $perfs = LoadPerfData($perf_file, $use_cpu, $use_bw, false, $max_bw);
+        $perf_file = $localPaths->utilizationFile();
+        $perfs = LoadPerfData($perf_file, $use_cpu, !isset($pcap_slices) && $use_bw, false, $max_bw);
         $perf_height = $is_thumbnail ? 16 : 50;
         if (isset($perfs) && is_array($perfs)) {
             foreach (array_keys($perfs) as $key) {
@@ -189,24 +196,28 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
             }
         }
     }
-    if ($use_cpu && !$is_image_map && isset($options) && is_array($options) &&
-        array_key_exists('path', $options) &&
-        array_key_exists('run_id', $options) &&
-        array_key_exists('is_cached', $options)) {
+    if (isset($pcap_slices) && is_array($pcap_slices)) {
+      $perf_height = $is_thumbnail ? 16 : 50;
+      $pcap_slices['x1'] = 0;
+      $pcap_slices['x2'] = $width - 1;
+      $pcap_slices['y1'] = $height - 1;  // share border with above
+      $pcap_slices['y2'] = $height + $perf_height - 2;
+      $pcap_slices['height'] = $perf_height;
+      $height += $perf_height - 1;
+    }
+    if ($use_cpu && !$is_image_map) {
       require_once('devtools.inc.php');
-      $cpu_slices = DevToolsGetCPUSlices($options['path'], $options['run_id'], $options['is_cached']);
-      if (isset($cpu_slices) && is_array($cpu_slices) && count($cpu_slices)) {
+      $cpu_slices = DevToolsGetCPUSlicesForStep($localPaths);
+      if (isset($cpu_slices) && is_array($cpu_slices) && isset($cpu_slices['main_thread'])) {
         $perf_height = $is_thumbnail ? 16 : 50;
         $cpu_slice_info = array();
-        foreach (array_keys($cpu_slices) as $thread) {
-          $cpu_slice_info[] = array('thread' => $thread,
-                                    'x1' => 0,
-                                    'x2' => $width - 1,
-                                    'y1' => $height - 1,
-                                    'y2' => $height + $perf_height - 2,
-                                    'height' => $perf_height);
-          $height += $perf_height - 1;
-        }
+        $cpu_slice_info[] = array('thread' => $cpu_slices['main_thread'],
+                                  'x1' => 0,
+                                  'x2' => $width - 1,
+                                  'y1' => $height - 1,
+                                  'y2' => $height + $perf_height - 2,
+                                  'height' => $perf_height);
+        $height += $perf_height - 1;
       }
     }
     
@@ -250,9 +261,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
             $filter = array();
         }
         $use_all = false;
-        $csi_params = ParseCsiInfo($options['id'], $options['path'],
-                                   $options['run_id'], $options['is_cached'],
-                                   $use_all);
+        $csi_params = ParseCsiInfoForStep($localPaths, $use_all);
         $csi_info = TailorRtParamsForVisualization($csi_params, $filter);
     }
     // get any user timings
@@ -310,6 +319,10 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                     $perfs['bw']['color'] = GetColor($im, 137, 200, 137);
                 }
             }
+            if (isset($pcap_slices)) {
+              $pcap_slices['in_color'] = GetColor($im, 52, 150, 255);
+              $pcap_slices['in_dup_color'] = GetColor($im, 192, 64, 64);
+            }
         } else {
             $time_scale_color = $dark_grey;
             $border_color = $black;
@@ -321,6 +334,10 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                     $perfs['bw']['color'] = GetColor($im, 0, 127, 0);
                 }
             }
+            if (isset($pcap_slices)) {
+              $pcap_slices['in_color'] = GetColor($im, 52, 150, 255);
+              $pcap_slices['in_dup_color'] = GetColor($im, 192, 64, 64);
+            }
         }
         if (isset($cpu_slice_info)) {
           $cpu_slice_colors = array();
@@ -330,6 +347,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
           $cpu_slice_colors['ResourceReceivedData'] = $cpu_slice_colors['ParseHTML'];
           $cpu_slice_colors['ResourceSendRequest'] = $cpu_slice_colors['ParseHTML'];
           $cpu_slice_colors['ResourceReceivedResponse'] = $cpu_slice_colors['ParseHTML'];
+          $cpu_slice_colors['ResourceReceiveResponse'] = $cpu_slice_colors['ParseHTML'];
           $cpu_slice_colors['ResourceFinish'] = $cpu_slice_colors['ParseHTML'];
           $cpu_slice_colors['CommitLoad'] = $cpu_slice_colors['ParseHTML'];
 
@@ -338,12 +356,14 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
           $cpu_slice_colors['ParseAuthorStyleSheet'] = $cpu_slice_colors['Layout'];
           $cpu_slice_colors['ScheduleStyleRecalculation'] = $cpu_slice_colors['Layout'];
           $cpu_slice_colors['InvalidateLayout'] = $cpu_slice_colors['Layout'];
+          $cpu_slice_colors['UpdateLayoutTree'] = $cpu_slice_colors['Layout'];
 
           $cpu_slice_colors['Paint'] = GetColor($im, 113, 179, 99);
           $cpu_slice_colors['PaintImage'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['PaintSetup'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['CompositeLayers'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['DecodeImage'] = $cpu_slice_colors['Paint'];
+          $cpu_slice_colors['Decode Image'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['ImageDecodeTask'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['Rasterize'] = $cpu_slice_colors['Paint'];
           $cpu_slice_colors['GPUTask'] = $cpu_slice_colors['Paint'];
@@ -363,6 +383,13 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
           $cpu_slice_colors['TimerRemove'] = $cpu_slice_colors['EvaluateScript'];
           $cpu_slice_colors['XHRLoad'] = $cpu_slice_colors['EvaluateScript'];
           $cpu_slice_colors['XHRReadyStateChange'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['v8.compile'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['MinorGC'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['MajorGC'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['FireAnimationFrame'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['ThreadState::completeSweep'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['Heap::collectGarbage'] = $cpu_slice_colors['EvaluateScript'];
+          $cpu_slice_colors['ThreadState::performIdleLazySweep'] = $cpu_slice_colors['EvaluateScript'];
 
           $cpu_slice_colors['other'] = GetColor($im, 184, 184, 184);
           $cpu_slice_colors['Program'] = $cpu_slice_colors['other'];
@@ -402,6 +429,13 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
             }
         }
         
+        // Draw pcap-based bandwidth backgrounds, labels and borders
+        if (isset($pcap_slices)) {
+          if (!$is_thumbnail && $show_labels)
+              DrawPerfLabel($im, 'pcap_bw', $pcap_slices, $font, $black);
+          DrawPerfBackground($im, $pcap_slices, $data_x, $border_color, $bg_colors['alt']);
+        }
+        
         // Draw timeline backgrounds, labels and borders
         if (isset($cpu_slice_info)) {
           foreach ($cpu_slice_info as $thread => $p) {
@@ -438,6 +472,9 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                         }
                     }
                 }
+                if (isset($pcap_slices)) {
+                  imageline($im, $x, $pcap_slices['y1'] + 1, $x, $pcap_slices['y2'] - 1, $time_scale_color);
+                }
                 if (isset($cpu_slice_info)) {
                   foreach ($cpu_slice_info as $p)
                     imageline($im, $x, $p['y1'] + 1, $x, $p['y2'] - 1, $time_scale_color);
@@ -460,6 +497,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                 'nav_load' => GetColor($im, 192, 192, 255),
                 'nav_dom' => GetColor($im, 216, 136, 223),
                 'nav_first_paint' => GetColor($im, 143, 188, 131),
+                'nav_dom_interactive' => GetColor($im, 255, 198, 26),
                 'aft' => GetColor($im, 255, 0, 0),
                 'user' => GetColor($im, 105, 0, 158)
                 );
@@ -476,6 +514,10 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                                                  'y2' => $p['y2'] - 1);
                         }
                     }
+                }
+                if (isset($pcap_slices)) {
+                  $endpoints[] = array('y1' => $pcap_slices['y1'] + 1,
+                                       'y2' => $pcap_slices['y2'] - 1);
                 }
                 if (isset($cpu_slice_info)) {
                   foreach ($cpu_slice_info as $p)
@@ -548,6 +590,35 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                 }
             }
             
+            // Draw the pcap-based bandwidth data
+            if (isset($pcap_slices)) {
+              // go through each pixel and draw bars individually
+              $x1 = $data_x + 1;
+              $x2 = $data_x + $data_width;
+              $pcap_top = $pcap_slices['y1'] + 1;
+              $pcap_bottom = $pcap_slices['y2'] - 1;
+              $pcap_height = $pcap_bottom - $pcap_top + 1;
+              $max_val = $pcap_slices['max'];
+              $end_slice_time = floatval($max_ms) / 1000.0;
+              $slice_time = $end_slice_time / floatval($data_width);
+              if ($x1 < $x2) {
+                $slices = array('in', 'in_dup');
+                foreach ($slices as $slice) {
+                  $index = 0;
+                  for ($x = $x1; $x <= $x2; $x++) {
+                    $start_time = (floatval($x - $x1) / floatval($data_width)) * $end_slice_time;
+                    $value = GetAverageSliceValue($pcap_slices[$slice], $start_time, $start_time + $slice_time);
+                    $pixels = min(intval((floatval($value) / floatval($max_val)) * floatval($pcap_height)), $pcap_height);
+                    if ($pixels > 0) {
+                      $y2 = max($pcap_bottom - $pixels, $pcap_top);
+                      imageline($im, $x, $pcap_bottom, $x, $y2, $pcap_slices["{$slice}_color"]);
+                    }
+                    $index++;
+                  }
+                }
+              }
+            }
+            
             // Draw the Timeline information
             if (isset($cpu_slice_info) && $max_ms) {
               foreach ($cpu_slice_info as $p) {
@@ -557,25 +628,23 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                 $cpu_top = $p['y1'] + 1;
                 $cpu_bottom = $p['y2'] - 1;
                 $cpu_height = $cpu_bottom - $cpu_top + 1;
-                $bins = intval(ceil($max_ms / $data_width));
-                $slices = $cpu_slices[$p['thread']];
-                $max_slices_ms = count($slices);
+                $slices = $cpu_slices['slices'][$p['thread']];
+                $slice_usecs = $cpu_slices['slice_usecs'];
+                $end_slice = intval($max_ms * 1000 / $slice_usecs);
                 if ($x1 < $x2) {
                   for ($x = $x1; $x <= $x2; $x++) {
-                    $ms = intval(floor(((($x - $x1) / $data_width) * $max_ms)));
-                    if ($ms <= $max_slices_ms) {
-                      $slice_bins = min($bins, $max_slices_ms - $ms);
-                      $cpu_times = AverageCpuSlices($ms, $slice_bins, $slices, $cpu_slice_colors);
-                      if ($cpu_times) {
-                        // draw the line for this data point in the order the colors are defined
-                        $y = $cpu_bottom;
-                        foreach ($cpu_slice_colors as $type => $color) {
-                          if (array_key_exists($type, $cpu_times)) {
-                            $pixels = $cpu_height * $cpu_times[$type];
-                            $y2 = max($cpu_bottom - $pixels, $cpu_top);
-                            imageline($im, $x, $y, $x, $y2, $color);
-                            $y = $y2;
-                          }
+                    $first_slice = intval(floor(((($x - $x1) / $data_width) * $end_slice)));
+                    $last_slice = intval(floor(((($x + 1- $x1) / $data_width) * $end_slice)));
+                    $cpu_times = AverageCpuSlices($slices, $first_slice, $last_slice, $slice_usecs, $cpu_slice_colors);
+                    if ($cpu_times) {
+                      // draw the line for this data point in the order the colors are defined
+                      $y = $cpu_bottom;
+                      foreach ($cpu_slice_colors as $type => $color) {
+                        if (isset($cpu_times[$type])) {
+                          $pixels = $cpu_height * $cpu_times[$type];
+                          $y2 = max($y - $pixels, $cpu_top);
+                          imageline($im, $x, $y, $x, $y2, $color);
+                          $y = $y2;
                         }
                       }
                     }
@@ -665,7 +734,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
                     $y2 -= 1;
                 }
                 $request['colors'] = GetRequestColors(
-                    $request['contentType'],
+                    @$request['contentType'],
                     $is_thumbnail, $is_mime, $is_state, $request['url']);
                 $bars = GetBars($request, $x_scaler, $y1, $y2,
                                 $is_thumbnail, $is_mime, $is_state);
@@ -786,20 +855,22 @@ class XScaler
     }
 }
 
-function AverageCpuSlices($ms_start, $bins, &$slices, &$known_types) {
+function AverageCpuSlices(&$slices, $first_slice, $last_slice, $slice_usecs, &$known_types) {
   $avg = null;
-  if ($bins) {
+  if ($last_slice >= $first_slice) {
     $valid = false;
     $totals = array();
-    $ms_end = $ms_start + $bins;
-    for ($ms = $ms_start; $ms < $ms_end; $ms++) {
-      if (count($slices[$ms])) {
-        foreach ($slices[$ms] as $type => $value) {
+    $total_time = ($last_slice - $first_slice + 1) * $slice_usecs;
+    for ($slice = $first_slice; $slice <= $last_slice; $slice++) {
+      foreach ($slices as $type => &$times) {
+        if (isset($times[$slice])) {
+          $value = $times[$slice];
           if ($value > 0) {
             $valid = true;
-            if (!array_key_exists($type, $known_types))
+            if (!isset($known_types[$type])) {
               $type = 'other';
-            if (!array_key_exists($type, $totals))
+            }
+            if (!isset($totals[$type]))
               $totals[$type] = 0;
             $totals[$type] += $value;
           }
@@ -809,7 +880,7 @@ function AverageCpuSlices($ms_start, $bins, &$slices, &$known_types) {
     if ($valid) {
       $avg = array();
       foreach($totals as $type => $total)
-        $avg[$type] = $total / $bins;
+        $avg[$type] = $total / $total_time;
     }
   }
   return $avg;
@@ -863,14 +934,27 @@ function DrawPerfLabel($im, $key, $perf, $font, $label_color) {
 
   $label = $key;
   if ($key == 'cpu') {
-      $label = 'CPU Utilization';
+    $label = 'CPU Utilization';
   } elseif ($key == 'bw') {
-      $max_kbps = number_format($perf['max'] / 1000);
-      $label = "BandwidthIn (0 - $max_kbps Kbps)";
+    $max_kbps = number_format($perf['max'] / 1000);
+    $label = "Bandwidth In (0 - $max_kbps Kbps)";
+  } elseif ($key == 'pcap_bw') {
+    $max_kbps = number_format($perf['max'] / 1000);
+    $label = "Bandwidth In (0 - $max_kbps Kbps)";
   }
   $font_height = imagefontheight($font);
   $label_y = $perf['y1'] + ($height / 2) - ($font_height / 2);
+  if (isset($perf['in_dup']))
+    $label_y = $perf['y1'] + ($height / 2) - intval(2.25 * $font_height / 2);
   imagestring($im, $font, $x + 50, $label_y, $label, $label_color);
+  if (isset($perf['in_color']))
+    imagefilledrectangle($im, $x + 40, $label_y + 2, $x + 30, $label_y + $font_height - 2, $perf['in_color']);
+  if (isset($perf['in_dup'])) {
+    $label_y += intval($font_height * 1.25);
+    imagestring($im, $font, $x + 50, $label_y, "Duplicate (wasted) Data", $label_color);
+    if (isset($perf['in_dup_color']))
+      imagefilledrectangle($im, $x + 40, $label_y + 2, $x + 30, $label_y + $font_height - 2, $perf['in_dup_color']);
+  }
 }
 
 /**
@@ -1053,14 +1137,19 @@ function AddBarIfValid(&$bars, $key, $request, $x_scaler, $y1, $y2) {
 * 
 */
 function InsertWaterfall($url, &$requests, $id, $run, $cached, &$page_data, $waterfall_options = '') {
+  echo CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $waterfall_options);
+}
+
+function CreateWaterfallHtml($url, &$requests, $id, $run, $cached, &$page_data, $waterfall_options = '', $step = 1) {
     global $settings;
-    
+
     // create the image map (this is for fallback when Javascript isn't enabled
     // but also gives us the position for each request)
-    echo '<map name="waterfall_map">';
+    $out = '<map name="waterfall_map_step' . $step . '">';
     $options = array(
         'id' => $id,
         'path' => './' . GetTestPath($id),
+        'step_id' => $step,
         'run_id' => $run,
         'is_cached' => @$_GET['cached'],
         'use_cpu' => true,
@@ -1073,19 +1162,21 @@ function InsertWaterfall($url, &$requests, $id, $run, $cached, &$page_data, $wat
         if (array_key_exists('request', $entry)) {
             $index = $entry['request'] + 1;
             $title = $index . ': ' . htmlspecialchars($entry['url']);
-            echo '<area href="#request' . $index . '" alt="' . $title . '" title="' . $title . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
+            $out .= '<area href="#step' . $step . '_request' . $index . '" alt="' . $title . '" title="' . $title . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
         } elseif (array_key_exists('url', $entry)) {
-            echo '<area href="#request" alt="' . $entry['url'] . '" title="' . $entry['url'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
+            $out .= '<area href="#step' . $step . '_request" alt="' . $entry['url'] . '" title="' . $entry['url'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
         } elseif (array_key_exists('userTime', $entry)) {
-            echo '<area nohref="nohref" alt="' . $entry['userTime'] . '" title="' . $entry['userTime'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
+            $out .= '<area nohref="nohref" alt="' . $entry['userTime'] . '" title="' . $entry['userTime'] . '" shape=RECT coords="' . $entry['left'] . ',' . $entry['top'] . ',' . $entry['right'] . ',' . $entry['bottom'] . '">' . "\n";
         }
     }
-    echo '</map>';
+    $out .= '</map>';
     
     // main container for the waterfall
-    echo '<div class="waterfall-container">';
-    echo "<img class=\"waterfall-image\" alt=\"\" onload=\"markUserTime('aft.Waterfall')\" usemap=\"#waterfall_map\" id=\"waterfall\" src=\"/waterfall.php?test=$id&run=$run&cached=$cached$waterfall_options\">";
+    $out .= '<div class="waterfall-container">';
+    $out .= "<img class=\"waterfall-image\" alt=\"\" onload=\"markUserTime('aft.Waterfall')\" usemap=\"#waterfall_map_step$step\" " .
+            "id=\"waterfall_step$step\" src=\"/waterfall.php?test=$id&run=$run&cached=$cached&step=$step$waterfall_options\">";
 
+    $stepSuffix = "-step" . $step;
     // draw div's over each of the waterfall elements (use the image map as a reference)
     foreach($map as $entry) {
         if (isset($entry['request'])) {
@@ -1099,42 +1190,47 @@ function InsertWaterfall($url, &$requests, $id, $run, $cached, &$page_data, $wat
                     $tooltip = substr($tooltip, 0, $split) . '...';
                 $tooltip = FitText($tooltip, 100);
             }
-            echo "<div class=\"transparent request-overlay\" id=\"request-overlay-$index\" title=\"$tooltip\" onclick=\"SelectRequest($index)\" style=\"position: absolute; top: {$top}px; height: {$height}px;\"></div>\n";
+            $out .= "<div class=\"transparent request-overlay\" id=\"request-overlay$stepSuffix-$index\" title=\"$tooltip\" onclick=\"SelectRequest($step, $index)\" style=\"position: absolute; top: {$top}px; height: {$height}px;\"></div>\n";
         }
     }
 
-    ?>
-    <div id="request-dialog" class="jqmDialog">
-        <div id="dialog-header" class="jqmdTC jqDrag">
-            <div id="dialog-title"></div>
-            <div id="request-dialog-radio">
-                <span id="request-details-button"><input type="radio" id="radio1" value="request-details" name="radio" checked="checked" /><label for="radio1">Details</label></span>
-                <span id="request-headers-button"><input type="radio" id="radio2" value="request-headers" name="radio" /><label for="radio2">Request</label></span>
-                <span id="response-headers-button"><input type="radio" id="radio3" value="response-headers" name="radio" /><label for="radio3">Response</label></span>
-                <span id="response-body-button"><input type="radio" id="radio4" value="response-body" name="radio" /><label for="radio4">Object</label></span>
+    $out .= <<<EOT
+    <div id="request-dialog$stepSuffix" class="jqmDialog">
+        <div id="dialog-header$stepSuffix" class="jqmdTC jqDrag">
+            <div id="dialog-title$stepSuffix" class="dialog-title"></div>
+            <div id="request-dialog-radio$stepSuffix" class="request-dialog-radio">
+                <span id="request-details-button$stepSuffix"><input type="radio" id="radio1$stepSuffix" value="request-details$stepSuffix" name="radio" checked="checked" /><label for="radio1$stepSuffix">Details</label></span>
+                <span id="request-headers-button$stepSuffix"><input type="radio" id="radio2$stepSuffix" value="request-headers$stepSuffix" name="radio" /><label for="radio2$stepSuffix">Request</label></span>
+                <span id="response-headers-button$stepSuffix"><input type="radio" id="radio3$stepSuffix" value="response-headers$stepSuffix" name="radio" /><label for="radio3$stepSuffix">Response</label></span>
+                <span id="response-body-button$stepSuffix"><input type="radio" id="radio4$stepSuffix" value="response-body$stepSuffix" name="radio" /><label for="radio4$stepSuffix">Object</label></span>
             </div>
         </div>
         <div class="jqmdBC">
-            <div id="dialog-contents" class="jqmdMSG">
-                <div id="request-details" class="dialog-tab-content"></div>
-                <div id="request-headers" class="dialog-tab-content"></div>
-                <div id="response-headers" class="dialog-tab-content"></div>
-                <div id="response-body" class="dialog-tab-content"></div>
+            <div id="dialog-contents$stepSuffix" class="jqmdMSG">
+                <div id="request-details$stepSuffix" class="dialog-tab-content request-details"></div>
+                <div id="request-headers$stepSuffix" class="dialog-tab-content request-headers"></div>
+                <div id="response-headers$stepSuffix" class="dialog-tab-content response-headers"></div>
+                <div id="response-body$stepSuffix" class="dialog-tab-content response-body"></div>
             </div>
         </div>
         <div class="jqmdX jqmClose"></div>
     </div>
-    <div id="marker"></div>
-    <?php
+    <div class="waterfall_marker"></div>
+EOT;
 
-    echo '</div>'; // container
+    $out .= '</div>'; // container
     
     // script support
-    echo "<script type=\"text/javascript\">\n";
-    echo "var wptRequestCount=" . count($requests) . ";\n";
-    echo "var wptRequestData=" . json_encode($requests) . ";\n";
-    echo "var wptNoLinks={$settings['nolinks']};\n";
-    echo "</script>";
+    $out .= "<script type=\"text/javascript\">\n";
+    $out .= "if (typeof wptRequestCount == 'undefined') var wptRequestCount = {};\n";
+    $out .= "if (typeof wptRequestData == 'undefined') var wptRequestData = {};\n";
+    $out .= "if (typeof wptPageData == 'undefined') var wptPageData = {};\n";
+    $out .= "if (typeof wptNoLinks == 'undefined') var wptNoLinks={$settings['nolinks']};\n";
+    $out .= "wptRequestCount['step$step']=" . count($requests) . ";\n";
+    $out .= "wptRequestData['step$step']=" . json_encode($requests) . ";\n";
+    $out .= "wptPageData['step$step']=" . json_encode($page_data) . ";\n";
+    $out .= "</script>";
+    return $out;
 }
 
 function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
@@ -1158,8 +1254,9 @@ function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
 
   $row_count = 0;
   foreach($waterfalls as $index => &$waterfall) {
-    $test_path = null;
-    $requests = getRequests($waterfall['id'], $test_path, $waterfall['run'], $waterfall['cached'], $has_secure_requests, $has_locations, false, false);
+    $test_path = './' . GetTestPath($waterfall['id']);
+    $localPaths = new TestPaths($test_path, $waterfall['run'], $waterfall['cached'], $waterfall['step']);
+    $requests = getRequestsForStep($localPaths, null, $has_secure_requests, $has_locations, false, false);
     if (isset($requests) && is_array($requests)) {
       $count = count($requests);
       if ($count > $row_count)
@@ -1180,9 +1277,124 @@ function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
   echo "<div style=\"background-color: #fff;$height_style\" class=\"waterfall-container\">";
   foreach($waterfalls as $index => &$waterfall) {
     $o = $index ? $opacity : '1.0';
-    echo "<img style=\"display:block;opacity:$o;position:absolute;top:0;left:0;\" class=\"waterfall-image\" alt=\"\" id=\"waterfall-$index\" src=\"/waterfall.php?test={$waterfall['id']}&run={$waterfall['run']}&cached={$waterfall['cached']}&rowcount=$row_count$waterfall_options\">";
+    $waterfallUrl = "/waterfall.php?test={$waterfall['id']}&run={$waterfall['run']}&cached={$waterfall['cached']}&step={$waterfall['step']}&rowcount=$row_count$waterfall_options";
+    echo "<img style=\"display:block;opacity:$o;position:absolute;top:0;left:0;\" class=\"waterfall-image\" alt=\"\" id=\"waterfall-$index\" src=\"$waterfallUrl\">";
   }
-  echo '<div id="marker"></div>';
+  echo '<div class="waterfall_marker"></div>';
   echo '</div>';
+}
+
+function LoadPcapSlices($slices_file, $max_bw) {
+  $slices = null;
+  if (gz_is_file($slices_file)) {
+    $original = json_decode(gz_file_get_contents($slices_file), true);
+    if (isset($original) && is_array($original) && isset($original['in'])) {
+      // The data is stored as bytes in 100ms buckets.  Convert that to bps values
+      $data = array();
+      foreach ($original as $series => $values) {
+        $data[$series] = array();
+        foreach ($values as $bucket => $value) {
+          $time = number_format(floatval($bucket) / 10.0, 1, '.', '');
+          $data[$series]["$time"] = $value * 80; // 8 bits per byte, 10 100ms buckets per second
+        }
+      }
+      
+      // Smooth out the bandwidth as needed to not exceed the configured bandwidth
+      if ($max_bw) {
+        $max_bw *= 1000;
+        foreach ($data as $series => $values) {
+          // figure out the real max
+          $measured_max = max($data[$series]);
+          if ($measured_max > $max_bw) {
+            $extra = 0;
+            $last_time = 0;
+            $last_value = 0;
+            krsort($data[$series], SORT_NUMERIC);
+            foreach($data[$series] as $time => $value) {
+              if ($last_time > $time) {
+                $elapsed = $last_time - $time;
+                if ($last_value > $max_bw) {
+                  $data[$series][$last_time] = $max_bw;
+                  $extra += ($last_value - $max_bw) * $elapsed;
+                } elseif ($extra) {
+                  $available = ($max_bw - $last_value) * $elapsed;
+                  if ($extra > $available) {
+                    $extra -= $available;
+                    $data[$series][$last_time] = $max_bw;
+                  } else {
+                    $extra = 0;
+                    $bw = $extra / $elapsed;
+                    $data[$series][$last_time] += $bw;
+                  }
+                }
+              }
+              $last_time = $time;
+              $last_value = $value;
+            }
+            ksort($data[$series], SORT_NUMERIC);
+          }
+        }
+      }
+      
+      $count = count($data['in']);
+      if ($count) {
+        $slices = array('count' => $count);
+        if ($max_bw) {
+          $slices['max'] = $max_bw;
+        } elseif ($count) {
+          $slices['max'] = max($data['in']);
+          if (isset($data['in_dup']))
+            $slices['max'] = max($slices['max'], max($data['in_dup']));
+        } else {
+          $slices['max'] = 0;
+        }
+        $slices['in'] = $data['in'];
+        if (isset($data['in_dup']))
+          $slices['in_dup'] = $data['in_dup'];
+      }
+    }    
+  }
+  return $slices;
+}
+
+function GetAverageSliceValue($slices, $start, $end) {
+  $avg = 0.0;
+  
+  $start_bucket = floatval(floor($start * 10.0)) / 10.0;
+  $end_bucket = floatval(ceil($end * 10.0)) / 10.0;
+  $slice_width = $end - $start;
+  
+  if ($slice_width > 0.1) {
+    // Spans multiple buckets
+    $count = 0;
+    $total = 0.0;
+    for ($bucket = $start_bucket; $bucket <= $end_bucket; $bucket += 0.1) {
+      $key = number_format($bucket, 1, '.', '');
+      if (isset($slices[$key])) {
+        $count++;
+        $total += floatval($slices[$key]);
+      }
+    }
+    if ($count)
+      $avg = $total / floatval($count);
+  } elseif ($end == $start) {
+    // One value exactly (unlikely)
+    $key = number_format($start_bucket, 1, '.', '');
+    if (isset($slices[$key]))
+      $avg = floatval($slices[$key]);
+  } else {
+    // Falls between two buckets
+    $start_key = number_format($start_bucket, 1, '.', '');
+    $end_key = number_format($end_bucket, 1, '.', '');
+    if (isset($slices[$start_key]) && isset($slices[$end_key])) {
+      $start_value = floatval($slices[$start_key]);
+      $end_value = floatval($slices[$end_key]);
+      $end_weight = floatval($start - $start_bucket) / 0.1;
+      $start_weight = 1.0 - $distance_from_start;
+      $avg = $start_weight * $start_value + $end_weight * $end_value;
+    }
+  }
+  
+  return $avg;
 }
 ?>

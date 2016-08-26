@@ -29,5 +29,5 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <winsdkver.h>
-#define _WIN32_WINNT  0x0501
+#define _WIN32_WINNT  0x0600
 #include <SDKDDKVer.h>

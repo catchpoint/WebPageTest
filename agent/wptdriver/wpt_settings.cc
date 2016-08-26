@@ -81,10 +81,6 @@ bool WptSettings::Load(void) {
   if (GetPrivateProfileString(_T("WebPagetest"), _T("Url"), _T(""), buff, 
     _countof(buff), iniFile )) {
     _server = buff;
-    if( _server.Right(1) != '/' )
-      _server += "/";
-    // Automatically re-map www.webpagetest.org to agent.webpagetest.org
-    _server.Replace(_T("www.webpagetest.org"), _T("agent.webpagetest.org"));
   }
 
   if (GetPrivateProfileString(_T("WebPagetest"), _T("username"), _T(""), buff,
@@ -142,9 +138,15 @@ bool WptSettings::Load(void) {
 //    LoadFromAzure();
   }
 
+
   SetTestTimeout(_timeout * SECONDS_TO_MS);
-  if (_server.GetLength() && _location.GetLength())
+  if (_server.GetLength() && _location.GetLength()) {
+    if( _server.Right(1) != '/' )
+      _server += "/";
+    // Automatically re-map www.webpagetest.org to agent.webpagetest.org
+    _server.Replace(_T("www.webpagetest.org"), _T("agent.webpagetest.org"));
     ret = true;
+  }
 
   _software_update.LoadSettings(iniFile);
 
@@ -161,22 +163,28 @@ void WptSettings::LoadFromEC2(void) {
     ParseInstanceData(userData);
   }
 
-  if (_location.IsEmpty()) {
-    CString zone;
-    if (GetUrlText(_T("http://169.254.169.254/latest/meta-data")
-                    _T("/placement/availability-zone"), zone)) {
-      int pos = zone.Find('-');
-      if (pos > 0) {
-        pos = zone.Find('-', pos + 1);
-        if (pos > 0)
-          _location = CString(_T("ec2-")) + zone.Left(pos).Trim();
-      }
-    }
+  if (GetUrlText(_T("http://169.254.169.254/latest/meta-data/instance-id"), 
+    _ec2_instance)) {
+    _ec2_instance = _ec2_instance.Trim();
+    _software_update._ec2_instance = _ec2_instance;
   }
 
-  GetUrlText(_T("http://169.254.169.254/latest/meta-data/instance-id"), 
-    _ec2_instance);
-  _ec2_instance = _ec2_instance.Trim();
+  if (GetUrlText(
+    _T("http://169.254.169.254/latest/meta-data/placement/availability-zone"), 
+    _ec2_availability_zone)) {
+    _ec2_availability_zone = _ec2_availability_zone.Trim();
+    _software_update._ec2_availability_zone = _ec2_availability_zone;
+  }
+
+  if (_location.IsEmpty() && _ec2_availability_zone.GetLength()) {
+    int pos = _ec2_availability_zone.Find('-');
+    if (pos > 0) {
+      pos = _ec2_availability_zone.Find('-', pos + 1);
+      if (pos > 0)
+        _location = CString(_T("ec2-")) +
+                    _ec2_availability_zone.Left(pos).Trim();
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -359,12 +367,12 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
   bool ret = false;
   TCHAR buff[10240];
   _browser = browser;
-  _template = _browser;
+  _template.Empty();
   _exe.Empty();
   _exe_directory.Empty();
   _options.Empty();
 
-  AtlTrace(_T("Loading settings for %s"), (LPCTSTR)browser);
+  ATLTRACE(_T("Loading settings for %s"), (LPCTSTR)browser);
 
   GetModuleFileName(NULL, buff, _countof(buff));
   *PathFindFileName(buff) = NULL;
@@ -410,12 +418,11 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
     ret = true;
   }
 
-  if (GetPrivateProfileString(browser, _T("options"), _T(""), buff, 
+  CString command_line;
+  if (GetPrivateProfileString(browser, _T("command-line"), _T(""), buff, 
     _countof(buff), iniFile )) {
-    _options = buff;
-    _options.Trim(_T("\""));
-    _options.Replace(_T("%WPTDIR%"), _wpt_directory);
-    _options.Replace(_T("%PROFILE%"), _profile_directory);
+    command_line = buff;
+    command_line.Trim(_T("\""));
   }
 
   // set up some browser-specific settings
@@ -423,12 +430,24 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
   exe.MakeLower();
   if (exe.Find(_T("safari.exe")) >= 0) {
     _profile_directory = app_data_dir_ + _T("\\Apple Computer");
-    if (_template.IsEmpty()) {
+    if (!_template.GetLength())
       _template = _T("Safari");
-    }
     if (_cache_directory.IsEmpty()) {
       _cache_directory = local_app_data_dir_ + _T("\\Apple Computer\\Safari");
     }
+  } else if (exe.Find(_T("chrome.exe")) >= 0) {
+    _options = _T("--load-extension=\"") + _wpt_directory + _T("\\extension\" --user-data-dir=\"") + _profile_directory + _T("\"");
+    if (!command_line.GetLength())
+      _options += _T(" --no-proxy-server");
+  } else if (exe.Find(_T("firefox.exe")) >= 0) {
+    if (!_template.GetLength())
+      _template = _T("Firefox");
+    _options = _T("-profile \"") + _profile_directory + _T("\" -no-remote");
+  }
+
+  // Add user-specified command-line options
+  if (command_line.GetLength()) {
+    _options += _T(" ") + command_line;
   }
 
   return ret;
@@ -446,7 +465,7 @@ bool BrowserSettings::Install(CString browser, CString url, CString md5) {
   _exe_directory.Empty();
   _options.Empty();
 
-  AtlTrace(_T("Checking custom browser: %s"), (LPCTSTR)browser);
+  ATLTRACE(_T("Checking custom browser: %s"), (LPCTSTR)browser);
 
   GetModuleFileName(NULL, buff, _countof(buff));
   *PathFindFileName(buff) = NULL;
@@ -523,11 +542,14 @@ void BrowserSettings::ResetProfile(bool clear_certs) {
   if (_cache_directory.GetLength()) {
     DeleteDirectory(_cache_directory, false);
   }
-  if (_profile_directory.GetLength() ) {
+  if (_profile_directory.GetLength()) {
     SHCreateDirectoryEx(NULL, _profile_directory, NULL);
     DeleteDirectory(_profile_directory, false);
-    CopyDirectoryTree(_wpt_directory + CString(_T("\\templates\\"))+_template,
-                      _profile_directory);
+    if (_template.GetLength()) {
+      CString src = _wpt_directory + CString(_T("\\templates\\")) + _template;
+      OutputDebugString(L"Copying '" + src + L"' to '" + _profile_directory + L"'");
+      CopyDirectoryTree(src, _profile_directory);
+    }
   }
 
   // flush the certificate revocation caches

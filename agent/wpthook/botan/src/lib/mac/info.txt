@@ -1,5 +1,0 @@
-define MAC 20150626
-
-<header:public>
-mac.h
-</header:public>

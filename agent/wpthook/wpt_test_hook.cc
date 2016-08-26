@@ -36,6 +36,7 @@ void WptTestHook::LoadFromFile() {
             _clear_cache = shared_cleared_cache;
             _run = shared_current_run;
             has_gpu_ = shared_has_gpu;
+            overrode_ua_string_ = shared_overrode_ua_string;
             BuildScript();
           }
         }

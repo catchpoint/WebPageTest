@@ -103,6 +103,40 @@ function GetLocationKey($location) {
   return $key;
 }
 
+function GetLocationFallbacks($location) {
+  $fallback = null;
+  if (isset($location) && strlen($location)) {
+    if (function_exists('apc_fetch') &&
+        function_exists('apc_store')) {
+      $fallback = apc_fetch("fallback_$location");
+      if ($fallback === false) {
+        $fallback = '';
+        $locations = LoadLocationsIni();
+        if ($locations !== false &&
+            is_array($locations) &&
+            isset($locations[$location]) &&
+            isset($locations[$location]['fallback'])) {
+          $fallback = $locations[$location]['fallback'];
+        }
+        apc_store("fallback_$location", $fallback, 60);
+      }
+    } else {
+      $locations = LoadLocationsIni();
+      if ($locations !== false &&
+          is_array($locations) &&
+          isset($locations[$location]) &&
+          isset($locations[$location]['fallback'])) {
+        $fallback = $locations[$location]['fallback'];
+      }
+    }
+  }
+  
+  $fallbacks = array();
+  if (isset($fallback) && strlen($fallback))
+    $fallbacks = explode(',', $fallback);
+  return $fallbacks;
+}
+
 // Load the locations from locations.ini and merge-in the ec2 locations if necessary
 function LoadLocationsIni() {
   $ec2_allow = GetSetting('ec2_allow');
@@ -180,7 +214,7 @@ function GetSetting($setting) {
     }
   } else {
     if (!isset($settings) || !is_array($settings))
-      $settings = parse_ini_file('./settings/settings.ini');
+      $settings = parse_ini_file(__DIR__ . '/settings/settings.ini');
     if (isset($settings) && is_array($settings) && array_key_exists($setting, $settings))
       $ret = $settings[$setting];
   }
@@ -449,28 +483,28 @@ function gz_readfile_chunked($filename, $retbytes = TRUE)
 *
 * @param mixed $file
 */
-function gz_file_get_contents($file)
-{
-    $data = null;
+function gz_file_get_contents($file) {
+  $data = null;
 
-    $fileSize = filesize("$file.gz");
-    if (!$fileSize)
-      $fileSize = filesize($file);
+  $fileSize = @filesize("$file.gz");
+  if (!$fileSize)
+    $fileSize = @filesize($file);
+  if ($fileSize) {
     $chunkSize = min(4096, max(1024000, $fileSize * 10));
     $zip = @gzopen("$file.gz", 'rb');
     if( $zip === false )
-        $zip = @gzopen($file, 'rb');
+      $zip = @gzopen($file, 'rb');
 
     if( $zip !== false ) {
-        while ($string = gzread($zip, $chunkSize)) {
-            $data .= $string;
-        }
-        gzclose($zip);
+      while ($string = gzread($zip, $chunkSize))
+        $data .= $string;
+      gzclose($zip);
+    } else {
+      $data = false;
     }
-    else
-        $data = false;
+  }
 
-    return $data;
+  return $data;
 }
 
 /**
@@ -1082,7 +1116,7 @@ function GetTestInfoHtml($includeScript = true)
     $html = '';
     $run = null;
     if (array_key_exists('run', $_REQUEST))
-      $run = $_REQUEST['run'];
+      $run = intval($_REQUEST['run']);
     if (isset($run) &&
         array_key_exists('testinfo', $test) &&
         array_key_exists('test_runs', $test['testinfo']) &&
@@ -1253,52 +1287,52 @@ function fastimagecopyresampled (&$dst_image, $src_image, $dst_x, $dst_y, $src_x
 */
 function GetPendingTests($loc, &$count, &$avgTime)
 {
-    $total = 0;
-    $locations = explode(',', $loc);
-    foreach($locations as $location) {
-        $parts = explode(':', $location);
-        $location = $parts[0];
-        $count = 0;
-        $avgTime = 0;
-        if (is_file("./tmp/$location.tests"))
-          $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
-        if( isset($tests) && is_array($tests) && array_key_exists('times', $tests) )
-        {
-            $count = (int)$tests['tests'];
-            $timeCount = count($tests['times']);
-            if( $timeCount )
-            {
-                $timeTotal = 0;
-                foreach( $tests['times'] as $time )
-                    $timeTotal += $time;
-                $avgTime = ceil($timeTotal / $timeCount);
-            }
-        }
-        // now count just the low priority tests
-        $beanstalkd = GetSetting('beanstalkd');
-        if ($beanstalkd && strlen($beanstalkd)) {
-            require_once('./lib/beanstalkd/pheanstalk_init.php');
-            $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
-            for ($priority = 0; $priority < 9; $priority++) {
-                $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
-                try {
-                    $stats = $pheanstalk->statsTube($tube);
-                    $total += intval($stats['current-jobs-ready']);
-                    if (!$priority)
-                        $count += intval($stats['current-jobs-ready']);
-                } catch(Exception $e) {
-                }
-            }
-        }
-        if( LoadJobQueue("./work/jobs/$location", $queue) ) {
-            foreach( $queue as $priority => &$q ) {
-                if ($priority < 9)
-                    $total += count($q);
-            }
-            $count += count($queue[0]);
-        }
+  $total = 0;
+  $locations = explode(',', $loc);
+  foreach($locations as $location) {
+    $parts = explode(':', $location);
+    $location = $parts[0];
+    $count = 0;
+    $avgTime = 0;
+    if (is_file("./tmp/$location.tests"))
+      $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
+    if( isset($tests) && is_array($tests) && array_key_exists('times', $tests) )
+    {
+      $count = (int)$tests['tests'];
+      $timeCount = count($tests['times']);
+      if( $timeCount )
+      {
+        $timeTotal = 0;
+        foreach( $tests['times'] as $time )
+          $timeTotal += $time;
+        $avgTime = ceil($timeTotal / $timeCount);
+      }
     }
-    return $total;
+    // now count just the low priority tests
+    $beanstalkd = GetSetting('beanstalkd');
+    if ($beanstalkd && strlen($beanstalkd)) {
+      require_once('./lib/beanstalkd/pheanstalk_init.php');
+      $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
+      for ($priority = 0; $priority < 9; $priority++) {
+        $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
+        try {
+          $stats = $pheanstalk->statsTube($tube);
+          $total += intval($stats['current-jobs-ready']);
+          if (!$priority)
+            $count += intval($stats['current-jobs-ready']);
+        } catch(Exception $e) {
+        }
+      }
+    }
+    if( LoadJobQueue("./work/jobs/$location", $queue) ) {
+      foreach( $queue as $priority => &$q ) {
+        if ($priority < 9)
+          $total += count($q);
+      }
+      $count += count($queue[0]);
+    }
+  }
+  return $total;
 }
 
 /**
@@ -1307,28 +1341,28 @@ function GetPendingTests($loc, &$count, &$avgTime)
 * @param mixed $location
 */
 function GetQueueLengths($location) {
-    $queues = array();
-    for ($priority = 0; $priority <= 9; $priority++)
-      $queues[$priority] = 0;
-    $beanstalkd = GetSetting('beanstalkd');
-    if ($beanstalkd && strlen($beanstalkd)) {
-        require_once('./lib/beanstalkd/pheanstalk_init.php');
-        $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
-        for ($priority = 0; $priority <= 9; $priority++) {
-            $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
-            try {
-                $stats = $pheanstalk->statsTube($tube);
-                $queues[$priority] += intval($stats['current-jobs-ready']);
-            } catch(Exception $e) {
-            }
-        }
+  $queues = array();
+  for ($priority = 0; $priority <= 9; $priority++)
+    $queues[$priority] = 0;
+  $beanstalkd = GetSetting('beanstalkd');
+  if ($beanstalkd && strlen($beanstalkd)) {
+    require_once('./lib/beanstalkd/pheanstalk_init.php');
+    $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
+    for ($priority = 0; $priority <= 9; $priority++) {
+      $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
+      try {
+        $stats = $pheanstalk->statsTube($tube);
+        $queues[$priority] += intval($stats['current-jobs-ready']);
+      } catch(Exception $e) {
+      }
     }
-    if( LoadJobQueue("./work/jobs/$location", $queue) ) {
-        foreach( $queue as $priority => &$q )
-            $queues[$priority] += count($q);
-    }
-    
-    return $queues;
+  }
+  if( LoadJobQueue("./work/jobs/$location", $queue) ) {
+    foreach( $queue as $priority => &$q )
+      $queues[$priority] += count($q);
+  }
+  
+  return $queues;
 }
 
 /**
@@ -1569,23 +1603,9 @@ function LoadJobQueue($workDir, &$queue)
       }
 
       if (!isset($queue) && !GetSetting('beanstalkd')) {
-        // build the queue from disk
-        $files = array();
-        $f = scandir($workDir);
-        if ($f !== false) {
-          foreach( $f as $file ) {
-            if( is_file("$workDir/$file") ) {
-              $fileTime = filemtime("$workDir/$file");
-              if( $fileTime && !isset($files[$fileTime]) )
-                $files[$fileTime] = $file;
-              else
-                $files[] = $file;
-            }
-          }
-        }
-
-        // sort it by time
-        ksort($files);
+        // build the queue from disk (files will be sortable by the order they were submitted)
+        $files = scandir($workDir);
+        sort($files);
 
         // now add them to the various priority queues
         $queue = array();
@@ -1618,12 +1638,12 @@ function LoadJobQueue($workDir, &$queue)
 */
 function SaveJobQueue($workDir, &$queue)
 {
-    $ret = false;
-    $queueName = sha1($workDir);
-    if (gz_file_put_contents("./tmp/$queueName.queue", json_encode($queue)) )
-        $ret = true;
+  $ret = false;
+  $queueName = sha1($workDir);
+  if (gz_file_put_contents("./tmp/$queueName.queue", json_encode($queue)) )
+    $ret = true;
 
-    return $ret;
+  return $ret;
 }
 
 /**
@@ -1766,13 +1786,14 @@ function CleanupLocks() {
 function Lock($name, $blocking = true, $maxLockSeconds = 300) {
   global $RemainingLocks;
   $lock = null;
+  $tmpdir =  __DIR__ . '/tmp';
   if (strlen($name)) {
-    if( !is_dir('./tmp') )
-      mkdir('./tmp', 0777, true);
+    if( !is_dir($tmpdir) )
+      mkdir($tmpdir, 0777, true);
     if (preg_match('/^[a-zA-Z0-9-_ ]+$/', $name))
-      $lockFile = __DIR__ . '/tmp/named-' . str_replace(' ', '-', $name) . '.lock';
+      $lockFile = $tmpdir . '/named-' . str_replace(' ', '-', $name) . '.lock';
     else
-      $lockFile = __DIR__ . '/tmp/lock-' . sha1($name) . '.lock';
+      $lockFile = $tmpdir . '/lock-' . sha1($name) . '.lock';
     $start = time();
     do {
       $file = @fopen($lockFile, 'x');
@@ -1933,14 +1954,23 @@ function json_response(&$response) {
     if( array_key_exists('r', $_REQUEST) && strlen($_REQUEST['r']) )
         $ret['requestId'] = $_REQUEST['r'];
     
+    $out = null;
     if (version_compare(phpversion(), '5.4.0') >= 0 &&
         array_key_exists('pretty', $_REQUEST) &&
         $_REQUEST['pretty']) {
-      echo json_encode($response, JSON_PRETTY_PRINT);
+      $out = json_encode($response, JSON_PRETTY_PRINT);
     } else {
-      echo json_encode($response);
+      $out = json_encode($response);
     }
 
+    if (!isset($out) || $out === false || !is_string($out) || strlen($out) < 3) {
+      require_once('lib/json.php');
+      $jsonLib = new Services_JSON();
+      $out = $jsonLib->encode($response);
+    }
+    
+    echo $out;
+    
     if( isset($_REQUEST['callback']) && strlen($_REQUEST['callback']) )
         echo ");";
 }
@@ -1951,22 +1981,23 @@ function json_response(&$response) {
  * @param mixed $id
  */
 function ValidateTestId(&$id) {
-    $valid = false;
-    $testId = $id;
-    // see if it is a relay test (includes the key)
-    if( strpos($id, '.') !== false ) {
-        $parts = explode('.', $id);
-        if( count($parts) == 2 ) {
-            $testId = trim($parts[1]);
-        }
-    }
+  $valid = false;
+  $testId = $id;
+  // see if it is a relay test (includes the key)
+  if( strpos($id, '.') !== false ) {
+    $parts = explode('.', $id);
+    if( count($parts) == 2 )
+      $testId = trim($parts[1]);
+  }
 
-    if (preg_match('/^(?:[a-zA-Z0-9_]+\.?)+$/', @$testId)) {
-        $valid = true;
-    } else {
-        $id = '';
-    }
-    return $valid;
+  if (preg_match('/^(?:[a-zA-Z0-9_]+\.?)+$/', @$testId)) {
+    if (!defined('OLD_TEST') && intval(substr($testId, 0, 2)) < intval(date("y")) - 1)
+      define('OLD_TEST', true);
+    $valid = true;
+  } else {
+    $id = '';
+  }
+  return $valid;
 }
 
 function arrayLookupWithDefault($key, $searchArray, $default) {
@@ -2717,4 +2748,44 @@ function WaitForSystemLoad($max_load, $timeout) {
     } while ($wait);
   }
 }
-?>
+
+/**
+ * Translate an error code into the text description
+ * @param int $error The error code
+ * @return string The error description
+ */
+function LookupError($error)
+{
+  $errorText = $error;
+
+  switch($error)
+  {
+    case 7: $errorText = "Invalid SSL Cert."; break;
+    case 99996: $errorText = "Timed Out waiting for DOM element"; break;
+    case 99997: $errorText = "Timed Out"; break;
+    case 99998: $errorText = "Timed Out"; break;
+    case 88888: $errorText = "Script Error"; break;
+    case 12999: $errorText = "Navigation Error"; break;
+    case -2146697211: $errorText = "Failed to Connect"; break;
+  }
+
+  return $errorText;
+}
+
+/**
+* See if the system is running over the configured max load setting.
+* This allows for bailing out of some optional CPU-intensive operations.
+* 
+*/
+function OverSystemLoad() {
+  $over = false;
+  $max_load = GetSetting('render_max_load');
+  if ($max_load !== false && $max_load > 0 && function_exists('sys_getloadavg')) {
+    $load = sys_getloadavg();
+    if ($load[0] > $max_load) {
+      $over = true;
+    }
+  }
+
+  return $over;
+}

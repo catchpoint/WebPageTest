@@ -47,6 +47,11 @@ if (array_key_exists('benchmark', $_GET) && strlen($_GET['benchmark'])) {
           unlink("./log/$logFile");
       }
       logMsg("Running benchmarks cron processing", "./log/$logFile", true);
+      
+      // See if we have benchmark data in S3 that needs to be imported
+      if (GetSetting('s3_benchmarks')) {
+        ImportS3Benchmarks();
+      }
 
       // iterate over all of the benchmarks and if we need to do any processing spawn off a child request to do the actual work
       // this way we can concurrently process all of the benchmarks
@@ -249,10 +254,7 @@ function CheckBenchmarkStatus($benchmark, &$state) {
             if (!$test['completed']) {
                 $status = GetTestStatus($test['id'], true);
                 $now = time();
-                if ($status['statusCode'] >= 400) {
-                    logMsg("Test {$test['id']} : Failed - {$status['statusText']}", "./log/$logFile", true);
-                    $test['completed'] = $now;
-                } elseif( $status['statusCode'] == 200 ) {
+                if( $status['statusCode'] == 200 ) {
                     logMsg("Test {$test['id']} : Completed", "./log/$logFile", true);
                     if (array_key_exists('completeTime', $status) && $status['completeTime'])
                         $test['completed'] = $status['completeTime'];
@@ -928,5 +930,106 @@ function FilterRawData(&$data, $options) {
             }
         }
     }
+}
+
+function ImportS3Benchmarks() {
+  require_once('./lib/S3.php');
+  global $logFile;
+  logMsg("Checking for S3 benchmarks", "./log/$logFile", true);
+  $server = GetSetting('archive_s3_server');
+  $key = GetSetting('archive_s3_key');
+  $secret = GetSetting('archive_s3_secret');
+  $bucket = GetSetting('archive_s3_bucket');
+  $prefix = GetSetting('s3_benchmarks');
+  $s3 = new S3($key, $secret, false, $server);
+  $s3Benchmarks = is_file("./results/benchmarks/s3.json") ? json_decode(file_get_contents('./results/benchmarks/s3.json'), true) : array();
+  if (!isset($s3Benchmarks) || !is_array($s3Benchmarks)) {
+    $s3Benchmarks = array();
+  }
+  
+  // list all of the benchmark files for this month and if it is in the first
+  // 10 days of the month, include the previous month.
+  $day = date('d');
+  $month = date('m');
+  $year = date('y');
+  $prefixes = array("$prefix$year$month");
+  if ($day <= 25) {
+    $month = intval($month) - 1;
+    if ($month < 1) {
+      $month = 12;
+      $year = intval($year) - 1;
+    }
+    $month = str_pad($month, 2, "0", STR_PAD_LEFT);
+    $prefixes[] = "$prefix$year$month";
+  }
+  if ($s3) {
+    foreach ($prefixes as $p) {
+      $files = $s3->getBucket($bucket, $p);
+      foreach ($files as $file => $info) {
+        $name = substr($file, strlen($prefix));
+        if (!isset($s3Benchmarks[$name])) {
+          $data = $s3->getObject($bucket, $file);
+          if ($data && isset($data->body) && strlen($data->body)) {
+            $bminfo = json_decode($data->body, true);
+            if (isset($bminfo) && is_array($bminfo)) {
+              if (ImportS3Benchmark($bminfo)) {
+                $s3Benchmarks[$name] = time();
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  file_put_contents('./results/benchmarks/s3.json', json_encode($s3Benchmarks));
+}
+
+function ImportS3Benchmark($info) {
+  global $logFile;
+  $imported = false;
+  $benchmark = $info['benchmark'];
+
+  // make sure the benchmark identified in the file isn't already being processed
+  if (!is_dir("./results/benchmarks/$benchmark"))
+    mkdir("./results/benchmarks/$benchmark", 0777, true);
+  if (is_file("./results/benchmarks/$benchmark/state.json"))
+    $state = json_decode(file_get_contents("./results/benchmarks/$benchmark/state.json"), true);
+  if (!isset($state) || !is_array($state))
+    $state = array('running' => false, 'needs_aggregation' => false, 'runs' => array());
+  
+  if (!$state['running'] && !$state['needs_aggregation']) {
+    if (isset($info['epoch'])) {
+      $state['last_run'] = $info['epoch'];
+    } elseif (isset($info['id'])) {
+      $date = DateTime::createFromFormat('ymd', substr($info['id'], 0, 6));
+      $state['last_run'] = $date->getTimestamp();
+    } else {
+      $state['last_run'] = time();
+    }
+    $state['tests'] = array();
+    
+    if (isset($info['tests']) && is_array($info['tests'])) {
+      foreach ($info['tests'] as $test) {
+        logMsg("$benchmark: Imported S3 test {$test['id']} ({$test['label']}) with config {$test['config']} for url {$test['url']}", "./log/$logFile", true);
+        $location = isset($test['location']) ? $test['location'] : 'Imported';
+        $state['tests'][] = array(  'id' => $test['id'], 
+                                    'label' => $test['label'],
+                                    'url' => $test['url'], 
+                                    'location' => $location, 
+                                    'config' => $test['config'],
+                                    'submitted' => $state['last_run'], 
+                                    'completed' => 0);
+      }
+    }
+
+    if (count($state['tests'])) {
+      $state['running'] = true;
+      $imported = true;
+      file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
+    }
+  }
+  
+  return $imported;
 }
 ?>

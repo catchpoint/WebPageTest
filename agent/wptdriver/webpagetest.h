@@ -38,6 +38,7 @@ public:
   bool DeleteIncrementalResults(WptTestDriver& test);
   bool UploadIncrementalResults(WptTestDriver& test);
   bool TestDone(WptTestDriver& test);
+  DWORD WptVersion(){ return _revisionNo; }
 
   bool _exit;
   bool has_gpu_;
@@ -83,4 +84,7 @@ private:
   bool GetClient(WptTestDriver& test);
   bool UnzipTo(CString zip_file, CString dest);
   void UpdateDNSServers();
+  bool GetNameFromMAC(LPTSTR name, DWORD &len);
+  bool ProcessFile(CString file, CAtlList<CString> &newFiles);
+  bool RunPythonScript(CString script, CString options);
 };

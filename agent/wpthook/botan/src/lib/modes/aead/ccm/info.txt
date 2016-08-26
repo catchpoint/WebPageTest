@@ -1,1 +1,0 @@
-define AEAD_CCM 20131128

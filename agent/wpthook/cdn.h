@@ -55,13 +55,15 @@ typedef struct {
 
 CDN_PROVIDER cdnList[] = {
   {".akamai.net", "Akamai"},
+  {".akamaized.net", "Akamai"},
   {".akamaiedge.net", "Akamai"},
   {".akamaihd.net", "Akamai"},
   {".edgesuite.net", "Akamai"},
   {".edgekey.net", "Akamai"},
-  {".srip.ne", "Akamai"},
+  {".srip.net", "Akamai"},
   {".akamaitechnologies.com", "Akamai"},
   {".akamaitechnologies.fr", "Akamai"},
+  {".tl88.net", "Akamai China CDN"},
   {".llnwd.net", "Limelight"},
   {"edgecastcdn.net", "Edgecast"},
   {".systemcdn.net", "Edgecast"},
@@ -104,7 +106,8 @@ CDN_PROVIDER cdnList[] = {
   {".wscloudcdn.com", "ChinaNetCenter"},
   {".ourwebpic.com", "ChinaNetCenter"},
   {".att-dsa.net", "AT&T"},
-  {".vo.msecnd.net", "Windows Azure"},
+  {".vo.msecnd.net", "Microsoft Azure"},
+  {".azureedge.net", "Microsoft Azure"},
   {".voxcdn.net", "VoxCDN"},
   {".bluehatnetwork.com", "Blue Hat Network"},
   {".swiftcdn1.com", "SwiftCDN"},
@@ -150,7 +153,7 @@ CDN_PROVIDER cdnList[] = {
   {".revcn.net", "Rev Software"},
   {".revdn.net", "Rev Software"},
   {".caspowa.com", "Caspowa"},
-  {".twimg.net", "Twitter"},
+  {".twimg.com", "Twitter"},
   {".facebook.com", "Facebook"},
   {".facebook.net", "Facebook"},
   {".fbcdn.net", "Facebook"},
@@ -166,11 +169,14 @@ CDN_PROVIDER cdnList[] = {
   {".hiberniacdn.com", "HiberniaCDN"},
   {".cdntel.net", "Telenor"},
   {".raxcdn.com", "Rackspace"},
+  {".unicorncdn.net", "UnicornCDN"},
+  {".optimalcdn.com", "Optimal CDN"},
   {"END_MARKER", "END_MARKER"}
 };
 
 CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "cloudflare", "Cloudflare"},
+  {"server", "yunjiasu", "Yunjiasu"},
   {"server", "ECS", "Edgecast"},
   {"server", "ECAcc", "Edgecast"},
   {"server", "ECD", "Edgecast"},
@@ -182,6 +188,7 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"Via", "CloudFront", "Amazon CloudFront"},
   {"X-Edge-IP", "", "CDN"},
   {"X-Edge-Location", "", "CDN"},
+  {"X-HW", "", "Highwinds"},
   {"X-Powered-By", "NYI FTW", "NYI FTW"},
   {"server", "ReSRC", "ReSRC.it"},
   {"X-Cdn", "Zenedge", "Zenedge"},
@@ -200,7 +207,9 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"X-Iinfo", "", "Incapsula"},
   {"X-Ar-Debug", "", "Aryaka"},
   {"server", "gocache", "GoCache"},
-  {"server", "hiberniacdn", "HiberniaCDN"}
+  {"server", "hiberniacdn", "HiberniaCDN"},
+  {"server", "UnicornCDN", "UnicornCDN"},
+  {"server", "Optimal CDN", "Optimal CDN"}
 };
 
 // Specific providers that require multiple headers

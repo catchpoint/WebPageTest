@@ -1,8 +1,0 @@
-define ECDH 20131128
-
-<requires>
-asn1
-ec_group
-ecc_key
-numbertheory
-</requires>

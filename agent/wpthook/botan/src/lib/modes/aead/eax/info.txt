@@ -1,6 +1,0 @@
-define AEAD_EAX 20131128
-
-<requires>
-cmac
-ctr
-</requires>

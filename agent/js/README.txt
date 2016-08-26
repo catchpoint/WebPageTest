@@ -79,16 +79,3 @@ resulting in link failures -- haven't figured that out yet, but it's
 going to be moot after we switch to JSCover.
 
 TODO(klm): switch JSCoverage -> JSCover.
-
-= Code reviews and code submissions
-
-We follow the git-rietveld code review process described in the dartlang repo:
-https://github.com/dart-lang/HOWTO-workflows/wiki/Code-Reviews-for-github-with-rietveld
-
-Work on a local branch, send a CL for review with "git cl upload", and then
-contributors with commit rights can commit with "git cl push origin/master",
-while contributors without commit rights could for the repo, follow the review
-process on the cloned repo, and then send a pull request, which should require
-no review and could be merged immediately.
-
-[For the record, GitHub's own diff UI and code review flow suck big time].

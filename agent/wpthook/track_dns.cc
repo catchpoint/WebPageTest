@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "StdAfx.h"
 #include "track_dns.h"
 #include "test_state.h"
+#include "wpthook.h"
 #include "../wptdriver/wpt_test.h"
 
 static LPCTSTR blocked_domains[] = {
@@ -59,6 +60,8 @@ TrackDns::~TrackDns(void){
 -----------------------------------------------------------------------------*/
 bool TrackDns::BlockLookup(CString name) {
   bool block = false;
+
+  // Check the hard-coded block list
   LPCTSTR * domain = blocked_domains;
   name.MakeLower();
   while (*domain && !block) {
@@ -66,6 +69,28 @@ bool TrackDns::BlockLookup(CString name) {
       block = true;
     domain++;
   }
+
+  // Check the list from the blockDomains script command
+  if (!_test._block_domains.IsEmpty()) {
+    POSITION pos = _test._block_domains.GetHeadPosition();
+    while (!block && pos) {
+      CString block_domain = _test._block_domains.GetNext(pos);
+      if (!block_domain.CompareNoCase(name))
+        block = true;
+    }
+  }
+
+  // Check the list from the blockDomainsExcept script command
+  if (!_test._block_domains_except.IsEmpty()) {
+    block = true;
+    POSITION pos = _test._block_domains_except.GetHeadPosition();
+    while (block && pos) {
+      CString allow_domain = _test._block_domains_except.GetNext(pos);
+      if (!allow_domain.CompareNoCase(name))
+        block = false;
+    }
+  }
+
   return block;
 }
 
@@ -171,13 +196,16 @@ void TrackDns::Reset() {
 }
 
 /*-----------------------------------------------------------------------------
-  For undecoded SPDY sessions (all of them), claim with IP instead of host.
+  Claim all matching DNS lookups but use the timing from the earliest
+  completed one (multiple lookups will use cached results)
 -----------------------------------------------------------------------------*/
 bool TrackDns::Claim(CString name, ULONG addr, LARGE_INTEGER before,
                      LARGE_INTEGER& start, LARGE_INTEGER& end) {
   bool is_claimed = false;
   if (!name.GetLength())
     name = GetHost(addr);
+  start.QuadPart = 0;
+  end.QuadPart = 0;
   EnterCriticalSection(&cs);
   POSITION pos = _dns_lookups.GetStartPosition();
   while (pos) {
@@ -190,8 +218,11 @@ bool TrackDns::Claim(CString name, ULONG addr, LARGE_INTEGER before,
         name == info->_name) {
       info->_accounted_for = true;
       is_claimed = true;
-      start = info->_start;
-      end = info->_end;
+      if (!start.QuadPart ||
+          (info->_start.QuadPart < start.QuadPart && info->_end.QuadPart > 0)) {
+        start = info->_start;
+        end = info->_end;
+      }
     }
   }
   LeaveCriticalSection(&cs);

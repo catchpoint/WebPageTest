@@ -1,7 +1,0 @@
-define BZIP2_TRANSFORM 20141118
-
-load_on vendor
-
-<libs>
-all -> bz2
-</libs>

@@ -21,7 +21,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   <body>
     <table id="locations">
       <xsl:for-each select="response/data/location">
-        <tr><th class="header" colspan="15"><xsl:attribute name="id"><xsl:value-of select="id"/></xsl:attribute><xsl:value-of select="id"/> (<xsl:value-of select="elapsed"/> minutes)</th></tr>
+        <tr><th class="header" colspan="16"><xsl:attribute name="id"><xsl:value-of select="id"/></xsl:attribute><xsl:value-of select="id"/> (<xsl:value-of select="elapsed"/> minutes)</th></tr>
         <xsl:if test="testers">
           <tr>
             <th class="tester">Tester</th>
@@ -29,7 +29,7 @@ xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
             <th>Last Check (minutes)</th>
             <th>Last Work (minutes)</th>
             <th>Version</th>
-            <th>PC</th>
+            <th>Computer Name</th>
             <th>EC2 Instance</th>
             <th>CPU Utilization</th>
             <th>Error Rate</th>

@@ -1,6 +1,8 @@
 <?php
-require_once('devtools.inc.php');
-if(extension_loaded('newrelic')) { 
+require_once __DIR__ . '/devtools.inc.php';
+require_once __DIR__ . '/include/UrlGenerator.php';
+
+if(extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('LoadRequests');
     newrelic_add_custom_tracer('FixUpRequestTimes');
     newrelic_add_custom_tracer('AddLocationData');
@@ -15,56 +17,88 @@ if(extension_loaded('newrelic')) {
 function getRequests($id, $test_path, $run, $is_cached,
                      &$has_secure_requests, &$has_locations,
                      $use_location_check, $use_raw_headers = false) {
-    if (!isset($test_path) || !strlen($test_path))
-        $test_path = './' . GetTestPath($id);
-    $cached_text = ((bool)@$is_cached) ? '_Cached' : '';
-    $file_prefix = $test_path . '/' . $run . $cached_text . '_';
-    $request_file_name =  $file_prefix . 'IEWTR.txt';
-    $headers_file_name = $file_prefix . 'report.txt';
-    $bodies_file_name = $file_prefix . 'bodies.zip';
-    $custom_rules_file_name = $file_prefix . 'custom_rules.json';
+  if (!isset($test_path) || !strlen($test_path))
+    $test_path = './' . GetTestPath($id);
+  $localPaths = new TestPaths($test_path, $run, $is_cached);
+  $urlGenerator = UrlGenerator::create(false, "", $id, $run, $is_cached);
+  return getRequestsForStep($localPaths, $urlGenerator, $has_secure_requests,
+    $has_locations, $use_location_check, $use_raw_headers);
+}
 
-    $needHeaders = false;
-    $requests = LoadRequests($request_file_name);
-    if (isset($requests) && is_array($requests) && count($requests)) {
-        if ($use_raw_headers)
-            $needHeaders = true;
+/**
+ * @param TestPaths $localPaths Paths for the run or step to load the requests for
+ * @param UrlGenerator $rootUrlGenerator Generator for the run or step related root URLs (i.e. without host)
+ * @param bool $has_secure_requests Gets set to true if at least one request is secure
+ * @param bool $has_locations Gets set to true if location data is included in the requests
+ * @param bool $use_location_check If true, location data will be added to the requests
+ * @param bool $use_raw_headers If true, raw headers are added. False by default
+ * @return array The loaded requests
+ */
+function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_requests, &$has_locations,
+                            $use_location_check, $use_raw_headers = false) {
+    $request_file_name =  $localPaths->requestDataFile();
+    $headers_file_name = $localPaths->headersFile();
+    $bodies_file_name = $localPaths->bodiesFile();
+    $custom_rules_file_name = $localPaths->customRulesFile();
+    $cache_version = 1;
+    $cache_file = $localPaths->requestsCacheFile($cache_version);
+    $requests = null;
+    $cached = true;
+    if (gz_is_file($cache_file))
+      $requests = json_decode(gz_file_get_contents($cache_file), true);
+    if (!isset($requests) || !is_array($requests)) {
+      $cached = false;
+      $needHeaders = false;
+      $requests = LoadRequests($request_file_name);
+      if (isset($requests) && is_array($requests) && count($requests)) {
+          if ($use_raw_headers)
+              $needHeaders = true;
 
-        AddResponseBodyFlags($requests, $bodies_file_name);
+          AddResponseBodyFlags($requests, $bodies_file_name);
+      } else {
+          GetDevToolsRequestsForStep($localPaths, $requests, $pageData);
+      }
+      FixUpRequestTimes($requests);
+      if ($needHeaders)
+          AddHeaders($requests, $headers_file_name);
 
-        // load any custom checks if they are available
-        $custom_rules = array();
-        if (gz_is_file($custom_rules_file_name))
-            $custom_rules = json_decode(gz_file_get_contents($custom_rules_file_name), true);
-    } else
-        GetDevToolsRequests($test_path, $run, $is_cached, $requests, $pageData);
-    FixUpRequestTimes($requests);
-    if ($needHeaders)
-        AddHeaders($requests, $headers_file_name);
-
-    $has_locations = false;
-    if ($use_location_check) {
-        $has_locations = AddLocationData($requests);
+      $has_locations = false;
+      if ($use_location_check) {
+          $has_locations = AddLocationData($requests);
+      }
     }
 
-    $has_secure_requests = false;
-    foreach ($requests as $index => &$request) {
-        $request['index'] = $index;
-        $request['number'] = $index + 1;
-        if (isset($request['body_id']) && $request['body_id'] > 0) {
-            $request['body_url'] = "/response_body.php?test=$id&run=$run&cached=$is_cached&bodyid={$request['body_id']}";
-        } elseif (@$request['body']) {
-            $request['body_url'] = "/response_body.php?test=$id&run=$run&cached=$is_cached&request={$request['number']}";
-        }
-        if ($request['is_secure'])
-            $has_secure_requests = true;
-        if (isset($custom_rules) && is_array($custom_rules) && array_key_exists($index + 1, $custom_rules))
-            $request['custom_rules'] = $custom_rules[$index + 1];
-    }
+    if (isset($requests) && is_array($requests)) {
+      // load any custom checks if they are available
+      $custom_rules = array();
+      if (gz_is_file($custom_rules_file_name))
+          $custom_rules = json_decode(gz_file_get_contents($custom_rules_file_name), true);
+
+      $has_secure_requests = false;
+      foreach ($requests as $index => &$request) {
+          $request['index'] = $index;
+          $request['number'] = $index + 1;
+          if ($rootUrlGenerator) {
+            if (isset($request['body_id']) && $request['body_id'] > 0) {
+              $request['body_url'] = $rootUrlGenerator->responseBodyWithBodyId($request['body_id']);
+            } elseif (@$request['body']) {
+              $request['body_url'] = $rootUrlGenerator->responseBodyWithRequestNumber($request['number']);
+            }
+          }
+          if ($request['is_secure'])
+              $has_secure_requests = true;
+          if (isset($custom_rules) && is_array($custom_rules) && array_key_exists($index + 1, $custom_rules))
+              $request['custom_rules'] = $custom_rules[$index + 1];
+      }
     
-    // this is disabled for right now - there were indications that it was
-    // spiking CPU to 100% on WPT so there may be a loop condition of some kind
-    //BuildRequestDependencies($requests);
+      // this is disabled for right now - there were indications that it was
+      // spiking CPU to 100% on WPT so there may be a loop condition of some kind
+      //BuildRequestDependencies($requests);
+      
+      if (!$cached && $use_raw_headers) {
+        gz_file_put_contents($cache_file, json_encode($requests));
+      }
+    }
     
     return $requests;
 }
@@ -184,7 +218,16 @@ function LoadRequests($request_file_name) {
         73 => 'client_port',
         74 => 'jpeg_scan_count',
         75 => 'priority',
-        76 => 'request_id'
+        76 => 'request_id',
+        77 => 'was_pushed',
+        78 => 'initiator_type',
+        79 => 'initiator_function',
+        80 => 'initiator_detail',
+        81 => 'protocol',
+        82 => 'http2_stream_id',
+        83 => 'http2_stream_dependency',
+        84 => 'http2_stream_weight',
+        85 => 'http2_stream_exclusive'
         );
     $request_lines = gz_file($request_file_name);
     if( isset($request_lines) && is_array($request_lines)) {

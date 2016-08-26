@@ -105,6 +105,9 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
   $result = array();
   $entries = array();
   
+  $includePageArrays = array('priorityStreams' => true, 'blinkFeatureFirstUsed' => true);
+  $includeRequestArrays = array();
+  
   $result['log'] = array();
   $result['log']['version'] = '1.1';
   $result['log']['creator'] = array(
@@ -136,7 +139,7 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
       
       // dump all of our metrics into the har data as custom fields
       foreach($data as $name => $value) {
-        if (!is_array($value))
+        if (!is_array($value) || isset($includePageArrays[$name]))
           $pd["_$name"] = $value;
       }
       
@@ -324,7 +327,7 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
 
         // dump all of our metrics into the har data as custom fields
         foreach($r as $name => $value) {
-          if (!is_array($value))
+          if (!is_array($value) || isset($includeRequestArrays[$name]))
             $entry["_$name"] = $value;
         }
         

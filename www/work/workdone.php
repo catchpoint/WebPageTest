@@ -21,6 +21,7 @@ require_once('breakdown.inc');
 require_once('devtools.inc.php');
 require_once('./video/visualProgress.inc.php');
 require_once('./video/avi2frames.inc.php');
+require_once __DIR__ . '/../include/ResultProcessing.php';
 
 if (!isset($included)) {
   error_reporting(E_ERROR | E_PARSE);
@@ -200,7 +201,7 @@ if (ValidateTestId($id)) {
             $expected_runs = $expected_runs * 2;
           $files = scandir($testPath);
           foreach ($files as $file) {
-            if (stripos($file, 'IEWPG'))
+            if (preg_match('/^[0-9]+_(Cached_)?IEWPG.txt/', $file) === true)
               $available_runs++;
             if ($file == 'test.job')
               $testfile = "$testPath/$file";
@@ -243,23 +244,9 @@ if (ValidateTestId($id)) {
 
         // Do any post-processing on this individual run that doesn't requre the test to be locked
         if (isset($runNumber) && isset($cacheWarmed)) {
-          $secure = false;
-          $haveLocations = false;
-          $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure, $haveLocations, false);
-          if (isset($requests) && is_array($requests) && count($requests)) {
-            getBreakdown($id, $testPath, $runNumber, $cacheWarmed, $requests);
-          } else {
-            $testerError = 'Missing Results';
-          }
-          if (is_dir('./google') && is_file('./google/google_lib.inc')) {
-            require_once('google/google_lib.inc');
-            ParseCsiInfo($id, $testPath, $runNumber, $cacheWarmed, true);
-          }
-          GetDevToolsCPUTime($testPath, $runNumber, $cacheWarmed);
-        }
+          $resultProcessing = new ResultProcessing($testPath, $id, $runNumber, $cacheWarmed);
+          $testerError = $resultProcessing->postProcessRun();
 
-        // mark this run as complete
-        if (isset($runNumber) && isset($cacheWarmed)) {
           if ($testInfo['fvonly'] || $cacheWarmed) {
             if (!array_key_exists('test_runs', $testInfo))
               $testInfo['test_runs'] = array();
@@ -267,6 +254,15 @@ if (ValidateTestId($id)) {
               $testInfo['test_runs'][$runNumber]['done'] = true;
             else
               $testInfo['test_runs'][$runNumber] = array('done' => true);
+            $numSteps = $resultProcessing->countSteps();
+            $reportedSteps = 0;
+            if (!empty($testInfo['test_runs'][$runNumber]['steps'])) {
+              $reportedSteps = $testInfo['test_runs'][$runNumber]['steps'];
+              if ($reportedSteps != $numSteps) {
+                $testerError = "Number of steps for first and repeat view differ (fv: $reportedSteps, rv: $numSteps)";
+              }
+            }
+            $testInfo['test_runs'][$runNumber]['steps'] = max($numSteps, $reportedSteps);
             $testInfo_dirty = true;
           }
           if (!GetSetting('disable_video_processing')) {
@@ -300,12 +296,19 @@ if (ValidateTestId($id)) {
           $testInfo['completed'] = $time;
           if (!array_key_exists('test_runs', $testInfo))
             $testInfo['test_runs'] = array();
+          // the number of steps should be the same for every run. But we take the max in case a step failed during
+          // a run
+          $numSteps = 0;
           for ($run = 1; $run <= $testInfo['runs']; $run++) {
             if (array_key_exists($run, $testInfo['test_runs']))
               $testInfo['test_runs'][$run]['done'] = true;
             else
               $testInfo['test_runs'][$run] = array('done' => true);
+            if (!empty($testInfo['test_runs'][$run]['steps'])) {
+              $numSteps = max($numSteps, $testInfo['test_runs'][$run]['steps']);
+            }
           }
+          $testInfo['steps'] = $numSteps;
           SaveTestInfo($id, $testInfo);
           $testInfo_dirty = false;
           
@@ -322,6 +325,7 @@ if (ValidateTestId($id)) {
 
           // do pre-complete post-processing
           MoveVideoFiles($testPath);
+          WptHookPostProcessResults(__DIR__ . '/../' . $testPath);
           
           if (!isset($pageData))
             $pageData = loadAllPageData($testPath);

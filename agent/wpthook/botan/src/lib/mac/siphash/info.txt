@@ -1,1 +1,0 @@
-define SIPHASH 20150110

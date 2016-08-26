@@ -2,7 +2,7 @@
 include 'common.inc';
 require_once('page_data.inc');
 require_once('testStatus.inc');
-set_time_limit(300);
+set_time_limit(3600);
 
 $use_median_run = false;
 if (array_key_exists('run', $_REQUEST) && $_REQUEST['run'] == 'median')

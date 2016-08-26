@@ -54,6 +54,7 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
             if (isset($processing)) {
               arsort($processing);
               $mapping = array('EvaluateScript' => 'Scripting',
+                               'v8.compile' => 'Scripting',
                                'FunctionCall' => 'Scripting',
                                'GCEvent' => 'Scripting',
                                'TimerFire' => 'Scripting',
@@ -62,8 +63,15 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
                                'TimerRemove' => 'Scripting',
                                'XHRLoad' => 'Scripting',
                                'XHRReadyStateChange' => 'Scripting',
+                               'MinorGC' => 'Scripting',
+                               'MajorGC' => 'Scripting',
+                               'FireAnimationFrame' => 'Scripting',
+                               'ThreadState::completeSweep' => 'Scripting',
+                               'Heap::collectGarbage' => 'Scripting',
+                               'ThreadState::performIdleLazySweep' => 'Scripting',
 
                                'Layout' => 'Layout',
+                               'UpdateLayoutTree' => 'Layout',
                                'RecalculateStyles' => 'Layout',
                                'ParseAuthorStyleSheet' => 'Layout',
                                'ScheduleStyleRecalculation' => 'Layout',
@@ -71,6 +79,7 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
 
                                'Paint' => 'Painting',
                                'DecodeImage' => 'Painting',
+                               'Decode Image' => 'Painting',
                                'ResizeImage' => 'Painting',
                                'CompositeLayers' => 'Painting',
                                'Rasterize' => 'Painting',
@@ -133,7 +142,7 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
                         <div class="table" id="tableGroups" style="width: 200px;"></div>
                     </td>
                     <td>
-                        <div class="table" id="tableEvents" style="width: 300px;"></div>
+                        <div class="table" id="tableEvents" style="width: 400px;"></div>
                     </td>
                 </tr>
                 <tr>
@@ -157,7 +166,7 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
                         <div class="table" id="tableGroupsIdle" style="width: 200px;"></div>
                     </td>
                     <td>
-                        <div class="table" id="tableEventsIdle" style="width: 300px;"></div>
+                        <div class="table" id="tableEventsIdle" style="width: 400px;"></div>
                     </td>
                 </tr>
             </table>

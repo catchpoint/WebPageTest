@@ -44,7 +44,7 @@ bool  shared_has_gpu = false;
 int   shared_result = -1;
 WCHAR shared_browser_exe[MAX_PATH] = {NULL};
 DWORD shared_browser_process_id = 0;
-WCHAR shared_keylog_file[MAX_PATH] = {NULL};
+bool  shared_overrode_ua_string = false;
 #pragma data_seg ()
 
 #pragma comment(linker,"/SECTION:.shared,RWS")
@@ -136,9 +136,14 @@ DWORD WINAPI GetBrowserProcessId() {
 }
 
 /*-----------------------------------------------------------------------------
-  Set the exe name for the browser we are currently using
 -----------------------------------------------------------------------------*/
-void WINAPI SetKeyLogFile(const WCHAR * keylog) {
-  lstrcpyW(shared_keylog_file, keylog);
+void WINAPI SetOverrodeUAString(bool overrode_ua_string) {
+  shared_overrode_ua_string = overrode_ua_string;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool WINAPI GetOverrodeUAString() {
+  return shared_overrode_ua_string;
 }
 

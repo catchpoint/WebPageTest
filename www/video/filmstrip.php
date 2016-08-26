@@ -2,6 +2,7 @@
 header('Content-disposition: attachment; filename=filmstrip.png');
 header ("Content-type: image/png");
 
+require_once __DIR__ . '/../include/TestPaths.php';
 chdir('..');
 include 'common.inc';
 require_once('page_data.inc');
@@ -139,6 +140,8 @@ foreach( $tests as &$test ) {
     }
     $frameCount = 0;
     $ms = 0;
+    $localPaths = new TestPaths(GetTestPath($test['id']), $test['run'], $test['cached'], $test['step']);
+    $videoDir = $localPaths->videoDir();
     while( $ms < $filmstrip_end_time ) {
         $ms = $frameCount * $interval;
         $frameCount++;
@@ -158,7 +161,7 @@ foreach( $tests as &$test ) {
             $cached = '';
             if( $test['cached'] )
                 $cached = '_cached';
-            $imgPath = GetTestPath($test['id']) . "/video_{$test['run']}$cached/$path";
+            $imgPath = $videoDir . "/" . $path;
             if( $lastThumb != $path || !$thumb ) {
                 if( $lastThumb != $path )
                     $border = $colChanged;

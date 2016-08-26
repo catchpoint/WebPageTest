@@ -1,11 +1,17 @@
 [FlashAX]
-url=http://cdn.webpagetest.org/installers/flash/flashplayer_19.0.0.226_winax.exe
-version=19.0.0.226
-md5=2DF5A2C99455431FC5E84CB0C2FCCA3C
-command=flashplayer_19.0.0.226_winax.exe -install
+url=http://cdn.webpagetest.org/installers/flash/install_flash_player_22_active_x.exe
+version=22.0.0.209
+md5=FB167D1992D86CBCB71960BA70040C57
+command=install_flash_player_22_active_x.exe -install
 
 [Flash]
-url=http://cdn.webpagetest.org/installers/flash/flashplayer_19.0.0.226_win.exe
-version=19.0.0.226
-md5=DDD05555A7B3E2F9D3204FDE57DBAA43
-command=flashplayer_19.0.0.226_win.exe -install
+url=http://cdn.webpagetest.org/installers/flash/install_flash_player_22_plugin.exe
+version=22.0.0.209
+md5=BCB4DA95D201D991A9AD119385F18632
+command=install_flash_player_22_plugin.exe -install
+
+[Python27]
+url=http://cdn.webpagetest.org/installers/python/python-2.7.12.msi
+version=2.7.12
+md5=FE0EF5B8FD02722F32F7284324934F9D
+command=msiexec /i python-2.7.12.msi /qn TARGETDIR=c:\Python27

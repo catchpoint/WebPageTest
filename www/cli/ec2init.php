@@ -1,4 +1,6 @@
 <?php
+if (php_sapi_name() != 'cli')
+  exit(1);
 set_time_limit(0);
 $dir = getcwd();
 chdir(__DIR__);

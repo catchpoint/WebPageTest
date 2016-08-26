@@ -9,14 +9,26 @@ error_reporting(E_ERROR | E_PARSE);
 $has_apc = function_exists('apc_fetch') && function_exists('apc_store');
 
 $ok = false;
-if (isset($_REQUEST['installer']) && isset($_SERVER['REMOTE_ADDR'])) {
+$ip = $_SERVER["REMOTE_ADDR"];
+if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
+  $forwarded = explode(',',$_SERVER["HTTP_X_FORWARDED_FOR"]);
+  if (isset($forwarded) && is_array($forwarded) && count($forwarded)) {
+    $forwarded_ip = trim(end($forwarded));
+    if (strlen($forwarded_ip) && $forwarded_ip != "127.0.0.1")
+        $ip = $forwarded_ip;
+  }
+}
+if (isset($_REQUEST['installer']) && isset($ip)) {
   $installer = $_REQUEST['installer'];
   $installer_postfix = GetSetting('installerPostfix');
   if ($installer_postfix) {
     $installer .= $installer_postfix;
     $ok = true;
+  } elseif ($ip == '72.66.115.14' ||  // Public WebPageTest
+            $ip == '149.20.63.13') {  // HTTP Archive
+    $ok = true;
   } elseif (preg_match('/^(software|browsers\/[-_a-zA-Z0-9]+)\.dat$/', $installer)) {
-    $ok = $has_apc ? ApcCheckIp($installer) : CheckIp($installer);
+    $ok = $has_apc ? ApcCheckIp($ip, $installer) : CheckIp($ip, $installer);
   }
 }
 
@@ -25,6 +37,7 @@ if ($ok) {
   $data = $has_apc ? apc_fetch("installer-$installer") : null;
   if (!$data && is_file($file)) {
     $data = file_get_contents($file);
+    ModifyInstaller($data);
     if ($has_apc)
       apc_store("installer-$installer", $data, 600);
   }
@@ -37,12 +50,12 @@ if ($ok) {
     header('HTTP/1.0 404 Not Found');
   }
 } else {
+  //logMsg("BLOCKED - $ip : {$_REQUEST['installer']}", "log/software.log", true);
   header('HTTP/1.0 403 Forbidden');
 }
 
-function ApcCheckIp($installer) {
+function ApcCheckIp($ip, $installer) {
   $ok = true;
-  $ip = $_SERVER["REMOTE_ADDR"];
   if (isset($ip) && strlen($ip)) {
     $now = time();
     $key = "inst-ip-$ip-$installer";
@@ -78,9 +91,8 @@ function ApcCheckIp($installer) {
 * 
 * @param mixed $installer
 */
-function CheckIp($installer) {
+function CheckIp($ip, $installer) {
   $ok = true;
-  $ip = $_SERVER["REMOTE_ADDR"];
   if (isset($ip) && strlen($ip)) {
     $lock = Lock("Installers", true, 5);
     if ($lock) {
@@ -130,5 +142,19 @@ function CheckIp($installer) {
     }
   }
   return $ok;
+}
+
+/**
+* Override installer options from settings
+* 
+* @param mixed $data
+*/
+function ModifyInstaller(&$data) {
+  $always_update = GetSetting('installer-always-update');
+  if ($always_update)
+    $data = str_replace('update=0', 'update=1', $data);
+  $base_url = GetSetting('installer-base-url');
+  if ($base_url && strlen($base_url))
+    $data = str_replace('http://cdn.webpagetest.org/', $base_url, $data);
 }
 ?>

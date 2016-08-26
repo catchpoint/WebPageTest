@@ -1,1 +1,0 @@
-define MISTY1 20131128

@@ -1,6 +1,6 @@
 <?php
 chdir('..');
-include('common_lib.inc');
+include('common.inc');
 error_reporting(E_ERROR | E_PARSE);
 require_once('archive.inc');
 require_once 'page_data.inc';
@@ -251,11 +251,8 @@ function notify( $mailto, $from,  $id, $testPath, $host )
         $secure = false;
         $haveLocations = false;
         $requests = getRequests($id, $testPath, 1, 0, $secure, $haveLocations, false);
-        ob_start();
-        dumpOptimizationReport($pageData[$fv][0], $requests, $id, 1, 0, $test);
-        $optimization = ob_get_contents();
-        ob_end_clean();
-        
+        $optimization = dumpOptimizationReport($pageData[$fv][0], $requests, $id, 1, 0, $test);
+
         // build the message body
         $body = 
         "<html>

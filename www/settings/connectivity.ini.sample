@@ -27,6 +27,13 @@ latency=120
 plr=0
 timeout=300
 
+[LTE]
+label="Mobile LTE (12 Mbps/12 Mbps 70ms RTT)"
+bwIn=12000000
+bwOut=12000000
+latency=70
+plr=0
+
 [3G]
 label="Mobile 3G (1.6 Mbps/768 Kbps 300ms RTT)"
 bwIn=1600000
@@ -59,19 +66,11 @@ latency=840
 plr=0
 timeout=300
 
-[2GFast]
-label="Mobile 2G - Fast (150 Kbps/120 Kbps 840ms RTT)"
-bwIn=150000
-bwOut=120000
-latency=840
-plr=0
-timeout=300
-
 [2G]
-label="Mobile 2G - Slow (35 Kbps/32 Kbps 1300ms RTT)"
-bwIn=35000
-bwOut=32000
-latency=1300
+label="Mobile 2G (280 Kbps/256 Kbps 800ms RTT)"
+bwIn=280000
+bwOut=256000
+latency=800
 plr=0
 timeout=300
 

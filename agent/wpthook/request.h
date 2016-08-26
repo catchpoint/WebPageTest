@@ -221,11 +221,41 @@ public:
   int _count;
 };
 
+class InitiatorData {
+public:
+  InitiatorData():request_id_(0), valid_(false){}
+  InitiatorData(const InitiatorData& src){*this = src;}
+  ~InitiatorData(){}
+  const InitiatorData& operator=(const InitiatorData& src) {
+    valid_ = src.valid_;
+    url_ = src.url_;
+    request_id_ = src.request_id_;
+    initiator_url_ = src.initiator_url_;
+    initiator_line_ = src.initiator_line_;
+    initiator_column_ = src.initiator_column_;
+    initiator_function_ = src.initiator_function_;
+    initiator_type_ = src.initiator_type_;
+    initiator_detail_ = src.initiator_detail_;
+    return src;
+  }
+
+  bool valid_;
+  DWORD request_id_;
+  CStringA  url_;
+  CStringA  initiator_url_;
+  CStringA  initiator_line_;
+  CStringA  initiator_column_;
+  CStringA  initiator_function_;
+  CStringA  initiator_type_;
+  CStringA  initiator_detail_;
+};
+
 class Request {
 public:
   Request(TestState& test_state, DWORD socket_id, DWORD stream_id,
           DWORD request_id, TrackSockets& sockets, TrackDns& dns,
-          WptTest& test, bool is_spdy, Requests& requests);
+          WptTest& test, bool is_spdy, Requests& requests,
+          CString protocol);
   ~Request(void);
 
   void DataIn(DataChunk& chunk);
@@ -239,6 +269,7 @@ public:
   void HeaderOut(const char * header, const char * value, bool pushed);
   void ObjectDataOut(DataChunk& chunk);
   void BytesOut(size_t len);
+  void SetPriority(int depends_on, int weight, int exclusive);
 
   void MatchConnections();
   bool Process();
@@ -254,7 +285,6 @@ public:
   LARGE_INTEGER GetStartTime();
   bool GetExpiresRemaining(bool& expiration_set, int& seconds_remaining);
   ULONG GetPeerAddress();
-  CString GetUrl();
 
   bool  _processed;
   bool  _reported;
@@ -265,10 +295,13 @@ public:
   int   _local_port;
   bool  _is_ssl;
   bool  _is_spdy;
-  CString initiator_;
-  CString initiator_line_;
-  CString initiator_column_;
+  bool  _was_pushed;
   CString priority_;
+  InitiatorData initiator_;
+  int   _h2_priority_depends_on;
+  int   _h2_priority_weight;
+  int   _h2_priority_exclusive;
+  CString _protocol;
 
   RequestData  _request_data;
   ResponseData _response_data;

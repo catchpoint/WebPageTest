@@ -1,4 +1,6 @@
 <?php
+if (php_sapi_name() != 'cli')
+  exit(1);
 chdir('..');
 include 'common_lib.inc';
 require_once('archive.inc');

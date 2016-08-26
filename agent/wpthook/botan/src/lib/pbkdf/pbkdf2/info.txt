@@ -1,5 +1,0 @@
-define PBKDF2 20131128
-
-<requires>
-hmac
-</requires>

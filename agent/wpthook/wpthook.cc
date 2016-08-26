@@ -49,20 +49,22 @@ WptHook::WptHook(void):
   background_thread_(NULL)
   ,background_thread_started_(NULL)
   ,message_window_(NULL)
-  ,test_state_(results_, screen_capture_, test_, dev_tools_, trace_)
+  ,test_state_(results_, screen_capture_, test_, trace_)
   ,winsock_hook_(dns_, sockets_, test_state_)
   ,nspr_hook_(sockets_, test_state_, test_)
   ,schannel_hook_(sockets_, test_state_, test_)
   ,wininet_hook_(sockets_, test_state_, test_)
+  ,chrome_ssl_hook_(sockets_, test_state_, test_)
   ,file_hook_(sockets_, test_state_)
   ,sockets_(requests_, test_state_, test_)
   ,requests_(test_state_, sockets_, dns_, test_)
   ,results_(test_state_, test_, requests_, sockets_, dns_, screen_capture_,
-            dev_tools_, trace_)
+            trace_)
   ,dns_(test_state_, test_)
   ,done_(false)
-  ,test_server_(*this, test_, test_state_, requests_, dev_tools_, trace_)
-  ,test_(*this, test_state_, shared_test_timeout) {
+  ,test_server_(*this, test_, test_state_, requests_, trace_)
+  ,test_(*this, test_state_, shared_test_timeout)
+  ,late_initialized_(false) {
 
   file_base_ = shared_results_file_base;
   background_thread_started_ = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -122,6 +124,7 @@ void WptHook::Init(){
     nspr_hook_.Init();
     schannel_hook_.Init();
     wininet_hook_.Init();
+    chrome_ssl_hook_.Init();
   }
   test_state_.Init();
   ResetEvent(background_thread_started_);
@@ -137,10 +140,34 @@ void WptHook::Init(){
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void WptHook::LateInit(){
+  if (!late_initialized_) {
+    late_initialized_ = true;
+    chrome_ssl_hook_.Init();
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 void WptHook::Start() {
+  if (!test_state_.gdi_only_) {
+    chrome_ssl_hook_.Init();
+  }
   reported_ = false;
   test_state_.Start();
   SetTimer(message_window_, TIMER_DONE, TIMER_DONE_INTERVAL, NULL);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptHook::SetDomInteractiveEvent(DWORD domInteractive) {
+  test_state_.SetDomInteractiveEvent(domInteractive);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptHook::SetDomLoadingEvent(DWORD domLoading) {
+  test_state_.SetDomLoadingEvent(domLoading);
 }
 
 /*-----------------------------------------------------------------------------
@@ -196,9 +223,9 @@ void WptHook::OnReport() {
       results_.Save();
     test_.CollectDataDone();
     if (test_.Done()) {
+      results_.Save();
       test_state_._exit = true;
       test_server_.Stop();
-      results_.Save();
       done_ = true;
       if (test_state_._frame_window) {
         WptTrace(loglevel::kTrace, 
@@ -272,8 +299,10 @@ static LRESULT CALLBACK WptHookWindowProc(HWND hwnd, UINT uMsg,
 void WptHook::BackgroundThread() {
   WptTrace(loglevel::kFunction, _T("[wpthook] BackgroundThread()\n"));
 
-  if (!test_state_.gdi_only_)
+  if (!test_state_.gdi_only_) {
+    chrome_ssl_hook_.Init();
     test_server_.Start();
+  }
 
   // create a hidden window for processing messages from wptdriver
   WNDCLASS wndClass;
