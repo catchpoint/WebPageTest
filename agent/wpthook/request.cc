@@ -101,7 +101,11 @@ void HttpData::AddChunk(DataChunk& chunk) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void HttpData::AddHeader(const char * header, const char * value) {
-  _header_fields.AddTail(HeaderField(header, value));
+  if (header && value && lstrlenA(header) < 100 &&
+      !IsBinaryContent((const LPBYTE)header, lstrlenA(header)) &&
+      !IsBinaryContent((const LPBYTE)value, lstrlenA(value))) {
+    _header_fields.AddTail(HeaderField(header, value));
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -142,12 +146,12 @@ void HttpData::CopyData() {
     *data = NULL;
 
     // Copy headers boundary (if any).
-    const char * header_end = strstr(_data, "\r\n\r\n");
-    if (header_end) {
-      _headers.Empty();
-      _headers.Append(_data, header_end - _data + 4);
+      const char * header_end = strstr(_data, "\r\n\r\n");
+      if (header_end) {
+        _headers.Empty();
+        _headers.Append(_data, header_end - _data + 4);
+      }
     }
-  }
 
   if (_headers.IsEmpty() && !_header_fields.IsEmpty()) {
     POSITION pos = _header_fields.GetHeadPosition();
@@ -169,13 +173,15 @@ void HttpData::ExtractHeaderFields() {
     int line_number = 0;
     CStringA line = _headers.Tokenize("\r\n", pos);
     while (pos > 0) {
-      if (line_number > 0) {
+      if (line_number > 0 &&
+          !IsBinaryContent((LPBYTE)(LPCSTR)line, line.GetLength())) {
         line.Trim();
         int separator = line.Find(':', 1);
         if (separator > 0) {
-          _header_fields.AddTail(
-              HeaderField(line.Left(separator),
-                          line.Mid(separator + 1).Trim()));
+          CStringA name(line.Left(separator));
+          CStringA value(line.Mid(separator + 1).Trim());
+          if (name.GetLength() < 100)
+            _header_fields.AddTail(HeaderField(name, value));
         }
       }
       line_number++;

@@ -1211,23 +1211,26 @@ function RestoreTest($id)
   $ret = false;
   if (!$userIsBot && ValidateTestId($id)) {
     $testPath = './' . GetTestPath($id);
-    $archive_dir = GetSetting('archive_dir');
-    $archive_s3_url = GetSetting('archive_s3_url');
-    $archive_s3_server = GetSetting('archive_s3_server');
-    if (($archive_dir && strlen($archive_dir)) ||
-        ($archive_s3_url && strlen($archive_s3_url)) ||
-        ($archive_s3_server && strlen($archive_s3_server))) {
-      $restore = false;
-      $testInfo = GetTestInfo($id);
-      if (!$testInfo)
-        $restore = true;
+    // Only trigger a restore if the directory for the test doesn't exist
+    if (!is_dir($testPath)) {
+      $archive_dir = GetSetting('archive_dir');
+      $archive_s3_url = GetSetting('archive_s3_url');
+      $archive_s3_server = GetSetting('archive_s3_server');
+      if (($archive_dir && strlen($archive_dir)) ||
+          ($archive_s3_url && strlen($archive_s3_url)) ||
+          ($archive_s3_server && strlen($archive_s3_server))) {
+        $restore = false;
+        $testInfo = GetTestInfo($id);
+        if (!$testInfo)
+          $restore = true;
 
-      if( $restore )
-        $ret = RestoreArchive($id);
-      else
+        if( $restore )
+          $ret = RestoreArchive($id);
+        else
+          $ret = true;
+      } else {
         $ret = true;
-    } else {
-      $ret = true;
+      }
     }
   }
 
