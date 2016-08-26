@@ -597,6 +597,14 @@ bool TrackSockets::SslSocketLookup(void* ssl, SOCKET& s) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void TrackSockets::SslRemoveSocketLookup(void* ssl) {
+  EnterCriticalSection(&cs);
+  _ssl_sockets.RemoveKey(ssl);
+  LeaveCriticalSection(&cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 bool TrackSockets::IsSSLHandshake(const DataChunk& chunk) {
   bool is_handshake = false;
   const char *buf = chunk.GetData();

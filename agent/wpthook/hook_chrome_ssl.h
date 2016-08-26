@@ -34,6 +34,8 @@ class TestState;
 class TrackSockets;
 class WptTestHook;
 
+typedef int (__cdecl *PFN_SSL3_NEW)(void *ssl);
+typedef void (__cdecl *PFN_SSL3_FREE)(void *ssl);
 typedef int (__cdecl *PFN_SSL3_CONNECT)(void *ssl);
 typedef int (__cdecl *PFN_SSL3_BEGIN_HANDSHAKE)(void *ssl);
 typedef int (__cdecl *PFN_SSL3_READ_APP_DATA)(void *ssl, uint8_t *buf, int len, int peek);
@@ -46,6 +48,8 @@ public:
   ~ChromeSSLHook();
   void Init();
 
+  int New(void *ssl);
+  void Free(void *ssl);
   int Connect(void *ssl);
   int BeginHandshake(void *ssl);
   int ReadAppData(void *ssl, uint8_t *buf, int len, int peek);
@@ -58,6 +62,8 @@ private:
   NCodeHookIA32* hook_;
   CRITICAL_SECTION cs;
 
+  PFN_SSL3_NEW              New_;
+  PFN_SSL3_FREE             Free_;
   PFN_SSL3_CONNECT          Connect_;
   PFN_SSL3_BEGIN_HANDSHAKE  BeginHandshake_;
   PFN_SSL3_READ_APP_DATA    ReadAppData_;

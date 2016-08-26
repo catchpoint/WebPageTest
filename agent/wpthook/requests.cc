@@ -115,10 +115,10 @@ void Requests::DataIn(DWORD socket_id, DataChunk& chunk) {
     key.LowPart = 0;
     if (_active_requests.Lookup(key.QuadPart, request) && request) {
       _test_state.ActivityDetected();
-      request->DataIn(chunk);
       WptTrace(loglevel::kFunction, 
                _T("[wpthook] - Requests::DataIn(socket_id=%d, len=%d)"),
                socket_id, chunk.GetLength());
+      request->DataIn(chunk);
     } else {
       WptTrace(loglevel::kFrequentEvent,
                _T("[wpthook] - Requests::DataIn(socket_id=%d, len=%d)")

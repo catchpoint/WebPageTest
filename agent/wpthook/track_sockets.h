@@ -105,6 +105,7 @@ public:
   void ResetSslFd(void);
   void SetSslSocket(SOCKET s);
   bool SslSocketLookup(void* ssl, SOCKET& s);
+  void SslRemoveSocketLookup(void* ssl);
   void EnableSsl(SocketInfo *info);
 
   void Reset();
