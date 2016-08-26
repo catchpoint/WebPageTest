@@ -708,7 +708,10 @@
                         foreach( $bulk['urls'] as &$entry )
                         {
                             $testData = $test;
-                            $testData['label'] = $entry['l'];
+                            if( $entry['l'] )
+                            {
+                                $testData['label'] = $entry['l'];
+                            }
                             if( $entry['ns'] )
                             {
                                 unset($testData['script']);
