@@ -123,6 +123,7 @@ function Job(client, task) {
   this.testError = undefined;
   this.retryError = undefined;
   this.timeout = (task.timeout * 1000) || client.jobTimeout;
+  this.task.headers = undefined;
   this.processScript(task['script']);
 }
 /** Public class. */
@@ -144,6 +145,17 @@ function constructHostsFile(task) {
   var hosts = "127.0.0.1 localhost";
   try {
     var block = task['block'];
+    if (block !== undefined) {
+      var entries = block.split(" ");
+      var count = entries.length;
+      for (var i = 0; i < count; i++) {
+        var host = entries[i].trim();
+        if (host.length) {
+          hosts += " " + host;
+        }
+      }
+    }
+    block = task['blockdomains'];
     if (block !== undefined) {
       var entries = block.split(" ");
       var count = entries.length;
@@ -204,6 +216,19 @@ Job.prototype.processScriptCommand = function(command, value, extra) {
       } else {
         logger.debug("Invalid setDns command parameters");
       }
+    } else if (command == 'addheader' || command == 'setheader') {
+      if (value !== undefined) {
+        var index = value.indexOf(":");
+        if (index > 0) {
+          var n = value.substr(0, index).trim();
+          var v = value.substr(index + 1).trim();
+          if (n.length && v.length) {
+            if (this.task.headers == undefined)
+              this.task.headers = {}
+            this.task.headers[n] = v;
+          }
+        }
+      }
     } else if (command == 'setdns') {
       if (value !== undefined &&
           extra !== undefined) {
@@ -225,7 +250,7 @@ Job.prototype.processScriptCommand = function(command, value, extra) {
       } else {
         logger.debug("Invalid setDnsName command parameters");
       }
-    } else if (command == 'block') {
+    } else if (command == 'block' || command == 'blockdomains') {
       if (value !== undefined) {
         hosts = "";
         var entries = value.split(" ");

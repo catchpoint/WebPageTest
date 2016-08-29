@@ -837,6 +837,8 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
     this.pageCommand_('navigate', {url: BLANK_PAGE_URL_});
     this.app_.timeout(500, 'Load blank startup page');
     this.networkCommand_('enable');
+    if (this.task_['headers'] != undefined)
+      this.networkCommand_('setExtraHTTPHeaders', {'headers': this.task_.headers});
     this.pageCommand_('enable');
   }
   if (1 === this.task_['Capture Video']) {  // Emit video sync, start recording
