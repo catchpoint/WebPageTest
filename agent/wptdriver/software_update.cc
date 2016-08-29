@@ -261,7 +261,7 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
                 }
               } else {
                 lstrcpy(exe, command);
-                lstrcpy(parameters, _T(''));
+                lstrcpy(parameters, _T(""));
               }
               shell_info.lpFile = exe;
               TCHAR directory[MAX_PATH];
