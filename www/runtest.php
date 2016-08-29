@@ -708,7 +708,7 @@
                         foreach( $bulk['urls'] as &$entry )
                         {
                             $testData = $test;
-                            if( $entry['l'] )
+                            if (isset($entry['l']) && strlen($entry['l']))
                             {
                                 $testData['label'] = $entry['l'];
                             }
