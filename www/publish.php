@@ -6,6 +6,10 @@ $pub = $settings['publishTo'];
 if (!isset($pub) || !strlen($pub)) {
     $pub = $_SERVER['HTTP_HOST'];
 }
+if (strncasecmp($pub, 'http:', 5) && strncasecmp($pub, 'https:', 6))
+  $pub = 'http://' . $pub;
+if (!strncasecmp($pub, "http://www.webpagetest.org", 26))
+  $pub = 'https://www.webpagetest.org';
 $noheaders = false;
 if (array_key_exists('noheaders', $_REQUEST) && $_REQUEST['noheaders'])
     $noheaders = true;
@@ -151,13 +155,13 @@ function PublishResult()
                             ));
 
             $ctx = stream_context_create($params);
-            $url = "http://$pub/work/dopublish.php";
+            $url = "$pub/work/dopublish.php";
             $fp = fopen($url, 'rb', false, $ctx);
             if( $fp )
             {
                 $response = @stream_get_contents($fp);
                 if( $response && strlen($response) )
-                    $result = "http://$pub/results.php?test=$response";
+                    $result = "$pub/results.php?test=$response";
             }
             
             // delete the zip file
