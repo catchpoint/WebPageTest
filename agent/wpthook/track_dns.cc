@@ -335,8 +335,8 @@ void TrackDns::AddAddress(CString host, DWORD address) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-int TrackDns::GetAddressCount(CString host) {
-  int count = 0;
+size_t TrackDns::GetAddressCount(CString host) {
+  size_t count = 0;
   bool found = false;
   EnterCriticalSection(&cs);
   POSITION pos = _host_addresses.GetHeadPosition();

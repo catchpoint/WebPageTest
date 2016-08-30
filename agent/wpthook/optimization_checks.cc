@@ -177,8 +177,8 @@ void OptimizationChecks::CheckGzip()
       request->_scores._gzip_score = 0;
       DataChunk body = request->_response_data.GetBody();
       DWORD headSize = request->_response_data.GetHeaders().GetLength();
-      DWORD responseBodySize = body.GetLength();
-      DWORD targetResponseSize = responseBodySize;
+      size_t responseBodySize = body.GetLength();
+      size_t targetResponseSize = responseBodySize;
 
       // If there is gzip encoding, then we are all set.
       // Spare small (<1 packet) responses.
@@ -189,9 +189,9 @@ void OptimizationChecks::CheckGzip()
 
       if( !request->_scores._gzip_score ) {
         // Try gzipping to see how smaller it will be.
-        DWORD origSize = responseBodySize;
+        size_t origSize = responseBodySize;
         LPBYTE bodyData = (LPBYTE)body.GetData();
-        DWORD bodyLen = body.GetLength();
+        size_t bodyLen = body.GetLength();
         // don't try gzip for known image formats that shouldn't be gzipped
         if ((bodyLen > 3 &&             // JPEG FF D8 FF
              bodyData[0] == 0xFF &&
@@ -215,12 +215,12 @@ void OptimizationChecks::CheckGzip()
           request->_scores._gzip_score = -1;
         } else {
           if (bodyLen && bodyData) {
-            DWORD len = compressBound(bodyLen);
+            uLong len = compressBound((uLong)bodyLen);
             if( len ) {
-              char* buff = (char*) malloc(len);
+              char* buff = (char*)malloc(len);
               if( buff ) {
                 // Do the compression and check the target bytes to set for this.
-                if (compress2((LPBYTE)buff, &len, bodyData, bodyLen, 7) == Z_OK)
+                if (compress2((LPBYTE)buff, &len, bodyData, (uLong)bodyLen, 7) == Z_OK)
                   targetResponseSize = len;
                 free(buff);
               }
@@ -238,10 +238,10 @@ void OptimizationChecks::CheckGzip()
       if( request->_scores._gzip_score != -1 ) {
         count++;
         total += request->_scores._gzip_score;
-        request->_scores._gzip_total = responseBodySize;
-        request->_scores._gzip_target = targetResponseSize;
-        targetBytes += targetResponseSize;
-        totalBytes += responseBodySize;
+        request->_scores._gzip_total = (DWORD)responseBodySize;
+        request->_scores._gzip_target = (DWORD)targetResponseSize;
+        targetBytes += (DWORD)targetResponseSize;
+        totalBytes += (DWORD)responseBodySize;
       }
     }
   }
@@ -261,13 +261,13 @@ void OptimizationChecks::CheckGzip()
 /*-----------------------------------------------------------------------------
   Protect against malformed images
 -----------------------------------------------------------------------------*/
-static bool DecodeImage(CxImage& img, BYTE * buffer, DWORD size,
+static bool DecodeImage(CxImage& img, BYTE * buffer, size_t size,
                         DWORD imagetype)
 {
   bool ret = false;
   
   __try{
-    ret = img.Decode(buffer, size, imagetype);
+    ret = img.Decode(buffer, (DWORD)size, imagetype);
   }__except(1){
     WptTrace(loglevel::kError,
       _T("[wpthook] - Exception when decoding image"));
@@ -302,8 +302,8 @@ void OptimizationChecks::CheckImageCompression()
       if (mime.Find("image/") >= 0 && body.GetData() && body.GetLength() > 2) {
         BYTE * buffer = (BYTE *)body.GetData();
         if (buffer[0] == 0xFF && buffer[1] == 0xD8) {
-          DWORD targetRequestBytes = body.GetLength();
-          DWORD size = targetRequestBytes;
+          size_t targetRequestBytes = body.GetLength();
+          size_t size = targetRequestBytes;
           count++;
         
           CxImage img;
@@ -338,12 +338,12 @@ void OptimizationChecks::CheckImageCompression()
             }
             if( targetRequestBytes > size )
               targetRequestBytes = size;
-            totalBytes += size;
-            targetBytes += targetRequestBytes;
+            totalBytes += (DWORD)size;
+            targetBytes += (DWORD)targetRequestBytes;
           
-            request->_scores._image_compress_total = size;
-            request->_scores._image_compress_target = targetRequestBytes;
-            request->_scores._image_compression_score = targetRequestBytes * 100 / size;
+            request->_scores._image_compress_total = (DWORD)size;
+            request->_scores._image_compress_target = (DWORD)targetRequestBytes;
+            request->_scores._image_compression_score = (int)(targetRequestBytes * 100 / size);
           }
         }
       }
@@ -595,7 +595,7 @@ void OptimizationChecks::CheckCustomRules() {
       Request *request = _requests._requests.GetNext(pos);
       DataChunk body = request->_response_data.GetBody(true);
       const char * body_data = body.GetData();
-      DWORD body_len = body.GetLength();
+      size_t body_len = body.GetLength();
       if (body_len && body_data) {
         POSITION rule_pos = _test._custom_rules.GetHeadPosition();
         while (rule_pos) {
@@ -656,7 +656,7 @@ void OptimizationChecks::CheckProgressiveJpeg() {
           body.GetLength() > 0) {
         BYTE * buffer = (BYTE *)body.GetData();
         if (buffer[0] == 0xFF && buffer[1] == 0xD8) {
-          DWORD len = body.GetLength();
+          DWORD len = (DWORD)body.GetLength();
           request->_scores._jpeg_scans = 0;
           DWORD pos = 0;
           BYTE * marker;

@@ -1036,7 +1036,7 @@ void TestState::CollectMemoryStats() {
       mem.cb = sizeof(mem);
       if (GetProcessMemoryInfo(hProc, &mem, sizeof(mem))) {
         // keep track in KB which will limit us to 4TB in a DWORD
-        _working_set_main_proc = mem.WorkingSetSize / 1024;
+        _working_set_main_proc = (DWORD)(mem.WorkingSetSize / 1024);
       }
       CloseHandle(hProc);
     }
@@ -1044,7 +1044,7 @@ void TestState::CollectMemoryStats() {
 
   // Add up the private working sets for all the child procs
   _working_set_child_procs = 0;
-  _process_count = procs.GetCount();
+  _process_count = (DWORD)procs.GetCount();
   if (!procs.IsEmpty()) {
     // This will limit us to 4GB which is fin
     DWORD len = sizeof(ULONG_PTR) + 1000000 * sizeof(PSAPI_WORKING_SET_BLOCK);

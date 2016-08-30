@@ -531,7 +531,7 @@ int CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags) {
       _sockets.ModifyDataOut(s, chunk, false);
       _sockets.DataOut(s, chunk, false);
     }
-    ret = _send(s, chunk.GetData(), chunk.GetLength(), flags);
+    ret = _send(s, chunk.GetData(), (int)chunk.GetLength(), flags);
     if (ret != SOCKET_ERROR) {
         ret = original_len;
     }
@@ -575,7 +575,7 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
     if (is_modified) {
       WSABUF out;
       out.buf = (char *)chunk.GetData();
-      out.len = chunk.GetLength();
+      out.len = (ULONG)chunk.GetLength();
       ret = _WSASend(s, &out, 1, lpNumberOfBytesSent, dwFlags, lpOverlapped,
                      lpCompletionRoutine);
       // Respond with the number of bytes the sending app was expecting
@@ -741,13 +741,13 @@ struct hostent * CWsHook::gethostbyname(const char * pNodeName) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void CWsHook::ProcessOverlappedIo(SOCKET s, LPOVERLAPPED lpOverlapped,
-                                  LPDWORD lpNumberOfBytesTransferred) {
+                                  PULONG_PTR lpNumberOfBytesTransferred) {
   WsaBuffTracker buff;
   // handle a receive
   if (_recv_buffers.Lookup(lpOverlapped, buff)) {
-    DWORD bytes = *lpNumberOfBytesTransferred;
+    ULONG_PTR bytes = *lpNumberOfBytesTransferred;
     for (DWORD i = 0; i < buff._buffer_count && bytes; i++) {
-      DWORD data_bytes = min(bytes, buff._buffers[i].len);
+      size_t data_bytes = min(bytes, buff._buffers[i].len);
       if (data_bytes && buff._buffers[i].buf) {
         DataChunk chunk(buff._buffers[i].buf, data_bytes);
         _sockets.DataIn(s, chunk, false);
@@ -760,7 +760,7 @@ void CWsHook::ProcessOverlappedIo(SOCKET s, LPOVERLAPPED lpOverlapped,
   if (_send_buffers.Lookup(lpOverlapped, chunk)) {
     _send_buffers.RemoveKey(lpOverlapped);
     if (lpNumberOfBytesTransferred) {
-      DWORD len = *lpNumberOfBytesTransferred;
+      ULONG_PTR len = *lpNumberOfBytesTransferred;
       if (_send_buffer_original_length.Lookup(lpOverlapped, len)) {
         _send_buffer_original_length.RemoveKey(lpOverlapped);
         *lpNumberOfBytesTransferred = len;
@@ -782,8 +782,13 @@ BOOL CWsHook::WSAGetOverlappedResult(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
     ret = _WSAGetOverlappedResult(s, lpOverlapped, lpcbTransfer, fWait, 
                                   lpdwFlags);
 
-  if (ret && lpcbTransfer && !_test_state._exit)
-    ProcessOverlappedIo(s, lpOverlapped, lpcbTransfer);
+  if (ret && lpcbTransfer && !_test_state._exit) {
+    if (lpcbTransfer) {
+      ULONG_PTR cbTransfer = *lpcbTransfer;
+      ProcessOverlappedIo(s, lpOverlapped, &cbTransfer);
+      *lpcbTransfer = (DWORD)cbTransfer;
+    }
+  }
 
   return ret;
 }
@@ -950,7 +955,7 @@ void CWsHook::ThreadpoolCallback(PTP_CALLBACK_INSTANCE Instance, PVOID Context,
       Overlapped && 
       NumberOfBytesTransferred &&
       !_test_state._exit) {
-    DWORD bytes = NumberOfBytesTransferred;
+    ULONG_PTR bytes = NumberOfBytesTransferred;
     ProcessOverlappedIo(s, (LPOVERLAPPED)Overlapped, &bytes);
     NumberOfBytesTransferred = bytes;
   }

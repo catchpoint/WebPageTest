@@ -190,7 +190,7 @@ bool Requests::IsHttpRequest(const DataChunk& chunk) const {
       "OPTIONS ", "DELETE ", "TRACE ", "CONNECT ", "PATCH "};
   for (int i = 0; i < _countof(HTTP_METHODS) && !ret; i++) {
     const char * method = HTTP_METHODS[i];
-    unsigned long method_len = strlen(method);
+    size_t method_len = strlen(method);
     if (chunk.GetLength() >= method_len &&
         !memcmp(chunk.GetData(), method, method_len)) {
       ret = true;

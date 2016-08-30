@@ -191,7 +191,7 @@ PRInt32 NsprHook::PR_Write(PRFileDesc *fd, const void *buf, PRInt32 amount) {
     if (buf && !_test_state._exit && _sockets.SslSocketLookup(fd, s)) {
       _sockets.ModifyDataOut(s, chunk, true);
     }
-    ret = _PR_Write(fd, chunk.GetData(), chunk.GetLength());
+    ret = _PR_Write(fd, chunk.GetData(), (PRInt32)chunk.GetLength());
     if (ret > 0 && s != INVALID_SOCKET) {
       _sockets.DataOut(s, chunk, true);
       ret = original_amount;

@@ -44,12 +44,12 @@ const __int64 NS100_TO_SEC = 10000000;   // convert 100ns intervals to seconds
 bool DataChunk::ModifyDataOut(const WptTest& test) {
   bool is_modified = false;
   const char * data = GetData();
-  unsigned long data_len = GetLength();
+  size_t data_len = GetLength();
   if (data && data_len > 0) {
     CStringA headers;
     CStringA line;
     const char * current_data = data;
-    unsigned long current_data_len = data_len;
+    size_t current_data_len = data_len;
     while(current_data_len) {
       if (*current_data == '\r' || *current_data == '\n') {
         if(!line.IsEmpty()) {
@@ -75,8 +75,8 @@ bool DataChunk::ModifyDataOut(const WptTest& test) {
     }
     if (is_modified) {
       DataChunk new_chunk;
-      DWORD headers_len = headers.GetLength();
-      DWORD new_len = headers_len + current_data_len;
+      size_t headers_len = headers.GetLength();
+      size_t new_len = headers_len + current_data_len;
       LPSTR new_data = new_chunk.AllocateLength(new_len);
       memcpy(new_data, (LPCSTR)headers, headers_len);
       if (current_data_len) {
@@ -149,7 +149,7 @@ void HttpData::CopyData() {
       const char * header_end = strstr(_data, "\r\n\r\n");
       if (header_end) {
         _headers.Empty();
-        _headers.Append(_data, header_end - _data + 4);
+        _headers.Append(_data, (int)(header_end - _data + 4));
       }
     }
 
@@ -354,19 +354,19 @@ DataChunk ResponseData::GetBody(bool uncompress) {
   ret = _body;
   if (uncompress && GetHeader("content-encoding").Find("gzip") >= 0) {
     LPBYTE body_data = (LPBYTE)ret.GetData();
-    DWORD body_len = ret.GetLength();
+    size_t body_len = ret.GetLength();
     if (body_data && body_len) {
-      DWORD len = body_len * 10;
+      size_t len = body_len * 10;
       LPBYTE buff = (LPBYTE)malloc(len);
       if (buff) {
         z_stream d_stream;
         memset( &d_stream, 0, sizeof(d_stream) );
         d_stream.next_in  = body_data;
-        d_stream.avail_in = body_len;
+        d_stream.avail_in = (uInt)body_len;
         int err = inflateInit2(&d_stream, MAX_WBITS + 16);
         if (err == Z_OK) {
           d_stream.next_out = buff;
-          d_stream.avail_out = len;
+          d_stream.avail_out = (uInt)len;
           while (((err = inflate(&d_stream, Z_SYNC_FLUSH)) == Z_OK) 
                     && d_stream.avail_in) {
             len *= 2;
@@ -375,7 +375,7 @@ DataChunk ResponseData::GetBody(bool uncompress) {
               break;
             
             d_stream.next_out = buff + d_stream.total_out;
-            d_stream.avail_out = len - d_stream.total_out;
+            d_stream.avail_out = (uInt)len - d_stream.total_out;
           }
         
           if (d_stream.total_out) {
@@ -472,7 +472,7 @@ void Request::DataIn(DataChunk& chunk) {
     if (!_first_byte.QuadPart)
       _first_byte.QuadPart = _end.QuadPart;
     if (!_is_spdy) {
-      _bytes_in += chunk.GetLength();
+      _bytes_in += (DWORD)chunk.GetLength();
       _response_data.AddChunk(chunk);
     }
   }
@@ -507,8 +507,8 @@ void Request::DataOut(DataChunk& chunk) {
   }
   if (_is_active && !_is_spdy) {
     // Keep track of the data that was actually sent.
-    unsigned long chunk_len = chunk.GetLength();
-    _bytes_out += chunk_len;
+    size_t chunk_len = chunk.GetLength();
+    _bytes_out += (DWORD)chunk_len;
     if (chunk_len > 0) {
       if (!_are_headers_complete &&
           chunk_len >= 4 && strstr(chunk.GetData(), "\r\n\r\n")) {
@@ -560,7 +560,7 @@ void Request::BytesIn(size_t len) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - Request::BytesIn(%d)"), len);
   EnterCriticalSection(&cs);
   if (_is_active)
-    _bytes_in += len;
+    _bytes_in += (DWORD)len;
   LeaveCriticalSection(&cs);
 }
 
@@ -606,7 +606,7 @@ void Request::BytesOut(size_t len) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - Request::BytesOut(%d)"), len);
   EnterCriticalSection(&cs);
   if (_is_active)
-    _bytes_out += len;
+    _bytes_out += (DWORD)len;
   LeaveCriticalSection(&cs);
 }
 

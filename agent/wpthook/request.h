@@ -37,7 +37,7 @@ class Requests;
 class DataChunk {
 public:
   DataChunk() { _value = new DataChunkValue(NULL, NULL, 0); }
-  DataChunk(const char * unowned_data, DWORD data_len) {
+  DataChunk(const char * unowned_data, size_t data_len) {
     _value = new DataChunkValue(unowned_data, NULL, data_len);
   }
   DataChunk(const DataChunk& src): _value(src._value) { ++_value->_ref_count; }
@@ -54,14 +54,14 @@ public:
   }
   void CopyDataIfUnowned() {
     if (_value->_unowned_data) {
-      DWORD len = _value->_data_len;
+      size_t len = _value->_data_len;
       char *new_data = new char[len];
       memcpy(new_data, _value->_unowned_data, len);
       _value->_unowned_data = NULL;
       _value->_data = new_data;
       _value->_data_len = len;    }
   }
-  char * AllocateLength(DWORD len) {
+  char * AllocateLength(size_t len) {
     if (--_value->_ref_count == 0) {
       delete _value;
     }
@@ -71,7 +71,7 @@ public:
   const char * GetData() const {
     return _value->_data ? _value->_data : _value->_unowned_data;
   }
-  DWORD GetLength() const { return _value->_data_len; }
+  size_t GetLength() const { return _value->_data_len; }
 
   bool ModifyDataOut(const WptTest& test);
 
@@ -80,9 +80,9 @@ private:
    public:
     const char * _unowned_data;
     char *       _data;
-    DWORD        _data_len;
+    size_t       _data_len;
     int          _ref_count;
-    DataChunkValue(const char * unowned_data, char * data, DWORD data_len) :
+    DataChunkValue(const char * unowned_data, char * data, size_t data_len) :
         _unowned_data(unowned_data), _data(data), _data_len(data_len),
         _ref_count(1) {
       _unowned_data = unowned_data;
@@ -121,7 +121,7 @@ class HttpData {
 
   bool HasHeaders() { CopyData(); return _headers.GetLength() != 0; }
   CStringA GetHeaders() { CopyData(); return _headers; }
-  DWORD GetDataSize() { return _data_size; }
+  size_t GetDataSize() { return _data_size; }
 
   void AddChunk(DataChunk& chunk);
   CStringA GetHeader(CStringA field_name);
@@ -136,8 +136,8 @@ protected:
   CAtlList<DataChunk> _data_chunks;
   CAtlList<DataChunk> _body_chunks;
   const char * _data;
-  DWORD _data_size;
-  DWORD _body_chunks_size;
+  size_t _data_size;
+  size_t _body_chunks_size;
   CStringA _headers;
   Fields _header_fields;
 };

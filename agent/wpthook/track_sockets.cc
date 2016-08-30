@@ -224,7 +224,7 @@ void TrackSockets::SniffProtocol(SocketInfo* info, DataChunk& chunk) {
       !info->IsLocalhost() &&
       info->_protocol == PROTO_NOT_CHECKED) {
     const char * data = chunk.GetData();
-    DWORD len = chunk.GetLength();
+    size_t len = chunk.GetLength();
     DWORD socket_id = info->_id;
 
     info->_protocol = PROTO_UNKNOWN;
@@ -244,7 +244,7 @@ void TrackSockets::SniffProtocol(SocketInfo* info, DataChunk& chunk) {
           "OPTIONS ", "DELETE ", "TRACE ", "CONNECT ", "PATCH "};
       for (int i = 0; i < _countof(HTTP_METHODS); i++) {
         const char * method = HTTP_METHODS[i];
-        unsigned long method_len = strlen(method);
+        size_t method_len = strlen(method);
         if (len >= method_len && !memcmp(data, method, method_len)) {
           ATLTRACE(_T("[%d] ********* HTTP 1 Connection detected"),
                     socket_id);
@@ -272,7 +272,7 @@ void TrackSockets::SniffProtocol(SocketInfo* info, DataChunk& chunk) {
 bool TrackSockets::ModifyDataOut(SOCKET s, DataChunk& chunk,
                                  bool is_unencrypted) {
   bool is_modified = false;
-  DWORD len = chunk.GetLength();
+  size_t len = chunk.GetLength();
   if (len > 0) {
     EnterCriticalSection(&cs);
     SocketInfo* info = GetSocketInfo(s);
@@ -306,16 +306,16 @@ void TrackSockets::DataOut(SOCKET s, DataChunk& chunk, bool is_unencrypted) {
     if (is_unencrypted)
       SniffProtocol(info, chunk);
     if (_test_state._active && !is_unencrypted) {
-      _test_state._bytes_out += chunk.GetLength();
+      _test_state._bytes_out += (int)chunk.GetLength();
       if (!_test_state._on_load.QuadPart)
-        _test_state._doc_bytes_out += chunk.GetLength();
+        _test_state._doc_bytes_out += (int)chunk.GetLength();
     }
     if (is_unencrypted || !info->_is_ssl) {
       if (info->_protocol == PROTO_H2) {
         size_t len = chunk.GetLength();
         const uint8_t * buff = (const uint8_t *)chunk.GetData();
         if (buff && len && info->_h2_out && info->_h2_out->session) {
-          int r = nghttp2_session_mem_recv(info->_h2_out->session, buff, len);
+          size_t r = nghttp2_session_mem_recv(info->_h2_out->session, buff, len);
           if (r < 0) {
             ATLTRACE("nghttp2_session_mem_recv - DataOut Error %d", r);
           }
@@ -341,19 +341,19 @@ void TrackSockets::DataIn(SOCKET s, DataChunk& chunk, bool is_unencrypted) {
   if (!info->IsLocalhost()) {
     _test_state.ActivityDetected();
     if (_test_state._active && !is_unencrypted) {
-      _test_state._bytes_in_bandwidth += chunk.GetLength();
+      _test_state._bytes_in_bandwidth += (int)chunk.GetLength();
       if (!_test_state.received_data_ && !IsSSLHandshake(chunk))
         _test_state.received_data_ = true;
-      _test_state._bytes_in += chunk.GetLength();
+      _test_state._bytes_in += (int)chunk.GetLength();
       if (!_test_state._on_load.QuadPart)
-        _test_state._doc_bytes_in += chunk.GetLength();
+        _test_state._doc_bytes_in += (int)chunk.GetLength();
     }
     if (is_unencrypted || !info->_is_ssl) {
       if (info->_protocol == PROTO_H2) {
         size_t len = chunk.GetLength();
         const uint8_t * buff = (const uint8_t *)chunk.GetData();
         if (buff && len && info->_h2_in && info->_h2_in->session) {
-          int r = nghttp2_session_mem_recv(info->_h2_in->session, buff, len);
+          size_t r = nghttp2_session_mem_recv(info->_h2_in->session, buff, len);
           if (r < 0) {
             ATLTRACE("nghttp2_session_mem_recv - DataIn Error %d", r);
           }
@@ -608,7 +608,7 @@ void TrackSockets::SslRemoveSocketLookup(void* ssl) {
 bool TrackSockets::IsSSLHandshake(const DataChunk& chunk) {
   bool is_handshake = false;
   const char *buf = chunk.GetData();
-  DWORD len = chunk.GetLength();
+  size_t len = chunk.GetLength();
   if (len > 3 && buf[0] == 0x16)
     is_handshake = true;
   return is_handshake;

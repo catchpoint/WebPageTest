@@ -902,7 +902,7 @@ void Results::ProcessRequests(void) {
           base_page = false;
           base_page_result_ = result_code;
           base_page_server_rtt_ = request->rtt_;
-          base_page_address_count_ = _dns.GetAddressCount(
+          base_page_address_count_ = (int)_dns.GetAddressCount(
               (LPCTSTR)CA2T(request->GetHost(), CP_UTF8));
           request->_is_base_page = true;
           base_page_complete_.QuadPart = request->_end.QuadPart;
@@ -913,7 +913,7 @@ void Results::ProcessRequests(void) {
           // check for adult content
           if (result_code == 200) {
             DataChunk body_chunk = request->_response_data.GetBody(true);
-            CStringA body(body_chunk.GetData(), body_chunk.GetLength());
+            CStringA body(body_chunk.GetData(), (int)body_chunk.GetLength());
             if (regex_search((LPCSTR)body, adult_regex) ||
                 body.Find("RTA-5042-1996-1400-1577-RTA") >= 0)
               adult_site_ = true;
@@ -1091,7 +1091,7 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
               request->_response_data.GetDataSize());
   result += buff;
   // Object Size
-  DWORD size = request->_response_data.GetBody().GetLength();
+  DWORD size = (DWORD)request->_response_data.GetBody().GetLength();
   if (size <= 0 && request->_object_size > 0)
     size = request->_object_size;
   buff.Format("%d\t", size);
@@ -1350,13 +1350,13 @@ void Results::SaveResponseBodies(void) {
                 mime.Find(_T("json")) >= 0))  {
             DataChunk body = request->_response_data.GetBody(true);
             LPBYTE body_data = (LPBYTE)body.GetData();
-            DWORD body_len = body.GetLength();
+            size_t body_len = body.GetLength();
             if (body_data && body_len && !IsBinaryContent(body_data, body_len)) {
               CStringA name;
               name.Format("%03d-%d-body.txt", count, request->_request_id);
               if (!zipOpenNewFileInZip(zip, name, 0, 0, 0, 0, 0, 0, Z_DEFLATED, 
                   Z_BEST_COMPRESSION)) {
-                zipWriteInFileInZip(zip, body_data, body_len);
+                zipWriteInFileInZip(zip, body_data, (unsigned int)body_len);
                 zipCloseFileInZip(zip);
                 bodies_count++;
                 if (_test._save_html_body)

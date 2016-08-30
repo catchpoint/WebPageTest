@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wpt_test_hook.h"
 
 #include "hook_chrome_ssl.h"
-
+#ifndef _WIN64
 static ChromeSSLHook* g_hook = NULL;
 
 /*
@@ -466,3 +466,4 @@ int ChromeSSLHook::WriteAppData(void *ssl, const void *buf, int len) {
   }
   return ret;
 }
+#endif // _WIN64

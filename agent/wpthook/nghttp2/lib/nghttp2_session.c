@@ -2362,9 +2362,9 @@ static int session_after_frame_sent1(nghttp2_session *session) {
     /* We update flow control window after a frame was completely
        sent. This is possible because we choose payload length not to
        exceed the window */
-    session->remote_window_size -= frame->hd.length;
+    session->remote_window_size -= (int32_t)frame->hd.length;
     if (stream) {
-      stream->remote_window_size -= frame->hd.length;
+      stream->remote_window_size -= (int32_t)frame->hd.length;
     }
 
     if (stream && aux_data->eof) {
@@ -4496,7 +4496,7 @@ static int adjust_recv_window_size(int32_t *recv_window_size_ptr, size_t delta,
       *recv_window_size_ptr > NGHTTP2_MAX_WINDOW_SIZE - (int32_t)delta) {
     return -1;
   }
-  *recv_window_size_ptr += delta;
+  *recv_window_size_ptr += (int32_t)delta;
   return 0;
 }
 
@@ -4596,7 +4596,7 @@ static int session_update_consumed_size(nghttp2_session *session,
                                              NGHTTP2_FLOW_CONTROL_ERROR);
   }
 
-  *consumed_size_ptr += delta_size;
+  *consumed_size_ptr += (int32_t)delta_size;
 
   /* recv_window_size may be smaller than consumed_size, because it
      may be decreased by negative value with

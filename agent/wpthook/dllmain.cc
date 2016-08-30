@@ -68,7 +68,10 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     case DLL_PROCESS_ATTACH: {
         // This is called VERY early in a process - only use kernel32.dll
         // functions.
-        ok = FALSE; // Don't load by default, only if we are actively testing
+        ok = FALSE; // Don't load by default, only if we are actively testing and only on win32
+        #ifdef _WIN64
+        // Don't do anything in 64-bit yet (placeholder for when the code has been tested)
+        #else
         TCHAR path[MAX_PATH];
         if (GetModuleFileName(NULL, path, _countof(path))) {
           TCHAR exe[MAX_PATH];
@@ -92,6 +95,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
               InstallHook();
           }
         }
+        #endif // _WIN64
       } break;
     case DLL_THREAD_ATTACH:
     case DLL_THREAD_DETACH:

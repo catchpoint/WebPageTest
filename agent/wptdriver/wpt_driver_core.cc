@@ -844,7 +844,7 @@ void WptDriverCore::PreTest() {
       if (!i)
         lstrcpy(PathFindFileName(path), _T("wptload.dll"));
       else
-        lstrcpy(PathFindFileName(path), _T("wptload64.dll"));
+        lstrcpy(PathFindFileName(path), _T("wptld64.dll"));
       TCHAR short_path[MAX_PATH];
       if (GetShortPathName(path, short_path, _countof(short_path))) {
         HKEY hKey;
