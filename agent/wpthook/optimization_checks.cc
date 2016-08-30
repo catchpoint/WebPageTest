@@ -328,6 +328,7 @@ void OptimizationChecks::CheckImageCompression()
                 int len = 0;
                 if( img.Encode(mem, len, CXIMAGE_FORMAT_JPG) && len ) {
                   img.FreeMemory(mem);
+                  len += 4096;  // Add 4k to allow for an sRGB ICC profile and copyright
                   targetRequestBytes = (DWORD) len < size ? (DWORD)len: size;
                 }
               }
