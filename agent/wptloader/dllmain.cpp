@@ -17,7 +17,11 @@ static DWORD WINAPI LoaderThreadProc(void* arg) {
   if (GetModuleFileName(module_handle, path, MAX_PATH)) {
     TCHAR * dll = _tcsstr(path, _T("wptload"));
     if (dll) {
+      #ifdef _WIN64
+      lstrcpy(dll, _T("wpthook64.dll"));
+      #else
       lstrcpy(dll, _T("wpthook.dll"));
+      #endif
       LoadLibrary(path);
     }
   }
@@ -32,12 +36,22 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH: {
+      #ifdef _WIN64
+      /*
+      TCHAR path[MAX_PATH];
+      OutputDebugStringA("wptload - 64bit attached");
+      if (GetModuleFileName(NULL, path, MAX_PATH)) {
+        OutputDebugString(path);
+      }
+      */
+      #else
       module_handle = hModule;
       // Spawn a background thread to try loading the hookdll
       HANDLE thread_handle = CreateThread(NULL, 0, ::LoaderThreadProc, 0, 0,
                                           NULL);
       if (thread_handle)
         CloseHandle(thread_handle);
+      #endif
     } break;
 	case DLL_THREAD_ATTACH:
 	case DLL_THREAD_DETACH:
