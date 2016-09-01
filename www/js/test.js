@@ -488,7 +488,7 @@ function SelectLocation()
    
     var script = document.createElement("script");
     script.type = "text/javascript";
-    script.src = "http://maps.google.com/maps/api/js?v=3.1&sensor=false&callback=InitializeMap";
+    script.src = "https://maps.google.com/maps/api/js?v=3.1&sensor=false&callback=InitializeMap";
     document.body.appendChild(script);
     
     return false;
