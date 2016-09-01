@@ -70,6 +70,6 @@ private:
   void PreTest();
   void PostTest();
   bool Startup();
-  LPTSTR GetAppInitString(LPCTSTR new_dll);
+  LPTSTR GetAppInitString(LPCTSTR new_dll, bool is64bit);
   bool NeedsReboot();
 };

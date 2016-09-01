@@ -838,38 +838,58 @@ void WptDriverCore::PreTest() {
   // controlled by a shared memory state)
   TCHAR path[MAX_PATH];
   if (GetModuleFileName(NULL, path, _countof(path))) {
-    // install 32 and 64-bit app-init dll's
-    DWORD flags[2] = {0, KEY_WOW64_64KEY};
-    for (int i = 0; i < _countof(flags); i++) {
-      if (!i)
-        lstrcpy(PathFindFileName(path), _T("wptload.dll"));
-      else
-        lstrcpy(PathFindFileName(path), _T("wptld64.dll"));
-      TCHAR short_path[MAX_PATH];
-      if (GetShortPathName(path, short_path, _countof(short_path))) {
-        HKEY hKey;
-		    if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
-            _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows"),
-            0, 0, 0, KEY_WRITE | flags[i], 0, &hKey, 0) == ERROR_SUCCESS ) {
-			    DWORD val = 1;
-			    RegSetValueEx(hKey, _T("LoadAppInit_DLLs"), 0, REG_DWORD,
-                        (const LPBYTE)&val, sizeof(val));
-			    val = 0;
-			    RegSetValueEx(hKey, _T("RequireSignedAppInit_DLLs"), 0, REG_DWORD,
-                        (const LPBYTE)&val, sizeof(val));
-          LPTSTR dlls = GetAppInitString(short_path);
-          if (dlls) {
-			      RegSetValueEx(hKey, _T("AppInit_DLLs"), 0, REG_SZ,
-                          (const LPBYTE)dlls,
-                          (lstrlen(dlls) + 1) * sizeof(TCHAR));
-            free(dlls);
-          }
-          RegCloseKey(hKey);
+    lstrcpy(PathFindFileName(path), _T("wptload.dll"));
+    TCHAR short_path[MAX_PATH];
+    if (GetShortPathName(path, short_path, _countof(short_path))) {
+      HKEY hKey;
+		  if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+          _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows"),
+          0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS ) {
+			  DWORD val = 1;
+			  RegSetValueEx(hKey, _T("LoadAppInit_DLLs"), 0, REG_DWORD,
+                      (const LPBYTE)&val, sizeof(val));
+			  val = 0;
+			  RegSetValueEx(hKey, _T("RequireSignedAppInit_DLLs"), 0, REG_DWORD,
+                      (const LPBYTE)&val, sizeof(val));
+        LPTSTR dlls = GetAppInitString(short_path, false);
+        if (dlls) {
+			    RegSetValueEx(hKey, _T("AppInit_DLLs"), 0, REG_SZ,
+                        (const LPBYTE)dlls,
+                        (lstrlen(dlls) + 1) * sizeof(TCHAR));
+          free(dlls);
         }
+        RegCloseKey(hKey);
       }
     }
   }
 
+  // Install the 64-bit appinit hook
+  BOOL is64bit = FALSE;
+  if (IsWow64Process(GetCurrentProcess(), &is64bit) && is64bit) {
+    lstrcpy(PathFindFileName(path), _T("wptld64.dll"));
+    TCHAR short_path[MAX_PATH];
+    if (GetShortPathName(path, short_path, _countof(short_path))) {
+      HKEY hKey;
+		  if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+          _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows"),
+          0, 0, 0, KEY_WRITE | KEY_WOW64_64KEY, 0, &hKey, 0) == ERROR_SUCCESS ) {
+			  DWORD val = 1;
+			  RegSetValueEx(hKey, _T("LoadAppInit_DLLs"), 0, REG_DWORD,
+                      (const LPBYTE)&val, sizeof(val));
+			  val = 0;
+			  RegSetValueEx(hKey, _T("RequireSignedAppInit_DLLs"), 0, REG_DWORD,
+                      (const LPBYTE)&val, sizeof(val));
+        LPTSTR dlls = GetAppInitString(short_path, true);
+        if (dlls) {
+			    RegSetValueEx(hKey, _T("AppInit_DLLs"), 0, REG_SZ,
+                        (const LPBYTE)dlls,
+                        (lstrlen(dlls) + 1) * sizeof(TCHAR));
+          free(dlls);
+        }
+        RegCloseKey(hKey);
+      }
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -877,12 +897,25 @@ void WptDriverCore::PreTest() {
 void WptDriverCore::PostTest() {
   // Remove the AppInit dll
   DWORD flags[2] = {0, KEY_WOW64_64KEY};
-  for (int i = 0; i < _countof(flags); i++) {
-    HKEY hKey;
+  HKEY hKey;
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+      _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows"),
+      0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS ) {
+    LPTSTR dlls = GetAppInitString(NULL, false);
+    if (dlls) {
+			RegSetValueEx(hKey, _T("AppInit_DLLs"), 0, REG_SZ,
+                    (const LPBYTE)dlls,
+                    (lstrlen(dlls) + 1) * sizeof(TCHAR));
+      free(dlls);
+    }
+    RegCloseKey(hKey);
+  }
+  BOOL is64bit = FALSE;
+  if (IsWow64Process(GetCurrentProcess(), &is64bit) && is64bit) {
 	  if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
         _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows"),
-        0, 0, 0, KEY_WRITE | flags[i], 0, &hKey, 0) == ERROR_SUCCESS ) {
-      LPTSTR dlls = GetAppInitString(NULL);
+        0, 0, 0, KEY_WRITE | KEY_WOW64_64KEY, 0, &hKey, 0) == ERROR_SUCCESS ) {
+      LPTSTR dlls = GetAppInitString(NULL, true);
       if (dlls) {
 			  RegSetValueEx(hKey, _T("AppInit_DLLs"), 0, REG_SZ,
                       (const LPBYTE)dlls,
@@ -896,9 +929,10 @@ void WptDriverCore::PostTest() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-LPTSTR WptDriverCore::GetAppInitString(LPCTSTR new_dll) {
+LPTSTR WptDriverCore::GetAppInitString(LPCTSTR new_dll, bool is64bit) {
   LPTSTR dlls = NULL;
   DWORD len = 0;
+  DWORD flags = is64bit ? KEY_WOW64_64KEY : 0;
 
   // get the existing appinit list
   HKEY hKey;
@@ -925,13 +959,14 @@ LPTSTR WptDriverCore::GetAppInitString(LPCTSTR new_dll) {
     memset(dlls, 0, len);
   }
 
-  // remove any occurences of wptload.dll from the list
+  // remove any occurences of wptload.dll and wptld64.dll from the list
   if (dlls && lstrlen(dlls)) {
     LPTSTR new_list = (LPTSTR)malloc(len);
     memset(new_list, 0, len);
     LPTSTR dll = _tcstok(dlls, _T(" ,"));
     while (dll) {
-      if (lstrcmpi(PathFindFileName(dll), _T("wptload.dll"))) {
+      if (lstrcmpi(PathFindFileName(dll), _T("wptload.dll")) &&
+          lstrcmpi(PathFindFileName(dll), _T("wptld64.dll"))) {
         if (lstrlen(new_list))
           lstrcat(new_list, _T(","));
         lstrcat(new_list, dll);
