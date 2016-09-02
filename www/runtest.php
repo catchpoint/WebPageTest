@@ -1,4 +1,10 @@
 <?php
+    if(extension_loaded('newrelic')) {
+        newrelic_add_custom_tracer('CheckUrl');
+        newrelic_add_custom_tracer('CheckIp');
+        newrelic_add_custom_tracer('WptHookValidateTest');
+    }
+
     // deal with magic quotes being enabled
     if (get_magic_quotes_gpc()) {
         function DealWithMagicQuotes(&$arr) {
@@ -16,14 +22,6 @@
     require_once('common.inc');
     require_once('./ec2/ec2.inc.php');
     set_time_limit(300);
-
-    if(extension_loaded('newrelic')) {
-        newrelic_add_custom_tracer('ValidateKey');
-        newrelic_add_custom_tracer('ValidateURL');
-        newrelic_add_custom_tracer('SubmitUrl');
-        newrelic_add_custom_tracer('GetRedirect');
-        newrelic_add_custom_tracer('CheckIp');
-    }
 
     $redirect_cache = array();
     $error = NULL;
