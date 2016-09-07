@@ -182,7 +182,7 @@ void OptimizationChecks::CheckGzip()
 
       // If there is gzip encoding, then we are all set.
       // Spare small (<1 packet) responses.
-      if( encoding.Find("gzip") >= 0 || encoding.Find("deflate") >= 0 ) 
+      if( encoding.Find("gzip") >= 0 || encoding.Find("deflate") >= 0 || encoding.Find("br") >= 0 ) 
         request->_scores._gzip_score = 100;
       else if (responseBodySize + headSize < 1400)
         request->_scores._gzip_score = -1;
