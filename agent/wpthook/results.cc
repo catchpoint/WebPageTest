@@ -98,6 +98,7 @@ void Results::Reset(void) {
   base_page_server_rtt_.Empty();
   base_page_redirects_ = 0;
   base_page_result_ = 0;
+  base_page_ttfb_ = -1;
   base_page_address_count_ = 0;
   base_page_complete_.QuadPart = 0;;
   adult_site_ = false;
@@ -784,6 +785,12 @@ void Results::SavePageData(OptimizationChecks& checks){
     // DOM Loading
     buff.Format("%d\t", _test_state._dom_loading);
     result += buff;
+    // Base Page TTFB
+    if (base_page_ttfb_ >= 0) {
+      buff.Format("%d", base_page_ttfb_);
+      result += buff;
+    }
+    result += "\t";
 
     result += "\r\n";
 
@@ -895,28 +902,34 @@ void Results::ProcessRequests(void) {
         count_connect_++;
         count_connect_doc_ += doc_increment;
       }
+      CStringA mime_type = request->GetMime().Trim().MakeLower();
       if (base_page) { 
         if (result_code == 301 || result_code == 302 || result_code == 401) {
           base_page_redirects_++;
         } else {
-          base_page = false;
-          base_page_result_ = result_code;
-          base_page_server_rtt_ = request->rtt_;
-          base_page_address_count_ = (int)_dns.GetAddressCount(
-              (LPCTSTR)CA2T(request->GetHost(), CP_UTF8));
-          request->_is_base_page = true;
-          base_page_complete_.QuadPart = request->_end.QuadPart;
-          if ((!_test_state._test_result ||  _test_state._test_result == 99999)
-              && base_page_result_ >= 400) {
-            _test_state._test_result = result_code;
-          }
-          // check for adult content
-          if (result_code == 200) {
-            DataChunk body_chunk = request->_response_data.GetBody(true);
-            CStringA body(body_chunk.GetData(), (int)body_chunk.GetLength());
-            if (regex_search((LPCSTR)body, adult_regex) ||
-                body.Find("RTA-5042-1996-1400-1577-RTA") >= 0)
-              adult_site_ = true;
+          // Make sure it isn't a OCSP or CRL check
+          if (mime_type != "application/ocsp-response" &&
+              mime_type != "application/pkix-crl") {
+            base_page = false;
+            base_page_result_ = result_code;
+            base_page_server_rtt_ = request->rtt_;
+            base_page_ttfb_ = request->_ms_first_byte;
+            base_page_address_count_ = (int)_dns.GetAddressCount(
+                (LPCTSTR)CA2T(request->GetHost(), CP_UTF8));
+            request->_is_base_page = true;
+            base_page_complete_.QuadPart = request->_end.QuadPart;
+            if ((!_test_state._test_result ||  _test_state._test_result == 99999)
+                && base_page_result_ >= 400) {
+              _test_state._test_result = result_code;
+            }
+            // check for adult content
+            if (result_code == 200) {
+              DataChunk body_chunk = request->_response_data.GetBody(true);
+              CStringA body(body_chunk.GetData(), (int)body_chunk.GetLength());
+              if (regex_search((LPCSTR)body, adult_regex) ||
+                  body.Find("RTA-5042-1996-1400-1577-RTA") >= 0)
+                adult_site_ = true;
+            }
           }
         }
       }
@@ -929,7 +942,9 @@ void Results::ProcessRequests(void) {
       new_end = max(new_end, request->_connect_end.QuadPart);
       if (request->_first_byte.QuadPart &&
           result_code != 301 && result_code != 302 && result_code != 401 &&
-          (!new_first_byte || request->_first_byte.QuadPart < new_first_byte))
+          (!new_first_byte || request->_first_byte.QuadPart < new_first_byte) &&
+          mime_type != "application/ocsp-response" &&
+          mime_type != "application/pkix-crl")
         new_first_byte = request->_first_byte.QuadPart;
     }
   }
