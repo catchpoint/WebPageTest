@@ -60,6 +60,9 @@
     <Filter Include="Third-Party\winpcap\pcap">
       <UniqueIdentifier>{31f31a0f-f1ec-4329-acab-a46bf2c9ee24}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Third-Party\brotli">
+      <UniqueIdentifier>{cdf6fa87-2189-4449-b484-721fb23c974c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NCodeHook\NCodeHook.h">
@@ -1074,6 +1077,21 @@
     </ClCompile>
     <ClCompile Include="..\wptdriver\zlib\gzclose.c">
       <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="brotli\dec\bit_reader.c">
+      <Filter>Third-Party\brotli</Filter>
+    </ClCompile>
+    <ClCompile Include="brotli\dec\decode.c">
+      <Filter>Third-Party\brotli</Filter>
+    </ClCompile>
+    <ClCompile Include="brotli\dec\huffman.c">
+      <Filter>Third-Party\brotli</Filter>
+    </ClCompile>
+    <ClCompile Include="brotli\dec\state.c">
+      <Filter>Third-Party\brotli</Filter>
+    </ClCompile>
+    <ClCompile Include="brotli\common\dictionary.c">
+      <Filter>Third-Party\brotli</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

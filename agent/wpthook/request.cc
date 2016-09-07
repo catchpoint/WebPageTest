@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "requests.h"
 #include <wininet.h>
 #include <zlib.h>
+#include <brotli/decode.h>
 
 const DWORD MAX_DATA_TO_RETAIN = 10485760;  // 10MB
 const __int64 NS100_TO_SEC = 10000000;   // convert 100ns intervals to seconds
@@ -387,6 +388,45 @@ DataChunk ResponseData::GetBody(bool uncompress) {
           inflateEnd(&d_stream);
         }
       
+        free(buff);
+      }
+    }
+  } else if (uncompress && GetHeader("content-encoding").Find("br") >= 0) {
+    LPBYTE body_data = (LPBYTE)ret.GetData();
+    size_t body_len = ret.GetLength();
+    if (body_data && body_len) {
+      size_t len = body_len * 10;
+      LPBYTE buff = (LPBYTE)malloc(len);
+      if (buff) {
+        size_t available_in = body_len;
+        size_t available_out = len;
+        const uint8_t* next_in = body_data;
+        uint8_t* next_out = buff;
+        size_t total_out = 0;
+        BrotliState* s = BrotliCreateState(NULL, NULL, NULL);
+        if (s) {
+          bool done = false;
+          while (!done) {
+            BrotliResult result = BrotliDecompressStream(&available_in, &next_in,
+                    &available_out, &next_out, &total_out, s);
+            if (result == BROTLI_RESULT_NEEDS_MORE_OUTPUT) {
+              len *= 2;
+              buff = (LPBYTE)realloc(buff, len);
+              if( !buff )
+                break;
+              next_out = buff + total_out;
+              available_out = len - total_out;
+            } else {
+              done = true;
+            }
+          }
+          if (total_out) {
+            char * data = ret.AllocateLength(total_out);
+            if (data)
+              memcpy(data, buff, total_out);
+          }
+          BrotliDestroyState(s);
+        }
         free(buff);
       }
     }
