@@ -1569,6 +1569,17 @@ WebDriverServer.prototype.done_ = function() {
       devToolsFile = path.join(this.runTempDir_, 'devtools.json');
       fs.writeFileSync(devToolsFile, JSON.stringify(this.devToolsMessages_));
     }
+    // Add any browser-specific page data if we have it
+    if (this.browser_['osVersion'] !== undefined) {
+      if (this.pageData_ === undefined)
+        this.pageData_ = {};
+      this.pageData_.osVersion = this.browser_.osVersion;
+    }
+    if (this.browser_['browserVersion'] !== undefined) {
+      if (this.pageData_ === undefined)
+        this.pageData_ = {};
+      this.pageData_.browserVersion = this.browser_.browserVersion;
+    }
     this.scheduleNoFault_('Send IPC', function() {
       logger.debug("Sending 'done' IPC")
       exports.process.send({
