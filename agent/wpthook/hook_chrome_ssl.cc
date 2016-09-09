@@ -214,6 +214,9 @@ void ChromeSSLHook::Init() {
     LeaveCriticalSection(&cs);
     return;
   }
+  #ifdef _WIN64
+  return;
+  #endif
 
   // only install for chrome.exe
   TCHAR path[MAX_PATH];

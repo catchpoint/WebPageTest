@@ -57,6 +57,7 @@ private:
   bool TracerouteTest(WptTestDriver& test);
   bool BrowserTest(WptTestDriver& test, WebBrowser &browser);
   bool SetupWebPageReplay(WptTestDriver& test, WebBrowser &browser);
+  void ResetBrowsers();
   void Init(void);
   void Cleanup(void);
   void FlushDNS(void);

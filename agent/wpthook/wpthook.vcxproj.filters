@@ -796,9 +796,6 @@
     <ClCompile Include="distorm\src\decoder.c">
       <Filter>Third-Party\distorm</Filter>
     </ClCompile>
-    <ClCompile Include="distorm\src\x86defs.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
     <ClCompile Include="distorm\src\distorm.c">
       <Filter>Third-Party\distorm</Filter>
     </ClCompile>
@@ -806,9 +803,6 @@
       <Filter>Third-Party\distorm</Filter>
     </ClCompile>
     <ClCompile Include="distorm\src\insts.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
-    <ClCompile Include="distorm\include\mnemonics.c">
       <Filter>Third-Party\distorm</Filter>
     </ClCompile>
     <ClCompile Include="distorm\src\operands.c">
@@ -1089,6 +1083,9 @@
     </ClCompile>
     <ClCompile Include="brotli\common\dictionary.c">
       <Filter>Third-Party\brotli</Filter>
+    </ClCompile>
+    <ClCompile Include="distorm\src\mnemonics.c">
+      <Filter>Third-Party\distorm</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

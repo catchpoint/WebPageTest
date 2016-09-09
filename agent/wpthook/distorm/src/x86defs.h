@@ -4,28 +4,13 @@ x86defs.h
 diStorm3 - Powerful disassembler for X86/AMD64
 http://ragestorm.net/distorm/
 distorm at gmail dot com
-Copyright (C) 2003-2012 Gil Dabah
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>
+Copyright (C) 2003-2016 Gil Dabah
+This library is licensed under the BSD license. See the file COPYING.
 */
 
 
 #ifndef X86DEFS_H
 #define X86DEFS_H
-
-#include "config.h"
-#include "instructions.h"
 
 
 #define SEG_REGS_MAX (6)
@@ -46,6 +31,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 /* Lea instruction byte code. */
 #define INST_LEA_INDEX (0x8d)
+
+/* NOP/XCHG instruction byte code. */
+#define INST_NOP_INDEX (0x90)
+
+/* ARPL/MOVSXD instruction byte code. */
+#define INST_ARPL_INDEX (0x63)
 
 /*
  * Minimal MODR/M value of divided instructions.
@@ -87,29 +78,5 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #define PREFIX_EX_W (8)
 /* Vector Lengh */
 #define PREFIX_EX_L (0x10)
-
-/*
- * The inst_lookup will return on of these two instructions according to the specified decoding mode.
- * ARPL or MOVSXD on 64 bits is one byte instruction at index 0x63.
- */
-#define INST_ARPL_INDEX (0x63)
-extern _InstInfo II_arpl;
-extern _InstInfo II_movsxd;
-
-/*
- * The NOP instruction can be prefixed by REX in 64bits, therefore we have to decide in runtime whether it's an XCHG or NOP instruction.
- * If 0x90 is prefixed by a useable REX it will become XCHG, otherwise it will become a NOP.
- * Also note that if it's prefixed by 0xf3, it becomes a Pause.
- */
-#define INST_NOP_INDEX (0x90)
-extern _InstInfo II_nop;
-extern _InstInfo II_pause;
-
-/*
- * Used for letting the extract operand know the type of operands without knowing the
- * instruction itself yet, because of the way those instructions work.
- * See function instructions.c!inst_lookup_3dnow.
- */
-extern _InstInfo II_3dnow;
 
 #endif /* X86DEFS_H */

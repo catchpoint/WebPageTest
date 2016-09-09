@@ -4,7 +4,7 @@
 using namespace std;
 
 // the disassembler needs at least 15
-const unsigned int MaxInstructions = 20;
+const unsigned int MaxInstructions = 30;
 
 static const unsigned int TrampolineBufferSize = 4096;
 
@@ -14,7 +14,7 @@ NCodeHook<ArchT>::NCodeHook(bool cleanOnDestruct) :
 	cleanOnDestruct_(cleanOnDestruct),
 	forceAbsJmp_(false)
 {
-	trampolineBuffer_ = VirtualAlloc(NULL, TrampolineBufferSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+  trampolineBuffer_ = VirtualAlloc(NULL, TrampolineBufferSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
 	if (trampolineBuffer_ == NULL) throw exception("Unable to allocate trampoline memory!");
 	for (uintptr_t i=(uintptr_t)trampolineBuffer_; i<(uintptr_t)trampolineBuffer_+TrampolineBufferSize; i+=MaxTotalTrampolineSize)
 		freeTrampolines_.insert(i);
@@ -46,7 +46,7 @@ int NCodeHook<ArchT>::getMinOffset(const unsigned char* codePtr, unsigned int ju
 	_DecodedInst instructions[MaxInstructions];
 	unsigned int instructionCount = 0;
 
-	result = distorm_decode(0, codePtr, 20, ArchT::DisasmType, instructions, MaxInstructions, &instructionCount);
+	result = distorm_decode(0, codePtr, jumpPatchSize + 20, ArchT::DisasmType, instructions, MaxInstructions, &instructionCount);
 	if (result != DECRES_SUCCESS) return -1;
 
 	unsigned int offset = 0;
@@ -82,7 +82,7 @@ U NCodeHook<ArchT>::createHook(U originalFunc, U hookFunc)
 	{
 		offset = getMinOffset((const unsigned char*)originalFunc, ArchT::AbsJumpPatchSize);
 		useAbsJump = true;
-	}		
+  }
 	else offset = getMinOffset((const unsigned char*)originalFunc, ArchT::NearJumpPatchSize);
 	
 	// error while determining offset?

@@ -248,18 +248,8 @@ void WptDriverCore::WorkThread(void) {
       ReleaseMutex(_testing_mutex);
     } else {
       // Launch and exit any browsers that need their state cleared
-      while (!reset_browsers.IsEmpty()) {
-        CString exe = reset_browsers.RemoveHead();
-        HANDLE process = NULL;
-        LaunchProcess(exe, &process);
-        if (process) {
-          WaitForInputIdle(process, 10000);
-          CloseHandle(process);
-        }
-        Sleep(5000);
-        KillBrowsers();
-      }
       ReleaseMutex(_testing_mutex);
+      ResetBrowsers();
       _status.Set(_T("Checking for software updates..."));
       _installing = true;
       _settings.UpdateSoftware();
@@ -272,7 +262,28 @@ void WptDriverCore::WorkThread(void) {
       }
     }
   }
+  ResetBrowsers();
   Cleanup();
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptDriverCore::ResetBrowsers() {
+  if (!reset_browsers.IsEmpty()) {
+    WaitForSingleObject(_testing_mutex, INFINITE);
+    while (!reset_browsers.IsEmpty()) {
+      CString exe = reset_browsers.RemoveHead();
+      HANDLE process = NULL;
+      LaunchProcess(exe, &process);
+      if (process) {
+        WaitForInputIdle(process, 10000);
+        CloseHandle(process);
+      }
+      Sleep(5000);
+      KillBrowsers();
+    }
+    ReleaseMutex(_testing_mutex);
+  }
 }
 
 /*-----------------------------------------------------------------------------

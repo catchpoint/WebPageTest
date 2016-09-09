@@ -20,7 +20,7 @@ public:
 		_DecodedInst instructions[MaxInstructions];
 		unsigned int instructionCount = 0;
 
-		result = distorm_decode(0, codePtr, 20, ArchT::DisasmType, instructions, MaxInstructions, &instructionCount);
+		result = distorm_decode(0, codePtr, jumpPatchSize + 20, ArchT::DisasmType, instructions, MaxInstructions, &instructionCount);
 		if (result != DECRES_SUCCESS) return -1;
 
 		int offset = 0;
@@ -63,9 +63,9 @@ public:
 	void writeNearJump(uintptr_t from, uintptr_t to)
 	{
 		unsigned char opcodes[NearJumpPatchSize];
-		int offset = (int)(to - from - NearJumpPatchSize);
+		long offset = (long)((intptr_t)to - (intptr_t)from - NearJumpPatchSize);
 		opcodes[0] = 0xE9;
-		*((int*)&opcodes[1]) = offset;
+		*((long*)&opcodes[1]) = offset;
 		memcpy((void*)from, opcodes, NearJumpPatchSize);
 	}
 

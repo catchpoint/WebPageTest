@@ -36,9 +36,8 @@ FileHook::~FileHook() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void FileHook::Init() {
-  if (_hook || g_hook) {
+  if (_hook || g_hook)
     return;
-  }
 
   // Get the system download path
   TCHAR path[4096];
