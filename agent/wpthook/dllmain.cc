@@ -68,11 +68,8 @@ BOOL APIENTRY DllMain( HMODULE hModule,
         // This is called VERY early in a process - only use kernel32.dll
         // functions.
         ok = FALSE; // Don't load by default, only if we are actively testing and only on win32
-        #ifdef _WIN64
-        // Don't do anything in 64-bit yet (placeholder for when the code has been tested)
-        #else
+        #ifndef _WIN64
         TCHAR path[MAX_PATH];
-        SharedMem shared(false);
         if (GetModuleFileName(NULL, path, _countof(path))) {
           TCHAR exe[MAX_PATH];
           lstrcpy(exe, path);
@@ -84,8 +81,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
           }
           if (!lstrcmpi(exe, _T("wptdriver.exe"))) {
             ok = TRUE;
-          } else if(lstrlen(shared.BrowserExe()) &&
-                    IsCorrectBrowserProcess(exe)) {
+          } else if(IsCorrectBrowserProcess(exe)) {
             ok = TRUE;
             global_dll_handle = (HINSTANCE)hModule;
 
@@ -95,7 +91,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
               InstallHook();
           }
         }
-        #endif // _WIN64
+        #endif //WIN64
       } break;
     case DLL_THREAD_ATTACH:
     case DLL_THREAD_DETACH:
@@ -112,7 +108,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 bool IsCorrectBrowserProcess(LPCTSTR exe) {
   bool ok = false;
   SharedMem shared(false);
-  if (!lstrcmpi(exe, shared.BrowserExe())) {
+  if (lstrlen(shared.BrowserExe()) && !lstrcmpi(exe, shared.BrowserExe())) {
     LPTSTR cmdline = GetCommandLine();
     if (!lstrcmpi(exe, _T("chrome.exe"))) {
       if (_tcsstr(cmdline, _T("http://127.0.0.1:8888/blank.html")))

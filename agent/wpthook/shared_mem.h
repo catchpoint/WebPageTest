@@ -32,14 +32,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -----------------------------------------------------------------------------*/
 #pragma pack(push, 8)
 typedef struct {
-  HHOOK	 hook_handle;
   WCHAR  results_file_base[MAX_PATH];
   DWORD  test_timeout;
   bool   cleared_cache;
   DWORD  current_run;
-  int    cpu_utilization;
+  long   cpu_utilization;
   bool   has_gpu;
-  int    result;
+  long   result;
   WCHAR  browser_exe[MAX_PATH];
   DWORD  browser_process_id;
   bool   overrode_ua_string;

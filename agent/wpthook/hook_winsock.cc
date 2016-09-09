@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static CWsHook * pHook = NULL;
 
-//#define TRACE_WINSOCK 1
+#define TRACE_WINSOCK 1
 
 /******************************************************************************
 *******************************************************************************
@@ -262,6 +262,7 @@ CWsHook::CWsHook(TrackDns& dns, TrackSockets& sockets, TestState& test_state):
   _getaddrinfo(NULL)
   , _dns(dns)
   , _sockets(sockets)
+  , _hook(NULL)
   , _test_state(test_state) {
   _recv_buffers.InitHashTable(257);
   _send_buffers.InitHashTable(257);
@@ -280,6 +281,8 @@ void CWsHook::Init() {
     return;
   _hook = new CodeHook();
   pHook = this;
+
+  WptTrace(loglevel::kProcess, _T("[wpthook] CWsHook::Init()"));
 
   // install the code hooks
   _WSASocketW = _hook->createHookByName("ws2_32.dll", "WSASocketW", 

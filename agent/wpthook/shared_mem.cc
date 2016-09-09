@@ -45,7 +45,6 @@ SharedMem::SharedMem(bool create):
                                                 sizeof(WPT_SHARED_MEM));
       if (shared_) {
         // Initialize all of the values
-        shared_->hook_handle = 0;
         shared_->results_file_base[0] = NULL;
         shared_->test_timeout = 120000;
         shared_->cleared_cache = false;
