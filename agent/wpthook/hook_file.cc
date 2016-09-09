@@ -2,7 +2,6 @@
 #include "request.h"
 #include "test_state.h"
 #include "track_sockets.h"
-#include "shared_mem.h"
 #include "hook_file.h"
 
 static FileHook* g_hook = NULL;
@@ -66,7 +65,7 @@ void FileHook::Init() {
     RegCloseKey(hKey);
   }
 
-  _hook = new NCodeHookIA32();
+  _hook = new CodeHook();
   g_hook = this;
   WptTrace(loglevel::kProcess, _T("[wpthook] FileHook::Init()\n"));
   CreateFileW_ = _hook->createHookByName("kernel32.dll", "CreateFileW",

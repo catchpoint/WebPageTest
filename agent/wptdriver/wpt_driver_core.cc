@@ -212,7 +212,7 @@ void WptDriverCore::WorkThread(void) {
               } else {
                 CStringA first_run_error = test._run_error;
                 if (!first_run_error.GetLength()) {
-                  int result = GetTestResult();
+                  int result = g_shared->TestResult();
                   if (result != 0 && result != 99999)
                     first_run_error.Format(
                         "Test run failed with result code %d", result);
@@ -291,7 +291,7 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
   WptTrace(loglevel::kFunction,_T("[wptdriver] WptDriverCore::BrowserTest\n"));
 
   test._run_error.Empty();
-  ResetTestResult();
+  g_shared->ResetTestResult();
   test.SetFileBase();
   if (test._clear_cache) {
     FlushDNS();
@@ -307,7 +307,7 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
   KillBrowsers();
 
   if (ret) {
-    int result = GetTestResult();
+    int result = g_shared->TestResult();
     if (result != 0 && result != 99999)
       ret = false;
   }
@@ -432,6 +432,7 @@ void WptDriverCore::Init(void){
   Do our cleanup on exit
 -----------------------------------------------------------------------------*/
 void WptDriverCore::Cleanup(void){
+  PostTest();
   if (housekeeping_timer_) {
     DeleteTimerQueueTimer(NULL, housekeeping_timer_, NULL);
     housekeeping_timer_ = NULL;

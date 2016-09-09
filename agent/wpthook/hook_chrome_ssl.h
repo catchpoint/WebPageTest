@@ -73,7 +73,7 @@ private:
   TestState& test_state_;
   TrackSockets& sockets_;
   WptTestHook& test_;
-  NCodeHookIA32* hook_;
+  CodeHook* hook_;
   CRITICAL_SECTION cs;
 
   PFN_SSL3_NEW              New_;

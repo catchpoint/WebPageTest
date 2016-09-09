@@ -98,7 +98,7 @@ void NsprHook::Init() {
   if (_hook || g_hook) {
     return;
   }
-  _hook = new NCodeHookIA32();
+  _hook = new CodeHook();
   g_hook = this; 
 
   GetFunctionByName(

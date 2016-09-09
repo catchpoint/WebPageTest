@@ -30,7 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
 #include "stdafx.h"
-#include "shared_mem.h"
 #include "wpthook.h"
 #include "window_messages.h"
 
@@ -63,10 +62,12 @@ WptHook::WptHook(void):
   ,dns_(test_state_, test_)
   ,done_(false)
   ,test_server_(*this, test_, test_state_, requests_, trace_)
-  ,test_(*this, test_state_, shared_test_timeout)
+  ,test_(*this, test_state_, 120000)
   ,late_initialized_(false) {
 
-  file_base_ = shared_results_file_base;
+  test_._test_timeout = test_state_.shared_.TestTimeout();
+  test_._measurement_timeout = test_._test_timeout;
+  file_base_ = test_state_.shared_.ResultsFileBase();
   background_thread_started_ = CreateEvent(NULL, TRUE, FALSE, NULL);
   report_message_ = RegisterWindowMessage(_T("WPT Report Data"));
 

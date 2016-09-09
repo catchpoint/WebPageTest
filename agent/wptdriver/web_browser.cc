@@ -118,7 +118,7 @@ bool WebBrowser::RunAndWait() {
 
   // signal to the IE BHO that it needs to inject the code
   HANDLE active_event = CreateMutex(&null_dacl, TRUE, GLOBAL_TESTING_MUTEX);
-  SetOverrodeUAString(false);
+  g_shared->SetOverrodeUAString(false);
 
   if (_test.Start() && ConfigureIpfw(_test)) {
     if (_browser._exe.GetLength()) {
@@ -200,7 +200,7 @@ bool WebBrowser::RunAndWait() {
             lstrcat(cmdLine, _T("\""));
             lstrcat(cmdLine, user_agent);
             lstrcat(cmdLine, _T("\""));
-            SetOverrodeUAString(true);
+            g_shared->SetOverrodeUAString(true);
           }
         }
         if (_test._browser_additional_command_line.GetLength()) {
@@ -259,7 +259,7 @@ bool WebBrowser::RunAndWait() {
 
       // Launch the browser and wait for the hook to start
       TerminateProcessesByName(PathFindFileName((LPCTSTR)_browser._exe));
-      SetBrowserExe(PathFindFileName((LPCTSTR)_browser._exe));
+      g_shared->SetBrowserExe(PathFindFileName((LPCTSTR)_browser._exe));
       if (_browser_started_event && _browser_done_event) {
         ResetEvent(_browser_started_event);
         ResetEvent(_browser_done_event);
@@ -287,7 +287,7 @@ bool WebBrowser::RunAndWait() {
           CloseHandle(pi.hProcess);
           if (WaitForSingleObject(_browser_started_event, wait_time) ==
               WAIT_OBJECT_0) {
-            DWORD pid = GetBrowserProcessId();
+            DWORD pid = g_shared->BrowserProcessId();
             if (pid) {
               _browser_process = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE,
                                              FALSE, pid);
@@ -331,7 +331,7 @@ bool WebBrowser::RunAndWait() {
       LeaveCriticalSection(&cs);
       TerminateProcessesByName(PathFindFileName((LPCTSTR)_browser._exe));
 
-      SetBrowserExe(NULL);
+      g_shared->SetBrowserExe(NULL);
       ResetIpfw();
 
     } else {

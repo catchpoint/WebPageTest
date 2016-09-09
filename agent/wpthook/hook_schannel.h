@@ -48,7 +48,7 @@ private:
   TestState& _test_state;
   TrackSockets& _sockets;
   WptTestHook& _test;
-  NCodeHookIA32* _hook;
+  CodeHook* _hook;
 
   // original functions
   INITIALIZE_SECURITY_CONTEXT_FN_W  InitializeSecurityContextW_;

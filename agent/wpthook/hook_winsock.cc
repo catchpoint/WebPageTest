@@ -26,7 +26,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-// WsHook.cpp - Code for intercepting winsock API calls
+// Ws_hook->cpp - Code for intercepting winsock API calls
 
 #include "StdAfx.h"
 #include "hook_winsock.h"
@@ -276,51 +276,53 @@ CWsHook::CWsHook(TrackDns& dns, TrackSockets& sockets, TestState& test_state):
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void CWsHook::Init() {
-  if (!pHook)
-    pHook = this;
+  if (_hook || pHook)
+    return;
+  _hook = new CodeHook();
+  pHook = this;
 
   // install the code hooks
-  _WSASocketW = hook.createHookByName("ws2_32.dll", "WSASocketW", 
+  _WSASocketW = _hook->createHookByName("ws2_32.dll", "WSASocketW", 
                                       WSASocketW_Hook);
-  _closesocket = hook.createHookByName("ws2_32.dll", "closesocket", 
+  _closesocket = _hook->createHookByName("ws2_32.dll", "closesocket", 
                                        closesocket_Hook);
-  _connect = hook.createHookByName("ws2_32.dll", "connect", connect_Hook);
-  _recv = hook.createHookByName("ws2_32.dll", "recv", recv_Hook);
-  _send = hook.createHookByName("ws2_32.dll", "send", send_Hook);
-  _select = hook.createHookByName("ws2_32.dll", "select", select_Hook);
-  _GetAddrInfoW = hook.createHookByName("ws2_32.dll", "GetAddrInfoW", 
+  _connect = _hook->createHookByName("ws2_32.dll", "connect", connect_Hook);
+  _recv = _hook->createHookByName("ws2_32.dll", "recv", recv_Hook);
+  _send = _hook->createHookByName("ws2_32.dll", "send", send_Hook);
+  _select = _hook->createHookByName("ws2_32.dll", "select", select_Hook);
+  _GetAddrInfoW = _hook->createHookByName("ws2_32.dll", "GetAddrInfoW", 
                                         GetAddrInfoW_Hook);
-  _gethostbyname = hook.createHookByName("ws2_32.dll", "gethostbyname", 
+  _gethostbyname = _hook->createHookByName("ws2_32.dll", "gethostbyname", 
                                          gethostbyname_Hook);
-  _GetAddrInfoExA = hook.createHookByName("ws2_32.dll", "GetAddrInfoExA", 
+  _GetAddrInfoExA = _hook->createHookByName("ws2_32.dll", "GetAddrInfoExA", 
                                           GetAddrInfoExA_Hook);
-  _GetAddrInfoExW = hook.createHookByName("ws2_32.dll", "GetAddrInfoExW", 
+  _GetAddrInfoExW = _hook->createHookByName("ws2_32.dll", "GetAddrInfoExW", 
                                           GetAddrInfoExW_Hook);
-  _WSARecv = hook.createHookByName("ws2_32.dll", "WSARecv", WSARecv_Hook);
-  _WSASend = hook.createHookByName("ws2_32.dll", "WSASend", WSASend_Hook);
-  _WSAGetOverlappedResult = hook.createHookByName("ws2_32.dll", 
+  _WSARecv = _hook->createHookByName("ws2_32.dll", "WSARecv", WSARecv_Hook);
+  _WSASend = _hook->createHookByName("ws2_32.dll", "WSASend", WSASend_Hook);
+  _WSAGetOverlappedResult = _hook->createHookByName("ws2_32.dll", 
       "WSAGetOverlappedResult", WSAGetOverlappedResult_Hook);
-  _WSAEventSelect = hook.createHookByName("ws2_32.dll", "WSAEventSelect",
+  _WSAEventSelect = _hook->createHookByName("ws2_32.dll", "WSAEventSelect",
                                           WSAEventSelect_Hook);
-  _WSAEnumNetworkEvents = hook.createHookByName("ws2_32.dll",
+  _WSAEnumNetworkEvents = _hook->createHookByName("ws2_32.dll",
       "WSAEnumNetworkEvents", WSAEnumNetworkEvents_Hook);
-  _CreateThreadpoolIo = hook.createHookByName("kernel32.dll",
+  _CreateThreadpoolIo = _hook->createHookByName("kernel32.dll",
       "CreateThreadpoolIo", CreateThreadpoolIo_Hook);
-  _CreateThreadpoolIo_base = hook.createHookByName("kernelbase.dll",
+  _CreateThreadpoolIo_base = _hook->createHookByName("kernelbase.dll",
       "CreateThreadpoolIo", CreateThreadpoolIo_base_Hook);
-  _CloseThreadpoolIo = hook.createHookByName("kernelbase.dll",
+  _CloseThreadpoolIo = _hook->createHookByName("kernelbase.dll",
       "CloseThreadpoolIo", CloseThreadpoolIo_Hook);
-  _CloseThreadpoolIo_base = hook.createHookByName("kernel32.dll",
+  _CloseThreadpoolIo_base = _hook->createHookByName("kernel32.dll",
       "CloseThreadpoolIo", CloseThreadpoolIo_base_Hook);
-  _StartThreadpoolIo = hook.createHookByName("kernelbase.dll",
+  _StartThreadpoolIo = _hook->createHookByName("kernelbase.dll",
       "StartThreadpoolIo", StartThreadpoolIo_Hook);
-  _StartThreadpoolIo_base = hook.createHookByName("kernel32.dll",
+  _StartThreadpoolIo_base = _hook->createHookByName("kernel32.dll",
       "StartThreadpoolIo", StartThreadpoolIo_base_Hook);
-  _WSAIoctl = hook.createHookByName("ws2_32.dll", "WSAIoctl", WSAIoctl_Hook);
+  _WSAIoctl = _hook->createHookByName("ws2_32.dll", "WSAIoctl", WSAIoctl_Hook);
 
   // only hook the A version if the W version wasn't present (XP SP1 or below)
   if (!_GetAddrInfoW)
-    _getaddrinfo = hook.createHookByName("ws2_32.dll", "getaddrinfo", 
+    _getaddrinfo = _hook->createHookByName("ws2_32.dll", "getaddrinfo", 
                                          getaddrinfo_Hook);
 }
 
@@ -329,6 +331,8 @@ void CWsHook::Init() {
 CWsHook::~CWsHook(void) {
   if( pHook == this )
     pHook = NULL;
+  if (_hook)
+    delete _hook;
 
   EnterCriticalSection(&cs);
   _send_buffers.RemoveAll();

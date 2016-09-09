@@ -308,7 +308,7 @@ void ChromeSSLHook::Init() {
 
   // To be safe, only hook if we find EXACTLY one match
   if (match_count == 1 && methods_addr) {
-    hook_ = new NCodeHookIA32();
+    hook_ = new CodeHook();
     g_hook = this; 
 
     ATLTRACE("Overwriting Chrome ssl methods structure (signature %d) at 0x%08X", signature, (DWORD)methods_addr);

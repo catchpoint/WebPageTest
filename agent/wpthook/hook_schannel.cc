@@ -107,7 +107,7 @@ void SchannelHook::Init() {
   if (_hook || g_hook) {
     return;
   }
-  _hook = new NCodeHookIA32();
+  _hook = new CodeHook();
   g_hook = this;
   WptTrace(loglevel::kProcess, _T("[wpthook] SchannelHook::Init()\n"));
   InitializeSecurityContextW_ = _hook->createHookByName(

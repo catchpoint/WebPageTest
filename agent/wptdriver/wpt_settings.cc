@@ -116,7 +116,6 @@ bool WptSettings::Load(void) {
   #else
   _debug = GetPrivateProfileInt(_T("WebPagetest"), _T("Debug"),_debug,iniFile);
   #endif
-  SetDebugLevel(_debug, logFile);
 
   // load the test parameters
   _timeout = GetPrivateProfileInt(_T("WebPagetest"), _T("Time Limit"),
@@ -139,7 +138,7 @@ bool WptSettings::Load(void) {
   }
 
 
-  SetTestTimeout(_timeout * SECONDS_TO_MS);
+  g_shared->SetTestTimeout(_timeout * SECONDS_TO_MS);
   if (_server.GetLength() && _location.GetLength()) {
     if( _server.Right(1) != '/' )
       _server += "/";

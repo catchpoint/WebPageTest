@@ -89,7 +89,7 @@ private:
   TestState& _test_state;
   TrackSockets& _sockets;
   WptTest& _test;
-  NCodeHookIA32* _hook;
+  CodeHook* _hook;
   CAtlMap<HINTERNET, INTERNET_STATUS_CALLBACK>	_status_callbacks;
   CAtlMap<HINTERNET, HINTERNET>	_parents;
   CAtlMap<HINTERNET, CString>	  _host_names;

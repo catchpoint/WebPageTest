@@ -230,9 +230,6 @@
     <ClInclude Include="nspr\prtypes.h">
       <Filter>Third-Party\nspr</Filter>
     </ClInclude>
-    <ClInclude Include="wpthook_dll.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="cdn.h">
       <Filter>Source Files</Filter>
     </ClInclude>

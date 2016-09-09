@@ -103,6 +103,9 @@
     <ClCompile Include="zlib\contrib\minizip\zip.c">
       <Filter>Third-Party\zlib\minizip</Filter>
     </ClCompile>
+    <ClCompile Include="..\wpthook\shared_mem.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -203,6 +206,9 @@
     </ClInclude>
     <ClInclude Include="zlib\contrib\minizip\zip.h">
       <Filter>Third-Party\zlib\minizip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\shared_mem.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -255,7 +255,7 @@ bool WebPagetest::UploadIncrementalResults(WptTestDriver& test) {
     ret = UploadImages(test, image_files);
     if (ret) {
       ret = UploadData(test, false);
-      SetCPUUtilization(0);
+      g_shared->SetCPUUtilization(0);
     }
   } else {
     DeleteIncrementalResults(test);
@@ -277,7 +277,7 @@ bool WebPagetest::TestDone(WptTestDriver& test){
   ret = UploadImages(test, image_files);
   if (ret) {
     ret = UploadData(test, true);
-    SetCPUUtilization(0);
+    g_shared->SetCPUUtilization(0);
   }
 
   ATLTRACE(_T("[wptdriver] - Test Done"));
@@ -814,7 +814,7 @@ void WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test,
     form_data += CStringA(CT2A(_dns_servers)) + "\r\n";
   }
 
-  int cpu_utilization = GetCPUUtilization();
+  int cpu_utilization = g_shared->CPUUtilization();
   if (cpu_utilization > 0) {
     form_data += CStringA("--") + boundary + "\r\n";
     form_data += "Content-Disposition: form-data; name=\"cpu\"\r\n\r\n";

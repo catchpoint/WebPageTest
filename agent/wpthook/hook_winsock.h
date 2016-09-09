@@ -148,7 +148,7 @@ public:
 
 private:
   TestState&        _test_state;
-  NCodeHookIA32		  hook;
+  CodeHook*		  _hook;
   CRITICAL_SECTION	cs;
 
   // addresses that WE have alocated in case of DNS overrides

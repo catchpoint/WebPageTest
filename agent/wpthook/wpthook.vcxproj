@@ -355,7 +355,6 @@
     <ClInclude Include="wpthook.h" />
     <ClInclude Include="hook_winsock.h" />
     <ClInclude Include="hook_nspr.h" />
-    <ClInclude Include="wpthook_dll.h" />
     <ClInclude Include="wpt_test_hook.h" />
   </ItemGroup>
   <ItemGroup>

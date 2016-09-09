@@ -71,7 +71,7 @@ private:
   TestState& _test_state;
   TrackSockets& _sockets;
   WptTestHook& _test;
-  NCodeHookIA32* _hook;
+  CodeHook* _hook;
 
   template <typename U> void GetFunctionByName(
       const std::string& dll, const std::string& funcName, U& func);

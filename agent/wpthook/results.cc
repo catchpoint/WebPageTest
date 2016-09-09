@@ -29,7 +29,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "StdAfx.h"
 #include "optimization_checks.h"
 #include "results.h"
-#include "shared_mem.h"
 #include "requests.h"
 #include "track_sockets.h"
 #include "track_dns.h"
@@ -144,8 +143,11 @@ void Results::Save(void) {
       SavePriorityStreams();
       _trace.Write(_test_state._file_base + TRACE_FILE);
     }
-    if (shared_result == -1 || shared_result == 0 || shared_result == 99999)
-      shared_result = _test_state._test_result;
+    if (_test_state.shared_.TestResult() == -1 ||
+        _test_state.shared_.TestResult() == 0 ||
+        _test_state.shared_.TestResult() == 99999) {
+      _test_state.shared_.SetTestResult(_test_state._test_result);
+    }
     _saved = true;
   }
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));
@@ -546,7 +548,7 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Connection Type
     result += "\t";
     // Cached
-    if (shared_cleared_cache)
+    if (_test_state.shared_.ClearedCache())
       result += "0\t";
     else
       result += "1\t";
@@ -754,7 +756,7 @@ void Results::SavePageData(OptimizationChecks& checks){
     if (doc_cpu_time > 0.0 && doc_total_time > 0.0) {
       int utilization =
           min((int)(((doc_cpu_time / doc_total_time) * 100) + 0.5), 100);
-      shared_cpu_utilization = utilization;
+      _test_state.shared_.SetCPUUtilization(utilization);
       buff.Format("%d\t", utilization);
       result += buff;
     } else

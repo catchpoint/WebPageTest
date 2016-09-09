@@ -30,7 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "test_state.h"
 #include "results.h"
 #include "screen_capture.h"
-#include "shared_mem.h"
 #include "../wptdriver/util.h"
 #include "cximage/ximage.h"
 #include <Mmsystem.h>
@@ -62,7 +61,8 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   ,_started(false)
   ,received_data_(false)
   ,_viewport_adjusted(false)
-  , reported_step_(0) {
+  , reported_step_(0)
+  , shared_(false) {
   QueryPerformanceCounter(&_launch);
   QueryPerformanceFrequency(&_ms_frequency);
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
@@ -83,7 +83,7 @@ TestState::~TestState(void) {
 -----------------------------------------------------------------------------*/
 void TestState::Init() {
   _winpcap.Initialize();
-  _file_base = shared_results_file_base;
+  _file_base = shared_.ResultsFileBase();
   Reset(false);
 }
 
@@ -175,9 +175,9 @@ void TestState::IncrementStep(void) {
     reported_step_++;
     // for multistep measurements, all following results get a prefix
     if (reported_step_ > 1) {
-      _file_base.Format(_T("%s_%d"), shared_results_file_base, reported_step_);
+      _file_base.Format(_T("%s_%d"), shared_.ResultsFileBase(), reported_step_);
     } else {
-      _file_base = shared_results_file_base;
+      _file_base = shared_.ResultsFileBase();
     }
     // Event name: Either default or set by command
     if (_test._current_event_name.IsEmpty()) {
@@ -218,7 +218,7 @@ void TestState::Start() {
 
   if (!_data_timer) {
     // for repeat view start capturing video immediately
-    if (!shared_cleared_cache)
+    if (!shared_.ClearedCache())
       received_data_ = true;
       
     timeBeginPeriod(1);

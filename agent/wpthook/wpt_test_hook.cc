@@ -1,6 +1,5 @@
 #include "StdAfx.h"
 #include "wpt_test_hook.h"
-#include "shared_mem.h"
 #include "wpthook.h"
 #include "test_state.h"
 
@@ -33,10 +32,11 @@ void WptTestHook::LoadFromFile() {
         if (ReadFile(file, buff, len, &bytes_read, 0)) {
           CString test_data(buff);
           if (Load(test_data)) {
-            _clear_cache = shared_cleared_cache;
-            _run = shared_current_run;
-            has_gpu_ = shared_has_gpu;
-            overrode_ua_string_ = shared_overrode_ua_string;
+            SharedMem shared(false);
+            _clear_cache = shared.ClearedCache();
+            _run = shared.CurrentRun();
+            has_gpu_ = shared.HasGPU();
+            overrode_ua_string_ = shared.OverrodeUAString();
             BuildScript();
           }
         }

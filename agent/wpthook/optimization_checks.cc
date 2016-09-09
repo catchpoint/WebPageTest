@@ -29,7 +29,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "StdAfx.h"
 #include "cdn.h"
 #include "optimization_checks.h"
-#include "shared_mem.h"
 #include "requests.h"
 #include "test_state.h"
 #include "track_dns.h"

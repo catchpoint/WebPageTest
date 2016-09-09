@@ -58,3 +58,5 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <atlstr.h>
 #include <atlcoll.h>
 #include "../wptdriver/util.h"
+#include "shared_mem.h"
+

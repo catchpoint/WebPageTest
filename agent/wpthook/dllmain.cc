@@ -29,7 +29,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "stdafx.h"
 #include "wpthook.h"
-#include "shared_mem.h"
 
 HINSTANCE global_dll_handle = NULL; // DLL handle
 extern WptHook * global_hook;
@@ -73,6 +72,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
         // Don't do anything in 64-bit yet (placeholder for when the code has been tested)
         #else
         TCHAR path[MAX_PATH];
+        SharedMem shared(false);
         if (GetModuleFileName(NULL, path, _countof(path))) {
           TCHAR exe[MAX_PATH];
           lstrcpy(exe, path);
@@ -84,7 +84,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
           }
           if (!lstrcmpi(exe, _T("wptdriver.exe"))) {
             ok = TRUE;
-          } else if(lstrlen(shared_browser_exe) &&
+          } else if(lstrlen(shared.BrowserExe()) &&
                     IsCorrectBrowserProcess(exe)) {
             ok = TRUE;
             global_dll_handle = (HINSTANCE)hModule;
@@ -111,8 +111,8 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 -----------------------------------------------------------------------------*/
 bool IsCorrectBrowserProcess(LPCTSTR exe) {
   bool ok = false;
-
-  if (!lstrcmpi(exe, shared_browser_exe)) {
+  SharedMem shared(false);
+  if (!lstrcmpi(exe, shared.BrowserExe())) {
     LPTSTR cmdline = GetCommandLine();
     if (!lstrcmpi(exe, _T("chrome.exe"))) {
       if (_tcsstr(cmdline, _T("http://127.0.0.1:8888/blank.html")))
@@ -123,7 +123,7 @@ bool IsCorrectBrowserProcess(LPCTSTR exe) {
     } else if (!lstrcmpi(exe, _T("iexplore.exe"))) {
       ok = true;
     }
-  } else if (!lstrcmpi(_T("safari.exe"), shared_browser_exe) &&
+  } else if (!lstrcmpi(_T("safari.exe"), shared.BrowserExe()) &&
              !lstrcmpi(exe, _T("WebKit2WebProcess.exe"))) {
       ok = true;
   }

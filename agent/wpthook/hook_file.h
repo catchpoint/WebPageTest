@@ -28,7 +28,7 @@ public:
 private:
   TestState& _test_state;
   TrackSockets& _sockets;
-  NCodeHookIA32* _hook;
+  CodeHook* _hook;
   CStringW download_path_;
 
   bool IsDownload(LPCWSTR lpFileName);
