@@ -119,6 +119,7 @@ bool WebBrowser::RunAndWait() {
   // signal to the IE BHO that it needs to inject the code
   HANDLE active_event = CreateMutex(&null_dacl, TRUE, GLOBAL_TESTING_MUTEX);
   g_shared->SetOverrodeUAString(false);
+  _browser_needs_reset.Empty();
 
   if (_test.Start() && ConfigureIpfw(_test)) {
     if (_browser._exe.GetLength()) {
@@ -237,7 +238,7 @@ bool WebBrowser::RunAndWait() {
       SetEnvironmentVariable(L"SSLKEYLOGFILE", _test._file_base + L"_keylog.log");
       DeleteFile(_test._file_base + L"_keylog.log");
 
-      _status.Set(_T("Launching: %s\n"), cmdLine);
+      _status.Set(_T("Launching: %s"), cmdLine);
 
       STARTUPINFO si;
       PROCESS_INFORMATION pi;
@@ -815,7 +816,9 @@ void WebBrowser::CreateChromeSymlink() {
     CString newDir = dir + _T(" SxS");
 
     RemoveDirectory(newDir);
-    if (CreateSymbolicLink(newDir, dir, SYMBOLIC_LINK_FLAG_DIRECTORY))
+    if (CreateSymbolicLink(newDir, dir, SYMBOLIC_LINK_FLAG_DIRECTORY)) {
+      _browser_needs_reset = _browser._exe;
       _browser._exe = newDir + "\\Application\\chrome.exe";
+    }
   }
 }

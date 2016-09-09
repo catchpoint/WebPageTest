@@ -173,16 +173,16 @@ void WptDriverCore::WorkThread(void) {
 
     WaitForSingleObject(_testing_mutex, INFINITE);
     Init();  // do initialization and machine configuration
+    _status.Set(_T("Checking for software updates..."));
+    _installing = true;
+    _settings.UpdateSoftware();
+    _installing = false;
     ReleaseMutex(_testing_mutex);
 
     _status.Set(_T("Running..."));
   }
   while (!_exit && !NeedsReboot()) {
     WaitForSingleObject(_testing_mutex, INFINITE);
-    _status.Set(_T("Checking for software updates..."));
-    _installing = true;
-    _settings.UpdateSoftware();
-    _installing = false;
     _status.Set(_T("Checking for work..."));
     WptTestDriver test(_settings._timeout * SECONDS_TO_MS, has_gpu_);
     if (_webpagetest.GetTest(test)) {
@@ -247,7 +247,23 @@ void WptDriverCore::WorkThread(void) {
       PostTest();
       ReleaseMutex(_testing_mutex);
     } else {
+      // Launch and exit any browsers that need their state cleared
+      while (!reset_browsers.IsEmpty()) {
+        CString exe = reset_browsers.RemoveHead();
+        HANDLE process = NULL;
+        LaunchProcess(exe, &process);
+        if (process) {
+          WaitForInputIdle(process, 10000);
+          CloseHandle(process);
+        }
+        Sleep(5000);
+        KillBrowsers();
+      }
       ReleaseMutex(_testing_mutex);
+      _status.Set(_T("Checking for software updates..."));
+      _installing = true;
+      _settings.UpdateSoftware();
+      _installing = false;
       _status.Set(_T("Waiting for work..."));
       int delay = _settings._polling_delay * SECONDS_TO_MS;
       while (!_exit && delay > 0) {
@@ -302,6 +318,24 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
   ShowCursor(FALSE);
   ret = browser.RunAndWait();
   ShowCursor(TRUE);
+
+  // See if we need to add the browser exe to the list of browsers
+  // we need to launch and kill.
+  if (!browser._browser_needs_reset.IsEmpty()) {
+    bool found = false;
+    if (!reset_browsers.IsEmpty()) {
+      POSITION pos = reset_browsers.GetHeadPosition();
+      while (pos) {
+        CString exe = reset_browsers.GetNext(pos);
+        if (exe == browser._browser_needs_reset) {
+          found = true;
+          break;
+        }
+      }
+    }
+    if (!found)
+      reset_browsers.AddTail(browser._browser_needs_reset);
+  }
 
   _webpagetest.UploadIncrementalResults(test);
   KillBrowsers();
