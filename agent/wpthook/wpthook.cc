@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "stdafx.h"
 #include "wpthook.h"
 #include "window_messages.h"
+#include "MinHook.h"
 
 WptHook * global_hook = NULL;
 extern HINSTANCE global_dll_handle;
@@ -119,6 +120,10 @@ void WptHook::Init(){
   //MessageBox(NULL, L"Attach Debugger", L"Attach Debugger", MB_OK);
 #endif
   test_.LoadFromFile();
+
+  // Initialize the API hooking library
+  MH_Initialize();
+
   if (!test_state_.gdi_only_) {
     file_hook_.Init();
     winsock_hook_.Init();

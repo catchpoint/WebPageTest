@@ -28,6 +28,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
+#include <stdint.h>
+
 #ifdef _WIN64
 class TestState;
 class TrackSockets;
@@ -40,7 +42,6 @@ public:
   void Init(){}
 };
 #else
-#include "ncodehook/NCodeHookInstantiation.h"
 
 class TestState;
 class TrackSockets;
@@ -73,7 +74,6 @@ private:
   TestState& test_state_;
   TrackSockets& sockets_;
   WptTestHook& test_;
-  CodeHook* hook_;
   CRITICAL_SECTION cs;
 
   PFN_SSL3_NEW              New_;

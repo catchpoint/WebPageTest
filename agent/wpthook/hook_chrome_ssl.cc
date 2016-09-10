@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "test_state.h"
 #include "track_sockets.h"
 #include "wpt_test_hook.h"
+#include "MinHook.h"
 
 #include "hook_chrome_ssl.h"
 #ifndef _WIN64
@@ -186,7 +187,6 @@ ChromeSSLHook::ChromeSSLHook(TrackSockets& sockets, TestState& test_state,
     sockets_(sockets),
     test_state_(test_state),
     test_(test),
-    hook_(NULL),
     New_(NULL),
     Free_(NULL),
     Connect_(NULL),
@@ -198,10 +198,8 @@ ChromeSSLHook::ChromeSSLHook(TrackSockets& sockets, TestState& test_state,
 }
 
 ChromeSSLHook::~ChromeSSLHook() {
-  if (g_hook == this) {
+  if (g_hook == this)
     g_hook = NULL;
-  }
-  delete hook_;  // remove all the hooks
   DeleteCriticalSection(&cs);
 }
 
@@ -210,13 +208,10 @@ ChromeSSLHook::~ChromeSSLHook() {
 -----------------------------------------------------------------------------*/
 void ChromeSSLHook::Init() {
   EnterCriticalSection(&cs);
-  if (hook_ || g_hook) {
+  if (g_hook) {
     LeaveCriticalSection(&cs);
     return;
   }
-  #ifdef _WIN64
-  return;
-  #endif
 
   // only install for chrome.exe
   TCHAR path[MAX_PATH];
@@ -311,43 +306,25 @@ void ChromeSSLHook::Init() {
 
   // To be safe, only hook if we find EXACTLY one match
   if (match_count == 1 && methods_addr) {
-    hook_ = new CodeHook();
     g_hook = this; 
 
     ATLTRACE("Overwriting Chrome ssl methods structure (signature %d) at 0x%08X", signature, (DWORD)methods_addr);
 
     // Hook the functions now that we have in-memory addresses for them
-    New_ = (PFN_SSL3_NEW)hook_->createHook(
-        (PFN_SSL3_NEW)methods_addr[methods_signatures[signature].ssl_new_index],
-        New_Hook);
-    Free_ = (PFN_SSL3_FREE)hook_->createHook(
-        (PFN_SSL3_FREE)methods_addr[methods_signatures[signature].ssl_free_index],
-        Free_Hook);
-    if (methods_signatures[signature].ssl_connect_index) {
-      ATLTRACE("Hooking Connect");
-      Connect_ = (PFN_SSL3_CONNECT)hook_->createHook(
-          (PFN_SSL3_CONNECT)methods_addr[methods_signatures[signature].ssl_connect_index],
-          Connect_Hook);
-    }
-    if (methods_signatures[signature].ssl_begin_handshake_index) {
-      ATLTRACE("Hooking BeginHandshake");
-      BeginHandshake_ = (PFN_SSL3_BEGIN_HANDSHAKE)hook_->createHook(
-          (PFN_SSL3_BEGIN_HANDSHAKE)methods_addr[methods_signatures[signature].ssl_begin_handshake_index],
-          BeginHandshake_Hook);
-    }
-    if (methods_signatures[signature].ssl_read_app_data_old_index) {
-      ReadAppDataOld_ = (PFN_SSL3_READ_APP_DATA_OLD)hook_->createHook(
-          (PFN_SSL3_READ_APP_DATA_OLD)methods_addr[methods_signatures[signature].ssl_read_app_data_old_index],
-          ReadAppDataOld_Hook);
-    }
-    if (methods_signatures[signature].ssl_read_app_data_index) {
-      ReadAppData_ = (PFN_SSL3_READ_APP_DATA)hook_->createHook(
-          (PFN_SSL3_READ_APP_DATA)methods_addr[methods_signatures[signature].ssl_read_app_data_index],
-          ReadAppData_Hook);
-    }
-    WriteAppData_ = (PFN_SSL3_WRITE_APP_DATA)hook_->createHook(
-        (PFN_SSL3_WRITE_APP_DATA)methods_addr[methods_signatures[signature].ssl_write_app_data_index],
-        WriteAppData_Hook);
+    MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_new_index], New_Hook, (LPVOID *)&New_);
+    MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_free_index], Free_Hook, (LPVOID *)&Free_);
+    if (methods_signatures[signature].ssl_connect_index)
+      MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_connect_index], Connect_Hook, (LPVOID *)&Connect_);
+    if (methods_signatures[signature].ssl_begin_handshake_index)
+      MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_begin_handshake_index], BeginHandshake_Hook, (LPVOID *)&BeginHandshake_);
+    if (methods_signatures[signature].ssl_read_app_data_old_index)
+      MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_read_app_data_old_index], ReadAppDataOld_Hook, (LPVOID *)&ReadAppDataOld_);
+    if (methods_signatures[signature].ssl_read_app_data_index)
+      MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_read_app_data_index], ReadAppData_Hook, (LPVOID *)&ReadAppData_);
+    MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_write_app_data_index], WriteAppData_Hook, (LPVOID *)&WriteAppData_);
+
+    MH_EnableHook(MH_ALL_HOOKS);
+
   } else if (match_count > 1) {
     g_hook = this; 
     ATLTRACE("Too many Chrome ssl methods structures found (%d matches)", match_count);

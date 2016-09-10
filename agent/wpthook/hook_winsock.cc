@@ -34,10 +34,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "track_dns.h"
 #include "track_sockets.h"
 #include "test_state.h"
+#include "MinHook.h"
 
 static CWsHook * pHook = NULL;
 
-#define TRACE_WINSOCK 1
+//#define TRACE_WINSOCK 1
 
 /******************************************************************************
 *******************************************************************************
@@ -262,7 +263,6 @@ CWsHook::CWsHook(TrackDns& dns, TrackSockets& sockets, TestState& test_state):
   _getaddrinfo(NULL)
   , _dns(dns)
   , _sockets(sockets)
-  , _hook(NULL)
   , _test_state(test_state) {
   _recv_buffers.InitHashTable(257);
   _send_buffers.InitHashTable(257);
@@ -277,56 +277,46 @@ CWsHook::CWsHook(TrackDns& dns, TrackSockets& sockets, TestState& test_state):
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void CWsHook::Init() {
-  if (_hook || pHook)
+  if (pHook)
     return;
-  _hook = new CodeHook();
   pHook = this;
 
   WptTrace(loglevel::kProcess, _T("[wpthook] CWsHook::Init()"));
 
   // install the code hooks
-  _WSASocketW = _hook->createHookByName("ws2_32.dll", "WSASocketW", 
-                                      WSASocketW_Hook);
-  _closesocket = _hook->createHookByName("ws2_32.dll", "closesocket", 
-                                       closesocket_Hook);
-  _connect = _hook->createHookByName("ws2_32.dll", "connect", connect_Hook);
-  _recv = _hook->createHookByName("ws2_32.dll", "recv", recv_Hook);
-  _send = _hook->createHookByName("ws2_32.dll", "send", send_Hook);
-  _select = _hook->createHookByName("ws2_32.dll", "select", select_Hook);
-  _GetAddrInfoW = _hook->createHookByName("ws2_32.dll", "GetAddrInfoW", 
-                                        GetAddrInfoW_Hook);
-  _gethostbyname = _hook->createHookByName("ws2_32.dll", "gethostbyname", 
-                                         gethostbyname_Hook);
-  _GetAddrInfoExA = _hook->createHookByName("ws2_32.dll", "GetAddrInfoExA", 
-                                          GetAddrInfoExA_Hook);
-  _GetAddrInfoExW = _hook->createHookByName("ws2_32.dll", "GetAddrInfoExW", 
-                                          GetAddrInfoExW_Hook);
-  _WSARecv = _hook->createHookByName("ws2_32.dll", "WSARecv", WSARecv_Hook);
-  _WSASend = _hook->createHookByName("ws2_32.dll", "WSASend", WSASend_Hook);
-  _WSAGetOverlappedResult = _hook->createHookByName("ws2_32.dll", 
-      "WSAGetOverlappedResult", WSAGetOverlappedResult_Hook);
-  _WSAEventSelect = _hook->createHookByName("ws2_32.dll", "WSAEventSelect",
-                                          WSAEventSelect_Hook);
-  _WSAEnumNetworkEvents = _hook->createHookByName("ws2_32.dll",
-      "WSAEnumNetworkEvents", WSAEnumNetworkEvents_Hook);
-  _CreateThreadpoolIo = _hook->createHookByName("kernel32.dll",
-      "CreateThreadpoolIo", CreateThreadpoolIo_Hook);
-  _CreateThreadpoolIo_base = _hook->createHookByName("kernelbase.dll",
-      "CreateThreadpoolIo", CreateThreadpoolIo_base_Hook);
-  _CloseThreadpoolIo = _hook->createHookByName("kernelbase.dll",
-      "CloseThreadpoolIo", CloseThreadpoolIo_Hook);
-  _CloseThreadpoolIo_base = _hook->createHookByName("kernel32.dll",
-      "CloseThreadpoolIo", CloseThreadpoolIo_base_Hook);
-  _StartThreadpoolIo = _hook->createHookByName("kernelbase.dll",
-      "StartThreadpoolIo", StartThreadpoolIo_Hook);
-  _StartThreadpoolIo_base = _hook->createHookByName("kernel32.dll",
-      "StartThreadpoolIo", StartThreadpoolIo_base_Hook);
-  _WSAIoctl = _hook->createHookByName("ws2_32.dll", "WSAIoctl", WSAIoctl_Hook);
-
+  LoadLibrary(_T("ws2_32.dll"));
+  MH_CreateHookApi(L"ws2_32.dll", "WSASocketW", WSASocketW_Hook, (LPVOID *)&_WSASocketW);
+  MH_CreateHookApi(L"ws2_32.dll", "closesocket", closesocket_Hook, (LPVOID *)&_closesocket);
+  MH_CreateHookApi(L"ws2_32.dll", "connect", connect_Hook, (LPVOID *)&_connect);
+  MH_CreateHookApi(L"ws2_32.dll", "recv", recv_Hook, (LPVOID *)&_recv);
+  MH_CreateHookApi(L"ws2_32.dll", "send", send_Hook, (LPVOID *)&_send);
+  MH_CreateHookApi(L"ws2_32.dll", "select", select_Hook, (LPVOID *)&_select);
+  MH_CreateHookApi(L"ws2_32.dll", "GetAddrInfoW", GetAddrInfoW_Hook, (LPVOID *)&_GetAddrInfoW);
+  MH_CreateHookApi(L"ws2_32.dll", "gethostbyname", gethostbyname_Hook, (LPVOID *)&_gethostbyname);
+  MH_CreateHookApi(L"ws2_32.dll", "GetAddrInfoExA", GetAddrInfoExA_Hook, (LPVOID *)&_GetAddrInfoExA);
+  MH_CreateHookApi(L"ws2_32.dll", "GetAddrInfoExW", GetAddrInfoExW_Hook, (LPVOID *)&_GetAddrInfoExW);
+  MH_CreateHookApi(L"ws2_32.dll", "WSARecv", WSARecv_Hook, (LPVOID *)&_WSARecv);
+  MH_CreateHookApi(L"ws2_32.dll", "WSASend", WSASend_Hook, (LPVOID *)&_WSASend);
+  MH_CreateHookApi(L"ws2_32.dll", "WSAGetOverlappedResult", WSAGetOverlappedResult_Hook, (LPVOID *)&_WSAGetOverlappedResult);
+  MH_CreateHookApi(L"ws2_32.dll", "WSAEventSelect", WSAEventSelect_Hook, (LPVOID *)&_WSAEventSelect);
+  MH_CreateHookApi(L"ws2_32.dll", "WSAEnumNetworkEvents", WSAEnumNetworkEvents_Hook, (LPVOID *)&_WSAEnumNetworkEvents);
+  MH_CreateHookApi(L"ws2_32.dll", "WSAIoctl", WSAIoctl_Hook, (LPVOID *)&_WSAIoctl);
   // only hook the A version if the W version wasn't present (XP SP1 or below)
   if (!_GetAddrInfoW)
-    _getaddrinfo = _hook->createHookByName("ws2_32.dll", "getaddrinfo", 
-                                         getaddrinfo_Hook);
+    MH_CreateHookApi(L"ws2_32.dll", "getaddrinfo", getaddrinfo_Hook, (LPVOID *)&_getaddrinfo);
+
+  LoadLibrary(_T("kernel32.dll"));
+  MH_CreateHookApi(L"kernel32.dll", "CreateThreadpoolIo", CreateThreadpoolIo_Hook, (LPVOID *)&_CreateThreadpoolIo);
+  MH_CreateHookApi(L"kernel32.dll", "CloseThreadpoolIo", CloseThreadpoolIo_Hook, (LPVOID *)&_CloseThreadpoolIo);
+  MH_CreateHookApi(L"kernel32.dll", "StartThreadpoolIo", StartThreadpoolIo_Hook, (LPVOID *)&_StartThreadpoolIo);
+
+  LoadLibrary(_T("kernelbase.dll"));
+  MH_CreateHookApi(L"kernelbase.dll", "CreateThreadpoolIo", CreateThreadpoolIo_base_Hook, (LPVOID *)&_CreateThreadpoolIo_base);
+  MH_CreateHookApi(L"kernelbase.dll", "CloseThreadpoolIo", CloseThreadpoolIo_base_Hook, (LPVOID *)&_CloseThreadpoolIo_base);
+  MH_CreateHookApi(L"kernelbase.dll", "StartThreadpoolIo", StartThreadpoolIo_base_Hook, (LPVOID *)&_StartThreadpoolIo_base);
+
+  // Enable the hooks
+  MH_EnableHook(MH_ALL_HOOKS);
 }
 
 /*-----------------------------------------------------------------------------
@@ -334,8 +324,6 @@ void CWsHook::Init() {
 CWsHook::~CWsHook(void) {
   if( pHook == this )
     pHook = NULL;
-  if (_hook)
-    delete _hook;
 
   EnterCriticalSection(&cs);
   _send_buffers.RemoveAll();
@@ -350,6 +338,9 @@ CWsHook::~CWsHook(void) {
 SOCKET CWsHook::WSASocketW(int af, int type, int protocol, 
                   LPWSAPROTOCOL_INFOW lpProtocolInfo, GROUP g, DWORD dwFlags) {
   SOCKET ret = INVALID_SOCKET;
+#ifdef TRACE_WINSOCK
+  ATLTRACE(_T("CWsHook::WSASocketW"));
+#endif
   _sockets.ResetSslFd();
   if (_WSASocketW) {
     ret = _WSASocketW(af, type, protocol, lpProtocolInfo, g, dwFlags);

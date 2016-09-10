@@ -28,8 +28,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include "ncodehook/NCodeHookInstantiation.h"
-
 class TrackDns;
 class TrackSockets;
 class TestState;
@@ -148,7 +146,6 @@ public:
 
 private:
   TestState&        _test_state;
-  CodeHook*		  _hook;
   CRITICAL_SECTION	cs;
 
   // addresses that WE have alocated in case of DNS overrides
