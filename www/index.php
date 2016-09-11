@@ -269,7 +269,7 @@ $loc = ParseLocations($locations);
                                             $runs = (int)$req_runs;
                                         $runs = max(1, min($runs, $settings['maxruns']));
                                         ?>
-                                        <input id="number_of_tests" type="number" min="1" max=<?php echo "\"$settings['maxruns']\"" ?> class="text short" name="runs" value=<?php echo "\"$runs\""; ?>>
+                                        <input id="number_of_tests" type="number" min="1" max=<?php echo "\"$settings['maxruns']\""; ?> class="text short" name="runs" value=<?php echo "\"$runs\""; ?>>
                                     </li>
                                     <li>
                                         <label for="viewBoth">
