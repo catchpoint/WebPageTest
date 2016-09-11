@@ -602,7 +602,7 @@ copy_buffer (j_compress_ptr cinfo, int scan_idx)
   {
     MEMCOPY(cinfo->dest->next_output_byte, src, cinfo->dest->free_in_buffer);
     src += cinfo->dest->free_in_buffer;
-    size -= cinfo->dest->free_in_buffer;
+    size -= (unsigned long)cinfo->dest->free_in_buffer;
     cinfo->dest->next_output_byte += cinfo->dest->free_in_buffer;
     cinfo->dest->free_in_buffer = 0;
     

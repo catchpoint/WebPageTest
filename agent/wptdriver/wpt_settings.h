@@ -114,6 +114,7 @@ public:
   CString _web_page_replay_host;
   CString _ini_file;
   CString _ec2_instance;
+  CString _ec2_availability_zone;
   CString _azure_instance;
   CString _clients_directory;
   BOOL _requireValidCertificate;

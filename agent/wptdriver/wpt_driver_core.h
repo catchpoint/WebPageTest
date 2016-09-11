@@ -57,6 +57,7 @@ private:
   bool TracerouteTest(WptTestDriver& test);
   bool BrowserTest(WptTestDriver& test, WebBrowser &browser);
   bool SetupWebPageReplay(WptTestDriver& test, WebBrowser &browser);
+  void ResetBrowsers();
   void Init(void);
   void Cleanup(void);
   void FlushDNS(void);
@@ -70,6 +71,7 @@ private:
   void PreTest();
   void PostTest();
   bool Startup();
-  LPTSTR GetAppInitString(LPCTSTR new_dll);
+  LPTSTR GetAppInitString(LPCTSTR new_dll, bool is64bit);
   bool NeedsReboot();
+  CAtlList<CString> reset_browsers;
 };

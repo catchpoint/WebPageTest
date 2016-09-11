@@ -189,6 +189,7 @@ public:
   CString                  _file_base;         // Base path for writing results files
   int reported_step_;
   CStringA  current_step_name_;
+  SharedMem shared_;
 
 private:
   bool  _first_request_sent;

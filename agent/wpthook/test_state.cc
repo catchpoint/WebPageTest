@@ -30,7 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "test_state.h"
 #include "results.h"
 #include "screen_capture.h"
-#include "shared_mem.h"
 #include "../wptdriver/util.h"
 #include "cximage/ximage.h"
 #include <Mmsystem.h>
@@ -62,7 +61,8 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   ,_started(false)
   ,received_data_(false)
   ,_viewport_adjusted(false)
-  , reported_step_(0) {
+  , reported_step_(0)
+  , shared_(false) {
   QueryPerformanceCounter(&_launch);
   QueryPerformanceFrequency(&_ms_frequency);
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
@@ -83,7 +83,7 @@ TestState::~TestState(void) {
 -----------------------------------------------------------------------------*/
 void TestState::Init() {
   _winpcap.Initialize();
-  _file_base = shared_results_file_base;
+  _file_base = shared_.ResultsFileBase();
   Reset(false);
 }
 
@@ -92,18 +92,8 @@ void TestState::Init() {
 void TestState::Reset(bool cascade) {
   EnterCriticalSection(&_data_cs);
   _step_start.QuadPart = 0;
-  _dom_interactive = 0;
-  _dom_loading = 0;
-  _dom_content_loaded_event_start = 0;
-  _dom_content_loaded_event_end = 0;
-  _load_event_start = 0;
-  _load_event_end = 0;
-  _first_paint = 0;
-  _on_load.QuadPart = 0;
   _fixed_viewport = -1;
-  _dom_element_count = 0;
   _is_responsive = -1;
-  _viewport_specified = -1;
   if (cascade && _test._combine_steps) {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
@@ -124,6 +114,8 @@ void TestState::Reset(bool cascade) {
     _video_capture_count = 0;
     _start.QuadPart = 0;
     _on_load.QuadPart = 0;
+    _viewport_specified = -1;
+    _dom_element_count = 0;
     _dom_interactive = 0;
     _dom_loading = 0;
     _dom_content_loaded_event_start = 0;
@@ -179,18 +171,20 @@ void __stdcall CollectData(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
   Increment the reported_step, the event name, and the _file_base
 -----------------------------------------------------------------------------*/
 void TestState::IncrementStep(void) {
-  reported_step_++;
-  // for multistep measurements, all following results get a prefix
-  if (reported_step_ > 1) {
-    _file_base.Format(_T("%s_%d"), shared_results_file_base, reported_step_);
-  } else {
-    _file_base = shared_results_file_base;
-  }
-  // Event name: Either default or set by command
-  if (_test._current_event_name.IsEmpty()) {
-    current_step_name_.Format("Step %d", reported_step_);
-  } else {
-    current_step_name_ = _test._current_event_name;
+  if (!_test._combine_steps || !reported_step_) {
+    reported_step_++;
+    // for multistep measurements, all following results get a prefix
+    if (reported_step_ > 1) {
+      _file_base.Format(_T("%s_%d"), shared_.ResultsFileBase(), reported_step_);
+    } else {
+      _file_base = shared_.ResultsFileBase();
+    }
+    // Event name: Either default or set by command
+    if (_test._current_event_name.IsEmpty()) {
+      current_step_name_.Format("Step %d", reported_step_);
+    } else {
+      current_step_name_ = _test._current_event_name;
+    }
   }
 }
 
@@ -224,7 +218,7 @@ void TestState::Start() {
 
   if (!_data_timer) {
     // for repeat view start capturing video immediately
-    if (!shared_cleared_cache)
+    if (!shared_.ClearedCache())
       received_data_ = true;
       
     timeBeginPeriod(1);
@@ -1042,7 +1036,7 @@ void TestState::CollectMemoryStats() {
       mem.cb = sizeof(mem);
       if (GetProcessMemoryInfo(hProc, &mem, sizeof(mem))) {
         // keep track in KB which will limit us to 4TB in a DWORD
-        _working_set_main_proc = mem.WorkingSetSize / 1024;
+        _working_set_main_proc = (DWORD)(mem.WorkingSetSize / 1024);
       }
       CloseHandle(hProc);
     }
@@ -1050,7 +1044,7 @@ void TestState::CollectMemoryStats() {
 
   // Add up the private working sets for all the child procs
   _working_set_child_procs = 0;
-  _process_count = procs.GetCount();
+  _process_count = (DWORD)procs.GetCount();
   if (!procs.IsEmpty()) {
     // This will limit us to 4GB which is fin
     DWORD len = sizeof(ULONG_PTR) + 1000000 * sizeof(PSAPI_WORKING_SET_BLOCK);

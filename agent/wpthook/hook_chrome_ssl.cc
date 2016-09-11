@@ -34,39 +34,42 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "test_state.h"
 #include "track_sockets.h"
 #include "wpt_test_hook.h"
+#include "MinHook.h"
 
 #include "hook_chrome_ssl.h"
-
+#ifndef _WIN64
 static ChromeSSLHook* g_hook = NULL;
 
 /*
 // From Chrome /src/third_party/boringssl/src/ssl/internal.h
-// July 2016
+// August 2016
 struct ssl_protocol_method_st {
-  char is_dtls; // 0 (2 byte padded) - 0
+  char is_dtls;         // 0 (2 byte padded) - 0
   uint16_t min_version; // (2 bytes) - 0
   uint16_t max_version; // (4 bytes padded) - 1
   uint16_t (*version_from_wire)(uint16_t wire_version); // 2
-  uint16_t (*version_to_wire)(uint16_t version); // 3
-  int (*ssl_new)(SSL *ssl); // 4
-  void (*ssl_free)(SSL *ssl); // 5
-  int (*begin_handshake)(SSL *ssl); // 6
-  void (*finish_handshake)(SSL *ssl); // 7
-  int (*ssl_get_message)(SSL *ssl, int msg_type,
-                         enum ssl_hash_message_t hash_message); // 8
-  int (*hash_current_message)(SSL *ssl); // 9
-  int (*read_app_data)(SSL *ssl, uint8_t *buf, int len, int peek); // 10
-  int (*read_change_cipher_spec)(SSL *ssl); // 11
-  void (*read_close_notify)(SSL *ssl); // 12
-  int (*write_app_data)(SSL *ssl, const void *buf_, int len); // 13
-  int (*dispatch_alert)(SSL *ssl); // 14
-  int (*supports_cipher)(const SSL_CIPHER *cipher); // 15
-  int (*init_message)(SSL *ssl, CBB *cbb, CBB *body, uint8_t type); // 16
-  int (*finish_message)(SSL *ssl, CBB *cbb); // 17
-  int (*write_message)(SSL *ssl); // 18
-  int (*send_change_cipher_spec)(SSL *ssl); // 19
-  void (*expect_flight)(SSL *ssl); // 20
-  void (*received_flight)(SSL *ssl);  // 21
+  uint16_t (*version_to_wire)(uint16_t version);        // 3
+  int (*ssl_new)(SSL *ssl);                             // 4
+  void (*ssl_free)(SSL *ssl);                           // 5
+  int (*ssl_get_message)(SSL *ssl, int msg_type,        // 6
+                         enum ssl_hash_message_t hash_message);
+  int (*hash_current_message)(SSL *ssl);                // 7
+  void (*release_current_message)(SSL *ssl, int free_buffer); // 8
+  int (*read_app_data)(SSL *ssl, int *out_got_handshake,  //9
+                       uint8_t *buf, int len, int peek);
+  int (*read_change_cipher_spec)(SSL *ssl);             // 10
+  void (*read_close_notify)(SSL *ssl);                  // 11
+  int (*write_app_data)(SSL *ssl, const void *buf_, int len); // 12
+  int (*dispatch_alert)(SSL *ssl);                      // 13
+  int (*supports_cipher)(const SSL_CIPHER *cipher);     // 14
+  int (*init_message)(SSL *ssl, CBB *cbb, CBB *body, uint8_t type); // 15
+  int (*finish_message)(SSL *ssl, CBB *cbb);            // 16
+  int (*write_message)(SSL *ssl);                       // 17
+  int (*send_change_cipher_spec)(SSL *ssl);             // 18
+  void (*expect_flight)(SSL *ssl);                      // 19
+  void (*received_flight)(SSL *ssl);                    // 20
+  int (*set_read_state)(SSL *ssl, SSL_AEAD_CTX *aead_ctx);  // 21
+  int (*set_write_state)(SSL *ssl, SSL_AEAD_CTX *aead_ctx); // 22
 };
 
 // Nov 2015
@@ -117,22 +120,47 @@ typedef struct {
   DWORD hhlen;
   DWORD hhlen_index;
   DWORD addr_start_index;
+  DWORD ssl_new_index;
+  DWORD ssl_free_index;
   DWORD ssl_connect_index;
   DWORD ssl_begin_handshake_index;
+  DWORD ssl_read_app_data_old_index;
   DWORD ssl_read_app_data_index;
   DWORD ssl_write_app_data_index;
 } SSL_METHODS_SIGNATURE;
 
 static SSL_METHODS_SIGNATURE methods_signatures[] = {
-  {20, 0x03000000, 0x00000304, 1, 2, 0, 6, 10, 13},  // July 2016 - hhlen is switched for ssl max DWORD
-  {15, 0x00000000, 4, 12, 1, 4, 0, 6, 9},  // Nov 2015
-  {14, 0x00000000, 4, 11, 1, 4, 0, 6, 8}   // May 2015
+  // July 2016 - hhlen is switched for ssl max DWORD
+  { 22,         // count
+    0x03000000, // signature
+    0x00000304, // hhlen
+    1,          // hhlen_index
+    2,          // addr_start_index
+    4,          // ssl_new_index
+    5,          // ssl_free_index
+    0,          // ssl_connect_index
+    0,          // ssl_begin_handshake_index
+    0,          // ssl_read_app_data_old_index
+    9,         // ssl_read_app_data_index
+    12},        // ssl_write_app_data_index
+
+  // Nov 2015
+  {15, 0x00000000, 4, 12, 1, 1, 2, 4, 0, 6, 0, 9},
+  {14, 0x00000000, 4, 11, 1, 1, 2, 4, 0, 6, 0, 8}   // May 2015
 };
 
 static const DWORD max_methods_struct_size = 80;
 
 
 // Stub Functions
+int __cdecl New_Hook(void *ssl) {
+  return g_hook ? g_hook->New(ssl) : -1;
+}
+
+void __cdecl Free_Hook(void *ssl) {
+  if (g_hook) g_hook->Free(ssl);
+}
+
 int __cdecl Connect_Hook(void *ssl) {
   return g_hook ? g_hook->Connect(ssl) : -1;
 }
@@ -141,8 +169,12 @@ int __cdecl BeginHandshake_Hook(void *ssl) {
   return g_hook ? g_hook->BeginHandshake(ssl) : 0;
 }
 
-int __cdecl ReadAppData_Hook(void *ssl, uint8_t *buf, int len, int peek) {
-  return g_hook ? g_hook->ReadAppData(ssl, buf, len, peek) : -1;
+int __cdecl ReadAppDataOld_Hook(void *ssl, uint8_t *buf, int len, int peek) {
+  return g_hook ? g_hook->ReadAppDataOld(ssl, buf, len, peek) : -1;
+}
+
+int __cdecl ReadAppData_Hook(void *ssl, int *out_got_handshake, uint8_t *buf, int len, int peek) {
+  return g_hook ? g_hook->ReadAppData(ssl, out_got_handshake, buf, len, peek) : -1;
 }
 
 int __cdecl WriteAppData_Hook(void *ssl, const void *buf, int len) {
@@ -155,19 +187,19 @@ ChromeSSLHook::ChromeSSLHook(TrackSockets& sockets, TestState& test_state,
     sockets_(sockets),
     test_state_(test_state),
     test_(test),
-    hook_(NULL),
+    New_(NULL),
+    Free_(NULL),
     Connect_(NULL),
     BeginHandshake_(NULL),
+    ReadAppDataOld_(NULL),
     ReadAppData_(NULL),
     WriteAppData_(NULL) {
   InitializeCriticalSection(&cs);
 }
 
 ChromeSSLHook::~ChromeSSLHook() {
-  if (g_hook == this) {
+  if (g_hook == this)
     g_hook = NULL;
-  }
-  delete hook_;  // remove all the hooks
   DeleteCriticalSection(&cs);
 }
 
@@ -176,7 +208,7 @@ ChromeSSLHook::~ChromeSSLHook() {
 -----------------------------------------------------------------------------*/
 void ChromeSSLHook::Init() {
   EnterCriticalSection(&cs);
-  if (hook_ || g_hook) {
+  if (g_hook) {
     LeaveCriticalSection(&cs);
     return;
   }
@@ -274,30 +306,25 @@ void ChromeSSLHook::Init() {
 
   // To be safe, only hook if we find EXACTLY one match
   if (match_count == 1 && methods_addr) {
-    hook_ = new NCodeHookIA32();
     g_hook = this; 
 
     ATLTRACE("Overwriting Chrome ssl methods structure (signature %d) at 0x%08X", signature, (DWORD)methods_addr);
 
     // Hook the functions now that we have in-memory addresses for them
-    if (methods_signatures[signature].ssl_connect_index) {
-      ATLTRACE("Hooking Connect");
-      Connect_ = (PFN_SSL3_CONNECT)hook_->createHook(
-          (PFN_SSL3_CONNECT)methods_addr[methods_signatures[signature].ssl_connect_index],
-          Connect_Hook);
-    }
-    if (methods_signatures[signature].ssl_begin_handshake_index) {
-      ATLTRACE("Hooking BeginHandshake");
-      BeginHandshake_ = (PFN_SSL3_BEGIN_HANDSHAKE)hook_->createHook(
-          (PFN_SSL3_BEGIN_HANDSHAKE)methods_addr[methods_signatures[signature].ssl_begin_handshake_index],
-          BeginHandshake_Hook);
-    }
-    ReadAppData_ = (PFN_SSL3_READ_APP_DATA)hook_->createHook(
-        (PFN_SSL3_READ_APP_DATA)methods_addr[methods_signatures[signature].ssl_read_app_data_index],
-        ReadAppData_Hook);
-    WriteAppData_ = (PFN_SSL3_WRITE_APP_DATA)hook_->createHook(
-        (PFN_SSL3_WRITE_APP_DATA)methods_addr[methods_signatures[signature].ssl_write_app_data_index],
-        WriteAppData_Hook);
+    MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_new_index], New_Hook, (LPVOID *)&New_);
+    MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_free_index], Free_Hook, (LPVOID *)&Free_);
+    if (methods_signatures[signature].ssl_connect_index)
+      MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_connect_index], Connect_Hook, (LPVOID *)&Connect_);
+    if (methods_signatures[signature].ssl_begin_handshake_index)
+      MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_begin_handshake_index], BeginHandshake_Hook, (LPVOID *)&BeginHandshake_);
+    if (methods_signatures[signature].ssl_read_app_data_old_index)
+      MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_read_app_data_old_index], ReadAppDataOld_Hook, (LPVOID *)&ReadAppDataOld_);
+    if (methods_signatures[signature].ssl_read_app_data_index)
+      MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_read_app_data_index], ReadAppData_Hook, (LPVOID *)&ReadAppData_);
+    MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_write_app_data_index], WriteAppData_Hook, (LPVOID *)&WriteAppData_);
+
+    MH_EnableHook(MH_ALL_HOOKS);
+
   } else if (match_count > 1) {
     g_hook = this; 
     ATLTRACE("Too many Chrome ssl methods structures found (%d matches)", match_count);
@@ -309,8 +336,31 @@ void ChromeSSLHook::Init() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+int ChromeSSLHook::New(void *ssl) {
+  int ret = -1;
+  ATLTRACE(_T("0x%08x - ChromeSSLHook::New"), ssl);
+  SOCKET s;
+  if (!sockets_.SslSocketLookup(ssl, s))
+    sockets_.SetSslFd(ssl);
+  if (New_)
+    ret = New_(ssl);
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void ChromeSSLHook::Free(void *ssl) {
+  ATLTRACE(_T("0x%08x - ChromeSSLHook::Free"), ssl);
+  sockets_.SslRemoveSocketLookup(ssl);
+  if (Free_)
+    Free_(ssl);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 int ChromeSSLHook::Connect(void *ssl) {
   int ret = -1;
+  ATLTRACE(_T("0x%08x - ChromeSSLHook::Connect"), ssl);
   SOCKET s;
   if (!sockets_.SslSocketLookup(ssl, s))
     sockets_.SetSslFd(ssl);
@@ -323,6 +373,7 @@ int ChromeSSLHook::Connect(void *ssl) {
 -----------------------------------------------------------------------------*/
 int ChromeSSLHook::BeginHandshake(void *ssl) {
   int ret = 0;
+  ATLTRACE(_T("0x%08x - ChromeSSLHook::BeginHandshake"), ssl);
   SOCKET s;
   if (!sockets_.SslSocketLookup(ssl, s))
     sockets_.SetSslFd(ssl);
@@ -333,10 +384,34 @@ int ChromeSSLHook::BeginHandshake(void *ssl) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-int ChromeSSLHook::ReadAppData(void *ssl, uint8_t *buf, int len, int peek) {
+int ChromeSSLHook::ReadAppDataOld(void *ssl, uint8_t *buf, int len, int peek) {
+  int ret = -1;
+  if (ReadAppDataOld_)
+    ret = ReadAppDataOld_(ssl, buf, len, peek);
+  ATLTRACE(_T("0x%08x - ChromeSSLHook::ReadAppDataOld - %d bytes"), ssl, ret);
+  if (ret > 0) {
+    SOCKET s = INVALID_SOCKET;
+    if (sockets_.SslSocketLookup(ssl, s)) {
+      if (buf && !test_state_._exit) {
+        DataChunk chunk((LPCSTR)buf, ret);
+        sockets_.DataIn(s, chunk, true);
+      }
+    } else {
+      ATLTRACE("0x%08X - ChromeSSLHook::ReadAppDataOld - Unmapped socket", ssl);
+    }
+  }
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int ChromeSSLHook::ReadAppData(void *ssl, int *out_got_handshake, uint8_t *buf, int len, int peek) {
   int ret = -1;
   if (ReadAppData_)
-    ret = ReadAppData_(ssl, buf, len, peek);
+    ret = ReadAppData_(ssl, out_got_handshake, buf, len, peek);
+  if (out_got_handshake && *out_got_handshake)
+    return ret;
+  ATLTRACE(_T("0x%08x - ChromeSSLHook::ReadAppData - %d bytes"), ssl, ret);
   if (ret > 0) {
     SOCKET s = INVALID_SOCKET;
     if (sockets_.SslSocketLookup(ssl, s)) {
@@ -355,6 +430,7 @@ int ChromeSSLHook::ReadAppData(void *ssl, uint8_t *buf, int len, int peek) {
 -----------------------------------------------------------------------------*/
 int ChromeSSLHook::WriteAppData(void *ssl, const void *buf, int len) {
   int ret = -1;
+  ATLTRACE(_T("0x%08x - ChromeSSLHook::WriteAppData - %d bytes"), ssl, len);
   if (WriteAppData_) {
     SOCKET s = INVALID_SOCKET;
     if (sockets_.SslSocketLookup(ssl, s)) {
@@ -370,3 +446,4 @@ int ChromeSSLHook::WriteAppData(void *ssl, const void *buf, int len) {
   }
   return ret;
 }
+#endif // _WIN64

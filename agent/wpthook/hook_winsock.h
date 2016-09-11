@@ -28,8 +28,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include "ncodehook/NCodeHookInstantiation.h"
-
 class TrackDns;
 class TrackSockets;
 class TestState;
@@ -41,7 +39,7 @@ public:
   WsaBuffTracker(const WsaBuffTracker& src):_buffers(NULL),_buffer_count(0){
     *this = src;
   }
-  WsaBuffTracker(LPWSABUF buffers, DWORD buffer_count):_buffers(NULL),
+  WsaBuffTracker(LPWSABUF buffers, ULONG_PTR buffer_count):_buffers(NULL),
     _buffer_count(0){
     Copy(buffers, buffer_count);
   }
@@ -50,12 +48,12 @@ public:
     Copy(src._buffers, src._buffer_count);
     return src;
   }
-  void Copy(LPWSABUF buffers, DWORD buffer_count) {
+  void Copy(LPWSABUF buffers, ULONG_PTR buffer_count) {
     Reset();
     if (buffer_count && buffers) {
       _buffer_count = buffer_count;
       _buffers = (LPWSABUF)malloc(sizeof(WSABUF) * _buffer_count);
-      for (DWORD i = 0; i < buffer_count; i++) {
+      for (ULONG_PTR i = 0; i < buffer_count; i++) {
         _buffers[i].len = buffers[i].len;
         _buffers[i].buf = buffers[i].buf;
       }
@@ -68,8 +66,8 @@ public:
     _buffers = NULL;
     _buffer_count = 0;
   }
-  LPWSABUF _buffers;
-  DWORD    _buffer_count;
+  LPWSABUF  _buffers;
+  ULONG_PTR _buffer_count;
 };
 
 // Function declarations for hook functions
@@ -132,7 +130,7 @@ public:
   int   WSAEnumNetworkEvents(SOCKET s, WSAEVENT hEventObject, 
                              LPWSANETWORKEVENTS lpNetworkEvents);
   void ProcessOverlappedIo(SOCKET s, LPOVERLAPPED lpOverlapped,
-                           LPDWORD lpNumberOfBytesTransferred);
+                           PULONG_PTR lpNumberOfBytesTransferred);
   PTP_IO CreateThreadpoolIo(HANDLE fl, PTP_WIN32_IO_CALLBACK_WPT pfnio,
                             PVOID pv, PTP_CALLBACK_ENVIRON pcbe,
                             bool kernelBase);
@@ -148,7 +146,6 @@ public:
 
 private:
   TestState&        _test_state;
-  NCodeHookIA32		  hook;
   CRITICAL_SECTION	cs;
 
   // addresses that WE have alocated in case of DNS overrides
@@ -161,7 +158,7 @@ private:
   // memory buffers for overlapped operations
   CAtlMap<LPWSAOVERLAPPED, WsaBuffTracker>  _recv_buffers;
   CAtlMap<LPWSAOVERLAPPED, DataChunk>       _send_buffers;
-  CAtlMap<LPWSAOVERLAPPED, DWORD>           _send_buffer_original_length;
+  CAtlMap<LPWSAOVERLAPPED, ULONG_PTR>       _send_buffer_original_length;
   CAtlMap<PTP_IO, PTP_WIN32_IO_CALLBACK_WPT> _threadpool_callbacks;
   CAtlMap<PTP_IO, SOCKET>                   _threadpool_sockets;
 

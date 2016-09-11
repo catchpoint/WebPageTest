@@ -104,7 +104,7 @@ if (!defined('EMBED')) {
             if (is_dir('forums') && !$settings['disableMybb']) {
                 $navTabs['Forums'] = '/forums/';
             }
-            $navTabs['Documentation'] = 'http://sites.google.com/a/webpagetest.org/docs/';
+            $navTabs['Documentation'] = 'https://sites.google.com/a/webpagetest.org/docs/';
             $navTabs['About'] = FRIENDLY_URLS ? '/about' : '/about.php';
         }
         foreach ($navTabs as $tabName => $tabUrl) {

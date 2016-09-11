@@ -1,4 +1,10 @@
 <?php
+    if(extension_loaded('newrelic')) {
+        newrelic_add_custom_tracer('CheckUrl');
+        newrelic_add_custom_tracer('CheckIp');
+        newrelic_add_custom_tracer('WptHookValidateTest');
+    }
+
     // deal with magic quotes being enabled
     if (get_magic_quotes_gpc()) {
         function DealWithMagicQuotes(&$arr) {
@@ -16,14 +22,6 @@
     require_once('common.inc');
     require_once('./ec2/ec2.inc.php');
     set_time_limit(300);
-
-    if(extension_loaded('newrelic')) {
-        newrelic_add_custom_tracer('ValidateKey');
-        newrelic_add_custom_tracer('ValidateURL');
-        newrelic_add_custom_tracer('SubmitUrl');
-        newrelic_add_custom_tracer('GetRedirect');
-        newrelic_add_custom_tracer('CheckIp');
-    }
 
     $redirect_cache = array();
     $error = NULL;
@@ -590,20 +588,25 @@
                     {
                         $testData = $test;
                         // Create a test with the given location and applicable connectivity.
-                        UpdateLocation($testData, $locations, $location_string);
+                        UpdateLocation($testData, $locations, $location_string, $error);
+                        if (strlen($error))
+                          break;
+                          
                         $id = CreateTest($testData, $testData['url']);
                         if( isset($id) )
                             $test['tests'][] = array('url' => $test['url'], 'id' => $id);
                     }
 
                     // write out the list of urls and the test ID for each
-                    if( count($test['tests']) )
-                    {
-                        $path = GetTestPath($test['id']);
-                        file_put_contents("./$path/tests.json", json_encode($test['tests']));
+                    if (!strlen($error)) {
+                      if( count($test['tests']) )
+                      {
+                          $path = GetTestPath($test['id']);
+                          file_put_contents("./$path/tests.json", json_encode($test['tests']));
+                      } else {
+                          $error = 'Locations could not be submitted for testing';
+                      }
                     }
-                    else
-                        $error = 'Locations could not be submitted for testing';
                 }
                 elseif( $test['batch'] )
                 {
@@ -703,7 +706,10 @@
                         foreach( $bulk['urls'] as &$entry )
                         {
                             $testData = $test;
-                            $testData['label'] = $entry['l'];
+                            if (isset($entry['l']) && strlen($entry['l']))
+                            {
+                                $testData['label'] = $entry['l'];
+                            }
                             if( $entry['ns'] )
                             {
                                 unset($testData['script']);
@@ -791,7 +797,7 @@
                         echo "<summaryCSV>$protocol://$host$uri/csv.php?test={$test['id']}</summaryCSV>\n";
                         echo "<detailCSV>$protocol://$host$uri/csv.php?test={$test['id']}&amp;requests=1</detailCSV>\n";
                     }
-                    echo "<jsonUrl>http://$host$uri/jsonResult.php?test={$test['id']}</jsonUrl>\n";
+                    echo "<jsonUrl>$protocol://$host$uri/jsonResult.php?test={$test['id']}</jsonUrl>\n";
                     echo "</data>\n";
                     echo "</response>\n";
 
@@ -904,7 +910,7 @@
 * @param mixed $test
 * @param mixed $new_location
 */
-function UpdateLocation(&$test, &$locations, $new_location)
+function UpdateLocation(&$test, &$locations, $new_location, &$error)
 {
   // Update the location.
   $test['location'] = $new_location;
@@ -955,6 +961,8 @@ function UpdateLocation(&$test, &$locations, $new_location)
 
           if( isset($connectivity[$test['connectivity']]['aftCutoff']) && !$test['aftEarlyCutoff'] )
               $test['aftEarlyCutoff'] = $connectivity[$test['connectivity']]['aftCutoff'];
+      } elseif (!isset($test['bwIn']) && !isset($test['bwOut']) && !isset($test['latency'])) {
+        $error = 'Unknown connectivity type: ' . htmlspecialchars($test['connectivity']);
       }
   }
 
@@ -1261,6 +1269,8 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 
                         if( isset($connectivity[$test['connectivity']]['aftCutoff']) && !$test['aftEarlyCutoff'] )
                             $test['aftEarlyCutoff'] = $connectivity[$test['connectivity']]['aftCutoff'];
+                    } elseif (!isset($test['bwIn']) && !isset($test['bwOut']) && !isset($test['latency'])) {
+                      $error = 'Unknown connectivity type: ' . htmlspecialchars($test['connectivity']);
                     }
                 }
 
@@ -1272,9 +1282,9 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             if( !$test['aftEarlyCutoff'] && $settings['aftEarlyCutoff'] )
                 $test['aftEarlyCutoff'] = $settings['aftEarlyCutoff'];
         }
-    }
-    elseif( !strlen($error) )
+    } elseif( !strlen($error) ) {
         $error = "Invalid URL, please try submitting your test request again.";
+    }
 
     return $ret;
 }

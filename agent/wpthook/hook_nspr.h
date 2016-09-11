@@ -28,7 +28,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 
-#include "ncodehook/NCodeHookInstantiation.h"
 #define MDCPUCFG "md/_winnt.cfg"
 #include "prio.h"
 typedef struct TRANSMIT_FILE_BUFFERS TRANSMIT_FILE_BUFFERS;
@@ -65,16 +64,13 @@ public:
   PRStatus PR_Close(PRFileDesc *fd);
   PRInt32 PR_Write(PRFileDesc *fd, const void *buf, PRInt32 amount);
   PRInt32 PR_Read(PRFileDesc *fd, void *buf, PRInt32 amount);
-  SECStatus SSL_ResetHandshake(PRFileDesc *fd, PRBool asServer);
   SECStatus SSL_SetURL(PRFileDesc *fd, const char *url);
 private:
   TestState& _test_state;
   TrackSockets& _sockets;
   WptTestHook& _test;
-  NCodeHookIA32* _hook;
 
-  template <typename U> void GetFunctionByName(
-      const std::string& dll, const std::string& funcName, U& func);
+  template <typename U> void GetFunctionByName(LPCSTR dll, LPCSTR funcName, U& func);
 
   PFN_SSL_ImportFD _SSL_ImportFD;
   PRCloseFN  _PR_Close;

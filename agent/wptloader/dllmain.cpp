@@ -15,11 +15,19 @@ static DWORD WINAPI LoaderThreadProc(void* arg) {
   // processes.
   TCHAR path[MAX_PATH];
   if (GetModuleFileName(module_handle, path, MAX_PATH)) {
+    #ifdef _WIN64
+    TCHAR * dll = _tcsstr(path, _T("wptld64"));
+    if (dll) {
+      lstrcpy(dll, _T("wpthk64.dll"));
+      LoadLibrary(path);
+    }
+    #else
     TCHAR * dll = _tcsstr(path, _T("wptload"));
     if (dll) {
       lstrcpy(dll, _T("wpthook.dll"));
       LoadLibrary(path);
     }
+    #endif
   }
   return 0;
 }

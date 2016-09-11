@@ -1,5 +1,4 @@
 #pragma once
-#include "ncodehook/NCodeHookInstantiation.h"
 #include <WinInet.h>
 
 class TestState;
@@ -89,7 +88,6 @@ private:
   TestState& _test_state;
   TrackSockets& _sockets;
   WptTest& _test;
-  NCodeHookIA32* _hook;
   CAtlMap<HINTERNET, INTERNET_STATUS_CALLBACK>	_status_callbacks;
   CAtlMap<HINTERNET, HINTERNET>	_parents;
   CAtlMap<HINTERNET, CString>	  _host_names;

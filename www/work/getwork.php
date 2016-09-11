@@ -189,7 +189,8 @@ function GetJob() {
                             if (!array_key_exists($run, $testInfoJson['test_runs']))
                               $testInfoJson['test_runs'][$run] = array('done' => false);
                           }
-                          $testInfoJson['id'] = $testId;
+                          $dotPos = stripos($testId, ".");
+                          $testInfoJson['id'] = $dotPos === false ? $testId : substr($testId, $dotPos + 1);
                           ProcessTestShard($testInfoJson, $testInfo, $delete, $priority);
                           SaveTestInfo($testId, $testInfoJson);
                         }

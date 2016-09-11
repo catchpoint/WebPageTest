@@ -45,7 +45,7 @@ class RunResultHtmlTable {
     $this->enabledColumns = array();
 
     // optional columns default setting based on data
-    $this->enabledColumns[self::COL_LABEL] = $this->isMultistep || $this->rvRunResults;
+    $this->enabledColumns[self::COL_LABEL] = $this->testInfo->getRuns() > 1 || $this->isMultistep || $this->rvRunResults;
     $this->enabledColumns[self::COL_ABOVE_THE_FOLD] = $testInfo->hasAboveTheFoldTime();
     $this->enabledColumns[self::COL_RESULT] = true;
     $checkByMetric = array(self::COL_USER_TIME, self::COL_DOM_TIME, self::COL_DOM_ELEMENTS, self::COL_SPEED_INDEX,
@@ -173,7 +173,7 @@ class RunResultHtmlTable {
   private function _headlineRow($isRepeatView, $runNumber) {
     $label = $this->_rvLabel($isRepeatView, $runNumber);
     $colspan = 9 + $this->_countLeftEnabledColumns() + $this->_countRightEnabledColumns();
-    return "<tr><td colspan='$colspan'>$label</td></tr>\n";
+    return "<tr><td colspan='$colspan' class='separation'>$label</td></tr>\n";
   }
 
   private function _rvLabel($isRepeatView, $runNumber) {

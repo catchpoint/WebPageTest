@@ -1,0 +1,16 @@
+include CONTRIBUTING.md
+include common/*.c
+include common/*.h
+include dec/*.c
+include dec/*.h
+include enc/*.c
+include enc/*.h
+include include/brotli/*.h
+include LICENSE
+include MANIFEST.in
+include python/bro.py
+include python/brotlimodule.cc
+include python/README.md
+include README.md
+include setup.py
+include tools/bro.c

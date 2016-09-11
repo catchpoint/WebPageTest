@@ -227,6 +227,8 @@ function BrowserAndroidChrome(app, args) {
   this.lastVideoSize_ = 0;
   this.videoStarted_ = false;
   this.videoIdleCount_ = 0;
+  this.osVersion = undefined;
+  this.browserVersion = undefined;
 }
 util.inherits(BrowserAndroidChrome, browser_base.BrowserBase);
 /** Public class. */
@@ -307,6 +309,7 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
   this.scheduleInstallIfNeeded_();
   this.scheduleSetStartupFlags_();
   this.clearProfile_();
+  this.getBrowserVersion_();
 
   // Flush the DNS cache
   this.adb_.su(['ndc', 'resolver', 'flushdefaultif']);
@@ -390,6 +393,24 @@ BrowserAndroidChrome.prototype.clearProfile_ = function() {
       }.bind(this));
     }
   }
+};
+
+/**
+ * Pull the version string out of the apk and store it for later reporting.
+ */
+BrowserAndroidChrome.prototype.getBrowserVersion_ = function() {
+  this.adb_.shell(['dumpsys', 'package', this.browserPackage_, '|',
+                   'grep', 'versionName', '|',
+                   'head', '-n1']).then(
+    function(stdout) {
+      if (stdout && stdout.length) {
+        var parts = stdout.trim().split("=");
+        if (parts && parts.length >= 2) {
+          this.browserVersion = parts[1];
+          logger.debug('Browser Version: "' + this.browserVersion + '"');
+        }
+      }
+  }.bind(this));
 };
 
 BrowserAndroidChrome.prototype.clearDownloads_ = function() {
@@ -786,12 +807,13 @@ BrowserAndroidChrome.prototype.scheduleGetCapabilities = function() {
   'use strict';
   return this.adb_.shell(['getprop', 'ro.build.version.release']).then(
       function(stdout) {
+    this.osVersion = stdout.trim();
     return {
       webdriver: false,
       'wkrdp.Page.captureScreenshot': false,
       'wkrdp.Network.clearBrowserCache': true,
       'wkrdp.Network.clearBrowserCookies': true,
-      videoRecording: parseFloat(stdout) >= 4.4,
+      videoRecording: parseFloat(this.osVersion) >= 4.4,
       videoFileExtension: 'mp4',
       takeScreenshot: true
     };

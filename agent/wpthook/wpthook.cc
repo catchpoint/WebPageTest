@@ -30,9 +30,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
 #include "stdafx.h"
-#include "shared_mem.h"
 #include "wpthook.h"
 #include "window_messages.h"
+#include "MinHook.h"
 
 WptHook * global_hook = NULL;
 extern HINSTANCE global_dll_handle;
@@ -63,10 +63,12 @@ WptHook::WptHook(void):
   ,dns_(test_state_, test_)
   ,done_(false)
   ,test_server_(*this, test_, test_state_, requests_, trace_)
-  ,test_(*this, test_state_, shared_test_timeout)
+  ,test_(*this, test_state_, 120000)
   ,late_initialized_(false) {
 
-  file_base_ = shared_results_file_base;
+  test_._test_timeout = test_state_.shared_.TestTimeout();
+  test_._measurement_timeout = test_._test_timeout;
+  file_base_ = test_state_.shared_.ResultsFileBase();
   background_thread_started_ = CreateEvent(NULL, TRUE, FALSE, NULL);
   report_message_ = RegisterWindowMessage(_T("WPT Report Data"));
 
@@ -118,6 +120,10 @@ void WptHook::Init(){
   //MessageBox(NULL, L"Attach Debugger", L"Attach Debugger", MB_OK);
 #endif
   test_.LoadFromFile();
+
+  // Initialize the API hooking library
+  MH_Initialize();
+
   if (!test_state_.gdi_only_) {
     file_hook_.Init();
     winsock_hook_.Init();
@@ -223,9 +229,9 @@ void WptHook::OnReport() {
       results_.Save();
     test_.CollectDataDone();
     if (test_.Done()) {
+      results_.Save();
       test_state_._exit = true;
       test_server_.Stop();
-      results_.Save();
       done_ = true;
       if (test_state_._frame_window) {
         WptTrace(loglevel::kTrace, 

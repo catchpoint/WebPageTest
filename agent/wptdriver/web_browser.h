@@ -39,9 +39,9 @@ public:
 
   bool RunAndWait();
   void ClearUserData();
+  CString _browser_needs_reset;
 
 private:
-  void InjectDll();
   bool ConfigureIpfw(WptTestDriver& test);
   void ResetIpfw(void);
   bool FindBrowserChild(DWORD pid, PROCESS_INFORMATION& pi,

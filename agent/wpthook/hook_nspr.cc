@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "test_state.h"
 #include "track_sockets.h"
 #include "wpt_test_hook.h"
+#include "MinHook.h"
 
 #include "hook_nspr.h"
 
@@ -77,7 +78,6 @@ NsprHook::NsprHook(TrackSockets& sockets, TestState& test_state,
     _sockets(sockets),
     _test_state(test_state),
     _test(test),
-    _hook(NULL), 
     _SSL_ImportFD(NULL),
     _PR_Close(NULL),
     _PR_Read(NULL),
@@ -91,61 +91,51 @@ NsprHook::~NsprHook() {
   if (g_hook == this) {
     g_hook = NULL;
   }
-  delete _hook;  // remove all the hooks
 }
 
 void NsprHook::Init() {
-  if (_hook || g_hook) {
+  if (g_hook)
     return;
-  }
-  _hook = new NCodeHookIA32();
   g_hook = this; 
 
-  GetFunctionByName(
-      "nss3.dll", "PR_FileDesc2NativeHandle", _PR_FileDesc2NativeHandle);
+
+  GetFunctionByName("nss3.dll", "PR_FileDesc2NativeHandle", _PR_FileDesc2NativeHandle);
   if (!_PR_FileDesc2NativeHandle)
-    GetFunctionByName(
-      "nspr4.dll", "PR_FileDesc2NativeHandle", _PR_FileDesc2NativeHandle);
+    GetFunctionByName("nspr4.dll", "PR_FileDesc2NativeHandle", _PR_FileDesc2NativeHandle);
 
   if (_PR_FileDesc2NativeHandle != NULL) {
     // Hook Firefox.
     WptTrace(loglevel::kProcess, _T("[wpthook] NsprHook::Init()\n"));
 
-    _SSL_ImportFD = _hook->createHookByName(
-        "nss3.dll", "SSL_ImportFD", SSL_ImportFD_Hook);
+    LoadLibrary(_T("nss3.dll"));
+    LoadLibrary(_T("nspr4.dll"));
+    LoadLibrary(_T("ssl3.dll"));
+
+    MH_CreateHookApi(L"nss3.dll", "SSL_ImportFD", SSL_ImportFD_Hook, (LPVOID *)&_SSL_ImportFD);
     if (!_SSL_ImportFD)
-      _SSL_ImportFD = _hook->createHookByName(
-          "ssl3.dll", "SSL_ImportFD", SSL_ImportFD_Hook);
+      MH_CreateHookApi(L"ssl3.dll", "SSL_ImportFD", SSL_ImportFD_Hook, (LPVOID *)&_SSL_ImportFD);
 
-    _PR_Close = _hook->createHookByName(
-        "nss3.dll", "PR_Close", PR_Close_Hook);
+    MH_CreateHookApi(L"nss3.dll", "PR_Close", PR_Close_Hook, (LPVOID *)&_PR_Close);
     if (!_PR_Close)
-      _PR_Close = _hook->createHookByName(
-          "nspr4.dll", "PR_Close", PR_Close_Hook);
+      MH_CreateHookApi(L"nspr4.dll", "PR_Close", PR_Close_Hook, (LPVOID *)&_PR_Close);
 
-    _PR_Write = _hook->createHookByName(
-        "nss3.dll", "PR_Write", PR_Write_Hook);
+    MH_CreateHookApi(L"nss3.dll", "PR_Write", PR_Write_Hook, (LPVOID *)&_PR_Write);
     if (!_PR_Write)
-      _PR_Write = _hook->createHookByName(
-          "nspr4.dll", "PR_Write", PR_Write_Hook);
+      MH_CreateHookApi(L"nspr4.dll", "PR_Write", PR_Write_Hook, (LPVOID *)&_PR_Write);
 
-    _PR_Read = _hook->createHookByName(
-        "nss3.dll", "PR_Read", PR_Read_Hook);
+    MH_CreateHookApi(L"nss3.dll", "PR_Read", PR_Read_Hook, (LPVOID *)&_PR_Read);
     if (!_PR_Read)
-      _PR_Read = _hook->createHookByName(
-          "nspr4.dll", "PR_Read", PR_Read_Hook);
+      MH_CreateHookApi(L"nspr4.dll", "PR_Read", PR_Read_Hook, (LPVOID *)&_PR_Read);
 
-    GetFunctionByName(
-        "nss3.dll", "SSL_AuthCertificateHook", _SSL_AuthCertificateHook);
+    GetFunctionByName("nss3.dll", "SSL_AuthCertificateHook", _SSL_AuthCertificateHook);
     if (!_SSL_AuthCertificateHook)
-      GetFunctionByName(
-          "ssl3.dll", "SSL_AuthCertificateHook", _SSL_AuthCertificateHook);
+      GetFunctionByName("ssl3.dll", "SSL_AuthCertificateHook", _SSL_AuthCertificateHook);
 
-    _SSL_SetURL = _hook->createHookByName(
-      "nss3.dll", "SSL_SetURL", SSL_SetURL_Hook);
+    MH_CreateHookApi(L"nss3.dll", "SSL_SetURL", SSL_SetURL_Hook, (LPVOID *)&_SSL_SetURL);
     if (!_SSL_SetURL)
-      _SSL_SetURL = _hook->createHookByName(
-        "ssl3.dll", "SSL_SetURL", SSL_SetURL_Hook);
+      MH_CreateHookApi(L"ssl3.dll", "SSL_SetURL", SSL_SetURL_Hook, (LPVOID *)&_SSL_SetURL);
+
+    MH_EnableHook(MH_ALL_HOOKS);
   }
 }
 
@@ -191,7 +181,7 @@ PRInt32 NsprHook::PR_Write(PRFileDesc *fd, const void *buf, PRInt32 amount) {
     if (buf && !_test_state._exit && _sockets.SslSocketLookup(fd, s)) {
       _sockets.ModifyDataOut(s, chunk, true);
     }
-    ret = _PR_Write(fd, chunk.GetData(), chunk.GetLength());
+    ret = _PR_Write(fd, chunk.GetData(), (PRInt32)chunk.GetLength());
     if (ret > 0 && s != INVALID_SOCKET) {
       _sockets.DataOut(s, chunk, true);
       ret = original_amount;
@@ -215,13 +205,9 @@ PRInt32 NsprHook::PR_Read(PRFileDesc *fd, void *buf, PRInt32 amount) {
 }
 
 template <typename U>
-void NsprHook::GetFunctionByName(
-    const string& dll_name, const string& function_name, U& function_ptr) {
-  HMODULE dll = LoadLibraryA(dll_name.c_str());
-  if (dll)
-    function_ptr = (U)GetProcAddress(dll, function_name.c_str());
-  else
-    function_ptr = NULL;
+void NsprHook::GetFunctionByName(LPCSTR dll_name, LPCSTR function_name, U& function_ptr) {
+  HMODULE dll = LoadLibraryA(dll_name);
+  function_ptr = dll ? (U)GetProcAddress(dll, function_name) : NULL;
 }
 
 SECStatus NsprHook::SSL_SetURL(PRFileDesc *fd, const char *url) {

@@ -25,6 +25,10 @@ public:
   void LoadSettings(CString settings_ini);
   bool UpdateSoftware(bool force = false);
   bool ReInstallBrowser(CString browser);
+  CString GetUpdateInfo(CString url);
+
+  CString _ec2_instance;
+  CString _ec2_availability_zone;
 
 protected:
   CAtlList<BrowserInfo> _browsers;

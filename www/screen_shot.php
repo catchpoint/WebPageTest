@@ -132,7 +132,7 @@ function printContent($fileHandler, $testInfo, $testRunResults) {
  */
 function printQuicklinks($testRunResults) {
     echo '<a name="quicklinks"><h1>Quicklinks</h1></a>';
-    echo '<div style="text-align: center;"><table class="pretty">';
+    echo '<div style="text-align: center;"><table class="pretty" id="quicklinks_table">';
     echo '<tbody>';
     for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
         $class = ($i % 2 == 0) ? " class='even'" : "";

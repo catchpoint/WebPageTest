@@ -131,11 +131,6 @@ typedef struct {HANDLE signal, broadcast;} pthread_cond_t;
 typedef DWORD pthread_t;
 #define pid_t HANDLE // MINGW typedefs pid_t to int. Using #define here.
 
-struct timespec {
-  long tv_nsec;
-  long tv_sec;
-};
-
 static int pthread_mutex_lock(pthread_mutex_t *);
 static int pthread_mutex_unlock(pthread_mutex_t *);
 static FILE *mg_fopen(const char *path, const char *mode);
@@ -1269,7 +1264,7 @@ static int set_non_blocking_mode(SOCKET sock) {
 static int64_t push(FILE *fp, SOCKET sock, SSL *ssl, const char *buf,
                     int64_t len) {
   int64_t sent;
-  int n, k;
+  size_t n, k;
 
   sent = 0;
   while (sent < len) {
@@ -1278,13 +1273,13 @@ static int64_t push(FILE *fp, SOCKET sock, SSL *ssl, const char *buf,
     k = len - sent > INT_MAX ? INT_MAX : (int) (len - sent);
 
     if (ssl != NULL) {
-      n = SSL_write(ssl, buf + sent, k);
+      n = SSL_write(ssl, buf + sent, (int)k);
     } else if (fp != NULL) {
       n = fwrite(buf + sent, 1, k, fp);
       if (ferror(fp))
         n = -1;
     } else {
-      n = send(sock, buf + sent, k, 0);
+      n = send(sock, buf + sent, (int)k, 0);
     }
 
     if (n < 0)
@@ -1304,7 +1299,7 @@ static int pull(FILE *fp, SOCKET sock, SSL *ssl, char *buf, int len) {
   if (ssl != NULL) {
     nread = SSL_read(ssl, buf, len);
   } else if (fp != NULL) {
-    nread = fread(buf, 1, (size_t) len, fp);
+    nread = (int)fread(buf, 1, (size_t) len, fp);
     if (ferror(fp))
       nread = -1;
   } else {
@@ -1340,7 +1335,7 @@ int mg_read(struct mg_connection *conn, void *buf, size_t len) {
     if (conn->consumed_content < (int64_t) buffered_len) {
       buffered_len -= (int) conn->consumed_content;
       if (len < (size_t) buffered_len) {
-        buffered_len = len;
+        buffered_len = (int)len;
       }
       memcpy(buf, buffered, buffered_len);
       len -= buffered_len;
@@ -1449,7 +1444,7 @@ int mg_get_var(const char *buf, size_t buf_len, const char *name,
     }
   }
 
-  return len;
+  return (int)len;
 }
 
 int mg_get_cookie(const struct mg_connection *conn, const char *cookie_name,
@@ -1462,7 +1457,7 @@ int mg_get_cookie(const struct mg_connection *conn, const char *cookie_name,
     return 0;
   }
 
-  name_len = strlen(cookie_name);
+  name_len = (int)strlen(cookie_name);
   end = s + strlen(s);
 
   for (; (s = strstr(s, cookie_name)) != NULL; s += name_len)
@@ -1477,7 +1472,7 @@ int mg_get_cookie(const struct mg_connection *conn, const char *cookie_name,
         p--;
       }
       if ((size_t) (p - s) < dst_size) {
-        len = (p - s) + 1;
+        len = (int)((p - s) + 1);
         mg_strlcpy(dst, s, len);
       }
       break;
@@ -1502,7 +1497,7 @@ static int get_document_root(const struct mg_connection *conn,
   while ((root = next_option(root, &uri_vec, &path_vec)) != NULL) {
     if (memcmp(uri, uri_vec.ptr, uri_vec.len) == 0) {
       *document_root = path_vec;
-      len_of_matched_uri = uri_vec.len;
+      len_of_matched_uri = (int)uri_vec.len;
       break;
     }
   }
@@ -1543,7 +1538,7 @@ struct mg_connection *mg_connect(struct mg_connection *conn,
     cry(conn, "%s: SSL is not initialized", __func__);
   } else if ((he = gethostbyname(host)) == NULL) {
     cry(conn, "%s: gethostbyname(%s): %s", __func__, host, strerror(ERRNO));
-  } else if ((sock = socket(PF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
+  } else if ((sock = (int)socket(PF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
     cry(conn, "%s: socket: %s", __func__, strerror(ERRNO));
   } else {
     sin.sin_family = AF_INET;
@@ -2432,7 +2427,7 @@ static void send_file_data(struct mg_connection *conn, FILE *fp, int64_t len) {
       to_read = (int) len;
 
     // Read from file, exit the loop on error
-    if ((num_read = fread(buf, 1, to_read, fp)) == 0)
+    if ((num_read = (int)fread(buf, 1, to_read, fp)) == 0)
       break;
 
     // Send read bytes to the client, exit the loop on error
@@ -3170,7 +3165,7 @@ static void handle_request(struct mg_connection *conn) {
   if ((conn->request_info.query_string = strchr(ri->uri, '?')) != NULL) {
     * conn->request_info.query_string++ = '\0';
   }
-  uri_len = strlen(ri->uri);
+  uri_len = (int)strlen(ri->uri);
   (void) url_decode(ri->uri, uri_len, ri->uri, uri_len + 1, 0);
   remove_double_dots_and_double_slashes(ri->uri);
   convert_uri_to_file_name(conn, ri->uri, path, sizeof(path));

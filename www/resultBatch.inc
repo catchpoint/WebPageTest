@@ -315,13 +315,32 @@ else
             <?php include('footer.inc'); ?>
             <script type="text/javascript">
                 var tests = "<?php echo implode(',', $testIds); ?>";
-                var pollingInterval = 5000;
-                var pollingIntervalTesting = 1000;
                 var waitingImage = '<?php echo "{$GLOBALS['cdnPath']}/images/status_waiting.png"; ?>';
                 var testingImage = '<?php echo "{$GLOBALS['cdnPath']}/images/status_testing.png"; ?>';
                 var lastStatusCode = 0;
                 var lastStatusText = '';
+                // polyfill performance.now
+                if ("performance" in window == false) {
+                    window.performance = {};
+                }
+                Date.now = (Date.now || function () {  // thanks IE8
+                  return new Date().getTime();
+                });
+                if ("now" in window.performance == false){
+                  var nowOffset = Date.now();
+                  if (performance.timing && performance.timing.navigationStart){
+                    nowOffset = performance.timing.navigationStart
+                  }
+                  window.performance.now = function now(){
+                    return Date.now() - nowOffset;
+                  }
+                }
+                var lastUpdate = window.performance.now();
                 function UpdateStatus(){
+                  var now = window.performance.now();
+                  var elapsed = now - lastUpdate;
+                  lastUpdate = now;
+                  if (elapsed < 0 || elapsed > 10000) {
                     try {
                       var xhr = new XMLHttpRequest();
                       xhr.open('GET', '/testStatus.php?f=json&pos=1&tests=' + tests, true);
@@ -329,7 +348,7 @@ else
                         if (xhr.readyState != 4)
                           return;
                         var reload = false;
-                        var interval = pollingInterval;
+                        var interval = 30000;
                         if (xhr.status == 200) {
                             var response = JSON.parse(xhr.responseText);
                             if (response['statusCode'] != undefined &&
@@ -343,7 +362,7 @@ else
                                     reload = true;
                             }
                             if (lastStatusCode == 100) {
-                                interval = pollingIntervalTesting;
+                                interval = 15000;
                             }
                             if (response['statusText'] != undefined &&
                                 response['statusText'] != lastStatusText) {
@@ -357,12 +376,15 @@ else
                             setTimeout('UpdateStatus()', interval);
                       };
                       xhr.onerror = function() {
-                        setTimeout('UpdateStatus()', pollingInterval);
+                        setTimeout('UpdateStatus()', 30000);
                       };
                       xhr.send();
                     } catch (err) {
-                        setTimeout('UpdateStatus()', pollingInterval);
+                        setTimeout('UpdateStatus()', 30000);
                     }
+                  } else {
+                    setTimeout('UpdateStatus()', 30000);
+                  }
                 }
                 
                 function CheckVideo(id) {
@@ -373,7 +395,6 @@ else
                         if (xhr.readyState != 4)
                           return;
                         var reload = false;
-                        var interval = pollingInterval;
                         if (xhr.status == 200) {
                             var response = JSON.parse(xhr.responseText);
                             if (response['statusCode'] == 200) {
@@ -418,7 +439,7 @@ else
                 //pimg();
                 <?php
                 if (!$complete && $view != 'bulk')
-                    echo "setTimeout('UpdateStatus()', pollingInterval);\n";
+                    echo "setTimeout('UpdateStatus()', 30000);\n";
                 ?>
             </script>
         </div>

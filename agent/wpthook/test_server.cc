@@ -30,7 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "test_server.h"
 #include "wpthook.h"
 #include "wpt_test_hook.h"
-#include "shared_mem.h"
 #include "mongoose/mongoose.h"
 #include "test_state.h"
 #include "trace.h"
@@ -175,7 +174,7 @@ void TestServer::MongooseCallback(enum mg_event event,
                     (LPCTSTR)CA2T(request_info->query_string, CP_UTF8));
     if (strcmp(request_info->uri, "/task") == 0) {
       if (!stored_ua_string_) {
-        if (!shared_overrode_ua_string) {
+        if (!test_state_.shared_.OverrodeUAString()) {
           for (int i = 0; i < request_info->num_headers; i++) {
             if (request_info->http_headers[i].name && request_info->http_headers[i].value) {
               if (!lstrcmpiA(request_info->http_headers[i].name, "User-Agent")) {
@@ -594,7 +593,7 @@ bool TestServer::OkToStart() {
     }
     if (started_) {
       // Signal to wptdriver which process it should wait for and that we started
-      shared_browser_process_id = GetCurrentProcessId();
+      test_state_.shared_.SetBrowserProcessId(GetCurrentProcessId());
       HANDLE browser_started_event = OpenEvent(EVENT_MODIFY_STATE , FALSE,
                                                 BROWSER_STARTED_EVENT);
       if (browser_started_event) {

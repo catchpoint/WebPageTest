@@ -1101,14 +1101,16 @@ function GetDevToolsCPUTime($testPath, $run, $cached, $endTime = 0) {
  */
 function GetDevToolsCPUTimeForStep($localPaths, $endTime = 0) {
   if (!$endTime) {
-    if (GetDevToolsRequestsForStep($localPaths, $requests, $pageData) &&
-      isset($pageData) && is_array($pageData) && isset($pageData['fullyLoaded'])) {
+    require_once(__DIR__ . '/page_data.inc');
+    $runCompleted = IsTestRunComplete($localPaths->getRunNumber(), $testInfo);
+    $pageData =  loadPageStepData($localPaths, $runCompleted);
+    if (isset($pageData) && is_array($pageData) && isset($pageData['fullyLoaded'])) {
       $endTime = $pageData['fullyLoaded'];
     }
   }
 
   $times = null;
-  $ver = 2;
+  $ver = 3;
   $cacheFile = $localPaths->devtoolsCPUTimeCacheFile($ver);
   if (gz_is_file($cacheFile))
     $cache = json_decode(gz_file_get_contents($cacheFile), true);
@@ -1120,6 +1122,8 @@ function GetDevToolsCPUTimeForStep($localPaths, $endTime = 0) {
     if (isset($cpu) && is_array($cpu) && isset($cpu['main_thread']) && isset($cpu['slices'][$cpu['main_thread']]) && isset($cpu['slice_usecs'])) {
       $busy = 0;
       $times = array();
+      if (!$endTime && isset($cpu['total_usecs']))
+        $endTime = $cpu['total_usecs'] / 1000;
       foreach ($cpu['slices'][$cpu['main_thread']] as $name => $slices) {
         $last_slice = min(intval(ceil(($endTime * 1000) / $cpu['slice_usecs'])), count($slices));
         $times[$name] = 0;

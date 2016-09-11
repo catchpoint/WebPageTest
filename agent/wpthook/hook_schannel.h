@@ -1,5 +1,4 @@
 #pragma once
-#include "ncodehook/NCodeHookInstantiation.h"
 #define SECURITY_WIN32
 #include <Security.h>
 
@@ -48,7 +47,6 @@ private:
   TestState& _test_state;
   TrackSockets& _sockets;
   WptTestHook& _test;
-  NCodeHookIA32* _hook;
 
   // original functions
   INITIALIZE_SECURITY_CONTEXT_FN_W  InitializeSecurityContextW_;

@@ -410,6 +410,7 @@ function loadPageData($file, $options = null)
                   $ret['browser_working_set_kb'] = $ret['browser_main_memory_kb'] + $ret['browser_other_private_memory_kb'];
                 if ((isset($fields[101]) && strlen(trim($fields[101])))) $ret['domInteractive'] = intval(trim($fields[101]));
                 if ((isset($fields[102]) && strlen(trim($fields[102])))) $ret['domLoading'] = intval(trim($fields[102]));
+                if ((isset($fields[103]) && strlen(trim($fields[103])))) $ret['base_page_ttfb'] = intval(trim($fields[103]));
                 
                 $ret['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));
                 if (!strlen($ret['pageSpeedVersion']))

@@ -833,7 +833,7 @@ static void frame_set_pad(nghttp2_buf *buf, size_t padlen, int framehd_only) {
   }
 
   trail_padlen = padlen - 1;
-  buf->pos[NGHTTP2_FRAME_HDLEN] = trail_padlen;
+  buf->pos[NGHTTP2_FRAME_HDLEN] = (uint8_t)trail_padlen;
 
   /* zero out padding */
   memset(buf->last, 0, trail_padlen);

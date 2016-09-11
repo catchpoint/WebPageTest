@@ -12,12 +12,6 @@
     <Filter Include="Third-Party">
       <UniqueIdentifier>{56e63e9d-1a75-439a-a7fd-5745b0b56f3e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Third-Party\NCodeHook">
-      <UniqueIdentifier>{8895b285-595b-46b0-9e29-2becbc9105e8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Third-Party\distorm">
-      <UniqueIdentifier>{df374626-a802-47b9-a3c7-f012594bbc0e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Third-Party\CxImage">
       <UniqueIdentifier>{eabee810-0378-4f4d-9468-e494b1dd5ab0}</UniqueIdentifier>
     </Filter>
@@ -60,50 +54,14 @@
     <Filter Include="Third-Party\winpcap\pcap">
       <UniqueIdentifier>{31f31a0f-f1ec-4329-acab-a46bf2c9ee24}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Third-Party\brotli">
+      <UniqueIdentifier>{cdf6fa87-2189-4449-b484-721fb23c974c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\minhook">
+      <UniqueIdentifier>{5f09aa85-e0af-4209-b3cd-9d533e89e490}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="NCodeHook\NCodeHook.h">
-      <Filter>Third-Party\NCodeHook</Filter>
-    </ClInclude>
-    <ClInclude Include="NCodeHook\NCodeHookInstantiation.h">
-      <Filter>Third-Party\NCodeHook</Filter>
-    </ClInclude>
-    <ClInclude Include="NCodeHook\NCodeHookItem.h">
-      <Filter>Third-Party\NCodeHook</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\src\config.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\src\decoder.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\src\instructions.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\src\insts.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\src\operands.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\src\prefix.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\src\textdefs.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\src\wstring.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\src\x86defs.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\include\distorm.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\include\mnemonics.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
     <ClInclude Include="cximage\stdint.h">
       <Filter>Third-Party\CxImage\Header Files</Filter>
     </ClInclude>
@@ -226,9 +184,6 @@
     </ClInclude>
     <ClInclude Include="nspr\prtypes.h">
       <Filter>Third-Party\nspr</Filter>
-    </ClInclude>
-    <ClInclude Include="wpthook_dll.h">
-      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="cdn.h">
       <Filter>Source Files</Filter>
@@ -545,6 +500,27 @@
     <ClInclude Include="winpcap\Include\pcap\vlan.h">
       <Filter>Third-Party\winpcap\pcap</Filter>
     </ClInclude>
+    <ClInclude Include="minhook\src\buffer.h">
+      <Filter>Third-Party\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="minhook\src\trampoline.h">
+      <Filter>Third-Party\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="minhook\src\HDE\hde32.h">
+      <Filter>Third-Party\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="minhook\src\HDE\hde64.h">
+      <Filter>Third-Party\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="minhook\src\HDE\pstdint.h">
+      <Filter>Third-Party\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="minhook\src\HDE\table32.h">
+      <Filter>Third-Party\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="minhook\src\HDE\table64.h">
+      <Filter>Third-Party\minhook</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cc">
@@ -552,12 +528,6 @@
     </ClCompile>
     <ClCompile Include="wpthook.cc">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="NCodeHook\NCodeHook.cpp">
-      <Filter>Third-Party\NCodeHook</Filter>
-    </ClCompile>
-    <ClCompile Include="NCodeHook\NCodeHookItem.cpp">
-      <Filter>Third-Party\NCodeHook</Filter>
     </ClCompile>
     <ClCompile Include="hook_winsock.cc">
       <Filter>Source Files</Filter>
@@ -792,36 +762,6 @@
     </ClCompile>
     <ClCompile Include="png\pngwtran.c">
       <Filter>Third-Party\png</Filter>
-    </ClCompile>
-    <ClCompile Include="distorm\src\decoder.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
-    <ClCompile Include="distorm\src\x86defs.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
-    <ClCompile Include="distorm\src\distorm.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
-    <ClCompile Include="distorm\src\instructions.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
-    <ClCompile Include="distorm\src\insts.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
-    <ClCompile Include="distorm\include\mnemonics.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
-    <ClCompile Include="distorm\src\operands.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
-    <ClCompile Include="distorm\src\prefix.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
-    <ClCompile Include="distorm\src\textdefs.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
-    <ClCompile Include="distorm\src\wstring.c">
-      <Filter>Third-Party\distorm</Filter>
     </ClCompile>
     <ClCompile Include="..\wptdriver\util.cc">
       <Filter>Source Files</Filter>
@@ -1074,6 +1014,36 @@
     </ClCompile>
     <ClCompile Include="..\wptdriver\zlib\gzclose.c">
       <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="brotli\dec\bit_reader.c">
+      <Filter>Third-Party\brotli</Filter>
+    </ClCompile>
+    <ClCompile Include="brotli\dec\decode.c">
+      <Filter>Third-Party\brotli</Filter>
+    </ClCompile>
+    <ClCompile Include="brotli\dec\huffman.c">
+      <Filter>Third-Party\brotli</Filter>
+    </ClCompile>
+    <ClCompile Include="brotli\dec\state.c">
+      <Filter>Third-Party\brotli</Filter>
+    </ClCompile>
+    <ClCompile Include="brotli\common\dictionary.c">
+      <Filter>Third-Party\brotli</Filter>
+    </ClCompile>
+    <ClCompile Include="minhook\src\buffer.c">
+      <Filter>Third-Party\minhook</Filter>
+    </ClCompile>
+    <ClCompile Include="minhook\src\hook.c">
+      <Filter>Third-Party\minhook</Filter>
+    </ClCompile>
+    <ClCompile Include="minhook\src\trampoline.c">
+      <Filter>Third-Party\minhook</Filter>
+    </ClCompile>
+    <ClCompile Include="minhook\src\HDE\hde32.c">
+      <Filter>Third-Party\minhook</Filter>
+    </ClCompile>
+    <ClCompile Include="minhook\src\HDE\hde64.c">
+      <Filter>Third-Party\minhook</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

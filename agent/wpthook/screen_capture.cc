@@ -28,7 +28,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "StdAfx.h"
 #include "screen_capture.h"
-#include "shared_mem.h"
 #include "cximage/ximage.h"
 #include "test_state.h"
 

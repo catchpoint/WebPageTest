@@ -29,7 +29,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "StdAfx.h"
 #include "optimization_checks.h"
 #include "results.h"
-#include "shared_mem.h"
 #include "requests.h"
 #include "track_sockets.h"
 #include "track_dns.h"
@@ -98,6 +97,7 @@ void Results::Reset(void) {
   base_page_server_rtt_.Empty();
   base_page_redirects_ = 0;
   base_page_result_ = 0;
+  base_page_ttfb_ = -1;
   base_page_address_count_ = 0;
   base_page_complete_.QuadPart = 0;;
   adult_site_ = false;
@@ -143,8 +143,11 @@ void Results::Save(void) {
       SavePriorityStreams();
       _trace.Write(_test_state._file_base + TRACE_FILE);
     }
-    if (shared_result == -1 || shared_result == 0 || shared_result == 99999)
-      shared_result = _test_state._test_result;
+    if (_test_state.shared_.TestResult() == -1 ||
+        _test_state.shared_.TestResult() == 0 ||
+        _test_state.shared_.TestResult() == 99999) {
+      _test_state.shared_.SetTestResult(_test_state._test_result);
+    }
     _saved = true;
   }
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));
@@ -545,7 +548,7 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Connection Type
     result += "\t";
     // Cached
-    if (shared_cleared_cache)
+    if (_test_state.shared_.ClearedCache())
       result += "0\t";
     else
       result += "1\t";
@@ -753,7 +756,7 @@ void Results::SavePageData(OptimizationChecks& checks){
     if (doc_cpu_time > 0.0 && doc_total_time > 0.0) {
       int utilization =
           min((int)(((doc_cpu_time / doc_total_time) * 100) + 0.5), 100);
-      shared_cpu_utilization = utilization;
+      _test_state.shared_.SetCPUUtilization(utilization);
       buff.Format("%d\t", utilization);
       result += buff;
     } else
@@ -784,6 +787,12 @@ void Results::SavePageData(OptimizationChecks& checks){
     // DOM Loading
     buff.Format("%d\t", _test_state._dom_loading);
     result += buff;
+    // Base Page TTFB
+    if (base_page_ttfb_ >= 0) {
+      buff.Format("%d", base_page_ttfb_);
+      result += buff;
+    }
+    result += "\t";
 
     result += "\r\n";
 
@@ -895,28 +904,34 @@ void Results::ProcessRequests(void) {
         count_connect_++;
         count_connect_doc_ += doc_increment;
       }
+      CStringA mime_type = request->GetMime().Trim().MakeLower();
       if (base_page) { 
         if (result_code == 301 || result_code == 302 || result_code == 401) {
           base_page_redirects_++;
         } else {
-          base_page = false;
-          base_page_result_ = result_code;
-          base_page_server_rtt_ = request->rtt_;
-          base_page_address_count_ = _dns.GetAddressCount(
-              (LPCTSTR)CA2T(request->GetHost(), CP_UTF8));
-          request->_is_base_page = true;
-          base_page_complete_.QuadPart = request->_end.QuadPart;
-          if ((!_test_state._test_result ||  _test_state._test_result == 99999)
-              && base_page_result_ >= 400) {
-            _test_state._test_result = result_code;
-          }
-          // check for adult content
-          if (result_code == 200) {
-            DataChunk body_chunk = request->_response_data.GetBody(true);
-            CStringA body(body_chunk.GetData(), body_chunk.GetLength());
-            if (regex_search((LPCSTR)body, adult_regex) ||
-                body.Find("RTA-5042-1996-1400-1577-RTA") >= 0)
-              adult_site_ = true;
+          // Make sure it isn't a OCSP or CRL check
+          if (mime_type != "application/ocsp-response" &&
+              mime_type != "application/pkix-crl") {
+            base_page = false;
+            base_page_result_ = result_code;
+            base_page_server_rtt_ = request->rtt_;
+            base_page_ttfb_ = request->_ms_first_byte;
+            base_page_address_count_ = (int)_dns.GetAddressCount(
+                (LPCTSTR)CA2T(request->GetHost(), CP_UTF8));
+            request->_is_base_page = true;
+            base_page_complete_.QuadPart = request->_end.QuadPart;
+            if ((!_test_state._test_result ||  _test_state._test_result == 99999)
+                && base_page_result_ >= 400) {
+              _test_state._test_result = result_code;
+            }
+            // check for adult content
+            if (result_code == 200) {
+              DataChunk body_chunk = request->_response_data.GetBody(true);
+              CStringA body(body_chunk.GetData(), (int)body_chunk.GetLength());
+              if (regex_search((LPCSTR)body, adult_regex) ||
+                  body.Find("RTA-5042-1996-1400-1577-RTA") >= 0)
+                adult_site_ = true;
+            }
           }
         }
       }
@@ -929,7 +944,9 @@ void Results::ProcessRequests(void) {
       new_end = max(new_end, request->_connect_end.QuadPart);
       if (request->_first_byte.QuadPart &&
           result_code != 301 && result_code != 302 && result_code != 401 &&
-          (!new_first_byte || request->_first_byte.QuadPart < new_first_byte))
+          (!new_first_byte || request->_first_byte.QuadPart < new_first_byte) &&
+          mime_type != "application/ocsp-response" &&
+          mime_type != "application/pkix-crl")
         new_first_byte = request->_first_byte.QuadPart;
     }
   }
@@ -1091,7 +1108,7 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
               request->_response_data.GetDataSize());
   result += buff;
   // Object Size
-  DWORD size = request->_response_data.GetBody().GetLength();
+  DWORD size = (DWORD)request->_response_data.GetBody().GetLength();
   if (size <= 0 && request->_object_size > 0)
     size = request->_object_size;
   buff.Format("%d\t", size);
@@ -1350,13 +1367,13 @@ void Results::SaveResponseBodies(void) {
                 mime.Find(_T("json")) >= 0))  {
             DataChunk body = request->_response_data.GetBody(true);
             LPBYTE body_data = (LPBYTE)body.GetData();
-            DWORD body_len = body.GetLength();
+            size_t body_len = body.GetLength();
             if (body_data && body_len && !IsBinaryContent(body_data, body_len)) {
               CStringA name;
               name.Format("%03d-%d-body.txt", count, request->_request_id);
               if (!zipOpenNewFileInZip(zip, name, 0, 0, 0, 0, 0, 0, Z_DEFLATED, 
                   Z_BEST_COMPRESSION)) {
-                zipWriteInFileInZip(zip, body_data, body_len);
+                zipWriteInFileInZip(zip, body_data, (unsigned int)body_len);
                 zipCloseFileInZip(zip);
                 bodies_count++;
                 if (_test._save_html_body)

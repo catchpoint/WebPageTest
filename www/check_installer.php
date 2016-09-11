@@ -28,7 +28,7 @@ if (isset($_REQUEST['installer']) && isset($ip)) {
             $ip == '149.20.63.13') {  // HTTP Archive
     $ok = true;
   } elseif (preg_match('/^(software|browsers\/[-_a-zA-Z0-9]+)\.dat$/', $installer)) {
-    $ok = $has_apc ? ApcCheckIp($ip, $installer) : CheckIp($ip, $installer);
+    $ok = IsValidIp($ip, $installer);
   }
 }
 
@@ -50,8 +50,29 @@ if ($ok) {
     header('HTTP/1.0 404 Not Found');
   }
 } else {
-  //logMsg("BLOCKED - $ip : {$_REQUEST['installer']}", "log/software.log", true);
   header('HTTP/1.0 403 Forbidden');
+}
+
+function IsValidIp($ip, $installer) {
+  global $has_apc;
+  $ok = true;
+  
+  // Make sure it isn't on our banned IP list
+  $filename = __DIR__ . '/settings/block_installer_ip.txt';
+  if (is_file($filename)) {
+    $blocked_addresses = file($filename, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (in_array($ip, $blocked_addresses)) {
+      $ok = false;
+    }
+  }
+
+  if ($ok ) {  
+    $ok = $has_apc ? ApcCheckIp($ip, $installer) : CheckIp($ip, $installer);
+    if (!$ok) {
+      logMsg("BLOCKED - $ip : {$_REQUEST['installer']}", "log/software.log", true);
+    }
+  }
+  return $ok;
 }
 
 function ApcCheckIp($ip, $installer) {

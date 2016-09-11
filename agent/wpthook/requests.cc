@@ -115,10 +115,10 @@ void Requests::DataIn(DWORD socket_id, DataChunk& chunk) {
     key.LowPart = 0;
     if (_active_requests.Lookup(key.QuadPart, request) && request) {
       _test_state.ActivityDetected();
-      request->DataIn(chunk);
       WptTrace(loglevel::kFunction, 
                _T("[wpthook] - Requests::DataIn(socket_id=%d, len=%d)"),
                socket_id, chunk.GetLength());
+      request->DataIn(chunk);
     } else {
       WptTrace(loglevel::kFrequentEvent,
                _T("[wpthook] - Requests::DataIn(socket_id=%d, len=%d)")
@@ -190,7 +190,7 @@ bool Requests::IsHttpRequest(const DataChunk& chunk) const {
       "OPTIONS ", "DELETE ", "TRACE ", "CONNECT ", "PATCH "};
   for (int i = 0; i < _countof(HTTP_METHODS) && !ret; i++) {
     const char * method = HTTP_METHODS[i];
-    unsigned long method_len = strlen(method);
+    size_t method_len = strlen(method);
     if (chunk.GetLength() >= method_len &&
         !memcmp(chunk.GetData(), method, method_len)) {
       ret = true;

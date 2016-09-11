@@ -262,7 +262,7 @@ bool CxImagePNG::Decode(CxFile *hFile)
       {
         //recover data from previous scan
         if (info_ptr->interlace_type && pass>0){
-          iter.GetRow(row_pointers, info_ptr->rowbytes);
+          iter.GetRow(row_pointers, (int32_t)info_ptr->rowbytes);
           //re-expand buffer for images with bit depth > 8
           if (info_ptr->bit_depth > 8){
             for(int32_t ax=(head.biWidth*channels-1);ax>=0;ax--)
@@ -280,7 +280,7 @@ bool CxImagePNG::Decode(CxFile *hFile)
         }
 
         //copy the pixels
-        iter.SetRow(row_pointers, info_ptr->rowbytes);
+        iter.SetRow(row_pointers, (int32_t)info_ptr->rowbytes);
         //<DP> expand 2 bpp images only in the last pass
         if (info_ptr->bit_depth==2 && pass==(number_passes-1))
           expand2to4bpp(iter.GetRow());

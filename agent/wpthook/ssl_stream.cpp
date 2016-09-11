@@ -76,20 +76,20 @@ SSLStream::~SSLStream() {
 -----------------------------------------------------------------------------*/
 void SSLStream::Append(const DataChunk& chunk) {
   if (process_data_) {
-    DWORD len = chunk.GetLength();
+    size_t len = chunk.GetLength();
     const char * buff = chunk.GetData();
   
     while (len && buff) {
-      DWORD copy_bytes = 0;
+      size_t copy_bytes = 0;
 
       // are we starting a new frame?
       if (message_size_ < 0) {
         // see if we can at least copy over the size of the initial frame
-        DWORD needed = sizeof(SSL_HEADER) - message_len_;
+        size_t needed = sizeof(SSL_HEADER) - message_len_;
         copy_bytes = min(needed, len);
         if (copy_bytes) {
           memcpy(&message_[message_len_], buff, copy_bytes);
-          message_len_ += copy_bytes;
+          message_len_ += (int)copy_bytes;
           len -= copy_bytes;
           buff += copy_bytes;
         }
@@ -108,7 +108,7 @@ void SSLStream::Append(const DataChunk& chunk) {
           buff) {
         copy_bytes = min(message_size_ - message_len_, (__int32)len);
         memcpy(&message_[message_len_], buff, copy_bytes);
-        message_len_ += copy_bytes;
+        message_len_ += (int)copy_bytes;
         len -= copy_bytes;
         buff += copy_bytes;
       }

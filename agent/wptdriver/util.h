@@ -78,5 +78,5 @@ int ElapsedFileTimeSeconds(FILETIME& check, FILETIME& now);
 void Reboot();
 bool ParseUrl(CString url, CString &scheme, CString &host,
               unsigned short &port, CString& object);
-CString SniffMimeType(LPBYTE content, DWORD len);
-bool IsBinaryContent(LPBYTE content, DWORD len);
+CString SniffMimeType(const LPBYTE content, size_t len);
+bool IsBinaryContent(const LPBYTE content, size_t len);

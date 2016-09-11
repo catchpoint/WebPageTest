@@ -34,4 +34,13 @@ function WptHookValidateTest(&$test) {
   }
   return $valid;
 }
+
+function WptHookPostProcessResults($testPath) {
+  global $WptHooks;
+  if (array_key_exists('PostProcessResults', $WptHooks)) {
+    foreach ($WptHooks['PostProcessResults'] as $fn) {
+      call_user_func($fn, $testPath);
+    }
+  }
+}
 ?>

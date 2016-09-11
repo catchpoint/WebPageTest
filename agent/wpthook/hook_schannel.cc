@@ -4,6 +4,7 @@
 #include "track_sockets.h"
 #include "wpt_test_hook.h"
 #include "hook_schannel.h"
+#include "MinHook.h"
 
 static SchannelHook* g_hook = NULL;
 
@@ -81,8 +82,7 @@ BOOL __stdcall CertVerifyCertificateChainPolicy_Hook(
 -----------------------------------------------------------------------------*/
 SchannelHook::SchannelHook(TrackSockets& sockets, TestState& test_state,
                            WptTestHook& test):
-  _hook(NULL)
-  ,_sockets(sockets)
+  _sockets(sockets)
   ,_test_state(test_state)
   ,_test(test)
   ,InitializeSecurityContextW_(NULL)
@@ -98,31 +98,23 @@ SchannelHook::SchannelHook(TrackSockets& sockets, TestState& test_state,
 SchannelHook::~SchannelHook(void){
   if (g_hook == this)
     g_hook = NULL;
-  delete _hook;  // remove all the hooks
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void SchannelHook::Init() {
-  if (_hook || g_hook) {
+  if (g_hook)
     return;
-  }
-  _hook = new NCodeHookIA32();
   g_hook = this;
+
   WptTrace(loglevel::kProcess, _T("[wpthook] SchannelHook::Init()\n"));
-  InitializeSecurityContextW_ = _hook->createHookByName(
-      "secur32.dll", "InitializeSecurityContextW", 
-      InitializeSecurityContextW_Hook);
-  InitializeSecurityContextA_ = _hook->createHookByName(
-      "secur32.dll", "InitializeSecurityContextA", 
-      InitializeSecurityContextA_Hook);
-  DeleteSecurityContext_ = _hook->createHookByName(
-      "secur32.dll", "DeleteSecurityContext", 
-      DeleteSecurityContext_Hook);
-  DecryptMessage_ = _hook->createHookByName(
-      "secur32.dll", "DecryptMessage", DecryptMessage_Hook);
-  EncryptMessage_ = _hook->createHookByName(
-      "secur32.dll", "EncryptMessage", EncryptMessage_Hook);
+
+  LoadLibrary(_T("secur32.dll"));
+  MH_CreateHookApi(L"secur32.dll", "InitializeSecurityContextW", InitializeSecurityContextW_Hook, (LPVOID *)&InitializeSecurityContextW_);
+  MH_CreateHookApi(L"secur32.dll", "InitializeSecurityContextA", InitializeSecurityContextA_Hook, (LPVOID *)&InitializeSecurityContextA_);
+  MH_CreateHookApi(L"secur32.dll", "DeleteSecurityContext", DeleteSecurityContext_Hook, (LPVOID *)&DeleteSecurityContext_);
+  MH_CreateHookApi(L"secur32.dll", "DecryptMessage", DecryptMessage_Hook, (LPVOID *)&DecryptMessage_);
+  MH_CreateHookApi(L"secur32.dll", "EncryptMessage", EncryptMessage_Hook, (LPVOID *)&EncryptMessage_);
 
   bool is_safari = false;
   TCHAR file_name[MAX_PATH];
@@ -132,10 +124,12 @@ void SchannelHook::Init() {
     if (exe.Find(_T("webkit2webprocess.exe")) >= 0)
       is_safari = true;
   }
-  if (_test._ignore_ssl || is_safari)
-    CertVerifyCertificateChainPolicy_ = _hook->createHookByName(
-        "crypt32.dll", "CertVerifyCertificateChainPolicy",
-        CertVerifyCertificateChainPolicy_Hook);
+  if (_test._ignore_ssl || is_safari) {
+    LoadLibrary(_T("crypt32.dll"));
+    MH_CreateHookApi(L"crypt32.dll", "CertVerifyCertificateChainPolicy", CertVerifyCertificateChainPolicy_Hook, (LPVOID *)&CertVerifyCertificateChainPolicy_);
+  }
+
+  MH_EnableHook(MH_ALL_HOOKS);
 }
 
 /*-----------------------------------------------------------------------------

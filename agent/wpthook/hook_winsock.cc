@@ -26,7 +26,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-// WsHook.cpp - Code for intercepting winsock API calls
+// Ws_hook->cpp - Code for intercepting winsock API calls
 
 #include "StdAfx.h"
 #include "hook_winsock.h"
@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "track_dns.h"
 #include "track_sockets.h"
 #include "test_state.h"
+#include "MinHook.h"
 
 static CWsHook * pHook = NULL;
 
@@ -276,52 +277,46 @@ CWsHook::CWsHook(TrackDns& dns, TrackSockets& sockets, TestState& test_state):
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void CWsHook::Init() {
-  if (!pHook)
-    pHook = this;
+  if (pHook)
+    return;
+  pHook = this;
+
+  WptTrace(loglevel::kProcess, _T("[wpthook] CWsHook::Init()"));
 
   // install the code hooks
-  _WSASocketW = hook.createHookByName("ws2_32.dll", "WSASocketW", 
-                                      WSASocketW_Hook);
-  _closesocket = hook.createHookByName("ws2_32.dll", "closesocket", 
-                                       closesocket_Hook);
-  _connect = hook.createHookByName("ws2_32.dll", "connect", connect_Hook);
-  _recv = hook.createHookByName("ws2_32.dll", "recv", recv_Hook);
-  _send = hook.createHookByName("ws2_32.dll", "send", send_Hook);
-  _select = hook.createHookByName("ws2_32.dll", "select", select_Hook);
-  _GetAddrInfoW = hook.createHookByName("ws2_32.dll", "GetAddrInfoW", 
-                                        GetAddrInfoW_Hook);
-  _gethostbyname = hook.createHookByName("ws2_32.dll", "gethostbyname", 
-                                         gethostbyname_Hook);
-  _GetAddrInfoExA = hook.createHookByName("ws2_32.dll", "GetAddrInfoExA", 
-                                          GetAddrInfoExA_Hook);
-  _GetAddrInfoExW = hook.createHookByName("ws2_32.dll", "GetAddrInfoExW", 
-                                          GetAddrInfoExW_Hook);
-  _WSARecv = hook.createHookByName("ws2_32.dll", "WSARecv", WSARecv_Hook);
-  _WSASend = hook.createHookByName("ws2_32.dll", "WSASend", WSASend_Hook);
-  _WSAGetOverlappedResult = hook.createHookByName("ws2_32.dll", 
-      "WSAGetOverlappedResult", WSAGetOverlappedResult_Hook);
-  _WSAEventSelect = hook.createHookByName("ws2_32.dll", "WSAEventSelect",
-                                          WSAEventSelect_Hook);
-  _WSAEnumNetworkEvents = hook.createHookByName("ws2_32.dll",
-      "WSAEnumNetworkEvents", WSAEnumNetworkEvents_Hook);
-  _CreateThreadpoolIo = hook.createHookByName("kernel32.dll",
-      "CreateThreadpoolIo", CreateThreadpoolIo_Hook);
-  _CreateThreadpoolIo_base = hook.createHookByName("kernelbase.dll",
-      "CreateThreadpoolIo", CreateThreadpoolIo_base_Hook);
-  _CloseThreadpoolIo = hook.createHookByName("kernelbase.dll",
-      "CloseThreadpoolIo", CloseThreadpoolIo_Hook);
-  _CloseThreadpoolIo_base = hook.createHookByName("kernel32.dll",
-      "CloseThreadpoolIo", CloseThreadpoolIo_base_Hook);
-  _StartThreadpoolIo = hook.createHookByName("kernelbase.dll",
-      "StartThreadpoolIo", StartThreadpoolIo_Hook);
-  _StartThreadpoolIo_base = hook.createHookByName("kernel32.dll",
-      "StartThreadpoolIo", StartThreadpoolIo_base_Hook);
-  _WSAIoctl = hook.createHookByName("ws2_32.dll", "WSAIoctl", WSAIoctl_Hook);
-
+  LoadLibrary(_T("ws2_32.dll"));
+  MH_CreateHookApi(L"ws2_32.dll", "WSASocketW", WSASocketW_Hook, (LPVOID *)&_WSASocketW);
+  MH_CreateHookApi(L"ws2_32.dll", "closesocket", closesocket_Hook, (LPVOID *)&_closesocket);
+  MH_CreateHookApi(L"ws2_32.dll", "connect", connect_Hook, (LPVOID *)&_connect);
+  MH_CreateHookApi(L"ws2_32.dll", "recv", recv_Hook, (LPVOID *)&_recv);
+  MH_CreateHookApi(L"ws2_32.dll", "send", send_Hook, (LPVOID *)&_send);
+  MH_CreateHookApi(L"ws2_32.dll", "select", select_Hook, (LPVOID *)&_select);
+  MH_CreateHookApi(L"ws2_32.dll", "GetAddrInfoW", GetAddrInfoW_Hook, (LPVOID *)&_GetAddrInfoW);
+  MH_CreateHookApi(L"ws2_32.dll", "gethostbyname", gethostbyname_Hook, (LPVOID *)&_gethostbyname);
+  MH_CreateHookApi(L"ws2_32.dll", "GetAddrInfoExA", GetAddrInfoExA_Hook, (LPVOID *)&_GetAddrInfoExA);
+  MH_CreateHookApi(L"ws2_32.dll", "GetAddrInfoExW", GetAddrInfoExW_Hook, (LPVOID *)&_GetAddrInfoExW);
+  MH_CreateHookApi(L"ws2_32.dll", "WSARecv", WSARecv_Hook, (LPVOID *)&_WSARecv);
+  MH_CreateHookApi(L"ws2_32.dll", "WSASend", WSASend_Hook, (LPVOID *)&_WSASend);
+  MH_CreateHookApi(L"ws2_32.dll", "WSAGetOverlappedResult", WSAGetOverlappedResult_Hook, (LPVOID *)&_WSAGetOverlappedResult);
+  MH_CreateHookApi(L"ws2_32.dll", "WSAEventSelect", WSAEventSelect_Hook, (LPVOID *)&_WSAEventSelect);
+  MH_CreateHookApi(L"ws2_32.dll", "WSAEnumNetworkEvents", WSAEnumNetworkEvents_Hook, (LPVOID *)&_WSAEnumNetworkEvents);
+  MH_CreateHookApi(L"ws2_32.dll", "WSAIoctl", WSAIoctl_Hook, (LPVOID *)&_WSAIoctl);
   // only hook the A version if the W version wasn't present (XP SP1 or below)
   if (!_GetAddrInfoW)
-    _getaddrinfo = hook.createHookByName("ws2_32.dll", "getaddrinfo", 
-                                         getaddrinfo_Hook);
+    MH_CreateHookApi(L"ws2_32.dll", "getaddrinfo", getaddrinfo_Hook, (LPVOID *)&_getaddrinfo);
+
+  LoadLibrary(_T("kernel32.dll"));
+  MH_CreateHookApi(L"kernel32.dll", "CreateThreadpoolIo", CreateThreadpoolIo_Hook, (LPVOID *)&_CreateThreadpoolIo);
+  MH_CreateHookApi(L"kernel32.dll", "CloseThreadpoolIo", CloseThreadpoolIo_Hook, (LPVOID *)&_CloseThreadpoolIo);
+  MH_CreateHookApi(L"kernel32.dll", "StartThreadpoolIo", StartThreadpoolIo_Hook, (LPVOID *)&_StartThreadpoolIo);
+
+  LoadLibrary(_T("kernelbase.dll"));
+  MH_CreateHookApi(L"kernelbase.dll", "CreateThreadpoolIo", CreateThreadpoolIo_base_Hook, (LPVOID *)&_CreateThreadpoolIo_base);
+  MH_CreateHookApi(L"kernelbase.dll", "CloseThreadpoolIo", CloseThreadpoolIo_base_Hook, (LPVOID *)&_CloseThreadpoolIo_base);
+  MH_CreateHookApi(L"kernelbase.dll", "StartThreadpoolIo", StartThreadpoolIo_base_Hook, (LPVOID *)&_StartThreadpoolIo_base);
+
+  // Enable the hooks
+  MH_EnableHook(MH_ALL_HOOKS);
 }
 
 /*-----------------------------------------------------------------------------
@@ -343,6 +338,9 @@ CWsHook::~CWsHook(void) {
 SOCKET CWsHook::WSASocketW(int af, int type, int protocol, 
                   LPWSAPROTOCOL_INFOW lpProtocolInfo, GROUP g, DWORD dwFlags) {
   SOCKET ret = INVALID_SOCKET;
+#ifdef TRACE_WINSOCK
+  ATLTRACE(_T("CWsHook::WSASocketW"));
+#endif
   _sockets.ResetSslFd();
   if (_WSASocketW) {
     ret = _WSASocketW(af, type, protocol, lpProtocolInfo, g, dwFlags);
@@ -531,7 +529,7 @@ int CWsHook::send(SOCKET s, const char FAR * buf, int len, int flags) {
       _sockets.ModifyDataOut(s, chunk, false);
       _sockets.DataOut(s, chunk, false);
     }
-    ret = _send(s, chunk.GetData(), chunk.GetLength(), flags);
+    ret = _send(s, chunk.GetData(), (int)chunk.GetLength(), flags);
     if (ret != SOCKET_ERROR) {
         ret = original_len;
     }
@@ -575,7 +573,7 @@ int CWsHook::WSASend(SOCKET s, LPWSABUF lpBuffers, DWORD dwBufferCount,
     if (is_modified) {
       WSABUF out;
       out.buf = (char *)chunk.GetData();
-      out.len = chunk.GetLength();
+      out.len = (ULONG)chunk.GetLength();
       ret = _WSASend(s, &out, 1, lpNumberOfBytesSent, dwFlags, lpOverlapped,
                      lpCompletionRoutine);
       // Respond with the number of bytes the sending app was expecting
@@ -741,13 +739,13 @@ struct hostent * CWsHook::gethostbyname(const char * pNodeName) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void CWsHook::ProcessOverlappedIo(SOCKET s, LPOVERLAPPED lpOverlapped,
-                                  LPDWORD lpNumberOfBytesTransferred) {
+                                  PULONG_PTR lpNumberOfBytesTransferred) {
   WsaBuffTracker buff;
   // handle a receive
   if (_recv_buffers.Lookup(lpOverlapped, buff)) {
-    DWORD bytes = *lpNumberOfBytesTransferred;
+    ULONG_PTR bytes = *lpNumberOfBytesTransferred;
     for (DWORD i = 0; i < buff._buffer_count && bytes; i++) {
-      DWORD data_bytes = min(bytes, buff._buffers[i].len);
+      size_t data_bytes = min(bytes, buff._buffers[i].len);
       if (data_bytes && buff._buffers[i].buf) {
         DataChunk chunk(buff._buffers[i].buf, data_bytes);
         _sockets.DataIn(s, chunk, false);
@@ -760,7 +758,7 @@ void CWsHook::ProcessOverlappedIo(SOCKET s, LPOVERLAPPED lpOverlapped,
   if (_send_buffers.Lookup(lpOverlapped, chunk)) {
     _send_buffers.RemoveKey(lpOverlapped);
     if (lpNumberOfBytesTransferred) {
-      DWORD len = *lpNumberOfBytesTransferred;
+      ULONG_PTR len = *lpNumberOfBytesTransferred;
       if (_send_buffer_original_length.Lookup(lpOverlapped, len)) {
         _send_buffer_original_length.RemoveKey(lpOverlapped);
         *lpNumberOfBytesTransferred = len;
@@ -782,8 +780,13 @@ BOOL CWsHook::WSAGetOverlappedResult(SOCKET s, LPWSAOVERLAPPED lpOverlapped,
     ret = _WSAGetOverlappedResult(s, lpOverlapped, lpcbTransfer, fWait, 
                                   lpdwFlags);
 
-  if (ret && lpcbTransfer && !_test_state._exit)
-    ProcessOverlappedIo(s, lpOverlapped, lpcbTransfer);
+  if (ret && lpcbTransfer && !_test_state._exit) {
+    if (lpcbTransfer) {
+      ULONG_PTR cbTransfer = *lpcbTransfer;
+      ProcessOverlappedIo(s, lpOverlapped, &cbTransfer);
+      *lpcbTransfer = (DWORD)cbTransfer;
+    }
+  }
 
   return ret;
 }
@@ -950,7 +953,7 @@ void CWsHook::ThreadpoolCallback(PTP_CALLBACK_INSTANCE Instance, PVOID Context,
       Overlapped && 
       NumberOfBytesTransferred &&
       !_test_state._exit) {
-    DWORD bytes = NumberOfBytesTransferred;
+    ULONG_PTR bytes = NumberOfBytesTransferred;
     ProcessOverlappedIo(s, (LPOVERLAPPED)Overlapped, &bytes);
     NumberOfBytesTransferred = bytes;
   }

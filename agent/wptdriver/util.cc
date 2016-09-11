@@ -813,7 +813,7 @@ bool ParseUrl(CString url, CString &scheme, CString &host,
   See if we can sniff the real content type by looking for a file signature
   https://mimesniff.spec.whatwg.org/#matching-an-image-type-pattern
 -----------------------------------------------------------------------------*/
-CString SniffMimeType(LPBYTE content, DWORD len) {
+CString SniffMimeType(const LPBYTE content, size_t len) {
   CString mime_type;
   if (len && content) {
     LPBYTE b = content;
@@ -896,7 +896,7 @@ CString SniffMimeType(LPBYTE content, DWORD len) {
   Scan the content to see if it is a binary content type
   https://mimesniff.spec.whatwg.org/#sniffing-a-mislabeled-binary-resource
 -----------------------------------------------------------------------------*/
-bool IsBinaryContent(LPBYTE content, DWORD len) {
+bool IsBinaryContent(const LPBYTE content, size_t len) {
   bool is_binary = false;
 
   if (content) {

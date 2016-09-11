@@ -220,6 +220,7 @@ class TestResultsHtmlTables {
    */
   private function _createVideoCell($stepResult, $even) {
     $localPaths = $stepResult->createTestPaths();
+    $nameOnlyPaths = $stepResult->createTestPaths("");
     $class = $even ? 'class="even"' : '';
     $out = "<td align=\"center\" valign=\"middle\" $class>";
     if (is_dir($localPaths->videoDir())) {
@@ -233,8 +234,10 @@ class TestResultsHtmlTables {
       $out .=  "<a href=\"$createUrl\">Watch Video</a>";
 
       $rawVideoPath = $localPaths->rawDeviceVideo();
-      if (is_file($rawVideoPath))
-        $out .=  "<br>-<br><a href=\"/$rawVideoPath\">Raw Device Video</a>";
+      if (is_file($rawVideoPath)) {
+        $rawVideoUrl = htmlspecialchars($urlGenerator->getFile($nameOnlyPaths->rawDeviceVideo()));
+        $out .=  "<br>-<br><a href=\"$rawVideoUrl\">Raw Device Video</a>";
+      }
     } else {
       $out .=  "not available";
     }

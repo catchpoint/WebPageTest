@@ -2,8 +2,8 @@
 #include "request.h"
 #include "test_state.h"
 #include "track_sockets.h"
-#include "shared_mem.h"
 #include "hook_file.h"
+#include "MinHook.h"
 
 static FileHook* g_hook = NULL;
 
@@ -19,8 +19,7 @@ HANDLE __stdcall CreateFileW_Hook(LPCWSTR lpFileName, DWORD dwDesiredAccess,
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 FileHook::FileHook(TrackSockets& sockets, TestState& test_state):
-  _hook(NULL)
-  ,_sockets(sockets)
+  _sockets(sockets)
   ,_test_state(test_state)
   ,CreateFileW_(NULL) {
 }
@@ -31,15 +30,13 @@ FileHook::FileHook(TrackSockets& sockets, TestState& test_state):
 FileHook::~FileHook() {
   if (g_hook == this)
     g_hook = NULL;
-  delete _hook;  // remove all the hooks
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void FileHook::Init() {
-  if (_hook || g_hook) {
+  if (g_hook)
     return;
-  }
 
   // Get the system download path
   TCHAR path[4096];
@@ -66,11 +63,12 @@ void FileHook::Init() {
     RegCloseKey(hKey);
   }
 
-  _hook = new NCodeHookIA32();
   g_hook = this;
   WptTrace(loglevel::kProcess, _T("[wpthook] FileHook::Init()\n"));
-  CreateFileW_ = _hook->createHookByName("kernel32.dll", "CreateFileW",
-                                         CreateFileW_Hook);
+
+  LoadLibrary(_T("kernel32.dll"));
+  MH_CreateHookApi(L"kernel32.dll", "CreateFileW", CreateFileW_Hook, (LPVOID *)&CreateFileW_);
+  MH_EnableHook(MH_ALL_HOOKS);
 }
 
 /*-----------------------------------------------------------------------------
