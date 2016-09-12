@@ -209,7 +209,8 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "gocache", "GoCache"},
   {"server", "hiberniacdn", "HiberniaCDN"},
   {"server", "UnicornCDN", "UnicornCDN"},
-  {"server", "Optimal CDN", "Optimal CDN"}
+  {"server", "Optimal CDN", "Optimal CDN"},
+  {"server", "Sucuri/Cloudproxy", "Sucuri/Cloudproxy"}
 };
 
 // Specific providers that require multiple headers
