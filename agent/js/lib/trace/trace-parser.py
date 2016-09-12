@@ -38,36 +38,12 @@ class Trace():
     self.cpu = {'main_thread': None}
     self.feature_usage = None
     self.feature_usage_start_time = None
+    self.netlog = {'bytes_in': 0, 'bytes_out': 0}
     return
 
-  def Process(self, trace):
-    f = None
-    line_mode = False
-    self.__init__()
-    try:
-      file_name, ext = os.path.splitext(trace)
-      if ext.lower() == '.gz':
-        f = gzip.open(trace, 'rb')
-      else:
-        f = open(trace, 'r')
-      for line in f:
-        try:
-          trace_event = json.loads(line.strip("\r\n\t ,"))
-          if not line_mode and 'traceEvents' in trace_event:
-            for sub_event in trace_event['traceEvents']:
-              self.ProcessEvent(sub_event)
-          else:
-            line_mode = True
-            self.ProcessEvent(trace_event)
-        except:
-          pass
-    except:
-      logging.critical("Error processing trace " + trace)
-
-    if f is not None:
-      f.close()
-    self.ProcessTimelineEvents()
-
+  ########################################################################################################################
+  #   Output Logging
+  ########################################################################################################################
   def WriteUserTiming(self, file):
     try:
       file_name, ext = os.path.splitext(file)
@@ -105,70 +81,124 @@ class Trace():
       except:
         logging.critical("Error writing feature usage to " + file)
 
-  def ProcessEvent(self, trace_event):
+  def WriteNetlog(self, file):
+    try:
+      file_name, ext = os.path.splitext(file)
+      if ext.lower() == '.gz':
+        with gzip.open(file, 'wb') as f:
+          json.dump(self.netlog, f)
+      else:
+        with open(file, 'w') as f:
+          json.dump(self.netlog, f)
+    except:
+      logging.critical("Error writing netlog details to " + file)
+    print json.dumps(self.netlog, sort_keys=True, indent = 4)
+
+
+  ########################################################################################################################
+  #   Top-level processing
+  ########################################################################################################################
+  def Process(self, trace):
+    f = None
+    line_mode = False
+    self.__init__()
+    try:
+      file_name, ext = os.path.splitext(trace)
+      if ext.lower() == '.gz':
+        f = gzip.open(trace, 'rb')
+      else:
+        f = open(trace, 'r')
+      for line in f:
+        try:
+          trace_event = json.loads(line.strip("\r\n\t ,"))
+          if not line_mode and 'traceEvents' in trace_event:
+            for sub_event in trace_event['traceEvents']:
+              self.ProcessTraceEvent(sub_event)
+          else:
+            line_mode = True
+            self.ProcessTraceEvent(trace_event)
+        except:
+          pass
+    except:
+      logging.critical("Error processing trace " + trace)
+
+    if f is not None:
+      f.close()
+    self.ProcessTimelineEvents()
+
+  def ProcessTraceEvent(self, trace_event):
     cat = trace_event['cat']
     if cat.find('blink.user_timing') >= 0:
       self.user_timing.append(trace_event)
     if cat.find('blink.feature_usage') >= 0:
-      self.ProcessFeatureUsageEvent(trace_event);
+      self.ProcessFeatureUsageEvent(trace_event)
+    if cat.find('netlog') >= 0:
+      self.ProcessNetlogEvent(trace_event)
     if cat.find('devtools.timeline') >= 0:
-      thread = '{0}:{1}'.format(trace_event['pid'], trace_event['tid'])
+      self.ProcessTimelineTraceEvent(trace_event)
 
-      # Keep track of the main thread
-      if self.cpu['main_thread'] is None and trace_event['name'] == 'ResourceSendRequest' and 'args' in trace_event and\
-              'data' in trace_event['args'] and 'url' in trace_event['args']['data']:
-        if trace_event['args']['data']['url'][:21] == 'http://127.0.0.1:8888':
-          self.ignore_threads[thread] = True
+
+  ########################################################################################################################
+  #   Timeline
+  ########################################################################################################################
+  def ProcessTimelineTraceEvent(self, trace_event):
+    thread = '{0}:{1}'.format(trace_event['pid'], trace_event['tid'])
+
+    # Keep track of the main thread
+    if self.cpu['main_thread'] is None and trace_event['name'] == 'ResourceSendRequest' and 'args' in trace_event and \
+            'data' in trace_event['args'] and 'url' in trace_event['args']['data']:
+      if trace_event['args']['data']['url'][:21] == 'http://127.0.0.1:8888':
+        self.ignore_threads[thread] = True
+      else:
+        if thread not in self.threads:
+          self.threads[thread] = {}
+        if self.start_time is None or trace_event['ts'] < self.start_time:
+          self.start_time = trace_event['ts']
+        self.cpu['main_thread'] = thread
+        if 'dur' not in trace_event:
+          trace_event['dur'] = 1
+
+    # Make sure each thread has a numerical ID
+    if self.cpu['main_thread'] is not None and thread not in self.threads and thread not in self.ignore_threads and \
+            trace_event['name'] != 'Program':
+      self.threads[thread] = {}
+
+    # Build timeline events on a stack. 'B' begins an event, 'E' ends an event
+    if (thread in self.threads and ('dur' in trace_event or trace_event['ph'] == 'B' or trace_event['ph'] == 'E')):
+      trace_event['thread'] = self.threads[thread]
+      if thread not in self.thread_stack:
+        self.thread_stack[thread] = []
+      if trace_event['name'] not in self.event_names:
+        self.event_names[trace_event['name']] = len(self.event_names)
+        self.event_name_lookup[self.event_names[trace_event['name']]] = trace_event['name']
+      if trace_event['name'] not in self.threads[thread]:
+        self.threads[thread][trace_event['name']] = self.event_names[trace_event['name']]
+      e = None
+      if trace_event['ph'] == 'E':
+        if len(self.thread_stack[thread]) > 0:
+          e = self.thread_stack[thread].pop()
+          if e['n'] == self.event_names[trace_event['name']]:
+            e['e'] = trace_event['ts']
+      else:
+        e = {'t': thread, 'n': self.event_names[trace_event['name']], 's': trace_event['ts']}
+        if trace_event['ph'] == 'B':
+          self.thread_stack[thread].append(e)
+          e = None
+        elif 'dur' in trace_event:
+          e['e'] = e['s'] + trace_event['dur']
+
+      if e is not None and 'e' in e and e['s'] >= self.start_time and e['e'] >= e['s']:
+        if self.end_time is None or e['e'] > self.end_time:
+          self.end_time = e['e']
+        # attach it to a parent event if there is one
+        if len(self.thread_stack[thread]) > 0:
+          parent = self.thread_stack[thread].pop()
+          if 'c' not in parent:
+            parent['c'] = []
+          parent['c'].append(e)
+          self.thread_stack[thread].append(parent)
         else:
-          if thread not in self.threads:
-            self.threads[thread] = {}
-          if self.start_time is None or trace_event['ts'] < self.start_time:
-            self.start_time = trace_event['ts']
-          self.cpu['main_thread'] = thread
-          if 'dur' not in trace_event:
-            trace_event['dur'] = 1
-
-      # Make sure each thread has a numerical ID
-      if self.cpu['main_thread'] is not None and thread not in self.threads and thread not in self.ignore_threads and\
-              trace_event['name'] != 'Program':
-        self.threads[thread] = {}
-
-      # Build timeline events on a stack. 'B' begins an event, 'E' ends an event
-      if (thread in self.threads and ('dur' in trace_event or trace_event['ph'] == 'B' or trace_event['ph'] == 'E')):
-        trace_event['thread'] = self.threads[thread]
-        if thread not in self.thread_stack:
-          self.thread_stack[thread] = []
-        if trace_event['name'] not in self.event_names:
-          self.event_names[trace_event['name']] = len(self.event_names)
-          self.event_name_lookup[self.event_names[trace_event['name']]] = trace_event['name']
-        if trace_event['name'] not in self.threads[thread]:
-          self.threads[thread][trace_event['name']] = self.event_names[trace_event['name']]
-        e = None
-        if trace_event['ph'] == 'E':
-          if len(self.thread_stack[thread]) > 0:
-            e = self.thread_stack[thread].pop()
-            if e['n'] == self.event_names[trace_event['name']]:
-              e['e'] = trace_event['ts']
-        else:
-          e = {'t': thread, 'n': self.event_names[trace_event['name']], 's': trace_event['ts']}
-          if trace_event['ph'] == 'B':
-            self.thread_stack[thread].append(e)
-            e = None
-          elif 'dur' in trace_event:
-            e['e'] = e['s'] + trace_event['dur']
-
-        if e is not None and 'e' in e and e['s'] >= self.start_time and e['e'] >= e['s']:
-          if self.end_time is None or e['e'] > self.end_time:
-            self.end_time = e['e']
-          # attach it to a parent event if there is one
-          if len(self.thread_stack[thread]) > 0:
-            parent = self.thread_stack[thread].pop()
-            if 'c' not in parent:
-              parent['c'] = []
-            parent['c'].append(e)
-            self.thread_stack[thread].append(parent)
-          else:
-            self.timeline_events.append(e)
+          self.timeline_events.append(e)
 
   def ProcessTimelineEvents(self):
     if len(self.timeline_events) and self.end_time > self.start_time:
@@ -208,12 +238,13 @@ class Trace():
     if end > start:
       thread = timeline_event['t']
       name = self.event_name_lookup[timeline_event['n']]
+
       slice_usecs = self.cpu['slice_usecs']
       first_slice = int(float(start) / float(slice_usecs))
       last_slice = int(float(end) / float(slice_usecs))
-      for slice_number in range(first_slice, last_slice + 1):
-        slice_start = slice_number * slice_usecs;
-        slice_end = slice_start + slice_usecs;
+      for slice_number in xrange(first_slice, last_slice + 1):
+        slice_start = slice_number * slice_usecs
+        slice_end = slice_start + slice_usecs
         used_start = max(slice_start, start)
         used_end = min(slice_end, end)
         slice_elapsed = used_end - used_start
@@ -227,22 +258,32 @@ class Trace():
   # Add the time to the given slice and subtract the time from a parent event
   def AdjustTimelineSlice(self, thread, slice_number, name, parent, elapsed):
     try:
-      fraction = min(1.0, float(elapsed) / float(self.cpu['slice_usecs']))
-      self.cpu['slices'][thread][name][slice_number] =\
-        min(1.0, self.cpu['slices'][thread][name][slice_number] + fraction)
-      if parent is not None:
-        self.cpu['slices'][thread][parent][slice_number] =\
-          max(0.0, self.cpu['slices'][thread][parent][slice_number] - fraction)
-      # make sure we don't exceed 100% for any slot
-      available = 1.0 - fraction
-      for slice_name in self.cpu['slices'][thread].keys():
-        if slice_name != name:
-          self.cpu['slices'][thread][slice_name][slice_number] =\
-            min(self.cpu['slices'][thread][slice_name][slice_number], available)
-          available -= self.cpu['slices'][thread][slice_name][slice_number]
+      # Don't bother adjusting if both the current event and parent are the same category
+      # since they would just cancel each other out.
+      if name != parent:
+        fraction = min(1.0, float(elapsed) / float(self.cpu['slice_usecs']))
+        self.cpu['slices'][thread][name][slice_number] = self.cpu['slices'][thread][name][slice_number] + fraction
+        if parent is not None:
+          parentTime = self.cpu['slices'][thread][parent][slice_number]
+          if parentTime >= fraction:
+            parentTime = max(0.0, parentTime - fraction)
+            self.cpu['slices'][thread][parent][slice_number] = parentTime
+        # Make sure we didn't exceed 100% in this slice
+        self.cpu['slices'][thread][name][slice_number] = min(1.0, self.cpu['slices'][thread][name][slice_number])
+
+        # make sure we don't exceed 100% for any slot
+        available = max(0.0, 1.0 - fraction)
+        for slice_name in self.cpu['slices'][thread].keys():
+          if slice_name != name:
+            self.cpu['slices'][thread][slice_name][slice_number] =\
+              min(self.cpu['slices'][thread][slice_name][slice_number], available)
+            available = max(0.0, available - self.cpu['slices'][thread][slice_name][slice_number])
     except:
       pass
 
+  ########################################################################################################################
+  #   Blink Features
+  ########################################################################################################################
   def ProcessFeatureUsageEvent(self, trace_event):
     global BLINK_CSS_FEATURES
     global BLINK_FEATURES
@@ -274,6 +315,70 @@ class Trace():
         if name not in self.feature_usage['CSSFeatures']:
           self.feature_usage['CSSFeatures'][name] = timestamp
 
+  ########################################################################################################################
+  #   Netlog
+  ########################################################################################################################
+  def ProcessNetlogEvent(self, trace_event):
+    if 'args' in trace_event and 'id' in trace_event and 'name' in trace_event and 'source_type' in trace_event['args']:
+      # Convert the source event id to hex if one exists
+      if 'params' in trace_event['args'] and 'source_dependency' in trace_event['args']['params'] and 'id' in trace_event['args']['params']['source_dependency']:
+        dependency_id = int(trace_event['args']['params']['source_dependency']['id'])
+        trace_event['args']['params']['source_dependency']['id'] = 'x%X' % dependency_id
+      if trace_event['args']['source_type'] == 'SOCKET':
+        self.ProcessNetlogSocketEvent(trace_event)
+      if trace_event['args']['source_type'] == 'HTTP2_SESSION':
+        self.ProcessNetlogHTTP2SessionEvent(trace_event)
+
+  def ProcessNetlogSocketEvent(self, s):
+    if 'sockets' not in self.netlog:
+      self.netlog['sockets'] = {}
+    if s['id'] not in self.netlog['sockets']:
+      self.netlog['sockets'][s['id']] = {'bytes_in': 0, 'bytes_out': 0}
+    if s['name'] == 'SOCKET_BYTES_RECEIVED' and 'params' in s['args'] and 'byte_count' in s['args']['params']:
+      self.netlog['sockets'][s['id']]['bytes_in'] += s['args']['params']['byte_count']
+      self.netlog['bytes_in'] += s['args']['params']['byte_count']
+    if s['name'] == 'SOCKET_BYTES_SENT' and 'params' in s['args'] and 'byte_count' in s['args']['params']:
+      self.netlog['sockets'][s['id']]['bytes_out'] += s['args']['params']['byte_count']
+      self.netlog['bytes_out'] += s['args']['params']['byte_count']
+
+  def ProcessNetlogHTTP2SessionEvent(self, s):
+    if 'params' in s['args'] and 'stream_id' in s['args']['params']:
+      if 'http2' not in self.netlog:
+        self.netlog['http2'] = {'bytes_in': 0, 'bytes_out': 0}
+      if s['id'] not in self.netlog['http2']:
+        self.netlog['http2'][s['id']] = {'bytes_in': 0, 'bytes_out': 0, 'streams':{}}
+      stream = '{0:d}'.format(s['args']['params']['stream_id'])
+      if stream not in self.netlog['http2'][s['id']]['streams']:
+        self.netlog['http2'][s['id']]['streams'][stream] = {'start': s['tts'], 'end': s['tts'], 'bytes_in': 0, 'bytes_out': 0}
+      if s['tts'] > self.netlog['http2'][s['id']]['streams'][stream]['end']:
+        self.netlog['http2'][s['id']]['streams'][stream]['end'] = s['tts']
+
+    if s['name'] == 'HTTP2_SESSION_SEND_HEADERS' and 'params' in s['args']:
+      if 'request' not in self.netlog['http2'][s['id']]['streams'][stream]:
+        self.netlog['http2'][s['id']]['streams'][stream]['request'] = {}
+      if 'headers' in s['args']['params']:
+        self.netlog['http2'][s['id']]['streams'][stream]['request']['headers'] = s['args']['params']['headers']
+      if 'parent_stream_id' in s['args']['params']:
+        self.netlog['http2'][s['id']]['streams'][stream]['request']['parent_stream_id'] = s['args']['params']['parent_stream_id']
+      if 'exclusive' in s['args']['params']:
+        self.netlog['http2'][s['id']]['streams'][stream]['request']['exclusive'] = s['args']['params']['exclusive']
+      if 'priority' in s['args']['params']:
+        self.netlog['http2'][s['id']]['streams'][stream]['request']['priority'] = s['args']['params']['priority']
+
+    if s['name'] == 'HTTP2_SESSION_RECV_HEADERS' and 'params' in s['args']:
+      if 'first_byte' not in self.netlog['http2'][s['id']]['streams'][stream]:
+        self.netlog['http2'][s['id']]['streams'][stream]['first_byte'] = s['tts']
+      if 'response' not in self.netlog['http2'][s['id']]['streams'][stream]:
+        self.netlog['http2'][s['id']]['streams'][stream]['response'] = {}
+      if 'headers' in s['args']['params']:
+        self.netlog['http2'][s['id']]['response']['streams'][stream]['headers'] = s['args']['params']['headers']
+
+    if s['name'] == 'HTTP2_SESSION_RECV_DATA' and 'params' in s['args'] and 'size' in s['args']['params']:
+      if 'first_byte' not in self.netlog['http2'][s['id']]['streams'][stream]:
+        self.netlog['http2'][s['id']]['streams'][stream]['first_byte'] = s['tts']
+      self.netlog['http2'][s['id']]['streams'][stream]['bytes_in'] += s['args']['params']['size']
+      self.netlog['http2'][s['id']]['bytes_in'] += s['args']['params']['size']
+
 
 ########################################################################################################################
 #   Main Entry Point
@@ -288,6 +393,7 @@ def main():
   parser.add_argument('-c', '--cpu', help="Output CPU time slices file.")
   parser.add_argument('-u', '--user', help="Output user timing file.")
   parser.add_argument('-f', '--features', help="Output blink feature usage file.")
+  parser.add_argument('-n', '--netlog', help="Output netlog details file.")
   options = parser.parse_args()
 
   # Set up logging
@@ -317,6 +423,9 @@ def main():
 
   if options.features:
     trace.WriteFeatureUsage(options.features)
+
+  if options.netlog:
+    trace.WriteNetlog(options.netlog)
 
   end = time.time()
   elapsed = end - start
