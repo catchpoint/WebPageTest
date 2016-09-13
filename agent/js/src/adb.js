@@ -281,26 +281,23 @@ Adb.prototype.getStoragePath = function() {
  */
 Adb.prototype.getPidsOfProcess = function(name) {
   'use strict';
-  return this.shell(['ps', name]).then(function(stdout) {
+  return this.shell(['ps', '|', 'grep', name]).then(function(stdout) {
     var pids = [];
     var lines = stdout.split(/[\r\n]+/);
-    if (lines.length === 0 || lines[0].indexOf('USER ') !== 0) {  // Heading.
-      throw new Error(util.format('ps command failed, output: %j', stdout));
+    if (lines.length > 0) {
+      lines.forEach(function(line, iLine) {
+        if (line.length === 0) {
+          return;  // Skip empty lines (last line in particular).
+        }
+        var fields = line.split(/\s+/);
+        if (fields.length === 9) {
+          // make sure the pid field is numeric
+          var pid = fields[1];
+          if (!isNaN(parseFloat(pid)) && isFinite(pid))
+            pids.push(pid);
+        }
+      }.bind(this));
     }
-    lines.forEach(function(line, iLine) {
-      if (line.length === 0) {
-        return;  // Skip empty lines (last line in particular).
-      }
-      var fields = line.split(/\s+/);
-      if (iLine === 0) {  // Skip the header
-        return;
-      }
-      if (fields.length !== 9) {
-        throw new Error(util.format('Failed to parse ps output line %d: %j',
-            iLine, stdout));
-      }
-      pids.push(fields[1]);
-    }.bind(this));
     return pids;
   }.bind(this));
 };

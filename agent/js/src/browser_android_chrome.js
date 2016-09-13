@@ -84,16 +84,15 @@ var BLACK_BOX_BROWSERS = {
     'UC Mini': {
       'package': 'com.uc.browser.en', 
       'activity': 'com.uc.browser.ActivityBrowser',
-      'relaunch': true,
-      'clearProfile': true,
       'videoFlags': ['--findstart', 25, '--notification'],
+      'directories': ['cache', 'databases', 'files', 'app_sbrowser', 'shared_prefs', 'code_cache', 'user', 'wa'],
       'startupDelay': 4000
     },
     'UC Browser': {
       'package': 'com.UCMobile.intl',
       'activity': 'com.UCMobile.main.UCMobile',
-      'clearProfile' : true,
       'videoFlags': ['--findstart', 25, '--notification'],
+      'directories': ['cache', 'databases', 'files', 'app_sbrowser', 'shared_prefs', 'code_cache', 'user', 'wa', 'temp', 'UCMobile', 'app_webview'],
       'startupDelay': 10000
     },
     'Opera Mini': {
@@ -102,6 +101,13 @@ var BLACK_BOX_BROWSERS = {
       'videoFlags': ['--findstart', 75, '--notification', '--renderignore', 40,
                      '--forceblank'],
       'directories': ['cache', 'databases', 'files', 'app_opera', 'app_webview'],
+      'startupDelay': 10000
+    },
+    'Samsung Browser': {
+      'package': 'com.sec.android.app.sbrowser',
+      'activity': '.SBrowserMainActivity',
+      'videoFlags': ['--findstart', 25, '--notification'],
+      'directories': ['cache', 'databases', 'files', 'app_sbrowser', 'shared_prefs', 'code_cache'],
       'startupDelay': 10000
     },
   };
@@ -174,7 +180,7 @@ function BrowserAndroidChrome(app, args) {
       this.browserPackage_ = BLACK_BOX_BROWSERS[browserName].package;
       this.browserActivity_ = BLACK_BOX_BROWSERS[browserName].activity;
       this.blank_page_ = args.flags.blankPage ||
-                         'http://www.webpagetest.org/blank.html';
+                         'http://api.webpagetest.org/blank.html';
       this.isBlackBox = true;
       this.supportsTracing = false;
       this.browserConfig_ = BLACK_BOX_BROWSERS[browserName];
@@ -317,12 +323,6 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
   // Start the browser
   this.navigateTo(this.blank_page_);
   if (this.isBlackBox) {
-    if (this.browserConfig_['relaunch']) {
-      // Get around first-launch UI
-      this.app_.timeout(1000, 'Wait for first browser startup');
-      this.kill();
-      this.navigateTo(this.blank_page_);
-    }
     this.app_.timeout(this.browserConfig_['startupDelay'], 'Wait for browser startup');
   }
 
@@ -359,10 +359,7 @@ BrowserAndroidChrome.prototype.clearProfile_ = function() {
   'use strict';
   if (this.isBlackBox) {
     if (!this.isCacheWarm_) {
-      if (this.browserConfig_['clearProfile']) {
-        // Nuke all of the application data
-        this.adb_.shell(['pm', 'clear', this.browserPackage_]);
-      } else if (this.browserConfig_['directories']) {
+      if (this.browserConfig_['directories']) {
         // Just clear out the cache directories
         for (var i = 0; i < this.browserConfig_.directories.length; i++) {
           this.adb_.su(['rm', '-r', '/data/data/' + this.browserPackage_ +
