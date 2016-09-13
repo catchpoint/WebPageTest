@@ -42,7 +42,7 @@ static ChromeSSLHook* g_hook = NULL;
 
 /*
 // From Chrome /src/third_party/boringssl/src/ssl/internal.h
-// August 2016
+// August 2016 (Chrome 54+)
 struct ssl_protocol_method_st {
   char is_dtls;         // 0 (2 byte padded) - 0
   uint16_t min_version; // (2 bytes) - 0
@@ -72,6 +72,28 @@ struct ssl_protocol_method_st {
   int (*set_write_state)(SSL *ssl, SSL_AEAD_CTX *aead_ctx); // 22
 };
 
+// Chrome 53
+struct ssl_protocol_method_st {
+  char is_dtls;                                                           // 0 (DWORD)
+  int (*ssl_new)(SSL *ssl);                                               // 1
+  void (*ssl_free)(SSL *ssl);                                             // 2
+  long (*ssl_get_message)(SSL *ssl, int msg_type,                         // 3
+                          enum ssl_hash_message_t hash_message, int *ok);
+  int (*ssl_read_app_data)(SSL *ssl, uint8_t *buf, int len, int peek);    // 4
+  int (*ssl_read_change_cipher_spec)(SSL *ssl);                           // 5
+  void (*ssl_read_close_notify)(SSL *ssl);                                // 6
+  int (*ssl_write_app_data)(SSL *ssl, const void *buf_, int len);         // 7
+  int (*ssl_dispatch_alert)(SSL *ssl);                                    // 8
+  int (*supports_cipher)(const SSL_CIPHER *cipher);                       // 9
+  unsigned int hhlen;                                                     // 10
+  int (*set_handshake_header)(SSL *ssl, int type, unsigned long len);     // 11
+  int (*do_write)(SSL *ssl);                                              // 12
+  int (*send_change_cipher_spec)(SSL *ssl, int a, int b);                 // 13
+  void (*expect_flight)(SSL *ssl);                                        // 14
+  void (*received_flight)(SSL *ssl);                                      // 15
+};
+
+
 // Nov 2015
 typedef struct ssl_protocol_method_st {
   char is_dtls;     // 0 (DWORD)
@@ -92,29 +114,11 @@ typedef struct ssl_protocol_method_st {
   int (*set_handshake_header)(void *ssl, int type, unsigned long len);
   int (*do_write)(void *ssl);
 } SSL_METHODS;
-
-// May 2015
-typedef struct ssl_protocol_method_st {
-  char is_dtls;        // 0 (DWORD)
-  int (*ssl_new)(void *ssl);
-  void (*ssl_free)(void *ssl);
-  int (*ssl_accept)(void *ssl);
-  int (*ssl_connect)(void *ssl);
-  long (*ssl_get_message)(void *ssl, int header_state, int body_state,
-                          int msg_type, long max,
-                          enum ssl_hash_message_t hash_message, int *ok);
-  int (*ssl_read_app_data)(void *ssl, uint8_t *buf, int len, int peek);
-  void (*ssl_read_close_notify)(void *ssl);
-  int (*ssl_write_app_data)(void *ssl, const void *buf_, int len);
-  int (*ssl_dispatch_alert)(void *ssl);
-  int (*supports_cipher)(void *cipher);
-  unsigned int hhlen; // 4 (DWORD)
-  int (*set_handshake_header)(void *ssl, int type, unsigned long len);
-  int (*do_write)(void *ssl);
-} SSL_METHODS_1;
 */
 
 typedef struct {
+  DWORD max_chrome_ver;
+  DWORD min_chrome_ver;
   DWORD count;
   DWORD signature;
   DWORD hhlen;
@@ -130,8 +134,10 @@ typedef struct {
 } SSL_METHODS_SIGNATURE;
 
 static SSL_METHODS_SIGNATURE methods_signatures[] = {
-  // July 2016 - hhlen is switched for ssl max DWORD
-  { 22,         // count
+  // August 2016 - hhlen is switched for ssl max DWORD
+  { 0,          // No max, current signature
+    54,         // Started in Chrome 53
+    22,         // count
     0x03000000, // signature
     0x00000304, // hhlen
     1,          // hhlen_index
@@ -141,12 +147,27 @@ static SSL_METHODS_SIGNATURE methods_signatures[] = {
     0,          // ssl_connect_index
     0,          // ssl_begin_handshake_index
     0,          // ssl_read_app_data_old_index
-    9,         // ssl_read_app_data_index
+    9,          // ssl_read_app_data_index
     12},        // ssl_write_app_data_index
 
+  // Chrome 53
+  { 53,         // No max, current signature
+    53,         // Started in Chrome 53
+    15,         // count
+    0x00000000, // signature
+    4,          // hhlen
+    10,         // hhlen_index
+    1,          // addr_start_index
+    1,          // ssl_new_index
+    2,          // ssl_free_index
+    0,          // ssl_connect_index
+    0,          // ssl_begin_handshake_index
+    4,          // ssl_read_app_data_old_index
+    0,          // ssl_read_app_data_index
+    7},         // ssl_write_app_data_index
+
   // Nov 2015
-  {15, 0x00000000, 4, 12, 1, 1, 2, 4, 0, 6, 0, 9},
-  {14, 0x00000000, 4, 11, 1, 1, 2, 4, 0, 6, 0, 8}   // May 2015
+  {52, 0, 15, 0x00000000, 4, 12, 1, 1, 2, 4, 0, 6, 0, 9}
 };
 
 static const DWORD max_methods_struct_size = 80;
@@ -228,6 +249,28 @@ void ChromeSSLHook::Init() {
   // - with all other entries pointing to addresses within chrome.dll
   CStringA buff;
   HMODULE module = GetModuleHandleA("chrome.dll");
+  DWORD chrome_version = 0;
+  if (GetModuleFileName(module, path, _countof(path))) {
+    DWORD unused;
+    DWORD infoSize = GetFileVersionInfoSize(path, &unused);
+    LPBYTE pVersion = NULL;
+    if (infoSize)  
+      pVersion = (LPBYTE)malloc( infoSize );
+    if (pVersion) {
+      if (GetFileVersionInfo(path, 0, infoSize, pVersion)) {
+        VS_FIXEDFILEINFO * info = NULL;
+        UINT size = 0;
+        if (VerQueryValue(pVersion, _T("\\"), (LPVOID*)&info, &size)) {
+          if( info ) {
+            chrome_version = HIWORD(info->dwFileVersionMS);
+          }
+        }
+      }
+      free( pVersion );
+    }
+  }
+  ATLTRACE("Looking for Chrome SSL hook for Chrome version %d\n", chrome_version);
+
   DWORD * methods_addr = NULL;
   DWORD signature = 0;
   DWORD match_count = 0;
@@ -256,10 +299,9 @@ void ChromeSSLHook::Init() {
                 // go through our list of matching signatures
                 for (int signum = 0; signum < _countof(methods_signatures); signum++) {
                   SSL_METHODS_SIGNATURE * sig = &methods_signatures[signum];
-                  // see if the first dword matches
-                  if (compare[0] == sig->signature) {
-                    // see if hhlen matches
-                    if (compare[sig->hhlen_index] == sig->hhlen) {
+                  if (chrome_version >= sig->min_chrome_ver && (!sig->max_chrome_ver || chrome_version <= sig->max_chrome_ver)) {
+                    // see if the first dword matches
+                    if (compare[0] == sig->signature && compare[sig->hhlen_index] == sig->hhlen) {
                       // see if all other entries are addresses in the chrome.dll address range
                       bool ok = true;
                       for (DWORD entry = sig->addr_start_index; entry < sig->count; entry++) {
