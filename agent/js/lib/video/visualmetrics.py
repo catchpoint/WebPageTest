@@ -308,8 +308,8 @@ def find_video_viewport(video, directory, find_viewport, viewport_time):
         im = Image.open(frame)
         pixels = im.load()
         middle = int(math.floor(height / 2))
-        # Find the top edge
-        x = 0
+        # Find the top edge (at ~40% in to deal with browsers that color the notification area)
+        x = int(width * 0.4)
         y = 0
         background = pixels[x, y]
         top = None
@@ -323,8 +323,8 @@ def find_video_viewport(video, directory, find_viewport, viewport_time):
         logging.debug('Window top edge is {0:d}'.format(top))
 
         # Find the bottom edge
+        x = 0
         y = height - 1
-        background = pixels[x, y]
         bottom = None
         while bottom is None and y > middle:
           if not colors_are_similar(background, pixels[x, y]):
@@ -412,7 +412,7 @@ def find_render_start(directory):
   global options
   global client_viewport
   try:
-    if options.renderignore > 0 and options.renderignore <= 100:
+    if client_viewport is not None or (options.renderignore > 0 and options.renderignore <= 100):
       files = sorted(glob.glob(os.path.join(directory, 'video-*.png')))
       count = len(files)
       if count > 1:
@@ -420,11 +420,14 @@ def find_render_start(directory):
         first = files[0]
         with Image.open(first) as im:
           width, height = im.size
-        mask = {}
-        mask['width'] = int(math.floor(width * options.renderignore / 100))
-        mask['height'] = int(math.floor(height * options.renderignore / 100))
-        mask['x'] = int(math.floor(width / 2 - mask['width'] / 2))
-        mask['y'] = int(math.floor(height / 2 - mask['height'] / 2))
+        if options.renderignore > 0 and options.renderignore <= 100:
+          mask = {}
+          mask['width'] = int(math.floor(width * options.renderignore / 100))
+          mask['height'] = int(math.floor(height * options.renderignore / 100))
+          mask['x'] = int(math.floor(width / 2 - mask['width'] / 2))
+          mask['y'] = int(math.floor(height / 2 - mask['height'] / 2))
+        else:
+          mask = None
         top = 10
         right_margin = 10
         bottom_margin = 10
@@ -625,11 +628,16 @@ def is_orange_frame(file, orange_file):
   return orange
 
 
-def colors_are_similar(a, b):
+def colors_are_similar(a, b, threshold = 15):
   similar = True
+  sum = 0
   for x in xrange(3):
-    if abs(a[x] - b[x]) > 25:
+    delta = abs(a[x] - b[x])
+    sum += delta
+    if delta > threshold:
       similar = False
+  if sum > threshold:
+    similar = False
 
   return similar
 
