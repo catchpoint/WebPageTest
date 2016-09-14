@@ -436,6 +436,8 @@ BrowserAndroidChrome.prototype.clearKnownApps_ = function() {
     this.adb_.shell(['am', 'force-stop', 'com.motorola.ccc.ota']);
     // Google docs pdf viewer
     this.adb_.shell(['am', 'force-stop', 'com.google.android.apps.docs']);
+    // Samsung USB message
+    this.adb_.shell(['am', 'force-stop', 'com.samsung.android.MtpApplication']);
   }.bind(this));
 };
 
