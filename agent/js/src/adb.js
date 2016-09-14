@@ -410,10 +410,10 @@ Adb.prototype.scheduleGetNetworkConfiguration = function() {
         var mac = undefined;
         var isUp = false;
         var addr = undefined;
-        stdout.split(/[\r\n]+/).forEach(function(line, lineNumber) {
+        stdout.split("\n").forEach(function(line, lineNumber) {
           line = line.trim();
-          if (!line) {
-            if (iface && addr) {
+          if (!line.length) {
+            if (iface) {
               var ifc = {name: iface, ip: addr, isUp: isUp};
               if (mac) {
                 ifc.mac = mac;
@@ -571,77 +571,12 @@ Adb.prototype.scheduleAssertRndisIsEnabled = function() {
 };
 
 /**
- * Enables Reverse USB Tethering via RNDIS.
- *
- * @return {webdriver.promise.Promise} resolve() for addErrback.
- */
-Adb.prototype.scheduleEnableRndis = function() {
-  'use strict';
-  return this.app_.schedule('Enable rndis', function() {
-    this.shell(['getprop', 'sys.usb.config']).then(function(stdout) {
-      if ('rndis,adb' !== stdout.trim()) {
-        // Enable rndis property.
-        this.su(['setprop', 'sys.usb.config', 'rndis,adb']);
-
-        // Wait for device to come back online (<1s).
-        this.adb(['wait-for-device']);
-      }
-    }.bind(this));
-
-    this.scheduleGetNetworkConfiguration().then(function(netcfg) {
-      var ifc = this.getRndisIfc_(netcfg, false);
-      if (!ifc) {
-        throw new Error('netcfg lacks rndis interface');
-      }
-      var ifname = ifc.name;
-
-      // Stop WiFi if enabled.
-      var hasWifi = netcfg.some(function(ifc2) {
-        return ifc2.isUp && (/^wlan\d+$/).test(ifc2.name);
-      });
-      if (hasWifi) {
-        this.su(['svc', 'wifi', 'disable']);
-      }
-
-      // Take all other interfaces down.
-      netcfg.forEach(function(ifc2) {
-        if (ifc2.isUp && 'lo' !== ifc2.name && ifname !== ifc2.name) {
-          this.su(['ifconfig', ifc2.name, 'down']);
-        }
-      }.bind(this));
-
-      // Bring up the interface
-      this.su(['ifconfig', ifname, 'down']);
-      this.su(['ifconfig', ifname, 'up']);
-
-      // Enable DHCP -- this will timeout after 10s.
-      this.su(['netcfg', ifname, 'dhcp']).addErrback(function(e) {
-        throw new Error('Offline or no DHCP offer: ' + e.message);
-      });
-
-      // Configure DNS.
-      this.shell(['getprop', 'net.' + ifname + '.dns1']).then(function(s1) {
-        this.shell(['getprop', 'net.' + ifname + '.dns2']).then(function(s2) {
-          var ips = [s1.trim(), s2.trim()].filter(
-              /./.test.bind(/^\d+(\.\d+)+$/));
-          this.su(['ndc', 'resolver', 'setifdns', ifname].concat(ips));
-        }.bind(this));
-      }.bind(this));
-      this.su(['ndc', 'resolver', 'setdefaultif', ifname]);
-    }.bind(this));
-
-    // Sanity check -- sometimes the above 'up' and/or 'dhcp' commands randomly
-    // fail.  We'll let our caller retry if desired.
-    this.scheduleAssertRndisIsEnabled();
-  }.bind(this));
-};
-
 /**
- * Enables Reverse USB Tethering via RNDIS on KitKat 4.4.4.
+ * Enables Reverse USB Tethering via RNDIS
  *
  * @return {webdriver.promise.Promise} resolve() for addErrback.
  */
-Adb.prototype.scheduleEnableRndis444 = function(config) {
+Adb.prototype.scheduleEnableRndis = function(config) {
   'use strict';
   return this.app_.schedule('Enable rndis', function() {
     var config_parts = config.split(",");
@@ -651,65 +586,91 @@ Adb.prototype.scheduleEnableRndis444 = function(config) {
       var dns1 = config_parts[2];
       var dns2 = config_parts[3];
     } else {
-      throw new Error('Invalid rndis config. Should be --rndis444="<ip>/24,<gateway>,<dns1>,<dns2>"');
+      throw new Error('Invalid rndis config. Should be --rndis="<ip>/24,<gateway>,<dns1>,<dns2>"');
     }
 
-    // Enable USB tethering
-    this.shell(['getprop', 'sys.usb.config']).then(function(stdout) {
-      if ('rndis,adb' !== stdout.trim()) {
-        this.su(['setprop', 'sys.usb.config', 'rndis,adb']);
-        this.adb(['wait-for-device']);
-      }
-    }.bind(this));
-    this.su(['service', 'call', 'connectivity', '34', 'i32', '1']).then(function(stdout) {
-      // Wait for device to come back online (<1s).
-      this.adb(['wait-for-device']);
-    }.bind(this));
+    return this.shell(['getprop', 'ro.build.version.release']).then(function(stdout) {
+      var osVersion = parseFloat(stdout.trim());
+      return this.shell(['getprop', 'ro.com.google.clientidbase']).then(function(stdout) {
+        var kernel = stdout.trim();
 
-    this.scheduleGetNetworkConfiguration().then(function(netcfg) {
-      var ifc = this.getRndisIfc_(netcfg, true);
-      if (!ifc) {
-        throw new Error('netcfg lacks rndis interface');
-      }
-      var ifname = ifc.name;
+        // Enable USB tethering
+        this.shell(['getprop', 'sys.usb.config']).then(function(stdout) {
+          if ('rndis,adb' !== stdout.trim()) {
+            this.su(['setprop', 'sys.usb.config', 'rndis,adb']);
+            this.adb(['wait-for-device']);
+          }
+        }.bind(this));
 
-      // Stop WiFi if enabled.
-      var hasWifi = netcfg.some(function(ifc2) {
-        return ifc2.isUp && (/^wlan\d+$/).test(ifc2.name);
-      });
-      if (hasWifi) {
-        this.su(['svc', 'wifi', 'disable']);
-      }
-
-      // Take all other interfaces down.
-      netcfg.forEach(function(ifc2) {
-        if (ifc2.isUp && 'lo' !== ifc2.name && ifname !== ifc2.name) {
-          this.su(['ip', 'link', 'set', ifc2.name, 'down']);
+        // The entry point to enable USB tethering varies by OS version
+        var tetherFunction = '34';
+        if (osVersion >= 6.0) {
+          if (kernel == 'android-samsung')
+            tetherFunction = '41';
+          else
+            tetherFunction = '30';
+        } else if (osVersion >= 5.1) {
+          tetherFunction = '31';
+        } else if (osVersion >= 5.0) {
+          tetherFunction = '30';
+        } else if (osVersion >= 4.4) {
+          tetherFunction = '34';
+        } else if (osVersion >= 4.1) {
+          tetherFunction = '33';
+        } else if (osVersion >= 4.0) {
+          tetherFunction = '32';
         }
+        this.su(['service', 'call', 'connectivity', tetherFunction, 'i32', '1']).then(function(stdout) {
+          // Wait for device to come back online (<1s).
+          this.adb(['wait-for-device']);
+        }.bind(this));
+
+        this.scheduleGetNetworkConfiguration().then(function(netcfg) {
+          var ifc = this.getRndisIfc_(netcfg, true);
+          if (!ifc) {
+            throw new Error('netcfg lacks rndis interface');
+          }
+          var ifname = ifc.name;
+
+          // Stop WiFi if enabled.
+          var hasWifi = netcfg.some(function(ifc2) {
+            return ifc2.isUp && (/^wlan\d+$/).test(ifc2.name);
+          });
+          if (hasWifi) {
+            this.su(['svc', 'wifi', 'disable']);
+          }
+
+          // Take all other interfaces down.
+          netcfg.forEach(function(ifc2) {
+            if (ifc2.isUp && 'lo' !== ifc2.name && ifname !== ifc2.name) {
+              this.su(['ip', 'link', 'set', ifc2.name, 'down']);
+            }
+          }.bind(this));
+
+          // Set ip address.
+          this.su(['ip', 'link', 'set', ifname, 'down']);
+          this.su(['ip', 'addr', 'flush', 'dev', ifname]);
+          this.su(['ip', 'addr', 'add', ip, 'dev', ifname]);
+          this.su(['ip', 'link', 'set', ifname, 'up']);
+
+          // set up default route
+          this.su(['route', 'add', '-net', '0.0.0.0', 'netmask', '0.0.0.0', 'gw', gateway, 'dev', ifname]);
+          this.su(['setprop', 'net.' + ifname + '.gw', gateway]);
+
+          // Configure DNS.
+          this.su(['setprop', 'net.dns1', dns1]);
+          this.su(['setprop', 'net.dns2', dns2]);
+          this.su(['setprop', 'net.' + ifname + '.dns1', dns1]);
+          this.su(['setprop', 'net.' + ifname + '.dns2', dns2]);
+          this.su(['ndc', 'resolver', 'setifdns', ifname, dns1, dns2]);
+          this.su(['ndc', 'resolver', 'setdefaultif', ifname]);
+        }.bind(this));
+
+        // Sanity check -- sometimes the above 'up' and/or 'dhcp' commands randomly
+        // fail.  We'll let our caller retry if desired.
+        this.scheduleAssertRndisIsEnabled();
       }.bind(this));
-
-      // Set ip address.
-      this.su(['ip', 'link', 'set', ifname, 'down']);
-      this.su(['ip', 'addr', 'flush', 'dev', ifname]);
-      this.su(['ip', 'addr', 'add', ip, 'dev', ifname]);
-      this.su(['ip', 'link', 'set', ifname, 'up']);
-
-      // set up default route
-      this.su(['route', 'add', '-net', '0.0.0.0', 'netmask', '0.0.0.0', 'gw', gateway, 'dev', ifname]);
-      this.su(['setprop', 'net.' + ifname + '.gw', gateway]);
-
-      // Configure DNS.
-      this.su(['setprop', 'net.dns1', dns1]);
-      this.su(['setprop', 'net.dns2', dns2]);
-      this.su(['setprop', 'net.' + ifname + '.dns1', dns1]);
-      this.su(['setprop', 'net.' + ifname + '.dns2', dns1]);
-      this.su(['ndc', 'resolver', 'setifdns', ifname, dns1, dns2]);
-      this.su(['ndc', 'resolver', 'setdefaultif', ifname]);
     }.bind(this));
-
-    // Sanity check -- sometimes the above 'up' and/or 'dhcp' commands randomly
-    // fail.  We'll let our caller retry if desired.
-    this.scheduleAssertRndisIsEnabled();
   }.bind(this));
 };
 
