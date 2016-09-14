@@ -5,6 +5,7 @@
 // Windows Header Files:
 #include <windows.h>
 #include <TCHAR.H>
+#include <Lmcons.h>
 
 HMODULE module_handle = NULL;
 
@@ -16,9 +17,9 @@ static DWORD WINAPI LoaderThreadProc(void* arg) {
   TCHAR path[MAX_PATH];
   if (GetModuleFileName(module_handle, path, MAX_PATH)) {
     #ifdef _WIN64
-    TCHAR * dll = _tcsstr(path, _T("wptld64"));
+    TCHAR * dll = _tcsstr(path, _T("wptldr64"));
     if (dll) {
-      lstrcpy(dll, _T("wpthk64.dll"));
+      lstrcpy(dll, _T("wpthook64.dll"));
       LoadLibrary(path);
     }
     #else
@@ -40,12 +41,19 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH: {
-      module_handle = hModule;
-      // Spawn a background thread to try loading the hookdll
-      HANDLE thread_handle = CreateThread(NULL, 0, ::LoaderThreadProc, 0, 0,
-                                          NULL);
-      if (thread_handle)
-        CloseHandle(thread_handle);
+      TCHAR user[UNLEN + 1];
+      DWORD len = sizeof(user)/sizeof(TCHAR);
+      user[0] = 0;
+      if (GetUserName(user, &len)) {
+        if (lstrcmpi(user, _T("SYSTEM"))) {
+          module_handle = hModule;
+          // Spawn a background thread to try loading the hookdll
+          HANDLE thread_handle = CreateThread(NULL, 0, ::LoaderThreadProc, 0, 0,
+                                              NULL);
+          if (thread_handle)
+            CloseHandle(thread_handle);
+        }
+      }
     } break;
 	case DLL_THREAD_ATTACH:
 	case DLL_THREAD_DETACH:

@@ -912,7 +912,7 @@ void WptDriverCore::PreTest() {
   // Install the 64-bit appinit hook
   BOOL is64bit = FALSE;
   if (IsWow64Process(GetCurrentProcess(), &is64bit) && is64bit) {
-    lstrcpy(PathFindFileName(path), _T("wptld64.dll"));
+    lstrcpy(PathFindFileName(path), _T("wptldr64.dll"));
     TCHAR short_path[MAX_PATH];
     if (GetShortPathName(path, short_path, _countof(short_path))) {
       HKEY hKey;
@@ -1005,14 +1005,15 @@ LPTSTR WptDriverCore::GetAppInitString(LPCTSTR new_dll, bool is64bit) {
     memset(dlls, 0, len);
   }
 
-  // remove any occurences of wptload.dll and wptld64.dll from the list
+  // remove any occurences of wptload.dll, wptld64.dll and wptld64.dll from the list
   if (dlls && lstrlen(dlls)) {
     LPTSTR new_list = (LPTSTR)malloc(len);
     memset(new_list, 0, len);
     LPTSTR dll = _tcstok(dlls, _T(" ,"));
     while (dll) {
       if (lstrcmpi(PathFindFileName(dll), _T("wptload.dll")) &&
-          lstrcmpi(PathFindFileName(dll), _T("wptld64.dll"))) {
+          lstrcmpi(PathFindFileName(dll), _T("wptld64.dll")) &&
+          lstrcmpi(PathFindFileName(dll), _T("wptldr64.dll"))) {
         if (lstrlen(new_list))
           lstrcat(new_list, _T(","));
         lstrcat(new_list, dll);

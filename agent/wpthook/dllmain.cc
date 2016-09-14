@@ -68,7 +68,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
         // This is called VERY early in a process - only use kernel32.dll
         // functions.
         ok = FALSE; // Don't load by default, only if we are actively testing and only on win32
-        //#ifndef _WIN64
         TCHAR path[MAX_PATH];
         if (GetModuleFileName(NULL, path, _countof(path))) {
           TCHAR exe[MAX_PATH];
@@ -79,19 +78,33 @@ BOOL APIENTRY DllMain( HMODULE hModule,
               lstrcpy(exe, token);
             token = _tcstok(NULL, _T("\\"));
           }
-          if (!lstrcmpi(exe, _T("wptdriver.exe"))) {
-            ok = TRUE;
-          } else if(IsCorrectBrowserProcess(exe)) {
-            ok = TRUE;
-            global_dll_handle = (HINSTANCE)hModule;
+          // Only inject into a known-browser
+          bool is_browser = false;
+          const TCHAR * BROWSERS[] = {
+            _T("chrome.exe"),
+            _T("firefox.exe"),
+            _T("iexplore.exe"),
+            _T("plugin-container.exe"),
+            _T("safari.exe"),
+            _T("WebKit2WebProcess.exe")
+          };
+          DWORD count = _countof(BROWSERS);
+          for (DWORD i = 0; i < count && !is_browser; i++) {
+            if (!lstrcmpi(BROWSERS[i], exe))
+              is_browser = true;
+          }
+          if (is_browser) {
+            if(IsCorrectBrowserProcess(exe)) {
+              ok = TRUE;
+              global_dll_handle = (HINSTANCE)hModule;
 
-            // IE gets instrumented from the BHO so don't start the actual
-            // hooking, just let the DLL load
-            if (lstrcmpi(exe, _T("iexplore.exe")))
-              InstallHook();
+              // IE gets instrumented from the BHO so don't start the actual
+              // hooking, just let the DLL load
+              if (lstrcmpi(exe, _T("iexplore.exe")))
+                InstallHook();
+            }
           }
         }
-        //#endif //WIN64
       } break;
     case DLL_THREAD_ATTACH:
     case DLL_THREAD_DETACH:
