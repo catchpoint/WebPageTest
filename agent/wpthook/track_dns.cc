@@ -32,11 +32,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "wpthook.h"
 #include "../wptdriver/wpt_test.h"
 
-static LPCTSTR blocked_domains[] = {
-  _T(".pack.google.com"),     // Chrome crx update URL
-  _T(".gvt1.com"),            // Chrome crx update URL
-  _T("clients1.google.com"),  // Autofill update downloads
-  _T("shavar.services.mozilla.com"), // Firefox tracking protection updates
+static LPCSTR blocked_domains[] = {
+  ".*\\.pack\\.google\\.com",          // Chrome crx update URL
+  ".*\\.gvt1\\.com",                   // Chrome crx update URL
+  "clients1\\.google\\.com",           // Autofill update downloads
+  "shavar\\.services\\.mozilla\\.com", // Firefox tracking protection updates
+  "shavar\\.stage\\.mozaws\\.net",
+  "aus[^\\.]*\\.mozilla\\.org",        // Firefox update service
+  "cdm\\.download\\.adobe\\.com",      // Firefox adobe updates
   NULL
 };
 
@@ -60,12 +63,13 @@ TrackDns::~TrackDns(void){
 -----------------------------------------------------------------------------*/
 bool TrackDns::BlockLookup(CString name) {
   bool block = false;
+  name.MakeLower();
 
   // Check the hard-coded block list
-  LPCTSTR * domain = blocked_domains;
-  name.MakeLower();
+  LPCSTR * domain = blocked_domains;
+  CStringA check_name(CT2A((LPCTSTR)name, CP_UTF8));
   while (*domain && !block) {
-    if (name.Find(*domain) != -1)
+    if (RegexMatch(check_name, *domain))
       block = true;
     domain++;
   }
