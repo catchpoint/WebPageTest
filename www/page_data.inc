@@ -68,7 +68,7 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = 
  * @return array|null Associative array with data for the given run or null on failure
  */
 function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo = null) {
-  $cacheVer = 1;
+  $cacheVer = 2;
   $cacheFile = $localPaths->pageDataCacheFile($cacheVer);
   $ret = null;
   if (gz_is_file($cacheFile))
@@ -373,6 +373,7 @@ function loadPageData($file, $options = null)
                                 'minify_savings' => @(int)$fields[67],
                                 'image_total' => @(int)$fields[68],
                                 'image_savings' => @(int)$fields[69],
+                                'base_page_redirects' => @(int)$fields[70],
                                 'optimization_checked' => @(int)$fields[71],
                                 'aft' => @(int)$fields[72],
                                 'domElements' => @(int)$fields[73],

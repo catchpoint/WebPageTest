@@ -210,7 +210,8 @@ void OptimizationChecks::CheckGzip()
              bodyData[1] == 0x49 &&
              bodyData[2] == 0x46 &&
              bodyData[3] == 0x38 &&
-             bodyData[5] == 0x61)) {
+             bodyData[5] == 0x61) ||
+            (bodyLen > 14 && !memcmp(bodyData, "RIFF", 4) && !memcmp(&bodyData[8], "WEBPVP", 6))) {
           request->_scores._gzip_score = -1;
         } else {
           if (bodyLen && bodyData) {
@@ -292,64 +293,106 @@ void OptimizationChecks::CheckImageCompression()
     Request *request = _requests._requests.GetNext(pos);
     if (request && request->_processed && request->GetResult() == 200) {
       int temp_pos = 0;
-      CStringA mime = request->GetResponseHeader("content-type").Tokenize(";",
-        temp_pos);
-      mime.MakeLower();
-
-      // If there is response body and it is an image.
       DataChunk body = request->_response_data.GetBody();
-      if (mime.Find("image/") >= 0 && body.GetData() && body.GetLength() > 2) {
-        BYTE * buffer = (BYTE *)body.GetData();
-        if (buffer[0] == 0xFF && buffer[1] == 0xD8) {
-          size_t targetRequestBytes = body.GetLength();
-          size_t size = targetRequestBytes;
-          count++;
-        
-          CxImage img;
-          // Decode the image with an exception protected function.
-          if (DecodeImage(img, (BYTE*)body.GetData(),
-                          body.GetLength(), CXIMAGE_FORMAT_UNKNOWN) ) {
-            DWORD type = img.GetType();
-            switch (type) {
-            // TODO: Add appropriate scores for gif and png
-            //       once they are available.
-            // Currently, even DecodeImage doesn't support gif and png.
-            // case CXIMAGE_FORMAT_GIF:
-            // case CXIMAGE_FORMAT_PNG:
-            //  request->_scores._imageCompressionScore = 100;
-            //  break;
-            case CXIMAGE_FORMAT_JPG:
-              {
-                img.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
-                img.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
-                img.SetJpegQuality(85);
-                BYTE* mem = NULL;
-                int len = 0;
-                if( img.Encode(mem, len, CXIMAGE_FORMAT_JPG) && len ) {
-                  img.FreeMemory(mem);
-                  len += 4096;  // Add 4k to allow for an sRGB ICC profile and copyright
-                  targetRequestBytes = (DWORD) len < size ? (DWORD)len: size;
-                }
-              }
-              break;
-            default:
-              request->_scores._image_compression_score = 0;
-            }
-            if( targetRequestBytes > size )
-              targetRequestBytes = size;
-            totalBytes += (DWORD)size;
-            targetBytes += (DWORD)targetRequestBytes;
-          
-            request->_scores._image_compress_total = (DWORD)size;
-            request->_scores._image_compress_target = (DWORD)targetRequestBytes;
-            request->_scores._image_compression_score = (int)(targetRequestBytes * 100 / size);
+      LPBYTE buffer = (LPBYTE)body.GetData();
+      size_t bodyLen = body.GetLength();
+      size_t size = bodyLen;
+      size_t targetRequestBytes = 0;
+      bool valid = false;
+      const char * image_type = NULL;
+
+      if (bodyLen > 3 && !memcmp(buffer, "\xFF\xD8\xFF", 3)) {
+        // JPEG FF D8 FF - re-compress it at quality 85 with metadata stripped
+        image_type = "JPEG";
+        CxImage img;
+        targetRequestBytes = size;
+        if (DecodeImage(img, buffer, bodyLen, CXIMAGE_FORMAT_JPG) ) {
+          img.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
+          img.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
+          img.SetJpegQuality(85);
+          BYTE* mem = NULL;
+          int len = 0;
+          if (img.Encode(mem, len, CXIMAGE_FORMAT_JPG) && len) {
+            img.FreeMemory(mem);
+            len += 4096;  // Add 4k to allow for an sRGB ICC profile and copyright
+            targetRequestBytes = (DWORD) len < size ? (DWORD)len: size;
+            valid = true;
           }
         }
+      } else if (bodyLen > 8 && !memcmp(buffer, "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A", 8)) {
+        // PNG 89 50 4E 47 0D 0A 1A 0A - walk the chunks and only count image data bytes
+        image_type = "PNG";
+        valid = true;
+        targetRequestBytes = 8;
+        size_t bytesRemaining = bodyLen - 8;
+        LPBYTE p = buffer + 8;
+        const char * image_chunk_types[] = {"iCCP", "tIME", "gAMA", "PLTE",
+          "acTL", "IHDR", "cHRM", "bKGD", "tRNS", "sBIT", "sRGB", "pHYs",
+          "hIST", "vpAg", "oFFs", "fcTL", "fdAT", "IDAT"};
+        int type_count = _countof(image_chunk_types);
+        while (valid && bytesRemaining >= 4) {
+          DWORD chunkLen = ntohl(*(u_long *)p);
+          if (chunkLen + 12 <= bytesRemaining) {
+            p += 4; // skip over the length to the field type
+            bool is_image_chunk = false;
+            for (int i = 0; i < type_count && !is_image_chunk; i++) {
+              if (!memcmp(p, image_chunk_types[i], 4))
+                is_image_chunk = true;
+            }
+            if (is_image_chunk)
+              targetRequestBytes += chunkLen + 12;
+            p += chunkLen + 8;  // skip over the type, data and the crc
+            bytesRemaining -= chunkLen + 12;
+          } else {
+            valid = false;
+            bytesRemaining = 0;
+          }
+        }
+      } else if (bodyLen > 6 && (!memcmp(buffer, "GIF87a", 6) || !memcmp(buffer, "GIF89a", 6))) {
+        image_type = "GIF";
+        CxImage img;
+        targetRequestBytes = size;
+        if (DecodeImage(img, buffer, bodyLen, CXIMAGE_FORMAT_GIF)) {
+          int frame_count = img.GetNumFrames();
+          ATLTRACE("GIF with %d frames", frame_count);
+          if (frame_count > 1) {
+            targetRequestBytes = size;
+            valid = true;
+          } else {
+            // Try compressing it as a PNG
+            BYTE* mem = NULL;
+            int len = 0;
+            if (img.Encode(mem, len, CXIMAGE_FORMAT_PNG) && len) {
+              img.FreeMemory(mem);
+              targetRequestBytes = (DWORD)len < size ? (DWORD)len: size;
+              valid = true;
+            }
+          }
+        }
+      } else if (bodyLen > 14 && !memcmp(buffer, "RIFF", 4) && !memcmp(&buffer[8], "WEBPVP", 6)) {
+        image_type = "WEBP";
+        targetRequestBytes = size;
+        valid = true;
+      }
+
+      if (valid) {
+        count++;
+        // Only flag savings > 1400 bytes
+        if (size - targetRequestBytes < 1400)
+          targetRequestBytes = size;
+        totalBytes += (DWORD)size;
+        targetBytes += (DWORD)targetRequestBytes;
+        request->_scores._image_compress_total = (DWORD)size;
+        request->_scores._image_compress_target = (DWORD)targetRequestBytes;
+        request->_scores._image_compression_score = (int)(targetRequestBytes * 100 / size);
+        ATLTRACE("%s Target size %d bytes from %d (%d%%): %s%s", image_type, targetRequestBytes, size,
+                 request->_scores._image_compression_score, (LPCSTR)request->GetHost(), (LPCSTR)request->_request_data.GetObject());
+      } else if (image_type) {
+        ATLTRACE("Invalid %s image: %s%s", image_type, (LPCSTR)request->GetHost(), (LPCSTR)request->_request_data.GetObject());
       }
     }
   }
   _requests.Unlock();
-
 
   _image_compress_total = totalBytes;
   _image_compress_target = targetBytes;

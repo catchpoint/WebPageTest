@@ -64,8 +64,8 @@ $userImages = true;
               if (array_key_exists('image_total', $request) && $request['image_total'] > 0) {
                 echo number_format(((float)$request['image_total'] / 1024.0), 1). " KB {$request['contentType']}<br>";
                 if (array_key_exists('image_save', $request) && $request['image_save'] > 1000) {
-                  $q85 = number_format((float)(($request['image_total'] - $request['image_save']) / 1024.0), 1);
-                  echo "Quality 85 optimized size: $q85 KB (<b>" . number_format(((float)$request['image_save'] / 1024.0), 1). " KB smaller</b>)<br>";
+                  $optimizedSize = number_format((float)(($request['image_total'] - $request['image_save']) / 1024.0), 1);
+                  echo "Optimized size: $optimizedSize KB (<b>" . number_format(((float)$request['image_save'] / 1024.0), 1). " KB smaller</b>)<br>";
                 }
               } else if (array_key_exists('objectSize', $request)) {
                 echo number_format(((float)$request['objectSize'] / 1024.0), 1). " KB {$request['contentType']}<br>";
