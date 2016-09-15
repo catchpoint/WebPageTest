@@ -80,3 +80,5 @@ bool ParseUrl(CString url, CString &scheme, CString &host,
               unsigned short &port, CString& object);
 CString SniffMimeType(const LPBYTE content, size_t len);
 bool IsBinaryContent(const LPBYTE content, size_t len);
+bool InstallAppInitHook(LPCTSTR exe);
+void ClearAppInitHooks();

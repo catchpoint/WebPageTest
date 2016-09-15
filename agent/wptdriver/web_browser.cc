@@ -264,7 +264,7 @@ bool WebBrowser::RunAndWait() {
       if (_browser_started_event && _browser_done_event) {
         ResetEvent(_browser_started_event);
         ResetEvent(_browser_done_event);
-
+        InstallAppInitHook(_browser._exe);
         if (CreateProcess(_browser._exe, cmdLine, NULL, NULL, FALSE,
                           0, NULL, NULL, &si, &pi)) {
           DWORD wait_time = 60000;
@@ -304,6 +304,7 @@ bool WebBrowser::RunAndWait() {
           _test._run_error = "Failed to launch the browser.";
         }
         LeaveCriticalSection(&cs);
+        ClearAppInitHooks();
 
         // wait for the browser to finish (infinite timeout if we are debugging)
         if (_browser_process && ok) {
