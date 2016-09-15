@@ -385,7 +385,7 @@ void OptimizationChecks::CheckImageCompression()
         request->_scores._image_compress_total = (DWORD)size;
         request->_scores._image_compress_target = (DWORD)targetRequestBytes;
         request->_scores._image_compression_score = (int)(targetRequestBytes * 100 / size);
-        ATLTRACE("%s Target size %d bytes from %d (%d%%): %s%s", image_type, targetRequestBytes, size,
+        ATLTRACE("%s target size %d bytes from %d (%d%%): %s%s", image_type, targetRequestBytes, size,
                  request->_scores._image_compression_score, (LPCSTR)request->GetHost(), (LPCSTR)request->_request_data.GetObject());
       } else if (image_type) {
         ATLTRACE("Invalid %s image: %s%s", image_type, (LPCSTR)request->GetHost(), (LPCSTR)request->_request_data.GetObject());
