@@ -354,10 +354,6 @@
                 (isset($_FILES['bulkfile']) && isset($_FILES['bulkfile']['tmp_name']) && strlen($_FILES['bulkfile']['tmp_name'])) )
                 $test['batch'] = 1;
 
-            // force the webperf contest entries to be private (hack)
-            if( strstr( $test['url'], 'entries.webperf-contest.com') !== false )
-                $test['private'] = 1;
-
             // login tests are forced to be private
             if( strlen($test['login']) )
                 $test['private'] = 1;
