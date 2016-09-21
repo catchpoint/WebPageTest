@@ -102,8 +102,9 @@
     </Link>
     <PostBuildEvent>
       <Command>copy /Y *.ini "$(outdir)\"
+mkdir "$(outdir)\templates\Firefox\extensions"
 copy /Y "..\browser\firefox\*.*" "$(outdir)\templates\Firefox\"
-copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org.xpi
+copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org.xpi"
 </Command>
     </PostBuildEvent>
     <PostBuildEvent>
@@ -133,8 +134,9 @@ copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdr
     </Link>
     <PostBuildEvent>
       <Command>copy /Y *.ini "$(outdir)\"
+mkdir "$(outdir)\templates\Firefox\extensions"
 copy /Y "..\browser\firefox\*.*" "$(outdir)\templates\Firefox\"
-copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org.xpi
+copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org.xpi"
 </Command>
     </PostBuildEvent>
     <PostBuildEvent>
@@ -170,8 +172,9 @@ copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdr
     </Link>
     <PostBuildEvent>
       <Command>copy /Y *.ini "$(outdir)\"
+mkdir "$(outdir)\templates\Firefox\extensions"
 copy /Y "..\browser\firefox\*.*" "$(outdir)\templates\Firefox\"
-copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org.xpi
+copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org.xpi"
 </Command>
     </PostBuildEvent>
     <PostBuildEvent>
@@ -207,8 +210,9 @@ copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdr
     </Link>
     <PostBuildEvent>
       <Command>copy /Y *.ini "$(outdir)\"
+mkdir "$(outdir)\templates\Firefox\extensions"
 copy /Y "..\browser\firefox\*.*" "$(outdir)\templates\Firefox\"
-copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org.xpi
+copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org.xpi"
 </Command>
     </PostBuildEvent>
     <PostBuildEvent>
