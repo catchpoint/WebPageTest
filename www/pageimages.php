@@ -54,7 +54,7 @@ $userImages = true;
             if( array_key_exists('contentType', $request) &&
               !strncasecmp($request['contentType'], 'image/', 6)) {
               $index = $request['index'] + 1;
-              echo "<tr><td><b>$index:</b></td><td>";
+              echo "<tr id=\"image$index\"><td><b>$index:</b></td><td>";
               $reqUrl = "http://";
               if( $request['is_secure'] )
                 $reqUrl = "https://";
