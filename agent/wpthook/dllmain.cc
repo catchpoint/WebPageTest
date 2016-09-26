@@ -29,6 +29,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "stdafx.h"
 #include "wpthook.h"
+#include <TCHAR.H>
+#include <Lmcons.h>
 
 HINSTANCE global_dll_handle = NULL; // DLL handle
 extern WptHook * global_hook;
@@ -63,6 +65,14 @@ BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
                        LPVOID lpReserved) {
   BOOL ok = TRUE;
+
+  // Check we don't run as SYSTEM
+  TCHAR user[UNLEN + 1];
+  DWORD userlen = UNLEN;
+  if (!GetUserName(user, &userlen) || lstrcmpi(user, L"SYSTEM") == 0) {
+    return false;
+  }
+
   switch (ul_reason_for_call) {
     case DLL_PROCESS_ATTACH: {
         // This is called VERY early in a process - only use kernel32.dll
