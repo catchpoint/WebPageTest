@@ -85,14 +85,16 @@ var BLACK_BOX_BROWSERS = {
       'package': 'com.uc.browser.en', 
       'activity': 'com.uc.browser.ActivityBrowser',
       'videoFlags': ['--findstart', 25, '--notification'],
-      'directories': ['cache', 'databases', 'files', 'app_sbrowser', 'shared_prefs', 'code_cache', 'user', 'wa'],
-      'startupDelay': 4000
+      'relaunch': true,
+      'clearProfile': true,
+      'startupDelay': 10000
     },
     'UC Browser': {
       'package': 'com.UCMobile.intl',
       'activity': 'com.UCMobile.main.UCMobile',
       'videoFlags': ['--findstart', 25, '--notification'],
-      'directories': ['cache', 'databases', 'files', 'app_sbrowser', 'shared_prefs', 'code_cache', 'user', 'wa', 'temp', 'UCMobile', 'app_webview'],
+      'relaunch': true,
+      'clearProfile': true,
       'startupDelay': 10000
     },
     'Opera Mini': {
@@ -324,6 +326,12 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
   // Start the browser
   this.navigateTo(this.blank_page_);
   if (this.isBlackBox) {
+    if (this.browserConfig_['relaunch']) {
+      // Get around first-launch UI and let things download
+      this.app_.timeout(this.browserConfig_['startupDelay'], 'Wait for first browser startup');
+      this.kill();
+      this.navigateTo(this.blank_page_);
+    }
     this.app_.timeout(this.browserConfig_['startupDelay'], 'Wait for browser startup');
   }
 
@@ -360,7 +368,10 @@ BrowserAndroidChrome.prototype.clearProfile_ = function() {
   'use strict';
   if (this.isBlackBox) {
     if (!this.isCacheWarm_) {
-      if (this.browserConfig_['directories']) {
+      if (this.browserConfig_['clearProfile']) {
+        // Nuke all of the application data
+        this.adb_.shell(['pm', 'clear', this.browserPackage_]);
+      } else if (this.browserConfig_['directories']) {
         // Just clear out the cache directories
         for (var i = 0; i < this.browserConfig_.directories.length; i++) {
           this.adb_.su(['rm', '-r', '/data/data/' + this.browserPackage_ +
@@ -1019,8 +1030,13 @@ BrowserAndroidChrome.prototype.scheduleActivityDetected = function() {
       this.lastVideoSize_ = video_size;
 
       if (!this.videoStarted_) {
-        if (video_delta > 100000)
+        if (this['videoStartedCount_'] == undefined)
+          this.videoStartedCount_ = 0;
+        // Wait for the first large jump or 30 seconds to consider video "started" (checks are done every 5 seconds)
+        if (video_delta > 100000 || video_size > 0 && this.videoStartedCount_ > 6) {
           this.videoStarted_ = true;
+        }
+        this.videoStartedCount_++;
       } else {
         if (video_delta > 10000) {
           this.videoIdleCount_ = 0;
