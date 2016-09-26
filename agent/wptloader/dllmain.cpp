@@ -41,18 +41,18 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH: {
-      TCHAR user[UNLEN + 1];
-      DWORD len = sizeof(user)/sizeof(TCHAR);
-      user[0] = 0;
-      if (GetUserName(user, &len)) {
-        if (lstrcmpi(user, _T("SYSTEM"))) {
-          module_handle = hModule;
-          // Spawn a background thread to try loading the hookdll
-          HANDLE thread_handle = CreateThread(NULL, 0, ::LoaderThreadProc, 0, 0,
-                                              NULL);
-          if (thread_handle)
-            CloseHandle(thread_handle);
-        }
+      const DWORD len = 100;
+      TCHAR env[len];
+      memset(env, 0, sizeof(env));
+      // Only install the hook if the environment for our current process
+      // includes the hook flag.
+      if (GetEnvironmentVariable(_T("WPT_HOOK"), env, len)) {
+        module_handle = hModule;
+        // Spawn a background thread to try loading the hookdll
+        HANDLE thread_handle = CreateThread(NULL, 0, ::LoaderThreadProc, 0, 0,
+                                            NULL);
+        if (thread_handle)
+          CloseHandle(thread_handle);
       }
     } break;
 	case DLL_THREAD_ATTACH:

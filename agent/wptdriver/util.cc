@@ -992,6 +992,10 @@ bool InstallAppInitHook(LPCTSTR exe) {
   ATLTRACE(_T("InstallAppInitHook - %s"), exe);
   bool installed = false;
 
+  // Set an environment variable flag to let the hook identify the processes
+  // that should be inspected
+  SetEnvironmentVariable(_T("WPT_HOOK"), _T("YES"));
+
   // See if we need the 64-bit version
   DWORD reg_flags = 0;
   LPCTSTR hook_dll = _T("wptload.dll");
@@ -1046,6 +1050,7 @@ bool InstallAppInitHook(LPCTSTR exe) {
 void ClearAppInitHooks() {
   HKEY hKey;
   ATLTRACE(_T("ClearAppInitHooks"));
+  SetEnvironmentVariable(_T("WPT_HOOK"), NULL);
 	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
       _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows"),
       0, 0, 0, KEY_READ | KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS ) {
