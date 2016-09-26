@@ -102,9 +102,9 @@
     </Link>
     <PostBuildEvent>
       <Command>copy /Y *.ini "$(outdir)\"
-mkdir "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org"
+mkdir "$(outdir)\templates\Firefox\extensions"
 copy /Y "..\browser\firefox\*.*" "$(outdir)\templates\Firefox\"
-xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org"
+copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org.xpi"
 </Command>
     </PostBuildEvent>
     <PostBuildEvent>
@@ -134,9 +134,9 @@ xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\ex
     </Link>
     <PostBuildEvent>
       <Command>copy /Y *.ini "$(outdir)\"
-mkdir "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org"
+mkdir "$(outdir)\templates\Firefox\extensions"
 copy /Y "..\browser\firefox\*.*" "$(outdir)\templates\Firefox\"
-xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org"
+copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org.xpi"
 </Command>
     </PostBuildEvent>
     <PostBuildEvent>
@@ -172,9 +172,9 @@ xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\ex
     </Link>
     <PostBuildEvent>
       <Command>copy /Y *.ini "$(outdir)\"
-mkdir "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org"
+mkdir "$(outdir)\templates\Firefox\extensions"
 copy /Y "..\browser\firefox\*.*" "$(outdir)\templates\Firefox\"
-xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org"
+copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org.xpi"
 </Command>
     </PostBuildEvent>
     <PostBuildEvent>
@@ -210,9 +210,9 @@ xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\ex
     </Link>
     <PostBuildEvent>
       <Command>copy /Y *.ini "$(outdir)\"
-mkdir "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org"
+mkdir "$(outdir)\templates\Firefox\extensions"
 copy /Y "..\browser\firefox\*.*" "$(outdir)\templates\Firefox\"
-xcopy /Y /E /S /I "..\browser\firefox\extension" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org"
+copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org.xpi"
 </Command>
     </PostBuildEvent>
     <PostBuildEvent>
