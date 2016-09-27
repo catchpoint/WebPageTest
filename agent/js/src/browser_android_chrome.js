@@ -1072,7 +1072,7 @@ BrowserAndroidChrome.prototype.waitForNetworkIdle_ = function(timeout) {
     this.networkIdleLastCheck_ = process.hrtime();
     return this.adb_.scheduleGetBytesRx().then(function(rx) {
       logger.debug("Bytes Rx: " + rx);
-      if (rx > 100)
+      if (rx > 1000)
         this.networkIdleCount_ = 0;
       else
         this.networkIdleCount_++;
