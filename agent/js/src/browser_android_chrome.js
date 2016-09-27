@@ -332,7 +332,7 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
     }
     this.app_.timeout(this.browserConfig_['startupDelay'], 'Wait for browser startup');
   }
-  this.waitForNetworkIdle_(30000);
+  this.waitForNetworkIdle_(60000);
 
   this.scheduleConfigureDevToolsPort_();
 };
