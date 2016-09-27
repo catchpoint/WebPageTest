@@ -85,17 +85,15 @@ var BLACK_BOX_BROWSERS = {
       'package': 'com.uc.browser.en', 
       'activity': 'com.uc.browser.ActivityBrowser',
       'videoFlags': ['--findstart', 25, '--notification'],
-      'relaunch': true,
-      'clearProfile': true,
+      'directories': ['cache', 'databases', 'files', 'app_webview', 'user', 'wa'],
       'startupDelay': 10000
     },
     'UC Browser': {
       'package': 'com.UCMobile.intl',
       'activity': 'com.UCMobile.main.UCMobile',
       'videoFlags': ['--findstart', 25, '--notification'],
-      'relaunch': true,
-      'clearProfile': true,
-      'startupDelay': 10000
+      'directories': ['cache', 'databases', 'files', 'app_webview', 'crash', 'temp', 'user', 'wa'],
+      'startupDelay': 15000
     },
     'Opera Mini': {
       'package': 'com.opera.mini.native',
@@ -109,7 +107,7 @@ var BLACK_BOX_BROWSERS = {
       'package': 'com.sec.android.app.sbrowser',
       'activity': '.SBrowserMainActivity',
       'videoFlags': ['--findstart', 25, '--notification'],
-      'directories': ['cache', 'databases', 'files', 'app_sbrowser', 'shared_prefs', 'code_cache'],
+      'directories': ['cache', 'databases', 'files', 'app_sbrowser', 'code_cache'],
       'startupDelay': 10000
     },
   };
@@ -334,16 +332,28 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
     }
     this.app_.timeout(this.browserConfig_['startupDelay'], 'Wait for browser startup');
   }
+  this.waitForNetworkIdle_(30000);
 
   this.scheduleConfigureDevToolsPort_();
 };
 
-BrowserAndroidChrome.prototype.navigateTo = function(url) {
+BrowserAndroidChrome.prototype.navigateTo = function(url, currentRetry) {
   'use strict';
+  var retry = (typeof currentRetry !== 'undefined') ?  currentRetry: 0;
   this.app_.schedule('Navigate', function() {
     var activity = this.browserPackage_ + '/' + this.browserActivity_;
     this.adb_.shell(['am', 'start', '-n', activity,
-        '-a', 'android.intent.action.VIEW', '-d', url]);
+        '-a', 'android.intent.action.VIEW', '-d', url]).then(function(stdout) {
+      if (!stdout.length) {
+        if (retry < 20) {
+          logger.debug("Navigate failed, retrying");
+          this.app_.timeout(1000, 'Wait to renavigate a failed intent');
+          this.navigateTo(url, retry + 1);
+        } else {
+          throw new Error('Unable to trigger navigation');
+        }
+      }
+    }.bind(this));
   }.bind(this));
 };
 
@@ -1033,7 +1043,7 @@ BrowserAndroidChrome.prototype.scheduleActivityDetected = function() {
         if (this['videoStartedCount_'] == undefined)
           this.videoStartedCount_ = 0;
         // Wait for the first large jump or 30 seconds to consider video "started" (checks are done every 5 seconds)
-        if (video_delta > 100000 || video_size > 0 && this.videoStartedCount_ > 6) {
+        if (video_delta > 50000 || video_size > 0 && this.videoStartedCount_ > 6) {
           this.videoStarted_ = true;
         }
         this.videoStartedCount_++;
@@ -1049,4 +1059,24 @@ BrowserAndroidChrome.prototype.scheduleActivityDetected = function() {
     }
     return activity_detected;
   }.bind(this));
+};
+
+BrowserAndroidChrome.prototype.waitForNetworkIdle_ = function(timeout) {
+  this.networkIdleCount_ = 0;
+  this.networkIdleLastCheck_ = process.hrtime();
+
+  this.app_.wait(function() {
+    var elapsed = process.hrtime(this.networkIdleLastCheck_)[0];
+    if (elapsed < 1)
+      return false;
+    this.networkIdleLastCheck_ = process.hrtime();
+    return this.adb_.scheduleGetBytesRx().then(function(rx) {
+      logger.debug("Bytes Rx: " + rx);
+      if (rx > 100)
+        this.networkIdleCount_ = 0;
+      else
+        this.networkIdleCount_++;
+      return this.networkIdleCount_ >= 5;
+    }.bind(this));
+  }.bind(this), timeout);
 };

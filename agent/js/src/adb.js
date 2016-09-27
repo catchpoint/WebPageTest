@@ -748,3 +748,23 @@ Adb.prototype.schedulePing = function(ip) {
     throw new Error('Unable to ping ' + ip + ': ' + e.message);
   });
 };
+
+Adb.prototype.scheduleGetBytesRx = function() {
+  return this.shell(['cat', '/proc/net/dev']).then(function(stdout) {
+    var rx = 0;
+    stdout.split(/[\r\n]+/).forEach(function(line) {
+      var m = line.match(/^\s*(\w+):\s+(\d+)/);
+      if (m) {
+        var iface = m[1];
+        var bytes = parseInt(m[2]);
+        if (iface != 'lo' && bytes > 0)
+          rx += bytes;
+      }
+    });
+    if (this['rxBytes'] == undefined || this.rxBytes > rx)
+      this.rxBytes = 0;
+    var delta = rx - this.rxBytes;
+    this.rxBytes = rx;
+    return delta;
+  }.bind(this));
+};
