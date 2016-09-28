@@ -171,6 +171,8 @@ CDN_PROVIDER cdnList[] = {
   {".raxcdn.com", "Rackspace"},
   {".unicorncdn.net", "UnicornCDN"},
   {".optimalcdn.com", "Optimal CDN"},
+  {".kinxcdn.com", "KINX CDN"},
+  {".kinxcdn.net", "KINX CDN"},
   {"END_MARKER", "END_MARKER"}
 };
 
