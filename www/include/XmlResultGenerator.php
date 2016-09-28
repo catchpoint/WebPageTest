@@ -300,6 +300,8 @@ class XmlResultGenerator {
 
     // raw results (files accessed directly on the file system, but via URL)
     echo "<rawData>\n";
+    if ($this->fileHandler->gzFileExists($localPaths->devtoolsScriptTimingFile()))
+      echo "<scriptTiming>" . htmlspecialchars($urlGenerator->getGZip($nameOnlyPaths->devtoolsScriptTimingFile())) . "</scriptTiming>\n";
     if ($this->fileHandler->gzFileExists($localPaths->headersFile()))
       echo "<headers>" . $urlPaths->headersFile() . "</headers>\n";
     if ($this->fileHandler->gzFileExists($localPaths->bodiesFile()))

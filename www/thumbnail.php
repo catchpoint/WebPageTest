@@ -116,6 +116,7 @@ function tbnDrawWaterfall($testStepResult, &$img)
         'use_cpu' => true,
         'use_bw' => true,
         'max_bw' => $bwIn,
+        'show_user_timing' => GetSetting('waterfall_show_user_timing'),
         'is_thumbnail' => true,
         'width' => $newWidth
         );

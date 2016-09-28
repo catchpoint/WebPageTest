@@ -21,6 +21,9 @@ tcpdump_view="http://cloudshark.org/view?url="
 ;google_oauth_client_id=<client ID>
 ;google_oauth_client_secret=<secret>
 
+; Uncomment to enable drawing of vertical lines in the waterfalls for all user timing marks
+;waterfall_show_user_timing=1
+
 
 ; *********************
 ; Test options/defaults

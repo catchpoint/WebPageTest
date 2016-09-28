@@ -265,21 +265,23 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
         $csi_info = TailorRtParamsForVisualization($csi_params, $filter);
     }
     // get any user timings
-    if (isset($page_data) && array_key_exists('userTime', $page_data)) {
-      foreach ($page_data as $key => $value) {
-        if (substr($key, 0, 9) == 'userTime.') {
-          $label = substr($key, 9);
-          if (!isset($user_times))
-            $user_times = array();
-          $user_times[$label] = $value;
+    if (!isset($options['show_user_timing']) || $options['show_user_timing']) {
+      if (isset($page_data) && array_key_exists('userTime', $page_data)) {
+        foreach ($page_data as $key => $value) {
+          if (substr($key, 0, 9) == 'userTime.') {
+            $label = substr($key, 9);
+            if (!isset($user_times))
+              $user_times = array();
+            $user_times[$label] = $value;
+          }
         }
+      }    
+      if (isset($csi_info)) {
+        if (!isset($user_times))
+          $user_times = array();
+        foreach ($csi_info as $key => $value)
+          $user_times[$key] = $value;
       }
-    }    
-    if (isset($csi_info)) {
-      if (!isset($user_times))
-        $user_times = array();
-      foreach ($csi_info as $key => $value)
-        $user_times[$key] = $value;
     }
 
     AddRowCoordinates($rows, $data_header_height + 1, $row_height);
@@ -653,7 +655,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, &$pa
               }
             }
 
-            // Draw the csi metrics.
+            // Draw the user timings
             if (isset($user_times)) {
                 foreach ($user_times as $name => $value) {
                     if ($name != 'srt' && $value > 0 && $value <= $max_ms) {

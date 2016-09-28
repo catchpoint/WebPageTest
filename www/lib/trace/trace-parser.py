@@ -32,6 +32,7 @@ class Trace():
     self.user_timing = []
     self.event_names = {}
     self.event_name_lookup = {}
+    self.scripts = None
     self.timeline_events = []
     self.start_time = None
     self.end_time = None
@@ -44,55 +45,33 @@ class Trace():
   ########################################################################################################################
   #   Output Logging
   ########################################################################################################################
-  def WriteUserTiming(self, file):
+  def WriteJson(self, file, json_data):
     try:
       file_name, ext = os.path.splitext(file)
       if ext.lower() == '.gz':
         with gzip.open(file, 'wb') as f:
-          json.dump(self.user_timing, f)
+          json.dump(json_data, f)
       else:
         with open(file, 'w') as f:
-          json.dump(self.user_timing, f)
+          json.dump(json_data, f)
     except:
-      logging.critical("Error writing user timing to " + file)
+      logging.critical("Error writing to " + file)
+
+  def WriteUserTiming(self, file):
+    self.WriteJson(file, self.user_timing)
 
   def WriteCPUSlices(self, file):
-    try:
-      file_name, ext = os.path.splitext(file)
-      if ext.lower() == '.gz':
-        with gzip.open(file, 'wb') as f:
-          json.dump(self.cpu, f)
-      else:
-        with open(file, 'w') as f:
-          json.dump(self.cpu, f)
-    except:
-      logging.critical("Error writing user timing to " + file)
+    self.WriteJson(file, self.cpu)
+
+  def WriteScriptTimings(self, file):
+    if self.scripts is not None:
+      self.WriteJson(file, self.scripts)
 
   def WriteFeatureUsage(self, file):
-    if self.feature_usage is not None:
-      try:
-        file_name, ext = os.path.splitext(file)
-        if ext.lower() == '.gz':
-          with gzip.open(file, 'wb') as f:
-            json.dump(self.feature_usage, f)
-        else:
-          with open(file, 'w') as f:
-            json.dump(self.feature_usage, f)
-      except:
-        logging.critical("Error writing feature usage to " + file)
+    self.WriteJson(file, self.feature_usage)
 
   def WriteNetlog(self, file):
-    try:
-      file_name, ext = os.path.splitext(file)
-      if ext.lower() == '.gz':
-        with gzip.open(file, 'wb') as f:
-          json.dump(self.netlog, f)
-      else:
-        with open(file, 'w') as f:
-          json.dump(self.netlog, f)
-    except:
-      logging.critical("Error writing netlog details to " + file)
-    print json.dumps(self.netlog, sort_keys=True, indent = 4)
+    self.WriteJson(file, self.netlog)
 
 
   ########################################################################################################################
@@ -181,6 +160,13 @@ class Trace():
             e['e'] = trace_event['ts']
       else:
         e = {'t': thread, 'n': self.event_names[trace_event['name']], 's': trace_event['ts']}
+        if (trace_event['name'] == 'EvaluateScript' or trace_event['name'] == 'v8.compile' or trace_event['name'] == 'v8.parseOnBackground')\
+                and 'args' in trace_event and 'data' in trace_event['args'] and 'url' in trace_event['args']['data'] and\
+                trace_event['args']['data']['url'].startswith('http'):
+          e['js'] = trace_event['args']['data']['url']
+        if trace_event['name'] == 'FunctionCall' and 'args' in trace_event and 'data' in trace_event['args'] and\
+                'scriptName' in trace_event['args']['data'] and trace_event['args']['data']['scriptName'].startswith('http'):
+          e['js'] = trace_event['args']['data']['scriptName']
         if trace_event['ph'] == 'B':
           self.thread_stack[thread].append(e)
           e = None
@@ -238,6 +224,22 @@ class Trace():
     if end > start:
       thread = timeline_event['t']
       name = self.event_name_lookup[timeline_event['n']]
+
+      if 'js' in timeline_event:
+        script = timeline_event['js']
+        s = start / 1000.0
+        e = end / 1000.0
+        if self.scripts is None:
+          self.scripts = {}
+        if 'main_thread' not in self.scripts and 'main_thread' in self.cpu:
+          self.scripts['main_thread'] = self.cpu['main_thread']
+        if thread not in self.scripts:
+          self.scripts[thread] = {}
+        if script not in self.scripts[thread]:
+          self.scripts[thread][script] = {}
+        if name not in self.scripts[thread][script]:
+          self.scripts[thread][script][name] = []
+        self.scripts[thread][script][name].append([s, e])
 
       slice_usecs = self.cpu['slice_usecs']
       first_slice = int(float(start) / float(slice_usecs))
@@ -391,6 +393,7 @@ def main():
                       help="Increase verbosity (specify multiple times for more). -vvvv for full debug output.")
   parser.add_argument('-t', '--trace', help="Input trace file.")
   parser.add_argument('-c', '--cpu', help="Output CPU time slices file.")
+  parser.add_argument('-j', '--js', help="Output Javascript per-script parse/evaluate/execute timings.")
   parser.add_argument('-u', '--user', help="Output user timing file.")
   parser.add_argument('-f', '--features', help="Output blink feature usage file.")
   parser.add_argument('-n', '--netlog', help="Output netlog details file.")
@@ -420,6 +423,9 @@ def main():
 
   if options.cpu:
     trace.WriteCPUSlices(options.cpu)
+
+  if options.js:
+    trace.WriteScriptTimings(options.js)
 
   if options.features:
     trace.WriteFeatureUsage(options.features)

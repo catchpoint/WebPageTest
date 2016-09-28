@@ -240,7 +240,7 @@ class JsonResultGenerator {
       $ret['PageSpeedScore'] = $testStepResult->getPageSpeedScore();
       $ret['PageSpeedData'] = $urlGenerator->getGZip($nameOnlyPaths->pageSpeedFile());
     }
-
+    
     $ret['pages'] = array();
     $ret['pages']['details'] = $urlGenerator->resultPage("details");
     $ret['pages']['checklist'] = $urlGenerator->resultPage("performance_optimization");
@@ -263,6 +263,8 @@ class JsonResultGenerator {
     }
 
     $ret['rawData'] = array();
+    if ($this->fileHandler->gzFileExists($localPaths->devtoolsScriptTimingFile()))
+      $ret['rawData']['scriptTiming'] = $urlGenerator->getGZip($nameOnlyPaths->devtoolsScriptTimingFile());
     $ret['rawData']['headers'] = $urlPaths->headersFile();
     $ret['rawData']['pageData'] = $urlPaths->pageDataFile();
     $ret['rawData']['requestsData'] = $urlPaths->requestDataFile();

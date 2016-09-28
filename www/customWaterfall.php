@@ -27,8 +27,9 @@ $page_description = "Website speed test custom waterfall$testLabel";
                      Maximum Time: <input id="max" type="text" name="max" style="width:2em" value=""> Seconds (leave blank for automatic)<br>
                      Requests (i.e. 1,2,3,4-9,8): <input id="requests" type="text" name="requests" style="width:20em" value="">
                     <button id="update" onclick="javascript:UpdateWaterfall();">Update Waterfall</button><br>
+                    <input id="showUT" type="checkbox" checked> Draw lines for User Timing Marks
                     <input id="showCPU" type="checkbox" checked> Show CPU Utilization 
-                    <input id="showBW" type="checkbox" checked> Show Bandwidth Utilization 
+                    <input id="showBW" type="checkbox" checked> Show Bandwidth Utilization <br>
                     <input id="showDots" type="checkbox" checked> Show Ellipsis (...) for missing items
                     <input id="showLabels" type="checkbox" checked> Show Labels for requests (URL)
                 </form>
@@ -38,7 +39,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 $extension = 'php';
                 if( FRIENDLY_URLS )
                     $extension = 'png';
-                echo "<img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step\">";
+                echo "<img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1\">";
             ?>
             
             <?php include('footer.inc'); ?>
@@ -84,6 +85,9 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 var width = $('#width').val();
                 var max = $('#max').val();
                 var requests = $('#requests').val();
+                var showUT = 0;
+                if( $('#showUT').attr('checked') )
+                    showUT = 1;
                 var showCPU = 0;
                 if( $('#showCPU').attr('checked') )
                     showCPU = 1;
@@ -112,6 +116,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
                           '&width=' + width + 
                           '&type=' + type + 
                           '&mime=' + mime + 
+                          '&ut=' + showUT + 
                           '&cpu=' + showCPU + 
                           '&bw=' + showBW + 
                           '&dots=' + showDots + 

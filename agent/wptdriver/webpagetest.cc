@@ -1189,20 +1189,29 @@ bool WebPagetest::ProcessFile(CString file, CAtlList<CString> &newFiles) {
   int pos = -1;
   if ((pos = file.Find(_T("trace.json"))) >= 0) {
     CString cpuFile = file.Left(pos) + _T("timeline_cpu.json.gz");
+    CString scriptTimingFile = file.Left(pos) + _T("script_timing.json.gz");
     CString userTimingFile = file.Left(pos) + _T("user_timing.json.gz");
     CString featureUsageFile = file.Left(pos) + _T("feature_usage.json.gz");
     CString options;
-    options.Format(_T("-t \"%s\" -c \"%s\" -u \"%s\" -f \"%s\""),
-                   (LPCTSTR)file, (LPCTSTR)cpuFile, (LPCTSTR)userTimingFile,
-                   (LPCTSTR)featureUsageFile);
+    options.Format(_T("-t \"%s\" -c \"%s\" -j \"%s\" -u \"%s\" -f \"%s\""),
+                   (LPCTSTR)file, (LPCTSTR)cpuFile, (LPCTSTR)scriptTimingFile,
+                   (LPCTSTR)userTimingFile, (LPCTSTR)featureUsageFile);
     if (RunPythonScript(_T("trace-parser.py"), options)) {
       if (FileExists(cpuFile)) {
         hasNewFiles = true;
         newFiles.AddTail(cpuFile);
       }
+      if (FileExists(scriptTimingFile)) {
+        hasNewFiles = true;
+        newFiles.AddTail(scriptTimingFile);
+      }
       if (FileExists(userTimingFile)) {
         hasNewFiles = true;
         newFiles.AddTail(userTimingFile);
+      }
+      if (FileExists(featureUsageFile)) {
+        hasNewFiles = true;
+        newFiles.AddTail(featureUsageFile);
       }
     }
   } else if ((pos = file.Find(_T(".cap"))) >= 0) {

@@ -48,6 +48,7 @@ $options = array(
   'max_bw' => $bwIn,
   'is_mime' => $is_mime,
   'is_state' => $is_state,
+  'show_user_timing' => (isset($_REQUEST['ut']) ? $_REQUEST['ut'] : GetSetting('waterfall_show_user_timing')),
   'rowcount' => $rowcount
 );
 
