@@ -591,6 +591,10 @@ bool TestServer::OkToStart() {
         last_cpu_user_.QuadPart = u.QuadPart;
       }
     }
+    #ifdef DEBUG
+      // don't wait in debug builds
+      started_ = true;
+    #endif
     if (started_) {
       // Signal to wptdriver which process it should wait for and that we started
       test_state_.shared_.SetBrowserProcessId(GetCurrentProcessId());

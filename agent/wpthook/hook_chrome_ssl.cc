@@ -37,82 +37,81 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "MinHook.h"
 
 #include "hook_chrome_ssl.h"
-#ifndef _WIN64
 static ChromeSSLHook* g_hook = NULL;
 
 /*
 // From Chrome /src/third_party/boringssl/src/ssl/internal.h
 // August 2016 (Chrome 54+)
 struct ssl_protocol_method_st {
-  char is_dtls;         // 0 (2 byte padded) - 0
-  uint16_t min_version; // (2 bytes) - 0
-  uint16_t max_version; // (4 bytes padded) - 1
-  uint16_t (*version_from_wire)(uint16_t wire_version); // 2
-  uint16_t (*version_to_wire)(uint16_t version);        // 3
-  int (*ssl_new)(SSL *ssl);                             // 4
-  void (*ssl_free)(SSL *ssl);                           // 5
-  int (*ssl_get_message)(SSL *ssl, int msg_type,        // 6
+  char is_dtls;         // (2 byte padded) (signature)
+  uint16_t min_version; // (2 bytes) (signature)
+  uint16_t max_version; // (4 bytes padded) (signature)
+  uint16_t (*version_from_wire)(uint16_t wire_version); // 0
+  uint16_t (*version_to_wire)(uint16_t version);        // 1
+  int (*ssl_new)(SSL *ssl);                             // 2
+  void (*ssl_free)(SSL *ssl);                           // 3
+  int (*ssl_get_message)(SSL *ssl, int msg_type,        // 4
                          enum ssl_hash_message_t hash_message);
-  int (*hash_current_message)(SSL *ssl);                // 7
-  void (*release_current_message)(SSL *ssl, int free_buffer); // 8
-  int (*read_app_data)(SSL *ssl, int *out_got_handshake,  //9
+  int (*hash_current_message)(SSL *ssl);                // 5
+  void (*release_current_message)(SSL *ssl, int free_buffer); // 6
+  int (*read_app_data)(SSL *ssl, int *out_got_handshake,  //7
                        uint8_t *buf, int len, int peek);
-  int (*read_change_cipher_spec)(SSL *ssl);             // 10
-  void (*read_close_notify)(SSL *ssl);                  // 11
-  int (*write_app_data)(SSL *ssl, const void *buf_, int len); // 12
-  int (*dispatch_alert)(SSL *ssl);                      // 13
-  int (*supports_cipher)(const SSL_CIPHER *cipher);     // 14
-  int (*init_message)(SSL *ssl, CBB *cbb, CBB *body, uint8_t type); // 15
-  int (*finish_message)(SSL *ssl, CBB *cbb);            // 16
-  int (*write_message)(SSL *ssl);                       // 17
-  int (*send_change_cipher_spec)(SSL *ssl);             // 18
-  void (*expect_flight)(SSL *ssl);                      // 19
-  void (*received_flight)(SSL *ssl);                    // 20
-  int (*set_read_state)(SSL *ssl, SSL_AEAD_CTX *aead_ctx);  // 21
-  int (*set_write_state)(SSL *ssl, SSL_AEAD_CTX *aead_ctx); // 22
+  int (*read_change_cipher_spec)(SSL *ssl);             // 8
+  void (*read_close_notify)(SSL *ssl);                  // 9
+  int (*write_app_data)(SSL *ssl, const void *buf_, int len); // 10
+  int (*dispatch_alert)(SSL *ssl);                      // 11
+  int (*supports_cipher)(const SSL_CIPHER *cipher);     // 12
+  int (*init_message)(SSL *ssl, CBB *cbb, CBB *body, uint8_t type); // 13
+  int (*finish_message)(SSL *ssl, CBB *cbb);            // 14
+  int (*write_message)(SSL *ssl);                       // 15
+  int (*send_change_cipher_spec)(SSL *ssl);             // 16
+  void (*expect_flight)(SSL *ssl);                      // 17
+  void (*received_flight)(SSL *ssl);                    // 18
+  int (*set_read_state)(SSL *ssl, SSL_AEAD_CTX *aead_ctx);  // 19
+  int (*set_write_state)(SSL *ssl, SSL_AEAD_CTX *aead_ctx); // 20
 };
 
 // Chrome 53
 struct ssl_protocol_method_st {
-  char is_dtls;                                                           // 0 (DWORD)
-  int (*ssl_new)(SSL *ssl);                                               // 1
-  void (*ssl_free)(SSL *ssl);                                             // 2
-  long (*ssl_get_message)(SSL *ssl, int msg_type,                         // 3
+  char is_dtls;                                                           // Signature
+  int (*ssl_new)(SSL *ssl);                                               // 0
+  void (*ssl_free)(SSL *ssl);                                             // 1
+  long (*ssl_get_message)(SSL *ssl, int msg_type,                         // 2
                           enum ssl_hash_message_t hash_message, int *ok);
-  int (*ssl_read_app_data)(SSL *ssl, uint8_t *buf, int len, int peek);    // 4
-  int (*ssl_read_change_cipher_spec)(SSL *ssl);                           // 5
-  void (*ssl_read_close_notify)(SSL *ssl);                                // 6
-  int (*ssl_write_app_data)(SSL *ssl, const void *buf_, int len);         // 7
-  int (*ssl_dispatch_alert)(SSL *ssl);                                    // 8
-  int (*supports_cipher)(const SSL_CIPHER *cipher);                       // 9
-  unsigned int hhlen;                                                     // 10
-  int (*set_handshake_header)(SSL *ssl, int type, unsigned long len);     // 11
-  int (*do_write)(SSL *ssl);                                              // 12
-  int (*send_change_cipher_spec)(SSL *ssl, int a, int b);                 // 13
-  void (*expect_flight)(SSL *ssl);                                        // 14
-  void (*received_flight)(SSL *ssl);                                      // 15
+  int (*ssl_read_app_data)(SSL *ssl, uint8_t *buf, int len, int peek);    // 3
+  int (*ssl_read_change_cipher_spec)(SSL *ssl);                           // 4
+  void (*ssl_read_close_notify)(SSL *ssl);                                // 5
+  int (*ssl_write_app_data)(SSL *ssl, const void *buf_, int len);         // 6
+  int (*ssl_dispatch_alert)(SSL *ssl);                                    // 7
+  int (*supports_cipher)(const SSL_CIPHER *cipher);                       // 8
+  unsigned int hhlen;                                                     // 9
+  int (*set_handshake_header)(SSL *ssl, int type, unsigned long len);     // 10
+  int (*do_write)(SSL *ssl);                                              // 11
+  int (*send_change_cipher_spec)(SSL *ssl, int a, int b);                 // 12
+  void (*expect_flight)(SSL *ssl);                                        // 13
+  void (*received_flight)(SSL *ssl);                                      // 14
 };
 
 
 // Nov 2015
 typedef struct ssl_protocol_method_st {
-  char is_dtls;     // 0 (DWORD)
-  int (*ssl_new)(void *ssl);
-  void (*ssl_free)(void *ssl);
-  int (*ssl_accept)(void *ssl);
-  int (*ssl_connect)(void *ssl);
-  long (*ssl_get_message)(void *ssl, int header_state, int body_state,
-                          int msg_type, long max,
+  char is_dtls;                                                           // Signature
+  int (*ssl_new)(void *ssl);                                              // 0
+  void (*ssl_free)(void *ssl);                                            // 1
+  int (*ssl_accept)(void *ssl);                                           // 2
+  int (*ssl_connect)(void *ssl);                                          // 3
+  long (*ssl_get_message)(void *ssl, int header_state, int body_state,    // 4
+                          int msg_type, long max, 
                           enum ssl_hash_message_t hash_message, int *ok);
-  int (*ssl_read_app_data)(void *ssl, uint8_t *buf, int len, int peek);
-  int (*ssl_read_change_cipher_spec)(void *ssl);
-  void (*ssl_read_close_notify)(void *ssl);
-  int (*ssl_write_app_data)(void *ssl, const void *buf_, int len);
-  int (*ssl_dispatch_alert)(void *ssl);
-  int (*supports_cipher)(void *cipher);
-  unsigned int hhlen; // 4 (DWORD)
-  int (*set_handshake_header)(void *ssl, int type, unsigned long len);
-  int (*do_write)(void *ssl);
+  int (*ssl_read_app_data)(void *ssl, uint8_t *buf, int len, int peek);   // 5
+  int (*ssl_read_change_cipher_spec)(void *ssl);                          // 6
+  void (*ssl_read_close_notify)(void *ssl);                               // 7
+  int (*ssl_write_app_data)(void *ssl, const void *buf_, int len);        // 8
+  int (*ssl_dispatch_alert)(void *ssl);                                   // 9
+  int (*supports_cipher)(void *cipher);                                   // 10
+  unsigned int hhlen;                                                     // 11 (value = 4 (DWORD))
+  int (*set_handshake_header)(void *ssl, int type, unsigned long len);    // 12
+  int (*do_write)(void *ssl);                                             // 13
 } SSL_METHODS;
 */
 
@@ -120,54 +119,69 @@ typedef struct {
   DWORD max_chrome_ver;
   DWORD min_chrome_ver;
   DWORD count;
-  DWORD signature;
-  DWORD hhlen;
-  DWORD hhlen_index;
-  DWORD addr_start_index;
-  DWORD ssl_new_index;
-  DWORD ssl_free_index;
-  DWORD ssl_connect_index;
-  DWORD ssl_begin_handshake_index;
-  DWORD ssl_read_app_data_old_index;
-  DWORD ssl_read_app_data_index;
-  DWORD ssl_write_app_data_index;
+  DWORD signature_len;
+  const char * signature_bytes;
+  const void **hhlen;
+  int hhlen_index;
+  int ssl_new_index;
+  int ssl_free_index;
+  int ssl_connect_index;
+  int ssl_begin_handshake_index;
+  int ssl_read_app_data_old_index;
+  int ssl_read_app_data_index;
+  int ssl_write_app_data_index;
 } SSL_METHODS_SIGNATURE;
 
 static SSL_METHODS_SIGNATURE methods_signatures[] = {
   // August 2016 - hhlen is switched for ssl max DWORD
   { 0,          // No max, current signature
-    54,         // Started in Chrome 53
-    22,         // count
-    0x03000000, // signature
-    0x00000304, // hhlen
-    1,          // hhlen_index
-    2,          // addr_start_index
-    4,          // ssl_new_index
-    5,          // ssl_free_index
-    0,          // ssl_connect_index
-    0,          // ssl_begin_handshake_index
-    0,          // ssl_read_app_data_old_index
-    9,          // ssl_read_app_data_index
-    12},        // ssl_write_app_data_index
+    54,         // Started in Chrome 54
+    21,         // count
+    8,          // 8-byte signature
+    "\x0\x0\x0\x3\x4\x3\x0\x0", // signature
+    0,          // hhlen
+    -1,         // hhlen_index
+    2,          // ssl_new_index
+    3,          // ssl_free_index
+    -1,         // ssl_connect_index
+    -1,         // ssl_begin_handshake_index
+    -1,         // ssl_read_app_data_old_index
+    7,          // ssl_read_app_data_index
+    10}         // ssl_write_app_data_index
 
+  //#ifndef _WIN64
   // Chrome 53
-  { 53,         // No max, current signature
+  ,{53,         // Ended in Chrome 53
     53,         // Started in Chrome 53
-    15,         // count
-    0x00000000, // signature
-    4,          // hhlen
-    10,         // hhlen_index
-    1,          // addr_start_index
-    1,          // ssl_new_index
-    2,          // ssl_free_index
-    0,          // ssl_connect_index
-    0,          // ssl_begin_handshake_index
-    4,          // ssl_read_app_data_old_index
-    0,          // ssl_read_app_data_index
-    7},         // ssl_write_app_data_index
+    14,         // count
+    4,          // Signature len
+    "\x0\x0\x0\x0", // signature
+    (const void **)4,          // hhlen
+    9,          // hhlen_index
+    0,          // ssl_new_index
+    1,          // ssl_free_index
+    -1,         // ssl_connect_index
+    -1,         // ssl_begin_handshake_index
+    3,          // ssl_read_app_data_old_index
+    -1,         // ssl_read_app_data_index
+    6}          // ssl_write_app_data_index
 
   // Nov 2015
-  {52, 0, 15, 0x00000000, 4, 12, 1, 1, 2, 4, 0, 6, 0, 9}
+  ,{52,         // Ended in Chrome 52
+    0,          // No start version
+    13,         // count
+    4,          // Signature len
+    "\x0\x0\x0\x0", // signature
+    (const void **)4,          // hhlen value
+    11,         // hhlen_index
+    0,          // ssl_new_index
+    1,          // ssl_free_index
+    3,          // ssl_connect_index
+    -1,         // ssl_begin_handshake_index
+    5,          // ssl_read_app_data_old_index
+    -1,         // ssl_read_app_data_index
+    8}          // ssl_write_app_data_index
+  //#endif
 };
 
 static const DWORD max_methods_struct_size = 80;
@@ -244,9 +258,9 @@ void ChromeSSLHook::Init() {
 
   // Locate the global SSL_METHODS structure from s3_meth.c in memory
   // - in the .rdata section of chrome.dll
-  // - starting with a 0 DWORD (for dtls) or 0x03000000 for newer packed version
-  // - with a 4 DWORD for the hhlen at the appropriate offset
-  // - with all other entries pointing to addresses within chrome.dll
+  // - starting with a signature that matches one of our defined signatures
+  // - with a 4 for the hhlen at the appropriate offset
+  // - with all functions pointing to addresses within chrome.dll
   CStringA buff;
   HMODULE module = GetModuleHandleA("chrome.dll");
   DWORD chrome_version = 0;
@@ -271,64 +285,68 @@ void ChromeSSLHook::Init() {
   }
   ATLTRACE("Looking for Chrome SSL hook for Chrome version %d\n", chrome_version);
 
-  DWORD * methods_addr = NULL;
-  DWORD signature = 0;
+  void ** methods_addr = NULL;
+  int signature = -1;
   DWORD match_count = 0;
   if (module) {
-    DWORD base_addr = (DWORD)module;
+    char * base_addr = (char *)module;
     MODULEINFO module_info;
     if (GetModuleInformation(GetCurrentProcess(), module, &module_info, sizeof(module_info))) {
-      DWORD end_addr = base_addr + module_info.SizeOfImage;
+      char * end_addr = base_addr + module_info.SizeOfImage;
       PIMAGE_DOS_HEADER pDos = (PIMAGE_DOS_HEADER)base_addr;
       PIMAGE_NT_HEADERS pNT = (PIMAGE_NT_HEADERS)(pDos->e_lfanew + base_addr);
       if (pNT->Signature == IMAGE_NT_SIGNATURE) {
         PIMAGE_SECTION_HEADER pSection = 0;
         for (int i = 0 ;i < pNT->FileHeader.NumberOfSections; i ++) {
-          pSection = (PIMAGE_SECTION_HEADER)((DWORD)pNT + sizeof(IMAGE_NT_HEADERS) + (sizeof(IMAGE_SECTION_HEADER)*i));
+          pSection = (PIMAGE_SECTION_HEADER)((char *)pNT + sizeof(IMAGE_NT_HEADERS) + (sizeof(IMAGE_SECTION_HEADER)*i));
           if (!strcmp((char*)pSection->Name, ".rdata") && pSection->SizeOfRawData > max_methods_struct_size) {
             // Scan for a matching signature
             int count = 0;
-            DWORD * compare;
-            LPBYTE addr = (LPBYTE)(base_addr + pSection->VirtualAddress);
+            char * compare;
+            char * addr = (char *)(base_addr + pSection->VirtualAddress);
             DWORD len = pSection->SizeOfRawData - max_methods_struct_size;
             while (len) {
-              compare = (DWORD *)addr;
+              compare = addr;
 
-              // Starts with 0 for dtls and 2nd entry in the address range
-              if ((compare[0] == 0 || compare[0] == 0x03000000) && compare[6] >= base_addr && compare[6] <= end_addr) {
+              // All signatures start with at least a 3-byte 0 value
+              if (!memcmp(compare, "\x0\x0\x0", 3)) {
                 // go through our list of matching signatures
                 for (int signum = 0; signum < _countof(methods_signatures); signum++) {
                   SSL_METHODS_SIGNATURE * sig = &methods_signatures[signum];
                   if (chrome_version >= sig->min_chrome_ver && (!sig->max_chrome_ver || chrome_version <= sig->max_chrome_ver)) {
-                    // see if the first dword matches
-                    if (compare[0] == sig->signature && compare[sig->hhlen_index] == sig->hhlen) {
-                      // see if all other entries are addresses in the chrome.dll address range
-                      bool ok = true;
-                      for (DWORD entry = sig->addr_start_index; entry < sig->count; entry++) {
-                        if (entry != sig->hhlen_index) {
-                          if (compare[entry] < base_addr || compare[entry] > end_addr) {
-                            ok = false;
-                            break;
+                    // see if the signature matches
+                    if (!memcmp(compare, sig->signature_bytes, sig->signature_len)) {
+                      void ** functions = (void **)&compare[sig->signature_len];
+                      // if hhlen is defined, make sure it matches
+                      if (sig->hhlen_index < 0 || functions[sig->hhlen_index] == sig->hhlen) {
+                        // see if all other entries are addresses in the chrome.dll address range
+                        bool ok = true;
+                        for (DWORD entry = 0; entry < sig->count; entry++) {
+                          if (entry != sig->hhlen_index) {
+                            if (functions[entry] < base_addr || functions[entry] > end_addr) {
+                              ok = false;
+                              break;
+                            }
                           }
                         }
-                      }
-                      if (ok) {
-                        // Scan the next 1KB to see if the reference to boringssl is present (possibly flaky, verify with several builds)
-                        char * mem = (char *)compare;
-                        bool found = false;
-                        for (int str_offset = 0; str_offset < 1024 && !found && (DWORD)mem < end_addr; str_offset++) {
-                          if (!memcmp(&mem[str_offset], "boringssl", 9))
-                            found = true;
-                        }
-                        if (found) {
-                          match_count++;
-                          ATLTRACE("Chrome ssl methods structure found (signature %d) at 0x%08X\n", signum, (DWORD)compare);
-                          if (!methods_addr) {
-                            methods_addr = compare;
-                            signature = signum;
+                        if (ok) {
+                          // Scan the next 1KB to see if the reference to boringssl is present (possibly flaky, verify with several builds)
+                          char * mem = compare;
+                          bool found = false;
+                          for (int str_offset = 0; str_offset < 1024 && !found && mem < end_addr; str_offset++) {
+                            if (!memcmp(&mem[str_offset], "boringssl", 9))
+                              found = true;
                           }
-                        } else {
-                          ATLTRACE("Signature match but ssl_lib.c string not found (signature %d) at 0x%08X\n", signum, (DWORD)compare);
+                          if (found) {
+                            match_count++;
+                            ATLTRACE("Chrome ssl methods structure found (signature %d) at 0x%p\n", signum, compare);
+                            if (!methods_addr) {
+                              methods_addr = functions;
+                              signature = signum;
+                            }
+                          } else {
+                            ATLTRACE("Signature match but ssl_lib.c string not found (signature %d) at 0x%p\n", signum, compare);
+                          }
                         }
                       }
                     }
@@ -336,9 +354,9 @@ void ChromeSSLHook::Init() {
                 }
               }
 
-              // Structure is DWORD-aligned in memory
-              len -= 4;
-              addr += 4;
+              // Structure is pointer-aligned in memory
+              len -= sizeof(void *);
+              addr += sizeof(void *);
             }
           }
         }
@@ -347,23 +365,23 @@ void ChromeSSLHook::Init() {
   }
 
   // To be safe, only hook if we find EXACTLY one match
-  if (match_count == 1 && methods_addr) {
+  if (match_count == 1 && methods_addr && signature >= 0) {
     g_hook = this; 
 
-    ATLTRACE("Overwriting Chrome ssl methods structure (signature %d) at 0x%08X", signature, (DWORD)methods_addr);
+    ATLTRACE("Overwriting Chrome ssl methods structure (signature %d) at 0x%p", signature, methods_addr);
 
     // Hook the functions now that we have in-memory addresses for them
-    MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_new_index], New_Hook, (LPVOID *)&New_);
-    MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_free_index], Free_Hook, (LPVOID *)&Free_);
-    if (methods_signatures[signature].ssl_connect_index)
-      MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_connect_index], Connect_Hook, (LPVOID *)&Connect_);
-    if (methods_signatures[signature].ssl_begin_handshake_index)
-      MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_begin_handshake_index], BeginHandshake_Hook, (LPVOID *)&BeginHandshake_);
-    if (methods_signatures[signature].ssl_read_app_data_old_index)
-      MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_read_app_data_old_index], ReadAppDataOld_Hook, (LPVOID *)&ReadAppDataOld_);
-    if (methods_signatures[signature].ssl_read_app_data_index)
-      MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_read_app_data_index], ReadAppData_Hook, (LPVOID *)&ReadAppData_);
-    MH_CreateHook((LPVOID)methods_addr[methods_signatures[signature].ssl_write_app_data_index], WriteAppData_Hook, (LPVOID *)&WriteAppData_);
+    MH_CreateHook(methods_addr[methods_signatures[signature].ssl_new_index], New_Hook, (LPVOID *)&New_);
+    MH_CreateHook(methods_addr[methods_signatures[signature].ssl_free_index], Free_Hook, (LPVOID *)&Free_);
+    if (methods_signatures[signature].ssl_connect_index >= 0)
+      MH_CreateHook(methods_addr[methods_signatures[signature].ssl_connect_index], Connect_Hook, (LPVOID *)&Connect_);
+    if (methods_signatures[signature].ssl_begin_handshake_index >= 0)
+      MH_CreateHook(methods_addr[methods_signatures[signature].ssl_begin_handshake_index], BeginHandshake_Hook, (LPVOID *)&BeginHandshake_);
+    if (methods_signatures[signature].ssl_read_app_data_old_index >= 0)
+      MH_CreateHook(methods_addr[methods_signatures[signature].ssl_read_app_data_old_index], ReadAppDataOld_Hook, (LPVOID *)&ReadAppDataOld_);
+    if (methods_signatures[signature].ssl_read_app_data_index >= 0)
+      MH_CreateHook(methods_addr[methods_signatures[signature].ssl_read_app_data_index], ReadAppData_Hook, (LPVOID *)&ReadAppData_);
+    MH_CreateHook(methods_addr[methods_signatures[signature].ssl_write_app_data_index], WriteAppData_Hook, (LPVOID *)&WriteAppData_);
 
     MH_EnableHook(MH_ALL_HOOKS);
 
@@ -488,4 +506,3 @@ int ChromeSSLHook::WriteAppData(void *ssl, const void *buf, int len) {
   }
   return ret;
 }
-#endif // _WIN64

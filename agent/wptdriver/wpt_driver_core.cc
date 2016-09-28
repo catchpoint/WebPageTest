@@ -169,7 +169,9 @@ bool WptDriverCore::Startup() {
 -----------------------------------------------------------------------------*/
 void WptDriverCore::WorkThread(void) {
   if (Startup()) {
+    #ifndef DEBUG
     Sleep(_settings._startup_delay * SECONDS_TO_MS);
+    #endif
 
     WaitForSingleObject(_testing_mutex, INFINITE);
     Init();  // do initialization and machine configuration
