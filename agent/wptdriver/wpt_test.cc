@@ -168,6 +168,7 @@ void WptTest::Reset(void) {
   _append_user_agent.Empty();
   _max_test_time = 0;
   _process_results = false;
+  _minimal_results = false;
   if (!_block_domains.IsEmpty())
     _block_domains.RemoveAll();
   if (!_block_domains_except.IsEmpty())
@@ -334,6 +335,8 @@ bool WptTest::Load(CString& test) {
           _browser_height = _ttoi(value.Trim());
         } else if (!key.CompareNoCase(_T("processResults")) && _ttoi(value.Trim())) {
           _process_results = true;
+        } else if (!key.CompareNoCase(_T("minimalResults")) && _ttoi(value.Trim())) {
+          _minimal_results = true;
         }
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {

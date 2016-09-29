@@ -158,8 +158,8 @@ bool CIpfw::SetPipe(unsigned int num, unsigned long bandwidth,
           s->sopt_val = (void *)(s+1);
           memcpy(s->sopt_val, &cmd, sizeof(cmd));
           DWORD n;
-          if (DeviceIoControl(hDriver, IP_FW_SETSOCKOPT,s,size, s, size, &n, 
-                              NULL))
+          if (DeviceIoControl(hDriver, IP_FW_SETSOCKOPT,s,(DWORD)size, s,
+                              (DWORD)size, &n, NULL))
             ret = true;
           free(s);
         }

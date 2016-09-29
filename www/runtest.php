@@ -185,6 +185,7 @@
             $test['clearcerts'] = array_key_exists('clearcerts', $_REQUEST) && $_REQUEST['clearcerts'] ? 1 : 0;
             $test['orientation'] = array_key_exists('orientation', $_REQUEST) ? trim($_REQUEST['orientation']) : 'default';
             $test['responsive'] = array_key_exists('responsive', $_REQUEST) && $_REQUEST['responsive'] ? 1 : 0;
+            $test['minimalResults'] = array_key_exists('minimal', $_REQUEST) && $_REQUEST['minimal'] ? 1 : 0;
             if (isset($_REQUEST['medianMetric']))
               $test['medianMetric'] = $_REQUEST['medianMetric'];
 
@@ -2067,6 +2068,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "continuousVideo=1\r\n";
             if (array_key_exists('responsive', $test) && $test['responsive'])
                 $testFile .= "responsive=1\r\n";
+            if (array_key_exists('minimalResults', $test) && $test['minimalResults'])
+                $testFile .= "minimalResults=1\r\n";
             if (array_key_exists('cmdLine', $test) && strlen($test['cmdLine']))
                 $testFile .= "cmdLine={$test['cmdLine']}\r\n";
             if (array_key_exists('addCmdLine', $test) && strlen($test['addCmdLine']))

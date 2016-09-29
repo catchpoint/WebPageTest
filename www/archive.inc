@@ -4,6 +4,21 @@ require_once('logging.inc');
 require_once('common_lib.inc');
 
 /**
+* See if the file should be skipped when archiving (usually just cache files)
+* 
+* @param mixed $file
+*/
+function ArchiveSkipFile($file) {
+  $skip = false;
+  if (preg_match('/\.pageData.\d+\.gz$/', $file) ||
+      preg_match('/\.requests.\d+\.gz$/', $file) ||
+      preg_match('/\.devToolsCPUTime.\d+\.gz$/', $file)) {
+    $skip = true;
+  }
+  return $skip;
+}
+
+/**
 * Archive the given test if it hasn't already been archived
 * For now this will just zip and move to a location on disk
 * but will eventually integrate with the S3 archiving
@@ -50,8 +65,10 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                         foreach ($files as $file) {
                             $filePath = "$testPath/$file";
                             if (is_file($filePath)) {
+                              if (!ArchiveSkipFile($file)) {
                                 $count++;
                                 $zip->addFile($filePath, $file);
+                              }
                             } else if ($file != '.' && $file != '..' && is_dir($filePath)) {
                                 $subFiles = scandir($filePath);
                                 if ($subFiles) {

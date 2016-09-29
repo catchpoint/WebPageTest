@@ -133,15 +133,19 @@ void Results::Save(void) {
       SaveRequests(checks);
       SaveImages();
       SaveProgressData();
-      SaveStatusMessages();
+      if (!_test._minimal_results) {
+        SaveStatusMessages();
+      }
       SavePageData(checks);
-      SaveResponseBodies();
-      SaveConsoleLog();
-      SaveTimedEvents();
-      SaveCustomMetrics();
-      SaveUserTiming();
-      SavePriorityStreams();
-      _trace.Write(_test_state._file_base + TRACE_FILE);
+      if (!_test._minimal_results) {
+        SaveResponseBodies();
+        SaveConsoleLog();
+        SaveTimedEvents();
+        SaveCustomMetrics();
+        SaveUserTiming();
+        SavePriorityStreams();
+        _trace.Write(_test_state._file_base + TRACE_FILE);
+      }
     }
     if (_test_state.shared_.TestResult() == -1 ||
         _test_state.shared_.TestResult() == 0 ||
@@ -216,18 +220,23 @@ void Results::SaveStatusMessages(void) {
 void Results::SaveImages(void) {
   // save the event-based images
   CxImage image;
-  if (_screen_capture.GetImage(CapturedImage::START_RENDER, image))
-    SaveImage(image, _test_state._file_base + IMAGE_START_RENDER, _test._image_quality, false, _test._full_size_video);
-  if (_screen_capture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image))
-    SaveImage(image, _test_state._file_base + IMAGE_DOC_COMPLETE, _test._image_quality, false, _test._full_size_video);
-  if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, image)) {
-    if (_test._png_screen_shot)
-      image.Save(_test_state._file_base + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
-    SaveImage(image, _test_state._file_base + IMAGE_FULLY_LOADED, _test._image_quality, false, _test._full_size_video);
-  }
-  if (_screen_capture.GetImage(CapturedImage::RESPONSIVE_CHECK, image)) {
-    SaveImage(image, _test_state._file_base + IMAGE_RESPONSIVE_CHECK, _test._image_quality,
-              true, _test._full_size_video);
+  if (_test._minimal_results) {
+    if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, image))
+      SaveImage(image, _test_state._file_base + IMAGE_FULLY_LOADED, _test._image_quality, true, false);
+  } else {
+    if (_screen_capture.GetImage(CapturedImage::START_RENDER, image))
+      SaveImage(image, _test_state._file_base + IMAGE_START_RENDER, _test._image_quality, false, _test._full_size_video);
+    if (_screen_capture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image))
+      SaveImage(image, _test_state._file_base + IMAGE_DOC_COMPLETE, _test._image_quality, false, _test._full_size_video);
+    if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, image)) {
+      if (_test._png_screen_shot)
+        image.Save(_test_state._file_base + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
+      SaveImage(image, _test_state._file_base + IMAGE_FULLY_LOADED, _test._image_quality, false, _test._full_size_video);
+    }
+    if (_screen_capture.GetImage(CapturedImage::RESPONSIVE_CHECK, image)) {
+      SaveImage(image, _test_state._file_base + IMAGE_RESPONSIVE_CHECK, _test._image_quality,
+                true, _test._full_size_video);
+    }
   }
 
   SaveVideo();
@@ -271,8 +280,8 @@ void Results::SaveVideo(void) {
             if (!_test_state._render_start.QuadPart)
               _test_state._render_start.QuadPart = image._capture_time.QuadPart;
             histogram = GetHistogramJSON(*img);
-            if (_test._video) {
-              _visually_complete.QuadPart = image._capture_time.QuadPart;
+            _visually_complete.QuadPart = image._capture_time.QuadPart;
+            if (_test._video && !_test._minimal_results) {
               file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_test_state._file_base, 
                                 image_time);
               SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_video);
@@ -285,13 +294,13 @@ void Results::SaveVideo(void) {
           image_time = 0;
           image_time_ms = 0;
           histogram = GetHistogramJSON(*img);
-          if (_test._video) {
+          if (_test._video && !_test._minimal_results) {
             file_name = _test_state._file_base + _T("_progress_0000.jpg");
             SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_video);
           }
         }
 
-        if (!histogram.IsEmpty()) {
+        if (!histogram.IsEmpty() && !_test._minimal_results) {
           if (histogram_count)
             histograms += ", ";
           histograms += "{\"histogram\": ";

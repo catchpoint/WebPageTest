@@ -235,8 +235,12 @@ bool WebBrowser::RunAndWait() {
       }
 
       // set up the TLS session key log
-      SetEnvironmentVariable(L"SSLKEYLOGFILE", _test._file_base + L"_keylog.log");
       DeleteFile(_test._file_base + L"_keylog.log");
+      if (_test._tcpdump) {
+        SetEnvironmentVariable(L"SSLKEYLOGFILE", _test._file_base + L"_keylog.log");
+      } else {
+        SetEnvironmentVariable(L"SSLKEYLOGFILE", NULL);
+      }
 
       _status.Set(_T("Launching: %s"), cmdLine);
 
@@ -335,6 +339,7 @@ bool WebBrowser::RunAndWait() {
 
       g_shared->SetBrowserExe(NULL);
       ResetIpfw();
+      SetEnvironmentVariable(L"SSLKEYLOGFILE", NULL);
 
     } else {
       _test._run_error = "Browser configured incorrectly (exe not defined).";
@@ -794,13 +799,13 @@ void WebBrowser::ConfigureChromePreferences() {
   HANDLE file = CreateFile(prefs_file, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
   if (file != INVALID_HANDLE_VALUE) {
     DWORD written = 0;
-    WriteFile(file, prefs, strlen(prefs), &written, 0);
+    WriteFile(file, prefs, lstrlenA(prefs), &written, 0);
     CloseHandle(file);
   }
   file = CreateFile(master_prefs_file, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
   if (file != INVALID_HANDLE_VALUE) {
     DWORD written = 0;
-    WriteFile(file, prefs, strlen(prefs), &written, 0);
+    WriteFile(file, prefs, lstrlenA(prefs), &written, 0);
     CloseHandle(file);
   }
 }

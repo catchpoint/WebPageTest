@@ -212,6 +212,7 @@ public:
   bool     _process_results;
   CAtlList<CString> _block_domains;
   CAtlList<CString> _block_domains_except;
+  bool     _minimal_results;
   
   // current state
   int     _run;
