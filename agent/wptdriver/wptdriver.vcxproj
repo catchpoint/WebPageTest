@@ -101,11 +101,12 @@
       <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y *.ini "$(outdir)\"
-mkdir "$(outdir)\templates\Firefox\extensions"
-copy /Y "..\browser\firefox\*.*" "$(outdir)\templates\Firefox\"
-copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org.xpi"
-</Command>
+      <Command>copy /Y *.ini "$(outdir)"
+del /S /Q "$(outdir)templates\Firefox"
+mkdir "$(outdir)templates\Firefox\extensions\wptdriver@webpagetest.org"
+copy /Y "..\browser\firefox\*.*" "$(outdir)templates\Firefox\"
+xcopy /E /R /Y "..\browser\firefox\extension" "$(outdir)templates\Firefox\extensions\wptdriver@webpagetest.org"
+EXIT 0</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Copying support files</Message>
@@ -133,11 +134,12 @@ copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdr
       <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y *.ini "$(outdir)\"
-mkdir "$(outdir)\templates\Firefox\extensions"
-copy /Y "..\browser\firefox\*.*" "$(outdir)\templates\Firefox\"
-copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org.xpi"
-</Command>
+      <Command>copy /Y *.ini "$(outdir)"
+del /S /Q "$(outdir)templates\Firefox"
+mkdir "$(outdir)templates\Firefox\extensions\wptdriver@webpagetest.org"
+copy /Y "..\browser\firefox\*.*" "$(outdir)templates\Firefox\"
+xcopy /E /R /Y "..\browser\firefox\extension" "$(outdir)templates\Firefox\extensions\wptdriver@webpagetest.org"
+EXIT 0</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Copying support files</Message>
@@ -171,11 +173,12 @@ copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdr
       <ProfileGuidedDatabase>$(IntDir)$(TargetName).pgd</ProfileGuidedDatabase>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y *.ini "$(outdir)\"
-mkdir "$(outdir)\templates\Firefox\extensions"
-copy /Y "..\browser\firefox\*.*" "$(outdir)\templates\Firefox\"
-copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org.xpi"
-</Command>
+      <Command>copy /Y *.ini "$(outdir)"
+del /S /Q "$(outdir)templates\Firefox"
+mkdir "$(outdir)templates\Firefox\extensions\wptdriver@webpagetest.org"
+copy /Y "..\browser\firefox\*.*" "$(outdir)templates\Firefox\"
+xcopy /E /R /Y "..\browser\firefox\extension" "$(outdir)templates\Firefox\extensions\wptdriver@webpagetest.org"
+EXIT 0</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Copying support files</Message>
@@ -209,11 +212,12 @@ copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdr
       <ProfileGuidedDatabase>$(IntDir)$(TargetName).pgd</ProfileGuidedDatabase>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y *.ini "$(outdir)\"
-mkdir "$(outdir)\templates\Firefox\extensions"
-copy /Y "..\browser\firefox\*.*" "$(outdir)\templates\Firefox\"
-copy /Y "..\browser\firefox\*.xpi" "$(outdir)\templates\Firefox\extensions\wptdriver@webpagetest.org.xpi"
-</Command>
+      <Command>copy /Y *.ini "$(outdir)"
+del /S /Q "$(outdir)templates\Firefox"
+mkdir "$(outdir)templates\Firefox\extensions\wptdriver@webpagetest.org"
+copy /Y "..\browser\firefox\*.*" "$(outdir)templates\Firefox\"
+xcopy /E /R /Y "..\browser\firefox\extension" "$(outdir)templates\Firefox\extensions\wptdriver@webpagetest.org"
+EXIT 0</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Copying support files</Message>
