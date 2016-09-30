@@ -1012,12 +1012,14 @@ function ValidateKey(&$test, &$error, $key = null)
       // see if it was an auto-provisioned key
       if (preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $key, $matches)) {
         $prefix = $matches['prefix'];
-        $db = new SQLite3(__DIR__ . "/dat/{$prefix}_api_keys.db");
-        $k = $db->escapeString($matches['key']);
-        $info = $db->querySingle("SELECT key_limit FROM keys WHERE key='$k'", true);
-        $db->close();
-        if (isset($info) && is_array($info) && isset($info['key_limit']))
-          $keys[$key] = array('limit' => $info['key_limit']);
+        if (is_file(__DIR__ . "/dat/{$prefix}_api_keys.db")) {
+          $db = new SQLite3(__DIR__ . "/dat/{$prefix}_api_keys.db");
+          $k = $db->escapeString($matches['key']);
+          $info = $db->querySingle("SELECT key_limit FROM keys WHERE key='$k'", true);
+          $db->close();
+          if (isset($info) && is_array($info) && isset($info['key_limit']))
+            $keys[$key] = array('limit' => $info['key_limit']);
+        }
       }
       
       // validate their API key and enforce any rate limits
