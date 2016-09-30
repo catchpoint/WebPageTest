@@ -968,7 +968,7 @@ bool WptDriverCore::NeedsReboot() {
     bool needs_reboot = false;
     if (ERROR_SUCCESS == RegOpenKeyEx(HKEY_LOCAL_MACHINE,
         L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WindowsUpdate"
-        L"\\Auto Update\\RebootRequired", 0, 0, &key)) {
+        L"\\Auto Update\\RebootRequired", 0, KEY_READ, &key)) {
       needs_reboot = true;
       RegCloseKey(key);
     }
