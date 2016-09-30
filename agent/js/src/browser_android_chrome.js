@@ -110,6 +110,27 @@ var BLACK_BOX_BROWSERS = {
       'directories': ['cache', 'databases', 'files', 'app_sbrowser', 'code_cache'],
       'startupDelay': 10000
     },
+    'QQ Browser': {
+      'package': 'com.tencent.mtt.intl',
+      'activity': 'com.tencent.mtt.SplashActivity',
+      'videoFlags': ['--findstart', 25, '--notification'],
+      'directories': ['cache', 'databases', 'files', 'app_appcache', 'app_databases', 'app_databases_tmp', 'app_x5_share'],
+      'startupDelay': 10000
+    },
+    'Firefox': {
+      'package': 'org.mozilla.firefox',
+      'activity': '.App',
+      'videoFlags': ['--findstart', 25, '--notification'],
+      'directories': ['cache', 'databases', 'files', 'app_sbrowser', 'code_cache'],
+      'startupDelay': 10000
+    },
+    'Firefox Beta': {
+      'package': 'org.mozilla.firefox_beta',
+      'activity': '.App',
+      'videoFlags': ['--findstart', 25, '--notification'],
+      'directories': ['cache', 'databases', 'files', 'app_tmpdir', 'no_backup'],
+      'startupDelay': 10000
+    },
   };
 
 var LAST_INSTALL_FILE = 'lastInstall.txt';
