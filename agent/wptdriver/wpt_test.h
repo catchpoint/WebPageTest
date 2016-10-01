@@ -213,6 +213,7 @@ public:
   CAtlList<CString> _block_domains;
   CAtlList<CString> _block_domains_except;
   bool     _minimal_results;
+  CString  _software_update_url;
   
   // current state
   int     _run;

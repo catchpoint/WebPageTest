@@ -26,17 +26,18 @@ public:
   bool UpdateSoftware(bool force = false);
   bool ReInstallBrowser(CString browser);
   CString GetUpdateInfo(CString url);
+  void SetSoftwareUrl(CString url);
 
   CString _ec2_instance;
   CString _ec2_availability_zone;
 
 protected:
   CAtlList<BrowserInfo> _browsers;
-  CString           _software_url;
   CString           _directory;
   LARGE_INTEGER     _last_update_check;
   LARGE_INTEGER     _perf_frequency_minutes;
   WptStatus         &_status;
+  CString           _software_url;
 
   bool UpdateBrowsers(void);
   bool InstallSoftware(CString browser, CString file_url, CString md5,

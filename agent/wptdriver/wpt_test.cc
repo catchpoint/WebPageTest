@@ -337,6 +337,8 @@ bool WptTest::Load(CString& test) {
           _process_results = true;
         } else if (!key.CompareNoCase(_T("minimalResults")) && _ttoi(value.Trim())) {
           _minimal_results = true;
+        } else if (!key.CompareNoCase(_T("software"))) {
+          _software_update_url = value.Trim();
         }
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {

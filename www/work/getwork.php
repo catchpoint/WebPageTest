@@ -153,6 +153,11 @@ function GetJob() {
 
                   // send the test info to the test agent
                   $testInfo = file_get_contents("$workDir/$fileName");
+                  $software = GetSetting('software');
+                  if ($software)
+                    $testInfo .= "software=$software\r\n";
+                  if (GetSetting('enable_agent_processing'))
+                    $testInfo .= "processResults=1\r\n";
 
                   // extract the test ID from the job file
                   if( preg_match('/Test ID=([^\r\n]+)\r/i', $testInfo, $matches) )
@@ -258,9 +263,9 @@ function GetJob() {
                         }
                       }
                       echo json_encode($testJson);
-                  }
-                  else
+                  } else {
                       echo $testInfo;
+                  }
                   $ok = true;
               }
                   

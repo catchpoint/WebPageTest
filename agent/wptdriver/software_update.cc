@@ -71,6 +71,15 @@ void SoftwareUpdate::LoadSettings(CString settings_ini) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void SoftwareUpdate::SetSoftwareUrl(CString url) {
+  if (url != _software_url) {
+    _software_url = url;
+    UpdateSoftware(true);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 CString SoftwareUpdate::GetUpdateInfo(CString url) {
   CString info, buff;
   if (_ec2_instance.GetLength())
