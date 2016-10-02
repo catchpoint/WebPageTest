@@ -15,11 +15,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import gzip
-import json
 import logging
 import math
 import os
 import time
+
+# try importing (or installing if necessary) a fast json parser
+try:
+  import ujson as json
+except:
+  try:
+    import pip
+    pip.main(['install', 'ujson'])
+    import ujson as json
+  except:
+    import json
 
 ########################################################################################################################
 #   Trace processing
@@ -107,14 +117,15 @@ class Trace():
 
   def ProcessTraceEvent(self, trace_event):
     cat = trace_event['cat']
-    if cat.find('blink.user_timing') >= 0:
-      self.user_timing.append(trace_event)
-    if cat.find('blink.feature_usage') >= 0:
-      self.ProcessFeatureUsageEvent(trace_event)
-    if cat.find('netlog') >= 0:
-      self.ProcessNetlogEvent(trace_event)
     if cat.find('devtools.timeline') >= 0:
       self.ProcessTimelineTraceEvent(trace_event)
+    elif cat.find('blink.feature_usage') >= 0:
+      self.ProcessFeatureUsageEvent(trace_event)
+    elif cat.find('blink.user_timing') >= 0:
+      self.user_timing.append(trace_event)
+    #Netlog support is still in progress
+    #elif cat.find('netlog') >= 0:
+    #  self.ProcessNetlogEvent(trace_event)
 
 
   ########################################################################################################################
@@ -203,7 +214,7 @@ class Trace():
       # Create the empty time slices for all of the threads
       self.cpu['slices'] = {}
       for thread in self.threads.keys():
-        self.cpu['slices'][thread] = {}
+        self.cpu['slices'][thread] = {'total': [0.0] * slice_count}
         for name in self.threads[thread].keys():
           self.cpu['slices'][thread][name] = [0.0] * slice_count
 
@@ -213,6 +224,7 @@ class Trace():
 
       # Go through all of the fractional times and convert the float fractional times to integer usecs
       for thread in self.cpu['slices'].keys():
+        del self.cpu['slices'][thread]['total']
         for name in self.cpu['slices'][thread].keys():
           for slice in range(len(self.cpu['slices'][thread][name])):
             self.cpu['slices'][thread][name][slice] =\
@@ -264,22 +276,23 @@ class Trace():
       # since they would just cancel each other out.
       if name != parent:
         fraction = min(1.0, float(elapsed) / float(self.cpu['slice_usecs']))
-        self.cpu['slices'][thread][name][slice_number] = self.cpu['slices'][thread][name][slice_number] + fraction
-        if parent is not None:
-          parentTime = self.cpu['slices'][thread][parent][slice_number]
-          if parentTime >= fraction:
-            parentTime = max(0.0, parentTime - fraction)
-            self.cpu['slices'][thread][parent][slice_number] = parentTime
+        self.cpu['slices'][thread][name][slice_number] += fraction
+        self.cpu['slices'][thread]['total'] += fraction
+        if parent is not None and self.cpu['slices'][thread][parent][slice_number] >= fraction:
+          self.cpu['slices'][thread][parent][slice_number] -= fraction
+          self.cpu['slices'][thread]['total'] -= fraction
         # Make sure we didn't exceed 100% in this slice
         self.cpu['slices'][thread][name][slice_number] = min(1.0, self.cpu['slices'][thread][name][slice_number])
 
         # make sure we don't exceed 100% for any slot
-        available = max(0.0, 1.0 - fraction)
-        for slice_name in self.cpu['slices'][thread].keys():
-          if slice_name != name:
-            self.cpu['slices'][thread][slice_name][slice_number] =\
-              min(self.cpu['slices'][thread][slice_name][slice_number], available)
-            available = max(0.0, available - self.cpu['slices'][thread][slice_name][slice_number])
+        if self.cpu['slices'][thread]['total'] > 1.0:
+          available = max(0.0, 1.0 - fraction)
+          for slice_name in self.cpu['slices'][thread].keys():
+            if slice_name != name:
+              self.cpu['slices'][thread][slice_name][slice_number] =\
+                min(self.cpu['slices'][thread][slice_name][slice_number], available)
+              available = max(0.0, available - self.cpu['slices'][thread][slice_name][slice_number])
+          self.cpu['slices'][thread]['total'] = min(1.0, max(0.0, 1.0 - available))
     except:
       pass
 
@@ -1609,7 +1622,114 @@ BLINK_FEATURES = {
   "1498": "ChromeLoadTimesConnectionInfo",
   "1499": "ChromeLoadTimesUnknown",
   "1500": "SVGViewElement",
-  "1501": "WebShareShare"
+  "1501": "WebShareShare",
+  "1502": "AuxclickAddListenerCount",
+  "1503": "HTMLCanvasElement",
+  "1504": "SVGSMILAnimationElementTiming",
+  "1505": "SVGSMILBeginEndAnimationElement",
+  "1506": "SVGSMILPausing",
+  "1507": "SVGSMILCurrentTime",
+  "1508": "HTMLBodyElementOnSelectionChangeAttribute",
+  "1509": "ForeignFetchInterception",
+  "1510": "MapNameMatchingStrict",
+  "1511": "MapNameMatchingASCIICaseless",
+  "1512": "MapNameMatchingUnicodeLower",
+  "1513": "RadioNameMatchingStrict",
+  "1514": "RadioNameMatchingASCIICaseless",
+  "1515": "RadioNameMatchingCaseFolding",
+  "1517": "InputSelectionGettersThrow",
+  "1519": "UsbGetDevices",
+  "1520": "UsbRequestDevice",
+  "1521": "UsbDeviceOpen",
+  "1522": "UsbDeviceClose",
+  "1523": "UsbDeviceSelectConfiguration",
+  "1524": "UsbDeviceClaimInterface",
+  "1525": "UsbDeviceReleaseInterface",
+  "1526": "UsbDeviceSelectAlternateInterface",
+  "1527": "UsbDeviceControlTransferIn",
+  "1528": "UsbDeviceControlTransferOut",
+  "1529": "UsbDeviceClearHalt",
+  "1530": "UsbDeviceTransferIn",
+  "1531": "UsbDeviceTransferOut",
+  "1532": "UsbDeviceIsochronousTransferIn",
+  "1533": "UsbDeviceIsochronousTransferOut",
+  "1534": "UsbDeviceReset",
+  "1535": "PointerEnterLeaveFired",
+  "1536": "PointerOverOutFired",
+  "1539": "DraggableAttribute",
+  "1540": "CleanScriptElementWithNonce",
+  "1541": "PotentiallyInjectedScriptElementWithNonce",
+  "1542": "PendingStylesheetAddedAfterBodyStarted",
+  "1543": "UntrustedMouseDownEventDispatchedToSelect",
+  "1544": "BlockedSniffingAudioToScript",
+  "1545": "BlockedSniffingVideoToScript",
+  "1546": "BlockedSniffingCSVToScript",
+  "1547": "MetaSetCookie",
+  "1548": "MetaRefresh",
+  "1549": "MetaSetCookieWhenCSPBlocksInlineScript",
+  "1550": "MetaRefreshWhenCSPBlocksInlineScript",
+  "1551": "MiddleClickAutoscrollStart",
+  "1552": "ClipCssOfFixedPositionElement",
+  "1553": "RTCPeerConnectionCreateOfferOptionsOfferToReceive",
+  "1554": "DragAndDropScrollStart",
+  "1555": "PresentationConnectionListConnectionAvailableEventListener",
+  "1556": "WebAudioAutoplayCrossOriginIframe",
+  "1557": "ScriptInvalidTypeOrLanguage",
+  "1558": "VRGetDisplays",
+  "1559": "VRPresent",
+  "1560": "VRDeprecatedGetPose",
+  "1561": "WebAudioAnalyserNode",
+  "1562": "WebAudioAudioBuffer",
+  "1563": "WebAudioAudioBufferSourceNode",
+  "1564": "WebAudioBiquadFilterNode",
+  "1565": "WebAudioChannelMergerNode",
+  "1566": "WebAudioChannelSplitterNode",
+  "1567": "WebAudioConvolverNode",
+  "1568": "WebAudioDelayNode",
+  "1569": "WebAudioDynamicsCompressorNode",
+  "1570": "WebAudioGainNode",
+  "1571": "WebAudioIIRFilterNode",
+  "1572": "WebAudioMediaElementAudioSourceNode",
+  "1573": "WebAudioOscillatorNode",
+  "1574": "WebAudioPannerNode",
+  "1575": "WebAudioPeriodicWave",
+  "1576": "WebAudioStereoPannerNode",
+  "1577": "WebAudioWaveShaperNode",
+  "1578": "CSSZoomReset",
+  "1579": "CSSZoomDocument",
+  "1580": "PaymentAddressCareOf",
+  "1581": "XSSAuditorBlockedScript",
+  "1582": "XSSAuditorBlockedEntirePage",
+  "1583": "XSSAuditorDisabled",
+  "1584": "XSSAuditorEnabledFilter",
+  "1585": "XSSAuditorEnabledBlock",
+  "1586": "XSSAuditorInvalid",
+  "1587": "SVGCursorElement",
+  "1588": "SVGCursorElementHasClient",
+  "1589": "TextInputEventOnInput",
+  "1590": "TextInputEventOnTextArea",
+  "1591": "TextInputEventOnContentEditable",
+  "1592": "TextInputEventOnNotNode",
+  "1593": "WebkitBeforeTextInsertedOnInput",
+  "1594": "WebkitBeforeTextInsertedOnTextArea",
+  "1595": "WebkitBeforeTextInsertedOnContentEditable",
+  "1596": "WebkitBeforeTextInsertedOnNotNode",
+  "1597": "WebkitEditableContentChangedOnInput",
+  "1598": "WebkitEditableContentChangedOnTextArea",
+  "1599": "WebkitEditableContentChangedOnContentEditable",
+  "1600": "WebkitEditableContentChangedOnNotNode",
+  "1601": "V8NavigatorUserMediaError_ConstraintName_AttributeGetter",
+  "1602": "V8HTMLMediaElement_SrcObject_AttributeGetter",
+  "1603": "V8HTMLMediaElement_SrcObject_AttributeSetter",
+  "1604": "CreateObjectURLBlob",
+  "1605": "CreateObjectURLMediaSource",
+  "1606": "CreateObjectURLMediaStream",
+  "1607": "DocumentCreateTouchWindowNull",
+  "1608": "DocumentCreateTouchWindowWrongType",
+  "1609": "DocumentCreateTouchTargetNull",
+  "1610": "DocumentCreateTouchTargetWrongType",
+  "1611": "DocumentCreateTouchLessThanSevenArguments",
+  "1612": "DocumentCreateTouchMoreThanSevenArguments"
 }
 
 ########################################################################################################################
@@ -2085,9 +2205,14 @@ BLINK_CSS_FEATURES = {
   "744": "CSSPropertyAliasWebkitTransitionDelay",
   "745": "CSSPropertyAliasWebkitTransitionDuration",
   "746": "CSSPropertyAliasWebkitTransitionProperty",
-  "747": "CSSPropertyAliasWebkitTransitionTimingFunction"
+  "747": "CSSPropertyAliasWebkitTransitionTimingFunction",
+  "748": "CSSPropertyAliasWebkitTransitionProperty",
+  "749": "CSSPropertyAliasWebkitTransitionTimingFunction",
+  "821": "CSSPropertyAliasWebkitUserSelect"
 }
 
 
 if '__main__' == __name__:
+  #import cProfile
+  #cProfile.run('main()')
   main()
