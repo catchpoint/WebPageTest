@@ -419,7 +419,7 @@ void OptimizationChecks::CheckCacheStatic()
     Request *request = _requests._requests.GetNext(pos);
     bool expiration_set;
     int seconds_remaining;
-    if( request && request->_processed && 
+    if( request && request->_processed && !request->_is_base_page &&
       request->GetExpiresRemaining(expiration_set, seconds_remaining)) {
       CString mime = request->GetMime().MakeLower();
       if (mime.Find(_T("/cache-manifest")) == -1) {
