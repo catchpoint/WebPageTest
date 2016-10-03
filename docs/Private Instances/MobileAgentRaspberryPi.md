@@ -86,7 +86,7 @@ The WebPageTest node agent requires NodeJS, Python, imagemagick and ffmpeg as we
 	- ```sudo apt-get upgrade```
 	- ```sudo apt-get -y --force-yes install git screen libtiff5-dev libjpeg-dev zlib1g-dev libfreetype6-dev liblcms2-dev libwebp-dev tcl8.6-dev tk8.6-dev python-tk python-pip libtiff5-dev libjpeg-dev zlib1g-dev libfreetype6-dev liblcms2-dev libwebp-dev tcl8.6-dev tk8.6-dev python-tk python-dev libavutil-dev libmp3lame-dev libx264-dev yasm git autoconf automake build-essential libass-dev libfreetype6-dev libtheora-dev libtool libvorbis-dev pkg-config texi2html zlib1g-dev libtext-unidecode-perl android-tools-adb imagemagick python-numpy python-scipy```
 2. Install the python modules:
-	- ```sudo pip install psutil pillow pyssim```
+	- ```sudo pip install psutil pillow pyssim ujson```
 	- Be patient, if it needs to build pyssim and the dependencies this can take upwards of an hour
 3. Download, build and install ffmpeg
 	- ```cd ~```
