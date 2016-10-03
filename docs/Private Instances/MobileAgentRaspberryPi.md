@@ -67,6 +67,15 @@ For the initial setup you will also need a USB keyboard and monitor with HDMI in
 	- Save and exit (Ctrl-O, Ctrl-X)
 	- ```sudo dphys-swapfile setup```
 	- ```sudo dphys-swapfile swapon```
+20. Configure watchdog to automatically reboot on hang (optional)
+	- ```echo "bcm2835_wdt" | sudo tee -a /etc/modules```
+	- ```sudo apt-get install watchdog```
+	- ```sudo update-rc.d watchdog defaults```
+	- ```sudo nano /etc/watchdog.conf```
+		- uncomment "watchdog-device =" line
+		- optionally, configure a load limit (max-load-15 = 80 should cover EXTREME cases)
+	- ```sudo modprobe bcm2835_wdt```
+	- ```sudo /etc/init.d/watchdog start```
 20. Configure it to reboot on out-of-memory and optionally disable IPv6
 	- ```sudo nano /etc/sysctl.conf```
 	- Add the reboot on OOM settings to the end
