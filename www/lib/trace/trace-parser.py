@@ -20,16 +20,11 @@ import math
 import os
 import time
 
-# try importing (or installing if necessary) a fast json parser
+# try a fast json parser if it is installed
 try:
   import ujson as json
 except:
-  try:
-    import pip
-    pip.main(['install', 'ujson'])
-    import ujson as json
-  except:
-    import json
+  import json
 
 ########################################################################################################################
 #   Trace processing
@@ -2213,6 +2208,4 @@ BLINK_CSS_FEATURES = {
 
 
 if '__main__' == __name__:
-  #import cProfile
-  #cProfile.run('main()')
   main()
