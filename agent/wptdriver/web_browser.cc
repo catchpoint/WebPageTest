@@ -321,6 +321,7 @@ bool WebBrowser::RunAndWait() {
           #endif
           WaitForSingleObject(_browser_done_event, wait_time);
           WaitForSingleObject(_browser_process, 10000);
+          _status.Set(_T("Test complete, processing result..."));
         }
       } else {
         _status.Set(_T("Error initializing browser event"));

@@ -55,7 +55,6 @@ static const TCHAR * CONSOLE_LOG_FILE = _T("_console_log.json");
 static const TCHAR * TIMED_EVENTS_FILE = _T("_timed_events.json");
 static const TCHAR * CUSTOM_METRICS_FILE = _T("_metrics.json");
 static const TCHAR * USER_TIMING_FILE = _T("_user_timing.json");
-static const TCHAR * TRACE_FILE = _T("_trace.json");
 static const TCHAR * CUSTOM_RULES_DATA_FILE = _T("_custom_rules.json");
 static const TCHAR * PRIORITY_STREAMS_FILE = _T("_priority_streams.json");
 static const DWORD RIGHT_MARGIN = 25;
@@ -90,7 +89,6 @@ Results::~Results(void) {
 void Results::Reset(void) {
   _requests.Reset();
   _screen_capture.Reset();
-  _trace.Reset();
   _saved = false;
   _visually_complete.QuadPart = 0;
   base_page_CDN_.Empty();
@@ -144,7 +142,7 @@ void Results::Save(void) {
         SaveCustomMetrics();
         SaveUserTiming();
         SavePriorityStreams();
-        _trace.Write(_test_state._file_base + TRACE_FILE);
+        _trace.End();
       }
     }
     if (_test_state.shared_.TestResult() == -1 ||

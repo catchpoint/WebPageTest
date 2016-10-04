@@ -2264,6 +2264,7 @@ function SendAsyncRequest($relative_url) {
     curl_setopt($c, CURLOPT_FOLLOWLOCATION, true);
     curl_setopt($c, CURLOPT_CONNECTTIMEOUT, 1);
     curl_setopt($c, CURLOPT_TIMEOUT, 1);
+    curl_setopt($c, CURLOPT_TIMEOUT_MS, 100);
     curl_exec($c);
     curl_close($c);
   } else {

@@ -31,13 +31,12 @@ public:
   Trace(void);
   ~Trace(void);
 
-  void Reset();
-  bool Write(CString file);
   void AddEvents(CStringA data);
-  void Process();
+  void Start(CString file);
+  void End();
 
 private:
   CRITICAL_SECTION cs_;
-  CAtlList<CStringA> events_;
-  bool processed_;
+  CString file_;
+  void *  gz_file_;
 };

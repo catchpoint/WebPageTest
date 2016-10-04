@@ -198,6 +198,7 @@ void TestState::Start() {
     IncrementStep();
     if (_test._tcpdump)
       _winpcap.StartCapture(_file_base + _T(".cap") );
+    _trace.Start(_file_base + "_trace.json");
   }
   QueryPerformanceCounter(&_step_start);
   GetSystemTime(&_start_time);
@@ -358,8 +359,6 @@ void TestState::OnLoad() {
     QueryPerformanceCounter(&_on_load);
     GetCPUTime(_doc_cpu_time, _doc_total_time);
     ActivityDetected();
-    _screen_capture.Capture(_frame_window,
-                            CapturedImage::DOCUMENT_COMPLETE);
     _current_document = 0;
   }
 }

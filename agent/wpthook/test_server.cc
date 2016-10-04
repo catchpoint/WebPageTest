@@ -168,6 +168,10 @@ void TestServer::MongooseCallback(enum mg_event event,
   EnterCriticalSection(&cs);
   if (event == MG_NEW_REQUEST) {
     //OutputDebugStringA(CStringA(request_info->uri) + CStringA("?") + request_info->query_string);
+    // Keep track of CPU utilization so we will know what it looks like when we
+    // get a request to actually start.
+    if (!started_)
+      OkToStart(false);
     WptTrace(loglevel::kFrequentEvent, _T("[wpthook] HTTP Request: %s\n"), 
                     (LPCTSTR)CA2T(request_info->uri, CP_UTF8));
     WptTrace(loglevel::kFrequentEvent, _T("[wpthook] HTTP Query String: %s\n"), 
@@ -195,7 +199,7 @@ void TestServer::MongooseCallback(enum mg_event event,
         stored_ua_string_ = true;
       }
       CStringA task;
-      if (OkToStart()) {
+      if (OkToStart(true)) {
         bool record = false;
         test_.GetNextTask(task, record);
         if (record)
@@ -548,7 +552,7 @@ CStringA TestServer::GetPostBodyA(struct mg_connection *conn,
   return body;
 }
 
-bool TestServer::OkToStart() {
+bool TestServer::OkToStart(bool trigger_start) {
   if (!started_) {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
@@ -561,7 +565,7 @@ bool TestServer::OkToStart() {
     } else {
       start_check_time_.QuadPart = now.QuadPart;
     }
-    if (elapsed > 30) {
+    if (elapsed > 30 && trigger_start) {
       started_ = true;
     } else {
       // calculate CPU utilization
@@ -582,7 +586,7 @@ bool TestServer::OkToStart() {
           if (kernel || user) {
             int cpu_utilization = (int)((((kernel + user) - idle) * 100) 
                                           / (kernel + user));
-            if (cpu_utilization < 25)
+            if (cpu_utilization < 50)
               started_ = true;
           }
         }

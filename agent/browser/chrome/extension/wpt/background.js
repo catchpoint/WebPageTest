@@ -40,19 +40,11 @@ goog.provide('wpt.main');
 
 ((function() {  // namespace
 
-/**
- * Chrome does some work on startup that might have a performance impact.
- * For example, if an extension is loaded using group policy, the installation
- * will download and install that extension shortly after startup.  We don't
- * want the timing of tests altered by this work, so wait a few seconds after
- * startup before starting to perform measurements.
- *
- * @const
- */
-var STARTUP_DELAY = 1000;
+/** @const */
+var STARTUP_DELAY = 100;
 
 /** @const */
-var TASK_INTERVAL = 1000;
+var TASK_INTERVAL = 500;
 
 // Run tasks slowly when testing, so that we can see errors in the logs
 // before navigation closes the dev tools window.
