@@ -14813,6 +14813,7 @@ wpt.main.startMeasurements = function() {
   } else {
     // Fetch tasks from wptdriver.exe.
     window.setInterval(wptGetTask, TASK_INTERVAL);
+    window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT);
   }
 };
 
