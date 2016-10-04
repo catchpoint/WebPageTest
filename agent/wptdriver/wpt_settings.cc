@@ -134,7 +134,7 @@ bool WptSettings::Load(void) {
   } else if (GetPrivateProfileInt(_T("WebPagetest"), _T("gce"), 0, iniFile)) {
     LoadFromGCE();
   } else if (GetPrivateProfileInt(_T("WebPagetest"), _T("azure"), 0, iniFile)) {
-//    LoadFromAzure();
+    LoadFromAzure();
   }
 
 
@@ -208,7 +208,8 @@ void WptSettings::LoadFromGCE(void) {
 void WptSettings::LoadFromAzure(void) {
   TCHAR drive[1024];
   if (GetEnvironmentVariable(_T("SystemDrive"), drive, _countof(drive))) {
-    HANDLE file = CreateFile(CString(drive) + _T("\\AzureData\\CustomData.bin"),
+    CString data_file = CString(drive) + _T("\\AzureData\\CustomData.bin");
+    HANDLE file = CreateFile(data_file,
         GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
     if (file != INVALID_HANDLE_VALUE) {
       DWORD size = GetFileSize(file, NULL);
@@ -217,19 +218,13 @@ void WptSettings::LoadFromAzure(void) {
         DWORD bytes_read = 0;
         if (ReadFile(file, custom_data, size, &bytes_read, 0) &&
             bytes_read == size) {
-          custom_data[size - 1] = 0;
+          custom_data[size] = 0;
           CString user_data = CA2T(custom_data, CP_UTF8);
           ParseInstanceData(user_data);
         }
       }
       CloseHandle(file);
     }
-  }
-  TCHAR instance_id[1024];
-  if (GetEnvironmentVariable(_T("RoleInstanceId"), instance_id,
-                             _countof(instance_id))) {
-    _azure_instance = CString(instance_id).Trim();
-    OutputDebugString(CString("Azure Instance ID: ") + _azure_instance);
   }
 }
 
@@ -240,8 +235,7 @@ void WptSettings::LoadFromAzure(void) {
 -----------------------------------------------------------------------------*/
 void WptSettings::ParseInstanceData(CString &userData) {
   int pos = 0;
-//  OutputDebugStringA("User Data:");
-//  OutputDebugString(userData);
+  //OutputDebugString(L"User Data: " + userData);
   do {
     CString token = userData.Tokenize(_T(" &"), pos).Trim();
     if (token.GetLength()) {
