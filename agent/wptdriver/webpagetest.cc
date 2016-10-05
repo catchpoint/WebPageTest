@@ -867,7 +867,7 @@ bool WebPagetest::CompressResults(CString directory, CString zip_file) {
                   DWORD bytes;
                   if (ReadFile(new_file,mem,size,&bytes, 0) && size == bytes) {
                     if (!zipOpenNewFileInZip(file, CT2A(fd.cFileName), 0, 0, 0, 
-                                     0, 0, 0,Z_DEFLATED,Z_BEST_COMPRESSION )) {
+                                     0, 0, 0,Z_DEFLATED,6 )) {
                       zipWriteInFileInZip(file, mem, size);
                       zipCloseFileInZip(file);
                     }
@@ -1193,9 +1193,10 @@ bool WebPagetest::ProcessFile(CString file, CAtlList<CString> &newFiles) {
     CString userTimingFile = file.Left(pos) + _T("user_timing.json.gz");
     CString featureUsageFile = file.Left(pos) + _T("feature_usage.json.gz");
     CString options;
-    options.Format(_T("-t \"%s\" -c \"%s\" -j \"%s\" -u \"%s\" -f \"%s\""),
+    options.Format(_T("-a -t \"%s\" -c \"%s\" -j \"%s\" -u \"%s\" -f \"%s\""),
                    (LPCTSTR)file, (LPCTSTR)cpuFile, (LPCTSTR)scriptTimingFile,
                    (LPCTSTR)userTimingFile, (LPCTSTR)featureUsageFile);
+    OutputDebugStringA("Processing trace file");
     if (RunPythonScript(_T("trace-parser.py"), options)) {
       if (FileExists(cpuFile)) {
         hasNewFiles = true;
@@ -1214,6 +1215,7 @@ bool WebPagetest::ProcessFile(CString file, CAtlList<CString> &newFiles) {
         newFiles.AddTail(featureUsageFile);
       }
     }
+    OutputDebugStringA("Processing trace file - complete");
   } else if ((pos = file.Find(_T(".cap"))) >= 0) {
     CString slicesFile = file.Left(pos) + _T("_pcap_slices.json.gz");
     CString options;

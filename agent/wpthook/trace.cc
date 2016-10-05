@@ -73,7 +73,7 @@ void Trace::AddEvents(CStringA data) {
     bool first = false;
     if (!gz_file_ && !file_.IsEmpty()) {
       first = true;
-      gz_file_ = gzopen((LPCSTR)CT2A(file_ + _T(".gz")), "wb9");
+      gz_file_ = gzopen((LPCSTR)CT2A(file_ + _T(".gz")), "wb6");
       if (gz_file_) {
         CStringA header = "{\"traceEvents\": [\n";
         gzwrite(gz_file_, (voidpc)(LPCSTR)header, (unsigned int)header.GetLength());

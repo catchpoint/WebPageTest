@@ -123,10 +123,13 @@ void Results::Reset(void) {
 void Results::Save(void) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save()\n"));
   if (!_saved) {
+    OutputDebugStringA("Results::Save()");
     ProcessRequests();
     if (_test._log_data) {
       OptimizationChecks checks(_requests, _test_state, _test, _dns);
+      OutputDebugStringA("Running optimization checks");
       checks.Check();
+      OutputDebugStringA("Running optimization checks - complete");
       base_page_CDN_ = checks._base_page_CDN;
       SaveRequests(checks);
       SaveImages();
@@ -151,6 +154,7 @@ void Results::Save(void) {
       _test_state.shared_.SetTestResult(_test_state._test_result);
     }
     _saved = true;
+    OutputDebugStringA("Results::Save() - Complete");
   }
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));
 }
@@ -243,6 +247,7 @@ void Results::SaveImages(void) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Results::SaveVideo(void) {
+  OutputDebugStringA("Results::SaveVideo()");
   _screen_capture.Lock();
   CStringA histograms = "[";
   DWORD histogram_count = 0;
@@ -277,8 +282,8 @@ void Results::SaveVideo(void) {
             margin = 0;
             if (!_test_state._render_start.QuadPart)
               _test_state._render_start.QuadPart = image._capture_time.QuadPart;
-            histogram = GetHistogramJSON(*img);
             _visually_complete.QuadPart = image._capture_time.QuadPart;
+            histogram = GetHistogramJSON(*img);
             if (_test._video && !_test._minimal_results) {
               file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_test_state._file_base, 
                                 image_time);
@@ -288,10 +293,10 @@ void Results::SaveVideo(void) {
         } else {
           width = img->GetWidth();
           height = img->GetHeight();
+          histogram = GetHistogramJSON(*img);
           // always save the first image at time zero
           image_time = 0;
           image_time_ms = 0;
-          histogram = GetHistogramJSON(*img);
           if (_test._video && !_test._minimal_results) {
             file_name = _test_state._file_base + _T("_progress_0000.jpg");
             SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_video);
@@ -319,9 +324,9 @@ void Results::SaveVideo(void) {
         if (last_image)
           delete last_image;
         last_image = img;
-      }
-      else
+      } else {
         delete img;
+      }
     }
   }
 
@@ -350,6 +355,7 @@ void Results::SaveVideo(void) {
   }
 
   _screen_capture.Unlock();
+  OutputDebugStringA("Results::SaveVideo() - Complete");
 }
 
 /*-----------------------------------------------------------------------------
@@ -368,7 +374,8 @@ bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2,
         DWORD height = img1->GetHeight() - margin;
         DWORD row_bytes = img1->GetEffWidth();
         DWORD compare_length = min(width * pixel_bytes, row_bytes);
-        for (DWORD row = bottom_margin; row < height && !different; row++) {
+        // Go two rows at a time.  We don't need to be sure every pixel matches
+        for (DWORD row = bottom_margin; row < height && !different; row += 2) {
           BYTE * r1 = img1->GetBits(row) + margin * pixel_bytes;
           BYTE * r2 = img2->GetBits(row) + margin * pixel_bytes;
           if (r1 && r2 && memcmp(r1, r2, compare_length))
@@ -386,15 +393,22 @@ bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2,
 void Results::SaveImage(CxImage& image, CString file, BYTE quality,
                         bool force_small, bool _full_size_video) {
   if (image.IsValid()) {
-    CxImage img(image);
-    if (!_full_size_video)
-      if (force_small || (img.GetWidth() > 600 && img.GetHeight() > 600))
-        img.Resample2(img.GetWidth() / 2, img.GetHeight() / 2);
-
-    img.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
-    img.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
-    img.SetJpegQuality((BYTE)quality);
-    img.Save(file, CXIMAGE_FORMAT_JPG);
+    if (!_full_size_video &&
+        (force_small || (image.GetWidth() > 600 && image.GetHeight() > 600))) {
+      // Make a copy and resize the copy
+      CxImage img(image);
+      img.QIShrink(img.GetWidth() / 2, img.GetHeight() / 2);
+      img.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
+      img.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
+      img.SetJpegQuality((BYTE)quality);
+      img.Save(file, CXIMAGE_FORMAT_JPG);
+    } else {
+      // Save the image
+      image.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
+      image.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
+      image.SetJpegQuality((BYTE)quality);
+      image.Save(file, CXIMAGE_FORMAT_JPG);
+    }
   }
 }
 
@@ -411,15 +425,36 @@ CStringA Results::GetHistogramJSON(CxImage& image) {
     }
     DWORD width = max(image.GetWidth() - RIGHT_MARGIN, 0);
     DWORD height = image.GetHeight();
-    for (DWORD y = BOTTOM_MARGIN; y < height; y++) {
-      for (DWORD x = 0; x < width; x++) {
-        RGBQUAD pixel = image.GetPixelColor(x,y);
-        if (pixel.rgbRed != 255 || 
-            pixel.rgbGreen != 255 || 
-            pixel.rgbBlue != 255) {
-          r[pixel.rgbRed]++;
-          g[pixel.rgbGreen]++;
-          b[pixel.rgbBlue]++;
+    if (image.GetBpp() >= 15) {
+      DWORD pixel_bytes = 3;
+      if (image.GetBpp() == 32)
+        pixel_bytes = 4;
+      DWORD row_bytes = image.GetEffWidth();
+      // Go two rows at a time.  We don't need to be sure every pixel matches
+      for (DWORD row = BOTTOM_MARGIN; row < height; row ++) {
+        BYTE * pixel = image.GetBits(row);
+        for (DWORD x = 0; x < width; x++) {
+          if (pixel[0] != 255 || 
+              pixel[1] != 255 || 
+              pixel[2] != 255) {
+            r[pixel[0]]++;
+            g[pixel[1]]++;
+            b[pixel[2]]++;
+          }
+          pixel += pixel_bytes;
+        }
+      }
+    } else {
+      for (DWORD y = BOTTOM_MARGIN; y < height; y++) {
+        for (DWORD x = 0; x < width; x++) {
+          RGBQUAD pixel = image.GetPixelColor(x,y);
+          if (pixel.rgbRed != 255 || 
+              pixel.rgbGreen != 255 || 
+              pixel.rgbBlue != 255) {
+            r[pixel.rgbRed]++;
+            g[pixel.rgbGreen]++;
+            b[pixel.rgbBlue]++;
+          }
         }
       }
     }
@@ -1378,8 +1413,7 @@ void Results::SaveResponseBodies(void) {
             if (body_data && body_len && !IsBinaryContent(body_data, body_len)) {
               CStringA name;
               name.Format("%03d-%d-body.txt", count, request->_request_id);
-              if (!zipOpenNewFileInZip(zip, name, 0, 0, 0, 0, 0, 0, Z_DEFLATED, 
-                  Z_BEST_COMPRESSION)) {
+              if (!zipOpenNewFileInZip(zip, name, 0, 0, 0, 0, 0, 0, Z_DEFLATED, 6)) {
                 zipWriteInFileInZip(zip, body_data, (unsigned int)body_len);
                 zipCloseFileInZip(zip);
                 bodies_count++;
