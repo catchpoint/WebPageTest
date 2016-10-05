@@ -82,27 +82,33 @@ class Trace():
   ########################################################################################################################
   #   Top-level processing
   ########################################################################################################################
-  def Process(self, trace):
+  def Process(self, trace, load_all):
     f = None
     line_mode = False
     self.__init__()
     try:
-      file_name, ext = os.path.splitext(trace)
-      if ext.lower() == '.gz':
-        f = gzip.open(trace, 'rb')
-      else:
-        f = open(trace, 'r')
-      for line in f:
-        try:
-          trace_event = json.loads(line.strip("\r\n\t ,"))
-          if not line_mode and 'traceEvents' in trace_event:
-            for sub_event in trace_event['traceEvents']:
-              self.ProcessTraceEvent(sub_event)
-          else:
-            line_mode = True
+      if load_all:
+        with gzip.open(trace,'rb') as trace_file:
+          trace_events = json.load(trace_file);
+          for trace_event in trace_events['traceEvents']:
             self.ProcessTraceEvent(trace_event)
-        except:
-          pass
+      else:
+        file_name, ext = os.path.splitext(trace)
+        if ext.lower() == '.gz':
+          f = gzip.open(trace, 'rb')
+        else:
+          f = open(trace, 'r')
+        for line in f:
+          try:
+            trace_event = json.loads(line.strip("\r\n\t ,"))
+            if not line_mode and 'traceEvents' in trace_event:
+              for sub_event in trace_event['traceEvents']:
+                self.ProcessTraceEvent(sub_event)
+            else:
+              line_mode = True
+              self.ProcessTraceEvent(trace_event)
+          except:
+            pass
     except:
       logging.critical("Error processing trace " + trace)
 
@@ -112,7 +118,7 @@ class Trace():
 
   def ProcessTraceEvent(self, trace_event):
     cat = trace_event['cat']
-    if cat.find('devtools.timeline') >= 0:
+    if cat == 'devtools.timeline' or cat.find('devtools.timeline') >= 0:
       self.ProcessTimelineTraceEvent(trace_event)
     elif cat.find('blink.feature_usage') >= 0:
       self.ProcessFeatureUsageEvent(trace_event)
@@ -405,6 +411,8 @@ def main():
   parser.add_argument('-u', '--user', help="Output user timing file.")
   parser.add_argument('-f', '--features', help="Output blink feature usage file.")
   parser.add_argument('-n', '--netlog', help="Output netlog details file.")
+  parser.add_argument('-a', '--all', action='store_true', default=False,
+                      help="Load the whole trace into memory (defaults to parsing incrementally).")
   options = parser.parse_args()
 
   # Set up logging
@@ -424,7 +432,7 @@ def main():
 
   start = time.time()
   trace = Trace()
-  trace.Process(options.trace)
+  trace.Process(options.trace, options.all)
 
   if options.user:
     trace.WriteUserTiming(options.user)
@@ -2208,4 +2216,6 @@ BLINK_CSS_FEATURES = {
 
 
 if '__main__' == __name__:
+#  import cProfile
+#  cProfile.run('main()', None, 2)
   main()
