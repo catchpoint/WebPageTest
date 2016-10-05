@@ -586,7 +586,7 @@ bool TestServer::OkToStart(bool trigger_start) {
           if (kernel || user) {
             int cpu_utilization = (int)((((kernel + user) - idle) * 100) 
                                           / (kernel + user));
-            if (cpu_utilization < 50)
+            if (cpu_utilization < 25)
               started_ = true;
           }
         }
