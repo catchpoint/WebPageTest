@@ -153,11 +153,18 @@ function GetJob() {
 
                   // send the test info to the test agent
                   $testInfo = file_get_contents("$workDir/$fileName");
-                  $software = GetSetting('software');
-                  if ($software)
-                    $testInfo .= "software=$software\r\n";
-                  if (GetSetting('enable_agent_processing'))
-                    $testInfo .= "processResults=1\r\n";
+                  $newline = strpos($testInfo, "\n", 2);
+                  if ($newline) {
+                    $newline++;
+                    $after = substr($testInfo, $newline);
+                    $testInfo = substr($testInfo, 0, $newline);
+                    $software = GetSetting('software');
+                    if ($software)
+                      $testInfo .= "software=$software\r\n";
+                    if (GetSetting('enable_agent_processing'))
+                      $testInfo .= "processResults=1\r\n";
+                    $testInfo .= $after;
+                  }
 
                   // extract the test ID from the job file
                   if( preg_match('/Test ID=([^\r\n]+)\r/i', $testInfo, $matches) )
