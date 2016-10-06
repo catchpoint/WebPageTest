@@ -1,11 +1,12 @@
 <?php
 if(extension_loaded('newrelic')) { 
   newrelic_add_custom_tracer('ProcessIncrementalResult');
-  newrelic_add_custom_tracer('CheckForSpam');
+  newrelic_add_custom_tracer('CompressTextFiles');
   newrelic_add_custom_tracer('loadPageRunData');
   newrelic_add_custom_tracer('getBreakdown');
   newrelic_add_custom_tracer('GetVisualProgress');
   newrelic_add_custom_tracer('DevToolsGetConsoleLog');
+  newrelic_add_custom_tracer('ExtractZipFile');
   newrelic_add_custom_tracer('WaitForSystemLoad');
 }
 
@@ -154,39 +155,13 @@ if (ValidateTestId($id)) {
           if (isset($har) && $har) {
             ProcessUploadedHAR($testPath);
           } else {
-            logMsg(" Extracting uploaded file '{$_FILES['file']['tmp_name']}' to '$testPath'\n");
-            $zip = new ZipArchive();
-            if ($zip->open($_FILES['file']['tmp_name']) === TRUE) {
-                $extractPath = realpath($testPath);
-                $zip->extractTo($extractPath);
-                $zip->close();
-            }
+            ExtractZipFile($_FILES['file']['tmp_name'], $testPath);
           }
         }
 
         // compress the text data files
-        if( isset($_FILES['file']) ) {
-          $f = scandir($testPath);
-          foreach( $f as $textFile ) {
-            logMsg("Checking $textFile\n");
-            if( is_file("$testPath/$textFile") ) {
-              $parts = pathinfo($textFile);
-              $ext = $parts['extension'];
-              if( !strcasecmp( $ext, 'txt') ||
-                  !strcasecmp( $ext, 'json') ||
-                  !strcasecmp( $ext, 'log') ||
-                  !strcasecmp( $ext, 'csv') ) {
-                if ($ini['sensitive'] && strpos($textFile, '_report'))
-                  RemoveSensitiveHeaders("$testPath/$textFile");
-                elseif (strpos($textFile, '_optimization'))
-                  unlink("$testPath/$textFile");
-                elseif (gz_compress("$testPath/$textFile"))
-                  unlink("$testPath/$textFile");
-              }
-            }
-          }
-        }
-        //CheckForSpam();
+        if( isset($_FILES['file']) )
+          CompressTextFiles($testPath);
         
         // make sure the test result is valid, otherwise re-run it
         if ($done && !$har &&
@@ -1375,5 +1350,39 @@ function CheckForSpam() {
           $testInfo_dirty = true;
         }
     }
+}
+
+function CompressTextFiles($testPath) {
+  $f = scandir($testPath);
+  foreach( $f as $textFile ) {
+    logMsg("Checking $textFile\n");
+    if( is_file("$testPath/$textFile") ) {
+      $parts = pathinfo($textFile);
+      $ext = $parts['extension'];
+      if( !strcasecmp( $ext, 'txt') ||
+          !strcasecmp( $ext, 'json') ||
+          !strcasecmp( $ext, 'log') ||
+          !strcasecmp( $ext, 'csv') ) {
+        if ($ini['sensitive'] && strpos($textFile, '_report'))
+          RemoveSensitiveHeaders("$testPath/$textFile");
+        elseif (strpos($textFile, '_optimization'))
+          unlink("$testPath/$textFile");
+        elseif (gz_compress("$testPath/$textFile"))
+          unlink("$testPath/$textFile");
+      }
+    }
+  }
+}
+
+function ExtractZipFile($file, $testPath) {
+  logMsg(" Extracting uploaded file '$file' to '$testPath'\n");
+  $zip = new ZipArchive();
+  if ($zip->open($file) === TRUE) {
+    $extractPath = realpath($testPath);
+    if ($extractPath !== false) {
+      $zip->extractTo($extractPath);
+      $zip->close();
+    }
+  }
 }
 ?>
