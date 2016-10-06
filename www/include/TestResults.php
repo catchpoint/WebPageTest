@@ -186,7 +186,7 @@ class TestResults {
     if ($numValues == 1 || $medianMode == "fastest") {
       return $runNumbers[0];
     }
-    $medianIndex = (int)floor($numValues / 2.0);
+    $medianIndex = (int)floor((float)($numValues - 1.0) / 2.0);
     return $runNumbers[$medianIndex];
   }
 
