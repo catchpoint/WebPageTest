@@ -42,7 +42,7 @@ if (function_exists('curl_init')) {
 } else
     $CURL_CONTEXT = false;
 
-if ($_SERVER["REMOTE_ADDR"] == '127.0.0.1' && isset($_REQUEST['addr'])) {
+if (isset($_SERVER["REMOTE_ADDR"]) && $_SERVER["REMOTE_ADDR"] == '127.0.0.1' && isset($_REQUEST['addr'])) {
   $_SERVER["REMOTE_ADDR"] = $_REQUEST['addr'];
 }
 if (function_exists('apache_request_headers')) {

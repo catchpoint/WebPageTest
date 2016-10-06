@@ -303,7 +303,7 @@ void Results::SaveVideo(void) {
           }
         }
 
-        if (!histogram.IsEmpty() && !_test._minimal_results) {
+        if (!histogram.IsEmpty()) {
           if (histogram_count)
             histograms += ", ";
           histograms += "{\"histogram\": ";
@@ -314,7 +314,7 @@ void Results::SaveVideo(void) {
           histograms += buff;
           histograms += "}";
           histogram_count++;
-          if (_test._video) {
+          if (_test._video  && !_test._minimal_results) {
             file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_test_state._file_base,
                              image_time);
             SaveHistogram(histogram, file_name);
