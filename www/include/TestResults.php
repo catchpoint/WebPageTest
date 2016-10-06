@@ -165,7 +165,7 @@ class TestResults {
    * @param string $metric Name of the metric to consider for selecting the median
    * @param bool $cached False if first views should be considered for selecting, true for repeat views
    * @param string $medianMode Can be set to "fastest" to consider the fastest run and not the median. Defaults to "median".
-   * @return float The run number of the median run
+   * @return float The run number of the median run (or lower of two middle values) of $metric,
    */
   public function getMedianRunNumber($metric, $cached, $medianMode = "median") {
     $values = $this->getMetricFromRuns($metric, $cached, true);
@@ -186,8 +186,17 @@ class TestResults {
     if ($numValues == 1 || $medianMode == "fastest") {
       return $runNumbers[0];
     }
-    $medianIndex = (int)floor($numValues / 2.0);
-    return $runNumbers[$medianIndex];
+    $medianIndex = (int)floor(((float)$numValues + 1.0) / 2.0);
+    $current = 0;
+    $run = null;
+    foreach( $runNumbers as $index => $time ) {
+      $current++;
+      if( $current == $medianIndex ) {
+          $run = $time;
+          break;
+      }
+    }
+    return $run;
   }
 
   /**
