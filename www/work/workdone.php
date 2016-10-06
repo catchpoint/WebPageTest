@@ -348,28 +348,6 @@ if (ValidateTestId($id)) {
             $out = str_replace('[test]', $complete, $test);
             file_put_contents("$testPath/testinfo.ini", $out);
           }
-
-          if ($lock = LockLocation($location)) {
-            $testCount = $testInfo['runs'];
-            if( !$testInfo['fvonly'] )
-                $testCount *= 2;
-                
-            if ($testInfo['started'] && $time > $testInfo['started'] && $testCount) {
-              $perTestTime = ceil(($time - $testInfo['started']) / $testCount);
-              $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
-              if( !$tests )
-                $tests = array();
-              // keep track of the average time for the last 100 tests
-              $tests['times'][] = $perTestTime;
-              if( count($tests['times']) > 100 )
-                array_shift($tests['times']);
-              // update the number of high-priority "page loads" that we think are in the queue
-              if( array_key_exists('tests', $tests) && $testInfo['priority'] == 0 )
-                $tests['tests'] = max(0, $tests['tests'] - $testCount);
-              file_put_contents("./tmp/$location.tests", json_encode($tests));
-            }
-            UnlockLocation($lock);
-          }
           
           // see if it is an industry benchmark test
           if (array_key_exists('industry', $ini) && array_key_exists('industry_page', $ini) && 

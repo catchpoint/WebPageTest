@@ -146,7 +146,7 @@ if( $ec2 )
                 // $targetCount = (int)($activeCount + ($idleCount / 4));
             } elseif( $targetBacklog ) {
                 // get the current backlog
-                $backlog = GetPendingTests($location, $bk, $avgTime);
+                $backlog = GetPendingTests($location, $bk);
                 echo "Backlog: $backlog\n";
                 if ($activeCount)
                     $ratio = $backlog / $activeCount;

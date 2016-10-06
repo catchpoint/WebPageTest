@@ -1556,17 +1556,6 @@ function WriteJob($location, &$test, &$job, $testId)
                             file_put_contents("$testPath/test.job", $job);
                         }
                     }
-                    $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
-                    if( !$tests )
-                        $tests = array();
-                    $testCount = $test['runs'];
-                    if( !$test['fvonly'] )
-                        $testCount *= 2;
-                    if( array_key_exists('tests', $tests) )
-                        $tests['tests'] += $testCount;
-                    else
-                        $tests['tests'] = $testCount;
-                    file_put_contents("./tmp/$location.tests", json_encode($tests));
 
                     $ret = true;
                 }

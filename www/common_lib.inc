@@ -1288,7 +1288,7 @@ function fastimagecopyresampled (&$dst_image, $src_image, $dst_x, $dst_y, $src_x
 * Get the number of pending high-priority page loads at the given location
 * and the average time per page load (from the last 100 tests)
 */
-function GetPendingTests($loc, &$count, &$avgTime)
+function GetPendingTests($loc, &$count)
 {
   $total = 0;
   $locations = explode(',', $loc);
@@ -1296,21 +1296,6 @@ function GetPendingTests($loc, &$count, &$avgTime)
     $parts = explode(':', $location);
     $location = $parts[0];
     $count = 0;
-    $avgTime = 0;
-    if (is_file("./tmp/$location.tests"))
-      $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
-    if( isset($tests) && is_array($tests) && array_key_exists('times', $tests) )
-    {
-      $count = (int)$tests['tests'];
-      $timeCount = count($tests['times']);
-      if( $timeCount )
-      {
-        $timeTotal = 0;
-        foreach( $tests['times'] as $time )
-          $timeTotal += $time;
-        $avgTime = ceil($timeTotal / $timeCount);
-      }
-    }
     // now count just the low priority tests
     $beanstalkd = GetSetting('beanstalkd');
     if ($beanstalkd && strlen($beanstalkd)) {
