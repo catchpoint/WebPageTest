@@ -594,7 +594,7 @@ function ScreenShotTable()
             /* @var TestStepResult $stepResult */
             $stepResult = $tests[0]["stepResult"];
             $requests = $stepResult->getRequestsWithInfo(true, true)->getRequests();
-            echo CreateWaterfallHtml('', $requests, $tests[0]['id'], $tests[0]['run'], $tests[0]['cached'], $data,
+            echo CreateWaterfallHtml('', $requests, $tests[0]['id'], $tests[0]['run'], $tests[0]['cached'], $stepResult->getRawResults(),
                                      "&max=$end_seconds&mime=1&state=1&cpu=1&bw=1", $tests[0]['step']);
             echo '<br><br>';
         } else {
