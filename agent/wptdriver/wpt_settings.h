@@ -97,10 +97,10 @@ public:
   void LoadFromAzure(void);
   void ParseInstanceData(CString &userData);
   bool SetBrowser(CString browser, CString url, CString md5, CString client);
-  bool PrepareTest(WptTest& test);
   bool GetUrlText(CString url, CString &response, LPCTSTR headers = NULL);
-  bool UpdateSoftware();
+  bool UpdateSoftware(bool force = false);
   bool ReInstallBrowser();
+  bool CheckBrowsers();
 
   CString _server;
   CString _username;

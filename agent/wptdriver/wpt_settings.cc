@@ -342,8 +342,8 @@ bool WptSettings::SetBrowser(CString browser, CString url,
 /*-----------------------------------------------------------------------------
   Update the various browsers
 -----------------------------------------------------------------------------*/
-bool WptSettings::UpdateSoftware() {
-  return _software_update.UpdateSoftware();
+bool WptSettings::UpdateSoftware(bool force) {
+  return _software_update.UpdateSoftware(force);
 }
 
 /*-----------------------------------------------------------------------------
@@ -351,6 +351,18 @@ bool WptSettings::UpdateSoftware() {
 -----------------------------------------------------------------------------*/
 bool WptSettings::ReInstallBrowser() {
   return _software_update.ReInstallBrowser(_browser._browser);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool WptSettings::CheckBrowsers() {
+  CString missing_browser;
+  bool ok = _software_update.CheckBrowsers(missing_browser);
+  if (!ok) {
+    _status.Set(_T("Exe for '%s' is not present, reinstalling..."), (LPCTSTR)missing_browser);
+    _software_update.ReInstallBrowser(missing_browser);
+  }
+  return ok;
 }
 
 /*-----------------------------------------------------------------------------
@@ -896,3 +908,4 @@ static bool Unzip(CString file, CStringA dir) {
 
   return ret;
 }
+

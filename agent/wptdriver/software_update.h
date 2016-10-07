@@ -10,9 +10,11 @@ public:
   const BrowserInfo& operator =(const BrowserInfo& src) {
     _installer = src._installer;
     _exe = src._exe;
+    _name = src._name;
     return src;
   }
   
+  CString _name;
   CString _installer;
   CString _exe;
 };
@@ -27,6 +29,7 @@ public:
   bool ReInstallBrowser(CString browser);
   CString GetUpdateInfo(CString url);
   void SetSoftwareUrl(CString url);
+  bool CheckBrowsers(CString& missing_browser);
 
   CString _ec2_instance;
   CString _ec2_availability_zone;

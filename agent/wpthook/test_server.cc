@@ -170,8 +170,6 @@ void TestServer::MongooseCallback(enum mg_event event,
     //OutputDebugStringA(CStringA(request_info->uri) + CStringA("?") + request_info->query_string);
     // Keep track of CPU utilization so we will know what it looks like when we
     // get a request to actually start.
-    if (!started_)
-      OkToStart(false);
     WptTrace(loglevel::kFrequentEvent, _T("[wpthook] HTTP Request: %s\n"), 
                     (LPCTSTR)CA2T(request_info->uri, CP_UTF8));
     WptTrace(loglevel::kFrequentEvent, _T("[wpthook] HTTP Query String: %s\n"), 
@@ -341,6 +339,8 @@ void TestServer::MongooseCallback(enum mg_event event,
     } else if (strcmp(request_info->uri, "/event/received_data") == 0) {
       test_state_.received_data_ = true;
 	  } else if (strncmp(request_info->uri, "/blank", 6) == 0) {
+      if (!started_)
+        OkToStart(false);
       test_state_.UpdateBrowserWindow();
 	    mg_write(conn, BLANK_HTML, lstrlenA(BLANK_HTML));
 	  } else if (strncmp(request_info->uri, "/viewport.js", 12) == 0) {

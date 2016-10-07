@@ -177,93 +177,107 @@ void WptDriverCore::WorkThread(void) {
     Init();  // do initialization and machine configuration
     _status.Set(_T("Checking for software updates..."));
     _installing = true;
-    _settings.UpdateSoftware();
+    bool ok = false;
+    while (!_exit && !ok) {
+      ok = _settings.UpdateSoftware(true);
+      if (!ok) {
+        _status.Set(_T("Software update failed, waiting 5 minutes and trying again..."));
+        for (int count = 0; count < 300 && !_exit; count++)
+          Sleep(1000);
+      }
+    }
     _installing = false;
     ReleaseMutex(_testing_mutex);
 
     _status.Set(_T("Running..."));
   }
   while (!_exit && !NeedsReboot()) {
-    WaitForSingleObject(_testing_mutex, INFINITE);
-    _status.Set(_T("Checking for work..."));
-    WptTestDriver test(_settings._timeout * SECONDS_TO_MS, has_gpu_);
-    if (_webpagetest.GetTest(test)) {
-      if (!test._software_update_url.IsEmpty())
-        _settings._software_update.SetSoftwareUrl(test._software_update_url);
-      PreTest();
-      test._run = test._specific_run ? test._specific_run : 1;
-      _status.Set(_T("Starting test..."));
-      if (_settings.SetBrowser(test._browser, test._browser_url,
-                               test._browser_md5, test._client)) {
-        CString profiles_dir = _settings._browser._profiles;
-        if (profiles_dir.GetLength())
-          DeleteDirectory(profiles_dir, false);
-        WebBrowser browser(_settings, test, _status, _settings._browser, 
-                           _ipfw, _webpagetest.WptVersion());
-        if (SetupWebPageReplay(test, browser) &&
-            !TracerouteTest(test)) {
-          test._index = test._specific_index ? test._specific_index : 1;
-          for (test._run = 1; test._run <= test._runs; test._run++) {
-            test._run_error.Empty();
-            test._run = test._specific_run ? test._specific_run : test._run;
-            test._clear_cache = true;
-            bool ok = BrowserTest(test, browser);
-            if (!test._fv_only) {
-              test._clear_cache = false;
-              if (ok) {
-                test._run_error.Empty();
-                BrowserTest(test, browser);
-              } else {
-                CStringA first_run_error = test._run_error;
-                if (!first_run_error.GetLength()) {
-                  int result = g_shared->TestResult();
-                  if (result != 0 && result != 99999)
-                    first_run_error.Format(
-                        "Test run failed with result code %d", result);
+    if (_settings.CheckBrowsers()) {
+      WaitForSingleObject(_testing_mutex, INFINITE);
+      _status.Set(_T("Checking for work..."));
+      WptTestDriver test(_settings._timeout * SECONDS_TO_MS, has_gpu_);
+      if (_webpagetest.GetTest(test)) {
+        if (!test._software_update_url.IsEmpty())
+          _settings._software_update.SetSoftwareUrl(test._software_update_url);
+        PreTest();
+        test._run = test._specific_run ? test._specific_run : 1;
+        _status.Set(_T("Starting test..."));
+        if (_settings.SetBrowser(test._browser, test._browser_url,
+                                 test._browser_md5, test._client)) {
+          CString profiles_dir = _settings._browser._profiles;
+          if (profiles_dir.GetLength())
+            DeleteDirectory(profiles_dir, false);
+          WebBrowser browser(_settings, test, _status, _settings._browser, 
+                             _ipfw, _webpagetest.WptVersion());
+          if (SetupWebPageReplay(test, browser) &&
+              !TracerouteTest(test)) {
+            test._index = test._specific_index ? test._specific_index : 1;
+            for (test._run = 1; test._run <= test._runs; test._run++) {
+              test._run_error.Empty();
+              test._run = test._specific_run ? test._specific_run : test._run;
+              test._clear_cache = true;
+              bool ok = BrowserTest(test, browser);
+              if (!test._fv_only) {
+                test._clear_cache = false;
+                if (ok) {
+                  test._run_error.Empty();
+                  BrowserTest(test, browser);
+                } else {
+                  CStringA first_run_error = test._run_error;
+                  if (!first_run_error.GetLength()) {
+                    int result = g_shared->TestResult();
+                    if (result != 0 && result != 99999)
+                      first_run_error.Format(
+                          "Test run failed with result code %d", result);
+                  }
+                  test._run_error =
+                      CStringA("Skipped repeat view, first view failed: ") +
+                      first_run_error;
+                  _webpagetest.UploadIncrementalResults(test);
                 }
-                test._run_error =
-                    CStringA("Skipped repeat view, first view failed: ") +
-                    first_run_error;
-                _webpagetest.UploadIncrementalResults(test);
               }
+              if (test._specific_run)
+                break;
+              else if (test._discard > 0)
+                test._discard--;
+              else
+                test._index++;
             }
-            if (test._specific_run)
-              break;
-            else if (test._discard > 0)
-              test._discard--;
-            else
-              test._index++;
           }
+          test._run = test._specific_run ? test._specific_run : test._runs;
+          if (profiles_dir.GetLength())
+            DeleteDirectory(profiles_dir, false);
+        } else {
+          test._test_error = test._run_error =
+              CStringA("Invalid Browser Selected: ") + CT2A(test._browser);
         }
-        test._run = test._specific_run ? test._specific_run : test._runs;
-        if (profiles_dir.GetLength())
-          DeleteDirectory(profiles_dir, false);
+        bool uploaded = false;
+        for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded;count++ ) {
+          uploaded = _webpagetest.TestDone(test);
+          if( !uploaded )
+            Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
+        }
+        PostTest();
+        ReleaseMutex(_testing_mutex);
       } else {
-        test._test_error = test._run_error =
-            CStringA("Invalid Browser Selected: ") + CT2A(test._browser);
+        // Launch and exit any browsers that need their state cleared
+        ReleaseMutex(_testing_mutex);
+        ResetBrowsers();
+        _status.Set(_T("Checking for software updates..."));
+        _installing = true;
+        _settings.UpdateSoftware();
+        _installing = false;
+        _status.Set(_T("Waiting for work..."));
+        int delay = _settings._polling_delay * SECONDS_TO_MS;
+        while (!_exit && delay > 0) {
+          Sleep(100);
+          delay -= 100;
+        }
       }
-      bool uploaded = false;
-      for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded;count++ ) {
-        uploaded = _webpagetest.TestDone(test);
-        if( !uploaded )
-          Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
-      }
-      PostTest();
-      ReleaseMutex(_testing_mutex);
     } else {
-      // Launch and exit any browsers that need their state cleared
-      ReleaseMutex(_testing_mutex);
-      ResetBrowsers();
-      _status.Set(_T("Checking for software updates..."));
-      _installing = true;
-      _settings.UpdateSoftware();
-      _installing = false;
-      _status.Set(_T("Waiting for work..."));
-      int delay = _settings._polling_delay * SECONDS_TO_MS;
-      while (!_exit && delay > 0) {
-        Sleep(100);
-        delay -= 100;
-      }
+      // Wait 5 minutes before trying again
+      for (int count = 0; count < 300 && !_exit; count++)
+        Sleep(1000);
     }
   }
   ResetBrowsers();

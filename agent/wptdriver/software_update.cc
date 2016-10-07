@@ -52,15 +52,16 @@ void SoftwareUpdate::LoadSettings(CString settings_ini) {
       settings_ini)) {
     TCHAR * section = sections;
     while(lstrlen(section)) {
-      if (GetPrivateProfileString(section, _T("Installer"), NULL, buff, 
+      if (GetPrivateProfileString(section, _T("exe"), NULL, buff, 
           _countof(buff), settings_ini)) {
         BrowserInfo info;
-        info._installer = buff;
-        if (GetPrivateProfileString(section, _T("exe"), NULL, buff, 
+        info._name = section;
+        info._exe = buff;
+        if (program_files_dir.GetLength())
+          info._exe.Replace(_T("%PROGRAM_FILES%"), program_files_dir);
+        if (GetPrivateProfileString(section, _T("Installer"), NULL, buff, 
             _countof(buff), settings_ini)) {
-          info._exe = buff;
-          if (program_files_dir.GetLength())
-            info._exe.Replace(_T("%PROGRAM_FILES%"), program_files_dir);
+          info._installer = buff;
         }
         _browsers.AddTail(info);
       }
@@ -158,7 +159,6 @@ bool SoftwareUpdate::UpdateBrowsers(void) {
             _T("[wptdriver] SoftwareUpdate::UpdateBrowsers\n"));
   POSITION pos = _browsers.GetHeadPosition();
   while (ok && pos) {
-    POSITION current_pos = pos;
     BrowserInfo browser_info = _browsers.GetNext(pos);
     CString url = browser_info._installer.Trim();
     if (url.GetLength()) {
@@ -191,12 +191,6 @@ bool SoftwareUpdate::UpdateBrowsers(void) {
         ok = InstallSoftware(browser, file_url, md5, version, command,
                               browser_info._exe);
       }
-    }
-
-    // if we don't need to automatically update the browser then 
-    // remove it from the list
-    if (ok) {
-      _browsers.RemoveAt(current_pos);
     }
   }
   WptTrace(loglevel::kFunction,
@@ -361,4 +355,22 @@ bool SoftwareUpdate::ReInstallBrowser(CString browser) {
     RegCloseKey(key);
   }
   return UpdateSoftware(true);
+}
+
+/*-----------------------------------------------------------------------------
+  See if the exe's for all of the browsers are present
+-----------------------------------------------------------------------------*/
+bool SoftwareUpdate::CheckBrowsers(CString& missing_browser) {
+  bool ok = true;
+
+  POSITION pos = _browsers.GetHeadPosition();
+  while (ok && pos) {
+    BrowserInfo browser_info = _browsers.GetNext(pos);
+    if (!FileExists(browser_info._exe)) {
+      ok = false;
+      missing_browser = browser_info._name;
+    }
+  }
+
+  return ok;
 }

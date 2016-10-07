@@ -542,6 +542,20 @@ bool FileExists(CString file) {
 }
 
 /*-----------------------------------------------------------------------------
+  See if the given file exists
+-----------------------------------------------------------------------------*/
+size_t FileSize(CString file) {
+  size_t size = 0;
+  HANDLE file_handle = CreateFile(file, GENERIC_READ, FILE_SHARE_READ, NULL,
+                                  OPEN_EXISTING, 0, 0);
+  if (file_handle != INVALID_HANDLE_VALUE) {
+    size = GetFileSize(file_handle, NULL);
+    CloseHandle(file_handle);
+  }
+  return size;
+}
+
+/*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool  RegexMatch(CStringA str, CStringA regex) {
   bool matched = false;
