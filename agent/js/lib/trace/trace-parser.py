@@ -235,6 +235,7 @@ class Trace():
     start = timeline_event['s'] - self.start_time
     end = timeline_event['e'] - self.start_time
     if end > start:
+      elapsed = end - start
       thread = timeline_event['t']
       name = self.event_name_lookup[timeline_event['n']]
 
@@ -278,22 +279,22 @@ class Trace():
       if name != parent:
         fraction = min(1.0, float(elapsed) / float(self.cpu['slice_usecs']))
         self.cpu['slices'][thread][name][slice_number] += fraction
-        self.cpu['slices'][thread]['total'] += fraction
+        self.cpu['slices'][thread]['total'][slice_number] += fraction
         if parent is not None and self.cpu['slices'][thread][parent][slice_number] >= fraction:
           self.cpu['slices'][thread][parent][slice_number] -= fraction
-          self.cpu['slices'][thread]['total'] -= fraction
+          self.cpu['slices'][thread]['total'][slice_number] -= fraction
         # Make sure we didn't exceed 100% in this slice
         self.cpu['slices'][thread][name][slice_number] = min(1.0, self.cpu['slices'][thread][name][slice_number])
 
         # make sure we don't exceed 100% for any slot
-        if self.cpu['slices'][thread]['total'] > 1.0:
+        if self.cpu['slices'][thread]['total'][slice_number] > 1.0:
           available = max(0.0, 1.0 - fraction)
           for slice_name in self.cpu['slices'][thread].keys():
             if slice_name != name:
               self.cpu['slices'][thread][slice_name][slice_number] =\
                 min(self.cpu['slices'][thread][slice_name][slice_number], available)
               available = max(0.0, available - self.cpu['slices'][thread][slice_name][slice_number])
-          self.cpu['slices'][thread]['total'] = min(1.0, max(0.0, 1.0 - available))
+          self.cpu['slices'][thread]['total'][slice_number] = min(1.0, max(0.0, 1.0 - available))
     except:
       pass
 
