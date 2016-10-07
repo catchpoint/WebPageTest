@@ -212,7 +212,8 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "hiberniacdn", "HiberniaCDN"},
   {"server", "UnicornCDN", "UnicornCDN"},
   {"server", "Optimal CDN", "Optimal CDN"},
-  {"server", "Sucuri/Cloudproxy", "Sucuri/Cloudproxy"}
+  {"server", "Sucuri/Cloudproxy", "Sucuri/Cloudproxy"},
+  {"section-io-id", "", "section.io"}
 };
 
 // Specific providers that require multiple headers
