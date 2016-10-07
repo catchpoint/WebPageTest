@@ -14717,7 +14717,8 @@ goog.provide('wpt.main');
 ((function() {  // namespace
 
 /** @const */
-var STARTUP_DELAY = 100;
+var STARTUP_DELAY = 500;
+var STARTUP_FAILSAFE_DELAY = 5000;
 
 /** @const */
 var TASK_INTERVAL = 500;
@@ -14761,6 +14762,7 @@ var g_manipulatingHeaders = false;
 var g_hasCustomCommandLine = false;
 var g_started = false;
 var g_requestsHooked = false;
+var g_failsafeStartup = undefined;
 
 /**
  * Uninstall a given set of extensions.  Run |onComplete| when done.
@@ -14820,6 +14822,11 @@ wpt.main.startMeasurements = function() {
 // Install an onLoad handler for all tabs.
 chrome.tabs.onUpdated.addListener(function(tabId, props) {
   if (!g_started && g_starting && props.status == 'complete') {
+    // Kill the failsafe timer
+    if (g_failsafeStartup != undefined) {
+      clearInterval(g_failsafeStartup);
+      g_failsafeStartup = undefined;
+    }
     // handle the startup sequencing (attach the debugger
     // after the browser loads and then start testing).
     g_started = true;
@@ -15248,6 +15255,7 @@ chrome.tabs.query(queryForFocusedTab, function(focusedTabs) {
   g_commandRunner = new wpt.commands.CommandRunner(g_tabid, window.chrome);
   wpt.chromeDebugger.Init(g_tabid, window.chrome, function(){
     setTimeout(function(){g_starting = true;chrome.tabs.update(g_tabid, {'url': STARTUP_URL});}, STARTUP_DELAY);
+    g_failsafeStartup = setInterval(function(){g_starting = true;chrome.tabs.update(g_tabid, {'url': STARTUP_URL});}, STARTUP_FAILSAFE_DELAY);
   });
 });
 
