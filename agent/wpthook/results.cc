@@ -57,6 +57,7 @@ static const TCHAR * CUSTOM_METRICS_FILE = _T("_metrics.json");
 static const TCHAR * USER_TIMING_FILE = _T("_user_timing.json");
 static const TCHAR * CUSTOM_RULES_DATA_FILE = _T("_custom_rules.json");
 static const TCHAR * PRIORITY_STREAMS_FILE = _T("_priority_streams.json");
+static const TCHAR * CHUNKS_DATA_FILE = _T("_requests_chunks.json");
 static const DWORD RIGHT_MARGIN = 25;
 static const DWORD BOTTOM_MARGIN = 25;
 static const DWORD INITIAL_MARGIN = 25;
@@ -1002,6 +1003,7 @@ void Results::ProcessRequests(void) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Results::SaveRequests(OptimizationChecks& checks) {
+  CStringA chunk_timings;
   HANDLE file = CreateFile(_test_state._file_base + REQUEST_DATA_FILE,
                            GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, 0, 0);
   if (file != INVALID_HANDLE_VALUE) {
@@ -1042,6 +1044,18 @@ void Results::SaveRequests(OptimizationChecks& checks) {
         request->_reported = true;
         if (request->_processed) {
           i++;
+          if (!_test._minimal_results) {
+            CStringA timings = request->GetChunkTimings();
+            if (!timings.IsEmpty()) {
+              CStringA json;
+              json.Format("\"%d\":", request->_request_id);
+              if (chunk_timings.IsEmpty()) {
+                chunk_timings = "{" + json + timings;
+              } else {
+                chunk_timings += "," + json + timings;
+              }
+            }
+          }
           SaveRequest(file, headers_file, request, i);
           if (!request->_custom_rules_matches.IsEmpty() && 
               custom_rules_file != INVALID_HANDLE_VALUE) {
@@ -1087,6 +1101,14 @@ void Results::SaveRequests(OptimizationChecks& checks) {
     if (headers_file != INVALID_HANDLE_VALUE)
       CloseHandle(headers_file);
     CloseHandle(file);
+    if (!chunk_timings.IsEmpty()) {
+      gzFile chunks_file = gzopen((LPCSTR)CT2A(_test_state._file_base + CHUNKS_DATA_FILE + CString(".gz")), "wb6");
+      if (chunks_file) {
+        chunk_timings += "}";
+        gzwrite(chunks_file, (voidpc)(LPCSTR)chunk_timings, (unsigned int)chunk_timings.GetLength());
+        gzclose(chunks_file);
+      }
+    }
   }
 }
 
