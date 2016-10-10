@@ -49,6 +49,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <atlstr.h>
 #include <atltime.h>
 #include <atlcoll.h>
+#include <atlenc.h>
 #include <in6addr.h>
 
 // shared internal includes

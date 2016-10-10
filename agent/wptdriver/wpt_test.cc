@@ -173,6 +173,10 @@ void WptTest::Reset(void) {
     _block_domains.RemoveAll();
   if (!_block_domains_except.IsEmpty())
     _block_domains_except.RemoveAll();
+  _incremental = true;
+  _job_info.Empty();
+  _testinfo_json.Empty();
+  _testinfo_ini.Empty();
 }
 
 /*-----------------------------------------------------------------------------
@@ -339,6 +343,32 @@ bool WptTest::Load(CString& test) {
           _minimal_results = true;
         } else if (!key.CompareNoCase(_T("software"))) {
           _software_update_url = value.Trim();
+        } else if (!key.CompareNoCase(_T("incremental")) && !_ttoi(value.Trim())) {
+          _incremental = false;
+        } else if (!key.CompareNoCase(_T("jobInfo"))) {
+          _job_info = value.Trim();
+        } else if (!key.CompareNoCase(_T("testInfoJson"))) {
+          int decoded_len = value.Trim().GetLength();
+          if (decoded_len) {
+            char * decoded_data = (char *)malloc(decoded_len + 1);
+            if (Base64Decode((LPCSTR)CT2A((LPCTSTR)value, CP_UTF8), decoded_len,
+                (BYTE*)decoded_data, &decoded_len) && decoded_len) {
+              decoded_data[decoded_len] = 0;
+              _testinfo_json = decoded_data;
+            }
+            free(decoded_data);
+          }
+        } else if (!key.CompareNoCase(_T("testInfoIni"))) {
+          int decoded_len = value.Trim().GetLength();
+          if (decoded_len) {
+            char * decoded_data = (char *)malloc(decoded_len + 1);
+            if (Base64Decode((LPCSTR)CT2A((LPCTSTR)value, CP_UTF8), decoded_len,
+                (BYTE*)decoded_data, &decoded_len) && decoded_len) {
+              decoded_data[decoded_len] = 0;
+              _testinfo_ini = decoded_data;
+            }
+            free(decoded_data);
+          }
         }
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {

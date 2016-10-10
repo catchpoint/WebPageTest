@@ -55,52 +55,54 @@ function GetTestPath($id)
 }
 
 /**
-* Get the key for a given location (and cache it if possible)
+* Get the key for a given location
 *
 * @param mixed $location
 */
 function GetLocationKey($location) {
-  $key = null;
+  $key = '';
+  $info = GetLocationInfo($location);
+  if (isset($info) && is_array($info) && isset($info['key'])) {
+    $key = $info['key'];
+  }
+  return $key;
+}
+
+/**
+* Get the information for a given location (and cache it if possible)
+*
+* @param mixed $location
+*/
+function GetLocationInfo($location) {
+  $info = null;
+  $from_cache = false;
   if (isset($location) && strlen($location)) {
-    if (function_exists('apc_fetch') &&
-        function_exists('apc_store')) {
-      $key = apc_fetch("key_$location");
-      if ($key === false) {
-        $key = '';
-        $locations = LoadLocationsIni();
-        if ($locations !== false &&
-            is_array($locations) &&
-            isset($locations[$location])) {
-          if (isset($locations[$location]['key'])) {
-            $key = $locations[$location]['key'];
-          } else {
-            $default_key = GetSetting('location_key');
-            if ($default_key)
-              $key = $default_key;
-            else
-              $key = '';
-          }
-        }
-        apc_store("key_$location", $key, 60);
-      }
-    } else {
+    $has_apc = false;
+    if (function_exists('apc_fetch') && function_exists('apc_store')) {
+      $has_apc = true;
+      $info = apc_fetch("locinfo_$location");
+      if ($info === false)
+        $info = null;
+      if (isset($info))
+        $from_cache = true;
+    }
+    
+    if (!isset($info)) {
+      $info = array();
       $locations = LoadLocationsIni();
-      if ($locations !== false &&
-          is_array($locations) &&
-          isset($locations[$location])) {
-        if (isset($locations[$location]['key'])) {
-          $key = $locations[$location]['key'];
-        } else {
+      if ($locations !== false && is_array($locations) && isset($locations[$location])) {
+        $info = $locations[$location];
+        if (!isset($info['key'])) {
           $default_key = GetSetting('location_key');
-          if ($default_key)
-            $key = $default_key;
-          else
-            $key = '';
+          $info['key'] = $default_key ? $default_key : '';
         }
       }
     }
+    
+    if (isset($info) && $has_apc && !$from_cache)
+      apc_store("locinfo_$location", $key, 120);
   }
-  return $key;
+  return $info;
 }
 
 function GetLocationFallbacks($location) {

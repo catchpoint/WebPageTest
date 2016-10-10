@@ -108,7 +108,13 @@ function GetJob() {
     global $isWin64;
 
     $workDir = "./work/jobs/$location";
-    $locKey = GetLocationKey($location);
+    $locInfo = GetLocationInfo($location);
+    $locKey = '';
+    if (isset($locInfo) && is_array($locInfo) && isset($locInfo['key']))
+      $locKey = $locInfo['key'];
+    $incremental = true;
+    if (GetSetting('no_incremental') || (isset($locInfo['incremental']) && !$locInfo['incremental']))
+      $incremental = false;
     if (strpos($location, '..') == false &&
         strpos($location, '\\') == false &&
         strpos($location, '/') == false &&
@@ -163,6 +169,8 @@ function GetJob() {
                       $testInfo .= "software=$software\r\n";
                     if (GetSetting('enable_agent_processing'))
                       $testInfo .= "processResults=1\r\n";
+                    if (!$incremental)
+                      $testInfo .= "incremental=0\r\n";
                     $testInfo .= $after;
                   }
 

@@ -93,7 +93,7 @@ private:
   void ProcessRequests(void);
   void SavePageData(OptimizationChecks&);
   void SaveRequests(OptimizationChecks&);
-  void SaveRequest(HANDLE file, HANDLE headers, Request * request, int index);
+  void SaveRequest(gzFile file, gzFile headers, Request * request, int index);
   void SaveImages(void);
   void SaveVideo(void);
   void SaveProgressData(void);
@@ -107,7 +107,7 @@ private:
   void SaveTimedEvents(void);
   void SaveCustomMetrics(void);
   void SaveUserTiming(void);
-  void SaveHistogram(CStringA& histogram, CString file);
+  void SaveHistogram(CStringA& histogram, CString file, bool compress);
   CStringA GetHistogramJSON(CxImage& image);
   bool NativeRequestExists(Request * browser_request);
   void SavePriorityStreams();

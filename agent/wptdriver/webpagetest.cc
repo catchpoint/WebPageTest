@@ -249,14 +249,15 @@ bool WebPagetest::UploadIncrementalResults(WptTestDriver& test) {
   ATLTRACE(_T("[wptdriver] - UploadIncrementalResults"));
 
   if (!test._discard_test) {
-    CString directory = test._directory + CString(_T("\\"));
-    CAtlList<CString> image_files;
-    GetImageFiles(directory, image_files);
-    ret = UploadImages(test, image_files);
-    if (ret) {
-      ret = UploadData(test, false);
-      g_shared->SetCPUUtilization(0);
+    if (test._incremental) {
+      CString directory = test._directory + CString(_T("\\"));
+      CAtlList<CString> image_files;
+      GetImageFiles(directory, image_files);
+      ret = UploadImages(test, image_files);
+      if (ret)
+        ret = UploadData(test, false);
     }
+    g_shared->SetCPUUtilization(0);
   } else {
     DeleteIncrementalResults(test);
   }
@@ -271,10 +272,12 @@ bool WebPagetest::TestDone(WptTestDriver& test){
   bool ret = true;
 
   UpdateDNSServers();
-  CString directory = test._directory + CString(_T("\\"));
-  CAtlList<CString> image_files;
-  GetImageFiles(directory, image_files);
-  ret = UploadImages(test, image_files);
+  if (test._incremental) {
+    CString directory = test._directory + CString(_T("\\"));
+    CAtlList<CString> image_files;
+    GetImageFiles(directory, image_files);
+    ret = UploadImages(test, image_files);
+  }
   if (ret) {
     ret = UploadData(test, true);
     g_shared->SetCPUUtilization(0);
@@ -315,6 +318,7 @@ void WebPagetest::GetFiles(const CString& directory,
 }
 
 /*-----------------------------------------------------------------------------
+  Upload any binary files that are larger than 100KB separately
 -----------------------------------------------------------------------------*/
 bool WebPagetest::UploadImages(WptTestDriver& test,
                                CAtlList<CString>& image_files) {
@@ -332,18 +336,24 @@ bool WebPagetest::UploadImages(WptTestDriver& test,
           POSITION newFilePos = newFiles.GetHeadPosition();
           while (ret && newFilePos) {
             CString newFile = newFiles.GetNext(newFilePos);
-            ret = UploadFile(url, false, test, newFile);
-            if (ret)
-              DeleteFile(newFile);
+            if (FileSize(newFile) > 100000) {
+              ret = UploadFile(url, false, test, newFile);
+              if (ret)
+                DeleteFile(newFile);
+            }
           }
         }
       }
-      if (ret)
+      if (ret && FileSize(file) > 100000) {
         ret = UploadFile(url, false, test, file);
-    }
-    if (ret)
+        if (ret)
+          DeleteFile(file);
+      }
+    } else {
       DeleteFile(file);
+    }
   }
+
   return ret;
 }
 
@@ -354,9 +364,31 @@ bool WebPagetest::UploadData(WptTestDriver& test, bool done) {
 
   CString file = NO_FILE;
   CString dir = test._directory + CString(_T("\\"));
-  ret = CompressResults(dir, dir + _T("results.zip"));
-  if (ret)
-    file = dir + _T("results.zip");
+
+  // Write out the passthrough testinfo data
+  if (done && !test._incremental) {
+    if (!test._testinfo_json.IsEmpty()) {
+      gzFile json_file = gzopen((LPCSTR)CT2A(dir + CString("testinfo.json.gz")), "wb6");
+      if (json_file) {
+        gzwrite(json_file, (voidpc)(LPCSTR)test._testinfo_json, (unsigned int)test._testinfo_json.GetLength());
+        gzclose(json_file);
+      }
+    }
+    if (!test._testinfo_ini.IsEmpty()) {
+      HANDLE ini_file = CreateFile(dir + _T("testinfo.ini"), GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, 0, 0);
+      if (ini_file != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(ini_file, (LPCSTR)test._testinfo_ini, test._testinfo_ini.GetLength(), &written, 0);
+        CloseHandle(ini_file);
+      }      
+    }
+  }
+
+  if (done || test._incremental) {
+    ret = CompressResults(dir, dir + _T("results.zip"));
+    if (ret)
+      file = dir + _T("results.zip");
+  }
 
   if (ret || done) {
     CString url = _settings._server + _T("work/workdone.php");
@@ -770,6 +802,12 @@ void WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test,
   form_data += test._clear_cache ? "0" : "1";
   form_data += "\r\n";
 
+  // incremental flag
+  form_data += CStringA("--") + boundary + "\r\n";
+  form_data += "Content-Disposition: form-data; name=\"incremental\"\r\n\r\n";
+  form_data += test._incremental ? "0" : "1";
+  form_data += "\r\n";
+
   // error string
   if (test._test_error.GetLength()) {
     form_data += CStringA("--") + boundary + "\r\n";
@@ -782,11 +820,17 @@ void WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test,
     form_data += test._run_error + "\r\n";
   }
 
-  // done flag
+  // done flag and pass-through data fields
   if (done) {
     form_data += CStringA("--") + boundary + "\r\n";
     form_data += "Content-Disposition: form-data; name=\"done\"\r\n\r\n";
     form_data += "1\r\n";
+
+    if (!test._job_info.IsEmpty()) {
+      form_data += CStringA("--") + boundary + "\r\n";
+      form_data += "Content-Disposition: form-data; name=\"jobInfo\"\r\n\r\n";
+      form_data += test._job_info + "\r\n";
+    }
   }
 
   if (_computer_name.GetLength()) {
@@ -851,7 +895,7 @@ bool WebPagetest::CompressResults(CString directory, CString zip_file) {
   if (file) {
     ret = true;
     WIN32_FIND_DATA fd;
-    HANDLE find_handle = FindFirstFile( directory + _T("*.*"), &fd);
+    HANDLE find_handle = FindFirstFile(directory + _T("*.*"), &fd);
     if (find_handle != INVALID_HANDLE_VALUE) {
       do {
         if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
@@ -866,8 +910,16 @@ bool WebPagetest::CompressResults(CString directory, CString zip_file) {
                 if (mem) {
                   DWORD bytes;
                   if (ReadFile(new_file,mem,size,&bytes, 0) && size == bytes) {
-                    if (!zipOpenNewFileInZip(file, CT2A(fd.cFileName), 0, 0, 0, 
-                                     0, 0, 0,Z_DEFLATED,6 )) {
+                    CStringA destFile = CT2A(fd.cFileName, CP_UTF8);
+                    int split_pos = destFile.Find("_progress_");
+                    if (split_pos > 0) {
+                      CStringA dir = "video_" + destFile.Left(split_pos).MakeLower();
+                      CStringA video_file = "frame" + destFile.Mid(split_pos + 9);
+                      destFile = dir + "/" + video_file;
+                    }
+
+                    // The files are already compressed, just store them
+                    if (!zipOpenNewFileInZip(file, destFile, 0, 0, 0, 0, 0, 0, Z_DEFLATED, Z_NO_COMPRESSION)) {
                       zipWriteInFileInZip(file, mem, size);
                       zipCloseFileInZip(file);
                     }

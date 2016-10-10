@@ -37,7 +37,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "trace.h"
 #include "../wptdriver/wpt_test.h"
 #include "cximage/ximage.h"
-#include <zlib.h>
 #include <zip.h>
 #include <regex>
 
@@ -184,12 +183,10 @@ void Results::SaveProgressData(void) {
       peak_process_count_ = data._process_count;
   }
   _test_state.UnLock();
-  HANDLE hFile = CreateFile(_test_state._file_base + PROGRESS_DATA_FILE,
-                            GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
-  if (hFile != INVALID_HANDLE_VALUE) {
-    DWORD dwBytes;
-    WriteFile(hFile, (LPCSTR)progress, progress.GetLength(), &dwBytes, 0);
-    CloseHandle(hFile);
+  gzFile progress_file = gzopen((LPCSTR)CT2A(_test_state._file_base + PROGRESS_DATA_FILE + CString(".gz")), "wb6");
+  if (progress_file) {
+    gzwrite(progress_file, (voidpc)(LPCSTR)progress, (unsigned int)progress.GetLength());
+    gzclose(progress_file);
   }
 }
 
@@ -208,13 +205,10 @@ void Results::SaveStatusMessages(void) {
     status += "\r\n";
   }
   _test_state.UnLock();
-  HANDLE hFile = CreateFile(_test_state._file_base + STATUS_MESSAGE_DATA_FILE, 
-                            GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
-  if( hFile != INVALID_HANDLE_VALUE )
-  {
-    DWORD dwBytes;
-    WriteFile(hFile, (LPCSTR)status, status.GetLength(), &dwBytes, 0);
-    CloseHandle(hFile);
+  gzFile out_file = gzopen((LPCSTR)CT2A(_test_state._file_base + STATUS_MESSAGE_DATA_FILE + CString(".gz")), "wb6");
+  if (out_file) {
+    gzwrite(out_file, (voidpc)(LPCSTR)status, (unsigned int)status.GetLength());
+    gzclose(out_file);
   }
 }
 
@@ -318,7 +312,7 @@ void Results::SaveVideo(void) {
           if (_test._video  && !_test._minimal_results) {
             file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_test_state._file_base,
                              image_time);
-            SaveHistogram(histogram, file_name);
+            SaveHistogram(histogram, file_name, false);
           }
         }
 
@@ -351,7 +345,7 @@ void Results::SaveVideo(void) {
       } else {
         file_name.Format(_T("%s%d.%d.histograms.json"), path, run, cached);
       }
-      SaveHistogram(histograms, file_name);
+      SaveHistogram(histograms, file_name, true);
     }
   }
 
@@ -489,14 +483,22 @@ CStringA Results::GetHistogramJSON(CxImage& image) {
 /*-----------------------------------------------------------------------------
   Save the image histogram as a json data structure (ignoring white pixels)
 -----------------------------------------------------------------------------*/
-void Results::SaveHistogram(CStringA& histogram, CString file) {
+void Results::SaveHistogram(CStringA& histogram, CString file, bool compress) {
   if (!histogram.IsEmpty()) {
-    HANDLE file_handle = CreateFile(file, GENERIC_WRITE, 0, 0, 
-                                    CREATE_ALWAYS, 0, 0);
-    if (file_handle != INVALID_HANDLE_VALUE) {
-      DWORD bytes;
-      WriteFile(file_handle, (LPCSTR)histogram, histogram.GetLength(), &bytes, 0);
-      CloseHandle(file_handle);
+    if (compress) {
+      gzFile out_file = gzopen((LPCSTR)CT2A(file + CString(".gz")), "wb6");
+      if (out_file) {
+        gzwrite(out_file, (voidpc)(LPCSTR)histogram, (unsigned int)histogram.GetLength());
+        gzclose(out_file);
+      }
+    } else {
+      HANDLE file_handle = CreateFile(file, GENERIC_WRITE, 0, 0, 
+                                      CREATE_ALWAYS, 0, 0);
+      if (file_handle != INVALID_HANDLE_VALUE) {
+        DWORD bytes;
+        WriteFile(file_handle, (LPCSTR)histogram, histogram.GetLength(), &bytes, 0);
+        CloseHandle(file_handle);
+      }
     }
   }
 }
@@ -505,11 +507,8 @@ void Results::SaveHistogram(CStringA& histogram, CString file) {
   Save the page-level data
 -----------------------------------------------------------------------------*/
 void Results::SavePageData(OptimizationChecks& checks){
-  HANDLE file = CreateFile(_test_state._file_base + PAGE_DATA_FILE,
-                           GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, 0, 0);
-  if (file != INVALID_HANDLE_VALUE) {
-    SetFilePointer( file, 0, 0, FILE_END );
-
+  gzFile file = gzopen((LPCSTR)CT2A(_test_state._file_base + PAGE_DATA_FILE + CString(".gz")), "ab6");
+  if (file) {
     CStringA result;
     CStringA buff;
 
@@ -839,10 +838,8 @@ void Results::SavePageData(OptimizationChecks& checks){
 
     result += "\r\n";
 
-    DWORD written;
-    WriteFile(file, (LPCSTR)result, result.GetLength(), &written, 0);
-
-    CloseHandle(file);
+    gzwrite(file, (voidpc)(LPCSTR)result, (unsigned int)result.GetLength());
+    gzclose(file);
   }
 }
 
@@ -1004,23 +1001,17 @@ void Results::ProcessRequests(void) {
 -----------------------------------------------------------------------------*/
 void Results::SaveRequests(OptimizationChecks& checks) {
   CStringA chunk_timings;
-  HANDLE file = CreateFile(_test_state._file_base + REQUEST_DATA_FILE,
-                           GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, 0, 0);
-  if (file != INVALID_HANDLE_VALUE) {
-    DWORD bytes;
+  gzFile file = gzopen((LPCSTR)CT2A(_test_state._file_base + REQUEST_DATA_FILE + CString(".gz")), "ab6");
+  if (file) {
     CStringA buff;
-    SetFilePointer( file, 0, 0, FILE_END );
 
-    HANDLE headers_file = CreateFile(_test_state._file_base + REQUEST_HEADERS_DATA_FILE,
-                            GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+    gzFile headers_file = gzopen((LPCSTR)CT2A(_test_state._file_base + REQUEST_HEADERS_DATA_FILE + CString(".gz")), "wb6");
 
-    HANDLE custom_rules_file = INVALID_HANDLE_VALUE;
+    gzFile custom_rules_file = NULL;
     if (!_test._custom_rules.IsEmpty()) {
-      custom_rules_file = CreateFile(_test_state._file_base +CUSTOM_RULES_DATA_FILE,
-                                    GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
-      if (custom_rules_file != INVALID_HANDLE_VALUE) {
-        WriteFile(custom_rules_file, "{", 1, &bytes, 0);
-      }
+      custom_rules_file = gzopen((LPCSTR)CT2A(_test_state._file_base + CUSTOM_RULES_DATA_FILE + CString(".gz")), "wb6");
+      if (custom_rules_file)
+        gzwrite(custom_rules_file, "{", 1);
     }
 
     _requests.Lock();
@@ -1057,50 +1048,44 @@ void Results::SaveRequests(OptimizationChecks& checks) {
             }
           }
           SaveRequest(file, headers_file, request, i);
-          if (!request->_custom_rules_matches.IsEmpty() && 
-              custom_rules_file != INVALID_HANDLE_VALUE) {
+          if (!request->_custom_rules_matches.IsEmpty() && custom_rules_file) {
             if (first_custom_rule) {
               first_custom_rule = false;
             } else {
-              WriteFile(custom_rules_file, ",", 1, &bytes, 0);
+              gzwrite(custom_rules_file, ",", 1);
             }
             buff.Format("\"%d\"", i);
-            WriteFile(custom_rules_file, (LPCSTR)buff, buff.GetLength(),
-                      &bytes, 0);
-            WriteFile(custom_rules_file, ":{", 2, &bytes, 0);
-            POSITION match_pos =
-                request->_custom_rules_matches.GetHeadPosition();
+            gzwrite(custom_rules_file, (LPCSTR)buff, buff.GetLength());
+            gzwrite(custom_rules_file, ":{", 2);
+            POSITION match_pos = request->_custom_rules_matches.GetHeadPosition();
             DWORD match_count = 0;
             while (match_pos) {
               match_count++;
-              CustomRulesMatch match = 
-                  request->_custom_rules_matches.GetNext(match_pos);
+              CustomRulesMatch match = request->_custom_rules_matches.GetNext(match_pos);
               CT2A name((LPCTSTR)match._name, CP_UTF8);
               CT2A value((LPCTSTR)match._value, CP_UTF8);
               CStringA entry = "";
               if (match_count > 1)
                 entry += ",";
               entry += CStringA("\"") + JSONEscapeA((LPCSTR)name) + "\":{";
-              entry += CStringA("\"value\":\"") +
-                       JSONEscapeA((LPCSTR)value)+"\",";
+              entry += CStringA("\"value\":\"") + JSONEscapeA((LPCSTR)value)+"\",";
               buff.Format("%d", match._count);
               entry += CStringA("\"count\":") + buff + "}";
-              WriteFile(custom_rules_file, (LPCSTR)entry, entry.GetLength(), 
-                        &bytes, 0);
+              gzwrite(custom_rules_file, (LPCSTR)entry, entry.GetLength());
             }
-            WriteFile(custom_rules_file, "}", 1, &bytes, 0);
+            gzwrite(custom_rules_file, "}", 1);
           }
         }
       }
     } while (request);
     _requests.Unlock();
-    if (custom_rules_file != INVALID_HANDLE_VALUE) {
-      WriteFile(custom_rules_file, "}", 1, &bytes, 0);
-      CloseHandle(custom_rules_file);
+    if (custom_rules_file) {
+      gzwrite(custom_rules_file, "}", 1);
+      gzclose(custom_rules_file);
     }
-    if (headers_file != INVALID_HANDLE_VALUE)
-      CloseHandle(headers_file);
-    CloseHandle(file);
+    if (headers_file)
+      gzclose(headers_file);
+    gzclose(file);
     if (!chunk_timings.IsEmpty()) {
       gzFile chunks_file = gzopen((LPCSTR)CT2A(_test_state._file_base + CHUNKS_DATA_FILE + CString(".gz")), "wb6");
       if (chunks_file) {
@@ -1114,8 +1099,7 @@ void Results::SaveRequests(OptimizationChecks& checks) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request, 
-                                                                   int index) {
+void Results::SaveRequest(gzFile file, gzFile headers, Request * request, int index) {
   CStringA result;
   CStringA buff;
 
@@ -1375,11 +1359,10 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
 
   result += "\r\n";
 
-  DWORD written;
-  WriteFile(file, (LPCSTR)result, result.GetLength(), &written, 0);
+  gzwrite(file, (LPCSTR)result, result.GetLength());
 
   // write out the raw headers
-  if (headers != INVALID_HANDLE_VALUE) {
+  if (headers) {
     buff.Format("Request details:\r\nRequest %d:\r\n"
                 "RID: %d\r\nRequest Headers:\r\n", 
                 index, request->_request_id);
@@ -1389,7 +1372,7 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
     buff += request->_response_data.GetHeaders();
     buff.Trim("\r\n");
     buff += "\r\n";
-    WriteFile(headers, (LPCSTR)buff, buff.GetLength(), &written, 0);
+    gzwrite(headers, (LPCSTR)buff, buff.GetLength());
   }
 }
 
@@ -1459,12 +1442,10 @@ void Results::SaveResponseBodies(void) {
 void Results::SaveConsoleLog(void) {
   CStringA log = CT2A(_test_state.GetConsoleLogJSON());
   if (log.GetLength()) {
-    HANDLE file = CreateFile(_test_state._file_base + CONSOLE_LOG_FILE, GENERIC_WRITE, 0, 
-                              NULL, CREATE_ALWAYS, 0, 0);
-    if (file != INVALID_HANDLE_VALUE) {
-      DWORD written;
-      WriteFile(file, (LPCSTR)log, log.GetLength(), &written, 0);
-      CloseHandle(file);
+    gzFile json_file = gzopen((LPCSTR)CT2A(_test_state._file_base + CONSOLE_LOG_FILE + CString(".gz")), "wb6");
+    if (json_file) {
+      gzwrite(json_file, (voidpc)(LPCSTR)log, (unsigned int)log.GetLength());
+      gzclose(json_file);
     }
   }
 }
@@ -1474,12 +1455,10 @@ void Results::SaveConsoleLog(void) {
 void Results::SaveTimedEvents(void) {
   CStringA log = CT2A(_test_state.GetTimedEventsJSON(), CP_UTF8);
   if (log.GetLength()) {
-    HANDLE file = CreateFile(_test_state._file_base + TIMED_EVENTS_FILE, GENERIC_WRITE, 0, 
-                              NULL, CREATE_ALWAYS, 0, 0);
-    if (file != INVALID_HANDLE_VALUE) {
-      DWORD written;
-      WriteFile(file, (LPCSTR)log, log.GetLength(), &written, 0);
-      CloseHandle(file);
+    gzFile json_file = gzopen((LPCSTR)CT2A(_test_state._file_base + TIMED_EVENTS_FILE + CString(".gz")), "wb6");
+    if (json_file) {
+      gzwrite(json_file, (voidpc)(LPCSTR)log, (unsigned int)log.GetLength());
+      gzclose(json_file);
     }
   }
 }
@@ -1489,12 +1468,10 @@ void Results::SaveTimedEvents(void) {
 void Results::SaveCustomMetrics(void) {
   CStringA custom_metrics = CT2A(_test_state._custom_metrics, CP_UTF8);
   if (custom_metrics.GetLength()) {
-    HANDLE file = CreateFile(_test_state._file_base + CUSTOM_METRICS_FILE, GENERIC_WRITE, 0, 
-                              NULL, CREATE_ALWAYS, 0, 0);
-    if (file != INVALID_HANDLE_VALUE) {
-      DWORD written;
-      WriteFile(file, (LPCSTR)custom_metrics, custom_metrics.GetLength(), &written, 0);
-      CloseHandle(file);
+    gzFile metrics_file = gzopen((LPCSTR)CT2A(_test_state._file_base + CUSTOM_METRICS_FILE + CString(".gz")), "wb6");
+    if (metrics_file) {
+      gzwrite(metrics_file, (voidpc)(LPCSTR)custom_metrics, (unsigned int)custom_metrics.GetLength());
+      gzclose(metrics_file);
     }
   }
 }
@@ -1504,12 +1481,10 @@ void Results::SaveCustomMetrics(void) {
 void Results::SaveUserTiming(void) {
   CStringA user_timing = CT2A(_test_state._user_timing, CP_UTF8);
   if (user_timing.GetLength()) {
-    HANDLE file = CreateFile(_test_state._file_base + USER_TIMING_FILE, GENERIC_WRITE, 0, 
-                              NULL, CREATE_ALWAYS, 0, 0);
-    if (file != INVALID_HANDLE_VALUE) {
-      DWORD written;
-      WriteFile(file, (LPCSTR)user_timing, user_timing.GetLength(), &written, 0);
-      CloseHandle(file);
+    gzFile user_timing_file = gzopen((LPCSTR)CT2A(_test_state._file_base + USER_TIMING_FILE + CString(".gz")), "wb6");
+    if (user_timing_file) {
+      gzwrite(user_timing_file, (voidpc)(LPCSTR)user_timing, (unsigned int)user_timing.GetLength());
+      gzclose(user_timing_file);
     }
   }
 }
@@ -1576,12 +1551,10 @@ void Results::SavePriorityStreams() {
       }
     }
     json += "}}";
-    HANDLE file = CreateFile(_test_state._file_base + PRIORITY_STREAMS_FILE, GENERIC_WRITE, 0, 
-                              NULL, CREATE_ALWAYS, 0, 0);
-    if (file != INVALID_HANDLE_VALUE) {
-      DWORD written;
-      WriteFile(file, (LPCSTR)json, json.GetLength(), &written, 0);
-      CloseHandle(file);
+    gzFile json_file = gzopen((LPCSTR)CT2A(_test_state._file_base + PRIORITY_STREAMS_FILE + CString(".gz")), "wb6");
+    if (json_file) {
+      gzwrite(json_file, (voidpc)(LPCSTR)json, (unsigned int)json.GetLength());
+      gzclose(json_file);
     }
   }
 }
