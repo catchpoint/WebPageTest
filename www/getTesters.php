@@ -145,7 +145,7 @@ function GetAllTesters() {
           isset($loc[$group[$j]]['relayLocation']) && strlen($loc[$group[$j]]['relayLocation'])) {
         $locations[$loc[$group[$j]]['location']] = GetRemoteTesters($loc[$group[$j]]['relayServer'], $loc[$group[$j]]['relayLocation']);
       } else {
-        $locations[$loc[$group[$j]]['location']] = GetTesters($loc[$group[$j]]['location']);
+        $locations[$loc[$group[$j]]['location']] = GetTesters($loc[$group[$j]]['location'], false, true);
       }
 
       $j++;

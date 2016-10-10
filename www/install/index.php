@@ -128,7 +128,6 @@ function CheckFilesystem() {
     ShowCheck('{docroot}/dat writable', IsWritable('dat'));
     ShowCheck('{docroot}/results writable', IsWritable('results'));
     ShowCheck('{docroot}/work/jobs writable', IsWritable('work/jobs'));
-    ShowCheck('{docroot}/work/video writable', IsWritable('work/video'));
     ShowCheck('{docroot}/logs writable', IsWritable('logs'));
     if ('Linux' == PHP_OS) {
         ShowCheck('{docroot}/tmp on tmpfs', IsWPTTmpOnTmpfs(), false);
@@ -175,7 +174,7 @@ function CheckLocations() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 function GetLocationInfo(&$locations, $location) {
-    $info = array('state' => 'pass', 'label' => "$location : ", 'video' => false, 'locations' => array());
+    $info = array('state' => 'pass', 'label' => "$location : ", 'locations' => array());
     if (array_key_exists($location, $locations)) {
         if (array_key_exists('label', $locations[$location])) {
             $info['label'] .= $locations[$location]['label'];
@@ -196,34 +195,13 @@ function GetLocationInfo(&$locations, $location) {
                         $info['state'] = 'fail';
                     }
                     $info['locations'][$loc_name]['label'] .= ' - ';
-                    $file = "./tmp/$loc_name.tm";
                     $testerCount = 0;
                     $elapsedCheck = -1;
-                    $lock = LockLocation($loc_name);
-                    if ($lock) {
-                        if (is_file($file)) {
-                            $now = time();
-                            $testers = json_decode(file_get_contents($file), true);
-                            $testerCount = count($testers);
-                            if( $testerCount ) {
-                                $latest = 0;
-                                foreach($testers as $tester) {
-                                    if( array_key_exists('updated', $tester) && $tester['updated'] > $latest) {
-                                        $latest = $tester['updated'];
-                                    }
-                                    if (array_key_exists('video', $tester) && $tester['video']) {
-                                        $info['video'] = true;
-                                    }
-                                }
-                                if ($latest > 0) {
-                                    $elapsedCheck = 0;
-                                    if( $now > $latest )
-                                        $elapsedCheck = (int)(($now - $latest) / 60);
-                                }
-                            }
-                        }
-                        UnlockLocation($lock);
-                    }
+                    $testers = GetTesters($loc_name);
+                    if (isset($testers['elapsed']))
+                      $elapsedCheck = $testers['elapsed'];
+                    if (isset($testers) && is_array($testers) && isset($testers['testers']))
+                      $testerCount = count($testers['testers']);
                     if ($testerCount && $elapsedCheck >= 0) {
                         if ($elapsedCheck < 60) {
                             $info['locations'][$loc_name]['label'] .= "<span class=\"pass\">$testerCount agents connected</span>";

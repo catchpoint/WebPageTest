@@ -808,17 +808,11 @@ function FilterLocations(&$locations, $includeHidden = '',
             if (isset($locRef['browser']) && !isset($locRef['ami'])) {
                 $parts = explode(':', $name);
                 $locname = $parts[0];
+                $testers = GetTesters($locname);
                 // now check the times
-                $file = "./tmp/$locname.tm";
-                if (is_file($file)) {
-                    $updated = filemtime($file);
-                    $now = time();
-                    $elapsed = 0;
-                    if( $now > $updated )
-                        $elapsed = $now - $updated;
-                    $minutes = (int)($elapsed / 60);
-                    if (PHP_OS!='WINNT' && PHP_OS!='WIN32' && PHP_OS!='Windows' &&$minutes > 30)
-                        unset($locations[$name]);
+                if (isset($testers) && is_array($testers) && isset($testers['elapsed'])) {
+                  if ($testers['elapsed'] > 30)
+                    unset($locations[$name]);
                 } else {
                   // TODO: Fix this so it only hides local locations, not relay and API
                   if (!array_key_exists('relayServer', $locRef)) {
@@ -1358,27 +1352,23 @@ function GetQueueLengths($location) {
 /**
 * Get the number of active testers at the given location
 */
-function GetTesterCount($location)
-{
-    $parts = explode(':', $location);
-    $location = $parts[0];
-    $count = 0;
-    if (is_file("./tmp/$location.tm"))
-      $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
-    if( isset($testers) && is_array($testers) && count($testers) )
-    {
-        $now = time();
-        foreach( $testers as &$tester )
-        {
-            if( (!array_key_exists('offline', $tester) ||
-                 !$tester['offline']) &&
-                $tester['updated'] &&
-                $now - $tester['updated'] < 3600 )
-                $count++;
-        }
+function GetTesterCount($location) {
+  $parts = explode(':', $location);
+  $location = $parts[0];
+  $testers = GetTesters($location);
+  $count = 0;
+  if (isset($testers) && is_array($testers) && isset($testers['testers']) && count($testers['testers'])) {
+    $now = time();
+    foreach ($testers['testers'] as $tester) {
+      if ((!isset($tester['offline']) || !$tester['offline']) &&
+          $tester['updated'] &&
+          $now - $tester['updated'] < 3600 ) {
+        $count++;
+      }
     }
+  }
 
-    return $count;
+  return $count;
 }
 
 /**
@@ -1641,7 +1631,7 @@ function SaveJobQueue($workDir, &$queue)
 *
 * @param mixed $dir
 */
-function GetTesters($locationId, $includeOffline = false) {
+function GetTesters($locationId, $includeOffline = false, $includeExpired = false) {
   $location = array();
   $dir = __DIR__ . "/tmp/testers-$locationId";
   if (is_dir($dir)) {
@@ -1655,7 +1645,7 @@ function GetTesters($locationId, $includeOffline = false) {
       
       // Clean up any old testers (> 1 hour since we've seen them)
       // but keep at least one around per location
-      if (isset($elapsed_time) && $elapsed > 60) {
+      if ((!$includeExpired || isset($elapsed_time)) && $elapsed > 60) {
         unlink($file);
       } else {
         $tester_info = json_decode(gz_file_get_contents($dir . '/' . basename($file, '.gz')), true);
