@@ -1639,109 +1639,150 @@ function SaveJobQueue($workDir, &$queue)
 *
 * @param mixed $dir
 */
-function GetTesters($locationId, $includeOffline = false)
-{
-    $location = array();
-
-    $file = "./tmp/$locationId.tm";
-    if( is_file($file) )
-    {
-        $now = time();
-        $updated = filemtime($file);
-        $elapsed = 0;
-        if( $now > $updated )
-            $elapsed = $now - $updated;
-        $location['elapsed'] = (int)($elapsed / 60);
-
-        // load information about each tester
-        $testers = json_decode(file_get_contents($file), true);
-        if( count($testers) )
-        {
-            ksort($testers);
-            $location['testers'] = array();
-            foreach( $testers as $id => $tester )
-            {
-                if( $includeOffline || !array_key_exists('offline', $tester) || !$tester['offline'] )
-                {
-                    $entry = array('id' => $id,
-                                   'pc' => @$tester['pc'],
-                                   'ec2' => @$tester['ec2'],
-                                   'ip' => @$tester['ip'],
-                                   'version' => @$tester['ver'],
-                                   'freedisk' => @$tester['freedisk'],
-                                   'ie' => @$tester['ie'],
-                                   'winver' => @$tester['winver'],
-                                   'isWinServer' => @$tester['isWinServer'],
-                                   'isWin64' => @$tester['isWin64'],
-                                   'dns' => @$tester['dns'],
-                                   'GPU' => @$tester['GPU'],
-                                   'offline' => @$tester['offline'],
-                                   'screenwidth' => @$tester['screenwidth'],
-                                   'screenheight' => @$tester['screenheight']);
-                    $entry['rebooted'] = isset($tester['rebooted']) ? $tester['rebooted'] : false;
-
-                    if (array_key_exists('cpu', $tester) && is_array($tester['cpu'])) {
-                      $total = 0;
-                      $count = 0;
-                      foreach($tester['cpu'] as $cpu) {
-                        $total += $cpu;
-                        $count++;
-                      }
-                      if ($count)
-                        $entry['cpu'] = round($total / $count);
-                    }
-
-                    if (array_key_exists('errors', $tester) && is_array($tester['errors'])) {
-                      $total = 0;
-                      $count = 0;
-                      foreach($tester['errors'] as $error) {
-                        if ($error !== 0 &&
-                            $error !== 'timeout' &&
-                            $error !== 'Page load timeout')
-                          $total++;
-                        $count++;
-                      }
-                      if ($count > 50)
-                        $entry['errors'] = round((100 * $total) / $count);
-                    }
-                    
-                    // last time it checked in
-                    if( isset($tester['updated']) )
-                    {
-                        $elapsed = 0;
-                        $updated = $tester['updated'];
-                        if( $now > $updated )
-                            $elapsed = $now - $updated;
-                        $entry['elapsed'] = (int)($elapsed / 60);
-                    }
-
-                    // last time it got work
-                    if( isset($tester['last']) )
-                    {
-                        $elapsed = 0;
-                        $updated = $tester['last'];
-                        if( $now > $updated )
-                            $elapsed = $now - $updated;
-                        $entry['last'] = (int)($elapsed / 60);
-                    }
-
-                    $entry['busy'] = 0;
-                    if (isset($tester['test']) && strlen($tester['test']))
-                        $entry['busy'] = 1;
-
-                    $entry['id'] = $id;
-                    $location['testers'][] = $entry;
-                }
-            }
-        }
+function GetTesters($locationId, $includeOffline = false) {
+  $location = array();
+  $dir = __DIR__ . "/tmp/testers-$locationId";
+  if (is_dir($dir)) {
+    $now = time();
+    $elapsed_time = null;
+    $testers = array();
+    $files = glob("$dir/*.json.gz");
+    foreach ($files as $file) {
+      $file_time = filemtime($file);
+      $elapsed = $now < $file_time ? 0 : ($file_time - $now) / 60;
+      
+      // Clean up any old testers (> 1 hour since we've seen them)
+      // but keep at least one around per location
+      if (isset($elapsed_time) && $elapsed > 60) {
+        unlink($file);
+      } else {
+        $tester_info = json_decode(gz_file_get_contents($dir . '/' . basename($file, '.gz')), true);
+        if (isset($tester_info) && is_array($tester_info))
+          $testers[$tester_info['id']] = $tester_info;
+      }
+      
+      // update the most recent contact from the given location
+      if (!isset($elapsed_time) || $elapsed < $elapsed_time)
+        $elapsed_time = $elapsed;
     }
     
-    if (isset($location['elapsed']) && $location['elapsed'] < 60)
-      $location['status'] = 'OK';
-    else
-      $location['status'] = 'OFFLINE';
+    if (count($testers)) {
+      ksort($testers);
+      $location['testers'] = array();
+      foreach ($testers as $id => $tester) {
+        if ($includeOffline || !isset($tester['offline']) || !$tester['offline'] ) {
+          $entry = array('id' => $id,
+                         'pc' => @$tester['pc'],
+                         'ec2' => @$tester['ec2'],
+                         'ip' => @$tester['ip'],
+                         'version' => @$tester['ver'],
+                         'freedisk' => @$tester['freedisk'],
+                         'ie' => @$tester['ie'],
+                         'winver' => @$tester['winver'],
+                         'isWinServer' => @$tester['isWinServer'],
+                         'isWin64' => @$tester['isWin64'],
+                         'dns' => @$tester['dns'],
+                         'GPU' => @$tester['GPU'],
+                         'offline' => @$tester['offline'],
+                         'screenwidth' => @$tester['screenwidth'],
+                         'screenheight' => @$tester['screenheight']);
+          $entry['rebooted'] = isset($tester['rebooted']) ? $tester['rebooted'] : false;
 
-    return $location;
+          if (isset($tester['cpu']) && is_array($tester['cpu']) && count($tester['cpu']))
+            $entry['cpu'] = round(array_sum($tester['cpu']) / count($tester['cpu']));
+
+          if (isset($tester['errors']) && is_array($tester['errors']) && count($tester['errors']) > 50)
+            $entry['errors'] = round(array_sum($tester['errors']) / count($tester['errors']));
+          
+          // last time it checked in
+          if (isset($tester['updated'])) {
+            $updated = $tester['updated'];
+            $entry['elapsed'] = $now < $updated ? 0 : (int)(($now - $updated) / 60);
+          }
+
+          // last time it got work
+          if (isset($tester['last'])) {
+            $updated = $tester['last'];
+            $entry['last'] = $now < $updated ? 0 : (int)(($now - $updated) / 60);
+          }
+
+          $entry['busy'] = 0;
+          if (isset($tester['test']) && strlen($tester['test']))
+            $entry['busy'] = 1;
+
+          $location['testers'][] = $entry;
+        }
+      }
+    }
+
+    if (isset($elapsed_time))
+      $location['elapsed'] = (int)($elapsed_time / 60);
+  }
+    
+  if (isset($location['elapsed']) && $location['elapsed'] < 60)
+    $location['status'] = 'OK';
+  else
+    $location['status'] = 'OFFLINE';
+
+  return $location;
+}
+
+/**
+* Update the list of testers and the last contact time for the given tester
+*
+* @param mixed $location
+* @param mixed $tester
+* @param mixed $testerInfo
+*/
+function UpdateTester($location, $tester, $testerInfo = null, $cpu = null, $error = null, $rebooted = null) {
+  $dir = __DIR__ . "/tmp/testers-$location";
+  $tester_file = $dir . '/' . sha1($tester) . '.json';
+  if (!is_dir($dir))
+    mkdir($dir, 0777, true);
+  $tester_info = null;
+  if (gz_is_file($tester_file))
+    $tester_info = json_decode(gz_file_get_contents($tester_file), true);
+  if (!isset($tester_info) || !is_array($tester_info))
+    $tester_info = array();
+    
+  $now = time();
+  $tester_info['updated'] = $now;
+  if (!isset($tester_info['first_contact']))
+    $tester_info['first_contact'] = $now;
+
+  if (isset($rebooted))
+    $tester_info['rebooted'] = $rebooted;
+    
+  // Update the CPU Utilization
+  if (isset($cpu) && $cpu > 0) {
+    if (!isset($tester_info['cpu']))
+      $tester_info['cpu'] = array();
+    $tester_info['cpu'][] = $cpu;
+    if (count($tester_info['cpu']) > 100)
+      array_shift($tester_info['cpu']);
+  }
+
+  // keep track of the success/error count
+  if (isset($error)) {
+    if (!isset($tester_info['errors']))
+      $tester_info['errors'] = array();
+    $tester_info['errors'][] = strlen($error) ? 100 : 0;
+    if (count($tester_info['errors']) > 100)
+      array_shift($tester_info['errors']);
+  }
+
+  if (isset($testerInfo) && is_array($testerInfo)) {
+    // keep track of the FIRST idle request as the last work time so we can have an accurate "idle time"
+    if (isset($testerInfo['test']) && strlen($testerInfo['test']))
+      $tester_info['last'] = $now;
+
+    // update any other data passed in for the tester
+    foreach ($testerInfo as $key => $value)
+      $tester_info[$key] = $value;
+  }
+  $tester_info['id'] = $tester;
+  
+  gz_file_put_contents($tester_file, json_encode($tester_info));
 }
 
 /**
@@ -2031,73 +2072,6 @@ function SecureDir($path) {
         } elseif ($file != '.' && $file != '..' && is_dir($filepath)) {
             SecureDir($filepath);
         }
-    }
-}
-
-/**
-* Update the list of testers and the last contact time for the given tester
-*
-* @param mixed $location
-* @param mixed $tester
-* @param mixed $testerInfo
-*/
-function UpdateTester($location, $tester, $testerInfo = null, $cpu = null, $error = null, $rebooted = null) {
-    if ($lock = LockLocation("testers-$location")) {
-        $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
-        if( !count($testers) )
-            $testers = array();
-        if( !isset($testers[$tester]) )
-            $testers[$tester] = array();
-        elseif( !is_array($testers[$tester]) )
-        {
-            unset($testers[$tester]);
-            $testers[$tester] = array();
-        }
-        $now = time();
-        $testers[$tester]['updated'] = $now;
-        if (!array_key_exists('first_contact', $testers[$tester])) {
-            $testers[$tester]['first_contact'] = $now;
-        }
-        if (isset($rebooted))
-          $testers[$tester]['rebooted'] = $rebooted;
-        if (isset($cpu) && $cpu > 0) {
-          if (!array_key_exists('cpu', $testers[$tester]))
-            $testers[$tester]['cpu'] = array();
-          $testers[$tester]['cpu'][] = $cpu;
-          if (count($testers[$tester]['cpu']) > 100)
-            array_shift($testers[$tester]['cpu']);
-        }
-        // keep track of the success/error count
-        if (isset($error)) {
-          if (!array_key_exists('errors', $testers[$tester]))
-            $testers[$tester]['errors'] = array();
-          $testers[$tester]['errors'][] = $error ? $error : 0;
-          if (count($testers[$tester]['errors']) > 100)
-            array_shift($testers[$tester]['errors']);
-        }
-        if (isset($testerInfo) && is_array($testerInfo)) {
-            // keep track of the FIRST idle request as the last work time so we can have an accurate "idle time"
-            if (array_key_exists('test', $testerInfo) &&
-                (strlen($testerInfo['test']) ||
-                 (array_key_exists('test', $testers[$tester]) &&
-                  strlen($testers[$tester]['test'])))) {
-                $testers[$tester]['last'] = $now;
-            }
-            // update any other data passed in for the tester
-            foreach ($testerInfo as $key => $value)
-                $testers[$tester][$key] = $value;
-        }
-        // delete any testers in this location that haven't checked in in over an hour
-        foreach( $testers as $name => &$data ) {
-            if( $now > $data['updated'] ) {
-                $elapsed = $now - $data['updated'];
-                if( $elapsed > 3600 )
-                    unset( $testers[$name] );
-            }
-        }
-
-        file_put_contents("./tmp/$location.tm", json_encode($testers));
-        UnlockLocation($lock);
     }
 }
 

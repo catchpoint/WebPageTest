@@ -296,7 +296,7 @@ function GetJob() {
         $testerInfo['isWin64'] = $isWin64;
         $testerInfo['test'] = '';
         if (isset($testId))
-            $testerInfo['test'] = $testId;
+          $testerInfo['test'] = $testId;
         UpdateTester($location, $tester, $testerInfo);
       }
     }

@@ -1026,13 +1026,16 @@ function ValidateKey(&$test, &$error, $key = null)
       if( array_key_exists($key, $keys) ){
         if (array_key_exists('default location', $keys[$key]) &&
             strlen($keys[$key]['default location']) &&
-            !strlen($test['location']))
+            !strlen($test['location'])) {
             $test['location'] = $keys[$key]['default location'];
+        }
         if (isset($keys[$key]['priority']))
             $test['priority'] = $keys[$key]['priority'];
         if (isset($keys[$key]['max-priority']))
             $test['priority'] = max($keys[$key]['max-priority'], $test['priority']);
-        if( isset($keys[$key]['limit']) ){
+        if (isset($keys[$key]['location']) && $test['location'] !== $keys[$key]['location'])
+          $error = "Invalid location.  The API key used is restricted to {$keys[$key]['location']}";
+        if( !strlen($error) && isset($keys[$key]['limit']) ) {
           $limit = (int)$keys[$key]['limit'];
 
             // update the number of tests they have submitted today
@@ -2082,6 +2085,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "UAModifier=$UAModifier\r\n";
             if (isset($test['appendua']))
               $testFile .= "AppendUA={$test['appendua']}\r\n";
+            if (isset($test['key']) && strlen($test['key']))
+              $testFile .= "APIKey={$test['key']}\r\n";
+            if (isset($test['ip']) && strlen($test['ip']))
+              $testFile .= "IPAddr={$test['ip']}\r\n";
 
             // see if we need to add custom scan rules
             if (array_key_exists('custom_rules', $test)) {
