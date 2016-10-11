@@ -151,16 +151,13 @@ if (ValidateTestId($id)) {
         if (!array_key_exists('retries', $testInfo))
           $testInfo['retries'] = 0;
         if (!$valid && $testInfo['retries'] < $testInfo['max_retries'] && isset($testfile)) {
-          if ($lock = LockLocation($location)) {
-            if (copy($testfile, $testInfo['job_file'])) {
-              ResetTestDir($testPath);
-              $testInfo['retries']++;
-              AddJobFileHead($testInfo['workdir'], $testInfo['job'], $testInfo['priority'], false);
-              $done = false;
-              unset($testInfo['started']);
-              $testInfo_dirty = true;
-            }
-            UnlockLocation($lock);
+          if (copy($testfile, $testInfo['job_file'])) {
+            ResetTestDir($testPath);
+            $testInfo['retries']++;
+            AddJobFileHead($testInfo['workdir'], $testInfo['job'], $testInfo['priority'], false);
+            $done = false;
+            unset($testInfo['started']);
+            $testInfo_dirty = true;
           }
         }
       }
@@ -436,11 +433,8 @@ function ProcessIncrementalResult() {
         array_key_exists('discarded', $testInfo['test_runs'][$runNumber]) &&
         $testInfo['test_runs'][$runNumber]['discarded']) {
       if (is_file("$testPath/test.job")) {
-        if ($lock = LockLocation($location)) {
-          if (copy("$testPath/test.job", $testInfo['job_file'])) {
-            AddJobFileHead($location, $testInfo['workdir'], $testInfo['job'], $testInfo['priority'], true);
-          }
-          UnlockLocation($lock);
+        if (copy("$testPath/test.job", $testInfo['job_file'])) {
+          AddJobFileHead($location, $testInfo['workdir'], $testInfo['job'], $testInfo['priority'], true);
         }
       }
     }
