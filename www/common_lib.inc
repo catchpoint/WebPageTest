@@ -1488,7 +1488,7 @@ function AddTestJob($location, $job, $test) {
             unlink($file);
           }
         }
-        UnlockLocation($locationLock);
+        Unlock($locationLock);
       }
     }
   }
@@ -1550,11 +1550,7 @@ function AddTestJobHead($location, $job, $workDir, $fileName, $priority, $atFron
         }
       }
     } else {
-      $locationLock = LockLocation($location);
-      if (isset($locationLock)) {
-        AddJobFileHead($location, $workDir, $fileName, $priority, $atFront);
-        UnlockLocation($locationLock);
-      }
+      AddJobFileHead($location, $workDir, $fileName, $priority, $atFront);
     }
   }
   return $ret;
@@ -2052,7 +2048,7 @@ function Lock($name, $blocking = true, $maxLockSeconds = 300) {
       $lockFile = $tmpdir . '/named-' . str_replace(' ', '-', $name) . '.lock';
     else
       $lockFile = $tmpdir . '/lock-' . sha1($name) . '.lock';
-    $start = time();
+    $start = microtime(true);
     do {
       $file = @fopen($lockFile, 'x');
       if ($file !== false) {
@@ -2068,7 +2064,7 @@ function Lock($name, $blocking = true, $maxLockSeconds = 300) {
           usleep(100000);
         }
       }
-      $elapsed = time() - $start;
+      $elapsed = microtime(true) - $start;
     } while (!isset($lock) && $blocking && $elapsed < $maxLockSeconds);
   }
   if (isset($lock)) {
