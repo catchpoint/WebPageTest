@@ -90,7 +90,14 @@ enable_agent_processing=1
 ;slow_test_time=240
 
 ; beanstalkd memory queue for tests (only the default 11300 port is supported right now)
+; This is the legacy mode used to apply beanstalkd to all work queues unilaterally
 ;beanstalkd=127.0.0.1
+
+; beanstalkd memory queue config (for locations configured to use it and for messaging queues)
+;queue=beanstalk
+;beanstalkAddr=127.0.0.1
+;beanstalkPort=11300
+
 
 ; Use beanstalkd only for low-priority tests and use traditional work queues for high-priority.
 ; The benefit of this is that interactive tests will still get queue position while still
