@@ -177,7 +177,7 @@ function GetTestStatus($id, $includePosition = true) {
               }
             } else {
               if ($includePosition && array_key_exists('workdir', $testInfoJson)) {
-                $count = FindJobPosition($testInfoJson['workdir'], $id);
+                $count = FindJobPosition($testInfoJson['location'], $testInfoJson['workdir'], $id);
                 if ($count >= 0) {
                   $ret['statusCode'] = 101;
                   $ret['behindCount'] = $count;

@@ -438,7 +438,7 @@ function ProcessIncrementalResult() {
       if (is_file("$testPath/test.job")) {
         if ($lock = LockLocation($location)) {
           if (copy("$testPath/test.job", $testInfo['job_file'])) {
-            AddJobFileHead($testInfo['workdir'], $testInfo['job'], $testInfo['priority'], true);
+            AddJobFileHead($location, $testInfo['workdir'], $testInfo['job'], $testInfo['priority'], true);
           }
           UnlockLocation($lock);
         }

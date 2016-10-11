@@ -1292,28 +1292,48 @@ function GetPendingTests($loc, &$count)
     $parts = explode(':', $location);
     $location = $parts[0];
     $count = 0;
-    // now count just the low priority tests
-    $beanstalkd = GetSetting('beanstalkd');
-    if ($beanstalkd && strlen($beanstalkd)) {
-      require_once('./lib/beanstalkd/pheanstalk_init.php');
-      $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
-      for ($priority = 0; $priority < 9; $priority++) {
-        $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
+    $info = GetLocationInfo($location);
+    if (isset($info) && is_array($info) && isset($info['queue'])) {
+      // explicitly configured work queues do not support multiple priorities for status
+      // though they do for the actual jobs.
+      $queueType = $info['queue'];
+      $addr = GetSetting("{$queueType}Addr");
+      $port = GetSetting("{$queueType}Port");
+      if ($queueType == 'beanstalk' && $addr && $port) {
+        require_once('./lib/beanstalkd/pheanstalk_init.php');
+        $pheanstalk = new Pheanstalk_Pheanstalk($addr, $port);
+        $tube = 'wpt.work.' . sha1($location);
         try {
           $stats = $pheanstalk->statsTube($tube);
           $total += intval($stats['current-jobs-ready']);
-          if (!$priority)
-            $count += intval($stats['current-jobs-ready']);
+          $count += intval($stats['current-jobs-ready']);
         } catch(Exception $e) {
         }
       }
-    }
-    if( LoadJobQueue("./work/jobs/$location", $queue) ) {
-      foreach( $queue as $priority => &$q ) {
-        if ($priority < 9)
-          $total += count($q);
+    } else {
+      // now count just the low priority tests
+      $beanstalkd = GetSetting('beanstalkd');
+      if ($beanstalkd && strlen($beanstalkd)) {
+        require_once('./lib/beanstalkd/pheanstalk_init.php');
+        $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
+        for ($priority = 0; $priority < 9; $priority++) {
+          $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
+          try {
+            $stats = $pheanstalk->statsTube($tube);
+            $total += intval($stats['current-jobs-ready']);
+            if (!$priority)
+              $count += intval($stats['current-jobs-ready']);
+          } catch(Exception $e) {
+          }
+        }
       }
-      $count += count($queue[0]);
+      if( LoadJobQueue("./work/jobs/$location", $queue) ) {
+        foreach( $queue as $priority => &$q ) {
+          if ($priority < 9)
+            $total += count($q);
+        }
+        $count += count($queue[0]);
+      }
     }
   }
   return $total;
@@ -1328,22 +1348,41 @@ function GetQueueLengths($location) {
   $queues = array();
   for ($priority = 0; $priority <= 9; $priority++)
     $queues[$priority] = 0;
-  $beanstalkd = GetSetting('beanstalkd');
-  if ($beanstalkd && strlen($beanstalkd)) {
-    require_once('./lib/beanstalkd/pheanstalk_init.php');
-    $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
-    for ($priority = 0; $priority <= 9; $priority++) {
-      $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
+  $info = GetLocationInfo($location);
+  if (isset($info) && is_array($info) && isset($info['queue'])) {
+    // explicitly configured work queues do not support multiple priorities for status
+    // though they do for the actual jobs.
+    $queueType = $info['queue'];
+    $addr = GetSetting("{$queueType}Addr");
+    $port = GetSetting("{$queueType}Port");
+    if ($queueType == 'beanstalk' && $addr && $port) {
+      require_once('./lib/beanstalkd/pheanstalk_init.php');
+      $pheanstalk = new Pheanstalk_Pheanstalk($addr, $port);
+      $tube = 'wpt.work.' . sha1($location);
       try {
         $stats = $pheanstalk->statsTube($tube);
-        $queues[$priority] += intval($stats['current-jobs-ready']);
+        $queues[0] += intval($stats['current-jobs-ready']);
       } catch(Exception $e) {
       }
     }
-  }
-  if( LoadJobQueue("./work/jobs/$location", $queue) ) {
-    foreach( $queue as $priority => &$q )
-      $queues[$priority] += count($q);
+  } else {
+    $beanstalkd = GetSetting('beanstalkd');
+    if ($beanstalkd && strlen($beanstalkd)) {
+      require_once('./lib/beanstalkd/pheanstalk_init.php');
+      $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
+      for ($priority = 0; $priority <= 9; $priority++) {
+        $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
+        try {
+          $stats = $pheanstalk->statsTube($tube);
+          $queues[$priority] += intval($stats['current-jobs-ready']);
+        } catch(Exception $e) {
+        }
+      }
+    }
+    if( LoadJobQueue("./work/jobs/$location", $queue) ) {
+      foreach( $queue as $priority => &$q )
+        $queues[$priority] += count($q);
+    }
   }
   
   return $queues;
@@ -1371,10 +1410,95 @@ function GetTesterCount($location) {
   return $count;
 }
 
+function GetDailyTestNum() {
+  $lock = Lock("TestNum");
+  if ($lock) {
+    $num = 0;
+    if (!$num) {
+      $filename = __DIR__ . '/dat/testnum.dat';
+      $day = date ('ymd');
+      $testData = array('day' => $day, 'num' => 0);
+      $newData = json_decode(file_get_contents($filename), true);
+      if (isset($newData) && is_array($newData) &&
+          array_key_exists('day', $newData) &&
+          array_key_exists('num', $newData) &&
+          $newData['day'] == $day) {
+        $testData['num'] = $newData['num'];
+      }
+      $testData['num']++;
+      $num = $testData['num'];
+      file_put_contents($filename, json_encode($testData));
+    }
+    Unlock($lock);
+  }
+  return $num;
+}
+
+function AddTestJob($location, $job, $test) {
+  $ret = false;
+  if (isset($job) && strlen($job)) {
+    $info = GetLocationInfo($location);
+    if (isset($info) && is_array($info) && isset($info['queue'])) {
+      // explicitly configured work queues do not support multiple priorities for status
+      // though they do for the actual jobs.
+      $queueType = $info['queue'];
+      $addr = GetSetting("{$queueType}Addr");
+      $port = GetSetting("{$queueType}Port");
+      if ($queueType == 'beanstalk' && $addr && $port) {
+        try {
+          require_once('./lib/beanstalkd/pheanstalk_init.php');
+          $pheanstalk = new Pheanstalk_Pheanstalk($addr, $port);
+          $tube = 'wpt.work.' . sha1($location);
+          $message = gzdeflate(json_encode(array('job' => $job)), 7);
+          if ($message) {
+            $pheanstalk->putInTube($tube, $message, $test['priority'] + 1);
+            $ret = true;
+          }
+        } catch(Exception $e) {
+        }
+      }
+    } else {
+      $locationLock = LockLocation($location);
+      if (isset($locationLock)) {
+        if( !is_dir($test['workdir']) )
+          mkdir($test['workdir'], 0777, true);
+        $workDir = $test['workdir'];
+        if (isset($test['affinity']))
+          $test['job'] = "Affinity{$test['affinity']}.{$test['job']}";
+        $testNum = GetDailyTestNum();
+        $sortableIndex = date('ymd') . GetSortableString($testNum);
+        $test['job'] = "$sortableIndex.{$test['job']}";
+        $fileName = $test['job'];
+        $file = "$workDir/$fileName";
+        if( file_put_contents($file, $job) ) {
+          if (AddJobFile($location, $workDir, $fileName, $test['priority'], $test['queue_limit'])) {
+            // store a copy of the job file with the original test in case the test fails and we need to resubmit it
+            $test['job_file'] = realpath($file);
+            if (ValidateTestId($testId)) {
+              $testPath = GetTestPath($testId);
+              if (strlen($testPath)) {
+                $testPath = './' . $testPath;
+                if (!is_dir($testPath))
+                  mkdir($testPath, 0777, true);
+                file_put_contents("$testPath/test.job", $job);
+              }
+            }
+            $ret = true;
+          } else {
+            unlink($file);
+          }
+        }
+        UnlockLocation($locationLock);
+      }
+    }
+  }
+  return $ret;
+}
+
 /**
 * Add a job to the work queue (assume it is locked)
 */
-function AddJobFile($workDir, $file, $priority, $queue_limit = 0)
+function AddJobFile($location, $workDir, $file, $priority, $queue_limit = 0)
 {
   $ret = false;
   
@@ -1402,36 +1526,100 @@ function AddJobFile($workDir, $file, $priority, $queue_limit = 0)
   return $ret;
 }
 
+function AddTestJobHead($location, $job, $workDir, $fileName, $priority, $atFront) {
+  $ret = false;
+  if (isset($job) && strlen($job)) {
+    $info = GetLocationInfo($location);
+    if (isset($info) && is_array($info) && isset($info['queue'])) {
+      // explicitly configured work queues do not support multiple priorities for status
+      // though they do for the actual jobs.
+      $queueType = $info['queue'];
+      $addr = GetSetting("{$queueType}Addr");
+      $port = GetSetting("{$queueType}Port");
+      if ($queueType == 'beanstalk' && $addr && $port) {
+        try {
+          require_once('./lib/beanstalkd/pheanstalk_init.php');
+          $pheanstalk = new Pheanstalk_Pheanstalk($addr, $port);
+          $tube = 'wpt.work.' . sha1($location);
+          $message = gzdeflate(json_encode(array('job' => $job)), 7);
+          if ($message) {
+            $pheanstalk->putInTube($tube, $message, 0);
+            $ret = true;
+          }
+        } catch(Exception $e) {
+        }
+      }
+    } else {
+      $locationLock = LockLocation($location);
+      if (isset($locationLock)) {
+        AddJobFileHead($location, $workDir, $fileName, $priority, $atFront);
+        UnlockLocation($locationLock);
+      }
+    }
+  }
+  return $ret;
+}
+
 /**
 * Add a job to the front of the work queue (assume it is locked)
 */
-function AddJobFileHead($workDir, $file, $priority, $atFront = false)
+function AddJobFileHead($location, $workDir, $file, $priority, $atFront = false)
 {
   $ret = false;
 
-  $use_beanstalk = false;
-  $beanstalkd = GetSetting('beanstalkd');
-  if ($beanstalkd && strlen($beanstalkd)) {
-    if ($priority || !GetSetting('beanstalk_api_only'))
-      $use_beanstalk = true;
-  }
-  if ($use_beanstalk) {
-    try {
-      $tube = 'wpt.' . md5($workDir) . ".$priority";
-      require_once('./lib/beanstalkd/pheanstalk_init.php');
-      $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
-      $pheanstalk->putInTube($tube, $file, '0');
-      $ret = true;
-    } catch(Exception $e) {
+  $info = GetLocationInfo($location);
+  if (isset($info) && is_array($info) && isset($info['queue'])) {
+    // explicitly configured work queues do not support multiple priorities for status
+    // though they do for the actual jobs.
+    $queueType = $info['queue'];
+    $addr = GetSetting("{$queueType}Addr");
+    $port = GetSetting("{$queueType}Port");
+    if ($queueType == 'beanstalk' && $addr && $port) {
+      try {
+        require_once('./lib/beanstalkd/pheanstalk_init.php');
+        $pheanstalk = new Pheanstalk_Pheanstalk($addr, $port);
+        $tube = 'wpt.work.' . sha1($location);
+        $job = file_get_contents($file);
+        if (isset($job) && strlen($job)) {
+          $message = gzdeflate(json_encode(array('file' => $file, 'job' => $job)), 7);
+          if ($message) {
+            $pheanstalk->putInTube($tube, $message, 0);
+            $ret = true;
+          }
+        }
+      } catch(Exception $e) {
+      }
     }
-  } elseif (LoadJobQueue($workDir, $queue)) {
-    // we actually want to insert it as the second test if there is already a queue
-    if (!$atFront && count($queue[$priority]))
-      $first = array_shift($queue[$priority]);
-    if (array_unshift($queue[$priority], $file)) {
-      if (!$atFront && isset($first) && strlen($first))
-        array_unshift($queue[$priority], $first);
-      $ret = SaveJobQueue($workDir, $queue);
+  } else {
+    $use_beanstalk = false;
+    $beanstalkd = GetSetting('beanstalkd');
+    if ($beanstalkd && strlen($beanstalkd)) {
+      if ($priority || !GetSetting('beanstalk_api_only'))
+        $use_beanstalk = true;
+    }
+    if ($use_beanstalk) {
+      try {
+        $tube = 'wpt.' . md5($workDir) . ".$priority";
+        require_once('./lib/beanstalkd/pheanstalk_init.php');
+        $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
+        $pheanstalk->putInTube($tube, $file, 0);
+        $ret = true;
+      } catch(Exception $e) {
+      }
+    } else {
+      if ($lock = LockLocation($location)) {
+        if (LoadJobQueue($workDir, $queue)) {
+          // we actually want to insert it as the second test if there is already a queue
+          if (!$atFront && count($queue[$priority]))
+            $first = array_shift($queue[$priority]);
+          if (array_unshift($queue[$priority], $file)) {
+            if (!$atFront && isset($first) && strlen($first))
+              array_unshift($queue[$priority], $first);
+            $ret = SaveJobQueue($workDir, $queue);
+          }
+        }
+        Unlock($lock);
+      }
     }
   }
   return $ret;
@@ -1440,49 +1628,78 @@ function AddJobFileHead($workDir, $file, $priority, $atFront = false)
 /**
 * Get a job from the given work queue (assume it is locked)
 */
-function GetJobFile($workDir, &$priority, $tester = null, $testerIndex = null, $testerCount = null) {
-    $file = null;
+function GetTestJob($location, &$file, $workDir, &$priority, $tester = null, $testerIndex = null, $testerCount = null) {
+  $test_job = null;
+  $file = null;
 
-    if (LoadJobQueue($workDir, $queue)) {
-      $modified = false;
-      $priority = 0;
-      while (!isset($file) && $priority <= 9) {
-        // Pick any tests without affinity or whose affinity
-        // matches the existing tester
-        if (isset($queue[$priority]) && count($queue[$priority])) {
-          foreach ($queue[$priority] as $index => $job_file) {
-            if (preg_match('/Affinity(?P<affinity>[a-zA-Z0-9\-_]+)\.(?P<id>[a-zA-Z0-9\_]+)\.(p[0-9]|url)$/', $job_file, $matches)) {
-              $affinity = $matches['affinity'];
-              if (preg_match('/^Tester(?P<tester>[a-zA-Z0-9\-_]+$)/', $affinity, $matches)) {
-                if (isset($tester) && !strcasecmp($tester,$matches['tester']))
-                  $file = $job_file;
-              } elseif (isset($testerIndex) && isset($testerCount) &&
-                        $testerIndex >= 0 && $testerIndex < $testerCount &&
-                        preg_match('/^[0-9]+$/', $affinity, $matches)) {
-                $matchIndex = intval($affinity) % $testerCount;
-                if ($matchIndex == $testerIndex)
-                  $file = $job_file;
+  $info = GetLocationInfo($location);
+  if (isset($info) && is_array($info) && isset($info['queue'])) {
+    // explicitly configured work queues do not support multiple priorities for status
+    // though they do for the actual jobs.
+    $queueType = $info['queue'];
+    $addr = GetSetting("{$queueType}Addr");
+    $port = GetSetting("{$queueType}Port");
+    if ($queueType == 'beanstalk' && $addr && $port) {
+      try {
+        require_once('./lib/beanstalkd/pheanstalk_init.php');
+        $pheanstalk = new Pheanstalk_Pheanstalk($addr, $port);
+        $tube = 'wpt.work.' . sha1($location);
+        $job = $pheanstalk->reserveFromTube($tube, 0);
+        if ($job !== false) {
+          $message = $job->getData();
+          // TODO: Add support for reserving and automatically retrying jobs
+          $pheanstalk->delete($job);
+          $job = json_decode(gzinflate($message), true);
+          if (isset($job) && is_array($job) && isset($job['job']))
+            $test_job = $job['job'];
+        }
+      } catch(Exception $e) {
+      }
+    }
+  } else {
+    if ($lock = LockLocation($location)) {
+      if (LoadJobQueue($workDir, $queue)) {
+        $modified = false;
+        $priority = 0;
+        while (!isset($file) && $priority <= 9) {
+          // Pick any tests without affinity or whose affinity
+          // matches the existing tester
+          if (isset($queue[$priority]) && count($queue[$priority])) {
+            foreach ($queue[$priority] as $index => $job_file) {
+              if (preg_match('/Affinity(?P<affinity>[a-zA-Z0-9\-_]+)\.(?P<id>[a-zA-Z0-9\_]+)\.(p[0-9]|url)$/', $job_file, $matches)) {
+                $affinity = $matches['affinity'];
+                if (preg_match('/^Tester(?P<tester>[a-zA-Z0-9\-_]+$)/', $affinity, $matches)) {
+                  if (isset($tester) && !strcasecmp($tester,$matches['tester']))
+                    $file = $job_file;
+                } elseif (isset($testerIndex) && isset($testerCount) &&
+                          $testerIndex >= 0 && $testerIndex < $testerCount &&
+                          preg_match('/^[0-9]+$/', $affinity, $matches)) {
+                  $matchIndex = intval($affinity) % $testerCount;
+                  if ($matchIndex == $testerIndex)
+                    $file = $job_file;
+                }
+              } else {
+                // no affinity, this one works
+                $file = $job_file;
               }
-            } else {
-              // no affinity, this one works
-              $file = $job_file;
-            }
-            if (isset($file)) {
-              unset($queue[$priority][$index]);
-              $modified = true;
-              if (is_file("$workDir/$file"))
-                break;
-              else
-                unset($file);
+              if (isset($file)) {
+                unset($queue[$priority][$index]);
+                $modified = true;
+                if (is_file("$workDir/$file"))
+                  break;
+                else
+                  unset($file);
+              }
             }
           }
+          if (!isset($file))
+            $priority++;
         }
-        if (!isset($file))
-          $priority++;
-      }
 
-      if ($modified)
-        SaveJobQueue($workDir, $queue);
+        if ($modified)
+          SaveJobQueue($workDir, $queue);
+      }
+      Unlock($lock);
     }
     
     if (!isset($file)) {
@@ -1510,38 +1727,45 @@ function GetJobFile($workDir, &$priority, $tester = null, $testerIndex = null, $
         }
       }
     }
+    if (isset($file) && strlen($file) && is_file("$workDir/$file")) {
+      $data = file_get_contents("$workDir/$file");
+      if (isset($data) && $data !== FALSE && strlen($data))
+        $test_job = $data;
+    }
+  }
 
-    return $file;
+  return $test_job;
 }
 
 /**
 * Find the position in the work queue for the given test (assume it is locked)
 */
-function FindJobPosition($workDir, $testId)
+function FindJobPosition($location, $workDir, $testId)
 {
   $count = 0;
   $found = false;
 
-  if( LoadJobQueue($workDir, $queue) ) {
-    $priority = 0;
-    while( !$found && $priority <= 9 ) {
-      foreach($queue[$priority] as $file) {
-        if( stripos($file, $testId) !== false ) {
-          $found = true;
-          break;
-        } elseif( !$found ) {
-          $count++;
+  $info = GetLocationInfo($location);
+  if (isset($info) && is_array($info) && isset($info['queue'])) {
+    $found = true;
+  } else {
+    if( LoadJobQueue($workDir, $queue) ) {
+      $priority = 0;
+      while( !$found && $priority <= 9 ) {
+        foreach($queue[$priority] as $file) {
+          if( stripos($file, $testId) !== false ) {
+            $found = true;
+            break;
+          } elseif( !$found ) {
+            $count++;
+          }
         }
+        $priority++;
       }
-      $priority++;
     }
-  }
-  
-  if (!$found) {
     $beanstalkd = GetSetting('beanstalkd');
-    if ($beanstalkd && strlen($beanstalkd)) {
+    if (!$found && $beanstalkd && strlen($beanstalkd))
       $found = true;
-    }
   }
 
   if( !$found )

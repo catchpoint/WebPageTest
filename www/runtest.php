@@ -1520,59 +1520,24 @@ function SubmitUrl($testId, $testData, &$test, $url)
 */
 function WriteJob($location, &$test, &$job, $testId)
 {
-    $ret = false;
-    global $error;
-    global $locations;
+  $ret = false;
+  global $error;
+  global $locations;
 
-    if( $locations[$location]['relayServer'] )
-    {
-        // upload the test to a the relay server
-        $test['id'] = $testId;
-        $ret = SendToRelay($test, $job);
+  if ($locations[$location]['relayServer']) {
+    // upload the test to a the relay server
+    $test['id'] = $testId;
+    $ret = SendToRelay($test, $job);
+  } else {
+    // Submit the job locally
+    if (AddTestJob($location, $job, $test)) {
+      $ret = true;
+    } else {
+      $error = "Sorry, that test location already has too many tests pending.  Pleasy try again later.";
     }
-    else
-    {
-        // make sure the work directory exists
-        if( !is_dir($test['workdir']) )
-            mkdir($test['workdir'], 0777, true);
-        $workDir = $test['workdir'];
-        $locationLock = LockLocation($location);
-        if( isset($locationLock) )
-        {
-            if (isset($test['affinity']))
-              $test['job'] = "Affinity{$test['affinity']}.{$test['job']}";
-            $testNum = GetDailyTestNum();
-            $sortableIndex = date('ymd') . GetSortableString($testNum);
-            $test['job'] = "$sortableIndex.{$test['job']}";
-            $fileName = $test['job'];
-            $file = "$workDir/$fileName";
-            if( file_put_contents($file, $job) ) {
-                if (AddJobFile($workDir, $fileName, $test['priority'], $test['queue_limit'])) {
-                    // store a copy of the job file with the original test in case the test fails and we need to resubmit it
-                    $test['job_file'] = realpath($file);
-                    if (ValidateTestId($testId)) {
-                        $testPath = GetTestPath($testId);
-                        if (strlen($testPath)) {
-                            $testPath = './' . $testPath;
-                            if (!is_dir($testPath))
-                                mkdir($testPath, 0777, true);
-                            file_put_contents("$testPath/test.job", $job);
-                        }
-                    }
+  }
 
-                    $ret = true;
-                }
-                else
-                {
-                    unlink($file);
-                    $error = "Sorry, that test location already has too many tests pending.  Pleasy try again later.";
-                }
-            }
-            UnlockLocation($locationLock);
-        }
-    }
-
-    return $ret;
+  return $ret;
 }
 
 /**
@@ -2499,27 +2464,4 @@ function GetSortableString($num, $targetLen = 6) {
   return $str;
 }
 
-function GetDailyTestNum() {
-  $lock = Lock("TestNum");
-  if ($lock) {
-    $num = 0;
-    if (!$num) {
-      $filename = './dat/testnum.dat';
-      $day = date ('ymd');
-      $testData = array('day' => $day, 'num' => 0);
-      $newData = json_decode(file_get_contents($filename), true);
-      if (isset($newData) && is_array($newData) &&
-          array_key_exists('day', $newData) &&
-          array_key_exists('num', $newData) &&
-          $newData['day'] == $day) {
-        $testData['num'] = $newData['num'];
-      }
-      $testData['num']++;
-      $num = $testData['num'];
-      file_put_contents($filename, json_encode($testData));
-    }
-    Unlock($lock);
-  }
-  return $num;
-}
 ?>
