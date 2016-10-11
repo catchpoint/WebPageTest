@@ -1631,31 +1631,44 @@ function SaveJobQueue($workDir, &$queue)
 *
 * @param mixed $dir
 */
-function GetTesters($locationId, $includeOffline = false, $includeExpired = false) {
+function GetTesters($locationId, $includeOffline = false) {
   $location = array();
   $dir = __DIR__ . "/tmp/testers-$locationId";
   if (is_dir($dir)) {
     $now = time();
     $elapsed_time = null;
     $testers = array();
+    $delete = array();
     $files = glob("$dir/*.json.gz");
     foreach ($files as $file) {
-      $file_time = filemtime($file);
-      $elapsed = $now < $file_time ? 0 : ($file_time - $now) / 60;
-      
-      // Clean up any old testers (> 1 hour since we've seen them)
-      // but keep at least one around per location
-      if ((!$includeExpired || isset($elapsed_time)) && $elapsed > 60) {
-        unlink($file);
-      } else {
-        $tester_info = json_decode(gz_file_get_contents($dir . '/' . basename($file, '.gz')), true);
-        if (isset($tester_info) && is_array($tester_info))
+      $tester_info = json_decode(gz_file_get_contents($dir . '/' . basename($file, '.gz')), true);
+      if (isset($tester_info) && is_array($tester_info)) {
+        $elapsed = 0;
+        if (isset($tester_info['updated'])) {
+          $updated = $tester_info['updated'];
+          $elapsed = $now < $updated ? 0 : ($now - $updated) / 60;
+          // update the most recent contact from the given location
+          if (!isset($elapsed_time) || $elapsed < $elapsed_time)
+            $elapsed_time = $elapsed;
+        }
+
+        // Clean up any old testers (> 1 hour since we've seen them)
+        if ($elapsed > 60) {
+          $delete[] = $file;
+        } else {
           $testers[$tester_info['id']] = $tester_info;
+        }
       }
-      
-      // update the most recent contact from the given location
-      if (!isset($elapsed_time) || $elapsed < $elapsed_time)
-        $elapsed_time = $elapsed;
+    }
+    
+    $delete_count = count($delete);
+    if ($delete_count) {
+      // Keep at least one around so we can tell how long the location has been offline
+      if (!count($testers))
+        $delete_count--;
+      for ($i = 0; $i < $delete_count; $i++) {
+        unlink($delete[$i]);
+      }
     }
     
     if (count($testers)) {
@@ -1708,7 +1721,7 @@ function GetTesters($locationId, $includeOffline = false, $includeExpired = fals
     }
 
     if (isset($elapsed_time))
-      $location['elapsed'] = (int)($elapsed_time / 60);
+      $location['elapsed'] = (int)$elapsed_time;
   }
     
   if (isset($location['elapsed']) && $location['elapsed'] < 60)
