@@ -182,6 +182,7 @@ function LoadLocations()
               $locations[$loc_name] = array( 'Label' => $label,
                                               'location' => $loc[$group[$j]]['location'],
                                               'Browsers' => $loc[$group[$j]]['browser'],
+                                              'localDir' => $loc[$group[$j]]['localDir'],
                                               'relayServer' => @$loc[$group[$j]]['relayServer'],
                                               'relayLocation' => @$loc[$group[$j]]['relayLocation'],
                                               'labelShort' => $loc[$loc_name]['label'],
