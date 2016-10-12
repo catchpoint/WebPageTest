@@ -64,6 +64,159 @@ static const DWORD INITIAL_BOTTOM_MARGIN = 85;  // Ignore for the first frame
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+class Histogram {
+public:
+  Histogram():is_valid(false) {
+    for (int i = 0; i < 256; i++) {
+      r[i] = g[i] = b[i] = 0;
+    }
+  }
+  Histogram(const Histogram &src) {*this = src;}
+  Histogram(CxImage& image) {FromImage(image);}
+  ~Histogram(){}
+  const Histogram &operator =(const Histogram &src) {
+    if (src.is_valid) {
+      for (int i = 0; i < 256; i++) {
+        r[i] = src.r[i];
+        g[i] = src.g[i];
+        b[i] = src.b[i];
+      }
+      is_valid = true;
+    }
+    return src;
+  }
+  bool FromImage(CxImage& image) {
+    is_valid = false;
+    if (image.IsValid()) {
+      DWORD count = 0;
+      for (int i = 0; i < 256; i++) {
+        r[i] = g[i] = b[i] = 0;
+      }
+      DWORD width = max(image.GetWidth() - RIGHT_MARGIN, 0);
+      DWORD height = image.GetHeight();
+      if (image.GetBpp() >= 15) {
+        DWORD pixel_bytes = 3;
+        if (image.GetBpp() == 32)
+          pixel_bytes = 4;
+        DWORD row_bytes = image.GetEffWidth();
+        for (DWORD row = BOTTOM_MARGIN; row < height; row ++) {
+          BYTE * pixel = image.GetBits(row);
+          for (DWORD x = 0; x < width; x++) {
+            if (pixel[0] != 255 || 
+                pixel[1] != 255 || 
+                pixel[2] != 255) {
+              r[pixel[0]]++;
+              g[pixel[1]]++;
+              b[pixel[2]]++;
+              count++;
+            }
+            pixel += pixel_bytes;
+          }
+        }
+      } else {
+        for (DWORD y = BOTTOM_MARGIN; y < height; y++) {
+          for (DWORD x = 0; x < width; x++) {
+            RGBQUAD pixel = image.GetPixelColor(x,y);
+            if (pixel.rgbRed != 255 || 
+                pixel.rgbGreen != 255 || 
+                pixel.rgbBlue != 255) {
+              r[pixel.rgbRed]++;
+              g[pixel.rgbGreen]++;
+              b[pixel.rgbBlue]++;
+              count++;
+            }
+          }
+        }
+      }
+      is_valid = true;
+    }
+    return is_valid;
+  }
+  CStringA json() {
+    CStringA ret;
+    if (is_valid) {
+      CStringA red = "\"r\":[";
+      CStringA green = "\"g\":[";
+      CStringA blue = "\"b\":[";
+      CStringA buff;
+      for (int i = 0; i < 256; i++) {
+        if (i) {
+          red += ",";
+          green += ",";
+          blue += ",";
+        }
+        buff.Format("%d", r[i]);
+        red += buff;
+        buff.Format("%d", g[i]);
+        green += buff;
+        buff.Format("%d", b[i]);
+        blue += buff;
+      }
+      red += "]";
+      green += "]";
+      blue += "]";
+      ret = "{" + red + "," + green + "," + blue + "}";
+    }
+    return ret;
+  }
+  double ColorProgress(DWORD *start, DWORD *end, DWORD *current, int slop) {
+    double progress = 0;
+    const int buckets = 256;
+    size_t total = 0;
+    size_t matched = 0;
+
+    // First build an array of the actual changes in the current histogram.
+    size_t available[buckets];
+    for (int i = 0; i < buckets; i++)
+      available[i] = current[i] > start[i] ? current[i] - start[i] : start[i] - current[i];
+
+    // Go through the target differences and subtract any matches from the array as we go,
+    // counting how many matches we made.
+    for (int i = 0; i < buckets; i++) {
+      size_t target = (size_t)abs((long)end[i] - (long)start[i]);
+      if (target) {
+        total += target;
+        int start_slop = max(0, i - slop);
+        int end_slop = min(buckets - 1, i + slop);
+        for (int j = start_slop; j <= end_slop; j++) {
+          size_t this_match = min(target, available[j]);
+          available[j] -= this_match;
+          matched += this_match;
+          target -= this_match;
+        }
+      }
+    }
+
+    if (!total)
+      progress = 0.0;
+    else if (matched >= total)
+      progress = 1.0;
+    else
+      progress = (double)matched / (double)total;
+
+    return progress;
+  }
+  double VisualProgress(Histogram &start, Histogram &end, int slop = 5) {
+    double progress = 0;
+    if (is_valid && start.is_valid && end.is_valid) {
+      // Average the progress of all 3 color channels
+      double red = ColorProgress(start.r, end.r, r, slop);
+      double green = ColorProgress(start.g, end.g, g, slop);
+      double blue = ColorProgress(start.b, end.b, b, slop);
+
+      progress = (red + green + blue) / 3;
+    }
+    return progress;
+  }
+  DWORD r[256];
+  DWORD g[256];
+  DWORD b[256];
+  bool is_valid;
+};
+
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 Results::Results(TestState& test_state, WptTest& test, Requests& requests, 
                   TrackSockets& sockets, TrackDns& dns, 
                   ScreenCapture& screen_capture, Trace &trace):
@@ -75,7 +228,7 @@ Results::Results(TestState& test_state, WptTest& test, Requests& requests,
   , _screen_capture(screen_capture)
   , _saved(false)
   , _trace(trace) {
-  _visually_complete.QuadPart = 0;
+  _last_visual_change.QuadPart = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -90,7 +243,7 @@ void Results::Reset(void) {
   _requests.Reset();
   _screen_capture.Reset();
   _saved = false;
-  _visually_complete.QuadPart = 0;
+  _last_visual_change.QuadPart = 0;
   base_page_CDN_.Empty();
   base_page_server_rtt_.Empty();
   base_page_redirects_ = 0;
@@ -115,6 +268,8 @@ void Results::Reset(void) {
   count_other_doc_ = 0;
   peak_memory_ = 0;
   peak_process_count_ = 0;
+  visually_complete_ = 0;
+  speed_index_ = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -244,18 +399,31 @@ void Results::SaveImages(void) {
 void Results::SaveVideo(void) {
   OutputDebugStringA("Results::SaveVideo()");
   _screen_capture.Lock();
-  CStringA histograms = "[";
-  DWORD histogram_count = 0;
-  CxImage * last_image = NULL;
-  DWORD width, height;
-  CString file_name;
-  POSITION pos = _screen_capture._captured_images.GetHeadPosition();
-  DWORD bottom_margin = INITIAL_BOTTOM_MARGIN;
-  DWORD margin = INITIAL_MARGIN;
-  while (pos) {
-    CStringA histogram;
-    CapturedImage& image = _screen_capture._captured_images.GetNext(pos);
-    if (image._type != CapturedImage::RESPONSIVE_CHECK) {
+  if (!_screen_capture._captured_images.IsEmpty()) {
+    CStringA histograms = "[";
+    DWORD histogram_count = 0;
+    CxImage * last_image = NULL;
+    DWORD width, height;
+    CString file_name;
+    Histogram start_histogram;
+
+    // get the end-state histogram to use for comparing
+    Histogram end_histogram;
+    CxImage end_img;
+    if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, end_img))
+      end_histogram.FromImage(end_img);
+    visually_complete_ = 0;
+    speed_index_ = 0;
+    double last_progress = 0.0;
+    DWORD last_progress_time = 0;
+
+    // loop through all of the frames
+    POSITION pos = _screen_capture._captured_images.GetHeadPosition();
+    DWORD bottom_margin = INITIAL_BOTTOM_MARGIN;
+    DWORD margin = INITIAL_MARGIN;
+    while (pos) {
+      CStringA json;
+      CapturedImage& image = _screen_capture._captured_images.GetNext(pos);
       CxImage * img = new CxImage;
       if (image.Get(*img)) {
         DWORD image_time_ms = _test_state.ElapsedMsFromStart(image._capture_time);
@@ -277,8 +445,19 @@ void Results::SaveVideo(void) {
             margin = 0;
             if (!_test_state._render_start.QuadPart)
               _test_state._render_start.QuadPart = image._capture_time.QuadPart;
-            _visually_complete.QuadPart = image._capture_time.QuadPart;
-            histogram = GetHistogramJSON(*img);
+            _last_visual_change.QuadPart = image._capture_time.QuadPart;
+            Histogram histogram = Histogram(*img);
+            if (histogram.is_valid) {
+              json = histogram.json();
+              if (start_histogram.is_valid && end_histogram.is_valid) {
+                double progress = histogram.VisualProgress(start_histogram, end_histogram);
+                if (progress >= 0.9999 && !visually_complete_)
+                  visually_complete_ = image_time_ms;
+                speed_index_ += (int)((1.0 - last_progress) * (double)(image_time_ms - last_progress_time));
+                last_progress = progress;
+                last_progress_time = image_time_ms;
+              }
+            }
             if (_test._video && !_test._minimal_results) {
               file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_test_state._file_base, 
                                 image_time);
@@ -288,7 +467,9 @@ void Results::SaveVideo(void) {
         } else {
           width = img->GetWidth();
           height = img->GetHeight();
-          histogram = GetHistogramJSON(*img);
+          start_histogram.FromImage(*img);
+          if (start_histogram.is_valid)
+            json = start_histogram.json();
           // always save the first image at time zero
           image_time = 0;
           image_time_ms = 0;
@@ -298,21 +479,21 @@ void Results::SaveVideo(void) {
           }
         }
 
-        if (!histogram.IsEmpty()) {
+        if (!json.IsEmpty() && !_test._minimal_results) {
           if (histogram_count)
             histograms += ", ";
           histograms += "{\"histogram\": ";
-          histograms += histogram;
+          histograms += json;
           histograms += ", \"time\": ";
           CStringA buff;
           buff.Format("%d", image_time_ms);
           histograms += buff;
           histograms += "}";
           histogram_count++;
-          if (_test._video  && !_test._minimal_results) {
+          if (_test._video) {
             file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_test_state._file_base,
-                             image_time);
-            SaveHistogram(histogram, file_name, false);
+                              image_time);
+            SaveHistogram(json, file_name, false);
           }
         }
 
@@ -323,32 +504,31 @@ void Results::SaveVideo(void) {
         delete img;
       }
     }
-  }
 
-  if (last_image)
-    delete last_image;
+    if (last_image)
+      delete last_image;
 
-  if (histogram_count > 1) {
-    histograms += "]";
-    TCHAR path[MAX_PATH];
-    lstrcpy(path, _test_state._file_base);
-    TCHAR * file = PathFindFileName(path);
-    int run = _tstoi(file);
-    if (run) {
-      int cached = _tcsstr(file, _T("_Cached")) ? 1 : 0;
-      *file = 0;
+    if (histogram_count > 1 && !_test._minimal_results) {
+      histograms += "]";
+      TCHAR path[MAX_PATH];
+      lstrcpy(path, _test_state._file_base);
+      TCHAR * file = PathFindFileName(path);
+      int run = _tstoi(file);
+      if (run) {
+        int cached = _tcsstr(file, _T("_Cached")) ? 1 : 0;
+        *file = 0;
 
-      // file_name needs to include step prefix for multistep measurements
-      if (_test_state.reported_step_ > 1) {
-        file_name.Format(_T("%s%d.%d.%d.histograms.json"),
-                         path, run, _test_state.reported_step_, cached);
-      } else {
-        file_name.Format(_T("%s%d.%d.histograms.json"), path, run, cached);
+        // file_name needs to include step prefix for multistep measurements
+        if (_test_state.reported_step_ > 1) {
+          file_name.Format(_T("%s%d.%d.%d.histograms.json"),
+                           path, run, _test_state.reported_step_, cached);
+        } else {
+          file_name.Format(_T("%s%d.%d.histograms.json"), path, run, cached);
+        }
+        SaveHistogram(histograms, file_name, true);
       }
-      SaveHistogram(histograms, file_name, true);
     }
   }
-
   _screen_capture.Unlock();
   OutputDebugStringA("Results::SaveVideo() - Complete");
 }
@@ -740,8 +920,8 @@ void Results::SavePageData(OptimizationChecks& checks){
     result += buff;
     buff.Format("%d\t", _test_state._dom_content_loaded_event_end);
     result += buff;
-    // Visually complete
-    result += FormatTime(_visually_complete);
+    // Last visual change
+    result += FormatTime(_last_visual_change);
     // Browser name
     result += _test_state._browser_name;
     result += "\t";
@@ -832,6 +1012,18 @@ void Results::SavePageData(OptimizationChecks& checks){
     // Base Page TTFB
     if (base_page_ttfb_ >= 0) {
       buff.Format("%d", base_page_ttfb_);
+      result += buff;
+    }
+    result += "\t";
+    // Visually Complete
+    if (visually_complete_) {
+      buff.Format("%d", visually_complete_);
+      result += buff;
+    }
+    result += "\t";
+    // SpeedIndex
+    if (speed_index_) {
+      buff.Format("%d", speed_index_);
       result += buff;
     }
     result += "\t";

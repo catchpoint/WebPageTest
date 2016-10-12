@@ -2,6 +2,7 @@
 require_once __DIR__ . '/page_data.inc';
 require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/include/TestResults.php';
+require_once __DIR__ . '/include/TestRunResults.php';
 
 if(isset($testPath) ) {
   $options = null;

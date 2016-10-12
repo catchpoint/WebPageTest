@@ -2,12 +2,14 @@
 if(extension_loaded('newrelic')) { 
   newrelic_add_custom_tracer('ProcessIncrementalResult');
   newrelic_add_custom_tracer('CompressTextFiles');
-  newrelic_add_custom_tracer('loadPageRunData');
+  newrelic_add_custom_tracer('loadPageStepData');
+  newrelic_add_custom_tracer('loadVideo');
+  newrelic_add_custom_tracer('GetVisualProgressForStep');
+  newrelic_add_custom_tracer('GetDevToolsCPUTimeForStep');
   newrelic_add_custom_tracer('getBreakdown');
   newrelic_add_custom_tracer('GetVisualProgress');
   newrelic_add_custom_tracer('DevToolsGetConsoleLog');
   newrelic_add_custom_tracer('ExtractZipFile');
-  newrelic_add_custom_tracer('WaitForSystemLoad');
 }
 
 chdir('..');
@@ -529,21 +531,23 @@ function CompressTextFiles($testPath) {
   global $ini;
   $f = scandir($testPath);
   foreach( $f as $textFile ) {
-    logMsg("Checking $textFile\n");
-    if( is_file("$testPath/$textFile") ) {
-      $parts = pathinfo($textFile);
-      $ext = $parts['extension'];
-      if( !strcasecmp( $ext, 'txt') ||
-          !strcasecmp( $ext, 'json') ||
-          !strcasecmp( $ext, 'log') ||
-          !strcasecmp( $ext, 'csv') ) {
-        if (strpos($textFile, '_optimization'))
-          unlink("$testPath/$textFile");
-        elseif (gz_compress("$testPath/$textFile"))
-          unlink("$testPath/$textFile");
+    if ($textFile != 'test.log') {
+      logMsg("Checking $textFile\n");
+      if( is_file("$testPath/$textFile") ) {
+        $parts = pathinfo($textFile);
+        $ext = $parts['extension'];
+        if( !strcasecmp( $ext, 'txt') ||
+            !strcasecmp( $ext, 'json') ||
+            !strcasecmp( $ext, 'log') ||
+            !strcasecmp( $ext, 'csv') ) {
+          if (strpos($textFile, '_optimization'))
+            unlink("$testPath/$textFile");
+          elseif (gz_compress("$testPath/$textFile"))
+            unlink("$testPath/$textFile");
+        }
+        if (isset($ini) && is_array($ini) && isset($ini['sensitive']) && $ini['sensitive'] && strpos($textFile, '_report'))
+          RemoveSensitiveHeaders($testPath . '/' . basename($textFile, '.gz'));
       }
-      if (isset($ini) && is_array($ini) && isset($ini['sensitive']) && $ini['sensitive'] && strpos($textFile, '_report'))
-        RemoveSensitiveHeaders($testPath . '/' . basename($textFile, '.gz'));
     }
   }
 }
