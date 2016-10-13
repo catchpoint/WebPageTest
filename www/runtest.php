@@ -1335,9 +1335,14 @@ function ValidateScript(&$script, &$error)
 
         $test['navigateCount'] = $navigateCount;
 
+        $maxNavigateCount = GetSetting("maxNavigateCount");
+        if (!$maxNavigateCount) {
+            $maxNavigateCount = 20;
+        }
+
         if( !$ok )
             $error = "Invalid Script (make sure there is at least one navigate command and that the commands are tab-delimited).  Please contact us if you need help with your test script.";
-        else if( $navigateCount > 20 )
+        else if( $navigateCount > $maxNavigateCount )
             $error = "Sorry, your test has been blocked.  Please contact us if you have any questions";
 
         if( strlen($error) )

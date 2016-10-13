@@ -70,6 +70,9 @@ allowNonFQDN=0
 ; Enables trace and pcap processing directly on the test agents.
 enable_agent_processing=1
 
+; Sets the maximum number of navigates in a script
+maxNavigateCount=20
+
 ; *************
 ; Server Config
 ; *************
