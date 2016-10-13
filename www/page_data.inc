@@ -191,8 +191,15 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
 
       if (isset($ret) && is_array($ret) && isset($ret['fullyLoaded']) && $ret['fullyLoaded']) {
         $processing = GetDevToolsCPUTimeForStep($localPaths, $ret['fullyLoaded']);
-        if (isset($processing) && is_array($processing) && count($processing))
+        if (isset($processing) && is_array($processing) && count($processing)) {
           $ret['cpuTimes'] = $processing;
+          if (isset($ret['docTime']) && $ret['docTime']) {    
+            $processing = GetDevToolsCPUTimeForStep($localPaths, $ret['docTime']);    
+            if (isset($processing) && is_array($processing) && count($processing)) {    
+              $ret['cpuTimesDoc'] = $processing;      
+            }
+          }
+        }
       }
 
       // See if there is Chrome trace user timing data to load.
