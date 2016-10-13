@@ -3,6 +3,7 @@
         newrelic_add_custom_tracer('CheckUrl');
         newrelic_add_custom_tracer('CheckIp');
         newrelic_add_custom_tracer('WptHookValidateTest');
+        newrelic_add_custom_tracer('GetRedirect');
     }
 
     // deal with magic quotes being enabled
@@ -1603,61 +1604,60 @@ function SendToRelay(&$test, &$out)
 /**
 * Detect if the given URL redirects to another host
 */
-function GetRedirect($url, &$rhost, &$rurl)
-{
-    global $redirect_cache;
-    $redirected = false;
-    $rhost = '';
-    $rurl = '';
+function GetRedirect($url, &$rhost, &$rurl) {
+  global $redirect_cache;
+  $redirected = false;
+  $rhost = '';
+  $rurl = '';
 
-    if (strlen($url)) {
-        if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
-            $url = 'http://' . $url;
-        if (array_key_exists($url, $redirect_cache)) {
-            $rhost = $redirect_cache[$url]['host'];
-            $rurl = $redirect_cache[$url]['url'];
-        } elseif (function_exists('curl_init')) {
-            $parts = parse_url($url);
-            $original = $parts['host'];
-            $host = '';
-            $curl = curl_init();
-            curl_setopt($curl, CURLOPT_URL, $url);
-            curl_setopt($curl, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; PTST 2.295)');
-            curl_setopt($curl, CURLOPT_FILETIME, true);
-            curl_setopt($curl, CURLOPT_NOBODY, true);
-            curl_setopt($curl, CURLOPT_HEADER, true);
-            curl_setopt($curl, CURLOPT_FAILONERROR, true);
-            curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 20);
-            curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 20);
-            curl_setopt($curl, CURLOPT_MAXREDIRS, 10);
-            curl_setopt($curl, CURLOPT_TIMEOUT, 20);
-            curl_setopt($curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            $headers = curl_exec($curl);
-            curl_close($curl);
-            $lines = explode("\n", $headers);
-            foreach($lines as $line) {
-                $line = trim($line);
-                $split = strpos($line, ':');
-                if ($split > 0) {
-                    $key = trim(substr($line, 0, $split));
-                    $value = trim(substr($line, $split + 1));
-                    if (!strcasecmp($key, 'Location')) {
-                        $rurl = $value;
-                        $parts = parse_url($rurl);
-                        $host = trim($parts['host']);
-                    }
-                }
-            }
-            if( strlen($host) && $original !== $host )
-                $rhost = $host;
-            $redirect_cache[$url] = array('host' => $rhost, 'url' => $rurl);
+  if (strlen($url)) {
+    if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
+      $url = 'http://' . $url;
+    if (array_key_exists($url, $redirect_cache)) {
+      $rhost = $redirect_cache[$url]['host'];
+      $rurl = $redirect_cache[$url]['url'];
+    } elseif (function_exists('curl_init')) {
+      $parts = parse_url($url);
+      $original = $parts['host'];
+      $host = '';
+      $curl = curl_init();
+      curl_setopt($curl, CURLOPT_URL, $url);
+      curl_setopt($curl, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; PTST 2.295)');
+      curl_setopt($curl, CURLOPT_FILETIME, true);
+      curl_setopt($curl, CURLOPT_NOBODY, true);
+      curl_setopt($curl, CURLOPT_HEADER, true);
+      curl_setopt($curl, CURLOPT_FAILONERROR, true);
+      curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+      curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 20);
+      curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 20);
+      curl_setopt($curl, CURLOPT_MAXREDIRS, 10);
+      curl_setopt($curl, CURLOPT_TIMEOUT, 20);
+      curl_setopt($curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+      curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+      $headers = curl_exec($curl);
+      curl_close($curl);
+      $lines = explode("\n", $headers);
+      foreach($lines as $line) {
+        $line = trim($line);
+        $split = strpos($line, ':');
+        if ($split > 0) {
+          $key = trim(substr($line, 0, $split));
+          $value = trim(substr($line, $split + 1));
+          if (!strcasecmp($key, 'Location')) {
+            $rurl = $value;
+            $parts = parse_url($rurl);
+            $host = trim($parts['host']);
+          }
         }
+      }
+      if( strlen($host) && $original !== $host )
+        $rhost = $host;
+      $redirect_cache[$url] = array('host' => $rhost, 'url' => $rurl);
     }
-    if (strlen($rhost))
-        $redirected = true;
-    return $redirected;
+  }
+  if (strlen($rhost))
+    $redirected = true;
+  return $redirected;
 }
 
 /**
@@ -1770,7 +1770,10 @@ function CheckUrl($url)
         $blockHosts !== false && count($blockHosts) ||
         $blockAuto !== false && count($blockAuto)) {
       // Follow redirects to see if they are obscuring the site being tested
-      GetRedirect($url, $rhost, $rurl);
+      $rhost = '';
+      $rurl = '';
+      if (GetSetting('check_redirects'))
+        GetRedirect($url, $rhost, $rurl);
       foreach( $blockUrls as $block ) {
         $block = trim($block);
         if( strlen($block) && preg_match("/$block/i", $url)) {

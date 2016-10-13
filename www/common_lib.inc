@@ -100,7 +100,7 @@ function GetLocationInfo($location) {
     }
     
     if (isset($info) && $has_apc && !$from_cache)
-      apc_store("locinfo_$location", $key, 120);
+      apc_store("locinfo_$location", $info, 120);
   }
   return $info;
 }
@@ -1208,7 +1208,7 @@ function RestoreTest($id)
   if (!$userIsBot && ValidateTestId($id)) {
     $testPath = './' . GetTestPath($id);
     // Only trigger a restore if the directory for the test doesn't exist
-    if (!is_dir($testPath)) {
+    if (!is_file("$testPath/testinfo.ini")) {
       $archive_dir = GetSetting('archive_dir');
       $archive_s3_url = GetSetting('archive_s3_url');
       $archive_s3_server = GetSetting('archive_s3_server');
