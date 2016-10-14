@@ -106,7 +106,7 @@ void SoftwareUpdate::SetSoftwareUrl(CString url) {
 -----------------------------------------------------------------------------*/
 CString SoftwareUpdate::GetUpdateInfo(CString url) {
   CString info, params, buff;
-  params = _T("wptdriverVer=") + _version + _T("wptdriverBuild=") + _build;
+  params = _T("wptdriverVer=") + _version + _T("&wptdriverBuild=") + _build;
   if (_ec2_instance.GetLength())
     params += _T("&ec2instance=") + _ec2_instance;
   if (_ec2_availability_zone.GetLength())
