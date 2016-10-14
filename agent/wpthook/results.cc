@@ -1278,6 +1278,7 @@ void Results::SaveRequests(OptimizationChecks& checks) {
     if (headers_file)
       gzclose(headers_file);
     gzclose(file);
+    /*
     if (!chunk_timings.IsEmpty()) {
       gzFile chunks_file = gzopen((LPCSTR)CT2A(_test_state._file_base + CHUNKS_DATA_FILE + CString(".gz")), "wb6");
       if (chunks_file) {
@@ -1286,6 +1287,7 @@ void Results::SaveRequests(OptimizationChecks& checks) {
         gzclose(chunks_file);
       }
     }
+    */
   }
 }
 

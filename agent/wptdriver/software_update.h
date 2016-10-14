@@ -41,6 +41,8 @@ protected:
   LARGE_INTEGER     _perf_frequency_minutes;
   WptStatus         &_status;
   CString           _software_url;
+  CString           _version;
+  CString           _build;
 
   bool UpdateBrowsers(void);
   bool InstallSoftware(CString browser, CString file_url, CString md5,

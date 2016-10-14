@@ -27,6 +27,29 @@ SoftwareUpdate::SoftwareUpdate(WptStatus &status):
   }
   QueryPerformanceFrequency(&_perf_frequency_minutes);
   _perf_frequency_minutes.QuadPart = _perf_frequency_minutes.QuadPart * 60;
+  // get the version number to pass along in update checks
+  TCHAR file[MAX_PATH];
+  if (GetModuleFileName(NULL, file, _countof(file))) {
+    DWORD unused;
+    DWORD infoSize = GetFileVersionInfoSize(file, &unused);
+    if (infoSize) {
+      LPBYTE pVersion = new BYTE[infoSize];
+      if (GetFileVersionInfo(file, 0, infoSize, pVersion)) {
+        VS_FIXEDFILEINFO * info = NULL;
+        UINT size = 0;
+        if( VerQueryValue(pVersion, _T("\\"), (LPVOID*)&info, &size) && info )
+        {
+          _version.Format(_T("%d.%d.%d.%d"), HIWORD(info->dwFileVersionMS),
+                          LOWORD(info->dwFileVersionMS),
+                          HIWORD(info->dwFileVersionLS),
+                          LOWORD(info->dwFileVersionLS));
+          _build.Format(_T("%d"), LOWORD(info->dwFileVersionLS));
+        }
+      }
+
+      delete [] pVersion;
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -82,22 +105,32 @@ void SoftwareUpdate::SetSoftwareUrl(CString url) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 CString SoftwareUpdate::GetUpdateInfo(CString url) {
-  CString info, buff;
+  CString info, params, buff;
+  params = _T("wptdriverVer=") + _version + _T("wptdriverBuild=") + _build;
   if (_ec2_instance.GetLength())
-    info += _T("ec2instance=") + _ec2_instance;
-  if (_ec2_availability_zone.GetLength()) {
-    if (info.GetLength())
-      info += _T("&");
-    info += _T("ec2zone=") + _ec2_availability_zone;
-  }
-  if (info.GetLength()) {
+    params += _T("&ec2instance=") + _ec2_instance;
+  if (_ec2_availability_zone.GetLength())
+    params += _T("&ec2zone=") + _ec2_availability_zone;
+  if (params.GetLength()) {
     if (url.Find(_T("?")) > 0)
       url += _T("&");
     else
       url += _T("?");
-    url += info;
+    url += params;
   }
-  return HttpGetText(url);
+
+  // Try getting the update information directly from a local s3 bucket
+  if (_ec2_availability_zone.GetLength() && url.Find(_T("www.webpagetest.org")) >= 0) {
+    CString region = _ec2_availability_zone.Left(_ec2_availability_zone.GetLength() - 1);
+    CString s3url = url;
+    s3url.Replace(_T("www.webpagetest.org"), _T("wpt-") + region + _T(".s3.amazonaws.com"));
+    info = HttpGetText(s3url);
+  }
+
+  if (info.IsEmpty())
+    info = HttpGetText(url);
+
+  return info;
 }
 
 /*-----------------------------------------------------------------------------

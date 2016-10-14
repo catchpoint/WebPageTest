@@ -18,6 +18,22 @@ if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
         $ip = $forwarded_ip;
   }
 }
+if (isset($_SERVER["HTTP_FASTLY_CLIENT_IP"]))
+  $ip = $_SERVER["HTTP_FASTLY_CLIENT_IP"];
+
+// See if the IP comes from an EC2 region
+$url_replace = null;
+$region = null;
+$s3_settings_file = __DIR__ . '/settings/s3installers.ini';
+if (is_file($s3_settings_file)) {
+  $s3settings = parse_ini_file($s3_settings_file, true);
+  $region = GetEC2Region($ip);
+  if (isset($region) && isset($s3settings['buckets'][$region])) {
+    $bucket = trim($s3settings['buckets'][$region]);
+    $url_replace = "http://$bucket.s3.amazonaws.com/";
+  }
+}
+
 if (isset($_REQUEST['installer']) && isset($ip)) {
   $installer = $_REQUEST['installer'];
   $installer_postfix = GetSetting('installerPostfix');
@@ -26,6 +42,8 @@ if (isset($_REQUEST['installer']) && isset($ip)) {
     $ok = true;
   } elseif ($ip == '72.66.115.14' ||  // Public WebPageTest
             $ip == '149.20.63.13') {  // HTTP Archive
+    $ok = true;
+  } elseif (isset($url_replace)) {
     $ok = true;
   } elseif (preg_match('/^(software|browsers\/[-_a-zA-Z0-9]+)\.dat$/', $installer)) {
     $ok = IsValidIp($ip, $installer);
@@ -45,6 +63,9 @@ if ($ok) {
     header("Content-type: text/plain");
     header("Cache-Control: no-cache, must-revalidate");
     header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+    if (isset($url_replace)) {
+      $data = str_replace('http://cdn.webpagetest.org/', $url_replace, $data);
+    }
     echo $data;
   } else {
     header('HTTP/1.0 404 Not Found');
@@ -177,5 +198,58 @@ function ModifyInstaller(&$data) {
   $base_url = GetSetting('installer-base-url');
   if ($base_url && strlen($base_url))
     $data = str_replace('http://cdn.webpagetest.org/', $base_url, $data);
+}
+
+function GetEC2Region($ip) {
+  $region = null;
+  $json = null;
+  
+  if (isset($_REQUEST['ec2zone'])) {
+    $region = substr($_REQUEST['ec2zone'], 0, strlen($_REQUEST['ec2zone']) - 1);
+  } else {
+    $lock = Lock('EC2Regions');
+    if (isset($lock)) {
+      $region_file = __DIR__ . '/dat/ec2addresses.json';
+      $needs_update = false;
+      if (is_file($region_file)) {
+        $now = time();
+        $updated = filemtime($region_file);
+        if ($now > $updated && $now - $updated >= 86400)
+          $needs_update = true;
+      }
+      
+      if (!is_file($region_file) || $needs_update) {
+        $json = file_get_contents('https://ip-ranges.amazonaws.com/ip-ranges.json');
+        if (isset($json) && $json !== FALSE && strlen($json))
+          file_put_contents($region_file, $json);
+      }
+
+      if (!isset($json) && is_file($region_file)) {
+        $json = file_get_contents($region_file);
+      }
+      Unlock($lock);
+    }
+
+    if (isset($json)) {
+      $regions = json_decode($json, true);
+      if (isset($regions['prefixes']) && is_array($regions['prefixes'])) {
+        $ip = ip2long($ip);
+        foreach($regions['prefixes'] as $prefix) {
+          if (isset($prefix['ip_prefix']) && isset($prefix['region'])) {
+            list ($subnet, $bits) = explode('/', $prefix['ip_prefix']);
+            $subnet = ip2long($subnet);
+            $mask = -1 << (32 - $bits);
+            $subnet &= $mask;
+            if (($ip & $mask) == $subnet) {
+              $region = $prefix['region'];
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  return $region;
 }
 ?>
