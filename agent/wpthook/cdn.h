@@ -173,6 +173,7 @@ CDN_PROVIDER cdnList[] = {
   {".optimalcdn.com", "Optimal CDN"},
   {".kinxcdn.com", "KINX CDN"},
   {".kinxcdn.net", "KINX CDN"},
+  {"cdn.playform.io", "Playform CDN"},
   {"END_MARKER", "END_MARKER"}
 };
 
