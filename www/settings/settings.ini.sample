@@ -24,6 +24,9 @@ tcpdump_view="http://cloudshark.org/view?url="
 ; Uncomment to enable drawing of vertical lines in the waterfalls for all user timing marks
 ;waterfall_show_user_timing=1
 
+; Uncomment to use mime-colored waterfalls as the default
+;mime_waterfalls=1
+
 
 ; *********************
 ; Test options/defaults
