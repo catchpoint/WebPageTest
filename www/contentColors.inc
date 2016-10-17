@@ -15,7 +15,8 @@ function GetRequestColors($content_type, $thumbnail, $is_mime,
             'connect'  => array(177,73,62),
             'ssl'      => array(69, 110, 175),
             'ttfb'     => array(208,137,14),
-            'download' => array(118,71,130)
+            'download' => array(118,71,130),
+            'js'       => array(255,173,255),
             );
     } else {
         // classic colors
@@ -25,7 +26,8 @@ function GetRequestColors($content_type, $thumbnail, $is_mime,
                 'connect'  => array(255, 157, 66),
                 'ssl'      => array(213,102, 223),
                 'ttfb'     => array(64, 255, 64),
-                'download' => array(52,150,255)
+                'download' => array(52,150,255),
+                'js'       => array(255,173,255),
                 );
         } else {
             $colors = array(
@@ -34,6 +36,7 @@ function GetRequestColors($content_type, $thumbnail, $is_mime,
                 'ssl'      => array(207, 37, 223),
                 'ttfb'     => array(0, 255, 0),
                 'download' => array(0,123,255),
+                'js'       => array(255,173,255),
                 );
         }
     }

@@ -47,19 +47,22 @@ class WaterfallViewHtmlSnippet {
   }
 
   private function _createLegend() {
-    $out = '<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" ' .
-      'style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">';
-    $out .= "\n<tr>\n";
-    $out .= $this->_legendBarTableCell("#1f7c83", "DNS Lookup", 15);
-    $out .= $this->_legendBarTableCell("#e58226", "Initial Connection", 15);
-    if ($this->requests->hasSecureRequests()) {
-      $out .= $this->_legendBarTableCell("#c141cd", "SSL Negotiation", 15);
+    $out = '';
+    if (!GetSetting('mime_waterfalls')) {
+      $out .= '<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" ' .
+        'style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">';
+      $out .= "\n<tr>\n";
+      $out .= $this->_legendBarTableCell("#1f7c83", "DNS Lookup", 15);
+      $out .= $this->_legendBarTableCell("#e58226", "Initial Connection", 15);
+      if ($this->requests->hasSecureRequests()) {
+        $out .= $this->_legendBarTableCell("#c141cd", "SSL Negotiation", 15);
+      }
+      $out .= $this->_legendBarTableCell("#1fe11f", "Time to First Byte", 15);
+      $out .= $this->_legendBarTableCell("#1977dd", "Content Download", 15);
+      $out .= $this->_legendHighlightTableCell("#ffff60", "3xx response");
+      $out .= $this->_legendHighlightTableCell("#ff6060", "4xx+ response");
+      $out .= "</tr>\n</table>\n";
     }
-    $out .= $this->_legendBarTableCell("#1fe11f", "Time to First Byte", 15);
-    $out .= $this->_legendBarTableCell("#1977dd", "Content Download", 15);
-    $out .= $this->_legendHighlightTableCell("#ffff60", "3xx response");
-    $out .= $this->_legendHighlightTableCell("#ff6060", "4xx+ response");
-    $out .= "</tr>\n</table>\n";
 
     $out .= '<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" ' .
       'style="width:auto; font-size:11px; margin-left:auto; margin-right:auto; margin-top:11px;">';
@@ -78,7 +81,7 @@ class WaterfallViewHtmlSnippet {
     if ((float)$this->stepResult->getMetric("loadEventStart"))
       $out .= $this->_legendBarTableCell("#C0C0FF", "On Load", 15);
     $out .= $this->_legendBarTableCell("#0000FF", "Document Complete", 2);
-    if ($this->stepResult->getMetric('userTime') || $this->hasCsi)
+    if (GetSetting('waterfall_show_user_timing') && ($this->stepResult->getMetric('userTime') || $this->hasCsi))
       $out .= '<td><table><tr><td><div class="arrow-down"></div></td><td>User Timings</td></tr></table></td>';
     $out .= "</tr>\n</table>\n<br>";
     return $out;

@@ -3,7 +3,7 @@
 /**
 * Draw label next to a request like "10 ms (404)".
 */
-function DrawRequestTimeLabel($im, $request, $x1, $y1, $x2, $y2, $min_x, $max_x,
+function DrawRequestTimeLabelBackground($im, $request, $x1, $y1, $x2, $y2, $min_x, $max_x,
                               $font, $font_width, $font_color, $bg_color) {
     $label = $request['all_ms'] . ' ms';
     $code = $request['responseCode'];
@@ -23,7 +23,25 @@ function DrawRequestTimeLabel($im, $request, $x1, $y1, $x2, $y2, $min_x, $max_x,
         imagefilledrectangle(
             $im, $label_x, $y1, $label_x + $label_width, $y2,
             $bg_color);
+    }
+}
 
+function DrawRequestTimeLabel($im, $request, $x1, $y1, $x2, $y2, $min_x, $max_x,
+                              $font, $font_width, $font_color, $bg_color) {
+    $label = $request['all_ms'] . ' ms';
+    $code = $request['responseCode'];
+    if ($code >= 300 || $code < 0) {
+        $label .= " ({$request['responseCode']})";
+    } elseif ($code == 0) {
+        $label .= ' (request canceled)';
+    }
+
+    $label_width = strlen($label) * $font_width;
+    $label_x = $x2 + 5;
+    if ($label_x + $label_width > $max_x) {
+        $label_x = $x1 - 5 - $label_width;
+    }
+    if ($label_x >= $min_x) {
         // Draw the label.
         imagestring($im, $font, $label_x, $y1 + 1, $label, $font_color);
     }
@@ -39,13 +57,18 @@ function DrawRequestTimeLabel($im, $request, $x1, $y1, $x2, $y2, $min_x, $max_x,
 * @param mixed $y2
 * @param array $color   RGB color
 */
-function DrawBar(&$im, $x1, $y1, $x2, $y2, $color) {
+function DrawBar(&$im, $x1, $y1, $x2, $y2, $color, $shaded) {
+  if ($shaded) {
     $bar_colors = GetBarColors($color, $y2 - $y1 + 1);
     for ($i = 0; $i < count($bar_colors); $i++) {
       list($r, $g, $b) = $bar_colors[$i];
       imageline($im, $x1, $y1 + $i, $x2, $y1 + $i,
                 GetColor($im, $r, $g, $b));
     }
+  } else {
+    list($r, $g, $b) = $color;
+    imagefilledrectangle($im, $x1, $y1, $x2, $y2, GetColor($im, $r, $g, $b));
+  }
 }
 
 /**
