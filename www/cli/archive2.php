@@ -76,55 +76,68 @@ function ElapsedDays($year, $month, $day) {
 * @param mixed $dayDir
 */
 function LongTermArchive($dir, $year, $month, $day) {
-    global $archive2_dir;
-    $target_dir = "{$archive2_dir}results/$year";
-    $dir = realpath($dir);
+  global $archive2_dir;
+  $target_dir = "{$archive2_dir}results/$year";
+  $dir = realpath($dir);
 
-    $info_file = "$dir/archive.dat";
-    if (is_file($info_file))
-        $info = json_decode(file_get_contents($info_file), true);
-    if (!isset($info) || !is_array($info)) {
-        $info = array('archived' => false, 'pruned' => false);
-    }
-    $dirty = false;
-    
-    if (!$info['archived']) {
-        if (!is_dir($target_dir))
-            mkdir($target_dir, 0777, true);
-        $target_dir = realpath($target_dir);
-        $zip_file = "$target_dir/$year$month$day.zip";
-        if (isset($target_dir) && strlen($target_dir) &&
-            isset($zip_file) && strlen($zip_file)) {
-            if (!is_file($zip_file)) {
-              echo "Archiving $dir to $zip_file...\n";
-              chdir($dir);
-              system("zip -rqD0 $zip_file *", $zipResult);
-              if ($zipResult == 0) {
-                  if (is_file($zip_file)) {
-                      $info['archived'] = true;
-                      $dirty = true;
-                  }
-              }
-            } else {
-              $info['archived'] = true;
-              $dirty = true;
-              $files = glob("$dir/*.zip");
-              if ($files && is_array($files) && count($files)) {
-                foreach ($files as $file)
-                  unlink("$dir/" . basename($file));
-              }
+  $info_file = "$dir/archive.dat";
+  if (is_file($info_file))
+      $info = json_decode(file_get_contents($info_file), true);
+  if (!isset($info) || !is_array($info)) {
+      $info = array('archived' => false, 'pruned' => false);
+  }
+  $dirty = false;
+
+  echo "Checking $dir...\n";
+  
+  if (!$info['archived']) {
+      if (!is_dir($target_dir))
+          mkdir($target_dir, 0777, true);
+      $target_dir = realpath($target_dir);
+      $zip_file = "$target_dir/$year$month$day.zip";
+      if (isset($target_dir) && strlen($target_dir) &&
+          isset($zip_file) && strlen($zip_file)) {
+          if (!is_file($zip_file)) {
+            echo "Archiving $dir to $zip_file...\n";
+            chdir($dir);
+            system("zip -rqD0 $zip_file *", $zipResult);
+            if ($zipResult == 0) {
+                if (is_file($zip_file)) {
+                    $info['archived'] = true;
+                    $dirty = true;
+                }
             }
-        }
-    } else {
-      $files = glob("$dir/*.zip");
-      if ($files && is_array($files) && count($files)) {
-        foreach ($files as $file)
-          unlink("$dir/" . basename($file));
+          } else {
+            $info['archived'] = true;
+            $dirty = true;
+            PruneArchive2Dir($dir);
+          }
       }
+  } else {
+    PruneArchive2Dir($dir);
+  }
+  
+  if ($dirty) {
+      file_put_contents($info_file, json_encode($info));
+  }
+}
+
+function PruneArchive2Dir($dir) {
+  echo "Pruning $dir...\n";
+  $files = scandir($dir);
+  foreach ($files as $file) {
+    $path = "$dir/$file";
+    if (is_dir($path)) {
+      if ($file != '.' && $file != '..')
+        delTree($dir, true);
+    } elseif (is_file($path) && $file != 'archive.dat') {
+      unlink($path);
     }
-    
-    if ($dirty) {
-        file_put_contents($info_file, json_encode($info));
-    }
+  }
+  $files = glob("$dir/*.zip");
+  if ($files && is_array($files) && count($files)) {
+    foreach ($files as $file)
+      unlink("$dir/" . basename($file));
+  }
 }
 ?>
