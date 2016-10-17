@@ -473,7 +473,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                           $x, $top + $data_height - $row_height, $time_scale_color);
                 if (isset($perfs) && is_array($perfs)) {
                     foreach ($perfs as $p) {
-                        if (array_key_exists('count', $p)) {
+                        if (isset($p['count']) && isset($p['y1']) && isset($p['y2'])) {
                             // Add gridline to performance chart area.
                             imageline($im, $x, $p['y1'] + 1, $x, $p['y2'] - 1, $time_scale_color);
                         }
@@ -512,10 +512,10 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                 $color = $event_colors[$event_name];
                 $endpoints = array(
                     array('y1' => $top + 1 + $row_height,
-                          'y2' => $top + $data_height - $row_height));
+                          'y2' => $top + $data_height - $row_height - 1));
                 if (isset($perfs) && is_array($perfs)) {
                     foreach ($perfs as $p) {
-                        if (array_key_exists('count', $p)) {
+                        if (isset($p['count']) && isset($p['y1']) && isset($p['y2'])) {
                             // Add event lines in performance chart area.
                             $endpoints[] = array('y1' => $p['y1'] + 1,
                                                  'y2' => $p['y2'] - 1);
