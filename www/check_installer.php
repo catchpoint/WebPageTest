@@ -99,8 +99,11 @@ function IsValidIp($ip, $installer) {
 function ApcCheckIp($ip, $installer) {
   $ok = true;
   if (isset($ip) && strlen($ip)) {
+    $ver = '';
+    if (isset($_REQUEST['wptdriverVer']))
+      $ver = $_REQUEST['wptdriverVer'];
     $now = time();
-    $key = "inst-ip-$ip-$installer";
+    $key = "inst-ip-$ip-$ver-$installer";
     $history = apc_fetch($key);
     if (!$history) {
       $history = array();
