@@ -292,7 +292,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     AddRowCoordinates($rows, $data_header_height + 1, $row_height);
     if ($is_image_map) {
         $map = array();
-        AddMapUrl($map, 0, 0, $data_x, $data_header_height, $url);
+        AddMapUrl($map, 0, $top, $data_x, $data_header_height, $url);
         foreach ($rows as $row) {
             $is_connection = $row['is_connection'];
             foreach ($row['requests'] as $request) {
@@ -1208,6 +1208,7 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
         'is_cached' => @$_GET['cached'],
         'use_cpu' => true,
         'show_labels' => true,
+        'is_mime' => (bool)GetSetting('mime_waterfalls'),
         'width' => 930
         );
     $rows = GetRequestRows($requests, false);
