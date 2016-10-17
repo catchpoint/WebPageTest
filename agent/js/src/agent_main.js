@@ -233,6 +233,7 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
       } catch(e) {}
     }
     if (ipcMsg.cpuSlicesFile) {
+      logger.debug("Processing CPU Slices file: " + ipcMsg.cpuSlicesFile);
       try {
         var buffer = fs.readFileSync(ipcMsg.cpuSlicesFile);
         if (buffer) {
@@ -243,7 +244,22 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
         fs.unlinkSync(ipcMsg.cpuSlicesFile);
       } catch(e) {}
     }
+    if (ipcMsg.scriptTimingFile) {
+      logger.debug("Processing Script Timing file: " + ipcMsg.scriptTimingFile);
+      try {
+        var buffer = fs.readFileSync(ipcMsg.scriptTimingFile);
+        if (buffer) {
+          job.resultFiles.push(new wpt_client.ResultFile(
+              wpt_client.ResultFile.ResultType.GZIP,
+              'script_timing.json.gz', 'application/x-gzip', buffer));
+        }
+        fs.unlinkSync(ipcMsg.scriptTimingFile);
+      } catch(e) {
+        logger.debug("Error Processing Script Timing file: " + ipcMsg.scriptTimingFile);
+      }
+    }
     if (ipcMsg.pcapSlicesFile) {
+      logger.debug("Processing PCAP Slices file: " + ipcMsg.pcapSlicesFile);
       try {
         var buffer = fs.readFileSync(ipcMsg.pcapSlicesFile);
         if (buffer) {
@@ -255,6 +271,7 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
       } catch(e) {}
     }
     if (ipcMsg.featureUsageFile) {
+      logger.debug("Processing Feature usage file: " + ipcMsg.featureUsageFile);
       try {
         var buffer = fs.readFileSync(ipcMsg.pcapSlicesFile);
         if (buffer) {
