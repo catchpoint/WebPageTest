@@ -108,13 +108,14 @@ function CheckPHP() {
 }
 
 function CheckUtils() {
-    ShowCheck('ffmpeg Installed with --enable-libx264 (required for video)', CheckFfmpeg());
-    ShowCheck('ffmpeg Installed with scale and decimate filters(required for mobile video)', CheckFfmpegFilters($ffmpegInfo), false, $ffmpegInfo);
-    ShowCheck('imagemagick compare Installed (required for mobile video)', CheckCompare(), false);
-    ShowCheck('jpegtran Installed (required for JPEG Analysis)', CheckJpegTran(), false);
-    ShowCheck('exiftool Installed (required for JPEG Analysis)', CheckExifTool(), false);
-    if (array_key_exists('beanstalkd', $settings))
-        ShowCheck("beanstalkd responding on {$settings['beanstalkd']} (configured in settings.ini)", CheckBeanstalkd());
+  global $settings;
+  ShowCheck('ffmpeg Installed with --enable-libx264 (required for video)', CheckFfmpeg());
+  ShowCheck('ffmpeg Installed with scale and decimate filters(required for mobile video)', CheckFfmpegFilters($ffmpegInfo), false, $ffmpegInfo);
+  ShowCheck('imagemagick compare Installed (required for mobile video)', CheckCompare(), false);
+  ShowCheck('jpegtran Installed (required for JPEG Analysis)', CheckJpegTran(), false);
+  ShowCheck('exiftool Installed (required for JPEG Analysis)', CheckExifTool(), false);
+  if (array_key_exists('beanstalkd', $settings))
+      ShowCheck("beanstalkd responding on {$settings['beanstalkd']} (configured in settings.ini)", CheckBeanstalkd());
 }
 
 function CheckMisc() {
@@ -155,7 +156,7 @@ function CheckLocations() {
     $out = '';
     foreach($locations['locations'] as $id => $location) {
         if (is_numeric($id)) {
-            $info = GetLocationInfo($locations, $location);
+            $info = GetInstallLocationInfo($locations, $location);
             $out .= "<li class=\"{$info['state']}\">{$info['label']}";
             if (count($info['locations'])) {
                 $out .= "<ul>";
@@ -173,7 +174,7 @@ function CheckLocations() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-function GetLocationInfo(&$locations, $location) {
+function GetInstallLocationInfo(&$locations, $location) {
     $info = array('state' => 'pass', 'label' => "$location : ", 'locations' => array());
     if (array_key_exists($location, $locations)) {
         if (array_key_exists('label', $locations[$location])) {
