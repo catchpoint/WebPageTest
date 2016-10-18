@@ -364,7 +364,7 @@ function KeepVideoForRun($testPath, $run)
             if (strcmp("$run", $match_run) &&
                 (strpos($file, '_bodies.zip') ||
                  strpos($file, '.cap') ||
-                 strpos($file, '_devtools.json') ||
+                 strpos($file, '_trace.json') ||
                  strpos($file, '_netlog.txt') ||
                  strpos($file, '_doc.') ||
                  strpos($file, '_render.'))) {
