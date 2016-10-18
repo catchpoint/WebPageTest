@@ -39,6 +39,7 @@ class Trace():
     self.event_name_lookup = {}
     self.scripts = None
     self.timeline_events = []
+    self.trace_events = []
     self.start_time = None
     self.end_time = None
     self.cpu = {'main_thread': None}
@@ -93,7 +94,7 @@ class Trace():
           trace_events = json.load(trace_file);
           for trace_event in trace_events['traceEvents']:
             try:
-              self.ProcessTraceEvent(trace_event)
+              self.FilterTraceEvent(trace_event)
               processed = true
             except:
               pass
@@ -112,10 +113,10 @@ class Trace():
             trace_event = json.loads(line.strip("\r\n\t ,"))
             if not line_mode and 'traceEvents' in trace_event:
               for sub_event in trace_event['traceEvents']:
-                self.ProcessTraceEvent(sub_event)
+                self.FilterTraceEvent(sub_event)
             else:
               line_mode = True
-              self.ProcessTraceEvent(trace_event)
+              self.FilterTraceEvent(trace_event)
           except:
             pass
       except:
@@ -123,6 +124,28 @@ class Trace():
 
     if f is not None:
       f.close()
+
+    self.ProcessTraceEvents()
+
+  def FilterTraceEvent(self, trace_event):
+    cat = trace_event['cat']
+    if cat == 'toplevel' or cat == 'ipc,toplevel':
+      return
+    if cat == 'devtools.timeline' or \
+            cat.find('devtools.timeline') >= 0 or \
+            cat.find('blink.feature_usage') >= 0 or \
+            cat.find('blink.user_timing') >= 0:
+      self.trace_events.append(trace_event)
+
+  def ProcessTraceEvents(self):
+    #sort the raw trace events by timestamp and then process them
+    if len(self.trace_events):
+      self.trace_events.sort(key=lambda trace_event: trace_event['ts'])
+      for trace_event in self.trace_events:
+        self.ProcessTraceEvent(trace_event)
+      self.trace_events = []
+
+    # Do the post-processing on timeline events
     self.ProcessTimelineEvents()
 
   def ProcessTraceEvent(self, trace_event):
@@ -132,6 +155,7 @@ class Trace():
     elif cat.find('blink.feature_usage') >= 0:
       self.ProcessFeatureUsageEvent(trace_event)
     elif cat.find('blink.user_timing') >= 0:
+      self.user_timing_trace_events.append(trace_event)
       self.user_timing.append(trace_event)
     #Netlog support is still in progress
     #elif cat.find('netlog') >= 0:
