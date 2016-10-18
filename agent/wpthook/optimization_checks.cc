@@ -105,10 +105,11 @@ void OptimizationChecks::CheckKeepAlive()
     if (request && request->_processed && request->GetResult() == 200) {
       CStringA connection = request->GetResponseHeader("connection");
       connection.MakeLower();
-      if( connection.Find("keep-alive") > -1 &&
-          connection.Find("close") == -1)
+      if (request->_protocol == _T("HTTP/2")) {
         request->_scores._keep_alive_score = 100;
-      else {
+      } else if( connection.Find("keep-alive") > -1 && connection.Find("close") == -1) {
+        request->_scores._keep_alive_score = 100;
+      } else {
         CStringA host = request->GetHost();
         bool needed = false;
         bool reused = false;
@@ -125,9 +126,9 @@ void OptimizationChecks::CheckKeepAlive()
           }
         }
 
-        if( reused )
+        if( reused ) {
           request->_scores._keep_alive_score = 100;
-        else if( needed ) {
+        } else if( needed ) {
           // HTTP 1.1 default to keep-alive
           if (connection.Find("close") > -1 ||
               request->_response_data.GetProtocolVersion() < 1.1)
