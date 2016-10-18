@@ -35,7 +35,8 @@
 #include "nghttp2_buf.h"
 #include "nghttp2_mem.h"
 
-#define NGHTTP2_HD_DEFAULT_MAX_BUFFER_SIZE NGHTTP2_DEFAULT_HEADER_TABLE_SIZE
+// Allow up to a 1MB buffer which should be WAY bigger than anyone uses
+#define NGHTTP2_HD_DEFAULT_MAX_BUFFER_SIZE (1 << 20)
 #define NGHTTP2_HD_ENTRY_OVERHEAD 32
 
 /* The maximum length of one name/value pair.  This is the sum of the
