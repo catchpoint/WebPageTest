@@ -83,44 +83,29 @@ class Trace():
   ########################################################################################################################
   #   Top-level processing
   ########################################################################################################################
-  def Process(self, trace, load_all):
+  def Process(self, trace):
     f = None
     line_mode = False
     self.__init__()
-    processed = False
-    if load_all:
-      try:
-        with gzip.open(trace,'rb') as trace_file:
-          trace_events = json.load(trace_file);
-          for trace_event in trace_events['traceEvents']:
-            try:
-              self.FilterTraceEvent(trace_event)
-              processed = true
-            except:
-              pass
-      except:
-        processed = False
-
-    if not processed:
-      try:
-        file_name, ext = os.path.splitext(trace)
-        if ext.lower() == '.gz':
-          f = gzip.open(trace, 'rb')
-        else:
-          f = open(trace, 'r')
-        for line in f:
-          try:
-            trace_event = json.loads(line.strip("\r\n\t ,"))
-            if not line_mode and 'traceEvents' in trace_event:
-              for sub_event in trace_event['traceEvents']:
-                self.FilterTraceEvent(sub_event)
-            else:
-              line_mode = True
-              self.FilterTraceEvent(trace_event)
-          except:
-            pass
-      except:
-        logging.critical("Error processing trace " + trace)
+    try:
+      file_name, ext = os.path.splitext(trace)
+      if ext.lower() == '.gz':
+        f = gzip.open(trace, 'rb')
+      else:
+        f = open(trace, 'r')
+      for line in f:
+        try:
+          trace_event = json.loads(line.strip("\r\n\t ,"))
+          if not line_mode and 'traceEvents' in trace_event:
+            for sub_event in trace_event['traceEvents']:
+              self.FilterTraceEvent(sub_event)
+          else:
+            line_mode = True
+            self.FilterTraceEvent(trace_event)
+        except:
+          pass
+    except:
+      logging.critical("Error processing trace " + trace)
 
     if f is not None:
       f.close()
@@ -155,7 +140,6 @@ class Trace():
     elif cat.find('blink.feature_usage') >= 0:
       self.ProcessFeatureUsageEvent(trace_event)
     elif cat.find('blink.user_timing') >= 0:
-      self.user_timing_trace_events.append(trace_event)
       self.user_timing.append(trace_event)
     #Netlog support is still in progress
     #elif cat.find('netlog') >= 0:
@@ -445,9 +429,7 @@ def main():
   parser.add_argument('-u', '--user', help="Output user timing file.")
   parser.add_argument('-f', '--features', help="Output blink feature usage file.")
   parser.add_argument('-n', '--netlog', help="Output netlog details file.")
-  parser.add_argument('-a', '--all', action='store_true', default=False,
-                      help="Load the whole trace into memory (defaults to parsing incrementally).")
-  options = parser.parse_args()
+  options, unknown = parser.parse_known_args()
 
   # Set up logging
   log_level = logging.CRITICAL
@@ -466,7 +448,7 @@ def main():
 
   start = time.time()
   trace = Trace()
-  trace.Process(options.trace, options.all)
+  trace.Process(options.trace)
 
   if options.user:
     trace.WriteUserTiming(options.user)

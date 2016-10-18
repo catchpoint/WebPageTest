@@ -1245,7 +1245,7 @@ bool WebPagetest::ProcessFile(CString file, CAtlList<CString> &newFiles) {
     CString userTimingFile = file.Left(pos) + _T("user_timing.json.gz");
     CString featureUsageFile = file.Left(pos) + _T("feature_usage.json.gz");
     CString options;
-    options.Format(_T("-a -t \"%s\" -c \"%s\" -j \"%s\" -u \"%s\" -f \"%s\""),
+    options.Format(_T("-t \"%s\" -c \"%s\" -j \"%s\" -u \"%s\" -f \"%s\""),
                    (LPCTSTR)file, (LPCTSTR)cpuFile, (LPCTSTR)scriptTimingFile,
                    (LPCTSTR)userTimingFile, (LPCTSTR)featureUsageFile);
     OutputDebugStringA("Processing trace file");
