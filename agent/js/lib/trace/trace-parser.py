@@ -86,13 +86,22 @@ class Trace():
     f = None
     line_mode = False
     self.__init__()
-    try:
-      if load_all:
+    processed = False
+    if load_all:
+      try:
         with gzip.open(trace,'rb') as trace_file:
           trace_events = json.load(trace_file);
           for trace_event in trace_events['traceEvents']:
-            self.ProcessTraceEvent(trace_event)
-      else:
+            try:
+              self.ProcessTraceEvent(trace_event)
+              processed = true
+            except:
+              pass
+      except:
+        processed = False
+
+    if not processed:
+      try:
         file_name, ext = os.path.splitext(trace)
         if ext.lower() == '.gz':
           f = gzip.open(trace, 'rb')
@@ -109,8 +118,8 @@ class Trace():
               self.ProcessTraceEvent(trace_event)
           except:
             pass
-    except:
-      logging.critical("Error processing trace " + trace)
+      except:
+        logging.critical("Error processing trace " + trace)
 
     if f is not None:
       f.close()
