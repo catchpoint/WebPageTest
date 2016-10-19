@@ -13,14 +13,37 @@ if(extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('EC2_LaunchInstance');
 }
 
+/**
+ * Creates a new AWS EC2 SDK client instance given the provided region.
+ * If no region is provided, the system default will be used.
+ * Credentials are loaded, either from common_lib::GetSetting('ec2_key') or common_lib::GetSetting('ec2_secret')
+ * of, if not available, the system default.
+ * @param String $awsRegion
+ * @return \Aws\Ec2\Ec2Client|static
+ */
+function EC2_GetSdkClient($awsRegion = null) {
+    $awsAccessKey = GetSetting('ec2_key');
+    $awsSecretKey = GetSetting('ec2_secret');
+    $sdkSettings = array();
+
+    if ($awsRegion) {
+        $sdkSettings['region'] = $awsRegion;
+    }
+    if ($awsAccessKey && $awsSecretKey) {
+        EC2Log('Creating EC2 SDK Client using access key credentials');
+        $sdkSettings['key'] = $awsAccessKey;
+        $sdkSettings['secret'] = $awsSecretKey;
+    }
+    return \Aws\Ec2\Ec2Client::factory($sdkSettings);
+}
 
 /**
 * Tests are pending for the given location, start instances as necessary
 * 
-* @param mixed $location
+* @param String $ami
 */
 function EC2_StartInstanceIfNeeded($ami) {
-  $target = 1;  // just support 1 instance at a time for now
+  $minimumNumberOfRunningInstances = 1;  // just support 1 instance at a time for now
   $needed = false;
   $lock = Lock('ec2-instances', true, 120);
   if ($lock) {
@@ -31,7 +54,7 @@ function EC2_StartInstanceIfNeeded($ami) {
       $instances[$ami] = array();
     if (!isset($instances[$ami]['count']) || !is_numeric($instances[$ami]['count']))
       $instances[$ami]['count'] = 0;
-    if ($instances[$ami]['count'] < $target)
+    if ($instances[$ami]['count'] < $minimumNumberOfRunningInstances)
       $needed = true;
     if ($needed) {
       if (EC2_StartInstance($ami)) {
@@ -41,20 +64,20 @@ function EC2_StartInstanceIfNeeded($ami) {
     }
     Unlock($lock);
   } else {
-    EC2LogError("Acquiring lock for ec2-instances"); 
+    EC2LogError("Acquiring lock for ec2-instances");
   }
 }
 
 /**
 * Start an EC2 Agent instance given the AMI
-* 
+*
 * @param mixed $ami
 */
 function EC2_StartInstance($ami) {
   $started = false;
-  
+
   // figure out the user data string to use for the instance
-  $key = GetSetting('location_key');
+  $locationKey = GetSetting('location_key');
   $locations = LoadLocationsIni();
   $urlblast = '';
   $wptdriver = '';
@@ -69,7 +92,7 @@ function EC2_StartInstance($ami) {
         if (isset($config['size']))
           $size = trim($config['size']);
         if (isset($config['key']) && strlen($config['key']))
-          $key = trim($config['key']);
+          $locationKey = trim($config['key']);
         if (strlen($loc))
           $loc .= ',';
         $loc .= $location;
@@ -101,15 +124,15 @@ function EC2_StartInstance($ami) {
       $user_data .= " wpt_location=$urlblast";
     if (strlen($wptdriver))
       $user_data .= " wpt_loc=$wptdriver";
-    if (isset($key) && strlen($key))
-      $user_data .= " wpt_key=$key";
+    if (isset($locationKey) && strlen($locationKey))
+      $user_data .= " wpt_key=$locationKey";
     if (!$size)
       $size = 'm3.medium';
     $started = EC2_LaunchInstance($region, $ami, $size, $user_data, $loc);
   } else {
     EC2LogError("Region ($region) or Location ($loc) invalid in EC2_StartInstance");
   }
-  
+
   return $started;
 }
 
@@ -117,7 +140,7 @@ function EC2_StartInstance($ami) {
 * Terminate any EC2 Instances that are configured for auto-scaling
 * if they have not had work in the last 15 minutes and are close
 * to an hourly increment of running (since EC2 bills hourly)
-* 
+*
 */
 function EC2_TerminateIdleInstances() {
   EC2_SendInstancesOffline();
@@ -126,7 +149,7 @@ function EC2_TerminateIdleInstances() {
     $instanceCounts = array();
     $agentCounts = array();
     $locations = EC2_GetTesters();
-    
+
     // Do a first pass to count the number of instances at each location/ami
     foreach($instances as $instance) {
       if (isset($instance['ami'])) {
@@ -155,7 +178,7 @@ function EC2_TerminateIdleInstances() {
         $terminate = true;
         $lastWork = null;   // last job assigned from this location
         $lastCheck = null;  // time since this instance connected (if ever)
-        
+
         foreach ($instance['locations'] as $location) {
           if ($agentCounts[$location]['count'] <= $agentCounts[$location]['min']) {
             $terminate = false;
@@ -169,12 +192,12 @@ function EC2_TerminateIdleInstances() {
             }
           }
         }
-        
+
         // Keep the instance if the location had work in the last 15 minutes
         // and if this instance has checked in recently
         if (isset($lastWork) && isset($lastCheck) && $lastWork < 15 && $lastCheck < 15)
           $terminate = false;
-        
+
         if ($terminate) {
           if (isset($instance['ami']) && $instance['running'])
             $instanceCounts[$instance['ami']]['count']--;
@@ -182,7 +205,7 @@ function EC2_TerminateIdleInstances() {
         }
       }
     }
-    
+
     // update the running instance counts
     $lock = Lock('ec2-instances', true, 120);
     if ($lock) {
@@ -207,7 +230,7 @@ function EC2_TerminateIdleInstances() {
 
 /**
 * Any excess instances should be marked as offline so that they can go idle and eventually terminate
-* 
+*
 */
 function EC2_SendInstancesOffline() {
   // Mark excess instances as offline so they can go idle
@@ -228,7 +251,7 @@ function EC2_SendInstancesOffline() {
     }
     $locations[$ami]['tests'] = $tests;
   }
-  
+
   foreach ($locations as $ami => $info) {
     // See if we have any offline testers that we need to bring online
     $online_target = max(1, intval($locations[$ami]['tests'] / ($scaleFactor / 2)));
@@ -241,7 +264,6 @@ function EC2_SendInstancesOffline() {
             $online++;
         }
         if ($online > $online_target) {
-          $changed = false;
           foreach ($testers['testers'] as &$tester) {
             if ($online > $online_target && (!isset($tester['offline']) || !$tester['offline'])) {
               $tester['offline'] = true;
@@ -258,7 +280,7 @@ function EC2_SendInstancesOffline() {
 /**
 * Start any instances that may be needed to handle large batches or
 * to keep the minimum instance count for a given location
-* 
+*
 */
 function EC2_StartNeededInstances() {
   $lock = Lock('ec2-instances', true, 120);
@@ -299,13 +321,13 @@ function EC2_StartNeededInstances() {
       $locations[$ami]['min'] = $min;
       $locations[$ami]['max'] = $max;
     }
-    
+
     foreach ($locations as $ami => $info) {
       $count = isset($instances[$ami]['count']) ? $instances[$ami]['count'] : 0;
       $target = $locations[$ami]['tests'] / $scaleFactor;
       $target = min($target, $locations[$ami]['max']);
       $target = max($target, $locations[$ami]['min']);
-      
+
       // See if we have any offline testers that we need to bring online
       $online_target = intval($locations[$ami]['tests'] / ($scaleFactor / 2));
       foreach ($info['locations'] as $location) {
@@ -317,7 +339,6 @@ function EC2_StartNeededInstances() {
               $online++;
           }
           if ($online < $online_target) {
-            $changed = false;
             foreach ($testers['testers'] as $tester) {
               if ($online < $online_target && isset($tester['offline']) && $tester['offline']) {
                 $tester['offline'] = false;
@@ -328,7 +349,7 @@ function EC2_StartNeededInstances() {
           }
         }
       }
-      
+
       // Start new instances as needed
       if ($count < $target) {
         $needed = $target - $count;
@@ -385,68 +406,65 @@ function EC2_DeleteOrphanedVolumes() {
 
 function EC2_GetRunningInstances() {
   $now = time();
+  $regions = array();
   $instances = array();
-  $key = GetSetting('ec2_key');
-  $secret = GetSetting('ec2_secret');
-  if ($key && $secret) {
-    $locations = EC2_GetAMILocations();
-    try {
-      $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => 'us-east-1'));
-      $regions = array();
-      $response = $ec2->describeRegions();
-      if (isset($response['Regions'])) {
-        foreach ($response['Regions'] as $region)
-          $regions[] = $region['RegionName'];
-      }
-    } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
-      $error = $e->getMessage();
-      EC2LogError("Listing running EC2 instances: $error");
+
+  $locations = EC2_GetAMILocations();
+  $ec2 = EC2_GetSdkClient();
+
+  try {
+    $response = $ec2->describeRegions();
+    if (isset($response['Regions'])) {
+      foreach ($response['Regions'] as $region)
+        $regions[] = $region['RegionName'];
     }
-    if (isset($regions) && is_array($regions) && count($regions)) {
-      foreach ($regions as $region) {
-        try {
-          $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => $region));
-          $response = $ec2->describeInstances();
-          if (isset($response['Reservations'])) {
-            foreach ($response['Reservations'] as $reservation) {
-              foreach ($reservation['Instances'] as $instance ) {
-                $wptLocations = null;
-                // See what locations are associated with the AMI
-                if (isset($instance['ImageId']) && isset($locations[$instance['ImageId']]['locations'])) {
-                  $wptLocations = $locations[$instance['ImageId']]['locations'];
-                } elseif (isset($instance['Tags'])) {
-                  // fall back to using tags to identify locations if they were set
-                  foreach ($instance['Tags'] as $tag) {
-                    if ($tag['Key'] == 'WPTLocations') {
-                      $wptLocations = explode(',', $tag['Value']);
-                      break;
-                    }
+  } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
+    $error = $e->getMessage();
+    EC2LogError("Listing running EC2 instances: $error");
+  }
+
+  if (count($regions)) {
+    foreach ($regions as $region) {
+      try {
+        $ec2 = EC2_GetSdkClient($region);
+        $response = $ec2->describeInstances();
+        if (isset($response['Reservations'])) {
+          foreach ($response['Reservations'] as $reservation) {
+            foreach ($reservation['Instances'] as $instance) {
+              $wptLocations = null;
+              // See what locations are associated with the AMI
+              if (isset($instance['ImageId']) && isset($locations[$instance['ImageId']]['locations'])) {
+                $wptLocations = $locations[$instance['ImageId']]['locations'];
+              } elseif (isset($instance['Tags'])) {
+                // fall back to using tags to identify locations if they were set
+                foreach ($instance['Tags'] as $tag) {
+                  if ($tag['Key'] == 'WPTLocations') {
+                    $wptLocations = explode(',', $tag['Value']);
+                    break;
                   }
                 }
-                if (isset($wptLocations)) {
-                  $launchTime = strtotime($instance['LaunchTime']);
-                  $elapsed = $now - $launchTime;
-                  $state = $instance['State']['Code'];
-                  $running = false;
-                  if (is_numeric($state) && $state <= 16)
-                    $running = true;
-                  $instances[] = array('region' => $region,
-                                       'id' => $instance['InstanceId'],
-                                       'ami' => $instance['ImageId'],
-                                       'state' => $state,
-                                       'launchTime' => $instance['LaunchTime'],
-                                       'launched' => $launchTime,
-                                       'runningTime' => $elapsed,
-                                       'locations' => $wptLocations,
-                                       'running' => $running);
-                }
+              }
+              if (isset($wptLocations)) {
+                $launchTime = strtotime($instance['LaunchTime']);
+                $elapsed = $now - $launchTime;
+                $state = $instance['State']['Code'];
+                $running = is_numeric($state) && $state <= 16;
+                $instances[] = array('region' => $region,
+                                     'id' => $instance['InstanceId'],
+                                     'ami' => $instance['ImageId'],
+                                     'state' => $state,
+                                     'launchTime' => $instance['LaunchTime'],
+                                     'launched' => $launchTime,
+                                     'runningTime' => $elapsed,
+                                     'locations' => $wptLocations,
+                                     'running' => $running);
               }
             }
           }
-        } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
-          $error = $e->getMessage();
-          EC2LogError("Listing running EC2 instances: $error");
         }
+      } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
+        $error = $e->getMessage();
+        EC2LogError("Listing running EC2 instances: $error");
       }
     }
   }
@@ -472,76 +490,66 @@ function EC2_GetRunningInstances() {
 }
 
 function EC2_TerminateInstance($region, $id) {
-  $key = GetSetting('ec2_key');
-  $secret = GetSetting('ec2_secret');
-  if ($key && $secret) {
-    try {
-      $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => $region));
-      $ec2->terminateInstances(array('InstanceIds' => array($id)));
-      EC2Log("Terminated instance $id in $region");
-    } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
-      $error = $e->getMessage();
-      EC2LogError("Terminating EC2 instance. Region: $region, ID: $id, error: $error");
-    }
-  } else {
-    EC2LogError("Missing key or secret - Terminating instance $id in $region");
+  $ec2 = EC2_GetSdkClient($region);
+  try {
+    $ec2->terminateInstances(array('InstanceIds' => array($id)));
+    EC2Log("Terminated EC2 instance. Region: $region, ID: $id");
+  } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
+    $error = $e->getMessage();
+    EC2LogError("Terminating EC2 instance. Region: $region, ID: $id, error: $error");
   }
 }
 
 function EC2_LaunchInstance($region, $ami, $size, $user_data, $loc) {
   EC2Log("Launching $size ami $ami in $region for $loc with user data: $user_data");
-  $ret = false;
-  $key = GetSetting('ec2_key');
-  $secret = GetSetting('ec2_secret');
-  if ($key && $secret) {
-    try {
-      $ec2 = \Aws\Ec2\Ec2Client::factory(array('key' => $key, 'secret' => $secret, 'region' => $region));
-      $ec2_options = array (
-        'ImageId' => $ami,
-        'MinCount' => 1,
-        'MaxCount' => 1,
-        'InstanceType' => $size,
-        'UserData' => base64_encode ( $user_data )
-      );
+  $success = false;
 
-      //add/modify the SecurityGroupIds if present in config
-      $secGroups = GetSetting("EC2.$region.securityGroup");
-      if ($secGroups) {
-        $securityGroupIds = explode(",", $secGroups);
-        if (isset($securityGroupIds)) {
-          $ec2_options['SecurityGroupIds'] = $securityGroupIds;
-        }
-      }
+  $ec2 = EC2_GetSdkClient($region);
+  try {
 
-      //add/modify the SubnetId if present in config
-      $subnetId = GetSetting("EC2.$region.subnetId");
-      if ($subnetId) {
-        $ec2_options['SubnetId'] = $subnetId;
-      }
+    $ec2_options = array (
+      'ImageId' => $ami,
+      'MinCount' => 1,
+      'MaxCount' => 1,
+      'InstanceType' => $size,
+      'UserData' => base64_encode ( $user_data )
+    );
 
-      $response = $ec2->runInstances ( $ec2_options );
-      $ret = true;
-      if (isset($loc) && strlen($loc) && isset($response['Instances'][0]['InstanceId'])) {
-        $instance_id = $response['Instances'][0]['InstanceId'];
-        EC2Log("Instance $instance_id started: $size ami $ami in $region for $loc with user data: $user_data");
-        $tags = "Name=>WebPagetest Agent|WPTLocations=>$loc";
-        $static_tags = GetSetting("EC2.tags");
-        if ($static_tags) {
-          $tags = $tags . '|' . $static_tags;
-        }
-        $ec2->createTags(array(
-          'Resources' => array($instance_id),
-          'Tags' => EC2_CreateTagArray($tags)
-        ));
+    //add/modify the SecurityGroupIds if present in config
+    $secGroups = GetSetting("EC2.$region.securityGroup");
+    if ($secGroups) {
+      $securityGroupIds = explode(",", $secGroups);
+      if (isset($securityGroupIds)) {
+        $ec2_options['SecurityGroupIds'] = $securityGroupIds;
       }
-    } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
-      $error = $e->getMessage();
-      EC2LogError("Launching EC2 instance. Region: $region, AMI: $ami, error: $error");
     }
-  } else {
-      EC2LogError("Launching EC2 instance. Missing key or secret");
+
+    //add/modify the SubnetId if present in config
+    $subnetId = GetSetting("EC2.$region.subnetId");
+    if ($subnetId) {
+      $ec2_options['SubnetId'] = $subnetId;
+    }
+
+    $response = $ec2->runInstances ( $ec2_options );
+    $success = true;
+    if (isset($loc) && strlen($loc) && isset($response['Instances'][0]['InstanceId'])) {
+      $instance_id = $response['Instances'][0]['InstanceId'];
+      EC2Log("Instance $instance_id started: $size ami $ami in $region for $loc with user data: $user_data");
+      $tags = "Name=>WebPagetest Agent|WPTLocations=>$loc";
+      $static_tags = GetSetting("EC2.tags");
+      if ($static_tags) {
+        $tags = $tags . '|' . $static_tags;
+      }
+      $ec2->createTags(array(
+        'Resources' => array($instance_id),
+        'Tags' => EC2_CreateTagArray($tags)
+      ));
+    }
+  } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
+    $error = $e->getMessage();
+    EC2LogError("Launching EC2 instance. Region: $region, AMI: $ami, error: $error");
   }
-  return $ret;
+  return $success;
 }
 
 function EC2_GetTesters() {
@@ -637,11 +645,11 @@ function EC2LogError($msg) {
  *
  * We use hash rockets and pipes to build our string because
  * they are much less likely to be used in a tag than other characters.
- * @param string $tagstring A tag delimited string.
+ * @param string $tagString A tag delimited string.
  * @return array An array of array tag key-value pairs
  */
-function EC2_CreateTagArray($tagstring) {
-  $kvpairs = explode('|', $tagstring);
+function EC2_CreateTagArray($tagString) {
+  $kvpairs = explode('|', $tagString);
   $final_array = array();
 
   foreach ($kvpairs as $kvpair) {
@@ -650,4 +658,3 @@ function EC2_CreateTagArray($tagstring) {
   }
   return $final_array;
 }
-?>

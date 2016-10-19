@@ -3,9 +3,20 @@ require_once('testStatus.inc');
 require_once('logging.inc');
 require_once('common_lib.inc');
 
+function S3_GetSdkClient() {
+    require_once('./lib/S3.php');
+    global $settings;
+
+    if (array_key_exists('archive_s3_key', $settings) && array_key_exists('archive_s3_secret', $settings)) {
+        return new S3(trim($settings['archive_s3_key']), trim($settings['archive_s3_secret']), false, trim($settings['archive_s3_server']));
+    } else {
+        return new S3(null, null, false, trim($settings['archive_s3_server']));
+    }
+}
+
 /**
 * See if the file should be skipped when archiving (usually just cache files)
-* 
+*
 * @param mixed $file
 */
 function ArchiveSkipFile($file) {
@@ -22,7 +33,7 @@ function ArchiveSkipFile($file) {
 * Archive the given test if it hasn't already been archived
 * For now this will just zip and move to a location on disk
 * but will eventually integrate with the S3 archiving
-* 
+*
 * @param mixed $id
 */
 function ArchiveTest($id, $store_result = true, $delete = false) {
@@ -49,7 +60,7 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                     SaveTestInfo($id, $testInfo);
                 }
             }
-            
+
             if (!$ret) {
               $lock = LockTest($id);
               if (isset($lock)) {
@@ -81,7 +92,7 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                             }
                         }
                         $zip->close();
-                        
+
                         // move the archive to it's final destination
                         if ($count && is_file($zipFile)) {
                             if (array_key_exists('archive_dir', $settings)) {
@@ -90,21 +101,18 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                                     if (VerifyArchive($id))
                                         $ret = true;
                                 }
-                            } elseif (array_key_exists('archive_s3_server', $settings) && 
-                                        array_key_exists('archive_s3_key', $settings) && 
-                                        array_key_exists('archive_s3_secret', $settings) && 
-                                        array_key_exists('archive_s3_bucket', $settings)) {
+                            } elseif (array_key_exists('archive_s3_bucket', $settings)) {
                                 // post the file to a S3-style bucket (just supporting Internet archive right now)
-                                require_once('./lib/S3.php');
-                                $s3 = new S3(trim($settings['archive_s3_key']), trim($settings['archive_s3_secret']), false, trim($settings['archive_s3_server']));
+                                $s3 = S3_GetSdkClient();
                                 $separator = strrpos($id, '_');
                                 if ($separator !== false) {
                                     $bucket = $settings['archive_s3_bucket'];
                                     $file = "$id.zip";
                                     $metaHeaders = array();
                                     $requestHeaders = array();
+
+                                    // special-case Internet Archive storage
                                     if (trim($settings['archive_s3_server']) == 's3.us.archive.org') {
-                                        // special-case Internet Archive storage
                                         $bucket = $settings['archive_s3_bucket'] . '_' . substr($id, 0, $separator);
                                         $file = substr($id, $separator + 1);
                                         $requestHeaders = array('x-archive-queue-derive' => '0',
@@ -115,7 +123,7 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                                         $ret = true;
                                 }
                             }
-                        } 
+                        }
                         // make sure we don't leave a file hanging around
                         if (is_file($zipFile))
                             unlink($zipFile);
@@ -132,13 +140,13 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
         if ($ret && $delete && is_dir($testPath))
           delTree("$testPath/");
     }
-      
+
     return $ret;
 }
 
 /**
 * Restore the given test from the archive if it is archived
-* 
+*
 * @param mixed $id
 */
 function RestoreArchive($id) {
@@ -157,8 +165,8 @@ function RestoreArchive($id) {
                     break;
             }
         }
-        if (strlen($url) || 
-            array_key_exists('archive_dir', $settings) || 
+        if (strlen($url) ||
+            array_key_exists('archive_dir', $settings) ||
             array_key_exists('archive_s3_url', $settings) ||
             array_key_exists('archive_s3_server', $settings)) {
             $deleteZip = true;
@@ -186,12 +194,8 @@ function RestoreArchive($id) {
                         }
                         $url = trim($settings['archive_s3_url']) . "$bucket/$file.zip";
                     }
-                } elseif (array_key_exists('archive_s3_server', $settings) && 
-                            array_key_exists('archive_s3_key', $settings) && 
-                            array_key_exists('archive_s3_secret', $settings) && 
-                            array_key_exists('archive_s3_bucket', $settings)) {
-                    require_once('./lib/S3.php');
-                    $s3 = new S3(trim($settings['archive_s3_key']), trim($settings['archive_s3_secret']), false, trim($settings['archive_s3_server']));
+                } elseif (array_key_exists('archive_s3_bucket', $settings)) {
+                    $s3 = S3_GetSdkClient();
                     $bucket = $settings['archive_s3_bucket'];
                     $file = "$id.zip";
                     $s3->getObject($bucket, $file, $zipfile);
@@ -229,13 +233,13 @@ function RestoreArchive($id) {
         else
             $ret = true;
     }
-        
+
     return $ret;
 }
 
 /**
 * Restore an archived zip from the 2nd-tier archive
-* 
+*
 * @param mixed $id
 * @param mixed $dest
 */
@@ -260,13 +264,13 @@ function RestoreArchive2($id, $dest) {
 
 /**
 * Verify the archive for the given test (deep verification)
-* 
+*
 * @param mixed $id
 */
 function VerifyArchive($id) {
     $valid = true;
     global $settings;
-    
+
     if (!GetSetting('trust_archive')) {
         if (isset($settings['archive_dir'])) {
             // local
@@ -310,15 +314,11 @@ function VerifyArchive($id) {
             } else {
                 logMsg("$id - Zip file missing ($archive)");
             }
-        } elseif (array_key_exists('archive_s3_server', $settings) && 
-                    array_key_exists('archive_s3_key', $settings) && 
-                    array_key_exists('archive_s3_secret', $settings) && 
-                    array_key_exists('archive_s3_bucket', $settings) &&
-                    trim($settings['archive_s3_server']) != 's3.us.archive.org') {
+        } elseif (array_key_exists('archive_s3_bucket', $settings) &&
+                  trim($settings['archive_s3_server']) != 's3.us.archive.org') {
             // S3
             $valid = false;
-            require_once('./lib/S3.php');
-            $s3 = new S3(trim($settings['archive_s3_key']), trim($settings['archive_s3_secret']), false, trim($settings['archive_s3_server']));
+            $s3 = S3_GetSdkClient();
             $bucket = $settings['archive_s3_bucket'];
             $file = "$id.zip";
             if (($info = $s3->getObjectInfo($bucket, $file)) !== false) {
@@ -326,18 +326,17 @@ function VerifyArchive($id) {
             }
         }
     }
-        
+
     return $valid;
 }
 
 /**
 * Generate the file name for the given archive file
-* 
+*
 * @param mixed $id
 * @param mixed $create_directory
 */
-function GetArchiveFile($id, $create_directory = false)
-{
+function GetArchiveFile($id, $create_directory = false) {
     global $settings;
     $file = null;
     if (isset($settings['archive_dir']) && strlen($id)) {
