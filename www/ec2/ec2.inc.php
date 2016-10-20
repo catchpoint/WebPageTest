@@ -34,7 +34,12 @@ function EC2_GetSdkClient($awsRegion = null) {
         $sdkSettings['key'] = $awsAccessKey;
         $sdkSettings['secret'] = $awsSecretKey;
     }
-    return \Aws\Ec2\Ec2Client::factory($sdkSettings);
+    try {
+      return \Aws\Ec2\Ec2Client::factory($sdkSettings);
+    } catch (Exception $error) {
+      EC2LogError('Unable initialize ec2 sdk', $error);
+      throw $error;
+    }
 }
 
 /**
@@ -410,9 +415,8 @@ function EC2_GetRunningInstances() {
   $instances = array();
 
   $locations = EC2_GetAMILocations();
-  $ec2 = EC2_GetSdkClient();
-
   try {
+    $ec2 = EC2_GetSdkClient();
     $response = $ec2->describeRegions();
     if (isset($response['Regions'])) {
       foreach ($response['Regions'] as $region)
@@ -490,8 +494,8 @@ function EC2_GetRunningInstances() {
 }
 
 function EC2_TerminateInstance($region, $id) {
-  $ec2 = EC2_GetSdkClient($region);
   try {
+    $ec2 = EC2_GetSdkClient($region);
     $ec2->terminateInstances(array('InstanceIds' => array($id)));
     EC2Log("Terminated EC2 instance. Region: $region, ID: $id");
   } catch (\Aws\Ec2\Exception\Ec2Exception $e) {
@@ -504,9 +508,8 @@ function EC2_LaunchInstance($region, $ami, $size, $user_data, $loc) {
   EC2Log("Launching $size ami $ami in $region for $loc with user data: $user_data");
   $success = false;
 
-  $ec2 = EC2_GetSdkClient($region);
   try {
-
+    $ec2 = EC2_GetSdkClient($region);
     $ec2_options = array (
       'ImageId' => $ami,
       'MinCount' => 1,
