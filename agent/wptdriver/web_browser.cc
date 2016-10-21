@@ -772,6 +772,27 @@ void WebBrowser::ConfigureIESettings() {
       DWORD val = 0;
       RegSetValueEx(hKey, _T("VersionCheckEnabled"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
+      val = 1;
+      RegSetValueEx(hKey, _T("IgnoreFrameApprovalCheck"), 0, REG_DWORD,
+                    (const LPBYTE)&val, sizeof(val));
+      RegCloseKey(hKey);
+    }
+
+    // Make sure the bho is enabled
+    if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+        _T("Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Ext"),
+        0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
+      DWORD val = 1;
+      RegSetValueEx(hKey, _T("IgnoreFrameApprovalCheck"), 0, REG_DWORD,
+                    (const LPBYTE)&val, sizeof(val));
+      RegCloseKey(hKey);
+    }
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
+        _T("Software\\Microsoft\\Windows\\CurrentVersion\\Ext\\Settings\\{2B925455-8D0C-401F-AA4C-9336C2167F14}"),
+        0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
+      DWORD val = 0x400;
+      RegSetValueEx(hKey, _T("Flags"), 0, REG_DWORD,
+                    (const LPBYTE)&val, sizeof(val));
       RegCloseKey(hKey);
     }
 }
