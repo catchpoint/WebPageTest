@@ -54,15 +54,10 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
         </tr>\n";
   foreach( $locations as $name => &$location ) {
     $error = '';
-    if (array_key_exists('PendingTests', $location) &&
-        array_key_exists('Total', $location['PendingTests']) &&
-        array_key_exists('HighPriority', $location['PendingTests']) &&
-        array_key_exists('Testing', $location['PendingTests'])) {
-      if ($location['PendingTests']['HighPriority'] > $location['PendingTests']['Testing'] * 10)
-        $error = ' danger';
-      elseif ($location['PendingTests']['Total'] > 1)
-        $error = ' warning';
-    }
+    if (isset($location['PendingTests']['Total']) && $location['PendingTests']['Total'] > 1)
+      $error = ' warning';
+    if (!isset($location['status']) || $location['status'] == 'OFFLINE')
+      $error = ' danger';
     echo "<tr id=\"$name\" class=\"$error\">";
     echo "<td class=\"location\">" . @htmlspecialchars($name) . "</td>" . PHP_EOL;
     echo "<td>" . @htmlspecialchars($location['labelShort']) . "</td>" . PHP_EOL;
@@ -183,6 +178,7 @@ function LoadLocations()
                                               'location' => $loc[$group[$j]]['location'],
                                               'Browsers' => $loc[$group[$j]]['browser'],
                                               'localDir' => $loc[$group[$j]]['localDir'],
+                                              'status' => @$loc[$group[$j]]['status'],
                                               'relayServer' => @$loc[$group[$j]]['relayServer'],
                                               'relayLocation' => @$loc[$group[$j]]['relayLocation'],
                                               'labelShort' => $loc[$loc_name]['label'],

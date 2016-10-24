@@ -801,24 +801,22 @@ function FilterLocations(&$locations, $includeHidden = '',
       }
     }
 
-    // only do it if we aren't displaying hidden locations and we're not running on Windows (busted filetime())
-    if (!isset($_REQUEST['hidden'])) {
-        // first remove any locations that haven't checked in for 30 minutes (could tighten this up in the future)
-        foreach ($locations as $name => &$locRef) {
-            if (isset($locRef['browser']) && !isset($locRef['ami'])) {
-                $parts = explode(':', $name);
-                $locname = $parts[0];
-                $testers = GetTesters($locname);
-                // now check the times
-                if (isset($testers) && is_array($testers) && isset($testers['elapsed'])) {
-                  if ($testers['elapsed'] > 30)
-                    unset($locations[$name]);
-                } else {
-                  // TODO: Fix this so it only hides local locations, not relay and API
-                  if (!array_key_exists('relayServer', $locRef)) {
-                    unset($locations[$name]);
-                  }
-                }
+    // first remove any locations that haven't checked in for 30 minutes (could tighten this up in the future)
+    foreach ($locations as $name => &$locRef) {
+        if (isset($locRef['browser']) && !isset($locRef['ami'])) {
+            $parts = explode(':', $name);
+            $locname = $parts[0];
+            $testers = GetTesters($locname);
+            if (isset($testers['status']))
+              $locations[$name]['status'] = $testers['status'];
+            // now check the times
+            if (isset($testers) && is_array($testers) && isset($testers['elapsed'])) {
+              if (!isset($_REQUEST['hidden']) && $testers['elapsed'] > 30)
+                unset($locations[$name]);
+            } else {
+              // TODO: Fix this so it only hides local locations, not relay and API
+              if (!isset($_REQUEST['hidden']) && !array_key_exists('relayServer', $locRef))
+                unset($locations[$name]);
             }
         }
     }
