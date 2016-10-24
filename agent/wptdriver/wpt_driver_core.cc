@@ -292,13 +292,20 @@ void WptDriverCore::ResetBrowsers() {
     while (!reset_browsers.IsEmpty()) {
       CString exe = reset_browsers.RemoveHead();
       HANDLE process = NULL;
-      LaunchProcess(exe, &process);
-      if (process) {
-        WaitForInputIdle(process, 10000);
-        CloseHandle(process);
+      PROCESS_INFORMATION pi;
+      STARTUPINFO si;
+      memset( &si, 0, sizeof(si) );
+      si.cb = sizeof(si);
+      si.dwFlags = STARTF_USESHOWWINDOW;
+      si.wShowWindow = SW_MINIMIZE;
+      if (CreateProcess(NULL, (LPTSTR)(LPCTSTR)exe, 0, 0, FALSE, 
+                        NORMAL_PRIORITY_CLASS , 0, NULL, &si, &pi)) {
+        WaitForInputIdle(pi.hProcess, 10000);
+        CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
       }
       Sleep(5000);
-      KillBrowsers();
+      TerminateProcessesByName(PathFindFileName((LPCTSTR)exe));
     }
     ReleaseMutex(_testing_mutex);
   }
