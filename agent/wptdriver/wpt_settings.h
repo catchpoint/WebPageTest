@@ -51,6 +51,7 @@ class BrowserSettings {
 public:
   BrowserSettings(){}
   ~BrowserSettings(){}
+  bool IsWebdriver();
   bool Load(const TCHAR * browser, const TCHAR * iniFile, CString client);
   bool Install(CString browser, CString url, CString md5);
   void ResetProfile(bool clear_certs);
@@ -67,7 +68,9 @@ public:
   CString _exe_directory;
   CString _profile_directory;
   CString _profiles;
-  CString _cache_directory;
+  CString _webdriver_script;
+  CAtlList<CString> _cache_directories;
+  CAtlList<CString> _kill_processes;
 
   // Windows/IE directories
   CString windows_dir_;

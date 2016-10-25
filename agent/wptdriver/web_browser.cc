@@ -122,7 +122,9 @@ bool WebBrowser::RunAndWait() {
   _browser_needs_reset.Empty();
 
   if (_test.Start() && ConfigureIpfw(_test)) {
-    if (_browser._exe.GetLength()) {
+    if (_browser.IsWebdriver()) {
+      RunWebdriverTest();
+    } else if (_browser._exe.GetLength()) {
       CString exe(_browser._exe);
       exe.MakeLower();
       if (exe.Find(_T("chrome.exe")) >= 0)
@@ -339,12 +341,13 @@ bool WebBrowser::RunAndWait() {
       TerminateProcessesByName(PathFindFileName((LPCTSTR)_browser._exe));
 
       g_shared->SetBrowserExe(NULL);
-      ResetIpfw();
       SetEnvironmentVariable(L"SSLKEYLOGFILE", NULL);
 
     } else {
       _test._run_error = "Browser configured incorrectly (exe not defined).";
     }
+
+    ResetIpfw();
   } else {
     _test._run_error = "Failed to configure IPFW/dummynet.  Is it installed?";
   }
@@ -849,4 +852,13 @@ void WebBrowser::CreateChromeSymlink() {
       _browser._exe = newDir + "\\Application\\chrome.exe";
     }
   }
+}
+
+/*-----------------------------------------------------------------------------
+  Save the test info out, run the stand-alone webdriver test and wait for it
+  to finish.
+-----------------------------------------------------------------------------*/
+void WebBrowser::RunWebdriverTest() {
+  OutputDebugStringA("RunWebdriverTest");
+  _test.SaveJson();
 }

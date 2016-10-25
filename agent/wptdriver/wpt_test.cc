@@ -73,6 +73,7 @@ WptTest::WptTest(void):
     lstrcat(path, _T("_data"));
     CreateDirectory(path, NULL);
     _test_file = CString(path) + _T("\\test.dat");
+    _json_file = CString(path) + _T("\\test.json");
   }
   _is_chrome = false;
   GetModuleFileName(NULL, path, _countof(path));
@@ -1252,4 +1253,165 @@ void WptTest::Unlock() {
 -----------------------------------------------------------------------------*/
 bool WptTest::IsLocked() {
   return lock_count_ != 0;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CStringA WptTest::JsonFragment(LPCSTR field, CString &value) {
+  CStringA fragment = "\"" + JSONEscapeA(field) + "\": ";
+  fragment += "\"" + JSONEscape(value) + "\"";
+  return fragment;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CStringA WptTest::JsonFragment(LPCSTR field, CStringA &value) {
+  CStringA fragment = "\"" + JSONEscapeA(field) + "\": ";
+  fragment += "\"" + JSONEscapeA(value) + "\"";
+  return fragment;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CStringA WptTest::JsonFragment(LPCSTR field, bool &value) {
+  CStringA fragment = "\"" + JSONEscapeA(field) + "\": ";
+  fragment += value ? "true": "false";
+  return fragment;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CStringA WptTest::JsonFragment(LPCSTR field, DWORD &value) {
+  CStringA fragment = "\"" + JSONEscapeA(field) + "\": ";
+  CStringA buff;
+  buff.Format("%lu", value);
+  fragment += buff;
+  return fragment;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CStringA WptTest::JsonFragment(LPCSTR field, int &value) {
+  CStringA fragment = "\"" + JSONEscapeA(field) + "\": ";
+  CStringA buff;
+  buff.Format("%d", value);
+  fragment += buff;
+  return fragment;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CStringA WptTest::JsonFragment(LPCSTR field, BYTE &value) {
+  CStringA fragment = "\"" + JSONEscapeA(field) + "\": ";
+  CStringA buff;
+  buff.Format("%lu", (DWORD)value);
+  fragment += buff;
+  return fragment;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CStringA WptTest::JsonFragment(LPCSTR field, double &value) {
+  CStringA fragment = "\"" + JSONEscapeA(field) + "\": ";
+  CStringA buff;
+  buff.Format("%f", value);
+  fragment += buff;
+  return fragment;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CStringA WptTest::JsonFragment(LPCSTR field, CAtlList<CString> &values) {
+  CStringA fragment = "\"" + JSONEscapeA(field) + "\": [";
+  if (!values.IsEmpty()) {
+    POSITION pos = values.GetHeadPosition();
+    while (pos) {
+      CString value = values.GetNext(pos);
+      fragment += "\"" + JSONEscape(value) + "\"";
+      if (pos)
+        fragment += ",";
+    }
+  }
+  fragment += "]";
+  return fragment;
+}
+
+/*-----------------------------------------------------------------------------
+  Serialize the test data out to a json file in the current results directory
+-----------------------------------------------------------------------------*/
+void  WptTest::SaveJson() {
+  CStringA json = "{";
+  json += JsonFragment("id", _id) + ",\n";
+  json += JsonFragment("file_base", _file_base) + ",\n";
+  json += JsonFragment("directory", _directory) + ",\n";
+  json += JsonFragment("url", _url) + ",\n";
+  json += JsonFragment("runs", _runs) + ",\n";
+  json += JsonFragment("discard", _discard) + ",\n";
+  json += JsonFragment("fv_only", _fv_only) + ",\n";
+  json += JsonFragment("doc_complete", _doc_complete) + ",\n";
+  json += JsonFragment("ignore_ssl", _ignore_ssl) + ",\n";
+  json += JsonFragment("tcpdump", _tcpdump) + ",\n";
+  json += JsonFragment("timeline", _timeline) + ",\n";
+  json += JsonFragment("timelineStackDepth", _timelineStackDepth) + ",\n";
+  json += JsonFragment("trace", _trace) + ",\n";
+  json += JsonFragment("netlog", _netlog) + ",\n";
+  json += JsonFragment("video", _video) + ",\n";
+  json += JsonFragment("noscript", _noscript) + ",\n";
+  json += JsonFragment("clear_certs", _clear_certs) + ",\n";
+  json += JsonFragment("emulate_mobile", _emulate_mobile) + ",\n";
+  json += JsonFragment("force_software_render", _force_software_render) + ",\n";
+  json += JsonFragment("test_type", _test_type) + ",\n";
+  json += JsonFragment("block", _block) + ",\n";
+  json += JsonFragment("bwIn", _bwIn) + ",\n";
+  json += JsonFragment("bwOut", _bwOut) + ",\n";
+  json += JsonFragment("latency", _latency) + ",\n";
+  json += JsonFragment("plr", _plr) + ",\n";
+  json += JsonFragment("browser", _browser) + ",\n";
+  json += JsonFragment("browser_url", _browser_url) + ",\n";
+  json += JsonFragment("browser_md5", _browser_md5) + ",\n";
+  json += JsonFragment("basic_auth", _basic_auth) + ",\n";
+  json += JsonFragment("script", _script) + ",\n";
+  json += JsonFragment("run", _run) + ",\n";
+  json += JsonFragment("specific_run", _specific_run) + ",\n";
+  json += JsonFragment("specific_index", _specific_index) + ",\n";
+  json += JsonFragment("discard_test", _discard_test) + ",\n";
+  json += JsonFragment("index", _index) + ",\n";
+  json += JsonFragment("clear_cache", _clear_cache) + ",\n";
+  json += JsonFragment("image_quality", _image_quality) + ",\n";
+  json += JsonFragment("png_screen_shot", _png_screen_shot) + ",\n";
+  json += JsonFragment("full_size_video", _full_size_video) + ",\n";
+  json += JsonFragment("minimum_duration", _minimum_duration) + ",\n";
+  json += JsonFragment("user_agent", _user_agent) + ",\n";
+  json += JsonFragment("block_requests", _block_requests) + ",\n";
+  json += JsonFragment("save_response_bodies", _save_response_bodies) + ",\n";
+  json += JsonFragment("save_html_body", _save_html_body) + ",\n";
+  json += JsonFragment("preserve_user_agent", _preserve_user_agent) + ",\n";
+  json += JsonFragment("check_responsive", _check_responsive) + ",\n";
+  json += JsonFragment("browser_width", _browser_width) + ",\n";
+  json += JsonFragment("browser_height", _browser_height) + ",\n";
+  json += JsonFragment("viewport_width", _viewport_width) + ",\n";
+  json += JsonFragment("viewport_height", _viewport_height) + ",\n";
+  json += JsonFragment("browser_command_line", _browser_command_line) + ",\n";
+  json += JsonFragment("browser_additional_command_line", _browser_additional_command_line) + ",\n";
+  json += JsonFragment("user_agent_modifier", _user_agent_modifier) + ",\n";
+  json += JsonFragment("append_user_agent", _append_user_agent) + ",\n";
+  json += JsonFragment("max_test_time", _max_test_time) + ",\n";
+  json += JsonFragment("minimal_results", _minimal_results) + ",\n";
+  json += JsonFragment("block_domains", _block_domains) + ",\n";
+  json += JsonFragment("block_domains_except", _block_domains_except) + ",\n";
+  json += JsonFragment("incremental", _incremental) + ",\n";
+  json += JsonFragment("job_info", _job_info) + ",\n";
+  json += JsonFragment("testinfo_json", _testinfo_json) + ",\n";
+  json += JsonFragment("testinfo_ini", _testinfo_ini);
+  json += "}";
+
+  // Write out the actual JSON
+  OutputDebugString(_json_file);
+  DWORD written;
+  HANDLE hFile = CreateFile(_json_file, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+  if (hFile != INVALID_HANDLE_VALUE) {
+    WriteFile(hFile, (LPCSTR)json, json.GetLength(), &written, 0);
+    CloseHandle(hFile);
+  }
+  exit(0);
 }

@@ -54,3 +54,5 @@ agent/js/5c2.sh
 
 # specific wptdriver settings
 agent/wptdriver/*.ini
+/agent/webdriver/data
+/agent/webdriver/test.json
