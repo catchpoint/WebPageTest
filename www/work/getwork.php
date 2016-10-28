@@ -429,8 +429,7 @@ function ProcessTestShard(&$testInfo, &$test, &$delete, $priority) {
   global $supports_sharding;
   global $tester;
   if (array_key_exists('shard_test', $testInfo) && $testInfo['shard_test']) {
-    if ((array_key_exists('type', $testInfo) && $testInfo['type'] == 'traceroute') ||
-        !$supports_sharding || $priority > 0) {
+    if ((array_key_exists('type', $testInfo) && $testInfo['type'] == 'traceroute') || !$supports_sharding) {
       $testInfo['shard_test'] = 0;
     } else {
       $done = true;
