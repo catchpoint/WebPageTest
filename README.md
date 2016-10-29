@@ -11,7 +11,7 @@ The platform is basically split into two parts:
 There are a few different agents depending on the browsers and platforms supported.
 
 ##Wptdriver
-Wptdriver is the main Windows test agent and it supports IE, Chrome, Firefox and Safari.  It requires Visual Studio 2013 and is all c++.
+Wptdriver is the main Windows test agent and it supports IE, Chrome, Firefox and Safari.  It requires Visual Studio 2013 and is all C++.
 
 The main project file for it is /webpagetest.sln
 
