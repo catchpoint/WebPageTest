@@ -121,7 +121,7 @@ CDN_PROVIDER cdnList[] = {
 	{".raxcdn.com", _T("Rackspace")},
 	{".unicorncdn.net", _T("UnicornCDN")},
 	{".optimalcdn.com", _T("Optimal CDN")},
-    {".hosting4cdn.com", _T("Hosting4CDN")},
+	{".hosting4cdn.com", _T("Hosting4CDN")},
 	{NULL, NULL}
 };
 
