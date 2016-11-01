@@ -173,6 +173,8 @@ CDN_PROVIDER cdnList[] = {
   {".optimalcdn.com", "Optimal CDN"},
   {".kinxcdn.com", "KINX CDN"},
   {".kinxcdn.net", "KINX CDN"},
+  {".stackpathdns.com", "StackPath"},
+  {".hosting4cdn.com", "Hosting4CDN"},
   {"END_MARKER", "END_MARKER"}
 };
 
