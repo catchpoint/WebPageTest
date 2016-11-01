@@ -347,7 +347,15 @@ function GetUpdate() {
     }
     
     // Keep track of the number of times in a row we sent down an update
-    if (function_exists('apc_fetch') && function_exists('apc_store')) {
+    if (function_exists('apcu_fetch') && function_exists('apcu_store')) {
+      $updateCount = apcu_fetch("uc-$location-$tester");
+      if (!$updateCount)
+        $updateCount = 0;
+      $oldCount = $updateCount;
+      $updateCount = $ret ? $updateCount + 1 : 0;
+      if ($updateCount != $oldCount)
+        apcu_store("uc-$location-$tester", $updateCount, 3600);
+    } elseif (function_exists('apc_fetch') && function_exists('apc_store')) {
       $updateCount = apc_fetch("uc-$location-$tester");
       if (!$updateCount)
         $updateCount = 0;
@@ -521,7 +529,14 @@ function GetReboot() {
   }
 
   // If we sent down more than 3 updates sequentially, reboot the tester
-  if (!$reboot && function_exists('apc_fetch') && function_exists('apc_store')) {
+  if (!$reboot && function_exists('apcu_fetch') && function_exists('apcu_store')) {
+    $updateCount = apcu_fetch("uc-$location-$tester");
+    if ($updateCount && $updateCount >= 3) {
+      $reboot = true;
+      $updateCount = 0;
+      apcu_store("uc-$location-$tester", $updateCount, 3600);
+    }
+  } elseif (!$reboot && function_exists('apc_fetch') && function_exists('apc_store')) {
     $updateCount = apc_fetch("uc-$location-$tester");
     if ($updateCount && $updateCount >= 3) {
       $reboot = true;

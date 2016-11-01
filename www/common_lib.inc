@@ -77,8 +77,16 @@ function GetLocationInfo($location) {
   $info = null;
   $from_cache = false;
   if (isset($location) && strlen($location)) {
+    $has_apcu = false;
     $has_apc = false;
-    if (function_exists('apc_fetch') && function_exists('apc_store')) {
+    if (function_exists('apcu_fetch') && function_exists('apcu_store')) {
+      $has_apcu = true;
+      $info = apcu_fetch("locinfo_$location");
+      if ($info === false)
+        $info = null;
+      if (isset($info))
+        $from_cache = true;
+    } elseif (function_exists('apc_fetch') && function_exists('apc_store')) {
       $has_apc = true;
       $info = apc_fetch("locinfo_$location");
       if ($info === false)
@@ -99,8 +107,12 @@ function GetLocationInfo($location) {
       }
     }
     
-    if (isset($info) && $has_apc && !$from_cache)
-      apc_store("locinfo_$location", $info, 120);
+    if (isset($info) && !$from_cache) {
+      if ($has_apcu)
+        apcu_store("locinfo_$location", $info, 120);
+      elseif ($has_apc)
+        apc_store("locinfo_$location", $info, 120);
+    }
   }
   return $info;
 }
@@ -108,8 +120,22 @@ function GetLocationInfo($location) {
 function GetLocationFallbacks($location) {
   $fallback = null;
   if (isset($location) && strlen($location)) {
-    if (function_exists('apc_fetch') &&
-        function_exists('apc_store')) {
+    if (function_exists('apcu_fetch') &&
+        function_exists('apcu_store')) {
+      $fallback = apcu_fetch("fallback_$location");
+      if ($fallback === false) {
+        $fallback = '';
+        $locations = LoadLocationsIni();
+        if ($locations !== false &&
+            is_array($locations) &&
+            isset($locations[$location]) &&
+            isset($locations[$location]['fallback'])) {
+          $fallback = $locations[$location]['fallback'];
+        }
+        apcu_store("fallback_$location", $fallback, 60);
+      }
+    } elseif (function_exists('apc_fetch') &&
+              function_exists('apc_store')) {
       $fallback = apc_fetch("fallback_$location");
       if ($fallback === false) {
         $fallback = '';
@@ -202,8 +228,20 @@ function LoadLocationsIni() {
 function GetSetting($setting) {
   global $settings;
   $ret = false;
-  if (function_exists('apc_fetch') &&
-      function_exists('apc_store')) {
+  if (function_exists('apcu_fetch') &&
+      function_exists('apcu_store')) {
+    $value = apcu_fetch("setting_$setting", $success);
+    if ($success)
+      $ret = $value;
+    else {
+      if (!isset($settings) || !is_array($settings))
+        $settings = parse_ini_file(__DIR__ . '/settings/settings.ini');
+      if (isset($settings) && is_array($settings) && array_key_exists($setting, $settings))
+        $ret = $settings[$setting];
+      apcu_store("setting_$setting", $ret, 60);
+    }
+  } elseif (function_exists('apc_fetch') &&
+            function_exists('apc_store')) {
     $value = apc_fetch("setting_$setting", $success);
     if ($success)
       $ret = $value;
@@ -2778,10 +2816,17 @@ function numRunsFromTestInfo($testInfo) {
 */
 function SBL_Update() {
   $key = GetSetting('sbl_api_key');
-  if ($key && strlen($key) && 
-      function_exists('apc_fetch') &&
-      function_exists('apc_store')) {
-    $next_update = apc_fetch('sbl_next_update');
+  $has_apcu = false;
+  $has_apc = false;
+  if (function_exists('apcu_fetch') && function_exists('apcu_store'))
+    $has_apcu = true;
+  elseif (function_exists('apc_fetch') && function_exists('apc_store'))
+    $has_apc = true;
+  if ($key && strlen($key) && ($has_apcu || $has_apc)) {
+    if ($has_apcu)
+      $next_update = apcu_fetch('sbl_next_update');
+    else
+      $next_update = apc_fetch('sbl_next_update');
     if (!$next_update || time() > $next_update) {
       $db = __DIR__ . '/dat/sbl.db';
       if (is_file($db)) {
@@ -2808,7 +2853,10 @@ function SBL_Update() {
           $seconds = 0;
         $next_update = time() + $seconds;
       }
-      apc_store('sbl_next_update', $next_update);
+      if ($has_apcu)
+        apcu_store('sbl_next_update', $next_update);
+      else
+        apc_store('sbl_next_update', $next_update);
     } else {
       $seconds = $next_update - time();
     }
@@ -2848,7 +2896,9 @@ function SBL_Check($url, &$message) {
 function CheckPythonVisualMetrics(&$failures) {
   $ok = false;
   $failures = null;
-  if (function_exists('apc_fetch')) {
+  if (function_exists('apcu_fetch')) {
+    $ok = apcu_fetch("PythonVisualMetrics");
+  } elseif (function_exists('apc_fetch')) {
     $ok = apc_fetch("PythonVisualMetrics");
   }
   if (!$ok) {
@@ -2876,7 +2926,9 @@ function CheckPythonVisualMetrics(&$failures) {
     if (isset($failures)) {
       $ok = false;
     }
-    if ($ok && function_exists('apc_store')) {
+    if ($ok && function_exists('apcu_store')) {
+      apcu_store("PythonVisualMetrics", $ok, 3600);
+    } elseif ($ok && function_exists('apc_store')) {
       apc_store("PythonVisualMetrics", $ok, 3600);
     }
   }

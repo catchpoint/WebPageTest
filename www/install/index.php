@@ -99,7 +99,7 @@ function CheckPHP() {
     ShowCheck('zlib Module Installed', extension_loaded('zlib'));
     ShowCheck('curl Module Installed', extension_loaded('curl'), false);
     ShowCheck('php.ini allow_url_fopen enabled', ini_get('allow_url_fopen'), true);
-    ShowCheck('APC Installed', extension_loaded('apc'), false);
+    ShowCheck('APC Installed', extension_loaded('apc') || extension_loaded('apcu'), false);
     ShowCheck('SQLite Installed (for editable test labels)', class_exists("SQLite3"), false);
     ShowCheck('Open SSL Module Installed (for "Login with Google")', function_exists('openssl_x509_read'), false);
     ShowCheck('php.ini upload_max_filesize > 10MB', return_bytes(ini_get('upload_max_filesize')) > 10000000, false, ini_get('upload_max_filesize'));

@@ -6,6 +6,7 @@ if(extension_loaded('newrelic')) {
 include 'common_lib.inc';
 error_reporting(E_ERROR | E_PARSE);
 
+$has_apcu = function_exists('apcu_fetch') && function_exists('apcu_store');
 $has_apc = function_exists('apc_fetch') && function_exists('apc_store');
 
 $ok = false;
@@ -52,11 +53,18 @@ if (isset($_REQUEST['installer']) && isset($ip)) {
 
 if ($ok) {
   $file = __DIR__ . '/installers/' . $installer;
-  $data = $has_apc ? apc_fetch("installer-$installer") : null;
+  if ($has_apcu)
+    $data = apcu_fetch("installer-$installer");
+  elseif ($has_apc)
+    $data = apc_fetch("installer-$installer");
+  else
+    $data = null;
   if (!$data && is_file($file)) {
     $data = file_get_contents($file);
     ModifyInstaller($data);
-    if ($has_apc)
+    if ($has_apcu)
+      apcu_store("installer-$installer", $data, 600);
+    elseif ($has_apc)
       apc_store("installer-$installer", $data, 600);
   }
   if (isset($data) && strlen($data)) {
@@ -76,6 +84,7 @@ if ($ok) {
 
 function IsValidIp($ip, $installer) {
   global $has_apc;
+  global $has_apcu;
   $ok = true;
   
   // Make sure it isn't on our banned IP list
@@ -87,8 +96,8 @@ function IsValidIp($ip, $installer) {
     }
   }
 
-  if ($ok ) {  
-    $ok = $has_apc ? ApcCheckIp($ip, $installer) : CheckIp($ip, $installer);
+  if ($ok ) {
+    $ok = ($has_apc || $has_apcu) ? ApcCheckIp($ip, $installer) : CheckIp($ip, $installer);
     if (!$ok) {
       logMsg("BLOCKED - $ip : {$_REQUEST['installer']}", "log/software.log", true);
     }
@@ -97,6 +106,7 @@ function IsValidIp($ip, $installer) {
 }
 
 function ApcCheckIp($ip, $installer) {
+  global $has_apcu;
   $ok = true;
   if (isset($ip) && strlen($ip)) {
     $ver = '';
@@ -104,7 +114,7 @@ function ApcCheckIp($ip, $installer) {
       $ver = $_REQUEST['wptdriverVer'];
     $now = time();
     $key = "inst-ip-$ip-$ver-$installer";
-    $history = apc_fetch($key);
+    $history = $has_apcu ? apcu_fetch($key) : apc_fetch($key);
     if (!$history) {
       $history = array();
     } elseif (!is_array($history)) {
@@ -115,7 +125,10 @@ function ApcCheckIp($ip, $installer) {
     }
     $history[] = $now;
     // Use 1KB blocks to prevent fragmentation
-    apc_store($key, $history, 604800);
+    if ($has_apcu)
+      apcu_store($key, $history, 604800);
+    else
+      apc_store($key, $history, 604800);
     if (count($history) > 10)
       array_shift($history);
     $count = 0;
