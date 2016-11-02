@@ -1733,13 +1733,13 @@ function CheckIp(&$test)
       foreach( $blockIps as $block ) {
         $block = trim($block);
         if( strlen($block) ) {
-          if( ereg($block, $ip) ) {
+          if( preg_match($block, $ip) ) {
             logMsg("$ip: matched $block for url {$test['url']}", "./log/{$date}-blocked.log", true);
             $ok = false;
             break;
           }
 
-          if( $ip2 && strlen($ip2) && ereg($block, $ip2) ) {
+          if( $ip2 && strlen($ip2) && preg_match($block, $ip2) ) {
             logMsg("$ip2: matched(2) $block for url {$test['url']}", "./log/{$date}-blocked.log", true);
             $ok = false;
             break;
