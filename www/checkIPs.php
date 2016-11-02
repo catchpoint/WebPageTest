@@ -1,6 +1,6 @@
 <?php
 require_once('common.inc');
-error_reporting(0);
+error_reporting(E_ALL);
 $days = 0;
 if( isset($_GET["days"]) )
     $days = (int)$_GET["days"];
@@ -23,7 +23,7 @@ $keys = array();
 // load the API keys
 $keys = parse_ini_file('./settings/keys.ini', true);
 
-$targetDate = new DateTime($from, new DateTimeZone('GMT'));
+$targetDate = new DateTime('now', new DateTimeZone('GMT'));
 for ($offset = 0; $offset <= $days; $offset++) {
   $dayCount = array();
   $fileName = './logs/' . $targetDate->format("Ymd") . '.log';
@@ -35,7 +35,7 @@ for ($offset = 0; $offset <= $days; $offset++) {
       if (isset($parts[1])) {
         $ip = trim($parts[1]);
         if (strlen($ip)) {
-          $key = trim($parts[13]);
+          $key = @trim($parts[13]);
           $count = 1;
           if (array_key_exists(14, $parts))
             $count = intval(trim($parts[14]));
@@ -133,7 +133,7 @@ function IPBlocked($ip) {
   if (isset($blockIps) && is_array($blockIps) && count($blockIps)) {
     foreach( $blockIps as $block ) {
       $block = trim($block);
-      if (strlen($block) && ereg($block, $ip)) {
+      if (strlen($block) && preg_match($block, $ip)) {
         $blocked = true;
         break;
       }
