@@ -1,6 +1,6 @@
 <?php
 chdir('..');
-$MIN_DAYS = 7;
+$MIN_DAYS = 5;
 
 include 'common.inc';
 require_once('archive.inc');

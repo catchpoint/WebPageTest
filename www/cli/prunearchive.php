@@ -2,7 +2,7 @@
 if (php_sapi_name() != 'cli')
   exit(1);
 chdir('..');
-$MIN_DAYS = 7;
+$MIN_DAYS = 5;
 
 include 'common.inc';
 ignore_user_abort(true);
