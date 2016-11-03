@@ -43,7 +43,14 @@ if (isset($_REQUEST['name']) && isset($_FILES['apk']['tmp_name']) && isset($_FIL
             'activity' => 'org.chromium.content_shell_apk.ContentShellActivity',
             'flagsFile' => '/data/local/tmp/content-shell-command-line',
             'socket' => 'localabstract:content_shell_devtools_remote');
-            
+        if (isset($_REQUEST['package']) && strlen($_REQUEST['package']))
+          $apk_settings['package'] = trim($_REQUEST['package']);
+        if (isset($_REQUEST['activity']) && strlen($_REQUEST['activity']))
+          $apk_settings['activity'] = trim($_REQUEST['activity']);
+        if (isset($_REQUEST['flags']) && strlen($_REQUEST['flags']))
+          $apk_settings['flagsFile'] = trim($_REQUEST['flagsFile']);
+        if (isset($_REQUEST['socket']) && strlen($_REQUEST['socket']))
+          $apk_settings['socket'] = trim($_REQUEST['socket']);
         file_put_contents("./browsers/$name.json", json_encode($apk_settings));
         $md5 = md5_file("./browsers/$name.apk");
         if ($md5 !== false) {
@@ -102,9 +109,25 @@ if (isset($_REQUEST['name']) && isset($_FILES['apk']['tmp_name']) && isset($_FIL
                 <form name="upload" method="POST" action="custom_browsers.php" enctype="multipart/form-data">
                 <br>
                 <label for="name">
-                    Friendly Name
+                    Friendly Name:
                 </label>
                 <input type="text" name="name" id="name" size="40"> <small>(Alpha-numeric, underscores, dashes, no spaces)</small><br><br>
+                <label for="package">
+                    Package (optional):
+                </label>
+                <input type="text" name="package" id="package" size="40"> <small>(defaults to org.chromium.chrome)</small><br><br>
+                <label for="activity">
+                    Launch Activity (optional):
+                </label>
+                <input type="text" name="activity" id="activity" size="40"> <small>(defaults to com.google.android.apps.chrome.Main)</small><br><br>
+                <label for="flags">
+                    Command-Line Flags File (optional):
+                </label>
+                <input type="text" name="flags" id="flags" size="40"> <small>(defaults to /data/local/chrome-command-line)</small><br><br>
+                <label for="socket">
+                    Dev Tools Socket (optional):
+                </label>
+                <input type="text" name="socket" id="socket" size="40"> <small>(defaults to localabstract:chrome_devtools_remote)</small><br><br>
                 <label for="apk">
                     APK File
                 </label>
