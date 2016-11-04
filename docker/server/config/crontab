@@ -5,4 +5,6 @@
 # |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7)  OR sun,mon,tue,wed,thu,fri,sat
 # |  |  |  |  |
 # *  *  *  *  *  command to be executed
-  0  0  *  *  *  /scripts/start_archiving.sh
+  */5  *  *  *  *  cd /var/www/html/cron/ && /usr/local/bin/php 5min.php >> /var/log/supervisor/cron_stdout.log 2>&1 
+  */15  *  *  *  *  cd /var/www/html/cron/ && /usr/local/bin/php 15min.php >> /var/log/supervisor/cron_stdout.log 2>&1
+  0  *  *  *  *  cd /var/www/html/cron/ && /usr/local/bin/php hourly.php >> /var/log/supervisor/cron_stdout.log 2>&1
