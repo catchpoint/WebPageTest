@@ -110,6 +110,15 @@ var BLACK_BOX_BROWSERS = {
       'directories': ['cache', 'databases', 'files', 'app_sbrowser', 'code_cache'],
       'startupDelay': 10000
     },
+    'Blimp': {
+      'package': 'org.chromium.blimp',
+      'activity': 'com.google.android.apps.chrome.Main',
+      'flagsFile': '/data/local/chrome-command-line',
+      'flags': '-f 268435456 --ez "android.support.customtabs.extra.user_opt_out" true',
+      'videoFlags': ['--findstart', 25, '--notification'],
+      'clearProfile': true,
+      'startupDelay': 10000
+    },
   };
 
 var LAST_INSTALL_FILE = 'lastInstall.txt';
@@ -167,6 +176,7 @@ function BrowserAndroidChrome(app, args) {
   this.supportsTracing = true;
   this.isBlackBox = false;
   this.videoFlags = undefined;
+  this.browserConfig_ = undefined;
   if (args.flags.chromePackage) {
     this.browserPackage_ = args.flags.chromePackage;
   } else if (args.task.browser) {
@@ -643,8 +653,10 @@ BrowserAndroidChrome.prototype.scheduleNeedsXvfb_ = function() {
 BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
   'use strict';
   this.app_.schedule('Configure startup flags', function() {
+    var flags = undefined;
+    var flagsFile = undefined;
     if (!this.isBlackBox) {
-      var flags = this.chromeFlags_.concat('--enable-remote-debugging');
+      flags = this.chromeFlags_.concat('--enable-remote-debugging');
       if (this.pac_) {
         flags.push('--proxy-pac-url=http://127.0.0.1:' + PAC_PORT + '/from_netcat');
         if (PAC_PORT !== 80) {
@@ -652,6 +664,14 @@ BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
           flags.push('--explicitly-allowed-ports=' + PAC_PORT);
         }
       }
+      flagsFile = this.flagsFile_;
+    } else if (this.browserConfig_ !== undefined) {
+      if (this.browserConfig_['flags'] !== undefined)
+        flags = this.browserConfig_['flags'];
+      if (this.browserConfig_['flagsFile'] !== undefined)
+        flagsFile = this.browserConfig_['flagsFile'];
+    }
+    if (flagsFile && flags) {
       var localFlagsFile = path.join(this.runTempDir_, 'wpt_chrome_command_line');
       try {fs.unlinkSync(localFlagsFile);} catch(e) {}
       var flagsString = 'chrome ' + flags.join(' ');
@@ -668,9 +688,9 @@ BrowserAndroidChrome.prototype.scheduleSetStartupFlags_ = function() {
         fs.writeFileSync(localFlagsFile, flagsString);
         var tempFlagsFile = storagePath + '/wpt_chrome_command_line';
         this.adb_.adb(['push', localFlagsFile, tempFlagsFile]);
-        this.adb_.su(['cp', tempFlagsFile, this.flagsFile_]);
+        this.adb_.su(['cp', tempFlagsFile, flagsFile]);
         this.adb_.shell(['rm', tempFlagsFile]);
-        this.adb_.su(['chmod', '666', this.flagsFile_]);
+        this.adb_.su(['chmod', '666', flagsFile]);
       }.bind(this));
     }
   }.bind(this));
