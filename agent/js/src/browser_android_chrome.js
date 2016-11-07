@@ -135,18 +135,8 @@ var BLACK_BOX_BROWSERS = {
       'package': 'org.chromium.blimp',
       'activity': 'com.google.android.apps.chrome.Main',
       'flagsFile': '/data/local/chrome-command-line',
-      'flags': ['--no-first-run',
-                '--disable-fre',
-                '--no-default-browser-check',
-                '--disable-background-networking',
-                '--disable-datasaver-prompt',
-                '--safebrowsing-disable-auto-update',
-                '--disable-external-intent-requests',
-                '-f',
-                '268435456',
-                '--ez',
-                'android.support.customtabs.extra.user_opt_out',
-                'true'],
+      'flags': CHROME_FLAGS,
+      'activityFlags': ['-f', '268435456', '--ez', 'android.support.customtabs.extra.user_opt_out', 'true'],
       'videoFlags': ['--findstart', 25, '--notification'],
       'clearProfile': true,
       'startupDelay': 10000
@@ -209,6 +199,7 @@ function BrowserAndroidChrome(app, args) {
   this.isBlackBox = false;
   this.videoFlags = undefined;
   this.browserConfig_ = undefined;
+  this.activityFlags_ = undefined;
   if (args.task['customBrowser_type'] !== undefined && BLACK_BOX_BROWSERS[args.task['customBrowser_type']] !== undefined)
     args.task.browser = args.task['customBrowser_type'];
   if (args.flags.chromePackage) {
@@ -230,6 +221,8 @@ function BrowserAndroidChrome(app, args) {
       this.browserConfig_ = BLACK_BOX_BROWSERS[browserName];
       if (BLACK_BOX_BROWSERS[browserName]['videoFlags'] != undefined)
         this.videoFlags = BLACK_BOX_BROWSERS[browserName].videoFlags;
+      if (BLACK_BOX_BROWSERS[browserName]['activityFlags'] != undefined)
+        this.activityFlags_ = BLACK_BOX_BROWSERS[browserName]['activityFlags'];
     }
   }
   this.blank_page_ = this.blank_page_ || 'about:blank';
@@ -386,8 +379,10 @@ BrowserAndroidChrome.prototype.navigateTo = function(url, currentRetry) {
   var retry = (typeof currentRetry !== 'undefined') ?  currentRetry: 0;
   this.app_.schedule('Navigate', function() {
     var activity = this.browserPackage_ + '/' + this.browserActivity_;
-    this.adb_.shell(['am', 'start', '-n', activity,
-        '-a', 'android.intent.action.VIEW', '-d', url]).then(function(stdout) {
+    var command = ['am', 'start', '-n', activity, '-a', 'android.intent.action.VIEW', '-d', url]
+    if (this.activityFlags_ !== undefined)
+      command = command.concat(this.activityFlags_);
+    this.adb_.shell(command).then(function(stdout) {
       if (!stdout.length) {
         if (retry < 20) {
           logger.debug("Navigate failed, retrying");
@@ -420,41 +415,37 @@ BrowserAndroidChrome.prototype.onChildProcessExit = function() {
  */
 BrowserAndroidChrome.prototype.clearProfile_ = function() {
   'use strict';
-  if (this.isBlackBox) {
-    if (!this.isCacheWarm_) {
-      if (this.browserConfig_['clearProfile']) {
-        // Nuke all of the application data
-        this.adb_.shell(['pm', 'clear', this.browserPackage_]);
-      } else if (this.browserConfig_['directories']) {
-        // Just clear out the cache directories
-        for (var i = 0; i < this.browserConfig_.directories.length; i++) {
-          this.adb_.su(['rm', '-r', '/data/data/' + this.browserPackage_ +
-                       '/' + this.browserConfig_.directories[i]]);
-        }
+  if (this.isCacheWarm_) {
+    this.adb_.su(['rm', '-r', '/data/data/' + this.browserPackage_ +
+                 '/app_tabs']);
+  } else if (this.isBlackBox) {
+    if (this.browserConfig_['clearProfile']) {
+      // Nuke all of the application data
+      this.adb_.shell(['pm', 'clear', this.browserPackage_]);
+    } else if (this.browserConfig_['directories']) {
+      // Just clear out the cache directories
+      for (var i = 0; i < this.browserConfig_.directories.length; i++) {
+        this.adb_.su(['rm', '-r', '/data/data/' + this.browserPackage_ +
+                     '/' + this.browserConfig_.directories[i]]);
       }
     }
   } else {
-    if (this.isCacheWarm_) {
-      this.adb_.su(['rm', '-r', '/data/data/' + this.browserPackage_ +
-                   '/app_tabs']);
-    } else {
-      // Delete everything except the lib directory
-      this.adb_.su(['ls', '/data/data/' + this.browserPackage_]).then(
-          function(files) {
-        var lines = files.split('\n');
-        var count = lines.length;
-        var directories = '';
-        for (var i = 0; i < count; i++) {
-          var file = lines[i].trim();
-          if (file.length && file !== '.' && file !== '..' &&
-              file !== 'lib' && file !== 'shared_prefs') {
-            directories += ' /data/data/' + this.browserPackage_ + '/' + file;
-          }
+    // Delete everything except the lib directory
+    this.adb_.su(['ls', '/data/data/' + this.browserPackage_]).then(
+        function(files) {
+      var lines = files.split('\n');
+      var count = lines.length;
+      var directories = '';
+      for (var i = 0; i < count; i++) {
+        var file = lines[i].trim();
+        if (file.length && file !== '.' && file !== '..' &&
+            file !== 'lib' && file !== 'shared_prefs') {
+          directories += ' /data/data/' + this.browserPackage_ + '/' + file;
         }
-        if (directories.length)
-          this.adb_.su(['rm', '-r ' + directories]);
-      }.bind(this));
-    }
+      }
+      if (directories.length)
+        this.adb_.su(['rm', '-r ' + directories]);
+    }.bind(this));
   }
 };
 
