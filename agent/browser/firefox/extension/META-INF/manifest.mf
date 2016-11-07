@@ -1,0 +1,52 @@
+Manifest-Version: 1.0
+
+Name: install.rdf
+Digest-Algorithms: MD5 SHA1
+MD5-Digest: IodIWHsFsxyboPh3Dndqyw==
+SHA1-Digest: 78OVp9BQr0RbEgYSoRxElhX47nI=
+
+Name: chrome.manifest
+Digest-Algorithms: MD5 SHA1
+MD5-Digest: walVcxr8mu321+wpzx8ojQ==
+SHA1-Digest: 0MXiNIwkJuSayfGgw8hh89i33t4=
+
+Name: README.txt
+Digest-Algorithms: MD5 SHA1
+MD5-Digest: L1WrWqMFuFmGP8fYPeX+Vw==
+SHA1-Digest: wQm2uohHJ80U+xhaork+tNVNrsM=
+
+Name: chrome/content/dialogOverlay.js
+Digest-Algorithms: MD5 SHA1
+MD5-Digest: XVzr8nUMi14a0J+rDMeRxA==
+SHA1-Digest: IwaapG7AjNmevXspd7tCZzUZV18=
+
+Name: chrome/content/dialogOverlay.xul
+Digest-Algorithms: MD5 SHA1
+MD5-Digest: A8wfsPiTw2pT205axDqD6Q==
+SHA1-Digest: R3QWTQEFxYCvEjsjxPzKzVgI7oE=
+
+Name: chrome/content/fakeCommandSource.js
+Digest-Algorithms: MD5 SHA1
+MD5-Digest: trZECD4wtIQAd5lATYv3Eg==
+SHA1-Digest: SucGDcYh6IZTc0heTydLTWPXJ60=
+
+Name: chrome/content/inPageCommandRunner.js
+Digest-Algorithms: MD5 SHA1
+MD5-Digest: yQU8Grg2Q4syltCazV/iTA==
+SHA1-Digest: unz8/2JzVxYu3XSC61+RIz70Hqo=
+
+Name: chrome/content/mozutil.js
+Digest-Algorithms: MD5 SHA1
+MD5-Digest: qIfBBjQcZ1LXf745W2vBFA==
+SHA1-Digest: BA8jC8RAAeIAdfwGEQY0+eYIjJ0=
+
+Name: chrome/content/overlay.js
+Digest-Algorithms: MD5 SHA1
+MD5-Digest: CkPDBOFCe3MUj/Dq7lTebA==
+SHA1-Digest: W4neaeqjT11V0anHM5xPWIAOKp8=
+
+Name: chrome/content/overlay.xul
+Digest-Algorithms: MD5 SHA1
+MD5-Digest: itzZtz5ayHEPkzIqIicIiQ==
+SHA1-Digest: pCNu82BtzgFbrJvnCvB6/jP8gWQ=
+

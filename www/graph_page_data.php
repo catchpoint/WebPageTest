@@ -171,6 +171,8 @@ $common_label = implode(" ", $common_labels);
             ?>
             <?php
             $metrics = array('docTime' => 'Load Time (onload - ms)', 
+                            'loadEventStart' => 'Browser-reported Load Time (Navigation Timing onload)',
+                            'domContentLoadedEventStart' => 'DOM Content Loaded (Navigation Timing)',
                             'SpeedIndex' => 'Speed Index',
                             'TTFB' => 'Time to First Byte (ms)', 
                             'basePageSSLTime' => 'Base Page SSL Time (ms)',

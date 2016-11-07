@@ -13919,6 +13919,7 @@ var NAV_TIMING_SCRIPT = "\
       }\
     } catch(e){}\
   };\
+  addTime('domLoading');\
   addTime('domInteractive');\
   addTime('domContentLoadedEventStart');\
   addTime('domContentLoadedEventEnd');\
@@ -14018,7 +14019,6 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.customMetrics = undefined;
     g_instance.timelineStackDepth = 0;
     g_instance.traceRunning = false;
-    g_instance.userTiming = [];
     var version = '1.0';
     if (g_instance.chromeApi_['debugger'])
         g_instance.chromeApi_.debugger.attach({tabId: g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachDebugger);
@@ -14032,7 +14032,6 @@ wpt.chromeDebugger.SetActive = function(active) {
   if (active) {
     g_instance.requests = {};
     g_instance.idMap = {};
-    g_instance.userTiming = [];
     g_instance.receivedData = false;
     g_instance.statsDoneCallback = undefined;
     g_instance.customMetrics = undefined;
@@ -14129,30 +14128,22 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
   var tracing = false;
   if (message === 'Tracing.dataCollected') {
     tracing = true;
-    if (params['value'] !== undefined) {
+    if (params['value'] !== undefined && params['value'].length && (g_instance.trace || g_instance.timeline)) {
       // Collect the netlog events separately for calculating the request timings
       var jsonStr = '';
       var len = params['value'].length;
       var first = true;
       for(var i = 0; i < len; i++) {
-        if (params['value'][i]['cat'] == 'blink.user_timing')
-          g_instance.userTiming.push(params['value'][i]);
         if (!first)
           jsonStr += ",\n";
         jsonStr += JSON.stringify(params['value'][i]);
         first = false;
       }
-      if (g_instance.trace || g_instance.timeline) {
-        wpt.chromeDebugger.sendEvent('trace', jsonStr);
-      }
+      wpt.chromeDebugger.sendEvent('trace', jsonStr);
     }
   }
   if (message === 'Tracing.tracingComplete') {
     tracing = true;
-    if (g_instance.userTiming.length) {
-      wpt.chromeDebugger.sendEvent('user_timing', JSON.stringify(g_instance.userTiming));
-      g_instance.userTiming = [];
-    }
     if (g_instance.statsDoneCallback)
       g_instance.statsDoneCallback();
   }
@@ -14581,6 +14572,7 @@ wpt.chromeDebugger.collectNavigationTiming = function(callback) {
             result['domContentLoadedEventStart'] +
         '&domContentLoadedEventEnd=' +
             result['domContentLoadedEventEnd'] +
+        '&domLoading=' + result['domLoading'] +
         '&domInteractive=' + result['domInteractive'] +
         '&loadEventStart=' + result['loadEventStart'] +
         '&loadEventEnd=' + result['loadEventEnd'] +
@@ -14724,19 +14716,12 @@ goog.provide('wpt.main');
 
 ((function() {  // namespace
 
-/**
- * Chrome does some work on startup that might have a performance impact.
- * For example, if an extension is loaded using group policy, the installation
- * will download and install that extension shortly after startup.  We don't
- * want the timing of tests altered by this work, so wait a few seconds after
- * startup before starting to perform measurements.
- *
- * @const
- */
-var STARTUP_DELAY = 1000;
+/** @const */
+var STARTUP_DELAY = 500;
+var STARTUP_FAILSAFE_DELAY = 5000;
 
 /** @const */
-var TASK_INTERVAL = 1000;
+var TASK_INTERVAL = 500;
 
 // Run tasks slowly when testing, so that we can see errors in the logs
 // before navigation closes the dev tools window.
@@ -14777,6 +14762,7 @@ var g_manipulatingHeaders = false;
 var g_hasCustomCommandLine = false;
 var g_started = false;
 var g_requestsHooked = false;
+var g_failsafeStartup = undefined;
 
 /**
  * Uninstall a given set of extensions.  Run |onComplete| when done.
@@ -14829,12 +14815,18 @@ wpt.main.startMeasurements = function() {
   } else {
     // Fetch tasks from wptdriver.exe.
     window.setInterval(wptGetTask, TASK_INTERVAL);
+    window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT);
   }
 };
 
 // Install an onLoad handler for all tabs.
 chrome.tabs.onUpdated.addListener(function(tabId, props) {
   if (!g_started && g_starting && props.status == 'complete') {
+    // Kill the failsafe timer
+    if (g_failsafeStartup != undefined) {
+      clearInterval(g_failsafeStartup);
+      g_failsafeStartup = undefined;
+    }
     // handle the startup sequencing (attach the debugger
     // after the browser loads and then start testing).
     g_started = true;
@@ -15263,6 +15255,7 @@ chrome.tabs.query(queryForFocusedTab, function(focusedTabs) {
   g_commandRunner = new wpt.commands.CommandRunner(g_tabid, window.chrome);
   wpt.chromeDebugger.Init(g_tabid, window.chrome, function(){
     setTimeout(function(){g_starting = true;chrome.tabs.update(g_tabid, {'url': STARTUP_URL});}, STARTUP_DELAY);
+    g_failsafeStartup = setInterval(function(){g_starting = true;chrome.tabs.update(g_tabid, {'url': STARTUP_URL});}, STARTUP_FAILSAFE_DELAY);
   });
 });
 

@@ -134,7 +134,7 @@ bool WptSettings::Load(void) {
   } else if (GetPrivateProfileInt(_T("WebPagetest"), _T("gce"), 0, iniFile)) {
     LoadFromGCE();
   } else if (GetPrivateProfileInt(_T("WebPagetest"), _T("azure"), 0, iniFile)) {
-//    LoadFromAzure();
+    LoadFromAzure();
   }
 
 
@@ -208,7 +208,8 @@ void WptSettings::LoadFromGCE(void) {
 void WptSettings::LoadFromAzure(void) {
   TCHAR drive[1024];
   if (GetEnvironmentVariable(_T("SystemDrive"), drive, _countof(drive))) {
-    HANDLE file = CreateFile(CString(drive) + _T("\\AzureData\\CustomData.bin"),
+    CString data_file = CString(drive) + _T("\\AzureData\\CustomData.bin");
+    HANDLE file = CreateFile(data_file,
         GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
     if (file != INVALID_HANDLE_VALUE) {
       DWORD size = GetFileSize(file, NULL);
@@ -217,19 +218,13 @@ void WptSettings::LoadFromAzure(void) {
         DWORD bytes_read = 0;
         if (ReadFile(file, custom_data, size, &bytes_read, 0) &&
             bytes_read == size) {
-          custom_data[size - 1] = 0;
+          custom_data[size] = 0;
           CString user_data = CA2T(custom_data, CP_UTF8);
           ParseInstanceData(user_data);
         }
       }
       CloseHandle(file);
     }
-  }
-  TCHAR instance_id[1024];
-  if (GetEnvironmentVariable(_T("RoleInstanceId"), instance_id,
-                             _countof(instance_id))) {
-    _azure_instance = CString(instance_id).Trim();
-    OutputDebugString(CString("Azure Instance ID: ") + _azure_instance);
   }
 }
 
@@ -240,8 +235,7 @@ void WptSettings::LoadFromAzure(void) {
 -----------------------------------------------------------------------------*/
 void WptSettings::ParseInstanceData(CString &userData) {
   int pos = 0;
-//  OutputDebugStringA("User Data:");
-//  OutputDebugString(userData);
+  //OutputDebugString(L"User Data: " + userData);
   do {
     CString token = userData.Tokenize(_T(" &"), pos).Trim();
     if (token.GetLength()) {
@@ -348,8 +342,8 @@ bool WptSettings::SetBrowser(CString browser, CString url,
 /*-----------------------------------------------------------------------------
   Update the various browsers
 -----------------------------------------------------------------------------*/
-bool WptSettings::UpdateSoftware() {
-  return _software_update.UpdateSoftware();
+bool WptSettings::UpdateSoftware(bool force) {
+  return _software_update.UpdateSoftware(force);
 }
 
 /*-----------------------------------------------------------------------------
@@ -357,6 +351,24 @@ bool WptSettings::UpdateSoftware() {
 -----------------------------------------------------------------------------*/
 bool WptSettings::ReInstallBrowser() {
   return _software_update.ReInstallBrowser(_browser._browser);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool WptSettings::CheckBrowsers() {
+  CString missing_browser;
+  bool ok = _software_update.CheckBrowsers(missing_browser);
+  if (!ok) {
+    _status.Set(_T("Exe for '%s' is not present, reinstalling..."), (LPCTSTR)missing_browser);
+    _software_update.ReInstallBrowser(missing_browser);
+  }
+  return ok;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool BrowserSettings::IsWebdriver() {
+  return _browser.CompareNoCase(_T("Edge")) || _browser.CompareNoCase(_T("Microsoft Edge"));
 }
 
 /*-----------------------------------------------------------------------------
@@ -370,6 +382,11 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
   _exe.Empty();
   _exe_directory.Empty();
   _options.Empty();
+  _webdriver_script.Empty();
+  if (!_cache_directories.IsEmpty())
+    _cache_directories.RemoveAll();
+  if (!_kill_processes.IsEmpty())
+    _kill_processes.RemoveAll();
 
   ATLTRACE(_T("Loading settings for %s"), (LPCTSTR)browser);
 
@@ -378,75 +395,88 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
   _wpt_directory = buff;
   _wpt_directory.Trim(_T("\\"));
 
+  // Delete an artifact from a bad agent update
+  DeleteFile(_wpt_directory + CString(_T("\\templates\\Firefox\\extensions\\wptdriver@webpagetest.org.xpi")));
+
   GetStandardDirectories();
 
-  // create a profile directory for the given browser
-  _profile_directory = _wpt_directory + _T("\\profiles\\");
-  if (!app_data_dir_.IsEmpty()) {
-    lstrcpy(buff, app_data_dir_);
-    PathAppend(buff, _T("webpagetest_profiles\\"));
-    _profile_directory = buff;
-  }
-  _profiles = _profile_directory;
-  if (client.GetLength())
-    _profile_directory += client + _T("-client-");
-  _profile_directory += browser;
-  if (GetPrivateProfileString(browser, _T("cache"), _T(""), buff, 
-    _countof(buff), iniFile )) {
-    _profile_directory = buff;
-    _profile_directory.Trim();
-    _profile_directory.Replace(_T("%WPTDIR%"), _wpt_directory);
-  }
-
-  if (GetPrivateProfileString(browser, _T("template"), _T(""), buff, 
-    _countof(buff), iniFile )) {
-    _template = buff;
-    _template.Trim();
-  }
-
-  if (GetPrivateProfileString(browser, _T("exe"), _T(""), buff, 
-    _countof(buff), iniFile )) {
-    _exe = buff;
-    _exe.Replace(_T("%PROGRAM_FILES%"), program_files_dir_);
-    _exe.Trim(_T("\""));
-
-    lstrcpy(buff, _exe);
-    *PathFindFileName(buff) = NULL;
-    _exe_directory = buff;
-    _exe_directory.Trim(_T("/\\"));
+  if (_browser.CompareNoCase(_T("Edge")) || _browser.CompareNoCase(_T("Microsoft Edge"))) {
+    _webdriver_script = _T("edge.py");
+    CString edge_cache_root = local_app_data_dir_ + _T("\\Packages\\Microsoft.MicrosoftEdge_8wekyb3d8bbwe\\");
+    _cache_directories.AddTail(edge_cache_root + _T("AC"));
+    _cache_directories.AddTail(edge_cache_root + _T("AppData"));
+    _kill_processes.AddTail(_T("MicrosoftEdgeCP.exe"));
+    _kill_processes.AddTail(_T("MicrosoftEdge.exe"));
+    _kill_processes.AddTail(_T("browser_broker.exe"));
+    _kill_processes.AddTail(_T("smartscreen.exe"));
     ret = true;
-  }
-
-  CString command_line;
-  if (GetPrivateProfileString(browser, _T("command-line"), _T(""), buff, 
-    _countof(buff), iniFile )) {
-    command_line = buff;
-    command_line.Trim(_T("\""));
-  }
-
-  // set up some browser-specific settings
-  CString exe(_exe);
-  exe.MakeLower();
-  if (exe.Find(_T("safari.exe")) >= 0) {
-    _profile_directory = app_data_dir_ + _T("\\Apple Computer");
-    if (!_template.GetLength())
-      _template = _T("Safari");
-    if (_cache_directory.IsEmpty()) {
-      _cache_directory = local_app_data_dir_ + _T("\\Apple Computer\\Safari");
+  } else {
+    // create a profile directory for the given browser
+    _profile_directory = _wpt_directory + _T("\\profiles\\");
+    if (!app_data_dir_.IsEmpty()) {
+      lstrcpy(buff, app_data_dir_);
+      PathAppend(buff, _T("webpagetest_profiles\\"));
+      _profile_directory = buff;
     }
-  } else if (exe.Find(_T("chrome.exe")) >= 0) {
-    _options = _T("--load-extension=\"") + _wpt_directory + _T("\\extension\" --user-data-dir=\"") + _profile_directory + _T("\"");
-    if (!command_line.GetLength())
-      _options += _T(" --no-proxy-server");
-  } else if (exe.Find(_T("firefox.exe")) >= 0) {
-    if (!_template.GetLength())
-      _template = _T("Firefox");
-    _options = _T("-profile \"") + _profile_directory + _T("\" -no-remote");
-  }
+    _profiles = _profile_directory;
+    if (client.GetLength())
+      _profile_directory += client + _T("-client-");
+    _profile_directory += browser;
+    if (GetPrivateProfileString(browser, _T("cache"), _T(""), buff, 
+      _countof(buff), iniFile )) {
+      _profile_directory = buff;
+      _profile_directory.Trim();
+      _profile_directory.Replace(_T("%WPTDIR%"), _wpt_directory);
+    }
 
-  // Add user-specified command-line options
-  if (command_line.GetLength()) {
-    _options += _T(" ") + command_line;
+    if (GetPrivateProfileString(browser, _T("template"), _T(""), buff, 
+      _countof(buff), iniFile )) {
+      _template = buff;
+      _template.Trim();
+    }
+
+    if (GetPrivateProfileString(browser, _T("exe"), _T(""), buff, 
+      _countof(buff), iniFile )) {
+      _exe = buff;
+      _exe.Replace(_T("%PROGRAM_FILES%"), program_files_dir_);
+      _exe.Trim(_T("\""));
+
+      lstrcpy(buff, _exe);
+      *PathFindFileName(buff) = NULL;
+      _exe_directory = buff;
+      _exe_directory.Trim(_T("/\\"));
+      ret = true;
+    }
+
+    CString command_line;
+    if (GetPrivateProfileString(browser, _T("command-line"), _T(""), buff, 
+      _countof(buff), iniFile )) {
+      command_line = buff;
+      command_line.Trim(_T("\""));
+    }
+
+    // set up some browser-specific settings
+    CString exe(_exe);
+    exe.MakeLower();
+    if (exe.Find(_T("safari.exe")) >= 0) {
+      _profile_directory = app_data_dir_ + _T("\\Apple Computer");
+      if (!_template.GetLength())
+        _template = _T("Safari");
+      _cache_directories.AddTail(local_app_data_dir_ + _T("\\Apple Computer\\Safari"));
+    } else if (exe.Find(_T("chrome.exe")) >= 0) {
+      _options = _T("--load-extension=\"") + _wpt_directory + _T("\\extension\" --user-data-dir=\"") + _profile_directory + _T("\"");
+      if (!command_line.GetLength())
+        _options += _T(" --no-proxy-server");
+    } else if (exe.Find(_T("firefox.exe")) >= 0) {
+      if (!_template.GetLength())
+        _template = _T("Firefox");
+      _options = _T("-profile \"") + _profile_directory + _T("\" -no-remote");
+    }
+
+    // Add user-specified command-line options
+    if (command_line.GetLength()) {
+      _options += _T(" ") + command_line;
+    }
   }
 
   return ret;
@@ -537,9 +567,15 @@ void BrowserSettings::CleanupCustomBrowsers(CString browser) {
   Reset the browser user profile (nuke the directory, copy the template over)
 -----------------------------------------------------------------------------*/
 void BrowserSettings::ResetProfile(bool clear_certs) {
+  // See if there are any processes we need to kill
+
   // clear the browser-specific profile directory
-  if (_cache_directory.GetLength()) {
-    DeleteDirectory(_cache_directory, false);
+  if (_cache_directories.IsEmpty()) {
+    POSITION pos = _cache_directories.GetHeadPosition();
+    while (pos) {
+      CString dir = _cache_directories.GetNext(pos);
+      DeleteDirectory(dir, false);
+    }
   }
   if (_profile_directory.GetLength()) {
     SHCreateDirectoryEx(NULL, _profile_directory, NULL);
@@ -580,6 +616,23 @@ void BrowserSettings::ResetProfile(bool clear_certs) {
     DeleteDirectory(local_app_data_dir_ + _T("\\Microsoft\\Windows\\WER"), false);
     ClearWinInetCache();
     ClearWebCache();
+  }
+
+  // Clear the Microsoft Edge caches
+  if (_webdriver_script == _T("edge.py")) {
+    CString edge_root = local_app_data_dir_ + _T("\\Packages\\Microsoft.MicrosoftEdge_8wekyb3d8bbwe\\");
+    // Only directories that start with #! in the AC folder
+    WIN32_FIND_DATA fd;
+    HANDLE hFind = FindFirstFile(edge_root + _T("AC\\#!*"), &fd);
+    if (hFind != INVALID_HANDLE_VALUE) {
+      do {
+        OutputDebugString(fd.cFileName);
+        DeleteDirectory(edge_root + CString(_T("AC\\")) + fd.cFileName, true);
+      } while(FindNextFile(hFind, &fd));
+      FindClose(hFind);
+    }
+    // The whole AppData folder
+    DeleteDirectory(edge_root + _T("AppData"), false);
   }
 
   // delete any .tmp files in our directory or the root directory of the drive.
@@ -899,3 +952,4 @@ static bool Unzip(CString file, CStringA dir) {
 
   return ret;
 }
+

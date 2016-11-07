@@ -122,7 +122,9 @@ bool WebBrowser::RunAndWait() {
   _browser_needs_reset.Empty();
 
   if (_test.Start() && ConfigureIpfw(_test)) {
-    if (_browser._exe.GetLength()) {
+    if (_browser.IsWebdriver()) {
+      RunWebdriverTest();
+    } else if (_browser._exe.GetLength()) {
       CString exe(_browser._exe);
       exe.MakeLower();
       if (exe.Find(_T("chrome.exe")) >= 0)
@@ -235,8 +237,12 @@ bool WebBrowser::RunAndWait() {
       }
 
       // set up the TLS session key log
-      SetEnvironmentVariable(L"SSLKEYLOGFILE", _test._file_base + L"_keylog.log");
       DeleteFile(_test._file_base + L"_keylog.log");
+      if (_test._tcpdump) {
+        SetEnvironmentVariable(L"SSLKEYLOGFILE", _test._file_base + L"_keylog.log");
+      } else {
+        SetEnvironmentVariable(L"SSLKEYLOGFILE", NULL);
+      }
 
       _status.Set(_T("Launching: %s"), cmdLine);
 
@@ -317,6 +323,7 @@ bool WebBrowser::RunAndWait() {
           #endif
           WaitForSingleObject(_browser_done_event, wait_time);
           WaitForSingleObject(_browser_process, 10000);
+          _status.Set(_T("Test complete, processing result..."));
         }
       } else {
         _status.Set(_T("Error initializing browser event"));
@@ -334,11 +341,13 @@ bool WebBrowser::RunAndWait() {
       TerminateProcessesByName(PathFindFileName((LPCTSTR)_browser._exe));
 
       g_shared->SetBrowserExe(NULL);
-      ResetIpfw();
+      SetEnvironmentVariable(L"SSLKEYLOGFILE", NULL);
 
     } else {
       _test._run_error = "Browser configured incorrectly (exe not defined).";
     }
+
+    ResetIpfw();
   } else {
     _test._run_error = "Failed to configure IPFW/dummynet.  Is it installed?";
   }
@@ -766,6 +775,27 @@ void WebBrowser::ConfigureIESettings() {
       DWORD val = 0;
       RegSetValueEx(hKey, _T("VersionCheckEnabled"), 0, REG_DWORD,
                     (const LPBYTE)&val, sizeof(val));
+      val = 1;
+      RegSetValueEx(hKey, _T("IgnoreFrameApprovalCheck"), 0, REG_DWORD,
+                    (const LPBYTE)&val, sizeof(val));
+      RegCloseKey(hKey);
+    }
+
+    // Make sure the bho is enabled
+    if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+        _T("Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Ext"),
+        0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
+      DWORD val = 1;
+      RegSetValueEx(hKey, _T("IgnoreFrameApprovalCheck"), 0, REG_DWORD,
+                    (const LPBYTE)&val, sizeof(val));
+      RegCloseKey(hKey);
+    }
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
+        _T("Software\\Microsoft\\Windows\\CurrentVersion\\Ext\\Settings\\{2B925455-8D0C-401F-AA4C-9336C2167F14}"),
+        0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
+      DWORD val = 0x400;
+      RegSetValueEx(hKey, _T("Flags"), 0, REG_DWORD,
+                    (const LPBYTE)&val, sizeof(val));
       RegCloseKey(hKey);
     }
 }
@@ -794,13 +824,13 @@ void WebBrowser::ConfigureChromePreferences() {
   HANDLE file = CreateFile(prefs_file, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
   if (file != INVALID_HANDLE_VALUE) {
     DWORD written = 0;
-    WriteFile(file, prefs, strlen(prefs), &written, 0);
+    WriteFile(file, prefs, lstrlenA(prefs), &written, 0);
     CloseHandle(file);
   }
   file = CreateFile(master_prefs_file, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
   if (file != INVALID_HANDLE_VALUE) {
     DWORD written = 0;
-    WriteFile(file, prefs, strlen(prefs), &written, 0);
+    WriteFile(file, prefs, lstrlenA(prefs), &written, 0);
     CloseHandle(file);
   }
 }
@@ -822,4 +852,13 @@ void WebBrowser::CreateChromeSymlink() {
       _browser._exe = newDir + "\\Application\\chrome.exe";
     }
   }
+}
+
+/*-----------------------------------------------------------------------------
+  Save the test info out, run the stand-alone webdriver test and wait for it
+  to finish.
+-----------------------------------------------------------------------------*/
+void WebBrowser::RunWebdriverTest() {
+  OutputDebugStringA("RunWebdriverTest");
+  _test.SaveJson();
 }

@@ -248,7 +248,7 @@ void CWinPCap::CompressCapture(void) {
 
   HANDLE hSrc = CreateFile(captureFile, GENERIC_READ, 0, 0, OPEN_EXISTING,0,0);
   if (hSrc != INVALID_HANDLE_VALUE) {
-    gzFile dst = gzopen((LPCSTR)CT2A(captureFile + _T(".gz")), "wb9");
+    gzFile dst = gzopen((LPCSTR)CT2A(captureFile + _T(".gz")), "wb6");
     if (dst) {
       char buff[4096];
       DWORD buffLen = sizeof(buff);

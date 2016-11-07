@@ -98,6 +98,8 @@ function tbnDrawWaterfall($testStepResult, &$img)
 
     require_once __DIR__ . '/waterfall.inc';
     $requests = $testStepResult->getRequests();
+    $localPaths = $testStepResult->createTestPaths();
+    AddRequestScriptTimings($requests, $localPaths->devtoolsScriptTimingFile());
     $use_dots = (!isset($_REQUEST['dots']) || $_REQUEST['dots'] != 0);
     $rows = GetRequestRows($requests, $use_dots);
     $page_events = GetPageEvents($testStepResult->getRawResults());
@@ -116,11 +118,15 @@ function tbnDrawWaterfall($testStepResult, &$img)
         'use_cpu' => true,
         'use_bw' => true,
         'max_bw' => $bwIn,
+        'show_user_timing' => GetSetting('waterfall_show_user_timing'),
         'is_thumbnail' => true,
+        'include_js' => true,
+        'is_mime' => (bool)GetSetting('mime_waterfalls'),
         'width' => $newWidth
         );
     $url = $testStepResult->readableIdentifier($url);
-    $img = GetWaterfallImage($rows, $url, $page_events, $options, $testStepResult->getRawResults());
+    $pageData = $testStepResult->getRawResults();
+    $img = GetWaterfallImage($rows, $url, $page_events, $options, $pageData);
 }
 
 /**

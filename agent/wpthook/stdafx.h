@@ -57,6 +57,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <shlobj.h>
 #include <atlstr.h>
 #include <atlcoll.h>
+#include <atlenc.h>
 #include "../wptdriver/util.h"
 #include "shared_mem.h"
 
+#include <zlib.h>

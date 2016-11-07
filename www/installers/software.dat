@@ -15,3 +15,9 @@ url=http://cdn.webpagetest.org/installers/python/python-2.7.12.msi
 version=2.7.12
 md5=FE0EF5B8FD02722F32F7284324934F9D
 command=msiexec /i python-2.7.12.msi /qn TARGETDIR=c:\Python27
+
+[ujson]
+url=http://cdn.webpagetest.org/installers/python/ujson.exe
+version=1.23
+md5=84E843660D5B1779E5FEE0440AB28B01
+command=ujson /S

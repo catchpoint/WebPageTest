@@ -78,5 +78,5 @@ private:
                       const struct mg_request_info *request_info);
   CStringA GetPostBodyA(struct mg_connection *conn,
                         const struct mg_request_info *request_info);
-  bool OkToStart();
+  bool OkToStart(bool trigger_start);
 };

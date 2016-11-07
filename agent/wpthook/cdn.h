@@ -171,6 +171,10 @@ CDN_PROVIDER cdnList[] = {
   {".raxcdn.com", "Rackspace"},
   {".unicorncdn.net", "UnicornCDN"},
   {".optimalcdn.com", "Optimal CDN"},
+  {".kinxcdn.com", "KINX CDN"},
+  {".kinxcdn.net", "KINX CDN"},
+  {".stackpathdns.com", "StackPath"},
+  {".hosting4cdn.com", "Hosting4CDN"},
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -210,7 +214,8 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "hiberniacdn", "HiberniaCDN"},
   {"server", "UnicornCDN", "UnicornCDN"},
   {"server", "Optimal CDN", "Optimal CDN"},
-  {"server", "Sucuri/Cloudproxy", "Sucuri/Cloudproxy"}
+  {"server", "Sucuri/Cloudproxy", "Sucuri/Cloudproxy"},
+  {"section-io-id", "", "section.io"}
 };
 
 // Specific providers that require multiple headers

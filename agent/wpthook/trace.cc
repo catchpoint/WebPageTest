@@ -32,9 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-Trace::Trace(void) {
+Trace::Trace(void):gz_file_(NULL) {
   InitializeCriticalSection(&cs_);
-  Reset();
 }
 
 /*-----------------------------------------------------------------------------
@@ -45,49 +44,46 @@ Trace::~Trace(void) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Trace::Reset() {
+void Trace::Start(CString file) {
+  End();
   EnterCriticalSection(&cs_);
-  events_.RemoveAll();
-  processed_ = false;
+  file_ = file;
   LeaveCriticalSection(&cs_);
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool Trace::Write(CString file) {
-  bool ok = false;
+void Trace::End() {
   EnterCriticalSection(&cs_);
-  if (!events_.IsEmpty()) {
-    gzFile dst = gzopen((LPCSTR)CT2A(file + _T(".gz")), "wb9");
-    if (dst) {
-      ok = true;
-      bool first = true;
-      CStringA event_string = "{\"traceEvents\": [\n";
-      gzwrite(dst, (voidpc)(LPCSTR)event_string, (unsigned int)event_string.GetLength());
-      POSITION pos = events_.GetHeadPosition();
-      while (pos) {
-        event_string = events_.GetNext(pos);
-        event_string.Trim("[],\n");
-        if (event_string.GetLength()) {
-          if (!first)
-            event_string = CStringA(",\n") + event_string;
-          first = false;
-          gzwrite(dst, (voidpc)(LPCSTR)event_string, (unsigned int)event_string.GetLength());
-        }
-      }
-      event_string = "\n]}";
-      gzwrite(dst, (voidpc)(LPCSTR)event_string, (unsigned int)event_string.GetLength());
-      gzclose(dst);
-    }
+  if (gz_file_) {
+    gzwrite(gz_file_, (voidpc)"\n]}", 3);
+    gzclose(gz_file_);
+    gz_file_ = NULL;
   }
+  file_.Empty();
   LeaveCriticalSection(&cs_);
-  return ok;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Trace::AddEvents(CStringA data) {
   EnterCriticalSection(&cs_);
-  events_.AddTail(data);
+  data.Trim("[],\n");
+  if (data.GetLength()) {
+    bool first = false;
+    if (!gz_file_ && !file_.IsEmpty()) {
+      first = true;
+      gz_file_ = gzopen((LPCSTR)CT2A(file_ + _T(".gz")), "wb6");
+      if (gz_file_) {
+        CStringA header = "{\"traceEvents\": [\n";
+        gzwrite(gz_file_, (voidpc)(LPCSTR)header, (unsigned int)header.GetLength());
+      }
+    }
+    if (gz_file_) {
+      if (!first)
+        gzwrite(gz_file_, (voidpc)",\n", 2);
+      gzwrite(gz_file_, (voidpc)(LPCSTR)data, (unsigned int)data.GetLength());
+    }
+  }
   LeaveCriticalSection(&cs_);
 }

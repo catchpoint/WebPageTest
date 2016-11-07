@@ -10,8 +10,20 @@ $lock = Lock("cron-5", false, 1200);
 if (!isset($lock))
   exit(0);
 
-  // Clear the user cache if we drop below 10% or 5MB available
-if (function_exists("apc_sma_info") && function_exists("apc_clear_cache")) {
+  // Clear the user cache if we drop below 20% or 5MB available
+if (function_exists("apcu_sma_info") && function_exists("apcu_clear_cache")) {
+  $info = apcu_sma_info(true);
+  if (isset($info['num_seg']) && isset($info['seg_size']) && isset($info['avail_mem'])) {
+    $total = $info['seg_size'] * $info['num_seg'];
+    $avail = $info['avail_mem'];
+    if ($total > 0) {
+      $pct = $avail / $total;
+      if ($avail < 5000000 || $pct < 0.20) {
+        apcu_clear_cache();
+      }
+    }
+  }
+} elseif (function_exists("apc_sma_info") && function_exists("apc_clear_cache")) {
   $info = apc_sma_info(true);
   if (isset($info['num_seg']) && isset($info['seg_size']) && isset($info['avail_mem'])) {
     $total = $info['seg_size'] * $info['num_seg'];

@@ -233,31 +233,23 @@ function EC2_SendInstancesOffline() {
     // See if we have any offline testers that we need to bring online
     $online_target = max(1, intval($locations[$ami]['tests'] / ($scaleFactor / 2)));
     foreach ($info['locations'] as $location) {
-      $lock = LockLocation($location);
-      if ($lock) {
-        if (is_file("./tmp/$location.tm")) {
-          $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
-          if (isset($testers) && is_array($testers) && count($testers)) {
-            $online = 0;
-            foreach ($testers as $tester) {
-              if (!isset($tester['offline']) || !$tester['offline'])
-                $online++;
-            }
-            if ($online > $online_target) {
-              $changed = false;
-              foreach ($testers as &$tester) {
-                if ($online > $online_target && (!isset($tester['offline']) || !$tester['offline'])) {
-                  $tester['offline'] = true;
-                  $online--;
-                  $changed = true;
-                }
-              }
-              if ($changed)
-                file_put_contents("./tmp/$location.tm", json_encode($testers));
+      $testers = GetTesters($location);
+      if (isset($testers) && is_array($testers) && isset($testers['testers']) && count($testers['testers'])) {
+        $online = 0;
+        foreach ($testers['testers'] as $tester) {
+          if (!isset($tester['offline']) || !$tester['offline'])
+            $online++;
+        }
+        if ($online > $online_target) {
+          $changed = false;
+          foreach ($testers['testers'] as &$tester) {
+            if ($online > $online_target && (!isset($tester['offline']) || !$tester['offline'])) {
+              $tester['offline'] = true;
+              $online--;
+              UpdateTester($location, $tester['id'], $tester);
             }
           }
         }
-        UnlockLocation($lock);
       }
     }
   }
@@ -317,31 +309,23 @@ function EC2_StartNeededInstances() {
       // See if we have any offline testers that we need to bring online
       $online_target = intval($locations[$ami]['tests'] / ($scaleFactor / 2));
       foreach ($info['locations'] as $location) {
-        $lock = LockLocation($location);
-        if ($lock) {
-          if (is_file("./tmp/$location.tm")) {
-            $testers = json_decode(file_get_contents("./tmp/$location.tm"), true);
-            if (isset($testers) && is_array($testers) && count($testers)) {
-              $online = 0;
-              foreach ($testers as $tester) {
-                if (!isset($tester['offline']) || !$tester['offline'])
-                  $online++;
-              }
-              if ($online < $online_target) {
-                $changed = false;
-                foreach ($testers as &$tester) {
-                  if ($online < $online_target && isset($tester['offline']) && $tester['offline']) {
-                    $tester['offline'] = false;
-                    $online++;
-                    $changed = true;
-                  }
-                }
-                if ($changed)
-                  file_put_contents("./tmp/$location.tm", json_encode($testers));
+        $testers = GetTesters($location);
+        if (isset($testers) && is_array($testers) && isset($testers['testers']) && count($testers['testers'])) {
+          $online = 0;
+          foreach ($testers['testers'] as $tester) {
+            if (!isset($tester['offline']) || !$tester['offline'])
+              $online++;
+          }
+          if ($online < $online_target) {
+            $changed = false;
+            foreach ($testers['testers'] as $tester) {
+              if ($online < $online_target && isset($tester['offline']) && $tester['offline']) {
+                $tester['offline'] = false;
+                $online++;
+                UpdateTester($location, $tester['id'], $tester);
               }
             }
           }
-          UnlockLocation($lock);
         }
       }
       

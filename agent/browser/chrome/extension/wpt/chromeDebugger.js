@@ -53,6 +53,7 @@ var NAV_TIMING_SCRIPT = "\
       }\
     } catch(e){}\
   };\
+  addTime('domLoading');\
   addTime('domInteractive');\
   addTime('domContentLoadedEventStart');\
   addTime('domContentLoadedEventEnd');\
@@ -152,7 +153,6 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.customMetrics = undefined;
     g_instance.timelineStackDepth = 0;
     g_instance.traceRunning = false;
-    g_instance.userTiming = [];
     var version = '1.0';
     if (g_instance.chromeApi_['debugger'])
         g_instance.chromeApi_.debugger.attach({tabId: g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachDebugger);
@@ -166,7 +166,6 @@ wpt.chromeDebugger.SetActive = function(active) {
   if (active) {
     g_instance.requests = {};
     g_instance.idMap = {};
-    g_instance.userTiming = [];
     g_instance.receivedData = false;
     g_instance.statsDoneCallback = undefined;
     g_instance.customMetrics = undefined;
@@ -263,30 +262,22 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
   var tracing = false;
   if (message === 'Tracing.dataCollected') {
     tracing = true;
-    if (params['value'] !== undefined) {
+    if (params['value'] !== undefined && params['value'].length && (g_instance.trace || g_instance.timeline)) {
       // Collect the netlog events separately for calculating the request timings
       var jsonStr = '';
       var len = params['value'].length;
       var first = true;
       for(var i = 0; i < len; i++) {
-        if (params['value'][i]['cat'] == 'blink.user_timing')
-          g_instance.userTiming.push(params['value'][i]);
         if (!first)
           jsonStr += ",\n";
         jsonStr += JSON.stringify(params['value'][i]);
         first = false;
       }
-      if (g_instance.trace || g_instance.timeline) {
-        wpt.chromeDebugger.sendEvent('trace', jsonStr);
-      }
+      wpt.chromeDebugger.sendEvent('trace', jsonStr);
     }
   }
   if (message === 'Tracing.tracingComplete') {
     tracing = true;
-    if (g_instance.userTiming.length) {
-      wpt.chromeDebugger.sendEvent('user_timing', JSON.stringify(g_instance.userTiming));
-      g_instance.userTiming = [];
-    }
     if (g_instance.statsDoneCallback)
       g_instance.statsDoneCallback();
   }
@@ -715,6 +706,7 @@ wpt.chromeDebugger.collectNavigationTiming = function(callback) {
             result['domContentLoadedEventStart'] +
         '&domContentLoadedEventEnd=' +
             result['domContentLoadedEventEnd'] +
+        '&domLoading=' + result['domLoading'] +
         '&domInteractive=' + result['domInteractive'] +
         '&loadEventStart=' + result['loadEventStart'] +
         '&loadEventEnd=' + result['loadEventEnd'] +

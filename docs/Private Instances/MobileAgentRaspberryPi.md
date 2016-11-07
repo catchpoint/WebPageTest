@@ -67,6 +67,15 @@ For the initial setup you will also need a USB keyboard and monitor with HDMI in
 	- Save and exit (Ctrl-O, Ctrl-X)
 	- ```sudo dphys-swapfile setup```
 	- ```sudo dphys-swapfile swapon```
+20. Configure watchdog to automatically reboot on hang (optional)
+	- ```echo "bcm2835_wdt" | sudo tee -a /etc/modules```
+	- ```sudo apt-get install watchdog```
+	- ```sudo update-rc.d watchdog defaults```
+	- ```sudo nano /etc/watchdog.conf```
+		- uncomment "watchdog-device =" line
+		- optionally, configure a load limit (max-load-15 = 80 should cover EXTREME cases)
+	- ```sudo modprobe bcm2835_wdt```
+	- ```sudo /etc/init.d/watchdog start```
 20. Configure it to reboot on out-of-memory and optionally disable IPv6
 	- ```sudo nano /etc/sysctl.conf```
 	- Add the reboot on OOM settings to the end
@@ -86,7 +95,7 @@ The WebPageTest node agent requires NodeJS, Python, imagemagick and ffmpeg as we
 	- ```sudo apt-get upgrade```
 	- ```sudo apt-get -y --force-yes install git screen libtiff5-dev libjpeg-dev zlib1g-dev libfreetype6-dev liblcms2-dev libwebp-dev tcl8.6-dev tk8.6-dev python-tk python-pip libtiff5-dev libjpeg-dev zlib1g-dev libfreetype6-dev liblcms2-dev libwebp-dev tcl8.6-dev tk8.6-dev python-tk python-dev libavutil-dev libmp3lame-dev libx264-dev yasm git autoconf automake build-essential libass-dev libfreetype6-dev libtheora-dev libtool libvorbis-dev pkg-config texi2html zlib1g-dev libtext-unidecode-perl android-tools-adb imagemagick python-numpy python-scipy```
 2. Install the python modules:
-	- ```sudo pip install psutil pillow pyssim```
+	- ```sudo pip install psutil pillow pyssim ujson```
 	- Be patient, if it needs to build pyssim and the dependencies this can take upwards of an hour
 3. Download, build and install ffmpeg
 	- ```cd ~```

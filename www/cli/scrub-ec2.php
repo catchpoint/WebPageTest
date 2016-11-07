@@ -58,25 +58,7 @@ if( $ec2 )
             $locations = explode(',', $location);
             $locCount = count($locations);
             foreach($locations as $loc) {
-                $loc_testers = json_decode(file_get_contents("./tmp/$loc.tm"), true);
-                foreach ($loc_testers as $id => $info) {
-                    $elapsed = 0;
-                    if (array_key_exists('updated', $info) && $info['updated'] < $now) {
-                        $elapsed = $now - $info['updated'];
-                    }
-                    if ($elapsed < 1800) {   // only count test machines that have contacted us in the last 30 minutes
-                        if (!array_key_exists($id, $testers)) {
-                            $testers[$id] = $info;
-                            $testers[$id]['locCount'] = 1;
-                        } else {
-                            $testerLocCount = $testers[$id]['locCount'];
-                            if (array_key_exists('test', $info) && strlen($info['test'])) {
-                                $testers[$id] = $info;
-                            }
-                            $testers[$id]['locCount'] = $testerLocCount + 1;
-                        }
-                    }
-                }
+                $testers[$id]['locCount'] = GetTesterCount($loc);
             }
             
             // if any testers have been known for more than 10 minutes and
@@ -146,7 +128,7 @@ if( $ec2 )
                 // $targetCount = (int)($activeCount + ($idleCount / 4));
             } elseif( $targetBacklog ) {
                 // get the current backlog
-                $backlog = GetPendingTests($location, $bk, $avgTime);
+                $backlog = GetPendingTests($location, $bk);
                 echo "Backlog: $backlog\n";
                 if ($activeCount)
                     $ratio = $backlog / $activeCount;
@@ -196,28 +178,25 @@ if( $ec2 )
                 $count = abs($needed);
                 $locations = explode(',', $location);
                 foreach($locations as $loc) {
-                    if( $lock = LockLocation($loc) ) {
-                        $testers = json_decode(file_get_contents("./tmp/$loc.tm"), true);
-                        if (count($testers)) {
-                            foreach($testers as &$tester) {
-                                if (array_key_exists('ec2', $tester) && strlen($tester['ec2']) && !$tester['offline']) {
-                                    if( $count > 0 && !strlen($tester['test']) ) {
-                                        $terminate[] = $tester['ec2'];
-                                        $count--;
-                                        $counts["$region.$ami"]--;
-                                    }
-                                    
-                                    // see if this tester is on the terminate list (for testers that support multiple locations)
-                                    foreach($terminate as $id) {
-                                        if ($tester['ec2'] == $id) {
-                                            $tester['offline'] = true;
-                                        }
+                    $testers = GetTesters($loc);
+                    if (isset($testers) && is_array($testers) && isset($testers['testers'])) {
+                        foreach($testers['testers'] as &$tester) {
+                            if (array_key_exists('ec2', $tester) && strlen($tester['ec2']) && !$tester['offline']) {
+                                if( $count > 0 && !strlen($tester['test']) ) {
+                                    $terminate[] = $tester['ec2'];
+                                    $count--;
+                                    $counts["$region.$ami"]--;
+                                }
+                                
+                                // see if this tester is on the terminate list (for testers that support multiple locations)
+                                foreach($terminate as $id) {
+                                    if ($tester['ec2'] == $id) {
+                                        $tester['offline'] = true;
+                                        UpdateTester($loc, $tester['id'], $tester);
                                     }
                                 }
                             }
-                            file_put_contents("./tmp/$loc.tm", json_encode($testers));
                         }
-                        UnlockLocation($lock);
                     }
                 }
             }

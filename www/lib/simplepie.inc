@@ -1290,6 +1290,9 @@ class SimplePie
 
 			list($headers, $sniffed) = $fetched;
 		}
+    
+    if (!strlen($this->raw_data))
+      return false;
 
 		// Set up array of possible encodings
 		$encodings = array();

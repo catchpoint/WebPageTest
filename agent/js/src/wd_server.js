@@ -195,6 +195,7 @@ WebDriverServer.prototype.init = function(args) {
   this.traceFileStream_ = undefined;
   this.userTimingFile_ = undefined;
   this.cpuSlicesFile_ = undefined;
+  this.scriptTimingFile_ = undefined;
   this.pcapSlicesFile_ = undefined;
   this.netlogFile_ = undefined;
   this.featureUsageFile_ = undefined;
@@ -1013,10 +1014,12 @@ WebDriverServer.prototype.scheduleProcessTrace_ = function() {
     if (this.traceFile_) {
       this.userTimingFile_ = path.join(this.runTempDir_, 'user_timing.json.gz');
       this.cpuSlicesFile_ = path.join(this.runTempDir_, 'timeline_cpu.json.gz');
+      this.scriptTimingFile_ = path.join(this.runTempDir_, 'script_timing.json.gz');
       this.featureUsageFile_ = path.join(this.runTempDir_, 'feature_usage.json.gz');
       var options = ['lib/trace/trace-parser.py', '-vvvv',
           '-t', this.traceFile_, '-u', this.userTimingFile_,
-          '-c', this.cpuSlicesFile_, '-f', this.featureUsageFile_];
+          '-c', this.cpuSlicesFile_, '-j', this.scriptTimingFile_,
+          '-f', this.featureUsageFile_];
       process_utils.scheduleExec(this.app_,
           'python', options, undefined,
           TRACE_PROCESSING_TIMEOUT_MS).then(function(stdout) {
@@ -1591,6 +1594,7 @@ WebDriverServer.prototype.done_ = function() {
           traceFile: this.traceFile_,
           userTimingFile: this.userTimingFile_,
           cpuSlicesFile: this.cpuSlicesFile_,
+          scriptTimingFile: this.scriptTimingFile_,
           pcapSlicesFile: this.pcapSlicesFile_,
           featureUsageFile: this.featureUsageFile_,
           netlogFile: this.netlogFile_,

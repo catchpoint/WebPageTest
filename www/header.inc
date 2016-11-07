@@ -2,6 +2,7 @@
 require_once __DIR__ . '/page_data.inc';
 require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/include/TestResults.php';
+require_once __DIR__ . '/include/TestRunResults.php';
 
 if(isset($testPath) ) {
   $options = null;
@@ -173,12 +174,6 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
               echo '<div id="optimization_header">';
               $localPaths = new TestPaths($testPath, $gradeRun, false);
               $urlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $id, $gradeRun, false);
-              $pageSpeedScore = $gradeRunResults->averagePageSpeedScore();
-              if ($pageSpeedScore !== null) {
-                $pageSpeedUrl = $urlGenerator->stepDetailPage("pagespeed");
-                $pageSpeedVersion = $gradeRunResults->getPageSpeedVersion();
-                echo "<span id=\"headerPagespeedScore\"><a href=\"$pageSpeedUrl\">PageSpeed $pageSpeedVersion Score</a>: <b>$pageSpeedScore/100</b></span>";
-              }
               
               echo "<div id=\"opthelp\"><a href=\"https://sites.google.com/a/webpagetest.org/docs/other-resources/optimization-resources\" title=\"Optimization Resources\" target=\"_blank\">Need help improving?</a></div>\n";
               echo '</div>';

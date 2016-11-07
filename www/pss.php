@@ -490,9 +490,8 @@ function LoadLocations()
                 $loc['testers'] = 1;
                 $loc['wait'] = ceil(($testCount * 30) / 60);
             } else {
-                GetPendingTests($index, $count, $avgTime);
-                if( !$avgTime )
-                    $avgTime = 30;  // default to 30 seconds if we don't have any history
+                GetPendingTests($index, $count);
+                $avgTime = 30;  // default to 30 seconds if we don't have any history
                 $loc['backlog'] = $count;
                 $loc['avgTime'] = $avgTime;
                 $loc['testers'] = GetTesterCount($index);

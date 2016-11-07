@@ -12,14 +12,14 @@ $locations = LoadLocations();
 // get the backlog for each location
 foreach( $locations as $id => &$location )
 {
-    if (strlen($location['relayServer']) && strlen($location['relayLocation'])) {
-        $location['PendingTests'] = GetRemoteBacklog($location['relayServer'], $location['relayLocation']);
-    } else {
-        $location['PendingTests'] = GetBacklog($location['localDir'], $location['location']);
-    }
+  if (strlen($location['relayServer']) && strlen($location['relayLocation'])) {
+    $location['PendingTests'] = GetRemoteBacklog($location['relayServer'], $location['relayLocation']);
+  } else {
+    $location['PendingTests'] = GetBacklog($location['localDir'], $location['location']);
+  }
 
-    // strip out any sensitive data
-    unset($location['localDir']);
+  // strip out any sensitive data
+  unset($location['localDir']);
 }
 
 // kick out the data
@@ -54,15 +54,10 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
         </tr>\n";
   foreach( $locations as $name => &$location ) {
     $error = '';
-    if (array_key_exists('PendingTests', $location) &&
-        array_key_exists('Total', $location['PendingTests']) &&
-        array_key_exists('HighPriority', $location['PendingTests']) &&
-        array_key_exists('Testing', $location['PendingTests'])) {
-        if ($location['PendingTests']['HighPriority'] > $location['PendingTests']['Testing'] * 10)
-          $error = ' danger';
-        elseif ($location['PendingTests']['Total'] > 1)
-          $error = ' warning';
-    }
+    if (isset($location['PendingTests']['Total']) && $location['PendingTests']['Total'] > 1)
+      $error = ' warning';
+    if (!isset($location['status']) || $location['status'] == 'OFFLINE')
+      $error = ' danger';
     echo "<tr id=\"$name\" class=\"$error\">";
     echo "<td class=\"location\">" . @htmlspecialchars($name) . "</td>" . PHP_EOL;
     echo "<td>" . @htmlspecialchars($location['labelShort']) . "</td>" . PHP_EOL;
@@ -86,45 +81,41 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
   echo "</table>\n";
   include 'admin_footer.inc';
 } else {
-    header ('Content-type: text/xml');
-    echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    echo "<?xml-stylesheet type=\"text/xsl\" encoding=\"UTF-8\" href=\"getLocations.xsl\" version=\"1.0\"?>\n";
-    echo "<response>\n";
-    echo "<statusCode>200</statusCode>\n";
-    echo "<statusText>Ok</statusText>\n";
-    if( strlen($_REQUEST['r']) )
-        echo "<requestId>{$_REQUEST['r']}</requestId>\n";
-    echo "<data>\n";
+  header ('Content-type: text/xml');
+  echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+  echo "<?xml-stylesheet type=\"text/xsl\" encoding=\"UTF-8\" href=\"getLocations.xsl\" version=\"1.0\"?>\n";
+  echo "<response>\n";
+  echo "<statusCode>200</statusCode>\n";
+  echo "<statusText>Ok</statusText>\n";
+  if( strlen($_REQUEST['r']) )
+      echo "<requestId>{$_REQUEST['r']}</requestId>\n";
+  echo "<data>\n";
 
-    foreach( $locations as $name => &$location )
-    {
-        echo "<location>\n";
-        echo "<id>$name</id>\n";
-        foreach( $location as $key => &$value )
-            if( is_array($value) )
-            {
-                echo "<$key>\n";
-                foreach( $value as $k => &$v )
-                {
-                    if (htmlspecialchars($v)!=$v)
-                        echo "<$k><![CDATA[$v]]></$k>\n";
-                    else
-                        echo "<$k>$v</$k>\n";
-                }
-                echo "</$key>\n";
-            }
-            else
-            {
-                if (htmlspecialchars($value)!=$value)
-                    echo "<$key><![CDATA[$value]]></$key>\n";
-                else
-                    echo "<$key>$value</$key>\n";
-            }
-        echo "</location>\n";
+  foreach ($locations as $name => &$location) {
+    echo "<location>\n";
+    echo "<id>$name</id>\n";
+    foreach ($location as $key => &$value) {
+      if (is_array($value)) {
+        echo "<$key>\n";
+        foreach ($value as $k => &$v) {
+          if (htmlspecialchars($v)!=$v)
+            echo "<$k><![CDATA[$v]]></$k>\n";
+          else
+            echo "<$k>$v</$k>\n";
+        }
+        echo "</$key>\n";
+      } else {
+        if (htmlspecialchars($value)!=$value)
+          echo "<$key><![CDATA[$value]]></$key>\n";
+        else
+          echo "<$key>$value</$key>\n";
+      }
     }
+    echo "</location>\n";
+  }
 
-    echo "</data>\n";
-    echo "</response>\n";
+  echo "</data>\n";
+  echo "</response>\n";
 }
 
 /**
@@ -133,81 +124,81 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
 */
 function LoadLocations()
 {
-    $locations = array();
-    $loc = LoadLocationsIni();
-    if (isset($_REQUEST['k']) && preg_match('/^(?P<prefix>[0-9A-Za-z]+)(?P<key>[\.0-9A-Za-z]*)$/', $_REQUEST['k'], $matches)) {
-      $filter = $matches['prefix'];
-      foreach ($loc as $name => $location) {
-        if (isset($location['browser'])) {
-          $ok = false;
-          if (isset($location['allowKeys'])) {
-            $keys = explode(',', $location['allowKeys']);
-            foreach($keys as $k) {
-              if ($k == $filter) {
-                $ok = true;
-                break;
-              }
+  $locations = array();
+  $loc = LoadLocationsIni();
+  if (isset($_REQUEST['k']) && preg_match('/^(?P<prefix>[0-9A-Za-z]+)(?P<key>[\.0-9A-Za-z]*)$/', $_REQUEST['k'], $matches)) {
+    $filter = $matches['prefix'];
+    foreach ($loc as $name => $location) {
+      if (isset($location['browser'])) {
+        $ok = false;
+        if (isset($location['allowKeys'])) {
+          $keys = explode(',', $location['allowKeys']);
+          foreach($keys as $k) {
+            if ($k == $filter) {
+              $ok = true;
+              break;
             }
           }
-          if (!$ok)
-            unset($loc[$name]);
         }
+        if (!$ok)
+          unset($loc[$name]);
       }
     }
-    FilterLocations($loc);
-    BuildLocations($loc);
+  }
+  FilterLocations($loc);
+  BuildLocations($loc);
 
-    if( isset($loc['locations']['default']) )
-        $default = $loc['locations']['default'];
-    else
-        $default = $loc['locations'][1];
+  if( isset($loc['locations']['default']) )
+    $default = $loc['locations']['default'];
+  else
+    $default = $loc['locations'][1];
 
-    $i = 1;
-    while( isset($loc['locations'][$i]) )
-    {
-        $group = &$loc[$loc['locations'][$i]];
-        if( !array_key_exists('hidden', $group) ||
-            !$group['hidden'] ||
-            $_REQUEST['hidden'] )
-        {
-            $label = $group['label'];
+  $i = 1;
+  while( isset($loc['locations'][$i]) )
+  {
+    $group = &$loc[$loc['locations'][$i]];
+    if (!isset($group['hidden']) || !$group['hidden'] || $_REQUEST['hidden']) {
+      $label = $group['label'];
 
-            if( isset($group['default']) )
-                $def = $group['default'];
-            else
-                $def = $group[1];
+      if( isset($group['default']) )
+          $def = $group['default'];
+      else
+          $def = $group[1];
 
-            $j = 1;
-            while( isset($group[$j]) )
-            {
-                if (array_key_exists($group[$j], $loc)) {
-                    if (!array_key_exists('hidden', $loc[$group[$j]]) ||
-                        !$loc[$group[$j]]['hidden'] ||
-                        $_REQUEST['hidden']) {
-                        $locations[$group[$j]] = array( 'Label' => $label,
-                                                        'location' => $loc[$group[$j]]['location'],
-                                                        'Browser' => $loc[$group[$j]]['browser'],
-                                                        'localDir' => $loc[$group[$j]]['localDir'],
-                                                        'relayServer' => @$loc[$group[$j]]['relayServer'],
-                                                        'relayLocation' => @$loc[$group[$j]]['relayLocation'],
-                                                        'labelShort' => $loc[$group[$j]]['label'],
-                                                        );
+      $j = 1;
+      while( isset($group[$j]) )
+      {
+        if (isset($loc[$group[$j]]['location'])) {
+          $loc_name = $loc[$group[$j]]['location'];
+          if (!isset($loc[$group[$j]]['hidden']) || !$loc[$group[$j]]['hidden'] || $_REQUEST['hidden']) {
+            if (isset($locations[$loc_name])) {
+              $locations[$loc_name]['Browsers'] .= ',' . $loc[$group[$j]]['browser'];
+            } else {
+              $locations[$loc_name] = array( 'Label' => $label,
+                                              'location' => $loc[$group[$j]]['location'],
+                                              'Browsers' => $loc[$group[$j]]['browser'],
+                                              'localDir' => $loc[$group[$j]]['localDir'],
+                                              'status' => @$loc[$group[$j]]['status'],
+                                              'relayServer' => @$loc[$group[$j]]['relayServer'],
+                                              'relayLocation' => @$loc[$group[$j]]['relayLocation'],
+                                              'labelShort' => $loc[$loc_name]['label'],
+                                              );
 
-                        if( $default == $loc['locations'][$i] && $def == $group[$j] )
-                            $locations[$group[$j]]['default'] = true;
+              if ($default == $loc['locations'][$i] && $def == $group[$j])
+                $locations[$loc_name]['default'] = true;
 
-                        if( isset($group['group']) )
-                            $locations[$group[$j]]['group'] = $group['group'];
-                    }
-                }
-                $j++;
+              if (isset($group['group']))
+                $locations[$loc_name]['group'] = $group['group'];
             }
+          }
         }
-
-        $i++;
+        $j++;
+      }
     }
+    $i++;
+  }
 
-    return $locations;
+  return $locations;
 }
 
 /**
@@ -258,34 +249,34 @@ function GetBacklog($dir, $locationId)
 * Pull the location information from a remote server
 */
 function GetRemoteBacklog($server, $remote_location) {
-    $backlog = array();
-    global $remote_cache;
+  $backlog = array();
+  global $remote_cache;
 
-    $server_hash = md5($server);
+  $server_hash = md5($server);
 
-    if (array_key_exists('relay', $_REQUEST) && $_REQUEST['relay']) {
-      // see if we need to populate the cache from the remote server
-      if (!array_key_exists($server_hash, $remote_cache)) {
-          $xml = http_fetch("$server/getLocations.php?hidden=1");
-          if ($xml) {
-            $remote = json_decode(json_encode((array)simplexml_load_string($xml)), true);
-            if (is_array($remote) && array_key_exists('data', $remote) && array_key_exists('location', $remote['data'])) {
-                $cache_entry = array();
-                foreach($remote['data']['location'] as &$location) {
-                    $parts = explode(':', $location['id']);
-                    $id = $parts[0];
-                    $cache_entry[$id] = $location['PendingTests'];
-                }
-                $remote_cache[$server_hash] = $cache_entry;
-            }
+  if (array_key_exists('relay', $_REQUEST) && $_REQUEST['relay']) {
+    // see if we need to populate the cache from the remote server
+    if (!array_key_exists($server_hash, $remote_cache)) {
+      $xml = http_fetch("$server/getLocations.php?hidden=1");
+      if ($xml) {
+        $remote = json_decode(json_encode((array)simplexml_load_string($xml)), true);
+        if (is_array($remote) && array_key_exists('data', $remote) && array_key_exists('location', $remote['data'])) {
+          $cache_entry = array();
+          foreach($remote['data']['location'] as &$location) {
+            $parts = explode(':', $location['id']);
+            $id = $parts[0];
+            $cache_entry[$id] = $location['PendingTests'];
           }
-      }
-
-      if (array_key_exists($server_hash, $remote_cache) && array_key_exists($remote_location,$remote_cache[$server_hash])) {
-          $backlog = $remote_cache[$server_hash][$remote_location];
+          $remote_cache[$server_hash] = $cache_entry;
+        }
       }
     }
 
-    return $backlog;
+    if (array_key_exists($server_hash, $remote_cache) && array_key_exists($remote_location,$remote_cache[$server_hash])) {
+        $backlog = $remote_cache[$server_hash][$remote_location];
+    }
+  }
+
+  return $backlog;
 }
 ?>

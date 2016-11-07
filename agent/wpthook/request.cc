@@ -509,6 +509,7 @@ void Request::DataIn(DataChunk& chunk) {
   EnterCriticalSection(&cs);
   if (_is_active) {
     QueryPerformanceCounter(&_end);
+    _chunk_timings.AddTail(ChunkTiming(chunk.GetLength(), _end));
     if (!_first_byte.QuadPart)
       _first_byte.QuadPart = _end.QuadPart;
     if (!_is_spdy) {
@@ -599,8 +600,12 @@ void Request::ObjectDataIn(DataChunk& chunk) {
 void Request::BytesIn(size_t len) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - Request::BytesIn(%d)"), len);
   EnterCriticalSection(&cs);
-  if (_is_active)
+  if (_is_active) {
+    LARGE_INTEGER now;
+    QueryPerformanceCounter(&now);
+    _chunk_timings.AddTail(ChunkTiming(len, now));
     _bytes_in += (DWORD)len;
+  }
   LeaveCriticalSection(&cs);
 }
 
@@ -963,4 +968,29 @@ void Request::SetPriority(int depends_on, int weight, int exclusive) {
   _h2_priority_depends_on = depends_on;
   _h2_priority_weight = weight;
   _h2_priority_exclusive = exclusive;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CStringA Request::GetChunkTimings() {
+  CStringA json;
+  if (!_chunk_timings.IsEmpty()) {
+    CStringA buff;
+    POSITION pos = _chunk_timings.GetHeadPosition();
+    while (pos) {
+      ChunkTiming timing = _chunk_timings.GetNext(pos);
+      DWORD elapsed = _test_state.ElapsedMsFromStart(timing.timestamp_);
+      if (elapsed > 0) {
+        buff.Format("[%d,%d]", elapsed, timing.length_);
+        if (json.IsEmpty()) {
+          json = "[" + buff;
+        } else {
+          json += "," + buff;
+        }
+      }
+    }
+    if (!json.IsEmpty())
+      json += "]";
+  }
+  return json;
 }

@@ -27,6 +27,29 @@ SoftwareUpdate::SoftwareUpdate(WptStatus &status):
   }
   QueryPerformanceFrequency(&_perf_frequency_minutes);
   _perf_frequency_minutes.QuadPart = _perf_frequency_minutes.QuadPart * 60;
+  // get the version number to pass along in update checks
+  TCHAR file[MAX_PATH];
+  if (GetModuleFileName(NULL, file, _countof(file))) {
+    DWORD unused;
+    DWORD infoSize = GetFileVersionInfoSize(file, &unused);
+    if (infoSize) {
+      LPBYTE pVersion = new BYTE[infoSize];
+      if (GetFileVersionInfo(file, 0, infoSize, pVersion)) {
+        VS_FIXEDFILEINFO * info = NULL;
+        UINT size = 0;
+        if( VerQueryValue(pVersion, _T("\\"), (LPVOID*)&info, &size) && info )
+        {
+          _version.Format(_T("%d.%d.%d.%d"), HIWORD(info->dwFileVersionMS),
+                          LOWORD(info->dwFileVersionMS),
+                          HIWORD(info->dwFileVersionLS),
+                          LOWORD(info->dwFileVersionLS));
+          _build.Format(_T("%d"), LOWORD(info->dwFileVersionLS));
+        }
+      }
+
+      delete [] pVersion;
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -52,15 +75,16 @@ void SoftwareUpdate::LoadSettings(CString settings_ini) {
       settings_ini)) {
     TCHAR * section = sections;
     while(lstrlen(section)) {
-      if (GetPrivateProfileString(section, _T("Installer"), NULL, buff, 
+      if (GetPrivateProfileString(section, _T("exe"), NULL, buff, 
           _countof(buff), settings_ini)) {
         BrowserInfo info;
-        info._installer = buff;
-        if (GetPrivateProfileString(section, _T("exe"), NULL, buff, 
+        info._name = section;
+        info._exe = buff;
+        if (program_files_dir.GetLength())
+          info._exe.Replace(_T("%PROGRAM_FILES%"), program_files_dir);
+        if (GetPrivateProfileString(section, _T("Installer"), NULL, buff, 
             _countof(buff), settings_ini)) {
-          info._exe = buff;
-          if (program_files_dir.GetLength())
-            info._exe.Replace(_T("%PROGRAM_FILES%"), program_files_dir);
+          info._installer = buff;
         }
         _browsers.AddTail(info);
       }
@@ -71,23 +95,42 @@ void SoftwareUpdate::LoadSettings(CString settings_ini) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-CString SoftwareUpdate::GetUpdateInfo(CString url) {
-  CString info, buff;
-  if (_ec2_instance.GetLength())
-    info += _T("ec2instance=") + _ec2_instance;
-  if (_ec2_availability_zone.GetLength()) {
-    if (info.GetLength())
-      info += _T("&");
-    info += _T("ec2zone=") + _ec2_availability_zone;
+void SoftwareUpdate::SetSoftwareUrl(CString url) {
+  if (url != _software_url) {
+    _software_url = url;
+    UpdateSoftware(true);
   }
-  if (info.GetLength()) {
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CString SoftwareUpdate::GetUpdateInfo(CString url) {
+  CString info, params, buff;
+  params = _T("wptdriverVer=") + _version + _T("&wptdriverBuild=") + _build;
+  if (_ec2_instance.GetLength())
+    params += _T("&ec2instance=") + _ec2_instance;
+  if (_ec2_availability_zone.GetLength())
+    params += _T("&ec2zone=") + _ec2_availability_zone;
+  if (params.GetLength()) {
     if (url.Find(_T("?")) > 0)
       url += _T("&");
     else
       url += _T("?");
-    url += info;
+    url += params;
   }
-  return HttpGetText(url);
+
+  // Try getting the update information directly from a local s3 bucket
+  if (_ec2_availability_zone.GetLength() && url.Find(_T("www.webpagetest.org")) >= 0) {
+    CString region = _ec2_availability_zone.Left(_ec2_availability_zone.GetLength() - 1);
+    CString s3url = url;
+    s3url.Replace(_T("www.webpagetest.org"), _T("wpt-") + region + _T(".s3.amazonaws.com"));
+    info = HttpGetText(s3url);
+  }
+
+  if (info.IsEmpty())
+    info = HttpGetText(url);
+
+  return info;
 }
 
 /*-----------------------------------------------------------------------------
@@ -149,7 +192,6 @@ bool SoftwareUpdate::UpdateBrowsers(void) {
             _T("[wptdriver] SoftwareUpdate::UpdateBrowsers\n"));
   POSITION pos = _browsers.GetHeadPosition();
   while (ok && pos) {
-    POSITION current_pos = pos;
     BrowserInfo browser_info = _browsers.GetNext(pos);
     CString url = browser_info._installer.Trim();
     if (url.GetLength()) {
@@ -182,12 +224,6 @@ bool SoftwareUpdate::UpdateBrowsers(void) {
         ok = InstallSoftware(browser, file_url, md5, version, command,
                               browser_info._exe);
       }
-    }
-
-    // if we don't need to automatically update the browser then 
-    // remove it from the list
-    if (ok) {
-      _browsers.RemoveAt(current_pos);
     }
   }
   WptTrace(loglevel::kFunction,
@@ -352,4 +388,22 @@ bool SoftwareUpdate::ReInstallBrowser(CString browser) {
     RegCloseKey(key);
   }
   return UpdateSoftware(true);
+}
+
+/*-----------------------------------------------------------------------------
+  See if the exe's for all of the browsers are present
+-----------------------------------------------------------------------------*/
+bool SoftwareUpdate::CheckBrowsers(CString& missing_browser) {
+  bool ok = true;
+
+  POSITION pos = _browsers.GetHeadPosition();
+  while (ok && pos) {
+    BrowserInfo browser_info = _browsers.GetNext(pos);
+    if (!FileExists(browser_info._exe)) {
+      ok = false;
+      missing_browser = browser_info._name;
+    }
+  }
+
+  return ok;
 }

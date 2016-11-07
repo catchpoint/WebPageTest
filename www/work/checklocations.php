@@ -17,17 +17,11 @@ $collected = '';
 
 $files = scandir('./tmp');
 foreach( $files as $file ) {
-  if(is_file("./tmp/$file")) {
-    $parts = pathinfo($file);
-    if( !strcasecmp( $parts['extension'], 'tm') ) {
-      $loc = basename($file, ".tm");
-      $fileName = "./tmp/$file";
-      $updated = filemtime($fileName);
-      $now = time();
-      $elapsed = 0;
-      if( $now > $updated )
-          $elapsed = $now - $updated;
-      $minutes = (int)($elapsed / 60);
+  if(is_dir("./tmp/$file") && preg_match('/testers-(.+)/', $file, $matches)) {
+    $loc = $matches[1];
+    $testers = GetTesters($loc, false, false);
+    if (isset($testers['elapsed'])) {
+      $minutes = $testers['elapsed'];
       
       if ($minutes < 4320 &&
           isset($locations[$loc]) &&
@@ -39,10 +33,10 @@ foreach( $files as $file ) {
         } elseif (isset($locations[$loc]['agents'])) {
           $configured = $locations[$loc]['agents'];
           $expected = isset($locations[$loc]['min-agents']) ? $locations[$loc]['min-agents'] : $configured;
-          $testers = GetTesterCount($loc);
-          if ($testers < $expected) {
-            $missing = $configured - $testers;
-            $alert = "has $missing agents offline ($testers connected, minimum of $expected of the $configured required).";
+          $tester_count = isset($testers['testers']) ? count($testers['testers']) : 0;
+          if ($tester_count < $expected) {
+            $missing = $configured - $tester_count;
+            $alert = "has $missing agents offline ($tester_count connected, minimum of $expected of the $configured required).";
             $collected .= "$loc - $missing agents offline";
           }
         }

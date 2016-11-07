@@ -122,7 +122,8 @@ public:
   virtual ~WptTest(void);
 
   void  Reset(void);
-  virtual bool  Load(CString& test);
+  virtual bool Load(CString& test);
+  void  SaveJson();
 
   bool  GetNextTask(CStringA& task, bool& record);
   bool  Done();
@@ -177,6 +178,7 @@ public:
   CString _basic_auth;
   CString _script;
   CString _test_file;
+  CString _json_file;
   bool    _log_data;
   DWORD   _test_timeout;
   bool    _has_test_timed_out;
@@ -212,6 +214,12 @@ public:
   bool     _process_results;
   CAtlList<CString> _block_domains;
   CAtlList<CString> _block_domains_except;
+  bool     _minimal_results;
+  CString  _software_update_url;
+  bool     _incremental;
+  CString  _job_info;
+  CStringA _testinfo_json;
+  CStringA _testinfo_ini;
   
   // current state
   int     _run;
@@ -263,4 +271,13 @@ protected:
   CAtlList<HttpHeaderValue> _override_hosts;
 
   CAtlMap<USHORT, USHORT> _tcp_port_override;
+
+  CStringA JsonFragment(LPCSTR field, CString &value);
+  CStringA JsonFragment(LPCSTR field, CStringA &value);
+  CStringA JsonFragment(LPCSTR field, bool &value);
+  CStringA JsonFragment(LPCSTR field, DWORD &value);
+  CStringA JsonFragment(LPCSTR field, int &value);
+  CStringA JsonFragment(LPCSTR field, BYTE &value);
+  CStringA JsonFragment(LPCSTR field, double &value);
+  CStringA JsonFragment(LPCSTR field, CAtlList<CString> &values);
 };

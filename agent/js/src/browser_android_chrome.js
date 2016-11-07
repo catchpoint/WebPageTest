@@ -110,11 +110,43 @@ var BLACK_BOX_BROWSERS = {
       'directories': ['cache', 'databases', 'files', 'app_sbrowser', 'code_cache'],
       'startupDelay': 10000
     },
+    'QQ Browser': {
+      'package': 'com.tencent.mtt.intl',
+      'activity': 'com.tencent.mtt.SplashActivity',
+      'videoFlags': ['--findstart', 25, '--notification'],
+      'directories': ['cache', 'databases', 'files', 'app_appcache', 'app_databases', 'app_databases_tmp', 'app_x5_share'],
+      'startupDelay': 10000
+    },
+    'Firefox': {
+      'package': 'org.mozilla.firefox',
+      'activity': '.App',
+      'videoFlags': ['--findstart', 25, '--notification'],
+      'directories': ['cache', 'databases', 'files', 'app_sbrowser', 'code_cache'],
+      'startupDelay': 10000
+    },
+    'Firefox Beta': {
+      'package': 'org.mozilla.firefox_beta',
+      'activity': '.App',
+      'videoFlags': ['--findstart', 25, '--notification'],
+      'directories': ['cache', 'databases', 'files', 'app_tmpdir', 'no_backup'],
+      'startupDelay': 10000
+    },
     'Blimp': {
       'package': 'org.chromium.blimp',
       'activity': 'com.google.android.apps.chrome.Main',
       'flagsFile': '/data/local/chrome-command-line',
-      'flags': '-f 268435456 --ez "android.support.customtabs.extra.user_opt_out" true',
+      'flags': ['--no-first-run',
+                '--disable-fre',
+                '--no-default-browser-check',
+                '--disable-background-networking',
+                '--disable-datasaver-prompt',
+                '--safebrowsing-disable-auto-update',
+                '--disable-external-intent-requests',
+                '-f',
+                '268435456',
+                '--ez',
+                'android.support.customtabs.extra.user_opt_out',
+                'true'],
       'videoFlags': ['--findstart', 25, '--notification'],
       'clearProfile': true,
       'startupDelay': 10000
@@ -177,6 +209,8 @@ function BrowserAndroidChrome(app, args) {
   this.isBlackBox = false;
   this.videoFlags = undefined;
   this.browserConfig_ = undefined;
+  if (args.task['customBrowser_type'] !== undefined && BLACK_BOX_BROWSERS[args.task['customBrowser_type']] !== undefined)
+    args.task.browser = args.task['customBrowser_type'];
   if (args.flags.chromePackage) {
     this.browserPackage_ = args.flags.chromePackage;
   } else if (args.task.browser) {
@@ -341,8 +375,8 @@ BrowserAndroidChrome.prototype.startBrowser = function() {
       this.navigateTo(this.blank_page_);
     }
     this.app_.timeout(this.browserConfig_['startupDelay'], 'Wait for browser startup');
+    this.waitForNetworkIdle_(60000);
   }
-  this.waitForNetworkIdle_(30000);
 
   this.scheduleConfigureDevToolsPort_();
 };
@@ -1092,7 +1126,7 @@ BrowserAndroidChrome.prototype.waitForNetworkIdle_ = function(timeout) {
     this.networkIdleLastCheck_ = process.hrtime();
     return this.adb_.scheduleGetBytesRx().then(function(rx) {
       logger.debug("Bytes Rx: " + rx);
-      if (rx > 100)
+      if (rx > 1000)
         this.networkIdleCount_ = 0;
       else
         this.networkIdleCount_++;

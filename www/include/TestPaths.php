@@ -252,6 +252,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for devtools script execution times timeline
+   */
+  public function devtoolsScriptTimingFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_script_timing.json";
+  }
+
+  /**
    * @return string Path for devtools trace file
    */
   public function devtoolsTraceFile() {

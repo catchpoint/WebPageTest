@@ -107,6 +107,8 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="affinity" value="' . htmlspecialchars($_REQUEST['affinity']) . "\">\n";
             if (array_key_exists('tester', $_REQUEST))
               echo '<input type="hidden" name="tester" value="' . htmlspecialchars($_REQUEST['tester']) . "\">\n";
+            if (array_key_exists('minimal', $_REQUEST))
+              echo '<input type="hidden" name="minimal" value="' . htmlspecialchars($_REQUEST['minimal']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>

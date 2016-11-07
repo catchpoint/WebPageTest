@@ -1044,6 +1044,7 @@ function DevToolsGetCPUSlicesForStep($localPaths) {
   $slices = null;
   $slices_file = $localPaths->devtoolsCPUTimelineFile() . ".gz";
   $trace_file = $localPaths->devtoolsTraceFile() . ".gz";
+  $script_timing = $localPaths->devtoolsScriptTimingFile() . ".gz";
   if (!GetSetting('disable_timeline_processing') && !is_file($slices_file) && is_file($trace_file) && is_file(__DIR__ . '/lib/trace/trace-parser.py')) {
     $script = realpath(__DIR__ . '/lib/trace/trace-parser.py');
     touch($slices_file);
@@ -1059,7 +1060,7 @@ function DevToolsGetCPUSlicesForStep($localPaths) {
     }
     $trace_file = realpath($trace_file);
 
-    $command = "python \"$script\" -t \"$trace_file\" -u \"$user_timing\" -c \"$slices_file\" 2>&1";
+    $command = "python \"$script\" -t \"$trace_file\" -u \"$user_timing\" -c \"$slices_file\" -j \"$script_timing\" 2>&1";
     exec($command, $output, $result);
     if (!is_file($slices_file))
       touch($slices_file);

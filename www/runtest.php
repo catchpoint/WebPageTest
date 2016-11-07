@@ -3,6 +3,7 @@
         newrelic_add_custom_tracer('CheckUrl');
         newrelic_add_custom_tracer('CheckIp');
         newrelic_add_custom_tracer('WptHookValidateTest');
+        newrelic_add_custom_tracer('GetRedirect');
     }
 
     // deal with magic quotes being enabled
@@ -185,6 +186,7 @@
             $test['clearcerts'] = array_key_exists('clearcerts', $_REQUEST) && $_REQUEST['clearcerts'] ? 1 : 0;
             $test['orientation'] = array_key_exists('orientation', $_REQUEST) ? trim($_REQUEST['orientation']) : 'default';
             $test['responsive'] = array_key_exists('responsive', $_REQUEST) && $_REQUEST['responsive'] ? 1 : 0;
+            $test['minimalResults'] = array_key_exists('minimal', $_REQUEST) && $_REQUEST['minimal'] ? 1 : 0;
             if (isset($_REQUEST['medianMetric']))
               $test['medianMetric'] = $_REQUEST['medianMetric'];
 
@@ -1011,25 +1013,30 @@ function ValidateKey(&$test, &$error, $key = null)
       // see if it was an auto-provisioned key
       if (preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $key, $matches)) {
         $prefix = $matches['prefix'];
-        $db = new SQLite3(__DIR__ . "/dat/{$prefix}_api_keys.db");
-        $k = $db->escapeString($matches['key']);
-        $info = $db->querySingle("SELECT key_limit FROM keys WHERE key='$k'", true);
-        $db->close();
-        if (isset($info) && is_array($info) && isset($info['key_limit']))
-          $keys[$key] = array('limit' => $info['key_limit']);
+        if (is_file(__DIR__ . "/dat/{$prefix}_api_keys.db")) {
+          $db = new SQLite3(__DIR__ . "/dat/{$prefix}_api_keys.db");
+          $k = $db->escapeString($matches['key']);
+          $info = $db->querySingle("SELECT key_limit FROM keys WHERE key='$k'", true);
+          $db->close();
+          if (isset($info) && is_array($info) && isset($info['key_limit']))
+            $keys[$key] = array('limit' => $info['key_limit']);
+        }
       }
       
       // validate their API key and enforce any rate limits
       if( array_key_exists($key, $keys) ){
         if (array_key_exists('default location', $keys[$key]) &&
             strlen($keys[$key]['default location']) &&
-            !strlen($test['location']))
+            !strlen($test['location'])) {
             $test['location'] = $keys[$key]['default location'];
+        }
         if (isset($keys[$key]['priority']))
             $test['priority'] = $keys[$key]['priority'];
         if (isset($keys[$key]['max-priority']))
             $test['priority'] = max($keys[$key]['max-priority'], $test['priority']);
-        if( isset($keys[$key]['limit']) ){
+        if (isset($keys[$key]['location']) && $test['location'] !== $keys[$key]['location'])
+          $error = "Invalid location.  The API key used is restricted to {$keys[$key]['location']}";
+        if( !strlen($error) && isset($keys[$key]['limit']) ) {
           $limit = (int)$keys[$key]['limit'];
 
             // update the number of tests they have submitted today
@@ -1328,9 +1335,14 @@ function ValidateScript(&$script, &$error)
 
         $test['navigateCount'] = $navigateCount;
 
+        $maxNavigateCount = GetSetting("maxNavigateCount");
+        if (!$maxNavigateCount) {
+            $maxNavigateCount = 20;
+        }
+
         if( !$ok )
             $error = "Invalid Script (make sure there is at least one navigate command and that the commands are tab-delimited).  Please contact us if you need help with your test script.";
-        else if( $navigateCount > 20 )
+        else if( $navigateCount > $maxNavigateCount )
             $error = "Sorry, your test has been blocked.  Please contact us if you have any questions";
 
         if( strlen($error) )
@@ -1514,70 +1526,24 @@ function SubmitUrl($testId, $testData, &$test, $url)
 */
 function WriteJob($location, &$test, &$job, $testId)
 {
-    $ret = false;
-    global $error;
-    global $locations;
+  $ret = false;
+  global $error;
+  global $locations;
 
-    if( $locations[$location]['relayServer'] )
-    {
-        // upload the test to a the relay server
-        $test['id'] = $testId;
-        $ret = SendToRelay($test, $job);
+  if ($locations[$location]['relayServer']) {
+    // upload the test to a the relay server
+    $test['id'] = $testId;
+    $ret = SendToRelay($test, $job);
+  } else {
+    // Submit the job locally
+    if (AddTestJob($location, $job, $test)) {
+      $ret = true;
+    } else {
+      $error = "Sorry, that test location already has too many tests pending.  Pleasy try again later.";
     }
-    else
-    {
-        // make sure the work directory exists
-        if( !is_dir($test['workdir']) )
-            mkdir($test['workdir'], 0777, true);
-        $workDir = $test['workdir'];
-        $locationLock = LockLocation($location);
-        if( isset($locationLock) )
-        {
-            if (isset($test['affinity']))
-              $test['job'] = "Affinity{$test['affinity']}.{$test['job']}";
-            $testNum = GetDailyTestNum();
-            $sortableIndex = date('ymd') . GetSortableString($testNum);
-            $test['job'] = "$sortableIndex.{$test['job']}";
-            $fileName = $test['job'];
-            $file = "$workDir/$fileName";
-            if( file_put_contents($file, $job) ) {
-                if (AddJobFile($workDir, $fileName, $test['priority'], $test['queue_limit'])) {
-                    // store a copy of the job file with the original test in case the test fails and we need to resubmit it
-                    $test['job_file'] = realpath($file);
-                    if (ValidateTestId($testId)) {
-                        $testPath = GetTestPath($testId);
-                        if (strlen($testPath)) {
-                            $testPath = './' . $testPath;
-                            if (!is_dir($testPath))
-                                mkdir($testPath, 0777, true);
-                            file_put_contents("$testPath/test.job", $job);
-                        }
-                    }
-                    $tests = json_decode(file_get_contents("./tmp/$location.tests"), true);
-                    if( !$tests )
-                        $tests = array();
-                    $testCount = $test['runs'];
-                    if( !$test['fvonly'] )
-                        $testCount *= 2;
-                    if( array_key_exists('tests', $tests) )
-                        $tests['tests'] += $testCount;
-                    else
-                        $tests['tests'] = $testCount;
-                    file_put_contents("./tmp/$location.tests", json_encode($tests));
+  }
 
-                    $ret = true;
-                }
-                else
-                {
-                    unlink($file);
-                    $error = "Sorry, that test location already has too many tests pending.  Pleasy try again later.";
-                }
-            }
-            UnlockLocation($locationLock);
-        }
-    }
-
-    return $ret;
+  return $ret;
 }
 
 /**
@@ -1643,61 +1609,60 @@ function SendToRelay(&$test, &$out)
 /**
 * Detect if the given URL redirects to another host
 */
-function GetRedirect($url, &$rhost, &$rurl)
-{
-    global $redirect_cache;
-    $redirected = false;
-    $rhost = '';
-    $rurl = '';
+function GetRedirect($url, &$rhost, &$rurl) {
+  global $redirect_cache;
+  $redirected = false;
+  $rhost = '';
+  $rurl = '';
 
-    if (strlen($url)) {
-        if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
-            $url = 'http://' . $url;
-        if (array_key_exists($url, $redirect_cache)) {
-            $rhost = $redirect_cache[$url]['host'];
-            $rurl = $redirect_cache[$url]['url'];
-        } elseif (function_exists('curl_init')) {
-            $parts = parse_url($url);
-            $original = $parts['host'];
-            $host = '';
-            $curl = curl_init();
-            curl_setopt($curl, CURLOPT_URL, $url);
-            curl_setopt($curl, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; PTST 2.295)');
-            curl_setopt($curl, CURLOPT_FILETIME, true);
-            curl_setopt($curl, CURLOPT_NOBODY, true);
-            curl_setopt($curl, CURLOPT_HEADER, true);
-            curl_setopt($curl, CURLOPT_FAILONERROR, true);
-            curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 20);
-            curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 20);
-            curl_setopt($curl, CURLOPT_MAXREDIRS, 10);
-            curl_setopt($curl, CURLOPT_TIMEOUT, 20);
-            curl_setopt($curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-            $headers = curl_exec($curl);
-            curl_close($curl);
-            $lines = explode("\n", $headers);
-            foreach($lines as $line) {
-                $line = trim($line);
-                $split = strpos($line, ':');
-                if ($split > 0) {
-                    $key = trim(substr($line, 0, $split));
-                    $value = trim(substr($line, $split + 1));
-                    if (!strcasecmp($key, 'Location')) {
-                        $rurl = $value;
-                        $parts = parse_url($rurl);
-                        $host = trim($parts['host']);
-                    }
-                }
-            }
-            if( strlen($host) && $original !== $host )
-                $rhost = $host;
-            $redirect_cache[$url] = array('host' => $rhost, 'url' => $rurl);
+  if (strlen($url)) {
+    if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
+      $url = 'http://' . $url;
+    if (array_key_exists($url, $redirect_cache)) {
+      $rhost = $redirect_cache[$url]['host'];
+      $rurl = $redirect_cache[$url]['url'];
+    } elseif (function_exists('curl_init')) {
+      $parts = parse_url($url);
+      $original = $parts['host'];
+      $host = '';
+      $curl = curl_init();
+      curl_setopt($curl, CURLOPT_URL, $url);
+      curl_setopt($curl, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; PTST 2.295)');
+      curl_setopt($curl, CURLOPT_FILETIME, true);
+      curl_setopt($curl, CURLOPT_NOBODY, true);
+      curl_setopt($curl, CURLOPT_HEADER, true);
+      curl_setopt($curl, CURLOPT_FAILONERROR, true);
+      curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+      curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 20);
+      curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 20);
+      curl_setopt($curl, CURLOPT_MAXREDIRS, 10);
+      curl_setopt($curl, CURLOPT_TIMEOUT, 20);
+      curl_setopt($curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+      curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+      $headers = curl_exec($curl);
+      curl_close($curl);
+      $lines = explode("\n", $headers);
+      foreach($lines as $line) {
+        $line = trim($line);
+        $split = strpos($line, ':');
+        if ($split > 0) {
+          $key = trim(substr($line, 0, $split));
+          $value = trim(substr($line, $split + 1));
+          if (!strcasecmp($key, 'Location')) {
+            $rurl = $value;
+            $parts = parse_url($rurl);
+            $host = trim($parts['host']);
+          }
         }
+      }
+      if( strlen($host) && $original !== $host )
+        $rhost = $host;
+      $redirect_cache[$url] = array('host' => $rhost, 'url' => $rurl);
     }
-    if (strlen($rhost))
-        $redirected = true;
-    return $redirected;
+  }
+  if (strlen($rhost))
+    $redirected = true;
+  return $redirected;
 }
 
 /**
@@ -1768,13 +1733,13 @@ function CheckIp(&$test)
       foreach( $blockIps as $block ) {
         $block = trim($block);
         if( strlen($block) ) {
-          if( ereg($block, $ip) ) {
+          if( preg_match($block, $ip) ) {
             logMsg("$ip: matched $block for url {$test['url']}", "./log/{$date}-blocked.log", true);
             $ok = false;
             break;
           }
 
-          if( $ip2 && strlen($ip2) && ereg($block, $ip2) ) {
+          if( $ip2 && strlen($ip2) && preg_match($block, $ip2) ) {
             logMsg("$ip2: matched(2) $block for url {$test['url']}", "./log/{$date}-blocked.log", true);
             $ok = false;
             break;
@@ -1810,7 +1775,10 @@ function CheckUrl($url)
         $blockHosts !== false && count($blockHosts) ||
         $blockAuto !== false && count($blockAuto)) {
       // Follow redirects to see if they are obscuring the site being tested
-      GetRedirect($url, $rhost, $rurl);
+      $rhost = '';
+      $rurl = '';
+      if (GetSetting('check_redirects'))
+        GetRedirect($url, $rhost, $rurl);
       foreach( $blockUrls as $block ) {
         $block = trim($block);
         if( strlen($block) && preg_match("/$block/i", $url)) {
@@ -2067,6 +2035,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "continuousVideo=1\r\n";
             if (array_key_exists('responsive', $test) && $test['responsive'])
                 $testFile .= "responsive=1\r\n";
+            if (array_key_exists('minimalResults', $test) && $test['minimalResults'])
+                $testFile .= "minimalResults=1\r\n";
             if (array_key_exists('cmdLine', $test) && strlen($test['cmdLine']))
                 $testFile .= "cmdLine={$test['cmdLine']}\r\n";
             if (array_key_exists('addCmdLine', $test) && strlen($test['addCmdLine']))
@@ -2088,8 +2058,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "UAModifier=$UAModifier\r\n";
             if (isset($test['appendua']))
               $testFile .= "AppendUA={$test['appendua']}\r\n";
-            if (GetSetting('enable_agent_processing'))
-              $testFile .= "processResults=1\r\n";
+            if (isset($test['key']) && strlen($test['key']))
+              $testFile .= "APIKey={$test['key']}\r\n";
+            if (isset($test['ip']) && strlen($test['ip']))
+              $testFile .= "IPAddr={$test['ip']}\r\n";
 
             // see if we need to add custom scan rules
             if (array_key_exists('custom_rules', $test)) {
@@ -2500,27 +2472,4 @@ function GetSortableString($num, $targetLen = 6) {
   return $str;
 }
 
-function GetDailyTestNum() {
-  $lock = Lock("TestNum");
-  if ($lock) {
-    $num = 0;
-    if (!$num) {
-      $filename = './dat/testnum.dat';
-      $day = date ('ymd');
-      $testData = array('day' => $day, 'num' => 0);
-      $newData = json_decode(file_get_contents($filename), true);
-      if (isset($newData) && is_array($newData) &&
-          array_key_exists('day', $newData) &&
-          array_key_exists('num', $newData) &&
-          $newData['day'] == $day) {
-        $testData['num'] = $newData['num'];
-      }
-      $testData['num']++;
-      $num = $testData['num'];
-      file_put_contents($filename, json_encode($testData));
-    }
-    Unlock($lock);
-  }
-  return $num;
-}
 ?>

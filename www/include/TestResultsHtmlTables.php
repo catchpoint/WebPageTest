@@ -375,7 +375,7 @@ class TestResultsHtmlTables {
   private function _getTraceLinks($stepResult) {
     $infoArray = $this->testInfo->getInfoArray();
     $localPaths = $stepResult->createTestPaths();
-    if (empty($infoArray["trace"]) || !gz_is_file($localPaths->devtoolsTraceFile())) {
+    if ((empty($infoArray["trace"]) && !$this->testInfo->hasTimeline()) || !gz_is_file($localPaths->devtoolsTraceFile())) {
       return "";
     }
     $filenamePaths = $stepResult->createTestPaths("");

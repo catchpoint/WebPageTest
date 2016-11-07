@@ -21,6 +21,12 @@ tcpdump_view="http://cloudshark.org/view?url="
 ;google_oauth_client_id=<client ID>
 ;google_oauth_client_secret=<secret>
 
+; Uncomment to enable drawing of vertical lines in the waterfalls for all user timing marks
+;waterfall_show_user_timing=1
+
+; Uncomment to use mime-colored waterfalls as the default
+;mime_waterfalls=1
+
 
 ; *********************
 ; Test options/defaults
@@ -67,6 +73,9 @@ allowNonFQDN=0
 ; Enables trace and pcap processing directly on the test agents.
 enable_agent_processing=1
 
+; Sets the maximum number of navigates in a script
+maxNavigateCount=20
+
 ; *************
 ; Server Config
 ; *************
@@ -87,7 +96,14 @@ enable_agent_processing=1
 ;slow_test_time=240
 
 ; beanstalkd memory queue for tests (only the default 11300 port is supported right now)
+; This is the legacy mode used to apply beanstalkd to all work queues unilaterally
 ;beanstalkd=127.0.0.1
+
+; beanstalkd memory queue config (for locations configured to use it and for messaging queues)
+;queue=beanstalk
+;beanstalkAddr=127.0.0.1
+;beanstalkPort=11300
+
 
 ; Use beanstalkd only for low-priority tests and use traditional work queues for high-priority.
 ; The benefit of this is that interactive tests will still get queue position while still

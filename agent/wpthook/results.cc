@@ -37,7 +37,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "trace.h"
 #include "../wptdriver/wpt_test.h"
 #include "cximage/ximage.h"
-#include <zlib.h>
 #include <zip.h>
 #include <regex>
 
@@ -55,13 +54,166 @@ static const TCHAR * CONSOLE_LOG_FILE = _T("_console_log.json");
 static const TCHAR * TIMED_EVENTS_FILE = _T("_timed_events.json");
 static const TCHAR * CUSTOM_METRICS_FILE = _T("_metrics.json");
 static const TCHAR * USER_TIMING_FILE = _T("_user_timing.json");
-static const TCHAR * TRACE_FILE = _T("_trace.json");
 static const TCHAR * CUSTOM_RULES_DATA_FILE = _T("_custom_rules.json");
 static const TCHAR * PRIORITY_STREAMS_FILE = _T("_priority_streams.json");
+static const TCHAR * CHUNKS_DATA_FILE = _T("_requests_chunks.json");
 static const DWORD RIGHT_MARGIN = 25;
 static const DWORD BOTTOM_MARGIN = 25;
 static const DWORD INITIAL_MARGIN = 25;
 static const DWORD INITIAL_BOTTOM_MARGIN = 85;  // Ignore for the first frame
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+class Histogram {
+public:
+  Histogram():is_valid(false) {
+    for (int i = 0; i < 256; i++) {
+      r[i] = g[i] = b[i] = 0;
+    }
+  }
+  Histogram(const Histogram &src) {*this = src;}
+  Histogram(CxImage& image) {FromImage(image);}
+  ~Histogram(){}
+  const Histogram &operator =(const Histogram &src) {
+    if (src.is_valid) {
+      for (int i = 0; i < 256; i++) {
+        r[i] = src.r[i];
+        g[i] = src.g[i];
+        b[i] = src.b[i];
+      }
+      is_valid = true;
+    }
+    return src;
+  }
+  bool FromImage(CxImage& image) {
+    is_valid = false;
+    if (image.IsValid()) {
+      DWORD count = 0;
+      for (int i = 0; i < 256; i++) {
+        r[i] = g[i] = b[i] = 0;
+      }
+      DWORD width = max(image.GetWidth() - RIGHT_MARGIN, 0);
+      DWORD height = image.GetHeight();
+      if (image.GetBpp() >= 15) {
+        DWORD pixel_bytes = 3;
+        if (image.GetBpp() == 32)
+          pixel_bytes = 4;
+        DWORD row_bytes = image.GetEffWidth();
+        for (DWORD row = BOTTOM_MARGIN; row < height; row ++) {
+          BYTE * pixel = image.GetBits(row);
+          for (DWORD x = 0; x < width; x++) {
+            if (pixel[0] != 255 || 
+                pixel[1] != 255 || 
+                pixel[2] != 255) {
+              r[pixel[0]]++;
+              g[pixel[1]]++;
+              b[pixel[2]]++;
+              count++;
+            }
+            pixel += pixel_bytes;
+          }
+        }
+      } else {
+        for (DWORD y = BOTTOM_MARGIN; y < height; y++) {
+          for (DWORD x = 0; x < width; x++) {
+            RGBQUAD pixel = image.GetPixelColor(x,y);
+            if (pixel.rgbRed != 255 || 
+                pixel.rgbGreen != 255 || 
+                pixel.rgbBlue != 255) {
+              r[pixel.rgbRed]++;
+              g[pixel.rgbGreen]++;
+              b[pixel.rgbBlue]++;
+              count++;
+            }
+          }
+        }
+      }
+      is_valid = true;
+    }
+    return is_valid;
+  }
+  CStringA json() {
+    CStringA ret;
+    if (is_valid) {
+      CStringA red = "\"r\":[";
+      CStringA green = "\"g\":[";
+      CStringA blue = "\"b\":[";
+      CStringA buff;
+      for (int i = 0; i < 256; i++) {
+        if (i) {
+          red += ",";
+          green += ",";
+          blue += ",";
+        }
+        buff.Format("%d", r[i]);
+        red += buff;
+        buff.Format("%d", g[i]);
+        green += buff;
+        buff.Format("%d", b[i]);
+        blue += buff;
+      }
+      red += "]";
+      green += "]";
+      blue += "]";
+      ret = "{" + red + "," + green + "," + blue + "}";
+    }
+    return ret;
+  }
+  double ColorProgress(DWORD *start, DWORD *end, DWORD *current, int slop) {
+    double progress = 0;
+    const int buckets = 256;
+    size_t total = 0;
+    size_t matched = 0;
+
+    // First build an array of the actual changes in the current histogram.
+    size_t available[buckets];
+    for (int i = 0; i < buckets; i++)
+      available[i] = current[i] > start[i] ? current[i] - start[i] : start[i] - current[i];
+
+    // Go through the target differences and subtract any matches from the array as we go,
+    // counting how many matches we made.
+    for (int i = 0; i < buckets; i++) {
+      size_t target = (size_t)abs((long)end[i] - (long)start[i]);
+      if (target) {
+        total += target;
+        int start_slop = max(0, i - slop);
+        int end_slop = min(buckets - 1, i + slop);
+        for (int j = start_slop; j <= end_slop; j++) {
+          size_t this_match = min(target, available[j]);
+          available[j] -= this_match;
+          matched += this_match;
+          target -= this_match;
+        }
+      }
+    }
+
+    if (!total)
+      progress = 0.0;
+    else if (matched >= total)
+      progress = 1.0;
+    else
+      progress = (double)matched / (double)total;
+
+    return progress;
+  }
+  double VisualProgress(Histogram &start, Histogram &end, int slop = 5) {
+    double progress = 0;
+    if (is_valid && start.is_valid && end.is_valid) {
+      // Average the progress of all 3 color channels
+      double red = ColorProgress(start.r, end.r, r, slop);
+      double green = ColorProgress(start.g, end.g, g, slop);
+      double blue = ColorProgress(start.b, end.b, b, slop);
+
+      progress = (red + green + blue) / 3;
+    }
+    return progress;
+  }
+  DWORD r[256];
+  DWORD g[256];
+  DWORD b[256];
+  bool is_valid;
+};
+
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -76,7 +228,7 @@ Results::Results(TestState& test_state, WptTest& test, Requests& requests,
   , _screen_capture(screen_capture)
   , _saved(false)
   , _trace(trace) {
-  _visually_complete.QuadPart = 0;
+  _last_visual_change.QuadPart = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -90,9 +242,8 @@ Results::~Results(void) {
 void Results::Reset(void) {
   _requests.Reset();
   _screen_capture.Reset();
-  _trace.Reset();
   _saved = false;
-  _visually_complete.QuadPart = 0;
+  _last_visual_change.QuadPart = 0;
   base_page_CDN_.Empty();
   base_page_server_rtt_.Empty();
   base_page_redirects_ = 0;
@@ -117,6 +268,8 @@ void Results::Reset(void) {
   count_other_doc_ = 0;
   peak_memory_ = 0;
   peak_process_count_ = 0;
+  visually_complete_ = 0;
+  speed_index_ = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -125,23 +278,30 @@ void Results::Reset(void) {
 void Results::Save(void) {
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save()\n"));
   if (!_saved) {
+    OutputDebugStringA("Results::Save()");
     ProcessRequests();
     if (_test._log_data) {
       OptimizationChecks checks(_requests, _test_state, _test, _dns);
+      OutputDebugStringA("Running optimization checks");
       checks.Check();
+      OutputDebugStringA("Running optimization checks - complete");
       base_page_CDN_ = checks._base_page_CDN;
       SaveRequests(checks);
       SaveImages();
       SaveProgressData();
-      SaveStatusMessages();
+      if (!_test._minimal_results) {
+        SaveStatusMessages();
+      }
       SavePageData(checks);
-      SaveResponseBodies();
-      SaveConsoleLog();
-      SaveTimedEvents();
-      SaveCustomMetrics();
-      SaveUserTiming();
-      SavePriorityStreams();
-      _trace.Write(_test_state._file_base + TRACE_FILE);
+      if (!_test._minimal_results) {
+        SaveResponseBodies();
+        SaveConsoleLog();
+        SaveTimedEvents();
+        SaveCustomMetrics();
+        SaveUserTiming();
+        SavePriorityStreams();
+        _trace.End();
+      }
     }
     if (_test_state.shared_.TestResult() == -1 ||
         _test_state.shared_.TestResult() == 0 ||
@@ -149,6 +309,7 @@ void Results::Save(void) {
       _test_state.shared_.SetTestResult(_test_state._test_result);
     }
     _saved = true;
+    OutputDebugStringA("Results::Save() - Complete");
   }
   WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));
 }
@@ -177,12 +338,10 @@ void Results::SaveProgressData(void) {
       peak_process_count_ = data._process_count;
   }
   _test_state.UnLock();
-  HANDLE hFile = CreateFile(_test_state._file_base + PROGRESS_DATA_FILE,
-                            GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
-  if (hFile != INVALID_HANDLE_VALUE) {
-    DWORD dwBytes;
-    WriteFile(hFile, (LPCSTR)progress, progress.GetLength(), &dwBytes, 0);
-    CloseHandle(hFile);
+  gzFile progress_file = gzopen((LPCSTR)CT2A(_test_state._file_base + PROGRESS_DATA_FILE + CString(".gz")), "wb6");
+  if (progress_file) {
+    gzwrite(progress_file, (voidpc)(LPCSTR)progress, (unsigned int)progress.GetLength());
+    gzclose(progress_file);
   }
 }
 
@@ -201,13 +360,10 @@ void Results::SaveStatusMessages(void) {
     status += "\r\n";
   }
   _test_state.UnLock();
-  HANDLE hFile = CreateFile(_test_state._file_base + STATUS_MESSAGE_DATA_FILE, 
-                            GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
-  if( hFile != INVALID_HANDLE_VALUE )
-  {
-    DWORD dwBytes;
-    WriteFile(hFile, (LPCSTR)status, status.GetLength(), &dwBytes, 0);
-    CloseHandle(hFile);
+  gzFile out_file = gzopen((LPCSTR)CT2A(_test_state._file_base + STATUS_MESSAGE_DATA_FILE + CString(".gz")), "wb6");
+  if (out_file) {
+    gzwrite(out_file, (voidpc)(LPCSTR)status, (unsigned int)status.GetLength());
+    gzclose(out_file);
   }
 }
 
@@ -216,18 +372,23 @@ void Results::SaveStatusMessages(void) {
 void Results::SaveImages(void) {
   // save the event-based images
   CxImage image;
-  if (_screen_capture.GetImage(CapturedImage::START_RENDER, image))
-    SaveImage(image, _test_state._file_base + IMAGE_START_RENDER, _test._image_quality, false, _test._full_size_video);
-  if (_screen_capture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image))
-    SaveImage(image, _test_state._file_base + IMAGE_DOC_COMPLETE, _test._image_quality, false, _test._full_size_video);
-  if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, image)) {
-    if (_test._png_screen_shot)
-      image.Save(_test_state._file_base + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
-    SaveImage(image, _test_state._file_base + IMAGE_FULLY_LOADED, _test._image_quality, false, _test._full_size_video);
-  }
-  if (_screen_capture.GetImage(CapturedImage::RESPONSIVE_CHECK, image)) {
-    SaveImage(image, _test_state._file_base + IMAGE_RESPONSIVE_CHECK, _test._image_quality,
-              true, _test._full_size_video);
+  if (_test._minimal_results) {
+    if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, image))
+      SaveImage(image, _test_state._file_base + IMAGE_FULLY_LOADED, _test._image_quality, true, false);
+  } else {
+    if (_screen_capture.GetImage(CapturedImage::START_RENDER, image))
+      SaveImage(image, _test_state._file_base + IMAGE_START_RENDER, _test._image_quality, false, _test._full_size_video);
+    if (_screen_capture.GetImage(CapturedImage::DOCUMENT_COMPLETE, image))
+      SaveImage(image, _test_state._file_base + IMAGE_DOC_COMPLETE, _test._image_quality, false, _test._full_size_video);
+    if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, image)) {
+      if (_test._png_screen_shot)
+        image.Save(_test_state._file_base + IMAGE_FULLY_LOADED_PNG, CXIMAGE_FORMAT_PNG);
+      SaveImage(image, _test_state._file_base + IMAGE_FULLY_LOADED, _test._image_quality, false, _test._full_size_video);
+    }
+    if (_screen_capture.GetImage(CapturedImage::RESPONSIVE_CHECK, image)) {
+      SaveImage(image, _test_state._file_base + IMAGE_RESPONSIVE_CHECK, _test._image_quality,
+                true, _test._full_size_video);
+    }
   }
 
   SaveVideo();
@@ -236,19 +397,33 @@ void Results::SaveImages(void) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Results::SaveVideo(void) {
+  OutputDebugStringA("Results::SaveVideo()");
   _screen_capture.Lock();
-  CStringA histograms = "[";
-  DWORD histogram_count = 0;
-  CxImage * last_image = NULL;
-  DWORD width, height;
-  CString file_name;
-  POSITION pos = _screen_capture._captured_images.GetHeadPosition();
-  DWORD bottom_margin = INITIAL_BOTTOM_MARGIN;
-  DWORD margin = INITIAL_MARGIN;
-  while (pos) {
-    CStringA histogram;
-    CapturedImage& image = _screen_capture._captured_images.GetNext(pos);
-    if (image._type != CapturedImage::RESPONSIVE_CHECK) {
+  if (!_screen_capture._captured_images.IsEmpty()) {
+    CStringA histograms = "[";
+    DWORD histogram_count = 0;
+    CxImage * last_image = NULL;
+    DWORD width, height;
+    CString file_name;
+    Histogram start_histogram;
+
+    // get the end-state histogram to use for comparing
+    Histogram end_histogram;
+    CxImage end_img;
+    if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, end_img))
+      end_histogram.FromImage(end_img);
+    visually_complete_ = 0;
+    speed_index_ = 0;
+    double last_progress = 0.0;
+    DWORD last_progress_time = 0;
+
+    // loop through all of the frames
+    POSITION pos = _screen_capture._captured_images.GetHeadPosition();
+    DWORD bottom_margin = INITIAL_BOTTOM_MARGIN;
+    DWORD margin = INITIAL_MARGIN;
+    while (pos) {
+      CStringA json;
+      CapturedImage& image = _screen_capture._captured_images.GetNext(pos);
       CxImage * img = new CxImage;
       if (image.Get(*img)) {
         DWORD image_time_ms = _test_state.ElapsedMsFromStart(image._capture_time);
@@ -270,9 +445,20 @@ void Results::SaveVideo(void) {
             margin = 0;
             if (!_test_state._render_start.QuadPart)
               _test_state._render_start.QuadPart = image._capture_time.QuadPart;
-            histogram = GetHistogramJSON(*img);
-            if (_test._video) {
-              _visually_complete.QuadPart = image._capture_time.QuadPart;
+            _last_visual_change.QuadPart = image._capture_time.QuadPart;
+            Histogram histogram = Histogram(*img);
+            if (histogram.is_valid) {
+              json = histogram.json();
+              if (start_histogram.is_valid && end_histogram.is_valid) {
+                double progress = histogram.VisualProgress(start_histogram, end_histogram);
+                if (progress >= 0.9999 && !visually_complete_)
+                  visually_complete_ = image_time_ms;
+                speed_index_ += (int)((1.0 - last_progress) * (double)(image_time_ms - last_progress_time));
+                last_progress = progress;
+                last_progress_time = image_time_ms;
+              }
+            }
+            if (_test._video && !_test._minimal_results) {
               file_name.Format(_T("%s_progress_%04d.jpg"), (LPCTSTR)_test_state._file_base, 
                                 image_time);
               SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_video);
@@ -281,21 +467,23 @@ void Results::SaveVideo(void) {
         } else {
           width = img->GetWidth();
           height = img->GetHeight();
+          start_histogram.FromImage(*img);
+          if (start_histogram.is_valid)
+            json = start_histogram.json();
           // always save the first image at time zero
           image_time = 0;
           image_time_ms = 0;
-          histogram = GetHistogramJSON(*img);
-          if (_test._video) {
+          if (_test._video && !_test._minimal_results) {
             file_name = _test_state._file_base + _T("_progress_0000.jpg");
             SaveImage(*img, file_name, _test._image_quality, false, _test._full_size_video);
           }
         }
 
-        if (!histogram.IsEmpty()) {
+        if (!json.IsEmpty() && !_test._minimal_results) {
           if (histogram_count)
             histograms += ", ";
           histograms += "{\"histogram\": ";
-          histograms += histogram;
+          histograms += json;
           histograms += ", \"time\": ";
           CStringA buff;
           buff.Format("%d", image_time_ms);
@@ -304,45 +492,45 @@ void Results::SaveVideo(void) {
           histogram_count++;
           if (_test._video) {
             file_name.Format(_T("%s_progress_%04d.hist"), (LPCTSTR)_test_state._file_base,
-                             image_time);
-            SaveHistogram(histogram, file_name);
+                              image_time);
+            SaveHistogram(json, file_name, false);
           }
         }
 
         if (last_image)
           delete last_image;
         last_image = img;
-      }
-      else
-        delete img;
-    }
-  }
-
-  if (last_image)
-    delete last_image;
-
-  if (histogram_count > 1) {
-    histograms += "]";
-    TCHAR path[MAX_PATH];
-    lstrcpy(path, _test_state._file_base);
-    TCHAR * file = PathFindFileName(path);
-    int run = _tstoi(file);
-    if (run) {
-      int cached = _tcsstr(file, _T("_Cached")) ? 1 : 0;
-      *file = 0;
-
-      // file_name needs to include step prefix for multistep measurements
-      if (_test_state.reported_step_ > 1) {
-        file_name.Format(_T("%s%d.%d.%d.histograms.json"),
-                         path, run, _test_state.reported_step_, cached);
       } else {
-        file_name.Format(_T("%s%d.%d.histograms.json"), path, run, cached);
+        delete img;
       }
-      SaveHistogram(histograms, file_name);
+    }
+
+    if (last_image)
+      delete last_image;
+
+    if (histogram_count > 1 && !_test._minimal_results) {
+      histograms += "]";
+      TCHAR path[MAX_PATH];
+      lstrcpy(path, _test_state._file_base);
+      TCHAR * file = PathFindFileName(path);
+      int run = _tstoi(file);
+      if (run) {
+        int cached = _tcsstr(file, _T("_Cached")) ? 1 : 0;
+        *file = 0;
+
+        // file_name needs to include step prefix for multistep measurements
+        if (_test_state.reported_step_ > 1) {
+          file_name.Format(_T("%s%d.%d.%d.histograms.json"),
+                           path, run, _test_state.reported_step_, cached);
+        } else {
+          file_name.Format(_T("%s%d.%d.histograms.json"), path, run, cached);
+        }
+        SaveHistogram(histograms, file_name, true);
+      }
     }
   }
-
   _screen_capture.Unlock();
+  OutputDebugStringA("Results::SaveVideo() - Complete");
 }
 
 /*-----------------------------------------------------------------------------
@@ -361,7 +549,8 @@ bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2,
         DWORD height = img1->GetHeight() - margin;
         DWORD row_bytes = img1->GetEffWidth();
         DWORD compare_length = min(width * pixel_bytes, row_bytes);
-        for (DWORD row = bottom_margin; row < height && !different; row++) {
+        // Go two rows at a time.  We don't need to be sure every pixel matches
+        for (DWORD row = bottom_margin; row < height && !different; row += 2) {
           BYTE * r1 = img1->GetBits(row) + margin * pixel_bytes;
           BYTE * r2 = img2->GetBits(row) + margin * pixel_bytes;
           if (r1 && r2 && memcmp(r1, r2, compare_length))
@@ -379,15 +568,22 @@ bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2,
 void Results::SaveImage(CxImage& image, CString file, BYTE quality,
                         bool force_small, bool _full_size_video) {
   if (image.IsValid()) {
-    CxImage img(image);
-    if (!_full_size_video)
-      if (force_small || (img.GetWidth() > 600 && img.GetHeight() > 600))
-        img.Resample2(img.GetWidth() / 2, img.GetHeight() / 2);
-
-    img.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
-    img.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
-    img.SetJpegQuality((BYTE)quality);
-    img.Save(file, CXIMAGE_FORMAT_JPG);
+    if (!_full_size_video &&
+        (force_small || (image.GetWidth() > 600 && image.GetHeight() > 600))) {
+      // Make a copy and resize the copy
+      CxImage img(image);
+      img.QIShrink(img.GetWidth() / 2, img.GetHeight() / 2);
+      img.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
+      img.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
+      img.SetJpegQuality((BYTE)quality);
+      img.Save(file, CXIMAGE_FORMAT_JPG);
+    } else {
+      // Save the image
+      image.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
+      image.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
+      image.SetJpegQuality((BYTE)quality);
+      image.Save(file, CXIMAGE_FORMAT_JPG);
+    }
   }
 }
 
@@ -404,15 +600,36 @@ CStringA Results::GetHistogramJSON(CxImage& image) {
     }
     DWORD width = max(image.GetWidth() - RIGHT_MARGIN, 0);
     DWORD height = image.GetHeight();
-    for (DWORD y = BOTTOM_MARGIN; y < height; y++) {
-      for (DWORD x = 0; x < width; x++) {
-        RGBQUAD pixel = image.GetPixelColor(x,y);
-        if (pixel.rgbRed != 255 || 
-            pixel.rgbGreen != 255 || 
-            pixel.rgbBlue != 255) {
-          r[pixel.rgbRed]++;
-          g[pixel.rgbGreen]++;
-          b[pixel.rgbBlue]++;
+    if (image.GetBpp() >= 15) {
+      DWORD pixel_bytes = 3;
+      if (image.GetBpp() == 32)
+        pixel_bytes = 4;
+      DWORD row_bytes = image.GetEffWidth();
+      // Go two rows at a time.  We don't need to be sure every pixel matches
+      for (DWORD row = BOTTOM_MARGIN; row < height; row ++) {
+        BYTE * pixel = image.GetBits(row);
+        for (DWORD x = 0; x < width; x++) {
+          if (pixel[0] != 255 || 
+              pixel[1] != 255 || 
+              pixel[2] != 255) {
+            r[pixel[0]]++;
+            g[pixel[1]]++;
+            b[pixel[2]]++;
+          }
+          pixel += pixel_bytes;
+        }
+      }
+    } else {
+      for (DWORD y = BOTTOM_MARGIN; y < height; y++) {
+        for (DWORD x = 0; x < width; x++) {
+          RGBQUAD pixel = image.GetPixelColor(x,y);
+          if (pixel.rgbRed != 255 || 
+              pixel.rgbGreen != 255 || 
+              pixel.rgbBlue != 255) {
+            r[pixel.rgbRed]++;
+            g[pixel.rgbGreen]++;
+            b[pixel.rgbBlue]++;
+          }
         }
       }
     }
@@ -446,14 +663,22 @@ CStringA Results::GetHistogramJSON(CxImage& image) {
 /*-----------------------------------------------------------------------------
   Save the image histogram as a json data structure (ignoring white pixels)
 -----------------------------------------------------------------------------*/
-void Results::SaveHistogram(CStringA& histogram, CString file) {
+void Results::SaveHistogram(CStringA& histogram, CString file, bool compress) {
   if (!histogram.IsEmpty()) {
-    HANDLE file_handle = CreateFile(file, GENERIC_WRITE, 0, 0, 
-                                    CREATE_ALWAYS, 0, 0);
-    if (file_handle != INVALID_HANDLE_VALUE) {
-      DWORD bytes;
-      WriteFile(file_handle, (LPCSTR)histogram, histogram.GetLength(), &bytes, 0);
-      CloseHandle(file_handle);
+    if (compress) {
+      gzFile out_file = gzopen((LPCSTR)CT2A(file + CString(".gz")), "wb6");
+      if (out_file) {
+        gzwrite(out_file, (voidpc)(LPCSTR)histogram, (unsigned int)histogram.GetLength());
+        gzclose(out_file);
+      }
+    } else {
+      HANDLE file_handle = CreateFile(file, GENERIC_WRITE, 0, 0, 
+                                      CREATE_ALWAYS, 0, 0);
+      if (file_handle != INVALID_HANDLE_VALUE) {
+        DWORD bytes;
+        WriteFile(file_handle, (LPCSTR)histogram, histogram.GetLength(), &bytes, 0);
+        CloseHandle(file_handle);
+      }
     }
   }
 }
@@ -462,11 +687,8 @@ void Results::SaveHistogram(CStringA& histogram, CString file) {
   Save the page-level data
 -----------------------------------------------------------------------------*/
 void Results::SavePageData(OptimizationChecks& checks){
-  HANDLE file = CreateFile(_test_state._file_base + PAGE_DATA_FILE,
-                           GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, 0, 0);
-  if (file != INVALID_HANDLE_VALUE) {
-    SetFilePointer( file, 0, 0, FILE_END );
-
+  gzFile file = gzopen((LPCSTR)CT2A(_test_state._file_base + PAGE_DATA_FILE + CString(".gz")), "ab6");
+  if (file) {
     CStringA result;
     CStringA buff;
 
@@ -698,8 +920,8 @@ void Results::SavePageData(OptimizationChecks& checks){
     result += buff;
     buff.Format("%d\t", _test_state._dom_content_loaded_event_end);
     result += buff;
-    // Visually complete
-    result += FormatTime(_visually_complete);
+    // Last visual change
+    result += FormatTime(_last_visual_change);
     // Browser name
     result += _test_state._browser_name;
     result += "\t";
@@ -793,13 +1015,23 @@ void Results::SavePageData(OptimizationChecks& checks){
       result += buff;
     }
     result += "\t";
+    // Visually Complete
+    if (visually_complete_) {
+      buff.Format("%d", visually_complete_);
+      result += buff;
+    }
+    result += "\t";
+    // SpeedIndex
+    if (speed_index_) {
+      buff.Format("%d", speed_index_);
+      result += buff;
+    }
+    result += "\t";
 
     result += "\r\n";
 
-    DWORD written;
-    WriteFile(file, (LPCSTR)result, result.GetLength(), &written, 0);
-
-    CloseHandle(file);
+    gzwrite(file, (voidpc)(LPCSTR)result, (unsigned int)result.GetLength());
+    gzclose(file);
   }
 }
 
@@ -960,23 +1192,18 @@ void Results::ProcessRequests(void) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Results::SaveRequests(OptimizationChecks& checks) {
-  HANDLE file = CreateFile(_test_state._file_base + REQUEST_DATA_FILE,
-                           GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, 0, 0);
-  if (file != INVALID_HANDLE_VALUE) {
-    DWORD bytes;
+  CStringA chunk_timings;
+  gzFile file = gzopen((LPCSTR)CT2A(_test_state._file_base + REQUEST_DATA_FILE + CString(".gz")), "ab6");
+  if (file) {
     CStringA buff;
-    SetFilePointer( file, 0, 0, FILE_END );
 
-    HANDLE headers_file = CreateFile(_test_state._file_base + REQUEST_HEADERS_DATA_FILE,
-                            GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0);
+    gzFile headers_file = gzopen((LPCSTR)CT2A(_test_state._file_base + REQUEST_HEADERS_DATA_FILE + CString(".gz")), "wb6");
 
-    HANDLE custom_rules_file = INVALID_HANDLE_VALUE;
+    gzFile custom_rules_file = NULL;
     if (!_test._custom_rules.IsEmpty()) {
-      custom_rules_file = CreateFile(_test_state._file_base +CUSTOM_RULES_DATA_FILE,
-                                    GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
-      if (custom_rules_file != INVALID_HANDLE_VALUE) {
-        WriteFile(custom_rules_file, "{", 1, &bytes, 0);
-      }
+      custom_rules_file = gzopen((LPCSTR)CT2A(_test_state._file_base + CUSTOM_RULES_DATA_FILE + CString(".gz")), "wb6");
+      if (custom_rules_file)
+        gzwrite(custom_rules_file, "{", 1);
     }
 
     _requests.Lock();
@@ -1000,58 +1227,73 @@ void Results::SaveRequests(OptimizationChecks& checks) {
         request->_reported = true;
         if (request->_processed) {
           i++;
+          if (!_test._minimal_results) {
+            CStringA timings = request->GetChunkTimings();
+            if (!timings.IsEmpty()) {
+              CStringA json;
+              json.Format("\"%d\":", request->_request_id);
+              if (chunk_timings.IsEmpty()) {
+                chunk_timings = "{" + json + timings;
+              } else {
+                chunk_timings += "," + json + timings;
+              }
+            }
+          }
           SaveRequest(file, headers_file, request, i);
-          if (!request->_custom_rules_matches.IsEmpty() && 
-              custom_rules_file != INVALID_HANDLE_VALUE) {
+          if (!request->_custom_rules_matches.IsEmpty() && custom_rules_file) {
             if (first_custom_rule) {
               first_custom_rule = false;
             } else {
-              WriteFile(custom_rules_file, ",", 1, &bytes, 0);
+              gzwrite(custom_rules_file, ",", 1);
             }
             buff.Format("\"%d\"", i);
-            WriteFile(custom_rules_file, (LPCSTR)buff, buff.GetLength(),
-                      &bytes, 0);
-            WriteFile(custom_rules_file, ":{", 2, &bytes, 0);
-            POSITION match_pos =
-                request->_custom_rules_matches.GetHeadPosition();
+            gzwrite(custom_rules_file, (LPCSTR)buff, buff.GetLength());
+            gzwrite(custom_rules_file, ":{", 2);
+            POSITION match_pos = request->_custom_rules_matches.GetHeadPosition();
             DWORD match_count = 0;
             while (match_pos) {
               match_count++;
-              CustomRulesMatch match = 
-                  request->_custom_rules_matches.GetNext(match_pos);
+              CustomRulesMatch match = request->_custom_rules_matches.GetNext(match_pos);
               CT2A name((LPCTSTR)match._name, CP_UTF8);
               CT2A value((LPCTSTR)match._value, CP_UTF8);
               CStringA entry = "";
               if (match_count > 1)
                 entry += ",";
               entry += CStringA("\"") + JSONEscapeA((LPCSTR)name) + "\":{";
-              entry += CStringA("\"value\":\"") +
-                       JSONEscapeA((LPCSTR)value)+"\",";
+              entry += CStringA("\"value\":\"") + JSONEscapeA((LPCSTR)value)+"\",";
               buff.Format("%d", match._count);
               entry += CStringA("\"count\":") + buff + "}";
-              WriteFile(custom_rules_file, (LPCSTR)entry, entry.GetLength(), 
-                        &bytes, 0);
+              gzwrite(custom_rules_file, (LPCSTR)entry, entry.GetLength());
             }
-            WriteFile(custom_rules_file, "}", 1, &bytes, 0);
+            gzwrite(custom_rules_file, "}", 1);
           }
         }
       }
     } while (request);
     _requests.Unlock();
-    if (custom_rules_file != INVALID_HANDLE_VALUE) {
-      WriteFile(custom_rules_file, "}", 1, &bytes, 0);
-      CloseHandle(custom_rules_file);
+    if (custom_rules_file) {
+      gzwrite(custom_rules_file, "}", 1);
+      gzclose(custom_rules_file);
     }
-    if (headers_file != INVALID_HANDLE_VALUE)
-      CloseHandle(headers_file);
-    CloseHandle(file);
+    if (headers_file)
+      gzclose(headers_file);
+    gzclose(file);
+    /*
+    if (!chunk_timings.IsEmpty()) {
+      gzFile chunks_file = gzopen((LPCSTR)CT2A(_test_state._file_base + CHUNKS_DATA_FILE + CString(".gz")), "wb6");
+      if (chunks_file) {
+        chunk_timings += "}";
+        gzwrite(chunks_file, (voidpc)(LPCSTR)chunk_timings, (unsigned int)chunk_timings.GetLength());
+        gzclose(chunks_file);
+      }
+    }
+    */
   }
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request, 
-                                                                   int index) {
+void Results::SaveRequest(gzFile file, gzFile headers, Request * request, int index) {
   CStringA result;
   CStringA buff;
 
@@ -1311,11 +1553,10 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
 
   result += "\r\n";
 
-  DWORD written;
-  WriteFile(file, (LPCSTR)result, result.GetLength(), &written, 0);
+  gzwrite(file, (LPCSTR)result, result.GetLength());
 
   // write out the raw headers
-  if (headers != INVALID_HANDLE_VALUE) {
+  if (headers) {
     buff.Format("Request details:\r\nRequest %d:\r\n"
                 "RID: %d\r\nRequest Headers:\r\n", 
                 index, request->_request_id);
@@ -1325,7 +1566,7 @@ void Results::SaveRequest(HANDLE file, HANDLE headers, Request * request,
     buff += request->_response_data.GetHeaders();
     buff.Trim("\r\n");
     buff += "\r\n";
-    WriteFile(headers, (LPCSTR)buff, buff.GetLength(), &written, 0);
+    gzwrite(headers, (LPCSTR)buff, buff.GetLength());
   }
 }
 
@@ -1371,8 +1612,7 @@ void Results::SaveResponseBodies(void) {
             if (body_data && body_len && !IsBinaryContent(body_data, body_len)) {
               CStringA name;
               name.Format("%03d-%d-body.txt", count, request->_request_id);
-              if (!zipOpenNewFileInZip(zip, name, 0, 0, 0, 0, 0, 0, Z_DEFLATED, 
-                  Z_BEST_COMPRESSION)) {
+              if (!zipOpenNewFileInZip(zip, name, 0, 0, 0, 0, 0, 0, Z_DEFLATED, 6)) {
                 zipWriteInFileInZip(zip, body_data, (unsigned int)body_len);
                 zipCloseFileInZip(zip);
                 bodies_count++;
@@ -1396,12 +1636,10 @@ void Results::SaveResponseBodies(void) {
 void Results::SaveConsoleLog(void) {
   CStringA log = CT2A(_test_state.GetConsoleLogJSON());
   if (log.GetLength()) {
-    HANDLE file = CreateFile(_test_state._file_base + CONSOLE_LOG_FILE, GENERIC_WRITE, 0, 
-                              NULL, CREATE_ALWAYS, 0, 0);
-    if (file != INVALID_HANDLE_VALUE) {
-      DWORD written;
-      WriteFile(file, (LPCSTR)log, log.GetLength(), &written, 0);
-      CloseHandle(file);
+    gzFile json_file = gzopen((LPCSTR)CT2A(_test_state._file_base + CONSOLE_LOG_FILE + CString(".gz")), "wb6");
+    if (json_file) {
+      gzwrite(json_file, (voidpc)(LPCSTR)log, (unsigned int)log.GetLength());
+      gzclose(json_file);
     }
   }
 }
@@ -1411,12 +1649,10 @@ void Results::SaveConsoleLog(void) {
 void Results::SaveTimedEvents(void) {
   CStringA log = CT2A(_test_state.GetTimedEventsJSON(), CP_UTF8);
   if (log.GetLength()) {
-    HANDLE file = CreateFile(_test_state._file_base + TIMED_EVENTS_FILE, GENERIC_WRITE, 0, 
-                              NULL, CREATE_ALWAYS, 0, 0);
-    if (file != INVALID_HANDLE_VALUE) {
-      DWORD written;
-      WriteFile(file, (LPCSTR)log, log.GetLength(), &written, 0);
-      CloseHandle(file);
+    gzFile json_file = gzopen((LPCSTR)CT2A(_test_state._file_base + TIMED_EVENTS_FILE + CString(".gz")), "wb6");
+    if (json_file) {
+      gzwrite(json_file, (voidpc)(LPCSTR)log, (unsigned int)log.GetLength());
+      gzclose(json_file);
     }
   }
 }
@@ -1426,12 +1662,10 @@ void Results::SaveTimedEvents(void) {
 void Results::SaveCustomMetrics(void) {
   CStringA custom_metrics = CT2A(_test_state._custom_metrics, CP_UTF8);
   if (custom_metrics.GetLength()) {
-    HANDLE file = CreateFile(_test_state._file_base + CUSTOM_METRICS_FILE, GENERIC_WRITE, 0, 
-                              NULL, CREATE_ALWAYS, 0, 0);
-    if (file != INVALID_HANDLE_VALUE) {
-      DWORD written;
-      WriteFile(file, (LPCSTR)custom_metrics, custom_metrics.GetLength(), &written, 0);
-      CloseHandle(file);
+    gzFile metrics_file = gzopen((LPCSTR)CT2A(_test_state._file_base + CUSTOM_METRICS_FILE + CString(".gz")), "wb6");
+    if (metrics_file) {
+      gzwrite(metrics_file, (voidpc)(LPCSTR)custom_metrics, (unsigned int)custom_metrics.GetLength());
+      gzclose(metrics_file);
     }
   }
 }
@@ -1441,12 +1675,10 @@ void Results::SaveCustomMetrics(void) {
 void Results::SaveUserTiming(void) {
   CStringA user_timing = CT2A(_test_state._user_timing, CP_UTF8);
   if (user_timing.GetLength()) {
-    HANDLE file = CreateFile(_test_state._file_base + USER_TIMING_FILE, GENERIC_WRITE, 0, 
-                              NULL, CREATE_ALWAYS, 0, 0);
-    if (file != INVALID_HANDLE_VALUE) {
-      DWORD written;
-      WriteFile(file, (LPCSTR)user_timing, user_timing.GetLength(), &written, 0);
-      CloseHandle(file);
+    gzFile user_timing_file = gzopen((LPCSTR)CT2A(_test_state._file_base + USER_TIMING_FILE + CString(".gz")), "wb6");
+    if (user_timing_file) {
+      gzwrite(user_timing_file, (voidpc)(LPCSTR)user_timing, (unsigned int)user_timing.GetLength());
+      gzclose(user_timing_file);
     }
   }
 }
@@ -1513,12 +1745,10 @@ void Results::SavePriorityStreams() {
       }
     }
     json += "}}";
-    HANDLE file = CreateFile(_test_state._file_base + PRIORITY_STREAMS_FILE, GENERIC_WRITE, 0, 
-                              NULL, CREATE_ALWAYS, 0, 0);
-    if (file != INVALID_HANDLE_VALUE) {
-      DWORD written;
-      WriteFile(file, (LPCSTR)json, json.GetLength(), &written, 0);
-      CloseHandle(file);
+    gzFile json_file = gzopen((LPCSTR)CT2A(_test_state._file_base + PRIORITY_STREAMS_FILE + CString(".gz")), "wb6");
+    if (json_file) {
+      gzwrite(json_file, (voidpc)(LPCSTR)json, (unsigned int)json.GetLength());
+      gzclose(json_file);
     }
   }
 }

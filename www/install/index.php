@@ -99,22 +99,26 @@ function CheckPHP() {
     ShowCheck('zlib Module Installed', extension_loaded('zlib'));
     ShowCheck('curl Module Installed', extension_loaded('curl'), false);
     ShowCheck('php.ini allow_url_fopen enabled', ini_get('allow_url_fopen'), true);
-    ShowCheck('APC Installed', extension_loaded('apc'), false);
+    ShowCheck('APC Installed', extension_loaded('apc') || extension_loaded('apcu'), false);
     ShowCheck('SQLite Installed (for editable test labels)', class_exists("SQLite3"), false);
     ShowCheck('Open SSL Module Installed (for "Login with Google")', function_exists('openssl_x509_read'), false);
+    ShowCheck('xml Module Installed (for rss feeds)', extension_loaded('xml'), false);
+    ShowCheck('pcre Module Installed (for rss feeds)', extension_loaded('pcre'), false);
+    ShowCheck('xmlreader Module Installed (for rss feeds)', extension_loaded('xmlreader'), false);
     ShowCheck('php.ini upload_max_filesize > 10MB', return_bytes(ini_get('upload_max_filesize')) > 10000000, false, ini_get('upload_max_filesize'));
     ShowCheck('php.ini post_max_size > 10MB', return_bytes(ini_get('post_max_size')) > 10000000, false, ini_get('post_max_size'));
     ShowCheck('php.ini memory_limit > 256MB or -1 (disabled)', return_bytes(ini_get('memory_limit')) > 256000000 || ini_get('memory_limit') == -1, false, ini_get('memory_limit'));
 }
 
 function CheckUtils() {
-    ShowCheck('ffmpeg Installed with --enable-libx264 (required for video)', CheckFfmpeg());
-    ShowCheck('ffmpeg Installed with scale and decimate filters(required for mobile video)', CheckFfmpegFilters($ffmpegInfo), false, $ffmpegInfo);
-    ShowCheck('imagemagick compare Installed (required for mobile video)', CheckCompare(), false);
-    ShowCheck('jpegtran Installed (required for JPEG Analysis)', CheckJpegTran(), false);
-    ShowCheck('exiftool Installed (required for JPEG Analysis)', CheckExifTool(), false);
-    if (array_key_exists('beanstalkd', $settings))
-        ShowCheck("beanstalkd responding on {$settings['beanstalkd']} (configured in settings.ini)", CheckBeanstalkd());
+  global $settings;
+  ShowCheck('ffmpeg Installed with --enable-libx264 (required for video)', CheckFfmpeg());
+  ShowCheck('ffmpeg Installed with scale and decimate filters(required for mobile video)', CheckFfmpegFilters($ffmpegInfo), false, $ffmpegInfo);
+  ShowCheck('imagemagick compare Installed (required for mobile video)', CheckCompare(), false);
+  ShowCheck('jpegtran Installed (required for JPEG Analysis)', CheckJpegTran(), false);
+  ShowCheck('exiftool Installed (required for JPEG Analysis)', CheckExifTool(), false);
+  if (array_key_exists('beanstalkd', $settings))
+      ShowCheck("beanstalkd responding on {$settings['beanstalkd']} (configured in settings.ini)", CheckBeanstalkd());
 }
 
 function CheckMisc() {
@@ -128,7 +132,6 @@ function CheckFilesystem() {
     ShowCheck('{docroot}/dat writable', IsWritable('dat'));
     ShowCheck('{docroot}/results writable', IsWritable('results'));
     ShowCheck('{docroot}/work/jobs writable', IsWritable('work/jobs'));
-    ShowCheck('{docroot}/work/video writable', IsWritable('work/video'));
     ShowCheck('{docroot}/logs writable', IsWritable('logs'));
     if ('Linux' == PHP_OS) {
         ShowCheck('{docroot}/tmp on tmpfs', IsWPTTmpOnTmpfs(), false);
@@ -156,7 +159,7 @@ function CheckLocations() {
     $out = '';
     foreach($locations['locations'] as $id => $location) {
         if (is_numeric($id)) {
-            $info = GetLocationInfo($locations, $location);
+            $info = GetInstallLocationInfo($locations, $location);
             $out .= "<li class=\"{$info['state']}\">{$info['label']}";
             if (count($info['locations'])) {
                 $out .= "<ul>";
@@ -174,8 +177,8 @@ function CheckLocations() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-function GetLocationInfo(&$locations, $location) {
-    $info = array('state' => 'pass', 'label' => "$location : ", 'video' => false, 'locations' => array());
+function GetInstallLocationInfo(&$locations, $location) {
+    $info = array('state' => 'pass', 'label' => "$location : ", 'locations' => array());
     if (array_key_exists($location, $locations)) {
         if (array_key_exists('label', $locations[$location])) {
             $info['label'] .= $locations[$location]['label'];
@@ -196,34 +199,13 @@ function GetLocationInfo(&$locations, $location) {
                         $info['state'] = 'fail';
                     }
                     $info['locations'][$loc_name]['label'] .= ' - ';
-                    $file = "./tmp/$loc_name.tm";
                     $testerCount = 0;
                     $elapsedCheck = -1;
-                    $lock = LockLocation($loc_name);
-                    if ($lock) {
-                        if (is_file($file)) {
-                            $now = time();
-                            $testers = json_decode(file_get_contents($file), true);
-                            $testerCount = count($testers);
-                            if( $testerCount ) {
-                                $latest = 0;
-                                foreach($testers as $tester) {
-                                    if( array_key_exists('updated', $tester) && $tester['updated'] > $latest) {
-                                        $latest = $tester['updated'];
-                                    }
-                                    if (array_key_exists('video', $tester) && $tester['video']) {
-                                        $info['video'] = true;
-                                    }
-                                }
-                                if ($latest > 0) {
-                                    $elapsedCheck = 0;
-                                    if( $now > $latest )
-                                        $elapsedCheck = (int)(($now - $latest) / 60);
-                                }
-                            }
-                        }
-                        UnlockLocation($lock);
-                    }
+                    $testers = GetTesters($loc_name);
+                    if (isset($testers['elapsed']))
+                      $elapsedCheck = $testers['elapsed'];
+                    if (isset($testers) && is_array($testers) && isset($testers['testers']))
+                      $testerCount = count($testers['testers']);
                     if ($testerCount && $elapsedCheck >= 0) {
                         if ($elapsedCheck < 60) {
                             $info['locations'][$loc_name]['label'] .= "<span class=\"pass\">$testerCount agents connected</span>";
