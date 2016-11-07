@@ -1,8 +1,6 @@
 FROM php:5.6-apache
 MAINTAINER iteratec WPT Team <wpt@iteratec.de>
 
-ENV PATH=$PATH:/scripts
-
 RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sources.list && \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -q -y --force-yes \
@@ -52,25 +50,22 @@ RUN chown -R www-data:www-data /var/www/html && \
     mv connectivity.ini.sample connectivity.ini && \
     \
     mkdir -p /var/log/supervisor && \
-    mkdir -p /scripts/settings
+    mkdir -p /scripts
 
 COPY docker/server/config/locations.ini /var/www/html/settings/locations.ini
 COPY docker/server/config/php.ini /usr/local/etc/php/
 COPY docker/server/config/apache2.conf /etc/apache2/apache2.conf
 COPY docker/server/config/crontab /etc/crontab
 
-# config supervisor
+# config supervisor to run apache AND cron
 COPY docker/server/config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/server/config/supervisord/supervisord_apache.conf /etc/supervisor/conf.d/supervisord_apache.conf
 COPY docker/server/config/supervisord/supervisord_cron.conf /etc/supervisor/conf.d/supervisord_cron.conf
 
-# Copy scripts
-COPY docker/server/scripts/migrate-settings /scripts/migrate-settings
-COPY docker/server/scripts/start_archiving.sh /scripts/start_archiving.sh
-
-# Set execution bit
-RUN chmod +x /scripts/migrate-settings && \
-    chmod +x /scripts/start_archiving.sh
+# copy script to run WPT cron scripts
+COPY docker/server/scripts/wpt_cron_call.sh /scripts/wpt_cron_call.sh
+RUN chmod 755 /scripts/wpt_cron_call.sh && \
+    crontab /etc/crontab
 
 VOLUME /var/www/html/settings
 VOLUME /var/www/html/results

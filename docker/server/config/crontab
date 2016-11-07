@@ -5,4 +5,6 @@
 # |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7)  OR sun,mon,tue,wed,thu,fri,sat
 # |  |  |  |  |
 # *  *  *  *  *  command to be executed
-  0  0  *  *  *  /scripts/start_archiving.sh
+  */5  *  *  *  *  env -i /scripts/wpt_cron_call.sh 5min.php
+  */15  *  *  *  *  env -i /scripts/wpt_cron_call.sh 15min.php
+  0  *  *  *  *  env -i /scripts/wpt_cron_call.sh hourly.php
