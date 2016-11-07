@@ -49,7 +49,8 @@ RUN chown -R www-data:www-data /var/www/html && \
     mv settings.ini.sample settings.ini && \
     mv connectivity.ini.sample connectivity.ini && \
     \
-    mkdir -p /var/log/supervisor
+    mkdir -p /var/log/supervisor && \
+    mkdir -p /scripts
 
 COPY docker/server/config/locations.ini /var/www/html/settings/locations.ini
 COPY docker/server/config/php.ini /usr/local/etc/php/
@@ -60,6 +61,11 @@ COPY docker/server/config/crontab /etc/crontab
 COPY docker/server/config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/server/config/supervisord/supervisord_apache.conf /etc/supervisor/conf.d/supervisord_apache.conf
 COPY docker/server/config/supervisord/supervisord_cron.conf /etc/supervisor/conf.d/supervisord_cron.conf
+
+# copy script to run WPT cron scripts
+COPY docker/server/scripts/wpt_cron_call.sh /scripts/wpt_cron_call.sh
+RUN chmod 755 /scripts/wpt_cron_call.sh && \
+    crontab /etc/crontab
 
 VOLUME /var/www/html/settings
 VOLUME /var/www/html/results
