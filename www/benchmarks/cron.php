@@ -1017,6 +1017,7 @@ function ImportS3Benchmark($info) {
       $state['last_run'] = time();
     }
     $state['tests'] = array();
+    logMsg("  $benchmark import: " . json_encode($info), "./log/$logFile", true);
     
     if (isset($info['tests']) && is_array($info['tests'])) {
       foreach ($info['tests'] as $test) {
@@ -1030,6 +1031,8 @@ function ImportS3Benchmark($info) {
                                     'submitted' => $state['last_run'], 
                                     'completed' => 0);
       }
+    } else {
+      logMsg("  $benchmark import with no tests", "./log/$logFile", true);
     }
 
     if (count($state['tests'])) {
@@ -1037,6 +1040,8 @@ function ImportS3Benchmark($info) {
       $imported = true;
       file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
     }
+  } else {
+    logMsg("  Benchmark $benchmark is currently busy", "./log/$logFile", true);
   }
   
   return $imported;
