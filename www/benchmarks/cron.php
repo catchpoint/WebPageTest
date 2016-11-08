@@ -966,6 +966,7 @@ function ImportS3Benchmarks() {
     foreach ($prefixes as $p) {
       $files = $s3->getBucket($bucket, $p);
       foreach ($files as $file => $info) {
+        logMsg("Checking $file", "./log/$logFile", true);
         $name = substr($file, strlen($prefix));
         if (!isset($s3Benchmarks[$name])) {
           $data = $s3->getObject($bucket, $file);
