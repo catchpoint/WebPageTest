@@ -193,11 +193,11 @@ function ProcessBenchmark($benchmark) {
             $state['running'] = false;
         }
         
-        if (!$state['running'] && 
-            (array_key_exists('runs', $state) && count($state['runs'])) &&
-            (!array_key_exists('needs_aggregation', $state) || $state['needs_aggregation']) ){
+        if (!$state['running'] && (!array_key_exists('needs_aggregation', $state) || $state['needs_aggregation'])) {
+          if (array_key_exists('runs', $state) && count($state['runs']))
             AggregateResults($benchmark, $state, $options);
-            file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
+          $state['needs_aggregation'] = false;
+          file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
         }
         
         // see if we need to kick off a new benchmark run
