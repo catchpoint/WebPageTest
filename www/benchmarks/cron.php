@@ -271,6 +271,7 @@ function CheckBenchmarkStatus($benchmark, &$state) {
                 // collect the test data and archive the test as we get each result
                 if ($test['completed']) {
                     $updated++;
+                    RestoreTest($test['id']);
                     CollectResults($test, $data);
                     if (ArchiveTest($test['id'])) {
                         logMsg("Test {$test['id']} : Archived", "./log/$logFile", true);
