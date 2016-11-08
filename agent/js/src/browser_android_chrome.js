@@ -137,7 +137,7 @@ var BLACK_BOX_BROWSERS = {
       'flagsFile': '/data/local/chrome-command-line',
       'flags': CHROME_FLAGS,
       'activityFlags': ['-f', '268435456', '--ez', 'android.support.customtabs.extra.user_opt_out', 'true'],
-      'videoFlags': ['--findstart', 25, '--notification', '--white'],
+      'videoFlags': ['--findstart', 25, '--notification', '--white', '--forceblank'],
       'clearProfile': true,
       'startupDelay': 10000
     },

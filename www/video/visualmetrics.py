@@ -401,6 +401,7 @@ def find_first_frame(directory, white_file):
         found_first_change = False
         found_white_frame = False
         found_non_white_frame = False
+        first_frame = None
         if white_file is None:
           found_white_frame = True
         for i in xrange(count):
@@ -409,17 +410,19 @@ def find_first_frame(directory, white_file):
             logging.debug('Removing early frame {0} from the beginning'.format(files[i]))
             os.remove(files[i])
             if different:
+              first_frame = files[i + 1]
               found_first_change = True
           elif not found_white_frame:
-            if found_non_white_frame:
-              found_white_frame = is_white_frame(files[i], white_file)
-              if not found_white_frame:
-                logging.debug('Removing early non-white frame {0} from the beginning'.format(files[i]))
+            if files[i] != first_frame:
+              if found_non_white_frame:
+                found_white_frame = is_white_frame(files[i], white_file)
+                if not found_white_frame:
+                  logging.debug('Removing early non-white frame {0} from the beginning'.format(files[i]))
+                  os.remove(files[i])
+              else:
+                found_non_white_frame = not is_white_frame(files[i], white_file)
+                logging.debug('Removing early pre-non-white frame {0} from the beginning'.format(files[i]))
                 os.remove(files[i])
-            else:
-              found_non_white_frame = not is_white_frame(files[i], white_file)
-              logging.debug('Removing early pre-non-white frame {0} from the beginning'.format(files[i]))
-              os.remove(files[i])
           if found_first_change and found_white_frame:
             break
   except:
@@ -987,7 +990,7 @@ def sample_frames(frames, interval, start_ms, skip_frames):
     logging.debug('Sapling frames in {0:d}ms intervals after {1:d} ms, skipping {2:d} frames...'.format(interval,
                                                                                                         first_change_time + start_ms,
                                                                                                         skip_frames))
-    frame_count = 0;
+    frame_count = 0
     for frame in frames:
       m = re.search(match, frame)
       if m is not None:
@@ -1077,8 +1080,8 @@ def calculate_visual_progress(histograms):
 
 
 def calculate_frame_progress(histogram, start, final):
-  total = 0;
-  matched = 0;
+  total = 0
+  matched = 0
   slop = 5  # allow for matching slight color variations
   channels = ['r', 'g', 'b']
   for channel in channels:
