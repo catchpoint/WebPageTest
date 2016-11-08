@@ -117,15 +117,42 @@ function GetJob() {
       strpos($location, '/') == false &&
       (!strlen($locKey) || !strcmp($key, $locKey))) {
     $now = time();
+    
+    // get the count of testers for this lication and the index of the current tester for affinity checking
+    $testerIndex = null;
+    if (function_exists('apcu_fetch') || function_exists('apc_fetch')) {
+      if (function_exists("apcu_fetch"))
+        $testers = apcu_fetch("testers_$location");
+      elseif (function_exists("apc_fetch"))
+        $testers = apc_fetch("testers_$location");
+      if (!isset($testers) || !is_array($testers))
+        $testers = array();
+      $testers[$pc] = $now;
+      $earliest = $now - 3600;
+      $index = 0;
+      foreach($testers as $name => $last_check) {
+        if ($name == $pc)
+          $testerIndex = $index;
+        if ($last_check < $earliest) {
+          unset($testers[$name]);
+        } else {
+          $index++;
+        }
+      }
+      $testerCount = count($testers);
+      if (function_exists("apcu_store"))
+        apcu_store("testers_$location", $testers);
+      elseif (function_exists("apc_store"))
+        apc_store("testers_$location", $testers);
+    }
 
     // If it is an EC2 auto-scaling location, make sure the agent isn't marked as offline      
     $offline = false;
-    if (isset($locInfo['ami'])) {
+    if (!isset($testerIndex) || isset($locInfo['ami'])) {
       $testers = GetTesters($location, true);
 
       // make sure the tester isn't marked as offline (usually when shutting down EC2 instances)                
       $testerCount = isset($testers['testers']) ? count($testers['testers']) : 0;
-      $testerIndex = null;
       if ($testerCount) {
         if (strlen($ec2)) {
           foreach($testers['testers'] as $index => $testerInfo) {
@@ -144,7 +171,11 @@ function GetJob() {
     }
     
     if (!$offline) {
-      $testInfo = GetTestJob($location, $fileName, $workDir, $priority, $testInfo, $pc, $testerIndex, $testerCount);
+      if (!isset($testerIndex))
+        $testerIndex = 0;
+      if (!$testerCount)
+        $testerCount = 1;
+      $testInfo = GetTestJob($location, $fileName, $workDir, $priority, $pc, $testerIndex, $testerCount);
       if (isset($testInfo)) {
         $original_test_info = $testInfo;
         $is_done = true;
