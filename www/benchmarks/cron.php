@@ -940,7 +940,7 @@ function ImportS3Benchmarks() {
   $key = GetSetting('archive_s3_key');
   $secret = GetSetting('archive_s3_secret');
   $bucket = GetSetting('archive_s3_bucket');
-  $prefix = GetSetting('s3_benchmarks');
+  $prefix = GetSetting('s3_benchmark_prefix');
   $s3 = new S3($key, $secret, false, $server);
   $s3Benchmarks = is_file("./results/benchmarks/s3.json") ? json_decode(file_get_contents('./results/benchmarks/s3.json'), true) : array();
   if (!isset($s3Benchmarks) || !is_array($s3Benchmarks)) {
