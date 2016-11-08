@@ -265,10 +265,6 @@ $page_description = "Comparison Test$testLabel.";
                             echo "<input type=\"checkbox\" name=\"mobile\" id=\"mobile\" class=\"mobile\"$checked>";
                             ?>
                         </li>
-                        <li>
-                            <label for="wait">Expected Wait</label>
-                            <span id="wait"></span>
-                        </li>
                         <?php
                         if( !$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false) )
                         {
@@ -477,39 +473,6 @@ function LoadLocations()
 {
     $locations = LoadLocationsIni();
     FilterLocations( $locations, 'pss' );
-    
-    // strip out any sensitive information
-    foreach( $locations as $index => &$loc )
-    {
-        if( isset($loc['browser']) )
-        {
-            $testCount = 16;
-            if (array_key_exists('relayServer', $loc)) {
-                $loc['backlog'] = 0;
-                $loc['avgTime'] = 30;
-                $loc['testers'] = 1;
-                $loc['wait'] = ceil(($testCount * 30) / 60);
-            } else {
-                GetPendingTests($index, $count);
-                $avgTime = 30;  // default to 30 seconds if we don't have any history
-                $loc['backlog'] = $count;
-                $loc['avgTime'] = $avgTime;
-                $loc['testers'] = GetTesterCount($index);
-                $loc['wait'] = -1;
-                if( $loc['testers'] )
-                {
-                    if( $loc['testers'] > 1 )
-                        $testCount = 16;
-                    $loc['wait'] = ceil((($testCount + ($count / $loc['testers'])) * $avgTime) / 60);
-                }
-            }
-        }
-        
-        unset( $loc['localDir'] );
-        unset( $loc['key'] );
-        unset( $loc['remoteDir'] );
-        unset( $loc['relayKey'] );
-    }
     
     return $locations;
 }
