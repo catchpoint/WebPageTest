@@ -975,9 +975,17 @@ function ImportS3Benchmarks() {
             if (isset($bminfo) && is_array($bminfo)) {
               if (ImportS3Benchmark($bminfo)) {
                 $s3Benchmarks[$name] = time();
+              } else {
+                logMsg("  Error importing s3 benchmark for $file", "./log/$logFile", true);
               }
+            } else {
+              logMsg("  Error parsing JSON for $file", "./log/$logFile", true);
             }
+          } else {
+            logMsg("  Error fetching $file", "./log/$logFile", true);
           }
+        } else {
+          logMsg("  Already processed $file", "./log/$logFile", true);
         }
       }
     }
