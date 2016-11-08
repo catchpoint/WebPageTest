@@ -14,25 +14,19 @@ if (!isset($lock)) {
   exit(0);
 }
 
-$archive_dir = null;
-if (array_key_exists('archive_dir', $settings)) {
-    $archive_dir = $settings['archive_dir'];
-}
-$archive2_dir = null;
-if (array_key_exists('archive2_dir', $settings)) {
-    $archive2_dir = $settings['archive2_dir'];
-}
-if (array_key_exists('archive2_days', $settings)) {
-    $MIN_DAYS = $settings['archive2_days'];
-}
+$archive_dir = GetSetting('archive_dir');
+$archive2_dir = GetSetting('archive2_dir');
+$days = GetSetting('archive2_days');
+if (isset($days) && $days !== false)
+  $MIN_DAYS = $days;
 $MIN_DAYS = max($MIN_DAYS,1);
 
 $UTC = new DateTimeZone('UTC');
 $now = time();
 
 // Archive each day of archives to long-term storage
-if (isset($archive_dir) && strlen($archive_dir) && 
-    isset($archive2_dir) && strlen($archive2_dir) ) {
+if (isset($archive_dir) && $archive_dir !== false && strlen($archive_dir) && 
+    isset($archive2_dir) && $archive2_dir !== false && strlen($archive2_dir) ) {
     $years = scandir("{$archive_dir}results");
     foreach( $years as $year ) {
         $yearDir = "{$archive_dir}results/$year";
@@ -45,7 +39,7 @@ if (isset($archive_dir) && strlen($archive_dir) &&
                     foreach( $days as $day ) {
                         $dayDir = "$monthDir/$day";
                         if( is_dir($dayDir) && $day != '.' && $day != '..' ) {
-                            if (ElapsedDays($year, $month, $day) > $MIN_DAYS) {
+                            if (ElapsedDays($year, $month, $day) >= $MIN_DAYS) {
                                 LongTermArchive($dayDir, $year, $month, $day);
                             }
                         }
