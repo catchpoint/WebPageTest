@@ -21,6 +21,12 @@ if (array_key_exists('archive_days', $settings)) {
 }
 $MIN_DAYS = max($MIN_DAYS,0.1);
 
+$MAX_DAYS = 30;
+$days = GetSetting('archive2_days');
+if (isset($days) && $days !== false)
+  $MAX_DAYS = $days;
+$MAX_DAYS = max($MAX_DAYS, 2);
+
 $archive_dir = null;
 if (array_key_exists('archive_dir', $settings)) {
     $archive_dir = $settings['archive_dir'];
@@ -222,45 +228,46 @@ function CheckTest($testPath, $id, $elapsedDays) {
   global $kept;
   global $log;
   global $MIN_DAYS;
+  global $MAX_DAYS;
   $logLine = "$id : ";
 
   echo "\rArc:$archiveCount, Del:$deleted, Kept:$kept, Checking:" . str_pad($id,45);
 
   $delete = false;
-  if (!is_file("$testPath/testinfo.ini") &&
+  if ($elapsedDays > $MAX_DAYS) {
+    $logLine .= "Old test, deleting";
+    $delete = true;
+  } elseif (!is_file("$testPath/testinfo.ini") &&
       !is_file("$testPath/testinfo.json.gz") &&
       !is_file("$testPath/testinfo.json")) {
-      $delete = true;
+    $delete = true;
   } else {
-      $elapsed = TestLastAccessed($id);
-      if (isset($elapsed)) {
-        if( $elapsed >= $MIN_DAYS ) {
-          if (ArchiveTest($id) ) {
-            $archiveCount++;
-            $logLine .= "Archived";
-                                                                                          
-            if (VerifyArchive($id) || $elapsed >= 30)
-              $delete = true;
-          } else if ($elapsed < 60) {
-            $status = GetTestStatus($id, false);
-            if ($status['statusCode'] >= 400 ||
-                ($status['statusCode'] == 102 &&
-                 $status['remote'] &&
-                 $elapsed > 1)) {
-              $delete = true;
-            }
-          } elseif ($elapsedDays > 10) {
-            $logLine .= "Old test, Failed to archive, deleting";
+    $elapsed = TestLastAccessed($id);
+    if (isset($elapsed)) {
+      if( $elapsed >= $MIN_DAYS ) {
+        if (ArchiveTest($id) ) {
+          $archiveCount++;
+          $logLine .= "Archived";
+                                                                                        
+          if (VerifyArchive($id))
             $delete = true;
-          } else {
-            $logLine .= "Failed to archive";
+        } else if ($elapsed < 60) {
+          $status = GetTestStatus($id, false);
+          if ($status['statusCode'] >= 400 ||
+              ($status['statusCode'] == 102 &&
+               $status['remote'] &&
+               $elapsed > 1)) {
+            $delete = true;
           }
         } else {
-          $logLine .= "Last Accessed $elapsed days";
+          $logLine .= "Failed to archive";
         }
       } else {
-        $delete = true;
+        $logLine .= "Last Accessed $elapsed days";
       }
+    } else {
+      $delete = true;
+    }
   }
 
   if ($delete) {
