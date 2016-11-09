@@ -8,7 +8,7 @@ Class       = WFPCALLOUTS
 ClassGuid   = {57465043-616C-6C6F-7574-5F636C617373}
 Provider    = %ProviderString%
 CatalogFile = shaper.cat
-DriverVer=11/09/2016,12.11.53.170
+DriverVer=11/09/2016,14.43.46.678
 
 [SourceDisksNames]
    1 = %ShaperDisk%,,,""
