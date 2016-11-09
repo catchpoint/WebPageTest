@@ -80,14 +80,17 @@ static const TCHAR * FIREFOX_REQUIRED_OPTIONS[] = {
 -----------------------------------------------------------------------------*/
 WebBrowser::WebBrowser(WptSettings& settings, WptTestDriver& test, 
                        WptStatus &status, BrowserSettings& browser,
-                       CIpfw &ipfw, DWORD wpt_ver):
+                       CIpfw &ipfw, Shaper &shaper, DWORD wpt_ver):
   _settings(settings)
   ,_test(test)
   ,_status(status)
   ,_browser_process(NULL)
   ,_browser(browser)
   ,_ipfw(ipfw)
+  ,_shaper(shaper)
   ,_wpt_ver(wpt_ver) {
+
+  ATLTRACE(_T("[wptdriver] - WebBrowser::WebBrowser"));
 
   InitializeCriticalSection(&cs);
 
@@ -431,7 +434,13 @@ bool WebBrowser::ConfigureIpfw(WptTestDriver& test) {
                 test._latency, test._plr );
     ATLTRACE(buff);
 
-    if (_ipfw.SetPipe(PIPE_IN, test._bwIn, latency, test._plr/100.0, true)) {
+    if (_shaper.IsAvailable()) {
+      DWORD latencyIn = latency;
+      DWORD latencyOut = latency;
+      if( test._latency % 2 )
+        latencyIn++;
+      ret = _shaper.Enable(test._bwIn, test._bwOut, latencyIn, latencyOut, test._plr);
+    } else if (_ipfw.SetPipe(PIPE_IN, test._bwIn, latency, test._plr/100.0, true)) {
       // make up for odd values
       if( test._latency % 2 )
         latency++;
@@ -456,8 +465,12 @@ bool WebBrowser::ConfigureIpfw(WptTestDriver& test) {
   Remove the bandwidth throttling
 -----------------------------------------------------------------------------*/
 void WebBrowser::ResetIpfw(void) {
-  _ipfw.SetPipe(PIPE_IN, 0, 0, 0, true);
-  _ipfw.SetPipe(PIPE_OUT, 0, 0, 0, false);
+  if (_shaper.IsAvailable()) {
+    _shaper.Disable();
+  } else {
+    _ipfw.SetPipe(PIPE_IN, 0, 0, 0, true);
+    _ipfw.SetPipe(PIPE_OUT, 0, 0, 0, false);
+  }
 }
 
 /*-----------------------------------------------------------------------------

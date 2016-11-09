@@ -368,7 +368,7 @@ bool WptSettings::CheckBrowsers() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool BrowserSettings::IsWebdriver() {
-  return _browser.CompareNoCase(_T("Edge")) || _browser.CompareNoCase(_T("Microsoft Edge"));
+  return !_browser.CompareNoCase(_T("Edge")) || !_browser.CompareNoCase(_T("Microsoft Edge"));
 }
 
 /*-----------------------------------------------------------------------------
@@ -400,7 +400,7 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
 
   GetStandardDirectories();
 
-  if (_browser.CompareNoCase(_T("Edge")) || _browser.CompareNoCase(_T("Microsoft Edge"))) {
+  if (!_browser.CompareNoCase(_T("Edge")) || !_browser.CompareNoCase(_T("Microsoft Edge"))) {
     _webdriver_script = _T("edge.py");
     CString edge_cache_root = local_app_data_dir_ + _T("\\Packages\\Microsoft.MicrosoftEdge_8wekyb3d8bbwe\\");
     _cache_directories.AddTail(edge_cache_root + _T("AC"));

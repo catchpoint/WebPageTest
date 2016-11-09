@@ -28,13 +28,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 #include "ipfw.h"
+#include "shaper.h"
 
 class BrowserSettings;
 
 class WebBrowser {
 public:
   WebBrowser(WptSettings& settings, WptTestDriver& test, WptStatus &status, 
-             BrowserSettings& browser, CIpfw &ipfw, DWORD wpt_ver);
+             BrowserSettings& browser, CIpfw &ipfw, Shaper &shaper, DWORD wpt_ver);
   ~WebBrowser(void);
 
   bool RunAndWait();
@@ -58,6 +59,7 @@ private:
   WptStatus&      _status;
   BrowserSettings& _browser;
   CIpfw&          _ipfw;
+  Shaper&         _shaper;
   
   HANDLE        _browser_process;
   HANDLE  _browser_started_event;
