@@ -40,6 +40,8 @@ public:
 
 protected:
   bool started_;
+  bool Install();
+  bool Uninstall();
   bool StartService();
   bool StopService();
 };

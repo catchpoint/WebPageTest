@@ -28,17 +28,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "stdafx.h"
 #include "shaper.h"
 #include "shaper/interface.h"
+#include <VersionHelpers.h>
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 Shaper::Shaper():started_(false) {
-  StartService();
+  if (IsWindows8Point1OrGreater()) {
+    Install();
+    StartService();
+  }
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 Shaper::~Shaper() {
-  StopService();
+  if (IsWindows8Point1OrGreater()) {
+    StopService();
+    Uninstall();
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -93,7 +100,6 @@ bool Shaper::Disable() {
 -----------------------------------------------------------------------------*/
 bool Shaper::StartService() {
   if (!started_) {
-    ATLTRACE(_T("[wptdriver] - Shaper::StartService"));
     SC_HANDLE scm = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS); 
     if (scm) {
       SC_HANDLE service = OpenService(scm, SHAPER_SERVICE_NAME, SERVICE_ALL_ACCESS); 
@@ -110,29 +116,15 @@ bool Shaper::StartService() {
                   Sleep(100);
                 count++;
               } while(status.dwCurrentState == SERVICE_START_PENDING && count < 600);
-              if (status.dwCurrentState == SERVICE_RUNNING) {
-                ATLTRACE(_T("[wptdriver] - Shaper::StartService() Service started"));
+              if (status.dwCurrentState == SERVICE_RUNNING)
                 started_ = true;
-              } else {
-                ATLTRACE(_T("[wptdriver] - Shaper::StartService() Error waiting for service to start"));
-              }
-            } else {
-              ATLTRACE(_T("[wptdriver] - Shaper::StartService() Error starting service"));
             }
-          } else {
-            ATLTRACE(_T("[wptdriver] - Shaper::StartService() Service already started"));
             started_ = true;
           }
-        } else {
-          ATLTRACE(_T("[wptdriver] - Shaper::StartService() Error connecting to SCM"));
         }
         CloseServiceHandle(service);
-      } else {
-        ATLTRACE(_T("[wptdriver] - Shaper::StartService() Error opening service"));
       }
       CloseServiceHandle(scm);
-    } else {
-      ATLTRACE(_T("[wptdriver] - Shaper::StartService() Error connecting to SCM: %d"), GetLastError());
     }
   }
   return started_;
@@ -169,4 +161,63 @@ bool Shaper::StopService() {
     CloseServiceHandle(scm);
   }
   return stopped;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool Shaper::Install() {
+  bool installed = false;
+  SC_HANDLE scm = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS); 
+  if (scm) {
+    SC_HANDLE service = OpenService(scm, SHAPER_SERVICE_NAME, SERVICE_ALL_ACCESS); 
+    if (!service) {
+      TCHAR driver_path[MAX_PATH];
+      GetModuleFileName(NULL, driver_path, MAX_PATH);
+      BOOL is64bit = FALSE;
+      if (IsWow64Process(GetCurrentProcess(), &is64bit) && is64bit)
+        lstrcpy(PathFindFileName(driver_path), _T("shaper\\x64\\shaper.sys"));
+      else
+        lstrcpy(PathFindFileName(driver_path), _T("shaper\\x86\\shaper.sys"));
+      if (FileExists(driver_path)) {
+        service = CreateService(scm,
+                                SHAPER_SERVICE_NAME,
+                                SHAPER_SERVICE_DISPLAY_NAME,
+                                SERVICE_ALL_ACCESS,
+                                SERVICE_KERNEL_DRIVER,
+                                SERVICE_DEMAND_START,
+                                SERVICE_ERROR_NORMAL,
+                                driver_path,
+                                NULL,
+                                NULL,
+                                NULL,
+                                NULL,
+                                NULL);
+        if (service) {
+          CloseServiceHandle(service);
+          installed = true;
+        }
+      }
+    } else {
+      CloseServiceHandle(service);
+    }
+    CloseServiceHandle(scm);
+  }
+  return installed;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool Shaper::Uninstall() {
+  bool removed = false;
+  SC_HANDLE scm = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS); 
+  if (scm) {
+    SC_HANDLE service = OpenService(scm, SHAPER_SERVICE_NAME, SERVICE_ALL_ACCESS); 
+    if (service) {
+      if (DeleteService(service))
+        removed = true;
+      CloseServiceHandle(service);
+    }
+    CloseServiceHandle(scm);
+  }
+  return removed;
 }

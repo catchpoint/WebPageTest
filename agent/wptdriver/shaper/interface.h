@@ -4,6 +4,7 @@
 #define SHAPER_SYMBOLIC_NAME   L"\\DosDevices\\Global\\TrafficShaper"
 #define SHAPER_DOS_NAME        L"\\\\.\\TrafficShaper"
 #define SHAPER_SERVICE_NAME    L"shaper"
+#define SHAPER_SERVICE_DISPLAY_NAME L"Traffic Shaper Driver"
 
 #pragma pack(push, 8)
 typedef struct {
