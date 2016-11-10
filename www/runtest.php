@@ -959,7 +959,9 @@ function UpdateLocation(&$test, &$locations, $new_location, &$error)
 
           if( isset($connectivity[$test['connectivity']]['aftCutoff']) && !$test['aftEarlyCutoff'] )
               $test['aftEarlyCutoff'] = $connectivity[$test['connectivity']]['aftCutoff'];
-      } elseif (!isset($test['bwIn']) && !isset($test['bwOut']) && !isset($test['latency'])) {
+      } elseif ((!isset($test['bwIn']) || !$test['bwIn']) &&
+                (!isset($test['bwOut']) || !$test['bwOut']) &&
+                (!isset($test['latency']) || !$test['latency'])) {
         $error = 'Unknown connectivity type: ' . htmlspecialchars($test['connectivity']);
       }
   }
@@ -1272,7 +1274,9 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 
                         if( isset($connectivity[$test['connectivity']]['aftCutoff']) && !$test['aftEarlyCutoff'] )
                             $test['aftEarlyCutoff'] = $connectivity[$test['connectivity']]['aftCutoff'];
-                    } elseif (!isset($test['bwIn']) && !isset($test['bwOut']) && !isset($test['latency'])) {
+                    } elseif ((!isset($test['bwIn']) || !$test['bwIn']) &&
+                              (!isset($test['bwOut']) || !$test['bwOut']) &&
+                              (!isset($test['latency']) || !$test['latency'])) {
                       $error = 'Unknown connectivity type: ' . htmlspecialchars($test['connectivity']);
                     }
                 }
