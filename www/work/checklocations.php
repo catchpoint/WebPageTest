@@ -91,8 +91,7 @@ function SendMessage($to, $subject, &$body) {
     global $settings;
 
     // send the e-mail through an SMTP server?
-    if (array_key_exists('mailserver', $settings))
-    {
+    if (array_key_exists('mailserver', $settings)) {
         require_once "Mail.php";
         $mailServerSettings = $settings['mailserver'];
         $mailInit = array ();
@@ -109,8 +108,12 @@ function SendMessage($to, $subject, &$body) {
         $smtp = Mail::factory('smtp', $mailInit);
         $headers = array ('From' => $mailServerSettings['from'], 'To' => $to, 'Subject' => $subject);
         $mail = $smtp->send($to, $headers, $body);
-    }
-    else
+    } else {
+      $from = GetSetting['notifyFrom'];
+      if ($from)
+        mail($to, $subject, $body, "From:$from", "-t $from");
+      else
         mail($to, $subject, $body);
+    }
 }
 ?>
