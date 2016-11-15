@@ -1095,3 +1095,26 @@ void ClearAppInitHooks() {
   }
   ATLTRACE(_T("ClearAppInitHooks - Done"));
 }
+
+/*-----------------------------------------------------------------------------
+  Run the given python script and wait for a result (assume C:\Python27)
+-----------------------------------------------------------------------------*/
+bool RunPythonScript(CString script, CString options) {
+  bool ok = false;
+  CString command_line = _T("C:\\Python27\\python.exe");
+  if (FileExists(command_line)) {
+    TCHAR dir[MAX_PATH];
+    if (GetModuleFileName(NULL, dir, _countof(dir))) {
+      *PathFindFileName(dir) = 0;
+      CString script_path = dir;
+      script_path += script;
+      if (FileExists(script_path)) {
+        command_line += _T(" \"") + script_path + _T("\"");
+        if (options.GetLength())
+          command_line += _T(" ") + options;
+        ok = LaunchProcess(command_line);
+      }
+    }
+  }
+  return ok;
+}

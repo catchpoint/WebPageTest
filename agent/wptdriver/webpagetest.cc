@@ -1249,7 +1249,7 @@ bool WebPagetest::ProcessFile(CString file, CAtlList<CString> &newFiles) {
                    (LPCTSTR)file, (LPCTSTR)cpuFile, (LPCTSTR)scriptTimingFile,
                    (LPCTSTR)userTimingFile, (LPCTSTR)featureUsageFile);
     OutputDebugStringA("Processing trace file");
-    if (RunPythonScript(_T("trace-parser.py"), options)) {
+    if (RunPythonScript(_T("support\\trace-parser.py"), options)) {
       if (FileExists(cpuFile)) {
         hasNewFiles = true;
         newFiles.AddTail(cpuFile);
@@ -1273,7 +1273,7 @@ bool WebPagetest::ProcessFile(CString file, CAtlList<CString> &newFiles) {
     CString options;
     options.Format(_T("-i \"%s\" -d \"%s\""),
                    (LPCTSTR)file, (LPCTSTR)slicesFile);
-    if (RunPythonScript(_T("pcap-parser.py"), options)) {
+    if (RunPythonScript(_T("support\\pcap-parser.py"), options)) {
       if (FileExists(slicesFile)) {
         hasNewFiles = true;
         newFiles.AddTail(slicesFile);
@@ -1283,25 +1283,3 @@ bool WebPagetest::ProcessFile(CString file, CAtlList<CString> &newFiles) {
   return hasNewFiles;
 }
 
-/*-----------------------------------------------------------------------------
-  Run the given python script and wait for a result (assume C:\Python27)
------------------------------------------------------------------------------*/
-bool WebPagetest::RunPythonScript(CString script, CString options) {
-  bool ok = false;
-  CString command_line = _T("C:\\Python27\\python.exe");
-  if (FileExists(command_line)) {
-    TCHAR dir[MAX_PATH];
-    if (GetModuleFileName(NULL, dir, _countof(dir))) {
-      *PathFindFileName(dir) = 0;
-      CString script_path = dir;
-      script_path += _T("support\\") + script;
-      if (FileExists(script_path)) {
-        command_line += _T(" \"") + script_path + _T("\"");
-        if (options.GetLength())
-          command_line += _T(" ") + options;
-        ok = LaunchProcess(command_line);
-      }
-    }
-  }
-  return ok;
-}

@@ -123,7 +123,7 @@ public:
 
   void  Reset(void);
   virtual bool Load(CString& test);
-  void  SaveJson();
+  CString SaveJson();
 
   bool  GetNextTask(CStringA& task, bool& record);
   bool  Done();

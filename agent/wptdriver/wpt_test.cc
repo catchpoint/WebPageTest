@@ -1339,7 +1339,8 @@ CStringA WptTest::JsonFragment(LPCSTR field, CAtlList<CString> &values) {
 /*-----------------------------------------------------------------------------
   Serialize the test data out to a json file in the current results directory
 -----------------------------------------------------------------------------*/
-void  WptTest::SaveJson() {
+CString  WptTest::SaveJson() {
+  CString json_file;
   CStringA json = "{";
   json += JsonFragment("id", _id) + ",\n";
   json += JsonFragment("file_base", _file_base) + ",\n";
@@ -1412,6 +1413,7 @@ void  WptTest::SaveJson() {
   if (hFile != INVALID_HANDLE_VALUE) {
     WriteFile(hFile, (LPCSTR)json, json.GetLength(), &written, 0);
     CloseHandle(hFile);
+    json_file = _json_file;
   }
-  exit(0);
+  return json_file;
 }

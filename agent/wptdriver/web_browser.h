@@ -51,7 +51,7 @@ private:
   void ConfigureIESettings();
   void ConfigureChromePreferences();
   void CreateChromeSymlink();
-  void RunWebdriverTest();
+  bool RunWebdriverTest();
   HANDLE FindAdditionalHookProcess(HANDLE launched_process, CString exe);
 
   WptSettings&    _settings;

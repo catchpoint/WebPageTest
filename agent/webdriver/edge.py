@@ -33,7 +33,7 @@ def RunTest(driver, test):
   etw_file = test.GetFileETW()
   if os.path.exists(etw_file):
     os.unlink(etw_file)
-  etw.start(etw_file)
+  etw.Start(etw_file)
 
   # Run through all of the script commands (just navigate for now but placeholder)
   while not test.Done():
@@ -41,8 +41,11 @@ def RunTest(driver, test):
     if action['command'] == 'navigate':
       driver.get(action['target'])
 
-  etw.stop()
-
+  etw.Stop()
+  etw_csv = etw_file + '.csv'
+  etw.ExtractCsv(etw_csv)
+  events = etw.Parse(etw_csv)
+  result = etw.ProcessEvents(events)
 
 def main():
   import argparse
@@ -77,7 +80,7 @@ def main():
 
   RunTest(driver, test)
 
-  #quit
+  #quit the browser
   driver.quit()
 
 if '__main__' == __name__:

@@ -126,7 +126,7 @@ bool WebBrowser::RunAndWait() {
 
   if (_test.Start() && ConfigureIpfw(_test)) {
     if (_browser.IsWebdriver()) {
-      RunWebdriverTest();
+      ret = RunWebdriverTest();
     } else if (_browser._exe.GetLength()) {
       CString exe(_browser._exe);
       exe.MakeLower();
@@ -871,7 +871,20 @@ void WebBrowser::CreateChromeSymlink() {
   Save the test info out, run the stand-alone webdriver test and wait for it
   to finish.
 -----------------------------------------------------------------------------*/
-void WebBrowser::RunWebdriverTest() {
+bool WebBrowser::RunWebdriverTest() {
+  bool ok = false;
   OutputDebugStringA("RunWebdriverTest");
-  _test.SaveJson();
+  CString json_file = _test.SaveJson();
+  if (!json_file.IsEmpty()) {
+    CString options;
+    options.Format(_T("-t \"%s\""), (LPCTSTR)json_file);
+    _status.Set(_T("Running webdriver test..."));
+    if (RunPythonScript(_T("webdriver\\edge.py"), options)) {
+      _status.Set(_T("Test complete, processing result..."));
+      ok = true;
+    } else {
+      _status.Set(_T("Test failed"));
+    }
+  }
+  return ok;
 }
