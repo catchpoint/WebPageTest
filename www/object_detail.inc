@@ -37,6 +37,7 @@ function getRequests($id, $test_path, $run, $is_cached,
 function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_requests, &$has_locations,
                             $use_location_check, $use_raw_headers = false) {
     $request_file_name =  $localPaths->requestDataFile();
+    $request_json_file_name =  $localPaths->requestDataJsonFile();
     $headers_file_name = $localPaths->headersFile();
     $bodies_file_name = $localPaths->bodiesFile();
     $custom_rules_file_name = $localPaths->customRulesFile();
@@ -51,11 +52,14 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
       $needHeaders = false;
       $requests = LoadRequests($request_file_name);
       if (isset($requests) && is_array($requests) && count($requests)) {
-          if ($use_raw_headers)
-              $needHeaders = true;
+        if ($use_raw_headers)
+          $needHeaders = true;
 
-          AddResponseBodyFlags($requests, $bodies_file_name);
+        AddResponseBodyFlags($requests, $bodies_file_name);
       } else {
+        if (gz_is_file($request_json_file_name))
+          $requests = json_decode(gz_file_get_contents($request_json_file_name), true);
+        else
           GetDevToolsRequestsForStep($localPaths, $requests, $pageData);
       }
       FixUpRequestTimes($requests);
@@ -351,6 +355,8 @@ function MergeDnsAndConnectionTimes($requests) {
             unset($connect_ms);
             $merged_requests[] = $request;
         }
+      } else {
+        $merged_requests[] = $request;
       }
     }
   }

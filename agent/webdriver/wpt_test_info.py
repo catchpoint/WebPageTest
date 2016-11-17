@@ -44,3 +44,27 @@ class WptTest:
     if 'file_base' in self.test and len(self.test['file_base']):
       file_path = self.test['file_base'] + '_trace.etl'
     return file_path
+
+  def GetFilePageData(self):
+    file_path = None
+    if 'file_base' in self.test and len(self.test['file_base']):
+      file_path = self.test['file_base'] + '_page_data.json'
+    return file_path
+
+  def GetFileRequests(self):
+    file_path = None
+    if 'file_base' in self.test and len(self.test['file_base']):
+      file_path = self.test['file_base'] + '_requests.json'
+    return file_path
+
+  def GetUrl(self):
+    url = None
+    if 'url' in self.test:
+      url = self.test['url']
+    return url
+
+  def IsCached(self):
+    cached = 0
+    if self.test is not None and 'clear_cache' in self.test and not self.test['clear_cache']:
+      cached = 1
+    return cached

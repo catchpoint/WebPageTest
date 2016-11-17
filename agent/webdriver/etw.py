@@ -13,10 +13,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import json
+import os
 import subprocess
+import urlparse
 
 class ETW:
   def __init__(self):
+    self.start = None
     self.log_file = None
     self.trace_name = None
     self.kernel_categories = []
@@ -36,6 +40,8 @@ class ETW:
                             #'Microsoft-Windows-Winsock-NameResolution',
                             #'Microsoft-Windows-Winsock-AFD:5',
                             #'37D2C3CD-C5D4-4587-8531-4696C44244C8' #Security: SChannel
+                            #'Schannel',
+                            #'Microsoft-Windows-TCPIP',
                             ]
 
     # The list of events we actually care about
@@ -107,6 +113,23 @@ class ETW:
       ret = subprocess.call(command, shell=True)
     return ret
 
+  def Write(self, test_info):
+    page_data_file = test_info.GetFilePageData()
+    request_data_file = test_info.GetFileRequests()
+    if self.log_file is not None and self.started and page_data_file is not None and request_data_file is not None:
+      csv_file = self.log_file + '.csv'
+      self.ExtractCsv(csv_file)
+      if os.path.exists(csv_file):
+        events = self.Parse(csv_file)
+        if len(events):
+          raw_result = self.ProcessEvents(events)
+          page_data, requests = self.ProcessResult(raw_result, test_info)
+          with open(page_data_file, 'wb') as f:
+            json.dump(page_data, f)
+          with open(request_data_file, 'wb') as f:
+            json.dump(requests, f)
+        os.unlink(csv_file)
+
   def ExtractCsv(self, csv_file):
     ret = 0
     if self.log_file is not None:
@@ -134,7 +157,8 @@ class ETW:
           else:
             columns = self.ExtractCsvLine(line)
             if len(columns):
-              event_name = columns[0]
+              event_name = columns[0].replace('/win:', '/')
+              event_name = columns[0].replace('/win:', '/')
               if len(event_name):
                 column_names[event_name] = columns
         else:
@@ -144,7 +168,7 @@ class ETW:
             buffer = buffer.replace("\r\r\n", "\r\n")
             columns = self.ExtractCsvLine(buffer)
             if len(columns):
-              event_name = columns[0]
+              event_name = columns[0].replace('/win:', '/')
               if len(event_name) and event_name in column_names and event_name in self.keep_events:
                 event = {'name': event_name, 'fields': {}}
                 available_names = len(column_names[event_name])
@@ -203,15 +227,15 @@ class ETW:
     dns = {}
     sockets = {}
     requests = {}
-    pageContext = None
-    CMarkup = None
+    pageContexts = []
+    CMarkup = []
     for event in events:
       if 'activity' in event:
         id = event['activity']
         if event['name'] == 'Microsoft-IE/Mshtml_CDoc_Navigation/Info':
           if 'EventContextId' in event['fields'] and 'CMarkup*' in event['fields']:
-            pageContext = event['fields']['EventContextId']
-            CMarkup = event['fields']['CMarkup*']
+            pageContexts.append(event['fields']['EventContextId'])
+            CMarkup.append(event['fields']['CMarkup*'])
             if 'start' not in result:
               result['start'] = event['ts']
             if 'URL' in event['fields'] and 'URL' not in result:
@@ -219,19 +243,19 @@ class ETW:
         elif 'start' in result:
           # Page Navigation events
           if event['name'] == 'Microsoft-IE/Mshtml_WebOCEvents_DocumentComplete/Info':
-            if 'CMarkup*' in event['fields'] and event['fields']['CMarkup*'] == CMarkup:
+            if 'CMarkup*' in event['fields'] and event['fields']['CMarkup*'] in CMarkup:
               result['pageData']['load'] = event['ts']
           if event['name'] == 'Microsoft-IE/Mshtml_CMarkup_LoadEvent_Start/Start':
-            if 'EventContextId' in event['fields'] and event['fields']['EventContextId'] == pageContext:
+            if 'EventContextId' in event['fields'] and event['fields']['EventContextId'] in pageContexts:
               result['pageData']['loadEventStart'] = event['ts']
           if event['name'] == 'Microsoft-IE/Mshtml_CMarkup_LoadEvent_Stop/Stop':
-            if 'EventContextId' in event['fields'] and event['fields']['EventContextId'] == pageContext:
+            if 'EventContextId' in event['fields'] and event['fields']['EventContextId'] in pageContexts:
               result['pageData']['loadEventEnd'] = event['ts']
           if event['name'] == 'Microsoft-IE/Mshtml_CMarkup_DOMContentLoadedEvent_Start/Start':
-            if 'EventContextId' in event['fields'] and event['fields']['EventContextId'] == pageContext:
+            if 'EventContextId' in event['fields'] and event['fields']['EventContextId'] in pageContexts:
               result['pageData']['domContentLoadedEventStart'] = event['ts']
           if event['name'] == 'Microsoft - IE / Mshtml_CMarkup_DOMContentLoadedEvent_Stop / Stop':
-            if 'EventContextId' in event['fields'] and event['fields']['EventContextId'] == pageContext:
+            if 'EventContextId' in event['fields'] and event['fields']['EventContextId'] in pageContexts:
               result['pageData']['domContentLoadedEventEnd'] = event['ts']
 
           # DNS
@@ -248,7 +272,7 @@ class ETW:
 
           # Sockets
           if event['name'] == 'Microsoft-Windows-WinINet/Wininet_SocketConnect/Start' and id not in result['sockets']:
-            result['sockets'][id] = {'start': event['ts']}
+            result['sockets'][id] = {'start': event['ts'], 'index': len(result['sockets'])}
             if 'Socket' in event['fields']:
               result['sockets'][id]['socket'] = event['fields']['Socket']
             if 'SourcePort' in event['fields']:
@@ -475,3 +499,212 @@ class ETW:
         result['pageData']['fullyLoaded'] = latest
 
     return result
+
+  def Elapsed(self, ts):
+    elapsed = None
+    if self.start is not None:
+      elapsed = int(round(float(ts - self.start) / 1000.0))
+    return elapsed
+
+  def ParseHeaders(self, str, isInbound):
+    h = {'headers':[]}
+    lines = str.split("\n")
+    row = 0
+    for line in lines:
+      line = line.strip()
+      if len(line):
+        if row == 0:
+          parts = line.split(' ')
+          if isInbound:
+            h['response_code'] = parts[1].strip()
+          else:
+            h['verb'] = parts[0].strip()
+        elif line.find(':') > 0:
+          key, value = line.split(':', 1)
+          key = key.strip(' :')
+          value = value.strip(' :')
+          if isInbound:
+            if key == 'Expires':
+              h['expires'] = value
+            elif key == 'Cache-Control':
+              h['cache_control'] = value
+            elif key == 'Content-Type':
+              h['content_type'] = value
+            elif key == 'Content-Encoding':
+              h['content_encoding'] = value
+        h['headers'].append(line)
+        row += 1
+    return h
+
+  def ProcessResult(self, raw, test_info):
+    page_data = {'browser_name': 'Microsoft Edge',
+                 'responses_200': 0,
+                 'responses_404': 0,
+                 'responses_other': 0,
+                 'result': 99998,
+                 'bytesOutDoc': 0,
+                 'bytesInDoc': 0,
+                 'bytesOut': 0,
+                 'bytesIn': 0,
+                 'requests': 0,
+                 'requestsDoc': 0}
+    requests = []
+    if 'start' in raw['pageData']:
+      self.start = raw['pageData']['start']
+
+      # Loop through all of the requests first
+      # All times are in microseconds so we divide by 1000 to get ms
+      for id in raw['requests']:
+        r = raw['requests'][id]
+        request = {}
+        if 'URL' in r:
+          parts = urlparse.urlsplit(r['URL'])
+          request['host'] = parts[1]
+          request['url'] = parts[2]
+          if len(parts) > 3 and len(parts[3]) > 0:
+            request['url'] += '?' + parts[3]
+          if parts[0] == 'https':
+            request['is_secure'] = 1
+          else:
+            request['is_secure'] = 0
+        if 'verb' in r:
+          request['method'] = r['verb']
+        if 'protocol' in r:
+          request['protocol'] = r['protocol']
+        request['request_id'] = id.strip('{}').replace('-', '')
+        request['load_start'] = self.Elapsed(r['start'])
+        if 'end' in r:
+          request['load_ms'] = self.Elapsed(r['end']) - request['load_start']
+        if 'firstByte' in r:
+          request['ttfb_ms'] = self.Elapsed(r['firstByte']) - request['load_start']
+        if 'dnsStart' in r and 'dnsEnd' in r:
+          request['dns_start'] = self.Elapsed(r['dnsStart'])
+          request['dns_end'] = self.Elapsed(r['dnsEnd'])
+          request['dns_ms'] = request['dns_end'] - request['dns_start']
+        if 'connectStart' in r and 'connectEnd' in r:
+          request['connect_start'] = self.Elapsed(r['connectStart'])
+          request['connect_end'] = self.Elapsed(r['connectEnd'])
+          request['connect_ms'] = request['connect_end'] - request['connect_start']
+        if 'tlsStart' in r and 'tlsEnd' in r:
+          request['ssl_start'] = self.Elapsed(r['tlsStart'])
+          request['ssl_end'] = self.Elapsed(r['tlsEnd'])
+          request['ssl_ms'] = request['ssl_end'] - request['ssl_start']
+
+        if 'inBytes' in r:
+          request['bytesIn'] = r['inBytes']
+          if 'inHeadersLen' in r:
+            request['objectSize'] = r['inBytes'] - r['inHeadersLen']
+        if 'outBytes' in r:
+          request['bytesOut'] = r['outBytes']
+        if 'connection' in r and r['connection'] in raw['sockets']:
+          c = raw['sockets'][r['connection']]
+          if 'socket' in c:
+            request['socket'] = c['socket']
+          else:
+            request['socket'] = c['index']
+          if 'start' in c and 'end' in c:
+            request['server_rtt'] = int(round(float(c['end'] - c['start']) / 1000.0))
+          if 'srcPort' in c:
+            request['client_port'] = c['srcPort']
+          if 'remote' in c:
+            ip, port = c['remote'].split(':', 1)
+            request['ip_addr'] = ip
+
+        if 'outHeaders' in r:
+          h = self.ParseHeaders(r['outHeaders'], False)
+          request['headers'] = {}
+          if 'headers' in h:
+            request['headers']['request'] = h['headers']
+          if 'verb' in h:
+            request['method'] = h['verb']
+
+        if 'inHeaders' in r:
+          h = self.ParseHeaders(r['inHeaders'], True)
+          if 'headers' not in request:
+            request['headers'] = {}
+          if 'headers' in h:
+            request['headers']['response'] = h['headers']
+          if 'expires' in h:
+            request['expires'] = h['expires']
+          if 'cache_control' in h:
+            request['cacheControl'] = h['cache_control']
+          if 'content_type' in h:
+            request['contentType'] = h['content_type']
+          if 'content_encoding' in h:
+            request['contentEncoding'] = h['content_encoding']
+          if 'response_code' in h:
+            request['responseCode'] = h['response_code']
+
+        requests.append(request)
+
+      # Sort all of the requests by start time
+      if len(requests):
+        requests.sort(key=lambda request: request['load_start'])
+
+      # Collect the basic page stats
+      page_data['URL'] = test_info.GetUrl()
+      if 'URL' in raw and page_data['URL'] is None:
+        page_data['URL'] = raw['URL']
+      if 'loadEventStart' in raw['pageData']:
+        page_data['result'] = 0
+        page_data['loadTime'] = self.Elapsed(raw['pageData']['loadEventStart'])
+        page_data['docTime'] = page_data['loadTime']
+        if 'loadEventEnd' in raw['pageData']:
+          page_data['loadEventStart'] = self.Elapsed(raw['pageData']['loadEventStart'])
+          page_data['loadEventEnd'] = self.Elapsed(raw['pageData']['loadEventEnd'])
+      if 'domContentLoadedEventStart' in raw['pageData']:
+        page_data['domContentLoadedEventStart'] = self.Elapsed(raw['pageData']['domContentLoadedEventStart'])
+        if 'domContentLoadedEventEnd' in raw['pageData']:
+          page_data['domContentLoadedEventEnd'] = self.Elapsed(raw['pageData']['domContentLoadedEventEnd'])
+        else:
+          page_data['domContentLoadedEventEnd'] = page_data['domContentLoadedEventStart']
+      if 'load' in raw['pageData']:
+        page_data['result'] = 0
+        page_data['loadTime'] = self.Elapsed(raw['pageData']['load'])
+        page_data['docTime'] = page_data['loadTime']
+      if 'fullyLoaded' in raw['pageData']:
+        page_data['fullyLoaded'] = self.Elapsed(raw['pageData']['fullyLoaded'])
+      if test_info.IsCached():
+        page_data['cached'] = 1
+      else:
+        page_data['cached'] = 0
+
+      # Loop through all of the requests
+      connections = {}
+      page_data['requestsFull'] = len(requests)
+      first_200 = True
+      if len(requests):
+        for r in requests:
+          if 'socket' in r:
+            connections[r['socket']] = r['socket']
+          if 'bytesIn' in r:
+            page_data['bytesIn'] += r['bytesIn']
+          if 'bytesOut' in r:
+            page_data['bytesOut'] += r['bytesOut']
+          if 'URL' in r and r['URL'].find('favicon.ico') == -1:
+            if 'responseCode' in r:
+              code = int(r['responseCode'])
+              if first_200 and code == 304 or (code >= 200 and code < 300):
+                first_200 = False
+                if 'ttfb_ms' in r and 'load_start' in r:
+                  page_data['TTFB'] = r['load_start'] + r['ttfb_ms']
+                if 'server_rtt' in r:
+                  page_data['server_rtt'] = r['server_rtt']
+              if code == 200:
+                page_data['responses_200'] += 1
+              elif code == 404:
+                page_data['responses_404'] += 1
+                if page_data['result'] == 0:
+                  page_data['result'] = 99999
+              else:
+                page_data['responses_other'] += 1
+            if  'docTime' in page_data and r['load_start'] <= page_data['docTime']:
+              page_data['requests'] += 1
+              page_data['requestsDoc'] += 1
+              if 'bytesIn' in r:
+                page_data['bytesInDoc'] += r['bytesIn']
+              if 'bytesOut' in r:
+                page_data['bytesOutDoc'] += r['bytesOut']
+      page_data['connections'] = len(connections)
+
+    return page_data, requests

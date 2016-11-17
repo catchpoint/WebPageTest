@@ -142,6 +142,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for request data file
+   */
+  public function requestDataJsonFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_requests.json";
+  }
+
+  /**
    * @return string Path for utilization file
    */
   public function utilizationFile() {

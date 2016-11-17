@@ -42,10 +42,9 @@ def RunTest(driver, test):
       driver.get(action['target'])
 
   etw.Stop()
-  etw_csv = etw_file + '.csv'
-  etw.ExtractCsv(etw_csv)
-  events = etw.Parse(etw_csv)
-  result = etw.ProcessEvents(events)
+  etw.Write(test)
+  if os.path.exists(etw_file):
+    os.unlink(etw_file)
 
 def main():
   import argparse
