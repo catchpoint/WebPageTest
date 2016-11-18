@@ -119,6 +119,7 @@ bool Shaper::StartService() {
               if (status.dwCurrentState == SERVICE_RUNNING)
                 started_ = true;
             }
+          } else {
             started_ = true;
           }
         }
