@@ -184,6 +184,25 @@ void WptSettings::LoadFromEC2(void) {
                     _ec2_availability_zone.Left(pos).Trim();
     }
   }
+
+  // Disable Apple and Google auto-updates
+  TerminateProcessesByName(_T("SoftwareUpdate.exe"));
+  HKEY hKey;
+  if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+                      _T("SOFTWARE\\Policies\\Google\\Update"),
+                      0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS ) {
+    DWORD val = 0;
+    RegSetValueEx(hKey, _T("AutoUpdateCheckPeriodMinutes"), 0, REG_DWORD,
+                  (const LPBYTE)&val, sizeof(val));
+    RegSetValueEx(hKey, _T("UpdateDefault"), 0, REG_DWORD,
+                  (const LPBYTE)&val, sizeof(val));
+    RegSetValueEx(hKey, _T("Update{8A69D345-D564-463C-AFF1-A69D9E530F96}"),
+                  0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+    val = 1;
+    RegSetValueEx(hKey, _T("DisableAutoUpdateChecksCheckboxValue"), 0,
+                  REG_DWORD, (const LPBYTE)&val, sizeof(val));
+    RegCloseKey(hKey);
+  }
 }
 
 /*-----------------------------------------------------------------------------
