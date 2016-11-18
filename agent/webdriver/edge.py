@@ -15,34 +15,161 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import gzip
+import json
 import logging
 import os
+import subprocess
 from selenium import webdriver
-import time
 from wpt_test_info import WptTest
 from etw import ETW
 
+PAGE_DATA_SCRIPT = """
+  var pageData = {};
+  var domCount = document.documentElement.getElementsByTagName("*").length;
+  if (domCount === undefined)
+    domCount = 0;
+  pageData["domElements"] = domCount;
+  function addTime(name, field) {
+    if (field == undefined)
+      field = name;
+    try {
+      if (window.performance.timing[field] > 0) {
+        pageData[name] = Math.max(0, Math.round(window.performance.timing[field] - window.performance.timing["navigationStart"]));
+      }
+    } catch(e) {}
+  };
+  addTime("domInteractive");
+  addTime("domContentLoadedEventStart");
+  addTime("domContentLoadedEventEnd");
+  addTime("loadEventStart");
+  addTime("loadEventEnd");
+  addTime("firstPaint", "msFirstPaint");
+  return pageData;
+"""
+
+USER_TIMING_SCRIPT = """
+  var m = [];
+  try {
+    var marks = window.performance.getEntriesByType("mark");
+    if (marks.length) {
+      for (var i = 0; i < marks.length; i++)
+        m.push({"type": "mark",
+                "entryType": marks[i].entryType,
+                "name": marks[i].name,
+                "startTime": marks[i].startTime});
+    }
+  } catch(e) {};
+  try {
+    var measures = window.performance.getEntriesByType("measure");
+    if (measures.length) {
+      for (var i = 0; i < measures.length; i++)
+        m.push({"type": "measure",
+                "entryType": measures[i].entryType,
+                "name": measures[i].name,
+                "startTime": measures[i].startTime,
+                "duration": measures[i].duration});
+    }
+  } catch(e) {};
+  return m;
+"""
+
 def RunTest(driver, test):
+  global PAGE_DATA_SCRIPT
+  global USER_TIMING_SCRIPT
+
   # Set up the timeouts and other options
   driver.set_page_load_timeout(test.GetTimeout())
   driver.set_window_position(0, 0, driver.current_window_handle)
   driver.set_window_size(1024, 768, driver.current_window_handle)
 
   #start ETW logging
-  etw = ETW()
-  etw_file = test.GetFileETW()
-  if os.path.exists(etw_file):
-    os.unlink(etw_file)
-  etw.Start(etw_file)
+  try:
+    etw = ETW()
+    etw_file = test.GetFileETW()
+    etw.Start(etw_file)
+  except:
+    pass
 
   # Run through all of the script commands (just navigate for now but placeholder)
   while not test.Done():
     action = test.GetNextCommand()
-    if action['command'] == 'navigate':
-      driver.get(action['target'])
+    try:
+      if action['command'] == 'navigate':
+        driver.get(action['target'])
+    except:
+      pass
 
-  etw.Stop()
-  etw.Write(test)
+  try:
+    etw.Stop()
+  except:
+    pass
+
+  # Pull metrics from the DOM
+  try:
+    dom_data = driver.execute_script(PAGE_DATA_SCRIPT)
+  except:
+    pass
+
+  # check for any user timing marks or measures
+  try:
+    user_timing_file = test.GetFileUserTiming()
+    if user_timing_file is not None:
+      if os.path.exists(user_timing_file):
+        os.unlink(user_timing_file)
+      if os.path.exists(user_timing_file + '.gz'):
+        os.unlink(user_timing_file + '.gz')
+      user_timing = driver.execute_script(USER_TIMING_SCRIPT)
+      if user_timing is not None:
+        with gzip.open(user_timing_file + '.gz', 'wb') as f:
+          json.dump(user_timing, f)
+  except:
+    pass
+
+  # collect custom metrics
+  try:
+    custom_metric_scripts = test.GetCustomMetrics()
+    custom_metrics_file = test.GetFileCustomMetrics()
+    if custom_metric_scripts is not None and custom_metrics_file is not None:
+      if os.path.exists(custom_metrics_file):
+        os.unlink(custom_metrics_file)
+      if os.path.exists(custom_metrics_file + '.gz'):
+        os.unlink(custom_metrics_file + '.gz')
+      custom_metrics = None
+      for metric in custom_metric_scripts:
+        script = custom_metric_scripts[metric]
+        result = driver.execute_script(script)
+        if result is not None:
+          if custom_metrics is None:
+            custom_metrics = {}
+          custom_metrics[metric] = result
+      if custom_metrics is not None:
+        with gzip.open(custom_metrics_file + '.gz', 'wb') as f:
+          json.dump(custom_metrics, f)
+  except:
+    pass
+
+  # grab a screen shot
+  try:
+    png = test.GetScreenshotPNG()
+    if png is not None:
+      if os.path.exists(png):
+        os.unlink(png)
+      driver.get_screenshot_as_file(png)
+      jpeg = test.GetScreenshotJPEG()
+      quality = test.GetScreenshotJPEGQuality()
+      if jpeg is not None and os.path.exists(png):
+        command = 'magick "{0}" -set colorspace sRGB -quality {1:d} "{2}"'.format(png, quality, jpeg)
+        subprocess.call(command, shell=True)
+        if os.path.exists(jpeg) and not test.KeepPNG():
+          os.unlink(png)
+  except:
+    pass
+
+  # process the etw trace
+  try:
+    etw.Write(test, dom_data)
+  except:
+    pass
   if os.path.exists(etw_file):
     os.unlink(etw_file)
 

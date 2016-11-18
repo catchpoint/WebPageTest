@@ -881,10 +881,12 @@ bool WebBrowser::RunWebdriverTest() {
     _status.Set(_T("Running webdriver test..."));
     if (RunPythonScript(_T("webdriver\\edge.py"), options)) {
       _status.Set(_T("Test complete, processing result..."));
+      g_shared->SetTestResult(0);
       ok = true;
     } else {
       _status.Set(_T("Test failed"));
     }
+    DeleteFile(json_file);
   }
   return ok;
 }

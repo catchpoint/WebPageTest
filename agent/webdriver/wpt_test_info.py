@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from collections import deque
+import base64
 import json
 
 class WptTest:
@@ -57,6 +58,42 @@ class WptTest:
       file_path = self.test['file_base'] + '_requests.json'
     return file_path
 
+  def GetFileUserTiming(self):
+    file_path = None
+    if 'file_base' in self.test and len(self.test['file_base']):
+      file_path = self.test['file_base'] + '_timed_events.json'
+    return file_path
+
+  def GetFileCustomMetrics(self):
+    file_path = None
+    if 'file_base' in self.test and len(self.test['file_base']):
+      file_path = self.test['file_base'] + '_metrics.json'
+    return file_path
+
+  def GetScreenshotPNG(self):
+    file_path = None
+    if 'file_base' in self.test and len(self.test['file_base']):
+      file_path = self.test['file_base'] + '_screen.png'
+    return file_path
+
+  def KeepPNG(self):
+    keep = False
+    if 'pngss' in self.test and self.test['pngss']:
+      keep = True
+    return keep
+
+  def GetScreenshotJPEG(self):
+    file_path = None
+    if 'file_base' in self.test and len(self.test['file_base']):
+      file_path = self.test['file_base'] + '_screen.jpg'
+    return file_path
+
+  def GetScreenshotJPEGQuality(self):
+    quality = 30
+    if 'image_quality' in self.test and self.test['image_quality'] > 0 and self.test['image_quality'] <= 100:
+      quality = self.test['image_quality']
+    return quality
+
   def GetUrl(self):
     url = None
     if 'url' in self.test:
@@ -68,3 +105,18 @@ class WptTest:
     if self.test is not None and 'clear_cache' in self.test and not self.test['clear_cache']:
       cached = 1
     return cached
+
+  def GetCustomMetrics(self):
+    metrics = None
+    if 'custom_metrics' in self.test and len(self.test['custom_metrics']):
+      lines = self.test['custom_metrics'].split("\n")
+      if lines is not None and len(lines):
+        for line in lines:
+          if line.find(':') > 0:
+            metric, str = line.split(":", 1)
+            script = base64.b64decode(str)
+            if metric is not None and script is not None and len(metric) and len(script):
+              if metrics is None:
+                metrics = {}
+              metrics[metric] = script
+    return metrics

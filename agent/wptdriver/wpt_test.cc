@@ -1372,6 +1372,7 @@ CString  WptTest::SaveJson() {
   json += JsonFragment("browser_md5", _browser_md5) + ",\n";
   json += JsonFragment("basic_auth", _basic_auth) + ",\n";
   json += JsonFragment("script", _script) + ",\n";
+  json += JsonFragment("custom_metrics", _custom_metrics) + ",\n";
   json += JsonFragment("run", _run) + ",\n";
   json += JsonFragment("specific_run", _specific_run) + ",\n";
   json += JsonFragment("specific_index", _specific_index) + ",\n";
