@@ -104,6 +104,9 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
       }
     }
     
+    // make sure everything is utf-8 encoded
+    $requests = MakeUTF8($requests);
+    
     return $requests;
 }
 

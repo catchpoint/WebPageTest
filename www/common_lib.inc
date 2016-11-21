@@ -3026,3 +3026,19 @@ function OverSystemLoad() {
 
   return $over;
 }
+
+/**
+* Make sure everything is in utf-8 format
+* 
+* @param mixed $mixed
+*/
+function MakeUTF8($mixed) {
+  if (is_array($mixed)) {
+    foreach ($mixed as $key => $value) {
+      $mixed[$key] = MakeUTF8($value);
+    }
+  } elseif (is_string($mixed)) {
+    return utf8_encode($mixed);
+  }
+  return $mixed;
+}
