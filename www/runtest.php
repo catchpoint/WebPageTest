@@ -1443,6 +1443,7 @@ function ScriptParameterCount($command)
         !strcasecmp($command, 'setViewportSize') ||
         !strcasecmp($command, 'overrideHost') ||
         !strcasecmp($command, 'addCustomRule') ||
+        !strcasecmp($command, 'firefoxPref') ||
         !strcasecmp($command, 'overrideHostUrl') )
     {
         $count = 3;
