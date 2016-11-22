@@ -200,6 +200,11 @@ function BrowserAndroidChrome(app, args) {
   this.videoFlags = undefined;
   this.browserConfig_ = undefined;
   this.activityFlags_ = undefined;
+  this.browserPackage_ = args.task.customBrowser_package ||
+      args.chromePackage_ || this.browserPackage_ || 'com.android.chrome';
+  this.browserActivity_ = args.task.customBrowser_activity ||
+      args.chromeActivity || this.browserActivity_ ||
+      'com.google.android.apps.chrome.Main';
   if (args.task['customBrowser_type'] !== undefined && BLACK_BOX_BROWSERS[args.task['customBrowser_type']] !== undefined)
     args.task.browser = args.task['customBrowser_type'];
   if (args.flags.chromePackage) {
@@ -226,11 +231,6 @@ function BrowserAndroidChrome(app, args) {
     }
   }
   this.blank_page_ = this.blank_page_ || 'about:blank';
-  this.browserPackage_ = args.task.customBrowser_package ||
-      args.chromePackage_ || this.browserPackage_ || 'com.android.chrome';
-  this.browserActivity_ = args.task.customBrowser_activity ||
-      args.chromeActivity || this.browserActivity_ ||
-      'com.google.android.apps.chrome.Main';
   this.flagsFile_ = args.task.customBrowser_flagsFile ||
       args.flagsFile || '/data/local/chrome-command-line';
   this.devToolsPort_ = args.flags.devToolsPort;
