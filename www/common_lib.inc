@@ -1470,64 +1470,67 @@ function GetDailyTestNum() {
   return $num;
 }
 
-function AddTestJob($location, $job, $test) {
+function AddTestJob($location, $job, $test, $testId) {
   $ret = false;
-  if (isset($job) && strlen($job)) {
-    $info = GetLocationInfo($location);
-    if (isset($info) && is_array($info) && isset($info['queue'])) {
-      // explicitly configured work queues do not support multiple priorities for status
-      // though they do for the actual jobs.
-      $queueType = $info['queue'];
-      $addr = GetSetting("{$queueType}Addr");
-      $port = GetSetting("{$queueType}Port");
-      if ($queueType == 'beanstalk' && $addr && $port) {
-        try {
-          require_once('./lib/beanstalkd/pheanstalk_init.php');
-          $pheanstalk = new Pheanstalk_Pheanstalk($addr, $port);
-          $tube = 'wpt.work.' . sha1($location);
-          $message = gzdeflate(json_encode(array('job' => $job)), 7);
-          if ($message) {
-            $pheanstalk->putInTube($tube, $message, $test['priority'] + 1);
-            $ret = true;
-          }
-        } catch(Exception $e) {
-        }
-      }
-    } else {
-      $locationLock = LockLocation($location);
-      if (isset($locationLock)) {
-        if( !is_dir($test['workdir']) )
-          mkdir($test['workdir'], 0777, true);
-        $workDir = $test['workdir'];
-        if (isset($test['affinity']))
-          $test['job'] = "Affinity{$test['affinity']}.{$test['job']}";
-        $testNum = GetDailyTestNum();
-        $sortableIndex = date('ymd') . GetSortableString($testNum);
-        $test['job'] = "$sortableIndex.{$test['job']}";
-        $fileName = $test['job'];
-        $file = "$workDir/$fileName";
-        if( file_put_contents($file, $job) ) {
-          if (AddJobFile($location, $workDir, $fileName, $test['priority'], $test['queue_limit'])) {
-            // store a copy of the job file with the original test in case the test fails and we need to resubmit it
-            $test['job_file'] = realpath($file);
-            if (ValidateTestId($testId)) {
-              $testPath = GetTestPath($testId);
-              if (strlen($testPath)) {
-                $testPath = './' . $testPath;
-                if (!is_dir($testPath))
-                  mkdir($testPath, 0777, true);
-                file_put_contents("$testPath/test.job", $job);
-              }
+  $waiting_file = null;
+  if (isset($job) && strlen($job) && ValidateTestId($testId)) {
+    $testPath = GetTestPath($testId);
+    if (strlen($testPath)) {
+      $testPath = './' . $testPath;
+      if (!is_dir($testPath))
+        mkdir($testPath, 0777, true);
+      $waiting_file = "$testPath/test.waiting";
+      touch($waiting_file);
+      $info = GetLocationInfo($location);
+      if (isset($info) && is_array($info) && isset($info['queue'])) {
+        // explicitly configured work queues do not support multiple priorities for status
+        // though they do for the actual jobs.
+        $queueType = $info['queue'];
+        $addr = GetSetting("{$queueType}Addr");
+        $port = GetSetting("{$queueType}Port");
+        if ($queueType == 'beanstalk' && $addr && $port) {
+          try {
+            require_once('./lib/beanstalkd/pheanstalk_init.php');
+            $pheanstalk = new Pheanstalk_Pheanstalk($addr, $port);
+            $tube = 'wpt.work.' . sha1($location);
+            $message = gzdeflate(json_encode(array('job' => $job)), 7);
+            if ($message) {
+              $pheanstalk->putInTube($tube, $message, $test['priority'] + 1);
+              $ret = true;
             }
-            $ret = true;
-          } else {
-            unlink($file);
+          } catch(Exception $e) {
           }
         }
-        Unlock($locationLock);
+      } else {
+        $locationLock = LockLocation($location);
+        if (isset($locationLock)) {
+          if( !is_dir($test['workdir']) )
+            mkdir($test['workdir'], 0777, true);
+          $workDir = $test['workdir'];
+          if (isset($test['affinity']))
+            $test['job'] = "Affinity{$test['affinity']}.{$test['job']}";
+          $testNum = GetDailyTestNum();
+          $sortableIndex = date('ymd') . GetSortableString($testNum);
+          $test['job'] = "$sortableIndex.{$test['job']}";
+          $fileName = $test['job'];
+          $file = "$workDir/$fileName";
+          if( file_put_contents($file, $job) ) {
+            if (AddJobFile($location, $workDir, $fileName, $test['priority'], $test['queue_limit'])) {
+              // store a copy of the job file with the original test in case the test fails and we need to resubmit it
+              $test['job_file'] = realpath($file);
+              file_put_contents("$testPath/test.job", $job);
+              $ret = true;
+            } else {
+              unlink($file);
+            }
+          }
+          Unlock($locationLock);
+        }
       }
     }
   }
+  if (!$ret && isset($waiting_file) && is_file($waiting_file))
+    unlink($waiting_file);
   return $ret;
 }
 

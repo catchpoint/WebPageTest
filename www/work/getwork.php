@@ -211,6 +211,9 @@ function GetJob() {
         if( isset($testId) ) {
           // figure out the path to the results
           $testPath = './' . GetTestPath($testId);
+          $waiting_file = "$testPath/test.waiting";
+          if (is_file($waiting_file))
+            unlink($waiting_file);
 
           // flag the test with the start time
           $ini = file_get_contents("$testPath/testinfo.ini");

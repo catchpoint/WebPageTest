@@ -1541,7 +1541,7 @@ function WriteJob($location, &$test, &$job, $testId)
     $ret = SendToRelay($test, $job);
   } else {
     // Submit the job locally
-    if (AddTestJob($location, $job, $test)) {
+    if (AddTestJob($location, $job, $test, $testId)) {
       $ret = true;
     } else {
       $error = "Sorry, that test location already has too many tests pending.  Pleasy try again later.";
