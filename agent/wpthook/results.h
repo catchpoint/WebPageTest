@@ -86,6 +86,7 @@ private:
   int count_not_found_doc_;
   int count_other_;
   int count_other_doc_;
+  int certificate_bytes_;
   int visually_complete_;
   int speed_index_;
 

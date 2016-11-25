@@ -148,6 +148,20 @@ void SSLStream::ProcessMessage() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void SSLStream::ProcessHandshake() {
+  if (message_size_ >= 4) {
+    SSL_HANDSHAKE * handshake = (SSL_HANDSHAKE *)message_;
+    CStringA buff;
+    buff.Format("Handshake: %d - %d bytes", (int)handshake->type, message_size_);
+    OutputDebugStringA(buff);
+    if (handshake->type == HANDSHAKE_CERTIFICATE)
+      OutputDebugStringA("**** Certificate");
+    if (handshake->type == HANDSHAKE_CERTIFICATE &&
+        direction_ == SSL_IN &&
+        socket_info_) {
+      // 4-byte handshake header which is counted as part of the message size
+      socket_info_->_certificate_bytes += message_size_ - 4;
+    }
+  }
   if (socket_info_ && !socket_info_->_is_ssl_handshake_complete) {
     if (!socket_info_->_ssl_start.QuadPart)
       QueryPerformanceCounter(&socket_info_->_ssl_start);
@@ -164,7 +178,7 @@ void SSLStream::ProcessApplicationData() {
 
   // Stop processing stream data to save memory and CPU since we don't do
   // anything more with it.
-  process_data_ = false;
+  //process_data_ = false;
 }
 
 /*-----------------------------------------------------------------------------

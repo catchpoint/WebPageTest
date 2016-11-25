@@ -1311,7 +1311,7 @@ function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
   foreach($waterfalls as $index => &$waterfall) {
     $test_path = './' . GetTestPath($waterfall['id']);
     $localPaths = new TestPaths($test_path, $waterfall['run'], $waterfall['cached'], $waterfall['step']);
-    $requests = getRequestsForStep($localPaths, null, $has_secure_requests, $has_locations, false, false);
+    $requests = getRequestsForStep($localPaths, null, $has_secure_requests, false);
     if (isset($requests) && is_array($requests)) {
       $count = count($requests);
       if ($count > $row_count)

@@ -723,7 +723,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
             if( $count )
             {
                 $optimized[0] = $pageData[$fvMedian][0];
-                $optimized[0]['request_data'] = getRequests($test['id'], $testPath, $fvMedian, 0, $secure, $haveLocations, false);
+                $optimized[0]['request_data'] = getRequests($test['id'], $testPath, $fvMedian, 0, $secure);
                 $optimized[0]['page_speed'] = GetPageSpeedScore("$testPath/{$fvMedian}_pagespeed.txt");
                 if ($json) {
                     $optimized[0]['page_speed_data'] = LoadPageSpeedData("$testPath/{$fvMedian}_pagespeed.txt");
@@ -746,7 +746,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
             else
             {
                 $original[0] = $pageData[$fvMedian][0];
-                $original[0]['request_data'] = getRequests($test['id'], $testPath, $fvMedian, 0, $secure, $haveLocations, false);
+                $original[0]['request_data'] = getRequests($test['id'], $testPath, $fvMedian, 0, $secure);
                 $original[0]['page_speed'] = GetPageSpeedScore("$testPath/{$fvMedian}_pagespeed.txt");
                 if ($json) {
                     $original[0]['page_speed_data'] = LoadPageSpeedData("$testPath/{$fvMedian}_pagespeed.txt");
@@ -775,7 +775,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
             if( $count )
             {
                 $optimized[1] = $pageData[$rvMedian][1];
-                $optimized[1]['request_data'] = getRequests($test['id'], $testPath, $rvMedian, 1, $secure, $haveLocations, false);
+                $optimized[1]['request_data'] = getRequests($test['id'], $testPath, $rvMedian, 1, $secure);
                 $optimized[1]['page_speed'] = GetPageSpeedScore("$testPath/{$rvMedian}_Cached_pagespeed.txt");
                 if ($json) {
                     $optimized[1]['page_speed_data'] = LoadPageSpeedData("$testPath/{$rvMedian}_Cached_pagespeed.txt");
@@ -797,7 +797,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
             else
             {
                 $original[1] = $pageData[$rvMedian][1];
-                $original[1]['request_data'] = getRequests($test['id'], $testPath, $rvMedian, 1, $secure, $haveLocations, false);
+                $original[1]['request_data'] = getRequests($test['id'], $testPath, $rvMedian, 1, $secure);
                 $original[1]['page_speed'] = GetPageSpeedScore("$testPath/{$rvMedian}_Cached_pagespeed.txt");
                 if ($json) {
                     $original[1]['page_speed_data'] = LoadPageSpeedData("$testPath/{$rvMedian}_Cached_pagespeed.txt");
@@ -844,7 +844,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
     if (!$mod_pagespeed && !$weblite) {
       if (!strncasecmp($url, 'https://', 8))
         $baseDomainSSL = true;
-      $requests = getRequests($tests['urls'][1]['id'], $tests['urls'][1]['path'], $tests['urls'][1]['fvMedian'], 0, $secure, $haveLocations, false);
+      $requests = getRequests($tests['urls'][1]['id'], $tests['urls'][1]['path'], $tests['urls'][1]['fvMedian'], 0, $secure);
       if( count($requests) ) {
           if($basePage = GetBasePage($requests)) {
               // see if there was a domain redirect for the base page
@@ -1213,7 +1213,7 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
             $entry['pageData'] = loadAllPageData($testPath);
             $entry['median_run'] = GetMedianRun($entry['pageData'], 0, $median_metric);
             $entry['median'] = $entry['pageData'][$entry['median_run']][0];
-            $entry['requests'] = getRequests($test['id'], $testPath, $entry['median_run'], 0, $secure, $haveLocations, false);
+            $entry['requests'] = getRequests($test['id'], $testPath, $entry['median_run'], 0, $secure);
             $entry['median']['csi'] = ParseCsiInfo($test['id'], $testPath, $entry['median_run'], 0, true);
             $entry['domains'] = array();
             $entry['mime_stats'] = array();

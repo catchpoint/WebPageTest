@@ -195,14 +195,13 @@ class TestStepResult {
   }
 
   public function getRequestsWithInfo($addLocationData, $addRawHeaders) {
-    $requests = getRequestsForStep($this->localPaths, $this->createUrlGenerator(""), $secure, $haveLocations,
-                                   $addLocationData, $addRawHeaders);
-    return new RequestsWithInfo($requests, $haveLocations, $secure);
+    $requests = getRequestsForStep($this->localPaths, $this->createUrlGenerator(""), $secure, $addRawHeaders);
+    return new RequestsWithInfo($requests, $secure);
   }
 
   public function getRequests() {
     // TODO: move implementation to this method
-    return getRequestsForStep($this->localPaths, $this->createUrlGenerator(""), $secure, $haveLocations, false, true);
+    return getRequestsForStep($this->localPaths, $this->createUrlGenerator(""), $secure, true);
   }
 
   public function getDomainBreakdown() {
@@ -344,18 +343,13 @@ class RequestsWithInfo {
   private $locationData;
   private $secureRequests;
 
-  public function __construct($requests, $hasLocationData, $hasSecureRequests) {
+  public function __construct($requests, $hasSecureRequests) {
     $this->requests = $requests;
-    $this->locationData = $hasLocationData;
     $this->secureRequests = $hasSecureRequests;
   }
 
   public function getRequests() {
     return $this->requests;
-  }
-
-  public function hasLocationData() {
-    return $this->locationData;
   }
 
   public function hasSecureRequests() {

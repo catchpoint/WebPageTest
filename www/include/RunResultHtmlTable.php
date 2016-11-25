@@ -14,6 +14,7 @@ class RunResultHtmlTable {
   const COL_VISUAL_COMPLETE = "visualComplete";
   const COL_RESULT = "result";
   const COL_COST = "cost";
+  const COL_CERTIFICATE_BYTES = "certificate_bytes";
 
   /* @var TestInfo */
   private $testInfo;
@@ -41,13 +42,14 @@ class RunResultHtmlTable {
     $this->isMultistep = $runResults->isMultistep();
     $this->leftOptionalColumns = array(self::COL_LABEL, self::COL_ABOVE_THE_FOLD, self::COL_USER_TIME,
       self::COL_DOM_TIME, self::COL_DOM_ELEMENTS, self::COL_SPEED_INDEX, self::COL_VISUAL_COMPLETE, self::COL_RESULT);
-    $this->rightOptionalColumns = array(self::COL_COST);
+    $this->rightOptionalColumns = array(self::COL_CERTIFICATE_BYTES, self::COL_COST);
     $this->enabledColumns = array();
 
     // optional columns default setting based on data
     $this->enabledColumns[self::COL_LABEL] = $this->testInfo->getRuns() > 1 || $this->isMultistep || $this->rvRunResults;
     $this->enabledColumns[self::COL_ABOVE_THE_FOLD] = $testInfo->hasAboveTheFoldTime();
     $this->enabledColumns[self::COL_RESULT] = true;
+    $this->enabledColumns[self::COL_CERTIFICATE_BYTES] = $runResults->hasValidNonZeroMetric('certificate_bytes');
     $checkByMetric = array(self::COL_USER_TIME, self::COL_DOM_TIME, self::COL_DOM_ELEMENTS, self::COL_SPEED_INDEX,
                            self::COL_VISUAL_COMPLETE);
     foreach ($checkByMetric as $col) {
@@ -144,6 +146,10 @@ class RunResultHtmlTable {
       $out .= $this->_headCell("Bytes In");
     }
 
+    if ($this->isColumnEnabled(self::COL_CERTIFICATE_BYTES)) {
+      $out .= $this->_headCell("Certificates");
+    }
+    
     if ($this->isColumnEnabled(self::COL_COST)) {
       $out .= $this->_headCell("Cost");
     }
@@ -243,6 +249,10 @@ class RunResultHtmlTable {
     $out .= $this->_bodyCell($idPrefix . "Requests" . $idSuffix, $this->_getSimpleMetric($stepResult, "requests"), $class);
     $out .= $this->_bodyCell($idPrefix . "BytesIn" . $idSuffix, $this->_getByteMetricInKbyte($stepResult, "bytesIn"), $class);
 
+    if ($this->isColumnEnabled(self::COL_CERTIFICATE_BYTES)) {
+      $out .= $this->_bodyCell($idPrefix . "CertificateBytes" . $idSuffix, $this->_getByteMetricInKbyte($stepResult, "certificate_bytes"), $class);
+    }
+    
     if ($this->isColumnEnabled(self::COL_COST)) {
       if ($cachedRun) {
         $out .= "<td>&nbsp;</td>";

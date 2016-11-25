@@ -39,8 +39,7 @@ function ParseCsiInfoForStep($localPaths, $getAll) {
         
 	    // Secure and haveLocations are not used but required by getRequests function.
 	    $secure = null;
-	    $haveLocations = null;
-	    $requests = getRequestsForStep($localPaths, null, $secure, $haveLocations, false);
+	    $requests = getRequestsForStep($localPaths, null, $secure, false);
       $params = array();
 	    foreach ( $requests as &$request ) {
 		    // Parse the individual url parts.

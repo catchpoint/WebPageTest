@@ -148,8 +148,7 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
       
       // now add the object-level data to the result
       $secure = false;
-      $haveLocations = false;
-      $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false, true);
+      $requests = getRequests($id, $testPath, $run, $cached, $secure, true);
       foreach( $requests as &$r ) {
         $entry = array();
         $entry['pageref'] = $pd['id'];

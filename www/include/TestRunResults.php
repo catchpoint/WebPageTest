@@ -242,12 +242,26 @@ class TestRunResults {
 
   /**
    * @param string $metric The metric to check for
-   * @return bool True if the metric is present and > 0 in any step, false otherwise
+   * @return bool True if the metric is present in any step, false otherwise
    */
   public function hasValidMetric($metric) {
     foreach ($this->stepResults as $stepResult) {
       $value = $stepResult->getMetric($metric);
       if (!empty($value)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * @param string $metric The metric to check for
+   * @return bool True if the metric is present and > 0 in any step, false otherwise
+   */
+  public function hasValidNonZeroMetric($metric) {
+    foreach ($this->stepResults as $stepResult) {
+      $value = $stepResult->getMetric($metric);
+      if (!empty($value) && $value > 0) {
         return true;
       }
     }

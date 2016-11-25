@@ -270,6 +270,7 @@ void Results::Reset(void) {
   peak_process_count_ = 0;
   visually_complete_ = 0;
   speed_index_ = 0;
+  certificate_bytes_ = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -1027,6 +1028,9 @@ void Results::SavePageData(OptimizationChecks& checks){
       result += buff;
     }
     result += "\t";
+    // Total certificate bytes
+    buff.Format("%d\t", certificate_bytes_);
+    result += buff;
 
     result += "\r\n";
 
@@ -1050,6 +1054,7 @@ void Results::ProcessRequests(void) {
   count_not_found_doc_ = 0;
   count_other_ = 0;
   count_other_doc_ = 0;
+  certificate_bytes_ = 0;
 
   _requests.Lock();
   // first pass, reset the actual start time to be the first measured action
@@ -1102,6 +1107,7 @@ void Results::ProcessRequests(void) {
         (!request->_from_browser || !NativeRequestExists(request))) {
       request->Process();
       int result_code = request->GetResult();
+      certificate_bytes_ += request->_certificate_bytes;
       int doc_increment = 0;
       if (request->_start.QuadPart <= _test_state._on_load.QuadPart)
         doc_increment = 1;
@@ -1550,6 +1556,9 @@ void Results::SaveRequest(gzFile file, gzFile headers, Request * request, int in
   } else {
     result += _T("\t");
   }
+  // Certificate Bytes
+  buff.Format("%d\t", request->_certificate_bytes);
+  result += buff;
 
   result += "\r\n";
 

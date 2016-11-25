@@ -343,6 +343,7 @@ public:
   bool _from_browser;
   bool _is_base_page;
   CStringA  rtt_;
+  int _certificate_bytes;
 
   // byte counts
   DWORD _bytes_in;

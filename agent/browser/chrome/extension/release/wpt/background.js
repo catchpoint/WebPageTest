@@ -14161,6 +14161,10 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
         g_instance.mobileEmulation != undefined) {
       g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.setDeviceMetricsOverride', g_instance.mobileEmulation);
     }
+
+    if (message === 'Page.loadEventFired') {
+      wpt.chromeDebugger.sendEvent('complete', '');
+    }
     
     // Network events
     // Processing logic largely duplocated from the WebPageTest PHP code
@@ -14763,6 +14767,7 @@ var g_hasCustomCommandLine = false;
 var g_started = false;
 var g_requestsHooked = false;
 var g_failsafeStartup = undefined;
+var g_updatedCount = 0;
 
 /**
  * Uninstall a given set of extensions.  Run |onComplete| when done.
@@ -14821,7 +14826,8 @@ wpt.main.startMeasurements = function() {
 
 // Install an onLoad handler for all tabs.
 chrome.tabs.onUpdated.addListener(function(tabId, props) {
-  if (!g_started && g_starting && props.status == 'complete') {
+  g_updatedCount++;
+  if (!g_started && g_starting && (props.status == 'complete' || g_updatedCount > 5)) {
     // Kill the failsafe timer
     if (g_failsafeStartup != undefined) {
       clearInterval(g_failsafeStartup);
@@ -14831,7 +14837,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, props) {
     // after the browser loads and then start testing).
     g_started = true;
     wpt.main.onStartup();
-  }else if (g_active && tabId == g_tabid) {
+  } else if (g_active && tabId == g_tabid) {
     if (props.status == 'loading') {
       g_start = new Date().getTime();
       wptSendEvent('navigate', '');

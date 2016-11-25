@@ -53,7 +53,8 @@ SocketInfo::SocketInfo():
   , _h2_in(NULL)
   , _h2_out(NULL)
   , _ssl_in(NULL)
-  , _ssl_out(NULL) {
+  , _ssl_out(NULL)
+  , _certificate_bytes(0) {
   memset(&_addr, 0, sizeof(_addr));
   _connect_start.QuadPart = 0;
   _connect_end.QuadPart = 0;
@@ -390,7 +391,8 @@ void TrackSockets::Reset() {
 -----------------------------------------------------------------------------*/
 bool TrackSockets::ClaimConnect(DWORD socket_id, LARGE_INTEGER before, 
                                 LARGE_INTEGER& start, LARGE_INTEGER& end,
-                                LARGE_INTEGER& ssl_start, LARGE_INTEGER& ssl_end) {
+                                LARGE_INTEGER& ssl_start, LARGE_INTEGER& ssl_end,
+                                int& certificate_bytes) {
   bool is_claimed = false;
   EnterCriticalSection(&cs);
   SocketInfo * info = NULL;
@@ -404,6 +406,7 @@ bool TrackSockets::ClaimConnect(DWORD socket_id, LARGE_INTEGER before,
       end = info->_connect_end;
       ssl_start = info->_ssl_start;
       ssl_end = info->_ssl_end;
+      certificate_bytes = info->_certificate_bytes;
     }
   }
   LeaveCriticalSection(&cs);

@@ -43,8 +43,7 @@ foreach( $testIds as &$testId )
 	$medianRun = GetMedianRun($pageData, $cached);
 
 	$secured = 0;
-	$haveLocations=1;
-	$requests = getRequests($testId, $testPath, $medianRun, $cached, $secure, $haveLocations, false,true);
+	$requests = getRequests($testId, $testPath, $medianRun, $cached, $secure, true);
 
 	// Flag indicating if we matched
 	$matched = array();

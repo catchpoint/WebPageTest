@@ -90,6 +90,8 @@ class RequestHeadersHtmlSnippet {
     if (array_key_exists('download_ms', $request) && $request['download_ms'] > 0)
       $out .= "<b>Content Download:</b> {$request['download_ms']} ms<br>\n";
     $out .= "<b>Bytes In (downloaded):</b> " . number_format($request['bytesIn'] / 1024.0, 1) . " KB<br>\n";
+    if (!empty($request['certificate_bytes']) && (int)$request['certificate_bytes'] > 0)
+      $out .= "<b>Certificates (downloaded):</b> " . number_format($request['certificate_bytes'], 0) . " B<br>\n";
     $out .= "<b>Bytes Out (uploaded):</b> " . number_format($request['bytesOut'] / 1024.0, 1) . " KB<br>\n";
     $urlGenerator = $this->stepResult->createUrlGenerator("", false);
 

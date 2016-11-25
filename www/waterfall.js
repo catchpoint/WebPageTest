@@ -157,6 +157,8 @@ function SelectRequest(step, request) {
             details += '<b>Content Download: </b>' + htmlEncode(r['download_ms']) + ' ms<br>';
         if (r['bytesIn'] !== undefined)
             details += '<b>Bytes In (downloaded): </b>' + NumBytesAsDisplayString(r['bytesIn']) + '<br>';
+        if (r['certificate_bytes'] !== undefined && r['certificate_bytes'] > 0)
+            details += '<b>Certificates (downloaded): </b>' + r['certificate_bytes'] + ' B<br>';
         if (r['bytesOut'] !== undefined)
             details += '<b>Bytes Out (uploaded): </b>' + NumBytesAsDisplayString(r['bytesOut']) + '<br>';
         if (r['custom_rules'] !== undefined) {

@@ -209,7 +209,7 @@ function getTargetTTFBForStep($localPaths, $rtt) {
   require_once('object_detail.inc');
 
   $secure = false;
-  $requests = getRequestsForStep($localPaths, null, $secure, $haveLocations, false);
+  $requests = getRequestsForStep($localPaths, null, $secure);
   if( count($requests) )
   {
     // figure out what the RTT is to the server (take the connect time from the first request unless it is over 3 seconds)

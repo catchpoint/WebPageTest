@@ -65,8 +65,7 @@ if (array_key_exists('test', $_REQUEST)) {
       for ($run = 1; $run <= $testInfo['runs']; $run++) {
         for ($cached = 0; $cached <= $max_cached; $cached++) {
           $secure = false;
-          $haveLocations = false;
-          $requests = getRequests($id, $testPath, $run, $cached, $secure, $haveLocations, false);
+          $requests = getRequests($id, $testPath, $run, $cached, $secure);
           if (isset($requests) && is_array($requests)) {
             foreach ($requests as &$request) {
               $request['reportedTime'] = gmdate('r', $now);
@@ -249,8 +248,7 @@ function notify( $mailto, $from,  $id, $testPath, $host )
         require_once 'optimization.inc';
         require_once('object_detail.inc');
         $secure = false;
-        $haveLocations = false;
-        $requests = getRequests($id, $testPath, 1, 0, $secure, $haveLocations, false);
+        $requests = getRequests($id, $testPath, 1, 0, $secure);
         $optimization = dumpOptimizationReport($pageData[$fv][0], $requests, $id, 1, 0, $test);
 
         // build the message body

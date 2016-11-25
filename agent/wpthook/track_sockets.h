@@ -75,6 +75,7 @@ public:
   LARGE_INTEGER       _connect_end;
   LARGE_INTEGER       _ssl_start;
   LARGE_INTEGER       _ssl_end;
+  int                 _certificate_bytes;
   SOCKET_PROTOCOL     _protocol;
   H2_USER_DATA *      _h2_in;
   H2_USER_DATA *      _h2_out;
@@ -91,7 +92,6 @@ public:
   void Close(SOCKET s);
   bool Connect(SOCKET s, const struct sockaddr FAR * name, int namelen);
   void Connected(SOCKET s);
-  void Bind(SOCKET s, const struct sockaddr FAR * name, int namelen);
   bool ModifyDataOut(SOCKET s, DataChunk& chunk, bool is_unencrypted);
   void DataOut(SOCKET s, DataChunk& chunk, bool is_unencrypted);
   void DataIn(SOCKET s, DataChunk& chunk, bool is_unencrypted);
@@ -112,7 +112,8 @@ public:
 
   bool ClaimConnect(DWORD socket_id, LARGE_INTEGER before,
                     LARGE_INTEGER& start, LARGE_INTEGER& end,
-                    LARGE_INTEGER& ssl_start, LARGE_INTEGER& ssl_end);
+                    LARGE_INTEGER& ssl_start, LARGE_INTEGER& ssl_end,
+                    int& certificate_bytes);
   void ClaimAll();
   ULONG GetPeerAddress(DWORD socket_id);
   int GetLocalPort(DWORD socket_id);

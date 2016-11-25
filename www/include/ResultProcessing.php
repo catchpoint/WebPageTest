@@ -49,13 +49,12 @@ class ResultProcessing {
   public function postProcessRun() {
     $testerError = null;
     $secure = false;
-    $haveLocations = false;
     loadPageRunData($this->testRoot, $this->run, $this->cached);
     $steps = $this->countSteps();
     for ($i = 1; $i <= $steps; $i++) {
       $rootUrls = UrlGenerator::create(true, "", $this->id, $this->run, $this->cached, $i);
       $stepPaths = new TestPaths($this->testRoot, $this->run, $this->cached, $i);
-      $requests = getRequestsForStep($stepPaths, $rootUrls, $secure, $haveLocations, true, true);
+      $requests = getRequestsForStep($stepPaths, $rootUrls, $secure, true);
       if (isset($requests) && is_array($requests) && count($requests)) {
         getBreakdownForStep($stepPaths, $rootUrls, $requests);
       } else {

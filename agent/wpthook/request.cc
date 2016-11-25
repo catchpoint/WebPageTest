@@ -473,7 +473,8 @@ Request::Request(TestState& test_state, DWORD socket_id, DWORD stream_id,
   , _h2_priority_depends_on(-1)
   , _h2_priority_weight(-1)
   , _h2_priority_exclusive(-1)
-  , _protocol(protocol) {
+  , _protocol(protocol)
+  , _certificate_bytes(0) {
   QueryPerformanceCounter(&_start);
   _first_byte.QuadPart = 0;
   _end.QuadPart = 0;
@@ -681,7 +682,7 @@ void Request::MatchConnections() {
     }
     if (!_connect_start.QuadPart)
       _sockets.ClaimConnect(_socket_id, _start, _connect_start, _connect_end,
-                            _ssl_start, _ssl_end);
+                            _ssl_start, _ssl_end, _certificate_bytes);
   }
   LeaveCriticalSection(&cs);
 }

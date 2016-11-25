@@ -40,7 +40,7 @@ function getBreakdownForStep($localPaths, $rootUrlGenerator, &$requests) {
         // get all of the requests
         $secure = false;
         $haveLocations = false;
-        $requests = getRequestsForStep($localPaths, $rootUrlGenerator, $secure, $haveLocations, false);
+        $requests = getRequestsForStep($localPaths, $rootUrlGenerator, $secure);
         
         $breakdown = array();
         $mime_colors = MimeColors();

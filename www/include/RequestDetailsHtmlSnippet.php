@@ -26,10 +26,6 @@ class RequestDetailsHtmlSnippet {
     $out .= $this->_createTable();
     $out .= "</div>\n";
 
-    if ($this->requests->hasLocationData()) {
-      $out .= '<p class="center">*This product includes GeoLite data created by MaxMind, available from ' .
-              '<a href="http://maxmind.com/">http://maxmind.com/</a>.</p>';
-    }
     return $out;
   }
 
@@ -67,12 +63,12 @@ class RequestDetailsHtmlSnippet {
     $out .= "<th class=\"reqTTFB\">Time to First Byte</th>\n";
     $out .= "<th class=\"reqDownload\">Content Download</th>\n";
     $out .= "<th class=\"reqBytes\">Bytes Downloaded</th>\n";
+    if ($this->requests->hasSecureRequests()) {
+      $out .= "<th class=\"reqCertBytes\">Certificates</th>\n";
+    }
     $out .= "<th class=\"reqResult\">Error/Status Code</th>\n";
     $out .= "<th class=\"reqIP\">IP</th>\n";
 
-    if ($this->requests->hasLocationData()) {
-      $out .= "<th class=\"reqLocation\">Location*</th>";
-    }
     $out .= "</tr>\n</thead>\n";
     return $out;
   }
@@ -127,11 +123,15 @@ class RequestDetailsHtmlSnippet {
     $bytesIn = empty($request["bytesIn"]) ? null : (number_format($request['bytesIn'] / 1024, 1) . " KB");
     $out .= $this->_createDataCell($bytesIn, "reqBytes", $highlight);
 
+    if ($this->requests->hasSecureRequests()) {
+      $reqCertBytes = null;
+      if (!empty($request['certificate_bytes']) && (int)$request['certificate_bytes'] > 0)
+        $reqCertBytes = $request['certificate_bytes'] . ' B';
+      $out .= $this->_createDataCell($reqCertBytes, "reqCertBytes", $highlight);
+    }
+    
     $out .= $this->_createDataCell(@$request["responseCode"], "reqResult", $highlight);
     $out .= $this->_createDataCell(@$request["ip_addr"], "reqIP", $highlight);
-
-    if ($this->requests->hasLocationData())
-      $out .= $this->_createDataCell(@$request["location"], "reqLocation", $highlight);
 
     $out .= '</tr>';
     return $out;

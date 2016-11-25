@@ -26,7 +26,7 @@ class ObjectDetailTest extends PHPUnit_Framework_TestCase {
     if (!copy(__DIR__ . "/data/sampleDevtools.json.gz", $this->tempDir . "/1_devtools.json.gz")) {
       $this->fail("Could not copy devtools file to temp dir.");
     }
-    $actualRequests = getRequests("testId", $this->tempDir, 1, 0, $hasSecure, $hasLocations, false, false);
+    $actualRequests = getRequests("testId", $this->tempDir, 1, 0, $hasSecure, false);
     $this->assertEquals($SAMPLE_DEVTOOLS_REQUESTS, $actualRequests);
   }
 
@@ -38,7 +38,7 @@ class ObjectDetailTest extends PHPUnit_Framework_TestCase {
       $this->fail("Failed to extract results to temp dir");
     }
     $testPath = $this->tempDir . "/singlestepResults";
-    $actualRequests = getRequests("testId", $testPath, 1, 0, $hasSecure, $hasLocations, false, false);
+    $actualRequests = getRequests("testId", $testPath, 1, 0, $hasSecure, false);
     $this->assertEquals($SINGLESTEP_REQUESTS, $actualRequests);
   }
 }

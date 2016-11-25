@@ -471,8 +471,7 @@ function CheckForSpam() {
                 $cacheWarmed = 0;
 
             $secure = false;
-            $haveLocations = false;
-            $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure, $haveLocations, false);
+            $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure);
             if (isset($requests) && is_array($requests) && count($requests)) {
                 foreach($requests as &$request) {
                     if (array_key_exists('full_url', $request)) {

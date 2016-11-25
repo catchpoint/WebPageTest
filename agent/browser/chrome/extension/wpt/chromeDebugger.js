@@ -295,6 +295,10 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
         g_instance.mobileEmulation != undefined) {
       g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.setDeviceMetricsOverride', g_instance.mobileEmulation);
     }
+
+    if (message === 'Page.loadEventFired') {
+      wpt.chromeDebugger.sendEvent('complete', '');
+    }
     
     // Network events
     // Processing logic largely duplocated from the WebPageTest PHP code

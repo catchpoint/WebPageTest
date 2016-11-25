@@ -416,6 +416,7 @@ function loadPageData($file, $options = null)
                 if ((isset($fields[103]) && strlen(trim($fields[103])))) $ret['base_page_ttfb'] = intval(trim($fields[103]));
                 if ((isset($fields[104]) && strlen(trim($fields[104])))) $ret['visualComplete'] = intval(trim($fields[104]));
                 if ((isset($fields[105]) && strlen(trim($fields[105])))) $ret['SpeedIndex'] = intval(trim($fields[105]));
+                if ((isset($fields[106]) && strlen(trim($fields[106])))) $ret['certificate_bytes'] = intval(trim($fields[106]));
                 
                 $ret['date'] = strtotime(trim($fields[0]) . ' ' . trim($fields[1]));
                 if (!strlen($ret['pageSpeedVersion']))
