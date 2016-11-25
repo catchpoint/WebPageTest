@@ -1461,6 +1461,22 @@ function GetAverageSliceValue($slices, $start, $end) {
 */
 
 function AddRequestScriptTimings(&$requests, $script_timings_file) {
+  $script_events = array('EvaluateScript', 
+                         'v8.compile',
+                         'FunctionCall',
+                         'GCEvent',
+                         'TimerFire',
+                         'EventDispatch',
+                         'TimerInstall',
+                         'TimerRemove',
+                         'XHRLoad',
+                         'XHRReadyStateChange',
+                         'MinorGC',
+                         'MajorGC',
+                         'FireAnimationFrame',
+                         'ThreadState::completeSweep',
+                         'Heap::collectGarbage',
+                         'ThreadState::performIdleLazySweep');
   if (gz_is_file($script_timings_file)) {
     $timings = json_decode(gz_file_get_contents($script_timings_file), true);
     if (isset($timings) &&
@@ -1473,13 +1489,11 @@ function AddRequestScriptTimings(&$requests, $script_timings_file) {
         if (isset($request['full_url']) &&
             isset($js_timing[$request['full_url']])) {
           $request['js_timing'] = array();
-          if (isset($js_timing[$request['full_url']]['EvaluateScript'])) {
-            foreach($js_timing[$request['full_url']]['EvaluateScript'] as $times)
-              $request['js_timing'][] = $times;
-          }
-          if (isset($js_timing[$request['full_url']]['FunctionCall'])) {
-            foreach($js_timing[$request['full_url']]['FunctionCall'] as $times)
-              $request['js_timing'][] = $times;
+          foreach ($script_events as $script_event) {
+            if (isset($js_timing[$request['full_url']][$script_event])) {
+              foreach($js_timing[$request['full_url']][$script_event] as $times)
+                $request['js_timing'][] = $times;
+            }
           }
         }
       }

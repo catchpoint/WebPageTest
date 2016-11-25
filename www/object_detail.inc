@@ -37,7 +37,8 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
     $headers_file_name = $localPaths->headersFile();
     $bodies_file_name = $localPaths->bodiesFile();
     $custom_rules_file_name = $localPaths->customRulesFile();
-    $cache_version = 1;
+    $script_timing_file_name = $localPaths->devtoolsScriptTimingFile();
+    $cache_version = 2;
     $cache_file = $localPaths->requestsCacheFile($cache_version);
     $requests = null;
     $cached = true;
@@ -59,6 +60,7 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
           GetDevToolsRequestsForStep($localPaths, $requests, $pageData);
       }
       FixUpRequestTimes($requests);
+      AddScriptTimings($requests, $script_timing_file_name);
       if ($needHeaders)
           AddHeaders($requests, $headers_file_name);
     }
@@ -467,6 +469,37 @@ function AddResponseBodyFlags(&$requests, $bodies_file_name) {
           $index = intval($name, 10);
           if ($index && array_key_exists($index - 1, $requests)) {
             $requests[$index - 1]['body'] = true;
+          }
+        }
+      }
+    }
+  }
+}
+
+function AddScriptTimings(&$requests, $script_timing_file_name) {
+  if (gz_is_file($script_timing_file_name)) {
+    $timings = json_decode(gz_file_get_contents($script_timing_file_name), true);
+    if (isset($timings) &&
+        is_array($timings) &&
+        isset($timings['main_thread']) &&
+        isset($timings[$timings['main_thread']])) {
+      $js_timing = $timings[$timings['main_thread']];
+      foreach ($requests as &$request) {
+        if (isset($request['full_url']) && isset($js_timing[$request['full_url']])) {
+          foreach ($js_timing[$request['full_url']] as $cpu_event => $times) {
+            $total = 0.0;
+            foreach ($times as $pair) {
+              $elapsed = $pair[1] - $pair[0];
+              if ($elapsed > 0)
+                $total += $elapsed;
+            }
+            if ($total > 0) {
+              $total = intval(round($total));
+              if (!isset($request['cpuTimes']))
+                $request['cpuTimes'] = array();
+              $request['cpuTimes'][$cpu_event] = $total;
+              $request["cpu.$cpu_event"] = $total;
+            }
           }
         }
       }

@@ -68,7 +68,7 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = 
  * @return array|null Associative array with data for the given run or null on failure
  */
 function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo = null) {
-  $cacheVer = 2;
+  $cacheVer = 3;
   $cacheFile = $localPaths->pageDataCacheFile($cacheVer);
   $ret = null;
   if (gz_is_file($cacheFile))
@@ -193,6 +193,9 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
         $processing = GetDevToolsCPUTimeForStep($localPaths, $ret['fullyLoaded']);
         if (isset($processing) && is_array($processing) && count($processing)) {
           $ret['cpuTimes'] = $processing;
+          // Create top-level metrics for each as well
+          foreach ($processing as $key => $value)
+            $ret["cpu.$key"] = $value;
           if (isset($ret['docTime']) && $ret['docTime']) {    
             $processing = GetDevToolsCPUTimeForStep($localPaths, $ret['docTime']);    
             if (isset($processing) && is_array($processing) && count($processing)) {    
