@@ -625,17 +625,20 @@ void BrowserSettings::ResetProfile(bool clear_certs) {
     DeleteDirectory(cookies_dir_, false);
     DeleteDirectory(history_dir_, false);
     DeleteDirectory(dom_storage_dir_, false);
-    DeleteDirectory(temp_files_dir_, false);
-    DeleteDirectory(temp_dir_, false);
     DeleteDirectory(silverlight_dir_, false);
     DeleteDirectory(recovery_dir_, false);
     DeleteDirectory(flash_dir_, false);
-    DeleteDirectory(windows_dir_ + _T("\\temp"), false);
     DeleteDirectory(app_data_dir_ + _T("\\Roaming\\Mozilla\\Firefox\\Crash Reports"), false);
     DeleteDirectory(local_app_data_dir_ + _T("\\Microsoft\\Windows\\WER"), false);
     ClearWinInetCache();
     ClearWebCache();
   }
+
+  // Clear some temp directories
+  DeleteDirectory(temp_files_dir_, false);
+  DeleteDirectory(temp_dir_, false);
+  DeleteDirectory(windows_dir_ + _T("\\temp"), false);
+  DeleteDirectory(windows_dir_ + _T("\\Logs"), false);
 
   // Clear the Microsoft Edge caches
   if (_webdriver_script == _T("edge.py")) {
