@@ -178,7 +178,7 @@ void SSLStream::ProcessApplicationData() {
 
   // Stop processing stream data to save memory and CPU since we don't do
   // anything more with it.
-  //process_data_ = false;
+  process_data_ = false;
 }
 
 /*-----------------------------------------------------------------------------
