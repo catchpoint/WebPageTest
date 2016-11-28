@@ -22,6 +22,7 @@ import subprocess
 from selenium import webdriver
 from wpt_test_info import WptTest
 from etw import ETW
+from recorder import WptRecord
 
 PAGE_DATA_SCRIPT = """
   var pageData = {};
@@ -82,13 +83,20 @@ def RunTest(driver, test):
   driver.set_window_position(0, 0, driver.current_window_handle)
   driver.set_window_size(1024, 768, driver.current_window_handle)
 
+  # Prepare the recorder
+  recorder = WptRecord()
+  recorder.Prepare(test)
+
   #start ETW logging
+  etw = ETW()
+  etw_file = test.GetFileETW()
   try:
-    etw = ETW()
-    etw_file = test.GetFileETW()
     etw.Start(etw_file)
   except:
     pass
+
+  # Start Recording
+  recorder.Start()
 
   # Run through all of the script commands (just navigate for now but placeholder)
   while not test.Done():
@@ -99,12 +107,16 @@ def RunTest(driver, test):
     except:
       pass
 
+  # Stop Recording
+  recorder.Stop()
+
   try:
     etw.Stop()
   except:
     pass
 
   # Pull metrics from the DOM
+  dom_data = None
   try:
     dom_data = driver.execute_script(PAGE_DATA_SCRIPT)
   except:
@@ -172,6 +184,11 @@ def RunTest(driver, test):
     pass
   if os.path.exists(etw_file):
     os.unlink(etw_file)
+
+  # Process the recording
+  print('Processing video capture')
+  recorder.Process()
+  recorder.Done()
 
 def main():
   import argparse

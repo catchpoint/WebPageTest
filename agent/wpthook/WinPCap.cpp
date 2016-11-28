@@ -180,6 +180,7 @@ bool CWinPCap::StopCapture() {
     CloseHandle(hCaptureThread);
     hCaptureThread = NULL;
     captureFile.Empty();
+    ret = true;
   }
 
   return ret;

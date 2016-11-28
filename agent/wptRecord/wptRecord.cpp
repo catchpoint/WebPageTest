@@ -3,17 +3,29 @@
 
 #include "stdafx.h"
 #include "wptRecord.h"
+#include "WptRecorder.h"
+#include <shellapi.h>
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
 LPCWSTR szTitle = L"wptRecord";
 LPCWSTR szWindowClass = L"wptRecord";
 
+// Window messages for controlling recording activity
+#define UWM_PREPARE (WM_APP + 0)  // Call after browser is launched to find viewport
+#define UWM_START   (WM_APP + 1)  // Start actual recording
+#define UWM_STOP    (WM_APP + 2)  // Stop recording
+#define UWM_PROCESS (WM_APP + 3)  // Process captured results and write files (WPARAM can include a ms offset to remove from all timings)
+#define UWM_DONE    (WM_APP + 4)  // Exit
+
 // Forward declarations of functions included in this code module:
 ATOM                RegisterWindowClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+
+// Globals
+WptRecorder * g_recorder = NULL;
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -28,12 +40,57 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
   if (!InitInstance (hInstance, nCmdShow))
       return FALSE;
 
+  // Create the global instance of the recorder
+  WptRecorder recorder;
+  g_recorder = &recorder;
+
+  // Process the command-line options
+  bool ok = false;
+  int argc = 0;
+  LPWSTR *argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+  if (argc && argv) {
+    for (int i = 0; i < argc; i++) {
+      LPWSTR cmd = argv[i];
+      if (cmd) {
+        if (!lstrcmpiW(cmd, L"--filebase")) {
+          i++;
+          if (i < argc && argv[i]) {
+            ok = true;
+            recorder.SetFileBase(argv[i]);
+          }
+        } else if (!lstrcmpiW(cmd, L"--video")) {
+          recorder.EnableVideo();
+        } else if (!lstrcmpiW(cmd, L"--cpu")) {
+          recorder.EnableCPU();
+        } else if (!lstrcmpiW(cmd, L"--tcpdump")) {
+          recorder.EnableTcpdump();
+        } else if (!lstrcmpiW(cmd, L"--histograms")) {
+          recorder.EnableHistograms();
+        } else if (!lstrcmpiW(cmd, L"--noresize")) {
+          recorder.EnableFullSizeVideo();
+        } else if (!lstrcmpiW(cmd, L"--quality")) {
+          i++;
+          if (i < argc && argv[i]) {
+            int quality = _wtoi(argv[i]);
+            if (quality > 0 && quality <= 100)
+              recorder.SetImageQuality(quality);
+          }
+        }
+      }
+    }
+  }
+
   // Main message loop:
   MSG msg;
-  while (GetMessage(&msg, nullptr, 0, 0)) {
-    TranslateMessage(&msg);
-    DispatchMessage(&msg);
+  msg.wParam = -1;
+  if (ok) {
+    while (GetMessage(&msg, nullptr, 0, 0)) {
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+    }
   }
+
+  g_recorder = NULL;
 
   return (int) msg.wParam;
 }
@@ -72,8 +129,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
     return FALSE;
 
   // Keep the window hidden.  We don't show any UI but use the window for messaging
-  ShowWindow(hWnd, nCmdShow);
-  UpdateWindow(hWnd);
+  //ShowWindow(hWnd, nCmdShow);
+  //UpdateWindow(hWnd);
 
   return TRUE;
 }
@@ -81,12 +138,34 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+  LRESULT ret = 0;
   switch (message) {
-  case WM_DESTROY:
-      PostQuitMessage(0);
-      break;
-  default:
-      return DefWindowProc(hWnd, message, wParam, lParam);
+    case UWM_PREPARE:
+        if (g_recorder)
+          ret = g_recorder->Prepare();
+        break;
+    case UWM_START:
+        if (g_recorder)
+          ret = g_recorder->Start();
+        break;
+    case UWM_STOP:
+        if (g_recorder)
+          ret = g_recorder->Stop();
+        break;
+    case UWM_PROCESS:
+        if (g_recorder)
+          ret = g_recorder->Process(wParam);
+        break;
+    case UWM_DONE:
+        if (g_recorder)
+          ret = g_recorder->Done();
+        PostQuitMessage(0);
+        break;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        break;
+    default:
+        return DefWindowProc(hWnd, message, wParam, lParam);
   }
-  return 0;
+  return ret;
 }
