@@ -1891,6 +1891,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         $testInfo .= "location=\"{$test['locationText']}\"\r\n";
         $testInfo .= "loc={$test['location']}\r\n";
         $testInfo .= "id=$testId\r\n";
+        $testInfo .= "label={$test['label']}\r\n";
         $testInfo .= "batch=$batch\r\n";
         $testInfo .= "batch_locations=$batch_locations\r\n";
         $testInfo .= "sensitive={$test['sensitive']}\r\n";

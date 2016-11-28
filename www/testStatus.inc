@@ -38,6 +38,7 @@ function GetTestStatus($id, $includePosition = true) {
         $test = @parse_ini_file("$testPath/testinfo.ini",true);
         if (isset($test) && isset($test['test'])) {
           $ret['testId'] = $id;
+          $ret['label'] = $test['test']['label'];
           $ret['runs'] = (int)$test['test']['runs'];
           $ret['fvonly'] = (int)$test['test']['fvonly'];
           $ret['remote'] = false;
