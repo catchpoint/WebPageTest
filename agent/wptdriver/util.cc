@@ -269,24 +269,55 @@ bool FindBrowserWindow( DWORD process_id, HWND& frame_window) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void WptTrace(int level, LPCTSTR format, ...) {
+void WptTrace(const wchar_t* format, ...) {
   #ifdef DEBUG
   va_list args;
-  va_start( args, format );
+  va_start(args, format);
 
-  int len = _vsctprintf( format, args ) + 1;
+  int len = _vscwprintf(format, args) + 2;
   if (len) {
-    TCHAR * msg = (TCHAR *)malloc( len * sizeof(TCHAR) );
+    int size = len * sizeof(wchar_t);
+    wchar_t * msg = (TCHAR *)malloc(size);
     if (msg) {
-      if (_vstprintf_s( msg, len, format, args ) > 0) {
-        if (lstrlen(msg)) {
-          OutputDebugString(msg);
-        }
+      memset(msg, 0, size);
+      if (vswprintf_s(msg, len, format, args) > 0 && lstrlenW(msg)) {
+        lstrcatW(msg, L"\n");
+        OutputDebugStringW(msg);
       }
 
       free( msg );
     }
   }
+  #endif
+}
+
+void WptTrace(const char* format, ...) {
+  #ifdef DEBUG
+  va_list args;
+  va_start(args, format);
+
+  int len = _vscprintf(format, args) + 2;
+  if (len) {
+    int size = len * sizeof(char);
+    char * msg = (char *)malloc(size);
+    if (msg) {
+      memset(msg, 0, size);
+      if (vsprintf_s(msg, len, format, args) > 0 && lstrlenA(msg)) {
+        lstrcatA(msg, "\n");
+        OutputDebugStringA(msg);
+      }
+
+      free( msg );
+    }
+  }
+  #endif
+}
+
+void WptTrace(int dwCategory, int line, const wchar_t* format, ...) {
+  #ifdef DEBUG
+  va_list argptr; va_start(argptr, format);
+  WptTrace(format, argptr);
+  va_end(argptr);
   #endif
 }
 

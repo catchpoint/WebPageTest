@@ -277,7 +277,7 @@ void Results::Reset(void) {
   Save the results out to the appropriate files
 -----------------------------------------------------------------------------*/
 void Results::Save(void) {
-  WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save()\n"));
+  ATLTRACE("[wpthook] - Results::Save()");
   if (!_saved) {
     OutputDebugStringA("Results::Save()");
     ProcessRequests();
@@ -312,7 +312,7 @@ void Results::Save(void) {
     _saved = true;
     OutputDebugStringA("Results::Save() - Complete");
   }
-  WptTrace(loglevel::kFunction, _T("[wpthook] - Results::Save() complete\n"));
+  ATLTRACE("[wpthook] - Results::Save() complete");
 }
 
 /*-----------------------------------------------------------------------------
@@ -1102,7 +1102,7 @@ void Results::ProcessRequests(void) {
   std::tr1::regex adult_regex("[^0-9a-zA-Z]2257[^0-9a-zA-Z]");
   while (pos) {
     Request * request = _requests._requests.GetNext(pos);
-    WptTrace(loglevel::kFunction, _T("[wpthook] - Processing request %S%S"), (LPCSTR)request->GetHost(), (LPCSTR)request->_request_data.GetObject());
+    ATLTRACE("[wpthook] - Processing request %s%s", (LPCSTR)request->GetHost(), (LPCSTR)request->_request_data.GetObject());
     if (request && 
         (!request->_from_browser || !NativeRequestExists(request))) {
       request->Process();
@@ -1303,7 +1303,7 @@ void Results::SaveRequest(gzFile file, gzFile headers, Request * request, int in
   CStringA result;
   CStringA buff;
 
-  WptTrace(loglevel::kFunction, _T("[wpthook] - Saving request %S%S"), (LPCSTR)request->GetHost(), (LPCSTR)request->_request_data.GetObject());
+  ATLTRACE("[wpthook] - Saving request %s%s", (LPCSTR)request->GetHost(), (LPCSTR)request->_request_data.GetObject());
 
   // Date
   buff.Format("%02d/%02d/%02d\t", _test_state._start_time.wMonth,

@@ -19,6 +19,8 @@ import json
 
 class WptTest:
   def __init__(self, config_file):
+    self.recorder = None
+    self.test = None
     with open(config_file, 'rb') as file:
       self.test = json.load(file)
       self.script = deque([])
@@ -39,6 +41,12 @@ class WptTest:
     if self.test is not None and 'max_test_time' in self.test and self.test['max_test_time'] > 0:
       timeout = self.test['max_test_time']
     return timeout
+
+  def GetFileBase(self):
+    file_path = None
+    if 'file_base' in self.test and len(self.test['file_base']):
+      file_path = self.test['file_base']
+    return file_path
 
   def GetFileETW(self):
     file_path = None
@@ -78,7 +86,7 @@ class WptTest:
 
   def KeepPNG(self):
     keep = False
-    if 'pngss' in self.test and self.test['pngss']:
+    if 'png_screen_shot' in self.test and self.test['png_screen_shot']:
       keep = True
     return keep
 
@@ -88,11 +96,23 @@ class WptTest:
       file_path = self.test['file_base'] + '_screen.jpg'
     return file_path
 
-  def GetScreenshotJPEGQuality(self):
+  def GetImageQuality(self):
     quality = 30
     if 'image_quality' in self.test and self.test['image_quality'] > 0 and self.test['image_quality'] <= 100:
       quality = self.test['image_quality']
     return quality
+
+  def BrowserWidth(self):
+    width = 1024
+    if 'browser_width' in self.test and self.test['browser_width'] > 0:
+      width = int(self.test['browser_width'])
+    return width
+
+  def BrowserHeight(self):
+    height = 1024
+    if 'browser_height' in self.test and self.test['browser_height'] > 0:
+      height = int(self.test['browser_height'])
+    return height
 
   def GetUrl(self):
     url = None
@@ -120,3 +140,27 @@ class WptTest:
                 metrics = {}
               metrics[metric] = script
     return metrics
+
+  def SetRecorder(self, path):
+    self.recorder = path
+
+  def GetRecorder(self):
+    return self.recorder
+
+  def TcpDump(self):
+    enabled = False
+    if self.test is not None and 'tcpdump' in self.test and self.test['tcpdump']:
+      enabled = True
+    return enabled
+
+  def Video(self):
+    enabled = False
+    if self.test is not None and 'video' in self.test and self.test['video']:
+      enabled = True
+    return enabled
+
+  def FullSizeVideo(self):
+    enabled = False
+    if self.test is not None and 'full_size_video' in self.test and self.test['full_size_video']:
+      enabled = True
+    return enabled

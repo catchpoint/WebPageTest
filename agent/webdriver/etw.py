@@ -21,6 +21,7 @@ import urlparse
 
 class ETW:
   def __init__(self):
+    self.earliest_navigate = None
     self.start = None
     self.log_file = None
     self.trace_name = None
@@ -47,6 +48,9 @@ class ETW:
 
     # The list of events we actually care about
     self.keep_events = [# Page Navigation Events
+                        'Microsoft-IE/Mshtml_CWindow_SuperNavigate2/Start',
+                        'Microsoft-IE/Mshtml_BFCache/Info',
+                        'Microsoft-IE/Mshtml_WebOCEvents_BeforeNavigate/Info',
                         'Microsoft-IE/Mshtml_CDoc_Navigation/Info', # Start of navigation, keep track of CMarkup* and EventContextId
                         'Microsoft-IE/Mshtml_WebOCEvents_DOMContentLoaded/Info', # CMarkup *
                         'Microsoft-IE/Mshtml_WebOCEvents_DocumentComplete/Info', # CMarkup*
@@ -117,6 +121,7 @@ class ETW:
     return ret
 
   def Write(self, test_info, dom_data):
+    start_offset = 0
     page_data_file = test_info.GetFilePageData()
     request_data_file = test_info.GetFileRequests()
     if self.log_file is not None and self.started and page_data_file is not None and request_data_file is not None:
@@ -133,18 +138,10 @@ class ETW:
             json.dump(page_data, f)
           with gzip.open(request_data_file + '.gz', 'wb') as f:
             json.dump(requests, f)
-
-          # Debugging
-          #with open(page_data_file, 'wb') as f:
-          #  json.dump(page_data, f, indent=4, sort_keys=True, separators=(',', ':'))
-          #with open(request_data_file, 'wb') as f:
-          #  json.dump(requests, f, indent=4, sort_keys=True, separators=(',', ':'))
-          #with open(request_data_file + '.events.json', 'wb') as f:
-          #  json.dump(events, f, indent=4, sort_keys=True, separators=(',', ':'))
-          #with open(request_data_file + '.raw.json', 'wb') as f:
-          #  json.dump(raw_result, f, indent=4, sort_keys=True, separators=(',', ':'))
-
         os.unlink(csv_file)
+    if self.earliest_navigate is not None and self.start is not None and self.start > self.earliest_navigate:
+      start_offset = int(round(float(self.start - self.earliest_navigate) / 1000.0))
+    return start_offset
 
   def ExtractCsv(self, csv_file):
     ret = 0
@@ -250,14 +247,24 @@ class ETW:
     requests = {}
     pageContexts = []
     CMarkup = []
+    navigating = True
     for event in events:
       try:
         if 'activity' in event:
           id = event['activity']
-          if event['name'] == 'Microsoft-IE/Mshtml_CDoc_Navigation/Info':
+          if event['name'] == 'Microsoft-IE/Mshtml_CWindow_SuperNavigate2/Start':
+            navigating = True
+          if self.earliest_navigate is None and\
+              (event['name'] == 'Microsoft-IE/Mshtml_CWindow_SuperNavigate2/Start' or
+               event['name'] == 'Microsoft-IE/Mshtml_BFCache/Info' or
+               event['name'] == 'Microsoft-IE/Mshtml_WebOCEvents_BeforeNavigate/Info' or
+               event['name'] == 'Microsoft-IE/Mshtml_CDoc_Navigation/Info'):
+            self.earliest_navigate = event['ts']
+          if navigating and event['name'] == 'Microsoft-IE/Mshtml_CDoc_Navigation/Info':
             if 'EventContextId' in event['fields'] and 'CMarkup*' in event['fields']:
               pageContexts.append(event['fields']['EventContextId'])
               CMarkup.append(event['fields']['CMarkup*'])
+              navigating = False
               if 'start' not in result:
                 result['start'] = event['ts']
               if 'URL' in event['fields'] and 'URL' not in result:

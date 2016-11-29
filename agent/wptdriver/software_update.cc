@@ -137,8 +137,7 @@ CString SoftwareUpdate::GetUpdateInfo(CString url) {
 -----------------------------------------------------------------------------*/
 bool SoftwareUpdate::UpdateSoftware(bool force) {
   bool ok = true;
-  WptTrace(loglevel::kFunction,
-            _T("[wptdriver] SoftwareUpdate::UpdateSoftware\n"));
+  ATLTRACE("[wptdriver] SoftwareUpdate::UpdateSoftware");
   if (force || TimeToCheck()) {
     ok = UpdateBrowsers();
     if (ok && _software_url.GetLength()) {
@@ -188,15 +187,13 @@ bool SoftwareUpdate::UpdateSoftware(bool force) {
 -----------------------------------------------------------------------------*/
 bool SoftwareUpdate::UpdateBrowsers(void) {
   bool ok = true;
-  WptTrace(loglevel::kFunction,
-            _T("[wptdriver] SoftwareUpdate::UpdateBrowsers\n"));
+  ATLTRACE("[wptdriver] SoftwareUpdate::UpdateBrowsers");
   POSITION pos = _browsers.GetHeadPosition();
   while (ok && pos) {
     BrowserInfo browser_info = _browsers.GetNext(pos);
     CString url = browser_info._installer.Trim();
     if (url.GetLength()) {
-      WptTrace(loglevel::kFunction,
-                _T("[wptdriver] Checking browser - %s\n"), (LPCTSTR)url);
+      ATLTRACE(L"[wptdriver] Checking browser - %s", (LPCWSTR)url);
       CString info = GetUpdateInfo(url);
       if (info.GetLength()) {
         CString browser, version, command, file_url, md5;
@@ -226,9 +223,8 @@ bool SoftwareUpdate::UpdateBrowsers(void) {
       }
     }
   }
-  WptTrace(loglevel::kFunction,
-            _T("[wptdriver] SoftwareUpdate::UpdateBrowsers complete: %s\n"),
-            ok ? _T("Succeeded") : _T("FAILED!"));
+  ATLTRACE("[wptdriver] SoftwareUpdate::UpdateBrowsers complete: %s",
+            ok ? "Succeeded" : "FAILED!");
   return ok;
 }
 
@@ -240,9 +236,8 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
   bool ok = true;
   bool already_installed = false;
 
-  WptTrace(loglevel::kFunction,
-            _T("[wptdriver] SoftwareUpdate::InstallSoftware - %s\n"),
-            (LPCTSTR)app);
+  ATLTRACE(L"[wptdriver] SoftwareUpdate::InstallSoftware - %s",
+            (LPCWSTR)app);
 
   if (app.GetLength() && file_url.GetLength() && version.GetLength() &&
       command.GetLength() ) {
@@ -269,14 +264,12 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
           CString file_path = _directory + CString(_T("\\")) 
                                 + file_url.Mid(file_pos + 1);
           _status.Set(_T("Downloading installer for %s"), (LPCTSTR)app);
-          WptTrace(loglevel::kTrace,
-                    _T("[wptdriver] Downloading - %s\n"), (LPCTSTR)file_url);
+          ATLTRACE(L"[wptdriver] Downloading - %s", (LPCWSTR)file_url);
           if (HttpSaveFile(file_url, file_path)) {
             if (md5.GetLength()) {
               CString file_md5 = HashFileMD5(file_path);
               if (file_md5.CompareNoCase(md5)) {
-                WptTrace(loglevel::kTrace,
-                          _T("[wptdriver] Hash mismatch - %s (expected %s)\n"), (LPCTSTR)file_md5, (LPCTSTR)md5);
+                ATLTRACE(L"[wptdriver] Hash mismatch - %s (expected %s)", (LPCWSTR)file_md5, (LPCWSTR)md5);
                 install = false;
               }
             }
@@ -305,8 +298,7 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
               shell_info.lpDirectory = directory;
               shell_info.nShow = SW_SHOWNORMAL;
               _status.Set(_T("Installing %s"), (LPCTSTR)app);
-              WptTrace(loglevel::kTrace,
-                 _T("[wptdriver] Running '%s' with parameters '%s' in '%s'\n"),
+              ATLTRACE(L"[wptdriver] Running '%s' with parameters '%s' in '%s'",
                  exe, parameters, directory);
               if (ShellExecuteEx(&shell_info) && shell_info.hProcess) {
                 if (WaitForSingleObject(shell_info.hProcess, 
@@ -318,14 +310,12 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
                 CloseHandle(shell_info.hProcess);
               } else {
                 _status.Set(_T("Error installing %s"), (LPCTSTR)app);
-                WptTrace(loglevel::kTrace,
-                          _T("[wptdriver] Error Running Installer\n"));
+                ATLTRACE("[wptdriver] Error Running Installer");
               }
             } else {
               _status.Set(_T("Error downloading installer for %s"),
                           (LPCTSTR)app);
-              WptTrace(loglevel::kTrace,
-                        _T("[wptdriver] File download corrupt\n"));
+              ATLTRACE("[wptdriver] File download corrupt");
             }
             DeleteFile(file_path);
           }
@@ -343,9 +333,8 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
     }
   }
 
-  WptTrace(loglevel::kFunction,
-           _T("[wptdriver] SoftwareUpdate::InstallSoftware Complete %s: %s\n"),
-           (LPCTSTR)app, ok ? _T("Succeeded") : _T("FAILED!"));
+  ATLTRACE(L"[wptdriver] SoftwareUpdate::InstallSoftware Complete %s: %s",
+           (LPCWSTR)app, ok ? L"Succeeded" : L"FAILED!");
 
   // don't fail if we already have the package installed and we are just doing
   // an update.

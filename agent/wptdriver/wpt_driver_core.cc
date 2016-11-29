@@ -407,7 +407,7 @@ bool WptDriverCore::TracerouteTest(WptTestDriver& test) {
 bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
   bool ret = false;
 
-  WptTrace(loglevel::kFunction,_T("[wptdriver] WptDriverCore::BrowserTest\n"));
+  ATLTRACE("[wptdriver] WptDriverCore::BrowserTest");
 
   test._run_error.Empty();
   g_shared->ResetTestResult();
@@ -449,8 +449,7 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
       ret = false;
   }
 
-  WptTrace(loglevel::kFunction, 
-            _T("[wptdriver] WptDriverCore::BrowserTest done\n"));
+  ATLTRACE("[wptdriver] WptDriverCore::BrowserTest done");
 
   return ret;
 }

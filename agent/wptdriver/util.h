@@ -30,16 +30,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <TlHelp32.h>
 
-namespace loglevel {
-  const int kError = 1;
-  const int kWarning = 2;
-  const int kProcess = 3;
-  const int kRareEvent = 4;
-  const int kFrequentEvent = 7;
-  const int kFunction = 8;
-  const int kTrace = 9;
-};
+#ifdef _DEBUG
+#ifdef ATLTRACE 
+#undef ATLTRACE
+#undef ATLTRACE2
 
+#define ATLTRACE WptTrace
+#define ATLTRACE2 ATLTRACE
+#endif // ATLTRACE
+#endif // _DEBUG
 
 // Utility routines shared by all of the code
 
@@ -50,7 +49,9 @@ void DeleteOldDirectoryEntries(CString directory, int seconds);
 void DeleteRegKey(HKEY hParent, LPCTSTR key, bool remove = true);
 void CopyDirectoryTree(CString source, CString destination);
 bool FindBrowserWindow(DWORD process_id, HWND& frame_window);
-void WptTrace(int level, LPCTSTR format, ...);
+void WptTrace(const char* format, ...);
+void WptTrace(const wchar_t* format, ...);
+void WptTrace(int dwCategory, int line, const wchar_t* format, ...);
 
 typedef CAtlList<CStringA> HookSymbolNames;
 typedef CAtlMap<CStringA, DWORD64> HookOffsets;

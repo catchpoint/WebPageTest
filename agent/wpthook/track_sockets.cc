@@ -141,14 +141,11 @@ bool TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
                             int namelen) {
   bool allowed = true;
 
-  WptTrace(loglevel::kFunction, 
-            _T("[wpthook] - TrackSockets::Connect(%d)\n"), s);
+  ATLTRACE("[wpthook] - TrackSockets::Connect(%d)", s);
 
   // We only care about IP sockets at this point.
   if (name->sa_family == AF_INET6) {
-    WptTrace(
-        loglevel::kFunction, 
-        _T("[wpthook] - TrackSockets::Connect: Warning: IPv6 unsupported!\n"));
+    ATLTRACE("[wpthook] - TrackSockets::Connect: Warning: parsing of IPv6 unsupported!");
   }
   if (namelen >= sizeof(struct sockaddr_in) && name->sa_family == AF_INET) {
     struct sockaddr_in* ip_name = (struct sockaddr_in *)name;
@@ -186,9 +183,7 @@ void TrackSockets::Connected(SOCKET s) {
         addrlen == sizeof(client))
       local_port = ntohs(client.sin_port);
 
-    WptTrace(loglevel::kFunction, 
-              _T("[wpthook] - TrackSockets::Connected(%d) - Client port: %d\n"),
-                 s, local_port);
+    ATLTRACE("[wpthook] - TrackSockets::Connected(%d) - Client port: %d", s, local_port);
 
     EnterCriticalSection(&cs);
     SocketInfo* info = GetSocketInfo(s);

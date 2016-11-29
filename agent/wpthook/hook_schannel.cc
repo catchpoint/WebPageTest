@@ -107,7 +107,7 @@ void SchannelHook::Init() {
     return;
   g_hook = this;
 
-  WptTrace(loglevel::kProcess, _T("[wpthook] SchannelHook::Init()\n"));
+  ATLTRACE("[wpthook] SchannelHook::Init()");
 
   LoadLibrary(_T("secur32.dll"));
   MH_CreateHookApi(L"secur32.dll", "InitializeSecurityContextW", InitializeSecurityContextW_Hook, (LPVOID *)&InitializeSecurityContextW_);

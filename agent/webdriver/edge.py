@@ -81,7 +81,7 @@ def RunTest(driver, test):
   # Set up the timeouts and other options
   driver.set_page_load_timeout(test.GetTimeout())
   driver.set_window_position(0, 0, driver.current_window_handle)
-  driver.set_window_size(1024, 768, driver.current_window_handle)
+  driver.set_window_size(test.BrowserWidth(), test.BrowserHeight(), driver.current_window_handle)
 
   # Prepare the recorder
   recorder = WptRecord()
@@ -119,6 +119,7 @@ def RunTest(driver, test):
   dom_data = None
   try:
     dom_data = driver.execute_script(PAGE_DATA_SCRIPT)
+    logging.debug('Navigation Timing: {0}'.format(json.dumps(dom_data)))
   except:
     pass
 
@@ -168,7 +169,7 @@ def RunTest(driver, test):
         os.unlink(png)
       driver.get_screenshot_as_file(png)
       jpeg = test.GetScreenshotJPEG()
-      quality = test.GetScreenshotJPEGQuality()
+      quality = test.GetImageQuality()
       if jpeg is not None and os.path.exists(png):
         command = 'magick "{0}" -set colorspace sRGB -quality {1:d} "{2}"'.format(png, quality, jpeg)
         subprocess.call(command, shell=True)
@@ -178,8 +179,9 @@ def RunTest(driver, test):
     pass
 
   # process the etw trace
+  start_offset = 0
   try:
-    etw.Write(test, dom_data)
+    start_offset = etw.Write(test, dom_data)
   except:
     pass
   if os.path.exists(etw_file):
@@ -187,7 +189,7 @@ def RunTest(driver, test):
 
   # Process the recording
   print('Processing video capture')
-  recorder.Process()
+  recorder.Process(start_offset)
   recorder.Done()
 
 def main():
@@ -197,6 +199,7 @@ def main():
   parser.add_argument('-v', '--verbose', action='count',
                       help="Increase verbosity (specify multiple times for more). -vvvv for full debug output.")
   parser.add_argument('-t', '--test', help="Input test json file.")
+  parser.add_argument('-r', '--recorder', help="Path to wptrecord.exe for recording video, tcpdump, etc.")
   options, unknown = parser.parse_known_args()
 
   # Set up logging
@@ -213,8 +216,10 @@ def main():
 
   if not options.test:
     parser.error("Input test file is not specified.")
-
   test = WptTest(options.test)
+
+  if options.recorder:
+    test.SetRecorder(options.recorder)
 
   #Start the browser
   exe = os.path.join(os.path.dirname(os.path.abspath(__file__)), "edge/MicrosoftWebDriver.exe")

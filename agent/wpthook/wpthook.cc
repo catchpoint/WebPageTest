@@ -115,7 +115,7 @@ static unsigned __stdcall ThreadProc( void* arg ) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptHook::Init(){
-  WptTrace(loglevel::kFunction, _T("[wpthook] Init()\n"));
+  ATLTRACE("[wpthook] Init()");
 #ifdef DEBUG
   //MessageBox(NULL, L"Attach Debugger", L"Attach Debugger", MB_OK);
 #endif
@@ -138,9 +138,9 @@ void WptHook::Init(){
   if (background_thread_started_ &&
       WaitForSingleObject(background_thread_started_, INIT_TIMEOUT) 
       == WAIT_OBJECT_0) {
-    WptTrace(loglevel::kFunction, _T("[wpthook] Init() Completed\n"));
+    ATLTRACE("[wpthook] Init() Completed");
   } else {
-    WptTrace(loglevel::kFunction, _T("[wpthook] Init() Timed out\n"));
+    ATLTRACE("[wpthook] Init() Timed out");
   }
 }
 
@@ -234,8 +234,7 @@ void WptHook::OnReport() {
       test_server_.Stop();
       done_ = true;
       if (test_state_._frame_window) {
-        WptTrace(loglevel::kTrace, 
-                  _T("[wpthook] - **** Exiting Hooked Browser\n"));
+        ATLTRACE("[wpthook] - **** Exiting Hooked Browser");
         ::SendMessage(test_state_._frame_window,WM_CLOSE,0,0);
       }
     }
@@ -303,7 +302,7 @@ static LRESULT CALLBACK WptHookWindowProc(HWND hwnd, UINT uMsg,
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptHook::BackgroundThread() {
-  WptTrace(loglevel::kFunction, _T("[wpthook] BackgroundThread()\n"));
+  ATLTRACE("[wpthook] BackgroundThread()");
 
   if (!test_state_.gdi_only_) {
     chrome_ssl_hook_.Init();
@@ -334,5 +333,5 @@ void WptHook::BackgroundThread() {
   }
 
   test_server_.Stop();
-  WptTrace(loglevel::kFunction, _T("[wpthook] BackgroundThread() Stopped\n"));
+  ATLTRACE("[wpthook] BackgroundThread() Stopped");
 }

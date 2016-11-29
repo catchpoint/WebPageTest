@@ -258,6 +258,7 @@ int WptRecorder::Start() {
 -----------------------------------------------------------------------------*/
 int WptRecorder::Stop() {
   int ret = 0;
+  CollectData();
   active_ = false;
   if (data_timer_) {
     OutputDebugStringA("WptRecorder::Stop\n");
@@ -275,10 +276,14 @@ int WptRecorder::Stop() {
 -----------------------------------------------------------------------------*/
 int WptRecorder::Process(DWORD start_offset) {
   int ret = 0;
-  OutputDebugStringA("WptRecorder::Process\n");
+  CStringA buff;
+  buff.Format("WptRecorder::Process - start offset = %dms\n", start_offset);
+  OutputDebugStringA(buff);
   // Make sure everything is stopped
   Stop();
   if (!file_base_.IsEmpty()) {
+    if (start_offset > 0)
+      start_.QuadPart += ms_frequency_.QuadPart * start_offset;
     SaveProgressData();
     SaveVideo();
   }

@@ -186,7 +186,7 @@ void WptTest::Reset(void) {
 bool WptTest::Load(CString& test) {
   bool ret = false;
 
-  WptTrace(loglevel::kFunction, _T("WptTest::Load()\n"));
+  ATLTRACE("WptTest::Load()");
 
   Reset();
 
@@ -391,8 +391,7 @@ bool WptTest::Load(CString& test) {
   if (_script.GetLength())
     _test_timeout *= _script_timeout_multiplier;
 
-  WptTrace(loglevel::kFunction, _T("WptTest::Load() - Loaded test %s\n"), 
-                                                                (LPCTSTR)_id);
+  ATLTRACE(L"WptTest::Load() - Loaded test %s", (LPCWSTR)_id);
 
   if( _id.GetLength() )
     ret = true;
@@ -406,7 +405,7 @@ bool WptTest::GetNextTask(CStringA& task, bool& record) {
   bool ret = false;
 
   EnterCriticalSection(&cs_);
-  WptTrace(loglevel::kFunction, _T("[wpthook] - WptTest::GetNextTask\n"));
+  ATLTRACE("[wpthook] - WptTest::GetNextTask");
   if (!_active && !IsLocked()){
     Lock();
     LARGE_INTEGER now;
@@ -474,7 +473,7 @@ CStringA WptTest::EncodeTask(ScriptCommand& command) {
   The last measurement completed, is it time to exit?
 -----------------------------------------------------------------------------*/
 bool WptTest::Done() {
-  WptTrace(loglevel::kFunction, _T("[wpthook] - WptTest::Done()\n"));
+  ATLTRACE("[wpthook] - WptTest::Done()");
   bool ret = false;
 
   _active = false;
@@ -664,8 +663,7 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
   bool continue_processing = true;
   consumed = true;
 
-  WptTrace(loglevel::kFunction, _T("[wpthook] Processing Command '%s'\n"), 
-                                                              command.command);
+  ATLTRACE(L"[wpthook] Processing Command '%s'", (LPCWSTR)command.command);
   CString cmd = command.command;
   cmd.MakeLower();
 
@@ -788,8 +786,7 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
   } else if (cmd == _T("setdomelement")) {
     if (command.target.Trim().GetLength()) {
       _dom_element_check = true;
-      WptTrace(loglevel::kFrequentEvent, 
-        _T("[wpthook] - WptTest::BuildScript() Setting dom element check."));
+      ATLTRACE("[wpthook] - WptTest::BuildScript() Setting dom element check.");
     }
     continue_processing = false;
     consumed = false;

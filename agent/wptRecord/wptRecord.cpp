@@ -128,10 +128,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
   if (!hWnd)
     return FALSE;
 
-  // Keep the window hidden.  We don't show any UI but use the window for messaging
-  //ShowWindow(hWnd, nCmdShow);
-  //UpdateWindow(hWnd);
-
   return TRUE;
 }
 

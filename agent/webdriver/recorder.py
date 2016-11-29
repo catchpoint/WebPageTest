@@ -13,11 +13,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import logging
+import subprocess
 import time
 import win32ui
 
 class WptRecord:
   def __init__(self):
+    self.proc = None
     self.window = None
     self.UWM_PREPARE = (0x8000 + 0)
     self.UWM_START   = (0x8000 + 1)
@@ -25,8 +28,23 @@ class WptRecord:
     self.UWM_PROCESS = (0x8000 + 3)
     self.UWM_DONE    = (0x8000 + 4)
 
-  def Prepare(self, test_info):
-    # Todo: launch the recorder process
+  def Prepare(self, test):
+    recorder = test.GetRecorder()
+    file_base = test.GetFileBase()
+    if recorder is not None and file_base is not None:
+      args = [recorder, '--filebase', file_base, '--cpu', '--histograms']
+      if test.TcpDump():
+        args.append('--tcpdump')
+      if test.Video():
+        args.append('--video')
+      if test.FullSizeVideo():
+        args.append('--noresize')
+      args.extend(['--quality', str(test.GetImageQuality())])
+      try:
+        self.proc = subprocess.Popen(args)
+      except:
+        logging.debug('Error launching recorder "{0}"'.format(recorder))
+
     # Wait for the recorder window to be available for 30 seconds
     start = time.time()
     while self.window is None and time.time() - start < 30:
@@ -55,10 +73,10 @@ class WptRecord:
       except:
         pass
 
-  def Process(self):
+  def Process(self, start_offset):
     if self.window is not None:
       try:
-        self.window.SendMessage(self.UWM_PROCESS, 0, 0)
+        self.window.SendMessage(self.UWM_PROCESS, start_offset, 0)
       except:
         pass
 
@@ -68,3 +86,5 @@ class WptRecord:
         self.window.SendMessage(self.UWM_DONE, 0, 0)
       except:
         pass
+    if self.proc is not None:
+      self.proc.wait()

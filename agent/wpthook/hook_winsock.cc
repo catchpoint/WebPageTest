@@ -281,7 +281,7 @@ void CWsHook::Init() {
     return;
   pHook = this;
 
-  WptTrace(loglevel::kProcess, _T("[wpthook] CWsHook::Init()"));
+  ATLTRACE("[wpthook] CWsHook::Init()");
 
   // install the code hooks
   LoadLibrary(_T("ws2_32.dll"));

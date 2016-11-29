@@ -115,15 +115,10 @@ void Requests::DataIn(DWORD socket_id, DataChunk& chunk) {
     key.LowPart = 0;
     if (_active_requests.Lookup(key.QuadPart, request) && request) {
       _test_state.ActivityDetected();
-      WptTrace(loglevel::kFunction, 
-               _T("[wpthook] - Requests::DataIn(socket_id=%d, len=%d)"),
-               socket_id, chunk.GetLength());
+      ATLTRACE("[wpthook] - Requests::DataIn(socket_id=%d, len=%d)", socket_id, chunk.GetLength());
       request->DataIn(chunk);
     } else {
-      WptTrace(loglevel::kFrequentEvent,
-               _T("[wpthook] - Requests::DataIn(socket_id=%d, len=%d)")
-               _T("   not associated with a known request"),
-               socket_id, chunk.GetLength());
+      ATLTRACE("[wpthook] - Requests::DataIn(socket_id=%d, len=%d) not associated with a known request", socket_id, chunk.GetLength());
     }
     LeaveCriticalSection(&cs);
   }
@@ -143,9 +138,7 @@ bool Requests::ModifyDataOut(DWORD socket_id, DataChunk& chunk) {
     } else {
       is_modified = chunk.ModifyDataOut(_test);
     }
-    WptTrace(loglevel::kFunction,
-        _T("[wpthook] Requests::ModifyDataOut(socket_id=%d, len=%d) -> %d"),
-        socket_id, chunk.GetLength(), is_modified);
+    ATLTRACE("[wpthook] Requests::ModifyDataOut(socket_id=%d, len=%d) -> %d", socket_id, chunk.GetLength(), is_modified);
     LeaveCriticalSection(&cs);
   }
   return is_modified;
@@ -160,14 +153,9 @@ void Requests::DataOut(DWORD socket_id, DataChunk& chunk) {
     if (request) {
       _test_state.ActivityDetected();
       request->DataOut(chunk);
-      WptTrace(loglevel::kFunction, 
-               _T("[wpthook] - Requests::DataOut(socket_id=%d, len=%d)"),
-               socket_id, chunk.GetLength());
+      ATLTRACE("[wpthook] - Requests::DataOut(socket_id=%d, len=%d)", socket_id, chunk.GetLength());
     } else {
-      WptTrace(loglevel::kFrequentEvent, 
-               _T("[wpthook] - Requests::DataOut(socket_id=%d, len=%d)")
-               _T("  Non-HTTP traffic detected"),
-               socket_id, chunk.GetLength());
+      ATLTRACE("[wpthook] - Requests::DataOut(socket_id=%d, len=%d) Non-HTTP traffic detected", socket_id, chunk.GetLength());
     }
     LeaveCriticalSection(&cs);
   }
@@ -673,8 +661,7 @@ void Requests::ObjectDataOut(DWORD socket_id, DWORD stream_id,
 -----------------------------------------------------------------------------*/
 void Requests::SetPriority(DWORD socket_id, DWORD stream_id, int depends_on,
                   int weight, int exclusive) {
-  WptTrace(loglevel::kFrequentEvent, 
-            _T("[wpthook] - Requests::SetPriority(socket_id=%d, stream_id=%d, depends_on=%d, weight=%d, exclusive=%d)"),
+  ATLTRACE("[wpthook] - Requests::SetPriority(socket_id=%d, stream_id=%d, depends_on=%d, weight=%d, exclusive=%d)",
             socket_id, stream_id, depends_on, weight, exclusive);
   EnterCriticalSection(&cs);
   Request * request = GetActiveRequest(socket_id, stream_id);

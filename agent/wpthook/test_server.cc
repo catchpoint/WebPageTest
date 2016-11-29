@@ -170,10 +170,8 @@ void TestServer::MongooseCallback(enum mg_event event,
     //OutputDebugStringA(CStringA(request_info->uri) + CStringA("?") + request_info->query_string);
     // Keep track of CPU utilization so we will know what it looks like when we
     // get a request to actually start.
-    WptTrace(loglevel::kFrequentEvent, _T("[wpthook] HTTP Request: %s\n"), 
-                    (LPCTSTR)CA2T(request_info->uri, CP_UTF8));
-    WptTrace(loglevel::kFrequentEvent, _T("[wpthook] HTTP Query String: %s\n"), 
-                    (LPCTSTR)CA2T(request_info->query_string, CP_UTF8));
+    ATLTRACE("[wpthook] HTTP Request: %s\n", request_info->uri);
+    ATLTRACE("[wpthook] HTTP Query String: %s\n", request_info->query_string);
     if (strcmp(request_info->uri, "/task") == 0) {
       if (!stored_ua_string_) {
         if (!test_state_.shared_.OverrodeUAString()) {

@@ -104,9 +104,7 @@ void * TrackDns::LookupStart(CString& name) {
   if (!name.GetLength() || name == _T("127.0.0.1"))
     return NULL;
 
-  WptTrace(loglevel::kFrequentEvent, 
-            _T("[wshook] (%d) DNS Lookup for '%s' started\n"), 
-              GetCurrentThreadId(), (LPCTSTR)name);
+  ATLTRACE(L"[wshook] (%d) DNS Lookup for '%s' started", GetCurrentThreadId(), (LPCWSTR)name);
   CheckCDN(name, name);
 
   // we need to check for overrides even if we aren't active
@@ -140,10 +138,9 @@ void TrackDns::LookupAddress(void * context, ULONG &addr) {
     LeaveCriticalSection(&cs);
     IN_ADDR address;
     address.S_un.S_addr = addr;
-    WptTrace(loglevel::kFrequentEvent, 
-      _T("[wshook] (%d) DNS Lookup address: %s -> %d.%d.%d.%d\n"), 
+    ATLTRACE(L"[wshook] (%d) DNS Lookup address: %s -> %d.%d.%d.%d", 
       GetCurrentThreadId(),
-      info->_name,
+      (LPCWSTR)info->_name,
       address.S_un.S_un_b.s_b1
       ,address.S_un.S_un_b.s_b2
       ,address.S_un.S_un_b.s_b3
@@ -161,8 +158,7 @@ void TrackDns::LookupAlias(CString name, CString alias) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TrackDns::LookupDone(void * context, int result) {
-  WptTrace(loglevel::kFrequentEvent, 
-            _T("[wshook] (%d) DNS Lookup complete\n"), GetCurrentThreadId());
+  ATLTRACE("[wshook] (%d) DNS Lookup complete", GetCurrentThreadId());
 
   if (context) {
     DnsInfo * info = (DnsInfo *)context;

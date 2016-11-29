@@ -167,7 +167,7 @@ void WinInetHook::Init() {
     return;
   g_hook = this;
 
-  WptTrace(loglevel::kProcess, _T("[wpthook] WinInetHook::Init()\n"));
+  ATLTRACE("[wpthook] WinInetHook::Init()");
 
   LoadLibrary(_T("wininet.dll"));
   MH_CreateHookApi(L"wininet.dll", "InternetConnectW", InternetConnectW_Hook, (LPVOID *)&_InternetConnectW);
@@ -432,7 +432,7 @@ HINTERNET WinInetHook::HttpOpenRequestW(HINTERNET hConnect, LPCWSTR lpszVerb,
   LPCWSTR lpszObjectName, LPCWSTR lpszVersion, LPCWSTR lpszReferrer, 
   LPCWSTR FAR * lplpszAcceptTypes, DWORD dwFlags, DWORD_PTR dwContext) {
 
-  AtlTrace(_T("WinInetHook::HttpOpenRequestW"));
+  ATLTRACE(_T("WinInetHook::HttpOpenRequestW"));
 
   HINTERNET ret = NULL;
   void * dlgContext = NULL;

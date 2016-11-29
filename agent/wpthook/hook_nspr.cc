@@ -105,7 +105,7 @@ void NsprHook::Init() {
 
   if (_PR_FileDesc2NativeHandle != NULL) {
     // Hook Firefox.
-    WptTrace(loglevel::kProcess, _T("[wpthook] NsprHook::Init()\n"));
+    ATLTRACE("[wpthook] NsprHook::Init()");
 
     LoadLibrary(_T("nss3.dll"));
     LoadLibrary(_T("nspr4.dll"));

@@ -191,7 +191,7 @@ void TestState::IncrementStep(void) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TestState::Start() {
-  WptTrace(loglevel::kFunction, _T("[wpthook] TestState::Start()\n"));
+  ATLTRACE("[wpthook] TestState::Start()");
   Reset();
   UpdateStoredBrowserVersion();
   if (_test._log_data) {
@@ -234,8 +234,7 @@ void TestState::Start() {
 -----------------------------------------------------------------------------*/
 void TestState::ActivityDetected() {
   if (_active) {
-    WptTrace(loglevel::kFunction,
-             _T("[wpthook] TestState::ActivityDetected()\n"));
+    ATLTRACE("[wpthook] TestState::ActivityDetected()");
     QueryPerformanceCounter(&_last_activity);
     if (!_first_activity.QuadPart)
       _first_activity.QuadPart = _last_activity.QuadPart;
@@ -246,8 +245,7 @@ void TestState::ActivityDetected() {
 -----------------------------------------------------------------------------*/
 void TestState::OnNavigate() {
   if (_active) {
-    WptTrace(loglevel::kFunction,
-             _T("[wpthook] TestState::OnNavigate()\n"));
+    ATLTRACE("[wpthook] TestState::OnNavigate()");
     UpdateBrowserWindow();
     _dom_interactive = 0;
     _dom_loading = 0;
@@ -301,14 +299,12 @@ void TestState::RecordTime(CString name, DWORD time, LARGE_INTEGER *out_time) {
                            _ms_frequency.QuadPart);
   }
   if (time > 0 && time <= elapsed_time) {
-    WptTrace(loglevel::kFrequentEvent, 
-             _T("[wpthook] - Record %s from extension: %dms\n"), name, time);
+    ATLTRACE(L"[wpthook] - Record %s from extension: %dms", (LPCWSTR)name, time);
     out_time->QuadPart = _step_start.QuadPart;
     out_time->QuadPart += _ms_frequency.QuadPart * time;
   } else {
-    WptTrace(loglevel::kFrequentEvent,
-             _T("[wpthook] - Record %s from hook: %dms (instead of %dms)\n"),
-             name, elapsed_time, time);
+    ATLTRACE(L"[wpthook] - Record %s from hook: %dms (instead of %dms)",
+             (LPCWSTR)name, elapsed_time, time);
   }
 }
 
@@ -371,8 +367,7 @@ void TestState::OnAllDOMElementsLoaded(DWORD load_time) {
     QueryPerformanceCounter(&_dom_elements_time);
     RecordTime(_T("_dom_elements_time"), load_time, &_dom_elements_time);
     _test._dom_element_check = false;
-    WptTrace(loglevel::kFrequentEvent, 
-      _T("[wpthook] - TestState::OnAllDOMElementsLoaded() Resetting dom element check state. "));
+    ATLTRACE("[wpthook] - TestState::OnAllDOMElementsLoaded() Resetting dom element check state.");
   }
 }
 
@@ -397,10 +392,9 @@ bool TestState::IsDone() {
       DWORD inactive_ms = ElapsedMs(_last_activity, now);
       DWORD navigated = navigated_ ? 1:0;
       DWORD navigating = navigating_ ? 1:0;
-      WptTrace(loglevel::kFunction,
-               _T("[wpthook] - TestState::IsDone() ")
-               _T("Test: %dms, load: %dms, inactive: %dms, test timeout:%d,")
-               _T(" navigating:%d, navigated: %d\n"),
+      ATLTRACE("[wpthook] - TestState::IsDone() "
+               "Test: %dms, load: %dms, inactive: %dms, test timeout:%d,"
+               " navigating:%d, navigated: %d",
                test_ms, load_ms, inactive_ms, _test._measurement_timeout,
                navigating, navigated);
       bool is_loaded = (navigated_ &&
@@ -425,9 +419,7 @@ bool TestState::IsDone() {
       }
     }
     if (is_page_done) {
-      WptTrace(loglevel::kFrequentEvent,
-                _T("[wpthook] - TestState::IsDone() -> true; %s"),
-                done_reason);
+      ATLTRACE(L"[wpthook] - TestState::IsDone() -> true; %s", (LPCWSTR)done_reason);
       Done();
       is_done = true;
     }
@@ -438,7 +430,7 @@ bool TestState::IsDone() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TestState::Done(bool force) {
-  WptTrace(loglevel::kFunction, _T("[wpthook] - **** TestState::Done()\n"));
+  ATLTRACE("[wpthook] - **** TestState::Done()");
   if (_active) {
     GetCPUTime(_end_cpu_time, _end_total_time);
     _screen_capture.Capture(_frame_window, CapturedImage::FULLY_LOADED);
@@ -485,8 +477,7 @@ void TestState::UpdateBrowserWindow(DWORD current_width,
       browser_process_id = GetParentProcessId(browser_process_id);
     HWND old_frame = _frame_window;
     if (::FindBrowserWindow(browser_process_id, _frame_window)) {
-      WptTrace(loglevel::kFunction, 
-                _T("[wpthook] - Frame Window: %08X\n"), _frame_window);
+      ATLTRACE("[wpthook] - Frame Window: %08X", _frame_window);
     }
     // position the browser window
     bool updated = false;
@@ -494,8 +485,7 @@ void TestState::UpdateBrowserWindow(DWORD current_width,
       if (current_width && current_height &&
           (_test._viewport_width != current_width ||
            _test._viewport_height != current_height)) {
-        WptTrace(loglevel::kFunction, 
-                  _T("[wpthook] - Adjusting viewport from %dx%d to %dx%d\n"),
+        ATLTRACE("[wpthook] - Adjusting viewport from %dx%d to %dx%d",
                   current_width, current_height,
                   _test._viewport_width, _test._viewport_height);
         RECT browser;
@@ -658,8 +648,7 @@ void TestState::TitleSet(CString title) {
     if (!_title_time.QuadPart || new_title.Compare(_title)) {
       QueryPerformanceCounter(&_title_time);
       _title = new_title;
-      WptTrace(loglevel::kFunction, _T("[wpthook] TestState::TitleSet(%s)\n"),
-                _title);
+      ATLTRACE(L"[wpthook] TestState::TitleSet(%s)", (LPCWSTR)_title);
     }
   }
 }

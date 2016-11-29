@@ -43,7 +43,7 @@ bool WptTestDriver::Start() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool WptTestDriver::Load(CString& test) {
-  WptTrace(loglevel::kFunction, _T("[wptdriver] - WptTestDriver::Load\n"));
+  ATLTRACE("[wptdriver] - WptTestDriver::Load");
   bool ret = WptTest::Load(test);
 
   if (_directory.GetLength() )

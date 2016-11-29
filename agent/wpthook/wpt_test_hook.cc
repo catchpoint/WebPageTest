@@ -19,7 +19,7 @@ WptTestHook::~WptTestHook(void) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptTestHook::LoadFromFile() {
-  WptTrace(loglevel::kFunction, _T("[wpthook] - WptTestHook::LoadFromFile\n"));
+  ATLTRACE("[wpthook] - WptTestHook::LoadFromFile");
 
   HANDLE file = CreateFile(_test_file, GENERIC_READ,0,0, OPEN_EXISTING, 0, 0);
   if (file != INVALID_HANDLE_VALUE) {

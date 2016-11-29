@@ -73,8 +73,7 @@ OptimizationChecks::~OptimizationChecks(void) {
  Perform the various native optimization checks.
 -----------------------------------------------------------------------------*/
 void OptimizationChecks::Check(void) {
-  WptTrace(loglevel::kFunction,
-    _T("[wpthook] - OptimizationChecks::Check()\n"));
+  ATLTRACE("[wpthook] - OptimizationChecks::Check()");
 
   CheckKeepAlive();
   CheckGzip();
@@ -86,8 +85,7 @@ void OptimizationChecks::Check(void) {
   CheckCustomRules();
   _checked = true;
 
-  WptTrace(loglevel::kFunction,
-    _T("[wpthook] - OptimizationChecks::Check() complete\n"));
+  ATLTRACE("[wpthook] - OptimizationChecks::Check() complete");
 }
 
 /*-----------------------------------------------------------------------------
@@ -151,9 +149,7 @@ void OptimizationChecks::CheckKeepAlive()
   // average the Cache scores of all of the objects for the page
   if( count )
     _keep_alive_score = total / count;
-  WptTrace(loglevel::kFunction,
-    _T("[wpthook] - OptChecks::CheckKeepAlive() keep-alive score: %d\n"),
-    _keep_alive_score);
+  ATLTRACE("[wpthook] - OptChecks::CheckKeepAlive() keep-alive score: %d", _keep_alive_score);
 }
 
 /*-----------------------------------------------------------------------------
@@ -254,9 +250,7 @@ void OptimizationChecks::CheckGzip()
   // average the Cache scores of all of the objects for the page
   if( count && totalBytes )
     _gzip_score = targetBytes * 100 / totalBytes;
-  WptTrace(loglevel::kFunction,
-    _T("[wpthook] - OptChecks::CheckGzip() gzip score: %d\n"),
-    _gzip_score);
+  ATLTRACE("[wpthook] - OptChecks::CheckGzip() gzip score: %d", _gzip_score);
 }
 
 /*-----------------------------------------------------------------------------
@@ -270,8 +264,7 @@ static bool DecodeImage(CxImage& img, BYTE * buffer, size_t size,
   __try{
     ret = img.Decode(buffer, (DWORD)size, imagetype);
   }__except(1){
-    WptTrace(loglevel::kError,
-      _T("[wpthook] - Exception when decoding image"));
+    ATLTRACE("[wpthook] - Exception when decoding image");
   }
   return ret;
 }
@@ -401,9 +394,7 @@ void OptimizationChecks::CheckImageCompression()
   // Calculate the score based on target/total.
   if( count && totalBytes )
     _image_compression_score = targetBytes * 100 / totalBytes;
-  WptTrace(loglevel::kFunction,
-    _T("[wpthook] - OptChecks::CheckImageCompression() score: %d\n"),
-    _image_compression_score);
+  ATLTRACE("[wpthook] - OptChecks::CheckImageCompression() score: %d", _image_compression_score);
 }
 
 /*-----------------------------------------------------------------------------
@@ -448,9 +439,7 @@ void OptimizationChecks::CheckCacheStatic()
   // average the Cache scores of all of the objects for the page
   if( count )
     _cache_score = total / count;
-  WptTrace(loglevel::kFunction,
-    _T("[wpthook] - OptimizationChecks::CheckCacheStatic() Cache score: %d\n"),
-    _cache_score);
+  ATLTRACE("[wpthook] - OptimizationChecks::CheckCacheStatic() Cache score: %d", _cache_score);
 }
 
 
@@ -518,9 +507,7 @@ void OptimizationChecks::CheckCombine() {
       0);
   }
 
-  WptTrace(loglevel::kFunction,
-    _T("[wpthook] - OptimizationChecks::CheckCombine() combine score: %d\n"),
-    _combine_score);
+  ATLTRACE("[wpthook] - OptimizationChecks::CheckCombine() combine score: %d", _combine_score);
 }
 
 /*-----------------------------------------------------------------------------
@@ -561,9 +548,7 @@ void OptimizationChecks::CheckCDN() {
   if( count )
     _static_cdn_score = total/count;
 
-  WptTrace(loglevel::kFunction,
-    _T("[wpthook] - OptimizationChecks::CheckCDN() static cdn score: %d\n"),
-    _static_cdn_score);
+  ATLTRACE("[wpthook] - OptimizationChecks::CheckCDN() static cdn score: %d", _static_cdn_score);
 }
 
 /*-----------------------------------------------------------------------------
@@ -727,9 +712,7 @@ void OptimizationChecks::CheckProgressiveJpeg() {
     _progressive_jpeg_score =
       (int)((progressive_bytes * 100.0 / total_bytes) + 0.5);
   }
-  WptTrace(loglevel::kFunction,
-    _T("[wpthook] - OptChecks::CheckProgressiveJpeg() score: %d\n"),
-    _progressive_jpeg_score);
+  ATLTRACE("[wpthook] - OptChecks::CheckProgressiveJpeg() score: %d", _progressive_jpeg_score);
 }
 
 /*-----------------------------------------------------------------------------

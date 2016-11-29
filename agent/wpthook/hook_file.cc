@@ -64,7 +64,7 @@ void FileHook::Init() {
   }
 
   g_hook = this;
-  WptTrace(loglevel::kProcess, _T("[wpthook] FileHook::Init()\n"));
+  ATLTRACE("[wpthook] FileHook::Init()");
 
   LoadLibrary(_T("kernel32.dll"));
   MH_CreateHookApi(L"kernel32.dll", "CreateFileW", CreateFileW_Hook, (LPVOID *)&CreateFileW_);

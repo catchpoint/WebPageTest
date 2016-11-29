@@ -489,9 +489,7 @@ Request::Request(TestState& test_state, DWORD socket_id, DWORD stream_id,
   _is_ssl = _sockets.IsSslById(socket_id);
   InitializeCriticalSection(&cs);
 
-  WptTrace(loglevel::kFunction,
-           _T("[wpthook] - new request on socket %d stream %d\n"), 
-           socket_id, stream_id);
+  ATLTRACE("[wpthook] - new request on socket %d stream %d", socket_id, stream_id);
 }
 
 
@@ -504,8 +502,7 @@ Request::~Request(void) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Request::DataIn(DataChunk& chunk) {
-  WptTrace(loglevel::kFunction, 
-      _T("[wpthook] - Request::DataIn(len=%d)"), chunk.GetLength());
+  ATLTRACE("[wpthook] - Request::DataIn(len=%d)", chunk.GetLength());
 
   EnterCriticalSection(&cs);
   if (_is_active) {
@@ -530,17 +527,14 @@ bool Request::ModifyDataOut(DataChunk& chunk) {
     is_modified = chunk.ModifyDataOut(_test);
   }
   LeaveCriticalSection(&cs);
-  WptTrace(loglevel::kFunction,
-      _T("[wpthook] - Request::ModifyDataOut(len=%d) -> %d"),
-      chunk.GetLength(), is_modified);
+  ATLTRACE("[wpthook] - Request::ModifyDataOut(len=%d) -> %d", chunk.GetLength(), is_modified);
   return is_modified;
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Request::DataOut(DataChunk& chunk) {
-  WptTrace(loglevel::kFunction,
-      _T("[wpthook] - Request::DataOut(len=%d)"), chunk.GetLength());
+  ATLTRACE("[wpthook] - Request::DataOut(len=%d)", chunk.GetLength());
 
   EnterCriticalSection(&cs);
   if (!_data_sent) {
@@ -565,8 +559,7 @@ void Request::DataOut(DataChunk& chunk) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Request::HeaderIn(const char * header, const char * value, bool pushed) {
-  WptTrace(loglevel::kFunction, 
-      _T("[wpthook] - Request::HeaderIn('%S', '%S')"), header, value);
+  ATLTRACE("[wpthook] - Request::HeaderIn('%s', '%s')", header, value);
 
   EnterCriticalSection(&cs);
   if (_is_active) {
@@ -583,8 +576,7 @@ void Request::HeaderIn(const char * header, const char * value, bool pushed) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Request::ObjectDataIn(DataChunk& chunk) {
-  WptTrace(loglevel::kFunction, 
-      _T("[wpthook] - Request::ObjectDataIn(len=%d)"), chunk.GetLength());
+  ATLTRACE("[wpthook] - Request::ObjectDataIn(len=%d)", chunk.GetLength());
 
   EnterCriticalSection(&cs);
   if (_is_active) {
@@ -599,7 +591,7 @@ void Request::ObjectDataIn(DataChunk& chunk) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Request::BytesIn(size_t len) {
-  WptTrace(loglevel::kFunction, _T("[wpthook] - Request::BytesIn(%d)"), len);
+  ATLTRACE("[wpthook] - Request::BytesIn(%d)", len);
   EnterCriticalSection(&cs);
   if (_is_active) {
     LARGE_INTEGER now;
@@ -613,8 +605,7 @@ void Request::BytesIn(size_t len) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Request::HeaderOut(const char * header, const char * value, bool pushed) {
-  WptTrace(loglevel::kFunction, 
-      _T("[wpthook] - Request::HeaderOut('%S', '%S')"), header, value);
+  ATLTRACE("[wpthook] - Request::HeaderOut('%s', '%s')", header, value);
 
   EnterCriticalSection(&cs);
   if (!_data_sent) {
@@ -632,8 +623,7 @@ void Request::HeaderOut(const char * header, const char * value, bool pushed) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Request::ObjectDataOut(DataChunk& chunk) {
-  WptTrace(loglevel::kFunction,
-      _T("[wpthook] - Request::ObjectDataOut(len=%d)"), chunk.GetLength());
+  ATLTRACE("[wpthook] - Request::ObjectDataOut(len=%d)", chunk.GetLength());
 
   EnterCriticalSection(&cs);
   if (!_data_sent) {
@@ -649,7 +639,7 @@ void Request::ObjectDataOut(DataChunk& chunk) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Request::BytesOut(size_t len) {
-  WptTrace(loglevel::kFunction, _T("[wpthook] - Request::BytesOut(%d)"), len);
+  ATLTRACE("[wpthook] - Request::BytesOut(%d)", len);
   EnterCriticalSection(&cs);
   if (_is_active)
     _bytes_out += (DWORD)len;
@@ -659,7 +649,7 @@ void Request::BytesOut(size_t len) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Request::SocketClosed() {
-  WptTrace(loglevel::kFunction, _T("[wpthook] - Request::SocketClosed()\n"));
+  ATLTRACE("[wpthook] - Request::SocketClosed()");
 
   EnterCriticalSection(&cs);
   if (_is_active) {
@@ -965,7 +955,7 @@ ULONG Request::GetPeerAddress() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Request::SetPriority(int depends_on, int weight, int exclusive) {
-  WptTrace(loglevel::kFunction, _T("[wpthook] - Request::SetPriority(), depends on %d, weight %d, exclusive %d"), depends_on, weight, exclusive);
+  ATLTRACE("[wpthook] - Request::SetPriority(), depends on %d, weight %d, exclusive %d", depends_on, weight, exclusive);
   _h2_priority_depends_on = depends_on;
   _h2_priority_weight = weight;
   _h2_priority_exclusive = exclusive;

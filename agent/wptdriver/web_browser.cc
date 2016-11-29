@@ -873,17 +873,22 @@ void WebBrowser::CreateChromeSymlink() {
 -----------------------------------------------------------------------------*/
 bool WebBrowser::RunWebdriverTest() {
   bool ok = false;
-  OutputDebugStringA("RunWebdriverTest");
+  ATLTRACE(L"WebBrowser::RunWebdriverTest");
   CString json_file = _test.SaveJson();
   if (!json_file.IsEmpty()) {
+    TCHAR recorder_path[MAX_PATH];
+    GetModuleFileName(NULL, recorder_path, _countof(recorder_path));
+    lstrcpy(PathFindFileName(recorder_path), _T("wptRecord.exe"));
     CString options;
-    options.Format(_T("-t \"%s\""), (LPCTSTR)json_file);
+    options.Format(_T("-t \"%s\" -r \"%s\""), (LPCTSTR)json_file, (LPCTSTR)recorder_path);
+    ATLTRACE(options);
     _status.Set(_T("Running webdriver test..."));
     if (RunPythonScript(_T("webdriver\\edge.py"), options)) {
       _status.Set(_T("Test complete, processing result..."));
       g_shared->SetTestResult(0);
       ok = true;
     } else {
+      ATLTRACE(L"RunPythonScript failed");
       _status.Set(_T("Test failed"));
     }
     DeleteFile(json_file);
