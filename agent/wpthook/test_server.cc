@@ -568,7 +568,12 @@ bool TestServer::OkToStart(bool trigger_start) {
     if (elapsed > 30 && trigger_start) {
       started_ = true;
     } else {
-      // calculate CPU utilization
+      // calculate CPU utilization and adjust for multiple cores
+      double target_cpu = 20.0;
+      SYSTEM_INFO sysinfo;
+      GetSystemInfo(&sysinfo);
+      if (sysinfo.dwNumberOfProcessors > 1)
+        target_cpu = target_cpu / (double)sysinfo.dwNumberOfProcessors;
       FILETIME idle_time, kernel_time, user_time;
       if (GetSystemTimes(&idle_time, &kernel_time, &user_time)) {
         ULARGE_INTEGER k, u, i;
@@ -584,9 +589,9 @@ bool TestServer::OkToStart(bool trigger_start) {
           __int64 kernel = k.QuadPart - last_cpu_kernel_.QuadPart;
           __int64 user = u.QuadPart - last_cpu_user_.QuadPart;
           if (kernel || user) {
-            int cpu_utilization = (int)((((kernel + user) - idle) * 100) 
-                                          / (kernel + user));
-            if (cpu_utilization < 25)
+            double cpu_utilization = (((double)(kernel + user - idle) * 100.0) 
+                                          / (double)(kernel + user));
+            if (cpu_utilization < target_cpu)
               started_ = true;
           }
         }

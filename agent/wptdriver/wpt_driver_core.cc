@@ -167,29 +167,95 @@ bool WptDriverCore::Startup() {
 /*-----------------------------------------------------------------------------
   Main thread for processing work
 -----------------------------------------------------------------------------*/
+void WptDriverCore::WaitForStartup() {
+  LARGE_INTEGER start, freq, now;
+  double elapsed = 0;
+  QueryPerformanceFrequency(&freq);
+  QueryPerformanceCounter(&start);
+  while (!_exit && elapsed < _settings._startup_delay) {
+    Sleep(1000);
+    QueryPerformanceCounter(&now);
+    elapsed = (double)(now.QuadPart - start.QuadPart) / (double)freq.QuadPart;
+  }
+
+  // Now wait up to 10 minutes for the CPU to go idle (no single core over 20%)
+  QueryPerformanceCounter(&start);
+  elapsed = 0;
+  bool is_idle = false;
+  double target_cpu = 20.0;
+  SYSTEM_INFO sysinfo;
+  GetSystemInfo(&sysinfo);
+  if (sysinfo.dwNumberOfProcessors > 1)
+    target_cpu = target_cpu / (double)sysinfo.dwNumberOfProcessors;
+  ULARGE_INTEGER last_k, last_u, last_i;
+  FILETIME idle_time, kernel_time, user_time;
+  if (GetSystemTimes(&idle_time, &kernel_time, &user_time)) {
+    _status.Set(_T("Waiting for the CPU to go idle..."));
+    last_k.LowPart = kernel_time.dwLowDateTime;
+    last_k.HighPart = kernel_time.dwHighDateTime;
+    last_u.LowPart = user_time.dwLowDateTime;
+    last_u.HighPart = user_time.dwHighDateTime;
+    last_i.LowPart = idle_time.dwLowDateTime;
+    last_i.HighPart = idle_time.dwHighDateTime;
+    while (!_exit && elapsed < 600 && !is_idle) {
+      Sleep(1000);
+      QueryPerformanceCounter(&now);
+      elapsed = (double)(now.QuadPart - start.QuadPart) / (double)freq.QuadPart;
+      if (GetSystemTimes(&idle_time, &kernel_time, &user_time)) {
+        ULARGE_INTEGER k, u, i;
+        k.LowPart = kernel_time.dwLowDateTime;
+        k.HighPart = kernel_time.dwHighDateTime;
+        u.LowPart = user_time.dwLowDateTime;
+        u.HighPart = user_time.dwHighDateTime;
+        i.LowPart = idle_time.dwLowDateTime;
+        i.HighPart = idle_time.dwHighDateTime;
+        __int64 idle = i.QuadPart - last_i.QuadPart;
+        __int64 kernel = k.QuadPart - last_k.QuadPart;
+        __int64 user = u.QuadPart - last_u.QuadPart;
+        if (kernel || user) {
+          double cpu_utilization = (((double)(kernel + user - idle) * 100.0) / (double)(kernel + user));
+          _status.Set(_T("Waiting for the CPU to go idle - %0.2f%%, target %0.2F%%"), cpu_utilization, target_cpu);
+          if (cpu_utilization < target_cpu)
+            is_idle = true;
+        }
+        last_i.QuadPart = i.QuadPart;
+        last_k.QuadPart = k.QuadPart;
+        last_u.QuadPart = u.QuadPart;
+      }
+    }
+    _status.Set(_T("Continuing startup..."));
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Main thread for processing work
+-----------------------------------------------------------------------------*/
 void WptDriverCore::WorkThread(void) {
   if (Startup()) {
     #ifndef DEBUG
-    Sleep(_settings._startup_delay * SECONDS_TO_MS);
+    WaitForStartup();
     #endif
 
-    WaitForSingleObject(_testing_mutex, INFINITE);
-    Init();  // do initialization and machine configuration
-    _status.Set(_T("Checking for software updates..."));
-    _installing = true;
-    bool ok = false;
-    while (!_exit && !ok) {
-      ok = _settings.UpdateSoftware(true);
-      if (!ok) {
-        _status.Set(_T("Software update failed, waiting 5 minutes and trying again..."));
-        for (int count = 0; count < 300 && !_exit; count++)
-          Sleep(1000);
+    if (!_exit) {
+      WaitForSingleObject(_testing_mutex, INFINITE);
+      _status.Set(_T("Initializing..."));
+      Init();  // do initialization and machine configuration
+      _status.Set(_T("Checking for software updates..."));
+      _installing = true;
+      bool ok = false;
+      while (!_exit && !ok) {
+        ok = _settings.UpdateSoftware(true);
+        if (!ok) {
+          _status.Set(_T("Software update failed, waiting 5 minutes and trying again..."));
+          for (int count = 0; count < 300 && !_exit; count++)
+            Sleep(1000);
+        }
       }
-    }
-    _installing = false;
-    ReleaseMutex(_testing_mutex);
+      _installing = false;
+      ReleaseMutex(_testing_mutex);
 
-    _status.Set(_T("Running..."));
+      _status.Set(_T("Running..."));
+    }
   }
   while (!_exit && !NeedsReboot()) {
     if (_settings.CheckBrowsers()) {
@@ -280,6 +346,7 @@ void WptDriverCore::WorkThread(void) {
         Sleep(1000);
     }
   }
+  _status.Set(_T("Cleaning up..."));
   ResetBrowsers();
   Cleanup();
 }
