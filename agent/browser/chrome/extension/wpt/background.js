@@ -264,14 +264,20 @@ function wptGetTask() {
   }
 }
 
-function wptSendEvent(event_name, query_string, data) {
-  try {
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'http://127.0.0.1:8888/event/' + event_name + query_string,
-             true);
-    xhr.send(data);
-  } catch (err) {
-    wpt.LOG.warning('Error sending page load XHR: ' + err);
+function wptSendEvent(event_name, query_string, data, attempt) {
+  // retry on error up to 10 times
+  var attempt = (typeof attempt !== 'undefined') ? attempt : 1;
+  if (attempt < 10) {
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.onerror = function() {
+        wptSendEvent(event_name, query_string, data, attempt + 1);
+      }
+      xhr.open('POST', 'http://127.0.0.1:8888/event/' + event_name + query_string, true);
+      xhr.send(data);
+    } catch (err) {
+      wpt.LOG.warning('Error sending XHR: ' + err);
+    }
   }
 }
 
@@ -453,118 +459,118 @@ function wptExecuteTask(task) {
       g_active = false;
       wpt.chromeDebugger.SetActive(g_active);
     }
-  // Decode and execute the actual command.
-  // Commands are all lowercase at this point.
-  wpt.LOG.info('Running task ' + task.action + ' ' + task.target);
-  switch (task.action) {
-    case 'navigate':
-      g_processing_task = true;
-      g_commandRunner.doNavigate(task.target, wptTaskCallback);
-      break;
-    case 'exec':
-      g_processing_task = true;
-      wpt.chromeDebugger.Exec(task.target, wptTaskCallback);
-      break;
-    case 'setcookie':
-      g_commandRunner.doSetCookie(task.target, task.value);
-      break;
-    case 'block':
-      g_commandRunner.doBlock(task.target);
-      break;
-    case 'setdomelement':
-      // Sending request to set the DOM element has to happen only at the
-      // navigate event after the content script is loaded. So, this just
-      // sets the global variable.
-      wpt.commands.g_domElements.push(task.target);
-      break;
-    case 'click':
-      g_processing_task = true;
-      g_commandRunner.doClick(task.target, wptTaskCallback);
-      break;
-    case 'setinnerhtml':
-      g_processing_task = true;
-      g_commandRunner.doSetInnerHTML(task.target, task.value, wptTaskCallback);
-      break;
-    case 'setinnertext':
-      g_processing_task = true;
-      g_commandRunner.doSetInnerText(task.target, task.value, wptTaskCallback);
-      break;
-    case 'setvalue':
-      g_processing_task = true;
-      g_commandRunner.doSetValue(task.target, task.value, wptTaskCallback);
-      break;
-    case 'submitform':
-      g_processing_task = true;
-      g_commandRunner.doSubmitForm(task.target, wptTaskCallback);
-      break;
-    case 'clearcache':
-      g_processing_task = true;
-      g_commandRunner.doClearCache(task.target, wptTaskCallback);
-      break;
-    case 'capturetimeline':
-      wpt.chromeDebugger.CaptureTimeline(parseInt(task.target));
-      break;
-    case 'capturetrace':
-      wpt.chromeDebugger.CaptureTrace(task.target);
-      break;
-    case 'noscript':
-      g_commandRunner.doNoScript();
-      break;
-    case 'overridehost':
-      g_overrideHosts[task.target] = task.value;
-      g_manipulatingHeaders = true;
-      wptHookRequests();
-      break;
-    case 'addheader':
-      var separator = task.target.indexOf(":");
-      if (separator > 0) {
-        g_addHeaders.push({'name' : task.target.substr(0, separator).trim(),
-                           'value' : task.target.substr(separator + 1).trim(),
-                           'filter' : typeof(task.value) === 'undefined' ? '' : task.value});
+    // Decode and execute the actual command.
+    // Commands are all lowercase at this point.
+    wpt.LOG.info('Running task ' + task.action + ' ' + task.target);
+    switch (task.action) {
+      case 'navigate':
+        g_processing_task = true;
+        g_commandRunner.doNavigate(task.target, wptTaskCallback);
+        break;
+      case 'exec':
+        g_processing_task = true;
+        wpt.chromeDebugger.Exec(task.target, wptTaskCallback);
+        break;
+      case 'setcookie':
+        g_commandRunner.doSetCookie(task.target, task.value);
+        break;
+      case 'block':
+        g_commandRunner.doBlock(task.target);
+        break;
+      case 'setdomelement':
+        // Sending request to set the DOM element has to happen only at the
+        // navigate event after the content script is loaded. So, this just
+        // sets the global variable.
+        wpt.commands.g_domElements.push(task.target);
+        break;
+      case 'click':
+        g_processing_task = true;
+        g_commandRunner.doClick(task.target, wptTaskCallback);
+        break;
+      case 'setinnerhtml':
+        g_processing_task = true;
+        g_commandRunner.doSetInnerHTML(task.target, task.value, wptTaskCallback);
+        break;
+      case 'setinnertext':
+        g_processing_task = true;
+        g_commandRunner.doSetInnerText(task.target, task.value, wptTaskCallback);
+        break;
+      case 'setvalue':
+        g_processing_task = true;
+        g_commandRunner.doSetValue(task.target, task.value, wptTaskCallback);
+        break;
+      case 'submitform':
+        g_processing_task = true;
+        g_commandRunner.doSubmitForm(task.target, wptTaskCallback);
+        break;
+      case 'clearcache':
+        g_processing_task = true;
+        g_commandRunner.doClearCache(task.target, wptTaskCallback);
+        break;
+      case 'capturetimeline':
+        wpt.chromeDebugger.CaptureTimeline(parseInt(task.target));
+        break;
+      case 'capturetrace':
+        wpt.chromeDebugger.CaptureTrace(task.target);
+        break;
+      case 'noscript':
+        g_commandRunner.doNoScript();
+        break;
+      case 'overridehost':
+        g_overrideHosts[task.target] = task.value;
         g_manipulatingHeaders = true;
         wptHookRequests();
-      }
-      break;
-    case 'setheader':
-      var separator = task.target.indexOf(":");
-      if (separator > 0) {
-        g_setHeaders.push({'name' : task.target.substr(0, separator).trim(),
-                           'value' : task.target.substr(separator + 1).trim(),
-                           'filter' : typeof(task.value) === 'undefined' ? '' : task.value});
-        g_manipulatingHeaders = true;
-        wptHookRequests();
-      }
-      break;
-    case 'resetheaders':
-      g_addHeaders = [];
-      g_setHeaders = [];
-      break;
-    case 'appenduseragent':
-      wpt.chromeDebugger.SetUserAgent(navigator.userAgent + ' ' + task.target);
-      break;
-    case 'collectstats':
-      g_processing_task = true;
-      wpt.chromeDebugger.CollectStats(task.target, wptTaskCallback);
-      break;
-    case 'emulatemobile':
-      wpt.chromeDebugger.EmulateMobile(task.target);
-      break;
-    case 'checkresponsive':
-      g_processing_task = true;
-      g_commandRunner.doCheckResponsive(wptTaskCallback);
-      break;
-    case 'hascustomcommandline':
-      g_hasCustomCommandLine = true;
-      break;
+        break;
+      case 'addheader':
+        var separator = task.target.indexOf(":");
+        if (separator > 0) {
+          g_addHeaders.push({'name' : task.target.substr(0, separator).trim(),
+                             'value' : task.target.substr(separator + 1).trim(),
+                             'filter' : typeof(task.value) === 'undefined' ? '' : task.value});
+          g_manipulatingHeaders = true;
+          wptHookRequests();
+        }
+        break;
+      case 'setheader':
+        var separator = task.target.indexOf(":");
+        if (separator > 0) {
+          g_setHeaders.push({'name' : task.target.substr(0, separator).trim(),
+                             'value' : task.target.substr(separator + 1).trim(),
+                             'filter' : typeof(task.value) === 'undefined' ? '' : task.value});
+          g_manipulatingHeaders = true;
+          wptHookRequests();
+        }
+        break;
+      case 'resetheaders':
+        g_addHeaders = [];
+        g_setHeaders = [];
+        break;
+      case 'appenduseragent':
+        wpt.chromeDebugger.SetUserAgent(navigator.userAgent + ' ' + task.target);
+        break;
+      case 'collectstats':
+        g_processing_task = true;
+        wpt.chromeDebugger.CollectStats(task.target, wptTaskCallback);
+        break;
+      case 'emulatemobile':
+        wpt.chromeDebugger.EmulateMobile(task.target);
+        break;
+      case 'checkresponsive':
+        g_processing_task = true;
+        g_commandRunner.doCheckResponsive(wptTaskCallback);
+        break;
+      case 'hascustomcommandline':
+        g_hasCustomCommandLine = true;
+        break;
 
-    default:
-      wpt.LOG.error('Unimplemented command: ', task);
-  }
-
-  if (!g_active && !g_processing_task)
-    window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT);
+      default:
+        wpt.LOG.error('Unimplemented command: ', task);
     }
+
+    if (!g_active && !g_processing_task)
+      window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT);
   }
+}
 
 // start out by grabbing the main tab and forcing a navigation to
 // the local blank page so we are guaranteed to see the navigation
