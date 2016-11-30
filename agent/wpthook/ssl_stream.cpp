@@ -150,11 +150,6 @@ void SSLStream::ProcessMessage() {
 void SSLStream::ProcessHandshake() {
   if (message_size_ >= 4) {
     SSL_HANDSHAKE * handshake = (SSL_HANDSHAKE *)message_;
-    CStringA buff;
-    buff.Format("Handshake: %d - %d bytes", (int)handshake->type, message_size_);
-    OutputDebugStringA(buff);
-    if (handshake->type == HANDSHAKE_CERTIFICATE)
-      OutputDebugStringA("**** Certificate");
     if (handshake->type == HANDSHAKE_CERTIFICATE &&
         direction_ == SSL_IN &&
         socket_info_) {

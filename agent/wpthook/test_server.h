@@ -42,19 +42,19 @@ public:
 
   bool Start(void);
   void Stop(void);
-  void MongooseCallback(enum mg_event event,
-                        struct mg_connection *conn,
-                        const struct mg_request_info *request_info);
+  void ThreadProc(void);
+  void HTTPRequest(struct mg_connection *conn, struct http_message *message);
 
 private:
+  HANDLE            server_thread_;
   WptHook&          hook_;
-  struct mg_context *mongoose_context_;
   WptTestHook&      test_;
   TestState&        test_state_;
   Requests&         requests_;
   Trace             &trace_;
   CRITICAL_SECTION  cs;
   bool              started_;
+  bool              shutting_down_;
   bool              stored_ua_string_;
   ULARGE_INTEGER    last_cpu_idle_;
   ULARGE_INTEGER    last_cpu_kernel_;
@@ -63,20 +63,17 @@ private:
   LARGE_INTEGER     start_check_freq_;
 
   void SendResponse(struct mg_connection *conn,
-                    const struct mg_request_info *request_info,
+                    struct http_message *message,
                     DWORD response_code,
                     CStringA response_code_string,
                     CStringA response_data);
-  CString GetParam(const CString query_string, const CString key) const;
-  bool GetDwordParam(const CString query_string, const CString key,
-                     DWORD& value) const;
-  bool GetIntParam(const CString query_string, const CString key,
-                   int& value) const;
-  CString GetUnescapedParam(const CString query_string,
-                             const CString key) const;
+  CStringA GetParam(const CStringA query_string, const CStringA key) const;
+  bool GetDwordParam(const CStringA query_string, const CStringA key, DWORD& value) const;
+  bool GetIntParam(const CStringA query_string, const CStringA key, int& value) const;
+  CStringA GetUnescapedParam(const CStringA query_string, const CStringA key) const;
   CString GetPostBody(struct mg_connection *conn,
-                      const struct mg_request_info *request_info);
+                      const struct http_message *message);
   CStringA GetPostBodyA(struct mg_connection *conn,
-                        const struct mg_request_info *request_info);
+                        const struct http_message *message);
   bool OkToStart(bool trigger_start);
 };

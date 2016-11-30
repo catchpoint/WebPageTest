@@ -216,7 +216,7 @@ void WptRecorder::Reset() {
 -----------------------------------------------------------------------------*/
 int WptRecorder::Prepare() {
   int ret = 0;
-  OutputDebugStringA("WptRecorder::Prepare\n");
+  ATLTRACE("WptRecorder::Prepare");
   if (FindBrowserWindow()) {
     FindViewport();
   }
@@ -234,7 +234,7 @@ void __stdcall CollectData(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
 -----------------------------------------------------------------------------*/
 int WptRecorder::Start() {
   int ret = 0;
-  OutputDebugStringA("WptRecorder::Start\n");
+  ATLTRACE("WptRecorder::Start");
   if (!active_ && !file_base_.IsEmpty()) {
     active_ = true;
     if (capture_tcpdump_)
@@ -261,7 +261,7 @@ int WptRecorder::Stop() {
   CollectData();
   active_ = false;
   if (data_timer_) {
-    OutputDebugStringA("WptRecorder::Stop\n");
+    ATLTRACE("WptRecorder::Stop");
     EnterCriticalSection(&cs_);
     DeleteTimerQueueTimer(NULL, data_timer_, NULL);
     data_timer_ = NULL;
@@ -276,9 +276,7 @@ int WptRecorder::Stop() {
 -----------------------------------------------------------------------------*/
 int WptRecorder::Process(DWORD start_offset) {
   int ret = 0;
-  CStringA buff;
-  buff.Format("WptRecorder::Process - start offset = %dms\n", start_offset);
-  OutputDebugStringA(buff);
+  ATLTRACE("WptRecorder::Process - start offset = %dms\n", start_offset);
   // Make sure everything is stopped
   Stop();
   if (!file_base_.IsEmpty()) {
@@ -294,7 +292,7 @@ int WptRecorder::Process(DWORD start_offset) {
 -----------------------------------------------------------------------------*/
 int WptRecorder::Done() {
   int ret = 0;
-  OutputDebugStringA("WptRecorder::Done\n");
+  ATLTRACE("WptRecorder::Done\n");
   return ret;
 }
 
@@ -353,7 +351,6 @@ bool WptRecorder::FindBrowserWindow() {
 void WptRecorder::CollectData() {
   EnterCriticalSection(&cs_);
   if (active_) {
-    OutputDebugStringA("CollectData\n");
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
     if (now.QuadPart > last_data_.QuadPart || !last_data_.QuadPart) {
@@ -550,7 +547,7 @@ void WptRecorder::SaveProgressData() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptRecorder::SaveVideo() {
-  OutputDebugStringA("Results::SaveVideo()");
+  ATLTRACE("Results::SaveVideo()");
   EnterCriticalSection(&cs_);
   screen_capture_.Lock();
   if (!screen_capture_._captured_images.IsEmpty()) {
@@ -679,7 +676,7 @@ void WptRecorder::SaveVideo() {
     }
   }
   screen_capture_.Unlock();
-  OutputDebugStringA("Results::SaveVideo() - Complete");
+  ATLTRACE("Results::SaveVideo() - Complete");
   LeaveCriticalSection(&cs_);
 }
 

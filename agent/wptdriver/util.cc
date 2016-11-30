@@ -274,8 +274,9 @@ void WptTrace(const wchar_t* format, ...) {
   va_list args;
   va_start(args, format);
 
-  int len = _vscwprintf(format, args) + 2;
-  if (len) {
+  int len = _vscwprintf(format, args);
+  if (len > 0) {
+    len += 2;
     int size = len * sizeof(wchar_t);
     wchar_t * msg = (TCHAR *)malloc(size);
     if (msg) {
@@ -296,8 +297,9 @@ void WptTrace(const char* format, ...) {
   va_list args;
   va_start(args, format);
 
-  int len = _vscprintf(format, args) + 2;
-  if (len) {
+  int len = _vscprintf(format, args);
+  if (len > 0) {
+    len += 2;
     int size = len * sizeof(char);
     char * msg = (char *)malloc(size);
     if (msg) {

@@ -869,7 +869,7 @@ int h2_on_header_callback(nghttp2_session *session, const nghttp2_frame *frame,
     stream_id = frame->push_promise.promised_stream_id;
 
   if (user_data && name && value) {
-    ATLTRACE("h2_on_header_callback - stream %d '%S' : '%S'",
+    ATLTRACE("h2_on_header_callback - stream %d '%s' : '%s'",
              stream_id, name, value);
     H2_USER_DATA * u = (H2_USER_DATA *)user_data;
     if (u->connection) {

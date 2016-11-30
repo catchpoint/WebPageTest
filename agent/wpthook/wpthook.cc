@@ -229,13 +229,15 @@ void WptHook::OnReport() {
       results_.Save();
     test_.CollectDataDone();
     if (test_.Done()) {
+      ATLTRACE("[wpthook] - (%d) Shutting down...", GetCurrentThreadId());
       results_.Save();
       test_state_._exit = true;
+      ATLTRACE("[wpthook] - (%d) Stopping server...", GetCurrentThreadId());
       test_server_.Stop();
       done_ = true;
       if (test_state_._frame_window) {
         ATLTRACE("[wpthook] - **** Exiting Hooked Browser");
-        ::SendMessage(test_state_._frame_window,WM_CLOSE,0,0);
+        ::SendMessage(test_state_._frame_window, WM_CLOSE, 0, 0);
       }
     }
   }
