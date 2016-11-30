@@ -179,24 +179,27 @@ class ETW:
             # line feeds in the data are escaped.  All real data lines end with \r\n
             if len(buffer) and line[-1] != "\r" and buffer[-3:] != "\r\r\n":
               buffer = buffer.replace("\r\r\n", "\r\n")
-              columns = self.ExtractCsvLine(buffer)
-              if len(columns):
-                event_name = columns[0].replace(' ', '').replace('/win:', '/').replace('/Task.', '/')
+              # pull the event name from the front of the string so we only do the heavy csv processing for events we care about
+              comma = buffer.find(',')
+              if comma > 0:
+                event_name = buffer[:comma].replace(' ', '').replace('/win:', '/').replace('/Task.', '/')
                 if len(event_name) and event_name in column_names and event_name in self.keep_events:
-                  event = {'name': event_name, 'fields': {}}
-                  available_names = len(column_names[event_name])
-                  for i in xrange(1, len(columns)):
-                    if i < available_names:
-                      key = column_names[event_name][i]
-                      value = columns[i]
-                      if key == 'TimeStamp':
-                        event['ts'] = int(value)
-                      elif key == 'etw:ActivityId':
-                        event['activity'] = value
-                      else:
-                        event['fields'][key] = value
-                  if 'ts' in event:
-                    events.append(event)
+                  columns = self.ExtractCsvLine(buffer)
+                  if len(columns):
+                    event = {'name': event_name, 'fields': {}}
+                    available_names = len(column_names[event_name])
+                    for i in xrange(1, len(columns)):
+                      if i < available_names:
+                        key = column_names[event_name][i]
+                        value = columns[i]
+                        if key == 'TimeStamp':
+                          event['ts'] = int(value)
+                        elif key == 'etw:ActivityId':
+                          event['activity'] = value
+                        else:
+                          event['fields'][key] = value
+                    if 'ts' in event:
+                      events.append(event)
               buffer = ''
         except:
           pass
@@ -212,24 +215,34 @@ class ETW:
     try:
       buffer = ''
       in_quote = False
+      in_multiline_quote = False
       if csv[-2:] == "\r\n":
         csv = csv[:-2]
       length = len(csv)
       for i in xrange(0, length):
         if csv[i] == ',' and not in_quote:
-          buffer = buffer.strip(' ')
-          buffer = buffer.replace('""', '"')
+          buffer = buffer.strip(" \r\n")
           if len(buffer) > 1 and buffer[0] == '"' and buffer[-1] == '"':
             buffer = buffer[1:-1]
           columns.append(buffer)
           buffer = ''
-        else:
+        elif len(buffer) or csv[i] != ' ':
           buffer += csv[i]
-          if csv[i] == '"' and i < length - 1 and csv[i + 1] != '"':
-              in_quote = not in_quote
+          # quote escaping starts with a quote as the first non-space character of the field
+          if not in_quote and buffer == '"':
+            in_quote = True
+            in_multiline_quote = False
+          elif in_quote and not in_multiline_quote:
+            if csv[i] == '"':
+              in_quote = False
+            elif csv[i] == '\r':
+              in_multiline_quote = True
+          elif in_quote and in_multiline_quote and csv[i] == '"':
+            if len(buffer) > 2 and (csv[i-1] == "\r" or csv[i-1] == "\n"):
+              in_quote = False
+              in_multiline_quote = False
       if len(buffer):
-        buffer = buffer.strip(' ')
-        buffer = buffer.replace('""', '"')
+        buffer = buffer.strip(" \r\n")
         if len(buffer) > 1 and buffer[0] == '"' and buffer[-1] == '"':
           buffer = buffer[1:-1]
         columns.append(buffer)
