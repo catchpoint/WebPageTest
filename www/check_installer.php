@@ -42,6 +42,7 @@ if (isset($_REQUEST['installer']) && isset($ip)) {
     $installer .= $installer_postfix;
     $ok = true;
   } elseif ($ip == '72.66.115.14' ||  // Public WebPageTest
+            $ip == '216.239.44.25' || // Gtech_ATL
             $ip == '149.20.63.13') {  // HTTP Archive
     $ok = true;
   } elseif (isset($url_replace)) {
