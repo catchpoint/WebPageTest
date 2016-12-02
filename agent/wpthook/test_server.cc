@@ -48,14 +48,9 @@ static const char * RESPONSE_ERROR_NOtest__STR = "ERROR: No Test";
 static const DWORD RESPONSE_ERROR_NOT_IMPLEMENTED = 403;
 static const char * RESPONSE_ERROR_NOT_IMPLEMENTED_STR = 
                                                       "ERROR: Not Implemented";
-static const char * BLANK_RESPONSE = "HTTP/1.1 200 OK\r\n"
-    "Cache: no-cache\r\n"
-    "\r\n";
+static const char * BLANK_RESPONSE = "";
 
-static const char * BLANK_HTML = "HTTP/1.1 200 OK\r\n"
-    "Cache: no-cache\r\n"
-    "Content-Type:text/html\r\n"
-    "\r\n"
+static const char * BLANK_HTML = 
     "<html><head><title>Blank</title>\n"
     "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, "
     "maximum-scale=1.0, user-scalable=0;\">\n"
@@ -361,14 +356,14 @@ void TestServer::HTTPRequest(struct mg_connection *conn, struct http_message *me
     if (!started_)
       OkToStart(false);
     test_state_.UpdateBrowserWindow();
-	  mg_send(conn, BLANK_HTML, lstrlenA(BLANK_HTML));
+	  SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, BLANK_HTML, "text/html");
 	} else if (uri.Left(12) == "/viewport.js") {
     DWORD width = 0;
     DWORD height = 0;
     GetDwordParam(query_string, "w", width);
     GetDwordParam(query_string, "h", height);
     test_state_.UpdateBrowserWindow(width, height);
-    mg_send(conn, BLANK_RESPONSE, lstrlenA(BLANK_RESPONSE));
+    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, BLANK_RESPONSE, "application/javascript");
   } else if (uri == "/event/responsive") {
     GetIntParam(query_string, "isResponsive",
                 test_state_._is_responsive);
@@ -442,6 +437,44 @@ void TestServer::SendResponse(struct mg_connection *conn,
   response += buff;
   response += "\r\n";
   response += data;
+
+  // and finally, send it
+  mg_send(conn, (LPCSTR)response, response.GetLength());
+}
+
+/*-----------------------------------------------------------------------------
+  Send a text response back to the caller
+-----------------------------------------------------------------------------*/
+void TestServer::SendResponse(struct mg_connection *conn,
+                  struct http_message *message,
+                  DWORD response_code,
+                  CStringA response_code_string,
+                  CStringA response_data,
+                  CStringA content_type){
+
+  CStringA callback;
+  CStringA request_id;
+
+  // process the query parameters
+  if (message->query_string.len) {
+    CStringA query_string(message->query_string.p, (int)message->query_string.len);
+    callback = GetParam(query_string, "callback");
+    request_id = GetParam(query_string, "r");
+  }
+
+  // start with the HTTP Header
+  CStringA response = "HTTP/1.1 200 OK\r\n"
+    "Server: wptdriver\r\n"
+    "Cache: no-cache\r\n"
+    "Pragma: no-cache\r\n"
+    "Content-Type: " + content_type + "\r\n";
+
+  DWORD len = response_data.GetLength();
+  CStringA buff;
+  buff.Format("Content-Length: %d\r\n", len);
+  response += buff;
+  response += "\r\n";
+  response += response_data;
 
   // and finally, send it
   mg_send(conn, (LPCSTR)response, response.GetLength());
