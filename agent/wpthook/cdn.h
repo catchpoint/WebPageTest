@@ -175,6 +175,7 @@ CDN_PROVIDER cdnList[] = {
   {".kinxcdn.net", "KINX CDN"},
   {".stackpathdns.com", "StackPath"},
   {".hosting4cdn.com", "Hosting4CDN"},
+  {".netlify.com", "Netlify"},
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -215,6 +216,7 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "UnicornCDN", "UnicornCDN"},
   {"server", "Optimal CDN", "Optimal CDN"},
   {"server", "Sucuri/Cloudproxy", "Sucuri/Cloudproxy"},
+  {"server", "Netlify", "Netlify"},
   {"section-io-id", "", "section.io"}
 };
 
