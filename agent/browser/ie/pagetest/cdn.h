@@ -122,6 +122,7 @@ CDN_PROVIDER cdnList[] = {
 	{".unicorncdn.net", _T("UnicornCDN")},
 	{".optimalcdn.com", _T("Optimal CDN")},
 	{".hosting4cdn.com", _T("Hosting4CDN")},
+	{".netlify.com", _T("Netlify")},
 	{NULL, NULL}
 };
 
@@ -160,4 +161,5 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
 	{"X-CDN", "Incapsula", _T("Incapsula")},
 	{"X-Iinfo", "", _T("Incapsula")},
 	{"server", "gocache", _T("GoCache")}
+	{"server", "Netlify", _T("Netlify")}
 };
