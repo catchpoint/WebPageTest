@@ -622,6 +622,7 @@ class ETW:
           r = raw['requests'][id]
           request = {}
           if 'URL' in r:
+            request['full_url'] = r['URL'];
             parts = urlparse.urlsplit(r['URL'])
             if len(parts) > 1:
               request['host'] = parts[1]
