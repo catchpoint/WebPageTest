@@ -472,12 +472,12 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                 imageline($im, $x, 1 + $top + $row_height,
                           $x, $top + $data_height - $row_height, $time_scale_color);
                 if (isset($perfs) && is_array($perfs)) {
-                    foreach ($perfs as $p) {
-                        if (isset($p['count']) && isset($p['y1']) && isset($p['y2'])) {
-                            // Add gridline to performance chart area.
-                            imageline($im, $x, $p['y1'] + 1, $x, $p['y2'] - 1, $time_scale_color);
-                        }
+                  foreach ($perfs as $p) {
+                    if (isset($p['count']) && isset($p['y1']) && isset($p['y2'])) {
+                      // Add gridline to performance chart area.
+                      imageline($im, $x, $p['y1'] + 1, $x, $p['y2'] - 1, $time_scale_color);
                     }
+                  }
                 }
                 if (isset($pcap_slices)) {
                   imageline($im, $x, $pcap_slices['y1'] + 1, $x, $pcap_slices['y2'] - 1, $time_scale_color);
@@ -532,69 +532,73 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                                          'y2' => $p['y2'] - 1);
                 }
                 foreach ($endpoints as $y1y2) {
-                    $y1 = $y1y2['y1'];
-                    $y2 = $y1y2['y2'];
-                    if (is_array($event)) {
-                        list($start_ms, $end_ms) = $event;
-                        if ($end_ms > 0) {
-                            $x1 = $x_scaler($start_ms);
-                            $x2 = $x_scaler($end_ms);
-                            if (!$is_thumbnail &&
-                                $x1 == $x2 && $x1 < $width - 3) {
-                                $x2 = $x1 + 1;
-                            }
-                            imagefilledrectangle($im, $x1, $y1, $x2, $y2,
-                                                 $color);
-                        }
-                    } else {
-                        $ms = $event;
-                        if ($ms > 0) {
-                            $x = $x_scaler($ms);
-                            imageline($im, $x, $y1, $x, $y2, $color);
-                            if (!$is_thumbnail && $x < $width - 3) {
-                                $x++;
-                                imageline($im, $x, $y1, $x, $y2, $color);
-                            }
-                        }
+                  $y1 = $y1y2['y1'];
+                  $y2 = $y1y2['y2'];
+                  if (is_array($event)) {
+                      list($start_ms, $end_ms) = $event;
+                      if ($end_ms > 0) {
+                          $x1 = $x_scaler($start_ms);
+                          $x2 = $x_scaler($end_ms);
+                          if (!$is_thumbnail &&
+                              $x1 == $x2 && $x1 < $width - 3) {
+                              $x2 = $x1 + 1;
+                          }
+                          imagefilledrectangle($im, $x1, $y1, $x2, $y2,
+                                               $color);
+                      }
+                  } else {
+                    $ms = $event;
+                    if ($ms > 0) {
+                      $x = $x_scaler($ms);
+                      imageline($im, $x, $y1, $x, $y2, $color);
+                      if (!$is_thumbnail && $x < $width - 3) {
+                        $x++;
+                        imageline($im, $x, $y1, $x, $y2, $color);
+                      }
                     }
+                  }
                 }
             }
 
             // Draw the performance data.
             if (isset($perfs) && is_array($perfs)) {
-                foreach ($perfs as $p) {
-                    $x1 = null;
-                    $y1 = null;
-                    foreach ($p['data'] as $ms => $value) {
-                        $x2 = $x_scaler($ms);
-                        $pmax = 0;
-                        if (array_key_exists('max', $p) && $p['max'] != 0) {
-                            $pmax = $p['max'];
-                        }
-                        $y2 = ($p['y1'] + $p['height'] - 2 -
-                               (int)((double)($p['height'] - 3) *
-                                     (double)$value / $pmax));
-                        if ($x2 <= $data_x) {
-                            $x2 = $data_x + 1;
-                        }
-                        if ($x2 >= $width - 1 && $x1 < $x2)  {
-                            // Point goes off the graph.
-                            // Interpolate the ending y-coordinate.
-                            $r = ($width - 2 - $x1) / ($x2 - $x1);
-                            $y2 = $y1 + (($y2 - $y1) * $r);
-                            $x2 = $width - 2;
-                        }
-                        if (isset($x1) && isset($y1)) {
-                            imageline($im, $x1, $y1, $x2, $y2, $p['color']);
-                        }
-                        if ($x2 >= ($width - 2)) {
-                            break;
-                        } else {
-                            $x1 = $x2;
-                            $y1 = $y2;
-                        }
-                    }
+              foreach ($perfs as $p) {
+                $x1 = $x_scaler(0);
+                $y1 = null;
+                foreach ($p['data'] as $ms => $value) {
+                  $x2 = $x_scaler($ms);
+                  $pmax = 0;
+                  if (array_key_exists('max', $p) && $p['max'] != 0) {
+                    $pmax = $p['max'];
+                  }
+                  $y2 = ($p['y1'] + $p['height'] - 2 - (int)((double)($p['height'] - 3) * (double)$value / $pmax));
+                  if ($x2 <= $data_x) {
+                    $x2 = $data_x + 1;
+                  }
+                  if ($x2 >= $width - 1 && $x1 < $x2)  {
+                    // Point goes off the graph.
+                    // Interpolate the ending y-coordinate.
+                    $r = ($width - 2 - $x1) / ($x2 - $x1);
+                    $y2 = $y1 + (($y2 - $y1) * $r);
+                    $x2 = $width - 2;
+                  }
+                  if ($x2 > $x1 + 1) {
+                    // If the data spans multiple columns, draw a flat line at the
+                    // current value size it is really an average for the last time bucket.
+                    if (isset($y1))
+                      imageline($im, $x1, $y1, $x1, $y2, $p['color']);
+                    imageline($im, $x1, $y2, $x2, $y2, $p['color']);
+                  } else if (isset($x1) && isset($y1)) {
+                    imageline($im, $x1, $y1, $x2, $y2, $p['color']);
+                  }
+                  if ($x2 >= ($width - 2)) {
+                    break;
+                  } else {
+                    $x1 = $x2;
+                    $y1 = $y2;
+                  }
                 }
+              }
             }
             
             // Draw the pcap-based bandwidth data
