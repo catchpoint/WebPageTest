@@ -164,3 +164,9 @@ class WptTest:
     if self.test is not None and 'full_size_video' in self.test and self.test['full_size_video']:
       enabled = True
     return enabled
+
+  def EndAtOnLoad(self):
+    doc_complete = False
+    if self.test is not None and 'doc_complete' in self.test and self.test['doc_complete']:
+      doc_complete = True
+    return doc_complete

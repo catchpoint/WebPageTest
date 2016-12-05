@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "WptRecorder.h"
 #include "../wpthook/cximage/ximage.h"
+#include "../wptdriver/shaper/interface.h"
 #include <TimeAPI.h>
 #include <zip.h>
 
@@ -177,11 +178,11 @@ public:
 WptRecorder::WptRecorder():
   data_timer_(NULL)
   , capture_video_(false)
-  , capture_cpu_(false)
   , capture_tcpdump_(false)
   , save_histograms_(false)
   , full_size_video_(false)
-  , image_quality_(30) {
+  , image_quality_(30)
+  , shaper_driver_(INVALID_HANDLE_VALUE) {
   InitializeCriticalSection(&cs_);
   Reset();
 }
@@ -200,8 +201,10 @@ void WptRecorder::Reset() {
   active_ = false;
   start_.QuadPart = 0;
   ms_frequency_.QuadPart = 0;
+  frequency_.QuadPart = 0;
   last_data_.QuadPart = 0;
   last_video_time_.QuadPart = 0;
+  last_activity_.QuadPart = 0;
   video_capture_count_ = 0;
   last_cpu_idle_.QuadPart = 0;
   last_cpu_kernel_.QuadPart = 0;
@@ -210,6 +213,8 @@ void WptRecorder::Reset() {
   speed_index_ = 0;
   render_start_.QuadPart = 0;
   last_visual_change_.QuadPart = 0;
+  last_bytes_in_ = 0;
+  last_bytes_out_ = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -237,17 +242,17 @@ int WptRecorder::Start() {
   ATLTRACE("WptRecorder::Start");
   if (!active_ && !file_base_.IsEmpty()) {
     active_ = true;
+    if (shaper_driver_ == INVALID_HANDLE_VALUE)
+      shaper_driver_ = CreateFile(SHAPER_DOS_NAME, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
     if (capture_tcpdump_)
       winpcap_.StartCapture(file_base_ + L".cap");
     QueryPerformanceCounter(&start_);
-    QueryPerformanceFrequency(&ms_frequency_);
-    ms_frequency_.QuadPart = ms_frequency_.QuadPart / 1000;
+    QueryPerformanceFrequency(&frequency_);
+    ms_frequency_.QuadPart = frequency_.QuadPart / 1000;
     if (!data_timer_) {
-      if (capture_video_ || capture_cpu_ || save_histograms_) {
-        timeBeginPeriod(1);
-        CreateTimerQueueTimer(&data_timer_, NULL, ::CollectData, this, 
-            DATA_COLLECTION_INTERVAL, DATA_COLLECTION_INTERVAL, WT_EXECUTEDEFAULT);
-      }
+      timeBeginPeriod(1);
+      CreateTimerQueueTimer(&data_timer_, NULL, ::CollectData, this, 
+          DATA_COLLECTION_INTERVAL, DATA_COLLECTION_INTERVAL, WT_EXECUTEDEFAULT);
     }
     CollectData();
   }
@@ -269,6 +274,32 @@ int WptRecorder::Stop() {
     LeaveCriticalSection(&cs_);
   }
   winpcap_.StopCapture();
+  if (shaper_driver_ != INVALID_HANDLE_VALUE) {
+    CloseHandle(shaper_driver_);
+    shaper_driver_ = INVALID_HANDLE_VALUE;
+  }
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+int WptRecorder::WaitForIdle(DWORD wait_seconds) {
+  int ret = 0;
+  ATLTRACE("WptRecorder::WaitForIdle - %d seconds", wait_seconds);
+  if (last_activity_.QuadPart > 0) {
+    LARGE_INTEGER start, now;
+    QueryPerformanceCounter(&now);
+    start.QuadPart = now.QuadPart;
+    DWORD elapsed = 0;
+    double elapsed_activity = (double)(now.QuadPart - last_activity_.QuadPart) / (double)frequency_.QuadPart;
+    while (elapsed < wait_seconds && elapsed_activity < 2) {
+      Sleep(100);
+      QueryPerformanceCounter(&now);
+      elapsed_activity = (double)(now.QuadPart - last_activity_.QuadPart) / (double)frequency_.QuadPart;
+      elapsed = (DWORD)((double)(now.QuadPart - start.QuadPart) / (double)frequency_.QuadPart);
+      ATLTRACE("WptRecorder::WaitForIdle - %d seconds elapsed, %0.2f seconds since last activity", elapsed, elapsed_activity);
+    }
+  }
   return ret;
 }
 
@@ -276,7 +307,7 @@ int WptRecorder::Stop() {
 -----------------------------------------------------------------------------*/
 int WptRecorder::Process(DWORD start_offset) {
   int ret = 0;
-  ATLTRACE("WptRecorder::Process - start offset = %dms\n", start_offset);
+  ATLTRACE("WptRecorder::Process - start offset = %dms", start_offset);
   // Make sure everything is stopped
   Stop();
   if (!file_base_.IsEmpty()) {
@@ -292,7 +323,7 @@ int WptRecorder::Process(DWORD start_offset) {
 -----------------------------------------------------------------------------*/
 int WptRecorder::Done() {
   int ret = 0;
-  ATLTRACE("WptRecorder::Done\n");
+  ATLTRACE("WptRecorder::Done");
   return ret;
 }
 
@@ -354,8 +385,7 @@ void WptRecorder::CollectData() {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
     if (now.QuadPart > last_data_.QuadPart || !last_data_.QuadPart) {
-      if (capture_cpu_)
-        CollectSystemStats(now);
+      CollectSystemStats(now);
       GrabVideoFrame();
       last_data_.QuadPart = now.QuadPart;
     }
@@ -370,9 +400,12 @@ void WptRecorder::CollectSystemStats(LARGE_INTEGER &now) {
   ProgressData data;
   data._time.QuadPart = now.QuadPart;
   DWORD msElapsed = 0;
+  double elapsed_seconds = 0;
   if (last_data_.QuadPart) {
     msElapsed = (DWORD)((now.QuadPart - last_data_.QuadPart) / 
                             ms_frequency_.QuadPart);
+    elapsed_seconds = (double)(now.QuadPart - last_data_.QuadPart) / 
+                            (double)frequency_.QuadPart;
   }
 
   // calculate CPU utilization
@@ -399,6 +432,20 @@ void WptRecorder::CollectSystemStats(LARGE_INTEGER &now) {
     last_cpu_idle_.QuadPart = i.QuadPart;
     last_cpu_kernel_.QuadPart = k.QuadPart;
     last_cpu_user_.QuadPart = u.QuadPart;
+  }
+  if (shaper_driver_ != INVALID_HANDLE_VALUE) {
+    SHAPER_STATS stats;
+    DWORD bytesReturned;
+    if (DeviceIoControl(shaper_driver_, SHAPER_IOCTL_GET_STATS, NULL, 0, &stats, sizeof(stats), &bytesReturned, NULL) && bytesReturned >= sizeof(stats)) {
+      unsigned __int64 tx = stats.outBytes - last_bytes_out_;
+      unsigned __int64 rx = stats.inBytes - last_bytes_in_;
+      if (elapsed_seconds > 0)
+        data._bpsIn = (DWORD)((double)(rx * 8) / elapsed_seconds);
+      if (rx > 1000 || tx > 500)
+        last_activity_.QuadPart = now.QuadPart;
+      last_bytes_in_ = stats.inBytes;
+      last_bytes_out_ = stats.outBytes;
+    }
   }
 
   if (msElapsed)
@@ -533,7 +580,7 @@ void WptRecorder::SaveProgressData() {
     ProgressData data = progress_data_.GetNext(pos);
     DWORD ms = ElapsedMsFromStart(data._time);
     CStringA buff;
-    buff.Format("%d,%d,%0.2f,%d\r\n", ms, 0, data._cpu, 0 );
+    buff.Format("%d,%d,%0.2f,%d\r\n", ms, data._bpsIn, data._cpu, 0 );
     progress += buff;
   }
   LeaveCriticalSection(&cs_);

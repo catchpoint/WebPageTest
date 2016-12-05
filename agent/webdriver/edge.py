@@ -107,6 +107,10 @@ def RunTest(driver, test):
     except:
       pass
 
+  # Wait for idle if it is not an onload-ending test
+  if not test.EndAtOnLoad():
+    recorder.WaitForIdle(30)
+
   # Stop Recording
   recorder.Stop()
 

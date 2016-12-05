@@ -17,6 +17,7 @@ LPCWSTR szWindowClass = L"wptRecord";
 #define UWM_STOP    (WM_APP + 2)  // Stop recording
 #define UWM_PROCESS (WM_APP + 3)  // Process captured results and write files (WPARAM can include a ms offset to remove from all timings)
 #define UWM_DONE    (WM_APP + 4)  // Exit
+#define UWM_WAIT_FOR_IDLE    (WM_APP + 5)  // Wait for the network to go idle (WPARAM includes the waqit time in seconds)
 
 // Forward declarations of functions included in this code module:
 ATOM                RegisterWindowClass(HINSTANCE hInstance);
@@ -60,8 +61,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
           }
         } else if (!lstrcmpiW(cmd, L"--video")) {
           recorder.EnableVideo();
-        } else if (!lstrcmpiW(cmd, L"--cpu")) {
-          recorder.EnableCPU();
         } else if (!lstrcmpiW(cmd, L"--tcpdump")) {
           recorder.EnableTcpdump();
         } else if (!lstrcmpiW(cmd, L"--histograms")) {
@@ -156,6 +155,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         if (g_recorder)
           ret = g_recorder->Done();
         PostQuitMessage(0);
+        break;
+    case UWM_WAIT_FOR_IDLE:
+        if (g_recorder)
+          ret = g_recorder->WaitForIdle(wParam);
         break;
     case WM_DESTROY:
         PostQuitMessage(0);

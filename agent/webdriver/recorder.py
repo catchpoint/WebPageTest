@@ -27,12 +27,13 @@ class WptRecord:
     self.UWM_STOP    = (0x8000 + 2)
     self.UWM_PROCESS = (0x8000 + 3)
     self.UWM_DONE    = (0x8000 + 4)
+    self.UWM_WAIT_FOR_IDLE = (0x8000 + 5)
 
   def Prepare(self, test):
     recorder = test.GetRecorder()
     file_base = test.GetFileBase()
     if recorder is not None and file_base is not None:
-      args = [recorder, '--filebase', file_base, '--cpu', '--histograms']
+      args = [recorder, '--filebase', file_base, '--histograms']
       if test.TcpDump():
         args.append('--tcpdump')
       if test.Video():
@@ -63,6 +64,13 @@ class WptRecord:
     if self.window is not None:
       try:
         self.window.PostMessage(self.UWM_START, 0, 0)
+      except:
+        pass
+
+  def WaitForIdle(self, wait_seconds):
+    if self.window is not None:
+      try:
+        self.window.SendMessage(self.UWM_WAIT_FOR_IDLE, wait_seconds, 0)
       except:
         pass
 

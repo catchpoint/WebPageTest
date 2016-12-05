@@ -4,7 +4,7 @@
 
 class ProgressData {
 public:
-  ProgressData(void):_cpu(0.0) {
+  ProgressData(void):_cpu(0.0),_bpsIn(0) {
     _time.QuadPart = 0; 
   }
   ProgressData(const ProgressData& src){*this = src;}
@@ -12,11 +12,13 @@ public:
   const ProgressData& operator =(const ProgressData& src) {
     _time.QuadPart = src._time.QuadPart;
     _cpu = src._cpu;
+    _bpsIn = src._bpsIn;
     return src;
   }
   
   LARGE_INTEGER   _time;
   double          _cpu;            // CPU utilization
+  DWORD           _bpsIn;          // inbound bandwidth
 };
 
 class WptRecorder
@@ -29,9 +31,9 @@ public:
   int Stop();
   int Process(DWORD start_offset);
   int Done();
+  int WaitForIdle(DWORD wait_seconds);
   void SetFileBase(CString file_base) {file_base_ = file_base;}
   void EnableVideo() {capture_video_ = true;}
-  void EnableCPU() {capture_cpu_ = true;}
   void EnableTcpdump() {winpcap_.Initialize(); capture_tcpdump_ = true;}
   void EnableHistograms() {save_histograms_ = true;}
   void SetImageQuality(int quality) {image_quality_ = quality;}
@@ -57,7 +59,6 @@ protected:
   // Settings
   CString file_base_;
   bool capture_video_;
-  bool capture_cpu_;
   bool capture_tcpdump_;
   bool save_histograms_;
   bool full_size_video_;
@@ -73,9 +74,11 @@ protected:
   ScreenCapture screen_capture_;
   CWinPCap      winpcap_;
   LARGE_INTEGER start_;
+  LARGE_INTEGER frequency_;
   LARGE_INTEGER ms_frequency_;
   LARGE_INTEGER last_data_;
   LARGE_INTEGER last_video_time_;
+  LARGE_INTEGER last_activity_;
   DWORD         video_capture_count_;
   bool          active_;
   HANDLE        data_timer_;
@@ -83,6 +86,9 @@ protected:
   ULARGE_INTEGER last_cpu_idle_;
   ULARGE_INTEGER last_cpu_kernel_;
   ULARGE_INTEGER last_cpu_user_;
+  unsigned __int64 last_bytes_in_;
+  unsigned __int64 last_bytes_out_;
   CAtlList<ProgressData>   progress_data_;     // CPU, memory and Bandwidth
+  HANDLE        shaper_driver_;
 };
 
