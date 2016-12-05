@@ -781,9 +781,9 @@ void WebBrowser::ConfigureIESettings() {
     }
 
     // Disable the prompt that asks you to confirm your start page and search provider
-    if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
-        _T("Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_EUPP_GLOBAL_FORCE_DISABLE"),
-        0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
+                       _T("Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_EUPP_GLOBAL_FORCE_DISABLE"),
+                       0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS ) {
       DWORD val = 1;
       RegSetValueEx(hKey, _T("iexplore.exe"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
       RegCloseKey(hKey);
