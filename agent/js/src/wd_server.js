@@ -371,10 +371,20 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
         'Network.' === message.method.substring(0, 8)) {
       logger.debug("Activity detected after onload, waiting for page activity to finish");
       clearTimeout(this.pageLoadCoalesceTimer_);
+      var wait_time = DETECT_ACTIVITY_MS;
+      if (this.task_['time'] !== undefined && this.testStartTime_ !== undefined) {
+        // Make sure we meet any minimum test duration that was specified
+        var elapsed = (Date.now() - this.testStartTime_) / 1000.0;
+        if (elapsed < this.task_.time) {
+          var remaining = this.task_.time - elapsed;
+          wait_time += (remaining * 1000);
+          logger.debug("Activity before the minimum test duration of " + this.task_.time + " seconds.  Waiting another " + remaining + " seconds.");
+        }
+      }
       this.pageLoadCoalesceTimer_ = setTimeout(function() {
         this.pageLoadCoalesceTimer_ = undefined;
         this.onPageLoad_();
-      }.bind(this), DETECT_ACTIVITY_MS);
+      }.bind(this), wait_time);
     }
     if ('Page.frameStartedLoading' === message.method) {
       if (message.params['frameId'] !== undefined) {
@@ -393,6 +403,15 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
     } else if ('Page.loadEventFired' === message.method) {
       if (this.isRecordingDevTools_) {
         var wait_time = this.task_['web10'] == 1 ? DETECT_NO_RE_NAVIGATE_MS : DETECT_ACTIVITY_MS;
+        if (this.task_['time'] !== undefined && this.testStartTime_ !== undefined) {
+          // Make sure we meet any minimum test duration that was specified
+          var elapsed = (Date.now() - this.testStartTime_) / 1000.0;
+          if (elapsed < this.task_.time) {
+            var remaining = this.task_.time - elapsed;
+            wait_time += (remaining * 1000);
+            logger.debug("Page loaded before the minimum test duration of " + this.task_.time + " seconds.  Waiting another " + remaining + " seconds.");
+          }
+        }
         // Allow for up to 1 second after the page load finished for
         // another navigation to start (in the case of a javascript redirect).
         this.pageLoadCoalesceTimer_ = setTimeout(function() {
@@ -1109,6 +1128,8 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
   this.scheduleStartPacketCaptureIfRequested_();
   // No page load timeout here -- agent_main enforces run-level timeout.
   this.app_.schedule('Run page load', function() {
+    this.testStartTime_ = Date.now();
+
     // onDevToolsMessage_ resolves this promise when it detects on-load.
     this.pageLoadDonePromise_ = new webdriver.promise.Deferred();
     if (this.timeout_) {
