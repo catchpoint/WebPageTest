@@ -53,3 +53,7 @@ headless=0
 ```
 
 The full list of settings that can be specified is in [settings.ini.sample](https://github.com/WPO-Foundation/webpagetest/blob/master/www/settings/settings.ini.sample)
+
+Connect to a Windows Test Agent:
+
+The password is: 2dialit
