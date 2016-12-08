@@ -151,8 +151,6 @@ $loc = ParseLocations($locations);
                             <?php if (isset($settings['map'])) { ?>
                             <input id="change-location-btn" type=button onclick="SelectLocation();" value="Select from Map">
                             <?php } ?>
-                            <br><span class="pending_tests hidden" id="pending_tests"><span id="backlog">0</span> Pending Tests</span>
-                            <span class="cleared"></span>
                         </li>
                         <li>
                             <label for="browser">Browser</label>
@@ -167,6 +165,8 @@ $loc = ParseLocations($locations);
                                 }
                                 ?>
                             </select>
+                            <span class="pending_tests hidden" id="pending_tests"><span id="backlog">0</span> Pending Tests</span>
+                            <span class="cleared"></span>
                         </li>
                     </ul>
                     <?php if (isset($settings['multi_locations'])) { ?>
