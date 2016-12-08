@@ -1592,6 +1592,19 @@ WebDriverServer.prototype.done_ = function() {
     if (this.devToolsMessages_ && this.devToolsMessages_.length > 0) {
       devToolsFile = path.join(this.runTempDir_, 'devtools.json');
       fs.writeFileSync(devToolsFile, JSON.stringify(this.devToolsMessages_));
+      // run the trace parser against the dev tools file on iOS
+      if (this.traceFile_ == undefined) {
+        this.cpuSlicesFile_ = path.join(this.runTempDir_, 'timeline_cpu.json.gz');
+        this.scriptTimingFile_ = path.join(this.runTempDir_, 'script_timing.json.gz');
+        var options = ['lib/trace/trace-parser.py', '-vvvv',
+            '-l', devToolsFile, '-c', this.cpuSlicesFile_, '-j', this.scriptTimingFile_];
+        process_utils.scheduleExec(this.app_,
+            'python', options, undefined,
+            TRACE_PROCESSING_TIMEOUT_MS).then(function(stdout) {
+        }.bind(this), function(err) {
+          logger.info('Timeline processing error: ' + err.message);
+        }.bind(this));
+      }
     }
     // Add any browser-specific page data if we have it
     if (this.browser_['osVersion'] !== undefined) {
