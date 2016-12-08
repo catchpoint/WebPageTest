@@ -948,7 +948,7 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
     this.traceFileStream_.write('{"traceEvents":[{}');
     var message = {method: 'Tracing.start'};
     message.params = {
-      categories: 'blink.console,disabled-by-default-devtools.timeline,devtools.timeline',
+      categories: 'blink.console,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-blink.feature_usage',
       options: 'record-as-much-as-possible'
     };
     if (1 === this.task_.trace) {
