@@ -106,11 +106,45 @@ class Trace():
           pass
     except:
       logging.critical("Error processing trace " + trace)
-
     if f is not None:
       f.close()
-
     self.ProcessTraceEvents()
+
+  def ProcessTimeline(self, timeline):
+    self.__init__()
+    self.cpu['main_thread'] = '0'
+    self.threads['0'] = {}
+    events = None
+    f = None
+    try:
+      file_name, ext = os.path.splitext(timeline)
+      if ext.lower() == '.gz':
+        f = gzip.open(timeline, 'rb')
+      else:
+        f = open(timeline, 'r')
+      events = json.load(f)
+      if events:
+        # convert the old format timeline events into our internal representation
+        for event in events:
+          if 'method' in event and 'params' in event:
+            if self.start_time is None:
+              if event['method'] == 'Network.requestWillBeSent' and 'timestamp' in event['params']:
+                self.start_time = event['params']['timestamp'] * 1000000.0
+                self.end_time = event['params']['timestamp'] * 1000000.0
+            else:
+              if 'timestamp' in event['params']:
+                t = event['params']['timestamp'] * 1000000.0
+                if t > self.end_time:
+                  self.end_time = t
+              if event['method'] == 'Timeline.eventRecorded' and 'record' in event['params']:
+                e = self.ProcessOldTimelineEvent(event['params']['record'], None)
+                if e is not None:
+                  self.timeline_events.append(e)
+        self.ProcessTimelineEvents()
+    except:
+      logging.critical("Error processing timeline " + timeline)
+    if f is not None:
+      f.close()
 
   def FilterTraceEvent(self, trace_event):
     cat = trace_event['cat']
@@ -217,6 +251,49 @@ class Trace():
         else:
           self.timeline_events.append(e)
 
+  def ProcessOldTimelineEvent(self, event, type):
+    e = None
+    thread = '0'
+    if 'type' in event:
+      type = event['type']
+    if type not in self.event_names:
+      self.event_names[type] = len(self.event_names)
+      self.event_name_lookup[self.event_names[type]] = type
+    if type not in self.threads[thread]:
+      self.threads[thread][type] = self.event_names[type]
+    start = None
+    end = None
+    if 'startTime' in event and 'endTime' in event:
+      start = event['startTime'] * 1000000.0
+      end = event['endTime'] * 1000000.0
+    if 'callInfo' in event:
+      if 'startTime' in event['callInfo'] and 'endTime' in event['callInfo']:
+        start = event['callInfo']['startTime'] * 1000000.0
+        end = event['callInfo']['endTime'] * 1000000.0
+    if start is not None and end is not None and end >= start and type is not None:
+      if end > self.end_time:
+        self.end_time = end
+      e = {'t': thread, 'n': self.event_names[type], 's': start, 'e': end}
+      if 'callInfo' in event and 'url' in event and event['url'].startswith('http'):
+        e['js'] = event['url']
+      # Process profile child events
+      if 'data' in event and 'profile' in event['data'] and 'rootNodes' in event['data']['profile']:
+        for child in event['data']['profile']['rootNodes']:
+          c = self.ProcessOldTimelineEvent(child, type)
+          if c is not None:
+            if 'c' not in e:
+              e['c'] = []
+            e['c'].append(c)
+      # recursively process any child events
+      if 'children' in event:
+        for child in event['children']:
+          c = self.ProcessOldTimelineEvent(child, type)
+          if c is not None:
+            if 'c' not in e:
+              e['c'] = []
+            e['c'].append(c)
+    return e
+
   def ProcessTimelineEvents(self):
     if len(self.timeline_events) and self.end_time > self.start_time:
       # Figure out how big each slice should be in usecs. Size it to a power of 10 where we have at least 2000 slices
@@ -272,7 +349,15 @@ class Trace():
           self.scripts[thread][script] = {}
         if name not in self.scripts[thread][script]:
           self.scripts[thread][script][name] = []
-        self.scripts[thread][script][name].append([s, e])
+        # make sure the script duration isn't already covered by a parent event
+        new_duration = True
+        if len(self.scripts[thread][script][name]):
+          for period in self.scripts[thread][script][name]:
+            if s >= period[0] and e <= period[1]:
+              new_duration = False
+              break
+        if new_duration:
+          self.scripts[thread][script][name].append([s, e])
 
       slice_usecs = self.cpu['slice_usecs']
       first_slice = int(float(start) / float(slice_usecs))
@@ -422,6 +507,7 @@ def main():
   parser.add_argument('-v', '--verbose', action='count',
                       help="Increase verbosity (specify multiple times for more). -vvvv for full debug output.")
   parser.add_argument('-t', '--trace', help="Input trace file.")
+  parser.add_argument('-l', '--timeline', help="Input timeline file (iOS or really old Chrome).")
   parser.add_argument('-c', '--cpu', help="Output CPU time slices file.")
   parser.add_argument('-j', '--js', help="Output Javascript per-script parse/evaluate/execute timings.")
   parser.add_argument('-u', '--user', help="Output user timing file.")
@@ -441,12 +527,15 @@ def main():
     log_level = logging.DEBUG
   logging.basicConfig(level=log_level, format="%(asctime)s.%(msecs)03d - %(message)s", datefmt="%H:%M:%S")
 
-  if not options.trace:
-    parser.error("Input trace file is not specified.")
+  if not options.trace and not options.timeline:
+    parser.error("Input trace or timeline file is not specified.")
 
   start = time.time()
   trace = Trace()
-  trace.Process(options.trace)
+  if options.trace:
+    trace.Process(options.trace)
+  elif options.timeline:
+    trace.ProcessTimeline(options.timeline)
 
   if options.user:
     trace.WriteUserTiming(options.user)
