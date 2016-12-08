@@ -55,6 +55,7 @@ protected:
   bool ImagesAreDifferent(CxImage * img1, CxImage* img2, DWORD bottom_margin, DWORD margin);
   void SaveHistogram(CStringA& histogram, CString file, bool compress);
   CStringA GetHistogramJSON(CxImage& image);
+  void WaitForCPUIdle(DWORD wait_seconds);
 
   // Settings
   CString file_base_;

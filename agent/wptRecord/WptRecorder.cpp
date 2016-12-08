@@ -222,6 +222,7 @@ void WptRecorder::Reset() {
 int WptRecorder::Prepare() {
   int ret = 0;
   ATLTRACE("WptRecorder::Prepare");
+  WaitForCPUIdle(30);
   if (FindBrowserWindow()) {
     FindViewport();
   }
@@ -303,6 +304,58 @@ int WptRecorder::WaitForIdle(DWORD wait_seconds) {
   return ret;
 }
 
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptRecorder::WaitForCPUIdle(DWORD wait_seconds) {
+  ATLTRACE("WptRecorder::WaitForCPUIdle - %d seconds", wait_seconds);
+  LARGE_INTEGER start, freq, now;
+  double elapsed = 0;
+  QueryPerformanceFrequency(&freq);
+  QueryPerformanceCounter(&start);
+  elapsed = 0;
+  bool is_idle = false;
+  double target_cpu = 20.0;
+  SYSTEM_INFO sysinfo;
+  GetSystemInfo(&sysinfo);
+  if (sysinfo.dwNumberOfProcessors > 1)
+    target_cpu = target_cpu / (double)sysinfo.dwNumberOfProcessors;
+  ULARGE_INTEGER last_k, last_u, last_i;
+  FILETIME idle_time, kernel_time, user_time;
+  if (GetSystemTimes(&idle_time, &kernel_time, &user_time)) {
+    last_k.LowPart = kernel_time.dwLowDateTime;
+    last_k.HighPart = kernel_time.dwHighDateTime;
+    last_u.LowPart = user_time.dwLowDateTime;
+    last_u.HighPart = user_time.dwHighDateTime;
+    last_i.LowPart = idle_time.dwLowDateTime;
+    last_i.HighPart = idle_time.dwHighDateTime;
+    while (elapsed < wait_seconds && !is_idle) {
+      Sleep(1000);
+      QueryPerformanceCounter(&now);
+      elapsed = (double)(now.QuadPart - start.QuadPart) / (double)freq.QuadPart;
+      if (GetSystemTimes(&idle_time, &kernel_time, &user_time)) {
+        ULARGE_INTEGER k, u, i;
+        k.LowPart = kernel_time.dwLowDateTime;
+        k.HighPart = kernel_time.dwHighDateTime;
+        u.LowPart = user_time.dwLowDateTime;
+        u.HighPart = user_time.dwHighDateTime;
+        i.LowPart = idle_time.dwLowDateTime;
+        i.HighPart = idle_time.dwHighDateTime;
+        __int64 idle = i.QuadPart - last_i.QuadPart;
+        __int64 kernel = k.QuadPart - last_k.QuadPart;
+        __int64 user = u.QuadPart - last_u.QuadPart;
+        if (kernel || user) {
+          double cpu_utilization = (((double)(kernel + user - idle) * 100.0) / (double)(kernel + user));
+          ATLTRACE("Waiting for the CPU to go idle - %0.2f%%, target %0.2F%%", cpu_utilization, target_cpu);
+          if (cpu_utilization < target_cpu)
+            is_idle = true;
+        }
+        last_i.QuadPart = i.QuadPart;
+        last_k.QuadPart = k.QuadPart;
+        last_u.QuadPart = u.QuadPart;
+      }
+    }
+  }
+}
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 int WptRecorder::Process(DWORD start_offset) {
