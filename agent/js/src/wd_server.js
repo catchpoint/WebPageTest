@@ -199,6 +199,7 @@ WebDriverServer.prototype.init = function(args) {
   this.pcapSlicesFile_ = undefined;
   this.netlogFile_ = undefined;
   this.featureUsageFile_ = undefined;
+  this.interactiveFile_ = undefined;
   this.isNavigating_ = false;
   this.mainFrame_ = undefined;
   this.pageLoadCoalesceTimer_ = undefined;
@@ -1035,10 +1036,11 @@ WebDriverServer.prototype.scheduleProcessTrace_ = function() {
       this.cpuSlicesFile_ = path.join(this.runTempDir_, 'timeline_cpu.json.gz');
       this.scriptTimingFile_ = path.join(this.runTempDir_, 'script_timing.json.gz');
       this.featureUsageFile_ = path.join(this.runTempDir_, 'feature_usage.json.gz');
+      this.interactiveFile_ = path.join(this.runTempDir_, 'interactive.json.gz');
       var options = ['lib/trace/trace-parser.py', '-vvvv',
           '-t', this.traceFile_, '-u', this.userTimingFile_,
           '-c', this.cpuSlicesFile_, '-j', this.scriptTimingFile_,
-          '-f', this.featureUsageFile_];
+          '-f', this.featureUsageFile_, '-i', this.interactiveFile_];
       process_utils.scheduleExec(this.app_,
           'python', options, undefined,
           TRACE_PROCESSING_TIMEOUT_MS).then(function(stdout) {
@@ -1596,8 +1598,10 @@ WebDriverServer.prototype.done_ = function() {
       if (this.traceFile_ == undefined) {
         this.cpuSlicesFile_ = path.join(this.runTempDir_, 'timeline_cpu.json.gz');
         this.scriptTimingFile_ = path.join(this.runTempDir_, 'script_timing.json.gz');
+        this.interactiveFile_ = path.join(this.runTempDir_, 'interactive.json.gz');
         var options = ['lib/trace/trace-parser.py', '-vvvv',
-            '-l', devToolsFile, '-c', this.cpuSlicesFile_, '-j', this.scriptTimingFile_];
+            '-l', devToolsFile, '-c', this.cpuSlicesFile_,
+            '-j', this.scriptTimingFile_, '-i', this.interactiveFile_];
         process_utils.scheduleExec(this.app_,
             'python', options, undefined,
             TRACE_PROCESSING_TIMEOUT_MS).then(function(stdout) {
@@ -1631,6 +1635,7 @@ WebDriverServer.prototype.done_ = function() {
           scriptTimingFile: this.scriptTimingFile_,
           pcapSlicesFile: this.pcapSlicesFile_,
           featureUsageFile: this.featureUsageFile_,
+          interactiveFile: this.interactiveFile_,
           netlogFile: this.netlogFile_,
           videoFile: this.videoFile_,
           videoFrames: this.videoFrames_,

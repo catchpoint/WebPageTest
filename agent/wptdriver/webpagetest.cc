@@ -1244,10 +1244,11 @@ bool WebPagetest::ProcessFile(CString file, CAtlList<CString> &newFiles) {
     CString scriptTimingFile = file.Left(pos) + _T("script_timing.json.gz");
     CString userTimingFile = file.Left(pos) + _T("user_timing.json.gz");
     CString featureUsageFile = file.Left(pos) + _T("feature_usage.json.gz");
+    CString interactiveFile = file.Left(pos) + _T("interactive.json.gz");
     CString options;
-    options.Format(_T("-t \"%s\" -c \"%s\" -j \"%s\" -u \"%s\" -f \"%s\""),
+    options.Format(_T("-t \"%s\" -c \"%s\" -j \"%s\" -u \"%s\" -f \"%s\", -i \"%s\""),
                    (LPCTSTR)file, (LPCTSTR)cpuFile, (LPCTSTR)scriptTimingFile,
-                   (LPCTSTR)userTimingFile, (LPCTSTR)featureUsageFile);
+                   (LPCTSTR)userTimingFile, (LPCTSTR)featureUsageFile, (LPCTSTR)interactiveFile);
     OutputDebugStringA("Processing trace file");
     if (RunPythonScript(_T("support\\trace-parser.py"), options)) {
       if (FileExists(cpuFile)) {
@@ -1265,6 +1266,10 @@ bool WebPagetest::ProcessFile(CString file, CAtlList<CString> &newFiles) {
       if (FileExists(featureUsageFile)) {
         hasNewFiles = true;
         newFiles.AddTail(featureUsageFile);
+      }
+      if (FileExists(interactiveFile)) {
+        hasNewFiles = true;
+        newFiles.AddTail(interactiveFile);
       }
     }
     OutputDebugStringA("Processing trace file - complete");

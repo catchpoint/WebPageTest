@@ -273,13 +273,25 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
     if (ipcMsg.featureUsageFile) {
       logger.debug("Processing Feature usage file: " + ipcMsg.featureUsageFile);
       try {
-        var buffer = fs.readFileSync(ipcMsg.pcapSlicesFile);
+        var buffer = fs.readFileSync(ipcMsg.featureUsageFile);
         if (buffer) {
           job.resultFiles.push(new wpt_client.ResultFile(
               wpt_client.ResultFile.ResultType.GZIP,
               'feature_usage.json.gz', 'application/x-gzip', buffer));
         }
-        fs.unlinkSync(ipcMsg.pcapSlicesFile);
+        fs.unlinkSync(ipcMsg.featureUsageFile);
+      } catch(e) {}
+    }
+    if (ipcMsg.interactiveFile) {
+      logger.debug("Processing interactive usage file: " + ipcMsg.interactiveFile);
+      try {
+        var buffer = fs.readFileSync(ipcMsg.interactiveFile);
+        if (buffer) {
+          job.resultFiles.push(new wpt_client.ResultFile(
+              wpt_client.ResultFile.ResultType.GZIP,
+              'interactive.json.gz', 'application/x-gzip', buffer));
+        }
+        fs.unlinkSync(ipcMsg.interactiveFile);
       } catch(e) {}
     }
     if (ipcMsg.screenshots && ipcMsg.screenshots.length > 0) {
