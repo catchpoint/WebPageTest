@@ -960,7 +960,7 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
       message.params.categories = '-*,' + message.params.categories;
     }
     if (1 === this.task_.timeline) {
-      message.params.categories = message.params.categories + ',toplevel,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame';
+      message.params.categories = message.params.categories + ',toplevel,v8.execute,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame';
       if (this.task_.timelineStackDepth) {
         message.params.categories = message.params.categories + ',disabled-by-default-devtools.timeline.stack,devtools.timeline.stack';
       }

@@ -14087,9 +14087,9 @@ wpt.chromeDebugger.StartTrace = function() {
     else
       traceCategories = '-*';
     if (g_instance.timeline)
-      traceCategories = traceCategories + ',toplevel,blink.console,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame';
+      traceCategories = traceCategories + ',toplevel,blink.console,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame,v8.execute,disabled-by-default-blink.feature_usage';
     if (g_instance.timelineStackDepth > 0)
-      traceCategories += ',disabled-by-default-devtools.timeline.stack,devtools.timeline.stack';
+      traceCategories += ',disabled-by-default-v8.runtime_stats_sampling,disabled-by-default-v8.cpu_profiler';
     var params = {categories: traceCategories, options:'record-as-much-as-possible'};
     g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start', params);
   }
