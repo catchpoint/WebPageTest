@@ -14089,7 +14089,7 @@ wpt.chromeDebugger.StartTrace = function() {
     if (g_instance.timeline)
       traceCategories = traceCategories + ',toplevel,blink.console,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame,v8.execute,disabled-by-default-blink.feature_usage';
     if (g_instance.timelineStackDepth > 0)
-      traceCategories += ',disabled-by-default-v8.runtime_stats_sampling,disabled-by-default-v8.cpu_profiler';
+      traceCategories += ',disabled-by-default-devtools.timeline.stack,devtools.timeline.stack';
     var params = {categories: traceCategories, options:'record-as-much-as-possible'};
     g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start', params);
   }
@@ -14660,21 +14660,14 @@ wpt.chromeDebugger.SendInitiator = function(requestId, url, initiator_json) {
  * @param {string} event event string.
  * @param {string} data event data (post body).
  */
-wpt.chromeDebugger.sendEvent = function(event, data, callback, attempt) {
+wpt.chromeDebugger.sendEvent = function(event, data, attempt) {
   // retry on error up to 10 times
   var attempt = (typeof attempt !== 'undefined') ? attempt : 1;
   if (attempt < 10) {
     try {
       var xhr = new XMLHttpRequest();
-      if (typeof callback !== 'undefined') {
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState == 4) {
-            callback();
-          }
-        }
-      }
       xhr.onerror = function() {
-        wpt.chromeDebugger.sendEvent(event, data, callback, attempt + 1);
+        wpt.chromeDebugger.sendEvent(event, data, attempt + 1);
       }
       xhr.open('POST', 'http://127.0.0.1:8888/event/' + event, true);
       xhr.send(data);
@@ -14915,39 +14908,33 @@ function wptFeedFakeTasks() {
 function wptGetTask() {
   if (!g_requesting_task && !g_processing_task) {
     g_requesting_task = true;
-    try {
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', 'http://127.0.0.1:8888/task', true);
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState != 4)
-          return;
-        if (xhr.status != 200) {
-          wpt.LOG.warning('Got unexpected (not 200) XHR status: ' + xhr.status);
+    fetch('http://127.0.0.1:8888/task').then(function(response) {
+      if (response.status == 200) {
+        response.json().then(function(resp) {
+          try {
+            if (resp['statusCode'] == 200) {
+              if (resp['data'] !== undefined) {
+                wptExecuteTask(resp.data);
+              }
+            } else {
+              wpt.LOG.warning('Got unexpected status code ' + resp['statusCode']);
+            }
+            g_requesting_task = false;
+          } catch(err) {
+            g_requesting_task = false;
+            wpt.LOG.warning('Execute task threw an exception');
+          }
+        }).catch(function() {
           g_requesting_task = false;
-          return;
-        }
-        var resp = JSON.parse(xhr.responseText);
-        if (resp.statusCode != 200) {
-          wpt.LOG.warning('Got unexpected status code ' + resp.statusCode);
-          g_requesting_task = false;
-          return;
-        }
-        if (!resp.data) {
-          g_requesting_task = false;
-          return;
-        }
-        wptExecuteTask(resp.data);
+        });
+      } else {
+        wpt.LOG.warning('Unexpected task response status: ' + response.status);
         g_requesting_task = false;
-      };
-      xhr.onerror = function() {
-        wpt.LOG.warning('Got an XHR error!');
-        g_requesting_task = false;
-      };
-      xhr.send();
-    } catch (err) {
-      wpt.LOG.warning('Error getting task: ' + err);
+      }
+    }).catch(function(err) {
       g_requesting_task = false;
-    }
+      wpt.LOG.warning('Task fetch failed');
+    });
   }
 }
 
@@ -14955,16 +14942,10 @@ function wptSendEvent(event_name, query_string, data, attempt) {
   // retry on error up to 10 times
   var attempt = (typeof attempt !== 'undefined') ? attempt : 1;
   if (attempt < 10) {
-    try {
-      var xhr = new XMLHttpRequest();
-      xhr.onerror = function() {
-        wptSendEvent(event_name, query_string, data, attempt + 1);
-      }
-      xhr.open('POST', 'http://127.0.0.1:8888/event/' + event_name + query_string, true);
-      xhr.send(data);
-    } catch (err) {
-      wpt.LOG.warning('Error sending XHR: ' + err);
-    }
+    var url = 'http://127.0.0.1:8888/event/' + event_name + query_string;
+    fetch(url, {method: 'POST', body: data}).catch(function(error) {
+      wptSendEvent(event_name, query_string, data, attempt + 1);
+    });
   }
 }
 

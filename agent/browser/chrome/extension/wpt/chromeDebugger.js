@@ -794,21 +794,14 @@ wpt.chromeDebugger.SendInitiator = function(requestId, url, initiator_json) {
  * @param {string} event event string.
  * @param {string} data event data (post body).
  */
-wpt.chromeDebugger.sendEvent = function(event, data, callback, attempt) {
+wpt.chromeDebugger.sendEvent = function(event, data, attempt) {
   // retry on error up to 10 times
   var attempt = (typeof attempt !== 'undefined') ? attempt : 1;
   if (attempt < 10) {
     try {
       var xhr = new XMLHttpRequest();
-      if (typeof callback !== 'undefined') {
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState == 4) {
-            callback();
-          }
-        }
-      }
       xhr.onerror = function() {
-        wpt.chromeDebugger.sendEvent(event, data, callback, attempt + 1);
+        wpt.chromeDebugger.sendEvent(event, data, attempt + 1);
       }
       xhr.open('POST', 'http://127.0.0.1:8888/event/' + event, true);
       xhr.send(data);
