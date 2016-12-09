@@ -231,6 +231,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for Main thread interactive time periods
+   */
+  public function interactiveFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_interactive.json";
+  }
+
+  /**
    * @return string Path for Chrome trace user timing
    */
   public function chromeUserTimingFile() {

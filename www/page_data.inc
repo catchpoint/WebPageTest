@@ -115,6 +115,13 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
           }
         }
       }
+      
+      // Load main-thread interactive windows if available
+      if (gz_is_file($localPaths->interactiveFile())) {
+        $interactive = json_decode(gz_file_get_contents($localPaths->interactiveFile()), true);
+        if (isset($interactive) && is_array($interactive) && count($interactive))
+          $ret['interactivePeriods'] = $interactive;
+      }
 
       // see if we have CSI metrics to load
       if (is_dir(__DIR__ . '/google') && is_file(__DIR__ . '/google/google_lib.inc')) {
