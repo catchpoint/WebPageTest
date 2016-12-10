@@ -62,15 +62,11 @@ private:
   LARGE_INTEGER     start_check_time_;
   LARGE_INTEGER     start_check_freq_;
 
-  void SendResponse(struct mg_connection *conn,
+  void SendJsonResponse(struct mg_connection *conn,
                     struct http_message *message,
-                    DWORD response_code,
-                    CStringA response_code_string,
                     CStringA response_data);
   void SendResponse(struct mg_connection *conn,
                     struct http_message *message,
-                    DWORD response_code,
-                    CStringA response_code_string,
                     CStringA response_data,
                     CStringA content_type);
   CStringA GetParam(const CStringA query_string, const CStringA key) const;

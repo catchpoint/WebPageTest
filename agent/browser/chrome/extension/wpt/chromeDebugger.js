@@ -794,21 +794,9 @@ wpt.chromeDebugger.SendInitiator = function(requestId, url, initiator_json) {
  * @param {string} event event string.
  * @param {string} data event data (post body).
  */
-wpt.chromeDebugger.sendEvent = function(event, data, attempt) {
-  // retry on error up to 10 times
-  var attempt = (typeof attempt !== 'undefined') ? attempt : 1;
-  if (attempt < 10) {
-    try {
-      var xhr = new XMLHttpRequest();
-      xhr.onerror = function() {
-        wpt.chromeDebugger.sendEvent(event, data, attempt + 1);
-      }
-      xhr.open('POST', 'http://127.0.0.1:8888/event/' + event, true);
-      xhr.send(data);
-    } catch (err) {
-      wpt.LOG.warning('Error sending request data XHR: ' + err);
-    }
-  }
+wpt.chromeDebugger.sendEvent = function(event, data) {
+  var url = 'http://127.0.0.1:8888/event/' + event ;
+  fetch(url, {method: 'POST', body: data});
 };
 
 })());  // namespace

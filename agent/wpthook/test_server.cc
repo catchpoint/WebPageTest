@@ -85,7 +85,6 @@ TestServer::TestServer(WptHook& hook, WptTestHook &test, TestState& test_state,
   ,started_(false)
   ,shutting_down_(false)
   ,stored_ua_string_(false) {
-  InitializeCriticalSection(&cs);
   last_cpu_idle_.QuadPart = 0;
   last_cpu_kernel_.QuadPart = 0;
   last_cpu_user_.QuadPart = 0;
@@ -97,7 +96,6 @@ TestServer::TestServer(WptHook& hook, WptTestHook &test, TestState& test_state,
 -----------------------------------------------------------------------------*/
 TestServer::~TestServer(void){
   Stop();
-  DeleteCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------
@@ -177,223 +175,206 @@ void TestServer::Stop(void){
   We received a request that we need to respond to
 -----------------------------------------------------------------------------*/
 void TestServer::HTTPRequest(struct mg_connection *conn, struct http_message *message) {
-  if (shutting_down_)
-    return;
+  CStringA json_response, text_response, response_type;
+  DWORD response_code = RESPONSE_OK;
 
-  hook_.LateInit();
-  EnterCriticalSection(&cs);
-  CStringA uri(message->uri.p, (int)message->uri.len);
-  CStringA query_string(message->query_string.p, (int)message->query_string.len);
-  //OutputDebugStringA(CStringA(message->uri) + CStringA("?") + message->query_string);
-  // Keep track of CPU utilization so we will know what it looks like when we
-  // get a request to actually start.
-  ATLTRACE("[wpthook] (%d) HTTP Request: %s%s", GetCurrentThreadId(), (LPCSTR)uri, query_string.GetLength() ? (LPCSTR)("?" + query_string) : "");
-  if ( uri == "/task") {
-    if (!stored_ua_string_) {
-      if (!test_state_.shared_.OverrodeUAString()) {
-        mg_str * ua = mg_get_http_header(message, "User-Agent");
-        if (ua) {
-          CStringA user_agent(ua->p, (int)ua->len);
-          ATLTRACE("Current UA string: %s", (LPCSTR)user_agent);
-          HKEY ua_key;
-          if (RegCreateKeyEx(HKEY_CURRENT_USER,
-              _T("Software\\WebPagetest\\wptdriver\\BrowserUAStrings"), 0, 0, 0, 
-              KEY_READ | KEY_WRITE, 0, &ua_key, 0) == ERROR_SUCCESS) {
-            RegSetValueExA(ua_key, CT2A((LPCWSTR)test_._browser), 0, REG_SZ,
-                          (const LPBYTE)(LPCSTR)user_agent, 
-                          user_agent.GetLength() + 1);
-            RegCloseKey(ua_key);
+  if (!shutting_down_) {
+    hook_.LateInit();
+    CStringA uri(message->uri.p, (int)message->uri.len);
+    CStringA query_string(message->query_string.p, (int)message->query_string.len);
+    //OutputDebugStringA(CStringA(message->uri) + CStringA("?") + message->query_string);
+    // Keep track of CPU utilization so we will know what it looks like when we
+    // get a request to actually start.
+    ATLTRACE("[wpthook] (%d) HTTP Request: %s%s", GetCurrentThreadId(), (LPCSTR)uri, query_string.GetLength() ? (LPCSTR)("?" + query_string) : "");
+    if ( uri == "/task") {
+      if (!stored_ua_string_) {
+        if (!test_state_.shared_.OverrodeUAString()) {
+          mg_str * ua = mg_get_http_header(message, "User-Agent");
+          if (ua) {
+            CStringA user_agent(ua->p, (int)ua->len);
+            ATLTRACE("Current UA string: %s", (LPCSTR)user_agent);
+            HKEY ua_key;
+            if (RegCreateKeyEx(HKEY_CURRENT_USER,
+                _T("Software\\WebPagetest\\wptdriver\\BrowserUAStrings"), 0, 0, 0, 
+                KEY_READ | KEY_WRITE, 0, &ua_key, 0) == ERROR_SUCCESS) {
+              RegSetValueExA(ua_key, CT2A((LPCWSTR)test_._browser), 0, REG_SZ,
+                            (const LPBYTE)(LPCSTR)user_agent, 
+                            user_agent.GetLength() + 1);
+              RegCloseKey(ua_key);
+            }
           }
         }
+        stored_ua_string_ = true;
       }
-      stored_ua_string_ = true;
-    }
-    CStringA task;
-    if (started_ || OkToStart(true)) {
-      bool record = false;
-      test_.GetNextTask(task, record);
-      if (record)
-        hook_.Start();
-    }
-    if (!task.IsEmpty()) {
-      ATLTRACE("[wpthook] - task: %s", (LPCSTR)task);
-    }
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, task);
-  } else if (uri == "/event/load") {
-    CString fixed_viewport = GetParam(query_string, "fixedViewport");
-    if (!fixed_viewport.IsEmpty())
-      test_state_._fixed_viewport = _ttoi(fixed_viewport);
-    DWORD dom_count = 0;
-    if (GetDwordParam(query_string, "domCount", dom_count) &&
-        dom_count)
-      test_state_._dom_element_count = dom_count;
-    // Browsers may get "/event/window_timing" to set "onload" time.
-    DWORD load_time = 0;
-    GetDwordParam(query_string, "timestamp", load_time);
-    hook_.OnLoad();
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, "");
-  } else if (uri == "/event/window_timing") {
-    //OutputDebugStringA(CStringA("Window timing:") + query_string);
-    DWORD start = 0;
-    GetDwordParam(query_string, "domContentLoadedEventStart",
-                  start);
-    DWORD end = 0;
-    GetDwordParam(query_string, "domContentLoadedEventEnd",
-                  end);
-    if (start < 0 || start > 3600000)
+      CStringA task;
+      if (started_ || OkToStart(true)) {
+        bool record = false;
+        test_.GetNextTask(task, record);
+        if (record)
+          hook_.Start();
+      }
+      if (!task.IsEmpty()) {
+        ATLTRACE("[wpthook] - task: %s", (LPCSTR)task);
+      }
+      json_response = task;
+    } else if (uri == "/event/load") {
+      CString fixed_viewport = GetParam(query_string, "fixedViewport");
+      if (!fixed_viewport.IsEmpty())
+        test_state_._fixed_viewport = _ttoi(fixed_viewport);
+      DWORD dom_count = 0;
+      if (GetDwordParam(query_string, "domCount", dom_count) &&
+          dom_count)
+        test_state_._dom_element_count = dom_count;
+      // Browsers may get "/event/window_timing" to set "onload" time.
+      DWORD load_time = 0;
+      GetDwordParam(query_string, "timestamp", load_time);
+      hook_.OnLoad();
+    } else if (uri == "/event/window_timing") {
+      //OutputDebugStringA(CStringA("Window timing:") + query_string);
+      DWORD start = 0;
+      GetDwordParam(query_string, "domContentLoadedEventStart",
+                    start);
+      DWORD end = 0;
+      GetDwordParam(query_string, "domContentLoadedEventEnd",
+                    end);
+      if (start < 0 || start > 3600000)
+        start = 0;
+      if (end < 0 || end > 3600000)
+        end = 0;
+      hook_.SetDomContentLoadedEvent(start, end);
       start = 0;
-    if (end < 0 || end > 3600000)
+      GetDwordParam(query_string, "loadEventStart", start);
       end = 0;
-    hook_.SetDomContentLoadedEvent(start, end);
-    start = 0;
-    GetDwordParam(query_string, "loadEventStart", start);
-    end = 0;
-    GetDwordParam(query_string, "loadEventEnd", end);
-    if (start < 0 || start > 3600000)
-      start = 0;
-    if (end < 0 || end > 3600000)
-      end = 0;
-    hook_.SetLoadEvent(start, end);
-    DWORD first_paint = 0;
-    GetDwordParam(query_string, "msFirstPaint", first_paint);
-    if (first_paint < 0 || first_paint > 3600000)
-      first_paint = 0;
-    hook_.SetFirstPaint(first_paint);
-    DWORD dom_interactive = 0;
-    GetDwordParam(query_string, "domInteractive", dom_interactive);
-    if (dom_interactive < 0 || dom_interactive > 3600000)
-      dom_interactive = 0;
-    hook_.SetDomInteractiveEvent(dom_interactive);
-    DWORD dom_loading = 0;
-    GetDwordParam(query_string, "domLoading", dom_loading);
-    if (dom_loading < 0 || dom_loading > 3600000)
-      dom_loading = 0;
-    hook_.SetDomLoadingEvent(dom_loading);
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, "");
-  } else if (uri == "/event/navigate") {
-    hook_.OnNavigate();
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, "");
-  } else if (uri == "/event/complete") {
-    hook_.OnNavigateComplete();
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, "");
-  } else if (uri == "/event/navigate_error") {
-    CString err_str = GetUnescapedParam(query_string, "str");
-    test_state_.OnStatusMessage(CString(_T("Navigation Error: ")) + err_str);
-    GetIntParam(query_string, "error",
-                test_state_._test_result);
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, "");
-  } else if (uri == "/event/all_dom_elements_loaded") {
-    DWORD load_time = 0;
-    GetDwordParam(query_string, "load_time", load_time);
-    hook_.OnAllDOMElementsLoaded(load_time);
-    // TODO: Log the all dom elements loaded time into its metric.
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, "");
-  } else if (uri == "/event/dom_element") {
-    DWORD time = 0;
-    GetDwordParam(query_string, "load_time", time);
-    CString dom_element = GetUnescapedParam(query_string,
-                                              "name_value");
-    // TODO: Store the dom element loaded time.
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, "");
-  } else if (uri == "/event/title") {
-    CString title = GetParam(query_string, "title");
-    if (!title.IsEmpty())
-      test_state_.TitleSet(title);
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, "");
-  } else if (uri == "/event/status") {
-    CString status = GetParam(query_string, "status");
-    if (!status.IsEmpty())
-      test_state_.OnStatusMessage(status);
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, "");
-  } else if (uri == "/event/request_data") {
-    CString body = GetPostBody(conn, message);
-    //OutputDebugStringA("\n\n*****\n\n");
-    //OutputDebugString(body);
-    requests_.ProcessBrowserRequest(body);
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, "");
-  } else if (uri == "/event/initiator") {
-    CStringA body = GetPostBodyA(conn, message);
-    requests_.ProcessInitiatorData(body);
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, "");
-  } else if (uri == "/event/user_timing") {
-    CString body = GetPostBody(conn, message);
-    test_state_.SetUserTiming(body);
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, "");
-  } else if (uri == "/event/console_log") {
-    if (test_state_._active) {
+      GetDwordParam(query_string, "loadEventEnd", end);
+      if (start < 0 || start > 3600000)
+        start = 0;
+      if (end < 0 || end > 3600000)
+        end = 0;
+      hook_.SetLoadEvent(start, end);
+      DWORD first_paint = 0;
+      GetDwordParam(query_string, "msFirstPaint", first_paint);
+      if (first_paint < 0 || first_paint > 3600000)
+        first_paint = 0;
+      hook_.SetFirstPaint(first_paint);
+      DWORD dom_interactive = 0;
+      GetDwordParam(query_string, "domInteractive", dom_interactive);
+      if (dom_interactive < 0 || dom_interactive > 3600000)
+        dom_interactive = 0;
+      hook_.SetDomInteractiveEvent(dom_interactive);
+      DWORD dom_loading = 0;
+      GetDwordParam(query_string, "domLoading", dom_loading);
+      if (dom_loading < 0 || dom_loading > 3600000)
+        dom_loading = 0;
+      hook_.SetDomLoadingEvent(dom_loading);
+    } else if (uri == "/event/navigate") {
+      hook_.OnNavigate();
+    } else if (uri == "/event/complete") {
+      hook_.OnNavigateComplete();
+    } else if (uri == "/event/navigate_error") {
+      CString err_str = GetUnescapedParam(query_string, "str");
+      test_state_.OnStatusMessage(CString(_T("Navigation Error: ")) + err_str);
+      GetIntParam(query_string, "error",
+                  test_state_._test_result);
+    } else if (uri == "/event/all_dom_elements_loaded") {
+      DWORD load_time = 0;
+      GetDwordParam(query_string, "load_time", load_time);
+      hook_.OnAllDOMElementsLoaded(load_time);
+      // TODO: Log the all dom elements loaded time into its metric.
+    } else if (uri == "/event/dom_element") {
+      DWORD time = 0;
+      GetDwordParam(query_string, "load_time", time);
+      CString dom_element = GetUnescapedParam(query_string,
+                                                "name_value");
+      // TODO: Store the dom element loaded time.
+    } else if (uri == "/event/title") {
+      CString title = GetParam(query_string, "title");
+      if (!title.IsEmpty())
+        test_state_.TitleSet(title);
+    } else if (uri == "/event/status") {
+      CString status = GetParam(query_string, "status");
+      if (!status.IsEmpty())
+        test_state_.OnStatusMessage(status);
+    } else if (uri == "/event/request_data") {
       CString body = GetPostBody(conn, message);
-      test_state_.AddConsoleLogMessage(body);
+      //OutputDebugStringA("\n\n*****\n\n");
+      //OutputDebugString(body);
+      requests_.ProcessBrowserRequest(body);
+    } else if (uri == "/event/initiator") {
+      CStringA body = GetPostBodyA(conn, message);
+      requests_.ProcessInitiatorData(body);
+    } else if (uri == "/event/user_timing") {
+      CString body = GetPostBody(conn, message);
+      test_state_.SetUserTiming(body);
+    } else if (uri == "/event/console_log") {
+      if (test_state_._active) {
+        CString body = GetPostBody(conn, message);
+        test_state_.AddConsoleLogMessage(body);
+      }
+    } else if (uri == "/event/timed_event") {
+      CString body = GetPostBody(conn, message);
+      //OutputDebugStringW("Timed event: " + body);
+      test_state_.AddTimedEvent(body);
+    } else if (uri == "/event/custom_metrics") {
+      CString body = GetPostBody(conn, message);
+      //OutputDebugStringW("Custom Metrics: " + body);
+      test_state_.SetCustomMetrics(body);
+    } else if (uri == "/event/stats") {
+      DWORD dom_count = 0;
+      //OutputDebugStringA(CStringA("DOM Count:") + query_string);
+      if (GetDwordParam(query_string, "domCount", dom_count) &&
+          dom_count)
+        test_state_._dom_element_count = dom_count;
+    } else if (uri == "/event/trace") {
+      CStringA body = CT2A(GetPostBody(conn, message));
+      if (body.GetLength())
+        trace_.AddEvents(body);
+    } else if (uri == "/event/paint") {
+      //test_state_.PaintEvent(0, 0, 0, 0);
+    } else if (uri == "/event/received_data") {
+      test_state_.received_data_ = true;
+	  } else if (uri.Left(6) == "/blank") {
+      if (!started_)
+        OkToStart(false);
+      test_state_.UpdateBrowserWindow();
+      text_response = BLANK_HTML;
+      response_type = "text/html";
+	  } else if (uri.Left(12) == "/viewport.js") {
+      DWORD width = 0;
+      DWORD height = 0;
+      GetDwordParam(query_string, "w", width);
+      GetDwordParam(query_string, "h", height);
+      test_state_.UpdateBrowserWindow(width, height);
+      text_response = BLANK_RESPONSE;
+      response_type = "application/javascript";
+    } else if (uri == "/event/responsive") {
+      GetIntParam(query_string, "isResponsive",
+                  test_state_._is_responsive);
+      GetIntParam(query_string, "viewportSpecified",
+                  test_state_._viewport_specified);
+      test_state_.CheckResponsive();
+    } else if (uri == "/event/debug") {
+      CStringA body = CT2A(GetPostBody(conn, message));
+      OutputDebugStringA(body);
     }
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, "");
-  } else if (uri == "/event/timed_event") {
-    CString body = GetPostBody(conn, message);
-    //OutputDebugStringW("Timed event: " + body);
-    test_state_.AddTimedEvent(body);
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, "");
-  } else if (uri == "/event/custom_metrics") {
-    CString body = GetPostBody(conn, message);
-    //OutputDebugStringW("Custom Metrics: " + body);
-    test_state_.SetCustomMetrics(body);
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, "");
-  } else if (uri == "/event/stats") {
-    DWORD dom_count = 0;
-    //OutputDebugStringA(CStringA("DOM Count:") + query_string);
-    if (GetDwordParam(query_string, "domCount", dom_count) &&
-        dom_count)
-      test_state_._dom_element_count = dom_count;
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, "");
-  } else if (uri == "/event/trace") {
-    CStringA body = CT2A(GetPostBody(conn, message));
-    if (body.GetLength())
-      trace_.AddEvents(body);
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, "");
-  } else if (uri == "/event/paint") {
-    //test_state_.PaintEvent(0, 0, 0, 0);
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, "");
-  } else if (uri == "/event/received_data") {
-    test_state_.received_data_ = true;
-	} else if (uri.Left(6) == "/blank") {
-    if (!started_)
-      OkToStart(false);
-    test_state_.UpdateBrowserWindow();
-	  SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, BLANK_HTML, "text/html");
-	} else if (uri.Left(12) == "/viewport.js") {
-    DWORD width = 0;
-    DWORD height = 0;
-    GetDwordParam(query_string, "w", width);
-    GetDwordParam(query_string, "h", height);
-    test_state_.UpdateBrowserWindow(width, height);
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, BLANK_RESPONSE, "application/javascript");
-  } else if (uri == "/event/responsive") {
-    GetIntParam(query_string, "isResponsive",
-                test_state_._is_responsive);
-    GetIntParam(query_string, "viewportSpecified",
-                test_state_._viewport_specified);
-    test_state_.CheckResponsive();
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, "");
-  } else if (uri == "/event/debug") {
-    CStringA body = CT2A(GetPostBody(conn, message));
-    OutputDebugStringA(body);
-    SendResponse(conn, message, RESPONSE_OK, RESPONSE_OK_STR, "");
-  } else {
-    // unknown command fall-through
-    SendResponse(conn, message, RESPONSE_ERROR_NOT_IMPLEMENTED, 
-                RESPONSE_ERROR_NOT_IMPLEMENTED_STR, "");
   }
-  LeaveCriticalSection(&cs);
+
+  if (response_type.IsEmpty())
+    SendJsonResponse(conn, message, json_response);
+  else
+    SendResponse(conn, message, text_response, response_type);
 }
 
 /*-----------------------------------------------------------------------------
   Send a JSON/JSONP response back to the caller
 -----------------------------------------------------------------------------*/
-void TestServer::SendResponse(struct mg_connection *conn,
+void TestServer::SendJsonResponse(struct mg_connection *conn,
                   struct http_message *message,
-                  DWORD response_code,
-                  CStringA response_code_string,
                   CStringA response_data){
 
   CStringA callback;
   CStringA request_id;
+
+  ATLTRACE("[wpthook] TestServer::SendJsonResponse");
 
   // process the query parameters
   if (message->query_string.len) {
@@ -413,10 +394,8 @@ void TestServer::SendResponse(struct mg_connection *conn,
     response += callback + "(";
 
   // now the standard REST container
-  CStringA buff;
-  CStringA data = "";
-  buff.Format("{\"statusCode\":%d,\"statusText\":\"%s\"", response_code, 
-    (LPCSTR)response_code_string);
+  CStringA buff("{\"statusCode\":200,\"statusText\":\"OK\"");
+  CStringA data("");
   data += buff;
   if (request_id.GetLength())
     data += CStringA(",\"requestId\":\"") + request_id + "\"";
@@ -447,13 +426,13 @@ void TestServer::SendResponse(struct mg_connection *conn,
 -----------------------------------------------------------------------------*/
 void TestServer::SendResponse(struct mg_connection *conn,
                   struct http_message *message,
-                  DWORD response_code,
-                  CStringA response_code_string,
                   CStringA response_data,
                   CStringA content_type){
 
   CStringA callback;
   CStringA request_id;
+
+  ATLTRACE("[wpthook] TestServer::SendResponse (with content type)");
 
   // process the query parameters
   if (message->query_string.len) {

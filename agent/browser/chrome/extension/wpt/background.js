@@ -258,15 +258,9 @@ function wptGetTask() {
   }
 }
 
-function wptSendEvent(event_name, query_string, data, attempt) {
-  // retry on error up to 10 times
-  var attempt = (typeof attempt !== 'undefined') ? attempt : 1;
-  if (attempt < 10) {
-    var url = 'http://127.0.0.1:8888/event/' + event_name + query_string;
-    fetch(url, {method: 'POST', body: data}).catch(function(error) {
-      wptSendEvent(event_name, query_string, data, attempt + 1);
-    });
-  }
+function wptSendEvent(event_name, data, attempt) {
+  var url = 'http://127.0.0.1:8888/event/' + event_name ;
+  fetch(url, {method: 'POST', body: data});
 }
 
 function wptHostMatches(host, filter) {
@@ -402,26 +396,22 @@ chrome.extension.onRequest.addListener(
     if (request.message == 'DOMElementLoaded') {
       var dom_element_time = new Date().getTime() - g_start;
       wptSendEvent(
-          'dom_element',
-          '?name_value=' + encodeURIComponent(request.name_value) +
-          '&time=' + dom_element_time);
+          'dom_element?name_value=' + encodeURIComponent(request.name_value) +
+          '&time=' + dom_element_time, '');
     }
     else if (request.message == 'AllDOMElementsLoaded') {
       var time = new Date().getTime() - g_start;
-      wptSendEvent(
-          'all_dom_elements_loaded',
-          '?load_time=' + time);
+      wptSendEvent('all_dom_elements_loaded?load_time=' + time, '');
     }
     else if (request.message == 'wptLoad') {
-      wptSendEvent('load', 
-                   '?timestamp=' + request.timestamp + 
-                   '&fixedViewport=' + request.fixedViewport);
+      wptSendEvent('load?timestamp=' + request.timestamp + 
+                   '&fixedViewport=' + request.fixedViewport, '');
     } else if (request.message == 'wptResponsive') {
       if (request['isResponsive'] !== undefined)
-        wptSendEvent('responsive', '?isResponsive=' + request.isResponsive);
+        wptSendEvent('responsive?isResponsive=' + request.isResponsive, '');
     } else if (request.message == 'wptCustomMetrics') {
       if (request['data'] !== undefined)
-        wptSendEvent('custom_metrics', '', JSON.stringify(request.data));
+        wptSendEvent('custom_metrics', JSON.stringify(request.data));
     }
     // TODO: check whether calling sendResponse blocks in the content script
     // side in page.
