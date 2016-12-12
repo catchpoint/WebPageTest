@@ -53,6 +53,8 @@ if( $view == 'simple' || $view == 'pss' )
     $view = 'pss';
 elseif ($view == 'pss_path')
     $view = 'pss_path';
+elseif ($view == 'cf')
+    $view = 'cf';
 elseif ($view == 'blink')
     $view = 'blink';
 elseif ($view == 'weblite') {
@@ -102,7 +104,7 @@ if( $dirty )
 $page_keywords = array('Bulk','Result','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Bulk website performance test result$testLabel.";
 
-if($csv && $view == 'pss')
+if($csv && ($view == 'pss' || $view == 'cf'))
 {
     $testInfo = $test['testinfo'];
     header ("Content-type: text/csv");
@@ -116,7 +118,7 @@ elseif($csv && $view == 'pss_path')
     if ($complete)
         DisplayPSSPath($tests, $test['testinfo']['video'], $dirty);
 }
-elseif($json && $view == 'pss')
+elseif($json && ($view == 'pss' || $view = 'cf'))
 {
     if ($complete)
         DisplayPSS($tests, $test['testinfo']['video'], $dirty);
@@ -179,13 +181,15 @@ else
             if( $view == 'pss' || $view == 'pss_path' )
             {
                 $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? "/compare?pssid=$id" : "/pss.php?pssid=$id",
-                                    'Test Result' => FRIENDLY_URLS ? "/result/$id/" : "/results.php?test=$id",
-                                    'PageSpeed Service' => 'https://developers.google.com/speed/pagespeed/service');
+                                    'Test Result' => FRIENDLY_URLS ? "/result/$id/" : "/results.php?test=$id");
                 if (array_key_exists('testinfo', $test) && array_key_exists('pss_advanced', $test['testinfo']) && $test['testinfo']['pss_advanced']) {                
                     $navTabs['New Comparison'] = FRIENDLY_URLS ? "/compare?pssid=$id&option=prioritize_visible_content" : "/pss.php?pssid=$id&option=prioritize_visible_content";
                 }
             }
-            elseif ($view == 'weblite')
+            elseif ($view == 'cf') {
+                $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? "/compare-cf?pssid=$id" : "/compare-cf.php?pssid=$id",
+                                    'Test Result' => FRIENDLY_URLS ? "/result/$id/" : "/results.php?test=$id");
+            } elseif ($view == 'weblite')
             {
                 $navTabs = array(   'New Comparison' => "/optimized?pssid=$id",
                                     'Test Result' => "/result/$id/");
@@ -228,7 +232,7 @@ else
                         echo "<h2>$label<br><span class=\"small\">(You can bookmark this page to come back or share the results with others)</span></h2>";
                     }
 
-                    if( $view == 'pss' )
+                    if( $view == 'pss' || $view == 'cf' )
                         DisplayPSS($tests, $test['testinfo']['video'], $dirty);
                     elseif( $view == 'weblite' )
                         DisplayPSS($tests, $test['testinfo']['video'], $dirty);
@@ -293,14 +297,6 @@ else
                 {
                     if( $view == 'pss' || $view == 'pss_path' )
                     {
-                        ?>
-                        <div class="left" style="width: 630px; margin-left: auto; margin-right: auto;">
-                        <p>Here are some resources you can browse while you wait for testing to complete (all open in new browser tabs):</p>
-                        <ul class="bullet_list">
-                        <li><a href="https://developers.google.com/speed/pagespeed/service" target="_blank">PageSpeed Service home page</a> - information about the service</li>
-                        </ul>
-                        </div>
-                        <?php
                     } elseif( $view == 'bulk' ) {
                         if( FRIENDLY_URLS )
                             echo "<br>Download Partial Combined Raw: <a href=\"/result/$id/{$id}_bulk_page_data.csv\">Page Data</a> - <a href=\"/result/$id/{$id}_bulk_requests.csv\">Object Data</a>";
