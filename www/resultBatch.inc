@@ -834,32 +834,6 @@ function DisplayPSS(&$tests, $video, &$dirty)
         $count++;
     }
 
-    $baseDomainRedirect = false;
-    $baseDomainSSL = false;
-    global $mod_pagespeed;
-    if (!$mod_pagespeed && !$weblite) {
-      if (!strncasecmp($url, 'https://', 8))
-        $baseDomainSSL = true;
-      $requests = getRequests($tests['urls'][1]['id'], $tests['urls'][1]['path'], $tests['urls'][1]['fvMedian'], 0, $secure);
-      if( count($requests) ) {
-          if($basePage = GetBasePage($requests)) {
-              // see if there was a domain redirect for the base page
-              $testedHost = $requests[0]['host'];
-              $basePageHost = $basePage['host'];
-              if( $testedHost != $basePageHost )
-                  $baseDomainRedirect = true;
-              
-              // see if any of the requests served from the base page were over ssl
-              foreach( $requests as &$request ) {
-                  if( $request['host'] == $basePageHost && $request['is_secure'] ) {
-                      $baseDomainSSL = true;
-                      break;
-                  }
-              }
-          }
-      }
-    }
-
     if( $json || $csv )
     {
         $domains = array();
@@ -878,10 +852,6 @@ function DisplayPSS(&$tests, $video, &$dirty)
         GetRequestStats($optimized[1]['request_data'], $domains['Optimized RV'], $mime_stats['Optimized RV']);
 
         $testIssues = 0;
-        if ($baseDomainRedirect)
-            $testIssues |= 1;
-        if ($baseDomainSSL)
-            $testIssues |= 2;
         $json_response['data'] = array();
         $json_response['data']['Test_ID'] = $id;
         $json_response['data']['URL'] = htmlspecialchars_decode($url);
@@ -971,23 +941,6 @@ function DisplayPSS(&$tests, $video, &$dirty)
     }
     else
     {
-        if ($baseDomainRedirect)
-        {
-            $testUrl = '/compare?url=' . urlencode($basePage['host'] . $basePage['url']);
-            echo '<div class="alert">';
-            echo '<h1>Domain Redirect Detected</h1>';
-            echo "It looks like <b>$testedHost</b> redirects to <b>$basePageHost</b> which prevented the optimization from being correctly measured.<br>Please <a href=\"$testUrl\">re-run the test</a> using <b>$basePageHost</b> instead.";
-            echo '</div>';
-        }
-        
-        if( $baseDomainSSL )
-        {
-            echo '<div class="alert">';
-            echo '<h1>HTTPS Content Detected</h1>';
-            echo "It looks like one or more resources from <b>$basePageHost</b> are served over <b>HTTPS</b> which prevented the optimization from being correctly measured.<br>(Testing of the PageSpeed Service does not support serving HTTPS content from the base domain)";
-            echo '</div>';
-        }
-        
         if (array_key_exists('pss_advanced', $testInfo) && $testInfo['pss_advanced']) {
             echo "<h2>Side-by-side Filmstrip (<a href=\"/video/compare.php?bare=1&tests={$tests['urls'][0]['id']},{$tests['urls'][1]['id']}&end=visual\" target=\"_blank\">open in new window</a>)</h2>";
             $e1='';
@@ -1181,8 +1134,6 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
     $videoPathTests = array();
     
     // first pass, check the status of all of the tests and calculate the relevant times
-    $baseDomainRedirect = false;
-    $baseDomainSSL = false;
     foreach($tests['urls'] as &$test) {
         if( preg_match('/(Original|Optimized)(.*)/i', trim($test['l']), $matches) ) {
             $opt_string = $matches[1];
@@ -1216,27 +1167,12 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
             GetRequestStats($entry['requests'], $entry['domains'], $entry['mime_stats']);
             if( !strlen($url) )
                 $url = $entry['median']['URL'];
-            if ($basePage = GetBasePage($entry['requests'])) {
-                $testedHost = $entry['requests'][0]['host'];
-                $basePageHost = $basePage['host'];
-                if( $testedHost != $basePageHost )
-                    $baseDomainRedirect = true;
-                foreach( $entry['requests'] as &$request ) {
-                    if ($request['host'] == $basePageHost && $request['secure']) {
-                        $baseDomainSSL = true;
-                    }
-                }
-            }
         }
     }
 
     if( $csv )
     {
         $testIssues = 0;
-        if ($baseDomainRedirect)
-            $testIssues |= 1;
-        if ($baseDomainSSL)
-            $testIssues |= 2;
 
         echo "Test ID,URL,Location,Base Domain Test Issues,";
         foreach ($testData as $variation => &$configs) {
@@ -1261,36 +1197,6 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
     }
     else
     {
-        if ($baseDomainRedirect)
-        {
-            $testUrl = '/compare?url=' . urlencode($basePage['host'] . $basePage['url']);
-            echo '<div class="alert">';
-            echo '<h1>Domain Redirect Detected</h1>';
-            echo "It looks like <b>$testedHost</b> redirects to <b>$basePageHost</b> which prevented the optimization from being correctly measured.<br>Please <a href=\"$testUrl\">re-run the test</a> using <b>$basePageHost</b> instead.";
-            echo '</div>';
-        }
-        
-        if( $baseDomainSSL )
-        {
-            echo '<div class="alert">';
-            echo '<h1>HTTPS Content Detected</h1>';
-            echo "It looks like one or more resources from <b>$basePageHost</b> are served over <b>HTTPS</b> which prevented the optimization from being correctly measured.<br>(PageSpeed Service does not support serving HTTPS content from the base domain)";
-            echo '</div>';
-        }
-/*        
-        echo '<br><table class="batchResults" border="1" cellpadding="15" cellspacing="0">
-                <tr><th class="empty"></th><th>Original</th><th>Optimized</th><th>Difference</th></tr>';
-
-        foreach ($testData as $variation => &$configs) {
-            $label = "$variation Load Time";
-            if ($variation == 'Page')
-                $label = "First View";
-            elseif( $variation = 'Path' )
-                $label = "Site Navigation";
-            DisplayPathMetric($label, $configs, 'loadTime');
-        }
-        echo '</table><br>';
-*/        
         global $supportsAuth;
         global $admin;
         if( !$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false) ) {
