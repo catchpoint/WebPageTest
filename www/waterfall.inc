@@ -230,6 +230,17 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
         $height += $perf_height - 1;
       }
     }
+    // See if we have main-thread interactive data
+    if (!$is_image_map && gz_is_file($localPaths->interactiveFile())) {
+      $interactive = json_decode(gz_file_get_contents($localPaths->interactiveFile()), true);
+      if (isset($interactive)) {
+        if (is_array($interactive) && count($interactive) > 1) {
+          $height += $row_height;
+        } else {
+          unset($interactive);
+        }
+      }
+    }
     
     if ($show_labels) {
         if ($is_thumbnail) {
@@ -453,6 +464,17 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
               DrawPerfBackground($im, $p, $data_x, $border_color, $bg_colors['alt']);
           }
         }
+        
+        if (isset($interactive)) {
+          $iTop = $height - $row_height - 1;
+          imagerectangle($im, 0, $iTop, $width - 1, $height - 1, $border_color);  // border
+          imageline($im, $data_x, $iTop, $data_x, $height - 1, $border_color);
+          if (!$is_thumbnail) {
+            $font_height = imagefontheight($font);
+            $label_y = $iTop + ($row_height / 2) - ($font_height / 2);
+            imagestring($im, $font, 50, $label_y, "Page is Interactive", $black);
+          }
+        }
 
         // Draw the time scale.
         // $max_ms, $width, $data_x, $black, $time_scale_color, $row_height, $data_height
@@ -664,6 +686,39 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
               }
             }
 
+            // Draw the page interactivity windows
+            if (isset($interactive) && isset($iTop) && $max_ms) {
+              $iBottom = $iTop + $row_height - 1;
+              $iTop += 1;
+              $iLeft = $data_x + 1;
+              $iRight = $width - 2;
+              $iWidth = $iRight - $iLeft;
+              $iScale = $iWidth / $max_ms;
+              $color_interactive = GetColor($im, 178, 234, 148);
+              $color_blocked = GetColor($im, 255, 82, 62);
+              // Default everything to not-interactive
+              imagefilledrectangle($im, $iLeft, $iTop, $iRight, $iBottom, $color_blocked);
+              // Draw the explicit windows from the data
+              $max_interactive = 0;
+              foreach ($interactive as $period) {
+                $l = $iLeft + intval(max(0, $period[0] * $iScale));
+                $r = $iLeft + intval(min($iWidth, $period[1] * $iScale));
+                $max_interactive = $r;
+                if ($r > $l)
+                  imagefilledrectangle($im, $l, $iTop, $r, $iBottom, $color_interactive);
+              }
+              // everything after the last window is interactive
+              if ($max_interactive < $iRight)
+                imagefilledrectangle($im, $max_interactive, $iTop, $iRight, $iBottom, $color_interactive);
+
+              // Everything before start render is N/A (blank)
+              if (isset($page_events['render'])) {
+                $r = $iLeft + intval(min($iWidth, $page_events['render'] * $iScale));
+                if ($r > $iLeft)
+                  imagefilledrectangle($im, $iLeft, $iTop, $r, $iBottom, $white);
+              }
+            }
+            
             // Draw the user timings
             if (isset($user_times)) {
                 foreach ($user_times as $name => $value) {
