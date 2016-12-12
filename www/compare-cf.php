@@ -43,7 +43,7 @@ $page_description = "Cloudflare Comparison Test$testLabel.";
             <input type="hidden" name="location" value="Dulles:Chrome.3G">
             <input type="hidden" name="mobile" value="1">
             <input type="hidden" name="discard" value="1">
-            <input type="hidden" name="runs" value="3">
+            <input type="hidden" name="runs" value="4">
             <input type="hidden" name="bulkurls" value="">
             <input type="hidden" name="vo" value="<?php echo $owner;?>">
             <?php
