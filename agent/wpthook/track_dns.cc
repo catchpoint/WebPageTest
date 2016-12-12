@@ -40,6 +40,7 @@ static LPCSTR blocked_domains[] = {
   "shavar\\.stage\\.mozaws\\.net",
   "aus[^\\.]*\\.mozilla\\.org",        // Firefox update service
   "cdm\\.download\\.adobe\\.com",      // Firefox adobe updates
+  "safebrowsing\\.google\\.com",       // Google safebrowsing list (Firefox)
   NULL
 };
 
