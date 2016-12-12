@@ -344,7 +344,7 @@ else
                         if (xhr.readyState != 4)
                           return;
                         var reload = false;
-                        var interval = 30000;
+                        var interval = 10000;
                         if (xhr.status == 200) {
                             var response = JSON.parse(xhr.responseText);
                             if (response['statusCode'] != undefined &&
@@ -358,7 +358,7 @@ else
                                     reload = true;
                             }
                             if (lastStatusCode == 100) {
-                                interval = 15000;
+                                interval = 5000;
                             }
                             if (response['statusText'] != undefined &&
                                 response['statusText'] != lastStatusText) {
@@ -372,14 +372,14 @@ else
                             setTimeout('UpdateStatus()', interval);
                       };
                       xhr.onerror = function() {
-                        setTimeout('UpdateStatus()', 30000);
+                        setTimeout('UpdateStatus()', 10000);
                       };
                       xhr.send();
                     } catch (err) {
-                        setTimeout('UpdateStatus()', 30000);
+                        setTimeout('UpdateStatus()', 10000);
                     }
                   } else {
-                    setTimeout('UpdateStatus()', 30000);
+                    setTimeout('UpdateStatus()', 10000);
                   }
                 }
                 
