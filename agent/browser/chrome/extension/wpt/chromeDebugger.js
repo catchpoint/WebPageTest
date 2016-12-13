@@ -221,7 +221,7 @@ wpt.chromeDebugger.StartTrace = function() {
     else
       traceCategories = '-*';
     if (g_instance.timeline)
-      traceCategories = traceCategories + ',toplevel,blink.console,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame,v8.execute,disabled-by-default-blink.feature_usage';
+      traceCategories = traceCategories + ',toplevel,blink.console,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame,v8.execute,disabled-by-default-blink.feature_usage,blink.user_timing';
     if (g_instance.timelineStackDepth > 0)
       traceCategories += ',disabled-by-default-devtools.timeline.stack,devtools.timeline.stack';
     var params = {categories: traceCategories, options:'record-as-much-as-possible'};

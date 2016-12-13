@@ -14087,7 +14087,7 @@ wpt.chromeDebugger.StartTrace = function() {
     else
       traceCategories = '-*';
     if (g_instance.timeline)
-      traceCategories = traceCategories + ',toplevel,blink.console,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame,v8.execute,disabled-by-default-blink.feature_usage';
+      traceCategories = traceCategories + ',toplevel,blink.console,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame,v8.execute,disabled-by-default-blink.feature_usage,blink.user_timing';
     if (g_instance.timelineStackDepth > 0)
       traceCategories += ',disabled-by-default-devtools.timeline.stack,devtools.timeline.stack';
     var params = {categories: traceCategories, options:'record-as-much-as-possible'};
@@ -15061,7 +15061,6 @@ function wptHookRequests() {
 chrome.extension.onRequest.addListener(
   function(request, sender, sendResponse) {
     wpt.LOG.info('Message from content script: ' + request.message);
-    /*
     if (request.message == 'DOMElementLoaded') {
       var dom_element_time = new Date().getTime() - g_start;
       wptSendEvent(
@@ -15082,7 +15081,6 @@ chrome.extension.onRequest.addListener(
       if (request['data'] !== undefined)
         wptSendEvent('custom_metrics', JSON.stringify(request.data));
     }
-    */
     // TODO: check whether calling sendResponse blocks in the content script
     // side in page.
     sendResponse({});
