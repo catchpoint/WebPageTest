@@ -203,6 +203,9 @@ WebDriverServer.prototype.init = function(args) {
   this.isNavigating_ = false;
   this.mainFrame_ = undefined;
   this.pageLoadCoalesceTimer_ = undefined;
+  this.activityTime_ = DETECT_ACTIVITY_MS;
+  if (args.task['activityTime'] !== undefined)
+    this.activityTime_ = 1000 * Math.min(Math.max(args.task.activityTime, 0), 30);
   this.tearDown_();
 };
 
@@ -372,7 +375,7 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
         'Network.' === message.method.substring(0, 8)) {
       logger.debug("Activity detected after onload, waiting for page activity to finish");
       clearTimeout(this.pageLoadCoalesceTimer_);
-      var wait_time = DETECT_ACTIVITY_MS;
+      var wait_time = this.activityTime_;
       if (this.task_['time'] !== undefined && this.testStartTime_ !== undefined) {
         // Make sure we meet any minimum test duration that was specified
         var elapsed = (Date.now() - this.testStartTime_) / 1000.0;
@@ -403,7 +406,7 @@ WebDriverServer.prototype.onDevToolsMessage_ = function(message) {
       }
     } else if ('Page.loadEventFired' === message.method) {
       if (this.isRecordingDevTools_) {
-        var wait_time = this.task_['web10'] == 1 ? DETECT_NO_RE_NAVIGATE_MS : DETECT_ACTIVITY_MS;
+        var wait_time = this.task_['web10'] == 1 ? DETECT_NO_RE_NAVIGATE_MS : this.activityTime_;
         if (this.task_['time'] !== undefined && this.testStartTime_ !== undefined) {
           // Make sure we meet any minimum test duration that was specified
           var elapsed = (Date.now() - this.testStartTime_) / 1000.0;

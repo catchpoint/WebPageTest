@@ -274,6 +274,8 @@ bool WptTest::Load(CString& test) {
         } else if (!key.CompareNoCase(_T("time"))) {
           _minimum_duration = MS_IN_SEC * max(_minimum_duration, 
                                min(DEFAULT_TEST_TIMEOUT, _ttoi(value.Trim())));
+        } else if (!key.CompareNoCase(_T("activityTime"))) {
+          _activity_timeout = MS_IN_SEC * min(max(_ttoi(value.Trim()), 0), 30);
         } else if (!key.CompareNoCase(_T("bodies")) && _ttoi(value.Trim())) {
           _save_response_bodies = true;
         } else if (!key.CompareNoCase(_T("htmlbody")) && _ttoi(value.Trim())) {
