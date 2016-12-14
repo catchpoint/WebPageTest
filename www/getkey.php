@@ -300,7 +300,8 @@ function EmailKeyInfo($info) {
       $content .= "$location\n";
   }
   SendMessage($email, 'WebPagetest API Key', $content);
-  echo 'The API key details were sent to ' . htmlspecialchars($email);
+  echo str_replace("\n", "<br>", $content);
+  echo '<br><br>The API key details were also sent to ' . htmlspecialchars($email);
   return $content;
 }
 
