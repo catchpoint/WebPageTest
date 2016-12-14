@@ -57,7 +57,7 @@ function ValidateAPIRequest() {
   $id = $_REQUEST['validate'];
   if ($info = GetRequestInfo($id)) {
     if ($keyinfo = CreateApiKey($info)) {
-      $string = EmailKeyInfo($keyinfo);
+      $string = EmailKeyInfo($keyinfo, true);
       echo '<br><br>';
       $html = str_replace("\n", '<br>', $string);
       $html = str_replace("&", '&AMP;', $html);
@@ -132,7 +132,7 @@ function SumbitRequest() {
       } elseif (BlockEmail($email)) {
         echo 'Sorry, registration is not permitted.  Please contact us for more information.';
       } elseif ($keyinfo = GetKeyInfo($email)) {
-        EmailKeyInfo($keyinfo);
+        EmailKeyInfo($keyinfo, false);
       } elseif ($requestinfo = CreateRequest($email)) {
         EmailValidation($requestinfo);
       } else {
@@ -257,7 +257,7 @@ function CreateRequest($email) {
 * 
 * @param mixed $info
 */
-function EmailKeyInfo($info) {
+function EmailKeyInfo($info, $display) {
   global $prefix;
   $email = $info['email'];
   $content = "Your API key is: {$prefix}.{$info['key']}\n\n";
@@ -300,7 +300,8 @@ function EmailKeyInfo($info) {
       $content .= "$location\n";
   }
   SendMessage($email, 'WebPagetest API Key', $content);
-  echo str_replace("\n", "<br>", $content);
+  if ($display)
+    echo str_replace("\n", "<br>", $content);
   echo '<br><br>The API key details were also sent to ' . htmlspecialchars($email);
   return $content;
 }
