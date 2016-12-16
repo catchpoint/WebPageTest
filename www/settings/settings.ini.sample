@@ -24,8 +24,8 @@ tcpdump_view="http://cloudshark.org/view?url="
 ; Uncomment to enable drawing of vertical lines in the waterfalls for all user timing marks
 ;waterfall_show_user_timing=1
 
-; Uncomment to use mime-colored waterfalls as the default
-;mime_waterfalls=1
+; Comment-out to use classic-colored waterfalls as the default
+mime_waterfalls=1
 
 
 ; *********************
@@ -115,7 +115,7 @@ maxNavigateCount=20
 ;gitUpdate=1
 
 ; Automatically update test agents hourly (pulls the latest test agents from the provided server)
-;agentUpdate=http://cdn.webpagetest.org/
+agentUpdate=http://cdn.webpagetest.org/
 
 ; If an android device is connected to the server, scrape updated APK's off of the
 ; device to be installed on the test agents automatically (for cases where
