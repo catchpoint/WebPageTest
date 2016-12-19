@@ -88,7 +88,7 @@ foreach($compTests as $t) {
 
                     // figure out the real end time (in ms)
                     if (isset($test['end'])) {
-                        $visualComplete = $stepResult->getMetric("visualComplte");
+                        $visualComplete = $stepResult->getMetric("visualComplete");
                         if( !strcmp($test['end'], 'visual') && $visualComplete !== null ) {
                             $test['end'] = $visualComplete;
                         } elseif( !strcmp($test['end'], 'load') ) {
@@ -129,6 +129,21 @@ foreach($compTests as $t) {
     }
 }
 
+$interval = 0;
+if (array_key_exists('ival', $_REQUEST))
+$interval = floatval($_REQUEST['ival']);
+if( $interval <= 0 ) {
+  if ($defaultInterval) {
+    $interval = $defaultInterval;
+  } else if( isset($fastest) ) {
+    if( $fastest > 3000 )
+      $interval = 500;
+    else
+      $interval = 100;
+  } else
+    $interval = 100;
+}
+
 $count = count($tests);
 if( $count ) {
     setcookie('fs', urlencode($_REQUEST['tests']));
@@ -150,115 +165,100 @@ if( !isset($thumbSize) || $thumbSize < 50 || $thumbSize > 500 ) {
         $thumbSize = 200;
 }
 
-$interval = 0;
-if (array_key_exists('ival', $_REQUEST))
-    $interval = floatval($_REQUEST['ival']);
-if( $interval <= 0 ) {
-    if ($defaultInterval) {
-        $interval = $defaultInterval;
-    } else if( isset($fastest) ) {
-        if( $fastest > 3000 )
-            $interval = 500;
-        else
-            $interval = 100;
-    } else
-        $interval = 100;
-}
 
 /**
 * Load information about each of the tests (particularly about the video frames)
 *
 */
 function LoadTestData() {
-    global $tests;
-    global $admin;
-    global $supportsAuth;
-    global $user;
-    global $supports60fps;
+  global $tests;
+  global $admin;
+  global $supportsAuth;
+  global $user;
+  global $supports60fps;
+  global $interval;
 
-    $count = 0;
-    foreach( $tests as &$test ) {
-        $count++;
-        $testInfo = null;
-        $testPath = &$test['path'];
-        if (!empty($test['stepResult'])) {
-            $url = trim($test['stepResult']->getUrl());
-            if (strlen($url)) {
-                $test['url'] = $url;
-            }
-        }
-
-        if (array_key_exists('label', $test) && strlen($test['label'])) {
-          $test['name'] = $test['label'];
-        } else {
-          $testInfo = GetTestInfo($test['id']);
-          if ($testInfo && array_key_exists('label', $testInfo))
-            $test['name'] = trim($testInfo['label']);
-        }
-
-        // See if we have an overridden test label in the sqlite DB
-        $new_label = getLabel($test['id'], $user);
-        if (!empty($new_label)) {
-            $test['name'] = $new_label;
-        }
-
-        if( !strlen($test['name']) ) {
-            $test['name'] = $test['url'];
-            $test['name'] = str_replace('http://', '', $test['name']);
-            $test['name'] = str_replace('https://', '', $test['name']);
-        }
-        $test['index'] = $count;
-
-        $localPaths = new TestPaths("./$testPath", $test["run"], $test["cached"], $test["step"]);
-        $videoPath = $localPaths->videoDir();
-
-        $test['video'] = array();
-        if( is_dir($videoPath) ) {
-            $test['video']['start'] = 20000;
-            $test['video']['end'] = 0;
-            $test['video']['frames'] = array();
-            $test['video']['frame_progress'] = array();
-            $end = null;
-            if (is_numeric($test['end']) && $test['end'] > 0)
-                $end = $test['end'] / 1000.0;
-            if (!empty($test["stepResult"])) {
-                $test['video']['progress'] = $test["stepResult"]->getVisualProgress($end);
-            }
-            if (!empty($test['video']['progress']['frames'])) {
-              foreach($test['video']['progress']['frames'] as $ms => $frame) {
-                if (!$supports60fps && is_array($frame) && array_key_exists('file', $frame) && substr($frame['file'], 0, 3) == 'ms_')
-                  $supports60fps = true;
-                  
-                if ((!$test['end'] || $test['end'] == -1 || $ms <= $test['end']) &&
-                    (!isset($test['initial']) || !count($test['video']['frames']) || $ms >= $test['initial']) ) {
-                  $path = "$videoPath/{$frame['file']}";
-                  if( $ms < $test['video']['start'] )
-                      $test['video']['start'] = $ms;
-                  if( $ms > $test['video']['end'] )
-                      $test['video']['end'] = $ms;
-                  // figure out the dimensions of the source image
-                  if( !array_key_exists('width', $test['video']) ||
-                      !$test['video']['width'] ||
-                      !array_key_exists('height', $test['video']) ||
-                      !$test['video']['height'] ) {
-                      $size = getimagesize($path);
-                      $test['video']['width'] = $size[0];
-                      $test['video']['height'] = $size[1];
-                  }
-                  $test['video']['frames'][$ms] = $frame['file'];
-                  $test['video']['frame_progress'][$ms] = $frame['progress'];
-                }
-              }
-              if ($test['end'] == -1)
-                  $test['end'] = $test['video']['end'];
-              elseif ($test['end'])
-                  $test['video']['end'] = $test['end'];
-            }
-            if( !isset($test['video']['frames'][0]) ) {
-                $test['video']['frames'][0] = $test['video']['frames'][$test['video']['start']]['file'];
-                $test['video']['frame_progress'][0] = $test['video']['frames'][$test['video']['start']]['progress'];
-            }
-        }
+  $count = 0;
+  foreach( $tests as &$test ) {
+    $count++;
+    $testInfo = null;
+    $testPath = &$test['path'];
+    if (!empty($test['stepResult'])) {
+      $url = trim($test['stepResult']->getUrl());
+      if (strlen($url))
+        $test['url'] = $url;
     }
+    
+    // Round the end time up based on the selected interval
+    if (isset($test['end']))
+      $test['end'] = ceil($test['end'] / $interval) * $interval;
+
+    if (array_key_exists('label', $test) && strlen($test['label'])) {
+      $test['name'] = $test['label'];
+    } else {
+      $testInfo = GetTestInfo($test['id']);
+      if ($testInfo && array_key_exists('label', $testInfo))
+        $test['name'] = trim($testInfo['label']);
+    }
+
+    // See if we have an overridden test label in the sqlite DB
+    $new_label = getLabel($test['id'], $user);
+    if (!empty($new_label))
+      $test['name'] = $new_label;
+
+    if( !strlen($test['name']) ) {
+      $test['name'] = $test['url'];
+      $test['name'] = str_replace('http://', '', $test['name']);
+      $test['name'] = str_replace('https://', '', $test['name']);
+    }
+    $test['index'] = $count;
+
+    $localPaths = new TestPaths("./$testPath", $test["run"], $test["cached"], $test["step"]);
+    $videoPath = $localPaths->videoDir();
+
+    $test['video'] = array();
+    if( is_dir($videoPath) ) {
+      $test['video']['start'] = 20000;
+      $test['video']['end'] = 0;
+      $test['video']['frames'] = array();
+      $test['video']['frame_progress'] = array();
+      if (!empty($test["stepResult"]))
+        $test['video']['progress'] = $test["stepResult"]->getVisualProgress();
+      if (!empty($test['video']['progress']['frames'])) {
+        foreach($test['video']['progress']['frames'] as $ms => $frame) {
+          if (!$supports60fps && is_array($frame) && array_key_exists('file', $frame) && substr($frame['file'], 0, 3) == 'ms_')
+            $supports60fps = true;
+            
+          if ((!$test['end'] || $test['end'] == -1 || $ms <= $test['end']) &&
+              (!isset($test['initial']) || !count($test['video']['frames']) || $ms >= $test['initial']) ) {
+            $path = "$videoPath/{$frame['file']}";
+            if( $ms < $test['video']['start'] )
+              $test['video']['start'] = $ms;
+            if( $ms > $test['video']['end'] )
+              $test['video']['end'] = $ms;
+            // figure out the dimensions of the source image
+            if( !array_key_exists('width', $test['video']) ||
+                !$test['video']['width'] ||
+                !array_key_exists('height', $test['video']) ||
+                !$test['video']['height'] ) {
+              $size = getimagesize($path);
+              $test['video']['width'] = $size[0];
+              $test['video']['height'] = $size[1];
+            }
+            $test['video']['frames'][$ms] = $frame['file'];
+            $test['video']['frame_progress'][$ms] = $frame['progress'];
+          }
+        }
+        if ($test['end'] == -1)
+          $test['end'] = $test['video']['end'];
+        elseif ($test['end'])
+          $test['video']['end'] = $test['end'];
+      }
+      if( !isset($test['video']['frames'][0]) ) {
+        $test['video']['frames'][0] = $test['video']['frames'][$test['video']['start']]['file'];
+        $test['video']['frame_progress'][0] = $test['video']['frames'][$test['video']['start']]['progress'];
+      }
+    }
+  }
 }
 ?>
