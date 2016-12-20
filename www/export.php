@@ -19,7 +19,7 @@ if (isset($_REQUEST['php']))
 if (isset($_REQUEST['pretty']))
   $options['pretty'] = $_REQUEST['pretty'];
 if (isset($_REQUEST['run']))
-  $options['run'] = intval($_REQUEST['run']);
+  $options['run'] = $_REQUEST['run'];
   
 $filename = '';
 if (@strlen($url)) {
