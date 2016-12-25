@@ -176,6 +176,8 @@ CDN_PROVIDER cdnList[] = {
   {".stackpathdns.com", "StackPath"},
   {".hosting4cdn.com", "Hosting4CDN"},
   {".netlify.com", "Netlify"},
+  {".belugacdn.com", "Beluga CDN"},
+  {".isprimecdn.com", "ISPrime CDN"},
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -217,6 +219,8 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "Optimal CDN", "Optimal CDN"},
   {"server", "Sucuri/Cloudproxy", "Sucuri/Cloudproxy"},
   {"server", "Netlify", "Netlify"},
+  {"server", "belugacdn.com", "Beluga CDN"},
+  {"X-Beluga-Cache-Status", "BelugaCDN.com", "Beluga CDN"},
   {"section-io-id", "", "section.io"}
 };
 
