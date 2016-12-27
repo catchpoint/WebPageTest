@@ -43,8 +43,7 @@ if (isset($_REQUEST['name']) && isset($_FILES['apk']['tmp_name']) && isset($_FIL
             'activity' => 'org.chromium.content_shell_apk.ContentShellActivity',
             'flagsFile' => '/data/local/tmp/content-shell-command-line',
             'socket' => 'localabstract:content_shell_devtools_remote');
-        if (isset($_REQUEST['type']))
-          $apk_settings['type'] = trim($_REQUEST['type']);
+            
         file_put_contents("./browsers/$name.json", json_encode($apk_settings));
         $md5 = md5_file("./browsers/$name.apk");
         if ($md5 !== false) {
@@ -103,23 +102,9 @@ if (isset($_REQUEST['name']) && isset($_FILES['apk']['tmp_name']) && isset($_FIL
                 <form name="upload" method="POST" action="custom_browsers.php" enctype="multipart/form-data">
                 <br>
                 <label for="name">
-                    Friendly Name:
+                    Friendly Name
                 </label>
                 <input type="text" name="name" id="name" size="40"> <small>(Alpha-numeric, underscores, dashes, no spaces)</small><br><br>
-                <label for="type">
-                    Browser Type:
-                </label>
-                <select name="type">
-                  <option value="Chrome">Chrome</option>
-                  <option value="Blimp">Blimp</option>
-                  <option value="Firefox">Firefox</option>
-                  <option value="Firefox Beta">Firefox Beta</option>
-                  <option value="Opera Mini">Opera Mini</option>
-                  <option value="Samsung Browser">Samsung Browser</option>
-                  <option value="UC Browser">UC Browser</option>
-                  <option value="UC Mini">UC Mini</option>
-                  <option value="QQ Browser">QQ Browser</option>
-                </select><br><br>
                 <label for="apk">
                     APK File
                 </label>
