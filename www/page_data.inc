@@ -168,7 +168,10 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
           }
         }
       }
-      if (!isset($ret['SpeedIndex'])) {
+      if (!isset($ret['SpeedIndex']) ||
+          !array_key_exists('render', $ret) || !$ret['render'] ||
+          !array_key_exists('lastVisualChange', $ret) || !$ret['lastVisualChange'] ||
+          !array_key_exists('visualComplete', $ret) || !$ret['visualComplete']) {
         require_once(__DIR__ . '/video/visualProgress.inc.php');
         $progress = GetVisualProgressForStep($localPaths, $runCompleted, null, null, $startOffset);
         if (isset($progress) && is_array($progress)) {
@@ -305,6 +308,7 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
         'domLoading',
         'domInteractive',
         'lastVisualChange',
+        'visualComplete',
         'server_rtt',
         'firstPaint');
       foreach ($times as $key) {
