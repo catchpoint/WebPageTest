@@ -215,7 +215,7 @@ function BrowserAndroidChrome(app, args) {
     if (separator >= 0) {
       browserName = browserName.substr(separator + 1).trim();
     }
-    this.browserPackage_ = KNOWN_BROWSERS[browserName];
+    this.browserPackage_ = args.task.customBrowser_package || KNOWN_BROWSERS[browserName];
     if (!this.browserPackage_ && BLACK_BOX_BROWSERS[browserName] != undefined) {
       this.browserPackage_ = BLACK_BOX_BROWSERS[browserName].package;
       this.browserActivity_ = BLACK_BOX_BROWSERS[browserName].activity;
