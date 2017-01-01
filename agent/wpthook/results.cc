@@ -411,7 +411,7 @@ void Results::SaveVideo(void) {
     // get the end-state histogram to use for comparing
     Histogram end_histogram;
     CxImage end_img;
-    if (_screen_capture.GetImage(CapturedImage::FULLY_LOADED, end_img))
+    if (_screen_capture._captured_images.GetTail().Get(end_img))
       end_histogram.FromImage(end_img);
     visually_complete_ = 0;
     speed_index_ = 0;
