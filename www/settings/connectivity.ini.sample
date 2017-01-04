@@ -59,11 +59,11 @@ plr=0
 timeout=240
 
 [3G_EM]
-label="Emerging Markets 3G (400 Kbps, 400ms RTT, 2% loss)"
+label="Emerging Markets 3G (400 Kbps, 400ms RTT)"
 bwIn=400000
 bwOut=400000
 latency=400
-plr=2
+plr=0
 timeout=480
 
 [Edge]
