@@ -58,6 +58,14 @@ latency=200
 plr=0
 timeout=240
 
+[3G_EM]
+label="Emerging Markets 3G (400 Kbps, 400ms RTT, 2% loss)"
+bwIn=400000
+bwOut=400000
+latency=400
+plr=2
+timeout=480
+
 [Edge]
 label="Mobile Edge (240 Kbps/200 Kbps 840ms RTT)"
 bwIn=240000

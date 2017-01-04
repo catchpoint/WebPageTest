@@ -101,7 +101,7 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 .test_box input.text.large {width: 680px;height: 33px;padding: 0 10px;font-size: 18px;font-weight: bold;border: none;}
 .test_box input.text.short {width: 40px;}
 .test_box input.before_label {float: left;width: auto;}
-.test_box select {width: 270px;}
+.test_box select {width: 380px;}
 .pending_tests {margin-left: 10px;color: #dcb315;font-size: 10px;}
 #addheaders {width: 400px;}
 #location {width: 370px;}
