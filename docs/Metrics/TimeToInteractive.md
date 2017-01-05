@@ -17,5 +17,5 @@ At any point in time this is the number of outstanding requests for HTML, Script
 
 ## TTI Calculation
 1. Start looking for TTI at the *first meaningful paint*
-2. Look for the first point in time where there are less than 2 *in-flight document requests* that occurs inside of an *interactive window*
+2. Look for the first *interactive window* where there is a contiguous period of 5 seconds fully contained within the interactive window with no more than 2 *in-flight document requests*
 3. TTI is the start of the *interactive window* from step 2 or the *first meaningful paint*, whichever is later
