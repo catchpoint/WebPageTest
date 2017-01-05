@@ -84,10 +84,18 @@ function GetApkFileInfo($path, &$size, &$date, &$time) {
   if (!$result && isset($output) && is_array($output)) {
     $last = end($output);
     $parts = preg_split('/\s+/', $last);
-    if (count($parts) >= 7) {
+    if (count($parts) >= 8) {
+      $size = intval($parts[4]);
+      $date = trim($parts[5]);
+      $time = trim($parts[6]);
+      echo "Size: $size, Date: $date, Time: $time\n";
+      if ($size > 0 && strlen($date) && strlen($time))
+        $ok = true;
+    } elseif (count($parts) >= 7) {
       $size = intval($parts[3]);
       $date = trim($parts[4]);
       $time = trim($parts[5]);
+      echo "Size: $size, Date: $date, Time: $time\n";
       if ($size > 0 && strlen($date) && strlen($time))
         $ok = true;
     }
