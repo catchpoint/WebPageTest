@@ -68,7 +68,7 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = 
  * @return array|null Associative array with data for the given run or null on failure
  */
 function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo = null) {
-  $cacheVer = 3;
+  $cacheVer = 4;
   $cacheFile = $localPaths->pageDataCacheFile($cacheVer);
   $ret = null;
   if (gz_is_file($cacheFile))
@@ -241,6 +241,17 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
         if (isset($priority_streams) && is_array($priority_streams) && count($priority_streams)) {
           $ret["priorityStreams"] = $priority_streams;
         }
+      }
+      
+      // Calculate Time to Interactive if we have First Meaningful Paint and interactive Windows
+      if (isset($ret['interactivePeriods']) &&
+          is_array($ret['interactivePeriods']) &&
+          count($ret['interactivePeriods']) &&
+          isset($ret['chromeUserTiming.firstMeaningfulPaint']) &&
+          $ret['chromeUserTiming.firstMeaningfulPaint'] > 0) {
+        $TTI = CalculateTimeToInteractive($localPaths, $ret['chromeUserTiming.firstMeaningfulPaint'], $ret['interactivePeriods']);
+        if (isset($TTI) && $TTI > 0)
+          $ret['TimeToInteractive'] = $TTI;
       }
     }
     
@@ -824,5 +835,97 @@ function ParseUserTiming($file) {
     }
   }
   return $user_timing;
+}
+
+/**
+* Time To Interactive: https://github.com/WPO-Foundation/webpagetest/blob/master/docs/Metrics/TimeToInteractive.md
+* 
+* @param mixed $localPaths
+* @param mixed $firstMeaningfulPaint
+* @param mixed $interactiveWindows
+*/
+function CalculateTimeToInteractive($localPaths, $firstMeaningfulPaint, $interactiveWindows) {
+  $TTI = null;
+  
+  // Start by filtering the interactive windows to only include 5 second windows that don't
+  // end before FMP.
+  $end = 0;
+  $iw = array();
+  foreach ($interactiveWindows as $window) {
+    $end = $window[1];
+    $duration = $window[1] - $window[0];
+    if ($end >= $firstMeaningfulPaint && $duration >= 5000)
+      $iw[] = $window;
+  }
+  
+  $rw = array();
+  if (count($iw)) {
+    // Find all of the request windows with 5 seconds of no more than 2 concurrent document requests
+    require_once(__DIR__ . '/object_detail.inc');
+    require_once(__DIR__ . '/contentColors.inc');
+    $requests = getRequestsForStep($localPaths, null, $has_secure_requests);
+    if (isset($requests) && is_array($requests) && count($requests)) {
+      // Build a list of start/end events for document requests
+      $re = array();
+      foreach ($requests as $request) {
+        if (isset($request['contentType']) &&
+            isset($request['load_start']) &&
+            $request['load_start'] >= 0 &&
+            isset($request['load_end']) &&
+            $request['load_end'] >= $firstMeaningfulPaint &&
+            IsTTIDocumentMimeType(ContentType($request['contentType'], $request['url']))) {
+          $re[] = array('type' => 'start', 'time' => $request['load_start']);
+          $re[] = array('type' => 'end', 'time' => $request['load_end']);
+        }
+      }
+      
+      // Sort the events by time
+      if (count($re)) {
+        usort($re, function($a, $b) {return ($a['time'] > $b['time']) ? +1 : -1;});
+        // walk the list of events tracking the number of in-flight requests and log any windows > 5 seconds
+        $window_start = 0;
+        $in_flight = 0;
+        foreach ($re as $e) {
+          if ($e['type'] == 'start') {
+            $in_flight++;
+            if (isset($window_start) && $in_flight > 2) {
+              $window_end = $e['time'];
+              if ($window_end - $window_start >= 5000)
+                $rw[] = array($window_start, $window_end);
+              $window_start = null;
+            }
+          } else {
+            $in_flight--;
+            if (!isset($window_start) && $in_flight <= 2)
+              $window_start = $e['time'];
+          }
+        }
+        if (isset($window_start) && $end - $window_start >= 5000)
+          $rw[] = array($window_start, $end);
+      }
+    }
+  }
+  
+  // Find the first interactive window that also has at least a 5 second intersection with one of the request windows
+  if (count($rw)) {
+    $window = null;
+    foreach($iw as $i) {
+      foreach($rw as $r) {
+        $intersect = array(max($i[0], $r[0]), min($i[1], $r[1]));
+        if ($intersect[1] - $intersect[0] >= 5000) {
+          $window = $i;
+          break 2;
+        }
+      }
+    }
+    if (isset($window))
+      $TTI = max($firstMeaningfulPaint, $window[0]);
+  }
+  
+  return $TTI;
+}
+
+function IsTTIDocumentMimeType($type) {
+  return $type == 'js' || $type == 'css' || $type == 'html' || $type == 'font';
 }
 ?>

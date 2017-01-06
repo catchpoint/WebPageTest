@@ -177,6 +177,7 @@ $common_label = implode(" ", $common_labels);
                             'TTFB' => 'Time to First Byte (ms)', 
                             'basePageSSLTime' => 'Base Page SSL Time (ms)',
                             'render' => 'Time to Start Render (ms)', 
+                            'TimeToInteractive' => 'Time to Interactive (ms)',
                             'visualComplete' => 'Time to Visually Complete (ms)',
                             'lastVisualChange' => 'Last Visual Change (ms)', 
                             'titleTime' => 'Time to Title (ms)',

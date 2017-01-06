@@ -716,6 +716,16 @@ function DisplayGraphs() {
     $progress_end = 0;
     foreach($tests as &$test) {
         $hasStepResult = array_key_exists('stepResult', $test) && is_a($test['stepResult'], "TestStepResult");
+        if ($hasStepResult &&
+            !isset($timeMetrics['chromeUserTiming.firstMeaningfulPaint']) &&
+            $test['stepResult']->getMetric('chromeUserTiming.firstMeaningfulPaint') > 0) {
+            $timeMetrics['chromeUserTiming.firstMeaningfulPaint'] = "First Meaningful Paint";
+        }
+        if ($hasStepResult &&
+            !isset($timeMetrics['TimeToInteractive']) &&
+            $test['stepResult']->getMetric('TimeToInteractive') > 0) {
+            $timeMetrics['TimeToInteractive'] = "Time To Interactive";
+        }
         $test['breakdown'] = $hasStepResult ? $test['stepResult']->getMimeTypeBreakdown() : array();
         if (array_key_exists('progress', $test['video'])
             && array_key_exists('frames', $test['video']['progress'])) {
@@ -736,8 +746,10 @@ function DisplayGraphs() {
       echo '<div id="compare_requests" class="compare-graph"></div>';
       echo '<div id="compare_bytes" class="compare-graph"></div>';
     } else {
-      foreach($timeMetrics as $metric => $label)
-        echo "<div id=\"compare_times_$metric\" class=\"compare-graph\"></div>";
+      foreach($timeMetrics as $metric => $label) {
+        $metricKey = str_replace('.', '', $metric);
+        echo "<div id=\"compare_times_$metricKey\" class=\"compare-graph\"></div>";
+      }
       foreach($mimeTypes as $type) {
         echo "<div id=\"compare_requests_$type\" class=\"compare-graph\"></div>";
         echo "<div id=\"compare_bytes_$type\" class=\"compare-graph\"></div>";
@@ -812,8 +824,9 @@ function DisplayGraphs() {
             }
             $row = 0;
             foreach($timeMetrics as $metric => $label) {
-              echo "var dataTimes$metric = new google.visualization.DataView(dataTimes);\n";
-              echo "dataTimes$metric.setRows($row, $row);\n";
+              $metricKey = str_replace('.', '', $metric);
+              echo "var dataTimes$metricKey = new google.visualization.DataView(dataTimes);\n";
+              echo "dataTimes$metricKey.setRows($row, $row);\n";
               $row++;
             }
             echo "dataRequests.setValue(0, 0, 'Total');\n";
@@ -863,8 +876,9 @@ function DisplayGraphs() {
               echo "bytesChart.draw(dataBytes, {title: 'Bytes'});\n";
             } else {
               foreach($timeMetrics as $metric => $label) {
-                echo "var timesChart$metric = new google.visualization.ColumnChart(document.getElementById('compare_times_$metric'));\n";
-                echo "timesChart$metric.draw(dataTimes$metric, {title: '$label (ms)'});\n";
+                $metricKey = str_replace('.', '', $metric);
+                echo "var timesChart$metricKey = new google.visualization.ColumnChart(document.getElementById('compare_times_$metricKey'));\n";
+                echo "timesChart$metricKey.draw(dataTimes$metricKey, {title: '$label (ms)'});\n";
               }
               foreach($mimeTypes as $type) {
                 echo "var requestsChart$type = new google.visualization.ColumnChart(document.getElementById('compare_requests_$type'));\n";
