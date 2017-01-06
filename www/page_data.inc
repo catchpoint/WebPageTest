@@ -68,7 +68,7 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = 
  * @return array|null Associative array with data for the given run or null on failure
  */
 function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo = null) {
-  $cacheVer = 4;
+  $cacheVer = 5;
   $cacheFile = $localPaths->pageDataCacheFile($cacheVer);
   $ret = null;
   if (gz_is_file($cacheFile))
@@ -862,7 +862,6 @@ function CalculateTimeToInteractive($localPaths, $firstMeaningfulPaint, $interac
   if (count($iw)) {
     // Find all of the request windows with 5 seconds of no more than 2 concurrent document requests
     require_once(__DIR__ . '/object_detail.inc');
-    require_once(__DIR__ . '/contentColors.inc');
     $requests = getRequestsForStep($localPaths, null, $has_secure_requests);
     if (isset($requests) && is_array($requests) && count($requests)) {
       // Build a list of start/end events for document requests
@@ -872,8 +871,7 @@ function CalculateTimeToInteractive($localPaths, $firstMeaningfulPaint, $interac
             isset($request['load_start']) &&
             $request['load_start'] >= 0 &&
             isset($request['load_end']) &&
-            $request['load_end'] >= $firstMeaningfulPaint &&
-            IsTTIDocumentMimeType(ContentType($request['contentType'], $request['url']))) {
+            $request['load_end'] >= $firstMeaningfulPaint) {
           $re[] = array('type' => 'start', 'time' => $request['load_start']);
           $re[] = array('type' => 'end', 'time' => $request['load_end']);
         }
@@ -923,9 +921,5 @@ function CalculateTimeToInteractive($localPaths, $firstMeaningfulPaint, $interac
   }
   
   return $TTI;
-}
-
-function IsTTIDocumentMimeType($type) {
-  return $type == 'js' || $type == 'css' || $type == 'html' || $type == 'font';
 }
 ?>

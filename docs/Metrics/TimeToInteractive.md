@@ -12,10 +12,10 @@ Chrome exposes this measurement as a "blink.user_timing" trace event with a name
 ### Interactive Window
 The browser's main thread is considered "interactive" when it is not blocked for more than **50ms** by any single task so it will be able to respond to user input within 50ms.  An interactive window is a period of **at least 5 seconds** where there are no main-thread tasks that take more than 50ms.
 
-### In-flight document requests
-At any point in time this is the number of outstanding requests for HTML, Script, Styles or Fonts.
+### In-flight requests
+At any point in time this is the number of outstanding requests.
 
 ## TTI Calculation
 1. Start looking for TTI at the *first meaningful paint*
-2. Look for the first *interactive window* where there is a contiguous period of 5 seconds fully contained within the interactive window with no more than 2 *in-flight document requests*
+2. Look for the first *interactive window* where there is a contiguous period of 5 seconds fully contained within the interactive window with no more than 2 *in-flight requests*
 3. TTI is the start of the *interactive window* from step 2 or the *first meaningful paint*, whichever is later
