@@ -1,4 +1,4 @@
-FROM php:5.6-apache
+FROM php:7.1-apache
 MAINTAINER iteratec WPT Team <wpt@iteratec.de>
 
 RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sources.list && \
