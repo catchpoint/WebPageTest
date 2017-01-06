@@ -1,3 +1,4 @@
 [submodule "agent/lib/libjpeg-turbo"] 
   path =  agent/lib/libjpeg-turbo
-  url = https://github.com/libjpeg-turbo/libjpeg-turbo/tree/1.5.1
+  url = https://github.com/libjpeg-turbo/libjpeg-turbo.git
+  tag = 1.5.1
