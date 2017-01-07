@@ -102,6 +102,6 @@ VOLUME /var/www/html/logs
 
 EXPOSE 80 443
 
-ENTRYPOINT [""]
+ENTRYPOINT []
 
 CMD ["/usr/bin/supervisord","-c","/etc/supervisord.conf"]
