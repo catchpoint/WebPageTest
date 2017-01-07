@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -ex
 
 echo PHP INFO
 php -i
@@ -6,7 +6,7 @@ php -i
 apachectl -t
 apachectl start
 echo HOMEPAGE
-echo $(wget http://localhost/)
+curl http://localhost/
 echo GOOGLE
-echo $(wget 'http://localhost/runtest.php?url=www.google.com')
+curl 'http://localhost/runtest.php?url=www.google.com'
 apachectl stop
