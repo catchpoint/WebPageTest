@@ -3,10 +3,10 @@
 echo PHP INFO
 php -i
 
-apachectl -t
-apachectl start
+#apachectl -t
+service apache2 start
 echo HOMEPAGE
 curl http://localhost/
 echo GOOGLE
 curl 'http://localhost/runtest.php?url=www.google.com'
-apachectl stop
+service apache2 stop
