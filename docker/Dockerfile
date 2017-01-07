@@ -92,7 +92,7 @@ RUN chmod 755 /scripts/wpt_cron_call.sh && \
 # tests
 COPY tests/run.sh /var/www/html/tests/docker-test.sh
 RUN cd /var/www/html/tests/ && \
-    bash -c run.sh
+    bash run.sh
 
 VOLUME /var/www/html/settings
 VOLUME /var/www/html/results
