@@ -1,12 +1,30 @@
 sudo: required
 
+git:
+  depth: 3
+
+language: php
+
 services:
   - docker
 
-script:
+php:
+  - 5.6
+  - 7.0
+  - 7.1
+
+before_script:
   - cd docker
   - docker build -t myimage .
-  - docker run -d --name mycontainer myimage
+  - docker run -d --name mycontainer -p 80:80 myimage
   - docker ps -a 
   - docker logs mycontainer
-  - docker exec mycontainer wget 'http://localhost/runtest.php?url=www.google.com'
+  - docker exec mycontainer wget 'http://0/install/'
+  - docker exec mycontainer wget 'http://0/runtest.php?url=www.google.com'
+
+script:
+  - php -i
+  - pwd
+  - php www/install/index.php
+  - batchtool/wpt_batch.py -s http://0 -i batchtool/urls.txt -f batchtool/result
+  - ls -la batchtool/result
