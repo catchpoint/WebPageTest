@@ -3,7 +3,7 @@ MAINTAINER iteratec WPT Team <wpt@iteratec.de>
 
 ARG BUILD_DATE
 ARG VCS_REF
-ARG VERSION
+ARG VERSION=3.0
     
 LABEL org.label-schema.build-date=$BUILD_DATE \
           org.label-schema.name="WebPAGETEST" \
