@@ -52,7 +52,7 @@ RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sour
     \
     wget --progress=dot:mega -O WebPageTest.zip https://github.com/WPO-Foundation/webpagetest/releases/download/WebPageTest-${VERSION}/webpagetest_${VERSION}.zip && \
     unzip WebPageTest.zip 'www/*' && \
-    mv www/* /var/www/html
+    mv www/* /var/www/html && \
     rm  WebPageTest.zip && ls -la /var/www/html
 
 RUN chown -R www-data:www-data /var/www/html && \
