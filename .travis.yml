@@ -19,8 +19,8 @@ before_script:
   - docker run -d --name mycontainer -p 80:80 myimage
   - docker ps -a 
   - docker logs mycontainer
-  - docker exec mycontainer wget 'http://0/install/'
-  - docker exec mycontainer wget 'http://0/runtest.php?url=www.google.com'
+  - docker exec mycontainer curl 'http://0/install/'
+  - docker exec mycontainer curl 'http://0/runtest.php?url=www.google.com'
 
 script:
   - php -i
