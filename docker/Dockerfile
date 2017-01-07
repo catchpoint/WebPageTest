@@ -32,6 +32,7 @@ RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sour
     python \
     python-pillow \
     cron \
+    lsof \
     supervisor && \
     \
     DEBIAN_FRONTEND=noninteractive apt-get install -q -y --force-yes\
