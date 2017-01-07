@@ -51,8 +51,9 @@ RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sour
     echo "extension=imagick.so" > /usr/local/etc/php/conf.d/ext-imagick.ini && \
     \
     wget --progress=dot:mega -O WebPageTest.zip https://github.com/WPO-Foundation/webpagetest/releases/download/WebPageTest-${VERSION}/webpagetest_${VERSION}.zip && \
-    unzip WebPageTest.zip 'www/*' -d /var/www/html && \
-    rm WebPageTest.zip && ls -la /var/www/html
+    unzip WebPageTest.zip 'www/*' && \
+    mv www/* /var/www/html
+    rm  WebPageTest.zip && ls -la /var/www/html
 
 RUN chown -R www-data:www-data /var/www/html && \
     cd /var/www/html && \
