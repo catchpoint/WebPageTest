@@ -56,8 +56,8 @@ RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sour
     cd /tmp && \
     wget --progress=dot:mega -O WebPageTest.zip $GITHUB_REPO/releases/download/WebPageTest-${VERSION}/webpagetest_${VERSION}.zip && \
     unzip WebPageTest.zip 'www/*' && \
-    mv www/* /var/www/html/ && \
-    rm -fr www WebPageTest.zip && \
+    mv www/* /var/www/html/  && \
+    rm -fr /tmp/* /var/tmp/* && \
     \
     chown -R www-data:www-data /var/www/html && \
     cd /var/www/html && \
