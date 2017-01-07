@@ -1,5 +1,8 @@
 #!/bin/bash
 
+echo PHP INFO
+php -i
+
 apachectl -t
 apachectl start
 echo HOMEPAGE
