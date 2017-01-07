@@ -1,6 +1,20 @@
 FROM php:7.1-apache
 MAINTAINER iteratec WPT Team <wpt@iteratec.de>
 
+ARG BUILD_DATE
+ARG VCS_REF
+ARG VERSION
+    
+LABEL org.label-schema.build-date=$BUILD_DATE \
+          org.label-schema.name="WebPAGETEST" \
+          org.label-schema.description="WebPagetest performance tool" \
+          org.label-schema.url="http://www.webpagetest.org" \
+          org.label-schema.vcs-ref=$VCS_REF \
+          org.label-schema.vcs-url="https://github.com/ebonharme/webpagetest" \
+          org.label-schema.vendor="WPO Foundation" \
+          org.label-schema.version=$VERSION \
+          org.label-schema.schema-version="1.0"
+          
 RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sources.list && \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -q -y --force-yes \
