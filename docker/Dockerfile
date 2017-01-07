@@ -87,8 +87,12 @@ COPY server/config/supervisord/supervisord_cron.conf /etc/supervisor/conf.d/supe
 # copy script to run WPT cron scripts
 COPY server/scripts/wpt_cron_call.sh /scripts/wpt_cron_call.sh
 RUN chmod 755 /scripts/wpt_cron_call.sh && \
-    crontab /etc/crontab && \
-    bash -c tests/run.sh
+    crontab /etc/crontab
+
+# tests
+COPY tests/run.sh /var/www/html/tests/docker-test.sh
+RUN cd /var/www/html/tests/ && \
+    bash -c run.sh
 
 VOLUME /var/www/html/settings
 VOLUME /var/www/html/results
