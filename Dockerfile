@@ -4,18 +4,19 @@ MAINTAINER iteratec WPT Team <wpt@iteratec.de>
 ARG BUILD_DATE
 ARG VCS_REF
 ARG VERSION=3.0
+ARG GIT_REPO=https://github.com/WPO-Foundation/webpagetest.git
     
 LABEL org.label-schema.build-date=$BUILD_DATE \
           org.label-schema.name="WebPAGETEST" \
           org.label-schema.description="WebPagetest performance tool" \
           org.label-schema.url="http://www.webpagetest.org" \
           org.label-schema.vcs-ref=$VCS_REF \
-          org.label-schema.vcs-url="https://github.com/ebonharme/webpagetest" \
+          org.label-schema.vcs-url=$GIT_REPO \
           org.label-schema.vendor="WPO Foundation" \
           org.label-schema.version=$VERSION \
           org.label-schema.schema-version="1.0"
           
-RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sources.list && \
+RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sources.list.d/deb-multimedia.list && \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -q -y --force-yes \
     deb-multimedia-keyring \
@@ -36,20 +37,23 @@ RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sour
     DEBIAN_FRONTEND=noninteractive apt-get install -q -y --force-yes\
     ffmpeg && \
     apt-get clean && \
-    apt-get autoclean
-
-RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ && \
+    apt-get autoclean && \
+    \
+    docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ && \
     docker-php-ext-install gd && \
     docker-php-ext-install zip && \
     docker-php-ext-install curl && \
-    a2enmod expires headers rewrite
-
-RUN apt-get install -y libmagickwand-6.q16-dev --no-install-recommends && \
+    a2enmod expires headers rewrite && \
+    \
+    apt-get install -y libmagickwand-6.q16-dev --no-install-recommends && \
     ln -s /usr/lib/x86_64-linux-gnu/ImageMagick-6.8.9/bin-Q16/MagickWand-config /usr/bin && \
     pecl install imagick && \
-    echo "extension=imagick.so" > /usr/local/etc/php/conf.d/ext-imagick.ini
-
-COPY www /var/www/html
+    echo "extension=imagick.so" > /usr/local/etc/php/conf.d/ext-imagick.ini && \
+    \
+    cd /var/www && \
+    wget -O WebPageTest.tar.gz https://github.com/WPO-Foundation/webpagetest/archive/WebPageTest-${VERSION}.tar.gz && \
+    tar xvf WebPageTest.tar.gz www && \
+    mv www html
 
 RUN chown -R www-data:www-data /var/www/html && \
     cd /var/www/html && \
