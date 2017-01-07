@@ -1,0 +1,12 @@
+sudo: required
+
+services:
+  - docker
+
+script:
+  - cd docker
+  - docker build -t myimage .
+  - docker run -d --name mycontainer myimage
+  - docker ps -a 
+  - docker logs mycontainer
+  - docker exec mycontainer wget 'http://localhost/runtest.php?url=www.google.com'
