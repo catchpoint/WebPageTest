@@ -88,7 +88,7 @@ COPY server/config/supervisord/supervisord_cron.conf /etc/supervisor/conf.d/supe
 COPY server/scripts/wpt_cron_call.sh /scripts/wpt_cron_call.sh
 RUN chmod 755 /scripts/wpt_cron_call.sh && \
     crontab /etc/crontab && \
-    tests/run.sh
+    bash -c tests/run.sh
 
 VOLUME /var/www/html/settings
 VOLUME /var/www/html/results
