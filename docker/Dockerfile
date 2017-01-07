@@ -4,14 +4,14 @@ MAINTAINER iteratec WPT Team <wpt@iteratec.de>
 ARG BUILD_DATE
 ARG VCS_REF
 ARG VERSION=3.0
-ARG GIT_REPO=https://github.com/WPO-Foundation/webpagetest.git
+ARG GITHUB_REPO=https://github.com/WPO-Foundation/webpagetest
     
 LABEL org.label-schema.build-date=$BUILD_DATE \
-          org.label-schema.name="WebPAGETEST" \
+          org.label-schema.name="WebPagetest" \
           org.label-schema.description="WebPagetest performance tool" \
           org.label-schema.url="http://www.webpagetest.org" \
           org.label-schema.vcs-ref=$VCS_REF \
-          org.label-schema.vcs-url=$GIT_REPO \
+          org.label-schema.vcs-url=$GITUB_REPO \
           org.label-schema.vendor="WPO Foundation" \
           org.label-schema.version=$VERSION \
           org.label-schema.schema-version="1.0"
@@ -46,12 +46,15 @@ RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sour
     a2enmod expires headers rewrite && \
     \
     DEBIAN_FRONTEND=noninteractive apt-get install -q -y libmagickwand-6.q16-dev --no-install-recommends && \
+    apt-get clean -y && \
+	apt-get --purge autoremove && \
+	rm -f /var/lib/apt/lists/*_dists_* && \
     ln -s /usr/lib/x86_64-linux-gnu/ImageMagick-6.8.9/bin-Q16/MagickWand-config /usr/bin && \
     pecl install imagick && \
     echo "extension=imagick.so" > /usr/local/etc/php/conf.d/ext-imagick.ini && \
     \
     cd /tmp && \
-    wget --progress=dot:mega -O WebPageTest.zip https://github.com/WPO-Foundation/webpagetest/releases/download/WebPageTest-${VERSION}/webpagetest_${VERSION}.zip && \
+    wget --progress=dot:mega -O WebPageTest.zip $GITHUB_REPO/releases/download/WebPageTest-${VERSION}/webpagetest_${VERSION}.zip && \
     unzip WebPageTest.zip 'www/*' && \
     mv www/* /var/www/html/ && \
     rm -fr www WebPageTest.zip && \
