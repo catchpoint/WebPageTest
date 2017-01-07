@@ -55,7 +55,7 @@ RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sour
     \
     cd /tmp && \
     wget --progress=dot:mega -O WebPageTest.zip $GITHUB_REPO/releases/download/WebPageTest-${VERSION}/webpagetest_${VERSION}.zip && \
-    unzip WebPageTest.zip 'www/*' && \
+    unzip -q WebPageTest.zip 'www/*' && \
     mv www/* /var/www/html/  && \
     rm -fr /tmp/* /var/tmp/* && \
     \
@@ -99,5 +99,7 @@ VOLUME /var/www/html/results
 VOLUME /var/www/html/logs
 
 EXPOSE 80 443
+
+ENTRYPOINT [""]
 
 CMD ["/usr/bin/supervisord","-c","/etc/supervisord.conf"]
