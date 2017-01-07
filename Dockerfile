@@ -45,15 +45,14 @@ RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sour
     docker-php-ext-install curl && \
     a2enmod expires headers rewrite && \
     \
-    apt-get install -y libmagickwand-6.q16-dev --no-install-recommends && \
+    apt-get install -q -y libmagickwand-6.q16-dev --no-install-recommends && \
     ln -s /usr/lib/x86_64-linux-gnu/ImageMagick-6.8.9/bin-Q16/MagickWand-config /usr/bin && \
     pecl install imagick && \
     echo "extension=imagick.so" > /usr/local/etc/php/conf.d/ext-imagick.ini && \
     \
-    cd /var/www && \
-    wget -O WebPageTest.tar.gz https://github.com/WPO-Foundation/webpagetest/archive/WebPageTest-${VERSION}.tar.gz && \
-    tar xvf WebPageTest.tar.gz www && \
-    mv www html
+    wget --progress=dot:mega -O WebPageTest.zip https://github.com/WPO-Foundation/webpagetest/releases/download/WebPageTest-${VERSION}/webpagetest_${VERSION}.zip && \
+    unzip -j WebPageTest.zip 'www/*' -d /var/www/html && \
+    rm WebPageTest.zip && ls -la /var/www/html
 
 RUN chown -R www-data:www-data /var/www/html && \
     cd /var/www/html && \
