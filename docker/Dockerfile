@@ -45,17 +45,18 @@ RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sour
     docker-php-ext-install curl && \
     a2enmod expires headers rewrite && \
     \
-    apt-get install -q -y libmagickwand-6.q16-dev --no-install-recommends && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -q -y libmagickwand-6.q16-dev --no-install-recommends && \
     ln -s /usr/lib/x86_64-linux-gnu/ImageMagick-6.8.9/bin-Q16/MagickWand-config /usr/bin && \
     pecl install imagick && \
     echo "extension=imagick.so" > /usr/local/etc/php/conf.d/ext-imagick.ini && \
     \
+    cd /tmp && \
     wget --progress=dot:mega -O WebPageTest.zip https://github.com/WPO-Foundation/webpagetest/releases/download/WebPageTest-${VERSION}/webpagetest_${VERSION}.zip && \
     unzip WebPageTest.zip 'www/*' && \
-    mv www/* /var/www/html && \
-    rm  WebPageTest.zip && ls -la /var/www/html
-
-RUN chown -R www-data:www-data /var/www/html && \
+    mv www/* /var/www/html/ && \
+    rm -fr www WebPageTest.zip && \
+    \
+    chown -R www-data:www-data /var/www/html && \
     cd /var/www/html && \
     chmod 0777 dat && \
     chmod 0777 -R work && \
@@ -76,7 +77,7 @@ COPY server/config/apache2.conf /etc/apache2/apache2.conf
 COPY server/config/crontab /etc/crontab
 
 # config supervisor to run apache AND cron
-COPY server/config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY server/config/supervisord.conf /etc/supervisord.conf
 COPY server/config/supervisord/supervisord_apache.conf /etc/supervisor/conf.d/supervisord_apache.conf
 COPY server/config/supervisord/supervisord_cron.conf /etc/supervisor/conf.d/supervisord_cron.conf
 
@@ -91,4 +92,4 @@ VOLUME /var/www/html/logs
 
 EXPOSE 80 443
 
-CMD ["/usr/bin/supervisord"]
+CMD ["/usr/bin/supervisord","-c","/etc/supervisord.conf"]
