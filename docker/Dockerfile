@@ -93,6 +93,8 @@ RUN chmod 755 /scripts/wpt_cron_call.sh && \
 COPY tests/run.sh /var/www/html/tests/docker-test.sh
 RUN cd /var/www/html/tests/ && \
     chmod +x docker-test.sh && \
+    lsof | grep docker-test.sh && \
+    sleep 5 && \
     ./docker-test.sh
 
 VOLUME /var/www/html/settings
