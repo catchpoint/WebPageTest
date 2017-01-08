@@ -29,6 +29,7 @@ RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sour
     libjpeg62-turbo-dev \
     libpng12-dev \
     libcurl4-openssl-dev \
+    libpython-dev \
     python \
     python-pip \
     python-pillow \
