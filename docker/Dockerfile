@@ -56,7 +56,7 @@ RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sour
 	rm -f /var/lib/apt/lists/*_dists_* && \
     ln -s /usr/lib/x86_64-linux-gnu/ImageMagick-6.8.9/bin-Q16/MagickWand-config /usr/bin && \
     pecl install imagick && \
-    pecl install apcu_bc && \
+    pecl install "channel://pecl.php.net/apcu_bc-1.0.3" && \
     echo "extension=imagick.so" > /usr/local/etc/php/conf.d/ext-imagick.ini && \
     pip install pyssim && \
     \
