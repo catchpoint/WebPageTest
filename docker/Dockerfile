@@ -52,6 +52,7 @@ RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sour
     ln -s /usr/lib/x86_64-linux-gnu/ImageMagick-6.8.9/bin-Q16/MagickWand-config /usr/bin && \
     pecl install imagick && \
     echo "extension=imagick.so" > /usr/local/etc/php/conf.d/ext-imagick.ini && \
+    pip install pyssim && \
     \
     cd /tmp && \
     wget --progress=dot:mega -O WebPageTest.zip $GITHUB_REPO/releases/download/WebPageTest-${VERSION}/webpagetest_${VERSION}.zip && \
