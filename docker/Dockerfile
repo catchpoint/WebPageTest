@@ -58,6 +58,7 @@ RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sour
     pecl install imagick && \
     pecl install "channel://pecl.php.net/apcu_bc-1.0.3" && \
     echo "extension=imagick.so" > /usr/local/etc/php/conf.d/ext-imagick.ini && \
+    echo "extension=apc.so" > /usr/local/etc/php/conf.d/ext-apcu_bc.ini && \
     pip install pyssim && \
     \
     cd /tmp && \
