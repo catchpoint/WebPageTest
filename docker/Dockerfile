@@ -33,6 +33,9 @@ RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sour
     python \
     python-pip \
     python-pillow \
+    python-numpy \
+    python-scipy \
+    python-argparse \
     cron \
     supervisor && \
     \
