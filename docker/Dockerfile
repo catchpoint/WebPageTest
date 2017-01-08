@@ -30,6 +30,7 @@ RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sour
     libpng12-dev \
     libcurl4-openssl-dev \
     python \
+    python-pip \
     python-pillow \
     cron \
     supervisor && \
