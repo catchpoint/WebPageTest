@@ -18,6 +18,7 @@ before_script:
   - cd docker
   - docker build -t myimage .
   - docker run -d --name mycontainer -p 80:80 myimage
+  - sleep 30
   - docker ps -a 
   - docker logs mycontainer
   - docker exec mycontainer curl 'http://0/install/'
