@@ -26,7 +26,7 @@ before_script:
 
 script:
   - php -i
-  - pwd
+  - cd ../
   - php www/install/index.php
   - batchtool/wpt_batch.py -s http://0 -i batchtool/urls.txt -f batchtool/result
   - ls -la batchtool/result
