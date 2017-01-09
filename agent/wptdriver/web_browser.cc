@@ -125,6 +125,7 @@ bool WebBrowser::RunAndWait() {
   _browser_needs_reset.Empty();
 
   if (_test.Start() && ConfigureIpfw(_test)) {
+    SetEnvironmentVariable(L"JSGC_DISABLE_POISONING", NULL);
     if (_browser.IsWebdriver()) {
       ret = RunWebdriverTest();
     } else if (_browser._exe.GetLength()) {
@@ -221,6 +222,7 @@ bool WebBrowser::RunAndWait() {
                   _test._browser_additional_command_line);
         }
       } else if (exe.Find(_T("firefox.exe")) >= 0) {
+        SetEnvironmentVariable(L"JSGC_DISABLE_POISONING", L"1");
         for (int i = 0; i < _countof(FIREFOX_REQUIRED_OPTIONS); i++) {
           if (_browser._options.Find(FIREFOX_REQUIRED_OPTIONS[i]) < 0) {
             lstrcat(cmdLine, _T(" "));

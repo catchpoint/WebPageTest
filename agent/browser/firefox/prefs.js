@@ -79,6 +79,8 @@ user_pref("toolkit.telemetry.rejected", true);
 user_pref("toolkit.telemetry.enabled", false);
 user_pref("toolkit.telemetry.reportingpolicy.firstRun", false);
 user_pref("signon.rememberSignons", false);
+user_pref("javascript.options.asyncstack", false);
 user_pref("javascript.options.showInConsole", true);
 user_pref("devtools.chrome.enabled", true);
 user_pref("devtools.debugger.remote-enabled", true);
+user_pref("devtools.sourcemap.locations.enabled", false);
