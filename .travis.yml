@@ -15,7 +15,7 @@ php:
 
 before_script:
   - docker info
-  - cd docker
+  - cd docker/server
   - docker build -t myimage .
   - docker run -d --name mycontainer -p 80:80 myimage
   - sleep 30
@@ -26,7 +26,8 @@ before_script:
 
 script:
   - php -i
-  - cd ../
+  - cd ../server
+  - composer install
   - php www/install/index.php
   - batchtool/wpt_batch.py -s http://0 -i batchtool/urls.txt -f batchtool/result
   - ls -la batchtool/result
