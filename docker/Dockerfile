@@ -56,9 +56,18 @@ RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sour
 	rm -f /var/lib/apt/lists/*_dists_* && \
     ln -s /usr/lib/x86_64-linux-gnu/ImageMagick-6.8.9/bin-Q16/MagickWand-config /usr/bin && \
     pecl install imagick && \
-    pecl install "channel://pecl.php.net/apcu_bc-1.0.3" && \
     echo "extension=imagick.so" > /usr/local/etc/php/conf.d/ext-imagick.ini && \
+    pecl install "channel://pecl.php.net/apcu_bc-1.0.3" && \
     echo "extension=apc.so" > /usr/local/etc/php/conf.d/ext-apcu_bc.ini && \
+    echo "extension=apcu.so" > /usr/local/etc/php/conf.d/ext-apcu_bc.ini && \
+    echo "extension=apc.so" >> /usr/local/etc/php/conf.d/ext-apcu_bc.ini && \
+    echo "apc.enabled=1" >> /usr/local/etc/php/conf.d/ext-apcu_bc.ini && \
+    echo "apc.shm_size=256M" >> /usr/local/etc/php/conf.d/ext-apcu_bc.ini && \
+    echo "apc.ttl=7200" >> /usr/local/etc/php/conf.d/ext-apcu_bc.ini && \
+    echo "apc.gc_ttl=3600" >> /usr/local/etc/php/conf.d/ext-apcu_bc.ini && \
+    echo "apc.entries_hint=4096" >> /usr/local/etc/php/conf.d/ext-apcu_bc.ini && \
+    echo "apc.slam_defense=1" >> /usr/local/etc/php/conf.d/ext-apcu_bc.ini && \
+    echo "apc.serializer=php" >> /usr/local/etc/php/conf.d/ext-apcu_bc.ini && \
     pip install pyssim && \
     \
     cd /tmp && \
