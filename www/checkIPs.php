@@ -133,7 +133,7 @@ function IPBlocked($ip) {
   if (isset($blockIps) && is_array($blockIps) && count($blockIps)) {
     foreach( $blockIps as $block ) {
       $block = trim($block);
-      if (strlen($block) && preg_match($block, $ip)) {
+      if (strlen($block) && preg_match("/$block/", $ip)) {
         $blocked = true;
         break;
       }
