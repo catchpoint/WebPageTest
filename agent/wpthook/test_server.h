@@ -61,6 +61,7 @@ private:
   ULARGE_INTEGER    last_cpu_user_;
   LARGE_INTEGER     start_check_time_;
   LARGE_INTEGER     start_check_freq_;
+  LARGE_INTEGER     idle_start_;
 
   void SendJsonResponse(struct mg_connection *conn,
                     struct http_message *message,

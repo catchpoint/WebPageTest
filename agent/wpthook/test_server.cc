@@ -89,6 +89,7 @@ TestServer::TestServer(WptHook& hook, WptTestHook &test, TestState& test_state,
   last_cpu_kernel_.QuadPart = 0;
   last_cpu_user_.QuadPart = 0;
   start_check_time_.QuadPart = 0;
+  idle_start_.QuadPart = 0;
   QueryPerformanceFrequency(&start_check_freq_);
 }
 
@@ -580,8 +581,19 @@ bool TestServer::OkToStart(bool trigger_start) {
           if (kernel || user) {
             double cpu_utilization = (((double)(kernel + user - idle) * 100.0) 
                                           / (double)(kernel + user));
-            if (cpu_utilization < target_cpu)
-              started_ = true;
+            if (cpu_utilization < target_cpu) {
+              if (!idle_start_.QuadPart) {
+                idle_start_.QuadPart = now.QuadPart;
+              } else {
+                double idle_elapsed = (double)(now.QuadPart - idle_start_.QuadPart) /
+                                      (double)start_check_freq_.QuadPart;
+                // Wait for 3 seconds of idle after browser start
+                if (idle_elapsed > 3)
+                  started_ = true;
+              }
+            } else {
+              idle_start_.QuadPart = 0;
+            }
           }
         }
         last_cpu_idle_.QuadPart = i.QuadPart;
