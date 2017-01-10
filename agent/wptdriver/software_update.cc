@@ -306,6 +306,13 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
                   WaitForChildProcesses(GetProcessId(shell_info.hProcess), SOFTWARE_INSTALL_TIMEOUT);
                   WaitForProcessesByName(exe, SOFTWARE_INSTALL_TIMEOUT);
                   ok = true;
+
+                  // If we are responsible for installing and updating Chrome, disable the Google updater
+                  if (!app.CompareNoCase(_T("Chrome"))) {
+                    TerminateProcessesByName(_T("GoogleUpdate.exe"));
+                    TerminateProcessesByName(_T("GoogleUpdateSetup.exe"));
+                    DeleteDirectory(_T("C:\\Program Files (x86)\\Google\\Update"), true);
+                  }
                 }
                 CloseHandle(shell_info.hProcess);
               } else {

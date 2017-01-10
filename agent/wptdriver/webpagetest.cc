@@ -172,6 +172,9 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
     return false;
   }
 
+  // Make sure Chrome's auto-updater isn't running
+  WaitForProcessesByName(_T("GoogleUpdate.exe"));
+
   DeleteDirectory(test._directory, false);
 
   // build the url for the request

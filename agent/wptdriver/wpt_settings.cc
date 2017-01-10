@@ -187,6 +187,12 @@ void WptSettings::LoadFromEC2(void) {
 
   // Disable Apple and Google auto-updates
   TerminateProcessesByName(_T("SoftwareUpdate.exe"));
+  TerminateProcessesByName(_T("GoogleUpdate.exe"));
+  TerminateProcessesByName(_T("GoogleUpdateSetup.exe"));
+  TerminateProcessesByName(_T("maintenanceservice.exe"));
+  DeleteDirectory(_T("C:\\Program Files (x86)\\Google\\Update"), true);
+  DeleteDirectory(_T("C:\\Program Files (x86)\\Apple Software Update"), true);
+  DeleteDirectory(_T("C:\\Program Files (x86)\\Mozilla Maintenance Service"), true);
   HKEY hKey;
   if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
                       _T("SOFTWARE\\Policies\\Google\\Update"),
