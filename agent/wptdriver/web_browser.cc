@@ -124,6 +124,9 @@ bool WebBrowser::RunAndWait() {
   g_shared->SetOverrodeUAString(false);
   _browser_needs_reset.Empty();
 
+  // Kill some non-essential background tasks that windows may have started up
+  TerminateProcessesByName(_T("mscorsvw.exe"));
+
   if (_test.Start() && ConfigureIpfw(_test)) {
     SetEnvironmentVariable(L"JSGC_DISABLE_POISONING", NULL);
     if (_browser.IsWebdriver()) {
