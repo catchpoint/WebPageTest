@@ -587,8 +587,8 @@ bool TestServer::OkToStart(bool trigger_start) {
               } else {
                 double idle_elapsed = (double)(now.QuadPart - idle_start_.QuadPart) /
                                       (double)start_check_freq_.QuadPart;
-                // Wait for 3 seconds of idle after browser start
-                if (idle_elapsed > 3)
+                // Wait for 2 seconds of idle after browser start
+                if (idle_elapsed > 2)
                   started_ = true;
               }
             } else {

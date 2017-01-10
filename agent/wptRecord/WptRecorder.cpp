@@ -293,7 +293,7 @@ int WptRecorder::WaitForIdle(DWORD wait_seconds) {
     start.QuadPart = now.QuadPart;
     DWORD elapsed = 0;
     double elapsed_activity = (double)(now.QuadPart - last_activity_.QuadPart) / (double)frequency_.QuadPart;
-    while (elapsed < wait_seconds && elapsed_activity < 3) {
+    while (elapsed < wait_seconds && elapsed_activity < 2) {
       Sleep(100);
       QueryPerformanceCounter(&now);
       elapsed_activity = (double)(now.QuadPart - last_activity_.QuadPart) / (double)frequency_.QuadPart;
