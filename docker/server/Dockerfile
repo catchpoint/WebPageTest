@@ -84,25 +84,33 @@ RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sour
     mkdir -p results && \
     chmod 0777 -R results && \
     \
+    php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \
+    php -r "if (hash_file('SHA384', 'composer-setup.php') === '55d6ead61b29c7bdee5cccfb50076874187bd9f21f65d8991d46ec5cc90518f447387fb9f76ebae1fbbacf329e583e30') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" && \
+    php composer-setup.php && \
+    php -r "unlink('composer-setup.php');" && \
+    mv composer.phar /usr/local/bin/composer && \
+    rm -fr lib && \
+    \
     cd /var/www/html/settings && \
     mv settings.ini.sample settings.ini && \
     mv connectivity.ini.sample connectivity.ini && \
     \
     mkdir -p /var/log/supervisor && \
     mkdir -p /scripts
-
-COPY server/config/locations.ini /var/www/html/settings/locations.ini
-COPY server/config/php.ini /usr/local/etc/php/
-COPY server/config/apache2.conf /etc/apache2/apache2.conf
-COPY server/config/crontab /etc/crontab
+COPY composer.json /var/www/html/
+RUN COMPOSER_VENDOR_DIR=lib composer install
+COPY config/locations.ini /var/www/html/settings/locations.ini
+COPY config/php.ini /usr/local/etc/php/
+COPY config/apache2.conf /etc/apache2/apache2.conf
+COPY config/crontab /etc/crontab
 
 # config supervisor to run apache AND cron
-COPY server/config/supervisord.conf /etc/supervisord.conf
-COPY server/config/supervisord/supervisord_apache.conf /etc/supervisor/conf.d/supervisord_apache.conf
-COPY server/config/supervisord/supervisord_cron.conf /etc/supervisor/conf.d/supervisord_cron.conf
+COPY config/supervisord.conf /etc/supervisord.conf
+COPY config/supervisord/supervisord_apache.conf /etc/supervisor/conf.d/supervisord_apache.conf
+COPY config/supervisord/supervisord_cron.conf /etc/supervisor/conf.d/supervisord_cron.conf
 
 # copy script to run WPT cron scripts
-COPY server/scripts/wpt_cron_call.sh /scripts/wpt_cron_call.sh
+COPY scripts/wpt_cron_call.sh /scripts/wpt_cron_call.sh
 RUN chmod 755 /scripts/wpt_cron_call.sh && \
     crontab /etc/crontab
 
