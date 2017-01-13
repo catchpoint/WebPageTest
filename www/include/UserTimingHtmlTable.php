@@ -53,7 +53,8 @@ class UserTimingHtmlTable {
       $out .= "<th><a href=\"https://github.com/WPO-Foundation/webpagetest/blob/master/docs/Metrics/TimeToInteractive.md\">Interactive</a></th>";
     if ($this->hasUserTiming) {
       foreach ($this->userTimings[0] as $label => $value)
-        $out .= '<th>' . htmlspecialchars($label) . '</th>';
+        if (count($stepUserTiming) < 5 || substr($label, 0, 5) !== 'goog_')
+          $out .= '<th>' . htmlspecialchars($label) . '</th>';
     }
     if ($this->hasNavTiming) {
       $out .= "<th$borderClass>";
@@ -86,7 +87,8 @@ class UserTimingHtmlTable {
         $out .= '<td>' . $this->_getTimeMetric($stepResult, "TimeToInteractive") . '</td>';
     if ($this->hasUserTiming)
       foreach ($stepUserTiming as $label => $value)
-        $out .= '<td>' . htmlspecialchars($value) . '</td>';
+        if (count($stepUserTiming) < 5 || substr($label, 0, 5) !== 'goog_')
+          $out .= '<td>' . htmlspecialchars($value) . '</td>';
     if ($this->hasNavTiming) {
       $out .= "<td$borderClass>";
       if ($this->hasFirstPaint)
