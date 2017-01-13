@@ -53,7 +53,7 @@ class UserTimingHtmlTable {
       $out .= "<th><a href=\"https://github.com/WPO-Foundation/webpagetest/blob/master/docs/Metrics/TimeToInteractive.md\">Interactive</a></th>";
     if ($this->hasUserTiming) {
       foreach ($this->userTimings[0] as $label => $value)
-        if (count($stepUserTiming) < 5 || substr($label, 0, 5) !== 'goog_')
+        if (count($this->userTimings[0]) < 5 || substr($label, 0, 5) !== 'goog_')
           $out .= '<th>' . htmlspecialchars($label) . '</th>';
     }
     if ($this->hasNavTiming) {
