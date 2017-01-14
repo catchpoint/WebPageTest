@@ -215,7 +215,7 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "hiberniacdn", "HiberniaCDN"},
   {"server", "UnicornCDN", "UnicornCDN"},
   {"server", "Optimal CDN", "Optimal CDN"},
-  {"server", "Sucuri/Cloudproxy", "Sucuri/Cloudproxy"},
+  {"server", "Sucuri/Cloudproxy", "Sucuri Firewall"},
   {"server", "Netlify", "Netlify"},
   {"section-io-id", "", "section.io"}
 };
