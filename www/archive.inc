@@ -356,7 +356,11 @@ function GetArchiveFile($id, $create_directory = false)
 }
 
 function ArchiveApi($id) {
-  if (GetSetting('archive_api') && !isset($_REQUEST['noarchive']))
-    ArchiveTest($id, true, true);
+  // For tests driven through the API, flag them as available for
+  // archiving as soon as they are accessed (if the setting is enabled)
+  if (GetSetting('archive_api')) {
+    $testPath = realpath('./' . GetTestPath($id));
+    touch("$testPath/archive.me");
+  }
 }
 ?>
