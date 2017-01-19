@@ -1068,6 +1068,7 @@ void Results::ProcessRequests(void) {
     while (pos) {
       Request * request = _requests._requests.GetNext(pos);
       if (request &&
+          request->GetHost().Left(9) != "127.0.0.1" &&
           request->_start.QuadPart &&
           request->_end.QuadPart &&
           (!request->_from_browser || !NativeRequestExists(request))) {
@@ -1104,6 +1105,7 @@ void Results::ProcessRequests(void) {
     Request * request = _requests._requests.GetNext(pos);
     ATLTRACE("[wpthook] - Processing request %s%s", (LPCSTR)request->GetHost(), (LPCSTR)request->_request_data.GetObject());
     if (request && 
+        request->GetHost().Left(9) != "127.0.0.1" &&
         (!request->_from_browser || !NativeRequestExists(request))) {
       request->Process();
       int result_code = request->GetResult();
@@ -1224,6 +1226,7 @@ void Results::SaveRequests(OptimizationChecks& checks) {
       while (pos) {
         Request * candidate = _requests._requests.GetNext(pos);
         if (!candidate->_reported && 
+            candidate->GetHost().Left(9) != "127.0.0.1" &&
             (!request || 
             candidate->_start.QuadPart < request->_start.QuadPart)) {
           request = candidate;

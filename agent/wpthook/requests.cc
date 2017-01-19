@@ -358,6 +358,11 @@ void Requests::ProcessBrowserRequest(CString request_data) {
     }
     line = request_data.Tokenize(_T("\n"), position);
   }
+
+  // don't include 127.0.0.1 requests
+  if (!url.Left(16).MakeLower().Compare(_T("http://127.0.0.1")))
+    return;
+
   if (url.GetLength() && priority.GetLength()) {
     BrowserRequestData data(url);
     data.priority_ = priority;
