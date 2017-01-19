@@ -216,6 +216,7 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "UnicornCDN", "UnicornCDN"},
   {"server", "Optimal CDN", "Optimal CDN"},
   {"server", "Sucuri/Cloudproxy", "Sucuri Firewall"},
+  {"x-sucuri-id", "", "Sucuri Firewall"},
   {"server", "Netlify", "Netlify"},
   {"section-io-id", "", "section.io"}
 };
