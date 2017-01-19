@@ -188,6 +188,7 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "NetDNA", "NetDNA"},
   {"server", "Airee", "Airee"},
   {"X-CDN-Geo", "", "OVH CDN"},
+  {"X-CDN-Pop", "", "OVH CDN"},
   {"X-Px", "", "CDNetworks"},
   {"X-Instart-Request-ID", "instart", "Instart Logic"},
   {"Via", "CloudFront", "Amazon CloudFront"},
