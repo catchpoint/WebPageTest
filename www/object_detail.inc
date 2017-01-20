@@ -38,7 +38,7 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
     $bodies_file_name = $localPaths->bodiesFile();
     $custom_rules_file_name = $localPaths->customRulesFile();
     $script_timing_file_name = $localPaths->devtoolsScriptTimingFile();
-    $cache_version = 2;
+    $cache_version = 3;
     $cache_file = $localPaths->requestsCacheFile($cache_version);
     $requests = null;
     $cached = true;

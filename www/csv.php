@@ -146,6 +146,8 @@ function csvPageData($id, $testPath, $runs) {
                 foreach($breakdown as $mime_type => $b) {
                   $pageData[$i][$cached]["bytes.$mime_type"] = $b['bytes'];
                   $pageData[$i][$cached]["requests.$mime_type"] = $b['requests'];
+                  if (isset($b['bytesUncompressed']))
+                    $pageData[$i][$cached]["bytesUncompressed.$mime_type"] = $b['bytesUncompressed'];
                 }
               }
               csvArray($pageData[$i][$cached], $id, $i, $cached);

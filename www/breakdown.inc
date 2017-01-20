@@ -7,7 +7,7 @@ if(extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('getBreakdownCombined');
 }
 
-define('BREAKDOWN_CACHE_VERSION', 3);
+define('BREAKDOWN_CACHE_VERSION', 4);
 
 /**
 * Aggregate the individual requests by mime type
@@ -58,8 +58,13 @@ function getBreakdownForStep($localPaths, $rootUrlGenerator, &$requests) {
             $contentType = ContentType($request['contentType'], $request['url']);
             $object = strtolower($request['url']);
             if( strlen($contentType) && (stripos($object, 'favicon.ico') === FALSE) ) {
-                $breakdown[$contentType]['bytes'] += $request['bytesIn'];
-                $breakdown[$contentType]['requests']++;
+              $breakdown[$contentType]['bytes'] += $request['bytesIn'];
+              $breakdown[$contentType]['requests']++;
+              if (isset($request['objectSizeUncompressed'])) {
+                if (!isset($breakdown[$contentType]['bytesUncompressed']))
+                  $breakdown[$contentType]['bytesUncompressed'] = 0;
+                $breakdown[$contentType]['bytesUncompressed'] += $request['objectSizeUncompressed'];
+              }
             }
           }
         }

@@ -65,7 +65,7 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData) {
     $requests = null;
     $pageData = null;
     $startOffset = null;
-    $ver = 13;
+    $ver = 14;
     $ok = GetCachedDevToolsRequests($localPaths, $requests, $pageData, $ver);
     if (!$ok) {
       if (GetDevToolsEventsForStep(null, $localPaths, $events, $startOffset)) {
@@ -153,18 +153,25 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData) {
                     $request['bytesOut'] = isset($rawRequest['headers']) ? strlen(implode("\r\n", $rawRequest['headers'])) : 0;
                     $request['bytesIn'] = 0;
                     $request['objectSize'] = '';
-                    if (isset($rawRequest['bytesIn'])) {
+                    if (isset($rawRequest['bytesIn']))
                       $request['bytesIn'] = $rawRequest['bytesIn'];
-                    } elseif (isset($rawRequest['bytesInEncoded']) && $rawRequest['bytesInEncoded']) {
+                    if (isset($rawRequest['bytesInEncoded']) && $rawRequest['bytesInEncoded']) {
                       $request['objectSize'] = $rawRequest['bytesInEncoded'];
-                      $request['bytesIn'] = $rawRequest['bytesInEncoded'];
-                      if (isset($rawRequest['response']['headersText']))
+                      if ($rawRequest['bytesInEncoded'] > $request['bytesIn']) {
+                        $request['bytesIn'] = $rawRequest['bytesInEncoded'];
+                        if (isset($rawRequest['response']['headersText']))
                           $request['bytesIn'] += strlen($rawRequest['response']['headersText']);
-                    } elseif (isset($rawRequest['bytesInData'])) {
-                      $request['objectSize'] = $rawRequest['bytesInData'];
-                      $request['bytesIn'] = $rawRequest['bytesInData'];
-                      if (isset($rawRequest['response']['headersText']))
+                      }
+                    }
+                    if (isset($rawRequest['bytesInData'])) {
+                      if ($request['objectSize'] === '')
+                        $request['objectSize'] = $rawRequest['bytesInData'];
+                      if (!$request['bytesIn']) {
+                        $request['bytesIn'] = $rawRequest['bytesInData'];
+                        if (isset($rawRequest['response']['headersText']))
                           $request['bytesIn'] += strlen($rawRequest['response']['headersText']);
+                      }
+                      $request['objectSizeUncompressed'] = $rawRequest['bytesInData'];
                     }
                     $request['expires'] = '';
                     $request['cacheControl'] = '';
