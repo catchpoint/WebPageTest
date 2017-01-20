@@ -178,6 +178,9 @@ else
                 $test['videoPath'] = "./{$test['path']}/video_{$test['run']}";
                 if( $test['cached'] )
                     $test['videoPath'] .= '_cached';
+                    
+                // round the test end up to the closest 100ms interval
+                $test['end'] = intval(ceil(floatval($test['end']) / 100.0) * 100.0);
 
                 if ($test['syncStartRender'] || $test['syncDocTime'] || $test['syncFullyLoaded'])
                     $videoIdExtra .= ".{$test['syncStartRender']}.{$test['syncDocTime']}.{$test['syncFullyLoaded']}";
