@@ -349,6 +349,7 @@ public:
   DWORD _bytes_in;
   DWORD _bytes_out;
   DWORD _object_size;
+  DWORD _uncompressed_size;
 
   // performance counter times
   LARGE_INTEGER _start;

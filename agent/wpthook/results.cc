@@ -1562,6 +1562,9 @@ void Results::SaveRequest(gzFile file, gzFile headers, Request * request, int in
   // Certificate Bytes
   buff.Format("%d\t", request->_certificate_bytes);
   result += buff;
+  // Uncompressed object size
+  buff.Format("%d\t", request->_uncompressed_size);
+  result += buff;
 
   result += "\r\n";
 

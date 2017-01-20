@@ -60,7 +60,7 @@ function getBreakdownForStep($localPaths, $rootUrlGenerator, &$requests) {
             if( strlen($contentType) && (stripos($object, 'favicon.ico') === FALSE) ) {
               $breakdown[$contentType]['bytes'] += $request['bytesIn'];
               $breakdown[$contentType]['requests']++;
-              if (isset($request['objectSizeUncompressed'])) {
+              if (isset($request['objectSizeUncompressed']) && $request['objectSizeUncompressed'] > 0) {
                 if (!isset($breakdown[$contentType]['bytesUncompressed']))
                   $breakdown[$contentType]['bytesUncompressed'] = 0;
                 $breakdown[$contentType]['bytesUncompressed'] += $request['objectSizeUncompressed'];

@@ -470,6 +470,7 @@ Request::Request(TestState& test_state, DWORD socket_id, DWORD stream_id,
   , _bytes_in(0)
   , _bytes_out(0)
   , _object_size(0)
+  , _uncompressed_size(0)
   , _h2_priority_depends_on(-1)
   , _h2_priority_weight(-1)
   , _h2_priority_exclusive(-1)
@@ -685,6 +686,10 @@ bool Request::Process() {
   EnterCriticalSection(&cs);
   if (_is_active) {
     _is_active = false;
+
+    // Get the uncompressed size of the response
+    DataChunk body = _response_data.GetBody(true);
+    _uncompressed_size = (DWORD)body.GetLength();
 
     // calculate the times
     if (_start.QuadPart && _end.QuadPart) {

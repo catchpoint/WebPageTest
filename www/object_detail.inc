@@ -228,7 +228,8 @@ function LoadRequests($request_file_name) {
         83 => 'http2_stream_dependency',
         84 => 'http2_stream_weight',
         85 => 'http2_stream_exclusive',
-        86 => 'certificate_bytes'
+        86 => 'certificate_bytes',
+        87 => 'objectSizeUncompressed'
         );
     $request_lines = gz_file($request_file_name);
     if( isset($request_lines) && is_array($request_lines)) {
