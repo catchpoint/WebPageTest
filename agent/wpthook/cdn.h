@@ -196,6 +196,7 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"X-Edge-Location", "", "CDN"},
   {"X-HW", "", "Highwinds"},
   {"X-Powered-By", "NYI FTW", "NYI FTW"},
+  {"X-Delivered-By", "NYI FTW", "NYI FTW"},
   {"server", "ReSRC", "ReSRC.it"},
   {"X-Cdn", "Zenedge", "Zenedge"},
   {"server", "leasewebcdn", "LeaseWeb CDN"},
