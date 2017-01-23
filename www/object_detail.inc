@@ -239,8 +239,14 @@ function LoadRequests($request_file_name) {
             if (count($columns)) {
                 $request = array();
                 foreach ($columns as $i => $value) {
-                    if (array_key_exists($i + 1, $needed_columns) && strlen(trim($value)))
-                        $request[$needed_columns[$i + 1]] = trim($value);
+                    $trimmed_value = trim($value);
+                    if (isset($needed_columns[$i + 1]) && strlen($trimmed_value)) {
+                        if (is_numeric($trimmed_value)) {
+                            $request[$needed_columns[$i + 1]] = $trimmed_value + 0;
+                        } else {
+                            $request[$needed_columns[$i + 1]] = $trimmed_value;
+                        }
+                    }
                 }
                 if (array_key_exists('host', $request) && array_key_exists('url', $request)) {
                     $url = 'http://';

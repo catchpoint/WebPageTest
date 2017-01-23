@@ -220,7 +220,8 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "Sucuri/Cloudproxy", "Sucuri Firewall"},
   {"x-sucuri-id", "", "Sucuri Firewall"},
   {"server", "Netlify", "Netlify"},
-  {"section-io-id", "", "section.io"}
+  {"section-io-id", "", "section.io"},
+  {"server", "Testa/", "Naver"}
 };
 
 // Specific providers that require multiple headers
