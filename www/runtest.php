@@ -20,6 +20,19 @@
         }
         DealWithMagicQuotes($GLOBALS);
     }
+    
+    // see if we are loading the test settings from a profile
+    if (isset($_REQUEST['profile']) && is_file(__DIR__ . '/settings/profiles.ini')) {
+      $profiles = parse_ini_file(__DIR__ . '/settings/profiles.ini', true);
+      if (isset($profiles) && is_array($profiles) && isset($profiles[$_REQUEST['profile']])) {
+        foreach($profiles[$_REQUEST['profile']] as $key => $value) {
+          if ($key !== 'label' && $key !== 'description') {
+            $_REQUEST[$key] = $value;
+            $_GET[$key] = $value;
+          }
+        }
+      }
+    }
     require_once('common.inc');
     require_once('./ec2/ec2.inc.php');
     set_time_limit(300);
