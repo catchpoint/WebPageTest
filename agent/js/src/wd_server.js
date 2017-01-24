@@ -964,9 +964,9 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
       message.params.categories = '-*,' + message.params.categories;
     }
     if (1 === this.task_.timeline) {
-      message.params.categories = message.params.categories + ',toplevel,v8.execute,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame,disabled-by-default-v8.runtime_stats';
+      message.params.categories = message.params.categories + ',toplevel,v8,disabled-by-default-v8.runtime_stats,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame';
       if (this.task_.timelineStackDepth) {
-        message.params.categories = message.params.categories + ',disabled-by-default-v8.cpu_profiler,disabled-by-default-v8.runtime_stats_sampling';
+        message.params.categories = message.params.categories + ',disabled-by-default-v8.cpu_profiler';
       }
     }
     this.devToolsCommand_(message).then(function() {
