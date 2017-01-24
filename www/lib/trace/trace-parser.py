@@ -49,6 +49,8 @@ class Trace():
     self.feature_usage = None
     self.feature_usage_start_time = None
     self.netlog = {'bytes_in': 0, 'bytes_out': 0}
+    self.v8stats = None
+    self.v8stack = {}
     return
 
   ########################################################################################################################
@@ -85,6 +87,9 @@ class Trace():
   def WriteNetlog(self, file):
     self.WriteJson(file, self.netlog)
 
+  def WriteV8Stats(self, file):
+    if self.v8stats is not None:
+      self.WriteJson(file, self.v8stats)
 
   ########################################################################################################################
   #   Top-level processing
@@ -159,7 +164,8 @@ class Trace():
     if cat == 'devtools.timeline' or \
             cat.find('devtools.timeline') >= 0 or \
             cat.find('blink.feature_usage') >= 0 or \
-            cat.find('blink.user_timing') >= 0:
+            cat.find('blink.user_timing') >= 0 or \
+            cat.find('v8') >= 0:
       self.trace_events.append(trace_event)
 
   def ProcessTraceEvents(self):
@@ -181,6 +187,8 @@ class Trace():
       self.ProcessFeatureUsageEvent(trace_event)
     elif cat.find('blink.user_timing') >= 0:
       self.user_timing.append(trace_event)
+    elif cat.find('v8') >= 0:
+      self.ProcessV8Event(trace_event)
     #Netlog support is still in progress
     #elif cat.find('netlog') >= 0:
     #  self.ProcessNetlogEvent(trace_event)
@@ -518,6 +526,48 @@ class Trace():
       self.netlog['http2'][s['id']]['bytes_in'] += s['args']['params']['size']
 
 
+  ########################################################################################################################
+  #   V8 call stats
+  ########################################################################################################################
+  def ProcessV8Event(self, trace_event):
+    try:
+      if self.start_time is not None and self.cpu['main_thread'] is not None and trace_event['ts'] >= self.start_time and \
+              "name" in trace_event:
+        thread = '{0}:{1}'.format(trace_event['pid'], trace_event['tid'])
+        if trace_event["ph"] == "B":
+          if thread not in self.v8stack:
+            self.v8stack[thread] = []
+          self.v8stack[thread].append(trace_event)
+        else:
+          duration = 0.0
+          if trace_event["ph"] == "E" and thread in self.v8stack:
+            start_event = self.v8stack[thread].pop()
+            if start_event['name'] == trace_event['name'] and 'ts' in start_event and start_event['ts'] <= trace_event['ts']:
+              duration = trace_event['ts'] - start_event['ts']
+          elif trace_event['ph'] == 'X' and 'dur' in trace_event:
+            duration = trace_event['dur']
+          if self.v8stats is None:
+            self.v8stats = {"main_thread": self.cpu['main_thread']}
+          if thread not in self.v8stats:
+            self.v8stats[thread] = {}
+          name = trace_event["name"]
+          if name == "V8.RuntimeStats":
+            name = "V8.ParseOnBackground"
+
+          if name not in self.v8stats[thread]:
+            self.v8stats[thread][name] = {"dur": 0.0, "events": {}}
+          self.v8stats[thread][name]['dur'] += float(duration) / 1000.0
+          if 'args' in trace_event and 'runtime-call-stats' in trace_event["args"]:
+            for stat in trace_event["args"]["runtime-call-stats"]:
+              if len(trace_event["args"]["runtime-call-stats"][stat]) == 2:
+                if stat not in self.v8stats[thread][name]['events']:
+                  self.v8stats[thread][name]['events'][stat] = {"count": 0, "dur": 0.0}
+                self.v8stats[thread][name]['events'][stat]["count"] += int(trace_event["args"]["runtime-call-stats"][stat][0])
+                self.v8stats[thread][name]['events'][stat]["dur"] += float(trace_event["args"]["runtime-call-stats"][stat][1]) / 1000.0
+    except:
+      pass
+
+
 ########################################################################################################################
 #   Main Entry Point
 ########################################################################################################################
@@ -535,6 +585,7 @@ def main():
   parser.add_argument('-f', '--features', help="Output blink feature usage file.")
   parser.add_argument('-i', '--interactive', help="Output list of interactive times.")
   parser.add_argument('-n', '--netlog', help="Output netlog details file.")
+  parser.add_argument('-s', '--stats', help="Output v8 Call stats file.")
   options, unknown = parser.parse_known_args()
 
   # Set up logging
@@ -576,6 +627,9 @@ def main():
 
   if options.netlog:
     trace.WriteNetlog(options.netlog)
+
+  if options.stats:
+    trace.WriteV8Stats(options.stats);
 
   end = time.time()
   elapsed = end - start
@@ -1942,7 +1996,98 @@ BLINK_FEATURES = {
   "1692": "CSSFlexibleBox",
   "1693": "CSSGridLayout",
   "1694": "V8BarcodeDetector_Detect_Method",
-  "1695": "V8FaceDetector_Detect_Method"
+  "1695": "V8FaceDetector_Detect_Method",
+  "1696": "FullscreenAllowedByOrientationChange",
+  "1697": "ServiceWorkerRespondToNavigationRequestWithRedirectedResponse",
+  "1698": "V8AudioContext_Constructor",
+  "1699": "V8OfflineAudioContext_Constructor",
+  "1700": "AppInstalledEventAddListener",
+  "1701": "AudioContextGetOutputTimestamp",
+  "1702": "V8MediaStreamAudioDestinationNode_Constructor",
+  "1703": "V8AnalyserNode_Constructor",
+  "1704": "V8AudioBuffer_Constructor",
+  "1705": "V8AudioBufferSourceNode_Constructor",
+  "1706": "V8AudioProcessingEvent_Constructor",
+  "1707": "V8BiquadFilterNode_Constructor",
+  "1708": "V8ChannelMergerNode_Constructor",
+  "1709": "V8ChannelSplitterNode_Constructor",
+  "1710": "V8ConstantSourceNode_Constructor",
+  "1711": "V8ConvolverNode_Constructor",
+  "1712": "V8DelayNode_Constructor",
+  "1713": "V8DynamicsCompressorNode_Constructor",
+  "1714": "V8GainNode_Constructor",
+  "1715": "V8IIRFilterNode_Constructor",
+  "1716": "V8MediaElementAudioSourceNode_Constructor",
+  "1717": "V8MediaStreamAudioSourceNode_Constructor",
+  "1718": "V8OfflineAudioCompletionEvent_Constructor",
+  "1719": "V8OscillatorNode_Constructor",
+  "1720": "V8PannerNode_Constructor",
+  "1721": "V8PeriodicWave_Constructor",
+  "1722": "V8StereoPannerNode_Constructor",
+  "1723": "V8WaveShaperNode_Constructor",
+  "1724": "V8Headers_GetAll_Method",
+  "1725": "NavigatorVibrateEngagementNone",
+  "1726": "NavigatorVibrateEngagementMinimal",
+  "1727": "NavigatorVibrateEngagementLow",
+  "1728": "NavigatorVibrateEngagementMedium",
+  "1729": "NavigatorVibrateEngagementHigh",
+  "1730": "NavigatorVibrateEngagementMax",
+  "1731": "AlertEngagementNone",
+  "1732": "AlertEngagementMinimal",
+  "1733": "AlertEngagementLow",
+  "1734": "AlertEngagementMedium",
+  "1735": "AlertEngagementHigh",
+  "1736": "AlertEngagementMax",
+  "1737": "ConfirmEngagementNone",
+  "1738": "ConfirmEngagementMinimal",
+  "1739": "ConfirmEngagementLow",
+  "1740": "ConfirmEngagementMedium",
+  "1741": "ConfirmEngagementHigh",
+  "1742": "ConfirmEngagementMax",
+  "1743": "PromptEngagementNone",
+  "1744": "PromptEngagementMinimal",
+  "1745": "PromptEngagementLow",
+  "1746": "PromptEngagementMedium",
+  "1747": "PromptEngagementHigh",
+  "1748": "PromptEngagementMax",
+  "1749": "TopNavInSandbox",
+  "1750": "TopNavInSandboxWithoutGesture",
+  "1751": "TopNavInSandboxWithPerm",
+  "1752": "TopNavInSandboxWithPermButNoGesture",
+  "1753": "ReferrerPolicyHeader",
+  "1754": "HTMLAnchorElementReferrerPolicyAttribute",
+  "1755": "HTMLIFrameElementReferrerPolicyAttribute",
+  "1756": "HTMLImageElementReferrerPolicyAttribute",
+  "1757": "HTMLLinkElementReferrerPolicyAttribute",
+  "1758": "BaseElement",
+  "1759": "BaseWithCrossOriginHref",
+  "1760": "BaseWithDataHref",
+  "1761": "BaseWithNewlinesInTarget",
+  "1762": "BaseWithOpenBracketInTarget",
+  "1763": "BaseWouldBeBlockedByDefaultSrc",
+  "1764": "V8AssigmentExpressionLHSIsCallInSloppy",
+  "1765": "V8AssigmentExpressionLHSIsCallInStrict",
+  "1766": "V8PromiseConstructorReturnedUndefined",
+  "1767": "FormSubmittedWithUnclosedFormControl",
+  "1768": "DocumentCompleteURLHTTPContainingNewline",
+  "1770": "DocumentCompleteURLHTTPContainingNewlineAndLessThan",
+  "1771": "DocumentCompleteURLNonHTTPContainingNewline",
+  "1772": "CSSSelectorInternalMediaControlsTextTrackList",
+  "1773": "CSSSelectorInternalMediaControlsTextTrackListItem",
+  "1774": "CSSSelectorInternalMediaControlsTextTrackListItemInput",
+  "1775": "CSSSelectorInternalMediaControlsTextTrackListKindCaptions",
+  "1776": "CSSSelectorInternalMediaControlsTextTrackListKindSubtitles",
+  "1777": "ScrollbarUseVerticalScrollbarButton",
+  "1778": "ScrollbarUseVerticalScrollbarThumb",
+  "1779": "ScrollbarUseVerticalScrollbarTrack",
+  "1780": "ScrollbarUseHorizontalScrollbarButton",
+  "1781": "ScrollbarUseHorizontalScrollbarThumb",
+  "1782": "ScrollbarUseHorizontalScrollbarTrack",
+  "1783": "HTMLTableCellElementColspan",
+  "1784": "HTMLTableCellElementColspanGreaterThan1000",
+  "1785": "HTMLTableCellElementColspanGreaterThan8190",
+  "1786": "SelectionAddRangeIntersect",
+  "1787": "PostMessageFromInsecureToSecureToplevel"
 }
 
 ########################################################################################################################
@@ -2452,7 +2597,14 @@ CSS_FEATURES = {
   "545": "CSSPropertyOffsetPosition",
   "546": "CSSPropertyTextDecorationSkip",
   "547": "CSSPropertyCaretColor",
-  "548": "CSSPropertyOffsetRotate"
+  "548": "CSSPropertyOffsetRotate",
+  "549": "CSSPropertyFontVariationSettings",
+  "550": "CSSPropertyInlineSize",
+  "551": "CSSPropertyBlockSize",
+  "552": "CSSPropertyMinInlineSize",
+  "553": "CSSPropertyMinBlockSize",
+  "554": "CSSPropertyMaxInlineSize",
+  "555": "CSSPropertyMaxBlockSize"
 }
 
 if '__main__' == __name__:
