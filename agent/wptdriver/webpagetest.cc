@@ -1248,10 +1248,12 @@ bool WebPagetest::ProcessFile(CString file, CAtlList<CString> &newFiles) {
     CString userTimingFile = file.Left(pos) + _T("user_timing.json.gz");
     CString featureUsageFile = file.Left(pos) + _T("feature_usage.json.gz");
     CString interactiveFile = file.Left(pos) + _T("interactive.json.gz");
+    CString v8file = file.Left(pos) + _T("v8stats.json.gz");
     CString options;
-    options.Format(_T("-t \"%s\" -c \"%s\" -j \"%s\" -u \"%s\" -f \"%s\" -i \"%s\""),
+    options.Format(_T("-t \"%s\" -c \"%s\" -j \"%s\" -u \"%s\" -f \"%s\" -i \"%s\" -s \"%s\""),
                    (LPCTSTR)file, (LPCTSTR)cpuFile, (LPCTSTR)scriptTimingFile,
-                   (LPCTSTR)userTimingFile, (LPCTSTR)featureUsageFile, (LPCTSTR)interactiveFile);
+                   (LPCTSTR)userTimingFile, (LPCTSTR)featureUsageFile,
+                   (LPCTSTR)interactiveFile, (LPCTSTR)v8file);
     OutputDebugStringA("Processing trace file");
     if (RunPythonScript(_T("support\\trace-parser.py"), options)) {
       if (FileExists(cpuFile)) {
