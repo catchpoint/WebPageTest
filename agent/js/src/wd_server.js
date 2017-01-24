@@ -200,6 +200,7 @@ WebDriverServer.prototype.init = function(args) {
   this.netlogFile_ = undefined;
   this.featureUsageFile_ = undefined;
   this.interactiveFile_ = undefined;
+  this.v8File_ = undefined;
   this.isNavigating_ = false;
   this.mainFrame_ = undefined;
   this.pageLoadCoalesceTimer_ = undefined;
@@ -1040,10 +1041,12 @@ WebDriverServer.prototype.scheduleProcessTrace_ = function() {
       this.scriptTimingFile_ = path.join(this.runTempDir_, 'script_timing.json.gz');
       this.featureUsageFile_ = path.join(this.runTempDir_, 'feature_usage.json.gz');
       this.interactiveFile_ = path.join(this.runTempDir_, 'interactive.json.gz');
+      this.v8File_ = path.join(this.runTempDir_, 'v8stats.json.gz');
       var options = ['lib/trace/trace-parser.py', '-vvvv',
           '-t', this.traceFile_, '-u', this.userTimingFile_,
           '-c', this.cpuSlicesFile_, '-j', this.scriptTimingFile_,
-          '-f', this.featureUsageFile_, '-i', this.interactiveFile_];
+          '-f', this.featureUsageFile_, '-i', this.interactiveFile_,
+          '-s', this.v8File_];
       process_utils.scheduleExec(this.app_,
           'python', options, undefined,
           TRACE_PROCESSING_TIMEOUT_MS).then(function(stdout) {
@@ -1639,6 +1642,7 @@ WebDriverServer.prototype.done_ = function() {
           pcapSlicesFile: this.pcapSlicesFile_,
           featureUsageFile: this.featureUsageFile_,
           interactiveFile: this.interactiveFile_,
+          v8File: this.v8File_,
           netlogFile: this.netlogFile_,
           videoFile: this.videoFile_,
           videoFrames: this.videoFrames_,

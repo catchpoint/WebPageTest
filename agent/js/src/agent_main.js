@@ -294,6 +294,18 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
         fs.unlinkSync(ipcMsg.interactiveFile);
       } catch(e) {}
     }
+    if (ipcMsg.v8File) {
+      logger.debug("Processing v8 stats file: " + ipcMsg.v8File);
+      try {
+        var buffer = fs.readFileSync(ipcMsg.v8File);
+        if (buffer) {
+          job.resultFiles.push(new wpt_client.ResultFile(
+              wpt_client.ResultFile.ResultType.GZIP,
+              'v8stats.json.gz', 'application/x-gzip', buffer));
+        }
+        fs.unlinkSync(ipcMsg.v8File);
+      } catch(e) {}
+    }
     if (ipcMsg.screenshots && ipcMsg.screenshots.length > 0) {
       var imageDescriptors = [];
       ipcMsg.screenshots.forEach(function(screenshot) {
