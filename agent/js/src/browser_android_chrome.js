@@ -163,8 +163,6 @@ var LAST_INSTALL_FILE = 'lastInstall.txt';
  *      #param {string=} chrome Chrome.apk to install, defaults to None.
  *      #param {string=} chromeActivity activity without the '.Main' suffix,
  *           defaults to 'com.google.android.apps.chrome'.
- *      #param {string=} chromePackage package, defaults task.browser-based
- *          package if set, else 'com.android.google'.
  *      #param {string=} devToolsPort DevTools port, defaults to dynamic
  *           selection.
  *      #param {string=} maxtemp maximum isReady temperature.
@@ -201,23 +199,22 @@ function BrowserAndroidChrome(app, args) {
   this.browserConfig_ = undefined;
   this.activityFlags_ = undefined;
   this.browserPackage_ = args.task.customBrowser_package ||
-      args.chromePackage_ || this.browserPackage_ || 'com.android.chrome';
+      this.browserPackage_ || 'com.android.chrome';
   this.browserActivity_ = args.task.customBrowser_activity ||
       args.chromeActivity || this.browserActivity_ ||
       'com.google.android.apps.chrome.Main';
   if (args.task['customBrowser_type'] !== undefined && BLACK_BOX_BROWSERS[args.task['customBrowser_type']] !== undefined)
     args.task.browser = args.task['customBrowser_type'];
-  if (args.flags.chromePackage) {
-    this.browserPackage_ = args.flags.chromePackage;
-  } else if (args.task.browser) {
+  if (args.task.browser) {
     var browserName = args.task.browser;
     var separator = browserName.lastIndexOf('-');
     if (separator >= 0) {
       browserName = browserName.substr(separator + 1).trim();
     }
+    logger.debug('Looking for browser "' + browserName + '"');
     this.browserPackage_ = args.task.customBrowser_package || KNOWN_BROWSERS[browserName] || this.browserPackage_ ;
-    if (!this.browserPackage_ && BLACK_BOX_BROWSERS[browserName] != undefined) {
-      this.browserPackage_ = BLACK_BOX_BROWSERS[browserName].package;
+    if (BLACK_BOX_BROWSERS[browserName] != undefined) {
+      this.browserPackage_ = args.task.customBrowser_package || BLACK_BOX_BROWSERS[browserName].package;
       this.browserActivity_ = BLACK_BOX_BROWSERS[browserName].activity;
       this.blank_page_ = args.flags.blankPage ||
                          'http://api.webpagetest.org/blank.html';
