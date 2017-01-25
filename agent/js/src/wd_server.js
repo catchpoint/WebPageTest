@@ -957,7 +957,7 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
       options: 'record-as-much-as-possible'
     };
     if (1 === this.task_.trace) {
-      var trace_categories = "*";
+      var trace_categories = "-*,blink,v8,cc,gpu,blink.net,netlog,disabled-by-default-v8.runtime_stats";
       if (this.task_['traceCategories'] !== undefined && this.task_.traceCategories.length)
         trace_categories = '-*,' + this.task_.traceCategories;
       message.params.categories = trace_categories + ',' + message.params.categories;
@@ -965,7 +965,7 @@ WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
       message.params.categories = '-*,' + message.params.categories;
     }
     if (1 === this.task_.timeline) {
-      message.params.categories = message.params.categories + ',toplevel,v8,disabled-by-default-v8.runtime_stats,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame';
+      message.params.categories = message.params.categories + ',toplevel,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame';
       if (this.task_.timelineStackDepth) {
         message.params.categories = message.params.categories + ',disabled-by-default-v8.cpu_profiler';
       }

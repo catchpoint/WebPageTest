@@ -146,7 +146,7 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.chromeApi_ = chromeApi;
     g_instance.startedCallback = callback;
     g_instance.trace = false;
-    g_instance.traceCategories = "*";
+    g_instance.traceCategories = "-*,blink,v8,cc,gpu,blink.net,netlog,disabled-by-default-v8.runtime_stats";
     g_instance.timeline = false;
     g_instance.statsDoneCallback = undefined;
     g_instance.mobileEmulation = undefined;
@@ -221,7 +221,7 @@ wpt.chromeDebugger.StartTrace = function() {
     else
       traceCategories = '-*';
     if (g_instance.timeline)
-      traceCategories = traceCategories + ',toplevel,blink.console,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame,v8,disabled-by-default-blink.feature_usage,blink.user_timing,disabled-by-default-v8.runtime_stats';
+      traceCategories = traceCategories + ',toplevel,blink.console,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame,disabled-by-default-blink.feature_usage,blink.user_timing';
     if (g_instance.timelineStackDepth > 0)
       traceCategories += ',disabled-by-default-v8.cpu_profiler';
     var params = {categories: traceCategories, options:'record-as-much-as-possible'};
