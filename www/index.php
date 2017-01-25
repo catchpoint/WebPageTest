@@ -266,9 +266,11 @@ $loc = ParseLocations($locations);
                                             <small>Up to <?php echo $settings['maxruns']; ?></small>
                                         </label>
                                         <?php
-                                        $runs = (int)@$_COOKIE["runs"];
+                                        $runs = 3;
+                                        if (isset($_COOKIE["runs"]))
+                                          $runs = (int)@$_COOKIE["runs"];
                                         if( isset($req_runs) )
-                                            $runs = (int)$req_runs;
+                                          $runs = (int)$req_runs;
                                         $runs = max(1, min($runs, $settings['maxruns']));
                                         ?>
                                         <input id="number_of_tests" type="number" min="1" max=<?php echo "\"{$settings['maxruns']}\""; ?> class="text short" name="runs" value=<?php echo "\"$runs\""; ?> required>
@@ -278,10 +280,11 @@ $loc = ParseLocations($locations);
                                             Repeat View
                                         </label>
                                         <?php
-                                        $fvOnly = (int)@$_COOKIE["testOptions"] & 2;
-                                        if (array_key_exists('fvonly', $_REQUEST)) {
-                                            $fvOnly = (int)$_REQUEST['fvonly'];
-                                        }
+                                        $fvOnly = true;
+                                        if (isset($_COOKIE["testOptions"]))
+                                          $fvOnly = (int)@$_COOKIE["testOptions"] & 2;
+                                        if (isset($_REQUEST['fvonly']))
+                                          $fvOnly = (int)$_REQUEST['fvonly'];
                                         ?>
                                         <input id="viewBoth" type="radio" name="fvonly" <?php if( !$fvOnly ) echo 'checked=checked'; ?> value="0">First View and Repeat View
                                         <input id="viewFirst" type="radio" name="fvonly" <?php if( $fvOnly ) echo 'checked=checked'; ?> value="1">First View Only
