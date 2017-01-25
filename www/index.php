@@ -468,7 +468,7 @@ $loc = ParseLocations($locations);
                                         Trace Categories<br>
                                         <small>(when tracing is enabled)</small>
                                         </label>
-                                        <input type="text" name="traceCategories" id="traceCategories" class="text" style="width: 400px;" value="*">
+                                        <input type="text" name="traceCategories" id="traceCategories" class="text" style="width: 400px;" value="blink,v8,cc,gpu,blink.net,netlog,disabled-by-default-v8.runtime_stats">
                                     </li>
                                     <li>
                                         <input type="checkbox" name="netlog" id="netlog" class="checkbox" style="float: left;width: auto;">
