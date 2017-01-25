@@ -92,8 +92,10 @@ function ValidateInput(form)
 })(jQuery);
 
 function RestoreSettings() {
-    if (wptStorage['testVideo'] != undefined && wptStorage['testVideo'])
-        $('#videoCheck').prop('checked', true);
+    if (wptStorage['testVideo'] != undefined)
+        $('#videoCheck').prop('checked', wptStorage['testVideo']);
+    if (wptStorage['testTimeline'] != undefined)
+        $('#timeline').prop('checked', wptStorage['testTimeline']);
     if (wptStorage['testLoc'] != undefined)
         $('#location').val(wptStorage['testLoc']); 
     LocationChanged();
@@ -101,6 +103,7 @@ function RestoreSettings() {
 
 function SaveSettings() {
     wptStorage['testVideo'] = $('#videoCheck').is(':checked');
+    wptStorage['testTimeline'] = $('#timeline').is(':checked');
 }
 
 /*

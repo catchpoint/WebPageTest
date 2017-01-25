@@ -293,8 +293,6 @@ $loc = ParseLocations($locations);
                                       <label for="videoCheck">Capture Video</label>
                                       <?php
                                       $video = 1;
-                                      if (isset($_COOKIE['video']))
-                                        $video = (int)$_COOKIE['video'];
                                       if (isset($_REQUEST['video']))
                                         $video = (int)$_REQUEST['video'];
                                       ?>
@@ -449,7 +447,12 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="timeline" id="timeline" class="checkbox" style="float: left;width: auto;">
+                                        <?php
+                                        $timeline = 1;
+                                        if (isset($_REQUEST['timeline']))
+                                          $timeline = (int)$_REQUEST['timeline'];
+                                        ?>
+                                        <input type="checkbox" name="timeline" id="timeline" class="checkbox" <?php if( $timeline ) echo 'checked=checked'; ?> style="float: left;width: auto;">
                                         <label for="timeline" class="auto_width">
                                             Capture Dev Tools Timeline
                                         </label>
