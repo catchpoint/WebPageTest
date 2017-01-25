@@ -292,9 +292,11 @@ $loc = ParseLocations($locations);
                                     <li>
                                       <label for="videoCheck">Capture Video</label>
                                       <?php
-                                      $video = 0;
-                                      if (array_key_exists('video', $_REQUEST))
-                                          $video = (int)$_REQUEST['video'];
+                                      $video = 1;
+                                      if (isset($_COOKIE['video']))
+                                        $video = (int)$_COOKIE['video'];
+                                      if (isset($_REQUEST['video']))
+                                        $video = (int)$_REQUEST['video'];
                                       ?>
                                       <input type="checkbox" name="video" id="videoCheck" class="checkbox" <?php if( $video ) echo 'checked=checked'; ?>>
                                     </li>
