@@ -121,14 +121,14 @@ var BLACK_BOX_BROWSERS = {
       'package': 'org.mozilla.firefox',
       'activity': '.App',
       'videoFlags': ['--findstart', 25, '--notification'],
-      'directories': ['cache', 'databases', 'files', 'app_sbrowser', 'code_cache'],
+      'clearProfile': true,
       'startupDelay': 10000
     },
     'Firefox Beta': {
       'package': 'org.mozilla.firefox_beta',
       'activity': '.App',
       'videoFlags': ['--findstart', 25, '--notification'],
-      'directories': ['cache', 'databases', 'files', 'app_tmpdir', 'no_backup'],
+      'clearProfile': true,
       'startupDelay': 10000
     },
     'Blimp': {
