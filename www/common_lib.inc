@@ -2134,20 +2134,8 @@ function UnLock(&$lock) {
   }
 }
 
-function LockTest($testIdOrPath) {
-  $lock = null;
-  $testPath = $testIdOrPath;
-  if (strpos($testPath, '/') === false) {
-    $id = $testPath;
-    $testPath = '';
-    if (ValidateTestId($id))
-      $testPath = './' . GetTestPath($id);
-  }
-  if (strlen($testPath) && is_dir($testPath)) {
-    $testPath = realpath($testPath);
-    $lock = Lock("Test $testPath");
-  }
-  return $lock;
+function LockTest($id) {
+  return Lock("Test $id");
 }
 
 function UnlockTest(&$testLock) {

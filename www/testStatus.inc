@@ -349,7 +349,7 @@ function GetRelayStatus($id, $testPath, &$test) {
             if (file_put_contents($tmp, http_fetch("{$server}download.php?test=$id&rkey=$key"))) {
                 $zip = new ZipArchive();
                 if ($zip->open($tmp) === true) {
-                    $lock = LockTest($testPath);
+                    $lock = LockTest($id);
                     if ($lock) {
                       if ($zip->extractTo($testPath)) {
                           SendAsyncRequest("/work/postprocess.php?test=$id");

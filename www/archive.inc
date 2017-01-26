@@ -210,7 +210,7 @@ function RestoreArchive($id) {
             if (is_file($zipfile)) {
               if (!is_dir($testPath))
                   mkdir( $testPath, 0777, true );
-              $lock = LockTest($testPath);
+              $lock = LockTest($id);
               if (isset($lock)) {
                 ZipExtract($zipfile, $testPath);
                 $ret = true;
