@@ -106,8 +106,10 @@ if (ValidateTestId($id)) {
         $testErrorStr = ', Test Error: "' . $_REQUEST['testerror'] . '"';
       if (array_key_exists('error', $_REQUEST) && strlen($_REQUEST['error']))
         $errorStr = ', Test Run Error: "' . $_REQUEST['error'] . '"';
-      logTestMsg($id, "Test Run Complete. Run: $runNumber, Cached: $cacheWarmed, Done: $done, Tester: $tester$testErrorStr$errorStr");
       $testLock = LockTest($id);
+      logTestMsg($id, "Test Run Complete. Run: $runNumber, Cached: $cacheWarmed, Done: $done, Tester: $tester$testErrorStr$errorStr");
+      if (!isset($testLock))
+        logTestMsg($id, "Failed to lock test");
       $testInfo = GetTestInfo($id);
       
       // Figure out the path to the results.
@@ -315,6 +317,7 @@ if (ValidateTestId($id)) {
         SaveTestInfo($id, $testInfo);
 
       SecureDir($testPath);
+      logTestMsg($id, "Done Processing. Run: $runNumber, Cached: $cacheWarmed, Done: $done, Tester: $tester$testErrorStr$errorStr");
       UnlockTest($testLock);
       /*************************************************************************
       * Do No modify TestInfo after this point
