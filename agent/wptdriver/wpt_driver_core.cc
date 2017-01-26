@@ -37,6 +37,8 @@ const TCHAR * BROWSERS[] = {
   _T("chrome.exe"),
   _T("firefox.exe"),
   _T("iexplore.exe"),
+  _T("MicrosoftEdge.exe"),
+  _T("MicrosoftEdgeCP.exe"),
   _T("plugin-container.exe")
 };
 
