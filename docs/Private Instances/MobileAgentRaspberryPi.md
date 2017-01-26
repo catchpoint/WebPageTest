@@ -75,7 +75,14 @@ For the initial setup you will also need a USB keyboard and monitor with HDMI in
 		- uncomment "watchdog-device =" line
 		- optionally, configure a load limit (max-load-15 = 80 should cover EXTREME cases)
 	- ```sudo modprobe bcm2835_wdt```
-	- ```sudo /etc/init.d/watchdog start```
+	- ```sudo nano /etc/systemd/system.conf```
+		- uncomment "RuntimeWatchdogSec=" line and set the time to 10
+		- uncomment "ShutdownWatchdogSec=10min"
+	- ```sudo nano /lib/systemd/system/watchdog.service```
+		- add ```WantedBy=multi-user.target``` below [Install]
+	- ```sudo systemctl start watchdog```
+	- ```sudo systemctl status watchdog```
+	- ```sudo systemctl enable watchdog```
 20. Configure it to reboot on out-of-memory and optionally disable IPv6
 	- ```sudo nano /etc/sysctl.conf```
 	- Add the reboot on OOM settings to the end
