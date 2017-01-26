@@ -109,7 +109,7 @@ BrowserLocalChrome.prototype.startBrowser = function() {
   'use strict';
   // TODO(klm): clean profile, see how ChromeDriver does it.
   var flags = CHROME_FLAGS;
-  flags.push('-remote-debugging-port=' + this.devToolsPort_);
+  flags.push('--remote-debugging-port=' + this.devToolsPort_);
   if (this.task_.ignoreSSL) {
     flags.push('--ignore-certificate-errors');
   }
