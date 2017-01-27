@@ -50,7 +50,7 @@ class UserTimingHtmlTable {
       $out .= "<th>Step</th>";
     }
     if ($this->hasTTI)
-      $out .= "<th><a href=\"https://github.com/WPO-Foundation/webpagetest/blob/master/docs/Metrics/TimeToInteractive.md\">Interactive</a></th>";
+      $out .= "<th><a href=\"https://github.com/WPO-Foundation/webpagetest/blob/master/docs/Metrics/TimeToInteractive.md\">Interactive (beta)</a></th>";
     if ($this->hasUserTiming) {
       foreach ($this->userTimings[0] as $label => $value)
         if (count($this->userTimings[0]) < 5 || substr($label, 0, 5) !== 'goog_')
