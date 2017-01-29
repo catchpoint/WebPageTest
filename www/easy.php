@@ -28,7 +28,7 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
         <title>WebPagetest - Website Performance and Optimization Test</title>
         <?php $gaTemplate = 'Main'; include ('head.inc'); ?>
         <style>
-        #description { min-height: 5em; padding-left: 170px; width:380px;}
+        #description { min-height: 2em; padding-left: 170px; width:380px;}
         </style>
     </head>
     <body>
@@ -88,6 +88,10 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
                         <li>
                         <div id="description"></div>
                         </li>
+                        <li>
+                            <label for="videoCheck">Include Repeat View</label>
+                            <input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()">
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -109,6 +113,13 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
         <?php 
           echo "var profiles = " . json_encode($profiles) . ";\n";
         ?>
+        var wptStorage = window.localStorage || {};
+        if (wptStorage['testrv'] != undefined)
+          $('#rv').prop('checked', wptStorage['testrv']);
+        var rvChanged = function() {
+          wptStorage['testrv'] = $('#rv').is(':checked');
+        }
+
         var profileChanged = function() {
           var sel = document.getElementById("profile");
           var txt = document.getElementById("description");

@@ -107,6 +107,8 @@
             $test['customHeaders'] = trim($req_customHeaders);
             $test['runs'] = (int)$req_runs;
             $test['fvonly'] = (int)$req_fvonly;
+            if (isset($_REQUEST['rv']))
+              $test['fvonly'] = $_REQUEST['rv'] ? 0 : 1;
             $test['timeout'] = (int)$req_timeout;
             $maxTime = GetSetting('maxtime');
             if ($maxTime && $test['timeout'] > $maxTime)
