@@ -89,8 +89,8 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
                         <div id="description"></div>
                         </li>
                         <li>
-                            <label for="videoCheck">Include Repeat View</label>
-                            <input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()">
+                            <label for="videoCheck">Include Repeat View:<br></label>
+                            <input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()">(Loads the page, closes the browser and then loads the page again)
                         </li>
                     </ul>
                 </div>
