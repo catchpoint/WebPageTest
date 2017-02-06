@@ -183,7 +183,7 @@ if (ValidateTestId($id)) {
         $testInfo_dirty = true;
       }
 
-      // Do any post-processing on this individual run that doesn't requre the test to be locked
+      // Do any post-processing on this individual run
       if (isset($runNumber) && isset($cacheWarmed)) {
         $resultProcessing = new ResultProcessing($testPath, $id, $runNumber, $cacheWarmed);
         $testerError = $resultProcessing->postProcessRun();
@@ -422,16 +422,23 @@ function ProcessIncrementalResult() {
   global $runNumber;
   global $cacheWarmed;
   global $location;
+  global $id;
 
   if ($done) {
-    // mark this test as done
-    $testInfo['test_runs'][$runNumber]['done'] = true;
+    // mark this shard as done
+    if (!isset($testInfo['shards_done']))
+      $testInfo['shards_done'] = array();
+    $testInfo['shards_done'][$runNumber] = true;
     $testInfo_dirty = true;
+    logTestMsg($id, "Marking shard $runNumber as complete");
     
     // make sure all of the sharded tests are done
     for ($run = 1; $run <= $testInfo['runs'] && $done; $run++) {
-      if (!$testInfo['test_runs'][$run]['done'])
+      if (!isset($testInfo['shards_done'][$run]) || $testInfo['shards_done'][$run] !== true)
         $done = false;
+    }
+    if ($done) {
+      logTestMsg($id, "All {$testInfo['runs']} runs are complete");
     }
     
     if (!$done &&
