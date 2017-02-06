@@ -126,7 +126,7 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
       // Load the diagnostic test timing information if available
       if (gz_is_file($localPaths->testTimingFile())) {
         $entries = array();
-        $lines = gzfile($localPaths->testTimingFile());
+        $lines = gz_file($localPaths->testTimingFile());
         if (isset($lines) && is_array($lines) && count($lines)) {
           foreach($lines as $line) {
             $parts = explode('=', trim($line));
