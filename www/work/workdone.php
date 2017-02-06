@@ -429,7 +429,7 @@ function ProcessIncrementalResult() {
     logTestMsg($id, "Checking shard $runNumber: " . json_encode($testInfo['shards_finished']));
     if (!isset($testInfo['shards_finished']))
       $testInfo['shards_finished'] = array();
-    $testInfo['shards_finished'][$runNumber] = true;
+    $testInfo['shards_finished'][$runNumber] = "Done";
     $testInfo_dirty = true;
     logTestMsg($id, "Marked shard $runNumber as complete: " . json_encode($testInfo['shards_finished']));
     
@@ -437,7 +437,7 @@ function ProcessIncrementalResult() {
     for ($run = 1; $run <= $testInfo['runs'] && $done; $run++) {
       if (!isset($testInfo['shards_finished'][$run]))
         $testInfo['shards_finished'][$run] = false;
-      if (!$testInfo['shards_finished'][$run])
+      if ($testInfo['shards_finished'][$run] !== "Done")
         $done = false;
     }
     if ($done) {
