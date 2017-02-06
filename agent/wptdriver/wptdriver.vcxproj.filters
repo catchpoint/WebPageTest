@@ -219,6 +219,9 @@
     <ClInclude Include="shaper\interface.h">
       <Filter>Third-Party\shaper</Filter>
     </ClInclude>
+    <ClInclude Include="log_duration.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="small.ico">

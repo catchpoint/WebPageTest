@@ -238,6 +238,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for diagnostic test timing
+   */
+  public function testTimingFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_test_timing.log";
+  }
+
+  /**
    * @return string Path for Chrome trace user timing
    */
   public function chromeUserTimingFile() {

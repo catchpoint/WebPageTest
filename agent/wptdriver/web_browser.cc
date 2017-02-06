@@ -129,6 +129,7 @@ bool WebBrowser::RunAndWait() {
   TerminateProcessesByName(_T("mscorsvw.exe"));
 
   if (_test.Start() && ConfigureIpfw(_test)) {
+    LogDuration logTestRunTime(_test.TimeLog(), "Run Test");
     SetEnvironmentVariable(L"JSGC_DISABLE_POISONING", NULL);
     if (_browser.IsWebdriver()) {
       ret = RunWebdriverTest();
@@ -277,6 +278,7 @@ bool WebBrowser::RunAndWait() {
       TerminateProcessesByName(PathFindFileName((LPCTSTR)_browser._exe));
       g_shared->SetBrowserExe(PathFindFileName((LPCTSTR)_browser._exe));
       if (_browser_started_event && _browser_done_event) {
+        LogDuration logBrowserLaunchTime(_test.TimeLog(), "Launch Browser");
         ResetEvent(_browser_started_event);
         ResetEvent(_browser_done_event);
         InstallAppInitHook(_browser._exe);
@@ -318,6 +320,7 @@ bool WebBrowser::RunAndWait() {
           _status.Set(_T("Error Launching: %s"), cmdLine);
           _test._run_error = "Failed to launch the browser.";
         }
+        logBrowserLaunchTime.Stop();
         LeaveCriticalSection(&cs);
         ClearAppInitHooks();
 

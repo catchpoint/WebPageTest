@@ -62,7 +62,8 @@ TestState::TestState(Results& results, ScreenCapture& screen_capture,
   ,received_data_(false)
   ,_viewport_adjusted(false)
   , reported_step_(0)
-  , shared_(false) {
+  , shared_(false)
+  , logMeasure_(NULL) {
   QueryPerformanceCounter(&_launch);
   QueryPerformanceFrequency(&_ms_frequency);
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
@@ -200,6 +201,9 @@ void TestState::Start() {
       _winpcap.StartCapture(_file_base + _T(".cap") );
     _trace.Start(_file_base + "_trace.json");
   }
+  if (logMeasure_)
+    delete logMeasure_;
+  logMeasure_ = new LogDuration(TimeLog(), "Measure Step");
   QueryPerformanceCounter(&_step_start);
   GetSystemTime(&_start_time);
   if (!_start.QuadPart)
@@ -444,7 +448,10 @@ void TestState::Done(bool force) {
         timeEndPeriod(1);
       }
     }
-
+    if (logMeasure_) {
+      delete logMeasure_;
+      logMeasure_ = NULL;
+    }
     _active = false;
   }
 }

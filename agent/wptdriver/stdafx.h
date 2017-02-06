@@ -61,4 +61,5 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "TraceRoute.h"
 #include "util.h"
 #include "../wpthook/shared_mem.h"
+#include "log_duration.h"
 extern SharedMem * g_shared;

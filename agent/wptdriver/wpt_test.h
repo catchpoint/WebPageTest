@@ -143,6 +143,7 @@ public:
   bool IsLocked();
   CStringA  GetAppendUA() const;
   bool HasCustomCommandLine() const {return _browser_command_line.GetLength() || _browser_additional_command_line.GetLength();}
+  CString TimeLog() {return _file_base + "_test_timing.log";}
 
   // overall test settings
   CString _id;

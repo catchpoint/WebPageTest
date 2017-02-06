@@ -238,6 +238,7 @@ EXIT 0</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\wpthook\shared_mem.h" />
+    <ClInclude Include="log_duration.h" />
     <ClInclude Include="shaper.h" />
     <ClInclude Include="shaper\interface.h" />
     <ClInclude Include="software_update.h" />

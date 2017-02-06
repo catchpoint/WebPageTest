@@ -122,6 +122,21 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
         if (isset($interactive) && is_array($interactive) && count($interactive))
           $ret['interactivePeriods'] = $interactive;
       }
+      
+      // Load the diagnostic test timing information if available
+      if (gz_is_file($localPaths->testTimingFile())) {
+        $entries = array();
+        $lines = gzfile($localPaths->testTimingFile());
+        if (isset($lines) && is_array($lines) && count($lines)) {
+          foreach($lines as $line) {
+            $parts = explode('=', trim($line));
+            if (count($parts) == 2 && strlen($parts[0]) && strlen($parts[1]))
+              $entries[str_replace(' ', '', $parts[0])] = intval($parts[1]);
+          }
+        }
+        if (count($entries))
+          $ret['testTiming'] = $entries;
+      }
 
       // see if we have CSI metrics to load
       if (is_dir(__DIR__ . '/google') && is_file(__DIR__ . '/google/google_lib.inc')) {

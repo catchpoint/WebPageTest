@@ -1,5 +1,5 @@
 /******************************************************************************
-Copyright (c) 2010, Google Inc.
+Copyright (c) 2017, Google Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without 
@@ -26,40 +26,41 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-// stdafx.h : include file for standard system include files,
-// or project specific include files that are used frequently, but
-// are changed infrequently
-//
-
 #pragma once
-#define PSAPI_VERSION 1
-#include "targetver.h"
+class LogDuration {
+  public:
+  LogDuration(LPCTSTR log_file, LPCSTR event_name):
+    log_file_(log_file),
+    event_name_(event_name) {
+    QueryPerformanceCounter(&start_);
+  }
+  ~LogDuration() {Stop();}
+  void Start() {
+    QueryPerformanceCounter(&start_);
+  }
+  void Stop() {
+    if (start_.QuadPart && !log_file_.IsEmpty() && !event_name_.IsEmpty()) {
+      LARGE_INTEGER end, freq;
+      QueryPerformanceCounter(&end);
+      QueryPerformanceFrequency(&freq);
+      DWORD elapsed_ms = (DWORD)((double)(end.QuadPart - start_.QuadPart) / ((double)freq.QuadPart / 1000.0));
+      CStringA ms;
+      ms.Format("%d", elapsed_ms);
+      CStringA entry = event_name_ + "=" + ms + "\n";
+      HANDLE hFile = CreateFile(log_file_, GENERIC_WRITE, FILE_SHARE_READ, 0, OPEN_ALWAYS, 0, 0);
+      if (hFile != INVALID_HANDLE_VALUE) {
+        SetFilePointer(hFile, 0, 0, FILE_END);
+        DWORD written = 0;
+        WriteFile(hFile, (LPCSTR)entry, entry.GetLength(), &written, 0);
+        CloseHandle(hFile);
+      }
+    }
+    start_.QuadPart = 0;
+  }
 
-#define INCL_WINSOCK_API_TYPEDEFS 1
+ private:
+  CString log_file_;
+  CStringA event_name_;
+  LARGE_INTEGER start_;
+};
 
-#define WIN32_LEAN_AND_MEAN
-// Windows Header Files:
-#include <windows.h>
-
-// C RunTime Header Files
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <Psapi.h>
-#include <tchar.h>
-#undef _WIN32_WINNT
-#define _WIN32_WINNT  0x0600
-#include <Ws2tcpip.h>
-#undef _WIN32_WINNT
-#define _WIN32_WINNT  0x0501
-#include <Wincrypt.h>
-
-#include <shlobj.h>
-#include <atlstr.h>
-#include <atlcoll.h>
-#include <atlenc.h>
-#include "../wptdriver/util.h"
-#include "../wptdriver/log_duration.h"
-#include "shared_mem.h"
-
-#include <zlib.h>

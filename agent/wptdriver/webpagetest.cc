@@ -343,6 +343,7 @@ bool WebPagetest::UploadImages(WptTestDriver& test,
                                CAtlList<CString>& image_files) {
   bool ret = true;
 
+  LogDuration logBrowserLaunchTime(test.TimeLog(), "Upload Images");
   // Upload the large binary files individually (e.g. images, tcpdump).
   CString url = _settings._server + _T("work/resultimage.php");
   POSITION pos = image_files.GetHeadPosition();
@@ -351,7 +352,7 @@ bool WebPagetest::UploadImages(WptTestDriver& test,
     if (!test._discard_test) {
       if (test._process_results) {
         CAtlList<CString> newFiles;
-        if (ProcessFile(file, newFiles)) {
+        if (ProcessFile(test, file, newFiles)) {
           POSITION newFilePos = newFiles.GetHeadPosition();
           while (ret && newFilePos) {
             CString newFile = newFiles.GetNext(newFilePos);
@@ -1228,10 +1229,11 @@ void WebPagetest::UpdateDNSServers() {
 /*-----------------------------------------------------------------------------
   Run python-based post-processing on the trace, pcap, etc files
 -----------------------------------------------------------------------------*/
-bool WebPagetest::ProcessFile(CString file, CAtlList<CString> &newFiles) {
+bool WebPagetest::ProcessFile(WptTestDriver& test, CString file, CAtlList<CString> &newFiles) {
   bool hasNewFiles = false;
   int pos = -1;
   if ((pos = file.Find(_T("trace.json"))) >= 0) {
+    LogDuration logTrace(test.TimeLog(), "Process Trace");
     CString cpuFile = file.Left(pos) + _T("timeline_cpu.json.gz");
     CString scriptTimingFile = file.Left(pos) + _T("script_timing.json.gz");
     CString userTimingFile = file.Left(pos) + _T("user_timing.json.gz");
@@ -1267,7 +1269,9 @@ bool WebPagetest::ProcessFile(CString file, CAtlList<CString> &newFiles) {
       }
     }
     OutputDebugStringA("Processing trace file - complete");
+    logTrace.Stop();
   } else if ((pos = file.Find(_T(".cap"))) >= 0) {
+    LogDuration logPcap(test.TimeLog(), "Process tcpdump");
     CString slicesFile = file.Left(pos) + _T("_pcap_slices.json.gz");
     CString options;
     options.Format(_T("-i \"%s\" -d \"%s\""),
@@ -1278,6 +1282,7 @@ bool WebPagetest::ProcessFile(CString file, CAtlList<CString> &newFiles) {
         newFiles.AddTail(slicesFile);
       }
     }
+    logPcap.Stop();
   }
   return hasNewFiles;
 }

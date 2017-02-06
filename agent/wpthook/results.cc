@@ -280,15 +280,22 @@ void Results::Save(void) {
   ATLTRACE("[wpthook] - Results::Save()");
   if (!_saved) {
     OutputDebugStringA("Results::Save()");
+    LogDuration logProcess(_test_state.TimeLog(), "Process Requests");
     ProcessRequests();
+    logProcess.Stop();
     if (_test._log_data) {
+      LogDuration logSave(_test_state.TimeLog(), "Save Result");
       OptimizationChecks checks(_requests, _test_state, _test, _dns);
       OutputDebugStringA("Running optimization checks");
+      LogDuration logOpt(_test_state.TimeLog(), "Run Optimization Checks");
       checks.Check();
+      logOpt.Stop();
       OutputDebugStringA("Running optimization checks - complete");
       base_page_CDN_ = checks._base_page_CDN;
       SaveRequests(checks);
+      LogDuration logVideo(_test_state.TimeLog(), "Process Video");
       SaveImages();
+      logVideo.Stop();
       SaveProgressData();
       if (!_test._minimal_results) {
         SaveStatusMessages();
