@@ -239,7 +239,7 @@ function CheckTest($testPath, $id, $elapsedDays, $forced_only) {
         $logLine .= "Archived";
         $delete = true;
       } else if ($elapsed < 60) {
-        $status = GetTestStatus($id, false);
+        $status = GetTestStatus($id, true);
         $logLine .= " status {$status['statusCode']}";
         if ($status['statusCode'] >= 400 ||
             ($status['statusCode'] == 102 &&
