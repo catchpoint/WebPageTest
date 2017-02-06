@@ -130,7 +130,7 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
         if (isset($lines) && is_array($lines) && count($lines)) {
           foreach($lines as $line) {
             $parts = explode('=', trim($line));
-            if (count($parts) == 2 && strlen($parts[0]) && strlen($parts[1]))
+            if (count($parts) >= 2 && strlen($parts[0]))
               $entries[str_replace(' ', '', $parts[0])] = intval($parts[1]);
           }
         }
