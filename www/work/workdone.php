@@ -434,7 +434,9 @@ function ProcessIncrementalResult() {
     
     // make sure all of the sharded tests are done
     for ($run = 1; $run <= $testInfo['runs'] && $done; $run++) {
-      if (!isset($testInfo['shards_done'][$run]) || $testInfo['shards_done'][$run] !== true)
+      if (!isset($testInfo['shards_done'][$run]))
+        $testInfo['shards_done'][$run] = false;
+      if (!$testInfo['shards_done'][$run])
         $done = false;
     }
     if ($done) {
