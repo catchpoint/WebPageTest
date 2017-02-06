@@ -20,12 +20,7 @@ if (array_key_exists('archive_days', $settings)) {
     $MIN_DAYS = $settings['archive_days'];
 }
 $MIN_DAYS = max($MIN_DAYS,0.1);
-
 $MAX_DAYS = 30;
-$days = GetSetting('archive2_days');
-if (isset($days) && $days !== false)
-  $MAX_DAYS = $days;
-$MAX_DAYS = max($MAX_DAYS, 2);
 
 $archive_dir = null;
 if (array_key_exists('archive_dir', $settings)) {
