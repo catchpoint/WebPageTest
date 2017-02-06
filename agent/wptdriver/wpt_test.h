@@ -216,7 +216,6 @@ public:
   CAtlList<CString> _block_domains_except;
   bool     _minimal_results;
   CString  _software_update_url;
-  bool     _incremental;
   CString  _job_info;
   CStringA _testinfo_json;
   CStringA _testinfo_ini;

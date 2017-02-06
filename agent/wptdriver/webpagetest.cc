@@ -247,19 +247,35 @@ bool WebPagetest::DeleteIncrementalResults(WptTestDriver& test) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void WebPagetest::StartTestRun(WptTestDriver& test) {
+  test.marked_done_ = false;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 bool WebPagetest::UploadIncrementalResults(WptTestDriver& test) {
   bool ret = true;
 
   ATLTRACE(_T("[wptdriver] - UploadIncrementalResults"));
 
   if (!test._discard_test) {
-    if (test._incremental) {
-      CString directory = test._directory + CString(_T("\\"));
-      CAtlList<CString> image_files;
-      GetImageFiles(directory, image_files);
-      ret = UploadImages(test, image_files);
-      if (ret)
-        ret = UploadData(test, false);
+    CString directory = test._directory + CString(_T("\\"));
+    CAtlList<CString> image_files;
+    GetImageFiles(directory, image_files);
+    ret = UploadImages(test, image_files);
+    if (ret) {
+      // See if this is the last run we are testing and if so, pass the done flag
+      // through now instead of waiting for TestDone() to prevent double-calls
+      // to workdone.
+      bool done = false;
+      if (test._fv_only || !test._clear_cache) {
+        if (test._specific_run || test._run == test._runs) {
+          done = true;
+        }
+      }
+      ret = UploadData(test, done);
+      if (done && ret)
+        test.marked_done_ = true;
     }
     g_shared->SetCPUUtilization(0);
   } else {
@@ -276,14 +292,13 @@ bool WebPagetest::TestDone(WptTestDriver& test){
   bool ret = true;
 
   UpdateDNSServers();
-  if (test._incremental) {
+  if (!test.marked_done_) {
     CString directory = test._directory + CString(_T("\\"));
     CAtlList<CString> image_files;
     GetImageFiles(directory, image_files);
     ret = UploadImages(test, image_files);
-  }
-  if (ret) {
-    ret = UploadData(test, true);
+    if (ret)
+      ret = UploadData(test, true);
     g_shared->SetCPUUtilization(0);
   }
 
@@ -369,30 +384,9 @@ bool WebPagetest::UploadData(WptTestDriver& test, bool done) {
   CString file = NO_FILE;
   CString dir = test._directory + CString(_T("\\"));
 
-  // Write out the passthrough testinfo data
-  if (done && !test._incremental) {
-    if (!test._testinfo_json.IsEmpty()) {
-      gzFile json_file = gzopen((LPCSTR)CT2A(dir + CString("testinfo.json.gz")), "wb6");
-      if (json_file) {
-        gzwrite(json_file, (voidpc)(LPCSTR)test._testinfo_json, (unsigned int)test._testinfo_json.GetLength());
-        gzclose(json_file);
-      }
-    }
-    if (!test._testinfo_ini.IsEmpty()) {
-      HANDLE ini_file = CreateFile(dir + _T("testinfo.ini"), GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, 0, 0);
-      if (ini_file != INVALID_HANDLE_VALUE) {
-        DWORD written = 0;
-        WriteFile(ini_file, (LPCSTR)test._testinfo_ini, test._testinfo_ini.GetLength(), &written, 0);
-        CloseHandle(ini_file);
-      }      
-    }
-  }
-
-  if (done || test._incremental) {
-    ret = CompressResults(dir, dir + _T("results.zip"));
-    if (ret)
-      file = dir + _T("results.zip");
-  }
+  ret = CompressResults(dir, dir + _T("results.zip"));
+  if (ret)
+    file = dir + _T("results.zip");
 
   if (ret || done) {
     CString url = _settings._server + _T("work/workdone.php");
@@ -804,12 +798,6 @@ void WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test,
   form_data += CStringA("--") + boundary + "\r\n";
   form_data += "Content-Disposition: form-data; name=\"cached\"\r\n\r\n";
   form_data += test._clear_cache ? "0" : "1";
-  form_data += "\r\n";
-
-  // incremental flag
-  form_data += CStringA("--") + boundary + "\r\n";
-  form_data += "Content-Disposition: form-data; name=\"incremental\"\r\n\r\n";
-  form_data += test._incremental ? "0" : "1";
   form_data += "\r\n";
 
   // error string

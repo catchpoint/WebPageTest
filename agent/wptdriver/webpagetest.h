@@ -37,6 +37,7 @@ public:
   bool GetTest(WptTestDriver& test);
   bool DeleteIncrementalResults(WptTestDriver& test);
   bool UploadIncrementalResults(WptTestDriver& test);
+  void StartTestRun(WptTestDriver& test);
   bool TestDone(WptTestDriver& test);
   DWORD WptVersion(){ return _revisionNo; }
 

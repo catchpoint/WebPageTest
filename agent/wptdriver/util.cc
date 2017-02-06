@@ -1151,3 +1151,37 @@ bool RunPythonScript(CString script, CString options) {
   }
   return ok;
 }
+
+/*-----------------------------------------------------------------------------
+  See if screen capture is available and will work
+-----------------------------------------------------------------------------*/
+bool ScreenCaptureAvailable() {
+  bool ok = false;
+  HWND wnd = GetDesktopWindow();
+  if (wnd) {
+    HDC src = GetDC(NULL);
+    if (src) {
+      HDC dc = CreateCompatibleDC(src);
+      if (dc) {
+        RECT window_rect;
+        GetWindowRect(wnd, &window_rect);
+        int width = abs(window_rect.right - window_rect.left);
+        int height = abs(window_rect.top - window_rect.bottom);
+        if (width && height) {
+          HBITMAP bitmap = CreateCompatibleBitmap(src, width, height); 
+          if (bitmap) {
+            HBITMAP hOriginal = (HBITMAP)SelectObject(dc, bitmap);
+            if (BitBlt(dc, 0, 0, width, height, src, 0, 0, SRCCOPY|CAPTUREBLT) )
+              ok = true;
+
+            SelectObject(dc, hOriginal);
+            DeleteObject(bitmap);
+          }
+        }
+        DeleteDC(dc);
+      }
+      ReleaseDC(wnd, src);
+    }
+  }
+  return ok;
+}

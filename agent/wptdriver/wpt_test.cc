@@ -174,7 +174,6 @@ void WptTest::Reset(void) {
     _block_domains.RemoveAll();
   if (!_block_domains_except.IsEmpty())
     _block_domains_except.RemoveAll();
-  _incremental = true;
   _job_info.Empty();
   _testinfo_json.Empty();
   _testinfo_ini.Empty();
@@ -346,8 +345,6 @@ bool WptTest::Load(CString& test) {
           _minimal_results = true;
         } else if (!key.CompareNoCase(_T("software"))) {
           _software_update_url = value.Trim();
-        } else if (!key.CompareNoCase(_T("incremental")) && !_ttoi(value.Trim())) {
-          _incremental = false;
         } else if (!key.CompareNoCase(_T("jobInfo"))) {
           _job_info = value.Trim();
         } else if (!key.CompareNoCase(_T("testInfoJson"))) {
@@ -1400,7 +1397,6 @@ CString  WptTest::SaveJson() {
   json += JsonFragment("minimal_results", _minimal_results) + ",\n";
   json += JsonFragment("block_domains", _block_domains) + ",\n";
   json += JsonFragment("block_domains_except", _block_domains_except) + ",\n";
-  json += JsonFragment("incremental", _incremental) + ",\n";
   json += JsonFragment("job_info", _job_info) + ",\n";
   json += JsonFragment("testinfo_json", _testinfo_json) + ",\n";
   json += JsonFragment("testinfo_ini", _testinfo_ini);

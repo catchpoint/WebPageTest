@@ -3,7 +3,8 @@
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WptTestDriver::WptTestDriver(DWORD default_timeout, bool has_gpu) {
+WptTestDriver::WptTestDriver(DWORD default_timeout, bool has_gpu):
+  marked_done_(false) {
   _test_timeout = default_timeout;
   _measurement_timeout = default_timeout;
   has_gpu_ = has_gpu;

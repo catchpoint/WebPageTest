@@ -85,3 +85,4 @@ bool IsBinaryContent(const LPBYTE content, size_t len);
 bool InstallAppInitHook(LPCTSTR exe);
 void ClearAppInitHooks();
 bool RunPythonScript(CString script, CString options);
+bool ScreenCaptureAvailable();

@@ -10,5 +10,6 @@ public:
   virtual bool  Load(CString& test);
   bool  Start();
   bool  SetFileBase();
+  bool  marked_done_;
 };
 
