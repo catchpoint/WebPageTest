@@ -1,5 +1,5 @@
 browser=Firefox
-url=http://cdn.webpagetest.org/installers/browsers/firefox_51.exe
+url=http://www.webpagetest.org/installers/browsers/firefox_51.exe
 md5=7E3AEB2E0110FBD0D582469B8B57B249
 version=51
 command=firefox_51.exe -ms
