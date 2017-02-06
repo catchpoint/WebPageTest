@@ -59,7 +59,7 @@ static const TCHAR * PRIORITY_STREAMS_FILE = _T("_priority_streams.json");
 static const TCHAR * CHUNKS_DATA_FILE = _T("_requests_chunks.json");
 static const DWORD RIGHT_MARGIN = 25;
 static const DWORD BOTTOM_MARGIN = 25;
-static const DWORD INITIAL_MARGIN = 25;
+static const DWORD INITIAL_MARGIN = 35;
 static const DWORD INITIAL_BOTTOM_MARGIN = 85;  // Ignore for the first frame
 
 /*-----------------------------------------------------------------------------
