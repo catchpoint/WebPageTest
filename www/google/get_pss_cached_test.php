@@ -37,9 +37,10 @@ json_response($ret);
 function PSS_GetCacheEntry($url) {
   $id = null;
   $cache_lock = Lock("PSS Cache");
+  $tmp_dir = GetSetting('tmp_dir');
   if (isset($cache_lock)) {
-    if (is_file('./tmp/pss.cache')) {
-        $cache = json_decode(file_get_contents('./tmp/pss.cache'), true);
+    if (is_file($tmp_dir . '/pss.cache')) {
+        $cache = json_decode(file_get_contents($tmp_dir . '/pss.cache'), true);
 
         // delete stale cache entries
         $now = time();
@@ -51,7 +52,7 @@ function PSS_GetCacheEntry($url) {
             }
         }
         if ($dirty) {
-            file_put_contents('./tmp/pss.cache', json_encode($cache));
+            file_put_contents($tmp_dir . '/pss.cache', json_encode($cache));
         }
         $key = md5($url);
         if (array_key_exists($key, $cache) && array_key_exists('id', $cache[$key])) {

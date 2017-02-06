@@ -107,11 +107,12 @@ $page_description = "WebPagetest benchmarks";
 function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
     global $raw_data;
     $raw_data = null;
+    $results_dir = GetSetting('results_dir');
 
     // figure out the time of the most recent test
     $test_time = 0;
-    if (is_dir("./results/benchmarks/{$benchmark['name']}/data")) {
-        $files = scandir("./results/benchmarks/{$benchmark['name']}/data");
+    if (is_dir($results_dir . "/benchmarks/{$benchmark['name']}/data")) {
+        $files = scandir($results_dir . "/benchmarks/{$benchmark['name']}/data");
         foreach( $files as $file ) {
             if (preg_match('/([0-9]+_[0-9]+)\..*/', $file, $matches)) {
                 $UTC = new DateTimeZone('UTC');

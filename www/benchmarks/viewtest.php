@@ -17,9 +17,10 @@ $test_time = 0;
 if (array_key_exists('time', $_REQUEST))
     $test_time = $_REQUEST['time'];
 else {
+    $results_dir = GetSetting('results_dir');
     // figure out the time of the most recent test
-    if (is_dir("./results/benchmarks/$benchmark/data")) {
-        $files = scandir("./results/benchmarks/$benchmark/data");
+    if (is_dir($results_dir . "/benchmarks/$benchmark/data")) {
+        $files = scandir($results_dir . "/benchmarks/$benchmark/data");
         foreach( $files as $file ) {
             if (preg_match('/([0-9]+_[0-9]+)\..*/', $file, $matches)) {
                 $UTC = new DateTimeZone('UTC');

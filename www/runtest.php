@@ -37,6 +37,7 @@
     require_once('./ec2/ec2.inc.php');
     set_time_limit(300);
 
+    $dat_dir = GetSetting('dat_dir');
     $redirect_cache = array();
     $error = NULL;
     $xml = false;
@@ -1022,7 +1023,8 @@ function UpdateLocation(&$test, &$locations, $new_location, &$error)
 function ValidateKey(&$test, &$error, $key = null)
 {
   global $admin;
-  
+  $dat_dir = GetSetting('dat_dir');
+
   // load the secret key (if there is one)
   $secret = '';
   $keys = parse_ini_file('./settings/keys.ini', true);
@@ -1055,8 +1057,8 @@ function ValidateKey(&$test, &$error, $key = null)
       // see if it was an auto-provisioned key
       if (preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $key, $matches)) {
         $prefix = $matches['prefix'];
-        if (is_file(__DIR__ . "/dat/{$prefix}_api_keys.db")) {
-          $db = new SQLite3(__DIR__ . "/dat/{$prefix}_api_keys.db");
+        if (is_file($dat_dir . "/{$prefix}_api_keys.db")) {
+          $db = new SQLite3($dat_dir . "/{$prefix}_api_keys.db");
           $k = $db->escapeString($matches['key']);
           $info = $db->querySingle("SELECT key_limit FROM keys WHERE key='$k'", true);
           $db->close();
@@ -1082,12 +1084,12 @@ function ValidateKey(&$test, &$error, $key = null)
           $limit = (int)$keys[$key]['limit'];
 
             // update the number of tests they have submitted today
-            if( !is_dir('./dat') )
-              mkdir('./dat', 0777, true);
+            if( !is_dir($dat_dir) )
+              mkdir($dat_dir, 0777, true);
 
           $lock = Lock("API Keys");
           if( isset($lock) ) {
-              $keyfile = './dat/keys_' . gmdate('Ymd') . '.dat';
+              $keyfile = $dat_dir . '/keys_' . gmdate('Ymd') . '.dat';
               $usage = null;
               if( is_file($keyfile) )
                 $usage = json_decode(file_get_contents($keyfile), true);
@@ -1724,11 +1726,12 @@ function GetRedirect($url, &$rhost, &$rurl) {
 */
 function LogTest(&$test, $testId, $url)
 {
-    if( !is_dir('./logs') )
-        mkdir('./logs', 0777, true);
+    $logs_dir = GetSetting('logs_dir');
+    if( !is_dir($logs_dir) )
+        mkdir($logs_dir, 0777, true);
 
     // open the log file
-    $filename = "./logs/" . gmdate("Ymd") . ".log";
+    $filename = $logs_dir . gmdate("Ymd") . ".log";
     $video = 0;
     if( strlen($test['video']) )
         $video = 1;
@@ -1813,6 +1816,7 @@ function CheckUrl($url)
   global $usingAPI;
   global $error;
   global $admin;
+  $logs_dir = GetSetting('logs_dir');
   $date = gmdate("Ymd");
   if( strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
     $url = 'http://' . $url;
@@ -1829,11 +1833,11 @@ function CheckUrl($url)
       foreach( $blockUrls as $block ) {
         $block = trim($block);
         if( strlen($block) && preg_match("/$block/i", $url)) {
-          logMsg("{$_SERVER['REMOTE_ADDR']}: url $url matched $block", "./log/{$date}-blocked.log", true);
+          logMsg("{$_SERVER['REMOTE_ADDR']}: url $url matched $block", $logs_dir . "/{$date}-blocked.log", true);
           $ok = false;
           break;
         } elseif( strlen($block) && strlen($rurl) && preg_match("/$block/i", $rurl)) {
-          logMsg("{$_SERVER['REMOTE_ADDR']}: url $url redirected to $rurl matched $block", "./log/{$date}-blocked.log", true);
+          logMsg("{$_SERVER['REMOTE_ADDR']}: url $url redirected to $rurl matched $block", $logs_dir . "/{$date}-blocked.log", true);
           $ok = false;
           break;
         }
@@ -1846,13 +1850,13 @@ function CheckUrl($url)
           if( strlen($block) &&
               (!strcasecmp($host, $block) ||
                !strcasecmp($host, "www.$block"))) {
-             logMsg("{$_SERVER['REMOTE_ADDR']}: $url matched $block", "./log/{$date}-blocked.log", true);
+             logMsg("{$_SERVER['REMOTE_ADDR']}: $url matched $block", $logs_dir . "/{$date}-blocked.log", true);
             $ok = false;
             break;
           } elseif( strlen($block) &&
               (!strcasecmp($rhost, $block) ||
                !strcasecmp($rhost, "www.$block"))) {
-             logMsg("{$_SERVER['REMOTE_ADDR']}: $url redirected to $rhost which matched $block", "./log/{$date}-blocked.log", true);
+             logMsg("{$_SERVER['REMOTE_ADDR']}: $url redirected to $rhost which matched $block", $logs_dir . "/{$date}-blocked.log", true);
             $ok = false;
             break;
           }
@@ -1865,7 +1869,7 @@ function CheckUrl($url)
     $ok = SBL_Check($url, $message);
     if (!$ok) {
       $error = "<br>Sorry, your test was blocked because $url is suspected of being used for <a href=\"http://www.antiphishing.org/\">phishing</a> or <a href=\"http://www.stopbadware.org/\">hosting malware</a>.<br><br>Advisory provided by <a href=\"http://code.google.com/apis/safebrowsing/safebrowsing_faq.html#whyAdvisory\">Google</a>.";
-      logMsg("{$_SERVER['REMOTE_ADDR']}: $url failed Safe Browsing check: $message", "./log/{$date}-blocked.log", true);
+      logMsg("{$_SERVER['REMOTE_ADDR']}: $url failed Safe Browsing check: $message", $logs_dir . "/{$date}-blocked.log", true);
     }
   }
 

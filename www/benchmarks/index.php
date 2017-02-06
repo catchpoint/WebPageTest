@@ -149,6 +149,7 @@ if (array_key_exists('f', $_REQUEST)) {
             </div>
             <?php
 }
+            $results_dir = GetSetting('results_dir');
             $count = 0;
             foreach ($benchmarks as &$benchmark) {
                 if (array_key_exists('title', $benchmark))
@@ -161,8 +162,8 @@ if (array_key_exists('f', $_REQUEST)) {
                     if (array_key_exists('description', $benchmark))
                         echo "{$benchmark['description']}<br>\n";
                 }
-                if (is_file("./results/benchmarks/{$benchmark['name']}/state.json")) {
-                    $state = json_decode(file_get_contents("./results/benchmarks/{$benchmark['name']}/state.json"), true);
+                if (is_file($results_dir . "/benchmarks/{$benchmark['name']}/state.json")) {
+                    $state = json_decode(file_get_contents($results_dir . "/benchmarks/{$benchmark['name']}/state.json"), true);
                   if (array_key_exists('running', $state) && $state['running'] &&
                       array_key_exists('tests', $state) && is_array($state['tests'])) {
                     $elapsed = 0;

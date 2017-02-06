@@ -18,7 +18,9 @@ require_once(__DIR__ . '/logging.inc');
 */
 function GetTestPath($id)
 {
-    $base = 'results';
+    $results_dir = GetSetting('results_dir');
+
+    $base = $results_dir;
     // see if it is a relay test (includes the key)
     $separator = strrpos($id, '.');
     if ($separator !== false ) {
@@ -369,7 +371,9 @@ function lang_compare_quality($in_a, $in_b)
 */
 function GetVideoPath($id, $find = false)
 {
-    $path = "results/video/$id";
+    $results_dir = GetSetting('results_dir');
+
+    $path = $results_dir . '/video/' . $id;
     if( strpos($id, '_') == 6 )
     {
         $parts = explode('_', $id);
@@ -379,11 +383,11 @@ function GetVideoPath($id, $find = false)
         if( count($parts) > 2 && strlen($parts[2]))
             $dir .= '/' . $parts[2];
 
-        $path = 'results/video/' . substr($parts[0], 0, 2) . '/' . substr($parts[0], 2, 2) . '/' . substr($parts[0], 4, 2) . '/' . $dir;
+        $path = $results_dir . '/video/' . substr($parts[0], 0, 2) . '/' . substr($parts[0], 2, 2) . '/' . substr($parts[0], 4, 2) . '/' . $dir;
 
         // support using the old path structure if we are trying to find an existing video
         if( $find && !is_dir($path) )
-            $path = 'results/video/' . substr($parts[0], 0, 2) . '/' . substr($parts[0], 2, 2) . '/' . substr($parts[0], 4, 2) . '/' . $parts[1];
+            $path = $results_dir . '/video/' . substr($parts[0], 0, 2) . '/' . substr($parts[0], 2, 2) . '/' . substr($parts[0], 4, 2) . '/' . $parts[1];
     }
 
     return $path;
@@ -705,6 +709,8 @@ function CountTests($path)
 */
 function BuildLocations( &$locations )
 {
+    $jobs_dir = GetSetting('jobs_dir');
+
     if (!isset($locations['processed'])) {
         // dynamically create a whole new tree based on the data from the locations
         // the main reason for this is to be able to support multiple browsers in each "location"
@@ -717,7 +723,7 @@ function BuildLocations( &$locations )
             if (array_key_exists('browser', $loc) ||
                 array_key_exists('type', $loc)) {
                 // clone the existing locations over for code that just accesses them directly
-                $loc['localDir'] = "./work/jobs/$name";
+                $loc['localDir'] = $jobs_dir . '/' . $name;
                 $loc['location'] = $name;
                 if( !is_dir($loc['localDir']) )
                     mkdir($loc['localDir'], 0777, true);
@@ -743,7 +749,7 @@ function BuildLocations( &$locations )
                                 $configuration = $original[$value];
                                 if (array_key_exists('browser', $configuration) &&
                                     strlen($configuration['browser'])) {
-                                    $configuration['localDir'] = "./work/jobs/$value";
+                                    $configuration['localDir'] = $jobs_dir . '/' . $value;
                                     $configuration['location'] = $value;
                                     if (!is_dir($configuration['localDir'])) {
                                         mkdir($configuration['localDir'], 0777, true);
@@ -1334,6 +1340,8 @@ function GetPendingTests($loc, &$count)
 {
   $total = 0;
   $locations = explode(',', $loc);
+  $jobs_dir = GetSetting('jobs_dir');
+
   foreach($locations as $location) {
     $parts = explode(':', $location);
     $location = $parts[0];
@@ -1363,7 +1371,7 @@ function GetPendingTests($loc, &$count)
         require_once('./lib/beanstalkd/pheanstalk_init.php');
         $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
         for ($priority = 0; $priority < 9; $priority++) {
-          $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
+          $tube = 'wpt.' . md5($jobs_dir . '/' . $location) . '.' . $priority;
           try {
             $stats = $pheanstalk->statsTube($tube);
             $total += intval($stats['current-jobs-ready']);
@@ -1373,7 +1381,7 @@ function GetPendingTests($loc, &$count)
           }
         }
       }
-      if( LoadJobQueue("./work/jobs/$location", $queue) ) {
+      if( LoadJobQueue($jobs_dir . '/' . $location, $queue) ) {
         foreach( $queue as $priority => &$q ) {
           if ($priority < 9)
             $total += count($q);
@@ -1392,6 +1400,8 @@ function GetPendingTests($loc, &$count)
 */
 function GetQueueLengths($location) {
   $queues = array();
+  $jobs_dir = GetSetting('jobs_dir');
+
   for ($priority = 0; $priority <= 9; $priority++)
     $queues[$priority] = 0;
   $info = GetLocationInfo($location);
@@ -1417,7 +1427,7 @@ function GetQueueLengths($location) {
       require_once('./lib/beanstalkd/pheanstalk_init.php');
       $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
       for ($priority = 0; $priority <= 9; $priority++) {
-        $tube = 'wpt.' . md5("./work/jobs/$location") . ".$priority";
+        $tube = 'wpt.' . md5($jobs_dir . '/' . $location) . '.' . $priority;
         try {
           $stats = $pheanstalk->statsTube($tube);
           $queues[$priority] += intval($stats['current-jobs-ready']);
@@ -1425,12 +1435,12 @@ function GetQueueLengths($location) {
         }
       }
     }
-    if( LoadJobQueue("./work/jobs/$location", $queue) ) {
+    if( LoadJobQueue($jobs_dir . '/' . $location, $queue) ) {
       foreach( $queue as $priority => &$q )
         $queues[$priority] += count($q);
     }
   }
-  
+
   return $queues;
 }
 
@@ -1458,10 +1468,11 @@ function GetTesterCount($location) {
 
 function GetDailyTestNum() {
   $lock = Lock("TestNum");
+  $dat_dir = GetSetting('dat_dir');
   if ($lock) {
     $num = 0;
     if (!$num) {
-      $filename = __DIR__ . '/dat/testnum.dat';
+      $filename = $dat_dir . '/testnum.dat';
       $day = date ('ymd');
       $testData = array('day' => $day, 'num' => 0);
       $newData = json_decode(file_get_contents($filename), true);
@@ -1825,12 +1836,13 @@ function FindJobPosition($location, $workDir, $testId)
 function LoadJobQueue($workDir, &$queue)
 {
   $ret = false;
+  $tmp_dir = GetSetting('tmp_dir');
   if (!GetSetting('beanstalkd') || GetSetting('beanstalk_api_only')) {
     $ret = true;
     if (isset($workDir) && strlen($workDir)) {
       $queue = null;
       $queueName = sha1($workDir);
-      $queueFile = "./tmp/$queueName.queue";
+      $queueFile = $tmp_dir . '/' . $queueName . '.queue';
       if( gz_is_file($queueFile) ) {
         $queue = json_decode(gz_file_get_contents($queueFile), true);
         // re-scan the directory if the queue is empty
@@ -1889,7 +1901,8 @@ function SaveJobQueue($workDir, &$queue)
 {
   $ret = false;
   $queueName = sha1($workDir);
-  if (gz_file_put_contents("./tmp/$queueName.queue", json_encode($queue)) )
+  $tmp_dir = GetSetting('tmp_dir');
+  if (gz_file_put_contents($tmp_dir . '/' . $queueName . '.queue', json_encode($queue)) )
     $ret = true;
 
   return $ret;
@@ -1902,7 +1915,8 @@ function SaveJobQueue($workDir, &$queue)
 */
 function GetTesters($locationId, $includeOffline = false, $include_sensitive = true) {
   $location = array();
-  $dir = __DIR__ . "/tmp/testers-$locationId";
+  $tmp_dir = GetSetting('tmp_dir');
+  $dir = $tmp_dir . "/testers-$locationId";
   if (is_dir($dir)) {
     $now = time();
     $elapsed_time = null;
@@ -2012,7 +2026,8 @@ function GetTesters($locationId, $includeOffline = false, $include_sensitive = t
 * @param mixed $testerInfo
 */
 function UpdateTester($location, $tester, $testerInfo = null, $cpu = null, $error = null, $rebooted = null) {
-  $dir = __DIR__ . "/tmp/testers-$location";
+  $tmp_dir = GetSetting('tmp_dir');
+  $dir = $tmp_dir . "/testers-$location";
   $tester_file = $dir . '/' . sha1($tester) . '.json';
   if (!is_dir($dir))
     mkdir($dir, 0777, true);
@@ -2092,7 +2107,7 @@ function CleanupLocks() {
 function Lock($name, $blocking = true, $maxLockSeconds = 300) {
   global $RemainingLocks;
   $lock = null;
-  $tmpdir =  __DIR__ . '/tmp';
+  $tmpdir = GetSetting('tmp_dir');
   if (strlen($name)) {
     if( !is_dir($tmpdir) )
       mkdir($tmpdir, 0777, true);
@@ -2566,9 +2581,9 @@ function updateLabel($test_guid, $label, $test_uid, $cur_user, $test_owner) {
     if (!class_exists("SQLite3")) {
         return "SQLite3 must be installed to update test labels";
     }
-
+    $dat_dir = GetSetting('dat_dir');
     // Connect to the SQLite DB, and make sure that the table exists
-    $db = new SQLite3('./dat/labels.db');
+    $db = new SQLite3($dat_dir . '/labels.db');
     $result = $db->query("CREATE TABLE IF NOT EXISTS labels (test_id STRING, label STRING, user_updated STRING);");
 
     $result = $db->query('INSERT OR IGNORE INTO labels (test_id, label, user_updated)
@@ -2593,7 +2608,8 @@ function getLabel($test_guid, $current_user) {
         return false;
     }
 
-    $db = new SQLite3('./dat/labels.db');
+    $dat_dir = GetSetting('dat_dir');
+    $db = new SQLite3($dat_dir . '/labels.db');
     $result = @$db->query('SELECT label FROM labels
                             WHERE test_id = "' . $db->escapeString($test_guid) . '"
                             AND user_updated="' . $db->escapeString($current_user) . '"');
@@ -2616,11 +2632,13 @@ function uniqueId(&$test_num) {
     $id = NULL;
     $test_num = 0;
 
-    if( !is_dir('./work/jobs') )
-        mkdir('./work/jobs', 0777, true);
+    $jobs_dir = GetSetting('jobs_dir');
+
+    if( !is_dir($jobs_dir) )
+        mkdir($jobs_dir, 0777, true);
 
     // try locking the context file
-    $filename = './work/jobs/uniqueId.dat';
+    $filename = $jobs_dir . '/uniqueId.dat';
     $lock = Lock("Unique ID");
     if ($lock) {
       $num = 0;
@@ -2826,6 +2844,7 @@ function SBL_Update() {
   $key = GetSetting('sbl_api_key');
   $has_apcu = false;
   $has_apc = false;
+  $dat_dir = GetSetting('dat_dir');
   if (function_exists('apcu_fetch') && function_exists('apcu_store'))
     $has_apcu = true;
   elseif (function_exists('apc_fetch') && function_exists('apc_store'))
@@ -2836,7 +2855,7 @@ function SBL_Update() {
     else
       $next_update = apc_fetch('sbl_next_update');
     if (!$next_update || time() > $next_update) {
-      $db = __DIR__ . '/dat/sbl.db';
+      $db = $dat_dir . '/sbl.db';
       if (is_file($db)) {
         $db = realpath($db);
       } else {
@@ -2878,7 +2897,8 @@ function SBL_Update() {
 */
 function SBL_Check($url, &$message) {
   $ok = true;
-  $db = __DIR__ . '/dat/sbl.db';
+  $dat_dir = GetSetting('dat_dir');
+  $db = $dat_dir . '/sbl.db';
   $key = GetSetting('sbl_api_key');
   if ($key && strlen($key) && is_file($db)) {
     $db = realpath($db);

@@ -10,13 +10,17 @@ require_once('archive.inc');
 set_time_limit(36000);
 ignore_user_abort(true);
 error_reporting(E_ERROR | E_PARSE);
-$debug=true;
-if (!is_dir('./log'))
-    mkdir('./log', 0777, true);
+$debug = true;
+
+$log_dir = GetSetting('log_dir');
+$results_dir = GetSetting('results_dir') . '/benchmarks';
+
+if (!is_dir($log_dir))
+    mkdir($log_dir, 0777, true);
 if (is_file('./settings/custom_benchmark.inc'))
   include ('./settings/custom_benchmark.inc');
 
-$logFile = 'benchmark.log';
+$logFile = $log_dir . '/benchmark.log';
 
 header ("Content-type: text/plain");
 
@@ -43,11 +47,11 @@ if (array_key_exists('benchmark', $_GET) && strlen($_GET['benchmark'])) {
     // make sure we don't execute multiple cron jobs concurrently
     $lock = Lock("Benchmarks Cron", false, 86400);
     if (isset($lock)) {
-      if (is_file("./log/$logFile")) {
-          unlink("./log/$logFile");
+      if (is_file($logFile)) {
+          unlink($logFile);
       }
-      logMsg("Running benchmarks cron processing", "./log/$logFile", true);
-      
+      logMsg("Running benchmarks cron processing", $logFile, true);
+
       // See if we have benchmark data in S3 that needs to be imported
       if (GetSetting('s3_benchmarks')) {
         ImportS3Benchmarks();
@@ -63,7 +67,7 @@ if (array_key_exists('benchmark', $_GET) && strlen($_GET['benchmark'])) {
       foreach ($bm_list as $benchmark) {
         PreProcessBenchmark(basename($benchmark, '.php'));
       }
-      logMsg("Done", "./log/$logFile", true);
+      logMsg("Done", $logFile, true);
       Unlock($lock);
     } else {
       echo "Benchmark cron job is already running\n";
@@ -78,18 +82,20 @@ if (array_key_exists('benchmark', $_GET) && strlen($_GET['benchmark'])) {
 * @param mixed $benchmark
 */
 function PreProcessBenchmark($benchmark) {
-  global $logFile;
+  global $logFile, $results_dir;
   $needsRunning = false;
+
   echo "PreProcessing benchmark '$benchmark'\n";
-  logMsg("PreProcessing benchmark '$benchmark'", "./log/$logFile", true);
+  logMsg("PreProcessing benchmark '$benchmark'", $logFile, true);
   $lock = Lock("Benchmark $benchmark Cron", false, 86400);
+
   if (isset($lock)) {
     $options = array();
     if(include "./settings/benchmarks/$benchmark.php") {
-      if (!is_dir("./results/benchmarks/$benchmark"))
-          mkdir("./results/benchmarks/$benchmark", 0777, true);
-      if (is_file("./results/benchmarks/$benchmark/state.json")) {
-        $state = json_decode(file_get_contents("./results/benchmarks/$benchmark/state.json"), true);
+      if (!is_dir($results_dir . "/$benchmark"))
+          mkdir($results_dir . "/$benchmark", 0777, true);
+      if (is_file($results_dir . "/$benchmark/state.json")) {
+        $state = json_decode(file_get_contents($results_dir . "/$benchmark/state.json"), true);
         if (array_key_exists('running', $state) && $state['running'])
           $needsRunning = true;
         elseif (array_key_exists('needs_aggregation', $state) && $state['needs_aggregation'])
@@ -107,18 +113,18 @@ function PreProcessBenchmark($benchmark) {
           $needsRunning = true;
       }
       if (isset($state))
-        file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
+        file_put_contents($results_dir . "/$benchmark/state.json", json_encode($state));
     }
     Unlock($lock);
   } else {
     echo "Benchmark '$benchmark' is currently locked\n";
-    logMsg("Benchmark '$benchmark' is currently locked", "./log/$logFile", true);
+    logMsg("Benchmark '$benchmark' is currently locked", $logFile, true);
   }
   
   if ($needsRunning) {
     echo "Benchmark '$benchmark' needs processing, spawning task\n";
-    logMsg("Benchmark '$benchmark' needs processing, spawning task", "./log/$logFile", true);
-    
+    logMsg("Benchmark '$benchmark' needs processing, spawning task", $logFile, true);
+
     $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     $url = "$protocol://" . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'] . '?benchmark=' . urlencode($benchmark);
     if (function_exists('curl_init')) {
@@ -136,7 +142,7 @@ function PreProcessBenchmark($benchmark) {
     }
   } else {
     echo "Benchmark '$benchmark' is idle\n";
-    logMsg("Benchmark '$benchmark' is idle", "./log/$logFile", true);
+    logMsg("Benchmark '$benchmark' is idle", $logFile, true);
   }
 }
 
@@ -146,21 +152,21 @@ function PreProcessBenchmark($benchmark) {
 * @param mixed $benchmark
 */
 function ProcessBenchmark($benchmark) {
-  global $logFile;
+  global $logFile, $results_dir;
   $lock = Lock("Benchmark $benchmark Cron", false, 86400);
   if (isset($lock)) {
-    logMsg("Processing benchmark '$benchmark'", "./log/$logFile", true);
+    logMsg("Processing benchmark '$benchmark'", $logFile, true);
     $options = array();
     if(include "./settings/benchmarks/$benchmark.php") {
-        if (!is_dir("./results/benchmarks/$benchmark"))
-            mkdir("./results/benchmarks/$benchmark", 0777, true);
-        if (is_file("./results/benchmarks/$benchmark/state.json")) {
-            $state = json_decode(file_get_contents("./results/benchmarks/$benchmark/state.json"), true);
+        if (!is_dir($results_dir . "/$benchmark"))
+            mkdir($results_dir . "/$benchmark", 0777, true);
+        if (is_file($results_dir . "/$benchmark/state.json")) {
+            $state = json_decode(file_get_contents($results_dir . "/$benchmark/state.json"), true);
         } else {
             $state = array('running' => false, 'needs_aggregation' => true, 'runs' => array());
             // build up a list of runs if we have data
-            if (is_dir("./results/benchmarks/$benchmark/data")) {
-                $files = scandir("./results/benchmarks/$benchmark/data");
+            if (is_dir($results_dir . "/$benchmark/data")) {
+                $files = scandir($results_dir . "/$benchmark/data");
                 $last_run = 0;
                 foreach( $files as $file ) {
                     if (preg_match('/([0-9]+_[0-9]+)\..*/', $file, $matches)) {
@@ -176,7 +182,7 @@ function ProcessBenchmark($benchmark) {
                     $state['last_run'] = $last_run;
                 }
             }
-            file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));        
+            file_put_contents($results_dir . "/$benchmark/state.json", json_encode($state));
         }
         if (!is_array($state)) {
             $state = array('running' => false);
@@ -188,7 +194,7 @@ function ProcessBenchmark($benchmark) {
         if (array_key_exists('running', $state)) {
             CheckBenchmarkStatus($benchmark, $state);
             // update the state between steps
-            file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
+            file_put_contents($results_dir . "/$benchmark/state.json", json_encode($state));
         } else {
             $state['running'] = false;
         }
@@ -197,7 +203,7 @@ function ProcessBenchmark($benchmark) {
           if (array_key_exists('runs', $state) && count($state['runs']))
             AggregateResults($benchmark, $state, $options);
           $state['needs_aggregation'] = false;
-          file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
+          file_put_contents($results_dir . "/$benchmark/state.json", json_encode($state));
         }
         
         // see if we need to kick off a new benchmark run
@@ -207,21 +213,21 @@ function ProcessBenchmark($benchmark) {
                 $state['last_run'] = 0;
             $now = time();
             if (call_user_func("{$benchmark}ShouldExecute", $state['last_run'], $now)) {
-                if (is_file("./log/$logFile")) {
-                    unlink("./log/$logFile");
+                if (is_file($logFile)) {
+                    unlink($logFile);
                 }
-                logMsg("Running benchmark '$benchmark'", "./log/$logFile", true);
+                logMsg("Running benchmark '$benchmark'", $logFile, true);
                 if (SubmitBenchmark($configurations, $state, $benchmark)) {
                     $state['last_run'] = $now;
                     $state['running'] = true;
                 }
             } else {
-                logMsg("Benchmark '$benchmark' does not need to be run", "./log/$logFile", true);
+                logMsg("Benchmark '$benchmark' does not need to be run", $logFile, true);
             }
         }
-        file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
+        file_put_contents($results_dir . "/$benchmark/state.json", json_encode($state));
     }
-    logMsg("Done Processing benchmark '$benchmark'", "./log/$logFile", true);
+    logMsg("Done Processing benchmark '$benchmark'", $logFile, true);
     Unlock($lock);
   }
 }
@@ -232,20 +238,20 @@ function ProcessBenchmark($benchmark) {
 * @param mixed $state
 */
 function CheckBenchmarkStatus($benchmark, &$state) {
-    global $logFile;
+    global $logFile, $results_dir;
     if ($state['running']) {
         $start_time = $state['last_run'];
-        if (!is_dir("./results/benchmarks/$benchmark/data"))
-            mkdir("./results/benchmarks/$benchmark/data", 0777, true);
-        $dataFile = "./results/benchmarks/$benchmark/data/" . gmdate('Ymd_Hi', $start_time) . '.json';
-        logMsg("Data File: $dataFile", "./log/$logFile", true);
+        if (!is_dir($results_dir . "/$benchmark/data"))
+            mkdir($results_dir . "/$benchmark/data", 0777, true);
+        $dataFile = $results_dir . "/$benchmark/data/" . gmdate('Ymd_Hi', $start_time) . '.json';
+        logMsg("Data File: $dataFile", $logFile, true);
         $updated = 0;
         if (gz_is_file($dataFile)) {
             $data = json_decode(gz_file_get_contents($dataFile), true);
-            logMsg("Loaded " . count($data) . " existing records", "./log/$logFile", true);
+            logMsg("Loaded " . count($data) . " existing records", $logFile, true);
         } else {
             $data = array();
-            logMsg("Data file doesn't exist, starting fresh", "./log/$logFile", true);
+            logMsg("Data file doesn't exist, starting fresh", $logFile, true);
         }
         $done = true;
         $total_tests = count($state['tests']);
@@ -255,7 +261,7 @@ function CheckBenchmarkStatus($benchmark, &$state) {
                 $status = GetTestStatus($test['id'], true);
                 $now = time();
                 if( $status['statusCode'] == 200 ) {
-                    logMsg("Test {$test['id']} : Completed", "./log/$logFile", true);
+                    logMsg("Test {$test['id']} : Completed", $logFile, true);
                     if (array_key_exists('completeTime', $status) && $status['completeTime'])
                         $test['completed'] = $status['completeTime'];
                     elseif (array_key_exists('startTime', $status) && $status['startTime'])
@@ -265,7 +271,7 @@ function CheckBenchmarkStatus($benchmark, &$state) {
                 } else {
                     $pending_tests++;
                     $done = false;
-                    logMsg("Test {$test['id']} : {$status['statusText']}", "./log/$logFile", true);
+                    logMsg("Test {$test['id']} : {$status['statusText']}", $logFile, true);
                 }
                 
                 // collect the test data and archive the test as we get each result
@@ -274,7 +280,7 @@ function CheckBenchmarkStatus($benchmark, &$state) {
                     RestoreTest($test['id']);
                     CollectResults($test, $data);
                     if (ArchiveTest($test['id'])) {
-                        logMsg("Test {$test['id']} : Archived", "./log/$logFile", true);
+                        logMsg("Test {$test['id']} : Archived", $logFile, true);
                         $path = GetTestPath($test['id']);
                         if (strlen($path))
                             delTree($path);
@@ -284,10 +290,10 @@ function CheckBenchmarkStatus($benchmark, &$state) {
         }
         
         if ($updated) {
-            logMsg("Data updated for for $updated tests, total data rows: " . count($data), "./log/$logFile", true);
+            logMsg("Data updated for for $updated tests, total data rows: " . count($data), $logFile, true);
             gz_file_put_contents($dataFile, json_encode($data));
         } else {
-            logMsg("No test data updated", "./log/$logFile", true);
+            logMsg("No test data updated", $logFile, true);
         }
 
         $now = time();
@@ -297,16 +303,16 @@ function CheckBenchmarkStatus($benchmark, &$state) {
           $done = true;  
 
         if ($done) {
-            logMsg("Benchmark '$benchmark' is finished after running for $elapsed seconds", "./log/$logFile", true);
+            logMsg("Benchmark '$benchmark' is finished after running for $elapsed seconds", $logFile, true);
             $state['runs'][] = $start_time;
             $state['running'] = false;
             $state['needs_aggregation'] = true;
             unset($state['tests']);    
         } else {
-            logMsg("'$benchmark' is waiting for $pending_tests of $total_tests tests after $elapsed seconds", "./log/$logFile", true);
+            logMsg("'$benchmark' is waiting for $pending_tests of $total_tests tests after $elapsed seconds", $logFile, true);
         }
-        
-        logMsg("Done checking status", "./log/$logFile", true);
+
+        logMsg("Done checking status", $logFile, true);
     }
 }
 
@@ -318,7 +324,7 @@ function CheckBenchmarkStatus($benchmark, &$state) {
 function CollectResults(&$test, &$data) {
     global $logFile;
     $testPath = './' . GetTestPath($test['id']);
-    logMsg("Loading page data from $testPath", "./log/$logFile", true);
+    logMsg("Loading page data from $testPath", $logFile, true);
     $page_data = loadAllPageData($testPath);
     if (count($page_data)) {
         foreach ($page_data as $run => &$page_run) {
@@ -508,9 +514,9 @@ function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
                 array_key_exists('data', $result) && 
                 array_key_exists('testId', $result['data']) ){
                 $id = $result['data']['testId'];
-                logMsg("Test submitted: $id", "./log/$logFile", true);
+                logMsg("Test submitted: $id", $logFile, true);
             } else {
-                logMsg("Error submitting benchmark test: {$result['statusText']}", "./log/$logFile", true);
+                logMsg("Error submitting benchmark test: {$result['statusText']}", $logFile, true);
             }
         }
     }
@@ -525,12 +531,12 @@ function SubmitBenchmarkTest($url, $location, &$settings, $benchmark) {
 * @param mixed $state
 */
 function AggregateResults($benchmark, &$state, $options) {
-    global $logFile;
-    
-    if (!is_dir("./results/benchmarks/$benchmark/aggregate"))
-        mkdir("./results/benchmarks/$benchmark/aggregate", 0777, true);
-    if (is_file("./results/benchmarks/$benchmark/aggregate/info.json")) {
-        $info = json_decode(file_get_contents("./results/benchmarks/$benchmark/aggregate/info.json"), true);
+    global $logFile, $results_dir;
+
+    if (!is_dir($results_dir . "/$benchmark/aggregate"))
+        mkdir($results_dir . "/$benchmark/aggregate", 0777, true);
+    if (is_file($results_dir . "/$benchmark/aggregate/info.json")) {
+        $info = json_decode(file_get_contents($results_dir . "/$benchmark/aggregate/info.json"), true);
     } else {
         $info = array('runs' => array());
     }
@@ -566,8 +572,8 @@ function AggregateResults($benchmark, &$state, $options) {
     $runs = array_reverse($state['runs']);
     foreach ($runs as $run_time) {
         if (!array_key_exists($run_time, $info['runs'])) {
-            $file_name = "./results/benchmarks/$benchmark/data/" . gmdate('Ymd_Hi', $run_time) . '.json';
-            logMsg("Aggregating Results for $file_name", "./log/$logFile", true);
+            $file_name = $results_dir . "/$benchmark/data/" . gmdate('Ymd_Hi', $run_time) . '.json';
+            logMsg("Aggregating Results for $file_name", $logFile, true);
             if (gz_is_file($file_name)) {
                 $data = json_decode(gz_file_get_contents($file_name), true);
                 FilterRawData($data, $options);
@@ -575,14 +581,14 @@ function AggregateResults($benchmark, &$state, $options) {
                 unset($data);
                 $info['runs'][$run_time] = 1;
             } else {
-                logMsg("Missing data file - $file_name", "./log/$logFile", true);
+                logMsg("Missing data file - $file_name", $logFile, true);
             }
         }
     }
-    
-    file_put_contents("./results/benchmarks/$benchmark/aggregate/info.json", json_encode($info));
+
+    file_put_contents($results_dir . "/$benchmark/aggregate/info.json", json_encode($info));
     $state['needs_aggregation'] = false;
-    logMsg("Agregation complete", "./log/$logFile", true);
+    logMsg("Agregation complete", $logFile, true);
 }
 
 /**
@@ -593,8 +599,9 @@ function AggregateResults($benchmark, &$state, $options) {
 * @param mixed $benchmark
 */
 function CreateAggregates(&$info, &$data, $benchmark, $run_time, $options) {
+    global $results_dir;
     foreach ($info['metrics'] as $metric) {
-        $metric_file = "./results/benchmarks/$benchmark/aggregate/$metric.json";
+        $metric_file = $results_dir . "/$benchmark/aggregate/$metric.json";
         if (gz_is_file($metric_file)) {
             $agg_data = json_decode(gz_file_get_contents($metric_file), true);
         } else {
@@ -605,7 +612,7 @@ function CreateAggregates(&$info, &$data, $benchmark, $run_time, $options) {
         unset($agg_data);
         
         if (array_key_exists('labels', $info) && count($info['labels']) <= 20) {
-            $metric_file = "./results/benchmarks/$benchmark/aggregate/$metric.labels.json";
+            $metric_file = $results_dir . "/$benchmark/aggregate/$metric.labels.json";
             if (gz_is_file($metric_file)) {
                 $agg_data = json_decode(gz_file_get_contents($metric_file), true);
             } else {
@@ -936,15 +943,15 @@ function FilterRawData(&$data, $options) {
 
 function ImportS3Benchmarks() {
   require_once('./lib/S3.php');
-  global $logFile;
-  logMsg("Checking for S3 benchmarks", "./log/$logFile", true);
+  global $logFile, $results_dir;
+  logMsg("Checking for S3 benchmarks", $logFile, true);
   $server = GetSetting('archive_s3_server');
   $key = GetSetting('archive_s3_key');
   $secret = GetSetting('archive_s3_secret');
   $bucket = GetSetting('archive_s3_bucket');
   $prefix = GetSetting('s3_benchmark_prefix');
   $s3 = new S3($key, $secret, false, $server);
-  $s3Benchmarks = is_file("./results/benchmarks/s3.json") ? json_decode(file_get_contents('./results/benchmarks/s3.json'), true) : array();
+  $s3Benchmarks = is_file($results_dir . '/s3.json') ? json_decode(file_get_contents($results_dir . '/s3.json'), true) : array();
   if (!isset($s3Benchmarks) || !is_array($s3Benchmarks)) {
     $s3Benchmarks = array();
   }
@@ -968,7 +975,7 @@ function ImportS3Benchmarks() {
     foreach ($prefixes as $p) {
       $files = $s3->getBucket($bucket, $p);
       foreach ($files as $file => $info) {
-        logMsg("Checking $file", "./log/$logFile", true);
+        logMsg("Checking $file", $logFile, true);
         $name = substr($file, strlen($prefix));
         if (!isset($s3Benchmarks[$name])) {
           $data = $s3->getObject($bucket, $file);
@@ -978,34 +985,34 @@ function ImportS3Benchmarks() {
               if (ImportS3Benchmark($bminfo)) {
                 $s3Benchmarks[$name] = time();
               } else {
-                logMsg("  Error importing s3 benchmark for $file", "./log/$logFile", true);
+                logMsg("  Error importing s3 benchmark for $file", $logFile, true);
               }
             } else {
-              logMsg("  Error parsing JSON for $file", "./log/$logFile", true);
+              logMsg("  Error parsing JSON for $file", $logFile, true);
             }
           } else {
-            logMsg("  Error fetching $file", "./log/$logFile", true);
+            logMsg("  Error fetching $file", $logFile, true);
           }
         } else {
-          logMsg("  Already processed $file", "./log/$logFile", true);
+          logMsg("  Already processed $file", $logFile, true);
         }
       }
     }
   }
-  
-  file_put_contents('./results/benchmarks/s3.json', json_encode($s3Benchmarks));
+
+  file_put_contents($results_dir . '/s3.json', json_encode($s3Benchmarks));
 }
 
 function ImportS3Benchmark($info) {
-  global $logFile;
+  global $logFile, $results_dir;
   $imported = false;
   $benchmark = $info['benchmark'];
 
   // make sure the benchmark identified in the file isn't already being processed
-  if (!is_dir("./results/benchmarks/$benchmark"))
-    mkdir("./results/benchmarks/$benchmark", 0777, true);
-  if (is_file("./results/benchmarks/$benchmark/state.json"))
-    $state = json_decode(file_get_contents("./results/benchmarks/$benchmark/state.json"), true);
+  if (!is_dir($results_dir . "/$benchmark"))
+    mkdir($results_dir . "/$benchmark", 0777, true);
+  if (is_file($results_dir . "/$benchmark/state.json"))
+    $state = json_decode(file_get_contents($results_dir . "/$benchmark/state.json"), true);
   if (!isset($state) || !is_array($state))
     $state = array('running' => false, 'needs_aggregation' => false, 'runs' => array());
   
@@ -1019,11 +1026,11 @@ function ImportS3Benchmark($info) {
       $state['last_run'] = time();
     }
     $state['tests'] = array();
-    logMsg("  $benchmark import: " . json_encode($info), "./log/$logFile", true);
-    
+    logMsg("  $benchmark import: " . json_encode($info), $logFile, true);
+
     if (isset($info['tests']) && is_array($info['tests'])) {
       foreach ($info['tests'] as $test) {
-        logMsg("$benchmark: Imported S3 test {$test['id']} ({$test['label']}) with config {$test['config']} for url {$test['url']}", "./log/$logFile", true);
+        logMsg("$benchmark: Imported S3 test {$test['id']} ({$test['label']}) with config {$test['config']} for url {$test['url']}", $logFile, true);
         $location = isset($test['location']) ? $test['location'] : 'Imported';
         $state['tests'][] = array(  'id' => $test['id'], 
                                     'label' => $test['label'],
@@ -1034,16 +1041,16 @@ function ImportS3Benchmark($info) {
                                     'completed' => 0);
       }
     } else {
-      logMsg("  $benchmark import with no tests", "./log/$logFile", true);
+      logMsg("  $benchmark import with no tests", $logFile, true);
     }
 
     if (count($state['tests'])) {
       $state['running'] = true;
       $imported = true;
-      file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
+      file_put_contents($results_dir . "/$benchmark/state.json", json_encode($state));
     }
   } else {
-    logMsg("  Benchmark $benchmark is currently busy", "./log/$logFile", true);
+    logMsg("  Benchmark $benchmark is currently busy", $logFile, true);
   }
   
   return $imported;

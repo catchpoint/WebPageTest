@@ -154,11 +154,12 @@ function ApcCheckIp($ip, $installer) {
 */
 function CheckIp($ip, $installer) {
   $ok = true;
+  $tmp_dir = GetSetting('tmp_dir');
   if (isset($ip) && strlen($ip)) {
     $lock = Lock("Installers", true, 5);
     if ($lock) {
       $now = time();
-      $file = "./tmp/installers.dat";
+      $file = $tmp_dir . "/installers.dat";
       if (gz_is_file($file))
         $history = json_decode(gz_file_get_contents($file), true);
       if (!isset($history) || !is_array($history))
@@ -222,13 +223,14 @@ function ModifyInstaller(&$data) {
 function GetEC2Region($ip) {
   $region = null;
   $json = null;
-  
+  $dat_dir = GetSetting('dat_dir');
+
   if (isset($_REQUEST['ec2zone'])) {
     $region = substr($_REQUEST['ec2zone'], 0, strlen($_REQUEST['ec2zone']) - 1);
   } else {
     $lock = Lock('EC2Regions');
     if (isset($lock)) {
-      $region_file = __DIR__ . '/dat/ec2addresses.json';
+      $region_file = $dat_dir . '/ec2addresses.json';
       $needs_update = false;
       if (is_file($region_file)) {
         $now = time();

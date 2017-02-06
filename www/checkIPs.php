@@ -1,6 +1,8 @@
 <?php
 require_once('common.inc');
 error_reporting(E_ALL);
+$dat_dir = GetSetting('dat_dir');
+
 $days = 0;
 if( isset($_GET["days"]) )
     $days = (int)$_GET["days"];
@@ -96,8 +98,8 @@ foreach($counts as $ip => $count) {
         // see if it was an auto-provisioned key
         if (!isset($keys[$key]) && preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $key, $matches)) {
           $prefix = $matches['prefix'];
-          if (is_file(__DIR__ . "/dat/{$prefix}_api_keys.db")) {
-            $db = new SQLite3(__DIR__ . "/dat/{$prefix}_api_keys.db");
+          if (is_file(__DIR__ . $dat_dir . "/{$prefix}_api_keys.db")) {
+            $db = new SQLite3(__DIR__ . $dat_dir . "/{$prefix}_api_keys.db");
             $k = $db->escapeString($matches['key']);
             $info = $db->querySingle("SELECT email,key_limit FROM keys WHERE key='$k'", true);
             $db->close();

@@ -26,11 +26,13 @@ $archive_dir = null;
 if (array_key_exists('archive_dir', $settings)) {
     $archive_dir = $settings['archive_dir'];
 }
+$results_dir = GetSetting('results_dir');
+$logs_dir = GetSetting('logs_dir');
 
 $kept = 0;
 $archiveCount = 0;
 $deleted = 0;
-$log = fopen('./cli/archive.log', 'w');
+$log = fopen($logs_dir . '/archive.log', 'w');
 
 // check the old tests first
 /*
@@ -45,12 +47,12 @@ $now = time();
 if ((isset($archive_dir) && strlen($archive_dir)) ||
   (array_key_exists('archive_s3_server', $settings) && strlen($settings['archive_s3_server']))) {
   CheckRelay();
-  CheckOldDir('./results/old');
+  CheckOldDir($results_dir . '/old');
 
   // Archive the actual tests
-  $years = scandir('./results');
+  $years = scandir($results_dir);
   foreach ($years as $year) {
-    $yearDir = "./results/$year";
+    $yearDir = "$results_dir/$year";
     if (is_numeric($year) && is_dir($yearDir) && $year != '.' && $year != '..') {
       $months = scandir($yearDir);
       foreach ($months as $month) {
@@ -85,11 +87,11 @@ Unlock($lock);
 * 
 */
 function CheckRelay() {
-  $dirs = scandir('./results/relay');
+  $dirs = scandir($results_dir . '/relay');
   $keys = parse_ini_file('./settings/keys.ini');
   foreach($dirs as $key) {
     if ($key != '.' && $key != '..') {
-      $keydir = "./results/relay/$key";
+      $keydir = "$results_dir/relay/$key";
       if (is_dir($keydir)) {
         if (array_key_exists($key, $keys)) {
           echo "\rChecking relay tests for $key";

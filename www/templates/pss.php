@@ -1,4 +1,5 @@
 <?php
+require_once('common_lib.inc');
 /*
     Template for PSS tests
     Automatically fills in the script and batch information
@@ -50,12 +51,14 @@ if (!array_key_exists('id', $test)) {
 * Get a cached test result
 */
 function PSS_GetCacheEntry($url) {
+    $tmp_dir = GetSetting('tmp_dir');
+
     $id = null;
-    $cache_lock = fopen('./tmp/pss.cache.lock', 'w+');
+    $cache_lock = fopen($tmp_dir . '/pss.cache.lock', 'w+');
     if ($cache_lock) {
         if (flock($cache_lock, LOCK_EX)) {
-            if (is_file('./tmp/pss.cache')) {
-                $cache = json_decode(file_get_contents('./tmp/pss.cache'), true);
+            if (is_file($tmp_dir . '/pss.cache')) {
+                $cache = json_decode(file_get_contents($tmp_dir . '/pss.cache'), true);
 
                 // delete stale cache entries
                 $now = time();
@@ -67,7 +70,7 @@ function PSS_GetCacheEntry($url) {
                     }
                 }
                 if ($dirty) {
-                    file_put_contents('./tmp/pss.cache', json_encode($cache));
+                    file_put_contents($tmp_dir . '/pss.cache', json_encode($cache));
                 }
                 $key = md5($url);
                 if (array_key_exists($key, $cache) && array_key_exists('id', $cache[$key])) {
@@ -84,6 +87,8 @@ function PSS_GetCacheEntry($url) {
 * Cache the test ID in the case of multiple submits
 */
 function PSS_TestSubmitted(&$test) {
+    $tmp_dir = GetSetting('tmp_dir');
+
     if (array_key_exists('id', $test) && array_key_exists('url', $test)) {
         $now = time();
         $cache_time = 10080;    // 7 days (in minutes)
@@ -94,11 +99,11 @@ function PSS_TestSubmitted(&$test) {
         $key = md5($test['url']);
         
         // update the cache
-        $cache_lock = fopen('./tmp/pss.cache.lock', 'w+');
+        $cache_lock = fopen($tmp_dir . '/pss.cache.lock', 'w+');
         if ($cache_lock) {
             if (flock($cache_lock, LOCK_EX)) {
-                if (is_file('./tmp/pss.cache')) {
-                    $cache = json_decode(file_get_contents('./tmp/pss.cache'), true);
+                if (is_file($tmp_dir . '/pss.cache')) {
+                    $cache = json_decode(file_get_contents($tmp_dir . '/pss.cache'), true);
                 } else {
                     $cache = array();
                 }
@@ -109,7 +114,7 @@ function PSS_TestSubmitted(&$test) {
                     }
                 }
                 $cache[$key] = $entry;
-                file_put_contents('./tmp/pss.cache', json_encode($cache));
+                file_put_contents($tmp_dir . '/pss.cache', json_encode($cache));
             }
             fclose($cache_lock);
         }

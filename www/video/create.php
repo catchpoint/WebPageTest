@@ -45,6 +45,7 @@ else
     include 'common.inc';
     require_once('page_data.inc');
     require_once('video.inc');
+    $video_dir = GetSetting('video_dir');
 
     $xml = false;
     if( !strcasecmp($_REQUEST['f'], 'xml') )
@@ -54,8 +55,8 @@ else
         $json = true;
 
     // make sure the work directory exists
-    if( !is_dir('./work/video/tmp') )
-        mkdir('./work/video/tmp', 0777, true);
+    if( !is_dir($video_dir . '/tmp') )
+        mkdir($video_dir . '/tmp', 0777, true);
 
     // get the list of tests and test runs
     $tests = array();

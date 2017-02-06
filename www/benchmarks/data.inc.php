@@ -173,9 +173,11 @@ function LoadData(&$data, &$configurations, $benchmark, $cached, $metric, $aggre
     global $start_time;
     global $INCLUDE_ERROR_BARS;
     global $raw_data;
+    $results_dir = GetSetting('results_dir');
+
     $data = array();
     if (GetConfigurationNames($benchmark, $configurations, $loc, $loc_aliases)) {
-        $data_file = "./results/benchmarks/$benchmark/aggregate/$metric.json";
+        $data_file = $results_dir . "/benchmarks/$benchmark/aggregate/$metric.json";
         $key = "$metric-$benchmark";
         if (gz_is_file($data_file)) {
             if (!array_key_exists($key, $raw_data)) {
@@ -443,11 +445,13 @@ function LoadTestData(&$data, &$configurations, $benchmark, $cached, $metric, $t
     global $raw_data;
     $ok = false;
     $data = array();
+    $results_dir = GetSetting('results_dir');
+
     if (!isset($meta))
       $meta = array();
     if (GetConfigurationNames($benchmark, $configurations, $loc, $loc_aliases)) {
         $date = gmdate('Ymd_Hi', $test);
-        $data_file = "./results/benchmarks/$benchmark/data/$date.json";
+        $data_file = $results_dir . "/benchmarks/$benchmark/data/$date.json";
         $key = "$benchmark-$date";
         if (gz_is_file($data_file)) {
             if (!array_key_exists($key, $raw_data)) {
@@ -709,12 +713,13 @@ function LoadTrendData(&$data, &$configurations, $benchmark, $cached, $metric, $
     global $trend_data;
     global $start_time;
     global $raw_data;
+    $results_dir = GetSetting('results_dir');
     $ok = false;
     $data = array();
     if (GetConfigurationNames($benchmark, $configurations, $loc, $loc_aliases)) {
         if (!isset($trend_data)) {
             // loop through all of the data files
-            $files = scandir("./results/benchmarks/$benchmark/data");
+            $files = scandir($results_dir . "/benchmarks/$benchmark/data");
             foreach( $files as $file ) {
                 if (preg_match('/([0-9]+_[0-9]+)\..*/', $file, $matches)) {
                     $UTC = new DateTimeZone('UTC');
@@ -725,7 +730,7 @@ function LoadTrendData(&$data, &$configurations, $benchmark, $cached, $metric, $
                         $file = basename($file, ".gz");
                         $key = "$benchmark.$file";
                         if (!array_key_exists($key, $raw_data)) {
-                          $raw_data[$key] = json_decode(gz_file_get_contents("./results/benchmarks/$benchmark/data/$file"), true);
+                          $raw_data[$key] = json_decode(gz_file_get_contents($results_dir . "/benchmarks/$benchmark/data/$file"), true);
                           usort($raw_data[$key], 'RawDataCompare');
                         }
                         if (count($raw_data[$key])) {
@@ -821,6 +826,8 @@ function LoadTrendData(&$data, &$configurations, $benchmark, $cached, $metric, $
 */
 function GetTestErrors(&$errors, $benchmark, $test) {
     global $raw_data;
+    $results_dir = GetSetting('results_dir');
+
     $errors_detected = false;
     $errors = array();
     $loc = null;
@@ -840,7 +847,7 @@ function GetTestErrors(&$errors, $benchmark, $test) {
             }
         }
         $date = gmdate('Ymd_Hi', $test);
-        $data_file = "./results/benchmarks/$benchmark/data/$date.json";
+        $data_file = $results_dir . "/benchmarks/$benchmark/data/$date.json";
         $key = "$benchmark-$date";
         if (gz_is_file($data_file)) {
             if (!array_key_exists($key, $raw_data)) {
@@ -974,6 +981,7 @@ function DeltaSortCompare(&$a, &$b) {
 function LoadMedianData($benchmark, $test_time) {
     global $median_data;
     global $raw_data;
+    $results_dir = GetSetting('results_dir');
     if (!isset($median_data)) {
         // see if we have a custom metric to use to calculate the median for the given benchmark
         $info = GetBenchmarkInfo($benchmark);
@@ -984,7 +992,7 @@ function LoadMedianData($benchmark, $test_time) {
             $median_metric = $info['options']['median_run'];
         }
         $date = gmdate('Ymd_Hi', $test_time);
-        $data_file = "./results/benchmarks/$benchmark/data/$date.json";
+        $data_file = $results_dir . "/benchmarks/$benchmark/data/$date.json";
         $key = "$benchmark-$date";
         if (gz_is_file($data_file)) {
             if (!array_key_exists($key, $raw_data)) {

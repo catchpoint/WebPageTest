@@ -104,7 +104,8 @@ function GetJob() {
   global $isWinServer;
   global $isWin64;
 
-  $workDir = "./work/jobs/$location";
+  $jobs_dir = GetSetting('jobs_dir');
+  $workDir = $jobs_dir . '/' . $location;
   $locInfo = GetLocationInfo($location);
   $locKey = '';
   if (isset($locInfo) && is_array($locInfo) && isset($locInfo['key']))
@@ -406,11 +407,13 @@ function CheckCron() {
   $should_run = false;
   $minutes15 = false;
   $minutes60 = false;
+  $tmp_dir = GetSetting('tmp_dir');
+
   $cron_lock = Lock("Cron Check", false, 1200);
   if (isset($cron_lock)) {
     $last_run = 0;
-    if (is_file('./tmp/wpt_cron.dat'))
-      $last_run = file_get_contents('./tmp/wpt_cron.dat');
+    if (is_file($tmp_dir . '/wpt_cron.dat'))
+      $last_run = file_get_contents($tmp_dir . '/wpt_cron.dat');
     $now = time();
     $elapsed = $now - $last_run;
     if (!$last_run) {
@@ -435,13 +438,13 @@ function CheckCron() {
       }
     }
     if ($should_run)
-      file_put_contents('./tmp/wpt_cron.dat', $now);
+      file_put_contents($tmp_dir . '/wpt_cron.dat', $now);
     Unlock($cron_lock);
   }
   
   // send the cron requests
   if ($should_run) {
-    if (is_file('./settings/benchmarks/benchmarks.txt') && 
+    if (is_file('./settings/benchmarks/benchmarks.txt') &&
         is_file('./benchmarks/cron.php'))
       SendAsyncRequest('/benchmarks/cron.php');
     SendAsyncRequest('/cron/5min.php');
@@ -533,8 +536,9 @@ function GetReboot() {
   global $tester;
   $reboot = false;
   $name = @strlen($ec2) ? $ec2 : $pc;
+  $jobs_dir = GetSetting('jobs_dir');
   if (isset($name) && strlen($name) && isset($location) && strlen($location)) {
-    $rebootFile = "./work/jobs/$location/$name.reboot";
+    $rebootFile = $jobs_dir . "/$location/$name.reboot";
     if (is_file($rebootFile)) {
       unlink($rebootFile);
       $reboot = true;

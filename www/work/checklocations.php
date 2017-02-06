@@ -2,6 +2,7 @@
 chdir('..');
 include 'common.inc';
 error_reporting(E_ALL);
+$tmp_dir = GetSetting('tmp_dir');
 
 // check and see if all of the locations have checked in within the last 30 minutes
 
@@ -15,9 +16,9 @@ $settings = parse_ini_file('./settings/settings.ini', true);
 $count = 0;
 $collected = '';
 
-$files = scandir('./tmp');
+$files = scandir($tmp_dir);
 foreach( $files as $file ) {
-  if(is_dir("./tmp/$file") && preg_match('/testers-(.+)/', $file, $matches)) {
+  if(is_dir($tmp_dir . "/$file") && preg_match('/testers-(.+)/', $file, $matches)) {
     $loc = $matches[1];
     $testers = GetTesters($loc, false, false);
     if (isset($testers['elapsed'])) {
@@ -78,9 +79,9 @@ if (array_key_exists('notify', $settings['settings'])) {
     SendMessage($to, "$count locations with issues - WebPagetest ALERT", $collected);
   
   // send the slow logs from the last hour
-  if (strlen($to) && is_file('./tmp/slow_tests.log')) {
-    $slow = file_get_contents('./tmp/slow_tests.log');
-    unlink('./tmp/slow_tests.log');
+  if (strlen($to) && is_file($tmp_dir . '/slow_tests.log')) {
+    $slow = file_get_contents($tmp_dir . '/slow_tests.log');
+    unlink($tmp_dir . '/slow_tests.log');
     if ($slow !== false && strlen($slow)) {
       SendMessage($to, 'Slow tests report', $slow);
     }

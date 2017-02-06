@@ -91,10 +91,13 @@ function TSViewPostResult(&$test, $id, $testPath, $server, $tsview_name) {
 }
 
 function TSViewCreate($server, $tsview_name, &$metrics) {
+  require_once('common_lib.inc');
+  $dat_dir = GetSetting('dat_dir');
+
   $needs_update = false;
-  if (!is_dir('./dat'))
-    mkdir('./dat', 0777, true);
-  $def = './dat/tsview-' . sha1($tsview_name) . '.json';
+  if (!is_dir($dat_dir))
+    mkdir($dat_dir, 0777, true);
+  $def = $dat_dir . '/tsview-' . sha1($tsview_name) . '.json';
   $lock = Lock("TSView $tsview_name");
   if (isset($lock)) {
     if (is_file($def))

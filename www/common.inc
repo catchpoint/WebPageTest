@@ -92,11 +92,6 @@ define('UNKNOWN_TIME', -1);      // Value used as a flag for an unknown time.
 $page_keywords = array('Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Run a free website speed test from around the globe using real browsers at consumer connection speeds with detailed optimization recommendations.";
 
-$tempDir = './tmp';
-if (!is_dir($tempDir))
-    mkdir($tempDir, 0777, true);
-$tempDir = realpath($tempDir) . '/';
-
 if (isset($_REQUEST['embed'])) {
     define('EMBED', true);
     define('BARE_UI', true);
@@ -119,6 +114,11 @@ if (!array_key_exists('nolinks', $settings))
 if (!array_key_exists('shard_tests', $settings))
     $settings['shard_tests'] = 0;
 $max_load = GetSetting('render_max_load');
+
+$tempDir = GetSetting('tmp_dir');
+if (!is_dir($tempDir))
+    mkdir($tempDir, 0777, true);
+$tempDir = realpath($tempDir) . '/';
 
 $privateInstall = true;
 if (array_key_exists('HTTP_HOST', $_SERVER) &&
@@ -200,7 +200,8 @@ if (is_dir('./forums') && (!array_key_exists('disableMybb', $settings) || !$sett
 if (!$admin && isset($_COOKIE['asid']) && isset($_COOKIE['google_id']) && isset($_COOKIE['google_email'])) {
   $lock = Lock('Auth', true, 10);
   if ($lock) {
-    $sessions = json_decode(gz_file_get_contents('./dat/admin_sessions.dat'), true);
+    $dat_dir = GetSetting('dat_dir');
+    $sessions = json_decode(gz_file_get_contents($dat_dir . '/admin_sessions.dat'), true);
     $session = $_COOKIE['asid'];
     if ($sessions &&
         isset($sessions[$session]) &&

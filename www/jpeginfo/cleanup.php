@@ -1,11 +1,13 @@
 <?php
 ignore_user_abort(true);
-chdir('..');  
+chdir('..');
 set_time_limit(36000);
+require_once('common_lib.inc');
+$results_dir = GetSetting('results_dir');
 
 // Recursively walk the jpeginfo results directory and
 // delete anything that was last accessed more than a day ago
-ScanDirectory('./results/jpeginfo', false);
+ScanDirectory($results_dir . '/jpeginfo', false);
 
 function ScanDirectory($dir, $delete) {
   if (is_dir($dir)) {

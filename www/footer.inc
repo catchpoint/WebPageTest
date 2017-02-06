@@ -14,10 +14,11 @@
 
    
     <?php
+        $tmp_dir = GetSetting('tmp_dir');
         $feeds = null;
-        if( is_file('./tmp/feeds.dat') )
-            $feeds = json_decode(file_get_contents('./tmp/feeds.dat'), true);
-        
+        if( is_file($tmp_dir . '/feeds.dat') )
+            $feeds = json_decode(file_get_contents($tmp_dir . '/feeds.dat'), true);
+
         if( count($feeds) && !defined('BARE_UI') )
         {
             echo '<table id="feeds"><tr>';

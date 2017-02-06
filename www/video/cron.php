@@ -1,5 +1,8 @@
 <?php
+require_once('common_lib.inc');
 header ("Content-type: text/plain");
+
+$dat_dir = GetSetting('dat_dir');
 
 $ok = true;
 if (is_file('./cron.key')) {
@@ -23,9 +26,9 @@ if (is_file('../settings/keys.ini')) {
 if ($ok) {
     // load the data set we already have if we are only looking for new entries
     $existing = null;
-    if( !$_REQUEST['all'] && is_file('./dat/industry.dat'))
-        $existing = json_decode(file_get_contents('./dat/industry.dat'), true);
-    
+    if( !$_REQUEST['all'] && is_file($dat_dir . '/industry.dat'))
+        $existing = json_decode(file_get_contents($dat_dir . '/industry.dat'), true);
+
     // load the industry pages that need to be tested
     $ind = parse_ini_file('./industry.ini', true);
     foreach($ind as $industry => &$pages) {

@@ -18,6 +18,8 @@ $client->setClientSecret($client_secret);
 $client->setRedirectUri($redirect_uri);
 $client->addScope('email');
 
+$dat_dir = GetSetting('dat_dir');
+
 if (!isset($_GET['code'])) {
   setcookie("page_before_google_oauth", $_SERVER['HTTP_REFERER']);
   $authUrl = $client->createAuthUrl();
@@ -30,7 +32,7 @@ if (!isset($_GET['code'])) {
   // Keep a mapping of user ID to email addresses (and allow for it to be overridden if needed)
   $lock = Lock('Auth', true, 10);
   if ($lock) {
-    $users = json_decode(gz_file_get_contents('./dat/users.dat'), true);
+    $users = json_decode(gz_file_get_contents($dat_dir . '/users.dat'), true);
     $user['id'] = md5($token_data['payload']['sub']);
     $user['oauth2id'] = $token_data['payload']['sub'];
     $user['email'] = $token_data['payload']['email'];
@@ -39,8 +41,8 @@ if (!isset($_GET['code'])) {
     if (isset($users[$user['email']]['id']))
       $user['id'] = $users[$user['email']]['id'];
     $users[$user['email']] = $user;
-    gz_file_put_contents('./dat/users.dat', json_encode($users));
-    
+    gz_file_put_contents($dat_dir . '/users.dat', json_encode($users));
+
     // se if the user that logged in was an administrator
     $admin_users = GetSetting('admin_users');
     if ($admin_users) {
@@ -52,11 +54,11 @@ if (!isset($_GET['code'])) {
         if (substr($email, -$admin_len) == $admin) {
           $session = sha1(json_encode($token_data) . time());
           setcookie("asid", $session, time()+60*60*24*7*2, "/");
-          $sessions = json_decode(gz_file_get_contents('./dat/admin_sessions.dat'), true);
+          $sessions = json_decode(gz_file_get_contents($dat_dir . '/admin_sessions.dat'), true);
           if (!isset($sessions) || !is_array($sessions))
             $sessions = array();
           $sessions[$session] = $user;
-          gz_file_put_contents('./dat/admin_sessions.dat', json_encode($sessions));
+          gz_file_put_contents($dat_dir . '/admin_sessions.dat', json_encode($sessions));
           break;
         }
       }

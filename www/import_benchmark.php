@@ -144,11 +144,12 @@ function ValidateKey() {
 function ImportBenchmarkRun($benchmark, $epoch, &$test_data) {
   global $error;
   $lock = Lock("Benchmark $benchmark Cron", true, 86400);
+  $results_dir = GetSetting('results_dir');
   if (isset($lock)) {
-    if (!is_dir("./results/benchmarks/$benchmark"))
-        mkdir("./results/benchmarks/$benchmark", 0777, true);
-    if (is_file("./results/benchmarks/$benchmark/state.json"))
-      $state = json_decode(file_get_contents("./results/benchmarks/$benchmark/state.json"), true);
+    if (!is_dir($results_dir . "/benchmarks/$benchmark"))
+        mkdir($results_dir . "/benchmarks/$benchmark", 0777, true);
+    if (is_file($results_dir . "/benchmarks/$benchmark/state.json"))
+      $state = json_decode(file_get_contents($results_dir . "/benchmarks/$benchmark/state.json"), true);
     else
       $state = array('running' => false, 'needs_aggregation' => false, 'runs' => array());
     $state['running'] = true;
@@ -158,7 +159,7 @@ function ImportBenchmarkRun($benchmark, $epoch, &$test_data) {
       $test['submitted'] = $epoch;
       $state['tests'][] = $test;
     }
-    file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));        
+    file_put_contents($results_dir . "/benchmarks/$benchmark/state.json", json_encode($state));
     Unlock($lock);
     // kick off the collection and aggregation of the results
     $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';

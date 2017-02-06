@@ -23,8 +23,9 @@ function EC2_StartInstanceIfNeeded($ami) {
   $target = 1;  // just support 1 instance at a time for now
   $needed = false;
   $lock = Lock('ec2-instances', true, 120);
+  $tmp_dir = GetSetting('tmp_dir');
   if ($lock) {
-    $instances = json_decode(file_get_contents('./tmp/ec2-instances.dat'), true);
+    $instances = json_decode(file_get_contents($tmp_dir . '/ec2-instances.dat'), true);
     if (!$instances || !is_array($instances))
       $instances = array();
     if (!isset($instances[$ami]))
@@ -36,7 +37,7 @@ function EC2_StartInstanceIfNeeded($ami) {
     if ($needed) {
       if (EC2_StartInstance($ami)) {
         $instances[$ami]['count']++;
-        file_put_contents('./tmp/ec2-instances.dat', json_encode($instances));
+        file_put_contents($tmp_dir . '/ec2-instances.dat', json_encode($instances));
       }
     }
     Unlock($lock);
@@ -129,6 +130,7 @@ function EC2_StartInstance($ami) {
 * 
 */
 function EC2_TerminateIdleInstances() {
+  $tmp_dir = GetSetting('tmp_dir');
   EC2_SendInstancesOffline();
   $instances = EC2_GetRunningInstances();
   if (count($instances)) {
@@ -195,7 +197,7 @@ function EC2_TerminateIdleInstances() {
     // update the running instance counts
     $lock = Lock('ec2-instances', true, 120);
     if ($lock) {
-      $counts = json_decode(file_get_contents('./tmp/ec2-instances.dat'), true);
+      $counts = json_decode(file_get_contents($tmp_dir . '/ec2-instances.dat'), true);
       if (!isset($counts) || !is_array($counts))
         $counts = array();
       foreach ($counts as $ami => $count) {
@@ -208,7 +210,7 @@ function EC2_TerminateIdleInstances() {
           $counts[$ami] = array('count' => 0);
         $counts[$ami]['count'] = $count['count'];
       }
-      file_put_contents('./tmp/ec2-instances.dat', json_encode($counts));
+      file_put_contents($tmp_dir . '/ec2-instances.dat', json_encode($counts));
       Unlock($lock);
     }
   }
@@ -271,8 +273,9 @@ function EC2_SendInstancesOffline() {
 */
 function EC2_StartNeededInstances() {
   $lock = Lock('ec2-instances', true, 120);
+  $tmp_dir = GetSetting('tmp_dir');
   if ($lock) {
-    $instances = json_decode(file_get_contents('./tmp/ec2-instances.dat'), true);
+    $instances = json_decode(file_get_contents($tmp_dir . '/ec2-instances.dat'), true);
     if (!$instances || !is_array($instances))
       $instances = array();
     $locations = EC2_GetAMILocations();
@@ -355,7 +358,7 @@ function EC2_StartNeededInstances() {
       }
     }
 
-    file_put_contents('./tmp/ec2-instances.dat', json_encode($instances));
+    file_put_contents($tmp_dir . '/ec2-instances.dat', json_encode($instances));
     Unlock($lock);
   }
 }
@@ -459,6 +462,7 @@ function EC2_GetRunningInstances() {
       }
     }
   }
+  $tmp_dir = GetSetting('tmp_dir');
   // update the AMI counts we are tracking locally
   if (count($instances)) {
     $lock = Lock('ec2-instances', true, 120);
@@ -473,7 +477,7 @@ function EC2_GetRunningInstances() {
           $amis[$instance['ami']]['count']++;
         }
       }
-      file_put_contents('./tmp/ec2-instances.dat', json_encode($amis));
+      file_put_contents($tmp_dir . '/ec2-instances.dat', json_encode($amis));
       Unlock($lock);
     }
   }
@@ -592,7 +596,7 @@ function EC2_GetAMILocations() {
 * @param mixed $msg
 */
 function EC2Log($msg) {
-  $dir = __DIR__ . '/log';
+  $dir = GetSetting('log_dir');
   if (!is_dir($dir))
     mkdir($dir, 0777, true);
   if (is_dir($dir)) {

@@ -176,8 +176,9 @@ function BlockEmail($email) {
 */
 function OpenKeysDatabase() {
   global $prefix;
+  $dat_dir = GetSetting('dat_dir');
   try {
-    $db = new SQLite3(__DIR__ . "/dat/{$prefix}_api_keys.db");
+    $db = new SQLite3(__DIR__ . $dat_dir . "/{$prefix}_api_keys.db");
     $db->query('CREATE TABLE IF NOT EXISTS keys (key TEXT PRIMARY KEY NOT NULL,created INTEGER,key_limit INTEGER NOT NULL,email TEXT UNIQUE NOT NULL,ip TEXT NOT NULL,name TEXT,company TEXT,website TEXT,contact INTEGER)');
   } catch (Exception $e) {
     $db = false;
@@ -191,8 +192,9 @@ function OpenKeysDatabase() {
 */
 function OpenRequestsDatabase() {
   global $prefix;
+  $dat_dir = GetSetting('dat_dir');
   try {
-    $db = new SQLite3(__DIR__ . "/dat/{$prefix}_api_keys.db");
+    $db = new SQLite3(__DIR__ . $dat_dir . "/{$prefix}_api_keys.db");
     $db->query('CREATE TABLE IF NOT EXISTS requests (id TEXT PRIMARY KEY NOT NULL,created INTEGER,email TEXT UNIQUE NOT NULL,ip TEXT NOT NULL,name TEXT,company TEXT,website TEXT,contact INTEGER)');
     
     // expire requests older than a week
@@ -352,6 +354,7 @@ function DeleteRequest($id) {
 */
 function CreateApiKey($request) {
   global $prefix;
+  $logs_dir = GetSetting('logs_dir');
   $info = false;
   if ($db = OpenKeysDatabase()) {
     $email = '"' . $request['email'] . '"';
@@ -378,7 +381,7 @@ function CreateApiKey($request) {
       $info = $request;
       $info['key'] = $key;
       $info['key_limit'] = $limit;
-      logMsg("$ip,$email,$name,$company,$website,$contact", __DIR__ . '/log/keys.log', true);
+      logMsg("$ip,$email,$name,$company,$website,$contact", $logs_dir . '/keys.log', true);
     }
     $db->close();
   }

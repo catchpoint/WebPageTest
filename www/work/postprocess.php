@@ -89,12 +89,13 @@ if (array_key_exists('test', $_REQUEST)) {
     }
 
     // log any slow tests
+    $tmp_dir = GetSetting('tmp_dir');
     $slow_test_time = GetSetting('slow_test_time');
     if (isset($testInfo) && $slow_test_time && array_key_exists('url', $testInfo) && strlen($testInfo['url'])) {
       $elapsed = time() - $testInfo['started'];
       if ($elapsed > $slow_test_time) {
         $log_entry = gmdate("m/d/y G:i:s", $testInfo['started']) . "\t$elapsed\t{$testInfo['ip']}\t{$testInfo['url']}\t{$testInfo['location']}\t$id\n";
-        error_log($log_entry, 3, './tmp/slow_tests.log');
+        error_log($log_entry, 3, $tmp_dir . '/slow_tests.log');
       }
     }
     

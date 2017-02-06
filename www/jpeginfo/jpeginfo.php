@@ -1,5 +1,6 @@
 <?php
 chdir('..');
+require_once('common.inc');
 include 'jpeginfo/jpeginfo.inc.php';
 if (array_key_exists('url', $_REQUEST) &&
     strlen($_REQUEST['url'])) {
@@ -43,9 +44,10 @@ if (array_key_exists('url', $_REQUEST) &&
 }
 
 function GetPath($id) {
-  if (!is_dir('./results/jpeginfo'))
-    mkdir('./results/jpeginfo');
-  $path = realpath('./results/jpeginfo') . '/' . implode('/', str_split(trim($id), 4));
+  $results_dir = GetSetting('results_dir');
+  if (!is_dir($results_dir . '/jpeginfo'))
+    mkdir($results_dir . '/jpeginfo');
+  $path = realpath($results_dir . '/jpeginfo') . '/' . implode('/', str_split(trim($id), 4));
   return $path;
 }
 

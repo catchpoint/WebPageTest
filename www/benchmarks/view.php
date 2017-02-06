@@ -98,8 +98,10 @@ if (array_key_exists('f', $_REQUEST)) {
               $elapsed = 0;
               $completed = 0;
               $total = 0;
-              if (is_file("./results/benchmarks/$benchmark/state.json")) {
-                  $state = json_decode(file_get_contents("./results/benchmarks/$benchmark/state.json"), true);
+              $results_dir = GetSetting('results_dir');
+
+              if (is_file($results_dir . "/benchmarks/$benchmark/state.json")) {
+                  $state = json_decode(file_get_contents($results_dir . "/benchmarks/$benchmark/state.json"), true);
                   if (array_key_exists('running', $state) && $state['running'] &&
                       array_key_exists('tests', $state) && is_array($state['tests'])) {
                     $now = time();

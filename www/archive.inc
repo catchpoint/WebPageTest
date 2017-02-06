@@ -29,6 +29,7 @@ function ArchiveSkipFile($file) {
 function ArchiveTest($id, $store_result = true, $delete = false) {
     global $settings;
     global $api_keys;
+    $tmp_dir = GetSetting('tmp_dir');
     $ret = false;
     if ( strpos($id, '.') === false &&                           // make sure it isn't a relay test
         (array_key_exists('archive_dir', $settings) ||           // local mount
@@ -58,7 +59,7 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                 $lock = LockTest($id);
                 if (isset($lock)) {
                   $testInfo = GetTestInfo($id);
-                  $zipFile = "./tmp/$id.zip";
+                  $zipFile = $tmp_dir . "/$id.zip";
                   // zip up the contents
                   if (is_dir($testPath) === true) {
                       $count = 0;
@@ -148,6 +149,7 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
 */
 function RestoreArchive($id) {
     $ret = false;
+    $tmp_dir = GetSetting('tmp_dir');
     if (strpos($id, '.') === false && GetSetting('archive_dir') != '/dev/null') {
         global $settings;
         $testPath = './' . GetTestPath($id);
@@ -167,7 +169,7 @@ function RestoreArchive($id) {
             array_key_exists('archive_s3_url', $settings) ||
             array_key_exists('archive_s3_server', $settings)) {
             $deleteZip = true;
-            $zipfile = "./tmp/$id.zip";
+            $zipfile = $tmp_dir . "/$id.zip";
             if (strlen($url)) {
                 $url .= "/$id.zip";
             } else {

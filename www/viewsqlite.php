@@ -1,5 +1,6 @@
 <?php
 include 'common.inc';
+$dat_dir = GetSetting('dat_dir');
 
 error_reporting(-1);
 
@@ -8,7 +9,7 @@ if (empty($settings['enable_google_csi'])) {
     die('Not Authorized');
 }
 
-$db = new SQLite3('./dat/labels.db');
+$db = new SQLite3($dat_dir . '/labels.db');
 $results = $db->query('SELECT * FROM labels');
 
 // Some really basic CSS for the table

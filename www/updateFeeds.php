@@ -1,4 +1,6 @@
 <?php
+require_once('common_lib.inc');
+
 if(extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('UpdateFeeds');
 }
@@ -8,9 +10,11 @@ if(extension_loaded('newrelic')) {
 * 
 */
 function UpdateFeeds() {
+  $tmp_dir = GetSetting('tmp_dir');
+
   if (is_file('./settings/feeds.inc')) {
-    if( !is_dir('./tmp') )
-        mkdir('./tmp', 0777);
+    if( !is_dir($tmp_dir) )
+        mkdir($tmp_dir, 0777);
 
     $feedData = array();
     $lock = Lock("Update Feeds", false);
@@ -95,7 +99,7 @@ function UpdateFeeds() {
       }
 
       // save out the feed data
-      file_put_contents('./tmp/feeds.dat', json_encode($feedData));
+      file_put_contents($tmp_dir . '/feeds.dat', json_encode($feedData));
       Unlock($lock);
     }
   }

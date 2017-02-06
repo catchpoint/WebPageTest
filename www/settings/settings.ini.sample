@@ -135,6 +135,13 @@ agentUpdate=http://cdn.webpagetest.org/
 ;ba_password=password
 ;validcertificate=1
 
+; All this directories must be writable by web server
+dat_dir=./dat
+jobs_dir=./work/jobs
+results_dir=./results
+tmp_dir=./tmp
+logs_dir=./logs
+
 ; ***********************
 ; Test result integration
 ; ***********************
