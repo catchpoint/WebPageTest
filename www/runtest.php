@@ -495,6 +495,10 @@
                 unset($test['errors']);
             if (array_key_exists('test_runs', $test))
                 unset($test['test_runs']);
+            if (array_key_exists('shards_finished', $test))
+                unset($test['shards_finished']);
+            if (array_key_exists('path', $test))
+                unset($test['path']);
             if (array_key_exists('spam', $test))
                 unset($test['spam']);
             $test['priority'] =  0;

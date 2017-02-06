@@ -425,19 +425,17 @@ function ProcessIncrementalResult() {
   global $id;
 
   if ($done) {
+    logMsg("$id - " . json_encode($testInfo['shards_finished']), __DIR__ . '/workdone.txt', true);
     // mark this shard as done
-    logTestMsg($id, "Checking shard $runNumber: " . json_encode($testInfo['shards_finished']));
     if (!isset($testInfo['shards_finished']))
       $testInfo['shards_finished'] = array();
-    $testInfo['shards_finished'][$runNumber] = "Done";
+    $testInfo['shards_finished'][$runNumber] = true;
     $testInfo_dirty = true;
     logTestMsg($id, "Marked shard $runNumber as complete: " . json_encode($testInfo['shards_finished']));
     
     // make sure all of the sharded tests are done
     for ($run = 1; $run <= $testInfo['runs'] && $done; $run++) {
-      if (!isset($testInfo['shards_finished'][$run]))
-        $testInfo['shards_finished'][$run] = false;
-      if ($testInfo['shards_finished'][$run] !== "Done")
+      if (!isset($testInfo['shards_finished'][$run]) || $testInfo['shards_finished'][$run] !== true)
         $done = false;
     }
     if ($done) {
