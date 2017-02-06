@@ -445,6 +445,8 @@ function delTree($dir, $remove = true)
     }
     if ($remove)
       rmdir( $dir );
+  } else {
+    unlink($dir);
   }
 }
 
