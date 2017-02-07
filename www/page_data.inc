@@ -357,6 +357,13 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
       gz_file_put_contents($cacheFile, json_encode($ret));
   }
 
+  if (isset($ret['testTiming']) &&
+      isset($testInfo['started']) &&
+      $testInfo['completed'] &&
+      $testInfo['completed'] > $testInfo['started']) {
+    $ret['testTiming']['AllRunsDuration'] = ($testInfo['completed'] - $testInfo['started']) * 1000;
+  }
+  
   return $ret;
 }
 
