@@ -63,6 +63,10 @@ private:
   LARGE_INTEGER     start_check_freq_;
   LARGE_INTEGER     idle_start_;
 
+  LogDuration * logExtensionStart_;
+  LogDuration * logExtensionBlank_;
+  LogDuration * logWaitForIdle_;
+
   void SendJsonResponse(struct mg_connection *conn,
                     struct http_message *message,
                     CStringA response_data);

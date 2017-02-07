@@ -84,13 +84,16 @@ TestServer::TestServer(WptHook& hook, WptTestHook &test, TestState& test_state,
   ,trace_(trace)
   ,started_(false)
   ,shutting_down_(false)
-  ,stored_ua_string_(false) {
+  ,stored_ua_string_(false)
+  ,logExtensionBlank_(NULL)
+  ,logWaitForIdle_(NULL) {
   last_cpu_idle_.QuadPart = 0;
   last_cpu_kernel_.QuadPart = 0;
   last_cpu_user_.QuadPart = 0;
   start_check_time_.QuadPart = 0;
   idle_start_.QuadPart = 0;
   QueryPerformanceFrequency(&start_check_freq_);
+  logExtensionStart_ = new LogDuration(CString(test_state_.shared_.ResultsFileBase()) + "_test_timing.log", "Extension Start");
 }
 
 /*-----------------------------------------------------------------------------
@@ -208,7 +211,18 @@ void TestServer::HTTPRequest(struct mg_connection *conn, struct http_message *me
         stored_ua_string_ = true;
       }
       CStringA task;
+      if (logExtensionBlank_) {
+        logExtensionBlank_->Stop();
+        delete logExtensionBlank_;
+        logExtensionBlank_ = NULL;
+        logWaitForIdle_ = new LogDuration(CString(test_state_.shared_.ResultsFileBase()) + "_test_timing.log", "Wait For Idle");
+      }
       if (started_ || OkToStart(true)) {
+        if (logWaitForIdle_) {
+          logWaitForIdle_->Stop();
+          delete logWaitForIdle_;
+          logWaitForIdle_ = NULL;
+        }
         bool record = false;
         test_.GetNextTask(task, record);
         if (record)
@@ -334,6 +348,12 @@ void TestServer::HTTPRequest(struct mg_connection *conn, struct http_message *me
     } else if (uri == "/event/received_data") {
       test_state_.received_data_ = true;
 	  } else if (uri.Left(6) == "/blank") {
+      if (logExtensionStart_) {
+        logExtensionStart_->Stop();
+        delete logExtensionStart_;
+        logExtensionStart_ = NULL;
+        logExtensionBlank_ = new LogDuration(CString(test_state_.shared_.ResultsFileBase()) + "_test_timing.log", "Extension Blank");
+      }
       if (!started_)
         OkToStart(false);
       test_state_.UpdateBrowserWindow();
