@@ -51,7 +51,7 @@ static const char * RESPONSE_ERROR_NOT_IMPLEMENTED_STR =
                                                       "ERROR: Not Implemented";
 static const char * BLANK_RESPONSE = "";
 
-static const char * VIEWPORT_HTML = 
+static const char * BLANK_HTML = 
     "<html><head><title>Blank</title>\n"
     "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, "
     "maximum-scale=1.0, user-scalable=0;\">\n"
@@ -72,14 +72,6 @@ static const char * VIEWPORT_HTML =
     "'&rnd=' + (Date.now() + Math.random());\n"
     "v.appendChild(s);\n"
     "</script>\n"
-    "</body></html>";
-
-static const char * BLANK_HTML = 
-    "<html><head><title>Blank</title>\n"
-    "<style type=\"text/css\">\n"
-    "body {background-color: #FFF;}\n"
-    "</style>\n"
-    "</head><body>\n"
     "</body></html>";
 
 /*-----------------------------------------------------------------------------
@@ -375,10 +367,7 @@ void TestServer::HTTPRequest(struct mg_connection *conn, struct http_message *me
       if (!started_)
         OkToStart(false);
       test_state_.UpdateBrowserWindow();
-      if (uri == "/blank.html")
-        text_response = VIEWPORT_HTML;
-      else
-        text_response = BLANK_HTML;
+      text_response = BLANK_HTML;
       response_type = "text/html";
 	  } else if (uri.Left(12) == "/viewport.js") {
       DWORD width = 0;

@@ -33,15 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Wtsapi32.h>
 #include <D3D9.h>
 
-const TCHAR * BROWSERS[] = {
-  _T("chrome.exe"),
-  _T("firefox.exe"),
-  _T("iexplore.exe"),
-  _T("MicrosoftEdge.exe"),
-  _T("MicrosoftEdgeCP.exe"),
-  _T("plugin-container.exe")
-};
-
 const TCHAR * DIALOG_WHITELIST[] = { 
   _T("urlblast")
   , _T("url blast")
@@ -338,6 +329,7 @@ void WptDriverCore::WorkThread(void) {
             TerminateProcess(browser_process_, 0);
             CloseHandle(browser_process_);
             browser_process_ = NULL;
+            KillBrowsers();
           }
 
           // Launch and exit any browsers that need their state cleared
@@ -464,7 +456,6 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
   }
 
   _webpagetest.UploadIncrementalResults(test, background_processing_event_);
-  KillBrowsers();
 
   if (ret) {
     int result = g_shared->TestResult();
@@ -752,41 +743,6 @@ bool WptDriverCore::ExtractZipFile(CString file) {
   }
 
   return ret;
-}
-
-/*-----------------------------------------------------------------------------
-  Kill any rogue browser processes that didn't go away on their own
-  This is disabled in debug mode to make it easier to develop
------------------------------------------------------------------------------*/
-void WptDriverCore::KillBrowsers() {
-  if (!_settings._debug) {
-    WTS_PROCESS_INFO * proc = NULL;
-    DWORD count = 0;
-    DWORD browser_count = _countof(BROWSERS);
-    if (WTSEnumerateProcesses(WTS_CURRENT_SERVER_HANDLE, 0, 1, &proc, &count)) {
-      for (DWORD i = 0; i < count; i++) {
-        bool terminate = false;
-
-        for (DWORD browser = 0; browser < browser_count && !terminate; 
-              browser++) {
-          TCHAR * process = PathFindFileName(proc[i].pProcessName);
-          if (!lstrcmpi(process, BROWSERS[browser]) )
-            terminate = true;
-        }
-
-        if (terminate) {
-          HANDLE process_handle = OpenProcess(PROCESS_TERMINATE, FALSE, 
-                                                proc[i].ProcessId);
-          if (process_handle) {
-            TerminateProcess(process_handle, 0);
-            CloseHandle(process_handle);
-          }
-        }
-      }
-      if (proc)
-        WTSFreeMemory(proc);
-    }
-  }
 }
 
 /*-----------------------------------------------------------------------------

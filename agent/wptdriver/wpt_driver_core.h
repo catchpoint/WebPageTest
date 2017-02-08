@@ -66,7 +66,6 @@ private:
   void FlushDNS(void);
   void ExtractZipFiles();
   bool ExtractZipFile(CString file);
-  void KillBrowsers();
   void SetupScreen();
   void SetupDummynet();
   void CloseDialogs();

@@ -14709,11 +14709,11 @@ goog.provide('wpt.main');
 ((function() {  // namespace
 
 /** @const */
-var STARTUP_DELAY = 500;
-var STARTUP_FAILSAFE_DELAY = 5000;
+var STARTUP_DELAY = 0;
+var STARTUP_FAILSAFE_DELAY = 2000;
 
 /** @const */
-var TASK_INTERVAL = 500;
+var TASK_INTERVAL = 100;
 
 // Run tasks slowly when testing, so that we can see errors in the logs
 // before navigation closes the dev tools window.
@@ -14727,13 +14727,6 @@ var TASK_INTERVAL_SHORT = 0;
 // not need to use wptdriver.exe while debugging.
 /** @const */
 var RUN_FAKE_COMMAND_SEQUENCE = false;
-
-// Some extensions can alter timing.  Remove some extensions that are likely
-// to be installed on test machines.
-var UNWANTED_EXTENSIONS = [
-  'mkmaajnfmpmpebdcpfnjbkgaloeidlfa',
-  'amppcaoflpjiofjedecfhmmlekknkpdl'
-];
 
 // regex to extract a host name from a URL
 var URL_REGEX = /([htps:]*\/\/)([^\/]+)(.*)/i;
@@ -14756,52 +14749,9 @@ var g_started = false;
 var g_requestsHooked = false;
 var g_failsafeStartup = undefined;
 var g_updatedCount = 0;
-
-/**
- * Uninstall a given set of extensions.  Run |onComplete| when done.
- * @param {Array.<string>} idsToUninstall IDs to uninstall.
- * @param {Function} onComplete Callback to run when uninstalls are done.
- */
-wpt.main.uninstallUnwantedExtensions = function(idsToUninstall, onComplete) {
-  // How many callbacks are we waiting on?  The uninstalls are done when
-  // there are no more callbacks in flight.
-  var numPendingCallbacks = 0;
-
-  var callOnCompleteWhenDone = function() {
-    if (numPendingCallbacks === 0)
-      onComplete();
-  };
-
-  var onUninstalled = function() {
-    --numPendingCallbacks;
-    callOnCompleteWhenDone();
-  };
-
-  // For each installed extension, uninstall if it is in |idsToUninstall|.
-  chrome.management.getAll(
-      function(extensionInfoArray) {
-        for (var i = 0; i < extensionInfoArray.length; ++i) {
-           if (idsToUninstall.indexOf(extensionInfoArray[i].id) != -1) {
-             ++numPendingCallbacks;
-             chrome.management.uninstall(
-                 extensionInfoArray[i].id, onUninstalled);
-             wpt.LOG.info('Uninstalling ' + extensionInfoArray[i].name +
-                          ' (id ' + extensionInfoArray[i].id + ').');
-           }
-        }
-        callOnCompleteWhenDone();
-      });
-};
+var g_navigating = false;
 
 wpt.main.onStartup = function() {
-  wpt.main.uninstallUnwantedExtensions(UNWANTED_EXTENSIONS, function() {
-    // When uninstalls finish, kick off our testing.
-    wpt.main.startMeasurements();
-  });
-};
-
-wpt.main.startMeasurements = function() {
-  wpt.LOG.info('Enter wptStartMeasurements');
   if (RUN_FAKE_COMMAND_SEQUENCE) {
     // Run the tasks in FAKE_TASKS.
     window.setInterval(wptFeedFakeTasks, FAKE_TASK_INTERVAL);
@@ -14827,9 +14777,11 @@ chrome.tabs.onUpdated.addListener(function(tabId, props) {
     wpt.main.onStartup();
   } else if (g_active && tabId == g_tabid) {
     if (props.status == 'loading') {
+      g_navigating = true;
       g_start = new Date().getTime();
       wptSendEvent('navigate', '');
     } else if (props.status == 'complete') {
+      g_navigating = false;
       wptSendEvent('complete', '');
     }
   }
@@ -14894,7 +14846,7 @@ function wptFeedFakeTasks() {
 
 // Get the next task from the wptdriver
 function wptGetTask() {
-  if (!g_requesting_task && !g_processing_task) {
+  if (!g_requesting_task && !g_processing_task && !g_navigating) {
     g_requesting_task = true;
     fetch('http://127.0.0.1:8888/task').then(function(response) {
       if (response.status == 200) {
