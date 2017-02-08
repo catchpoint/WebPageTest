@@ -134,6 +134,7 @@ bool WebBrowser::RunAndWait(HANDLE background_processing_event, HANDLE& browser_
     LogDuration logTestRunTime(_test.TimeLog(), "Run Test");
     SetEnvironmentVariable(L"JSGC_DISABLE_POISONING", NULL);
     if (_browser.IsWebdriver()) {
+      WaitForSingleObject(background_processing_event, 300000);
       ret = RunWebdriverTest();
     } else if (_browser._exe.GetLength()) {
       CString exe(_browser._exe);
