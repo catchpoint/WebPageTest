@@ -61,8 +61,7 @@ WptDriverCore::WptDriverCore(WptStatus &status):
   ,has_gpu_(false)
   ,watchdog_started_(false)
   ,_installing(false)
-  ,_settings(status)
-  ,browser_process_(NULL) {
+  ,_settings(status) {
   global_core = this;
   reboot_time_.QuadPart = 0;
   _testing_mutex = CreateMutex(NULL, FALSE, _T("Global\\WebPagetest"));
@@ -323,15 +322,6 @@ void WptDriverCore::WorkThread(void) {
           PostTest();
           ReleaseMutex(_testing_mutex);
         } else {
-          // Wait for the previous browser to finish
-          if (browser_process_) {
-            WaitForSingleObject(browser_process_, 10000);
-            TerminateProcess(browser_process_, 0);
-            CloseHandle(browser_process_);
-            browser_process_ = NULL;
-            KillBrowsers();
-          }
-
           // Launch and exit any browsers that need their state cleared
           ReleaseMutex(_testing_mutex);
           ResetBrowsers();
@@ -434,7 +424,8 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
 
   SetCursorPos(0,0);
   ShowCursor(FALSE);
-  ret = browser.RunAndWait(background_processing_event_, browser_process_);
+  HANDLE browser_process = NULL;
+  ret = browser.RunAndWait(background_processing_event_, browser_process);
   ShowCursor(TRUE);
 
   // See if we need to add the browser exe to the list of browsers
@@ -456,6 +447,14 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
   }
 
   _webpagetest.UploadIncrementalResults(test, background_processing_event_);
+
+  // Wait for the previous browser to finish
+  if (browser_process) {
+    WaitForSingleObject(browser_process, 10000);
+    TerminateProcess(browser_process, 0);
+    CloseHandle(browser_process);
+    KillBrowsers();
+  }
 
   if (ret) {
     int result = g_shared->TestResult();

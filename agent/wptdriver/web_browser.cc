@@ -122,14 +122,6 @@ bool WebBrowser::RunAndWait(HANDLE background_processing_event, HANDLE& browser_
   bool ret = false;
   bool is_chrome = false;
 
-  if (browser_process) {
-    WaitForSingleObject(browser_process, 10000);
-    TerminateProcess(browser_process, 0);
-    CloseHandle(browser_process);
-    browser_process = NULL;
-    KillBrowsers();
-  }
-
   // signal to the IE BHO that it needs to inject the code
   HANDLE active_event = CreateMutex(&null_dacl, TRUE, GLOBAL_TESTING_MUTEX);
   g_shared->SetOverrodeUAString(false);

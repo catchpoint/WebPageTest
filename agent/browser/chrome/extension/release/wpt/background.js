@@ -14710,10 +14710,11 @@ goog.provide('wpt.main');
 
 /** @const */
 var STARTUP_DELAY = 0;
-var STARTUP_FAILSAFE_DELAY = 2000;
+var STARTUP_FAILSAFE_DELAY = 5000;
 
 /** @const */
-var TASK_INTERVAL = 100;
+var TASK_INTERVAL = 500;
+var TASK_INTERVAL_STARTUP = 100;
 
 // Run tasks slowly when testing, so that we can see errors in the logs
 // before navigation closes the dev tools window.
@@ -14749,7 +14750,8 @@ var g_started = false;
 var g_requestsHooked = false;
 var g_failsafeStartup = undefined;
 var g_updatedCount = 0;
-var g_navigating = false;
+var g_taskTimer = undefined;
+var g_taskInterval = TASK_INTERVAL_STARTUP;
 
 wpt.main.onStartup = function() {
   if (RUN_FAKE_COMMAND_SEQUENCE) {
@@ -14757,7 +14759,7 @@ wpt.main.onStartup = function() {
     window.setInterval(wptFeedFakeTasks, FAKE_TASK_INTERVAL);
   } else {
     // Fetch tasks from wptdriver.exe.
-    window.setInterval(wptGetTask, TASK_INTERVAL);
+    g_taskTimer = window.setInterval(wptGetTask, g_taskInterval);
     window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT);
   }
 };
@@ -14777,11 +14779,9 @@ chrome.tabs.onUpdated.addListener(function(tabId, props) {
     wpt.main.onStartup();
   } else if (g_active && tabId == g_tabid) {
     if (props.status == 'loading') {
-      g_navigating = true;
       g_start = new Date().getTime();
       wptSendEvent('navigate', '');
     } else if (props.status == 'complete') {
-      g_navigating = false;
       wptSendEvent('complete', '');
     }
   }
@@ -14846,7 +14846,7 @@ function wptFeedFakeTasks() {
 
 // Get the next task from the wptdriver
 function wptGetTask() {
-  if (!g_requesting_task && !g_processing_task && !g_navigating) {
+  if (!g_requesting_task && !g_processing_task) {
     g_requesting_task = true;
     fetch('http://127.0.0.1:8888/task').then(function(response) {
       if (response.status == 200) {
@@ -15051,6 +15051,11 @@ var wptTaskCallback = function() {
 function wptExecuteTask(task) {
   if (task.action.length) {
     if (task.record) {
+      if (g_taskTimer !== undefined && g_taskInterval != TASK_INTERVAL) {
+        g_taskInterval = TASK_INTERVAL;
+        window.clearInterval(g_taskTimer);
+        g_taskTimer = window.setInterval(wptGetTask, g_taskInterval);
+      }
       g_active = true;
       wpt.chromeDebugger.SetActive(g_active);
     } else {
