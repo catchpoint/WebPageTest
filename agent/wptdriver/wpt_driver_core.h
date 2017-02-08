@@ -54,7 +54,6 @@ private:
   HANDLE      housekeeping_timer_;
   bool        has_gpu_;
   bool        watchdog_started_;
-  HANDLE      background_processing_event_;
   LARGE_INTEGER reboot_time_;
   bool TracerouteTest(WptTestDriver& test);
   bool BrowserTest(WptTestDriver& test, WebBrowser &browser);
@@ -65,6 +64,7 @@ private:
   void FlushDNS(void);
   void ExtractZipFiles();
   bool ExtractZipFile(CString file);
+  void KillBrowsers();
   void SetupScreen();
   void SetupDummynet();
   void CloseDialogs();

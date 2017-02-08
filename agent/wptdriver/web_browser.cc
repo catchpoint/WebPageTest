@@ -34,7 +34,6 @@ const int PIPE_IN = 1;
 const int PIPE_OUT = 2;
 static const TCHAR * GLOBAL_TESTING_MUTEX = _T("Global\\wpt_testing_active");
 static const TCHAR * BROWSER_STARTED_EVENT = _T("Global\\wpt_browser_started");
-static const TCHAR * BROWSER_CAN_TEST_EVENT = _T("Global\\wpt_browser_can_test");
 static const TCHAR * BROWSER_DONE_EVENT = _T("Global\\wpt_browser_done");
 static const TCHAR * FLASH_CACHE_DIR = 
                         _T("Macromedia\\Flash Player\\#SharedObjects");
@@ -86,6 +85,7 @@ WebBrowser::WebBrowser(WptSettings& settings, WptTestDriver& test,
   _settings(settings)
   ,_test(test)
   ,_status(status)
+  ,_browser_process(NULL)
   ,_browser(browser)
   ,_ipfw(ipfw)
   ,_shaper(shaper)
@@ -102,8 +102,6 @@ WebBrowser::WebBrowser(WptSettings& settings, WptTestDriver& test,
   if( InitializeSecurityDescriptor(&SD, SECURITY_DESCRIPTOR_REVISION) )
     if( SetSecurityDescriptorDacl(&SD, TRUE,(PACL)NULL, FALSE) )
       null_dacl.lpSecurityDescriptor = &SD;
-  _browser_can_test_event = CreateEvent(&null_dacl, TRUE, FALSE,
-                                       BROWSER_CAN_TEST_EVENT);
   _browser_started_event = CreateEvent(&null_dacl, TRUE, FALSE,
                                        BROWSER_STARTED_EVENT);
   _browser_done_event = CreateEvent(&null_dacl, TRUE, FALSE,
@@ -118,7 +116,7 @@ WebBrowser::~WebBrowser(void) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool WebBrowser::RunAndWait(HANDLE background_processing_event, HANDLE& browser_process) {
+bool WebBrowser::RunAndWait() {
   bool ret = false;
   bool is_chrome = false;
 
@@ -130,11 +128,10 @@ bool WebBrowser::RunAndWait(HANDLE background_processing_event, HANDLE& browser_
   // Kill some non-essential background tasks that windows may have started up
   TerminateProcessesByName(_T("mscorsvw.exe"));
 
-  if (_test.Start()) {
+  if (_test.Start() && ConfigureIpfw(_test)) {
     LogDuration logTestRunTime(_test.TimeLog(), "Run Test");
     SetEnvironmentVariable(L"JSGC_DISABLE_POISONING", NULL);
     if (_browser.IsWebdriver()) {
-      WaitForSingleObject(background_processing_event, 300000);
       ret = RunWebdriverTest();
     } else if (_browser._exe.GetLength()) {
       CString exe(_browser._exe);
@@ -272,6 +269,7 @@ bool WebBrowser::RunAndWait(HANDLE background_processing_event, HANDLE& browser_
       si.dwFlags = STARTF_USEPOSITION | STARTF_USESIZE | STARTF_USESHOWWINDOW;
 
       EnterCriticalSection(&cs);
+      _browser_process = NULL;
       HANDLE additional_process = NULL;
       CAtlArray<HANDLE> browser_processes;
       bool ok = true;
@@ -283,7 +281,6 @@ bool WebBrowser::RunAndWait(HANDLE background_processing_event, HANDLE& browser_
         LogDuration logBrowserLaunchTime(_test.TimeLog(), "Launch Browser");
         ResetEvent(_browser_started_event);
         ResetEvent(_browser_done_event);
-        ResetEvent(_browser_can_test_event);
         InstallAppInitHook(_browser._exe);
         if (CreateProcess(_browser._exe, cmdLine, NULL, NULL, FALSE,
                           0, NULL, NULL, &si, &pi)) {
@@ -309,8 +306,10 @@ bool WebBrowser::RunAndWait(HANDLE background_processing_event, HANDLE& browser_
           if (WaitForSingleObject(_browser_started_event, wait_time) ==
               WAIT_OBJECT_0) {
             DWORD pid = g_shared->BrowserProcessId();
-            if (pid)
-              browser_process = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE, FALSE, pid);
+            if (pid) {
+              _browser_process = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE,
+                                             FALSE, pid);
+            }
           } else {
             ok = false;
             _status.Set(_T("Error waiting for browser to launch"));
@@ -326,27 +325,17 @@ bool WebBrowser::RunAndWait(HANDLE background_processing_event, HANDLE& browser_
         ClearAppInitHooks();
 
         // wait for the browser to finish (infinite timeout if we are debugging)
-        if (browser_process && ok) {
-          // Wait for background processing to finish before signaling to start the test
-          if (WaitForSingleObject(background_processing_event, 300000) == WAIT_OBJECT_0) {
-            if (ConfigureIpfw(_test)) {
-              SetEvent(_browser_can_test_event);
-
-              ret = true;
-              DWORD wait_time = _test._max_test_time ? _test._max_test_time : _test._test_timeout + 180000;  // Allow extra time for results processing
-              _status.Set(_T("Waiting up to %d seconds for the test to complete"), 
-                          (wait_time / SECONDS_TO_MS));
-              #ifdef DEBUG
-              wait_time = INFINITE;
-              #endif
-              WaitForSingleObject(_browser_done_event, wait_time);
-              _status.Set(_T("Test complete, processing result..."));
-              ResetIpfw();
-            } else {
-              _test._run_error = "Failed to configure IPFW/dummynet.  Is it installed?";
-            }
-          } else {
-          }
+        if (_browser_process && ok) {
+          ret = true;
+          DWORD wait_time = _test._max_test_time ? _test._max_test_time : _test._test_timeout + 180000;  // Allow extra time for results processing
+          _status.Set(_T("Waiting up to %d seconds for the test to complete"), 
+                      (wait_time / SECONDS_TO_MS));
+          #ifdef DEBUG
+          wait_time = INFINITE;
+          #endif
+          WaitForSingleObject(_browser_done_event, wait_time);
+          WaitForSingleObject(_browser_process, 10000);
+          _status.Set(_T("Test complete, processing result..."));
         }
       } else {
         _status.Set(_T("Error initializing browser event"));
@@ -354,13 +343,25 @@ bool WebBrowser::RunAndWait(HANDLE background_processing_event, HANDLE& browser_
             "Failed while initializing the browser started event.";
       }
 
+      // kill the browser and any child processes if it is still running
+      EnterCriticalSection(&cs);
+      if (_browser_process) {
+        CloseHandle(_browser_process);
+        _browser_process = NULL;
+      }
+      LeaveCriticalSection(&cs);
+      TerminateProcessesByName(PathFindFileName((LPCTSTR)_browser._exe));
+
       g_shared->SetBrowserExe(NULL);
       SetEnvironmentVariable(L"SSLKEYLOGFILE", NULL);
+
     } else {
       _test._run_error = "Browser configured incorrectly (exe not defined).";
     }
+
+    ResetIpfw();
   } else {
-    _test._run_error = "Failed to start the test.";
+    _test._run_error = "Failed to configure IPFW/dummynet.  Is it installed?";
   }
 
   if (active_event)

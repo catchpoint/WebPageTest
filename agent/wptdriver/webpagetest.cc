@@ -39,53 +39,6 @@ static const TCHAR * NO_FILE = _T("");
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-TestInfo::TestInfo(WebPagetest& wpt, WptTestDriver& test, bool done, HANDLE done_event):
-  _wpt (&wpt)
-  , _computer_name(wpt._computer_name)
-  , _dns_servers(wpt._dns_servers)
-  , _server(wpt._settings._server)
-  , _location(wpt._settings._location)
-  , _key(wpt._settings._key)
-  , _ec2_instance(wpt._settings._ec2_instance)
-  , _azure_instance(wpt._settings._azure_instance)
-  , _discard_test(test._discard_test)
-  , _process_results(test._process_results)
-  , _id(test._id)
-  , _run(test._run)
-  , _index(test._index)
-  , _clear_cache(test._clear_cache)
-  , _test_error(test._test_error)
-  , _run_error(test._run_error)
-  , _job_info(test._job_info)
-  , _done(done)
-  , _done_event(done_event) {
-
-  _cpu_utilization = g_shared->CPUUtilization();
-
-  if (_done_event) {
-    WaitForSingleObject(_done_event, 300000);
-    ResetEvent(_done_event);
-  }
-
-  // Move all of the files to a staging upload directory
-  _directory = test._directory + "\\upload";
-  DeleteDirectory(_directory, false);
-  CreateDirectory(_directory, NULL);
-  WIN32_FIND_DATA fd;
-  CString src = test._directory + "\\";
-  CString dest = _directory + "\\";
-  HANDLE find_handle = FindFirstFile(src + "*.*", &fd);
-  if (find_handle != INVALID_HANDLE_VALUE) {
-    do {
-      if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-        MoveFile(src + fd.cFileName, dest + fd.cFileName);
-    } while (FindNextFile(find_handle, &fd));
-    FindClose(find_handle);
-  }
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
 WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
   _settings(settings)
   ,_status(status)
@@ -95,8 +48,7 @@ WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
   ,_revisionNo(0)
   ,_exit(false)
   ,has_gpu_(false)
-  ,rebooting_(false)
-  ,_upload_thread(NULL) {
+  ,rebooting_(false) {
   SetErrorMode(SEM_FAILCRITICALERRORS);
   // get the version number of the wpthook.dll binary (for software updates)
   TCHAR file[MAX_PATH];
@@ -206,10 +158,6 @@ bool WebPagetest::GetNameFromMAC(LPTSTR name, DWORD &len) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 WebPagetest::~WebPagetest(void) {
-  if (_upload_thread) {
-    WaitForSingleObject(_upload_thread, 300000);
-    CloseHandle(_upload_thread);
-  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -300,53 +248,32 @@ void WebPagetest::StartTestRun(WptTestDriver& test) {
 }
 
 /*-----------------------------------------------------------------------------
-  Stub entry point for the background work thread
 -----------------------------------------------------------------------------*/
-static unsigned __stdcall UploadThreadProc(void* arg) {
-  TestInfo * test_info = (TestInfo *)arg;
-  if (test_info) {
-    if (test_info->_wpt)
-      test_info->_wpt->UploadThread(*test_info);
-    if (test_info->_done_event)
-      SetEvent(test_info->_done_event);
-    delete test_info;
-  }
-    
-  return 0;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void WebPagetest::UploadThread(TestInfo& test_info) {
-  CAtlList<CString> image_files;
-  GetImageFiles(test_info._directory + "\\", image_files);
-  UploadImages(test_info, image_files);
-  UploadData(test_info);
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-bool WebPagetest::UploadIncrementalResults(WptTestDriver& test, HANDLE background_processing_event) {
+bool WebPagetest::UploadIncrementalResults(WptTestDriver& test) {
   bool ret = true;
 
   ATLTRACE(_T("[wptdriver] - UploadIncrementalResults"));
 
   if (!test._discard_test) {
-    bool done = false;
-    if (test._fv_only || !test._clear_cache) {
-      if (test._specific_run || test._run == test._runs) {
-        done = true;
-        test.marked_done_ = true;
+    CString directory = test._directory + CString(_T("\\"));
+    CAtlList<CString> image_files;
+    GetImageFiles(directory, image_files);
+    ret = UploadImages(test, image_files);
+    if (ret) {
+      // See if this is the last run we are testing and if so, pass the done flag
+      // through now instead of waiting for TestDone() to prevent double-calls
+      // to workdone.
+      bool done = false;
+      if (test._fv_only || !test._clear_cache) {
+        if (test._specific_run || test._run == test._runs) {
+          done = true;
+        }
       }
+      ret = UploadData(test, done);
+      if (done && ret)
+        test.marked_done_ = true;
     }
-    TestInfo * test_info = new TestInfo(*this, test, done, background_processing_event);
     g_shared->SetCPUUtilization(0);
-
-    if (_upload_thread) {
-      WaitForSingleObject(_upload_thread, 300000);
-      CloseHandle(_upload_thread);
-    }
-    _upload_thread = (HANDLE)_beginthreadex(0, 0, ::UploadThreadProc, test_info, 0, 0);
   } else {
     DeleteIncrementalResults(test);
   }
@@ -357,19 +284,18 @@ bool WebPagetest::UploadIncrementalResults(WptTestDriver& test, HANDLE backgroun
 /*-----------------------------------------------------------------------------
   Send the test result back to the server
 -----------------------------------------------------------------------------*/
-bool WebPagetest::TestDone(WptTestDriver& test, HANDLE background_processing_event){
+bool WebPagetest::TestDone(WptTestDriver& test){
   bool ret = true;
 
   UpdateDNSServers();
   if (!test.marked_done_) {
-    TestInfo * test_info = new TestInfo(*this, test, true, background_processing_event);
+    CString directory = test._directory + CString(_T("\\"));
+    CAtlList<CString> image_files;
+    GetImageFiles(directory, image_files);
+    ret = UploadImages(test, image_files);
+    if (ret)
+      ret = UploadData(test, true);
     g_shared->SetCPUUtilization(0);
-
-    if (_upload_thread) {
-      WaitForSingleObject(_upload_thread, 300000);
-      CloseHandle(_upload_thread);
-    }
-    _upload_thread = (HANDLE)_beginthreadex(0, 0, ::UploadThreadProc, test_info, 0, 0);
   }
 
   ATLTRACE(_T("[wptdriver] - Test Done"));
@@ -409,24 +335,25 @@ void WebPagetest::GetFiles(const CString& directory,
 /*-----------------------------------------------------------------------------
   Upload any binary files that are larger than 100KB separately
 -----------------------------------------------------------------------------*/
-bool WebPagetest::UploadImages(TestInfo& test_info,
+bool WebPagetest::UploadImages(WptTestDriver& test,
                                CAtlList<CString>& image_files) {
   bool ret = true;
 
+  LogDuration logBrowserLaunchTime(test.TimeLog(), "Upload Images");
   // Upload the large binary files individually (e.g. images, tcpdump).
-  CString url = test_info._server + _T("work/resultimage.php");
+  CString url = _settings._server + _T("work/resultimage.php");
   POSITION pos = image_files.GetHeadPosition();
   while (ret && pos) {
     CString file = image_files.GetNext(pos);
-    if (!test_info._discard_test) {
-      if (test_info._process_results) {
+    if (!test._discard_test) {
+      if (test._process_results) {
         CAtlList<CString> newFiles;
-        if (ProcessFile(test_info, file, newFiles)) {
+        if (ProcessFile(test, file, newFiles)) {
           POSITION newFilePos = newFiles.GetHeadPosition();
           while (ret && newFilePos) {
             CString newFile = newFiles.GetNext(newFilePos);
             if (FileSize(newFile) > 100000) {
-              ret = UploadFile(url, false, test_info, newFile);
+              ret = UploadFile(url, false, test, newFile);
               if (ret)
                 DeleteFile(newFile);
             }
@@ -434,7 +361,7 @@ bool WebPagetest::UploadImages(TestInfo& test_info,
         }
       }
       if (ret && FileSize(file) > 100000) {
-        ret = UploadFile(url, false, test_info, file);
+        ret = UploadFile(url, false, test, file);
         if (ret)
           DeleteFile(file);
       }
@@ -448,19 +375,19 @@ bool WebPagetest::UploadImages(TestInfo& test_info,
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool WebPagetest::UploadData(TestInfo& test_info) {
+bool WebPagetest::UploadData(WptTestDriver& test, bool done) {
   bool ret = false;
 
   CString file = NO_FILE;
-  CString dir = test_info._directory + CString(_T("\\"));
+  CString dir = test._directory + CString(_T("\\"));
 
   ret = CompressResults(dir, dir + _T("results.zip"));
   if (ret)
     file = dir + _T("results.zip");
 
-  if (ret || test_info._done) {
-    CString url = test_info._server + _T("work/workdone.php");
-    ret = UploadFile(url, test_info._done, test_info, file);
+  if (ret || done) {
+    CString url = _settings._server + _T("work/workdone.php");
+    ret = UploadFile(url, done, test, file);
     if (ret)
       DeleteFile(file);
   }
@@ -630,7 +557,8 @@ bool WebPagetest::HttpGet(CString url, WptTestDriver& test,
 /*-----------------------------------------------------------------------------
   Upload an individual file from a result set
 -----------------------------------------------------------------------------*/
-bool WebPagetest::UploadFile(CString url, bool done, TestInfo& test_info, CString file) {
+bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test, 
+                                                                 CString file){
   bool ret = false;
 
   CString headers;
@@ -641,7 +569,7 @@ bool WebPagetest::UploadFile(CString url, bool done, TestInfo& test_info, CStrin
   HANDLE file_handle = INVALID_HANDLE_VALUE;
 
   // build the file name and file size if the file exists
-  if (!test_info._discard_test && file.GetLength()) {
+  if (!test._discard_test && file.GetLength()) {
     file_handle = CreateFile(file, GENERIC_READ, FILE_SHARE_READ, 0, 
                               OPEN_EXISTING, 0, 0);
     if (file_handle != INVALID_HANDLE_VALUE) {
@@ -653,7 +581,8 @@ bool WebPagetest::UploadFile(CString url, bool done, TestInfo& test_info, CStrin
 
   ATLTRACE(_T("[wptdriver] - Uploading '%s' (%d bytes) to '%s'"), (LPCTSTR)file, file_size, (LPCTSTR)url);
 
-  BuildFormData(test_info, done, file_name, file_size, headers, footer, form_data, content_length);
+  BuildFormData(_settings, test, done, file_name, file_size, 
+                headers, footer, form_data, content_length);
 
   // use WinInet to do the POST (quite a few steps)
   HINTERNET internet = InternetOpen(_T("WebPagetest Driver"), 
@@ -814,9 +743,11 @@ bool WebPagetest::CrackUrl(CString url, CString &host, unsigned short &port,
 /*-----------------------------------------------------------------------------
   Build the form data for a POST (with an optional file)
 -----------------------------------------------------------------------------*/
-void WebPagetest::BuildFormData(TestInfo& test_info, bool done, CString file_name,
-    DWORD file_size, CString& headers, CStringA& footer,  CStringA& form_data,
-    DWORD& content_length) {
+void WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test, 
+                            bool done,
+                            CString file_name, DWORD file_size,
+                            CString& headers, CStringA& footer, 
+                            CStringA& form_data, DWORD& content_length){
   footer = "";
   form_data = "";
 
@@ -834,48 +765,48 @@ void WebPagetest::BuildFormData(TestInfo& test_info, bool done, CString file_nam
   // location
   form_data += CStringA("--") + boundary + "\r\n";
   form_data += "Content-Disposition: form-data; name=\"location\"\r\n\r\n";
-  form_data += CStringA(CT2A(test_info._location)) + "\r\n";
+  form_data += CStringA(CT2A(settings._location)) + "\r\n";
 
   // key
-  if (test_info._key.GetLength()) {
+  if (settings._key.GetLength()) {
     form_data += CStringA("--") + boundary + "\r\n";
     form_data += "Content-Disposition: form-data; name=\"key\"\r\n\r\n";
-    form_data += CStringA(CT2A(test_info._key)) + "\r\n";
+    form_data += CStringA(CT2A(settings._key)) + "\r\n";
   }
 
   // id
   form_data += CStringA("--") + boundary + "\r\n";
   form_data += "Content-Disposition: form-data; name=\"id\"\r\n\r\n";
-  form_data += CStringA(CT2A(test_info._id)) + "\r\n";
+  form_data += CStringA(CT2A(test._id)) + "\r\n";
 
   // run
   form_data += CStringA("--") + boundary + "\r\n";
   form_data += "Content-Disposition: form-data; name=\"run\"\r\n\r\n";
-  buffA.Format("%d", test_info._run);
+  buffA.Format("%d", test._run);
   form_data += buffA + "\r\n";
 
   // index
   form_data += CStringA("--") + boundary + "\r\n";
   form_data += "Content-Disposition: form-data; name=\"index\"\r\n\r\n";
-  buffA.Format("%d", test_info._index);
+  buffA.Format("%d", test._index);
   form_data += buffA + "\r\n";
 
   // cached state
   form_data += CStringA("--") + boundary + "\r\n";
   form_data += "Content-Disposition: form-data; name=\"cached\"\r\n\r\n";
-  form_data += test_info._clear_cache ? "0" : "1";
+  form_data += test._clear_cache ? "0" : "1";
   form_data += "\r\n";
 
   // error string
-  if (test_info._test_error.GetLength()) {
+  if (test._test_error.GetLength()) {
     form_data += CStringA("--") + boundary + "\r\n";
     form_data += "Content-Disposition: form-data; name=\"testerror\"\r\n\r\n";
-    form_data += test_info._test_error + "\r\n";
+    form_data += test._test_error + "\r\n";
   }
-  if (test_info._run_error.GetLength()) {
+  if (test._run_error.GetLength()) {
     form_data += CStringA("--") + boundary + "\r\n";
     form_data += "Content-Disposition: form-data; name=\"error\"\r\n\r\n";
-    form_data += test_info._run_error + "\r\n";
+    form_data += test._run_error + "\r\n";
   }
 
   // done flag and pass-through data fields
@@ -884,42 +815,43 @@ void WebPagetest::BuildFormData(TestInfo& test_info, bool done, CString file_nam
     form_data += "Content-Disposition: form-data; name=\"done\"\r\n\r\n";
     form_data += "1\r\n";
 
-    if (!test_info._job_info.IsEmpty()) {
+    if (!test._job_info.IsEmpty()) {
       form_data += CStringA("--") + boundary + "\r\n";
       form_data += "Content-Disposition: form-data; name=\"jobInfo\"\r\n\r\n";
-      form_data += test_info._job_info + "\r\n";
+      form_data += test._job_info + "\r\n";
     }
   }
 
-  if (test_info._computer_name.GetLength()) {
+  if (_computer_name.GetLength()) {
     form_data += CStringA("--") + boundary + "\r\n";
     form_data += "Content-Disposition: form-data; name=\"pc\"\r\n\r\n";
-    form_data += CStringA(CT2A(test_info._computer_name)) + "\r\n";
+    form_data += CStringA(CT2A(_computer_name)) + "\r\n";
   }
 
-  if (test_info._ec2_instance.GetLength()) {
+  if (_settings._ec2_instance.GetLength()) {
     form_data += CStringA("--") + boundary + "\r\n";
     form_data += "Content-Disposition: form-data; name=\"ec2\"\r\n\r\n";
-    form_data += CStringA(CT2A(test_info._ec2_instance)) + "\r\n";
+    form_data += CStringA(CT2A(_settings._ec2_instance)) + "\r\n";
   }
 
-  if (test_info._azure_instance.GetLength()) {
+  if (_settings._azure_instance.GetLength()) {
     form_data += CStringA("--") + boundary + "\r\n";
     form_data += "Content-Disposition: form-data; name=\"azure\"\r\n\r\n";
-    form_data += CStringA(CT2A(test_info._azure_instance)) + "\r\n";
+    form_data += CStringA(CT2A(_settings._azure_instance)) + "\r\n";
   }
 
   // DNS servers
-  if (!test_info._dns_servers.IsEmpty()) {
+  if (!_dns_servers.IsEmpty()) {
     form_data += CStringA("--") + boundary + "\r\n";
     form_data += "Content-Disposition: form-data; name=\"dns\"\r\n\r\n";
-    form_data += CStringA(CT2A(test_info._dns_servers)) + "\r\n";
+    form_data += CStringA(CT2A(_dns_servers)) + "\r\n";
   }
 
-  if (test_info._cpu_utilization > 0) {
+  int cpu_utilization = g_shared->CPUUtilization();
+  if (cpu_utilization > 0) {
     form_data += CStringA("--") + boundary + "\r\n";
     form_data += "Content-Disposition: form-data; name=\"cpu\"\r\n\r\n";
-    buffA.Format("%d", test_info._cpu_utilization);
+    buffA.Format("%d", cpu_utilization);
     form_data += buffA + "\r\n";
   }
 
@@ -1293,10 +1225,11 @@ void WebPagetest::UpdateDNSServers() {
 /*-----------------------------------------------------------------------------
   Run python-based post-processing on the trace, pcap, etc files
 -----------------------------------------------------------------------------*/
-bool WebPagetest::ProcessFile(TestInfo& test_info, CString file, CAtlList<CString> &newFiles) {
+bool WebPagetest::ProcessFile(WptTestDriver& test, CString file, CAtlList<CString> &newFiles) {
   bool hasNewFiles = false;
   int pos = -1;
   if ((pos = file.Find(_T("trace.json"))) >= 0) {
+    LogDuration logTrace(test.TimeLog(), "Process Trace");
     CString cpuFile = file.Left(pos) + _T("timeline_cpu.json.gz");
     CString scriptTimingFile = file.Left(pos) + _T("script_timing.json.gz");
     CString userTimingFile = file.Left(pos) + _T("user_timing.json.gz");
@@ -1332,7 +1265,9 @@ bool WebPagetest::ProcessFile(TestInfo& test_info, CString file, CAtlList<CStrin
       }
     }
     OutputDebugStringA("Processing trace file - complete");
+    logTrace.Stop();
   } else if ((pos = file.Find(_T(".cap"))) >= 0) {
+    LogDuration logPcap(test.TimeLog(), "Process tcpdump");
     CString slicesFile = file.Left(pos) + _T("_pcap_slices.json.gz");
     CString options;
     options.Format(_T("-i \"%s\" -d \"%s\""),
@@ -1343,6 +1278,7 @@ bool WebPagetest::ProcessFile(TestInfo& test_info, CString file, CAtlList<CStrin
         newFiles.AddTail(slicesFile);
       }
     }
+    logPcap.Stop();
   }
   return hasNewFiles;
 }

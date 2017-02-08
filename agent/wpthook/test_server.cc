@@ -38,7 +38,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // definitions
 static const TCHAR * BROWSER_STARTED_EVENT = _T("Global\\wpt_browser_started");
-static const TCHAR * BROWSER_CAN_TEST_EVENT = _T("Global\\wpt_browser_can_test");
 static const TCHAR * BROWSER_DONE_EVENT = _T("Global\\wpt_browser_done");
 static const DWORD RESPONSE_OK = 200;
 static const char * RESPONSE_OK_STR = "OK";
@@ -85,12 +84,10 @@ TestServer::TestServer(WptHook& hook, WptTestHook &test, TestState& test_state,
   ,requests_(requests)
   ,trace_(trace)
   ,started_(false)
-  ,signaled_start_(false)
   ,shutting_down_(false)
   ,stored_ua_string_(false)
   ,logExtensionBlank_(NULL)
   ,logWaitForIdle_(NULL)
-  ,ok_to_test_event_(NULL) {
   last_cpu_idle_.QuadPart = 0;
   last_cpu_kernel_.QuadPart = 0;
   last_cpu_user_.QuadPart = 0;
@@ -154,7 +151,6 @@ bool TestServer::Start(void) {
   bool ret = false;
 
   if (!server_thread_) {
-    ok_to_test_event_ = OpenEvent(SYNCHRONIZE, FALSE, BROWSER_CAN_TEST_EVENT);
     server_thread_ = (HANDLE)_beginthreadex(0, 0, ::MongooseThreadProc, this, 0, 0);
     ret = true;
   }
@@ -170,11 +166,6 @@ void TestServer::Stop(void){
   if (server_thread_) {
     WaitForSingleObject(server_thread_, 10000);
     server_thread_ = NULL;
-  }
-
-  if (ok_to_test_event_) {
-    CloseHandle(ok_to_test_event_);
-    ok_to_test_event_ = NULL;
   }
 
   HANDLE browser_done_event = OpenEvent(EVENT_MODIFY_STATE , FALSE,
@@ -573,17 +564,6 @@ CStringA TestServer::GetPostBodyA(struct mg_connection *conn,
 }
 
 bool TestServer::OkToStart(bool trigger_start) {
-  if (!signaled_start_) {
-    // Signal to wptdriver which process it should wait for and that we started
-    signaled_start_ = true;
-    test_state_.shared_.SetBrowserProcessId(GetCurrentProcessId());
-    HANDLE browser_started_event = OpenEvent(EVENT_MODIFY_STATE , FALSE, BROWSER_STARTED_EVENT);
-    if (browser_started_event) {
-      SetEvent(browser_started_event);
-      CloseHandle(browser_started_event);
-    }
-  }
-
   if (!started_) {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
@@ -597,8 +577,7 @@ bool TestServer::OkToStart(bool trigger_start) {
       start_check_time_.QuadPart = now.QuadPart;
     }
     if (elapsed > 30 && trigger_start) {
-      if (!ok_to_test_event_ || WaitForSingleObject(ok_to_test_event_, 0) == WAIT_OBJECT_0)
-        started_ = true;
+      started_ = true;
     } else {
       // calculate CPU utilization and adjust for multiple cores
       double target_cpu = 20.0;
@@ -630,14 +609,8 @@ bool TestServer::OkToStart(bool trigger_start) {
                 double idle_elapsed = (double)(now.QuadPart - idle_start_.QuadPart) /
                                       (double)start_check_freq_.QuadPart;
                 // Wait for 500 ms of idle after browser start
-                if (idle_elapsed > 0.5) {
-                  if (ok_to_test_event_) {
-                    if (WaitForSingleObject(ok_to_test_event_, 0) == WAIT_OBJECT_0)
-                      started_ = true;
-                  } else {
-                    started_ = true;
-                  }
-                }
+                if (idle_elapsed > 0.5)
+                  started_ = true;
               }
             } else {
               idle_start_.QuadPart = 0;
@@ -650,10 +623,19 @@ bool TestServer::OkToStart(bool trigger_start) {
       }
     }
     #ifdef DEBUG
-    // don't wait in debug builds
-    if (!ok_to_test_event_ || WaitForSingleObject(ok_to_test_event_, 0) == WAIT_OBJECT_0)
+      // don't wait in debug builds
       started_ = true;
     #endif
+    if (started_) {
+      // Signal to wptdriver which process it should wait for and that we started
+      test_state_.shared_.SetBrowserProcessId(GetCurrentProcessId());
+      HANDLE browser_started_event = OpenEvent(EVENT_MODIFY_STATE , FALSE,
+                                                BROWSER_STARTED_EVENT);
+      if (browser_started_event) {
+        SetEvent(browser_started_event);
+        CloseHandle(browser_started_event);
+      }
+    }
   }
   return started_;
 }

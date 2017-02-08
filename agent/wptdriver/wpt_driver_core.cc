@@ -33,6 +33,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Wtsapi32.h>
 #include <D3D9.h>
 
+const TCHAR * BROWSERS[] = {
+  _T("chrome.exe"),
+  _T("firefox.exe"),
+  _T("iexplore.exe"),
+  _T("MicrosoftEdge.exe"),
+  _T("MicrosoftEdgeCP.exe"),
+  _T("plugin-container.exe")
+};
+
 const TCHAR * DIALOG_WHITELIST[] = { 
   _T("urlblast")
   , _T("url blast")
@@ -65,7 +74,6 @@ WptDriverCore::WptDriverCore(WptStatus &status):
   global_core = this;
   reboot_time_.QuadPart = 0;
   _testing_mutex = CreateMutex(NULL, FALSE, _T("Global\\WebPagetest"));
-  background_processing_event_ = CreateEvent(NULL, TRUE, TRUE, NULL);
   has_gpu_ = DetectGPU();
   _webpagetest.has_gpu_ = has_gpu_;
 }
@@ -295,7 +303,7 @@ void WptDriverCore::WorkThread(void) {
                     test._run_error =
                         CStringA("Skipped repeat view, first view failed: ") +
                         first_run_error;
-                    _webpagetest.UploadIncrementalResults(test, background_processing_event_);
+                    _webpagetest.UploadIncrementalResults(test);
                   }
                 }
                 if (test._specific_run)
@@ -315,7 +323,7 @@ void WptDriverCore::WorkThread(void) {
           }
           bool uploaded = false;
           for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded;count++ ) {
-            uploaded = _webpagetest.TestDone(test, background_processing_event_);
+            uploaded = _webpagetest.TestDone(test);
             if( !uploaded )
               Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
           }
@@ -424,8 +432,7 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
 
   SetCursorPos(0,0);
   ShowCursor(FALSE);
-  HANDLE browser_process = NULL;
-  ret = browser.RunAndWait(background_processing_event_, browser_process);
+  ret = browser.RunAndWait();
   ShowCursor(TRUE);
 
   // See if we need to add the browser exe to the list of browsers
@@ -446,15 +453,8 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
       reset_browsers.AddTail(browser._browser_needs_reset);
   }
 
-  _webpagetest.UploadIncrementalResults(test, background_processing_event_);
-
-  // Wait for the previous browser to finish
-  if (browser_process) {
-    WaitForSingleObject(browser_process, 10000);
-    TerminateProcess(browser_process, 0);
-    CloseHandle(browser_process);
-    KillBrowsers();
-  }
+  _webpagetest.UploadIncrementalResults(test);
+  KillBrowsers();
 
   if (ret) {
     int result = g_shared->TestResult();
@@ -742,6 +742,41 @@ bool WptDriverCore::ExtractZipFile(CString file) {
   }
 
   return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  Kill any rogue browser processes that didn't go away on their own
+  This is disabled in debug mode to make it easier to develop
+-----------------------------------------------------------------------------*/
+void WptDriverCore::KillBrowsers() {
+  if (!_settings._debug) {
+    WTS_PROCESS_INFO * proc = NULL;
+    DWORD count = 0;
+    DWORD browser_count = _countof(BROWSERS);
+    if (WTSEnumerateProcesses(WTS_CURRENT_SERVER_HANDLE, 0, 1, &proc, &count)) {
+      for (DWORD i = 0; i < count; i++) {
+        bool terminate = false;
+
+        for (DWORD browser = 0; browser < browser_count && !terminate; 
+              browser++) {
+          TCHAR * process = PathFindFileName(proc[i].pProcessName);
+          if (!lstrcmpi(process, BROWSERS[browser]) )
+            terminate = true;
+        }
+
+        if (terminate) {
+          HANDLE process_handle = OpenProcess(PROCESS_TERMINATE, FALSE, 
+                                                proc[i].ProcessId);
+          if (process_handle) {
+            TerminateProcess(process_handle, 0);
+            CloseHandle(process_handle);
+          }
+        }
+      }
+      if (proc)
+        WTSFreeMemory(proc);
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------

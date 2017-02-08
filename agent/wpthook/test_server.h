@@ -54,7 +54,6 @@ private:
   Trace             &trace_;
   CRITICAL_SECTION  cs;
   bool              started_;
-  bool              signaled_start_;
   bool              shutting_down_;
   bool              stored_ua_string_;
   ULARGE_INTEGER    last_cpu_idle_;
@@ -63,7 +62,6 @@ private:
   LARGE_INTEGER     start_check_time_;
   LARGE_INTEGER     start_check_freq_;
   LARGE_INTEGER     idle_start_;
-  HANDLE            ok_to_test_event_;
 
   LogDuration * logExtensionStart_;
   LogDuration * logExtensionBlank_;
