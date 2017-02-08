@@ -29,6 +29,45 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 
 #include <Wininet.h>
+class WebPagetest;
+
+/*-----------------------------------------------------------------------------
+  Snapshot of a WptDriverTest for uploading results in a background thread.
+-----------------------------------------------------------------------------*/
+class TestInfo {
+ public:
+  TestInfo(WebPagetest& wpt, WptTestDriver& test, bool done, HANDLE done_event);
+  ~TestInfo() {}
+
+  // From WebPagetest
+  WebPagetest * _wpt;
+  CString _computer_name;
+  CString _dns_servers;
+  int     _cpu_utilization;
+
+  // From Settings
+  CString _server;
+  CString _location;
+  CString _key;
+  CString _ec2_instance;
+  CString _azure_instance;
+
+  // From WptTestDriver
+  CString _directory;
+  bool    _discard_test;
+  bool    _process_results;
+  CString _id;
+  int     _run;
+  int     _index;
+  bool    _clear_cache;
+  CString _test_error;
+  CString _run_error;
+  CString _job_info;
+
+  bool _done;
+  HANDLE _done_event;
+};
+
 
 class WebPagetest {
 public:
@@ -40,26 +79,28 @@ public:
   void StartTestRun(WptTestDriver& test);
   bool TestDone(WptTestDriver& test, HANDLE background_processing_event);
   DWORD WptVersion(){ return _revisionNo; }
+  void UploadThread(TestInfo& test_info);
 
   bool _exit;
   bool has_gpu_;
   bool rebooting_;
+  WptSettings&  _settings;
+  CString       _computer_name;
+  CString       _dns_servers;
 
 private:
-  WptSettings&  _settings;
   WptStatus&    _status;
   DWORD         _majorVer;
   DWORD         _minorVer;
   DWORD         _buildNo;
   DWORD         _revisionNo;
-  CString       _computer_name;
-  CString       _dns_servers;
   int           _screenWidth;
   int           _screenHeight;
   DWORD         _winMajor;
   DWORD         _winMinor;
   DWORD         _isServer;
   DWORD         _is64Bit;
+  HANDLE        _upload_thread;
 
   void LoadClientCertificateFromStore(HINTERNET request);
   void SetLoginCredentials(HINTERNET request);
@@ -67,23 +108,22 @@ private:
                CString& zip_file);
   bool CrackUrl(CString url, CString &host, unsigned short &port, 
                 CString& object, DWORD &secure_flag);
-  void BuildFormData(WptSettings& settings, WptTestDriver& test, 
-                     bool done,
+  void BuildFormData(TestInfo& test_info, bool done,
                      CString file_name, DWORD file_size,
                      CString& headers, CStringA& footer, 
                      CStringA& form_data, DWORD& content_length);
-  bool UploadFile(CString url, bool done, WptTestDriver& test, CString file);
+  bool UploadFile(CString url, bool done, TestInfo& test_info, CString file);
   bool CompressResults(CString directory, CString zip_file);
   void GetImageFiles(const CString& directory, CAtlList<CString>& files);
   void GetFiles(const CString& directory, const TCHAR* glob_pattern,
                 CAtlList<CString>& files);
-  bool UploadImages(WptTestDriver& test, CAtlList<CString>& image_files);
-  bool UploadData(WptTestDriver& test, bool done);
+  bool UploadImages(TestInfo& test_info, CAtlList<CString>& image_files);
+  bool UploadData(TestInfo& test_info);
   bool ProcessZipFile(CString zip_file, WptTestDriver& test);
   bool InstallUpdate(CString dir);
   bool GetClient(WptTestDriver& test);
   bool UnzipTo(CString zip_file, CString dest);
   void UpdateDNSServers();
   bool GetNameFromMAC(LPTSTR name, DWORD &len);
-  bool ProcessFile(WptTestDriver& test, CString file, CAtlList<CString> &newFiles);
+  bool ProcessFile(TestInfo& test_info, CString file, CAtlList<CString> &newFiles);
 };
