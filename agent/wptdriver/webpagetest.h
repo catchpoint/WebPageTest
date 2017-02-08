@@ -36,9 +36,9 @@ public:
   ~WebPagetest(void);
   bool GetTest(WptTestDriver& test);
   bool DeleteIncrementalResults(WptTestDriver& test);
-  bool UploadIncrementalResults(WptTestDriver& test);
+  bool UploadIncrementalResults(WptTestDriver& test, HANDLE background_processing_event);
   void StartTestRun(WptTestDriver& test);
-  bool TestDone(WptTestDriver& test);
+  bool TestDone(WptTestDriver& test, HANDLE background_processing_event);
   DWORD WptVersion(){ return _revisionNo; }
 
   bool _exit;

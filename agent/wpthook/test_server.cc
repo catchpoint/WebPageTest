@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // definitions
 static const TCHAR * BROWSER_STARTED_EVENT = _T("Global\\wpt_browser_started");
+static const TCHAR * BROWSER_CAN_TEST_EVENT = _T("Global\\wpt_browser_can_test");
 static const TCHAR * BROWSER_DONE_EVENT = _T("Global\\wpt_browser_done");
 static const DWORD RESPONSE_OK = 200;
 static const char * RESPONSE_OK_STR = "OK";
@@ -50,7 +51,7 @@ static const char * RESPONSE_ERROR_NOT_IMPLEMENTED_STR =
                                                       "ERROR: Not Implemented";
 static const char * BLANK_RESPONSE = "";
 
-static const char * BLANK_HTML = 
+static const char * VIEWPORT_HTML = 
     "<html><head><title>Blank</title>\n"
     "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, "
     "maximum-scale=1.0, user-scalable=0;\">\n"
@@ -60,7 +61,10 @@ static const char * BLANK_HTML =
     "</head><body>\n"
     "<div id=\"viewport\" "
     "style=\"position: fixed;top: 0;left: 0;bottom: 0;right: 0;\"></div>\n"
-    "<script>"
+    "<script>\n"
+    "var warmup = new XMLHttpRequest();\n"
+    "warmup.open('GET', 'https://www.google.com/', true);\n"
+    "warmup.send();\n"
     "var v = document.getElementById(\"viewport\");\n"
     "var s = document.createElement('script');\n"
     "s.src = 'viewport.js?w=' + v.offsetWidth + "
@@ -68,8 +72,14 @@ static const char * BLANK_HTML =
     "'&rnd=' + (Date.now() + Math.random());\n"
     "v.appendChild(s);\n"
     "</script>\n"
-    "<img style=\"position: fixed; left: -2px; width: 1px; height: 1px\" "
-    "src=\"https://www.google.com/favicon.ico\">\n"
+    "</body></html>";
+
+static const char * BLANK_HTML = 
+    "<html><head><title>Blank</title>\n"
+    "<style type=\"text/css\">\n"
+    "body {background-color: #FFF;}\n"
+    "</style>\n"
+    "</head><body>\n"
     "</body></html>";
 
 /*-----------------------------------------------------------------------------
@@ -83,10 +93,12 @@ TestServer::TestServer(WptHook& hook, WptTestHook &test, TestState& test_state,
   ,requests_(requests)
   ,trace_(trace)
   ,started_(false)
+  ,signaled_start_(false)
   ,shutting_down_(false)
   ,stored_ua_string_(false)
   ,logExtensionBlank_(NULL)
-  ,logWaitForIdle_(NULL) {
+  ,logWaitForIdle_(NULL)
+  ,ok_to_test_event_(NULL) {
   last_cpu_idle_.QuadPart = 0;
   last_cpu_kernel_.QuadPart = 0;
   last_cpu_user_.QuadPart = 0;
@@ -150,6 +162,7 @@ bool TestServer::Start(void) {
   bool ret = false;
 
   if (!server_thread_) {
+    ok_to_test_event_ = OpenEvent(SYNCHRONIZE, FALSE, BROWSER_CAN_TEST_EVENT);
     server_thread_ = (HANDLE)_beginthreadex(0, 0, ::MongooseThreadProc, this, 0, 0);
     ret = true;
   }
@@ -165,6 +178,11 @@ void TestServer::Stop(void){
   if (server_thread_) {
     WaitForSingleObject(server_thread_, 10000);
     server_thread_ = NULL;
+  }
+
+  if (ok_to_test_event_) {
+    CloseHandle(ok_to_test_event_);
+    ok_to_test_event_ = NULL;
   }
 
   HANDLE browser_done_event = OpenEvent(EVENT_MODIFY_STATE , FALSE,
@@ -357,7 +375,10 @@ void TestServer::HTTPRequest(struct mg_connection *conn, struct http_message *me
       if (!started_)
         OkToStart(false);
       test_state_.UpdateBrowserWindow();
-      text_response = BLANK_HTML;
+      if (uri == "/blank.html")
+        text_response = VIEWPORT_HTML;
+      else
+        text_response = BLANK_HTML;
       response_type = "text/html";
 	  } else if (uri.Left(12) == "/viewport.js") {
       DWORD width = 0;
@@ -563,6 +584,17 @@ CStringA TestServer::GetPostBodyA(struct mg_connection *conn,
 }
 
 bool TestServer::OkToStart(bool trigger_start) {
+  if (!signaled_start_) {
+    // Signal to wptdriver which process it should wait for and that we started
+    signaled_start_ = true;
+    test_state_.shared_.SetBrowserProcessId(GetCurrentProcessId());
+    HANDLE browser_started_event = OpenEvent(EVENT_MODIFY_STATE , FALSE, BROWSER_STARTED_EVENT);
+    if (browser_started_event) {
+      SetEvent(browser_started_event);
+      CloseHandle(browser_started_event);
+    }
+  }
+
   if (!started_) {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
@@ -576,7 +608,8 @@ bool TestServer::OkToStart(bool trigger_start) {
       start_check_time_.QuadPart = now.QuadPart;
     }
     if (elapsed > 30 && trigger_start) {
-      started_ = true;
+      if (!ok_to_test_event_ || WaitForSingleObject(ok_to_test_event_, 0) == WAIT_OBJECT_0)
+        started_ = true;
     } else {
       // calculate CPU utilization and adjust for multiple cores
       double target_cpu = 20.0;
@@ -607,9 +640,15 @@ bool TestServer::OkToStart(bool trigger_start) {
               } else {
                 double idle_elapsed = (double)(now.QuadPart - idle_start_.QuadPart) /
                                       (double)start_check_freq_.QuadPart;
-                // Wait for 2 seconds of idle after browser start
-                if (idle_elapsed > 2)
-                  started_ = true;
+                // Wait for 500 ms of idle after browser start
+                if (idle_elapsed > 0.5) {
+                  if (ok_to_test_event_) {
+                    if (WaitForSingleObject(ok_to_test_event_, 0) == WAIT_OBJECT_0)
+                      started_ = true;
+                  } else {
+                    started_ = true;
+                  }
+                }
               }
             } else {
               idle_start_.QuadPart = 0;
@@ -622,19 +661,10 @@ bool TestServer::OkToStart(bool trigger_start) {
       }
     }
     #ifdef DEBUG
-      // don't wait in debug builds
+    // don't wait in debug builds
+    if (!ok_to_test_event_ || WaitForSingleObject(ok_to_test_event_, 0) == WAIT_OBJECT_0)
       started_ = true;
     #endif
-    if (started_) {
-      // Signal to wptdriver which process it should wait for and that we started
-      test_state_.shared_.SetBrowserProcessId(GetCurrentProcessId());
-      HANDLE browser_started_event = OpenEvent(EVENT_MODIFY_STATE , FALSE,
-                                                BROWSER_STARTED_EVENT);
-      if (browser_started_event) {
-        SetEvent(browser_started_event);
-        CloseHandle(browser_started_event);
-      }
-    }
   }
   return started_;
 }

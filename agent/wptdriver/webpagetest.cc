@@ -249,7 +249,7 @@ void WebPagetest::StartTestRun(WptTestDriver& test) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool WebPagetest::UploadIncrementalResults(WptTestDriver& test) {
+bool WebPagetest::UploadIncrementalResults(WptTestDriver& test, HANDLE background_processing_event) {
   bool ret = true;
 
   ATLTRACE(_T("[wptdriver] - UploadIncrementalResults"));
@@ -284,7 +284,7 @@ bool WebPagetest::UploadIncrementalResults(WptTestDriver& test) {
 /*-----------------------------------------------------------------------------
   Send the test result back to the server
 -----------------------------------------------------------------------------*/
-bool WebPagetest::TestDone(WptTestDriver& test){
+bool WebPagetest::TestDone(WptTestDriver& test, HANDLE background_processing_event){
   bool ret = true;
 
   UpdateDNSServers();

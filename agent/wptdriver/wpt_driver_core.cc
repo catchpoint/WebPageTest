@@ -70,10 +70,12 @@ WptDriverCore::WptDriverCore(WptStatus &status):
   ,has_gpu_(false)
   ,watchdog_started_(false)
   ,_installing(false)
-  ,_settings(status) {
+  ,_settings(status)
+  ,browser_process_(NULL) {
   global_core = this;
   reboot_time_.QuadPart = 0;
   _testing_mutex = CreateMutex(NULL, FALSE, _T("Global\\WebPagetest"));
+  background_processing_event_ = CreateEvent(NULL, TRUE, TRUE, NULL);
   has_gpu_ = DetectGPU();
   _webpagetest.has_gpu_ = has_gpu_;
 }
@@ -303,7 +305,7 @@ void WptDriverCore::WorkThread(void) {
                     test._run_error =
                         CStringA("Skipped repeat view, first view failed: ") +
                         first_run_error;
-                    _webpagetest.UploadIncrementalResults(test);
+                    _webpagetest.UploadIncrementalResults(test, background_processing_event_);
                   }
                 }
                 if (test._specific_run)
@@ -323,13 +325,21 @@ void WptDriverCore::WorkThread(void) {
           }
           bool uploaded = false;
           for (int count = 0; count < UPLOAD_RETRY_COUNT && !uploaded;count++ ) {
-            uploaded = _webpagetest.TestDone(test);
+            uploaded = _webpagetest.TestDone(test, background_processing_event_);
             if( !uploaded )
               Sleep(UPLOAD_RETRY_DELAY * SECONDS_TO_MS);
           }
           PostTest();
           ReleaseMutex(_testing_mutex);
         } else {
+          // Wait for the previous browser to finish
+          if (browser_process_) {
+            WaitForSingleObject(browser_process_, 10000);
+            TerminateProcess(browser_process_, 0);
+            CloseHandle(browser_process_);
+            browser_process_ = NULL;
+          }
+
           // Launch and exit any browsers that need their state cleared
           ReleaseMutex(_testing_mutex);
           ResetBrowsers();
@@ -432,7 +442,7 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
 
   SetCursorPos(0,0);
   ShowCursor(FALSE);
-  ret = browser.RunAndWait();
+  ret = browser.RunAndWait(background_processing_event_, browser_process_);
   ShowCursor(TRUE);
 
   // See if we need to add the browser exe to the list of browsers
@@ -453,7 +463,7 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
       reset_browsers.AddTail(browser._browser_needs_reset);
   }
 
-  _webpagetest.UploadIncrementalResults(test);
+  _webpagetest.UploadIncrementalResults(test, background_processing_event_);
   KillBrowsers();
 
   if (ret) {
