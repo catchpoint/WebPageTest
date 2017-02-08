@@ -1,6 +1,7 @@
 <?php
 require_once 'devtools.inc.php';
 require_once __DIR__ . '/include/TestPaths.php';
+require_once(__DIR__ . '/video/visualProgress.inc.php');
 
 /**
 * Load the page results directly from the results files
@@ -187,7 +188,6 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
           !array_key_exists('render', $ret) || !$ret['render'] ||
           !array_key_exists('lastVisualChange', $ret) || !$ret['lastVisualChange'] ||
           !array_key_exists('visualComplete', $ret) || !$ret['visualComplete']) {
-        require_once(__DIR__ . '/video/visualProgress.inc.php');
         $progress = GetVisualProgressForStep($localPaths, $runCompleted, null, null, $startOffset);
         if (isset($progress) && is_array($progress)) {
           if (array_key_exists('SpeedIndex', $progress))
