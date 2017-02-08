@@ -87,7 +87,7 @@ TestServer::TestServer(WptHook& hook, WptTestHook &test, TestState& test_state,
   ,shutting_down_(false)
   ,stored_ua_string_(false)
   ,logExtensionBlank_(NULL)
-  ,logWaitForIdle_(NULL)
+  ,logWaitForIdle_(NULL) {
   last_cpu_idle_.QuadPart = 0;
   last_cpu_kernel_.QuadPart = 0;
   last_cpu_user_.QuadPart = 0;

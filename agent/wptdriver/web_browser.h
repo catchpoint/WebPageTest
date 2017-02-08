@@ -38,7 +38,7 @@ public:
              BrowserSettings& browser, CIpfw &ipfw, Shaper &shaper, DWORD wpt_ver);
   ~WebBrowser(void);
 
-  bool RunAndWait();
+  bool RunAndWait(HANDLE &browser_process);
   void ClearUserData();
   CString _browser_needs_reset;
 
@@ -61,7 +61,6 @@ private:
   CIpfw&          _ipfw;
   Shaper&         _shaper;
   
-  HANDLE        _browser_process;
   HANDLE  _browser_started_event;
   HANDLE  _browser_done_event;
   DWORD   _wpt_ver;

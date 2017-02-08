@@ -432,7 +432,8 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
 
   SetCursorPos(0,0);
   ShowCursor(FALSE);
-  ret = browser.RunAndWait();
+  HANDLE browser_process = NULL;
+  ret = browser.RunAndWait(browser_process);
   ShowCursor(TRUE);
 
   // See if we need to add the browser exe to the list of browsers
@@ -454,6 +455,11 @@ bool WptDriverCore::BrowserTest(WptTestDriver& test, WebBrowser &browser) {
   }
 
   _webpagetest.UploadIncrementalResults(test);
+  if (browser_process) {
+    WaitForSingleObject(browser_process, 10000);
+    CloseHandle(browser_process);
+    browser_process = NULL;
+  }
   KillBrowsers();
 
   if (ret) {

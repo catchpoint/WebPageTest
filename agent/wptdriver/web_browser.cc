@@ -85,7 +85,6 @@ WebBrowser::WebBrowser(WptSettings& settings, WptTestDriver& test,
   _settings(settings)
   ,_test(test)
   ,_status(status)
-  ,_browser_process(NULL)
   ,_browser(browser)
   ,_ipfw(ipfw)
   ,_shaper(shaper)
@@ -116,7 +115,7 @@ WebBrowser::~WebBrowser(void) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool WebBrowser::RunAndWait() {
+bool WebBrowser::RunAndWait(HANDLE &browser_process) {
   bool ret = false;
   bool is_chrome = false;
 
@@ -269,7 +268,7 @@ bool WebBrowser::RunAndWait() {
       si.dwFlags = STARTF_USEPOSITION | STARTF_USESIZE | STARTF_USESHOWWINDOW;
 
       EnterCriticalSection(&cs);
-      _browser_process = NULL;
+      browser_process = NULL;
       HANDLE additional_process = NULL;
       CAtlArray<HANDLE> browser_processes;
       bool ok = true;
@@ -307,7 +306,7 @@ bool WebBrowser::RunAndWait() {
               WAIT_OBJECT_0) {
             DWORD pid = g_shared->BrowserProcessId();
             if (pid) {
-              _browser_process = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE,
+              browser_process = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE,
                                              FALSE, pid);
             }
           } else {
@@ -325,7 +324,7 @@ bool WebBrowser::RunAndWait() {
         ClearAppInitHooks();
 
         // wait for the browser to finish (infinite timeout if we are debugging)
-        if (_browser_process && ok) {
+        if (browser_process && ok) {
           ret = true;
           DWORD wait_time = _test._max_test_time ? _test._max_test_time : _test._test_timeout + 180000;  // Allow extra time for results processing
           _status.Set(_T("Waiting up to %d seconds for the test to complete"), 
@@ -334,7 +333,6 @@ bool WebBrowser::RunAndWait() {
           wait_time = INFINITE;
           #endif
           WaitForSingleObject(_browser_done_event, wait_time);
-          WaitForSingleObject(_browser_process, 10000);
           _status.Set(_T("Test complete, processing result..."));
         }
       } else {
@@ -342,15 +340,6 @@ bool WebBrowser::RunAndWait() {
         _test._run_error =
             "Failed while initializing the browser started event.";
       }
-
-      // kill the browser and any child processes if it is still running
-      EnterCriticalSection(&cs);
-      if (_browser_process) {
-        CloseHandle(_browser_process);
-        _browser_process = NULL;
-      }
-      LeaveCriticalSection(&cs);
-      TerminateProcessesByName(PathFindFileName((LPCTSTR)_browser._exe));
 
       g_shared->SetBrowserExe(NULL);
       SetEnvironmentVariable(L"SSLKEYLOGFILE", NULL);
