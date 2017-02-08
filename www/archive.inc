@@ -170,9 +170,6 @@ function RestoreArchive($id) {
                 if (isset($settings['archive_dir'])) {
                     $deleteZip = false;
                     $zipfile = GetArchiveFile($id);
-                    //see if we have a 2nd-level archive
-                    if ((!is_file($zipfile) || !filesize($zipfile)) && array_key_exists('archive2_dir', $settings))
-                        RestoreArchive2($id, $zipfile);
                     if (is_file($zipfile))
                         touch($zipfile);
                 } elseif (isset($settings['archive_s3_url'])) {
@@ -232,31 +229,6 @@ function RestoreArchive($id) {
     }
         
     return $ret;
-}
-
-/**
-* Restore an archived zip from the 2nd-tier archive
-* 
-* @param mixed $id
-* @param mixed $dest
-*/
-function RestoreArchive2($id, $dest) {
-    global $settings;
-    if (preg_match('/([0-9][0-9])([0-9][0-9])([0-9][0-9])_(.*)/i', $id, $matches)) {
-        $year = $matches[1];
-        $month = $matches[2];
-        $day = $matches[3];
-        $file = str_replace('_', '/', $matches[4]);
-        $longTermZip = "{$settings['archive2_dir']}results/$year/$year$month$day.zip";
-        if (is_file($longTermZip)) {
-            $longTermZip = realpath($longTermZip);
-            $destDir = dirname($dest);
-            if (!is_dir($destDir))
-                mkdir($destDir, 0777, true);
-            $command = "unzip -p \"$longTermZip\" \"$file.zip\" > \"$dest\"";
-            exec($command, $output, $result);
-        }
-    }
 }
 
 /**
