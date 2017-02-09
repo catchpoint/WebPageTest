@@ -156,7 +156,7 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
 	{"server", "gws", _T("Google")},
 	{"server", "GSE", _T("Google")},
 	{"server", "Golfe2", _T("Google")},
-	{"Via", "1.1 google", "Google"},
+	{"Via", "google", "Google"},
 	{"server", "tsa_b", _T("Twitter")},
 	{"X-Cache", "cache.51cdn.com", _T("ChinaNetCenter")},
 	{"X-CDN", "Incapsula", _T("Incapsula")},
