@@ -227,7 +227,7 @@ function BrowserAndroidChrome(app, args) {
         this.activityFlags_ = BLACK_BOX_BROWSERS[browserName]['activityFlags'];
     }
   }
-  this.blank_page_ = this.blank_page_ || 'about:blank';
+  this.blank_page_ = this.blank_page_ || args.startURL || 'about:blank';
   this.flagsFile_ = args.task.customBrowser_flagsFile ||
       args.flagsFile || '/data/local/chrome-command-line';
   this.devToolsPort_ = args.flags.devToolsPort;
