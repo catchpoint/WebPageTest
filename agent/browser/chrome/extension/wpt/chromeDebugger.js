@@ -153,7 +153,7 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.customMetrics = undefined;
     g_instance.timelineStackDepth = 0;
     g_instance.traceRunning = false;
-    var version = '1.0';
+    var version = '1.2';
     if (g_instance.chromeApi_['debugger'])
         g_instance.chromeApi_.debugger.attach({tabId: g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachDebugger);
   } catch (err) {
@@ -176,6 +176,19 @@ wpt.chromeDebugger.SetActive = function(active) {
 /**
  * Execute a command in the context of the page
  */
+wpt.chromeDebugger.Block = function(blockString) {
+  var patterns = blockString.split(" ");
+  var count = patterns.length;
+  for (var i = 0; i < count; i++) {
+    if (patterns[i].length) {
+      g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.addBlockedURL', {"url": patterns[i]});
+    }
+  }
+};
+
+/**
+ * Execute a command in the context of the page
+ */
 wpt.chromeDebugger.Exec = function(code, callback) {
   g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Runtime.evaluate', {expression: code, returnByValue: true}, function(response){
     var value = undefined;
@@ -188,6 +201,10 @@ wpt.chromeDebugger.Exec = function(code, callback) {
 wpt.chromeDebugger.SetUserAgent = function(UAString) {
   g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.setUserAgentOverride', {"userAgent": UAString});
 };
+
+wpt.chromeDebugger.AddHeader = function (name, value) {
+  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.setExtraHTTPHeaders', {"headers": {name: value}});
+}
 
 /**
  * Capture the network timeline

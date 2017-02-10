@@ -410,7 +410,7 @@ function wptExecuteTask(task) {
         g_commandRunner.doSetCookie(task.target, task.value);
         break;
       case 'block':
-        g_commandRunner.doBlock(task.target);
+        wpt.chromeDebugger.Block(task.target);
         break;
       case 'setdomelement':
         // Sending request to set the DOM element has to happen only at the
@@ -459,11 +459,11 @@ function wptExecuteTask(task) {
       case 'addheader':
         var separator = task.target.indexOf(":");
         if (separator > 0) {
-          g_addHeaders.push({'name' : task.target.substr(0, separator).trim(),
-                             'value' : task.target.substr(separator + 1).trim(),
-                             'filter' : typeof(task.value) === 'undefined' ? '' : task.value});
-          g_manipulatingHeaders = true;
-          wptHookRequests();
+          var name = task.target.substr(0, separator).trim();
+          var value = task.target.substr(separator + 1).trim();
+          if (name.length && value.length) {
+            wpt.chromeDebugger.AddHeader(name, value);
+          }
         }
         break;
       case 'setheader':
