@@ -51,7 +51,25 @@ var DETECT_ACTIVITY_MS = 2000;
 var DETECT_NO_RE_NAVIGATE_MS = 1000;
 var BLACKBOX_DETECT_ACTIVITY_TIME = 5000;
 
-var BLANK_PAGE_URL_ = 'data:text/html;charset=utf-8,';
+var BLANK_PAGE_URL_ = 'data:text/html,';
+/* ORANGE_PAGE_URL_
+<html>
+<head>
+<style>
+body {background-color: white; margin: 0;}
+#o {width:100%; height: 100%; background-color: #DE640D;}
+</style>
+<script>
+window.addEventListener('beforeunload', function() {
+  var o = document.getElementById('o')
+  o.parentNode.removeChild(o);
+});
+</script>
+</head>
+<body><div id='o'></div></body>
+</html>
+*/
+var ORANGE_PAGE_URL_ = 'data:text/html,%3Chtml%3E%0D%0A%3Chead%3E%0D%0A%3Cstyle%3E%0D%0Abody%20%7Bbackground-color%3A%20white%3B%20margin%3A%200%3B%7D%0D%0A%23o%20%7Bwidth%3A100%25%3B%20height%3A%20100%25%3B%20background-color%3A%20%23DE640D%3B%7D%0D%0A%3C%2Fstyle%3E%0D%0A%3Cscript%3E%0D%0Awindow.addEventListener%28%27beforeunload%27%2C%20function%28%29%20%7B%0D%0A%20%20var%20o%20%3D%20document.getElementById%28%27o%27%29%0D%0A%20%20o.parentNode.removeChild%28o%29%3B%0D%0A%7D%29%3B%0D%0A%3C%2Fscript%3E%0D%0A%3C%2Fhead%3E%0D%0A%3Cbody%3E%3Cdiv%20id%3D%27o%27%3E%3C%2Fdiv%3E%3C%2Fbody%3E%0D%0A%3C%2Fhtml%3E';
 var GHASTLY_ORANGE_ = '#DE640D';
 
 // onDevToolsMessage_ log levels by message.method, defaults to 'debug'
@@ -137,6 +155,7 @@ WebDriverServer.prototype.initIpc = function() {
  */
 WebDriverServer.prototype.init = function(args) {
   'use strict';
+  args.startURL = args.task['Capture Video'] ? ORANGE_PAGE_URL_ : BLANK_PAGE_URL_;
   if (!this.browser_) {
     // Only set on the first run:
     //
@@ -313,7 +332,7 @@ WebDriverServer.prototype.connectDevTools_ = function() {
       }
       return connected.promise;
     }.bind(this), DEVTOOLS_CONNECT_TIMEOUT_MS_, 'Connect DevTools');
-    if (1 === this.task_.timeline || 1 === this.task_['Capture Video']) {
+    if (1 === this.task_.timeline) {
       var timelineStackDepth = (this.task_.timelineStackDepth ?
           parseInt(this.task_.timelineStackDepth, 10) : 0);
       this.timelineCommand_('start', {maxCallStackDepth: timelineStackDepth});
@@ -859,8 +878,6 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
   // "about:blank", but it's still a good idea.
   this.isNavigating_ = true;
   if (!this.browser_.isBlackBox) {
-    this.pageCommand_('navigate', {url: BLANK_PAGE_URL_});
-    this.app_.timeout(500, 'Load blank startup page');
     this.networkCommand_('enable');
     if (this.task_['headers'] != undefined)
       this.networkCommand_('setExtraHTTPHeaders', {'headers': this.task_.headers});
@@ -875,25 +892,13 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
         // Get the root frameId
         this.pageCommand_('getResourceTree').then(function(result) {
           var frameId = result.frameTree.frame.id;
-          // Hold orange(500ms)->white: anchor video to DevTools.
-          this.app_.schedule('Setting background to orange', function() {logger.debug('Setting background to orange');});
-          this.setPageBackground_(frameId, GHASTLY_ORANGE_);
-          this.app_.timeout(500, 'Set orange background');
           this.scheduleStartVideoRecording_();
-          // Begin recording DevTools before onTestStarted_ fires,
-          // to make sure we get the paint event from the below switch to white.
-          // This allows us to sync the DevTools trace vs. the video by matching
-          // the first DevTools paint event timestamp to the video frame where
-          // the background changed from non-white to white.
-          this.app_.schedule('Start recording DevTools with video', function() {
-            this.isRecordingDevTools_ = true;
-          }.bind(this));
           this.app_.schedule('Start recording tracing', function() {
+            this.isRecordingDevTools_ = true;
             this.scheduleStartTracingIfRequested_();
           }.bind(this));
+          logger.debug("Waiting for 500ms to allow for video capture to start and grab some orange");
           this.app_.timeout(500, 'Hold orange background');
-          this.app_.schedule('Setting background to white', function() {logger.debug('Setting background to white');});
-          this.setPageBackground_(frameId);  // White
         }.bind(this));
       } else {
         this.scheduleStartVideoRecording_();
@@ -902,10 +907,8 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
   }
   // Make sure we start recording DevTools regardless of the video.
   if (!this.browser_.isBlackBox) {
-    this.app_.schedule('Start recording DevTools', function() {
-      this.isRecordingDevTools_ = true;
-    }.bind(this));
     this.app_.schedule('Start recording tracing', function() {
+      this.isRecordingDevTools_ = true;
       this.scheduleStartTracingIfRequested_();
     }.bind(this));
   }
@@ -920,20 +923,16 @@ WebDriverServer.prototype.clearPageAndStartVideoWd_ = function() {
   'use strict';
   // Navigate to a blank, to make sure we clear the prior page and cancel
   // all pending events.
-  this.driver_.get(BLANK_PAGE_URL_ + '<body/>');
+  var url = this.task_['Capture Video'] ? ORANGE_PAGE_URL_ : BLANK_PAGE_URL_;
+  this.driver_.get(url);
   if (1 === this.task_['Capture Video']) {  // Emit video sync, start recording
     this.getCapabilities_().then(function(caps) {
       if (!caps.videoRecording) {
         return;
       }
-      // Hold ghastly orange(500ms)->white: anchor video to DevTools.
-      this.driver_.executeScript(
-        'document.body.style.backgroundColor="' + GHASTLY_ORANGE_ + '";');
-      this.app_.timeout(500, 'Set orange background');
+      // Hold ghastly orange(500ms)
       this.scheduleStartVideoRecording_();
       this.app_.timeout(500, 'Hold orange background');
-      this.driver_.executeScript(
-          'document.body.style.backgroundColor="white";');
     }.bind(this));
   }
 };
@@ -944,8 +943,7 @@ WebDriverServer.prototype.clearPageAndStartVideoWd_ = function() {
  */
 WebDriverServer.prototype.scheduleStartTracingIfRequested_ = function() {
   'use strict';
-  // Always enable tracing, at a minimum to capture timeline data
-  if (this.browser_.supportsTracing && !this.driver_ && !this.traceRunning_) {
+  if ((1 === this.task_.trace || 1 === this.task_.timeline) && this.browser_.supportsTracing && !this.driver_ && !this.traceRunning_) {
     this.traceRunning_ = true;
     this.traceFile_ = path.join(this.runTempDir_, 'trace.json.gz');
     this.traceFileStream_ = zlib.createGzip();
@@ -1035,7 +1033,7 @@ WebDriverServer.prototype.scheduleStopTracing_ = function() {
 WebDriverServer.prototype.scheduleProcessTrace_ = function() {
   'use strict';
   this.scheduleNoFault_('Process Trace', function() {
-    if (this.traceFile_) {
+    if (this.traceFile_ !== undefined) {
       this.userTimingFile_ = path.join(this.runTempDir_, 'user_timing.json.gz');
       this.cpuSlicesFile_ = path.join(this.runTempDir_, 'timeline_cpu.json.gz');
       this.scriptTimingFile_ = path.join(this.runTempDir_, 'script_timing.json.gz');
@@ -1391,7 +1389,7 @@ WebDriverServer.prototype.scheduleCollectMetrics_ = function() {
               this.task_.customMetrics[metric] +
               '};' +
               'try{wptCustomMetric();}catch(e){};').then(function(result) {
-            if (this.customMetrics_ == undefined)
+            if (this.customMetrics_ === undefined)
               this.customMetrics_ = {};
             this.customMetrics_[metric] = result;
             logger.debug(metric + ' : ' + result);
@@ -1496,10 +1494,6 @@ WebDriverServer.prototype.scheduleProcessVideo_ = function() {
       } else {
         options.push('--orange');
       }
-      if (this.traceFile_) {
-        options.push('--timeline');
-        options.push(this.traceFile_);
-      }
       process_utils.scheduleExec(this.app_,
           'python', options, undefined,
           VIDEO_PROCESSING_TIMEOUT_MS).then(function(stdout) {
@@ -1581,11 +1575,11 @@ WebDriverServer.prototype.done_ = function() {
     }
     // video processing needs to be done after tracing has been stopped and collected
     this.scheduleStopTracing_();
-    if (this.traceFile_)
+    if (this.traceFile_ !== undefined)
       this.scheduleProcessTrace_();
-    if (this.videoFile_)
+    if (this.videoFile_ !== undefined)
       this.scheduleProcessVideo_();
-    if (this.pcapFile_)
+    if (this.pcapFile_ !== undefined)
       this.scheduleProcessPcap_();
     this.scheduleGetNetlog_();
     this.scheduleNoFault_('End state', function() {
@@ -1601,7 +1595,7 @@ WebDriverServer.prototype.done_ = function() {
       devToolsFile = path.join(this.runTempDir_, 'devtools.json');
       fs.writeFileSync(devToolsFile, JSON.stringify(this.devToolsMessages_));
       // run the trace parser against the dev tools file on iOS
-      if (this.traceFile_ == undefined) {
+      if (this.traceFile_ === undefined && 1 === this.task_.timeline) {
         this.cpuSlicesFile_ = path.join(this.runTempDir_, 'timeline_cpu.json.gz');
         this.scriptTimingFile_ = path.join(this.runTempDir_, 'script_timing.json.gz');
         this.interactiveFile_ = path.join(this.runTempDir_, 'interactive.json.gz');
