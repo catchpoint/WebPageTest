@@ -292,7 +292,7 @@ $loc = ParseLocations($locations);
                                     <li>
                                       <label for="videoCheck">Capture Video</label>
                                       <?php
-                                      $video = 1;
+                                      $video = 0;
                                       if (isset($_REQUEST['video']))
                                         $video = (int)$_REQUEST['video'];
                                       ?>
@@ -448,7 +448,7 @@ $loc = ParseLocations($locations);
                                     </li>
                                     <li>
                                         <?php
-                                        $timeline = 1;
+                                        $timeline = 0;
                                         if (isset($_REQUEST['timeline']))
                                           $timeline = (int)$_REQUEST['timeline'];
                                         ?>
