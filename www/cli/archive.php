@@ -225,7 +225,7 @@ function CheckTest($testPath, $id, $elapsedDays, $forced_only) {
       $elapsed = TestLastAccessed($id);
       if (isset($elapsed)) {
         $logLine .= "Last Accessed $elapsed days";
-        if ($elapsed >= $MIN_DAYS) {
+        if ($elapsed >= 0.5) {
           $needs_archive = true;
           $logLine .= " Archiving";
         }
