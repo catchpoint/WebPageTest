@@ -263,7 +263,7 @@ function GetConfigurationNames($benchmark, &$configs, $loc, &$loc_aliases) {
 function GetBenchmarks() {
     $benchmarks = array();
     $bm_list = file('./settings/benchmarks/benchmarks.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    if (!count($bm_list))
+    if (!$bm_list || !count($bm_list))
         $bm_list = glob('./settings/benchmarks/*.php');
     foreach ($bm_list as $benchmark) {
         $benchmarks[] = GetBenchmarkInfo(basename($benchmark, '.php'));
