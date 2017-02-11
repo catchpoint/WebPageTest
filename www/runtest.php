@@ -147,6 +147,7 @@
             $test['aftEarlyCutoff'] = (int)$req_aftec;
             $test['aftMinChanges'] = (int)$req_aftmc;
             $test['tcpdump'] = $req_tcpdump;
+            $test['lighthouse'] = $req_lighthouse;
             $test['timeline'] = $req_timeline;
             $test['timelineStackDepth'] = array_key_exists('timelineStack', $_REQUEST) && $_REQUEST['timelineStack'] ? 5 : 0;
             $test['swrender'] = $req_swrender;
@@ -1191,6 +1192,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             $test['ignoreSSL'] = $test['ignoreSSL'] ? 1 : 0;
             $test['tcpdump'] = $test['tcpdump'] ? 1 : 0;
             $test['standards'] = $test['standards'] ? 1 : 0;
+            $test['lighthouse'] = $test['lighthouse'] ? 1 : 0;
             $test['timeline'] = $test['timeline'] ? 1 : 0;
             $test['swrender'] = $test['swrender'] ? 1 : 0;
             $test['netlog'] = $test['netlog'] ? 1 : 0;
@@ -1311,6 +1313,17 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 
             if( !$test['aftEarlyCutoff'] && $settings['aftEarlyCutoff'] )
                 $test['aftEarlyCutoff'] = $settings['aftEarlyCutoff'];
+
+            if ( $test['lighthouse'] ) {
+              $lh_error = '';
+              if ( strpos($test['browser'], 'Chrome') === FALSE )
+                $lh_error = 'Lighthouse only works on Chrome';
+              if ( strlen($test['script']) )
+                $lh_error = 'Lighthouse cannot run with custom scripts';
+
+              if ( strlen($lh_error) )
+                $error = "Lighthouse Incompatibility: $lh_error";
+            }
         }
     } elseif( !strlen($error) ) {
         $error = "Invalid URL, please try submitting your test request again.";
