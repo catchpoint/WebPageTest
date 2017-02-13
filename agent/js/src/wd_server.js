@@ -873,6 +873,19 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
       }
     }
   }.bind(this));
+
+  // configure any URLs that need to be blocked
+  if (this.task_['block'] !== undefined) {
+    var entries = this.task_['block'].split(" ");
+    var count = entries.length;
+    for (var i = 0; i < count; i++) {
+      var block = entries[i].trim();
+      if (block.length) {
+        this.networkCommand_('addBlockedURL', {'url': block});
+      }
+    }
+  }
+  
   // Navigate to a blank, to make sure we clear the prior page and cancel
   // all pending events.  This isn't strictly required if startBrowser loads
   // "about:blank", but it's still a good idea.

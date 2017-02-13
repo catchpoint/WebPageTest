@@ -144,18 +144,7 @@ function constructHostsFile(task) {
   // Start with a default localhost hosts file
   var hosts = "127.0.0.1 localhost";
   try {
-    var block = task['block'];
-    if (block !== undefined) {
-      var entries = block.split(" ");
-      var count = entries.length;
-      for (var i = 0; i < count; i++) {
-        var host = entries[i].trim();
-        if (host.length) {
-          hosts += " " + host;
-        }
-      }
-    }
-    block = task['blockdomains'];
+    var block = task['blockdomains'];
     if (block !== undefined) {
       var entries = block.split(" ");
       var count = entries.length;
