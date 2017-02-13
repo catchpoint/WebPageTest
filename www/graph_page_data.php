@@ -64,15 +64,6 @@ if ($rv) {
 $median_run = (isset($_REQUEST['median_run'])) ? $_REQUEST['median_run'] : 0;
 $median_value = (isset($_REQUEST['median_value'])) ? $_REQUEST['median_value']  : 0;
 
-// Remove speed index if none of the runs have video.
-$removeSpeedIndex = true;
-foreach ( $testsInfo as $testInfo ) {
-  if ($testInfo && $testInfo['video']) {
-    $removeSpeedIndex = false;
-    break;
-  }
-}
-
 // Color palette taken from benchmarks/view.php
 // TODO(geening): Combine this with the colors in benchmarks/view.php
 // TODO(geening): Have a cleaner way to support more than 8 tests with
