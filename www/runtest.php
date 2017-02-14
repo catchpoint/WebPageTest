@@ -2058,6 +2058,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "keepua=1\r\n";
             if( $test['mobile'] )
                 $testFile .= "mobile=1\r\n";
+            if( $test['lighthouse'] )
+                $testFile .= "lighthouse=1\r\n";
             if( isset($test['dpr']) && $test['dpr'] > 0 )
                 $testFile .= "dpr={$test['dpr']}\r\n";
             if( isset($test['width']) && $test['width'] > 0 )
