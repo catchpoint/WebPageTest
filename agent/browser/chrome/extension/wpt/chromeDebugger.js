@@ -203,7 +203,9 @@ wpt.chromeDebugger.SetUserAgent = function(UAString) {
 };
 
 wpt.chromeDebugger.AddHeader = function (name, value) {
-  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.setExtraHTTPHeaders', {"headers": {name: value}});
+  var headers = {}
+  headers[name] = value;
+  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.setExtraHTTPHeaders', {"headers": headers});
 }
 
 /**
