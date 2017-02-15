@@ -2443,7 +2443,7 @@ function ProcessTestScript($url, &$test) {
   }
 
   // Handle HTTP Basic Auth
-  if (strlen($test['login']) && strlen($test['password'])) {
+  if (strlen($test['login']) || strlen($test['password'])) {
     $header = "Authorization: Basic " . base64_encode("{$test['login']}:{$test['password']}");
     $testFile .= "Basic Auth={$test['login']}:{$test['password']}\r\n";
     if (!isset($script) || !strlen($script))
