@@ -411,6 +411,19 @@ $loc = ParseLocations($locations);
                             <div id="advanced-chrome" class="test_subbox ui-tabs-hide">
                                 <p>Chrome-specific advanced settings:</p>
                                 <ul class="input_fields">
+                                    <?php
+                                    // Hide Lighthouse option behind flag until fully supported by agents
+                                    if ( isset($_REQUEST['lighthouse']) ) {
+                                    ?>
+                                    <li>
+                                        <input type="checkbox" name="lighthouse" id="lighthouse" class="checkbox" style="float: left;width: auto;">
+                                        <label for="lighthouse" class="auto_width">
+                                            Capture Lighthouse Report
+                                        </label>
+                                    </li>
+                                    <?php
+                                    } // end lighthouse block
+                                    ?>
                                     <li>
                                         <input type="checkbox" name="mobile" id="mobile" class="checkbox" style="float: left;width: auto;">
                                         <?php
