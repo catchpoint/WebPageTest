@@ -564,14 +564,18 @@ function CompressTextFiles($testPath) {
 
 function ExtractZipFile($file, $testPath) {
   global $id;
-  logTestMsg($id, "Extracting uploaded file '$file' to '$testPath'");
+  $zipsize = filesize($file);
+  logTestMsg($id, "Extracting $zipsize byte uploaded file '$file' to '$testPath'");
   $zip = new ZipArchive();
   if ($zip->open($file) === TRUE) {
     $extractPath = realpath($testPath);
     if ($extractPath !== false) {
-      $zip->extractTo($extractPath);
+      if (!$zip->extractTo($extractPath))
+        logTestMsg($id, "Error extracting uploaded zip file '$file' to '$testPath'");
       $zip->close();
     }
+  } else {
+    logTestMsg($id, "Error opening uploaded zip file '$file'");
   }
 }
 ?>
