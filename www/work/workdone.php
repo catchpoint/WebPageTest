@@ -563,7 +563,8 @@ function CompressTextFiles($testPath) {
 }
 
 function ExtractZipFile($file, $testPath) {
-  logMsg(" Extracting uploaded file '$file' to '$testPath'\n");
+  global $id;
+  logTestMsg($id, "Extracting uploaded file '$file' to '$testPath'");
   $zip = new ZipArchive();
   if ($zip->open($file) === TRUE) {
     $extractPath = realpath($testPath);
