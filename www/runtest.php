@@ -1768,9 +1768,6 @@ function CheckIp(&$test)
     $ip = $_SERVER['REMOTE_ADDR'];
     $blockIps = file('./settings/blockip.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     if (isset($blockIps) && is_array($blockIps) && count($blockIps)) {
-      $blockIpsAuto = file('./settings/blockipauto.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-      if (isset($blockIpsAuto) && is_array($blockIpsAuto) && count($blockIpsAuto))
-        $blockIps = array_merge($blockIps, $blockIpsAuto);
       foreach( $blockIps as $block ) {
         $block = trim($block);
         if( strlen($block) ) {
