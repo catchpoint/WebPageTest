@@ -325,7 +325,7 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="noscript" id="noscript" class="checkbox" style="float: left;width: auto;">
                                         <label for="noscript" class="auto_width">
-                                            Disable Javascript
+                                            Disable JavaScript
                                         </label>
                                     </li>
                                     <li>
