@@ -239,7 +239,7 @@ if (strlen($id)) {
     $testPath = './' . GetTestPath($id);
     $test = array();
     if (is_file("$testPath/testinfo.ini")) {
-        $test = parse_ini_file("$testPath/testinfo.ini",true);
+        $test = @parse_ini_file("$testPath/testinfo.ini",true);
         if (!$userIsBot)
           touch("$testPath/testinfo.ini");
     }

@@ -72,8 +72,8 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
   $cacheVer = 5;
   $cacheFile = $localPaths->pageDataCacheFile($cacheVer);
   $ret = null;
-  if (gz_is_file($cacheFile))
-    $ret = json_decode(gz_file_get_contents($cacheFile), true);
+//  if (gz_is_file($cacheFile))
+//    $ret = json_decode(gz_file_get_contents($cacheFile), true);
   
   if (!isset($ret) || !is_array($ret)) {
     $ret = loadPageData($localPaths->pageDataFile(), $options);

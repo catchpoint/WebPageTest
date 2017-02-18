@@ -282,7 +282,7 @@ function GetImageHistogram($image_file, $options, $histograms) {
 */
 function CalculateFrameProgress(&$histogram, &$start_histogram, &$final_histogram, $slop) {
   $progress = 0;
-  $channels = array_keys($histogram);
+  $channels = isset($histogram) ? array_keys($histogram) : array();
   $channelCount = count($channels);
   if ($channelCount > 0) {
     foreach ($channels as $index => $channel) {

@@ -955,7 +955,7 @@ class XScaler
 
 function AverageCpuSlices(&$slices, $first_slice, $last_slice, $slice_usecs, &$known_types) {
   $avg = null;
-  if ($last_slice >= $first_slice) {
+  if ($last_slice >= $first_slice && isset($slices) && is_array($slices)) {
     $valid = false;
     $totals = array();
     $total_time = ($last_slice - $first_slice + 1) * $slice_usecs;

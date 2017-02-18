@@ -66,7 +66,7 @@ function CancelTest($id)
         if( $testInfo['priority'] )
             $ext = "p{$testInfo['priority']}";
         $queued_job_file = $testInfo['workdir'] . "/$id.$ext";
-        $cancelled = unlink($queued_job_file);
+        $cancelled = @unlink($queued_job_file);
       }
     }
     UnlockTest($lock);

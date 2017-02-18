@@ -308,7 +308,7 @@ function InsertChart($metric, $label) {
       sort($values, SORT_NUMERIC);
       $sum = array_sum($values);
       $count = count($values);
-      $mean = number_format($sum / $count, 3, '.', '');
+      $mean = $count ? number_format($sum / $count, 3, '.', '') : 0;
       echo "<td>$mean</td>";
       $median = $values[intval($count / 2)];
       echo "<td>$median</td>";
@@ -320,9 +320,12 @@ function InsertChart($metric, $label) {
       $sqsum = 0;
       foreach ($values as $value)
           $sqsum += pow($value - $mean, 2);
-      $stddev = number_format(sqrt($sqsum / $count), 3, '.', '');
+      $stddev = $count ? number_format(sqrt($sqsum / $count), 3, '.', '') : 0;
       echo "<td>$stddev</td>";
-      echo "<td>" . number_format(($stddev/$mean) * 100, 3, '.', '') . "%</td>";
+      if ($mean)
+        echo "<td>" . number_format(($stddev/$mean) * 100, 3, '.', '') . "%</td>";
+      else
+        echo "<td></td>";
 
       echo '</tr>';
     }

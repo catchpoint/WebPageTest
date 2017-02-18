@@ -57,11 +57,11 @@ else
             }
             if( is_file("$testPath/$file") ) {
                 if( !strcasecmp( $type, 'jpg') )
-                    $img = imagecreatefromjpeg("$testPath/$file");
+                    $img = @imagecreatefromjpeg("$testPath/$file");
                 elseif( !strcasecmp( $type, 'gif') )
-                    $img = imagecreatefromgif("$testPath/$file");
+                    $img = @imagecreatefromgif("$testPath/$file");
                 else
-                    $img = imagecreatefrompng("$testPath/$file");
+                    $img = @imagecreatefrompng("$testPath/$file");
             }
         }
 
