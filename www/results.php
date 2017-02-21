@@ -15,9 +15,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
     // if we don't have an url, try to get it from the page results
     if( !strlen($url) && isset($pageData[1][0]['URL']))
         $url = $pageData[1][0]['URL'];
-    if (array_key_exists('testinfo', $test) && 
-        array_key_exists('spam', $test['testinfo']) &&
-        $test['testinfo']['spam']) {
+    if (isset($test['testinfo']['spam']) && $test['testinfo']['spam']) {
         include 'resultSpam.inc.php';
     } else {
         if( (isset($test['test']) && ( $test['test']['batch'] || $test['test']['batch_locations'] )) ||

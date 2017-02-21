@@ -737,29 +737,31 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
   // First go and match up the first net event with the matching timeline event
   // to sync the clocks (recent Chrome builds use different clocks)
   if ($hasNet && $hasTimeline) {
-    foreach ($messages as $message) {
-      if (is_array($message) &&
-          isset($message['method']) &&
-          isset($message['params']['timestamp']) &&
-          isset($message['params']['request']['url']) &&
-          strlen($message['params']['request']['url']) &&
-          $message['method'] == 'Network.requestWillBeSent') {
-        $firstNetEventTime = $message['params']['timestamp'] * 1000.0;
-        $firstNetEventURL = json_encode($message['params']['request']['url']);
-        break;
-      }
-    }
-    if (isset($firstNetEventTime) && isset($firstNetEventURL)) {
+    if (isset($messages) && is_array($messages) && count($messages)) {
       foreach ($messages as $message) {
         if (is_array($message) &&
             isset($message['method']) &&
-            isset($message['params']['record']['startTime']) &&
-            $message['method'] == 'Timeline.eventRecorded') {
-          $json = json_encode($message);
-          if (strpos($json, $firstNetEventURL) !== false) {
-            $timelineEventTime = $message['params']['record']['startTime'];
-            $firstEvent = $timelineEventTime;
-            break;
+            isset($message['params']['timestamp']) &&
+            isset($message['params']['request']['url']) &&
+            strlen($message['params']['request']['url']) &&
+            $message['method'] == 'Network.requestWillBeSent') {
+          $firstNetEventTime = $message['params']['timestamp'] * 1000.0;
+          $firstNetEventURL = json_encode($message['params']['request']['url']);
+          break;
+        }
+      }
+      if (isset($firstNetEventTime) && isset($firstNetEventURL)) {
+        foreach ($messages as $message) {
+          if (is_array($message) &&
+              isset($message['method']) &&
+              isset($message['params']['record']['startTime']) &&
+              $message['method'] == 'Timeline.eventRecorded') {
+            $json = json_encode($message);
+            if (strpos($json, $firstNetEventURL) !== false) {
+              $timelineEventTime = $message['params']['record']['startTime'];
+              $firstEvent = $timelineEventTime;
+              break;
+            }
           }
         }
       }

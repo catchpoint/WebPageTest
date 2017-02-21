@@ -12,36 +12,40 @@ require_once __DIR__ . '/include/TestPaths.php';
 function GetConnectionRows(&$requests, $show_labels = true) {
     $host_connections = array();  // group connections by host
     foreach ($requests as $request) {
-        if (isset($request['socket'])) {
-            $socket = $request['socket'];
-            $host = $request['host'];
-            if (!array_key_exists($host, $host_connections)) {
-                $host_connections[$host] = array();
-            }
-            if (!array_key_exists($socket, $host_connections[$host])) {
-                $host_connections[$host][$socket] = array(
-                    'is_connection' => true,
-                    'socket' => intval($socket),
-                    'host' => $host,
-                    'is_secure' => $request['is_secure'],
-                    'start' => $request['all_start'],
-                    'end' => $request['all_end'],
-                    'requests' => array($request)
-                    );
-            } else {
-                $host_connections[$host][$socket]['end'] = $request['all_end'];
-                $host_connections[$host][$socket]['requests'][] = $request;
-            }
+      if (isset($request['socket'])) {
+        $socket = $request['socket'];
+        $host = $request['host'];
+        if (!array_key_exists($host, $host_connections)) {
+          $host_connections[$host] = array();
         }
-    }
-    $rows = call_user_func_array('array_merge', $host_connections);
-    foreach (array_keys($rows) as $row_index) {
-        if ($show_labels) {
-            $rows[$row_index]['label'] = sprintf(
-                '%2d. %s', $row_index + 1, $rows[$row_index]['host']);
+        if (!array_key_exists($socket, $host_connections[$host])) {
+          $host_connections[$host][$socket] = array(
+              'is_connection' => true,
+              'socket' => intval($socket),
+              'host' => $host,
+              'is_secure' => $request['is_secure'],
+              'start' => $request['all_start'],
+              'end' => $request['all_end'],
+              'requests' => array($request)
+              );
         } else {
-            $rows[$row_index]['label'] = sprintf('%2d.', $row_index + 1);
+          $host_connections[$host][$socket]['end'] = $request['all_end'];
+          $host_connections[$host][$socket]['requests'][] = $request;
         }
+      }
+    }
+    if (count($host_connections)) {
+      $rows = call_user_func_array('array_merge', $host_connections);
+      foreach (array_keys($rows) as $row_index) {
+        if ($show_labels) {
+          $rows[$row_index]['label'] = sprintf(
+              '%2d. %s', $row_index + 1, $rows[$row_index]['host']);
+        } else {
+          $rows[$row_index]['label'] = sprintf('%2d.', $row_index + 1);
+        }
+      }
+    } else {
+      $rows = array();
     }
     return $rows;
 }
@@ -258,13 +262,17 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     if (@$_REQUEST['max'] > 0) {
         $max_ms = (int)($_REQUEST['max'] * 1000.0);
     } else {
-        // Include all page events and resource times in time scale.
+      // Include all page events and resource times in time scale.
+      if (isset($page_events) && is_array($page_events) && count($page_events)) {
         foreach ($page_events as $event) {
-            $max_ms = max($max_ms, is_array($event) ? $event[1] : $event);
+          $max_ms = max($max_ms, is_array($event) ? $event[1] : $event);
         }
+      }
+      if (isset($rows) && is_array($rows) && count($rows)) {
         foreach ($rows as $r) {
-            $max_ms = max($max_ms, $r['end']);
+          $max_ms = max($max_ms, $r['end']);
         }
+      }
     }
     $x_scaler = new XScaler($max_ms, $data_x + 1, $data_width);
 
@@ -302,22 +310,23 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
 
     AddRowCoordinates($rows, $data_header_height + 1, $row_height);
     if ($is_image_map) {
-        $map = array();
-        AddMapUrl($map, 0, $top, $data_x, $data_header_height, $url);
+      $map = array();
+      AddMapUrl($map, 0, $top, $data_x, $data_header_height, $url);
+      if (isset($rows) && is_array($rows) && count($rows)) {
         foreach ($rows as $row) {
-            $is_connection = $row['is_connection'];
-            foreach ($row['requests'] as $request) {
-                if ($is_connection) {
-                    $x1 = $x_scaler($request['ttfb_start']);
-                    $x2 = $x_scaler($request['download_end']);
-                } else {
-                    $x1 = 0;
-                    $x2 = $width - 1;
-                }
-                AddMapRequest($map, $x1, $top + $row['y1'], $x2, $top + $row['y2'],
-                              $request);
+          $is_connection = $row['is_connection'];
+          foreach ($row['requests'] as $request) {
+            if ($is_connection) {
+              $x1 = $x_scaler($request['ttfb_start']);
+              $x2 = $x_scaler($request['download_end']);
+            } else {
+              $x1 = 0;
+              $x2 = $width - 1;
             }
+            AddMapRequest($map, $x1, $top + $row['y1'], $x2, $top + $row['y2'], $request);
+          }
         }
+      }
     } else {
         // Draw items needed if we're ACTUALLY drawing the chart.
         $im = imagecreatetruecolor($width, $height);
@@ -663,21 +672,23 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                 $cpu_height = $cpu_bottom - $cpu_top + 1;
                 $slices = $cpu_slices['slices'][$p['thread']];
                 $slice_usecs = $cpu_slices['slice_usecs'];
-                $end_slice = intval($max_ms * 1000 / $slice_usecs);
-                if ($x1 < $x2) {
-                  for ($x = $x1; $x <= $x2; $x++) {
-                    $first_slice = intval(floor(((($x - $x1) / $data_width) * $end_slice)));
-                    $last_slice = intval(floor(((($x + 1- $x1) / $data_width) * $end_slice)));
-                    $cpu_times = AverageCpuSlices($slices, $first_slice, $last_slice, $slice_usecs, $cpu_slice_colors);
-                    if ($cpu_times) {
-                      // draw the line for this data point in the order the colors are defined
-                      $y = $cpu_bottom;
-                      foreach ($cpu_slice_colors as $type => $color) {
-                        if (isset($cpu_times[$type])) {
-                          $pixels = $cpu_height * $cpu_times[$type];
-                          $y2 = max($y - $pixels, $cpu_top);
-                          imageline($im, $x, $y, $x, $y2, $color);
-                          $y = $y2;
+                if ($slice_usecs > 0) {
+                  $end_slice = intval($max_ms * 1000 / $slice_usecs);
+                  if ($x1 < $x2) {
+                    for ($x = $x1; $x <= $x2; $x++) {
+                      $first_slice = intval(floor(((($x - $x1) / $data_width) * $end_slice)));
+                      $last_slice = intval(floor(((($x + 1- $x1) / $data_width) * $end_slice)));
+                      $cpu_times = AverageCpuSlices($slices, $first_slice, $last_slice, $slice_usecs, $cpu_slice_colors);
+                      if ($cpu_times) {
+                        // draw the line for this data point in the order the colors are defined
+                        $y = $cpu_bottom;
+                        foreach ($cpu_slice_colors as $type => $color) {
+                          if (isset($cpu_times[$type])) {
+                            $pixels = $cpu_height * $cpu_times[$type];
+                            $y2 = max($y - $pixels, $cpu_top);
+                            imageline($im, $x, $y, $x, $y2, $color);
+                            $y = $y2;
+                          }
                         }
                       }
                     }
@@ -988,11 +999,13 @@ function AverageCpuSlices(&$slices, $first_slice, $last_slice, $slice_usecs, &$k
 *
 */
 function AddRowCoordinates(&$rows, $y1, $row_height) {
+  if (isset($rows) && is_array($rows) && count($rows)) {
     foreach ($rows as &$r) {
-        $r['y1'] = $y1;
-        $r['y2'] = $y1 + $row_height - 1;
-        $y1 += $row_height;
+      $r['y1'] = $y1;
+      $r['y2'] = $y1 + $row_height - 1;
+      $y1 += $row_height;
     }
+  }
 }
 
 /* Add 'bg_color' to each row.

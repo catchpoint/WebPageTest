@@ -206,17 +206,18 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
               }
             }
             $index = 0;
-            foreach($processing as $type => $time)
-            {
-              if ($type != 'Idle') {
-                echo "events.setValue($index, 0, '$type');\n";
-                echo "events.setValue($index, 1, $time);\n";
-                $group = 'Other';
-                if (array_key_exists($type, $mapping))
-                  $group = $mapping[$type];
-                $color = $groupColors[$group];
-                echo "eventColors.push('$color');\n";
-                $index++;
+            if (isset($processing) && is_array($processing) && count($processing)) {
+              foreach($processing as $type => $time) {
+                if ($type != 'Idle') {
+                  echo "events.setValue($index, 0, '$type');\n";
+                  echo "events.setValue($index, 1, $time);\n";
+                  $group = 'Other';
+                  if (array_key_exists($type, $mapping))
+                    $group = $mapping[$type];
+                  $color = $groupColors[$group];
+                  echo "eventColors.push('$color');\n";
+                  $index++;
+                }
               }
             }
             ?>
@@ -255,25 +256,29 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
             var eventColors = new Array();
             <?php
             $index = 0;
-            foreach($groups as $type => $time)
-            {
-                echo "groupsIdle.setValue($index, 0, '$type');\n";
-                echo "groupsIdle.setValue($index, 1, $time);\n";
-                $color = $groupColors[$type];
-                echo "groupColors.push('$color');\n";
-                $index++;
+            if (isset($groups) && is_array($groups) && count($groups)) {
+              foreach($groups as $type => $time)
+              {
+                  echo "groupsIdle.setValue($index, 0, '$type');\n";
+                  echo "groupsIdle.setValue($index, 1, $time);\n";
+                  $color = $groupColors[$type];
+                  echo "groupColors.push('$color');\n";
+                  $index++;
+              }
             }
             $index = 0;
-            foreach($processing as $type => $time)
-            {
-                echo "eventsIdle.setValue($index, 0, '$type');\n";
-                echo "eventsIdle.setValue($index, 1, $time);\n";
-                $group = 'Other';
-                if (array_key_exists($type, $mapping))
-                  $group = $mapping[$type];
-                $color = $groupColors[$group];
-                echo "eventColors.push('$color');\n";
-                $index++;
+            if (isset($processing) && is_array($processing) && count($processing)) {
+              foreach($processing as $type => $time)
+              {
+                  echo "eventsIdle.setValue($index, 0, '$type');\n";
+                  echo "eventsIdle.setValue($index, 1, $time);\n";
+                  $group = 'Other';
+                  if (array_key_exists($type, $mapping))
+                    $group = $mapping[$type];
+                  $color = $groupColors[$group];
+                  echo "eventColors.push('$color');\n";
+                  $index++;
+              }
             }
             ?>
             var viewGroupsIdle = new google.visualization.DataView(groupsIdle);

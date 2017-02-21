@@ -52,10 +52,16 @@ function GetVisualProgressForStep($localPaths, $runCompleted, $options = null, $
   }
   if (!isset($end) && !isset($options) && gz_is_file($cache_file)) {
     $frames = json_decode(gz_file_get_contents($cache_file), true);
-    if (!array_key_exists('frames', $frames) || !array_key_exists('version', $frames))
-      unset($frames);
-    elseif(array_key_exists('version', $frames) && $frames['version'] !== $current_version)
-      unset($frames);
+    if (isset($frames)) {
+      if (is_array($frames)) {
+        if (!array_key_exists('frames', $frames) || !array_key_exists('version', $frames))
+          unset($frames);
+        elseif(array_key_exists('version', $frames) && $frames['version'] !== $current_version)
+          unset($frames);
+      } else {
+        unset($frames);
+      }
+    }
   }    
   $base_path = substr($video_directory, 1);
   if ((!isset($frames) || !count($frames)) && (is_dir($video_directory) || gz_is_file($histograms_file))) {
@@ -311,7 +317,9 @@ function CalculateFrameProgress(&$histogram, &$start_histogram, &$final_histogra
           }
         }
       }
-      $progress += ($matched / $total) / $channelCount;
+      if ($total > 0) {
+        $progress += ($matched / $total) / $channelCount;
+      }
     }
   }
   return floor($progress * 100);
