@@ -696,15 +696,18 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
   } else if (cmd == _T("setuseragent")) {
     _user_agent = CT2A(command.target);
   } else if (cmd == _T("addheader")) {
-    int pos = command.target.Find(_T(':'));
-    if (pos > 0) {
-      CStringA tag = CT2A(command.target.Left(pos).Trim());
-      CStringA value = CT2A(command.target.Mid(pos + 1).Trim());
-      HttpHeaderValue header(tag, value, (LPCSTR)CT2A(command.value.Trim()));
-      _add_headers.AddTail(header);
+    // Chrome will handle the additional headers in the extension
+    if (!_is_chrome) {
+      int pos = command.target.Find(_T(':'));
+      if (pos > 0) {
+        CStringA tag = CT2A(command.target.Left(pos).Trim());
+        CStringA value = CT2A(command.target.Mid(pos + 1).Trim());
+        HttpHeaderValue header(tag, value, (LPCSTR)CT2A(command.value.Trim()));
+        _add_headers.AddTail(header);
+      }
+      continue_processing = false;
+      consumed = false;
     }
-    continue_processing = false;
-    consumed = false;
   } else if (cmd == _T("setheader")) {
     int pos = command.target.Find(_T(':'));
     if (pos > 0) {
