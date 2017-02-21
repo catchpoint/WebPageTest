@@ -705,9 +705,9 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
         HttpHeaderValue header(tag, value, (LPCSTR)CT2A(command.value.Trim()));
         _add_headers.AddTail(header);
       }
-      continue_processing = false;
-      consumed = false;
     }
+    continue_processing = false;
+    consumed = false;
   } else if (cmd == _T("setheader")) {
     int pos = command.target.Find(_T(':'));
     if (pos > 0) {
