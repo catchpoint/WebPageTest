@@ -1,4 +1,35 @@
 <?php
+// Do a really quick check for a pending test to significantly reduce overhead
+if (isset($_REQUEST['noposition']) &&
+    $_REQUEST['noposition'] &&
+    isset($_REQUEST['test']) &&
+    strpos($_REQUEST['test'], '_') == 6) {
+  $base = __DIR__ . '/results';
+  $parts = explode('_', $_REQUEST['test']);
+  $dir = $parts[1];
+  if( count($parts) > 2 && strlen($parts[2]))
+    $dir .= '/' . $parts[2];
+  $y = substr($parts[0], 0, 2);
+  $m = substr($parts[0], 2, 2);
+  $d = substr($parts[0], 4, 2);
+  $pendingFile = "$base/$y/$m/$d/$dir/test.waiting";
+  if (is_file($pendingFile)) {
+    header("Content-type: application/json; charset=utf-8");
+    header("Cache-Control: no-cache, must-revalidate");
+    header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+
+    if( array_key_exists('callback', $_REQUEST) && strlen($_REQUEST['callback']) )
+        echo "{$_REQUEST['callback']}(";
+    echo "{\"statusCode\":101,\"statusText\":\"Test pending\",\"id\":\"{$_REQUEST['test']}\"";
+    if (isset($_REQUEST['r']))
+      echo ",\"requestId\":\"{$_REQUEST['r']}\"";
+    echo "}";
+    if( isset($_REQUEST['callback']) && strlen($_REQUEST['callback']) )
+        echo ");";
+    exit;
+  }
+}
+
 require_once('common.inc');
 require_once('page_data.inc');
 require_once('testStatus.inc');
