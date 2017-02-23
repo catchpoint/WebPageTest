@@ -28,7 +28,7 @@ class UserTimingHtmlTable {
     $this->hasUserTiming = $this->_initUserTimings();
     $this->hasFirstPaint = $this->runResults->hasValidMetric("firstPaint");
     $this->hasDomInteractive = $this->runResults->hasValidMetric("domInteractive");
-    $this->hasTTI = $this->runResults->hasValidMetric("TimeToInteractive");
+    $this->hasTTI = $this->runResults->hasValidMetric("TimeToInteractive") || $this->runResults->hasValidMetric("TTIMeasurementEnd");
     $this->isMultistep = $runResults->countSteps() > 1;
   }
 
@@ -83,8 +83,14 @@ class UserTimingHtmlTable {
     if ($this->isMultistep) {
       $out .= "<td>" . FitText($stepResult->readableIdentifier(), 30) . "</td>";
     }
-    if ($this->hasTTI)
-        $out .= '<td>' . $this->_getTimeMetric($stepResult, "TimeToInteractive") . '</td>';
+    if ($this->hasTTI) {
+      $tti = '-';
+      if ($stepResult->getMetric("TimeToInteractive"))
+        $tti = $this->_getTimeMetric($stepResult, "TimeToInteractive");
+      elseif ($stepResult->getMetric("TTIMeasurementEnd"))
+        $tti = '&GT; ' . $this->_getTimeMetric($stepResult, "TTIMeasurementEnd");
+      $out .= "<td>$tti</td>";
+    }
     if ($this->hasUserTiming)
       foreach ($stepUserTiming as $label => $value)
         if (count($stepUserTiming) < 5 || substr($label, 0, 5) !== 'goog_')

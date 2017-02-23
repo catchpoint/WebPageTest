@@ -69,11 +69,11 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = 
  * @return array|null Associative array with data for the given run or null on failure
  */
 function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo = null) {
-  $cacheVer = 5;
+  $cacheVer = 6;
   $cacheFile = $localPaths->pageDataCacheFile($cacheVer);
   $ret = null;
-//  if (gz_is_file($cacheFile))
-//    $ret = json_decode(gz_file_get_contents($cacheFile), true);
+  if (gz_is_file($cacheFile))
+    $ret = json_decode(gz_file_get_contents($cacheFile), true);
   
   if (!isset($ret) || !is_array($ret)) {
     $ret = loadPageData($localPaths->pageDataFile(), $options);
@@ -259,14 +259,28 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
       }
       
       // Calculate Time to Interactive if we have First Meaningful Paint and interactive Windows
-      if (isset($ret['interactivePeriods']) &&
-          is_array($ret['interactivePeriods']) &&
-          count($ret['interactivePeriods']) &&
-          isset($ret['chromeUserTiming.firstMeaningfulPaint']) &&
-          $ret['chromeUserTiming.firstMeaningfulPaint'] > 0) {
-        $TTI = CalculateTimeToInteractive($localPaths, $ret['chromeUserTiming.firstMeaningfulPaint'], $ret['interactivePeriods']);
-        if (isset($TTI) && $TTI > 0)
+      if (isset($ret['interactivePeriods']) && is_array($ret['interactivePeriods']) && count($ret['interactivePeriods'])) {
+        $seek_start = null;
+        $TTI = null;
+        if (isset($ret['chromeUserTiming.firstMeaningfulPaint']) && $ret['chromeUserTiming.firstMeaningfulPaint'] > 0)
+          $seek_start = $ret['chromeUserTiming.firstMeaningfulPaint'];
+        elseif (isset($ret['chromeUserTiming.firstContentfulPaint']) && $ret['chromeUserTiming.firstContentfulPaint'] > 0)
+          $seek_start = $ret['chromeUserTiming.firstContentfulPaint'];
+        elseif (isset($ret['render']) && $ret['render'] > 0)
+          $seek_start = $ret['render'];
+        if (isset($seek_start)) 
+          $TTI = CalculateTimeToInteractive($localPaths, $seek_start, $ret['interactivePeriods'], $measurement_end);
+        if (isset($TTI) && $TTI > 0) {
           $ret['TimeToInteractive'] = $TTI;
+        } else {
+          $measurement_end = 0;
+          foreach ($ret['interactivePeriods'] as $window) {
+            if ($window[1] > $measurement_end)
+              $measurement_end = $window[1];
+          }
+          if ($measurement_end > 0)
+            $ret['TTIMeasurementEnd'] = $measurement_end;
+        }
       }
     }
     
@@ -866,7 +880,7 @@ function ParseUserTiming($file) {
 * @param mixed $firstMeaningfulPaint
 * @param mixed $interactiveWindows
 */
-function CalculateTimeToInteractive($localPaths, $firstMeaningfulPaint, $interactiveWindows) {
+function CalculateTimeToInteractive($localPaths, $firstMeaningfulPaint, $interactiveWindows, &$measurement_end) {
   $TTI = null;
   
   // Start by filtering the interactive windows to only include 5 second windows that don't

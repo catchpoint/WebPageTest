@@ -57,6 +57,12 @@ class RunResultHtmlTable {
       $this->enabledColumns[$col] = $runResults->hasValidMetric($col) ||
                                    ($rvRunResults && $rvRunResults->hasValidMetric($col));
     }
+    
+    // Special-case the check for TTI
+    if (!$this->enabledColumns[self::COL_TTI]) {
+      $this->enabledColumns[self::COL_TTI] = $runResults->hasValidMetric('TTIMeasurementEnd') ||
+                                   ($rvRunResults && $rvRunResults->hasValidMetric('TTIMeasurementEnd'));
+    }
   }
 
   /**
@@ -232,7 +238,12 @@ class RunResultHtmlTable {
       $out .= $this->_bodyCell($idPrefix . "DomTime" . $idSuffix, $this->_getIntervalMetric($stepResult, "domTime"), $class);
     }
     if ($this->isColumnEnabled(self::COL_TTI)) {
-      $out .= $this->_bodyCell($idPrefix. "TimeToInteractive" . $idSuffix, $this->_getIntervalMetric($stepResult, "TimeToInteractive"), $class);
+      $value = '-';
+      if ($stepResult->getMetric("TimeToInteractive"))
+        $value = $this->_getIntervalMetric($stepResult, "TimeToInteractive");
+      elseif ($stepResult->getMetric("TTIMeasurementEnd"))
+        $value = '&GT; ' . $this->_getIntervalMetric($stepResult, "TTIMeasurementEnd");
+      $out .= $this->_bodyCell($idPrefix. "TimeToInteractive" . $idSuffix, $value, $class);
     }
     if ($this->isColumnEnabled(self::COL_RESULT)) {
       $out .= $this->_bodyCell($idPrefix . "result" . $idSuffix, $this->_getSimpleMetric($stepResult, "result"), $class);
