@@ -111,6 +111,9 @@ bool WptSettings::Load(void) {
     _clientCertCommonName = buff;
   }
 
+  _polling_delay = GetPrivateProfileInt(_T("WebPagetest"), _T("polling_delay"),
+                                  _polling_delay, iniFile);
+
   #ifdef DEBUG
   _debug = 9;
   #else
@@ -185,30 +188,7 @@ void WptSettings::LoadFromEC2(void) {
     }
   }
 
-  // Disable Apple and Google auto-updates
-  TerminateProcessesByName(_T("SoftwareUpdate.exe"));
-  TerminateProcessesByName(_T("GoogleUpdate.exe"));
-  TerminateProcessesByName(_T("GoogleUpdateSetup.exe"));
-  TerminateProcessesByName(_T("maintenanceservice.exe"));
-  DeleteDirectory(_T("C:\\Program Files (x86)\\Google\\Update"), true);
-  DeleteDirectory(_T("C:\\Program Files (x86)\\Apple Software Update"), true);
-  DeleteDirectory(_T("C:\\Program Files (x86)\\Mozilla Maintenance Service"), true);
-  HKEY hKey;
-  if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
-                      _T("SOFTWARE\\Policies\\Google\\Update"),
-                      0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS ) {
-    DWORD val = 0;
-    RegSetValueEx(hKey, _T("AutoUpdateCheckPeriodMinutes"), 0, REG_DWORD,
-                  (const LPBYTE)&val, sizeof(val));
-    RegSetValueEx(hKey, _T("UpdateDefault"), 0, REG_DWORD,
-                  (const LPBYTE)&val, sizeof(val));
-    RegSetValueEx(hKey, _T("Update{8A69D345-D564-463C-AFF1-A69D9E530F96}"),
-                  0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
-    val = 1;
-    RegSetValueEx(hKey, _T("DisableAutoUpdateChecksCheckboxValue"), 0,
-                  REG_DWORD, (const LPBYTE)&val, sizeof(val));
-    RegCloseKey(hKey);
-  }
+  DisableChromeUpdates();
 }
 
 /*-----------------------------------------------------------------------------
@@ -225,6 +205,8 @@ void WptSettings::LoadFromGCE(void) {
   GetUrlText(_T("http://169.254.169.254/computeMetadata/v1/instance/id"), 
     _ec2_instance, L"Metadata-Flavor: Google");
   _ec2_instance = _ec2_instance.Trim();
+
+  DisableChromeUpdates();
 }
 
 /*-----------------------------------------------------------------------------
@@ -251,6 +233,7 @@ void WptSettings::LoadFromAzure(void) {
       CloseHandle(file);
     }
   }
+  DisableChromeUpdates();
 }
 
 /*-----------------------------------------------------------------------------
@@ -293,6 +276,8 @@ void WptSettings::ParseInstanceData(CString &userData) {
             _key = value; 
           else if (!key.CompareNoCase(_T("wpt_timeout")))
             _timeout = _ttol(value); 
+          else if (!key.CompareNoCase(_T("wpt_polling_delay")))
+            _polling_delay = _ttol(value); 
         }
       }
     }
@@ -388,6 +373,35 @@ bool WptSettings::CheckBrowsers() {
     _software_update.ReInstallBrowser(missing_browser);
   }
   return ok;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void WptSettings::DisableChromeUpdates() {
+  // Disable Apple and Google auto-updates
+  TerminateProcessesByName(_T("SoftwareUpdate.exe"));
+  TerminateProcessesByName(_T("GoogleUpdate.exe"));
+  TerminateProcessesByName(_T("GoogleUpdateSetup.exe"));
+  TerminateProcessesByName(_T("maintenanceservice.exe"));
+  DeleteDirectory(_T("C:\\Program Files (x86)\\Google\\Update"), true);
+  DeleteDirectory(_T("C:\\Program Files (x86)\\Apple Software Update"), true);
+  DeleteDirectory(_T("C:\\Program Files (x86)\\Mozilla Maintenance Service"), true);
+  HKEY hKey;
+  if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+                      _T("SOFTWARE\\Policies\\Google\\Update"),
+                      0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS ) {
+    DWORD val = 0;
+    RegSetValueEx(hKey, _T("AutoUpdateCheckPeriodMinutes"), 0, REG_DWORD,
+                  (const LPBYTE)&val, sizeof(val));
+    RegSetValueEx(hKey, _T("UpdateDefault"), 0, REG_DWORD,
+                  (const LPBYTE)&val, sizeof(val));
+    RegSetValueEx(hKey, _T("Update{8A69D345-D564-463C-AFF1-A69D9E530F96}"),
+                  0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+    val = 1;
+    RegSetValueEx(hKey, _T("DisableAutoUpdateChecksCheckboxValue"), 0,
+                  REG_DWORD, (const LPBYTE)&val, sizeof(val));
+    RegCloseKey(hKey);
+  }
 }
 
 /*-----------------------------------------------------------------------------

@@ -104,6 +104,7 @@ public:
   bool UpdateSoftware(bool force = false);
   bool ReInstallBrowser();
   bool CheckBrowsers();
+  void DisableChromeUpdates();
 
   CString _server;
   CString _username;
