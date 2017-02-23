@@ -152,27 +152,45 @@ $user = NULL;
 $admin = false;
 $api_keys;
 if (is_dir('./forums') && (!array_key_exists('disableMybb', $settings) || !$settings['disableMybb'])) {
-    ob_start();
-    $supportsAuth = true;
+  ob_start();
+  $supportsAuth = true;
 
-    if (isset($_COOKIE['mybbuser'])) {
-        $dir = getcwd();
-        try {
-            define("IN_MYBB",1);
-            chdir('forums'); // path to MyBB
-            include './global.php';
-
-            $uid = $mybb->user['uid'];
-            $user = $mybb->user['username'];
-            if( $mybb->usergroup['cancp'] )
-                $admin = true;
-            unset($mybb);
-        }
-        catch(Exception $e) {
-        }
-        chdir($dir);
+  if (isset($_COOKIE['mybbuser'])) {
+    if (function_exists("apcu_fetch")) {
+      $userinfo = apcu_fetch("mybb-user-{$_COOKIE['mybbuser']}");
+      if (isset($userinfo) &&
+          is_array($userinfo) &&
+          isset($userinfo['uid']) &&
+          isset($userinfo['user']) &&
+          isset($userinfo['admin'])) {
+        $uid = $userinfo['uid'];
+        $user = $userinfo['user'];
+        $admin = $userinfo['admin'];
+      }
     }
-    ob_end_clean();
+    if (!isset($user)) {
+      $dir = getcwd();
+      try {
+          define("IN_MYBB",1);
+          chdir('forums'); // path to MyBB
+          include './global.php';
+
+          $uid = $mybb->user['uid'];
+          $user = $mybb->user['username'];
+          if( $mybb->usergroup['cancp'] )
+              $admin = true;
+          unset($mybb);
+      }
+      catch(Exception $e) {
+      }
+      chdir($dir);
+      if (function_exists('apcu_store')) {
+        $userinfo = array('uid' => $uid, 'user' => $user, 'admin' => $admin);
+        apcu_store("mybb-user-{$_COOKIE['mybbuser']}", $userinfo, 3600);
+      }
+    }
+  }
+  ob_end_clean();
 }
 
 if (!$admin && isset($_COOKIE['asid']) && isset($_COOKIE['google_id']) && isset($_COOKIE['google_email'])) {
