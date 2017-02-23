@@ -338,7 +338,7 @@ void WptDriverCore::WorkThread(void) {
           _settings.UpdateSoftware();
           _installing = false;
           _status.Set(_T("Waiting for work..."));
-          int delay = _settings._polling_delay * SECONDS_TO_MS;
+          int delay = ((rand() % 5000) - 2500) + (_settings._polling_delay * SECONDS_TO_MS);
           while (!_exit && delay > 0) {
             Sleep(100);
             delay -= 100;
