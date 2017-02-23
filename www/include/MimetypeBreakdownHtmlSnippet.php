@@ -37,6 +37,7 @@ class MimetypeBreakdownHtmlSnippet extends BreakdownHtmlSnippet {
         "type" => $type,
         "requests" => $values["requests"],
         "bytes" => $values["bytes"],
+        "bytesUncompressed" => $values["bytesUncompressed"],
         "color" => $values["color"]
       );
     }

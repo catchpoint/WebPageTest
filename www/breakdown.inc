@@ -48,6 +48,7 @@ function getBreakdownForStep($localPaths, $rootUrlGenerator, &$requests) {
             $entry = array(
                 'color' => $color,
                 'bytes' => 0,
+                'bytesUncompressed' => 0,
                 'requests' => 0
                 );
             $breakdown["$contentType"] = $entry;
@@ -60,11 +61,8 @@ function getBreakdownForStep($localPaths, $rootUrlGenerator, &$requests) {
             if( strlen($contentType) && (stripos($object, 'favicon.ico') === FALSE) ) {
               $breakdown[$contentType]['bytes'] += $request['bytesIn'];
               $breakdown[$contentType]['requests']++;
-              if (isset($request['objectSizeUncompressed']) && $request['objectSizeUncompressed'] > 0) {
-                if (!isset($breakdown[$contentType]['bytesUncompressed']))
-                  $breakdown[$contentType]['bytesUncompressed'] = 0;
+              if (isset($request['objectSizeUncompressed']) && $request['objectSizeUncompressed'] > 0)
                 $breakdown[$contentType]['bytesUncompressed'] += $request['objectSizeUncompressed'];
-              }
             }
           }
         }
@@ -96,9 +94,11 @@ function getBreakdownCombined($id, $testPath, $run)
         if( !count($rvData) )
         {
             $rvData['bytes'] = 0;
+            $rvData['bytesUncompressed'] = 0;
             $rvData['requests'] = 0;
         }
         $combined[$type]['rvBytes'] = $rvData['bytes'];
+        $combined[$type]['rvBytesUncompressed'] = $rvData['bytesUncompressed'];
         $combined[$type]['rvRequests'] = $rvData['requests'];
     }
 
@@ -111,8 +111,10 @@ function getBreakdownCombined($id, $testPath, $run)
         {
             $fv = array();
             $fv['bytes'] = 0;
+            $fv['bytesUncompressed'] = 0;
             $fv['requests'] = 0;
             $fv['rvBytes'] = $data['bytes'];
+            $fv['rvBytesUncompressed'] = $data['bytesUncompressed'];
             $fv['rvRequests'] = $data['requests'];
             $combined[$type] = $fv;
         }

@@ -174,6 +174,7 @@ if(!$testInfo->isFirstViewOnly()) {
             data.addColumn('string', 'MIME Type');
             data.addColumn('number', 'Requests');
             data.addColumn('number', 'Bytes');
+            data.addColumn('number', 'Uncompressed');
             data.addRows(numData);
             var requests = new google.visualization.DataTable();
             requests.addColumn('string', 'Content Type');
@@ -188,6 +189,7 @@ if(!$testInfo->isFirstViewOnly()) {
                 data.setValue(i, 0, breakdown[i]['type']);
                 data.setValue(i, 1, breakdown[i]['requests']);
                 data.setValue(i, 2, breakdown[i]['bytes']);
+                data.setValue(i, 3, breakdown[i]['bytesUncompressed']);
                 requests.setValue(i, 0, breakdown[i]['type']);
                 requests.setValue(i, 1, breakdown[i]['requests']);
                 bytes.setValue(i, 0, breakdown[i]['type']);
@@ -202,7 +204,7 @@ if(!$testInfo->isFirstViewOnly()) {
             tableRequests.draw(viewRequests, {showRowNumber: false, sortColumn: 1, sortAscending: false});
 
             var viewBytes = new google.visualization.DataView(data);
-            viewBytes.setColumns([0, 2]);
+            viewBytes.setColumns([0, 2, 3]);
             
             var tableBytes = new google.visualization.Table(parentNode.find('div.tableBytes')[0]);
             tableBytes.draw(viewBytes, {showRowNumber: false, sortColumn: 1, sortAscending: false});
