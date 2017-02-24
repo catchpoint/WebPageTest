@@ -598,35 +598,33 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                 $y1 = null;
                 foreach ($p['data'] as $ms => $value) {
                   $x2 = $x_scaler($ms);
-                  $pmax = 0;
                   if (array_key_exists('max', $p) && $p['max'] != 0) {
-                    $pmax = $p['max'];
-                  }
-                  $y2 = ($p['y1'] + $p['height'] - 2 - (int)((double)($p['height'] - 3) * (double)$value / $pmax));
-                  if ($x2 <= $data_x) {
-                    $x2 = $data_x + 1;
-                  }
-                  if ($x2 >= $width - 1 && $x1 < $x2)  {
-                    // Point goes off the graph.
-                    // Interpolate the ending y-coordinate.
-                    $r = ($width - 2 - $x1) / ($x2 - $x1);
-                    $y2 = $y1 + (($y2 - $y1) * $r);
-                    $x2 = $width - 2;
-                  }
-                  if ($x2 > $x1 + 1) {
-                    // If the data spans multiple columns, draw a flat line at the
-                    // current value size it is really an average for the last time bucket.
-                    if (isset($y1))
-                      imageline($im, $x1, $y1, $x1, $y2, $p['color']);
-                    imageline($im, $x1, $y2, $x2, $y2, $p['color']);
-                  } else if (isset($x1) && isset($y1)) {
-                    imageline($im, $x1, $y1, $x2, $y2, $p['color']);
-                  }
-                  if ($x2 >= ($width - 2)) {
-                    break;
-                  } else {
-                    $x1 = $x2;
-                    $y1 = $y2;
+                    $y2 = ($p['y1'] + $p['height'] - 2 - (int)((double)($p['height'] - 3) * (double)$value / $p['max']));
+                    if ($x2 <= $data_x) {
+                      $x2 = $data_x + 1;
+                    }
+                    if ($x2 >= $width - 1 && $x1 < $x2)  {
+                      // Point goes off the graph.
+                      // Interpolate the ending y-coordinate.
+                      $r = ($width - 2 - $x1) / ($x2 - $x1);
+                      $y2 = $y1 + (($y2 - $y1) * $r);
+                      $x2 = $width - 2;
+                    }
+                    if ($x2 > $x1 + 1) {
+                      // If the data spans multiple columns, draw a flat line at the
+                      // current value size it is really an average for the last time bucket.
+                      if (isset($y1))
+                        imageline($im, $x1, $y1, $x1, $y2, $p['color']);
+                      imageline($im, $x1, $y2, $x2, $y2, $p['color']);
+                    } else if (isset($x1) && isset($y1)) {
+                      imageline($im, $x1, $y1, $x2, $y2, $p['color']);
+                    }
+                    if ($x2 >= ($width - 2)) {
+                      break;
+                    } else {
+                      $x1 = $x2;
+                      $y1 = $y2;
+                    }
                   }
                 }
               }

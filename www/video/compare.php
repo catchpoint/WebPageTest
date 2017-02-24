@@ -455,9 +455,11 @@ function ScreenShotTable()
                 $ms = $frameCount * $interval;
                 // find the closest video frame <= the target time
                 $frame_ms = null;
-                foreach ($test['video']['frames'] as $frameTime => $file) {
-                  if ($frameTime <= $ms && (!isset($frame_ms) || $frameTime > $frame_ms))
-                    $frame_ms = $frameTime;
+                if (isset($test['video']['frames']) && is_array($test['video']['frames']) && count($test['video']['frames'])) {
+                  foreach ($test['video']['frames'] as $frameTime => $file) {
+                    if ($frameTime <= $ms && (!isset($frame_ms) || $frameTime > $frame_ms))
+                      $frame_ms = $frameTime;
+                  }
                 }
                 $path = null;
                 if (isset($frame_ms))

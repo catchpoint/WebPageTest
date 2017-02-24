@@ -195,14 +195,16 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
             var eventColors = new Array();
             <?php
             $index = 0;
-            foreach($groups as $type => $time)
-            {
-              if ($type != 'Idle') {
-                echo "groups.setValue($index, 0, '$type');\n";
-                echo "groups.setValue($index, 1, $time);\n";
-                $color = $groupColors[$type];
-                echo "groupColors.push('$color');\n";
-                $index++;
+            if (isset($groups) && is_array($groups) && count($groups)) {
+              foreach($groups as $type => $time)
+              {
+                if ($type != 'Idle') {
+                  echo "groups.setValue($index, 0, '$type');\n";
+                  echo "groups.setValue($index, 1, $time);\n";
+                  $color = $groupColors[$type];
+                  echo "groupColors.push('$color');\n";
+                  $index++;
+                }
               }
             }
             $index = 0;

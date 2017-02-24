@@ -773,25 +773,29 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
   }
   
   if (!$firstEvent && $hasTimeline) {
-    foreach ($messages as $message) {
-      if (is_array($message) && isset($message['method'])) {
-        $eventTime = DevToolsEventTime($message);
-        $json = json_encode($message);
-        if (strpos($json, '"type":"Resource') !== false) {
-          $firstEvent = $eventTime;
-          break;
+    if (isset($messages) && is_array($messages) && count($messages)) {
+      foreach ($messages as $message) {
+        if (is_array($message) && isset($message['method'])) {
+          $eventTime = DevToolsEventTime($message);
+          $json = json_encode($message);
+          if (strpos($json, '"type":"Resource') !== false) {
+            $firstEvent = $eventTime;
+            break;
+          }
         }
       }
     }
   }
   if (!$firstEvent && $hasNet && isset($messages) && is_array($messages)) {
-    foreach ($messages as $message) {
-      if (is_array($message) && isset($message['method'])) {
-        $eventTime = DevToolsEventTime($message);
-        $method_class = substr($message['method'], 0, strpos($message['method'], '.'));
-        if ($eventTime && $method_class === 'Network') {
-          $firstEvent = $eventTime * 1000.0;
-          break;
+    if (isset($messages) && is_array($messages) && count($messages)) {
+      foreach ($messages as $message) {
+        if (is_array($message) && isset($message['method'])) {
+          $eventTime = DevToolsEventTime($message);
+          $method_class = substr($message['method'], 0, strpos($message['method'], '.'));
+          if ($eventTime && $method_class === 'Network') {
+            $firstEvent = $eventTime * 1000.0;
+            break;
+          }
         }
       }
     }

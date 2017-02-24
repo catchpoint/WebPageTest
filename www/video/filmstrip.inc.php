@@ -63,8 +63,8 @@ foreach($compTests as $t) {
                   $test_median_metric = $info['medianMetric'];
             }
 
-            $testInfo = parse_ini_file("./{$test['path']}/testinfo.ini",true);
-            if ($testInfo !== FALSE) {
+            $testInfo = @parse_ini_file("./{$test['path']}/testinfo.ini",true);
+            if (isset($testInfo) && is_array($testInfo)) {
                 if (array_key_exists('test', $testInfo) && array_key_exists('location', $testInfo['test']))
                     $test['location'] = $testInfo['test']['location'];
                 if (isset($testInfo['test']) && isset($testInfo['test']['completeTime'])) {
