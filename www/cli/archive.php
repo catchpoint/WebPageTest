@@ -238,6 +238,7 @@ function CheckTest($testPath, $id, $elapsedDays, $forced_only) {
         $archiveCount++;
         $logLine .= "Archived";
         $delete = true;
+        usleep(1000);
       } else if ($elapsed < 60) {
         $status = GetTestStatus($id, true);
         $logLine .= " status {$status['statusCode']}";
