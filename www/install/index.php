@@ -97,6 +97,7 @@ function CheckPHP() {
     ShowCheck('FreeType enabled for GD (required for video rendering)', CheckFreeType(), false);
     ShowCheck('zip Module Installed', extension_loaded('zip'));
     ShowCheck('zlib Module Installed', extension_loaded('zlib'));
+    ShowCheck('mbstring available', function_exists('mb_substr'));
     ShowCheck('curl Module Installed', extension_loaded('curl'), false);
     ShowCheck('php.ini allow_url_fopen enabled', ini_get('allow_url_fopen'), true);
     ShowCheck('APC Installed', extension_loaded('apc') || extension_loaded('apcu'), false);
