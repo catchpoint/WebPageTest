@@ -176,6 +176,7 @@ CDN_PROVIDER cdnList[] = {
   {".stackpathdns.com", "StackPath"},
   {".hosting4cdn.com", "Hosting4CDN"},
   {".netlify.com", "Netlify"},
+  {".b-cdn.net", "BunnyCDN"},
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -222,7 +223,8 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"x-sucuri-id", "", "Sucuri Firewall"},
   {"server", "Netlify", "Netlify"},
   {"section-io-id", "", "section.io"},
-  {"server", "Testa/", "Naver"}
+  {"server", "Testa/", "Naver"},
+  {"server", "BunnyCDN", "BunnyCDN"}
 };
 
 // Specific providers that require multiple headers
