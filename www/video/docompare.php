@@ -93,6 +93,8 @@ function SubmitTest($url, $label, $key)
     $testUrl .= 'f=xml&priority=2&runs=3&video=1&mv=1&fvonly=1&url=' . urlencode($url);
     if( $label && strlen($label) )
         $testUrl .= '&label=' . urlencode($label);
+    if (isset($_REQUEST['profile']) && strlen($_REQUEST['profile']) && is_file(__DIR__ . '/../settings/profiles.ini'))
+        $testUrl .= "&profile={$_REQUEST['profile']}";
     if( $ip )
         $testUrl .= "&addr=$ip";
     if( $uid )

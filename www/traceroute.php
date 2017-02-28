@@ -48,7 +48,12 @@ $page_description = "Test network path from multiple locations around the world 
             
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
-                    <li class="analytical_review"><a href="/">Analytical Review</a></li>
+                    <li class="analytical_review"><a href="/">Advanced Testing</a></li>
+                    <?php
+                    if (is_file(__DIR__ . '/settings/profiles.ini')) {
+                      echo "<li class=\"easy_mode\"><a href=\"/easy.php\">Simple Testing</a></li>";
+                    }
+                    ?>
                     <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
                     <li class="traceroute ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Traceroute</a></li>
                 </ul>

@@ -6,6 +6,9 @@ $tid= array_key_exists('tid', $_GET) ? $_GET['tid'] : 0;
 $run= array_key_exists('run', $_GET) ? $_GET['run'] : 0;
 $page_keywords = array('Video','comparison','Webpagetest','Website Speed Test');
 $page_description = "Visually compare the performance of multiple websites with a side-by-side video and filmstrip view of the user experience.";
+$profiles = null;
+if (is_file(__DIR__ . '/../settings/profiles.ini'))
+  $profiles = parse_ini_file(__DIR__ . '/../settings/profiles.ini', true);
 ?>
 
 <!DOCTYPE html>
@@ -26,9 +29,14 @@ $page_description = "Visually compare the performance of multiple websites with 
 
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
-                    <li class="analytical_review"><a href="/">Analytical Review</a></li>
+                    <li class="analytical_review"><a href="/">Advanced Testing</a></li>
+                    <?php
+                    if (is_file(__DIR__ . '/../settings/profiles.ini')) {
+                      echo "<li class=\"easy_mode\"><a href=\"/easy.php\">Simple Testing</a></li>";
+                    }
+                    ?>
                     <li class="visual_comparison ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Visual Comparison</a></li>
-                    <li class="traceroute"><a href="/traceroute">Traceroute</a></li>
+                    <li class="traceroute"><a href="/traceroute.php">Traceroute</a></li>
                 </ul>
                 <div id="visual_comparison" class="test_box">
 
@@ -65,50 +73,30 @@ $page_description = "Visually compare the performance of multiple websites with 
                         <button onclick="return AddUrl();">Add</button> another page to the comparison.
                         <br>
                         <br>
+                        <br>
+                        <br>
+                        <ul>
                         <?php
-                        // load the main industry list
-                        if (is_file('./video/industry.ini') && is_file('./video/dat/industry.dat')) {
-                          $ind = parse_ini_file('./video/industry.ini', true);
-                          $ids = json_decode(file_get_contents('./video/dat/industry.dat'), true);
-                          if( $ind && count($ind) && $ids && count($ids) )
-                          {
-                              $i = 0;
-                              echo '<p><a href="javascript:void(0)" id="advanced_settings">Compare against industry pages <span class="arrow"></span></a></p>';
-                              echo '<div id="advanced_settings-container" class="hidden">';
-                              foreach($ind as $industry => &$pages )
-                              {
-                                  if( $ids[$industry] )
-                                  {
-                                      echo "<div class=\"industry\">\n";
-                                      echo "<div class=\"indHead\">$industry:</div>\n";
-                                      echo "<div class=\"indBody\">\n";
-                                      foreach( $pages as $page => $url )
-                                      {
-                                          $details = $ids[$industry][$page];
-                                          if( $details )
-                                          {
-                                              $i++;
-                                              $tid = $details['id'];
-                                              $date = $details['last_updated'];
-                                              echo "<input type=\"checkbox\" name=\"t[]\" value=\"$tid\"> $page";
-                                              /*
-                                              if( $date )
-                                              {
-                                                  $date = gmdate('m/d/y', strtotime($date));
-                                                  echo " ($date)";
-                                              }
-                                              */
-                                              echo "<br>\n";
-                                          }
-                                      }
-                                      echo "</div></div>\n";
-                                  }
-                              }
-                              echo '</div>';
+                        if (isset($profiles) && is_array($profiles) && count($profiles)) {
+                          echo '<li>';
+                          echo '<label for="profile">Test Configuration:</label>';
+                          echo '<select name="profile" id="profile" onchange="profileChanged()">';
+                          foreach($profiles as $name => $profile) {
+                            $selected = '';
+                            if ($name == $_COOKIE['testProfile'])
+                              $selected = 'selected';
+                            echo "<option value=\"$name\" $selected>{$profile['label']}</option>";
                           }
+                          if (isset($lastGroup))
+                              echo "</optgroup>";
+                          echo '</select>';
+                          echo '</li>';
+                          echo '<li>';
+                          echo '<div id="description"></div>';
+                          echo '</li>';
+                          echo '</ul>';
                         }
                         ?>
-
                         <p id="footnote" class="cleared">For each URL, 3 first-view tests will be run from '<?php echo $loc['label']; ?>' and the median run will be used for comparison.  
                         The tests will also be publically available.  If you would like to test with different settings, submit your tests individually from the 
                         <a href="/">main test page</a>.</p>
@@ -120,6 +108,33 @@ $page_description = "Visually compare the performance of multiple websites with 
                 </div>
                 <div class="cleared"></div>
                 
+                <script type="text/javascript">
+                <?php 
+                  echo "var profiles = " . json_encode($profiles) . ";\n";
+                ?>
+                var wptStorage = window.localStorage || {};
+                if (wptStorage['testrv'] != undefined)
+                  $('#rv').prop('checked', wptStorage['testrv']);
+                var rvChanged = function() {
+                  wptStorage['testrv'] = $('#rv').is(':checked');
+                }
+
+                var profileChanged = function() {
+                  var sel = document.getElementById("profile");
+                  var txt = document.getElementById("description");
+                  var profile = sel.options[sel.selectedIndex].value;
+                  var description = "";
+                  if (profiles[profile] !== undefined) {
+                    var d = new Date();
+                    d.setTime(d.getTime() + (365*24*60*60*1000));
+                    document.cookie = "testProfile=" + profile + ";" + "expires=" + d.toUTCString() + ";path=/";          
+                    if (profiles[profile]['description'] !== undefined)
+                      description = profiles[profile]['description'];
+                  }
+                  txt.innerHTML = description;
+                };
+                profileChanged();
+                </script>
             </form>
             
             <?php include('footer.inc'); ?>

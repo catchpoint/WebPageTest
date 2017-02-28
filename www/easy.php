@@ -60,8 +60,8 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
 
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
-                    <li class="analytical_review"><a href="/">Analytical Review</a></li>
-                    <li class="easy_mode ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Easy Mode</a></li>
+                    <li class="analytical_review"><a href="/">Advanced Testing</a></li>
+                    <li class="easy_mode ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Simple Testing</a></li>
                     <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
                     <li class="traceroute"><a href="/traceroute">Traceroute</a></li>
                 </ul>
