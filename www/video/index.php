@@ -91,6 +91,7 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
                               echo "</optgroup>";
                           echo '</select>';
                           echo '</li>';
+                          echo '<br>';
                           echo '<li>';
                           echo '<div id="description"></div>';
                           echo '</li>';
