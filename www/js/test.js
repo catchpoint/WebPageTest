@@ -92,6 +92,7 @@ function ValidateInput(form)
 })(jQuery);
 
 function RestoreSettings() {
+  if (!forgetSettings) {
     if (wptStorage['testVideo'] != undefined)
         $('#videoCheck').prop('checked', wptStorage['testVideo']);
     if (wptStorage['testTimeline'] != undefined)
@@ -99,11 +100,14 @@ function RestoreSettings() {
     if (wptStorage['testLoc'] != undefined)
         $('#location').val(wptStorage['testLoc']); 
     LocationChanged();
+  }
 }
 
 function SaveSettings() {
+  if (!forgetSettings) {
     wptStorage['testVideo'] = $('#videoCheck').is(':checked');
     wptStorage['testTimeline'] = $('#timeline').is(':checked');
+  }
 }
 
 /*

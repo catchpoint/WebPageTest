@@ -969,8 +969,7 @@ function GetLocationFromConfig(&$locations, $config)
 
     foreach($locations as $location => &$values)
         foreach($values as $cfg)
-            if( $cfg == $config )
-            {
+            if( !strcmp($cfg, $config) ) {
                 $ret = $location;
                 break 2;
             }
@@ -1008,8 +1007,11 @@ function ParseLocations(&$locations) {
     $currentLoc = null;
     if (array_key_exists('cfg', $_COOKIE))
         $currentLoc = GetLocationFromConfig($locations, $_COOKIE["cfg"] );
+    if (isset($_REQUEST["cfg"])) {
+        $currentLoc = GetLocationFromConfig($locations, $_REQUEST["cfg"] );
+    }
     if ((!$currentLoc || !isset($loc['locations'][$currentLoc])) && isset($locations['locations']['default'])) {
-        // nope, try thee default
+        // nope, try the default
         $currentLoc = $locations['locations']['default'];
     }
     if (!$currentLoc || !isset($loc['locations'][$currentLoc])) {
@@ -1019,7 +1021,7 @@ function ParseLocations(&$locations) {
             break;
         }
     }
-
+    
     // select the location
     $loc['locations'][$currentLoc]['checked'] = true;
 
@@ -1044,6 +1046,10 @@ function ParseLocations(&$locations) {
         $currentBrowser = str_replace(' ', '', $locations[$_COOKIE["cfg"]]['browser']);
         $currentConfig = $_COOKIE["cfg"];
     }
+    if (isset($_REQUEST["cfg"]) && isset($locations[$_REQUEST["cfg"]])) {
+        $currentBrowser = str_replace(' ', '', $locations[$_REQUEST["cfg"]]['browser']);
+        $currentConfig = $_REQUEST["cfg"];
+    }
     if (!strlen($currentBrowser) || !isset($loc['browsers'][$currentBrowser])) {
         // try the browser from the default config
         $cfg = $locations[$currentLoc]['default'];
@@ -1059,6 +1065,9 @@ function ParseLocations(&$locations) {
             break;
         }
     }
+    if (isset($_REQUEST['browser']) && isset($loc['browsers'][$_REQUEST['browser']]))
+      $currentBrowser = $_REQUEST['browser'];
+
     $loc['browsers'][$currentBrowser]['selected'] = true;
 
     // build the list of connection types

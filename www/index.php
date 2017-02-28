@@ -42,6 +42,15 @@ if (!strlen($url)) {
     $url = 'Enter a Website URL';
 }
 $connectivity = parse_ini_file('./settings/connectivity.ini', true);
+if (isset($_REQUEST['connection']) && isset($connectivity[$_REQUEST['connection']])) {
+  // move it to the front of the list
+  $insert = $connectivity[$_REQUEST['connection']];
+  unset($connectivity[$_REQUEST['connection']]);
+  $old = $connectivity;
+  $connectivity = array($_REQUEST['connection'] => $insert);
+  foreach ($old as $key => $values)
+    $connectivity[$key] = $values;
+}
 
 // if they have custom bandwidth stored, remember it
 if( isset($_COOKIE['u']) && isset($_COOKIE['d']) && isset($_COOKIE['l']) )
@@ -269,6 +278,8 @@ $loc = ParseLocations($locations);
                                         $runs = 3;
                                         if (isset($_COOKIE["runs"]))
                                           $runs = (int)@$_COOKIE["runs"];
+                                        if (isset($_REQUEST["runs"]))
+                                          $runs = (int)@$_REQUEST["runs"];
                                         if( isset($req_runs) )
                                           $runs = (int)$req_runs;
                                         $runs = max(1, min($runs, $settings['maxruns']));
@@ -425,14 +436,19 @@ $loc = ParseLocations($locations);
                                     } // end lighthouse block
                                     ?>
                                     <li>
-                                        <input type="checkbox" name="mobile" id="mobile" class="checkbox" style="float: left;width: auto;">
                                         <?php
+                                        $checked = '';
+                                        if (isset($_REQUEST['mobile']) && $_REQUEST['mobile'])
+                                          $checked = ' checked';
+                                        echo "<input type=\"checkbox\" name=\"mobile\" id=\"mobile\" class=\"checkbox\" style=\"float: left;width: auto;\"$checked>";
                                         if (is_file('./settings/mobile_devices.ini')) {
                                           $devices = parse_ini_file('./settings/mobile_devices.ini', true);
                                           if ($devices && count($devices)) {
                                             $selectedDevice = null;
                                             if (isset($_COOKIE['mdev']) && isset($devices[$_COOKIE['mdev']]))
                                               $selectedDevice = $_COOKIE['mdev'];
+                                            if (isset($_REQUEST['mdev']) && isset($devices[$_REQUEST['mdev']]))
+                                              $selectedDevice = $_REQUEST['mdev'];
                                             echo '<select name="mobileDevice" id="mobileDevice">';
                                             $lastGroup = null;
                                             foreach ($devices as $deviceName => $deviceInfo) {
@@ -725,6 +741,10 @@ $loc = ParseLocations($locations);
               $sponsor['offset'] = $offset;
             }
             echo "var sponsors = " . @json_encode($sponsors) . ";\n";
+            if (isset($_REQUEST['force']) && $_REQUEST['force'])
+              echo "var forgetSettings = true;\n";
+            else
+              echo "var forgetSettings = false;\n";
         ?>
         </script>
         <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script> 
