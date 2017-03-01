@@ -40,93 +40,97 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
         $testPath = realpath('./' . GetTestPath($id));
         $testInfo = GetTestInfo($id);
         if ($testInfo && ($completed || $testInfo['batch'])) {
-            if( isset($testInfo['archived']) && $testInfo['archived'] ) {
-                if (VerifyArchive($id)) {
-                    $ret = true;
-                } else {
-                    $zipFile = GetArchiveFile($id, true);
-                    unlink($zipFile);
-                    $testInfo['archived'] = false;
-                    SaveTestInfo($id, $testInfo);
-                }
-            }
-            
-            if (!$ret) {
-              $lock = LockTest($id);
-              if (isset($lock)) {
-                $testInfo = GetTestInfo($id);
-                $zipFile = "./tmp/$id.zip";
-                // zip up the contents
-                if (is_dir($testPath) === true) {
-                    $count = 0;
-                    $zip = new ZipArchive();
-                    if ($zip->open($zipFile, ZIPARCHIVE::CREATE) === true) {
-                        // add the files
-                        $files = scandir($testPath);
-                        foreach ($files as $file) {
-                            $filePath = "$testPath/$file";
-                            if (is_file($filePath)) {
-                              if (!ArchiveSkipFile($file)) {
-                                $count++;
-                                $zip->addFile($filePath, $file);
+            if (GetSetting('archive_dir') == '/dev/null') {
+              $ret = true;
+            } else {
+              if( isset($testInfo['archived']) && $testInfo['archived'] ) {
+                  if (VerifyArchive($id)) {
+                      $ret = true;
+                  } else {
+                      $zipFile = GetArchiveFile($id, true);
+                      unlink($zipFile);
+                      $testInfo['archived'] = false;
+                      SaveTestInfo($id, $testInfo);
+                  }
+              }
+              
+              if (!$ret) {
+                $lock = LockTest($id);
+                if (isset($lock)) {
+                  $testInfo = GetTestInfo($id);
+                  $zipFile = "./tmp/$id.zip";
+                  // zip up the contents
+                  if (is_dir($testPath) === true) {
+                      $count = 0;
+                      $zip = new ZipArchive();
+                      if ($zip->open($zipFile, ZIPARCHIVE::CREATE) === true) {
+                          // add the files
+                          $files = scandir($testPath);
+                          foreach ($files as $file) {
+                              $filePath = "$testPath/$file";
+                              if (is_file($filePath)) {
+                                if (!ArchiveSkipFile($file)) {
+                                  $count++;
+                                  $zip->addFile($filePath, $file);
+                                }
+                              } else if ($file != '.' && $file != '..' && is_dir($filePath)) {
+                                  $subFiles = scandir($filePath);
+                                  if ($subFiles) {
+                                      $zip->addEmptyDir($file);
+                                      foreach ($subFiles as $subFile) {
+                                          if( is_file("$filePath/$subFile") )
+                                              $zip->addFile("$filePath/$subFile", "$file/$subFile");
+                                      }
+                                  }
                               }
-                            } else if ($file != '.' && $file != '..' && is_dir($filePath)) {
-                                $subFiles = scandir($filePath);
-                                if ($subFiles) {
-                                    $zip->addEmptyDir($file);
-                                    foreach ($subFiles as $subFile) {
-                                        if( is_file("$filePath/$subFile") )
-                                            $zip->addFile("$filePath/$subFile", "$file/$subFile");
-                                    }
-                                }
-                            }
-                        }
-                        $zip->close();
-                        
-                        // move the archive to it's final destination
-                        if ($count && is_file($zipFile)) {
-                            if (array_key_exists('archive_dir', $settings)) {
-                                $dest = GetArchiveFile($id, true);
-                                if (rename($zipFile, $dest)) {
-                                    if (VerifyArchive($id))
-                                        $ret = true;
-                                }
-                            } elseif (array_key_exists('archive_s3_server', $settings) && 
-                                        array_key_exists('archive_s3_key', $settings) && 
-                                        array_key_exists('archive_s3_secret', $settings) && 
-                                        array_key_exists('archive_s3_bucket', $settings)) {
-                                // post the file to a S3-style bucket (just supporting Internet archive right now)
-                                require_once('./lib/S3.php');
-                                $s3 = new S3(trim($settings['archive_s3_key']), trim($settings['archive_s3_secret']), false, trim($settings['archive_s3_server']));
-                                $separator = strrpos($id, '_');
-                                if ($separator !== false) {
-                                    $bucket = $settings['archive_s3_bucket'];
-                                    $file = "$id.zip";
-                                    $metaHeaders = array();
-                                    $requestHeaders = array();
-                                    if (trim($settings['archive_s3_server']) == 's3.us.archive.org') {
-                                        // special-case Internet Archive storage
-                                        $bucket = $settings['archive_s3_bucket'] . '_' . substr($id, 0, $separator);
-                                        $file = substr($id, $separator + 1);
-                                        $requestHeaders = array('x-archive-queue-derive' => '0',
-                                                                'x-archive-meta-collection' => 'httparchive',
-                                                                'x-archive-auto-make-bucket' => '1');
-                                    }
-                                    if ($s3->putObject($s3->inputFile($zipFile, false), $bucket, $file, S3::ACL_PRIVATE, $metaHeaders, $requestHeaders))
-                                        $ret = true;
-                                }
-                            }
-                        } 
-                        // make sure we don't leave a file hanging around
-                        if (is_file($zipFile))
-                            unlink($zipFile);
-                        if ($ret && $store_result) {
-                            $testInfo['archived'] = true;
-                            SaveTestInfo($id, $testInfo);
-                        }
-                    }
+                          }
+                          $zip->close();
+                          
+                          // move the archive to it's final destination
+                          if ($count && is_file($zipFile)) {
+                              if (array_key_exists('archive_dir', $settings)) {
+                                  $dest = GetArchiveFile($id, true);
+                                  if (rename($zipFile, $dest)) {
+                                      if (VerifyArchive($id))
+                                          $ret = true;
+                                  }
+                              } elseif (array_key_exists('archive_s3_server', $settings) && 
+                                          array_key_exists('archive_s3_key', $settings) && 
+                                          array_key_exists('archive_s3_secret', $settings) && 
+                                          array_key_exists('archive_s3_bucket', $settings)) {
+                                  // post the file to a S3-style bucket (just supporting Internet archive right now)
+                                  require_once('./lib/S3.php');
+                                  $s3 = new S3(trim($settings['archive_s3_key']), trim($settings['archive_s3_secret']), false, trim($settings['archive_s3_server']));
+                                  $separator = strrpos($id, '_');
+                                  if ($separator !== false) {
+                                      $bucket = $settings['archive_s3_bucket'];
+                                      $file = "$id.zip";
+                                      $metaHeaders = array();
+                                      $requestHeaders = array();
+                                      if (trim($settings['archive_s3_server']) == 's3.us.archive.org') {
+                                          // special-case Internet Archive storage
+                                          $bucket = $settings['archive_s3_bucket'] . '_' . substr($id, 0, $separator);
+                                          $file = substr($id, $separator + 1);
+                                          $requestHeaders = array('x-archive-queue-derive' => '0',
+                                                                  'x-archive-meta-collection' => 'httparchive',
+                                                                  'x-archive-auto-make-bucket' => '1');
+                                      }
+                                      if ($s3->putObject($s3->inputFile($zipFile, false), $bucket, $file, S3::ACL_PRIVATE, $metaHeaders, $requestHeaders))
+                                          $ret = true;
+                                  }
+                              }
+                          } 
+                          // make sure we don't leave a file hanging around
+                          if (is_file($zipFile))
+                              unlink($zipFile);
+                          if ($ret && $store_result) {
+                              $testInfo['archived'] = true;
+                              SaveTestInfo($id, $testInfo);
+                          }
+                      }
+                  }
+                  UnlockTest($lock);
                 }
-                UnlockTest($lock);
               }
             }
         }
@@ -144,7 +148,7 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
 */
 function RestoreArchive($id) {
     $ret = false;
-    if (strpos($id, '.') === false) {
+    if (strpos($id, '.') === false && GetSetting('archive_dir') != '/dev/null') {
         global $settings;
         $testPath = './' . GetTestPath($id);
         $url = '';
@@ -240,7 +244,7 @@ function VerifyArchive($id) {
     $valid = true;
     global $settings;
     
-    if (!GetSetting('trust_archive')) {
+    if (!GetSetting('trust_archive') && GetSetting('archive_dir') != '/dev/null') {
         if (isset($settings['archive_dir'])) {
             // local
             $valid = false;
