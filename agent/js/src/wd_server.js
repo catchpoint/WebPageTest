@@ -155,7 +155,8 @@ WebDriverServer.prototype.initIpc = function() {
  */
 WebDriverServer.prototype.init = function(args) {
   'use strict';
-  args.startURL = args.task['Capture Video'] ? ORANGE_PAGE_URL_ : BLANK_PAGE_URL_;
+  args.startURL = args.task['Capture Video'] && !args.task.lighthouse ? 
+      ORANGE_PAGE_URL_ : BLANK_PAGE_URL_;
   if (!this.browser_) {
     // Only set on the first run:
     //
@@ -507,7 +508,7 @@ WebDriverServer.prototype.onDriverBuild = function(driver) {
     // connected as the only DevTools client.
     // We will get the DevTools events via the "performance" log, and we
     // also cannot use DevTools, only WebDriver API via this.driver_.
-    this.clearPageAndStartVideoWd_();
+    this.holdBlankAndStartVideoWd_();
     this.scheduleStartPacketCaptureIfRequested_();
     this.onTestStarted_();
   } else if (this.driver_ !== driver) {
@@ -854,11 +855,10 @@ WebDriverServer.prototype.getCapabilities_ = function() {
 };
 
 /**
- * Blanks out the browser at the beginning of a test, using DevTools.
- *
+ * Clears cache, adds blocked URLs, and sets extra HTTP headers.
  * @private
  */
-WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
+WebDriverServer.prototype.prepareNetworkForNavigation_ = function() {
   'use strict';
   this.getCapabilities_().then(function(caps) {
     if (!this.isCacheCleared_ && !this.isCacheWarm_) {
@@ -896,12 +896,20 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
       this.networkCommand_('setExtraHTTPHeaders', {'headers': this.task_.headers});
     this.pageCommand_('enable');
   }
+};
+
+/**
+ * Blanks out the browser at the beginning of a test, using DevTools.
+ * @private
+ */
+WebDriverServer.prototype.holdBlankAndStartVideoDevTools_ = function() {
+  'use strict';
   if (1 === this.task_['Capture Video']) {  // Emit video sync, start recording
     this.getCapabilities_().then(function(caps) {
       if (!caps.videoRecording) {
         return;
       }
-      if (!this.browser_.isBlackBox) {
+      if (!this.browser_.isBlackBox && !this.task_.lighthouse) {
         // Get the root frameId
         this.pageCommand_('getResourceTree').then(function(result) {
           var frameId = result.frameTree.frame.id;
@@ -919,7 +927,7 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
     }.bind(this));
   }
   // Make sure we start recording DevTools regardless of the video.
-  if (!this.browser_.isBlackBox) {
+  if (!this.browser_.isBlackBox && !this.task_.lighthouse) {
     this.app_.schedule('Start recording tracing', function() {
       this.isRecordingDevTools_ = true;
       this.scheduleStartTracingIfRequested_();
@@ -932,7 +940,7 @@ WebDriverServer.prototype.clearPageAndStartVideoDevTools_ = function() {
  *
  * @private
  */
-WebDriverServer.prototype.clearPageAndStartVideoWd_ = function() {
+WebDriverServer.prototype.holdBlankAndStartVideoWd_ = function() {
   'use strict';
   // Navigate to a blank, to make sure we clear the prior page and cancel
   // all pending events.
@@ -1017,6 +1025,16 @@ WebDriverServer.prototype.onTracingMessage_ = function(message) {
   } else {
     logger.debug('Unexpected tracing message - ' + message.method);
   }
+};
+
+/**
+ * Runs lighthouse with the options specified by the task and dumps data into 
+ * a directory.
+ * @private
+ */
+WebDriverServer.prototype.runLighthouse_ = function() {
+  // TODO(phulce): actually run lighthouse
+  this.onPageLoad_(new Error('Lighthouse not yet implemented!'));
 };
 
 /**
@@ -1142,8 +1160,11 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
     this.startChrome_(browserCaps);
   }
   this.prepareVideoCapture_();
-  this.startDevTools_();
-  this.clearPageAndStartVideoDevTools_();
+  if (!this.task_.lighthouse) {
+    this.startDevTools_();
+    this.prepareNetworkForNavigation_();
+  }
+  this.holdBlankAndStartVideoDevTools_();
   this.scheduleStartPacketCaptureIfRequested_();
   // No page load timeout here -- agent_main enforces run-level timeout.
   this.app_.schedule('Run page load', function() {
@@ -1175,6 +1196,8 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
       this.browser_.navigateTo(this.task_.url);
       this.app_.timeout(BLACKBOX_DETECT_ACTIVITY_TIME, 'wait');
       this.scheduleCheckActivity_();
+    } else if (this.task_.lighthouse) {
+      this.runLighthouse_();
     } else {
       this.pageCommand_('navigate', {url: this.task_.url});
     }
@@ -1566,7 +1589,8 @@ WebDriverServer.prototype.done_ = function() {
     this.isRecordingDevTools_ = false;
 
     this.scheduleNoFault_('Capture Screen Shot', function() {
-      this.takeScreenshot_('screen', 'end of run');
+      if (!this.task_.lighthouse)
+        this.takeScreenshot_('screen', 'end of run');
     }.bind(this));
     if (this.videoFile_) {
       this.scheduleNoFault_('Stop video recording',
@@ -1587,7 +1611,8 @@ WebDriverServer.prototype.done_ = function() {
           this.scheduleGetWdDevToolsLog_.bind(this));
     }
     // video processing needs to be done after tracing has been stopped and collected
-    this.scheduleStopTracing_();
+    if (!this.task_.lighthouse)
+      this.scheduleStopTracing_();
     if (this.traceFile_ !== undefined)
       this.scheduleProcessTrace_();
     if (this.videoFile_ !== undefined)
