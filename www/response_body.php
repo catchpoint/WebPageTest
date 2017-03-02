@@ -32,7 +32,7 @@ if ($request || $body_id) {
         $name = $zip->getNameIndex($i);
         $parts = explode('-', $name);
         if (isset($body_id)) {
-          $id = intval($parts[1], 10);
+          $id = $parts[1];
           if ($id == $body_id) {
             $body = $zip->getFromIndex($i);
             break;

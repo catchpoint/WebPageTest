@@ -119,7 +119,7 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData) {
                       is_array($parts) &&
                       array_key_exists('host', $parts) &&
                       array_key_exists('path', $parts)) {
-                    $request = array();
+                    $request = array('request_id' => $rawRequest['id']);
                     $request['ip_addr'] = '';
                     $request['method'] = isset($rawRequest['method']) ? $rawRequest['method'] : '';
                     $request['host'] = '';

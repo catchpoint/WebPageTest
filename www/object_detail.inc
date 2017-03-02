@@ -51,14 +51,13 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
       if (isset($requests) && is_array($requests) && count($requests)) {
         if ($use_raw_headers)
           $needHeaders = true;
-
-        AddResponseBodyFlags($requests, $bodies_file_name);
       } else {
         if (gz_is_file($request_json_file_name))
           $requests = json_decode(gz_file_get_contents($request_json_file_name), true);
         else
           GetDevToolsRequestsForStep($localPaths, $requests, $pageData);
       }
+      AddResponseBodyFlags($requests, $bodies_file_name);
       FixUpRequestTimes($requests);
       AddScriptTimings($requests, $script_timing_file_name);
       if ($needHeaders)
@@ -465,7 +464,7 @@ function AddResponseBodyFlags(&$requests, $bodies_file_name) {
         $name = $zip->getNameIndex($i);
         $parts = explode('-', $name);
         if (count($parts) >= 3 && stripos($name, '-body.txt') !== false) {
-          $id = intval($parts[1], 10);
+          $id = $parts[1];
           foreach ($requests as &$request) {
             if (isset($request['request_id']) && $request['request_id'] == $id) {
               $request['body_id'] = $id;

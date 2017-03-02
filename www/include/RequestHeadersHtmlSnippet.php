@@ -98,7 +98,7 @@ class RequestHeadersHtmlSnippet {
     $urlGenerator = $this->stepResult->createUrlGenerator("", false);
 
     $responseBodyUrl = null;
-    if (isset($request['body_id']) && $request['body_id'] > 0) {
+    if (isset($request['body_id']) && $request['body_id'] !== 0) {
       $responseBodyUrl = $urlGenerator->responseBodyWithBodyId($request['body_id']);
     } elseif (array_key_exists('body', $request) && $request['body']) {
       $responseBodyUrl = $urlGenerator->responseBodyWithRequestNumber($requestNum);
