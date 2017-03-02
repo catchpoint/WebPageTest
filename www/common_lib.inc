@@ -963,18 +963,21 @@ function FilterLocations(&$locations, $includeHidden = '',
 * @param mixed $locations
 * @param mixed $config
 */
-function GetLocationFromConfig(&$locations, $config)
-{
-    $ret = null;
+function GetLocationFromConfig(&$locations, $config) {
+  $ret = null;
 
-    foreach($locations as $location => &$values)
-        foreach($values as $cfg)
-            if( !strcmp($cfg, $config) ) {
-                $ret = $location;
-                break 2;
-            }
+  foreach($locations as $location => &$values) {
+    if (isset($values) && is_array($values) && count($values)) {
+      foreach($values as $cfg) {
+        if( !strcmp($cfg, $config) ) {
+          $ret = $location;
+          break 2;
+        }
+      }
+    }
+  }
 
-    return $ret;
+  return $ret;
 }
 
 /**
