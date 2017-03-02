@@ -157,6 +157,8 @@ function GetVisualProgressForStep($localPaths, $runCompleted, $options = null, $
     foreach($frames['frames'] as $time => &$frame) {
       if ($frame['progress'] > 0 && !array_key_exists('startRender', $frames))
         $frames['startRender'] = $time;
+      if (!$frames['visualComplete85'] && $frame['progress'] >= 85)
+        $frames['visualComplete85'] = $time;
       if (!$frames['visualComplete'] && $frame['progress'] == 100)
         $frames['visualComplete'] = $time;
       // fix up the frame paths in case we have a cached version referencing a relay path
