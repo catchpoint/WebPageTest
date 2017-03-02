@@ -187,11 +187,14 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
       if (!isset($ret['SpeedIndex']) ||
           !array_key_exists('render', $ret) || !$ret['render'] ||
           !array_key_exists('lastVisualChange', $ret) || !$ret['lastVisualChange'] ||
+          !array_key_exists('visualComplete85', $ret) || !$ret['visualComplete85'] ||
           !array_key_exists('visualComplete', $ret) || !$ret['visualComplete']) {
         $progress = GetVisualProgressForStep($localPaths, $runCompleted, null, null, $startOffset);
         if (isset($progress) && is_array($progress)) {
           if (array_key_exists('SpeedIndex', $progress))
             $ret['SpeedIndex'] = $progress['SpeedIndex'];
+          if (array_key_exists('visualComplete85', $progress))
+            $ret['visualComplete85'] = $progress['visualComplete85'];
           if (array_key_exists('visualComplete', $progress))
             $ret['visualComplete'] = $progress['visualComplete'];
           if (array_key_exists('startRender', $progress) && (!array_key_exists('render', $ret) || !$ret['render']))
