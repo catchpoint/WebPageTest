@@ -1036,16 +1036,16 @@ WebDriverServer.prototype.runLighthouse_ = function() {
   this.lighthouseFile_ = path.join(this.runTempDir_, 'lighthouse.html');
   this.app_.timeout(1000, 'Waiting for Chrome to be available...');
   process_utils.scheduleExec(this.app_,
-    'lighthouse',
-    [
-      '--disable-device-emulation',
-      '--disable-network-throttling',
-      '--save-assets',
-      '--port', this.browser_.devToolsPort_,
-      '--output', 'html',
-      '--output-path', this.lighthouseFile_,
-      this.task_.url,
-    ], undefined, this.timeout_).then(function () {
+      'lighthouse',
+      [
+        '--disable-device-emulation',
+        '--disable-network-throttling',
+        '--save-assets',
+        '--port', this.browser_.devToolsPort_,
+        '--output', 'html',
+        '--output-path', this.lighthouseFile_,
+        this.task_.url,
+      ], undefined, this.timeout_).then(function () {
     var devtoolsLogFile = path.join(this.runTempDir_, 'lighthouse-0.devtoolslog.json');
     this.devToolsMessages_ = JSON.parse(fs.readFileSync(devtoolsLogFile, 'utf8'));
 

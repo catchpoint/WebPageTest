@@ -12,7 +12,6 @@ if(array_key_exists("HTTP_IF_MODIFIED_SINCE",$_SERVER) && strlen(trim($_SERVER['
 
       // Cache for a year
       header('Last-Modified: ' . gmdate('r'));
-      header('Expires: '.gmdate('r', time() + 31536000));
       header('Cache-Control: public,max-age=31536000');
       header('Content-type: text/html');
       header('Content-Length: ' . filesize($filePath));
