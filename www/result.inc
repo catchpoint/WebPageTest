@@ -125,8 +125,15 @@ $page_description = "Website performance test result$testLabel.";
                     ?>
                 </div>
                 <?php
+                    $fvMedian = $testResults->getMedianRunNumber($median_metric, false);
+                    $rvMedian = $testResults->getMedianRunNumber($median_metric, true);
+
                     // create a friendlier (unique) name for the fi
                     $fileUrl = GetFileUrl($url);
+                    if ( $test['testinfo']['lighthouse'] && $fvMedian )
+                    {
+                      echo "<a href=\"/lighthouse.php?test=$id&run=$fvMedian\">Lighthouse report</a><br>";
+                    }
                     if( FRIENDLY_URLS )
                     {
                         echo "<a href=\"/result/$id/{$id}_{$fileUrl}_page_data.csv\">Raw page data</a> - ";
@@ -151,8 +158,6 @@ $page_description = "Website performance test result$testLabel.";
             <div class="cleared"></div>
             <div id="average">
                 <?php
-                $fvMedian = $testResults->getMedianRunNumber($median_metric, false);
-                $rvMedian = $testResults->getMedianRunNumber($median_metric, true);
                 $is_test_error = $testInfo->isTestError();
                 if ($fvMedian)
                 {

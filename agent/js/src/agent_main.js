@@ -221,6 +221,17 @@ Agent.prototype.scheduleProcessDone_ = function(ipcMsg, job) {
         fs.unlinkSync(ipcMsg.traceFile);
       } catch(e) {}
     }
+    if (ipcMsg.lighthouseFile) {
+      try {
+        var buffer = fs.readFileSync(ipcMsg.lighthouseFile);
+        if (buffer) {
+          job.resultFiles.push(new wpt_client.ResultFile(
+              wpt_client.ResultFile.ResultType.GZIP,
+              'lighthouse.html.gz', 'application/x-gzip', buffer));
+        }
+        fs.unlinkSync(ipcMsg.lighthouseFile);
+      } catch(e) {}
+    }
     if (ipcMsg.userTimingFile) {
       try {
         var buffer = fs.readFileSync(ipcMsg.userTimingFile);

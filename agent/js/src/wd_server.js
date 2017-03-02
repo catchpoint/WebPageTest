@@ -1028,13 +1028,34 @@ WebDriverServer.prototype.onTracingMessage_ = function(message) {
 };
 
 /**
- * Runs lighthouse with the options specified by the task and dumps data into 
+ * Runs lighthouse with the options specified by the task and dumps data into
  * a directory.
  * @private
  */
 WebDriverServer.prototype.runLighthouse_ = function() {
-  // TODO(phulce): actually run lighthouse
-  this.onPageLoad_(new Error('Lighthouse not yet implemented!'));
+  this.lighthouseFile_ = path.join(this.runTempDir_, 'lighthouse.html');
+  this.app_.timeout(1000, 'Waiting for Chrome to be available...');
+  process_utils.scheduleExec(this.app_,
+    'lighthouse',
+    [
+      '--disable-device-emulation',
+      '--disable-network-throttling',
+      '--save-assets',
+      '--port', this.browser_.devToolsPort_,
+      '--output', 'html',
+      '--output-path', this.lighthouseFile_,
+      this.task_.url,
+    ], undefined, this.timeout_).then(function () {
+    var devtoolsLogFile = path.join(this.runTempDir_, 'lighthouse-0.devtoolslog.json');
+    this.devToolsMessages_ = JSON.parse(fs.readFileSync(devtoolsLogFile, 'utf8'));
+
+    this.traceFile_ = path.join(this.runTempDir_, 'lighthouse-0.trace.json');
+    var contents = JSON.parse(fs.readFileSync(this.traceFile_, 'utf8'));
+    fs.writeFileSync(this.traceFile_, JSON.stringify(contents));
+    this.onPageLoad_();
+  }.bind(this), function (err) {
+    this.onPageLoad_(err);
+  }.bind(this));
 };
 
 /**
@@ -1590,7 +1611,7 @@ WebDriverServer.prototype.done_ = function() {
 
     this.scheduleNoFault_('Capture Screen Shot', function() {
       if (!this.task_.lighthouse)
-        this.takeScreenshot_('screen', 'end of run');
+        return this.takeScreenshot_('screen', 'end of run');
     }.bind(this));
     if (this.videoFile_) {
       this.scheduleNoFault_('Stop video recording',
@@ -1668,6 +1689,7 @@ WebDriverServer.prototype.done_ = function() {
           devToolsFile: devToolsFile,
           screenshots: this.screenshots_,
           traceFile: this.traceFile_,
+          lighthouseFile: this.lighthouseFile_,
           userTimingFile: this.userTimingFile_,
           cpuSlicesFile: this.cpuSlicesFile_,
           scriptTimingFile: this.scriptTimingFile_,
