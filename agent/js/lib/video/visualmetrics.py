@@ -466,7 +466,7 @@ def find_render_start(directory):
   global options
   global client_viewport
   try:
-    if client_viewport is not None or (options.renderignore > 0 and options.renderignore <= 100):
+    if client_viewport is not None or options.viewport is not None or (options.renderignore > 0 and options.renderignore <= 100):
       files = sorted(glob.glob(os.path.join(directory, 'video-*.png')))
       count = len(files)
       if count > 1:
@@ -499,7 +499,7 @@ def find_render_start(directory):
           top += client_viewport['y']
         crop = '{0:d}x{1:d}+{2:d}+{3:d}'.format(width, height, left, top)
         for i in xrange(1, count):
-          if frames_match(first, files[i], 10, 100, crop, mask):
+          if frames_match(first, files[i], 10, 500, crop, mask):
             logging.debug('Removing pre-render frame {0}'.format(files[i]))
             os.remove(files[i])
           else:

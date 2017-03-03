@@ -1569,6 +1569,7 @@ WebDriverServer.prototype.scheduleProcessVideo_ = function() {
           videoDir, '--force', '--quality', imgQ, '--viewport',
           '--maxframes', 50, '--histogram', this.histogramFile_];
       if (this.task_.lighthouse) {
+        options.push('--forceblank');
         options.push('--startwhite');
         options.push('--endwhite');
         options.push('--screenshot');
