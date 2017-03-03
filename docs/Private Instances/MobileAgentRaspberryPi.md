@@ -114,9 +114,11 @@ The WebPageTest node agent requires NodeJS, Python, imagemagick and ffmpeg as we
 	- ```sudo make install```
 	- ```cd ~```
 	- ```rm -rf ffmpeg```
-4. Install NodeJS 4.x
-	- ```curl -sL https://deb.nodesource.com/setup_4.x | sudo -E bash -```
+4. Install NodeJS 7.x
+	- ```curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -```
 	- ```sudo apt-get install -y nodejs```
+5. Install lighthouse
+	- ```sudo npm install -g lighthouse```
 
 ## Configure adb access ##
 By default, USB-connected devices are only available to the root user.  In order to access adb from the user you created you need to explicitly add the device ID's to a configuration file.
