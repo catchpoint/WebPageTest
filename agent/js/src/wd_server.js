@@ -1042,6 +1042,18 @@ WebDriverServer.prototype.onTracingMessage_ = function(message) {
  * @private
  */
 WebDriverServer.prototype.runLighthouse_ = function() {
+  var lighthouseConfig = {
+    extends: true,
+    passes: [{
+      passName: 'defaultPass',
+      blankPage: args.task['Capture Video'] ? ORANGE_PAGE_URL_ : BLANK_PAGE_URL_,
+      blankDuration: 1000,
+      gatherers: []
+    }]
+  };
+
+  var lighthouseConfigFile = path.join(this.runTempDir_, 'lighthouse.config.json');
+  fs.writeFileSync(lighthouseConfigFile, JSON.stringify(lighthouseConfig, null, 2));
   this.lighthouseFile_ = path.join(this.runTempDir_, 'lighthouse.html');
   this.app_.timeout(1000, 'Waiting for Chrome to be available...');
   process_utils.scheduleExec(this.app_,
@@ -1050,6 +1062,7 @@ WebDriverServer.prototype.runLighthouse_ = function() {
         '--disable-device-emulation',
         '--disable-network-throttling',
         '--save-assets',
+        '--config-path', lighthouseConfigFile,
         '--port', this.browser_.devToolsPort_,
         '--output', 'html',
         '--output-path', this.lighthouseFile_,
