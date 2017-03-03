@@ -70,6 +70,16 @@ window.addEventListener('beforeunload', function() {
 </html>
 */
 var ORANGE_PAGE_URL_ = 'data:text/html,%3Chtml%3E%0D%0A%3Chead%3E%0D%0A%3Cstyle%3E%0D%0Abody%20%7Bbackground-color%3A%20white%3B%20margin%3A%200%3B%7D%0D%0A%23o%20%7Bwidth%3A100%25%3B%20height%3A%20100%25%3B%20background-color%3A%20%23DE640D%3B%7D%0D%0A%3C%2Fstyle%3E%0D%0A%3Cscript%3E%0D%0Awindow.addEventListener%28%27beforeunload%27%2C%20function%28%29%20%7B%0D%0A%20%20var%20o%20%3D%20document.getElementById%28%27o%27%29%0D%0A%20%20o.parentNode.removeChild%28o%29%3B%0D%0A%7D%29%3B%0D%0A%3C%2Fscript%3E%0D%0A%3C%2Fhead%3E%0D%0A%3Cbody%3E%3Cdiv%20id%3D%27o%27%3E%3C%2Fdiv%3E%3C%2Fbody%3E%0D%0A%3C%2Fhtml%3E';
+/* ORANGE_PAGE_URL_
+<html>
+<head>
+<style>
+body {background-color: #DE640D;}
+</style>
+</head>
+</html>
+*/
+var LIGHTHOUSE_START_ = 'data:text/html,%3Chtml%3E%0D%0A%3Chead%3E%0D%0A%3Cstyle%3E%0D%0Abody%20%7Bbackground-color%3A%20%23DE640D%3B%7D%0D%0A%3C%2Fstyle%3E%0D%0A%3C%2Fhead%3E%0D%0A%3C%2Fhtml%3E'
 var GHASTLY_ORANGE_ = '#DE640D';
 
 // onDevToolsMessage_ log levels by message.method, defaults to 'debug'
@@ -155,8 +165,9 @@ WebDriverServer.prototype.initIpc = function() {
  */
 WebDriverServer.prototype.init = function(args) {
   'use strict';
-  args.startURL = args.task['Capture Video'] && !args.task.lighthouse ? 
-      ORANGE_PAGE_URL_ : BLANK_PAGE_URL_;
+  args.startURL = args.task['Capture Video'] ? ORANGE_PAGE_URL_ : BLANK_PAGE_URL_;
+  if (args.task['lighthouse'])
+    args.startURL = LIGHTHOUSE_START_;
   if (!this.browser_) {
     // Only set on the first run:
     //
@@ -333,7 +344,7 @@ WebDriverServer.prototype.connectDevTools_ = function() {
       }
       return connected.promise;
     }.bind(this), DEVTOOLS_CONNECT_TIMEOUT_MS_, 'Connect DevTools');
-    if (1 === this.task_.timeline) {
+    if (!this.task_.lighthouse && 1 === this.task_.timeline) {
       var timelineStackDepth = (this.task_.timelineStackDepth ?
           parseInt(this.task_.timelineStackDepth, 10) : 0);
       this.timelineCommand_('start', {maxCallStackDepth: timelineStackDepth});
@@ -909,18 +920,16 @@ WebDriverServer.prototype.holdBlankAndStartVideoDevTools_ = function() {
       if (!caps.videoRecording) {
         return;
       }
-      if (!this.browser_.isBlackBox && !this.task_.lighthouse) {
-        // Get the root frameId
-        this.pageCommand_('getResourceTree').then(function(result) {
-          var frameId = result.frameTree.frame.id;
-          this.scheduleStartVideoRecording_();
+      if (!this.browser_.isBlackBox) {
+        this.scheduleStartVideoRecording_();
+        if (!this.task_.lighthouse) {
           this.app_.schedule('Start recording tracing', function() {
             this.isRecordingDevTools_ = true;
             this.scheduleStartTracingIfRequested_();
           }.bind(this));
-          logger.debug("Waiting for 500ms to allow for video capture to start and grab some orange");
-          this.app_.timeout(500, 'Hold orange background');
-        }.bind(this));
+        }
+        logger.debug("Waiting for 500ms to allow for video capture to start and grab some orange");
+        this.app_.timeout(500, 'Hold orange background');
       } else {
         this.scheduleStartVideoRecording_();
       }
@@ -1181,12 +1190,13 @@ WebDriverServer.prototype.runPageLoad_ = function(browserCaps) {
     this.startChrome_(browserCaps);
   }
   this.prepareVideoCapture_();
-  if (!this.task_.lighthouse) {
-    this.startDevTools_();
-    this.prepareNetworkForNavigation_();
-  }
+  this.startDevTools_();
+  this.prepareNetworkForNavigation_();
   this.holdBlankAndStartVideoDevTools_();
   this.scheduleStartPacketCaptureIfRequested_();
+  if (this.task_.lighthouse) {
+    this.devTools_ = undefined;
+  }
   // No page load timeout here -- agent_main enforces run-level timeout.
   this.app_.schedule('Run page load', function() {
     this.testStartTime_ = Date.now();
@@ -1544,7 +1554,10 @@ WebDriverServer.prototype.scheduleProcessVideo_ = function() {
       var options = ['lib/video/visualmetrics.py', '-vvvv', '-i', this.videoFile_, '-d',
           videoDir, '--force', '--quality', imgQ, '--viewport',
           '--maxframes', 50, '--histogram', this.histogramFile_];
-      if (this.browser_.isBlackBox) {
+      if (this.task_.lighthouse) {
+        options.push('--startwhite');
+        options.push('--endwhite');
+      } if (this.browser_.isBlackBox) {
         if (this.browser_.videoFlags && this.browser_.videoFlags.length)
           for (var i = 0; i < this.browser_.videoFlags.length; i++)
             options.push(this.browser_.videoFlags[i]);
