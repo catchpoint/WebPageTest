@@ -168,6 +168,7 @@ WebDriverServer.prototype.init = function(args) {
   args.startURL = args.task['Capture Video'] ? ORANGE_PAGE_URL_ : BLANK_PAGE_URL_;
   if (args.task['lighthouse'])
     args.startURL = LIGHTHOUSE_START_;
+  this.blank_page_ = args.startURL;
   if (!this.browser_) {
     // Only set on the first run:
     //
@@ -1046,8 +1047,8 @@ WebDriverServer.prototype.runLighthouse_ = function() {
     extends: true,
     passes: [{
       passName: 'defaultPass',
-      blankPage: args.task['Capture Video'] ? ORANGE_PAGE_URL_ : BLANK_PAGE_URL_,
-      blankDuration: 1000,
+      blankPage: this.blank_page_,
+      blankDuration: 500,
       gatherers: []
     }]
   };
@@ -1062,7 +1063,7 @@ WebDriverServer.prototype.runLighthouse_ = function() {
         '--disable-device-emulation',
         '--disable-network-throttling',
         '--save-assets',
-        '--config-path', lighthouseConfigFile,
+//        '--config-path', lighthouseConfigFile,
         '--port', this.browser_.devToolsPort_,
         '--output', 'html',
         '--output-path', this.lighthouseFile_,
@@ -1570,6 +1571,10 @@ WebDriverServer.prototype.scheduleProcessVideo_ = function() {
       if (this.task_.lighthouse) {
         options.push('--startwhite');
         options.push('--endwhite');
+        options.push('--screenshot');
+        var screenshot = path.join(this.runTempDir_, 'screen.jpg');
+        options.push(screenshot);
+        this.addScreenshot_('screen.jpg', screenshot, 'screenshot');
       } if (this.browser_.isBlackBox) {
         if (this.browser_.videoFlags && this.browser_.videoFlags.length)
           for (var i = 0; i < this.browser_.videoFlags.length; i++)
