@@ -58,19 +58,6 @@ static const char * BLANK_HTML =
     "body {background-color: #FFF;}\n"
     "</style>\n"
     "</head><body>\n"
-    "<div id=\"viewport\" "
-    "style=\"position: fixed;top: 0;left: 0;bottom: 0;right: 0;\"></div>\n"
-    "<script>\n"
-    "var warmup = new XMLHttpRequest();\n"
-    "warmup.open('GET', 'https://www.google.com/', true);\n"
-    "warmup.send();\n"
-    "var v = document.getElementById(\"viewport\");\n"
-    "var s = document.createElement('script');\n"
-    "s.src = 'viewport.js?w=' + v.offsetWidth + "
-    "'&h=' + v.offsetHeight + "
-    "'&rnd=' + (Date.now() + Math.random());\n"
-    "v.appendChild(s);\n"
-    "</script>\n"
     "</body></html>";
 
 /*-----------------------------------------------------------------------------
