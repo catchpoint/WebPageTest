@@ -363,11 +363,11 @@ function GetUpdate() {
         unset($update);
     }
     
+    $updateDir = './work/update';
+    if (is_dir("$updateDir/$location"))
+      $updateDir = "$updateDir/$location";
+
     if (!isset($update)) {
-      $updateDir = './work/update';
-      if (is_dir("$updateDir/$location"))
-        $updateDir = "$updateDir/$location";
-          
       // see if we have any software updates
       if (is_file("$updateDir/{$fileBase}update.ini") && is_file("$updateDir/{$fileBase}update.zip")) {
         $update = parse_ini_file("$updateDir/{$fileBase}update.ini");
