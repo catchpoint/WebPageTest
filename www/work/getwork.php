@@ -371,19 +371,21 @@ function GetUpdate() {
       // see if we have any software updates
       if (is_file("$updateDir/{$fileBase}update.ini") && is_file("$updateDir/{$fileBase}update.zip")) {
         $update = parse_ini_file("$updateDir/{$fileBase}update.ini");
-
-        // Check for inequality allows both upgrade and quick downgrade
-        if ($update['ver'] && intval($update['ver']) !== intval($_GET['ver'])) {
-          header('Content-Type: application/zip');
-          header("Cache-Control: no-cache, must-revalidate");
-          header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
-
-          readfile_chunked("$updateDir/{$fileBase}update.zip");
-          $ret = true;
-        }
       }
       if (isset($update) && function_exists('apcu_store')) {
         apcu_store("update-$fileBase", $update, 60);
+      }
+    }
+    
+    if (isset($update)) {
+      // Check for inequality allows both upgrade and quick downgrade
+      if ($update['ver'] && intval($update['ver']) !== intval($_GET['ver'])) {
+        header('Content-Type: application/zip');
+        header("Cache-Control: no-cache, must-revalidate");
+        header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+
+        readfile_chunked("$updateDir/{$fileBase}update.zip");
+        $ret = true;
       }
     }
   }
