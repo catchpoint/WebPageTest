@@ -210,9 +210,9 @@ function DisplayResults(&$progress) {
   $firstFrame = current($progress['frames']);
   echo '<table class="thumbs">';
   echo '<tr><th colspan=3>Hover over or select a point on the chart to view the thumbnail and calculated progress.</th></tr><tr>';
-  echo "<td class=\"image\"><img src=\"{$progress['video']}/$firstFrame\"></td>";
-  echo "<td class=\"image\"><img id=\"videoFrame\" src=\"{$progress['video']}/$firstFrame\"></td>";
-  echo "<td class=\"image\"><img src=\"{$progress['video']}/$lastFrame\"></td>";
+  echo "<td class=\"image\"><img src=\"" . htmlspecialchars($progress['video']) . "/$firstFrame\"></td>";
+  echo "<td class=\"image\"><img id=\"videoFrame\" src=\"" . htmlspecialchars($progress['video']) . "/$firstFrame\"></td>";
+  echo "<td class=\"image\"><img src=\"" . htmlspecialchars($progress['video']) . "/$lastFrame\"></td>";
   echo '</tr>';
   echo "<tr><td>Start (0%)</td><td id=\"stats\"></td><td>Speed Index ($endTime ms):";
   foreach ($algorithms as $algorithm) {
@@ -239,7 +239,7 @@ function DisplayResults(&$progress) {
       $progress_end = $time;
     echo '<tr>';
     echo "<td class=\"time\">$time</td>";
-    echo "<td class=\"image\"><img src=\"{$progress['video']}/$file\"></td>";
+    echo "<td class=\"image\"><img src=\"" . htmlspecialchars($progress['video']) . "/$file\"></td>";
     foreach ($algorithms as $algorithm) {
       $value = '';
       if (array_key_exists($time, $progress['progress'][$algorithm]))
@@ -266,7 +266,7 @@ function DisplayResults(&$progress) {
     } else {
       echo ",\n";
     }
-    echo "$time: {'img': '{$progress['video']}/$file', 'label':'($time ms)";
+    echo "$time: {'img': '" . htmlspecialchars($progress['video']) . "/$file', 'label':'($time ms)";
     foreach ($algorithms as $algorithm) {
       $value = '';
       if (array_key_exists($time, $progress['progress'][$algorithm]))
