@@ -138,8 +138,8 @@ if (array_key_exists('f', $_REQUEST)) {
                 <div style="float: right;">
                     <form name="metric" method="get" action="viewtest.php">
                         <?php
-                        echo "<input type=\"hidden\" name=\"benchmark\" value=\"$benchmark\">";
-                        echo "<input type=\"hidden\" name=\"time\" value=\"$test_time\">";
+                        echo "<input type=\"hidden\" name=\"benchmark\" value=\"" . htmlspecialchars($benchmark) . "\">";
+                        echo "<input type=\"hidden\" name=\"time\" value=\"" . htmlspecialchars($test_time) . "\">";
                         ?>
                         Metric <select name="metric" size="1" onchange="this.form.submit();">
                         <?php
@@ -174,8 +174,8 @@ if (array_key_exists('f', $_REQUEST)) {
                     }
                     function SelectedPoint(url, tests, series, index, cached) {
                         <?php
-                            echo "var benchmark=\"$benchmark\";\n";
-                            echo "var medianMetric=\"$median_metric\";\n";
+                            echo "var benchmark=\"" . htmlspecialchars($benchmark) . "\";\n";
+                            echo "var medianMetric=\"" . htmlspecialchars($median_metric) . "\";\n";
                         ?>
                         var menu = '<div><h4>View test for ' + url + '</h4>';
                         var compare = "/video/compare.php?ival=100&medianMetric=" + medianMetric + "&tests=";
@@ -293,7 +293,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
     global $out_data;
     $chart_title = '';
     if (isset($title))
-        $chart_title = "title: \"$title (First View)\",";
+        $chart_title = "title: \"" . htmlspecialchars($title) . " (First View)\",";
     $annotations = null;
     $bmname = $benchmark['name'];
     if (isset($loc)) {
@@ -344,7 +344,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
     }
     if (!array_key_exists('fvonly', $benchmark) || !$benchmark['fvonly']) {
         if (isset($title))
-            $chart_title = "title: \"$title (Repeat View)\",";
+            $chart_title = "title: \"" . htmlspecialchars($title) . " (Repeat View)\",";
         $tsv = LoadTestDataTSV($benchmark['name'], 1, $metric, $test_time, $meta, $loc, $annotations);
         if (isset($out_data)) {
             $out_data[$bmname][$metric]['RV'] = TSVEncode($tsv);
