@@ -33,8 +33,10 @@ $page_description = "Comparison Test$testLabel.";
         <div class="page">
             <?php
             $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? '/compare' : '/pss.php' );
-            if( array_key_exists('pssid', $_GET) && strlen($_GET['pssid']) )
-                $navTabs['Test Result'] = FRIENDLY_URLS ? "/result/{$_GET['pssid']}/" : "/results.php?test={$_GET['pssid']}";
+            if( array_key_exists('pssid', $_GET) && strlen($_GET['pssid']) ) {
+                $pssid = htmlspecialchars($_GET['pssid']);
+                $navTabs['Test Result'] = FRIENDLY_URLS ? "/result/$pssid/" : "/results.php?test=$pssid";
+            }
             $tab = 'New Comparison';
             include 'header.inc';
             ?>
