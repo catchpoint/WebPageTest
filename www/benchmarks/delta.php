@@ -136,8 +136,8 @@ if (!isset($ref)) {
                 <div style="float: right;">
                     <form name="metric" method="get" action="delta.php">
                         <?php
-                        echo "<input type=\"hidden\" name=\"benchmark\" value=\"$benchmark\">";
-                        echo "<input type=\"hidden\" name=\"time\" value=\"$test_time\">";
+                        echo "<input type=\"hidden\" name=\"benchmark\" value=\"" . htmlspecialchars($benchmark) . "\">";
+                        echo "<input type=\"hidden\" name=\"time\" value=\"" . htmlspecialchars($test_time) . "\">";
                         ?>
                         Metric <select name="metric" size="1" onchange="this.form.submit();">
                         <?php
@@ -170,8 +170,8 @@ if (!isset($ref)) {
                     var charts = new Array();
                     function SelectedPoint(p, data, ref, cmp, cached) {
                         <?php
-                            echo "var benchmark=\"$benchmark\";\n";
-                            echo "var medianMetric=\"$median_metric\";\n";
+                            echo "var benchmark=\"" . htmlspecialchars($benchmark) . "\";\n";
+                            echo "var medianMetric=\"" . htmlspecialchars($median_metric) . "\";\n";
                         ?>
                         var index = p.yval.toFixed(5);
                         var menu = '<div><h4>View test for ' + data[index].url + '</h4>';
@@ -257,13 +257,13 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null) {
             $compare[] = $config;
     }
     foreach( $compare as $config ) {
-        $refLabel = $ref;
+        $refLabel = htmlspecialchars($ref);
         if (array_key_exists('title', $benchmark['configurations'][$ref])) {
-            $refLabel = $benchmark['configurations'][$ref]['title'];
+            $refLabel = htmlspecialchars($benchmark['configurations'][$ref]['title']);
         }
-        $configLabel = $config;
+        $configLabel = htmlspecialchars($config);
         if (array_key_exists('title', $benchmark['configurations'][$config])) {
-            $configLabel = $benchmark['configurations'][$config]['title'];
+            $configLabel = htmlspecialchars($benchmark['configurations'][$config]['title']);
         }
         $chart_title = "$configLabel vs. $refLabel";
         $tsv = LoadDeltaTSV($benchmark['name'], $ref, $config, 0, $metric, $test_time, $meta, $loc);
