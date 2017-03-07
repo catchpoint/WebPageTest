@@ -70,7 +70,7 @@ if (array_key_exists('f', $_REQUEST)) {
                 <div style="float: right;">
                     <form name="aggregation" method="get" action="view.php">
                         <?php
-                        echo "<input type=\"hidden\" name=\"benchmark\" value=\"$benchmark\">";
+                        echo "<input type=\"hidden\" name=\"benchmark\" value=\"" . htmlspecialchars($benchmark) . "\">";
                         ?>
                         Aggregation <select name="aggregate" size="1" onchange="this.form.submit();">
                             <option value="avg" <?php if ($aggregate == 'avg') echo "selected"; ?>>Average</option>
@@ -117,7 +117,7 @@ if (array_key_exists('f', $_REQUEST)) {
                 $hours = intval(floor($elapsed / 3600));
                 $elapsed -= $hours * 3600;
                 $minutes = intval(floor($elapsed / 60));
-                echo "<a href=\"partial.php?benchmark=$bm\">Benchmark is running</a> - completed $completed of $total tests in $hours hours and $minutes minutes.";
+                echo "<a href=\"partial.php?benchmark=" . htmlspecialchars($bm) . "\">Benchmark is running</a> - completed $completed of $total tests in $hours hours and $minutes minutes.";
               } else {
                 echo 'Not Running';
               }
@@ -129,7 +129,7 @@ if (array_key_exists('f', $_REQUEST)) {
             $bmData = array();
             foreach ($benchmarks as &$benchmark) {
               $entry = array();
-              $entry['title'] = array_key_exists('title', $benchmark) && strlen($benchmark['title']) ? $benchmark['title'] : $benchmark['name'];
+              $entry['title'] = htmlspecialchars(array_key_exists('title', $benchmark) && strlen($benchmark['title']) ? $benchmark['title'] : $benchmark['name']);
               $entry['configurations'] = array();
               foreach ($benchmark['configurations'] as $name => &$config) {
                 $entry['configurations'][$name] = array();
@@ -254,7 +254,7 @@ if (array_key_exists('f', $_REQUEST)) {
                 }
                 foreach( $metrics as $metric => $label) {
                     if (!isset($out_data)) {
-                        echo "<h2>$label <span class=\"small\">(<a name=\"$metric\" href=\"#$metric\">direct link</a>)</span></h2>\n";
+                        echo "<h2>" . htmlspecialchars($label) . " <span class=\"small\">(<a name=\"$metric\" href=\"#$metric\">direct link</a>)</span></h2>\n";
                     }
                     if ($info['expand'] && count($info['locations'] > 1)) {
                         foreach ($info['locations'] as $location => $label) {
@@ -294,7 +294,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
     global $INCLUDE_ERROR_BARS;
     $chart_title = '';
     if (isset($title))
-        $chart_title = "title: \"$title (First View)\",";
+        $chart_title = "title: \"" . htmlspecialchars($title) . " (First View)\",";
     $bmname = $benchmark['name'];
     if (isset($loc)) {
         $bmname .= ".$loc";
@@ -334,7 +334,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
     }
     if (!array_key_exists('fvonly', $benchmark) || !$benchmark['fvonly']) {
         if (isset($title))
-            $chart_title = "title: \"$title (Repeat View)\",";
+            $chart_title = "title: \"" . htmlspecialchars($title) . " (Repeat View)\",";
         $tsv = LoadDataTSV($benchmark['name'], 1, $metric, $aggregate, $loc, $annotations);
         if (isset($out_data)) {
             $out_data[$bmname][$metric]['RV'] = TSVEncode($tsv);
