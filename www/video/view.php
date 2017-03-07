@@ -194,8 +194,8 @@ else
             {
                 text-align:center;
                 <?php
-                echo "background-color: $bgcolor;\n";
-                echo "color: $color;\n";
+                echo "background-color: " . htmlspecialchars($bgcolor) . ";\n";
+                echo "color: " . htmlspecialchars($color) . ";\n";
                 ?>
                 font-family: arial,sans-serif;
                 padding: 0px 25px;
@@ -204,7 +204,7 @@ else
             {
                 text-decoration: underline;
                 <?php
-                echo "color: $color;\n";
+                echo "color: " . htmlspecialchars($color) . ";\n";
                 ?>
             }
             #player
@@ -220,8 +220,8 @@ else
             #embed
             {
                 <?php
-                    echo "background: $bgcolor;\n";
-                    echo "color: $color;\n"
+                    echo "background: " . htmlspecialchars($bgcolor) . ";\n";
+                    echo "color: " . htmlspecialchars($color) . ";\n"
                 ?>
                 font-family: arial,sans-serif;
                 padding: 20px;
@@ -245,13 +245,13 @@ else
               clear: both;
               float: right;
               <?php
-              echo "color: $lightcolor;\n";
+              echo "color: " . htmlspecialchars($lightcolor) . ";\n";
               ?>
             }
             #testmode a.link
             {
               <?php
-              echo "color: $lightcolor;\n";
+              echo "color: " . htmlspecialchars($lightcolor) . ";\n";
               ?>
             }
             .vjs-default-skin .vjs-controls {height: 0;}
@@ -259,7 +259,7 @@ else
             .vjs-default-skin .vjs-volume-control {display: none;}
             <?php
             if( $embed )
-                echo "body {background-color: $bgcolor; margin:0; padding: 0;}";
+                echo "body {background-color: " . htmlspecialchars($bgcolor) . "; margin:0; padding: 0;}";
             ?>
         </style>
         <script type="text/javascript" src="/video/video-js.3.2.0/video.min.js"></script>
