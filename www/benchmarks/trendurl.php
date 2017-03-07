@@ -55,7 +55,7 @@ if (array_key_exists('f', $_REQUEST)) {
                 <div style="float: right;">
                     <form name="aggregation" method="get" action="trendurl.php">
                         <?php
-                        echo "<input type=\"hidden\" name=\"benchmark\" value=\"$benchmark\">";
+                        echo "<input type=\"hidden\" name=\"benchmark\" value=\"" . htmlspecialchars($benchmark) . "\">";
                         echo '<input type="hidden" name="url" value="' . htmlentities($url) . '">';
                         ?>
                         Time Period <select name="days" size="1" onchange="this.form.submit();">
@@ -74,8 +74,8 @@ if (array_key_exists('f', $_REQUEST)) {
             <script type="text/javascript">
             function SelectedPoint(meta, time, cached) {
                 <?php
-                echo "var url = \"$url\";\n";
-                echo "var medianMetric=\"$median_metric\";\n";
+                echo "var url = \"" . htmlspecialchars($url) . "\";\n";
+                echo "var medianMetric=\"" . htmlspecialchars($median_metric) . "\";\n";
                 ?>
                 var menu = '<div><h4>View test for ' + url + '</h4>';
                 var compare = "/video/compare.php?ival=100&medianMetric=" + medianMetric + "&tests=";
@@ -147,10 +147,10 @@ if (array_key_exists('f', $_REQUEST)) {
               }
             }
             if (!isset($out_data)) {
-                echo "<h1>{$info['title']} - $url</h1>";
+                echo "<h1>{$info['title']} - " . htmlspecialchars($url) . "</h1>";
                 if (array_key_exists('description', $info))
-                    echo "<p>{$info['description']}</p>\n";
-                echo "<p>Displaying the median run for $url trended over time</p>";
+                    echo "<p>" . htmlspecialchars($info['description']) . "</p>\n";
+                echo "<p>Displaying the median run for " . htmlspecialchars($url) . " trended over time</p>";
             }
             foreach( $metrics as $metric => $label) {
                 if (!isset($out_data)) {
@@ -197,7 +197,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
     }
     $chart_title = '';
     if (isset($title))
-        $chart_title = "title: \"$title (First View)\",";
+        $chart_title = "title: \"" . htmlspecialchars($title) . " (First View)\",";
     $tsv = LoadTrendDataTSV($benchmark['name'], 0, $metric, $url, $loc, $annotations, $meta);
     if (isset($out_data)) {
         if (!array_key_exists($bmname, $out_data)) {
@@ -246,7 +246,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
     }
     if (!array_key_exists('fvonly', $benchmark) || !$benchmark['fvonly']) {
         if (isset($title))
-            $chart_title = "title: \"$title (Repeat View)\",";
+            $chart_title = "title: \"" . htmlspecialchars($title) . " (Repeat View)\",";
         $tsv = LoadTrendDataTSV($benchmark['name'], 1, $metric, $url, $loc, $annotations, $meta);
         if (isset($out_data)) {
             $out_data[$bmname][$metric]['RV'] = TSVEncode($tsv);
