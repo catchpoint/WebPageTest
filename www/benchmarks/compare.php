@@ -156,7 +156,7 @@ foreach ($benchmarks as &$benchmark) {
             
             <div class="translucent">
             <?php
-              echo '<h2>Comparing: ' . $comparing . '<br>From: ' . $baseline . '</h2>';
+              echo '<h2>Comparing: ' . htmlspecialchars($comparing) . '<br>From: ' . htmlspecialchars($baseline) . '</h2>';
             ?>
             <div style="clear:both;">
                 <div style="float:left;" class="notes">
@@ -183,8 +183,8 @@ foreach ($benchmarks as &$benchmark) {
                     }
                     function SelectedPoint(url, tests, series, index, cached) {
                         <?php
-                            echo "var benchmark=\"$benchmark\";\n";
-                            echo "var medianMetric=\"$median_metric\";\n";
+                            echo 'var benchmark="' . htmlspecialchars($benchmark) . "\";\n";
+                            echo 'var medianMetric="' . htmlspecialchars($median_metric) . "\";\n";
                         ?>
                         var menu = '<div><h4>View test for ' + url + '</h4>';
                         var compare = "/video/compare.php?ival=100&medianMetric=" + medianMetric + "&tests=";
@@ -208,7 +208,7 @@ foreach ($benchmarks as &$benchmark) {
             </div>
             <?php
             foreach( $metrics as $metric => $label) {
-                echo "<h2>$label <span class=\"small\">(<a name=\"$metric\" href=\"#$metric\">direct link</a>)</span></h2>\n";
+                echo "<h2>" . htmlspecialchars($label) . " <span class=\"small\">(<a name=\"" . htmlspecialchars($metric) . "\" href=\"#" . htmlspecialchars($metric) . "\">direct link</a>)</span></h2>\n";
                 DisplayBenchmarkData($metric);
             }
             ?>
