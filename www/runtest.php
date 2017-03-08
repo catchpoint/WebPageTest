@@ -583,7 +583,7 @@
                         foreach($hosts as $host) {
                             $host = trim($host);
                             if (strlen($host)) {
-                                $script .= "setDnsName\t$host\tblackhole.webpagetest.org\r\n";
+                                $script .= "setDns\t$host\t72.66.115.13\r\n";
                             }
                         }
                         if (strlen($script)) {
