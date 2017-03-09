@@ -186,6 +186,7 @@ agentUpdate=http://cdn.webpagetest.org/
 ;archive_s3_key=<access key>
 ;archive_s3_secret=<secret>
 ;archive_s3_bucket=<bucket>
+;archive_s3_urlstyle=vhost
 ;archive_s3_url=http://s3.amazonaws.com/
 
 ;Number of days to keep tests locally before archiving
