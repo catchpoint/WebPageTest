@@ -371,6 +371,7 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData) {
             $pageData['final_base_page_request_id'] = $rawPageData['mainResourceID'];
           }
         }
+        GetOptimizationResults($localPaths, $pageData, $requests);
         $ok = true;
       }
       if ($ok) {
@@ -378,6 +379,121 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData) {
       }
     }
     return $ok;
+}
+
+/**
+* Load any optimization results from the agents
+* 
+* @param mixed $localPaths
+* @param mixed $pageData
+* @param mixed $requests
+*/
+function GetOptimizationResults($localPaths, &$pageData, &$requests) {
+  $path = $localPaths->optimizationChecksFile();
+  if (gz_is_file($path)) {
+    $opt = json_decode(gz_file_get_contents($path), true);
+    if (isset($opt) && is_array($opt)) {
+      // Initialize the defaults
+      $pageData['score_cache'] = -1;
+      $pageData['score_cdn'] = -1;
+      $pageData['score_gzip'] = -1;
+      $pageData['score_cookies'] = -1;
+      $pageData['score_keep-alive'] = -1;
+      $pageData['score_minify'] = -1;
+      $pageData['score_combine'] = -1;
+      $pageData['score_compress'] = -1;
+      $pageData['score_etags'] = -1;
+      $pageData['score_progressive_jpeg'] = -1;
+      $pageData['gzip_total'] = 0;
+      $pageData['gzip_savings'] = 0;
+      $pageData['minify_total'] = -1;
+      $pageData['minify_savings'] = -1;
+      $pageData['image_total'] = 0;
+      $pageData['image_savings'] = 0;
+      $pageData['optimization_checked'] = 1;
+
+      // Track grades that are averages of the scores
+      $cache_count = 0;
+      $cache_total = 0;
+      $cdn_count = 0;
+      $cdn_total = 0;
+      $keep_alive_count = 0;
+      $keep_alive_total = 0;
+      $progressive_total_bytes = 0;
+      $progressive_bytes = 0;
+
+      // Attach the optimization check data to each request
+      foreach ($requests as &$request) {
+        if ($request['responseCode'] == 200) {
+          $id = $request['id'];
+          if (($pos = strpos($request['id'], '-')) !== false)
+            $id = substr($id, 0, $pos);
+          if (isset($opt[$id])) {
+            if (isset($opt[$id]['cache'])) {
+              $request['score_cache'] = $opt[$id]['cache']['score'];
+              $request['cache_time'] = $opt[$id]['cache']['time'];
+              $cache_count++;
+              $cache_total += $request['score_cache'];
+            }
+            if (isset($opt[$id]['cdn'])) {
+              $request['score_cdn'] = $opt[$id]['cdn']['score'];
+              $request['cdn_provider'] = $opt[$id]['cdn']['provider'];
+              $cdn_count++;
+              $cdn_total += $request['score_cdn'];
+            }
+            if (isset($opt[$id]['keep_alive'])) {
+              $request['score_keep-alive'] = $opt[$id]['keep_alive']['score'];
+              $keep_alive_count++;
+              $keep_alive_total += $request['score_keep-alive'];
+            }
+            if (isset($opt[$id]['gzip'])) {
+              $savings = $opt[$id]['gzip']['size'] - $opt[$id]['gzip']['target_size'];
+              $request['score_gzip'] = $opt[$id]['gzip']['score'];
+              $request['gzip_total'] = $opt[$id]['gzip']['size'];
+              $request['gzip_save'] = $savings;
+              $pageData['gzip_total'] += $opt[$id]['gzip']['size'];
+              $pageData['gzip_savings'] += $savings;
+            }
+            if (isset($opt[$id]['image'])) {
+              $savings = $opt[$id]['image']['size'] - $opt[$id]['image']['target_size'];
+              $request['score_compress'] = $opt[$id]['image']['score'];
+              $request['image_total'] = $opt[$id]['image']['size'];
+              $request['image_save'] = $savings;
+              $pageData['image_total'] += $opt[$id]['image']['size'];
+              $pageData['image_savings'] += $savings;
+            }
+            if (isset($opt[$id]['progressive'])) {
+              $size = $opt[$id]['progressive']['size'];
+              $request['jpeg_scan_count'] = $opt[$id]['progressive']['scan_count'];
+              $progressive_total_bytes += $size;
+              if ($request['jpeg_scan_count'] > 1) {
+                $request['score_progressive_jpeg'] = 100;
+                $progressive_bytes += $size;
+              } elseif ($size < 10240) {
+                $request['score_progressive_jpeg'] = 50;
+              } else {
+                $request['score_progressive_jpeg'] = 0;
+              }
+            }
+          }
+        }
+      }
+
+      // Figure out the page-level optimization scores
+      if ($cache_count > 0)
+        $pageData['score_cache'] = intval($cache_total / $cache_count);
+      if ($cdn_count > 0)
+        $pageData['score_cdn'] = intval($cdn_total / $cdn_count);
+      if ($keep_alive_count > 0)
+        $pageData['score_keep-alive'] = intval($keep_alive_total / $keep_alive_count);
+      if ($pageData['gzip_total'] > 0)
+        $pageData['score_gzip'] = 100 - intval($pageData['gzip_savings'] * 100 / $pageData['gzip_total']);
+      if ($pageData['image_total'] > 0)
+        $pageData['score_compress'] = 100 - intval($pageData['image_savings'] * 100 / $pageData['image_total']);
+      if ($progressive_total_bytes > 0)
+        $pageData['score_progressive_jpeg'] = intval($progressive_bytes * 100 / $progressive_total_bytes);
+    }
+  }
 }
 
 /**

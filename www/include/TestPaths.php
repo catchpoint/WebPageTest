@@ -322,6 +322,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for the optimization check results
+   */
+  public function optimizationChecksFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_optimization.json";
+  }
+
+  /**
    * @return string Path to the raw video
    */
   public function rawDeviceVideo() {
