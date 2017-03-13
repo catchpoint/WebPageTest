@@ -224,7 +224,8 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "Netlify", "Netlify"},
   {"section-io-id", "", "section.io"},
   {"server", "Testa/", "Naver"},
-  {"server", "BunnyCDN", "BunnyCDN"}
+  {"server", "BunnyCDN", "BunnyCDN"},
+  {"server", "MNCDN", "Medianova"}
 };
 
 // Specific providers that require multiple headers
