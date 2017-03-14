@@ -153,6 +153,7 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.customMetrics = undefined;
     g_instance.timelineStackDepth = 0;
     g_instance.traceRunning = false;
+    g_instance.headers = {};
     var version = '1.2';
     if (g_instance.chromeApi_['debugger'])
         g_instance.chromeApi_.debugger.attach({tabId: g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachDebugger);
@@ -203,9 +204,8 @@ wpt.chromeDebugger.SetUserAgent = function(UAString) {
 };
 
 wpt.chromeDebugger.AddHeader = function (name, value) {
-  var headers = {}
-  headers[name] = value;
-  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.setExtraHTTPHeaders', {"headers": headers});
+  g_instance.headers[name] = value;
+  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.setExtraHTTPHeaders', {"headers": g_instance.headers});
 }
 
 /**
