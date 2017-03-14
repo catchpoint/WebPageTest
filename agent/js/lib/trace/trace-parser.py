@@ -438,7 +438,7 @@ class Trace():
             'feature' in trace_event['args'] and\
         (trace_event['name'] == 'FeatureFirstUsed' or trace_event['name'] == 'CSSFirstUsed'):
       if self.feature_usage is None:
-        self.feature_usage = {'Features': {}, 'CSSFeatures': {}}
+        self.feature_usage = {'Features': {}, 'CSSFeatures': {}, 'AnimatedCSSFeatures': {}}
       if self.feature_usage_start_time is None:
         if self.start_time is not None:
           self.feature_usage_start_time = self.start_time
@@ -460,6 +460,13 @@ class Trace():
           name = 'CSSFeature_{0}'.format(id)
         if name not in self.feature_usage['CSSFeatures']:
           self.feature_usage['CSSFeatures'][name] = timestamp
+      elif trace_event['name'] == 'AnimatedCSSFirstUsed':
+        if id in CSS_FEATURES:
+          name = CSS_FEATURES[id]
+        else:
+          name = 'CSSFeature_{0}'.format(id)
+        if name not in self.feature_usage['AnimatedCSSFeatures']:
+          self.feature_usage['AnimatedCSSFeatures'][name] = timestamp
 
   ########################################################################################################################
   #   Netlog
@@ -2087,7 +2094,76 @@ BLINK_FEATURES = {
   "1784": "HTMLTableCellElementColspanGreaterThan1000",
   "1785": "HTMLTableCellElementColspanGreaterThan8190",
   "1786": "SelectionAddRangeIntersect",
-  "1787": "PostMessageFromInsecureToSecureToplevel"
+  "1787": "PostMessageFromInsecureToSecureToplevel",
+  "1788": "V8MediaSession_Metadata_AttributeGetter",
+  "1789": "V8MediaSession_Metadata_AttributeSetter",
+  "1790": "V8MediaSession_PlaybackState_AttributeGetter",
+  "1791": "V8MediaSession_PlaybackState_AttributeSetter",
+  "1792": "V8MediaSession_SetActionHandler_Method",
+  "1793": "WebNFCPush",
+  "1794": "WebNFCCancelPush",
+  "1795": "WebNFCWatch",
+  "1796": "WebNFCCancelWatch",
+  "1797": "AudioParamCancelAndHoldAtTime",
+  "1798": "CSSValueUserModifyReadOnly",
+  "1799": "CSSValueUserModifyReadWrite",
+  "1800": "CSSValueUserModifyReadWritePlaintextOnly",
+  "1801": "V8TextDetector_Detect_Method",
+  "1802": "CSSValueOnDemand",
+  "1803": "ServiceWorkerNavigationPreload",
+  "1804": "FullscreenRequestWithPendingElement",
+  "1805": "HTMLIFrameElementAllowfullscreenAttributeSetAfterContentLoad",
+  "1806": "PointerEventSetCaptureOutsideDispatch",
+  "1807": "NotificationPermissionRequestedInsecureOrigin",
+  "1808": "V8DeprecatedStorageInfo_QueryUsageAndQuota_Method",
+  "1809": "V8DeprecatedStorageInfo_RequestQuota_Method",
+  "1810": "V8DeprecatedStorageQuota_QueryUsageAndQuota_Method",
+  "1811": "V8DeprecatedStorageQuota_RequestQuota_Method",
+  "1812": "V8FileReaderSync_Constructor",
+  "1813": "UncancellableTouchEventPreventDefaulted",
+  "1814": "UncancellableTouchEventDueToMainThreadResponsivenessPreventDefaulted",
+  "1815": "V8HTMLVideoElement_Poster_AttributeGetter",
+  "1816": "V8HTMLVideoElement_Poster_AttributeSetter",
+  "1817": "NotificationPermissionRequestedIframe",
+  "1818": "FileReaderSyncInServiceWorker",
+  "1819": "PresentationReceiverInsecureOrigin",
+  "1820": "PresentationReceiverSecureOrigin",
+  "1821": "PresentationRequestInsecureOrigin",
+  "1822": "PresentationRequestSecureOrigin",
+  "1823": "RtcpMuxPolicyNegotiate",
+  "1824": "DOMClobberedVariableAccessed",
+  "1825": "HTMLDocumentCreateProcessingInstruction",
+  "1826": "FetchResponseConstructionWithStream",
+  "1827": "LocationOrigin",
+  "1828": "DocumentOrigin",
+  "1829": "SubtleCryptoOnlyStrictSecureContextCheckFailed",
+  "1830": "Canvas2DFilter",
+  "1831": "Canvas2DImageSmoothingQuality",
+  "1832": "CanvasToBlob",
+  "1833": "CanvasToDataURL",
+  "1834": "OffscreenCanvasConvertToBlob",
+  "1835": "SVGInCanvas2D",
+  "1836": "SVGInWebGL",
+  "1837": "SelectionFuncionsChangeFocus",
+  "1838": "HTMLObjectElementGetter",
+  "1839": "HTMLObjectElementSetter",
+  "1840": "HTMLEmbedElementGetter",
+  "1841": "HTMLEmbedElementSetter",
+  "1842": "TransformUsesBoxSizeOnSVG",
+  "1843": "ScrollByKeyboardArrowKeys",
+  "1844": "ScrollByKeyboardPageUpDownKeys",
+  "1845": "ScrollByKeyboardHomeEndKeys",
+  "1846": "ScrollByKeyboardSpacebarKey",
+  "1847": "ScrollByTouch",
+  "1848": "ScrollByWheel",
+  "1849": "ScheduledActionIgnored",
+  "1850": "GetCanvas2DContextAttributes",
+  "1851": "V8HTMLInputElement_Capture_AttributeGetter",
+  "1852": "V8HTMLInputElement_Capture_AttributeSetter",
+  "1853": "HTMLMediaElementControlsListAttribute",
+  "1854": "HTMLMediaElementControlsListNoDownload",
+  "1855": "HTMLMediaElementControlsListNoFullscreen",
+  "1856": "HTMLMediaElementControlsListNoRemotePlayback"
 }
 
 ########################################################################################################################
@@ -2604,7 +2680,9 @@ CSS_FEATURES = {
   "552": "CSSPropertyMinInlineSize",
   "553": "CSSPropertyMinBlockSize",
   "554": "CSSPropertyMaxInlineSize",
-  "555": "CSSPropertyMaxBlockSize"
+  "555": "CSSPropertyMaxBlockSize",
+  "556": "CSSPropertyAliasLineBreak",
+  "557": "CSSPropertyPlaceContent"
 }
 
 if '__main__' == __name__:
