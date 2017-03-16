@@ -233,6 +233,7 @@ void WptDriverCore::WaitForStartup() {
   Main thread for processing work
 -----------------------------------------------------------------------------*/
 void WptDriverCore::WorkThread(void) {
+  ULONGLONG screen_unavailable = 0;
   if (Startup()) {
     #ifndef DEBUG
     WaitForStartup();
@@ -263,6 +264,7 @@ void WptDriverCore::WorkThread(void) {
     if (_settings.CheckBrowsers()) {
       WaitForSingleObject(_testing_mutex, INFINITE);
       if (ScreenCaptureAvailable()) {
+        screen_unavailable = 0;
         _status.Set(_T("Checking for work..."));
         WptTestDriver test(_settings._timeout * SECONDS_TO_MS, has_gpu_);
         if (_webpagetest.GetTest(test)) {
@@ -346,12 +348,24 @@ void WptDriverCore::WorkThread(void) {
           }
         }
       } else {
-        _status.Set(_T("Screen capture is unavailable, Rebooting..."));
-        Reboot();
-        int delay = 30 * SECONDS_TO_MS;
-        while (!_exit && delay > 0) {
-          Sleep(100);
-          delay -= 100;
+        // Give it up to 10 minutes to become available before deciding to exit
+        ULONGLONG now = GetTickCount64();
+        if (!screen_unavailable)
+          screen_unavailable = now;
+        if (now - screen_unavailable > 600000) {
+          _status.Set(_T("Screen capture is unavailable, Rebooting..."));
+          Reboot();
+          int delay = 30 * SECONDS_TO_MS;
+          while (!_exit && delay > 0) {
+            Sleep(100);
+            delay -= 100;
+          }
+        } else {
+          int delay = ((rand() % 5000) - 2500) + (_settings._polling_delay * SECONDS_TO_MS);
+          while (!_exit && delay > 0) {
+            Sleep(100);
+            delay -= 100;
+          }
         }
       }
     } else {
