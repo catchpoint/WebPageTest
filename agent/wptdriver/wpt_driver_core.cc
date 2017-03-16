@@ -266,6 +266,7 @@ void WptDriverCore::WorkThread(void) {
         _status.Set(_T("Checking for work..."));
         WptTestDriver test(_settings._timeout * SECONDS_TO_MS, has_gpu_);
         if (_webpagetest.GetTest(test)) {
+          TerminateProcessesByName(_T("rundll32.exe"));
           if (!test._software_update_url.IsEmpty())
             _settings._software_update.SetSoftwareUrl(test._software_update_url);
           PreTest();

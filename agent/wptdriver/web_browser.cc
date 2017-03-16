@@ -352,6 +352,7 @@ bool WebBrowser::RunAndWait(HANDLE &browser_process) {
   } else {
     _test._run_error = "Failed to configure IPFW/dummynet.  Is it installed?";
   }
+  TerminateProcessesByName(_T("rundll32.exe"));
 
   if (active_event)
     CloseHandle(active_event);
