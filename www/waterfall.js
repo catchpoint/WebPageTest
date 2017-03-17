@@ -126,7 +126,7 @@ function SelectRequest(step, request) {
           details += '<br>';
         }
         if (r['was_pushed'] !== undefined && r['was_pushed'] > 0)
-            details += '<b>SERVER PUSHED</b>';
+            details += '<b>SERVER PUSHED</b><br>';
         if (r['client_port'] !== undefined && r['client_port'] !== null && r['client_port'])
             details += '<b>Client Port: </b>' + htmlEncode(r['client_port']) + '<br>';
         if (r['load_start'] !== undefined)

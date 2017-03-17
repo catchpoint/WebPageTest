@@ -64,7 +64,7 @@ class RequestHeadersHtmlSnippet {
       $out .= '<br>';
     }
     if (isset($request['was_pushed']) && $request['was_pushed'] > 0)
-        echo '<b>SERVER PUSHED</b>';
+        echo '<b>SERVER PUSHED</b><br>';
     if (array_key_exists('initiator', $request) && strlen($request['initiator'])) {
       $out .= "<b>Initiated By:</b> " . htmlspecialchars($request['initiator']);
       if (array_key_exists('initiator_line', $request) && strlen($request['initiator_line']))
