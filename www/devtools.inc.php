@@ -377,7 +377,7 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData) {
             return 0;
           return ($a['load_start'] < $b['load_start']) ? -1 : 1;
         });
-        NetlogRequestTimings($localPaths, $pageData, $requests);
+        ProcessNetlogRequests($localPaths, $pageData, $requests);
         usort($requests, function($a, $b) {
           if ($a['load_start'] == $b['load_start'])
             return 0;
@@ -400,7 +400,7 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData) {
 * @param mixed $pageData
 * @param mixed $requests
 */
-function NetlogRequestTimings($localPaths, $pageData, &$requests) {
+function ProcessNetlogRequests($localPaths, &$pageData, &$requests) {
   $path = $localPaths->netlogRequestsFile();
   $mapping = array('dns_start' => 'dns_start',
                    'dns_end' => 'dns_end',
@@ -437,8 +437,108 @@ function NetlogRequestTimings($localPaths, $pageData, &$requests) {
                 $request['ttfb_ms'] = intval(round($entry['first_byte'] - $entry['start']));
               if (isset($entry['end']))
                 $request['load_ms'] = intval(round($entry['end'] - $entry['start']));
+              if (isset($entry['pushed']) && $entry['pushed'])
+                $request['was_pushed'] = 1;
             }
           }
+        }
+      }
+      // Add any netlog requests that we didn't know about
+      foreach ($netlog as $index => $entry) {
+        if (!isset($entry['claimed'])) {
+          $request = array('type' => 3, 'full_url' => $entry['url']);
+          $url = parse_url($entry['url']);
+          if ($url['scheme'] == 'https')
+            $request['is_secure'] = 1;
+          else
+            $request['is_secure'] = 0;
+          $request['host'] = $url['host'];
+          $request['url'] = $url['path'];
+          if (strlen($url['query']))
+            $request['url'] .= '?' . $url['query'];
+          $request['score_cache'] = -1;
+          $request['score_cdn'] = -1;
+          $request['score_gzip'] = -1;
+          $request['score_cookies'] = -1;
+          $request['score_keep-alive'] = -1;
+          $request['score_minify'] = -1;
+          $request['score_combine'] = -1;
+          $request['score_compress'] = -1;
+          $request['score_etags'] = -1;
+          $request['dns_ms'] = -1;
+          $request['connect_ms'] = -1;
+          $request['ssl_ms'] = -1;
+          $request['gzip_total'] = null;
+          $request['gzip_save'] = null;
+          $request['minify_total'] = null;
+          $request['minify_save'] = null;
+          $request['image_total'] = null;
+          $request['image_save'] = null;
+          $request['cache_time'] = null;
+          $request['cdn_provider'] = null;
+          $request['server_count'] = null;
+          $request['type'] = 3;
+          $request['dns_start'] = -1;
+          $request['dns_end'] = -1;
+          $request['connect_start'] = -1;
+          $request['connect_end'] = -1;
+          $request['ssl_start'] = -1;
+          $request['ssl_end'] = -1;
+          foreach ($mapping as $from => $to) {
+            if (isset($entry[$from])) {
+              if (is_float($entry[$from]))
+                $request[$to] = intval(round($entry[$from]));
+              else
+                $request[$to] = $entry[$from];
+            }
+          }
+          if (isset($entry['first_byte']))
+            $request['ttfb_ms'] = intval(round($entry['first_byte'] - $entry['start']));
+          if (isset($entry['end']))
+            $request['load_ms'] = intval(round($entry['end'] - $entry['start']));
+          $request['headers'] = array();
+          if (isset($entry['request_headers']))
+            $request['headers']['request'] = $entry['request_headers'];
+          if (isset($entry['response_headers'])) {
+            $request['headers']['response'] = $entry['response_headers'];
+            foreach ($entry['response_headers'] as $header) {
+              if (preg_match("/^HTTP\/1[^\s]+ (\d+)/", $header, $matches))
+                $request['responseCode'] = intval($matches[1]);
+              if (preg_match("/^:status: (\d+)/", $header, $matches))
+                $request['responseCode'] = intval($matches[1]);
+              if (preg_match("/^content-type: (.+)/i", $header, $matches))
+                $request['contentType'] = $matches[1];
+              if (preg_match("/^cache-control: (.+)/i", $header, $matches))
+                $request['cacheControl'] = $matches[1];
+              if (preg_match("/^content-encoding: (.+)/i", $header, $matches))
+                $request['contentEncoding'] = $matches[1];
+              if (preg_match("/^expires: (.+)/i", $header, $matches))
+                $request['expires'] = $matches[1];
+            }
+          }
+          if (isset($entry['pushed']) && $entry['pushed'])
+            $request['was_pushed'] = 1;
+          if (isset($entry['bytes_in'])) {
+            $request['bytesIn'] = $entry['bytes_in'];
+            $request['objectSize'] = $entry['bytes_in'];
+          }
+          $request['bytesOut'] = 0;
+          $pageData['bytesIn'] += $request['bytesIn'];
+          $pageData['requests']++;
+          if ($request['load_start'] < $pageData['docTime']) {
+            $pageData['bytesOutDoc'] += $request['bytesOut'];
+            $pageData['bytesInDoc'] += $request['bytesIn'];
+            $pageData['requestsDoc']++;
+          }
+          if ($request['responseCode'] == 200) {
+            $pageData['responses_200']++;
+          } elseif ($request['responseCode'] == 404) {
+            $pageData['responses_404']++;
+            $pageData['result'] = 99999;
+          } else {
+            $pageData['responses_other']++;
+          }
+          $requests[] = $request;
         }
       }
     }
