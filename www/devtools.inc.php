@@ -345,7 +345,8 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData) {
                       } else
                           $pageData['responses_other']++;
                       
-                      $requests[] = $request;
+                      if ($request['load_start'] > 0)
+                        $requests[] = $request;
                     }
                   }
                 }
@@ -371,6 +372,17 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData) {
             $pageData['final_base_page_request_id'] = $rawPageData['mainResourceID'];
           }
         }
+        usort($requests, function($a, $b) {
+          if ($a['load_start'] == $b['load_start'])
+            return 0;
+          return ($a['load_start'] < $b['load_start']) ? -1 : 1;
+        });
+        NetlogRequestTimings($localPaths, $pageData, $requests);
+        usort($requests, function($a, $b) {
+          if ($a['load_start'] == $b['load_start'])
+            return 0;
+          return ($a['load_start'] < $b['load_start']) ? -1 : 1;
+        });
         GetOptimizationResults($localPaths, $pageData, $requests);
         $ok = true;
       }
@@ -379,6 +391,58 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData) {
       }
     }
     return $ok;
+}
+
+/**
+* See if we have request timing information available from the netlog
+* 
+* @param mixed $localPaths
+* @param mixed $pageData
+* @param mixed $requests
+*/
+function NetlogRequestTimings($localPaths, $pageData, &$requests) {
+  $path = $localPaths->netlogRequestsFile();
+  $mapping = array('dns_start' => 'dns_start',
+                   'dns_end' => 'dns_end',
+                   'connect_start' => 'connect_start',
+                   'connect_end' => 'connect_end',
+                   'ssl_start' => 'ssl_start',
+                   'ssl_end' => 'ssl_end',
+                   'start' => 'load_start',
+                   'priority' => 'priority',
+                   'protocol' => 'protocol',
+                   'socket' => 'socket',
+                   'stream_id' => 'http2_stream_id',
+                   'parent_stream_id' => 'http2_stream_dependency',
+                   'weight' => 'http2_stream_weight',
+                   'exclusive' => 'http2_stream_exclusive');
+  if (gz_is_file($path)) {
+    $netlog = json_decode(gz_file_get_contents($path), true);
+    if (isset($netlog) && is_array($netlog)) {
+      foreach ($requests as &$request) {
+        if (isset($request['full_url'])) {
+          // Find the first matching request in the netlog
+          foreach ($netlog as $index => $entry) {
+            if (isset($entry['url']) && isset($entry['start']) && !isset($entry['claimed']) && $entry['url'] == $request['full_url']) {
+              $netlog[$index]['claimed'] = true;
+              foreach ($mapping as $from => $to) {
+                if (isset($entry[$from])) {
+                  if (is_float($entry[$from]))
+                    $request[$to] = intval(round($entry[$from]));
+                  else
+                    $request[$to] = $entry[$from];
+                }
+              }
+              if (isset($entry['first_byte']))
+                $request['ttfb_ms'] = intval(round($entry['first_byte'] - $entry['start']));
+              if (isset($entry['end']))
+                $request['load_ms'] = intval(round($entry['end'] - $entry['start']));
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 /**

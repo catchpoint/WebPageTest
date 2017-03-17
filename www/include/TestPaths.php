@@ -329,6 +329,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for the netlog-parsed requests
+   */
+  public function netlogRequestsFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_netlog_requests.json";
+  }
+
+  /**
    * @return string Path to the raw video
    */
   public function rawDeviceVideo() {
