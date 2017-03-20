@@ -1,0 +1,4 @@
+ProductRegistry.nameForUrl=function(parsedUrl){if(parsedUrl.isDataURL())
+return null;var productsByDomain=ProductRegistry._productsByDomain;var domain=parsedUrl.domain();var domainParts=domain.split('.');while(domainParts.length>1){var subDomain=domainParts.join('.');var entry=productsByDomain.get(subDomain);if(entry&&(!entry.exact||subDomain===domain))
+return entry.name;domainParts.shift();}
+return null;};ProductRegistry.register=function(data){for(var i=0;i<data.length;i++){var entry=data[i];ProductRegistry._productsByDomain.set(entry.url,entry);}};ProductRegistry._productsByDomain=new Map();;ProductRegistry.register([{url:'google-analytics.com','name':'Google Analytics','exact':false},{url:'chromium.org','name':'Chromium','exact':false}]);;

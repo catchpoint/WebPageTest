@@ -36,7 +36,7 @@ if ($newTimeline) {
   $url = $cdn ? $cdn : "$protocol://$host";
   $url .= $uri;
   // short-term hack because the timeline code doesn't URLdecode query params and we can't pass any URL with a &
-  $url .= "/inspector-20160510/inspector.html?experiments=true&loadTimelineFromURL=$timelineUrlParam";
+  $url .= "/inspector-20170320/inspector.html?experiments=true&loadTimelineFromURL=$timelineUrlParam";
   header("Location: $url");
 } else {
   echo '<iframe id="devtools" frameborder="0" height="100%" width="100%" src="/chrome/inspector-20140603/devtools.html" onload="DevToolsLoaded();"></iframe>';
