@@ -1203,7 +1203,7 @@ function GetTestInfoHtml($includeScript = true)
         {
             $html .= '<p><a href="javascript:void(0)" id="script_in_results">Script <span class="arrow"></span></a></p>';
             $html .= '<div id="script_in_results-container" class="hidden">';
-            $html .= '<pre>' . $test['testinfo']['script'] . '</pre>';
+            $html .= '<pre>' . htmlspecialchars($test['testinfo']['script']) . '</pre>';
             $html .= '</div>';
         }
         else
