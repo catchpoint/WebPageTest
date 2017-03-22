@@ -140,7 +140,7 @@ function csvPageData($id, $testPath, $runs) {
       for( $i = 1; $i <= $runs; $i++ ) {
         if (array_key_exists($i, $pageData)) {
           for ($cached = 0; $cached <= 1; $cached++) {
-            if (array_key_exists($cached, $pageData[$i])) {
+            if (isset($pageData[$i][$cached]['URL'])) {
               $breakdown = getBreakdown($id, $testPath, $i, $cached, $requests);
               if (isset($breakdown) && is_array($breakdown) && count($breakdown)) {
                 foreach($breakdown as $mime_type => $b) {
