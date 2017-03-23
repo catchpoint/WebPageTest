@@ -177,6 +177,7 @@ CDN_PROVIDER cdnList[] = {
   {".hosting4cdn.com", "Hosting4CDN"},
   {".netlify.com", "Netlify"},
   {".b-cdn.net", "BunnyCDN"},
+  {".pix-cdn.org", "Advanced Hosters CDN"},
   {"END_MARKER", "END_MARKER"}
 };
 
