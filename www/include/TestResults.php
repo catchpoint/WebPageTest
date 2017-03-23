@@ -208,6 +208,19 @@ class TestResults {
     }
     return false;
   }
+  
+  /** Return the lighthouse results (from json) */
+  public function getLighthouseResult() {
+    $lighthouse = null;
+    $localPaths = new TestPaths($this->testInfo->getRootDirectory(), 1, 0, 1);
+    $lighthouse_file = $localPaths->lighthouseJsonFile();
+    if (gz_is_file($lighthouse_file)) {
+      $result = json_decode(gz_file_get_contents($lighthouse_file), true);
+      if (isset($result) && is_array($result))
+        $lighthouse = $result;
+    }
+    return $lighthouse;
+  }
 
   private function calculateAverages($cached) {
     $avgResults = array();

@@ -110,6 +110,13 @@ class JsonResultGenerator {
     $ret['successfulFVRuns'] = $testResults->countSuccessfulRuns(false);
     if (!$fvOnly)
       $ret['successfulRVRuns'] = $testResults->countSuccessfulRuns(true);
+      
+    // lighthouse
+    if (!$this->hasInfoFlag(self::BASIC_INFO_ONLY)) {
+      $lighthouse = $testResults->getLighthouseResult();
+      if (isset($lighthouse))
+        $ret['lighthouse'] = $lighthouse;
+    }
 
     // average
     $stats = array($testResults->getFirstViewAverage(), $testResults->getRepeatViewAverage());

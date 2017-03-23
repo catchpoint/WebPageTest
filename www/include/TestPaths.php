@@ -315,6 +315,20 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for lighthouse json file
+   */
+  public function lighthouseJsonFile() {
+    return $this->testRoot . "lighthouse.json";
+  }
+
+  /**
+   * @return string Path for lighthouse html file
+   */
+  public function lighthouseHtmlFile() {
+    return $this->testRoot . "lighthouse.html";
+  }
+
+  /**
    * @return string Path for the console log
    */
   public function consoleLogFile() {

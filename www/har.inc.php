@@ -114,6 +114,13 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
       'name' => 'WebPagetest',
       'version' => VER_WEBPAGETEST
       );
+  // Attach the lighthouse result at the top level
+  $lighthouse_file = "$testPath/lighthouse.json";
+  if (gz_is_file($lighthouse_file)) {
+    $lighthouse = json_decode(gz_file_get_contents($lighthouse_file), true);
+    if (isset($lighthouse) && is_array($lighthouse))
+      $result['_lighthouse'] = $lighthouse;
+  }  
   $result['log']['pages'] = array();
   foreach ($pageData as $run => $pageRun) {
     foreach ($pageRun as $cached => $data) {
