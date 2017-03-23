@@ -243,8 +243,8 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
                 $benchmark = $test['testinfo']['benchmark'];
                 if (isset($test['testinfo']['epoch'])) {
                     $epochStr = $test['testinfo']['epoch'];
-                    $epoch = (int)$epochStr + ($tz_offset * 60);
-                    $epochTime = strftime('%x %X', $epoch);
+                    $epoch = (int)$epochStr;
+                    $epochTime = strftime('%x %X', $epoch + ($tz_offset * 60));
                     $benchmarkStr = "$benchmark - <span class=\"jsdate\" date=\"$epochStr\">$epochTime</span>";
                 } else {
                     $benchmarkStr = $benchmark;
