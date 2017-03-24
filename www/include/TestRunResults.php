@@ -280,6 +280,20 @@ class TestRunResults {
     return false;
   }
 
+  /**
+   * @return bool True if any step si optimization checked, false otherwise
+   */
+  public function getLighthouseScore() {
+    $score = null;
+    foreach ($this->stepResults as $stepResult) {
+      $score = $stepResult->getMetric("lighthouse.ProgressiveWebApp");
+      if (isset($score)) {
+        return intval(($score * 100.0) + 0.5);
+      }
+    }
+    return $score;
+  }
+
   public function hasBreakdownTimeline() {
     foreach ($this->stepResults as $stepResult) {
       if ($stepResult->hasBreakdownTimeline()) {

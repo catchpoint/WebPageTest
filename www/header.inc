@@ -173,7 +173,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
           echo '<div id="optimization">';
               echo '<div id="optimization_header">';
               $localPaths = new TestPaths($testPath, $gradeRun, false);
-              $urlGenerator = UrlGenerator::create(FRIENDLY_URLS, "", $id, $gradeRun, false);
+              $urlGenerator = UrlGenerator::create(false, "", $id, $gradeRun, false);
               
               echo "<div id=\"opthelp\"><a href=\"https://sites.google.com/a/webpagetest.org/docs/other-resources/optimization-resources\" title=\"Optimization Resources\" target=\"_blank\">Need help improving?</a></div>\n";
               echo '</div>';
@@ -186,8 +186,14 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
                         $smaller = ' smaller';
                       echo "<ul class=\"grades$smaller\">";
                       $optlink = $urlGenerator->resultPage("performance_optimization");
-                      foreach( $grades as $check => &$grade )
-                          echo "<li class=\"$check\"><a href=\"$optlink#$check\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
+                      foreach( $grades as $check => &$grade ) {
+                          if ($check == 'lighthouse') {
+                            $lighthouse = $urlGenerator->resultPage("lighthouse");
+                            echo "<li class=\"$check\"><a href=\"$lighthouse\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
+                          }else {
+                            echo "<li class=\"$check\"><a href=\"$optlink#$check\"><h2 class=\"{$grade['class']}\">{$grade['grade']}</h2></a>{$grade['description']}</li>";
+                          }
+                      }
                       echo '</ul>';
                   }
               echo '</div>';
@@ -356,6 +362,19 @@ if( !strcasecmp('Test Result', $tab) || (array_key_exists('compare', $_COOKIE) &
 function GetGrades($testInfo, $testRunResults)
 {
     $grades = array();
+    $lighthouse = $testRunResults->getLighthouseScore();
+    if (isset($lighthouse)) {
+      $class = 'F';
+      if ($lighthouse > 90)
+        $class = 'A';
+      elseif ($lighthouse > 80)
+        $class = 'B';
+      elseif ($lighthouse > 70)
+        $class = 'C';
+      elseif ($lighthouse > 60)
+        $class = 'D';
+      $grades['lighthouse'] = array( 'class' => $class, 'grade' => $lighthouse, 'description' => 'Lighthouse PWA Score');
+    }
     if ($testRunResults->isOptimizationChecked()) {
         require_once('optimization_detail.inc.php');
 

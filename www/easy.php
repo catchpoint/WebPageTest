@@ -92,16 +92,10 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
                             <label for="videoCheck">Include Repeat View:<br></label>
                             <input type="checkbox" name="rv" id="rv" class="checkbox" onclick="rvChanged()">(Loads the page, closes the browser and then loads the page again)
                         </li>
-                        <?php
-                        if (isset($_REQUEST['lighthouse']) || GetSetting('lighthouse')) {
-                        ?>
                         <li>
                             <label for="videoCheck">Run Lighthouse Audit:<br></label>
                             <input type="checkbox" name="lighthouse" id="lighthouse" class="checkbox" onclick="lighthouseChanged()">(Mobile devices only)
                         </li>
-                        <?php
-                        }
-                        ?>
                     </ul>
                 </div>
             </div>

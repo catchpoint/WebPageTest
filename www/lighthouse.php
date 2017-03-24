@@ -5,7 +5,7 @@ if(array_key_exists("HTTP_IF_MODIFIED_SINCE",$_SERVER) && strlen(trim($_SERVER['
   include 'common.inc';
   $ok = false;
   if (isset($testPath) && is_dir($testPath)) {
-    $file = "${run}_lighthouse.html.gz";
+    $file = "lighthouse.html.gz";
     $filePath = "$testPath/$file";
     if (is_file($filePath)) {
       $ok = true;
@@ -14,8 +14,7 @@ if(array_key_exists("HTTP_IF_MODIFIED_SINCE",$_SERVER) && strlen(trim($_SERVER['
       header('Last-Modified: ' . gmdate('r'));
       header('Cache-Control: public,max-age=31536000');
       header('Content-type: text/html');
-      header('Content-Length: ' . filesize($filePath));
-      readfile($filePath);
+      gz_readfile_chunked($filePath);
     }
   }
   if (!$ok) {

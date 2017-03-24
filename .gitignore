@@ -56,3 +56,13 @@ agent/js/5c2.sh
 agent/wptdriver/*.ini
 /agent/webdriver/data
 /agent/webdriver/test.json
+/www/installers/browsers/chrome-update-origin.dat
+/www/installers/browsers/chrome-update2.dat
+/www/installers/browsers/chrome2.dat
+/www/installers/browsers/firefox-origin.dat
+/www/installers/browsers/firefox2.dat
+/www/installers/python/ujson/ujson.pyd
+/www/installers/python/ujson/ujson.zip
+/www/installers/software2.dat
+/www/amp.html
+/www/apc/apc.php

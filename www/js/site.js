@@ -1009,6 +1009,8 @@ var getScrollbarWidth = function() {
                     return 'Click the grade to see the requests that should be served from a CDN if you have a distributed user base';
                 } else if (t.hasClass('first_byte_time')) {
                     return 'Click the grade to see information about the target First Byte Time';
+                } else if (t.hasClass('lighthouse')) {
+                    return 'Click the score to see the full Lighthouse Progressive Web App report';
                 }
 
                 return false;
