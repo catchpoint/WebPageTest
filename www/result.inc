@@ -130,10 +130,6 @@ $page_description = "Website performance test result$testLabel.";
 
                     // create a friendlier (unique) name for the fi
                     $fileUrl = GetFileUrl($url);
-                    if ( $test['testinfo']['lighthouse'] && $fvMedian )
-                    {
-                      echo "<a href=\"/lighthouse.php?test=$id&run=$fvMedian\">Lighthouse report</a><br>";
-                    }
                     if( FRIENDLY_URLS )
                     {
                         echo "<a href=\"/result/$id/{$id}_{$fileUrl}_page_data.csv\">Raw page data</a> - ";
