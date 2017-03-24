@@ -281,7 +281,7 @@ class TestRunResults {
   }
 
   /**
-   * @return bool True if any step si optimization checked, false otherwise
+   * @return int lighthouse score
    */
   public function getLighthouseScore() {
     $score = null;

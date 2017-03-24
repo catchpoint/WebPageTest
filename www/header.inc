@@ -165,6 +165,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
                 $gradeRun = $medianRun;
         }
         $gradeRunResults = $testResults->getRunResult($gradeRun, false);
+        $firstRunResults = $testResults->getRunResult(1, false);
 
         echo '<div id="header_container">';
         // Only include optimization data for normal tests
@@ -178,7 +179,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
               echo "<div id=\"opthelp\"><a href=\"https://sites.google.com/a/webpagetest.org/docs/other-resources/optimization-resources\" title=\"Optimization Resources\" target=\"_blank\">Need help improving?</a></div>\n";
               echo '</div>';
               echo '<div id="grades">';
-                  $grades = GetGrades($testInfo, $gradeRunResults);
+                  $grades = GetGrades($testInfo, $gradeRunResults, $firstRunResults);
                   if( count($grades) )
                   {
                       $smaller = '';
@@ -359,10 +360,10 @@ if( !strcasecmp('Test Result', $tab) || (array_key_exists('compare', $_COOKIE) &
 * @param TestRunResults $testRunResults Run results to compute the grades for
 * @return array An array with the different grades
 */
-function GetGrades($testInfo, $testRunResults)
+function GetGrades($testInfo, $testRunResults, $firstRunResults)
 {
     $grades = array();
-    $lighthouse = $testRunResults->getLighthouseScore();
+    $lighthouse = $firstRunResults->getLighthouseScore();
     if (isset($lighthouse)) {
       $class = 'F';
       if ($lighthouse > 90)
