@@ -285,20 +285,6 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
             $ret['TTIMeasurementEnd'] = $measurement_end;
         }
       }
-      
-      // see if there is test-level lighthouse data to attach
-      $lighthouse_file = $localPaths->lighthouseJsonFile();
-      if (gz_is_file($lighthouse_file)) {
-        $lighthouse = json_decode(gz_file_get_contents($lighthouse_file), true);
-        if (isset($lighthouse) && is_array($lighthouse) && isset($lighthouse['aggregations'])) {
-          foreach($lighthouse['aggregations'] as $lh) {
-            if (isset($lh['name']) && isset($lh['total']) && isset($lh['scored']) && $lh['scored']) {
-              $name = 'lighthouse.' . str_replace(' ', '', $lh['name']);
-              $ret[$name] = $lh['total'];
-            }
-          }
-        }
-      }  
     }
     
     // For visual tests (black-box browser testing) use the visual metrics as the base timings
@@ -393,6 +379,23 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
       $testInfo['completed'] &&
       $testInfo['completed'] > $testInfo['started']) {
     $ret['testTiming']['AllRunsDuration'] = ($testInfo['completed'] - $testInfo['started']) * 1000;
+  }
+
+  if (isset($ret)) {
+    // see if there is test-level lighthouse data to attach
+    // Don't cache the lighthouse bit because the file may come in after other results are cached
+    $lighthouse_file = $localPaths->lighthouseJsonFile();
+    if (gz_is_file($lighthouse_file)) {
+      $lighthouse = json_decode(gz_file_get_contents($lighthouse_file), true);
+      if (isset($lighthouse) && is_array($lighthouse) && isset($lighthouse['aggregations'])) {
+        foreach($lighthouse['aggregations'] as $lh) {
+          if (isset($lh['name']) && isset($lh['total']) && isset($lh['scored']) && $lh['scored']) {
+            $name = 'lighthouse.' . str_replace(' ', '', $lh['name']);
+            $ret[$name] = $lh['total'];
+          }
+        }
+      }
+    }  
   }
   
   return $ret;
