@@ -20,8 +20,6 @@ function loadAllPageData($testPath, $options = null) {
     $runs = $ini['test']['runs'];
     $fvonly = $ini['test']['fvonly'];
     $testInfo = GetTestInfo($testPath);
-    if (@$testInfo['type'] == 'lighthouse')
-      return null;
     $completed = true;
     if ($testInfo && (!array_key_exists('completed', $testInfo) || !$testInfo['completed']))
       $completed = false;

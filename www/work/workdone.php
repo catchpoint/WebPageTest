@@ -111,9 +111,6 @@ if (ValidateTestId($id)) {
       if (!isset($testLock))
         logTestMsg($id, "Failed to lock test");
       $testInfo = GetTestInfo($id);
-      $post_process_test = true;
-      if (@$testInfo['type'] == 'lighthouse' || @$testInfo['type'] == 'traceroute')
-        $post_process_test = false;
       
       // Figure out the path to the results.
       $ini = parse_ini_file("$testPath/testinfo.ini");
@@ -187,7 +184,7 @@ if (ValidateTestId($id)) {
       }
 
       // Do any post-processing on this individual run
-      if ($post_process_test && isset($runNumber) && isset($cacheWarmed)) {
+      if (isset($runNumber) && isset($cacheWarmed)) {
         $resultProcessing = new ResultProcessing($testPath, $id, $runNumber, $cacheWarmed);
         $testerError = $resultProcessing->postProcessRun();
 
@@ -271,17 +268,15 @@ if (ValidateTestId($id)) {
         MoveVideoFiles($testPath);
         WptHookPostProcessResults(__DIR__ . '/../' . $testPath);
         
-        if ($post_process_test) {
-          if (!isset($pageData))
-            $pageData = loadAllPageData($testPath);
-          $medianRun = GetMedianRun($pageData, 0, $medianMetric);
-          $testInfo['medianRun'] = $medianRun;
-          $testInfo_dirty = true;
+        if (!isset($pageData))
+          $pageData = loadAllPageData($testPath);
+        $medianRun = GetMedianRun($pageData, 0, $medianMetric);
+        $testInfo['medianRun'] = $medianRun;
+        $testInfo_dirty = true;
 
-          // delete all of the videos except for the median run?
-          if( array_key_exists('median_video', $ini) && $ini['median_video'] )
-            KeepVideoForRun($testPath, $medianRun);
-        }
+        // delete all of the videos except for the median run?
+        if( array_key_exists('median_video', $ini) && $ini['median_video'] )
+          KeepVideoForRun($testPath, $medianRun);
         
         $test = file_get_contents("$testPath/testinfo.ini");
         $now = gmdate("m/d/y G:i:s", $time);
@@ -295,6 +290,29 @@ if (ValidateTestId($id)) {
           file_put_contents("$testPath/testinfo.ini", $out);
         }
         
+        // see if it is an industry benchmark test
+        if (array_key_exists('industry', $ini) && array_key_exists('industry_page', $ini) && 
+          strlen($ini['industry']) && strlen($ini['industry_page'])) {
+          if( !is_dir('./video/dat') )
+            mkdir('./video/dat', 0777, true);
+          $indLock = Lock("Industry Video");
+          if (isset($indLock)) {
+            // update the page in the industry list
+            $ind;
+            $data = file_get_contents('./video/dat/industry.dat');
+            if( $data )
+              $ind = json_decode($data, true);
+            $update = array();
+            $update['id'] = $id;
+            $update['last_updated'] = $now;
+            $ind[$ini['industry']][$ini['industry_page']] = $update;
+            $data = json_encode($ind);
+            file_put_contents('./video/dat/industry.dat', $data);
+            Unlock($indLock);
+          }
+        }
+      }
+
       if ($testInfo_dirty)
         SaveTestInfo($id, $testInfo);
 
@@ -310,8 +328,7 @@ if (ValidateTestId($id)) {
         logTestMsg($id, "Test Complete");
 
         // send an async request to the post-processing code so we don't block
-        if ($post_process_test)
-          SendAsyncRequest("/work/postprocess.php?test=$id");
+        SendAsyncRequest("/work/postprocess.php?test=$id");
       }
     } else {
       logMsg("location key incorrect\n");
