@@ -60,6 +60,13 @@ class TestInfo {
   }
 
   /**
+   * @return string The type of the test
+   */
+  public function getTestType() {
+    return isset($this->rawData['testinfo']['type']) ? $this->rawData['testinfo']['type'] : 0;
+  }
+
+  /**
    * @return bool True if the test only has first views, false otherwise
    */
   public function isFirstViewOnly() {

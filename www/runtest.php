@@ -423,15 +423,6 @@
             if( $req_ads == 'blocked' )
                 $test['block'] .= ' adsWrapper.js adsWrapperAT.js adsonar.js sponsored_links1.js switcher.dmn.aol.com';
 
-            // see if they selected blank ads (AOL-specific)
-            if( $req_ads == 'blank' )
-            {
-                if( strpos($test['url'], '?') === false )
-                    $test['url'] .= '?atwExc=blank';
-                else
-                    $test['url'] .= '&atwExc=blank';
-            }
-            
             // see if there are any custom metrics to extract
             if (is_dir('./settings/custom_metrics')) {
               $files = glob('./settings/custom_metrics/*.js');
@@ -469,6 +460,13 @@
                   $test['customMetrics'] = array();
                 $test['customMetrics'][$metric] = base64_encode($code);
               }
+            }
+            
+            // Force some test options when running a lighthouse-only test
+            if ($test['type'] == 'lighthouse') {
+              $test['lighthouse'] = 1;
+              $test['runs'] = 1;
+              $test['fvonly'] = 1;
             }
         }
         else
