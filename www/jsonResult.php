@@ -75,7 +75,7 @@ if (array_key_exists('batch', $test['test']) && $test['test']['batch']) {
         $json_file = "./$testPath/lighthouse.json";
         $ret['data'] = array('html_result_url' => "$urlStart/results.php?test=$id");
         if (gz_is_file($json_file))
-          $ret['data']['json'] = json_decode(gz_file_get_contents($json_file), true);
+          $ret['data']['lighthouse'] = json_decode(gz_file_get_contents($json_file), true);
       } else {
         $ret['data'] = $jsonResultGenerator->resultDataArray($testResults, $median_metric);
       }
