@@ -125,6 +125,7 @@
             $test['video'] = $req_video;
             $test['keepvideo'] = isset($req_keepvideo) && $req_keepvideo ? 1 : 0;
             $test['continuousVideo'] = isset($req_continuousVideo) && $req_continuousVideo ? 1 : 0;
+            $test['renderVideo'] = isset($req_renderVideo) && $req_renderVideo ? 1 : 0;
             $test['label'] = preg_replace('/[^\w\d \-_\.]/', '', trim($req_label));
             $test['industry'] = trim($req_ig);
             $test['industry_page'] = trim($req_ip);
@@ -2011,6 +2012,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "\r\nCapture Video=1";
             if (GetSetting('save_mp4') || $test['keepvideo'])
                 $testFile .= "\r\nkeepvideo=1";
+            if ($test['renderVideo'])
+                $testFile .= "\r\nrenderVideo=1";
             if( strlen($test['type']) )
                 $testFile .= "\r\ntype={$test['type']}";
             if( $test['block'] ) {
