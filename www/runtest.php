@@ -506,10 +506,16 @@
             $test['priority'] =  0;
         }
         
-        if ($test['mobile'] && isset($test['mobileDevice']) && is_file('./settings/mobile_devices.ini')) {
-          setcookie('mdev', $test['mobileDevice'], time()+60*60*24*365, '/');
+        if ($test['mobile'] && is_file('./settings/mobile_devices.ini')) {
           $devices = parse_ini_file('./settings/mobile_devices.ini', true);
-          if ($devices && isset($devices[$test['mobileDevice']])) {
+          if ($devices) {
+            if (isset($test['mobileDevice'])) {
+              setcookie('mdev', $test['mobileDevice'], time()+60*60*24*365, '/');
+            }
+            if (!isset($test['mobileDevice']) || !isset($devices[$test['mobileDevice']])) {
+              // Grab the first device from the list
+              $test['mobileDevice'] = key($devices);
+            }
             $test['mobileDeviceLabel'] = isset($devices[$test['mobileDevice']]['label']) ? $devices[$test['mobileDevice']]['label'] : $test['mobileDevice'];
             if (!$test['width'] && isset($devices[$test['mobileDevice']]['width']))
               $test['width'] = $devices[$test['mobileDevice']]['width'];
