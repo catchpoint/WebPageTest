@@ -268,6 +268,9 @@ class JsonResultGenerator {
     if ($this->fileHandler->fileExists($localPaths->screenShotPngFile())) {
       $ret['images']['screenShotPng'] = $urlGenerator->getFile($nameOnlyPaths->screenShotPngFile());
     }
+    if ($this->fileHandler->fileExists($localPaths->renderedVideoFile())) {
+      $ret['video'] = $urlGenerator->getFile($nameOnlyPaths->renderedVideoFile());
+    }
 
     $ret['rawData'] = array();
     if ($this->fileHandler->gzFileExists($localPaths->devtoolsScriptTimingFile()))

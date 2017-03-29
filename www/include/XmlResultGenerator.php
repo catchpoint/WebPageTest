@@ -297,6 +297,9 @@ class XmlResultGenerator {
       echo "<screenShotPng>" . htmlspecialchars($urlGenerator->getFile($nameOnlyPaths->screenShotPngFile())) . "</screenShotPng>\n";
     }
     echo "</images>\n";
+    if ($this->fileHandler->fileExists($localPaths->renderedVideoFile())) {
+      echo "<video>" . htmlspecialchars($urlGenerator->getFile($nameOnlyPaths->renderedVideoFile())) . "</video>\n";
+    }
 
     // raw results (files accessed directly on the file system, but via URL)
     echo "<rawData>\n";

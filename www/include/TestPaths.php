@@ -177,6 +177,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for the rendered video file
+   */
+  public function renderedVideoFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_rendered_video.mp4";
+  }
+
+  /**
    * @param string $type One of 'render', 'dom', 'doc', 'responsive'
    * @return string Path for the additional screenshot file
    */
