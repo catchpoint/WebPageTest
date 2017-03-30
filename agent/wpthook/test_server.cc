@@ -59,6 +59,19 @@ static const char * BLANK_HTML =
     "</style>\n"
     "</head><body>\n"
     "</body></html>";
+static const char * VIEWPORT_HTML = 
+    "<html><head><title>Blank</title>\n"
+    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, "
+    "maximum-scale=1.0, user-scalable=0;\">\n"
+    "<style type=\"text/css\">\n"
+    "body {background-color: #FFF;}\n"
+    "</style>\n"
+    "<script>\n"
+    "var url = '/viewport.js?w=' + window.innerWidth + '&h=' + window.innerHeight;"
+    "document.write('<scr' + 'ipt src=\"' + url + '\"></scr' + 'ipt>');\n"
+    "</script>\n"
+    "</head><body>\n"
+    "</body></html>";
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -345,7 +358,10 @@ void TestServer::HTTPRequest(struct mg_connection *conn, struct http_message *me
       if (!started_)
         OkToStart(false);
       test_state_.UpdateBrowserWindow();
-      text_response = BLANK_HTML;
+      if (test_._viewport_width && test_._viewport_height)
+        text_response = VIEWPORT_HTML;
+      else
+        text_response = BLANK_HTML;
       response_type = "text/html";
 	  } else if (uri.Left(12) == "/viewport.js") {
       DWORD width = 0;

@@ -478,6 +478,8 @@ BOOL CALLBACK MakeTopmost(HWND hwnd, LPARAM lParam) {
 -----------------------------------------------------------------------------*/
 void TestState::UpdateBrowserWindow(DWORD current_width,
                                     DWORD current_height) {
+  ATLTRACE("[wpthook] - UpdateBrowserWindow. currently: %d x %d", current_width,
+           current_height);
   if (!_started) {
     DWORD browser_process_id = GetCurrentProcessId();
     if (no_gdi_)
@@ -489,6 +491,8 @@ void TestState::UpdateBrowserWindow(DWORD current_width,
     // position the browser window
     bool updated = false;
     if (_test._viewport_width && _test._viewport_height) {
+      ATLTRACE("[wpthook] - Target viewport: %d x %d", _test._viewport_width,
+               _test._viewport_height);
       if (current_width && current_height &&
           (_test._viewport_width != current_width ||
            _test._viewport_height != current_height)) {
@@ -523,6 +527,8 @@ void TestState::UpdateBrowserWindow(DWORD current_width,
       EnumWindows(::MakeTopmost, (LPARAM)this);
       FindViewport();
     }
+  } else {
+    ATLTRACE("[wpthook] - UpdateBrowserWindow. Abort (already started)");
   }
 }
 
