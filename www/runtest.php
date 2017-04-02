@@ -1215,11 +1215,6 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             $test['noheaders'] = $test['noheaders'] ? 1 : 0;
             $test['aft'] = 0;
             
-            // Lighthouse tests are first-view only
-            if ($test['lighthouse']) {
-              $test['fvonly'] = 1;
-            }
-
             if( !$test['aftMinChanges'] && $settings['aftMinChanges'] )
                 $test['aftMinChanges'] = $settings['aftMinChanges'];
 
