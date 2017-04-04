@@ -437,6 +437,10 @@ bool BrowserSettings::Load(const TCHAR * browser, const TCHAR * iniFile,
   // Delete an artifact from a bad agent update
   DeleteFile(_wpt_directory + CString(_T("\\templates\\Firefox\\extensions\\wptdriver@webpagetest.org.xpi")));
 
+  // Delete the old extension
+  DeleteFile(_wpt_directory + CString(_T("\\templates\\Firefox\\wptdriver-1.0-fx-windows.xpi")));
+  DeleteDirectory(_wpt_directory + CString(_T("\\templates\\Firefox\\extensions\\wptdriver@webpagetest.org")));
+
   GetStandardDirectories();
 
   if (!_browser.CompareNoCase(_T("Edge")) || !_browser.CompareNoCase(_T("Microsoft Edge"))) {

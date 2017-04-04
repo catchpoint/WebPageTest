@@ -1,0 +1,52 @@
+Manifest-Version: 1.0
+
+Name: manifest.json
+Digest-Algorithms: MD5 SHA1
+MD5-Digest: DNHbPQta2BwbK7uZa1NPFw==
+SHA1-Digest: A6v0aD9m5aatCO1GSIgwbSPnlx8=
+
+Name: wpt/allTests.css
+Digest-Algorithms: MD5 SHA1
+MD5-Digest: GqKdO4oew7HVmur1vrtgBw==
+SHA1-Digest: Jsvc537rHmuOhBGCFQpDWPvWBZ4=
+
+Name: wpt/allTests.html
+Digest-Algorithms: MD5 SHA1
+MD5-Digest: 2NqYznE/ylTOUrtqsjyeNA==
+SHA1-Digest: 9kecc29WtqTVDBo2v/edLOWnrdU=
+
+Name: wpt/allTests.js
+Digest-Algorithms: MD5 SHA1
+MD5-Digest: xFSvjXpsOk1qdtreq7HcZQ==
+SHA1-Digest: mKZrvxH+xV4el7O6wlC7HW/Lgj8=
+
+Name: wpt/background.js
+Digest-Algorithms: MD5 SHA1
+MD5-Digest: oHNehCj2IW2TqtROE3NDgg==
+SHA1-Digest: R9IvCKGm6szCGxMgfZiOGURNb0o=
+
+Name: wpt/browserActionPopup.css
+Digest-Algorithms: MD5 SHA1
+MD5-Digest: L6+7pZ/1DZk9LtAuqIkgEw==
+SHA1-Digest: 35XuTCe3H5EH3k8yvW8XSI6g1bw=
+
+Name: wpt/browserActionPopup.html
+Digest-Algorithms: MD5 SHA1
+MD5-Digest: MMfRviTk/I9N4upFUZXFhQ==
+SHA1-Digest: LxPg3BEBfUqwFLtddMLb0bV28sg=
+
+Name: wpt/browserActionPopup.js
+Digest-Algorithms: MD5 SHA1
+MD5-Digest: phbAyVkS3RuMuUXxPd7QBQ==
+SHA1-Digest: VWrMGex0FS+pIh/SpvpCG9gVKeo=
+
+Name: wpt/icon.jpg
+Digest-Algorithms: MD5 SHA1
+MD5-Digest: QEcasvy2Qp+VQqiZhT7GdQ==
+SHA1-Digest: 0IxQwVRoOU5m9aZ1W3fkcTmnqC4=
+
+Name: wpt/script.js
+Digest-Algorithms: MD5 SHA1
+MD5-Digest: U2wmtxBGnafEHo1YQbKXFQ==
+SHA1-Digest: F7g5afWjMNk8nm70w4H5AV4pjME=
+
