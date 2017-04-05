@@ -155,6 +155,7 @@
             $test['timelineStackDepth'] = array_key_exists('timelineStack', $_REQUEST) && $_REQUEST['timelineStack'] ? 5 : 0;
             $test['swrender'] = $req_swrender;
             $test['trace'] = array_key_exists('trace', $_REQUEST) && $_REQUEST['trace'] ? 1 : 0;
+            $test['codeCoverage'] = isset($_REQUEST['codeCoverage']) && $_REQUEST['codeCoverage'] ? 1 : 0;
             if (isset($_REQUEST['trace']) &&
                 strlen($_REQUEST['traceCategories']) &&
                 strpos($test['traceCategories'], "\n") === false &&
@@ -1321,16 +1322,8 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             if( !$test['aftEarlyCutoff'] && $settings['aftEarlyCutoff'] )
                 $test['aftEarlyCutoff'] = $settings['aftEarlyCutoff'];
 
-            if ( $test['lighthouse'] ) {
-              $lh_error = '';
-              if ( strpos($test['browser'], 'Chrome') === FALSE )
-                $lh_error = 'Lighthouse only works on Chrome';
-              if ( strlen($test['script']) )
-                $lh_error = 'Lighthouse cannot run with custom scripts';
-
-              if ( strlen($lh_error) )
-                $error = "Lighthouse Incompatibility: $lh_error";
-            }
+            if ($test['lighthouse'] && strlen($test['script']))
+                $error = 'Lighthouse cannot run with custom scripts';
         }
     } elseif( !strlen($error) ) {
         $error = "Invalid URL, please try submitting your test request again.";
@@ -2066,6 +2059,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "mobile=1\r\n";
             if( $test['lighthouse'] )
                 $testFile .= "lighthouse=1\r\n";
+            if( $test['codeCoverage'] )
+                $testFile .= "codeCoverage=1\r\n";
             if( isset($test['dpr']) && $test['dpr'] > 0 )
                 $testFile .= "dpr={$test['dpr']}\r\n";
             if( isset($test['width']) && $test['width'] > 0 )
