@@ -439,7 +439,7 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="codeCoverage" id="codeCoverage" class="checkbox" style="float: left;width: auto;" checked>
                                         <label for="codeCoverage" class="auto_width">
-                                            Check for code coverage (Mobile devices only)
+                                            Check for code coverage (Mobile devices only, Chrome 59+ - significantly impacts javascript performance)
                                         </label>
                                     </li>
                                     <?php
