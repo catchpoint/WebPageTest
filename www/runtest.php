@@ -155,7 +155,6 @@
             $test['timelineStackDepth'] = array_key_exists('timelineStack', $_REQUEST) && $_REQUEST['timelineStack'] ? 5 : 0;
             $test['swrender'] = $req_swrender;
             $test['trace'] = array_key_exists('trace', $_REQUEST) && $_REQUEST['trace'] ? 1 : 0;
-            $test['codeCoverage'] = isset($_REQUEST['codeCoverage']) && $_REQUEST['codeCoverage'] ? 1 : 0;
             if (isset($_REQUEST['trace']) &&
                 strlen($_REQUEST['traceCategories']) &&
                 strpos($test['traceCategories'], "\n") === false &&
@@ -2059,8 +2058,6 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "mobile=1\r\n";
             if( $test['lighthouse'] )
                 $testFile .= "lighthouse=1\r\n";
-            if( $test['codeCoverage'] )
-                $testFile .= "codeCoverage=1\r\n";
             if( isset($test['dpr']) && $test['dpr'] > 0 )
                 $testFile .= "dpr={$test['dpr']}\r\n";
             if( isset($test['width']) && $test['width'] > 0 )
