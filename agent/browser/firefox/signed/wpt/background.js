@@ -14057,7 +14057,7 @@ var wptBeforeSendRequest = function(details) {
   return action;
 };
 
-browser.webRequest.onCompleted.addListener(function(details) {
+browser.webRequest.onCompleted.addListener((details) => {
     if (g_active && details.tabId == g_tabid) {
       wpt.LOG.info('Completed, status = ' + details.statusCode);
       if (details.statusCode >= 400) {
@@ -14065,8 +14065,11 @@ browser.webRequest.onCompleted.addListener(function(details) {
         wptSendEvent('navigate_error?error=' + details.statusCode, '');
       }
     }
-  }, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
-);
+  }, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']});
+
+browser.webRequest.onHeadersReceived.addListener((details) => ({
+    responseHeaders: details.responseHeaders.filter(h => h.name.toLowerCase() !== 'content-security-policy')
+  }), { urls: ['http://*/*', 'https://*/*'], types: ['main_frame'] }, ["blocking", "responseHeaders"]);
 
 function wptHookRequests() {
   if (!g_requestsHooked) {

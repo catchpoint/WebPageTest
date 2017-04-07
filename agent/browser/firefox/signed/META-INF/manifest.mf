@@ -2,8 +2,8 @@ Manifest-Version: 1.0
 
 Name: manifest.json
 Digest-Algorithms: MD5 SHA1
-MD5-Digest: DNHbPQta2BwbK7uZa1NPFw==
-SHA1-Digest: A6v0aD9m5aatCO1GSIgwbSPnlx8=
+MD5-Digest: /xODIrXMshPOLlR4kz8nxw==
+SHA1-Digest: 8vOzuqw/XIZQC4ckRP7xpf5km1k=
 
 Name: wpt/allTests.css
 Digest-Algorithms: MD5 SHA1
@@ -17,13 +17,13 @@ SHA1-Digest: 9kecc29WtqTVDBo2v/edLOWnrdU=
 
 Name: wpt/allTests.js
 Digest-Algorithms: MD5 SHA1
-MD5-Digest: xFSvjXpsOk1qdtreq7HcZQ==
-SHA1-Digest: mKZrvxH+xV4el7O6wlC7HW/Lgj8=
+MD5-Digest: GvK7JtgiW+L5b9ubnsEpJA==
+SHA1-Digest: 9Yrh12AG19VGu55FcUVvRMR0aZE=
 
 Name: wpt/background.js
 Digest-Algorithms: MD5 SHA1
-MD5-Digest: oHNehCj2IW2TqtROE3NDgg==
-SHA1-Digest: R9IvCKGm6szCGxMgfZiOGURNb0o=
+MD5-Digest: z9aMV9LTMVeGCWQYWdzdRQ==
+SHA1-Digest: zhAY/FMXxqGo7Al0Ujg/M31dyH0=
 
 Name: wpt/browserActionPopup.css
 Digest-Algorithms: MD5 SHA1
@@ -47,6 +47,6 @@ SHA1-Digest: 0IxQwVRoOU5m9aZ1W3fkcTmnqC4=
 
 Name: wpt/script.js
 Digest-Algorithms: MD5 SHA1
-MD5-Digest: U2wmtxBGnafEHo1YQbKXFQ==
-SHA1-Digest: F7g5afWjMNk8nm70w4H5AV4pjME=
+MD5-Digest: xQn9HnwpAoMguYEMlUQ2+Q==
+SHA1-Digest: WgkIiGKwMTVPbyjCMCqtwfODrEs=
 
