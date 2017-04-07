@@ -1,6 +1,6 @@
 {
   "name": "WPT WebExtension",
-  "version": "0.9",
+  "version": "0.10",
   "description": "WebPagetest WebExtension.",
   "background": {
     "scripts": ["wpt/background.js"]
