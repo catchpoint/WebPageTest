@@ -351,7 +351,7 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
               $name = $zip->getNameIndex($i);
               $parts = explode('-', $name);
               if (count($parts) >= 3 && stripos($name, '-body.txt') !== false) {
-                $id = intval($parts[1], 10);
+                $id = $parts[1];
                 foreach ($entries as &$entry) {
                   if (isset($entry['_body_id']) && $entry['_body_id'] == $id) {
                     $entry['response']['content']['text'] = utf8_encode($zip->getFromIndex($i));
