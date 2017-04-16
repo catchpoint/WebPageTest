@@ -2,6 +2,10 @@
 include 'common.inc';
 set_time_limit(0);
 
+if ($userIsBot) {
+  header('HTTP/1.0 403 Forbidden');
+}
+
 $page_keywords = array('Log','History','Webpagetest','Website Speed Test');
 $page_description = "History of website performance speed tests run on WebPagetest.";
 
@@ -361,4 +365,3 @@ else
 </html>
 <?php
 } // if( !$csv )
-?>
