@@ -301,6 +301,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for debug log file
+   */
+  public function debugLogFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_debug.log";
+  }
+
+  /**
    * @return string Path for keylog file
    */
   public function keylogFile() {

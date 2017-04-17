@@ -118,6 +118,10 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="tester" value="' . htmlspecialchars($_REQUEST['tester']) . "\">\n";
             if (array_key_exists('minimal', $_REQUEST))
               echo '<input type="hidden" name="minimal" value="' . htmlspecialchars($_REQUEST['minimal']) . "\">\n";
+            if (isset($_REQUEST['noopt']))
+              echo '<input type="hidden" name="noopt" value="' . htmlspecialchars($_REQUEST['noopt']) . "\">\n";
+            if (isset($_REQUEST['debug']))
+              echo '<input type="hidden" name="debug" value="' . htmlspecialchars($_REQUEST['debug']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>

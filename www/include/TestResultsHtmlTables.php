@@ -210,6 +210,7 @@ class TestResultsHtmlTables {
     $out .=  $this->_getTimelineLinks($stepResult);
     $out .=  $this->_getTraceLinks($stepResult);
     $out .=  $this->_getNetlogLinks($stepResult);
+    $out .=  $this->_getDebuglogLinks($stepResult);
     $out .=  '</td>';
     return $out;
   }
@@ -400,6 +401,20 @@ class TestResultsHtmlTables {
     $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS);
     $zipUrl = $urlGenerator->getGZip( $stepResult->createTestPaths("")->netlogFile());
     return "<br><br><a href=\"$zipUrl\" title=\"Download Network Log\">Net Log</a>";
+  }
+
+  /**
+   * @param TestStepResult $stepResult
+   * @return string Markup with links
+   */
+  private function _getDebuglogLinks($stepResult) {
+    $localPaths = $stepResult->createTestPaths();
+    if (!gz_is_file($localPaths->debugLogFile())) {
+      return "";
+    }
+    $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS);
+    $zipUrl = $urlGenerator->getGZip( $stepResult->createTestPaths("")->debugLogFile());
+    return "<br><br><a href=\"$zipUrl\" title=\"Download Debug Log\">Debug Log</a>";
   }
 
   /**

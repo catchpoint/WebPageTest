@@ -12,10 +12,13 @@ if( isset($_GET['file']) &&
 {
     header("Content-disposition: attachment; filename={$_GET['file']}");
     if( strpos($_GET['file'], 'pagespeed') !== false || 
-        strpos($_GET['file'], '.json') !== false )
+        strpos($_GET['file'], '.json') !== false ) {
         header ("Content-type: application/json");
-    else
+    } elseif (strpos($_GET['file'], '.log') !== false) {
+        header ("Content-type: text/plain");
+    } else {
         header ("Content-type: application/octet-stream");
+    }
     if (isset($_REQUEST['compressed'])) {
       readfile($file);
     } else {
