@@ -73,6 +73,7 @@ private:
   void PostTest();
   bool Startup();
   void WaitForStartup();
+  void SetMachinePolicies();
   LPTSTR GetAppInitString(LPCTSTR new_dll, bool is64bit);
   bool NeedsReboot();
   CAtlList<CString> reset_browsers;

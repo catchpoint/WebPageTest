@@ -493,7 +493,9 @@ typedef HRESULT (STDAPICALLTYPE* DLLREG)(void);
 /*-----------------------------------------------------------------------------
   Do any startup initialization (settings have already loaded)
 -----------------------------------------------------------------------------*/
-void WptDriverCore::Init(void){
+void WptDriverCore::Init(void) {
+  SetMachinePolicies();
+
   // Clear IE's caches
   LaunchProcess(_T("RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 6655"));
 
@@ -1123,4 +1125,104 @@ bool WptDriverCore::NeedsReboot() {
   }
 
   return _exit;
+}
+
+/*-----------------------------------------------------------------------------
+  Write out any GPO policies directly to the Registry.pol file and force an
+  update if anything changed
+-----------------------------------------------------------------------------*/
+static void AddDwordPolicy(HANDLE hFile, LPBYTE existing_policy, DWORD existing_len, LPCWSTR key, LPCWSTR name, DWORD value, bool &modified) {
+  // See if the policy is already in there
+  bool found = false;
+  if (existing_policy && existing_len) {
+    DWORD find_len = (lstrlenW(key) + lstrlenW(name) + 5) * 2;
+    if (find_len < existing_len - 8) {
+      LPBYTE find = (LPBYTE)malloc(find_len);
+      LPBYTE pos = find;
+      DWORD len = 2;
+      memcpy(pos, L"[", len);
+      pos += len;
+      len = (lstrlenW(key) + 1) * 2;
+      memcpy(pos, key, len);
+      pos += len;
+      len = 2;
+      memcpy(pos, L";", len);
+      pos += len;
+      len = (lstrlenW(name) + 1) * 2;
+      memcpy(pos, name, len);
+      pos += len;
+      len = 2;
+      memcpy(pos, L";", len);
+      DWORD compare_len = existing_len - find_len;
+      for (DWORD i = 7; i < compare_len && !found; i ++) {
+        if (!memcmp(&existing_policy[i], find, find_len))
+          found = true;
+      }
+      free(find);
+    }
+  }
+  if (!found) {
+    ATLTRACE(L"[wptdriver] Writing policy for %s", name);
+    DWORD dwBytes;
+    WriteFile(hFile, L"[", 2, &dwBytes, 0);
+    WriteFile(hFile, key, (lstrlenW(key) + 1) * 2, &dwBytes, 0);
+    WriteFile(hFile, L";", 2, &dwBytes, 0);
+    WriteFile(hFile, name, (lstrlenW(name) + 1) * 2, &dwBytes, 0);
+    WriteFile(hFile, L";", 2, &dwBytes, 0);
+    DWORD val = REG_DWORD;
+    WriteFile(hFile, &val, sizeof(val), &dwBytes, 0);
+    WriteFile(hFile, L";", 2, &dwBytes, 0);
+    val = sizeof(DWORD);
+    WriteFile(hFile, &val, sizeof(val), &dwBytes, 0);
+    WriteFile(hFile, L";", 2, &dwBytes, 0);
+    WriteFile(hFile, &value, sizeof(value), &dwBytes, 0);
+    WriteFile(hFile, L"]", 2, &dwBytes, 0);
+    modified = true;
+  } else {
+    ATLTRACE(L"[wptdriver] Existing policy found for %s", name);
+  }
+}
+
+void WptDriverCore::SetMachinePolicies() {
+  TCHAR reg_file[MAX_PATH];
+  if (GetWindowsDirectory(reg_file, MAX_PATH)) {
+    lstrcat(reg_file, _T("\\Sysnative\\GroupPolicy\\Machine"));
+    SHCreateDirectoryEx(NULL, reg_file, NULL);
+    lstrcat(reg_file, _T("\\Registry.pol"));
+    LPCWSTR key = L"Software\\Policies\\Google\\Chrome";
+
+    ATLTRACE(L"Group policy file: %s", reg_file);
+
+    // Parse the old policy values
+    HANDLE hPolicies = CreateFile(reg_file, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, 0, OPEN_ALWAYS, 0, 0);
+    DWORD policy_len = 0;
+    LPBYTE existing_policy = NULL;
+    bool modified = false;
+    if (hPolicies != INVALID_HANDLE_VALUE) {
+      policy_len = GetFileSize(hPolicies, NULL);
+      DWORD dwBytes;
+      if (policy_len > 0) {
+        existing_policy = (LPBYTE)malloc(policy_len);
+        ReadFile(hPolicies, existing_policy, policy_len, &dwBytes, 0);
+      }
+      SetFilePointer(hPolicies, 0, 0, FILE_END);
+      // Write out the file header if necessary
+      if (policy_len < 8) {
+        ATLTRACE("[wptdriver] Wrote header for new policy file");
+        WriteFile(hPolicies, "PReg\x01\x00\x00\x00", 8, &dwBytes, 0);
+      }
+      AddDwordPolicy(hPolicies, existing_policy, policy_len, key, L"PasswordManagerEnabled", 0, modified);
+      AddDwordPolicy(hPolicies, existing_policy, policy_len, key, L"AllowFileSelectionDialogs", 0, modified);
+      AddDwordPolicy(hPolicies, existing_policy, policy_len, key, L"AutoFillEnabled", 0, modified);
+      AddDwordPolicy(hPolicies, existing_policy, policy_len, key, L"BackgroundModeEnabled", 0, modified);
+      AddDwordPolicy(hPolicies, existing_policy, policy_len, key, L"SyncDisabled", 1, modified);
+      if (existing_policy)
+        free(existing_policy);
+      CloseHandle(hPolicies);
+    }
+    if (modified) {
+      ATLTRACE(L"[wptdriver] Forcing policy update");
+      LaunchProcess("gpupdate /force");
+    }
+  }
 }
