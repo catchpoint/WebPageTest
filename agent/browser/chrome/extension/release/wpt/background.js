@@ -14777,6 +14777,11 @@ wpt.main.onStartup = function() {
     // Run the tasks in FAKE_TASKS.
     window.setInterval(wptFeedFakeTasks, FAKE_TASK_INTERVAL);
   } else {
+    // Disable some features that can only be disabled from the extension
+    chrome.privacy.services.passwordSavingEnabled.set({ value: false }, function(){});
+    chrome.privacy.services.autofillEnabled.set({ value: false }, function(){});
+    chrome.privacy.services.translationServiceEnabled.set({ value: false }, function(){});
+
     // Fetch tasks from wptdriver.exe.
     g_taskTimer = window.setInterval(wptGetTask, g_taskInterval);
     window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT);

@@ -28,6 +28,7 @@
     "browsingData",
     "management",
     "debugger",
+    "privacy",
     "contentSettings",
     "http://*/*",
     "https://*/*"
