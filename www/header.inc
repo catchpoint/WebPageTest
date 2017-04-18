@@ -379,7 +379,7 @@ function GetGrades($testInfo, $testRunResults, $firstRunResults)
     if ($testRunResults->isOptimizationChecked()) {
         require_once('optimization_detail.inc.php');
 
-        $opt = getOptimizationGradesForRun($testRunResults);
+        $opt = getOptimizationGradesForRun($testInfo, $testRunResults);
         $infoArray = $testInfo->getInfoArray();
         if( $infoArray['view'] != 'simple' && $infoArray['view'] != 'pss' )
             $grades['first_byte_time'] = array( 'class' => $opt['ttfb']['class'], 'grade' => $opt['ttfb']['grade'], 'description' => $opt['ttfb']['label']);
