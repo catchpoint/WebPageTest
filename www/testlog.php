@@ -4,6 +4,7 @@ set_time_limit(0);
 
 if ($userIsBot) {
   header('HTTP/1.0 403 Forbidden');
+  exit;
 }
 
 $page_keywords = array('Log','History','Webpagetest','Website Speed Test');
