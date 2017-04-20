@@ -14176,9 +14176,11 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
     // Page events
     if (message === 'Page.frameNavigated' &&
         params['frame'] !== undefined &&
-        params.frame['parentId'] === undefined &&
-        g_instance.mobileEmulation != undefined) {
-      g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.setDeviceMetricsOverride', g_instance.mobileEmulation);
+        params.frame['parentId'] === undefined) {
+      wpt.chromeDebugger.sendEvent('navigate', '');
+      if (g_instance.mobileEmulation != undefined) {
+        g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.setDeviceMetricsOverride', g_instance.mobileEmulation);
+      }
     }
 
     if (message === 'Page.loadEventFired') {
