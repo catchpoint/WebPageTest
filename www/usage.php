@@ -17,6 +17,20 @@ include 'admin_header.inc';
     if( array_key_exists('k', $_REQUEST) && strlen($_REQUEST['k']) ) {
         $key = trim($_REQUEST['k']);
         $keys = parse_ini_file('./settings/keys.ini', true);
+
+        // see if it was an auto-provisioned key
+        if (preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $key, $matches)) {
+          $prefix = $matches['prefix'];
+          if (is_file(__DIR__ . "/dat/{$prefix}_api_keys.db")) {
+            $db = new SQLite3(__DIR__ . "/dat/{$prefix}_api_keys.db");
+            $k = $db->escapeString($matches['key']);
+            $info = $db->querySingle("SELECT key_limit FROM keys WHERE key='$k'", true);
+            $db->close();
+            if (isset($info) && is_array($info) && isset($info['key_limit']))
+              $keys[$key] = array('limit' => $info['key_limit']);
+          }
+        }
+        
         if( $admin && $key == 'all' ) {
             $day = gmdate('Ymd');
             if( strlen($req_date) )
