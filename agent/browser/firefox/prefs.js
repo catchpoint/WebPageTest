@@ -16,6 +16,7 @@ user_pref("browser.places.importBookmarksHTML", false);
 user_pref("browser.cache.disk.capacity", 1048576);
 user_pref("browser.cache.disk.smart_size.first_run", false);
 user_pref("browser.cache.disk.smart_size_cached_value", 1048576);
+user_pref("browser.crashReports.unsubmittedCheck.enabled", false);
 user_pref("browser.newtabpage.directory.ping", "");
 user_pref("browser.newtabpage.directory.source", "data:application/json,{}");
 user_pref("browser.newtabpage.enabled", false);
