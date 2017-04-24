@@ -43,7 +43,7 @@ const STARTUP_DELAY = 0;
 const STARTUP_FAILSAFE_DELAY = 5000;
 
 /** @const */
-const TASK_INTERVAL = 5000;
+const TASK_INTERVAL = 500;
 const TASK_INTERVAL_STARTUP = 100;
 
 // Run tasks slowly when testing, so that we can see errors in the logs
