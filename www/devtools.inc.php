@@ -674,12 +674,21 @@ function GetCachedDevToolsRequests($localPaths, &$requests, &$pageData, $ver) {
   $cache = null;
   if (count($MEMCACHE_GetCachedDevToolsRequests) > 100)
     $MEMCACHE_GetCachedDevToolsRequests = array();
-  $cacheFile = $localPaths->devtoolsRequestsCacheFile($ver);
+  $cacheFile = $localPaths->devtoolsProcessedRequestsFile();
   if (isset($MEMCACHE_GetCachedDevToolsRequests[$cacheFile])) {
     $cache = $MEMCACHE_GetCachedDevToolsRequests[$cacheFile];
   } elseif (gz_is_file($cacheFile)) {
     $cache = json_decode(gz_file_get_contents($cacheFile), true);
     $MEMCACHE_GetCachedDevToolsRequests[$cacheFile] = $cache;
+  }
+  if (!isset($cache)) {
+    $cacheFile = $localPaths->devtoolsRequestsCacheFile($ver);
+    if (isset($MEMCACHE_GetCachedDevToolsRequests[$cacheFile])) {
+      $cache = $MEMCACHE_GetCachedDevToolsRequests[$cacheFile];
+    } elseif (gz_is_file($cacheFile)) {
+      $cache = json_decode(gz_file_get_contents($cacheFile), true);
+      $MEMCACHE_GetCachedDevToolsRequests[$cacheFile] = $cache;
+    }
   }
   if (isset($cache) &&
       isset($cache['requests']) &&

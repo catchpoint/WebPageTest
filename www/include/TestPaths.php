@@ -409,6 +409,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path to the file for processed devtools requests
+   */
+  public function devtoolsProcessedRequestsFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_devtools_requests.json";
+  }
+
+  /**
    * @param int $version The version of the cache format
    * @return string Path to cache file for devtools requests
    */
