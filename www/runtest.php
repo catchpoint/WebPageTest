@@ -151,6 +151,7 @@
             $test['aftMinChanges'] = (int)$req_aftmc;
             $test['tcpdump'] = $req_tcpdump;
             $test['lighthouse'] = $req_lighthouse;
+            $test['lighthouseTrace'] = isset($_REQUEST['lighthouseTrace']) && $_REQUEST['lighthouseTrace;'] ? 1 : 0;
             $test['timeline'] = $req_timeline;
             $test['timelineStackDepth'] = array_key_exists('timelineStack', $_REQUEST) && $_REQUEST['timelineStack'] ? 5 : 0;
             $test['swrender'] = $req_swrender;
@@ -2059,6 +2060,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "mobile=1\r\n";
             if( $test['lighthouse'] )
                 $testFile .= "lighthouse=1\r\n";
+            if( $test['lighthouseTrace'] )
+                $testFile .= "lighthouseTrace=1\r\n";
             if( $test['debug'] )
                 $testFile .= "debug=1\r\n";
             if( isset($test['dpr']) && $test['dpr'] > 0 )

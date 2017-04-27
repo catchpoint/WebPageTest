@@ -81,6 +81,7 @@ $loc = ParseLocations($locations);
             if (!$headless) {
             ?>
             <form name="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
+            <input type="hidden" name="lighthouseTrace" value="1">
             
             <?php
             echo "<input type=\"hidden\" name=\"vo\" value=\"$owner\">\n";
@@ -434,7 +435,7 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="lighthouse" id="lighthouse" class="checkbox" style="float: left;width: auto;">
                                         <label for="lighthouse" class="auto_width">
-                                            Capture Lighthouse Report (Mobile devices and Chrome Beta only)
+                                            Capture Lighthouse Report (Mobile devices only)
                                         </label>
                                     </li>
                                     <li>
