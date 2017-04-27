@@ -18,9 +18,10 @@ if(array_key_exists("HTTP_IF_MODIFIED_SINCE",$_SERVER) && strlen(trim($_SERVER['
       if (gz_is_file($lighthouseTrace)) {
         // Add the HTML to view/download the trace and timelines to the raw html
         $html = gz_file_get_contents($filePath);
-        $insert = '<div style="text-align: center; line-height: 2em; padding-bottom: 2em;">';
-        $insert .= "Timeline from test: <a href=\"/getTimeline.php?test=$id&run=lighthouse\">Download</a> or <a href=\"/chrome/timeline.php?test=$id&run=lighthouse\">View</a><br>";
-        $insert .= "Trace from test: <a href=\"/getgzip.php?test=$id&file=lighthouse_trace.json\">Download</a> or <a href=\"/chrome/trace.php?test=$id&run=lighthouse\">View</a>";
+        $insert = '<div style="text-align: center; line-height: 2em;"><span>';
+        $insert .= "<p>Timeline from test: <a href=\"/getTimeline.php?test=$id&run=lighthouse\">Download</a> or <a href=\"/chrome/timeline.php?test=$id&run=lighthouse\">View</a> &nbsp; -  &nbsp; ";
+        $insert .= "Trace from test: <a href=\"/getgzip.php?test=$id&file=lighthouse_trace.json\">Download</a> or <a href=\"/chrome/trace.php?test=$id&run=lighthouse\">View</a></p>";
+        $insert .= "</span>";
         $insert .= '</div>';
         $insert_pos = strpos($html, '</footer>');
         if ($insert_pos !== false) {
