@@ -104,6 +104,7 @@ private:
   void SaveImage(CxImage& image, CString file, BYTE quality,
                  bool force_small = false, bool _full_size_video = false);
   bool ImagesAreDifferent(CxImage * img1, CxImage* img2, DWORD bottom_margin, DWORD margin);
+  bool ImageIsValid(CxImage * img, bool render_started);
   CStringA FormatTime(LARGE_INTEGER t);
   void SaveResponseBodies(void);
   void SaveConsoleLog(void);
