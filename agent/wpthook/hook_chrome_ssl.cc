@@ -41,6 +41,38 @@ static ChromeSSLHook* g_hook = NULL;
 
 /*
 // From Chrome /src/third_party/boringssl/src/ssl/internal.h
+
+// January 2017 (critical part of the signature still matches 54+)
+struct ssl_protocol_method_st {
+  char is_dtls;
+  uint16_t min_version;
+  uint16_t max_version;
+  int (*version_from_wire)(uint16_t *out_version, uint16_t wire_version);
+  uint16_t (*version_to_wire)(uint16_t version);
+  int (*ssl_new)(SSL *ssl);
+  void (*ssl_free)(SSL *ssl);
+  int (*ssl_get_message)(SSL *ssl);
+  void (*get_current_message)(const SSL *ssl, CBS *out);
+  void (*release_current_message)(SSL *ssl, int free_buffer);
+  int (*read_app_data)(SSL *ssl, int *out_got_handshake, uint8_t *buf, int len,
+                       int peek);
+  int (*read_change_cipher_spec)(SSL *ssl);
+  void (*read_close_notify)(SSL *ssl);
+  int (*write_app_data)(SSL *ssl, const uint8_t *buf, int len);
+  int (*dispatch_alert)(SSL *ssl);
+  int (*supports_cipher)(const SSL_CIPHER *cipher);
+  int (*init_message)(SSL *ssl, CBB *cbb, CBB *body, uint8_t type);
+  int (*finish_message)(SSL *ssl, CBB *cbb, uint8_t **out_msg, size_t *out_len);
+  int (*add_message)(SSL *ssl, uint8_t *msg, size_t len);
+  int (*add_change_cipher_spec)(SSL *ssl);
+  int (*add_alert)(SSL *ssl, uint8_t level, uint8_t desc);
+  int (*flush_flight)(SSL *ssl);
+  void (*expect_flight)(SSL *ssl);
+  void (*received_flight)(SSL *ssl);
+  int (*set_read_state)(SSL *ssl, SSL_AEAD_CTX *aead_ctx);
+  int (*set_write_state)(SSL *ssl, SSL_AEAD_CTX *aead_ctx);
+};
+
 // August 2016 (Chrome 54+)
 struct ssl_protocol_method_st {
   char is_dtls;         // (2 byte padded) (signature)
@@ -330,22 +362,11 @@ void ChromeSSLHook::Init() {
                           }
                         }
                         if (ok) {
-                          // Scan the next 1KB to see if the reference to boringssl is present (possibly flaky, verify with several builds)
-                          char * mem = compare;
-                          bool found = false;
-                          for (int str_offset = 0; str_offset < 1024 && !found && mem < end_addr; str_offset++) {
-                            if (!memcmp(&mem[str_offset], "boringssl", 9))
-                              found = true;
-                          }
-                          if (found) {
-                            match_count++;
-                            ATLTRACE("Chrome ssl methods structure found (signature %d) at 0x%p\n", signum, compare);
-                            if (!methods_addr) {
-                              methods_addr = functions;
-                              signature = signum;
-                            }
-                          } else {
-                            ATLTRACE("Signature match but ssl_lib.c string not found (signature %d) at 0x%p\n", signum, compare);
+                          match_count++;
+                          ATLTRACE("Chrome ssl methods structure found (signature %d) at 0x%p\n", signum, compare);
+                          if (!methods_addr) {
+                            methods_addr = functions;
+                            signature = signum;
                           }
                         }
                       }
