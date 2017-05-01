@@ -600,8 +600,8 @@ void WptTest::BuildScript() {
       _viewport_width = DEFAULT_MOBILE_WIDTH;
       _viewport_height = DEFAULT_MOBILE_HEIGHT;
     }
-    _browser_width = _viewport_width + CHROME_PADDING_WIDTH;
-    _browser_height = _viewport_height + CHROME_PADDING_HEIGHT;
+    _browser_width = _viewport_width + CHROME_PADDING_WIDTH + 200;
+    _browser_height = _viewport_height + CHROME_PADDING_HEIGHT + 200;
     if (_user_agent.IsEmpty())
       _user_agent = DEFAULT_MOBILE_USER_AGENT;
     ScriptCommand command;
@@ -611,8 +611,6 @@ void WptTest::BuildScript() {
           _viewport_width, _viewport_height, _device_scale_factor);
     command.record = false;
     _script_commands.AddHead(command);
-    _viewport_width = 0;
-    _viewport_height = 0;
   }
 }
 
