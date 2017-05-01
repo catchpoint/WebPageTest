@@ -600,8 +600,8 @@ void WptTest::BuildScript() {
       _viewport_width = DEFAULT_MOBILE_WIDTH;
       _viewport_height = DEFAULT_MOBILE_HEIGHT;
     }
-    _browser_width = _viewport_width + CHROME_PADDING_WIDTH + 200;
-    _browser_height = _viewport_height + CHROME_PADDING_HEIGHT + 200;
+    _browser_width = _viewport_width + CHROME_PADDING_WIDTH;
+    _browser_height = _viewport_height + CHROME_PADDING_HEIGHT;
     if (_user_agent.IsEmpty())
       _user_agent = DEFAULT_MOBILE_USER_AGENT;
     ScriptCommand command;
