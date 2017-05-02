@@ -120,8 +120,11 @@ if (!array_key_exists('shard_tests', $settings))
 $max_load = GetSetting('render_max_load');
 
 $privateInstall = true;
-if( array_key_exists('HTTP_HOST', $_SERVER) && stristr($_SERVER['HTTP_HOST'] , '.webpagetest.org') !== false )
+if (array_key_exists('HTTP_HOST', $_SERVER) &&
+    stristr($_SERVER['HTTP_HOST'] , 'httparchive.webpagetest.org') !== false &&
+    stristr($_SERVER['HTTP_HOST'] , '.webpagetest.org') !== false) {
     $privateInstall = false;
+}
 
 // override some settings from the URI
 if (isset($_REQUEST['bulk'])) {

@@ -1,6 +1,12 @@
 <?php
 
 include 'common.inc';
+if (isset($_REQUEST['k'])) {
+  $keys = parse_ini_file(__DIR__ . '/settings/keys.ini', true);
+  if (isset($keys['server']['key']) && $_REQUEST['k'] == $keys['server']['key']) {
+    $admin = true;
+  }
+}
 $remote_cache = array();
 if ($CURL_CONTEXT !== false) {
   curl_setopt($CURL_CONTEXT, CURLOPT_CONNECTTIMEOUT, 30);
@@ -33,27 +39,34 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
     echo "<tr id=\"$name\"><th class=\"header$error\" colspan=\"16\">" . htmlspecialchars($name) . "$elapsed</th></tr>\n";
     if (array_key_exists('testers', $location)) {
       echo "<tr><th class=\"tester\">Tester</th><th>Busy?</th><th>Last Check (minutes)</th><th>Last Work (minutes)</th><th>Version</th><th>PC</th><th>EC2 Instance</th><th>CPU Utilization</th><th>Error Rate</th><th>Free Disk (GB)</th><th>Screen Size</th>";
-      echo "<th>IP</th><th>DNS Server(s)</th></tr>\n";
+      echo "<th>IP</th><th>DNS Server(s)</th>";
+      if ($admin) {
+        echo "<th>Current Test</th>";
+      }
+      echo "</tr>\n";
       $count = 0;
       foreach($location['testers'] as $tester) {
         $count++;
-        echo "<tr><td class=\"tester\">$count</td>";
-        echo "<td>" . @htmlspecialchars($tester['busy']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['elapsed']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['last']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['version']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['pc']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['ec2']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['cpu']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['errors']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['freedisk']) . "</td>";
+        echo "<tr><td nowrap class=\"tester\">$count</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['busy']) . "</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['elapsed']) . "</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['last']) . "</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['version']) . "</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['pc']) . "</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['ec2']) . "</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['cpu']) . "</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['errors']) . "</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['freedisk']) . "</td>";
         if (empty($tester['screenwidth']) || empty($tester['screenwidth'])) {
-          echo "<td></td>";
+          echo "<td nowrap></td>";
         } else {
-          echo "<td>" . @htmlspecialchars($tester['screenwidth']) . "x" . @htmlspecialchars($tester['screenheight']) . "</td>";
+          echo "<td nowrap>" . @htmlspecialchars($tester['screenwidth']) . "x" . @htmlspecialchars($tester['screenheight']) . "</td>";
         }
-        echo "<td>" . @htmlspecialchars($tester['ip']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['dns']) . "</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['ip']) . "</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['dns']) . "</td>";
+        if ($admin) {
+          echo "<td nowrap>" . @htmlspecialchars($tester['test']) . "</td>";
+        }
         echo "</tr>";
       }
     }

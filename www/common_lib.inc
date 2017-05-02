@@ -1960,6 +1960,7 @@ function GetTesters($locationId, $includeOffline = false) {
                          'isWinServer' => @$tester['isWinServer'],
                          'isWin64' => @$tester['isWin64'],
                          'dns' => @$tester['dns'],
+                         'test' => @$tester['test'],
                          'GPU' => @$tester['GPU'],
                          'offline' => @$tester['offline'],
                          'screenwidth' => @$tester['screenwidth'],
