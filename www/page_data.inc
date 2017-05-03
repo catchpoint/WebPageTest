@@ -398,6 +398,9 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
     }  
   }
   
+  if (isset($ret['fullyLoaded']))
+    $ret['fullyLoaded'] = intval(round($ret['fullyLoaded']));
+  
   return $ret;
 }
 
