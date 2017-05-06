@@ -195,6 +195,12 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
             $ret['SpeedIndex'] = $progress['SpeedIndex'];
           if (array_key_exists('visualComplete85', $progress))
             $ret['visualComplete85'] = $progress['visualComplete85'];
+          if (isset($progress['visualComplete90']))
+            $ret['visualComplete90'] = $progress['visualComplete90'];
+          if (isset($progress['visualComplete95']))
+            $ret['visualComplete95'] = $progress['visualComplete95'];
+          if (isset($progress['visualComplete99']))
+            $ret['visualComplete99'] = $progress['visualComplete99'];
           if (array_key_exists('visualComplete', $progress))
             $ret['visualComplete'] = $progress['visualComplete'];
           if (array_key_exists('startRender', $progress) && (!array_key_exists('render', $ret) || !$ret['render']))

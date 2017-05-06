@@ -719,6 +719,31 @@ function DisplayGraphs() {
     foreach($tests as &$test) {
         $hasStepResult = array_key_exists('stepResult', $test) && is_a($test['stepResult'], "TestStepResult");
         if ($hasStepResult &&
+            !isset($timeMetrics['visualComplete85']) &&
+            $test['stepResult']->getMetric('visualComplete85') > 0) {
+            $timeMetrics['visualComplete85'] = "85% Visually Complete";
+        }
+        if ($hasStepResult &&
+            !isset($timeMetrics['visualComplete90']) &&
+            $test['stepResult']->getMetric('visualComplete90') > 0) {
+            $timeMetrics['visualComplete90'] = "90% Visually Complete";
+        }
+        if ($hasStepResult &&
+            !isset($timeMetrics['visualComplete95']) &&
+            $test['stepResult']->getMetric('visualComplete95') > 0) {
+            $timeMetrics['visualComplete95'] = "95% Visually Complete";
+        }
+        if ($hasStepResult &&
+            !isset($timeMetrics['visualComplete99']) &&
+            $test['stepResult']->getMetric('visualComplete99') > 0) {
+            $timeMetrics['visualComplete99'] = "99% Visually Complete";
+        }
+        if ($hasStepResult &&
+            !isset($timeMetrics['chromeUserTiming.firstContentfulPaint']) &&
+            $test['stepResult']->getMetric('chromeUserTiming.firstContentfulPaint') > 0) {
+            $timeMetrics['chromeUserTiming.firstContentfulPaint'] = "First Contentful Paint";
+        }
+        if ($hasStepResult &&
             !isset($timeMetrics['chromeUserTiming.firstMeaningfulPaint']) &&
             $test['stepResult']->getMetric('chromeUserTiming.firstMeaningfulPaint') > 0) {
             $timeMetrics['chromeUserTiming.firstMeaningfulPaint'] = "First Meaningful Paint";
