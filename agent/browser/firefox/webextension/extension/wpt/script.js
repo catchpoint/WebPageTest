@@ -561,6 +561,8 @@ wpt.contentScript.InPageCommandRunner = class InPageCommandRunner {
           };
           pushEvent('timed_event', null, JSON.stringify(measure));
         }
+        performance.clearMarks();
+        performance.clearMeasures();
       }
 
       var domCount = document.getElementsByTagName("*").length;

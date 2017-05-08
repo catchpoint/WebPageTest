@@ -98,6 +98,8 @@ var USER_TIMING_SCRIPT = '\
           m.push({"entryType": measures[i].entryType, "name": measures[i].name, "startTime": measures[i].startTime, "duration": measures[i].duration});\
       }\
     }\
+    performance.clearMarks();\
+    performance.clearMeasures();\
   } catch(e) {}\
   return m;\
 })();';
