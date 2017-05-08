@@ -895,22 +895,22 @@ function DisplayGraphs() {
                 echo "progressChart.draw(dataProgress, {title: 'Visual Progress (%)', hAxis: {title: 'Time (seconds)'}});\n";
             }
             if (count($tests) <= 4) {
-              echo "var timesChart = new google.visualization.ColumnChart(document.getElementById('compare_times'));\n";
+              echo "var timesChart = new google.visualization.BarChart(document.getElementById('compare_times'));\n";
               echo "timesChart.draw(dataTimes, {title: 'Timings (ms)'});\n";
-              echo "var requestsChart = new google.visualization.ColumnChart(document.getElementById('compare_requests'));\n";
+              echo "var requestsChart = new google.visualization.BarChart(document.getElementById('compare_requests'));\n";
               echo "requestsChart.draw(dataRequests, {title: 'Requests'});\n";
-              echo "var bytesChart = new google.visualization.ColumnChart(document.getElementById('compare_bytes'));\n";
+              echo "var bytesChart = new google.visualization.BarChart(document.getElementById('compare_bytes'));\n";
               echo "bytesChart.draw(dataBytes, {title: 'Bytes'});\n";
             } else {
               foreach($timeMetrics as $metric => $label) {
                 $metricKey = str_replace('.', '', $metric);
-                echo "var timesChart$metricKey = new google.visualization.ColumnChart(document.getElementById('compare_times_$metricKey'));\n";
+                echo "var timesChart$metricKey = new google.visualization.BarChart(document.getElementById('compare_times_$metricKey'));\n";
                 echo "timesChart$metricKey.draw(dataTimes$metricKey, {title: '$label (ms)'});\n";
               }
               foreach($mimeTypes as $type) {
-                echo "var requestsChart$type = new google.visualization.ColumnChart(document.getElementById('compare_requests_$type'));\n";
+                echo "var requestsChart$type = new google.visualization.BarChart(document.getElementById('compare_requests_$type'));\n";
                 echo "requestsChart$type.draw(dataRequests$type, {title: '$type Requests'});\n";
-                echo "var bytesChart$type = new google.visualization.ColumnChart(document.getElementById('compare_bytes_$type'));\n";
+                echo "var bytesChart$type = new google.visualization.BarChart(document.getElementById('compare_bytes_$type'));\n";
                 echo "bytesChart$type.draw(dataBytes$type, {title: '$type Bytes'});\n";
               }
             }
