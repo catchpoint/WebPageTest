@@ -27,6 +27,8 @@ tcpdump_view="http://cloudshark.org/view?url="
 ; Comment-out to use classic-colored waterfalls as the default
 mime_waterfalls=1
 
+; Uncomment to disable the testlog in the UI
+;disableTestlog=1
 
 ; *********************
 ; Test options/defaults
