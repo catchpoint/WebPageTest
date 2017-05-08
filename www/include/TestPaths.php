@@ -431,6 +431,10 @@ class TestPaths {
     return $this->testRoot . "breakdown" . $version . ".json";
   }
 
+  public function requestsAnalysisFile() {
+    return $this->testRoot . $this->dotIdentifier() . ".analysis.json";
+  }
+  
   /**
    * @param int $version The version of the cache format
    * @return string Path to cache file for page data

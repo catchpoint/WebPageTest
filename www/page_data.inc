@@ -238,7 +238,7 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
           }
         }
       }
-
+      
       // See if there is Chrome trace user timing data to load.
       // Do this after the CPU slice calculations so the trace processing has already run.
       if (gz_is_file($localPaths->chromeUserTimingFile())) {
@@ -388,6 +388,15 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
   }
 
   if (isset($ret)) {
+    // see if there is request analysis that needs to be added
+    if (gz_is_file($localPaths->requestsAnalysisFile())) {
+      $analysis = json_decode(gz_file_get_contents($localPaths->requestsAnalysisFile()), true);
+      foreach ($analysis as $key => $value) {
+        if (!isset($ret[$key]))
+          $ret[$key] = $value;
+      }
+    }
+
     // see if there is test-level lighthouse data to attach
     // Don't cache the lighthouse bit because the file may come in after other results are cached
     $lighthouse_file = $localPaths->lighthouseJsonFile();
