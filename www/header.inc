@@ -97,7 +97,9 @@ if (!defined('EMBED')) {
                 $navTabs['Test Result'] = isset($resultUrl) ? $resultUrl : '';
             }
 
-            $navTabs['Test History'] = FRIENDLY_URLS ? '/testlog/1/' : '/testlog.php?days=1';
+            if (empty($settings['disableTestlog'])) {
+              $navTabs['Test History'] = FRIENDLY_URLS ? '/testlog/1/' : '/testlog.php?days=1';
+            }
 
             if (is_dir('wptmonitor')) {
                 $navTabs['Monitor'] = '/wptmonitor/';
