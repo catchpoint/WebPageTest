@@ -210,6 +210,8 @@
             $test['debug'] = isset($_REQUEST['debug']) && $_REQUEST['debug'] ? 1 : 0;
             if (isset($_REQUEST['medianMetric']))
               $test['medianMetric'] = $_REQUEST['medianMetric'];
+            if (isset($_REQUEST['throttle_cpu']))
+              $test['throttle_cpu'] = $_REQUEST['throttle_cpu'];
 
             if (array_key_exists('tsview_id', $_REQUEST)){
               $test['tsview_id'] = $_REQUEST['tsview_id'];
@@ -527,6 +529,8 @@
               $test['dpr'] = $devices[$test['mobileDevice']]['dpr'];
             if (!isset($test['uastring']) && isset($devices[$test['mobileDevice']]['ua']))
               $test['uastring'] = $devices[$test['mobileDevice']]['ua'];
+            if (!isset($test['throttle_cpu']) && isset($devices[$test['mobileDevice']]['throttle_cpu']))
+              $test['throttle_cpu'] = $devices[$test['mobileDevice']]['ua'];
           }
         }
         
@@ -2064,6 +2068,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "lighthouseTrace=1\r\n";
             if( $test['debug'] )
                 $testFile .= "debug=1\r\n";
+            if( isset($test['throttle_cpu']) && $test['throttle_cpu'] > 0 )
+                $testFile .= "throttle_cpu={$test['throttle_cpu']}\r\n";
             if( isset($test['dpr']) && $test['dpr'] > 0 )
                 $testFile .= "dpr={$test['dpr']}\r\n";
             if( isset($test['width']) && $test['width'] > 0 )
