@@ -284,9 +284,9 @@ function GetJob() {
                           $testJson['customMetrics'][$metric] = $code;
                         }
                       }
-                    } elseif( filter_var($value, FILTER_VALIDATE_INT) ) {
+                    } elseif( filter_var($value, FILTER_VALIDATE_INT) !== false ) {
                       $testJson[$key] = intval($value);
-                    } elseif( filter_var($value, FILTER_VALIDATE_FLOAT) ) {
+                    } elseif( filter_var($value, FILTER_VALIDATE_FLOAT) !== false ) {
                       $testJson[$key] = floatval($value);
                     } else {
                       $testJson[$key] = $value;
