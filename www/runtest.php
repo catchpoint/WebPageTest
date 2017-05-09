@@ -530,7 +530,7 @@
             if (!isset($test['uastring']) && isset($devices[$test['mobileDevice']]['ua']))
               $test['uastring'] = $devices[$test['mobileDevice']]['ua'];
             if (!isset($test['throttle_cpu']) && isset($devices[$test['mobileDevice']]['throttle_cpu']))
-              $test['throttle_cpu'] = $devices[$test['mobileDevice']]['ua'];
+              $test['throttle_cpu'] = $devices[$test['mobileDevice']]['throttle_cpu'];
           }
         }
         
