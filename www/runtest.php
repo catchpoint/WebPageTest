@@ -2068,7 +2068,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 $testFile .= "lighthouseTrace=1\r\n";
             if( $test['debug'] )
                 $testFile .= "debug=1\r\n";
-            if( isset($test['throttle_cpu']) && $test['throttle_cpu'] > 0 )
+            if( isset($test['throttle_cpu']) && $test['throttle_cpu'] > 0.0 )
                 $testFile .= "throttle_cpu={$test['throttle_cpu']}\r\n";
             if( isset($test['dpr']) && $test['dpr'] > 0 )
                 $testFile .= "dpr={$test['dpr']}\r\n";
