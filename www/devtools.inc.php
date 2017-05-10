@@ -423,11 +423,9 @@ function ProcessNetlogRequests($localPaths, &$pageData, &$requests) {
         if (isset($request['full_url'])) {
           // Find the first matching request in the netlog
           foreach ($netlog as $index => $entry) {
-            if (isset($entry['url']) && isset($entry['start']) &&
-                !isset($entry['claimed']) && !isset($request['netlog']) &&
+            if (isset($entry['url']) && isset($entry['start']) && !isset($entry['claimed']) &&
                 $entry['url'] == $request['full_url']) {
               $netlog[$index]['claimed'] = true;
-              $request['netlog'] = true;
               foreach ($mapping as $from => $to) {
                 if (isset($entry[$from])) {
                   if (is_float($entry[$from]))
@@ -442,6 +440,7 @@ function ProcessNetlogRequests($localPaths, &$pageData, &$requests) {
                 $request['load_ms'] = intval(round($entry['end'] - $entry['start']));
               if (isset($entry['pushed']) && $entry['pushed'])
                 $request['was_pushed'] = 1;
+              break;
             }
           }
         }
