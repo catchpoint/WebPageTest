@@ -123,6 +123,7 @@ CDN_PROVIDER cdnList[] = {
 	{".optimalcdn.com", _T("Optimal CDN")},
 	{".hosting4cdn.com", _T("Hosting4CDN")},
 	{".netlify.com", _T("Netlify")},
+	{".roast.io", _T("Roast.io")},
 	{NULL, NULL}
 };
 
@@ -161,6 +162,7 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
 	{"X-Cache", "cache.51cdn.com", _T("ChinaNetCenter")},
 	{"X-CDN", "Incapsula", _T("Incapsula")},
 	{"X-Iinfo", "", _T("Incapsula")},
-	{"server", "gocache", _T("GoCache")}
-	{"server", "Netlify", _T("Netlify")}
+	{"server", "gocache", _T("GoCache")},
+	{"server", "Netlify", _T("Netlify")},
+	{"server", "Roast.io", _T("Roast.io")}
 };
