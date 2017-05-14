@@ -88,6 +88,9 @@ function MimeColors() {
 * Bucket the content types into our known categories
 */
 function ContentType($mime, $url = null) {
+    $pos = strpos($mime, ';');
+    if ($pos !== false)
+      $mime = substr($mime, 0, $pos);
     $content_type = 'other';
     if (stripos($mime, 'javascript') !== false ||
         stripos($mime, 'ecmascript') !== false ||

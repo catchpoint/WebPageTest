@@ -184,6 +184,11 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData) {
                         GetDevToolsHeaderValue($rawRequest['response']['headers'], 'Content-Encoding', $request['contentEncoding']);
                         GetDevToolsHeaderValue($rawRequest['response']['headers'], 'Content-Length', $request['objectSize']);
                     }
+                    if (isset($request['contentType'])) {
+                      $pos = strpos($request['contentType'], ';');
+                      if ($pos !== false)
+                        $request['contentType'] = substr($request['contentType'], 0, $pos);
+                    }
                     $request['type'] = 3;
                     $request['socket'] = isset($rawRequest['response']['connectionId']) ? $rawRequest['response']['connectionId'] : -1;
                     $request['dns_start'] = -1;
