@@ -178,6 +178,7 @@ CDN_PROVIDER cdnList[] = {
   {".netlify.com", "Netlify"},
   {".b-cdn.net", "BunnyCDN"},
   {".pix-cdn.org", "Advanced Hosters CDN"},
+  {".roast.io", "Roast.io"},
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -226,7 +227,8 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"section-io-id", "", "section.io"},
   {"server", "Testa/", "Naver"},
   {"server", "BunnyCDN", "BunnyCDN"},
-  {"server", "MNCDN", "Medianova"}
+  {"server", "MNCDN", "Medianova"},
+  {"server", "Roast.io", "Roast.io"}
 };
 
 // Specific providers that require multiple headers
