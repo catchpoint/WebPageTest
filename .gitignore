@@ -66,3 +66,7 @@ agent/wptdriver/*.ini
 /www/installers/software2.dat
 /www/amp.html
 /www/apc/apc.php
+/www/settings/custom_metrics/Images.js
+/www/settings/custom_metrics/Resolution.js
+/www/settings/custom_metrics/Colordepth.js
+/www/settings/custom_metrics/Dpi.js

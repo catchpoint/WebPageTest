@@ -80,12 +80,15 @@
         if (is_file('./settings/sponsors.ini')) {
             $s = parse_ini_file('./settings/sponsors.ini', true);
             if (is_array($s) && count($s)) {
-                foreach( $s as &$entry ){
+                foreach( $s as $entry ){
                     if( strlen($entry['logo']) ) {
                         $offset = 0;
                         if( $entry['index'] )
                             $offset = -40 * $entry['index'];
-                        $sponsors[] = array('logo' => $GLOBALS['cdnPath'] . $entry['logo'], 'href' => $entry['href'], 'title' => $entry['alt'], 'offset' => $offset);
+                        $nofollow = false;
+                        if (isset($entry['nofollow']) && $entry['nofollow'])
+                          $nofollow = true;
+                        $sponsors[] = array('logo' => $GLOBALS['cdnPath'] . $entry['logo'], 'href' => $entry['href'], 'title' => $entry['alt'], 'offset' => $offset, 'nofollow' => $nofollow);
                     }
                 }
             }
@@ -118,7 +121,8 @@
                 $title = '';
                 if (array_key_exists('title', $sponsor))
                     $title = $sponsor['title'];
-                echo "<td ><a href=\"{$sponsor['href']}\" title=\"$title\"><div class=\"sponsor_logo\" style=\"$style\"></div></a></td>";
+                $nofollow = $sponsor['nofollow'] ? 'rel="nofollow"' : '';
+                echo "<td ><a href=\"{$sponsor['href']}\" $nofollow title=\"$title\"><div class=\"sponsor_logo\" style=\"$style\"></div></a></td>";
                 if( $remaining && $remaining < $rowCount - $i - 1 )
                     echo '<td></td>';
             }
