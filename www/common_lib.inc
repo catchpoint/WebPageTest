@@ -797,7 +797,7 @@ function BuildLocations( &$locations )
 */
 function FilterLocations(&$locations, $includeHidden = '',
                          $stripBrowser = null) {
-    global $user;
+    global $user, $admin;
     BuildLocations($locations);
     // drop the main index of any hidden locations so they don't show up in the map view
     foreach ($locations as $name => &$locRef) {
@@ -816,7 +816,7 @@ function FilterLocations(&$locations, $includeHidden = '',
       // see if the location is restricted
       if (isset($locations[$name]) && isset($locRef['restricted'])) {
         $remove = true;
-        if (isset($_COOKIE['google_email']) || isset($user)) {
+        if (($admin && isset($_COOKIE['google_email'])) || isset($user)) {
           $currentUser = isset($_COOKIE['google_email']) ? trim($_COOKIE['google_email']) : $user;
           $userLen = strlen($currentUser);
           $users = explode(',', $locRef['restricted']);

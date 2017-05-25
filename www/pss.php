@@ -250,8 +250,6 @@ $page_description = "Comparison Test$testLabel.";
                                 echo '<select name="backend" id="backend">';
                                 echo "<option value=\"prod\"$prodSelected>Default (Safe)</option>";
                                 echo "<option value=\"aggressive\"$aggressiveSelected>Aggressive</option>";
-                                if( !$supportsAuth || ($admin || substr($_COOKIE['google_email'], -11) == '@google.com') )
-                                    echo '<option value="staging">Staging</option>';
                                 echo '</select>';
                             } else {
                                 echo "<input type=\"hidden\" name=\"backend\" id=\"backend\" value=\"prod\">\n";
@@ -268,7 +266,7 @@ $page_description = "Comparison Test$testLabel.";
                             ?>
                         </li>
                         <?php
-                        if( !$supportsAuth || ($admin || substr($_COOKIE['google_email'], -11) == '@google.com') )
+                        if( !$supportsAuth || $admin )
                         {
                         ?>
                         <li>

@@ -30,12 +30,12 @@ if( $supportsAuth && !defined('EMBED') )
         $logoutUrl = '/forums/member.php?action=logout';
         if( isset($mybb) && strlen($mybb->user['logoutkey']) )
             $logoutUrl .= '&logoutkey=' . $mybb->user['logoutkey'];
-        echo "Welcome, $user &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
+        echo "Welcome, " . htmlspecialchars($user) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
     }
     else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) )
 	  {
         $logoutUrl = 'javascript:ClearOAuthCookies();';
-        $google_email = $_COOKIE['google_email'];
+        $google_email = htmlspecialchars($_COOKIE['google_email']);
         echo "Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
     }
     else
