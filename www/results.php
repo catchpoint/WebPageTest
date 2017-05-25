@@ -19,21 +19,21 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
         include 'resultSpam.inc.php';
     } else {
         if( (isset($test['test']) && ( $test['test']['batch'] || $test['test']['batch_locations'] )) ||
-            (!array_key_exists('test', $test) && array_key_exists('testinfo', $test) && $test['testinfo']['batch']) )
+            (!array_key_exists('test', $test) && array_key_exists('testinfo', $test) && $test['testinfo']['batch']) ) {
             include 'resultBatch.inc';
-        elseif( isset($test['testinfo']['cancelled']) )
+        } elseif( isset($test['testinfo']['cancelled']) ) {
             include 'testcancelled.inc';
-        elseif( (isset($test['test']) && isset($test['test']['completeTime'])) || count($pageData) > 0 )
-        {
-            if( @$test['test']['type'] == 'traceroute' )
+        } elseif( (isset($test['test']) && isset($test['test']['completeTime'])) || count($pageData) > 0 ) {
+            if( @$test['test']['type'] == 'traceroute' ) {
                 include 'resultTraceroute.inc';
-            elseif( @$test['test']['type'] == 'lighthouse' )
+            } elseif( @$test['test']['type'] == 'lighthouse' ) {
                 include 'lighthouse.php';
-            else
+            } else {
                 include 'result.inc';
-        }
-        else
+            }
+        } else {
             include 'running.inc';
+        }
     }
 }
 ?>

@@ -1546,6 +1546,7 @@ function SubmitUrl($testId, $testData, &$test, $url)
         $out .= "script://$testId.pts";
     else
         $out .= $url;
+    $out .= "\r\n";
 
     // add the actual test configuration
     $out .= $testData;
@@ -1882,6 +1883,18 @@ function CheckUrl($url)
   return $ok;
 }
 
+/** 
+* Add a single entry to ini-style files
+* @param mixed $ini
+* @param mixed $key
+* @param mixed $value
+*/
+function AddIniLine(&$ini, $key, $value) {
+  if (strpos($value, "\n") === false && strpos($value, "\r") === false) {
+    $ini .= "$key=$value\r\n";
+  }
+}
+
 /**
 * Create a single test and return the test ID
 *
@@ -1922,49 +1935,49 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
 
         // write out the ini file
         $testInfo = "[test]\r\n";
-        $testInfo .= "fvonly={$test['fvonly']}\r\n";
-        $testInfo .= "timeout={$test['timeout']}\r\n";
+        AddIniLine($testInfo, "fvonly", $test['fvonly']);
+        AddIniLine($testInfo, "timeout", $test['timeout']);
         $resultRuns = $test['runs'] - $test['discard'];
-        $testInfo .= "runs=$resultRuns\r\n";
-        $testInfo .= "location=\"{$test['locationText']}\"\r\n";
-        $testInfo .= "loc={$test['location']}\r\n";
-        $testInfo .= "id=$testId\r\n";
-        $testInfo .= "batch=$batch\r\n";
-        $testInfo .= "batch_locations=$batch_locations\r\n";
-        $testInfo .= "sensitive={$test['sensitive']}\r\n";
+        AddIniLine($testInfo, "runs", $resultRuns);
+        AddIniLine($testInfo, "location", "\"{$test['locationText']}\"");
+        AddIniLine($testInfo, "loc", $test['location']);
+        AddIniLine($testInfo, "id", $testId);
+        AddIniLine($testInfo, "batch", $batch);
+        AddIniLine($testInfo, "batch_locations", $batch_locations);
+        AddIniLine($testInfo, "sensitive", $test['sensitive']);
         if( strlen($test['login']) )
-            $testInfo .= "authenticated=1\r\n";
-        $testInfo .= "connections={$test['connections']}\r\n";
+            AddIniLine($testInfo, "authenticated", "1");
+        AddIniLine($testInfo, "connections", $test['connections']);
         if( strlen($test['script']) )
-            $testInfo .= "script=1\r\n";
+            AddIniLine($testInfo, "script", "1");
         if( strlen($test['notify']) )
-            $testInfo .= "notify={$test['notify']}\r\n";
+            AddIniLine($testInfo, "notify", $test['notify']);
         if( strlen($test['video']) )
-            $testInfo .= "video=1\r\n";
+            AddIniLine($testInfo, "video", "1");
         if( strlen($test['uid']) )
-            $testInfo .= "uid={$test['uid']}\r\n";
+            AddIniLine($testInfo, "uid", $test['uid']);
         if( strlen($test['owner']) )
-            $testInfo .= "owner={$test['owner']}\r\n";
+            AddIniLine($testInfo, "owner", $test['owner']);
         if( strlen($test['type']) )
-            $testInfo .= "type={$test['type']}\r\n";
+            AddIniLine($testInfo, "type", $test['type']);
         if( strlen($test['industry']) && strlen($test['industry_page']) )
         {
-            $testInfo .= "industry=\"{$test['industry']}\"\r\n";
-            $testInfo .= "industry_page=\"{$test['industry_page']}\"\r\n";
+            AddIniLine($testInfo, "industry", $test['industry']);
+            AddIniLine($testInfo, "industry_page", $test['industry_page']);
         }
 
         if( isset($test['connectivity']) )
         {
-            $testInfo .= "connectivity={$test['connectivity']}\r\n";
-            $testInfo .= "bwIn={$test['bwIn']}\r\n";
-            $testInfo .= "bwOut={$test['bwOut']}\r\n";
-            $testInfo .= "latency={$test['latency']}\r\n";
-            $testInfo .= "plr={$test['plr']}\r\n";
+            AddIniLine($testInfo, "connectivity", $test['connectivity']);
+            AddIniLine($testInfo, "bwIn", $test['bwIn']);
+            AddIniLine($testInfo, "bwOut", $test['bwOut']);
+            AddIniLine($testInfo, "latency", $test['latency']);
+            AddIniLine($testInfo, "plr", $test['plr']);
         }
 
         $testInfo .= "\r\n[runs]\r\n";
         if( $test['median_video'] )
-            $testInfo .= "median_video=1\r\n";
+            AddIniLine($testInfo, "median_video", "1");
 
         file_put_contents("{$test['path']}/testinfo.ini",  $testInfo);
 
@@ -1974,163 +1987,163 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             // build up the actual test commands
             $testFile = '';
             if( strlen($test['domElement']) )
-                $testFile .= "\r\nDOMElement={$test['domElement']}";
+                AddIniLine($testFile, 'DOMElement', $test['domElement']);
             if( $test['fvonly'] )
-                $testFile .= "\r\nfvonly=1";
+                AddIniLine($testFile, 'fvonly', '1');
             if( $test['timeout'] )
-                $testFile .= "\r\ntimeout={$test['timeout']}";
+                AddIniLine($testFile, 'timeout', $test['timeout']);
             if( $test['web10'] )
-                $testFile .= "\r\nweb10=1";
+                AddIniLine($testFile, 'web10', '1');
             if( $test['ignoreSSL'] )
-                $testFile .= "\r\nignoreSSL=1";
+                AddIniLine($testFile, 'ignoreSSL', '1');
             if( $test['tcpdump'] )
-                $testFile .= "\r\ntcpdump=1";
+                AddIniLine($testFile, 'tcpdump', '1');
             if( $test['standards'] )
-                $testFile .= "\r\nstandards=1";
+                AddIniLine($testFile, 'standards', '1');
             if( $test['timeline'] ) {
-                $testFile .= "\r\ntimeline=1";
-                $testFile .= "\r\ntimelineStackDepth={$test['timelineStackDepth']}";
+                AddIniLine($testFile, 'timeline', '1');
+                AddIniLine($testFile, 'timelineStackDepth', $test['timelineStackDepth']);
             }
             if( $test['trace'] )
-                $testFile .= "\r\ntrace=1";
+                AddIniLine($testFile, 'trace', '1');
             if (isset($test['traceCategories']))
-                $testFile .= "\r\ntraceCategories={$test['traceCategories']}";
+                AddIniLine($testFile, 'traceCategories', $test['traceCategories']);
             if( $test['swrender'] )
-                $testFile .= "\r\nswRender=1";
+                AddIniLine($testFile, 'swRender', '1');
             if( $test['netlog'] )
-                $testFile .= "\r\nnetlog=1";
+                AddIniLine($testFile, 'netlog', '1');
             if( $test['spdy3'] )
-                $testFile .= "\r\nspdy3=1";
+                AddIniLine($testFile, 'spdy3', '1');
             if( $test['noscript'] )
-                $testFile .= "\r\nnoscript=1";
+                AddIniLine($testFile, 'noscript', '1');
             if( $test['fullsizevideo'] )
-                $testFile .= "\r\nfullSizeVideo=1";
+                AddIniLine($testFile, 'fullSizeVideo', '1');
             if( $test['blockads'] )
-                $testFile .= "\r\nblockads=1";
+                AddIniLine($testFile, 'blockads', '1');
             if( $test['video'] )
-                $testFile .= "\r\nCapture Video=1";
+                AddIniLine($testFile, 'Capture Video', '1');
             if (GetSetting('save_mp4') || $test['keepvideo'])
-                $testFile .= "\r\nkeepvideo=1";
+                AddIniLine($testFile, 'keepvideo', '1');
             if ($test['renderVideo'])
-                $testFile .= "\r\nrenderVideo=1";
+                AddIniLine($testFile, 'renderVideo', '1');
             if( strlen($test['type']) )
-                $testFile .= "\r\ntype={$test['type']}";
+                AddIniLine($testFile, 'type', $test['type']);
             if( $test['block'] ) {
-                $testFile .= "\r\nblock={$test['block']}";
+                $block = $test['block'];
                 if (isset($forceBlock))
-                  $testFile .= " $forceBlock";
+                  $block .= " $forceBlock";
+                AddIniLine($testFile, 'block', $block);
             } elseif (isset($forceBlock)) {
-                $testFile .= "\r\nblock=$forceBlock";
+                AddIniLine($testFile, 'block', $forceBlock);
             }
             if( $test['noopt'] )
-                $testFile .= "\r\nnoopt=1";
+                AddIniLine($testFile, 'noopt', '1');
             if( $test['noimages'] )
-                $testFile .= "\r\nnoimages=1";
+                AddIniLine($testFile, 'noimages', '1');
             if( $test['noheaders'] )
-                $testFile .= "\r\nnoheaders=1";
+                AddIniLine($testFile, 'noheaders', '1');
             if( $test['discard'] )
-                $testFile .= "\r\ndiscard={$test['discard']}";
-            $testFile .= "\r\nruns={$test['runs']}\r\n";
+                AddIniLine($testFile, 'discard', $test['discard']);
+            AddIniLine($testFile, 'runs', $test['runs']);
 
             if( isset($test['connectivity']) )
             {
-                $testFile .= "bwIn={$test['bwIn']}\r\n";
-                $testFile .= "bwOut={$test['bwOut']}\r\n";
-                $testFile .= "latency={$test['testLatency']}\r\n";
-                $testFile .= "plr={$test['plr']}\r\n";
+                AddIniLine($testFile, 'bwIn', $test['bwIn']);
+                AddIniLine($testFile, 'bwOut', $test['bwOut']);
+                AddIniLine($testFile, 'latency', $test['testLatency']);
+                AddIniLine($testFile, 'plr', $test['plr']);
             }
 
             if( isset($test['browserExe']) && strlen($test['browserExe']) )
-                $testFile .= "browserExe={$test['browserExe']}\r\n";
+                AddIniLine($testFile, 'browserExe', $test['browserExe']);
             if( isset($test['browser']) && strlen($test['browser']) )
-                $testFile .= "browser={$test['browser']}\r\n";
+                AddIniLine($testFile, 'browser', $test['browser']);
             if( $test['pngss'] || $settings['pngss'] )
-                $testFile .= "pngScreenShot=1\r\n";
+                AddIniLine($testFile, 'pngScreenShot', '1');
             if( $test['iq'] )
-                $testFile .= "imageQuality={$test['iq']}\r\n";
+                AddIniLine($testFile, 'imageQuality', $test['iq']);
             elseif( $settings['iq'] )
-                $testFile .= "imageQuality={$settings['iq']}\r\n";
+                AddIniLine($testFile, 'imageQuality', $settings['iq']);
             if( $test['bodies'] )
-                $testFile .= "bodies=1\r\n";
+                AddIniLine($testFile, 'bodies', '1');
             if( $test['htmlbody'] )
-                $testFile .= "htmlbody=1\r\n";
+                AddIniLine($testFile, 'htmlbody', '1');
             if( $test['time'] )
-                $testFile .= "time={$test['time']}\r\n";
+                AddIniLine($testFile, 'time', $test['time']);
             if( $test['clear_rv'] )
-                $testFile .= "clearRV={$test['clear_rv']}\r\n";
+                AddIniLine($testFile, 'clearRV', $test['clear_rv']);
             if( $test['keepua'] )
-                $testFile .= "keepua=1\r\n";
+                AddIniLine($testFile, 'keepua', '1');
             if( $test['mobile'] )
-                $testFile .= "mobile=1\r\n";
+                AddIniLine($testFile, 'mobile', '1');
             if( $test['lighthouse'] )
-                $testFile .= "lighthouse=1\r\n";
+                AddIniLine($testFile, 'lighthouse', '1');
             if( $test['lighthouseTrace'] )
-                $testFile .= "lighthouseTrace=1\r\n";
+                AddIniLine($testFile, 'lighthouseTrace', '1');
             if( $test['debug'] )
-                $testFile .= "debug=1\r\n";
+                AddIniLine($testFile, 'debug', '1');
             if( isset($test['throttle_cpu']) && $test['throttle_cpu'] > 0.0 )
-                $testFile .= "throttle_cpu={$test['throttle_cpu']}\r\n";
+                AddIniLine($testFile, 'throttle_cpu', $test['throttle_cpu']);
             if( isset($test['dpr']) && $test['dpr'] > 0 )
-                $testFile .= "dpr={$test['dpr']}\r\n";
+                AddIniLine($testFile, 'dpr', $test['dpr']);
             if( isset($test['width']) && $test['width'] > 0 )
-                $testFile .= "width={$test['width']}\r\n";
+                AddIniLine($testFile, 'width', $test['width']);
             if( isset($test['height']) && $test['height'] > 0 )
-                $testFile .= "height={$test['height']}\r\n";
+                AddIniLine($testFile, 'height', $test['height']);
             if( isset($test['browser_width']) && $test['browser_width'] > 0 )
-                $testFile .= "browser_width={$test['browser_width']}\r\n";
+                AddIniLine($testFile, 'browser_width', $test['browser_width']);
             if( isset($test['browser_height']) && $test['browser_height'] > 0 )
-                $testFile .= "browser_height={$test['browser_height']}\r\n";
+                AddIniLine($testFile, 'browser_height', $test['browser_height']);
             if( $test['clearcerts'] )
-                $testFile .= "clearcerts=1\r\n";
+                AddIniLine($testFile, 'clearcerts', '1');
             if( $test['orientation'] )
-                $testFile .= "orientation={$test['orientation']}\r\n";
+                AddIniLine($testFile, 'orientation', $test['orientation']);
             if (array_key_exists('continuousVideo', $test) && $test['continuousVideo'])
-                $testFile .= "continuousVideo=1\r\n";
+                AddIniLine($testFile, 'continuousVideo', '1');
             if (array_key_exists('responsive', $test) && $test['responsive'])
-                $testFile .= "responsive=1\r\n";
+                AddIniLine($testFile, 'responsive', '1');
             if (array_key_exists('minimalResults', $test) && $test['minimalResults'])
-                $testFile .= "minimalResults=1\r\n";
+                AddIniLine($testFile, 'minimalResults', '1');
             if (array_key_exists('cmdLine', $test) && strlen($test['cmdLine']))
-                $testFile .= "cmdLine={$test['cmdLine']}\r\n";
+                AddIniLine($testFile, 'cmdLine', $test['cmdLine']);
             if (array_key_exists('addCmdLine', $test) && strlen($test['addCmdLine']))
-                $testFile .= "addCmdLine={$test['addCmdLine']}\r\n";
+                AddIniLine($testFile, 'addCmdLine', $test['addCmdLine']);
             if (array_key_exists('customBrowserUrl', $test) && strlen($test['customBrowserUrl']))
-                $testFile .= "customBrowserUrl={$test['customBrowserUrl']}\r\n";
+                AddIniLine($testFile, 'customBrowserUrl', $test['customBrowserUrl']);
             if (array_key_exists('customBrowserMD5', $test) && strlen($test['customBrowserMD5']))
-                $testFile .= "customBrowserMD5={$test['customBrowserMD5']}\r\n";
+                AddIniLine($testFile, 'customBrowserMD5', $test['customBrowserMD5']);
             if (array_key_exists('customBrowserSettings', $test) &&
                 is_array($test['customBrowserSettings']) &&
                 count($test['customBrowserSettings'])) {
               foreach ($test['customBrowserSettings'] as $setting => $value)
-                $testFile .= "customBrowser_$setting=$value\r\n";
+                AddIniLine($testFile, "customBrowser_$setting", $value);
             }
             if (isset($test['uastring']))
-              $testFile .= "uastring={$test['uastring']}\r\n";
+                AddIniLine($testFile, 'uastring', $test['uastring']);
             $UAModifier = GetSetting('UAModifier');
             if ($UAModifier && strlen($UAModifier))
-                $testFile .= "UAModifier=$UAModifier\r\n";
+                AddIniLine($testFile, 'UAModifier', $UAModifier);
             if (isset($test['appendua']))
-              $testFile .= "AppendUA={$test['appendua']}\r\n";
+                AddIniLine($testFile, 'AppendUA', $test['appendua']);
             if (isset($test['key']) && strlen($test['key']))
-              $testFile .= "APIKey={$test['key']}\r\n";
+                AddIniLine($testFile, 'APIKey', $test['key']);
             if (isset($test['ip']) && strlen($test['ip']))
-              $testFile .= "IPAddr={$test['ip']}\r\n";
+                AddIniLine($testFile, 'IPAddr', $test['ip']);
 
             // see if we need to add custom scan rules
             if (array_key_exists('custom_rules', $test)) {
                 foreach($test['custom_rules'] as &$rule) {
                     $rule = trim($rule);
                     if (strlen($rule)) {
-                        $testFile .= "customRule=$rule\r\n";
+                        AddIniLine($testFile, 'customRule', $rule);
                     }
-
                 }
             }
 
             // Add custom metrics
             if (array_key_exists('customMetrics', $test)) {
               foreach($test['customMetrics'] as $name => $code)
-                $testFile .= "customMetric=$name:$code\r\n";
+                AddIniLine($testFile, 'customMetric', "$name:$code");
             }
 
             if( !SubmitUrl($testId, $testFile, $test, $url) )
