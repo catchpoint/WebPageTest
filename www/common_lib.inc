@@ -1904,7 +1904,7 @@ function SaveJobQueue($workDir, &$queue)
 *
 * @param mixed $dir
 */
-function GetTesters($locationId, $includeOffline = false) {
+function GetTesters($locationId, $includeOffline = false, $include_sensitive = true) {
   $location = array();
   $dir = __DIR__ . "/tmp/testers-$locationId";
   if (is_dir($dir)) {
@@ -1960,11 +1960,13 @@ function GetTesters($locationId, $includeOffline = false) {
                          'isWinServer' => @$tester['isWinServer'],
                          'isWin64' => @$tester['isWin64'],
                          'dns' => @$tester['dns'],
-                         'test' => @$tester['test'],
                          'GPU' => @$tester['GPU'],
                          'offline' => @$tester['offline'],
                          'screenwidth' => @$tester['screenwidth'],
                          'screenheight' => @$tester['screenheight']);
+          if ($include_sensitive) {
+             $entry['test'] = @$tester['test'];
+          }
           $entry['rebooted'] = isset($tester['rebooted']) ? $tester['rebooted'] : false;
 
           if (isset($tester['cpu']) && is_array($tester['cpu']) && count($tester['cpu']))

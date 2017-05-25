@@ -14,7 +14,7 @@ if ($CURL_CONTEXT !== false) {
 }
 
 // load the locations
-$locations = GetAllTesters();
+$locations = GetAllTesters($admin);
 
 // kick out the data
 if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
@@ -131,7 +131,7 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
 * Load the location information and extract just the end nodes
 *
 */
-function GetAllTesters() {
+function GetAllTesters($include_sensitive = true) {
   $locations = array();
   $loc = LoadLocationsIni();
 
@@ -155,7 +155,7 @@ function GetAllTesters() {
           isset($loc[$group[$j]]['relayLocation']) && strlen($loc[$group[$j]]['relayLocation'])) {
         $locations[$loc[$group[$j]]['location']] = GetRemoteTesters($loc[$group[$j]]['relayServer'], $loc[$group[$j]]['relayLocation']);
       } else {
-        $locations[$loc[$group[$j]]['location']] = GetTesters($loc[$group[$j]]['location']);
+        $locations[$loc[$group[$j]]['location']] = GetTesters($loc[$group[$j]]['location'], false, $include_sensitive);
       }
 
       $j++;
