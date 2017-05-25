@@ -10,7 +10,7 @@ if ($userIsBot || !empty($settings['disableTestlog'])) {
 $page_keywords = array('Log','History','Webpagetest','Website Speed Test');
 $page_description = "History of website performance speed tests run on WebPagetest.";
 
-if ($supportsAuth && ((array_key_exists('google_email', $_COOKIE) && strpos($_COOKIE['google_email'], '@google.com') !== false)))
+if ($supportsAuth && ((array_key_exists('google_email', $_COOKIE) && substr($_COOKIE['google_email'], -11) == '@google.com') !== false)))
     $admin = true;
 
 $supportsGrep = false;

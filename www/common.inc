@@ -227,7 +227,7 @@ if( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
 }
 setcookie('o', $owner, time()+60*60*24*365, '/');
 
-if( $supportsAuth && ($admin || (array_key_exists('google_email', $_COOKIE) && strpos($_COOKIE['google_email'], '@google.com') !== false)) ) {
+if( $supportsAuth && ($admin || (array_key_exists('google_email', $_COOKIE) && substr($_COOKIE['google_email'], -11) == '@google.com')) ) {
     $settings['enable_google_csi'] = true;
 }
 

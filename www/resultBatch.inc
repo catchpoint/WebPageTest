@@ -77,7 +77,7 @@ $videoCaptured = false;
 if (array_key_exists('video', $test['test']) && $test['test']['video'])
     $videoCaptured = true;
 $showExperimental = false;
-if( $videoCaptured && (!$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false)) )
+if( $videoCaptured && (!$supportsAuth || ($admin || substr($_COOKIE['google_email'], -11) == '@google.com') !== false)) )
     $showExperimental = true;
 
 
@@ -1199,7 +1199,7 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
     {
         global $supportsAuth;
         global $admin;
-        if( !$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false) ) {
+        if( !$supportsAuth || ($admin || substr($_COOKIE['google_email'], -11) == '@google.com') !== false) ) {
             $csi = array();
             foreach ($testData as $variation => &$configs) {
                 foreach($configs['Optimized']['median']['csi'] as $name => $value) {
