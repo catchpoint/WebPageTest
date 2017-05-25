@@ -37,18 +37,20 @@ if (is_file($s3_settings_file)) {
 
 if (isset($_REQUEST['installer']) && isset($ip)) {
   $installer = $_REQUEST['installer'];
-  $installer_postfix = GetSetting('installerPostfix');
-  if ($installer_postfix) {
-    $installer .= $installer_postfix;
-    $ok = true;
-  } elseif ($ip == '72.66.115.14' ||  // Public WebPageTest
-            $ip == '216.239.44.25' || // Gtech_ATL
-            $ip == '149.20.63.13') {  // HTTP Archive
-    $ok = true;
-  } elseif (isset($url_replace)) {
-    $ok = true;
-  } elseif (preg_match('/^(software|browsers\/[-_a-zA-Z0-9]+)\.dat$/', $installer)) {
-    $ok = IsValidIp($ip, $installer);
+  if (preg_match('/^(software|browsers\/[-_a-zA-Z0-9]+)\.dat$/', $installer)) {
+    $installer_postfix = GetSetting('installerPostfix');
+    if ($installer_postfix) {
+      $installer .= $installer_postfix;
+      $ok = true;
+    } elseif ($ip == '72.66.115.14' ||  // Public WebPageTest
+              $ip == '216.239.44.25' || // Gtech_ATL
+              $ip == '149.20.63.13') {  // HTTP Archive
+      $ok = true;
+    } elseif (isset($url_replace)) {
+      $ok = true;
+    } else {
+      $ok = IsValidIp($ip, $installer);
+    }
   }
 }
 
