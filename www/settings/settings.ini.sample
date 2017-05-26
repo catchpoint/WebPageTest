@@ -130,6 +130,11 @@ agentUpdate=http://cdn.webpagetest.org/
 ; YYMMDD_<serverID>hash_xxx
 ;serverID=A
 
+; For basic authentication with WPT server
+;ba_username=username
+;ba_password=password
+;validcertificate=1
+
 ; ***********************
 ; Test result integration
 ; ***********************
