@@ -2295,6 +2295,10 @@ function ValidateTestId(&$id) {
   } else {
     $id = '';
   }
+  // Exit if we are trying to operate on an invalid ID
+  if (!$valid) {
+    exit(0);
+  }
   return $valid;
 }
 
