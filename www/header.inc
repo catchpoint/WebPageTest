@@ -333,6 +333,15 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
                 echo "<li$current><a href=\"$tabUrl\">$tabName</a></li>";
             }
         }
+        
+        // Add the "Image Analysis" link
+        if (isset($_GET['img']) && isset($id) && strlen($id)) {
+          $tabUrl = GetSetting('image_analysis');
+          if ($tabUrl) {
+            $tabUrl = str_replace('{test id}', $id, $tabUrl);
+            echo "<li><a href=\"$tabUrl\" title=\"Image Analysis - Opens in a new window.\" target=\"_blank\" rel=\"noopener\">Image Analysis<img src=\"/images/new_badge.png\" style=\"top: 0; float: right;\"></a></li>";
+          }
+        }
     
         echo '</ul>';
         echo '<div class="test_results-content">';
