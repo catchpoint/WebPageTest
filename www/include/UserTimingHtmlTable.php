@@ -28,7 +28,7 @@ class UserTimingHtmlTable {
     $this->hasUserTiming = $this->_initUserTimings();
     $this->hasFirstPaint = $this->runResults->hasValidMetric("firstPaint");
     $this->hasDomInteractive = $this->runResults->hasValidMetric("domInteractive");
-    $this->hasTTI = $this->runResults->hasValidMetric("TimeToInteractive") || $this->runResults->hasValidMetric("TTIMeasurementEnd");
+    $this->hasTTI = $this->runResults->hasValidMetric("TimeToInteractive") || $this->runResults->hasValidMetric("LastInteractive");
     $this->isMultistep = $runResults->countSteps() > 1;
   }
 
@@ -87,8 +87,8 @@ class UserTimingHtmlTable {
       $tti = '-';
       if ($stepResult->getMetric("TimeToInteractive"))
         $tti = $this->_getTimeMetric($stepResult, "TimeToInteractive");
-      elseif ($stepResult->getMetric("TTIMeasurementEnd"))
-        $tti = '&GT; ' . $this->_getTimeMetric($stepResult, "TTIMeasurementEnd");
+      elseif ($stepResult->getMetric("LastInteractive"))
+        $tti = '&GT; ' . $this->_getTimeMetric($stepResult, "LastInteractive");
       $out .= "<td>$tti</td>";
     }
     if ($this->hasUserTiming)

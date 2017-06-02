@@ -60,8 +60,8 @@ class RunResultHtmlTable {
     
     // Special-case the check for TTI
     if (!$this->enabledColumns[self::COL_TTI]) {
-      $this->enabledColumns[self::COL_TTI] = $runResults->hasValidMetric('TTIMeasurementEnd') ||
-                                   ($rvRunResults && $rvRunResults->hasValidMetric('TTIMeasurementEnd'));
+      $this->enabledColumns[self::COL_TTI] = $runResults->hasValidMetric('LastInteractive') ||
+                                   ($rvRunResults && $rvRunResults->hasValidMetric('LastInteractive'));
     }
   }
 
@@ -241,8 +241,8 @@ class RunResultHtmlTable {
       $value = '-';
       if ($stepResult->getMetric("TimeToInteractive"))
         $value = $this->_getIntervalMetric($stepResult, "TimeToInteractive");
-      elseif ($stepResult->getMetric("TTIMeasurementEnd"))
-        $value = '&GT; ' . $this->_getIntervalMetric($stepResult, "TTIMeasurementEnd");
+      elseif ($stepResult->getMetric("LastInteractive"))
+        $value = '&GT; ' . $this->_getIntervalMetric($stepResult, "LastInteractive");
       $out .= $this->_bodyCell($idPrefix. "TimeToInteractive" . $idSuffix, $value, $class);
     }
     if ($this->isColumnEnabled(self::COL_RESULT)) {

@@ -238,7 +238,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     if (!$is_image_map && gz_is_file($localPaths->interactiveFile())) {
       $interactive = json_decode(gz_file_get_contents($localPaths->interactiveFile()), true);
       if (isset($interactive)) {
-        if (is_array($interactive) && count($interactive) > 1) {
+        if (is_array($interactive) && count($interactive) > 0) {
           $height += $row_height;
         } else {
           unset($interactive);

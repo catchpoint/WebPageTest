@@ -269,27 +269,32 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
       
       // Calculate Time to Interactive if we have First Meaningful Paint and interactive Windows
       if (isset($ret['interactivePeriods']) && is_array($ret['interactivePeriods']) && count($ret['interactivePeriods'])) {
-        $seek_start = null;
+        $seek_start = 0;
         $TTI = null;
-        if (isset($ret['chromeUserTiming.firstMeaningfulPaint']) && $ret['chromeUserTiming.firstMeaningfulPaint'] > 0)
-          $seek_start = $ret['chromeUserTiming.firstMeaningfulPaint'];
-        elseif (isset($ret['chromeUserTiming.firstContentfulPaint']) && $ret['chromeUserTiming.firstContentfulPaint'] > 0)
+        if (isset($ret['chromeUserTiming.firstContentfulPaint']) && $ret['chromeUserTiming.firstContentfulPaint'] > 0)
           $seek_start = $ret['chromeUserTiming.firstContentfulPaint'];
         elseif (isset($ret['render']) && $ret['render'] > 0)
           $seek_start = $ret['render'];
-        if (isset($seek_start)) 
-          $TTI = CalculateTimeToInteractive($localPaths, $seek_start, $ret['interactivePeriods'], $measurement_end);
+        if ($seek_start > 0) 
+          $TTI = CalculateTimeToInteractive($localPaths, $seek_start, $ret['interactivePeriods'], $measurement_end, $first_interactive);
+        if (isset($first_interactive) && $first_interactive > 0) {
+          $ret['FirstInteractive'] = $first_interactive;
+        }
         if (isset($TTI) && $TTI > 0) {
           $ret['TimeToInteractive'] = $TTI;
-        } else {
-          $measurement_end = 0;
-          foreach ($ret['interactivePeriods'] as $window) {
-            if ($window[1] > $measurement_end)
-              $measurement_end = $window[1];
-          }
-          if ($measurement_end > 0)
-            $ret['TTIMeasurementEnd'] = $measurement_end;
         }
+        $measurement_end = 0;
+        $last_interactive = 0;
+        foreach ($ret['interactivePeriods'] as $window) {
+          if ($window[1] > $measurement_end) {
+            $measurement_end = max($window[1], $seek_start);
+            $last_interactive = max($window[0], $seek_start);
+          }
+        }
+        if ($measurement_end > 0)
+          $ret['TTIMeasurementEnd'] = $measurement_end;
+        if ($last_interactive > 0)
+          $ret['LastInteractive'] = $last_interactive;
       }
     }
     
@@ -918,18 +923,22 @@ function ParseUserTiming($file) {
 * @param mixed $firstMeaningfulPaint
 * @param mixed $interactiveWindows
 */
-function CalculateTimeToInteractive($localPaths, $firstMeaningfulPaint, $interactiveWindows, &$measurement_end) {
+function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows, &$measurement_end, &$first_interactive) {
   $TTI = null;
+  $first_interactive = null;
   
   // Start by filtering the interactive windows to only include 5 second windows that don't
-  // end before FMP.
+  // end before the start time.
   $end = 0;
   $iw = array();
   foreach ($interactiveWindows as $window) {
     $end = $window[1];
     $duration = $window[1] - $window[0];
-    if ($end >= $firstMeaningfulPaint && $duration >= 5000)
+    if ($end >= $startTime && $duration >= 5000) {
       $iw[] = $window;
+      if (!isset($first_interactive) || $window[0] < $first_interactive)
+        $first_interactive = max($window[0], $startTime);
+    }
   }
   
   $rw = array();
@@ -945,7 +954,7 @@ function CalculateTimeToInteractive($localPaths, $firstMeaningfulPaint, $interac
             isset($request['load_start']) &&
             $request['load_start'] >= 0 &&
             isset($request['load_end']) &&
-            $request['load_end'] >= $firstMeaningfulPaint) {
+            $request['load_end'] >= $startTime) {
           $re[] = array('type' => 'start', 'time' => $request['load_start']);
           $re[] = array('type' => 'end', 'time' => $request['load_end']);
         }
@@ -991,7 +1000,7 @@ function CalculateTimeToInteractive($localPaths, $firstMeaningfulPaint, $interac
       }
     }
     if (isset($window))
-      $TTI = max($firstMeaningfulPaint, $window[0]);
+      $TTI = max($startTime, $window[0]);
   }
   
   return $TTI;
