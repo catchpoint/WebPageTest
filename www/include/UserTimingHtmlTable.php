@@ -28,7 +28,7 @@ class UserTimingHtmlTable {
     $this->hasUserTiming = $this->_initUserTimings();
     $this->hasFirstPaint = $this->runResults->hasValidMetric("firstPaint");
     $this->hasDomInteractive = $this->runResults->hasValidMetric("domInteractive");
-    $this->hasTTI = $this->runResults->hasValidMetric("TimeToInteractive") || $this->runResults->hasValidMetric("LastInteractive");
+    $this->hasTTI = $this->runResults->hasValidMetric("FirstInteractive") || $this->runResults->hasValidMetric("LastInteractive");
     $this->isMultistep = $runResults->countSteps() > 1;
   }
 
@@ -50,7 +50,7 @@ class UserTimingHtmlTable {
       $out .= "<th>Step</th>";
     }
     if ($this->hasTTI)
-      $out .= "<th><a href=\"https://github.com/WPO-Foundation/webpagetest/blob/master/docs/Metrics/TimeToInteractive.md\">Interactive (beta)</a></th>";
+      $out .= "<th><a href=\"https://github.com/WPO-Foundation/webpagetest/blob/master/docs/Metrics/TimeToInteractive.md\">First Interactive (beta)</a></th>";
     if ($this->hasUserTiming) {
       foreach ($this->userTimings[0] as $label => $value)
         if (count($this->userTimings[0]) < 5 || substr($label, 0, 5) !== 'goog_')
@@ -85,8 +85,8 @@ class UserTimingHtmlTable {
     }
     if ($this->hasTTI) {
       $tti = '-';
-      if ($stepResult->getMetric("TimeToInteractive"))
-        $tti = $this->_getTimeMetric($stepResult, "TimeToInteractive");
+      if ($stepResult->getMetric("FirstInteractive"))
+        $tti = $this->_getTimeMetric($stepResult, "FirstInteractive");
       elseif ($stepResult->getMetric("LastInteractive"))
         $tti = '&GT; ' . $this->_getTimeMetric($stepResult, "LastInteractive");
       $out .= "<td>$tti</td>";

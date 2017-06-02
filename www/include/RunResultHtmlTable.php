@@ -10,7 +10,7 @@ class RunResultHtmlTable {
   const COL_USER_TIME = "userTime";
   const COL_DOM_TIME = "domTime";
   const COL_DOM_ELEMENTS = "domElements";
-  const COL_TTI = "TimeToInteractive";
+  const COL_TTI = "FirstInteractive";
   const COL_SPEED_INDEX = "SpeedIndex";
   const COL_VISUAL_COMPLETE = "visualComplete";
   const COL_RESULT = "result";
@@ -141,7 +141,7 @@ class RunResultHtmlTable {
       $out .= $this->_headCell("DOM Element");
     }
     if ($this->isColumnEnabled(self::COL_TTI)) {
-      $out .= $this->_headCell("<a href=\"https://github.com/WPO-Foundation/webpagetest/blob/master/docs/Metrics/TimeToInteractive.md\">Interactive (beta)</a>");
+      $out .= $this->_headCell("<a href=\"https://github.com/WPO-Foundation/webpagetest/blob/master/docs/Metrics/TimeToInteractive.md\">First Interactive (beta)</a>");
     }
     if ($this->isColumnEnabled(self::COL_RESULT)) {
       $out .= $this->_headCell("Result (error&nbsp;code)");
@@ -239,11 +239,11 @@ class RunResultHtmlTable {
     }
     if ($this->isColumnEnabled(self::COL_TTI)) {
       $value = '-';
-      if ($stepResult->getMetric("TimeToInteractive"))
-        $value = $this->_getIntervalMetric($stepResult, "TimeToInteractive");
+      if ($stepResult->getMetric("FirstInteractive"))
+        $value = $this->_getIntervalMetric($stepResult, "FirstInteractive");
       elseif ($stepResult->getMetric("LastInteractive"))
         $value = '&GT; ' . $this->_getIntervalMetric($stepResult, "LastInteractive");
-      $out .= $this->_bodyCell($idPrefix. "TimeToInteractive" . $idSuffix, $value, $class);
+      $out .= $this->_bodyCell($idPrefix. "FirstInteractive" . $idSuffix, $value, $class);
     }
     if ($this->isColumnEnabled(self::COL_RESULT)) {
       $out .= $this->_bodyCell($idPrefix . "result" . $idSuffix, $this->_getSimpleMetric($stepResult, "result"), $class);
