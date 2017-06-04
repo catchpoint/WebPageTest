@@ -561,7 +561,7 @@ function gz_file_put_contents($filename, $data)
     $nogzip = GetSetting('nogzip');
     if( !$nogzip && extension_loaded('zlib') )
     {
-        $zip = gzopen("$filename.gz", 'wb6');
+        $zip = @gzopen("$filename.gz", 'wb6');
         if( $zip !== false )
         {
             if( gzwrite($zip, $data) )
@@ -1163,13 +1163,9 @@ function GetTestInfoHtml($includeScript = true)
     $run = null;
     if (array_key_exists('run', $_REQUEST))
       $run = intval($_REQUEST['run']);
-    if (isset($run) &&
-        array_key_exists('testinfo', $test) &&
-        array_key_exists('test_runs', $test['testinfo']) &&
-        array_key_exists($run, $test['testinfo']['test_runs']) &&
-        array_key_exists('tester', $test['testinfo']['test_runs'][$run]))
+    if (isset($run) && isset($test) && is_array($test) && isset($test['testinfo']['test_runs'][$run]['tester']))
       $html .= 'Tester: ' . $test['testinfo']['test_runs'][$run]['tester'] . '<br>';
-    elseif (isset($test['testinfo']['tester']) )
+    elseif (isset($test) && is_array($test) && isset($test['testinfo']['tester']) )
       $html .= 'Tester: ' . $test['testinfo']['tester'] . '<br>';
     if( $dom )
         $html .= 'DOM Element: <b>' . htmlspecialchars($dom) . '</b><br>';
