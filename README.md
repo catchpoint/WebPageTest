@@ -7,6 +7,9 @@ The platform is basically split into two parts:
 * /www - The web UI (PHP)
 * /agent - The code for running the tests on various browsers.
 
+# Troubleshooting Private instances
+If your instance is running, but you're having issues configuring agents, try navigating to {server_ip}/install and checking for a valid configuration.
+
 # Agents
 There are a few different agents depending on the browsers and platforms supported.
 
