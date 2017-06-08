@@ -179,6 +179,8 @@ CDN_PROVIDER cdnList[] = {
   {".b-cdn.net", "BunnyCDN"},
   {".pix-cdn.org", "Advanced Hosters CDN"},
   {".roast.io", "Roast.io"},
+  {".userapi.com", "VKontakte CDN"},
+  {"yastatic.net", "Yandex, LLC"},
   {"END_MARKER", "END_MARKER"}
 };
 
