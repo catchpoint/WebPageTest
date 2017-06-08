@@ -571,15 +571,18 @@
             }
         }
 
+        if( !strlen($error) && !$test['batch'] ) {
+          ValidateParameters($test, $locations, $error);
+        }
         // Make sure we aren't blocking the tester
         // TODO: remove the allowance for high-priority after API keys are implemented
-        ValidateKey($test, $error);
+        if (!strlen($error)) {
+          ValidateKey($test, $error);
+        }
         if( !strlen($error) && CheckIp($test) && CheckUrl($test['url']) )
         {
-            if( !$error && !$test['batch'] )
-              ValidateParameters($test, $locations, $error);
 
-            if( !strlen($error) && !array_key_exists('id', $test) )
+            if( !array_key_exists('id', $test) )
             {
                 // see if we are doing a SPOF test (if so, we need to build the 2 tests and
                 // redirect to the comparison page
@@ -1098,6 +1101,8 @@ function ValidateKey(&$test, &$error, $key = null)
               $runcount = max(1, $test['runs']);
               if( !$test['fvonly'] )
                 $runcount *= 2;
+              if (array_key_exists('navigateCount', $test) && $test['navigateCount'] > 0)
+                $runcount *= $test['navigateCount'];
 
             if( $limit > 0 ){
               if( $used + $runcount <= $limit ){
