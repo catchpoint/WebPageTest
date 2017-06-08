@@ -1,0 +1,33 @@
+sudo: required
+
+git:
+  depth: 3
+
+language: php
+
+services:
+  - docker
+
+php:
+  - 5.6
+  - 7.0
+  - 7.1
+
+before_script:
+  - docker info
+  - cd docker/server
+  - docker build -t myimage .
+  - docker run -d --name mycontainer -p 80:80 myimage
+  - sleep 30
+  - docker ps -a 
+  - docker logs mycontainer
+  - docker exec mycontainer curl 'http://0/install/'
+  - docker exec mycontainer curl 'http://0/runtest.php?url=www.google.com'
+
+script:
+  - php -i
+  - cd ../server
+  - composer install
+  - php www/install/index.php
+  - batchtool/wpt_batch.py -s http://0 -i batchtool/urls.txt -f batchtool/result
+  - ls -la batchtool/result
