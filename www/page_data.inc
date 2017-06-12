@@ -407,11 +407,21 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
     $lighthouse_file = $localPaths->lighthouseJsonFile();
     if (gz_is_file($lighthouse_file)) {
       $lighthouse = json_decode(gz_file_get_contents($lighthouse_file), true);
-      if (isset($lighthouse) && is_array($lighthouse) && isset($lighthouse['aggregations'])) {
-        foreach($lighthouse['aggregations'] as $lh) {
-          if (isset($lh['name']) && isset($lh['total']) && isset($lh['scored']) && $lh['scored']) {
-            $name = 'lighthouse.' . str_replace(' ', '', $lh['name']);
-            $ret[$name] = $lh['total'];
+      if (isset($lighthouse) && is_array($lighthouse)) {
+        if (isset($lighthouse['aggregations'])) {
+          foreach($lighthouse['aggregations'] as $lh) {
+            if (isset($lh['name']) && isset($lh['total']) && isset($lh['scored']) && $lh['scored']) {
+              $name = 'lighthouse.' . str_replace(' ', '', $lh['name']);
+              $ret[$name] = $lh['total'];
+            }
+          }
+        } elseif (isset($lighthouse['reportCategories'])) {
+          foreach($lighthouse['reportCategories'] as $lh) {
+            if (isset($lh['name']) && isset($lh['score'])) {
+              $name = 'lighthouse.' . str_replace(' ', '', $lh['name']);
+              $score = floatval($lh['score']) / 100.0;
+              $ret[$name] = $score;
+            }
           }
         }
       }
