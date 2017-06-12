@@ -127,6 +127,8 @@ function SelectRequest(step, request) {
         }
         if (r['was_pushed'] !== undefined && r['was_pushed'] > 0)
             details += '<b>SERVER PUSHED</b><br>';
+        if (r['request_id'] !== undefined && r['request_id'] !== null && r['request_id'].length)
+            details += '<b>Request ID: </b>' + htmlEncode(r['request_id']) + '<br>';
         if (r['client_port'] !== undefined && r['client_port'] !== null && r['client_port'])
             details += '<b>Client Port: </b>' + htmlEncode(r['client_port']) + '<br>';
         if (r['load_start'] !== undefined)
