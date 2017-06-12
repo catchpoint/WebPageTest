@@ -41,7 +41,7 @@ static LPCSTR blocked_domains[] = {
   "aus[^\\.]*\\.mozilla\\.org",        // Firefox update service
   "cdm\\.download\\.adobe\\.com",      // Firefox adobe updates
   "safebrowsing\\.google\\.com",       // Google safebrowsing list (Firefox)
-  "ctldl\\.windowsupdate\\.com",       // Windows cert revocation updates
+  //"ctldl\\.windowsupdate\\.com",       // Windows cert revocation updates
   NULL
 };
 
