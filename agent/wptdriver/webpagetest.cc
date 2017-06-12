@@ -1242,7 +1242,7 @@ bool WebPagetest::ProcessFile(WptTestDriver& test, CString file, CAtlList<CStrin
                    (LPCTSTR)userTimingFile, (LPCTSTR)featureUsageFile,
                    (LPCTSTR)interactiveFile, (LPCTSTR)v8file);
     OutputDebugStringA("Processing trace file");
-    if (RunPythonScript(_T("support\\trace-parser.py"), options)) {
+    if (RunPythonScript(_T("support\\trace_parser.py"), options)) {
       if (FileExists(cpuFile)) {
         hasNewFiles = true;
         newFiles.AddTail(cpuFile);
