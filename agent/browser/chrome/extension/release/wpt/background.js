@@ -13964,6 +13964,8 @@ var USER_TIMING_SCRIPT = '\
           m.push({"entryType": measures[i].entryType, "name": measures[i].name, "startTime": measures[i].startTime, "duration": measures[i].duration});\
       }\
     }\
+    performance.clearMarks();\
+    performance.clearMeasures();\
   } catch(e) {}\
   return m;\
 })();';
@@ -14106,7 +14108,7 @@ wpt.chromeDebugger.StartTrace = function() {
     else
       traceCategories = '-*';
     if (g_instance.timeline)
-      traceCategories = traceCategories + ',toplevel,blink.console,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame,disabled-by-default-blink.feature_usage,blink.user_timing';
+      traceCategories = traceCategories + ',toplevel,blink.console,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame,disabled-by-default-blink.feature_usage,blink.user_timing,rail';
     if (g_instance.timelineStackDepth > 0)
       traceCategories += ',disabled-by-default-v8.cpu_profiler';
     var params = {categories: traceCategories, options:'record-as-much-as-possible'};
