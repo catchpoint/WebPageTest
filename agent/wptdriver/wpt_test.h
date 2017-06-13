@@ -252,7 +252,7 @@ protected:
   void      FixURL(ScriptCommand& command);
   bool      PreProcessScriptCommand(ScriptCommand& command);
   bool      ConditionMatches(ScriptCommand& command);
-  void      ParseBlockCommand(CString block_list, bool add_head);
+  void      ParseBlockCommand(CString block_list);
   int       lock_count_;
   virtual bool ProcessCommand(ScriptCommand& command, bool &consumed);
 
