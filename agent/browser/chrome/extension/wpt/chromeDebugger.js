@@ -182,10 +182,13 @@ wpt.chromeDebugger.SetActive = function(active) {
 wpt.chromeDebugger.Block = function(blockString) {
   var patterns = blockString.split(" ");
   var count = patterns.length;
-  for (var i = 0; i < count; i++) {
-    if (patterns[i].length) {
-      g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.addBlockedURL', {"url": patterns[i]});
+  if (count > 0) {
+    for (var i = 0; i < count; i++) {
+      if (patterns[i].length) {
+        g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.addBlockedURL', {"url": patterns[i]});
+      }
     }
+    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.setBlockedURLs', {"urls": patterns});
   }
 };
 
