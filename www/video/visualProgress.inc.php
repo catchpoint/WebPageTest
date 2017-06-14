@@ -63,7 +63,8 @@ function GetVisualProgressForStep($localPaths, $runCompleted, $options = null, $
       }
     }
   }    
-  $base_path = substr($video_directory, 1);
+  
+  $base_path = $video_directory;
   if ((!isset($frames) || !count($frames)) && (is_dir($video_directory) || gz_is_file($histograms_file))) {
     $frames = array('version' => $current_version);
     $frames['frames'] = array();

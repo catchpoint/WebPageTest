@@ -142,6 +142,10 @@ update_dir=./work/update
 results_dir=./results
 tmp_dir=./tmp
 logs_dir=./logs
+; You can place results_dir outside of your docroot, but you must make it available at this prefix.
+; For example via symlink: ln -s /data/results /var/www/webpagetest/results
+; And better not change it
+results_url=/results
 
 ; ***********************
 ; Test result integration

@@ -1701,11 +1701,12 @@ function VideoHtml($id)
 
     $dir = GetVideoPath($id, true);
     $hasThumb = false;
-    if( is_file("./$dir/video.png") )
+    if( is_file($dir . '/video.png') )
     {
         $hasThumb = true;
-        list($width, $height) = getimagesize("./$dir/video.png");
+        list($width, $height) = getimagesize($dir . '/video.png');
     }
+    $videoUrl = str_replace(GetSetting('results_dir'), GetSetting('results_url'), $dir);
     
     echo "<script>\n";
     if (array_key_exists('html', $_REQUEST) && $_REQUEST['html'])
@@ -1718,9 +1719,9 @@ function VideoHtml($id)
     echo "'plugins':{'controls':{'volume':false,'mute':false,'stop':true,'tooltips':{'buttons':true,'fullscreen':'Enter fullscreen mode'}}},";
     echo "'canvas':{'backgroundColor':'#000000','backgroundGradient':'none'},";
     if ($hasThumb) {
-        echo "'playlist':[{'url':'/$dir/video.png'},{'url':'/$dir/video.mp4','autoPlay':false,'autoBuffering':false}]";
+        echo "'playlist':[{'url':'$videoUrl/video.png'},{'url':'$videoUrl/video.mp4','autoPlay':false,'autoBuffering':false}]";
     } else {
-        echo "'playlist':[{'url':'/$dir/video.mp4','autoPlay':false,'autoBuffering':true}]";
+        echo "'playlist':[{'url':'$videoUrl/video.mp4','autoPlay':false,'autoBuffering':true}]";
     }
     echo "}\"};\n";
     echo "_V_.options.flash.params = {
@@ -1734,9 +1735,9 @@ function VideoHtml($id)
     echo "<video id=\"player\" class=\"player video-js vjs-default-skin\" controls
       preload=\"auto\" width=\"$width\" height=\"$height\"";
     if ($hasThumb)
-        echo " poster=\"/$dir/video.png\"";
+        echo " poster=\"$videoUrl/video.png\"";
     echo "data-setup=\"{}\">
-        <source src=\"/$dir/video.mp4\" type='video/mp4'>
+        <source src=\"$videoUrl/video.mp4\" type='video/mp4'>
     </video>";
 
     if (!$weblite)

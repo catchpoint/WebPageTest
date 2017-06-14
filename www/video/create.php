@@ -68,7 +68,7 @@ else
         // see if the video already exists
         $id = $_REQUEST['id'];
         $path = GetVideoPath($id);
-        if( is_file("./$path/video.mp4") )
+        if( is_file($path . '/video.mp4') )
             $exists = true;
     }
 

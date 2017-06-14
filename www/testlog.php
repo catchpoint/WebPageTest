@@ -128,10 +128,11 @@ else
                     $done = false;
                     $totalCount = 0;
                     $targetDate = new DateTime($from, new DateTimeZone('GMT'));
+                    $logsDir = GetSetting('logs_dir');
                     for($offset = 0; $offset <= $days && !$done; $offset++)
                     {
                         // figure out the name of the log file
-                        $fileName = realpath('./logs/' . $targetDate->format("Ymd") . '.log');
+                        $fileName = realpath($logsDir . $targetDate->format("Ymd") . '.log');
                         if ($fileName !== false) {
                           // load the log file into an array of lines
                           if (isset($lines))
