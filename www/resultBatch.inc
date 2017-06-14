@@ -42,7 +42,7 @@ if( gz_is_file("$testPath/video.json") ) {
 // grab the location from the first test
 $location = $test['test']['location'];
 if( count($tests) && count($tests['urls']) ) {
-  $location_test_path = './' . GetTestPath($tests['urls'][0]['id']);
+  $location_test_path = GetTestPath($tests['urls'][0]['id']);
   $location_test_ini = parse_ini_file("$location_test_path/testinfo.ini",true);
   if( array_key_exists('test', $location_test_ini) && array_key_exists('location', $location_test_ini['test']) )
     $location = $location_test_ini['test']['location'];
@@ -552,7 +552,7 @@ function DisplayTest($id, $url, $label, $complete)
     global $videoCaptured;
     global $median_metric;
     RestoreTest($id);
-    $testPath = './' . GetTestPath($id);
+    $testPath = GetTestPath($id);
     $fileUrl = GetFileUrl($url);
 
     echo '<tr>';
@@ -690,7 +690,7 @@ function DisplayPSS(&$tests, $video, &$dirty)
         $fvSpeedIndexDTValue = null;
         RestoreTest($test['id']);
         $test['path'] = GetTestPath($test['id']);
-        $testPath = './' . $test['path'];
+        $testPath = $test['path'];
         $path = substr($testPath, 1);
         if( $test['c'] )
         {
@@ -1156,7 +1156,7 @@ function DisplayPSSPath(&$tests, $video, &$dirty)
             $entry['id'] = $test['id'];
             $test['path'] = GetTestPath($test['id']);
             $entry['path'] = $test['path'];
-            $testPath = './' . $test['path'];
+            $testPath = $test['path'];
             $entry['pageData'] = loadAllPageData($testPath);
             $entry['median_run'] = GetMedianRun($entry['pageData'], 0, $median_metric);
             $entry['median'] = $entry['pageData'][$entry['median_run']][0];
@@ -1455,7 +1455,7 @@ function DisplayBlinkTable($tests, $tableLabel)
         $id = $test['id'];
         RestoreTest($id);
         $test['path'] = GetTestPath($id);
-        $testPath = './' . $test['path'];
+        $testPath = $test['path'];
         if( $test['c'] )
         {
             $pageData = loadAllPageData($testPath);
@@ -1664,13 +1664,13 @@ function CheckVideo($videoID, &$regenerate_video)
     $elapsed = 0;
 
     $dir = GetVideoPath($videoID, true);
-    if( is_dir("./$dir") )
+    if( is_dir($dir) )
     {
-        if (is_file("./$dir/video.mp4")) {
+        if (is_file($dir . '/video.mp4')) {
             $done = true;
-            GenerateVideoThumbnail("./$dir");
+            GenerateVideoThumbnail($dir);
         } else {
-            $created = filemtime("./$dir");
+            $created = filemtime($dir);
             if ($created !== false) {
                 $elapsed = time() - $created;
                 if ($elapsed > 600)
@@ -1678,7 +1678,7 @@ function CheckVideo($videoID, &$regenerate_video)
             }
         }
         if ($regenerate_video) {
-            delTree("./$dir");
+            delTree($dir);
         }
     } else
         $regenerate_video = true;
@@ -1761,7 +1761,7 @@ function CheckTests(&$tests, &$dirty)
       $complete = true;
       $id = $test['id'];
       RestoreTest($id);
-      $testPath = './' . GetTestPath($id);
+      $testPath = GetTestPath($id);
       $testIni = parse_ini_file("$testPath/testinfo.ini",true);
       $checked++;
       if( (!isset($testIni['test']) || !isset($testIni['test']['completeTime'])) ) {
@@ -1770,7 +1770,7 @@ function CheckTests(&$tests, &$dirty)
         // go through all of the variations as well
         foreach( $test['v'] as $variationId ) {
           RestoreTest($variationId);
-          $testPath = './' . GetTestPath($variationId);
+          $testPath = GetTestPath($variationId);
           $testIni = parse_ini_file("$testPath/testinfo.ini",true);
           if( (!isset($testIni['test']) || !isset($testIni['test']['completeTime'])) ) {
             $complete = false;

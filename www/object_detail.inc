@@ -16,7 +16,7 @@ if(extension_loaded('newrelic')) {
 function getRequests($id, $test_path, $run, $is_cached,
                      &$has_secure_requests, $use_raw_headers = false) {
   if (!isset($test_path) || !strlen($test_path))
-    $test_path = './' . GetTestPath($id);
+    $test_path = GetTestPath($id);
   $localPaths = new TestPaths($test_path, $run, $is_cached);
   $urlGenerator = UrlGenerator::create(false, "", $id, $run, $is_cached);
   return getRequestsForStep($localPaths, $urlGenerator, $has_secure_requests, $use_raw_headers);

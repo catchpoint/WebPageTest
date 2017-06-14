@@ -6,11 +6,11 @@ require_once('draw.inc');
 // figure out the paths to the actual images
 $parts = explode('/', $_REQUEST['ref']);
 if( count($parts) == 2 )
-    $ref = './' . GetTestPath($parts[0]) . '/' . $parts[1];
+    $ref = GetTestPath($parts[0]) . '/' . $parts[1];
 
 $parts = explode('/', $_REQUEST['cmp']);
 if( count($parts) == 2 )
-    $cmp = './' . GetTestPath($parts[0]) . '/' . $parts[1];
+    $cmp = GetTestPath($parts[0]) . '/' . $parts[1];
 
 $ok = false;
 if( isset($ref) && isset($cmp) && is_file($ref) && is_file($cmp) )

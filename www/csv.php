@@ -45,7 +45,7 @@ if( isset($test['test']) && (isset($test['test']['completeTime']) || $test['test
     if( isset($tests) ) {
       foreach( $tests['urls'] as &$testData ) {
         RestoreTest($testData['id']);
-        $path = './' . GetTestPath($testData['id']);
+        $path = GetTestPath($testData['id']);
         if (!isset($hasCSV)) {
           $files = glob("$path/*$fileType");
           if ($files && is_array($files) && count($files))
@@ -77,7 +77,7 @@ if( isset($test['test']) && (isset($test['test']['completeTime']) || $test['test
         }
         
         foreach( $testData['v'] as $variationIndex => $variationId ) {
-          $path = './' . GetTestPath($variationId);
+          $path = GetTestPath($variationId);
           $testInfo = GetTestInfo($path);
           if ($hasCSV) {
             for( $i = 1; $i <= $test['test']['runs']; $i++ ) {

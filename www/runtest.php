@@ -1612,7 +1612,7 @@ function SendToRelay(&$test, &$out)
     $url = $locations[$test['location']]['relayServer'] . 'runtest.php';
     $key = $locations[$test['location']]['relayKey'];
     $location = $locations[$test['location']]['relayLocation'];
-    $ini = file_get_contents('./' . GetTestPath($test['id']) . '/testinfo.ini');
+    $ini = file_get_contents(GetTestPath($test['id']) . '/testinfo.ini');
 
     $boundary = "---------------------".substr(md5(rand(0,32000)), 0, 10);
     $data = "--$boundary\r\n";
@@ -1911,7 +1911,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             $id = ShardKey($test_num) . $id;
         $today = new DateTime("now", new DateTimeZone('UTC'));
         $testId = $today->format('ymd_') . $id;
-        $test['path'] = './' . GetTestPath($testId);
+        $test['path'] = GetTestPath($testId);
 
         // make absolutely CERTAIN that this test ID doesn't already exist
         while( is_dir($test['path']) )
@@ -1919,7 +1919,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             // fall back to random ID's
             $id = ShardKey($test_num) . md5(uniqid(rand(), true));
             $testId = $today->format('ymd_') . $id;
-            $test['path'] = './' . GetTestPath($testId);
+            $test['path'] = GetTestPath($testId);
         }
 
         // create the folder for the test results
@@ -2306,7 +2306,7 @@ function RelayTest()
         $id = $rkey . '.' . $test['id'];
         $ret['id'] = $id;
         $test['job'] = $rkey . '.' . $test['job'];
-        $testPath = './' . GetTestPath($id);
+        $testPath = GetTestPath($id);
         @mkdir($testPath, 0777, true);
         $job = str_replace($test['id'], $id, $job);
         file_put_contents("$testPath/testinfo.ini", $ini);

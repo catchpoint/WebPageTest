@@ -110,7 +110,7 @@ if(!isset($gdinfo['FreeType Support']) || !$gdinfo['FreeType Support']) {
 // Load the information about the video that needs rendering
 if (isset($_REQUEST['id'])) {
   $videoId = trim($_REQUEST['id']);
-  $videoPath = './' . GetVideoPath($_REQUEST['id']);
+  $videoPath = GetVideoPath($_REQUEST['id']);
   if (!is_file("$videoPath/video.ini")) {
     $optionsFile = "$videoPath/testinfo.json";
     if (gz_is_file($optionsFile)) {
@@ -177,12 +177,12 @@ function RenderVideo(&$tests) {
     if (isset($test['path']) &&
         isset($test['run']) &&
         isset($test['cached'])) {
-      $progress = GetVisualProgress("./{$test['path']}", $test['run'], $test['cached']);
+      $progress = GetVisualProgress($test['path'], $test['run'], $test['cached']);
       if (isset($progress) && is_array($progress) && isset($progress['frames'])) {
         $test['frames'] = $progress['frames'];
         if (count($test['frames'])) {
           $frame = current($test['frames']);
-          $dim = getimagesize("./{$frame['path']}");
+          $dim = getimagesize($frame['path']);
           $size = max($dim[0], $dim[1]);
           if ($size > $biggestThumbnail)
             $biggestThumbnail = $size;
@@ -518,9 +518,9 @@ function DrawTest(&$test, $frameTime, $im) {
   if (isset($path) && (!isset($test['lastFrame']) || $test['lastFrame'] !== $path || $need_grey)) {
     $test['lastFrame'] = $path;
     if (strtolower(substr($path, -4)) == '.png')
-      $thumb = imagecreatefrompng("./$path");
+      $thumb = imagecreatefrompng($path);
     else
-      $thumb = imagecreatefromjpeg("./$path");
+      $thumb = imagecreatefromjpeg($path);
     if ($thumb) {
       if ($need_grey)
         imagefilter($thumb, IMG_FILTER_GRAYSCALE);

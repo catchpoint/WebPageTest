@@ -38,7 +38,7 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
         $completed = true;
         if ($status['statusCode'] >= 100 && $status['statusCode'] < 200)
             $completed = false;
-        $testPath = realpath('./' . GetTestPath($id));
+        $testPath = realpath(GetTestPath($id));
         $testInfo = GetTestInfo($id);
         if ($testInfo && ($completed || $testInfo['batch'])) {
             if (GetSetting('archive_dir') == '/dev/null') {
@@ -152,7 +152,7 @@ function RestoreArchive($id) {
     $tmp_dir = GetSetting('tmp_dir');
     if (strpos($id, '.') === false && GetSetting('archive_dir') != '/dev/null') {
         global $settings;
-        $testPath = './' . GetTestPath($id);
+        $testPath = GetTestPath($id);
         $url = '';
         // see if we have a http path where the file is archived
         $check_dir = $testPath;
@@ -250,7 +250,7 @@ function VerifyArchive($id) {
         if (isset($settings['archive_dir'])) {
             // local
             $valid = false;
-            $testPath = realpath('./' . GetTestPath($id));
+            $testPath = realpath(GetTestPath($id));
             $archive = GetArchiveFile($id);
             if (is_dir($testPath) && is_file($archive)) {
                 chmod($archive, 0777);
@@ -338,7 +338,7 @@ function ArchiveApi($id) {
   // For tests driven through the API, flag them as available for
   // archiving as soon as they are accessed (if the setting is enabled)
   if (GetSetting('archive_api')) {
-    $testPath = realpath('./' . GetTestPath($id));
+    $testPath = realpath(GetTestPath($id));
     touch("$testPath/archive.me");
   }
 }

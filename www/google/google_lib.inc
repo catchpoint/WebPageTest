@@ -9,7 +9,7 @@ define("CSI_CACHE_VERSION", 2);
  */
 function ParseCsiInfo($id, $testPath, $run, $cached, $getAll, $generate = true) {
   if (!isset($testPath) || !strlen($testPath))
-    $testPath = './' . GetTestPath($id);
+    $testPath = GetTestPath($id);
   $localPaths = new TestPaths($testPath, $run, $cached);
   return ParseCsiInfoForStep($localPaths, $getAll);
 }

@@ -14,7 +14,7 @@ if( isset($_FILES['file']) )
   // create a new test id
   $today = new DateTime("now", new DateTimeZone('America/New_York'));
   $id = $today->format('ymd_') . ShardKey(rand()) . md5(uniqid(rand(), true));
-  $path = './' . GetTestPath($id);
+  $path = GetTestPath($id);
 
   // create the folder for the test results
   if( !is_dir($path) )

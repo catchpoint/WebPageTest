@@ -14,7 +14,7 @@ if (array_key_exists('key', $_REQUEST))
   $key = $_REQUEST['key'];
 $id = $_REQUEST['id'];
 
-$testPath = './' . GetTestPath($id);
+$testPath = GetTestPath($id);
 
 if (ValidateTestId($id)) {
   $testInfo = GetTestInfo($id);

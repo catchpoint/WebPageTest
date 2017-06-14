@@ -14,7 +14,7 @@ if (array_key_exists('tests', $_REQUEST)) {
     $test = array('batch' => 1);
     $test['id'] = CreateTestID();
     $id = $test['id'];
-    $testPath = './' . GetTestPath($id);
+    $testPath = GetTestPath($id);
     $test['path'] = $testPath;
     if (!is_dir($testPath))
       mkdir($testPath, 0777, true);
@@ -41,7 +41,7 @@ if (array_key_exists('tests', $_REQUEST)) {
     foreach( $tests as &$test_id ) {
       if (ValidateTestId($test_id)) {
         RestoreTest($test_id);
-        $test_path = './' . GetTestPath($test_id);
+        $test_path = GetTestPath($test_id);
         $pageData = loadPageRunData($test_path, 1, 0);
         $url = 'Imported Test';
         if ($pageData && array_key_exists('URL', $pageData))
@@ -92,7 +92,7 @@ if (array_key_exists('tests', $_REQUEST)) {
       // generate the test ID
       $test['id'] = CreateTestID();
       $id = $test['id'];
-      $testPath = './' . GetTestPath($id);
+      $testPath = GetTestPath($id);
       $test['path'] = $testPath;
       if (!is_dir($testPath))
         mkdir($testPath, 0777, true);

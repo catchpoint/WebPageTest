@@ -126,7 +126,7 @@ if( isset($tests) )
             GetTestStatus($test['id']);
             $label = $test['l'];
             $url = $test['u'];
-            $testPath = './' . GetTestPath($test['id']);
+            $testPath = GetTestPath($test['id']);
             $pageData = loadAllPageData($testPath);
 	    
 	    if ($incStatus) {
@@ -173,7 +173,7 @@ if( isset($tests) )
                     $id = $test['v'][$variationIndex];
                     RestoreTest($id);
                     GetTestStatus($id);
-                    $testPath = './' . GetTestPath($id);
+                    $testPath = GetTestPath($id);
                     $pageData = loadAllPageData($testPath);
                     for( $cacheVal = 0; $cacheVal <= $cached; $cacheVal++ )
                     {

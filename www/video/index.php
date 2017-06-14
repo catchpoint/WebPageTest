@@ -46,7 +46,7 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
                             <?php
                             if( $tid )
                             {
-                                $testPath = './' . GetTestPath($tid);
+                                $testPath = GetTestPath($tid);
                                 $pageData = loadAllPageData($testPath);
                                 $url = trim($pageData[1][0]['URL']);
                                 $testInfo = GetTestInfo($tid);

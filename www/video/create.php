@@ -176,7 +176,7 @@ else
                 elseif( !$test['end'] )
                     $test['end'] = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];
 
-                $test['videoPath'] = "./{$test['path']}/video_{$test['run']}";
+                $test['videoPath'] = "{$test['path']}/video_{$test['run']}";
                 if( $test['cached'] )
                     $test['videoPath'] .= '_cached';
                     
@@ -234,17 +234,17 @@ else
             }
 
             $path = GetVideoPath($id);
-            if( is_file("./$path/video.mp4") )
+            if( is_file("$path/video.mp4") )
             {
                 if( $_REQUEST['force'] )
-                    delTree("./$path/");
+                    delTree($path);
                 else
                     $exists = true;
             }
 
             if( !$exists ) {
                 // set up the result directory
-                $dest = './' . GetVideoPath($id);
+                $dest = GetVideoPath($id);
                 if( !is_dir($dest) )
                     mkdir($dest, 0777, true);
                 if( count($labels) )

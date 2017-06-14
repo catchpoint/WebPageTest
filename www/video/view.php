@@ -44,39 +44,39 @@ $ini = null;
 $title = "WebPagetest - Visual Comparison";
 
 $dir = GetVideoPath($videoId, true);
-if( is_dir("./$dir") )
+if( is_dir($dir) )
 {
     $valid = true;
-    if (is_file("./$dir/video.mp4") || is_file("./$dir/video.ini")) {
-        $ini = parse_ini_file("./$dir/video.ini");
-        if( is_file("./$dir/video.mp4") || isset($ini['completed']) )
+    if (is_file($dir . '/video.mp4') || is_file($dir . '/video.ini')) {
+        $ini = parse_ini_file($dir . '/video.ini');
+        if( is_file($dir . '/video.mp4') || isset($ini['completed']) )
         {
             $done = true;
-            GenerateVideoThumbnail("./$dir");
+            GenerateVideoThumbnail($dir);
         }
     }
     
     // get the video time
-    $date = gmdate("M j, Y", filemtime("./$dir"));
-    if( is_file("./$dir/video.mp4")  )
-        $date = gmdate("M j, Y", filemtime("./$dir/video.mp4"));
+    $date = gmdate("M j, Y", filemtime($dir));
+    if( is_file($dir . '/video.mp4')  )
+        $date = gmdate("M j, Y", filemtime($dir . '/video.mp4'));
     $title .= " - $date";
 
-    $labels = json_decode(file_get_contents("./$dir/labels.txt"), true);
+    $labels = json_decode(file_get_contents($dir . '/labels.txt'), true);
     if( count($labels) )
     {
         $title .= ' : ';
         foreach($labels as $index => $label)
         {
             if( $index > 0 )
-                $title .= ", ";
+                $title .= ', ';
             $title .= $label;
         }
     }
     
     $location = null;
-    if (gz_is_file("./$dir/testinfo.json")) {
-        $tests = json_decode(gz_file_get_contents("./$dir/testinfo.json"), true);
+    if (gz_is_file($dir . '/testinfo.json')) {
+        $tests = json_decode(gz_file_get_contents($dir . '/testinfo.json'), true);
         if (is_array($tests) && count($tests)) {
             foreach($tests as &$test) {
                 if (array_key_exists('location', $test)) {
@@ -145,8 +145,8 @@ elseif( $json )
         $ret['data']['videoUrl'] = $videoUrl;
     if (strlen($embedUrl)) {
         $ret['data']['embedUrl'] = $embedUrl;
-        if (is_file("./$dir/video.png")) {
-            list($width, $height) = getimagesize("./$dir/video.png");
+        if (is_file($dir . '/video.png')) {
+            list($width, $height) = getimagesize($dir .'/video.png');
             $ret['data']['width'] = $width;
             $ret['data']['height'] = $height;
         }
@@ -293,10 +293,10 @@ else
                 $height = 600;
 
                 $hasThumb = false;
-                if( is_file("./$dir/video.png") )
+                if( is_file($dir . '/video.png') )
                 {
                     $hasThumb = true;
-                    list($width, $height) = getimagesize("./$dir/video.png");
+                    list($width, $height) = getimagesize($dir . '/video.png');
                 }
 
                 if( array_key_exists('width', $_REQUEST) && $_REQUEST['width'] )

@@ -259,7 +259,7 @@ if (strlen($id)) {
     if (!$userIsBot)
       RestoreTest($id);   // restore the test if it is archived (and deleted)
 
-    $testPath = './' . GetTestPath($id);
+    $testPath = GetTestPath($id);
     $test = array();
     if (is_file("$testPath/testinfo.ini")) {
         $test = @parse_ini_file("$testPath/testinfo.ini",true);

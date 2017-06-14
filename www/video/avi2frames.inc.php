@@ -16,7 +16,7 @@ if(extension_loaded('newrelic')) {
 * @param mixed $id
 */
 function ReprocessVideo($id) {
-  $testPath = './' . GetTestPath($id);
+  $testPath = GetTestPath($id);
   if (is_dir($testPath)) {
     $lock = LockTest($id);
     if (isset($lock)) {

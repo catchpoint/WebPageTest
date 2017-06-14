@@ -2,7 +2,7 @@
 include 'common.inc';
 $found = false;
 if (ValidateTestId($id)) {
-  $testPath = './' . GetTestPath($id);
+  $testPath = GetTestPath($id);
   if (is_file("$testPath/test.log")) {
     header ("Content-type: text/plain");
     readfile("$testPath/test.log");

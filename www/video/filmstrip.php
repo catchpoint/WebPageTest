@@ -161,7 +161,7 @@ foreach( $tests as &$test ) {
             $cached = '';
             if( $test['cached'] )
                 $cached = '_cached';
-            $imgPath = $videoDir . "/" . $path;
+            $imgPath = $videoDir . '/' . $path;
             if( $lastThumb != $path || !$thumb ) {
                 if( $lastThumb != $path )
                     $border = $colChanged;
@@ -171,9 +171,9 @@ foreach( $tests as &$test ) {
                     unset($thuumb);
                 }
                 if (strtolower(substr($imgPath, -4)) == '.png')
-                  $tmp = imagecreatefrompng("./$imgPath");
+                  $tmp = imagecreatefrompng($imgPath);
                 else
-                  $tmp = imagecreatefromjpeg("./$imgPath");
+                  $tmp = imagecreatefromjpeg($imgPath);
                 if( $tmp ) {
                     $thumb = imagecreatetruecolor($test['video']['thumbWidth'], $test['video']['thumbHeight']);
                     fastimagecopyresampled($thumb, $tmp, 0, 0, 0, 0, $test['video']['thumbWidth'], $test['video']['thumbHeight'], imagesx($tmp), imagesy($tmp), 4);

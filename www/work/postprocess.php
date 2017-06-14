@@ -25,7 +25,7 @@ if(extension_loaded('newrelic')) {
 if (array_key_exists('test', $_REQUEST)) {
   $id = $_REQUEST['test'];
   if (ValidateTestId($id)) {
-    $testPath = './' . GetTestPath($id);
+    $testPath = GetTestPath($id);
     $testInfo = GetTestInfo($id);
     
     // see if we need to log the raw test data

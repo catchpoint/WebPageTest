@@ -206,7 +206,7 @@ function GetJob() {
 
         if( isset($testId) ) {
           // figure out the path to the results
-          $testPath = './' . GetTestPath($testId);
+          $testPath = GetTestPath($testId);
           $waiting_file = "$testPath/test.waiting";
           if (is_file($waiting_file))
             unlink($waiting_file);
@@ -365,8 +365,8 @@ function GetUpdate() {
       if ($update === FALSE)
         unset($update);
     }
-    
-    $updateDir = './work/update';
+      
+    $updateDir = GetSetting('update_dir');
     if (is_dir("$updateDir/$location"))
       $updateDir = "$updateDir/$location";
 

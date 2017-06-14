@@ -1258,7 +1258,7 @@ function RestoreTest($id)
   global $userIsBot;
   $ret = false;
   if (!$userIsBot && ValidateTestId($id)) {
-    $testPath = './' . GetTestPath($id);
+    $testPath = GetTestPath($id);
     // Only trigger a restore if the directory for the test doesn't exist
     if (!is_file("$testPath/testinfo.ini")) {
       $archive_dir = GetSetting('archive_dir');
@@ -1293,7 +1293,7 @@ function RestoreTest($id)
 function TestLastAccessed($id)
 {
     $elapsed = null;
-    $file = './' . GetTestPath($id) . '/testinfo.ini';
+    $file = GetTestPath($id) . '/testinfo.ini';
     if (is_file($file)) {
       $timestamp = filemtime($file);
       if( $timestamp )
@@ -1497,7 +1497,7 @@ function AddTestJob($location, $job, $test, $testId) {
   if (isset($job) && strlen($job) && ValidateTestId($testId)) {
     $testPath = GetTestPath($testId);
     if (strlen($testPath)) {
-      $testPath = './' . $testPath;
+      $testPath = $testPath;
       if (!is_dir($testPath))
         mkdir($testPath, 0777, true);
       $waiting_file = "$testPath/test.waiting";
@@ -2701,7 +2701,7 @@ function GetTestInfo($testIdOrPath) {
       $id = $testPath;
       $testPath = '';
       if (ValidateTestId($id))
-        $testPath = './' . GetTestPath($id);
+        $testPath = GetTestPath($id);
     }
       
     // TODO(pmeenan): cache the test info to prevent multiple disk
@@ -2748,7 +2748,7 @@ function SaveTestInfo($testIdOrPath, &$testInfo) {
       $id = $testPath;
       $testPath = '';
       if (ValidateTestId($id))
-        $testPath = './' . GetTestPath($id);
+        $testPath = GetTestPath($id);
     }
     if (is_dir($testPath)) {
       $testPath = realpath($testPath);
@@ -2790,7 +2790,7 @@ function logTestMsg($testIdOrPath, $message) {
       $id = $testPath;
       $testPath = '';
       if (ValidateTestId($id))
-        $testPath = './' . GetTestPath($id);
+        $testPath = GetTestPath($id);
     }
     if (is_dir($testPath)) {
       logMsg($message, "$testPath/test.log", true);

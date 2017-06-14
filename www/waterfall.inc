@@ -1275,7 +1275,7 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
       $is_mime = true;
     $options = array(
         'id' => $id,
-        'path' => './' . GetTestPath($id),
+        'path' => GetTestPath($id),
         'step_id' => $step,
         'run_id' => $run,
         'is_cached' => @$_GET['cached'],
@@ -1382,7 +1382,7 @@ function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
 
   $row_count = 0;
   foreach($waterfalls as $index => &$waterfall) {
-    $test_path = './' . GetTestPath($waterfall['id']);
+    $test_path = GetTestPath($waterfall['id']);
     $localPaths = new TestPaths($test_path, $waterfall['run'], $waterfall['cached'], $waterfall['step']);
     $requests = getRequestsForStep($localPaths, null, $has_secure_requests, false);
     if (isset($requests) && is_array($requests)) {

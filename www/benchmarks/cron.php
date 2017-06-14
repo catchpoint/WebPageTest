@@ -323,7 +323,7 @@ function CheckBenchmarkStatus($benchmark, &$state) {
 */
 function CollectResults(&$test, &$data) {
     global $logFile;
-    $testPath = './' . GetTestPath($test['id']);
+    $testPath = GetTestPath($test['id']);
     logMsg("Loading page data from $testPath", $logFile, true);
     $page_data = loadAllPageData($testPath);
     if (count($page_data)) {
@@ -438,7 +438,7 @@ function SubmitBenchmark(&$configurations, &$state, $benchmark) {
 // see if the given test has valid results
 function IsTestValid($id) {
     $valid = false;
-    $testPath = './' . GetTestPath($id);
+    $testPath = GetTestPath($id);
     $page_data = loadAllPageData($testPath);
     if (CountSuccessfulTests($page_data, 0) >= 3) {
         $valid = true;
@@ -860,7 +860,7 @@ function CalculateMetrics(&$records) {
 * @param mixed $id
 */
 function PruneTestData($id) {
-    $testPath = './' . GetTestPath($id);
+    $testPath = GetTestPath($id);
     
     $files = scandir($testPath);
     foreach( $files as $file ) {

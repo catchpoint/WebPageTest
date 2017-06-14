@@ -63,13 +63,13 @@ foreach($compTests as $t) {
                   $test_median_metric = $info['medianMetric'];
             }
 
-            $testInfo = @parse_ini_file("./{$test['path']}/testinfo.ini",true);
+            $testInfo = @parse_ini_file($test['path'] . '/testinfo.ini',true);
             if (isset($testInfo) && is_array($testInfo)) {
                 if (array_key_exists('test', $testInfo) && array_key_exists('location', $testInfo['test']))
                     $test['location'] = $testInfo['test']['location'];
                 if (isset($testInfo['test']) && isset($testInfo['test']['completeTime'])) {
                     $test['done'] = true;
-                    $testInfoObject = TestInfo::fromFiles("./" . $test['path']);
+                    $testInfoObject = TestInfo::fromFiles($test['path']);
 
                     if( !array_key_exists('run', $test) || !$test['run'] ) {
                         $testResults = TestResults::fromFiles($testInfoObject);
@@ -213,7 +213,7 @@ function LoadTestData() {
     }
     $test['index'] = $count;
 
-    $localPaths = new TestPaths("./$testPath", $test["run"], $test["cached"], $test["step"]);
+    $localPaths = new TestPaths($testPath, $test["run"], $test["cached"], $test["step"]);
     $videoPath = $localPaths->videoDir();
 
     $test['video'] = array();

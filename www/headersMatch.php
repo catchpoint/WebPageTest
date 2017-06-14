@@ -38,7 +38,7 @@ foreach( $testIds as &$testId )
 	
 	RestoreTest($testId);
   GetTestStatus($testId);
-  $testPath = './' . GetTestPath($testId);
+  $testPath = GetTestPath($testId);
   $pageData = loadAllPageData($testPath);
 	$medianRun = GetMedianRun($pageData, $cached);
 

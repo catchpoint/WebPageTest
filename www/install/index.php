@@ -129,23 +129,34 @@ function CheckMisc() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 function CheckFilesystem() {
-    ShowCheck('{docroot}/tmp writable', IsWritable('tmp'));
-    ShowCheck('{docroot}/dat writable', IsWritable('dat'));
-    ShowCheck('{docroot}/results writable', IsWritable('results'));
-    ShowCheck('{docroot}/work/jobs writable', IsWritable('work/jobs'));
-    ShowCheck('{docroot}/logs writable', IsWritable('logs'));
+    global $settings;
+
+    $tmp = array_key_exists('tmp_dir', $settings) ? $settings['tmp_dir'] : 'tmp';
+    $dat = array_key_exists('dat_dir', $settings) ? $settings['dat_dir'] : 'dat';
+    $results = array_key_exists('results_dir', $settings) ? $settings['results_dir'] : 'results';
+    $jobs = array_key_exists('jobs_dir', $settings) ? $settings['jobs_dir'] : 'work/jobs';
+    $logs = array_key_exists('logs_dir', $settings) ? $settings['logs_dir'] : 'logs';
+    
+    ShowCheck($tmp . ' writable', IsWritable($tmp));
+    ShowCheck($dat . ' writable', IsWritable($dat));
+    ShowCheck($results . ' writable', IsWritable($results));
+    ShowCheck($jobs . ' writable', IsWritable($jobs));
+    ShowCheck($logs . ' writable', IsWritable($logs));
     if ('Linux' == PHP_OS) {
-        ShowCheck('{docroot}/tmp on tmpfs', IsWPTTmpOnTmpfs(), false);
+        ShowCheck($tmp . ' on tmpfs', IsWPTTmpOnTmpfs(), false);
     }
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 function IsWPTTmpOnTmpfs() {
-    $marker = getcwd() . "/tmp";
+    global $settings;
+
+    $tmp = array_key_exists('tmp_dir', $settings) ? $settings['tmp_dir'] : getcwd() . '/tmp';
+
     exec('mount -l -t tmpfs', $lines);
     foreach ($lines as $line) {
-	if (0 === strpos($line, "tmpfs on $marker")) {
+	if (0 === strpos($line, "tmpfs on $tmp")) {
             return true;
         }
     }
@@ -238,7 +249,9 @@ function GetInstallLocationInfo(&$locations, $location) {
 -----------------------------------------------------------------------------*/
 function IsWritable($dir) {
     $ok = false;
-    $dir = './' . $dir;
+    if ($dir[0] != '/') {
+        $dir = './' . $dir;
+    }
     if (!is_dir($dir)) {
         mkdir($dir, 0777, true);
     }

@@ -58,24 +58,26 @@ function ApkUpdate() {
 */
 function AgentUpdate() {
   $updateServer = GetSetting('agentUpdate');
+  $updateDir = GetSetting('update_dir');
+
   echo "\nChecking for agent update...\n";
   if ($updateServer && strlen($updateServer)) {
-    if (!is_dir('./work/update'))
-      mkdir('./work/update', 0777, true); 
+    if (!is_dir($updateDir))
+      mkdir($updateDir, 0777, true); 
     $url = $updateServer . 'work/getupdates.php';
     $updates = json_decode(http_fetch($url), true);
     if ($updates && is_array($updates) && count($updates)) {
       foreach($updates as $update) {
         $needsUpdate = true;
-        $ini = "./work/update/{$update['name']}.ini";
-        $zip = "./work/update/{$update['name']}.zip";
+        $ini = $updateDir . "/{$update['name']}.ini";
+        $zip = $updateDir . "/{$update['name']}.zip";
         if (is_file($ini) && is_file($zip)) {
           $current = parse_ini_file($ini);
           if ($current['ver'] == $update['ver'])
             $needsUpdate = false;
         }
         if ($needsUpdate && isset($update['md5'])) {
-          $tmp = "./work/update/{$update['name']}.tmp";
+          $tmp = $updateDir . "/{$update['name']}.tmp";
           if (is_file($tmp))
             unlink($tmp);
           $url = $updateServer . str_replace(" ","%20","work/update/{$update['name']}.zip?v={$update['ver']}");
@@ -94,7 +96,7 @@ function AgentUpdate() {
               rename($tmp, $zip);
               $z = new ZipArchive;
               if ($z->open($zip) === TRUE) {
-                $z->extractTo('./work/update', "{$update['name']}.ini");
+                $z->extractTo($updateDir, "{$update['name']}.ini");
                 $z->close();
               }
             }

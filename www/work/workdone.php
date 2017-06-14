@@ -88,7 +88,7 @@ $urlUnderTest  = arrayLookupWithDefault('_urlUnderTest',  $_REQUEST, null);
 $testInfo_dirty = false;
 
 if (ValidateTestId($id)) {
-  $testPath = './' . GetTestPath($id);
+  $testPath = GetTestPath($id);
   $testInfo = GetTestInfo($id);
   if (isset($testInfo['medianMetric']))
     $medianMetric = $testInfo['medianMetric'];
