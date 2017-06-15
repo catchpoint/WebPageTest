@@ -1819,10 +1819,8 @@ function CheckUrl($url)
   if (!$usingAPI && !$admin) {
     $blockUrls = file('./settings/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     $blockHosts = file('./settings/blockdomains.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    $blockAuto = file('./settings/blockdomainsauto.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     if ($blockUrls !== false && count($blockUrls) ||
-        $blockHosts !== false && count($blockHosts) ||
-        $blockAuto !== false && count($blockAuto)) {
+        $blockHosts !== false && count($blockHosts)) {
       // Follow redirects to see if they are obscuring the site being tested
       $rhost = '';
       $rurl = '';
@@ -1855,20 +1853,6 @@ function CheckUrl($url)
               (!strcasecmp($rhost, $block) ||
                !strcasecmp($rhost, "www.$block"))) {
              logMsg("{$_SERVER['REMOTE_ADDR']}: $url redirected to $rhost which matched $block", "./log/{$date}-blocked.log", true);
-            $ok = false;
-            break;
-          }
-        }
-      }
-      if ($ok) {
-        $parts = parse_url($url);
-        $host = trim($parts['host']);
-        foreach( $blockAuto as $block ) {
-          $block = trim($block);
-          if( strlen($block) &&
-              (!strcasecmp($host, $block) ||
-               !strcasecmp($host, "www.$block"))) {
-             logMsg("{$_SERVER['REMOTE_ADDR']}: $url matched auto-block $block", "./log/{$date}-blocked.log", true);
             $ok = false;
             break;
           }
