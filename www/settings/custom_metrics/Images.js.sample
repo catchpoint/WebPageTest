@@ -7,7 +7,12 @@ var wptImages = function(win) {
   for (var i = 0; i < elements.length; i++) {
     var el = elements[i];
     if (el.tagName == 'IMG') {
-      images.push({'url': el.currentSrc || el.src, 'width': el.width, 'height': el.height, 'naturalWidth': el.naturalWidth, 'naturalHeight': el.naturalHeight});
+      var url = el.currentSrc || el.src;
+
+      // Only include HTTP(S) URLs i.e. skip dataURIs
+      if(url.indexOf("http") === 0) {
+        images.push({'url': url, 'width': el.width, 'height': el.height, 'naturalWidth': el.naturalWidth, 'naturalHeight': el.naturalHeight});
+      }
     }
     if (el.tagName == 'IFRAME') {
       try {
@@ -20,4 +25,5 @@ var wptImages = function(win) {
   }
   return images;
 };
+
 return JSON.stringify(wptImages());
