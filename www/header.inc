@@ -335,7 +335,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
         }
         
         // Add the "Image Analysis" link
-        if (isset($_GET['img']) && isset($id) && strlen($id)) {
+        if (isset($id) && strlen($id)) {
           $tabUrl = GetSetting('image_analysis');
           if ($tabUrl) {
             $tabUrl = str_replace('{test id}', $id, $tabUrl);
