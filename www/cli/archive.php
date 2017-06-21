@@ -87,6 +87,7 @@ Unlock($lock);
 * 
 */
 function CheckRelay() {
+  global $results_dir;
   $dirs = scandir($results_dir . '/relay');
   $keys = parse_ini_file('./settings/keys.ini');
   foreach($dirs as $key) {
