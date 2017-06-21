@@ -2191,7 +2191,7 @@ function loadVideo($path, &$frames)
                 $file = basename($file);
                 $parts = explode('_', $file);
                 if (count($parts) >= 2) {
-                    $index = intval($parts[1] * 100);
+                    $index = (int)$parts[1] * 100;
                     $frames[$index] = $file;
                 }
             }

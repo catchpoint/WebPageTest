@@ -155,7 +155,7 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
     $pageRunData = $testStepResult->getRawResults();
 
     $localPaths = $testStepResult->createTestPaths();
-    $urlPaths = $testStepResult->createTestPaths(substr($testInfo->getRootDirectory(), 1));
+    $urlPaths = $testStepResult->createTestPaths($testInfo->getResutlsUrl());
     $urlGenerator = $testStepResult->createUrlGenerator("", FRIENDLY_URLS);
 
     echo "<a name=\"step_" . $testStepResult->getStepNumber() . "\">";

@@ -115,6 +115,13 @@ class TestInfo {
   }
 
   /**
+   * @return string The root url for the test, relative to the WebpageTest root
+   */
+  public function getResultsUrl() {
+    return str_replace(GetSetting('results_dir'), GetSetting('results_url'), $this->rootDirectory);
+  }
+
+  /**
    * @return string|null The location as saved in the ini file or null if not set
    */
   public function getTestLocation() {
