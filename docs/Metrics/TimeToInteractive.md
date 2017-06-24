@@ -7,7 +7,7 @@ TTI is (currently) a Chrome-specific measurement that measures the time until th
 ## Underlying Measurements
 TTI is built on top of a collection of other measurements, some of which are currently only available in Chrome:
 
-### Time to First Contentfil Paint
+### Time to First Contentful Paint
 The measurement is of the first paint of text or an image.
 
 Chrome exposes this measurement as a "blink.user_timing" trace event with a name of "firstContentfulPaint".  
