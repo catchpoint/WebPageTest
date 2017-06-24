@@ -1,7 +1,8 @@
 # Time to Interactive (TTI)
 TTI is (currently) a Chrome-specific measurement that measures the time until the page being loaded is considered usable and will respond to user input.  There are two variations on the metric:
-    * Time to Consistently Interactive: This was previously the only TTI measurement and measured the point where the page is likely complete and will consistently respond quickly.
-    * Time to First Interactive: This is a newer metric and reports when the page is first expected to be usable and will respond to input quickly (with the possibility of slow responses as more content loads).
+
+1. Time to Consistently Interactive: This was previously the only TTI measurement and measured the point where the page is likely complete and will consistently respond quickly.
+1. Time to First Interactive: This is a newer metric and reports when the page is first expected to be usable and will respond to input quickly (with the possibility of slow responses as more content loads).
 
 ## Underlying Measurements
 TTI is built on top of a collection of other measurements, some of which are currently only available in Chrome:
