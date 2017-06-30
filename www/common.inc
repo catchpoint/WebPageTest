@@ -11,6 +11,14 @@ foreach($_REQUEST as $key => $val) {
         exit(0);
     }
 }
+// fast exit for Nagios monitoring scripts
+if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
+    strlen($_SERVER['HTTP_USER_AGENT']) &&
+    stripos($_SERVER['HTTP_USER_AGENT'], 'nagios') !== false) {
+    echo "OK";
+    exit(0);
+}
+
 
 // shared initializiation/loading code
 set_time_limit(300);
