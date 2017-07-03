@@ -10,10 +10,7 @@ require_once('common_lib.inc');
 */
 function ArchiveSkipFile($file) {
   $skip = false;
-  if ($file == 'archive.me' ||
-      preg_match('/\.pageData.\d+\.gz$/', $file) ||
-      preg_match('/\.requests.\d+\.gz$/', $file) ||
-      preg_match('/\.devToolsCPUTime.\d+\.gz$/', $file)) {
+  if ($file == 'archive.me') {
     $skip = true;
   }
   return $skip;
