@@ -1,7 +1,6 @@
 <?php
 include 'common.inc';
 set_time_limit(0);
-header('Content-Encoding: none;');
 
 // parse the logs for the counts
 $days = $_REQUEST['days'];
