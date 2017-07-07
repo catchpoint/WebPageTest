@@ -384,7 +384,7 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
     if (isset($ret) && is_array($ret) && !$basic_results)
       gz_file_put_contents($cacheFile, json_encode($ret));
   }
-
+  
   if (isset($ret['testTiming']) &&
       isset($testInfo['started']) &&
       $testInfo['completed'] &&
@@ -393,6 +393,10 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
   }
 
   if (isset($ret)) {
+    if (!isset($ret['requestsFull']) && isset($ret['requests'])) {
+      $ret['requestsFull'] = $ret['requests'];
+    }
+    
     // see if there is request analysis that needs to be added
     if (gz_is_file($localPaths->requestsAnalysisFile())) {
       $analysis = json_decode(gz_file_get_contents($localPaths->requestsAnalysisFile()), true);
