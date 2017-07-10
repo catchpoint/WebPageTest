@@ -1724,6 +1724,9 @@ function GetRedirect($url, &$rhost, &$rurl) {
 */
 function LogTest(&$test, $testId, $url)
 {
+    if (GetSetting('logging_off'))
+        return;
+        
     if( !is_dir('./logs') )
         mkdir('./logs', 0777, true);
 
