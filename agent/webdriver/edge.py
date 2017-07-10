@@ -14,6 +14,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import glob
 import gzip
 import json
 import logging
@@ -195,6 +196,22 @@ def RunTest(driver, test):
   print('Processing video capture')
   recorder.Process(start_offset)
   recorder.Done()
+  # Delete the actual video files if video capture was not enabled
+  if not test.Video():
+    pattern = test.GetFileVideoBase() + '*'
+    files = glob.glob(pattern)
+    for path in files:
+      if os.path.isfile(path):
+        try:
+          os.remove(path)
+        except Exception:
+          pass
+
+def getReleaseId():
+  key = r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+  val = r"ReleaseID"
+  output = os.popen( 'REG QUERY "{0}" /V "{1}"'.format( key , val)  ).read()
+  return int(output.strip().split(' ')[-1])
 
 def main():
   import argparse
@@ -226,7 +243,18 @@ def main():
     test.SetRecorder(options.recorder)
 
   #Start the browser
-  exe = os.path.join(os.path.dirname(os.path.abspath(__file__)), "edge/MicrosoftWebDriver.exe")
+  edgeVer = 15
+  release = getReleaseId()
+  if release > 0:
+    if release >= 1703:
+      edgeVer = 15
+    elif release >= 1607:
+      edgeVer = 14
+    elif release >= 1511:
+      edgeVer = 13
+    elif release >= 1507:
+      edgeVer = 12
+  exe = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'edge', '{0:d}'.format(edgeVer), 'MicrosoftWebDriver.exe')
   driver = webdriver.Edge(executable_path=exe)
   driver.get("about:blank")
 

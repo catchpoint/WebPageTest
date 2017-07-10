@@ -48,6 +48,12 @@ class WptTest:
       file_path = self.test['file_base']
     return file_path
 
+  def GetFileVideoBase(self):
+    file_path = None
+    if 'file_base' in self.test and len(self.test['file_base']):
+      file_path = self.test['file_base'] + '_progress_'
+    return file_path
+
   def GetFileETW(self):
     file_path = None
     if 'file_base' in self.test and len(self.test['file_base']):
