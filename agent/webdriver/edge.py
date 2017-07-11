@@ -207,9 +207,9 @@ def RunTest(driver, test):
         except Exception:
           pass
 
-def getReleaseId():
+def getWindowsBuild():
   key = r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
-  val = r"ReleaseID"
+  val = r"CurrentBuild"
   output = os.popen( 'REG QUERY "{0}" /V "{1}"'.format( key , val)  ).read()
   return int(output.strip().split(' ')[-1])
 
@@ -243,18 +243,21 @@ def main():
     test.SetRecorder(options.recorder)
 
   #Start the browser
-  edgeVer = 15
-  release = getReleaseId()
-  if release > 0:
-    if release >= 1703:
-      edgeVer = 15
-    elif release >= 1607:
-      edgeVer = 14
-    elif release >= 1511:
-      edgeVer = 13
-    elif release >= 1507:
-      edgeVer = 12
-  exe = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'edge', '{0:d}'.format(edgeVer), 'MicrosoftWebDriver.exe')
+  exe = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'edge', 'current', 'MicrosoftWebDriver.exe')
+  if not os.path.isfile(exe):
+    edgeVer = 15
+    build = getWindowsBuild()
+    if build > 0:
+      if build >= 15000:
+        edgeVer = 15
+      elif build >= 14000:
+        edgeVer = 14
+      elif build >= 10586:
+        edgeVer = 13
+      elif build >= 10240:
+        edgeVer = 12
+    exe = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'edge', '{0:d}'.format(edgeVer), 'MicrosoftWebDriver.exe')
+  logging.debug('Using webdriver exe: %s', exe)
   driver = webdriver.Edge(executable_path=exe)
   driver.get("about:blank")
 
