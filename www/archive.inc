@@ -100,7 +100,8 @@ function ArchiveTest($id, $store_result = true, $delete = false) {
                                           array_key_exists('archive_s3_bucket', $settings)) {
                                   // post the file to a S3-style bucket (just supporting Internet archive right now)
                                   require_once('./lib/S3.php');
-                                  $s3 = new S3(trim($settings['archive_s3_key']), trim($settings['archive_s3_secret']), false, trim($settings['archive_s3_server']));
+                                  $urlstyle = array_key_exists('archive_s3_urlstyle', $settings) ? trim($settings['archive_s3_urlstyle']) : 'vhost';
+                                  $s3 = new S3(trim($settings['archive_s3_key']), trim($settings['archive_s3_secret']), false, trim($settings['archive_s3_server']), $urlstyle);
                                   $separator = strrpos($id, '_');
                                   if ($separator !== false) {
                                       $bucket = $settings['archive_s3_bucket'];
@@ -193,7 +194,8 @@ function RestoreArchive($id) {
                             array_key_exists('archive_s3_secret', $settings) && 
                             array_key_exists('archive_s3_bucket', $settings)) {
                     require_once('./lib/S3.php');
-                    $s3 = new S3(trim($settings['archive_s3_key']), trim($settings['archive_s3_secret']), false, trim($settings['archive_s3_server']));
+                    $urlstyle = array_key_exists('archive_s3_urlstyle', $settings) ? trim($settings['archive_s3_urlstyle']) : 'vhost';
+                    $s3 = new S3(trim($settings['archive_s3_key']), trim($settings['archive_s3_secret']), false, trim($settings['archive_s3_server']), $urlstyle);
                     $bucket = $settings['archive_s3_bucket'];
                     $file = "$id.zip";
                     $s3->getObject($bucket, $file, $zipfile);
@@ -295,7 +297,8 @@ function VerifyArchive($id) {
             // S3
             $valid = false;
             require_once('./lib/S3.php');
-            $s3 = new S3(trim($settings['archive_s3_key']), trim($settings['archive_s3_secret']), false, trim($settings['archive_s3_server']));
+            $urlstyle = array_key_exists('archive_s3_urlstyle', $settings) ? trim($settings['archive_s3_urlstyle']) : 'vhost';
+            $s3 = new S3(trim($settings['archive_s3_key']), trim($settings['archive_s3_secret']), false, trim($settings['archive_s3_server']), $urlstyle);
             $bucket = $settings['archive_s3_bucket'];
             $file = "$id.zip";
             if (($info = $s3->getObjectInfo($bucket, $file)) !== false) {

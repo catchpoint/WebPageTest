@@ -3047,3 +3047,4 @@ function MakeUTF8($mixed) {
   }
   return $mixed;
 }
+
