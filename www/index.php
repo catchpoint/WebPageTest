@@ -81,6 +81,7 @@ $loc = ParseLocations($locations);
             if (!$headless) {
             ?>
             <form name="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
+            <input type="hidden" name="lighthouseTrace" value="1">
             
             <?php
             echo "<input type=\"hidden\" name=\"vo\" value=\"$owner\">\n";
@@ -118,6 +119,12 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="tester" value="' . htmlspecialchars($_REQUEST['tester']) . "\">\n";
             if (array_key_exists('minimal', $_REQUEST))
               echo '<input type="hidden" name="minimal" value="' . htmlspecialchars($_REQUEST['minimal']) . "\">\n";
+            if (isset($_REQUEST['noopt']))
+              echo '<input type="hidden" name="noopt" value="' . htmlspecialchars($_REQUEST['noopt']) . "\">\n";
+            if (isset($_REQUEST['debug']))
+              echo '<input type="hidden" name="debug" value="' . htmlspecialchars($_REQUEST['debug']) . "\">\n";
+            if (isset($_REQUEST['throttle_cpu']))
+              echo '<input type="hidden" name="throttle_cpu" value="' . htmlspecialchars($_REQUEST['throttle_cpu']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
@@ -430,7 +437,7 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="lighthouse" id="lighthouse" class="checkbox" style="float: left;width: auto;">
                                         <label for="lighthouse" class="auto_width">
-                                            Capture Lighthouse Report (Mobile devices and Chrome Beta only)
+                                            Capture Lighthouse Report (Mobile devices only)
                                         </label>
                                     </li>
                                     <li>

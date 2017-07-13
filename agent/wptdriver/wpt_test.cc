@@ -513,11 +513,9 @@ void WptTest::BuildScript() {
             if (!_no_run && command_pos > 0 && 
                 script_command.target.GetLength()) {
               if (script_command.command == _T("block")) {
-                ParseBlockCommand(script_command.target, false);
-              }
-              else {
-                script_command.value =
-                                  line.Tokenize(_T("\t"),command_pos).Trim();
+                _block += _T(" ") + script_command.target;
+              } else {
+                script_command.value = line.Tokenize(_T("\t"),command_pos).Trim();
               }
             }
 
@@ -549,7 +547,7 @@ void WptTest::BuildScript() {
   }
 
   if (_block.GetLength() ) {
-    ParseBlockCommand(_block, true);
+    ParseBlockCommand(_block);
   }
 
   if (_timeline) {
@@ -611,8 +609,6 @@ void WptTest::BuildScript() {
           _viewport_width, _viewport_height, _device_scale_factor);
     command.record = false;
     _script_commands.AddHead(command);
-    _viewport_width = 0;
-    _viewport_height = 0;
   }
 }
 
@@ -1163,21 +1159,22 @@ bool WptTest::ConditionMatches(ScriptCommand& command) {
 /*-----------------------------------------------------------------------------
   Parse the list of block strings into individual commands
 -----------------------------------------------------------------------------*/
-void WptTest::ParseBlockCommand(CString block_list, bool add_head) {
+void WptTest::ParseBlockCommand(CString block_list) {
   int pattern_pos = 0;
-  while (pattern_pos < block_list.GetLength()) {
-    CString pattern = block_list.Tokenize(_T(" "), pattern_pos).Trim();
+  CString block = _T("");
+  while (pattern_pos >= 0) {
+    CString pattern = block_list.Tokenize(_T(" \r\n"), pattern_pos).Trim();
     if (pattern.GetLength()) {
-      // For each pattern, add a new script command.
-      ScriptCommand block_script_command;
-      block_script_command.command = _T("block");
-      block_script_command.target = pattern;
-      if (add_head) {
-        _script_commands.AddHead(block_script_command);
-      } else {
-        _script_commands.AddTail(block_script_command);
-      }
+      if (block.GetLength())
+        block += _T(" ");
+      block += pattern;
     }
+  }
+  if (block.GetLength()) {
+    ScriptCommand block_script_command;
+    block_script_command.command = _T("block");
+    block_script_command.target = block;
+    _script_commands.AddHead(block_script_command);
   }
 }
 

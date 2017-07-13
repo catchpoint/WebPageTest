@@ -30,12 +30,12 @@ if( $supportsAuth && !defined('EMBED') )
         $logoutUrl = '/forums/member.php?action=logout';
         if( isset($mybb) && strlen($mybb->user['logoutkey']) )
             $logoutUrl .= '&logoutkey=' . $mybb->user['logoutkey'];
-        echo "Welcome, $user &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
+        echo "Welcome, " . htmlspecialchars($user) . " &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
     }
     else if( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) )
 	  {
         $logoutUrl = 'javascript:ClearOAuthCookies();';
-        $google_email = $_COOKIE['google_email'];
+        $google_email = htmlspecialchars($_COOKIE['google_email']);
         echo "Welcome, $google_email &nbsp;|&nbsp; <a href=\"$logoutUrl\">Logout</a>";
     }
     else
@@ -97,7 +97,9 @@ if (!defined('EMBED')) {
                 $navTabs['Test Result'] = isset($resultUrl) ? $resultUrl : '';
             }
 
-            $navTabs['Test History'] = FRIENDLY_URLS ? '/testlog/1/' : '/testlog.php?days=1';
+            if (empty($settings['disableTestlog'])) {
+              $navTabs['Test History'] = FRIENDLY_URLS ? '/testlog/1/' : '/testlog.php?days=1';
+            }
 
             if (is_dir('wptmonitor')) {
                 $navTabs['Monitor'] = '/wptmonitor/';
@@ -331,6 +333,15 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
                 echo "<li$current><a href=\"$tabUrl\">$tabName</a></li>";
             }
         }
+        
+        // Add the "Image Analysis" link
+        if (isset($id) && strlen($id)) {
+          $tabUrl = GetSetting('image_analysis');
+          if ($tabUrl) {
+            $tabUrl = str_replace('{test id}', $id, $tabUrl);
+            echo "<li><a href=\"$tabUrl\" title=\"Image Analysis - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" style=\"padding-right: 5px;\">Image Analysis<img src=\"/images/new_badge.png?v=2\" style=\"top: 0; float: right;\"></a></li>";
+          }
+        }
     
         echo '</ul>';
         echo '<div class="test_results-content">';
@@ -379,7 +390,7 @@ function GetGrades($testInfo, $testRunResults, $firstRunResults)
     if ($testRunResults->isOptimizationChecked()) {
         require_once('optimization_detail.inc.php');
 
-        $opt = getOptimizationGradesForRun($testRunResults);
+        $opt = getOptimizationGradesForRun($testInfo, $testRunResults);
         $infoArray = $testInfo->getInfoArray();
         if( $infoArray['view'] != 'simple' && $infoArray['view'] != 'pss' )
             $grades['first_byte_time'] = array( 'class' => $opt['ttfb']['class'], 'grade' => $opt['ttfb']['grade'], 'description' => $opt['ttfb']['label']);

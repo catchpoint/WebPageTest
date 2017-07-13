@@ -14,9 +14,13 @@ if (isset($_REQUEST['timeline'])) {
       $_REQUEST['cached'] = $value;
   }
 }
-include 'common.inc'; 
+include 'common.inc';
+if ($_REQUEST['run'] == 'lighthouse')
+  $fileBase = 'lighthouse';
+else
+  $fileBase = "$run{$cachedText}";
 $ok = false;
-if (gz_is_file("$testPath/$run{$cachedText}_trace.json")) {
+if (gz_is_file("$testPath/{$fileBase}_trace.json")) {
   $ok = true;
   header("Content-disposition: attachment; filename=timeline.json");
   header ("Content-type: application/json");
@@ -24,7 +28,7 @@ if (gz_is_file("$testPath/$run{$cachedText}_trace.json")) {
   // Trim off the beginning "traceEvents" object and the trailing }
   // and reduce the trace to just an array which is what the timeline
   // viewer expects
-  $filename = "$testPath/$run{$cachedText}_trace.json";
+  $filename = "$testPath/{$fileBase}_trace.json";
   $buffer = '';
   $handle = gzopen("$filename.gz", 'rb');
   if ($handle === false)
@@ -52,12 +56,12 @@ if (gz_is_file("$testPath/$run{$cachedText}_trace.json")) {
     echo rtrim($buffer, "\r\n}");
     gzclose($handle);
   }
-} elseif (gz_is_file("$testPath/$run{$cachedText}_timeline.json")) {
+} elseif (gz_is_file("$testPath/{$fileBase}_timeline.json")) {
   $ok = true;
   header("Content-disposition: attachment; filename=timeline.json");
   header ("Content-type: application/json");
-  gz_readfile_chunked("$testPath/$run{$cachedText}_timeline.json");
-} elseif (gz_is_file("$testPath/$run{$cachedText}_devtools.json")) {
+  gz_readfile_chunked("$testPath/{$fileBase}_timeline.json");
+} elseif (gz_is_file("$testPath/{$fileBase}_devtools.json")) {
   require_once('devtools.inc.php');
   $devTools = array();
   $startOffset = null;

@@ -880,44 +880,44 @@ bool Request::GetExpiresRemaining(bool& expiration_set,
       pragma.Find("no-cache") != -1) {
     is_cacheable = false;
   } else {
-    CStringA date_string = GetResponseHeader("date").Trim();
     CStringA age_string = GetResponseHeader("age").Trim();
-    CStringA expires_string = GetResponseHeader("expires").Trim();
-    SYSTEMTIME sys_time;
-    __int64 date_seconds = 0;
-    if (date_string.GetLength() && 
-        InternetTimeToSystemTimeA(date_string, &sys_time, 0)) {
-        date_seconds = SystemTimeToSeconds(sys_time);
-    }
-    if (!date_seconds) {
-      GetSystemTime(&sys_time);
-      date_seconds = SystemTimeToSeconds(sys_time);
-    }
-    if (date_seconds) {
-      if (expires_string.GetLength() && 
-          InternetTimeToSystemTimeA(expires_string, &sys_time, 0)) {
-        __int64 expires_seconds = SystemTimeToSeconds(sys_time);
-        if (expires_seconds) {
-          if (expires_seconds < date_seconds)
-            is_cacheable = false;
-          else {
-            expiration_set = true;
-            seconds_remaining = (int)(expires_seconds - date_seconds);
+    int index = cache.Find("max-age");
+    if( index > -1 ) {
+      int eq = cache.Find("=", index);
+      if( eq > -1 ) {
+        seconds_remaining = atol(cache.Mid(eq + 1).Trim());
+        if (seconds_remaining) {
+          expiration_set = true;
+          if (age_string.GetLength()) {
+            int age = atol(age_string);
+            seconds_remaining -= age;
           }
         }
       }
     }
-    if (is_cacheable && !expiration_set) {
-      int index = cache.Find("max-age");
-      if( index > -1 ) {
-        int eq = cache.Find("=", index);
-        if( eq > -1 ) {
-          seconds_remaining = atol(cache.Mid(eq + 1).Trim());
-          if (seconds_remaining) {
-            expiration_set = true;
-            if (age_string.GetLength()) {
-              int age = atol(age_string);
-              seconds_remaining -= age;
+    if (!expiration_set) {
+      CStringA date_string = GetResponseHeader("date").Trim();
+      CStringA expires_string = GetResponseHeader("expires").Trim();
+      SYSTEMTIME sys_time;
+      __int64 date_seconds = 0;
+      if (date_string.GetLength() && 
+          InternetTimeToSystemTimeA(date_string, &sys_time, 0)) {
+          date_seconds = SystemTimeToSeconds(sys_time);
+      }
+      if (!date_seconds) {
+        GetSystemTime(&sys_time);
+        date_seconds = SystemTimeToSeconds(sys_time);
+      }
+      if (date_seconds) {
+        if (expires_string.GetLength() && 
+            InternetTimeToSystemTimeA(expires_string, &sys_time, 0)) {
+          __int64 expires_seconds = SystemTimeToSeconds(sys_time);
+          if (expires_seconds) {
+            if (expires_seconds < date_seconds)
+              is_cacheable = false;
+            else {
+              expiration_set = true;
+              seconds_remaining = (int)(expires_seconds - date_seconds);
             }
           }
         }

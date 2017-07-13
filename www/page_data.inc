@@ -69,7 +69,7 @@ function loadPageRunData($testPath, $run, $cached, $options = null, $testInfo = 
  * @return array|null Associative array with data for the given run or null on failure
  */
 function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo = null) {
-  $cacheVer = 6;
+  $cacheVer = 7;
   $cacheFile = $localPaths->pageDataCacheFile($cacheVer);
   $ret = null;
   if (gz_is_file($cacheFile))
@@ -195,6 +195,12 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
             $ret['SpeedIndex'] = $progress['SpeedIndex'];
           if (array_key_exists('visualComplete85', $progress))
             $ret['visualComplete85'] = $progress['visualComplete85'];
+          if (isset($progress['visualComplete90']))
+            $ret['visualComplete90'] = $progress['visualComplete90'];
+          if (isset($progress['visualComplete95']))
+            $ret['visualComplete95'] = $progress['visualComplete95'];
+          if (isset($progress['visualComplete99']))
+            $ret['visualComplete99'] = $progress['visualComplete99'];
           if (array_key_exists('visualComplete', $progress))
             $ret['visualComplete'] = $progress['visualComplete'];
           if (array_key_exists('startRender', $progress) && (!array_key_exists('render', $ret) || !$ret['render']))
@@ -232,7 +238,7 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
           }
         }
       }
-
+      
       // See if there is Chrome trace user timing data to load.
       // Do this after the CPU slice calculations so the trace processing has already run.
       if (gz_is_file($localPaths->chromeUserTimingFile())) {
@@ -263,27 +269,32 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
       
       // Calculate Time to Interactive if we have First Meaningful Paint and interactive Windows
       if (isset($ret['interactivePeriods']) && is_array($ret['interactivePeriods']) && count($ret['interactivePeriods'])) {
-        $seek_start = null;
+        $seek_start = 0;
         $TTI = null;
-        if (isset($ret['chromeUserTiming.firstMeaningfulPaint']) && $ret['chromeUserTiming.firstMeaningfulPaint'] > 0)
-          $seek_start = $ret['chromeUserTiming.firstMeaningfulPaint'];
-        elseif (isset($ret['chromeUserTiming.firstContentfulPaint']) && $ret['chromeUserTiming.firstContentfulPaint'] > 0)
+        if (isset($ret['chromeUserTiming.firstContentfulPaint']) && $ret['chromeUserTiming.firstContentfulPaint'] > 0)
           $seek_start = $ret['chromeUserTiming.firstContentfulPaint'];
         elseif (isset($ret['render']) && $ret['render'] > 0)
           $seek_start = $ret['render'];
-        if (isset($seek_start)) 
-          $TTI = CalculateTimeToInteractive($localPaths, $seek_start, $ret['interactivePeriods'], $measurement_end);
+        if ($seek_start > 0) 
+          $TTI = CalculateTimeToInteractive($localPaths, $seek_start, $ret['interactivePeriods'], $measurement_end, $first_interactive);
+        if (isset($first_interactive) && $first_interactive > 0) {
+          $ret['FirstInteractive'] = $first_interactive;
+        }
         if (isset($TTI) && $TTI > 0) {
           $ret['TimeToInteractive'] = $TTI;
-        } else {
-          $measurement_end = 0;
-          foreach ($ret['interactivePeriods'] as $window) {
-            if ($window[1] > $measurement_end)
-              $measurement_end = $window[1];
-          }
-          if ($measurement_end > 0)
-            $ret['TTIMeasurementEnd'] = $measurement_end;
         }
+        $measurement_end = 0;
+        $last_interactive = 0;
+        foreach ($ret['interactivePeriods'] as $window) {
+          if ($window[1] > $measurement_end) {
+            $measurement_end = max($window[1], $seek_start);
+            $last_interactive = max($window[0], $seek_start);
+          }
+        }
+        if ($measurement_end > 0)
+          $ret['TTIMeasurementEnd'] = $measurement_end;
+        if ($last_interactive > 0)
+          $ret['LastInteractive'] = $last_interactive;
       }
     }
     
@@ -373,7 +384,7 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
     if (isset($ret) && is_array($ret) && !$basic_results)
       gz_file_put_contents($cacheFile, json_encode($ret));
   }
-
+  
   if (isset($ret['testTiming']) &&
       isset($testInfo['started']) &&
       $testInfo['completed'] &&
@@ -382,21 +393,47 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
   }
 
   if (isset($ret)) {
+    if (!isset($ret['requestsFull']) && isset($ret['requests'])) {
+      $ret['requestsFull'] = $ret['requests'];
+    }
+    
+    // see if there is request analysis that needs to be added
+    if (gz_is_file($localPaths->requestsAnalysisFile())) {
+      $analysis = json_decode(gz_file_get_contents($localPaths->requestsAnalysisFile()), true);
+      foreach ($analysis as $key => $value) {
+        if (!isset($ret[$key]))
+          $ret[$key] = $value;
+      }
+    }
+
     // see if there is test-level lighthouse data to attach
     // Don't cache the lighthouse bit because the file may come in after other results are cached
     $lighthouse_file = $localPaths->lighthouseJsonFile();
     if (gz_is_file($lighthouse_file)) {
       $lighthouse = json_decode(gz_file_get_contents($lighthouse_file), true);
-      if (isset($lighthouse) && is_array($lighthouse) && isset($lighthouse['aggregations'])) {
-        foreach($lighthouse['aggregations'] as $lh) {
-          if (isset($lh['name']) && isset($lh['total']) && isset($lh['scored']) && $lh['scored']) {
-            $name = 'lighthouse.' . str_replace(' ', '', $lh['name']);
-            $ret[$name] = $lh['total'];
+      if (isset($lighthouse) && is_array($lighthouse)) {
+        if (isset($lighthouse['aggregations'])) {
+          foreach($lighthouse['aggregations'] as $lh) {
+            if (isset($lh['name']) && isset($lh['total']) && isset($lh['scored']) && $lh['scored']) {
+              $name = 'lighthouse.' . str_replace(' ', '', $lh['name']);
+              $ret[$name] = $lh['total'];
+            }
+          }
+        } elseif (isset($lighthouse['reportCategories'])) {
+          foreach($lighthouse['reportCategories'] as $lh) {
+            if (isset($lh['name']) && isset($lh['score'])) {
+              $name = 'lighthouse.' . str_replace(' ', '', $lh['name']);
+              $score = floatval($lh['score']) / 100.0;
+              $ret[$name] = $score;
+            }
           }
         }
       }
     }  
   }
+  
+  if (isset($ret['fullyLoaded']))
+    $ret['fullyLoaded'] = intval(round($ret['fullyLoaded']));
   
   return $ret;
 }
@@ -900,18 +937,22 @@ function ParseUserTiming($file) {
 * @param mixed $firstMeaningfulPaint
 * @param mixed $interactiveWindows
 */
-function CalculateTimeToInteractive($localPaths, $firstMeaningfulPaint, $interactiveWindows, &$measurement_end) {
+function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows, &$measurement_end, &$first_interactive) {
   $TTI = null;
+  $first_interactive = null;
   
   // Start by filtering the interactive windows to only include 5 second windows that don't
-  // end before FMP.
+  // end before the start time.
   $end = 0;
   $iw = array();
   foreach ($interactiveWindows as $window) {
     $end = $window[1];
     $duration = $window[1] - $window[0];
-    if ($end >= $firstMeaningfulPaint && $duration >= 5000)
+    if ($end >= $startTime && $duration >= 5000) {
       $iw[] = $window;
+      if (!isset($first_interactive) || $window[0] < $first_interactive)
+        $first_interactive = max($window[0], $startTime);
+    }
   }
   
   $rw = array();
@@ -927,7 +968,7 @@ function CalculateTimeToInteractive($localPaths, $firstMeaningfulPaint, $interac
             isset($request['load_start']) &&
             $request['load_start'] >= 0 &&
             isset($request['load_end']) &&
-            $request['load_end'] >= $firstMeaningfulPaint) {
+            $request['load_end'] >= $startTime) {
           $re[] = array('type' => 'start', 'time' => $request['load_start']);
           $re[] = array('type' => 'end', 'time' => $request['load_end']);
         }
@@ -973,7 +1014,7 @@ function CalculateTimeToInteractive($localPaths, $firstMeaningfulPaint, $interac
       }
     }
     if (isset($window))
-      $TTI = max($firstMeaningfulPaint, $window[0]);
+      $TTI = max($startTime, $window[0]);
   }
   
   return $TTI;

@@ -13964,6 +13964,8 @@ var USER_TIMING_SCRIPT = '\
           m.push({"entryType": measures[i].entryType, "name": measures[i].name, "startTime": measures[i].startTime, "duration": measures[i].duration});\
       }\
     }\
+    performance.clearMarks();\
+    performance.clearMeasures();\
   } catch(e) {}\
   return m;\
 })();';
@@ -14046,10 +14048,13 @@ wpt.chromeDebugger.SetActive = function(active) {
 wpt.chromeDebugger.Block = function(blockString) {
   var patterns = blockString.split(" ");
   var count = patterns.length;
-  for (var i = 0; i < count; i++) {
-    if (patterns[i].length) {
-      g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.addBlockedURL', {"url": patterns[i]});
+  if (count > 0) {
+    for (var i = 0; i < count; i++) {
+      if (patterns[i].length) {
+        g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.addBlockedURL', {"url": patterns[i]});
+      }
     }
+    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.setBlockedURLs', {"urls": patterns});
   }
 };
 
@@ -14106,7 +14111,7 @@ wpt.chromeDebugger.StartTrace = function() {
     else
       traceCategories = '-*';
     if (g_instance.timeline)
-      traceCategories = traceCategories + ',toplevel,blink.console,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame,disabled-by-default-blink.feature_usage,blink.user_timing';
+      traceCategories = traceCategories + ',toplevel,blink.console,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame,disabled-by-default-blink.feature_usage,blink.user_timing,rail';
     if (g_instance.timelineStackDepth > 0)
       traceCategories += ',disabled-by-default-v8.cpu_profiler';
     var params = {categories: traceCategories, options:'record-as-much-as-possible'};
@@ -14176,9 +14181,11 @@ wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
     // Page events
     if (message === 'Page.frameNavigated' &&
         params['frame'] !== undefined &&
-        params.frame['parentId'] === undefined &&
-        g_instance.mobileEmulation != undefined) {
-      g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.setDeviceMetricsOverride', g_instance.mobileEmulation);
+        params.frame['parentId'] === undefined) {
+      wpt.chromeDebugger.sendEvent('navigate', '');
+      if (g_instance.mobileEmulation != undefined) {
+        g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.setDeviceMetricsOverride', g_instance.mobileEmulation);
+      }
     }
 
     if (message === 'Page.loadEventFired') {
@@ -14777,6 +14784,11 @@ wpt.main.onStartup = function() {
     // Run the tasks in FAKE_TASKS.
     window.setInterval(wptFeedFakeTasks, FAKE_TASK_INTERVAL);
   } else {
+    // Disable some features that can only be disabled from the extension
+    chrome.privacy.services.passwordSavingEnabled.set({ value: false }, function(){});
+    chrome.privacy.services.autofillEnabled.set({ value: false }, function(){});
+    chrome.privacy.services.translationServiceEnabled.set({ value: false }, function(){});
+
     // Fetch tasks from wptdriver.exe.
     g_taskTimer = window.setInterval(wptGetTask, g_taskInterval);
     window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT);

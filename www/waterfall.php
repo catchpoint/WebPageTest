@@ -37,9 +37,9 @@ if (@$_REQUEST['type'] == 'connection') {
 }
 $page_events = GetPageEvents($testStepResult->getRawResults());
 $bwIn=0;
-if (isset($test) && array_key_exists('testinfo', $test) && array_key_exists('bwIn', $test['testinfo'])) {
+if (isset($test) && is_array($test) && isset($test['testinfo']['bwIn'])) {
   $bwIn = $test['testinfo']['bwIn'];
-} else if(isset($test) && array_key_exists('test', $test) && array_key_exists('bwIn', $test['test'])) {
+} else if(isset($test) && is_array($test) && isset($test['test']['bwIn'])) {
   $bwIn = $test['test']['bwIn'];
 }
 

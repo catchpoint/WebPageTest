@@ -266,7 +266,7 @@ $page_description = "Website performance test details$testLabel";
                 <br>
                 <?php
                     echo '';
-                    if (array_key_exists('testinfo', $test) && array_key_exists('testerDNS', $test['testinfo']) && strlen($test['testinfo']['testerDNS']))
+                    if (isset($test) && is_array($test) && isset($test['testinfo']['testerDNS']))
                         echo "<p>Test Machine DNS Server(s): {$test['testinfo']['testerDNS']}</p>\n";
 
                     if ($isMultistep) {

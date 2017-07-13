@@ -21,6 +21,7 @@ $page_description = "View Custom Metrics";
             
             <div id="result">
             <?php
+            $pageData = loadAllPageData($testPath);
             if (isset($pageData) &&
                 is_array($pageData) &&
                 array_key_exists($run, $pageData) &&

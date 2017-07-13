@@ -8,6 +8,12 @@
 ******************************************************************************/
 
 include 'common.inc';
+
+if ($userIsBot) {
+  header('HTTP/1.0 403 Forbidden');
+  exit;
+}
+
 require_once('har.inc.php');
 
 $options = array();

@@ -97,12 +97,21 @@ function EC2_StartInstance($ami) {
         $host = file_get_contents('http://169.254.169.254/latest/meta-data/hostname');
     }
     $user_data = "wpt_server=$host";
+    $wpt_username = GetSetting('ba_username');
+    $wpt_password = GetSetting('ba_password');
+    $wpt_validcertificate = GetSetting('validcertificate');
     if (strlen($urlblast))
       $user_data .= " wpt_location=$urlblast";
     if (strlen($wptdriver))
       $user_data .= " wpt_loc=$wptdriver";
     if (isset($key) && strlen($key))
       $user_data .= " wpt_key=$key";
+    if (isset($wpt_username) && strlen($wpt_username))
+      $user_data .= " wpt_username=$wpt_username";
+    if (isset($wpt_password) && strlen($wpt_password))
+        $user_data .= " wpt_password=$wpt_password";
+    if (isset($wpt_validcertificate) && strlen($wpt_validcertificate))
+        $user_data .= " wpt_validcertificate=$wpt_validcertificate";
     if (!$size)
       $size = 'm3.medium';
     $started = EC2_LaunchInstance($region, $ami, $size, $user_data, $loc);

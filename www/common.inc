@@ -11,6 +11,14 @@ foreach($_REQUEST as $key => $val) {
         exit(0);
     }
 }
+// fast exit for Nagios monitoring scripts
+if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
+    strlen($_SERVER['HTTP_USER_AGENT']) &&
+    stripos($_SERVER['HTTP_USER_AGENT'], 'nagios') !== false) {
+    echo "OK";
+    exit(0);
+}
+
 
 // shared initializiation/loading code
 set_time_limit(300);
@@ -73,8 +81,9 @@ if (array_key_exists('HTTP_MOD_REWRITE', $_SERVER) && $_SERVER['HTTP_MOD_REWRITE
 $userIsBot = false;
 if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
     strlen($_SERVER['HTTP_USER_AGENT']) &&
-    preg_match('/robot|spider|crawler|indexer|WeSEE|Googlebot|YandexBot|Twitterbot|SemrushBot|Slackbot|Slack-ImgProxy|bingbot|SEOdiver|EPiServer|^$/i', $_SERVER['HTTP_USER_AGENT']))
+    preg_match('/robot|spider|crawler|indexer|WeSEE|Googlebot|YandexBot|Twitterbot|SemrushBot|Slackbot|Slack-ImgProxy|bingbot|SEOdiver|EPiServer|Wget|^$/i', $_SERVER['HTTP_USER_AGENT'])) {
   $userIsBot = true;
+}
 
 // constants
 define('VER_WEBPAGETEST', '3.0');   // webpagetest version
@@ -120,8 +129,11 @@ if (!array_key_exists('shard_tests', $settings))
 $max_load = GetSetting('render_max_load');
 
 $privateInstall = true;
-if( array_key_exists('HTTP_HOST', $_SERVER) && stristr($_SERVER['HTTP_HOST'] , '.webpagetest.org') !== false )
+if (array_key_exists('HTTP_HOST', $_SERVER) &&
+    stristr($_SERVER['HTTP_HOST'] , 'httparchive.webpagetest.org') !== false &&
+    stristr($_SERVER['HTTP_HOST'] , '.webpagetest.org') !== false) {
     $privateInstall = false;
+}
 
 // override some settings from the URI
 if (isset($_REQUEST['bulk'])) {
@@ -223,7 +235,7 @@ if( isset($_COOKIE['google_id']) && strlen($_COOKIE['google_id']) ) {
 }
 setcookie('o', $owner, time()+60*60*24*365, '/');
 
-if( $supportsAuth && ($admin || (array_key_exists('google_email', $_COOKIE) && strpos($_COOKIE['google_email'], '@google.com') !== false)) ) {
+if ($admin) {
     $settings['enable_google_csi'] = true;
 }
 

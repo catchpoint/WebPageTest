@@ -1,0 +1,15 @@
+<html>
+<head>
+<style>
+body {background-color: white; margin: 0;}
+#o {width:100%; height: 100%; background-color: #DE640D;}
+</style>
+<script>
+window.addEventListener('beforeunload', function() {
+  var o = document.getElementById('o')
+  o.parentNode.removeChild(o);
+});
+</script>
+</head>
+<body><div id='o'></div></body>
+</html>

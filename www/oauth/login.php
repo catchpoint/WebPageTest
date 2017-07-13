@@ -45,8 +45,11 @@ if (!isset($_GET['code'])) {
     $admin_users = GetSetting('admin_users');
     if ($admin_users) {
       $admins = explode(',', $admin_users);
+      $email = strtolower($user['email']);
       foreach ($admins as $admin) {
-        if (stripos(strtolower($user['email']), strtolower(trim($admin))) !== false) {
+        $admin = strtolower(trim($admin));
+        $admin_len = strlen($admin);
+        if (substr($email, -$admin_len) == $admin) {
           $session = sha1(json_encode($token_data) . time());
           setcookie("asid", $session, time()+60*60*24*7*2, "/");
           $sessions = json_decode(gz_file_get_contents('./dat/admin_sessions.dat'), true);

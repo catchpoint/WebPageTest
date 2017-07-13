@@ -538,7 +538,6 @@ function AggregateResults($benchmark, &$state, $options) {
     if (!array_key_exists('runs', $info)) {
         $info['runs'] = array();
     }
-    
     // store a list of metrics that we aggregate in the info block
     $info['metrics'] = array('TTFB', 'basePageSSLTime', 'bytesOut', 'bytesOutDoc', 'bytesIn', 'bytesInDoc', 
                                 'connections', 'requests', 'requestsDoc', 'render', 
@@ -549,7 +548,9 @@ function AggregateResults($benchmark, &$state, $options) {
                                 'js_bytes', 'js_requests', 'css_bytes', 'css_requests', 'image_bytes', 'image_requests',
                                 'flash_bytes', 'flash_requests', 'html_bytes', 'html_requests', 'text_bytes', 'text_requests',
                                 'other_bytes', 'other_requests', 'SpeedIndex', 'responses_404',
-                                'responses_other', 'browser_version', 'server_rtt', 'docCPUms');
+                                'responses_other', 'browser_version', 'server_rtt', 'docCPUms',
+                                'visualComplete85', 'visualComplete90', 'visualComplete95', 'visualComplete99',
+                                'TimeToInteractive', 'chromeUserTiming.firstContentfulPaint', 'chromeUserTiming.firstMeaningfulPaint');
     require_once('benchmarks/data.inc.php');
     $bmSettings = GetBenchmarkInfo($benchmark);
     if (isset($bmSettings) &&

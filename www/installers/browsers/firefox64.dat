@@ -1,0 +1,6 @@
+browser=Firefox
+url=http://cdn.webpagetest.org/installers/browsers/firefox64_54.exe
+md5=08A28CA2E869AF5705C3A4FEC14FB477
+version=54
+command=firefox64_54.exe -ms
+update=1

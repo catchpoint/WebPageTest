@@ -448,7 +448,8 @@ void Results::SaveVideo(void) {
             img->Expand(0, 0, width - img->GetWidth(), 0, black);
           if (img->GetHeight() < height)
             img->Expand(0, 0, 0, height - img->GetHeight(), black);
-          if (ImagesAreDifferent(last_image, img, bottom_margin, margin)) {
+          if (ImagesAreDifferent(last_image, img, bottom_margin, margin) &&
+              ImageIsValid(img, _test_state._render_start.QuadPart != 0)) {
             bottom_margin = BOTTOM_MARGIN;
             margin = 0;
             if (!_test_state._render_start.QuadPart)
@@ -569,6 +570,36 @@ bool Results::ImagesAreDifferent(CxImage * img1, CxImage* img2,
   else
     different = true;
   return different;
+}
+
+/*-----------------------------------------------------------------------------
+  Ignore solid color images before render start. This includes solid
+  backgrounds and leftover stuff.
+-----------------------------------------------------------------------------*/
+bool Results::ImageIsValid(CxImage * img, bool render_started) {
+  bool valid = true;
+  if (!render_started && img) {
+    DWORD margin = max(BOTTOM_MARGIN, RIGHT_MARGIN);
+    DWORD right = max(img->GetWidth() - margin, 0);
+    DWORD bottom = img->GetHeight() - margin;
+    RGBQUAD background = img->GetPixelColor(right / 2, bottom / 2, false);
+    ATLTRACE("[wpthook] - Checking for blank image.  Color at (%d, %d): #%02X%02X%02X",
+             right / 2, bottom / 2, background.rgbRed, background.rgbGreen, background.rgbBlue);
+    valid = false;
+    for (DWORD y = margin; y < bottom && !valid; y += 2) {
+      for (DWORD x = margin; x < right && !valid; x += 2) {
+        RGBQUAD pixel = img->GetPixelColor(x, y, false);
+        if (pixel.rgbBlue != background.rgbBlue ||
+            pixel.rgbGreen != background.rgbGreen ||
+            pixel.rgbRed != background.rgbRed) {
+          ATLTRACE("[wpthook] - Different pixel colors found at (%d, %d): #%02X%02X%02X",
+                   x, y, pixel.rgbRed, pixel.rgbGreen, pixel.rgbBlue);
+          valid = true;
+        }
+      }
+    }
+  }
+  return valid;
 }
 
 /*-----------------------------------------------------------------------------

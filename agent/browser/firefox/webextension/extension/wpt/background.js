@@ -43,7 +43,7 @@ const STARTUP_DELAY = 0;
 const STARTUP_FAILSAFE_DELAY = 5000;
 
 /** @const */
-const TASK_INTERVAL = 5000;
+const TASK_INTERVAL = 500;
 const TASK_INTERVAL_STARTUP = 100;
 
 // Run tasks slowly when testing, so that we can see errors in the logs
@@ -345,7 +345,7 @@ var wptBeforeSendRequest = function(details) {
   return action;
 };
 
-browser.webRequest.onCompleted.addListener(function(details) {
+browser.webRequest.onCompleted.addListener((details) => {
     if (g_active && details.tabId == g_tabid) {
       wpt.LOG.info('Completed, status = ' + details.statusCode);
       if (details.statusCode >= 400) {
@@ -353,8 +353,11 @@ browser.webRequest.onCompleted.addListener(function(details) {
         wptSendEvent('navigate_error?error=' + details.statusCode, '');
       }
     }
-  }, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
-);
+  }, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']});
+
+browser.webRequest.onHeadersReceived.addListener((details) => ({
+    responseHeaders: details.responseHeaders.filter(h => h.name.toLowerCase() !== 'content-security-policy')
+  }), { urls: ['http://*/*', 'https://*/*'], types: ['main_frame'] }, ["blocking", "responseHeaders"]);
 
 function wptHookRequests() {
   if (!g_requestsHooked) {

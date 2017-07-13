@@ -7,10 +7,13 @@ The platform is basically split into two parts:
 * /www - The web UI (PHP)
 * /agent - The code for running the tests on various browsers.
 
-#Agents
+# Troubleshooting Private instances
+If your instance is running, but you're having issues configuring agents, try navigating to {server_ip}/install and checking for a valid configuration.
+
+# Agents
 There are a few different agents depending on the browsers and platforms supported.
 
-##Wptdriver
+## Wptdriver
 Wptdriver is the main Windows test agent and it supports IE, Chrome, Firefox and Safari.  It requires Visual Studio 2013 and is all C++.
 
 The main project file for it is /webpagetest.sln
@@ -36,7 +39,7 @@ There are also several browser-specific extensions for interacting with the vari
 * /agent/browser/firefox/prefs.js - Default prefs file for the Firefox user profile.
 * /agent/browser/safari - Extension for supporting Safari (JS).
 
-##Urlblast/Pagetest
+## Urlblast/Pagetest
 Urlblast and pagetest are the original agent that support IE only and requires Visual Studio 2008 SP3 to build (also all c++).  It is in the process of being deprecated but wptdriver is not quite at feature parity yet (a few script commands and PageSpeed integration).
 
 The main project file for it is /agent/browser/ie/pagetest.sln
@@ -47,24 +50,24 @@ The main project file for it is /agent/browser/ie/pagetest.sln
 * /agent/browser/ie/Pagetest Installer - Installer project for building the msi installer for the desktop install of pagetest.
 * /agent/browser/ie/ptUpdate - A small executable that is included with urlblast updates that can verify and apply the update.
 
-##NodeJS - Desktop and Mobile (experimental)
+## NodeJS - Desktop and Mobile (experimental)
 A cross-platform NodeJS agent that can be used to test Desktop Chrome, Chrome on Android and Safari on iOS.  It is still under very active development but can run basic URL tests and capture full dev tools timeline information.
 
 * /agent/js - The NodeJS agent
 
-##Chrome stand-alone extension (not yet functional)
+## Chrome stand-alone extension (not yet functional)
 An experiment in creating a stand-alone agent built entirely as a Chrome extension is located in /agent/browser/chrome/WebPagetest-lite
 
-##Mobitest Mobile Agents
+## Mobitest Mobile Agents
 The Mobitest agents are managed by Akamai and are hosted on [Google code](https://code.google.com/p/mobitest-agent/).
 
-#API Examples
+# API Examples
 There are two examples using the [Restful API](https://sites.google.com/a/webpagetest.org/docs/advanced-features/webpagetest-restful-apis):
 
 * /bulktest - A php cli project that can submit a bulk set of tests, gather the results and aggregate analysis.
 * /batchtool - A python project that can submit a bulk set of tests and gather the results.
 
-#Communicating sensitive information
+# Communicating sensitive information
 
 If you need to communicate sensitive information in an issue or through mail please use the following GPG key to encrypt the data:
 

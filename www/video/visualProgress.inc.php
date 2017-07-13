@@ -159,6 +159,12 @@ function GetVisualProgressForStep($localPaths, $runCompleted, $options = null, $
         $frames['startRender'] = $time;
       if (!isset($frames['visualComplete85']) && $frame['progress'] >= 85)
         $frames['visualComplete85'] = $time;
+      if (!isset($frames['visualComplete90']) && $frame['progress'] >= 90)
+        $frames['visualComplete90'] = $time;
+      if (!isset($frames['visualComplete95']) && $frame['progress'] >= 95)
+        $frames['visualComplete95'] = $time;
+      if (!isset($frames['visualComplete99']) && $frame['progress'] >= 99)
+        $frames['visualComplete99'] = $time;
       if (!$frames['visualComplete'] && $frame['progress'] == 100)
         $frames['visualComplete'] = $time;
       // fix up the frame paths in case we have a cached version referencing a relay path

@@ -184,6 +184,11 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData) {
                         GetDevToolsHeaderValue($rawRequest['response']['headers'], 'Content-Encoding', $request['contentEncoding']);
                         GetDevToolsHeaderValue($rawRequest['response']['headers'], 'Content-Length', $request['objectSize']);
                     }
+                    if (isset($request['contentType'])) {
+                      $pos = strpos($request['contentType'], ';');
+                      if ($pos !== false)
+                        $request['contentType'] = substr($request['contentType'], 0, $pos);
+                    }
                     $request['type'] = 3;
                     $request['socket'] = isset($rawRequest['response']['connectionId']) ? $rawRequest['response']['connectionId'] : -1;
                     $request['dns_start'] = -1;
@@ -423,7 +428,8 @@ function ProcessNetlogRequests($localPaths, &$pageData, &$requests) {
         if (isset($request['full_url'])) {
           // Find the first matching request in the netlog
           foreach ($netlog as $index => $entry) {
-            if (isset($entry['url']) && isset($entry['start']) && !isset($entry['claimed']) && $entry['url'] == $request['full_url']) {
+            if (isset($entry['url']) && isset($entry['start']) && !isset($entry['claimed']) &&
+                $entry['url'] == $request['full_url']) {
               $netlog[$index]['claimed'] = true;
               foreach ($mapping as $from => $to) {
                 if (isset($entry[$from])) {
@@ -439,6 +445,7 @@ function ProcessNetlogRequests($localPaths, &$pageData, &$requests) {
                 $request['load_ms'] = intval(round($entry['end'] - $entry['start']));
               if (isset($entry['pushed']) && $entry['pushed'])
                 $request['was_pushed'] = 1;
+              break;
             }
           }
         }
@@ -674,12 +681,21 @@ function GetCachedDevToolsRequests($localPaths, &$requests, &$pageData, $ver) {
   $cache = null;
   if (count($MEMCACHE_GetCachedDevToolsRequests) > 100)
     $MEMCACHE_GetCachedDevToolsRequests = array();
-  $cacheFile = $localPaths->devtoolsRequestsCacheFile($ver);
+  $cacheFile = $localPaths->devtoolsProcessedRequestsFile();
   if (isset($MEMCACHE_GetCachedDevToolsRequests[$cacheFile])) {
     $cache = $MEMCACHE_GetCachedDevToolsRequests[$cacheFile];
   } elseif (gz_is_file($cacheFile)) {
     $cache = json_decode(gz_file_get_contents($cacheFile), true);
     $MEMCACHE_GetCachedDevToolsRequests[$cacheFile] = $cache;
+  }
+  if (!isset($cache)) {
+    $cacheFile = $localPaths->devtoolsRequestsCacheFile($ver);
+    if (isset($MEMCACHE_GetCachedDevToolsRequests[$cacheFile])) {
+      $cache = $MEMCACHE_GetCachedDevToolsRequests[$cacheFile];
+    } elseif (gz_is_file($cacheFile)) {
+      $cache = json_decode(gz_file_get_contents($cacheFile), true);
+      $MEMCACHE_GetCachedDevToolsRequests[$cacheFile] = $cache;
+    }
   }
   if (isset($cache) &&
       isset($cache['requests']) &&

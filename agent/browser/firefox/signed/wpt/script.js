@@ -53,11 +53,9 @@ injected.innerHTML = `
     }
 
     if (event.data.type == "RUN_SCRIPT") {
-      console.log(event.data.text);
       try {
         const fn = eval(event.data.text);
         const result = fn(event.data.payload && JSON.parse(event.data.payload));
-        console.log(result);
         window.postMessage({
           type: 'SCRIPT_RESULT',
           id: event.data.id,
@@ -76,7 +74,6 @@ injected.innerHTML = `
 document.documentElement.appendChild(injected);
 
 function wptSendEvent(eventName, optParams, data) {
-  console.log("sending data: " + data);
   let url = 'http://127.0.0.1:8888/event/' + eventName ;
   if (optParams) {
       url += '?' + Object.entries(optParams)

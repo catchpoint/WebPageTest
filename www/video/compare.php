@@ -632,13 +632,13 @@ function ScreenShotTable()
             <p>Examples:</p>
             <ul>
             <li><b>Customizing labels:</b>
-            http://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY-l:Original,110606_AE_RZN5-l:No+JS</li>
+            https://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY-l:Original,110606_AE_RZN5-l:No+JS</li>
             <li><b>Compare First vs. Repeat view:</b>
-            http://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY, 110606_MJ_RZEY-c:1</li>
+            https://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY, 110606_MJ_RZEY-c:1</li>
             <li><b>Second step of first run vs. Second step of second run:</b>
-            http://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY-r:1-s:2,110606_MJ_RZEY-r:2-s:2</li>
+            https://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY-r:1-s:2,110606_MJ_RZEY-r:2-s:2</li>
             <li><b>White background with black text:</b>
-            http://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY, 110606_MJ_RZEY-c:1&bg=ffffff&text=000000</li>
+            https://www.webpagetest.org/video/compare.php?tests=110606_MJ_RZEY, 110606_MJ_RZEY-c:1&bg=ffffff&text=000000</li>
             </ul>
             <input id="advanced-ok" type=button class="simplemodal-close" value="OK">
         </div>
@@ -719,6 +719,31 @@ function DisplayGraphs() {
     foreach($tests as &$test) {
         $hasStepResult = array_key_exists('stepResult', $test) && is_a($test['stepResult'], "TestStepResult");
         if ($hasStepResult &&
+            !isset($timeMetrics['visualComplete85']) &&
+            $test['stepResult']->getMetric('visualComplete85') > 0) {
+            $timeMetrics['visualComplete85'] = "85% Visually Complete";
+        }
+        if ($hasStepResult &&
+            !isset($timeMetrics['visualComplete90']) &&
+            $test['stepResult']->getMetric('visualComplete90') > 0) {
+            $timeMetrics['visualComplete90'] = "90% Visually Complete";
+        }
+        if ($hasStepResult &&
+            !isset($timeMetrics['visualComplete95']) &&
+            $test['stepResult']->getMetric('visualComplete95') > 0) {
+            $timeMetrics['visualComplete95'] = "95% Visually Complete";
+        }
+        if ($hasStepResult &&
+            !isset($timeMetrics['visualComplete99']) &&
+            $test['stepResult']->getMetric('visualComplete99') > 0) {
+            $timeMetrics['visualComplete99'] = "99% Visually Complete";
+        }
+        if ($hasStepResult &&
+            !isset($timeMetrics['chromeUserTiming.firstContentfulPaint']) &&
+            $test['stepResult']->getMetric('chromeUserTiming.firstContentfulPaint') > 0) {
+            $timeMetrics['chromeUserTiming.firstContentfulPaint'] = "First Contentful Paint";
+        }
+        if ($hasStepResult &&
             !isset($timeMetrics['chromeUserTiming.firstMeaningfulPaint']) &&
             $test['stepResult']->getMetric('chromeUserTiming.firstMeaningfulPaint') > 0) {
             $timeMetrics['chromeUserTiming.firstMeaningfulPaint'] = "First Meaningful Paint";
@@ -758,7 +783,7 @@ function DisplayGraphs() {
       }
     }
     ?>
-    <script type="text/javascript" src="<?php echo $GLOBALS['ptotocol']; ?>://www.google.com/jsapi"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script type="text/javascript">
         google.load('visualization', '1', {'packages':['table', 'corechart']});
         google.setOnLoadCallback(drawCharts);
@@ -870,22 +895,22 @@ function DisplayGraphs() {
                 echo "progressChart.draw(dataProgress, {title: 'Visual Progress (%)', hAxis: {title: 'Time (seconds)'}});\n";
             }
             if (count($tests) <= 4) {
-              echo "var timesChart = new google.visualization.ColumnChart(document.getElementById('compare_times'));\n";
+              echo "var timesChart = new google.visualization.BarChart(document.getElementById('compare_times'));\n";
               echo "timesChart.draw(dataTimes, {title: 'Timings (ms)'});\n";
-              echo "var requestsChart = new google.visualization.ColumnChart(document.getElementById('compare_requests'));\n";
+              echo "var requestsChart = new google.visualization.BarChart(document.getElementById('compare_requests'));\n";
               echo "requestsChart.draw(dataRequests, {title: 'Requests'});\n";
-              echo "var bytesChart = new google.visualization.ColumnChart(document.getElementById('compare_bytes'));\n";
+              echo "var bytesChart = new google.visualization.BarChart(document.getElementById('compare_bytes'));\n";
               echo "bytesChart.draw(dataBytes, {title: 'Bytes'});\n";
             } else {
               foreach($timeMetrics as $metric => $label) {
                 $metricKey = str_replace('.', '', $metric);
-                echo "var timesChart$metricKey = new google.visualization.ColumnChart(document.getElementById('compare_times_$metricKey'));\n";
+                echo "var timesChart$metricKey = new google.visualization.BarChart(document.getElementById('compare_times_$metricKey'));\n";
                 echo "timesChart$metricKey.draw(dataTimes$metricKey, {title: '$label (ms)'});\n";
               }
               foreach($mimeTypes as $type) {
-                echo "var requestsChart$type = new google.visualization.ColumnChart(document.getElementById('compare_requests_$type'));\n";
+                echo "var requestsChart$type = new google.visualization.BarChart(document.getElementById('compare_requests_$type'));\n";
                 echo "requestsChart$type.draw(dataRequests$type, {title: '$type Requests'});\n";
-                echo "var bytesChart$type = new google.visualization.ColumnChart(document.getElementById('compare_bytes_$type'));\n";
+                echo "var bytesChart$type = new google.visualization.BarChart(document.getElementById('compare_bytes_$type'));\n";
                 echo "bytesChart$type.draw(dataBytes$type, {title: '$type Bytes'});\n";
               }
             }

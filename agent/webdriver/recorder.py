@@ -36,8 +36,7 @@ class WptRecord:
       args = [recorder, '--filebase', file_base, '--histograms']
       if test.TcpDump():
         args.append('--tcpdump')
-      if test.Video():
-        args.append('--video')
+      args.append('--video')
       if test.FullSizeVideo():
         args.append('--noresize')
       args.extend(['--quality', str(test.GetImageQuality())])

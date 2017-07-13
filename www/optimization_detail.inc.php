@@ -15,7 +15,7 @@ function getOptimizationGradesForStep($testInfo, $testStepResult) {
   // With one step, it will do exactly what we want, so we create an artificial run
   $singlestepRunResult = TestRunResults::fromStepResults($testInfo, $testStepResult->getRunNumber(),
     $testStepResult->isCachedRun(), array($testStepResult));
-  return getOptimizationGradesForRun($singlestepRunResult);
+  return getOptimizationGradesForRun($testInfo, $singlestepRunResult);
 }
 
 /**
@@ -24,7 +24,7 @@ function getOptimizationGradesForStep($testInfo, $testStepResult) {
  * @param TestRunResults $testRunResults Results of the run to get the grades for
  * @return array|null An array with all labels, scores, grades, weights, etc per score
  */
-function getOptimizationGradesForRun($testRunResults)
+function getOptimizationGradesForRun($testInfo, $testRunResults)
 {
   if (!isset($testRunResults)) {
     return null;
@@ -48,7 +48,7 @@ function getOptimizationGradesForRun($testRunResults)
     $stepResult = $testRunResults->getStepResult($i);
     $pageData = $stepResult->getRawResults();
     $ttfb = (int)$pageData['TTFB'];
-    $latency = isset($test['testinfo']['latency']) ? $test['testinfo']['latency'] : null;
+    $latency = $testInfo->getLatency();
     $ttfbScore = gradeTTFBForStep($ttfb, $latency, $stepResult->createTestPaths(), $target);
     if (isset($ttfbScore)) {
       $numTTFBScores++;

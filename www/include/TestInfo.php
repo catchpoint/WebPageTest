@@ -139,6 +139,13 @@ class TestInfo {
   }
 
   /**
+   * @return int The configured latency for the test
+   */
+  public function getLatency() {
+    return empty($this->rawData['testinfo']['latency']) ? null : $this->rawData['testinfo']['latency'];
+  }
+
+  /**
    * @param int $run The run number
    * @return null|string Tester for specified run
    */

@@ -561,7 +561,7 @@ function gz_file_put_contents($filename, $data)
     $nogzip = GetSetting('nogzip');
     if( !$nogzip && extension_loaded('zlib') )
     {
-        $zip = gzopen("$filename.gz", 'wb6');
+        $zip = @gzopen("$filename.gz", 'wb6');
         if( $zip !== false )
         {
             if( gzwrite($zip, $data) )
@@ -797,7 +797,7 @@ function BuildLocations( &$locations )
 */
 function FilterLocations(&$locations, $includeHidden = '',
                          $stripBrowser = null) {
-    global $user;
+    global $user, $admin;
     BuildLocations($locations);
     // drop the main index of any hidden locations so they don't show up in the map view
     foreach ($locations as $name => &$locRef) {
@@ -816,7 +816,7 @@ function FilterLocations(&$locations, $includeHidden = '',
       // see if the location is restricted
       if (isset($locations[$name]) && isset($locRef['restricted'])) {
         $remove = true;
-        if (isset($_COOKIE['google_email']) || isset($user)) {
+        if (($admin && isset($_COOKIE['google_email'])) || isset($user)) {
           $currentUser = isset($_COOKIE['google_email']) ? trim($_COOKIE['google_email']) : $user;
           $userLen = strlen($currentUser);
           $users = explode(',', $locRef['restricted']);
@@ -1163,13 +1163,9 @@ function GetTestInfoHtml($includeScript = true)
     $run = null;
     if (array_key_exists('run', $_REQUEST))
       $run = intval($_REQUEST['run']);
-    if (isset($run) &&
-        array_key_exists('testinfo', $test) &&
-        array_key_exists('test_runs', $test['testinfo']) &&
-        array_key_exists($run, $test['testinfo']['test_runs']) &&
-        array_key_exists('tester', $test['testinfo']['test_runs'][$run]))
+    if (isset($run) && isset($test) && is_array($test) && isset($test['testinfo']['test_runs'][$run]['tester']))
       $html .= 'Tester: ' . $test['testinfo']['test_runs'][$run]['tester'] . '<br>';
-    elseif (isset($test['testinfo']['tester']) )
+    elseif (isset($test) && is_array($test) && isset($test['testinfo']['tester']) )
       $html .= 'Tester: ' . $test['testinfo']['tester'] . '<br>';
     if( $dom )
         $html .= 'DOM Element: <b>' . htmlspecialchars($dom) . '</b><br>';
@@ -1904,7 +1900,7 @@ function SaveJobQueue($workDir, &$queue)
 *
 * @param mixed $dir
 */
-function GetTesters($locationId, $includeOffline = false) {
+function GetTesters($locationId, $includeOffline = false, $include_sensitive = true) {
   $location = array();
   $dir = __DIR__ . "/tmp/testers-$locationId";
   if (is_dir($dir)) {
@@ -1964,6 +1960,9 @@ function GetTesters($locationId, $includeOffline = false) {
                          'offline' => @$tester['offline'],
                          'screenwidth' => @$tester['screenwidth'],
                          'screenheight' => @$tester['screenheight']);
+          if ($include_sensitive) {
+             $entry['test'] = @$tester['test'];
+          }
           $entry['rebooted'] = isset($tester['rebooted']) ? $tester['rebooted'] : false;
 
           if (isset($tester['cpu']) && is_array($tester['cpu']) && count($tester['cpu']))
@@ -2291,6 +2290,10 @@ function ValidateTestId(&$id) {
     $valid = true;
   } else {
     $id = '';
+  }
+  // Exit if we are trying to operate on an invalid ID
+  if (!$valid) {
+    exit(0);
   }
   return $valid;
 }

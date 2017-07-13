@@ -301,6 +301,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path for debug log file
+   */
+  public function debugLogFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_debug.log";
+  }
+
+  /**
    * @return string Path for keylog file
    */
   public function keylogFile() {
@@ -402,6 +409,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path to the file for processed devtools requests
+   */
+  public function devtoolsProcessedRequestsFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_devtools_requests.json";
+  }
+
+  /**
    * @param int $version The version of the cache format
    * @return string Path to cache file for devtools requests
    */
@@ -417,6 +431,10 @@ class TestPaths {
     return $this->testRoot . "breakdown" . $version . ".json";
   }
 
+  public function requestsAnalysisFile() {
+    return $this->testRoot . $this->dotIdentifier() . ".analysis.json";
+  }
+  
   /**
    * @param int $version The version of the cache format
    * @return string Path to cache file for page data

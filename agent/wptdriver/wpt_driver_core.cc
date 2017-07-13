@@ -493,10 +493,7 @@ typedef HRESULT (STDAPICALLTYPE* DLLREG)(void);
 /*-----------------------------------------------------------------------------
   Do any startup initialization (settings have already loaded)
 -----------------------------------------------------------------------------*/
-void WptDriverCore::Init(void){
-  // Clear IE's caches
-  LaunchProcess(_T("RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 6655"));
-
+void WptDriverCore::Init(void) {
   // set the OS to not boost foreground processes
   HKEY hKey;
   if (SUCCEEDED(RegOpenKeyEx(HKEY_LOCAL_MACHINE, 

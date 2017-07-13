@@ -322,7 +322,7 @@ function InsertChart($metric, $label) {
           $sqsum += pow($value - $mean, 2);
       $stddev = $count ? number_format(sqrt($sqsum / $count), 3, '.', '') : 0;
       echo "<td>$stddev</td>";
-      if ($mean)
+      if ($mean > 0)
         echo "<td>" . number_format(($stddev/$mean) * 100, 3, '.', '') . "%</td>";
       else
         echo "<td></td>";

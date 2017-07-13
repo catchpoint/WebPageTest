@@ -93,6 +93,11 @@ For the initial setup you will also need a USB keyboard and monitor with HDMI in
 		- ```net.ipv6.conf.default.disable_ipv6 = 1```
 		- ```net.ipv6.conf.lo.disable_ipv6 = 1```
 	- Save and exit
+21. Disable hardware checksum offload (at least if using reverse-tethering). There is a kernel bug that reports tons of checksum errors for bridged interfaces.
+        - ```sudo apt-get install ethtool```
+	- ```sudo nano /etc/ec.local```
+	- Add the config before the ```exit 0``` at the end of the file
+		- ```ethtool --offload eth0 rx off tx off```
 
 ## Install Software Dependencies ##
 The WebPageTest node agent requires NodeJS, Python, imagemagick and ffmpeg as well as the pillow and psutil python modules.  Most of these can be installed directly but ffmpeg is not currently available through apt so it needs to be built directly on the Pi.

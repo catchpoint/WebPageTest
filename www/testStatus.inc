@@ -96,12 +96,16 @@ function GetTestStatus($id, $includePosition = true) {
                   // in the last 60 minutes, Force individual runs to end if they didn't complete
                   // within 60 minutes and force the overall test to end if all of the individual
                   // runs are complete.
-                  if ($elapsed > 60) {
+                  $max_run_minutes = GetSetting('max_run_minutes');
+                  if (!$max_run_minutes) {
+                    $max_run_minutes == 60;
+                  }
+                  if ($elapsed > $max_run_minutes) {
                     $elapsedUpdate = 100;
                     if (isset($testInfoJson['last_updated']) && $now > $testInfoJson['last_updated'])
                       $elapsedUpdate = ($now - $testInfoJson['last_updated']) / 60;
                     $ret['elapsedUpdate'] = $elapsedUpdate;
-                    if ($elapsedUpdate > 60) {
+                    if ($elapsedUpdate > $max_run_minutes) {
                       $allComplete = true;
                       $lock = LockTest($id);
                       if ($lock) {

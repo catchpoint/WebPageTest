@@ -238,7 +238,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     if (!$is_image_map && gz_is_file($localPaths->interactiveFile())) {
       $interactive = json_decode(gz_file_get_contents($localPaths->interactiveFile()), true);
       if (isset($interactive)) {
-        if (is_array($interactive) && count($interactive) > 1) {
+        if (is_array($interactive) && count($interactive) > 0) {
           $height += $row_height;
         } else {
           unset($interactive);
@@ -1270,6 +1270,9 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
     // create the image map (this is for fallback when Javascript isn't enabled
     // but also gives us the position for each request)
     $out = '<map name="waterfall_map_step' . $step . '">';
+    $is_mime = (bool)GetSetting('mime_waterfalls');
+    if (strpos($waterfall_options, 'mime=1') !== false)
+      $is_mime = true;
     $options = array(
         'id' => $id,
         'path' => './' . GetTestPath($id),
@@ -1278,7 +1281,7 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
         'is_cached' => @$_GET['cached'],
         'use_cpu' => true,
         'show_labels' => true,
-        'is_mime' => (bool)GetSetting('mime_waterfalls'),
+        'is_mime' => $is_mime,
         'width' => 930
         );
     $rows = GetRequestRows($requests, false);

@@ -68,9 +68,45 @@ function getBreakdownForStep($localPaths, $rootUrlGenerator, &$requests) {
         }
         $cache[$cacheKey] = $breakdown;
         gz_file_put_contents($cache_file, json_encode($cache));
+        
+        // Collect other analysis that requires access to the request data
+        analyzeRequests($localPaths, $requests);
     }
     
     return $breakdown;
+}
+
+/**
+* Run through the requests and collect page-level analysis for them
+* 
+* @param mixed $localPaths
+* @param mixed $requests
+*/
+function analyzeRequests($localPaths, &$requests) {
+  $analysis_file = $localPaths->requestsAnalysisFile();
+  if (!gz_is_file($analysis_file)) {
+    $analysis = array('smallImageCount' => 0,
+                      'bigImageCount' => 0,
+                      'maybeCaptcha' => 0);
+    foreach($requests as $request) {
+      if (isset($request['contentType']) && isset($request['objectSize'])) {
+        $contentType = ContentType($request['contentType'], $request['url']);
+        if ($contentType == 'image') {
+          if ($request['objectSize'] > 100000) {
+            $analysis['bigImageCount']++;
+          } elseif ($request['objectSize'] > 100 && $request['objectSize'] < 10000) {
+            $analysis['smallImageCount']++;
+          }
+        }
+      }
+      if (isset($request['url'])) {
+        if (strpos($request['url'], 'recaptcha/api.js') !== false) {
+          $analysis['maybeCaptcha'] = 1;
+        }
+      }
+    }
+    gz_file_put_contents($analysis_file, json_encode($analysis));
+  }
 }
 
 /**

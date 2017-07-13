@@ -66,10 +66,15 @@ function UpdateFeeds() {
                         $date++;
 
                       echo "  Found: " . $item->get_title() . "\n";
+                      $url = urldecode($item->get_permalink());
+                      if (substr($url, 0, 4) != 'http') {
+                        $parts = parse_url($feedUrl);
+                        $url = "{$parts['scheme']}://{$parts['host']}$url";
+                      }
                       $feedData[$category][$date] = array ( 
                               'source' => $feedSource,
                               'title' => $item->get_title(),
-                              'link' => urldecode($item->get_permalink()),
+                              'link' => $url,
                               'date' => $dateStr
                           );
                     }
