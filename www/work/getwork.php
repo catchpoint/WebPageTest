@@ -44,8 +44,8 @@ if (isset($locations) && is_array($locations) && count($locations) &&
     (!array_key_exists('freedisk', $_GET) || (float)$_GET['freedisk'] > 0.1)) {
   shuffle($locations);
   $location = trim($locations[0]);
-  //if (!$is_done && array_key_exists('reboot', $_GET))
-  //  $is_done = GetReboot();
+  if (!$is_done && array_key_exists('reboot', $_GET) && GetSetting('allowReboot'))
+    $is_done = GetReboot();
   if (!$is_done && array_key_exists('ver', $_GET))
     $is_done = GetUpdate();
   foreach ($locations as $loc) {
