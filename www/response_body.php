@@ -3,7 +3,7 @@ include 'common.inc';
 $body = null;
 $body_id = null;
 if (isset($_GET['bodyid'])) {
-  $body_id = $_GET['bodyid'];
+  $body_id = trim($_GET['bodyid']);
 } elseif (isset($_GET['request'])) {
   $request = (int)$_GET['request'];
 } elseif (isset($_GET['url'])) {
@@ -32,8 +32,8 @@ if ($request || $body_id) {
         $name = $zip->getNameIndex($i);
         $parts = explode('-', $name);
         if (isset($body_id)) {
-          $id = $parts[1];
-          if ($id == $body_id) {
+          $id = trim($parts[1]);
+          if (!strcmp($id, $body_id)) {
             $body = $zip->getFromIndex($i);
             break;
           }
