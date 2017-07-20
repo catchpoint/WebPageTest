@@ -195,6 +195,12 @@ agentUpdate=http://cdn.webpagetest.org/
 ;archive_s3_bucket=<bucket>
 ;archive_s3_url=http://s3.amazonaws.com/
 
+; s3 url style - valid options are 'vhost' or 'path'. The default is 'vhost'
+; example of s3 url styles:
+;   - vhost: http://<bucket>.<s3_server>/object
+;   - path: http://<s3_server>/<bucket>/object
+;archive_s3_urlstyle=vhost
+
 ;Number of days to keep tests locally before archiving
 ;archive_days=2
 
@@ -233,3 +239,4 @@ agentUpdate=http://cdn.webpagetest.org/
 ; the subnet). This is required only if you do not have a default VPC.
 ;EC2.us-west-2.securityGroup=sg-a0011b223,sg-b1122c334
 ;EC2.us-west-2.subnetId=subnet-aaa0011bc1
+
