@@ -27,6 +27,8 @@ tcpdump_view="http://cloudshark.org/view?url="
 ; Comment-out to use classic-colored waterfalls as the default
 mime_waterfalls=1
 
+; Uncomment to disable the testlog in the UI
+;disableTestlog=1
 
 ; *********************
 ; Test options/defaults
@@ -128,6 +130,11 @@ agentUpdate=http://cdn.webpagetest.org/
 ; YYMMDD_<serverID>hash_xxx
 ;serverID=A
 
+; For basic authentication with WPT server
+;ba_username=username
+;ba_password=password
+;validcertificate=1
+
 ; ***********************
 ; Test result integration
 ; ***********************
@@ -186,8 +193,13 @@ agentUpdate=http://cdn.webpagetest.org/
 ;archive_s3_key=<access key>
 ;archive_s3_secret=<secret>
 ;archive_s3_bucket=<bucket>
-;archive_s3_urlstyle=vhost
 ;archive_s3_url=http://s3.amazonaws.com/
+
+; s3 url style - valid options are 'vhost' or 'path'. The default is 'vhost'
+; example of s3 url styles:
+;   - vhost: http://<bucket>.<s3_server>/object
+;   - path: http://<s3_server>/<bucket>/object
+;archive_s3_urlstyle=vhost
 
 ;Number of days to keep tests locally before archiving
 ;archive_days=2
