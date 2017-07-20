@@ -61,8 +61,7 @@ if (array_key_exists('tests', $_REQUEST)) {
     ****************************************************************************/
     $id = null;
     $error = null;
-    if (array_key_exists('test', $_REQUEST) &&
-        ValidateTestId($_REQUEST['test'])) {
+    if (isset($_REQUEST['test']) && strlen($_REQUEST['test']) && ValidateTestId($_REQUEST['test'])) {
       $id = $_REQUEST['test'];
       RestoreTest($id);
       $test = GetTestInfo($id);
