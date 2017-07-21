@@ -73,7 +73,7 @@ class WaterfallViewHtmlSnippet {
     if ((float)$this->stepResult->getMetric("domTime"))
       $out .= $this->_legendBarTableCell("#F28300", "DOM Element", 2);
     if ((float)$this->stepResult->getMetric("firstPaint"))
-      $out .= $this->_legendBarTableCell("#8FBC83", "msFirstPaint", 2);
+      $out .= $this->_legendBarTableCell("#8FBC83", "RUM First Paint", 2);
     if ((float)$this->stepResult->getMetric("domInteractive"))
       $out .= $this->_legendBarTableCell("#FFC61A", "DOM Interactive", 2);
     if ((float)$this->stepResult->getMetric("domContentLoadedEventStart"))
