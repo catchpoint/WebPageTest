@@ -1331,9 +1331,6 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 
             if( !$test['aftEarlyCutoff'] && $settings['aftEarlyCutoff'] )
                 $test['aftEarlyCutoff'] = $settings['aftEarlyCutoff'];
-
-            if ($test['lighthouse'] && strlen($test['script']))
-                $error = 'Lighthouse cannot run with custom scripts';
         }
     } elseif( !strlen($error) ) {
         $error = "Invalid URL, please try submitting your test request again.";
