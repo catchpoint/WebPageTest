@@ -98,7 +98,7 @@ function GetTestStatus($id, $includePosition = true) {
                   // runs are complete.
                   $max_run_minutes = GetSetting('max_run_minutes');
                   if (!$max_run_minutes) {
-                    $max_run_minutes == 60;
+                    $max_run_minutes = 60;
                   }
                   if ($elapsed > $max_run_minutes) {
                     $elapsedUpdate = 100;
