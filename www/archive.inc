@@ -163,40 +163,59 @@ function RestoreArchive($id) {
                     break;
             }
         }
+        $archive_settings = null;
+        // See if the test ID has a server-specific ID
+        if (preg_match('/_([^_])i/', $id, $matches)) {
+          $server = $matches[1];
+          if (isset($settings["{$server}_archive_s3_server"]) &&
+              isset($settings["{$server}_archive_s3_key"]) &&
+              isset($settings["{$server}_archive_s3_secret"]) &&
+              isset($settings["{$server}_archive_s3_bucket"])) {
+            $archive_settings = array('archive_s3_server' => $settings["{$server}_archive_s3_server"],
+                                      'archive_s3_key' => $settings["{$server}_archive_s3_key"],
+                                      'archive_s3_secret' => $settings["{$server}_archive_s3_secret"],
+                                      'archive_s3_bucket' => $settings["{$server}_archive_s3_bucket"]);
+            if (isset($settings["{$server}archive_s3_urlstyle"]))
+              $archive_settings['archive_s3_urlstyle'] = $settings["{$server}archive_s3_urlstyle"];
+          }
+        }
+        if (!isset($archive_settings)) {
+          $archive_settings = $settings;
+        }
         if (strlen($url) || 
-            array_key_exists('archive_dir', $settings) || 
-            array_key_exists('archive_s3_url', $settings) ||
-            array_key_exists('archive_s3_server', $settings)) {
+            array_key_exists('archive_dir', $archive_settings) || 
+            array_key_exists('archive_s3_url', $archive_settings) ||
+            array_key_exists('archive_s3_server', $archive_settings)) {
             $deleteZip = true;
             $zipfile = "./tmp/$id.zip";
             if (strlen($url)) {
                 $url .= "/$id.zip";
             } else {
-                if (isset($settings['archive_dir'])) {
+                if (isset($archive_settings['archive_dir'])) {
                     $deleteZip = false;
                     $zipfile = GetArchiveFile($id);
                     if (is_file($zipfile))
                         touch($zipfile);
-                } elseif (isset($settings['archive_s3_url'])) {
+                } elseif (isset($archive_settings['archive_s3_url'])) {
                     $separator = strrpos($id, '_');
                     if ($separator !== false) {
-                        $bucket = $settings['archive_s3_bucket'];
+                        $bucket = $archive_settings['archive_s3_bucket'];
                         $file = "$id";
-                        if (trim($settings['archive_s3_server']) == 's3.us.archive.org') {
+                        if (trim($archive_settings['archive_s3_server']) == 's3.us.archive.org') {
                             // special-case Internet Archive storage
-                            $bucket = $settings['archive_s3_bucket'] . '_' . substr($id, 0, $separator);
+                            $bucket = $archive_settings['archive_s3_bucket'] . '_' . substr($id, 0, $separator);
                             $file = substr($id, $separator + 1);
                         }
-                        $url = trim($settings['archive_s3_url']) . "$bucket/$file.zip";
+                        $url = trim($archive_settings['archive_s3_url']) . "$bucket/$file.zip";
                     }
-                } elseif (array_key_exists('archive_s3_server', $settings) && 
-                            array_key_exists('archive_s3_key', $settings) && 
-                            array_key_exists('archive_s3_secret', $settings) && 
-                            array_key_exists('archive_s3_bucket', $settings)) {
+                } elseif (array_key_exists('archive_s3_server', $archive_settings) && 
+                            array_key_exists('archive_s3_key', $archive_settings) && 
+                            array_key_exists('archive_s3_secret', $archive_settings) && 
+                            array_key_exists('archive_s3_bucket', $archive_settings)) {
                     require_once('./lib/S3.php');
-                    $urlstyle = array_key_exists('archive_s3_urlstyle', $settings) ? trim($settings['archive_s3_urlstyle']) : 'vhost';
-                    $s3 = new S3(trim($settings['archive_s3_key']), trim($settings['archive_s3_secret']), false, trim($settings['archive_s3_server']), $urlstyle);
-                    $bucket = $settings['archive_s3_bucket'];
+                    $urlstyle = array_key_exists('archive_s3_urlstyle', $archive_settings) ? trim($archive_settings['archive_s3_urlstyle']) : 'vhost';
+                    $s3 = new S3(trim($archive_settings['archive_s3_key']), trim($archive_settings['archive_s3_secret']), false, trim($archive_settings['archive_s3_server']), $urlstyle);
+                    $bucket = $archive_settings['archive_s3_bucket'];
                     $file = "$id.zip";
                     $s3->getObject($bucket, $file, $zipfile);
                 }
