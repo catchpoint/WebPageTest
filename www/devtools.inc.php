@@ -1355,7 +1355,7 @@ function DevToolsGetCPUSlicesForStep($localPaths) {
   $trace_file = $localPaths->devtoolsTraceFile() . ".gz";
   $script_timing = $localPaths->devtoolsScriptTimingFile() . ".gz";
   if (!GetSetting('disable_timeline_processing') && !is_file($slices_file) && is_file($trace_file) && is_file(__DIR__ . '/lib/trace/trace-parser.py')) {
-    $script = realpath(__DIR__ . '/lib/trace/trace-parser.py');
+    $script = realpath(__DIR__ . '/lib/trace/trace_parser.py');
     touch($slices_file);
     if (is_file($slices_file)) {
       $slices_file = realpath($slices_file);

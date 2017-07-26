@@ -1115,7 +1115,7 @@ WebDriverServer.prototype.scheduleProcessTrace_ = function() {
       this.featureUsageFile_ = path.join(this.runTempDir_, 'feature_usage.json.gz');
       this.interactiveFile_ = path.join(this.runTempDir_, 'interactive.json.gz');
       this.v8File_ = path.join(this.runTempDir_, 'v8stats.json.gz');
-      var options = ['lib/trace/trace-parser.py', '-vvvv',
+      var options = ['lib/trace/trace_parser.py', '-vvvv',
           '-t', this.traceFile_, '-u', this.userTimingFile_,
           '-c', this.cpuSlicesFile_, '-j', this.scriptTimingFile_,
           '-f', this.featureUsageFile_, '-i', this.interactiveFile_,
@@ -1690,7 +1690,7 @@ WebDriverServer.prototype.done_ = function() {
         this.cpuSlicesFile_ = path.join(this.runTempDir_, 'timeline_cpu.json.gz');
         this.scriptTimingFile_ = path.join(this.runTempDir_, 'script_timing.json.gz');
         this.interactiveFile_ = path.join(this.runTempDir_, 'interactive.json.gz');
-        var options = ['lib/trace/trace-parser.py', '-vvvv',
+        var options = ['lib/trace/trace_parser.py', '-vvvv',
             '-l', devToolsFile, '-c', this.cpuSlicesFile_,
             '-j', this.scriptTimingFile_, '-i', this.interactiveFile_];
         process_utils.scheduleExec(this.app_,
