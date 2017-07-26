@@ -179,6 +179,8 @@ CDN_PROVIDER cdnList[] = {
   {".b-cdn.net", "BunnyCDN"},
   {".pix-cdn.org", "Advanced Hosters CDN"},
   {".roast.io", "Roast.io"},
+  {".xlabs.com.br","XLabs Security"},
+  {".armor.zone", "XLabs Security"},
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -228,7 +230,8 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "Testa/", "Naver"},
   {"server", "BunnyCDN", "BunnyCDN"},
   {"server", "MNCDN", "Medianova"},
-  {"server", "Roast.io", "Roast.io"}
+  {"server", "Roast.io", "Roast.io"},
+  {"x-cdn", "XLabs Security"}
 };
 
 // Specific providers that require multiple headers
