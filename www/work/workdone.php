@@ -427,7 +427,6 @@ function ProcessIncrementalResult() {
   global $id;
 
   if ($done) {
-    logMsg("$id - " . json_encode($testInfo['shards_finished']), __DIR__ . '/workdone.txt', true);
     // mark this shard as done
     if (!isset($testInfo['shards_finished']))
       $testInfo['shards_finished'] = array();
