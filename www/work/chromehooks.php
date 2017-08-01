@@ -40,11 +40,11 @@ function GetMethods($signature) {
       $methods = LookupMethods($signature, $cache_file);
       if (!isset($methods)) {
         $privateInstall = true;
-        if (array_key_exists('HTTP_HOST', $_SERVER) &&
-            $_SERVER['HTTP_HOST'] != 'www.webpagetest.org' &&
-            $_SERVER['HTTP_HOST'] != 'origin.webpagetest.org' &&
-            $_SERVER['HTTP_HOST'] != 'agent.webpagetest.org' &&
-            $_SERVER['HTTP_HOST'] != 'api.webpagetest.org') {
+        if (isset($_SERVER['HTTP_HOST']) &&
+            ($_SERVER['HTTP_HOST'] == 'www.webpagetest.org' ||
+             $_SERVER['HTTP_HOST'] == 'origin.webpagetest.org' ||
+             $_SERVER['HTTP_HOST'] == 'agent.webpagetest.org' ||
+             $_SERVER['HTTP_HOST'] == 'api.webpagetest.org')) {
             $privateInstall = false;
         }
         if ($privateInstall) {
