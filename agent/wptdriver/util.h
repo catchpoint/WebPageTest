@@ -66,7 +66,7 @@ void TerminateProcessesByName(TCHAR * exe);
 void WaitForChildProcesses(DWORD pid, DWORD timeout = 300000);
 void WaitForProcessesByName(TCHAR * exe, DWORD timeout = 300000);
 bool IsBrowserDocument(HWND wnd, bool recurse = true);
-CString HttpGetText(CString url);
+CString HttpGetText(CString url, DWORD * response_code = NULL);
 DWORD   HttpSaveFile(CString url, CString file);
 CString HashFileMD5(CString file);
 bool FileExists(CString file);

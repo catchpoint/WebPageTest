@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "software_update.h"
 #include "wpt_status.h"
+#include "PEHelper.h"
 #include <Shellapi.h>
 
 static const DWORD SOFTWARE_UPDATE_INTERVAL_MINUTES = 60;  // hourly
@@ -100,6 +101,12 @@ void SoftwareUpdate::SetSoftwareUrl(CString url) {
     _software_url = url;
     UpdateSoftware(true);
   }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void SoftwareUpdate::SetServerUrl(CString url) {
+  _server_url = url;
 }
 
 /*-----------------------------------------------------------------------------
@@ -398,8 +405,93 @@ bool SoftwareUpdate::CheckBrowsers(CString& missing_browser) {
     if (!FileExists(browser_info._exe)) {
       ok = false;
       missing_browser = browser_info._name;
+    } else {
+      if (!GetChromeSymbols(browser_info._exe)) {
+        ok = false;
+      }
     }
   }
 
+  return ok;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool SoftwareUpdate::GetChromeSymbols(CString exe) {
+  bool ok = true;
+  TCHAR path[MAX_PATH];
+  lstrcpy(path, (LPCTSTR)exe);
+  LPTSTR file = PathFindFileName(path);
+  if (!lstrcmpi(file, _T("chrome.exe"))) {
+    *file = 0;
+    CString dir(path);
+    PathAppend(path, _T("*.*"));
+
+    WIN32_FIND_DATA fd;
+    HANDLE hFind = FindFirstFile(path, &fd);
+    if (hFind != INVALID_HANDLE_VALUE) {
+      do {
+        if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY &&
+            lstrcmp(fd.cFileName, _T(".")) &&
+            lstrcmp(fd.cFileName,_T(".."))) {
+          lstrcpy(path, (LPCTSTR)dir);
+          PathAppend(path, fd.cFileName);
+          CString chrome_dir(path);
+          PathAppend(path, _T("chrome.dll"));
+          if (FileExists(path)) {
+            CString dll(path);
+            lstrcpy(path, (LPCTSTR)chrome_dir);
+            PathAppend(path, _T("wpt.sym"));
+            CString symbols_file(path);
+            if (!FileExists(symbols_file)) {
+              ATLTRACE(_T("Symbols needed for %s"), (LPCTSTR)dll);
+              CPEHelper pdbinfo;
+              if (pdbinfo.OpenAndVerify(dll)) {
+                CString pdb_signature;
+                pdbinfo.GetPdbFileIndex(pdb_signature);
+                if (pdb_signature.GetLength()) {
+                  FetchChromeSymbols(pdb_signature, symbols_file);
+                }
+              }
+              if (!FileExists(symbols_file))
+                ok = false;
+            }
+          }
+        }
+      } while(FindNextFile(hFind, &fd));
+      
+      FindClose(hFind);
+    }
+  }
+  return ok;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool SoftwareUpdate::FetchChromeSymbols(CString pdb_signature, CString symbols_file) {
+  bool ok = false;
+  CStringA symbols;
+  DWORD response_code = 0;
+  ATLTRACE(_T("Fetching symbols for chrome.dll with signature %s"), pdb_signature);
+  CString url = _server_url + _T("work/chromehooks.php?signature=") + pdb_signature;
+  symbols = CT2A((LPCTSTR)HttpGetText(url, &response_code), CP_UTF8);
+  ATLTRACE(_T("(%d) %s : \n%S"), response_code, (LPCTSTR)url, (LPCSTR)symbols);
+  if (response_code != 200) {
+    url = _T("http://www.webpagetest.org/work/chromehooks.php?signature=") + pdb_signature;
+    symbols = CT2A((LPCTSTR)HttpGetText(url, &response_code), CP_UTF8);
+    ATLTRACE(_T("(%d) %s : \n%S"), response_code, (LPCTSTR)url, (LPCSTR)symbols);
+  }
+  if (response_code == 200 || response_code == 404) {
+    if (response_code == 404)
+      symbols.Empty();
+    HANDLE hFile = CreateFile(symbols_file, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+    if (hFile != INVALID_HANDLE_VALUE) {
+      if (symbols.GetLength()) {
+        DWORD written;
+        WriteFile(hFile, (LPCSTR)symbols, symbols.GetLength(), &written, 0);
+      }
+      CloseHandle(hFile);
+    }
+  }
   return ok;
 }

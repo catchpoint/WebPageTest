@@ -109,6 +109,7 @@
     <ClCompile Include="shaper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PEHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -222,6 +223,7 @@
     <ClInclude Include="log_duration.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="PEHelper.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="small.ico">

@@ -235,6 +235,7 @@ EXIT 0</Command>
   <ItemGroup>
     <ClInclude Include="..\wpthook\shared_mem.h" />
     <ClInclude Include="log_duration.h" />
+    <ClInclude Include="PEHelper.h" />
     <ClInclude Include="shaper.h" />
     <ClInclude Include="shaper\interface.h" />
     <ClInclude Include="software_update.h" />
@@ -273,6 +274,7 @@ EXIT 0</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\wpthook\shared_mem.cc" />
+    <ClCompile Include="PEHelper.cpp" />
     <ClCompile Include="shaper.cpp" />
     <ClCompile Include="software_update.cc" />
     <ClCompile Include="ipfw.cc" />

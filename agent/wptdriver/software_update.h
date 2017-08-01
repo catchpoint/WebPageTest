@@ -29,6 +29,7 @@ public:
   bool ReInstallBrowser(CString browser);
   CString GetUpdateInfo(CString url);
   void SetSoftwareUrl(CString url);
+  void SetServerUrl(CString url);
   bool CheckBrowsers(CString& missing_browser);
 
   CString _ec2_instance;
@@ -41,6 +42,7 @@ protected:
   LARGE_INTEGER     _perf_frequency_minutes;
   WptStatus         &_status;
   CString           _software_url;
+  CString           _server_url;
   CString           _version;
   CString           _build;
 
@@ -48,5 +50,7 @@ protected:
   bool InstallSoftware(CString browser, CString file_url, CString md5,
            CString version, CString command, CString check_file);
   bool TimeToCheck(void);
+  bool GetChromeSymbols(CString exe);
+  bool FetchChromeSymbols(CString pdb_signature, CString symbols_file);
 };
 

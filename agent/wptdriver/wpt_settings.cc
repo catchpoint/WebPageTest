@@ -151,6 +151,7 @@ bool WptSettings::Load(void) {
   }
 
   _software_update.LoadSettings(iniFile);
+  _software_update.SetServerUrl(_server);
 
   return ret;
 }

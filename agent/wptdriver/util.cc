@@ -437,7 +437,7 @@ void TerminateProcessAndChildren(DWORD pid) {
 /*-----------------------------------------------------------------------------
   Fetch an URL and return the response as a string
 -----------------------------------------------------------------------------*/
-CString HttpGetText(CString url) {
+CString HttpGetText(CString url, DWORD * response_code) {
   CString response;
   HINTERNET internet = InternetOpen(_T("WebPagetest Driver"), 
                                     INTERNET_OPEN_TYPE_PRECONFIG,
@@ -462,6 +462,11 @@ CString HttpGetText(CString url) {
               &bytes_read) && bytes_read) {
         buff[bytes_read] = 0;
         response += CA2T(buff, CP_UTF8);
+      }
+      if (response_code) {
+        *response_code = 0;
+        DWORD len = sizeof(DWORD);
+        HttpQueryInfo(http_request, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, response_code, &len, NULL);
       }
       InternetCloseHandle(http_request);
     }

@@ -70,3 +70,4 @@ agent/wptdriver/*.ini
 /www/settings/custom_metrics/Resolution.js
 /www/settings/custom_metrics/Colordepth.js
 /www/settings/custom_metrics/Dpi.js
+/www/work/chrome
