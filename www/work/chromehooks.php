@@ -2,6 +2,7 @@
 chdir('..');
 include 'common_lib.inc';
 set_time_limit(600);
+ignore_user_abort(true);
 
 $busy = false;
 $methods = null;
