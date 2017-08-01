@@ -42,7 +42,7 @@ function GetMethods($signature) {
     $methods = file_get_contents($cache_file);
   } else {
     // Only let one lookup run at a time, return 403's to others to have them try again
-    $lock = Lock("chrome-$signature", false, 600);
+    $lock = Lock("chrome-offsets", false, 600);
     if ($lock) {
       $cache_dir = __DIR__ . '/chrome';
       if (!is_dir($cache_dir))
