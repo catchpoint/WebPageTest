@@ -1,4 +1,13 @@
 <?php
+/**
+* By default this will relay to the public webpagetest server to populate a cache of chrome function offsets.
+* If you want the work to be done locally it requires python 2.7, some specific modules and cabextract
+* and only works on a Linux server:
+* 
+* sudo pip install pdbparse
+* sudo pip install 'construct==2.5.5-reupload'
+* sudo apt-get install cabextract
+*/
 chdir('..');
 include 'common_lib.inc';
 set_time_limit(600);
