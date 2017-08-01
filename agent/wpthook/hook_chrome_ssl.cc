@@ -322,7 +322,7 @@ void ChromeSSLHook::Init() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool ChromeSSLHook::HookUsingSymbols(LPCTSTR path, HMODULE module, DWORD chrome_version) {
-  bool ok = false;
+  bool ok = false, read_hooked = false, write_hooked = false;
   TCHAR offsets_file[MAX_PATH];
   lstrcpy(offsets_file, path);
   lstrcpy(PathFindFileName(offsets_file), _T("wpt.sym"));
@@ -354,7 +354,6 @@ bool ChromeSSLHook::HookUsingSymbols(LPCTSTR path, HMODULE module, DWORD chrome_
                   if (func == "ssl3_new") {
                     ATLTRACE("%s (%d): 0x%p", (LPCSTR)func, offset, addr);
                     MH_CreateHook(addr, New_Hook, (LPVOID *)&New_);
-                    ok = true;
                   } else if (func == "ssl3_free") {
                     ATLTRACE("%s (%d): 0x%p", (LPCSTR)func, offset, addr);
                     MH_CreateHook(addr, Free_Hook, (LPVOID *)&Free_);
@@ -364,6 +363,7 @@ bool ChromeSSLHook::HookUsingSymbols(LPCTSTR path, HMODULE module, DWORD chrome_
                       MH_CreateHook(addr, Connect_Hook, (LPVOID *)&Connect_);
                     }
                   } else if (func == "ssl3_read_app_data") {
+                    read_hooked = true;
                     if (chrome_version <= 53) {
                       ATLTRACE("%s - old (%d): 0x%p", (LPCSTR)func, offset, addr);
                       MH_CreateHook(addr, ReadAppDataOld_Hook, (LPVOID *)&ReadAppDataOld_);
@@ -372,6 +372,7 @@ bool ChromeSSLHook::HookUsingSymbols(LPCTSTR path, HMODULE module, DWORD chrome_
                       MH_CreateHook(addr, ReadAppData_Hook, (LPVOID *)&ReadAppData_);
                     }
                   } else if (func == "ssl3_write_app_data") {
+                    write_hooked = true;
                     if (chrome_version <= 60) {
                       ATLTRACE("%s - old (%d): 0x%p", (LPCSTR)func, offset, addr);
                       MH_CreateHook(addr, WriteAppDataOld_Hook, (LPVOID *)&WriteAppDataOld_);
@@ -392,7 +393,8 @@ bool ChromeSSLHook::HookUsingSymbols(LPCTSTR path, HMODULE module, DWORD chrome_
     }
   }
 
-  if (ok) {
+  if (read_hooked && write_hooked) {
+    ok = true;
     g_hook = this; 
     MH_EnableHook(MH_ALL_HOOKS);
   }

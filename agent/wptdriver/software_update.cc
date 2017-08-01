@@ -443,7 +443,7 @@ bool SoftwareUpdate::GetChromeSymbols(CString exe) {
             lstrcpy(path, (LPCTSTR)chrome_dir);
             PathAppend(path, _T("wpt.sym"));
             CString symbols_file(path);
-            if (!FileExists(symbols_file)) {
+            if (!FileSize(symbols_file)) {
               ATLTRACE(_T("Symbols needed for %s"), (LPCTSTR)dll);
               CPEHelper pdbinfo;
               if (pdbinfo.OpenAndVerify(dll)) {
