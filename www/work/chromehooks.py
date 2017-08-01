@@ -90,20 +90,26 @@ def get_functions(pdb_file):
     gsyms = pdb.STREAM_GSYM
     if not hasattr(gsyms, 'globals'):
         gsyms.globals = []
+    #names = []
     for sym in gsyms.globals:
         try:
-            if sym.name in methods:
+            name = sym.name.lstrip('_')
+            #names.append(name)
+            if name in methods:
                 off = sym.offset
                 virt_base = sects[sym.segment-1].VirtualAddress
                 addr = omap.remap(off+virt_base)
-                if methods[sym.name] == 0:
-                    methods[sym.name] = addr
+                if methods[name] == 0:
+                    methods[name] = addr
                 else:
-                    methods[sym.name] = -1
+                    methods[name] = -1
         except IndexError:
             pass
         except AttributeError:
             pass
+    #with open('names.txt', 'wb') as f_out:
+    #    for name in names:
+    #        f_out.write(name + "\n")
     return methods
 
 def main():
@@ -119,6 +125,15 @@ def main():
     if not re.match(r'^[A-F0-9]{33,41}$', options.signature):
         parser.error("Invalid signature")
     if platform.system() == "Linux":
+        import fcntl
+        pid_file = '/tmp/chromehooks.pid'
+        lock_file = open(pid_file, 'w')
+        try:
+            fcntl.lockf(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except IOError:
+            # another instance is running
+            parser.error("Already running")
+
         pdb = get_pdb(options.signature)
         if pdb is not None and os.path.isfile(pdb):
             methods = get_functions(pdb)
