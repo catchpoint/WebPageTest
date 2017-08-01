@@ -41,7 +41,10 @@ function GetMethods($signature) {
       if (!isset($methods)) {
         $privateInstall = true;
         if (array_key_exists('HTTP_HOST', $_SERVER) &&
-            stristr($_SERVER['HTTP_HOST'] , '.webpagetest.org') !== false) {
+            $_SERVER['HTTP_HOST'] != 'www.webpagetest.org' &&
+            $_SERVER['HTTP_HOST'] != 'origin.webpagetest.org' &&
+            $_SERVER['HTTP_HOST'] != 'agent.webpagetest.org' &&
+            $_SERVER['HTTP_HOST'] != 'api.webpagetest.org') {
             $privateInstall = false;
         }
         if ($privateInstall) {
