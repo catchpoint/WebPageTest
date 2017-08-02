@@ -179,6 +179,7 @@ CDN_PROVIDER cdnList[] = {
   {".b-cdn.net", "BunnyCDN"},
   {".pix-cdn.org", "Advanced Hosters CDN"},
   {".roast.io", "Roast.io"},
+  {".cedexis.net", "Cedexis"},
   {"END_MARKER", "END_MARKER"}
 };
 
