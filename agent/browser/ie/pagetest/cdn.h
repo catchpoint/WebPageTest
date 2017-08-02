@@ -124,6 +124,9 @@ CDN_PROVIDER cdnList[] = {
 	{".hosting4cdn.com", _T("Hosting4CDN")},
 	{".netlify.com", _T("Netlify")},
 	{".roast.io", _T("Roast.io")},
+	{".cdnvideo.ru", _T("CDNvideo")},
+	{".cdnvideo.net", _T("CDNvideo")},
+	{".trbcdn.net", _T("TRBCDN")},
 	{NULL, NULL}
 };
 
