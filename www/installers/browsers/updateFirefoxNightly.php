@@ -28,31 +28,29 @@ if ($html) {
     $local_file = "nightly-$ver-$time.exe";
     if (!is_file($local_file)) {
       $valid_md5 = strtoupper(GetMD5());
-      if ($valid_md5) {
-        if (file_put_contents($local_file, file_get_contents("$base_url$remote_file"))) {
-          $md5 = strtoupper(md5_file($local_file));
-          if ($md5 == $valid_md5) {
-            // write out the new nightly dat file
-            file_put_contents('nightly.dat',
-              "browser=Nightly\r\n" .
-              "url=http://www.webpagetest.org/installers/browsers/$local_file\r\n" .
-              "md5=$md5\r\n" .
-              "version=$remote_file_ver.$remote_file_time\r\n" .
-              "command=$local_file -ms\r\n" .
-              "update=1\r\n");
-            
-            // delete any nightlies more than a week old
-            $files = glob("nightly-*");
-            if ($files) {
-              $earliest = time() - 604800; // 1 week
-              foreach($files as $file) {
-                if (filemtime($file) < $earliest)
-                  unlink($file);
-              }
+      if (file_put_contents($local_file, file_get_contents("$base_url$remote_file"))) {
+        $md5 = strtoupper(md5_file($local_file));
+        if (!strlen($valid_md5) || $md5 == $valid_md5) {
+          // write out the new nightly dat file
+          file_put_contents('nightly.dat',
+            "browser=Nightly\r\n" .
+            "url=http://www.webpagetest.org/installers/browsers/$local_file\r\n" .
+            "md5=$md5\r\n" .
+            "version=$remote_file_ver.$remote_file_time\r\n" .
+            "command=$local_file -ms\r\n" .
+            "update=1\r\n");
+          
+          // delete any nightlies more than a week old
+          $files = glob("nightly-*");
+          if ($files) {
+            $earliest = time() - 604800; // 1 week
+            foreach($files as $file) {
+              if (filemtime($file) < $earliest)
+                unlink($file);
             }
-          } elseif (is_file($local_file)) {
-            unlink($local_file);
           }
+        } elseif (is_file($local_file)) {
+          unlink($local_file);
         }
       }
     }
