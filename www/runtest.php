@@ -116,7 +116,13 @@
             if ($maxTime && $test['timeout'] > $maxTime)
               $test['timeout'] = (int)$maxTime;
             $test['connections'] = (int)$req_connections;
-            $test['private'] = $req_private;
+            if (isset($req_private)) {
+              $test['private'] = $req_private;
+            } elseif (GetSetting('defaultPrivate')) {
+              $test['private'] = 1;
+            } else {
+              $test['private'] = 0;
+            }
             $test['web10'] = $req_web10;
             $test['ignoreSSL'] = $req_ignoreSSL;
             $test['script'] = trim($req_script);
