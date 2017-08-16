@@ -229,7 +229,9 @@ $loc = ParseLocations($locations);
                                 <li><a href="#test-settings">Test Settings</a></li>
                                 <li><a href="#advanced-settings">Advanced</a></li>
                                 <li><a href="#advanced-chrome">Chrome</a></li>
+                                <?php if (!isset($settings['no_basic_auth_ui'])) { ?>
                                 <li><a href="#auth">Auth</a></li>
+                                <?php } ?>
                                 <li><a href="#script">Script</a></li>
                                 <li><a href="#block">Block</a></li>
                                 <li><a href="#spof">SPOF</a></li>
@@ -565,6 +567,8 @@ $loc = ParseLocations($locations);
                                     </li>
                                 </ul>
                             </div>
+                            
+                            <?php if (!isset($settings['no_basic_auth_ui'])) { ?>
                             <div id="auth" class="test_subbox ui-tabs-hide">
                                 <div class="notification-container">
                                     <div class="notification"><div class="warning">
@@ -587,6 +591,7 @@ $loc = ParseLocations($locations);
                                     </li>
                                 </ul>
                             </div>
+                            <?php } ?>
 
                             <div id="script" class="test_subbox ui-tabs-hide">
                                 <div>
