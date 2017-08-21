@@ -213,6 +213,7 @@ public:
   CStringA _append_user_agent;
   DWORD    _max_test_time;
   bool     _process_results;
+  CString  _block_domains_global;
   CAtlList<CString> _block_domains;
   CAtlList<CString> _block_domains_except;
   bool     _minimal_results;
@@ -253,6 +254,7 @@ protected:
   bool      PreProcessScriptCommand(ScriptCommand& command);
   bool      ConditionMatches(ScriptCommand& command);
   void      ParseBlockCommand(CString block_list);
+  void      ParseBlockDomains(CString block_list);
   int       lock_count_;
   virtual bool ProcessCommand(ScriptCommand& command, bool &consumed);
 

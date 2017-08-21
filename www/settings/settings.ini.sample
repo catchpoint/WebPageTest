@@ -14,9 +14,6 @@ publishTo=www.webpagetest.org
 ;Uncomment map=1 if you want to enable the map-based picker
 ;map=1
 
-; Integrate with cloudshark
-tcpdump_view="http://cloudshark.org/view?url="
-
 ; Log in with Google
 ;google_oauth_client_id=<client ID>
 ;google_oauth_client_secret=<secret>
@@ -77,6 +74,9 @@ enable_agent_processing=1
 
 ; Sets the maximum number of navigates in a script
 maxNavigateCount=20
+
+; Block domains from all tests (space-delimited list)
+;blockDomains=ctldl.windowsupdate.com
 
 ; *************
 ; Server Config

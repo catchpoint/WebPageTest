@@ -247,6 +247,8 @@ bool WptTest::Load(CString& test) {
           _test_type = value.Trim();
         } else if (!key.CompareNoCase(_T("block"))) {
           _block = value.Trim();
+        } else if (!key.CompareNoCase(_T("blockDomains"))) {
+          _block_domains_global = value.Trim();
         } else if (!key.CompareNoCase(_T("bwIn"))) {
           _bwIn = _ttoi(value.Trim());
         } else if (!key.CompareNoCase(_T("bwOut"))) {
@@ -550,6 +552,10 @@ void WptTest::BuildScript() {
     ParseBlockCommand(_block);
   }
 
+  if (_block_domains_global.GetLength()) {
+    ParseBlockDomains("");
+  }
+
   if (_timeline) {
     ScriptCommand command;
     command.command = _T("captureTimeline");
@@ -764,14 +770,7 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
     continue_processing = false;
     consumed = false;
   } else if (cmd == _T("blockdomains")) {
-    int pos = 0;
-    if (!_block_domains.IsEmpty())
-      _block_domains.RemoveAll();
-    do {
-      CString domain = command.target.Tokenize(_T(" ,"), pos);
-      if (pos > 0)
-        _block_domains.AddTail(domain);
-    } while(pos >= 0);
+    ParseBlockDomains(command.target);
   } else if (cmd == _T("blockdomainsexcept")) {
     int pos = 0;
     if (!_block_domains_except.IsEmpty())
@@ -1175,6 +1174,30 @@ void WptTest::ParseBlockCommand(CString block_list) {
     block_script_command.command = _T("block");
     block_script_command.target = block;
     _script_commands.AddHead(block_script_command);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Join the global list of domains to block with the local list
+-----------------------------------------------------------------------------*/
+void WptTest::ParseBlockDomains(CString block_list) {
+  if (!_block_domains.IsEmpty())
+    _block_domains.RemoveAll();
+  if (block_list.GetLength()) {
+    int pos = 0;
+    do {
+      CString domain = block_list.Tokenize(_T(" ,"), pos).Trim();
+      if (pos > 0 && domain.GetLength())
+        _block_domains.AddTail(domain);
+    } while(pos >= 0);
+  }
+  if (_block_domains_global.GetLength()) {
+    int pos = 0;
+    do {
+      CString domain = _block_domains_global.Tokenize(_T(" ,"), pos).Trim();
+      if (pos > 0 && domain.GetLength())
+        _block_domains.AddTail(domain);
+    } while(pos >= 0);
   }
 }
 

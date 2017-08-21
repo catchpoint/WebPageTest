@@ -127,6 +127,13 @@
             $test['ignoreSSL'] = $req_ignoreSSL;
             $test['script'] = trim($req_script);
             $test['block'] = $req_block;
+            $test['blockDomains'] = isset($req_blockDomains) ? $req_blockDomains : "";
+            $blockDomains = GetSetting('blockDomains');
+            if ($blockDomains && strlen($blockDomains)) {
+              if (strlen($test['blockDomains']))
+                $test['blockDomains'] .= ' ';
+              $test['blockDomains'] .= $blockDomains;
+            }
             $test['notify'] = trim($req_notify);
             $test['video'] = $req_video;
             $test['keepvideo'] = isset($req_keepvideo) && $req_keepvideo ? 1 : 0;
@@ -2030,6 +2037,9 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'block', $block);
             } elseif (isset($forceBlock)) {
                 AddIniLine($testFile, 'block', $forceBlock);
+            }
+            if (strlen($test['blockDomains'])) {
+                AddIniLine($testFile, 'blockDomains', $test['blockDomains']);
             }
             if( $test['noopt'] )
                 AddIniLine($testFile, 'noopt', '1');

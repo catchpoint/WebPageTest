@@ -237,5 +237,5 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
 
 // Specific providers that require multiple headers
 CDN_PROVIDER_MULTI_HEADER cdnMultiHeaderList[] = {
-  {"Fastly", {{"Via", ""}, {"X-Served-By", "cache-"}, {"X-Cache", ""}}}
+  {"Fastly", {{"X-Served-By", "cache-"}, {"X-Cache", ""}}}
 };
