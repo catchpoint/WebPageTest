@@ -3042,7 +3042,10 @@ function MakeUTF8($mixed) {
       $mixed[$key] = MakeUTF8($value);
     }
   } elseif (is_string($mixed)) {
-    return utf8_encode($mixed);
+    $encoding = mb_detect_encoding($mixed);
+    if ($encoding != 'UTF-8') {
+      return mb_convert_encoding($mixed, 'UTF-8', $encoding);
+    }
   }
   return $mixed;
 }

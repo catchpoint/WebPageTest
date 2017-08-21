@@ -161,6 +161,8 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
         $entry['pageref'] = $pd['id'];
         $entry['startedDateTime'] = msdate((double)$data['date'] + ($r['load_start'] / 1000.0));
         $entry['time'] = $r['all_ms'];
+        $entry['_run'] = $run;
+        $entry['_cached'] = $cached;
         
         $request = array();
         $request['method'] = $r['method'];
@@ -353,17 +355,16 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
               if (count($parts) >= 3 && stripos($name, '-body.txt') !== false) {
                 $id = trim($parts[1]);
                 foreach ($entries as &$entry) {
-                  if (isset($entry['_body_id']) && !strcmp(trim($entry['_body_id']), $id)) {
-                    $entry['response']['content']['text'] = utf8_encode($zip->getFromIndex($i));
+                  if ($entry['_run'] == $run && $entry['_cached'] == $cached &&
+                      isset($entry['_body_id']) && isset($entry['_body_id']) &&
+                      !strcmp(trim($entry['_body_id']), $id)) {
+                    $entry['response']['content']['text'] = MakeUTF8($zip->getFromIndex($i));
                     break;
                   }
                 }
-              } else {
-                $index = intval($name, 10) - 1;
-                if (array_key_exists($index, $entries))
-                  $entries[$index]['response']['content']['text'] = utf8_encode($zip->getFromIndex($i));
               }
             }
+            $zip->close();
           }
         }
       }
