@@ -187,6 +187,8 @@ function EC2_TerminateIdleInstances() {
         if ($terminate) {
           if (isset($instance['ami']) && $instance['running'])
             $instanceCounts[$instance['ami']]['count']--;
+          foreach ($instance['locations'] as $location)
+            $agentCounts[$location]['count']--;
           EC2_TerminateInstance($instance['region'], $instance['id']);
         }
       }
