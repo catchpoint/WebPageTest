@@ -230,19 +230,27 @@ function EC2_SendInstancesOffline() {
   // Figure out how many tests are pending for the given AMI across all of the locations it supports
   foreach ($locations as $ami => $info) {
     $tests = 0;
+    $min = 0;
     foreach($info['locations'] as $location) {
       $queues = GetQueueLengths($location);
       if (isset($queues) && is_array($queues)) {
         foreach($queues as $priority => $count)
           $tests += $count;
       }
+      $locMin = GetSetting("EC2.min");
+      if ($locMin !== false)
+        $min = max(0, intval($locMin));
+      $locMin = GetSetting("EC2.$location.min");
+      if ($locMin !== false)
+        $min = max(0, intval($locMin));
     }
     $locations[$ami]['tests'] = $tests;
+    $locations[$ami]['min'] = $min;
   }
   
   foreach ($locations as $ami => $info) {
-    // See if we have any offline testers that we need to bring online
-    $online_target = max(1, intval($locations[$ami]['tests'] / ($scaleFactor / 2)));
+    // See if we have any online testers that we need to make offline
+    $online_target = max($info['min'], intval($locations[$ami]['tests'] / ($scaleFactor / 2)));
     foreach ($info['locations'] as $location) {
       $testers = GetTesters($location);
       if (isset($testers) && is_array($testers) && isset($testers['testers']) && count($testers['testers'])) {
@@ -252,7 +260,6 @@ function EC2_SendInstancesOffline() {
             $online++;
         }
         if ($online > $online_target) {
-          $changed = false;
           foreach ($testers['testers'] as &$tester) {
             if ($online > $online_target && (!isset($tester['offline']) || !$tester['offline'])) {
               $tester['offline'] = true;
