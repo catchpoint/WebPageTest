@@ -186,12 +186,12 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
             bytes.addColumn('number', 'Bytes');
             bytes.addRows(numData);
             for (var i = 0; i < numData; i++) {
-                data.setValue(i, 0, breakdown[i]['domain']);
+                data.setValue(i, 0, String(breakdown[i]['domain']));
                 data.setValue(i, 1, breakdown[i]['requests']);
                 data.setValue(i, 2, breakdown[i]['bytes']);
-                requests.setValue(i, 0, breakdown[i]['domain']);
+                requests.setValue(i, 0, String(breakdown[i]['domain']));
                 requests.setValue(i, 1, breakdown[i]['requests']);
-                bytes.setValue(i, 0, breakdown[i]['domain']);
+                bytes.setValue(i, 0, String(breakdown[i]['domain']));
                 bytes.setValue(i, 1, breakdown[i]['bytes']);
             }
 
