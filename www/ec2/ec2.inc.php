@@ -444,18 +444,20 @@ function EC2_GetRunningInstances() {
                   $launchTime = strtotime($instance['LaunchTime']);
                   $elapsed = $now - $launchTime;
                   $state = $instance['State']['Code'];
-                  $running = false;
-                  if (is_numeric($state) && $state <= 16)
-                    $running = true;
-                  $instances[] = array('region' => $region,
-                                       'id' => $instance['InstanceId'],
-                                       'ami' => $instance['ImageId'],
-                                       'state' => $state,
-                                       'launchTime' => $instance['LaunchTime'],
-                                       'launched' => $launchTime,
-                                       'runningTime' => $elapsed,
-                                       'locations' => $wptLocations,
-                                       'running' => $running);
+                  if (48 != $state) {
+                    $running = false;
+                    if (is_numeric($state) && $state <= 16)
+                      $running = true;
+                    $instances[] = array('region' => $region,
+                                         'id' => $instance['InstanceId'],
+                                         'ami' => $instance['ImageId'],
+                                         'state' => $state,
+                                         'launchTime' => $instance['LaunchTime'],
+                                         'launched' => $launchTime,
+                                         'runningTime' => $elapsed,
+                                         'locations' => $wptLocations,
+                                         'running' => $running);
+                  }
                 }
               }
             }
