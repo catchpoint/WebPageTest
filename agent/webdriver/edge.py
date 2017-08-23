@@ -113,8 +113,7 @@ def RunTest(driver, test):
     minTestDuration = test.GetMinimumTestDuration()
     if minTestDuration > 0:
       recorder.WaitForDuration(minTestDuration)
-    else:
-      recorder.WaitForIdle(30)
+    recorder.WaitForIdle(30)
 
   # Stop Recording
   recorder.Stop()
