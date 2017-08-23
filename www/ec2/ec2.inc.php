@@ -325,7 +325,7 @@ function EC2_StartNeededInstances() {
       $target = max($target, $locations[$ami]['min']);
       
       // See if we have any offline testers that we need to bring online
-      $online_target = intval($locations[$ami]['tests'] / ($scaleFactor / 2));
+      $online_target = max($target, intval($locations[$ami]['tests'] / ($scaleFactor / 2)));
       foreach ($info['locations'] as $location) {
         $testers = GetTesters($location);
         if (isset($testers) && is_array($testers) && isset($testers['testers']) && count($testers['testers'])) {
@@ -335,7 +335,6 @@ function EC2_StartNeededInstances() {
               $online++;
           }
           if ($online < $online_target) {
-            $changed = false;
             foreach ($testers['testers'] as $tester) {
               if ($online < $online_target && isset($tester['offline']) && $tester['offline']) {
                 $tester['offline'] = false;
