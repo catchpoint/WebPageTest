@@ -176,3 +176,9 @@ class WptTest:
     if self.test is not None and 'doc_complete' in self.test and self.test['doc_complete']:
       doc_complete = True
     return doc_complete
+
+  def GetMinimumTestDuration(self):
+    minimum_duration = 0
+    if self.test is not None and 'minimum_duration' in self.test and self.test['minimum_duration']:
+      minimum_duration = int(self.test['minimum_duration']) /1000
+    return minimum_duration

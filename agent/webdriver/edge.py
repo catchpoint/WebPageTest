@@ -110,6 +110,9 @@ def RunTest(driver, test):
 
   # Wait for idle if it is not an onload-ending test
   if not test.EndAtOnLoad():
+    minTestDuration = test.GetMinimumTestDuration()
+    if minTestDuration > 0:
+      recorder.WaitForDuration(minTestDuration)
     recorder.WaitForIdle(30)
 
   # Stop Recording

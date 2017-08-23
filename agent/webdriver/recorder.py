@@ -73,6 +73,13 @@ class WptRecord:
       except:
         pass
 
+  def WaitForDuration(self, wait_seconds):
+    if wait_seconds is not None:
+      try:
+        time.sleep(wait_seconds)
+      except:
+        pass
+
   def Stop(self):
     if self.window is not None:
       try:
