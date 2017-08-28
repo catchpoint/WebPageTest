@@ -80,6 +80,8 @@ if (array_key_exists('batch', $test['test']) && $test['test']['batch']) {
         $ret['data'] = $jsonResultGenerator->resultDataArray($testResults, $median_metric);
       }
 
+      addTtfbScoresToRuns($testInfo, $testResults, $ret);
+
       ArchiveApi($id);
     }
 
@@ -106,6 +108,39 @@ function getRequestInfoFlags() {
     $infoFlags[] = JsonResultGenerator::BASIC_INFO_ONLY;
   }
   return $infoFlags;
+}
+
+function addTtfbScoresToRuns($testInfo, TestResults $testResults, &$results) {
+  require_once('optimization_detail.inc.php');
+
+  foreach ($results['data']['runs'] as $run_id => $run_data) {
+    if (isset($run_data['firstView'])) {
+      $result = getTtfbScoreForRun($testInfo, $testResults, $run_id, false);
+      if (null !== $result)
+        $results['data']['runs'][$run_id]['firstView']['score_ttfb'] = $result;
+    }
+    if (isset($run_data['repeatView'])) {
+      $result = getTtfbScoreForRun($testInfo, $testResults, $run_id, true);
+      if (null !== $result)
+        $results['data']['runs'][$run_id]['repeatView']['score_ttfb'] = $result;
+    }
+  }
+}
+
+function getTtfbScoreForRun($testInfo, TestResults $testResults, $run_id, $cached) {
+  $testRunResults = $testResults->getRunResult($run_id, $cached);
+  if ($testRunResults && $testRunResults->isOptimizationChecked()) {
+    $grades = getOptimizationGradesForRun($testInfo, $testRunResults);
+    if (isset($grades['ttfb']['score'])) {
+      $result = $grades['ttfb']['score'];
+    } else {
+      $result = -1;
+    }
+  } else {
+    $result = null;
+  }
+
+  return $result;
 }
 
 ?>
