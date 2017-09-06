@@ -153,6 +153,25 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
       // add the page-level ldata to the result
       $result['log']['pages'][] = $pd;
       
+      $zip = null;
+      $body_names = array();
+      if (isset($options['bodies']) && $options['bodies']) {
+        $bodies_file = $testPath . '/' . $run . $cached_text . '_bodies.zip';
+        if (is_file($bodies_file)) {
+          $zip = new ZipArchive;
+          if ($zip->open($bodies_file) === TRUE) {
+            for( $i = 0; $i < $zip->numFiles; $i++ ) {
+              $name = $zip->getNameIndex($i);
+              $parts = explode('-', $name);
+              if (count($parts) >= 3 && stripos($name, '-body.txt') !== false) {
+                $hash = sha1(trim($parts[1]));
+                $body_names[$hash] = $name;
+              }
+            }
+          }
+        }
+      }
+      
       // now add the object-level data to the result
       $secure = false;
       $requests = getRequests($id, $testPath, $run, $cached, $secure, true);
@@ -275,6 +294,25 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
           $response['content']['mimeType'] = (string)$r['contentType'];
         else
           $response['content']['mimeType'] = '';
+
+        // Add the response body
+        if (isset($zip)){
+          $name = null;
+          if (isset($r['body_id'])) {
+            $hash = sha1($r['body_id']);
+            if (isset($body_names[$hash]))
+              $name = $body_names[$hash];
+          }
+          if (!isset($name) && isset($r['request_id'])) {
+            $hash = sha1($r['request_id']);
+            if (isset($body_names[$hash]))
+              $name = $body_names[$hash];
+          }
+          if (isset($name)) {
+            $body = $zip->getFromName($name);
+            $response['content']['text'] = MakeUTF8($body);
+          }
+        }
         
         // unsupported fields that are required
         $response['cookies'] = array();
@@ -343,30 +381,8 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
         $entries[] = $entry;
       }
       
-      // add the bodies to the requests
-      if (isset($options['bodies']) && $options['bodies']) {
-        $bodies_file = $testPath . '/' . $run . $cached_text . '_bodies.zip';
-        if (is_file($bodies_file)) {
-          $zip = new ZipArchive;
-          if ($zip->open($bodies_file) === TRUE) {
-            for( $i = 0; $i < $zip->numFiles; $i++ ) {
-              $name = $zip->getNameIndex($i);
-              $parts = explode('-', $name);
-              if (count($parts) >= 3 && stripos($name, '-body.txt') !== false) {
-                $id = trim($parts[1]);
-                foreach ($entries as &$entry) {
-                  if ($entry['_run'] == $run && $entry['_cached'] == $cached &&
-                      isset($entry['_body_id']) && isset($entry['_body_id']) &&
-                      !strcmp(trim($entry['_body_id']), $id)) {
-                    $entry['response']['content']['text'] = MakeUTF8($zip->getFromIndex($i));
-                    break;
-                  }
-                }
-              }
-            }
-            $zip->close();
-          }
-        }
+      if (isset($zip)) {
+        $zip->close();
       }
     }
   }
