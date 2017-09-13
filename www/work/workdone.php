@@ -277,7 +277,7 @@ if (ValidateTestId($id)) {
         $testInfo_dirty = true;
 
         // delete all of the videos except for the median run?
-        if( array_key_exists('median_video', $ini) && $ini['median_video'] )
+        if( array_key_exists('median_video', $ini) && $ini['median_video'])
           KeepVideoForRun($testPath, $medianRun);
         
         $test = file_get_contents("$testPath/testinfo.ini");
@@ -356,7 +356,7 @@ if (isset($workdone_video_start) && isset($workdone_video_end)) {
 */
 function KeepVideoForRun($testPath, $run)
 {
-  if ($run) {
+  if ($run && !GetSetting('keep_all_video')) {
     $dir = opendir($testPath);
     if ($dir) {
       while($file = readdir($dir)) {
