@@ -43,6 +43,19 @@ class ResultProcessing {
         $steps++;
       }
     }
+    // Check for agent-reportef devtools steps
+    if (!$steps) {
+      if ($this->cached) {
+        $pattern ="/^" . $this->run . "_Cached_([0-9]+_)?devtools_requests.json/";
+      } else {
+        $pattern ="/^" . $this->run . "_([0-9]+_)?devtools_requests.json/";
+      }
+      foreach ($files as $file) {
+        if (preg_match($pattern, $file)) {
+          $steps++;
+        }
+      }
+    }
     // Check for devtools steps
     if (!$steps) {
       if ($this->cached) {
