@@ -71,3 +71,17 @@ agent/wptdriver/*.ini
 /www/settings/custom_metrics/Colordepth.js
 /www/settings/custom_metrics/Dpi.js
 /www/work/chrome
+agent/js/device_status_android.json
+webpagetest.VC.db
+agent/js/agent.bat
+agent/js/src/.vscode/launch.json
+agent/webdriver/.vscode/launch.json
+agent/webdriver/out/1_metrics.json.gz
+agent/webdriver/out/1_page_data.json.gz
+agent/webdriver/out/1_progress.csv.gz
+agent/webdriver/out/1_requests.json.gz
+agent/webdriver/out/1_screen.jpg
+agent/webdriver/out/1_timed_events.json.gz
+agent/webdriver/out/1.0.histograms.json.gz
+agent/wptdriver/Registry.pol
+www/gce.php
