@@ -93,7 +93,11 @@ def get_functions(pdb_file):
     #names = []
     for sym in gsyms.globals:
         try:
-            name = sym.name.lstrip('_')
+            name = sym.name.lstrip('_').strip()
+            if name.startswith('?'):
+                end = name.find('@')
+                if end >= 0:
+                    name = name[1:end]
             #names.append(name)
             if name in methods:
                 off = sym.offset
