@@ -653,12 +653,14 @@ void BrowserSettings::ResetProfile(bool clear_certs) {
     DeleteDirectory(silverlight_dir_, false);
     DeleteDirectory(recovery_dir_, false);
     DeleteDirectory(flash_dir_, false);
-    DeleteDirectory(app_data_dir_ + _T("\\Roaming\\Mozilla\\Firefox\\Crash Reports"), false);
-    DeleteDirectory(app_data_dir_ + _T("\\Mozilla\\Firefox\\Crash Reports"), false);
     DeleteDirectory(local_app_data_dir_ + _T("\\Microsoft\\Windows\\WER"), false);
     ClearWinInetCache();
     ClearWebCache();
   }
+
+  // Delete Firefox unsent crash reports
+  DeleteDirectory(app_data_dir_ + _T("\\Roaming\\Mozilla\\Firefox\\Crash Reports"), false);
+  DeleteDirectory(app_data_dir_ + _T("\\Mozilla\\Firefox\\Crash Reports"), false);
 
   // Clear some temp directories
   DeleteDirectory(temp_files_dir_, false);
