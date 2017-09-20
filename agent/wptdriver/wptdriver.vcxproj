@@ -132,12 +132,8 @@
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y *.ini "$(outdir)"
-del /S /Q "$(outdir)templates\Firefox"
-mkdir "$(outdir)templates\Firefox\extensions\wptdriver@webpagetest.org"
-copy /Y "..\browser\firefox\*.*" "$(outdir)templates\Firefox\"
-xcopy /E /R /Y "..\browser\firefox\extension" "$(outdir)templates\Firefox\extensions\wptdriver@webpagetest.org"
-EXIT 0</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Copying support files</Message>
@@ -176,6 +172,8 @@ del /S /Q "$(outdir)templates\Firefox"
 mkdir "$(outdir)templates\Firefox\extensions\test-webpagetest@mozilla.com"
 copy /Y "..\browser\firefox\*.*" "$(outdir)templates\Firefox\"
 xcopy /E /R /Y "..\browser\firefox\signed" "$(outdir)templates\Firefox\extensions\test-webpagetest@mozilla.com"
+mkdir "$(outdir)templates\Firefox\chrome"
+copy /Y "..\browser\firefox\chrome\*.*" "$(outdir)templates\Firefox\chrome\"
 EXIT 0</Command>
     </PostBuildEvent>
     <PostBuildEvent>
@@ -210,12 +208,8 @@ EXIT 0</Command>
       <ProfileGuidedDatabase>$(IntDir)$(TargetName).pgd</ProfileGuidedDatabase>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y *.ini "$(outdir)"
-del /S /Q "$(outdir)templates\Firefox"
-mkdir "$(outdir)templates\Firefox\extensions\wptdriver@webpagetest.org"
-copy /Y "..\browser\firefox\*.*" "$(outdir)templates\Firefox\"
-xcopy /E /R /Y "..\browser\firefox\extension" "$(outdir)templates\Firefox\extensions\wptdriver@webpagetest.org"
-EXIT 0</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Copying support files</Message>
