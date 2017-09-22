@@ -37,8 +37,9 @@ class WptTestHook;
 typedef int (__cdecl *PFN_SSL3_NEW)(void *ssl);
 typedef void (__cdecl *PFN_SSL3_FREE)(void *ssl);
 typedef int (__cdecl *PFN_SSL3_CONNECT)(void *ssl);
-typedef int (__cdecl *PFN_SSL3_READ_APP_DATA_OLD)(void *ssl, uint8_t *buf, int len, int peek);
-typedef int (__cdecl *PFN_SSL3_READ_APP_DATA)(void *ssl, int *out_got_handshake, uint8_t *buf, int len, int peek);
+typedef int (__cdecl *PFN_SSL3_READ_APP_DATA_OLD2)(void *ssl, uint8_t *buf, int len, int peek);
+typedef int (__cdecl *PFN_SSL3_READ_APP_DATA_OLD)(void *ssl, int *out_got_handshake, uint8_t *buf, int len, int peek);
+typedef int (__cdecl *PFN_SSL3_READ_APP_DATA)(void *ssl, bool *out_got_handshake, uint8_t *buf, int len, int peek);
 typedef int (__cdecl *PFN_SSL3_WRITE_APP_DATA_OLD)(void *ssl, const void *buf, int len);
 typedef int (__cdecl *PFN_SSL3_WRITE_APP_DATA)(void *ssl, int *out_needs_handshake, const uint8_t *buf, int len);
 
@@ -52,8 +53,9 @@ public:
   int New(void *ssl);
   void Free(void *ssl);
   int Connect(void *ssl);
-  int ReadAppDataOld(void *ssl, uint8_t *buf, int len, int peek);
-  int ReadAppData(void *ssl, int *out_got_handshake, uint8_t *buf, int len, int peek);
+  int ReadAppDataOld2(void *ssl, uint8_t *buf, int len, int peek);
+  int ReadAppDataOld(void *ssl, int *out_got_handshake, uint8_t *buf, int len, int peek);
+  int ReadAppData(void *ssl, bool *out_got_handshake, uint8_t *buf, int len, int peek);
   int WriteAppDataOld(void *ssl, const void *buf, int len);
   int WriteAppData(void *ssl, int *out_needs_handshake, const uint8_t *buf, int len);
 
@@ -66,6 +68,7 @@ private:
   PFN_SSL3_NEW              New_;
   PFN_SSL3_FREE             Free_;
   PFN_SSL3_CONNECT          Connect_;
+  PFN_SSL3_READ_APP_DATA_OLD2    ReadAppDataOld2_;
   PFN_SSL3_READ_APP_DATA_OLD    ReadAppDataOld_;
   PFN_SSL3_READ_APP_DATA    ReadAppData_;
   PFN_SSL3_WRITE_APP_DATA_OLD   WriteAppDataOld_;
