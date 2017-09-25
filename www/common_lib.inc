@@ -1726,10 +1726,11 @@ function GetTestJob($location, &$file, $workDir, &$priority, $tester = null, $te
               if (isset($file)) {
                 unset($queue[$priority][$index]);
                 $modified = true;
-                if (is_file("$workDir/$file"))
+                if (is_file("$workDir/$file")) {
                   break;
-                else
+                } else {
                   unset($file);
+                }
               }
             }
           }
@@ -1770,8 +1771,12 @@ function GetTestJob($location, &$file, $workDir, &$priority, $tester = null, $te
     }
     if (isset($file) && strlen($file) && is_file("$workDir/$file")) {
       $data = file_get_contents("$workDir/$file");
-      if (isset($data) && $data !== FALSE && strlen($data))
+      if (isset($data) && $data !== FALSE && strlen($data)) {
         $test_job = $data;
+      } else {
+        unlink("$workDir/$file");
+        unset($file);
+      }
     }
   }
 
