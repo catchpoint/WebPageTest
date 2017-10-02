@@ -99,6 +99,7 @@ else
                 {
                     margin-left: auto;
                     margin-right: auto;
+                    padding-right: 100vw;
                 }
                 #videoDiv
                 {
@@ -266,11 +267,11 @@ else
                 <?php
                 }
                 ?>
-                div.waterfall-container {top: -8em;}
+                div.waterfall-container {top: -8em; width:930px; margin: 0 auto;}
             </style>
         </head>
         <body>
-            <div class="page">
+            <div class="page-wide">
                 <?php
                 $tab = 'Test Result';
                 $nosubheader = true;
@@ -505,15 +506,17 @@ function ScreenShotTable()
 
         // end of the container table
         echo "</td></tr></table>\n";
+        echo '<div class="page">';
         echo "<div id=\"image\">";
         echo "<a id=\"export\" class=\"pagelink\" href=\"filmstrip.php?tests=" . htmlspecialchars($_REQUEST['tests']) . "&thumbSize=$thumbSize&ival=$interval&end=$endTime&text=$color&bg=$bgcolor\">Export filmstrip as an image...</a>";
         echo "</div>";
         echo '<div id="bottom"><input type="checkbox" name="slow" value="1"> Slow Motion<br><br>';
         echo "<input id=\"SubmitBtn\" type=\"submit\" value=\"Create Video\">";
         echo '<br><br><a class="pagelink" href="javascript:ShowAdvanced()">Advanced customization options...</a>';
-        echo "</div></form>";
+        echo "</div></div></form>";
         if (!defined('EMBED')) {
         ?>
+        <div class="page">
         <div id="layout">
             <form id="layoutForm" name="layout" method="get" action="/video/compare.php">
             <?php
@@ -642,13 +645,14 @@ function ScreenShotTable()
             </ul>
             <input id="advanced-ok" type=button class="simplemodal-close" value="OK">
         </div>
+        </div>
         <?php
         } // EMBED
         // scroll the table to show the first thumbnail change
         $scrollPos = $firstFrame * ($maxThumbWidth + 6);
         ?>
         <script language="javascript">
-            var thumbWidth = <?php echo "$maxThumbWidth;"; ?>
+            var thumbWidth = <?php echo "$maxThumbWidth + 4;"; ?>
             var scrollPos = <?php echo "$scrollPos;"; ?>
             document.getElementById("videoDiv").scrollLeft = scrollPos;
         </script>

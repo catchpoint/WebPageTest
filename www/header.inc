@@ -24,7 +24,7 @@ if (isset($testResults)) {
 
 if( $supportsAuth && !defined('EMBED') )
 {
-    echo '<div id="wptAuthBar">';
+    echo '<div id="wptAuthBar" class="page">';
     if( isset($user) )
     {
         $logoutUrl = '/forums/member.php?action=logout';
@@ -54,7 +54,7 @@ if( $supportsAuth && !defined('EMBED') )
 if (!defined('EMBED')) {
 ?>
 
-<div id="header">
+<div id="header" class="page">
     <h1 class="logo"><a href="/">WebPageTest</a></h1>
     <div class="headerAd">
     <?php
@@ -76,7 +76,7 @@ if (!defined('EMBED')) {
     </div>
 </div>
 
-<div id="nav_bkg"><ul id="nav" class="cufon-dincond_black"><?php
+<div id="nav_bkg"><div id="nav_bar"><div class="page"><ul id="nav" class="cufon-dincond_black"><?php
         if ($id) {
             $resultUrl = "/results.php?test=$id";
             if (array_key_exists('end', $_REQUEST))
@@ -128,7 +128,7 @@ if (!defined('EMBED')) {
         }
 ?></ul>
 
-</div>
+</div></div></div>
 
 <?php
 if (!defined('BARE_UI') && isset($settings['alert']) && strlen($settings['alert'])) {

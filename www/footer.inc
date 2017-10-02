@@ -12,7 +12,7 @@
     </div>
 </div>
 
-   
+<div class="page">
     <?php
         $feeds = null;
         if( is_file('./tmp/feeds.dat') )
@@ -130,6 +130,7 @@
             echo '</div>';
         }
     ?>
+    </div>
     <div class="cleared"></div>
     
     <?php
