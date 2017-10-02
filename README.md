@@ -1,4 +1,4 @@
-This is the official repository for the [WebPagetest](http://www.webpagetest.org/) web performance testing code.
+This is the official repository for the [WebPagetest](https://www.webpagetest.org/) web performance testing code.
 
 If you are looking to install your own instance, I recommend grabbing the latest [private instance release](https://sites.google.com/a/webpagetest.org/docs/private-instances).
 
