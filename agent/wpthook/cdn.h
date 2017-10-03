@@ -183,6 +183,7 @@ CDN_PROVIDER cdnList[] = {
   {".cdnvideo.net", "CDNvideo"},
   {".trbcdn.ru", "TRBCDN"},
   {".cedexis.net", "Cedexis"},
+  {".streamprovider.net", "Rocket CDN"},
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -232,7 +233,8 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "Testa/", "Naver"},
   {"server", "BunnyCDN", "BunnyCDN"},
   {"server", "MNCDN", "Medianova"},
-  {"server", "Roast.io", "Roast.io"}
+  {"server", "Roast.io", "Roast.io"},
+  {"x-rocket-node", "", "Rocket CDN"}
 };
 
 // Specific providers that require multiple headers
