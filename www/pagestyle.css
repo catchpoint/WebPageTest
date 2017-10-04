@@ -186,7 +186,7 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 #test_results_running-container {margin: 0 -25px 0px;}
 
 .test_results {clear:both;}
-.test_results-content {padding: 15px 20px 5px;}
+.test_results-content {padding: 15px 20px 5px; overflow: hidden; }
 #result {background-color: #fff; text-align:center; margin: -15px -20px 0px; padding: 0px 25px; }
 #testinfo { text-align:left; float: left; }
 #download { text-align:right; clear: both; padding:5px 0px; }
