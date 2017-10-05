@@ -323,6 +323,17 @@ $SINGLESTEP_RUN_RESULT_DATA["getMimeTypeBreakdown"] = array (
       'bytes' => 0,
       'requests' => 0,
     ),
+ 'video' =>
+    array (
+      'color' =>
+        array (
+          0 => 0,
+          1 => 0,
+          2 => 0,
+        ),
+      'bytes' => 0,
+      'requests' => 0,
+    ),
   'other' =>
     array (
       'color' =>
