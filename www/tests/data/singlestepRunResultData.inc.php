@@ -327,9 +327,9 @@ $SINGLESTEP_RUN_RESULT_DATA["getMimeTypeBreakdown"] = array (
     array (
       'color' =>
         array (
-          0 => 0,
-          1 => 0,
-          2 => 0,
+          0 => 255,
+          1 => 79,
+          2 => 156,
         ),
       'bytes' => 0,
       'requests' => 0,
