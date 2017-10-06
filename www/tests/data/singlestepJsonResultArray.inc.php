@@ -1854,9 +1854,9 @@ $SINGLESTEP_JSON_RESULT_ARRAY = array (
                     array (
                       'color' =>
                         array (
-                          0 => 255,
-                          1 => 79,
-                          2 => 186,
+                          0 => 33,
+                          1 => 194,
+                          2 => 162,
                         ),
                       'bytes' => 0,
                       'requests' => 0,
@@ -3459,9 +3459,9 @@ $SINGLESTEP_JSON_RESULT_ARRAY = array (
                 array (
                   'color' =>
                     array (
-                      0 => 255,
-                      1 => 79,
-                      2 => 156,
+                      0 => 33,
+                      1 => 194,
+                      2 => 162,
                     ),
                   'bytes' => 0,
                   'requests' => 0,

@@ -79,7 +79,7 @@ function MimeColors() {
         'image' => array(196,154,232),
         'flash' => array(45,183,193),
         'font' => array(255,82,62),
-        'video' => array(255, 79, 186),
+        'video' => array(33, 194, 162),
         'other' => array(196,196,196)
         );
     return $colors;
