@@ -1850,6 +1850,17 @@ $SINGLESTEP_JSON_RESULT_ARRAY = array (
                       'bytes' => 0,
                       'requests' => 0,
                     ),
+                  'video' =>
+                    array (
+                      'color' =>
+                        array (
+                          0 => 33,
+                          1 => 194,
+                          2 => 162,
+                        ),
+                      'bytes' => 0,
+                      'requests' => 0,
+                    ),
                   'other' =>
                     array (
                       'color' =>
@@ -3440,6 +3451,17 @@ $SINGLESTEP_JSON_RESULT_ARRAY = array (
                       0 => 255,
                       1 => 82,
                       2 => 62,
+                    ),
+                  'bytes' => 0,
+                  'requests' => 0,
+                ),
+              'video' =>
+                array (
+                  'color' =>
+                    array (
+                      0 => 33,
+                      1 => 194,
+                      2 => 162,
                     ),
                   'bytes' => 0,
                   'requests' => 0,

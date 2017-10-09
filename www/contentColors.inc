@@ -79,6 +79,7 @@ function MimeColors() {
         'image' => array(196,154,232),
         'flash' => array(45,183,193),
         'font' => array(255,82,62),
+        'video' => array(33, 194, 162),
         'other' => array(196,196,196)
         );
     return $colors;
@@ -105,6 +106,8 @@ function ContentType($mime, $url = null) {
 //        $content_type = 'text';
     } elseif (!strncasecmp($mime, 'image/', 6)) {
         $content_type = 'image';
+    } elseif (!strncasecmp($mime, 'video/', 6)) {
+        $content_type = 'video';
     } elseif (!strcasecmp($mime, 'application/x-shockwave-flash')) {
         $content_type = 'flash';
     } elseif (stripos($mime, 'font') !== false) {
@@ -127,6 +130,9 @@ function ContentType($mime, $url = null) {
                 $ext == '.woff' || $ext == '.woff2' ||
                 $ext == '.otf')
           $content_type = 'font';
+	else if ($ext == '.mp4' ||  
+		 $ext == '.f4v' || $ext == '.flv')
+	  $content_type = 'video';
       }
     }
     
