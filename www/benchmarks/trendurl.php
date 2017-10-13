@@ -138,6 +138,8 @@ if (array_key_exists('f', $_REQUEST)) {
                             'image_requests' => 'Image Requests',
                             'flash_bytes' => 'Flash Bytes (KB)', 
                             'flash_requests' => 'Flash Requests', 
+			    'video_bytes' => 'Video Bytes (KB)', 
+                            'video_requests' => 'Video Requests', 
                             'html_bytes' => 'HTML Bytes (KB)', 
                             'html_requests' => 'HTML Requests', 
                             'text_bytes' => 'Text Bytes (KB)', 

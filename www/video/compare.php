@@ -708,7 +708,7 @@ function DisplayGraphs() {
     global $tests;
     global $filmstrip_end_frame;
     require_once('breakdown.inc');
-    $mimeTypes = array('html', 'js', 'css', 'image', 'flash', 'font', 'other');
+    $mimeTypes = array('html', 'js', 'css', 'image', 'flash', 'font','video', 'other');
     $timeMetrics = array('visualComplete' => 'Visually Complete',
                         'lastVisualChange' => 'Last Visual Change',
                         'docTime' => 'Load Time (onload)',

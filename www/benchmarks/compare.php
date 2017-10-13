@@ -121,6 +121,8 @@ $metrics = array('docTime' => 'Load Time (onload)',
                 'html_requests' => 'HTML Requests', 
                 'text_bytes' => 'Text Bytes (KB)', 
                 'text_requests' => 'Text Requests',
+		'video_bytes' => 'Video Bytes (KB)',
+		'video_requests => 'Video Requests',
                 'other_bytes' => 'Other Bytes (KB)', 
                 'other_requests' => 'Other Requests',
                 'browser_version' => 'Browser Version'

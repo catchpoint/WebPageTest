@@ -546,7 +546,7 @@ function AggregateResults($benchmark, &$state, $options) {
                                 'image_total', 'image_savings', 'domElements', 'titleTime', 'loadEvent-Time', 
                                 'domContentLoadedEventStart', 'domContentLoadedEvent-Time', 'visualComplete', 'lastVisualChange',
                                 'js_bytes', 'js_requests', 'css_bytes', 'css_requests', 'image_bytes', 'image_requests',
-                                'flash_bytes', 'flash_requests', 'html_bytes', 'html_requests', 'text_bytes', 'text_requests',
+                                'flash_bytes', 'flash_requests', 'video_bytes', 'video_requests','html_bytes', 'html_requests', 'text_bytes', 'text_requests',
                                 'other_bytes', 'other_requests', 'SpeedIndex', 'responses_404',
                                 'responses_other', 'browser_version', 'server_rtt', 'docCPUms',
                                 'visualComplete85', 'visualComplete90', 'visualComplete95', 'visualComplete99',

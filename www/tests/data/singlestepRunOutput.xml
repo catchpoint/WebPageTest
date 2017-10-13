@@ -270,6 +270,10 @@
       <requests>0</requests>
       <bytes>0</bytes>
     </flash>
+    <video>
+      <requests>0</requests>
+      <bytes>0</bytes>
+    </video>
     <font>
       <requests>0</requests>
       <bytes>0</bytes>
