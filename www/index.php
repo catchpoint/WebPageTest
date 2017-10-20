@@ -125,6 +125,14 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="debug" value="' . htmlspecialchars($_REQUEST['debug']) . "\">\n";
             if (isset($_REQUEST['throttle_cpu']))
               echo '<input type="hidden" name="throttle_cpu" value="' . htmlspecialchars($_REQUEST['throttle_cpu']) . "\">\n";
+            if (isset($_REQUEST['browser_width']))
+              echo '<input type="hidden" name="browser_width" value="' . htmlspecialchars($_REQUEST['browser_width']) . "\">\n";
+            if (isset($_REQUEST['browser_height']))
+              echo '<input type="hidden" name="browser_height" value="' . htmlspecialchars($_REQUEST['browser_height']) . "\">\n";
+            if (isset($_REQUEST['width']))
+              echo '<input type="hidden" name="width" value="' . htmlspecialchars($_REQUEST['width']) . "\">\n";
+            if (isset($_REQUEST['height']))
+              echo '<input type="hidden" name="height" value="' . htmlspecialchars($_REQUEST['height']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
