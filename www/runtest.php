@@ -268,6 +268,18 @@
                 $test['uastring'] = $req_uastring;
               }
             }
+            if (isset($req_UAModifier) && strlen($req_UAModifier)) {
+              if (strpos($req_UAModifier, '"') !== false) {
+                $error = 'Invalid User Agent Modifier: "' . htmlspecialchars($req_UAModifier) . '"';
+              } else {
+                $test['UAModifier'] = $req_UAModifier;
+              }
+            } else {
+              $UAModifier = GetSetting('UAModifier');
+              if ($UAModifier && strlen($UAModifier)) {
+                $test['UAModifier'] = $UAModifier;
+              }
+            }
             if (isset($req_appendua) && strlen($req_appendua)) {
               if (strpos($req_appendua, '"') !== false) {
                 $error = 'Invalid User Agent String: "' . htmlspecialchars($req_appendua) . '"';
@@ -2125,9 +2137,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             }
             if (isset($test['uastring']))
                 AddIniLine($testFile, 'uastring', $test['uastring']);
-            $UAModifier = GetSetting('UAModifier');
-            if ($UAModifier && strlen($UAModifier))
-                AddIniLine($testFile, 'UAModifier', $UAModifier);
+            if (isset($test['UAModifier']) && strlen($test['UAModifier']))
+                AddIniLine($testFile, 'UAModifier', $test['UAModifier']);
             if (isset($test['appendua']))
                 AddIniLine($testFile, 'AppendUA', $test['appendua']);
             if (isset($test['key']) && strlen($test['key']))
