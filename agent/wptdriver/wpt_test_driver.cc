@@ -8,6 +8,28 @@ WptTestDriver::WptTestDriver(DWORD default_timeout, bool has_gpu):
   _test_timeout = default_timeout;
   _measurement_timeout = default_timeout;
   has_gpu_ = has_gpu;
+
+  // grab the version number of the dll
+  TCHAR file[MAX_PATH];
+  if (GetModuleFileName(GetModuleHandle(NULL), file, _countof(file))) {
+    DWORD unused;
+    DWORD infoSize = GetFileVersionInfoSize(file, &unused);
+    LPBYTE pVersion = NULL;
+    if (infoSize)  
+      pVersion = (LPBYTE)malloc( infoSize );
+    if (pVersion) {
+      if (GetFileVersionInfo(file, 0, infoSize, pVersion)) {
+        VS_FIXEDFILEINFO * info = NULL;
+        UINT size = 0;
+        if (VerQueryValue(pVersion, _T("\\"), (LPVOID*)&info, &size)) {
+          if( info ) {
+            _version = LOWORD(info->dwFileVersionLS);
+          }
+        }
+      }
+      free( pVersion );
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------
