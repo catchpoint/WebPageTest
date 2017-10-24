@@ -197,7 +197,7 @@ bool WebBrowser::RunAndWait(HANDLE &browser_process) {
           if (user_agent.GetLength()) {
             CString append = CA2T(_test.GetAppendUA(), CP_UTF8);
             if (append.GetLength())
-              user_agent += append;
+              user_agent += _T(" ") + append;
             lstrcat(cmdLine, CHROME_USER_AGENT);
             lstrcat(cmdLine, _T("\""));
             lstrcat(cmdLine, user_agent);
