@@ -124,8 +124,16 @@ function EC2_StartInstance($ami) {
 
 /**
 * Terminate any EC2 Instances that are configured for auto-scaling
-* if they have not had work in the last 15 minutes and are close
-* to an hourly increment of running (since EC2 bills hourly)
+* if they have not had work.
+*
+* Linux agents are billed per second ( with a minimum of 60 seconds ), and
+* are terminated after being idle for EC2.IdleTerminateMinutes, from the
+* settings.
+*
+* Windows agents are billed hourly and terminate if they have not had any
+* work in the last 15 minutes and are close to an hourly increment of running.
+*
+* https://aws.amazon.com/about-aws/whats-new/2017/10/announcing-amazon-ec2-per-second-billing/
 * 
 */
 function EC2_TerminateIdleInstances() {
@@ -158,9 +166,16 @@ function EC2_TerminateIdleInstances() {
       }
     }
 
+	$idleTerminateMinutes = GetSetting("EC2.IdleTerminateMinutes");
+	$minutes = $instance['runningTime'] / 60.0;
+	if ($idleTerminateMinutes) {
+		$timeCheck = ( $minutes > $idleTerminateMinutes );
+	} else {
+		$timeCheck = ( $minutes > 15 && $minutes % 60 >= 50 );
+	}
+
     foreach($instances as $instance) {
-      $minutes = $instance['runningTime'] / 60.0;
-      if ($minutes > 15 && $minutes % 60 >= 50) {
+      if ($timeCheck) {
         $terminate = true;
         $lastWork = null;   // last job assigned from this location
         $lastCheck = null;  // time since this instance connected (if ever)
