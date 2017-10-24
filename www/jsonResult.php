@@ -42,7 +42,7 @@ require_once __DIR__ . '/include/JsonResultGenerator.php';
 require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/include/TestResults.php';
 
-if (array_key_exists('batch', $test['test']) && $test['test']['batch']) {
+if (isset($test['test']['batch']) && $test['test']['batch']) {
   $_REQUEST['f'] = 'json';
   include 'resultBatch.inc';
 } else {

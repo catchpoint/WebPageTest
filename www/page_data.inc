@@ -106,9 +106,9 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
         if ($custom_metrics && is_array($custom_metrics) && count($custom_metrics)) {
           $ret["custom"] = array();
           foreach ($custom_metrics as $metric => $value) {
-            if (preg_match('/^[0-9]+$/', $value))
+            if (!is_array($value) && preg_match('/^[0-9]+$/', $value))
               $ret[$metric] = intval($value);
-            elseif (preg_match('/^[0-9]*\.[0-9]+$/', $value))
+            elseif (!is_array($value) && preg_match('/^[0-9]*\.[0-9]+$/', $value))
               $ret[$metric] = floatval($value);
             else
               $ret[$metric] = $value;

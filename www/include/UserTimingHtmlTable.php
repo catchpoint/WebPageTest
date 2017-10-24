@@ -137,7 +137,7 @@ class UserTimingHtmlTable {
         $userTimings[substr($metric, 9)] = number_format($value / 1000, 3) . 's';
     if (isset($data['custom']) && count($data['custom'])) {
       foreach($data['custom'] as $metric) {
-        if (isset($data[$metric])) {
+        if (isset($data[$metric]) && !is_array($data[$metric])) {
           $value = $data[$metric];
           if (strlen($value) < 30) {
             if (is_double($value))
