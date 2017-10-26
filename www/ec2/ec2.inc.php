@@ -167,14 +167,14 @@ function EC2_TerminateIdleInstances() {
     }
 
 	$idleTerminateMinutes = GetSetting("EC2.IdleTerminateMinutes");
-	$minutes = $instance['runningTime'] / 60.0;
-	if ($idleTerminateMinutes) {
-		$timeCheck = ( $minutes > $idleTerminateMinutes );
-	} else {
-		$timeCheck = ( $minutes > 15 && $minutes % 60 >= 50 );
-	}
 
     foreach($instances as $instance) {
+      $minutes = $instance['runningTime'] / 60.0;
+      if ($idleTerminateMinutes) {
+        $timeCheck = ( $minutes > $idleTerminateMinutes );
+      } else {
+        $timeCheck = ( $minutes > 15 && $minutes % 60 >= 50 );
+      }
       if ($timeCheck) {
         $terminate = true;
         $lastWork = null;   // last job assigned from this location
