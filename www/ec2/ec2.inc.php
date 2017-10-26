@@ -194,9 +194,9 @@ function EC2_TerminateIdleInstances() {
           }
         }
         
-        // Keep the instance if the location had work in the last 15 minutes
-        // and if this instance has checked in recently
-        if (isset($lastWork) && isset($lastCheck) && $lastWork < 15 && $lastCheck < 15)
+        // Keep the instance if the location had work in the last
+        // EC2.IdleTerminateMinutes and if this instance has checked in recently
+        if (isset($lastWork) && isset($lastCheck) && $lastWork < $idleTerminateMinutes && $lastCheck < $idleTerminateMinutes)
           $terminate = false;
         
         if ($terminate) {
