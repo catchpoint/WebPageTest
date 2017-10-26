@@ -428,6 +428,17 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
               $name = 'lighthouse.' . str_replace(' ', '', $lh['name']);
               $score = floatval($lh['score']) / 100.0;
               $ret[$name] = $score;
+              if ($lh['name'] == 'Performance' && isset($lh['audits'])) {
+                foreach ($lh['audits'] as $audit) {
+                  if (isset($audit['id']) &&
+                      isset($audit['group']) &&
+                      $audit['group'] == 'perf-metric' &&
+                      isset($audit['result']['rawValue'])) {
+                    $name = 'lighthouse.' . str_replace(' ', '', $lh['name']) . '.' . str_replace(' ', '', $audit['id']);
+                    $ret[$name] = $audit['result']['rawValue'];
+                  }
+                }
+              }
             }
           }
         }
