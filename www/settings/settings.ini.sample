@@ -223,6 +223,21 @@ agentUpdate=http://cdn.webpagetest.org/
 ; Start an EC2 instance for every X tests in the queue (up to the location max)
 ;EC2.ScaleFactor=100
 
+; !!! ONLY SET THIS FOR LINUX AGENTS !!!
+;
+; Number of minutes to let an instance run idle before terminating.  This
+; is only helpful for Linux agents, where EC2 gets billed per second, with a
+; minimum of 60 seconds.
+; https://aws.amazon.com/about-aws/whats-new/2017/10/announcing-amazon-ec2-per-second-billing/
+;
+; Be careful, it is possible to set this too low.  It needs to be longer than
+; the time it takes for AWS to spin up a new instance and wptagent to start
+; processing tests.
+;
+; Windows is still billed hourly.  Do not set this if you are using Windows
+; agents.
+;EC2.IdleTerminateMinutes=15
+
 ; Default location when using EC2 auto-scaling - this setting is required for auto-scaling
 ;EC2.default=us-east-1
 
