@@ -215,9 +215,11 @@ function BrowserChanged()
                 } else {
                     for( var conn in connectivity )
                     {
-                        if( selectedConfig == undefined )
-                            selectedConfig = config + '.' + conn;
-                        connections[config + '.' + conn] = {'label': connectivity[conn]['label']};
+                        if (connectivity[conn]['hidden'] == undefined || !connectivity[conn]['hidden']) {
+                            if( selectedConfig == undefined )
+                                selectedConfig = config + '.' + conn;
+                            connections[config + '.' + conn] = {'label': connectivity[conn]['label']};
+                        }
                     }
                     
                     connections[config + '.custom'] = {'label': 'Custom'};
