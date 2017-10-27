@@ -58,6 +58,7 @@ CDN_PROVIDER cdnList[] = {
 	{".att-dsa.net", _T("AT&T")},
 	{".vo.msecnd.net", _T("Microsoft Azure")},
 	{".azureedge.net", _T("Microsoft Azure")},
+	{".azure.microsoft.com", _T("Microsoft Azure")},
 	{".voxcdn.net", _T("VoxCDN")},
 	{".bluehatnetwork.com", _T("Blue Hat Network")},
 	{".swiftcdn1.com", _T("SwiftCDN")},
