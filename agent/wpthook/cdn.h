@@ -190,6 +190,7 @@ CDN_PROVIDER cdnList[] = {
 
 CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "cloudflare", "Cloudflare"},
+  {"server", "cloudflare-nginx", "Cloudflare"},
   {"server", "yunjiasu", "Yunjiasu"},
   {"server", "ECS", "Edgecast"},
   {"server", "ECAcc", "Edgecast"},
