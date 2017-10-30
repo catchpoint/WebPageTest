@@ -22,8 +22,8 @@ foreach($compTests as $t) {
     $parts = explode('-', $t);
     if (count($parts) >= 1) {
         $test = array();
-        $test['id'] = $parts[0];
-        if (ValidateTestId($test['id'])) {
+        $test['id'] = trim($parts[0]);
+        if (strlen($test['id']) && ValidateTestId($test['id'])) {
             $test['cached'] = 0;
             $test['step'] = 1;
             $test['end'] = $endTime;
