@@ -349,7 +349,9 @@ function EC2_StartNeededInstances() {
             if (!isset($tester['offline']) || !$tester['offline'])
               $online++;
           }
-          if ($online < $online_target) {
+          // Leave one instance running, so that it can process any tests that
+          // come in before it hits the termination time limit.
+          if (($online > 1 ) && ($online < $online_target)) {
             foreach ($testers['testers'] as $tester) {
               if ($online < $online_target && isset($tester['offline']) && $tester['offline']) {
                 $tester['offline'] = false;
