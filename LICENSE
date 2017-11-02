@@ -3,13 +3,13 @@ other open source projects, each with their own license.
 
 Most of the licenses are one of:
 
-BSD - http://opensource.org/licenses/bsd-license.php
-MIT - http://opensource.org/licenses/mit-license.php
+BSD - https://opensource.org/licenses/bsd-license.php
+MIT - https://opensource.org/licenses/mit-license.php
 LGPL - http://www.gnu.org/licenses/lgpl-2.1.html
 GPL v2 - http://www.gnu.org/licenses/gpl-2.0.html
 GPL v3 - http://www.gnu.org/licenses/gpl-3.0.html
-QPL 1.0 - http://www.opensource.org/licenses/qtpl.ph
-MPL - http://www.mozilla.org/MPL/
+QPL 1.0 - https://www.opensource.org/licenses/qtpl.ph
+MPL - https://www.mozilla.org/en-US/MPL/
 
 I have done my best to collect the licenses for all of the 3rd party code used
 to build WebPagetest here but the authoratative source will always be the code 
@@ -151,24 +151,24 @@ GNU LESSER GENERAL PUBLIC LICENSE
 
 Version 3, 29 June 2007
 
-Copyright © 2007 Free Software Foundation, Inc. <http://fsf.org/>
+Copyright Â© 2007 Free Software Foundation, Inc. <http://fsf.org/>
 
 Everyone is permitted to copy and distribute verbatim copies of this license document, but changing it is not allowed.
 
 This version of the GNU Lesser General Public License incorporates the terms and conditions of version 3 of the GNU General Public License, supplemented by the additional permissions listed below.
 0. Additional Definitions.
 
-As used herein, “this License” refers to version 3 of the GNU Lesser General Public License, and the “GNU GPL” refers to version 3 of the GNU General Public License.
+As used herein, Â“this LicenseÂ” refers to version 3 of the GNU Lesser General Public License, and the Â“GNU GPLÂ” refers to version 3 of the GNU General Public License.
 
-“The Library” refers to a covered work governed by this License, other than an Application or a Combined Work as defined below.
+Â“The LibraryÂ” refers to a covered work governed by this License, other than an Application or a Combined Work as defined below.
 
-An “Application” is any work that makes use of an interface provided by the Library, but which is not otherwise based on the Library. Defining a subclass of a class defined by the Library is deemed a mode of using an interface provided by the Library.
+An Â“ApplicationÂ” is any work that makes use of an interface provided by the Library, but which is not otherwise based on the Library. Defining a subclass of a class defined by the Library is deemed a mode of using an interface provided by the Library.
 
-A “Combined Work” is a work produced by combining or linking an Application with the Library. The particular version of the Library with which the Combined Work was made is also called the “Linked Version”.
+A Â“Combined WorkÂ” is a work produced by combining or linking an Application with the Library. The particular version of the Library with which the Combined Work was made is also called the Â“Linked VersionÂ”.
 
-The “Minimal Corresponding Source” for a Combined Work means the Corresponding Source for the Combined Work, excluding any source code for portions of the Combined Work that, considered in isolation, are based on the Application, and not on the Linked Version.
+The Â“Minimal Corresponding SourceÂ” for a Combined Work means the Corresponding Source for the Combined Work, excluding any source code for portions of the Combined Work that, considered in isolation, are based on the Application, and not on the Linked Version.
 
-The “Corresponding Application Code” for a Combined Work means the object code and/or source code for the Application, including any data and utility programs needed for reproducing the Combined Work from the Application, but excluding the System Libraries of the Combined Work.
+The Â“Corresponding Application CodeÂ” for a Combined Work means the object code and/or source code for the Application, including any data and utility programs needed for reproducing the Combined Work from the Application, but excluding the System Libraries of the Combined Work.
 1. Exception to Section 3 of the GNU GPL.
 
 You may convey a covered work under sections 3 and 4 of this License without being bound by section 3 of the GNU GPL.
@@ -209,7 +209,7 @@ You may place library facilities that are a work based on the Library side by si
 
 The Free Software Foundation may publish revised and/or new versions of the GNU Lesser General Public License from time to time. Such new versions will be similar in spirit to the present version, but may differ in detail to address new problems or concerns.
 
-Each version is given a distinguishing version number. If the Library as you received it specifies that a certain numbered version of the GNU Lesser General Public License “or any later version” applies to it, you have the option of following the terms and conditions either of that published version or of any later version published by the Free Software Foundation. If the Library as you received it does not specify a version number of the GNU Lesser General Public License, you may choose any version of the GNU Lesser General Public License ever published by the Free Software Foundation.
+Each version is given a distinguishing version number. If the Library as you received it specifies that a certain numbered version of the GNU Lesser General Public License Â“or any later versionÂ” applies to it, you have the option of following the terms and conditions either of that published version or of any later version published by the Free Software Foundation. If the Library as you received it does not specify a version number of the GNU Lesser General Public License, you may choose any version of the GNU Lesser General Public License ever published by the Free Software Foundation.
 
 If the Library as you received it specifies that a proxy can decide whether future versions of the GNU Lesser General Public License shall apply, that proxy's public statement of acceptance of any version is permanent authorization for you to choose that version for the Library.
 -------------------------------------------------------------------------------
@@ -217,7 +217,7 @@ If the Library as you received it specifies that a proxy can decide whether futu
 ---------------------------------- jQuery -------------------------------------
 Copyright 2010, John Resig
 Dual licensed under the MIT or GPL Version 2 licenses.
-http://jquery.org/license
+https://jquery.org/license/
 
 Includes Sizzle.js
 http://sizzlejs.com/
@@ -230,7 +230,7 @@ Copyright (c) 2010 AUTHORS.txt (http://jqueryui.com/about)
 Dual licensed under the MIT (MIT-LICENSE.txt)
 and GPL (GPL-LICENSE.txt) licenses.
 
-http://docs.jquery.com/UI
+http://api.jqueryui.com/
 -------------------------------------------------------------------------------
 
 ----------------------------- jQuery UI Widget --------------------------------
@@ -238,7 +238,7 @@ Copyright (c) 2010 AUTHORS.txt (http://jqueryui.com/about)
 Dual licensed under the MIT (MIT-LICENSE.txt)
 and GPL (GPL-LICENSE.txt) licenses.
 
-http://docs.jquery.com/UI/Widget
+http://learn.jquery.com/jquery-ui/widget-factory/
 -------------------------------------------------------------------------------
 
 ------------------------------ jQuery UI Tabs ---------------------------------
@@ -246,30 +246,30 @@ Copyright (c) 2010 AUTHORS.txt (http://jqueryui.com/about)
 Dual licensed under the MIT (MIT-LICENSE.txt)
 and GPL (GPL-LICENSE.txt) licenses.
 
-http://docs.jquery.com/UI/Tabs
+http://api.jqueryui.com/tabs/
 -------------------------------------------------------------------------------
 
 --------------------------- jQuery Tooltip Plugin -----------------------------
 http://bassistance.de/jquery-plugins/jquery-plugin-tooltip/
-http://docs.jquery.com/Plugins/Tooltip
+http://jqueryui.com/tooltip/
 
-Copyright (c) 2006 - 2008 JÃ¶rn Zaefferer
+Copyright (c) 2006 - 2008 JÃƒÂ¶rn Zaefferer
 
 $Id: jquery.tooltip.js 5741 2008-06-21 15:22:16Z joern.zaefferer $
  
 Dual licensed under the MIT and GPL licenses:
-  http://www.opensource.org/licenses/mit-license.php
+  https://opensource.org/licenses/mit-license.php
   http://www.gnu.org/licenses/gpl.html
 -------------------------------------------------------------------------------
 
 --------------------------------- Treeview ------------------------------------
 http://bassistance.de/jquery-plugins/jquery-plugin-treeview/
-http://docs.jquery.com/Plugins/Treeview
+https://github.com/jzaefferer/jquery-treeview
 
-Copyright (c) 2007 Jörn Zaefferer
+Copyright (c) 2007 JÃ¶rn Zaefferer
 
 Dual licensed under the MIT and GPL licenses:
-   http://www.opensource.org/licenses/mit-license.php
+   https://opensource.org/licenses/mit-license.php
    http://www.gnu.org/licenses/gpl.html
 -------------------------------------------------------------------------------
 
@@ -283,7 +283,7 @@ Dual licensed under the MIT and GPL licenses
 Copyright (c) 2007 Christian Bach
 Examples and docs at: http://tablesorter.com
 Dual licensed under the MIT and GPL licenses:
-http://www.opensource.org/licenses/mit-license.php
+https://opensource.org/licenses/mit-license.php
 http://www.gnu.org/licenses/gpl.html
 -------------------------------------------------------------------------------
 
