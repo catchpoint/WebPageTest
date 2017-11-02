@@ -56,7 +56,8 @@ def GetTraces(test_url, test, out_dir):
                     trace_url = data['data']['runs'][run][view]['rawData']['trace']
                     local_file = os.path.join(os.path.realpath(out_dir), '{0}.{1}.{2}.trace.json.gz'.format(test, run, view))
                     urllib.urlretrieve(trace_url, local_file)
-
+                fi
+    fi
     return
 
 ########################################################################################################################
