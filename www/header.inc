@@ -339,7 +339,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
           $tabUrl = GetSetting('image_analysis');
           if ($tabUrl) {
             $tabUrl = str_replace('{test id}', $id, $tabUrl);
-            echo "<li><a href=\"$tabUrl\" title=\"Image Analysis - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" style=\"padding-right: 5px;\">Image Analysis<img src=\"/images/new_badge.png?v=2\" style=\"top: 0; float: right;\"></a></li>";
+            echo "<li><a href=\"$tabUrl\" title=\"Cloudinary Image Analysis (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" style=\"padding-right: 2px;\">Image Analysis<img src=\"/images/external_header.svg\" style=\"padding-top: 4px; float: right;\"></a></li>";
           }
         }
     
