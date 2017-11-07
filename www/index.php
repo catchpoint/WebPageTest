@@ -140,9 +140,9 @@ $loc = ParseLocations($locations);
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
                     <li class="analytical_review ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Advanced Testing</a></li>
-                    <li class="easy_mode"><a href=\"/easy.php\">Simple Testing</a></li>
-                    <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
-                    <li class="traceroute"><a href="/traceroute.php">Traceroute</a></li>
+                    <li class="easy_mode"><a href="easy.php">Simple Testing</a></li>
+                    <li class="visual_comparison"><a href="video">Visual Comparison</a></li>
+                    <li class="traceroute"><a href="traceroute.php">Traceroute</a></li>
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
