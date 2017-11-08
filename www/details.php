@@ -359,7 +359,9 @@ $page_description = "Website performance test details$testLabel";
                 stepNum = 1;
                 doExpandAll = true;
             }
-           
+           if (stepNum <= 0) {
+           return;
+           }
             var expand = function() {
                 var scrollToNode = $(window.location.hash);
                 if (doExpandAll) {
