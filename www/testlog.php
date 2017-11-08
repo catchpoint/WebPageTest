@@ -154,7 +154,7 @@ else
                               }
                             }
                             if (strlen($pattern)) {
-                              $command = "grep -i -F \"$pattern\" \"$fileName\"";
+                              $command = "grep -a -i -F \"$pattern\" \"$fileName\"";
                               exec($command, $lines, $result_code);
                               if ($result_code === 0 && is_array($lines) && count($lines))
                                 $ok = true;
