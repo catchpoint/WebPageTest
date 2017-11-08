@@ -138,7 +138,7 @@ $page_description = "Website performance test details$testLabel";
                         if( is_file("$testPath/{$run}{$cachedText}_dynaTrace.dtas") )
                         {
                             echo "<br><a href=\"/$testPath/{$run}{$cachedText}_dynaTrace.dtas\">Download dynaTrace Session</a>";
-                            echo ' (<a href="http://ajax.dynatrace.com/pages/" target="_blank">get dynaTrace</a>)';
+                            echo ' (<a href="https://www.dynatrace.com/topics/ajax-edition/" target="_blank">get dynaTrace</a>)';
                         }
                         if( is_file("$testPath/{$run}{$cachedText}_bodies.zip") )
                             echo "<br><a href=\"/$testPath/{$run}{$cachedText}_bodies.zip\">Download Response Bodies</a>";
@@ -359,9 +359,9 @@ $page_description = "Website performance test details$testLabel";
                 stepNum = 1;
                 doExpandAll = true;
             }
-            if (stepNum <= 0) {
-                return;
-            }
+           if (stepNum <= 0) {
+           return;
+           }
             var expand = function() {
                 var scrollToNode = $(window.location.hash);
                 if (doExpandAll) {
