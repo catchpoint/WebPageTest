@@ -797,6 +797,9 @@ void WebBrowser::ConfigureChromePreferences() {
           "\"geolocation\":2"
         "},"
         "\"password_manager_enabled\":false"
+      "},"
+      "\"translate\": {"
+        "\"enabled\": false"
       "}"
     "}";
   SHCreateDirectoryEx(NULL, _browser._profile_directory + _T("\\Default"), NULL);
