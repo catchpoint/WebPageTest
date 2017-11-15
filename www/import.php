@@ -49,7 +49,7 @@ if (array_key_exists('tests', $_REQUEST)) {
         $bulk['urls'][] = array('u' => $url, 'id' => $test_id);
       }
     }
-    gz_file_put_contents("$testPath/bulk.json", JSONEncode($bulk));
+    gz_file_put_contents("$testPath/bulk.json", json_encode($bulk));
     
     // Return the test ID (or redirect if not using the API)
     TestResult($test, $error);
@@ -156,7 +156,7 @@ if (array_key_exists('tests', $_REQUEST)) {
           }
         }
         if (count($metrics))
-          gz_file_put_contents("$testPath/{$run}_metrics.json", JSONEncode($metrics));
+          gz_file_put_contents("$testPath/{$run}_metrics.json", json_encode($metrics));
       }
       
       // create the test info files

@@ -171,7 +171,7 @@ if (array_key_exists('f', $_REQUEST)) {
                 <script type="text/javascript">
                     var charts = new Array();
                     <?php
-                    echo 'var seriesData = ' . JSONEncode($series) . ";\n";
+                    echo 'var seriesData = ' . json_encode($series) . ";\n";
                     ?>
                     function ToggleSeries(checked, series) {
                         setTimeout('ToggleSeriesDelayed(' + checked + ',' + series + ');', 1);
@@ -292,7 +292,7 @@ if (!isset($out_data)) {
     if (GetTestErrors($errors, $benchmark, $test_time))
       $out_data[$benchmark]['errors'] = $errors;
     header ("Content-type: application/json; charset=utf-8");
-    echo JSONEncode($out_data);
+    echo json_encode($out_data);
 }
 
 function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) {
@@ -331,7 +331,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
         $id = "g$count";
         echo "<div class=\"chart-container\"><div id=\"$id\" class=\"benchmark-chart\"></div><div id=\"{$id}_legend\" class=\"benchmark-legend\"></div></div><br>\n";
         echo "<script type=\"text/javascript\">
-                var {$id}meta = " . JSONEncode($meta) . ";
+                var {$id}meta = " . json_encode($meta) . ";
                 $id = new Dygraph(
                     document.getElementById(\"$id\"),
                     \"" . str_replace("\t", '\t', str_replace("\n", '\n', $tsv)) . "\",
@@ -347,7 +347,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                 );
                 charts.push('$id');";
         if (isset($annotations) && count($annotations)) {
-            echo "$id.setAnnotations(" . JSONEncode($annotations) . ");\n";
+            echo "$id.setAnnotations(" . json_encode($annotations) . ");\n";
         }
         echo "</script>\n";
     }
@@ -372,7 +372,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
             $id = "g$count";
             echo "<br><div class=\"chart-container\"><div id=\"$id\" class=\"benchmark-chart\"></div><div id=\"{$id}_legend\" class=\"benchmark-legend\"></div></div>\n";
             echo "<script type=\"text/javascript\">
-                    var {$id}meta = " . JSONEncode($meta) . ";
+                    var {$id}meta = " . json_encode($meta) . ";
                     $id = new Dygraph(
                         document.getElementById(\"$id\"),
                         \"" . str_replace("\t", '\t', str_replace("\n", '\n', $tsv)) . "\",
@@ -389,7 +389,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                     );
                     charts.push('$id');";
             if (isset($annotations) && count($annotations)) {
-                echo "$id.setAnnotations(" . JSONEncode($annotations) . ");\n";
+                echo "$id.setAnnotations(" . json_encode($annotations) . ");\n";
             }
             echo "</script>\n";
         }

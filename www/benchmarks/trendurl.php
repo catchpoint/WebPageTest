@@ -187,7 +187,7 @@ if (!isset($out_data)) {
 } else {
     // spit out the raw data
     header ("Content-type: application/json; charset=utf-8");
-    echo JSONEncode($out_data);
+    echo json_encode($out_data);
 }
 
 /**
@@ -234,7 +234,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
         $id = "g$count";
         echo "<div class=\"chart-container\"><div id=\"$id\" class=\"benchmark-chart\"></div><div id=\"{$id}_legend\" class=\"benchmark-legend\"></div></div><br>\n";
         echo "<script type=\"text/javascript\">
-                var {$id}meta = " . JSONEncode($meta) . ";
+                var {$id}meta = " . json_encode($meta) . ";
                 $id = new Dygraph(
                     document.getElementById(\"$id\"),
                     \"" . str_replace("\t", '\t', str_replace("\n", '\n', $tsv)) . "\",
@@ -249,7 +249,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                     legend: \"always\"}
                 );";
         if (isset($annotations) && count($annotations)) {
-            echo "$id.setAnnotations(" . JSONEncode($annotations) . ");\n";
+            echo "$id.setAnnotations(" . json_encode($annotations) . ");\n";
         }
         echo "</script>\n";
     }
@@ -279,7 +279,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
             $id = "g$count";
             echo "<br><div class=\"chart-container\"><div id=\"$id\" class=\"benchmark-chart\"></div><div id=\"{$id}_legend\" class=\"benchmark-legend\"></div></div>\n";
             echo "<script type=\"text/javascript\">
-                    var {$id}meta = " . JSONEncode($meta) . ";
+                    var {$id}meta = " . json_encode($meta) . ";
                     $id = new Dygraph(
                         document.getElementById(\"$id\"),
                         \"" . str_replace("\t", '\t', str_replace("\n", '\n', $tsv)) . "\",
@@ -294,7 +294,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                         legend: \"always\"}
                     );";
             if (isset($annotations) && count($annotations)) {
-                echo "$id.setAnnotations(" . JSONEncode($annotations) . ");\n";
+                echo "$id.setAnnotations(" . json_encode($annotations) . ");\n";
             }
             echo "</script>\n";
         }

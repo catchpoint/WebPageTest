@@ -677,7 +677,7 @@ function LoadPageSpeedData($file) {
       $pagespeed = $json->decode(gz_file_get_contents($file), true);
       if ($pagespeed) {
         // make sure we only have to go this route once, save the corrected file
-        gz_file_put_contents($file, JSONEncode($pagespeed));
+        gz_file_put_contents($file, json_encode($pagespeed));
       }
     }
   }
@@ -1469,7 +1469,7 @@ function GetDailyTestNum() {
       }
       $testData['num']++;
       $num = $testData['num'];
-      file_put_contents($filename, JSONEncode($testData));
+      file_put_contents($filename, json_encode($testData));
     }
     Unlock($lock);
   }
@@ -1499,7 +1499,7 @@ function AddTestJob($location, $job, $test, $testId) {
             require_once('./lib/beanstalkd/pheanstalk_init.php');
             $pheanstalk = new Pheanstalk_Pheanstalk($addr, $port);
             $tube = 'wpt.work.' . sha1($location);
-            $message = gzdeflate(JSONEncode(array('job' => $job)), 7);
+            $message = gzdeflate(json_encode(array('job' => $job)), 7);
             if ($message) {
               $pheanstalk->putInTube($tube, $message, $test['priority'] + 1);
               $ret = true;
@@ -1586,7 +1586,7 @@ function AddTestJobHead($location, $job, $workDir, $fileName, $priority, $atFron
           require_once('./lib/beanstalkd/pheanstalk_init.php');
           $pheanstalk = new Pheanstalk_Pheanstalk($addr, $port);
           $tube = 'wpt.work.' . sha1($location);
-          $message = gzdeflate(JSONEncode(array('job' => $job)), 7);
+          $message = gzdeflate(json_encode(array('job' => $job)), 7);
           if ($message) {
             $pheanstalk->putInTube($tube, $message, 0);
             $ret = true;
@@ -1622,7 +1622,7 @@ function AddJobFileHead($location, $workDir, $file, $priority, $atFront = false)
         $tube = 'wpt.work.' . sha1($location);
         $job = file_get_contents($file);
         if (isset($job) && strlen($job)) {
-          $message = gzdeflate(JSONEncode(array('file' => $file, 'job' => $job)), 7);
+          $message = gzdeflate(json_encode(array('file' => $file, 'job' => $job)), 7);
           if ($message) {
             $pheanstalk->putInTube($tube, $message, 0);
             $ret = true;
@@ -1890,7 +1890,7 @@ function SaveJobQueue($workDir, &$queue)
 {
   $ret = false;
   $queueName = sha1($workDir);
-  if (gz_file_put_contents("./tmp/$queueName.queue", JSONEncode($queue)) )
+  if (gz_file_put_contents("./tmp/$queueName.queue", json_encode($queue)) )
     $ret = true;
 
   return $ret;
@@ -2060,7 +2060,7 @@ function UpdateTester($location, $tester, $testerInfo = null, $cpu = null, $erro
   }
   $tester_info['id'] = $tester;
   
-  gz_file_put_contents($tester_file, JSONEncode($tester_info));
+  gz_file_put_contents($tester_file, json_encode($tester_info));
 }
 
 /**
@@ -2253,25 +2253,21 @@ function json_response(&$response) {
     if (version_compare(phpversion(), '5.4.0') >= 0 &&
         array_key_exists('pretty', $_REQUEST) &&
         $_REQUEST['pretty']) {
-      $out = JSONEncode($response, JSON_PRETTY_PRINT);
+      $out = json_encode($response, JSON_PRETTY_PRINT);
     } else {
-      $out = JSONEncode($response);
+      $out = json_encode($response);
     }
 
+    if (!isset($out) || $out === false || !is_string($out) || strlen($out) < 3) {
+      require_once('lib/json.php');
+      $jsonLib = new Services_JSON();
+      $out = $jsonLib->encode($response);
+    }
+    
     echo $out;
     
     if( isset($_REQUEST['callback']) && strlen($_REQUEST['callback']) )
         echo ");";
-}
-
-function JSONEncode(&$val, $options=0, $depth=1024) {
-  $ret = json_encode($val, $options, $depth);;
-  if (!isset($ret) || $ret === false || !is_string($ret) || strlen($ret) < 3) {
-    require_once('lib/json.php');
-    $jsonLib = new Services_JSON();
-    $ret = $jsonLib->encode($val);
-  }
-  return $ret;
 }
 
 /**
@@ -2641,7 +2637,7 @@ function uniqueId(&$test_num) {
       $testData['num']++;
       $test_num = $testData['num'];
       $id = NumToString($testData['num']);
-      file_put_contents($filename, JSONEncode($testData));
+      file_put_contents($filename, json_encode($testData));
       Unlock($lock);
     }
 
@@ -2741,7 +2737,7 @@ function SaveTestInfo($testIdOrPath, &$testInfo) {
       $testPath = realpath($testPath);
       $lock = Lock("Test Info $testPath");
       if ($lock) {
-        gz_file_put_contents("$testPath/testinfo.json", JSONEncode($testInfo));
+        gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfo));
         Unlock($lock);
       }
     }

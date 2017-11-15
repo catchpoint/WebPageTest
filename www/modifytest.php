@@ -16,4 +16,4 @@ if (isset($_POST['label']) && isset($_POST['testID'])) {
 }
 
 header('Content-type: application/json');
-echo JSONEncode($result);
+echo json_encode($result);

@@ -665,7 +665,7 @@
                       if( count($test['tests']) )
                       {
                           $path = GetTestPath($test['id']);
-                          file_put_contents("./$path/tests.json", JSONEncode($test['tests']));
+                          file_put_contents("./$path/tests.json", json_encode($test['tests']));
                       } else {
                           $error = 'Locations could not be submitted for testing';
                       }
@@ -808,7 +808,7 @@
                         if( $testCount )
                         {
                             $path = GetTestPath($test['id']);
-                            gz_file_put_contents("./$path/bulk.json", JSONEncode($bulk));
+                            gz_file_put_contents("./$path/bulk.json", json_encode($bulk));
                         }
                         else
                             $error = 'Urls could not be submitted for testing';
@@ -929,7 +929,7 @@
                     header ("Content-type: application/json");
                     header("Cache-Control: no-cache, must-revalidate");
                     header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
-                    echo JSONEncode($ret);
+                    echo json_encode($ret);
                 }
                 else
                 {
@@ -955,7 +955,7 @@
                 $ret['statusCode'] = 400;
                 $ret['statusText'] = $error;
                 header ("Content-type: application/json");
-                echo JSONEncode($ret);
+                echo json_encode($ret);
             } elseif (strlen($error)) {
                 ErrorPage($error);
             } else {
@@ -1142,7 +1142,7 @@ function ValidateKey(&$test, &$error, $key = null)
                 $usage[$key] = $used;
             }
             if( !strlen($error) )
-              file_put_contents($keyfile, JSONEncode($usage));
+              file_put_contents($keyfile, json_encode($usage));
             Unlock($lock);
           }
         }
@@ -1648,7 +1648,7 @@ function SendToRelay(&$test, &$out)
     $data .= "Content-Disposition: form-data; name=\"ini\"\r\n\r\n$ini";
 
     $data .= "\r\n--$boundary\r\n";
-    $data .= "Content-Disposition: form-data; name=\"testinfo\"\r\n\r\n" . JSONEncode($test);
+    $data .= "Content-Disposition: form-data; name=\"testinfo\"\r\n\r\n" . json_encode($test);
 
     $data .= "\r\n--$boundary--\r\n";
 
@@ -2344,7 +2344,7 @@ function RelayTest()
     }
 
     header ("Content-type: application/json");
-    echo JSONEncode($ret);
+    echo json_encode($ret);
 }
 
 /**

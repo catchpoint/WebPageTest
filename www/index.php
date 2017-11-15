@@ -745,8 +745,8 @@ $loc = ParseLocations($locations);
         <script type="text/javascript">
         <?php 
             echo "var maxRuns = {$settings['maxruns']};\n";
-            echo "var locations = " . JSONEncode($locations) . ";\n";
-            echo "var connectivity = " . JSONEncode($connectivity) . ";\n";
+            echo "var locations = " . json_encode($locations) . ";\n";
+            echo "var connectivity = " . json_encode($connectivity) . ";\n";
 
             $sponsors = parse_ini_file('./settings/sponsors.ini', true);
             foreach( $sponsors as &$sponsor )
@@ -758,7 +758,7 @@ $loc = ParseLocations($locations);
                 $offset = -40 * $sponsor['index'];
               $sponsor['offset'] = $offset;
             }
-            echo "var sponsors = " . @JSONEncode($sponsors) . ";\n";
+            echo "var sponsors = " . @json_encode($sponsors) . ";\n";
             if (isset($_REQUEST['force']) && $_REQUEST['force'])
               echo "var forgetSettings = true;\n";
             else

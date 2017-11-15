@@ -78,7 +78,7 @@ if (gz_is_file("$testPath/{$fileBase}_trace.json")) {
         }
         foreach ($events as $event) {
           echo ",\n";
-          echo JSONEncode($event);
+          echo json_encode($event);
         }
       }
     }

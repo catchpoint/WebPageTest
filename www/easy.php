@@ -115,7 +115,7 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
 
         <script type="text/javascript">
         <?php 
-          echo "var profiles = " . JSONEncode($profiles) . ";\n";
+          echo "var profiles = " . json_encode($profiles) . ";\n";
         ?>
         var wptStorage = window.localStorage || {};
         if (wptStorage['testrv'] != undefined)

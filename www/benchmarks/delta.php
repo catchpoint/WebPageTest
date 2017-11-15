@@ -281,7 +281,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null) {
             $id = "g$count";
             echo "<div class=\"chart-container\"><div id=\"$id\" class=\"benchmark-chart\"></div><div id=\"{$id}_legend\" class=\"benchmark-legend\"></div></div><br>\n";
             echo "<script type=\"text/javascript\">
-                    var {$id}meta = " . JSONEncode($meta) . ";
+                    var {$id}meta = " . json_encode($meta) . ";
                     var {$id}legend = document.getElementById('{$id}_legend');
                     $id = new Dygraph(
                         document.getElementById(\"$id\"),
@@ -329,7 +329,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null) {
 
                 echo "<br><div class=\"chart-container\"><div id=\"$id\" class=\"benchmark-chart\"></div><div id=\"{$id}_legend\" class=\"benchmark-legend\"></div></div>\n";
                 echo "<script type=\"text/javascript\">
-                        var {$id}meta = " . JSONEncode($meta) . ";
+                        var {$id}meta = " . json_encode($meta) . ";
                         var {$id}legend = document.getElementById('{$id}_legend');
                         $id = new Dygraph(
                             document.getElementById(\"$id\"),

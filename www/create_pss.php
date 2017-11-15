@@ -25,7 +25,7 @@ if (array_key_exists('original', $_REQUEST) && array_key_exists('optimized', $_R
             $tests['urls'] = array();
             $tests['urls'][] = array('u' => $test['url'], 'l' => 'Original', 'id' => $original);
             $tests['urls'][] = array('u' => $test['url'], 'l' => 'Optimized', 'id' => $optimized);
-            gz_file_put_contents("./{$test['path']}/bulk.json", JSONEncode($tests));
+            gz_file_put_contents("./{$test['path']}/bulk.json", json_encode($tests));
             
             // redirect
             $url = "/results.php?test={$test['id']}";

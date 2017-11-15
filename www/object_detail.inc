@@ -92,7 +92,7 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
       //BuildRequestDependencies($requests);
       
       if (!$cached && $use_raw_headers) {
-        gz_file_put_contents($cache_file, JSONEncode($requests));
+        gz_file_put_contents($cache_file, json_encode($requests));
       }
     }
     

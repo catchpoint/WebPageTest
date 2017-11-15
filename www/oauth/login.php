@@ -39,7 +39,7 @@ if (!isset($_GET['code'])) {
     if (isset($users[$user['email']]['id']))
       $user['id'] = $users[$user['email']]['id'];
     $users[$user['email']] = $user;
-    gz_file_put_contents('./dat/users.dat', JSONEncode($users));
+    gz_file_put_contents('./dat/users.dat', json_encode($users));
     
     // se if the user that logged in was an administrator
     $admin_users = GetSetting('admin_users');
@@ -50,13 +50,13 @@ if (!isset($_GET['code'])) {
         $admin = strtolower(trim($admin));
         $admin_len = strlen($admin);
         if (substr($email, -$admin_len) == $admin) {
-          $session = sha1(JSONEncode($token_data) . time());
+          $session = sha1(json_encode($token_data) . time());
           setcookie("asid", $session, time()+60*60*24*7*2, "/");
           $sessions = json_decode(gz_file_get_contents('./dat/admin_sessions.dat'), true);
           if (!isset($sessions) || !is_array($sessions))
             $sessions = array();
           $sessions[$session] = $user;
-          gz_file_put_contents('./dat/admin_sessions.dat', JSONEncode($sessions));
+          gz_file_put_contents('./dat/admin_sessions.dat', json_encode($sessions));
           break;
         }
       }

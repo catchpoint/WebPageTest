@@ -111,7 +111,7 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
                 
                 <script type="text/javascript">
                 <?php 
-                  echo "var profiles = " . JSONEncode($profiles) . ";\n";
+                  echo "var profiles = " . json_encode($profiles) . ";\n";
                 ?>
                 var wptStorage = window.localStorage || {};
                 if (wptStorage['testrv'] != undefined)

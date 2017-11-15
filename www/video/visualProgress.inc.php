@@ -173,7 +173,7 @@ function GetVisualProgressForStep($localPaths, $runCompleted, $options = null, $
     }
   }
   if ($runCompleted && !isset($end) && !isset($options) && $dirty && isset($frames) && count($frames))
-    gz_file_put_contents($cache_file,JSONEncode($frames));
+    gz_file_put_contents($cache_file,json_encode($frames));
   return $frames;
 }
 
@@ -286,7 +286,7 @@ function GetImageHistogram($image_file, $options, $histograms) {
           unset($im);
       }
       if (!isset($options) && isset($histogram_file) && !is_file($histogram_file) && isset($histogram))
-        file_put_contents($histogram_file, JSONEncode($histogram));
+        file_put_contents($histogram_file, json_encode($histogram));
   }
   return $histogram;
 }

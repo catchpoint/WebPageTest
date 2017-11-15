@@ -95,7 +95,7 @@ function UpdateFeeds() {
       }
 
       // save out the feed data
-      file_put_contents('./tmp/feeds.dat', JSONEncode($feedData));
+      file_put_contents('./tmp/feeds.dat', json_encode($feedData));
       Unlock($lock);
     }
   }

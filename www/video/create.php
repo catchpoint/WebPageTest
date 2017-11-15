@@ -247,8 +247,8 @@ else
                 if( !is_dir($dest) )
                     mkdir($dest, 0777, true);
                 if( count($labels) )
-                    file_put_contents("$dest/labels.txt", JSONEncode($labels));
-                gz_file_put_contents("$dest/testinfo.json", JSONEncode($tests));
+                    file_put_contents("$dest/labels.txt", json_encode($labels));
+                gz_file_put_contents("$dest/testinfo.json", json_encode($tests));
 
                 // kick off the actual rendering
                 SendAsyncRequest("/video/render.php?id=$id");
@@ -317,7 +317,7 @@ else
             if( strlen($_REQUEST['r']) )
                 $ret['requestId'] = $_REQUEST['r'];
             header ("Content-type: application/json");
-            echo JSONEncode($ret);
+            echo json_encode($ret);
         }
     }
 }

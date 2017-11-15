@@ -385,7 +385,7 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
     }
     
     if (isset($ret) && is_array($ret) && !$basic_results)
-      gz_file_put_contents($cacheFile, JSONEncode($ret));
+      gz_file_put_contents($cacheFile, json_encode($ret));
   }
   
   if (isset($ret['testTiming']) &&
