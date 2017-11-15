@@ -1355,7 +1355,13 @@ EOT;
     $out .= "if (typeof wptPageData == 'undefined') var wptPageData = {};\n";
     $out .= "if (typeof wptNoLinks == 'undefined') var wptNoLinks={$settings['nolinks']};\n";
     $out .= "wptRequestCount['step$step']=" . count($requests) . ";\n";
-    $out .= "wptRequestData['step$step']=" . json_encode($requests) . ";\n";
+    $request_data = json_encode($requests, 0, 1024);
+    if (!isset($request_data) || $request_data === false || !is_string($request_data) || strlen($request_data) < 3) {
+      require_once('lib/json.php');
+      $jsonLib = new Services_JSON();
+      $request_data = $jsonLib->encode($requests);
+    }
+    $out .= "wptRequestData['step$step']=" . $request_data . ";\n";
     $out .= "wptPageData['step$step']=" . json_encode($page_data) . ";\n";
     $out .= "</script>";
     return $out;
