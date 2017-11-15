@@ -153,8 +153,8 @@ $page_description = "Test network path from multiple locations around the world 
         <script type="text/javascript">
         <?php 
             echo "var maxRuns = {$settings['maxruns']};\n";
-            echo "var locations = " . json_encode($locations) . ";\n";
-            echo "var connectivity = " . json_encode($connectivity) . ";\n";
+            echo "var locations = " . JSONEncode($locations) . ";\n";
+            echo "var connectivity = " . JSONEncode($connectivity) . ";\n";
 
             $sponsors = parse_ini_file('./settings/sponsors.ini', true);
             foreach( $sponsors as &$sponsor )
@@ -166,7 +166,7 @@ $page_description = "Test network path from multiple locations around the world 
                 $offset = -40 * $sponsor['index'];
               $sponsor['offset'] = $offset;
             }
-            echo "var sponsors = " . @json_encode($sponsors) . ";\n";
+            echo "var sponsors = " . @JSONEncode($sponsors) . ";\n";
         ?>
         </script>
         <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script> 

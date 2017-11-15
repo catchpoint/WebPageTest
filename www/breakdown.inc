@@ -67,7 +67,7 @@ function getBreakdownForStep($localPaths, $rootUrlGenerator, &$requests) {
           }
         }
         $cache[$cacheKey] = $breakdown;
-        gz_file_put_contents($cache_file, json_encode($cache));
+        gz_file_put_contents($cache_file, JSONEncode($cache));
         
         // Collect other analysis that requires access to the request data
         analyzeRequests($localPaths, $requests);
@@ -105,7 +105,7 @@ function analyzeRequests($localPaths, &$requests) {
         }
       }
     }
-    gz_file_put_contents($analysis_file, json_encode($analysis));
+    gz_file_put_contents($analysis_file, JSONEncode($analysis));
   }
 }
 

@@ -140,7 +140,7 @@ if (array_key_exists('f', $_REQUEST)) {
               }
               $bmData[$benchmark['name']] = $entry;
             }
-            echo "var benchmarks = " . json_encode($bmData) . ";\n";
+            echo "var benchmarks = " . JSONEncode($bmData) . ";\n";
             ?>
             function CompareTo(benchmark, config, location, time, title) {
               if (compareTo === undefined) {
@@ -288,7 +288,7 @@ if (!isset($out_data)) {
 } else {
     // spit out the raw data
     header ("Content-type: application/json; charset=utf-8");
-    echo json_encode($out_data);
+    echo JSONEncode($out_data);
 }
 
 /**
@@ -337,7 +337,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                     legend: \"always\"}
                 );";
         if (isset($annotations) && count($annotations)) {
-            echo "$id.setAnnotations(" . json_encode($annotations) . ");\n";
+            echo "$id.setAnnotations(" . JSONEncode($annotations) . ");\n";
         }
         echo "</script>\n";
     }
@@ -368,7 +368,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                         legend: \"always\"}
                     );";
             if (isset($annotations) && count($annotations)) {
-                echo "$id.setAnnotations(" . json_encode($annotations) . ");\n";
+                echo "$id.setAnnotations(" . JSONEncode($annotations) . ");\n";
             }
             echo "</script>\n";
         }

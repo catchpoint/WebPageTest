@@ -328,7 +328,7 @@ function GetBatchStatus(&$status) {
         
         // rewrite the bulk file if it changed
         if( $dirty )
-            gz_file_put_contents("$testPath/bulk.json", json_encode($tests));
+            gz_file_put_contents("$testPath/bulk.json", JSONEncode($tests));
     }
 }
 

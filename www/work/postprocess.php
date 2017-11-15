@@ -53,7 +53,7 @@ if (array_key_exists('test', $_REQUEST)) {
             $testData['testRunId'] = "$id.$run.$cached";
             $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
             $testData['testResultUrl'] = "$protocol://{$_SERVER['HTTP_HOST']}/details.php?test=$id&run=$run&cached=$cached";
-            error_log(json_encode($testData) . "\n", 3, $pageLog);
+            error_log(JSONEncode($testData) . "\n", 3, $pageLog);
           }
         }
       }
@@ -81,7 +81,7 @@ if (array_key_exists('test', $_REQUEST)) {
               $request['testRunId'] = "$id.$run.$cached";
               $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
               $request['testResultUrl'] = "$protocol://{$_SERVER['HTTP_HOST']}/details.php?test=$id&run=$run&cached=$cached";
-              error_log(json_encode($request) . "\n", 3, $requestsLog);
+              error_log(JSONEncode($request) . "\n", 3, $requestsLog);
             }
           }
         }

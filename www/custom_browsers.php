@@ -44,7 +44,7 @@ if (isset($_REQUEST['name']) && isset($_FILES['apk']['tmp_name']) && isset($_FIL
             'flagsFile' => '/data/local/tmp/content-shell-command-line',
             'socket' => 'localabstract:content_shell_devtools_remote');
             
-        file_put_contents("./browsers/$name.json", json_encode($apk_settings));
+        file_put_contents("./browsers/$name.json", JSONEncode($apk_settings));
         $md5 = md5_file("./browsers/$name.apk");
         if ($md5 !== false) {
           $md5 = strtoupper($md5);

@@ -180,7 +180,7 @@ foreach ($benchmarks as &$benchmark) {
                 <script type="text/javascript">
                     var charts = new Array();
                     <?php
-                    echo 'var seriesData = ' . json_encode($series) . ";\n";
+                    echo 'var seriesData = ' . JSONEncode($series) . ";\n";
                     ?>
                     function ToggleSeries(checked, series) {
                         setTimeout('ToggleSeriesDelayed(' + checked + ',' + series + ');', 1);
@@ -238,7 +238,7 @@ function DisplayBenchmarkData($metric) {
         $id = "g$count";
         echo "<div class=\"chart-container\"><div id=\"$id\" class=\"benchmark-chart\"></div><div id=\"{$id}_legend\" class=\"benchmark-legend\"></div></div><br>\n";
         echo "<script type=\"text/javascript\">
-                var {$id}meta = " . json_encode($meta) . ";
+                var {$id}meta = " . JSONEncode($meta) . ";
                 $id = new Dygraph(
                     document.getElementById(\"$id\"),
                     \"" . str_replace("\t", '\t', str_replace("\n", '\n', $tsv)) . "\",
@@ -253,7 +253,7 @@ function DisplayBenchmarkData($metric) {
                 );
                 charts.push('$id');";
         if (isset($annotations) && count($annotations)) {
-            echo "$id.setAnnotations(" . json_encode($annotations) . ");\n";
+            echo "$id.setAnnotations(" . JSONEncode($annotations) . ");\n";
         }
         echo "</script>\n";
     }

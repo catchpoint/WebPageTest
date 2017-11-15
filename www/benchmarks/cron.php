@@ -107,7 +107,7 @@ function PreProcessBenchmark($benchmark) {
           $needsRunning = true;
       }
       if (isset($state))
-        file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
+        file_put_contents("./results/benchmarks/$benchmark/state.json", JSONEncode($state));
     }
     Unlock($lock);
   } else {
@@ -176,7 +176,7 @@ function ProcessBenchmark($benchmark) {
                     $state['last_run'] = $last_run;
                 }
             }
-            file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));        
+            file_put_contents("./results/benchmarks/$benchmark/state.json", JSONEncode($state));        
         }
         if (!is_array($state)) {
             $state = array('running' => false);
@@ -188,7 +188,7 @@ function ProcessBenchmark($benchmark) {
         if (array_key_exists('running', $state)) {
             CheckBenchmarkStatus($benchmark, $state);
             // update the state between steps
-            file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
+            file_put_contents("./results/benchmarks/$benchmark/state.json", JSONEncode($state));
         } else {
             $state['running'] = false;
         }
@@ -197,7 +197,7 @@ function ProcessBenchmark($benchmark) {
           if (array_key_exists('runs', $state) && count($state['runs']))
             AggregateResults($benchmark, $state, $options);
           $state['needs_aggregation'] = false;
-          file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
+          file_put_contents("./results/benchmarks/$benchmark/state.json", JSONEncode($state));
         }
         
         // see if we need to kick off a new benchmark run
@@ -219,7 +219,7 @@ function ProcessBenchmark($benchmark) {
                 logMsg("Benchmark '$benchmark' does not need to be run", "./log/$logFile", true);
             }
         }
-        file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
+        file_put_contents("./results/benchmarks/$benchmark/state.json", JSONEncode($state));
     }
     logMsg("Done Processing benchmark '$benchmark'", "./log/$logFile", true);
     Unlock($lock);
@@ -285,7 +285,7 @@ function CheckBenchmarkStatus($benchmark, &$state) {
         
         if ($updated) {
             logMsg("Data updated for for $updated tests, total data rows: " . count($data), "./log/$logFile", true);
-            gz_file_put_contents($dataFile, json_encode($data));
+            gz_file_put_contents($dataFile, JSONEncode($data));
         } else {
             logMsg("No test data updated", "./log/$logFile", true);
         }
@@ -580,7 +580,7 @@ function AggregateResults($benchmark, &$state, $options) {
         }
     }
     
-    file_put_contents("./results/benchmarks/$benchmark/aggregate/info.json", json_encode($info));
+    file_put_contents("./results/benchmarks/$benchmark/aggregate/info.json", JSONEncode($info));
     $state['needs_aggregation'] = false;
     logMsg("Agregation complete", "./log/$logFile", true);
 }
@@ -601,7 +601,7 @@ function CreateAggregates(&$info, &$data, $benchmark, $run_time, $options) {
             $agg_data = array();
         }
         AggregateMetric($metric, $info, $data, $run_time, $agg_data, $options);
-        gz_file_put_contents($metric_file, @json_encode($agg_data));
+        gz_file_put_contents($metric_file, @JSONEncode($agg_data));
         unset($agg_data);
         
         if (array_key_exists('labels', $info) && count($info['labels']) <= 20) {
@@ -612,7 +612,7 @@ function CreateAggregates(&$info, &$data, $benchmark, $run_time, $options) {
                 $agg_data = array();
             }
             AggregateMetricByLabel($metric, $info, $data, $run_time, $agg_data, $options);
-            gz_file_put_contents($metric_file, json_encode($agg_data));
+            gz_file_put_contents($metric_file, JSONEncode($agg_data));
             unset($agg_data);
         }
     }
@@ -993,7 +993,7 @@ function ImportS3Benchmarks() {
     }
   }
   
-  file_put_contents('./results/benchmarks/s3.json', json_encode($s3Benchmarks));
+  file_put_contents('./results/benchmarks/s3.json', JSONEncode($s3Benchmarks));
 }
 
 function ImportS3Benchmark($info) {
@@ -1019,7 +1019,7 @@ function ImportS3Benchmark($info) {
       $state['last_run'] = time();
     }
     $state['tests'] = array();
-    logMsg("  $benchmark import: " . json_encode($info), "./log/$logFile", true);
+    logMsg("  $benchmark import: " . JSONEncode($info), "./log/$logFile", true);
     
     if (isset($info['tests']) && is_array($info['tests'])) {
       foreach ($info['tests'] as $test) {
@@ -1040,7 +1040,7 @@ function ImportS3Benchmark($info) {
     if (count($state['tests'])) {
       $state['running'] = true;
       $imported = true;
-      file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
+      file_put_contents("./results/benchmarks/$benchmark/state.json", JSONEncode($state));
     }
   } else {
     logMsg("  Benchmark $benchmark is currently busy", "./log/$logFile", true);

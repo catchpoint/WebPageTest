@@ -20,7 +20,7 @@ if (gz_is_file("$testPath/$run{$cachedText}_devtools.json")) {
           echo "[\n";
         } else
           echo ",\n";
-        echo json_encode($entry);
+        echo JSONEncode($entry);
       }
     }
     if ($ok)

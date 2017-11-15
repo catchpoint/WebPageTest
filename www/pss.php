@@ -333,8 +333,8 @@ $page_description = "Comparison Test$testLabel.";
         <?php 
             echo "var wptForgetSettings = true;\n";
             echo "var maxRuns = {$settings['maxruns']};\n";
-            echo "var locations = " . json_encode($locations) . ";\n";
-            echo "var connectivity = " . json_encode($connectivity) . ";\n";
+            echo "var locations = " . JSONEncode($locations) . ";\n";
+            echo "var connectivity = " . JSONEncode($connectivity) . ";\n";
 
             $sponsors = parse_ini_file('./settings/sponsors.ini', true);
             if( strlen($GLOBALS['cdnPath']) )
@@ -347,7 +347,7 @@ $page_description = "Comparison Test$testLabel.";
                         $sponsor['logo_big'] = $GLOBALS['cdnPath'] . $sponsor['logo_big'];
                 }
             }
-            echo "var sponsors = " . json_encode($sponsors) . ";\n";
+            echo "var sponsors = " . JSONEncode($sponsors) . ";\n";
            
         ?>
         </script>

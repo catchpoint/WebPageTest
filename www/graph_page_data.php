@@ -251,7 +251,7 @@ $common_label = implode(" ", $common_labels);
             <script type="text/javascript" src="//www.google.com/jsapi"></script>
             <script type="text/javascript">
                 <?php
-                    echo "var chartData = " . json_encode($chartData) . ";\n";
+                    echo "var chartData = " . JSONEncode($chartData) . ";\n";
                     echo "var runs = $num_runs;\n";
                 ?>
             <?php include('graph_page_data.js'); ?>

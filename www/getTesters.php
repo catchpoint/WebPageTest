@@ -181,7 +181,7 @@ function GetRemoteTesters($server, $remote_location) {
     if (!isset($remote_cache[$server_hash])) {
       $xml = http_fetch("$server/getTesters.php?hidden=1");
       if ($xml) {
-        $remote = json_decode(json_encode((array)simplexml_load_string($xml)), true);
+        $remote = json_decode(JSONEncode((array)simplexml_load_string($xml)), true);
         if (is_array($remote) && isset($remote['data']['location'])) {
           $cache_entry = array();
           foreach($remote['data']['location'] as &$location) {

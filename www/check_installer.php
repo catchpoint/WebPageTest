@@ -198,7 +198,7 @@ function CheckIp($ip, $installer) {
         }
       }
       
-      gz_file_put_contents($file, json_encode($history));
+      gz_file_put_contents($file, JSONEncode($history));
       Unlock($lock);
     }
   }

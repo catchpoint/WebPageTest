@@ -723,7 +723,7 @@ function SaveCachedDevToolsRequests($localPaths, &$requests, &$pageData, $ver) {
       $cache = array();
     $cache['requests'] = $requests;
     $cache['pageData'] = $pageData;
-    gz_file_put_contents($cacheFile, json_encode($cache));
+    gz_file_put_contents($cacheFile, JSONEncode($cache));
     Unlock($lock);
   }
 }
@@ -900,7 +900,7 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
         if (isset($main_frame) &&
             $event['method'] == 'Timeline.eventRecorded' &&
             !isset($pageData['domContentLoadedEventStart'])) {
-          $eventString = json_encode($event);
+          $eventString = JSONEncode($event);
           if (strpos($eventString, '"type":"DOMContentLoaded"') !== false &&
               isset($event['record'])) {
             ParseDevToolsDOMContentLoaded($event['record'], $main_frame, $pageData);
@@ -1042,7 +1042,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
             strlen($message['params']['request']['url']) &&
             $message['method'] == 'Network.requestWillBeSent') {
           $firstNetEventTime = $message['params']['timestamp'] * 1000.0;
-          $firstNetEventURL = json_encode($message['params']['request']['url']);
+          $firstNetEventURL = JSONEncode($message['params']['request']['url']);
           break;
         }
       }
@@ -1052,7 +1052,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
               isset($message['method']) &&
               isset($message['params']['record']['startTime']) &&
               $message['method'] == 'Timeline.eventRecorded') {
-            $json = json_encode($message);
+            $json = JSONEncode($message);
             if (strpos($json, $firstNetEventURL) !== false) {
               $timelineEventTime = $message['params']['record']['startTime'];
               $firstEvent = $timelineEventTime;
@@ -1073,7 +1073,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
       foreach ($messages as $message) {
         if (is_array($message) && isset($message['method'])) {
           $eventTime = DevToolsEventTime($message);
-          $json = json_encode($message);
+          $json = JSONEncode($message);
           if (strpos($json, '"type":"Resource') !== false) {
             $firstEvent = $eventTime;
             break;
@@ -1117,7 +1117,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
 
         // see if we got a stop message (do this before capture so we don't include it)
         if ($recording && $hasTrim) {
-          $encoded = json_encode($message);
+          $encoded = JSONEncode($message);
           if (strpos($encoded, $STOP_MESSAGE) !== false)
             $recording = false;
         }
@@ -1144,7 +1144,7 @@ function ParseDevToolsEvents(&$json, &$events, $filter, $removeParams, &$startOf
                       
         // see if we got a start message (do this after capture so we don't include it)
         if (!$recording && !$recordPending && $hasTrim) {
-          $encoded = json_encode($message);
+          $encoded = JSONEncode($message);
           if (strpos($encoded, $START_MESSAGE) !== false)
             $recordPending = true;
         }
@@ -1201,7 +1201,7 @@ function DevToolsIsNetRequest(&$event) {
       $isValid = true;
     elseif ($event['method'] == 'Timeline.eventRecorded') {
       $NET_REQUEST = ',"type":"ResourceSendRequest",';
-      $encoded = json_encode($event);
+      $encoded = JSONEncode($event);
       if (strpos($encoded, $NET_REQUEST) !== false)
         $isValid = true;
     }
@@ -1276,7 +1276,7 @@ function DevToolsGetConsoleLogForStep($localPaths) {
             $console_log[] = $event['message'];
       }
     }
-    gz_file_put_contents($console_log_file, json_encode($console_log));
+    gz_file_put_contents($console_log_file, JSONEncode($console_log));
   }
   return $console_log;
 }
@@ -1309,7 +1309,7 @@ function DevToolsGetVideoOffset($testPath, $run, $cached, &$endTime) {
           
           // calculate the start time stuff
           if ($method_class === 'Timeline') {
-            $encoded = json_encode($event);
+            $encoded = JSONEncode($event);
             $eventTime = DevToolsEventEndTime($event);
             if ($eventTime &&
                 (!$startTime || $eventTime <= $startTime) &&
@@ -1448,7 +1448,7 @@ function GetDevToolsCPUTimeForStep($localPaths, $endTime = 0) {
     if (!isset($cache) || !is_array($cache))
       $cache = array();
     $cache[$endTime] = $times;
-    gz_file_put_contents($cacheFile, json_encode($cache));
+    gz_file_put_contents($cacheFile, JSONEncode($cache));
   }
   return $times;
 }

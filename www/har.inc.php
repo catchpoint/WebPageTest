@@ -49,14 +49,14 @@ function GenerateHAR($id, $testPath, $options) {
       $pretty_print = true;
     if (isset($options['php']) && $options['php']) {
       if ($pretty_print && $json_encode_good)
-        $json = json_encode($harData, JSON_PRETTY_PRINT);
+        $json = JSONEncode($harData, JSON_PRETTY_PRINT);
       else
-        $json = json_encode($harData);
+        $json = JSONEncode($harData);
     } elseif ($json_encode_good) {
       if ($pretty_print)
-        $json = json_encode($harData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+        $json = JSONEncode($harData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
       else
-        $json = json_encode($harData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $json = JSONEncode($harData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     } else {    
       $jsonLib = new Services_JSON();
       $json = $jsonLib->encode($harData);

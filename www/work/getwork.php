@@ -310,7 +310,7 @@ function GetJob() {
               $testJson['apk_info'] = $apk_info;
             }
           }
-          echo json_encode($testJson);
+          echo JSONEncode($testJson);
         } else {
           echo $testInfo;
         }

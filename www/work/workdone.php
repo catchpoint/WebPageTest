@@ -45,7 +45,7 @@ if(extension_loaded('newrelic')) {
 
 $workdone_start = microtime(true);
 
-//logmsg(json_encode($_REQUEST), './work/workdone.log', true);
+//logmsg(JSONEncode($_REQUEST), './work/workdone.log', true);
 
 // The following params have a default value:
 $done = arrayLookupWithDefault('done', $_REQUEST, false);
@@ -308,7 +308,7 @@ if (ValidateTestId($id)) {
             $update['id'] = $id;
             $update['last_updated'] = $now;
             $ind[$ini['industry']][$ini['industry_page']] = $update;
-            $data = json_encode($ind);
+            $data = JSONEncode($ind);
             file_put_contents('./video/dat/industry.dat', $data);
             Unlock($indLock);
           }
@@ -432,7 +432,7 @@ function ProcessIncrementalResult() {
       $testInfo['shards_finished'] = array();
     $testInfo['shards_finished'][$runNumber] = true;
     $testInfo_dirty = true;
-    logTestMsg($id, "Marked shard $runNumber as complete: " . json_encode($testInfo['shards_finished']));
+    logTestMsg($id, "Marked shard $runNumber as complete: " . JSONEncode($testInfo['shards_finished']));
     
     // make sure all of the sharded tests are done
     for ($run = 1; $run <= $testInfo['runs'] && $done; $run++) {

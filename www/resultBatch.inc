@@ -97,7 +97,7 @@ $videoCount = 0;
 // rewrite the bulk file if it changed
 if( $dirty )
 {
-    gz_file_put_contents("$testPath/bulk.json", json_encode($tests));
+    gz_file_put_contents("$testPath/bulk.json", JSONEncode($tests));
     $dirty = false;
 }
 
@@ -259,7 +259,7 @@ else
                 // rewrite the bulk file if it changed
                 if( $dirty )
                 {
-                    gz_file_put_contents("$testPath/bulk.json", json_encode($tests));
+                    gz_file_put_contents("$testPath/bulk.json", JSONEncode($tests));
                     $dirty = false;
                 }
 
@@ -446,12 +446,12 @@ else
 } // csv
 
 if ($videoDirty) {
-    gz_file_put_contents("$testPath/video.json", json_encode($videoInfo));
+    gz_file_put_contents("$testPath/video.json", JSONEncode($videoInfo));
 }
 // rewrite the bulk file if it changed
 if( $dirty )
 {
-    gz_file_put_contents("$testPath/bulk.json", json_encode($tests));
+    gz_file_put_contents("$testPath/bulk.json", JSONEncode($tests));
     $dirty = false;
 }
 

@@ -290,7 +290,7 @@ $page_description = "Website performance test result$testLabel.";
           <script type="text/javascript" src="//www.google.com/jsapi"></script>
           <script type="text/javascript">
           <?php
-          echo 'var wptBreakdown=' . json_encode($breakdown) . ";\n";
+          echo 'var wptBreakdown=' . JSONEncode($breakdown) . ";\n";
           ?>
 
           google.load("visualization", "1", {packages:["corechart"]});
