@@ -220,6 +220,29 @@ if (!$admin && isset($_COOKIE['asid']) && isset($_COOKIE['google_id']) && isset(
   }
 }
 
+if (!$admin) {
+  $this_user = null;
+  if (isset($user)) {
+    $this_user = $user;
+  } elseif( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
+    $this_user = $_COOKIE['google_email'];
+  }
+  if (isset($this_user)) {
+    $admin_users = GetSetting("admin_users");
+    if ($admin_users) {
+      $admin_users = explode(',', $admin_users);
+      if (is_array($admin_users) && count($admin_users)) {
+        foreach($admin_users as $substr) {
+          if (stripos($this_user, $substr) !== false) {
+            $admin = true;
+            break;
+          }
+        }
+      }
+    }
+  }
+}
+
 // assign a unique ID to each person
 $isFirstVisit = true;
 $isOwner = false;
