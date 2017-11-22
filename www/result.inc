@@ -147,6 +147,8 @@ $page_description = "Website performance test result$testLabel.";
 			                echo '<br><a href="/google/view_csi.php?test=' . $id . '">View CSI data</a>';
                     if (is_file("$testPath/test.log"))
                         echo "<br><a href=\"/viewlog.php?test=$id\">View Test Log</a>";
+                    if (is_file("$testPath/lighthouse.log.gz"))
+                        echo " - <a href=\"/viewlog.php?test=$id&lighthouse=1\">Lighthouse Test Log</a>";
                     if( array_key_exists('publishTo', $settings) && $settings['publishTo'] )
                         echo "<br><a href=\"/publish.php?test=$id\">Publish to {$settings['publishTo']}</a>";
                 ?>

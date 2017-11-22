@@ -222,6 +222,19 @@ class TestResults {
     return $lighthouse;
   }
 
+  /** Return the lighthouse log contents */
+  public function getLighthouseLog() {
+    $log = null;
+    $localPaths = new TestPaths($this->testInfo->getRootDirectory(), 1, 0, 1);
+    $log_file = $localPaths->lighthouseLogFile();
+    if (gz_is_file($log_file)) {
+      $log = gz_file_get_contents($log_file);
+      if (isset($log) && !strlen($log))
+        $log = null;
+    }
+    return $log;
+  }
+
   private function calculateAverages($cached) {
     $avgResults = array();
     $loadTimes = array();

@@ -121,6 +121,12 @@ function BuildHAR(&$pageData, $id, $testPath, $options) {
     if (isset($lighthouse) && is_array($lighthouse))
       $result['_lighthouse'] = $lighthouse;
   }  
+  $lighthouse_log = "$testPath/lighthouse.log";
+  if (gz_is_file($lighthouse_log)) {
+    $log = gz_file_get_contents($lighthouse_log);
+    if (isset($log) && strlen($log))
+      $result['_lighthouse_log'] = $log;
+  }  
   $result['log']['pages'] = array();
   foreach ($pageData as $run => $pageRun) {
     foreach ($pageRun as $cached => $data) {
