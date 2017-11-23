@@ -85,3 +85,10 @@ agent/webdriver/out/1_timed_events.json.gz
 agent/webdriver/out/1.0.histograms.json.gz
 agent/wptdriver/Registry.pol
 www/gce.php
+
+# docker 
+docker/local/results/*
+!docker/local/results/.gitkeep
+
+# intellij
+*.iml
