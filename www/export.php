@@ -14,7 +14,7 @@ if ($userIsBot) {
   exit;
 }
 
-require_once('har.inc.php');
+require_once __DIR__ . '/har/har.inc.php';
 
 $options = array();
 if (isset($_REQUEST['bodies']))
