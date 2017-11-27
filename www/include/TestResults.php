@@ -3,6 +3,8 @@
 require_once __DIR__ . '/FileHandler.php';
 require_once __DIR__ . '/TestStepResult.php';
 require_once __DIR__ . '/TestRunResults.php';
+require_once __DIR__ . '/Browser.php';
+
 
 class TestResults {
 
@@ -208,7 +210,7 @@ class TestResults {
     }
     return false;
   }
-  
+
   /** Return the lighthouse results (from json) */
   public function getLighthouseResult() {
     $lighthouse = null;
@@ -233,6 +235,14 @@ class TestResults {
         $log = null;
     }
     return $log;
+  }
+
+  public function getBrowser(){
+      $rawResultsFirstRunFirstStep = $this->getRunResult(1, false)->getStepResult(1)->getRawResults();
+      return new Browser(
+          $rawResultsFirstRunFirstStep['browser_name'],
+          $rawResultsFirstRunFirstStep['browser_version']
+      );
   }
 
   private function calculateAverages($cached) {
