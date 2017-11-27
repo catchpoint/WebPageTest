@@ -324,6 +324,7 @@ function GetJob() {
       $testerInfo['ec2'] = $ec2;
       $testerInfo['ver'] = array_key_exists('version', $_GET) ? $_GET['version'] : $_GET['ver'];
       $testerInfo['freedisk'] = @$_GET['freedisk'];
+      $testerInfo['upminutes'] = @$_GET['upminutes'];
       $testerInfo['ie'] = @$_GET['ie'];
       $testerInfo['dns'] = $dnsServers;
       $testerInfo['video'] = @$_GET['video'];

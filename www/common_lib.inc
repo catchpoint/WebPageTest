@@ -1952,6 +1952,7 @@ function GetTesters($locationId, $includeOffline = false, $include_sensitive = t
                          'ip' => @$tester['ip'],
                          'version' => @$tester['ver'],
                          'freedisk' => @$tester['freedisk'],
+                         'upminutes' => @$tester['upminutes'],
                          'ie' => @$tester['ie'],
                          'winver' => @$tester['winver'],
                          'isWinServer' => @$tester['isWinServer'],
