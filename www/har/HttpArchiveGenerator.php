@@ -91,8 +91,11 @@ class HttpArchiveGenerator
         $lighthouse_log = $testPath . "/lighthouse.log";
         if (gz_is_file($lighthouse_log)) {
             $log = gz_file_get_contents($lighthouse_log);
-            if (isset($log) && strlen($log))
-                $this->harData['_lighthouse_log'] = $log;
+            if (isset($log) && strlen($log)) {
+                if (!isset($this->harData['_lighthouse']))
+                  $this->harData['_lighthouse'] = array();
+                $this->harData['test_log'] = $log;
+            }
         }
     }
 

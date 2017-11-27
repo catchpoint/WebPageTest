@@ -117,8 +117,11 @@ class JsonResultGenerator {
       if (isset($lighthouse))
         $ret['lighthouse'] = $lighthouse;
       $log = $testResults->getLighthouseLog();
-      if (isset($log))
-        $ret['lighthouse_log'] = $log;
+      if (isset($log)) {
+        if (!isset($ret['lighthouse']))
+          $ret['lighthouse'] = array();
+        $ret['lighthouse']['test_log'] = $log;
+      }
     }
 
     // average
