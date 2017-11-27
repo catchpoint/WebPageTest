@@ -2,6 +2,8 @@
 
 require_once __DIR__ . '/../common_lib.inc';
 require_once __DIR__ . '/../object_detail.inc';
+require_once __DIR__ . '/../include/TestResults.php';
+require_once __DIR__ . '/../include/Browser.php';
 
 /**
  * Creates HttpArchives from test data.
@@ -9,38 +11,33 @@ require_once __DIR__ . '/../object_detail.inc';
 class HttpArchiveGenerator
 {
 
-    private $pageData;
-    private $id;
-    private $testPath;
+    private $resultData;
+    private $testInfo;
     private $options;
 
-    private $harData;
+    private $harData = array();
 
     private static $includePageArrays = array('priorityStreams' => true, 'blinkFeatureFirstUsed' => true);
 
     /**
      * HttpArchiveGenerator constructor.
      *
-     * @param $pageData
-     * @param $id
-     * @param $testPath
+     * @param $testIfo
+     *          Object of type TestInfo containing infos about the test har file should be created for.
      * @param $options
+     *          Options for har file generation.
      */
-    public function __construct($pageData, $id, $testPath, $options)
-    {
-        $this->pageData = $pageData;
-        $this->id = $id;
-        $this->testPath = $testPath;
+    public function __construct($testInfo, $options) {
+        $this->resultData = TestResults::fromFiles($testInfo);
+        $this->testInfo = $testInfo;
         $this->options = $options;
     }
 
     /**
      * Builds up the data set from tests data and provides it json encoded.
      *
-     * @param $options
-     * @return mixed|string
      */
-    public function generate(){
+    public function generate() {
         $this->buildHAR();
         return $this->getJsonEncoded($this->options);
     }
@@ -48,128 +45,121 @@ class HttpArchiveGenerator
     /**
      * Builds the data set.
      */
-    private function buildHAR()
-    {
-        $result = array();
+    private function buildHAR() {
 
-        $this->setBaseData($result);
-        $this->setLighthouseData($result);
+        $this->setBaseData();
+        $this->setLighthouseData();
+        $this->setBrowserData();
 
         $entries = array();
-        $result['log']['pages'] = array();
-        foreach ($this->pageData as $run => $runData) {
-            foreach ($runData as $cached => $cachedOrUncachedRunData) {
+        $this->harData['log']['pages'] = array();
 
-                $this->setBrowserData($result, $cachedOrUncachedRunData);
+        for ($runNumber = 1; $runNumber <= $this->resultData->countRuns(); $runNumber++) {
 
-                $pd = $this->setPageData($result, $cachedOrUncachedRunData, $run, $cached);
+            $harShouldContainAllRuns = !$this->options['run'];
+            $harShouldContainOnlyThisRun = $this->options['run'] && $this->options['run'] == $runNumber;
 
-                $this->setEntryData($run, $cached, $cachedOrUncachedRunData, $pd, $entries);
+            if ($harShouldContainAllRuns || $harShouldContainOnlyThisRun) {
+
+                $this->handleRun($runNumber, $entries);
+
             }
+
         }
 
-        $result['log']['entries'] = $entries;
-
-        $this->harData = $result;
+        $this->harData['log']['entries'] = $entries;
 
     }
 
-    /**
-     * Encodes previously build dataset as json.
-     *
-     * @param $options
-     * @return mixed|string
-     *          Json encoded harfile.
-     */
-    private function getJsonEncoded($options)
-    {
-        $json_encode_good = version_compare(phpversion(), '5.4.0') >= 0 ? true : false;
-        $pretty_print = false;
-        if (isset($options['pretty']) && $options['pretty'])
-            $pretty_print = true;
-        if (isset($options['php']) && $options['php']) {
-            if ($pretty_print && $json_encode_good)
-                $json = json_encode($this->harData, JSON_PRETTY_PRINT);
-            else
-                $json = json_encode($this->harData);
-        } elseif ($json_encode_good) {
-            if ($pretty_print)
-                $json = json_encode($this->harData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
-            else
-                $json = json_encode($this->harData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        } else {
-            $jsonLib = new Services_JSON();
-            $json = $jsonLib->encode($this->harData);
-        }
-        if ($json === false) {
-            $jsonLib = new Services_JSON();
-            $json = $jsonLib->encode($this->harData);
-        }
-        return $json;
-    }
-
-    private function setBaseData(&$result)
-    {
-        $result['log'] = array();
-        $result['log']['version'] = '1.1';
-        $result['log']['creator'] = array(
+    private function setBaseData() {
+        $this->harData['log'] = array();
+        $this->harData['log']['version'] = '1.1';
+        $this->harData['log']['creator'] = array(
             'name' => 'WebPagetest',
             'version' => VER_WEBPAGETEST
         );
     }
 
-    private function setLighthouseData(&$result)
-    {
-        $lighthouse_file = "$this->testPath/lighthouse.json";
+    private function setLighthouseData() {
+        $testPath = $this->testInfo->getRootDirectory();
+        $lighthouse_file = $testPath . "/lighthouse.json";
         if (gz_is_file($lighthouse_file)) {
             $lighthouse = json_decode(gz_file_get_contents($lighthouse_file), true);
             if (isset($lighthouse) && is_array($lighthouse))
-                $result['_lighthouse'] = $lighthouse;
+                $this->harData['_lighthouse'] = $lighthouse;
+        }
+        $lighthouse_log = $testPath . "/lighthouse.log";
+        if (gz_is_file($lighthouse_log)) {
+            $log = gz_file_get_contents($lighthouse_log);
+            if (isset($log) && strlen($log))
+                $this->harData['_lighthouse_log'] = $log;
         }
     }
 
-    public function setBrowserData(&$result, $cachedOrUncachedRunData)
-    {
-        if (!array_key_exists('browser', $result['log'])) {
-            $result['log']['browser'] = array(
-                'name' => $cachedOrUncachedRunData['browser_name'],
-                'version' => $cachedOrUncachedRunData['browser_version']
-            );
+    public function setBrowserData() {
+        $browser = $this->resultData->getBrowser();
+        $this->harData['log']['browser'] = array(
+            'name' => $browser->getName(),
+            'version' => $browser->getVersion()
+        );
+    }
+
+    private function handleRun($runNumber, &$entries) {
+        $this->setPageAndEntryDataFor($runNumber, false, $entries);
+
+        if (!$this->testInfo->isFirstViewOnly()) {
+            $this->setPageAndEntryDataFor($runNumber, true, $entries);
         }
     }
 
-    private function setPageData(&$result, $cachedOrUncachedRunData, $run, $cached)
-    {
+    private function setPageAndEntryDataFor($runNumber, $cached, &$entries) {
+        $runResult = $this->resultData->getRunResult($runNumber, $cached);
+        for ($stepNumber = 1; $stepNumber <= $runResult->countSteps(); $stepNumber++) {
+
+            $stepResult = $runResult->getStepResult($stepNumber)->getRawResults();
+
+            $pd = $this->setPageDataFor($stepResult);
+            $this->setEntryDataFor($stepResult, $pd, $entries);
+
+        }
+    }
+
+    private function setPageDataFor($stepData) {
+        $run = $stepData['run'];
+        $cached = $stepData['cached'];
+        $stepNumber = $stepData['step'];
+
         $pd = array();
-        $pd['startedDateTime'] = $this->msdate($cachedOrUncachedRunData['date']);
+        $pd['startedDateTime'] = HttpArchiveGenerator::msdate($stepData['date']);
         $pd['title'] = "Run $run, ";
         if ($cached)
             $pd['title'] .= "Repeat View";
         else
             $pd['title'] .= "First View";
-        $pd['title'] .= " for " . $cachedOrUncachedRunData['URL'];
-        $pd['id'] = "page_{$run}_{$cached}";
-        $pd['pageTimings'] = array('onLoad' => $cachedOrUncachedRunData['docTime'], 'onContentLoad' => -1, '_startRender' => $cachedOrUncachedRunData['render']);
+        $pd['title'] .= " for " . $stepData['URL'];
+        $pd['id'] = "page_{$run}_{$cached}_{$stepNumber}";
+        $pd['pageTimings'] = array('onLoad' => $stepData['docTime'], 'onContentLoad' => -1, '_startRender' => $stepData['render']);
 
         // dump all of our metrics into the har data as custom fields
-        foreach ($cachedOrUncachedRunData as $name => $value) {
+        foreach ($stepData as $name => $value) {
             if (!is_array($value) || isset(HttpArchiveGenerator::$includePageArrays[$name]))
                 $pd["_$name"] = $value;
         }
 
         // add the page-level ldata to the result
-        $result['log']['pages'][] = $pd;
+        $this->harData['log']['pages'][] = $pd;
         return $pd;
     }
 
-    private function setEntryData($run, $cached, $cachedOrUncachedRunData, $pd, &$entries)
-    {
+    private function setEntryDataFor($stepData, $pd, &$entries) {
+        $run = $stepData['run'];
+        $cached = $stepData['cached'];
         list($zip, $bodyNamesArray) = $this->getBodiesFor($run, $cached);
 
         $secure = false;
-        $requests = getRequests($this->id, $this->testPath, $run, $cached, $secure, true);
+        $requests = getRequests($this->testInfo->getId(), $this->testInfo->getRootDirectory(), $run, $cached, $secure, true, $stepData['step']);
         foreach ($requests as &$r) {
-            $entries[] = $this->getEntriesFor($run, $cached, $cachedOrUncachedRunData, $pd, $r, $bodyNamesArray);
+            $entries[] = $this->getEntriesFor($stepData, $pd, $r, $bodyNamesArray);
         }
 
         if (isset($zip)) {
@@ -177,8 +167,7 @@ class HttpArchiveGenerator
         }
     }
 
-    private function getBodiesFor($run, $cached)
-    {
+    private function getBodiesFor($run, $cached) {
         $zip = null;
         $body_names = array();
 
@@ -187,7 +176,7 @@ class HttpArchiveGenerator
             $cached_text = '_Cached';
 
         if (isset($this->options['bodies']) && $this->options['bodies']) {
-            $bodies_file = $this->testPath . '/' . $run . $cached_text . '_bodies.zip';
+            $bodies_file = $this->testInfo->getRootDirectory() . '/' . $run . $cached_text . '_bodies.zip';
             if (is_file($bodies_file)) {
                 $zip = new ZipArchive;
                 if ($zip->open($bodies_file) === TRUE) {
@@ -205,11 +194,14 @@ class HttpArchiveGenerator
         return array('bodiesZipFile' => $zip, 'bodyNamesArray' => $body_names);
     }
 
-    private function getEntriesFor($run, $cached, $cachedOrUncachedRunData, $pageData, $requestData, $bodyNamesArray){
+    private function getEntriesFor($stepData, $pageData, $requestData, $bodyNamesArray) {
+
+        $run = $stepData['run'];
+        $cached = $stepData['cached'];
 
         $entry = array();
         $entry['pageref'] = $pageData['id'];
-        $entry['startedDateTime'] = $this->msdate((double)$cachedOrUncachedRunData['date'] + ($requestData['load_start'] / 1000.0));
+        $entry['startedDateTime'] = HttpArchiveGenerator::msdate((double)$stepData['date'] + ($requestData['load_start'] / 1000.0));
         $entry['time'] = $requestData['all_ms'];
         $entry['_run'] = $run;
         $entry['_cached'] = $cached;
@@ -363,8 +355,8 @@ class HttpArchiveGenerator
         // WepbageTest's internal representation does not assume any
         // overlap, so we must add our connect and ssl time to get the
         // connect time expected by HAR.
-        $timings['connect'] = (durationOfInterval($requestData['connect_ms']) +
-            durationOfInterval($requestData['ssl_ms']));
+        $timings['connect'] = (HttpArchiveGenerator::durationOfInterval($requestData['connect_ms']) +
+            HttpArchiveGenerator::durationOfInterval($requestData['ssl_ms']));
         if (!$timings['connect'])
             $timings['connect'] = -1;
 
@@ -412,8 +404,40 @@ class HttpArchiveGenerator
 
     }
 
-    private function msdate($mstimestamp)
-    {
+    /**
+     * Encodes previously build dataset as json.
+     *
+     * @param $options
+     * @return mixed|string
+     *          Json encoded harfile.
+     */
+    private function getJsonEncoded($options) {
+        $json_encode_good = version_compare(phpversion(), '5.4.0') >= 0 ? true : false;
+        $pretty_print = false;
+        if (isset($options['pretty']) && $options['pretty'])
+            $pretty_print = true;
+        if (isset($options['php']) && $options['php']) {
+            if ($pretty_print && $json_encode_good)
+                $json = json_encode($this->harData, JSON_PRETTY_PRINT);
+            else
+                $json = json_encode($this->harData);
+        } elseif ($json_encode_good) {
+            if ($pretty_print)
+                $json = json_encode($this->harData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+            else
+                $json = json_encode($this->harData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        } else {
+            $jsonLib = new Services_JSON();
+            $json = $jsonLib->encode($this->harData);
+        }
+        if ($json === false) {
+            $jsonLib = new Services_JSON();
+            $json = $jsonLib->encode($this->harData);
+        }
+        return $json;
+    }
+
+    static function msdate($mstimestamp) {
         $timestamp = floor($mstimestamp);
         $milliseconds = round(($mstimestamp - $timestamp) * 1000);
 
@@ -421,6 +445,21 @@ class HttpArchiveGenerator
         $msDate = substr($date, 0, 19) . '.' . sprintf('%03d', $milliseconds) . substr($date, 19);
 
         return $msDate;
+    }
+
+    /**
+     * Time intervals can be UNKNOWN_TIME or a non-negative number of milliseconds.
+     * Intervals that are set to UNKNOWN_TIME represent events that did not happen,
+     * so their duration is 0ms.
+     *
+     * @param type $value
+     * @return int The duration of $value
+     */
+    static function durationOfInterval($value) {
+        if ($value == UNKNOWN_TIME) {
+            return 0;
+        }
+        return (int)$value;
     }
 
 }
