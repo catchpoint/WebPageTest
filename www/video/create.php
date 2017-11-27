@@ -1,5 +1,5 @@
 <?php
-$version = 8;
+$version = 9;
 if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
 {
     $tests = '';
@@ -43,7 +43,10 @@ else
     $cwd = getcwd();
     chdir('..');
     include 'common.inc';
-    require_once('page_data.inc');
+    require_once __DIR__ . '/visualProgress.inc.php';
+    require_once __DIR__ . '/../include/TestInfo.php';
+    require_once __DIR__ . '/../include/TestResults.php';
+    require_once __DIR__ . '/../include/TestStepResult.php';
     require_once('video.inc');
 
     $xml = false;
@@ -90,6 +93,7 @@ else
                 $test = array();
                 $test['id'] = $parts[0];
                 $test['cached'] = 0;
+                $test['step'] = 1;
                 $test['end'] = $endTime;
                 $test['extend'] = false;
                 $test['syncStartRender'] = "";
@@ -97,6 +101,7 @@ else
                 $test['syncFullyLoaded'] = "";
                 $test['bg'] = $bgColor;
                 $test['text'] = $textColor;
+                $label = null;
                 
                 if (isset($_REQUEST['labelHeight']) && is_numeric($_REQUEST['labelHeight']))
                   $test['labelHeight'] = intval($_REQUEST['labelHeight']);
@@ -114,15 +119,17 @@ else
                         if( $p[0] == 'r' )
                             $test['run'] = (int)$p[1];
                         if( $p[0] == 'l' )
-                            $test['label'] = preg_replace('/[^a-zA-Z0-9 \-_]/', '', $p[1]);
+                            $label = preg_replace('/[^a-zA-Z0-9 \-_]/', '', $p[1]);
                         if( $p[0] == 'c' )
                             $test['cached'] = (int)$p[1];
+                        if( $p[0] == 's')
+                            $test['step'] = (int)$p[1];
                         if( $p[0] == 'e' )
                             $test['end'] = trim($p[1]);
                         if( $p[0] == 'i' )
                             $test['initial'] = intval(trim($p[1]) * 1000.0);
                         // Optional Extra info to sync the video with
-                        if( $p[0] == 's' )
+                        if( $p[0] == 'p' )
                             $test['syncStartRender'] = (int)$p[1];
                         if( $p[0] == 'd' )
                             $test['syncDocTime'] = (int)$p[1];
@@ -133,82 +140,93 @@ else
 
                 RestoreTest($test['id']);
                 $test['path'] = GetTestPath($test['id']);
-                $test['pageData'] = loadAllPageData($test['path']);
+                $info = GetTestInfo($test['id']);
+                if ($info) {
+                    if (array_key_exists('discard', $info) &&
+                        $info['discard'] >= 1 &&
+                        array_key_exists('priority', $info) &&
+                        $info['priority'] >= 1) {
+                        $defaultInterval = 100;
+                    }
+                    $test['url'] = $info['url'];
+                    if (isset($info['medianMetric']))
+                      $test_median_metric = $info['medianMetric'];
+                }
+                $testInfoObject = TestInfo::fromFiles("./" . $test['path']);
 
-                if( !$test['run'] )
-                    $test['run'] = GetMedianRun($test['pageData'], 0, $median_metric);
+                if( !array_key_exists('run', $test) || !$test['run'] ) {
+                    $testResults = TestResults::fromFiles($testInfoObject);
+                    $test['run'] = $testResults->getMedianRunNumber($test_median_metric, $test['cached']);
+                    $runResults = $testResults->getRunResult($test['run'], $test['cached']);
+                    $stepResult = $runResults->getStepResult($test['step']);
+                } else {
+                    $stepResult = TestStepResult::fromFiles($testInfoObject, $test['run'], $test['cached'], $test['step']);
+                }
+                $test['pageData'] = $stepResult->getRawResults();
+                $test['aft'] = (int) $stepResult->getMetric('aft');
 
+                $loadTime = $stepResult->getMetric('fullyLoaded');
+                if( isset($loadTime) && (!isset($fastest) || $loadTime < $fastest) )
+                    $fastest = $loadTime;
                 // figure out the real end time (in ms)
-                if( isset($test['end']) )
-                {
-                    if (!strcmp($test['end'], 'visual') && array_key_exists('visualComplete', $test['pageData'][$test['run']][$test['cached']])) {
-                        $test['end'] = $test['pageData'][$test['run']][$test['cached']]['visualComplete'];
-                    }
-                    elseif( !strcmp($test['end'], 'doc') || !strcmp($test['end'], 'docvisual') )
-                    {
-                        if( !strcmp($test['end'], 'docvisual') )
-                        {
-                            $test['extend'] = true;
-                            $videoIdExtra .= 'e';
-                        }
-                        $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'];
-                    }
-                    elseif(!strncasecmp($test['end'], 'doc+', 4))
-                        $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'] + (int)((double)substr($test['end'], 4) * 1000.0);
-                    elseif( !strcmp($test['end'], 'aft') )
-                    {
-                        $test['end'] = $test['pageData'][$test['run']][$test['cached']]['aft'];
+                if (isset($test['end'])) {
+                    $visualComplete = $stepResult->getMetric("visualComplete");
+                    if( !strcmp($test['end'], 'visual') && $visualComplete !== null ) {
+                        $test['end'] = $visualComplete;
+                    } elseif( !strcmp($test['end'], 'load') ) {
+                        $test['end'] = $stepResult->getMetric('loadTime');
+                    } elseif( !strcmp($test['end'], 'doc') ) {
+                        $test['end'] = $stepResult->getMetric('docTime');
+                    } elseif(!strncasecmp($test['end'], 'doc+', 4)) {
+                        $test['end'] = $stepResult->getMetric('docTime') + (int)((double)substr($test['end'], 4) * 1000.0);
+                    } elseif( !strcmp($test['end'], 'full') ) {
+                        $test['end'] = 0;
+                    } elseif( !strcmp($test['end'], 'all') ) {
+                        $test['end'] = -1;
+                    } elseif( !strcmp($test['end'], 'aft') ) {
+                        $test['end'] = $test['aft'];
                         if( !$test['end'] )
                             $test['end'] = -1;
-                    }
-                    elseif( !strcmp($test['end'], 'load') )
-                        $test['end'] = $test['pageData'][$test['run']][$test['cached']]['loadTime'];
-                    elseif( !strcmp($test['end'], 'full') )
-                        $test['end'] = 0;
-                    elseif( !strcmp($test['end'], 'all') )
-                        $test['end'] = -1;
-                    else
+                    } else {
                         $test['end'] = (int)((double)$test['end'] * 1000.0);
-                }
-                if( $test['end'] == -1 )
+                    }
+                } else {
                     $test['end'] = 0;
-                elseif( !$test['end'] )
-                    $test['end'] = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];
+                }
+                if( !$test['end'] )
+                    $test['end'] = $stepResult->getMetric('fullyLoaded');
 
-                $test['videoPath'] = "./{$test['path']}/video_{$test['run']}";
-                if( $test['cached'] )
-                    $test['videoPath'] .= '_cached';
-                    
                 // round the test end up to the closest 100ms interval
                 $test['end'] = intval(ceil(floatval($test['end']) / 100.0) * 100.0);
-
+                $localPaths = new TestPaths('./' . $test['path'], $test["run"], $test["cached"], $test["step"]);
+                $test['videoPath'] = $localPaths->videoDir();
+  
                 if ($test['syncStartRender'] || $test['syncDocTime'] || $test['syncFullyLoaded'])
                     $videoIdExtra .= ".{$test['syncStartRender']}.{$test['syncDocTime']}.{$test['syncFullyLoaded']}";
 
-                $testInfo = GetTestInfo($test['id']);
-                if ($testInfo) {
-                  if( !strlen($test['label']) )
-                    $test['label'] = trim($testInfo['label']);
-                  if (array_key_exists('locationText', $testInfo))
-                    $test['location'] = $testInfo['locationText'];
+                if (!isset($label) || !strlen($label)) {
+                    if ($info && isset($info['label']))
+                        $label = $info['label'];
+                    $new_label = getLabel($test['id'], $user);
+                    if (!empty($new_label))
+                        $label = $new_label;
                 }
-
-                if (!strlen($test['label'])) {
-                    $test['label'] = trim($test['pageData'][1][0]['URL']);
+                if( empty($label) ) {
+                  $label = $test['url'];
+                  $label = str_replace('http://', '', $label);
+                  $label = str_replace('https://', '', $label);
                 }
+                if (empty($label))
+                    $label = trim($stepResult->getUrl());
+                $test['label'] = $label;
+                
+                if ($info && isset($info['locationText']))
+                    $test['location'] = $info['locationText'];
 
-                // See if the label has been edited
-                $new_label = getLabel($test['id'], $user);
-
-                if (!empty($new_label)) {
-                    $labels[] = $new_label;
-                } else {
+                if( is_dir($test['videoPath']) ) {
                     $labels[] = $test['label'];
-                }
-
-
-                if( is_dir($test['videoPath']) )
                     $tests[] = $test;
+                }
             }
         }
 
