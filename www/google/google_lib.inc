@@ -43,7 +43,7 @@ function ParseCsiInfoForStep($localPaths, $getAll) {
       $params = array();
 	    foreach ( $requests as &$request ) {
 		    // Parse the individual url parts.
-		    $url_parts = parse_url('http://' . $request['host'] . $request['url']);
+		    $url_parts = parse_url('https://' . $request['host'] . $request['url']);
 		    if ($url_parts['path'] == '/csi' || $url_parts['path'] == '/csi_204' ||
             ($url_parts['path'] == '/gen_204' &&
              strpos($request['url'], 'atyp=csi') !== false)) {
