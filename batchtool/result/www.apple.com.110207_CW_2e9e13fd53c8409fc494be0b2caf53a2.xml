@@ -95,7 +95,7 @@
 </thumbnails>
 <images>
 <waterfall>http://latencylab/results/11/02/07/CW/2e9e13fd53c8409fc494be0b2caf53a2/1_waterfall.png</waterfall>
-<connectionView>https://latencylab/results/11/02/07/CW/2e9e13fd53c8409fc494be0b2caf53a2/1_connection.png</connectionView>
+<connectionView>http://latencylab/results/11/02/07/CW/2e9e13fd53c8409fc494be0b2caf53a2/1_connection.png</connectionView>
 <checklist>http://latencylab/results/11/02/07/CW/2e9e13fd53c8409fc494be0b2caf53a2/1_optimization.png</checklist>
 <screenShot>http://latencylab/results/11/02/07/CW/2e9e13fd53c8409fc494be0b2caf53a2/1_screen.jpg</screenShot>
 </images>
