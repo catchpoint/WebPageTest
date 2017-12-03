@@ -1,7 +1,7 @@
 FROM php:5.6-apache
 MAINTAINER iteratec WPT Team <wpt@iteratec.de>
 
-RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sources.list && \
+RUN echo deb https://www.deb-multimedia.org jessie main non-free >> /etc/apt/sources.list && \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -q -y --force-yes \
     deb-multimedia-keyring \
