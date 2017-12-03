@@ -68,7 +68,7 @@ def main(argv):
     if len(argv) != 2:
         print 'Downloads trace files for all of the runs in all of the tests in a WebPageTest bulk test'
         print 'Usage: python download-traces.py <WebPageTest test URL> <Output Directory>'
-        print 'i.e.: python bulk-traces.py http://www.webpagetest.org/result/160229_8T_bf92565fcc52c58675c6c0688b1ce0fd/ traces'
+        print 'i.e.: python bulk-traces.py https://www.webpagetest.org/result/160229_8T_bf92565fcc52c58675c6c0688b1ce0fd/ traces'
         exit(1)
 
     bulk_url = argv[0]
