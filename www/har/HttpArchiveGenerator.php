@@ -374,7 +374,7 @@ class HttpArchiveGenerator
         // We lump both into "wait".  Issue 24* tracks this work.  When
         // it is resolved, read the real values for send and wait
         // instead of using the request's TTFB.
-        // *: http://code.google.com/p/webpagetest/issues/detail?id=24
+        // *: https://code.google.com/p/webpagetest/issues/detail?id=24
         $timings['send'] = 0;
         $timings['wait'] = (int)$requestData['ttfb_ms'];
         $timings['receive'] = (int)$requestData['download_ms'];

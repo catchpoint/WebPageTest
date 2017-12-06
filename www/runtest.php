@@ -1889,7 +1889,7 @@ function CheckUrl($url)
   if ($ok && !$admin && !$usingAPI) {
     $ok = SBL_Check($url, $message);
     if (!$ok) {
-      $error = "<br>Sorry, your test was blocked because $url is suspected of being used for <a href=\"http://www.antiphishing.org/\">phishing</a> or <a href=\"http://www.stopbadware.org/\">hosting malware</a>.<br><br>Advisory provided by <a href=\"http://code.google.com/apis/safebrowsing/safebrowsing_faq.html#whyAdvisory\">Google</a>.";
+      $error = "<br>Sorry, your test was blocked because $url is suspected of being used for <a href=\"https://www.antiphishing.org/\">phishing</a> or <a href=\"http://www.stopbadware.org/\">hosting malware</a>.<br><br>Advisory provided by <a href=\"http://code.google.com/apis/safebrowsing/safebrowsing_faq.html#whyAdvisory\">Google</a>.";
       logMsg("{$_SERVER['REMOTE_ADDR']}: $url failed Safe Browsing check: $message", "./log/{$date}-blocked.log", true);
     }
   }
