@@ -69,6 +69,7 @@ static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--disable-domain-reliability"),
     _T("--safebrowsing-disable-auto-update"),
     _T("--disable-background-timer-throttling"),
+    _T("--disable-browser-side-navigation"),
     _T("--host-rules=\"MAP cache.pack.google.com 127.0.0.1\"")
 };
 static const TCHAR * CHROME_IGNORE_CERT_ERRORS =
