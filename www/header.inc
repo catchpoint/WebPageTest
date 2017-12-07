@@ -374,6 +374,7 @@ if( !strcasecmp('Test Result', $tab) || (array_key_exists('compare', $_COOKIE) &
 function GetGrades($testInfo, $testRunResults, $firstRunResults)
 {
     $grades = array();
+    $infoArray = $testInfo->getInfoArray();
     $lighthouse = $firstRunResults->getLighthouseScore();
     if (isset($lighthouse)) {
       $class = 'F';
@@ -386,12 +387,13 @@ function GetGrades($testInfo, $testRunResults, $firstRunResults)
       elseif ($lighthouse > 60)
         $class = 'D';
       $grades['lighthouse'] = array( 'class' => $class, 'grade' => $lighthouse, 'description' => 'Lighthouse PWA Score');
+    } elseif (isset($infoArray['lighthouse']) && $infoArray['lighthouse']) {
+      $grades['lighthouse'] = array( 'class' => 'F', 'grade' => '?', 'description' => 'Lighthouse PWA Score');
     }
     if ($testRunResults->isOptimizationChecked()) {
         require_once('optimization_detail.inc.php');
 
         $opt = getOptimizationGradesForRun($testInfo, $testRunResults);
-        $infoArray = $testInfo->getInfoArray();
         if( $infoArray['view'] != 'simple' && $infoArray['view'] != 'pss' )
             $grades['first_byte_time'] = array( 'class' => $opt['ttfb']['class'], 'grade' => $opt['ttfb']['grade'], 'description' => $opt['ttfb']['label']);
         $grades['keep_alive_enabled'] = array( 'class' => $opt['keep-alive']['class'], 'grade' => $opt['keep-alive']['grade'], 'description' => $opt['keep-alive']['label']);
