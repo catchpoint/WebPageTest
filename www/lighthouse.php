@@ -51,7 +51,7 @@ if(array_key_exists("HTTP_IF_MODIFIED_SINCE",$_SERVER) && strlen(trim($_SERVER['
           $ok = true;
           header('Content-type: text/html');
           echo "<html><head></head><body>";
-          echo "<p>The Lighthouse test failed to run.  Please try again.</p>";
+          echo "<p>Sorry, Lighthouse had some issues gathering your report on WebPageTest. Please try again or try using Lighthouse through <a href=\"https://developers.google.com/web/tools/lighthouse/\">another way</a></p>";
           $file = "lighthouse.log";
           $filePath = "$testPath/$file";
           if (gz_is_file($filePath)) {
