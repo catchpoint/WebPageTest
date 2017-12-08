@@ -5,9 +5,9 @@ Most of the licenses are one of:
 
 BSD - https://opensource.org/licenses/bsd-license.php
 MIT - https://opensource.org/licenses/mit-license.php
-LGPL - http://www.gnu.org/licenses/lgpl-2.1.html
-GPL v2 - http://www.gnu.org/licenses/gpl-2.0.html
-GPL v3 - http://www.gnu.org/licenses/gpl-3.0.html
+LGPL - https://www.gnu.org/licenses/lgpl-2.1.html
+GPL v2 - https://www.gnu.org/licenses/gpl-2.0.html
+GPL v3 - https://www.gnu.org/licenses/gpl-3.0.html
 QPL 1.0 - https://www.opensource.org/licenses/qtpl.ph
 MPL - https://www.mozilla.org/en-US/MPL/
 
@@ -220,7 +220,7 @@ Dual licensed under the MIT or GPL Version 2 licenses.
 https://jquery.org/license/
 
 Includes Sizzle.js
-http://sizzlejs.com/
+https://sizzlejs.com/
 Copyright 2010, The Dojo Foundation
 Released under the MIT, BSD, and GPL Licenses.
 -------------------------------------------------------------------------------
@@ -230,7 +230,7 @@ Copyright (c) 2010 AUTHORS.txt (http://jqueryui.com/about)
 Dual licensed under the MIT (MIT-LICENSE.txt)
 and GPL (GPL-LICENSE.txt) licenses.
 
-http://api.jqueryui.com/
+https://api.jqueryui.com/
 -------------------------------------------------------------------------------
 
 ----------------------------- jQuery UI Widget --------------------------------
@@ -238,7 +238,7 @@ Copyright (c) 2010 AUTHORS.txt (http://jqueryui.com/about)
 Dual licensed under the MIT (MIT-LICENSE.txt)
 and GPL (GPL-LICENSE.txt) licenses.
 
-http://learn.jquery.com/jquery-ui/widget-factory/
+https://learn.jquery.com/jquery-ui/widget-factory/
 -------------------------------------------------------------------------------
 
 ------------------------------ jQuery UI Tabs ---------------------------------
@@ -246,12 +246,12 @@ Copyright (c) 2010 AUTHORS.txt (http://jqueryui.com/about)
 Dual licensed under the MIT (MIT-LICENSE.txt)
 and GPL (GPL-LICENSE.txt) licenses.
 
-http://api.jqueryui.com/tabs/
+https://api.jqueryui.com/tabs/
 -------------------------------------------------------------------------------
 
 --------------------------- jQuery Tooltip Plugin -----------------------------
 http://bassistance.de/jquery-plugins/jquery-plugin-tooltip/
-http://jqueryui.com/tooltip/
+https://jqueryui.com/tooltip/
 
 Copyright (c) 2006 - 2008 JÃ¶rn Zaefferer
 
@@ -259,7 +259,7 @@ $Id: jquery.tooltip.js 5741 2008-06-21 15:22:16Z joern.zaefferer $
  
 Dual licensed under the MIT and GPL licenses:
   https://opensource.org/licenses/mit-license.php
-  http://www.gnu.org/licenses/gpl.html
+  https://www.gnu.org/licenses/gpl.html
 -------------------------------------------------------------------------------
 
 --------------------------------- Treeview ------------------------------------
@@ -270,7 +270,7 @@ Copyright (c) 2007 Jörn Zaefferer
 
 Dual licensed under the MIT and GPL licenses:
    https://opensource.org/licenses/mit-license.php
-   http://www.gnu.org/licenses/gpl.html
+   https://www.gnu.org/licenses/gpl.html
 -------------------------------------------------------------------------------
 
 -------------------------------- SimpleModal ----------------------------------
@@ -284,7 +284,7 @@ Copyright (c) 2007 Christian Bach
 Examples and docs at: http://tablesorter.com
 Dual licensed under the MIT and GPL licenses:
 https://opensource.org/licenses/mit-license.php
-http://www.gnu.org/licenses/gpl.html
+https://www.gnu.org/licenses/gpl.html
 -------------------------------------------------------------------------------
 
 ###############################################################################
@@ -422,7 +422,7 @@ but also includes several more components each with their own license
 ------------------------------ Page Speed SDK ---------------------------------
 Apache License
 Version 2.0, January 2004
-http://www.apache.org/licenses/
+https://www.apache.org/licenses/
 -------------------------------------------------------------------------------
 
 --------------------------------- googleurl -----------------------------------
