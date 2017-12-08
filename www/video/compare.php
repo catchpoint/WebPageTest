@@ -271,7 +271,7 @@ else
             </style>
         </head>
         <body>
-            <div class="page-wide">
+            <div class="page-wide id="page-wide">
                 <?php
                 $tab = 'Test Result';
                 $nosubheader = true;
@@ -294,7 +294,21 @@ else
 
                 <?php include('footer.inc'); ?>
             </div>
-
+     <a id="s" href="javascript:genPDF()"><button class="button5">Dowload PDF</button></a>
+ <script type="text/javascript" src="jspdf.min.js"></script>
+   <script type="text/javascript" src="html2canvas.js"></script>
+    <script type="text/javascript">
+   function genPDF(){
+    html2canvas(document.getElementById("page-wide"),{
+    onrendered: function (canvas) {
+    var img=canvas.toDataURL("image/png");
+    var doc=new jsPDF();
+    doc.addImage(img,'JPEG',20,20);
+    doc.save('test.pdf');
+    }
+    });
+    }
+ </script>
             <script type="text/javascript">
                 function ShowAdvanced()
                 {
