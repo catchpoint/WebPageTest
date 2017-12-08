@@ -34,7 +34,7 @@ See the COPYING file for details.
   var FLICKR_USER = 'ingawalker';
   var FLICKR_SET = '72057594102831547';
   var FLICKRSET_URL =
-      'http://flickr.com/photos/' + FLICKR_USER + '/sets/' + FLICKR_SET;
+      'https://flickr.com/photos/' + FLICKR_USER + '/sets/' + FLICKR_SET;
   var parent = goog.dom.createElement('div');
 
   function setUp() {
@@ -60,10 +60,10 @@ See the COPYING file for details.
     assertExtractsCorrectly(FLICKR_USER, FLICKR_SET, FLICKRSET_URL);
     // user id with @ sign
     assertExtractsCorrectly('30441750@N06', '7215760789302468',
-        'http://flickr.com/photos/30441750@N06/sets/7215760789302468/');
+        'https://flickr.com/photos/30441750@N06/sets/7215760789302468/');
     // user id with - sign
     assertExtractsCorrectly('30441750-N06', '7215760789302468',
-        'http://flickr.com/photos/30441750-N06/sets/7215760789302468/');
+        'https://flickr.com/photos/30441750-N06/sets/7215760789302468/');
 
     var invalidUrl = 'http://invalidUrl/filename.doc';
     var e = assertThrows('', function() {
