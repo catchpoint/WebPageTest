@@ -62,61 +62,6 @@ window.goog['isNull'] = window.goog['isNull'] || function(val) {
   return (val === null);
 };
 
-/**
- * @private
- */
-wpt.contentScript.collectStats_ = function() {
-  // look for any user timing data
-  try {
-    if (window['performance'] != undefined &&
-        (window.performance.getEntriesByType ||
-         window.performance.webkitGetEntriesByType)) {
-      if (window.performance.getEntriesByType)
-        var marks = window.performance.getEntriesByType("mark");
-      else
-        var marks = window.performance.webkitGetEntriesByType("mark");
-      if (marks.length)
-        chrome.extension.sendRequest({'message': 'wptMarks', 
-                                      'marks': marks },
-                                     function(response) {});
-    }
-  } catch(e){
-  }
-
-  var domCount = document.documentElement.getElementsByTagName("*").length;
-  if (domCount === undefined)
-    domCount = 0;
-  chrome.extension.sendRequest({'message': 'wptStats',
-                                'domCount': domCount}, function(response) {});
-  
-  var timingRequest = { 'message': 'wptWindowTiming' };
-  function addTime(name) {
-    if (window.performance.timing[name] > 0) {
-      timingRequest[name] = Math.max(0, (
-        window.performance.timing[name] -
-        window.performance.timing['navigationStart']));
-    }
-  };
-  addTime('domContentLoadedEventStart');
-  addTime('domContentLoadedEventEnd');
-  addTime('loadEventStart');
-  addTime('loadEventEnd');
-  timingRequest['msFirstPaint'] = 0;
-  if (window['chrome'] !== undefined &&
-      window.chrome['loadTimes'] !== undefined) {
-    var chromeTimes = window.chrome.loadTimes();
-    if (chromeTimes['firstPaintTime'] !== undefined &&
-        chromeTimes['firstPaintTime'] > 0) {
-      var startTime = chromeTimes['requestTime'] ? chromeTimes['requestTime'] : chromeTimes['startLoadTime'];
-      if (chromeTimes['firstPaintTime'] >= startTime)
-        timingRequest['msFirstPaint'] = (chromeTimes['firstPaintTime'] - startTime) * 1000.0;
-    }
-  }
-
-  // Send the times back to the extension.
-  chrome.extension.sendRequest(timingRequest, function(response) {});
-};
-
 wpt.contentScript.checkResponsive_ = function() {
   var response = { 'message': 'wptResponsive' };
   
@@ -237,7 +182,8 @@ chrome.extension.onRequest.addListener(
           function() { pollDOMElement(); },
           DOM_ELEMENT_POLL_INTERVAL);
     } else if (request.message == 'collectStats') {
-      wpt.contentScript.collectStats_();
+      var customMetrics = request['customMetrics'] || '';
+      wpt.contentScript.collectStats_(customMetrics);
     } else if (request.message == 'checkResponsive') {
       wpt.contentScript.checkResponsive_();
     }
@@ -328,7 +274,6 @@ wpt.contentScript.InPageCommandRunner = function(doc,
  * @private
  */
 wpt.contentScript.InPageCommandRunner.prototype.Success_ = function() {
-  console.log('Command successful.');
   if (this.resultCallbacks_.success)
     this.resultCallbacks_.success();
 };
@@ -339,7 +284,6 @@ wpt.contentScript.InPageCommandRunner.prototype.Success_ = function() {
  * @private
  */
 wpt.contentScript.InPageCommandRunner.prototype.Warn_ = function(warning) {
-  console.log('Command generated warning: ' + warning);
   if (this.resultCallbacks_.warn)
     this.resultCallbacks_.warn(warning);
 };
@@ -350,7 +294,6 @@ wpt.contentScript.InPageCommandRunner.prototype.Warn_ = function(warning) {
  * @private
  */
 wpt.contentScript.InPageCommandRunner.prototype.FatalError_ = function(error) {
-  console.log('Command generated error: ' + error);
   if (this.resultCallbacks_.error)
     this.resultCallbacks_.error(error);
 };

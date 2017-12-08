@@ -30,6 +30,8 @@ var http = require('http');
 var logger = require('logger');
 var url = require('url');
 
+var DEV_TOOLS_COMMAND_TIMEOUT = 5000;
+
 /** Allow tests to stub out. */
 exports.WebSocket = require('ws');
 
@@ -90,17 +92,20 @@ DevTools.prototype.onMessage = function(callback) {
 DevTools.prototype.connect = function(callback, errback) {
   'use strict';
   var retries = 0;  // ios_webkit_debug_proxy sometimes returns an empty array.
+  this.debuggerUrl_ = undefined;
   var listTabs = (function() {
     var request = http.get(url.parse(this.devToolsUrl_), function(response) {
       exports.processResponse(response, function(responseBody) {
         var devToolsJson = JSON.parse(responseBody);
-        if (devToolsJson.length === 0 && retries < 10) {
+        if (devToolsJson.length === 0 && retries < 20) {
           retries += 1;
           logger.debug('Retrying DevTools tab list, attempt %d', retries + 1);
-          global.setTimeout(listTabs, 1000);
+          global.setTimeout(listTabs, 2000);
           return;
         }
-        this.debuggerUrl_ = devToolsJson[0].webSocketDebuggerUrl;
+        if (devToolsJson && devToolsJson.length) {
+          this.debuggerUrl_ = devToolsJson[0].webSocketDebuggerUrl;
+        }
         if (!this.debuggerUrl_) {
           throw new Error('DevTools response at ' + this.devToolsUrl_ +
               ' does not contain webSocketDebuggerUrl: ' + responseBody);
@@ -221,14 +226,26 @@ DevTools.prototype.command_ = function(command, callback, errback) {
   'use strict';
   this.commandId_ += 1;
   command.id = this.commandId_;
+  logger.debug('Send command: %j', command);
   if (callback || errback) {
     this.commandCallbacks_[command.id] = {
-        method: command.method,
-        callback: callback,
-        errback: errback
-      };
+      method: command.method,
+      callback: callback,
+      errback: errback
+    };
+    global.setTimeout(function(){
+      var callbackErrback = this.commandCallbacks_[command.id];
+      if (callbackErrback) {
+        delete this.commandCallbacks_[command.id];
+        logger.debug('Timeout for command: %j', command);
+        if (callbackErrback.errback) {
+          try {
+            callbackErrback.errback(new Error("Command Timeout"));
+          } catch(e) {}
+        }
+      }
+    }.bind(this), DEV_TOOLS_COMMAND_TIMEOUT);
   }
-  logger.debug('Send command: %j', command);
   this.ws_.send(JSON.stringify(command));
   return command.id;
 };

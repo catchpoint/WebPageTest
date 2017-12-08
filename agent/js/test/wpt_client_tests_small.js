@@ -250,9 +250,9 @@ describe('wpt_client small', function() {
 
     test_utils.stubLog(sandbox, function(
          levelPrinter, levelName, stamp, source, message) {
-      return message.match(new RegExp('Finished\\srun\\s\\d+/' +
-          task.runs + '\\s(.*\\s)?of\\sjob\\s' + task['Test ID'] +
-          '(\\s|$)'));
+      return message.match(new RegExp('Finished\\srun\\s\\d+[ab]/' +
+          task.runs + '\\s(.*\\s)?of\\s(finished\\s)?job\\s' +
+          task['Test ID'] + '(\\s|$)'));
     });
 
     var numJobRuns = 0;
@@ -303,7 +303,7 @@ describe('wpt_client small', function() {
     });
 
     client.run(/*forever=*/false);
-    sandbox.clock.tick(10);
+    sandbox.clock.tick(100);
     should.ok(doneSpy.calledOnce);
     should.equal(6, numJobRuns);
   });
@@ -314,14 +314,15 @@ describe('wpt_client small', function() {
     test_utils.stubLog(sandbox, function(
          levelPrinter, levelName, stamp, source, message) {
       return ((/^Unhandled\sexception\s/).test(message) ||
-          (/^Finished\srun\s/).test(message));
+          (/^(Finished|Failed)\srun\s/).test(message));
     });
     var client = new wpt_client.Client(app, {serverUrl: 'url'});
     client.onStartJobRun = function() {};  // Do nothing, wait for exception.
     sandbox.stub(client, 'postResultFile_',
         function(job, resultFile, fields, callback) {
       logger.debug('stub postResultFile_ f=%j fields=%j', resultFile, fields);
-      should.equal(job.error, e.message);
+      should.equal(job.agentError, undefined);
+      should.equal(job.testError, e.message);
       var isFoundErrorField = false;
       fields.forEach(function(nameValue) {
         if ('error' === nameValue[0]) {
@@ -334,7 +335,8 @@ describe('wpt_client small', function() {
     var doneSpy = sandbox.spy();
     client.on('done', function(job) {
       logger.debug('client done');
-      should.equal(job.error, e.message);
+      should.equal(job.agentError, undefined);
+      should.equal(job.testError, e.message);
       // Second uncaught exception outside of job processing is ignored.
       // Spy on logger.critical just for this exception and make sure
       // that we log the message "outside of job".
@@ -351,6 +353,64 @@ describe('wpt_client small', function() {
     logger.debug('emitting uncaught');
     // First uncaught exception finishes the job.
     wpt_client.process.emit('uncaughtException', e);
+    test_utils.tickUntilIdle(app, sandbox);
     should.ok(doneSpy.calledOnce);
   });
+
+  function testSignal_(signal_name, expectedStartCount, expectedAbortCount) {
+    // Creates a 2-run uncached+cached job, emits the given signal in the
+    // middle of the first run's uncached load, then verifies that the job
+    // exits with the expected startRun and abort counts.
+    var startSpy = sandbox.spy();
+    var submitSpy = sandbox.spy();
+    var abortSpy = sandbox.spy();
+    var exitSpy = sandbox.spy();
+
+    var client = new wpt_client.Client(app, {serverUrl: 'url'});
+    test_utils.stubLog(sandbox, function(
+         levelPrinter, levelName, stamp, source, message) {
+      return ((/^Received \S+, will exit after /).test(message) ||
+          (/^Aborting job /).test(message) ||
+          (/^(Finished|Failed) run \d+/).test(message) ||
+          (/^Exiting due to /).test(message));
+    });
+    client.onStartJobRun = function(job) {
+      startSpy();
+      if (1 === job.runNumber && !job.isCacheWarm) {
+        global.setTimeout(function() {
+          wpt_client.process.emit(signal_name);  // Signal on first iteration
+        }, 5);
+      }
+      global.setTimeout(function() {
+        if (!abortSpy.called && !exitSpy.called) {
+          var isRunFinished = job.isFirstViewOnly || job.isCacheWarm;
+          job.isCacheWarm = !isRunFinished;  // Set for next iteration
+          job.runFinished(isRunFinished);
+        }
+      }, 10);
+    };
+    client.onAbortJob = function(job) {
+      abortSpy();
+      job.runFinished(true);
+    };
+    sandbox.stub(client, 'submitResult_', function(
+        job, isJobFinished, callback) {
+      submitSpy();
+      callback();
+    });
+    wpt_client.process.exit = exitSpy;
+    client.processJobResponse_('{"Test ID": "gaga", "runs": 2, "fvonly": 0}');
+    sandbox.clock.tick(100);
+
+    should.ok(exitSpy.calledOnce);
+    should.equal(startSpy.callCount, expectedStartCount);
+    should.equal(submitSpy.callCount, startSpy.callCount);
+    should.equal(abortSpy.callCount, expectedAbortCount);
+  }
+
+  it('should handle SIGQUIT', testSignal_.bind(undefined, 'SIGQUIT', 4, 0));
+  it('should handle SIGABRT', testSignal_.bind(undefined, 'SIGABRT', 2, 0));
+  it('should handle SIGTERM', testSignal_.bind(undefined, 'SIGTERM', 1, 1));
+  it('should handle SIGINT', testSignal_.bind(undefined, 'SIGINT', 1, 1));
+
 });

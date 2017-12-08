@@ -107,6 +107,7 @@ public:
   TrackDns(TestState& test_state, WptTest& test);
   ~TrackDns(void);
 
+  bool BlockLookup(CString name);
   void * LookupStart(CString& name);
   void LookupAddress(void * context, ULONG &addr);
   void LookupAlias(CString name, CString alias);
@@ -119,7 +120,7 @@ public:
             LARGE_INTEGER& start, LARGE_INTEGER& end);
   LONGLONG  GetEarliest(LONGLONG& after);
   void AddAddress(CString host, DWORD address);
-  int GetAddressCount(CString host);
+  size_t GetAddressCount(CString host);
   CStringA GetCDNProvider(CString host);
 
   CAtlMap<void *, DnsInfo *>  _dns_lookups;

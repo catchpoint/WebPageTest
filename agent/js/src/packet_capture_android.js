@@ -40,17 +40,18 @@ var LISTENING_ON_TIMEOUT = 5000;
 
 /**
  * @param {webdriver.promise.ControlFlow=} app the scheduler.
- * @param {Object.<string>} args options with string values:
- *   #param {string} deviceSerial  the device to run tcpdump on.
- *   #param {string=} tcpdumpBinary  device-architecture tcpdump binary.
- *       If undefined, try to use tcpdump preinstalled on device.
+ * @param {Object} args options:
+ #   #param {Object} flags:
+ *     #param {string} deviceSerial  the device to run tcpdump on.
+ *     #param {string=} tcpdumpBinary  device-architecture tcpdump binary.
+ *         If undefined, try to use tcpdump preinstalled on device.
  * @constructor
  */
 function PacketCaptureAndroid(app, args) {
   'use strict';
   this.app_ = app;
-  this.deviceSerial_ = args.deviceSerial;
-  this.localTcpdumpBinary_ = args.tcpdumpBinary;
+  this.deviceSerial_ = args.flags['deviceSerial'];
+  this.localTcpdumpBinary_ = args.flags.tcpdumpBinary;
   this.localPcapFile_ = undefined;
   this.deviceTcpdumpCommand_ = undefined;
   this.devicePcapFile_ = undefined;
@@ -70,7 +71,7 @@ PacketCaptureAndroid.prototype.schedulePrepare_ = function() {
       process_utils.scheduleFunction(this.app_, 'Check local tcpdump',
           fs.exists, this.localTcpdumpBinary_).then(function(exists) {
         if (exists) {
-          this.deviceTcpdumpCommand_ = '/data/local/tmp/tcpdump';
+          this.deviceTcpdumpCommand_ = '/data/local/tmp/tcpdump474';
         } else {
           this.localTcpdumpBinary_ = undefined;  // Triggers /system/xbin below.
         }
@@ -128,15 +129,15 @@ PacketCaptureAndroid.prototype.scheduleStart = function(localPcapFile) {
   this.schedulePrepare_();
   this.scheduleStop();  // Cleanup possible leftovers.
   this.schedulePushTcpdumpIfNeeded_();
-  this.adb_.scheduleDetectConnectedInterface().then(function(iface) {
-    logger.debug('Starting tcpdump of %s to %s', iface, this.devicePcapFile_);
+  this.app_.schedule('Start tcpdump', function() {
+    logger.debug('Starting tcpdump to %s', this.devicePcapFile_);
     // -p = don't put into promiscuous mode.
     // -s 0 = capture entire packets.
-    this.adb_.spawnSu([this.deviceTcpdumpCommand_, '-i', iface, '-p',
+    this.adb_.spawnSu([this.deviceTcpdumpCommand_, '-i', 'any', '-p',
          '-s', '0', '-w', this.devicePcapFile_]).then(function(proc) {
       this.tcpdumpAdbProcess_ = proc;
       var listenBuffer = ''; // Defined until we get our "listening on" line
-      var listenRegex = new RegExp('\\n?listening on ' + iface + ',');
+      var listenRegex = new RegExp('\\n?listening on ');
       proc.stdout.on('data', function(data) {
         logger.info('%s STDOUT: %s', this.deviceTcpdumpCommand_, data);
         if (undefined !== listenBuffer) {
@@ -173,8 +174,9 @@ PacketCaptureAndroid.prototype.scheduleStop = function() {
       this.adb_.scheduleKill('tcpdump', 'INT');
       // Read the pcap file only after tcpdump exits: avoid incomplete data.
       process_utils.scheduleWait(this.app_, proc, 'tcpdump', EXIT_TIMEOUT);
+      this.adb_.su(['chmod', '777', this.devicePcapFile_]);
       this.adb_.adb(['pull', this.devicePcapFile_, this.localPcapFile_]);
-      this.adb_.shell(['rm', this.devicePcapFile_]);
+      this.adb_.su(['rm', this.devicePcapFile_]);
     } else {
       // Hard-kill any possible leftover tcpdumps.
       this.adb_.scheduleKill('tcpdump', 'KILL');

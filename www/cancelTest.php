@@ -49,32 +49,31 @@ if( isset($test['test']) )
 * Cancel and individual test
 * 
 * @param mixed $id
+* @return bool
 */
 function CancelTest($id)
 {
-    $cancelled = false;
-    $testPath = './' . GetTestPath($id);
+  $cancelled = false;
+  $lock = LockTest($id);
+  if ($lock) {
+    $testInfo = GetTestInfo($id);
+    if ($testInfo && !array_key_exists('started', $testInfo)) {
+      $testInfo['cancelled'] = time();
+      SaveTestInfo($id, $testInfo);
 
-    if( gz_is_file("$testPath/testinfo.json") )
-    {
-        $testInfoJson = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
-        if( !$testInfoJson['started'] )
-        {
-            $testInfoJson['cancelled'] = time();
-
-            // delete the actual test file.
-            $ext = 'url';
-            if( $testInfoJson['priority'] )
-                $ext = "p{$testInfoJson['priority']}";
-            $queued_job_file = $testInfoJson['workdir'] . "/$id.$ext";
-            if( unlink($queued_job_file) )
-            {
-                $cancelled = true;
-                gz_file_put_contents("$testPath/testinfo.json", json_encode($testInfoJson));
-            }
-        }
+      // delete the actual test file.
+      if (array_key_exists('workdir', $testInfo)) {
+        $ext = 'url';
+        if( $testInfo['priority'] )
+            $ext = "p{$testInfo['priority']}";
+        $file_to_search = $testInfo['workdir'] . "/*.$id.$ext";
+        $found_files = glob($file_to_search);
+        if (1 === count($found_files))
+          $cancelled = @unlink($found_files[0]);
+      }
     }
-    
-    return $cancelled;
+    UnlockTest($lock);
+  }
+  return $cancelled;
 }
 ?>

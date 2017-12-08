@@ -1,4 +1,0 @@
-- har.py: Ignore content in har file
-- har.py: Add HTTP/ prefix to httpVersion fields
-- mediatype.py: Support a badly formatted content type
-- tcp/flow.py: Ignore packets that are out-of-stream, instead of throwing an exception

@@ -16,9 +16,8 @@ $loc = ParseLocations($locations);
 $preview = false;
 if( array_key_exists('preview', $_GET) && strlen($_GET['preview']) && $_GET['preview'] )
     $preview = true;
-$mps = false;
-if (array_key_exists('mps', $_REQUEST))
-    $mps = true;
+// Put it into mod_pagespeed mode all the time
+$mps = true;
 
 $page_keywords = array('Comparison','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Comparison Test$testLabel.";
@@ -34,11 +33,10 @@ $page_description = "Comparison Test$testLabel.";
         <div class="page">
             <?php
             $navTabs = array(   'New Comparison' => FRIENDLY_URLS ? '/compare' : '/pss.php' );
-            if( array_key_exists('pssid', $_GET) && strlen($_GET['pssid']) )
-                $navTabs['Test Result'] = FRIENDLY_URLS ? "/result/{$_GET['pssid']}/" : "/results.php?test={$_GET['pssid']}";
-            $navTabs += array(  'PageSpeed Service Home' => 'http://code.google.com/speed/pss', 
-                                'Sample Tests' => 'http://code.google.com/speed/pss/gallery.html',
-                                'Sign Up!' => 'https://docs.google.com/a/google.com/spreadsheet/viewform?hl=en_US&formkey=dDdjcmNBZFZsX2c0SkJPQnR3aGdnd0E6MQ');
+            if( array_key_exists('pssid', $_GET) && strlen($_GET['pssid']) ) {
+                $pssid = htmlspecialchars($_GET['pssid']);
+                $navTabs['Test Result'] = FRIENDLY_URLS ? "/result/$pssid/" : "/results.php?test=$pssid";
+            }
             $tab = 'New Comparison';
             include 'header.inc';
             ?>
@@ -50,7 +48,7 @@ $page_description = "Comparison Test$testLabel.";
             <input type="hidden" name="video" value="1">
             <input type="hidden" name="shard" value="1">
             <input type="hidden" name="priority" value="0">
-            <input type="hidden" name="timeline" value="1">
+            <input type="hidden" name="timeline" value="0">
             <input type="hidden" name="mv" value="1">
             <?php
                 if ($mps || (array_key_exists('origin', $_GET) && strlen($_GET['origin']))) {
@@ -71,8 +69,9 @@ $page_description = "Comparison Test$testLabel.";
                 echo "<input type=\"hidden\" name=\"runs\" value=\"8\">\n";
                 echo "<input type=\"hidden\" name=\"discard\" value=\"1\">\n";
             } elseif( array_key_exists('origin', $_GET) && strlen($_GET['origin']) ) {
-                $script = 'setDnsName\t%HOSTR%\t' . htmlspecialchars($_GET['origin']) . '\nnavigate\t%URL%';
-                echo "<input type=\"hidden\" id=\"script\" name=\"script\" value=\"setDnsName&#09;%HOSTR%&#09;{$_GET['origin']}&#10;navigate&#09;%URL%\">\n";
+                $origin = htmlspecialchars($_GET['origin']);
+                $script = 'setDnsName\t%HOSTR%\t' . $origin . '\nnavigate\t%URL%';
+                echo "<input type=\"hidden\" id=\"script\" name=\"script\" value=\"setDnsName&#09;%HOSTR%&#09;$origin&#10;navigate&#09;%URL%\">\n";
                 echo "<input type=\"hidden\" name=\"runs\" value=\"5\">\n";
             } else {
                 $script = 'if\trun\t1\nif\tcached\t0\naddHeader\tX-PSA-Blocking-Rewrite: pss_blocking_rewrite\t%HOST_REGEX%\nendif\nendif\nsetDnsName\t%HOSTR%\tghs.google.com\noverrideHost\t%HOSTR%\tpsa.pssdemos.com\nnavigate\t%URL%';
@@ -100,11 +99,11 @@ $page_description = "Comparison Test$testLabel.";
               if ($mps) {
                 echo '<h2 class="cufon-dincond_black"><small>Evaluate the impact of <a href="https://code.google.com/p/modpagespeed/">mod_pagespeed</a> (must be installed on the server)</small></h2>';
               } elseif ($preview) {
-                echo '<h2 class="cufon-dincond_black"><small>Preview optimization changes for your site hosted on <a href="http://code.google.com/speed/pss">PageSpeed Service</a></small></h2>';
+                echo '<h2 class="cufon-dincond_black"><small>Preview optimization changes for your site hosted on <a href="https://developers.google.com/speed/pagespeed/service">PageSpeed Service</a></small></h2>';
               } elseif( array_key_exists('origin', $_GET) && strlen($_GET['origin']) )
-                echo '<h2 class="cufon-dincond_black"><small>Measure performance of original site vs optimized by <a href="http://code.google.com/speed/pss">PageSpeed Service</a></small></h2>';
+                echo '<h2 class="cufon-dincond_black"><small>Measure performance of original site vs optimized by <a href="https://developers.google.com/speed/pagespeed/service">PageSpeed Service</a></small></h2>';
               else
-                echo '<h2 class="cufon-dincond_black"><small>Measure your site performance when optimized by <a href="http://code.google.com/speed/pss">PageSpeed Service</a></small></h2>';
+                echo '<h2 class="cufon-dincond_black"><small>Measure your site performance when optimized by <a href="https://developers.google.com/speed/pagespeed/service">PageSpeed Service</a></small></h2>';
             }
             ?>
 
@@ -115,23 +114,11 @@ $page_description = "Comparison Test$testLabel.";
                         $default = 'Enter a Website URL';
                         $testurl = trim($_GET['url']);
                         if( strlen($testurl) )
-                            $default = $testurl;
+                            $default = htmlspecialchars($testurl);
                         echo "<li><input type=\"text\" name=\"testurl\" id=\"testurl\" value=\"$default\" class=\"text large\" onfocus=\"if (this.value == this.defaultValue) {this.value = '';}\" onblur=\"if (this.value == '') {this.value = this.defaultValue;}\"></li>\n";
                         ?>
-                        <li>
-                            <label for="location">Test From<br><small id="locinfo">(Using Chrome on Cable)</small></label>
-                            <select name="pssloc" id="pssloc">
-                                <option value="US_East" selected>US East (Virginia)</option>
-                                <option value="US_West">US West (California)</option>
-                                <option value="Brazil">South America (Brazil)</option>
-                                <option value="Europe">Europe (Ireland)</option>
-                                <option value="Asia_Singapore">Asia (Singapore)</option>
-                                <option value="Asia_Tokyo">Asia (Tokyo)</option>
-                                <option value="other">More Configurations...</option>
-                            </select>
-                        </li>
                     </ul>
-                    <ul class="input_fields hidden" id="morelocs">
+                    <ul class="input_fields" id="morelocs">
                         <li>
                             <label for="location">Location</label>
                             <select name="where" id="location">
@@ -263,8 +250,6 @@ $page_description = "Comparison Test$testLabel.";
                                 echo '<select name="backend" id="backend">';
                                 echo "<option value=\"prod\"$prodSelected>Default (Safe)</option>";
                                 echo "<option value=\"aggressive\"$aggressiveSelected>Aggressive</option>";
-                                if( !$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false) )
-                                    echo '<option value="staging">Staging</option>';
                                 echo '</select>';
                             } else {
                                 echo "<input type=\"hidden\" name=\"backend\" id=\"backend\" value=\"prod\">\n";
@@ -280,12 +265,8 @@ $page_description = "Comparison Test$testLabel.";
                             echo "<input type=\"checkbox\" name=\"mobile\" id=\"mobile\" class=\"mobile\"$checked>";
                             ?>
                         </li>
-                        <li>
-                            <label for="wait">Expected Wait</label>
-                            <span id="wait"></span>
-                        </li>
                         <?php
-                        if( !$supportsAuth || ($admin || strpos($_COOKIE['google_email'], '@google.com') !== false) )
+                        if( !$supportsAuth || $admin )
                         {
                         ?>
                         <li>
@@ -475,26 +456,7 @@ $page_description = "Comparison Test$testLabel.";
                 return true;
             }
             
-            function PSSLocChanged(){
-                var loc = $('#pssloc').val(); 
-                if( loc == 'other' )
-                {
-                    $('#morelocs').show();
-                    $('#locinfo').hide();
-                }
-                else
-                {
-                    $('#morelocs').hide();
-                    $('#locinfo').show();
-                    $('#location').val(loc); 
-                    LocationChanged();
-                }
-            }
-            PSSLocChanged();
-
-            $("#pssloc").change(function(){
-                PSSLocChanged();
-            });
+            LocationChanged();
             
             $('#script').val(originalScript);
         </script>
@@ -509,42 +471,8 @@ $page_description = "Comparison Test$testLabel.";
 */
 function LoadLocations()
 {
-    $locations = parse_ini_file('./settings/locations.ini', true);
+    $locations = LoadLocationsIni();
     FilterLocations( $locations, 'pss' );
-    
-    // strip out any sensitive information
-    foreach( $locations as $index => &$loc )
-    {
-        if( isset($loc['browser']) )
-        {
-            $testCount = 16;
-            if (array_key_exists('relayServer', $loc)) {
-                $loc['backlog'] = 0;
-                $loc['avgTime'] = 30;
-                $loc['testers'] = 1;
-                $loc['wait'] = ceil(($testCount * 30) / 60);
-            } else {
-                GetPendingTests($index, $count, $avgTime);
-                if( !$avgTime )
-                    $avgTime = 30;  // default to 30 seconds if we don't have any history
-                $loc['backlog'] = $count;
-                $loc['avgTime'] = $avgTime;
-                $loc['testers'] = GetTesterCount($index);
-                $loc['wait'] = -1;
-                if( $loc['testers'] )
-                {
-                    if( $loc['testers'] > 1 )
-                        $testCount = 16;
-                    $loc['wait'] = ceil((($testCount + ($count / $loc['testers'])) * $avgTime) / 60);
-                }
-            }
-        }
-        
-        unset( $loc['localDir'] );
-        unset( $loc['key'] );
-        unset( $loc['remoteDir'] );
-        unset( $loc['relayKey'] );
-    }
     
     return $locations;
 }

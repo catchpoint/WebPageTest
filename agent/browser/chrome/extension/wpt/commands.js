@@ -39,27 +39,6 @@ goog.provide('wpt.commands');
 wpt.commands.g_domElements = [];
 
 /**
- * Chrome APIs move from experimental to supported without notice.
- * Keep our code from breaking by declaring that some experimental
- * APIs can be used in the non-experimental namespace.
- * @param {string} apiName The name of the chrome extensons API.
- */
-function moveOutOfexperimentalIfNeeded(apiName) {
-  // Prefer the real API.  If it exists, do nothing.
-  if (!chrome[apiName]) {
-    // Use the experimental version if it exists.
-    if (chrome.experimental[apiName]) {
-      chrome[apiName] = chrome.experimental[apiName];
-    } else {
-      throw 'Requested chrome API ' + apiName + ' does not exist!';
-    }
-  }
-}
-
-moveOutOfexperimentalIfNeeded('webNavigation');
-moveOutOfexperimentalIfNeeded('webRequest');
-
-/**
  * Remove leading and trailing whitespace.
  * @param {string} stringToTrim
  * @return {string}
@@ -98,8 +77,6 @@ wpt.commands.CommandRunner = function(tabId, chromeApi) {
 wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
     commandObject, callback) {
 
-  console.log('Delegate a command to the content script: ', commandObject);
-
   var code = ['wpt.contentScript.InPageCommandRunner.Instance.RunCommand(',
               JSON.stringify(commandObject),
               ');'].join('');
@@ -108,20 +85,6 @@ wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
         if (callback != undefined)
           callback();
       });
-};
-
-/**
- * Implement the exec command.
- * TODO(skerner): Make this use SendCommandToContentScript_(), and
- * wrap it in a try block to avoid breaking the content script on
- * an exception.
- * @param {string} script
- */
-wpt.commands.CommandRunner.prototype.doExec = function(script, callback) {
-  this.chromeApi_.tabs.executeScript(g_tabid, {'code': script}, function(results){
-    if (callback != undefined)
-      callback();
-  });
 };
 
 /**
@@ -173,34 +136,6 @@ wpt.commands.CommandRunner.prototype.doSetCookie = function(cookie_path, data) {
 };
 
 /**
- * Block all urls matching |blockPattern| using the declarative web
- * request API.
- * @param {string} blockPattern
- */
-wpt.commands.CommandRunner.prototype.doBlockUsingDeclarativeApi_ =
-    function(blockPattern) {
-
-  // Match requests where any part of the URL contains |blockPattern|.
-  var requestMatcher = new chrome.declarativeWebRequest.RequestMatcher({
-    url: {
-      urlContains: blockPattern
-    }
-  });
-
-  // Blocking is implemented by canceling any matching request.
-  var blockingRule = {
-    conditions: [
-        requestMatcher
-    ],
-    actions: [
-        new chrome.declarativeWebRequest.CancelRequest()
-    ]
-  };
-
-  this.chromeApi_.declarativeWebRequest.onRequest.addRules([blockingRule]);
-};
-
-/**
  * Block all urls matching |blockPattern| using the non-declarative web
  * request API.
  * @param {string} blockPattern
@@ -238,15 +173,7 @@ wpt.commands.CommandRunner.prototype.doBlock = function(blockPattern) {
   // web request API, the test that we have permission to use it will
   // fail.
   var self = this;
-  this.chromeApi_.permissions.contains(
-      {permissions: ['declarativeWebRequest']},
-      function(hasPermission) {
-        if (hasPermission) {
-          self.doBlockUsingDeclarativeApi_(blockPattern);
-        } else {
-          self.doBlockUsingRequestCallback_(blockPattern);
-        }
-      });
+  self.doBlockUsingRequestCallback_(blockPattern);
 };
 
 /**
@@ -364,17 +291,6 @@ wpt.commands.CommandRunner.prototype.doNoScript = function() {
     'primaryPattern': '<all_urls>',
     'setting': 'block'
   });
-};
-
-/**
- * Implement the collectStats command.
- */
-wpt.commands.CommandRunner.prototype.doCollectStats = function(callback) {
-  chrome.tabs.sendRequest( g_tabid, {'message': 'collectStats'},
-      function(response) {
-        if (callback != undefined)
-          callback();
-      });
 };
 
 wpt.commands.CommandRunner.prototype.doCheckResponsive = function(callback) {

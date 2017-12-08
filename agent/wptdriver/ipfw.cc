@@ -65,7 +65,7 @@ bool CIpfw::Init() {
             if (pos > 0) {
               CStringA cmd = line.Mid(pos + 1).Trim();
               if (cmd.GetLength()) {
-                initialized_ = Execute((LPCTSTR)CA2T((LPCSTR)cmd));
+                initialized_ = Execute((LPCTSTR)CA2T((LPCSTR)cmd, CP_UTF8));
               }
             }
           }
@@ -80,13 +80,39 @@ bool CIpfw::Init() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool CIpfw::SetPipe(unsigned int num, unsigned long bandwidth, 
-                    unsigned long delay, double plr) {
+                    unsigned long delay, double plr, bool pipe_in) {
   bool ret = Init();
 
   if (ret) {
-    // on 32-bit systems, talk to the driver directly, otherwise use
-    // the ipfw command-line app.
-    if (win32_) {
+    // Always try using the command-line interface if available
+    CString cmd_line, buff;
+
+    // Bandwidth and delay get applied to the pipe
+    cmd_line.Format(_T("pipe %d config"), num);
+    if (bandwidth > 0) {
+      buff.Format(_T(" bw %dKbit/s"), bandwidth);
+      cmd_line += buff;
+    }
+    if (delay >= 0) {
+      buff.Format(_T(" delay %dms"), delay);
+      cmd_line += buff;
+    }
+    ret = Execute(cmd_line);
+
+    // Packet loss needs to be applied to the queue
+    if (ret) {
+      cmd_line.Format(_T("queue %d config pipe %d queue 100"), num, num);
+      if (plr > 0.0 && plr <= 1.0) {
+        buff.Format(_T(" plr %0.4f"), plr);
+        cmd_line += buff;
+      }
+      buff.Format(_T(" mask %s-port 0xffff"), pipe_in ? _T("dst") : _T("src"));
+      cmd_line += buff;
+      Execute(cmd_line);
+    }
+
+    // on 32-bit systems, fall back to talking to the driver directly
+    if (win32_ && !ret) {
       if (hDriver != INVALID_HANDLE_VALUE) {
         #pragma pack(push)
         #pragma pack(1)
@@ -132,28 +158,12 @@ bool CIpfw::SetPipe(unsigned int num, unsigned long bandwidth,
           s->sopt_val = (void *)(s+1);
           memcpy(s->sopt_val, &cmd, sizeof(cmd));
           DWORD n;
-          if (DeviceIoControl(hDriver, IP_FW_SETSOCKOPT,s,size, s, size, &n, 
-                              NULL))
+          if (DeviceIoControl(hDriver, IP_FW_SETSOCKOPT,s,(DWORD)size, s,
+                              (DWORD)size, &n, NULL))
             ret = true;
           free(s);
         }
       }
-    } else {
-      CString cmd, buff;
-      cmd.Format(_T("pipe %d config"), num);
-      if (bandwidth > 0) {
-        buff.Format(_T(" bw %dKbit/s"), bandwidth);
-        cmd += buff;
-      }
-      if (delay > 0) {
-        buff.Format(_T(" delay %dms"), delay);
-        cmd += buff;
-      }
-      if (plr > 0.0) {
-        buff.Format(_T(" plr 0.4f"), plr);
-        cmd += buff;
-      }
-      ret = Execute(cmd);
     }
   }
   return ret;
@@ -166,8 +176,8 @@ bool CIpfw::Execute(CString cmd) {
   bool ret = false;
   if (!ipfw_dir_.IsEmpty()) {
     CString command;
-    command.Format(_T("cmd /C \"ipfw.exe %s\""), (LPCTSTR)cmd);
-    AtlTrace(_T("Configuring dummynet: '%s'"), (LPCTSTR)command);
+    command.Format(_T("\"%sipfw.exe\" %s"), (LPCTSTR)ipfw_dir_, (LPCTSTR)cmd);
+    ATLTRACE(_T("Configuring dummynet: '%s'"), (LPCTSTR)command);
     ret = LaunchProcess(command, NULL, ipfw_dir_);
   }
   return ret;

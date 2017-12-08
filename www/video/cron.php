@@ -41,7 +41,8 @@ if ($ok) {
                         $page = urlencode($page);
                         
                         // build the url to initiate the test
-                        $testUrl = "http://{$_SERVER['HTTP_HOST']}/runtest.php?f=xml&priority=9&runs=5&video=1&mv=1&fvonly=1&url=$url&label=$page&ig=$industry&ip=$page$key";
+                        $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+                        $testUrl = "$protocol://{$_SERVER['HTTP_HOST']}/runtest.php?f=xml&priority=9&runs=5&video=1&mv=1&fvonly=1&url=$url&label=$page&ig=$industry&ip=$page$key";
                         
                         // we don't actually care if it worked or not
                         $result = file_get_contents($testUrl);

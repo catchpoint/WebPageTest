@@ -8,7 +8,7 @@ if (!array_key_exists('noBulk', $settings))
     $settings['noBulk'] = 0;
 
 // see if we are overriding the max runs
-if (isset($_COOKIE['maxruns'])) {
+if (isset($_COOKIE['maxruns']) && (int)$_GET['maxruns'] > 0) {
     $settings['maxruns'] = (int)$_GET['maxruns'];
 }
 if (isset($_GET['maxruns'])) {
@@ -16,7 +16,7 @@ if (isset($_GET['maxruns'])) {
     setcookie("maxruns", $settings['maxruns']);    
 }
 
-if (!isset($settings['maxruns'])) {
+if (!isset($settings['maxruns']) || $settings['maxruns'] <= 0) {
     $settings['maxruns'] = 10;
 }
 if (isset($_REQUEST['map'])) {
@@ -36,12 +36,21 @@ if (is_file('./settings/keys.ini')) {
 }
 $url = '';
 if (isset($req_url)) {
-  $url = $req_url;
+  $url = htmlspecialchars($req_url);
 }
 if (!strlen($url)) {
     $url = 'Enter a Website URL';
 }
 $connectivity = parse_ini_file('./settings/connectivity.ini', true);
+if (isset($_REQUEST['connection']) && isset($connectivity[$_REQUEST['connection']])) {
+  // move it to the front of the list
+  $insert = $connectivity[$_REQUEST['connection']];
+  unset($connectivity[$_REQUEST['connection']]);
+  $old = $connectivity;
+  $connectivity = array($_REQUEST['connection'] => $insert);
+  foreach ($old as $key => $values)
+    $connectivity[$key] = $values;
+}
 
 // if they have custom bandwidth stored, remember it
 if( isset($_COOKIE['u']) && isset($_COOKIE['d']) && isset($_COOKIE['l']) )
@@ -72,6 +81,7 @@ $loc = ParseLocations($locations);
             if (!$headless) {
             ?>
             <form name="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
+            <input type="hidden" name="lighthouseTrace" value="1">
             
             <?php
             echo "<input type=\"hidden\" name=\"vo\" value=\"$owner\">\n";
@@ -95,21 +105,48 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="shard" value="' . htmlspecialchars($_REQUEST['shard']) . "\">\n";
             if (array_key_exists('discard', $_REQUEST))
               echo '<input type="hidden" name="discard" value="' . htmlspecialchars($_REQUEST['discard']) . "\">\n";
-            if (array_key_exists('responsive', $_REQUEST))
-              echo '<input type="hidden" name="responsive" value="' . htmlspecialchars($_REQUEST['responsive']) . "\">\n";
+            if (array_key_exists('timeout', $_REQUEST))
+              echo '<input type="hidden" name="timeout" value="' . htmlspecialchars($_REQUEST['timeout']) . "\">\n";
+            if (array_key_exists('appendua', $_REQUEST))
+              echo '<input type="hidden" name="appendua" value="' . htmlspecialchars($_REQUEST['appendua']) . "\">\n";
+            if (array_key_exists('keepvideo', $_REQUEST))
+              echo '<input type="hidden" name="keepvideo" value="' . htmlspecialchars($_REQUEST['keepvideo']) . "\">\n";
+            if (array_key_exists('medianMetric', $_REQUEST))
+              echo '<input type="hidden" name="medianMetric" value="' . htmlspecialchars($_REQUEST['medianMetric']) . "\">\n";
+            if (array_key_exists('affinity', $_REQUEST))
+              echo '<input type="hidden" name="affinity" value="' . htmlspecialchars($_REQUEST['affinity']) . "\">\n";
+            if (array_key_exists('tester', $_REQUEST))
+              echo '<input type="hidden" name="tester" value="' . htmlspecialchars($_REQUEST['tester']) . "\">\n";
+            if (array_key_exists('minimal', $_REQUEST))
+              echo '<input type="hidden" name="minimal" value="' . htmlspecialchars($_REQUEST['minimal']) . "\">\n";
+            if (isset($_REQUEST['noopt']))
+              echo '<input type="hidden" name="noopt" value="' . htmlspecialchars($_REQUEST['noopt']) . "\">\n";
+            if (isset($_REQUEST['debug']))
+              echo '<input type="hidden" name="debug" value="' . htmlspecialchars($_REQUEST['debug']) . "\">\n";
+            if (isset($_REQUEST['throttle_cpu']))
+              echo '<input type="hidden" name="throttle_cpu" value="' . htmlspecialchars($_REQUEST['throttle_cpu']) . "\">\n";
+            if (isset($_REQUEST['browser_width']))
+              echo '<input type="hidden" name="browser_width" value="' . htmlspecialchars($_REQUEST['browser_width']) . "\">\n";
+            if (isset($_REQUEST['browser_height']))
+              echo '<input type="hidden" name="browser_height" value="' . htmlspecialchars($_REQUEST['browser_height']) . "\">\n";
+            if (isset($_REQUEST['width']))
+              echo '<input type="hidden" name="width" value="' . htmlspecialchars($_REQUEST['width']) . "\">\n";
+            if (isset($_REQUEST['height']))
+              echo '<input type="hidden" name="height" value="' . htmlspecialchars($_REQUEST['height']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
 
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
-                    <li class="analytical_review ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Analytical Review</a></li>
-                    <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
+                    <li class="analytical_review ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Advanced Testing</a></li>
                     <?php
-                    if (GetSetting('mobile'))
-                        echo '<li class="mobile_test"><a href="/mobile">Mobile</a></li>';
+                    if (is_file(__DIR__ . '/settings/profiles.ini')) {
+                      echo "<li class=\"easy_mode\"><a href=\"/easy.php\">Simple Testing</a></li>";
+                    }
                     ?>
-                    <li class="traceroute"><a href="/traceroute">Traceroute</a></li>
+                    <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
+                    <li class="traceroute"><a href="/traceroute.php">Traceroute</a></li>
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
@@ -143,8 +180,6 @@ $loc = ParseLocations($locations);
                             <?php if (isset($settings['map'])) { ?>
                             <input id="change-location-btn" type=button onclick="SelectLocation();" value="Select from Map">
                             <?php } ?>
-                            <span class="pending_tests hidden" id="pending_tests"><span id="backlog">0</span> Pending Tests</span>
-                            <span class="cleared"></span>
                         </li>
                         <li>
                             <label for="browser">Browser</label>
@@ -159,6 +194,8 @@ $loc = ParseLocations($locations);
                                 }
                                 ?>
                             </select>
+                            <span class="pending_tests hidden" id="pending_tests"><span id="backlog">0</span> Pending Tests</span>
+                            <span class="cleared"></span>
                         </li>
                     </ul>
                     <?php if (isset($settings['multi_locations'])) { ?>
@@ -200,11 +237,14 @@ $loc = ParseLocations($locations);
                                 <li><a href="#test-settings">Test Settings</a></li>
                                 <li><a href="#advanced-settings">Advanced</a></li>
                                 <li><a href="#advanced-chrome">Chrome</a></li>
+                                <?php if (!isset($settings['no_basic_auth_ui'])) { ?>
                                 <li><a href="#auth">Auth</a></li>
+                                <?php } ?>
                                 <li><a href="#script">Script</a></li>
                                 <li><a href="#block">Block</a></li>
                                 <li><a href="#spof">SPOF</a></li>
-                                <?php if (!$settings['noBulk']) { ?>
+                                <li><a href="#custom-metrics">Custom</a></li>
+                                <?php if ($admin || !$settings['noBulk']) { ?>
                                 <li><a href="#bulk">Bulk Testing</a></li>
                                 <?php } ?>
                             </ul>
@@ -241,28 +281,43 @@ $loc = ParseLocations($locations);
                                             </tr>
                                         </table>
                                     </li>
+                                    <?php
+                                    if ($admin) {
+                                      echo '<li>';
+                                      echo '<label for="custom_browser">';
+                                      echo '<a href="/custom_browsers.php">Custom Browser</a>';
+                                      echo '</label>';
+                                      echo '<input id="custom_browser" type="text" class="text" name="custombrowser" value="">';
+                                      echo '</li>';
+                                    }
+                                    ?>
                                     <li>
                                         <label for="number_of_tests">
                                             Number of Tests to Run<br>
                                             <small>Up to <?php echo $settings['maxruns']; ?></small>
                                         </label>
                                         <?php
-                                        $runs = (int)@$_COOKIE["runs"];
+                                        $runs = 3;
+                                        if (isset($_COOKIE["runs"]))
+                                          $runs = (int)@$_COOKIE["runs"];
+                                        if (isset($_REQUEST["runs"]))
+                                          $runs = (int)@$_REQUEST["runs"];
                                         if( isset($req_runs) )
-                                            $runs = (int)$req_runs;
+                                          $runs = (int)$req_runs;
                                         $runs = max(1, min($runs, $settings['maxruns']));
                                         ?>
-                                        <input id="number_of_tests" type="text" class="text short" name="runs" value=<?php echo "\"$runs\""; ?>>
+                                        <input id="number_of_tests" type="number" min="1" max=<?php echo "\"{$settings['maxruns']}\""; ?> class="text short" name="runs" value=<?php echo "\"$runs\""; ?> required>
                                     </li>
                                     <li>
                                         <label for="viewBoth">
                                             Repeat View
                                         </label>
                                         <?php
-                                        $fvOnly = (int)@$_COOKIE["testOptions"] & 2;
-                                        if (array_key_exists('fvonly', $_REQUEST)) {
-                                            $fvOnly = (int)$_REQUEST['fvonly'];
-                                        }
+                                        $fvOnly = true;
+                                        if (isset($_COOKIE["testOptions"]))
+                                          $fvOnly = (int)@$_COOKIE["testOptions"] & 2;
+                                        if (isset($_REQUEST['fvonly']))
+                                          $fvOnly = (int)$_REQUEST['fvonly'];
                                         ?>
                                         <input id="viewBoth" type="radio" name="fvonly" <?php if( !$fvOnly ) echo 'checked=checked'; ?> value="0">First View and Repeat View
                                         <input id="viewFirst" type="radio" name="fvonly" <?php if( $fvOnly ) echo 'checked=checked'; ?> value="1">First View Only
@@ -271,14 +326,14 @@ $loc = ParseLocations($locations);
                                       <label for="videoCheck">Capture Video</label>
                                       <?php
                                       $video = 0;
-                                      if (array_key_exists('video', $_REQUEST))
-                                          $video = (int)$_REQUEST['video'];
+                                      if (isset($_REQUEST['video']))
+                                        $video = (int)$_REQUEST['video'];
                                       ?>
                                       <input type="checkbox" name="video" id="videoCheck" class="checkbox" <?php if( $video ) echo 'checked=checked'; ?>>
                                     </li>
                                     <li>
                                         <label for="keep_test_private">Keep Test Private</label>
-                                        <input type="checkbox" name="private" id="keep_test_private" class="checkbox" <?php if (((int)@$_COOKIE["testOptions"] & 1) || array_key_exists('hidden', $_REQUEST)) echo " checked=checked"; ?>>
+                                        <input type="checkbox" name="private" id="keep_test_private" class="checkbox" <?php if (((int)@$_COOKIE["testOptions"] & 1) || array_key_exists('hidden', $_REQUEST) || GetSetting('defaultPrivate')) echo " checked=checked"; ?>>
                                     </li>
                                     <li>
                                         <label for="label">Label</label>
@@ -303,13 +358,14 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="noscript" id="noscript" class="checkbox" style="float: left;width: auto;">
                                         <label for="noscript" class="auto_width">
-                                            Disable Javascript
+                                            Disable JavaScript
                                         </label>
                                     </li>
                                     <li>
                                         <input type="checkbox" name="clearcerts" id="clearcerts" class="checkbox" style="float: left;width: auto;">
                                         <label for="clearcerts" class="auto_width">
-                                            Clear SSL Certificate Caches
+                                            Clear SSL Certificate Caches<br>
+                                            <small>Internet Explorer and Chrome</small>
                                         </label>
                                     </li>
                                     <li>
@@ -340,16 +396,10 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="continuousVideo" id="continuousVideo" class="checkbox" style="float: left;width: auto;">
-                                        <label for="continuousVideo" class="auto_width">
-                                            Continuous Video Capture<br>
-                                            <small>Unstable/experimental, may cause tests to fail</small>
-                                        </label>
-                                    </li>
-                                    <li>
                                         <?php
                                         $checked = '';
-                                        if (array_key_exists('keepua', $settings) && $settings['keepua'])
+                                        if ((array_key_exists('keepua', $settings) && $settings['keepua']) ||
+                                                (array_key_exists('keepua', $_REQUEST) && $_REQUEST['keepua']))
                                             $checked = ' checked=checked';
                                         echo "<input type=\"checkbox\" name=\"keepua\" id=\"keepua\" class=\"checkbox\" style=\"float: left;width: auto;\"$checked>\n";
                                         ?>
@@ -359,63 +409,162 @@ $loc = ParseLocations($locations);
                                         </label>
                                     </li>
                                     <li>
-                                        <label for="dom_elements" class="auto_width">DOM Element</label>
-                                        <input type="text" name="domelement" id="dom_elements" class="text">
-                                        <div class="tooltip" style="display:none;">Waits for and records when the indicated DOM element becomes available on the page.  The DOM element 
-                                        is identified in <b>attribute=value</b> format where "attribute" is the attribute to match on (id, className, name, innerText, etc.)
-                                        and "value" is the value of that attribute (case sensitive).  For example, on SNS pages <b>name=loginId</b>
-                                        would be the DOM element for the Screen Name entry field.<br><br>
-                                        There are 3 special  attributes that will match on a HTTP request: <b>RequestEnd</b>, <b>RequestStart</b> and <b>RequestTTFB</b> will mark the End, Start or TTFB of the
-                                        first request that contains the given value in the url. i.e. <b>RequestTTFB=favicon.ico</b> will mark the first byte time of the favicon.ico request.
-                                        </div>
+                                        <label for="uastring" style="width: auto;">
+                                        User Agent String<br>
+                                        <small>(Custom UA String)</small>
+                                        </label>
+                                        <input type="text" name="uastring" id="uastring" class="text" style="width: 350px;">
                                     </li>
+                                    <?php
+                                    if ( isset($settings['fullSizeVideoOn']) && $settings['fullSizeVideoOn'] )
+                                    { ?>
+                                    <li>
+                                        <input type="checkbox" name="fullsizevideo" id="full_size_video" class="checkbox" <?php if( isset($settings['fullSizeVideoDefault']) && $settings['fullSizeVideoDefault'] )  echo 'checked=checked'; ?> style="float: left;width: auto;">
+                                        <label for="full_size_video" class="auto_width">
+                                            Capture Full Size Video<br>
+                                            <small>Enables full size screenshots in the filmstrip</small>
+                                        </label>
+                                    </li><?php } ?>
                                     <li>
                                         <label for="time">
                                             Minimum test duration<br>
                                             <small>Capture data for at least...</small>
                                         </label>
-                                        <input id="time" type="text" class="text short" name="time" value=""> seconds
+                                        <input id="time" type="number" class="text short" name="time" value=""> seconds
                                     </li>
-                                    <?php
-                                    /*
                                     <li>
-                                        <label for="orientationDefault">
-                                            Mobile Orientation<br>
-                                            <small>Experimental</small>
+                                        <label for="customHeaders">
+                                            Custom headers<br>
+                                            <small>Add custom headers to all network requests emitted from the browser</small>
                                         </label>
-                                        <input id="orientationDefault" type="radio" name="orientation" checked=checked value="default">Device Default
-                                        <input id="orientationPortrait" type="radio" name="orientation" value="portrait">Portrait
-                                        <input id="orientationPortrait" type="radio" name="orientation" value="landscape">Landscape
+                                        <textarea id="customHeaders" type="text" class="text" name="customHeaders" value=""></textarea>
                                     </li>
-                                    */
-                                    ?>
                                 </ul>
                             </div>
                             <div id="advanced-chrome" class="test_subbox ui-tabs-hide">
                                 <p>Chrome-specific advanced settings:</p>
                                 <ul class="input_fields">
                                     <li>
-                                        <input type="checkbox" name="mobile" id="mobile" class="checkbox" style="float: left;width: auto;">
-                                        <label for="mobile" class="auto_width">
-                                            Emulate Mobile Browser (Experimental)<br>
-                                            <small>Chrome mobile user agent, 640x960 screen, 2x scaling and fixed viewport</small>
+                                        <input type="checkbox" name="lighthouse" id="lighthouse" class="checkbox" style="float: left;width: auto;">
+                                        <label for="lighthouse" class="auto_width">
+                                            Capture Lighthouse Report (Mobile devices only)
                                         </label>
                                     </li>
                                     <li>
-                                        <input type="checkbox" name="timeline" id="timeline" class="checkbox" style="float: left;width: auto;">
+                                        <?php
+                                        $checked = '';
+                                        if (isset($_REQUEST['mobile']) && $_REQUEST['mobile'])
+                                          $checked = ' checked';
+                                        echo "<input type=\"checkbox\" name=\"mobile\" id=\"mobile\" class=\"checkbox\" style=\"float: left;width: auto;\"$checked>";
+                                        if (is_file('./settings/mobile_devices.ini')) {
+                                          $devices = parse_ini_file('./settings/mobile_devices.ini', true);
+                                          if ($devices && count($devices)) {
+                                            $selectedDevice = null;
+                                            if (isset($_COOKIE['mdev']) && isset($devices[$_COOKIE['mdev']]))
+                                              $selectedDevice = $_COOKIE['mdev'];
+                                            if (isset($_REQUEST['mdev']) && isset($devices[$_REQUEST['mdev']]))
+                                              $selectedDevice = $_REQUEST['mdev'];
+                                            echo '<select name="mobileDevice" id="mobileDevice">';
+                                            $lastGroup = null;
+                                            foreach ($devices as $deviceName => $deviceInfo) {
+                                              if (isset($deviceInfo['label'])) {
+                                                if (isset($deviceInfo['group']) && $deviceInfo['group'] != $lastGroup) {
+                                                  if (isset($lastGroup))
+                                                    echo "</optgroup>";
+                                                  $lastGroup = $deviceInfo['group'];
+                                                  echo "<optgroup label=\"" . htmlspecialchars($lastGroup) . "\">";
+                                                }
+                                                $selected = '';
+                                                if (isset($selectedDevice) && $selectedDevice == $deviceName)
+                                                  $selected = 'selected';
+                                                echo "<option value=\"$deviceName\" $selected>" . htmlspecialchars($deviceInfo['label']) . "</option>\n";
+                                              }
+                                            }
+                                            if (isset($lastGroup))
+                                              echo "</optgroup>";
+                                            echo '</select>';
+                                          }
+                                        }
+                                        ?>
+                                        <label for="mobile" class="auto_width">
+                                            Emulate Mobile Browser
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <?php
+                                        $timeline = 0;
+                                        if (isset($_REQUEST['timeline']))
+                                          $timeline = (int)$_REQUEST['timeline'];
+                                        ?>
+                                        <input type="checkbox" name="timeline" id="timeline" class="checkbox" <?php if( $timeline ) echo 'checked=checked'; ?> style="float: left;width: auto;">
                                         <label for="timeline" class="auto_width">
                                             Capture Dev Tools Timeline
                                         </label>
+                                        <?php
+                                        /*
                                         <input type="checkbox" name="timelineStack" id="timelineStack" class="checkbox" style="float: left;width: auto;">
                                         <label for="timelineStack" class="auto_width">
                                             Include call stack (increases overhead)
                                         </label>
+                                        */
+                                        ?>
+                                    </li>
+                                    <li>
+                                        <input type="checkbox" name="trace" id="trace" class="checkbox" style="float: left;width: auto;">
+                                        <label for="trace" class="auto_width">
+                                            Capture Chrome Trace (about://tracing)
+                                        </label>
+                                    </li>
+                                    <li>
+                                        <label for="traceCategories" style="width: auto;">
+                                        Trace Categories<br>
+                                        <small>(when tracing is enabled)</small>
+                                        </label>
+                                        <input type="text" name="traceCategories" id="traceCategories" class="text" style="width: 400px;" value="blink,v8,cc,gpu,blink.net,netlog,disabled-by-default-v8.runtime_stats">
                                     </li>
                                     <li>
                                         <input type="checkbox" name="netlog" id="netlog" class="checkbox" style="float: left;width: auto;">
                                         <label for="netlog" class="auto_width">
                                             Capture Network Log
                                         </label>
+                                    </li>
+                                    <li>
+                                        <input type="checkbox" name="dataReduction" id="dataReduction" class="checkbox" style="float: left;width: auto;">
+                                        <label for="dataReduction" class="auto_width">
+                                            Enable Data Reduction<br>
+                                            <small>Chrome 34+ on Android</small>
+                                        </label>
+                                    </li>
+                                    <?php
+                                    if ($admin && GetSetting('wprDesktop')) {
+                                    ?>
+                                    <li>
+                                        <input type="checkbox" name="wprDesktop" id="wprDesktop" class="checkbox" style="float: left;width: auto;">
+                                        <label for="wprDesktop" class="auto_width">
+                                            Use Web Page Replay recorded Desktop Page<br>
+                                            <small>Limited list of available <a href="/wprDesktop.txt">URLs</a></small>
+                                        </label>
+                                    </li>
+                                    <?php
+                                    }
+                                    if ($admin && GetSetting('wprMobile')) {
+                                    ?>
+                                    <li>
+                                        <input type="checkbox" name="wprMobile" id="wprMobile" class="checkbox" style="float: left;width: auto;">
+                                        <label for="wprMobile" class="auto_width">
+                                            Use Web Page Replay recorded Mobile Page<br>
+                                            <small>Limited list of available <a href="/wprMobile.txt">URLs</a></small>
+                                        </label>
+                                    </li>
+                                    <?php
+                                    }
+                                    ?>
+                                    <li>
+                                        <label for="hostResolverRules" style="width: auto;">
+                                        <a href="https://github.com/atom/electron/blob/master/docs/api/chrome-command-line-switches.md#--host-rulesrules">Host Resolver Rules</a><br>
+                                        <small>i.e. MAP * 1.2.3.4</small>
+                                        </label>
+                                        <input type="text" name="hostResolverRules" id="hostResolverRules" class="text" style="width: 400px;">
                                     </li>
                                     <li>
                                         <label for="cmdline" style="width: auto;">
@@ -426,6 +575,8 @@ $loc = ParseLocations($locations);
                                     </li>
                                 </ul>
                             </div>
+                            
+                            <?php if (!isset($settings['no_basic_auth_ui'])) { ?>
                             <div id="auth" class="test_subbox ui-tabs-hide">
                                 <div class="notification-container">
                                     <div class="notification"><div class="warning">
@@ -448,6 +599,7 @@ $loc = ParseLocations($locations);
                                     </li>
                                 </ul>
                             </div>
+                            <?php } ?>
 
                             <div id="script" class="test_subbox ui-tabs-hide">
                                 <div>
@@ -509,7 +661,20 @@ $loc = ParseLocations($locations);
                                 ?></textarea>
                             </div>
 
-                            <?php if (!$settings['noBulk']) { ?>
+                            <div id="custom-metrics" class="test_subbox ui-tabs-hide">
+                                <div>
+                                    <div class="notification-container">
+                                        <div class="notification"><div class="message">
+                                            See <a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/custom-metrics">the documentation</a> for details on how to specify custom metrics to be captured.
+                                        </div></div>
+                                    </div>
+                                    
+                                    <p><label for="custom_metrics" class="full_width">Custom Metrics:</label></p>
+                                    <textarea name="custom" id="custom_metrics" cols="0" rows="0"></textarea>
+                                </div>
+                            </div>
+
+                            <?php if ($admin || !$settings['noBulk']) { ?>
                             <div id="bulk" class="test_subbox ui-tabs-hide">
                                 <p>
                                     <label for="bulkurls" class="full_width">
@@ -586,19 +751,18 @@ $loc = ParseLocations($locations);
             $sponsors = parse_ini_file('./settings/sponsors.ini', true);
             foreach( $sponsors as &$sponsor )
             {
-                if( strlen($GLOBALS['cdnPath']) )
-                {
-                    if( isset($sponsor['logo']) )
-                        $sponsor['logo'] = $GLOBALS['cdnPath'] . $sponsor['logo'];
-                    if( isset($sponsor['logo_big']) )
-                        $sponsor['logo_big'] = $GLOBALS['cdnPath'] . $sponsor['logo_big'];
-                }
-                $offset = 0;
-                if( $sponsor['index'] )
-                    $offset = -40 * $sponsor['index'];
-                $sponsor['offset'] = $offset;
+              if( strlen($GLOBALS['cdnPath']) && isset($sponsor['logo']) )
+                $sponsor['logo'] = $GLOBALS['cdnPath'] . $sponsor['logo'];
+              $offset = 0;
+              if( $sponsor['index'] )
+                $offset = -40 * $sponsor['index'];
+              $sponsor['offset'] = $offset;
             }
             echo "var sponsors = " . @json_encode($sponsors) . ";\n";
+            if (isset($_REQUEST['force']) && $_REQUEST['force'])
+              echo "var forgetSettings = true;\n";
+            else
+              echo "var forgetSettings = false;\n";
         ?>
         </script>
         <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script> 
@@ -613,7 +777,7 @@ $loc = ParseLocations($locations);
 */
 function LoadLocations()
 {
-    $locations = parse_ini_file('./settings/locations.ini', true);
+    $locations = LoadLocationsIni();
     FilterLocations( $locations );
     
     // strip out any sensitive information

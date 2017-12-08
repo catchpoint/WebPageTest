@@ -174,6 +174,7 @@ void TerminateProcs(void) {
   // (wait long enough for them to exit gracefully first)
   const TCHAR * procs[] = { 
     _T("wptdriver.exe")
+    , _T("wptwatchdog.exe")
     , _T("chrome.exe")
   };
 
@@ -192,8 +193,8 @@ void TerminateProcs(void) {
         HANDLE process = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE, FALSE, 
                                       proc[i].ProcessId);
         if (process) {
-          // give it 2 minutes to exit on it's own
-          if (WaitForSingleObject(process, 120000) != WAIT_OBJECT_0)
+          // give it 10 seconds to exit on it's own
+          if (WaitForSingleObject(process, 10000) != WAIT_OBJECT_0)
             TerminateProcess(process, 0);
           CloseHandle(process);
         }

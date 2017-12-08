@@ -122,7 +122,8 @@ public:
   virtual ~WptTest(void);
 
   void  Reset(void);
-  virtual bool  Load(CString& test);
+  virtual bool Load(CString& test);
+  CString SaveJson();
 
   bool  GetNextTask(CStringA& task, bool& record);
   bool  Done();
@@ -131,12 +132,18 @@ public:
   void  OverridePort(const struct sockaddr FAR * name, int namelen);
   bool  ModifyRequestHeader(CStringA& header) const;
   bool  BlockRequest(CString host, CString object);
+  bool  OverrideHost(CString host, CString &new_host);
+  bool  GetHeadersToSet(CString host, CAtlList<CString> &headers);
+  bool  GetHeadersToAdd(CString host, CAtlList<CString> &headers);
   void  CollectData();
   void  CollectDataDone();
   virtual void  ReportData();
   void Lock();
   void Unlock();
   bool IsLocked();
+  CStringA  GetAppendUA() const;
+  bool HasCustomCommandLine() const {return _browser_command_line.GetLength() || _browser_additional_command_line.GetLength();}
+  CString TimeLog() {return _file_base + "_test_timing.log";}
 
   // overall test settings
   CString _id;
@@ -150,7 +157,9 @@ public:
   bool    _ignore_ssl;
   bool    _tcpdump;
   bool    _timeline;
+  int     _timelineStackDepth;
   bool    _trace;
+  CString _traceCategories;
   bool    _netlog;
   bool    _video;
   bool    _spdy3;
@@ -170,11 +179,14 @@ public:
   CString _basic_auth;
   CString _script;
   CString _test_file;
+  CString _json_file;
   bool    _log_data;
   DWORD   _test_timeout;
+  bool    _has_test_timed_out;
   DWORD   _measurement_timeout;
   BYTE    _image_quality;
   bool    _png_screen_shot;
+  bool    _full_size_video;
   DWORD   _minimum_duration;
   bool    _save_response_bodies;
   bool    _save_html_body;
@@ -195,6 +207,19 @@ public:
   CString _navigated_url;
   CStringA _test_error;
   CStringA _run_error;
+  CString _custom_metrics;
+  DWORD   _script_timeout_multiplier;
+  CStringA _user_agent_modifier;
+  CStringA _append_user_agent;
+  DWORD    _max_test_time;
+  CString  _block_domains_global;
+  CAtlList<CString> _block_domains;
+  CAtlList<CString> _block_domains_except;
+  bool     _minimal_results;
+  CString  _software_update_url;
+  CString  _job_info;
+  CStringA _testinfo_json;
+  CStringA _testinfo_ini;
   
   // current state
   int     _run;
@@ -203,7 +228,6 @@ public:
   bool    _discard_test;
   int     _index;
   bool    _clear_cache;
-  bool    _upload_incremental_results;
   bool    _active;
   LARGE_INTEGER _sleep_end;
   LARGE_INTEGER _perf_frequency;
@@ -212,6 +236,9 @@ public:
   // Whether we need to wait for DOM element.
   bool    _dom_element_check;
   int     _no_run;  // conditional block support - if/else/endif
+  CStringA _current_event_name;
+  bool    _is_chrome;
+  bool    overrode_ua_string_;
 
   // system information
   bool      has_gpu_;
@@ -225,7 +252,8 @@ protected:
   void      FixURL(ScriptCommand& command);
   bool      PreProcessScriptCommand(ScriptCommand& command);
   bool      ConditionMatches(ScriptCommand& command);
-  void      ParseBlockCommand(CString block_list, bool add_head);
+  void      ParseBlockCommand(CString block_list);
+  void      ParseBlockDomains(CString block_list);
   int       lock_count_;
   virtual bool ProcessCommand(ScriptCommand& command, bool &consumed);
 
@@ -244,4 +272,13 @@ protected:
   CAtlList<HttpHeaderValue> _override_hosts;
 
   CAtlMap<USHORT, USHORT> _tcp_port_override;
+
+  CStringA JsonFragment(LPCSTR field, CString &value);
+  CStringA JsonFragment(LPCSTR field, CStringA &value);
+  CStringA JsonFragment(LPCSTR field, bool &value);
+  CStringA JsonFragment(LPCSTR field, DWORD &value);
+  CStringA JsonFragment(LPCSTR field, int &value);
+  CStringA JsonFragment(LPCSTR field, BYTE &value);
+  CStringA JsonFragment(LPCSTR field, double &value);
+  CStringA JsonFragment(LPCSTR field, CAtlList<CString> &values);
 };

@@ -1,17 +1,23 @@
 [FlashAX]
-url=http://s3.amazonaws.com/wpt-software/flashplayer11_9r900_152_winax.exe
-version=11.9.900.152
-md5=8A56647FAB4555A90CE51A3B9891C8D8
-command=flashplayer11_9r900_152_winax.exe -install
+url=http://cdn.webpagetest.org/installers/flash/install_flash_player_22_active_x.exe
+version=22.0.0.209
+md5=FB167D1992D86CBCB71960BA70040C57
+command=install_flash_player_22_active_x.exe -install
 
 [Flash]
-url=http://s3.amazonaws.com/wpt-software/flashplayer11_9r900_152_win.exe
-version=11.9.900.152
-md5=A178DA64FD1F1031D965175CBBC7F481
-command=flashplayer11_9r900_152_win.exe -install
+url=http://cdn.webpagetest.org/installers/flash/install_flash_player_22_plugin.exe
+version=22.0.0.209
+md5=BCB4DA95D201D991A9AD119385F18632
+command=install_flash_player_22_plugin.exe -install
 
-[Silverlight]
-url=http://s3.amazonaws.com/wpt-software/silverlight_5.exe
-version=5.0.61118.0
-md5=43478A6A7A03F282C4A48222B4D631B4
-command=silverlight_5.exe /q
+[Python27]
+url=http://cdn.webpagetest.org/installers/python/python-2.7.12.msi
+version=2.7.12
+md5=FE0EF5B8FD02722F32F7284324934F9D
+command=msiexec /i python-2.7.12.msi /qn TARGETDIR=c:\Python27
+
+[ujson]
+url=http://cdn.webpagetest.org/installers/python/ujson.exe
+version=1.23
+md5=84E843660D5B1779E5FEE0440AB28B01
+command=ujson /S

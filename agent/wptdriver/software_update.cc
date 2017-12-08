@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "software_update.h"
 #include "wpt_status.h"
+#include "PEHelper.h"
 #include <Shellapi.h>
 
 static const DWORD SOFTWARE_UPDATE_INTERVAL_MINUTES = 60;  // hourly
@@ -27,6 +28,29 @@ SoftwareUpdate::SoftwareUpdate(WptStatus &status):
   }
   QueryPerformanceFrequency(&_perf_frequency_minutes);
   _perf_frequency_minutes.QuadPart = _perf_frequency_minutes.QuadPart * 60;
+  // get the version number to pass along in update checks
+  TCHAR file[MAX_PATH];
+  if (GetModuleFileName(NULL, file, _countof(file))) {
+    DWORD unused;
+    DWORD infoSize = GetFileVersionInfoSize(file, &unused);
+    if (infoSize) {
+      LPBYTE pVersion = new BYTE[infoSize];
+      if (GetFileVersionInfo(file, 0, infoSize, pVersion)) {
+        VS_FIXEDFILEINFO * info = NULL;
+        UINT size = 0;
+        if( VerQueryValue(pVersion, _T("\\"), (LPVOID*)&info, &size) && info )
+        {
+          _version.Format(_T("%d.%d.%d.%d"), HIWORD(info->dwFileVersionMS),
+                          LOWORD(info->dwFileVersionMS),
+                          HIWORD(info->dwFileVersionLS),
+                          LOWORD(info->dwFileVersionLS));
+          _build.Format(_T("%d"), LOWORD(info->dwFileVersionLS));
+        }
+      }
+
+      delete [] pVersion;
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -52,15 +76,16 @@ void SoftwareUpdate::LoadSettings(CString settings_ini) {
       settings_ini)) {
     TCHAR * section = sections;
     while(lstrlen(section)) {
-      if (GetPrivateProfileString(section, _T("Installer"), NULL, buff, 
+      if (GetPrivateProfileString(section, _T("exe"), NULL, buff, 
           _countof(buff), settings_ini)) {
         BrowserInfo info;
-        info._installer = buff;
-        if (GetPrivateProfileString(section, _T("exe"), NULL, buff, 
+        info._name = section;
+        info._exe = buff;
+        if (program_files_dir.GetLength())
+          info._exe.Replace(_T("%PROGRAM_FILES%"), program_files_dir);
+        if (GetPrivateProfileString(section, _T("Installer"), NULL, buff, 
             _countof(buff), settings_ini)) {
-          info._exe = buff;
-          if (program_files_dir.GetLength())
-            info._exe.Replace(_T("%PROGRAM_FILES%"), program_files_dir);
+          info._installer = buff;
         }
         _browsers.AddTail(info);
       }
@@ -71,26 +96,71 @@ void SoftwareUpdate::LoadSettings(CString settings_ini) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void SoftwareUpdate::SetSoftwareUrl(CString url) {
+  if (url != _software_url) {
+    _software_url = url;
+    UpdateSoftware(true);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void SoftwareUpdate::SetServerUrl(CString url) {
+  _server_url = url;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CString SoftwareUpdate::GetUpdateInfo(CString url) {
+  CString info, params, buff;
+  params = _T("wptdriverVer=") + _version + _T("&wptdriverBuild=") + _build;
+  if (_ec2_instance.GetLength())
+    params += _T("&ec2instance=") + _ec2_instance;
+  if (_ec2_availability_zone.GetLength())
+    params += _T("&ec2zone=") + _ec2_availability_zone;
+  if (params.GetLength()) {
+    if (url.Find(_T("?")) > 0)
+      url += _T("&");
+    else
+      url += _T("?");
+    url += params;
+  }
+
+  // Try getting the update information directly from a local s3 bucket
+  if (_ec2_availability_zone.GetLength() && url.Find(_T("www.webpagetest.org")) >= 0) {
+    CString region = _ec2_availability_zone.Left(_ec2_availability_zone.GetLength() - 1);
+    CString s3url = url;
+    s3url.Replace(_T("www.webpagetest.org"), _T("wpt-") + region + _T(".s3.amazonaws.com"));
+    info = HttpGetText(s3url);
+  }
+
+  if (info.IsEmpty())
+    info = HttpGetText(url);
+
+  return info;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 bool SoftwareUpdate::UpdateSoftware(bool force) {
   bool ok = true;
+  ATLTRACE("[wptdriver] SoftwareUpdate::UpdateSoftware");
   if (force || TimeToCheck()) {
     ok = UpdateBrowsers();
     if (ok && _software_url.GetLength()) {
-      CString info = HttpGetText(_software_url);
+      CString info = GetUpdateInfo(_software_url);
       if (info.GetLength()) {
-        CString app, version, command, file_url, md5;
+        CString app, version, command, url, md5;
         int token_position = 0;
         CString line = info.Tokenize(_T("\r\n"), token_position).Trim();
         while (ok && token_position >= 0) {
           if (line.Left(1) == _T('[')) {
-            if (app.GetLength()) {
-              ok = InstallSoftware(app, file_url, md5, version, command, 1, 
-                                    _T(""));
-            }
+            if (app.GetLength())
+              ok = InstallSoftware(app, url, md5, version, command, _T(""));
             app = line.Trim(_T("[] \t"));
             version.Empty();
             command.Empty();
-            file_url.Empty();
+            url.Empty();
             md5.Empty();
           } else if (app.GetLength()) {
             int separator = line.Find(_T('='));
@@ -98,7 +168,7 @@ bool SoftwareUpdate::UpdateSoftware(bool force) {
               CString tag = line.Left(separator).Trim().MakeLower();
               CString value = line.Mid(separator + 1).Trim();
               if (tag == _T("url"))
-                file_url = value;
+                url = value;
               else if (tag == _T("md5"))
                 md5 = value;
               else if (tag == _T("version"))
@@ -109,10 +179,8 @@ bool SoftwareUpdate::UpdateSoftware(bool force) {
           }
           line = info.Tokenize(_T("\r\n"), token_position).Trim();
         }
-        if (ok && app.GetLength()) {
-          ok = InstallSoftware(app, file_url, md5, version, command, 1, 
-                                _T(""));
-        }
+        if (ok && app.GetLength())
+          ok = InstallSoftware(app, url, md5, version, command, _T(""));
       }
     }
     if (ok) {
@@ -126,18 +194,14 @@ bool SoftwareUpdate::UpdateSoftware(bool force) {
 -----------------------------------------------------------------------------*/
 bool SoftwareUpdate::UpdateBrowsers(void) {
   bool ok = true;
-  WptTrace(loglevel::kFunction,
-            _T("[wptdriver] SoftwareUpdate::UpdateBrowsers\n"));
+  ATLTRACE("[wptdriver] SoftwareUpdate::UpdateBrowsers");
   POSITION pos = _browsers.GetHeadPosition();
   while (ok && pos) {
-    DWORD update = 1;
-    POSITION current_pos = pos;
     BrowserInfo browser_info = _browsers.GetNext(pos);
     CString url = browser_info._installer.Trim();
     if (url.GetLength()) {
-      WptTrace(loglevel::kFunction,
-                _T("[wptdriver] Checking browser - %s\n"), (LPCTSTR)url);
-      CString info = HttpGetText(url);
+      ATLTRACE(L"[wptdriver] Checking browser - %s", (LPCWSTR)url);
+      CString info = GetUpdateInfo(url);
       if (info.GetLength()) {
         CString browser, version, command, file_url, md5;
         int token_position = 0;
@@ -157,26 +221,17 @@ bool SoftwareUpdate::UpdateBrowsers(void) {
               version = value;
             else if (tag == _T("command"))
               command = value;
-            else if (tag == _T("update"))
-              update = _ttoi(value);
           }
           line = info.Tokenize(_T("\r\n"), token_position);
         }
 
-        ok = InstallSoftware(browser, file_url, md5, version, command, update,
+        ok = InstallSoftware(browser, file_url, md5, version, command,
                               browser_info._exe);
       }
     }
-
-    // if we don't need to automatically update the browser then 
-    // remove it from the list
-    if (ok && !update) {
-      _browsers.RemoveAt(current_pos);
-    }
   }
-  WptTrace(loglevel::kFunction,
-            _T("[wptdriver] SoftwareUpdate::UpdateBrowsers complete: %s\n"),
-            ok ? _T("Succeeded") : _T("FAILED!"));
+  ATLTRACE("[wptdriver] SoftwareUpdate::UpdateBrowsers complete: %s",
+            ok ? "Succeeded" : "FAILED!");
   return ok;
 }
 
@@ -184,13 +239,12 @@ bool SoftwareUpdate::UpdateBrowsers(void) {
   Download and install the software if necessary
 -----------------------------------------------------------------------------*/
 bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
-          CString version, CString command, DWORD update, CString check_file) {
+          CString version, CString command, CString check_file) {
   bool ok = true;
   bool already_installed = false;
 
-  WptTrace(loglevel::kFunction,
-            _T("[wptdriver] SoftwareUpdate::InstallSoftware - %s\n"),
-            (LPCTSTR)app);
+  ATLTRACE(L"[wptdriver] SoftwareUpdate::InstallSoftware - %s",
+            (LPCWSTR)app);
 
   if (app.GetLength() && file_url.GetLength() && version.GetLength() &&
       command.GetLength() ) {
@@ -204,7 +258,7 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
       if (RegQueryValueEx(key, app, 0, 0, (LPBYTE)buff, &len) 
           == ERROR_SUCCESS) {
         already_installed = true;
-        if (!version.Compare(buff) || !update)
+        if (!version.Compare(buff))
           install = false;
       }
 
@@ -217,11 +271,12 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
           CString file_path = _directory + CString(_T("\\")) 
                                 + file_url.Mid(file_pos + 1);
           _status.Set(_T("Downloading installer for %s"), (LPCTSTR)app);
-          WptTrace(loglevel::kTrace,
-                    _T("[wptdriver] Downloading - %s\n"), (LPCTSTR)file_url);
+          ATLTRACE(L"[wptdriver] Downloading - %s", (LPCWSTR)file_url);
           if (HttpSaveFile(file_url, file_path)) {
             if (md5.GetLength()) {
-              if (HashFileMD5(file_path) != md5) {
+              CString file_md5 = HashFileMD5(file_path);
+              if (file_md5.CompareNoCase(md5)) {
+                ATLTRACE(L"[wptdriver] Hash mismatch - %s (expected %s)", (LPCWSTR)file_md5, (LPCWSTR)md5);
                 install = false;
               }
             }
@@ -242,7 +297,7 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
                 }
               } else {
                 lstrcpy(exe, command);
-                lstrcpy(parameters, _T(''));
+                lstrcpy(parameters, _T(""));
               }
               shell_info.lpFile = exe;
               TCHAR directory[MAX_PATH];
@@ -250,25 +305,31 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
               shell_info.lpDirectory = directory;
               shell_info.nShow = SW_SHOWNORMAL;
               _status.Set(_T("Installing %s"), (LPCTSTR)app);
-              WptTrace(loglevel::kTrace,
-                 _T("[wptdriver] Running '%s' with parameters '%s' in '%s'\n"),
+              ATLTRACE(L"[wptdriver] Running '%s' with parameters '%s' in '%s'",
                  exe, parameters, directory);
               if (ShellExecuteEx(&shell_info) && shell_info.hProcess) {
                 if (WaitForSingleObject(shell_info.hProcess, 
                       SOFTWARE_INSTALL_TIMEOUT) == WAIT_OBJECT_0) {
+                  WaitForChildProcesses(GetProcessId(shell_info.hProcess), SOFTWARE_INSTALL_TIMEOUT);
+                  WaitForProcessesByName(exe, SOFTWARE_INSTALL_TIMEOUT);
                   ok = true;
+
+                  // If we are responsible for installing and updating Chrome, disable the Google updater
+                  if (!app.CompareNoCase(_T("Chrome"))) {
+                    TerminateProcessesByName(_T("GoogleUpdate.exe"));
+                    TerminateProcessesByName(_T("GoogleUpdateSetup.exe"));
+                    DeleteDirectory(_T("C:\\Program Files (x86)\\Google\\Update"), true);
+                  }
                 }
                 CloseHandle(shell_info.hProcess);
               } else {
                 _status.Set(_T("Error installing %s"), (LPCTSTR)app);
-                WptTrace(loglevel::kTrace,
-                          _T("[wptdriver] Error Running Installer\n"));
+                ATLTRACE("[wptdriver] Error Running Installer");
               }
             } else {
               _status.Set(_T("Error downloading installer for %s"),
                           (LPCTSTR)app);
-              WptTrace(loglevel::kTrace,
-                        _T("[wptdriver] File download corrupt\n"));
+              ATLTRACE("[wptdriver] File download corrupt");
             }
             DeleteFile(file_path);
           }
@@ -286,9 +347,8 @@ bool SoftwareUpdate::InstallSoftware(CString app, CString file_url,CString md5,
     }
   }
 
-  WptTrace(loglevel::kFunction,
-           _T("[wptdriver] SoftwareUpdate::InstallSoftware Complete %s: %s\n"),
-           (LPCTSTR)app, ok ? _T("Succeeded") : _T("FAILED!"));
+  ATLTRACE(L"[wptdriver] SoftwareUpdate::InstallSoftware Complete %s: %s",
+           (LPCWSTR)app, ok ? L"Succeeded" : L"FAILED!");
 
   // don't fail if we already have the package installed and we are just doing
   // an update.
@@ -331,4 +391,107 @@ bool SoftwareUpdate::ReInstallBrowser(CString browser) {
     RegCloseKey(key);
   }
   return UpdateSoftware(true);
+}
+
+/*-----------------------------------------------------------------------------
+  See if the exe's for all of the browsers are present
+-----------------------------------------------------------------------------*/
+bool SoftwareUpdate::CheckBrowsers(CString& missing_browser) {
+  bool ok = true;
+
+  POSITION pos = _browsers.GetHeadPosition();
+  while (ok && pos) {
+    BrowserInfo browser_info = _browsers.GetNext(pos);
+    if (!FileExists(browser_info._exe)) {
+      ok = false;
+      missing_browser = browser_info._name;
+    } else {
+      if (!GetChromeSymbols(browser_info._exe)) {
+        ok = false;
+      }
+    }
+  }
+
+  return ok;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool SoftwareUpdate::GetChromeSymbols(CString exe) {
+  bool ok = true;
+  TCHAR path[MAX_PATH];
+  lstrcpy(path, (LPCTSTR)exe);
+  LPTSTR file = PathFindFileName(path);
+  if (!lstrcmpi(file, _T("chrome.exe"))) {
+    *file = 0;
+    CString dir(path);
+    PathAppend(path, _T("*.*"));
+
+    WIN32_FIND_DATA fd;
+    HANDLE hFind = FindFirstFile(path, &fd);
+    if (hFind != INVALID_HANDLE_VALUE) {
+      do {
+        if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY &&
+            lstrcmp(fd.cFileName, _T(".")) &&
+            lstrcmp(fd.cFileName,_T(".."))) {
+          lstrcpy(path, (LPCTSTR)dir);
+          PathAppend(path, fd.cFileName);
+          CString chrome_dir(path);
+          PathAppend(path, _T("chrome.dll"));
+          if (FileExists(path)) {
+            CString dll(path);
+            lstrcpy(path, (LPCTSTR)chrome_dir);
+            PathAppend(path, _T("wpt.sym"));
+            CString symbols_file(path);
+            if (!FileSize(symbols_file)) {
+              ATLTRACE(_T("Symbols needed for %s"), (LPCTSTR)dll);
+              CPEHelper pdbinfo;
+              if (pdbinfo.OpenAndVerify(dll)) {
+                CString pdb_signature;
+                pdbinfo.GetPdbFileIndex(pdb_signature);
+                if (pdb_signature.GetLength()) {
+                  FetchChromeSymbols(pdb_signature, symbols_file);
+                }
+              }
+              if (!FileExists(symbols_file))
+                ok = false;
+            }
+          }
+        }
+      } while(FindNextFile(hFind, &fd));
+      
+      FindClose(hFind);
+    }
+  }
+  return ok;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool SoftwareUpdate::FetchChromeSymbols(CString pdb_signature, CString symbols_file) {
+  bool ok = false;
+  CStringA symbols;
+  DWORD response_code = 0;
+  ATLTRACE(_T("Fetching symbols for chrome.dll with signature %s"), pdb_signature);
+  CString url = _server_url + _T("work/chromehooks.php?signature=") + pdb_signature;
+  symbols = CT2A((LPCTSTR)HttpGetText(url, &response_code), CP_UTF8);
+  ATLTRACE(_T("(%d) %s : \n%S"), response_code, (LPCTSTR)url, (LPCSTR)symbols);
+  if (response_code != 200) {
+    url = _T("http://www.webpagetest.org/work/chromehooks.php?signature=") + pdb_signature;
+    symbols = CT2A((LPCTSTR)HttpGetText(url, &response_code), CP_UTF8);
+    ATLTRACE(_T("(%d) %s : \n%S"), response_code, (LPCTSTR)url, (LPCSTR)symbols);
+  }
+  if (response_code == 200 || response_code == 404) {
+    if (response_code == 404)
+      symbols.Empty();
+    HANDLE hFile = CreateFile(symbols_file, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+    if (hFile != INVALID_HANDLE_VALUE) {
+      if (symbols.GetLength()) {
+        DWORD written;
+        WriteFile(hFile, (LPCSTR)symbols, symbols.GetLength(), &written, 0);
+      }
+      CloseHandle(hFile);
+    }
+  }
+  return ok;
 }

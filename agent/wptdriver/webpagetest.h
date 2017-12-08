@@ -27,6 +27,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
 #pragma once
+
+#include <Wininet.h>
+
 class WebPagetest {
 public:
   WebPagetest(WptSettings &settings, WptStatus &status);
@@ -34,10 +37,13 @@ public:
   bool GetTest(WptTestDriver& test);
   bool DeleteIncrementalResults(WptTestDriver& test);
   bool UploadIncrementalResults(WptTestDriver& test);
+  void StartTestRun(WptTestDriver& test);
   bool TestDone(WptTestDriver& test);
+  DWORD WptVersion(){ return _revisionNo; }
 
   bool _exit;
   bool has_gpu_;
+  bool rebooting_;
 
 private:
   WptSettings&  _settings;
@@ -48,13 +54,20 @@ private:
   DWORD         _revisionNo;
   CString       _computer_name;
   CString       _dns_servers;
+  int           _screenWidth;
+  int           _screenHeight;
+  DWORD         _winMajor;
+  DWORD         _winMinor;
+  DWORD         _isServer;
+  DWORD         _is64Bit;
 
+  void LoadClientCertificateFromStore(HINTERNET request);
+  void SetLoginCredentials(HINTERNET request);
   bool HttpGet(CString url, WptTestDriver& test, CString& test_string, 
                CString& zip_file);
-  bool ParseTest(CString& test_string, WptTestDriver& test);
   bool CrackUrl(CString url, CString &host, unsigned short &port, 
                 CString& object, DWORD &secure_flag);
-  bool BuildFormData(WptSettings& settings, WptTestDriver& test, 
+  void BuildFormData(WptSettings& settings, WptTestDriver& test, 
                      bool done,
                      CString file_name, DWORD file_size,
                      CString& headers, CStringA& footer, 
@@ -71,4 +84,6 @@ private:
   bool GetClient(WptTestDriver& test);
   bool UnzipTo(CString zip_file, CString dest);
   void UpdateDNSServers();
+  bool GetNameFromMAC(LPTSTR name, DWORD &len);
+  bool ProcessFile(WptTestDriver& test, CString file, CAtlList<CString> &newFiles);
 };

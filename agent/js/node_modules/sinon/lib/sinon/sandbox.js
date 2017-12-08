@@ -13,11 +13,11 @@
  * @author Christian Johansen (christian@cjohansen.no)
  * @license BSD
  *
- * Copyright (c) 2010-2011 Christian Johansen
+ * Copyright (c) 2010-2013 Christian Johansen
  */
 "use strict";
 
-if (typeof module == "object" && typeof require == "function") {
+if (typeof module !== 'undefined' && module.exports) {
     var sinon = require("../sinon");
     sinon.extend(sinon, require("./util/fake_timers"));
 }
@@ -30,7 +30,7 @@ if (typeof module == "object" && typeof require == "function") {
             return;
         }
 
-        if (config.injectInto) {
+        if (config.injectInto && !(key in config.injectInto) ) {
             config.injectInto[key] = value;
         } else {
             push.call(sandbox.args, value);
@@ -119,7 +119,7 @@ if (typeof module == "object" && typeof require == "function") {
 
     sinon.sandbox.useFakeXMLHttpRequest = sinon.sandbox.useFakeServer;
 
-    if (typeof module == "object" && typeof require == "function") {
+    if (typeof module !== 'undefined' && module.exports) {
         module.exports = sinon.sandbox;
     }
 }());

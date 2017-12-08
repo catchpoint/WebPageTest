@@ -8,7 +8,8 @@ function SendBeacon($beaconUrl, $id, $testPath, &$testInfo, &$pageData)
 {
     if( !$testInfo['private'] )
     {
-        $fvMedian = GetMedianRun($pageData, 0);
+        $medianMetric = isset($testInfo['medianMetric']) ? $testInfo['medianMetric'] : 'loadTime';
+        $fvMedian = GetMedianRun($pageData, 0, $medianMetric);
         if( $fvMedian )
         {
             $data = array(  'version' => VER_WEBPAGETEST, 
@@ -32,7 +33,7 @@ function SendBeacon($beaconUrl, $id, $testPath, &$testInfo, &$pageData)
             
             $data['first'] = $pageData[$fvMedian][0];
 
-            $rvMedian = GetMedianRun($pageData, 1);
+            $rvMedian = GetMedianRun($pageData, 1, $medianMetric);
             if( $rvMedian )
                 $data['repeat'] = $pageData[$rvMedian][1];
                 

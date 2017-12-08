@@ -5,14 +5,14 @@ All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
-    * Redistributions of source code must retain the above copyright notice,
-      this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright notice,
-      this list of conditions and the following disclaimer in the documentation
-      and/or other materials provided with the distribution.
-    * Neither the name of Google, Inc. nor the names of its contributors
-      may be used to endorse or promote products derived from this software
-      without specific prior written permission.
+ * Redistributions of source code must retain the above copyright notice,
+ this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright notice,
+ this list of conditions and the following disclaimer in the documentation
+ and/or other materials provided with the distribution.
+ * Neither the name of Google, Inc. nor the names of its contributors
+ may be used to endorse or promote products derived from this software
+ without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -89,20 +89,17 @@ describe('browser_android_chrome small', function() {
         shellStub.addKeepAlive(proc);
         keepAlive = true;
       } else if ('xset' === command) {
-        global.setTimeout(function() {
-          proc.stdout.emit('data', 'has display');
-        }, 1);
+        proc.stdout.emit('data', 'has display');
       } else if ((/adb/).test(command)) {
         if (args.some(regExTest.bind(/^shell$/)) &&
             args.some(regExTest.bind(/^ps$/))) {
-          global.setTimeout(function() {
-            proc.stdout.emit('data',
-                'USER PID PPID VSIZE RSS WCHAN PC NAME\n');
-            proc.stdout.emit('data',
-                'root 1 0 560 404 ffffffff 00000000 S /init\n');
-          }, 1);
-        } else if (!args.some(regExTest.bind(/^force-stop$/))) {
-          // Ignore shell am force-stop.
+          proc.stdout.emit('data',
+              'USER PID PPID VSIZE RSS WCHAN PC NAME\n');
+          proc.stdout.emit('data',
+              'root 1 0 560 404 ffffffff 00000000 S /init\n');
+        } else if (!args.some(regExTest.bind(/^force-stop$/)) &&
+                   !args.some(regExTest.bind(/^dumpsys$/))) {
+          // Ignore shell am force-stop and shell dumpsys *.
           keepAlive = shellStub.callback(proc, command, args);
         }
       } else {
@@ -125,18 +122,20 @@ describe('browser_android_chrome small', function() {
   });
 
   it('should install on first run, start, get killed', function() {
-    startBrowser_({deviceSerial: serial, runNumber: 1, chrome: chromeApk});
+    startBrowser_({runNumber: 1, flags: {deviceSerial: serial,
+        chrome: chromeApk}, task: {}});
     killBrowser_();
   });
 
   it('should not install on a non-first run, start, get killed', function() {
-    startBrowser_({deviceSerial: serial, runNumber: 2, chrome: chromeApk});
+    startBrowser_({runNumber: 2, flags: {deviceSerial: serial,
+        chrome: chromeApk}, task: {}});
     killBrowser_();
   });
 
   it('should use PAC server', function() {
-    startBrowser_({deviceSerial: serial, runNumber: 1, chrome: chromeApk,
-        pac: 'function FindProxyForURL...'});
+    startBrowser_({runNumber: 1, flags: {deviceSerial: serial,
+        chrome: chromeApk}, task: {pac: 'function FindProxyForURL...'}});
     killBrowser_();
   });
 
@@ -144,9 +143,7 @@ describe('browser_android_chrome small', function() {
     // Simulate adb shell getprop ro.product.device -> shmantra.
     spawnStub.callback = function(proc, command, args) {
       if (/adb$/.test(command) && -1 !== args.indexOf('ro.product.device')) {
-        global.setTimeout(function() {
-          proc.stdout.emit('data', 'shmantra');
-        }, 1);
+        proc.stdout.emit('data', 'shmantra');
         return false;
       }
       return true;  // Keep capture alive.
@@ -156,8 +153,8 @@ describe('browser_android_chrome small', function() {
     var videoStop = sandbox.stub(
         video_hdmi.VideoHdmi.prototype, 'scheduleStopVideoRecording');
     browser = new browser_android_chrome.BrowserAndroidChrome(app,
-        {deviceSerial: serial, runNumber: 1, chrome: chromeApk,
-        videoCard: videoCard});
+        {runNumber: 1, flags: {deviceSerial: serial, chrome: chromeApk,
+          videoCard: videoCard}, task: {}});
     browser.scheduleStartVideoRecording('test.avi');
     test_utils.tickUntilIdle(app, sandbox);
     should.ok(spawnStub.calledOnce);
@@ -176,11 +173,14 @@ describe('browser_android_chrome small', function() {
 
   it('should start and kill chromedriver', function() {
     browser = new browser_android_chrome.BrowserAndroidChrome(app, {
+      runNumber: 1,
+      runTempDir: 'runtmp',
+      flags: {
         deviceSerial: serial,
-        runNumber: 1,
-        chromedriver: chromedriver,
-        runTempDir: 'runtmp'
-      });
+        chromedriver: chromedriver
+      },
+      task: {}
+    });
     should.ok(!browser.isRunning());
     browser.startWdServer({browserName: 'chrome'});
     test_utils.tickUntilIdle(app, sandbox);
@@ -188,7 +188,8 @@ describe('browser_android_chrome small', function() {
     browser.getServerUrl().should.match(/^http:\/\/localhost:\d+$/);
     should.equal(undefined, browser.getDevToolsUrl());  // No DevTools with WD.
     assertAdbCalls(['shell', 'ps'],
-                   ['shell', 'am', 'force-stop', /^com\.[\.\w]+/]);
+        ['shell', 'am', 'force-stop', /^com\.[\.\w]+/],
+        ['shell', 'dumpsys', 'window', 'windows']);
     if (process.platform === 'linux') {
       spawnStub.assertCall('xset', 'q');
     }
@@ -201,7 +202,8 @@ describe('browser_android_chrome small', function() {
     should.ok(!browser.isRunning());
     spawnStub.assertCalls({0: 'ps'}, {0: 'kill'});
     assertAdbCalls(['shell', 'ps'],
-                   ['shell', 'am', 'force-stop', /^com\.[\.\w]+/]);
+        ['shell', 'am', 'force-stop', /^com\.[\.\w]+/],
+        ['shell', 'dumpsys', 'window', 'windows']);
     spawnStub.assertCall();
     should.equal(undefined, browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());
@@ -212,18 +214,19 @@ describe('browser_android_chrome small', function() {
     spawnStub.callback = function(proc, command, args) {
       if (/adb$/.test(command) &&
           args.some(new RegExp().test.bind(/STORAGE/))) {  // Find storage dir.
-        global.setTimeout(function() {
-          proc.stdout.emit('data', '/gagacard');
-        }, 1);
+        proc.stdout.emit('data', '/gagacard');
       }
       return false;
     };
     var screenshotCbSpy = sandbox.spy();
     browser = new browser_android_chrome.BrowserAndroidChrome(app, {
-      deviceSerial: serial,
       runNumber: 1,
-      chromedriver: chromedriver,
-      runTempDir: 'runtmp'
+      runTempDir: 'runtmp',
+      flags: {
+        deviceSerial: serial,
+        chromedriver: chromedriver
+      },
+      task: {}
     });
     browser.scheduleTakeScreenshot('gaga').then(screenshotCbSpy);
     test_utils.tickUntilIdle(app, sandbox);
@@ -270,14 +273,16 @@ describe('browser_android_chrome small', function() {
             args.some(regExTest.bind(/^ps$/))) {
           stdout = 'USER PID PPID VSIZE RSS WCHAN PC NAME\n' +
               'root 1 0 560 404 ffffffff 00000000 S /init\n';
+        } else if (args.some(new RegExp().test.bind(/STORAGE/))) {
+          stdout = '/gagacard';
+        } else if (/^ls \/data\/data\//.test(args[args.length - 1])) {
+          stdout = 'app_tabs\nfiles\ncache';
         }
       } else {
         keepAlive = shellStub.callback(proc, command, args);
       }
       if (undefined !== stdout) {
-        global.setTimeout(function() {
-          proc.stdout.emit('data', stdout);
-        }, 1);
+        proc.stdout.emit('data', stdout);
       }
       return keepAlive;
     };
@@ -290,35 +295,47 @@ describe('browser_android_chrome small', function() {
     browser.startBrowser();
     test_utils.tickUntilIdle(app, sandbox);
     assertAdbCalls(['shell', 'ps'],
-                   ['shell', 'am', 'force-stop', /^com\.[\.\w]+/]);
-    //assertAdbCall('shell', 'am', 'force-stop', /^com\.[\.\w]+/);
+        ['shell', 'am', 'force-stop', /^com\.[\.\w]+/],
+        ['shell', 'dumpsys', 'window', 'windows']);
     if (1 === args.runNumber) {
       assertAdbCalls(
           ['uninstall', /com\.[\w\.]+/],
           ['install', '-r', chromeApk]);
     }
-    if (args.pac) {
+    if (args.task.pac) {
       assertAdbCall('push', /^[^\/]+\.pac_body$/, /^\/.*\/pac_body$/);
     }
-    assertAdbCall('shell', 'su', '-c', 'echo x');
-    if (args.pac) {
+    if (args.task.pac) {
+      assertAdbCall('shell', 'su', '-c', 'echo x');
       assertAdbCall('shell', 'su', '-c',
           /^while true; do nc -l \d+ < \S+pac_body; done$/);
     }
     var flags = ['--no-first-run', '--disable-background-networking',
-        '--no-default-browser-check', '--process-per-tab',
-        '--allow-running-insecure-content', '--disable-fre',
-        '--enable-benchmarking', '--metrics-recording-only',
-        '--disable-geolocation', '--disable-external-intent-requests',
-        '--enable-remote-debugging'];
-    if (args.pac) {
+      '--no-default-browser-check', '--process-per-tab',
+      '--allow-running-insecure-content', '--disable-fre',
+      '--enable-benchmarking', '--metrics-recording-only',
+      '--disable-geolocation', '--disable-external-intent-requests',
+      '--disable-infobars', '--enable-remote-debugging'];
+    if (args.task.pac) {
       flags.push('--proxy-pac-url=http://127.0.0.1:80/from_netcat');
     }
     assertAdbCalls(
-        ['shell', 'su', '-c', 'echo \\"chrome ' + flags.join(' ') +
-            '\\" > /data/local/chrome-command-line'],
+        ['shell', /^\[\[ -w "\$EXTERNAL_STORAGE"/], // Output ''.
+        ['push', 'wpt_chrome_command_line',
+         '/gagacard/wpt_chrome_command_line']);
+    if (!args.task.pac) {
+      assertAdbCall('shell', 'su', '-c', 'echo x');
+    }
+    assertAdbCalls(
         ['shell', 'su', '-c',
-            'ls /data/data/com.android.chrome'],
+            'cp /gagacard/wpt_chrome_command_line' +
+            ' /data/local/chrome-command-line'],
+        ['shell', 'rm', '/gagacard/wpt_chrome_command_line'],
+        ['shell', 'su', '-c', 'chmod 666 /data/local/chrome-command-line'],
+        ['shell', 'su', '-c', 'ls /data/data/com.android.chrome'],
+        ['shell', 'su', '-c', 'rm -r /data/data/com.android.chrome/app_tabs'],
+        ['shell', 'su', '-c', 'rm -r /data/data/com.android.chrome/files'],
+        ['shell', 'su', '-c', 'rm -r /data/data/com.android.chrome/cache'],
         ['shell', 'su', '-c', 'ndc resolver flushdefaultif'],
         ['shell', 'am', 'start', '-n', /^com\.[\.\w]+/, '-d', 'about:blank'],
         ['forward', /tcp:\d+/, /^\w+/]);
@@ -326,9 +343,9 @@ describe('browser_android_chrome small', function() {
     should.ok(browser.isRunning());
     (browser.getDevToolsUrl() || '').should.match(new RegExp(
         '^http:\\\/\\\/localhost:(' + Object.keys(serverStub.ports).join('|') +
-        ')\\\/json$'));
+            ')\\\/json$'));
     should.equal(undefined, browser.getServerUrl());
-    should.equal(!!ncProc, !!args.pac);
+    should.equal(!!ncProc, !!args.task.pac);
     assertAdbCall();
   }
 
@@ -338,15 +355,17 @@ describe('browser_android_chrome small', function() {
     test_utils.tickUntilIdle(app, sandbox);
     should.ok(!browser.isRunning());
 
-    if (args.pac) {
+    assertAdbCall('forward', '--remove', /^tcp:\d+$/);
+    if (args.task.pac) {
       spawnStub.assertCalls({0: 'ps'}, {0: 'kill'});
       assertAdbCall('shell', 'rm', /^\/.*\/pac_body$/);
     }
     assertAdbCalls(['shell', 'ps'],
-                   ['shell', 'am', 'force-stop', /^com\.[\.\w]+/]);
+        ['shell', 'am', 'force-stop', /^com\.[\.\w]+/],
+        ['shell', 'dumpsys', 'window', 'windows']);
     should.equal(undefined, browser.getServerUrl());
     should.equal(undefined, browser.getDevToolsUrl());
-    if (args.pac) {
+    if (args.task.pac) {
       should.ok(ncProc.kill.calledOnce);
     }
   }

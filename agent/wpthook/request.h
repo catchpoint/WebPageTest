@@ -37,7 +37,7 @@ class Requests;
 class DataChunk {
 public:
   DataChunk() { _value = new DataChunkValue(NULL, NULL, 0); }
-  DataChunk(const char * unowned_data, DWORD data_len) {
+  DataChunk(const char * unowned_data, size_t data_len) {
     _value = new DataChunkValue(unowned_data, NULL, data_len);
   }
   DataChunk(const DataChunk& src): _value(src._value) { ++_value->_ref_count; }
@@ -54,14 +54,14 @@ public:
   }
   void CopyDataIfUnowned() {
     if (_value->_unowned_data) {
-      DWORD len = _value->_data_len;
+      size_t len = _value->_data_len;
       char *new_data = new char[len];
       memcpy(new_data, _value->_unowned_data, len);
       _value->_unowned_data = NULL;
       _value->_data = new_data;
       _value->_data_len = len;    }
   }
-  char * AllocateLength(DWORD len) {
+  char * AllocateLength(size_t len) {
     if (--_value->_ref_count == 0) {
       delete _value;
     }
@@ -71,7 +71,7 @@ public:
   const char * GetData() const {
     return _value->_data ? _value->_data : _value->_unowned_data;
   }
-  DWORD GetLength() const { return _value->_data_len; }
+  size_t GetLength() const { return _value->_data_len; }
 
   bool ModifyDataOut(const WptTest& test);
 
@@ -80,9 +80,9 @@ private:
    public:
     const char * _unowned_data;
     char *       _data;
-    DWORD        _data_len;
+    size_t       _data_len;
     int          _ref_count;
-    DataChunkValue(const char * unowned_data, char * data, DWORD data_len) :
+    DataChunkValue(const char * unowned_data, char * data, size_t data_len) :
         _unowned_data(unowned_data), _data(data), _data_len(data_len),
         _ref_count(1) {
       _unowned_data = unowned_data;
@@ -116,23 +116,28 @@ typedef CAtlList<HeaderField> Fields;
 
 class HttpData {
  public:
-  HttpData(): _data(NULL), _data_size(0) {}
+  HttpData(): _data(NULL), _data_size(0), _body_chunks_size(0) {}
   ~HttpData() { delete _data; }
 
   bool HasHeaders() { CopyData(); return _headers.GetLength() != 0; }
   CStringA GetHeaders() { CopyData(); return _headers; }
-  DWORD GetDataSize() { return _data_size; }
+  size_t GetDataSize() { return _data_size; }
 
   void AddChunk(DataChunk& chunk);
   CStringA GetHeader(CStringA field_name);
+
+  virtual void AddHeader(const char * header, const char * value);
+  void AddBodyChunk(DataChunk& chunk);
 
 protected:
   void CopyData();
   void ExtractHeaderFields();
 
   CAtlList<DataChunk> _data_chunks;
+  CAtlList<DataChunk> _body_chunks;
   const char * _data;
-  DWORD _data_size;
+  size_t _data_size;
+  size_t _body_chunks_size;
   CStringA _headers;
   Fields _header_fields;
 };
@@ -141,6 +146,7 @@ class RequestData : public HttpData {
  public:
    CStringA GetMethod() { ProcessRequestLine(); return _method; }
    CStringA GetObject() { ProcessRequestLine(); return _object; }
+   virtual void AddHeader(const char * header, const char * value);
 
  private:
    void ProcessRequestLine();
@@ -152,6 +158,7 @@ class RequestData : public HttpData {
 class ResponseData : public HttpData {
  public:
   ResponseData(): HttpData(), _result(-2), _protocol_version(-1.0) {}
+  virtual void AddHeader(const char * header, const char * value);
 
   int GetResult() { ProcessStatusLine(); return _result; }
   double GetProtocolVersion() { ProcessStatusLine(); return _protocol_version;}
@@ -214,17 +221,77 @@ public:
   int _count;
 };
 
+class InitiatorData {
+public:
+  InitiatorData():request_id_(0), valid_(false){}
+  InitiatorData(const InitiatorData& src){*this = src;}
+  ~InitiatorData(){}
+  const InitiatorData& operator=(const InitiatorData& src) {
+    valid_ = src.valid_;
+    url_ = src.url_;
+    request_id_ = src.request_id_;
+    initiator_url_ = src.initiator_url_;
+    initiator_line_ = src.initiator_line_;
+    initiator_column_ = src.initiator_column_;
+    initiator_function_ = src.initiator_function_;
+    initiator_type_ = src.initiator_type_;
+    initiator_detail_ = src.initiator_detail_;
+    return src;
+  }
+
+  bool valid_;
+  DWORD request_id_;
+  CStringA  url_;
+  CStringA  initiator_url_;
+  CStringA  initiator_line_;
+  CStringA  initiator_column_;
+  CStringA  initiator_function_;
+  CStringA  initiator_type_;
+  CStringA  initiator_detail_;
+};
+
+class ChunkTiming {
+public:
+  ChunkTiming():length_(0) {timestamp_.QuadPart = 0;}
+  ChunkTiming(size_t length):length_(length) {
+    QueryPerformanceCounter(&timestamp_);
+  }
+  ChunkTiming(size_t length, LARGE_INTEGER& timestamp):
+    length_(length) {
+    timestamp_.QuadPart = timestamp.QuadPart;
+  }
+  ChunkTiming(const ChunkTiming& src) {*this = src;}
+  ~ChunkTiming() {}
+  const ChunkTiming& operator=(const ChunkTiming&src) {
+    timestamp_.QuadPart = src.timestamp_.QuadPart;
+    length_ = src.length_;
+    return src;
+  }
+
+  LARGE_INTEGER timestamp_;
+  size_t        length_;
+};
+
 class Request {
 public:
-  Request(TestState& test_state, DWORD socket_id,
-          TrackSockets& sockets, TrackDns& dns, WptTest& test, bool is_spdy,
-          Requests& requests);
+  Request(TestState& test_state, DWORD socket_id, DWORD stream_id,
+          DWORD request_id, TrackSockets& sockets, TrackDns& dns,
+          WptTest& test, bool is_spdy, Requests& requests,
+          CString protocol);
   ~Request(void);
 
   void DataIn(DataChunk& chunk);
   bool ModifyDataOut(DataChunk& chunk);
   void DataOut(DataChunk& chunk);
   void SocketClosed();
+
+  void HeaderIn(const char * header, const char * value, bool pushed);
+  void ObjectDataIn(DataChunk& chunk);
+  void BytesIn(size_t len);
+  void HeaderOut(const char * header, const char * value, bool pushed);
+  void ObjectDataOut(DataChunk& chunk);
+  void BytesOut(size_t len);
+  void SetPriority(int depends_on, int weight, int exclusive);
 
   void MatchConnections();
   bool Process();
@@ -240,18 +307,24 @@ public:
   LARGE_INTEGER GetStartTime();
   bool GetExpiresRemaining(bool& expiration_set, int& seconds_remaining);
   ULONG GetPeerAddress();
-  CString GetUrl();
+  CStringA GetChunkTimings();
 
   bool  _processed;
   bool  _reported;
   DWORD _socket_id;
+  DWORD _stream_id;
+  DWORD _request_id;
   ULONG _peer_address;
   int   _local_port;
   bool  _is_ssl;
   bool  _is_spdy;
-  CString initiator_;
-  CString initiator_line_;
-  CString initiator_column_;
+  bool  _was_pushed;
+  CString priority_;
+  InitiatorData initiator_;
+  int   _h2_priority_depends_on;
+  int   _h2_priority_weight;
+  int   _h2_priority_exclusive;
+  CString _protocol;
 
   RequestData  _request_data;
   ResponseData _response_data;
@@ -270,10 +343,13 @@ public:
   bool _from_browser;
   bool _is_base_page;
   CStringA  rtt_;
+  int _certificate_bytes;
 
   // byte counts
   DWORD _bytes_in;
   DWORD _bytes_out;
+  DWORD _object_size;
+  DWORD _uncompressed_size;
 
   // performance counter times
   LARGE_INTEGER _start;
@@ -288,6 +364,7 @@ public:
 
   OptimizationScores _scores;
   CAtlList<CustomRulesMatch>  _custom_rules_matches;
+  CAtlList<ChunkTiming> _chunk_timings;
 
 private:
   TestState&    _test_state;

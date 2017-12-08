@@ -1,5 +1,5 @@
 <?php
-$version = 5;
+$version = 9;
 if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
 {
     $tests = '';
@@ -28,13 +28,14 @@ if( !isset($_REQUEST['tests']) && isset($_REQUEST['t']) )
         }
     }
 
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
     $host  = $_SERVER['HTTP_HOST'];
     $uri = $_SERVER['PHP_SELF'];
     $params = '';
     foreach( $_GET as $key => $value )
         if( $key != 't' && !is_array($value))
             $params .= "&$key=" . urlencode($value);
-    header("Location: http://$host$uri?tests=$tests{$params}");    
+    header("Location: $protocol://$host$uri?tests=$tests{$params}");
 }
 else
 {
@@ -42,7 +43,10 @@ else
     $cwd = getcwd();
     chdir('..');
     include 'common.inc';
-    require_once('page_data.inc');
+    require_once __DIR__ . '/visualProgress.inc.php';
+    require_once __DIR__ . '/../include/TestInfo.php';
+    require_once __DIR__ . '/../include/TestResults.php';
+    require_once __DIR__ . '/../include/TestStepResult.php';
     require_once('video.inc');
 
     $xml = false;
@@ -51,7 +55,7 @@ else
     $json = false;
     if( !strcasecmp($_REQUEST['f'], 'json') )
         $json = true;
-    
+
     // make sure the work directory exists
     if( !is_dir('./work/video/tmp') )
         mkdir('./work/video/tmp', 0777, true);
@@ -59,7 +63,7 @@ else
     // get the list of tests and test runs
     $tests = array();
     $id = null;
-    
+
     $exists = false;
     if( isset($_REQUEST['id']) )
     {
@@ -77,7 +81,9 @@ else
         if( strlen($_REQUEST['end']) )
             $endTime = trim($_REQUEST['end']);
         $videoIdExtra = "";
-        
+        $bgColor = isset($_REQUEST['bg']) ? $_REQUEST['bg'] : '000000';
+        $textColor = isset($_REQUEST['text']) ? $_REQUEST['text'] : 'ffffff';
+
         $compTests = explode(',', $_REQUEST['tests']);
         foreach($compTests as $t)
         {
@@ -87,12 +93,24 @@ else
                 $test = array();
                 $test['id'] = $parts[0];
                 $test['cached'] = 0;
+                $test['step'] = 1;
                 $test['end'] = $endTime;
                 $test['extend'] = false;
                 $test['syncStartRender'] = "";
                 $test['syncDocTime'] = "";
                 $test['syncFullyLoaded'] = "";
-                    
+                $test['bg'] = $bgColor;
+                $test['text'] = $textColor;
+                $label = null;
+                
+                if (isset($_REQUEST['labelHeight']) && is_numeric($_REQUEST['labelHeight']))
+                  $test['labelHeight'] = intval($_REQUEST['labelHeight']);
+                if (isset($_REQUEST['timeHeight']) && is_numeric($_REQUEST['timeHeight']))
+                  $test['timeHeight'] = intval($_REQUEST['timeHeight']);
+                
+                if (isset($_REQUEST['slow']) && $_REQUEST['slow'])
+                  $test['speed'] = 0.2;
+
                 for( $i = 1; $i < count($parts); $i++ )
                 {
                     $p = explode(':', $parts[$i]);
@@ -101,13 +119,17 @@ else
                         if( $p[0] == 'r' )
                             $test['run'] = (int)$p[1];
                         if( $p[0] == 'l' )
-                            $test['label'] = urldecode($p[1]);
+                            $label = preg_replace('/[^a-zA-Z0-9 \-_]/', '', $p[1]);
                         if( $p[0] == 'c' )
                             $test['cached'] = (int)$p[1];
+                        if( $p[0] == 's')
+                            $test['step'] = (int)$p[1];
                         if( $p[0] == 'e' )
                             $test['end'] = trim($p[1]);
+                        if( $p[0] == 'i' )
+                            $test['initial'] = intval(trim($p[1]) * 1000.0);
                         // Optional Extra info to sync the video with
-                        if( $p[0] == 's' )
+                        if( $p[0] == 'p' )
                             $test['syncStartRender'] = (int)$p[1];
                         if( $p[0] == 'd' )
                             $test['syncDocTime'] = (int)$p[1];
@@ -115,68 +137,96 @@ else
                             $test['syncFullyLoaded'] = (int)$p[1];
                     }
                 }
-                
+
                 RestoreTest($test['id']);
                 $test['path'] = GetTestPath($test['id']);
-                $test['pageData'] = loadAllPageData($test['path']);
-                
-                if( !$test['run'] )
-                    $test['run'] = GetMedianRun($test['pageData'], 0, $median_metric);
-                    
+                $info = GetTestInfo($test['id']);
+                if ($info) {
+                    if (array_key_exists('discard', $info) &&
+                        $info['discard'] >= 1 &&
+                        array_key_exists('priority', $info) &&
+                        $info['priority'] >= 1) {
+                        $defaultInterval = 100;
+                    }
+                    $test['url'] = $info['url'];
+                    if (isset($info['medianMetric']))
+                      $test_median_metric = $info['medianMetric'];
+                }
+                $testInfoObject = TestInfo::fromFiles("./" . $test['path']);
+
+                if( !array_key_exists('run', $test) || !$test['run'] ) {
+                    $testResults = TestResults::fromFiles($testInfoObject);
+                    $test['run'] = $testResults->getMedianRunNumber($test_median_metric, $test['cached']);
+                    $runResults = $testResults->getRunResult($test['run'], $test['cached']);
+                    $stepResult = $runResults->getStepResult($test['step']);
+                } else {
+                    $stepResult = TestStepResult::fromFiles($testInfoObject, $test['run'], $test['cached'], $test['step']);
+                }
+                $test['pageData'] = $stepResult->getRawResults();
+                $test['aft'] = (int) $stepResult->getMetric('aft');
+
+                $loadTime = $stepResult->getMetric('fullyLoaded');
+                if( isset($loadTime) && (!isset($fastest) || $loadTime < $fastest) )
+                    $fastest = $loadTime;
                 // figure out the real end time (in ms)
-                if( isset($test['end']) )
-                {
-                    if (!strcmp($test['end'], 'visual') && array_key_exists('visualComplete', $test['pageData'][$test['run']][$test['cached']])) {
-                        $test['end'] = $test['pageData'][$test['run']][$test['cached']]['visualComplete'];
-                    }
-                    elseif( !strcmp($test['end'], 'doc') || !strcmp($test['end'], 'docvisual') )
-                    {
-                        if( !strcmp($test['end'], 'docvisual') )
-                        {
-                            $test['extend'] = true;
-                            $videoIdExtra .= 'e';
-                        }
-                        $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'];
-                    }
-                    elseif(!strncasecmp($test['end'], 'doc+', 4))
-                        $test['end'] = $test['pageData'][$test['run']][$test['cached']]['docTime'] + (int)((double)substr($test['end'], 4) * 1000.0);
-                    elseif( !strcmp($test['end'], 'aft') )
-                    {
-                        $test['end'] = $test['pageData'][$test['run']][$test['cached']]['aft'];
+                if (isset($test['end'])) {
+                    $visualComplete = $stepResult->getMetric("visualComplete");
+                    if( !strcmp($test['end'], 'visual') && $visualComplete !== null ) {
+                        $test['end'] = $visualComplete;
+                    } elseif( !strcmp($test['end'], 'load') ) {
+                        $test['end'] = $stepResult->getMetric('loadTime');
+                    } elseif( !strcmp($test['end'], 'doc') ) {
+                        $test['end'] = $stepResult->getMetric('docTime');
+                    } elseif(!strncasecmp($test['end'], 'doc+', 4)) {
+                        $test['end'] = $stepResult->getMetric('docTime') + (int)((double)substr($test['end'], 4) * 1000.0);
+                    } elseif( !strcmp($test['end'], 'full') ) {
+                        $test['end'] = 0;
+                    } elseif( !strcmp($test['end'], 'all') ) {
+                        $test['end'] = -1;
+                    } elseif( !strcmp($test['end'], 'aft') ) {
+                        $test['end'] = $test['aft'];
                         if( !$test['end'] )
                             $test['end'] = -1;
-                    }
-                    elseif( !strcmp($test['end'], 'full') )
-                        $test['end'] = 0;
-                    elseif( !strcmp($test['end'], 'all') )
-                        $test['end'] = -1;
-                    else
+                    } else {
                         $test['end'] = (int)((double)$test['end'] * 1000.0);
-                }
-                if( $test['end'] == -1 )
+                    }
+                } else {
                     $test['end'] = 0;
-                elseif( !$test['end'] )
-                    $test['end'] = $test['pageData'][$test['run']][$test['cached']]['fullyLoaded'];
+                }
+                if( !$test['end'] )
+                    $test['end'] = $stepResult->getMetric('fullyLoaded');
 
-                $test['videoPath'] = "./{$test['path']}/video_{$test['run']}";
-                if( $test['cached'] )
-                    $test['videoPath'] .= '_cached';
-                    
+                // round the test end up to the closest 100ms interval
+                $test['end'] = intval(ceil(floatval($test['end']) / 100.0) * 100.0);
+                $localPaths = new TestPaths('./' . $test['path'], $test["run"], $test["cached"], $test["step"]);
+                $test['videoPath'] = $localPaths->videoDir();
+  
                 if ($test['syncStartRender'] || $test['syncDocTime'] || $test['syncFullyLoaded'])
                     $videoIdExtra .= ".{$test['syncStartRender']}.{$test['syncDocTime']}.{$test['syncFullyLoaded']}";
 
-                $testInfo = json_decode(gz_file_get_contents("./{$test['path']}/testinfo.json"), true);
-                if( !strlen($test['label']) ) {
-                    $test['label'] = trim($testInfo['label']);
+                if (!isset($label) || !strlen($label)) {
+                    if ($info && isset($info['label']))
+                        $label = $info['label'];
+                    $new_label = getLabel($test['id'], $user);
+                    if (!empty($new_label))
+                        $label = $new_label;
                 }
-                if (array_key_exists('locationText', $testInfo))
-                    $test['location'] = $testInfo['locationText'];
-                if( !strlen($test['label']) )
-                    $test['label'] = trim($test['pageData'][1][0]['URL']);
-                $labels[] = $test['label'];
+                if( empty($label) ) {
+                  $label = $test['url'];
+                  $label = str_replace('http://', '', $label);
+                  $label = str_replace('https://', '', $label);
+                }
+                if (empty($label))
+                    $label = trim($stepResult->getUrl());
+                $test['label'] = $label;
                 
-                if( is_dir($test['videoPath']) )
+                if ($info && isset($info['locationText']))
+                    $test['location'] = $info['locationText'];
+
+                if( is_dir($test['videoPath']) ) {
+                    $labels[] = $test['label'];
                     $tests[] = $test;
+                }
             }
         }
 
@@ -189,7 +239,7 @@ else
                 if( strlen($_REQUEST['tests']) )
                 {
                     $date = gmdate('ymd_');
-                    $hashstr = $_REQUEST['tests'] . $_REQUEST['template'] . $version . trim($_REQUEST['end']) . $videoIdExtra;
+                    $hashstr = $_REQUEST['tests'] . $_REQUEST['template'] . $version . trim($_REQUEST['end']) . $videoIdExtra . $bgColor . $textColor;
                     if( $_REQUEST['slow'] )
                         $hashstr .= '.slow';
                     if( strpos($hashstr, '_') == 6 )
@@ -209,85 +259,17 @@ else
                     $exists = true;
             }
 
-            if( !$exists )
-            {
-                // load the appropriate script file
-                $scriptFile = "./video/templates/$count.avs";
-                if( strlen($_REQUEST['template']) )
-                    $scriptFile = "./video/templates/{$_REQUEST['template']}.avs";
-                
-                $script = file_get_contents($scriptFile);
-                if( strlen($script) )
-                {
-                    // figure out the job id
-                    require_once('./lib/pclzip.lib.php');
+            if( !$exists ) {
+                // set up the result directory
+                $dest = './' . GetVideoPath($id);
+                if( !is_dir($dest) )
+                    mkdir($dest, 0777, true);
+                if( count($labels) )
+                    file_put_contents("$dest/labels.txt", json_encode($labels));
+                gz_file_put_contents("$dest/testinfo.json", json_encode($tests));
 
-                    $zipFile = "./work/video/tmp/$id.zip";
-                    $zip = new PclZip($zipFile);
-                    if( $zip )
-                    {
-                        // zip up the video files
-                        foreach( $tests as $index => &$test )
-                        {
-                            // build an appropriate script file for this test
-                            $startOffset = array_key_exists('pageData', $test) &&
-                                           array_key_exists($test['run'], $test['pageData']) &&
-                                           array_key_exists($test['cached'], $test['pageData'][$test['run']]) &&
-                                           array_key_exists('testStartOffset', $test['pageData'][$test['run']][$test['cached']])
-                                           ? $test['pageData'][$test['run']][$test['cached']]['testStartOffset'] : null;
-                            BuildVideoScript(null, $test['videoPath'], $test['end'], $test['extend'], $startOffset);
-
-                            $files = array();
-                            $dir = opendir($test['videoPath']);
-                            if( $dir )
-                            {
-                                while($file = readdir($dir)) 
-                                {
-                                    $path = $test['videoPath'] . "/$file";
-                                    if( is_file($path) && (stripos($file, '.jpg') || stripos($file, '.avs')) &&  strpos($file, '.thm') === false )
-                                        $files[] = $path;
-                                }
-
-                                closedir($dir);
-                            }
-                            
-                            // update the label in the script
-                            $script = str_replace("%$index%", $test['label'], $script);
-                            
-                            if( count($files) )
-                                $zip->add($files, PCLZIP_OPT_REMOVE_ALL_PATH, PCLZIP_OPT_ADD_PATH, "$index");
-                        }
-                    }
-                    
-                    // see if they want the video in slow motion
-                    if( $_REQUEST['slow'] )
-                        $script .= "\r\nAssumeFPS(2)\r\n";
-
-                    // add the script to the zip file
-                    $tmpScript = "./work/video/tmp/$id.avs";
-                    file_put_contents($tmpScript, $script);
-                    $zip->add($tmpScript, PCLZIP_CB_PRE_ADD, 'ZipAvsCallback');
-                    unlink($tmpScript);
-                    
-                    // create an ini file for the job as well
-                    $ini = "[info]\r\n";
-                    $ini .= "id=$id\r\n";
-                    $tmpIni = "./work/video/tmp/$id.ini";
-                    file_put_contents($tmpIni, $ini);
-                    $zip->add($tmpIni, PCLZIP_CB_PRE_ADD, 'ZipIniCallback');
-                    unlink($tmpIni);
-                    
-                    // set up the result directory
-                    $dest = './' . GetVideoPath($id);
-                    if( !is_dir($dest) )
-                        mkdir($dest, 0777, true);
-                    if( count($labels) )
-                        file_put_contents("$dest/labels.txt", json_encode($labels));
-                    gz_file_put_contents("$dest/testinfo.json", json_encode($tests));
-                    
-                    // move the file to the video work directory
-                    rename( $zipFile, "./work/video/$id.zip" );
-                }
+                // kick off the actual rendering
+                SendAsyncRequest("/video/render.php?id=$id");
             }
         }
     }
@@ -295,6 +277,7 @@ else
     // redirect to the destination page
     if( $id )
     {
+        $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
         $host  = $_SERVER['HTTP_HOST'];
         $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 
@@ -309,8 +292,8 @@ else
                 echo "<requestId>{$_REQUEST['r']}</requestId>\n";
             echo "<data>\n";
             echo "<videoId>$id</videoId>\n";
-            echo "<xmlUrl>http://$host$uri/view.php?f=xml&id=$id</xmlUrl>\n";
-            echo "<userUrl>http://$host$uri/view.php?id=$id</userUrl>\n";
+            echo "<xmlUrl>$protocol://$host$uri/view.php?f=xml&id=$id</xmlUrl>\n";
+            echo "<userUrl>$protocol://$host$uri/view.php?id=$id</userUrl>\n";
             echo "</data>\n";
             echo "</response>\n";
         }
@@ -321,13 +304,13 @@ else
             $ret['statusText'] = 'Ok';
             $ret['data'] = array();
             $ret['data']['videoId'] = $id;
-            $ret['data']['jsonUrl'] = "http://$host$uri/view.php?f=json&id=$id";
-            $ret['data']['userUrl'] = "http://$host$uri/view.php?id=$id";
+            $ret['data']['jsonUrl'] = "$protocol://$host$uri/view.php?f=json&id=$id";
+            $ret['data']['userUrl'] = "$protocol://$host$uri/view.php?id=$id";
             json_response($ret);
         }
         else
         {
-            header("Location: http://$host$uri/view.php?id=$id");    
+            header("Location: $protocol://$host$uri/view.php?id=$id");
         }
     }
     else
@@ -359,7 +342,7 @@ else
 
 /**
 * Override the script file name
-* 
+*
 * @param mixed $p_event
 * @param mixed $p_header
 * @return mixed
@@ -372,7 +355,7 @@ function ZipAvsCallback($p_event, &$p_header)
 
 /**
 * Override the ini file name
-* 
+*
 * @param mixed $p_event
 * @param mixed $p_header
 * @return mixed

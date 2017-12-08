@@ -13601,27 +13601,6 @@ goog.provide('wpt.commands');
 wpt.commands.g_domElements = [];
 
 /**
- * Chrome APIs move from experimental to supported without notice.
- * Keep our code from breaking by declaring that some experimental
- * APIs can be used in the non-experimental namespace.
- * @param {string} apiName The name of the chrome extensons API.
- */
-function moveOutOfexperimentalIfNeeded(apiName) {
-  // Prefer the real API.  If it exists, do nothing.
-  if (!chrome[apiName]) {
-    // Use the experimental version if it exists.
-    if (chrome.experimental[apiName]) {
-      chrome[apiName] = chrome.experimental[apiName];
-    } else {
-      throw 'Requested chrome API ' + apiName + ' does not exist!';
-    }
-  }
-}
-
-moveOutOfexperimentalIfNeeded('webNavigation');
-moveOutOfexperimentalIfNeeded('webRequest');
-
-/**
  * Remove leading and trailing whitespace.
  * @param {string} stringToTrim
  * @return {string}
@@ -13660,8 +13639,6 @@ wpt.commands.CommandRunner = function(tabId, chromeApi) {
 wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
     commandObject, callback) {
 
-  console.log('Delegate a command to the content script: ', commandObject);
-
   var code = ['wpt.contentScript.InPageCommandRunner.Instance.RunCommand(',
               JSON.stringify(commandObject),
               ');'].join('');
@@ -13670,20 +13647,6 @@ wpt.commands.CommandRunner.prototype.SendCommandToContentScript_ = function(
         if (callback != undefined)
           callback();
       });
-};
-
-/**
- * Implement the exec command.
- * TODO(skerner): Make this use SendCommandToContentScript_(), and
- * wrap it in a try block to avoid breaking the content script on
- * an exception.
- * @param {string} script
- */
-wpt.commands.CommandRunner.prototype.doExec = function(script, callback) {
-  this.chromeApi_.tabs.executeScript(g_tabid, {'code': script}, function(results){
-    if (callback != undefined)
-      callback();
-  });
 };
 
 /**
@@ -13735,34 +13698,6 @@ wpt.commands.CommandRunner.prototype.doSetCookie = function(cookie_path, data) {
 };
 
 /**
- * Block all urls matching |blockPattern| using the declarative web
- * request API.
- * @param {string} blockPattern
- */
-wpt.commands.CommandRunner.prototype.doBlockUsingDeclarativeApi_ =
-    function(blockPattern) {
-
-  // Match requests where any part of the URL contains |blockPattern|.
-  var requestMatcher = new chrome.declarativeWebRequest.RequestMatcher({
-    url: {
-      urlContains: blockPattern
-    }
-  });
-
-  // Blocking is implemented by canceling any matching request.
-  var blockingRule = {
-    conditions: [
-        requestMatcher
-    ],
-    actions: [
-        new chrome.declarativeWebRequest.CancelRequest()
-    ]
-  };
-
-  this.chromeApi_.declarativeWebRequest.onRequest.addRules([blockingRule]);
-};
-
-/**
  * Block all urls matching |blockPattern| using the non-declarative web
  * request API.
  * @param {string} blockPattern
@@ -13800,15 +13735,7 @@ wpt.commands.CommandRunner.prototype.doBlock = function(blockPattern) {
   // web request API, the test that we have permission to use it will
   // fail.
   var self = this;
-  this.chromeApi_.permissions.contains(
-      {permissions: ['declarativeWebRequest']},
-      function(hasPermission) {
-        if (hasPermission) {
-          self.doBlockUsingDeclarativeApi_(blockPattern);
-        } else {
-          self.doBlockUsingRequestCallback_(blockPattern);
-        }
-      });
+  self.doBlockUsingRequestCallback_(blockPattern);
 };
 
 /**
@@ -13928,17 +13855,6 @@ wpt.commands.CommandRunner.prototype.doNoScript = function() {
   });
 };
 
-/**
- * Implement the collectStats command.
- */
-wpt.commands.CommandRunner.prototype.doCollectStats = function(callback) {
-  chrome.tabs.sendRequest( g_tabid, {'message': 'collectStats'},
-      function(response) {
-        if (callback != undefined)
-          callback();
-      });
-};
-
 wpt.commands.CommandRunner.prototype.doCheckResponsive = function(callback) {
   chrome.tabs.sendRequest( g_tabid, {'message': 'checkResponsive'},
       function(response) {
@@ -13991,6 +13907,95 @@ var TIMELINE_AGGREGATION_INTERVAL = 500;
 var TIMELINE_START_TIMEOUT = 10000;
 var TRACING_START_TIMEOUT = 10000;
 
+var NAV_TIMING_SCRIPT = "\
+(function(){\
+  var timing = {};\
+  function addTime(name) {\
+    try {\
+      if (window.performance.timing[name] > 0) {\
+        timing[name] = Math.max(0, (\
+          window.performance.timing[name] -\
+          window.performance.timing['navigationStart']));\
+      }\
+    } catch(e){}\
+  };\
+  addTime('domLoading');\
+  addTime('domInteractive');\
+  addTime('domContentLoadedEventStart');\
+  addTime('domContentLoadedEventEnd');\
+  addTime('loadEventStart');\
+  addTime('loadEventEnd');\
+  try {\
+    timing['msFirstPaint'] = 0;\
+    if (window['chrome'] !== undefined &&\
+        window.chrome['loadTimes'] !== undefined) {\
+      var chromeTimes = window.chrome.loadTimes();\
+      if (chromeTimes['firstPaintTime'] !== undefined &&\
+          chromeTimes['firstPaintTime'] > 0) {\
+        var startTime = chromeTimes['requestTime'] ? chromeTimes['requestTime'] : chromeTimes['startLoadTime'];\
+        if (chromeTimes['firstPaintTime'] >= startTime)\
+          timing['msFirstPaint'] = (chromeTimes['firstPaintTime'] - startTime) * 1000.0;\
+      }\
+    }\
+  } catch(e) {}\
+  return timing;\
+})();";
+
+var USER_TIMING_SCRIPT = '\
+(function(){\
+  var m = [];\
+  try {\
+    if (window["performance"] != undefined &&\
+        (window.performance.getEntriesByType ||\
+         window.performance.webkitGetEntriesByType)) {\
+      if (window.performance.getEntriesByType) {\
+        var marks = window.performance.getEntriesByType("mark");\
+        var measures = window.performance.getEntriesByType("measure");\
+      } else {\
+        var marks = window.performance.webkitGetEntriesByType("mark");\
+        var measures = window.performance.webkitGetEntriesByType("measure");\
+      }\
+      if (marks.length) {\
+        for (var i = 0; i < marks.length; i++)\
+          m.push({"entryType": marks[i].entryType, "name": marks[i].name, "startTime": marks[i].startTime});\
+      }\
+      if (measures.length) {\
+        for (var i = 0; i < measures.length; i++)\
+          m.push({"entryType": measures[i].entryType, "name": measures[i].name, "startTime": measures[i].startTime, "duration": measures[i].duration});\
+      }\
+    }\
+    performance.clearMarks();\
+    performance.clearMeasures();\
+  } catch(e) {}\
+  return m;\
+})();';
+
+var DOM_COUNT_SCRIPT = "\
+(function(){\
+  var domCount = 0;\
+  try {\
+    var domCount = document.documentElement.getElementsByTagName('*').length;\
+    if (domCount === undefined)\
+      domCount = 0;\
+  } catch(e) {}\
+  return domCount;\
+})();";
+
+var CUSTOM_METRICS_SCRIPT = '\
+(function(metrics){\
+  var results = {};\
+  for (var i = 0; i < metrics.length; i++) {\
+    try {\
+      var fn = new Function("return function wptCustomMetric" + i + "(){" + metrics[i].code + "};")();\
+      var result = fn();\
+      if (typeof result == "undefined")\
+        result = "";\
+      results[metrics[i].name] = result;\
+    } catch(e){}\
+  }\
+  return results;\
+})';
+
 /**
  * Construct an object that connectes to the Chrome debugger.
  *
@@ -14008,11 +14013,16 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
     g_instance.tabId_ = tabId;
     g_instance.chromeApi_ = chromeApi;
     g_instance.startedCallback = callback;
-    g_instance.timelineStartedCallback = undefined;
-    g_instance.tracingStartedCallback = undefined;
-    g_instance.devToolsData = '';
-    g_instance.devToolsTimer = undefined;
-    var version = '1.0';
+    g_instance.trace = false;
+    g_instance.traceCategories = "-*,blink,v8,cc,gpu,blink.net,netlog,disabled-by-default-v8.runtime_stats";
+    g_instance.timeline = false;
+    g_instance.statsDoneCallback = undefined;
+    g_instance.mobileEmulation = undefined;
+    g_instance.customMetrics = undefined;
+    g_instance.timelineStackDepth = 0;
+    g_instance.traceRunning = false;
+    g_instance.headers = {};
+    var version = '1.2';
     if (g_instance.chromeApi_['debugger'])
         g_instance.chromeApi_.debugger.attach({tabId: g_instance.tabId_}, version, wpt.chromeDebugger.OnAttachDebugger);
   } catch (err) {
@@ -14021,41 +14031,116 @@ wpt.chromeDebugger.Init = function(tabId, chromeApi, callback) {
 };
 
 wpt.chromeDebugger.SetActive = function(active) {
-  g_instance.devToolsData = '';
-  g_instance.requests = {};
-  g_instance.receivedData = false;
   g_instance.active = active;
+  if (active) {
+    g_instance.requests = {};
+    g_instance.idMap = {};
+    g_instance.receivedData = false;
+    g_instance.statsDoneCallback = undefined;
+    g_instance.customMetrics = undefined;
+    wpt.chromeDebugger.StartTrace();
+  }
 };
+
+/**
+ * Execute a command in the context of the page
+ */
+wpt.chromeDebugger.Block = function(blockString) {
+  var patterns = blockString.split(" ");
+  var count = patterns.length;
+  if (count > 0) {
+    for (var i = 0; i < count; i++) {
+      if (patterns[i].length) {
+        g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.addBlockedURL', {"url": patterns[i]});
+      }
+    }
+    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.setBlockedURLs', {"urls": patterns});
+  }
+};
+
+/**
+ * Execute a command in the context of the page
+ */
+wpt.chromeDebugger.Exec = function(code, callback) {
+  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Runtime.evaluate', {expression: code, returnByValue: true}, function(response){
+    var value = undefined;
+    if (response['result'] !== undefined && response.result['value'] !== undefined)
+      value = response.result.value;
+    callback(value);
+  });
+};
+
+wpt.chromeDebugger.SetUserAgent = function(UAString) {
+  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.setUserAgentOverride', {"userAgent": UAString});
+};
+
+wpt.chromeDebugger.AddHeader = function (name, value) {
+  g_instance.headers[name] = value;
+  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Network.setExtraHTTPHeaders', {"headers": g_instance.headers});
+}
 
 /**
  * Capture the network timeline
  */
-wpt.chromeDebugger.CaptureTimeline = function(callback) {
+wpt.chromeDebugger.CaptureTimeline = function(timelineStackDepth, callback) {
   g_instance.timeline = true;
-  g_instance.timelineStartedCallback = callback;
-  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Timeline.start', null, function(){
-    setTimeout(function(){
-      if (g_instance.timelineStartedCallback) {
-        g_instance.timelineStartedCallback();
-        g_instance.timelineStartedCallback = undefined;
-      }
-    }, TIMELINE_START_TIMEOUT);
-  });
+  g_instance.timelineStackDepth = timelineStackDepth;
+  if (g_instance.active) {
+    wpt.chromeDebugger.StartTrace();
+  }
 };
 
 /**
  * Capture a trace
  */
-wpt.chromeDebugger.CaptureTrace = function(callback) {
-  g_instance.tracingStartedCallback = callback;
-  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start', null, function(){
-    setTimeout(function(){
-      if (g_instance.tracingStartedCallback) {
-        g_instance.tracingStartedCallback();
-        g_instance.tracingStartedCallback = undefined;
-      }
-    }, TRACING_START_TIMEOUT);
+wpt.chromeDebugger.CaptureTrace = function(categories) {
+  g_instance.trace = true;
+  if (categories != undefined && categories.length)
+    g_instance.traceCategories = "-*," + categories;
+  if (g_instance.active) {
+    wpt.chromeDebugger.StartTrace();
+  }
+};
+
+wpt.chromeDebugger.StartTrace = function() {
+  if (!g_instance.traceRunning) {
+    g_instance.traceRunning = true;
+    var traceCategories = '';
+    if (g_instance.trace)
+      traceCategories = g_instance.traceCategories;
+    else
+      traceCategories = '-*';
+    if (g_instance.timeline)
+      traceCategories = traceCategories + ',toplevel,blink.console,disabled-by-default-devtools.timeline,devtools.timeline,disabled-by-default-devtools.timeline.frame,devtools.timeline.frame,disabled-by-default-blink.feature_usage,blink.user_timing,rail';
+    if (g_instance.timelineStackDepth > 0)
+      traceCategories += ',disabled-by-default-v8.cpu_profiler';
+    var params = {categories: traceCategories, options:'record-as-much-as-possible'};
+    g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.start', params);
+  }
+}
+
+wpt.chromeDebugger.CollectStats = function(customMetrics, callback) {
+    g_instance.statsDoneCallback = callback;
+    g_instance.customMetrics = customMetrics;
+  wpt.chromeDebugger.collectDOMCount(function(){
+    wpt.chromeDebugger.collectNavigationTiming(function(){
+      wpt.chromeDebugger.collectUserTiming(function(){
+        wpt.chromeDebugger.collectCustomMetrics(function(){
+          if (g_instance.traceRunning) {
+            g_instance.traceRunning = false;
+            g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Tracing.end');
+          } else {
+            g_instance.statsDoneCallback();
+          }
+        });
+      });
+    });
   });
+};
+
+wpt.chromeDebugger.EmulateMobile = function(deviceString) {
+  g_instance.mobileEmulation = JSON.parse(deviceString);
+  g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.setDeviceMetricsOverride', g_instance.mobileEmulation);
 };
 
 /**
@@ -14064,123 +14149,417 @@ wpt.chromeDebugger.CaptureTrace = function(callback) {
 wpt.chromeDebugger.OnMessage = function(tabId, message, params) {
   // timeline and tracing starts seem to have a delay in startup
   // and don't really start when the callback completes
-  if (g_instance.timelineStartedCallback &&
-      message === 'Timeline.eventRecorded') {
-    g_instance.timelineStartedCallback();
-    g_instance.timelineStartedCallback = undefined;
+  var tracing = false;
+  if (message === 'Tracing.dataCollected') {
+    tracing = true;
+    if (params['value'] !== undefined && params['value'].length && (g_instance.trace || g_instance.timeline)) {
+      // Collect the netlog events separately for calculating the request timings
+      var jsonStr = '';
+      var len = params['value'].length;
+      var first = true;
+      for(var i = 0; i < len; i++) {
+        if (!first)
+          jsonStr += ",\n";
+        jsonStr += JSON.stringify(params['value'][i]);
+        first = false;
+      }
+      wpt.chromeDebugger.sendEvent('trace', jsonStr);
+    }
   }
-  if (g_instance.tracingStartedCallback &&
-      message === 'Tracing.dataCollected') {
-    g_instance.tracingStartedCallback();
-    g_instance.tracingStartedCallback = undefined;
+  if (message === 'Tracing.tracingComplete') {
+    tracing = true;
+    if (g_instance.statsDoneCallback)
+      g_instance.statsDoneCallback();
   }
-  if (message === 'Tracing.dataCollected')
-    console.log(params);
+
+  if(message === 'Console.messageAdded') {
+    wpt.chromeDebugger.sendEvent('console_log', JSON.stringify(params['message']));
+  }
 
     // actual message recording
-  if (g_instance.active) {
-    // keep track of all of the dev tools messages
-    if (g_instance.timeline) {
-      if (g_instance.devToolsData.length)
-        g_instance.devToolsData += ',';
-      g_instance.devToolsData += '{"method":"' + message + '","params":' + JSON.stringify(params) + '}';
-      if (g_instance.devToolsTimer == undefined)
-        g_instance.devToolsTimer = setTimeout(wpt.chromeDebugger.SendDevToolsData, TIMELINE_AGGREGATION_INTERVAL);
+  if (g_instance.active && !tracing) {
+    // Page events
+    if (message === 'Page.frameNavigated' &&
+        params['frame'] !== undefined &&
+        params.frame['parentId'] === undefined) {
+      wpt.chromeDebugger.sendEvent('navigate', '');
+      if (g_instance.mobileEmulation != undefined) {
+        g_instance.chromeApi_.debugger.sendCommand({tabId: g_instance.tabId_}, 'Page.setDeviceMetricsOverride', g_instance.mobileEmulation);
+      }
+    }
+
+    if (message === 'Page.loadEventFired') {
+      wpt.chromeDebugger.sendEvent('complete', '');
     }
     
     // Network events
-    if (message === 'Network.requestWillBeSent') {
-      if (params.request.url.indexOf('http') == 0) {
-        // see if it is a redirect
-        if (params['redirectResponse'] !== undefined &&
-            g_instance.requests[params.requestId] !== undefined) {
-          if (!g_instance.receivedData)
-            wpt.chromeDebugger.SendReceivedData();
-          if (!params.redirectResponse.fromDiskCache &&
-              g_instance.requests[params.requestId]['fromNet'] !== false) {
-            g_instance.requests[params.requestId].fromNet = true;
-            if (g_instance.requests[params.requestId]['firstByteTime'] === undefined) {
-              g_instance.requests[params.requestId].firstByteTime = params.timestamp;
-            }
-            g_instance.requests[params.requestId].response = params.redirectResponse;
-            request = g_instance.requests[params.requestId];
-            request.endTime = params.timestamp;
-            wpt.chromeDebugger.sendRequestDetails(request);
-          }
-          delete g_instance.requests[params.requestId];
+    // Processing logic largely duplocated from the WebPageTest PHP code
+    if (params['requestId'] !== undefined) {
+      if (message === 'Network.requestServedFromCache') {
+        wpt.chromeDebugger.SendReceivedData();
+        if (g_instance.requests[params.requestId] !== undefined) {
+          g_instance.requests[params.requestId].fromNet = false;
+          g_instance.requests[params.requestId].fromCache = true;
         }
-        var detail = {};
-        detail.url = params.request.url;
-        detail.initiator = params.initiator;
-        detail.startTime = params.timestamp;
-        if (params['request'] !== undefined)
-          detail.request = params.request;
-        g_instance.requests[params.requestId] = detail;
-      }
-    } else if (message === 'Network.dataReceived') {
-      if (g_instance.requests[params.requestId] !== undefined) {
-        if (!g_instance.receivedData)
-          wpt.chromeDebugger.SendReceivedData();
-        if (g_instance.requests[params.requestId]['firstByteTime'] === undefined)
-          g_instance.requests[params.requestId].firstByteTime = params.timestamp;
-        if (g_instance.requests[params.requestId]['bytesIn'] === undefined)
-          g_instance.requests[params.requestId]['bytesIn'] = 0;
-        if (params['encodedDataLength'] !== undefined && params.encodedDataLength > 0)
-          g_instance.requests[params.requestId]['bytesIn'] += params.encodedDataLength;
-      }
-    } else if (message === 'Network.responseReceived') {
-      if (!g_instance.receivedData)
-        wpt.chromeDebugger.SendReceivedData();
-      if (!params.response.fromDiskCache &&
-          g_instance.requests[params.requestId] !== undefined &&
-          g_instance.requests[params.requestId]['fromNet'] !== false) {
-        g_instance.requests[params.requestId].fromNet = true;
-        if (g_instance.requests[params.requestId]['firstByteTime'] === undefined) {
-          g_instance.requests[params.requestId].firstByteTime = params.timestamp;
-        }
-        g_instance.requests[params.requestId].response = params.response;
-      }
-    } else if (message === 'Network.requestServedFromCache') {
-      if (!g_instance.receivedData)
-        wpt.chromeDebugger.SendReceivedData();
-      if (g_instance.requests[params.requestId] !== undefined)
-        g_instance.requests[params.requestId].fromNet = false;
-    } else if (message === 'Network.loadingFinished') {
-      if (!g_instance.receivedData)
-        wpt.chromeDebugger.SendReceivedData();
-      if (g_instance.requests[params.requestId] !== undefined) {
-        if (g_instance.requests[params.requestId]['fromNet']) {
-          request = g_instance.requests[params.requestId];
+      } else if (params['timestamp'] !== undefined) {
+        params.timestamp *= 1000;  // Convert it to ms
+        var id = params.requestId;
+        var originalId = id;
+        if (g_instance.idMap[id] !== undefined)
+          id += '-' + g_instance.idMap[id];
+        if (message === 'Network.requestWillBeSent' && params['request'] !== undefined && params.request['url'] !== undefined && params.request.url.indexOf('http') == 0) {
+          var request = params.request;
+          request.startTime = params.timestamp;
           request.endTime = params.timestamp;
-          wpt.chromeDebugger.sendRequestDetails(request);
+          if (params['initiator'] !== undefined)
+            wpt.chromeDebugger.SendInitiator(params['requestId'], params.request['url'], JSON.stringify(params.initiator));
+          // redirects re-use the same request ID
+          if (g_instance.requests[id] !== undefined) {
+            wpt.chromeDebugger.SendReceivedData();
+            if (params['redirectResponse'] !== undefined) {
+              if (g_instance.requests[id]['endTime'] === undefined || params.timestamp > g_instance.requests[id].endTime)
+                  g_instance.requests[id].endTime = params.timestamp;
+              if (g_instance.requests[id]['firstByteTime'] === undefined)
+                  g_instance.requests[id].firstByteTime = params.timestamp;
+              g_instance.requests[id].fromNet = false;
+              if (params.redirectResponse['fromDiskCache'] !== undefined && !params.redirectResponse.fromDiskCache)
+                g_instance.requests[id].fromNet = true;
+              g_instance.requests[id].response = params.redirectResponse;
+            }
+            wpt.chromeDebugger.sendRequestDetails(id);
+            // Generate a new unique ID
+            var count = 0;
+            if (g_instance.idMap[originalId] !== undefined)
+              count = g_instance.idMap[originalId];
+            g_instance.idMap[originalId] = count + 1;
+            id = originalId + "-" + g_instance.idMap[originalId];
+          }
+          // keep track of the new request
+          request['id'] = id;
+          g_instance.requests[id] = request;
+        } else if (g_instance.requests[id] !== undefined) {
+          if (g_instance.requests[id]['endTime'] === undefined || params.timestamp > g_instance.requests[id].endTime)
+              g_instance.requests[id].endTime = params.timestamp;
+          if (message === 'Network.dataReceived') {
+            wpt.chromeDebugger.SendReceivedData();
+            if (g_instance.requests[id]['firstByteTime'] === undefined)
+              g_instance.requests[id].firstByteTime = params.timestamp;
+            if (g_instance.requests[id]['bytesInData'] === undefined)
+              g_instance.requests[id].bytesInData = 0;
+            if (params['dataLength'] !== undefined)
+              g_instance.requests[id].bytesInData += params.dataLength;
+            if (g_instance.requests[id]['bytesInEncoded'] === undefined)
+              g_instance.requests[id].bytesInEncoded = 0;
+            if (params['encodedDataLength'] !== undefined)
+              g_instance.requests[id].bytesInEncoded += params.encodedDataLength;
+          } else if (message === 'Network.responseReceived' && params['response'] !== undefined) {
+            wpt.chromeDebugger.SendReceivedData();
+            if (g_instance.requests[id]['firstByteTime'] === undefined)
+              g_instance.requests[id].firstByteTime = params.timestamp;
+            g_instance.requests[id].fromNet = false;
+            // the timing data for cached resources is completely bogus
+            if (g_instance.requests[id]['fromCache'] !== undefined && params.response['timing'] !== undefined)
+              delete params.response.timing;
+            if (params.response['fromDiskCache'] !== undefined &&
+                !params.response.fromDiskCache &&
+                g_instance.requests[id]['fromCache'] === undefined) {
+              g_instance.requests[id].fromNet = true;
+            }
+            // adjust the start time
+            if (params.response['timing'] !== undefined && params.response.timing['receiveHeadersEnd'] !== undefined)
+              g_instance.requests[id].startTime = params.timestamp - params.response.timing.receiveHeadersEnd;
+            g_instance.requests[id].response = params.response;
+            var done = false;
+            if (g_instance.requests[id].response['headers'] !== undefined &&
+                g_instance.requests[id].response.headers['Content-Length'] !== undefined &&
+                parseInt(g_instance.requests[id].response.headers['Content-Length']) === 0) {
+              done = true;
+            }
+            if (g_instance.requests[id].response['headers'] !== undefined &&
+                g_instance.requests[id].response.headers['content-length'] !== undefined &&
+                parseInt(g_instance.requests[id].response.headers['content-length']) === 0) {
+              done = true;
+            }
+            if (done ||
+                (g_instance.requests[id].response['status'] !== undefined &&
+                 g_instance.requests[id].response.status !== 200 &&
+                 g_instance.requests[id].response.status !== 100)) {
+              g_instance.requests[id].endTime = params.timestamp;
+              wpt.chromeDebugger.sendRequestDetails(id);
+            }
+          } else if (message === 'Network.loadingFinished') {
+            wpt.chromeDebugger.SendReceivedData();
+            if (g_instance.requests[id]['firstByteTime'] === undefined)
+              g_instance.requests[id].firstByteTime = params.timestamp;
+            if (g_instance.requests[id]['endTime'] === undefined || params.timestamp > g_instance.requests[id].endTime)
+              g_instance.requests[id].endTime = params.timestamp;
+            wpt.chromeDebugger.sendRequestDetails(id);
+          } else if (message === 'Network.loadingFailed') {
+            if (g_instance.requests[id]['response'] !== undefined && g_instance.requests[id]['fromCache'] === undefined) {
+              if (params['canceled'] !== undefined && params.canceled) {
+                g_instance.requests[id].canceled = true;
+              } else {
+                g_instance.requests[id].fromNet = true;
+                g_instance.requests[id].errorCode = 12999;
+                if (g_instance.requests[id]['firstByteTime'] === undefined)
+                  g_instance.requests[id].firstByteTime = params.timestamp;
+                if (g_instance.requests[id]['endTime'] === undefined || params.timestamp > g_instance.requests[id].endTime)
+                  g_instance.requests[id].endTime = params.timestamp;
+                if (params['errorText'] !== undefined) {
+                  g_instance.requests[id].error = params.errorText;
+                  g_instance.requests[id].errorCode = wpt.chromeExtensionUtils.netErrorStringToWptCode(params.errorText);
+                } else if (params['error'] !== undefined) {
+                  g_instance.requests[id].errorCode = params.error;
+                }
+              }
+              wpt.chromeDebugger.sendRequestDetails(id);
+            }
+          }
         }
-        delete g_instance.requests[params.requestId];
-      }
-    } else if (message === 'Network.loadingFailed') {
-      if (g_instance.requests[params.requestId] !== undefined) {
-        request = g_instance.requests[params.requestId];
-        request.endTime = params.timestamp;
-        request.error = params.errorText;
-        request.errorCode =
-            wpt.chromeExtensionUtils.netErrorStringToWptCode(request.error);
-        wpt.chromeDebugger.sendRequestDetails(request);
-        delete g_instance.requests[params.requestId];
       }
     }
-  }
-};
-
-wpt.chromeDebugger.SendDevToolsData = function() {
-  g_instance.devToolsTimer = undefined;
-  if (g_instance.devToolsData.length) {
-    wpt.chromeDebugger.sendEvent('devTools', g_instance.devToolsData);
-    g_instance.devToolsData = '';
   }
 };
 
 /**
- * Attached using the 1.0 released interface
+* Fix up all of the request details for sending
+*/
+wpt.chromeDebugger.FinalizeRequest = function(id) {
+  // keep track of some common checks
+  if (g_instance.requests[id]['response'] !== undefined && g_instance.requests[id].response['timing'] !== undefined)
+    hasTiming = true;
+
+  // Fix the "requestTime" to be in ms and use it as the anchor for the start time
+  if (hasTiming && g_instance.requests[id].response.timing['requestTime'] !== undefined) {
+    g_instance.requests[id].response.timing.requestTime *= 1000;
+    g_instance.requests[id].startTime = g_instance.requests[id].response.timing.requestTime;
+  }
+
+  // Calculate absolute timestamps for all of the timings
+  if (hasTiming) {
+    if (g_instance.requests[id].response.timing['dnsStart'] !== undefined &&
+        g_instance.requests[id].response.timing['dnsEnd'] !== undefined &&
+        g_instance.requests[id].response.timing.dnsStart !== -1 &&
+        g_instance.requests[id].response.timing.dnsEnd !== -1 &&
+        g_instance.requests[id].response.timing.dnsEnd > g_instance.requests[id].response.timing.dnsStart) {
+      g_instance.requests[id].dnsStart = g_instance.requests[id].startTime + g_instance.requests[id].response.timing.dnsStart;
+      g_instance.requests[id].dnsEnd = g_instance.requests[id].startTime + g_instance.requests[id].response.timing.dnsEnd;
+    }
+    if (g_instance.requests[id].response.timing['connectStart'] !== undefined &&
+        g_instance.requests[id].response.timing['connectEnd'] !== undefined &&
+        g_instance.requests[id].response.timing.connectStart !== -1 &&
+        g_instance.requests[id].response.timing.connectEnd !== -1 &&
+        g_instance.requests[id].response.timing.connectEnd > g_instance.requests[id].response.timing.connectStart) {
+      g_instance.requests[id].connectStart = g_instance.requests[id].startTime + g_instance.requests[id].response.timing.connectStart;
+      if (g_instance.requests[id].response.timing['sslStart'] !== undefined &&
+          g_instance.requests[id].response.timing.sslStart !== -1 &&
+          g_instance.requests[id].response.timing.sslStart > g_instance.requests[id].response.timing.connectStart) {
+        g_instance.requests[id].connectEnd = g_instance.requests[id].startTime + g_instance.requests[id].response.timing.sslStart;
+      } else {
+        g_instance.requests[id].connectEnd = g_instance.requests[id].startTime + g_instance.requests[id].response.timing.connectEnd;
+      }
+    }
+    if (g_instance.requests[id].response.timing['sslStart'] !== undefined &&
+        g_instance.requests[id].response.timing['sslEnd'] !== undefined &&
+        g_instance.requests[id].response.timing.sslStart !== -1 &&
+        g_instance.requests[id].response.timing.sslEnd !== -1 &&
+        g_instance.requests[id].response.timing.sslEnd > g_instance.requests[id].response.timing.sslStart) {
+      g_instance.requests[id].sslStart = g_instance.requests[id].startTime + g_instance.requests[id].response.timing.sslStart;
+      g_instance.requests[id].sslEnd = g_instance.requests[id].startTime + g_instance.requests[id].response.timing.sslEnd;
+    }
+    if (g_instance.requests[id].response.timing['sendStart'] !== undefined &&
+        g_instance.requests[id].response.timing.sendStart !== -1) {
+      g_instance.requests[id].requestStart = g_instance.requests[id].startTime + g_instance.requests[id].response.timing.sendStart;
+    }
+    if (g_instance.requests[id].response.timing['receiveHeadersEnd'] !== undefined &&
+        g_instance.requests[id].response.timing.receiveHeadersEnd !== -1) {
+      g_instance.requests[id].firstByteTime = g_instance.requests[id].startTime + g_instance.requests[id].response.timing.receiveHeadersEnd;
+    }
+  }
+
+  // Fix-up the bytes in (fall back to content length) if we didn't get it explicitly
+  if (g_instance.requests[id]['bytesIn'] === undefined && g_instance.requests[id]['bytesInEncoded'] !== undefined)
+    g_instance.requests[id].bytesIn = g_instance.requests[id].bytesInEncoded;
+  var headerlength = 0;
+  if (!g_instance.requests[id]['bytesIn'] && g_instance.requests[id]['response'] !== undefined && g_instance.requests[id].response['headers'] !== undefined) {
+    if (g_instance.requests[id].response['headersText'] !== undefined) {
+      headerlength = g_instance.requests[id].response['headersText'].length;
+    } else {
+      try {
+        for (var key in g_instance.requests[id].response.headers) {
+          headerlength += key.length + 4; // include the colon, space and \r\n
+          if (g_instance.requests[id].response.headers[key] !== undefined)
+            headerlength += g_instance.requests[id].response.headers[key].length;
+        }    
+      } catch(e) {}
+    }
+    if (g_instance.requests[id].response.headers['Content-Length'] !== undefined)
+      g_instance.requests[id]['bytesIn'] = parseInt(g_instance.requests[id].response.headers['Content-Length']) + headerlength;
+    else if (g_instance.requests[id].response.headers['content-length'] !== undefined)
+      g_instance.requests[id]['bytesIn'] = parseInt(g_instance.requests[id].response.headers['content-length']) + headerlength;
+  }
+  // Populate the objectSize (fall back to bytesIn if not available)
+  g_instance.requests[id]['objectSize'] = g_instance.requests[id]['bytesIn'] - headerlength;
+  if (g_instance.requests[id]['response'] !== undefined && g_instance.requests[id].response['headers'] !== undefined) {
+    if (g_instance.requests[id].response.headers['Content-Length'] !== undefined)
+      g_instance.requests[id]['objectSize'] = parseInt(g_instance.requests[id].response.headers['Content-Length']);
+    else if (g_instance.requests[id].response.headers['content-length'] !== undefined)
+      g_instance.requests[id]['objectSize'] = parseInt(g_instance.requests[id].response.headers['content-length']);
+  }
+}
+
+/**
+ * Process and send the data for a single request
+ * to the hook for processing
+ * @param {object} request Request data.
  */
+wpt.chromeDebugger.sendRequestDetails = function(id) {
+  if (g_instance.requests[id] === undefined || g_instance.requests[id]['sent'] !== undefined)
+    return;
+  wpt.chromeDebugger.FinalizeRequest(id);
+  g_instance.requests[id].sent = true;
+
+  var request = g_instance.requests[id];
+  if (request['fromNet'] !== undefined && request.fromNet && request['requestStart'] !== undefined) {
+    var eventData = 'browser=chrome\n';
+    eventData += 'id=' + id + '\n';
+    eventData += 'url=' + request.url + '\n';
+    if (request['errorCode'] !== undefined)
+      eventData += 'errorCode=' + request.errorCode + '\n';
+    if (request['error'] !== undefined)
+      eventData += 'errorText=' + request.error + '\n';
+    if (request['initialPriority'] !== undefined)
+      eventData += 'priority=' + request.initialPriority + '\n';
+
+    if (request['startTime'] !== undefined)
+      eventData += 'startTime=' + request.startTime + '\n';
+    if (request['requestStart'] !== undefined)
+      eventData += 'requestStart=' + request.requestStart + '\n';
+    if (request['firstByteTime'] !== undefined)
+      eventData += 'firstByteTime=' + request.firstByteTime + '\n';
+    if (request['endTime'] !== undefined)
+      eventData += 'endTime=' + request.endTime + '\n';
+    if (request['dnsStart'] !== undefined)
+      eventData += 'dnsStart=' + request.dnsStart + '\n';
+    if (request['dnsEnd'] !== undefined)
+      eventData += 'dnsEnd=' + request.dnsEnd + '\n';
+    if (request['connectStart'] !== undefined)
+      eventData += 'connectStart=' + request.connectStart + '\n';
+    if (request['connectEnd'] !== undefined)
+      eventData += 'connectEnd=' + request.connectEnd + '\n';
+    if (request['sslStart'] !== undefined)
+      eventData += 'sslStart=' + request.sslStart + '\n';
+    if (request['sslEnd'] !== undefined)
+      eventData += 'sslEnd=' + request.sslEnd + '\n';
+
+    if (request['bytesIn'] !== undefined)
+      eventData += 'bytesIn=' + request.bytesIn + '\n';
+    if (request['objectSize'] !== undefined)
+      eventData += 'objectSize=' + request.objectSize + '\n';
+    if (request['response'] !== undefined) {
+      if (request.response['status'] !== undefined)
+        eventData += 'status=' + request.response.status + '\n';
+      if (request.response['connectionId'] !== undefined)
+        eventData += 'connectionId=' + request.response.connectionId + '\n';
+
+      // the end of the data is ini-file style for multi-line values
+      eventData += '\n';
+      if (request.response['requestHeadersText'] !== undefined) {
+        eventData += '[Request Headers]\n' + request.response.requestHeadersText + '\n';
+      } else if (request.response['requestHeaders'] !== undefined) {
+        eventData += '[Request Headers]\n';
+        var method = 'GET';
+        if (request.response.requestHeaders['method'] !== undefined)
+          method = request.response.requestHeaders['method'];
+        else if (request.response.requestHeaders[':method'] !== undefined)
+          method = request.response.requestHeaders[':method'];
+        var version = 'HTTP/1.1';
+        if (request.response.requestHeaders['version'] !== undefined)
+          version = request.response.requestHeaders['version'];
+        else if (request.response.requestHeaders[':version'] !== undefined)
+          version = request.response.requestHeaders[':version'];
+        var matches = request.url.match(/[^\/]*\/\/([^\/]+)(.*)/);
+        if (matches !== undefined && matches.length > 1) {
+          var host = matches[1];
+          if (request.response.requestHeaders['host'] !== undefined)
+            host = request.response.requestHeaders['host'];
+          else if (request.response.requestHeaders[':host'] !== undefined)
+            host = request.response.requestHeaders[':host'];
+          var object = '/';
+          if (matches.length > 2)
+            object = matches[2];
+          if (request.response.requestHeaders['path'] !== undefined)
+            object = request.response.requestHeaders['path'];
+          else if (request.response.requestHeaders[':path'] !== undefined)
+            object = request.response.requestHeaders[':path'];
+          eventData += method + ' ' + object + ' ' + version + '\n';
+          eventData += 'Host: ' + host + '\n';
+          for (tag in request.response.requestHeaders)
+            eventData += tag + ': ' + request.response.requestHeaders[tag] + '\n';
+        }
+        eventData += '\n';
+      } else if (request['request'] !== undefined) {
+        eventData += '[Request Headers]\n';
+        var method = 'GET';
+        if (request.request['method'] !== undefined)
+          method = request.request['method'];
+        var matches = request.url.match(/[^\/]*\/\/([^\/]+)(.*)/);
+        if (matches !== undefined && matches.length > 1) {
+          var host = matches[1];
+          var object = '/';
+          if (matches.length > 2)
+            object = matches[2];
+          eventData += method + ' ' + object + ' HTTP/1.1\n';
+          eventData += 'Host: ' + host + '\n';
+          if (request.request['headers'] !== undefined) {
+            for (tag in request.request.headers)
+              eventData += tag + ': ' + request.request.headers[tag] + '\n';
+          }
+        }
+        eventData += '\n';
+      }
+
+      if (request.response['headersText'] !== undefined) {
+        eventData += '[Response Headers]\n' + request.response.headersText + '\n';
+      } else if(request.response['headers'] !== undefined) {
+        eventData += '[Response Headers]\n';
+        if (request.response.headers['version'] !== undefined &&
+            request.response.headers['status'] !== undefined) {
+          eventData += request.response.headers['version'] + ' ' + request.response.headers['status'] + '\n';
+        } else if (request.response.headers['status'] !== undefined) {
+          eventData += 'HTTP/2 ' + request.response.headers['status'] + '\n';
+        }
+        for (tag in request.response.headers) {
+          if (tag !== 'version' && tag !== 'status')
+            eventData += tag + ': ' + request.response.headers[tag] + '\n';
+        }
+      }
+    } else if (request['request'] !== undefined) {
+      eventData += '[Request Headers]\n';
+      var method = 'GET';
+      if (request.request['method'] !== undefined)
+        method = request.request['method'];
+      var matches = request.url.match(/[^\/]*\/\/([^\/]+)(.*)/);
+      if (matches !== undefined && matches.length > 1) {
+        var host = matches[1];
+        var object = '/';
+        if (matches.length > 2) {
+          object = matches[2];
+        }
+        eventData += method + ' ' + object + ' HTTP/1.1\n';
+        eventData += 'Host: ' + host + '\n';
+        if (request.request['headers'] !== undefined) {
+          for (tag in request.request.headers) {
+            eventData += tag + ': ' + request.request.headers[tag] + '\n';
+          }
+        }
+      }
+      eventData += '\n';
+    }
+    wpt.chromeDebugger.sendEvent('request_data', eventData);
+  }
+};
+
 wpt.chromeDebugger.OnAttachDebugger = function() {
   wpt.LOG.info('attached to debugger extension interface');
   g_instance.connected = true;
@@ -14200,129 +14579,106 @@ wpt.chromeDebugger.OnAttachDebugger = function() {
 };
 
 /**
- * Process and send the data for a single request
- * to the hook for processing
- * @param {object} request Request data.
- */
-wpt.chromeDebugger.sendRequestDetails = function(request) {
-  var valid = false;
-  var eventData = 'browser=chrome\n';
-  eventData += 'url=' + request.url + '\n';
-  if (request['errorCode'] !== undefined)
-    eventData += 'errorCode=' + request.errorCode + '\n';
-  if (request['error'] !== undefined)
-    eventData += 'errorText=' + request.error + '\n';
-  if (request['startTime'] !== undefined)
-    eventData += 'startTime=' + request.startTime + '\n';
-  if (request['firstByteTime'] !== undefined)
-    eventData += 'firstByteTime=' + request.firstByteTime + '\n';
-  if (request['endTime'] !== undefined)
-    eventData += 'endTime=' + request.endTime + '\n';
-  if (request['bytesIn'] !== undefined)
-    eventData += 'bytesIn=' + request.bytesIn + '\n';
-  if (request['initiator'] !== undefined &&
-      request.initiator['type'] !== undefined) {
-    eventData += 'initiatorType=' + request.initiator.type + '\n';
-    if (request.initiator.type == 'parser') {
-      if (request.initiator['url'] !== undefined)
-        eventData += 'initiatorUrl=' + request.initiator.url + '\n';
-      if (request.initiator['lineNumber'] !== undefined)
-        eventData += 'initiatorLineNumber=' + request.initiator.lineNumber + '\n';
-    } else if (request.initiator.type == 'script' &&
-               request.initiator['stackTrace'] &&
-               request.initiator.stackTrace[0]) {
-      if (request.initiator.stackTrace[0]['url'] !== undefined)
-        eventData += 'initiatorUrl=' + request.initiator.stackTrace[0].url + '\n';
-      if (request.initiator.stackTrace[0]['lineNumber'] !== undefined)
-        eventData += 'initiatorLineNumber=' + request.initiator.stackTrace[0].lineNumber + '\n';
-      if (request.initiator.stackTrace[0]['columnNumber'] !== undefined)
-        eventData += 'initiatorColumnNumber=' + request.initiator.stackTrace[0].columnNumber + '\n';
-      if (request.initiator.stackTrace[0]['functionName'] !== undefined)
-        eventData += 'initiatorFunctionName=' + request.initiator.stackTrace[0].functionName + '\n';
-    }
+* Notify the c++ code that we got our first byte of data for the page.
+*/
+wpt.chromeDebugger.SendReceivedData = function() {
+  if (!g_instance.receivedData) {
+    g_instance.receivedData = true;
+    wpt.chromeDebugger.sendEvent('received_data', '');
   }
-  if (request['response'] !== undefined) {
-    if (request.response['status'] !== undefined)
-        eventData += 'status=' + request.response.status + '\n';
-    if (request.response['connectionId'] !== undefined)
-        eventData += 'connectionId=' + request.response.connectionId + '\n';
-    if (request.response['timing'] !== undefined) {
-      if (request.response.timing['sendStart'] !== undefined && request.response.timing.sendStart > 0)
-        valid = true;
-      eventData += 'timing.dnsStart=' + request.response.timing.dnsStart + '\n';
-      eventData += 'timing.dnsEnd=' + request.response.timing.dnsEnd + '\n';
-      eventData += 'timing.connectStart=' + request.response.timing.connectStart + '\n';
-      eventData += 'timing.connectEnd=' + request.response.timing.connectEnd + '\n';
-      eventData += 'timing.sslStart=' + request.response.timing.sslStart + '\n';
-      eventData += 'timing.sslEnd=' + request.response.timing.sslEnd + '\n';
-      eventData += 'timing.requestTime=' + request.response.timing.requestTime + '\n';
-      if (request.response.timing['sendStart'] !== undefined)
-        eventData += 'timing.sendStart=' + request.response.timing.sendStart + '\n';
-      if (request.response.timing['sendEnd'] !== undefined)
-        eventData += 'timing.sendEnd=' + request.response.timing.sendEnd + '\n';
-      if (request.response.timing['receiveHeadersEnd'] !== undefined)
-        eventData += 'timing.receiveHeadersEnd=' + request.response.timing.receiveHeadersEnd + '\n';
-    }
-
-    // the end of the data is ini-file style for multi-line values
-    eventData += '\n';
-    if (request.response['requestHeadersText'] !== undefined) {
-      eventData += '[Request Headers]\n' + request.response.requestHeadersText + '\n';
-    } else if (request['request'] !== undefined) {
-      eventData += '[Request Headers]\n';
-      var method = 'GET';
-      if (request.request['method'] !== undefined) {
-        method = request.request['method'];
-      }
-      var matches = request.url.match(/[^\/]*\/\/([^\/]+)(.*)/);
-      if (matches !== undefined && matches.length > 1) {
-        var host = matches[1];
-        var object = '/';
-        if (matches.length > 2) {
-          object = matches[2];
-        }
-        eventData += method + ' ' + object + ' HTTP/1.1\n';
-        eventData += 'Host: ' + host + '\n';
-        if (request.request['headers'] !== undefined) {
-          for (tag in request.request.headers) {
-            eventData += tag + ': ' + request.request.headers[tag] + '\n';
-          }
-        }
-      }
-      eventData += '\n';
-    }
-    if (request.response['headersText'] !== undefined)
-      eventData += '[Response Headers]\n' + request.response.headersText + '\n';
-  } else if (request['request'] !== undefined) {
-    eventData += '[Request Headers]\n';
-    var method = 'GET';
-    if (request.request['method'] !== undefined) {
-      method = request.request['method'];
-    }
-    var matches = request.url.match(/[^\/]*\/\/([^\/]+)(.*)/);
-    if (matches !== undefined && matches.length > 1) {
-      var host = matches[1];
-      var object = '/';
-      if (matches.length > 2) {
-        object = matches[2];
-      }
-      eventData += method + ' ' + object + ' HTTP/1.1\n';
-      eventData += 'Host: ' + host + '\n';
-      if (request.request['headers'] !== undefined) {
-        for (tag in request.request.headers) {
-          eventData += tag + ': ' + request.request.headers[tag] + '\n';
-        }
-      }
-    }
-    eventData += '\n';
-  }
-  if (valid)
-    wpt.chromeDebugger.sendEvent('request_data', eventData);
 };
 
-wpt.chromeDebugger.SendReceivedData = function() {
-  g_instance.receivedData = true;
-  wpt.chromeDebugger.sendEvent('received_data', '');
+wpt.chromeDebugger.collectDOMCount = function(callback) {
+  wpt.chromeDebugger.Exec(DOM_COUNT_SCRIPT, function(result) {
+    wpt.chromeDebugger.sendEvent('stats?domCount=' + result);
+    callback();
+  });
+};
+
+wpt.chromeDebugger.collectNavigationTiming = function(callback) {
+  wpt.chromeDebugger.Exec(NAV_TIMING_SCRIPT, function(result) {
+    wpt.chromeDebugger.sendEvent(
+        'window_timing?domContentLoadedEventStart=' +
+            result['domContentLoadedEventStart'] +
+        '&domContentLoadedEventEnd=' +
+            result['domContentLoadedEventEnd'] +
+        '&domLoading=' + result['domLoading'] +
+        '&domInteractive=' + result['domInteractive'] +
+        '&loadEventStart=' + result['loadEventStart'] +
+        '&loadEventEnd=' + result['loadEventEnd'] +
+        '&msFirstPaint=' + result['msFirstPaint']);
+    callback();
+  });
+};
+
+wpt.chromeDebugger.collectUserTiming = function(callback) {
+  wpt.chromeDebugger.Exec(USER_TIMING_SCRIPT, function(result) {
+    if (result !== undefined && result.length) {
+      for (var i = 0; i < result.length; i++) {
+        var mark = result[i];
+        mark.type = result['entryType'];
+        wpt.chromeDebugger.sendEvent('timed_event', JSON.stringify(mark));
+      }
+    }
+    callback();
+  });
+};
+
+wpt.chromeDebugger.collectCustomMetrics = function(callback) {
+  var metrics = [];
+  if (g_instance['customMetrics'] !== undefined && g_instance.customMetrics.length) {
+    var lines = g_instance.customMetrics.split("\n");
+    var lineCount = lines.length;
+    for (var i = 0; i < lineCount; i++) {
+      var parts = lines[i].split(":");
+      if (parts.length == 2) {
+        metrics.push({"name": parts[0], "code": window.atob(parts[1])});
+      }
+    }
+  }
+
+  if (metrics.length) {
+    var code = CUSTOM_METRICS_SCRIPT + '(' + JSON.stringify(metrics) + ');'
+    wpt.chromeDebugger.Exec(code, function(result) {
+      wpt.chromeDebugger.sendEvent('custom_metrics', JSON.stringify(result));
+      callback();
+    });
+  } else {
+    callback();
+  }
+};
+
+wpt.chromeDebugger.SendInitiator = function(requestId, url, initiator_json) {
+  var initiator = JSON.parse(initiator_json);
+  var detail = "requestID=" + requestId + '\n';
+  detail += "requestUrl=" + url + '\n';
+  if (initiator['url'])
+    detail += "initiatorUrl=" + initiator.url + '\n';
+  if (initiator['lineNumber'])
+    detail += "initiatorLineNumber=" + initiator.lineNumber + '\n';
+  if (initiator['type'])
+    detail += "initiatorType=" + initiator.type + '\n';
+  if (initiator['stack'] && initiator.stack['callFrames'] && initiator.stack.callFrames[0]) {
+    if (initiator.stack.callFrames[0]['url'])
+      detail += 'initiatorUrl=' + initiator.stack.callFrames[0].url + '\n';
+    if (initiator.stack.callFrames[0]['lineNumber'] !== undefined)
+      detail += 'initiatorLineNumber=' + initiator.stack.callFrames[0].lineNumber + '\n';
+    if (initiator.stack.callFrames[0]['columnNumber'] !== undefined)
+      detail += 'initiatorColumnNumber=' + initiator.stack.callFrames[0].columnNumber + '\n';
+    if (initiator.stack.callFrames[0]['functionName'])
+      detail += 'initiatorFunctionName=' + initiator.stack.callFrames[0].functionName + '\n';
+  } else if (initiator['stackTrace'] && initiator.stackTrace[0]) {
+    if (initiator.stackTrace[0]['url'])
+      detail += 'initiatorUrl=' + initiator.stackTrace[0].url + '\n';
+    if (initiator.stackTrace[0]['lineNumber'] !== undefined)
+      detail += 'initiatorLineNumber=' + initiator.stackTrace[0].lineNumber + '\n';
+    if (initiator.stackTrace[0]['columnNumber'] !== undefined)
+      detail += 'initiatorColumnNumber=' + initiator.stackTrace[0].columnNumber + '\n';
+    if (initiator.stackTrace[0]['functionName'])
+      detail += 'initiatorFunctionName=' + initiator.stackTrace[0].functionName + '\n';
+  }
+  detail += 'initiatorDetail=' + initiator_json + '\n';
+  wpt.chromeDebugger.sendEvent('initiator', detail);
 };
 
 /**
@@ -14331,13 +14687,8 @@ wpt.chromeDebugger.SendReceivedData = function() {
  * @param {string} data event data (post body).
  */
 wpt.chromeDebugger.sendEvent = function(event, data) {
-  try {
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'http://127.0.0.1:8888/event/' + event, true);
-    xhr.send(data);
-  } catch (err) {
-    wpt.LOG.warning('Error sending request data XHR: ' + err);
-  }
+  var url = 'http://127.0.0.1:8888/event/' + event ;
+  fetch(url, {method: 'POST', body: data});
 };
 
 })());  // namespace
@@ -14383,19 +14734,13 @@ goog.provide('wpt.main');
 
 ((function() {  // namespace
 
-/**
- * Chrome does some work on startup that might have a performance impact.
- * For example, if an extension is loaded using group policy, the installation
- * will download and install that extension shortly after startup.  We don't
- * want the timing of tests altered by this work, so wait a few seconds after
- * startup before starting to perform measurements.
- *
- * @const
- */
-var STARTUP_DELAY = 1000;
+/** @const */
+var STARTUP_DELAY = 0;
+var STARTUP_FAILSAFE_DELAY = 5000;
 
 /** @const */
-var TASK_INTERVAL = 1000;
+var TASK_INTERVAL = 500;
+var TASK_INTERVAL_STARTUP = 100;
 
 // Run tasks slowly when testing, so that we can see errors in the logs
 // before navigation closes the dev tools window.
@@ -14410,13 +14755,6 @@ var TASK_INTERVAL_SHORT = 0;
 /** @const */
 var RUN_FAKE_COMMAND_SEQUENCE = false;
 
-// Some extensions can alter timing.  Remove some extensions that are likely
-// to be installed on test machines.
-var UNWANTED_EXTENSIONS = [
-  'mkmaajnfmpmpebdcpfnjbkgaloeidlfa',
-  'amppcaoflpjiofjedecfhmmlekknkpdl'
-];
-
 // regex to extract a host name from a URL
 var URL_REGEX = /([htps:]*\/\/)([^\/]+)(.*)/i;
 
@@ -14430,70 +14768,47 @@ var g_processing_task = false;
 var g_commandRunner = null;  // Will create once we know the tab id under test.
 var g_debugWindow = null;  // May create at window onload.
 var g_overrideHosts = {};
+var g_addHeaders = [];
+var g_setHeaders = [];
+var g_manipulatingHeaders = false;
+var g_hasCustomCommandLine = false;
 var g_started = false;
-
-/**
- * Uninstall a given set of extensions.  Run |onComplete| when done.
- * @param {Array.<string>} idsToUninstall IDs to uninstall.
- * @param {Function} onComplete Callback to run when uninstalls are done.
- */
-wpt.main.uninstallUnwantedExtensions = function(idsToUninstall, onComplete) {
-  // How many callbacks are we waiting on?  The uninstalls are done when
-  // there are no more callbacks in flight.
-  var numPendingCallbacks = 0;
-
-  var callOnCompleteWhenDone = function() {
-    if (numPendingCallbacks == 0)
-      onComplete();
-  };
-
-  var onUninstalled = function() {
-    --numPendingCallbacks;
-    callOnCompleteWhenDone();
-  };
-
-  // For each installed extension, uninstall if it is in |idsToUninstall|.
-  chrome.management.getAll(
-      function(extensionInfoArray) {
-        for (var i = 0; i < extensionInfoArray.length; ++i) {
-           if (idsToUninstall.indexOf(extensionInfoArray[i].id) != -1) {
-             ++numPendingCallbacks;
-             chrome.management.uninstall(
-                 extensionInfoArray[i].id, onUninstalled);
-             wpt.LOG.info('Uninstalling ' + extensionInfoArray[i].name +
-                          ' (id ' + extensionInfoArray[i].id + ').');
-           }
-        }
-        callOnCompleteWhenDone();
-      });
-};
+var g_requestsHooked = false;
+var g_failsafeStartup = undefined;
+var g_updatedCount = 0;
+var g_taskTimer = undefined;
+var g_taskInterval = TASK_INTERVAL_STARTUP;
 
 wpt.main.onStartup = function() {
-  wpt.main.uninstallUnwantedExtensions(UNWANTED_EXTENSIONS, function() {
-    // When uninstalls finish, kick off our testing.
-    wpt.main.startMeasurements();
-  });
-};
-
-wpt.main.startMeasurements = function() {
-  wpt.LOG.info('Enter wptStartMeasurements');
   if (RUN_FAKE_COMMAND_SEQUENCE) {
     // Run the tasks in FAKE_TASKS.
     window.setInterval(wptFeedFakeTasks, FAKE_TASK_INTERVAL);
   } else {
+    // Disable some features that can only be disabled from the extension
+    chrome.privacy.services.passwordSavingEnabled.set({ value: false }, function(){});
+    chrome.privacy.services.autofillEnabled.set({ value: false }, function(){});
+    chrome.privacy.services.translationServiceEnabled.set({ value: false }, function(){});
+
     // Fetch tasks from wptdriver.exe.
-    window.setInterval(wptGetTask, TASK_INTERVAL);
+    g_taskTimer = window.setInterval(wptGetTask, g_taskInterval);
+    window.setTimeout(wptGetTask, TASK_INTERVAL_SHORT);
   }
-}
+};
 
 // Install an onLoad handler for all tabs.
 chrome.tabs.onUpdated.addListener(function(tabId, props) {
-  if (!g_started && g_starting && props.status == 'complete') {
+  g_updatedCount++;
+  if (!g_started && g_starting && (props.status == 'complete' || g_updatedCount > 5)) {
+    // Kill the failsafe timer
+    if (g_failsafeStartup != undefined) {
+      clearInterval(g_failsafeStartup);
+      g_failsafeStartup = undefined;
+    }
     // handle the startup sequencing (attach the debugger
     // after the browser loads and then start testing).
     g_started = true;
     wpt.main.onStartup();
-  }else if (g_active && tabId == g_tabid) {
+  } else if (g_active && tabId == g_tabid) {
     if (props.status == 'loading') {
       g_start = new Date().getTime();
       wptSendEvent('navigate', '');
@@ -14518,7 +14833,7 @@ function FakeCommand(action, target, opt_value) {
   };
 
   if (typeof opt_value != 'undefined')
-    result['value'] = opt_value;
+    result.value = opt_value;
 
   return result;
 }
@@ -14564,53 +14879,115 @@ function wptFeedFakeTasks() {
 function wptGetTask() {
   if (!g_requesting_task && !g_processing_task) {
     g_requesting_task = true;
-    try {
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', 'http://127.0.0.1:8888/task', true);
-      xhr.onreadystatechange = function() {
-        if (xhr.readyState != 4)
-          return;
-        if (xhr.status != 200) {
-          wpt.LOG.warning('Got unexpected (not 200) XHR status: ' + xhr.status);
+    fetch('http://127.0.0.1:8888/task').then(function(response) {
+      if (response.status == 200) {
+        response.json().then(function(resp) {
+          try {
+            if (resp['statusCode'] == 200) {
+              if (resp['data'] !== undefined) {
+                wptExecuteTask(resp.data);
+              }
+            } else {
+              wpt.LOG.warning('Got unexpected status code ' + resp['statusCode']);
+            }
+            g_requesting_task = false;
+          } catch(err) {
+            g_requesting_task = false;
+            wpt.LOG.warning('Execute task threw an exception');
+          }
+        }).catch(function() {
           g_requesting_task = false;
-          return;
-        }
-        var resp = JSON.parse(xhr.responseText);
-        if (resp.statusCode != 200) {
-          wpt.LOG.warning('Got unexpected status code ' + resp.statusCode);
-          g_requesting_task = false;
-          return;
-        }
-        if (!resp.data) {
-          g_requesting_task = false;
-          return;
-        }
-        wptExecuteTask(resp.data);
+        });
+      } else {
+        wpt.LOG.warning('Unexpected task response status: ' + response.status);
         g_requesting_task = false;
-      };
-      xhr.onerror = function() {
-        wpt.LOG.warning('Got an XHR error!');
-        g_requesting_task = false;
-      };
-      xhr.send();
-    } catch (err) {
-      wpt.LOG.warning('Error getting task: ' + err);
+      }
+    }).catch(function(err) {
       g_requesting_task = false;
+      wpt.LOG.warning('Task fetch failed');
+    });
+  }
+}
+
+function wptSendEvent(event_name, data, attempt) {
+  var url = 'http://127.0.0.1:8888/event/' + event_name ;
+  fetch(url, {method: 'POST', body: data});
+}
+
+function wptHostMatches(host, filter) {
+  var matched = false;
+  if (!filter.length || filter == '*' || host.toLowerCase() == filter.toLowerCase()) {
+    matched = true;
+  } else {
+    var re = new RegExp(filter);
+    matched = re.test(host);
+  }
+  return matched;
+}
+
+var wptBeforeSendHeaders = function(details) {
+  var response = {};
+  if (g_active && details.tabId == g_tabid) {
+    var modified = false;
+    if (g_manipulatingHeaders) {
+      var host = details.url.match(URL_REGEX)[2].toString();
+      var scheme = details.url.match(URL_REGEX)[1].toString();
+      for (var originalHost in g_overrideHosts) {
+        if (g_overrideHosts[originalHost] == host) {
+          details.requestHeaders.push({'name' : 'x-Host', 'value' : originalHost});
+          modified = true;
+          break;
+        }
+      }
+      
+      // modify headers for HTTPS requests (non-encrypted will be handled at the network layer)
+      if (g_hasCustomCommandLine || scheme.toLowerCase() == "https://") {
+        var i;
+        for (i = 0; i < g_setHeaders.length; i++) {
+          if (wptHostMatches(host, g_setHeaders[i].filter)) {
+            var headerSet = false;
+            for (var j = 0; j < details.requestHeaders.length; j++) {
+              if (g_setHeaders[i].name.toLowerCase() == details.requestHeaders[j].name.toLowerCase()) {
+                details.requestHeaders[j].value = g_setHeaders[i].value;
+                headerSet = true;
+              }
+            }
+            if (!headerSet)
+              details.requestHeaders.push({'name' : g_setHeaders[i].name, 'value' : g_setHeaders[i].value});
+            modified = true;
+          }
+        }
+        for (i = 0; i < g_addHeaders.length; i++) {
+          if (wptHostMatches(host, g_addHeaders[i].filter)) {
+            details.requestHeaders.push({'name' : g_addHeaders[i].name, 'value' : g_addHeaders[i].value});
+            modified = true;
+          }
+        }
+      }
+    }
+    
+    if (modified) {
+      response = {requestHeaders: details.requestHeaders};
     }
   }
-}
+  return response;
+};
 
-function wptSendEvent(event_name, query_string, data) {
-  try {
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'http://127.0.0.1:8888/event/' + event_name + query_string,
-             true);
-    xhr.send(data);
-  } catch (err) {
-    wpt.LOG.warning('Error sending page load XHR: ' + err);
+var wptBeforeSendRequest = function(details) {
+  var action = {};
+  if (g_active && g_manipulatingHeaders && details.tabId == g_tabid) {
+    var urlParts = details.url.match(URL_REGEX);
+    var scheme = urlParts[1].toString();
+    var host = urlParts[2].toString();
+    var object = urlParts[3].toString();
+    if (g_overrideHosts[host] !== undefined) {
+      var newHost = g_overrideHosts[host];
+      action.redirectUrl = scheme + newHost + object;
+    }
   }
-}
-
+  return action;
+};
+  
 chrome.webRequest.onErrorOccurred.addListener(function(details) {
   // Chrome canary is generating spurious net:ERR_ABORTED errors
   // right when navigation starts - we need to ignore them
@@ -14628,6 +15005,14 @@ chrome.webRequest.onErrorOccurred.addListener(function(details) {
   }, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
 );
 
+chrome.webRequest.onAuthRequired.addListener(function(details, cb) {
+    if (g_active && details.tabId == g_tabid) {
+       return {
+         cancel: true
+       };
+    }
+}, {urls: ["<all_urls>"]}, ["blocking"]);
+
 chrome.webRequest.onCompleted.addListener(function(details) {
     if (g_active && details.tabId == g_tabid) {
       wpt.LOG.info('Completed, status = ' + details.statusCode);
@@ -14640,44 +15025,20 @@ chrome.webRequest.onCompleted.addListener(function(details) {
   }, {urls: ['http://*/*', 'https://*/*'], types: ['main_frame']}
 );
 
-chrome.webRequest.onBeforeRequest.addListener(function(details) {
-    var action = {};
-    if (g_active && details.tabId == g_tabid) {
-      var urlParts = details.url.match(URL_REGEX);
-      var scheme = urlParts[1].toString();
-      var host = urlParts[2].toString();
-      var object = urlParts[3].toString();
-      wpt.LOG.info('Checking host override for "' + host +
-                   '" in URL ' + details.url);
-      if (g_overrideHosts[host] != undefined) {
-        var newHost = g_overrideHosts[host];
-        wpt.LOG.info('Overriding host ' + host + ' to ' + newHost);
-        action.redirectUrl = scheme + newHost + object;
-      }
-    }
-    return action;
-  },
-  {urls: ['https://*/*']},
-  ['blocking']
-);
-
-chrome.webRequest.onBeforeSendHeaders.addListener(function(details) {
-    var response = {};
-    if (g_active && details.tabId == g_tabid) {
-      var host = details.url.match(URL_REGEX)[2].toString();
-      for (originalHost in g_overrideHosts) {
-        if (g_overrideHosts[originalHost] == host) {
-          details.requestHeaders.push({'name' : 'x-Host', 'value' : originalHost});
-          response = {requestHeaders: details.requestHeaders};
-          break;
-        }
-      }
-    }
-      return response;
-  },
-  {urls: ['https://*/*']},
-  ['blocking', 'requestHeaders']
-);
+function wptHookRequests() {
+  if (!g_requestsHooked) {
+    g_requestsHooked = true;
+    var urlHooks = g_hasCustomCommandLine ? ["<all_urls>"] : ['https://*/*'];
+    chrome.webRequest.onBeforeSendHeaders.addListener(wptBeforeSendHeaders,
+      {urls: urlHooks},
+      ['blocking', 'requestHeaders']
+    );
+    chrome.webRequest.onBeforeRequest.addListener(wptBeforeSendRequest,
+      {urls: urlHooks},
+      ['blocking']
+    );
+  }
+}
 
 // Add a listener for messages from script.js through message passing.
 chrome.extension.onRequest.addListener(
@@ -14686,56 +15047,22 @@ chrome.extension.onRequest.addListener(
     if (request.message == 'DOMElementLoaded') {
       var dom_element_time = new Date().getTime() - g_start;
       wptSendEvent(
-          'dom_element',
-          '?name_value=' + encodeURIComponent(request['name_value']) +
-          '&time=' + dom_element_time);
+          'dom_element?name_value=' + encodeURIComponent(request.name_value) +
+          '&time=' + dom_element_time, '');
     }
     else if (request.message == 'AllDOMElementsLoaded') {
       var time = new Date().getTime() - g_start;
-      wptSendEvent(
-          'all_dom_elements_loaded',
-          '?load_time=' + time);
+      wptSendEvent('all_dom_elements_loaded?load_time=' + time, '');
     }
     else if (request.message == 'wptLoad') {
-      wptSendEvent('load', 
-                   '?timestamp=' + request['timestamp'] + 
-                   '&fixedViewport=' + request['fixedViewport']);
-    }
-    else if (request.message == 'wptWindowTiming') {
-      wpt.logging.closeWindowIfOpen();
-      g_active = false;
-      wpt.chromeDebugger.SetActive(g_active);
-      wptSendEvent(
-          'window_timing',
-          '?domContentLoadedEventStart=' +
-              request['domContentLoadedEventStart'] +
-          '&domContentLoadedEventEnd=' +
-              request['domContentLoadedEventEnd'] +
-          '&loadEventStart=' + request['loadEventStart'] +
-          '&loadEventEnd=' + request['loadEventEnd'] +
-          '&msFirstPaint=' + request['msFirstPaint']);
-    }
-    else if (request.message == 'wptDomCount') {
-      wptSendEvent('domCount', 
-                   '?domCount=' + request['domCount']);
-    }
-    else if (request.message == 'wptMarks') {
-      if (request['marks'] != undefined &&
-          request.marks.length) {
-        for (var i = 0; i < request.marks.length; i++) {
-          var mark = request.marks[i];
-          mark.type = 'mark';
-          wptSendEvent('timed_event', '', JSON.stringify(mark));
-        }
-      }
-    } else if (request.message == 'wptStats') {
-      var stats = '?';
-      if (request['domCount'] != undefined)
-        stats += 'domCount=' + request['domCount'];
-      wptSendEvent('stats', stats);
+      wptSendEvent('load?timestamp=' + request.timestamp + 
+                   '&fixedViewport=' + request.fixedViewport, '');
     } else if (request.message == 'wptResponsive') {
-      if (request['isResponsive'] != undefined)
-        wptSendEvent('responsive', '?isResponsive=' + request['isResponsive']);
+      if (request['isResponsive'] !== undefined)
+        wptSendEvent('responsive?isResponsive=' + request.isResponsive, '');
+    } else if (request.message == 'wptCustomMetrics') {
+      if (request['data'] !== undefined)
+        wptSendEvent('custom_metrics', JSON.stringify(request.data));
     }
     // TODO: check whether calling sendResponse blocks in the content script
     // side in page.
@@ -14755,6 +15082,11 @@ var wptTaskCallback = function() {
 function wptExecuteTask(task) {
   if (task.action.length) {
     if (task.record) {
+      if (g_taskTimer !== undefined && g_taskInterval != TASK_INTERVAL) {
+        g_taskInterval = TASK_INTERVAL;
+        window.clearInterval(g_taskTimer);
+        g_taskTimer = window.setInterval(wptGetTask, g_taskInterval);
+      }
       g_active = true;
       wpt.chromeDebugger.SetActive(g_active);
     } else {
@@ -14771,13 +15103,13 @@ function wptExecuteTask(task) {
         break;
       case 'exec':
         g_processing_task = true;
-        g_commandRunner.doExec(task.target, wptTaskCallback);
+        wpt.chromeDebugger.Exec(task.target, wptTaskCallback);
         break;
       case 'setcookie':
         g_commandRunner.doSetCookie(task.target, task.value);
         break;
       case 'block':
-        g_commandRunner.doBlock(task.target);
+        wpt.chromeDebugger.Block(task.target);
         break;
       case 'setdomelement':
         // Sending request to set the DOM element has to happen only at the
@@ -14810,26 +15142,59 @@ function wptExecuteTask(task) {
         g_commandRunner.doClearCache(task.target, wptTaskCallback);
         break;
       case 'capturetimeline':
-        g_processing_task = true;
-        wpt.chromeDebugger.CaptureTimeline(wptTaskCallback);
+        wpt.chromeDebugger.CaptureTimeline(parseInt(task.target));
         break;
       case 'capturetrace':
-        g_processing_task = true;
-        wpt.chromeDebugger.CaptureTrace(wptTaskCallback);
+        wpt.chromeDebugger.CaptureTrace(task.target);
         break;
       case 'noscript':
         g_commandRunner.doNoScript();
         break;
       case 'overridehost':
         g_overrideHosts[task.target] = task.value;
+        g_manipulatingHeaders = true;
+        wptHookRequests();
+        break;
+      case 'addheader':
+        var separator = task.target.indexOf(":");
+        if (separator > 0) {
+          var name = task.target.substr(0, separator).trim();
+          var value = task.target.substr(separator + 1).trim();
+          if (name.length && value.length) {
+            wpt.chromeDebugger.AddHeader(name, value);
+          }
+        }
+        break;
+      case 'setheader':
+        var separator = task.target.indexOf(":");
+        if (separator > 0) {
+          g_setHeaders.push({'name' : task.target.substr(0, separator).trim(),
+                             'value' : task.target.substr(separator + 1).trim(),
+                             'filter' : typeof(task.value) === 'undefined' ? '' : task.value});
+          g_manipulatingHeaders = true;
+          wptHookRequests();
+        }
+        break;
+      case 'resetheaders':
+        g_addHeaders = [];
+        g_setHeaders = [];
+        break;
+      case 'appenduseragent':
+        wpt.chromeDebugger.SetUserAgent(navigator.userAgent + ' ' + task.target);
         break;
       case 'collectstats':
         g_processing_task = true;
-        g_commandRunner.doCollectStats(wptTaskCallback);
+        wpt.chromeDebugger.CollectStats(task.target, wptTaskCallback);
+        break;
+      case 'emulatemobile':
+        wpt.chromeDebugger.EmulateMobile(task.target);
         break;
       case 'checkresponsive':
         g_processing_task = true;
         g_commandRunner.doCheckResponsive(wptTaskCallback);
+        break;
+      case 'hascustomcommandline':
+        g_hasCustomCommandLine = true;
         break;
 
       default:
@@ -14856,6 +15221,7 @@ chrome.tabs.query(queryForFocusedTab, function(focusedTabs) {
   g_commandRunner = new wpt.commands.CommandRunner(g_tabid, window.chrome);
   wpt.chromeDebugger.Init(g_tabid, window.chrome, function(){
     setTimeout(function(){g_starting = true;chrome.tabs.update(g_tabid, {'url': STARTUP_URL});}, STARTUP_DELAY);
+    g_failsafeStartup = setInterval(function(){g_starting = true;chrome.tabs.update(g_tabid, {'url': STARTUP_URL});}, STARTUP_FAILSAFE_DELAY);
   });
 });
 

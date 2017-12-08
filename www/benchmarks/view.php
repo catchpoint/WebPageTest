@@ -1,7 +1,7 @@
 <?php
 chdir('..');
 include 'common.inc';
-include './benchmarks/data.inc.php';
+require_once('./benchmarks/data.inc.php');
 $page_keywords = array('Benchmarks','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "WebPagetest benchmark details";
 $aggregate = 'median';
@@ -12,9 +12,11 @@ if (array_key_exists('benchmark', $_REQUEST)) {
     $benchmark = $_REQUEST['benchmark'];
     $info = GetBenchmarkInfo($benchmark);
 }
+$benchmarks = GetBenchmarks();
 if (array_key_exists('f', $_REQUEST)) {
     $out_data = array();
 } else {
+  $INCLUDE_ERROR_BARS = true;
 ?>
 <!DOCTYPE html>
 <html>
@@ -25,7 +27,7 @@ if (array_key_exists('f', $_REQUEST)) {
         <meta name="description" content="Speed up the performance of your web pages with an automated analysis">
         <meta name="author" content="Patrick Meenan">
         <?php $gaTemplate = 'About'; include ('head.inc'); ?>
-        <script type="text/javascript" src="/js/dygraph-combined.js?v=2"></script>
+        <script type="text/javascript" src="/js/dygraph-combined.js?v=1.0.1"></script>
         <style type="text/css">
         .chart-container { clear: both; width: 875px; height: 350px; margin-left: auto; margin-right: auto; padding: 0;}
         .benchmark-chart { float: left; width: 700px; height: 350px; }
@@ -68,7 +70,7 @@ if (array_key_exists('f', $_REQUEST)) {
                 <div style="float: right;">
                     <form name="aggregation" method="get" action="view.php">
                         <?php
-                        echo "<input type=\"hidden\" name=\"benchmark\" value=\"$benchmark\">";
+                        echo "<input type=\"hidden\" name=\"benchmark\" value=\"" . htmlspecialchars($benchmark) . "\">";
                         ?>
                         Aggregation <select name="aggregate" size="1" onchange="this.form.submit();">
                             <option value="avg" <?php if ($aggregate == 'avg') echo "selected"; ?>>Average</option>
@@ -76,6 +78,7 @@ if (array_key_exists('f', $_REQUEST)) {
                             <option value="median" <?php if ($aggregate == 'median') echo "selected"; ?>>Median</option>
                             <option value="75pct" <?php if ($aggregate == '75pct') echo "selected"; ?>>75th Percentile</option>
                             <option value="95pct" <?php if ($aggregate == '95pct') echo "selected"; ?>>95th Percentile</option>
+                            <option value="stddev" <?php if ($aggregate == 'stddev') echo "selected"; ?>>Standard Deviation</option>
                             <option value="count" <?php if ($aggregate == 'count') echo "selected"; ?>>Count</option>
                         </select>
                         <br>
@@ -91,8 +94,78 @@ if (array_key_exists('f', $_REQUEST)) {
                 </div>
             </div>
             <div style="clear:both;">
+            <?php
+              $elapsed = 0;
+              $completed = 0;
+              $total = 0;
+              if (is_file("./results/benchmarks/$benchmark/state.json")) {
+                  $state = json_decode(file_get_contents("./results/benchmarks/$benchmark/state.json"), true);
+                  if (array_key_exists('running', $state) && $state['running'] &&
+                      array_key_exists('tests', $state) && is_array($state['tests'])) {
+                    $now = time();
+                    if ($now > $state['last_run'])
+                      $elapsed = $now - $state['last_run'];
+                    $total = count($state['tests']);
+                    foreach ($state['tests'] as &$test) {
+                      if (is_array($test) && array_key_exists('completed', $test) && $test['completed'])
+                        $completed++;
+                    }
+                  }
+              }
+              echo 'Benchmark Status: ';
+              if ($total) {
+                $hours = intval(floor($elapsed / 3600));
+                $elapsed -= $hours * 3600;
+                $minutes = intval(floor($elapsed / 60));
+                echo "<a href=\"partial.php?benchmark=" . htmlspecialchars($bm) . "\">Benchmark is running</a> - completed $completed of $total tests in $hours hours and $minutes minutes.";
+              } else {
+                echo 'Not Running';
+              }
+            ?>
             </div>
             <script type="text/javascript">
+            var compareTo = undefined;
+            <?php
+            $bmData = array();
+            foreach ($benchmarks as &$benchmark) {
+              $entry = array();
+              $entry['title'] = htmlspecialchars(array_key_exists('title', $benchmark) && strlen($benchmark['title']) ? $benchmark['title'] : $benchmark['name']);
+              $entry['configurations'] = array();
+              foreach ($benchmark['configurations'] as $name => &$config) {
+                $entry['configurations'][$name] = array();
+                $entry['configurations'][$name]['title'] = htmlspecialchars(array_key_exists('title', $config) && strlen($config['title']) ? $config['title'] : $name);
+                $entry['configurations'][$name]['locations'] = array();
+                foreach ($config['locations'] as $location)
+                  $entry['configurations'][$name]['locations'][] = htmlspecialchars($location);
+              }
+              $bmData[$benchmark['name']] = $entry;
+            }
+            echo "var benchmarks = " . json_encode($bmData) . ";\n";
+            ?>
+            function CompareTo(benchmark, config, location, time, title) {
+              if (compareTo === undefined) {
+                compareTo = {'title' : title,
+                             'benchmark' : benchmark,
+                             'config' : config,
+                             'location' : location,
+                             'time' : time};
+              } else {
+                var url = "compare.php?configs=";
+                url += encodeURIComponent(compareTo['benchmark']);
+                url += '~' + encodeURIComponent(compareTo['config']);
+                url += '~' + encodeURIComponent(compareTo['location']);
+                url += '~' + compareTo['time'];
+                url += ',' + encodeURIComponent(benchmark);
+                url += '~' + encodeURIComponent(config);
+                url += '~' + encodeURIComponent(location);
+                url += '~' + time;
+                var offset = new Date().getTimezoneOffset();
+                url += '&offset=' + encodeURIComponent(offset);
+                window.location.href = url;
+              }
+              $.modal.close();
+            }
+
             function SelectedPoint(benchmark, metric, series, time, cached) {
                 time = parseInt(time / 1000, 10);
                 var isCached = 0;
@@ -103,6 +176,27 @@ if (array_key_exists('f', $_REQUEST)) {
                 var delta = "delta.php?benchmark=" + encodeURIComponent(benchmark) + "&metric=" + encodeURIComponent(metric) + "&time=" + time;
                 menu += '<a href="' + scatter + '">Scatter Plot</a><br>';
                 menu += '<a href="' + delta + '">Comparison Distribution</a><br>';
+                menu += '<br>';
+                if (compareTo === undefined)
+                  menu += '<h4>Compare</h4>';
+                else
+                  menu += '<h4>Compare ' + compareTo['title'] + ' to:</h4>';
+                for (config in benchmarks[benchmark]['configurations']) {
+                  for (index in benchmarks[benchmark]['configurations'][config]['locations']) {
+                    var location = benchmarks[benchmark]['configurations'][config]['locations'][index];
+                    var title = benchmarks[benchmark]['configurations'][config]['title'];
+                    if (benchmarks[benchmark]['configurations'][config]['locations'].length > 1)
+                      title += ' ' + location;
+                    trailer = '';
+                    if (compareTo === undefined)
+                      trailer = ' to...';
+                    menu += '<a href="#" onclick="CompareTo(\'' + benchmark + '\',\'' 
+                            + config + '\',\'' 
+                            + location + '\',' 
+                            + time + ',\'' 
+                            + title + '\');return false;">' + title + trailer + '</a><br>';
+                  }
+                }
                 menu += '</div>';
                 $.modal(menu, {overlayClose:true});
             }
@@ -111,13 +205,21 @@ if (array_key_exists('f', $_REQUEST)) {
 }
             $metrics = array('docTime' => 'Load Time (onload)', 
                             'SpeedIndex' => 'Speed Index',
-                            'SpeedIndexDT' => 'Speed Index (Dev Tools)',
                             'TTFB' => 'Time to First Byte', 
                             'titleTime' => 'Time to Title', 
+                            'basePageSSLTime' => 'Base Page SSL Time',
                             'render' => 'Time to Start Render', 
+                            'chromeUserTiming.firstContentfulPaint' => 'Time to First Contentful Paint', 
+                            'chromeUserTiming.firstMeaningfulPaint' => 'Time to First Meaningful Paint', 
+                            'domContentLoadedEventStart' => 'DOM Content Loaded',
                             'visualComplete' => 'Time to Visually Complete', 
-                            'VisuallyCompleteDT' => 'Time to Visually Complete (Dev Tools)', 
+                            'visualComplete85' => 'Time to 85% Visually Complete', 
+                            'visualComplete90' => 'Time to 90% Visually Complete', 
+                            'visualComplete95' => 'Time to 95% Visually Complete', 
+                            'visualComplete99' => 'Time to 99% Visually Complete', 
+                            'lastVisualChange' => 'Last Visual Change',
                             'fullyLoaded' => 'Load Time (Fully Loaded)', 
+                            'TimeToInteractive' => 'Time to Interactive', 
                             'server_rtt' => 'Estimated RTT to Server',
                             'docCPUms' => 'CPU Busy Time',
                             'domElements' => 'Number of DOM Elements', 
@@ -134,6 +236,8 @@ if (array_key_exists('f', $_REQUEST)) {
                             'image_requests' => 'Image Requests',
                             'flash_bytes' => 'Flash Bytes (KB)', 
                             'flash_requests' => 'Flash Requests', 
+			    'video_bytes' => 'Video Bytes (KB)', 
+                            'video_requests' => 'Video Requests',
                             'html_bytes' => 'HTML Bytes (KB)', 
                             'html_requests' => 'HTML Requests', 
                             'text_bytes' => 'Text Bytes (KB)', 
@@ -147,6 +251,11 @@ if (array_key_exists('f', $_REQUEST)) {
                 if (!$info['video']) {
                     unset($metrics['SpeedIndex']);
                 }
+                if (array_key_exists('metrics', $info) && is_array($info['metrics'])) {
+                  foreach ($info['metrics'] as $metric => $label) {
+                    $metrics[$metric] = $label;
+                  }
+                }
                 if (!isset($out_data)) {
                     echo "<h1>{$info['title']}</h1>";
                     if (array_key_exists('description', $info))
@@ -154,7 +263,7 @@ if (array_key_exists('f', $_REQUEST)) {
                 }
                 foreach( $metrics as $metric => $label) {
                     if (!isset($out_data)) {
-                        echo "<h2>$label <span class=\"small\">(<a name=\"$metric\" href=\"#$metric\">direct link</a>)</span></h2>\n";
+                        echo "<h2>" . htmlspecialchars($label) . " <span class=\"small\">(<a name=\"$metric\" href=\"#$metric\">direct link</a>)</span></h2>\n";
                     }
                     if ($info['expand'] && count($info['locations'] > 1)) {
                         foreach ($info['locations'] as $location => $label) {
@@ -191,13 +300,15 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
     global $count;
     global $aggregate;
     global $out_data;
+    global $INCLUDE_ERROR_BARS;
     $chart_title = '';
     if (isset($title))
-        $chart_title = "title: \"$title (First View)\",";
+        $chart_title = "title: \"" . htmlspecialchars($title) . " (First View)\",";
     $bmname = $benchmark['name'];
     if (isset($loc)) {
         $bmname .= ".$loc";
     }
+    $errorBars = $INCLUDE_ERROR_BARS && $aggregate == 'median' ? 'customBars: true,' : '';
     $tsv = LoadDataTSV($benchmark['name'], 0, $metric, $aggregate, $loc, $annotations);
     if (isset($out_data)) {
         if (!array_key_exists($bmname, $out_data)) {
@@ -219,8 +330,10 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                     showRoller: true,
                     labelsSeparateLines: true,
                     labelsDiv: document.getElementById('{$id}_legend'),
+                    colors: ['#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101'],
                     pointClickCallback: function(e, p) {SelectedPoint(\"{$benchmark['name']}\", \"$metric\", p.name, p.xval, false);},
                     $chart_title
+                    $errorBars
                     legend: \"always\"}
                 );";
         if (isset($annotations) && count($annotations)) {
@@ -230,7 +343,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
     }
     if (!array_key_exists('fvonly', $benchmark) || !$benchmark['fvonly']) {
         if (isset($title))
-            $chart_title = "title: \"$title (Repeat View)\",";
+            $chart_title = "title: \"" . htmlspecialchars($title) . " (Repeat View)\",";
         $tsv = LoadDataTSV($benchmark['name'], 1, $metric, $aggregate, $loc, $annotations);
         if (isset($out_data)) {
             $out_data[$bmname][$metric]['RV'] = TSVEncode($tsv);
@@ -248,8 +361,10 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                         showRoller: true,
                         labelsSeparateLines: true,
                         labelsDiv: document.getElementById('{$id}_legend'),
+                        colors: ['#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101'],
                         pointClickCallback: function(e, p) {SelectedPoint(\"{$benchmark['name']}\", \"$metric\", p.name, p.xval, true);},
                         $chart_title
+                        $errorBars
                         legend: \"always\"}
                     );";
             if (isset($annotations) && count($annotations)) {

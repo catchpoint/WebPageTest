@@ -12,7 +12,7 @@
     </div>
 </div>
 
-   
+<div class="page">
     <?php
         $feeds = null;
         if( is_file('./tmp/feeds.dat') )
@@ -80,12 +80,15 @@
         if (is_file('./settings/sponsors.ini')) {
             $s = parse_ini_file('./settings/sponsors.ini', true);
             if (is_array($s) && count($s)) {
-                foreach( $s as &$entry ){
+                foreach( $s as $entry ){
                     if( strlen($entry['logo']) ) {
                         $offset = 0;
                         if( $entry['index'] )
                             $offset = -40 * $entry['index'];
-                        $sponsors[] = array('logo' => $GLOBALS['cdnPath'] . $entry['logo'], 'href' => $entry['href'], 'title' => $entry['alt'], 'offset' => $offset);
+                        $nofollow = false;
+                        if (isset($entry['nofollow']) && $entry['nofollow'])
+                          $nofollow = true;
+                        $sponsors[] = array('logo' => $GLOBALS['cdnPath'] . $entry['logo'], 'href' => $entry['href'], 'title' => $entry['alt'], 'offset' => $offset, 'nofollow' => $nofollow);
                     }
                 }
             }
@@ -118,7 +121,8 @@
                 $title = '';
                 if (array_key_exists('title', $sponsor))
                     $title = $sponsor['title'];
-                echo "<td ><a href=\"{$sponsor['href']}\" title=\"$title\"><div class=\"sponsor_logo\" style=\"$style\"></div></a></td>";
+                $nofollow = $sponsor['nofollow'] ? 'rel="nofollow"' : '';
+                echo "<td ><a href=\"{$sponsor['href']}\" $nofollow title=\"$title\"><div class=\"sponsor_logo\" style=\"$style\"></div></a></td>";
                 if( $remaining && $remaining < $rowCount - $i - 1 )
                     echo '<td></td>';
             }
@@ -126,11 +130,13 @@
             echo '</div>';
         }
     ?>
+    </div>
     <div class="cleared"></div>
     
     <?php
     if (!isset($site_js_loaded) || !$site_js_loaded) {
         echo "<script type=\"text/javascript\" src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
+        $hasJquery = true;
     }
     if (!array_key_exists('HTTP_CACHE_CONTROL', $_SERVER) &&    // skip manual browser refreshes
         is_file('./js/experiment.js')) {

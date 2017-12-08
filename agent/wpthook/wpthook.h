@@ -31,7 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "hook_nspr.h"
 #include "hook_schannel.h"
 #include "hook_wininet.h"
-#include "hook_gdi.h"
+#include "hook_chrome_ssl.h"
+#include "hook_file.h"
 #include "requests.h"
 #include "track_dns.h"
 #include "track_sockets.h"
@@ -40,7 +41,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "screen_capture.h"
 #include "test_server.h"
 #include "wpt_test_hook.h"
-#include "dev_tools.h"
 #include "trace.h"
 
 extern HINSTANCE global_dll_handle; // DLL handle
@@ -51,12 +51,15 @@ public:
   ~WptHook(void);
 
   void Init();
+  void LateInit();
   void BackgroundThread();
   bool OnMessage(UINT message, WPARAM wParam, LPARAM lParam);
 
   // extension actions
   void Start();
   void OnAllDOMElementsLoaded(DWORD load_time);
+  void SetDomInteractiveEvent(DWORD domInteractive);
+  void SetDomLoadingEvent(DWORD domLoading);
   void SetDomContentLoadedEvent(DWORD start, DWORD end);
   void SetLoadEvent(DWORD start, DWORD end);
   void SetFirstPaint(DWORD first_paint);
@@ -66,15 +69,13 @@ public:
   void Report();
   void OnReport();
 
-  // hook interfaces (for marshalling to the processing thread)
-  void SendPaintEvent(int x, int y, int width, int height);
-
 private:
-  CGDIHook  gdi_hook_;
   CWsHook   winsock_hook_;
   NsprHook  nspr_hook_;
   SchannelHook  schannel_hook_;
   WinInetHook wininet_hook_;
+  ChromeSSLHook chrome_ssl_hook_;
+  FileHook  file_hook_;
   HANDLE    background_thread_;
   HANDLE    background_thread_started_;
   HWND      message_window_;
@@ -82,6 +83,7 @@ private:
   bool      done_;
   bool      reported_;
   UINT      report_message_;
+  bool      late_initialized_;
 
   // winsock event tracking
   TrackDns      dns_;
@@ -93,6 +95,5 @@ private:
   ScreenCapture screen_capture_;
   TestServer    test_server_;
   WptTestHook   test_;
-  DevTools      dev_tools_;
   Trace         trace_;
 };

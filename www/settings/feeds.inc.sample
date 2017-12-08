@@ -6,22 +6,33 @@ $feeds['Recent Industry Blog Posts'] = array();
 $feeds['Recent Industry Blog Posts']['Steve Souders'] = 'http://www.stevesouders.com/blog/feed/';
 $feeds['Recent Industry Blog Posts']['Patrick Meenan'] = 'http://blog.patrickmeenan.com/feeds/posts/default';
 $feeds['Recent Industry Blog Posts']['Stoyan Stefanov'] = 'http://www.phpied.com/feed/';
-$feeds['Recent Industry Blog Posts']['Eric Goldsmith'] = 'http://ericgoldsmith.com/feed/';
 $feeds['Recent Industry Blog Posts']['David Artz'] = 'http://www.artzstudio.com/feed/';
 $feeds['Recent Industry Blog Posts']['Sajal Kayan'] = 'http://www.sajalkayan.com/tag/site-performance/feed/';
+$feeds['Recent Industry Blog Posts']['Aaron Peters'] = 'http://www.aaronpeters.nl/rss.xml';
+$feeds['Recent Industry Blog Posts']['Guy Podjarny'] = 'http://www.guypo.com/feed/';
+$feeds['Recent Industry Blog Posts']['Gilly Barr'] = 'http://www.debuggerstepthrough.com/feeds/posts/default/-/performance';
+$feeds['Recent Industry Blog Posts']['Ilya Grigorik'] = 'http://feeds.igvita.com/igvita';
+$feeds['Recent Industry Blog Posts']['Will Chan'] = 'https://insouciant.org/atom.xml';
 
-//$feeds['Recent Industry Blog Posts']['Yahoo Exceptional Performance'] = 'http://pipes.yahoo.com/pipes/pipe.run?_id=PKsaYeBk3RG_sHO91JzWFw&_render=rss';
+$feeds['Recent Industry Blog Posts']['Yahoo Exceptional Performance'] = 'http://pipes.yahoo.com/pipes/pipe.run?_id=PKsaYeBk3RG_sHO91JzWFw&_render=rss';
 $feeds['Recent Industry Blog Posts']['Gomez'] = 'http://blog.gomez.com/feed/rss/';
-$feeds['Recent Industry Blog Posts']['Webmetrics Performance Blog'] = 'http://www.neustar.biz/rss/feed/webmetrics_performance_blog';
 $feeds['Recent Industry Blog Posts']['Aptimize'] = 'http://www.aptimize.com/blog';
-$feeds['Recent Industry Blog Posts']['Strangeloop Networks'] = 'http://www.webperformancetoday.com/feed/';
-$feeds['Recent Industry Blog Posts']['Zoompf'] = 'http://zoompf.com/blog/feed';
+$feeds['Recent Industry Blog Posts']['Web Performance Today'] = 'http://www.webperformancetoday.com/feed/';
+$feeds['Recent Industry Blog Posts']['Rigor'] = 'http://rigor.com/feed';
 $feeds['Recent Industry Blog Posts']['Zeroload'] = 'http://zeroload.net/blog/feed.xml';
 $feeds['Recent Industry Blog Posts']['Performance Calendar'] = 'http://calendar.perfplanet.com/feed/';
+$feeds['Recent Industry Blog Posts']['Blaze.io'] = 'http://www.blaze.io/feed/';
+$feeds['Recent Industry Blog Posts']['CDN Planet'] = 'http://www.cdnplanet.com/blog/feed/';
+$feeds['Recent Industry Blog Posts']['Limelight Networks'] = 'http://blog.limelight.com/tag/performance/feed/';
+$feeds['Recent Industry Blog Posts']['Spil Games'] = 'http://www.spilgames.com/category/performance-2/feed/';
+$feeds['Recent Industry Blog Posts']['Soasta'] = 'http://www.soasta.com/feed/';
+$feeds['Recent Industry Blog Posts']['Soasta Webinars'] = 'http://www.soasta.com/webinars/feed/';
+$feeds['Recent Industry Blog Posts']['Neustar'] = 'https://www.neustar.biz/blog/load-testing-and-performance/rss';
+$feeds['Recent Industry Blog Posts']['SpeedCurve'] = 'https://speedcurve.com/blog/rss/';
 
 $feeds['Recent Discussions'] = array();
 $feeds['Recent Discussions']['WebPagetest Forums'] = 'http://www.webpagetest.org/forums/syndication.php?limit=30';
-$feeds['Recent Discussions']['Yahoo Exceptional Performance'] = 'http://rss.groups.yahoo.com/group/exceptional-performance/rss';
+//$feeds['Recent Discussions']['Yahoo Exceptional Performance'] = 'http://rss.groups.yahoo.com/group/exceptional-performance/rss';
 $feeds['Recent Discussions']['Make The Web Faster Google Group'] = 'http://groups.google.com/group/make-the-web-faster/feed/atom_v1_0_msgs.xml';
 
 ?>

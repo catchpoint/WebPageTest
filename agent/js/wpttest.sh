@@ -77,19 +77,15 @@ if [[ "$tests" == '*' || "$tests" == 'all' ]]; then
 fi
 
 # Set paths, copied from wptdriver.sh
-case "$0" in
-  /*) wpt_root="$0" ;;
-  *)  wpt_root="$PWD/$0" ;;
-esac
-while [[ ! -d "$wpt_root/agent/js/src" ]]; do
-  wpt_root="${wpt_root%/*}"
-  if [[ -z "$wpt_root" ]]; then
-    echo "Cannot determine project root from $0" 1>&2
-    exit 2
-  fi
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
 done
-declare agent="$wpt_root/agent/js"
-declare -a chromedrivers=("$wpt_root/lib/webdriver/chromedriver/$(uname -ms)/chromedriver-"*)
+declare agent="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
+declare -a chromedrivers=("$agent/lib/webdriver/chromedriver/$(uname -ms)/chromedriver-"*)
 declare -a chromedriver=(--chromedriver "${chromedrivers[${#chromedrivers[@]}-1]}")
 declare src_dir="src${cov:+-cov}"
 export NODE_PATH="${agent}:${agent}/src${cov:+-cov}"

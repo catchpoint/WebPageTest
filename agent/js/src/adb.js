@@ -26,6 +26,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
+var murmurhash = require('murmurhash/murmurhash3_gc');
 var logger = require('logger');
 var process_utils = require('process_utils');
 var util = require('util');
@@ -33,9 +34,11 @@ var util = require('util');
 /** Default adb command timeout. */
 exports.DEFAULT_TIMEOUT = 60000;
 
-var STORAGE_PATHS_ = ['$EXTERNAL_STORAGE',
-    '$SECONDARY_STORAGE',
-    '/data/local/tmp'
+var STORAGE_PATHS_ = [
+    '/data/local/tmp',
+    '/sdcard',
+    '$EXTERNAL_STORAGE',
+    '$SECONDARY_STORAGE'
 ];
 
 /**
@@ -50,9 +53,11 @@ function Adb(app, serial, adbCommand) {
   'use strict';
   this.app_ = app;
   this.adbCommand = adbCommand || process.env.ANDROID_ADB || 'adb';
-  this.serial = serial;
+  this.serial = serial || undefined;
   this.isUserDebug_ = undefined;
   this.storagePath_ = undefined;
+  if (this.serial == 'android')
+    this.serial = undefined;
 }
 /** Public class. */
 exports.Adb = Adb;
@@ -86,7 +91,10 @@ Adb.prototype.command_ = function(args, options, timeout) {
  */
 Adb.prototype.adb = function(args, options, timeout) {
   'use strict';
-  return this.command_(['-s', this.serial].concat(args), options, timeout);
+  if (this.serial !== undefined)
+    return this.command_(['-s', this.serial].concat(args), options, timeout);
+  else
+    return this.command_(args, options, timeout);
 };
 
 /**
@@ -184,7 +192,10 @@ Adb.prototype.spawn_ = function(args) {
  */
 Adb.prototype.spawnAdb = function(args) {
   'use strict';
-  return this.spawn_(['-s', this.serial].concat(args));
+  if (this.serial !== undefined)
+    return this.spawn_(['-s', this.serial].concat(args));
+  else
+    return this.spawn_(args);
 };
 
 /**
@@ -270,26 +281,23 @@ Adb.prototype.getStoragePath = function() {
  */
 Adb.prototype.getPidsOfProcess = function(name) {
   'use strict';
-  return this.shell(['ps', name]).then(function(stdout) {
+  return this.shell(['ps', '|', 'grep', name]).then(function(stdout) {
     var pids = [];
     var lines = stdout.split(/[\r\n]+/);
-    if (lines.length === 0 || lines[0].indexOf('USER ') !== 0) {  // Heading.
-      throw new Error(util.format('ps command failed, output: %j', stdout));
+    if (lines.length > 0) {
+      lines.forEach(function(line, iLine) {
+        if (line.length === 0) {
+          return;  // Skip empty lines (last line in particular).
+        }
+        var fields = line.split(/\s+/);
+        if (fields.length === 9) {
+          // make sure the pid field is numeric
+          var pid = fields[1];
+          if (!isNaN(parseFloat(pid)) && isFinite(pid))
+            pids.push(pid);
+        }
+      }.bind(this));
     }
-    lines.forEach(function(line, iLine) {
-      if (line.length === 0) {
-        return;  // Skip empty lines (last line in particular).
-      }
-      var fields = line.split(/\s+/);
-      if (iLine === 0) {  // Skip the header
-        return;
-      }
-      if (fields.length !== 9) {
-        throw new Error(util.format('Failed to parse ps output line %d: %j',
-            iLine, stdout));
-      }
-      pids.push(fields[1]);
-    }.bind(this));
     return pids;
   }.bind(this));
 };
@@ -353,43 +361,410 @@ Adb.prototype.scheduleForceStopMatchingPackages = function(nameRegex) {
 };
 
 /**
- * Returns the name of the single currently connected interface, or undefined.
+ * Returns the network interfaces and their state.
  *
- * Output format:
- * Up to Honeycomb:
- *
- * usb0 UP 192.168.1.67 255.255.255.192 0x00001043
- *
+ * Output format up to Honeycomb:
+ *   usb0 UP 192.168.1.67 255.255.255.192 0x00001043
  * IceCreamSandwich+:
+ *   usb0 UP 192.168.1.68/28 0x00001002 02:00:00:00:00:01
  *
- * usb0 UP 192.168.1.68/28 0x00001002 02:00:00:00:00:01
+ * @return {webdriver.promise.Promise} Resolves to an Array of Objects, e.g.:
+ *    [{name: 'wlan0', isUp: true, ip: '1.2.3.4', mac: ...}, ...]
+ */
+Adb.prototype.scheduleGetNetworkConfiguration = function() {
+  'use strict';
+  return this.shell(['netcfg']).then(function(stdout) {
+    var ret = [];
+    var ok = true;
+    stdout.split(/[\r\n]+/).forEach(function(line, lineNumber) {
+      if (ok) {
+        line = line.trim();
+        if (!line) {
+          return;  // Skip empty lines.
+        }
+        var fields = line.split(/\s+/);
+        if (fields.length !== 5) {
+          ok = false;
+          return;
+        }
+        var ifc = {};
+        ifc.name = fields[0];
+        ifc.isUp = (fields[1] == 'UP');
+        var ip = fields[2].replace(/\/\d+$/, '');
+        if (ip !== '0.0.0.0') {
+          ifc.ip = ip;
+        }
+        if (/^0x/.test(fields[3])) {
+          ifc.mac = fields[4];
+        }
+        ret.push(ifc);
+      }
+    }.bind(this));
+
+    if (ok ) {
+      return ret;
+    } else {
+      return this.shell(['ifconfig']).then(function(stdout) {
+        ret = [];
+        var iface = undefined;
+        var mac = undefined;
+        var isUp = false;
+        var addr = undefined;
+        stdout.split("\n").forEach(function(line, lineNumber) {
+          line = line.trim();
+          if (!line.length) {
+            if (iface) {
+              var ifc = {name: iface, ip: addr, isUp: isUp};
+              if (mac) {
+                ifc.mac = mac;
+              }
+              ret.push(ifc);
+            }
+            iface = undefined;
+            mac = undefined;
+            isUp = false;
+            addr = undefined;
+            return;  // Skip empty lines.
+          }
+          var fields = line.match(/^([^\s]+)[\s]+Link encap/);
+          if (fields && fields.length == 2) {
+            iface = fields[1];
+            fields = line.match(/HWaddr ([A-Fa-f0-9\:]+)$/);
+            if (fields && fields.length == 2) {
+              mac = fields[1];
+            }
+          }
+          fields = line.match(/^inet addr\:([0-9\.]+)/);
+          if (fields && fields.length == 2) {
+            addr = fields[1];
+          }
+          if (line.match(/^UP /)) {
+            isUp = true;
+          }
+        }.bind(this));
+        if (iface && addr) {
+          var ifc = {name: iface, ip: addr, isUp: isUp};
+          if (mac) {
+            ifc.mac = mac;
+          }
+          ret.push(ifc);
+        }
+        logger.debug(JSON.stringify(ret));
+        return ret;
+      }.bind(this));
+    }
+  }.bind(this));
+};
+
+/**
+ * Returns the name of the single currently-connected interface.
  *
- * @return {webdriver.promise.Promise} Resolves to the interface name.
+ * @return {webdriver.promise.Promise} Resolves to the interface name, or
+ *    an error if zero or more than one interface is connected.
  */
 Adb.prototype.scheduleDetectConnectedInterface = function() {
   'use strict';
-  return this.shell(['netcfg']).then(function(stdout) {
-    var connectedInterfaces = [];
-    stdout.split(/[\r\n]+/).forEach(function(line, lineNumber) {
-      if (!line) {
-        return;  // Skip empty lines.
-      }
-      var fields = line.split(/\s+/);
-      if (fields.length !== 5) {
-        throw new Error(util.format('netcfg output unrecognized at line %d: %j',
-            lineNumber, stdout));
-      }
-      if (fields[0] !== 'lo' && fields[1] === 'UP' &&
-          0 !== fields[2].indexOf('0.0.0.0')) {
-        connectedInterfaces.push(fields[0]);
-      }
-    }.bind(this));
-    if (connectedInterfaces.length !== 1) {
+  return this.scheduleGetNetworkConfiguration().then(function(netcfg) {
+    var ifnames = netcfg.filter(function(ifc) {
+      return (ifc.isUp && 'lo' !== ifc.name && !!ifc.ip);
+    }).map(function(ifc) {
+      return ifc.name;
+    });
+    if (ifnames.length !== 1) {
       throw new Error(util.format(
-          '%s connected interfaces detected: %j, netcfg output: %j',
-          (connectedInterfaces.length === 0 ? 'Zero' : 'More than one'),
-          connectedInterfaces, stdout));
+          '%s connected interfaces detected: %j',
+          (ifnames.length === 0 ? 'Zero' : 'More than one'), ifnames));
     }
-    return connectedInterfaces[0];
+    return ifnames[0];
+  }.bind(this));
+};
+
+/**
+ * Throws an error if the battery temperature is greater than maxTemp.
+ *
+ * @param {number} maxTemp Celsius, e.g. 39.0 (== 102F).
+ */
+Adb.prototype.scheduleCheckBatteryTemperature = function(maxTemp) {
+  'use strict';
+  this.shell(['cat', '/sys/class/power_supply/battery/temp']).then(
+      function(stdout) {
+    if ((/^\d+$/).test(stdout.trim())) {
+      var deviceTemp = parseInt(stdout.trim(), 10) / 10.0;
+      if (deviceTemp > maxTemp) {
+        throw new Error('Temperature ' + deviceTemp + ' > ' + maxTemp);
+      }
+    } else {
+      this.shell(['cat', '/sys/class/power_supply/battery/batt_temp']).then(
+          function(stdout) {
+        if ((/^\d+$/).test(stdout.trim())) {
+          var deviceTemp = parseInt(stdout.trim(), 10) / 10.0;
+          if (deviceTemp > maxTemp) {
+            throw new Error('Temperature ' + deviceTemp + ' > ' + maxTemp);
+          }
+        } else {
+          throw new Error('Device temperature not available');
+        }
+      }.bind(this));
+    }
+  }.bind(this));
+};
+
+/**
+ * Checks for the application error dialog or USB debugging dialog and send
+ * keyboard commands to dismiss it.
+ */
+Adb.prototype.scheduleDismissSystemDialog = function() {
+  'use strict';
+  this.shell(['dumpsys', 'window', 'windows']).then(function(stdout) {
+    var appError = /Window #[^\n]*Application Error\:/;
+    var usbDebugging = /Window #[^\n]*systemui\.usb\.UsbDebuggingActivity/;
+    if (appError.test(stdout) || usbDebugging.test(stdout)) {
+      logger.warn('System dialog detected, dismissing it.');
+      this.shell(['input', 'keyevent', 'KEYCODE_DPAD_RIGHT']);
+      this.shell(['input', 'keyevent', 'KEYCODE_DPAD_RIGHT']);
+      this.shell(['input', 'keyevent', 'KEYCODE_ENTER']);
+    }
+  }.bind(this));
+};
+
+/**
+ * Returns the RNDIS entry.
+ *
+ * @param {Array.<Object>} netcfg from scheduleGetNetworkConfiguration().
+ * @return {Object} member of netcfg, or undefined.
+ * @private
+ */
+Adb.prototype.getRndisIfc_ = function(netcfg, onlyrndis) {
+  'use strict';
+  var ret;
+  netcfg.forEach(function(ifc) {
+    if ('rndis0' === ifc.name ||  // Prefer rndis0 over usb0.
+        (!onlyrndis && 'usb0' === ifc.name && undefined === ret)) {
+      ret = ifc;
+    }
+  });
+  return ret;
+};
+
+/**
+ * Verifies that RNSID is correctly enabled.
+ *
+ * @return {webdriver.promise.Promise} resolve() for addErrback.
+ */
+Adb.prototype.scheduleAssertRndisIsEnabled = function() {
+  'use strict';
+  return this.scheduleGetNetworkConfiguration().then(function(netcfg) {
+    var ifc = this.getRndisIfc_(netcfg, false);
+    var badNames = netcfg.filter(function(o) {
+      return (o.isUp && 'lo' !== o.name && (!ifc || ifc.name !== o.name));
+    }).map(function(o) { return o.name; });
+    var err = (
+        badNames.length !== 0 ? 'Non-rndis ' + badNames.join(' ') + ' is UP' :
+        !ifc ? 'netcfg lacks rndis interface' :
+        !ifc.isUp ? ifc.name + ' is DOWN' :
+        !ifc.ip ? ifc.name + ' lacks IP address' :
+        undefined);
+    if (undefined !== err) {
+      throw new Error(err);
+    }
+  }.bind(this));
+};
+
+/**
+/**
+ * Enables Reverse USB Tethering via RNDIS
+ *
+ * @return {webdriver.promise.Promise} resolve() for addErrback.
+ */
+Adb.prototype.scheduleEnableRndis = function(config) {
+  'use strict';
+  return this.app_.schedule('Enable rndis', function() {
+    var config_parts = config.split(",");
+    if (config_parts.length === 4) {
+      var ip = config_parts[0];
+      var gateway = config_parts[1];
+      var dns1 = config_parts[2];
+      var dns2 = config_parts[3];
+    } else {
+      throw new Error('Invalid rndis config. Should be --rndis="<ip>/24,<gateway>,<dns1>,<dns2>"');
+    }
+
+    return this.shell(['getprop', 'ro.build.version.release']).then(function(stdout) {
+      var osVersion = parseFloat(stdout.trim());
+      return this.shell(['getprop', 'ro.com.google.clientidbase']).then(function(stdout) {
+        var kernel = stdout.trim();
+
+        // Enable USB tethering
+        this.shell(['getprop', 'sys.usb.config']).then(function(stdout) {
+          if ('rndis,adb' !== stdout.trim()) {
+            this.su(['setprop', 'sys.usb.config', 'rndis,adb']);
+            this.adb(['wait-for-device']);
+          }
+        }.bind(this));
+
+        // The entry point to enable USB tethering varies by OS version
+        var tetherFunction = '34';
+        if (osVersion >= 6.0) {
+          if (kernel == 'android-samsung')
+            tetherFunction = '41';
+          else
+            tetherFunction = '30';
+        } else if (osVersion >= 5.1) {
+          tetherFunction = '31';
+        } else if (osVersion >= 5.0) {
+          tetherFunction = '30';
+        } else if (osVersion >= 4.4) {
+          tetherFunction = '34';
+        } else if (osVersion >= 4.1) {
+          tetherFunction = '33';
+        } else if (osVersion >= 4.0) {
+          tetherFunction = '32';
+        }
+        this.su(['service', 'call', 'connectivity', tetherFunction, 'i32', '1']).then(function(stdout) {
+          // Wait for device to come back online (<1s).
+          this.adb(['wait-for-device']);
+        }.bind(this));
+
+        this.scheduleGetNetworkConfiguration().then(function(netcfg) {
+          var ifc = this.getRndisIfc_(netcfg, true);
+          if (!ifc) {
+            throw new Error('netcfg lacks rndis interface');
+          }
+          var ifname = ifc.name;
+
+          // Stop WiFi if enabled.
+          var hasWifi = netcfg.some(function(ifc2) {
+            return ifc2.isUp && (/^wlan\d+$/).test(ifc2.name);
+          });
+          if (hasWifi) {
+            this.su(['svc', 'wifi', 'disable']);
+          }
+
+          // Take all other interfaces down.
+          netcfg.forEach(function(ifc2) {
+            if (ifc2.isUp && 'lo' !== ifc2.name && ifname !== ifc2.name) {
+              this.su(['ip', 'link', 'set', ifc2.name, 'down']);
+            }
+          }.bind(this));
+
+          // Set ip address.
+          this.su(['ip', 'link', 'set', ifname, 'down']);
+          this.su(['ip', 'addr', 'flush', 'dev', ifname]);
+          this.su(['ip', 'addr', 'add', ip, 'dev', ifname]);
+          this.su(['ip', 'link', 'set', ifname, 'up']);
+
+          // set up default route
+          this.su(['route', 'add', '-net', '0.0.0.0', 'netmask', '0.0.0.0', 'gw', gateway, 'dev', ifname]);
+          this.su(['setprop', 'net.' + ifname + '.gw', gateway]);
+
+          // Configure DNS.
+          this.su(['setprop', 'net.dns1', dns1]);
+          this.su(['setprop', 'net.dns2', dns2]);
+          this.su(['setprop', 'net.' + ifname + '.dns1', dns1]);
+          this.su(['setprop', 'net.' + ifname + '.dns2', dns2]);
+          this.su(['ndc', 'resolver', 'setifdns', ifname, dns1, dns2]);
+          this.su(['ndc', 'resolver', 'setdefaultif', ifname]);
+        }.bind(this));
+
+        // Sanity check -- sometimes the above 'up' and/or 'dhcp' commands randomly
+        // fail.  We'll let our caller retry if desired.
+        this.scheduleAssertRndisIsEnabled();
+      }.bind(this));
+    }.bind(this));
+  }.bind(this));
+};
+
+/**
+ * Returns the gateway's IP, which should always be pingable.
+ *
+ * @param {string=} ifname expected interface name, defaults to any.
+ * @return {webdriver.promise.Promise} Resolves to the gateway ip.
+ */
+Adb.prototype.scheduleGetGateway = function(ifname) {
+  'use strict';
+  // Could use `ip route show`, but that's JB+ only.
+  return this.shell(['cat', '/proc/net/route']).then(function(stdout) {
+    var ret = null;
+    stdout.split(/[\r\n]+/).forEach(function(line) {
+      var m = line.match(/^\s*(\S+)\s+00000000\s+([0-9a-fA-F]{8})\s/);
+      if (m && (!ifname || m[1] === ifname)) {
+        var hexIp = m[2];
+        // Decode '4E38220C' to '12.34.56.78' -- there's likely a better way:
+        ret = util.format('%d.%d.%d.%d',
+            parseInt(hexIp.substr(6, 2), 16),
+            parseInt(hexIp.substr(4, 2), 16),
+            parseInt(hexIp.substr(2, 2), 16),
+            parseInt(hexIp.substr(0, 2), 16));
+      }
+    });
+    if (!ret) {
+      return this.shell(['getprop']).then(function(stdout) {
+        stdout.split(/[\r\n]+/).forEach(function(line) {
+          var m = line.match(/^\[\w*\.(\w*)\.gateway\]\:\s*\[([\d\.\:]*)\]/);
+          if (m && (!ifname || m[1] === ifname)) {
+            logger.debug("Detected gateway: " + m[2]);
+            ret = m[2];
+          }
+          m = line.match(/^\[net\.dns1\]\:\s*\[([\d\.\:]*)\]/);
+          if (!ret && m) {
+            logger.debug("Detected gateway: " + m[1]);
+            ret = m[1];
+          }
+        });
+        if (!ret) {
+          throw new Error(
+              'Unable to find' + (!ifname ? '' : (' ' + ifname + '\'s')) +
+              ' gateway: ' + stdout);
+        }
+        return ret;
+      }.bind(this));
+    }
+    return ret;
+  }.bind(this));
+};
+
+/**
+ * @param {string} ip address to ping.
+ * @return {webdriver.promise.Promise} Resolves to the average round trip
+ * time in seconds, or an error if all pings failed.
+ */
+Adb.prototype.schedulePing = function(ip) {
+  'use strict';
+  // Send 3 pings, 0.2s apart, 5s deadline (could add '-r' for LAN-only)
+  return this.shell(['ping', '-c3', '-i0.2', '-w5', ip]).then(
+      function(stdout) {
+    var ret;
+    stdout.split(/[\r\n]+/).forEach(function(line) {
+      var m = line.match(/^\s*rtt\s[^=]*=[^\/]*\/(\d+\.\d+)\/.*$/);
+      if (m) {
+        ret = parseFloat(m[1]) / 1000.0;
+      }
+    });
+    if (undefined === ret) {
+      throw new Error('Unexpected ping output: ' + stdout);
+    }
+    return ret;
+  }, function(e) {
+    throw new Error('Unable to ping ' + ip + ': ' + e.message);
+  });
+};
+
+Adb.prototype.scheduleGetBytesRx = function() {
+  return this.shell(['cat', '/proc/net/dev']).then(function(stdout) {
+    var rx = 0;
+    stdout.split(/[\r\n]+/).forEach(function(line) {
+      var m = line.match(/^\s*(\w+):\s+(\d+)/);
+      if (m) {
+        var iface = m[1];
+        var bytes = parseInt(m[2]);
+        if (iface != 'lo' && bytes > 0)
+          rx += bytes;
+      }
+    });
+    if (this['rxBytes'] == undefined || this.rxBytes > rx)
+      this.rxBytes = 0;
+    var delta = rx - this.rxBytes;
+    this.rxBytes = rx;
+    return delta;
   }.bind(this));
 };

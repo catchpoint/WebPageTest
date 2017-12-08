@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<overlay id="main-window"
-         xmlns:html="http://www.w3.org/1999/xhtml"
-         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-   <script type="application/x-javascript" src="chrome://wptdriver/content/inPageCommandRunner.js"/>
-   <script type="application/x-javascript" src="chrome://wptdriver/content/mozutil.js"/>
-   <script type="application/x-javascript" src="chrome://wptdriver/content/fakeCommandSource.js"/>
-   <script type="application/x-javascript" src="chrome://wptdriver/content/overlay.js"/>
-</overlay>

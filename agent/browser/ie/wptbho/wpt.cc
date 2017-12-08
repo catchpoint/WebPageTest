@@ -9,7 +9,7 @@ const DWORD TASK_INTERVAL = 500;
 static const TCHAR * GLOBAL_TESTING_MUTEX = _T("Global\\wpt_testing_active");
 static const TCHAR * HOOK_DLL = _T("wpthook.dll");
 
-typedef BOOL (WINAPI * PFN_INSTALL_HOOK)(HANDLE process);
+typedef void (WINAPI * PFN_INSTALL_HOOK)(void);
 
 // registry keys
 static const TCHAR * REG_DOM_STORAGE_LOW = 
@@ -26,11 +26,15 @@ static const TCHAR * DOM_SCRIPT_FUNCTIONS =
     _T("var wptGetUserTimings = (function(){")
     _T("  var ret = '';")
     _T("  if (window.performance && window.performance.getEntriesByType) {")
-    _T("    var marks = JSON.stringify(performance.getEntriesByType('mark'));")
-    _T("    if (marks.length > 2) {")
-    _T("      ret = marks.substring(1, marks.length - 1);")
-    _T("      ret = ret.replace(/\"name\":/g,'\"type\":\"mark\",\"name\":');")
-    _T("    }")
+    _T("    var m = [];")
+    _T("    var marks = performance.getEntriesByType('mark');")
+    _T("    for (var i = 0; i < marks.length; i++)")
+    _T("      m.push({'type': 'mark', 'entryType': marks[i].entryType, 'name': marks[i].name, 'startTime': marks[i].startTime});")
+    _T("    var measures = performance.getEntriesByType('measure');")
+    _T("    for (var i = 0; i < measures.length; i++)")
+    _T("      m.push({'type': 'measure', 'entryType': measures[i].entryType, 'name': measures[i].name, 'startTime': measures[i].startTime, 'duration': measures[i].duration});")
+    _T("    if (m.length)")
+    _T("      ret = JSON.stringify(m);")
     _T("  }")
     _T("  return ret;")
     _T("});")
@@ -43,6 +47,8 @@ static const TCHAR * DOM_SCRIPT_FUNCTIONS =
     _T("    };")
     _T("    timingParams = addTime('domContentLoadedEventStart') + '&' +")
     _T("        addTime('domContentLoadedEventEnd') + '&' +")
+    _T("        addTime('domInteractive') + '&' +")
+    _T("        addTime('domLoading') + '&' +")
     _T("        addTime('msFirstPaint') + '&' +")
     _T("        addTime('loadEventStart') + '&' +")
     _T("        addTime('loadEventEnd');")
@@ -62,7 +68,8 @@ Wpt::Wpt(void):
   ,_navigating(false)
   ,_must_exit(false)
   ,_task_thread(NULL)
-  ,_processing_task(false) {
+  ,_processing_task(false)
+  ,_exec_count(0) {
 }
 
 
@@ -93,27 +100,31 @@ static LRESULT CALLBACK WptBHOWindowProc(HWND hwnd, UINT uMsg,
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void Wpt::Install(CComPtr<IWebBrowser2> web_browser) {
-  AtlTrace(_T("[wptbho] - Install"));
+  ATLTRACE(_T("[wptbho] - Install"));
   HANDLE active_mutex = OpenMutex(SYNCHRONIZE, FALSE, GLOBAL_TESTING_MUTEX);
   if (!_task_timer && active_mutex) {
-    global_wpt = this;
-    WNDCLASS wndClass;
-    memset(&wndClass, 0, sizeof(wndClass));
-    wndClass.lpszClassName = _T("wptbho");
-    wndClass.lpfnWndProc = WptBHOWindowProc;
-    wndClass.hInstance = dll_hinstance;
-    if (RegisterClass(&wndClass)) {
-      _message_window = CreateWindow(wndClass.lpszClassName,
-          wndClass.lpszClassName, WS_POPUP, 0, 0, 0, 0, NULL, NULL,
-          dll_hinstance, NULL);
-    }
-    if (InstallHook()) {
-      _web_browser = web_browser;
-      CComBSTR bstr_url = L"http://127.0.0.1:8888/blank.html";
-      _web_browser->Navigate(bstr_url, 0, 0, 0, 0);
+    if (!global_wpt) {
+      global_wpt = this;
+      WNDCLASS wndClass;
+      memset(&wndClass, 0, sizeof(wndClass));
+      wndClass.lpszClassName = _T("wptbho");
+      wndClass.lpfnWndProc = WptBHOWindowProc;
+      wndClass.hInstance = dll_hinstance;
+      if (RegisterClass(&wndClass)) {
+        _message_window = CreateWindow(wndClass.lpszClassName,
+            wndClass.lpszClassName, WS_POPUP, 0, 0, 0, 0, NULL, NULL,
+            dll_hinstance, NULL);
+      }
+      if (InstallHook()) {
+        _web_browser = web_browser;
+        CComBSTR bstr_url = L"http://127.0.0.1:8888/blank.html";
+        _web_browser->Navigate(bstr_url, 0, 0, 0, 0);
+      }
+    } else {
+      ATLTRACE(_T("[wptbho] - Already installed"));
     }
   } else {
-    AtlTrace(_T("[wptbho] - Install, failed to open mutex"));
+    ATLTRACE(_T("[wptbho] - Install, failed to open mutex"));
   }
   if (active_mutex)
     CloseHandle(active_mutex);
@@ -175,7 +186,7 @@ void Wpt::Stop(void) {
   correct one
 -----------------------------------------------------------------------------*/
 bool Wpt::InstallHook() {
-  AtlTrace(_T("[wptbho] - InstallHook"));
+  ATLTRACE(_T("[wptbho] - InstallHook"));
   bool ok = false;
   if (_hook_dll) {
     ok = true;
@@ -188,8 +199,9 @@ bool Wpt::InstallHook() {
         _hook_dll = LoadLibrary(path);
         if (_hook_dll) {
           PFN_INSTALL_HOOK InstallHook = 
-            (PFN_INSTALL_HOOK)GetProcAddress(_hook_dll, "_InstallHook@4");
-          if (InstallHook && InstallHook(GetCurrentProcess()) ) {
+            (PFN_INSTALL_HOOK)GetProcAddress(_hook_dll, "_InstallHook@0");
+          if (InstallHook) {
+            InstallHook();
             ok = true;
           } else {
             FreeLibrary(_hook_dll);
@@ -200,7 +212,7 @@ bool Wpt::InstallHook() {
       CloseHandle(active_mutex);
     }
   }
-  AtlTrace(_T("[wptbho] - InstallHook complete"));
+  ATLTRACE(_T("[wptbho] - InstallHook complete"));
   return ok;
 }
 
@@ -208,7 +220,7 @@ bool Wpt::InstallHook() {
 -----------------------------------------------------------------------------*/
 void Wpt::OnLoad() {
   if (_active) {
-    AtlTrace(_T("[wptbho] - Wpt::OnLoad()"));
+    ATLTRACE(_T("[wptbho] - Wpt::OnLoad()"));
     int fixed_viewport = 0;
     if (_web_browser) {
       CComPtr<IDispatch> dispatch;
@@ -233,7 +245,7 @@ void Wpt::OnLoad() {
 -----------------------------------------------------------------------------*/
 void Wpt::OnNavigate() {
   if (_active) {
-    AtlTrace(_T("[wptbho] - Wpt::OnNavigate()"));
+    ATLTRACE(_T("[wptbho] - Wpt::OnNavigate()"));
     _navigating = true;
     _wpt_interface.OnNavigate();
   }
@@ -243,7 +255,7 @@ void Wpt::OnNavigate() {
 -----------------------------------------------------------------------------*/
 void Wpt::OnNavigateError(DWORD error) {
   if (_active) {
-    AtlTrace(_T("[wptbho] - Wpt::OnNavigateError(%d)"), error);
+    ATLTRACE(_T("[wptbho] - Wpt::OnNavigateError(%d)"), error);
     CString options;
     options.Format(_T("error=%d"), error);
     _wpt_interface.OnNavigateError(options);
@@ -284,7 +296,7 @@ void Wpt::CheckForTask() {
         Click(_task._target);
         break;
       case WptTask::COLLECT_STATS:
-        CollectStats();
+        CollectStats(_task._target);
         break;
       case WptTask::EXEC:
         Exec(_task._target);
@@ -321,7 +333,7 @@ void Wpt::CheckForTask() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void  Wpt::NavigateTo(CString url) {
-  AtlTrace(CString(_T("[wptbho] NavigateTo: ")) + url);
+  ATLTRACE(CString(_T("[wptbho] NavigateTo: ")) + url);
   if (_web_browser) {
     CComBSTR bstr_url = url;
     _web_browser->Navigate(bstr_url, 0, 0, 0, 0);
@@ -735,7 +747,7 @@ CComQIPtr<IWebBrowser2> HtmlWindowToHtmlWebBrowser(
 }
 
 /*-----------------------------------------------------------------------------
-	Convert a window to a document, accounting for cross-domain security
+  Convert a window to a document, accounting for cross-domain security
   issues.
 -----------------------------------------------------------------------------*/
 CComQIPtr<IHTMLDocument2> HtmlWindowToHtmlDocument(
@@ -901,7 +913,7 @@ CComPtr<IHTMLElement> Wpt::FindDomElementInDocument(CString tag,
 }
 
 /*-----------------------------------------------------------------------------
-	Expire any items in the cache that will expire within X seconds.
+  Expire any items in the cache that will expire within X seconds.
 -----------------------------------------------------------------------------*/
 void  Wpt::ExpireCache(CString target) {
   DWORD seconds = 0;
@@ -1012,7 +1024,7 @@ void  Wpt::ExpireCache(CString target) {
 }
 
 /*-----------------------------------------------------------------------------
-	Expire a single item in the cache if it expires within X seconds.
+  Expire a single item in the cache if it expires within X seconds.
 -----------------------------------------------------------------------------*/
 void Wpt::ExpireCacheEntry(INTERNET_CACHE_ENTRY_INFO * info, DWORD seconds) {
   if (info->lpszSourceUrlName) {
@@ -1046,10 +1058,10 @@ void Wpt::ExpireCacheEntry(INTERNET_CACHE_ENTRY_INFO * info, DWORD seconds) {
 DWORD Wpt::CountDOMElements(CComQIPtr<IHTMLDocument2> &document) {
   DWORD count = 0;
   if (document) {
-		IHTMLElementCollection *coll;
-		if (SUCCEEDED(document->get_all(&coll)) && coll) {
-			long nodes = 0;
-			if( SUCCEEDED(coll->get_length(&nodes)) )
+    IHTMLElementCollection *coll;
+    if (SUCCEEDED(document->get_all(&coll)) && coll) {
+      long nodes = 0;
+      if( SUCCEEDED(coll->get_length(&nodes)) )
         count += nodes;
       coll->Release();
     }
@@ -1083,8 +1095,8 @@ DWORD Wpt::CountDOMElements(CComQIPtr<IHTMLDocument2> &document) {
 /*-----------------------------------------------------------------------------
   Collect the stats at the end of a test
 -----------------------------------------------------------------------------*/
-void Wpt::CollectStats() {
-  AtlTrace(_T("[wptbho] - Wpt::CollectStats()"));
+void Wpt::CollectStats(CString custom_metrics) {
+  ATLTRACE(_T("[wptbho] - Wpt::CollectStats()"));
   if (_web_browser) {
     CComPtr<IDispatch> dispatch;
     if (SUCCEEDED(_web_browser->get_Document(&dispatch))) {
@@ -1092,7 +1104,7 @@ void Wpt::CollectStats() {
       if (document) {
         DWORD count = CountDOMElements(document);
         _wpt_interface.ReportDOMElementCount(count);
-        AtlTrace(_T("[wptbho] - Wpt::CollectStats() Reported %d DOM elements"),
+        ATLTRACE(_T("[wptbho] - Wpt::CollectStats() Reported %d DOM elements"),
                 count);
       }
     }
@@ -1102,7 +1114,7 @@ void Wpt::CollectStats() {
     if (Invoke(GET_USER_TIMINGS, timings)) {
       if (timings.vt == VT_BSTR) {
         CString user_timings(timings);
-        _wpt_interface.ReportUserTiming(user_timings);
+        _wpt_interface.ReportUserTiming(user_timings.Trim(_T("[]")));
       }
     }
     if (Invoke(GET_NAV_TIMINGS, timings)) {
@@ -1112,6 +1124,89 @@ void Wpt::CollectStats() {
       }
     }
   }
+  int len = custom_metrics.GetLength();
+  if (len) {
+    char * buff = (char *)malloc(len + 1);
+    if (buff) {
+      CString out = _T("{");
+      int pos = 0;
+      int count = 0;
+      CString line = custom_metrics.Tokenize(_T("\r\n"), pos);
+      while (pos != -1) {
+        int split = line.Find(_T(":"));
+        if (split > 0) {
+          CString name = line.Left(split);
+          CStringA encoded = CT2A(line.Mid(split + 1), CP_UTF8);
+          int decoded_len = len;
+          if (Base64Decode((LPCSTR)encoded, encoded.GetLength(),
+              (BYTE*)buff, &decoded_len) && decoded_len) {
+            buff[decoded_len] = 0;
+            CStringA code = buff;
+            CString result = GetCustomMetric((LPCTSTR)CA2T(code, CP_UTF8));
+            if (count)
+              out += _T(",");
+            out += _T("\"");
+            out += JSONEscape(name);
+            out += "\":\"";
+            out += JSONEscape(result);
+            out += "\"";
+            count++;
+          }
+        }
+        line = custom_metrics.Tokenize(_T("\r\n"), pos);
+      }
+      out += _T("}");
+      if (count)
+        _wpt_interface.ReportCustomMetrics(out);
+      free(buff);
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CString Wpt::GetCustomMetric(CString code) {
+  CString ret;
+  CString functionName;
+
+  _exec_count++;
+  functionName.Format(_T("wptCustomJs%d"), _exec_count);
+  CString functionBody = CString(_T("var ")) + functionName +
+                         _T(" = (function(){");
+  functionBody += code;
+  functionBody += _T(";});");
+
+  if (Exec(functionBody)) {
+    _variant_t result;
+    DWORD len = functionName.GetLength() + 1;
+    LPOLESTR fn = (LPOLESTR)malloc(len * sizeof(OLECHAR));
+    if (fn) {
+      lstrcpyn(fn, (LPCTSTR)functionName, len);
+      if (Invoke(fn, result)) {
+        if (result.vt != VT_BSTR)
+          result.ChangeType(VT_BSTR);
+        if (result.vt == VT_BSTR)
+          ret.SetString(result.bstrVal);
+      }
+      free(fn);
+    }
+  }
+  
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CString Wpt::JSONEscape(CString src) {
+  src.Replace(_T("\\"), _T("\\\\"));
+  src.Replace(_T("\""), _T("\\\""));
+  src.Replace(_T("/"),  _T("\\/"));
+  src.Replace(_T("\b"), _T("\\b"));
+  src.Replace(_T("\r"), _T("\\r"));
+  src.Replace(_T("\n"), _T("\\n"));
+  src.Replace(_T("\t"), _T("\\t"));
+  src.Replace(_T("\f"), _T("\\f"));
+  return src;
 }
 
 /*-----------------------------------------------------------------------------

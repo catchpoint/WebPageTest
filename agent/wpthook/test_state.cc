@@ -30,19 +30,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "test_state.h"
 #include "results.h"
 #include "screen_capture.h"
-#include "shared_mem.h"
 #include "../wptdriver/util.h"
 #include "cximage/ximage.h"
 #include <Mmsystem.h>
 #include <WtsApi32.h>
 #include "wpt_test_hook.h"
-#include "dev_tools.h"
 #include "trace.h"
 
 static const DWORD ON_LOAD_GRACE_PERIOD = 100;
-static const DWORD SCREEN_CAPTURE_INCREMENTS = 20;
+static const DWORD SCREEN_CAPTURE_INCREMENTS = 200;
 static const DWORD DATA_COLLECTION_INTERVAL = 100;
-static const DWORD START_RENDER_MARGIN = 30;
 static const DWORD MS_IN_SEC = 1000;
 static const DWORD SCRIPT_TIMEOUT_MULTIPLIER = 10;
 static const DWORD RESPONSIVE_BROWSER_WIDTH = 480;
@@ -50,28 +47,30 @@ static const DWORD RESPONSIVE_BROWSER_WIDTH = 480;
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 TestState::TestState(Results& results, ScreenCapture& screen_capture, 
-                      WptTestHook &test, DevTools& dev_tools, Trace& trace):
+                      WptTestHook &test, Trace& trace):
   _results(results)
   ,_screen_capture(screen_capture)
   ,_frame_window(NULL)
-  ,_document_window(NULL)
-  ,_render_check_thread(NULL)
   ,_exit(false)
   ,_data_timer(NULL)
   ,_test(test)
-  ,_dev_tools(dev_tools)
   ,_trace(trace)
   ,no_gdi_(false)
   ,gdi_only_(false)
   ,navigated_(false)
   ,_started(false)
-  ,received_data_(false) {
+  ,received_data_(false)
+  ,_viewport_adjusted(false)
+  , reported_step_(0)
+  , shared_(false)
+  , logMeasure_(NULL) {
+  QueryPerformanceCounter(&_launch);
   QueryPerformanceFrequency(&_ms_frequency);
   _ms_frequency.QuadPart = _ms_frequency.QuadPart / 1000;
-  _check_render_event = CreateEvent(NULL, TRUE, FALSE, NULL);
   InitializeCriticalSection(&_data_cs);
   FindBrowserNameAndVersion();
   paint_msg_ = RegisterWindowMessage(_T("WPT Browser Paint"));
+  _timeout_start_time.QuadPart = 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -84,6 +83,8 @@ TestState::~TestState(void) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TestState::Init() {
+  _winpcap.Initialize();
+  _file_base = shared_.ResultsFileBase();
   Reset(false);
 }
 
@@ -92,16 +93,8 @@ void TestState::Init() {
 void TestState::Reset(bool cascade) {
   EnterCriticalSection(&_data_cs);
   _step_start.QuadPart = 0;
-  _dom_content_loaded_event_start = 0;
-  _dom_content_loaded_event_end = 0;
-  _load_event_start = 0;
-  _load_event_end = 0;
-  _first_paint = 0;
-  _on_load.QuadPart = 0;
   _fixed_viewport = -1;
-  _dom_element_count = 0;
   _is_responsive = -1;
-  _viewport_specified = -1;
   if (cascade && _test._combine_steps) {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
@@ -118,11 +111,14 @@ void TestState::Reset(bool cascade) {
     _doc_bytes_out = 0;
     _bytes_out = 0;
     _last_bytes_in = 0;
-    _screen_updated = false;
     _last_data.QuadPart = 0;
     _video_capture_count = 0;
     _start.QuadPart = 0;
     _on_load.QuadPart = 0;
+    _viewport_specified = -1;
+    _dom_element_count = 0;
+    _dom_interactive = 0;
+    _dom_loading = 0;
     _dom_content_loaded_event_start = 0;
     _dom_content_loaded_event_end = 0;
     _load_event_start = 0;
@@ -143,6 +139,9 @@ void TestState::Reset(bool cascade) {
     _end_cpu_time.dwHighDateTime = _end_cpu_time.dwLowDateTime = 0;
     _start_total_time.dwHighDateTime = _start_total_time.dwLowDateTime = 0;
     _end_total_time.dwHighDateTime = _end_total_time.dwLowDateTime = 0;
+    _working_set_main_proc = 0;
+    _working_set_child_procs = 0;
+    _process_count = 0;
     _progress_data.RemoveAll();
     _test_result = 0;
     _title_time.QuadPart = 0;
@@ -150,7 +149,10 @@ void TestState::Reset(bool cascade) {
     _user_agent = _T("WebPagetest");
     _console_log_messages.RemoveAll();
     _timed_events.RemoveAll();
+    _custom_metrics.Empty();
+    _user_timing.Empty();
     navigating_ = false;
+    _first_request_sent = false;
     GetSystemTime(&_start_time);
   }
   LeaveCriticalSection(&_data_cs);
@@ -161,30 +163,56 @@ void TestState::Reset(bool cascade) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-static unsigned __stdcall RenderCheckThread( void* arg ) {
-  TestState * test_state = (TestState *)arg;
-  if( test_state )
-    test_state->RenderCheckThread();
-    
-  return 0;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
 void __stdcall CollectData(PVOID lpParameter, BOOLEAN TimerOrWaitFired) {
   if( lpParameter )
     ((TestState *)lpParameter)->CollectData();
 }
 
+/*------------------------------------------------------------------------------
+  Increment the reported_step, the event name, and the _file_base
+-----------------------------------------------------------------------------*/
+void TestState::IncrementStep(void) {
+  if (!_test._combine_steps || !reported_step_) {
+    reported_step_++;
+    // for multistep measurements, all following results get a prefix
+    if (reported_step_ > 1) {
+      _file_base.Format(_T("%s_%d"), shared_.ResultsFileBase(), reported_step_);
+    } else {
+      _file_base = shared_.ResultsFileBase();
+    }
+    // Event name: Either default or set by command
+    if (_test._current_event_name.IsEmpty()) {
+      current_step_name_.Format("Step %d", reported_step_);
+    } else {
+      current_step_name_ = _test._current_event_name;
+    }
+  }
+}
+
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TestState::Start() {
-  WptTrace(loglevel::kFunction, _T("[wpthook] TestState::Start()\n"));
+  ATLTRACE("[wpthook] TestState::Start()");
   Reset();
+  UpdateStoredBrowserVersion();
+  if (_test._log_data) {
+    IncrementStep();
+    if (_test._tcpdump)
+      _winpcap.StartCapture(_file_base + _T(".cap") );
+    _trace.Start(_file_base + "_trace.json");
+  }
+  if (logMeasure_)
+    delete logMeasure_;
+  logMeasure_ = new LogDuration(TimeLog(), "Measure Step");
   QueryPerformanceCounter(&_step_start);
   GetSystemTime(&_start_time);
   if (!_start.QuadPart)
     _start.QuadPart = _step_start.QuadPart;
+
+  //This is only called once, on the first navigate
+  if (!_timeout_start_time.QuadPart)
+    _timeout_start_time.QuadPart = _step_start.QuadPart;
+
   GetCPUTime(_start_cpu_time, _start_total_time);
   _active = true;
   UpdateBrowserWindow();  // the document window may not be available yet
@@ -193,14 +221,11 @@ void TestState::Start() {
     _started = true;
   }
 
-  if (!_render_check_thread) {
-    _exit = false;
-    ResetEvent(_check_render_event);
-    _render_check_thread = (HANDLE)_beginthreadex(0, 0, ::RenderCheckThread, 
-                                                                   this, 0, 0);
-  }
-
   if (!_data_timer) {
+    // for repeat view start capturing video immediately
+    if (!shared_.ClearedCache())
+      received_data_ = true;
+      
     timeBeginPeriod(1);
     CreateTimerQueueTimer(&_data_timer, NULL, ::CollectData, this, 
         DATA_COLLECTION_INTERVAL, DATA_COLLECTION_INTERVAL, WT_EXECUTEDEFAULT);
@@ -213,8 +238,7 @@ void TestState::Start() {
 -----------------------------------------------------------------------------*/
 void TestState::ActivityDetected() {
   if (_active) {
-    WptTrace(loglevel::kFunction,
-             _T("[wpthook] TestState::ActivityDetected()\n"));
+    ATLTRACE("[wpthook] TestState::ActivityDetected()");
     QueryPerformanceCounter(&_last_activity);
     if (!_first_activity.QuadPart)
       _first_activity.QuadPart = _last_activity.QuadPart;
@@ -225,9 +249,10 @@ void TestState::ActivityDetected() {
 -----------------------------------------------------------------------------*/
 void TestState::OnNavigate() {
   if (_active) {
-    WptTrace(loglevel::kFunction,
-             _T("[wpthook] TestState::OnNavigate()\n"));
+    ATLTRACE("[wpthook] TestState::OnNavigate()");
     UpdateBrowserWindow();
+    _dom_interactive = 0;
+    _dom_loading = 0;
     _dom_content_loaded_event_start = 0;
     _dom_content_loaded_event_end = 0;
     _load_event_start = 0;
@@ -248,8 +273,22 @@ void TestState::OnNavigate() {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void TestState::SendingRequest() {
+  EnterCriticalSection(&_data_cs);
+  if (_active && navigating_ && !_first_request_sent) {
+    _first_request_sent = true;
+    // fix up the navigation start time to match when the first event was sent
+    QueryPerformanceCounter(&_first_navigate);
+  }
+  LeaveCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 void TestState::OnNavigateComplete() {
-  navigating_ = false;
+  // force an onload if one didn't already fire
+  if (navigating_)
+    OnLoad();
 }
 
 /*-----------------------------------------------------------------------------
@@ -264,15 +303,27 @@ void TestState::RecordTime(CString name, DWORD time, LARGE_INTEGER *out_time) {
                            _ms_frequency.QuadPart);
   }
   if (time > 0 && time <= elapsed_time) {
-    WptTrace(loglevel::kFrequentEvent, 
-             _T("[wpthook] - Record %s from extension: %dms\n"), name, time);
+    ATLTRACE(L"[wpthook] - Record %s from extension: %dms", (LPCWSTR)name, time);
     out_time->QuadPart = _step_start.QuadPart;
     out_time->QuadPart += _ms_frequency.QuadPart * time;
   } else {
-    WptTrace(loglevel::kFrequentEvent,
-             _T("[wpthook] - Record %s from hook: %dms (instead of %dms)\n"),
-             name, elapsed_time, time);
+    ATLTRACE(L"[wpthook] - Record %s from hook: %dms (instead of %dms)",
+             (LPCWSTR)name, elapsed_time, time);
   }
+}
+
+/*-----------------------------------------------------------------------------
+  Save web timings for DOMInteractive event.
+-----------------------------------------------------------------------------*/
+void TestState::SetDomInteractiveEvent(DWORD domInteractive) {
+  _dom_interactive = domInteractive;
+}
+
+/*-----------------------------------------------------------------------------
+  Save web timings for DOMLoading event.
+-----------------------------------------------------------------------------*/
+void TestState::SetDomLoadingEvent(DWORD domLoading) {
+  _dom_loading = domLoading;
 }
 
 /*-----------------------------------------------------------------------------
@@ -308,8 +359,6 @@ void TestState::OnLoad() {
     QueryPerformanceCounter(&_on_load);
     GetCPUTime(_doc_cpu_time, _doc_total_time);
     ActivityDetected();
-    _screen_capture.Capture(_document_window,
-                            CapturedImage::DOCUMENT_COMPLETE);
     _current_document = 0;
   }
 }
@@ -322,8 +371,7 @@ void TestState::OnAllDOMElementsLoaded(DWORD load_time) {
     QueryPerformanceCounter(&_dom_elements_time);
     RecordTime(_T("_dom_elements_time"), load_time, &_dom_elements_time);
     _test._dom_element_check = false;
-    WptTrace(loglevel::kFrequentEvent, 
-      _T("[wpthook] - TestState::OnAllDOMElementsLoaded() Resetting dom element check state. "));
+    ATLTRACE("[wpthook] - TestState::OnAllDOMElementsLoaded() Resetting dom element check state.");
   }
 }
 
@@ -337,15 +385,20 @@ bool TestState::IsDone() {
   if (_active) {
     bool is_page_done = false;
     CString done_reason;
-    if (test_ms >= _test._minimum_duration) {
+    DWORD elapsed_timeout_ms = ElapsedMs(_timeout_start_time, now);
+    if (elapsed_timeout_ms > _test._test_timeout) {
+      _test_result = TEST_RESULT_TIMEOUT;
+      is_page_done = true;
+      done_reason = _T("Test timed out.");
+      _test._has_test_timed_out = true;
+    } else if (test_ms >= _test._minimum_duration) {
       DWORD load_ms = ElapsedMs(_on_load, now);
       DWORD inactive_ms = ElapsedMs(_last_activity, now);
       DWORD navigated = navigated_ ? 1:0;
       DWORD navigating = navigating_ ? 1:0;
-      WptTrace(loglevel::kFunction,
-               _T("[wpthook] - TestState::IsDone() ")
-               _T("Test: %dms, load: %dms, inactive: %dms, test timeout:%d,")
-               _T(" navigating:%d, navigated: %d\n"),
+      ATLTRACE("[wpthook] - TestState::IsDone() "
+               "Test: %dms, load: %dms, inactive: %dms, test timeout:%d,"
+               " navigating:%d, navigated: %d",
                test_ms, load_ms, inactive_ms, _test._measurement_timeout,
                navigating, navigated);
       bool is_loaded = (navigated_ &&
@@ -366,13 +419,11 @@ bool TestState::IsDone() {
       } else if (test_ms > _test._measurement_timeout) {
         _test_result = TEST_RESULT_TIMEOUT;
         is_page_done = true;
-        done_reason = _T("Test timed out.");
+        done_reason = _T("Meaurement timed out.");
       }
     }
     if (is_page_done) {
-      WptTrace(loglevel::kFrequentEvent,
-                _T("[wpthook] - TestState::IsDone() -> true; %s"),
-                done_reason);
+      ATLTRACE(L"[wpthook] - TestState::IsDone() -> true; %s", (LPCWSTR)done_reason);
       Done();
       is_done = true;
     }
@@ -383,11 +434,12 @@ bool TestState::IsDone() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TestState::Done(bool force) {
-  WptTrace(loglevel::kFunction, _T("[wpthook] - **** TestState::Done()\n"));
+  ATLTRACE("[wpthook] - **** TestState::Done()");
   if (_active) {
     GetCPUTime(_end_cpu_time, _end_total_time);
-    _screen_capture.Capture(_document_window, CapturedImage::FULLY_LOADED);
-
+    _screen_capture.Capture(_frame_window, CapturedImage::FULLY_LOADED);
+    _winpcap.StopCapture();
+    CollectMemoryStats();
     if (force || !_test._combine_steps) {
       // kill the timer that was collecting periodic data (cpu, video, etc)
       if (_data_timer) {
@@ -395,17 +447,11 @@ void TestState::Done(bool force) {
         _data_timer = NULL;
         timeEndPeriod(1);
       }
-
-      // clean up the background thread that was doing the timer checks
-      if (_render_check_thread) {
-        _exit = true;
-        SetEvent(_check_render_event);
-        WaitForSingleObject(_render_check_thread, INFINITE);
-        CloseHandle(_render_check_thread);
-        _render_check_thread = NULL;
-      }
     }
-
+    if (logMeasure_) {
+      delete logMeasure_;
+      logMeasure_ = NULL;
+    }
     _active = false;
   }
 }
@@ -430,52 +476,61 @@ BOOL CALLBACK MakeTopmost(HWND hwnd, LPARAM lParam) {
 /*-----------------------------------------------------------------------------
     Find the browser window that we are going to capture
 -----------------------------------------------------------------------------*/
-void TestState::UpdateBrowserWindow() {
+void TestState::UpdateBrowserWindow(DWORD current_width,
+                                    DWORD current_height) {
+  ATLTRACE("[wpthook] - UpdateBrowserWindow. currently: %d x %d", current_width,
+           current_height);
+  const int CHROME_PADDING_HEIGHT = 75;
+  const int CHROME_PADDING_WIDTH = 6;
   if (!_started) {
     DWORD browser_process_id = GetCurrentProcessId();
     if (no_gdi_)
       browser_process_id = GetParentProcessId(browser_process_id);
     HWND old_frame = _frame_window;
-    if (::FindBrowserWindow(browser_process_id, _frame_window, 
-                            _document_window)) {
-      WptTrace(loglevel::kFunction, 
-                _T("[wpthook] - Frame Window: %08X, Document Window: %08X\n"), 
-                _frame_window, _document_window);
-      if (!_document_window)
-        _document_window = _frame_window;
+    if (::FindBrowserWindow(browser_process_id, _frame_window)) {
+      ATLTRACE("[wpthook] - Frame Window: %08X", _frame_window);
     }
     // position the browser window
-    if (_frame_window && old_frame != _frame_window) {
-      DWORD browser_width = _test._browser_width;
-      DWORD browser_height = _test._browser_height;
-      ::ShowWindow(_frame_window, SW_RESTORE);
-      if (_test._viewport_width && _test._viewport_height) {
-        ::UpdateWindow(_frame_window);
-        FindViewport();
+    bool updated = false;
+    if (_test._viewport_width && _test._viewport_height) {
+      ATLTRACE("[wpthook] - Target viewport: %d x %d", _test._viewport_width,
+               _test._viewport_height);
+      if (current_width && current_height &&
+          (_test._viewport_width != current_width ||
+           _test._viewport_height != current_height)) {
+        ATLTRACE("[wpthook] - Adjusting viewport from %dx%d to %dx%d",
+                  current_width, current_height,
+                  _test._viewport_width, _test._viewport_height);
         RECT browser;
         GetWindowRect(_frame_window, &browser);
-        RECT viewport = {0,0,0,0};
-        if (_screen_capture.IsViewportSet())
-          memcpy(&viewport, &_screen_capture._viewport, sizeof(RECT));
-        else if (_document_window)
-            GetWindowRect(_document_window, &viewport);
-        int vp_width = abs(viewport.right - viewport.left);
-        int vp_height = abs(viewport.top - viewport.bottom);
-        int br_width = abs(browser.right - browser.left);
-        int br_height = abs(browser.top - browser.bottom);
-        if (vp_width && vp_height && br_width && br_height && 
-          br_width >= vp_width && br_height >= vp_height) {
-          browser_width = _test._viewport_width + (br_width - vp_width);
-          browser_height = _test._viewport_height + (br_height - vp_height);
-        }
-        _screen_capture.ClearViewport();
+        int browser_width = abs(browser.right - browser.left);
+        int browser_height = abs(browser.top - browser.bottom);
+        int width_delta = _test._viewport_width - current_width;
+        int height_delta = _test._viewport_height - current_height;
+        // Make sure it is no smaller than the requested size
+        int width = max(browser_width + width_delta, (int)_test._viewport_width + CHROME_PADDING_WIDTH);
+        int height = max(browser_height + height_delta, (int)_test._viewport_height + CHROME_PADDING_HEIGHT);
+        ::ShowWindow(_frame_window, SW_RESTORE);
+        ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, width, height, SWP_NOACTIVATE);
+        updated = true;
+        _viewport_adjusted = true;
       }
-      ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, 
-                      browser_width, browser_height, SWP_NOACTIVATE);
+    } else if (!_viewport_adjusted && _frame_window &&
+                old_frame != _frame_window) {
+      int width = max(_test._browser_width, _test._viewport_width + CHROME_PADDING_WIDTH);
+      int height = max(_test._browser_height, _test._viewport_height + CHROME_PADDING_HEIGHT);
+      ::ShowWindow(_frame_window, SW_RESTORE);
+      ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, width, height, SWP_NOACTIVATE);
+      updated = true;
+    }
+    if (updated) {
+      _screen_capture.ClearViewport();
       ::UpdateWindow(_frame_window);
       EnumWindows(::MakeTopmost, (LPARAM)this);
       FindViewport();
     }
+  } else {
+    ATLTRACE("[wpthook] - UpdateBrowserWindow. Abort (already started)");
   }
 }
 
@@ -483,146 +538,30 @@ void TestState::UpdateBrowserWindow() {
     Grab a video frame if it is appropriate
 -----------------------------------------------------------------------------*/
 void TestState::GrabVideoFrame(bool force) {
-  if (_active && _document_window && _test._video) {
-    if (force ||
-        _test._continuous_video ||
-        (_screen_updated && _render_start.QuadPart)) {
-      // use a falloff on the resolution with which we capture video
-      bool grab_video = false;
-      LARGE_INTEGER now;
-      QueryPerformanceCounter(&now);
-      if (!_last_video_time.QuadPart || _test._continuous_video)
+  if (_active && _frame_window && (force || received_data_)) {
+    // use a falloff on the resolution with which we capture video
+    bool grab_video = false;
+    LARGE_INTEGER now;
+    QueryPerformanceCounter(&now);
+    if (!_last_video_time.QuadPart || _test._continuous_video) {
+      grab_video = true;
+    } else {
+      DWORD interval = DATA_COLLECTION_INTERVAL;
+      if (_video_capture_count > SCREEN_CAPTURE_INCREMENTS * 2)
+        interval *= 20;
+      else if (_video_capture_count > SCREEN_CAPTURE_INCREMENTS)
+        interval *= 5;
+      LARGE_INTEGER min_time;
+      min_time.QuadPart = _last_video_time.QuadPart + 
+                            (interval * _ms_frequency.QuadPart);
+      if (now.QuadPart >= min_time.QuadPart)
         grab_video = true;
-      else {
-        DWORD interval = DATA_COLLECTION_INTERVAL;
-        if (_video_capture_count > SCREEN_CAPTURE_INCREMENTS * 2)
-          interval *= 20;
-        else if (_video_capture_count > SCREEN_CAPTURE_INCREMENTS)
-          interval *= 5;
-        LARGE_INTEGER min_time;
-        min_time.QuadPart = _last_video_time.QuadPart + 
-                              (interval * _ms_frequency.QuadPart);
-        if (now.QuadPart >= min_time.QuadPart)
-          grab_video = true;
-      }
-      if (grab_video) {
-        _screen_updated = false;
-        _last_video_time.QuadPart = now.QuadPart;
-        _video_capture_count++;
-        _screen_capture.Capture(_document_window, CapturedImage::VIDEO);
-      }
     }
-  }
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void TestState::PaintEvent(int x, int y, int width, int height) {
-  if (received_data_) {
-    bool valid = true;
-    if (width && height && _screen_capture.IsViewportSet()) {
-      int left = max(x - _screen_capture._viewport.left, 0);
-      int top = max(y - _screen_capture._viewport.top, 0);
-      int right = max(min(x + width, _screen_capture._viewport.right)
-                      - _screen_capture._viewport.left, 0);
-      int bottom = max(min(y + height, _screen_capture._viewport.bottom)
-                        - _screen_capture._viewport.top, 0);
-      x = left;
-      y = top;
-      width = right - left;
-      height = bottom - top;
-      if (width <= 0 || height <= 0)
-        valid = false;
+    if (grab_video) {
+      _last_video_time.QuadPart = now.QuadPart;
+      _video_capture_count++;
+      _screen_capture.Capture(_frame_window, CapturedImage::VIDEO);
     }
-    if (valid) {
-      _screen_updated = true;
-      CheckStartRender();
-    }
-  }
-}
-
-/*-----------------------------------------------------------------------------
-    See if anything has been rendered to the screen
------------------------------------------------------------------------------*/
-void TestState::CheckStartRender() {
-  if (!_render_start.QuadPart && _screen_updated && _document_window) {
-    GdiFlush();
-    SetEvent(_check_render_event);
-  }
-}
-
-/*-----------------------------------------------------------------------------
-    Background thread to check to see if rendering has started
-    (this way we don't block the browser itself)
------------------------------------------------------------------------------*/
-void TestState::RenderCheckThread() {
-  while (!_render_start.QuadPart && !_exit) {
-    WaitForSingleObject(_check_render_event, INFINITE);
-    if (!_exit) {
-      _screen_capture.Lock();
-      _screen_updated = false;
-      LARGE_INTEGER now;
-      QueryPerformanceCounter((LARGE_INTEGER *)&now);
-
-      // grab a screen shot
-      bool found = false;
-      CapturedImage captured_img = _screen_capture.CaptureImage(
-                                _document_window, CapturedImage::START_RENDER);
-      CxImage img;
-      if (captured_img.Get(img) && 
-          img.GetWidth() > START_RENDER_MARGIN * 2 &&
-          img.GetHeight() > START_RENDER_MARGIN * 2) {
-        int bpp = img.GetBpp();
-        if (bpp >= 15) {
-          int height = img.GetHeight();
-          int width = img.GetWidth();
-          // 24-bit gets a fast-path where we can just compare full rows
-          if (bpp <= 24 ) {
-            DWORD row_bytes = img.GetEffWidth();
-            DWORD compare_bytes = (bpp>>3) * (width-(START_RENDER_MARGIN * 2));
-            char * background = (char *)malloc(compare_bytes);
-            if (background) {
-              char * image_bytes = (char *)img.GetBits(START_RENDER_MARGIN)
-                                     + START_RENDER_MARGIN * (bpp >> 3);
-              memcpy(background, image_bytes, compare_bytes);
-              for (DWORD row = START_RENDER_MARGIN; 
-                    row < height - START_RENDER_MARGIN && !found; row++) {
-                if (memcmp(image_bytes, background, compare_bytes))
-                  found = true;
-                else
-                  image_bytes += row_bytes;
-              }
-              free (background);
-            }
-          } else {
-            for (DWORD row = START_RENDER_MARGIN; 
-                    row < height - START_RENDER_MARGIN && !found; row++) {
-              for (DWORD x = START_RENDER_MARGIN; 
-                    x < width - START_RENDER_MARGIN && !found; x++) {
-                RGBQUAD pixel = img.GetPixelColor(x, row, false);
-                if (pixel.rgbBlue != 255 || pixel.rgbRed != 255 || 
-                    pixel.rgbGreen != 255)
-                  found = true;
-              }
-            }
-          }
-        }
-      }
-
-      if (found) {
-        _render_start.QuadPart = now.QuadPart;
-        _screen_capture._captured_images.AddTail(captured_img);
-      } else {
-        captured_img.Free();
-      }
-
-      _screen_capture.Unlock();
-    }
-    ResetEvent(_check_render_event);
-
-    // prevent a tight loop
-    if (!_render_start.QuadPart && !_exit)
-      Sleep(20);
   }
 }
 
@@ -687,12 +626,28 @@ void TestState::CollectData() {
     LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
     if (now.QuadPart > _last_data.QuadPart || !_last_data.QuadPart) {
+      CheckTitle();
       GrabVideoFrame();
       CollectSystemStats(now);
       _last_data.QuadPart = now.QuadPart;
     }
   }
   LeaveCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::CheckTitle() {
+  if (_active && _frame_window && received_data_) {
+    TCHAR title[4096];
+    if (GetWindowText(_frame_window, title, _countof(title))) {
+      if (last_title_.Compare(title)) {
+        last_title_ = title;
+        if (last_title_.Left(5).Compare(_T("Blank")))
+          TitleSet(title);
+      }
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -708,8 +663,7 @@ void TestState::TitleSet(CString title) {
     if (!_title_time.QuadPart || new_title.Compare(_title)) {
       QueryPerformanceCounter(&_title_time);
       _title = new_title;
-      WptTrace(loglevel::kFunction, _T("[wpthook] TestState::TitleSet(%s)\n"),
-                _title);
+      ATLTRACE(L"[wpthook] TestState::TitleSet(%s)", (LPCWSTR)_title);
     }
   }
 }
@@ -718,10 +672,9 @@ void TestState::TitleSet(CString title) {
   Find the portion of the document window that represents the document
 -----------------------------------------------------------------------------*/
 void TestState::FindViewport(bool force) {
-  if (_document_window == _frame_window &&
-      (force || !_screen_capture.IsViewportSet())) {
+  if (_frame_window && (force || !_screen_capture.IsViewportSet())) {
     _screen_capture.ClearViewport();
-    CapturedImage captured = _screen_capture.CaptureImage(_document_window);
+    CapturedImage captured = _screen_capture.CaptureImage(_frame_window);
     CxImage image;
     if (captured.Get(image)) {
       // start in the middle of the image and go in each direction 
@@ -732,11 +685,11 @@ void TestState::FindViewport(bool force) {
         DWORD x = width / 2;
         DWORD y = height / 2;
         RECT viewport = {0,0,0,0}; 
-        viewport.right = width - 1;
         DWORD row_bytes = image.GetEffWidth();
+        DWORD pixel_bytes = row_bytes / width;
         unsigned char * middle = image.GetBits(y);
         if (middle) {
-          middle += row_bytes / 2;
+          middle += x * pixel_bytes;
           unsigned char background[3];
           memcpy(background, middle, 3);
           // find the top
@@ -747,17 +700,36 @@ void TestState::FindViewport(bool force) {
             pixel += row_bytes;
             y++;
           }
-          // find the top
+          // find the bottom
           y = height / 2;
           pixel = middle;
           while (y && !viewport.bottom) {
             if (memcmp(background, pixel, 3))
-              viewport.bottom = height - y;
+              viewport.bottom = height - y - 1;
             pixel -= row_bytes;
             y--;
           }
           if (!viewport.bottom)
             viewport.bottom = height - 1;
+          // find the left
+          pixel = middle;
+          while (x && !viewport.left) {
+            if (memcmp(background, pixel, 3))
+              viewport.left = x;
+            pixel -= pixel_bytes;
+            x--;
+          }
+          // find the right
+          x = width / 2;
+          pixel = middle;
+          while (x < width && !viewport.right) {
+            if (memcmp(background, pixel, 3))
+              viewport.right = x - 1;
+            pixel += pixel_bytes;
+            x++;
+          }
+          if (!viewport.right)
+            viewport.right = width - 1;
         }
         if (viewport.right - viewport.left > (long)width / 2 &&
           viewport.bottom - viewport.top > (long)height / 2) {
@@ -784,6 +756,10 @@ void TestState::OnStatusMessage(CString status) {
 -----------------------------------------------------------------------------*/
 DWORD TestState::ElapsedMsFromStart(LARGE_INTEGER end) const {
   return ElapsedMs(_start, end);
+}
+
+DWORD TestState::ElapsedMsFromLaunch(LARGE_INTEGER end) const {
+  return ElapsedMs(_launch, end);
 }
 
 DWORD TestState::ElapsedMs(LARGE_INTEGER start, LARGE_INTEGER end) const {
@@ -867,6 +843,22 @@ void TestState::AddConsoleLogMessage(CString message) {
 void TestState::AddTimedEvent(CString timed_event) {
   EnterCriticalSection(&_data_cs);
   _timed_events.AddTail(timed_event);
+  LeaveCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::SetCustomMetrics(CString custom_metrics) {
+  EnterCriticalSection(&_data_cs);
+  _custom_metrics = custom_metrics;
+  LeaveCriticalSection(&_data_cs);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TestState::SetUserTiming(CString user_timing) {
+  EnterCriticalSection(&_data_cs);
+  _user_timing = user_timing;
   LeaveCriticalSection(&_data_cs);
 }
 
@@ -998,5 +990,126 @@ void TestState::CheckResponsive() {
   if (_frame_window) {
     _screen_capture.Capture(_frame_window, CapturedImage::RESPONSIVE_CHECK,
                             false);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Collect the memory stats for the top-level process and all child processes
+-----------------------------------------------------------------------------*/
+void TestState::CollectMemoryStats() {
+  // Build a list of all of the processes involved
+  DWORD main_proc = GetCurrentProcessId();
+  CAtlList<DWORD> procs;
+  HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  if (snap != INVALID_HANDLE_VALUE) {
+    PROCESSENTRY32 proc;
+    proc.dwSize = sizeof(proc);
+    procs.AddHead(main_proc);
+    CAtlList<DWORD> new_procs;
+    do {
+      new_procs.RemoveAll();
+      if (Process32First(snap, &proc)) {
+        do {
+          if (procs.Find(proc.th32ProcessID) &&
+              proc.th32ParentProcessID &&
+              !procs.Find(proc.th32ParentProcessID) &&
+              StrStrI(proc.szExeFile, _T("wptdriver.exe"))) {
+            procs.AddHead(proc.th32ParentProcessID);
+          }
+          if (!procs.Find(proc.th32ProcessID) && procs.Find(proc.th32ParentProcessID))
+            new_procs.AddTail(proc.th32ProcessID);
+        } while (Process32Next(snap, &proc));
+      }
+      if (!new_procs.IsEmpty()) {
+        POSITION pos = new_procs.GetHeadPosition();
+        while (pos)
+          procs.AddTail(new_procs.GetNext(pos));
+      }
+    } while(!new_procs.IsEmpty());
+    CloseHandle(snap);
+  }
+
+  // Get the full working set for the main process
+  _working_set_main_proc = 0;
+  if (main_proc) {
+    HANDLE hProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, main_proc);
+    if (hProc) {
+      PROCESS_MEMORY_COUNTERS mem;
+      memset(&mem, 0, sizeof(mem));
+      mem.cb = sizeof(mem);
+      if (GetProcessMemoryInfo(hProc, &mem, sizeof(mem))) {
+        // keep track in KB which will limit us to 4TB in a DWORD
+        _working_set_main_proc = (DWORD)(mem.WorkingSetSize / 1024);
+      }
+      CloseHandle(hProc);
+    }
+  }
+
+  // Add up the private working sets for all the child procs
+  _working_set_child_procs = 0;
+  _process_count = (DWORD)procs.GetCount();
+  if (!procs.IsEmpty()) {
+    // This will limit us to 4GB which is fin
+    DWORD len = sizeof(ULONG_PTR) + 1000000 * sizeof(PSAPI_WORKING_SET_BLOCK);
+    PSAPI_WORKING_SET_INFORMATION * mem = (PSAPI_WORKING_SET_INFORMATION *)malloc(len);
+    if (mem) {
+      POSITION pos = procs.GetHeadPosition();
+      while (pos) {
+        DWORD pid = procs.GetNext(pos);
+        if (pid != main_proc) {
+          HANDLE hProc = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
+          if (hProc) {
+            if (QueryWorkingSet(hProc, mem, len)) {
+              DWORD count = 0;
+              for (ULONG_PTR i = 0; i < mem->NumberOfEntries; i++) {
+                if (!mem->WorkingSetInfo[i].Shared)
+                  count++;
+              }
+              // Each page is 4kb for x86/amd64
+              DWORD ws = count * 4;
+              _working_set_child_procs += ws;
+            }
+            CloseHandle(hProc);
+          }
+        }
+      }
+      free(mem);
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Collect the memory stats for the top-level process and all child processes
+-----------------------------------------------------------------------------*/
+void TestState::UpdateStoredBrowserVersion() {
+  // Update the registry key we use for tracking the version (and the default UA string)
+  if (_browser_version.GetLength() && _test._browser.GetLength()) {
+    HKEY key;
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
+        _T("Software\\WebPagetest\\wptdriver\\BrowserVersions"), 0, 0, 0, 
+        KEY_READ | KEY_WRITE, 0, &key, 0) == ERROR_SUCCESS) {
+      TCHAR buff[1024];
+      DWORD len = sizeof(buff);
+      bool same_version = false;
+      if (RegQueryValueEx(key, _test._browser, 0, 0, (LPBYTE)buff, &len) 
+          == ERROR_SUCCESS) {
+        if (!_browser_version.Compare(buff))
+          same_version = true;
+      }
+      if (!same_version) {
+        RegSetValueEx(key, _test._browser, 0, REG_SZ,
+                      (const LPBYTE)(LPCTSTR)_browser_version, 
+                      (_browser_version.GetLength() + 1) * sizeof(TCHAR));
+        // If the browser version changed, delete the now-invalid stored UA string
+        HKEY ua_key;
+        if (RegCreateKeyEx(HKEY_CURRENT_USER,
+            _T("Software\\WebPagetest\\wptdriver\\BrowserUAStrings"), 0, 0, 0, 
+            KEY_READ | KEY_WRITE, 0, &ua_key, 0) == ERROR_SUCCESS) {
+          RegDeleteValue(ua_key, _test._browser);
+          RegCloseKey(ua_key);
+        }
+      }
+      RegCloseKey(key);
+    }
   }
 }

@@ -220,6 +220,10 @@ void CBrowserEvents::DocumentComplete(CString & szUrl, DWORD code)
 		HKEY hKey;
 		if( RegOpenKeyEx(HKEY_CURRENT_USER, _T("SOFTWARE\\AOL\\ieWatch"), 0, KEY_READ | KEY_WRITE, &hKey) == ERROR_SUCCESS )
 		{
+      // Set the registry key that indicates we started ok
+      DWORD val = 1;
+      RegSetValueEx(hKey, _T("Started"), 0, REG_DWORD, (LPBYTE)&val, sizeof(val));
+
 			// get the url value out
 			TCHAR buff[4096];
 			DWORD buffLen = sizeof(buff);

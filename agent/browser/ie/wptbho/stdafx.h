@@ -24,6 +24,7 @@
 #include <atlctl.h>
 #include <atlcoll.h>
 #include <atlstr.h>
+#include <atlenc.h>
 #include <ExDispID.h>
 #include <Wininet.h>
 #include <comdef.h>

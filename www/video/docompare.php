@@ -15,25 +15,38 @@ if (array_key_exists('headless', $settings) && $settings['headless']) {
     $headless = true;
 }
 
-if (!$headless) {
-    foreach( $urls as $index => $url )
-    {
-        $url = trim($url);
-        if( strlen($url) )
-        {
-            $id = SubmitTest($url, $labels[$index], $key);
-            if( $id && strlen($id) )
-                $ids[] = $id;
-        }
+$duplicates = false;
+foreach( $urls as $index => $url ) {
+  $url = trim($url);
+  if( strlen($url) ) {
+    foreach( $urls as $index2 => $url2 ) {
+      $url2 = trim($url2);
+      if ($index != $index2 && $url == $url2) {
+        $duplicates = true;
+      }
     }
+  }
+}
 
-    // now add the industry urls
-    foreach( $_REQUEST['t'] as $tid )
+if (!$duplicates && !$headless) {
+  foreach( $urls as $index => $url ) {
+    $url = trim($url);
+    if( strlen($url) )
     {
-        $tid = trim($tid);
-        if( strlen($tid) )
-            $ids[] = $tid;
+      $id = SubmitTest($url, $labels[$index], $key);
+      if( $id && strlen($id) )
+        $ids[] = $id;
     }
+  }
+
+  // now add the industry urls
+  if (isset($_REQUEST['t']) && is_array($_REQUEST['t']) && count($_REQUEST['t'])) {
+    foreach( $_REQUEST['t'] as $tid ) {
+      $tid = trim($tid);
+      if( strlen($tid) )
+        $ids[] = $tid;
+    }
+  }
 }
 
 // if we were successful, redirect to the result page
@@ -53,7 +66,8 @@ if( count($ids) )
         $idStr .= $id;
     }
     
-    $compareUrl = 'http://' . $_SERVER['HTTP_HOST'] . "/video/compare.php?tests=$idStr";
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $compareUrl = "$protocol://" . $_SERVER['HTTP_HOST'] . "/video/compare.php?tests=$idStr";
     header("Location: $compareUrl");    
 }
 else
@@ -74,10 +88,13 @@ function SubmitTest($url, $label, $key)
     global $ip;
     $id = null;
     
-    $testUrl = 'http://' . $_SERVER['HTTP_HOST'] . '/runtest.php?';
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $testUrl = "$protocol://" . $_SERVER['HTTP_HOST'] . '/runtest.php?';
     $testUrl .= 'f=xml&priority=2&runs=3&video=1&mv=1&fvonly=1&url=' . urlencode($url);
     if( $label && strlen($label) )
         $testUrl .= '&label=' . urlencode($label);
+    if (isset($_REQUEST['profile']) && strlen($_REQUEST['profile']) && is_file(__DIR__ . '/../settings/profiles.ini'))
+        $testUrl .= "&profile={$_REQUEST['profile']}";
     if( $ip )
         $testUrl .= "&addr=$ip";
     if( $uid )

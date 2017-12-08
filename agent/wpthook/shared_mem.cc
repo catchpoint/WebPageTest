@@ -28,75 +28,51 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "stdafx.h"
 #include "shared_mem.h"
-#include "wpthook_dll.h"
-
-#pragma once
-#pragma data_seg (".shared")
-HHOOK shared_hook_handle = 0;
-WCHAR shared_results_file_base[MAX_PATH] = {NULL};
-DWORD shared_test_timeout = 120000;
-bool  shared_cleared_cache = false;
-DWORD shared_current_run = 0;
-WCHAR shared_log_file[MAX_PATH] = {NULL};
-int   shared_debug_level = 0;
-int   shared_cpu_utilization = 0;
-bool  shared_has_gpu = false;
-#pragma data_seg ()
-
-#pragma comment(linker,"/SECTION:.shared,RWS")
 
 /*-----------------------------------------------------------------------------
-  Set the base file name to use for results files
 -----------------------------------------------------------------------------*/
-void WINAPI SetResultsFileBase(const WCHAR * file_base) {
-  lstrcpyW(shared_results_file_base, file_base);
+SharedMem::SharedMem(bool create):
+  file_mapping_(NULL)
+  , shared_(NULL) {
+  LPCTSTR MAP_FILE_NAME = _T("Local\\WebPageTestSharedMemory");
+  if (create) {
+    file_mapping_ = CreateFileMapping(INVALID_HANDLE_VALUE, NULL,
+                                      PAGE_READWRITE, 0, sizeof(WPT_SHARED_MEM),
+                                      MAP_FILE_NAME);
+    if (file_mapping_) {
+      shared_ = (WPT_SHARED_MEM *)MapViewOfFile(file_mapping_,
+                                                FILE_MAP_ALL_ACCESS, 0, 0,
+                                                sizeof(WPT_SHARED_MEM));
+      if (shared_) {
+        // Initialize all of the values
+        shared_->results_file_base[0] = NULL;
+        shared_->test_timeout = 120000;
+        shared_->cleared_cache = false;
+        shared_->current_run = 0;
+        shared_->cpu_utilization = 0;
+        shared_->has_gpu = false;
+        shared_->result = -1;
+        shared_->browser_exe[0] = NULL;
+        shared_->browser_process_id = 0;
+        shared_->overrode_ua_string = false;
+      }
+    }
+  } else {
+    file_mapping_ = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, MAP_FILE_NAME);
+    if (file_mapping_) {
+      shared_ = (WPT_SHARED_MEM *)MapViewOfFile(file_mapping_,
+                                                FILE_MAP_ALL_ACCESS, 0, 0,
+                                                sizeof(WPT_SHARED_MEM));
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void WINAPI SetTestTimeout(DWORD timeout) {
-  shared_test_timeout = timeout;
+SharedMem::~SharedMem() {
+  if (shared_)
+    UnmapViewOfFile(shared_);
+  if (file_mapping_)
+    CloseHandle(file_mapping_);
 }
 
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void WINAPI SetClearedCache(bool cleared_cache) {
-  shared_cleared_cache = cleared_cache;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-bool WINAPI GetClearedCache() {
-  return shared_cleared_cache;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void WINAPI SetCurrentRun(DWORD run) {
-  shared_current_run = run;
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void WINAPI SetHasGPU(bool has_gpu) {
-  shared_has_gpu = has_gpu;
-}
-
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void WINAPI SetDebugLevel(int level, const WCHAR * log_file) {
-  shared_debug_level = level;
-  lstrcpyW(shared_log_file, log_file);
-}
-
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-int WINAPI GetCPUUtilization() {
-  return shared_cpu_utilization;
-}
-/*-----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-void WINAPI SetCPUUtilization(int utilization) {
-  shared_cpu_utilization = utilization;
-}

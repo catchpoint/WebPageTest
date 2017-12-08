@@ -51,6 +51,7 @@ class BrowserSettings {
 public:
   BrowserSettings(){}
   ~BrowserSettings(){}
+  bool IsWebdriver();
   bool Load(const TCHAR * browser, const TCHAR * iniFile, CString client);
   bool Install(CString browser, CString url, CString md5);
   void ResetProfile(bool clear_certs);
@@ -66,7 +67,10 @@ public:
   CString _wpt_directory;
   CString _exe_directory;
   CString _profile_directory;
-  CString _cache_directory;
+  CString _profiles;
+  CString _webdriver_script;
+  CAtlList<CString> _cache_directories;
+  CAtlList<CString> _kill_processes;
 
   // Windows/IE directories
   CString windows_dir_;
@@ -92,13 +96,19 @@ public:
   ~WptSettings(void);
   bool Load(void);
   void LoadFromEC2(void);
+  void LoadFromGCE(void);
+  void LoadFromAzure(void);
+  void ParseInstanceData(CString &userData);
   bool SetBrowser(CString browser, CString url, CString md5, CString client);
-  bool PrepareTest(WptTest& test);
-  bool GetUrlText(CString url, CString &response);
-  bool UpdateSoftware();
+  bool GetUrlText(CString url, CString &response, LPCTSTR headers = NULL);
+  bool UpdateSoftware(bool force = false);
   bool ReInstallBrowser();
+  bool CheckBrowsers();
+  void DisableChromeUpdates();
 
   CString _server;
+  CString _username;
+  CString _password;
   CString _location;
   CString _key;
   DWORD   _timeout;
@@ -108,7 +118,12 @@ public:
   CString _web_page_replay_host;
   CString _ini_file;
   CString _ec2_instance;
+  CString _ec2_availability_zone;
+  CString _azure_instance;
   CString _clients_directory;
+  BOOL _requireValidCertificate;
+  CString _clientCertCommonName;
+  bool  _keep_resolution;
 
   BrowserSettings _browser;
   SoftwareUpdate _software_update;

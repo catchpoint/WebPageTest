@@ -20,7 +20,7 @@ if (array_key_exists('tests', $_REQUEST)) {
       mkdir($testPath, 0777, true);
 
     // create the test info files
-    gz_file_put_contents("$testPath/testinfo.json", json_encode($test));
+    SaveTestInfo($id, $test);
 
     // write out the ini file
     $testInfo = "[test]\r\n";
@@ -61,13 +61,11 @@ if (array_key_exists('tests', $_REQUEST)) {
     ****************************************************************************/
     $id = null;
     $error = null;
-    if (array_key_exists('test', $_REQUEST) &&
-        ValidateTestId($_REQUEST['test'])) {
+    if (isset($_REQUEST['test']) && strlen($_REQUEST['test']) && ValidateTestId($_REQUEST['test'])) {
       $id = $_REQUEST['test'];
       RestoreTest($id);
-      $testPath = './' . GetTestPath($id);
-      if (is_dir($testPath) && gz_is_file("$testPath/testinfo.json")) {
-        $test = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+      $test = GetTestInfo($id);
+      if ($test) {
         $test['runs']++;
         $run = $test['runs'];
         if (((array_key_exists('key', $test) && strlen($test['key'])) ||
@@ -81,6 +79,7 @@ if (array_key_exists('tests', $_REQUEST)) {
       $test = array('runs' => 1,
                     'discard' => 0,
                     'fvonly' => 1);
+      $test['location'] = 'Imported';
       $test['started'] = time();
       $test['private'] = array_key_exists('private', $_REQUEST) && $_REQUEST['private'] ? 1 : 0;
       $test['label'] = array_key_exists('label', $_REQUEST) && strlen($_REQUEST['label']) ? htmlspecialchars(trim($req_label)) : '';
@@ -90,7 +89,7 @@ if (array_key_exists('tests', $_REQUEST)) {
         $test['key'] = $_REQUEST['k'];
       
       // generate the test ID
-      $test['id'] = CreateTestID;
+      $test['id'] = CreateTestID();
       $id = $test['id'];
       $testPath = './' . GetTestPath($id);
       $test['path'] = $testPath;
@@ -139,8 +138,29 @@ if (array_key_exists('tests', $_REQUEST)) {
         move_uploaded_file($_FILES['tcpdump']['tmp_name'], "$testPath/$run.cap");
       }
       
+      // custom metrics
+      if (array_key_exists('metrics', $_REQUEST) &&
+          strlen($_REQUEST['metrics'])) {
+        $lines = explode("\n", $_REQUEST['metrics']);
+        $metrics = array();
+        foreach($lines as $line) {
+          if (preg_match('/(?P<metric>[a-zA-Z0-9\._\-\[\]{}():;<>+$#@!~]+)=(?P<value>[0-9]*(\.[0-9]*)?)/', $line, $matches)) {
+            $metric = trim($matches['metric']);
+            $value = trim($matches['value']);
+            if (strpos($value, '.') === false)
+              $value = intval($value);
+            else
+              $value = floatval($value);
+            if (strlen($metric) && strlen($value))
+              $metrics[$metric] = $value;
+          }
+        }
+        if (count($metrics))
+          gz_file_put_contents("$testPath/{$run}_metrics.json", json_encode($metrics));
+      }
+      
       // create the test info files
-      gz_file_put_contents("$testPath/testinfo.json", json_encode($test));
+      SaveTestInfo($id, $test);
 
       // write out the ini file
       $testInfo = "[test]\r\n";
@@ -165,7 +185,7 @@ if (array_key_exists('tests', $_REQUEST)) {
       include('workdone.php');
 
       // re-load the test info
-      $test = json_decode(gz_file_get_contents("$testPath/testinfo.json"), true);
+      $test = GetTestInfo($id);
     }
     
     // Return the test ID (or redirect if not using the API)
@@ -270,6 +290,10 @@ if (array_key_exists('tests', $_REQUEST)) {
                       </li>';
               }
               ?>
+              <li>
+                <textarea name="metrics" id="metrics" value="" cols="80" rows=10></textarea>
+                <label for="metrics">Custom Metrics<br><small>One metric per line:<br>metric=value</small></label>
+              </li>
             </ul>
             <input type="submit" value="Submit">
           </div>
@@ -309,6 +333,7 @@ function CreateTestID() {
 }
 
 function TestResult(&$test, $error) {
+  $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
   $host  = $_SERVER['HTTP_HOST'];
   $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
   if (array_key_exists('f', $_REQUEST)) {
@@ -322,19 +347,19 @@ function TestResult(&$test, $error) {
       $ret['data'] = array();
       $ret['data']['testId'] = $test['id'];
       $ret['data']['ownerKey'] = $test['owner'];
-      $ret['data']['jsonUrl'] = "http://$host$uri/results.php?test={$test['id']}&f=json";
-      $ret['data']['xmlUrl'] = "http://$host$uri/xmlResult.php?test={$test['id']}";
-      $ret['data']['userUrl'] = "http://$host$uri/results.php?test={$test['id']}";
-      $ret['data']['summaryCSV'] = "http://$host$uri/csv.php?test={$test['id']}";
-      $ret['data']['detailCSV'] = "http://$host$uri/csv.php?test={$test['id']}&requests=1";
-      $ret['data']['jsonUrl'] = "http://$host$uri/jsonResult.php?test={$test['id']}";
+      $ret['data']['jsonUrl'] = "$protocol://$host$uri/results.php?test={$test['id']}&f=json";
+      $ret['data']['xmlUrl'] = "$protocol://$host$uri/xmlResult.php?test={$test['id']}";
+      $ret['data']['userUrl'] = "$protocol://$host$uri/results.php?test={$test['id']}";
+      $ret['data']['summaryCSV'] = "$protocol://$host$uri/csv.php?test={$test['id']}";
+      $ret['data']['detailCSV'] = "$protocol://$host$uri/csv.php?test={$test['id']}&requests=1";
+      $ret['data']['jsonUrl'] = "$protocol://$host$uri/jsonResult.php?test={$test['id']}";
     }
     json_response($ret);
   } else {
     if (isset($error)) {
       echo "<html><body>$error</body>";
     } else {
-      header("Location: http://$host$uri/results.php?test={$test['id']}");
+      header("Location: $protocol://$host$uri/results.php?test={$test['id']}");
     }
   }
 }

@@ -14,9 +14,12 @@ if(array_key_exists("HTTP_IF_MODIFIED_SINCE",$_SERVER) && strlen(trim($_SERVER['
 }
 else
 {
-    include 'common.inc';
-    include 'object_detail.inc'; 
-    require_once('page_data.inc');
+    include __DIR__ . '/common.inc';
+    require_once __DIR__ . '/include/TestInfo.php';
+    require_once __DIR__ . '/include/TestStepResult.php';
+
+    global $testPath, $run, $cached, $step; // from common.inc
+
     $file = $_GET['file'];
 
     // make sure nobody is trying to use us to pull down external images from somewhere else
@@ -34,15 +37,17 @@ else
         if( $w && $w > 20 && $w < 1000 )
             $newWidth = $w;
         $img = null;
-        
+
+        $testStepResult = TestStepResult::fromFiles(TestInfo::fromFiles($testPath), $run, $cached, $step);
+
         // see if it is a waterfall image
         if( strstr($parts['basename'], 'waterfall') !== false )
         {
-            tbnDrawWaterfall($img);
+            tbnDrawWaterfall($testStepResult, $img);
         }
         elseif( strstr($parts['basename'], 'optimization') !== false )
         {
-            tbnDrawChecklist($img);
+            tbnDrawChecklist($testStepResult, $img);
         }
         else {
             if( !is_file("$testPath/$file") ) {
@@ -52,11 +57,11 @@ else
             }
             if( is_file("$testPath/$file") ) {
                 if( !strcasecmp( $type, 'jpg') )
-                    $img = imagecreatefromjpeg("$testPath/$file");
+                    $img = @imagecreatefromjpeg("$testPath/$file");
                 elseif( !strcasecmp( $type, 'gif') )
-                    $img = imagecreatefromgif("$testPath/$file");
+                    $img = @imagecreatefromgif("$testPath/$file");
                 else
-                    $img = imagecreatefrompng("$testPath/$file");
+                    $img = @imagecreatefrompng("$testPath/$file");
             }
         }
 
@@ -76,10 +81,11 @@ else
 
 /**
 * Draw the waterfall image
-* 
+*
+* @param TestStepResult $testStepResult Step results to draw the waterfall for
 * @param resource $img
 */
-function tbnDrawWaterfall(&$img)
+function tbnDrawWaterfall($testStepResult, &$img)
 {
     global $id;
     global $testPath;
@@ -88,16 +94,15 @@ function tbnDrawWaterfall(&$img)
     global $url;
     global $newWidth;
     global $test;
+    global $step;
 
-    include('waterfall.inc');
-    $is_secure = false;
-    $has_locations = false;
-    $requests = getRequests($id, $testPath, $run, $cached, $is_secure,
-                            $has_locations, false);
+    require_once __DIR__ . '/waterfall.inc';
+    $requests = $testStepResult->getRequests();
+    $localPaths = $testStepResult->createTestPaths();
+    AddRequestScriptTimings($requests, $localPaths->devtoolsScriptTimingFile());
     $use_dots = (!isset($_REQUEST['dots']) || $_REQUEST['dots'] != 0);
     $rows = GetRequestRows($requests, $use_dots);
-    $page_data = loadPageRunData($testPath, $run, $cached);
-    $page_events = GetPageEvents($page_data);
+    $page_events = GetPageEvents($testStepResult->getRawResults());
     $bwIn=0;
     if (isset($test) && array_key_exists('testinfo', $test) && array_key_exists('bwIn', $test['testinfo'])) {
         $bwIn = $test['testinfo']['bwIn'];
@@ -109,40 +114,35 @@ function tbnDrawWaterfall(&$img)
         'path' => $testPath,
         'run_id' => $run,
         'is_cached' => $cached,
+        'step_id' => $step,
         'use_cpu' => true,
         'use_bw' => true,
         'max_bw' => $bwIn,
+        'show_user_timing' => GetSetting('waterfall_show_user_timing'),
         'is_thumbnail' => true,
+        'include_js' => true,
+        'is_mime' => (bool)GetSetting('mime_waterfalls'),
         'width' => $newWidth
         );
-    $img = GetWaterfallImage($rows, $url, $page_events, $options, $page_data);
-    if (!$requests || !$page_data) {
-        $failed = true;
-    }
+    $url = $testStepResult->readableIdentifier($url);
+    $pageData = $testStepResult->getRawResults();
+    $img = GetWaterfallImage($rows, $url, $page_events, $options, $pageData);
 }
 
 /**
 * Draw the checklist image
-* 
+*
+* @param TestStepResult $testStepResult Step results to draw the waterfall for
 * @param resource $img
 */
-function tbnDrawChecklist(&$img)
+function tbnDrawChecklist($testStepResult, &$img)
 {
-    global $id;
-    global $testPath;
-    global $run;
-    global $cached;
     global $url;
 
-    include('optimizationChecklist.inc');
-    $is_secure = false;
-    $has_locations = false;
-    $requests = getRequests($id, $testPath, $run, $cached, $is_secure, $has_locations, false);
-    $page_data = loadPageRunData($testPath, $run, $cached);
-    $img = drawChecklist($url, $requests, $page_data);
-    if (!$requests || !$page_data) {
-        $failed = true;
-    }
+    require_once __DIR__ . '/optimizationChecklist.inc';
+
+    $requests = $testStepResult->getRequests();
+    $img = drawChecklist($testStepResult->readableIdentifier($url), $requests, $testStepResult->getRawResults());
 }
 
 /**

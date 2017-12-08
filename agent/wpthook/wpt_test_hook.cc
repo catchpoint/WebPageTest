@@ -1,6 +1,5 @@
 #include "StdAfx.h"
 #include "wpt_test_hook.h"
-#include "shared_mem.h"
 #include "wpthook.h"
 #include "test_state.h"
 
@@ -20,7 +19,7 @@ WptTestHook::~WptTestHook(void) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void WptTestHook::LoadFromFile() {
-  WptTrace(loglevel::kFunction, _T("[wpthook] - WptTestHook::LoadFromFile\n"));
+  ATLTRACE("[wpthook] - WptTestHook::LoadFromFile");
 
   HANDLE file = CreateFile(_test_file, GENERIC_READ,0,0, OPEN_EXISTING, 0, 0);
   if (file != INVALID_HANDLE_VALUE) {
@@ -33,9 +32,11 @@ void WptTestHook::LoadFromFile() {
         if (ReadFile(file, buff, len, &bytes_read, 0)) {
           CString test_data(buff);
           if (Load(test_data)) {
-            _clear_cache = shared_cleared_cache;
-            _run = shared_current_run;
-            has_gpu_ = shared_has_gpu;
+            SharedMem shared(false);
+            _clear_cache = shared.ClearedCache();
+            _run = shared.CurrentRun();
+            has_gpu_ = shared.HasGPU();
+            overrode_ua_string_ = shared.OverrodeUAString();
             BuildScript();
           }
         }

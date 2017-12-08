@@ -1,6 +1,12 @@
 <?php
 
 include 'common.inc';
+if (isset($_REQUEST['k'])) {
+  $keys = parse_ini_file(__DIR__ . '/settings/keys.ini', true);
+  if (isset($keys['server']['key']) && $_REQUEST['k'] == $keys['server']['key']) {
+    $admin = true;
+  }
+}
 $remote_cache = array();
 if ($CURL_CONTEXT !== false) {
   curl_setopt($CURL_CONTEXT, CURLOPT_CONNECTTIMEOUT, 30);
@@ -8,7 +14,7 @@ if ($CURL_CONTEXT !== false) {
 }
 
 // load the locations
-$locations = GetAllTesters();
+$locations = GetAllTesters($admin);
 
 // kick out the data
 if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
@@ -18,56 +24,57 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
   $ret['data'] = $locations;
   json_response($ret);
 } elseif( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'html' ) {
-  echo "<!DOCTYPE html>\n";
-  echo "<html>\n<head>\n<title>WebPagetest - Tester Status</title>\n";
-  echo "<head>
-        <noscript>
-        <meta http-equiv=\"refresh\" content=\"240\" />
-        </noscript>
-        <script language=\"JavaScript\">
-        setTimeout( \"window.location.reload(true)\", 240000 );
-        </script>\n";
-  echo "<style type=\"text/css\">\n";
-  echo "th,td{text-align:center; padding: 0px 15px;}\n";
-  echo ".tester{text-align: left;}\n";
-  echo ".header{text-align: left; background-color: yellow;font-size: larger; padding: 0.2em;}\n";
-  echo ".error{background-color: red}\n";
-  echo "</style>\n";
-  echo "</head>\n<body>\n";
-  echo "<table>\n";
+  $refresh = 240;
+  $title = 'WebPagetest - Tester Status';
+  include 'admin_header.inc';
+  echo "<table class=\"table\">\n";
   foreach( $locations as $name => &$location ) {
-    $error = ' error';
+    $error = ' danger';
     $elapsed = '';
     if (array_key_exists('elapsed', $location)) {
       $elapsed = " ({$location['elapsed']} minutes)";
       if ($location['elapsed'] < 30)
-        $error = '';
+        $error = ' success';
     }
-    echo "<tr id=\"$name\"><th class=\"header$error\" colspan=\"12\">" . htmlspecialchars($name) . "$elapsed</th></tr>\n";
+    echo "<tr id=\"$name\"><th class=\"header$error\" colspan=\"16\">" . htmlspecialchars($name) . "$elapsed</th></tr>\n";
     if (array_key_exists('testers', $location)) {
-      echo "<tr><th class=\"tester\">Tester</th><th>Version</th><th>PC</th><th>EC2 Instance</th><th>CPU Utilization</th><th>Free Disk (GB)</th><th>IE Version</th>";
-      echo "<th>GPU?</th><th>IP</th><th>Busy?</th><th>Last Check (minutes)</th><th>Last Work (minutes)</th></tr>\n";
+      echo "<tr><th class=\"tester\">Tester</th><th>Busy?</th><th>Last Check (minutes)</th><th>Last Work (minutes)</th><th>Version</th><th>PC</th><th>EC2 Instance</th><th>CPU Utilization</th><th>Error Rate</th><th>Free Disk (GB)</th><th>uptime (minutes)</th><th>Screen Size</th>";
+      echo "<th>IP</th><th>DNS Server(s)</th>";
+      if ($admin) {
+        echo "<th>Current Test</th>";
+      }
+      echo "</tr>\n";
       $count = 0;
       foreach($location['testers'] as $tester) {
         $count++;
-        echo "<tr><td class=\"tester\">$count</td>";
-        echo "<td>" . @htmlspecialchars($tester['version']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['pc']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['ec2']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['cpu']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['freedisk']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['ie']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['GPU']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['ip']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['busy']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['elapsed']) . "</td>";
-        echo "<td>" . @htmlspecialchars($tester['last']) . "</td>";
+        echo "<tr><td nowrap class=\"tester\">$count</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['busy']) . "</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['elapsed']) . "</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['last']) . "</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['version']) . "</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['pc']) . "</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['ec2']) . "</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['cpu']) . "</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['errors']) . "</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['freedisk']) . "</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['upminutes']) . "</td>";
+        if (empty($tester['screenwidth']) || empty($tester['screenwidth'])) {
+          echo "<td nowrap></td>";
+        } else {
+          echo "<td nowrap>" . @htmlspecialchars($tester['screenwidth']) . "x" . @htmlspecialchars($tester['screenheight']) . "</td>";
+        }
+        echo "<td nowrap>" . @htmlspecialchars($tester['ip']) . "</td>";
+        echo "<td nowrap>" . @htmlspecialchars($tester['dns']) . "</td>";
+        if ($admin) {
+          echo "<td nowrap>" . @htmlspecialchars($tester['test']) . "</td>";
+        }
         echo "</tr>";
       }
     }
   }
   echo "</table>\n";
-  echo "</body>\n</html>";
+  include 'admin_footer.inc';
+
 } else {
     header ('Content-type: text/xml');
     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
@@ -78,7 +85,7 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
     if( array_key_exists('r', $_REQUEST) && strlen($_REQUEST['r']) )
         echo "<requestId>{$_REQUEST['r']}</requestId>\n";
     echo "<data>\n";
-    
+
     foreach( $locations as $name => &$location )
     {
         echo "<location>\n";
@@ -112,87 +119,91 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
                     echo "<$key><![CDATA[$value]]></$key>\n";
                 else
                     echo "<$key>$value</$key>\n";
-            }            
+            }
         }
         echo "</location>\n";
     }
-    
+
     echo "</data>\n";
     echo "</response>\n";
 }
 
 /**
 * Load the location information and extract just the end nodes
-* 
+*
 */
-function GetAllTesters()
-{
-    $locations = array();
-    $loc = parse_ini_file('./settings/locations.ini', true);
-    BuildLocations($loc);
-    
-    $i = 1;
-    while( isset($loc['locations'][$i]) )
-    {
-        $group = &$loc[$loc['locations'][$i]];
-        $j = 1;
-        while( isset($group[$j]) )
-        {
-            if (array_key_exists('relayServer', $loc[$group[$j]]) && strlen($loc[$group[$j]]['relayServer']) &&
-                array_key_exists('relayLocation', $loc[$group[$j]]) && strlen($loc[$group[$j]]['relayLocation'])) {
-                $locations[$loc[$group[$j]]['location']] = GetRemoteTesters($loc[$group[$j]]['relayServer'], $loc[$group[$j]]['relayLocation']);
-            } else {
-                $locations[$loc[$group[$j]]['location']] = GetTesters($loc[$group[$j]]['location']);
-            }
+function GetAllTesters($include_sensitive = true) {
+  $locations = array();
+  $loc = LoadLocationsIni();
 
-            $j++;
-        }
-        
-        $i++;
+  if (isset($_REQUEST['location'])) {
+    $location = $_REQUEST['location'];
+    $new = array('locations' => array('1' => 'group', 'default' => 'group'),
+                 'group' => array('1' => $location, 'default' => $location, 'label' => 'placeholder'));
+    if (isset($loc[$_REQUEST['location']]))
+      $new[$_REQUEST['location']] = $loc[$_REQUEST['location']];
+    $loc = $new;
+  }
+
+  BuildLocations($loc);
+  
+  $i = 1;
+  while (isset($loc['locations'][$i])) {
+    $group = &$loc[$loc['locations'][$i]];
+    $j = 1;
+    while (isset($group[$j])) {
+      if (isset($loc[$group[$j]]['relayServer']) && strlen($loc[$group[$j]]['relayServer']) &&
+          isset($loc[$group[$j]]['relayLocation']) && strlen($loc[$group[$j]]['relayLocation'])) {
+        $locations[$loc[$group[$j]]['location']] = GetRemoteTesters($loc[$group[$j]]['relayServer'], $loc[$group[$j]]['relayLocation']);
+      } else {
+        $locations[$loc[$group[$j]]['location']] = GetTesters($loc[$group[$j]]['location'], false, $include_sensitive);
+      }
+
+      $j++;
     }
-    
-    return $locations;
+
+    $i++;
+  }
+  
+  return $locations;
 }
 
 /**
 * Get the tester information for a remote location
 */
 function GetRemoteTesters($server, $remote_location) {
-    $testers = array();
-    global $remote_cache;
-    
-    $server_hash = md5($server);
-    
-    if (array_key_exists('relay', $_REQUEST) && $_REQUEST['relay']) {
-      // see if we need to populate the cache from the remote server
-      if (!array_key_exists($server_hash, $remote_cache)) {
-        $xml = http_fetch("$server/getTesters.php?hidden=1");
-        if ($xml) {
-          $remote = json_decode(json_encode((array)simplexml_load_string($xml)), true);
-          if (is_array($remote) && array_key_exists('data', $remote) && array_key_exists('location', $remote['data'])) {
-              $cache_entry = array();
-              foreach($remote['data']['location'] as &$location) {
-                  if (array_key_exists('testers', $location) && array_key_exists('tester', $location['testers'])) {
-                    $parts = explode(':', $location['id']);
-                    $id = $parts[0];
-                    if (array_key_exists(0, $location['testers']['tester']))
-                      $cache_entry[$id] = array(  'elapsed' => $location['elapsed'],
-                                                              'testers' => $location['testers']['tester']);
-                    else
-                      $cache_entry[$id] = array(  'elapsed' => $location['elapsed'],
-                                                              'testers' => array($location['testers']['tester']));
-                  }
-              }
-              $remote_cache[$server_hash] = $cache_entry;
+  $testers = array();
+  global $remote_cache;
+
+  $server_hash = md5($server);
+
+  if (isset($_REQUEST['relay']) && $_REQUEST['relay']) {
+    // see if we need to populate the cache from the remote server
+    if (!isset($remote_cache[$server_hash])) {
+      $xml = http_fetch("$server/getTesters.php?hidden=1");
+      if ($xml) {
+        $remote = json_decode(json_encode((array)simplexml_load_string($xml)), true);
+        if (is_array($remote) && isset($remote['data']['location'])) {
+          $cache_entry = array();
+          foreach($remote['data']['location'] as &$location) {
+            if (isset($location['testers']['tester'])) {
+              $parts = explode(':', $location['id']);
+              $id = $parts[0];
+              if (isset($location['testers']['tester'][0]))
+                $cache_entry[$id] = array('elapsed' => $location['elapsed'], 'testers' => $location['testers']['tester']);
+              else
+                $cache_entry[$id] = array('elapsed' => $location['elapsed'], 'testers' => array($location['testers']['tester']));
+            }
           }
+          $remote_cache[$server_hash] = $cache_entry;
         }
       }
-
-      if (array_key_exists($server_hash, $remote_cache) && array_key_exists($remote_location,$remote_cache[$server_hash])) {
-          $testers = $remote_cache[$server_hash][$remote_location];
-      }
     }
-    
-    return $testers;
+
+    if (isset($remote_cache[$server_hash][$remote_location]))
+      $testers = $remote_cache[$server_hash][$remote_location];
+  }
+
+  return $testers;
 }
 ?>

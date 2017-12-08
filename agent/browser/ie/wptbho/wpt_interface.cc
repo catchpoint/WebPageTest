@@ -16,6 +16,8 @@ const TCHAR * EVENT_DOM_ELEMENT_COUNT =
     _T("http://127.0.0.1:8888/event/stats?domCount=");
 const TCHAR * EVENT_TIMED = 
     _T("http://127.0.0.1:8888/event/timed_event");
+const TCHAR * EVENT_CUSTOM_METRICS =
+    _T("http://127.0.0.1:8888/event/custom_metrics");
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -33,7 +35,7 @@ bool WptInterface::GetTask(WptTask& task) {
   bool has_task = false;
   CString response;
   if (HttpGet(TASK_REQUEST, response)) {
-    AtlTrace(_T("[wptbho] Task String: %s"), response);
+    ATLTRACE(_T("[wptbho] Task String: %s"), response);
     has_task = task.ParseTask(response);
   }
 
@@ -105,8 +107,14 @@ void  WptInterface::ReportNavigationTiming(CString timing) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void  WptInterface::ReportUserTiming(CString events){
+void  WptInterface::ReportUserTiming(CString events) {
   HttpPost(EVENT_TIMED, CT2A(events, CP_UTF8));
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void  WptInterface::ReportCustomMetrics(CString custom_metrics) {
+  HttpPost(EVENT_CUSTOM_METRICS, CT2A(custom_metrics, CP_UTF8));
 }
 
 /*-----------------------------------------------------------------------------
@@ -139,7 +147,7 @@ bool WptInterface::HttpGet(CString url, CString& response) {
               &bytes_read) && bytes_read) {
         // NULL-terminate it and add it to our response string
         buff[bytes_read] = 0;
-        response += CA2T(buff);
+        response += CA2T(buff, CP_UTF8);
       }
       InternetCloseHandle(http_request);
     }

@@ -5,333 +5,325 @@
 ;            and replace SecretKey with a unique secret string (alphanumeric, no whitespace)
 
 [locations]
-1=US_E
-2=US_W
-3=US_W2
-4=SA_E
-5=EU_W
-6=AP_SE
-7=AP_NE
-default=US_E
+1=us-east-1
+2=us-west-1
+3=us-west-2
+4=eu-west-1
+5=ap-northeast-1
+6=ap-southeast-1
+7=ap-southeast-2
+8=sa-east-1
+default=us-east-1
 
 
-;
-; ****** US-East (Virginia) *****
-;
 
-[US_E]
-1=US_East_IE7
-2=US_East_IE8
-3=US_East
-4=US_East_wptdriver
-label="US East (Virginia)"
+; **********************************
+; ****** 1 - us-east-1         *****
+; ****** US East (N. Virginia) *****
+
+[us-east-1]
+1=us-east-1_IE7
+2=us-east-1_IE8
+3=us-east-1_wptdriver
+label="US East (N. Virginia)"
 lat=38.954980
 lng=-77.447956
-default=US_East_IE8
+default=us-east-1_wptdriver
 
-[US_East_IE7]
+[us-east-1_IE7]
 ; AMI: ami-fe689397
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=US_East_IE7
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-east-1_IE7
 browser=IE 7
 latency=0
-label="US East (Virginia) - IE7"
+label="US East (N. Virginia) - IE7"
 key=SecretKey
 
-[US_East_IE8]
+[us-east-1_IE8]
 ; AMI: ami-406f9429
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=US_East_IE8
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-east-1_IE8
 browser=IE 8
 latency=0
-label="US East (Virginia) - IE8"
+label="US East (N. Virginia) - IE8"
 key=SecretKey
 
-[US_East]
-; AMI: ami-0f7eae66
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=US_East
-browser=IE 9
+[us-east-1_wptdriver]
+; AMI: ami-561cb13e
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-east-1
+browser=Chrome,Firefox,Safari,IE 11
 latency=0
-label="US East (Virginia) - IE9"
-key=SecretKey
-
-[US_East_wptdriver]
-; uses same instance as US_East (make sure the SecretKey is the same for both)
-browser=Chrome,Firefox
-latency=0
-label="US East (Virginia)"
+label="US East (N. Virginia)"
 key=SecretKey
 
 
-;
-; ****** US-West (California) *****
-;
 
-[US_W]
-1=US_West_IE7
-2=US_West_IE8
-3=US_West
-4=US_West_wptdriver
-label="US West (California)"
+; ************************************
+; ****** 2 - us-west-1           *****
+; ****** US West (N. California) *****
+
+[us-west-1]
+1=us-west-1_IE7
+2=us-west-1_IE8
+3=us-west-1_wptdriver
+label="US West (N. California)"
 lat=37.343577
 lng=-121.894798
-default=US_West_IE8
+default=us-west-1_wptdriver
 
-[US_West_IE7]
+[us-west-1_IE7]
 ; AMI: ami-919dcfd4
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=US_West_IE7
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-west-1_IE7
 browser=IE 7
 latency=0
-label="US West (California) - IE7"
+label="US West (N. California) - IE7"
 key=SecretKey
 
-[US_West_IE8]
+[us-west-1_IE8]
 ; AMI: ami-5982d01c
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=US_West_IE8
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-west-1_IE8
 browser=IE 8
 latency=0
-label="US West (California) - IE8"
+label="US West (N. California) - IE8"
 key=SecretKey
 
-[US_West]
-; AMI: ami-f97029bc
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=US_West
-browser=IE 9
+[us-west-1_wptdriver]
+; AMI: ami-1e330f5b
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-west-1
+browser=Chrome,Firefox,Safari,IE 11
 latency=0
-label="US West (California) - IE9"
-key=SecretKey
-
-[US_West_wptdriver]
-; uses same instance as US_East (make sure the SecretKey is the same for both)
-browser=Chrome,Firefox
-latency=0
-label="US West (California)"
+label="US West (N. California)"
 key=SecretKey
 
 
-;
-; ****** US-West (Oregon) *****
-;
 
-[US_W2]
-1=US_West2_IE7
-2=US_West2_IE8
-3=US_West2
-4=US_West2_wptdriver
+; *****************************
+; ****** 3 - us-west-2    *****
+; ****** US West (Oregon) *****
+
+[us-west-2]
+1=us-west-2_IE7
+2=us-west-2_IE8
+3=us-west-2_wptdriver
 label="US West (Oregon)"
 lat=45.777102
 lng=-119.788742
-default=US_West2_IE8
+default=us-west-2_wptdriver
 
-[US_West2_IE7]
+[us-west-2_IE7]
 ; AMI: ami-68a42958
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=US_West2_IE7
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-west-2_IE7
 browser=IE 7
 latency=0
 label="US West (Oregon) - IE7"
 key=SecretKey
 
-[US_West2_IE8]
+[us-west-2_IE8]
 ; AMI: ami-2ca4291c
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=US_West2_IE8
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-west-2_IE8
 browser=IE 8
 latency=0
 label="US West (Oregon) - IE8"
 key=SecretKey
 
-[US_West2]
-; AMI: ami-867af7b6
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=US_West2
-browser=IE 9
-latency=0
-label="US West (Oregon) - IE9"
-key=SecretKey
-
-[US_West2_wptdriver]
-; uses same instance as US_East (make sure the SecretKey is the same for both)
-browser=Chrome,Firefox
+[us-west-2_wptdriver]
+; AMI: ami-82a4c9b2
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-west-2
+browser=Chrome,Firefox,Safari,IE 11
 latency=0
 label="US West (Oregon)"
 key=SecretKey
 
 
-;
-; ****** Brazil *****
-;
 
-[SA_E]
-1=SA_East_IE7
-2=SA_East_IE8
-3=SA_East
-4=SA_East_wptdriver
-label="South America (Brazil)"
-lat=-23.55014
-lng=-46.641083
-default=SA_East_IE8
+; **************************
+; ****** 4 - eu-west-1 *****
+; ****** EU (Ireland)  *****
 
-[SA_East_IE7]
-; AMI: ami-622ff07f
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=SA_East_IE7
-browser=IE 7
-latency=0
-label="South America (Brazil) - IE7"
-key=SecretKey
-
-[SA_East_IE8]
-; AMI: ami-9c2ff081
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=SA_East_IE8
-browser=IE 8
-latency=0
-label="South America (Brazil) - IE8"
-key=SecretKey
-
-[SA_East]
-; AMI: ami-cc7fa0d1
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=SA_East
-browser=IE 9
-latency=0
-label="South America (Brazil) - IE9"
-key=SecretKey
-
-[SA_East_wptdriver]
-; uses same instance as US_East (make sure the SecretKey is the same for both)
-browser=Chrome,Firefox
-latency=0
-label="South America (Brazil)"
-key=SecretKey
-
-
-;
-; ****** Ireland *****
-;
-
-[EU_W]
-1=EU_WEST_IE7
-2=EU_WEST_IE8
-3=EU_WEST
-4=EU_WEST_wptdriver
+[eu-west-1]
+1=eu-west-1_IE7
+2=eu-west-1_IE8
+3=eu-west-1_wptdriver
 label="Europe (Ireland)"
 lat=53.343583
 lng=-6.267014
-default=EU_WEST_IE8
+default=eu-west-1_wptdriver
 
-[EU_WEST_IE7]
+[eu-west-1_IE7]
 ; AMI: ami-70b18004
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=EU_WEST_IE7
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=eu-west-1_IE7
 browser=IE 7
 latency=0
 label="Europe (Ireland) - IE7"
 key=SecretKey
 
-[EU_WEST_IE8]
+[eu-west-1_IE8]
 ; AMI: ami-00b18074
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=EU_WEST_IE8
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=eu-west-1_IE8
 browser=IE 8
 latency=0
 label="Europe (Ireland) - IE8"
 key=SecretKey
 
-[EU_WEST]
-; AMI: ami-33b98747
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=EU_WEST
-browser=IE 9
-latency=0
-label="Europe (Ireland) - IE9"
-key=SecretKey
-
-[EU_WEST_wptdriver]
-; uses same instance as US_East (make sure the SecretKey is the same for both)
-browser=Chrome,Firefox
+[eu-west-1_wptdriver]
+; AMI: ami-ecb3409b
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=eu-west-1
+browser=Chrome,Firefox,Safari,IE 11
 latency=0
 label="Europe (Ireland)"
 key=SecretKey
 
 
-;
-; ****** Singapore *****
-;
 
-[AP_SE]
-1=Singapore_IE7
-2=Singapore_IE8
-3=Singapore
-4=Singapore_wptdriver
-label="Asia (Singapore)"
+; *************************************
+; ****** 1 - ap-southeast-1       *****
+; ****** Asia Pacific (Singapore) *****
+
+[ap-southeast-1]
+1=ap-southeast-1_IE7
+2=ap-southeast-1_IE8
+3=ap-southeast-1_wptdriver
+label="Asia Pacific (Singapore)"
 lat=1.352708
 lng=103.819935
-default=Singapore_IE8
+default=ap-southeast-1_wptdriver
 
-[Singapore_IE7]
+[ap-southeast-1_IE7]
 ; AMI: ami-38bac26a
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=Singapore_IE7
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-southeast-1_IE7
 browser=IE 7
 latency=0
-label="Asia (Singapore) - IE7"
+label="Asia Pacific (Singapore) - IE7"
 key=SecretKey
 
-[Singapore_IE8]
+[ap-southeast-1_IE8]
 ; AMI: ami-92bac2c0
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=Singapore_IE8
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-southeast-1_IE8
 browser=IE 8
 latency=0
-label="Asia (Singapore) - IE8"
+label="Asia Pacific (Singapore) - IE8"
 key=SecretKey
 
-[Singapore]
-; AMI: ami-385a1e6a
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=Singapore
-browser=IE 9
+[ap-southeast-1_wptdriver]
+; AMI: ami-8c0a5bde
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-southeast-1
+browser=Chrome,Firefox,Safari,IE 11
 latency=0
-label="Asia (Singapore) - IE9"
+label="Asia Pacific (Singapore)"
 key=SecretKey
 
-[Singapore_wptdriver]
-; uses same instance as US_East (make sure the SecretKey is the same for both)
-browser=Chrome,Firefox
+
+
+; **********************************
+; ****** 1 - ap-southeast-2    *****
+; ****** Asia Pacific (Sydney) *****
+
+[ap-southeast-2]
+1=ap-southeast-2_IE7
+2=ap-southeast-2_IE8
+3=ap-southeast-2_wptdriver
+label="Asia Pacific (Sydney)"
+lat=-33.7969235
+lng=150.9224326
+default=ap-southeast-2_wptdriver
+
+[ap-southeast-2_IE7]
+; AMI: ami-2b40d711
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-southeast-2_IE7
+browser=IE 7
 latency=0
-label="Asia (Singapore)"
+label="Asia Pacific (Sydney) - IE7"
+key=SecretKey
+
+[ap-southeast-2_IE8]
+; AMI: ami-2940d713
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-southeast-2_IE8
+browser=IE 8
+latency=0
+label="Asia Pacific (Sydney) - IE8"
+key=SecretKey
+
+[ap-southeast-2_wptdriver]
+; AMI: ami-2dfb6217
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-southeast-2
+browser=Chrome,Firefox,Safari,IE 11
+latency=0
+label="Asia Pacific (Sydney)"
 key=SecretKey
 
 
-;
-; ****** Tokyo *****
-;
 
-[AP_NE]
-1=Tokyo_IE7
-2=Tokyo_IE8
-3=Tokyo
-4=Tokyo_wptdriver
-label="Asia (Tokyo)"
+; *********************************
+; ****** 1 - ap-northeast-1   *****
+; ****** Asia Pacific (Tokyo) *****
+
+[ap-northeast-1]
+1=ap-northeast-1_IE7
+2=ap-northeast-1_IE8
+3=ap-northeast-1_wptdriver
+label="Asia Pacific (Tokyo)"
 lat=35.682175
 lng=139.752731
-default=Tokyo_IE8
+default=ap-northeast-1_wptdriver
 
-[Tokyo_IE7]
+[ap-northeast-1_IE7]
 ; AMI: ami-ba16bcbb
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=Tokyo_IE7
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-northeast-1_IE7
 browser=IE 7
 latency=0
-label="Asia (Tokyo) - IE7"
+label="Asia Pacific (Tokyo) - IE7"
 key=SecretKey
 
-[Tokyo_IE8]
+[ap-northeast-1_IE8]
 ; AMI: ami-bc16bcbd
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=Tokyo_IE8
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-northeast-1_IE8
 browser=IE 8
 latency=0
-label="Asia (Tokyo) - IE8"
+label="Asia Pacific (Tokyo) - IE8"
 key=SecretKey
 
-[Tokyo]
-; AMI: ami-6a5cea6b
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=Tokyo
-browser=IE 9
+[ap-northeast-1_wptdriver]
+; AMI: ami-29473328
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-northeast-1
+browser=Chrome,Firefox,Safari,IE 11
 latency=0
-label="Asia (Tokyo) - IE9"
+label="Asia Pacific (Tokyo)"
 key=SecretKey
 
-[Tokyo_wptdriver]
-; uses same instance as US_East (make sure the SecretKey is the same for both)
-browser=Chrome,Firefox
+
+
+; **************************************
+; ****** 8 - sa-east-1             *****
+; ****** South America (Sao Paulo) *****
+
+[sa-east-1]
+1=sa-east-1_IE7
+2=sa-east-1_IE8
+3=sa-east-1_wptdriver
+label="South America (Sao Paulo)"
+lat=-23.55014
+lng=-46.641083
+default=sa-east-1_wptdriver
+
+[sa-east-1_IE7]
+; AMI: ami-622ff07f
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=sa-east-1_IE7
+browser=IE 7
 latency=0
-label="Asia (Tokyo)"
+label="South America (Sao Paulo) - IE7"
 key=SecretKey
+
+[sa-east-1_IE8]
+; AMI: ami-9c2ff081
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=sa-east-1_IE8
+browser=IE 8
+latency=0
+label="South America (Sao Paulo) - IE8"
+key=SecretKey
+
+[sa-east-1_wptdriver]
+; AMI: ami-f9a300e4
+; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=sa-east-1
+browser=Chrome,Firefox,Safari,IE 11
+latency=0
+label="South America (Sao Paulo)"
+key=SecretKey
+

@@ -12,12 +12,6 @@
     <Filter Include="Third-Party">
       <UniqueIdentifier>{56e63e9d-1a75-439a-a7fd-5745b0b56f3e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Third-Party\NCodeHook">
-      <UniqueIdentifier>{8895b285-595b-46b0-9e29-2becbc9105e8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Third-Party\distorm">
-      <UniqueIdentifier>{df374626-a802-47b9-a3c7-f012594bbc0e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Third-Party\CxImage">
       <UniqueIdentifier>{eabee810-0378-4f4d-9468-e494b1dd5ab0}</UniqueIdentifier>
     </Filter>
@@ -48,50 +42,23 @@
     <Filter Include="Third-Party\png">
       <UniqueIdentifier>{84bbfb46-a9fc-4fb8-8297-1e195eaefb74}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Third-Party\nghttp2">
+      <UniqueIdentifier>{bd2f09c2-c8da-4a14-a5d5-1235a58ca441}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\winpcap">
+      <UniqueIdentifier>{008d51b7-181c-4c6c-99d2-d1e795300ae7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\winpcap\pcap">
+      <UniqueIdentifier>{31f31a0f-f1ec-4329-acab-a46bf2c9ee24}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\brotli">
+      <UniqueIdentifier>{cdf6fa87-2189-4449-b484-721fb23c974c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\minhook">
+      <UniqueIdentifier>{5f09aa85-e0af-4209-b3cd-9d533e89e490}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="NCodeHook\NCodeHook.h">
-      <Filter>Third-Party\NCodeHook</Filter>
-    </ClInclude>
-    <ClInclude Include="NCodeHook\NCodeHookInstantiation.h">
-      <Filter>Third-Party\NCodeHook</Filter>
-    </ClInclude>
-    <ClInclude Include="NCodeHook\NCodeHookItem.h">
-      <Filter>Third-Party\NCodeHook</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\src\config.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\src\decoder.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\src\instructions.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\src\insts.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\src\operands.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\src\prefix.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\src\textdefs.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\src\wstring.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\src\x86defs.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\include\distorm.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
-    <ClInclude Include="distorm\include\mnemonics.h">
-      <Filter>Third-Party\distorm</Filter>
-    </ClInclude>
     <ClInclude Include="cximage\stdint.h">
       <Filter>Third-Party\CxImage\Header Files</Filter>
     </ClInclude>
@@ -215,13 +182,7 @@
     <ClInclude Include="nspr\prtypes.h">
       <Filter>Third-Party\nspr</Filter>
     </ClInclude>
-    <ClInclude Include="wpthook_dll.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="cdn.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="hook_gdi.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="hook_nspr.h">
@@ -356,11 +317,152 @@
     <ClInclude Include="hook_wininet.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="dev_tools.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="trace.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_buf.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_callbacks.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_frame.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_hd.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_hd_huffman.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_helper.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_http.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_int.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_map.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_mem.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_net.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_npn.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_option.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_outbound_item.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_pq.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_priority_spec.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_queue.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_session.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_stream.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\nghttp2_submit.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="nghttp2\lib\includes\nghttp2\nghttp2.h">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClInclude>
+    <ClInclude Include="ssl_stream.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hook_file.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="hook_chrome_ssl.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WinPCap.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\bittypes.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\ip6_misc.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\Packet32.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap-bpf.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap-namedb.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap-stdinc.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\remote-ext.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\Win32-Extensions.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap\bluetooth.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap\bpf.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap\namedb.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap\pcap.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap\sll.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap\usb.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
+    </ClInclude>
+    <ClInclude Include="winpcap\Include\pcap\vlan.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
+    </ClInclude>
+    <ClInclude Include="minhook\src\buffer.h">
+      <Filter>Third-Party\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="minhook\src\trampoline.h">
+      <Filter>Third-Party\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="minhook\src\HDE\hde32.h">
+      <Filter>Third-Party\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="minhook\src\HDE\hde64.h">
+      <Filter>Third-Party\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="minhook\src\HDE\pstdint.h">
+      <Filter>Third-Party\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="minhook\src\HDE\table32.h">
+      <Filter>Third-Party\minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="minhook\src\HDE\table64.h">
+      <Filter>Third-Party\minhook</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -370,16 +472,7 @@
     <ClCompile Include="wpthook.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="NCodeHook\NCodeHook.cpp">
-      <Filter>Third-Party\NCodeHook</Filter>
-    </ClCompile>
-    <ClCompile Include="NCodeHook\NCodeHookItem.cpp">
-      <Filter>Third-Party\NCodeHook</Filter>
-    </ClCompile>
     <ClCompile Include="hook_winsock.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="hook_gdi.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="track_sockets.cc">
@@ -499,9 +592,6 @@
     <ClCompile Include="cximage\ximawnd.cpp">
       <Filter>Third-Party\CxImage\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="inject.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="mongoose\mongoose.c">
       <Filter>Third-Party\Mongoose</Filter>
     </ClCompile>
@@ -616,43 +706,10 @@
     <ClCompile Include="png\pngwtran.c">
       <Filter>Third-Party\png</Filter>
     </ClCompile>
-    <ClCompile Include="distorm\src\decoder.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
-    <ClCompile Include="distorm\src\x86defs.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
-    <ClCompile Include="distorm\src\distorm.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
-    <ClCompile Include="distorm\src\instructions.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
-    <ClCompile Include="distorm\src\insts.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
-    <ClCompile Include="distorm\include\mnemonics.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
-    <ClCompile Include="distorm\src\operands.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
-    <ClCompile Include="distorm\src\prefix.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
-    <ClCompile Include="distorm\src\textdefs.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
-    <ClCompile Include="distorm\src\wstring.c">
-      <Filter>Third-Party\distorm</Filter>
-    </ClCompile>
     <ClCompile Include="..\wptdriver\util.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hook_wininet.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dev_tools.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dllmain.cc">
@@ -660,6 +717,120 @@
     </ClCompile>
     <ClCompile Include="trace.cc">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_buf.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_callbacks.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_frame.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_hd.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_hd_huffman.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_hd_huffman_data.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_helper.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_http.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_map.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_mem.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_npn.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_option.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_outbound_item.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_pq.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_priority_spec.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_queue.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_session.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_stream.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_submit.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="nghttp2\lib\nghttp2_version.c">
+      <Filter>Third-Party\nghttp2</Filter>
+    </ClCompile>
+    <ClCompile Include="ssl_stream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hook_file.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="hook_chrome_ssl.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WinPCap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\gzlib.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\gzread.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\gzwrite.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\gzclose.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="brotli\dec\bit_reader.c">
+      <Filter>Third-Party\brotli</Filter>
+    </ClCompile>
+    <ClCompile Include="brotli\dec\decode.c">
+      <Filter>Third-Party\brotli</Filter>
+    </ClCompile>
+    <ClCompile Include="brotli\dec\huffman.c">
+      <Filter>Third-Party\brotli</Filter>
+    </ClCompile>
+    <ClCompile Include="brotli\dec\state.c">
+      <Filter>Third-Party\brotli</Filter>
+    </ClCompile>
+    <ClCompile Include="brotli\common\dictionary.c">
+      <Filter>Third-Party\brotli</Filter>
+    </ClCompile>
+    <ClCompile Include="minhook\src\buffer.c">
+      <Filter>Third-Party\minhook</Filter>
+    </ClCompile>
+    <ClCompile Include="minhook\src\hook.c">
+      <Filter>Third-Party\minhook</Filter>
+    </ClCompile>
+    <ClCompile Include="minhook\src\trampoline.c">
+      <Filter>Third-Party\minhook</Filter>
+    </ClCompile>
+    <ClCompile Include="minhook\src\HDE\hde32.c">
+      <Filter>Third-Party\minhook</Filter>
+    </ClCompile>
+    <ClCompile Include="minhook\src\HDE\hde64.c">
+      <Filter>Third-Party\minhook</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

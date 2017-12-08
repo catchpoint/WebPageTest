@@ -1,7 +1,8 @@
 <?php
 chdir('..');
 include 'common.inc';
-include './benchmarks/data.inc.php';
+set_time_limit(600);
+require_once('./benchmarks/data.inc.php');
 $page_keywords = array('Benchmarks','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "WebPagetest benchmark details";
 $aggregate = 'median';
@@ -31,7 +32,7 @@ if (array_key_exists('f', $_REQUEST)) {
         <meta name="description" content="Speed up the performance of your web pages with an automated analysis">
         <meta name="author" content="Patrick Meenan">
         <?php $gaTemplate = 'About'; include ('head.inc'); ?>
-        <script type="text/javascript" src="/js/dygraph-combined.js?v=2"></script>
+        <script type="text/javascript" src="/js/dygraph-combined.js?v=1.0.1"></script>
         <style type="text/css">
         .chart-container { clear: both; width: 875px; height: 350px; margin-left: auto; margin-right: auto; padding: 0;}
         .benchmark-chart { float: left; width: 700px; height: 350px; }
@@ -52,9 +53,9 @@ if (array_key_exists('f', $_REQUEST)) {
                     Highlight an area of the chart to zoom in on that area and double-click to zoom out.
                 </div>
                 <div style="float: right;">
-                    <form name="aggregation" method="get" action="view.php">
+                    <form name="aggregation" method="get" action="trendurl.php">
                         <?php
-                        echo "<input type=\"hidden\" name=\"benchmark\" value=\"$benchmark\">";
+                        echo "<input type=\"hidden\" name=\"benchmark\" value=\"" . htmlspecialchars($benchmark) . "\">";
                         echo '<input type="hidden" name="url" value="' . htmlentities($url) . '">';
                         ?>
                         Time Period <select name="days" size="1" onchange="this.form.submit();">
@@ -71,19 +72,30 @@ if (array_key_exists('f', $_REQUEST)) {
             <div style="clear:both;">
             </div>
             <script type="text/javascript">
-            function SelectedPoint(meta, time) {
+            function SelectedPoint(meta, time, cached) {
                 <?php
-                echo "var url = \"$url\";\n";
-                echo "var medianMetric=\"$median_metric\";\n";
+                echo "var url = \"" . htmlspecialchars($url) . "\";\n";
+                echo "var medianMetric=\"" . htmlspecialchars($median_metric) . "\";\n";
                 ?>
                 var menu = '<div><h4>View test for ' + url + '</h4>';
+                var compare = "/video/compare.php?ival=100&medianMetric=" + medianMetric + "&tests=";
+                var graph_compare = "/graph_page_data.php?tests=";
                 time = parseInt(time / 1000, 10);
                 var ok = false;
                 if (meta[time] != undefined) {
                     for(i = 0; i < meta[time].length; i++) {
                         ok = true;
                         menu += '<a href="/result/' + meta[time][i]['test'] + '/?medianMetric=' + medianMetric + '" target="_blank">' + meta[time][i]['label'] + '</a><br>';
+                        if (i) {
+                            compare += ",";
+                            graph_compare += ",";
+                        }
+                            compare += encodeURIComponent(meta[time][i]['test'] + "-l:" + meta[time][i]['label'].replace("-","").replace(":","") + "-c:" + (cached ? 1 : 0));
+                            graph_compare += encodeURIComponent(meta[time][i]['test'] + "-l:" + meta[time][i]['label'].replace("-","").replace(":",""));
                     }
+                    graph_compare += "&" + (cached ? "rv" : "fv") + "=1";
+                    menu += '<br><a href="' + compare + '">Filmstrip Comparison</a>';
+                    menu += '<br><a href="' + graph_compare + '">Graph Comparison</a>';
                 }
                 menu += '</div>';
                 if (ok) {
@@ -95,13 +107,21 @@ if (array_key_exists('f', $_REQUEST)) {
 }
             $metrics = array('docTime' => 'Load Time (onload)', 
                             'SpeedIndex' => 'Speed Index',
-                            'SpeedIndexDT' => 'Speed Index (Dev Tools)',
                             'TTFB' => 'Time to First Byte', 
+                            'basePageSSLTime' => 'Base Page SSL Time',
                             'titleTime' => 'Time to Title', 
                             'render' => 'Time to Start Render', 
+                            'chromeUserTiming.firstContentfulPaint' => 'Time to First Contentful Paint', 
+                            'chromeUserTiming.firstMeaningfulPaint' => 'Time to First Meaningful Paint', 
+                            'domContentLoadedEventStart' => 'DOM Content Loaded',
                             'visualComplete' => 'Time to Visually Complete', 
-                            'VisuallyCompleteDT' => 'Time to Visually Complete (Dev Tools)', 
+                            'visualComplete85' => 'Time to 85% Visually Complete', 
+                            'visualComplete90' => 'Time to 90% Visually Complete', 
+                            'visualComplete95' => 'Time to 95% Visually Complete', 
+                            'visualComplete99' => 'Time to 99% Visually Complete', 
+                            'lastVisualChange' => 'Last Visual Change',
                             'fullyLoaded' => 'Load Time (Fully Loaded)', 
+                            'TimeToInteractive' => 'Time to Interactive', 
                             'server_rtt' => 'Estimated RTT to Server',
                             'docCPUms' => 'CPU Busy Time',
                             'domElements' => 'Number of DOM Elements', 
@@ -118,6 +138,8 @@ if (array_key_exists('f', $_REQUEST)) {
                             'image_requests' => 'Image Requests',
                             'flash_bytes' => 'Flash Bytes (KB)', 
                             'flash_requests' => 'Flash Requests', 
+			    'video_bytes' => 'Video Bytes (KB)', 
+                            'video_requests' => 'Video Requests', 
                             'html_bytes' => 'HTML Bytes (KB)', 
                             'html_requests' => 'HTML Requests', 
                             'text_bytes' => 'Text Bytes (KB)', 
@@ -128,11 +150,16 @@ if (array_key_exists('f', $_REQUEST)) {
             if (!$info['video']) {
                 unset($metrics['SpeedIndex']);
             }
+            if (array_key_exists('metrics', $info) && is_array($info['metrics'])) {
+              foreach ($info['metrics'] as $metric => $label) {
+                $metrics[$metric] = $label;
+              }
+            }
             if (!isset($out_data)) {
-                echo "<h1>{$info['title']} - $url</h1>";
+                echo "<h1>{$info['title']} - " . htmlspecialchars($url) . "</h1>";
                 if (array_key_exists('description', $info))
-                    echo "<p>{$info['description']}</p>\n";
-                echo "<p>Displaying the median run for $url trended over time</p>";
+                    echo "<p>" . htmlspecialchars($info['description']) . "</p>\n";
+                echo "<p>Displaying the median run for " . htmlspecialchars($url) . " trended over time</p>";
             }
             foreach( $metrics as $metric => $label) {
                 if (!isset($out_data)) {
@@ -179,7 +206,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
     }
     $chart_title = '';
     if (isset($title))
-        $chart_title = "title: \"$title (First View)\",";
+        $chart_title = "title: \"" . htmlspecialchars($title) . " (First View)\",";
     $tsv = LoadTrendDataTSV($benchmark['name'], 0, $metric, $url, $loc, $annotations, $meta);
     if (isset($out_data)) {
         if (!array_key_exists($bmname, $out_data)) {
@@ -215,8 +242,9 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                     rollPeriod: 1,
                     showRoller: true,
                     labelsSeparateLines: true,
+                    colors: ['#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101'],
                     labelsDiv: document.getElementById('{$id}_legend'),
-                    pointClickCallback: function(e, p) {SelectedPoint({$id}meta, p.xval);},
+                    pointClickCallback: function(e, p) {SelectedPoint({$id}meta, p.xval, false);},
                     $chart_title
                     legend: \"always\"}
                 );";
@@ -227,7 +255,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
     }
     if (!array_key_exists('fvonly', $benchmark) || !$benchmark['fvonly']) {
         if (isset($title))
-            $chart_title = "title: \"$title (Repeat View)\",";
+            $chart_title = "title: \"" . htmlspecialchars($title) . " (Repeat View)\",";
         $tsv = LoadTrendDataTSV($benchmark['name'], 1, $metric, $url, $loc, $annotations, $meta);
         if (isset($out_data)) {
             $out_data[$bmname][$metric]['RV'] = TSVEncode($tsv);
@@ -259,8 +287,9 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null, $title = null) 
                         rollPeriod: 1,
                         showRoller: true,
                         labelsSeparateLines: true,
+                        colors: ['#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101'],
                         labelsDiv: document.getElementById('{$id}_legend'),
-                        pointClickCallback: function(e, p) {SelectedPoint({$id}meta, p.xval);},
+                        pointClickCallback: function(e, p) {SelectedPoint({$id}meta, p.xval, true);},
                         $chart_title
                         legend: \"always\"}
                     );";

@@ -1,7 +1,7 @@
 <?php
 chdir('..');
 include 'common.inc';
-include './benchmarks/data.inc.php';
+require_once('./benchmarks/data.inc.php');
 $page_keywords = array('Benchmarks','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "WebPagetest benchmark test details";
 $benchmark = '';
@@ -32,13 +32,21 @@ else {
 }
 $metrics = array('docTime' => 'Load Time (onload)', 
                 'SpeedIndex' => 'Speed Index',
-                'SpeedIndexDT' => 'Speed Index (Dev Tools)',
                 'TTFB' => 'Time to First Byte', 
+                'basePageSSLTime' => 'Base Page SSL Time',
                 'titleTime' => 'Time to Title', 
                 'render' => 'Time to Start Render', 
+                'chromeUserTiming.firstContentfulPaint' => 'Time to First Contentful Paint', 
+                'chromeUserTiming.firstMeaningfulPaint' => 'Time to First Meaningful Paint', 
+                'domContentLoadedEventStart' => 'DOM Content Loaded',
                 'visualComplete' => 'Time to Visually Complete', 
-                'VisuallyCompleteDT' => 'Time to Visually Complete (Dev Tools)', 
+                'visualComplete85' => 'Time to 85% Visually Complete', 
+                'visualComplete90' => 'Time to 90% Visually Complete', 
+                'visualComplete95' => 'Time to 95% Visually Complete', 
+                'visualComplete99' => 'Time to 99% Visually Complete', 
+                'lastVisualChange' => 'Last Visual Change',
                 'fullyLoaded' => 'Load Time (Fully Loaded)', 
+                'TimeToInteractive' => 'Time to Interactive', 
                 'server_rtt' => 'Estimated RTT to Server',
                 'docCPUms' => 'CPU Busy Time',
                 'domElements' => 'Number of DOM Elements', 
@@ -54,7 +62,9 @@ $metrics = array('docTime' => 'Load Time (onload)',
                 'image_bytes' => 'Image Bytes (KB)', 
                 'image_requests' => 'Image Requests',
                 'flash_bytes' => 'Flash Bytes (KB)', 
-                'flash_requests' => 'Flash Requests', 
+                'flash_requests' => 'Flash Requests',
+                'video_bytes' => 'Video Bytes (KB)', 
+                'video_requests' => 'Video Requests', 
                 'html_bytes' => 'HTML Bytes (KB)', 
                 'html_requests' => 'HTML Requests', 
                 'text_bytes' => 'Text Bytes (KB)', 
@@ -90,7 +100,7 @@ if (!isset($ref)) {
         <meta name="description" content="Speed up the performance of your web pages with an automated analysis">
         <meta name="author" content="Patrick Meenan">
         <?php $gaTemplate = 'About'; include ('head.inc'); ?>
-        <script type="text/javascript" src="/js/dygraph-combined.js?v=2"></script>
+        <script type="text/javascript" src="/js/dygraph-combined.js?v=1.0.1"></script>
         <style type="text/css">
         .chart-container { clear: both; width: 875px; height: 350px; margin-left: auto; margin-right: auto; padding: 0;}
         .benchmark-chart { float: left; width: 700px; height: 350px; }
@@ -135,8 +145,8 @@ if (!isset($ref)) {
                 <div style="float: right;">
                     <form name="metric" method="get" action="delta.php">
                         <?php
-                        echo "<input type=\"hidden\" name=\"benchmark\" value=\"$benchmark\">";
-                        echo "<input type=\"hidden\" name=\"time\" value=\"$test_time\">";
+                        echo "<input type=\"hidden\" name=\"benchmark\" value=\"" . htmlspecialchars($benchmark) . "\">";
+                        echo "<input type=\"hidden\" name=\"time\" value=\"" . htmlspecialchars($test_time) . "\">";
                         ?>
                         Metric <select name="metric" size="1" onchange="this.form.submit();">
                         <?php
@@ -169,8 +179,8 @@ if (!isset($ref)) {
                     var charts = new Array();
                     function SelectedPoint(p, data, ref, cmp, cached) {
                         <?php
-                            echo "var benchmark=\"$benchmark\";\n";
-                            echo "var medianMetric=\"$median_metric\";\n";
+                            echo "var benchmark=\"" . htmlspecialchars($benchmark) . "\";\n";
+                            echo "var medianMetric=\"" . htmlspecialchars($median_metric) . "\";\n";
                         ?>
                         var index = p.yval.toFixed(5);
                         var menu = '<div><h4>View test for ' + data[index].url + '</h4>';
@@ -256,13 +266,13 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null) {
             $compare[] = $config;
     }
     foreach( $compare as $config ) {
-        $refLabel = $ref;
+        $refLabel = htmlspecialchars($ref);
         if (array_key_exists('title', $benchmark['configurations'][$ref])) {
-            $refLabel = $benchmark['configurations'][$ref]['title'];
+            $refLabel = htmlspecialchars($benchmark['configurations'][$ref]['title']);
         }
-        $configLabel = $config;
+        $configLabel = htmlspecialchars($config);
         if (array_key_exists('title', $benchmark['configurations'][$config])) {
-            $configLabel = $benchmark['configurations'][$config]['title'];
+            $configLabel = htmlspecialchars($benchmark['configurations'][$config]['title']);
         }
         $chart_title = "$configLabel vs. $refLabel";
         $tsv = LoadDeltaTSV($benchmark['name'], $ref, $config, 0, $metric, $test_time, $meta, $loc);
@@ -280,6 +290,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null) {
                         strokeWidth: 0.0,
                         labelsSeparateLines: true,
                         labelsDiv: document.getElementById('hidden'),
+                        colors: ['#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101'],
                         axes: {x: {valueFormatter: function(delta) {
                                     var num = delta * 100;
                                     return num.toFixed(2) + '%';
@@ -315,6 +326,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null) {
             if (isset($tsv) && strlen($tsv)) {
                 $count++;
                 $id = "g$count";
+
                 echo "<br><div class=\"chart-container\"><div id=\"$id\" class=\"benchmark-chart\"></div><div id=\"{$id}_legend\" class=\"benchmark-legend\"></div></div>\n";
                 echo "<script type=\"text/javascript\">
                         var {$id}meta = " . json_encode($meta) . ";
@@ -326,6 +338,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null) {
                             strokeWidth: 0.0,
                             labelsSeparateLines: true,
                             labelsDiv: document.getElementById('{$id}_legend'),
+                            colors: ['#ed2d2e', '#008c47', '#1859a9', '#662c91', '#f37d22', '#a11d20', '#b33893', '#010101'],
                             axes: {x: {valueFormatter: function(delta) {
                                         var num = delta * 100;
                                         return num.toFixed(2) + '%';

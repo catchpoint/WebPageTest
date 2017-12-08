@@ -3,10 +3,33 @@
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-WptTestDriver::WptTestDriver(DWORD default_timeout, bool has_gpu) {
+WptTestDriver::WptTestDriver(DWORD default_timeout, bool has_gpu):
+  marked_done_(false) {
   _test_timeout = default_timeout;
   _measurement_timeout = default_timeout;
   has_gpu_ = has_gpu;
+
+  // grab the version number of the dll
+  TCHAR file[MAX_PATH];
+  if (GetModuleFileName(GetModuleHandle(NULL), file, _countof(file))) {
+    DWORD unused;
+    DWORD infoSize = GetFileVersionInfoSize(file, &unused);
+    LPBYTE pVersion = NULL;
+    if (infoSize)  
+      pVersion = (LPBYTE)malloc( infoSize );
+    if (pVersion) {
+      if (GetFileVersionInfo(file, 0, infoSize, pVersion)) {
+        VS_FIXEDFILEINFO * info = NULL;
+        UINT size = 0;
+        if (VerQueryValue(pVersion, _T("\\"), (LPVOID*)&info, &size)) {
+          if( info ) {
+            _version = LOWORD(info->dwFileVersionLS);
+          }
+        }
+      }
+      free( pVersion );
+    }
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -29,10 +52,10 @@ bool WptTestDriver::Start() {
     
     if (_directory.GetLength()) {
       SetFileBase();
-      SetClearedCache(_clear_cache);
-      SetCurrentRun(_run);
-      SetCPUUtilization(0);
-      SetHasGPU(has_gpu_);
+      g_shared->SetClearedCache(_clear_cache);
+      g_shared->SetCurrentRun(_run);
+      g_shared->SetCPUUtilization(0);
+      g_shared->SetHasGPU(has_gpu_);
       ret = true;
     }
   }
@@ -43,7 +66,7 @@ bool WptTestDriver::Start() {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool WptTestDriver::Load(CString& test) {
-  WptTrace(loglevel::kFunction, _T("[wptdriver] - WptTestDriver::Load\n"));
+  ATLTRACE("[wptdriver] - WptTestDriver::Load");
   bool ret = WptTest::Load(test);
 
   if (_directory.GetLength() )
@@ -73,7 +96,7 @@ bool WptTestDriver::SetFileBase() {
     _file_base.Format(_T("%s\\%d"), (LPCTSTR)_directory, _index);
     if (!_clear_cache)
       _file_base += _T("_Cached");
-    SetResultsFileBase(_file_base);
+    g_shared->SetResultsFileBase(_file_base);
     ret = true;
   }
   return ret;

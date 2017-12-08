@@ -204,7 +204,7 @@ bool CxImage::CreateFromHANDLE(HANDLE hMem)
 	if (!Destroy())
 		return false;
 
-	uint32_t dwSize = GlobalSize(hMem);
+	uint32_t dwSize = (int32_t)GlobalSize(hMem);
 	if (!dwSize) return false;
 
 	uint8_t *lpVoid;						//pointer to the bitmap

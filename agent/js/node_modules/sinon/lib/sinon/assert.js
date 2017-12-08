@@ -10,12 +10,12 @@
  * @author Christian Johansen (christian@cjohansen.no)
  * @license BSD
  *
- * Copyright (c) 2010-2011 Christian Johansen
+ * Copyright (c) 2010-2013 Christian Johansen
  */
 "use strict";
 
 (function (sinon, global) {
-    var commonJSModule = typeof module == "object" && typeof require == "function";
+    var commonJSModule = typeof module !== "undefined" && module.exports;
     var slice = Array.prototype.slice;
     var assert;
 
@@ -83,7 +83,7 @@
     function exposedName(prefix, prop) {
         return !prefix || /^fail/.test(prop) ? prop :
             prefix + prop.slice(0, 1).toUpperCase() + prop.slice(1);
-    };
+    }
 
     assert = {
         failException: "AssertError",
@@ -104,7 +104,14 @@
             if (!sinon.calledInOrder(arguments)) {
                 try {
                     expected = [].join.call(arguments, ", ");
-                    actual = sinon.orderByFirstCall(slice.call(arguments)).join(", ");
+                    var calls = slice.call(arguments);
+                    var i = calls.length;
+                    while (i) {
+                        if (!calls[--i].called) {
+                            calls.splice(i, 1);
+                        }
+                    }
+                    actual = sinon.orderByFirstCall(calls).join(", ");
                 } catch (e) {
                     // If this fails, we'll just fall back to the blank string
                 }
@@ -173,4 +180,4 @@
     } else {
         sinon.assert = assert;
     }
-}(typeof sinon == "object" && sinon || null, typeof window != "undefined" ? window : global));
+}(typeof sinon == "object" && sinon || null, typeof window != "undefined" ? window : (typeof self != "undefined") ? self : global));

@@ -26,7 +26,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 
-var jog = require('jog');
 var util = require('util');
 
 /** Object of levelName to [level, printer, levelId]. */
@@ -41,17 +40,20 @@ exports.LEVELS = {
   };
 
 /**
- * Print "."s instead of repeat console messages, up to (DOT_LIMIT-1) dots.
- * To disable, set the DOT_LIMIT to undefined or <= 0.
+ * Print a single char for repeat log messages, to reduce log clutter.
+ *
+ * For example, if our HISTORY_LIMIT is 3 and we're asked to log:
+ *   [A, B, C, C, B, C, D, B]
+ # then we'll print:
+ *   [A, B, C, ., 1, ., D, 2]
+ * where '.' is shorthand for 0.
+ * To disable, set the HISTORY_LIMIT to <= 0.
  */
-exports.DOT_LIMIT = 80;
-/** Dot printer. */
+exports.HISTORY_LIMIT = 3;
+/** The history char printer, which defaults to stdout. */
 exports.DOT_WRITER = process.stdout;
-var prevCount = 0;
-var prevLevel;
-var prevMessage;
-
-var jsonFileLogger = jog(new jog.FileStore('./debug.log'));
+var history = [];
+var dotCount = 0;  // how many '.'s we've printed in a row
 
 function getMaxLogLevel() {
   'use strict';
@@ -105,63 +107,80 @@ var STACK_LINE_RE_ = new RegExp(
     (/(?:\S+\/)?(\S+?):(\d+)[\s\S]*/).source);
 
 /**
- * maybeLog is a wrapper for the visionmedia jog module that will:
- * a) automatically wrap strings in an object to get maximum info.
- * b) use jog.info because it stores the most information.
- * c) check for a WPT_VERBOSE environment variable and mirror logs to the
- *    console if it is true.
- * d) check for a WPT_MAX_LOGLEVEL environment variable and only log messages
- *    greater than or equal to the maximum log level.
+ * Returns a debug string indicating who called the caller of this function.
  *
- * @param {string} levelName the log level.
+ * @param {int=} level the caller level: 1 by default, 0 = myself.
+ * @return {string} debug annotation.
+ */
+exports.whoIsMyCaller = function(level) {
+  'use strict';
+  if (level === undefined) {
+    level = 1;
+  }
+  var callerStackLine = new Error().stack.split('\n', 3 + level)[2 + level];
+  var matches = callerStackLine.match(STACK_LINE_RE_);
+  var functionName = matches[1] || 'unknown';
+  return matches[2] + ':' + matches[3] + ' ' + functionName;
+};
+
+/**
+ * Logs a util.format message if the level is <= our MAX_LOG_LEVEL.
+ *
  * @param {Array} levelProperties [<level>, <stream>, <abbreviation>].
- * @param {Object|string} data an object or string
- *    (which will be converted to an object for jog) that will be logged.
+ * @param {Object} var_args util.format arguments, e.g. '%s is %d', 'foo', 7.
 */
-function maybeLog(levelName, levelProperties, data) {
+function maybeLog(levelProperties, var_args) {  // jshint unused:false
   'use strict';
   var level = levelProperties[0];
   if (level <= exports.MAX_LOG_LEVEL) {
     var stamp = new Date();  // Take timestamp early for better precision
-    var callerStackLine = new Error().stack.split('\n', 3)[2];
-    var matches = callerStackLine.match(STACK_LINE_RE_);
-    var functionName = matches[1] || 'unknown';
-    var sourceAnnotation = matches[2] + ':' + matches[3] + ' ' + functionName;
-    var message;
-    var logData = data;
-    if (typeof data === 'string') {
-      message = util.format.apply(
-          /*this=*/undefined, Array.prototype.slice.call(arguments, 2)).trim();
-      logData = { message: message, source: sourceAnnotation };
-    } else {
-      logData = data.slice();  // Don't modify the original
-      data.source = sourceAnnotation;
-    }
+    var stream = levelProperties[1];
+    var levelName = levelProperties[2];
+    var sourceAnnotation = exports.whoIsMyCaller(2);
+    var message = util.format.apply(
+        undefined, Array.prototype.slice.call(arguments, 1)).trim();
     if (exports.LOG_TO_CONSOLE) {
-      if (!message) {
-        message = JSON.stringify(data);
-      }
-      if (level === prevLevel && message === prevMessage &&
-            exports.DOT_LIMIT >= prevCount) {
-        prevCount += 1;
-        if (exports.DOT_WRITER) {
-          exports.DOT_WRITER.write('.');
+      if (exports.HISTORY_LIMIT > 0) {
+        var i = 0;
+        for (; i < history.length && (
+            level !== history[i][0] || message !== history[i][1]); i++) {
         }
-      } else {
-        if (prevCount > 1 && exports.DOT_WRITER) {
-          exports.DOT_WRITER.write('\n');
+        if (i < history.length) {  // Matches recent history
+          dotCount += 1;
+          if (exports.DOT_WRITER) {
+            if (0 === (dotCount % 80)) {  // Line wrap after 80 chars
+              exports.DOT_WRITER.write('\n');
+              exports.log(stream, levelName, stamp, '', '');
+            }
+            var dotChar = (0 === i ? '.' : ('' + i));
+            exports.DOT_WRITER.write(dotChar);
+          }
+          return;
+        } else {
+          if (dotCount > 1) {
+            dotCount = 1;
+            if (exports.DOT_WRITER) {
+              exports.DOT_WRITER.write('\n');
+            }
+            // We could clear the history here, e.g.:
+            //   info("foo") --> T1 info: foo
+            //   info("bar") --> T2 info: bar
+            //   info("foo") --> 1   (flush if you'd prefer "T3 info: foo")
+          }
+          if (history.length >= exports.HISTORY_LIMIT) {
+            history.pop();
+          }
+          history.unshift([level, message]);
         }
-        prevCount = 1;
-        prevLevel = level;
-        prevMessage = message;
-        exports.log(levelProperties[1], levelProperties[2], stamp,
-            sourceAnnotation, message);
       }
+      exports.log(stream, levelName, stamp, sourceAnnotation, message);
     }
-
-    jsonFileLogger.info(levelName, logData);
   }
 }
+
+// Months in locale format
+var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
+    'Oct', 'Nov', 'Dec'];
 
 /**
  * Log to text stream.
@@ -179,7 +198,10 @@ exports.log = function(levelPrinter, levelName, stamp, source, message) {
     date = new Date();
   }
   if (date instanceof Date) {
-    date = date.toISOString().slice(5, -1).replace('T', 'Z').replace('-', '');
+    // e.g. 1391808049123 --> "Feb_07_13:20:49.123" (local timezone is PST).
+    date = new Date(date.getTime() - 60000 * date.getTimezoneOffset());
+    date = MONTHS[date.getMonth()] + '_' +
+        date.toISOString().slice(7, -1).replace('T', '_').replace('-', '');
   }
   levelPrinter(levelName + ' ' + date + ' ' + source + ' ' +
       (message ? (': ' + message) : ''));
@@ -188,6 +210,11 @@ exports.log = function(levelPrinter, levelName, stamp, source, message) {
 // Generate level-named functions -- info, debug, etc.
 Object.keys(exports.LEVELS).forEach(function(levelName) {
   'use strict';
-  exports[levelName] = maybeLog.bind(
-      /*this=*/undefined, levelName, exports.LEVELS[levelName]);
+  var boundLog = maybeLog.bind(undefined, exports.LEVELS[levelName]);
+  // We cannot simply assign boundLog, because SinonJS somehow doesn't like it,
+  // and the stubs on the logging functions break.
+  // This is also why whoIsMyCaller needs an arg to return indirect callers.
+  exports[levelName] = function() {
+    boundLog.apply(undefined, arguments);
+  };
 });

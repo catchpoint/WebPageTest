@@ -149,7 +149,7 @@ exports.tickUntilIdle = function(app, sandbox, maxSteps, ticksPerStep) {
   }
   app.removeListener(webdriver.promise.ControlFlow.EventType.IDLE, onIdle);
   should.ok(steps < maxSteps, 'ControlFlow still active after ' + steps + '*' +
-      ticksPerStep + ' ticks');
+      ticksPerStep + ' ticks: \n' + app.getSchedule());
   should.equal('[]', app.getSchedule());
 };
 
@@ -187,13 +187,13 @@ exports.stubLog = function(sandbox, isMatch) {
  */
 exports.stubHttpGet = function(sandbox, urlRegExp, data) {
   'use strict';
-  var response = new Stream();
-  response.setEncoding = function() {};
   return sandbox.stub(http, 'get', function(url, responseCb) {
     logger.debug('Stub http.get(%s)', url.href);
     if (urlRegExp) {
       url.href.should.match(urlRegExp);
     }
+    var response = new Stream();
+    response.setEncoding = function() {};
     responseCb(response);
     response.emit('data', data);
     response.emit('end');
@@ -268,6 +268,50 @@ exports.assertMatch = function(expected, actual) {
 };
 
 /**
+ * An EventEmitter that buffers "emit" requests until a listener is added.
+ *
+ * This class allows stubbed spawn callbacks to use:
+ *   proc.stdout.emit('data', 'foo');
+ * instead of:
+ *   global.setTimeout(function() {
+ *     proc.stdout.emit('data', 'foo');
+ *   }, 1);
+ * The latter was required because SinonJS calls the stub before the scheduled
+ * process_util can attach its stdout/stderr listeners.
+ *
+ * @constructor
+ */
+function BufferedEventEmitter() {
+  'use strict';
+  var origEmit = this.emit;
+  var origAddListener = this.addListener;
+  var buffer = [];
+  this.emit = function() {
+    if (this.emit === origEmit) {
+      // addListener sets this.emit = origEmit, but we can still get callbacks
+      // from a saved pointer, e.g.:
+      //   var stdout = proc.stdout.emit.bind(proc.stdout, 'data');
+      //   global.setTimeout(...  stdout('foo'); ...);
+      origEmit.apply(this, arguments);
+    } else {
+      buffer.push(arguments);
+    }
+  };
+  this.addListener = function() {
+    this.emit = origEmit;
+    this.addListener = origAddListener;
+    this.on = this.addListener;
+    this.addListener.apply(this, arguments);
+    buffer.forEach(function(args) {
+      this.emit.apply(this, args);
+    }.bind(this));
+    buffer = [];
+  };
+  this.on = this.addListener;
+}
+util.inherits(BufferedEventEmitter, events.EventEmitter);
+
+/**
  * Stubs out child_process.spawn, allows a callback to inject behavior and
  * tests to assert expected calls.
  *
@@ -300,8 +344,8 @@ exports.stubOutProcessSpawn = function(sandbox) {
   'use strict';
   var stub = sandbox.stub(child_process, 'spawn', function() {
     var fakeProcess = new events.EventEmitter();
-    fakeProcess.stdout = new events.EventEmitter();
-    fakeProcess.stderr = new events.EventEmitter();
+    fakeProcess.stdout = new BufferedEventEmitter();
+    fakeProcess.stderr = new BufferedEventEmitter();
     fakeProcess.kill = sandbox.spy();
     var args = Array.prototype.slice.call(arguments);
     var keepAlive = false;

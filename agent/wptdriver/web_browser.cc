@@ -26,7 +26,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ******************************************************************************/
 #include "StdAfx.h"
-#include "dbghelp/dbghelp.h"
 #include "util.h"
 #include "web_browser.h"
 
@@ -34,39 +33,48 @@ typedef void(__stdcall * LPINSTALLHOOK)(DWORD thread_id);
 const int PIPE_IN = 1;
 const int PIPE_OUT = 2;
 static const TCHAR * GLOBAL_TESTING_MUTEX = _T("Global\\wpt_testing_active");
+static const TCHAR * BROWSER_STARTED_EVENT = _T("Global\\wpt_browser_started");
+static const TCHAR * BROWSER_DONE_EVENT = _T("Global\\wpt_browser_done");
 static const TCHAR * FLASH_CACHE_DIR = 
                         _T("Macromedia\\Flash Player\\#SharedObjects");
 static const TCHAR * SILVERLIGHT_CACHE_DIR = _T("Microsoft\\Silverlight");
 
 static const TCHAR * CHROME_NETLOG = _T(" --log-net-log=\"%s_netlog.txt\"");
 static const TCHAR * CHROME_SPDY3 = _T(" --enable-spdy3");
-static const TCHAR * CHROME_GPU = 
-    _T(" --force-compositing-mode")
-    _T(" --enable-threaded-compositing")
-    _T(" --enable-viewport");
-static const TCHAR * CHROME_MOBILE = 
-    _T(" --enable-pinch")
-    _T(" --enable-fixed-layout");
 static const TCHAR * CHROME_SOFTWARE_RENDER = 
     _T(" --disable-accelerated-compositing");
-static const TCHAR * CHROME_SCALE_FACTOR =
-    _T(" --force-device-scale-factor=");
 static const TCHAR * CHROME_USER_AGENT =
     _T(" --user-agent=");
+static const TCHAR * CHROME_DISABLE_PLUGINS = 
+    _T(" --disable-plugins-discovery --disable-bundled-ppapi-flash");
 static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
-    _T("--enable-experimental-extension-apis"),
     _T("--disable-background-networking"),
     _T("--no-default-browser-check"),
     _T("--no-first-run"),
     _T("--process-per-tab"),
     _T("--new-window"),
+    _T("--silent-debugger-extension-api"),
+    _T("--disable-infobars"),
     _T("--disable-translate"),
+    _T("--disable-notifications"),
     _T("--disable-desktop-notifications"),
-    _T("--allow-running-insecure-content")
+    _T("--allow-running-insecure-content"),
+    _T("--disable-save-password-bubble"),
+    _T("--disable-component-update"),
+    _T("--disable-background-downloads"),
+    _T("--disable-add-to-shelf"),
+    _T("--disable-client-side-phishing-detection"),
+    _T("--disable-datasaver-prompt"),
+    _T("--disable-default-apps"),
+    _T("--disable-domain-reliability"),
+    _T("--safebrowsing-disable-auto-update"),
+    _T("--disable-background-timer-throttling"),
+    _T("--disable-browser-side-navigation"),
+    _T("--host-rules=\"MAP cache.pack.google.com 127.0.0.1\"")
 };
 static const TCHAR * CHROME_IGNORE_CERT_ERRORS =
     _T(" --ignore-certificate-errors");
- 
+
 static const TCHAR * FIREFOX_REQUIRED_OPTIONS[] = {
     _T("-no-remote")
 };
@@ -75,13 +83,16 @@ static const TCHAR * FIREFOX_REQUIRED_OPTIONS[] = {
 -----------------------------------------------------------------------------*/
 WebBrowser::WebBrowser(WptSettings& settings, WptTestDriver& test, 
                        WptStatus &status, BrowserSettings& browser,
-                       CIpfw &ipfw):
+                       CIpfw &ipfw, Shaper &shaper, DWORD wpt_ver):
   _settings(settings)
   ,_test(test)
   ,_status(status)
-  ,_browser_process(NULL)
   ,_browser(browser)
-  ,_ipfw(ipfw) {
+  ,_ipfw(ipfw)
+  ,_shaper(shaper)
+  ,_wpt_ver(wpt_ver) {
+
+  ATLTRACE(_T("[wptdriver] - WebBrowser::WebBrowser"));
 
   InitializeCriticalSection(&cs);
 
@@ -92,6 +103,10 @@ WebBrowser::WebBrowser(WptSettings& settings, WptTestDriver& test,
   if( InitializeSecurityDescriptor(&SD, SECURITY_DESCRIPTOR_REVISION) )
     if( SetSecurityDescriptorDacl(&SD, TRUE,(PACL)NULL, FALSE) )
       null_dacl.lpSecurityDescriptor = &SD;
+  _browser_started_event = CreateEvent(&null_dacl, TRUE, FALSE,
+                                       BROWSER_STARTED_EVENT);
+  _browser_done_event = CreateEvent(&null_dacl, TRUE, FALSE,
+                                    BROWSER_DONE_EVENT);
 }
 
 /*-----------------------------------------------------------------------------
@@ -102,15 +117,28 @@ WebBrowser::~WebBrowser(void) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool WebBrowser::RunAndWait(bool &critical_error) {
+bool WebBrowser::RunAndWait(HANDLE &browser_process) {
   bool ret = false;
-  critical_error = false;
+  bool is_chrome = false;
 
   // signal to the IE BHO that it needs to inject the code
   HANDLE active_event = CreateMutex(&null_dacl, TRUE, GLOBAL_TESTING_MUTEX);
+  g_shared->SetOverrodeUAString(false);
+  _browser_needs_reset.Empty();
+
+  // Kill some non-essential background tasks that windows may have started up
+  TerminateProcessesByName(_T("mscorsvw.exe"));
 
   if (_test.Start() && ConfigureIpfw(_test)) {
-    if (_browser._exe.GetLength()) {
+    LogDuration logTestRunTime(_test.TimeLog(), "Run Test");
+    SetEnvironmentVariable(L"JSGC_DISABLE_POISONING", NULL);
+    if (_browser.IsWebdriver()) {
+      ret = RunWebdriverTest();
+    } else if (_browser._exe.GetLength()) {
+      CString exe(_browser._exe);
+      exe.MakeLower();
+      if (exe.Find(_T("chrome.exe")) >= 0)
+        CreateChromeSymlink();
       bool hook = true;
       bool hook_child = false;
       TCHAR cmdLine[32768];
@@ -119,9 +147,11 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
         lstrcat( cmdLine, CString(_T(" ")) + _browser._options );
       // if we are running chrome, make sure the command line options that our 
       // extension NEEDS are present
-      CString exe(_browser._exe);
+      exe = _browser._exe;
       exe.MakeLower();
       if (exe.Find(_T("chrome.exe")) >= 0) {
+        is_chrome = true;
+        ConfigureChromePreferences();
         if (_test._browser_command_line.GetLength()) {
           lstrcat(cmdLine, CString(_T(" ")) +
                   _test._browser_command_line);
@@ -143,21 +173,37 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
             lstrcat(cmdLine, CHROME_SPDY3);
           if (_test._force_software_render)
             lstrcat(cmdLine, CHROME_SOFTWARE_RENDER);
-          else if (_test._emulate_mobile) {
-            lstrcat(cmdLine, CHROME_GPU);
-            lstrcat(cmdLine, CHROME_MOBILE);
-          } else if (_test._device_scale_factor.GetLength())
-            lstrcat(cmdLine, CHROME_GPU);
-          if (_test.has_gpu_ && _test._device_scale_factor.GetLength()) {
-            lstrcat(cmdLine, CHROME_SCALE_FACTOR);
-            lstrcat(cmdLine, _test._device_scale_factor);
-          }
+          if (_test._emulate_mobile)
+            lstrcat(cmdLine, CHROME_DISABLE_PLUGINS);
+
+          CString user_agent;
           if (_test._user_agent.GetLength() &&
               _test._user_agent.Find(_T('"')) == -1) {
+            user_agent = CA2T(_test._user_agent, CP_UTF8);
+          } else if (!_test._preserve_user_agent) {
+            // See if we have a stored version of what the UA string should be
+            HKEY ua_key;
+            if (RegCreateKeyEx(HKEY_CURRENT_USER,
+                _T("Software\\WebPagetest\\wptdriver\\BrowserUAStrings"), 0, 0, 0, 
+                KEY_READ, 0, &ua_key, 0) == ERROR_SUCCESS) {
+                TCHAR buff[10000];
+                DWORD len = sizeof(buff);
+                if (RegQueryValueEx(ua_key, _test._browser, 0, 0, (LPBYTE)buff, &len) 
+                    == ERROR_SUCCESS) {
+                  user_agent = buff;
+                }
+              RegCloseKey(ua_key);
+            }
+          }
+          if (user_agent.GetLength()) {
+            CString append = CA2T(_test.GetAppendUA(), CP_UTF8);
+            if (append.GetLength())
+              user_agent += _T(" ") + append;
             lstrcat(cmdLine, CHROME_USER_AGENT);
             lstrcat(cmdLine, _T("\""));
-            lstrcat(cmdLine, CA2T(_test._user_agent));
+            lstrcat(cmdLine, user_agent);
             lstrcat(cmdLine, _T("\""));
+            g_shared->SetOverrodeUAString(true);
           }
         }
         if (_test._browser_additional_command_line.GetLength()) {
@@ -172,6 +218,7 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
                   _test._browser_additional_command_line);
         }
       } else if (exe.Find(_T("firefox.exe")) >= 0) {
+        SetEnvironmentVariable(L"JSGC_DISABLE_POISONING", L"1");
         for (int i = 0; i < _countof(FIREFOX_REQUIRED_OPTIONS); i++) {
           if (_browser._options.Find(FIREFOX_REQUIRED_OPTIONS[i]) < 0) {
             lstrcat(cmdLine, _T(" "));
@@ -190,7 +237,15 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
         lstrcat(cmdLine, _T(" http://127.0.0.1:8888/blank.html"));
       }
 
-      _status.Set(_T("Launching: %s\n"), cmdLine);
+      // set up the TLS session key log
+      DeleteFile(_test._file_base + L"_keylog.log");
+      if (_test._tcpdump) {
+        SetEnvironmentVariable(L"SSLKEYLOGFILE", _test._file_base + L"_keylog.log");
+      } else {
+        SetEnvironmentVariable(L"SSLKEYLOGFILE", NULL);
+      }
+
+      _status.Set(_T("Launching: %s"), cmdLine);
 
       STARTUPINFO si;
       PROCESS_INFORMATION pi;
@@ -204,140 +259,88 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
       si.wShowWindow = SW_SHOWNORMAL;
       si.dwFlags = STARTF_USEPOSITION | STARTF_USESIZE | STARTF_USESHOWWINDOW;
 
-      InstallGlobalHook();
       EnterCriticalSection(&cs);
-      _browser_process = NULL;
+      browser_process = NULL;
       HANDLE additional_process = NULL;
       CAtlArray<HANDLE> browser_processes;
       bool ok = true;
-      if (CreateProcess(_browser._exe, cmdLine, NULL, NULL, FALSE,
-                        CREATE_SUSPENDED, NULL, NULL, &si, &pi)) {
-        _browser_process = pi.hProcess;
-        browser_processes.Add(pi.hProcess);
 
-        ResumeThread(pi.hThread);
-        if (WaitForInputIdle(pi.hProcess, 120000) != 0) {
-          ok = false;
-          critical_error = true;
-          _status.Set(_T("Error waiting for browser to launch\n"));
-          _test._run_error = "Failed while waiting for the browser to launch.";
-        }
-
-        // wait for the child process to start if we are expecting one (Safari)
-        if (ok && hook_child) {
-          Sleep(1000);
-          for (int attempts = 0;
-               attempts < 600 && !additional_process;
-               attempts++) {
-            additional_process = FindAdditionalHookProcess(pi.hProcess, exe);
-            if (!additional_process)
-              Sleep(100);
+      // Launch the browser and wait for the hook to start
+      TerminateProcessesByName(PathFindFileName((LPCTSTR)_browser._exe));
+      g_shared->SetBrowserExe(PathFindFileName((LPCTSTR)_browser._exe));
+      if (_browser_started_event && _browser_done_event) {
+        LogDuration logBrowserLaunchTime(_test.TimeLog(), "Launch Browser");
+        ResetEvent(_browser_started_event);
+        ResetEvent(_browser_done_event);
+        InstallAppInitHook(_browser._exe);
+        if (CreateProcess(_browser._exe, cmdLine, NULL, NULL, FALSE,
+                          0, NULL, NULL, &si, &pi)) {
+          DWORD wait_time = 60000;
+          #ifdef DEBUG
+          wait_time = INFINITE;
+          #endif
+          // see if we need to do a re-launch of Chrome (seems to be necessary with the latest canary)
+          if (is_chrome) {
+            HANDLE events[2];
+            events[0] = pi.hProcess;
+            events[1] = _browser_started_event;
+            if (WaitForMultipleObjects(2, events, FALSE, wait_time) == WAIT_OBJECT_0) {
+              CloseHandle(pi.hThread);
+              CloseHandle(pi.hProcess);
+              Sleep(5000);
+              CreateProcess(_browser._exe, cmdLine, NULL, NULL, FALSE,
+                          0, NULL, NULL, &si, &pi);
+            }
           }
-        }
-
-        if (hook) {
-          SuspendThread(pi.hThread);
-          if (ok && !InstallHook(pi.hProcess)) {
+          CloseHandle(pi.hThread);
+          CloseHandle(pi.hProcess);
+          if (WaitForSingleObject(_browser_started_event, wait_time) ==
+              WAIT_OBJECT_0) {
+            DWORD pid = g_shared->BrowserProcessId();
+            if (pid) {
+              browser_process = OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE,
+                                             FALSE, pid);
+            }
+          } else {
             ok = false;
-            critical_error = true;
-            _status.Set(_T("Error instrumenting browser\n"));
-            _test._run_error = "Failed to instrument the browser.";
+            _status.Set(_T("Error waiting for browser to launch"));
+            _test._run_error = "Timed out waiting for the browser to start.";
           }
-          if (additional_process)
-            InstallHook(additional_process);
-          ResumeThread(pi.hThread);
+        } else {
+          ok = false;
+          _status.Set(_T("Error Launching: %s"), cmdLine);
+          _test._run_error = "Failed to launch the browser.";
         }
-        CloseHandle(pi.hThread);
-        SetPriorityClass(pi.hProcess, ABOVE_NORMAL_PRIORITY_CLASS);
-      } else {
-        _status.Set(_T("Error Launching: %s\n"), cmdLine);
-        _test._run_error = "Failed to launch the browser.";
-        critical_error = true;
-      }
-      LeaveCriticalSection(&cs);
+        logBrowserLaunchTime.Stop();
+        LeaveCriticalSection(&cs);
+        ClearAppInitHooks();
 
-      // wait for the browser to finish (infinite timeout if we are debugging)
-      if (_browser_process && ok) {
-        _status.Set(_T("Waiting up to %d seconds for the test to complete\n"), 
-                    (_test._test_timeout / SECONDS_TO_MS) * 2);
-        DWORD wait_time = _test._test_timeout * 2;
-        #ifdef DEBUG
-        wait_time = INFINITE;
-        #endif
-        if (additional_process) {
-          HANDLE handles[2];
-          handles[0] = _browser_process;
-          handles[1] = additional_process;
-          DWORD result = WaitForMultipleObjects(2, handles, TRUE, wait_time);
-          if (result == WAIT_OBJECT_0 || result == WAIT_OBJECT_0 + 1)
-            ret = true;
-        } else if (WaitForSingleObject(_browser_process, wait_time) != 
-                   WAIT_TIMEOUT ) {
+        // wait for the browser to finish (infinite timeout if we are debugging)
+        if (browser_process && ok) {
           ret = true;
+          DWORD wait_time = _test._max_test_time ? _test._max_test_time : _test._test_timeout + 180000;  // Allow extra time for results processing
+          _status.Set(_T("Waiting up to %d seconds for the test to complete"), 
+                      (wait_time / SECONDS_TO_MS));
+          #ifdef DEBUG
+          wait_time = INFINITE;
+          #endif
+          WaitForSingleObject(_browser_done_event, wait_time);
+          _status.Set(_T("Test complete, processing result..."));
         }
-
-        // see if we need to attach to a child firefox process 
-        // < 4.x spawns a child process after initializing a new profile
-        CString browser_exe;
-        exe.MakeLower();
-        if (exe.Find(_T("firefox.exe")) >= 0)
-          browser_exe = _T("firefox.exe");
-        else if (exe.Find(_T("iexplore.exe")) >= 0)
-          browser_exe = _T("iexplore.exe");
-        if (ret && browser_exe.GetLength()) {
-          EnterCriticalSection(&cs);
-          if (FindBrowserChild(pi.dwProcessId, pi, browser_exe)) {
-            CloseHandle(_browser_process);
-            _browser_process = pi.hProcess;
-            if (WaitForInputIdle(pi.hProcess, 120000) == 0) {
-              if (pi.hThread)
-                SuspendThread(pi.hThread);
-              if (hook && !InstallHook(pi.hProcess))
-                ok = false;
-              if (pi.hThread) {
-                ResumeThread(pi.hThread);
-                CloseHandle(pi.hThread);
-              }
-            }
-          }
-          LeaveCriticalSection(&cs);
-          if (ok) {
-            ret = false;
-            #ifdef DEBUG
-            if (WaitForSingleObject(_browser_process, INFINITE ) ==
-                WAIT_OBJECT_0 ) {
-              ret = true;
-            }
-            #else
-            if (WaitForSingleObject(_browser_process,
-                                    _test._test_timeout * 2) == 
-                WAIT_OBJECT_0 ) {
-              ret = true;
-            }
-            #endif
-          }
-        }
+      } else {
+        _status.Set(_T("Error initializing browser event"));
+        _test._run_error =
+            "Failed while initializing the browser started event.";
       }
 
-      // kill the browser and any child processes if it is still running
-      EnterCriticalSection(&cs);
-      if (_browser_process) {
-        TerminateProcess(_browser_process, 0);
-        WaitForSingleObject(_browser_process, 120000);
-        CloseHandle(_browser_process);
-        _browser_process = NULL;
-      }
-      if (additional_process) {
-        TerminateProcess(additional_process, 0);
-        WaitForSingleObject(additional_process, 120000);
-        CloseHandle(additional_process);
-      }
-      LeaveCriticalSection(&cs);
-      ResetIpfw();
-      RemoveGlobalHook();
+      g_shared->SetBrowserExe(NULL);
+      SetEnvironmentVariable(L"SSLKEYLOGFILE", NULL);
+
     } else {
       _test._run_error = "Browser configured incorrectly (exe not defined).";
     }
+
+    ResetIpfw();
   } else {
     _test._run_error = "Failed to configure IPFW/dummynet.  Is it installed?";
   }
@@ -352,6 +355,7 @@ bool WebBrowser::RunAndWait(bool &critical_error) {
   Delete the user profile as well as the flash and silverlight caches
 -----------------------------------------------------------------------------*/
 void WebBrowser::ClearUserData() {
+  TerminateProcessesByName(PathFindFileName((LPCTSTR)_browser._exe));
   _browser.ResetProfile(_test._clear_certs);
   TCHAR path[MAX_PATH];
   if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 
@@ -372,6 +376,37 @@ void WebBrowser::ClearUserData() {
   GetModuleFileName(NULL, path, MAX_PATH);
   lstrcpy(PathFindFileName(path), _T("symbols"));
   DeleteDirectory(path, false);
+
+  // Clean out any old windows update downloads (over 1 month old)
+  const unsigned __int64 TICKS_PER_MONTH = 10000000ui64 * 60ui64 * 60ui64 * 24ui64 * 30L;
+  FILETIME now;
+  GetSystemTimeAsFileTime(&now);
+  ULARGE_INTEGER keep_start;
+  keep_start.LowPart = now.dwLowDateTime;
+  keep_start.HighPart = now.dwHighDateTime;
+  keep_start.QuadPart -= TICKS_PER_MONTH;
+  TCHAR dir[MAX_PATH];
+  GetWindowsDirectory(dir, MAX_PATH);
+  lstrcat(dir, _T("\\SoftwareDistribution\\Download\\"));
+  CString downloads(dir);
+  WIN32_FIND_DATA fd;
+  HANDLE hFind = FindFirstFile(downloads + _T("*.*"), &fd);
+  if (hFind != INVALID_HANDLE_VALUE) {
+    do {
+      if (lstrcmp(fd.cFileName, _T(".")) && lstrcmp(fd.cFileName, _T(".."))) {
+        ULARGE_INTEGER file_time;
+        file_time.LowPart = fd.ftLastWriteTime.dwLowDateTime;
+        file_time.HighPart = fd.ftLastWriteTime.dwHighDateTime;
+        if (file_time.QuadPart < keep_start.QuadPart) {
+          if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            DeleteDirectory(downloads + fd.cFileName, true);
+          else
+            DeleteFile(downloads + fd.cFileName);
+        }
+      }
+    } while (FindNextFile(hFind, &fd));
+    FindClose(hFind);
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -387,24 +422,30 @@ bool WebBrowser::ConfigureIpfw(WptTestDriver& test) {
     buff.Format(_T("[wptdriver] - Throttling: %d Kbps in, %d Kbps out, ")
                 _T("%d ms latency, %0.2f plr"), test._bwIn, test._bwOut, 
                 test._latency, test._plr );
-    AtlTrace(buff);
+    ATLTRACE(buff);
 
-    if (_ipfw.SetPipe(PIPE_IN, test._bwIn, latency,test._plr/100.0)) {
+    if (_shaper.IsAvailable()) {
+      DWORD latencyIn = latency;
+      DWORD latencyOut = latency;
+      if( test._latency % 2 )
+        latencyIn++;
+      ret = _shaper.Enable(test._bwIn, test._bwOut, latencyIn, latencyOut, test._plr);
+    } else if (_ipfw.SetPipe(PIPE_IN, test._bwIn, latency, test._plr/100.0, true)) {
       // make up for odd values
       if( test._latency % 2 )
         latency++;
 
-      if (_ipfw.SetPipe(PIPE_OUT, test._bwOut,latency,test._plr/100.0))
+      if (_ipfw.SetPipe(PIPE_OUT, test._bwOut,latency,test._plr/100.0, false))
         ret = true;
       else
-        _ipfw.SetPipe(PIPE_IN, 0, 0, 0);
+        _ipfw.SetPipe(PIPE_IN, 0, 0, 0, true);
     }
   }
   else
     ret = true;
 
   if (!ret) {
-    AtlTrace(_T("[wptdriver] - Error Configuring dummynet"));
+    ATLTRACE(_T("[wptdriver] - Error Configuring dummynet"));
   }
 
   return ret;
@@ -414,8 +455,12 @@ bool WebBrowser::ConfigureIpfw(WptTestDriver& test) {
   Remove the bandwidth throttling
 -----------------------------------------------------------------------------*/
 void WebBrowser::ResetIpfw(void) {
-  _ipfw.SetPipe(PIPE_IN, 0, 0, 0);
-  _ipfw.SetPipe(PIPE_OUT, 0, 0, 0);
+  if (_shaper.IsAvailable()) {
+    _shaper.Disable();
+  } else {
+    _ipfw.SetPipe(PIPE_IN, 0, 0, 0, true);
+    _ipfw.SetPipe(PIPE_OUT, 0, 0, 0, false);
+  }
 }
 
 /*-----------------------------------------------------------------------------
@@ -578,137 +623,245 @@ HANDLE WebBrowser::FindAdditionalHookProcess(HANDLE launched_process,
   Set some IE prefs to make sure testing is consistent
 -----------------------------------------------------------------------------*/
 void WebBrowser::ConfigureIESettings() {
-		HKEY hKey;
-		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+    HKEY hKey;
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
                        _T("Software\\Microsoft\\Internet Explorer\\Main"),
                        0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS ) {
-			LPCTSTR szVal = _T("yes");
-			RegSetValueEx(hKey, _T("DisableScriptDebuggerIE"), 0, REG_SZ,
-                    (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
+      LPCTSTR szVal = _T("yes");
+      RegSetValueEx(hKey, _T("DisableScriptDebuggerIE"), 0, REG_SZ, (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
 
-			szVal = _T("no");
-			RegSetValueEx(hKey, _T("FormSuggest PW Ask"), 0, REG_SZ,
-                    (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
-			RegSetValueEx(hKey, _T("Friendly http errors"), 0, REG_SZ,
-                    (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
-			RegSetValueEx(hKey, _T("Use FormSuggest"), 0, REG_SZ,
-                    (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
+      szVal = _T("no");
+      RegSetValueEx(hKey, _T("FormSuggest PW Ask"), 0, REG_SZ, (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
+      RegSetValueEx(hKey, _T("Friendly http errors"), 0, REG_SZ, (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
+      RegSetValueEx(hKey, _T("Use FormSuggest"), 0, REG_SZ, (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
 
-			DWORD val = 1;
-			RegSetValueEx(hKey, _T("NoUpdateCheck"), 0, REG_DWORD,
-                    (const LPBYTE)&val, sizeof(val));
-			RegSetValueEx(hKey, _T("NoJITSetup"), 0, REG_DWORD,
-                    (const LPBYTE)&val, sizeof(val));
-			RegSetValueEx(hKey, _T("NoWebJITSetup"), 0, REG_DWORD,
-                    (const LPBYTE)&val, sizeof(val));
-			//val = 0;
-			RegSetValueEx(hKey, _T("UseSWRender"), 0, REG_DWORD,
-                    (const LPBYTE)&val, sizeof(val));
-			RegCloseKey(hKey);
-		}
+      DWORD val = 1;
+      RegSetValueEx(hKey, _T("NoUpdateCheck"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegSetValueEx(hKey, _T("NoJITSetup"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegSetValueEx(hKey, _T("NoWebJITSetup"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      //val = 0;
+      RegSetValueEx(hKey, _T("UseSWRender"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegCloseKey(hKey);
+    }
 
-		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
         _T("Software\\Microsoft\\Internet Explorer\\InformationBar"), 0, 0, 0,
         KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
-			DWORD val = 0;
-			RegSetValueEx(hKey, _T("FirstTime"), 0, REG_DWORD,
-                    (const LPBYTE)&val, sizeof(val));
-			RegCloseKey(hKey);
-		}
+      DWORD val = 0;
+      RegSetValueEx(hKey, _T("FirstTime"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegCloseKey(hKey);
+    }
 
-		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
+        _T("Software\\Microsoft\\Internet Explorer\\PhishingFilter"), 0, 0, 0,
+        KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
+      DWORD val = 0;
+      RegSetValueEx(hKey, _T("EnabledV9"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegSetValueEx(hKey, _T("Enabled"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      val = 3;
+      RegSetValueEx(hKey, _T("ShownVerifyBalloon"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegCloseKey(hKey);
+    }
+
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
         _T("Software\\Microsoft\\Internet Explorer\\IntelliForms"), 0, 0, 0,
         KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
-			DWORD val = 0;
-			RegSetValueEx(hKey, _T("AskUser"), 0, REG_DWORD,
-                    (const LPBYTE)&val, sizeof(val));
-			RegCloseKey(hKey);
-		}
+      DWORD val = 0;
+      RegSetValueEx(hKey, _T("AskUser"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegCloseKey(hKey);
+    }
 
-		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
         _T("Software\\Microsoft\\Internet Explorer\\Security"), 0, 0, 0,
         KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
-			LPCTSTR szVal = _T("Query");
-			RegSetValueEx(hKey, _T("Safety Warning Level"), 0, REG_SZ,
-                    (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
-			szVal = _T("Medium");
-			RegSetValueEx(hKey, _T("Sending_Security"), 0, REG_SZ,
-                    (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
-			szVal = _T("Low");
-			RegSetValueEx(hKey, _T("Viewing_Security"), 0, REG_SZ,
-                    (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
-			RegCloseKey(hKey);
-		}
+      LPCTSTR szVal = _T("Query");
+      RegSetValueEx(hKey, _T("Safety Warning Level"), 0, REG_SZ, (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
+      szVal = _T("Medium");
+      RegSetValueEx(hKey, _T("Sending_Security"), 0, REG_SZ, (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
+      szVal = _T("Low");
+      RegSetValueEx(hKey, _T("Viewing_Security"), 0, REG_SZ, (const LPBYTE)szVal, (lstrlen(szVal) + 1) * sizeof(TCHAR));
+      RegCloseKey(hKey);
+    }
 
-		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
         _T("Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings"),
         0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
-			DWORD val = 1;
-			RegSetValueEx(hKey, _T("AllowCookies"), 0, REG_DWORD,
-                    (const LPBYTE)&val, sizeof(val));
-			RegSetValueEx(hKey, _T("EnableHttp1_1"), 0, REG_DWORD,
-                    (const LPBYTE)&val, sizeof(val));
-			RegSetValueEx(hKey, _T("ProxyHttp1.1"), 0, REG_DWORD,
-                    (const LPBYTE)&val, sizeof(val));
-			RegSetValueEx(hKey, _T("EnableNegotiate"), 0, REG_DWORD,
-                    (const LPBYTE)&val, sizeof(val));
+      DWORD val = 1;
+      RegSetValueEx(hKey, _T("AllowCookies"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegSetValueEx(hKey, _T("EnableHttp1_1"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegSetValueEx(hKey, _T("ProxyHttp1.1"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegSetValueEx(hKey, _T("EnableNegotiate"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
 
-			val = 0;
-			RegSetValueEx(hKey, _T("WarnAlwaysOnPost"), 0,
-                    REG_DWORD, (const LPBYTE)&val, sizeof(val));
-			RegSetValueEx(hKey, _T("WarnonBadCertRecving"), 0,
-                    REG_DWORD, (const LPBYTE)&val, sizeof(val));
-			RegSetValueEx(hKey, _T("WarnOnPost"), 0, REG_DWORD,
-                    (const LPBYTE)&val, sizeof(val));
-			RegSetValueEx(hKey, _T("WarnOnPostRedirect"), 0,
-                    REG_DWORD, (const LPBYTE)&val, sizeof(val));
-			RegSetValueEx(hKey, _T("WarnOnZoneCrossing"), 0,
-                    REG_DWORD, (const LPBYTE)&val, sizeof(val));
-			RegCloseKey(hKey);
-		}
+      val = 0;
+      RegSetValueEx(hKey, _T("WarnAlwaysOnPost"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegSetValueEx(hKey, _T("WarnonBadCertRecving"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegSetValueEx(hKey, _T("WarnOnPost"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegSetValueEx(hKey, _T("WarnOnPostRedirect"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegSetValueEx(hKey, _T("WarnOnZoneCrossing"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegCloseKey(hKey);
+    }
 
-		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
         _T("Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings")
         _T("\\5.0\\Cache\\Content"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0)
         == ERROR_SUCCESS) {
-			DWORD val = 131072;
-			RegSetValueEx(hKey, _T("CacheLimit"), 0, REG_DWORD,
-                    (const LPBYTE)&val, sizeof(val));
-			RegCloseKey(hKey);
-		}
+      DWORD val = 131072;
+      RegSetValueEx(hKey, _T("CacheLimit"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegCloseKey(hKey);
+    }
 
-		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
         _T("Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings")
         _T("\\Cache\\Content"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0)
         == ERROR_SUCCESS) {
-			DWORD val = 131072;
-			RegSetValueEx(hKey, _T("CacheLimit"), 0, REG_DWORD,
-                    (const LPBYTE)&val, sizeof(val));
-			RegCloseKey(hKey);
-		}
+      DWORD val = 131072;
+      RegSetValueEx(hKey, _T("CacheLimit"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegCloseKey(hKey);
+    }
 
-		// reset the toolbar layout (to make sure the sidebar isn't open)		
-		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+    // reset the toolbar layout (to make sure the sidebar isn't open)		
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
         _T("Software\\Microsoft\\Internet Explorer\\Toolbar\\WebBrowser"),
         0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
-			RegDeleteValue(hKey, _T("ITBarLayout"));
-			RegCloseKey(hKey);
-		}
-		
-		// Tweak the security zone to eliminate some warnings
-		if (RegCreateKeyEx(HKEY_CURRENT_USER,
+      RegDeleteValue(hKey, _T("ITBarLayout"));
+      RegCloseKey(hKey);
+    }
+    
+    // Tweak the security zone to eliminate some warnings
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
         _T("Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings")
         _T("\\Zones\\3"), 0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
-			DWORD val = 0;
-			
-			// don't warn about posting data
-			RegSetValueEx(hKey, _T("1601"), 0, REG_DWORD, (const LPBYTE)&val,
-                    sizeof(val));
+      DWORD val = 0;
+      
+      // don't warn about posting data
+      RegSetValueEx(hKey, _T("1601"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
 
-			// don't warn about mixed content
-			RegSetValueEx(hKey, _T("1609"), 0, REG_DWORD, (const LPBYTE)&val,
-                    sizeof(val));
+      // don't warn about mixed content
+      RegSetValueEx(hKey, _T("1609"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
 
-			RegCloseKey(hKey);
-		}
+      RegCloseKey(hKey);
+    }
+
+    // Disable the blocking of ActiveX controls (which seems to be inconsistent)
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
+        _T("Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Ext"),
+        0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
+      DWORD val = 0;
+      RegSetValueEx(hKey, _T("VersionCheckEnabled"), 0, REG_DWORD,
+                    (const LPBYTE)&val, sizeof(val));
+      val = 1;
+      RegSetValueEx(hKey, _T("IgnoreFrameApprovalCheck"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegCloseKey(hKey);
+    }
+
+    // Make sure the bho is enabled
+    if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+        _T("Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Ext"),
+        0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
+      DWORD val = 1;
+      RegSetValueEx(hKey, _T("IgnoreFrameApprovalCheck"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegCloseKey(hKey);
+    }
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
+        _T("Software\\Microsoft\\Windows\\CurrentVersion\\Ext\\Settings\\{2B925455-8D0C-401F-AA4C-9336C2167F14}"),
+        0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS) {
+      DWORD val = 0x400;
+      RegSetValueEx(hKey, _T("Flags"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegCloseKey(hKey);
+    }
+
+    // Disable the prompt that asks you to confirm your start page and search provider
+    if (RegCreateKeyEx(HKEY_CURRENT_USER,
+                       _T("Software\\Microsoft\\Internet Explorer\\Main\\FeatureControl\\FEATURE_EUPP_GLOBAL_FORCE_DISABLE"),
+                       0, 0, 0, KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS ) {
+      DWORD val = 1;
+      RegSetValueEx(hKey, _T("iexplore.exe"), 0, REG_DWORD, (const LPBYTE)&val, sizeof(val));
+      RegCloseKey(hKey);
+    }
+}
+
+/*-----------------------------------------------------------------------------
+  Write to both the profile prefs file and the master_preferences file
+  that is used as a template
+-----------------------------------------------------------------------------*/
+void WebBrowser::ConfigureChromePreferences() {
+  CString prefs_file =
+      _browser._profile_directory + _T("\\Default\\Preferences");
+  TCHAR master_prefs_file[10240];
+  lstrcpy(master_prefs_file, _browser._exe);
+  lstrcpy(PathFindFileName(master_prefs_file), _T("master_preferences"));
+
+  LPCSTR prefs =
+    "{"
+      "\"profile\":{"
+        "\"default_content_setting_values\":{"
+          "\"geolocation\":2"
+        "},"
+        "\"password_manager_enabled\":false"
+      "},"
+      "\"translate\": {"
+        "\"enabled\": false"
+      "}"
+    "}";
+  SHCreateDirectoryEx(NULL, _browser._profile_directory + _T("\\Default"), NULL);
+  HANDLE file = CreateFile(prefs_file, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+  if (file != INVALID_HANDLE_VALUE) {
+    DWORD written = 0;
+    WriteFile(file, prefs, lstrlenA(prefs), &written, 0);
+    CloseHandle(file);
+  }
+  file = CreateFile(master_prefs_file, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+  if (file != INVALID_HANDLE_VALUE) {
+    DWORD written = 0;
+    WriteFile(file, prefs, lstrlenA(prefs), &written, 0);
+    CloseHandle(file);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Run Chrome from inside of a "Chrome SxS\\Application
+-----------------------------------------------------------------------------*/
+void WebBrowser::CreateChromeSymlink() {
+  CString lower(_browser._exe);
+  lower.MakeLower();
+  int pos = lower.Find(_T("chrome\\application\\chrome.exe"));
+  if (pos > 0 && lower.Find(_T("chrome sxs\\application")) == -1) {
+    CString dir = _browser._exe.Left(pos) + _T("Chrome");
+    CString newDir = dir + _T(" SxS");
+
+    RemoveDirectory(newDir);
+    if (CreateSymbolicLink(newDir, dir, SYMBOLIC_LINK_FLAG_DIRECTORY)) {
+      _browser_needs_reset = _browser._exe;
+      _browser._exe = newDir + "\\Application\\chrome.exe";
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Save the test info out, run the stand-alone webdriver test and wait for it
+  to finish.
+-----------------------------------------------------------------------------*/
+bool WebBrowser::RunWebdriverTest() {
+  bool ok = false;
+  ATLTRACE(L"WebBrowser::RunWebdriverTest");
+  CString json_file = _test.SaveJson();
+  if (!json_file.IsEmpty()) {
+    TCHAR recorder_path[MAX_PATH];
+    GetModuleFileName(NULL, recorder_path, _countof(recorder_path));
+    lstrcpy(PathFindFileName(recorder_path), _T("wptRecord.exe"));
+    CString options;
+    options.Format(_T("-t \"%s\" -r \"%s\""), (LPCTSTR)json_file, (LPCTSTR)recorder_path);
+    ATLTRACE(options);
+    _status.Set(_T("Running webdriver test..."));
+    if (RunPythonScript(_T("webdriver\\edge.py"), options)) {
+      _status.Set(_T("Test complete, processing result..."));
+      g_shared->SetTestResult(0);
+      ok = true;
+    } else {
+      ATLTRACE(L"RunPythonScript failed");
+      _status.Set(_T("Test failed"));
+    }
+    DeleteFile(json_file);
+  }
+  return ok;
 }

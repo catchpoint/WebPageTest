@@ -1,13 +1,26 @@
 <?php
 include 'common.inc';
-include 'object_detail.inc';
+require_once('object_detail.inc');
 require_once('page_data.inc');
 require_once('waterfall.inc');
+
+require_once __DIR__ . '/include/TestInfo.php';
+require_once __DIR__ . '/include/TestRunResults.php';
+require_once __DIR__ . '/include/RunResultHtmlTable.php';
+require_once __DIR__ . '/include/UserTimingHtmlTable.php';
+require_once __DIR__ . '/include/WaterfallViewHtmlSnippet.php';
+require_once __DIR__ . '/include/ConnectionViewHtmlSnippet.php';
+require_once __DIR__ . '/include/RequestDetailsHtmlSnippet.php';
+require_once __DIR__ . '/include/RequestHeadersHtmlSnippet.php';
+require_once __DIR__ . '/include/AccordionHtmlHelper.php';
 
 $options = null;
 if (array_key_exists('end', $_REQUEST))
     $options = array('end' => $_REQUEST['end']);
-$data = loadPageRunData($testPath, $run, $cached, $options);
+$testInfo = TestInfo::fromFiles($testPath);
+$testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, null, $options);
+$data = loadPageRunData($testPath, $run, $cached, $options, $test['testinfo']);
+$isMultistep = $testRunResults->countSteps() > 1;
 
 $page_keywords = array('Performance Test','Details','Webpagetest','Website Speed Test','Page Speed');
 $page_description = "Website performance test details$testLabel";
@@ -94,7 +107,9 @@ $page_description = "Website performance test details$testLabel";
         .a_request {
             cursor: pointer;
         }
+
         <?php
+        include __DIR__ . "/css/accordion.css";
         include "waterfall.css";
         ?>
         </style>
@@ -118,10 +133,12 @@ $page_description = "Website performance test details$testLabel";
                         echo '<a href="/export.php?' . "test=$id&run=$run&cached=$cached&bodies=1&pretty=1" . '">Export HTTP Archive (.har)</a>';
                         if ( is_dir('./google') && array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'] )
                             echo '<br><a href="/google/google_csi.php?' . "test=$id&run=$run&cached=$cached" . '">CSI (.csv) data</a>';
+                        if (array_key_exists('custom', $data) && is_array($data['custom']) && count($data['custom']))
+                            echo '<br><a href="/custom_metrics.php?' . "test=$id&run=$run&cached=$cached" . '">Custom Metrics</a>';
                         if( is_file("$testPath/{$run}{$cachedText}_dynaTrace.dtas") )
                         {
                             echo "<br><a href=\"/$testPath/{$run}{$cachedText}_dynaTrace.dtas\">Download dynaTrace Session</a>";
-                            echo ' (<a href="http://ajax.dynatrace.com/pages/" target="_blank">get dynaTrace</a>)';
+                            echo ' (<a href="https://www.dynatrace.com/topics/ajax-edition/" target="_blank">get dynaTrace</a>)';
                         }
                         if( is_file("$testPath/{$run}{$cachedText}_bodies.zip") )
                             echo "<br><a href=\"/$testPath/{$run}{$cachedText}_bodies.zip\">Download Response Bodies</a>";
@@ -130,110 +147,33 @@ $page_description = "Website performance test details$testLabel";
                 </div>
                 <div class="cleared"></div>
                 <br>
-                <table id="tableResults" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
-                    <tr>
-                        <?php
-                        $cols = 4;
-                        if (array_key_exists('userTime', $data) && (float)$data['userTime'] > 0.0)
-                            $cols++;
-                        if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0)
-                            $cols++;
-                        if (array_key_exists('aft', $test['test']) && $test['test']['aft'] )
-                            $cols++;
-                        if (array_key_exists('domElements', $data) && $data['domElements'] > 0)
-                            $cols++;
-                        if (array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0)
-                            $cols++;
-                        if (array_key_exists('visualComplete', $data) && (float)$data['visualComplete'] > 0.0)
-                            $cols++;
-                        ?>
-                        <th align="center" class="empty" valign="middle" colspan=<?php echo "\"$cols\"";?> ></th>
-                        <th align="center" class="border" valign="middle" colspan="3">Document Complete</th>
-                        <th align="center" class="border" valign="middle" colspan="3">Fully Loaded</th>
-                    </tr>
-                    <tr>
-                        <th align="center" valign="middle">Load Time</th>
-                        <th align="center" valign="middle">First Byte</th>
-                        <th align="center" valign="middle">Start Render</th>
-                        <?php if (array_key_exists('userTime', $data) && (float)$data['userTime'] > 0.0 ) { ?>
-                        <th align="center" valign="middle">User Time</th>
-                        <?php } ?>
-                        <?php if( array_key_exists('aft', $test['test']) && $test['test']['aft'] ) { ?>
-                        <th align="center" valign="middle">Above the Fold</th>
-                        <?php } ?>
-                        <?php if (array_key_exists('visualComplete', $data) && (float)$data['visualComplete'] > 0.0) { ?>
-                        <th align="center" valign="middle">Visually Complete</th>
-                        <?php } ?>
-                        <?php if (array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0) { ?>
-                        <th align="center" valign="middle"><a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/metrics/speed-index" target="_blank">Speed Index</a></th>
-                        <?php } ?>
-                        <?php if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 ) { ?>
-                        <th align="center" valign="middle">DOM Element</th>
-                        <?php } ?>
-                        <?php if (array_key_exists('domElements', $data) && $data['domElements'] > 0 ) { ?>
-                        <th align="center" valign="middle">DOM Elements</th>
-                        <?php } ?>
-                        <th align="center" valign="middle">Result (error code)</th>
 
-                        <th align="center" class="border" valign="middle">Time</th>
-                        <th align="center" valign="middle">Requests</th>
-                        <th align="center" valign="middle">Bytes In</th>
-
-                        <th align="center" class="border" valign="middle">Time</th>
-                        <th align="center" valign="middle">Requests</th>
-                        <th align="center" valign="middle">Bytes In</th>
-                    </tr>
-                    <tr>
-                        <?php
-                        echo "<td id=\"LoadTime\" valign=\"middle\">" . formatMsInterval($data['loadTime'], 3) . "</td>\n";
-                        echo "<td id=\"TTFB\" valign=\"middle\">" . formatMsInterval($data['TTFB'], 3) . "</td>\n";
-                        //echo "<td id=\"startRender\" valign=\"middle\">" . number_format($data['render'] / 1000.0, 3) . "s</td>\n";
-                        echo "<td id=\"startRender\" valign=\"middle\">" . formatMsInterval($data['render'], 3) . "</td>\n";
-                        if (array_key_exists('userTime', $data) && (float)$data['userTime'] > 0.0 )
-                            echo "<td id=\"userTime\" valign=\"middle\">" . formatMsInterval($data['userTime'], 3) . "</td>\n";
-                        if (array_key_exists('aft', $test['test']) && $test['test']['aft'] ) {
-                            $aft = number_format($data['aft'] / 1000.0, 1) . 's';
-                            if( !$data['aft'] )
-                                $aft = 'N/A';
-                            echo "<td id=\"aft\" valign=\"middle\">$aft</th>";
-                        }
-                        if( array_key_exists('visualComplete', $data) && (float)$data['visualComplete'] > 0.0 )
-                            echo "<td id=\"visualComplate\" valign=\"middle\">" . formatMsInterval($data['visualComplete'], 3) . "</td>\n";
-                        if( array_key_exists('SpeedIndex', $data) && (int)$data['SpeedIndex'] > 0 ) {
-                            if (array_key_exists('SpeedIndexCustom', $data))
-                                echo "<td id=\"speedIndex\" valign=\"middle\">{$data['SpeedIndexCustom']}</td>\n";
-                            else
-                                echo "<td id=\"speedIndex\" valign=\"middle\">{$data['SpeedIndex']}</td>\n";
-                        }
-                        if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 )
-                            echo "<td id=\"domTime\" valign=\"middle\">" . formatMsInterval($data['domTime'], 3) . "</td>\n";
-                        if (array_key_exists('domElements', $data) && $data['domElements'] > 0 )
-                            echo "<td id=\"domElements\" valign=\"middle\">{$data['domElements']}</td>\n";
-                        echo "<td id=\"result\" valign=\"middle\">{$data['result']}</td>\n";
-
-                        echo "<td id=\"docComplete\" class=\"border\" valign=\"middle\">" . formatMsInterval($data['docTime'], 3) . "</td>\n";
-                        echo "<td id=\"requestsDoc\" valign=\"middle\">{$data['requestsDoc']}</td>\n";
-                        echo "<td id=\"bytesInDoc\" valign=\"middle\">" . number_format($data['bytesInDoc'] / 1024, 0) . " KB</td>\n";
-
-                        echo "<td id=\"fullyLoaded\" class=\"border\" valign=\"middle\">" . formatMsInterval($data['fullyLoaded'], 3) . "</td>\n";
-                        echo "<td id=\"requests\" valign=\"middle\">{$data['requests']}</td>\n";
-                        echo "<td id=\"bytesIn\" valign=\"middle\">" . number_format($data['bytesIn'] / 1024, 0) . " KB</td>\n";
-                        ?>
-                    </tr>
-                </table><br>
+                <?php
+                  $htmlTable = new RunResultHtmlTable($testInfo, $testRunResults);
+                  echo $htmlTable->create();
+                ?>
+                <br>
                 <?php
                 if( is_dir('./google') && isset($test['testinfo']['extract_csi']) )
                 {
                     require_once('google/google_lib.inc');
-                    $params = ParseCsiInfo($id, $testPath, $run, $_GET["cached"], true);
                 ?>
                     <h2>Csi Metrics</h2>
                             <table id="tableCustomMetrics" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">
                                <tr>
                             <?php
-                                    foreach ( $test['testinfo']['extract_csi'] as $csi_param )
-                                        echo '<th align="center" class="border" valign="middle">' . $csi_param . '</th>';
-                                    echo '</tr><tr>';
+                                if ($isMultistep) {
+                                    echo '<th align="center" class="border" valign="middle">Step</th>';
+                                }
+                                foreach ( $test['testinfo']['extract_csi'] as $csi_param )
+                                    echo '<th align="center" class="border" valign="middle">' . $csi_param . '</th>';
+                                echo "</tr>\n";
+                                foreach ($testRunResults->getStepResults() as $stepResult) {
+                                    echo "<tr>\n";
+                                    $params = ParseCsiInfoForStep($stepResult->createTestPaths(), true);
+                                    if ($isMultistep) {
+                                        echo '<td class="even" valign="middle">' . $stepResult->readableIdentifier() . '</td>';
+                                    }
                                     foreach ( $test['testinfo']['extract_csi'] as $csi_param )
                                     {
                                         if( array_key_exists($csi_param, $params) )
@@ -242,170 +182,124 @@ $page_description = "Website performance test details$testLabel";
                                         }
                                         else
                                         {
-                                            echo '<td class="even" valign="middle"></td>';
+                                            echo '<td class="even" valign="middle">&nbsp;</td>';
                                         }
                                     }
-                                    echo '</tr>';
+                                    echo "</tr>\n";
+                                }
                             ?>
                     </table><br>
                 <?php
                 }
-                $userTimings = array();
-                foreach($data as $metric => $value)
-                  if (substr($metric, 0, 9) == 'userTime.')
-                    $userTimings[substr($metric, 9)] = $value;
-                $timingCount = count($userTimings);
-                $navTiming = false;
-                if ((array_key_exists('loadEventStart', $data) && $data['loadEventStart'] > 0) ||
-                    (array_key_exists('domContentLoadedEventStart', $data) && $data['domContentLoadedEventStart'] > 0))
-                    $navTiming = true;
-                if ($timingCount || $navTiming)
-                {
-                    $borderClass = '';
-                    if ($timingCount)
-                      $borderClass = ' class="border"';
-                    echo '<table id="tableW3CTiming" class="pretty" align="center" border="1" cellpadding="10" cellspacing="0">';
-                    echo '<tr>';
-                    if ($timingCount)
-                      foreach($userTimings as $label => $value)
-                        echo '<th>' . htmlspecialchars($label) . '</th>';
-                    if ($navTiming) {
-                      echo "<th$borderClass>";
-                      if ($data['firstPaint'] > 0)
-                        echo "msFirstPaint</th><th>";
-                      echo "<a href=\"http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#process\">domContentLoaded</a></th><th><a href=\"http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#process\">loadEvent</a></th>";
-                    }
-                    echo '</tr><tr>';
-                    if ($timingCount)
-                      foreach($userTimings as $label => $value)
-                        echo '<td>' . number_format($value / 1000, 3) . 's</td>';
-                    if ($navTiming) {
-                      echo "<td$borderClass>";
-                      if ($data['firstPaint'] > 0)
-                        echo number_format($data['firstPaint'] / 1000.0, 3) . 's</td><td>';
-                      echo number_format($data['domContentLoadedEventStart'] / 1000.0, 3) . 's - ' .
-                              number_format($data['domContentLoadedEventEnd'] / 1000.0, 3) . 's (' .
-                              number_format(($data['domContentLoadedEventEnd'] - $data['domContentLoadedEventStart']) / 1000.0, 3) . 's)' . '</td>';
-                      echo '<td>' . number_format($data['loadEventStart'] / 1000.0, 3) . 's - ' .
-                              number_format($data['loadEventEnd'] / 1000.0, 3) . 's (' .
-                              number_format(($data['loadEventEnd'] - $data['loadEventStart']) / 1000.0, 3) . 's)' . '</td>';
-                    }
-                    echo '</tr>';
-                    echo '</table><br>';
-                }
-                $secure = false;
-                $haveLocations = false;
-                $requests = getRequests($id, $testPath, $run, @$_GET['cached'], $secure, $haveLocations, true, true);
+                $userTimingTable = new UserTimingHtmlTable($testRunResults);
+                echo $userTimingTable->create();
+
                 ?>
                 <script type="text/javascript">
                   markUserTime('aft.Detail Table');
                 </script>
 
+                <?php
+                if ($isMultistep) {
+                    echo "<a name='quicklinks'><h3>Quicklinks</h3></a>\n";
+                    echo "<table id='quicklinks_table'>\n";
+                    for ($i = 1; $i <= $testRunResults->countSteps(); $i++) {
+                        $stepResult = $testRunResults->getStepResult($i);
+                        $urlGenerator = $stepResult->createUrlGenerator("", false);
+                        $stepSuffix = "step" . $i;
+                        $class = $i % 2 == 0 ? " class='even'" : "";
+                        echo "<tr$class>\n";
+                        echo "<th>" . $stepResult->readableIdentifier() . "</th>";
+                        echo "<td><a href='#waterfall_view_$stepSuffix'>Waterfall View</a></td>";
+                        echo "<td><a href='#connection_view_$stepSuffix'>Connection View</a></td>";
+                        echo "<td><a href='#request_details_$stepSuffix'>Request Details</a></td>";
+                        echo "<td><a href='#request_headers_$stepSuffix'>Request Headers</a></td>";
+                        echo "<td><a href='" . $urlGenerator->stepDetailPage("customWaterfall", "width=930") . "'>Customize Waterfall</a></td>";
+                        echo "<td><a href='" . $urlGenerator->stepDetailPage("pageimages") . "'>All Images</a></td>";
+                        echo "</tr>";
+                    }
+                    echo "</table>\n<br>\n";
+                    $accordionHelper = new AccordionHtmlHelper($testRunResults);
+                }
+                ?>
+
                 <div style="text-align:center;">
                 <h3 name="waterfall_view">Waterfall View</h3>
-                <table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">
-                    <tr>
-                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#1f7c83"></div></td><td>DNS Lookup</td></tr></table></td>
-                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#e58226"></div></td><td>Initial Connection</td></tr></table></td>
-                        <?php if($secure) { ?>
-                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#c141cd"></div></td><td>SSL Negotiation</td></tr></table></td>
-                        <?php } ?>
-                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#1fe11f"></div></td><td>Time to First Byte</td></tr></table></td>
-                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#1977dd"></div></td><td>Content Download</td></tr></table></td>
-                        <td style="vertical-align:middle; padding: 4px;"><div style="background-color:#ffff60">&nbsp;3xx response&nbsp;</div></td>
-                        <td style="vertical-align:middle; padding: 4px;"><div style="background-color:#ff6060">&nbsp;4xx+ response&nbsp;</div></td>
-                    </tr>
-                </table>
-                <table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto; margin-top:11px;">
-                    <tr>
-                        <td><table><tr><td><div class="bar" style="width:2px; background-color:#28BC00"></div></td><td>Start Render</td></tr></table></td>
-                        <?php 
-                        if (array_key_exists('aft', $data) && $data['aft'] )
-                          echo '<td><table><tr><td><div class="bar" style="width:2px; background-color:#FF0000"></div></td><td>Above the Fold</td></tr></table></td>';
-                        if (array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 )
-                          echo '<td><table><tr><td><div class="bar" style="width:2px; background-color:#F28300"></div></td><td>DOM Element</td></tr></table></td>';
-                        if(array_key_exists('firstPaint', $data) && (float)$data['firstPaint'] > 0.0 )
-                          echo '<td><table><tr><td><div class="bar" style="width:2px; background-color:#8FBC83"></div></td><td>msFirstPaint</td></tr></table></td>';
-                        if(array_key_exists('domContentLoadedEventStart', $data) && (float)$data['domContentLoadedEventStart'] > 0.0 )
-                          echo '<td><table><tr><td><div class="bar" style="width:15px; background-color:#D888DF"></div></td><td>DOM Content Loaded</td></tr></table></td>';
-                        if(array_key_exists('loadEventStart', $data) && (float)$data['loadEventStart'] > 0.0 )
-                          echo '<td><table><tr><td><div class="bar" style="width:15px; background-color:#C0C0FF"></div></td><td>On Load</td></tr></table></td>';
-                        echo '<td><table><tr><td><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td>Document Complete</td></tr></table></td>';
-                        if(array_key_exists('userTime', $data) || (array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi']))
-                          echo '<td><table><tr><td><div class="arrow-down"></div></td><td>User Timings</td></tr></table></td>';
-                        ?>
-                    </tr>
-                </table>
-                <br>
                 <?php
-                    InsertWaterfall($url, $requests, $id, $run, $cached, $data);
-                    echo "<br><a href=\"/customWaterfall.php?width=930&test=$id&run=$run&cached=$cached\">customize waterfall</a> &#8226; ";
-                    echo "<a id=\"view-images\" href=\"/pageimages.php?test=$id&run=$run&cached=$cached\">View all Images</a>";
+                    if ($isMultistep) {
+                        echo $accordionHelper->createAccordion("waterfall_view", "waterfall");
+                    } else {
+                        $enableCsi = (array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi']);
+                        $waterfallSnippet = new WaterfallViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1), $enableCsi);
+                        echo $waterfallSnippet->create();
+                    }
                 ?>
                 <br>
                 <br>
                 <h3 name="connection_view">Connection View</h3>
-                <map name="connection_map">
-                <?php
-                    $connection_rows = GetConnectionRows($requests);
-                    $options = array(
-                        'id' => $id,
-                        'path' => $testPath,
-                        'run_id' => $run,
-                        'is_cached' => (bool)@$_GET['cached'],
-                        'use_cpu' => true,
-                        'show_labels' => true,
-                        'width' => 930
-                        );
-                    $map = GetWaterfallMap($connection_rows, $url, $options, $data);
-                    foreach($map as $entry) {
-                        if (array_key_exists('request', $entry)) {
-                            $index = $entry['request'] + 1;
-                            $title = "$index: " . htmlspecialchars($entry['url']);
-                            echo "<area href=\"#request$index\" alt=\"$title\" title=\"$title\" shape=RECT coords=\"{$entry['left']},{$entry['top']},{$entry['right']},{$entry['bottom']}\">\n";
-                        } elseif(array_key_exists('url', $entry)) {
-                            echo "<area href=\"#request\" alt=\"{$entry['url']}\" title=\"{$entry['url']}\" shape=RECT coords=\"{$entry['left']},{$entry['top']},{$entry['right']},{$entry['bottom']}\">\n";
-                        }
+                    <?php
+                    if ($isMultistep) {
+                        echo $accordionHelper->createAccordion("connection_view", "connection");
+                    } else {
+                        $waterfallSnippet = new ConnectionViewHtmlSnippet($testInfo, $testRunResults->getStepResult(1));
+                        echo $waterfallSnippet->create();
                     }
-                ?>
-                </map>
-                <table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">
-                    <tr>
-                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#007B84"></div></td><td>DNS Lookup</td></tr></table></td>
-                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#FF7B00"></div></td><td>Initial Connection</td></tr></table></td>
-                        <?php if($secure) { ?>
-                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#CF25DF"></div></td><td>SSL Negotiation</td></tr></table></td>
-                        <?php } ?>
-                        <td><table><tr><td><div class="bar" style="width:2px; background-color:#28BC00"></div></td><td>Start Render</td></tr></table></td>
-                        <?php if(array_key_exists('domTime', $data) && (float)$data['domTime'] > 0.0 ) { ?>
-                        <td><table><tr><td><div class="bar" style="width:2px; background-color:#F28300"></div></td><td>DOM Element</td></tr></table></td>
-                        <?php } ?>
-                        <?php if(array_key_exists('domContentLoadedEventStart', $data) && (float)$data['domContentLoadedEventStart'] > 0.0 ) { ?>
-                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#D888DF"></div></td><td>DOM Content Loaded</td></tr></table></td>
-                        <?php } ?>
-                        <?php if(array_key_exists('loadEventStart', $data) && (float)$data['loadEventStart'] > 0.0 ) { ?>
-                        <td><table><tr><td><div class="bar" style="width:15px; background-color:#C0C0FF"></div></td><td>On Load</td></tr></table></td>
-                        <?php } ?>
-                        <td><table><tr><td><div class="bar" style="width:2px; background-color:#0000FF"></div></td><td>Document Complete</td></tr></table></td>
-                    </tr>
-                </table>
-                <br>
-                <img class="progress" alt="Connection View waterfall diagram" usemap="#connection_map" id="connectionView" src="<?php
-                    $extenstion = 'php';
-                    if( FRIENDLY_URLS )
-                        $extenstion = 'png';
-                    echo "/waterfall.$extenstion?type=connection&width=930&test=$id&run=$run&cached=$cached&mime=1";?>">
+                    ?>
                 </div>
                 <br><br>
                 <?php include('./ads/details_middle.inc'); ?>
 
                 <br>
-                <?php include 'waterfall_detail.inc'; ?>
+                <h3 name="request_details_view">Request Details</h3>
+                <?php
+                    if ($isMultistep) {
+                        echo $accordionHelper->createAccordion("request_details", "requestDetails", "initDetailsTable");
+                    } else {
+                        $useLinks = !$settings['nolinks'];
+                        $requestDetailsSnippet = new RequestDetailsHtmlSnippet($testInfo, $testRunResults->getStepResult(1), $useLinks);
+                        echo $requestDetailsSnippet->create();
+                    }
+                ?>
+
+                <br>
+                <?php include('./ads/details_bottom.inc'); ?>
+                <br>
+                <?php
+                    echo '';
+                    if (isset($test) && is_array($test) && isset($test['testinfo']['testerDNS']))
+                        echo "<p>Test Machine DNS Server(s): {$test['testinfo']['testerDNS']}</p>\n";
+
+                    if ($isMultistep) {
+                        echo "<br><h3 name=\"request_headers_view\" class='center'>Request Headers</h3>\n";
+                        echo $accordionHelper->createAccordion("request_headers", "requestHeaders", "initHeaderRequestExpander");
+                    } else {
+                        $requestHeadersSnippet = new RequestHeadersHtmlSnippet($testRunResults->getStepResult(1), $useLinks);
+                        $snippet = $requestHeadersSnippet->create();
+                        if ($snippet) {
+                            echo '<div id="headers">';
+                            echo '<br><hr><h2>Request Headers</h2>';
+                            echo $snippet;
+                            echo '</div>';
+                        }
+                    }
+                ?>
             </div>
 
             <?php include('footer.inc'); ?>
         </div>
+        <a href="#top" id="back_to_top">Back to top</a>
 
+        <?php
+        if ($isMultistep) {
+          echo '<script type="text/javascript" src="/js/jk-navigation.js"></script>';
+          echo '<script type="text/javascript" src="/js/accordion.js"></script>';
+          $testId = $testInfo->getId();
+          $testRun = $testRunResults->getRunNumber();
+          echo '<script type="text/javascript">';
+          echo "var accordionHandler = new AccordionHandler('$testId', $testRun);";
+          echo '</script>';
+        }
+        ?>
         <script type="text/javascript">
         function expandRequest(targetNode) {
           if (targetNode.length) {
@@ -421,31 +315,101 @@ $page_description = "Website performance test details$testLabel";
           }
         }
 
-        $(document).ready(function() { $("#tableDetails").tablesorter({
-            headers: { 3: { sorter:'currency' } ,
-                       4: { sorter:'currency' } ,
-                       5: { sorter:'currency' } ,
-                       6: { sorter:'currency' } ,
-                       7: { sorter:'currency' } ,
-                       8: { sorter:'currency' } ,
-                       9: { sorter:'currency' }
-                     }
-        }); } );
+        function initDetailsTable(targetNode) {
+             $(targetNode).find(".tableDetails").tablesorter({
+                headers: { 3: { sorter:'currency' } ,
+                    4: { sorter:'currency' } ,
+                    5: { sorter:'currency' } ,
+                    6: { sorter:'currency' } ,
+                    7: { sorter:'currency' } ,
+                    8: { sorter:'currency' } ,
+                    9: { sorter:'currency' }
+                }
+            });
+        }
 
-        $('.a_request').click(function () {
-            expandRequest($(this));
-        });
+        function initHeaderRequestExpander(targetNode) {
+            $(targetNode).find('.a_request').click(function () {
+                expandRequest($(this));
+            });
+        }
 
-        function expandAll() {
-          $(".header_details").each(function(index) {
-            $(this).show();
+        function expandAll(step) {
+          var expandAllNode = $("#step" + step + "_all");
+          var expandText = expandAllNode.html();
+          var doShow = expandText.substring(0, 1) == "+";
+          expandAllNode.html(doShow ? "- Collapse All" : "+ Expand All");
+          $("#header_details_step" + step + " .header_details").each(function(index) {
+            $(this).toggle(doShow);
           });
         }
-        
-        if (window.location.hash == '#all') {
-          expandAll();
-        } else
-          expandRequest($(window.location.hash));
+
+        function scrollTo(node) {
+            $('html, body').animate({scrollTop: node.offset().top + 'px'}, 'fast');
+        }
+
+        function handleRequestHash() {
+            var stepNum = -1;
+            var doExpandAll = false;
+            if (window.location.hash.startsWith("#step")) {
+                var parts = window.location.hash.split("_");
+                stepNum = parts[0].substring("#step".length);
+                doExpandAll = parts[1] == "all";
+            } else if (window.location.hash == '#all') {
+                stepNum = 1;
+                doExpandAll = true;
+            }
+           if (stepNum <= 0) {
+           return;
+           }
+            var expand = function() {
+                var scrollToNode = $(window.location.hash);
+                if (doExpandAll) {
+                    scrollToNode = $("#step" + stepNum + "_all");
+                    expandAll(stepNum);
+                } else {
+                    expandRequest(scrollToNode);
+                }
+                scrollTo(scrollToNode);
+            };
+            var slide_opener = $("#request_headers_step" + stepNum);
+            if (slide_opener.length) {
+              accordionHandler.toggleAccordion(slide_opener, true, expand);
+            } else {
+                expand();
+            }
+        }
+
+        function handleHash() {
+            var hash = window.location.hash;
+            if (!hash) {
+                var defaultAccordion = $("#waterfall_view_step1");
+                if (defaultAccordion.length) {
+                  accordionHandler.toggleAccordion(defaultAccordion);
+                }
+                return;
+            }
+            if (hash.startsWith("#waterfall_view_step") ||
+                hash.startsWith("#connection_view_step") ||
+                hash.startsWith("#request_details_step") ||
+                hash.startsWith("#request_headers_step")) {
+              accordionHandler.handleHash();
+            }
+            handleRequestHash();
+        }
+
+
+
+        // init existing snippets
+        $(document).ready(function() {
+            initDetailsTable($(document));
+            initHeaderRequestExpander($(document));
+            <?php if ($isMultistep) { ?>
+              accordionHandler.connect();
+            <?php } ?>
+            handleHash();
+        });
+        window.onhashchange = handleHash;
 
         <?php
         include "waterfall.js";
@@ -453,3 +417,4 @@ $page_description = "Website performance test details$testLabel";
         </script>
     </body>
 </html>
+

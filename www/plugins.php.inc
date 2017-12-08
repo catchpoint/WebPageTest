@@ -1,5 +1,6 @@
 <?php
-$WptHooks = array();
+if (!isset($WptHooks))
+  $WptHooks = array();
 
 LoadPlugins();
 
@@ -27,11 +28,20 @@ function WptHookValidateTest(&$test) {
   $valid = true;
   if (array_key_exists('ValidateTest', $WptHooks)) {
     foreach ($WptHooks['ValidateTest'] as $fn) {
-      $valid = call_user_func($fn, $test);
+      $valid = call_user_func_array($fn, array(&$test));
       if (!$valid)
         break;
     }
   }
   return $valid;
+}
+
+function WptHookPostProcessResults($testPath) {
+  global $WptHooks;
+  if (array_key_exists('PostProcessResults', $WptHooks)) {
+    foreach ($WptHooks['PostProcessResults'] as $fn) {
+      call_user_func($fn, $testPath);
+    }
+  }
 }
 ?>

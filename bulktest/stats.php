@@ -2,20 +2,27 @@
 include './settings.inc';
 
 $results = array();
-
+$prefix = array('');
+if (!$fvonly)
+  $prefix[] = 'rv_';
+  
 // Load the existing results
 if (LoadResults($results)) {
     // split them up by URL and location
     $data = array();
     $stats = array();
     $invalid = 0;
+    $rvInvalid = 0;
     $total = 0;
     $minRuns = ceil($runs / 2);
     foreach($results as &$result) {
         $valid = true;
         $validVisual = true;
+        $rvValidVisual = false;
+        $rvValid = false;
         $total++;
         if ((@$result['result'] != 0 && @$result['result'] != 99999 ) ||
+            (isset($result['resubmit']) && $result['resubmit']) ||
             !@$result['bytesInDoc'] ||
             !@$result['docTime'] ||
             !@$result['TTFB'] ||
@@ -23,11 +30,24 @@ if (LoadResults($results)) {
             @$result['TTFB'] > @$result['docTime'] ||
             (isset($maxBandwidth) && $maxBandwidth && (($result['bytesInDoc'] * 8) / $result['docTime']) > $maxBandwidth) ||
             ($video && (!$result['SpeedIndex'] || !$result['render'] || !$result['visualComplete']))) {
-            $valid = false;
-            $invalid++;
+          $valid = false;
+          $invalid++;
+        }
+        if (!$fvonly) {
+          $rvValid = true;
+          $rvValidVisual = true;
+          if ((@$result['rv_result'] != 0 && @$result['rv_result'] != 99999 ) ||
+              $result['rv_successfulRuns'] < $minRuns ||
+              ($video && (!$result['rv_SpeedIndex'] || !$result['rv_render'] || !$result['rv_visualComplete']))) {
+            $rvValid = false;
+            $rvInvalid++;
+          }
         }
         if ($valid && $video && (!$result['SpeedIndex'] || !$result['render'] || !$result['visualComplete'])) {
           $validVisual = false;
+        }
+        if ($rvValid && $video && (!$result['rv_SpeedIndex'] || !$result['rv_render'] || !$result['rv_visualComplete'])) {
+          $rvValidVisual = false;
         }
         $url = $result['url'];
         $label = $result['label'];
@@ -43,10 +63,16 @@ if (LoadResults($results)) {
         $data[$key][$label] = array();
         $data[$key][$label]['id'] = $result['id'];
         $data[$key][$label]['result'] = $result['result'];
+        if (array_key_exists('rv_result', $result))
+          $data[$key][$label]['rv_result'] = $result['rv_result'];
         if (array_key_exists('run', $result))
           $data[$key][$label]['run'] = $result['run'];
+        if (array_key_exists('rv_run', $result))
+          $data[$key][$label]['rv_run'] = $result['rv_run'];
         $data[$key][$label]['valid'] = $valid;
         $data[$key][$label]['validVisual'] = $validVisual;
+        $data[$key][$label]['rv_valid'] = $rvValid;
+        $data[$key][$label]['rv_validVisual'] = $rvValidVisual;
         if( $valid ) {
             if (!array_key_exists($label, $stats)) {
                 $stats[$label] = array();
@@ -62,30 +88,27 @@ if (LoadResults($results)) {
               }
             }
         }
+        if ($rvValid) {
+          if (!array_key_exists($label, $stats)) {
+              $stats[$label] = array();
+              foreach ($metrics as $metric)
+                  $stats[$label]["rv_$metric"] = array();
+          }
+          foreach ($metrics as $metric) {
+            if (array_key_exists("rv_$metric", $result) && IsMetricValid("rv_$metric", $rvValid, $rvValidVisual)) {
+              $data[$key][$label]["rv_$metric"] = $result["rv_$metric"];
+              if (array_key_exists("rv_$metric.stddev", $result))
+                $data[$key][$label]["rv_$metric.stddev"] = $result["rv_$metric.stddev"];
+              $stats[$label]["rv_$metric"][] = $result["rv_$metric"];
+            }
+          }
+        }
     }
     echo "$invalid of $total\n";
     ksort($data);
-    $file = fopen("./tests.csv", 'w');
-    if ($file) {
-      fwrite($file, 'URL');
-      foreach($permutations as $label => &$permutation)
-          fwrite($file, ",$label");
-      fwrite($file, "\r\n");
-      foreach($data as $key => &$urlData) {
-        fwrite($file, "\"{$urlData['url']}\"");
-        foreach($permutations as $label => &$permutation) {
-          $test = '';
-          if (array_key_exists($label, $urlData) &&
-              is_array($urlData[$label]) &&
-              array_key_exists('id', $urlData[$label]))
-              $test = "{$server}result/{$urlData[$label]['id']}/";
-          fwrite($file, ",\"$test\"");
-        }
-        fwrite($file, "\r\n");
-      }
-      fclose($file);
-    }
-    foreach ($metrics as $metric) {
+    foreach ($metrics as $m) {
+      foreach ($prefix as $p) {
+        $metric = "$p$m";
         $file = fopen("./$metric.csv", 'w+');
         if ($file) {
             fwrite($file, 'URL,');
@@ -132,9 +155,12 @@ if (LoadResults($results)) {
                         $metricData[$label][] = $value;
                     if (array_key_exists($label, $urlData) && array_key_exists('id', $urlData[$label])) {
                       $run = '';
-                      if (array_key_exists('run', $urlData[$label]))
-                        $run = "-r:{$urlData[$label]['run']}";
-                      $compare .= $urlData[$label]['id'] . $run . '-l:' . urlencode($label) . ',';
+                      if (array_key_exists("{$p}run", $urlData[$label]))
+                        $run = "-r:{$urlData[$label]["{$p}run"]}";
+                      $cached = '';
+                      if (!strncmp('rv_', $metric, 3))
+                        $cached = '-c:1';
+                      $compare .= $urlData[$label]['id'] . $run . $cached . '-l:' . urlencode($label) . ',';
                     }
                     $first = false;
                 }
@@ -180,7 +206,7 @@ if (LoadResults($results)) {
                     $first = false;
                 }
                 fwrite($summary, "\r\n");
-                $percentiles = array(25,50,75,95,99);
+                $percentiles = array(25,50,75,95);
                 foreach($percentiles as $percentile) {
                     fwrite($summary, "{$percentile}th Percentile,");
                     $first = true;
@@ -212,6 +238,7 @@ if (LoadResults($results)) {
                 fclose($summary);
             }
         }
+      }
     }
 }
 

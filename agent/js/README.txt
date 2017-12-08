@@ -46,7 +46,8 @@ driver.wait(function()  {
 
 = Running tests
 
-./wpttest.sh (or .bat) -v -m 10
+./wpttest -l  # Run lint, please clean up any issues.
+./wpttest.sh (or .bat) -d -m 10  # -g <regexp> to run a subset of tests.
 
 See the script source for various options.
 

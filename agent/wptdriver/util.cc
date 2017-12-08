@@ -30,7 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "util.h"
 #include <Wincrypt.h>
 #include <TlHelp32.h>
-#include "dbghelp/dbghelp.h"
+#include <Wtsapi32.h>
 #include <WinInet.h>
 #include <regex>
 #include <string>
@@ -102,7 +102,7 @@ void DeleteDirectory( LPCTSTR directory, bool remove ) {
           else
             DeleteFile(path);
         }
-      }while(FindNextFile(hFind, &fd));
+      } while(FindNextFile(hFind, &fd));
       
       FindClose(hFind);
     }
@@ -110,6 +110,30 @@ void DeleteDirectory( LPCTSTR directory, bool remove ) {
     delete [] path;
     if( remove )
       RemoveDirectory(directory);
+  }
+}
+
+
+/*-----------------------------------------------------------------------------
+  Delete anything in the given directory older than the provided age
+-----------------------------------------------------------------------------*/
+void DeleteOldDirectoryEntries(CString directory, int seconds) {
+  WIN32_FIND_DATA fd;
+  HANDLE hFind = FindFirstFile(directory + _T("\\*.*"), &fd);
+  if (hFind != INVALID_HANDLE_VALUE) {
+    FILETIME now;
+    GetSystemTimeAsFileTime(&now);
+    do {
+      if (lstrcmp(fd.cFileName, _T(".")) &&
+          lstrcmp(fd.cFileName, _T("..")) &&
+          ElapsedFileTimeSeconds(fd.ftLastWriteTime, now) > seconds) {
+        if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+          DeleteDirectory(directory + _T("\\") + fd.cFileName);
+        else
+          DeleteFile(directory + _T("\\") + fd.cFileName);
+      }
+    } while (FindNextFile(hFind, &fd));
+    FindClose(hFind);
   }
 }
 
@@ -232,11 +256,10 @@ static HWND FindDocumentWindow(DWORD process_id, HWND parent) {
 /*-----------------------------------------------------------------------------
   Find the top-level and document windows for the browser
 -----------------------------------------------------------------------------*/
-bool FindBrowserWindow( DWORD process_id, HWND& frame_window, 
-                          HWND& document_window) {
+bool FindBrowserWindow( DWORD process_id, HWND& frame_window) {
   bool found = false;
   // find a known document window that belongs to this process
-  document_window = FindDocumentWindow(process_id, ::GetDesktopWindow());
+  HWND document_window = FindDocumentWindow(process_id, ::GetDesktopWindow());
   if (document_window) {
     found = true;
     frame_window = GetAncestor(document_window, GA_ROOTOWNER);
@@ -246,24 +269,57 @@ bool FindBrowserWindow( DWORD process_id, HWND& frame_window,
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void WptTrace(int level, LPCTSTR format, ...) {
+void WptTrace(const wchar_t* format, ...) {
   #ifdef DEBUG
   va_list args;
-  va_start( args, format );
+  va_start(args, format);
 
-  int len = _vsctprintf( format, args ) + 1;
-  if (len) {
-    TCHAR * msg = (TCHAR *)malloc( len * sizeof(TCHAR) );
+  int len = _vscwprintf(format, args);
+  if (len > 0) {
+    len += 2;
+    int size = len * sizeof(wchar_t);
+    wchar_t * msg = (TCHAR *)malloc(size);
     if (msg) {
-      if (_vstprintf_s( msg, len, format, args ) > 0) {
-        if (lstrlen(msg)) {
-          OutputDebugString(msg);
-        }
+      memset(msg, 0, size);
+      if (vswprintf_s(msg, len, format, args) > 0 && lstrlenW(msg)) {
+        lstrcatW(msg, L"\n");
+        OutputDebugStringW(msg);
       }
 
       free( msg );
     }
   }
+  #endif
+}
+
+void WptTrace(const char* format, ...) {
+  #ifdef DEBUG
+  va_list args;
+  va_start(args, format);
+
+  int len = _vscprintf(format, args);
+  if (len > 0) {
+    len += 2;
+    int size = len * sizeof(char);
+    char * msg = (char *)malloc(size);
+    if (msg) {
+      memset(msg, 0, size);
+      if (vsprintf_s(msg, len, format, args) > 0 && lstrlenA(msg)) {
+        lstrcatA(msg, "\n");
+        OutputDebugStringA(msg);
+      }
+
+      free( msg );
+    }
+  }
+  #endif
+}
+
+void WptTrace(int dwCategory, int line, const wchar_t* format, ...) {
+  #ifdef DEBUG
+  va_list argptr; va_start(argptr, format);
+  WptTrace(format, argptr);
+  va_end(argptr);
   #endif
 }
 
@@ -381,7 +437,7 @@ void TerminateProcessAndChildren(DWORD pid) {
 /*-----------------------------------------------------------------------------
   Fetch an URL and return the response as a string
 -----------------------------------------------------------------------------*/
-CString HttpGetText(CString url) {
+CString HttpGetText(CString url, DWORD * response_code) {
   CString response;
   HINTERNET internet = InternetOpen(_T("WebPagetest Driver"), 
                                     INTERNET_OPEN_TYPE_PRECONFIG,
@@ -405,7 +461,12 @@ CString HttpGetText(CString url) {
       while (InternetReadFile(http_request, buff, sizeof(buff) - 1, 
               &bytes_read) && bytes_read) {
         buff[bytes_read] = 0;
-        response += CA2T(buff);
+        response += CA2T(buff, CP_UTF8);
+      }
+      if (response_code) {
+        *response_code = 0;
+        DWORD len = sizeof(DWORD);
+        HttpQueryInfo(http_request, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, response_code, &len, NULL);
       }
       InternetCloseHandle(http_request);
     }
@@ -519,6 +580,20 @@ bool FileExists(CString file) {
 }
 
 /*-----------------------------------------------------------------------------
+  See if the given file exists
+-----------------------------------------------------------------------------*/
+size_t FileSize(CString file) {
+  size_t size = 0;
+  HANDLE file_handle = CreateFile(file, GENERIC_READ, FILE_SHARE_READ, NULL,
+                                  OPEN_EXISTING, 0, 0);
+  if (file_handle != INVALID_HANDLE_VALUE) {
+    size = GetFileSize(file_handle, NULL);
+    CloseHandle(file_handle);
+  }
+  return size;
+}
+
+/*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool  RegexMatch(CStringA str, CStringA regex) {
   bool matched = false;
@@ -588,20 +663,18 @@ DWORD GetParentProcessId(DWORD pid) {
 -----------------------------------------------------------------------------*/
 DWORD FindProcessIds(TCHAR * exe, CAtlList<DWORD> &pids) {
   DWORD count = 0;
-  HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-  if (snap != INVALID_HANDLE_VALUE) {
-    PROCESSENTRY32 proc;
-    proc.dwSize = sizeof(proc);
-    if (Process32First(snap, &proc)) {
-      bool found = false;
-      do {
-        if (!lstrcmpi(exe, proc.szExeFile)) {
-          count++;
-          pids.AddTail(proc.th32ProcessID);
-        }
-      } while (!found && Process32Next(snap, &proc));
+  WTS_PROCESS_INFO * proc = NULL;
+  DWORD process_count = 0;
+  if (WTSEnumerateProcesses(WTS_CURRENT_SERVER_HANDLE, 0, 1, &proc, &process_count)) {
+    for (DWORD i = 0; i < process_count; i++) {
+      TCHAR * process = PathFindFileName(proc[i].pProcessName);
+      if (!lstrcmpi(process, exe)) {
+        count++;
+        pids.AddTail(proc[i].ProcessId);
+      }
     }
-    CloseHandle(snap);
+    if (proc)
+      WTSFreeMemory(proc);
   }
   return count;
 }
@@ -616,6 +689,79 @@ void TerminateProcessById(DWORD pid) {
     TerminateProcess(process, 0);
     WaitForSingleObject(process, 120000);
     CloseHandle(process);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Wait for all direct children of the given process to finish
+-----------------------------------------------------------------------------*/
+void WaitForChildProcesses(DWORD pid, DWORD timeout) {
+  bool children_found = false;
+  DWORD end_time = GetTickCount() + timeout;
+  do {
+    children_found = false;
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snap != INVALID_HANDLE_VALUE) {
+      PROCESSENTRY32 proc;
+      proc.dwSize = sizeof(proc);
+      if (Process32First(snap, &proc)) {
+        do {
+          if (proc.th32ParentProcessID == pid) {
+            children_found = true;
+            HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, proc.th32ProcessID);
+            if (process) {
+              WaitForSingleObject(process, timeout);
+              CloseHandle(process);
+            }
+          }
+        } while (Process32Next(snap, &proc));
+      }
+      CloseHandle(snap);
+    }
+  } while(children_found && GetTickCount() < end_time);
+}
+
+/*-----------------------------------------------------------------------------
+  Wait for all instances of the given executable to finish
+-----------------------------------------------------------------------------*/
+void WaitForProcessesByName(TCHAR * exe, DWORD timeout) {
+  bool processes_found = false;
+  DWORD end_time = GetTickCount() + timeout;
+  do {
+    processes_found = false;
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snap != INVALID_HANDLE_VALUE) {
+      PROCESSENTRY32 proc;
+      proc.dwSize = sizeof(proc);
+      if (Process32First(snap, &proc)) {
+        do {
+          if (!lstrcmpi(proc.szExeFile, exe)) {
+            processes_found = true;
+            HANDLE process = OpenProcess(SYNCHRONIZE, FALSE, proc.th32ProcessID);
+            if (process) {
+              WaitForSingleObject(process, timeout);
+              CloseHandle(process);
+            }
+          }
+        } while (Process32Next(snap, &proc));
+      }
+      CloseHandle(snap);
+    }
+  } while(processes_found && GetTickCount() < end_time);
+}
+
+/*-----------------------------------------------------------------------------
+  Terminate all instances of a process given it's name
+-----------------------------------------------------------------------------*/
+void TerminateProcessesByName(TCHAR * exe) {
+  CAtlList<DWORD> processes;
+  FindProcessIds(exe, processes);
+  if (!processes.IsEmpty()) {
+    POSITION pos = processes.GetHeadPosition();
+    while (pos) {
+      DWORD pid = processes.GetNext(pos);
+      TerminateProcessById(pid);
+    }
   }
 }
 
@@ -651,4 +797,396 @@ int ElapsedFileTimeSeconds(FILETIME& check, FILETIME& now) {
     elapsed = (int)e.QuadPart;
   }
   return elapsed;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void Reboot() {
+  HANDLE hToken;
+  if (OpenProcessToken(GetCurrentProcess(),
+      TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
+    TOKEN_PRIVILEGES tp;
+    if (LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &tp.Privileges[0].Luid)) {
+      tp.PrivilegeCount = 1;
+      tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+      AdjustTokenPrivileges(hToken, FALSE, &tp, 0, (PTOKEN_PRIVILEGES)0, 0) ;
+    }
+    CloseHandle(hToken);
+  }
+  
+  InitiateSystemShutdown(NULL, NULL, 0, TRUE, TRUE);
+}
+
+/*-----------------------------------------------------------------------------
+  Helper function to crack an url into it's component parts
+-----------------------------------------------------------------------------*/
+bool ParseUrl(CString url, CString &scheme, CString &host,
+              unsigned short &port, CString& object){
+  bool ret = false;
+
+  URL_COMPONENTS parts;
+  memset(&parts, 0, sizeof(parts));
+  TCHAR szHost[10000];
+  TCHAR path[10000];
+  TCHAR extra[10000];
+  TCHAR szScheme[100];
+    
+  memset(szHost, 0, sizeof(szHost));
+  memset(path, 0, sizeof(path));
+  memset(extra, 0, sizeof(extra));
+  memset(szScheme, 0, sizeof(szScheme));
+
+  parts.lpszHostName = szHost;
+  parts.dwHostNameLength = _countof(szHost);
+  parts.lpszUrlPath = path;
+  parts.dwUrlPathLength = _countof(path);
+  parts.lpszExtraInfo = extra;
+  parts.dwExtraInfoLength = _countof(extra);
+  parts.lpszScheme = szScheme;
+  parts.dwSchemeLength = _countof(szScheme);
+  parts.dwStructSize = sizeof(parts);
+
+  if( InternetCrackUrl((LPCTSTR)url, url.GetLength(), 0, &parts) ){
+    ret = true;
+    scheme = szScheme;
+    host = szHost;
+    port = parts.nPort;
+    object = path;
+    object += extra;
+    if (!port) {
+      port = !lstrcmpi(scheme, _T("https")) ?
+          INTERNET_DEFAULT_HTTPS_PORT : INTERNET_DEFAULT_HTTP_PORT;
+    }
+  }
+  return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  See if we can sniff the real content type by looking for a file signature
+  https://mimesniff.spec.whatwg.org/#matching-an-image-type-pattern
+-----------------------------------------------------------------------------*/
+CString SniffMimeType(const LPBYTE content, size_t len) {
+  CString mime_type;
+  if (len && content) {
+    LPBYTE b = content;
+
+    // Image Types
+    if (len > 4 &&
+        b[0] == 0x00 && b[1] == 0x00 && b[2] == 0x01 && b[3] == 0x00) {
+      mime_type = _T("image/x-icon"); // Windows Icon
+    } else if (len > 4 &&
+        b[0] == 0x00 && b[1] == 0x00 && b[2] == 0x02 && b[3] == 0x00) {
+      mime_type = _T("image/x-icon"); // Windows Cursor
+    } else if (len > 6 && !memcmp(b, "GIF87a", 6)) {
+      mime_type = _T("image/gif");
+    } else if (len > 14 &&
+        !memcmp(b, "RIFF", 4) && !memcmp(&b[8], "WEBPVP", 6)) {
+      mime_type = _T("image/webp");
+    } else if (len > 8 &&
+        b[0] == 0x89 && b[1] == 0x50 && b[2] == 0x4E && b[3] == 0x47 &&
+        b[4] == 0x0D && b[5] == 0x0A && b[6] == 0x1A && b[7] == 0x0A) {
+      mime_type = _T("image/png");
+    } else if (len > 3 &&
+        b[0] == 0xFF && b[1] == 0xD8 && b[2] == 0xFF) {
+      mime_type = _T("image/jpeg");
+    // Video/Audio types
+    } else if (len > 4 &&
+        b[0] == 0x1A && b[1] == 0x45 && b[2] == 0xDF && b[3] == 0xA3) {
+      mime_type = _T("video/webm");
+    } else if (len > 4 && !memcmp(b, ".snd", 4)) {
+      mime_type = _T("audio/basic");
+    } else if (len > 12 &&
+        !memcmp(b, "FORM", 4) && !memcmp(&b[8], "AIFF", 4)) {
+      mime_type = _T("audio/aiff");
+    } else if (len > 3 && !memcmp(b, "ID3", 4)) {
+      mime_type = _T("audio/mpeg");
+    } else if (len > 5 && !memcmp(b, "OggS", 5)) {
+      mime_type = _T("application/ogg");
+    } else if (len > 8 &&
+        b[0] == 0x4D && b[1] == 0x54 && b[2] == 0x68 && b[3] == 0x64 &&
+        b[4] == 0x00 && b[5] == 0x00 && b[6] == 0x00 && b[7] == 0x06) {
+      mime_type = _T("audio/midi");
+    } else if (len > 12 &&
+        !memcmp(b, "RIFF", 4) && !memcmp(&b[8], "AVI ", 4)) {
+      mime_type = _T("video/avi");
+    } else if (len > 12 &&
+        !memcmp(b, "RIFF", 4) && !memcmp(&b[8], "WAVE", 4)) {
+      mime_type = _T("audio/wave");
+    // Fonts
+    } else if (len > 4 &&
+        b[0] == 0x00 && b[1] == 0x01 && b[2] == 0x00 && b[3] == 0x00) {
+      mime_type = _T("application/x-font-truetype");
+    } else if (len > 4 && !memcmp(b, "OTTO", 4)) {
+      mime_type = _T("application/x-font-opentype");
+    } else if (len > 4 && !memcmp(b, "ttcf", 4)) {
+      mime_type = _T("application/x-font-truetype");
+    } else if (len > 4 && !memcmp(b, "wOFF", 4)) {
+      mime_type = _T("application/font-woff");
+    // Compressed file formats
+    } else if (len > 3 &&
+        b[0] == 0x1F && b[1] == 0x8B && b[2] == 0x08) {
+      mime_type = _T("application/x-gzip");
+    } else if (len > 4 &&
+        b[0] == 0x50 && b[1] == 0x4B && b[2] == 0x03 && b[3] == 0x04) {
+      mime_type = _T("application/zip");
+    } else if (len > 7 &&
+        b[0] == 0x52 && b[1] == 0x61 && b[2] == 0x72 && b[3] == 0x20 &&
+        b[4] == 0x1A && b[5] == 0x07 && b[6] == 0x00) {
+      mime_type = _T("application/x-rar-compressed");
+    // Misc
+    } else if (len > 5 && !memcmp(b, "%PDF-", 5)) {
+      mime_type = _T("application/pdf");
+    } else if (len > 11 && !memcmp(b, "%!PS-Adobe-", 11)) {
+      mime_type = _T("application/postscript");
+    }
+  }
+
+  return mime_type;
+}
+
+/*-----------------------------------------------------------------------------
+  Scan the content to see if it is a binary content type
+  https://mimesniff.spec.whatwg.org/#sniffing-a-mislabeled-binary-resource
+-----------------------------------------------------------------------------*/
+bool IsBinaryContent(const LPBYTE content, size_t len) {
+  bool is_binary = false;
+
+  if (content) {
+    if (len >= 2 &&
+        (content[0] == 0xFE && content[1] == 0xFF) ||
+        (content[0] == 0xFF && content[1] == 0xFE)) {
+      // UTF 16 BOM
+      is_binary = false;
+    } else if (len >= 3 && content[0] == 0xEF &&
+               content[1] == 0xBB && content[2] == 0xBF) {
+      // UTF 8 BOM
+      is_binary = false;
+    } else if (len > 0) {
+      DWORD index = 0;
+      while (index < len && !is_binary) {
+        BYTE val = content[index];
+        if (val <= 0x08 || 
+            val == 0x0B ||
+            (val >= 0x0E && val <= 0x1A) ||
+            (val >= 0x1C && val <= 0x1F)) {
+          is_binary = true;
+        }
+        index++;
+      }
+    }
+  }
+
+  return is_binary;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+static LPTSTR GetAppInitString(LPCTSTR new_dll, HKEY hKey) {
+  LPTSTR dlls = NULL;
+  DWORD len = 0;
+
+  ATLTRACE(_T("GetAppInitString"));
+
+  // get the existing appinit list
+  if (RegQueryValueEx(hKey, _T("AppInit_DLLs"), 0, NULL, NULL, &len) ==
+      ERROR_SUCCESS) {
+    if (new_dll && lstrlen(new_dll))
+      len += (lstrlen(new_dll) + 2) * sizeof(TCHAR);
+    dlls = (LPTSTR)malloc(len);
+    memset(dlls, 0, len);
+    DWORD bytes = len;
+    RegQueryValueEx(hKey, _T("AppInit_DLLs"), 0, NULL, (LPBYTE)dlls, &bytes);
+  }
+
+  // allocate memory in case there wasn't an existing list
+  if (!dlls && new_dll && lstrlen(new_dll)) {
+    len = (lstrlen(new_dll) + 1) * sizeof(TCHAR);
+    dlls = (LPTSTR)malloc(len);
+    memset(dlls, 0, len);
+  }
+
+  // remove any occurences of wptload.dll, wptld64.dll and wptld64.dll from the list
+  if (dlls && lstrlen(dlls)) {
+    LPTSTR new_list = (LPTSTR)malloc(len);
+    memset(new_list, 0, len);
+    LPTSTR dll = _tcstok(dlls, _T(" ,"));
+    while (dll) {
+      if (lstrcmpi(PathFindFileName(dll), _T("wptload.dll")) &&
+          lstrcmpi(PathFindFileName(dll), _T("wptld64.dll")) &&
+          lstrcmpi(PathFindFileName(dll), _T("wptldr64.dll"))) {
+        if (lstrlen(new_list))
+          lstrcat(new_list, _T(","));
+        lstrcat(new_list, dll);
+      }
+      dll = _tcstok(NULL, _T(" ,"));
+    }
+    free(dlls);
+    dlls = new_list;
+  }
+
+  // add the new dll to the list
+  if (dlls && new_dll && lstrlen(new_dll)) {
+    if (lstrlen(dlls))
+      lstrcat(dlls, _T(","));
+    lstrcat(dlls, new_dll);
+  }
+
+  ATLTRACE(_T("GetAppInitString: '%s'"), dlls);
+
+  return dlls;
+}
+
+/*-----------------------------------------------------------------------------
+  Install the AppInit hook dll and use the exe to determine if it is for
+  64-bit or 32 (and only install the needed hook)
+-----------------------------------------------------------------------------*/
+bool InstallAppInitHook(LPCTSTR exe) {
+  ATLTRACE(_T("InstallAppInitHook - %s"), exe);
+  bool installed = false;
+
+  // Set an environment variable flag to let the hook identify the processes
+  // that should be inspected
+  SetEnvironmentVariable(_T("WPT_HOOK"), _T("YES"));
+
+  // See if we need the 64-bit version
+  DWORD reg_flags = 0;
+  LPCTSTR hook_dll = _T("wptload.dll");
+  BOOL is64bit = FALSE;
+  if (IsWow64Process(GetCurrentProcess(), &is64bit) && is64bit) {
+    DWORD binary_type = 0;
+    if (GetBinaryType(exe, &binary_type)) {
+      if (binary_type == SCS_64BIT_BINARY) {
+        reg_flags = KEY_WOW64_64KEY;
+        hook_dll = _T("wptldr64.dll");
+      }
+    }
+    ATLTRACE(_T("InstallAppInitHook - Binary type: %d"), binary_type);
+  }
+
+  // Update the AppInit registry key
+  TCHAR path[MAX_PATH];
+  if (GetModuleFileName(NULL, path, _countof(path))) {
+    lstrcpy(PathFindFileName(path), hook_dll);
+    TCHAR short_path[MAX_PATH];
+    if (GetShortPathName(path, short_path, _countof(short_path))) {
+      HKEY hKey;
+		  if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+          _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows"),
+          0, 0, 0, KEY_READ | KEY_WRITE | reg_flags, 0,
+          &hKey, 0) == ERROR_SUCCESS ) {
+			  DWORD val = 1;
+			  RegSetValueEx(hKey, _T("LoadAppInit_DLLs"), 0, REG_DWORD,
+                      (const LPBYTE)&val, sizeof(val));
+			  val = 0;
+			  RegSetValueEx(hKey, _T("RequireSignedAppInit_DLLs"), 0, REG_DWORD,
+                      (const LPBYTE)&val, sizeof(val));
+        LPTSTR dlls = GetAppInitString(short_path, hKey);
+        if (dlls) {
+			    RegSetValueEx(hKey, _T("AppInit_DLLs"), 0, REG_SZ,
+                        (const LPBYTE)dlls,
+                        (lstrlen(dlls) + 1) * sizeof(TCHAR));
+          free(dlls);
+        }
+        RegCloseKey(hKey);
+      }
+    }
+  }
+
+  return installed;
+  ATLTRACE(_T("InstallAppInitHook - Done"));
+}
+
+/*-----------------------------------------------------------------------------
+  Remove the WPT hook dll's from the AppInit dll entries
+-----------------------------------------------------------------------------*/
+void ClearAppInitHooks() {
+  HKEY hKey;
+  ATLTRACE(_T("ClearAppInitHooks"));
+  SetEnvironmentVariable(_T("WPT_HOOK"), NULL);
+	if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+      _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows"),
+      0, 0, 0, KEY_READ | KEY_WRITE, 0, &hKey, 0) == ERROR_SUCCESS ) {
+    LPTSTR dlls = GetAppInitString(NULL, hKey);
+    if (dlls) {
+			RegSetValueEx(hKey, _T("AppInit_DLLs"), 0, REG_SZ,
+                    (const LPBYTE)dlls,
+                    (lstrlen(dlls) + 1) * sizeof(TCHAR));
+      free(dlls);
+    }
+    RegCloseKey(hKey);
+  }
+  BOOL is64bit = FALSE;
+  if (IsWow64Process(GetCurrentProcess(), &is64bit) && is64bit) {
+	  if (RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+        _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows"),
+        0, 0, 0, KEY_READ | KEY_WRITE | KEY_WOW64_64KEY, 0,
+        &hKey, 0) == ERROR_SUCCESS ) {
+      LPTSTR dlls = GetAppInitString(NULL, hKey);
+      if (dlls) {
+			  RegSetValueEx(hKey, _T("AppInit_DLLs"), 0, REG_SZ,
+                      (const LPBYTE)dlls,
+                      (lstrlen(dlls) + 1) * sizeof(TCHAR));
+        free(dlls);
+      }
+      RegCloseKey(hKey);
+    }
+  }
+  ATLTRACE(_T("ClearAppInitHooks - Done"));
+}
+
+/*-----------------------------------------------------------------------------
+  Run the given python script and wait for a result (assume C:\Python27)
+-----------------------------------------------------------------------------*/
+bool RunPythonScript(CString script, CString options) {
+  bool ok = false;
+  CString command_line = _T("C:\\Python27\\python.exe");
+  if (FileExists(command_line)) {
+    TCHAR dir[MAX_PATH];
+    if (GetModuleFileName(NULL, dir, _countof(dir))) {
+      *PathFindFileName(dir) = 0;
+      CString script_path = dir;
+      script_path += script;
+      if (FileExists(script_path)) {
+        command_line += _T(" \"") + script_path + _T("\"");
+        if (options.GetLength())
+          command_line += _T(" ") + options;
+        ok = LaunchProcess(command_line);
+      }
+    }
+  }
+  return ok;
+}
+
+/*-----------------------------------------------------------------------------
+  See if screen capture is available and will work
+-----------------------------------------------------------------------------*/
+bool ScreenCaptureAvailable() {
+  bool ok = false;
+  HWND wnd = GetDesktopWindow();
+  if (wnd) {
+    HDC src = GetDC(NULL);
+    if (src) {
+      HDC dc = CreateCompatibleDC(src);
+      if (dc) {
+        RECT window_rect;
+        GetWindowRect(wnd, &window_rect);
+        int width = abs(window_rect.right - window_rect.left);
+        int height = abs(window_rect.top - window_rect.bottom);
+        if (width && height) {
+          HBITMAP bitmap = CreateCompatibleBitmap(src, width, height); 
+          if (bitmap) {
+            HBITMAP hOriginal = (HBITMAP)SelectObject(dc, bitmap);
+            if (BitBlt(dc, 0, 0, width, height, src, 0, 0, SRCCOPY|CAPTUREBLT) )
+              ok = true;
+
+            SelectObject(dc, hOriginal);
+            DeleteObject(bitmap);
+          }
+        }
+        DeleteDC(dc);
+      }
+      ReleaseDC(wnd, src);
+    }
+  }
+  return ok;
 }

@@ -21,15 +21,16 @@ if (typeof sinon == "undefined") {
 (function () {
     var push = [].push;
 
-    sinon.Event = function Event(type, bubbles, cancelable) {
-        this.initEvent(type, bubbles, cancelable);
+    sinon.Event = function Event(type, bubbles, cancelable, target) {
+        this.initEvent(type, bubbles, cancelable, target);
     };
 
     sinon.Event.prototype = {
-        initEvent: function(type, bubbles, cancelable) {
+        initEvent: function(type, bubbles, cancelable, target) {
             this.type = type;
             this.bubbles = bubbles;
             this.cancelable = cancelable;
+            this.target = target;
         },
 
         stopPropagation: function () {},
@@ -40,13 +41,13 @@ if (typeof sinon == "undefined") {
     };
 
     sinon.EventTarget = {
-        addEventListener: function addEventListener(event, listener, useCapture) {
+        addEventListener: function addEventListener(event, listener) {
             this.eventListeners = this.eventListeners || {};
             this.eventListeners[event] = this.eventListeners[event] || [];
             push.call(this.eventListeners[event], listener);
         },
 
-        removeEventListener: function removeEventListener(event, listener, useCapture) {
+        removeEventListener: function removeEventListener(event, listener) {
             var listeners = this.eventListeners && this.eventListeners[event] || [];
 
             for (var i = 0, l = listeners.length; i < l; ++i) {

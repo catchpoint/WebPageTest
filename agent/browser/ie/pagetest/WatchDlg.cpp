@@ -1054,7 +1054,7 @@ void CWatchDlg::DrawItem(LPNMTVCUSTOMDRAW pCustomDraw, CTrackedEvent * e, HDC hD
 	// highlight warnings and errors
 	if( w && ((w->result >= 300 && w->result != -1) || (!active && (int)(w->result) < 0)) )
 	{
-		if( w->result >= 400 || (int)(w->result) < 0 )
+		if( w->result != 401 && (w->result >= 400 || (int)(w->result) < 0) )
 		{
 			hBrush = hBrError;
 			color = colorError;
@@ -1067,7 +1067,7 @@ void CWatchDlg::DrawItem(LPNMTVCUSTOMDRAW pCustomDraw, CTrackedEvent * e, HDC hD
 	}
 	else if( r && ((r->response.code >= 300 && r->response.code != -1) || (!active && (int)(r->response.code) < 0)) )
 	{
-		if( r->response.code >= 400 || (int)(r->response.code) < 0 )
+		if( r->response.code != 401 && (r->response.code >= 400 || (int)(r->response.code) < 0) )
 		{
 			hBrush = hBrError;
 			color = colorError;

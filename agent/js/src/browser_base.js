@@ -28,6 +28,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 var logger = require('logger');
 var process_utils = require('process_utils');
+var webdriver = require('selenium-webdriver');
 
 /**
  * Base class for browsers.
@@ -99,31 +100,71 @@ BrowserBase.prototype.killChildProcessIfNeeded = function() {
 };
 
 /**
- * Checks whether the browser is ready to run tests.
+ * Verifies that the browser is ready to run tests.
  *
- * A simple return means ready, any exception prevents polling for new jobs.
+ * @return {webdriver.promise.Promise} resolve() for addErrback.
  */
-BrowserBase.prototype.scheduleIsAvailable = function() {
+BrowserBase.prototype.scheduleAssertIsReady = function() {
   'use strict';
+  return this.app_.schedule('Base Assert isRunning', function() {
+    return true;
+  }.bind(this));
 };
 
 /**
- * Imports a browser module and creates a browser object, given flags.
- * The flags should contain the property 'browser', specifying a
- * package-qualified class name for instantiation. If unspecified,
- * defaults to browser_local_chrome.BrowserLocalChrome.
+ * Verifies that the browser is still running and didn't crash.
+ *
+ * @return {webdriver.promise.Promise} resolve() for addErrback.
+ * @override
+ */
+BrowserBase.prototype.scheduleAssertIsRunning = function() {
+  'use strict';
+  return webdriver.promise.fulfilled(true);  // Assume it's running.
+};
+
+/**
+ * Copy the netlog to the given file
+ *
+ * @return {webdriver.promise.Promise} resolve() for addErrback.
+ * @override
+ */
+BrowserBase.prototype.scheduleGetNetlog = function(log) {
+  'use strict';
+  return webdriver.promise.fulfilled(false);  // Assume it's running.
+};
+
+/**
+ * Attempts recovery if the browser is not ready to run tests.
+ *
+ * @return {webdriver.promise.Promise} resolve(boolean) wasOffline,
+ *   i.e. didRecover:  false if already ready, true if wasOffline but we
+ *   sucessfully recovered, else an error is thrown if we're offline.
+ */
+BrowserBase.prototype.scheduleMakeReady = function() {
+  'use strict';
+  return this.scheduleAssertIsReady().then(function() {
+    return false;  // Was already online.
+  });
+};
+
+/**
+ * Imports a browser module and creates a browser object, given args.
  *
  * @param {webdriver.promise.ControlFlow} app the ControlFlow for scheduling.
- * @param {Object} flags an object containing a string property 'browser'.
+ * @param {Object} args additional browser-specific args.
+ *   #param {Object} flags:
+ *     #param {string=} browser package-qualified browser class name for
+ *         instantiation, which defaults to
+ *         browser_local_chrome.BrowserLocalChrome.
  * @return {BrowserBase} the browser object.
  */
-exports.createBrowser = function(app, flags) {
+exports.createBrowser = function(app, args) {
   'use strict';
-  var browserType =
-      flags.browser || 'browser_local_chrome.BrowserLocalChrome';
+  var browserType = (args.flags.browser ? args.flags.browser :
+      'browser_local_chrome.BrowserLocalChrome');
   logger.debug('Creating browser ' + browserType);
   var lastDot = browserType.lastIndexOf('.');
   var browserModule = require(browserType.substring(0, lastDot));
   var BrowserClass = browserModule[browserType.substring(lastDot + 1)];
-  return new BrowserClass(app, flags);
+  return new BrowserClass(app, args);
 };

@@ -28,7 +28,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "StdAfx.h"
 #include "webpagetest.h"
-#include <Wininet.h>
 #include <Wincrypt.h>
 #include <Shellapi.h>
 #include <IPHlpApi.h>
@@ -48,11 +47,13 @@ WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
   ,_buildNo(0)
   ,_revisionNo(0)
   ,_exit(false)
-  ,has_gpu_(false) {
+  ,has_gpu_(false)
+  ,rebooting_(false) {
   SetErrorMode(SEM_FAILCRITICALERRORS);
-  // get the version number of the binary (for software updates)
+  // get the version number of the wpthook.dll binary (for software updates)
   TCHAR file[MAX_PATH];
   if (GetModuleFileName(NULL, file, _countof(file))) {
+    lstrcpy(PathFindFileName(file), _T("wpthook.dll"));
     DWORD unused;
     DWORD infoSize = GetFileVersionInfoSize(file, &unused);
     if (infoSize) {
@@ -62,21 +63,36 @@ WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
         UINT size = 0;
         if( VerQueryValue(pVersion, _T("\\"), (LPVOID*)&info, &size) && info )
         {
-		      _majorVer = HIWORD(info->dwFileVersionMS);
-		      _minorVer = LOWORD(info->dwFileVersionMS);
-		      _buildNo = HIWORD(info->dwFileVersionLS);
-		      _revisionNo = LOWORD(info->dwFileVersionLS);
+          _majorVer = HIWORD(info->dwFileVersionMS);
+          _minorVer = LOWORD(info->dwFileVersionMS);
+          _buildNo = HIWORD(info->dwFileVersionLS);
+          _revisionNo = LOWORD(info->dwFileVersionLS);
         }
       }
 
       delete [] pVersion;
     }
   }
+  // Get the OS platform and version
+  #pragma warning(disable:4996) // deprecated GetVersionEx
+  OSVERSIONINFOEX osvi;
+  ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
+  osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+  GetVersionEx((LPOSVERSIONINFO)&osvi);
+  _winMajor = osvi.dwMajorVersion;
+  _winMinor = osvi.dwMinorVersion;
+  _isServer = osvi.wProductType == VER_NT_WORKSTATION ? 0 : 1;
+  BOOL isWow64 = FALSE;
+  IsWow64Process(GetCurrentProcess(), &isWow64);
+  _is64Bit = isWow64 ? 1 : 0;
+
   // get the computer name (and escape it)
   TCHAR name[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD len = _countof(name);
   name[0] = 0;
-  if (GetComputerName(name, &len) && lstrlen(name)) {
+  if (!GetNameFromMAC(name, len))
+    GetComputerName(name, &len);
+  if (lstrlen(name)) {
     TCHAR escaped[INTERNET_MAX_URL_LENGTH];
     len = _countof(escaped);
     if ((UrlEscape(name, escaped, &len, URL_ESCAPE_SEGMENT_ONLY | 
@@ -84,6 +100,59 @@ WebPagetest::WebPagetest(WptSettings &settings, WptStatus &status):
       _computer_name = escaped;
   }
   UpdateDNSServers();
+
+  _screenWidth = GetSystemMetrics(SM_CXSCREEN);
+  _screenHeight = GetSystemMetrics(SM_CYSCREEN);
+}
+
+/*-----------------------------------------------------------------------------
+  For special cases where we use VMWare-reserved MAC addresses we can auto-name
+  the PC based on the assigned MAC address in the form of:
+  00:50:56:00:<vm server number>:<machine number>
+-----------------------------------------------------------------------------*/
+bool WebPagetest::GetNameFromMAC(LPTSTR name, DWORD &len) {
+  bool ret = false;
+  ULONG addr_len = 15000;
+  IP_ADAPTER_ADDRESSES * addresses = NULL;
+  DWORD ret_val = NO_ERROR;
+  DWORD attempts = 0;
+  do {
+    attempts++;
+    addresses = (IP_ADAPTER_ADDRESSES *)malloc(addr_len);
+    if (addresses) {
+      ret_val = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX,
+                                     NULL, addresses, &addr_len);
+      if (ret_val != NO_ERROR) {
+        free(addresses);
+        addresses = NULL;
+      }
+    } else {
+      break;
+    }
+  } while ((ret_val == ERROR_BUFFER_OVERFLOW) && (attempts <= 2));
+
+  if (ret_val == NO_ERROR && addresses) {
+    IP_ADAPTER_ADDRESSES * addr = addresses;
+    while (addr) {
+      if (addr->PhysicalAddressLength == 6 &&
+          addr->PhysicalAddress[0] == 0x00 &&
+          addr->PhysicalAddress[1] == 0x50 &&
+          addr->PhysicalAddress[2] == 0x56 &&
+          addr->PhysicalAddress[3] == 0x00) {
+        DWORD server = addr->PhysicalAddress[4];
+        DWORD machine = addr->PhysicalAddress[5];
+        wsprintf(name, _T("VM%X-%02X"), server, machine);
+        len = lstrlen(name);
+        ret = true;
+      }
+      addr = addr->Next;
+    }
+  }
+
+  if (addresses)
+    free(addresses);
+
+  return ret;
 }
 
 /*-----------------------------------------------------------------------------
@@ -97,12 +166,20 @@ WebPagetest::~WebPagetest(void) {
 bool WebPagetest::GetTest(WptTestDriver& test) {
   bool ret = false;
 
+  if (rebooting_) {
+    // We should never get here, but if we do make sure to keep trying to reboot
+    Reboot();
+    return false;
+  }
+
   DeleteDirectory(test._directory, false);
 
   // build the url for the request
   CString buff;
-  CString url = _settings._server + _T("work/getwork.php?shards=1");
-  url += CString(_T("&location=")) + _settings._location;
+  CString url = _settings._server + _T("work/getwork.php?shards=1&reboot=1");
+  buff.Format(_T("&location=%s&screenwidth=%d&screenheight=%d&winver=%d.%d&winserver=%d&is64bit=%d"),
+              _settings._location, _screenWidth, _screenHeight, _winMajor, _winMinor, _isServer, _is64Bit);
+  url += buff;
   if (_settings._key.GetLength())
     url += CString(_T("&key=")) + _settings._key;
   if (_majorVer || _minorVer || _buildNo || _revisionNo) {
@@ -115,6 +192,10 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
     url += CString(_T("&pc=")) + _computer_name;
   if (_settings._ec2_instance.GetLength())
     url += CString(_T("&ec2=")) + _settings._ec2_instance;
+  if (_settings._ec2_availability_zone.GetLength())
+    url += CString(_T("&ec2zone=")) + _settings._ec2_availability_zone;
+  if (_settings._azure_instance.GetLength())
+    url += CString(_T("&azure=")) + _settings._azure_instance;
   if (_dns_servers.GetLength())
     url += CString(_T("&dns=")) + _dns_servers;
   ULARGE_INTEGER fd;
@@ -128,7 +209,10 @@ bool WebPagetest::GetTest(WptTestDriver& test) {
   CString test_string, zip_file;
   if (HttpGet(url, test, test_string, zip_file)) {
     if (test_string.GetLength()) {
-      if (test.Load(test_string)) {
+      if (test_string == _T("Reboot")) {
+        rebooting_ = true;
+        Reboot();
+      } else if (test.Load(test_string)) {
         if (!test._client.IsEmpty())
           ret = GetClient(test);
         else
@@ -159,8 +243,16 @@ bool WebPagetest::DeleteIncrementalResults(WptTestDriver& test) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void WebPagetest::StartTestRun(WptTestDriver& test) {
+  test.marked_done_ = false;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 bool WebPagetest::UploadIncrementalResults(WptTestDriver& test) {
   bool ret = true;
+
+  ATLTRACE(_T("[wptdriver] - UploadIncrementalResults"));
 
   if (!test._discard_test) {
     CString directory = test._directory + CString(_T("\\"));
@@ -168,9 +260,22 @@ bool WebPagetest::UploadIncrementalResults(WptTestDriver& test) {
     GetImageFiles(directory, image_files);
     ret = UploadImages(test, image_files);
     if (ret) {
-      ret = UploadData(test, false);
-      SetCPUUtilization(0);
+      // See if this is the last run we are testing and if so, pass the done flag
+      // through now instead of waiting for TestDone() to prevent double-calls
+      // to workdone.
+      bool done = false;
+      if (test._fv_only || !test._clear_cache) {
+        if (test._specific_run || test._run == test._runs) {
+          done = true;
+        }
+      }
+      ret = UploadData(test, done);
+      if (done && ret)
+        test.marked_done_ = true;
     }
+    g_shared->SetCPUUtilization(0);
+  } else {
+    DeleteIncrementalResults(test);
   }
 
   return ret;
@@ -183,14 +288,17 @@ bool WebPagetest::TestDone(WptTestDriver& test){
   bool ret = true;
 
   UpdateDNSServers();
-  CString directory = test._directory + CString(_T("\\"));
-  CAtlList<CString> image_files;
-  GetImageFiles(directory, image_files);
-  ret = UploadImages(test, image_files);
-  if (ret) {
-    ret = UploadData(test, true);
-    SetCPUUtilization(0);
+  if (!test.marked_done_) {
+    CString directory = test._directory + CString(_T("\\"));
+    CAtlList<CString> image_files;
+    GetImageFiles(directory, image_files);
+    ret = UploadImages(test, image_files);
+    if (ret)
+      ret = UploadData(test, true);
+    g_shared->SetCPUUtilization(0);
   }
+
+  ATLTRACE(_T("[wptdriver] - Test Done"));
 
   return ret;
 }
@@ -225,21 +333,41 @@ void WebPagetest::GetFiles(const CString& directory,
 }
 
 /*-----------------------------------------------------------------------------
+  Upload any binary files that are larger than 100KB separately
 -----------------------------------------------------------------------------*/
 bool WebPagetest::UploadImages(WptTestDriver& test,
                                CAtlList<CString>& image_files) {
   bool ret = true;
 
+  LogDuration logBrowserLaunchTime(test.TimeLog(), "Upload Images");
   // Upload the large binary files individually (e.g. images, tcpdump).
   CString url = _settings._server + _T("work/resultimage.php");
   POSITION pos = image_files.GetHeadPosition();
   while (ret && pos) {
     CString file = image_files.GetNext(pos);
-    if (!test._discard_test)
-      ret = UploadFile(url, false, test, file);
-    if (ret)
+    if (!test._discard_test) {
+      CAtlList<CString> newFiles;
+      if (ProcessFile(test, file, newFiles)) {
+        POSITION newFilePos = newFiles.GetHeadPosition();
+        while (ret && newFilePos) {
+          CString newFile = newFiles.GetNext(newFilePos);
+          if (FileSize(newFile) > 100000) {
+            ret = UploadFile(url, false, test, newFile);
+            if (ret)
+              DeleteFile(newFile);
+          }
+        }
+      }
+      if (ret && FileSize(file) > 100000) {
+        ret = UploadFile(url, false, test, file);
+        if (ret)
+          DeleteFile(file);
+      }
+    } else {
       DeleteFile(file);
+    }
   }
+
   return ret;
 }
 
@@ -250,6 +378,7 @@ bool WebPagetest::UploadData(WptTestDriver& test, bool done) {
 
   CString file = NO_FILE;
   CString dir = test._directory + CString(_T("\\"));
+
   ret = CompressResults(dir, dir + _T("results.zip"));
   if (ret)
     file = dir + _T("results.zip");
@@ -262,6 +391,77 @@ bool WebPagetest::UploadData(WptTestDriver& test, bool done) {
   }
 
   return ret;
+}
+
+/*-----------------------------------------------------------------------------
+  Set the credentials required to access the server, if configured
+-----------------------------------------------------------------------------*/
+void WebPagetest::SetLoginCredentials(HINTERNET request) {
+  if (!_settings._username.IsEmpty() && !_settings._password.IsEmpty()) {
+    InternetSetOption(request, INTERNET_OPTION_USERNAME,
+      (LPVOID)(PCTSTR)(_settings._username), _settings._username.GetLength() + 1);
+    InternetSetOption(request, INTERNET_OPTION_PASSWORD,
+      (LPVOID)(PCTSTR)(_settings._password), _settings._password.GetLength() + 1);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Retrieves a client certificate from the Personal certificate store.  Gets the
+  first certificate, or the certificate that matches the common name specified
+  in the settings
+-----------------------------------------------------------------------------*/
+void WebPagetest::LoadClientCertificateFromStore(HINTERNET request) {
+  HCERTSTORE hMyStore = CertOpenSystemStore(0, _T("MY"));
+
+  if (!hMyStore)
+    return;
+
+  PCCERT_CONTEXT pDesiredCert = NULL;
+  if (!_settings._clientCertCommonName.IsEmpty()) {
+    CERT_RDN cert_rdn;
+    CERT_RDN_ATTR cert_rdn_attr;
+
+    cert_rdn.cRDNAttr = 1;
+    cert_rdn.rgRDNAttr = &cert_rdn_attr;
+
+    _settings._clientCertCommonName;
+    cert_rdn_attr.pszObjId = szOID_COMMON_NAME;
+    cert_rdn_attr.dwValueType = CERT_RDN_ANY_TYPE;
+    cert_rdn_attr.Value.cbData = _settings._clientCertCommonName.GetLength();
+
+    LPSTR pCommonName = new char[_settings._clientCertCommonName.GetLength() + 1];
+    WideCharToMultiByte(CP_ACP, 0, _settings._clientCertCommonName, -1, pCommonName, _settings._clientCertCommonName.GetLength() + 1, NULL, NULL);
+    cert_rdn_attr.Value.pbData = (BYTE *)pCommonName;
+
+    pDesiredCert = CertFindCertificateInStore(
+      hMyStore,
+      X509_ASN_ENCODING | PKCS_7_ASN_ENCODING,
+      0,
+      CERT_FIND_SUBJECT_ATTR,
+      &cert_rdn,
+      NULL);
+
+    delete[] pCommonName;
+  }
+  else {
+    // use the first certificate in the store
+    pDesiredCert = CertFindCertificateInStore(
+      hMyStore,
+      X509_ASN_ENCODING | PKCS_7_ASN_ENCODING,
+      0,
+      NULL,
+      NULL,
+      NULL);
+  }
+
+  if (pDesiredCert) {
+    InternetSetOption(request, INTERNET_OPTION_CLIENT_CERT_CONTEXT,
+      (LPVOID)pDesiredCert, sizeof(CERT_CONTEXT));
+    CertFreeCertificateContext(pDesiredCert);
+  }
+
+  if (hMyStore)
+    CertCloseStore(hMyStore, 0);
 }
 
 /*-----------------------------------------------------------------------------
@@ -286,43 +486,64 @@ bool WebPagetest::HttpGet(CString url, WptTestDriver& test,
                       &timeout, sizeof(timeout));
     CString host, object;
     unsigned short port;
-    DWORD secure_flag;
-    if (CrackUrl(url, host, port, object, secure_flag)) {
-      HINTERNET http_request = InternetOpenUrl(internet, url, NULL, 0, 
-                                  INTERNET_FLAG_NO_CACHE_WRITE | 
-                                  INTERNET_FLAG_NO_UI | 
-                                  INTERNET_FLAG_PRAGMA_NOCACHE | 
-                                  INTERNET_FLAG_RELOAD |
-                                  secure_flag, NULL);
-      if (http_request) {
-        TCHAR mime_type[1024] = TEXT("\0");
-        DWORD len = _countof(mime_type);
-        if (HttpQueryInfo(http_request,HTTP_QUERY_CONTENT_TYPE, mime_type, 
-                            &len, NULL)) {
-          result = true;
-          bool is_zip = false;
-          char buff[4097];
-          DWORD bytes_read, bytes_written;
-          HANDLE file = INVALID_HANDLE_VALUE;
-          if (!lstrcmpi(mime_type, _T("application/zip"))) {
-            zip_file = test._directory + _T("\\wpt.zip");
-            file = CreateFile(zip_file,GENERIC_WRITE,0,0,CREATE_ALWAYS,0,NULL);
-            is_zip = true;
+    DWORD secure_flags;
+    if (CrackUrl(url, host, port, object, secure_flags)) {
+      HINTERNET connect = InternetConnect(internet, host, port, NULL, NULL,
+        INTERNET_SERVICE_HTTP, 0, 0);
+      if (connect) {
+        HINTERNET request = HttpOpenRequest(connect, _T("GET"), object, NULL, NULL, NULL,
+          INTERNET_FLAG_NO_CACHE_WRITE |
+          INTERNET_FLAG_NO_UI |
+          INTERNET_FLAG_PRAGMA_NOCACHE |
+          INTERNET_FLAG_RELOAD | 
+          INTERNET_FLAG_KEEP_CONNECTION | 
+          secure_flags, 0);
+        if (request) {
+
+          SetLoginCredentials(request);
+          BOOL send_request_result = HttpSendRequest(request, NULL, 0, NULL, 0);
+          if (!send_request_result) {
+            DWORD dwError = GetLastError();
+            if (dwError == ERROR_INTERNET_CLIENT_AUTH_CERT_NEEDED) {
+              LoadClientCertificateFromStore(request);
+              send_request_result = HttpSendRequest(request, NULL, 0, NULL, 0);
+            } 
           }
-          while (InternetReadFile(http_request, buff, sizeof(buff) - 1, 
-                  &bytes_read) && bytes_read) {
-            if (is_zip) {
-              WriteFile(file, buff, bytes_read, &bytes_written, 0);
-            } else {
-              // NULL-terminate it and add it to our response string
-              buff[bytes_read] = 0;
-              test_string += CA2T(buff);
+
+          if (send_request_result) {
+            TCHAR mime_type[1024] = TEXT("\0");
+            DWORD len = _countof(mime_type);
+
+            if (HttpQueryInfo(request, HTTP_QUERY_CONTENT_TYPE, mime_type,
+              &len, NULL)) {
+              result = true;
+              bool is_zip = false;
+              char buff[4097];
+              DWORD bytes_read, bytes_written;
+              HANDLE file = INVALID_HANDLE_VALUE;
+              if (!lstrcmpi(mime_type, _T("application/zip"))) {
+                zip_file = test._directory + _T("\\wpt.zip");
+                file = CreateFile(zip_file, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
+                is_zip = true;
+              }
+              while (InternetReadFile(request, buff, sizeof(buff) - 1,
+                &bytes_read) && bytes_read) {
+                if (is_zip) {
+                  WriteFile(file, buff, bytes_read, &bytes_written, 0);
+                }
+                else {
+                  // NULL-terminate it and add it to our response string
+                  buff[bytes_read] = 0;
+                  test_string += CA2T(buff, CP_UTF8);
+                }
+              }
+              if (file != INVALID_HANDLE_VALUE)
+                CloseHandle(file);
             }
           }
-          if (file != INVALID_HANDLE_VALUE)
-            CloseHandle(file);
+          InternetCloseHandle(request);
         }
-        InternetCloseHandle(http_request);
+        InternetCloseHandle(connect);
       }
     }
     InternetCloseHandle(internet);
@@ -356,91 +577,113 @@ bool WebPagetest::UploadFile(CString url, bool done, WptTestDriver& test,
     }
   }
 
-  if (BuildFormData(_settings, test, done, file_name, file_size, 
-                      headers, footer, form_data, content_length)) {
-    // use WinInet to do the POST (quite a few steps)
-    HINTERNET internet = InternetOpen(_T("WebPagetest Driver"), 
-              INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-    if (internet) {
-      DWORD timeout = 600000;
-      InternetSetOption(internet, INTERNET_OPTION_CONNECT_TIMEOUT,
-                        &timeout, sizeof(timeout));
-      InternetSetOption(internet, INTERNET_OPTION_RECEIVE_TIMEOUT,
-                        &timeout, sizeof(timeout));
-      InternetSetOption(internet, INTERNET_OPTION_SEND_TIMEOUT,
-                        &timeout, sizeof(timeout));
-      InternetSetOption(internet, INTERNET_OPTION_DATA_SEND_TIMEOUT,
-                        &timeout, sizeof(timeout));
-      InternetSetOption(internet, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT,
-                        &timeout, sizeof(timeout));
+  ATLTRACE(_T("[wptdriver] - Uploading '%s' (%d bytes) to '%s'"), (LPCTSTR)file, file_size, (LPCTSTR)url);
 
-      CString host, object;
-      unsigned short port;
-      DWORD secure_flag;
-      if (CrackUrl(url, host, port, object, secure_flag)) {
-        HINTERNET connect = InternetConnect(internet, host, port, NULL, NULL,
-                                            INTERNET_SERVICE_HTTP, 0, 0);
-        if (connect){
-          HINTERNET request = HttpOpenRequest(connect, _T("POST"), object, 
-                                                NULL, NULL, NULL, 
-                                                INTERNET_FLAG_NO_CACHE_WRITE |
-                                                INTERNET_FLAG_NO_UI |
-                                                INTERNET_FLAG_PRAGMA_NOCACHE |
-                                                INTERNET_FLAG_RELOAD |
-                                                INTERNET_FLAG_KEEP_CONNECTION |
-                                                secure_flag, NULL);
-          if (request){
-            if (HttpAddRequestHeaders(request, headers, headers.GetLength(), 
-                                      HTTP_ADDREQ_FLAG_ADD |
-                                      HTTP_ADDREQ_FLAG_REPLACE)) {
-              INTERNET_BUFFERS buffers;
-              memset( &buffers, 0, sizeof(buffers) );
-              buffers.dwStructSize = sizeof(buffers);
-              buffers.dwBufferTotal = content_length;
-              if (HttpSendRequestEx(request, &buffers, NULL, 0, NULL)) {
-                DWORD bytes_written;
-                if (InternetWriteFile(request, (LPCSTR)form_data, 
-                                      form_data.GetLength(), &bytes_written)) {
-                  // upload the file itself
-                  if (file_handle != INVALID_HANDLE_VALUE && file_size) {
-                      DWORD chunkSize = min(64 * 1024, file_size);
-                      LPBYTE mem = (LPBYTE)malloc(chunkSize);
-                      if (mem) {
-                        DWORD bytes;
-                        while (ReadFile(file_handle, mem, chunkSize, 
-                                                         &bytes, 0) && bytes) {
-                          InternetWriteFile(request, mem, bytes, 
-                                                            &bytes_written);
-                        }
-                        free(mem);
-                      }
-                  }
+  BuildFormData(_settings, test, done, file_name, file_size, 
+                headers, footer, form_data, content_length);
 
-                  // upload the end of the form data
-                  if (InternetWriteFile(request, (LPCSTR)footer, 
-                                        footer.GetLength(), &bytes_written)) {
-                    if (HttpEndRequest(request, NULL, 0, 0)) {
-                      ret = true;
-                    }
-                  }
-                }
+  // use WinInet to do the POST (quite a few steps)
+  HINTERNET internet = InternetOpen(_T("WebPagetest Driver"), 
+            INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+  if (internet) {
+    DWORD timeout = 600000;
+    InternetSetOption(internet, INTERNET_OPTION_CONNECT_TIMEOUT,
+                      &timeout, sizeof(timeout));
+    InternetSetOption(internet, INTERNET_OPTION_RECEIVE_TIMEOUT,
+                      &timeout, sizeof(timeout));
+    InternetSetOption(internet, INTERNET_OPTION_SEND_TIMEOUT,
+                      &timeout, sizeof(timeout));
+    InternetSetOption(internet, INTERNET_OPTION_DATA_SEND_TIMEOUT,
+                      &timeout, sizeof(timeout));
+    InternetSetOption(internet, INTERNET_OPTION_DATA_RECEIVE_TIMEOUT,
+                      &timeout, sizeof(timeout));
+
+    CString host, object;
+    unsigned short port;
+    DWORD secure_flag;
+    if (CrackUrl(url, host, port, object, secure_flag)) {
+      ATLTRACE(_T("[wptdriver] - Connecting to '%s' port %d"), (LPCTSTR)host, port);
+      HINTERNET connect = InternetConnect(internet, host, port, NULL, NULL,
+                                          INTERNET_SERVICE_HTTP, 0, 0);
+      if (connect) {
+        ATLTRACE(_T("[wptdriver] - POSTing to %s"), (LPCTSTR)object);
+        HINTERNET request = HttpOpenRequest(connect, _T("POST"), object, 
+                                              NULL, NULL, NULL, 
+                                              INTERNET_FLAG_NO_CACHE_WRITE |
+                                              INTERNET_FLAG_NO_UI |
+                                              INTERNET_FLAG_PRAGMA_NOCACHE |
+                                              INTERNET_FLAG_RELOAD |
+                                              INTERNET_FLAG_KEEP_CONNECTION |
+                                              secure_flag, NULL);
+        if (request) {
+          SetLoginCredentials(request);
+          if (HttpAddRequestHeaders(request, headers, headers.GetLength(), 
+                                    HTTP_ADDREQ_FLAG_ADD |
+                                    HTTP_ADDREQ_FLAG_REPLACE)) {
+            INTERNET_BUFFERS buffers;
+            memset( &buffers, 0, sizeof(buffers) );
+            buffers.dwStructSize = sizeof(buffers);
+            buffers.dwBufferTotal = content_length;
+            ATLTRACE(_T("[wptdriver] - Sending request"));
+            BOOL send_request_result = HttpSendRequestEx(request, &buffers, NULL, 0, NULL);
+            if (!send_request_result) {
+              DWORD dwError = GetLastError();
+              if (dwError == ERROR_INTERNET_CLIENT_AUTH_CERT_NEEDED) {
+                LoadClientCertificateFromStore(request);
+                send_request_result = HttpSendRequestEx(request, &buffers, NULL, 0, NULL);
               }
             }
-            InternetCloseHandle(request);
+
+            if (send_request_result) {
+              DWORD bytes_written;
+              ATLTRACE(_T("[wptdriver] - Writing data"));
+              if (InternetWriteFile(request, (LPCSTR)form_data, 
+                                    form_data.GetLength(), &bytes_written)) {
+                ATLTRACE(_T("[wptdriver] - Uploading the file"));
+                // upload the file itself
+                if (file_handle != INVALID_HANDLE_VALUE && file_size) {
+                    DWORD chunkSize = min(64 * 1024, file_size);
+                    LPBYTE mem = (LPBYTE)malloc(chunkSize);
+                    if (mem) {
+                      DWORD bytes;
+                      while (ReadFile(file_handle, mem, chunkSize, 
+                                                        &bytes, 0) && bytes) {
+                        InternetWriteFile(request, mem, bytes, 
+                                                          &bytes_written);
+                      }
+                      free(mem);
+                    }
+                }
+
+                // upload the end of the form data
+                if (InternetWriteFile(request, (LPCSTR)footer, 
+                                      footer.GetLength(), &bytes_written)) {
+                  if (HttpEndRequest(request, NULL, 0, 0)) {
+                    ret = true;
+                  }
+                }
+              } else {
+                ATLTRACE(_T("InternetWriteFile failed: %d"), GetLastError());
+              }
+            } else {
+              ATLTRACE(_T("HttpSendRequestEx failed: %d"), GetLastError());
+            }
           }
-          InternetCloseHandle(connect);
+          InternetCloseHandle(request);
         }
+        InternetCloseHandle(connect);
       }
-      InternetCloseHandle(internet);
     }
+    InternetCloseHandle(internet);
   }
 
-  if (file_handle != INVALID_HANDLE_VALUE) {
+  if (file_handle != INVALID_HANDLE_VALUE)
     CloseHandle( file_handle );
-  }
 
   if (ret)
     DeleteFile(file);
+
+  ATLTRACE(_T("[wptdriver] - Upload %s"), ret ? _T("SUCCEEDED") : _T("FAILED"));
 
   return ret;
 }
@@ -481,12 +724,12 @@ bool WebPagetest::CrackUrl(CString url, CString &host, unsigned short &port,
       port = parts.nPort;
       object = path;
       object += extra;
-      if (!host.CompareNoCase(_T("www.webpagetest.org")))
-        host = _T("agent.webpagetest.org");
       if (!lstrcmpi(scheme, _T("https"))) {
-        secure_flag = INTERNET_FLAG_SECURE |
-                      INTERNET_FLAG_IGNORE_CERT_CN_INVALID |
-                      INTERNET_FLAG_IGNORE_CERT_DATE_INVALID;
+        secure_flag = INTERNET_FLAG_SECURE;
+        if (!_settings._requireValidCertificate) {
+          secure_flag |= INTERNET_FLAG_IGNORE_CERT_CN_INVALID |
+          INTERNET_FLAG_IGNORE_CERT_DATE_INVALID;
+        }
         if (!port)
           port = INTERNET_DEFAULT_HTTPS_PORT;
       } else if (!port)
@@ -498,13 +741,11 @@ bool WebPagetest::CrackUrl(CString url, CString &host, unsigned short &port,
 /*-----------------------------------------------------------------------------
   Build the form data for a POST (with an optional file)
 -----------------------------------------------------------------------------*/
-bool WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test, 
+void WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test, 
                             bool done,
                             CString file_name, DWORD file_size,
                             CString& headers, CStringA& footer, 
                             CStringA& form_data, DWORD& content_length){
-  bool ret = true;
-
   footer = "";
   form_data = "";
 
@@ -517,7 +758,7 @@ bool WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test,
       guid.Data4[3],guid.Data4[4],guid.Data4[5],guid.Data4[6],guid.Data4[7]);
   
   headers = CString("Content-Type: multipart/form-data; boundary=") + 
-              CString(CA2T(boundary)) + _T("\r\n");
+              CString(CA2T(boundary, CP_UTF8)) + _T("\r\n");
 
   // location
   form_data += CStringA("--") + boundary + "\r\n";
@@ -566,11 +807,17 @@ bool WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test,
     form_data += test._run_error + "\r\n";
   }
 
-  // done flag
+  // done flag and pass-through data fields
   if (done) {
     form_data += CStringA("--") + boundary + "\r\n";
     form_data += "Content-Disposition: form-data; name=\"done\"\r\n\r\n";
     form_data += "1\r\n";
+
+    if (!test._job_info.IsEmpty()) {
+      form_data += CStringA("--") + boundary + "\r\n";
+      form_data += "Content-Disposition: form-data; name=\"jobInfo\"\r\n\r\n";
+      form_data += test._job_info + "\r\n";
+    }
   }
 
   if (_computer_name.GetLength()) {
@@ -585,6 +832,12 @@ bool WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test,
     form_data += CStringA(CT2A(_settings._ec2_instance)) + "\r\n";
   }
 
+  if (_settings._azure_instance.GetLength()) {
+    form_data += CStringA("--") + boundary + "\r\n";
+    form_data += "Content-Disposition: form-data; name=\"azure\"\r\n\r\n";
+    form_data += CStringA(CT2A(_settings._azure_instance)) + "\r\n";
+  }
+
   // DNS servers
   if (!_dns_servers.IsEmpty()) {
     form_data += CStringA("--") + boundary + "\r\n";
@@ -592,7 +845,7 @@ bool WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test,
     form_data += CStringA(CT2A(_dns_servers)) + "\r\n";
   }
 
-  int cpu_utilization = GetCPUUtilization();
+  int cpu_utilization = g_shared->CPUUtilization();
   if (cpu_utilization > 0) {
     form_data += CStringA("--") + boundary + "\r\n";
     form_data += "Content-Disposition: form-data; name=\"cpu\"\r\n\r\n";
@@ -616,8 +869,6 @@ bool WebPagetest::BuildFormData(WptSettings& settings, WptTestDriver& test,
   CString buff;
   buff.Format(_T("Content-Length: %u\r\n"), content_length);
   headers += buff;
-
-  return ret;
 }
 
 /*-----------------------------------------------------------------------------
@@ -631,7 +882,7 @@ bool WebPagetest::CompressResults(CString directory, CString zip_file) {
   if (file) {
     ret = true;
     WIN32_FIND_DATA fd;
-    HANDLE find_handle = FindFirstFile( directory + _T("*.*"), &fd);
+    HANDLE find_handle = FindFirstFile(directory + _T("*.*"), &fd);
     if (find_handle != INVALID_HANDLE_VALUE) {
       do {
         if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
@@ -646,8 +897,16 @@ bool WebPagetest::CompressResults(CString directory, CString zip_file) {
                 if (mem) {
                   DWORD bytes;
                   if (ReadFile(new_file,mem,size,&bytes, 0) && size == bytes) {
-                    if (!zipOpenNewFileInZip(file, CT2A(fd.cFileName), 0, 0, 0, 
-                                     0, 0, 0,Z_DEFLATED,Z_BEST_COMPRESSION )) {
+                    CStringA destFile = CT2A(fd.cFileName, CP_UTF8);
+                    int split_pos = destFile.Find("_progress_");
+                    if (split_pos > 0) {
+                      CStringA dir = "video_" + destFile.Left(split_pos).MakeLower();
+                      CStringA video_file = "frame" + destFile.Mid(split_pos + 9);
+                      destFile = dir + "/" + video_file;
+                    }
+
+                    // The files are already compressed, just store them
+                    if (!zipOpenNewFileInZip(file, destFile, 0, 0, 0, 0, 0, 0, Z_DEFLATED, Z_NO_COMPRESSION)) {
                       zipWriteInFileInZip(file, mem, size);
                       zipCloseFileInZip(file);
                     }
@@ -960,3 +1219,65 @@ void WebPagetest::UpdateDNSServers() {
       free(addresses);
   }
 }
+
+/*-----------------------------------------------------------------------------
+  Run python-based post-processing on the trace, pcap, etc files
+-----------------------------------------------------------------------------*/
+bool WebPagetest::ProcessFile(WptTestDriver& test, CString file, CAtlList<CString> &newFiles) {
+  bool hasNewFiles = false;
+  int pos = -1;
+  if ((pos = file.Find(_T("trace.json"))) >= 0) {
+    LogDuration logTrace(test.TimeLog(), "Process Trace");
+    CString cpuFile = file.Left(pos) + _T("timeline_cpu.json.gz");
+    CString scriptTimingFile = file.Left(pos) + _T("script_timing.json.gz");
+    CString userTimingFile = file.Left(pos) + _T("user_timing.json.gz");
+    CString featureUsageFile = file.Left(pos) + _T("feature_usage.json.gz");
+    CString interactiveFile = file.Left(pos) + _T("interactive.json.gz");
+    CString v8file = file.Left(pos) + _T("v8stats.json.gz");
+    CString options;
+    options.Format(_T("-t \"%s\" -c \"%s\" -j \"%s\" -u \"%s\" -f \"%s\" -i \"%s\" -s \"%s\""),
+                   (LPCTSTR)file, (LPCTSTR)cpuFile, (LPCTSTR)scriptTimingFile,
+                   (LPCTSTR)userTimingFile, (LPCTSTR)featureUsageFile,
+                   (LPCTSTR)interactiveFile, (LPCTSTR)v8file);
+    OutputDebugStringA("Processing trace file");
+    if (RunPythonScript(_T("support\\trace_parser.py"), options)) {
+      if (FileExists(cpuFile)) {
+        hasNewFiles = true;
+        newFiles.AddTail(cpuFile);
+      }
+      if (FileExists(scriptTimingFile)) {
+        hasNewFiles = true;
+        newFiles.AddTail(scriptTimingFile);
+      }
+      if (FileExists(userTimingFile)) {
+        hasNewFiles = true;
+        newFiles.AddTail(userTimingFile);
+      }
+      if (FileExists(featureUsageFile)) {
+        hasNewFiles = true;
+        newFiles.AddTail(featureUsageFile);
+      }
+      if (FileExists(interactiveFile)) {
+        hasNewFiles = true;
+        newFiles.AddTail(interactiveFile);
+      }
+    }
+    OutputDebugStringA("Processing trace file - complete");
+    logTrace.Stop();
+  } else if ((pos = file.Find(_T(".cap"))) >= 0) {
+    LogDuration logPcap(test.TimeLog(), "Process tcpdump");
+    CString slicesFile = file.Left(pos) + _T("_pcap_slices.json.gz");
+    CString options;
+    options.Format(_T("-i \"%s\" -d \"%s\""),
+                   (LPCTSTR)file, (LPCTSTR)slicesFile);
+    if (RunPythonScript(_T("support\\pcap-parser.py"), options)) {
+      if (FileExists(slicesFile)) {
+        hasNewFiles = true;
+        newFiles.AddTail(slicesFile);
+      }
+    }
+    logPcap.Stop();
+  }
+  return hasNewFiles;
+}
+

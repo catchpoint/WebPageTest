@@ -1,0 +1,487 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Third-Party">
+      <UniqueIdentifier>{8e4d199a-da39-4ebc-a539-9fca43a87955}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\CxImage">
+      <UniqueIdentifier>{5f573e3e-f047-4f25-ba3f-a4884d17fe2f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\CxImage\Header Files">
+      <UniqueIdentifier>{2db857ef-9b83-4424-bf2b-7f3770cb0f2a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\CxImage\Source Files">
+      <UniqueIdentifier>{962f8698-4324-4f8f-954c-0ca6065b8693}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\png">
+      <UniqueIdentifier>{814c47d3-d09e-4e1c-8f37-2de84c504e72}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\winpcap">
+      <UniqueIdentifier>{7683aeba-d0d8-44fc-a77a-00f90cf2b96c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\winpcap\pcap">
+      <UniqueIdentifier>{02921e41-f2e0-4f91-b8fe-c842b61cdea5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Third-Party\zlib">
+      <UniqueIdentifier>{de25709e-c82d-4f51-9450-fccb44fd8d97}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wptRecord.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WptRecorder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\stdint.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\xfile.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximabmp.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximacfg.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximadef.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximage.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximagif.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximaico.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximaiter.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximajas.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximajbg.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximajpg.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximamng.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximapcx.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximapng.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximapsd.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximaraw.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximaska.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximatga.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximath.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximatif.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximawbmp.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\ximawmf.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\xiofile.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\cximage\xmemfile.h">
+      <Filter>Third-Party\CxImage\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\png\png.h">
+      <Filter>Third-Party\png</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\png\pngconf.h">
+      <Filter>Third-Party\png</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\png\pngdebug.h">
+      <Filter>Third-Party\png</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\png\pnginfo.h">
+      <Filter>Third-Party\png</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\png\pnglibconf.h">
+      <Filter>Third-Party\png</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\png\pngpriv.h">
+      <Filter>Third-Party\png</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\png\pngstruct.h">
+      <Filter>Third-Party\png</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\winpcap\Include\bittypes.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\winpcap\Include\ip6_misc.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\winpcap\Include\Packet32.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\winpcap\Include\pcap-bpf.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\winpcap\Include\pcap-namedb.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\winpcap\Include\pcap-stdinc.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\winpcap\Include\pcap.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\winpcap\Include\remote-ext.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\winpcap\Include\Win32-Extensions.h">
+      <Filter>Third-Party\winpcap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\winpcap\Include\pcap\bluetooth.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\winpcap\Include\pcap\bpf.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\winpcap\Include\pcap\namedb.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\winpcap\Include\pcap\pcap.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\winpcap\Include\pcap\sll.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\winpcap\Include\pcap\usb.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\winpcap\Include\pcap\vlan.h">
+      <Filter>Third-Party\winpcap\pcap</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\contrib\minizip\crypt.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\contrib\minizip\ioapi.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\contrib\minizip\iowin32.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\contrib\minizip\mztools.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\contrib\minizip\unzip.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\contrib\minizip\zip.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\crc32.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\deflate.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\inffast.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\inffixed.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\inflate.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\inftrees.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\trees.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\zconf.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\zlib.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wptdriver\zlib\zutil.h">
+      <Filter>Third-Party\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\wpthook\screen_capture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wptRecord.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WptRecorder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\util.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximabmp.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximadsp.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximaenc.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximaexif.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximage.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximagif.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximahist.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximaico.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximainfo.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximaint.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximajas.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximajbg.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximajpg.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximalpha.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximalyr.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximamng.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximapal.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximapcx.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximapng.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximapsd.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximaraw.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximasel.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximaska.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximatga.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximath.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximatif.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximatran.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximawbmp.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximawmf.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\ximawnd.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\cximage\xmemfile.cpp">
+      <Filter>Third-Party\CxImage\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\png\png.c">
+      <Filter>Third-Party\png</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\png\pngerror.c">
+      <Filter>Third-Party\png</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\png\pngget.c">
+      <Filter>Third-Party\png</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\png\pngmem.c">
+      <Filter>Third-Party\png</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\png\pngpread.c">
+      <Filter>Third-Party\png</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\png\pngread.c">
+      <Filter>Third-Party\png</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\png\pngrio.c">
+      <Filter>Third-Party\png</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\png\pngrtran.c">
+      <Filter>Third-Party\png</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\png\pngrutil.c">
+      <Filter>Third-Party\png</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\png\pngset.c">
+      <Filter>Third-Party\png</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\png\pngtrans.c">
+      <Filter>Third-Party\png</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\png\pngwio.c">
+      <Filter>Third-Party\png</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\png\pngwrite.c">
+      <Filter>Third-Party\png</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\png\pngwtran.c">
+      <Filter>Third-Party\png</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\png\pngwutil.c">
+      <Filter>Third-Party\png</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\adler32.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\compress.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\contrib\minizip\ioapi.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\contrib\minizip\iowin32.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\contrib\minizip\mztools.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\contrib\minizip\unzip.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\contrib\minizip\zip.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\crc32.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\deflate.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\gzclose.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\gzlib.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\gzread.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\gzwrite.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\infback.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\inffast.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\inflate.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\inftrees.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\trees.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\uncompr.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wptdriver\zlib\zutil.c">
+      <Filter>Third-Party\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\screen_capture.cc">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\wpthook\WinPCap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="wptRecord.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="small.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="wptRecord.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+</Project>

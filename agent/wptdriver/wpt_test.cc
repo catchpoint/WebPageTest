@@ -33,23 +33,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../wpthook/shared_mem.h"
 #include "wpt_settings.h"
 
-static const DWORD SCRIPT_TIMEOUT_MULTIPLIER = 2;
 static const BYTE JPEG_DEFAULT_QUALITY = 30;
 static const DWORD MS_IN_SEC = 1000;
 static const DWORD BROWSER_WIDTH = 1024;
 static const DWORD BROWSER_HEIGHT = 768;
 
-// Mobile emulation defaults (taken from a Droid RAZR).
-// The height has 36 added pixels to allow for the debugging header.
-static const TCHAR * DEFAULT_MOBILE_SCALE_FACTOR = _T("1.5");
-static const DWORD DEFAULT_MOBILE_WIDTH = 540;
-static const DWORD DEFAULT_MOBILE_HEIGHT = 900;
-static const DWORD CHROME_PADDING_HEIGHT = 115;
-static const DWORD CHROME_PADDING_WIDTH = 4;
+// Mobile emulation defaults (taken from a Nexus 5).
+static const TCHAR * DEFAULT_MOBILE_SCALE_FACTOR = _T("3");
+static const DWORD DEFAULT_MOBILE_WIDTH = 360;
+static const DWORD DEFAULT_MOBILE_HEIGHT = 511;
+static const DWORD CHROME_PADDING_HEIGHT = 75;
+static const DWORD CHROME_PADDING_WIDTH = 6;
 static const char * DEFAULT_MOBILE_USER_AGENT =
-    "Mozilla/5.0 (Linux; Android 4.0.4; DROID RAZR "
-    "Build/6.7.2-180_DHD-16_M4-31) AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/31.0.1631.1 Mobile Safari/537.36";
+    "Mozilla/5.0 (Linux; Android 4.4.4; Nexus 5 Build/KTU84Q) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.81 "
+    "Mobile Safari/537.36";
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -59,7 +57,9 @@ WptTest::WptTest(void):
   ,_activity_timeout(DEFAULT_ACTIVITY_TIMEOUT)
   ,_measurement_timeout(DEFAULT_TEST_TIMEOUT)
   ,has_gpu_(false)
-  ,lock_count_(0) {
+  ,lock_count_(0)
+  ,_script_timeout_multiplier(2)
+  ,overrode_ua_string_(false) {
   QueryPerformanceFrequency(&_perf_frequency);
 
   // figure out what our working diriectory is
@@ -73,7 +73,13 @@ WptTest::WptTest(void):
     lstrcat(path, _T("_data"));
     CreateDirectory(path, NULL);
     _test_file = CString(path) + _T("\\test.dat");
+    _json_file = CString(path) + _T("\\test.json");
   }
+  _is_chrome = false;
+  GetModuleFileName(NULL, path, _countof(path));
+  if (!lstrcmpi(PathFindFileName(path), _T("chrome.exe")))
+    _is_chrome = true;
+
   InitializeCriticalSection(&cs_);
   _tcp_port_override.InitHashTable(257);
 
@@ -99,6 +105,7 @@ void WptTest::Reset(void) {
   _ignore_ssl = false;
   _tcpdump = false;
   _timeline = false;
+  _timelineStackDepth = 0;
   _trace = false;
   _netlog = false;
   _video = false;
@@ -131,8 +138,8 @@ void WptTest::Reset(void) {
   _combine_steps = 0;
   _image_quality = JPEG_DEFAULT_QUALITY;
   _png_screen_shot = false;
+  _full_size_video = false;
   _minimum_duration = 0;
-  _upload_incremental_results = true;
   _user_agent.Empty();
   _add_headers.RemoveAll();
   _set_headers.RemoveAll();
@@ -156,6 +163,19 @@ void WptTest::Reset(void) {
   _browser_additional_command_line.Empty();
   _run_error.Empty();
   _test_error.Empty();
+  _custom_metrics.Empty();
+  _has_test_timed_out = false;
+  _user_agent_modifier = "PTST";
+  _append_user_agent.Empty();
+  _max_test_time = 0;
+  _minimal_results = false;
+  if (!_block_domains.IsEmpty())
+    _block_domains.RemoveAll();
+  if (!_block_domains_except.IsEmpty())
+    _block_domains_except.RemoveAll();
+  _job_info.Empty();
+  _testinfo_json.Empty();
+  _testinfo_ini.Empty();
 }
 
 /*-----------------------------------------------------------------------------
@@ -164,7 +184,7 @@ void WptTest::Reset(void) {
 bool WptTest::Load(CString& test) {
   bool ret = false;
 
-  WptTrace(loglevel::kFunction, _T("WptTest::Load()\n"));
+  ATLTRACE("WptTest::Load()");
 
   Reset();
 
@@ -178,85 +198,95 @@ bool WptTest::Load(CString& test) {
       CString value = line.Mid(keyEnd + 1);
       if (key.GetLength()) {
         // check against all of the known options
-        if (!key.CompareNoCase(_T("Test ID")))
+        if (!key.CompareNoCase(_T("Test ID"))) {
           _id = value.Trim();
-        else if (!key.CompareNoCase(_T("url")))
+        } else if (!key.CompareNoCase(_T("url"))) {
           _url = value.Trim();
-        else if (!key.CompareNoCase(_T("fvonly")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("fvonly")) && _ttoi(value.Trim())) {
           _fv_only = true;
-        else if (!key.CompareNoCase(_T("run")))
+        } else if (!key.CompareNoCase(_T("run"))) {
           _specific_run = _ttoi(value.Trim());
-        else if (!key.CompareNoCase(_T("index")))
+        } else if (!key.CompareNoCase(_T("index"))) {
           _specific_index = _ttoi(value.Trim());
-        else if (!key.CompareNoCase(_T("discardTest")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("discardTest")) && _ttoi(value.Trim())) {
           _discard_test = true;
-        else if (!key.CompareNoCase(_T("runs")))
+        } else if (!key.CompareNoCase(_T("runs"))) {
           _runs = _ttoi(value.Trim());
-        else if (!key.CompareNoCase(_T("discard")) && !_specific_run)
+        } else if (!key.CompareNoCase(_T("discard")) && !_specific_run) {
           _discard = _ttoi(value.Trim());
-        else if (!key.CompareNoCase(_T("web10")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("web10")) && _ttoi(value.Trim())) {
           _doc_complete = true;
-        else if (!key.CompareNoCase(_T("ignoreSSL")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("ignoreSSL")) && _ttoi(value.Trim())) {
           _ignore_ssl = true;
-        else if (!key.CompareNoCase(_T("tcpdump")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("tcpdump")) && _ttoi(value.Trim())) {
           _tcpdump = true;
-        else if (!key.CompareNoCase(_T("timeline")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("timeline")) && _ttoi(value.Trim())) {
           _timeline = true;
-        else if (!key.CompareNoCase(_T("trace")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("timelineStackDepth"))) {
+          _timelineStackDepth = _ttoi(value.Trim());
+        } else if (!key.CompareNoCase(_T("trace")) && _ttoi(value.Trim())) {
           _trace = true;
-        else if (!key.CompareNoCase(_T("netlog")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("traceCategories")) && value.GetLength()) {
+          _traceCategories = value;
+        } else if (!key.CompareNoCase(_T("netlog")) && _ttoi(value.Trim())) {
           _netlog = true;
-        else if (!key.CompareNoCase(_T("spdy3")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("spdy3")) && _ttoi(value.Trim())) {
           _spdy3 = true;
-        else if (!key.CompareNoCase(_T("noscript")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("noscript")) && _ttoi(value.Trim())) {
           _noscript = true;
-        else if (!key.CompareNoCase(_T("Capture Video")) &&_ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("Capture Video")) &&_ttoi(value.Trim())) {
           _video = true;
-        else if (!key.CompareNoCase(_T("clearcerts")) &&_ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("clearcerts")) &&_ttoi(value.Trim())) {
           _clear_certs = true;
-        else if (!key.CompareNoCase(_T("mobile")) &&_ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("mobile")) &&_ttoi(value.Trim())) {
           _emulate_mobile = true;
-        else if (!key.CompareNoCase(_T("swRender")) &&_ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("swRender")) &&_ttoi(value.Trim())) {
           _force_software_render = true;
-        else if (!key.CompareNoCase(_T("type")))
+        } else if (!key.CompareNoCase(_T("type"))) {
           _test_type = value.Trim();
-        else if (!key.CompareNoCase(_T("block")))
+        } else if (!key.CompareNoCase(_T("block"))) {
           _block = value.Trim();
-        else if (!key.CompareNoCase(_T("bwIn")))
+        } else if (!key.CompareNoCase(_T("blockDomains"))) {
+          _block_domains_global = value.Trim();
+        } else if (!key.CompareNoCase(_T("bwIn"))) {
           _bwIn = _ttoi(value.Trim());
-        else if (!key.CompareNoCase(_T("bwOut")))
+        } else if (!key.CompareNoCase(_T("bwOut"))) {
           _bwOut = _ttoi(value.Trim());
-        else if (!key.CompareNoCase(_T("latency")))
+        } else if (!key.CompareNoCase(_T("latency"))) {
           _latency = _ttoi(value.Trim());
-        else if (!key.CompareNoCase(_T("plr")))
+        } else if (!key.CompareNoCase(_T("plr"))) {
           _plr = _ttof(value.Trim());
-        else if (!key.CompareNoCase(_T("browser")))
+        } else if (!key.CompareNoCase(_T("browser"))) {
           _browser = value.Trim();
-        else if (!key.CompareNoCase(_T("customBrowserUrl")))
+        } else if (!key.CompareNoCase(_T("customBrowserUrl"))) {
           _browser_url = value.Trim();
-        else if (!key.CompareNoCase(_T("customBrowserMD5")))
+        } else if (!key.CompareNoCase(_T("customBrowserMD5"))) {
           _browser_md5 = value.Trim();
-        else if (!key.CompareNoCase(_T("Basic Auth")))
+        } else if (!key.CompareNoCase(_T("Basic Auth"))) {
           _basic_auth = value.Trim();
-        else if (!key.CompareNoCase(_T("imageQuality")))
+        } else if (!key.CompareNoCase(_T("imageQuality"))) {
           _image_quality = (BYTE)max(_image_quality, 
                                      min(100, _ttoi(value.Trim())));
-        else if (!key.CompareNoCase(_T("pngScreenShot")) &&_ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("pngScreenShot")) &&_ttoi(value.Trim())) {
           _png_screen_shot = true;
-        else if (!key.CompareNoCase(_T("time")))
+        } else if (!key.CompareNoCase(_T("fullSizeVideo")) &&_ttoi(value.Trim())) {
+          _full_size_video = true;
+        } else if (!key.CompareNoCase(_T("time"))) {
           _minimum_duration = MS_IN_SEC * max(_minimum_duration, 
                                min(DEFAULT_TEST_TIMEOUT, _ttoi(value.Trim())));
-        else if (!key.CompareNoCase(_T("bodies")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("activityTime"))) {
+          _activity_timeout = MS_IN_SEC * min(max(_ttoi(value.Trim()), 0), 30);
+        } else if (!key.CompareNoCase(_T("bodies")) && _ttoi(value.Trim())) {
           _save_response_bodies = true;
-        else if (!key.CompareNoCase(_T("htmlbody")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("htmlbody")) && _ttoi(value.Trim())) {
           _save_html_body = true;
-        else if (!key.CompareNoCase(_T("keepua")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("keepua")) && _ttoi(value.Trim())) {
           _preserve_user_agent = true;
-        else if (!key.CompareNoCase(_T("responsive")) && _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("responsive")) && _ttoi(value.Trim())) {
           _check_responsive = true;
-        else if (!key.CompareNoCase(_T("client")))
+        } else if (!key.CompareNoCase(_T("client"))) {
           _client = value.Trim();
-        else if (!key.CompareNoCase(_T("customRule"))) {
+        } else if (!key.CompareNoCase(_T("customRule"))) {
           int separator = value.Find(_T('='));
           if (separator > 0) {
             CString name = value.Left(separator).Trim();
@@ -274,13 +304,71 @@ bool WptTest::Load(CString& test) {
               }
             }
           }
-        } else if (!key.CompareNoCase(_T("cmdLine")))
+        } else if (!key.CompareNoCase(_T("customMetric"))) {
+          if (!_custom_metrics.IsEmpty())
+            _custom_metrics += _T("\n");
+          _custom_metrics += value;
+        } else if (!key.CompareNoCase(_T("cmdLine"))) {
           _browser_command_line = value;
-        else if (!key.CompareNoCase(_T("addCmdLine")))
+        } else if (!key.CompareNoCase(_T("addCmdLine"))) {
           _browser_additional_command_line = value;
-        else if (!key.CompareNoCase(_T("continuousVideo")) &&
-                 _ttoi(value.Trim()))
+        } else if (!key.CompareNoCase(_T("continuousVideo")) &&
+                   _ttoi(value.Trim())) {
           _continuous_video = true;
+        } else if (!key.CompareNoCase(_T("timeout"))) {
+          _test_timeout = _ttoi(value.Trim()) * 1000;
+          _script_timeout_multiplier = 1;
+          if (_test_timeout < 0)
+            _test_timeout = 0;
+          else if (_test_timeout > 3600000)
+            _test_timeout = 3600000;
+        } else if (!key.CompareNoCase(_T("maxTestTime"))) {
+          _max_test_time = min(max(_ttoi(value.Trim()), 0), 3600) * 1000;
+        } else if (!key.CompareNoCase(_T("UAModifier"))) {
+          _user_agent_modifier = value;
+        } else if (!key.CompareNoCase(_T("UAString"))) {
+          _user_agent = value.Trim();
+        } else if (!key.CompareNoCase(_T("AppendUA"))) {
+          _append_user_agent = value.Trim();
+        } else if (!key.CompareNoCase(_T("dpr")) && _ttoi(value.Trim())) {
+          _device_scale_factor = value.Trim();
+        } else if (!key.CompareNoCase(_T("width")) && _ttoi(value.Trim())) {
+          _viewport_width = _ttoi(value.Trim());
+        } else if (!key.CompareNoCase(_T("height")) && _ttoi(value.Trim())) {
+          _viewport_height = _ttoi(value.Trim());
+        } else if (!key.CompareNoCase(_T("browser_width")) && _ttoi(value.Trim())) {
+          _browser_width = _ttoi(value.Trim());
+        } else if (!key.CompareNoCase(_T("browser_height")) && _ttoi(value.Trim())) {
+          _browser_height = _ttoi(value.Trim());
+        } else if (!key.CompareNoCase(_T("minimalResults")) && _ttoi(value.Trim())) {
+          _minimal_results = true;
+        } else if (!key.CompareNoCase(_T("software"))) {
+          _software_update_url = value.Trim();
+        } else if (!key.CompareNoCase(_T("jobInfo"))) {
+          _job_info = value.Trim();
+        } else if (!key.CompareNoCase(_T("testInfoJson"))) {
+          int decoded_len = value.Trim().GetLength();
+          if (decoded_len) {
+            char * decoded_data = (char *)malloc(decoded_len + 1);
+            if (Base64Decode((LPCSTR)CT2A((LPCTSTR)value, CP_UTF8), decoded_len,
+                (BYTE*)decoded_data, &decoded_len) && decoded_len) {
+              decoded_data[decoded_len] = 0;
+              _testinfo_json = decoded_data;
+            }
+            free(decoded_data);
+          }
+        } else if (!key.CompareNoCase(_T("testInfoIni"))) {
+          int decoded_len = value.Trim().GetLength();
+          if (decoded_len) {
+            char * decoded_data = (char *)malloc(decoded_len + 1);
+            if (Base64Decode((LPCSTR)CT2A((LPCTSTR)value, CP_UTF8), decoded_len,
+                (BYTE*)decoded_data, &decoded_len) && decoded_len) {
+              decoded_data[decoded_len] = 0;
+              _testinfo_ini = decoded_data;
+            }
+            free(decoded_data);
+          }
+        }
       }
     } else if (!line.Trim().CompareNoCase(_T("[Script]"))) {
       // grab the rest of the response as the script
@@ -291,15 +379,17 @@ bool WptTest::Load(CString& test) {
     line = test.Tokenize(_T("\r\n"), linePos);
   }
 
+  if (_measurement_timeout < _test_timeout)
+    _measurement_timeout = _test_timeout;
+
   if (_specific_run) {
     _discard = 0;
   }
 
   if (_script.GetLength())
-    _test_timeout *= SCRIPT_TIMEOUT_MULTIPLIER;
+    _test_timeout *= _script_timeout_multiplier;
 
-  WptTrace(loglevel::kFunction, _T("WptTest::Load() - Loaded test %s\n"), 
-                                                                (LPCTSTR)_id);
+  ATLTRACE(L"WptTest::Load() - Loaded test %s", (LPCWSTR)_id);
 
   if( _id.GetLength() )
     ret = true;
@@ -313,7 +403,7 @@ bool WptTest::GetNextTask(CStringA& task, bool& record) {
   bool ret = false;
 
   EnterCriticalSection(&cs_);
-  WptTrace(loglevel::kFunction, _T("[wpthook] - WptTest::GetNextTask\n"));
+  ATLTRACE("[wpthook] - WptTest::GetNextTask");
   if (!_active && !IsLocked()){
     Lock();
     LARGE_INTEGER now;
@@ -381,11 +471,11 @@ CStringA WptTest::EncodeTask(ScriptCommand& command) {
   The last measurement completed, is it time to exit?
 -----------------------------------------------------------------------------*/
 bool WptTest::Done() {
-  WptTrace(loglevel::kFunction, _T("[wpthook] - WptTest::Done()\n"));
+  ATLTRACE("[wpthook] - WptTest::Done()");
   bool ret = false;
 
   _active = false;
-  if (_script_commands.IsEmpty())
+  if (_script_commands.IsEmpty() || _has_test_timed_out)
     ret = true;
 
   return ret;
@@ -422,11 +512,9 @@ void WptTest::BuildScript() {
             if (!_no_run && command_pos > 0 && 
                 script_command.target.GetLength()) {
               if (script_command.command == _T("block")) {
-                ParseBlockCommand(script_command.target, false);
-              }
-              else {
-                script_command.value =
-                                  line.Tokenize(_T("\t"),command_pos).Trim();
+                _block += _T(" ") + script_command.target;
+              } else {
+                script_command.value = line.Tokenize(_T("\t"),command_pos).Trim();
               }
             }
 
@@ -458,12 +546,17 @@ void WptTest::BuildScript() {
   }
 
   if (_block.GetLength() ) {
-    ParseBlockCommand(_block, true);
+    ParseBlockCommand(_block);
+  }
+
+  if (_block_domains_global.GetLength()) {
+    ParseBlockDomains("");
   }
 
   if (_timeline) {
     ScriptCommand command;
     command.command = _T("captureTimeline");
+    command.target.Format(_T("%d"), _timelineStackDepth);
     command.record = false;
     _script_commands.AddHead(command);
   }
@@ -471,6 +564,7 @@ void WptTest::BuildScript() {
   if (_trace) {
     ScriptCommand command;
     command.command = _T("captureTrace");
+    command.target = _traceCategories;
     command.record = false;
     _script_commands.AddHead(command);
   }
@@ -482,38 +576,42 @@ void WptTest::BuildScript() {
     _script_commands.AddHead(command);
   }
 
+  if (!overrode_ua_string_) {
+    CStringA append = GetAppendUA();
+    if(!append.IsEmpty()) {
+      ScriptCommand command;
+      command.command = _T("appendUserAgent");
+      command.target = append;
+      command.record = false;
+      _script_commands.AddHead(command);
+    }
+  }
+
+  if (HasCustomCommandLine()) {
+    ScriptCommand command;
+    command.command = _T("hasCustomCommandLine");
+    command.record = false;
+    _script_commands.AddHead(command);
+  }
+
   if (_emulate_mobile) {
     if (_device_scale_factor.IsEmpty())
       _device_scale_factor = DEFAULT_MOBILE_SCALE_FACTOR;
     if (!_viewport_width && !_viewport_height) {
-      DWORD padding_width = CHROME_PADDING_WIDTH;
-      DWORD padding_height = CHROME_PADDING_HEIGHT;
-      double scale = _ttof(_device_scale_factor);
-      if (scale >= 0.5 && scale <= 10.0) {
-        padding_width = (int)((double)padding_width * scale);
-        padding_height = (int)((double)padding_height * scale);
-      }
-      _browser_width = DEFAULT_MOBILE_WIDTH + padding_width;
-      _browser_height = DEFAULT_MOBILE_HEIGHT + padding_height;
+      _viewport_width = DEFAULT_MOBILE_WIDTH;
+      _viewport_height = DEFAULT_MOBILE_HEIGHT;
     }
+    _browser_width = _viewport_width + CHROME_PADDING_WIDTH;
+    _browser_height = _viewport_height + CHROME_PADDING_HEIGHT;
     if (_user_agent.IsEmpty())
       _user_agent = DEFAULT_MOBILE_USER_AGENT;
-  }
-
-  // Scale the viewport or browser size by the scale factor.
-  // Once the viewport scaling is ACTUALLY working in Chrome then we can ues it
-  // but as of right now it isn't.
-  if (!has_gpu_ && _device_scale_factor.GetLength()) {
-    double scale = _ttof(_device_scale_factor);
-    _device_scale_factor.Empty();
-    if (scale >= 0.5 && scale <= 10.0) {
-      _browser_width = (int)((double)_browser_width / scale);
-      _browser_height = (int)((double)_browser_height / scale);
-      if (_viewport_width)
-        _viewport_width = (int)((double)_viewport_width / scale);
-      if (_viewport_height)
-        _viewport_height = (int)((double)_viewport_height / scale);
-    }
+    ScriptCommand command;
+    command.command = _T("emulatemobile");
+    command.target.Format(
+        _T("{\"width\":%d,\"height\":%d,\"deviceScaleFactor\":%s,\"mobile\":true,\"fitWindow\":true}"),
+          _viewport_width, _viewport_height, _device_scale_factor);
+    command.record = false;
+    _script_commands.AddHead(command);
   }
 }
 
@@ -563,8 +661,7 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
   bool continue_processing = true;
   consumed = true;
 
-  WptTrace(loglevel::kFunction, _T("[wpthook] Processing Command '%s'\n"), 
-                                                              command.command);
+  ATLTRACE(L"[wpthook] Processing Command '%s'", (LPCWSTR)command.command);
   CString cmd = command.command;
   cmd.MakeLower();
 
@@ -598,12 +695,15 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
   } else if (cmd == _T("setuseragent")) {
     _user_agent = CT2A(command.target);
   } else if (cmd == _T("addheader")) {
-    int pos = command.target.Find(_T(':'));
-    if (pos > 0) {
-      CStringA tag = CT2A(command.target.Left(pos).Trim());
-      CStringA value = CT2A(command.target.Mid(pos + 1).Trim());
-      HttpHeaderValue header(tag, value, (LPCSTR)CT2A(command.value.Trim()));
-      _add_headers.AddTail(header);
+    // Chrome will handle the additional headers in the extension
+    if (!_is_chrome) {
+      int pos = command.target.Find(_T(':'));
+      if (pos > 0) {
+        CStringA tag = CT2A(command.target.Left(pos).Trim());
+        CStringA value = CT2A(command.target.Mid(pos + 1).Trim());
+        HttpHeaderValue header(tag, value, (LPCSTR)CT2A(command.value.Trim()));
+        _add_headers.AddTail(header);
+      }
     }
     continue_processing = false;
     consumed = false;
@@ -666,11 +766,21 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
     _block_requests.AddTail(command.target);
     continue_processing = false;
     consumed = false;
+  } else if (cmd == _T("blockdomains")) {
+    ParseBlockDomains(command.target);
+  } else if (cmd == _T("blockdomainsexcept")) {
+    int pos = 0;
+    if (!_block_domains_except.IsEmpty())
+      _block_domains_except.RemoveAll();
+    do {
+      CString domain = command.target.Tokenize(_T(" ,"), pos);
+      if (pos > 0)
+        _block_domains_except.AddTail(domain);
+    } while(pos >= 0);
   } else if (cmd == _T("setdomelement")) {
     if (command.target.Trim().GetLength()) {
       _dom_element_check = true;
-      WptTrace(loglevel::kFrequentEvent, 
-        _T("[wpthook] - WptTest::BuildScript() Setting dom element check."));
+      ATLTRACE("[wpthook] - WptTest::BuildScript() Setting dom element check.");
     }
     continue_processing = false;
     consumed = false;
@@ -687,6 +797,8 @@ bool WptTest::ProcessCommand(ScriptCommand& command, bool &consumed) {
     ReportData();
     continue_processing = false;
     consumed = false;
+  } else if (cmd == _T("seteventname")) {
+    _current_event_name = CT2A(command.target.Trim());
   } else {
     continue_processing = false;
     consumed = false;
@@ -762,6 +874,8 @@ bool WptTest::PreProcessScriptCommand(ScriptCommand& command) {
       }
       if (!_device_scale_factor.GetLength())
         _device_scale_factor.Empty();
+    } else if (cmd == _T("setuseragent")) {
+      _user_agent = CT2A(command.target.Trim());
     } else {
       processed = false;
     }
@@ -828,6 +942,32 @@ void WptTest::OverridePort(const struct sockaddr FAR * name, int namelen) {
 }
 
 /*-----------------------------------------------------------------------------
+  Get the run-specific UA string that needs to be added the UA string
+-----------------------------------------------------------------------------*/
+CStringA WptTest::GetAppendUA() const {
+  CStringA user_agent;
+
+  // Add the default PTST/version part
+  if (!_preserve_user_agent)
+    user_agent.Format("%s/%d", _user_agent_modifier, _version);
+
+  // See if they requested anything additional
+  if (!_append_user_agent.IsEmpty()) {
+    CStringA buff;
+    CStringA append = _append_user_agent;
+    append.Replace("%TESTID%", CT2A(_id));
+    buff.Format("%d", _run);
+    append.Replace("%RUN%", buff);
+    append.Replace("%CACHED%", _clear_cache ? "0" : "1");
+    buff.Format("%d", _version);
+    append.Replace("%VERSION%", buff);
+    user_agent += " " + append;
+  }
+
+  return user_agent;
+}
+
+/*-----------------------------------------------------------------------------
   Modify an outbound request header.  The modifications can include:
   - Including PTST in the user agent string
   - Adding new headers
@@ -835,41 +975,47 @@ void WptTest::OverridePort(const struct sockaddr FAR * name, int namelen) {
   - Overriding the host header for a specific host
 -----------------------------------------------------------------------------*/
 bool WptTest::ModifyRequestHeader(CStringA& header) const {
-  bool modified = true;
+  bool modified = false;
 
   int pos = header.Find(':');
   CStringA tag = header.Left(pos);
   CStringA value = header.Mid(pos + 1).Trim();
+  ATLTRACE(_T("Checking header '%S', value '%S'"), (LPCSTR)tag, (LPCSTR)value);
   if( !tag.CompareNoCase("User-Agent") ) {
-    if (_user_agent.GetLength()) {
-      header = CStringA("User-Agent: ") + _user_agent;
-    } else if(!_preserve_user_agent) {
-      CStringA user_agent;
-      user_agent.Format(" PTST/%d", _version);
-      header += user_agent;
+    if (!overrode_ua_string_) {
+      if (_user_agent.GetLength()) {
+        modified = true;
+        header = CStringA("User-Agent: ") + _user_agent;
+      } else if(!_preserve_user_agent && value.Find(" " + _user_agent_modifier + "/") == -1) {
+        modified = true;
+        header += " " + GetAppendUA();
+      }
     }
   } else if (!tag.CompareNoCase("Host")) {
     CStringA new_headers;
-    // Add new headers after the host header.
-    POSITION pos = _add_headers.GetHeadPosition();
-    while (pos) {
-      HttpHeaderValue new_header = _add_headers.GetNext(pos);
-      if (RegexMatch(value, new_header._filter)) {
-        new_headers += CStringA("\r\n") + new_header._tag + CStringA(": ") + 
-                        new_header._value;
+    POSITION pos;
+    if (!HasCustomCommandLine() || !_is_chrome) {
+      // Add new headers after the host header.
+      pos = _add_headers.GetHeadPosition();
+      while (pos) {
+        HttpHeaderValue new_header = _add_headers.GetNext(pos);
+        if (RegexMatch(value, new_header._filter)) {
+          new_headers += CStringA("\r\n") + new_header._tag + CStringA(": ") + 
+                          new_header._value;
+        }
       }
-    }
-    // Override existing headers (they are added here and the original
-    // version is removed below when it is processed)
-    pos = _set_headers.GetHeadPosition();
-    while (pos) {
-      HttpHeaderValue new_header = _set_headers.GetNext(pos);
-      if (RegexMatch(value, new_header._filter)) {
-        new_headers += CStringA("\r\n") + new_header._tag + CStringA(": ") + 
-                        new_header._value;
-        if (!new_header._tag.CompareNoCase("Host")) {
-          header.Empty();
-          new_headers.TrimLeft();
+      // Override existing headers (they are added here and the original
+      // version is removed below when it is processed)
+      pos = _set_headers.GetHeadPosition();
+      while (pos) {
+        HttpHeaderValue new_header = _set_headers.GetNext(pos);
+        if (RegexMatch(value, new_header._filter)) {
+          new_headers += CStringA("\r\n") + new_header._tag + CStringA(": ") + 
+                          new_header._value;
+          if (!new_header._tag.CompareNoCase("Host")) {
+            header.Empty();
+            new_headers.TrimLeft();
+          }
         }
       }
     }
@@ -886,17 +1032,15 @@ bool WptTest::ModifyRequestHeader(CStringA& header) const {
       }
     }
     if (new_headers.GetLength()) {
+      modified = true;
       header += new_headers;
-    } else {
-      modified = false;
     }
   } else {
-    modified = false;
     // Delete headers that were being overriden
     POSITION pos = _set_headers.GetHeadPosition();
     while (pos && !modified) {
       HttpHeaderValue new_header = _set_headers.GetNext(pos);
-      if (!new_header._tag.CompareNoCase(tag)) {
+      if (!new_header._tag.CompareNoCase(tag) && new_header._value.CompareNoCase(value)) {
         header.Empty();
         modified = true;
       }
@@ -911,6 +1055,7 @@ bool WptTest::ModifyRequestHeader(CStringA& header) const {
 -----------------------------------------------------------------------------*/
 bool WptTest::BlockRequest(CString host, CString object) {
   bool block = false;
+  EnterCriticalSection(&cs_);
   CString request = host + object;
   POSITION pos = _block_requests.GetHeadPosition();
   while (!block && pos) {
@@ -918,7 +1063,72 @@ bool WptTest::BlockRequest(CString host, CString object) {
     if (request.Find(block_pattern) >= 0)
       block = true;
   }
+  LeaveCriticalSection(&cs_);
   return block;
+}
+
+/*-----------------------------------------------------------------------------
+  See if the host for the outbound request needs to be modified
+-----------------------------------------------------------------------------*/
+bool WptTest::OverrideHost(CString host, CString &new_host) {
+  bool override_host = false;
+  if (host.GetLength()) {
+    EnterCriticalSection(&cs_);
+    POSITION pos = _override_hosts.GetHeadPosition();
+    while (pos) {
+      HttpHeaderValue host_override = _override_hosts.GetNext(pos);
+      if (!host_override._tag.CompareNoCase(CT2A(host)) ||
+          !host_override._tag.Compare("*")) {
+        new_host = CA2T(host_override._value, CP_UTF8);
+        override_host = true;
+        break;
+      }
+    }
+    LeaveCriticalSection(&cs_);
+  }
+  return override_host;
+}
+
+/*-----------------------------------------------------------------------------
+  See if the host for the outbound request needs to be modified
+-----------------------------------------------------------------------------*/
+bool WptTest::GetHeadersToSet(CString host, CAtlList<CString> &headers) {
+  if (!headers.IsEmpty())
+    headers.RemoveAll();
+  if (host.GetLength()) {
+    EnterCriticalSection(&cs_);
+    POSITION pos = _set_headers.GetHeadPosition();
+    while (pos) {
+      HttpHeaderValue new_header = _set_headers.GetNext(pos);
+      if (RegexMatch((LPCSTR)CT2A(host), new_header._filter)) {
+        CString header = new_header._tag + CStringA(": ") + new_header._value;
+        headers.AddTail(header);
+      }
+    }
+    LeaveCriticalSection(&cs_);
+  }
+  return !headers.IsEmpty();
+}
+
+/*-----------------------------------------------------------------------------
+  See if the host for the outbound request needs to be modified
+-----------------------------------------------------------------------------*/
+bool WptTest::GetHeadersToAdd(CString host, CAtlList<CString> &headers) {
+  if (!headers.IsEmpty())
+    headers.RemoveAll();
+  if (host.GetLength()) {
+    EnterCriticalSection(&cs_);
+    POSITION pos = _add_headers.GetHeadPosition();
+    while (pos) {
+      HttpHeaderValue new_header = _add_headers.GetNext(pos);
+      if (RegexMatch((LPCSTR)CT2A(host), new_header._filter)) {
+        CString header = new_header._tag + CStringA(": ") + new_header._value;
+        headers.AddTail(header);
+      }
+    }
+    LeaveCriticalSection(&cs_);
+  }
+  return !headers.IsEmpty();
 }
 
 /*-----------------------------------------------------------------------------
@@ -945,21 +1155,46 @@ bool WptTest::ConditionMatches(ScriptCommand& command) {
 /*-----------------------------------------------------------------------------
   Parse the list of block strings into individual commands
 -----------------------------------------------------------------------------*/
-void WptTest::ParseBlockCommand(CString block_list, bool add_head) {
+void WptTest::ParseBlockCommand(CString block_list) {
   int pattern_pos = 0;
-  while (pattern_pos < block_list.GetLength()) {
-    CString pattern = block_list.Tokenize(_T(" "), pattern_pos).Trim();
+  CString block = _T("");
+  while (pattern_pos >= 0) {
+    CString pattern = block_list.Tokenize(_T(" \r\n"), pattern_pos).Trim();
     if (pattern.GetLength()) {
-      // For each pattern, add a new script command.
-      ScriptCommand block_script_command;
-      block_script_command.command = _T("block");
-      block_script_command.target = pattern;
-      if (add_head) {
-        _script_commands.AddHead(block_script_command);
-      } else {
-        _script_commands.AddTail(block_script_command);
-      }
+      if (block.GetLength())
+        block += _T(" ");
+      block += pattern;
     }
+  }
+  if (block.GetLength()) {
+    ScriptCommand block_script_command;
+    block_script_command.command = _T("block");
+    block_script_command.target = block;
+    _script_commands.AddHead(block_script_command);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+  Join the global list of domains to block with the local list
+-----------------------------------------------------------------------------*/
+void WptTest::ParseBlockDomains(CString block_list) {
+  if (!_block_domains.IsEmpty())
+    _block_domains.RemoveAll();
+  if (block_list.GetLength()) {
+    int pos = 0;
+    do {
+      CString domain = block_list.Tokenize(_T(" ,"), pos).Trim();
+      if (pos > 0 && domain.GetLength())
+        _block_domains.AddTail(domain);
+    } while(pos >= 0);
+  }
+  if (_block_domains_global.GetLength()) {
+    int pos = 0;
+    do {
+      CString domain = _block_domains_global.Tokenize(_T(" ,"), pos).Trim();
+      if (pos > 0 && domain.GetLength())
+        _block_domains.AddTail(domain);
+    } while(pos >= 0);
   }
 }
 
@@ -988,6 +1223,7 @@ void  WptTest::CollectData() {
   // Add the command to trigger the browser to collect in-page stats
   // (before doing a responsive check where we resize the window)
   cmd.command = _T("collectstats");
+  cmd.target = _custom_metrics;
   _script_commands.AddHead(cmd);
 }
 
@@ -1003,6 +1239,7 @@ void WptTest::ReportData() {
 -----------------------------------------------------------------------------*/
 void WptTest::CollectDataDone() {
   bool removed = false;
+  _current_event_name.Empty();
   do {
     removed = false;
     if (!_script_commands.IsEmpty()) {
@@ -1032,4 +1269,167 @@ void WptTest::Unlock() {
 -----------------------------------------------------------------------------*/
 bool WptTest::IsLocked() {
   return lock_count_ != 0;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CStringA WptTest::JsonFragment(LPCSTR field, CString &value) {
+  CStringA fragment = "\"" + JSONEscapeA(field) + "\": ";
+  fragment += "\"" + JSONEscape(value) + "\"";
+  return fragment;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CStringA WptTest::JsonFragment(LPCSTR field, CStringA &value) {
+  CStringA fragment = "\"" + JSONEscapeA(field) + "\": ";
+  fragment += "\"" + JSONEscapeA(value) + "\"";
+  return fragment;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CStringA WptTest::JsonFragment(LPCSTR field, bool &value) {
+  CStringA fragment = "\"" + JSONEscapeA(field) + "\": ";
+  fragment += value ? "true": "false";
+  return fragment;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CStringA WptTest::JsonFragment(LPCSTR field, DWORD &value) {
+  CStringA fragment = "\"" + JSONEscapeA(field) + "\": ";
+  CStringA buff;
+  buff.Format("%lu", value);
+  fragment += buff;
+  return fragment;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CStringA WptTest::JsonFragment(LPCSTR field, int &value) {
+  CStringA fragment = "\"" + JSONEscapeA(field) + "\": ";
+  CStringA buff;
+  buff.Format("%d", value);
+  fragment += buff;
+  return fragment;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CStringA WptTest::JsonFragment(LPCSTR field, BYTE &value) {
+  CStringA fragment = "\"" + JSONEscapeA(field) + "\": ";
+  CStringA buff;
+  buff.Format("%lu", (DWORD)value);
+  fragment += buff;
+  return fragment;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CStringA WptTest::JsonFragment(LPCSTR field, double &value) {
+  CStringA fragment = "\"" + JSONEscapeA(field) + "\": ";
+  CStringA buff;
+  buff.Format("%f", value);
+  fragment += buff;
+  return fragment;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+CStringA WptTest::JsonFragment(LPCSTR field, CAtlList<CString> &values) {
+  CStringA fragment = "\"" + JSONEscapeA(field) + "\": [";
+  if (!values.IsEmpty()) {
+    POSITION pos = values.GetHeadPosition();
+    while (pos) {
+      CString value = values.GetNext(pos);
+      fragment += "\"" + JSONEscape(value) + "\"";
+      if (pos)
+        fragment += ",";
+    }
+  }
+  fragment += "]";
+  return fragment;
+}
+
+/*-----------------------------------------------------------------------------
+  Serialize the test data out to a json file in the current results directory
+-----------------------------------------------------------------------------*/
+CString  WptTest::SaveJson() {
+  CString json_file;
+  CStringA json = "{";
+  json += JsonFragment("id", _id) + ",\n";
+  json += JsonFragment("file_base", _file_base) + ",\n";
+  json += JsonFragment("directory", _directory) + ",\n";
+  json += JsonFragment("url", _url) + ",\n";
+  json += JsonFragment("runs", _runs) + ",\n";
+  json += JsonFragment("discard", _discard) + ",\n";
+  json += JsonFragment("fv_only", _fv_only) + ",\n";
+  json += JsonFragment("doc_complete", _doc_complete) + ",\n";
+  json += JsonFragment("ignore_ssl", _ignore_ssl) + ",\n";
+  json += JsonFragment("tcpdump", _tcpdump) + ",\n";
+  json += JsonFragment("timeline", _timeline) + ",\n";
+  json += JsonFragment("timelineStackDepth", _timelineStackDepth) + ",\n";
+  json += JsonFragment("trace", _trace) + ",\n";
+  json += JsonFragment("netlog", _netlog) + ",\n";
+  json += JsonFragment("video", _video) + ",\n";
+  json += JsonFragment("noscript", _noscript) + ",\n";
+  json += JsonFragment("clear_certs", _clear_certs) + ",\n";
+  json += JsonFragment("emulate_mobile", _emulate_mobile) + ",\n";
+  json += JsonFragment("force_software_render", _force_software_render) + ",\n";
+  json += JsonFragment("test_type", _test_type) + ",\n";
+  json += JsonFragment("block", _block) + ",\n";
+  json += JsonFragment("bwIn", _bwIn) + ",\n";
+  json += JsonFragment("bwOut", _bwOut) + ",\n";
+  json += JsonFragment("latency", _latency) + ",\n";
+  json += JsonFragment("plr", _plr) + ",\n";
+  json += JsonFragment("browser", _browser) + ",\n";
+  json += JsonFragment("browser_url", _browser_url) + ",\n";
+  json += JsonFragment("browser_md5", _browser_md5) + ",\n";
+  json += JsonFragment("basic_auth", _basic_auth) + ",\n";
+  json += JsonFragment("script", _script) + ",\n";
+  json += JsonFragment("custom_metrics", _custom_metrics) + ",\n";
+  json += JsonFragment("run", _run) + ",\n";
+  json += JsonFragment("specific_run", _specific_run) + ",\n";
+  json += JsonFragment("specific_index", _specific_index) + ",\n";
+  json += JsonFragment("discard_test", _discard_test) + ",\n";
+  json += JsonFragment("index", _index) + ",\n";
+  json += JsonFragment("clear_cache", _clear_cache) + ",\n";
+  json += JsonFragment("image_quality", _image_quality) + ",\n";
+  json += JsonFragment("png_screen_shot", _png_screen_shot) + ",\n";
+  json += JsonFragment("full_size_video", _full_size_video) + ",\n";
+  json += JsonFragment("minimum_duration", _minimum_duration) + ",\n";
+  json += JsonFragment("user_agent", _user_agent) + ",\n";
+  json += JsonFragment("block_requests", _block_requests) + ",\n";
+  json += JsonFragment("save_response_bodies", _save_response_bodies) + ",\n";
+  json += JsonFragment("save_html_body", _save_html_body) + ",\n";
+  json += JsonFragment("preserve_user_agent", _preserve_user_agent) + ",\n";
+  json += JsonFragment("check_responsive", _check_responsive) + ",\n";
+  json += JsonFragment("browser_width", _browser_width) + ",\n";
+  json += JsonFragment("browser_height", _browser_height) + ",\n";
+  json += JsonFragment("viewport_width", _viewport_width) + ",\n";
+  json += JsonFragment("viewport_height", _viewport_height) + ",\n";
+  json += JsonFragment("browser_command_line", _browser_command_line) + ",\n";
+  json += JsonFragment("browser_additional_command_line", _browser_additional_command_line) + ",\n";
+  json += JsonFragment("user_agent_modifier", _user_agent_modifier) + ",\n";
+  json += JsonFragment("append_user_agent", _append_user_agent) + ",\n";
+  json += JsonFragment("max_test_time", _max_test_time) + ",\n";
+  json += JsonFragment("minimal_results", _minimal_results) + ",\n";
+  json += JsonFragment("block_domains", _block_domains) + ",\n";
+  json += JsonFragment("block_domains_except", _block_domains_except) + ",\n";
+  json += JsonFragment("job_info", _job_info) + ",\n";
+  json += JsonFragment("testinfo_json", _testinfo_json) + ",\n";
+  json += JsonFragment("testinfo_ini", _testinfo_ini);
+  json += "}";
+
+  // Write out the actual JSON
+  OutputDebugString(_json_file);
+  DWORD written;
+  HANDLE hFile = CreateFile(_json_file, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+  if (hFile != INVALID_HANDLE_VALUE) {
+    WriteFile(hFile, (LPCSTR)json, json.GetLength(), &written, 0);
+    CloseHandle(hFile);
+    json_file = _json_file;
+  }
+  return json_file;
 }

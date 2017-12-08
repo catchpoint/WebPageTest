@@ -29,7 +29,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "StdAfx.h"
 #include "cdn.h"
 #include "optimization_checks.h"
-#include "shared_mem.h"
 #include "requests.h"
 #include "test_state.h"
 #include "track_dns.h"
@@ -74,8 +73,7 @@ OptimizationChecks::~OptimizationChecks(void) {
  Perform the various native optimization checks.
 -----------------------------------------------------------------------------*/
 void OptimizationChecks::Check(void) {
-  WptTrace(loglevel::kFunction,
-    _T("[wpthook] - OptimizationChecks::Check()\n"));
+  ATLTRACE("[wpthook] - OptimizationChecks::Check()");
 
   CheckKeepAlive();
   CheckGzip();
@@ -87,8 +85,7 @@ void OptimizationChecks::Check(void) {
   CheckCustomRules();
   _checked = true;
 
-  WptTrace(loglevel::kFunction,
-    _T("[wpthook] - OptimizationChecks::Check() complete\n"));
+  ATLTRACE("[wpthook] - OptimizationChecks::Check() complete");
 }
 
 /*-----------------------------------------------------------------------------
@@ -106,10 +103,11 @@ void OptimizationChecks::CheckKeepAlive()
     if (request && request->_processed && request->GetResult() == 200) {
       CStringA connection = request->GetResponseHeader("connection");
       connection.MakeLower();
-      if( connection.Find("keep-alive") > -1 &&
-          connection.Find("close") == -1)
+      if (request->_protocol == _T("HTTP/2")) {
         request->_scores._keep_alive_score = 100;
-      else {
+      } else if( connection.Find("keep-alive") > -1 && connection.Find("close") == -1) {
+        request->_scores._keep_alive_score = 100;
+      } else {
         CStringA host = request->GetHost();
         bool needed = false;
         bool reused = false;
@@ -126,9 +124,9 @@ void OptimizationChecks::CheckKeepAlive()
           }
         }
 
-        if( reused )
+        if( reused ) {
           request->_scores._keep_alive_score = 100;
-        else if( needed ) {
+        } else if( needed ) {
           // HTTP 1.1 default to keep-alive
           if (connection.Find("close") > -1 ||
               request->_response_data.GetProtocolVersion() < 1.1)
@@ -151,9 +149,7 @@ void OptimizationChecks::CheckKeepAlive()
   // average the Cache scores of all of the objects for the page
   if( count )
     _keep_alive_score = total / count;
-  WptTrace(loglevel::kFunction,
-    _T("[wpthook] - OptChecks::CheckKeepAlive() keep-alive score: %d\n"),
-    _keep_alive_score);
+  ATLTRACE("[wpthook] - OptChecks::CheckKeepAlive() keep-alive score: %d", _keep_alive_score);
 }
 
 /*-----------------------------------------------------------------------------
@@ -175,22 +171,23 @@ void OptimizationChecks::CheckGzip()
       CStringA encoding = request->GetResponseHeader("content-encoding");
       encoding.MakeLower();
       request->_scores._gzip_score = 0;
-      DWORD numRequestBytes = request->_response_data.GetDataSize();
-      DWORD targetRequestBytes = numRequestBytes;
+      DataChunk body = request->_response_data.GetBody();
+      DWORD headSize = request->_response_data.GetHeaders().GetLength();
+      size_t responseBodySize = body.GetLength();
+      size_t targetResponseSize = responseBodySize;
 
       // If there is gzip encoding, then we are all set.
       // Spare small (<1 packet) responses.
-      if( encoding.Find("gzip") >= 0 || encoding.Find("deflate") >= 0 ) 
+      if( encoding.Find("gzip") >= 0 || encoding.Find("deflate") >= 0 || encoding.Find("br") >= 0 ) 
         request->_scores._gzip_score = 100;
-      else if (numRequestBytes < 1400)
+      else if (responseBodySize + headSize < 1400)
         request->_scores._gzip_score = -1;
 
       if( !request->_scores._gzip_score ) {
         // Try gzipping to see how smaller it will be.
-        DWORD origSize = numRequestBytes;
-        DataChunk body = request->_response_data.GetBody();
+        size_t origSize = responseBodySize;
         LPBYTE bodyData = (LPBYTE)body.GetData();
-        DWORD bodyLen = body.GetLength();
+        size_t bodyLen = body.GetLength();
         // don't try gzip for known image formats that shouldn't be gzipped
         if ((bodyLen > 3 &&             // JPEG FF D8 FF
              bodyData[0] == 0xFF &&
@@ -210,25 +207,25 @@ void OptimizationChecks::CheckGzip()
              bodyData[1] == 0x49 &&
              bodyData[2] == 0x46 &&
              bodyData[3] == 0x38 &&
-             bodyData[5] == 0x61)) {
+             bodyData[5] == 0x61) ||
+            (bodyLen > 14 && !memcmp(bodyData, "RIFF", 4) && !memcmp(&bodyData[8], "WEBPVP", 6))) {
           request->_scores._gzip_score = -1;
         } else {
-          DWORD headSize = request->_response_data.GetHeaders().GetLength();
           if (bodyLen && bodyData) {
-            DWORD len = compressBound(bodyLen);
+            uLong len = compressBound((uLong)bodyLen);
             if( len ) {
-              char* buff = (char*) malloc(len);
+              char* buff = (char*)malloc(len);
               if( buff ) {
                 // Do the compression and check the target bytes to set for this.
-                if (compress2((LPBYTE)buff, &len, bodyData, bodyLen, 7) == Z_OK)
-                  targetRequestBytes = len + headSize;
+                if (compress2((LPBYTE)buff, &len, bodyData, (uLong)bodyLen, 7) == Z_OK)
+                  targetResponseSize = len;
                 free(buff);
               }
             }
             // allow a pass if we don't get 10% savings or less than 1400 bytes
-            if( targetRequestBytes >= (origSize * 0.9) || 
-                origSize - targetRequestBytes < 1400 ) {
-              targetRequestBytes = origSize;
+            if( targetResponseSize >= (origSize * 0.9) || 
+                origSize - targetResponseSize < 1400 ) {
+              targetResponseSize = origSize;
               request->_scores._gzip_score = -1;
             }
           }
@@ -238,10 +235,10 @@ void OptimizationChecks::CheckGzip()
       if( request->_scores._gzip_score != -1 ) {
         count++;
         total += request->_scores._gzip_score;
-        request->_scores._gzip_total = numRequestBytes;
-        request->_scores._gzip_target = targetRequestBytes;
-        targetBytes += targetRequestBytes;
-        totalBytes += numRequestBytes;
+        request->_scores._gzip_total = (DWORD)responseBodySize;
+        request->_scores._gzip_target = (DWORD)targetResponseSize;
+        targetBytes += (DWORD)targetResponseSize;
+        totalBytes += (DWORD)responseBodySize;
       }
     }
   }
@@ -253,24 +250,21 @@ void OptimizationChecks::CheckGzip()
   // average the Cache scores of all of the objects for the page
   if( count && totalBytes )
     _gzip_score = targetBytes * 100 / totalBytes;
-  WptTrace(loglevel::kFunction,
-    _T("[wpthook] - OptChecks::CheckGzip() gzip score: %d\n"),
-    _gzip_score);
+  ATLTRACE("[wpthook] - OptChecks::CheckGzip() gzip score: %d", _gzip_score);
 }
 
 /*-----------------------------------------------------------------------------
   Protect against malformed images
 -----------------------------------------------------------------------------*/
-static bool DecodeImage(CxImage& img, BYTE * buffer, DWORD size,
+static bool DecodeImage(CxImage& img, BYTE * buffer, size_t size,
                         DWORD imagetype)
 {
   bool ret = false;
   
   __try{
-    ret = img.Decode(buffer, size, imagetype);
+    ret = img.Decode(buffer, (DWORD)size, imagetype);
   }__except(1){
-    WptTrace(loglevel::kError,
-      _T("[wpthook] - Exception when decoding image"));
+    ATLTRACE("[wpthook] - Exception when decoding image");
   }
   return ret;
 }
@@ -285,7 +279,6 @@ void OptimizationChecks::CheckImageCompression()
   int total = 0;
   DWORD totalBytes = 0;
   DWORD targetBytes = 0;
-  int imgNum = 0;
 
   _requests.Lock();
   POSITION pos = _requests._requests.GetHeadPosition();
@@ -294,75 +287,106 @@ void OptimizationChecks::CheckImageCompression()
     Request *request = _requests._requests.GetNext(pos);
     if (request && request->_processed && request->GetResult() == 200) {
       int temp_pos = 0;
-      CStringA mime = request->GetResponseHeader("content-type").Tokenize(";",
-        temp_pos);
-      mime.MakeLower();
-
-      // If there is response body and it is an image.
       DataChunk body = request->_response_data.GetBody();
-      if (mime.Find("image/") >= 0 && body.GetData() && body.GetLength() > 2) {
-        BYTE * buffer = (BYTE *)body.GetData();
-        if (buffer[0] == 0xFF && buffer[1] == 0xD8) {
-          DWORD targetRequestBytes = body.GetLength();
-          DWORD size = targetRequestBytes;
-          count++;
-        
-          CxImage img;
-          // Decode the image with an exception protected function.
-          if (DecodeImage(img, (BYTE*)body.GetData(),
-                          body.GetLength(), CXIMAGE_FORMAT_UNKNOWN) ) {
-            DWORD type = img.GetType();
-            switch (type) {
-            // TODO: Add appropriate scores for gif and png
-            //       once they are available.
-            // Currently, even DecodeImage doesn't support gif and png.
-            // case CXIMAGE_FORMAT_GIF:
-            // case CXIMAGE_FORMAT_PNG:
-            //  request->_scores._imageCompressionScore = 100;
-            //  break;
-            case CXIMAGE_FORMAT_JPG:
-              {
-                img.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
-                img.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
-                img.SetJpegQuality(85);
-                BYTE* mem = NULL;
-                int len = 0;
-                if( img.Encode(mem, len, CXIMAGE_FORMAT_JPG) && len ) {
-                  img.FreeMemory(mem);
-                  targetRequestBytes = (DWORD) len < size ? (DWORD)len: size;
-                }
-              }
-              break;
-            default:
-              request->_scores._image_compression_score = 0;
-            }
-            if( targetRequestBytes > size )
-              targetRequestBytes = size;
-            totalBytes += size;
-            targetBytes += targetRequestBytes;
-          
-            request->_scores._image_compress_total = size;
-            request->_scores._image_compress_target = targetRequestBytes;
-            request->_scores._image_compression_score = 100;
+      LPBYTE buffer = (LPBYTE)body.GetData();
+      size_t bodyLen = body.GetLength();
+      size_t size = bodyLen;
+      size_t targetRequestBytes = 0;
+      bool valid = false;
+      const char * image_type = NULL;
 
-            // If the original was within 10%, then give 100
-            // If it's less than 50% bigger then give 50
-            // More than that is a fail
-            if (targetRequestBytes && targetRequestBytes < size && size > 1400) {
-              double ratio = (double)size / (double)targetRequestBytes;
-              if (ratio >= 1.5)
-                request->_scores._image_compression_score = 0;
-              else if (ratio >= 1.1)
-                request->_scores._image_compression_score = 50;
+      if (bodyLen > 3 && !memcmp(buffer, "\xFF\xD8\xFF", 3)) {
+        // JPEG FF D8 FF - re-compress it at quality 85 with metadata stripped
+        image_type = "JPEG";
+        CxImage img;
+        targetRequestBytes = size;
+        if (DecodeImage(img, buffer, bodyLen, CXIMAGE_FORMAT_JPG) ) {
+          img.SetCodecOption(8, CXIMAGE_FORMAT_JPG);  // optimized encoding
+          img.SetCodecOption(16, CXIMAGE_FORMAT_JPG); // progressive
+          img.SetJpegQuality(85);
+          BYTE* mem = NULL;
+          int len = 0;
+          if (img.Encode(mem, len, CXIMAGE_FORMAT_JPG) && len) {
+            img.FreeMemory(mem);
+            len += 4096;  // Add 4k to allow for an sRGB ICC profile and copyright
+            targetRequestBytes = (DWORD) len < size ? (DWORD)len: size;
+            valid = true;
+          }
+        }
+      } else if (bodyLen > 8 && !memcmp(buffer, "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A", 8)) {
+        // PNG 89 50 4E 47 0D 0A 1A 0A - walk the chunks and only count image data bytes
+        image_type = "PNG";
+        valid = true;
+        targetRequestBytes = 8;
+        size_t bytesRemaining = bodyLen - 8;
+        LPBYTE p = buffer + 8;
+        const char * image_chunk_types[] = {"iCCP", "tIME", "gAMA", "PLTE",
+          "acTL", "IHDR", "cHRM", "bKGD", "tRNS", "sBIT", "sRGB", "pHYs",
+          "hIST", "vpAg", "oFFs", "fcTL", "fdAT", "IDAT"};
+        int type_count = _countof(image_chunk_types);
+        while (valid && bytesRemaining >= 4) {
+          DWORD chunkLen = ntohl(*(u_long *)p);
+          if (chunkLen + 12 <= bytesRemaining) {
+            p += 4; // skip over the length to the field type
+            bool is_image_chunk = false;
+            for (int i = 0; i < type_count && !is_image_chunk; i++) {
+              if (!memcmp(p, image_chunk_types[i], 4))
+                is_image_chunk = true;
+            }
+            if (is_image_chunk)
+              targetRequestBytes += chunkLen + 12;
+            p += chunkLen + 8;  // skip over the type, data and the crc
+            bytesRemaining -= chunkLen + 12;
+          } else {
+            valid = false;
+            bytesRemaining = 0;
+          }
+        }
+      } else if (bodyLen > 6 && (!memcmp(buffer, "GIF87a", 6) || !memcmp(buffer, "GIF89a", 6))) {
+        image_type = "GIF";
+        CxImage img;
+        targetRequestBytes = size;
+        if (DecodeImage(img, buffer, bodyLen, CXIMAGE_FORMAT_GIF)) {
+          int frame_count = img.GetNumFrames();
+          ATLTRACE("GIF with %d frames", frame_count);
+          if (frame_count > 1) {
+            targetRequestBytes = size;
+            valid = true;
+          } else {
+            // Try compressing it as a PNG
+            BYTE* mem = NULL;
+            int len = 0;
+            if (img.Encode(mem, len, CXIMAGE_FORMAT_PNG) && len) {
+              img.FreeMemory(mem);
+              targetRequestBytes = (DWORD)len < size ? (DWORD)len: size;
+              valid = true;
             }
           }
-          total += request->_scores._image_compression_score;
         }
+      } else if (bodyLen > 14 && !memcmp(buffer, "RIFF", 4) && !memcmp(&buffer[8], "WEBPVP", 6)) {
+        image_type = "WEBP";
+        targetRequestBytes = size;
+        valid = true;
+      }
+
+      if (valid) {
+        count++;
+        // Only flag savings > 1400 bytes
+        if (size - targetRequestBytes < 1400)
+          targetRequestBytes = size;
+        totalBytes += (DWORD)size;
+        targetBytes += (DWORD)targetRequestBytes;
+        request->_scores._image_compress_total = (DWORD)size;
+        request->_scores._image_compress_target = (DWORD)targetRequestBytes;
+        request->_scores._image_compression_score = (int)(targetRequestBytes * 100 / size);
+        ATLTRACE("%s target size %d bytes from %d (%d%%): %s%s", image_type, targetRequestBytes, size,
+                 request->_scores._image_compression_score, (LPCSTR)request->GetHost(), (LPCSTR)request->_request_data.GetObject());
+      } else if (image_type) {
+        ATLTRACE("Invalid %s image: %s%s", image_type, (LPCSTR)request->GetHost(), (LPCSTR)request->_request_data.GetObject());
       }
     }
   }
   _requests.Unlock();
-
 
   _image_compress_total = totalBytes;
   _image_compress_target = targetBytes;
@@ -370,9 +394,7 @@ void OptimizationChecks::CheckImageCompression()
   // Calculate the score based on target/total.
   if( count && totalBytes )
     _image_compression_score = targetBytes * 100 / totalBytes;
-  WptTrace(loglevel::kFunction,
-    _T("[wpthook] - OptChecks::CheckImageCompression() score: %d\n"),
-    _image_compression_score);
+  ATLTRACE("[wpthook] - OptChecks::CheckImageCompression() score: %d", _image_compression_score);
 }
 
 /*-----------------------------------------------------------------------------
@@ -389,7 +411,7 @@ void OptimizationChecks::CheckCacheStatic()
     Request *request = _requests._requests.GetNext(pos);
     bool expiration_set;
     int seconds_remaining;
-    if( request && request->_processed && 
+    if( request && request->_processed && !request->_is_base_page &&
       request->GetExpiresRemaining(expiration_set, seconds_remaining)) {
       CString mime = request->GetMime().MakeLower();
       if (mime.Find(_T("/cache-manifest")) == -1) {
@@ -417,9 +439,7 @@ void OptimizationChecks::CheckCacheStatic()
   // average the Cache scores of all of the objects for the page
   if( count )
     _cache_score = total / count;
-  WptTrace(loglevel::kFunction,
-    _T("[wpthook] - OptimizationChecks::CheckCacheStatic() Cache score: %d\n"),
-    _cache_score);
+  ATLTRACE("[wpthook] - OptimizationChecks::CheckCacheStatic() Cache score: %d", _cache_score);
 }
 
 
@@ -487,9 +507,7 @@ void OptimizationChecks::CheckCombine() {
       0);
   }
 
-  WptTrace(loglevel::kFunction,
-    _T("[wpthook] - OptimizationChecks::CheckCombine() combine score: %d\n"),
-    _combine_score);
+  ATLTRACE("[wpthook] - OptimizationChecks::CheckCombine() combine score: %d", _combine_score);
 }
 
 /*-----------------------------------------------------------------------------
@@ -513,8 +531,6 @@ void OptimizationChecks::CheckCDN() {
         isStatic = true;
         request->_scores._static_cdn_score = 0;
       }
-      CStringA host = request->GetHost();
-      host.MakeLower();
       if (IsCDN(request, request->_scores._cdn_provider) && isStatic)
         request->_scores._static_cdn_score = 100;
       if (request->_is_base_page)
@@ -532,9 +548,7 @@ void OptimizationChecks::CheckCDN() {
   if( count )
     _static_cdn_score = total/count;
 
-  WptTrace(loglevel::kFunction,
-    _T("[wpthook] - OptimizationChecks::CheckCDN() static cdn score: %d\n"),
-    _static_cdn_score);
+  ATLTRACE("[wpthook] - OptimizationChecks::CheckCDN() static cdn score: %d", _static_cdn_score);
 }
 
 /*-----------------------------------------------------------------------------
@@ -544,7 +558,7 @@ bool OptimizationChecks::IsCDN(Request * request, CStringA &provider) {
   provider.Empty();
   bool ret = false;
 
-  CString host = (LPCTSTR)CA2T(request->GetHost());
+  CString host = (LPCTSTR)CA2T(request->GetHost(), CP_UTF8);
   host.MakeLower();
   if( host.IsEmpty() )
     return ret;
@@ -568,7 +582,32 @@ bool OptimizationChecks::IsCDN(Request * request, CStringA &provider) {
           provider = cdn_header->name;
       }
     }
-
+    // Check HTTP headers for CDN's that require multiple headers in combination
+    int multi_cdn_header_count = _countof(cdnMultiHeaderList);
+    for (int i = 0; i < multi_cdn_header_count && !ret; i++) {
+      CDN_PROVIDER_MULTI_HEADER * cdn_multi_header = &cdnMultiHeaderList[i];
+      bool all_match = true;
+      int header_count = _countof(cdn_multi_header->headers);
+      for (int j = 0; j < header_count && all_match; j++) {
+        CDN_PROVIDER_HEADER_PAIR * cdn_header = &(cdn_multi_header->headers[j]);
+        if (cdn_header->response_field.GetLength()) {
+          CStringA header = request->GetResponseHeader(cdn_header->response_field);
+          if (header.GetLength()) {
+            if (cdn_header->pattern.GetLength()) {
+              CStringA pattern = cdn_header->pattern;
+              if (header.Find(pattern) < 0)
+                all_match = false;
+            }
+          } else {
+            all_match = false;
+          }
+        }
+      }
+      if (all_match) {
+        ret = true;
+        provider = cdn_multi_header->name;
+      }
+    }
   }
 
   return ret;
@@ -584,7 +623,7 @@ void OptimizationChecks::CheckCustomRules() {
       Request *request = _requests._requests.GetNext(pos);
       DataChunk body = request->_response_data.GetBody(true);
       const char * body_data = body.GetData();
-      DWORD body_len = body.GetLength();
+      size_t body_len = body.GetLength();
       if (body_len && body_data) {
         POSITION rule_pos = _test._custom_rules.GetHeadPosition();
         while (rule_pos) {
@@ -607,7 +646,7 @@ void OptimizationChecks::CheckCustomRules() {
               match._count++;
               if (match._value.IsEmpty()) {
                 std::string match_string = *i;
-                match._value = CA2T(match_string.c_str());
+                match._value = CA2T(match_string.c_str(), CP_UTF8);
               }
               i++;
             }
@@ -645,7 +684,7 @@ void OptimizationChecks::CheckProgressiveJpeg() {
           body.GetLength() > 0) {
         BYTE * buffer = (BYTE *)body.GetData();
         if (buffer[0] == 0xFF && buffer[1] == 0xD8) {
-          DWORD len = body.GetLength();
+          DWORD len = (DWORD)body.GetLength();
           request->_scores._jpeg_scans = 0;
           DWORD pos = 0;
           BYTE * marker;
@@ -673,9 +712,7 @@ void OptimizationChecks::CheckProgressiveJpeg() {
     _progressive_jpeg_score =
       (int)((progressive_bytes * 100.0 / total_bytes) + 0.5);
   }
-  WptTrace(loglevel::kFunction,
-    _T("[wpthook] - OptChecks::CheckProgressiveJpeg() score: %d\n"),
-    _progressive_jpeg_score);
+  ATLTRACE("[wpthook] - OptChecks::CheckProgressiveJpeg() score: %d", _progressive_jpeg_score);
 }
 
 /*-----------------------------------------------------------------------------

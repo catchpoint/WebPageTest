@@ -50,6 +50,7 @@ class S3
 	private static $__sslKey = null;
 
 	public static $endpoint = 's3.amazonaws.com';
+        public static $urlstyle = 'vhost';
 	public static $proxy = null;
 
 	public static $useSSL = false;
@@ -73,17 +74,18 @@ class S3
 	* @param boolean $useSSL Enable SSL
 	* @return void
 	*/
-	public function __construct($accessKey = null, $secretKey = null, $useSSL = false, $endpoint = 's3.amazonaws.com')
+	public function __construct($accessKey = null, $secretKey = null, $useSSL = false, $endpoint = 's3.amazonaws.com', $urlstyle = 'vhost')
 	{
 		if ($accessKey !== null && $secretKey !== null)
 			self::setAuth($accessKey, $secretKey);
 		self::$useSSL = $useSSL;
 		self::$endpoint = $endpoint;
+		self::$urlstyle = $urlstyle;
 	}
 
 
 	/**
-	* Set the sertvice endpoint
+	* Set the service endpoint
 	*
 	* @param string $host Hostname
 	* @return void
@@ -469,7 +471,7 @@ class S3
 	public static function putObject($input, $bucket, $uri, $acl = self::ACL_PRIVATE, $metaHeaders = array(), $requestHeaders = array(), $storageClass = self::STORAGE_CLASS_STANDARD)
 	{
 		if ($input === false) return false;
-		$rest = new S3Request('PUT', $bucket, $uri, self::$endpoint);
+		$rest = new S3Request('PUT', $bucket, $uri, self::$endpoint, self::$urlstyle);
 
 		if (is_string($input)) $input = array(
 			'data' => $input, 'size' => strlen($input),
@@ -582,7 +584,7 @@ class S3
 	*/
 	public static function getObject($bucket, $uri, $saveTo = false)
 	{
-		$rest = new S3Request('GET', $bucket, $uri, self::$endpoint);
+		$rest = new S3Request('GET', $bucket, $uri, self::$endpoint, self::$urlstyle);
 		if ($saveTo !== false)
 		{
 			if (is_resource($saveTo))
@@ -617,7 +619,7 @@ class S3
 	*/
 	public static function getObjectInfo($bucket, $uri, $returnInfo = true)
 	{
-		$rest = new S3Request('HEAD', $bucket, $uri, self::$endpoint);
+		$rest = new S3Request('HEAD', $bucket, $uri, self::$endpoint, self::$urlstyle);
 		$rest = $rest->getResponse();
 		if ($rest->error === false && ($rest->code !== 200 && $rest->code !== 404))
 			$rest->error = array('code' => $rest->code, 'message' => 'Unexpected HTTP status');
@@ -1643,22 +1645,35 @@ final class S3Request
 	* @param string $uri Object URI
 	* @return mixed
 	*/
-	function __construct($verb, $bucket = '', $uri = '', $endpoint = 's3.amazonaws.com')
+	function __construct($verb, $bucket = '', $uri = '', $endpoint = 's3.amazonaws.com', $urlstyle)
 	{
 		$this->endpoint = $endpoint;
 		$this->verb = $verb;
 		$this->bucket = $bucket;
-		$this->uri = $uri !== '' ? '/'.str_replace('%2F', '/', rawurlencode($uri)) : '/';
-
-		if ($this->bucket !== '')
+		if (isset($urlstyle) && $urlstyle === 'path')
 		{
-			$this->headers['Host'] = $this->bucket.'.'.$this->endpoint;
-			$this->resource = '/'.$this->bucket.$this->uri;
+			$this->uri = "/";
+			if ($bucket !== '') {
+				$this->uri .= $bucket . "/";
+			}
+			$this->uri .= str_replace('%2F', '/', rawurlencode($uri));
+			$this->headers['Host'] = $this->endpoint;
+			$this->resource = $this->uri;
 		}
 		else
 		{
-			$this->headers['Host'] = $this->endpoint;
-			$this->resource = $this->uri;
+			$this->uri = $uri !== '' ? '/'.str_replace('%2F', '/', rawurlencode($uri)) : '/';
+
+			if ($this->bucket !== '')
+			{
+				$this->headers['Host'] = $this->bucket.'.'.$this->endpoint;
+				$this->resource = '/'.$this->bucket.$this->uri;
+			}
+			else
+			{
+				$this->headers['Host'] = $this->endpoint;
+				$this->resource = $this->uri;
+			}
 		}
 		$this->headers['Date'] = gmdate('D, d M Y H:i:s T');
 
@@ -1837,7 +1852,7 @@ final class S3Request
 
 		// Parse body into XML
 		if ($this->response->error === false && isset($this->response->headers['type']) &&
-		$this->response->headers['type'] == 'application/xml' && isset($this->response->body))
+		    stripos($this->response->headers['type'], 'application/xml') !== false && isset($this->response->body))
 		{
 			$this->response->body = simplexml_load_string($this->response->body);
 
@@ -1920,3 +1935,4 @@ class S3Exception extends Exception {
 		$this->line = $line;
 	}
 }
+

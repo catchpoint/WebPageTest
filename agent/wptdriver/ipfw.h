@@ -34,7 +34,7 @@ public:
   ~CIpfw(void){};
 
   bool SetPipe(unsigned int num, unsigned long bandwidth, 
-               unsigned long delay, double plr = 0.0);
+               unsigned long delay, double plr, bool pipe_in);
 
 protected:
   bool Init();

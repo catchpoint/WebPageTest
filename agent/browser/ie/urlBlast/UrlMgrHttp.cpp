@@ -167,7 +167,7 @@ void CUrlMgrHttp::Start()
 			CString ec2;
 			if( ec2Instance.GetLength() )
 				ec2 = CString(_T("&ec2=")) + ec2Instance;
-			getWork = CString(_T("getwork.php?shards=1")) + videoStr + CString(_T("&location=")) + location + CString(_T("&key=")) + key + ec2;
+			getWork = CString(_T("getwork.php?reboot=1&shards=1")) + videoStr + CString(_T("&location=")) + location + CString(_T("&key=")) + key + ec2;
 			workDone = CString(object) + _T("workdone.php");
 			resultImage = CString(object) + _T("resultimage.php");
 
@@ -227,6 +227,11 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 
 				log.Trace(_T("Retrieved video job '%s' in '%s'"), (LPCTSTR)context->testId, (LPCTSTR)info.zipFileDir);
 			}
+      else if ( job == "Reboot" )
+      {
+        ret = true;
+        info.reboot = true;
+      }
 			else
 			{
 				// default settings
@@ -326,7 +331,7 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 							}
 							else if( !key.CompareNoCase(_T("Host")) )
 								info.host = value;
-							else if( !key.CompareNoCase(_T("Browser")) )
+							else if( !key.CompareNoCase(_T("BrowserExe")) )
 								info.browser = value;
 							else if( !key.CompareNoCase(_T("noopt")) && _ttol(value) )
                 info.checkOpt = 0;
@@ -354,6 +359,11 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
                 if (!info.customRules.IsEmpty())
                   info.customRules += _T("\n");
                 info.customRules += value;
+              }
+              else if( !key.CompareNoCase(_T("customMetric")) ) {
+                if (!info.customMetrics.IsEmpty())
+                  info.customMetrics += "\n";
+                info.customMetrics += (LPCSTR)CT2A(value);
               }
 							else if( !key.CompareNoCase(_T("clearcerts")) && _ttol(value) )
                 info.clearCerts = true;
@@ -384,6 +394,7 @@ bool CUrlMgrHttp::GetNextUrl(CTestInfo &info)
 
 					context->fileRunBase.Format(_T("%s-%d"), (LPCTSTR)context->fileBase, index);
 					info.logFile = workDir + context->fileRunBase;
+          info.customMetricsFile = workDir + _T("custom.txt");
 
 					if( info.eventText.IsEmpty() )						
             info.eventText.Format(_T("Run_%d"), info.currentRun);
@@ -490,6 +501,10 @@ bool CUrlMgrHttp::RunRepeatView(CTestInfo &info)
 void CUrlMgrHttp::UrlFinished(CTestInfo &info)
 {
   UpdateDNSServers();
+  if (!info.customMetricsFile.IsEmpty()) {
+    DeleteFile(info.customMetricsFile);
+    info.customMetricsFile.Empty();
+  }
 	if( info.context )
 	{
 		CUrlMgrHttpContext * context = (CUrlMgrHttpContext *)info.context;
@@ -560,6 +575,7 @@ void CUrlMgrHttp::UrlFinished(CTestInfo &info)
 
 				info.logFile = workDir + context->fileRunBase;
 				info.eventText = CString(_T("Run_")) + runText;
+        info.customMetricsFile = workDir + _T("custom.txt");
 
 				if( info.harvestLinks )
 					info.linksFile = workDir + context->fileRunBase + _T("_links.txt");

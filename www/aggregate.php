@@ -1,19 +1,36 @@
 <?php
 include 'common.inc';
-include 'page_data.inc';
+require_once('page_data.inc');
 require_once('testStatus.inc');
-set_time_limit(300);
+set_time_limit(3600);
 
 $use_median_run = false;
 if (array_key_exists('run', $_REQUEST) && $_REQUEST['run'] == 'median')
     $use_median_run = true;
 
-// only support batch tests for now
-if( isset($test['test']) && $test['test']['batch'] )
+$tests = null;
+
+// Allow for status info to be included as well
+$incStatus=0;
+if (isset($_REQUEST['status']) && strlen($_REQUEST['status']) ) {
+	$incStatus = $_REQUEST['status'];
+}
+
+// Support regular tests
+if( isset($_REQUEST['tests']) && strlen($_REQUEST['tests']) )
 {
-    header("Content-disposition: attachment; filename={$id}_aggregate.csv");
-    header("Content-type: text/csv");
-    
+    $testIds = explode(',', $_REQUEST['tests']);
+    $tests = array();
+    $tests['variations'] = array();
+    $tests['urls'] = array();
+    foreach( $testIds as &$testId )
+        $tests['urls'][] = array('u' => null, 'id' => $testId);
+
+    $fvonly = 1;
+}  
+// And obviously batch tests
+else if( isset($test['test']) && $test['test']['batch'] )
+{
     // load the test data
     $fvOnly = $test['test']['fvonly'];
     $tests = null;
@@ -28,8 +45,14 @@ if( isset($test['test']) && $test['test']['batch'] )
     }
     elseif( gz_is_file("$testPath/bulk.json") )
         $tests = json_decode(gz_file_get_contents("$testPath/bulk.json"), true);
-    if( isset($tests) )
-    {
+    
+}
+
+if( isset($tests) )
+{
+    header("Content-disposition: attachment; filename={$id}_aggregate.csv");
+    header("Content-type: text/csv");
+    
         // list of metrics that will be produced
         // for each of these, the median, average and std dev. will be calculated
         $metrics = array(   'docTime' => 'Document Complete', 
@@ -40,8 +63,13 @@ if( isset($test['test']) && $test['test']['batch'] )
                             'requestsDoc' => 'Requests (Doc)',
                             'loadEventStart' => 'Load Event Start',
                             'SpeedIndex' => 'Speed Index',
-                            'SpeedIndexDT' => 'Speed IndexDT' );
-        
+                            'lastVisualChange' => 'Last Visual Change',
+                            'visualComplete' => 'Visually Complete' );
+
+	// If asked, add status info as well
+	if ($incStatus) {
+	    	echo '"Status Code","Elapsed Time","Completed Time","Behind Count","Tests Expected","Tests Completed",';
+        } 
         // generate the header row of stats
         echo '"Test","URL","FV Successful Tests",';
         if ($use_median_run) {
@@ -50,7 +78,7 @@ if( isset($test['test']) && $test['test']['batch'] )
                 echo "\"FV $metric\",";
         } else {
             foreach( $metrics as $metric )
-                echo "\"FV $metric Median\",\"FV $metric Avg\",\"FV $metric Std. Dev\",";
+                echo "\"FV $metric Median\",\"FV $metric Avg\",\"FV $metric Std. Dev\",\"FV $metric Min\",\"FV $metric Max\",";
         }
         if( !$fvOnly )
         {
@@ -61,7 +89,7 @@ if( isset($test['test']) && $test['test']['batch'] )
                     echo "\"RV $metric\",";
             } else {
                 foreach( $metrics as $metric )
-                    echo "\"RV $metric Median\",\"RV $metric Avg\",\"RV $metric Std. Dev\",";
+                    echo "\"RV $metric Median\",\"RV $metric Avg\",\"RV $metric Std. Dev\",\"RV $metric Min\",\"RV $metric Max\",";
             }
         }
         foreach( $tests['variations'] as &$variation )
@@ -74,7 +102,7 @@ if( isset($test['test']) && $test['test']['batch'] )
                     echo "\"$label FV $metric\",";
             } else {
                 foreach( $metrics as $metric )
-                    echo "\"$label FV $metric Median\",\"$label FV $metric Avg\",\"$label FV $metric Std. Dev\",";
+                    echo "\"$label FV $metric Median\",\"$label FV $metric Avg\",\"$label FV $metric Std. Dev\",\"$label FV $metric Min\",\"$label FV $metric Max\",";
             }
             if( !$fvOnly )
             {
@@ -85,7 +113,7 @@ if( isset($test['test']) && $test['test']['batch'] )
                         echo "\"$label RV $metric\",";
                 } else {
                     foreach( $metrics as $metric )
-                        echo "\"$label RV $metric Median\",\"$label RV $metric Avg\",\"$label RV $metric Std. Dev\",";
+                        echo "\"$label RV $metric Median\",\"$label RV $metric Avg\",\"$label RV $metric Std. Dev\",\"$label RV $metric Min\",\"$label RV $metric Max\",";
                 }
             }
         }
@@ -100,8 +128,22 @@ if( isset($test['test']) && $test['test']['batch'] )
             $url = $test['u'];
             $testPath = './' . GetTestPath($test['id']);
             $pageData = loadAllPageData($testPath);
+	    
+	    if ($incStatus) {
+	    	$status = GetTestStatus($test['id'], 1);
+		// In ver 2 onwards, always echo the status info
+	    	echo '"' . $status['statusCode'] . '","' .
+			$status['elapsed']. '","' .
+			$status['completeTime']. '","' .
+			$status['behindCount']. '","' .
+			$status['testsExpected']. '","' .
+			$status['testsCompleted']. '",'; 
+	    }
             if( count($pageData) )
             {
+		// If we didn't have an URL before, fill it in now
+		if ($url == null)
+		    $url = $pageData[1][0]['URL'];
                 echo "\"$label\",\"$url\",";
                 $cached = 0;
                 if( !$fvOnly )
@@ -119,8 +161,8 @@ if( isset($test['test']) && $test['test']['batch'] )
                         if ($use_median_run) {
                             echo "\"{$pageData[$median_run][$cacheVal][$metric]}\",";
                         } else {
-                            CalculateAggregateStats($pageData, $cacheVal, $metric, $median, $avg, $stdDev);
-                            echo "\"$median\",\"$avg\",\"$stdDev\",";
+                            CalculateAggregateStats($pageData, $cacheVal, $metric, $median, $avg, $stdDev, $min, $max);
+                            echo "\"$median\",\"$avg\",\"$stdDev\",\"$min\",\"$max\",";
                         }
                     }
                 }
@@ -148,8 +190,8 @@ if( isset($test['test']) && $test['test']['batch'] )
                                 if ($use_median_run) {
                                     echo "\"{$pageData[$median_run][$cacheVal][$metric]}\",";
                                 } else {
-                                    CalculateAggregateStats($pageData, $cacheVal, $metric, $median, $avg, $stdDev);
-                                    echo "\"$median\",\"$avg\",\"$stdDev\",";
+                                    CalculateAggregateStats($pageData, $cacheVal, $metric, $median, $avg, $stdDev, $min, $max);
+                                    echo "\"$median\",\"$avg\",\"$stdDev\",\"$min\",\"$max\",";
                                 }
                             }
                         }
@@ -171,7 +213,6 @@ if( isset($test['test']) && $test['test']['batch'] )
             echo "\"{$test['id']}\"\r\n";
         }
     }    
-}
 else
 {
     header("HTTP/1.0 404 Not Found");

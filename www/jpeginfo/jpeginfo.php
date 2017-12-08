@@ -34,7 +34,8 @@ if (array_key_exists('url', $_REQUEST) &&
       mkdir($dir, 0777, true);
     move_uploaded_file($_FILES['imgfile']['tmp_name'], $path);
   }
-  header("Location: http://{$_SERVER['HTTP_HOST']}{$_SERVER['PHP_SELF']}?id=$id");
+  $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+  header("Location: $protocol://{$_SERVER['HTTP_HOST']}{$_SERVER['PHP_SELF']}?id=$id");
 } else {
   echo "<!DOCTYPE html>\n<html>\n<head>\n</head>\n<body>\n";
   echo "No image file provided";
@@ -63,9 +64,9 @@ function AnalyzeFile($path) {
         echo "<h2>Stats</h2>";
         echo "Image Type: ";
         if ($info['progressive'])
-          echo "<b>Progressive</b><br>Scan Count: {$info['scans']}<br>";
+          echo "Progressive (Renders from blurry to sharp)<br>Scan Count: {$info['scans']}<br>";
         else
-          echo "<b>Baseline</b><br>";
+          echo "Baseline (Renders top-down)<br>";
         echo "File Size: " . number_format($info['filesize']) . ' bytes<br>';
         echo "Application Data: " . number_format($info['appdata']) . ' bytes (' . number_format(($info['appdata'] / $info['filesize']) * 100, 1) . '%)<br>';
 
@@ -105,21 +106,21 @@ function AnalyzeFile($path) {
 
         if (is_file($path)) {
           echo "<h2>Image (" . number_format($info['filesize']) . " bytes)</h2>";
-          echo '<img src="data::image/jpeg;base64,';
+          echo '<img src="data:image/jpeg;base64,';
           echo base64_encode(file_get_contents($path));
           echo '"><br><br>';
         }
         
         if (isset($optData)) {
           echo "<h2>Optimized Image - Lossless (" . number_format($optsize) . " bytes)</h2>";
-          echo '<img src="data::image/jpeg;base64,';
+          echo '<img src="data:image/jpeg;base64,';
           echo base64_encode($optData);
           echo '"><br><br>';
         }
 
         if (isset($jpegData)) {
           echo "<h2>Quality 85 Image - Lossy (" . number_format($jpegsize) . " bytes)</h2>";
-          echo '<img src="data::image/jpeg;base64,';
+          echo '<img src="data:image/jpeg;base64,';
           echo base64_encode($jpegData);
           echo '"><br><br>';
         }
@@ -191,21 +192,23 @@ function GetUrl($url, $path) {
 
 function FetchUrl($url) {
   $ret = false;
-  $curl = curl_init();
-  curl_setopt($curl, CURLOPT_URL, $url);
-  curl_setopt($curl, CURLOPT_USERAGENT, 'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)');
-  curl_setopt($curl, CURLOPT_FILETIME, true);
-  curl_setopt($curl, CURLOPT_FAILONERROR, true);
-  curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
-  curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 30);
-  curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 30);
-  curl_setopt($curl, CURLOPT_MAXREDIRS, 10);
-  curl_setopt($curl, CURLOPT_TIMEOUT, 30);
-  curl_setopt($curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-  curl_setopt($curl, CURLOPT_WRITEFUNCTION, 'WriteCallback');
-  if (curl_exec($curl) !== false)
-    $ret = true;
-  curl_close($curl);
+  if (function_exists('curl_init')) {
+    $curl = curl_init();
+    curl_setopt($curl, CURLOPT_URL, $url);
+    curl_setopt($curl, CURLOPT_USERAGENT, 'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)');
+    curl_setopt($curl, CURLOPT_FILETIME, true);
+    curl_setopt($curl, CURLOPT_FAILONERROR, true);
+    curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 30);
+    curl_setopt($curl, CURLOPT_DNS_CACHE_TIMEOUT, 30);
+    curl_setopt($curl, CURLOPT_MAXREDIRS, 10);
+    curl_setopt($curl, CURLOPT_TIMEOUT, 30);
+    curl_setopt($curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+    curl_setopt($curl, CURLOPT_WRITEFUNCTION, 'WriteCallback');
+    if (curl_exec($curl) !== false)
+      $ret = true;
+    curl_close($curl);
+  }
   return $ret;
 }
 

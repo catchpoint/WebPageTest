@@ -48,12 +48,13 @@ $page_description = "Test network path from multiple locations around the world 
             
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
-                    <li class="analytical_review"><a href="/">Analytical Review</a></li>
-                    <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
+                    <li class="analytical_review"><a href="/">Advanced Testing</a></li>
                     <?php
-                    if( $settings['mobile'] )
-                        echo '<li class="mobile_test"><a href="/mobile">Mobile</a></li>';
+                    if (is_file(__DIR__ . '/settings/profiles.ini')) {
+                      echo "<li class=\"easy_mode\"><a href=\"/easy.php\">Simple Testing</a></li>";
+                    }
                     ?>
+                    <li class="visual_comparison"><a href="/video/">Visual Comparison</a></li>
                     <li class="traceroute ui-state-default ui-corner-top ui-tabs-selected ui-state-active"><a href="#">Traceroute</a></li>
                 </ul>
                 <div id="analytical-review" class="test_box">
@@ -156,17 +157,16 @@ $page_description = "Test network path from multiple locations around the world 
             echo "var connectivity = " . json_encode($connectivity) . ";\n";
 
             $sponsors = parse_ini_file('./settings/sponsors.ini', true);
-            if( strlen($GLOBALS['cdnPath']) )
+            foreach( $sponsors as &$sponsor )
             {
-                foreach( $sponsors as &$sponsor )
-                {
-                    if( isset($sponsor['logo']) )
-                        $sponsor['logo'] = $GLOBALS['cdnPath'] . $sponsor['logo'];
-                    if( isset($sponsor['logo_big']) )
-                        $sponsor['logo_big'] = $GLOBALS['cdnPath'] . $sponsor['logo_big'];
-                }
+              if( strlen($GLOBALS['cdnPath']) && isset($sponsor['logo']) )
+                $sponsor['logo'] = $GLOBALS['cdnPath'] . $sponsor['logo'];
+              $offset = 0;
+              if( $sponsor['index'] )
+                $offset = -40 * $sponsor['index'];
+              $sponsor['offset'] = $offset;
             }
-            echo "var sponsors = " . json_encode($sponsors) . ";\n";
+            echo "var sponsors = " . @json_encode($sponsors) . ";\n";
         ?>
         </script>
         <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script> 
@@ -181,7 +181,7 @@ $page_description = "Test network path from multiple locations around the world 
 */
 function LoadLocations()
 {
-    $locations = parse_ini_file('./settings/locations.ini', true);
+    $locations = LoadLocationsIni();
     FilterLocations( $locations );
     
     // strip out any sensitive information

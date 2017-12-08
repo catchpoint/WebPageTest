@@ -29,7 +29,23 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "StdAfx.h"
 #include "track_dns.h"
 #include "test_state.h"
+#include "wpthook.h"
 #include "../wptdriver/wpt_test.h"
+
+static LPCSTR blocked_domains[] = {
+  ".*\\.pack\\.google\\.com",          // Chrome crx update URL
+  ".*\\.gvt1\\.com",                   // Chrome crx update URL
+  "clients1\\.google\\.com",           // Autofill update downloads
+  "shavar\\.services\\.mozilla\\.com", // Firefox tracking protection updates
+  "shavar\\.stage\\.mozaws\\.net",
+  "aus[^\\.]*\\.mozilla\\.org",        // Firefox update service
+  "cdm\\.download\\.adobe\\.com",      // Firefox adobe updates
+  "search\\.services\\.mozilla\\.com", // Firefox 54 addition
+  "safebrowsing\\.google\\.com",       // Google safebrowsing list (Firefox)
+  "tracking-protection\\.cdn\\.mozilla\\.net",  // Firefox tracking protection
+  //"ctldl\\.windowsupdate\\.com",       // Windows cert revocation updates
+  NULL
+};
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
@@ -49,13 +65,50 @@ TrackDns::~TrackDns(void){
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+bool TrackDns::BlockLookup(CString name) {
+  bool block = false;
+  name.MakeLower();
+
+  // Check the hard-coded block list
+  LPCSTR * domain = blocked_domains;
+  CStringA check_name(CT2A((LPCTSTR)name, CP_UTF8));
+  while (*domain && !block) {
+    if (RegexMatch(check_name, *domain))
+      block = true;
+    domain++;
+  }
+
+  // Check the list from the blockDomains script command
+  if (!_test._block_domains.IsEmpty()) {
+    POSITION pos = _test._block_domains.GetHeadPosition();
+    while (!block && pos) {
+      CString block_domain = _test._block_domains.GetNext(pos);
+      if (!block_domain.CompareNoCase(name))
+        block = true;
+    }
+  }
+
+  // Check the list from the blockDomainsExcept script command
+  if (!_test._block_domains_except.IsEmpty()) {
+    block = true;
+    POSITION pos = _test._block_domains_except.GetHeadPosition();
+    while (block && pos) {
+      CString allow_domain = _test._block_domains_except.GetNext(pos);
+      if (!allow_domain.CompareNoCase(name))
+        block = false;
+    }
+  }
+
+  return block;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 void * TrackDns::LookupStart(CString& name) {
   if (!name.GetLength() || name == _T("127.0.0.1"))
     return NULL;
 
-  WptTrace(loglevel::kFrequentEvent, 
-            _T("[wshook] (%d) DNS Lookup for '%s' started\n"), 
-              GetCurrentThreadId(), (LPCTSTR)name);
+  ATLTRACE(L"[wshook] (%d) DNS Lookup for '%s' started", GetCurrentThreadId(), (LPCWSTR)name);
   CheckCDN(name, name);
 
   // we need to check for overrides even if we aren't active
@@ -89,10 +142,9 @@ void TrackDns::LookupAddress(void * context, ULONG &addr) {
     LeaveCriticalSection(&cs);
     IN_ADDR address;
     address.S_un.S_addr = addr;
-    WptTrace(loglevel::kFrequentEvent, 
-      _T("[wshook] (%d) DNS Lookup address: %s -> %d.%d.%d.%d\n"), 
+    ATLTRACE(L"[wshook] (%d) DNS Lookup address: %s -> %d.%d.%d.%d", 
       GetCurrentThreadId(),
-      info->_name,
+      (LPCWSTR)info->_name,
       address.S_un.S_un_b.s_b1
       ,address.S_un.S_un_b.s_b2
       ,address.S_un.S_un_b.s_b3
@@ -110,8 +162,7 @@ void TrackDns::LookupAlias(CString name, CString alias) {
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void TrackDns::LookupDone(void * context, int result) {
-  WptTrace(loglevel::kFrequentEvent, 
-            _T("[wshook] (%d) DNS Lookup complete\n"), GetCurrentThreadId());
+  ATLTRACE("[wshook] (%d) DNS Lookup complete", GetCurrentThreadId());
 
   if (context) {
     DnsInfo * info = (DnsInfo *)context;
@@ -149,13 +200,16 @@ void TrackDns::Reset() {
 }
 
 /*-----------------------------------------------------------------------------
-  For undecoded SPDY sessions (all of them), claim with IP instead of host.
+  Claim all matching DNS lookups but use the timing from the earliest
+  completed one (multiple lookups will use cached results)
 -----------------------------------------------------------------------------*/
 bool TrackDns::Claim(CString name, ULONG addr, LARGE_INTEGER before,
                      LARGE_INTEGER& start, LARGE_INTEGER& end) {
   bool is_claimed = false;
   if (!name.GetLength())
     name = GetHost(addr);
+  start.QuadPart = 0;
+  end.QuadPart = 0;
   EnterCriticalSection(&cs);
   POSITION pos = _dns_lookups.GetStartPosition();
   while (pos) {
@@ -168,8 +222,11 @@ bool TrackDns::Claim(CString name, ULONG addr, LARGE_INTEGER before,
         name == info->_name) {
       info->_accounted_for = true;
       is_claimed = true;
-      start = info->_start;
-      end = info->_end;
+      if (!start.QuadPart ||
+          (info->_start.QuadPart < start.QuadPart && info->_end.QuadPart > 0)) {
+        start = info->_start;
+        end = info->_end;
+      }
     }
   }
   LeaveCriticalSection(&cs);
@@ -282,8 +339,8 @@ void TrackDns::AddAddress(CString host, DWORD address) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-int TrackDns::GetAddressCount(CString host) {
-  int count = 0;
+size_t TrackDns::GetAddressCount(CString host) {
+  size_t count = 0;
   bool found = false;
   EnterCriticalSection(&cs);
   POSITION pos = _host_addresses.GetHeadPosition();
@@ -348,7 +405,7 @@ CStringA TrackDns::GetCDNProvider(CString host) {
     POSITION pos = _cdn_hosts.GetHeadPosition();
     while (provider.IsEmpty() && pos) {
       CDNEntry &entry = _cdn_hosts.GetNext(pos);
-      if (!host.CompareNoCase((LPCTSTR)CA2T(entry._name)))
+      if (!host.CompareNoCase((LPCTSTR)CA2T(entry._name, CP_UTF8)))
         provider = entry._provider;
     }
   }

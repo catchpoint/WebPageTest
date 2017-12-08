@@ -10,7 +10,7 @@ header ("Content-type: text/javascript");
  * http://bassistance.de/jquery-plugins/jquery-plugin-treeview/
  * http://docs.jquery.com/Plugins/Treeview
  *
- * Copyright (c) 2007 Jörn Zaefferer
+ * Copyright (c) 2007 J?rn Zaefferer
  *
  * Dual licensed under the MIT and GPL licenses:
  *   http://www.opensource.org/licenses/mit-license.php
@@ -24,7 +24,8 @@ header ("Content-type: text/javascript");
 $div = $_REQUEST['div'];
 if (strlen($testPath) && strlen($div)) {
     // inject the css file into the document dynamically
-    $base_path = 'http://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+    $base_path = "$protocol://" . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
     $css = "$base_path/tree.css?v=2";
     echo "var pagespeed_tree_css=document.createElement('link');\n";
     echo "pagespeed_tree_css.setAttribute('rel', 'stylesheet');\n";

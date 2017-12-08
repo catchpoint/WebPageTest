@@ -647,6 +647,8 @@ void CurlBlastDlg::CloseDialogs(void)
 			, _T("choose file")
 			, _T("network delay simulator") 
 			, _T("shut down windows")
+      , _T("vmware")
+      , _T("security essentials")
 		};
 
 		// build a list of dialogs to close
@@ -1014,6 +1016,37 @@ void CurlBlastDlg::ClearTemp()
     TCHAR longPath[MAX_PATH];
     if( GetLongPathName(path, longPath, _countof(longPath)) )
       DeleteDirectory(longPath, false);
+  }
+
+  // Clean out any old windows update downloads (over 1 month old)
+  const unsigned __int64 TICKS_PER_MONTH = 10000000ui64 * 60ui64 * 60ui64 * 24ui64 * 30L;
+  FILETIME now;
+  GetSystemTimeAsFileTime(&now);
+  ULARGE_INTEGER keep_start;
+  keep_start.LowPart = now.dwLowDateTime;
+  keep_start.HighPart = now.dwHighDateTime;
+  keep_start.QuadPart -= TICKS_PER_MONTH;
+  TCHAR dir[MAX_PATH];
+  GetWindowsDirectory(dir, MAX_PATH);
+  lstrcat(dir, _T("\\SoftwareDistribution\\Download\\"));
+  CString downloads(dir);
+  WIN32_FIND_DATA fd;
+  HANDLE hFind = FindFirstFile(downloads + _T("*.*"), &fd);
+  if (hFind != INVALID_HANDLE_VALUE) {
+    do {
+      if (lstrcmp(fd.cFileName, _T(".")) && lstrcmp(fd.cFileName, _T(".."))) {
+        ULARGE_INTEGER file_time;
+        file_time.LowPart = fd.ftLastWriteTime.dwLowDateTime;
+        file_time.HighPart = fd.ftLastWriteTime.dwHighDateTime;
+        if (file_time.QuadPart < keep_start.QuadPart) {
+          if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            DeleteDirectory(downloads + fd.cFileName, true);
+          else
+            DeleteFile(downloads + fd.cFileName);
+        }
+      }
+    } while (FindNextFile(hFind, &fd));
+    FindClose(hFind);
   }
 }
 

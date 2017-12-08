@@ -32,26 +32,36 @@ class DataChunk;
 class Requests;
 class TestState;
 class WptTest;
-struct PRFileDesc;
+class SSLStream;
+struct nghttp2_session;
+
+typedef enum {
+  PROTO_NOT_CHECKED,
+  PROTO_HTTP,
+  PROTO_SPDY,
+  PROTO_H2,
+  PROTO_UNKNOWN
+} SOCKET_PROTOCOL;
+
+typedef enum {
+  DATA_IN,
+  DATA_OUT
+} DATA_DIRECTION;
+
+typedef struct {
+  nghttp2_session * session;
+  void *            connection;
+  DWORD             socket_id;
+  DATA_DIRECTION    direction;
+} H2_USER_DATA;
 
 class SocketInfo {
 public:
-  SocketInfo():
-    _id(0)
-    , _accounted_for(false)
-    , _during_test(false)
-    , _is_ssl(false)
-    , _is_ssl_handshake_complete(false)
-    , _local_port(0) {
-    memset(&_addr, 0, sizeof(_addr));
-    _connect_start.QuadPart = 0;
-    _connect_end.QuadPart = 0;
-    _ssl_start.QuadPart = 0;
-    _ssl_end.QuadPart = 0;
-  }
-  ~SocketInfo(void){}
+  SocketInfo();
+  ~SocketInfo(void);
 
   bool IsLocalhost();
+  bool IsLinkLocal();
 
   DWORD               _id;
   struct sockaddr_in  _addr;
@@ -60,10 +70,17 @@ public:
   bool                _during_test;
   bool                _is_ssl;
   bool                _is_ssl_handshake_complete;
+  bool                _ssl_checked;
   LARGE_INTEGER       _connect_start;
   LARGE_INTEGER       _connect_end;
   LARGE_INTEGER       _ssl_start;
   LARGE_INTEGER       _ssl_end;
+  int                 _certificate_bytes;
+  SOCKET_PROTOCOL     _protocol;
+  H2_USER_DATA *      _h2_in;
+  H2_USER_DATA *      _h2_out;
+  SSLStream *         _ssl_in;
+  SSLStream *         _ssl_out;
 };
 
 class TrackSockets {
@@ -73,32 +90,49 @@ public:
 
   void Create(SOCKET s);
   void Close(SOCKET s);
-  void Connect(SOCKET s, const struct sockaddr FAR * name, int namelen);
+  bool Connect(SOCKET s, const struct sockaddr FAR * name, int namelen);
   void Connected(SOCKET s);
-  void Bind(SOCKET s, const struct sockaddr FAR * name, int namelen);
   bool ModifyDataOut(SOCKET s, DataChunk& chunk, bool is_unencrypted);
   void DataOut(SOCKET s, DataChunk& chunk, bool is_unencrypted);
   void DataIn(SOCKET s, DataChunk& chunk, bool is_unencrypted);
 
+  void SniffSSL(SOCKET s, DataChunk& chunk);
   bool IsSsl(SOCKET s);
   bool IsSslById(DWORD socket_id);
-  void SetSslFd(PRFileDesc* fd);
-  void ClearSslFd(PRFileDesc* fd);
+  void SetSslFd(void* ssl);
+  void ClearSslFd(void* ssl);
   void ClaimSslFd(SOCKET s);
   void ResetSslFd(void);
   void SetSslSocket(SOCKET s);
-  bool SslSocketLookup(PRFileDesc* fd, SOCKET& s);
+  bool SslSocketLookup(void* ssl, SOCKET& s);
+  void SslRemoveSocketLookup(void* ssl);
+  void EnableSsl(SocketInfo *info);
 
   void Reset();
 
   bool ClaimConnect(DWORD socket_id, LARGE_INTEGER before,
                     LARGE_INTEGER& start, LARGE_INTEGER& end,
-                    LARGE_INTEGER& ssl_start, LARGE_INTEGER& ssl_end);
+                    LARGE_INTEGER& ssl_start, LARGE_INTEGER& ssl_end,
+                    int& certificate_bytes);
   void ClaimAll();
   ULONG GetPeerAddress(DWORD socket_id);
   int GetLocalPort(DWORD socket_id);
   LONGLONG GetEarliest(LONGLONG& after);
   CStringA GetRTT(DWORD ipv4_address);
+  bool Find(ULONG server_addr, USHORT server_port, USHORT client_port,
+            LARGE_INTEGER &match_connect_start,
+            LARGE_INTEGER &match_connect_end);
+
+  void H2BeginHeaders(DATA_DIRECTION direction, DWORD socket_id, int stream_id);
+  void H2CloseStream(DATA_DIRECTION direction, DWORD socket_id, int stream_id);
+  void H2Header(DATA_DIRECTION direction, DWORD socket_id, int stream_id,
+                const char * header, const char * value, bool pushed);
+  void H2Data(DATA_DIRECTION direction, DWORD socket_id, int stream_id,
+              size_t len, const char * data);
+  void H2Bytes(DATA_DIRECTION direction, DWORD socket_id, int stream_id,
+               size_t len);
+  void H2Priority(DATA_DIRECTION direction, DWORD socket_id, int stream_id,
+                int depends_on, int weight, int exclusive);
 
 private:
   SocketInfo* GetSocketInfo(SOCKET s, bool lookup_peer = true);
@@ -106,6 +140,10 @@ private:
 
   void SslDataOut(SocketInfo* info, const DataChunk& chunk);
   void SslDataIn(SocketInfo* info, const DataChunk& chunk);
+  bool IsSSLHandshake(const DataChunk& chunk);
+  H2_USER_DATA * NewHttp2Session(DWORD socket_id,
+                                 DATA_DIRECTION direction);
+  void SniffProtocol(SocketInfo* info, DataChunk& chunk);
 
   CRITICAL_SECTION cs;
   Requests&                   _requests;
@@ -115,7 +153,7 @@ private:
   CAtlMap<SOCKET, DWORD>	    _openSockets;
   CAtlMap<DWORD, SocketInfo*>  _socketInfo;
 
-  CAtlMap<DWORD, PRFileDesc*>    _last_ssl_fd;  // per-thread
-  CAtlMap<PRFileDesc*, SOCKET>   _ssl_sockets;
-  CAtlMap<DWORD, DWORD>          ipv4_rtt_;  // round trip times by address
+  CAtlMap<DWORD, void*>    _last_ssl_fd;  // per-thread
+  CAtlMap<void*, SOCKET>   _ssl_sockets;
+  CAtlMap<DWORD, DWORD>    ipv4_rtt_;  // round trip times by address
 };

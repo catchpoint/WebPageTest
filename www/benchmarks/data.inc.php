@@ -1,7 +1,7 @@
 <?php
 
 require_once('common.inc');
-$raw_data = null;
+$raw_data = array();
 $trend_data = null;
 $median_data = null;
 $start_time = 0;
@@ -70,6 +70,8 @@ function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc, &$annotatio
             stripos($metric, 'fullyloaded') !== false || 
             stripos($metric, 'visualcomplete') !== false || 
             stripos($metric, 'eventstart') !== false || 
+            stripos($metric, 'lastVisualChange') !== false || 
+            stripos($metric, 'domContentLoadedEventStart') !== false || 
             stripos($metric, 'ttfb') !== false) {
         $istime = true;
     }
@@ -111,10 +113,15 @@ function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc, &$annotatio
                     if (array_key_exists($configuration['name'], $row) && array_key_exists($location['location'], $row[$configuration['name']])) {
                         $value = $row[$configuration['name']][$location['location']];
                         if ($aggregate != 'count') {
-                            if ($isbytes)
-                                $value = number_format($value / 1024.0, 3, '.', '');
-                            elseif ($istime)
-                                $value = number_format($value / 1000.0, 3, '.', '');
+                            $divisor = $isbytes ? 1024.0 : $istime ? 1000.0 : 1;
+                            if (strpos($value, ';') === false) {
+                              $value = isset($divisor) ? number_format($value / $divisor, 3, '.', '') : $value;
+                            } else {
+                              $values = explode(';', $value);
+                              foreach($values as $index => $val)
+                                $values[$index] = isset($divisor) ? number_format($val / $divisor, 3, '.', '') : $value;
+                              $value = implode(';', $values);
+                            }
                         }
                         $tsv .= $value;
                     }
@@ -164,13 +171,19 @@ function LoadDataTSV($benchmark, $cached, $metric, $aggregate, $loc, &$annotatio
 function LoadData(&$data, &$configurations, $benchmark, $cached, $metric, $aggregate, $loc) {
     $ok = false;
     global $start_time;
+    global $INCLUDE_ERROR_BARS;
+    global $raw_data;
     $data = array();
     if (GetConfigurationNames($benchmark, $configurations, $loc, $loc_aliases)) {
         $data_file = "./results/benchmarks/$benchmark/aggregate/$metric.json";
+        $key = "$metric-$benchmark";
         if (gz_is_file($data_file)) {
-            $raw_data = json_decode(gz_file_get_contents($data_file), true);
-            if (count($raw_data)) {
-                foreach($raw_data as &$row) {
+            if (!array_key_exists($key, $raw_data)) {
+              $raw_data[$key] = json_decode(gz_file_get_contents($data_file), true);
+              usort($raw_data[$key], 'RawDataCompare');
+            }
+            if (count($raw_data[$key])) {
+                foreach($raw_data[$key] as &$row) {
                     if ($row['cached'] == $cached &&
                         array_key_exists($aggregate, $row) &&
                         strlen($row[$aggregate])) {
@@ -190,13 +203,19 @@ function LoadData(&$data, &$configurations, $benchmark, $cached, $metric, $aggre
                             }
                             if (!isset($loc) || $loc == $location) {
                                 $ok = true;
-                                if (!array_key_exists($time, $data)) {
+                                if (!array_key_exists($time, $data))
                                     $data[$time] = array();
-                                }
-                                if (!array_key_exists($config, $data[$time])) {
+                                if (!array_key_exists($config, $data[$time]))
                                     $data[$time][$config] = array();
+                                $mid = $row[$aggregate];
+                                if ($INCLUDE_ERROR_BARS && $aggregate == 'median') {
+                                  $low = array_key_exists('confLow', $row) ? $row['confLow'] : $mid;
+                                  $high = array_key_exists('confHigh', $row) ? $row['confHigh'] : $mid;
+                                  $value = "$low;$mid;$high";
+                                } else {
+                                  $value = $mid;
                                 }
-                                $data[$time][$config][$location] = $row[$aggregate];
+                                $data[$time][$config][$location] = $value;
                             }
                         }
                     }
@@ -244,7 +263,7 @@ function GetConfigurationNames($benchmark, &$configs, $loc, &$loc_aliases) {
 function GetBenchmarks() {
     $benchmarks = array();
     $bm_list = file('./settings/benchmarks/benchmarks.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    if (!count($bm_list))
+    if (!$bm_list || !count($bm_list))
         $bm_list = glob('./settings/benchmarks/*.php');
     foreach ($bm_list as $benchmark) {
         $benchmarks[] = GetBenchmarkInfo(basename($benchmark, '.php'));
@@ -268,6 +287,9 @@ function GetBenchmarkInfo($benchmark) {
         }
         if (isset($links)) {
             $info['links'] = $links;
+        }
+        if (isset($metrics)) {
+          $info['metrics'] = $metrics;
         }
         $info['fvonly'] = false;
         $info['video'] = false;
@@ -309,6 +331,7 @@ function LoadTestDataTSV($benchmark, $cached, $metric, $test, &$meta, $loc) {
     $isbytes = false;
     $istime = false;
     $annotations = array();
+    $meta = array();
     if (stripos($metric, 'bytes') !== false) {
         $isbytes = true;
     } elseif (stripos($metric, 'time') !== false || 
@@ -316,6 +339,7 @@ function LoadTestDataTSV($benchmark, $cached, $metric, $test, &$meta, $loc) {
             stripos($metric, 'fullyloaded') !== false || 
             stripos($metric, 'visualcomplete') !== false || 
             stripos($metric, 'eventstart') !== false || 
+            stripos($metric, 'lastVisualChange') !== false || 
             stripos($metric, 'ttfb') !== false) {
         $istime = true;
     }
@@ -419,24 +443,28 @@ function LoadTestData(&$data, &$configurations, $benchmark, $cached, $metric, $t
     global $raw_data;
     $ok = false;
     $data = array();
-    $meta = array();
+    if (!isset($meta))
+      $meta = array();
     if (GetConfigurationNames($benchmark, $configurations, $loc, $loc_aliases)) {
         $date = gmdate('Ymd_Hi', $test);
         $data_file = "./results/benchmarks/$benchmark/data/$date.json";
+        $key = "$benchmark-$date";
         if (gz_is_file($data_file)) {
-            if (!isset($raw_data)) {
-                $raw_data = json_decode(gz_file_get_contents($data_file), true);
-                usort($raw_data, 'RawDataCompare');
+            if (!array_key_exists($key, $raw_data)) {
+                $raw_data[$key] = json_decode(gz_file_get_contents($data_file), true);
+                usort($raw_data[$key], 'RawDataCompare');
             }
-            if (count($raw_data)) {
-                foreach($raw_data as &$row) {
+            if (count($raw_data[$key])) {
+                foreach($raw_data[$key] as &$row) {
                     if (array_key_exists('cached', $row) &&
                         $row['cached'] == $cached &&
                         array_key_exists('url', $row) && 
                         array_key_exists('config', $row) && 
                         array_key_exists('location', $row) && 
                         array_key_exists($metric, $row) && 
-                        strlen($row[$metric])) {
+                        strlen($row[$metric]) &&
+                        isset($row['result']) &&
+                        ($row['result'] == 0 || $row['result'] == 99999)) {
                         $url = $row['url'];
                         if (array_key_exists('label', $row) && strlen($row['label'])) {
                             $url = $row['label'];
@@ -470,6 +498,74 @@ function LoadTestData(&$data, &$configurations, $benchmark, $cached, $metric, $t
         }
     }
     return $ok;
+}
+
+function LoadTestComparisonTSV($configs, $cached, $metric, &$meta) {
+  $ok = false;
+  $tsv = '';
+  if (stripos($metric, 'bytes') !== false) {
+      $isbytes = true;
+  } elseif (stripos($metric, 'time') !== false || 
+          stripos($metric, 'render') !== false || 
+          stripos($metric, 'fullyloaded') !== false || 
+          stripos($metric, 'visualcomplete') !== false || 
+          stripos($metric, 'eventstart') !== false || 
+          stripos($metric, 'lastVisualChange') !== false || 
+          stripos($metric, 'ttfb') !== false) {
+      $istime = true;
+  }
+  $row = "URL";
+  foreach ($configs as $config)
+    $row .= "\t{$config['label']}";
+  $row .= "\n";
+  $tsv .= $row;
+  $rows = array();
+  $maxValues = 0;
+  foreach ($configs as $column => $config) {
+    if (LoadTestData($data, $bmConfigs, $config['benchmark'], $cached, $metric, $config['time'], $meta, $config['location'])) {
+      foreach ($data as $url => &$configData) {
+        $ok = true;
+        if (!array_key_exists($url, $rows))
+          $rows[$url] = array();
+        if (array_key_exists($config['config'], $configData) &&
+            array_key_exists($config['location'], $configData[$config['config']])) {
+          foreach ($configData[$config['config']][$config['location']] as &$result) {
+            if (!array_key_exists($column, $rows[$url])) {
+              $rows[$url][$column] = array('test' => $result['test'], 'values' => array());
+              if (!array_key_exists($url, $meta))
+                $meta[$url] = array();
+              if (!array_key_exists('tests', $meta[$url]))
+                $meta[$url]['tests'] = array();
+              $meta[$url]['tests'][$column] = $result['test'];
+            }
+            $value = $result['value'];
+            if ($isbytes)
+                $value = number_format($value / 1024.0, 3, '.', '');
+            elseif ($istime)
+                $value = number_format($value / 1000.0, 3, '.', '');
+            $rows[$url][$column]['values'][] = $value;
+            $maxValues = max($maxValues, count($rows[$url][$column]['values']));
+          }
+        }
+      }
+    }
+  }
+  foreach ($rows as $url => $rowData) {
+    for ($index = 0; $index < $maxValues; $index++) {
+      $row = $url;
+      foreach ($configs as $column => $config) {
+        $row .= "\t";
+        if (array_key_exists($column, $rowData) &&
+            array_key_exists($index, $rowData[$column]['values']))
+          $row .= $rowData[$column]['values'][$index];
+      }
+      $row .= "\n";
+      $tsv .= $row;
+    }
+  }
+  if (!$ok)
+    unset($tsv);
+  return $tsv;
 }
 
 /**
@@ -511,6 +607,7 @@ function LoadTrendDataTSV($benchmark, $cached, $metric, $url, $loc, &$annotation
             stripos($metric, 'fullyloaded') !== false || 
             stripos($metric, 'visualcomplete') !== false || 
             stripos($metric, 'eventstart') !== false || 
+            stripos($metric, 'lastVisualChange') !== false || 
             stripos($metric, 'ttfb') !== false) {
         $istime = true;
     }
@@ -611,6 +708,7 @@ function LoadTrendDataTSV($benchmark, $cached, $metric, $url, $loc, &$annotation
 function LoadTrendData(&$data, &$configurations, $benchmark, $cached, $metric, $url, $loc) {
     global $trend_data;
     global $start_time;
+    global $raw_data;
     $ok = false;
     $data = array();
     if (GetConfigurationNames($benchmark, $configurations, $loc, $loc_aliases)) {
@@ -625,9 +723,13 @@ function LoadTrendData(&$data, &$configurations, $benchmark, $cached, $metric, $
                     if (!$start_time || $time > $start_time) {
                         $tests = array();
                         $file = basename($file, ".gz");
-                        $raw_data = json_decode(gz_file_get_contents("./results/benchmarks/$benchmark/data/$file"), true);
-                        if (count($raw_data)) {
-                            foreach($raw_data as $row) {
+                        $key = "$benchmark.$file";
+                        if (!array_key_exists($key, $raw_data)) {
+                          $raw_data[$key] = json_decode(gz_file_get_contents("./results/benchmarks/$benchmark/data/$file"), true);
+                          usort($raw_data[$key], 'RawDataCompare');
+                        }
+                        if (count($raw_data[$key])) {
+                            foreach($raw_data[$key] as $row) {
                                 if (array_key_exists('docTime', $row) && 
                                     ($row['result'] == 0 || $row['result'] == 99999) &&
                                     ($row['label'] == $url || $row['url'] == $url)) {
@@ -673,7 +775,6 @@ function LoadTrendData(&$data, &$configurations, $benchmark, $cached, $metric, $
                                     }
                                 }
                             }
-                            unset($raw_data);
                         }
                     }
                 }
@@ -740,12 +841,14 @@ function GetTestErrors(&$errors, $benchmark, $test) {
         }
         $date = gmdate('Ymd_Hi', $test);
         $data_file = "./results/benchmarks/$benchmark/data/$date.json";
+        $key = "$benchmark-$date";
         if (gz_is_file($data_file)) {
-            if (!isset($raw_data)) {
-                $raw_data = json_decode(gz_file_get_contents($data_file), true);
+            if (!array_key_exists($key, $raw_data)) {
+                $raw_data[$key] = json_decode(gz_file_get_contents($data_file), true);
+                usort($raw_data[$key], 'RawDataCompare');
             }
-            if (count($raw_data)) {
-                foreach($raw_data as &$row) {
+            if (count($raw_data[$key])) {
+                foreach($raw_data[$key] as &$row) {
                     if (array_key_exists('url', $row) && 
                         array_key_exists('config', $row) && 
                         array_key_exists('location', $row)) {
@@ -870,6 +973,7 @@ function DeltaSortCompare(&$a, &$b) {
 */
 function LoadMedianData($benchmark, $test_time) {
     global $median_data;
+    global $raw_data;
     if (!isset($median_data)) {
         // see if we have a custom metric to use to calculate the median for the given benchmark
         $info = GetBenchmarkInfo($benchmark);
@@ -881,12 +985,16 @@ function LoadMedianData($benchmark, $test_time) {
         }
         $date = gmdate('Ymd_Hi', $test_time);
         $data_file = "./results/benchmarks/$benchmark/data/$date.json";
+        $key = "$benchmark-$date";
         if (gz_is_file($data_file)) {
-            $raw_data = json_decode(gz_file_get_contents($data_file), true);
-            if (count($raw_data)) {
+            if (!array_key_exists($key, $raw_data)) {
+              $raw_data[$key] = json_decode(gz_file_get_contents($data_file), true);
+              usort($raw_data[$key], 'RawDataCompare');
+            }
+            if (count($raw_data[$key])) {
                 $tests = array();
                 // group the results by test ID
-                foreach($raw_data as &$row) {
+                foreach($raw_data[$key] as &$row) {
                     if (array_key_exists($median_metric, $row) && 
                         ($row['result'] == 0 || $row['result'] == 99999)) {
                         $id = $row['id'];
@@ -987,4 +1095,5 @@ function TSVEncode(&$tsv) {
     }
     return $out;
 }
+
 ?>

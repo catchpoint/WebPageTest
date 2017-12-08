@@ -1,7 +1,7 @@
 <?php
 chdir('..');
 include 'common.inc';
-$id = $_REQUEST['id'];
+$videoId = $_REQUEST['id'];
 $valid = false;
 $done = false;
 $embed = false;
@@ -43,7 +43,7 @@ if( array_key_exists('f', $_REQUEST)) {
 $ini = null;
 $title = "WebPagetest - Visual Comparison";
 
-$dir = GetVideoPath($id, true);
+$dir = GetVideoPath($videoId, true);
 if( is_dir("./$dir") )
 {
     $valid = true;
@@ -102,10 +102,11 @@ if( $xml || $json )
         {
             $code = 200;
 
+            $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
             $host  = $_SERVER['HTTP_HOST'];
             $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-            $videoUrl = "http://$host$uri/download.php?id=$id";
-            $embedUrl = "http://$host$uri/view.php?embed=1&id=$id";
+            $videoUrl = "$protocol://$host$uri/download.php?id=$videoId";
+            $embedUrl = "$protocol://$host$uri/view.php?embed=1&id=$videoId";
         }
         else
             $code = 100;
@@ -127,7 +128,7 @@ if( $xml )
     if( strlen($_REQUEST['r']) )
         echo "<requestId>{$_REQUEST['r']}</requestId>\n";
     echo "<data>\n";
-    echo "<videoId>$id</videoId>\n";
+    echo "<videoId>$videoId</videoId>\n";
     if( strlen($videoUrl) )
         echo '<videoUrl>' . htmlspecialchars($videoUrl) . '</videoUrl>\n';
     echo "</data>\n";
@@ -139,7 +140,7 @@ elseif( $json )
     $ret['statusCode'] = $code;
     $ret['statusText'] = $error;
     $ret['data'] = array();
-    $ret['data']['videoId'] = $id;
+    $ret['data']['videoId'] = $videoId;
     if( strlen($videoUrl) )
         $ret['data']['videoUrl'] = $videoUrl;
     if (strlen($embedUrl)) {
@@ -162,6 +163,8 @@ else
         <?php
         if( $valid && !$done && !$embed )
         {
+            $autoRefresh = true;
+            $noanalytics = true;
             ?>
             <noscript>
             <meta http-equiv="refresh" content="10" />
@@ -191,8 +194,8 @@ else
             {
                 text-align:center;
                 <?php
-                echo "background-color: $bgcolor;\n";
-                echo "color: $color;\n";
+                echo "background-color: " . htmlspecialchars($bgcolor) . ";\n";
+                echo "color: " . htmlspecialchars($color) . ";\n";
                 ?>
                 font-family: arial,sans-serif;
                 padding: 0px 25px;
@@ -201,7 +204,7 @@ else
             {
                 text-decoration: underline;
                 <?php
-                echo "color: $color;\n";
+                echo "color: " . htmlspecialchars($color) . ";\n";
                 ?>
             }
             #player
@@ -217,8 +220,8 @@ else
             #embed
             {
                 <?php
-                    echo "background: $bgcolor;\n";
-                    echo "color: $color;\n"
+                    echo "background: " . htmlspecialchars($bgcolor) . ";\n";
+                    echo "color: " . htmlspecialchars($color) . ";\n"
                 ?>
                 font-family: arial,sans-serif;
                 padding: 20px;
@@ -242,13 +245,13 @@ else
               clear: both;
               float: right;
               <?php
-              echo "color: $lightcolor;\n";
+              echo "color: " . htmlspecialchars($lightcolor) . ";\n";
               ?>
             }
             #testmode a.link
             {
               <?php
-              echo "color: $lightcolor;\n";
+              echo "color: " . htmlspecialchars($lightcolor) . ";\n";
               ?>
             }
             .vjs-default-skin .vjs-controls {height: 0;}
@@ -256,7 +259,7 @@ else
             .vjs-default-skin .vjs-volume-control {display: none;}
             <?php
             if( $embed )
-                echo "body {background-color: $bgcolor; margin:0; padding: 0;}";
+                echo "body {background-color: " . htmlspecialchars($bgcolor) . "; margin:0; padding: 0;}";
             ?>
         </style>
         <script type="text/javascript" src="/video/video-js.3.2.0/video.min.js"></script>
@@ -270,8 +273,7 @@ else
         <div class="page">
             <?php
             if( !$embed ) {
-                $tab = 'Test Result';
-                $videoId = $id;
+                $tab = '';
                 $nosubheader = true;
                 include 'header.inc';
             }
@@ -336,13 +338,14 @@ else
                 </video>";
 
                 if(!$embed) {
-                    echo "<br><a class=\"link\" href=\"/video/download.php?id=$id\">Download</a> | ";
+                    echo "<br><a class=\"link\" href=\"/video/download.php?id=$videoId\">Download</a> | ";
                     echo '<a class="link" href="javascript:ShowEmbed()">Embed</a>';
+                    $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
                     $dataText = 'View as data comparison';
-                    $dataUrl = "http://{$_SERVER['HTTP_HOST']}{$_SERVER['PHP_SELF']}?id=$id&data=1";
+                    $dataUrl = "$protocol://{$_SERVER['HTTP_HOST']}{$_SERVER['PHP_SELF']}?id=$videoId&data=1";
                     if ($displayData) {
                       $dataText = 'View as video';
-                      $dataUrl = "http://{$_SERVER['HTTP_HOST']}{$_SERVER['PHP_SELF']}?id=$id";
+                      $dataUrl = "$protocol://{$_SERVER['HTTP_HOST']}{$_SERVER['PHP_SELF']}?id=$videoId";
                     }
                     if (defined('BARE_UI'))
                       $dataUrl .= '&bare=1';
@@ -376,7 +379,8 @@ else
               $dimensions = "&width=$width&height=$height";
               $framesize = " width=\"$width\" height=\"$height\"";
             }
-            echo htmlspecialchars("<iframe src=\"http://{$_SERVER['HTTP_HOST']}{$_SERVER['PHP_SELF']}?id=$id&embed=1$dimensions\"$framesize></iframe>");
+            $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+            echo htmlspecialchars("<iframe src=\"$protocol://{$_SERVER['HTTP_HOST']}{$_SERVER['PHP_SELF']}?id=$videoId&embed=1$dimensions\"$framesize></iframe>");
             ?>
             </p>
             <input id="embed-ok" type=button class="simplemodal-close" value="OK">

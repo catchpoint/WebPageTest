@@ -17,7 +17,7 @@ if (is_file('./settings/checkTesters.inc')) {
 function CheckLocation($url, &$locations) {
     $doc = new MyDOMDocument();
     if( $doc ) {
-        $response = http_fetch($url);
+        $response = file_get_contents($url);
         if( strlen($response) ) {
             $response = preg_replace('/[^(\x20-\x7F)]*/','', $response);
             $doc->loadXML($response);

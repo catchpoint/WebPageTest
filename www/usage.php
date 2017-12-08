@@ -1,28 +1,35 @@
 <?php
-include 'common_lib.inc';
+include 'common.inc';
 set_time_limit(0);
-header('Content-Encoding: none;');
 
 // parse the logs for the counts
 $days = $_REQUEST['days'];
 if( !$days || $days > 1000 )
     $days = 7;
 
+$title = 'WebPagetest - Usage';
+
+include 'admin_header.inc';
 ?>
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>WebPagetest - Usage</title>
-        <style type="text/css">
-            table {text-align: left;}
-            table td, table th {padding: 0 1em;}
-        </style>
-    </head>
-    <body>
+
 <?php
     if( array_key_exists('k', $_REQUEST) && strlen($_REQUEST['k']) ) {
         $key = trim($_REQUEST['k']);
         $keys = parse_ini_file('./settings/keys.ini', true);
+
+        // see if it was an auto-provisioned key
+        if (preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $key, $matches)) {
+          $prefix = $matches['prefix'];
+          if (is_file(__DIR__ . "/dat/{$prefix}_api_keys.db")) {
+            $db = new SQLite3(__DIR__ . "/dat/{$prefix}_api_keys.db");
+            $k = $db->escapeString($matches['key']);
+            $info = $db->querySingle("SELECT key_limit FROM keys WHERE key='$k'", true);
+            $db->close();
+            if (isset($info) && is_array($info) && isset($info['key_limit']))
+              $keys[$key] = array('limit' => $info['key_limit']);
+          }
+        }
+        
         if( $admin && $key == 'all' ) {
             $day = gmdate('Ymd');
             if( strlen($req_date) )
@@ -44,7 +51,7 @@ if( !$days || $days > 1000 )
             if( count($used) )
             {
                 usort($used, 'comp');
-                echo "<table><tr><th>Used</th><th>Limit</th><th>Contact</th><th>Description</th></tr>";
+                echo "<table class=\"table\"><tr><th>Used</th><th>Limit</th><th>Contact</th><th>Description</th></tr>";
                 foreach($used as &$entry)
                     echo "<tr><td>{$entry['used']}</td><td>{$entry['limit']}</td><td>{$entry['contact']}</td><td>{$entry['description']}</td></tr>";
                 echo '</table>';
@@ -52,7 +59,7 @@ if( !$days || $days > 1000 )
         } else {
             if( isset($keys[$key]) ) {
                 $limit = (int)@$keys[$key]['limit'];
-                echo "<table><tr><th>Date</th><th>Used</th><th>Limit</th></tr>";
+                echo "<table class=\"table\"><tr><th>Date</th><th>Used</th><th>Limit</th></tr>";
                 $targetDate = new DateTime('now', new DateTimeZone('GMT'));
                 for($offset = 0; $offset <= $days; $offset++) {
                     $keyfile = './dat/keys_' . $targetDate->format("Ymd") . '.dat';
@@ -75,10 +82,10 @@ if( !$days || $days > 1000 )
                   $used = 0;
             }
         }
-    } else {
+    } elseif ($privateInstall || $admin) {
         $total_api = 0;
         $total_ui = 0;
-        echo "Date,Interactive,API,Total<br>\n";
+        echo "<table class=\"table\"><tr><th>Date</th><th>Interactive</th><th>API</th><th>Total</th></tr>" . PHP_EOL;
         $targetDate = new DateTime('now', new DateTimeZone('GMT'));
         for($offset = 0; $offset <= $days; $offset++)
         {
@@ -96,16 +103,22 @@ if( !$days || $days > 1000 )
             }
             $count = $api + $ui;
             $date = $targetDate->format("Y/m/d");
-            echo "$date,$ui,$api,$count<br>\n";
+            echo "<tr><td>$date</td><td>$ui</td><td>$api</td><td>$count</td></tr>\n";
             $targetDate->modify('-1 day');
             $total_api += $api;
             $total_ui += $ui;
             flush();
             ob_flush();
         }
-        
         $total = $total_api + $total_ui;
-        echo "<br><br>Total,$total_ui,$total_api,$total";
+        echo "<tr>
+                <td><b>Total</b></td>
+                <td><b>$total_ui</b></td>
+                <td><b>$total_api</b></td>
+                <td><b>$total</b></td>
+            </tr>\n";
+
+        echo '</table>';
     }
 
 function comp($a, $b)
@@ -115,6 +128,7 @@ function comp($a, $b)
     }
     return ($a['used'] > $b['used']) ? -1 : 1;
 }
+
+include 'admin_footer.inc';
+
 ?>
-    </body>
-</html>

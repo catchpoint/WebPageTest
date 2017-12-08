@@ -1,3 +1,4 @@
+/plugins/
 /ads/
 /browsers/
 /custom/
@@ -14,11 +15,15 @@
 /tmp/
 /work/jobs/
 /work/video/
+/work/update/
 /plugins/*.inc
 /settings/*.inc
 /settings/*.ini
 /settings/*.php
+!/settings/ec2_locations.ini
 /settings/block*.txt
 /settings/whitelist.txt
 /settings/customrules.txt
+/settings/benchmarks/*
+!/settings/benchmarks/sample
 *.log

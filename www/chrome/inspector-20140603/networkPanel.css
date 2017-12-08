@@ -1,0 +1,320 @@
+/*
+ * Copyright (C) 2006, 2007, 2008 Apple Inc.  All rights reserved.
+ * Copyright (C) 2009 Anthony Ricaud <rik@webkit.org>
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1.  Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ * 2.  Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ * 3.  Neither the name of Apple Computer, Inc. ("Apple") nor the names of
+ *     its contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY APPLE AND ITS CONTRIBUTORS "AS IS" AND ANY
+ * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL APPLE OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+.network-larger-resources-status-bar-item .glyph {
+    -webkit-mask-position: -224px 0;
+}
+
+#network-views {
+    background: rgb(203, 203, 203);
+}
+
+#network-close-button {
+    position: absolute;
+    top: 8px;
+    left: 5px;
+    z-index: 10;
+    display: none;
+}
+
+#network-views.small #network-close-button {
+    top: 4px;
+}
+
+.network.panel.viewing-resource #network-close-button {
+    display: block;
+}
+
+.network.panel .sidebar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: auto;
+    border: none;
+    background: inherit;
+}
+
+.network.panel:not(.viewing-resource) .sidebar-resizer-vertical {
+    display: none;
+}
+
+.network.panel .data-grid th.sort-descending,
+.network.panel .data-grid th.sort-ascending {
+    background: white;
+}
+
+#network-views .network-item-view .tabbed-pane-header {
+    flex: 0 0 31px;
+    padding-top: 8px;
+    padding-left: 13px;
+    white-space: nowrap;
+}
+
+#network-views.small .network-item-view .tabbed-pane-header {
+    flex-basis: 23px;
+    padding-top: 0;
+}
+
+.network-item-view {
+    display: none;
+    background: white;
+}
+
+.network-item-view.visible {
+    display: -webkit-flex;
+}
+
+.network-item-view .tabbed-pane-header {
+    border-bottom: 1px solid rgb(205, 205, 205);
+}
+
+.resource-headers-view {
+    display: none;
+    margin: 6px;
+    -webkit-user-select: text;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: auto;
+}
+
+.resource-headers-view.visible {
+    display: block;
+}
+
+.resource-headers-view .outline-disclosure .parent {
+    -webkit-user-select: none;
+    font-weight: bold;
+}
+
+.resource-headers-view .outline-disclosure .parent .section * {
+    font-weight: normal;
+}
+
+.resource-headers-view .outline-disclosure .children li {
+    white-space: nowrap;
+}
+
+.resource-headers-view .outline-disclosure .caution {
+    margin-left: 4px;
+    display: inline-block;
+    font-weight: bold;
+}
+
+.resource-headers-view .outline-disclosure li.expanded .header-count {
+    display: none;
+}
+
+.resource-headers-view .outline-disclosure li .header-toggle {
+    display: none;
+}
+
+.resource-headers-view .outline-disclosure li .status-from-cache {
+    color: gray;
+}
+
+.resource-headers-view .outline-disclosure li.expanded .header-toggle {
+    display: inline;
+    margin-left: 30px;
+    font-weight: normal;
+    color: rgb(45%, 45%, 45%);
+}
+
+.resource-headers-view .outline-disclosure li .header-toggle:hover {
+    color: rgb(20%, 20%, 45%);
+    cursor: pointer;
+}
+
+.resource-headers-view .outline-disclosure .header-name {
+    color: rgb(33%, 33%, 33%);
+    display: inline-block;
+    margin-right: 0.5em;
+    font-weight: bold;
+    vertical-align: top;
+    white-space: pre-wrap;
+}
+
+.resource-headers-view .outline-disclosure .header-value {
+    display: inline;
+    margin-right: 100px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin-top: 1px;
+}
+
+.resource-cookies-view {
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    overflow: auto;
+    margin: 12px;
+    height: 100%;
+}
+
+.resource-cookies-view.visible {
+    display: flex;
+}
+
+.resource-cookies-view .data-grid {
+    flex: auto;
+    height: 100%;
+}
+
+.resource-cookies-view .data-grid .row-group {
+    font-weight: bold;
+    font-size: 11px;
+}
+
+.resource-timing-view {
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    margin: 6px;
+    font-weight: bold;
+    font-size: 11px;
+    color: rgb(30%, 30%, 30%);
+}
+
+.resource-timing-view table {
+    border-spacing: 21px 0;
+}
+
+.resource-timing-view .network-timing-bar {
+    opacity: 1;
+}
+
+.resource-timing-view .network-timing-bar.blocking,
+.resource-timing-view .network-timing-bar.proxy {
+    background-image: linear-gradient(to bottom, rgb(242, 242, 194), rgb(204, 204, 102));
+    border-left: 1px solid rgb(204, 204, 102);
+}
+
+.resource-timing-view .network-timing-bar.dns {
+    background-image: linear-gradient(to bottom, rgb(194, 242, 194), rgb(102, 204, 102));
+    border-left: 1px solid rgb(102, 204, 102);
+}
+
+.resource-timing-view .network-timing-bar.connecting,
+.resource-timing-view .network-timing-bar.ssl {
+    background-image: linear-gradient(to bottom, rgb(194, 242, 242), rgb(102, 204, 204));
+    border-left: 1px solid rgb(102, 204, 204);
+}
+
+.resource-timing-view .network-timing-bar.sending {
+    background-image: linear-gradient(to bottom, rgb(194, 194, 242), rgb(102, 102, 204));
+    border-left: 1px solid rgb(102, 102, 204);
+}
+
+.resource-timing-view .network-timing-bar.waiting {
+    background-image: linear-gradient(to bottom, rgb(242, 194, 242), rgb(204, 102, 204));
+    border-left: 1px solid rgb(204, 102, 204);
+}
+
+.resource-timing-view .network-timing-bar.receiving {
+    background-image: linear-gradient(to bottom, rgb(242, 194, 194), rgb(204, 102, 102));
+    border-left: 1px solid rgb(204, 102, 102);
+}
+
+.resource-timing-view.visible {
+    display: block;
+}
+
+.resource-websocket {
+    -webkit-user-select: text;
+}
+
+.resource-websocket,
+.resource-websocket .data-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: none;
+}
+
+.resource-websocket .data-grid .data {
+    background-image: none;
+}
+
+.resource-websocket td {
+    padding-top: 3px;
+    padding-bottom: 3px;
+    border-top: 1px solid rgb(240, 240, 240);
+}
+
+.resource-websocket-row-outcoming {
+    background-color: rgb(226, 247, 218);
+}
+
+.resource-websocket-row-outcoming:not(.selected) td {
+    border-left-color: rgb(177, 209, 165);
+}
+
+.resource-websocket-row-outcoming:not(.selected) td, .resource-websocket-row-outcoming:not(.selected) + tr td {
+    border-top-color: rgb(199, 236, 185);
+}
+
+.resource-websocket-row-opcode {
+    background-color: rgb(255, 255, 232);
+    color: rgb(170, 111, 71);
+}
+
+.resource-websocket-row-opcode td {
+    border-color: rgb(211, 187, 171);
+}
+
+.resource-websocket-row-opcode td, .resource-websocket-row-opcode + tr td {
+    border-top-color: rgb(248, 240, 210);
+}
+
+.resource-websocket-row-error {
+    background-color: rgb(255, 237, 237);
+    color: rgb(182, 0, 0);
+}
+
+.panel.network .split-view {
+    flex: auto;
+    position: relative;
+}
+
+.network-filters-header {
+    flex: 0 0 23px;
+    padding-right: 4px;
+}

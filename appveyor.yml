@@ -1,0 +1,19 @@
+version: 2.19.{build}
+configuration: Release
+shallow_clone: true
+environment:
+  matrix:
+  - DUMMYNETARCH: 32bit
+  - DUMMYNETARCH: 64bit
+build:
+  project: webpagetest.sln
+  verbosity: normal
+after_build:
+- ps: >-
+    Rename-Item $Env:CONFIGURATION wptdriver
+
+    Copy-Item -r dist\webpagetest\agent\dummynet\$env:DUMMYNETARCH wptdriver\dummynet
+
+    Copy-Item -r agent\browser\chrome\extension\release wptdriver\extension
+artifacts:
+- path: wptdriver

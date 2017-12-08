@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define MAX_LOADSTRING 100
 WptStatus * global_status = NULL;
+SharedMem * g_shared = NULL;
 
 // Global Variables:
 HINSTANCE hInst;								// current instance
@@ -83,6 +84,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     WSADATA wsaData;
     WSAStartup(wVersionRequested, &wsaData);
 
+    // Allocate the shared memory
+    g_shared = new SharedMem(true);
+
     // start up the actual core code
     ClipCursor(NULL);
     SetCursorPos(0,0);
@@ -101,6 +105,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     }
 
     core.Stop();
+    delete g_shared;
     global_status = NULL;
     WSACleanup();
     ret = (int)msg.wParam;

@@ -30,15 +30,67 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "StdAfx.h"
 #include "track_sockets.h"
 #include "requests.h"
-#include "test_state.h"
+#include "ssl_stream.h"
 #include "../wptdriver/wpt_test.h"
+#include <nghttp2/nghttp2.h>
+#include "test_state.h"
 
 const DWORD LOCALHOST = 0x0100007F; // 127.0.0.1
+const DWORD LINK_LOCAL_MASK = 0x0000FFFF;
+const DWORD LINK_LOCAL = 0x0000FEA9; // 169.254.x.x
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+SocketInfo::SocketInfo():
+  _id(0)
+  , _accounted_for(false)
+  , _during_test(false)
+  , _ssl_checked(false)
+  , _is_ssl(false)
+  , _is_ssl_handshake_complete(false)
+  , _local_port(0)
+  , _protocol(PROTO_NOT_CHECKED)
+  , _h2_in(NULL)
+  , _h2_out(NULL)
+  , _ssl_in(NULL)
+  , _ssl_out(NULL)
+  , _certificate_bytes(0) {
+  memset(&_addr, 0, sizeof(_addr));
+  _connect_start.QuadPart = 0;
+  _connect_end.QuadPart = 0;
+  _ssl_start.QuadPart = 0;
+  _ssl_end.QuadPart = 0;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+SocketInfo::~SocketInfo(void) {
+  if (_h2_in) {
+    if (_h2_in->session)
+      nghttp2_session_del(_h2_in->session);
+    delete _h2_in;
+  }
+  if (_h2_out) {
+    if (_h2_out->session)
+      nghttp2_session_del(_h2_out->session);
+    delete _h2_out;
+  }
+  if (_ssl_in)
+    delete _ssl_in;
+  if (_ssl_out)
+    delete _ssl_out;
+}
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool SocketInfo::IsLocalhost() {
   return _addr.sin_addr.S_un.S_addr == LOCALHOST;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool SocketInfo::IsLinkLocal() {
+  return (_addr.sin_addr.S_un.S_addr & LINK_LOCAL_MASK) == LINK_LOCAL;
 }
 
 /*-----------------------------------------------------------------------------
@@ -85,16 +137,15 @@ void TrackSockets::Close(SOCKET s) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name, 
+bool TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name, 
                             int namelen) {
-  WptTrace(loglevel::kFunction, 
-            _T("[wpthook] - TrackSockets::Connect(%d)\n"), s);
+  bool allowed = true;
+
+  ATLTRACE("[wpthook] - TrackSockets::Connect(%d)", s);
 
   // We only care about IP sockets at this point.
   if (name->sa_family == AF_INET6) {
-    WptTrace(
-        loglevel::kFunction, 
-        _T("[wpthook] - TrackSockets::Connect: Warning: IPv6 unsupported!\n"));
+    ATLTRACE("[wpthook] - TrackSockets::Connect: Warning: parsing of IPv6 unsupported!");
   }
   if (namelen >= sizeof(struct sockaddr_in) && name->sa_family == AF_INET) {
     struct sockaddr_in* ip_name = (struct sockaddr_in *)name;
@@ -103,8 +154,10 @@ void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
     EnterCriticalSection(&cs);
     SocketInfo* info = GetSocketInfo(s, false);
     memcpy(&info->_addr, ip_name, sizeof(struct sockaddr_in));
+    info->_addr.sin_port = ntohs(info->_addr.sin_port);
     QueryPerformanceCounter(&info->_connect_start);
     localhost = info->IsLocalhost();
+    allowed = !info->IsLinkLocal();
     LeaveCriticalSection(&cs);
 
     if (!localhost) {
@@ -112,6 +165,7 @@ void TrackSockets::Connect(SOCKET s, const struct sockaddr FAR * name,
       _test_state.ActivityDetected();
     }
   }
+  return allowed;
 }
 
 /*-----------------------------------------------------------------------------
@@ -129,9 +183,7 @@ void TrackSockets::Connected(SOCKET s) {
         addrlen == sizeof(client))
       local_port = ntohs(client.sin_port);
 
-    WptTrace(loglevel::kFunction, 
-              _T("[wpthook] - TrackSockets::Connected(%d) - Client port: %d\n"),
-                 s, local_port);
+    ATLTRACE("[wpthook] - TrackSockets::Connected(%d) - Client port: %d", s, local_port);
 
     EnterCriticalSection(&cs);
     SocketInfo* info = GetSocketInfo(s);
@@ -161,18 +213,76 @@ void TrackSockets::Connected(SOCKET s) {
 }
 
 /*-----------------------------------------------------------------------------
+  Sniff for H2/SPDY/HTTP1 on encrypted connections
+-----------------------------------------------------------------------------*/
+void TrackSockets::SniffProtocol(SocketInfo* info, DataChunk& chunk) {
+  if (info->_is_ssl &&
+      !info->IsLocalhost() &&
+      info->_protocol == PROTO_NOT_CHECKED) {
+    const char * data = chunk.GetData();
+    size_t len = chunk.GetLength();
+    DWORD socket_id = info->_id;
+
+    info->_protocol = PROTO_UNKNOWN;
+
+    const char * HTTP2_HEADER = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
+    if (info->_protocol == PROTO_UNKNOWN &&
+        len >= (DWORD)lstrlenA(HTTP2_HEADER) &&
+        !memcmp(data, HTTP2_HEADER, lstrlenA(HTTP2_HEADER))) {
+      ATLTRACE(_T("[%d] ********* HTTP 2 Connection detected"), socket_id);
+      info->_protocol = PROTO_H2;
+      info->_h2_in = NewHttp2Session(socket_id, DATA_IN);
+      info->_h2_out = NewHttp2Session(socket_id, DATA_OUT);
+    }
+
+    if (info->_protocol == PROTO_UNKNOWN) {
+      const char * HTTP_METHODS[] = {"GET ", "HEAD ", "POST ", "PUT ",
+          "OPTIONS ", "DELETE ", "TRACE ", "CONNECT ", "PATCH "};
+      for (int i = 0; i < _countof(HTTP_METHODS); i++) {
+        const char * method = HTTP_METHODS[i];
+        size_t method_len = strlen(method);
+        if (len >= method_len && !memcmp(data, method, method_len)) {
+          ATLTRACE(_T("[%d] ********* HTTP 1 Connection detected"),
+                    socket_id);
+          info->_protocol = PROTO_HTTP;
+          break;
+        }
+      }
+    }
+
+    if (info->_protocol == PROTO_UNKNOWN && len >= 8 &&
+        data[0] == '\x80' && data[1] == '\x02') {
+      ATLTRACE(_T("[%d] ********* SPDY Connection detected"), socket_id);
+      info->_protocol = PROTO_SPDY;
+    }
+
+    if (info->_protocol == PROTO_UNKNOWN) {
+      ATLTRACE(_T("[%d] ********* Unknown connection protocol"), socket_id);
+    }
+  }
+}
+
+/*-----------------------------------------------------------------------------
   Allow data to be modified.
 -----------------------------------------------------------------------------*/
 bool TrackSockets::ModifyDataOut(SOCKET s, DataChunk& chunk,
                                  bool is_unencrypted) {
   bool is_modified = false;
-  EnterCriticalSection(&cs);
-  SocketInfo* info = GetSocketInfo(s);
-  DWORD socket_id = info->_id;
-  if (!info->IsLocalhost() && (is_unencrypted || !info->_is_ssl)) {
-    is_modified = _requests.ModifyDataOut(socket_id, chunk);
+  size_t len = chunk.GetLength();
+  if (len > 0) {
+    EnterCriticalSection(&cs);
+    SocketInfo* info = GetSocketInfo(s);
+    DWORD socket_id = info->_id;
+    if (is_unencrypted)
+      SniffProtocol(info, chunk);
+
+    if (!info->IsLocalhost() &&
+        ((is_unencrypted && info->_protocol == PROTO_HTTP) || !info->_is_ssl)) {
+      is_modified = _requests.ModifyDataOut(socket_id, chunk);
+    }
+
+    LeaveCriticalSection(&cs);
   }
-  LeaveCriticalSection(&cs);
   return is_modified;
 }
 
@@ -188,13 +298,27 @@ void TrackSockets::DataOut(SOCKET s, DataChunk& chunk, bool is_unencrypted) {
   }
   DWORD socket_id = info->_id;
   if (!info->IsLocalhost()) {
+    _test_state.ActivityDetected();
+    if (is_unencrypted)
+      SniffProtocol(info, chunk);
     if (_test_state._active && !is_unencrypted) {
-      _test_state._bytes_out += chunk.GetLength();
+      _test_state._bytes_out += (int)chunk.GetLength();
       if (!_test_state._on_load.QuadPart)
-        _test_state._doc_bytes_out += chunk.GetLength();
+        _test_state._doc_bytes_out += (int)chunk.GetLength();
     }
     if (is_unencrypted || !info->_is_ssl) {
-      _requests.DataOut(socket_id, chunk);
+      if (info->_protocol == PROTO_H2) {
+        size_t len = chunk.GetLength();
+        const uint8_t * buff = (const uint8_t *)chunk.GetData();
+        if (buff && len && info->_h2_out && info->_h2_out->session) {
+          size_t r = nghttp2_session_mem_recv(info->_h2_out->session, buff, len);
+          if (r < 0) {
+            ATLTRACE("nghttp2_session_mem_recv - DataOut Error %d", r);
+          }
+        }
+      } else {
+        _requests.DataOut(socket_id, chunk);
+      }
     } else {
       SslDataOut(info, chunk);
     }
@@ -211,14 +335,28 @@ void TrackSockets::DataIn(SOCKET s, DataChunk& chunk, bool is_unencrypted) {
   SocketInfo* info = GetSocketInfo(s);
   DWORD socket_id = info->_id;
   if (!info->IsLocalhost()) {
+    _test_state.ActivityDetected();
     if (_test_state._active && !is_unencrypted) {
-      _test_state._bytes_in_bandwidth += chunk.GetLength();
-      _test_state._bytes_in += chunk.GetLength();
+      _test_state._bytes_in_bandwidth += (int)chunk.GetLength();
+      if (!_test_state.received_data_ && !IsSSLHandshake(chunk))
+        _test_state.received_data_ = true;
+      _test_state._bytes_in += (int)chunk.GetLength();
       if (!_test_state._on_load.QuadPart)
-        _test_state._doc_bytes_in += chunk.GetLength();
+        _test_state._doc_bytes_in += (int)chunk.GetLength();
     }
     if (is_unencrypted || !info->_is_ssl) {
-      _requests.DataIn(socket_id, chunk);
+      if (info->_protocol == PROTO_H2) {
+        size_t len = chunk.GetLength();
+        const uint8_t * buff = (const uint8_t *)chunk.GetData();
+        if (buff && len && info->_h2_in && info->_h2_in->session) {
+          size_t r = nghttp2_session_mem_recv(info->_h2_in->session, buff, len);
+          if (r < 0) {
+            ATLTRACE("nghttp2_session_mem_recv - DataIn Error %d", r);
+          }
+        }
+      } else {
+        _requests.DataIn(socket_id, chunk);
+      }
     } else {
       SslDataIn(info, chunk);
     }
@@ -248,7 +386,8 @@ void TrackSockets::Reset() {
 -----------------------------------------------------------------------------*/
 bool TrackSockets::ClaimConnect(DWORD socket_id, LARGE_INTEGER before, 
                                 LARGE_INTEGER& start, LARGE_INTEGER& end,
-                                LARGE_INTEGER& ssl_start, LARGE_INTEGER& ssl_end) {
+                                LARGE_INTEGER& ssl_start, LARGE_INTEGER& ssl_end,
+                                int& certificate_bytes) {
   bool is_claimed = false;
   EnterCriticalSection(&cs);
   SocketInfo * info = NULL;
@@ -262,10 +401,40 @@ bool TrackSockets::ClaimConnect(DWORD socket_id, LARGE_INTEGER before,
       end = info->_connect_end;
       ssl_start = info->_ssl_start;
       ssl_end = info->_ssl_end;
+      certificate_bytes = info->_certificate_bytes;
     }
   }
   LeaveCriticalSection(&cs);
   return is_claimed;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+bool TrackSockets::Find(ULONG server_addr, USHORT server_port,
+                        USHORT client_port,
+                        LARGE_INTEGER &match_connect_start,
+                        LARGE_INTEGER &match_connect_end) {
+  bool found = false;
+  EnterCriticalSection(&cs);
+  POSITION pos = _socketInfo.GetStartPosition();
+  while (pos) {
+    SocketInfo * info = NULL;
+    DWORD key = 0;
+    _socketInfo.GetNextAssoc(pos, key, info);
+    if (info &&
+        info->_addr.sin_addr.S_un.S_addr == server_addr &&
+        info->_addr.sin_port == server_port &&
+        info->_local_port == client_port) {
+      if (info->_connect_start.QuadPart) {
+        found = true;
+        match_connect_start.QuadPart = info->_connect_start.QuadPart;
+        match_connect_end.QuadPart = info->_connect_end.QuadPart;
+      }
+      break;
+    }
+  }
+  LeaveCriticalSection(&cs);
+  return found;
 }
 
 /*-----------------------------------------------------------------------------
@@ -309,6 +478,21 @@ int TrackSockets::GetLocalPort(DWORD socket_id) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
+void TrackSockets::SniffSSL(SOCKET s, DataChunk& chunk) {
+  if (chunk.GetLength() > 0) {
+    EnterCriticalSection(&cs);
+    SocketInfo* info = GetSocketInfo(s);
+    if (!info->IsLocalhost() && !info->_ssl_checked) {
+      info->_ssl_checked = true;
+      if (IsSSLHandshake(chunk))
+        EnableSsl(info);
+    }
+    LeaveCriticalSection(&cs);
+  }
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
 bool TrackSockets::IsSsl(SOCKET s) {
   EnterCriticalSection(&cs);
   SocketInfo* info = GetSocketInfo(s);
@@ -335,19 +519,19 @@ bool TrackSockets::IsSslById(DWORD socket_id) {
   Chrome uses this (from NsprHook::SSL_ImportFD) to map the fd to a SOCKET.
   The SOCKET is set when Chrome calls CWsHook::recv to check the SOCKET.
 -----------------------------------------------------------------------------*/
-void TrackSockets::SetSslFd(PRFileDesc* fd) {
+void TrackSockets::SetSslFd(void* ssl) {
   EnterCriticalSection(&cs);
-  _ssl_sockets.RemoveKey(fd);
-  _last_ssl_fd.SetAt(GetCurrentThreadId(), fd);
+  _ssl_sockets.RemoveKey(ssl);
+  _last_ssl_fd.SetAt(GetCurrentThreadId(), ssl);
   LeaveCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------
   Drop the fd to SOCKET mapping (called from NsprHook::PR_Close).
 -----------------------------------------------------------------------------*/
-void TrackSockets::ClearSslFd(PRFileDesc* fd) {
+void TrackSockets::ClearSslFd(void* ssl) {
   EnterCriticalSection(&cs);
-  _ssl_sockets.RemoveKey(fd);
+  _ssl_sockets.RemoveKey(ssl);
   _last_ssl_fd.RemoveKey(GetCurrentThreadId());
   LeaveCriticalSection(&cs);
 }
@@ -357,12 +541,12 @@ void TrackSockets::ClearSslFd(PRFileDesc* fd) {
 void TrackSockets::ClaimSslFd(SOCKET s) {
   DWORD thread_id = GetCurrentThreadId();
   EnterCriticalSection(&cs);
-  PRFileDesc * fd = NULL;
-  if (_last_ssl_fd.Lookup(thread_id, fd) && fd 
+  void * ssl = NULL;
+  if (_last_ssl_fd.Lookup(thread_id, ssl) && ssl 
         && s != INVALID_SOCKET) {
-    _ssl_sockets.SetAt(fd, s);
+    _ssl_sockets.SetAt(ssl, s);
     SocketInfo* info = GetSocketInfo(s);
-    info->_is_ssl = true;
+    EnableSsl(info);
   }
   _last_ssl_fd.RemoveKey(thread_id);
   LeaveCriticalSection(&cs);
@@ -385,15 +569,15 @@ void TrackSockets::SetSslSocket(SOCKET s) {
   EnterCriticalSection(&cs);
   SOCKET lookup_socket;
   DWORD socket_id = 0;
-  PRFileDesc * fd = NULL;
+  void * ssl = NULL;
   _openSockets.Lookup(s, socket_id);
-  _last_ssl_fd.Lookup(thread_id, fd);
-  if (fd && s != INVALID_SOCKET &&
-      !_ssl_sockets.Lookup(fd, lookup_socket) &&
-      (!socket_id || !_requests.HasActiveRequest(socket_id))) {
-    _ssl_sockets.SetAt(fd, s);
+  _last_ssl_fd.Lookup(thread_id, ssl);
+  if (ssl && s != INVALID_SOCKET &&
+      !_ssl_sockets.Lookup(ssl, lookup_socket) &&
+      (!socket_id || !_requests.HasActiveRequest(socket_id, 0))) {
+    _ssl_sockets.SetAt(ssl, s);
     SocketInfo* info = GetSocketInfo(s);
-    info->_is_ssl = true;
+    EnableSsl(info);
   }
   _last_ssl_fd.RemoveKey(thread_id);
   LeaveCriticalSection(&cs);
@@ -401,58 +585,53 @@ void TrackSockets::SetSslSocket(SOCKET s) {
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
-bool TrackSockets::SslSocketLookup(PRFileDesc* fd, SOCKET& s) {
+bool TrackSockets::SslSocketLookup(void* ssl, SOCKET& s) {
   EnterCriticalSection(&cs);
   _last_ssl_fd.RemoveKey(GetCurrentThreadId());
-  bool ret = _ssl_sockets.Lookup(fd, s);
+  bool ret = _ssl_sockets.Lookup(ssl, s);
   LeaveCriticalSection(&cs);
   return ret;
 }
 
 /*-----------------------------------------------------------------------------
-  Track the SSL handshake.
-  http://en.wikipedia.org/wiki/Transport_Layer_Security#Handshake_protocol
-  Call from within critical section.
-  -----------------------------------------------------------------------------*/
-void TrackSockets::SslDataOut(SocketInfo* info, const DataChunk& chunk) {
-  const char *buf = chunk.GetData();
-  DWORD len = chunk.GetLength();
-  if (info->_is_ssl && !info->_is_ssl_handshake_complete && len > 3) {
-    bool is_handshake = (
-        buf[0] == 0x16 && buf[1] == 3 && buf[2] >= 0 && buf[2] <= 3);
-    bool is_application_data = (
-        buf[0] == 0x17 && buf[1] == 3 && buf[2] >= 0 && buf[2] <= 3);
-      // Handshake data starts with 0x16, then major/minor version.
-    if (is_handshake) {
-      if (!info->_ssl_start.QuadPart) {
-        QueryPerformanceCounter(&info->_ssl_start);
-        WptTrace(loglevel::kProcess, _T(
-            "handshake start(socket_id=%d)"), info->_id);
-      } else {
-        QueryPerformanceCounter(&info->_ssl_end);
-        WptTrace(loglevel::kProcess, _T(
-            "handshake end updated(socket_id=%d)"), info->_id);
-        // TODO: search for 14 (cipher) or 17 (app data) to end handshake
-        // Chrome makes the initial HTTP request when finishing the handshake.
-      }
-    } else if (is_application_data) {
-      WptTrace(loglevel::kProcess, _T(
-          "handshake complete(socket_id=%d)"), info->_id);
-      info->_is_ssl_handshake_complete = true;
-    }
-  }
+-----------------------------------------------------------------------------*/
+void TrackSockets::SslRemoveSocketLookup(void* ssl) {
+  EnterCriticalSection(&cs);
+  _ssl_sockets.RemoveKey(ssl);
+  LeaveCriticalSection(&cs);
 }
 
 /*-----------------------------------------------------------------------------
-  Track the SSL handshake.
-  http://en.wikipedia.org/wiki/Transport_Layer_Security#Handshake_protocol
-  Call from within critical section.
+-----------------------------------------------------------------------------*/
+bool TrackSockets::IsSSLHandshake(const DataChunk& chunk) {
+  bool is_handshake = false;
+  const char *buf = chunk.GetData();
+  size_t len = chunk.GetLength();
+  if (len > 3 && buf[0] == 0x16)
+    is_handshake = true;
+  return is_handshake;
+}
 
-  TODO: search for 14 (change cipher) or 17 (app data) to end handshake
-  TODO: Save SSL version chosen by server. w
+/*-----------------------------------------------------------------------------
+  Call from within critical section.
+-----------------------------------------------------------------------------*/
+void TrackSockets::SslDataOut(SocketInfo* info, const DataChunk& chunk) {
+  info->_ssl_out->Append(chunk);
+}
+
+/*-----------------------------------------------------------------------------
+  Call from within critical section.
 -----------------------------------------------------------------------------*/
 void TrackSockets::SslDataIn(SocketInfo* info, const DataChunk& chunk) {
-  SslDataOut(info, chunk);
+  info->_ssl_in->Append(chunk);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TrackSockets::EnableSsl(SocketInfo *info) {
+  info->_is_ssl = true;
+  info->_ssl_in = new SSLStream(*this, info, SSL_IN);
+  info->_ssl_out = new SSLStream(*this, info, SSL_OUT);
 }
 
 /*-----------------------------------------------------------------------------
@@ -521,4 +700,239 @@ CStringA TrackSockets::GetRTT(DWORD ipv4_address) {
     ret.Format("%d", ms);
   }
   return ret;
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TrackSockets::H2BeginHeaders(DATA_DIRECTION direction, DWORD socket_id,
+                                  int stream_id) {
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TrackSockets::H2CloseStream(DATA_DIRECTION direction, DWORD socket_id,
+                                 int stream_id) {
+  _requests.StreamClosed(socket_id, stream_id);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TrackSockets::H2Header(DATA_DIRECTION direction, DWORD socket_id,
+    int stream_id, const char * header, const char * value, bool pushed) {
+  if (direction == DATA_IN)
+    _requests.HeaderIn(socket_id, stream_id, header, value, pushed);
+  else
+    _requests.HeaderOut(socket_id, stream_id, header, value, pushed);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TrackSockets::H2Data(DATA_DIRECTION direction, DWORD socket_id,
+    int stream_id, size_t len, const char * data) {
+  DataChunk chunk(data, len);
+  if (direction == DATA_IN)
+    _requests.ObjectDataIn(socket_id, stream_id, chunk);
+  else
+    _requests.ObjectDataOut(socket_id, stream_id, chunk);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TrackSockets::H2Bytes(DATA_DIRECTION direction, DWORD socket_id, int stream_id,
+              size_t len) {
+  if (direction == DATA_IN)
+    _requests.BytesIn(socket_id, stream_id, len);
+  else
+    _requests.BytesOut(socket_id, stream_id, len);
+}
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+void TrackSockets::H2Priority(DATA_DIRECTION direction, DWORD socket_id, int stream_id,
+              int depends_on, int weight, int exclusive) {
+  _requests.SetPriority(socket_id, stream_id, depends_on, weight, exclusive);
+}
+
+
+/******************************************************************************
+  nghttp2 c-interface callbacks (trampoline back to TrackSockets callbacks)
+*******************************************************************************/
+ssize_t h2_send_callback(nghttp2_session *session, const uint8_t *data,
+                          size_t length, int flags, void *user_data) {
+  return length;
+}
+
+const char * h2_frame_type(int type) {
+  switch (type) {
+    case NGHTTP2_DATA: return "DATA";
+    case NGHTTP2_HEADERS: return "HEADERS";
+    case NGHTTP2_PRIORITY: return "PRIORITY";
+    case NGHTTP2_RST_STREAM: return "RST_STREAM";
+    case NGHTTP2_SETTINGS: return "SETTINGS";
+    case NGHTTP2_PUSH_PROMISE: return "PUSH_PROMISE";
+    case NGHTTP2_PING: return "PING";
+    case NGHTTP2_GOAWAY: return "GOAWAY";
+    case NGHTTP2_WINDOW_UPDATE: return "WINDOW_UPDATE";
+    case NGHTTP2_CONTINUATION: return "CONTINUATION";
+    default: return "UNKNOWN";
+  }
+}
+
+int h2_on_begin_frame_callback(nghttp2_session *session,
+                               const nghttp2_frame_hd *hd, void *user_data) {
+  ATLTRACE("h2_on_begin_frame_callback [%s] - stream %d, %d bytes",
+           h2_frame_type(hd->type), hd->stream_id, hd->length);
+  return 0;
+}
+
+int h2_on_frame_recv_callback(nghttp2_session *session,
+                              const nghttp2_frame *frame, void *user_data) {
+  ATLTRACE("h2_on_frame_recv_callback [%s] - stream %d, %d bytes",
+           h2_frame_type(frame->hd.type), frame->hd.stream_id,
+           frame->hd.length);
+  // Keep track of the bytes-in for headers by looking at the frame
+  if (user_data) {
+    if (frame->hd.type == NGHTTP2_HEADERS) {
+      H2_USER_DATA * u = (H2_USER_DATA *)user_data;
+      if (u->connection) {
+        TrackSockets * c = (TrackSockets *)u->connection;
+        c->H2Bytes(u->direction, u->socket_id, frame->hd.stream_id,
+                   frame->hd.length);
+        if (frame->hd.flags & NGHTTP2_FLAG_PRIORITY) {
+          c->H2Priority(u->direction, u->socket_id, frame->hd.stream_id,
+                        frame->headers.pri_spec.stream_id,
+                        frame->headers.pri_spec.weight,
+                        frame->headers.pri_spec.exclusive);
+        }
+      }
+    } else if (frame->hd.type == NGHTTP2_PRIORITY) {
+      H2_USER_DATA * u = (H2_USER_DATA *)user_data;
+      if (u->connection) {
+        TrackSockets * c = (TrackSockets *)u->connection;
+        c->H2Priority(u->direction, u->socket_id, frame->hd.stream_id,
+                      frame->priority.pri_spec.stream_id,
+                      frame->priority.pri_spec.weight,
+                      frame->priority.pri_spec.exclusive);
+      }
+    }
+  }
+  return 0;
+}
+
+int h2_on_data_chunk_recv_callback(nghttp2_session *session, uint8_t flags,
+                                   int32_t stream_id, const uint8_t *data,
+                                   size_t len, void *user_data) {
+  ATLTRACE("h2_on_data_chunk_recv_callback - stream %d, %d bytes", stream_id, len);
+  if (user_data) {
+    H2_USER_DATA * u = (H2_USER_DATA *)user_data;
+    if (u->connection) {
+      TrackSockets * c = (TrackSockets *)u->connection;
+      c->H2Data(u->direction, u->socket_id, stream_id, len, (const char *)data);
+      c->H2Bytes(u->direction, u->socket_id, stream_id, len);
+    }
+  }
+  return 0;
+}
+
+int h2_on_stream_close_callback(nghttp2_session *session, int32_t stream_id,
+                                uint32_t error_code, void *user_data) {
+  ATLTRACE("h2_on_stream_close_callback - stream %d", stream_id);
+  if (user_data) {
+    H2_USER_DATA * u = (H2_USER_DATA *)user_data;
+    if (u->connection) {
+      TrackSockets * c = (TrackSockets *)u->connection;
+      c->H2CloseStream(u->direction, u->socket_id, stream_id);
+    }
+  }
+  return 0;
+}
+
+int h2_on_begin_headers_callback(nghttp2_session *session,
+                                 const nghttp2_frame *frame, void *user_data) {
+  ATLTRACE("h2_on_begin_headers_callback - stream %d, %d bytes", frame->hd.stream_id, frame->hd.length);
+  if (user_data) {
+    H2_USER_DATA * u = (H2_USER_DATA *)user_data;
+    if (u->connection) {
+      TrackSockets * c = (TrackSockets *)u->connection;
+      c->H2BeginHeaders(u->direction, u->socket_id, frame->hd.stream_id);
+    }
+  }
+  return 0;
+}
+
+int h2_on_header_callback(nghttp2_session *session, const nghttp2_frame *frame,
+                          const uint8_t *name, size_t namelen,
+                          const uint8_t *value, size_t valuelen,
+                          uint8_t flags, void *user_data) {
+  int32_t stream_id = frame->hd.stream_id;
+  if (frame->hd.type == NGHTTP2_PUSH_PROMISE)
+    stream_id = frame->push_promise.promised_stream_id;
+
+  if (user_data && name && value) {
+    ATLTRACE("h2_on_header_callback - stream %d '%s' : '%s'",
+             stream_id, name, value);
+    H2_USER_DATA * u = (H2_USER_DATA *)user_data;
+    if (u->connection) {
+      DATA_DIRECTION direction = u->direction;
+      // if we are processing a PUSH_PROMISE, flip the header direction
+      bool pushed = false;
+      if (frame->hd.type == NGHTTP2_PUSH_PROMISE) {
+        direction = u->direction == DATA_IN ? DATA_OUT : DATA_IN;
+        pushed = true;
+      }
+      TrackSockets * c = (TrackSockets *)u->connection;
+      c->H2Header(direction, u->socket_id, stream_id,
+                  (const char *)name, (const char *)value, pushed);
+    }
+  }
+  return 0;
+}
+
+/*-----------------------------------------------------------------------------
+  Create a new HTTP2 session 
+-----------------------------------------------------------------------------*/
+H2_USER_DATA * TrackSockets::NewHttp2Session(DWORD socket_id,
+                                             DATA_DIRECTION direction) {
+  H2_USER_DATA * user_data = NULL;
+  nghttp2_session_callbacks * cb = NULL;
+  if (!nghttp2_session_callbacks_new(&cb) && cb) {
+    nghttp2_session_callbacks_set_send_callback(cb, h2_send_callback);
+    nghttp2_session_callbacks_set_on_begin_frame_callback(
+        cb, h2_on_begin_frame_callback);
+    nghttp2_session_callbacks_set_on_frame_recv_callback(
+        cb, h2_on_frame_recv_callback);
+    nghttp2_session_callbacks_set_on_data_chunk_recv_callback(
+        cb, h2_on_data_chunk_recv_callback);
+    nghttp2_session_callbacks_set_on_stream_close_callback(
+        cb, h2_on_stream_close_callback);
+    nghttp2_session_callbacks_set_on_begin_headers_callback(
+        cb, h2_on_begin_headers_callback);
+    nghttp2_session_callbacks_set_on_header_callback(
+        cb, h2_on_header_callback);
+
+
+    nghttp2_option * options = NULL;
+    if (!nghttp2_option_new(&options) && options) {
+      nghttp2_option_set_no_auto_window_update(options, 1);
+      nghttp2_option_set_no_http_messaging(options, 1);
+
+      user_data = new H2_USER_DATA;
+      user_data->direction = direction;
+      user_data->connection = this;
+      user_data->socket_id = socket_id;
+      bool ok = false;
+      if (direction == DATA_OUT) {
+        ok = !nghttp2_session_server_new2(&user_data->session, cb, user_data, options);
+      } else {
+        ok = !nghttp2_session_client_new2(&user_data->session, cb, user_data, options);
+      }
+      if (!ok) {
+        delete user_data;
+        user_data = NULL;
+      }
+      nghttp2_option_del(options);
+    }
+    nghttp2_session_callbacks_del(cb);
+  }
+  return user_data;
 }

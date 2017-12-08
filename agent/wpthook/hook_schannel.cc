@@ -4,6 +4,7 @@
 #include "track_sockets.h"
 #include "wpt_test_hook.h"
 #include "hook_schannel.h"
+#include "MinHook.h"
 
 static SchannelHook* g_hook = NULL;
 
@@ -81,8 +82,7 @@ BOOL __stdcall CertVerifyCertificateChainPolicy_Hook(
 -----------------------------------------------------------------------------*/
 SchannelHook::SchannelHook(TrackSockets& sockets, TestState& test_state,
                            WptTestHook& test):
-  _hook(NULL)
-  ,_sockets(sockets)
+  _sockets(sockets)
   ,_test_state(test_state)
   ,_test(test)
   ,InitializeSecurityContextW_(NULL)
@@ -98,36 +98,38 @@ SchannelHook::SchannelHook(TrackSockets& sockets, TestState& test_state,
 SchannelHook::~SchannelHook(void){
   if (g_hook == this)
     g_hook = NULL;
-  delete _hook;  // remove all the hooks
 }
 
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 void SchannelHook::Init() {
-  if (_hook || g_hook) {
+  if (g_hook)
     return;
-  }
-  _hook = new NCodeHookIA32();
   g_hook = this;
-  WptTrace(loglevel::kProcess, _T("[wpthook] SchannelHook::Init()\n"));
-  InitializeSecurityContextW_ = _hook->createHookByName(
-      "secur32.dll", "InitializeSecurityContextW", 
-      InitializeSecurityContextW_Hook);
-  InitializeSecurityContextA_ = _hook->createHookByName(
-      "secur32.dll", "InitializeSecurityContextA", 
-      InitializeSecurityContextA_Hook);
-  DeleteSecurityContext_ = _hook->createHookByName(
-      "secur32.dll", "DeleteSecurityContext", 
-      DeleteSecurityContext_Hook);
-  DecryptMessage_ = _hook->createHookByName(
-      "secur32.dll", "DecryptMessage", DecryptMessage_Hook);
-  EncryptMessage_ = _hook->createHookByName(
-      "secur32.dll", "EncryptMessage", EncryptMessage_Hook);
 
-  if (_test._ignore_ssl)
-    CertVerifyCertificateChainPolicy_ = _hook->createHookByName(
-        "crypt32.dll", "CertVerifyCertificateChainPolicy",
-        CertVerifyCertificateChainPolicy_Hook);
+  ATLTRACE("[wpthook] SchannelHook::Init()");
+
+  LoadLibrary(_T("secur32.dll"));
+  MH_CreateHookApi(L"secur32.dll", "InitializeSecurityContextW", InitializeSecurityContextW_Hook, (LPVOID *)&InitializeSecurityContextW_);
+  MH_CreateHookApi(L"secur32.dll", "InitializeSecurityContextA", InitializeSecurityContextA_Hook, (LPVOID *)&InitializeSecurityContextA_);
+  MH_CreateHookApi(L"secur32.dll", "DeleteSecurityContext", DeleteSecurityContext_Hook, (LPVOID *)&DeleteSecurityContext_);
+  MH_CreateHookApi(L"secur32.dll", "DecryptMessage", DecryptMessage_Hook, (LPVOID *)&DecryptMessage_);
+  MH_CreateHookApi(L"secur32.dll", "EncryptMessage", EncryptMessage_Hook, (LPVOID *)&EncryptMessage_);
+
+  bool is_safari = false;
+  TCHAR file_name[MAX_PATH];
+  if (GetModuleFileName(NULL, file_name, _countof(file_name))) {
+    CString exe(file_name);
+    exe.MakeLower();
+    if (exe.Find(_T("webkit2webprocess.exe")) >= 0)
+      is_safari = true;
+  }
+  if (_test._ignore_ssl || is_safari) {
+    LoadLibrary(_T("crypt32.dll"));
+    MH_CreateHookApi(L"crypt32.dll", "CertVerifyCertificateChainPolicy", CertVerifyCertificateChainPolicy_Hook, (LPVOID *)&CertVerifyCertificateChainPolicy_);
+  }
+
+  MH_EnableHook(MH_ALL_HOOKS);
 }
 
 /*-----------------------------------------------------------------------------
@@ -146,7 +148,7 @@ SECURITY_STATUS SchannelHook::InitializeSecurityContextW(
             pszTargetName, fContextReq, Reserved1, TargetDataRep, pInput,
             Reserved2, phNewContext, pOutput, pfContextAttr, ptsExpiry);
     if (!phContext && phNewContext) {
-      _sockets.SetSslFd((PRFileDesc *)phNewContext);
+      _sockets.SetSslFd(phNewContext);
     }
   }
   return ret;
@@ -168,7 +170,7 @@ SECURITY_STATUS SchannelHook::InitializeSecurityContextA(
             pszTargetName, fContextReq, Reserved1, TargetDataRep, pInput,
             Reserved2, phNewContext, pOutput, pfContextAttr, ptsExpiry);
     if (!phContext && phNewContext) {
-      _sockets.SetSslFd((PRFileDesc *)phNewContext);
+      _sockets.SetSslFd(phNewContext);
     }
   }
   return ret;
@@ -179,7 +181,7 @@ SECURITY_STATUS SchannelHook::InitializeSecurityContextA(
 SECURITY_STATUS SchannelHook::DeleteSecurityContext(PCtxtHandle phContext) {
   SECURITY_STATUS ret = SEC_E_INTERNAL_ERROR;
   if (phContext) {
-    _sockets.ClearSslFd((PRFileDesc *)phContext);
+    _sockets.ClearSslFd(phContext);
   }
   if (DeleteSecurityContext_)
     ret = DeleteSecurityContext_(phContext);
@@ -193,7 +195,7 @@ SECURITY_STATUS SchannelHook::EncryptMessage(PCtxtHandle phContext,
   SECURITY_STATUS ret = SEC_E_INTERNAL_ERROR;
   if (EncryptMessage_) {
     SOCKET s = INVALID_SOCKET;
-    _sockets.SslSocketLookup((PRFileDesc *)phContext, s);
+    _sockets.SslSocketLookup(phContext, s);
     if (pMessage && !_test_state._exit) {
       for (ULONG i = 0; i < pMessage->cBuffers; i++) {
         unsigned long len = pMessage->pBuffers[i].cbBuffer;
@@ -221,7 +223,7 @@ SECURITY_STATUS SchannelHook::DecryptMessage(PCtxtHandle phContext,
     SOCKET s = INVALID_SOCKET;
     ret = DecryptMessage_(phContext, pMessage, MessageSeqNo, pfQOP);
     if (ret == SEC_E_OK && pMessage && !_test_state._exit) {
-      if (_sockets.SslSocketLookup((PRFileDesc *)phContext, s) && 
+      if (_sockets.SslSocketLookup(phContext, s) && 
             s != INVALID_SOCKET) {
         for (ULONG i = 0; i < pMessage->cBuffers; i++) {
           unsigned long len = pMessage->pBuffers[i].cbBuffer;

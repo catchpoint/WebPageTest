@@ -7,7 +7,7 @@
             $page_keywords = array('Traceroute','Webpagetest','Website Speed Test','Page Speed');
             $page_description = "Traceroute result.";
             include ('head.inc');
-            include ('testStatus.inc');
+            require_once('testStatus.inc');
         ?>
     </head>
     <body>
