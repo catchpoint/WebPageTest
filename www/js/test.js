@@ -16,6 +16,13 @@ function ValidateInput(form)
         form.url.focus();
         return false
     }
+  
+    if( (form.url.value == "Host Name/IP Address"))
+    {
+        alert( "Please enter a Host Name/IP Address to test." );
+        form.url.focus();
+        return false;
+    }
     
     if( form.url.value == "Enter a Website URL" )
         form.url.value = "";
