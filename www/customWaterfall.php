@@ -34,17 +34,32 @@ $page_description = "Website speed test custom waterfall$testLabel";
                     <input id="showLabels" type="checkbox" checked> Show Labels for requests (URL)
                 </form>
             </div>
+            <a id="s" href="javascript:genPDF()"><button class="button5">Dowload PDF</button></a>
             <br>
+            <div id="testdiv">
             <?php
                 $extension = 'php';
                 if( FRIENDLY_URLS )
                     $extension = 'png';
                 echo "<img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1\">";
             ?>
-            
+            </div>
             <?php include('footer.inc'); ?>
         </div>
-
+       <script type="text/javascript" src="jspdf.min.js"></script>
+       <script type="text/javascript" src="html2canvas.js"></script>
+        <script type="text/javascript">
+        function genPDF(){
+            html2canvas(document.getElementById("testdiv"),{
+            onrendered: function (canvas) {
+                var img=canvas.toDataURL("image/png");
+                var doc=new jsPDF();
+                doc.addImage(img,'JPEG',20,20);
+                doc.save('test.pdf');
+        }
+      });
+    }
+ </script>
         <script type="text/javascript">
             $(document).ready(function(){ 
                 
