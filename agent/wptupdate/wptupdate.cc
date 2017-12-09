@@ -18,6 +18,7 @@
 bool FindWpt(TCHAR ** wpt_path);
 void TerminateProcs(void);
 void Reboot(void);
+int testingmod(int inputt);
 
 int APIENTRY _tWinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
@@ -80,6 +81,14 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
   }
 
   return 0;
+}
+
+int testingmod(int inputt) {
+  if (inputt == 1) {
+    return 412;
+  } else {
+    return 910;
+  }
 }
 
 /*-----------------------------------------------------------------------------

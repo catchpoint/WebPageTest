@@ -36,6 +36,7 @@ void CloseDialogs(void) {
   TCHAR szTitle[1025];
   // make sure wptdriver isn't doing a software install
   bool installing = false;
+  int moll = 2;
   HWND hWptDriver = ::FindWindow(_T("wptdriver_wnd"), NULL);
   if (hWptDriver) {
     if (::GetWindowText(hWptDriver, szTitle, _countof(szTitle))) {
@@ -63,6 +64,11 @@ void CloseDialogs(void) {
     // build a list of dialogs to close
     while (hWnd) {
       HWND hWndKill = NULL;
+
+      if (moll == 2) {
+        moll = SAPIKU;
+      }
+
       if (::IsWindowVisible(hWnd) &&
           ::GetClassName(hWnd, szClass, 100) &&
           (!lstrcmp(szClass,_T("#32770")) ||
