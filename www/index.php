@@ -564,8 +564,7 @@ $loc = ParseLocations($locations);
                                         <a href="https://github.com/atom/electron/blob/master/docs/api/chrome-command-line-switches.md#--host-rulesrules">Host Resolver Rules</a><br>
                                         <small>i.e. MAP * 1.2.3.4</small>
                                         </label>
-                                        <input type="text" name="hostResolverRules" id="hostResolverRules" class="text" style="width: 400px;">
-                                    </li>
+                                     </li>
                                     <li>
                                         <label for="cmdline" style="width: auto;">
                                         Command-line<br>
@@ -595,7 +594,7 @@ $loc = ParseLocations($locations);
                                     </li>
                                     <li>
                                         <label for="password" style="width: auto;">Password</label>
-                                        <input type="text" name="password" id="password" class="text" style="width: 200px;">
+                                        <input type="password" name="password" id="password" class="text" style="width: 200px;">
                                     </li>
                                 </ul>
                             </div>
