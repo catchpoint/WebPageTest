@@ -88,7 +88,7 @@ else
                             <option value="182" <?php if ($days == 182) echo "selected"; ?>>6 Months</option>
                             <option value="365" <?php if ($days == 365) echo "selected"; ?>>1 Year</option>
                          </select> test log for URLs containing
-                         <input id="filter" name="filter" type="text" style="width:30em" value="<?php echo htmlspecialchars($filter); ?>">
+                         <input id="filter" name="filter" type="text" style="width:30em" onkeypress="if (event.keyCode == 32) {return false;}" value="<?php echo htmlspecialchars($filter); ?>">
                          <input id="SubmitBtn" type="submit" value="Update List"><br>
                          <?php
                          if( isset($uid) || (isset($owner) && strlen($owner)) ) { ?>
