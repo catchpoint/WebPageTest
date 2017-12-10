@@ -57,15 +57,15 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
                                     echo "<input type=\"hidden\" id=\"tid\" name=\"tid\" value=\"$tid\">";
                                     echo "<input type=\"hidden\" id=\"run\" name=\"run\" value=\"$run\">";
                                     echo "Label: <input id=\"tidlabel\" type=\"text\" name=\"tidlabel\" value=\"$label\" style=\"width:10em\"> ";
-                                    echo "URL: <input id=\"tidurl\" type=\"text\" style=\"width:30em\" value=\"$url\" disabled=\"disabled\"> ";
+                                    echo "URL: <input id=\"tidurl\" type=\"text\" style=\"width:30em\" value=\"$url\" disabled=\"disabled\" onkeypress='if (event.keyCode == 32) {return false;}' ";
                                     echo "<a href='#' onClick='return RemoveUrl(\"#urldiv0\");'>Remove</a>";
                                     echo "</div>\n";
                                 }
                             }
                             ?>
                             <div id="urldiv1" class="urldiv">
-                                Label: <input id="label1" type="text" name="label[1]" style="width:10em"  onkeypress="if (event.keyCode == 32) {return false;}"> 
-                                URL: <input id="url1" type="text" name="url[1]" style="width:30em"  > 
+                                Label: <input id="label1" type="text" name="label[1]" style="width:10em"> 
+                                URL: <input id="url1" type="text" name="url[1]" style="width:30em" onkeypress="if (event.keyCode == 32) {return false;}" > 
                                 <a href='#' onClick='return RemoveUrl("#urldiv1");'>Remove</a>
                             </div>
                         </div>
