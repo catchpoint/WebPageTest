@@ -179,6 +179,8 @@ agentUpdate=http://cdn.webpagetest.org/
 ;showslow=http://www.showslow.com
 ;beaconRate=100
 ;showslow_key=<your showslow API key>
+;site key recaptcha api:6LfYXTwUAAAAAPyn1ID4UdsXs-ja3P7qPib37asw
+;Secret key recaptcha api:6LfYXTwUAAAAANwazeg06YX02s8K8nzxFN96j2sO
 
 
 ; **************
