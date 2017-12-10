@@ -119,9 +119,11 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
               }
             }
             ?>
-            
+            <div id="testdiv">
             <table align="center">
                 <tr>
+                    
+                    <?php echo "<a href='javascript:genPDF()'>download</a>";?>
                     <th class="header" colspan="2">
                     <h2>Main thread processing breakdown</h2>
                     Where the browser's main thread was busy, not including idle time waiting for resources <?php
@@ -170,10 +172,24 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
                     </td>
                 </tr>
             </table>
+             </div>
         </div>
         
         <?php include('footer.inc'); ?>
-
+        <script type="text/javascript" src="jspdf.min.js"></script>
+        <script type="text/javascript" src="html2canvas.js"></script>
+        <script type="text/javascript">
+        function genPDF(){
+            html2canvas(document.getElementById("testdiv"),{
+            onrendered: function (canvas) {
+                var img=canvas.toDataURL("image/png");
+                var doc=new jsPDF();
+                doc.addImage(img,'JPEG',20,20);
+                doc.save('test.pdf');
+        }
+      });
+    }
+ </script>
         <!--Load the AJAX API-->
         <script type="text/javascript" src="<?php echo $GLOBALS['ptotocol']; ?>://www.google.com/jsapi"></script>
         <script type="text/javascript">
