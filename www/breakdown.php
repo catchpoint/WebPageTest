@@ -66,6 +66,7 @@ if(!$testInfo->isFirstViewOnly()) {
     </head>
     <body>
         <div class="page">
+            <a class="save" href="">Print File</a>
             <?php
             $tab = 'Test Result';
             $subtab = 'Content Breakdown';
@@ -135,6 +136,12 @@ if(!$testInfo->isFirstViewOnly()) {
             echo '</script>';
         }
         ?>
+          <script>
+        $('.save').click(function(){
+         window.print();
+    });
+        </script>
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
         <script type="text/javascript">
     
         // Load the Visualization API and the table package.
