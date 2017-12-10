@@ -9,14 +9,15 @@ function htmlEntities(str) {
   
 function ValidateInput(form)
 {
-    if( (form.url.value == "" || form.url.value == "Enter a Website URL") )
+    if( (form.url.value == "" || form.url.value == "Enter a Website URL") && 
+      form.script.value == "" && form.bulkurls.value == "" && form.bulkfile.value == "")
     {
         alert( "Please enter an URL to test." );
         form.url.focus();
         return false
     }
   
-    if( (form.url.value == "Host Name/IP Address"))
+    if( form.url.value == "Host Name/IP Address" )
     {
         alert( "Please enter a Host Name/IP Address to test." );
         form.url.focus();
