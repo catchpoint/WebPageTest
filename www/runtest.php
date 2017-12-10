@@ -2447,7 +2447,8 @@ function ErrorPage($error) {
                 <?php
                 include 'header.inc';
 
-                echo "<p>$error</p>\n";
+                $str = $error;
+                echo wordwrap($str,150,"<br>\n",TRUE);
                 ?>
 
                 <?php include('footer.inc'); ?>
