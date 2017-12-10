@@ -71,6 +71,7 @@ if(!$testInfo->isFirstViewOnly()) {
             $subtab = 'Content Breakdown';
             include 'header.inc';
             ?>
+           
             <?php
             if ($isMultistep) {
                 echo "<a name='quicklinks'><h3>Quicklinks</h3></a>\n";
@@ -92,8 +93,10 @@ if(!$testInfo->isFirstViewOnly()) {
                 echo "</table>\n<br>\n";
             }
             ?>
+             <div id="testdiv">
             <h1>Content breakdown by MIME type (First  View)</h1>
             <?php
+                echo "<a href='javascript:genPDF()'>download</a>";
                 if ($isMultistep) {
                     $accordionHelper = new AccordionHtmlHelper($firstViewResults);
                     echo $accordionHelper->createAccordion("breakdown_fv", "mimetypeBreakdown", "drawTable");
@@ -117,11 +120,25 @@ if(!$testInfo->isFirstViewOnly()) {
                     }
                 ?>
             <?php } ?>
+            </div>
         </div>
         
         <?php include('footer.inc'); ?>
         <a href="#top" id="back_to_top">Back to top</a>
-
+        <script type="text/javascript" src="jspdf.min.js"></script>
+        <script type="text/javascript" src="html2canvas.js"></script>
+        <script type="text/javascript">
+        function genPDF(){
+            html2canvas(document.getElementById("testdiv"),{
+            onrendered: function (canvas) {
+                var img=canvas.toDataURL("image/png");
+                var doc=new jsPDF();
+                doc.addImage(img,'JPEG',20,20);
+                doc.save('test.pdf');
+        }
+      });
+    }
+ </script>
         <!--Load the AJAX API-->
         <script type="text/javascript" src="<?php echo $GLOBALS['ptotocol']; ?>://www.google.com/jsapi"></script>
         <?php
