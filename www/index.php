@@ -72,6 +72,7 @@ $loc = ParseLocations($locations);
     <head>
         <title>WebPagetest - Website Performance and Optimization Test</title>
         <?php $gaTemplate = 'Main'; include ('head.inc'); ?>
+        <script src='https://www.google.com/recaptcha/api.js'></script>
     </head>
     <body>
         <div class="page">
@@ -597,6 +598,11 @@ $loc = ParseLocations($locations);
                                         <label for="password" style="width: auto;">Password</label>
                                         <input type="text" name="password" id="password" class="text" style="width: 200px;">
                                     </li>
+                                    <li>
+                                           
+                                          <div class="g-recaptcha" data-callback="makeaction" data-sitekey="6LfYXTwUAAAAAPyn1ID4UdsXs-ja3P7qPib37asw"></div>
+                
+                                    </li>
                                 </ul>
                             </div>
                             <?php } ?>
@@ -690,13 +696,7 @@ $loc = ParseLocations($locations);
                         </div>
                     </div>
                 </div>
-                <script src='https://www.google.com/recaptcha/api.js'></script>
-
-                <div class="g-recaptcha" data-callback="makeaction" data-sitekey="6LfYXTwUAAAAAPyn1ID4UdsXs-ja3P7qPib37asw"></div>
-                <div>
-                  <br>
-                  <button type="submit" id="btn_submit" name="btn_submit" disabled>submit</button>
-                </div>
+             
                 
             </div>
 
