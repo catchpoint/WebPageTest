@@ -26,6 +26,12 @@ if(!$testInfo->isFirstViewOnly()) {
     <head>
         <title>WebPagetest Content Breakdown<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Content Breakdown'; include ('head.inc'); ?>
+	    <script>
+         $('.save').click(function(){
+          window.print();
+     });
+         </script>
+         <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
         <style type="text/css">
             td {
                 text-align:center; 
@@ -96,6 +102,7 @@ if(!$testInfo->isFirstViewOnly()) {
              <div id="testdiv">
             <h1>Content breakdown by MIME type (First  View)</h1>
             <?php
+		echo "<a href='' class='save'>Print file</a>";
                 echo "<a href='javascript:genPDF()'>download</a>";
                 if ($isMultistep) {
                     $accordionHelper = new AccordionHtmlHelper($firstViewResults);
