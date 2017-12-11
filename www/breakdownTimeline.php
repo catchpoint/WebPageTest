@@ -14,6 +14,12 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
     <head>
         <title>WebPagetest Content Breakdown<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Content Breakdown'; include ('head.inc'); ?>
+        <script>
+         $('.save').click(function(){
+          window.print();
+     });
+         </script>
+         <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
         <style type="text/css">
             td {
                 text-align:left; 
@@ -122,7 +128,7 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
             <div id="testdiv">
             <table align="center">
                 <tr>
-                    
+                    <?php echo "<a href='' class='save'>Print file</a>"; ?>
                     <?php echo "<a href='javascript:genPDF()'>download</a>";?>
                     <th class="header" colspan="2">
                     <h2>Main thread processing breakdown</h2>
