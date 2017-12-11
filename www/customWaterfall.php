@@ -34,10 +34,12 @@ $page_description = "Website speed test custom waterfall$testLabel";
                     <input id="showLabels" type="checkbox" checked> Show Labels for requests (URL)
                 </form>
             </div>
-            <a id="s" href="javascript:genPDF()"><button class="button5">Dowload PDF</button></a>
+           
+            
             <br>
             <div id="testdiv">
             <?php
+                 echo "<a href='javascript:genPDF()'>download</a>";
                 $extension = 'php';
                 if( FRIENDLY_URLS )
                     $extension = 'png';
