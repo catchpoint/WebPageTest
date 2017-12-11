@@ -65,7 +65,7 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
                             ?>
                             <div id="urldiv1" class="urldiv">
                                 Label: <input id="label1" type="text" name="label[1]" style="width:10em"> 
-                                URL: <input id="url1" type="text" name="url[1]" style="width:30em"> 
+                                URL: <input id="url1" type="text" name="url[1]" style="width:30em" onkeypress="if (event.keyCode == 32) {return false;}" > 
                                 <a href='#' onClick='return RemoveUrl("#urldiv1");'>Remove</a>
                             </div>
                         </div>
