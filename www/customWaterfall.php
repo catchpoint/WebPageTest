@@ -52,38 +52,25 @@ $page_description = "Website speed test custom waterfall$testLabel";
         function genPDF(){
             html2canvas(document.getElementById("testdiv"),{
             onrendered: function (canvas) {
-                var contentWidth = canvas.width;
-	      var contentHeight = canvas.height;
-	
-	      //The height of the canvas which one pdf page can show;
-	      var pageHeight = contentWidth / 592.28 * 841.89;
-	      //the height of canvas that haven't render to pdf
-	      var leftHeight = contentHeight;
-	      //addImage y-axial offset
-	      var position = 0;
-	      //a4 format [595.28,841.89]	      
-              var imgWidth = 595.28;
-	      var imgHeight = 592.28/contentWidth * contentHeight;
-	
-	      var pageData = canvas.toDataURL('image/jpeg', 1.0);
-	
-	      var pdf = new jsPDF('', 'pt', 'a4');
-	
-	     if (leftHeight < pageHeight) {
-	          pdf.addImage(pageData, 'JPEG', 0, 0, imgWidth, imgHeight );
-	      } else {
-	          while(leftHeight > 0) {
-	              pdf.addImage(pageData, 'JPEG', 0, position, imgWidth, imgHeight)
-	              leftHeight -= pageHeight;
-	              position -= 841.89;
-	              //avoid blank page
-	              if(leftHeight > 0) {
-	                  pdf.addPage();
-	              }
-	          }
-	      }
-	
-	      pdf.save('test.pdf');
+            var imgData = canvas.toDataURL('image/png');
+              var imgWidth = 210;
+              var pageHeight = 295;
+              var imgHeight = canvas.height * imgWidth / canvas.width;
+              var heightLeft = imgHeight;
+
+              var doc = new jsPDF('p', 'mm');
+              var position = 0;
+
+  doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+  heightLeft -= pageHeight;
+
+  while (heightLeft >= 0) {
+    position = heightLeft - imgHeight;
+    doc.addPage();
+    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+  }
+  doc.save( 'file.pdf');
         }
       });
     }
