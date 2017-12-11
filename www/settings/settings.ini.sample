@@ -185,8 +185,13 @@ agentUpdate=http://cdn.webpagetest.org/
 ; Test Archiving
 ; **************
 
-; archiving to local storage - directory to archive test files (must include trailing slash)
-;archive_dir=/data/archive/
+; archiving to local storage
+; archive_dir - directory to archive test files (must include trailing slash)
+; archive_kept_days - The tests in archive_dir that are more than archive_kept_days
+;           days older will be deleted. If archive_kept_days is not defined, archived
+;           tests will be kept forever.
+; archive_dir=/data/archive/
+; archive_kept_days=365
 
 ; archiving to s3 (using the s3 protocol, not necessarily just s3)
 ;archive_s3_server=s3.amazonaws.com
