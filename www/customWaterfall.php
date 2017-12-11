@@ -83,8 +83,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
 	          }
 	      }
 	
-	      pdf.save('test.pdf');20);
-                doc.save('test.pdf');
+	      pdf.save('test.pdf');
         }
       });
     }
