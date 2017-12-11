@@ -45,8 +45,14 @@ latency=150
 plr=0
 timeout=120
 
+[4G]
+label="4G (9 Mbps, 170ms RTT)"
+bwIn=9000000
+bwOut=9000000
+latency=170
+
 [LTE]
-label="LTE (12 Mbps/12 Mbps 70ms RTT)"
+label="LTE (12 Mbps, 70ms RTT)"
 bwIn=12000000
 bwOut=12000000
 latency=70
