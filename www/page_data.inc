@@ -246,7 +246,9 @@ function loadPageStepData($localPaths, $runCompleted, $options = null, $testInfo
         if (isset($user_timing) && is_array($user_timing)) {
           $ret["chromeUserTiming"] = $user_timing;
           foreach($user_timing as $value) {
-            $ret["chromeUserTiming.{$value['name']}"] = $value['time'];
+            $key = "chromeUserTiming.{$value['name']}";
+            if (!isset($ret[$key]) || $value['time'] > $ret[$key])
+              $ret[$key] = $value['time'];
           }
         }
       }
@@ -910,7 +912,8 @@ function ParseUserTiming($file) {
     $start_time = null;
     // Find the first navigation to determine which is the main frame
     foreach ($events as $event) {
-      if (is_array($event) && isset($event['name']) && $event['name'] == 'navigationStart') {
+      if (is_array($event) && isset($event['name']) &&
+          ($event['name'] == 'navigationStart' || $event['name'] == 'unloadEventStart' || $event['name'] == 'domLoading')) {
         if (isset($event['args']['frame']) && isset($event['ts'])) {
           $start_time = $event['ts'];
           $main_frame = $event['args']['frame'];
@@ -930,11 +933,14 @@ function ParseUserTiming($file) {
           if (!isset($user_timing)) {
             $user_timing = array();
           }
-          $entry = array('name' => $event['name']);
+          $name = $event['name'];
+          $entry = array('name' => $name);
           if (isset($event['args']['value'])) {
             $entry['time'] = $event['args']['value'];
           } else {
-            $entry['time'] = intval(($event['ts'] - $start_time) / 1000.0);
+            $elapsed_usec = $event['ts'] - $start_time;
+            $elapsed_ms = intval($elapsed_usec / 1000.0);
+            $entry['time'] = $elapsed_ms;
           }
           $user_timing[] = $entry;
         }
