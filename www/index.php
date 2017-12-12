@@ -62,6 +62,10 @@ if( isset($_COOKIE['u']) && isset($_COOKIE['d']) && isset($_COOKIE['l']) )
         $conn['plr'] = 0;
     $connectivity['custom'] = $conn;
 }
+$recaptcha = GetSetting['6LfYXTwUAAAAAPyn1ID4UdsXs-ja3P7qPib37asw'];
+if ($recaptcha) {
+    echo <recaptcha html with loaded 6LfYXTwUAAAAAPyn1ID4UdsXs-ja3P7qPib37asw>
+}
 
 $locations = LoadLocations();
 $loc = ParseLocations($locations);
