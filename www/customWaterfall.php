@@ -34,17 +34,49 @@ $page_description = "Website speed test custom waterfall$testLabel";
                     <input id="showLabels" type="checkbox" checked> Show Labels for requests (URL)
                 </form>
             </div>
+           
+            
             <br>
+            <div id="testdiv">
             <?php
+                 echo "<a href='javascript:genPDF()'>download</a>";
                 $extension = 'php';
                 if( FRIENDLY_URLS )
                     $extension = 'png';
                 echo "<img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1\">";
             ?>
-            
+            </div>
             <?php include('footer.inc'); ?>
         </div>
+       <script type="text/javascript" src="jspdf.min.js"></script>
+       <script type="text/javascript" src="html2canvas.js"></script>
+        <script type="text/javascript">
+        function genPDF(){
+            html2canvas(document.getElementById("testdiv"),{
+            onrendered: function (canvas) {
+            var imgData = canvas.toDataURL('image/png');
+              var imgWidth = 210;
+              var pageHeight = 295;
+              var imgHeight = canvas.height * imgWidth / canvas.width;
+              var heightLeft = imgHeight;
 
+              var doc = new jsPDF('p', 'mm');
+              var position = 0;
+
+  doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+  heightLeft -= pageHeight;
+
+  while (heightLeft >= 0) {
+    position = heightLeft - imgHeight;
+    doc.addPage();
+    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+  }
+  doc.save( 'file.pdf');
+        }
+      });
+    }
+ </script>
         <script type="text/javascript">
             $(document).ready(function(){ 
                 

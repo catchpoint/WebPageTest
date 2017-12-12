@@ -26,6 +26,12 @@ if(!$testInfo->isFirstViewOnly()) {
     <head>
         <title>WebPagetest Content Breakdown<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Content Breakdown'; include ('head.inc'); ?>
+	    <script>
+         $('.save').click(function(){
+          window.print();
+     });
+         </script>
+         <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
         <style type="text/css">
             td {
                 text-align:center; 
@@ -71,6 +77,7 @@ if(!$testInfo->isFirstViewOnly()) {
             $subtab = 'Content Breakdown';
             include 'header.inc';
             ?>
+           
             <?php
             if ($isMultistep) {
                 echo "<a name='quicklinks'><h3>Quicklinks</h3></a>\n";
@@ -92,8 +99,11 @@ if(!$testInfo->isFirstViewOnly()) {
                 echo "</table>\n<br>\n";
             }
             ?>
+             <div id="testdiv">
             <h1>Content breakdown by MIME type (First  View)</h1>
             <?php
+		echo "<a href='' class='save'>Print file</a>";
+                echo "<a href='javascript:genPDF()'>download</a>";
                 if ($isMultistep) {
                     $accordionHelper = new AccordionHtmlHelper($firstViewResults);
                     echo $accordionHelper->createAccordion("breakdown_fv", "mimetypeBreakdown", "drawTable");
@@ -117,11 +127,40 @@ if(!$testInfo->isFirstViewOnly()) {
                     }
                 ?>
             <?php } ?>
+            </div>
         </div>
         
         <?php include('footer.inc'); ?>
         <a href="#top" id="back_to_top">Back to top</a>
+        <script type="text/javascript" src="jspdf.min.js"></script>
+        <script type="text/javascript" src="html2canvas.js"></script>
+        <script type="text/javascript">
+        function genPDF(){
+            html2canvas(document.getElementById("testdiv"),{
+            onrendered: function (canvas) {
+            var imgData = canvas.toDataURL('image/png');
+              var imgWidth = 210;
+              var pageHeight = 295;
+              var imgHeight = canvas.height * imgWidth / canvas.width;
+              var heightLeft = imgHeight;
 
+              var doc = new jsPDF('p', 'mm');
+              var position = 0;
+
+  		doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+	  	heightLeft -= pageHeight;
+
+  		while (heightLeft >= 0) {
+    		position = heightLeft - imgHeight;
+    		doc.addPage();
+   	 	doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+   		heightLeft -= pageHeight;
+  	}
+  		doc.save( 'file.pdf');
+        }
+      });
+    }
+ </script>
         <!--Load the AJAX API-->
         <script type="text/javascript" src="<?php echo $GLOBALS['ptotocol']; ?>://www.google.com/jsapi"></script>
         <?php
