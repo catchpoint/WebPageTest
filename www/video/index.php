@@ -64,8 +64,8 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
                             }
                             ?>
                             <div id="urldiv1" class="urldiv">
-                                Label: <input id="label1" type="text" name="label[1]" style="width:10em"> 
-                                URL: <input id="url1" type="text" name="url[1]" style="width:30em"> 
+                                Label: <input id="label1" type="search" name="label[1]" style="width:10em"> 
+                                URL: <input id="url1" type="search" name="url[1]" style="width:30em"> 
                                 <a href='#' onClick='return RemoveUrl("#urldiv1");'>Remove</a>
                             </div>
                         </div>
