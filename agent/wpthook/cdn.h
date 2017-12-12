@@ -186,8 +186,6 @@ CDN_PROVIDER cdnList[] = {
   {".trbcdn.ru", "TRBCDN"},
   {".cedexis.net", "Cedexis"},
   {".streamprovider.net", "Rocket CDN"},
-  {".maxcdn.com", "MaxCDN"},
-  {".limelight.com", "Limelight Networks"},
   {".CDNlion.com", "CDNlion"},
   
   {"END_MARKER", "END_MARKER"}
