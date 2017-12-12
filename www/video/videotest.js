@@ -21,6 +21,11 @@ function AddUrl()
 
 function RemoveUrl(id) 
 {
+    if($(id)>0){
     $(id).remove();
+    }
+    else{
+    window.alert("Not Delete");    
+    }
     return false;
 }
