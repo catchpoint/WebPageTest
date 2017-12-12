@@ -59,7 +59,7 @@ $page_description = "Test network path from multiple locations around the world 
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
-                        <li><input type="text" name="url" id="url" value="Host Name/IP Address" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>
+                        <li><input type="search" name="url" id="url" value="Host Name/IP Address" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>
                         <li>
                             <label for="location">Test Location</label>
                             <select name="where" id="location">
@@ -112,7 +112,7 @@ $page_description = "Test network path from multiple locations around the world 
                                 Number of Tests to Run<br>
                                 <small>Up to <?php echo $settings['maxruns']; ?></small>
                             </label>
-                            <input id="number_of_tests" type="text" class="text short" name="runs" value="3">
+                            <input id="number_of_tests" type="search" class="text short" name="runs" value="3">
                         </li>
                     </ul>
                 </div>
