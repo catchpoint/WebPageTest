@@ -507,14 +507,27 @@ Agent.prototype.startJobRun_ = function(job) {
     if (job.isCacheWarm)
         this.runTempDir_ += ".rv";
     // Validate job
+
     var script = job.task.script;
     var url = job.task.url;
+    var steps;
+
     try {
       if (script && !/new\s+(\S+\.)?Builder\s*\(/.test(script)) {
-        // Nuke any non-webdriver scripts for now.  Regular WPT
-        // scripts would have been pre-processed when the task was
-        // initially parsed.
-        script = undefined;
+          //enable non-webdriver scripts
+          var decodedScript = this.decodeScript_(script);
+          url = decodedScript.url;
+          steps = decodedScript.steps;
+
+          logger.debug("    script steps to process");
+
+          for(var i=0; i<steps.length; i++) {
+            logger.debug(JSON.stringify(steps[i]));
+          }
+
+          logger.debug("    /script steps to process");
+
+          script = undefined;
       }
       url = url.trim();
       if (!((/^https?:\/\//i).test(url))) {
@@ -564,6 +577,7 @@ Agent.prototype.startJobRun_ = function(job) {
       this.app_.schedule('Start WD Server',
           this.startWdServer_.bind(this, job));
     }
+
     this.app_.schedule('Send IPC "run"', function() {
       // Copy our flags and task
       var flags = {};
@@ -583,6 +597,12 @@ Agent.prototype.startJobRun_ = function(job) {
       if (!!url) {
         task.url = url;
       }
+      if (!!steps) {
+        task.steps = steps;
+      } else {
+        delete task.steps;
+      }
+
       var message = {
           cmd: 'run',
           runNumber: job.runNumber,
@@ -664,6 +684,90 @@ Agent.prototype.scheduleCleanWorkDir_ = function() {
     deleteFolderRecursive(this.workDir_);
     this.scheduleMakeDirs_(this.workDir_);
   }.bind(this));
+};
+
+/**
+ * @param {string} message the error message.
+ * @constructor
+ */
+function ScriptError(message) {
+  'use strict';
+  this.message = message;
+  this.stack = (new Error(message)).stack;
+}
+ScriptError.prototype = new Error();
+
+/**
+ * Parse the supported commands from WPT script.
+ *
+ * Blank lines and lines starting with "//" are ignored.  Lines starting with
+ * "if", "endif", and "addHeader" are also ignored for now, but this feature is
+ * deprecated and these commands will be rejected in a future.  Any other input
+ * will throw a ScriptError.
+ *
+ * @param {string} script e.g.:
+ *   setDns hostName ipAddress
+ *   navigate url.
+ * @return {Object} a URL and steps object, e.g.:
+ *   {url:'http://x.com', steps: [{{"params":{}, "navigate":"http://google.com"}]}.
+ * @private
+ */
+Agent.prototype.decodeScript_ = function(script) {
+  'use strict';
+  // Assign nulls to appease 'possibly uninitialized' warnings.
+  var url = null;
+  var step = {};
+  step.params = {};
+  var steps = [];
+  var m;
+
+  script.split('\n').forEach(function(line, lineNumber) {
+
+    line = line.trim();
+    if (!line || 0 === line.indexOf('//')) {
+      return;
+    }
+
+    // find navigate commands
+    m = line.match(/^navigate\s+(\S+)$/i);
+    if (m) {
+      //append http:// at the start if missing
+      if (!/^https?:\/\//i.test(m[1])) {
+        m[1] = 'http://' +  m[1];
+      }
+
+      step.navigate = m[1];
+
+      steps.push(step);
+
+      //reset step object while preserving parameters
+      var params = JSON.parse(JSON.stringify(step.params));
+      step = {};
+      step.params = {};
+      step.params = params;
+
+      return;
+    }
+
+    // log unsupported commands
+    logger.info('WPT script contains unsupported line[' + lineNumber + ']: ' + line);
+  });
+
+
+  if (steps.length > 0) {
+    // final navigate is our test url
+    url = steps[steps.length - 1].navigate;
+  }
+
+  if (!url) {
+    throw new ScriptError('WPT script lacks navigate command');
+  }
+
+  logger.debug('');
+  return {
+    url: url,
+    steps: steps
+  };
 };
 
 /**
