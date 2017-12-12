@@ -62,9 +62,9 @@ if( isset($_COOKIE['u']) && isset($_COOKIE['d']) && isset($_COOKIE['l']) )
         $conn['plr'] = 0;
     $connectivity['custom'] = $conn;
 }
-$recaptcha = GetSetting['6LfYXTwUAAAAAPyn1ID4UdsXs-ja3P7qPib37asw'];
+$recaptcha = GetSetting['recaptcha_key'];
 if ($recaptcha) {
-    echo <recaptcha html with loaded 6LfYXTwUAAAAAPyn1ID4UdsXs-ja3P7qPib37asw>
+    echo <recaptcha html with loaded key>
 }
 
 $locations = LoadLocations();
@@ -76,7 +76,6 @@ $loc = ParseLocations($locations);
     <head>
         <title>WebPagetest - Website Performance and Optimization Test</title>
         <?php $gaTemplate = 'Main'; include ('head.inc'); ?>
-        <script src='https://www.google.com/recaptcha/api.js'></script>
     </head>
     <body>
         <div class="page">
@@ -604,7 +603,7 @@ $loc = ParseLocations($locations);
                                     </li>
                                     <li>
                                            
-                                          <div class="g-recaptcha" data-callback="makeaction" data-sitekey="6LfYXTwUAAAAAPyn1ID4UdsXs-ja3P7qPib37asw"></div>
+                                          <div class="g-recaptcha" data-callback="makeaction" data-sitekey="$recaptcha"></div>
                 
                                     </li>
                                 </ul>
