@@ -25,7 +25,7 @@ function RemoveUrl(id)
     $(id).remove();
     }
     else{
-    window.alert("Not Delete");    
+       alert("Can't Delete");    
     }
     return false;
 }
