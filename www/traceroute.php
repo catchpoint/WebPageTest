@@ -112,7 +112,7 @@ $page_description = "Test network path from multiple locations around the world 
                                 Number of Tests to Run<br>
                                 <small>Up to <?php echo $settings['maxruns']; ?></small>
                             </label>
-                            <input id="number_of_tests" type="text" class="text short" name="runs" value="3">
+                            <input id="number_of_tests" type="number"  class="text short" name="runs" value="3">
                         </li>
                     </ul>
                 </div>
