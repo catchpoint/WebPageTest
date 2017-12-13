@@ -21,7 +21,7 @@ function ValidateInput(form)
         form.url.value = "";
     
     var runs = form.runs.value;
-    if( runs < 1 || runs > maxRuns || isNaN(runs))
+    if( runs < 1 || runs > maxRuns )
     {
         alert( "Please select a number of runs between 1 and " + maxRuns + "." );
         form.runs.focus();
