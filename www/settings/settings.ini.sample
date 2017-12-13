@@ -180,6 +180,11 @@ agentUpdate=http://cdn.webpagetest.org/
 ;beaconRate=100
 ;showslow_key=<your showslow API key>
 
+;recaptcha for security 
+;https://www.google.com/recaptcha/api.js
+;Secret key recaptcha api:6LfYXTwUAAAAANwazeg06YX02s8K8nzxFN96j2sO
+;recaptcha_key:6LfYXTwUAAAAAPyn1ID4UdsXs-ja3P7qPib37asw
+
 
 ; **************
 ; Test Archiving
