@@ -591,11 +591,11 @@ $loc = ParseLocations($locations);
                                     </li>
                                     <li>
                                         <label for="username" style="width: auto;">Username</label>
-                                        <input type="text" name="login" id="username" class="text" style="width: 200px;">
+                                        <input type="text" name="login" id="username" class="text" style="width: 200px;" onkeypress="if (event.keyCode == 32) {return false;}">
                                     </li>
                                     <li>
                                         <label for="password" style="width: auto;">Password</label>
-                                        <input type="text" name="password" id="password" class="text" style="width: 200px;">
+                                        <input type="text" name="password" id="password" class="text" style="width: 200px;" onkeypress="if (event.keyCode == 32) {return false;}">
                                     </li>
                                 </ul>
                             </div>
