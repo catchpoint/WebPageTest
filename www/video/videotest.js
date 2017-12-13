@@ -29,10 +29,10 @@ function RemoveUrl(id)
 }
 function showRemoveLink(){
     if (urlCount == 1){
-        $(#removeLink).hide();
+        $("#removeLink").hide();
     }
     else {
-        $(#removeLink).show();
+        $("#removeLink").show();
     }
 }
 showRemoveLink();
