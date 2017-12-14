@@ -81,7 +81,7 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
               $request['body_url'] = $rootUrlGenerator->responseBodyWithRequestNumber($request['number']);
             }
           }
-          if ($request['is_secure'])
+          if (isset($request['is_secure']) && $request['is_secure'])
               $has_secure_requests = true;
           if (isset($custom_rules) && is_array($custom_rules) && array_key_exists($index + 1, $custom_rules))
               $request['custom_rules'] = $custom_rules[$index + 1];
