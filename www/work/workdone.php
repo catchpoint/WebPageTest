@@ -27,7 +27,7 @@ require_once('./video/avi2frames.inc.php');
 require_once __DIR__ . '/../include/ResultProcessing.php';
 
 if (!isset($included)) {
-  error_reporting(E_ERROR | E_PARSE);
+  error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
   header('Content-type: text/plain');
   header("Cache-Control: no-cache, must-revalidate");
   header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
