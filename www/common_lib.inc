@@ -225,9 +225,9 @@ function LoadLocationsIni() {
 /**
 * Get a setting from settings.ini (and cache it for up to a minute)
 */
-function GetSetting($setting) {
+function GetSetting($setting, $default = FALSE) {
   global $settings;
-  $ret = false;
+  $ret = $default;
   if (function_exists('apcu_fetch') &&
       function_exists('apcu_store')) {
     $value = apcu_fetch("setting_$setting", $success);

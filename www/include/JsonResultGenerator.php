@@ -47,7 +47,7 @@ class JsonResultGenerator {
    * @param string $medianMetric Metric to consider when selecting the median run
    * @return array An array containing all data about the test, in a form that can be encoded with JSON
    */
-  public function resultDataArray($testResults, $medianMetric = "loadTime") {
+  public function resultDataArray($testResults, $medianMetric) {
     $testInfo = $this->testInfo->getInfoArray();
     $fvOnly = $this->testInfo->isFirstViewOnly();
     $cacheLabels = array('firstView', 'repeatView');

@@ -90,6 +90,7 @@ $testInfo_dirty = false;
 if (ValidateTestId($id)) {
   $testPath = './' . GetTestPath($id);
   $testInfo = GetTestInfo($id);
+  $medianMetric = GetSetting('medianMetric', 'loadTime');
   if (isset($testInfo['medianMetric']))
     $medianMetric = $testInfo['medianMetric'];
   if (!$testInfo || !array_key_exists('location', $testInfo)) {

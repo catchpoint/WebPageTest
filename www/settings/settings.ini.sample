@@ -75,6 +75,9 @@ enable_agent_processing=1
 ; Sets the maximum number of navigates in a script
 maxNavigateCount=20
 
+; Selects the metric to use for the median run (defaults to loadTime)
+; medianMetric=SpeedIndex
+
 ; Block domains from all tests (space-delimited list)
 ;blockDomains=ctldl.windowsupdate.com
 

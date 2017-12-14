@@ -694,7 +694,9 @@ function calculatePageStats(&$pageData, &$fv, &$rv)
 * @param mixed $pageData
 * @param mixed $cached
 */
-function GetMedianRun(&$pageData, $cached, $metric = 'loadTime') {
+function GetMedianRun(&$pageData, $cached, $metric = null) {
+    if (!isset($metric))
+      $metric = GetSetting('medianMetric', 'loadTime');
     $run = 0;
     $cached = $cached ? 1:0;
     $times = values($pageData, $cached, $metric, true);

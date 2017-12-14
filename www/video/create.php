@@ -149,6 +149,7 @@ else
                         $defaultInterval = 100;
                     }
                     $test['url'] = $info['url'];
+                    $test_median_metric = GetSetting('medianMetric', 'loadTime');
                     if (isset($info['medianMetric']))
                       $test_median_metric = $info['medianMetric'];
                 }

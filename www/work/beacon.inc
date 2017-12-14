@@ -8,7 +8,7 @@ function SendBeacon($beaconUrl, $id, $testPath, &$testInfo, &$pageData)
 {
     if( !$testInfo['private'] )
     {
-        $medianMetric = isset($testInfo['medianMetric']) ? $testInfo['medianMetric'] : 'loadTime';
+        $medianMetric = isset($testInfo['medianMetric']) ? $testInfo['medianMetric'] : GetSetting('medianMetric', 'loadTime');
         $fvMedian = GetMedianRun($pageData, 0, $medianMetric);
         if( $fvMedian )
         {

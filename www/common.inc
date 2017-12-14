@@ -276,7 +276,7 @@ if (preg_match('/^[a-zA-Z0-9_]+$/', @$_REQUEST['test'])) {
     $id = $_COOKIE['tid'];
 }
 
-$median_metric = 'loadTime';
+$median_metric = isset($settings['medianMetric']) ? $settings['medianMetric'] : 'loadTime';
 $testLabel = '';
 if (strlen($id)) {
     if (@strlen($_REQUEST['rkey'])) {

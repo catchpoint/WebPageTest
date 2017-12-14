@@ -568,8 +568,8 @@ function DisplayTest($id, $url, $label, $complete)
     if( $complete )
     {
         $pageData = loadAllPageData($testPath);
-        $fvMedian = GetMedianRun($pageData, 0, 'docTime');
-        $rvMedian = GetMedianRun($pageData, 1, 'docTime');
+        $fvMedian = GetMedianRun($pageData, 0, $median_metric);
+        $rvMedian = GetMedianRun($pageData, 1, $median_metric);
         $rvMedian_column = '';
         if ($rvMedian && ($pageData[$rvMedian][1]['result'] == 0 || $pageData[$rvMedian][1]['result'] == 99999))
             $rvMedian_column = number_format($pageData[$rvMedian][1]['loadTime'] / 1000.0, 3);
