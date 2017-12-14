@@ -40,7 +40,6 @@ $id   = $_REQUEST['id'];
 
 if(extension_loaded('newrelic')) { 
   newrelic_add_custom_parameter('test', $id);
-  newrelic_add_custom_parameter('location', $location);
 }
 
 $workdone_start = microtime(true);
@@ -103,6 +102,7 @@ if (ValidateTestId($id)) {
     $locKey = GetLocationKey($location);
     if ((!strlen($locKey) || !strcmp($key, $locKey)) || !strcmp($_SERVER['REMOTE_ADDR'], "127.0.0.1")) {
       $testErrorStr = '';
+      $errorStr = '';
       if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror']))
         $testErrorStr = ', Test Error: "' . $_REQUEST['testerror'] . '"';
       if (array_key_exists('error', $_REQUEST) && strlen($_REQUEST['error']))
