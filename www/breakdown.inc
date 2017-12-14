@@ -89,7 +89,7 @@ function analyzeRequests($localPaths, &$requests) {
                       'bigImageCount' => 0,
                       'maybeCaptcha' => 0);
     foreach($requests as $request) {
-      if (isset($request['contentType']) && isset($request['objectSize'])) {
+      if (isset($request['contentType']) && isset($request['objectSize']) && isset($request['url'])) {
         $contentType = ContentType($request['contentType'], $request['url']);
         if ($contentType == 'image') {
           if ($request['objectSize'] > 100000) {

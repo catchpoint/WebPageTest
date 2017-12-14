@@ -881,7 +881,10 @@ function loadUserTimingData(&$pageData, $userTimingFile) {
  * @return bool
  */
 function successfulRun($data) {
-  return ($data['result'] === 0 || $data['result']  === 99999);
+  $successful = False;
+  if (isset($data['result']))
+    $successful = ($data['result'] === 0 || $data['result']  === 99999);
+  return $successful;
 }
 
 /**

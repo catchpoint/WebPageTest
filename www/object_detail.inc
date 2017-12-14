@@ -359,7 +359,7 @@ function FixUpRequestTimes(&$requests) {
             $req[$key . '_end'] = $end;
             $req[$key . '_ms'] = $ms;
         }
-        $req['load_end'] = $req['load_start'] + $req['load_ms'];
+        $req['load_end'] = (isset($req['load_start']) && isset($req['load_ms'])) ? ($req['load_start'] + $req['load_ms']) : 0;
 
         // iOS agents do not have any way to get the time to first byte,
         // so it may be unset.  In that case, treat the entire time from
