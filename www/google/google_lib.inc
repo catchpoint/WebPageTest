@@ -81,7 +81,9 @@ function ParseSubParams(&$params, $combined_pairs) {
 	$combined_pair_list = explode(',', $params[$combined_pairs]);
 	foreach ($combined_pair_list as $item) {
 		$pair = explode('.', $item);
-		$params[$pair[0]] = $pair[1];
+    if (isset($pair) && is_array($pair) && count($pair) >= 2) {
+		  $params[$pair[0]] = $pair[1];
+    }
 	}
 }
 
