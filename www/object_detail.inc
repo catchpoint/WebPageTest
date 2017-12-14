@@ -330,8 +330,8 @@ function MergeDnsAndConnectionTimes($requests) {
 function FixUpRequestTimes(&$requests) {
     $requests = MergeDnsAndConnectionTimes($requests);
     foreach($requests as &$req) {
-        $all_start = $req['load_start'];
-        $all_ms = $req['load_ms'];
+        $all_start = isset($req['load_start']) ? $req['load_start'] : 0;
+        $all_ms = isset($req['load_ms']) ? $req['load_ms'] : 0;
 
         foreach (array('ssl', 'connect', 'dns') as $key) {
             $start = $end = $ms = 0;
@@ -368,17 +368,17 @@ function FixUpRequestTimes(&$requests) {
         // this logic.
         $ttfb_ms = isset($req['ttfb_ms']) ? $req['ttfb_ms'] : 0;
 
-        $req['ttfb_start'] = $req['load_start'];
-        $req['ttfb_end'] = $req['ttfb_start'] + $req['ttfb_ms'];
+        $req['ttfb_start'] = isset($req['load_start']) ? $req['load_start'] : 0;
+        $req['ttfb_end'] = (isset($req['ttfb_start']) && isset($req['ttfb_ms'])) ? ($req['ttfb_start'] + $req['ttfb_ms']) : 0;
 
         // The download state starts when TTFB ends, and stops when loading
         // is done.
-        $req['download_start'] = $req['load_start'] + $ttfb_ms;
-        $req['download_end'] = $req['load_end'];
+        $req['download_start'] = isset($req['load_start']) ? $req['load_start'] + $ttfb_ms : 0;
+        $req['download_end'] = isset($req['load_end']) ? $req['load_end'] : 0;
         $req['download_ms'] = $req['download_end'] - $req['download_start'];
 
         $req['all_start'] = $all_start;
-        $req['all_end'] = $req['load_end'];
+        $req['all_end'] = isset($req['load_end']) ? $req['load_end'] : 0;
         $req['all_ms'] = $all_ms;
     }
 }
