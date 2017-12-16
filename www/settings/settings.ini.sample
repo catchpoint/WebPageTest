@@ -176,14 +176,6 @@ agentUpdate=http://cdn.webpagetest.org/
 ;logTestRequests=/var/log/webpagetest/requests.log
 ;logPrivateTests=0
 
-;
-; showslow (beacon rate is a percent of results to allow for sampling)
-;
-;showslow=http://www.showslow.com
-;beaconRate=100
-;showslow_key=<your showslow API key>
-
-
 ; **************
 ; Test Archiving
 ; **************
