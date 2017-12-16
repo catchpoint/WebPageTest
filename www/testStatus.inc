@@ -360,7 +360,7 @@ function GetRelayStatus($id, $testPath, &$test) {
                           http_fetch("{$server}delete.php?test=$id&rkey=$key");
                           $ret = $status['data'];
                       }
-                      Unlock($lock);
+                      UnlockTest($lock);
                     }
                         
                     $zip->close();
