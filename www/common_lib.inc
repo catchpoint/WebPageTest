@@ -2106,6 +2106,7 @@ function Lock($name, $blocking = true, $maxLockSeconds = 300) {
     do {
       $file = @fopen($lockFile, 'x');
       if ($file !== false) {
+        fwrite($file, json_encode(debug_backtrace(), JSON_PRETTY_PRINT | JSON_PARTIAL_OUTPUT_ON_ERROR));
         fclose($file);
         $lock = array('name' => $name);
         $lock['file'] = $lockFile;
