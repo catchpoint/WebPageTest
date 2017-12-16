@@ -1839,7 +1839,7 @@ function LoadJobQueue($workDir, &$queue)
           if (is_array($queue)) {
             $empty = true;
             foreach ($queue as &$p) {
-              if (count($p)) {
+              if (count($p) && (strpos($p[0], "AffinityTester") == FALSE)) {
                 $empty = false;
                 break;
               }
