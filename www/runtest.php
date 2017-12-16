@@ -579,7 +579,7 @@
             $test['uid'] = $uid;
 
         // create an owner string (for API calls, this should already be set as a cookie for normal visitors)
-        if( !isset($test['owner']) || !strlen($test['owner']) )
+        if( !isset($test['owner']) || !strlen($test['owner']) || !preg_match("/^[\w @\.]+$/", $test['owner']) )
           $test['owner'] = sha1(uniqid(uniqid('', true), true));
 
         // special case locations
