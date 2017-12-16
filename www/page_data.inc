@@ -731,7 +731,7 @@ function GetMedianRun(&$pageData, $cached, $metric = null) {
     
     // fall back to loadTime if we failed to get a run with the specified metric
     if (!$run && $metric != 'loadTime') {
-        $run = GetMedianRun($pageData, $cached);
+        $run = GetMedianRun($pageData, $cached, 'loadTime');
     }
     
     return $run;

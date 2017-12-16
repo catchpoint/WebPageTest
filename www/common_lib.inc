@@ -2104,7 +2104,7 @@ function Lock($name, $blocking = true, $maxLockSeconds = 300) {
       $lockFile = $tmpdir . '/lock-' . sha1($name) . '.lock';
     $start = microtime(true);
     do {
-      $file = @fopen($lockFile, 'x');
+      $file = @fopen($lockFile, 'xb');
       if ($file !== false) {
         fwrite($file, json_encode(debug_backtrace(), JSON_PRETTY_PRINT | JSON_PARTIAL_OUTPUT_ON_ERROR));
         fclose($file);
@@ -2116,7 +2116,7 @@ function Lock($name, $blocking = true, $maxLockSeconds = 300) {
         if ($modified && time() - $modified > $maxLockSeconds) {
           @unlink($lockFile);
         } elseif ($blocking) {
-          usleep(100000);
+          usleep(rand(100000, 150000));
         }
       }
       $elapsed = microtime(true) - $start;
