@@ -8,14 +8,14 @@ require_once('devtools.inc.php');
 /**
 * Calculate the progress for all of the images in a given directory
 */
-function GetVisualProgress($testPath, $run, $cached, $options = null, $end = null, $startOffset = null) {
+function GetVisualProgress($testPath, $run, $cached, $startOffset = null) {
   // TODO: in the long run this function might get redundant as the version below is more flexible
   $frames = null;
   $testPath = $testPath[0] == '.' || $testPath[0] == "/" ? $testPath : "./$testPath";
   $localPaths = new TestPaths($testPath, $run, $cached);
   $testInfo = GetTestInfo($testPath);
   $completed = IsTestRunComplete($run, $testInfo);
-  return GetVisualProgressForStep($localPaths, $completed, $options, $end, $startOffset);
+  return GetVisualProgressForStep($localPaths, $completed, $startOffset);
 }
 
 /**
@@ -23,12 +23,10 @@ function GetVisualProgress($testPath, $run, $cached, $options = null, $end = nul
  *
  * @param TestPaths $localPaths TestPaths object for this step/run
  * @param bool $runCompleted If the run was completed
- * @param array $options Options for image histogram
- * @param float|int $end Optional end value
  * @param float|int $startOffset Optional start offset
  * @return array|null The visual progress as an array or null
  */
-function GetVisualProgressForStep($localPaths, $runCompleted, $options = null, $end = null, $startOffset = null) {
+function GetVisualProgressForStep($localPaths, $runCompleted, $startOffset = null) {
   $frames = null;
   $video_directory = $localPaths->videoDir();
   $cache_file = $localPaths->visualDataCacheFile();
@@ -44,13 +42,7 @@ function GetVisualProgressForStep($localPaths, $runCompleted, $options = null, $
   }
   $dirty = false;
   $current_version = VIDEO_CODE_VERSION;
-  if (isset($end)) {
-    if (is_numeric($end))
-      $end = (int)($end * 1000);
-    else
-      unset($end);
-  }
-  if (!isset($end) && !isset($options) && gz_is_file($cache_file)) {
+  if (gz_is_file($cache_file)) {
     $frames = json_decode(gz_file_get_contents($cache_file), true);
     if (isset($frames)) {
       if (is_array($frames)) {
@@ -78,7 +70,7 @@ function GetVisualProgressForStep($localPaths, $runCompleted, $options = null, $
           $parts = explode('_', $file);
           if (count($parts) >= 2) {
             $time = (((int)$parts[1]) * 100) - $startOffset;
-            if ($time >= 0 && (!isset($end) || $time <= $end)) {
+            if ($time >= 0) {
               if (isset($previous_file) && !array_key_exists(0, $frames['frames']) && $time > 0) {
                 $frames['frames'][0] = array('path' => "$base_path/$previous_file",
                                              'file' => $previous_file);
@@ -95,7 +87,7 @@ function GetVisualProgressForStep($localPaths, $runCompleted, $options = null, $
           $parts = explode('_', $file);
           if (count($parts) >= 2) {
             $time = intval($parts[1]) - $startOffset;
-            if ($time >= 0 && (!isset($end) || $time <= $end)) {
+            if ($time >= 0) {
               if (isset($previous_file) && !array_key_exists(0, $frames['frames']) && $time > 0) {
                 $frames['frames'][0] = array('path' => "$base_path/$previous_file",
                                              'file' => $previous_file);
@@ -120,10 +112,10 @@ function GetVisualProgressForStep($localPaths, $runCompleted, $options = null, $
         $histograms = null;
         if (gz_is_file($histograms_file))
           $histograms = json_decode(gz_file_get_contents($histograms_file), true);
-        $start_histogram = GetImageHistogram("$video_directory/$first_file", $options, $histograms);
-        $final_histogram = GetImageHistogram("$video_directory/$last_file", $options, $histograms);
+        $start_histogram = GetImageHistogram("$video_directory/$first_file", $histograms);
+        $final_histogram = GetImageHistogram("$video_directory/$last_file", $histograms);
         foreach($frames['frames'] as $time => &$frame) {
-          $histogram = GetImageHistogram("$video_directory/{$frame['file']}", $options, $histograms);
+          $histogram = GetImageHistogram("$video_directory/{$frame['file']}", $histograms);
           $frame['progress'] = CalculateFrameProgress($histogram, $start_histogram, $final_histogram, 5);
           if ($frame['progress'] == 100 && !array_key_exists('complete', $frames))
             $frames['complete'] = $time;
@@ -172,7 +164,7 @@ function GetVisualProgressForStep($localPaths, $runCompleted, $options = null, $
         $frame['path'] = $base_path . '/' . basename($frame['path']);
     }
   }
-  if ($runCompleted && !isset($end) && !isset($options) && $dirty && isset($frames) && count($frames))
+  if ($runCompleted && $dirty && isset($frames) && count($frames))
     gz_file_put_contents($cache_file,json_encode($frames));
   return $frames;
 }
@@ -180,7 +172,7 @@ function GetVisualProgressForStep($localPaths, $runCompleted, $options = null, $
 /**
 * Calculate histograms for each color channel for the given image
 */
-function GetImageHistogram($image_file, $options, $histograms) {
+function GetImageHistogram($image_file, $histograms) {
   $histogram = null;
   
   $ext = strripos($image_file, '.jpg');
@@ -208,7 +200,7 @@ function GetImageHistogram($image_file, $options, $histograms) {
   }
   
   // See if we have the old-style histograms (separate files)
-  if (!isset($histogram) && !isset($options) && isset($histogram_file) && is_file($histogram_file)) {
+  if (!isset($histogram) && isset($histogram_file) && is_file($histogram_file)) {
       $histogram = json_decode(file_get_contents($histogram_file), true);
       if (!is_array($histogram) ||
           !array_key_exists('r', $histogram) ||
@@ -231,8 +223,6 @@ function GetImageHistogram($image_file, $options, $histograms) {
               // default a resample to 1/4 in each direction which will significantly speed up processing with minimal impact to accuracy.
               // This is only for calculations done on the server.  Histograms from the client look at every pixel
               $resample = 8;
-              if (isset($options) && array_key_exists('resample', $options))
-                  $resample = $options['resample'];
               if ($resample > 2) {
                   $oldWidth = $width;
                   $oldHeight = $height;
@@ -249,9 +239,6 @@ function GetImageHistogram($image_file, $options, $histograms) {
               $histogram['g'] = array();
               $histogram['b'] = array();
               $buckets = 256;
-              if (isset($options) && array_key_exists('buckets', $options) && $options['buckets'] >= 1 && $options['buckets'] <= 256) {
-                  $buckets = $options['buckets'];
-              }
               for ($i = 0; $i < $buckets; $i++) {
                   $histogram['r'][$i] = 0;
                   $histogram['g'][$i] = 0;
@@ -265,13 +252,6 @@ function GetImageHistogram($image_file, $options, $histograms) {
                       $b = $rgb & 0xFF;
                       // ignore white pixels
                       if ($r != 255 || $g != 255 || $b != 255) {
-                          if (isset($options) && array_key_exists('colorSpace', $options) && $options['colorSpace'] != 'RGB') {
-                              if ($options['colorSpace'] == 'HSV') {
-                                  RGB_TO_HSV($r, $g, $b);
-                              } elseif ($options['colorSpace'] == 'YUV') {
-                                  RGB_TO_YUV($r, $g, $b);
-                              }
-                          }
                           $bucket = (int)(($r + 1.0) / 256.0 * $buckets) - 1;
                           $histogram['r'][$bucket]++;
                           $bucket = (int)(($g + 1.0) / 256.0 * $buckets) - 1;
@@ -285,7 +265,7 @@ function GetImageHistogram($image_file, $options, $histograms) {
           imagedestroy($im);
           unset($im);
       }
-      if (!isset($options) && isset($histogram_file) && !is_file($histogram_file) && isset($histogram))
+      if (isset($histogram_file) && !is_file($histogram_file) && isset($histogram))
         file_put_contents($histogram_file, json_encode($histogram));
   }
   return $histogram;

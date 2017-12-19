@@ -57,11 +57,11 @@ class TestStepResult {
    * @param array $options Options for the loadPageStepData
    * @return TestStepResult|null The created instance on success, null otherwise
    */
-  public static function fromFiles($testInfo, $runNumber, $isCached, $stepNumber, $fileHandler = null, $options = null) {
+  public static function fromFiles($testInfo, $runNumber, $isCached, $stepNumber, $fileHandler = null) {
     // no support to use FileHandler so far
     $localPaths = new TestPaths($testInfo->getRootDirectory(), $runNumber, $isCached, $stepNumber);
     $runCompleted = $testInfo->isRunComplete($runNumber);
-    $pageData = loadPageStepData($localPaths, $runCompleted, $options, $testInfo->getInfoArray());
+    $pageData = loadPageStepData($localPaths, $runCompleted, $testInfo->getInfoArray());
     return new self($testInfo, $pageData, $runNumber, $isCached, $stepNumber, $fileHandler);
   }
 
@@ -185,13 +185,12 @@ class TestStepResult {
     return null;
   }
 
-  public function getVisualProgress($end = null) {
+  public function getVisualProgress() {
     // TODO: move implementation to this method
     if (!$this->fileHandler->dirExists($this->localPaths->videoDir())) {
       return array();
     }
-    return GetVisualProgressForStep($this->localPaths, $this->testInfo->isRunComplete($this->run), null, $end,
-      $this->getStartOffset());
+    return GetVisualProgressForStep($this->localPaths, $this->testInfo->isRunComplete($this->run), $this->getStartOffset());
   }
 
   public function getRequestsWithInfo($addLocationData, $addRawHeaders) {

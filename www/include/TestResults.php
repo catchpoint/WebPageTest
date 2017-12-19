@@ -44,7 +44,7 @@ class TestResults {
    * @param array $options Options to load the TestRunResults
    * @return TestResults The new instance
    */
-  public static function fromFiles($testInfo, $fileHandler = null, $options = null) {
+  public static function fromFiles($testInfo, $fileHandler = null) {
     $runResults = array();
     $numRuns = $testInfo->getRuns();
     $firstViewOnly = $testInfo->isFirstViewOnly();
@@ -53,8 +53,8 @@ class TestResults {
       if (!$testComplete && !$testInfo->isRunComplete($runNumber)) {
         continue;
       }
-      $firstView = TestRunResults::fromFiles($testInfo, $runNumber, false, $fileHandler, $options);
-      $repeatView = $firstViewOnly ? null : TestRunResults::fromFiles($testInfo, $runNumber, true, $fileHandler, $options);
+      $firstView = TestRunResults::fromFiles($testInfo, $runNumber, false, $fileHandler);
+      $repeatView = $firstViewOnly ? null : TestRunResults::fromFiles($testInfo, $runNumber, true, $fileHandler);
       $runResults[] = array($firstView, $repeatView);
     }
 

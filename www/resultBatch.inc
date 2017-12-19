@@ -697,14 +697,13 @@ function DisplayPSS(&$tests, $video, &$dirty)
             $testInfo = GetTestInfo($test['id']);
             if( $testInfo && (!$started || (array_key_exists('started', $testInfo) && $testInfo['started'] < $started)))
               $started = $testInfo['started'];
-            $options = array('end' => $test['end']);
-            $pageData = loadAllPageData($testPath, $options);
+            $pageData = loadAllPageData($testPath);
             $fvMedian = GetMedianRun($pageData, 0, $median_metric);
             $test['fvMedian'] = $fvMedian;
             $fvLoadTime = $pageData[$fvMedian][0]['loadTime'];
             $fvRenderTime = $pageData[$fvMedian][0]['render'];
             $startOffset = array_key_exists('testStartOffset', $pageData[$fvMedian][0]) ? intval(round($pageData[$fvMedian][0]['testStartOffset'])) : 0;
-            $visual = GetVisualProgress($testPath, $fvMedian, 0, null, $test['end'], $startOffset);
+            $visual = GetVisualProgress($testPath, $fvMedian, 0, $startOffset);
             if (array_key_exists('SpeedIndex', $pageData[$fvMedian][0]))
                 $fvFLIvalue = $pageData[$fvMedian][0]['SpeedIndex'];
             if (array_key_exists('SpeedIndexCustom', $pageData[$fvMedian][0]))

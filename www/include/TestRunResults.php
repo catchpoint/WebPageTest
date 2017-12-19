@@ -45,11 +45,11 @@ class TestRunResults {
    * @param array $options Options for loading the TestStepData
    * @return TestRunResults|null The initialized object or null if it failed
    */
-  public static function fromFiles($testInfo, $runNumber, $isCached, $fileHandler = null, $options = null) {
+  public static function fromFiles($testInfo, $runNumber, $isCached, $fileHandler = null) {
     $stepResults = array();
     $isValid = false;
     for ($stepNumber = 1; $stepNumber <= $testInfo->stepsInRun($runNumber); $stepNumber++) {
-      $stepResult = TestStepResult::fromFiles($testInfo, $runNumber, $isCached, $stepNumber, $fileHandler, $options);
+      $stepResult = TestStepResult::fromFiles($testInfo, $runNumber, $isCached, $stepNumber, $fileHandler);
       $stepResults[] = $stepResult;
       $isValid = $isValid || ($stepResult !== null);
     }

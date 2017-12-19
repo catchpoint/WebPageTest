@@ -310,7 +310,7 @@ if (strlen($id)) {
       require_once 'include/TestInfo.php';
       require_once 'include/TestResults.php';
       $testInfo = TestInfo::fromFiles($testPath);
-      $testResults = TestResults::fromFiles($testInfo, null, $options);
+      $testResults = TestResults::fromFiles($testInfo);
       $run = $testResults->getMedianRunNumber($median_metric, $cached);
     }
     $cachedText = $cached ? '_Cached' : '';

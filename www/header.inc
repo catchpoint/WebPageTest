@@ -5,11 +5,8 @@ require_once __DIR__ . '/include/TestResults.php';
 require_once __DIR__ . '/include/TestRunResults.php';
 
 if(isset($testPath) ) {
-  $options = null;
-  if (array_key_exists('end', $_REQUEST))
-    $options = array('end' => $_REQUEST['end']);
   $testInfo = TestInfo::fromFiles($testPath);
-  $testResults = TestResults::fromFiles($testInfo, null, $options);
+  $testResults = TestResults::fromFiles($testInfo);
 }
 if (isset($testResults)) {
   $adultKeywords = array();
