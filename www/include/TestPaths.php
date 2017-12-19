@@ -408,6 +408,13 @@ class TestPaths {
   }
 
   /**
+   * @return string Path to the visual progress file
+   */
+  public function visualProgressFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_visual_progress.json";
+  }
+
+  /**
    * @param int $version The version of the cache format
    * @return string Path to cache file for devtools CPU times
    */

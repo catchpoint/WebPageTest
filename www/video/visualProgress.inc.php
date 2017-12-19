@@ -34,6 +34,7 @@ function GetVisualProgressForStep($localPaths, $runCompleted, $startOffset = nul
     $startOffset = 0;
   $visual_data_file = $localPaths->visualDataFile();
   $histograms_file = $localPaths->histogramsFile();
+  $visual_progress_file = $localPaths->visualProgressFile();
   if (gz_is_file($visual_data_file)) {
     $visual_data = json_decode(gz_file_get_contents($visual_data_file), true);
     // see if we are processing an externally-uploaded visual data file
@@ -56,6 +57,20 @@ function GetVisualProgressForStep($localPaths, $runCompleted, $startOffset = nul
     }
   }    
   $base_path = substr($video_directory, 1);
+  $visual_progress = null;
+  if (!isset($frames) || !count($frames)) {
+    if (gz_is_file($visual_progress_file)) {
+      $raw = json_decode(gz_file_get_contents($visual_progress_file), true);
+      if (isset($raw) && is_array($raw) && count($raw)) {
+        $visual_progress = array();
+        foreach($raw as $progress_entry) {
+          if(is_array($progress_entry) && isset($progress_entry['file']) && isset($progress_entry['progress'])) {
+            $visual_progress[$progress_entry['file']] = $progress_entry['progress'];
+          }
+        }
+      }
+    }
+  }
   if ((!isset($frames) || !count($frames)) && (is_dir($video_directory) || gz_is_file($histograms_file))) {
     $frames = array('version' => $current_version);
     $frames['frames'] = array();
@@ -109,16 +124,32 @@ function GetVisualProgressForStep($localPaths, $runCompleted, $startOffset = nul
         }
       } elseif (isset($first_file) && strlen($first_file) &&
                 isset($last_file) && strlen($last_file) && count($frames['frames'])) {
-        $histograms = null;
-        if (gz_is_file($histograms_file))
-          $histograms = json_decode(gz_file_get_contents($histograms_file), true);
-        $start_histogram = GetImageHistogram("$video_directory/$first_file", $histograms);
-        $final_histogram = GetImageHistogram("$video_directory/$last_file", $histograms);
-        foreach($frames['frames'] as $time => &$frame) {
-          $histogram = GetImageHistogram("$video_directory/{$frame['file']}", $histograms);
-          $frame['progress'] = CalculateFrameProgress($histogram, $start_histogram, $final_histogram, 5);
-          if ($frame['progress'] == 100 && !array_key_exists('complete', $frames))
-            $frames['complete'] = $time;
+        $calculated = false;
+        if (isset($visual_progress) && count($visual_progress)) {
+          $calculated = true;
+          foreach($frames['frames'] as $time => &$frame) {
+            $file = pathinfo($frame['file'], PATHINFO_FILENAME);
+            if (isset($file) && isset($visual_progress[$file])) {
+              $frame['progress'] = intval(round($visual_progress[$file]));
+              if ($frame['progress'] == 100 && !array_key_exists('complete', $frames))
+                $frames['complete'] = $time;
+            } else {
+              $calculated = false;
+            }
+          }
+        }
+        if (!$calculated){
+          $histograms = null;
+          if (gz_is_file($histograms_file))
+            $histograms = json_decode(gz_file_get_contents($histograms_file), true);
+          $start_histogram = GetImageHistogram("$video_directory/$first_file", $histograms);
+          $final_histogram = GetImageHistogram("$video_directory/$last_file", $histograms);
+          foreach($frames['frames'] as $time => &$frame) {
+            $histogram = GetImageHistogram("$video_directory/{$frame['file']}", $histograms);
+            $frame['progress'] = CalculateFrameProgress($histogram, $start_histogram, $final_histogram, 5);
+            if ($frame['progress'] == 100 && !array_key_exists('complete', $frames))
+              $frames['complete'] = $time;
+          }
         }
       }
     } elseif (gz_is_file($histograms_file)) {
