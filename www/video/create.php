@@ -65,7 +65,7 @@ else
     $id = null;
 
     $exists = false;
-    if( isset($_REQUEST['id']) )
+    if( isset($_REQUEST['id']) && preg_match('/^[\w\.\-_]+$/', $_REQUEST['id']) )
     {
         // see if the video already exists
         $id = $_REQUEST['id'];

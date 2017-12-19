@@ -1,6 +1,10 @@
 <?php
 chdir('..');
 include 'common.inc';
+if (isset($_REQUEST['id']) && !preg_match('/^[\w\.\-_]+$/', $_REQUEST['id'])) {
+  header("HTTP/1.0 404 Not Found");
+  die();
+}
 $videoId = $_REQUEST['id'];
 $valid = false;
 $done = false;
