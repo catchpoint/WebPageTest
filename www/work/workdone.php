@@ -3,10 +3,11 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('ProcessIncrementalResult');
   newrelic_add_custom_tracer('CompressTextFiles');
   newrelic_add_custom_tracer('loadPageStepData');
+  newrelic_add_custom_tracer('getRequestsForStep');
   newrelic_add_custom_tracer('loadVideo');
   newrelic_add_custom_tracer('GetVisualProgressForStep');
   newrelic_add_custom_tracer('GetDevToolsCPUTimeForStep');
-  newrelic_add_custom_tracer('getBreakdown');
+  newrelic_add_custom_tracer('getBreakdownForStep');
   newrelic_add_custom_tracer('GetVisualProgress');
   newrelic_add_custom_tracer('DevToolsGetConsoleLog');
   newrelic_add_custom_tracer('ExtractZipFile');
