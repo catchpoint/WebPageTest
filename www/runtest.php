@@ -178,6 +178,7 @@
             $test['spdy3'] = $req_spdy3;
             $test['noscript'] = $req_noscript;
             $test['fullsizevideo'] = $req_fullsizevideo;
+            $test['thumbsize'] = isset($_REQUEST['thumbsize']) ? min(max(int($_REQUEST['thumbsize']), 100), 2000) : GetSetting('thumbsize', null);
             $test['blockads'] = $req_blockads;
             $test['sensitive'] = $req_sensitive;
             $test['type'] = trim($req_type);
@@ -2023,6 +2024,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'noscript', '1');
             if( $test['fullsizevideo'] )
                 AddIniLine($testFile, 'fullSizeVideo', '1');
+            if (isset($test['thumbsize']))
+                AddIniLine($testFile, 'thumbsize', $test['thumbsize']);
             if( $test['blockads'] )
                 AddIniLine($testFile, 'blockads', '1');
             if( $test['video'] )

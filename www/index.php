@@ -133,6 +133,8 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="width" value="' . htmlspecialchars($_REQUEST['width']) . "\">\n";
             if (isset($_REQUEST['height']))
               echo '<input type="hidden" name="height" value="' . htmlspecialchars($_REQUEST['height']) . "\">\n";
+            if (isset($_REQUEST['thumbsize']))
+              echo '<input type="hidden" name="thumbsize" value="' . htmlspecialchars($_REQUEST['thumbsize']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
