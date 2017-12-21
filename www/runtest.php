@@ -140,8 +140,6 @@
             $test['continuousVideo'] = isset($req_continuousVideo) && $req_continuousVideo ? 1 : 0;
             $test['renderVideo'] = isset($req_renderVideo) && $req_renderVideo ? 1 : 0;
             $test['label'] = preg_replace('/[^\w\d \-_\.]/', '', trim($req_label));
-            $test['industry'] = trim($req_ig);
-            $test['industry_page'] = trim($req_ip);
             $test['median_video'] = (int)$req_mv;
             $test['ip'] = $req_addr;
             $test['priority'] = (int)$req_priority;
@@ -1974,11 +1972,6 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             AddIniLine($testInfo, "owner", $test['owner']);
         if( strlen($test['type']) )
             AddIniLine($testInfo, "type", $test['type']);
-        if( strlen($test['industry']) && strlen($test['industry_page']) )
-        {
-            AddIniLine($testInfo, "industry", $test['industry']);
-            AddIniLine($testInfo, "industry_page", $test['industry_page']);
-        }
 
         if( isset($test['connectivity']) )
         {

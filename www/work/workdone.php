@@ -267,28 +267,6 @@ if (ValidateTestId($id)) {
           $out = str_replace('[test]', $complete, $test);
           file_put_contents("$testPath/testinfo.ini", $out);
         }
-        
-        // see if it is an industry benchmark test
-        if (array_key_exists('industry', $ini) && array_key_exists('industry_page', $ini) && 
-          strlen($ini['industry']) && strlen($ini['industry_page'])) {
-          if( !is_dir('./video/dat') )
-            mkdir('./video/dat', 0777, true);
-          $indLock = Lock("Industry Video");
-          if (isset($indLock)) {
-            // update the page in the industry list
-            $ind;
-            $data = file_get_contents('./video/dat/industry.dat');
-            if( $data )
-              $ind = json_decode($data, true);
-            $update = array();
-            $update['id'] = $id;
-            $update['last_updated'] = $now;
-            $ind[$ini['industry']][$ini['industry_page']] = $update;
-            $data = json_encode($ind);
-            file_put_contents('./video/dat/industry.dat', $data);
-            Unlock($indLock);
-          }
-        }
       }
 
       if ($testInfo_dirty)
