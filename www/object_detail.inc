@@ -49,7 +49,6 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
       if (isset($requests)) {
         FixUpRequestTimes($requests);
         AddScriptTimings($requests, $script_timing_file_name);
-        $requests = MakeUTF8($requests);
       }
     }
     if (!isset($requests) || !is_array($requests)) {
