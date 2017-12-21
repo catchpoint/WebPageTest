@@ -7,6 +7,7 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('loadVideo');
   newrelic_add_custom_tracer('GetVisualProgressForStep');
   newrelic_add_custom_tracer('GetDevToolsCPUTimeForStep');
+  newrelic_add_custom_tracer('GetDevToolsRequestsForStep');
   newrelic_add_custom_tracer('getBreakdownForStep');
   newrelic_add_custom_tracer('GetVisualProgress');
   newrelic_add_custom_tracer('DevToolsGetConsoleLog');
