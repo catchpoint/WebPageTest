@@ -45,9 +45,8 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
     if (gz_is_file($cache_file)) {
       $requests = json_decode(gz_file_get_contents($cache_file), true);
     } elseif (gz_is_file($devtools_request)) {
-      $devtools_data = json_decode(gz_file_get_contents($devtools_request), true);
-      if (isset($devtools_data['requests']) && is_array($devtools_data['requests'])) {
-        $requests = $devtools_data['requests'];
+      GetDevToolsRequestsForStep($localPaths, $requests, $pageData);
+      if (isset($requests)) {
         FixUpRequestTimes($requests);
         AddScriptTimings($requests, $script_timing_file_name);
         $requests = MakeUTF8($requests);
