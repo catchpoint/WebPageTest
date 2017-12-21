@@ -39,10 +39,20 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
     $script_timing_file_name = $localPaths->devtoolsScriptTimingFile();
     $cache_version = 3;
     $cache_file = $localPaths->requestsCacheFile($cache_version);
+    $devtools_request = $localPaths->devtoolsProcessedRequestsFile();
     $requests = null;
     $cached = true;
-    if (gz_is_file($cache_file))
+    if (gz_is_file($cache_file)) {
       $requests = json_decode(gz_file_get_contents($cache_file), true);
+    } elseif (gz_is_file($devtools_request)) {
+      $devtools_data = json_decode(gz_file_get_contents($devtools_request), true);
+      if (isset($devtools_data['requests']) && is_array($devtools_data['requests'])) {
+        $requests = $devtools_data['requests'];
+        FixUpRequestTimes($requests);
+        AddScriptTimings($requests, $script_timing_file_name);
+        $requests = MakeUTF8($requests);
+      }
+    }
     if (!isset($requests) || !is_array($requests)) {
       $cached = false;
       $needHeaders = false;
@@ -58,9 +68,9 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
       }
       AddResponseBodyFlags($requests, $bodies_file_name);
       FixUpRequestTimes($requests);
-      AddScriptTimings($requests, $script_timing_file_name);
       if ($needHeaders)
           AddHeaders($requests, $headers_file_name);
+      AddScriptTimings($requests, $script_timing_file_name);
       // make sure everything is utf-8 encoded
       $requests = MakeUTF8($requests);
     }
