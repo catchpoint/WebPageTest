@@ -200,8 +200,6 @@
             $test['max_retries'] = min((int)$req_retry, 10);
             if (array_key_exists('keepua', $_REQUEST) && $_REQUEST['keepua'])
                 $test['keepua'] = 1;
-            if (is_file('./settings/customrules.txt'))
-                $test['custom_rules'] = file('./settings/customrules.txt',FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             $test['pss_advanced'] = $req_pss_advanced;
             $test['shard_test'] = $settings['shard_tests'];
             if (array_key_exists('shard', $_REQUEST))
@@ -2138,16 +2136,6 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'APIKey', $test['key']);
             if (isset($test['ip']) && strlen($test['ip']))
                 AddIniLine($testFile, 'IPAddr', $test['ip']);
-
-            // see if we need to add custom scan rules
-            if (array_key_exists('custom_rules', $test)) {
-                foreach($test['custom_rules'] as &$rule) {
-                    $rule = trim($rule);
-                    if (strlen($rule)) {
-                        AddIniLine($testFile, 'customRule', $rule);
-                    }
-                }
-            }
 
             // Add custom metrics
             if (array_key_exists('customMetrics', $test)) {

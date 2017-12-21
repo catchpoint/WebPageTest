@@ -36,7 +36,6 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
     $request_json_file_name =  $localPaths->requestDataJsonFile();
     $headers_file_name = $localPaths->headersFile();
     $bodies_file_name = $localPaths->bodiesFile();
-    $custom_rules_file_name = $localPaths->customRulesFile();
     $script_timing_file_name = $localPaths->devtoolsScriptTimingFile();
     $cache_version = 3;
     $cache_file = $localPaths->requestsCacheFile($cache_version);
@@ -62,14 +61,11 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
       AddScriptTimings($requests, $script_timing_file_name);
       if ($needHeaders)
           AddHeaders($requests, $headers_file_name);
+      // make sure everything is utf-8 encoded
+      $requests = MakeUTF8($requests);
     }
 
     if (isset($requests) && is_array($requests)) {
-      // load any custom checks if they are available
-      $custom_rules = array();
-      if (gz_is_file($custom_rules_file_name))
-          $custom_rules = json_decode(gz_file_get_contents($custom_rules_file_name), true);
-
       $has_secure_requests = false;
       foreach ($requests as $index => &$request) {
           $request['index'] = $index;
@@ -81,23 +77,14 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
               $request['body_url'] = $rootUrlGenerator->responseBodyWithRequestNumber($request['number']);
             }
           }
-          if (isset($request['is_secure']) && $request['is_secure'])
+          if (!$has_secure_requests && isset($request['is_secure']) && $request['is_secure'])
               $has_secure_requests = true;
-          if (isset($custom_rules) && is_array($custom_rules) && array_key_exists($index + 1, $custom_rules))
-              $request['custom_rules'] = $custom_rules[$index + 1];
       }
     
-      // this is disabled for right now - there were indications that it was
-      // spiking CPU to 100% on WPT so there may be a loop condition of some kind
-      //BuildRequestDependencies($requests);
-      
       if (!$cached && $use_raw_headers) {
         gz_file_put_contents($cache_file, json_encode($requests));
       }
     }
-    
-    // make sure everything is utf-8 encoded
-    $requests = MakeUTF8($requests);
     
     return $requests;
 }

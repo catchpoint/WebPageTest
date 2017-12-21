@@ -165,13 +165,6 @@ function SelectRequest(step, request) {
             details += '<b>Certificates (downloaded): </b>' + r['certificate_bytes'] + ' B<br>';
         if (r['bytesOut'] !== undefined)
             details += '<b>Bytes Out (uploaded): </b>' + NumBytesAsDisplayString(r['bytesOut']) + '<br>';
-        if (r['custom_rules'] !== undefined) {
-            for (rule in r['custom_rules']) {
-                details += '<b>Custom Rule - ' + htmlEncode(rule) + ': </b>(';
-                details += htmlEncode(r['custom_rules'][rule]['count']) + ' matches) - ';
-                details += htmlEncode(r['custom_rules'][rule]['value']) + '<br>';
-            }
-        }
         var psPageData = wptPageData[stepLabel] !== undefined ? wptPageData[stepLabel]['psPageData'] : undefined;
         if (psPageData !== undefined &&
             psPageData['connections'] !== undefined &&

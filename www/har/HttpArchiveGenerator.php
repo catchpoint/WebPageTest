@@ -393,10 +393,6 @@ class HttpArchiveGenerator
             }
         }
 
-        if (array_key_exists('custom_rules', $requestData)) {
-            $entry['_custom_rules'] = $requestData['custom_rules'];
-        }
-
         // dump all of our metrics into the har data as custom fields
         foreach ($requestData as $name => $value) {
             if (!is_array($value))

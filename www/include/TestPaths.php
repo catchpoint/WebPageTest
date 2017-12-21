@@ -210,13 +210,6 @@ class TestPaths {
   }
 
   /**
-   * @return string Path for custom metrics file
-   */
-  public function customRulesFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_custom_rules.json";
-  }
-
-  /**
    * @return string Path for user timed events
    */
   public function userTimedEventsFile() {
