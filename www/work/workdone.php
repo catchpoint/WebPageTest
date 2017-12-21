@@ -10,6 +10,10 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('GetVisualProgress');
   newrelic_add_custom_tracer('DevToolsGetConsoleLog');
   newrelic_add_custom_tracer('ExtractZipFile');
+  newrelic_add_custom_tracer('LockTest');
+  newrelic_add_custom_tracer('UpdateTester');
+  newrelic_add_custom_tracer('SecureDir');
+  newrelic_add_custom_tracer('ProcessRun');
 }
 
 chdir('..');
@@ -185,36 +189,7 @@ if (ValidateTestId($id)) {
       }
 
       // Do any post-processing on this individual run
-      if (isset($runNumber) && isset($cacheWarmed)) {
-        $resultProcessing = new ResultProcessing($testPath, $id, $runNumber, $cacheWarmed);
-        $testerError = $resultProcessing->postProcessRun();
-
-        if ($testInfo['fvonly'] || $cacheWarmed) {
-          if (!array_key_exists('test_runs', $testInfo))
-            $testInfo['test_runs'] = array();
-          if (array_key_exists($runNumber, $testInfo['test_runs']))
-            $testInfo['test_runs'][$runNumber]['done'] = true;
-          else
-            $testInfo['test_runs'][$runNumber] = array('done' => true);
-          $numSteps = $resultProcessing->countSteps();
-          $reportedSteps = 0;
-          if (!empty($testInfo['test_runs'][$runNumber]['steps'])) {
-            $reportedSteps = $testInfo['test_runs'][$runNumber]['steps'];
-            if ($reportedSteps != $numSteps) {
-              $testerError = "Number of steps for first and repeat view differ (fv: $reportedSteps, rv: $numSteps)";
-            }
-          }
-          $testInfo['test_runs'][$runNumber]['steps'] = max($numSteps, $reportedSteps);
-          $testInfo_dirty = true;
-        }
-        if (!GetSetting('disable_video_processing')) {
-          if ($testInfo['video'])
-            $workdone_video_start = microtime(true);
-          ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed, $max_load);
-          if ($testInfo['video'])
-            $workdone_video_end = microtime(true);
-        }
-      }
+      ProcessRun();
 
       if (strlen($location) && strlen($tester)) {
         $testerInfo = array();
@@ -341,14 +316,35 @@ if (ValidateTestId($id)) {
 
 $workdone_end = microtime(true);
 
-/*
-if (isset($workdone_video_start) && isset($workdone_video_end)) {
-  $elapsed = intval(($workdone_end - $workdone_start) * 1000);
-  $video_elapsed = intval(($workdone_video_end - $workdone_video_start) * 1000);
-  if ($video_elapsed > 10)
-    logMsg("$elapsed ms - video processing: $video_elapsed ms - Test $id, Run $runNumber:$cacheWarmed", './work/workdone.log', true);
+function ProcessRun() {
+  global $runNumber, $cacheWarmed, $testPath, $id, $testInfo, $testInfo_dirty, $testerError;
+  if (isset($runNumber) && isset($cacheWarmed)) {
+    $resultProcessing = new ResultProcessing($testPath, $id, $runNumber, $cacheWarmed);
+    $testerError = $resultProcessing->postProcessRun();
+
+    if ($testInfo['fvonly'] || $cacheWarmed) {
+      if (!array_key_exists('test_runs', $testInfo))
+        $testInfo['test_runs'] = array();
+      if (array_key_exists($runNumber, $testInfo['test_runs']))
+        $testInfo['test_runs'][$runNumber]['done'] = true;
+      else
+        $testInfo['test_runs'][$runNumber] = array('done' => true);
+      $numSteps = $resultProcessing->countSteps();
+      $reportedSteps = 0;
+      if (!empty($testInfo['test_runs'][$runNumber]['steps'])) {
+        $reportedSteps = $testInfo['test_runs'][$runNumber]['steps'];
+        if ($reportedSteps != $numSteps) {
+          $testerError = "Number of steps for first and repeat view differ (fv: $reportedSteps, rv: $numSteps)";
+        }
+      }
+      $testInfo['test_runs'][$runNumber]['steps'] = max($numSteps, $reportedSteps);
+      $testInfo_dirty = true;
+    }
+    if (!GetSetting('disable_video_processing')) {
+      ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed, $max_load);
+    }
+  }
 }
-*/
 
 /**
 * Delete all of the video files except for the median run
@@ -454,89 +450,6 @@ function ProcessIncrementalResult() {
       }
     }
   }
-}
-
-/**
-* Check the given test against our block list to see if the test bypassed our blocks.
-* If it did, add the domain to the automatic blocked domains list
-* 
-*/
-function CheckForSpam() {
-    global $testPath;
-    global $id;
-    global $runNumber;
-    global $cacheWarmed;
-    global $testInfo;
-    global $testInfo_dirty;
-
-    if (isset($testInfo) && 
-        !array_key_exists('spam', $testInfo) &&
-        strpos($id, '.') == false &&
-        !strlen($testInfo['user']) &&
-        !strlen($testInfo['key']) &&
-        is_file('./settings/blockurl.txt')) {
-        $blocked = false;
-        $blockUrls = file('./settings/blockurl.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        if (count($blockUrls)) {
-            if (!isset($runNumber))
-                $runNumber = 1;
-            if (!isset($cacheWarmed))
-                $cacheWarmed = 0;
-
-            $secure = false;
-            $requests = getRequests($id, $testPath, $runNumber, $cacheWarmed, $secure);
-            if (isset($requests) && is_array($requests) && count($requests)) {
-                foreach($requests as &$request) {
-                    if (array_key_exists('full_url', $request)) {
-                        $url = $request['full_url'];
-                        foreach( $blockUrls as $block ) {
-                            $block = trim($block);
-                            if (strlen($block) && (preg_match("/$block/i", $url))) {
-                                $date = gmdate("Ymd");
-                                // add the top-level page domain to the block list
-                                $pageUrl = $requests[0]['full_url'];
-                                $host = '';
-                                if (strlen($pageUrl)) {
-                                    $parts = parse_url($pageUrl);
-                                    $host = trim($parts['host']);
-                                    if (strlen($host) &&
-                                        strcasecmp($host, 'www.google.com') &&
-                                        strcasecmp($host, 'google.com') &&
-                                        strcasecmp($host, 'www.youtube.com') &&
-                                        strcasecmp($host, 'youtube.com')) {
-                                        // add it to the auto-block list if it isn't already there
-                                        if (is_file('./settings/blockdomainsauto.txt'))
-                                            $autoBlock = file('./settings/blockdomainsauto.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-                                        if (!isset($autoBlock) || !is_array($autoBlock))
-                                            $autoBlock = array();
-                                        $found = false;
-                                        foreach($autoBlock as $entry) {
-                                            if (!strcasecmp($entry, $host)) {
-                                                $found = true;
-                                                break;
-                                            }
-                                        }
-                                        if (!$found) {
-                                            $autoBlock[] = $host;
-                                            file_put_contents('./settings/blockdomainsauto.txt', implode("\r\n", $autoBlock));
-                                        }
-                                    }
-                                }
-                                logMsg("[$id] $host: $pageUrl referenced $url which matched $block", "./log/{$date}-auto_blocked.log", true);
-                                
-                                $blocked = true;
-                                break 2;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if ($blocked) {
-          $testInfo['spam'] = $blocked;
-          $testInfo_dirty = true;
-        }
-    }
 }
 
 function CompressTextFiles($testPath) {
