@@ -90,7 +90,6 @@ class ResultProcessing {
         require_once(__DIR__ . '/../google/google_lib.inc');
         ParseCsiInfoForStep($stepPaths, true);
       }
-      GetDevToolsCPUTimeForStep($stepPaths);
     }
     return $testerError;
   }
