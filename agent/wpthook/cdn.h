@@ -162,6 +162,8 @@ CDN_PROVIDER cdnList[] = {
   {".cdninstagram.com", "Facebook"},
   {".rlcdn.com", "Reapleaf"},
   {".wp.com", "WordPress"},
+  {".wordpress.com", "WordPress"},
+  {".gravatar.com", "WordPress"},
   {".aads1.net", "Aryaka"},
   {".aads-cn.net", "Aryaka"},
   {".aads-cng.net", "Aryaka"},
