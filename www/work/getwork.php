@@ -7,6 +7,9 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('ProcessTestShard');
   newrelic_add_custom_tracer('GetTesters');
   newrelic_add_custom_tracer('LockLocation');
+  newrelic_add_custom_tracer('GetLocationInfo');
+  newrelic_add_custom_tracer('LockTest');
+  newrelic_add_custom_tracer('UpdateTester');
 }
 
 chdir('..');
