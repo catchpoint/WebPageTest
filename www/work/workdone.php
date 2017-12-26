@@ -16,6 +16,8 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('GetVisualProgress');
   newrelic_add_custom_tracer('DevToolsGetConsoleLog');
   newrelic_add_custom_tracer('SecureDir');
+  newrelic_add_custom_tracer('loadPageRunData');
+  newrelic_add_custom_tracer('ParseCsiInfoForStep');
 }
 
 chdir('..');
