@@ -138,7 +138,7 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
       }
 
       // see if we have CSI metrics to load
-      if (is_dir(__DIR__ . '/google') && is_file(__DIR__ . '/google/google_lib.inc')) {
+      if (GetSetting('enable_csi') && is_dir(__DIR__ . '/google') && is_file(__DIR__ . '/google/google_lib.inc')) {
         require_once(__DIR__ . '/google/google_lib.inc');
         $csi = ParseCsiInfoForStep($localPaths, true);
         if (isset($csi) && is_array($csi) && count($csi)) {

@@ -167,13 +167,14 @@ $page_description = "Website performance test details$testLabel";
                                 echo "</tr>\n";
                                 foreach ($testRunResults->getStepResults() as $stepResult) {
                                     echo "<tr>\n";
-                                    $params = ParseCsiInfoForStep($stepResult->createTestPaths(), true);
+                                    if (GetSetting('enable_csi'))
+                                      $params = ParseCsiInfoForStep($stepResult->createTestPaths(), true);
                                     if ($isMultistep) {
                                         echo '<td class="even" valign="middle">' . $stepResult->readableIdentifier() . '</td>';
                                     }
                                     foreach ( $test['testinfo']['extract_csi'] as $csi_param )
                                     {
-                                        if( array_key_exists($csi_param, $params) )
+                                        if( isset($params) && array_key_exists($csi_param, $params) )
                                         {
                                             echo '<td class="even" valign="middle">' . $params[$csi_param] . '</td>';
                                         }
