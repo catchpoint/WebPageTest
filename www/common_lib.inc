@@ -2321,6 +2321,9 @@ function formatMsInterval($val, $digits) {
 * @param mixed $path
 */
 function SecureDir($path) {
+    if (GetSetting('no_secure'))
+      return;
+      
     $files = scandir($path);
     foreach ($files as $file) {
         $filepath = "$path/$file";
