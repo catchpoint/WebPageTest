@@ -155,8 +155,7 @@ function GetTesterIndex($locInfo, &$testerIndex, &$testerCount, &$offline) {
 function StartTest($testId) {
   $testPath = './' . GetTestPath($testId);
   $waiting_file = "$testPath/test.waiting";
-  if (is_file($waiting_file))
-    unlink($waiting_file);
+  @unlink($waiting_file);
 
   // flag the test with the start time
   $ini = file_get_contents("$testPath/testinfo.ini");
@@ -326,8 +325,8 @@ function GetJob() {
         }
 
         if ($delete) {
-          if (isset($fileName) && is_file("$workDir/$fileName")) {
-            unlink("$workDir/$fileName");
+          if (isset($fileName)) {
+            @unlink("$workDir/$fileName");
           }
         } else {
           AddTestJobHead($location, $original_test_info, $workDir, $fileName, $priority, true);
