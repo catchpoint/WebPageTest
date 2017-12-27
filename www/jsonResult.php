@@ -13,7 +13,7 @@ if (isset($_REQUEST['noposition']) &&
   $m = substr($parts[0], 2, 2);
   $d = substr($parts[0], 4, 2);
   $pendingFile = "$base/$y/$m/$d/$dir/test.waiting";
-  $created = filectime($pendingFile);
+  $created = @filectime($pendingFile);
   if ($created !== false && (time() - $created < 3600)) {
     header("Content-type: application/json; charset=utf-8");
     header("Cache-Control: no-cache, must-revalidate");
