@@ -11,8 +11,9 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('LockTest');
   newrelic_add_custom_tracer('UpdateTester');
   newrelic_add_custom_tracer('GetTesterIndex');
-  newrelic_add_custom_tracer('apcu_fetch');
-  newrelic_add_custom_tracer('apcu_store');
+  newrelic_add_custom_tracer('StartTest');
+  newrelic_add_custom_tracer('TestToJSON');
+  newrelic_add_custom_tracer('logTestMsg');
 }
 
 chdir('..');
@@ -56,15 +57,18 @@ if (isset($locations) && is_array($locations) && count($locations) &&
     $is_done = GetUpdate();
   foreach ($locations as $loc) {
     $location = trim($loc);
-    if (!$is_done && strlen($location))
+    if (!$is_done && strlen($location)) {
       $is_done = GetJob();
+    }
     // see if there are fallbacks specified for the given location (for idle)
-    $fallbacks = GetLocationFallbacks($location);
-    if (is_array($fallbacks) && count($fallbacks)) {
-      foreach($fallbacks as $fallback) {
-        $location = trim($fallback);
-        if (!$is_done && strlen($location))
-          $is_done = GetJob();
+    if (!$is_done) {
+      $fallbacks = GetLocationFallbacks($location);
+      if (is_array($fallbacks) && count($fallbacks)) {
+        foreach($fallbacks as $fallback) {
+          $location = trim($fallback);
+          if (!$is_done && strlen($location))
+            $is_done = GetJob();
+        }
       }
     }
   }
@@ -148,6 +152,81 @@ function GetTesterIndex($locInfo, &$testerIndex, &$testerCount, &$offline) {
   }
 }
 
+function StartTest($testId) {
+  $testPath = './' . GetTestPath($testId);
+  $waiting_file = "$testPath/test.waiting";
+  if (is_file($waiting_file))
+    unlink($waiting_file);
+
+  // flag the test with the start time
+  $ini = file_get_contents("$testPath/testinfo.ini");
+  if (stripos($ini, 'startTime=') === false) {
+    $time = time();
+    $start = "[test]\r\nstartTime=" . gmdate("m/d/y G:i:s", $time);
+    $out = str_replace('[test]', $start, $ini);
+    file_put_contents("$testPath/testinfo.ini", $out);
+  }
+}
+
+function TestToJSON($testInfo) {
+  $testJson = array();
+  $script = '';
+  $isScript = false;
+  $lines = explode("\r\n", $testInfo);
+  foreach($lines as $line) {
+    if( strlen(trim($line)) ) {
+      if( $isScript ) {
+        if( strlen($script) )
+          $script .= "\r\n";
+        $script .= $line;
+      } elseif( !strcasecmp($line, '[Script]') ) {
+        $isScript = true;
+      } else {
+        $pos = strpos($line, '=');
+        if( $pos !== false ) {
+          $key = trim(substr($line, 0, $pos));
+          $value = trim(substr($line, $pos + 1));
+          if( strlen($key) && strlen($value) ) {
+            if ($key == 'customMetric') {
+              $pos = strpos($value, ':');
+              if ($pos !== false) {
+                $metric = trim(substr($value, 0, $pos));
+                $code = base64_decode(substr($value, $pos+1));
+                if ($code !== false && strlen($metric) && strlen($code)) {
+                  if (!isset($testJson['customMetrics']))
+                    $testJson['customMetrics'] = array();
+                  $testJson['customMetrics'][$metric] = $code;
+                }
+              }
+            } elseif( filter_var($value, FILTER_VALIDATE_INT) !== false ) {
+              $testJson[$key] = intval($value);
+            } elseif( filter_var($value, FILTER_VALIDATE_FLOAT) !== false ) {
+              $testJson[$key] = floatval($value);
+            } else {
+              $testJson[$key] = $value;
+            }
+          }
+        }
+      }
+    }
+  }
+  if( strlen($script) )
+      $testJson['script'] = $script;
+  // See if we need to include apk information
+  if (isset($_REQUEST['apk']) && is_file(__DIR__ . '/update/apk.dat')) {
+    $apk_info = json_decode(file_get_contents(__DIR__ . '/update/apk.dat'), true);
+    if (isset($apk_info) && is_array($apk_info) && isset($apk_info['packages']) && is_array($apk_info['packages'])) {
+      $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+      $update_path = dirname($_SERVER['PHP_SELF']) . '/update/';
+      $base_uri = "$protocol://{$_SERVER['HTTP_HOST']}$update_path";
+      foreach ($apk_info['packages'] as $package => $info)
+        $apk_info['packages'][$package]['apk_url'] = "$base_uri{$apk_info['packages'][$package]['file_name']}?md5={$apk_info['packages'][$package]['md5']}";
+      $testJson['apk_info'] = $apk_info;
+    }
+  }
+  return $testJson;
+}
+
 /**
 * Get an actual task to complete
 * 
@@ -218,21 +297,7 @@ function GetJob() {
           $testId = trim($matches[1]);
 
         if( isset($testId) ) {
-          // figure out the path to the results
-          $testPath = './' . GetTestPath($testId);
-          $waiting_file = "$testPath/test.waiting";
-          if (is_file($waiting_file))
-            unlink($waiting_file);
-
-          // flag the test with the start time
-          $ini = file_get_contents("$testPath/testinfo.ini");
-          if (stripos($ini, 'startTime=') === false) {
-            $time = time();
-            $start = "[test]\r\nstartTime=" . gmdate("m/d/y G:i:s", $time);
-            $out = str_replace('[test]', $start, $ini);
-            file_put_contents("$testPath/testinfo.ini", $out);
-          }
-          
+          StartTest($testId);
           $lock = LockTest($testId);
           if ($lock) {
             $testInfoJson = GetTestInfo($testId);
@@ -269,61 +334,7 @@ function GetJob() {
         }
         
         if ($is_json) {
-          $testJson = array();
-          $script = '';
-          $isScript = false;
-          $lines = explode("\r\n", $testInfo);
-          foreach($lines as $line) {
-            if( strlen(trim($line)) ) {
-              if( $isScript ) {
-                if( strlen($script) )
-                  $script .= "\r\n";
-                $script .= $line;
-              } elseif( !strcasecmp($line, '[Script]') ) {
-                $isScript = true;
-              } else {
-                $pos = strpos($line, '=');
-                if( $pos !== false ) {
-                  $key = trim(substr($line, 0, $pos));
-                  $value = trim(substr($line, $pos + 1));
-                  if( strlen($key) && strlen($value) ) {
-                    if ($key == 'customMetric') {
-                      $pos = strpos($value, ':');
-                      if ($pos !== false) {
-                        $metric = trim(substr($value, 0, $pos));
-                        $code = base64_decode(substr($value, $pos+1));
-                        if ($code !== false && strlen($metric) && strlen($code)) {
-                          if (!isset($testJson['customMetrics']))
-                            $testJson['customMetrics'] = array();
-                          $testJson['customMetrics'][$metric] = $code;
-                        }
-                      }
-                    } elseif( filter_var($value, FILTER_VALIDATE_INT) !== false ) {
-                      $testJson[$key] = intval($value);
-                    } elseif( filter_var($value, FILTER_VALIDATE_FLOAT) !== false ) {
-                      $testJson[$key] = floatval($value);
-                    } else {
-                      $testJson[$key] = $value;
-                    }
-                  }
-                }
-              }
-            }
-          }
-          if( strlen($script) )
-              $testJson['script'] = $script;
-          // See if we need to include apk information
-          if (isset($_REQUEST['apk']) && is_file(__DIR__ . '/update/apk.dat')) {
-            $apk_info = json_decode(file_get_contents(__DIR__ . '/update/apk.dat'), true);
-            if (isset($apk_info) && is_array($apk_info) && isset($apk_info['packages']) && is_array($apk_info['packages'])) {
-              $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
-              $update_path = dirname($_SERVER['PHP_SELF']) . '/update/';
-              $base_uri = "$protocol://{$_SERVER['HTTP_HOST']}$update_path";
-              foreach ($apk_info['packages'] as $package => $info)
-                $apk_info['packages'][$package]['apk_url'] = "$base_uri{$apk_info['packages'][$package]['file_name']}?md5={$apk_info['packages'][$package]['md5']}";
-              $testJson['apk_info'] = $apk_info;
-            }
-          }
+          $testJson = TestToJSON($testInfo);
           echo json_encode($testJson);
         } else {
           echo $testInfo;
