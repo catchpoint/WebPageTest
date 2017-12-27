@@ -2772,7 +2772,7 @@ function IsTestRunComplete($run, &$testInfo) {
 }
 
 function logTestMsg($testIdOrPath, $message) {
-  if (isset($testIdOrPath) && strlen($testIdOrPath) && strlen($message)) {
+  if (!GetSetting('disable_test_log') && isset($testIdOrPath) && strlen($testIdOrPath) && strlen($message)) {
     $testPath = $testIdOrPath;
     if (strpos($testPath, '/') === false) {
       $id = $testPath;
