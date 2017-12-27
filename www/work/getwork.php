@@ -10,6 +10,9 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('GetLocationInfo');
   newrelic_add_custom_tracer('LockTest');
   newrelic_add_custom_tracer('UpdateTester');
+  newrelic_add_custom_tracer('GetTesterIndex');
+  newrelic_add_custom_tracer('apcu_fetch');
+  newrelic_add_custom_tracer('apcu_store');
 }
 
 chdir('..');
@@ -39,7 +42,7 @@ $dnsServers = '';
 if (array_key_exists('dns', $_REQUEST))
   $dnsServers = str_replace('-', ',', $_REQUEST['dns']);
 $supports_sharding = false;
-if (array_key_exists('shards', $_REQUEST) && $_REQUEST['shards'])
+if (GetSetting('shard_tests', true) && array_key_exists('shards', $_REQUEST) && $_REQUEST['shards'])
   $supports_sharding = true;
 
 $is_done = false;
@@ -85,6 +88,65 @@ if (!$is_done) {
   header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 }
 
+function GetTesterIndex($locInfo, &$testerIndex, &$testerCount, &$offline) {
+  global $pc;
+  global $ec2;
+  global $tester;
+  global $location;
+  $now = time();
+
+  // get the count of testers for this lication and the index of the current tester for affinity checking
+  $testerIndex = null;
+  if (function_exists('apcu_fetch') || function_exists('apc_fetch')) {
+    if (function_exists("apcu_fetch"))
+      $testers = apcu_fetch("testers_$location");
+    elseif (function_exists("apc_fetch"))
+      $testers = apc_fetch("testers_$location");
+    if (!isset($testers) || !is_array($testers))
+      $testers = array();
+    $testers[$pc] = $now;
+    $earliest = $now - 3600;
+    $index = 0;
+    foreach($testers as $name => $last_check) {
+      if ($name == $pc)
+        $testerIndex = $index;
+      if ($last_check < $earliest) {
+        unset($testers[$name]);
+      } else {
+        $index++;
+      }
+    }
+    $testerCount = count($testers);
+    if (function_exists("apcu_store"))
+      apcu_store("testers_$location", $testers);
+    elseif (function_exists("apc_store"))
+      apc_store("testers_$location", $testers);
+  }
+
+  // If it is an EC2 auto-scaling location, make sure the agent isn't marked as offline      
+  $offline = false;
+  if (GetSetting('ec2_key') && !isset($testerIndex) || isset($locInfo['ami'])) {
+    $testers = GetTesters($location, true);
+
+    // make sure the tester isn't marked as offline (usually when shutting down EC2 instances)                
+    $testerCount = isset($testers['testers']) ? count($testers['testers']) : 0;
+    if ($testerCount) {
+      if (strlen($ec2)) {
+        foreach($testers['testers'] as $index => $testerInfo) {
+          if (isset($testerInfo['ec2']) && $testerInfo['ec2'] == $ec2 &&
+              isset($testerInfo['offline']) && $testerInfo['offline'])
+            $offline = true;
+            break;
+        }
+      }
+      foreach($testers['testers'] as $index => $testerInfo)
+        if ($testerInfo['id'] == $tester) {
+          $testerIndex = $index;
+          break;
+        }
+    }
+  }
+}
 
 /**
 * Get an actual task to complete
@@ -116,59 +178,8 @@ function GetJob() {
       strpos($location, '\\') == false &&
       strpos($location, '/') == false &&
       (!strlen($locKey) || !strcmp($key, $locKey))) {
-    $now = time();
     
-    // get the count of testers for this lication and the index of the current tester for affinity checking
-    $testerIndex = null;
-    if (function_exists('apcu_fetch') || function_exists('apc_fetch')) {
-      if (function_exists("apcu_fetch"))
-        $testers = apcu_fetch("testers_$location");
-      elseif (function_exists("apc_fetch"))
-        $testers = apc_fetch("testers_$location");
-      if (!isset($testers) || !is_array($testers))
-        $testers = array();
-      $testers[$pc] = $now;
-      $earliest = $now - 3600;
-      $index = 0;
-      foreach($testers as $name => $last_check) {
-        if ($name == $pc)
-          $testerIndex = $index;
-        if ($last_check < $earliest) {
-          unset($testers[$name]);
-        } else {
-          $index++;
-        }
-      }
-      $testerCount = count($testers);
-      if (function_exists("apcu_store"))
-        apcu_store("testers_$location", $testers);
-      elseif (function_exists("apc_store"))
-        apc_store("testers_$location", $testers);
-    }
-
-    // If it is an EC2 auto-scaling location, make sure the agent isn't marked as offline      
-    $offline = false;
-    if (!isset($testerIndex) || isset($locInfo['ami'])) {
-      $testers = GetTesters($location, true);
-
-      // make sure the tester isn't marked as offline (usually when shutting down EC2 instances)                
-      $testerCount = isset($testers['testers']) ? count($testers['testers']) : 0;
-      if ($testerCount) {
-        if (strlen($ec2)) {
-          foreach($testers['testers'] as $index => $testerInfo) {
-            if (isset($testerInfo['ec2']) && $testerInfo['ec2'] == $ec2 &&
-                isset($testerInfo['offline']) && $testerInfo['offline'])
-              $offline = true;
-              break;
-          }
-        }
-        foreach($testers['testers'] as $index => $testerInfo)
-          if ($testerInfo['id'] == $tester) {
-            $testerIndex = $index;
-            break;
-          }
-      }
-    }
+    GetTesterIndex($locInfo, $testerIndex, $testerCount, $offline);
     
     if (!$offline) {
       if (!isset($testerIndex))
