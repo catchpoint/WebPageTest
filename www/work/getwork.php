@@ -109,7 +109,8 @@ function GetTesterIndex($locInfo, &$testerIndex, &$testerCount, &$offline) {
     if (!isset($testers) || !is_array($testers))
       $testers = array();
     $testers[$pc] = $now;
-    $earliest = $now - 3600;
+    $max_tester_time = min(max(GetSetting('max_tester_minutes', 60), 5), 120) * 60;
+    $earliest = $now - $max_tester_time;
     $index = 0;
     foreach($testers as $name => $last_check) {
       if ($name == $pc)
