@@ -1910,6 +1910,7 @@ function GetTesters($locationId, $includeOffline = false, $include_sensitive = t
     $testers = array();
     $delete = array();
     $files = glob("$dir/*.json.gz");
+    $max_tester_time = min(max(GetSetting('max_tester_minutes', 60), 5), 120) * 60;
     foreach ($files as $file) {
       $tester_info = json_decode(gz_file_get_contents($dir . '/' . basename($file, '.gz')), true);
       if (isset($tester_info) && is_array($tester_info)) {
@@ -1923,7 +1924,7 @@ function GetTesters($locationId, $includeOffline = false, $include_sensitive = t
         }
 
         // Clean up any old testers (> 1 hour since we've seen them)
-        if ($elapsed > 60) {
+        if ($elapsed > $max_tester_time) {
           $delete[] = $file;
         } else {
           $testers[$tester_info['id']] = $tester_info;
