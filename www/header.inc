@@ -314,7 +314,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
           $tabs['Processing Breakdown'] = $menuStandardUrlGenerator->resultPage("breakdownTimeline");
         }
 
-        if( !isset($test['testinfo']) || !isset(!$test['testinfo']['noimages']) || !$test['testinfo']['noimages'] )
+        if( !isset($test['testinfo']) || !isset($test['testinfo']['noimages']) || !$test['testinfo']['noimages'] )
             $tabs['Screen Shot'] = $menuUrlGenerator->resultPage("screen_shot", $endParams);
         //$tabs['More Checks'] = "/moreChecks.php?test=$id";
 
