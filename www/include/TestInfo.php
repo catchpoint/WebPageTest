@@ -66,7 +66,8 @@ class TestInfo {
    * @return string The type of the test
    */
   public function getTestType() {
-    return isset($this->rawData['testinfo']['type']) ? $this->rawData['testinfo']['type'] : 0;
+    $type = isset($this->rawData['testinfo']['type']) ? $this->rawData['testinfo']['type'] : '';
+    return $type;
   }
 
   /**
