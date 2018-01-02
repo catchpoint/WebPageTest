@@ -161,7 +161,7 @@ $loc = ParseLocations($locations);
                                 foreach($loc['locations'] as &$location)
                                 {
                                     $selected = '';
-                                    if( $location['checked'] )
+                                    if( isset($location['checked']) && $location['checked'] )
                                         $selected = 'selected';
                                     if (array_key_exists('group', $location) && $location['group'] != $lastGroup) {
                                         if (isset($lastGroup))
@@ -190,7 +190,7 @@ $loc = ParseLocations($locations);
                                 foreach( $loc['browsers'] as $key => &$browser )
                                 {
                                     $selected = '';
-                                    if( $browser['selected'] )
+                                    if( isset($browser['selected']) && $browser['selected'] )
                                         $selected = 'selected';
                                     echo "<option value=\"{$browser['key']}\" $selected>{$browser['label']}</option>\n";
                                 }
@@ -259,7 +259,7 @@ $loc = ParseLocations($locations);
                                             foreach( $loc['connections'] as $key => &$connection )
                                             {
                                                 $selected = '';
-                                                if( $connection['selected'] )
+                                                if( isset($connection['selected']) && $connection['selected'] )
                                                     $selected = 'selected';
                                                 echo "<option value=\"{$connection['key']}\" $selected>{$connection['label']}</option>\n";
                                             }
@@ -711,7 +711,7 @@ $loc = ParseLocations($locations);
                         foreach($loc['locations'] as &$location)
                         {
                             $selected = '';
-                            if( $location['checked'] )
+                            if( isset($location['checked']) && $location['checked'] )
                                 $selected = 'selected';
                                 
                             if (array_key_exists('group', $location) && $location['group'] != $lastGroup) {
