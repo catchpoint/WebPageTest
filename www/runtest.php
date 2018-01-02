@@ -162,7 +162,7 @@
             if( isset($req_bwOut) && !isset($req_bwUp) )
                 $test['bwOut'] = (int)$req_bwOut;
             else
-                $test['bwOut'] = (int)$req_bwUp;
+                $test['bwOut'] = isset($req_bwUp) ? (int)$req_bwUp : 0;
             $test['latency'] = isset($req_latency) ? (int)$req_latency : 0;
             $test['testLatency'] = isset($req_latency) ? (int)$req_latency : 0;
             $test['plr'] = isset($req_plr) ? trim($req_plr) : 0;
@@ -704,7 +704,7 @@
                       }
                     }
                 }
-                elseif( $test['batch'] )
+                elseif( isset($test['batch']) && $test['batch'] )
                 {
                     // build up the full list of urls
                     $bulk = array();
@@ -1180,7 +1180,7 @@ function ValidateKey(&$test, &$error, $key = null)
           }
         }
         // check to see if we need to limit queue lengths from this API key
-        if ($keys[$key]['queue_limit']) {
+        if (isset($keys[$key]['queue_limit']) && $keys[$key]['queue_limit']) {
             $test['queue_limit'] = $keys[$key]['queue_limit'];
         }
       }else{
@@ -1217,7 +1217,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
 {
     global $use_closest;
 
-    if( strlen($test['script']) )
+    if( isset($test['script']) && strlen($test['script']) )
     {
         $url = ValidateScript($test['script'], $error);
         if( isset($url) )
@@ -1776,7 +1776,7 @@ function LogTest(&$test, $testId, $url)
     // open the log file
     $filename = "./logs/" . gmdate("Ymd") . ".log";
     $video = 0;
-    if( strlen($test['video']) )
+    if( isset($test['video']) && strlen($test['video']) )
         $video = 1;
     $ip = $_SERVER['REMOTE_ADDR'];
     if( array_key_exists('ip',$test) && strlen($test['ip']) )
@@ -2475,7 +2475,7 @@ function ErrorPage($error) {
 function ProcessTestScript($url, &$test) {
   $script = null;
   // add the script data (if we're running a script)
-  if (strlen($test['script'])) {
+  if (isset($test['script']) && strlen($test['script'])) {
     $script = trim($test['script']);
     if (strlen($url)) {
       if (strncasecmp($url, 'http:', 5) && strncasecmp($url, 'https:', 6))
@@ -2507,7 +2507,7 @@ function ProcessTestScript($url, &$test) {
   }
 
   // Handle HTTP Basic Auth
-  if (strlen($test['login']) || strlen($test['password'])) {
+  if ((isset($test['login']) && strlen($test['login'])) || (isset($test['password']) && strlen($test['password']))) {
     $header = "Authorization: Basic " . base64_encode("{$test['login']}:{$test['password']}");
     $testFile .= "Basic Auth={$test['login']}:{$test['password']}\r\n";
     if (!isset($script) || !strlen($script))
@@ -2515,7 +2515,7 @@ function ProcessTestScript($url, &$test) {
     $script = "addHeader\t$header\r\n" . $script;
   }
   // Add custom headers
-  if (strlen($test['customHeaders'])) {
+  if (isset($test['customHeaders']) && strlen($test['customHeaders'])) {
     if (!isset($script) || !strlen($script))
       $script = "navigate\t$url";
     $headers = preg_split("/\r\n|\n|\r/", $test['customHeaders']);

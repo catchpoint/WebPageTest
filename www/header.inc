@@ -372,7 +372,8 @@ function GetGrades($testInfo, $testRunResults, $firstRunResults)
 {
     $grades = array();
     $infoArray = $testInfo->getInfoArray();
-    $lighthouse = $firstRunResults->getLighthouseScore();
+    if (isset($firstRunResults))
+      $lighthouse = $firstRunResults->getLighthouseScore();
     if (isset($lighthouse)) {
       $class = 'F';
       if ($lighthouse > 90)

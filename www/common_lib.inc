@@ -1184,7 +1184,7 @@ function GetTestInfoHtml($includeScript = true)
             $html .= ", {$test['testinfo']['plr']}% Packet Loss";
         $html .= '<br>';
     }
-    if( isset($test['testinfo']) && strlen($test['testinfo']['script']) )
+    if( isset($test['testinfo']['script']) && strlen($test['testinfo']['script']) )
     {
         $show = false;
         if ($includeScript) {
