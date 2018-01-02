@@ -12,13 +12,17 @@ if (isset($_REQUEST['timeline'])) {
       $_REQUEST['run'] = $value;
     elseif ($key == 'c')
       $_REQUEST['cached'] = $value;
+    elseif ($key == 's')
+      $_REQUEST['step'] = $value;
   }
 }
 include 'common.inc';
 if ($_REQUEST['run'] == 'lighthouse')
   $fileBase = 'lighthouse';
-else
-  $fileBase = "$run{$cachedText}";
+else {
+  $stepSuffix = $step > 1 ? ("_" . $step) : "";
+  $fileBase = "$run{$cachedText}{$stepSuffix}";
+}
 $ok = false;
 if (gz_is_file("$testPath/{$fileBase}_trace.json")) {
   $ok = true;
