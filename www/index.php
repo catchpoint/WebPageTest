@@ -222,7 +222,7 @@ $loc = ParseLocations($locations);
                     <br>
                     <?php } ?>
                    <?php
-                    if( (int)$_COOKIE["as"] )
+                    if( isset($_COOKIE["as"]) && (int)$_COOKIE["as"] )
                     {
                         echo '<p><a href="javascript:void(0)" id="advanced_settings" class="extended">Advanced Settings <span class="arrow"></span></a><small id="settings_summary_label" class="hidden"><br><span id="settings_summary"></span></small></p>';
                         echo '<div id="advanced_settings-container">';

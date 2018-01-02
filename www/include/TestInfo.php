@@ -35,7 +35,10 @@ class TestInfo {
         touch($iniPath);
     }
     $test["testinfo"] = GetTestInfo($rootDirectory);
-    return new self($test['testinfo']["id"], $rootDirectory, $test);
+    if (isset($test) && is_array($test) && isset($test['testinfo']["id"]))
+      return new self($test['testinfo']["id"], $rootDirectory, $test);
+    else
+      return null;
   }
 
   /**

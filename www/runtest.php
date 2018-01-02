@@ -926,7 +926,7 @@
                 }
                 else
                 {
-                    if (count($spofTests) > 1) {
+                    if (isset($spofTests) && count($spofTests) > 1) {
                         header("Location: $protocol://$host$uri/video/compare.php?tests=" . implode(',', $spofTests));
                     } else {
                         // redirect regardless if it is a bulk test or not
@@ -1625,7 +1625,7 @@ function WriteJob($location, &$test, &$job, $testId)
   global $error;
   global $locations;
 
-  if ($locations[$location]['relayServer']) {
+  if (isset($locations[$location]['relayServer']) && $locations[$location]['relayServer']) {
     // upload the test to a the relay server
     $test['id'] = $testId;
     $ret = SendToRelay($test, $job);
@@ -1789,18 +1789,18 @@ function LogTest(&$test, $testId, $url)
 
     $line_data = array(
         'date' => gmdate("Y-m-d G:i:s"),
-        'ip' => $ip,
-        'guid' => $testId,
-        'url' => $url,
-        'location' => $test['locationText'],
-        'private' => $test['private'],
-        'testUID' => $test['uid'],
-        'testUser' => $test['user'],
-        'video' => $video,
-        'label' => $test['label'],
-        'owner' => $test['owner'],
-        'key' => $test['key'],
-        'count' => $pageLoads,
+        'ip' => @$ip,
+        'guid' => @$testId,
+        'url' => @$url,
+        'location' => @$test['locationText'],
+        'private' => @$test['private'],
+        'testUID' => @$test['uid'],
+        'testUser' => @$test['user'],
+        'video' => @$video,
+        'label' => @$test['label'],
+        'owner' => @$test['owner'],
+        'key' => @$test['key'],
+        'count' => @$pageLoads,
     );
 
     $log = makeLogLine($line_data);

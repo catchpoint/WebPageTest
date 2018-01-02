@@ -741,8 +741,8 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
     $idMap = array();
     $endTimestamp = null;
     foreach ($events as $event) {
-      if (isset($event['method']) &&
-          isset($event['timestamp']) &&
+      if (isset($event['method'])) {
+        if (isset($event['timestamp']) &&
           (!isset($endTimestamp) || $event['timestamp'] > $endTimestamp))
         $endTimestamp = $event['timestamp'];
         if (!isset($main_frame) &&
@@ -908,6 +908,7 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
             ParseDevToolsDOMContentLoaded($event['record'], $main_frame, $pageData);
           }
         }
+      }
     }
     // Go through and error-out any requests that were started but never got a response or error
     if (isset($endTimestamp)) {

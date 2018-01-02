@@ -314,7 +314,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
           $tabs['Processing Breakdown'] = $menuStandardUrlGenerator->resultPage("breakdownTimeline");
         }
 
-        if( !isset($test['testinfo']) || !$test['testinfo']['noimages'] )
+        if( !isset($test['testinfo']) || !isset(!$test['testinfo']['noimages']) || !$test['testinfo']['noimages'] )
             $tabs['Screen Shot'] = $menuUrlGenerator->resultPage("screen_shot", $endParams);
         //$tabs['More Checks'] = "/moreChecks.php?test=$id";
 
@@ -391,7 +391,7 @@ function GetGrades($testInfo, $testRunResults, $firstRunResults)
         require_once('optimization_detail.inc.php');
 
         $opt = getOptimizationGradesForRun($testInfo, $testRunResults);
-        if( $infoArray['view'] != 'simple' && $infoArray['view'] != 'pss' )
+        if( !isset($infoArray['view']) || ($infoArray['view'] != 'simple' && $infoArray['view'] != 'pss') )
             $grades['first_byte_time'] = array( 'class' => $opt['ttfb']['class'], 'grade' => $opt['ttfb']['grade'], 'description' => $opt['ttfb']['label']);
         $grades['keep_alive_enabled'] = array( 'class' => $opt['keep-alive']['class'], 'grade' => $opt['keep-alive']['grade'], 'description' => $opt['keep-alive']['label']);
         $grades['compress_text'] = array( 'class' => $opt['gzip']['class'], 'grade' => $opt['gzip']['grade'], 'description' => $opt['gzip']['label']);
