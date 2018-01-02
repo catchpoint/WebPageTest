@@ -41,10 +41,10 @@
     $error = NULL;
     $xml = false;
     $usingAPI = false;
-    if( !strcasecmp($req_f, 'xml') )
+    if( isset($req_f) && !strcasecmp($req_f, 'xml') )
         $xml = true;
     $json = false;
-    if( !strcasecmp($req_f, 'json') )
+    if( isset($req_f) && !strcasecmp($req_f, 'json') )
         $json = true;
     $headless = false;
     if (array_key_exists('headless', $settings) && $settings['headless']) {
@@ -629,7 +629,7 @@
             }
         }
 
-        if( !strlen($error) && !$test['batch'] ) {
+        if( !strlen($error) && (!isset($test['batch']) || !$test['batch'])) {
           ValidateParameters($test, $locations, $error);
         }
         // Make sure we aren't blocking the tester
@@ -1241,7 +1241,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             $test['fullsizevideo'] = 0;
         }
 
-        if( !$test['batch'] )
+        if( !isset($test['batch']) || !$test['batch'] )
             ValidateURL($test['url'], $error, $settings);
 
         if( !$error )
@@ -1297,8 +1297,12 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             }
 
             // see if we are blocking API access at the given location
-            if( $locations[$test['location']]['noscript'] && $test['priority'] )
+            if( isset($locations[$test['location']]['noscript']) &&
+                $locations[$test['location']]['noscript'] &&
+                isset($test['priority']) &&
+                $test['priority'] ) {
                 $error = 'API Automation is currently disabled for that location.';
+            }
 
             // see if we need to override the browser
             if( isset($locations[$test['location']]['browserExe']) && strlen($locations[$test['location']]['browserExe']))
@@ -1309,18 +1313,21 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
               $test['mobile'] = 1;
             
             // See if the location carries a timeout override 
-            if (!$test['timeout'] && isset($locations[$test['location']]['timeout']) && $locations[$test['location']]['timeout'] > 0)
+            if (!isset($test['timeout']) && isset($locations[$test['location']]['timeout']) && $locations[$test['location']]['timeout'] > 0)
               $test['timeout'] = intval($locations[$test['location']]['timeout']);
 
             // figure out what the location working directory and friendly name are
             $test['locationText'] = $locations[$test['location']]['label'];
 
-
-            $test['locationLabel'] = $locations[$test['location']]['label'];
-            $test['workdir'] = $locations[$test['location']]['localDir'];
-            $test['remoteUrl']  = $locations[$test['location']]['remoteUrl'];
-            $test['remoteLocation'] = $locations[$test['location']]['remoteLocation'];
-            if( !strlen($test['workdir']) && !strlen($test['remoteUrl']) )
+            if (isset($locations[$test['location']]['label']))
+              $test['locationLabel'] = $locations[$test['location']]['label'];
+            if (isset($locations[$test['location']]['localDir']))
+              $test['workdir'] = $locations[$test['location']]['localDir'];
+            if (isset($locations[$test['location']]['remoteUrl']))
+              $test['remoteUrl']  = $locations[$test['location']]['remoteUrl'];
+            if (isset($locations[$test['location']]['remoteLocation']))
+              $test['remoteLocation'] = $locations[$test['location']]['remoteLocation'];
+            if( !isset($test['workdir']) && !isset($test['remoteUrl']) )
                 $error = "Invalid Location, please try submitting your test request again.";
 
             if( strlen($test['type']) )
@@ -1361,8 +1368,6 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                         if (!$test['timeout'] && isset($connectivity[$test['connectivity']]['timeout']))
                           $test['timeout'] = $connectivity[$test['connectivity']]['timeout'];
 
-                        if( isset($connectivity[$test['connectivity']]['aftCutoff']) && !$test['aftEarlyCutoff'] )
-                            $test['aftEarlyCutoff'] = $connectivity[$test['connectivity']]['aftCutoff'];
                     } elseif ((!isset($test['bwIn']) || !$test['bwIn']) &&
                               (!isset($test['bwOut']) || !$test['bwOut']) &&
                               (!isset($test['latency']) || !$test['latency'])) {
@@ -1374,9 +1379,6 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                 if( isset($test['latency']) && $locations[$test['location']]['latency'] )
                     $test['testLatency'] = max(0, $test['latency'] - $locations[$test['location']]['latency'] );
             }
-
-            if( !$test['aftEarlyCutoff'] && $settings['aftEarlyCutoff'] )
-                $test['aftEarlyCutoff'] = $settings['aftEarlyCutoff'];
         }
     } elseif( !strlen($error) ) {
         $error = "Invalid URL, please try submitting your test request again.";

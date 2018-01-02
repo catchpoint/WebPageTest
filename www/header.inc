@@ -101,7 +101,7 @@ if (!defined('EMBED')) {
             if (is_dir('wptmonitor')) {
                 $navTabs['Monitor'] = '/wptmonitor/';
             }
-            if (is_dir('forums') && !$settings['disableMybb']) {
+            if (is_dir('forums') && (!isset($settings['disableMybb']) || !$settings['disableMybb'])) {
                 $navTabs['Forums'] = '/forums/';
             }
             $navTabs['Documentation'] = 'https://sites.google.com/a/webpagetest.org/docs/';
