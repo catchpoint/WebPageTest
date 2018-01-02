@@ -444,6 +444,9 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
   if (isset($ret['fullyLoaded']))
     $ret['fullyLoaded'] = intval(round($ret['fullyLoaded']));
   
+  if (empty($ret))
+    $ret = null;
+    
   return $ret;
 }
 
