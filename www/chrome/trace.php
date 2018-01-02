@@ -4,8 +4,10 @@ include 'common.inc';
 RestoreTest($id);
 if ($_REQUEST['run'] == 'lighthouse')
   $fileBase = 'lighthouse';
-else
-  $fileBase = "$run{$cachedText}";
+else{
+  $stepSuffix = $step > 1 ? ("_" . $step) : "";
+  $fileBase = "$run{$cachedText}{$stepSuffix}";
+}
 $traceFile = "$testPath/{$fileBase}_trace.json.gz";
 if (!is_file($traceFile) && is_file("$testPath/{$fileBase}_trace.json")) {
   if (gz_compress("$testPath/{$fileBase}_trace.json")) {

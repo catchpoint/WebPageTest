@@ -7,7 +7,7 @@ include 'common.inc';
 $newTimeline = gz_is_file("$testPath/{$run}{$cachedText}_trace.json");
 if ($_REQUEST['run'] == 'lighthouse')
   $run = 'lighthouse';
-$timelineUrlParam = "/getTimeline.php?timeline=t:$id,r:$run,c:$cached";
+$timelineUrlParam = "/getTimeline.php?timeline=t:$id,r:$run,c:$cached,s:$step";
 ?>
 <!DOCTYPE html>
 <html>
