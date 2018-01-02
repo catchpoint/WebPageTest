@@ -80,8 +80,10 @@ if( $_REQUEST['f'] == 'xml' )
         if( $key == 'data' )
         {
             echo "\n";
-            foreach( $val as $k => $v )
+            foreach( $val as $k => $v ) {
+              if (is_string($v))
                 echo("<$k>$v</$k>\n");
+            }
         }
         else
             echo $val;

@@ -115,8 +115,7 @@
             $test['fvonly'] = isset($req_fvonly) ? (int)$req_fvonly : 0;
             if (isset($_REQUEST['rv']))
               $test['fvonly'] = $_REQUEST['rv'] ? 0 : 1;
-            if (isset($req_timeout))
-              $test['timeout'] = (int)$req_timeout;
+            $test['timeout'] = isset($req_timeout) ? (int)$req_timeout : 0;
             $maxTime = GetSetting('maxtime');
             if ($maxTime && $test['timeout'] > $maxTime)
               $test['timeout'] = (int)$maxTime;
@@ -274,8 +273,10 @@
 
             // custom options
             $test['cmdLine'] = '';
-            ValidateCommandLine($req_cmdline, $error);
-            $test['addCmdLine'] = $req_cmdline;
+            if (isset($req_cmdline)) {
+              ValidateCommandLine($req_cmdline, $error);
+              $test['addCmdLine'] = $req_cmdline;
+            }
             if (isset($req_disableThreadedParser) && $req_disableThreadedParser) {
               if (strlen($test['addCmdLine']))
                 $test['addCmdLine'] .= ' ';
@@ -415,7 +416,7 @@
             }
 
             // modify the script to include additional headers (if appropriate)
-            if( strlen($req_addheaders) && strlen($test['script']) )
+            if( isset($req_addheaders) && strlen($req_addheaders) && strlen($test['script']) )
             {
                 $headers = explode("\n", $req_addheaders);
                 foreach( $headers as $header )
@@ -433,7 +434,7 @@
                 $test['batch'] = 1;
 
             // login tests are forced to be private
-            if( strlen($test['login']) )
+            if( isset($test['login']) && strlen($test['login']) )
                 $test['private'] = 1;
                 
             if (!$test['browser_width'] || !$test['browser_height']) {
@@ -467,7 +468,7 @@
             // default batch and API requests to a lower priority
             if( !isset($req_priority) )
             {
-                if( $test['batch'] || $test['batch_locations'] ) {
+                if( (isset($test['batch']) && $test['batch']) || (isset($test['batch_locations']) && $test['batch_locations']) ) {
                     $bulkPriority = GetSetting('bulk_priority');
                     $test['priority'] =  $bulkPriority ? $bulkPriority : 7;
                 } elseif( $_SERVER['REQUEST_METHOD'] == 'GET' || $xml || $json ) {
@@ -476,11 +477,11 @@
             }
 
             // do we need to force the priority to be ignored (needed for the AOL system currently?)
-            if( $settings['noPriority'] )
+            if( isset($settings['noPriority']) && $settings['noPriority'] )
                 $test['priority'] =  0;
 
             // take the ad-blocking request and create a custom block from it
-            if( $req_ads == 'blocked' )
+            if( isset($req_ads) && $req_ads == 'blocked' )
                 $test['block'] .= ' adsWrapper.js adsWrapperAT.js adsonar.js sponsored_links1.js switcher.dmn.aol.com';
 
             // see if there are any custom metrics to extract
@@ -523,7 +524,7 @@
             }
             
             // Force some test options when running a lighthouse-only test
-            if ($test['type'] == 'lighthouse') {
+            if (isset($test['type']) && $test['type'] == 'lighthouse') {
               $test['lighthouse'] = 1;
               $test['runs'] = 1;
               $test['fvonly'] = 1;
@@ -592,14 +593,16 @@
         $test['created'] = time();
 
         // the API key requirements are for all test paths
-        $test['vd'] = $req_vd;
-        $test['vh'] = $req_vh;
+        $test['vd'] = isset($req_vd) ? $req_vd : '';
+        $test['vh'] = isset($req_vh) ? $req_vh : '';
         if ($headless) {
             $test['vd'] = '';
             $test['vh'] = '';
         }
-        $test['owner'] = $req_vo;
-        $test['key'] = $req_k;
+        if (isset($req_vo))
+          $test['owner'] = $req_vo;
+        if (isset($req_k))
+          $test['key'] = $req_k;
 
         // some myBB integration to get the requesting user
         if( isset($user) && !array_key_exists('user', $test) )
@@ -1224,9 +1227,9 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
     if( strlen($test['url']) || $test['batch'] )
     {
         $settings = parse_ini_file('./settings/settings.ini');
-        if( $_COOKIE['maxruns'] )
+        if( isset($_COOKIE['maxruns']) && $_COOKIE['maxruns'] )
             $settings['maxruns'] = (int)$_COOKIE['maxruns'];
-        elseif( $_REQUEST['maxruns'] )
+        elseif( isset($_REQUEST['maxruns']) && $_REQUEST['maxruns'] )
             $settings['maxruns'] = (int)$_REQUEST['maxruns'];
         $maxruns = (int)$settings['maxruns'];
         if( !$maxruns )
@@ -1260,30 +1263,18 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                 $test['fvonly'] = 1;
 
             // make sure on/off options are explicitly 1 or 0
-            $test['private'] = $test['private'] ? 1 : 0;
-            $test['web10'] = $test['web10'] ? 1 : 0;
-            $test['ignoreSSL'] = $test['ignoreSSL'] ? 1 : 0;
-            $test['tcpdump'] = $test['tcpdump'] ? 1 : 0;
-            $test['standards'] = $test['standards'] ? 1 : 0;
-            $test['lighthouse'] = $test['lighthouse'] ? 1 : 0;
-            $test['timeline'] = $test['timeline'] ? 1 : 0;
-            $test['swrender'] = $test['swrender'] ? 1 : 0;
-            $test['netlog'] = $test['netlog'] ? 1 : 0;
-            $test['spdy3'] = $test['spdy3'] ? 1 : 0;
-            $test['noscript'] = $test['noscript'] ? 1 : 0;
-            $test['fullsizevideo'] = $test['fullsizevideo'] ? 1 : 0;
-            $test['blockads'] = $test['blockads'] ? 1 : 0;
-            $test['sensitive'] = $test['sensitive'] ? 1 : 0;
-            $test['pngss'] = $test['pngss'] ? 1 : 0;
-            $test['bodies'] = $test['bodies'] ? 1 : 0;
-            $test['htmlbody'] = $test['htmlbody'] ? 1 : 0;
-            $test['pss_advanced'] = $test['pss_advanced'] ? 1 : 0;
-            $test['noheaders'] = $test['noheaders'] ? 1 : 0;
+            $values = array('private', 'web10', 'ignoreSSL', 'tcpdump', 'standards', 'lighthouse',
+                            'timeline', 'swrender', 'netlog', 'spdy3', 'noscript', 'fullsizevideo',
+                            'blockads', 'sensitive', 'pngss', 'bodies', 'htmlbody', 'pss_advanced',
+                            'noheaders');
+            foreach ($values as $value) {
+              if (isset($test[$value]) && $test[$value])
+                $test[$value] = 1;
+              else
+                $test[$value] = 0;
+            }
             $test['aft'] = 0;
             
-            if( !$test['aftMinChanges'] && $settings['aftMinChanges'] )
-                $test['aftMinChanges'] = $settings['aftMinChanges'];
-
             // use the default location if one wasn't specified
             if( !strlen($test['location']) )
             {
