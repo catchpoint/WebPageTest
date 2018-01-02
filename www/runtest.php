@@ -103,19 +103,24 @@
         {
             $test = array();
             $test['url'] = trim($req_url);
-            $test['domElement'] = trim($req_domelement);
-            $test['login'] = trim($req_login);
-            $test['password'] = trim($req_password);
-            $test['customHeaders'] = trim($req_customHeaders);
-            $test['runs'] = (int)$req_runs;
-            $test['fvonly'] = (int)$req_fvonly;
+            if (isset($req_domelement))
+              $test['domElement'] = trim($req_domelement);
+            if (isset($req_login))
+              $test['login'] = trim($req_login);
+            if (isset($req_password))
+              $test['password'] = trim($req_password);
+            if (isset($req_customHeaders))
+              $test['customHeaders'] = trim($req_customHeaders);
+            $test['runs'] = isset($req_runs) ? (int)$req_runs : 0;
+            $test['fvonly'] = isset($req_fvonly) ? (int)$req_fvonly : 0;
             if (isset($_REQUEST['rv']))
               $test['fvonly'] = $_REQUEST['rv'] ? 0 : 1;
-            $test['timeout'] = (int)$req_timeout;
+            if (isset($req_timeout))
+              $test['timeout'] = (int)$req_timeout;
             $maxTime = GetSetting('maxtime');
             if ($maxTime && $test['timeout'] > $maxTime)
               $test['timeout'] = (int)$maxTime;
-            $test['connections'] = (int)$req_connections;
+            $test['connections'] = isset($req_connections) ? (int)$req_connections : 0;
             if (isset($req_private)) {
               $test['private'] = $req_private;
             } elseif (GetSetting('defaultPrivate')) {
@@ -123,10 +128,14 @@
             } else {
               $test['private'] = 0;
             }
-            $test['web10'] = $req_web10;
-            $test['ignoreSSL'] = $req_ignoreSSL;
-            $test['script'] = trim($req_script);
-            $test['block'] = $req_block;
+            if (isset($req_web10))
+              $test['web10'] = $req_web10;
+            if (isset($req_ignoreSSL))
+              $test['ignoreSSL'] = $req_ignoreSSL;
+            if (isset($req_script))
+              $test['script'] = trim($req_script);
+            if (isset($req_block))
+              $test['block'] = $req_block;
             $test['blockDomains'] = isset($req_blockDomains) ? $req_blockDomains : "";
             $blockDomains = GetSetting('blockDomains');
             if ($blockDomains && strlen($blockDomains)) {
@@ -134,15 +143,19 @@
                 $test['blockDomains'] .= ' ';
               $test['blockDomains'] .= $blockDomains;
             }
-            $test['notify'] = trim($req_notify);
-            $test['video'] = $req_video;
+            if (isset($req_notify))
+              $test['notify'] = trim($req_notify);
+            if (isset($req_video))
+              $test['video'] = $req_video;
             $test['keepvideo'] = isset($req_keepvideo) && $req_keepvideo ? 1 : 0;
             $test['continuousVideo'] = isset($req_continuousVideo) && $req_continuousVideo ? 1 : 0;
             $test['renderVideo'] = isset($req_renderVideo) && $req_renderVideo ? 1 : 0;
-            $test['label'] = preg_replace('/[^\w\d \-_\.]/', '', trim($req_label));
-            $test['median_video'] = (int)$req_mv;
-            $test['ip'] = $req_addr;
-            $test['priority'] = (int)$req_priority;
+            if (isset($req_label))
+              $test['label'] = preg_replace('/[^\w\d \-_\.]/', '', trim($req_label));
+            $test['median_video'] = isset($req_mv) ? (int)$req_mv : 0;
+            if (isset($req_addr))
+              $test['ip'] = $req_addr;
+            $test['priority'] = isset($req_priority) ? (int)$req_priority : 0;
             if( isset($req_bwIn) && !isset($req_bwDown) )
                 $test['bwIn'] = (int)$req_bwIn;
             else
@@ -151,21 +164,25 @@
                 $test['bwOut'] = (int)$req_bwOut;
             else
                 $test['bwOut'] = (int)$req_bwUp;
-            $test['latency'] = (int)$req_latency;
-            $test['testLatency'] = (int)$req_latency;
+            $test['latency'] = isset($req_latency) ? (int)$req_latency : 0;
+            $test['testLatency'] = isset($req_latency) ? (int)$req_latency : 0;
             $test['plr'] = isset($req_plr) ? trim($req_plr) : 0;
-            $test['callback'] = $req_pingback;
+            if (isset($req_pingback))
+              $test['callback'] = $req_pingback;
             if (!$json && !isset($req_pingback) && isset($req_callback))
                 $test['callback'] = $req_callback;
-            $test['agent'] = $req_agent;
-            $test['aftEarlyCutoff'] = (int)$req_aftec;
-            $test['aftMinChanges'] = (int)$req_aftmc;
-            $test['tcpdump'] = $req_tcpdump;
-            $test['lighthouse'] = $req_lighthouse;
+            if (isset($req_agent))
+              $test['agent'] = $req_agent;
+            if (isset($req_tcpdump))
+              $test['tcpdump'] = $req_tcpdump;
+            if (isset($req_lighthouse))
+              $test['lighthouse'] = $req_lighthouse;
             $test['lighthouseTrace'] = isset($_REQUEST['lighthouseTrace']) && $_REQUEST['lighthouseTrace'] ? 1 : 0;
-            $test['timeline'] = $req_timeline;
+            if (isset($req_timeline))
+              $test['timeline'] = $req_timeline;
             $test['timelineStackDepth'] = array_key_exists('timelineStack', $_REQUEST) && $_REQUEST['timelineStack'] ? 5 : 0;
-            $test['swrender'] = $req_swrender;
+            if (isset($req_swrender))
+              $test['swrender'] = $req_swrender;
             $test['trace'] = array_key_exists('trace', $_REQUEST) && $_REQUEST['trace'] ? 1 : 0;
             if (isset($_REQUEST['trace']) &&
                 strlen($_REQUEST['traceCategories']) &&
@@ -173,35 +190,51 @@
                 trim($test['traceCategories']) != "*") {
               $test['traceCategories'] = $_REQUEST['traceCategories'];
             }                                                                                                           
-            $test['standards'] = $req_standards;
-            $test['netlog'] = $req_netlog;
-            $test['spdy3'] = $req_spdy3;
-            $test['noscript'] = $req_noscript;
-            $test['fullsizevideo'] = $req_fullsizevideo;
+            if (isset($req_standards))
+              $test['standards'] = $req_standards;
+            if (isset($req_netlog))
+              $test['netlog'] = $req_netlog;
+            if (isset($req_spdy3))
+              $test['spdy3'] = $req_spdy3;
+            if (isset($req_noscript))
+              $test['noscript'] = $req_noscript;
+            if (isset($req_fullsizevideo))
+              $test['fullsizevideo'] = $req_fullsizevideo;
             $test['thumbsize'] = isset($_REQUEST['thumbsize']) ? min(max(intval($_REQUEST['thumbsize']), 100), 2000) : GetSetting('thumbsize', null);
-            $test['blockads'] = $req_blockads;
-            $test['sensitive'] = $req_sensitive;
-            $test['type'] = trim($req_type);
-            $test['noopt'] = trim($req_noopt);
-            $test['noimages'] = trim($req_noimages);
-            $test['noheaders'] = trim($req_noheaders);
-            $test['view'] = trim($req_view);
-            $test['discard'] = max(min((int)$req_discard, $test['runs'] - 1), 0);
+            if (isset($req_blockads))
+              $test['blockads'] = $req_blockads;
+            if (isset($req_sensitive))
+              $test['sensitive'] = $req_sensitive;
+            if (isset($req_type))
+              $test['type'] = trim($req_type);
+            if (isset($req_noopt))
+              $test['noopt'] = trim($req_noopt);
+            if (isset($req_noimages))
+              $test['noimages'] = trim($req_noimages);
+            if (isset($req_noheaders))
+              $test['noheaders'] = trim($req_noheaders);
+            if (isset($req_view))
+              $test['view'] = trim($req_view);
+            if (isset($req_discard))
+              $test['discard'] = max(min((int)$req_discard, $test['runs'] - 1), 0);
             $test['queue_limit'] = 0;
-            $test['pngss'] = (int)$req_pngss;
-            $test['iq'] = (int)$req_iq;
+            $test['pngss'] = isset($req_pngss) ? (int)$req_pngss : 0;
+            $test['iq'] = isset($req_iq) ? (int)$req_iq : 0;
             $test['bodies'] = array_key_exists('bodies', $_REQUEST) && $_REQUEST['bodies'] ? 1 : 0;
             if (!array_key_exists('bodies', $_REQUEST) && GetSetting('bodies'))
               $test['bodies'] = 1;
-            $test['htmlbody'] = $req_htmlbody;
-            $test['time'] = (int)$req_time;
-            $test['clear_rv'] = (int)$req_clearRV;
+            if (isset($req_htmlbody))
+              $test['htmlbody'] = $req_htmlbody;
+            $test['time'] = isset($req_time) ? (int)$req_time : 0;
+            $test['clear_rv'] = isset($req_clearRV) ? (int)$req_clearRV : 0;
             $test['keepua'] = 0;
-            $test['benchmark'] = $req_benchmark;
-            $test['max_retries'] = min((int)$req_retry, 10);
+            if (isset($req_benchmark))
+              $test['benchmark'] = $req_benchmark;
+            $test['max_retries'] = isset($req_retry) ? min((int)$req_retry, 10) : 0;
             if (array_key_exists('keepua', $_REQUEST) && $_REQUEST['keepua'])
                 $test['keepua'] = 1;
-            $test['pss_advanced'] = $req_pss_advanced;
+            if (isset($req_pss_advanced))
+              $test['pss_advanced'] = $req_pss_advanced;
             $test['shard_test'] = $settings['shard_tests'];
             if (array_key_exists('shard', $_REQUEST))
               $test['shard_test'] = $_REQUEST['shard'];
