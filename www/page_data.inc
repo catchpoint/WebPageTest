@@ -70,8 +70,12 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
   $cacheVer = 7;
   $cacheFile = $localPaths->pageDataCacheFile($cacheVer);
   $ret = null;
-  if (gz_is_file($cacheFile))
+  if (gz_is_file($cacheFile)) {
     $ret = json_decode(gz_file_get_contents($cacheFile), true);
+    if (!isset($ret['result'])) {
+      $ret = null;
+    }
+  }
   
   if (!isset($ret) || !is_array($ret)) {
     $ret = loadPageData($localPaths->pageDataFile());
@@ -94,7 +98,7 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
       }
     }
 
-    if (isset($ret) && !$basic_results) {
+    if (!empty($ret) && !$basic_results) {
       $startOffset = array_key_exists('testStartOffset', $ret) ? intval(round($ret['testStartOffset'])) : 0;
       loadUserTimingData($ret, $localPaths->userTimedEventsFile());
 
@@ -291,7 +295,7 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
     }
     
     // For visual tests (black-box browser testing) use the visual metrics as the base timings
-    if (isset($ret) &&
+    if (!empty($ret) &&
         isset($ret['visualTest']) &&
         $ret['visualTest'] &&
         isset($ret['visualComplete'])) {
@@ -301,18 +305,20 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
     }
     
     // See if we have pcap-based versions of the various metrics
-    if ((!isset($ret['bytesIn']) || !$ret['bytesIn']) && isset($ret['pcapBytesIn']) && $ret['pcapBytesIn'])
-      $ret['bytesIn'] = $ret['pcapBytesIn'];
-    if ((!isset($ret['bytesInDoc']) || !$ret['bytesInDoc']) && isset($ret['pcapBytesIn']) && $ret['pcapBytesIn'])
-      $ret['bytesInDoc'] = $ret['pcapBytesIn'];
-    if ((!isset($ret['bytesOut']) || !$ret['bytesOut']) && isset($ret['pcapBytesOut']) && $ret['pcapBytesOut'])
-      $ret['bytesOut'] = $ret['pcapBytesOut'];
-    if ((!isset($ret['bytesOutDoc']) || !$ret['bytesOutDoc']) && isset($ret['pcapBytesOut']) && $ret['pcapBytesOut'])
-      $ret['bytesOutDoc'] = $ret['pcapBytesOut'];
+    if (!empty($ret)) {
+      if ((!isset($ret['bytesIn']) || !$ret['bytesIn']) && isset($ret['pcapBytesIn']) && $ret['pcapBytesIn'])
+        $ret['bytesIn'] = $ret['pcapBytesIn'];
+      if ((!isset($ret['bytesInDoc']) || !$ret['bytesInDoc']) && isset($ret['pcapBytesIn']) && $ret['pcapBytesIn'])
+        $ret['bytesInDoc'] = $ret['pcapBytesIn'];
+      if ((!isset($ret['bytesOut']) || !$ret['bytesOut']) && isset($ret['pcapBytesOut']) && $ret['pcapBytesOut'])
+        $ret['bytesOut'] = $ret['pcapBytesOut'];
+      if ((!isset($ret['bytesOutDoc']) || !$ret['bytesOutDoc']) && isset($ret['pcapBytesOut']) && $ret['pcapBytesOut'])
+        $ret['bytesOutDoc'] = $ret['pcapBytesOut'];
+    }
 
     $run = $localPaths->getRunNumber();
     $cached = $localPaths->isCachedResult();
-    if (isset($ret)) {
+    if (!empty($ret)) {
       $ret['run'] = $localPaths->getRunNumber();
       $ret['cached'] = $localPaths->isCachedResult() ? 1 : 0;
       $ret['step'] = $localPaths->getStepNumber();
@@ -371,20 +377,20 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
         }
         $ret['error'] = $testInfo['errors'][$run][$cached];
       }
+
+      if (is_array($ret) && isset($ret['result']) && !$basic_results)
+        gz_file_put_contents($cacheFile, json_encode($ret));
     }
-    
-    if (isset($ret) && is_array($ret) && !$basic_results)
-      gz_file_put_contents($cacheFile, json_encode($ret));
   }
   
-  if (isset($ret['testTiming']) &&
+  if (!empty($ret) && isset($ret['testTiming']) &&
       isset($testInfo['started']) &&
       $testInfo['completed'] &&
       $testInfo['completed'] > $testInfo['started']) {
     $ret['testTiming']['AllRunsDuration'] = ($testInfo['completed'] - $testInfo['started']) * 1000;
   }
 
-  if (isset($ret)) {
+  if (!empty($ret)) {
     if (!isset($ret['requestsFull']) && isset($ret['requests'])) {
       $ret['requestsFull'] = $ret['requests'];
     }
