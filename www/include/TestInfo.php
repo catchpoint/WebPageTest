@@ -38,7 +38,7 @@ class TestInfo {
     if (isset($test) && is_array($test) && isset($test['testinfo']["id"]))
       return new self($test['testinfo']["id"], $rootDirectory, $test);
     else
-      return null;
+      return new self('010101_0_0', $rootDirectory, $test);
   }
 
   /**
