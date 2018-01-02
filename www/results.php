@@ -20,7 +20,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
             include 'resultBatch.inc';
         } elseif( isset($test['testinfo']['cancelled']) ) {
             include 'testcancelled.inc';
-        } elseif( (isset($test['test']) && isset($test['test']['completeTime'])) || count($pageData) > 0 ) {
+        } elseif( isset($test['test']['completeTime']) || count($pageData) > 0 ) {
             if( @$test['test']['type'] == 'traceroute' ) {
                 include 'resultTraceroute.inc';
             } elseif( @$test['test']['type'] == 'lighthouse' ) {

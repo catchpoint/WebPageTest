@@ -147,7 +147,7 @@ if (!defined('BARE_UI') && isset($settings['alert']) && strlen($settings['alert'
 if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
 {
     // make sure the test is actually complete
-    if( (isset($test['test']) && isset($test['test']['completeTime'])) )
+    if(isset($test['test']['completeTime']))
     {
         if (!isset($testResults) || !isset($testInfo)) {
           $testInfo = TestInfo::fromFiles($testPath);

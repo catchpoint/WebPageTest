@@ -153,7 +153,7 @@ function GetTesterIndex($locInfo, &$testerIndex, &$testerCount, &$offline) {
   }
 }
 
-function StartTest($testId) {
+function StartTest($testId, $time) {
   $testPath = './' . GetTestPath($testId);
   $waiting_file = "$testPath/test.waiting";
   @unlink($waiting_file);
@@ -161,7 +161,6 @@ function StartTest($testId) {
   // flag the test with the start time
   $ini = file_get_contents("$testPath/testinfo.ini");
   if (stripos($ini, 'startTime=') === false) {
-    $time = time();
     $start = "[test]\r\nstartTime=" . gmdate("m/d/y G:i:s", $time);
     $out = str_replace('[test]', $start, $ini);
     file_put_contents("$testPath/testinfo.ini", $out);
@@ -297,7 +296,8 @@ function GetJob() {
           $testId = trim($matches[1]);
 
         if( isset($testId) ) {
-          StartTest($testId);
+          $time = time();
+          StartTest($testId, $time);
           $lock = LockTest($testId);
           if ($lock) {
             $testInfoJson = GetTestInfo($testId);
