@@ -674,7 +674,7 @@
                         }
                     }
                 }
-                else if( $test['batch_locations'] && count($test['multiple_locations']) )
+                else if( isset($test['batch_locations']) && $test['batch_locations'] && count($test['multiple_locations']) )
                 {
                     $test['id'] = CreateTest($test, $test['url'], 0, 1);
                     $test['batch_id'] = $test['id'];
@@ -1330,7 +1330,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             if( !isset($test['workdir']) && !isset($test['remoteUrl']) )
                 $error = "Invalid Location, please try submitting your test request again.";
 
-            if( strlen($test['type']) )
+            if( isset($test['type']) && strlen($test['type']) )
             {
                 if( $test['type'] == 'traceroute' )
                 {
@@ -1376,15 +1376,13 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                 }
 
                 // adjust the latency for any last-mile latency at the location
-                if( isset($test['latency']) && $locations[$test['location']]['latency'] )
+                if( isset($test['latency']) && isset($locations[$test['location']]['latency']) && $locations[$test['location']]['latency'] )
                     $test['testLatency'] = max(0, $test['latency'] - $locations[$test['location']]['latency'] );
             }
         }
     } elseif( !strlen($error) ) {
         $error = "Invalid URL, please try submitting your test request again.";
     }
-
-    return $ret;
 }
 
 /**
@@ -1974,7 +1972,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         $testInfo = "[test]\r\n";
         AddIniLine($testInfo, "fvonly", $test['fvonly']);
         AddIniLine($testInfo, "timeout", $test['timeout']);
-        $resultRuns = $test['runs'] - $test['discard'];
+        $resultRuns = isset($test['discard']) ? $test['runs'] - $test['discard'] : $test['runs'];
         AddIniLine($testInfo, "runs", $resultRuns);
         AddIniLine($testInfo, "location", "\"{$test['locationText']}\"");
         AddIniLine($testInfo, "loc", $test['location']);
@@ -1982,20 +1980,20 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         AddIniLine($testInfo, "batch", $batch);
         AddIniLine($testInfo, "batch_locations", $batch_locations);
         AddIniLine($testInfo, "sensitive", $test['sensitive']);
-        if( strlen($test['login']) )
+        if( isset($test['login']) && strlen($test['login']) )
             AddIniLine($testInfo, "authenticated", "1");
         AddIniLine($testInfo, "connections", $test['connections']);
-        if( strlen($test['script']) )
+        if( isset($test['script']) && strlen($test['script']) )
             AddIniLine($testInfo, "script", "1");
-        if( strlen($test['notify']) )
+        if( isset($test['notify']) && strlen($test['notify']) )
             AddIniLine($testInfo, "notify", $test['notify']);
-        if( strlen($test['video']) )
+        if( isset($test['video']) && strlen($test['video']) )
             AddIniLine($testInfo, "video", "1");
-        if( strlen($test['uid']) )
+        if( isset($test['uid']) && strlen($test['uid']) )
             AddIniLine($testInfo, "uid", $test['uid']);
-        if( strlen($test['owner']) )
+        if( isset($test['owner']) && strlen($test['owner']) )
             AddIniLine($testInfo, "owner", $test['owner']);
-        if( strlen($test['type']) )
+        if( isset($test['type']) && strlen($test['type']) )
             AddIniLine($testInfo, "type", $test['type']);
 
         if( isset($test['connectivity']) )
@@ -2008,7 +2006,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         }
 
         $testInfo .= "\r\n[runs]\r\n";
-        if( $test['median_video'] )
+        if( isset($test['median_video']) && $test['median_video'] )
             AddIniLine($testInfo, "median_video", "1");
 
         file_put_contents("{$test['path']}/testinfo.ini",  $testInfo);
@@ -2018,51 +2016,52 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         {
             // build up the actual test commands
             $testFile = '';
-            if( strlen($test['domElement']) )
+            if( isset($test['domElement']) && strlen($test['domElement']) )
                 AddIniLine($testFile, 'DOMElement', $test['domElement']);
-            if( $test['fvonly'] )
+            if( isset($test['fvonly']) && $test['fvonly'] )
                 AddIniLine($testFile, 'fvonly', '1');
-            if( $test['timeout'] )
+            if( isset($test['timeout']) && $test['timeout'] )
                 AddIniLine($testFile, 'timeout', $test['timeout']);
-            if( $test['web10'] )
+            if( isset($test['web10']) && $test['web10'] )
                 AddIniLine($testFile, 'web10', '1');
-            if( $test['ignoreSSL'] )
+            if( isset($test['ignoreSSL']) && $test['ignoreSSL'] )
                 AddIniLine($testFile, 'ignoreSSL', '1');
-            if( $test['tcpdump'] )
+            if( isset($test['tcpdump']) && $test['tcpdump'] )
                 AddIniLine($testFile, 'tcpdump', '1');
-            if( $test['standards'] )
+            if( isset($test['standards']) && $test['standards'] )
                 AddIniLine($testFile, 'standards', '1');
-            if( $test['timeline'] ) {
+            if( isset($test['timeline']) && $test['timeline'] ) {
                 AddIniLine($testFile, 'timeline', '1');
-                AddIniLine($testFile, 'timelineStackDepth', $test['timelineStackDepth']);
+                if (isset($test['timelineStackDepth']))
+                  AddIniLine($testFile, 'timelineStackDepth', $test['timelineStackDepth']);
             }
-            if( $test['trace'] )
+            if( isset($test['trace']) && $test['trace'] )
                 AddIniLine($testFile, 'trace', '1');
             if (isset($test['traceCategories']))
                 AddIniLine($testFile, 'traceCategories', $test['traceCategories']);
-            if( $test['swrender'] )
+            if( isset($test['swrender']) && $test['swrender'] )
                 AddIniLine($testFile, 'swRender', '1');
-            if( $test['netlog'] )
+            if( isset($test['netlog']) && $test['netlog'] )
                 AddIniLine($testFile, 'netlog', '1');
-            if( $test['spdy3'] )
+            if( isset($test['spdy3']) && $test['spdy3'] )
                 AddIniLine($testFile, 'spdy3', '1');
-            if( $test['noscript'] )
+            if( isset($test['noscript']) && $test['noscript'] )
                 AddIniLine($testFile, 'noscript', '1');
-            if( $test['fullsizevideo'] )
+            if( isset($test['fullsizevideo']) && $test['fullsizevideo'] )
                 AddIniLine($testFile, 'fullSizeVideo', '1');
             if (isset($test['thumbsize']))
                 AddIniLine($testFile, 'thumbsize', $test['thumbsize']);
-            if( $test['blockads'] )
+            if( isset($test['blockads']) && $test['blockads'] )
                 AddIniLine($testFile, 'blockads', '1');
-            if( $test['video'] )
+            if( isset($test['video']) && $test['video'] )
                 AddIniLine($testFile, 'Capture Video', '1');
-            if (GetSetting('save_mp4') || $test['keepvideo'])
+            if (GetSetting('save_mp4') || (isset($test['keepvideo']) && $test['keepvideo']))
                 AddIniLine($testFile, 'keepvideo', '1');
-            if ($test['renderVideo'])
+            if (isset($test['renderVideo']) && $test['renderVideo'])
                 AddIniLine($testFile, 'renderVideo', '1');
-            if( strlen($test['type']) )
+            if( isset($test['type']) && strlen($test['type']) )
                 AddIniLine($testFile, 'type', $test['type']);
-            if( $test['block'] ) {
+            if( isset($test['block']) && $test['block'] ) {
                 $block = $test['block'];
                 if (isset($forceBlock))
                   $block .= " $forceBlock";
@@ -2070,16 +2069,16 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             } elseif (isset($forceBlock)) {
                 AddIniLine($testFile, 'block', $forceBlock);
             }
-            if (strlen($test['blockDomains'])) {
+            if (isset($test['blockDomains']) && strlen($test['blockDomains'])) {
                 AddIniLine($testFile, 'blockDomains', $test['blockDomains']);
             }
-            if( $test['noopt'] )
+            if( isset($test['noopt']) && $test['noopt'] )
                 AddIniLine($testFile, 'noopt', '1');
-            if( $test['noimages'] )
+            if( isset($test['noimages']) && $test['noimages'] )
                 AddIniLine($testFile, 'noimages', '1');
-            if( $test['noheaders'] )
+            if( isset($test['noheaders']) && $test['noheaders'] )
                 AddIniLine($testFile, 'noheaders', '1');
-            if( $test['discard'] )
+            if( isset($test['discard']) && $test['discard'] )
                 AddIniLine($testFile, 'discard', $test['discard']);
             AddIniLine($testFile, 'runs', $test['runs']);
 
@@ -2095,29 +2094,29 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'browserExe', $test['browserExe']);
             if( isset($test['browser']) && strlen($test['browser']) )
                 AddIniLine($testFile, 'browser', $test['browser']);
-            if( $test['pngss'] || $settings['pngss'] )
+            if( (isset($test['pngss']) && $test['pngss']) || (isset($settings['pngss']) && $settings['pngss']) )
                 AddIniLine($testFile, 'pngScreenShot', '1');
-            if( $test['iq'] )
+            if( isset($test['iq']) && $test['iq'] )
                 AddIniLine($testFile, 'imageQuality', $test['iq']);
-            elseif( $settings['iq'] )
+            elseif( isset($settings['iq']) && $settings['iq'] )
                 AddIniLine($testFile, 'imageQuality', $settings['iq']);
-            if( $test['bodies'] )
+            if( isset($test['bodies']) && $test['bodies'] )
                 AddIniLine($testFile, 'bodies', '1');
-            if( $test['htmlbody'] )
+            if( isset($test['htmlbody']) && $test['htmlbody'] )
                 AddIniLine($testFile, 'htmlbody', '1');
-            if( $test['time'] )
+            if( isset($test['time']) && $test['time'] )
                 AddIniLine($testFile, 'time', $test['time']);
-            if( $test['clear_rv'] )
+            if( isset($test['clear_rv']) && $test['clear_rv'] )
                 AddIniLine($testFile, 'clearRV', $test['clear_rv']);
-            if( $test['keepua'] )
+            if( isset($test['keepua']) && $test['keepua'] )
                 AddIniLine($testFile, 'keepua', '1');
-            if( $test['mobile'] )
+            if( isset($test['mobile']) && $test['mobile'] )
                 AddIniLine($testFile, 'mobile', '1');
-            if( $test['lighthouse'] )
+            if( isset($test['lighthouse']) && $test['lighthouse'] )
                 AddIniLine($testFile, 'lighthouse', '1');
-            if( $test['lighthouseTrace'] )
+            if( isset($test['lighthouseTrace']) && $test['lighthouseTrace'] )
                 AddIniLine($testFile, 'lighthouseTrace', '1');
-            if( $test['debug'] )
+            if( isset($test['debug']) && $test['debug'] )
                 AddIniLine($testFile, 'debug', '1');
             if( isset($test['throttle_cpu']) && $test['throttle_cpu'] > 0.0 )
                 AddIniLine($testFile, 'throttle_cpu', $test['throttle_cpu']);
@@ -2131,9 +2130,9 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'browser_width', $test['browser_width']);
             if( isset($test['browser_height']) && $test['browser_height'] > 0 )
                 AddIniLine($testFile, 'browser_height', $test['browser_height']);
-            if( $test['clearcerts'] )
+            if( isset($test['clearcerts']) && $test['clearcerts'] )
                 AddIniLine($testFile, 'clearcerts', '1');
-            if( $test['orientation'] )
+            if( isset($test['orientation']) && $test['orientation'] )
                 AddIniLine($testFile, 'orientation', $test['orientation']);
             if (array_key_exists('continuousVideo', $test) && $test['continuousVideo'])
                 AddIniLine($testFile, 'continuousVideo', '1');
