@@ -189,19 +189,19 @@ else
                                       // tokenize the line
                                       $line_data = tokenizeLogLine($line);
 
-                                      $date       = $line_data['date'];
-                                      $ip         = $line_data['ip'];
-                                      $guid       = $line_data['guid'];
-                                      $url        = htmlentities($line_data['url']);
-                                      $location   = $line_data['location'];
-                                      $private    = $line_data['private'];
-                                      $testUID    = $line_data['testUID'];
-                                      $testUser   = $line_data['testUser'];
-                                      $video      = $line_data['video'];
-                                      $label      = htmlentities($line_data['label']);
-                                      $o          = $line_data['o'];
-                                      $key        = $line_data['key'];
-                                      $count      = $line_data['count'];
+                                      $date       = @$line_data['date'];
+                                      $ip         = @$line_data['ip'];
+                                      $guid       = @$line_data['guid'];
+                                      $url        = htmlentities(@$line_data['url']);
+                                      $location   = @$line_data['location'];
+                                      $private    = @$line_data['private'];
+                                      $testUID    = @$line_data['testUID'];
+                                      $testUser   = @$line_data['testUser'];
+                                      $video      = @$line_data['video'];
+                                      $label      = htmlentities(@$line_data['label']);
+                                      $o          = @$line_data['o'];
+                                      $key        = @$line_data['key'];
+                                      $count      = @$line_data['count'];
 
                                       if (!$location) {
                                           $location = '';
