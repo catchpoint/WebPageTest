@@ -60,6 +60,7 @@ $lighthouse = parse_ini_file('./settings/lighthouse.ini', true);
             <input type="hidden" name="type" value="lighthouse">
 
             <h2 class="cufon-dincond_black">Run a Chrome Lighthouse Test</h2>
+            <p>Run <a href="https://developers.google.com/web/tools/lighthouse/">Lighthouse</a> on an emulated mobile device on a 3G network. Running the test will give you the top level scores for all the categories Lighthouse runs on, as well as individual level reports.</p>
 
             <div id="test_box-container">
                 <div id="analytical-review" class="test_box">
