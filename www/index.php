@@ -441,6 +441,19 @@ $loc = ParseLocations($locations);
                                         </label>
                                         <textarea id="customHeaders" type="text" class="text" name="customHeaders" value=""></textarea>
                                     </li>
+                                    <?php
+                                    if ($admin) {
+                                    ?>
+                                    <li>
+                                        <label for="injectScript">
+                                            Inject Script<br>
+                                            <small>Javascript to run after the document has started loading.</small>
+                                        </label>
+                                        <textarea id="injectScript" type="text" class="text" name="injectScript" value=""></textarea>
+                                    </li>
+                                    <?php
+                                    }
+                                    ?>
                                 </ul>
                             </div>
                             <div id="advanced-chrome" class="test_subbox ui-tabs-hide">

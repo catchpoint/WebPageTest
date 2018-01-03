@@ -111,6 +111,8 @@
               $test['password'] = trim($req_password);
             if (isset($req_customHeaders))
               $test['customHeaders'] = trim($req_customHeaders);
+            if (isset($_REQUEST['injectScript']) && strlen($_REQUEST['injectScript']))
+              $test['injectScript'] = $_REQUEST['injectScript'];
             $test['runs'] = isset($req_runs) ? (int)$req_runs : 0;
             $test['fvonly'] = isset($req_fvonly) ? (int)$req_fvonly : 0;
             if (isset($_REQUEST['rv']))
@@ -2069,6 +2071,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             if (isset($test['blockDomains']) && strlen($test['blockDomains'])) {
                 AddIniLine($testFile, 'blockDomains', $test['blockDomains']);
             }
+            if (isset($test['injectScript']))
+                AddIniLine($testFile, 'injectScript', base64_encode($test['injectScript']));
             if( isset($test['noopt']) && $test['noopt'] )
                 AddIniLine($testFile, 'noopt', '1');
             if( isset($test['noimages']) && $test['noimages'] )
