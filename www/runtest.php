@@ -1330,14 +1330,11 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             if( !isset($test['workdir']) && !isset($test['remoteUrl']) )
                 $error = "Invalid Location, please try submitting your test request again.";
 
-            if( isset($test['type']) && strlen($test['type']) )
+            if( isset($test['type']) && strlen($test['type']) && $test['type'] === 'traceroute' )
             {
-                if( $test['type'] == 'traceroute' )
-                {
-                    // make sure we're just passing a host name
-                    $parts = parse_url($test['url']);
-                    $test['url'] = $parts['host'];
-                }
+                // make sure we're just passing a host name
+                $parts = parse_url($test['url']);
+                $test['url'] = $parts['host'];
             }
             else
             {
