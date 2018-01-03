@@ -441,9 +441,6 @@ $loc = ParseLocations($locations);
                                         </label>
                                         <textarea id="customHeaders" type="text" class="text" name="customHeaders" value=""></textarea>
                                     </li>
-                                    <?php
-                                    if ($admin) {
-                                    ?>
                                     <li>
                                         <label for="injectScript">
                                             Inject Script<br>
@@ -451,9 +448,6 @@ $loc = ParseLocations($locations);
                                         </label>
                                         <textarea id="injectScript" type="text" class="text" name="injectScript" value=""></textarea>
                                     </li>
-                                    <?php
-                                    }
-                                    ?>
                                 </ul>
                             </div>
                             <div id="advanced-chrome" class="test_subbox ui-tabs-hide">
