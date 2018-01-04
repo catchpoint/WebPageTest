@@ -48,6 +48,7 @@ function getRequestsForStep($localPaths, $rootUrlGenerator, &$has_secure_request
       GetDevToolsRequestsForStep($localPaths, $requests, $pageData);
       if (isset($requests)) {
         FixUpRequestTimes($requests);
+        AddResponseBodyFlags($requests, $bodies_file_name);
         AddScriptTimings($requests, $script_timing_file_name);
       }
     }
