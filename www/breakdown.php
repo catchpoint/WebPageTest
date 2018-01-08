@@ -123,7 +123,7 @@ if(!$testInfo->isFirstViewOnly()) {
         <a href="#top" id="back_to_top">Back to top</a>
 
         <!--Load the AJAX API-->
-        <script type="text/javascript" src="<?php echo $GLOBALS['ptotocol']; ?>://www.google.com/jsapi"></script>
+        <script type="text/javascript" src="//www.google.com/jsapi"></script>
         <?php
         if ($isMultistep) {
             echo '<script type="text/javascript" src="/js/jk-navigation.js"></script>';

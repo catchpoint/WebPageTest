@@ -787,7 +787,7 @@ function DisplayGraphs() {
       }
     }
     ?>
-    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript" src="//www.google.com/jsapi"></script>
     <script type="text/javascript">
         google.load('visualization', '1', {'packages':['table', 'corechart']});
         google.setOnLoadCallback(drawCharts);
