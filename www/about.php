@@ -48,6 +48,14 @@ $page_description = "More information about WebPagetest website speed testing an
                 <?php
                 }
                 ?>
+                <p>
+                    <a href="https://github.com/WPO-Foundation/webpagetest/releases/tag/WebPageTest-<?php echo VER_WEBPAGETEST ?>">WebPageTest v <?php echo VER_WEBPAGETEST ?></a><br />
+                </p>
+                    Agents versions are :<pre><p><b>UPDATE.INI</b></p><p>
+                <?php include ("./work/update/update.ini"); ?>
+                </p>
+                <p><b>WPTUPDATE.INI</b></p><p><?php include ("./work/update/wptupdate.ini"); ?>
+                </p></pre>
             </div>
             
             <?php include('footer.inc'); ?>
