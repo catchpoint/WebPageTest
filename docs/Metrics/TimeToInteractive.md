@@ -8,9 +8,12 @@ TTI is (currently) a Chrome-specific measurement that measures the time until th
 TTI is built on top of a collection of other measurements, some of which are currently only available in Chrome:
 
 ### Time to First Contentful Paint
-The measurement is of the first paint of text or an image.
+The measurement is of the first paint of text or an image.  For browsers that don't report First Contentful Paint as a metric, the start render time is used in it's place (time when the first non-white content is displayed).
 
 Chrome exposes this measurement as a "blink.user_timing" trace event with a name of "firstContentfulPaint".  
+
+### DOM Content Loaded
+Browser event that is fired when the HTML parser has reached the end of the document (executed all blocking scripts).  Fully described [here](https://developer.mozilla.org/en-US/docs/Web/Events/DOMContentLoaded).
 
 ### Interactive Window
 The browser's main thread is considered "interactive" when it is not blocked for more than **50ms** by any single task so it will be able to respond to user input within 50ms.  An interactive window is a period of **at least 5 seconds** where there are no main-thread tasks that take more than 50ms.
@@ -19,11 +22,11 @@ The browser's main thread is considered "interactive" when it is not blocked for
 At any point in time this is the number of outstanding requests.
 
 ## Time to Consistently Interactive Calculation
-1. Start looking for TTI at the *first contentful paint*
+1. Start looking for TTI at the larger of *first contentful paint* or *DOM Content Loaded*
 2. Look for the first *interactive window* where there is a contiguous period of 5 seconds fully contained within the interactive window with no more than 2 *in-flight requests*
-3. TTI is the start of the *interactive window* from step 2 or the *first contentful paint*, whichever is later
+3. TTI is the start of the *interactive window* from step 2 or the search starting point, whichever is later
 
 ## Time to First Interactive Calculation
-1. Start looking for TTI at the *first contentful paint*
+1. Start looking for TTI at the larger of *first contentful paint* or *DOM Content Loaded*
 2. Look for the first *interactive window* where there is a contiguous period of 5 seconds fully contained within the interactive window regardless of the number of *in-flight requests*
-3. TTI is the start of the *interactive window* from step 2 or the *first contentful paint*, whichever is later
+3. TTI is the start of the *interactive window* from step 2 or the search starting point, whichever is later
