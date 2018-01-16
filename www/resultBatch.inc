@@ -151,7 +151,6 @@ else
         $gaTemplate = 'Bulk Result';
         include ('head.inc');
         ?>
-        <link rel="stylesheet" href="/video/video-js.3.2.0/video-js.min.css" type="text/css">
         <style type="text/css">
             .player
             {
@@ -167,12 +166,8 @@ else
                 width: 100%;
                 height: 380px;
             }
-            .vjs-default-skin .vjs-controls {height: 0;}
-            .vjs-default-skin .vjs-mute-control {display: none;}
-            .vjs-default-skin .vjs-volume-control {display: none;}
         </style>
         </style>
-        <script type="text/javascript" src="/video/video-js.3.2.0/video.min.js"></script>
     </head>
     <body>
         <div class="page">
@@ -1706,35 +1701,11 @@ function VideoHtml($id)
         list($width, $height) = getimagesize("./$dir/video.png");
     }
     
-    echo "<script>\n";
-    if (array_key_exists('html', $_REQUEST) && $_REQUEST['html'])
-        echo "_V_.options.techOrder = ['html5', 'flash'];\n";
-    else
-        echo "_V_.options.techOrder = ['flash', 'html5'];\n";
-    echo "_V_.options.flash.swf = '/video/player/flowplayer-3.2.16.swf';\n";
-    echo "_V_.options.flash.flashVars = {config:\"{";
-    echo "'clip':{'scaling':'fit'},";
-    echo "'plugins':{'controls':{'volume':false,'mute':false,'stop':true,'tooltips':{'buttons':true,'fullscreen':'Enter fullscreen mode'}}},";
-    echo "'canvas':{'backgroundColor':'#000000','backgroundGradient':'none'},";
-    if ($hasThumb) {
-        echo "'playlist':[{'url':'/$dir/video.png'},{'url':'/$dir/video.mp4','autoPlay':false,'autoBuffering':false}]";
-    } else {
-        echo "'playlist':[{'url':'/$dir/video.mp4','autoPlay':false,'autoBuffering':true}]";
-    }
-    echo "}\"};\n";
-    echo "_V_.options.flash.params = {
-           allowfullscreen: 'true',
-           wmode: 'transparent',
-           allowscriptaccess: 'always'
-       };
-       _V_.options.flash.attributes={};\n";
-    echo "</script>\n";
-        
-    echo "<video id=\"player\" class=\"player video-js vjs-default-skin\" controls
+    echo "<video id=\"player\" controls
       preload=\"auto\" width=\"$width\" height=\"$height\"";
     if ($hasThumb)
         echo " poster=\"/$dir/video.png\"";
-    echo "data-setup=\"{}\">
+    echo ">
         <source src=\"/$dir/video.mp4\" type='video/mp4'>
     </video>";
 
