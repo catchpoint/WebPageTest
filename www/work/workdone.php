@@ -465,11 +465,22 @@ function ExtractZipFile($file, $testPath) {
   logTestMsg($id, "Extracting $zipsize byte uploaded file '$file' to '$testPath'");
   $zip = new ZipArchive();
   if ($zip->open($file) === TRUE) {
-    $extractPath = realpath($testPath);
-    if ($extractPath !== false) {
-      if (!$zip->extractTo($extractPath))
-        logTestMsg($id, "Error extracting uploaded zip file '$file' to '$testPath'");
-      $zip->close();
+    $valid = true;
+    // Make sure all of the uploaded files are appropriate
+    for ($i=0; $i < $zip->numFiles; $i++) { 
+      $entry = $zip->getNameIndex($i); 
+      if (substr($entry, -1) == '/') continue; // skip directories 
+      $fileName = basename($entry);
+      if (!validateUploadFileName($fileName))
+        $valid = false;
+    }
+    if ($valid) {
+      $extractPath = realpath($testPath);
+      if ($extractPath !== false) {
+        if (!$zip->extractTo($extractPath))
+          logTestMsg($id, "Error extracting uploaded zip file '$file' to '$testPath'");
+        $zip->close();
+      }
     }
   } else {
     logTestMsg($id, "Error opening uploaded zip file '$file'");
