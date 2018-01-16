@@ -24,7 +24,11 @@ if (isset($_GET['bodyid'])) {
 
 // get the actual body
 if ($request || $body_id) {
-  $bodies_file = $testPath . '/' . $run . $cachedText . '_bodies.zip';
+  $step = "";
+  if (isset($_GET['step'])) {
+    $step = "_" . trim($_GET['step']);
+  }
+  $bodies_file = $testPath . '/' . $run . $cachedText . $step . '_bodies.zip';
   if (is_file($bodies_file)) {
     $zip = new ZipArchive;
     if ($zip->open($bodies_file) === TRUE) {
