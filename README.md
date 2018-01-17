@@ -1,6 +1,6 @@
 This is the official repository for the [WebPagetest](https://www.webpagetest.org/) web performance testing code.
 
-If you are looking to install your own instance, I recommend grabbing the latest [private instance release](https://sites.google.com/a/webpagetest.org/docs/private-instances).
+If you are looking to install your own instance, I recommend grabbing the latest [private instance release](https://github.com/WPO-Foundation/webpagetest-docs/blob/master/user/Private%20Instances/README.md).
 
 The platform is basically split into two parts:
 
