@@ -290,7 +290,7 @@ else
             echo "<statusCode>200</statusCode>\n";
             echo "<statusText>Ok</statusText>\n";
             if( strlen($_REQUEST['r']) )
-                echo "<requestId>" . htmlentities($_REQUEST['r'], ENT_QUOTES, "UTF-8") . "</requestId>\n";
+                echo "<requestId>{$_REQUEST['r']}</requestId>\n";
             echo "<data>\n";
             echo "<videoId>$id</videoId>\n";
             echo "<xmlUrl>$protocol://$host$uri/view.php?f=xml&id=$id</xmlUrl>\n";
@@ -325,7 +325,7 @@ else
             echo "<statusCode>400</statusCode>\n";
             echo "<statusText>$error</statusText>\n";
             if( strlen($_REQUEST['r']) )
-                echo "<requestId>" . htmlentities($_REQUEST['r'], ENT_QUOTES, "UTF-8") . "</requestId>\n";
+                echo "<requestId>{$_REQUEST['r']}</requestId>\n";
             echo "</response>\n";
         }
         elseif( $json )
