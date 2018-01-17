@@ -43,7 +43,7 @@
     if(array_key_exists("bgcolor", $_REQUEST)) {
         $bgcolor = htmlentities($_REQUEST["bgcolor"], ENT_QUOTES, "UTF-8");
     }
-    if(array_key_exists("color" $_REQUEST)){
+    if(array_key_exists("color", $_REQUEST)){
         $color = htmlentities($_REQUEST["color"], ENT_QUOTES, "UTF-8");
     }
     if(array_key_exists("autoplay", $_REQUEST) && $_REQUEST["autoplay"]) {
