@@ -1,5 +1,5 @@
 <?php
-require_once('archive.inc');
+require_once(__DIR__ . '/archive.inc');
 
 if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('RestoreTest');
@@ -3053,7 +3053,10 @@ function MakeUTF8($mixed) {
       $mixed[$key] = MakeUTF8($value);
     }
   } elseif (is_string($mixed)) {
-    $encoding = mb_detect_encoding($mixed);
+    $encoding = mb_detect_encoding($mixed, mb_detect_order(), true);
+    if ($encoding == FALSE) {
+      return '';
+    }
     if ($encoding != 'UTF-8') {
       return mb_convert_encoding($mixed, 'UTF-8', $encoding);
     }

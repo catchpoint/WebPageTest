@@ -162,7 +162,7 @@ class HttpArchiveGenerator
         $secure = false;
         $requests = getRequests($this->testInfo->getId(), $this->testInfo->getRootDirectory(), $run, $cached, $secure, true, $stepData['step']);
         foreach ($requests as &$r) {
-            $entries[] = $this->getEntriesFor($stepData, $pd, $r, $bodyNamesArray);
+            $entries[] = $this->getEntriesFor($stepData, $pd, $r, $zip, $bodyNamesArray);
         }
 
         if (isset($zip)) {
@@ -194,10 +194,10 @@ class HttpArchiveGenerator
                 }
             }
         }
-        return array('bodiesZipFile' => $zip, 'bodyNamesArray' => $body_names);
+        return array($zip, $body_names);
     }
 
-    private function getEntriesFor($stepData, $pageData, $requestData, $bodyNamesArray) {
+    private function getEntriesFor($stepData, $pageData, $requestData, $zip, $bodyNamesArray) {
 
         $run = $stepData['run'];
         $cached = $stepData['cached'];
@@ -326,17 +326,23 @@ class HttpArchiveGenerator
             $name = null;
             if (isset($requestData['body_id'])) {
                 $hash = sha1($requestData['body_id']);
-                if (isset($body_names[$hash]))
+                if (isset($bodyNamesArray[$hash]))
                     $name = $bodyNamesArray[$hash];
             }
             if (!isset($name) && isset($requestData['request_id'])) {
                 $hash = sha1($requestData['request_id']);
-                if (isset($body_names[$hash]))
+                if (isset($bodyNamesArray[$hash]))
                     $name = $bodyNamesArray[$hash];
             }
             if (isset($name)) {
                 $body = $zip->getFromName($name);
-                $response['content']['text'] = MakeUTF8($body);
+                $encoding = mb_detect_encoding($body, mb_detect_order(), true);
+                if ($encoding !== FALSE) {
+                    if ($encoding != 'UTF-8') {
+                        $body = mb_convert_encoding($mixed, 'UTF-8', $encoding);
+                    }
+                    $response['content']['text'] = $body;
+                }
             }
         }
 

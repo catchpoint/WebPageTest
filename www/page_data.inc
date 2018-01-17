@@ -1,6 +1,6 @@
 <?php
-require_once 'devtools.inc.php';
-require_once __DIR__ . '/include/TestPaths.php';
+require_once(__DIR__ . '/devtools.inc.php');
+require_once(__DIR__ . '/include/TestPaths.php');
 require_once(__DIR__ . '/video/visualProgress.inc.php');
 
 /**

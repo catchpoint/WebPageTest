@@ -1,7 +1,7 @@
 <?php
-require_once('testStatus.inc');
-require_once('logging.inc');
-require_once('common_lib.inc');
+require_once(__DIR__ . '/testStatus.inc');
+require_once(__DIR__ . '/logging.inc');
+require_once(__DIR__ . '/common_lib.inc');
 
 /**
 * See if the file should be skipped when archiving (usually just cache files)

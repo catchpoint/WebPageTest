@@ -3,7 +3,7 @@ if(extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('GetVisualProgress');
     newrelic_add_custom_tracer('GetImageHistogram');
 }
-require_once('devtools.inc.php');
+require_once(__DIR__ . '/../devtools.inc.php');
 
 /**
 * Calculate the progress for all of the images in a given directory
