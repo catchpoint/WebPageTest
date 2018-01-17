@@ -192,7 +192,7 @@
         <noscript>
             <meta http-equiv="refresh" content="10" />
         </noscript>
-        <script language="JavaScript">
+        <script>
             setTimeout("window.location.reload(true)", 10000);
         </script>
         <?php
@@ -212,20 +212,26 @@
         <style type="text/css">
             .content h2 {
                 font-size: 1.5em;
-                color: <?php echo $color; ?>;
+                <?php
+                echo "color: $color;";
+                ?>
             }
             div.content
             {
                 text-align:center;
-                background-color: <?php echo $bgcolor; ?>;
-                color: <?php echo $color; ?>;
+                <?php
+                echo "background-color: $bgcolor;" . PHP_EOL;
+                echo "color: $color;";
+                ?>
                 font-family: arial,sans-serif;
                 padding: 0px 25px;
             }
             .link
             {
                 text-decoration: underline;
-                color: <?php echo $color; ?>;
+                <?php
+                echo "color: $color;";
+                ?>
             }
             #player
             {
@@ -239,8 +245,10 @@
             }
             #embed
             {
-                background-color: <?php echo $bgcolor; ?>;
-                color: <?php echo $color; ?>;
+                <?php
+                echo "background-color: $bgcolor;" . PHP_EOL;
+                echo "color: $color;";
+                ?>
                 font-family: arial,sans-serif;
                 padding: 20px;
             }
@@ -259,11 +267,15 @@
             {
               clear: both;
               float: right;
-              color: <?php echo $lightcolor; ?>;
+              <?php
+              echo "color: $lightcolor;";
+              ?>
             }
             #testmode a.link
             {
-              color: <?php echo $lightcolor; ?>;
+              <?php
+              echo "color: $lightcolor;";
+              ?>
             }
             <?php
                 if($embed) {
@@ -329,7 +341,7 @@
                           </video>";
 
                     if(!$embed) {
-                        echo "<br><a class=\"link\" href=\"/video/download.php?id=$videoId\">Download</a> | <a class="link" href="javascript:ShowEmbed()">Embed</a>";
+                        echo "<br><a class=\"link\" href=\"/video/download.php?id=$videoId\">Download</a> | <a class=\"link\" href=\"javascript:ShowEmbed()\">Embed</a>";
 
                         $protocol = ((isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on") || (isset($_SERVER["HTTP_SSL"]) && $_SERVER["HTTP_SSL"] == "On")) ? "https" : "http";
                         $dataText = "View as data comparison";
