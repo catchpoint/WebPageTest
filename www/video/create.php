@@ -81,8 +81,8 @@ else
         if( strlen($_REQUEST['end']) )
             $endTime = trim($_REQUEST['end']);
         $videoIdExtra = "";
-        $bgColor = isset($_REQUEST['bg']) ? $_REQUEST['bg'] : '000000';
-        $textColor = isset($_REQUEST['text']) ? $_REQUEST['text'] : 'ffffff';
+        $bgColor = isset($_REQUEST['bg']) ? htmlspecialchars($_REQUEST['bg']) : '000000';
+        $textColor = isset($_REQUEST['text']) ? htmlspecialchars($_REQUEST['text']) : 'ffffff';
 
         $compTests = explode(',', $_REQUEST['tests']);
         foreach($compTests as $t)
@@ -290,7 +290,7 @@ else
             echo "<statusCode>200</statusCode>\n";
             echo "<statusText>Ok</statusText>\n";
             if( strlen($_REQUEST['r']) )
-                echo "<requestId>{$_REQUEST['r']}</requestId>\n";
+                echo "<requestId>" . htmlspecialchars($_REQUEST['r']) . "</requestId>\n";
             echo "<data>\n";
             echo "<videoId>$id</videoId>\n";
             echo "<xmlUrl>$protocol://$host$uri/view.php?f=xml&id=$id</xmlUrl>\n";
@@ -325,7 +325,7 @@ else
             echo "<statusCode>400</statusCode>\n";
             echo "<statusText>$error</statusText>\n";
             if( strlen($_REQUEST['r']) )
-                echo "<requestId>{$_REQUEST['r']}</requestId>\n";
+                echo "<requestId>" . htmlspecialchars($_REQUEST['r']) . "</requestId>\n";
             echo "</response>\n";
         }
         elseif( $json )

@@ -5,7 +5,7 @@ if (isset($_REQUEST['id']) && !preg_match('/^[\w\.\-_]+$/', $_REQUEST['id'])) {
   header("HTTP/1.0 404 Not Found");
   die();
 }
-$videoId = $_REQUEST['id'];
+$videoId = htmlspecialchars($_REQUEST['id']);
 $valid = false;
 $done = false;
 $embed = false;
@@ -25,9 +25,9 @@ if (array_key_exists('data', $_REQUEST) && $_REQUEST['data']) {
   $displayData = true;
 }
 if (array_key_exists('bgcolor', $_REQUEST))
-    $bgcolor = $_REQUEST['bgcolor'];
+    $bgcolor = htmlspecialchars($_REQUEST['bgcolor']);
 if (array_key_exists('color', $_REQUEST))
-    $color = $_REQUEST['color'];
+    $color = htmlspecialchars($_REQUEST['color']);
 $autoplay = 'false';
 if (array_key_exists('autoplay', $_REQUEST) && $_REQUEST['autoplay'])
     $autoplay = 'true';
@@ -130,7 +130,7 @@ if( $xml )
     echo "<statusCode>$code</statusCode>\n";
     echo "<statusText>$error</statusText>\n";
     if( strlen($_REQUEST['r']) )
-        echo "<requestId>{$_REQUEST['r']}</requestId>\n";
+        echo "<requestId>" . htmlspecialchars($_REQUEST['r']) . "</requestId>\n";
     echo "<data>\n";
     echo "<videoId>$videoId</videoId>\n";
     if( strlen($videoUrl) )
@@ -173,7 +173,7 @@ else
             <noscript>
             <meta http-equiv="refresh" content="10" />
             </noscript>
-            <script language="JavaScript">
+            <script>
             setTimeout( "window.location.reload(true)", 10000 );
             </script>
             <?php
