@@ -31,41 +31,20 @@ class ResultProcessing {
    * @return int The number of steps in this run
    */
   public function countSteps() {
+  // Scan through all of the files that have the common pattern
     if ($this->cached) {
-      $pattern ="/^" . $this->run . "_Cached_([0-9]+_)?IEWPG.txt/";
+      $pattern ="/^" . $this->run . "_Cached_([0-9]+_)?/";
     } else {
-      $pattern ="/^" . $this->run . "_([0-9]+_)?IEWPG.txt/";
+      $pattern ="/^" . $this->run . "_([0-9]+_)?/";
     }
     $files = scandir($this->testRoot);
-    $steps = 0;
+    $steps = 1;
     foreach ($files as $file) {
-      if (preg_match($pattern, $file)) {
-        $steps++;
-      }
-    }
-    // Check for agent-reportef devtools steps
-    if (!$steps) {
-      if ($this->cached) {
-        $pattern ="/^" . $this->run . "_Cached_([0-9]+_)?devtools_requests.json/";
-      } else {
-        $pattern ="/^" . $this->run . "_([0-9]+_)?devtools_requests.json/";
-      }
-      foreach ($files as $file) {
-        if (preg_match($pattern, $file)) {
-          $steps++;
-        }
-      }
-    }
-    // Check for devtools steps
-    if (!$steps) {
-      if ($this->cached) {
-        $pattern ="/^" . $this->run . "_Cached_([0-9]+_)?devtools.json/";
-      } else {
-        $pattern ="/^" . $this->run . "_([0-9]+_)?devtools.json/";
-      }
-      foreach ($files as $file) {
-        if (preg_match($pattern, $file)) {
-          $steps++;
+      if (preg_match($pattern, $file, $matches)) {
+        if (isset($matches[1])) {
+          $step = intval($matches[1]);
+          if ($step > $steps)
+            $steps = $step;
         }
       }
     }
