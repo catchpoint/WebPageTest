@@ -67,7 +67,7 @@ function loadPageRunData($testPath, $run, $cached, $testInfo = null) {
  * @return array|null Associative array with data for the given run or null on failure
  */
 function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
-  $cacheVer = 7;
+  $cacheVer = 8;
   $cacheFile = $localPaths->pageDataCacheFile($cacheVer);
   $ret = null;
   if (gz_is_file($cacheFile)) {
@@ -905,20 +905,34 @@ function values(&$pageData, $cached, $metric, $successfulOnly) {
   return $values;
 }
 
+function CompareTimestamps($a, $b) {
+  if (!isset($a['ts']) || !isset($b['ts']) || $a['ts'] == $b['ts']) {
+      return 0;
+  }
+  return ($a['ts'] < $b['ts']) ? -1 : 1;
+}
+
 function ParseUserTiming($file) {
   $user_timing = null;
   $events = json_decode(gz_file_get_contents($file), true);
   if (isset($events) && is_array($events)) {
+    usort($events, 'CompareTimestamps');
     $main_frame = null;
     $start_time = null;
     // Find the first navigation to determine which is the main frame
     foreach ($events as $event) {
-      if (is_array($event) && isset($event['name']) &&
-          ($event['name'] == 'navigationStart' || $event['name'] == 'unloadEventStart' || $event['name'] == 'domLoading')) {
-        if (isset($event['args']['frame']) && isset($event['ts'])) {
+      if (is_array($event) && isset($event['name']) && isset($event['ts'])) {
+        if (!isset($start_time)) {
           $start_time = $event['ts'];
-          $main_frame = $event['args']['frame'];
-          break;
+        }
+        if ($event['name'] == 'navigationStart' ||
+            $event['name'] == 'unloadEventStart' ||
+            $event['name'] == 'redirectStart' ||
+            $event['name'] == 'domLoading') {
+          if (isset($event['args']['frame'])) {
+            $main_frame = $event['args']['frame'];
+            break;
+          }
         }
       }
     }
