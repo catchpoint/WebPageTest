@@ -138,6 +138,11 @@ agentUpdate=http://cdn.webpagetest.org/
 ;ba_password=password
 ;validcertificate=1
 
+; For integration with invisible reCAPTCHA
+;recaptcha_site_key=
+;recaptcha_secret_key=
+
+
 ; ***********************
 ; Test result integration
 ; ***********************

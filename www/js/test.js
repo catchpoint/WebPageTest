@@ -10,7 +10,9 @@ function htmlEntities(str) {
 function ValidateInput(form)
 {
     if( (form.url.value == "" || form.url.value == "Enter a Website URL") &&
-        form.script.value == "" && form.bulkurls.value == "" && form.bulkfile.value == "" )
+        form.script.value == "" &&
+        (form['bulkurls'] == undefined || form.bulkurls.value == "") &&
+        (form['bulkfile'] == undefined || form.bulkfile.value == "") )
     {
         alert( "Please enter an URL to test." );
         form.url.focus();
