@@ -52,5 +52,6 @@ protected:
   bool TimeToCheck(void);
   bool GetChromeSymbols(CString exe);
   bool FetchChromeSymbols(CString pdb_signature, CString symbols_file);
+  int  GetDllVersion(CString file);
 };
 

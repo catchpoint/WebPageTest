@@ -415,6 +415,29 @@ bool SoftwareUpdate::CheckBrowsers(CString& missing_browser) {
   return ok;
 }
 
+int SoftwareUpdate::GetDllVersion(CString file) {
+  int version = -1;
+  DWORD unused;
+  DWORD infoSize = GetFileVersionInfoSize(file, &unused);
+  LPBYTE pVersion = NULL;
+  if (infoSize)  
+    pVersion = (LPBYTE)malloc( infoSize );
+  if (pVersion) {
+    if (GetFileVersionInfo(file, 0, infoSize, pVersion)) {
+      VS_FIXEDFILEINFO * info = NULL;
+      UINT size = 0;
+      if (VerQueryValue(pVersion, _T("\\"), (LPVOID*)&info, &size)) {
+        if( info ) {
+          version = LOWORD(info->dwFileVersionLS);
+        }
+      }
+    }
+    free( pVersion );
+  }
+  return version;
+}
+
+
 /*-----------------------------------------------------------------------------
 -----------------------------------------------------------------------------*/
 bool SoftwareUpdate::GetChromeSymbols(CString exe) {
@@ -439,22 +462,26 @@ bool SoftwareUpdate::GetChromeSymbols(CString exe) {
           CString chrome_dir(path);
           PathAppend(path, _T("chrome.dll"));
           if (FileExists(path)) {
-            CString dll(path);
-            lstrcpy(path, (LPCTSTR)chrome_dir);
-            PathAppend(path, _T("wpt.sym"));
-            CString symbols_file(path);
-            if (!FileSize(symbols_file)) {
-              ATLTRACE(_T("Symbols needed for %s"), (LPCTSTR)dll);
-              CPEHelper pdbinfo;
-              if (pdbinfo.OpenAndVerify(dll)) {
-                CString pdb_signature;
-                pdbinfo.GetPdbFileIndex(pdb_signature);
-                if (pdb_signature.GetLength()) {
-                  FetchChromeSymbols(pdb_signature, symbols_file);
+            int version = GetDllVersion(path);
+            // Don't get symbols for Chrome 64 or later
+            if (version > 0 && version < 64) {
+              CString dll(path);
+              lstrcpy(path, (LPCTSTR)chrome_dir);
+              PathAppend(path, _T("wpt.sym"));
+              CString symbols_file(path);
+              if (!FileSize(symbols_file)) {
+                ATLTRACE(_T("Symbols needed for %s"), (LPCTSTR)dll);
+                CPEHelper pdbinfo;
+                if (pdbinfo.OpenAndVerify(dll)) {
+                  CString pdb_signature;
+                  pdbinfo.GetPdbFileIndex(pdb_signature);
+                  if (pdb_signature.GetLength()) {
+                    FetchChromeSymbols(pdb_signature, symbols_file);
+                  }
                 }
+                if (!FileExists(symbols_file))
+                  ok = false;
               }
-              if (!FileExists(symbols_file))
-                ok = false;
             }
           }
         }

@@ -142,7 +142,10 @@ void ChromeSSLHook::Init() {
     }
   }
   ATLTRACE("Looking for Chrome SSL hook for Chrome version %d", chrome_version);
-  HookUsingSymbols(path, module, chrome_version);
+  // Don't hook TLS for chrome 64 or later.  The interface changed pretty radically
+  if (chrome_version < 64) {
+    HookUsingSymbols(path, module, chrome_version);
+  }
 
   LeaveCriticalSection(&cs);
 }
