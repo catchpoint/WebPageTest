@@ -22,31 +22,40 @@ function ValidateInput(form)
     if( form.url.value == "Enter a Website URL" )
         form.url.value = "";
     
-    var runs = form.runs.value;
-    if( runs < 1 || runs > maxRuns )
-    {
-        alert( "Please select a number of runs between 1 and " + maxRuns + "." );
-        form.runs.focus();
-        return false
+    if (form['runs']) {
+      var runs = form.runs.value;
+      if( runs < 1 || runs > maxRuns )
+      {
+          alert( "Please select a number of runs between 1 and " + maxRuns + "." );
+          form.runs.focus();
+          return false
+      }
     }
     
     var date = new Date();
     date.setTime(date.getTime()+(730*24*60*60*1000));
     var expires = "; expires="+date.toGMTString();
     var options = 0;
-    if( form.private.checked )
-        options = 1;
+    if (form['private']) {
+      if( form.private.checked )
+          options = 1;
+    }
     if( form.viewFirst.checked )
         options = options | 2;
     document.cookie = 'testOptions=' + options + expires + '; path=/';
-    document.cookie = 'runs=' + runs + expires + '; path=/';
+    if (form['runs']) {
+      document.cookie = 'runs=' + runs + expires + '; path=/';
+    }
     
     // save out the selected location and connection information
-    document.cookie = 'cfg=' + $('#connection').val() + expires +  '; path=/';
-    document.cookie = 'u=' + $('#bwUp').val() + expires +  '; path=/';
-    document.cookie = 'd=' + $('#bwDown').val() + expires +  '; path=/';
-    document.cookie = 'l=' + $('#latency').val() + expires +  '; path=/';
-    document.cookie = 'p=' + $('#plr').val() + expires +  '; path=/';
+    try {
+      document.cookie = 'cfg=' + $('#connection').val() + expires +  '; path=/';
+      document.cookie = 'u=' + $('#bwUp').val() + expires +  '; path=/';
+      document.cookie = 'd=' + $('#bwDown').val() + expires +  '; path=/';
+      document.cookie = 'l=' + $('#latency').val() + expires +  '; path=/';
+      document.cookie = 'p=' + $('#plr').val() + expires +  '; path=/';
+    } catch(error) {
+    }
     
     SaveSettings();
 
