@@ -39,7 +39,7 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
             $tab = 'Home';
             include 'header.inc';
             ?>
-            <form name="urlEntry" action="/video/docompare.php" method="POST" onsubmit="return ValidateInput(this)">
+            <form name="urlEntry" id="urlEntry" action="/video/docompare.php" method="POST" onsubmit="return ValidateInput(this)">
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
 
