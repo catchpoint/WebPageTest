@@ -123,6 +123,7 @@ $lighthouse = parse_ini_file('./settings/lighthouse.ini', true);
         </div>
 
         <script type="text/javascript">
+        var maxRuns = 3;
         var profileChanged = function() {
           var sel = document.getElementById("location");
           var location = sel.options[sel.selectedIndex].value;
