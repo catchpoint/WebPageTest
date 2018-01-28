@@ -40,7 +40,7 @@ function ValidateInput(form)
       if( form.private.checked )
           options = 1;
     }
-    if( form.viewFirst.checked )
+    if( form['viewFirst'] && form.viewFirst.checked )
         options = options | 2;
     document.cookie = 'testOptions=' + options + expires + '; path=/';
     if (form['runs']) {
@@ -103,7 +103,7 @@ function ValidateInput(form)
 })(jQuery);
 
 function RestoreSettings() {
-  if (!forgetSettings) {
+  if (!window['wptForgetSettings']) {
     if (wptStorage['testVideo'] != undefined)
         $('#videoCheck').prop('checked', wptStorage['testVideo']);
     if (wptStorage['testTimeline'] != undefined)
@@ -115,7 +115,7 @@ function RestoreSettings() {
 }
 
 function SaveSettings() {
-  if (!forgetSettings) {
+  if (!window['wptForgetSettings']) {
     wptStorage['testVideo'] = $('#videoCheck').is(':checked');
     wptStorage['testTimeline'] = $('#timeline').is(':checked');
   }
