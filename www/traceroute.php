@@ -22,6 +22,22 @@ $page_description = "Test network path from multiple locations around the world 
     <body>
         <div class="page">
             <?php
+            $siteKey = GetSetting("recaptcha_site_key", "");
+            if (strlen($siteKey)) {
+              echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
+              ?>
+              <script>
+              function onRecaptchaSubmit(token) {
+                var form = document.getElementById("urlEntry");
+                if (ValidateInput(form)) {
+                  form.submit();
+                } else {
+                  grecaptcha.reset();
+                }
+              }
+              </script>
+              <?php
+            }
             $tab = 'Home';
             include 'header.inc';
             ?>
@@ -119,7 +135,13 @@ $page_description = "Test network path from multiple locations around the world 
             </div>
 
             <div id="start_test-container">
-                <p><input type="submit" name="submit" value="" class="start_test"></p>
+                <?php
+                if (strlen($siteKey)) {
+                  echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
+                } else {
+                  echo '<p><input type="submit" name="submit" value="" class="start_test"></p>';
+                }
+                ?>
                 <div id="sponsor">
                 </div>
             </div>
