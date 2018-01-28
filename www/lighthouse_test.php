@@ -131,5 +131,6 @@ $lighthouse = parse_ini_file('./settings/lighthouse.ini', true);
           document.cookie = "lhloc=" + location + ";" + "expires=" + d.toUTCString() + ";path=/";          
         };
         </script>
+        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script> 
     </body>
 </html>
