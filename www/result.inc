@@ -98,13 +98,24 @@ $page_description = "Website performance test result$testLabel.";
                         && ($isOwner || !$test['testinfo']['sensitive'])
                         && (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type'])) )
                     {
+                        $siteKey = GetSetting("recaptcha_site_key", "");
+                        if (strlen($siteKey)) {
+                          echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
+                          ?>
+                          <script>
+                          function onRecaptchaSubmit(token) {
+                            document.getElementById("urlEntry").submit();
+                          }
+                          </script>
+                          <?php
+                        }
                         // load the secret key (if there is one)
                         $secret = '';
                         $keys = parse_ini_file('./settings/keys.ini', true);
                         if( $keys && isset($keys['server']) && isset($keys['server']['secret']) )
                           $secret = trim($keys['server']['secret']);
 
-                        echo '<form name="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data">';
+                        echo '<form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data">';
                         echo "\n<input type=\"hidden\" name=\"resubmit\" value=\"$id\">\n";
                         echo "<input type=\"hidden\" name=\"vo\" value=\"$owner\">\n";
                         if( strlen($secret) ){
@@ -119,7 +130,11 @@ $page_description = "Website performance test result$testLabel.";
                           $hmac = sha1($hashStr);
                           echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
                         }
-                        echo '<input type="submit" value="Re-run the test">';
+                        if (strlen($siteKey)) {
+                          echo "<button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha\">Re-run the test</button>";
+                        } else {
+                          echo '<input type="submit" value="Re-run the test">';
+                        }
                         echo "\n</form>\n";
                     }
                     ?>

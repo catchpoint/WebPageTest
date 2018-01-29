@@ -22,6 +22,22 @@ $page_description = "Cloudflare Comparison Test$testLabel.";
     <body>
         <div class="page">
             <?php
+            $siteKey = GetSetting("recaptcha_site_key", "");
+            if (strlen($siteKey)) {
+              echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
+              ?>
+              <script>
+              function onRecaptchaSubmit(token) {
+                var form = document.getElementById("urlEntry");
+                if (PrepareComparisonTest(form)) {
+                  form.submit();
+                } else {
+                  grecaptcha.reset();
+                }
+              }
+              </script>
+              <?php
+            }
             $navTabs = array('New Comparison' => FRIENDLY_URLS ? '/compare' : '/compare-cf.php' );
             if( isset($_GET['pssid']) && strlen($_GET['pssid']) ) {
                 $pssid = htmlspecialchars($_GET['pssid']);
@@ -30,7 +46,7 @@ $page_description = "Cloudflare Comparison Test$testLabel.";
             $tab = 'New Comparison';
             include 'header.inc';
             ?>
-            <form name="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return PrepareComparisonTest(this)">
+            <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return PrepareComparisonTest(this)">
             
             <input type="hidden" name="private" value="1">
             <input type="hidden" name="view" value="cf">
@@ -78,7 +94,13 @@ $page_description = "Cloudflare Comparison Test$testLabel.";
             </div>
 
             <div id="start_test-container">
-                <p><input id="start_test-button" type="submit" name="submit" value="" class="start_test"></p>
+                <?php
+                if (strlen($siteKey)) {
+                  echo "<p><button id=\"start_test-button\" data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
+                } else {
+                  echo '<p><input type="submit"  id="start_test-button" name="submit" value="" class="start_test"></p>';
+                }
+                ?>
             </div>
             <div class="cleared"><br></div>
             </form>
@@ -88,6 +110,7 @@ $page_description = "Cloudflare Comparison Test$testLabel.";
         </div>
 
         <script type="text/javascript">
+            var maxRuns=9;
             function PrepareComparisonTest(form) {
                 var url = form.testurl.value;
                 if( url == "" || url == "Enter a Website URL" )

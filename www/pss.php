@@ -39,7 +39,7 @@ $page_description = "Comparison Test$testLabel.";
               <script>
               function onRecaptchaSubmit(token) {
                 var form = document.getElementById("urlEntry");
-                if (ValidateInput(form)) {
+                if (PreparePSSTest(form)) {
                   form.submit();
                 } else {
                   grecaptcha.reset();
