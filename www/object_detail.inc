@@ -462,7 +462,9 @@ function AddResponseBodyFlags(&$requests, $bodies_file_name) {
         if (count($parts) >= 3 && stripos($name, '-body.txt') !== false) {
           $id = trim($parts[1]);
           foreach ($requests as &$request) {
-            if (isset($request['request_id']) && !strcmp(trim($request['request_id']), $id)) {
+            if (isset($request['raw_id']) && !strcmp(trim($request['raw_id']), $id)) {
+              $request['body_id'] = $id;
+            } elseif (isset($request['request_id']) && !strcmp(trim($request['request_id']), $id)) {
               $request['body_id'] = $id;
             }
           }
