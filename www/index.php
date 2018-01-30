@@ -472,7 +472,7 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="lighthouse" id="lighthouse" class="checkbox" style="float: left;width: auto;">
                                         <label for="lighthouse" class="auto_width">
-                                            Capture Lighthouse Report (Mobile devices only)
+                                            Capture Lighthouse Report (Chrome only)
                                         </label>
                                     </li>
                                     <li>
