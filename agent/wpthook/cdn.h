@@ -112,6 +112,7 @@ CDN_PROVIDER cdnList[] = {
   {".voxcdn.net", "VoxCDN"},
   {".bluehatnetwork.com", "Blue Hat Network"},
   {".swiftcdn1.com", "SwiftCDN"},
+  {".swiftserve.com", "SwiftCDN"},
   {".cdngc.net", "CDNetworks"},
   {".gccdn.net", "CDNetworks"},
   {".panthercdn.com", "CDNetworks"},
