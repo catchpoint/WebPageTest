@@ -205,21 +205,6 @@ if (is_dir('./forums') && (!array_key_exists('disableMybb', $settings) || !$sett
   ob_end_clean();
 }
 
-if (!$admin && isset($_COOKIE['asid']) && isset($_COOKIE['google_id']) && isset($_COOKIE['google_email'])) {
-  $lock = Lock('Auth', true, 10);
-  if ($lock) {
-    $sessions = json_decode(gz_file_get_contents('./dat/admin_sessions.dat'), true);
-    $session = $_COOKIE['asid'];
-    if ($sessions &&
-        isset($sessions[$session]) &&
-        $sessions[$session]['id'] == $_COOKIE['google_id'] &&
-        $sessions[$session]['email'] == $_COOKIE['google_email']) {
-      $admin = true;
-    }
-    Unlock($lock);
-  }
-}
-
 if (!$admin) {
   $this_user = null;
   if (isset($user)) {
@@ -227,7 +212,7 @@ if (!$admin) {
   } elseif( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
     $this_user = $_COOKIE['google_email'];
   }
-  if (isset($this_user)) {
+  if (isset($this_user) && strlen($this_user)) {
     $admin_users = GetSetting("admin_users");
     if ($admin_users) {
       $admin_users = explode(',', $admin_users);
