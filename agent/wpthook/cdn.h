@@ -190,6 +190,7 @@ CDN_PROVIDER cdnList[] = {
   {".cedexis.net", "Cedexis"},
   {".streamprovider.net", "Rocket CDN"},
   {".singularcdn.net.br", "Singular CDN"},
+  {".cdn.vccloud.vn", "VCCloud CDN"},
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -241,6 +242,7 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "MNCDN", "Medianova"},
   {"server", "Roast.io", "Roast.io"},
   {"server", "SingularCDN", "Singular CDN"},
+  {"server", "VCCloud CDN", "VCCloud CDN"},
   {"x-rocket-node", "", "Rocket CDN"}
 };
 
