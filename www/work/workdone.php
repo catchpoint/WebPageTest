@@ -198,8 +198,6 @@ if (ValidateTestId($id)) {
       if (strlen($location) && strlen($tester)) {
         $testerInfo = array();
         $testerInfo['ip'] = $_SERVER['REMOTE_ADDR'];
-        if ($done)
-          $testerInfo['test'] = '';
         if (!isset($testerError))
           $testerError = false;
         if (array_key_exists('testerror', $_REQUEST) && strlen($_REQUEST['testerror']))
