@@ -166,7 +166,7 @@ function EC2_TerminateIdleInstances() {
       }
     }
 
-	$idleTerminateMinutes = GetSetting("EC2.IdleTerminateMinutes");
+	$idleTerminateMinutes = max(intval(GetSetting("EC2.IdleTerminateMinutes", 15)), 1);
 
     foreach($instances as $instance) {
       $minutes = $instance['runningTime'] / 60.0;
