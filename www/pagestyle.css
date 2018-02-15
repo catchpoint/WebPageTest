@@ -11,7 +11,7 @@ a {color: #000;}
 img {border: none;}
 input, select, textarea {color: #444;font-family: Arial, Helvetica, sans-serif;font-size: 12px;}
 input.checkbox, input.radio {margin: 0 10px 0 0;}
-textarea {overflow-x: hidden;width: 400px;height: 100px;padding: 3px;}
+textarea {overflow-x: hidden;width: 400px;height: 100px;padding: 3px; max-width: 99%;}
 
 h2 .small {font-weight:normal; font-size: 12px;}
 h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
