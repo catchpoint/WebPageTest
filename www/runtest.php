@@ -1578,9 +1578,9 @@ function ValidateURL(&$url, &$error, &$settings)
         $error = "Please enter a Valid URL.  <b>" . htmlspecialchars($host) . "</b> is not a valid Internet host name";
     elseif( preg_match('/\d+\.\d+\.\d+\.\d+/', $host) && !$settings['allowPrivate'] &&
             (!strcmp($host, "127.0.0.1") || !strncmp($host, "192.168.", 8)  || !strncmp($host, "169.254.", 8) || !strncmp($host, "10.", 3)) )
-        $error = "You can not test <b>$host</b> from the public Internet.  Your web site needs to be hosted on the public Internet for testing";
+        $error = "You can not test <b>" . htmlspecialchars($host) . "</b> from the public Internet.  Your web site needs to be hosted on the public Internet for testing";
     elseif (!strcmp($host, "169.254.169.254"))
-        $error = "Sorry, $host is blocked from testing";
+        $error = "Sorry, " . htmlspecialchars($host) . " is blocked from testing";
     elseif( !strcasecmp(substr($url, -4), '.pdf') )
         $error = "You can not test PDF files with WebPagetest";
     else
@@ -1925,7 +1925,11 @@ function CheckUrl($url)
   if ($ok && !$admin && !$usingAPI) {
     $ok = SBL_Check($url, $message);
     if (!$ok) {
-      $error = "<br>Sorry, your test was blocked because $url is suspected of being used for <a href=\"https://www.antiphishing.org/\">phishing</a> or <a href=\"http://www.stopbadware.org/\">hosting malware</a>.<br><br>Advisory provided by <a href=\"http://code.google.com/apis/safebrowsing/safebrowsing_faq.html#whyAdvisory\">Google</a>.";
+      $error = "<br>Sorry, your test was blocked because " . htmlspecialchars($url) . " is suspected of being used for 
+      <a href=\"https://www.antiphishing.org/\">phishing</a> or 
+      <a href=\"http://www.stopbadware.org/\">hosting malware</a>.
+      <br><br>Advisory provided by 
+      <a href=\"http://code.google.com/apis/safebrowsing/safebrowsing_faq.html#whyAdvisory\">Google</a>.";
       logMsg("{$_SERVER['REMOTE_ADDR']}: $url failed Safe Browsing check: $message", "./log/{$date}-blocked.log", true);
     }
   }
@@ -2473,8 +2477,7 @@ function ErrorPage($error) {
                 <?php
                 include 'header.inc';
 
-                $str = $error;
-                echo wordwrap($str,150,"<br>\n",TRUE);
+                echo $error;
                 ?>
 
                 <?php include('footer.inc'); ?>

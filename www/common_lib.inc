@@ -4,7 +4,6 @@ require_once(__DIR__ . '/archive.inc');
 if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('RestoreTest');
   newrelic_add_custom_tracer('SBL_Check');
-  newrelic_add_custom_tracer('SBL_Update');
 }
 
 define('VIDEO_CODE_VERSION', 20);
@@ -2826,79 +2825,43 @@ function numRunsFromTestInfo($testInfo) {
 }
 
 /**
-* Update the safe browsing list (if configured)
-* 
-*/
-function SBL_Update() {
-  $key = GetSetting('sbl_api_key');
-  $has_apcu = false;
-  $has_apc = false;
-  if (function_exists('apcu_fetch') && function_exists('apcu_store'))
-    $has_apcu = true;
-  elseif (function_exists('apc_fetch') && function_exists('apc_store'))
-    $has_apc = true;
-  if ($key && strlen($key) && ($has_apcu || $has_apc)) {
-    if ($has_apcu)
-      $next_update = apcu_fetch('sbl_next_update');
-    else
-      $next_update = apc_fetch('sbl_next_update');
-    if (!$next_update || time() > $next_update) {
-      $db = __DIR__ . '/dat/sbl.db';
-      if (is_file($db)) {
-        $db = realpath($db);
-      } else {
-        file_put_contents($db, '');
-        $db = realpath($db);
-        unlink($db);
-      }
-      $cmd = "gglsbl_client.py --api-key $key --db-path \"$db\" --onetime --debug 2>&1";
-      exec($cmd, $out);
-      $next_update = 0;
-      if (isset($out) && is_array($out) && count($out)) {
-        $updated = 0;
-        $seconds = 0;
-        foreach($out as $line) {
-          if (stripos($line, "Storing sub chunk") !== false) {
-            $updated++;
-          } elseif (preg_match('/Next query will be delayed (?P<seconds>[0-9]+) seconds/', $line, $matches)) {
-            $seconds = intval($matches['seconds']);
-          }
-        }
-        if ($updated)
-          $seconds = 0;
-        $next_update = time() + $seconds;
-      }
-      if ($has_apcu)
-        apcu_store('sbl_next_update', $next_update);
-      else
-        apc_store('sbl_next_update', $next_update);
-    } else {
-      $seconds = $next_update - time();
-    }
-  }
-}
-
-/**
 * Check an URL against the SBL
 * 
 * @param mixed $url
 */
 function SBL_Check($url, &$message) {
   $ok = true;
-  $db = __DIR__ . '/dat/sbl.db';
   $key = GetSetting('sbl_api_key');
-  if ($key && strlen($key) && is_file($db)) {
-    $db = realpath($db);
-    $url = escapeshellarg($url);
-    $cmd = "gglsbl_client.py --api-key $key --db-path \"$db\" --check-url $url 2>&1";
-    exec($cmd, $out);
-    if (isset($out) && is_array($out) && count($out)) {
-      foreach($out as $line) {
-        if (stripos($line, 'is blacklisted') !== false) {
-          $ok = false;
-          break;
-        }
-      }
+  if ($key && strlen($key)) {
+    $check = array(
+      'client' => array(
+        'clientId' => 'WebPageTest',
+        'clientVersion' => '1.0'
+      ),
+      'threatInfo' => array(
+        'threatTypes' => array('MALWARE'),
+        'platformTypes' => array('ALL_PLATFORMS'),
+        'threatEntryTypes' => array('URL'),
+        'threatEntries' => array(array('url' => $url))
+      )
+    );
+    $data = json_encode($check);
+    $api_url = "https://safebrowsing.googleapis.com/v4/threatMatches:find?key=$key";
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $api_url);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: application/json", 'Content-Length: ' . strlen($data)));
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+    $raw_response = curl_exec($ch);
+    $response = json_decode($raw_response, true);
+    curl_close ($ch);
+    if (isset($response) && is_array($response) && isset($response['matches'][0]['threatType'])) {
+      $ok = false;
     }
   }
   return $ok;
