@@ -220,6 +220,10 @@ agentUpdate=http://cdn.webpagetest.org/
 ;ec2_key=<access key>
 ;ec2_secret=<secret>
 
+; EC2 default instance size (defaults to m3.medium, c4.large is recommended).
+; Can be overridden in locations.ini for individual locations.
+;ec2_instance_size=c4.large
+
 ; Should we automatically delete any EBS volumes marked as "available"?
 ; This can be used to prevent orphaned volumes but only if the account
 ; doesn't expect to keep offline EBS volumes.
