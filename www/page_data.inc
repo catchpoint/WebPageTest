@@ -264,19 +264,23 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
       if (isset($ret['interactivePeriods']) && is_array($ret['interactivePeriods']) && count($ret['interactivePeriods'])) {
         $seek_start = 0;
         $TTI = null;
-        if (isset($ret['chromeUserTiming.firstContentfulPaint']) && $ret['chromeUserTiming.firstContentfulPaint'] > 0)
+        if (isset($ret['chromeUserTiming.firstMeaningfulPaint']) && $ret['chromeUserTiming.firstMeaningfulPaint'] > 0)
+          $seek_start = $ret['chromeUserTiming.firstMeaningfulPaint'];
+        elseif (isset($ret['chromeUserTiming.firstContentfulPaint']) && $ret['chromeUserTiming.firstContentfulPaint'] > 0)
           $seek_start = $ret['chromeUserTiming.firstContentfulPaint'];
         elseif (isset($ret['render']) && $ret['render'] > 0)
           $seek_start = $ret['render'];
         if ($seek_start > 0) {
-          if (isset($ret['domContentLoadedEventEnd']) && $ret['domContentLoadedEventEnd'] > $seek_start)
-            $seek_start = $ret['domContentLoadedEventEnd'];
           $TTI = CalculateTimeToInteractive($localPaths, $seek_start, $ret['interactivePeriods'], $measurement_end, $first_interactive);
         }
         if (isset($first_interactive) && $first_interactive > 0) {
+          if (isset($ret['domContentLoadedEventEnd']) && $ret['domContentLoadedEventEnd'] > $first_interactive)
+            $first_interactive = $ret['domContentLoadedEventEnd'];
           $ret['FirstInteractive'] = $first_interactive;
         }
         if (isset($TTI) && $TTI > 0) {
+          if (isset($ret['domContentLoadedEventEnd']) && $ret['domContentLoadedEventEnd'] > $TTI)
+            $TTI = $ret['domContentLoadedEventEnd'];
           $ret['TimeToInteractive'] = $TTI;
         }
         $measurement_end = 0;
@@ -1004,8 +1008,10 @@ function CalculateTimeToInteractive($localPaths, $startTime, $interactiveWindows
             $request['load_start'] >= 0 &&
             isset($request['load_end']) &&
             $request['load_end'] >= $startTime) {
-          $re[] = array('type' => 'start', 'time' => $request['load_start']);
-          $re[] = array('type' => 'end', 'time' => $request['load_end']);
+          if (!isset($request['method']) || $request['method'] == 'GET') {
+            $re[] = array('type' => 'start', 'time' => $request['load_start']);
+            $re[] = array('type' => 'end', 'time' => $request['load_end']);
+          }
         }
       }
       
