@@ -1,16 +1,16 @@
 # Time to Interactive (TTI)
-TTI is (currently) a Chrome-specific measurement that measures the time until the page being loaded is considered usable and will respond to user input.  There are two variations on the metric:
+TTI measures the time until the page being loaded is considered usable and will respond to user input.  There are two variations on the metric:
 
-1. Time to Consistently Interactive: This was previously the only TTI measurement and measured the point where the page is likely complete and will consistently respond quickly.
+1. Time to Consistently Interactive: This was previously the only TTI measurement and measured the point where the page is likely complete and will consistently respond quickly. The canonical definition for it is [here](https://github.com/WICG/time-to-interactive).
 1. Time to First Interactive: This is a newer metric and reports when the page is first expected to be usable and will respond to input quickly (with the possibility of slow responses as more content loads).
 
 ## Underlying Measurements
-TTI is built on top of a collection of other measurements, some of which are currently only available in Chrome:
+TTI is built on top of a collection of other measurements:
 
-### Time to First Contentful Paint
-The measurement is of the first paint of text or an image.  For browsers that don't report First Contentful Paint as a metric, the start render time is used in it's place (time when the first non-white content is displayed).
+### Time to First Meaningful Paint
+The point in time when the main content of the page is rendered. In Chrome this is the first paint event after the bigest change to the layout of the content inside of the viewport.  When it is not available the start render time is used in it's place (time when the first non-white content is displayed).
 
-Chrome exposes this measurement as a "blink.user_timing" trace event with a name of "firstContentfulPaint".  
+Chrome exposes this measurement as a "blink.user_timing" trace event with a name of "firstMeaningfulPaint".  
 
 ### DOM Content Loaded
 Browser event that is fired when the HTML parser has reached the end of the document (executed all blocking scripts).  Fully described [here](https://developer.mozilla.org/en-US/docs/Web/Events/DOMContentLoaded).
@@ -19,14 +19,14 @@ Browser event that is fired when the HTML parser has reached the end of the docu
 The browser's main thread is considered "interactive" when it is not blocked for more than **50ms** by any single task so it will be able to respond to user input within 50ms.  An interactive window is a period of **at least 5 seconds** where there are no main-thread tasks that take more than 50ms.
 
 ### In-flight requests
-At any point in time this is the number of outstanding requests.
+At any point in time this is the number of outstanding successful GET requests (POSTs and failed requests are ignored).
 
 ## Time to Consistently Interactive Calculation
-1. Start looking for TTI at the larger of *first contentful paint* or *DOM Content Loaded*
+1. Start looking for TTI at *first meaningful paint*
 2. Look for the first *interactive window* where there is a contiguous period of 5 seconds fully contained within the interactive window with no more than 2 *in-flight requests*
-3. TTI is the start of the *interactive window* from step 2 or the search starting point, whichever is later
+3. TTI is the start of the *interactive window* from step 2, *first meaningful paint* or *DOM Content Loaded*, whichever is later
 
 ## Time to First Interactive Calculation
-1. Start looking for TTI at the larger of *first contentful paint* or *DOM Content Loaded*
-2. Look for the first *interactive window* where there is a contiguous period of 5 seconds fully contained within the interactive window regardless of the number of *in-flight requests*
-3. TTI is the start of the *interactive window* from step 2 or the search starting point, whichever is later
+1. Start looking for TTI at *first meaningful paint*
+2. Look for the first *interactive window* (with no regard to *in-flight requests*)
+3. First Interactive is the start of the *interactive window* from step 2, *first meaningful paint* or *DOM Content Loaded*, whichever is later
