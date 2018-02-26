@@ -43,8 +43,8 @@ if (!isset($included)) {
 set_time_limit(3600);
 ignore_user_abort(true);
 
-$key  = $_REQUEST['key'];
-$id   = $_REQUEST['id'];
+$key  = isset($_REQUEST['key']) ? $_REQUEST['key'] : null;
+$id   = isset($_REQUEST['id']) ? $_REQUEST['id'] : null;
 
 if(extension_loaded('newrelic')) { 
   newrelic_add_custom_parameter('test', $id);
