@@ -2034,7 +2034,7 @@ function UpdateTester($location, $tester, $testerInfo = null, $cpu = null, $erro
     
   // Update the CPU Utilization
   if (isset($cpu) && $cpu > 0) {
-    if (!isset($tester_info['cpu']))
+    if (!isset($tester_info['cpu']) || !is_array($tester_info['cpu']))
       $tester_info['cpu'] = array();
     $tester_info['cpu'][] = $cpu;
     if (count($tester_info['cpu']) > 100)
