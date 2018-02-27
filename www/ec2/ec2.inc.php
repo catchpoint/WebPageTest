@@ -177,8 +177,8 @@ function EC2_TerminateIdleInstances() {
       }
       if ($timeCheck) {
         $terminate = true;
-        $lastWork = null;   // last job assigned from this location
-        $lastCheck = null;  // time since this instance connected (if ever)
+        $lastWork = max($idleTerminateMinutes, 99999);   // last job assigned from this location
+        $lastCheck = max($idleTerminateMinutes, 99999);  // time since this instance connected (if ever)
         
         foreach ($instance['locations'] as $location) {
           if ($agentCounts[$location]['count'] <= $agentCounts[$location]['min']) {
@@ -186,9 +186,10 @@ function EC2_TerminateIdleInstances() {
           } elseif (isset($locations[$location]['testers'])) {
             foreach ($locations[$location]['testers'] as $tester) {
               if (isset($tester['ec2']) && $tester['ec2'] == $instance['id']) {
-                if (isset($tester['last']) && (!isset($lastWork) || $tester['last'] < $lastWork))
+                if (isset($tester['last']) && $tester['last'] < $lastWork)
                   $lastWork = $tester['last'];
-                $lastCheck = $tester['elapsed'];
+                if (isset($tester['elapsed']) && $tester['elapsed'] < $lastCheck)
+                  $lastCheck = $tester['elapsed'];
               }
             }
           }
@@ -196,7 +197,9 @@ function EC2_TerminateIdleInstances() {
         
         // Keep the instance if the location had work in the last
         // EC2.IdleTerminateMinutes and if this instance has checked in recently
-        if (isset($lastWork) && isset($lastCheck) && $lastWork < $idleTerminateMinutes && $lastCheck < $idleTerminateMinutes)
+        if (isset($lastCheck) && $lastCheck < $idleTerminateMinutes)
+          $terminate = false;
+        if (isset($lastWork) && $lastWork < $idleTerminateMinutes)
           $terminate = false;
         
         if ($terminate) {
@@ -204,6 +207,7 @@ function EC2_TerminateIdleInstances() {
             $instanceCounts[$instance['ami']]['count']--;
           foreach ($instance['locations'] as $location)
             $agentCounts[$location]['count']--;
+          EC2Log("Terminatingstance $id in $region - lastWork = $lastWork, lastCheck = $lastCheck");
           EC2_TerminateInstance($instance['region'], $instance['id']);
         }
       }
