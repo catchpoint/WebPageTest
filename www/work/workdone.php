@@ -321,7 +321,7 @@ function ProcessRun() {
       $testInfo_dirty = true;
     }
     if (!GetSetting('disable_video_processing')) {
-      ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed, $max_load);
+      ProcessAVIVideo($testInfo, $testPath, $runNumber, $cacheWarmed);
     }
   }
 }
