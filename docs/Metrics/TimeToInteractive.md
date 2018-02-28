@@ -10,7 +10,7 @@ TTI is built on top of a collection of other measurements:
 ### Time to First Contentful Paint
 The point in time when the first image or text is rendered to the screen (something other than background colors).
 
-Chrome exposes this measurement as a "blink.user_timing" trace event with a name of "firstMeaningfulPaint".  
+Chrome exposes this measurement as a "blink.user_timing" trace event with a name of "firstContentfulPaint".  
 
 ### DOM Content Loaded
 Browser event that is fired when the HTML parser has reached the end of the document (executed all blocking scripts).  Fully described [here](https://developer.mozilla.org/en-US/docs/Web/Events/DOMContentLoaded).
