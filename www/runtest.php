@@ -220,6 +220,7 @@
               $test['discard'] = max(min((int)$req_discard, $test['runs'] - 1), 0);
             $test['queue_limit'] = 0;
             $test['pngss'] = isset($req_pngss) ? (int)$req_pngss : 0;
+            $test['fps'] = isset($req_fps) ? (int)$req_fps : null;
             $test['iq'] = isset($req_iq) ? (int)$req_iq : 0;
             $test['bodies'] = array_key_exists('bodies', $_REQUEST) && $_REQUEST['bodies'] ? 1 : 0;
             if (!array_key_exists('bodies', $_REQUEST) && GetSetting('bodies'))
@@ -2117,6 +2118,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'browser', $test['browser']);
             if( (isset($test['pngss']) && $test['pngss']) || (isset($settings['pngss']) && $settings['pngss']) )
                 AddIniLine($testFile, 'pngScreenShot', '1');
+            if (isset($test['fps']) && $test['fps'] > 0)
+                AddIniLine($testFile, 'fps', $test['fps']);
             if( isset($test['iq']) && $test['iq'] )
                 AddIniLine($testFile, 'imageQuality', $test['iq']);
             elseif( isset($settings['iq']) && $settings['iq'] )
