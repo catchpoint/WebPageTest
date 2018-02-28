@@ -264,9 +264,7 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
       if (isset($ret['interactivePeriods']) && is_array($ret['interactivePeriods']) && count($ret['interactivePeriods'])) {
         $seek_start = 0;
         $TTI = null;
-        if (isset($ret['chromeUserTiming.firstMeaningfulPaint']) && $ret['chromeUserTiming.firstMeaningfulPaint'] > 0)
-          $seek_start = $ret['chromeUserTiming.firstMeaningfulPaint'];
-        elseif (isset($ret['chromeUserTiming.firstContentfulPaint']) && $ret['chromeUserTiming.firstContentfulPaint'] > 0)
+        if (isset($ret['chromeUserTiming.firstContentfulPaint']) && $ret['chromeUserTiming.firstContentfulPaint'] > 0)
           $seek_start = $ret['chromeUserTiming.firstContentfulPaint'];
         elseif (isset($ret['render']) && $ret['render'] > 0)
           $seek_start = $ret['render'];
