@@ -2054,6 +2054,8 @@ function UpdateTester($location, $tester, $testerInfo = null, $cpu = null, $erro
     // keep track of the FIRST idle request as the last work time so we can have an accurate "idle time"
     if (isset($testerInfo['test']) && strlen($testerInfo['test']))
       $tester_info['last'] = $now;
+    if (isset($tester_info['test']) && strlen($tester_info['test']))
+      $tester_info['last'] = $now;
 
     // update any other data passed in for the tester
     foreach ($testerInfo as $key => $value)

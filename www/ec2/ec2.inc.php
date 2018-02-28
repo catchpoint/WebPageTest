@@ -166,7 +166,7 @@ function EC2_TerminateIdleInstances() {
       }
     }
 
-	$idleTerminateMinutes = max(intval(GetSetting("EC2.IdleTerminateMinutes", 15)), 1);
+	$idleTerminateMinutes = max(intval(GetSetting("EC2.IdleTerminateMinutes", 60)), 1);
 
     foreach($instances as $instance) {
       $minutes = $instance['runningTime'] / 60.0;
@@ -197,17 +197,22 @@ function EC2_TerminateIdleInstances() {
         
         // Keep the instance if the location had work in the last
         // EC2.IdleTerminateMinutes and if this instance has checked in recently
-        if (isset($lastCheck) && $lastCheck < $idleTerminateMinutes)
+        if (!isset($lastCheck)) {
+          // Don't terminate an instance that has been running for less than
+          // an hour and hasn't yet connected
+          if ($minutes < 60)
+            $terminate = false;
+        } elseif (isset($lastWork) && $lastWork < $idleTerminateMinutes) {
+          // Don't terminate it if the last job was recent
           $terminate = false;
-        if (isset($lastWork) && $lastWork < $idleTerminateMinutes)
-          $terminate = false;
+        }
         
         if ($terminate) {
           if (isset($instance['ami']) && $instance['running'])
             $instanceCounts[$instance['ami']]['count']--;
           foreach ($instance['locations'] as $location)
             $agentCounts[$location]['count']--;
-          EC2Log("Terminatingstance $id in $region - lastWork = $lastWork, lastCheck = $lastCheck");
+          EC2Log("Terminatingstance {$instance['id']} in {$instance['region']} - lastWork = $lastWork, lastCheck = $lastCheck");
           EC2_TerminateInstance($instance['region'], $instance['id']);
         }
       }
