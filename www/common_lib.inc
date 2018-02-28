@@ -227,7 +227,7 @@ function LoadLocationsIni() {
 function GetSetting($setting, $default = FALSE) {
   // disable recaptcha for logged-in users
   if ($setting == 'recaptcha_site_key') {
-    if (isset($user))
+    if (isset($_COOKIE['mybbuser']))
       return $default;
     if (isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']))
       return $default;
