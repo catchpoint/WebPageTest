@@ -225,6 +225,13 @@ function LoadLocationsIni() {
 * Get a setting from settings.ini (and cache it for up to a minute)
 */
 function GetSetting($setting, $default = FALSE) {
+  // disable recaptcha for logged-in users
+  if ($setting == 'recaptcha_site_key') {
+    if (isset($user))
+      return $default;
+    if (isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']))
+      return $default;
+  }
   global $settings;
   $ret = $default;
   if (function_exists('apcu_fetch') &&
