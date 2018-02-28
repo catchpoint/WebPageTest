@@ -179,6 +179,7 @@ function EC2_TerminateIdleInstances() {
         $terminate = true;
         $lastWork = max($idleTerminateMinutes, 99999);   // last job assigned from this location
         $lastCheck = max($idleTerminateMinutes, 99999);  // time since this instance connected (if ever)
+        $has_test = false;
         
         foreach ($instance['locations'] as $location) {
           if ($agentCounts[$location]['count'] <= $agentCounts[$location]['min']) {
@@ -190,6 +191,10 @@ function EC2_TerminateIdleInstances() {
                   $lastWork = $tester['last'];
                 if (isset($tester['elapsed']) && $tester['elapsed'] < $lastCheck)
                   $lastCheck = $tester['elapsed'];
+                if (isset($tester['test']) && strlen($tester['test'])) {
+                  // don't terminate an instance that is busy with a test
+                  $terminate = false;
+                }
               }
             }
           }
