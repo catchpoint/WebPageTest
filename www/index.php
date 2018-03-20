@@ -153,6 +153,8 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="thumbsize" value="' . htmlspecialchars($_REQUEST['thumbsize']) . "\">\n";
             if (isset($_REQUEST['fps']))
               echo '<input type="hidden" name="fps" value="' . htmlspecialchars($_REQUEST['fps']) . "\">\n";
+            if (isset($_REQUEST['timeline_fps']))
+              echo '<input type="hidden" name="timeline_fps" value="' . htmlspecialchars($_REQUEST['timeline_fps']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
