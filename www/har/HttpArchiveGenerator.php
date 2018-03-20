@@ -339,7 +339,7 @@ class HttpArchiveGenerator
                 $encoding = mb_detect_encoding($body, mb_detect_order(), true);
                 if ($encoding !== FALSE) {
                     if ($encoding != 'UTF-8') {
-                        $body = mb_convert_encoding($mixed, 'UTF-8', $encoding);
+                        $body = mb_convert_encoding($body, 'UTF-8', $encoding);
                     }
                     $response['content']['text'] = $body;
                 }
