@@ -223,6 +223,9 @@ class TestInfo {
    * @return bool True if the test is supposed to have a timeline, false otherwise
    */
   public function hasTimeline() {
-    return !empty($this->rawData["testinfo"]["timeline"]);
+    $ret = !empty($this->rawData["testinfo"]["timeline"]);
+    if ($ret && !empty($this->rawData["testinfo"]["discard_timeline"]))
+      $ret = false;
+    return $ret;
   }
 }
