@@ -21,7 +21,7 @@ if (is_file(__DIR__ . '/../settings/profiles.ini'))
         <div class="page">
             <?php
             $siteKey = GetSetting("recaptcha_site_key", "");
-            if (strlen($siteKey)) {
+            if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($siteKey)) {
               echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
               ?>
               <script>

@@ -1087,6 +1087,9 @@ function UpdateLocation(&$test, &$locations, $new_location, &$error)
 function ValidateKey(&$test, &$error, $key = null)
 {
   global $admin;
+  global $uid;
+  global $user;
+  global $this_user;
   
   // load the secret key (if there is one)
   $secret = '';
@@ -1115,7 +1118,7 @@ function ValidateKey(&$test, &$error, $key = null)
       } else {
         // if recaptcha is enabled, verify the response
         $secret = GetSetting("recaptcha_secret_key", "");
-        if (strlen($secret)) {
+        if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($secret)) {
           $passed = false;
           if (isset($_REQUEST['g-recaptcha-response'])) {
             $captcha_url = "https://www.google.com/recaptcha/api/siteverify?secret=" . urlencode($secret) . "&response=" . urlencode($_REQUEST['g-recaptcha-response']);

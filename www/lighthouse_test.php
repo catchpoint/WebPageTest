@@ -35,7 +35,7 @@ $lighthouse = parse_ini_file('./settings/lighthouse.ini', true);
         <div class="page">
             <?php
             $siteKey = GetSetting("recaptcha_site_key", "");
-            if (strlen($siteKey)) {
+            if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($siteKey)) {
               echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
               ?>
               <script>
