@@ -157,6 +157,8 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="timeline_fps" value="' . htmlspecialchars($_REQUEST['timeline_fps']) . "\">\n";
             if (isset($_REQUEST['discard_timeline']))
               echo '<input type="hidden" name="discard_timeline" value="' . htmlspecialchars($_REQUEST['discard_timeline']) . "\">\n";
+            if (isset($_REQUEST['htmlbody']))
+              echo '<input type="hidden" name="htmlbody" value="' . htmlspecialchars($_REQUEST['htmlbody']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
