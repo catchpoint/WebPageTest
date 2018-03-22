@@ -183,6 +183,8 @@
               $test['timeline'] = $req_timeline;
             if (isset($_REQUEST['timeline_fps']) && $_REQUEST['timeline_fps'])
               $test['timeline_fps'] = 1;
+            if (isset($_REQUEST['discard_timeline']) && $_REQUEST['discard_timeline'])
+              $test['discard_timeline'] = 1;
             $test['timelineStackDepth'] = array_key_exists('timelineStack', $_REQUEST) && $_REQUEST['timelineStack'] ? 5 : 0;
             if (isset($req_swrender))
               $test['swrender'] = $req_swrender;
@@ -2054,6 +2056,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'standards', '1');
             if( isset($test['timeline']) && $test['timeline'] ) {
                 AddIniLine($testFile, 'timeline', '1');
+                if (isset($test['discard_timeline']))
+                  AddIniLine($testFile, 'discard_timeline', $test['discard_timeline']);
                 if (isset($test['timeline_fps']))
                   AddIniLine($testFile, 'timeline_fps', $test['timeline_fps']);
                 if (isset($test['timelineStackDepth']))
