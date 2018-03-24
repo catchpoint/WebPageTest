@@ -418,6 +418,7 @@ class HttpArchiveGenerator
     private function getJsonEncoded($options) {
         $json_encode_good = version_compare(phpversion(), '5.4.0') >= 0 ? true : false;
         $pretty_print = false;
+        $json = null;
         if (isset($options['pretty']) && $options['pretty'])
             $pretty_print = true;
         if (isset($options['php']) && $options['php']) {
@@ -431,12 +432,18 @@ class HttpArchiveGenerator
             else
                 $json = json_encode($this->harData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         } else {
-            $jsonLib = new Services_JSON();
-            $json = $jsonLib->encode($this->harData);
+            try {
+                $jsonLib = new Services_JSON();
+                $json = $jsonLib->encode($this->harData);
+            } catch (Exception $e) {
+            }
         }
         if ($json === false) {
-            $jsonLib = new Services_JSON();
-            $json = $jsonLib->encode($this->harData);
+            try {
+              $jsonLib = new Services_JSON();
+              $json = $jsonLib->encode($this->harData);
+            } catch (Exception $e) {
+            }
         }
         return $json;
     }
