@@ -433,6 +433,7 @@ class HttpArchiveGenerator
                 $json = json_encode($this->harData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         } else {
             try {
+                require_once(__DIR__ . '/../lib/json.php');
                 $jsonLib = new Services_JSON();
                 $json = $jsonLib->encode($this->harData);
             } catch (Exception $e) {
@@ -440,8 +441,9 @@ class HttpArchiveGenerator
         }
         if ($json === false) {
             try {
-              $jsonLib = new Services_JSON();
-              $json = $jsonLib->encode($this->harData);
+                require_once(__DIR__ . '/../lib/json.php');
+                $jsonLib = new Services_JSON();
+                $json = $jsonLib->encode($this->harData);
             } catch (Exception $e) {
             }
         }
