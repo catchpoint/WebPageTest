@@ -232,6 +232,9 @@ agentUpdate=http://cdn.webpagetest.org/
 ; Start an EC2 instance for every X tests in the queue (up to the location max)
 ;EC2.ScaleFactor=100
 
+; Pass the private IP address of the server through user-data for auto-launch agents instead of public EIP
+;ec2_use_server_private_ip=1
+
 ; !!! ONLY SET THIS FOR LINUX AGENTS !!!
 ;
 ; Number of minutes to let an instance run idle before terminating.  This
