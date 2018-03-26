@@ -17,7 +17,9 @@ class HttpArchiveGenerator
 
     private $harData = array();
 
-    private static $includePageArrays = array('priorityStreams' => true, 'blinkFeatureFirstUsed' => true);
+    private static $includePageArrays = array('priorityStreams' => true,
+                                              'blinkFeatureFirstUsed' => true,
+                                              'detected' => true);
 
     /**
      * HttpArchiveGenerator constructor.
