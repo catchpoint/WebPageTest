@@ -19,7 +19,8 @@ class HttpArchiveGenerator
 
     private static $includePageArrays = array('priorityStreams' => true,
                                               'blinkFeatureFirstUsed' => true,
-                                              'detected' => true);
+                                              'detected' => true,
+                                              'detected_apps' => true);
 
     /**
      * HttpArchiveGenerator constructor.
