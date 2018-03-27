@@ -52,7 +52,7 @@ function EC2_StartInstanceIfNeeded($ami) {
 */
 function EC2_StartInstance($ami) {
   $started = false;
-  
+  $host = '';
   // figure out the user data string to use for the instance
   $key = GetSetting('location_key');
   $locations = LoadLocationsIni();
@@ -87,14 +87,25 @@ function EC2_StartInstance($ami) {
   }
   if (strlen($loc) && isset($region)) {
     $host = GetSetting('host');
+    $useprivateip = GetSetting('ec2_use_server_private_ip');
     if (!$host && isset($_SERVER['HTTP_HOST']) && strlen($_SERVER['HTTP_HOST']))
       $host = $_SERVER['HTTP_HOST'];
     if ((!$host || $host == '127.0.0.1' || $host == 'localhost') && GetSetting('ec2')) {
-      $host = file_get_contents('http://169.254.169.254/latest/meta-data/public-ipv4');
-      if (!isset($host) || !strlen($host))
-        $host = file_get_contents('http://169.254.169.254/latest/meta-data/public-hostname');
-      if (!isset($host) || !strlen($host))
-        $host = file_get_contents('http://169.254.169.254/latest/meta-data/hostname');
+      if ($useprivateip == 1) {
+        EC2Log("Getting private IP");
+        $host = file_get_contents('http://169.254.169.254/latest/meta-data/local-ipv4');
+        if (!isset($host) || !strlen($host))
+          $host = file_get_contents('http://169.254.169.254/latest/meta-data/local-hostname');
+        if (!isset($host) || !strlen($host))
+          $host = file_get_contents('http://169.254.169.254/latest/meta-data/hostname');
+      } else {
+        EC2Log("Getting public IP");
+        $host = file_get_contents('http://169.254.169.254/latest/meta-data/public-ipv4');
+        if (!isset($host) || !strlen($host))
+          $host = file_get_contents('http://169.254.169.254/latest/meta-data/public-hostname');
+        if (!isset($host) || !strlen($host))
+          $host = file_get_contents('http://169.254.169.254/latest/meta-data/hostname');
+      }
     }
     $user_data = "wpt_server=$host";
     $wpt_username = GetSetting('ba_username');
