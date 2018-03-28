@@ -1,4 +1,8 @@
 <?php
+// No longer do symbol lookups
+http_response_code(404);
+die();
+
 /**
 * By default this will relay to the public webpagetest server to populate a cache of chrome function offsets.
 * If you want the work to be done locally it requires python 2.7, some specific modules and cabextract
