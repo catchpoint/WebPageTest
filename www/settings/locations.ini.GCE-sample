@@ -1,0 +1,208 @@
+; This is a sample locations.ini that includes all of the Google Cloud locations
+
+; The locations will automatically be set by the agents but the server address
+; and secret key need to be passed as metadata.
+; The metadata key is:
+; wpt_data
+; The metadata value is:
+; wpt_server=www.yourserver.com wpt_key=SecretLocationKey
+; IMPORTANT: Make sure to change the wpt_server to point to your private WPT instance
+;            and replace SecretKey with a unique secret string (alphanumeric, no whitespace)
+
+[locations]
+1=us-east4-loc
+2=us-east1-loc
+3=us-central1-loc
+4-us-west1-loc
+5=northamerica-northeast1-loc
+6=southamerica-east1-loc
+7=europe-west2-loc
+8=europe-west1-loc
+9=europe-west3-loc
+10=europe-west4-loc
+11=asia-south1-loc
+12=asia-southeast1-loc
+13=asia-east1-loc
+14=asia-northeast1-loc
+15=australia-southeast1-loc
+default=us-east4-loc
+
+;
+; North America
+;
+
+[us-east4-loc]
+1=us-east4
+label="Virginia, USA (Chrome,Firefox,Opera)"
+group=North America
+
+[us-east4]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Virginia, USA"
+key=SecretLocationKey
+
+
+[us-east1-loc]
+1=us-east1
+label="South Carolina, USA (Chrome,Firefox,Opera)"
+group=North America
+
+[us-east1]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="South Carolina, USA"
+key=SecretLocationKey
+
+
+[us-central1-loc]
+1=us-central1
+label="Iowa, USA (Chrome,Firefox,Opera)"
+group=North America
+
+[us-central1]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Iowa, USA"
+key=SecretLocationKey
+
+
+[us-west1-loc]
+1=us-west1
+label="Oregon, USA (Chrome,Firefox,Opera)"
+group=North America
+
+[us-west1]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Oregon, USA"
+key=SecretLocationKey
+
+
+[northamerica-northeast1-loc]
+1=northamerica-northeast1
+label="Montréal, Canada (Chrome,Firefox,Opera)"
+group=North America
+
+[northamerica-northeast1]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Montréal, Canada"
+key=SecretLocationKey
+
+;
+; South America
+;
+
+[southamerica-east1-loc]
+1=southamerica-east1
+label="São Paulo, Brazil (Chrome,Firefox,Opera)"
+group=South America
+
+[southamerica-east1]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="São Paulo, Brazil"
+key=SecretLocationKey
+
+;
+; Europe
+;
+
+[europe-west2-loc]
+1=europe-west2
+label="London, U.K. (Chrome,Firefox,Opera)"
+group=Europe
+
+[europe-west2]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="London, U.K."
+key=SecretLocationKey
+
+
+[europe-west1-loc]
+1=europe-west1
+label="St. Ghislain, Belgium (Chrome,Firefox,Opera)"
+group=Europe
+
+[europe-west1]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="St. Ghislain, Belgium"
+key=SecretLocationKey
+
+
+[europe-west3-loc]
+1=europe-west3
+label="Frankfurt, Germany (Chrome,Firefox,Opera)"
+group=Europe
+
+[europe-west3]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Frankfurt, Germany"
+key=SecretLocationKey
+
+
+[europe-west4-loc]
+1=europe-west4
+label="Eemshaven, Netherlands (Chrome,Firefox,Opera)"
+group=Europe
+
+[europe-west4]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Eemshaven, Netherlands"
+key=SecretLocationKey
+
+;
+; Asia
+;
+
+[asia-south1-loc]
+1=asia-south1
+label="Mumbai, India (Chrome,Firefox,Opera)"
+group=Asia
+
+[asia-south1]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Mumbai, India"
+key=SecretLocationKey
+
+
+[asia-southeast1-loc]
+1=asia-southeast1
+label="Jurong West, Singapore (Chrome,Firefox,Opera)"
+group=Asia
+
+[asia-southeast1]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Jurong West, Singapore"
+key=SecretLocationKey
+
+
+[asia-east1-loc]
+1=asia-east1
+label="Changhua County, Taiwan (Chrome,Firefox,Opera)"
+group=Asia
+
+[asia-east1]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Changhua County, Taiwan"
+key=SecretLocationKey
+
+
+[asia-northeast1-loc]
+1=asia-northeast1
+label="Tokyo, Japan (Chrome,Firefox,Opera)"
+group=Asia
+
+[asia-northeast1]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Tokyo, Japan"
+key=SecretLocationKey
+
+;
+; Oceania
+;
+
+[australia-southeast1-loc]
+1=australia-southeast1
+label="Sydney, Australia (Chrome,Firefox,Opera)"
+group=Oceania
+
+[australia-southeast1]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Sydney, Australia"
+key=SecretLocationKey
