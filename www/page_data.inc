@@ -213,8 +213,10 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
             $ret['lastVisualChange'] = $ret['visualComplete'];
         }
       }
-      // see if we need a custom Speed Index as well
-      if (isset($ret) && is_array($ret) && isset($ret['fullyLoaded']) && $ret['fullyLoaded']) {
+      // Calculate the timeline-based CPU times
+      if (isset($ret) && is_array($ret) &&
+          !isset($ret['cpuTimes']) &&
+          isset($ret['fullyLoaded']) && $ret['fullyLoaded']) {
         $processing = GetDevToolsCPUTimeForStep($localPaths, $ret['fullyLoaded']);
         if (isset($processing) && is_array($processing) && count($processing)) {
           $ret['cpuTimes'] = $processing;
