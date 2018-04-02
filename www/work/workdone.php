@@ -3,21 +3,20 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('ProcessRun');
   newrelic_add_custom_tracer('loadAllPageData');
   newrelic_add_custom_tracer('getRequestsForStep');
-  newrelic_add_custom_tracer('ExtractZipFile');
-  newrelic_add_custom_tracer('ProcessIncrementalResult');
-  newrelic_add_custom_tracer('CompressTextFiles');
   newrelic_add_custom_tracer('LockTest');
   newrelic_add_custom_tracer('UpdateTester');
-  newrelic_add_custom_tracer('loadVideo');
   newrelic_add_custom_tracer('GetVisualProgressForStep');
   newrelic_add_custom_tracer('GetDevToolsCPUTimeForStep');
   newrelic_add_custom_tracer('GetDevToolsRequestsForStep');
-  newrelic_add_custom_tracer('getBreakdownForStep');
+  newrelic_add_custom_tracer('loadUserTimingData');
   newrelic_add_custom_tracer('GetVisualProgress');
   newrelic_add_custom_tracer('DevToolsGetConsoleLog');
   newrelic_add_custom_tracer('SecureDir');
   newrelic_add_custom_tracer('loadPageRunData');
-  newrelic_add_custom_tracer('ParseCsiInfoForStep');
+  newrelic_add_custom_tracer('loadPageStepData');
+  newrelic_add_custom_tracer('ParseUserTiming');
+  newrelic_add_custom_tracer('CalculateTimeToInteractive');
+  
 }
 
 chdir('..');

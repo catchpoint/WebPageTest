@@ -328,6 +328,10 @@ class TestPaths {
     return $this->testRoot . "lighthouse.json";
   }
 
+  public function lighthouseAuditsFile() {
+    return $this->testRoot . "lighthouse_audits.json";
+  }
+
   /**
    * @return string Path for lighthouse html file
    */
