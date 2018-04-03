@@ -7,7 +7,7 @@
 ; The metadata value is:
 ; wpt_server=www.yourserver.com wpt_key=SecretLocationKey
 ; IMPORTANT: Make sure to change the wpt_server to point to your private WPT instance
-;            and replace SecretKey with a unique secret string (alphanumeric, no whitespace)
+;            and replace SecretKey with the Key configured in settings.ini (if any)
 
 [locations]
 1=gce-us-east4-linux-loc
@@ -39,7 +39,6 @@ group=North America
 [gce-us-east4-linux]
 browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
 label="Virginia, USA"
-key=SecretLocationKey
 
 
 [gce-us-east1-linux-loc]
@@ -50,7 +49,6 @@ group=North America
 [gce-us-east1-linux]
 browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
 label="South Carolina, USA"
-key=SecretLocationKey
 
 
 [gce-us-central1-linux-loc]
@@ -61,7 +59,6 @@ group=North America
 [gce-us-central1-linux]
 browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
 label="Iowa, USA"
-key=SecretLocationKey
 
 
 [gce-us-west1-linux-loc]
@@ -72,7 +69,6 @@ group=North America
 [gce-us-west1-linux]
 browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
 label="Oregon, USA"
-key=SecretLocationKey
 
 
 [gce-northamerica-northeast1-linux-loc]
@@ -83,7 +79,6 @@ group=North America
 [gce-northamerica-northeast1-linux]
 browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
 label="Montréal, Canada"
-key=SecretLocationKey
 
 ;
 ; South America
@@ -97,7 +92,6 @@ group=South America
 [gce-southamerica-east1-linux]
 browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
 label="São Paulo, Brazil"
-key=SecretLocationKey
 
 ;
 ; Europe
@@ -111,7 +105,6 @@ group=Europe
 [gce-europe-west2-linux]
 browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
 label="London, U.K."
-key=SecretLocationKey
 
 
 [gce-europe-west1-linux-loc]
@@ -122,7 +115,6 @@ group=Europe
 [gce-europe-west1-linux]
 browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
 label="St. Ghislain, Belgium"
-key=SecretLocationKey
 
 
 [gce-europe-west3-linux-loc]
@@ -133,7 +125,6 @@ group=Europe
 [gce-europe-west3-linux]
 browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
 label="Frankfurt, Germany"
-key=SecretLocationKey
 
 
 [gce-europe-west4-linux-loc]
@@ -144,7 +135,6 @@ group=Europe
 [gce-europe-west4-linux]
 browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
 label="Eemshaven, Netherlands"
-key=SecretLocationKey
 
 ;
 ; Asia
@@ -158,7 +148,6 @@ group=Asia
 [gce-asia-south1-linux]
 browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
 label="Mumbai, India"
-key=SecretLocationKey
 
 
 [gce-asia-southeast1-linux-loc]
@@ -169,7 +158,6 @@ group=Asia
 [gce-asia-southeast1-linux]
 browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
 label="Jurong West, Singapore"
-key=SecretLocationKey
 
 
 [gce-asia-east1-linux-loc]
@@ -180,7 +168,6 @@ group=Asia
 [gce-asia-east1-linux]
 browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
 label="Changhua County, Taiwan"
-key=SecretLocationKey
 
 
 [gce-asia-northeast1-linux-loc]
@@ -191,7 +178,6 @@ group=Asia
 [gce-asia-northeast1-linux]
 browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
 label="Tokyo, Japan"
-key=SecretLocationKey
 
 ;
 ; Oceania
@@ -205,4 +191,3 @@ group=Oceania
 [gce-australia-southeast1-linux]
 browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
 label="Sydney, Australia"
-key=SecretLocationKey

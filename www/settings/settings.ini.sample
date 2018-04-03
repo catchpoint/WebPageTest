@@ -94,6 +94,9 @@ maxNavigateCount=20
 ; for processing background tasks.
 ;local_server=http://127.0.0.1
 
+; Default API key to use across all locations
+;location_key=AlphaNumericKey
+
 ; disable gzip compressing the result text files
 ;nogzip=1
 

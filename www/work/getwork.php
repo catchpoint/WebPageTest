@@ -251,7 +251,7 @@ function GetJob() {
 
   $workDir = "./work/jobs/$location";
   $locInfo = GetLocationInfo($location);
-  $locKey = '';
+  $locKey = GetSetting('location_key', '');
   if (isset($locInfo) && is_array($locInfo) && isset($locInfo['key']))
     $locKey = $locInfo['key'];
   if (strpos($location, '..') == false &&

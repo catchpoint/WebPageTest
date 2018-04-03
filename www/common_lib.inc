@@ -59,7 +59,7 @@ function GetTestPath($id)
 * @param mixed $location
 */
 function GetLocationKey($location) {
-  $key = '';
+  $key = GetSetting('location_key', '');
   $info = GetLocationInfo($location);
   if (isset($info) && is_array($info) && isset($info['key'])) {
     $key = $info['key'];
