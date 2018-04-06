@@ -159,6 +159,8 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="discard_timeline" value="' . htmlspecialchars($_REQUEST['discard_timeline']) . "\">\n";
             if (isset($_REQUEST['htmlbody']))
               echo '<input type="hidden" name="htmlbody" value="' . htmlspecialchars($_REQUEST['htmlbody']) . "\">\n";
+            if (isset($_REQUEST['disable_video']))
+              echo '<input type="hidden" name="disable_video" value="' . htmlspecialchars($_REQUEST['disable_video']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>

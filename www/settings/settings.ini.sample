@@ -38,6 +38,12 @@ fullSizeVideoOn=1
 ;Full Size Video - default checkbox state - ticked (1) or unticked (0)
 fullSizeVideoDefault=0
 
+; Disable all video capture and processing when tests do not opt for video.
+; Usually the agents will still capture video to calculate the visual metrics
+; but the video will not be uploaded. With strict_video enabled, tests without
+; video capture will not get visual metrics.
+;strict_video=1
+
 ; Run tests concurrently across test machines
 ;shard_tests=1
 

@@ -148,6 +148,12 @@
               $test['notify'] = trim($req_notify);
             if (isset($req_video))
               $test['video'] = $req_video;
+            if (isset($_REQUEST['disable_video']) && $_REQUEST['disable_video']) {
+              $test['disable_video'] = 1;
+            } elseif (GetSetting('strict_video')) {
+              if (!isset($test['video']) || !$test['video'])
+                $test['disable_video'] = 1;
+            }
             $test['keepvideo'] = isset($req_keepvideo) && $req_keepvideo ? 1 : 0;
             $test['continuousVideo'] = isset($req_continuousVideo) && $req_continuousVideo ? 1 : 0;
             $test['renderVideo'] = isset($req_renderVideo) && $req_renderVideo ? 1 : 0;
@@ -2016,6 +2022,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
             AddIniLine($testInfo, "notify", $test['notify']);
         if( isset($test['video']) && strlen($test['video']) )
             AddIniLine($testInfo, "video", "1");
+        if (isset($test['disable_video']))
+            AddIniLine($testInfo, "disable_video", $test['disable_video']);
         if( isset($test['uid']) && strlen($test['uid']) )
             AddIniLine($testInfo, "uid", $test['uid']);
         if( isset($test['owner']) && strlen($test['owner']) )
@@ -2086,6 +2094,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'blockads', '1');
             if( isset($test['video']) && $test['video'] )
                 AddIniLine($testFile, 'Capture Video', '1');
+            if (isset($test['disable_video']))
+                AddIniLine($testFile, "disable_video", $test['disable_video']);
             if (GetSetting('save_mp4') || (isset($test['keepvideo']) && $test['keepvideo']))
                 AddIniLine($testFile, 'keepvideo', '1');
             if (isset($test['renderVideo']) && $test['renderVideo'])
