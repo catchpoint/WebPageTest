@@ -43,6 +43,12 @@ then bounce nginx:
   sudo service nginx restart
 ```
 
+note that agent creation is logged at:
+
+```
+  /var/www/webpagetest/www/ec2/log
+```
+
 Example user data:
 
 ```
