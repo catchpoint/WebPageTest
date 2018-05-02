@@ -98,7 +98,7 @@ $page_description = "Comparison Test$testLabel.";
             echo "<script>\nvar originalScript = \"$script\";\n</script>";
             ?>
             <input type="hidden" name="bulkurls" value="">
-            <input type="hidden" name="vo" value="<?php echo $owner;?>">
+            <input type="hidden" name="vo" value="<?php echo htmlspecialchars($owner);?>">
             <?php
             if( strlen($secret) ){
               $hashStr = $secret;

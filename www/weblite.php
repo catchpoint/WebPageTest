@@ -62,7 +62,7 @@ $page_description = "Comparison Test$testLabel.";
             <input type="hidden" name="web10" value="0">
             <input type="hidden" name="fvonly" value="1">
             <input type="hidden" name="bulkurls" value="">
-            <input type="hidden" name="vo" value="<?php echo $owner;?>">
+            <input type="hidden" name="vo" value="<?php echo htmlspecialchars($owner);?>">
             <?php
             if( strlen($secret) ){
               $hashStr = $secret;

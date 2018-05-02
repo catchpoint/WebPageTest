@@ -56,7 +56,7 @@ $lighthouse = parse_ini_file('./settings/lighthouse.ini', true);
             <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
             
             <?php
-            echo "<input type=\"hidden\" name=\"vo\" value=\"$owner\">\n";
+            echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
             if( strlen($secret) ){
               $hashStr = $secret;
               $hashStr .= $_SERVER['HTTP_USER_AGENT'];

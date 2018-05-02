@@ -62,7 +62,7 @@ $page_description = "Cloudflare Comparison Test$testLabel.";
             <input type="hidden" name="mobile" value="1">
             <input type="hidden" name="runs" value="3">
             <input type="hidden" name="bulkurls" value="">
-            <input type="hidden" name="vo" value="<?php echo $owner;?>">
+            <input type="hidden" name="vo" value="<?php echo htmlspecialchars($owner);?>">
             <?php
             if( strlen($secret) ){
               $hashStr = $secret;
