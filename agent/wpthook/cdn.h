@@ -190,6 +190,7 @@ CDN_PROVIDER cdnList[] = {
   {".cedexis.net", "Cedexis"},
   {".streamprovider.net", "Rocket CDN"},
   {".singularcdn.net.br", "Singular CDN"},
+  {".meleven.de", "Meleven"},
   {"END_MARKER", "END_MARKER"}
 };
 
