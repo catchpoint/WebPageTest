@@ -63,7 +63,7 @@ h2 .medium {font-weight:normal; line-height: 18px; font-size: 18px;}
 
 .test_menu {height: 24px;width: 975px;background-color: #2f2f2f;padding-left: 5px; margin-top: 12px; line-height: 24px; clear:both; }
 .test_menu li {float: left;height: inherit;}
-.test_menu li a {padding: 0 15px;height: inherit;color: #fff;text-decoration: none;font-weight: bold;}
+.test_menu li a {padding: 0 11px;height: inherit;color: #fff;text-decoration: none;font-weight: bold;}
 .test_menu li.current a {color: #f1c52e; display: block; text-decoration:underline; }
 
  #main {position: relative; padding: 0; background-color: #fff;}

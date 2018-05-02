@@ -339,6 +339,15 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
             echo "<li><a href=\"$tabUrl\" title=\"Cloudinary Image Analysis (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" style=\"padding-right: 2px;\">Image Analysis<img src=\"/images/external_header.svg\" style=\"padding-top: 4px; float: right;\"></a></li>";
           }
         }
+        
+        // Add the "Request Map" link
+        if (isset($id) && strlen($id)) {
+          $tabUrl = GetSetting('request_map');
+          if ($tabUrl) {
+            $tabUrl = str_replace('{test id}', $id, $tabUrl);
+            echo "<li><a href=\"$tabUrl\" title=\"Request Map (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" style=\"padding-right: 2px;\">Request Map<img src=\"/images/external_header.svg\" style=\"padding-top: 4px; float: right;\"></a></li>";
+          }
+        }
     
         echo '</ul>';
         echo '<div class="test_results-content">';
