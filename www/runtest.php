@@ -121,6 +121,9 @@
             $maxTime = GetSetting('maxtime');
             if ($maxTime && $test['timeout'] > $maxTime)
               $test['timeout'] = (int)$maxTime;
+            $run_time_limit = GetSetting('run_time_limit');
+            if ($run_time_limit)
+              $test['run_time_limit'] = (int)$run_time_limit;
             $test['connections'] = isset($req_connections) ? (int)$req_connections : 0;
             if (isset($req_private)) {
               $test['private'] = $req_private;
@@ -2004,7 +2007,11 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         // write out the ini file
         $testInfo = "[test]\r\n";
         AddIniLine($testInfo, "fvonly", $test['fvonly']);
-        AddIniLine($testInfo, "timeout", $test['timeout']);
+        $timeout = $test['timeout'];
+        if (!$timeout) {
+          $timeout = GetSetting('step_timeout', $timeout);
+        }
+        AddIniLine($testInfo, "timeout", $timeout);
         $resultRuns = isset($test['discard']) ? $test['runs'] - $test['discard'] : $test['runs'];
         AddIniLine($testInfo, "runs", $resultRuns);
         AddIniLine($testInfo, "location", "\"{$test['locationText']}\"");
@@ -2055,8 +2062,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'DOMElement', $test['domElement']);
             if( isset($test['fvonly']) && $test['fvonly'] )
                 AddIniLine($testFile, 'fvonly', '1');
-            if( isset($test['timeout']) && $test['timeout'] )
-                AddIniLine($testFile, 'timeout', $test['timeout']);
+            if( $timeout )
+                AddIniLine($testFile, 'timeout', $timeout);
+            if (isset($test['run_time_limit']))
+              AddIniLine($testFile, "run_time_limit", $test['run_time_limit']);
             if( isset($test['web10']) && $test['web10'] )
                 AddIniLine($testFile, 'web10', '1');
             if( isset($test['ignoreSSL']) && $test['ignoreSSL'] )

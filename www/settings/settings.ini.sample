@@ -50,8 +50,14 @@ fullSizeVideoDefault=0
 ; Maximum number of runs allowed per test
 maxruns=9
 
+; Default timeout for each step of a test (in seconds)
+;step_timeout=120
+
 ; Maximum amount of time for a test run (if requested by timeout=X)
 maxtime=600
+
+; Time limit for all steps in a single test run.
+;run_time_limit=180
 
 ; Maximum server load to allow when rendering video on the server
 render_max_load=8
