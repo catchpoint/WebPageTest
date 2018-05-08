@@ -295,6 +295,15 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
           $ret['TTIMeasurementEnd'] = $measurement_end;
         if ($last_interactive > 0)
           $ret['LastInteractive'] = $last_interactive;
+        if (!isset($ret['TimeToInteractive']) &&
+            $measurement_end > 0 &&
+            $last_interactive > 0 &&
+            $measurement_end - $last_interactive >= 5000) {
+          $ret['TimeToInteractive'] = $last_interactive;
+          if (!isset($ret['FirstInteractive'])) {
+            $ret['FirstInteractive'] = $last_interactive;
+          }
+        }
       }
     }
     
