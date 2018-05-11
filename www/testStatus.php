@@ -68,7 +68,7 @@ if( isset($_REQUEST['tests']) && strlen($_REQUEST['tests']) )
 }
 
 // spit out the response in the correct format
-if( $_REQUEST['f'] == 'xml' )
+if( isset($_REQUEST['f']) && $_REQUEST['f'] == 'xml' )
 {
     header ('Content-type: text/xml');
     echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
@@ -80,8 +80,10 @@ if( $_REQUEST['f'] == 'xml' )
         if( $key == 'data' )
         {
             echo "\n";
-            foreach( $val as $k => $v )
+            foreach( $val as $k => $v ) {
+              if (is_string($v))
                 echo("<$k>$v</$k>\n");
+            }
         }
         else
             echo $val;

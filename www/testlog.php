@@ -26,6 +26,9 @@ $repeat   = !empty($_REQUEST['repeat']);
 $nolimit   = !empty($_REQUEST['nolimit']);
 $csv       = !strcasecmp($_GET["f"], 'csv');
 
+if (isset($this_user) && !isset($user))
+  $user = $this_user;
+
 if (isset($filterstr) && $supportsGrep)
   $filterstr = trim(escapeshellarg(str_replace(array('"', "'", '\\'), '', trim($filterstr))), "'\"");
 
@@ -74,7 +77,7 @@ else
         </style>
     </head>
     <body>
-        <div class="page">
+        <div class="page-wide">
             <?php
             $tab = 'Test History';
             include 'header.inc';
@@ -138,23 +141,24 @@ else
                             unset($lines);
                           if ($supportsGrep) {
                             $ok = false;
-                            $pattern = '';
+                            $patterns = array();
                             if(isset($filterstr) && strlen($filterstr)) {
-                              $pattern = $filterstr;
+                              $patterns[] = $filterstr;
                             } elseif (!$all) {
                               if (isset($user)) {
-                                if (strlen($pattern))
-                                  $pattern .= "\n";
-                                $pattern .= "\t$user\t";
+                                $patterns[]= "\t$user\t";
                               }
                               if (isset($owner) && strlen($owner)) {
-                                if (strlen($pattern))
-                                  $pattern .= "\n";
-                                $pattern .= "\t$owner\t";
+                                $patterns[] = "\t$owner\t";
                               }
                             }
-                            if (strlen($pattern)) {
-                              $command = "grep -i -F \"$pattern\" \"$fileName\"";
+                            if (count($patterns)) {
+                              $command = "grep -a -i -F";
+                              foreach($patterns as $pattern) {
+                                $pattern = str_replace('"', '\\"', $pattern);
+                                $command .= " -e \"$pattern\"";
+                              }
+                              $command .= " \"$fileName\"";
                               exec($command, $lines, $result_code);
                               if ($result_code === 0 && is_array($lines) && count($lines))
                                 $ok = true;
@@ -189,19 +193,19 @@ else
                                       // tokenize the line
                                       $line_data = tokenizeLogLine($line);
 
-                                      $date       = $line_data['date'];
-                                      $ip         = $line_data['ip'];
-                                      $guid       = $line_data['guid'];
-                                      $url        = htmlentities($line_data['url']);
-                                      $location   = $line_data['location'];
-                                      $private    = $line_data['private'];
-                                      $testUID    = $line_data['testUID'];
-                                      $testUser   = $line_data['testUser'];
-                                      $video      = $line_data['video'];
-                                      $label      = htmlentities($line_data['label']);
-                                      $o          = $line_data['o'];
-                                      $key        = $line_data['key'];
-                                      $count      = $line_data['count'];
+                                      $date       = @$line_data['date'];
+                                      $ip         = @$line_data['ip'];
+                                      $guid       = @$line_data['guid'];
+                                      $url        = htmlentities(@$line_data['url']);
+                                      $location   = @$line_data['location'];
+                                      $private    = @$line_data['private'];
+                                      $testUID    = @$line_data['testUID'];
+                                      $testUser   = @$line_data['testUser'];
+                                      $video      = @$line_data['video'];
+                                      $label      = htmlentities(@$line_data['label']);
+                                      $o          = @$line_data['o'];
+                                      $key        = @$line_data['key'];
+                                      $count      = @$line_data['count'];
 
                                       if (!$location) {
                                           $location = '';

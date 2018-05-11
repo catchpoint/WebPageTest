@@ -75,11 +75,6 @@ class RequestHeadersHtmlSnippet {
     }
     if (array_key_exists('client_port', $request) && intval($request['client_port']))
       $out .= "<b>Client Port:</b> " . htmlspecialchars($request['client_port']) . "<br>\n";
-    if (array_key_exists('custom_rules', $request)) {
-      foreach ($request['custom_rules'] as $rule_name => &$rule) {
-        $out .= "<b>Custom Rule - " . htmlspecialchars($rule_name) . ": </b>(" . htmlspecialchars($rule['count']) . " matches) - " . htmlspecialchars($rule['value']) . "<br>\n";
-      }
-    }
     $out .= "<b>Request Start:</b> " . number_format($request['load_start'] / 1000.0, 3) . " s<br>\n";
     if (array_key_exists('dns_ms', $request) && $request['dns_ms'] > 0)
       $out .= "<b>DNS Lookup:</b> {$request['dns_ms']} ms<br>\n";

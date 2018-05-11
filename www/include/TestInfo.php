@@ -35,7 +35,10 @@ class TestInfo {
         touch($iniPath);
     }
     $test["testinfo"] = GetTestInfo($rootDirectory);
-    return new self($test['testinfo']["id"], $rootDirectory, $test);
+    if (isset($test) && is_array($test) && isset($test['testinfo']["id"]))
+      return new self($test['testinfo']["id"], $rootDirectory, $test);
+    else
+      return new self('010101_0_0', $rootDirectory, $test);
   }
 
   /**
@@ -63,7 +66,8 @@ class TestInfo {
    * @return string The type of the test
    */
   public function getTestType() {
-    return isset($this->rawData['testinfo']['type']) ? $this->rawData['testinfo']['type'] : 0;
+    $type = isset($this->rawData['testinfo']['type']) ? $this->rawData['testinfo']['type'] : '';
+    return $type;
   }
 
   /**
@@ -219,6 +223,9 @@ class TestInfo {
    * @return bool True if the test is supposed to have a timeline, false otherwise
    */
   public function hasTimeline() {
-    return !empty($this->rawData["testinfo"]["timeline"]);
+    $ret = !empty($this->rawData["testinfo"]["timeline"]);
+    if ($ret && !empty($this->rawData["testinfo"]["discard_timeline"]))
+      $ret = false;
+    return $ret;
   }
 }

@@ -23,6 +23,22 @@ $page_description = "Comparison Test$testLabel.";
     <body>
         <div class="page">
             <?php
+            $siteKey = GetSetting("recaptcha_site_key", "");
+            if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($siteKey)) {
+              echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
+              ?>
+              <script>
+              function onRecaptchaSubmit(token) {
+                var form = document.getElementById("urlEntry");
+                if (PreparePSSTest(form)) {
+                  form.submit();
+                } else {
+                  grecaptcha.reset();
+                }
+              }
+              </script>
+              <?php
+            }
             $navTabs = array('New Comparison' => '/optimized');
             if( array_key_exists('pssid', $_GET) && strlen($_GET['pssid']) ) {
                 $pssid = htmlspecialchars($_GET['pssid']);
@@ -46,7 +62,7 @@ $page_description = "Comparison Test$testLabel.";
             <input type="hidden" name="web10" value="0">
             <input type="hidden" name="fvonly" value="1">
             <input type="hidden" name="bulkurls" value="">
-            <input type="hidden" name="vo" value="<?php echo $owner;?>">
+            <input type="hidden" name="vo" value="<?php echo htmlspecialchars($owner);?>">
             <?php
             if( strlen($secret) ){
               $hashStr = $secret;
@@ -80,7 +96,13 @@ $page_description = "Comparison Test$testLabel.";
             </div>
 
             <div id="start_test-container">
-                <p><input id="start_test-button" type="submit" name="submitBtn" value="" class="start_test"></p>
+                <?php
+                if (strlen($siteKey)) {
+                  echo "<p><button id=\"start_test-button\" data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
+                } else {
+                  echo '<p><input id="start_test-button" type="submit" name="submit" value="" class="start_test"></p>';
+                }
+                ?>
             </div>
             <div class="cleared"><br></div>
 

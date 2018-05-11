@@ -14,7 +14,9 @@ if ($userIsBot) {
   exit;
 }
 
-require_once('har.inc.php');
+require_once __DIR__ . '/lib/json.php';
+require_once __DIR__ . '/include/TestInfo.php';
+require_once __DIR__ . '/har/HttpArchiveGenerator.php';
 
 $options = array();
 if (isset($_REQUEST['bodies']))
@@ -42,7 +44,16 @@ header('Content-type: application/json');
 if( isset($_REQUEST['callback']) && strlen($_REQUEST['callback']) )
     echo "{$_REQUEST['callback']}(";
 
-$json = GenerateHAR($id, $testPath, $options);
+$json = '{}';
+
+if (isset($testPath)) {
+
+    $testInfo = TestInfo::fromValues($id, $testPath, $test);
+    $archiveGenerator = new HttpArchiveGenerator($testInfo, $options);
+    $json = $archiveGenerator->generate();
+
+}
+
 echo $json;
 
 if( isset($_REQUEST['callback']) && strlen($_REQUEST['callback']) )

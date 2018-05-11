@@ -480,6 +480,8 @@ void TestState::UpdateBrowserWindow(DWORD current_width,
                                     DWORD current_height) {
   ATLTRACE("[wpthook] - UpdateBrowserWindow. currently: %d x %d", current_width,
            current_height);
+  const int CHROME_PADDING_HEIGHT = 75;
+  const int CHROME_PADDING_WIDTH = 6;
   if (!_started) {
     DWORD browser_process_id = GetCurrentProcessId();
     if (no_gdi_)
@@ -505,20 +507,20 @@ void TestState::UpdateBrowserWindow(DWORD current_width,
         int browser_height = abs(browser.top - browser.bottom);
         int width_delta = _test._viewport_width - current_width;
         int height_delta = _test._viewport_height - current_height;
+        // Make sure it is no smaller than the requested size
+        int width = max(browser_width + width_delta, (int)_test._viewport_width + CHROME_PADDING_WIDTH);
+        int height = max(browser_height + height_delta, (int)_test._viewport_height + CHROME_PADDING_HEIGHT);
         ::ShowWindow(_frame_window, SW_RESTORE);
-        ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, 
-                        browser_width + width_delta,
-                        browser_height + height_delta, SWP_NOACTIVATE);
+        ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, width, height, SWP_NOACTIVATE);
         updated = true;
         _viewport_adjusted = true;
       }
     } else if (!_viewport_adjusted && _frame_window &&
                 old_frame != _frame_window) {
-      DWORD browser_width = _test._browser_width;
-      DWORD browser_height = _test._browser_height;
+      int width = max(_test._browser_width, _test._viewport_width + CHROME_PADDING_WIDTH);
+      int height = max(_test._browser_height, _test._viewport_height + CHROME_PADDING_HEIGHT);
       ::ShowWindow(_frame_window, SW_RESTORE);
-      ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, 
-                      browser_width, browser_height, SWP_NOACTIVATE);
+      ::SetWindowPos(_frame_window, HWND_TOPMOST, 0, 0, width, height, SWP_NOACTIVATE);
       updated = true;
     }
     if (updated) {

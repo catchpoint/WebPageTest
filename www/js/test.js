@@ -10,7 +10,9 @@ function htmlEntities(str) {
 function ValidateInput(form)
 {
     if( (form.url.value == "" || form.url.value == "Enter a Website URL") &&
-        form.script.value == "" && form.bulkurls.value == "" && form.bulkfile.value == "" )
+        form.script.value == "" &&
+        (form['bulkurls'] == undefined || form.bulkurls.value == "") &&
+        (form['bulkfile'] == undefined || form.bulkfile.value == "") )
     {
         alert( "Please enter an URL to test." );
         form.url.focus();
@@ -20,31 +22,40 @@ function ValidateInput(form)
     if( form.url.value == "Enter a Website URL" )
         form.url.value = "";
     
-    var runs = form.runs.value;
-    if( runs < 1 || runs > maxRuns )
-    {
-        alert( "Please select a number of runs between 1 and " + maxRuns + "." );
-        form.runs.focus();
-        return false
+    if (form['runs']) {
+      var runs = form.runs.value;
+      if( runs < 1 || runs > maxRuns )
+      {
+          alert( "Please select a number of runs between 1 and " + maxRuns + "." );
+          form.runs.focus();
+          return false
+      }
     }
     
     var date = new Date();
     date.setTime(date.getTime()+(730*24*60*60*1000));
     var expires = "; expires="+date.toGMTString();
     var options = 0;
-    if( form.private.checked )
-        options = 1;
-    if( form.viewFirst.checked )
+    if (form['private']) {
+      if( form.private.checked )
+          options = 1;
+    }
+    if( form['viewFirst'] && form.viewFirst.checked )
         options = options | 2;
     document.cookie = 'testOptions=' + options + expires + '; path=/';
-    document.cookie = 'runs=' + runs + expires + '; path=/';
+    if (form['runs']) {
+      document.cookie = 'runs=' + runs + expires + '; path=/';
+    }
     
     // save out the selected location and connection information
-    document.cookie = 'cfg=' + $('#connection').val() + expires +  '; path=/';
-    document.cookie = 'u=' + $('#bwUp').val() + expires +  '; path=/';
-    document.cookie = 'd=' + $('#bwDown').val() + expires +  '; path=/';
-    document.cookie = 'l=' + $('#latency').val() + expires +  '; path=/';
-    document.cookie = 'p=' + $('#plr').val() + expires +  '; path=/';
+    try {
+      document.cookie = 'cfg=' + $('#connection').val() + expires +  '; path=/';
+      document.cookie = 'u=' + $('#bwUp').val() + expires +  '; path=/';
+      document.cookie = 'd=' + $('#bwDown').val() + expires +  '; path=/';
+      document.cookie = 'l=' + $('#latency').val() + expires +  '; path=/';
+      document.cookie = 'p=' + $('#plr').val() + expires +  '; path=/';
+    } catch(error) {
+    }
     
     SaveSettings();
 
@@ -92,7 +103,7 @@ function ValidateInput(form)
 })(jQuery);
 
 function RestoreSettings() {
-  if (!forgetSettings) {
+  if (!window['wptForgetSettings']) {
     if (wptStorage['testVideo'] != undefined)
         $('#videoCheck').prop('checked', wptStorage['testVideo']);
     if (wptStorage['testTimeline'] != undefined)
@@ -104,7 +115,7 @@ function RestoreSettings() {
 }
 
 function SaveSettings() {
-  if (!forgetSettings) {
+  if (!window['wptForgetSettings']) {
     wptStorage['testVideo'] = $('#videoCheck').is(':checked');
     wptStorage['testTimeline'] = $('#timeline').is(':checked');
   }
@@ -215,9 +226,11 @@ function BrowserChanged()
                 } else {
                     for( var conn in connectivity )
                     {
-                        if( selectedConfig == undefined )
-                            selectedConfig = config + '.' + conn;
-                        connections[config + '.' + conn] = {'label': connectivity[conn]['label']};
+                        if (connectivity[conn]['hidden'] == undefined || !connectivity[conn]['hidden']) {
+                            if( selectedConfig == undefined )
+                                selectedConfig = config + '.' + conn;
+                            connections[config + '.' + conn] = {'label': connectivity[conn]['label']};
+                        }
                     }
                     
                     connections[config + '.custom'] = {'label': 'Custom'};

@@ -1,7 +1,11 @@
 <?php
 chdir('..');
 include 'common.inc';
-$videoId = $_REQUEST['id'];
+if (isset($_REQUEST['id']) && !preg_match('/^[\w\.\-_]+$/', $_REQUEST['id'])) {
+  header("HTTP/1.0 404 Not Found");
+  die();
+}
+$videoId = htmlspecialchars($_REQUEST['id']);
 $valid = false;
 $done = false;
 $embed = false;
@@ -21,9 +25,9 @@ if (array_key_exists('data', $_REQUEST) && $_REQUEST['data']) {
   $displayData = true;
 }
 if (array_key_exists('bgcolor', $_REQUEST))
-    $bgcolor = $_REQUEST['bgcolor'];
+    $bgcolor = htmlspecialchars($_REQUEST['bgcolor']);
 if (array_key_exists('color', $_REQUEST))
-    $color = $_REQUEST['color'];
+    $color = htmlspecialchars($_REQUEST['color']);
 $autoplay = 'false';
 if (array_key_exists('autoplay', $_REQUEST) && $_REQUEST['autoplay'])
     $autoplay = 'true';
@@ -126,7 +130,7 @@ if( $xml )
     echo "<statusCode>$code</statusCode>\n";
     echo "<statusText>$error</statusText>\n";
     if( strlen($_REQUEST['r']) )
-        echo "<requestId>{$_REQUEST['r']}</requestId>\n";
+        echo "<requestId>" . htmlspecialchars($_REQUEST['r']) . "</requestId>\n";
     echo "<data>\n";
     echo "<videoId>$videoId</videoId>\n";
     if( strlen($videoUrl) )
@@ -169,7 +173,7 @@ else
             <noscript>
             <meta http-equiv="refresh" content="10" />
             </noscript>
-            <script language="JavaScript">
+            <script>
             setTimeout( "window.location.reload(true)", 10000 );
             </script>
             <?php
@@ -182,7 +186,6 @@ else
                 include ('head.inc'); 
             }
         ?>
-        <link rel="stylesheet" href="/video/video-js.3.2.0/video-js.min.css" type="text/css">
         <style type="text/css">
             .content h2 {
                 font-size: 1.5em;
@@ -254,15 +257,11 @@ else
               echo "color: " . htmlspecialchars($lightcolor) . ";\n";
               ?>
             }
-            .vjs-default-skin .vjs-controls {height: 0;}
-            .vjs-default-skin .vjs-mute-control {display: none;}
-            .vjs-default-skin .vjs-volume-control {display: none;}
             <?php
             if( $embed )
                 echo "body {background-color: " . htmlspecialchars($bgcolor) . "; margin:0; padding: 0;}";
             ?>
         </style>
-        <script type="text/javascript" src="/video/video-js.3.2.0/video.min.js"></script>
         <script type="text/javascript">
             function ShowEmbed() {
                 $("#embed").modal({opacity:80});
@@ -304,36 +303,11 @@ else
                 if( array_key_exists('height', $_REQUEST) && $_REQUEST['height'] )
                     $height = (int)$_REQUEST['height'];
 
-                echo "<script>\n";
-                if (array_key_exists('html', $_REQUEST) && $_REQUEST['html'])
-                    echo "_V_.options.techOrder = ['html5', 'flash'];\n";
-                else
-                    echo "_V_.options.techOrder = ['flash', 'html5'];\n";
-                echo "_V_.options.flash.swf = '/video/player/flowplayer-3.2.16.swf';\n";
-                echo "_V_.options.flash.flashVars = {config:\"{";
-                echo "'clip':{'scaling':'fit'},";
-                echo "'plugins':{'controls':{'volume':false,'mute':false,'stop':true,'tooltips':{'buttons':true,'fullscreen':'Enter fullscreen mode'}}},";
-                echo "'canvas':{'backgroundColor':'#000000','backgroundGradient':'none'},";
-                if ($hasThumb) {
-                    echo "'playlist':[{'url':'/$dir/video.png'},{'url':'/$dir/video.mp4','autoPlay':$autoplay,'autoBuffering':false}]";
-                } else {
-                    echo "'playlist':[{'url':'/$dir/video.mp4','autoPlay':$autoplay,'autoBuffering':true}]";
-                }
-                echo "}\"};\n";
-                echo "_V_.options.flash.params = {
-                       allowfullscreen: 'true',
-                       wmode: 'transparent',
-                       allowscriptaccess: 'always'
-                   };
-                   _V_.options.flash.attributes={};\n";
-                echo "</script>\n";
-                    
-                echo "<video id=\"player\" class=\"video-js vjs-default-skin\" controls
-                  preload=\"auto\" width=\"$width\" height=\"$height\"";
-                if ($hasThumb) {
-                    echo " poster=\"/$dir/video.png\"";
-                }
-                echo "data-setup=\"{}\">
+                $poster = "";
+                if ($hasThumb)
+                  $poster = "poster=\"/$dir/video.png\"";
+                echo "<video id=\"player\" controls muted
+                       preload=\"auto\" width=\"$width\" height=\"$height\" $poster>
                     <source src=\"/$dir/video.mp4\" type='video/mp4'>
                 </video>";
 
@@ -365,6 +339,27 @@ else
                     include('footer.inc'); 
             ?>
         </div>
+        <script>
+          var video = document.getElementById('player');
+          var started = false;
+          video.addEventListener('click',function(){
+              video.paused ? video.play() : video.pause();
+          },false);
+          video.addEventListener('mouseenter',function(){
+            if (started) {
+              video.setAttribute("controls","controls");
+            }
+          },false);
+          video.addEventListener('mouseleave',function(){
+            if (started) {
+              video.removeAttribute("controls");
+            }
+          },false);
+          video.addEventListener('play',function(){
+            started = true;
+            video.removeAttribute("controls");
+          },false);
+        </script>
         <div id="embed" style="display:none;">
             <h3>Video Embed</h3>
             <p>Copy and past the code below into a website to embed the video.</p>  

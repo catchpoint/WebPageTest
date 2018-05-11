@@ -1,7 +1,7 @@
 <?php
 chdir('..');
 include('common.inc');
-error_reporting(E_ERROR | E_PARSE);
+error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 require_once('archive.inc');
 require_once 'page_data.inc';
 ignore_user_abort(true);
@@ -98,33 +98,6 @@ if (array_key_exists('test', $_REQUEST)) {
       }
     }
     
-    // see if we need to send a showslow beacon
-    $beaconUrl = null;
-    if( isset($testInfo) && !$testInfo['private'] ) {
-      $showslow = GetSetting('showslow');
-      if (strpos($id, '.') === false && $showslow && strlen($showslow))
-      {
-          $beaconUrl = "$showslow/beacon/webpagetest/";
-          $showslow_key = GetSetting('showslow_key');
-          if ($showslow_key && strlen($showslow_key))
-            $beaconUrl .= '?key=' . trim($showslow_key);
-          $beaconRate = GetSetting('beaconRate');
-          if ($beaconRate && rand(1, 100) > $beaconRate ) {
-            unset($beaconUrl);
-          } else {
-            $lock = LockTest($id);
-            if ($lock) {
-              $testInfo = GetTestInfo($id);
-              if ($testInfo) {
-                $testInfo['showslow'] = 1;
-                SaveTestInfo($id, $testInfo);
-              }
-              UnlockTest($lock);
-            }
-          }
-      }
-    }
-
     // archive the actual test
     if (!GetSetting("lazyArchive"))
       ArchiveTest($id, false);

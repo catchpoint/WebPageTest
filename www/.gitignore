@@ -26,4 +26,5 @@
 /settings/customrules.txt
 /settings/benchmarks/*
 !/settings/benchmarks/sample
+/settings/custom.css
 *.log

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """
 Copyright 2016 Google Inc. All Rights Reserved.
 
@@ -275,7 +275,7 @@ class Trace():
                             'http'):
                         e['js'] = trace_event['args']['data']['scriptName']
                     elif 'url' in trace_event['args']['data'] and trace_event['args']['data']['url'].startswith('http'):
-                        e['js'] = trace_event['args']['data']['url']
+                        e['js'] = trace_event['args']['data']['url'].split('#', 1)[0]
                 if trace_event['ph'] == 'B':
                     self.thread_stack[thread].append(e)
                     e = None
@@ -321,7 +321,18 @@ class Trace():
                  'n': self.event_names[type], 's': start, 'e': end}
             if 'callInfo' in event and 'url' in event and event['url'].startswith(
                     'http'):
-                e['js'] = event['url']
+                e['js'] = event['url'].split('#', 1)[0]
+            elif 'data' in event and 'url' in event['data'] and \
+                    event['data']['url'].startswith('http'):
+                e['js'] = event['data']['url'].split('#', 1)[0]
+            elif 'data' in event and 'scriptName' in event['data'] and \
+                    event['data']['scriptName'].startswith('http'):
+                e['js'] = event['data']['scriptName'].split('#', 1)[0]
+            elif 'stackTrace' in event and event['stackTrace']:
+                for stack_frame in event['stackTrace']:
+                    if 'url' in stack_frame and stack_frame['url'].startswith('http'):
+                        e['js'] = stack_frame['url'].split('#', 1)[0]
+                        break
             # Process profile child events
             if 'data' in event and 'profile' in event['data'] and 'rootNodes' in event['data']['profile']:
                 for child in event['data']['profile']['rootNodes']:
@@ -750,12 +761,12 @@ class Trace():
             if 'weight' in params:
                 stream['weight'] = params['weight']
             if 'url' in params:
-                stream['url'] = params['url']
+                stream['url'] = params['url'].split('#', 1)[0]
                 if 'url_request' in stream:
                     request_id = stream['url_request']
                     if 'url_request' in self.netlog and request_id in self.netlog['url_request']:
                         request = self.netlog['url_request'][request_id]
-                        request['url'] = params['url']
+                        request['url'] = params['url'].split('#', 1)[0]
             if name == 'HTTP2_SESSION_RECV_DATA' and 'size' in params:
                 stream['end'] = trace_event['ts']
                 if 'first_byte' not in stream:
@@ -774,10 +785,10 @@ class Trace():
             if name == 'HTTP2_STREAM_ADOPTED_PUSH_STREAM' and 'url' in params and \
                     'url_request' in self.netlog:
                 # Find the phantom request with the matching url and mark it
+                url = params['url'].split('#', 1)[0]
                 for request_id in self.netlog['url_request']:
                     request = self.netlog['url_request'][request_id]
-                    if 'url' in request and params['url'] == request['url'] and \
-                            'start' not in request:
+                    if 'url' in request and url == request['url'] and 'start' not in request:
                         request['phantom'] = True
                         break
         if name == 'HTTP2_SESSION_RECV_PUSH_PROMISE' and 'promised_stream_id' in params:
@@ -809,7 +820,7 @@ class Trace():
                     if match:
                         path = match.group(1)
                 if scheme is not None and authority is not None and path is not None:
-                    url = '{0}://{1}{2}'.format(scheme, authority, path)
+                    url = '{0}://{1}{2}'.format(scheme, authority, path).split('#', 1)[0]
                     request['url'] = url
                     stream['url'] = url
             request['protocol'] = 'HTTP/2'
@@ -892,7 +903,7 @@ class Trace():
         if 'method' in params:
             entry['method'] = params['method']
         if 'url' in params:
-            entry['url'] = params['url']
+            entry['url'] = params['url'].split('#', 1)[0]
         if 'start' not in entry and name == 'HTTP_TRANSACTION_SEND_REQUEST' and \
                 trace_event['ph'] == 'e':
             entry['start'] = trace_event['ts']

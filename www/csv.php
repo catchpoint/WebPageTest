@@ -220,9 +220,9 @@ function printResult() {
 
 function SpeedIndex($testPath, $run, $cached, $testInfo) {
   $speed_index = '';
-  $pageData = loadPageRunData($testPath, $run, $cached, null, $testInfo);
+  $pageData = loadPageRunData($testPath, $run, $cached, $testInfo);
   $startOffset = array_key_exists('testStartOffset', $pageData) ? intval(round($pageData['testStartOffset'])) : 0;
-  $progress = GetVisualProgress($testPath, $run, $cached, null, null, $startOffset);
+  $progress = GetVisualProgress($testPath, $run, $cached, $startOffset);
   if (isset($progress) && is_array($progress) && array_key_exists('SpeedIndex', $progress)) {
     $speed_index = $progress['SpeedIndex'];
   }

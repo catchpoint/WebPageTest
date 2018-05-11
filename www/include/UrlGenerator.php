@@ -117,7 +117,7 @@ abstract class UrlGenerator {
    */
   public function createVideo($end = null) {
     $tests = $this->testId . "-r:" . $this->run . "-c:" . ($this->cached ? 1 : 0);
-    $tests .= ($this->step > 1) ? ("-p:" . $this->step) : "";
+    $tests .= ($this->step > 1) ? ("-s:" . $this->step) : "";
     $tests .= $end ? "-e:$end" : "";
 
     $id = $this->testId . "." . $this->run . "." . ($this->cached ? 1 : 0);

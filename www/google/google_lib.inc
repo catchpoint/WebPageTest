@@ -43,24 +43,28 @@ function ParseCsiInfoForStep($localPaths, $getAll) {
       $params = array();
 	    foreach ( $requests as &$request ) {
 		    // Parse the individual url parts.
-		    $url_parts = parse_url('http://' . $request['host'] . $request['url']);
-		    if ($url_parts['path'] == '/csi' || $url_parts['path'] == '/csi_204' ||
-            ($url_parts['path'] == '/gen_204' &&
-             strpos($request['url'], 'atyp=csi') !== false)) {
-			    $csi_query = $url_parts['query'];
-			    parse_str($csi_query, $params);
-			    foreach ($params as $param_name => $param_value) {
-				    if ($param_name == 'rt' ||
-                $param_name == 'it' ||
-                $param_name == 'irt' ) {
-					    ParseSubParams($params, $param_name);
-              if( !$getAll ) {
-                Unlock($lock);
-                return $params;
-              }
-				    }
-			    }
-		    }
+        if (isset($request['url']) && isset($request['host'])) {
+		      $url_parts = parse_url('http://' . $request['host'] . $request['url']);
+          if (isset($url_parts) && is_array($url_parts) && isset($url_parts['path'])) {
+		        if ($url_parts['path'] == '/csi' || $url_parts['path'] == '/csi_204' ||
+                ($url_parts['path'] == '/gen_204' &&
+                 strpos($request['url'], 'atyp=csi') !== false)) {
+			        $csi_query = $url_parts['query'];
+			        parse_str($csi_query, $params);
+			        foreach ($params as $param_name => $param_value) {
+				        if ($param_name == 'rt' ||
+                    $param_name == 'it' ||
+                    $param_name == 'irt' ) {
+					        ParseSubParams($params, $param_name);
+                  if( !$getAll ) {
+                    Unlock($lock);
+                    return $params;
+                  }
+				        }
+			        }
+		        }
+          }
+        }
 	    }
       $cache[$cacheKey] = $params;
       gz_file_put_contents($cacheFile, json_encode($cache));
@@ -77,7 +81,9 @@ function ParseSubParams(&$params, $combined_pairs) {
 	$combined_pair_list = explode(',', $params[$combined_pairs]);
 	foreach ($combined_pair_list as $item) {
 		$pair = explode('.', $item);
-		$params[$pair[0]] = $pair[1];
+    if (isset($pair) && is_array($pair) && count($pair) >= 2) {
+		  $params[$pair[0]] = $pair[1];
+    }
 	}
 }
 

@@ -42,7 +42,7 @@ require_once __DIR__ . '/include/JsonResultGenerator.php';
 require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/include/TestResults.php';
 
-if (array_key_exists('batch', $test['test']) && $test['test']['batch']) {
+if (isset($test['test']['batch']) && $test['test']['batch']) {
   $_REQUEST['f'] = 'json';
   include 'resultBatch.inc';
 } else {
@@ -71,7 +71,8 @@ if (array_key_exists('batch', $test['test']) && $test['test']['batch']) {
         $ret["webPagetestVersion"] = VER_WEBPAGETEST;
       }
 
-      if ($testInfo->getTestType() == 'lighthouse') {
+      $type = $testInfo->getTestType();
+      if ($type === 'lighthouse') {
         $json_file = "./$testPath/lighthouse.json";
         $ret['data'] = array('html_result_url' => "$urlStart/results.php?test=$id");
         if (gz_is_file($json_file))

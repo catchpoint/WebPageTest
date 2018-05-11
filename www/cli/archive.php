@@ -16,6 +16,11 @@ if (!isset($lock)) {
   exit(0);
 }
 
+$archive_kept_days = null;
+if (array_key_exists('archive_kept_days', $settings) && is_numeric($settings['archive_kept_days'])) {
+  $archive_kept_days = $settings['archive_kept_days'];
+}
+
 if (array_key_exists('archive_days', $settings)) {
     $MIN_DAYS = $settings['archive_days'];
 }
@@ -29,6 +34,7 @@ if (array_key_exists('archive_dir', $settings)) {
 
 $kept = 0;
 $archiveCount = 0;
+$archivesDeletedCount = 0;
 $deleted = 0;
 $log = fopen('./cli/archive.log', 'w');
 
@@ -72,13 +78,58 @@ if ((isset($archive_dir) && strlen($archive_dir)) ||
     }
   }
 }
+
+if (isset($archive_kept_days) && isset($archive_dir) && strlen($archive_dir)) {
+  $years = scandir($archive_dir . 'results/');
+  foreach ($years as $year) {
+    $yearDir = $archive_dir . "results/$year";
+    if (is_numeric($year) && is_dir($yearDir) && ElapsedDays($year, '01', '01') > $archive_kept_days) {
+      $months = scandir($yearDir);
+      foreach ($months as $month) {
+        $monthDir = "$yearDir/$month";
+        if (is_numeric($month) && is_dir($monthDir) && ElapsedDays($year, $month, '01') > $archive_kept_days) {
+          $days = scandir($monthDir);
+          foreach ($days as $day) {
+            $dayDir = "$monthDir/$day";
+            if (is_numeric($day) && is_dir($dayDir) && ElapsedDays($year, $month, $day) > $archive_kept_days) {
+              DeleteArchivedFiles($dayDir);
+              rmdir($dayDir);
+            }
+          }
+          rmdir($monthDir);
+        }
+      }
+      rmDir($yearDir);
+    }
+  }
+}
+
 echo "\nDone\n\n";
 
 if( $log ) {
-    fwrite($log, "Archived: $archiveCount\nDeleted: $deleted\nKept: $kept\n" . gmdate('r') . "\n");;
+    fwrite($log, "Archived: $archiveCount\nDeleted: $deleted\nKept: $kept\nArchives deleted: $archivesDeletedCount\n" . gmdate('r') . "\n");;
     fclose($log);
 }
 Unlock($lock);
+
+function DeleteArchivedFiles($dir) {
+  global $archivesDeletedCount;
+  $paths = scandir($dir);
+  if (isset($paths) && is_array($paths) && count($paths)) {
+    foreach ($paths as $path) {
+      if ($path != '.' && $path != '..') {
+        $absoulutePath = "$dir/$path";
+        if (preg_match('/.*.zip$/', $path)) {
+          unlink($absoulutePath);
+          $archivesDeletedCount++;
+        } else {
+          DeleteArchivedFiles($absoulutePath);
+          rmdir($absoulutePath);
+        }
+      }
+    }
+  }
+}
 
 /**
 * Clean up the relay directory of old tests

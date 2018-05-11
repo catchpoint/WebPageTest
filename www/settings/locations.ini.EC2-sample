@@ -1,329 +1,687 @@
 ; This is a sample locations.ini that includes all of the EC2 locations, AMI's 
 ; and user data strings necessary to spin up testing using EC2 test agents
 
-; IMPORTANT: Make sure to change the wpt_server to point to your private WPT instance
-;            and replace SecretKey with a unique secret string (alphanumeric, no whitespace)
+; This is a list of all of the EC2 AMI's and locations for use with
+; the auto-scaling EC2 server AMI.  The locations will be merged with
+; the locations specified in locations.ini automatically if the setting
+; ec2_locations=1 is specified in settings.ini
 
 [locations]
-1=us-east-1
-2=us-west-1
-3=us-west-2
-4=eu-west-1
-5=ap-northeast-1
-6=ap-southeast-1
-7=ap-southeast-2
-8=sa-east-1
-default=us-east-1
-
+1=us-east-1-group
+2=us-east-1-linux-group
+3=us-east-2-group
+4=us-east-2-linux-group
+5=us-west-1-group
+6=us-west-1-linux-group
+7=us-west-2-group
+8=us-west-2-linux-group
+9=ca-central-1-group
+10=ca-central-1-linux-group
+11=eu-west-1-group
+12=eu-west-1-linux-group
+13=eu-west-2-group
+14=eu-west-2-linux-group
+15=eu-west-3-group
+16=eu-west-3-linux-group
+17=eu-central-1-group
+18=eu-central-1-linux-group
+19=ap-northeast-1-group
+20=ap-northeast-1-linux-group
+21=ap-northeast-2-group
+22=ap-northeast-2-linux-group
+23=ap-southeast-1-group
+24=ap-southeast-1-linux-group
+25=ap-south-1-group
+26=ap-south-1-linux-group
+27=ap-southeast-2-group
+28=ap-southeast-2-linux-group
+29=sa-east-1-group
+30=sa-east-1-linux-group
+default=us-east-1-group
 
 
 ; **********************************
-; ****** 1 - us-east-1         *****
+; ****** us-east-1             *****
 ; ****** US East (N. Virginia) *****
-
-[us-east-1]
-1=us-east-1_IE7
-2=us-east-1_IE8
-3=us-east-1_wptdriver
+[us-east-1-group]
+1=us-east-1
+2=us-east-1_IE11
+3=us-east-1_IE10
+4=us-east-1_IE9
 label="US East (N. Virginia)"
 lat=38.954980
 lng=-77.447956
-default=us-east-1_wptdriver
+default=us-east-1
 
-[us-east-1_IE7]
-; AMI: ami-fe689397
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-east-1_IE7
-browser=IE 7
-latency=0
-label="US East (N. Virginia) - IE7"
-key=SecretKey
-
-[us-east-1_IE8]
-; AMI: ami-406f9429
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-east-1_IE8
-browser=IE 8
-latency=0
-label="US East (N. Virginia) - IE8"
-key=SecretKey
-
-[us-east-1_wptdriver]
-; AMI: ami-561cb13e
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-east-1
-browser=Chrome,Firefox,Safari,IE 11
-latency=0
+[us-east-1]
+browser=Chrome,Firefox
 label="US East (N. Virginia)"
-key=SecretKey
 
+[us-east-1_IE11]
+browser=IE 11
+label="US East (N. Virginia)"
+
+[us-east-1_IE10]
+browser=IE 10
+label="US East (N. Virginia)"
+
+[us-east-1_IE9]
+browser=IE 9
+label="US East (N. Virginia)"
+
+; **********************************
+; ****** us-east-1-linux       *****
+; ****** US East (N. Virginia) *****
+[us-east-1-linux-group]
+1=us-east-1-linux
+label="US East - Linux (N. Virginia)"
+lat=38.954980
+lng=-77.447956
+default=us-east-1-linux
+
+[us-east-1-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="US East - Linux (N. Virginia)"
+
+
+; **********************************
+; ****** us-east-2             *****
+; ****** US East 2 (Ohio)      *****
+[us-east-2-group]
+1=us-east-2
+2=us-east-2_IE11
+3=us-east-2_IE10
+4=us-east-2_IE9
+label="US East 2 (Ohio)"
+lat=40.1849572
+lng=-83.7901337
+default=us-east-2
+
+[us-east-2]
+browser=Chrome,Firefox
+label="US East 2 (Ohio)"
+
+[us-east-2_IE11]
+browser=IE 11
+label="US East 2 (Ohio)"
+
+[us-east-2_IE10]
+browser=IE 10
+label="US East 2 (Ohio)"
+
+[us-east-2_IE9]
+browser=IE 9
+label="US East 2 (Ohio)"
+
+; **********************************
+; ****** us-east-2-linux       *****
+; ****** US East 2 (Ohio)      *****
+[us-east-2-linux-group]
+1=us-east-2-linux
+label="US East 2 - Linux (Ohio)"
+lat=40.1849572
+lng=-83.7901337
+default=us-east-2-linux
+
+[us-east-2-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="US East 2 - Linux (Ohio)"
 
 
 ; ************************************
-; ****** 2 - us-west-1           *****
+; ****** us-west-1               *****
 ; ****** US West (N. California) *****
-
-[us-west-1]
-1=us-west-1_IE7
-2=us-west-1_IE8
-3=us-west-1_wptdriver
+[us-west-1-group]
+1=us-west-1
+2=us-west-1_IE11
+3=us-west-1_IE10
+4=us-west-1_IE9
 label="US West (N. California)"
 lat=37.343577
 lng=-121.894798
-default=us-west-1_wptdriver
+default=us-west-1
 
-[us-west-1_IE7]
-; AMI: ami-919dcfd4
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-west-1_IE7
-browser=IE 7
-latency=0
-label="US West (N. California) - IE7"
-key=SecretKey
-
-[us-west-1_IE8]
-; AMI: ami-5982d01c
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-west-1_IE8
-browser=IE 8
-latency=0
-label="US West (N. California) - IE8"
-key=SecretKey
-
-[us-west-1_wptdriver]
-; AMI: ami-1e330f5b
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-west-1
-browser=Chrome,Firefox,Safari,IE 11
-latency=0
+[us-west-1]
+browser=Chrome,Firefox
 label="US West (N. California)"
-key=SecretKey
 
+[us-west-1_IE11]
+browser=IE 11
+label="US West (N. California)"
+
+[us-west-1_IE10]
+browser=IE 10
+label="US West (N. California)"
+
+[us-west-1_IE9]
+browser=IE 9
+label="US West (N. California)"
+
+; **********************************
+; ****** us-west-1-linux        *****
+; ****** US West (N. California)*****
+[us-west-1-linux-group]
+1=us-west-1-linux
+label="US West - Linux (N. California)"
+lat=37.343577
+lng=-121.894798
+default=us-west-1-linux
+
+[us-west-1-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="US West - Linux (N. California)"
 
 
 ; *****************************
 ; ****** 3 - us-west-2    *****
 ; ****** US West (Oregon) *****
-
-[us-west-2]
-1=us-west-2_IE7
-2=us-west-2_IE8
-3=us-west-2_wptdriver
+[us-west-2-group]
+1=us-west-2
+2=us-west-2_IE11
+3=us-west-2_IE10
+4=us-west-2_IE9
 label="US West (Oregon)"
 lat=45.777102
 lng=-119.788742
-default=us-west-2_wptdriver
+default=us-west-2
 
-[us-west-2_IE7]
-; AMI: ami-68a42958
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-west-2_IE7
-browser=IE 7
-latency=0
-label="US West (Oregon) - IE7"
-key=SecretKey
-
-[us-west-2_IE8]
-; AMI: ami-2ca4291c
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-west-2_IE8
-browser=IE 8
-latency=0
-label="US West (Oregon) - IE8"
-key=SecretKey
-
-[us-west-2_wptdriver]
-; AMI: ami-82a4c9b2
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=us-west-2
-browser=Chrome,Firefox,Safari,IE 11
-latency=0
+[us-west-2]
+browser=Chrome,Firefox
 label="US West (Oregon)"
-key=SecretKey
 
+[us-west-2_IE11]
+browser=IE 11
+label="US West (Oregon)"
+
+[us-west-2_IE10]
+browser=IE 10
+label="US West (Oregon)"
+
+[us-west-2_IE9]
+browser=IE 9
+label="US West (Oregon)"
+
+; **********************************
+; ****** us-west-2-linux       *****
+; ****** US West 2 (Oregon)    *****
+[us-west-2-linux-group]
+1=us-west-2-linux
+label="US West 2 - Linux (Oregon)"
+lat=45.777102
+lng=-119.788742
+default=us-west-2-linux
+
+[us-west-2-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="US West 2 - Linux (Oregon)"
+
+
+; **********************************
+; ****** ca-central-1         *****
+; ****** Canada Central (Montreal) *****
+[ca-central-1-group]
+1=ca-central-1
+2=ca-central-1_IE11
+3=ca-central-1_IE10
+4=ca-central-1_IE9
+label="Canada Central (Montreal)"
+lat=45.4957251
+lng=-73.589684
+default=ca-central-1
+
+[ca-central-1]
+browser=Chrome,Firefox
+label="Canada Central (Montreal)"
+
+[ca-central-1_IE11]
+browser=IE 11
+label="Canada Central (Montreal)"
+
+[ca-central-1_IE10]
+browser=IE 10
+label="Canada Central (Montreal)"
+
+[ca-central-1_IE9]
+browser=IE 9
+label="Canada Central (Montreal)"
+
+; **********************************
+; ****** ca-central-1-linux    *****
+[ca-central-1-linux-group]
+1=ca-central-1-linux
+label="Canada Central - Linux (Montreal)"
+lat=45.4957251
+lng=-73.589684
+default=ca-central-1-linux
+
+[ca-central-1-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Canada Central - Linux (Montreal)"
 
 
 ; **************************
-; ****** 4 - eu-west-1 *****
+; ****** eu-west-1     *****
 ; ****** EU (Ireland)  *****
-
-[eu-west-1]
-1=eu-west-1_IE7
-2=eu-west-1_IE8
-3=eu-west-1_wptdriver
+[eu-west-1-group]
+1=eu-west-1
+2=eu-west-1_IE11
+3=eu-west-1_IE10
+4=eu-west-1_IE9
 label="Europe (Ireland)"
 lat=53.343583
 lng=-6.267014
-default=eu-west-1_wptdriver
+default=eu-west-1
 
-[eu-west-1_IE7]
-; AMI: ami-70b18004
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=eu-west-1_IE7
-browser=IE 7
-latency=0
-label="Europe (Ireland) - IE7"
-key=SecretKey
-
-[eu-west-1_IE8]
-; AMI: ami-00b18074
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=eu-west-1_IE8
-browser=IE 8
-latency=0
-label="Europe (Ireland) - IE8"
-key=SecretKey
-
-[eu-west-1_wptdriver]
-; AMI: ami-ecb3409b
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=eu-west-1
-browser=Chrome,Firefox,Safari,IE 11
-latency=0
+[eu-west-1]
+browser=Chrome,Firefox
 label="Europe (Ireland)"
-key=SecretKey
 
+[eu-west-1_IE11]
+browser=IE 11
+label="Europe (Ireland)"
+
+[eu-west-1_IE10]
+browser=IE 10
+label="Europe (Ireland)"
+
+[eu-west-1_IE9]
+browser=IE 9
+label="Europe (Ireland)"
+
+; **********************************
+; ****** eu-west-1-linux       *****
+[eu-west-1-linux-group]
+1=eu-west-1-linux
+label="Europe - Linux (Ireland)"
+lat=53.343583
+lng=-6.267014
+default=eu-west-1-linux
+
+[eu-west-1-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Europe - Linux (Ireland)"
+
+; **********************************
+; ****** eu-west-2         *****
+; ****** EU (London) *****
+[eu-west-2-group]
+1=eu-west-2
+2=eu-west-2_IE11
+3=eu-west-2_IE10
+4=eu-west-2_IE9
+label="EU (London)"
+lat=51.5285582
+lng=-0.241678
+default=eu-west-2
+
+[eu-west-2]
+browser=Chrome,Firefox
+label="Europe (London)"
+
+[eu-west-2_IE11]
+browser=IE 11
+label="Europe (London)"
+
+[eu-west-2_IE10]
+browser=IE 10
+label="Europe (London)"
+
+[eu-west-2_IE9]
+browser=IE 9
+label="Europe (London)"
+
+; **********************************
+; ****** eu-west-2-linux       *****
+[eu-west-2-linux-group]
+1=eu-west-2-linux
+label="Europe - Linux (London)"
+lat=51.5285582
+lng=-0.241678
+default=eu-west-2-linux
+
+[eu-west-2-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Europe - Linux (London)"
+
+; **********************************
+; ****** eu-west-3         *****
+; ****** EU (Paris) *****
+[eu-west-3-group]
+1=eu-west-3
+2=eu-west-3_IE11
+3=eu-west-3_IE10
+4=eu-west-3_IE9
+label="EU (Paris)"
+lat=48.8587741
+lng=2.2069771
+default=eu-west-3
+
+[eu-west-3]
+browser=Chrome,Firefox
+label="Europe (Paris)"
+
+[eu-west-3_IE11]
+browser=IE 11
+label="Europe (Paris)"
+
+[eu-west-3_IE10]
+browser=IE 10
+label="Europe (Paris)"
+
+[eu-west-3_IE9]
+browser=IE 9
+label="Europe (Paris)"
+
+; **********************************
+; ****** eu-west-3-linux       *****
+[eu-west-3-linux-group]
+1=eu-west-3-linux
+label="Europe - Linux (Paris)"
+lat=48.8587741
+lng=2.2069771
+default=eu-west-3-linux
+
+[eu-west-3-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Europe - Linux (Paris)"
+
+; **************************
+; ****** eu-central-1 ******
+; ****** EU (Frankfurt) ****
+[eu-central-1-group]
+1=eu-central-1
+2=eu-central-1_IE11
+3=eu-central-1_IE10
+4=eu-central-1_IE9
+label="Europe (Frankfurt)"
+lat=50.1057043
+lng=8.6698232
+default=eu-central-1
+
+[eu-central-1]
+browser=Chrome,Firefox
+label="Europe (Frankfurt)"
+
+[eu-central-1_IE11]
+browser=IE 11
+label="Europe (Frankfurt)"
+
+[eu-central-1_IE10]
+browser=IE 10
+label="Europe (Frankfurt)"
+
+[eu-central-1_IE9]
+browser=IE 9
+label="Europe (Frankfurt)"
+
+; **********************************
+; ****** eu-central-1-linux    *****
+[eu-central-1-linux-group]
+1=eu-central-1-linux
+label="Europe - Linux (Frankfurt)"
+lat=50.1057043
+lng=8.6698232
+default=eu-central-1-linux
+
+[eu-central-1-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Europe - Linux (Frankfurt)"
 
 
 ; *************************************
 ; ****** 1 - ap-southeast-1       *****
 ; ****** Asia Pacific (Singapore) *****
-
-[ap-southeast-1]
-1=ap-southeast-1_IE7
-2=ap-southeast-1_IE8
-3=ap-southeast-1_wptdriver
+[ap-southeast-1-group]
+1=ap-southeast-1
+2=ap-southeast-1_IE11
+3=ap-southeast-1_IE10
+4=ap-southeast-1_IE9
 label="Asia Pacific (Singapore)"
 lat=1.352708
 lng=103.819935
-default=ap-southeast-1_wptdriver
+default=ap-southeast-1
 
-[ap-southeast-1_IE7]
-; AMI: ami-38bac26a
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-southeast-1_IE7
-browser=IE 7
-latency=0
-label="Asia Pacific (Singapore) - IE7"
-key=SecretKey
-
-[ap-southeast-1_IE8]
-; AMI: ami-92bac2c0
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-southeast-1_IE8
-browser=IE 8
-latency=0
-label="Asia Pacific (Singapore) - IE8"
-key=SecretKey
-
-[ap-southeast-1_wptdriver]
-; AMI: ami-8c0a5bde
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-southeast-1
-browser=Chrome,Firefox,Safari,IE 11
-latency=0
+[ap-southeast-1]
+browser=Chrome,Firefox
 label="Asia Pacific (Singapore)"
-key=SecretKey
 
+[ap-southeast-1_IE11]
+browser=IE 11
+label="Asia Pacific (Singapore)"
+ami=ami-3e55995d
+
+[ap-southeast-1_IE10]
+browser=IE 10
+label="Asia Pacific (Singapore)"
+
+[ap-southeast-1_IE9]
+browser=IE 9
+label="Asia Pacific (Singapore)"
+
+; **********************************
+; ****** ap-southeast-1-linux  *****
+[ap-southeast-1-linux-group]
+1=ap-southeast-1-linux
+label="Asia Pacific - Linux (Singapore)"
+lat=1.352708
+lng=103.819935
+default=ap-southeast-1-linux
+
+[ap-southeast-1-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Asia Pacific - Linux (Singapore)"
+
+
+; **********************************
+; ****** ap-south-1         *****
+; ****** India (Mumbai) *****
+[ap-south-1-group]
+1=ap-south-1
+2=ap-south-1_IE11
+3=ap-south-1_IE10
+4=ap-south-1_IE9
+label="India (Mumbai)"
+lat=19.0828096
+lng=72.8111648
+default=ap-south-1
+
+[ap-south-1]
+browser=Chrome,Firefox
+label="India (Mumbai)"
+
+[ap-south-1_IE11]
+browser=IE 11
+label="India (Mumbai)"
+
+[ap-south-1_IE10]
+browser=IE 10
+label="India (Mumbai)"
+
+[ap-south-1_IE9]
+browser=IE 9
+label="India (Mumbai)"
+
+; **********************************
+; ****** ap-south-1-linux      *****
+[ap-south-1-linux-group]
+1=ap-south-1-linux
+label="India - Linux (Mumbai)"
+lat=19.0828096
+lng=72.8111648
+default=ap-south-1-linux
+
+[ap-south-1-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="India - Linux (Mumbai)"
 
 
 ; **********************************
 ; ****** 1 - ap-southeast-2    *****
 ; ****** Asia Pacific (Sydney) *****
-
-[ap-southeast-2]
-1=ap-southeast-2_IE7
-2=ap-southeast-2_IE8
-3=ap-southeast-2_wptdriver
+[ap-southeast-2-group]
+1=ap-southeast-2
+2=ap-southeast-2_IE11
+3=ap-southeast-2_IE10
+4=ap-southeast-2_IE9
 label="Asia Pacific (Sydney)"
 lat=-33.7969235
 lng=150.9224326
-default=ap-southeast-2_wptdriver
+default=ap-southeast-2
 
-[ap-southeast-2_IE7]
-; AMI: ami-2b40d711
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-southeast-2_IE7
-browser=IE 7
-latency=0
-label="Asia Pacific (Sydney) - IE7"
-key=SecretKey
-
-[ap-southeast-2_IE8]
-; AMI: ami-2940d713
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-southeast-2_IE8
-browser=IE 8
-latency=0
-label="Asia Pacific (Sydney) - IE8"
-key=SecretKey
-
-[ap-southeast-2_wptdriver]
-; AMI: ami-2dfb6217
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-southeast-2
-browser=Chrome,Firefox,Safari,IE 11
-latency=0
+[ap-southeast-2]
+browser=Chrome,Firefox
 label="Asia Pacific (Sydney)"
-key=SecretKey
 
+[ap-southeast-2_IE11]
+browser=IE 11
+label="Asia Pacific (Sydney)"
+
+[ap-southeast-2_IE10]
+browser=IE 10
+label="Asia Pacific (Sydney)"
+
+[ap-southeast-2_IE9]
+browser=IE 9
+label="Asia Pacific (Sydney)"
+
+; **********************************
+; ****** ap-southeast-2-linux  *****
+[ap-southeast-2-linux-group]
+1=ap-southeast-2-linux
+label="Asia Pacific - Linux (Sydney)"
+lat=-33.7969235
+lng=150.9224326
+default=ap-southeast-2-linux
+
+[ap-southeast-2-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Asia Pacific - Linux (Sydney)"
 
 
 ; *********************************
 ; ****** 1 - ap-northeast-1   *****
 ; ****** Asia Pacific (Tokyo) *****
-
-[ap-northeast-1]
-1=ap-northeast-1_IE7
-2=ap-northeast-1_IE8
-3=ap-northeast-1_wptdriver
+[ap-northeast-1-group]
+1=ap-northeast-1
+2=ap-northeast-1_IE11
+3=ap-northeast-1_IE10
+4=ap-northeast-1_IE9
 label="Asia Pacific (Tokyo)"
 lat=35.682175
 lng=139.752731
-default=ap-northeast-1_wptdriver
+default=ap-northeast-1
 
-[ap-northeast-1_IE7]
-; AMI: ami-ba16bcbb
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-northeast-1_IE7
-browser=IE 7
-latency=0
-label="Asia Pacific (Tokyo) - IE7"
-key=SecretKey
-
-[ap-northeast-1_IE8]
-; AMI: ami-bc16bcbd
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-northeast-1_IE8
-browser=IE 8
-latency=0
-label="Asia Pacific (Tokyo) - IE8"
-key=SecretKey
-
-[ap-northeast-1_wptdriver]
-; AMI: ami-29473328
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=ap-northeast-1
-browser=Chrome,Firefox,Safari,IE 11
-latency=0
+[ap-northeast-1]
+browser=Chrome,Firefox
 label="Asia Pacific (Tokyo)"
-key=SecretKey
 
+[ap-northeast-1_IE11]
+browser=IE 11
+label="Asia Pacific (Tokyo)"
+
+[ap-northeast-1_IE10]
+browser=IE 10
+label="Asia Pacific (Tokyo)"
+
+[ap-northeast-1_IE9]
+browser=IE 9
+label="Asia Pacific (Tokyo)"
+
+; **********************************
+; ****** ap-northeast-1-linux  *****
+[ap-northeast-1-linux-group]
+1=ap-northeast-1-linux
+label="Asia Pacific - Linux (Tokyo)"
+lat=35.682175
+lng=139.752731
+default=ap-northeast-1-linux
+
+[ap-northeast-1-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Asia Pacific - Linux (Tokyo)"
+
+
+; **********************************
+; ****** ap-northeast-2         *****
+; ****** Asia Pacific (Seoul) *****
+[ap-northeast-2-group]
+1=ap-northeast-2
+2=ap-northeast-2_IE11
+3=ap-northeast-2_IE10
+4=ap-northeast-2_IE9
+label="Asia Pacific (Seoul)"
+lat=40.1849572
+lng=-83.7901337
+default=ap-northeast-2
+
+[ap-northeast-2]
+browser=Chrome,Firefox
+label="Asia Pacific (Seoul)"
+
+[ap-northeast-2_IE11]
+browser=IE 11
+label="Asia Pacific (Seoul)"
+
+[ap-northeast-2_IE10]
+browser=IE 10
+label="Asia Pacific (Seoul)"
+
+[ap-northeast-2_IE9]
+browser=IE 9
+label="Asia Pacific (Seoul)"
+
+; **********************************
+; ****** ap-northeast-2-linux  *****
+[ap-northeast-2-linux-group]
+1=ap-northeast-2-linux
+label="Asia Pacific - Linux (Seoul)"
+lat=40.1849572
+lng=-83.7901337
+default=ap-northeast-2-linux
+
+[ap-northeast-2-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Asia Pacific - Linux (Seoul)"
 
 
 ; **************************************
 ; ****** 8 - sa-east-1             *****
 ; ****** South America (Sao Paulo) *****
-
-[sa-east-1]
-1=sa-east-1_IE7
-2=sa-east-1_IE8
-3=sa-east-1_wptdriver
+[sa-east-1-group]
+1=sa-east-1
+2=sa-east-1_IE11
+3=sa-east-1_IE10
+4=sa-east-1_IE9
 label="South America (Sao Paulo)"
 lat=-23.55014
 lng=-46.641083
-default=sa-east-1_wptdriver
+default=sa-east-1
 
-[sa-east-1_IE7]
-; AMI: ami-622ff07f
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=sa-east-1_IE7
-browser=IE 7
-latency=0
-label="South America (Sao Paulo) - IE7"
-key=SecretKey
-
-[sa-east-1_IE8]
-; AMI: ami-9c2ff081
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=sa-east-1_IE8
-browser=IE 8
-latency=0
-label="South America (Sao Paulo) - IE8"
-key=SecretKey
-
-[sa-east-1_wptdriver]
-; AMI: ami-f9a300e4
-; user-data: wpt_server=www.yourserver.com wpt_key=SecretKey wpt_location=sa-east-1
-browser=Chrome,Firefox,Safari,IE 11
-latency=0
+[sa-east-1]
+browser=Chrome,Firefox
 label="South America (Sao Paulo)"
-key=SecretKey
 
+[sa-east-1_IE11]
+browser=IE 11
+label="South America (Sao Paulo)"
+
+[sa-east-1_IE10]
+browser=IE 10
+label="South America (Sao Paulo)"
+
+[sa-east-1_IE9]
+browser=IE 9
+label="South America (Sao Paulo)"
+
+; **********************************
+; ****** sa-east-1-linux       *****
+[sa-east-1-linux-group]
+1=sa-east-1-linux
+label="South America - Linux (Sao Paulo)"
+lat=-23.55014
+lng=-46.641083
+default=sa-east-1-linux
+
+[sa-east-1-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="South America - Linux (Sao Paulo)"

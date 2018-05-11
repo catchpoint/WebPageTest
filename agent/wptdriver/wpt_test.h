@@ -212,7 +212,6 @@ public:
   CStringA _user_agent_modifier;
   CStringA _append_user_agent;
   DWORD    _max_test_time;
-  bool     _process_results;
   CString  _block_domains_global;
   CAtlList<CString> _block_domains;
   CAtlList<CString> _block_domains_except;

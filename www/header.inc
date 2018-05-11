@@ -5,11 +5,8 @@ require_once __DIR__ . '/include/TestResults.php';
 require_once __DIR__ . '/include/TestRunResults.php';
 
 if(isset($testPath) ) {
-  $options = null;
-  if (array_key_exists('end', $_REQUEST))
-    $options = array('end' => $_REQUEST['end']);
   $testInfo = TestInfo::fromFiles($testPath);
-  $testResults = TestResults::fromFiles($testInfo, null, $options);
+  $testResults = TestResults::fromFiles($testInfo);
 }
 if (isset($testResults)) {
   $adultKeywords = array();
@@ -24,7 +21,7 @@ if (isset($testResults)) {
 
 if( $supportsAuth && !defined('EMBED') )
 {
-    echo '<div id="wptAuthBar">';
+    echo '<div id="wptAuthBar" class="page">';
     if( isset($user) )
     {
         $logoutUrl = '/forums/member.php?action=logout';
@@ -54,7 +51,7 @@ if( $supportsAuth && !defined('EMBED') )
 if (!defined('EMBED')) {
 ?>
 
-<div id="header">
+<div id="header" class="page">
     <h1 class="logo"><a href="/">WebPageTest</a></h1>
     <div class="headerAd">
     <?php
@@ -76,7 +73,7 @@ if (!defined('EMBED')) {
     </div>
 </div>
 
-<div id="nav_bkg"><ul id="nav" class="cufon-dincond_black"><?php
+<div id="nav_bkg"><div id="nav_bar"><div class="page"><ul id="nav" class="cufon-dincond_black"><?php
         if ($id) {
             $resultUrl = "/results.php?test=$id";
             if (array_key_exists('end', $_REQUEST))
@@ -104,7 +101,7 @@ if (!defined('EMBED')) {
             if (is_dir('wptmonitor')) {
                 $navTabs['Monitor'] = '/wptmonitor/';
             }
-            if (is_dir('forums') && !$settings['disableMybb']) {
+            if (is_dir('forums') && (!isset($settings['disableMybb']) || !$settings['disableMybb'])) {
                 $navTabs['Forums'] = '/forums/';
             }
             $navTabs['Documentation'] = 'https://sites.google.com/a/webpagetest.org/docs/';
@@ -128,7 +125,7 @@ if (!defined('EMBED')) {
         }
 ?></ul>
 
-</div>
+</div></div></div>
 
 <?php
 if (!defined('BARE_UI') && isset($settings['alert']) && strlen($settings['alert'])) {
@@ -150,7 +147,7 @@ if (!defined('BARE_UI') && isset($settings['alert']) && strlen($settings['alert'
 if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
 {
     // make sure the test is actually complete
-    if( (isset($test['test']) && isset($test['test']['completeTime'])) )
+    if(isset($test['test']['completeTime']))
     {
         if (!isset($testResults) || !isset($testInfo)) {
           $testInfo = TestInfo::fromFiles($testPath);
@@ -317,7 +314,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
           $tabs['Processing Breakdown'] = $menuStandardUrlGenerator->resultPage("breakdownTimeline");
         }
 
-        if( !isset($test['testinfo']) || !$test['testinfo']['noimages'] )
+        if( !isset($test['testinfo']) || !isset($test['testinfo']['noimages']) || !$test['testinfo']['noimages'] )
             $tabs['Screen Shot'] = $menuUrlGenerator->resultPage("screen_shot", $endParams);
         //$tabs['More Checks'] = "/moreChecks.php?test=$id";
 
@@ -339,7 +336,16 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
           $tabUrl = GetSetting('image_analysis');
           if ($tabUrl) {
             $tabUrl = str_replace('{test id}', $id, $tabUrl);
-            echo "<li><a href=\"$tabUrl\" title=\"Image Analysis - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" style=\"padding-right: 5px;\">Image Analysis<img src=\"/images/new_badge.png?v=2\" style=\"top: 0; float: right;\"></a></li>";
+            echo "<li><a href=\"$tabUrl\" title=\"Cloudinary Image Analysis (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" style=\"padding-right: 2px;\">Image Analysis<img src=\"/images/external_header.svg\" style=\"padding-top: 4px; float: right;\"></a></li>";
+          }
+        }
+        
+        // Add the "Request Map" link
+        if (isset($id) && strlen($id)) {
+          $tabUrl = GetSetting('request_map');
+          if ($tabUrl) {
+            $tabUrl = str_replace('{test id}', $id, $tabUrl);
+            echo "<li><a href=\"$tabUrl\" title=\"Request Map (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" style=\"padding-right: 2px;\">Request Map<img src=\"/images/external_header.svg\" style=\"padding-top: 4px; float: right;\"></a></li>";
           }
         }
     
@@ -374,7 +380,9 @@ if( !strcasecmp('Test Result', $tab) || (array_key_exists('compare', $_COOKIE) &
 function GetGrades($testInfo, $testRunResults, $firstRunResults)
 {
     $grades = array();
-    $lighthouse = $firstRunResults->getLighthouseScore();
+    $infoArray = $testInfo->getInfoArray();
+    if (isset($firstRunResults))
+      $lighthouse = $firstRunResults->getLighthouseScore();
     if (isset($lighthouse)) {
       $class = 'F';
       if ($lighthouse > 90)
@@ -386,13 +394,14 @@ function GetGrades($testInfo, $testRunResults, $firstRunResults)
       elseif ($lighthouse > 60)
         $class = 'D';
       $grades['lighthouse'] = array( 'class' => $class, 'grade' => $lighthouse, 'description' => 'Lighthouse PWA Score');
+    } elseif (isset($infoArray['lighthouse']) && $infoArray['lighthouse']) {
+      $grades['lighthouse'] = array( 'class' => 'F', 'grade' => '?', 'description' => 'Lighthouse PWA Score');
     }
     if ($testRunResults->isOptimizationChecked()) {
         require_once('optimization_detail.inc.php');
 
         $opt = getOptimizationGradesForRun($testInfo, $testRunResults);
-        $infoArray = $testInfo->getInfoArray();
-        if( $infoArray['view'] != 'simple' && $infoArray['view'] != 'pss' )
+        if( !isset($infoArray['view']) || ($infoArray['view'] != 'simple' && $infoArray['view'] != 'pss') )
             $grades['first_byte_time'] = array( 'class' => $opt['ttfb']['class'], 'grade' => $opt['ttfb']['grade'], 'description' => $opt['ttfb']['label']);
         $grades['keep_alive_enabled'] = array( 'class' => $opt['keep-alive']['class'], 'grade' => $opt['keep-alive']['grade'], 'description' => $opt['keep-alive']['label']);
         $grades['compress_text'] = array( 'class' => $opt['gzip']['class'], 'grade' => $opt['gzip']['grade'], 'description' => $opt['gzip']['label']);

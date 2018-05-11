@@ -12,51 +12,13 @@ bwOut=384000
 latency=50
 plr=0
 
-[FIOS]
-label="FIOS (20/5 Mbps 4ms RTT)"
-bwIn=20000000
-bwOut=5000000
-latency=4
-plr=0
-
-[Dial]
-label="56K Dial-Up (49/30 Kbps 120ms RTT)"
-bwIn=49000
-bwOut=30000
-latency=120
-plr=0
-timeout=300
-
-[LTE]
-label="Mobile LTE (12 Mbps/12 Mbps 70ms RTT)"
-bwIn=12000000
-bwOut=12000000
-latency=70
-plr=0
-
-[3G]
-label="Mobile 3G (1.6 Mbps/768 Kbps 300ms RTT)"
-bwIn=1600000
-bwOut=768000
-latency=300
-plr=0
-timeout=120
-
-[3GFast]
-label="Mobile 3G - Fast (1.6 Mbps/768 Kbps 150ms RTT)"
-bwIn=1600000
-bwOut=768000
-latency=150
-plr=0
-timeout=120
-
 [3GSlow]
-label="Mobile 3G - Slow (780 Kbps/330 Kbps 200ms RTT)"
-bwIn=780000
-bwOut=330000
-latency=200
+label="3G Slow (400 Kbps, 400ms RTT)"
+bwIn=400000
+bwOut=400000
+latency=400
 plr=0
-timeout=240
+timeout=480
 
 [3G_EM]
 label="Emerging Markets 3G (400 Kbps, 400ms RTT)"
@@ -65,6 +27,36 @@ bwOut=400000
 latency=400
 plr=0
 timeout=480
+hidden=1
+
+[3G]
+label="3G (1.6 Mbps/768 Kbps 300ms RTT)"
+bwIn=1600000
+bwOut=768000
+latency=300
+plr=0
+timeout=120
+
+[3GFast]
+label="3G Fast (1.6 Mbps/768 Kbps 150ms RTT)"
+bwIn=1600000
+bwOut=768000
+latency=150
+plr=0
+timeout=120
+
+[4G]
+label="4G (9 Mbps, 170ms RTT)"
+bwIn=9000000
+bwOut=9000000
+latency=170
+
+[LTE]
+label="LTE (12 Mbps, 70ms RTT)"
+bwIn=12000000
+bwOut=12000000
+latency=70
+plr=0
 
 [Edge]
 label="Mobile Edge (240 Kbps/200 Kbps 840ms RTT)"
@@ -75,12 +67,27 @@ plr=0
 timeout=300
 
 [2G]
-label="Mobile 2G (280 Kbps/256 Kbps 800ms RTT)"
+label="2G (280 Kbps/256 Kbps 800ms RTT)"
 bwIn=280000
 bwOut=256000
 latency=800
 plr=0
 timeout=300
+
+[Dial]
+label="56K Dial-Up (49/30 Kbps 120ms RTT)"
+bwIn=49000
+bwOut=30000
+latency=120
+plr=0
+timeout=300
+
+[FIOS]
+label="FIOS (20/5 Mbps 4ms RTT)"
+bwIn=20000000
+bwOut=5000000
+latency=4
+plr=0
 
 [Native]
 label="Native Connection (No Traffic Shaping)"

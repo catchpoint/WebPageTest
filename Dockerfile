@@ -17,6 +17,7 @@ RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sour
     python \
     python-pillow \
     cron \
+    beanstalkd \
     supervisor && \
     \
     DEBIAN_FRONTEND=noninteractive apt-get install -q -y --force-yes\
@@ -57,14 +58,16 @@ COPY docker/server/config/php.ini /usr/local/etc/php/
 COPY docker/server/config/apache2.conf /etc/apache2/apache2.conf
 COPY docker/server/config/crontab /etc/crontab
 
-# config supervisor to run apache AND cron
+# config supervisor to run apache, cron, beanstalkd, ec2init
 COPY docker/server/config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/server/config/supervisord/supervisord_apache.conf /etc/supervisor/conf.d/supervisord_apache.conf
 COPY docker/server/config/supervisord/supervisord_cron.conf /etc/supervisor/conf.d/supervisord_cron.conf
+COPY docker/server/config/supervisord/supervisord_beanstalkd.conf /etc/supervisor/conf.d/supervisord_beanstalkd.conf
+COPY docker/server/config/supervisord/supervisord_ec2init.conf /etc/supervisor/conf.d/supervisord_ec2init.conf
 
-# copy script to run WPT cron scripts
-COPY docker/server/scripts/wpt_cron_call.sh /scripts/wpt_cron_call.sh
-RUN chmod 755 /scripts/wpt_cron_call.sh && \
+# copy WPT scripts, set executable and create crontab
+COPY docker/server/scripts/ /scripts/
+RUN chmod 755 /scripts/* && \
     crontab /etc/crontab
 
 VOLUME /var/www/html/settings

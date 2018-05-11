@@ -175,7 +175,7 @@ $page_description = "Chrome main thread processing breakdown$testLabel";
         <?php include('footer.inc'); ?>
 
         <!--Load the AJAX API-->
-        <script type="text/javascript" src="<?php echo $GLOBALS['ptotocol']; ?>://www.google.com/jsapi"></script>
+        <script type="text/javascript" src="//www.google.com/jsapi"></script>
         <script type="text/javascript">
     
         // Load the Visualization API and the table package.

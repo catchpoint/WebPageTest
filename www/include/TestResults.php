@@ -3,6 +3,8 @@
 require_once __DIR__ . '/FileHandler.php';
 require_once __DIR__ . '/TestStepResult.php';
 require_once __DIR__ . '/TestRunResults.php';
+require_once __DIR__ . '/Browser.php';
+
 
 class TestResults {
 
@@ -42,7 +44,7 @@ class TestResults {
    * @param array $options Options to load the TestRunResults
    * @return TestResults The new instance
    */
-  public static function fromFiles($testInfo, $fileHandler = null, $options = null) {
+  public static function fromFiles($testInfo, $fileHandler = null) {
     $runResults = array();
     $numRuns = $testInfo->getRuns();
     $firstViewOnly = $testInfo->isFirstViewOnly();
@@ -51,8 +53,8 @@ class TestResults {
       if (!$testComplete && !$testInfo->isRunComplete($runNumber)) {
         continue;
       }
-      $firstView = TestRunResults::fromFiles($testInfo, $runNumber, false, $fileHandler, $options);
-      $repeatView = $firstViewOnly ? null : TestRunResults::fromFiles($testInfo, $runNumber, true, $fileHandler, $options);
+      $firstView = TestRunResults::fromFiles($testInfo, $runNumber, false, $fileHandler);
+      $repeatView = $firstViewOnly ? null : TestRunResults::fromFiles($testInfo, $runNumber, true, $fileHandler);
       $runResults[] = array($firstView, $repeatView);
     }
 
@@ -208,7 +210,7 @@ class TestResults {
     }
     return false;
   }
-  
+
   /** Return the lighthouse results (from json) */
   public function getLighthouseResult() {
     $lighthouse = null;
@@ -220,6 +222,27 @@ class TestResults {
         $lighthouse = $result;
     }
     return $lighthouse;
+  }
+
+  /** Return the lighthouse log contents */
+  public function getLighthouseLog() {
+    $log = null;
+    $localPaths = new TestPaths($this->testInfo->getRootDirectory(), 1, 0, 1);
+    $log_file = $localPaths->lighthouseLogFile();
+    if (gz_is_file($log_file)) {
+      $log = gz_file_get_contents($log_file);
+      if (isset($log) && !strlen($log))
+        $log = null;
+    }
+    return $log;
+  }
+
+  public function getBrowser(){
+      $rawResultsFirstRunFirstStep = $this->getRunResult(1, false)->getStepResult(1)->getRawResults();
+      return new Browser(
+          $rawResultsFirstRunFirstStep['browser_name'],
+          $rawResultsFirstRunFirstStep['browser_version']
+      );
   }
 
   private function calculateAverages($cached) {

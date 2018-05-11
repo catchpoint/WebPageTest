@@ -1,6 +1,6 @@
 <?php
-require_once('common_lib.inc');
-require_once('page_data.inc');
+require_once(__DIR__ . '/common_lib.inc');
+require_once(__DIR__ . '/page_data.inc');
 if(extension_loaded('newrelic')) { 
     newrelic_add_custom_tracer('GetRelayStatus');
 }
@@ -96,10 +96,7 @@ function GetTestStatus($id, $includePosition = true) {
                   // in the last 60 minutes, Force individual runs to end if they didn't complete
                   // within 60 minutes and force the overall test to end if all of the individual
                   // runs are complete.
-                  $max_run_minutes = GetSetting('max_run_minutes');
-                  if (!$max_run_minutes) {
-                    $max_run_minutes = 60;
-                  }
+                  $max_run_minutes = GetSetting('max_run_minutes', 60);
                   if ($elapsed > $max_run_minutes) {
                     $elapsedUpdate = 100;
                     if (isset($testInfoJson['last_updated']) && $now > $testInfoJson['last_updated'])
@@ -137,7 +134,7 @@ function GetTestStatus($id, $includePosition = true) {
                             $date = gmdate("m/d/y G:i:s", $now);
 
                             // update the completion time if it isn't already set
-                            if (!strpos($test, 'completeTime')) {
+                            if (isset($test) && is_string($test) && !strpos($test, 'completeTime')) {
                               $complete = "[test]\r\ncompleteTime=$date";
                               $out = str_replace('[test]', $complete, $test);
                               file_put_contents("$testPath/testinfo.ini", $out);
@@ -360,7 +357,7 @@ function GetRelayStatus($id, $testPath, &$test) {
                           http_fetch("{$server}delete.php?test=$id&rkey=$key");
                           $ret = $status['data'];
                       }
-                      Unlock($lock);
+                      UnlockTest($lock);
                     }
                         
                     $zip->close();

@@ -1,7 +1,7 @@
 <?php
 include 'common.inc';
 set_time_limit(0);
-
+$admin = true;
 // parse the logs for the counts
 $days = $_REQUEST['days'];
 if( !$days || $days > 1000 )
@@ -16,35 +16,48 @@ include 'admin_header.inc';
     if( array_key_exists('k', $_REQUEST) && strlen($_REQUEST['k']) ) {
         $key = trim($_REQUEST['k']);
         $keys = parse_ini_file('./settings/keys.ini', true);
-
-        // see if it was an auto-provisioned key
-        if (preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $key, $matches)) {
-          $prefix = $matches['prefix'];
-          if (is_file(__DIR__ . "/dat/{$prefix}_api_keys.db")) {
-            $db = new SQLite3(__DIR__ . "/dat/{$prefix}_api_keys.db");
-            $k = $db->escapeString($matches['key']);
-            $info = $db->querySingle("SELECT key_limit FROM keys WHERE key='$k'", true);
-            $db->close();
-            if (isset($info) && is_array($info) && isset($info['key_limit']))
-              $keys[$key] = array('limit' => $info['key_limit']);
+        
+        // Add the list of self-provisioned keys
+        $prefix = 'A';
+        if (is_file(__DIR__ . "/dat/{$prefix}_api_keys.db")) {
+          $db = new SQLite3(__DIR__ . "/dat/{$prefix}_api_keys.db");
+          $results = $db->query("SELECT key,email,key_limit FROM keys");
+          if ($results){
+            while ($row = $results->fetchArray(SQLITE3_ASSOC)) {
+              $k = "$prefix.{$row['key']}";
+              $keys[$key] = array('contact' => $row['email'], 'limit' => $row['key_limit']);
+            }
           }
+          $db->close();
         }
         
         if( $admin && $key == 'all' ) {
+            if (!isset($_REQUEST['days']))
+              $days = 1;
             $day = gmdate('Ymd');
             if( strlen($req_date) )
                 $day = $req_date;
-            $keyfile = "./dat/keys_$day.dat";
-            $usage = null;
-            if( is_file($keyfile) )
-              $usage = json_decode(file_get_contents($keyfile), true);
-            if( !isset($usage) )
-              $usage = array();
-
+            $targetDate = new DateTime('now', new DateTimeZone('GMT'));
+            $usage = array();
+            for($offset = 0; $offset < $days; $offset++) {
+                $keyfile = './dat/keys_' . $targetDate->format("Ymd") . '.dat';
+                if( is_file($keyfile) ) {
+                  $day_usage = json_decode(file_get_contents($keyfile), true);
+                  if (isset($day_usage) && is_array($day_usage)) {
+                    foreach ($day_usage as $k => $used) {
+                      if (!isset($usage[$k]))
+                        $usage[$k] = 0;
+                      $usage[$k] += $used;
+                    }
+                  }
+                }
+                $date = $targetDate->format("Y/m/d");
+                $targetDate->modify('-1 day');
+            }
             $used = array();
             foreach($keys as $key => &$keyUser)
             {
-                $u = (int)$usage[$key];
+                $u = isset($usage[$key]) ? (int)$usage[$key] : 0;
                 if( $u )
                     $used[] = array('used' => $u, 'description' => $keyUser['description'], 'contact' => $keyUser['contact'], 'limit' => $keyUser['limit']);
             }

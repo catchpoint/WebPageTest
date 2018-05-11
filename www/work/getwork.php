@@ -7,6 +7,13 @@ if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('ProcessTestShard');
   newrelic_add_custom_tracer('GetTesters');
   newrelic_add_custom_tracer('LockLocation');
+  newrelic_add_custom_tracer('GetLocationInfo');
+  newrelic_add_custom_tracer('LockTest');
+  newrelic_add_custom_tracer('UpdateTester');
+  newrelic_add_custom_tracer('GetTesterIndex');
+  newrelic_add_custom_tracer('StartTest');
+  newrelic_add_custom_tracer('TestToJSON');
+  newrelic_add_custom_tracer('logTestMsg');
 }
 
 chdir('..');
@@ -36,7 +43,7 @@ $dnsServers = '';
 if (array_key_exists('dns', $_REQUEST))
   $dnsServers = str_replace('-', ',', $_REQUEST['dns']);
 $supports_sharding = false;
-if (array_key_exists('shards', $_REQUEST) && $_REQUEST['shards'])
+if (GetSetting('shard_tests', true) && array_key_exists('shards', $_REQUEST) && $_REQUEST['shards'])
   $supports_sharding = true;
 
 $is_done = false;
@@ -50,15 +57,18 @@ if (isset($locations) && is_array($locations) && count($locations) &&
     $is_done = GetUpdate();
   foreach ($locations as $loc) {
     $location = trim($loc);
-    if (!$is_done && strlen($location))
+    if (!$is_done && strlen($location)) {
       $is_done = GetJob();
+    }
     // see if there are fallbacks specified for the given location (for idle)
-    $fallbacks = GetLocationFallbacks($location);
-    if (is_array($fallbacks) && count($fallbacks)) {
-      foreach($fallbacks as $fallback) {
-        $location = trim($fallback);
-        if (!$is_done && strlen($location))
-          $is_done = GetJob();
+    if (!$is_done) {
+      $fallbacks = GetLocationFallbacks($location);
+      if (is_array($fallbacks) && count($fallbacks)) {
+        foreach($fallbacks as $fallback) {
+          $location = trim($fallback);
+          if (!$is_done && strlen($location))
+            $is_done = GetJob();
+        }
       }
     }
   }
@@ -82,6 +92,141 @@ if (!$is_done) {
   header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
 }
 
+function GetTesterIndex($locInfo, &$testerIndex, &$testerCount, &$offline) {
+  global $pc;
+  global $ec2;
+  global $tester;
+  global $location;
+  $now = time();
+
+  // get the count of testers for this lication and the index of the current tester for affinity checking
+  $testerIndex = null;
+  if (function_exists('apcu_fetch') || function_exists('apc_fetch')) {
+    if (function_exists("apcu_fetch"))
+      $testers = apcu_fetch("testers_$location");
+    elseif (function_exists("apc_fetch"))
+      $testers = apc_fetch("testers_$location");
+    if (!isset($testers) || !is_array($testers))
+      $testers = array();
+    $testers[$pc] = $now;
+    $max_tester_time = min(max(GetSetting('max_tester_minutes', 60), 5), 120) * 60;
+    $earliest = $now - $max_tester_time;
+    $index = 0;
+    foreach($testers as $name => $last_check) {
+      if ($name == $pc)
+        $testerIndex = $index;
+      if ($last_check < $earliest) {
+        unset($testers[$name]);
+      } else {
+        $index++;
+      }
+    }
+    $testerCount = count($testers);
+    if (function_exists("apcu_store"))
+      apcu_store("testers_$location", $testers);
+    elseif (function_exists("apc_store"))
+      apc_store("testers_$location", $testers);
+  }
+
+  // If it is an EC2 auto-scaling location, make sure the agent isn't marked as offline      
+  $offline = false;
+  if (GetSetting('ec2_key') && !isset($testerIndex) || isset($locInfo['ami'])) {
+    $testers = GetTesters($location, true);
+
+    // make sure the tester isn't marked as offline (usually when shutting down EC2 instances)                
+    $testerCount = isset($testers['testers']) ? count($testers['testers']) : 0;
+    if ($testerCount) {
+      if (strlen($ec2)) {
+        foreach($testers['testers'] as $index => $testerInfo) {
+          if (isset($testerInfo['ec2']) && $testerInfo['ec2'] == $ec2 &&
+              isset($testerInfo['offline']) && $testerInfo['offline'])
+            $offline = true;
+            break;
+        }
+      }
+      foreach($testers['testers'] as $index => $testerInfo)
+        if ($testerInfo['id'] == $tester) {
+          $testerIndex = $index;
+          break;
+        }
+    }
+  }
+}
+
+function StartTest($testId, $time) {
+  $testPath = './' . GetTestPath($testId);
+  $waiting_file = "$testPath/test.waiting";
+  @unlink($waiting_file);
+
+  // flag the test with the start time
+  $ini = file_get_contents("$testPath/testinfo.ini");
+  if (stripos($ini, 'startTime=') === false) {
+    $start = "[test]\r\nstartTime=" . gmdate("m/d/y G:i:s", $time);
+    $out = str_replace('[test]', $start, $ini);
+    file_put_contents("$testPath/testinfo.ini", $out);
+  }
+}
+
+function TestToJSON($testInfo) {
+  $testJson = array();
+  $script = '';
+  $isScript = false;
+  $lines = explode("\r\n", $testInfo);
+  foreach($lines as $line) {
+    if( strlen(trim($line)) ) {
+      if( $isScript ) {
+        if( strlen($script) )
+          $script .= "\r\n";
+        $script .= $line;
+      } elseif( !strcasecmp($line, '[Script]') ) {
+        $isScript = true;
+      } else {
+        $pos = strpos($line, '=');
+        if( $pos !== false ) {
+          $key = trim(substr($line, 0, $pos));
+          $value = trim(substr($line, $pos + 1));
+          if( strlen($key) && strlen($value) ) {
+            if ($key == 'customMetric') {
+              $pos = strpos($value, ':');
+              if ($pos !== false) {
+                $metric = trim(substr($value, 0, $pos));
+                $code = base64_decode(substr($value, $pos+1));
+                if ($code !== false && strlen($metric) && strlen($code)) {
+                  if (!isset($testJson['customMetrics']))
+                    $testJson['customMetrics'] = array();
+                  $testJson['customMetrics'][$metric] = $code;
+                }
+              }
+            } elseif ($key == 'injectScript') {
+              $testJson['injectScript'] = base64_decode($value);
+            } elseif( filter_var($value, FILTER_VALIDATE_INT) !== false ) {
+              $testJson[$key] = intval($value);
+            } elseif( filter_var($value, FILTER_VALIDATE_FLOAT) !== false ) {
+              $testJson[$key] = floatval($value);
+            } else {
+              $testJson[$key] = $value;
+            }
+          }
+        }
+      }
+    }
+  }
+  if( strlen($script) )
+      $testJson['script'] = $script;
+  // See if we need to include apk information
+  if (isset($_REQUEST['apk']) && is_file(__DIR__ . '/update/apk.dat')) {
+    $apk_info = json_decode(file_get_contents(__DIR__ . '/update/apk.dat'), true);
+    if (isset($apk_info) && is_array($apk_info) && isset($apk_info['packages']) && is_array($apk_info['packages'])) {
+      $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
+      $update_path = dirname($_SERVER['PHP_SELF']) . '/update/';
+      $base_uri = "$protocol://{$_SERVER['HTTP_HOST']}$update_path";
+      foreach ($apk_info['packages'] as $package => $info)
+        $apk_info['packages'][$package]['apk_url'] = "$base_uri{$apk_info['packages'][$package]['file_name']}?md5={$apk_info['packages'][$package]['md5']}";
+      $testJson['apk_info'] = $apk_info;
+    }
+  }
+  return $testJson;
+}
 
 /**
 * Get an actual task to complete
@@ -106,66 +251,15 @@ function GetJob() {
 
   $workDir = "./work/jobs/$location";
   $locInfo = GetLocationInfo($location);
-  $locKey = '';
+  $locKey = GetSetting('location_key', '');
   if (isset($locInfo) && is_array($locInfo) && isset($locInfo['key']))
     $locKey = $locInfo['key'];
   if (strpos($location, '..') == false &&
       strpos($location, '\\') == false &&
       strpos($location, '/') == false &&
       (!strlen($locKey) || !strcmp($key, $locKey))) {
-    $now = time();
     
-    // get the count of testers for this lication and the index of the current tester for affinity checking
-    $testerIndex = null;
-    if (function_exists('apcu_fetch') || function_exists('apc_fetch')) {
-      if (function_exists("apcu_fetch"))
-        $testers = apcu_fetch("testers_$location");
-      elseif (function_exists("apc_fetch"))
-        $testers = apc_fetch("testers_$location");
-      if (!isset($testers) || !is_array($testers))
-        $testers = array();
-      $testers[$pc] = $now;
-      $earliest = $now - 3600;
-      $index = 0;
-      foreach($testers as $name => $last_check) {
-        if ($name == $pc)
-          $testerIndex = $index;
-        if ($last_check < $earliest) {
-          unset($testers[$name]);
-        } else {
-          $index++;
-        }
-      }
-      $testerCount = count($testers);
-      if (function_exists("apcu_store"))
-        apcu_store("testers_$location", $testers);
-      elseif (function_exists("apc_store"))
-        apc_store("testers_$location", $testers);
-    }
-
-    // If it is an EC2 auto-scaling location, make sure the agent isn't marked as offline      
-    $offline = false;
-    if (!isset($testerIndex) || isset($locInfo['ami'])) {
-      $testers = GetTesters($location, true);
-
-      // make sure the tester isn't marked as offline (usually when shutting down EC2 instances)                
-      $testerCount = isset($testers['testers']) ? count($testers['testers']) : 0;
-      if ($testerCount) {
-        if (strlen($ec2)) {
-          foreach($testers['testers'] as $index => $testerInfo) {
-            if (isset($testerInfo['ec2']) && $testerInfo['ec2'] == $ec2 &&
-                isset($testerInfo['offline']) && $testerInfo['offline'])
-              $offline = true;
-              break;
-          }
-        }
-        foreach($testers['testers'] as $index => $testerInfo)
-          if ($testerInfo['id'] == $tester) {
-            $testerIndex = $index;
-            break;
-          }
-      }
-    }
+    GetTesterIndex($locInfo, $testerIndex, $testerCount, $offline);
     
     if (!$offline) {
       if (!isset($testerIndex))
@@ -204,21 +298,8 @@ function GetJob() {
           $testId = trim($matches[1]);
 
         if( isset($testId) ) {
-          // figure out the path to the results
-          $testPath = './' . GetTestPath($testId);
-          $waiting_file = "$testPath/test.waiting";
-          if (is_file($waiting_file))
-            unlink($waiting_file);
-
-          // flag the test with the start time
-          $ini = file_get_contents("$testPath/testinfo.ini");
-          if (stripos($ini, 'startTime=') === false) {
-            $time = time();
-            $start = "[test]\r\nstartTime=" . gmdate("m/d/y G:i:s", $time);
-            $out = str_replace('[test]', $start, $ini);
-            file_put_contents("$testPath/testinfo.ini", $out);
-          }
-          
+          $time = time();
+          StartTest($testId, $time);
           $lock = LockTest($testId);
           if ($lock) {
             $testInfoJson = GetTestInfo($testId);
@@ -247,69 +328,15 @@ function GetJob() {
         }
 
         if ($delete) {
-          if (isset($fileName) && is_file("$workDir/$fileName")) {
-            unlink("$workDir/$fileName");
+          if (isset($fileName)) {
+            @unlink("$workDir/$fileName");
           }
         } else {
           AddTestJobHead($location, $original_test_info, $workDir, $fileName, $priority, true);
         }
         
         if ($is_json) {
-          $testJson = array();
-          $script = '';
-          $isScript = false;
-          $lines = explode("\r\n", $testInfo);
-          foreach($lines as $line) {
-            if( strlen(trim($line)) ) {
-              if( $isScript ) {
-                if( strlen($script) )
-                  $script .= "\r\n";
-                $script .= $line;
-              } elseif( !strcasecmp($line, '[Script]') ) {
-                $isScript = true;
-              } else {
-                $pos = strpos($line, '=');
-                if( $pos !== false ) {
-                  $key = trim(substr($line, 0, $pos));
-                  $value = trim(substr($line, $pos + 1));
-                  if( strlen($key) && strlen($value) ) {
-                    if ($key == 'customMetric') {
-                      $pos = strpos($value, ':');
-                      if ($pos !== false) {
-                        $metric = trim(substr($value, 0, $pos));
-                        $code = base64_decode(substr($value, $pos+1));
-                        if ($code !== false && strlen($metric) && strlen($code)) {
-                          if (!isset($testJson['customMetrics']))
-                            $testJson['customMetrics'] = array();
-                          $testJson['customMetrics'][$metric] = $code;
-                        }
-                      }
-                    } elseif( filter_var($value, FILTER_VALIDATE_INT) !== false ) {
-                      $testJson[$key] = intval($value);
-                    } elseif( filter_var($value, FILTER_VALIDATE_FLOAT) !== false ) {
-                      $testJson[$key] = floatval($value);
-                    } else {
-                      $testJson[$key] = $value;
-                    }
-                  }
-                }
-              }
-            }
-          }
-          if( strlen($script) )
-              $testJson['script'] = $script;
-          // See if we need to include apk information
-          if (isset($_REQUEST['apk']) && is_file(__DIR__ . '/update/apk.dat')) {
-            $apk_info = json_decode(file_get_contents(__DIR__ . '/update/apk.dat'), true);
-            if (isset($apk_info) && is_array($apk_info) && isset($apk_info['packages']) && is_array($apk_info['packages'])) {
-              $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
-              $update_path = dirname($_SERVER['PHP_SELF']) . '/update/';
-              $base_uri = "$protocol://{$_SERVER['HTTP_HOST']}$update_path";
-              foreach ($apk_info['packages'] as $package => $info)
-                $apk_info['packages'][$package]['apk_url'] = "$base_uri{$apk_info['packages'][$package]['file_name']}?md5={$apk_info['packages'][$package]['md5']}";
-              $testJson['apk_info'] = $apk_info;
-            }
-          }
+          $testJson = TestToJSON($testInfo);
           echo json_encode($testJson);
         } else {
           echo $testInfo;
@@ -324,6 +351,7 @@ function GetJob() {
       $testerInfo['ec2'] = $ec2;
       $testerInfo['ver'] = array_key_exists('version', $_GET) ? $_GET['version'] : $_GET['ver'];
       $testerInfo['freedisk'] = @$_GET['freedisk'];
+      $testerInfo['upminutes'] = @$_GET['upminutes'];
       $testerInfo['ie'] = @$_GET['ie'];
       $testerInfo['dns'] = $dnsServers;
       $testerInfo['video'] = @$_GET['video'];

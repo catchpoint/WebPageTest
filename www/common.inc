@@ -86,10 +86,10 @@ if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
 }
 
 // constants
-define('VER_WEBPAGETEST', '3.0');   // webpagetest version
-define('VER_CSS', 69);           // version of the sitewide css file
+define('VER_WEBPAGETEST', '18.02');   // webpagetest version
+define('VER_CSS', 74);           // version of the sitewide css file
 define('VER_JS', 33);            // version of the sitewide javascript file
-define('VER_JS_TEST', 35);       // version of the javascript specific to the test pages
+define('VER_JS_TEST', 39);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);     // version of the javascript specific to the test running status page
 define('UNKNOWN_TIME', -1);      // Value used as a flag for an unknown time.
                                  // To find code that fails to check that a time
@@ -205,18 +205,26 @@ if (is_dir('./forums') && (!array_key_exists('disableMybb', $settings) || !$sett
   ob_end_clean();
 }
 
-if (!$admin && isset($_COOKIE['asid']) && isset($_COOKIE['google_id']) && isset($_COOKIE['google_email'])) {
-  $lock = Lock('Auth', true, 10);
-  if ($lock) {
-    $sessions = json_decode(gz_file_get_contents('./dat/admin_sessions.dat'), true);
-    $session = $_COOKIE['asid'];
-    if ($sessions &&
-        isset($sessions[$session]) &&
-        $sessions[$session]['id'] == $_COOKIE['google_id'] &&
-        $sessions[$session]['email'] == $_COOKIE['google_email']) {
-      $admin = true;
+if (!$admin) {
+  $this_user = null;
+  if (isset($user)) {
+    $this_user = $user;
+  } elseif( isset($_COOKIE['google_email']) && isset($_COOKIE['google_id']) ) {
+    $this_user = $_COOKIE['google_email'];
+  }
+  if (isset($this_user) && strlen($this_user)) {
+    $admin_users = GetSetting("admin_users");
+    if ($admin_users) {
+      $admin_users = explode(',', $admin_users);
+      if (is_array($admin_users) && count($admin_users)) {
+        foreach($admin_users as $substr) {
+          if (stripos($this_user, $substr) !== false) {
+            $admin = true;
+            break;
+          }
+        }
+      }
     }
-    Unlock($lock);
   }
 }
 
@@ -253,7 +261,7 @@ if (preg_match('/^[a-zA-Z0-9_]+$/', @$_REQUEST['test'])) {
     $id = $_COOKIE['tid'];
 }
 
-$median_metric = 'loadTime';
+$median_metric = isset($settings['medianMetric']) ? $settings['medianMetric'] : 'loadTime';
 $testLabel = '';
 if (strlen($id)) {
     if (@strlen($_REQUEST['rkey'])) {
@@ -287,7 +295,7 @@ if (strlen($id)) {
       require_once 'include/TestInfo.php';
       require_once 'include/TestResults.php';
       $testInfo = TestInfo::fromFiles($testPath);
-      $testResults = TestResults::fromFiles($testInfo, null, $options);
+      $testResults = TestResults::fromFiles($testInfo);
       $run = $testResults->getMedianRunNumber($median_metric, $cached);
     }
     $cachedText = $cached ? '_Cached' : '';

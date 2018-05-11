@@ -87,7 +87,7 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
   echo "<response>\n";
   echo "<statusCode>200</statusCode>\n";
   echo "<statusText>Ok</statusText>\n";
-  if( strlen($_REQUEST['r']) )
+  if( isset($_REQUEST['r']) && strlen($_REQUEST['r']) )
       echo "<requestId>{$_REQUEST['r']}</requestId>\n";
   echo "<data>\n";
 

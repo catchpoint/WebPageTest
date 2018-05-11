@@ -37,26 +37,29 @@ class ConnectionViewHtmlSnippet {
 
   private function _createMap() {
     $out = "<map name=\"" . $this->mapName . "\">\n";
-    $connection_rows = GetConnectionRows($this->requests->getRequests());
-    $options = array(
-      'id' => $this->testInfo->getId(),
-      'path' => $this->testInfo->getRootDirectory(),
-      'run_id' => $this->stepResult->getRunNumber(),
-      'is_cached' => $this->stepResult->isCachedRun(),
-      'step_id' => $this->stepResult->getStepNumber(),
-      'use_cpu' => true,
-      'show_labels' => true,
-      'width' => 930
-    );
-    $map = GetWaterfallMap($connection_rows, $this->stepResult->readableIdentifier(), $options, $this->stepResult->getRawResults());
-    $stepNumber = $this->stepResult->getStepNumber();
-    foreach ($map as $entry) {
-      if (array_key_exists('request', $entry)) {
-        $index = $entry['request'] + 1;
-        $title = "$index: " . htmlspecialchars($entry['url']);
-        $out .= "<area href=\"#step${stepNumber}_request$index\" alt=\"$title\" title=\"$title\" shape=RECT coords=\"{$entry['left']},{$entry['top']},{$entry['right']},{$entry['bottom']}\">\n";
-      } elseif (array_key_exists('url', $entry)) {
-        $out .= "<area href=\"#step${stepNumber}_request\" alt=\"{$entry['url']}\" title=\"{$entry['url']}\" shape=RECT coords=\"{$entry['left']},{$entry['top']},{$entry['right']},{$entry['bottom']}\">\n";
+    $requests = $this->requests->getRequests();
+    if (isset($requests)) {
+      $connection_rows = GetConnectionRows($requests);
+      $options = array(
+        'id' => $this->testInfo->getId(),
+        'path' => $this->testInfo->getRootDirectory(),
+        'run_id' => $this->stepResult->getRunNumber(),
+        'is_cached' => $this->stepResult->isCachedRun(),
+        'step_id' => $this->stepResult->getStepNumber(),
+        'use_cpu' => true,
+        'show_labels' => true,
+        'width' => 930
+      );
+      $map = GetWaterfallMap($connection_rows, $this->stepResult->readableIdentifier(), $options, $this->stepResult->getRawResults());
+      $stepNumber = $this->stepResult->getStepNumber();
+      foreach ($map as $entry) {
+        if (array_key_exists('request', $entry)) {
+          $index = $entry['request'] + 1;
+          $title = "$index: " . htmlspecialchars($entry['url']);
+          $out .= "<area href=\"#step${stepNumber}_request$index\" alt=\"$title\" title=\"$title\" shape=RECT coords=\"{$entry['left']},{$entry['top']},{$entry['right']},{$entry['bottom']}\">\n";
+        } elseif (array_key_exists('url', $entry)) {
+          $out .= "<area href=\"#step${stepNumber}_request\" alt=\"{$entry['url']}\" title=\"{$entry['url']}\" shape=RECT coords=\"{$entry['left']},{$entry['top']},{$entry['right']},{$entry['bottom']}\">\n";
+        }
       }
     }
     $out .= "</map>\n";

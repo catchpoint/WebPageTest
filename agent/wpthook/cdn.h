@@ -108,9 +108,11 @@ CDN_PROVIDER cdnList[] = {
   {".att-dsa.net", "AT&T"},
   {".vo.msecnd.net", "Microsoft Azure"},
   {".azureedge.net", "Microsoft Azure"},
+  {".azure.microsoft.com", "Microsoft Azure"},
   {".voxcdn.net", "VoxCDN"},
   {".bluehatnetwork.com", "Blue Hat Network"},
   {".swiftcdn1.com", "SwiftCDN"},
+  {".swiftserve.com", "SwiftCDN"},
   {".cdngc.net", "CDNetworks"},
   {".gccdn.net", "CDNetworks"},
   {".panthercdn.com", "CDNetworks"},
@@ -139,6 +141,7 @@ CDN_PROVIDER cdnList[] = {
   {".azion.net", "Azion"},
   {".cdncloud.net.au", "MediaCloud"},
   {".rncdn1.com", "Reflected Networks"},
+  {".rncdn7.com", "Reflected Networks"},
   {".cdnsun.net", "CDNsun"},
   {".mncdn.com", "Medianova"},
   {".mncdn.net", "Medianova"},
@@ -160,6 +163,8 @@ CDN_PROVIDER cdnList[] = {
   {".cdninstagram.com", "Facebook"},
   {".rlcdn.com", "Reapleaf"},
   {".wp.com", "WordPress"},
+  {".wordpress.com", "WordPress"},
+  {".gravatar.com", "WordPress"},
   {".aads1.net", "Aryaka"},
   {".aads-cn.net", "Aryaka"},
   {".aads-cng.net", "Aryaka"},
@@ -183,6 +188,8 @@ CDN_PROVIDER cdnList[] = {
   {".cdnvideo.net", "CDNvideo"},
   {".trbcdn.ru", "TRBCDN"},
   {".cedexis.net", "Cedexis"},
+  {".streamprovider.net", "Rocket CDN"},
+  {".singularcdn.net.br", "Singular CDN"},
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -232,7 +239,9 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "Testa/", "Naver"},
   {"server", "BunnyCDN", "BunnyCDN"},
   {"server", "MNCDN", "Medianova"},
-  {"server", "Roast.io", "Roast.io"}
+  {"server", "Roast.io", "Roast.io"},
+  {"server", "SingularCDN", "Singular CDN"},
+  {"x-rocket-node", "", "Rocket CDN"}
 };
 
 // Specific providers that require multiple headers

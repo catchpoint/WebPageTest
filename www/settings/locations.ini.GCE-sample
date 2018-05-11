@@ -1,0 +1,193 @@
+; This is a sample locations.ini that includes all of the Google Cloud locations
+
+; The locations will automatically be set by the agents but the server address
+; and secret key need to be passed as metadata.
+; The metadata key is:
+; wpt_data
+; The metadata value is:
+; wpt_server=www.yourserver.com wpt_key=SecretLocationKey
+; IMPORTANT: Make sure to change the wpt_server to point to your private WPT instance
+;            and replace SecretKey with the Key configured in settings.ini (if any)
+
+[locations]
+1=gce-us-east4-linux-loc
+2=gce-us-east1-linux-loc
+3=gce-us-central1-linux-loc
+4-gce-us-west1-linux-loc
+5=gce-northamerica-northeast1-linux-loc
+6=gce-southamerica-east1-linux-loc
+7=gce-europe-west2-linux-loc
+8=gce-europe-west1-linux-loc
+9=gce-europe-west3-linux-loc
+10=gce-europe-west4-linux-loc
+11=gce-asia-south1-linux-loc
+12=gce-asia-southeast1-linux-loc
+13=gce-asia-east1-linux-loc
+14=gce-asia-northeast1-linux-loc
+15=gce-australia-southeast1-linux-loc
+default=gce-us-east4-linux-loc
+
+;
+; North America
+;
+
+[gce-us-east4-linux-loc]
+1=gce-us-east4-linux
+label="Virginia, USA (Chrome,Firefox,Opera)"
+group=North America
+
+[gce-us-east4-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Virginia, USA"
+
+
+[gce-us-east1-linux-loc]
+1=gce-us-east1-linux
+label="South Carolina, USA (Chrome,Firefox,Opera)"
+group=North America
+
+[gce-us-east1-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="South Carolina, USA"
+
+
+[gce-us-central1-linux-loc]
+1=gce-us-central1-linux
+label="Iowa, USA (Chrome,Firefox,Opera)"
+group=North America
+
+[gce-us-central1-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Iowa, USA"
+
+
+[gce-us-west1-linux-loc]
+1=gce-us-west1-linux
+label="Oregon, USA (Chrome,Firefox,Opera)"
+group=North America
+
+[gce-us-west1-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Oregon, USA"
+
+
+[gce-northamerica-northeast1-linux-loc]
+1=gce-northamerica-northeast1-linux
+label="Montréal, Canada (Chrome,Firefox,Opera)"
+group=North America
+
+[gce-northamerica-northeast1-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Montréal, Canada"
+
+;
+; South America
+;
+
+[gce-southamerica-east1-linux-loc]
+1=gce-southamerica-east1-linux
+label="São Paulo, Brazil (Chrome,Firefox,Opera)"
+group=South America
+
+[gce-southamerica-east1-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="São Paulo, Brazil"
+
+;
+; Europe
+;
+
+[gce-europe-west2-linux-loc]
+1=gce-europe-west2-linux
+label="London, U.K. (Chrome,Firefox,Opera)"
+group=Europe
+
+[gce-europe-west2-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="London, U.K."
+
+
+[gce-europe-west1-linux-loc]
+1=gce-europe-west1-linux
+label="St. Ghislain, Belgium (Chrome,Firefox,Opera)"
+group=Europe
+
+[gce-europe-west1-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="St. Ghislain, Belgium"
+
+
+[gce-europe-west3-linux-loc]
+1=gce-europe-west3-linux
+label="Frankfurt, Germany (Chrome,Firefox,Opera)"
+group=Europe
+
+[gce-europe-west3-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Frankfurt, Germany"
+
+
+[gce-europe-west4-linux-loc]
+1=gce-europe-west4-linux
+label="Eemshaven, Netherlands (Chrome,Firefox,Opera)"
+group=Europe
+
+[gce-europe-west4-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Eemshaven, Netherlands"
+
+;
+; Asia
+;
+
+[gce-asia-south1-linux-loc]
+1=gce-asia-south1-linux
+label="Mumbai, India (Chrome,Firefox,Opera)"
+group=Asia
+
+[gce-asia-south1-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Mumbai, India"
+
+
+[gce-asia-southeast1-linux-loc]
+1=gce-asia-southeast1-linux
+label="Jurong West, Singapore (Chrome,Firefox,Opera)"
+group=Asia
+
+[gce-asia-southeast1-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Jurong West, Singapore"
+
+
+[gce-asia-east1-linux-loc]
+1=gce-asia-east1-linux
+label="Changhua County, Taiwan (Chrome,Firefox,Opera)"
+group=Asia
+
+[gce-asia-east1-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Changhua County, Taiwan"
+
+
+[gce-asia-northeast1-linux-loc]
+1=gce-asia-northeast1-linux
+label="Tokyo, Japan (Chrome,Firefox,Opera)"
+group=Asia
+
+[gce-asia-northeast1-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Tokyo, Japan"
+
+;
+; Oceania
+;
+
+[gce-australia-southeast1-linux-loc]
+1=gce-australia-southeast1-linux
+label="Sydney, Australia (Chrome,Firefox,Opera)"
+group=Oceania
+
+[gce-australia-southeast1-linux]
+browser=Chrome,Chrome Beta,Chrome Canary,Firefox,Firefox Nightly,Opera,Opera Beta,Opera Developer
+label="Sydney, Australia"

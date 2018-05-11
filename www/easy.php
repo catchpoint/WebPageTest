@@ -34,14 +34,30 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
     <body>
         <div class="page">
             <?php
+            $siteKey = GetSetting("recaptcha_site_key", "");
+            if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($siteKey)) {
+              echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
+              ?>
+              <script>
+              function onRecaptchaSubmit(token) {
+                var form = document.getElementById("urlEntry");
+                if (ValidateInput(form)) {
+                  form.submit();
+                } else {
+                  grecaptcha.reset();
+                }
+              }
+              </script>
+              <?php
+            }
             $tab = 'Home';
             include 'header.inc';
             if (!$headless) {
             ?>
-            <form name="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
+            <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
             
             <?php
-            echo "<input type=\"hidden\" name=\"vo\" value=\"$owner\">\n";
+            echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
             if( strlen($secret) ){
               $hashStr = $secret;
               $hashStr .= $_SERVER['HTTP_USER_AGENT'];
@@ -67,7 +83,7 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
-                        <li><input type="text" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>
+                        <li><input type="text" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}"></li>
                         <li>
                             <label for="profile">Test Configuration:</label>
                             <select name="profile" id="profile" onchange="profileChanged()">
@@ -101,7 +117,13 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
             </div>
 
             <div id="start_test-container">
-                <p><input type="submit" name="submit" value="" class="start_test"></p>
+                <?php
+                if (strlen($siteKey)) {
+                  echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
+                } else {
+                  echo '<p><input type="submit" name="submit" value="" class="start_test"></p>';
+                }
+                ?>
             </div>
             <div class="cleared"></div>
             </form>
@@ -145,5 +167,6 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
         };
         profileChanged();
         </script>
+        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script> 
     </body>
 </html>

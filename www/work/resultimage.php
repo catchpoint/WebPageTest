@@ -37,23 +37,6 @@ if (ValidateTestId($id)) {
 
 
 /**
- * Checks if the fileName contains invalid characters or has an invalid extension
- * @param $fileName string The filename to check
- * @return bool true if accepted for an upload, false otherwise
- */
-function validateUploadFileName($fileName) {
-  if (strpos($fileName, '..') !== false ||
-      strpos($fileName, '/') !== false ||
-      strpos($fileName, '\\') !== false) {
-    return false;
-  }
-  $parts = pathinfo($fileName);
-  $ext = strtolower($parts['extension']);
-  // TODO: shouldn't this be a whitelist?
-  return !in_array($ext, array('php', 'pl', 'py', 'cgi', 'asp', 'js', 'rb', 'htaccess', 'jar'));
-}
-
-/**
  * @param $testRoot string Root directory for the test
  * @param $fileName string Name of the uploaded file
  * @return string Destination path for the uploaded file

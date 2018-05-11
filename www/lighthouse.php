@@ -45,6 +45,23 @@ if(array_key_exists("HTTP_IF_MODIFIED_SINCE",$_SERVER) && strlen(trim($_SERVER['
         } else {
           gz_readfile_chunked($filePath);
         }
+      } else {
+        $info = GetTestInfo($testPath);
+        if (isset($info) && is_array($info) && isset($info['lighthouse']) && $info['lighthouse']) {
+          $ok = true;
+          header('Content-type: text/html');
+          echo "<html><head></head><body>";
+          echo "<p>Sorry, Lighthouse had some issues gathering your report on WebPageTest. Please try again or try using Lighthouse through <a href=\"https://developers.google.com/web/tools/lighthouse/\">another way</a></p>";
+          $file = "lighthouse.log";
+          $filePath = "$testPath/$file";
+          if (gz_is_file($filePath)) {
+            echo "<p>Lighthouse test log:</p>\n";
+            echo "<pre>";
+            echo htmlspecialchars(gz_file_get_contents($filePath));
+            echo "</pre>";
+          }
+          echo "</body></html>";
+        }
       }
     }
   }

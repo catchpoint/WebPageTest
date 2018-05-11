@@ -5,7 +5,7 @@ if (array_key_exists('url', $_REQUEST) &&
     strlen($_REQUEST['url'])) {
   $url = trim($_REQUEST['url']);
   echo "<!DOCTYPE html>\n<html>\n<head>\n</head>\n<body>\n";
-  echo "JPEG Analysis for <a href=\"" . htmlspecialchars($url) . "\">" . htmlspecialchars($url) . "</a><br><br>";
+  echo "JPEG Analysis for " . htmlspecialchars($url) . "<br><br>";
   $id = sha1($url);
   $path = GetPath($id);
   if (!is_file($path))

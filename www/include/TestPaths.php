@@ -210,13 +210,6 @@ class TestPaths {
   }
 
   /**
-   * @return string Path for custom metrics file
-   */
-  public function customRulesFile() {
-    return $this->testRoot . $this->underscoreIdentifier() . "_custom_rules.json";
-  }
-
-  /**
    * @return string Path for user timed events
    */
   public function userTimedEventsFile() {
@@ -335,11 +328,22 @@ class TestPaths {
     return $this->testRoot . "lighthouse.json";
   }
 
+  public function lighthouseAuditsFile() {
+    return $this->testRoot . "lighthouse_audits.json";
+  }
+
   /**
    * @return string Path for lighthouse html file
    */
   public function lighthouseHtmlFile() {
     return $this->testRoot . "lighthouse.html";
+  }
+
+  /**
+   * @return string Path for lighthouse json file
+   */
+  public function lighthouseLogFile() {
+    return $this->testRoot . "lighthouse.log";
   }
 
   /**
@@ -398,6 +402,13 @@ class TestPaths {
    */
   public function histogramsFile() {
     return $this->testRoot . $this->dotIdentifier() . ".histograms.json";
+  }
+
+  /**
+   * @return string Path to the visual progress file
+   */
+  public function visualProgressFile() {
+    return $this->testRoot . $this->underscoreIdentifier() . "_visual_progress.json";
   }
 
   /**

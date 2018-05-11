@@ -69,6 +69,7 @@ static const TCHAR * CHROME_REQUIRED_OPTIONS[] = {
     _T("--disable-domain-reliability"),
     _T("--safebrowsing-disable-auto-update"),
     _T("--disable-background-timer-throttling"),
+    _T("--disable-browser-side-navigation"),
     _T("--host-rules=\"MAP cache.pack.google.com 127.0.0.1\"")
 };
 static const TCHAR * CHROME_IGNORE_CERT_ERRORS =
@@ -195,19 +196,9 @@ bool WebBrowser::RunAndWait(HANDLE &browser_process) {
             }
           }
           if (user_agent.GetLength()) {
-            if (!_test._preserve_user_agent) {
-              CString append, buff;
-              CString product = _test._append_user_agent.GetLength() ? 
-                  CA2T(_test._append_user_agent, CP_UTF8) : _T("PTST");
-              append.Format(_T(" %s/%d"), (LPCTSTR)product, _wpt_ver);
-              append.Replace(_T("%TESTID%"), _test._id);
-              buff.Format(_T("%d"), _test._run);
-              append.Replace(_T("%RUN%"), buff);
-              append.Replace(_T("%CACHED%"), _test._clear_cache ? _T("0") : _T("1"));
-              buff.Format(_T("%d"), _test._version);
-              append.Replace(_T("%VERSION%"), buff);
-              user_agent += append;
-            }
+            CString append = CA2T(_test.GetAppendUA(), CP_UTF8);
+            if (append.GetLength())
+              user_agent += _T(" ") + append;
             lstrcat(cmdLine, CHROME_USER_AGENT);
             lstrcat(cmdLine, _T("\""));
             lstrcat(cmdLine, user_agent);
@@ -807,6 +798,9 @@ void WebBrowser::ConfigureChromePreferences() {
           "\"geolocation\":2"
         "},"
         "\"password_manager_enabled\":false"
+      "},"
+      "\"translate\": {"
+        "\"enabled\": false"
       "}"
     "}";
   SHCreateDirectoryEx(NULL, _browser._profile_directory + _T("\\Default"), NULL);

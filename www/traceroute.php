@@ -22,13 +22,29 @@ $page_description = "Test network path from multiple locations around the world 
     <body>
         <div class="page">
             <?php
+            $siteKey = GetSetting("recaptcha_site_key", "");
+            if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($siteKey)) {
+              echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
+              ?>
+              <script>
+              function onRecaptchaSubmit(token) {
+                var form = document.getElementById("urlEntry");
+                if (ValidateInput(form)) {
+                  form.submit();
+                } else {
+                  grecaptcha.reset();
+                }
+              }
+              </script>
+              <?php
+            }
             $tab = 'Home';
             include 'header.inc';
             ?>
-            <form name="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
+            <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
             
             <input type="hidden" name="type" value="traceroute">
-            <input type="hidden" name="vo" value="<?php echo $owner;?>">
+            <input type="hidden" name="vo" value="<?php echo htmlspecialchars($owner);?>">
             <?php
             if( strlen($secret) ){
               $hashStr = $secret;
@@ -59,7 +75,7 @@ $page_description = "Test network path from multiple locations around the world 
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
-                        <li><input type="text" name="url" id="url" value="Host Name/IP Address" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>
+                        <li><input type="text" name="url" id="url" value="Host Name/IP Address" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}"></li>
                         <li>
                             <label for="location">Test Location</label>
                             <select name="where" id="location">
@@ -112,14 +128,20 @@ $page_description = "Test network path from multiple locations around the world 
                                 Number of Tests to Run<br>
                                 <small>Up to <?php echo $settings['maxruns']; ?></small>
                             </label>
-                            <input id="number_of_tests" type="text" class="text short" name="runs" value="3">
+                            <input id="number_of_tests" type="number"  class="text short" name="runs" value="3">
                         </li>
                     </ul>
                 </div>
             </div>
 
             <div id="start_test-container">
-                <p><input type="submit" name="submit" value="" class="start_test"></p>
+                <?php
+                if (strlen($siteKey)) {
+                  echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
+                } else {
+                  echo '<p><input type="submit" name="submit" value="" class="start_test"></p>';
+                }
+                ?>
                 <div id="sponsor">
                 </div>
             </div>

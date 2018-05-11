@@ -7,10 +7,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
 } elseif (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'xml') {
     include 'xmlResult.php';
 } else {
-    $options = null;
-    if (array_key_exists('end', $_REQUEST))
-        $options = array('end' => $_REQUEST['end']);
-    $pageData = loadAllPageData($testPath, $options);
+    $pageData = loadAllPageData($testPath);
 
     // if we don't have an url, try to get it from the page results
     if( !strlen($url) && isset($pageData[1][0]['URL']))
@@ -23,7 +20,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
             include 'resultBatch.inc';
         } elseif( isset($test['testinfo']['cancelled']) ) {
             include 'testcancelled.inc';
-        } elseif( (isset($test['test']) && isset($test['test']['completeTime'])) || count($pageData) > 0 ) {
+        } elseif( isset($test['test']['completeTime']) || count($pageData) > 0 ) {
             if( @$test['test']['type'] == 'traceroute' ) {
                 include 'resultTraceroute.inc';
             } elseif( @$test['test']['type'] == 'lighthouse' ) {

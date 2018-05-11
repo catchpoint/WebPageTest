@@ -151,7 +151,6 @@ else
         $gaTemplate = 'Bulk Result';
         include ('head.inc');
         ?>
-        <link rel="stylesheet" href="/video/video-js.3.2.0/video-js.min.css" type="text/css">
         <style type="text/css">
             .player
             {
@@ -167,12 +166,8 @@ else
                 width: 100%;
                 height: 380px;
             }
-            .vjs-default-skin .vjs-controls {height: 0;}
-            .vjs-default-skin .vjs-mute-control {display: none;}
-            .vjs-default-skin .vjs-volume-control {display: none;}
         </style>
         </style>
-        <script type="text/javascript" src="/video/video-js.3.2.0/video.min.js"></script>
     </head>
     <body>
         <div class="page">
@@ -568,8 +563,8 @@ function DisplayTest($id, $url, $label, $complete)
     if( $complete )
     {
         $pageData = loadAllPageData($testPath);
-        $fvMedian = GetMedianRun($pageData, 0, 'docTime');
-        $rvMedian = GetMedianRun($pageData, 1, 'docTime');
+        $fvMedian = GetMedianRun($pageData, 0, $median_metric);
+        $rvMedian = GetMedianRun($pageData, 1, $median_metric);
         $rvMedian_column = '';
         if ($rvMedian && ($pageData[$rvMedian][1]['result'] == 0 || $pageData[$rvMedian][1]['result'] == 99999))
             $rvMedian_column = number_format($pageData[$rvMedian][1]['loadTime'] / 1000.0, 3);
@@ -697,14 +692,13 @@ function DisplayPSS(&$tests, $video, &$dirty)
             $testInfo = GetTestInfo($test['id']);
             if( $testInfo && (!$started || (array_key_exists('started', $testInfo) && $testInfo['started'] < $started)))
               $started = $testInfo['started'];
-            $options = array('end' => $test['end']);
-            $pageData = loadAllPageData($testPath, $options);
+            $pageData = loadAllPageData($testPath);
             $fvMedian = GetMedianRun($pageData, 0, $median_metric);
             $test['fvMedian'] = $fvMedian;
             $fvLoadTime = $pageData[$fvMedian][0]['loadTime'];
             $fvRenderTime = $pageData[$fvMedian][0]['render'];
             $startOffset = array_key_exists('testStartOffset', $pageData[$fvMedian][0]) ? intval(round($pageData[$fvMedian][0]['testStartOffset'])) : 0;
-            $visual = GetVisualProgress($testPath, $fvMedian, 0, null, $test['end'], $startOffset);
+            $visual = GetVisualProgress($testPath, $fvMedian, 0, $startOffset);
             if (array_key_exists('SpeedIndex', $pageData[$fvMedian][0]))
                 $fvFLIvalue = $pageData[$fvMedian][0]['SpeedIndex'];
             if (array_key_exists('SpeedIndexCustom', $pageData[$fvMedian][0]))
@@ -1707,35 +1701,11 @@ function VideoHtml($id)
         list($width, $height) = getimagesize("./$dir/video.png");
     }
     
-    echo "<script>\n";
-    if (array_key_exists('html', $_REQUEST) && $_REQUEST['html'])
-        echo "_V_.options.techOrder = ['html5', 'flash'];\n";
-    else
-        echo "_V_.options.techOrder = ['flash', 'html5'];\n";
-    echo "_V_.options.flash.swf = '/video/player/flowplayer-3.2.16.swf';\n";
-    echo "_V_.options.flash.flashVars = {config:\"{";
-    echo "'clip':{'scaling':'fit'},";
-    echo "'plugins':{'controls':{'volume':false,'mute':false,'stop':true,'tooltips':{'buttons':true,'fullscreen':'Enter fullscreen mode'}}},";
-    echo "'canvas':{'backgroundColor':'#000000','backgroundGradient':'none'},";
-    if ($hasThumb) {
-        echo "'playlist':[{'url':'/$dir/video.png'},{'url':'/$dir/video.mp4','autoPlay':false,'autoBuffering':false}]";
-    } else {
-        echo "'playlist':[{'url':'/$dir/video.mp4','autoPlay':false,'autoBuffering':true}]";
-    }
-    echo "}\"};\n";
-    echo "_V_.options.flash.params = {
-           allowfullscreen: 'true',
-           wmode: 'transparent',
-           allowscriptaccess: 'always'
-       };
-       _V_.options.flash.attributes={};\n";
-    echo "</script>\n";
-        
-    echo "<video id=\"player\" class=\"player video-js vjs-default-skin\" controls
+    echo "<video id=\"player\" controls
       preload=\"auto\" width=\"$width\" height=\"$height\"";
     if ($hasThumb)
         echo " poster=\"/$dir/video.png\"";
-    echo "data-setup=\"{}\">
+    echo ">
         <source src=\"/$dir/video.mp4\" type='video/mp4'>
     </video>";
 

@@ -76,15 +76,31 @@ $loc = ParseLocations($locations);
     <body>
         <div class="page">
             <?php
+            $siteKey = GetSetting("recaptcha_site_key", "");
+            if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($siteKey)) {
+              echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
+              ?>
+              <script>
+              function onRecaptchaSubmit(token) {
+                var form = document.getElementById("urlEntry");
+                if (ValidateInput(form)) {
+                  form.submit();
+                } else {
+                  grecaptcha.reset();
+                }
+              }
+              </script>
+              <?php
+            }
             $tab = 'Home';
             include 'header.inc';
             if (!$headless) {
             ?>
-            <form name="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
+            <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
             <input type="hidden" name="lighthouseTrace" value="1">
             
             <?php
-            echo "<input type=\"hidden\" name=\"vo\" value=\"$owner\">\n";
+            echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
             if( strlen($secret) ){
               $hashStr = $secret;
               $hashStr .= $_SERVER['HTTP_USER_AGENT'];
@@ -125,6 +141,26 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="debug" value="' . htmlspecialchars($_REQUEST['debug']) . "\">\n";
             if (isset($_REQUEST['throttle_cpu']))
               echo '<input type="hidden" name="throttle_cpu" value="' . htmlspecialchars($_REQUEST['throttle_cpu']) . "\">\n";
+            if (isset($_REQUEST['browser_width']))
+              echo '<input type="hidden" name="browser_width" value="' . htmlspecialchars($_REQUEST['browser_width']) . "\">\n";
+            if (isset($_REQUEST['browser_height']))
+              echo '<input type="hidden" name="browser_height" value="' . htmlspecialchars($_REQUEST['browser_height']) . "\">\n";
+            if (isset($_REQUEST['width']))
+              echo '<input type="hidden" name="width" value="' . htmlspecialchars($_REQUEST['width']) . "\">\n";
+            if (isset($_REQUEST['height']))
+              echo '<input type="hidden" name="height" value="' . htmlspecialchars($_REQUEST['height']) . "\">\n";
+            if (isset($_REQUEST['thumbsize']))
+              echo '<input type="hidden" name="thumbsize" value="' . htmlspecialchars($_REQUEST['thumbsize']) . "\">\n";
+            if (isset($_REQUEST['fps']))
+              echo '<input type="hidden" name="fps" value="' . htmlspecialchars($_REQUEST['fps']) . "\">\n";
+            if (isset($_REQUEST['timeline_fps']))
+              echo '<input type="hidden" name="timeline_fps" value="' . htmlspecialchars($_REQUEST['timeline_fps']) . "\">\n";
+            if (isset($_REQUEST['discard_timeline']))
+              echo '<input type="hidden" name="discard_timeline" value="' . htmlspecialchars($_REQUEST['discard_timeline']) . "\">\n";
+            if (isset($_REQUEST['htmlbody']))
+              echo '<input type="hidden" name="htmlbody" value="' . htmlspecialchars($_REQUEST['htmlbody']) . "\">\n";
+            if (isset($_REQUEST['disable_video']))
+              echo '<input type="hidden" name="disable_video" value="' . htmlspecialchars($_REQUEST['disable_video']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
@@ -142,7 +178,7 @@ $loc = ParseLocations($locations);
                 </ul>
                 <div id="analytical-review" class="test_box">
                     <ul class="input_fields">
-                        <li><input type="text" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}"></li>
+                        <li><input type="text" name="url" id="url" value="<?php echo $url; ?>" class="text large" onfocus="if (this.value == this.defaultValue) {this.value = '';}" onblur="if (this.value == '') {this.value = this.defaultValue;}" onkeypress="if (event.keyCode == 32) {return false;}"></li>
                         <li>
                             <label for="location">Test Location</label>
                             <select name="where" id="location">
@@ -151,7 +187,7 @@ $loc = ParseLocations($locations);
                                 foreach($loc['locations'] as &$location)
                                 {
                                     $selected = '';
-                                    if( $location['checked'] )
+                                    if( isset($location['checked']) && $location['checked'] )
                                         $selected = 'selected';
                                     if (array_key_exists('group', $location) && $location['group'] != $lastGroup) {
                                         if (isset($lastGroup))
@@ -180,7 +216,7 @@ $loc = ParseLocations($locations);
                                 foreach( $loc['browsers'] as $key => &$browser )
                                 {
                                     $selected = '';
-                                    if( $browser['selected'] )
+                                    if( isset($browser['selected']) && $browser['selected'] )
                                         $selected = 'selected';
                                     echo "<option value=\"{$browser['key']}\" $selected>{$browser['label']}</option>\n";
                                 }
@@ -212,7 +248,7 @@ $loc = ParseLocations($locations);
                     <br>
                     <?php } ?>
                    <?php
-                    if( (int)$_COOKIE["as"] )
+                    if( isset($_COOKIE["as"]) && (int)$_COOKIE["as"] )
                     {
                         echo '<p><a href="javascript:void(0)" id="advanced_settings" class="extended">Advanced Settings <span class="arrow"></span></a><small id="settings_summary_label" class="hidden"><br><span id="settings_summary"></span></small></p>';
                         echo '<div id="advanced_settings-container">';
@@ -249,7 +285,7 @@ $loc = ParseLocations($locations);
                                             foreach( $loc['connections'] as $key => &$connection )
                                             {
                                                 $selected = '';
-                                                if( $connection['selected'] )
+                                                if( isset($connection['selected']) && $connection['selected'] )
                                                     $selected = 'selected';
                                                 echo "<option value=\"{$connection['key']}\" $selected>{$connection['label']}</option>\n";
                                             }
@@ -431,6 +467,13 @@ $loc = ParseLocations($locations);
                                         </label>
                                         <textarea id="customHeaders" type="text" class="text" name="customHeaders" value=""></textarea>
                                     </li>
+                                    <li>
+                                        <label for="injectScript">
+                                            Inject Script<br>
+                                            <small>Javascript to run after the document has started loading.</small>
+                                        </label>
+                                        <textarea id="injectScript" type="text" class="text" name="injectScript" value=""></textarea>
+                                    </li>
                                 </ul>
                             </div>
                             <div id="advanced-chrome" class="test_subbox ui-tabs-hide">
@@ -439,7 +482,7 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="lighthouse" id="lighthouse" class="checkbox" style="float: left;width: auto;">
                                         <label for="lighthouse" class="auto_width">
-                                            Capture Lighthouse Report (Mobile devices only)
+                                            Capture Lighthouse Report (Chrome only)
                                         </label>
                                     </li>
                                     <li>
@@ -685,7 +728,13 @@ $loc = ParseLocations($locations);
             </div>
 
             <div id="start_test-container">
-                <p><input type="submit" name="submit" value="" class="start_test"></p>
+                <?php
+                if (strlen($siteKey)) {
+                  echo "<p><button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha start_test\"></button></p>";
+                } else {
+                  echo '<p><input type="submit" name="submit" value="" class="start_test"></p>';
+                }
+                ?>
                 <div id="sponsor">
                 </div>
             </div>
@@ -701,7 +750,7 @@ $loc = ParseLocations($locations);
                         foreach($loc['locations'] as &$location)
                         {
                             $selected = '';
-                            if( $location['checked'] )
+                            if( isset($location['checked']) && $location['checked'] )
                                 $selected = 'selected';
                                 
                             if (array_key_exists('group', $location) && $location['group'] != $lastGroup) {

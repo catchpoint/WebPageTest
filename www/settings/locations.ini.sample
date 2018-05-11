@@ -9,13 +9,12 @@ default=Test_loc
 ;
 
 [Test_loc]
-1=IE
-2=Test
+1=Test
 label=Test Location
 group=Desktop
 
 [Public_Dulles]
-1=WPT_Dulles_IE8
+1=WPT_Dulles
 label="WebPagetest.org - Dulles, VA"
 group=Public
 
@@ -23,18 +22,6 @@ group=Public
 ; Tese are the browser-specific configurations that match the configurations
 ; defined in the top-level locations.  Each one of these MUST match the location
 ; name configured on the test agent (urlblast.ini or wptdriver.ini)
-;
-
-[IE]
-browser=IE 8
-latency=0
-label="Test Location - IE 8"
-;browserExe=pagetest.exe
-;key=TestKey123
-
-;
-; For a wptdriver configuration (chrome, firefox), the browser labels here 
-; MUST match the labels used in wptdriver.ini
 ;
 
 [Test]
@@ -52,9 +39,9 @@ label="Test Location"
 ; To use the public webpagetest.org instance you will need an API key
 ;
 
-[WPT_Dulles_IE8]
-browser=IE 8
+[WPT_Dulles]
+browser=Chrome,Firefox
 label="WebPagetest.org Dulles, VA - IE8"
 relayServer="https://www.webpagetest.org/"
 relayKey=<your API key>
-relayLocation=Dulles_IE8
+relayLocation=Dulles

@@ -277,7 +277,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     $x_scaler = new XScaler($max_ms, $data_x + 1, $data_width);
 
     // Get the CSI information.
-    if (is_dir('./google') && array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'] == 1) {
+    if (GetSetting('enable_csi') && is_dir('./google') && array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'] == 1) {
         require_once('./google/google_lib.inc');
         if (@$settings['enable_google_csi_filter'] == 1) {
             $filter = array('prt' => 1, 'ol' => 1, 'aft' => 1);
@@ -1355,7 +1355,13 @@ EOT;
     $out .= "if (typeof wptPageData == 'undefined') var wptPageData = {};\n";
     $out .= "if (typeof wptNoLinks == 'undefined') var wptNoLinks={$settings['nolinks']};\n";
     $out .= "wptRequestCount['step$step']=" . count($requests) . ";\n";
-    $out .= "wptRequestData['step$step']=" . json_encode($requests) . ";\n";
+    $request_data = json_encode($requests, 0, 1024);
+    if (!isset($request_data) || $request_data === false || !is_string($request_data) || strlen($request_data) < 3) {
+      require_once('lib/json.php');
+      $jsonLib = new Services_JSON();
+      $request_data = $jsonLib->encode($requests);
+    }
+    $out .= "wptRequestData['step$step']=" . $request_data . ";\n";
     $out .= "wptPageData['step$step']=" . json_encode($page_data) . ";\n";
     $out .= "</script>";
     return $out;

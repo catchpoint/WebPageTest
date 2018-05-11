@@ -40,7 +40,7 @@ for ($offset = 0; $offset <= $days; $offset++) {
           if (array_key_exists(14, $parts))
             $count = intval(trim($parts[14]));
           $count = max(1, $count);
-          if( ($privateInstall || $admin) && strlen($key) && $key != $keys['server']['key'] ) {
+          if( ($admin) && strlen($key) && $key != $keys['server']['key'] ) {
             if (!isset($users[$ip]))
               $users[$ip] = array();
             if (!in_array($key, $users[$ip]))

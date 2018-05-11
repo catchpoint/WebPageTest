@@ -67,7 +67,7 @@ function GetDevToolsRequestsForStep($localPaths, &$requests, &$pageData) {
     $startOffset = null;
     $ver = 14;
     $ok = GetCachedDevToolsRequests($localPaths, $requests, $pageData, $ver);
-    if (!$ok) {
+    if (!$ok && !GetSetting('disable_devtools_processing')) {
       if (GetDevToolsEventsForStep(null, $localPaths, $events, $startOffset)) {
           if (DevToolsFilterNetRequests($events, $rawRequests, $rawPageData)) {
               $requests = array();
@@ -741,7 +741,9 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
     $idMap = array();
     $endTimestamp = null;
     foreach ($events as $event) {
-      if (isset($event['timestamp']) && (!isset($endTimestamp) || $event['timestamp'] > $endTimestamp))
+      if (isset($event['method'])) {
+        if (isset($event['timestamp']) &&
+          (!isset($endTimestamp) || $event['timestamp'] > $endTimestamp))
         $endTimestamp = $event['timestamp'];
         if (!isset($main_frame) &&
             $event['method'] == 'Page.frameStartedLoading' &&
@@ -906,6 +908,7 @@ function DevToolsFilterNetRequests($events, &$requests, &$pageData) {
             ParseDevToolsDOMContentLoaded($event['record'], $main_frame, $pageData);
           }
         }
+      }
     }
     // Go through and error-out any requests that were started but never got a response or error
     if (isset($endTimestamp)) {

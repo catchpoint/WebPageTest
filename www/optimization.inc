@@ -576,11 +576,8 @@ function dumpOptimizationGlossary(&$settings)
         </tr>
         <tr>
             <td class="nowrap">What is checked</td>
-            <td >
-                An "Expires" header is present (and is not 0 or -1) or a 
-                "cache-control: max-age" directive is present and set for an 
-                hour or greater.  If the expiration is set for less than 30 
-                days you will get a warning (only applies to max-age currently).
+            <td >             
+                An "Expires" header is present (and is not 0 or -1) or a "cache-control: max-age" directive is present and set for an hour or greater. If the expiration is set for less 7 days you will get a warning. If the expiration is set for less than 1 hour you will get a failure. This only applies to max-age currently. 
             </td>
         </tr>
 

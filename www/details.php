@@ -14,12 +14,9 @@ require_once __DIR__ . '/include/RequestDetailsHtmlSnippet.php';
 require_once __DIR__ . '/include/RequestHeadersHtmlSnippet.php';
 require_once __DIR__ . '/include/AccordionHtmlHelper.php';
 
-$options = null;
-if (array_key_exists('end', $_REQUEST))
-    $options = array('end' => $_REQUEST['end']);
 $testInfo = TestInfo::fromFiles($testPath);
-$testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, null, $options);
-$data = loadPageRunData($testPath, $run, $cached, $options, $test['testinfo']);
+$testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, null);
+$data = loadPageRunData($testPath, $run, $cached, $test['testinfo']);
 $isMultistep = $testRunResults->countSteps() > 1;
 
 $page_keywords = array('Performance Test','Details','Webpagetest','Website Speed Test','Page Speed');
@@ -138,7 +135,7 @@ $page_description = "Website performance test details$testLabel";
                         if( is_file("$testPath/{$run}{$cachedText}_dynaTrace.dtas") )
                         {
                             echo "<br><a href=\"/$testPath/{$run}{$cachedText}_dynaTrace.dtas\">Download dynaTrace Session</a>";
-                            echo ' (<a href="http://ajax.dynatrace.com/pages/" target="_blank">get dynaTrace</a>)';
+                            echo ' (<a href="https://www.dynatrace.com/topics/ajax-edition/" target="_blank">get dynaTrace</a>)';
                         }
                         if( is_file("$testPath/{$run}{$cachedText}_bodies.zip") )
                             echo "<br><a href=\"/$testPath/{$run}{$cachedText}_bodies.zip\">Download Response Bodies</a>";
@@ -170,13 +167,14 @@ $page_description = "Website performance test details$testLabel";
                                 echo "</tr>\n";
                                 foreach ($testRunResults->getStepResults() as $stepResult) {
                                     echo "<tr>\n";
-                                    $params = ParseCsiInfoForStep($stepResult->createTestPaths(), true);
+                                    if (GetSetting('enable_csi'))
+                                      $params = ParseCsiInfoForStep($stepResult->createTestPaths(), true);
                                     if ($isMultistep) {
                                         echo '<td class="even" valign="middle">' . $stepResult->readableIdentifier() . '</td>';
                                     }
                                     foreach ( $test['testinfo']['extract_csi'] as $csi_param )
                                     {
-                                        if( array_key_exists($csi_param, $params) )
+                                        if( isset($params) && array_key_exists($csi_param, $params) )
                                         {
                                             echo '<td class="even" valign="middle">' . $params[$csi_param] . '</td>';
                                         }
@@ -359,9 +357,9 @@ $page_description = "Website performance test details$testLabel";
                 stepNum = 1;
                 doExpandAll = true;
             }
-            if (stepNum <= 0) {
-                return;
-            }
+           if (stepNum <= 0) {
+           return;
+           }
             var expand = function() {
                 var scrollToNode = $(window.location.hash);
                 if (doExpandAll) {

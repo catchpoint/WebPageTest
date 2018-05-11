@@ -58,6 +58,7 @@ CDN_PROVIDER cdnList[] = {
 	{".att-dsa.net", _T("AT&T")},
 	{".vo.msecnd.net", _T("Microsoft Azure")},
 	{".azureedge.net", _T("Microsoft Azure")},
+	{".azure.microsoft.com", _T("Microsoft Azure")},
 	{".voxcdn.net", _T("VoxCDN")},
 	{".bluehatnetwork.com", _T("Blue Hat Network")},
 	{".swiftcdn1.com", _T("SwiftCDN")},
@@ -100,8 +101,9 @@ CDN_PROVIDER cdnList[] = {
 	{".zenedge.net", _T("Zenedge")},
 	{".lswcdn.net", _T("LeaseWeb CDN")},
 	{".lswcdn.eu", _T("LeaseWeb CDN")},
-	{".revcn.net", _T("Rev Software")},
-	{".revdn.net", _T("Rev Software")},
+	{".revcn.net", _T("Nuu:bit")},
+	{".revdn.net", _T("Nuu:bit")},
+	{".nuubitcn.net", _T("Nuu:bit")},
 	{".caspowa.com", _T("Caspowa")},
 	{".twimg.com", _T("Twitter")},
 	{".facebook.com", _T("Facebook")},
@@ -127,6 +129,7 @@ CDN_PROVIDER cdnList[] = {
 	{".cdnvideo.ru", _T("CDNvideo")},
 	{".cdnvideo.net", _T("CDNvideo")},
 	{".trbcdn.net", _T("TRBCDN")},
+	{".imgeng.in", _T("ImageEngine")},
 	{NULL, NULL}
 };
 
@@ -152,8 +155,8 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
 	{"server", "ReSRC", _T("ReSRC.it")},
 	{"X-Cdn", "Zenedge", _T("Zenedge")},
 	{"server", "leasewebcdn", _T("LeaseWeb CDN")},
-	{"Via", "Rev-Cache", _T("Rev Software")},
-	{"X-Rev-Cache", "", _T("Rev Software")},
+	{"Via", "Rev-Cache", _T("Nuu:bit")},
+	{"X-Rev-Cache", "", _T("Nuu:bit")},
 	{"Server", "Caspowa", _T("Caspowa")},
 	{"Server", "SurgeCDN", _T("Surge")},
 	{"server", "sffe", _T("Google")},
@@ -167,5 +170,6 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
 	{"X-Iinfo", "", _T("Incapsula")},
 	{"server", "gocache", _T("GoCache")},
 	{"server", "Netlify", _T("Netlify")},
-	{"server", "Roast.io", _T("Roast.io")}
+	{"server", "Roast.io", _T("Roast.io")},
+	{"server", "ScientiaMobile ImageEngine", _T("ImageEngine")}
 };

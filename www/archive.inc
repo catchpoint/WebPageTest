@@ -1,7 +1,7 @@
 <?php
-require_once('testStatus.inc');
-require_once('logging.inc');
-require_once('common_lib.inc');
+require_once(__DIR__ . '/testStatus.inc');
+require_once(__DIR__ . '/logging.inc');
+require_once(__DIR__ . '/common_lib.inc');
 
 /**
 * See if the file should be skipped when archiving (usually just cache files)
@@ -11,6 +11,7 @@ require_once('common_lib.inc');
 function ArchiveSkipFile($file) {
   $skip = false;
   if ($file == 'archive.me' ||
+      $file == 'test.waiting' ||
       preg_match('/\.pageData.\d+\.gz$/', $file) ||
       preg_match('/\.requests.\d+\.gz$/', $file) ||
       preg_match('/\.devToolsCPUTime.\d+\.gz$/', $file)) {

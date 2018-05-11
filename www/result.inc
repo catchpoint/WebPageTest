@@ -98,15 +98,26 @@ $page_description = "Website performance test result$testLabel.";
                         && ($isOwner || !$test['testinfo']['sensitive'])
                         && (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type'])) )
                     {
+                        $siteKey = GetSetting("recaptcha_site_key", "");
+                        if (!isset($uid) && !isset($user) && !isset($this_user) && strlen($siteKey)) {
+                          echo "<script src=\"https://www.google.com/recaptcha/api.js\" async defer></script>\n";
+                          ?>
+                          <script>
+                          function onRecaptchaSubmit(token) {
+                            document.getElementById("urlEntry").submit();
+                          }
+                          </script>
+                          <?php
+                        }
                         // load the secret key (if there is one)
                         $secret = '';
                         $keys = parse_ini_file('./settings/keys.ini', true);
                         if( $keys && isset($keys['server']) && isset($keys['server']['secret']) )
                           $secret = trim($keys['server']['secret']);
 
-                        echo '<form name="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data">';
+                        echo '<form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data">';
                         echo "\n<input type=\"hidden\" name=\"resubmit\" value=\"$id\">\n";
-                        echo "<input type=\"hidden\" name=\"vo\" value=\"$owner\">\n";
+                        echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
                         if( strlen($secret) ){
                           $hashStr = $secret;
                           $hashStr .= $_SERVER['HTTP_USER_AGENT'];
@@ -119,7 +130,11 @@ $page_description = "Website performance test result$testLabel.";
                           $hmac = sha1($hashStr);
                           echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
                         }
-                        echo '<input type="submit" value="Re-run the test">';
+                        if (strlen($siteKey)) {
+                          echo "<button data-sitekey=\"$siteKey\" data-callback='onRecaptchaSubmit' class=\"g-recaptcha\">Re-run the test</button>";
+                        } else {
+                          echo '<input type="submit" value="Re-run the test">';
+                        }
                         echo "\n</form>\n";
                     }
                     ?>
@@ -141,12 +156,12 @@ $page_description = "Website performance test result$testLabel.";
                         echo "<a href=\"/csv.php?test=$id&requests=1\">Raw object data</a>";
                     }
                     echo '<br><a href="/export.php?bodies=1&pretty=1&test=' . $id . '">Export HTTP Archive (.har)</a>';
-                    if( array_key_exists('showslow', $test['testinfo']) && $test['testinfo']['showslow'] && strlen($settings['showslow']) )
-                        echo '<br><a href="'.$settings['showslow'].'/details/?url='.urlencode(FixUrlSlash($url)).'#webpagetest' . '">See in ShowSlow</a>';
 		                if( is_dir('./google') && array_key_exists('enable_google_csi', $settings) && $settings['enable_google_csi'] )
 			                echo '<br><a href="/google/view_csi.php?test=' . $id . '">View CSI data</a>';
                     if (is_file("$testPath/test.log"))
                         echo "<br><a href=\"/viewlog.php?test=$id\">View Test Log</a>";
+                    if (is_file("$testPath/lighthouse.log.gz"))
+                        echo " - <a href=\"/viewlog.php?test=$id&lighthouse=1\">Lighthouse Test Log</a>";
                     if( array_key_exists('publishTo', $settings) && $settings['publishTo'] )
                         echo "<br><a href=\"/publish.php?test=$id\">Publish to {$settings['publishTo']}</a>";
                 ?>

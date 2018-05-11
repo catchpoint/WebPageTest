@@ -38,14 +38,26 @@ fullSizeVideoOn=1
 ;Full Size Video - default checkbox state - ticked (1) or unticked (0)
 fullSizeVideoDefault=0
 
+; Disable all video capture and processing when tests do not opt for video.
+; Usually the agents will still capture video to calculate the visual metrics
+; but the video will not be uploaded. With strict_video enabled, tests without
+; video capture will not get visual metrics.
+;strict_video=1
+
 ; Run tests concurrently across test machines
 ;shard_tests=1
 
 ; Maximum number of runs allowed per test
 maxruns=9
 
+; Default timeout for each step of a test (in seconds)
+;step_timeout=120
+
 ; Maximum amount of time for a test run (if requested by timeout=X)
 maxtime=600
+
+; Time limit for all steps in a single test run.
+;run_time_limit=180
 
 ; Maximum server load to allow when rendering video on the server
 render_max_load=8
@@ -75,6 +87,9 @@ enable_agent_processing=1
 ; Sets the maximum number of navigates in a script
 maxNavigateCount=20
 
+; Selects the metric to use for the median run (defaults to loadTime)
+; medianMetric=SpeedIndex
+
 ; Block domains from all tests (space-delimited list)
 ;blockDomains=ctldl.windowsupdate.com
 
@@ -90,6 +105,9 @@ maxNavigateCount=20
 ; This is mostly used when the pages are behind authentication and need another path
 ; for processing background tasks.
 ;local_server=http://127.0.0.1
+
+; Default API key to use across all locations
+;location_key=AlphaNumericKey
 
 ; disable gzip compressing the result text files
 ;nogzip=1
@@ -135,6 +153,11 @@ agentUpdate=http://cdn.webpagetest.org/
 ;ba_password=password
 ;validcertificate=1
 
+; For integration with invisible reCAPTCHA
+;recaptcha_site_key=
+;recaptcha_secret_key=
+
+
 ; ***********************
 ; Test result integration
 ; ***********************
@@ -173,20 +196,17 @@ agentUpdate=http://cdn.webpagetest.org/
 ;logTestRequests=/var/log/webpagetest/requests.log
 ;logPrivateTests=0
 
-;
-; showslow (beacon rate is a percent of results to allow for sampling)
-;
-;showslow=http://www.showslow.com
-;beaconRate=100
-;showslow_key=<your showslow API key>
-
-
 ; **************
 ; Test Archiving
 ; **************
 
-; archiving to local storage - directory to archive test files (must include trailing slash)
-;archive_dir=/data/archive/
+; archiving to local storage
+; archive_dir - directory to archive test files (must include trailing slash)
+; archive_kept_days - The tests in archive_dir that are more than archive_kept_days
+;           days older will be deleted. If archive_kept_days is not defined, archived
+;           tests will be kept forever.
+; archive_dir=/data/archive/
+; archive_kept_days=365
 
 ; archiving to s3 (using the s3 protocol, not necessarily just s3)
 ;archive_s3_server=s3.amazonaws.com
@@ -215,6 +235,10 @@ agentUpdate=http://cdn.webpagetest.org/
 ;ec2_key=<access key>
 ;ec2_secret=<secret>
 
+; EC2 default instance size (defaults to m3.medium, c4.large is recommended).
+; Can be overridden in locations.ini for individual locations.
+;ec2_instance_size=c4.large
+
 ; Should we automatically delete any EBS volumes marked as "available"?
 ; This can be used to prevent orphaned volumes but only if the account
 ; doesn't expect to keep offline EBS volumes.
@@ -222,6 +246,24 @@ agentUpdate=http://cdn.webpagetest.org/
 
 ; Start an EC2 instance for every X tests in the queue (up to the location max)
 ;EC2.ScaleFactor=100
+
+; Pass the private IP address of the server through user-data for auto-launch agents instead of public EIP
+;ec2_use_server_private_ip=1
+
+; !!! ONLY SET THIS FOR LINUX AGENTS !!!
+;
+; Number of minutes to let an instance run idle before terminating.  This
+; is only helpful for Linux agents, where EC2 gets billed per second, with a
+; minimum of 60 seconds.
+; https://aws.amazon.com/about-aws/whats-new/2017/10/announcing-amazon-ec2-per-second-billing/
+;
+; Be careful, it is possible to set this too low.  It needs to be longer than
+; the time it takes for AWS to spin up a new instance and wptagent to start
+; processing tests.
+;
+; Windows is still billed hourly.  Do not set this if you are using Windows
+; agents.
+;EC2.IdleTerminateMinutes=15
 
 ; Default location when using EC2 auto-scaling - this setting is required for auto-scaling
 ;EC2.default=us-east-1

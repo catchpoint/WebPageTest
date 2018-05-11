@@ -414,7 +414,12 @@ class TestResultsHtmlTables {
     }
     $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS);
     $zipUrl = $urlGenerator->getGZip( $stepResult->createTestPaths("")->debugLogFile());
-    return "<br><br><a href=\"$zipUrl\" title=\"Download Debug Log\">Debug Log</a>";
+    $ret = "<br><br><a href=\"$zipUrl\" title=\"Download Debug Log\">Debug Log</a>";
+    if (gz_is_file($localPaths->devtoolsFile())) {
+      $zipUrl = $urlGenerator->getGZip( $stepResult->createTestPaths("")->devtoolsFile());
+      $ret .= "<br><a href=\"$zipUrl\" title=\"Download Raw Devtools Events\">Devtools Events</a>";
+    }
+    return $ret;
   }
 
   /**
