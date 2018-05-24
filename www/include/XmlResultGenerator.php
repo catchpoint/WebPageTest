@@ -540,6 +540,15 @@ function ArrayToXML($array) {
       if (is_numeric($key))
         $key = 'value';
       $key = preg_replace('/[^a-zA-Z0-9\.\-_]/', '_', $key);
+
+      /* XXX: XML tag name should not start with digit or '-' or '.'
+       * so we check if key starts with an invalid XML tagname, and if this is the 
+       * case, we prefix the tagname with '_'.
+       */
+      if (preg_match('/^[a-zA-Z_]/', $key) == 0) {
+          $key = "_" . $key;
+      }
+
       $ret .= "<$key>";
       if (is_array($val))
         $ret .= "\n" . ArrayToXML($val);
