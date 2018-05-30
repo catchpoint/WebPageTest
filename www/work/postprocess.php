@@ -11,7 +11,9 @@ set_time_limit(60*50);
 header("Content-Length: 0", true);
 ob_end_flush();
 flush();
-ob_end_clean();
+if (ob_get_length()) 
+  ob_end_clean();
+
 if (function_exists('fastcgi_finish_request'))
   fastcgi_finish_request();
     
