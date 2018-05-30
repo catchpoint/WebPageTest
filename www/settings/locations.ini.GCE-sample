@@ -13,7 +13,7 @@
 1=gce-us-east4-linux-loc
 2=gce-us-east1-linux-loc
 3=gce-us-central1-linux-loc
-4-gce-us-west1-linux-loc
+4=gce-us-west1-linux-loc
 5=gce-northamerica-northeast1-linux-loc
 6=gce-southamerica-east1-linux-loc
 7=gce-europe-west2-linux-loc
