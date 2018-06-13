@@ -2514,6 +2514,11 @@ function SendAsyncRequest($relative_url) {
 * @param array $line_data The data to turn into a log line
 */
 function makeLogLine($line_data) {
+    foreach ($line_data as $key => $value) {
+      if (strpos($value, "\t") !== false) {
+        $line_data[$key] = str_replace("\t", '', $value);
+      }
+    }
     $log = $line_data['date'] . "\t" . $line_data['ip'] . "\t0" . "\t0";
     $log .= "\t" . $line_data['guid'] . "\t" . $line_data['url'] . "\t". $line_data['location'] . "\t" . $line_data['private'];
     $log .= "\t". $line_data['testUID'] . "\t" . $line_data['testUser'] . "\t" . $line_data['video'] . "\t" . $line_data['label'];
