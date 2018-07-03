@@ -709,6 +709,13 @@ $loc = ParseLocations($locations);
                                     <p><label for="custom_metrics" class="full_width">Custom Metrics:</label></p>
                                     <textarea name="custom" id="custom_metrics" cols="0" rows="0"></textarea>
 
+                                    <div class="notification-container">
+                                        <br>
+                                        <div class="notification"><div class="message">
+                                            See <a href="https://github.com/WPO-Foundation/webpagetest/blob/master/docs/Metrics/HeroElements.md">the documentation</a> for details on how to specify custom hero elements.
+                                        </div></div>
+                                    </div>
+
                                     <?php if (isset($_REQUEST['heroElementTimes']) && $_REQUEST['heroElementTimes']): ?>
                                     <p><br><label for="hero_elements" class="full_width">Custom Hero Element Selectors:</label></p>
                                     <textarea name="heroElements" id="hero_elements" cols="0" rows="0"></textarea>
