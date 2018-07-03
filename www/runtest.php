@@ -188,6 +188,7 @@
             if (isset($req_lighthouse))
               $test['lighthouse'] = $req_lighthouse;
             $test['lighthouseTrace'] = isset($_REQUEST['lighthouseTrace']) && $_REQUEST['lighthouseTrace'] ? 1 : 0;
+            $test['heroElementTimes'] = isset($_REQUEST['heroElementTimes']) && $_REQUEST['heroElementTimes'] ? 1 : 0;
             if (isset($req_timeline))
               $test['timeline'] = $req_timeline;
             if (isset($_REQUEST['timeline_fps']) && $_REQUEST['timeline_fps'])
@@ -538,7 +539,24 @@
                 $test['customMetrics'][$metric] = base64_encode($code);
               }
             }
-            
+
+            if (array_key_exists('heroElements', $_REQUEST)) {
+              // Custom hero element selectors should be specified as a JSON string
+              // in { heroName: selector[, heroName2: selector2[, ...]] } format.
+              $heroElements = json_decode($_REQUEST['heroElements']);
+              if (is_object($heroElements)) {
+                // Iterate over each value in the object, filtering out anything
+                // that isn't a string of non-zero length.
+                $heroElements = array_filter((array) $heroElements, function($selector) {
+                  return is_string($selector) && strlen($selector);
+                });
+                if (count($heroElements) > 0) {
+                  $test['heroElementTimes'] = 1;
+                  $test['heroElements'] = base64_encode(json_encode($heroElements, JSON_FORCE_OBJECT));
+                }
+              }
+            }
+
             // Force some test options when running a lighthouse-only test
             if (isset($test['type']) && $test['type'] == 'lighthouse') {
               $test['lighthouse'] = 1;
@@ -2170,6 +2188,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'lighthouse', '1');
             if( isset($test['lighthouseTrace']) && $test['lighthouseTrace'] )
                 AddIniLine($testFile, 'lighthouseTrace', '1');
+            if( isset($test['heroElementTimes']) && $test['heroElementTimes'] )
+                AddIniLine($testFile, 'heroElementTimes', '1');
+            if( isset($test['heroElements']) && strlen($test['heroElements']) )
+                AddIniLine($testFile, 'heroElements', $test['heroElements']);
             if( isset($test['debug']) && $test['debug'] )
                 AddIniLine($testFile, 'debug', '1');
             if( isset($test['throttle_cpu']) && $test['throttle_cpu'] > 0.0 )

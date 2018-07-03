@@ -161,6 +161,8 @@ $loc = ParseLocations($locations);
               echo '<input type="hidden" name="htmlbody" value="' . htmlspecialchars($_REQUEST['htmlbody']) . "\">\n";
             if (isset($_REQUEST['disable_video']))
               echo '<input type="hidden" name="disable_video" value="' . htmlspecialchars($_REQUEST['disable_video']) . "\">\n";
+            if (isset($_REQUEST['heroElementTimes']))
+              echo '<input type="hidden" name="heroElementTimes" value="' . htmlspecialchars($_REQUEST['heroElementTimes']) . "\">\n";
             ?>
 
             <h2 class="cufon-dincond_black">Test a website's performance</h2>
@@ -703,9 +705,14 @@ $loc = ParseLocations($locations);
                                             See <a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/custom-metrics">the documentation</a> for details on how to specify custom metrics to be captured.
                                         </div></div>
                                     </div>
-                                    
+
                                     <p><label for="custom_metrics" class="full_width">Custom Metrics:</label></p>
                                     <textarea name="custom" id="custom_metrics" cols="0" rows="0"></textarea>
+
+                                    <?php if (isset($_REQUEST['heroElementTimes']) && $_REQUEST['heroElementTimes']): ?>
+                                    <p><br><label for="hero_elements" class="full_width">Custom Hero Element Selectors:</label></p>
+                                    <textarea name="heroElements" id="hero_elements" cols="0" rows="0"></textarea>
+                                    <?php endif ?>
                                 </div>
                             </div>
 
