@@ -482,7 +482,7 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="lighthouse" id="lighthouse" class="checkbox" style="float: left;width: auto;">
                                         <label for="lighthouse" class="auto_width">
-                                            Capture Lighthouse Report (Chrome only)
+                                            Capture Lighthouse Report <small>(Uses a "3G Fast" connection independent of test settings)</small>
                                         </label>
                                     </li>
                                     <li>
