@@ -197,6 +197,8 @@ function TestToJSON($testInfo) {
                   $testJson['customMetrics'][$metric] = $code;
                 }
               }
+            } elseif ($key == 'heroElements') {
+              $testJson['heroElements'] = json_decode(base64_decode($value));
             } elseif ($key == 'injectScript') {
               $testJson['injectScript'] = base64_decode($value);
             } elseif( filter_var($value, FILTER_VALIDATE_INT) !== false ) {
