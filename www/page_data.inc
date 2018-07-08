@@ -476,6 +476,12 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
           }
         }
       }
+
+      foreach (['FirstPaintedHero', 'LastPaintedHero'] as $metric) {
+        if (isset($ret['heroElementTimes'][$metric])) {
+          $ret[$metric] = $ret['heroElementTimes'][$metric];
+        }
+      }
     }
   }
 
