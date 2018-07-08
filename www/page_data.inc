@@ -473,6 +473,7 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
         foreach ($hero_elements['timings'] as $timing) {
           if (isset($timing['value'])) {
             $ret['heroElementTimes'][$timing['name']] = $timing['value'];
+            $ret["heroElementTimes.{$timing['name']}"] = $timing['value'];
           }
         }
       }
