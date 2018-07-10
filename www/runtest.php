@@ -188,6 +188,7 @@
             if (isset($req_lighthouse))
               $test['lighthouse'] = $req_lighthouse;
             $test['lighthouseTrace'] = isset($_REQUEST['lighthouseTrace']) && $_REQUEST['lighthouseTrace'] ? 1 : 0;
+            $test['lighthouseThrottle'] = isset($_REQUEST['lighthouseThrottle']) && $_REQUEST['lighthouseThrottle'] ? 1 : GetSetting('lighthouseThrottle', 0);
             $test['heroElementTimes'] = isset($_REQUEST['heroElementTimes']) && $_REQUEST['heroElementTimes'] ? 1 : 0;
             if (isset($req_timeline))
               $test['timeline'] = $req_timeline;
@@ -2188,6 +2189,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'lighthouse', '1');
             if( isset($test['lighthouseTrace']) && $test['lighthouseTrace'] )
                 AddIniLine($testFile, 'lighthouseTrace', '1');
+            if( isset($test['lighthouseThrottle']) && $test['lighthouseThrottle'] )
+                AddIniLine($testFile, 'lighthouseThrottle', '1');
             if( isset($test['heroElementTimes']) && $test['heroElementTimes'] )
                 AddIniLine($testFile, 'heroElementTimes', '1');
             if( isset($test['heroElements']) && strlen($test['heroElements']) )
