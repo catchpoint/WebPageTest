@@ -12,6 +12,7 @@ class RunResultHtmlTable {
   const COL_DOM_ELEMENTS = "domElements";
   const COL_TTI = "FirstInteractive";
   const COL_SPEED_INDEX = "SpeedIndex";
+  const COL_LAST_PAINTED_HERO = "LastPaintedHero";
   const COL_VISUAL_COMPLETE = "visualComplete";
   const COL_RESULT = "result";
   const COL_COST = "cost";
@@ -41,8 +42,8 @@ class RunResultHtmlTable {
     $this->runResults = $runResults;
     $this->rvRunResults = $rvRunResults;
     $this->isMultistep = $runResults->isMultistep();
-    $this->leftOptionalColumns = array(self::COL_LABEL, self::COL_USER_TIME,
-      self::COL_TTI, self::COL_SPEED_INDEX, self::COL_VISUAL_COMPLETE, self::COL_RESULT);
+    $this->leftOptionalColumns = array(self::COL_LABEL, self::COL_USER_TIME, self::COL_TTI,
+      self::COL_SPEED_INDEX, self::COL_LAST_PAINTED_HERO, self::COL_VISUAL_COMPLETE, self::COL_RESULT);
     $this->rightOptionalColumns = array(self::COL_CERTIFICATE_BYTES, self::COL_COST);
     $this->enabledColumns = array();
 
@@ -52,7 +53,7 @@ class RunResultHtmlTable {
     $this->enabledColumns[self::COL_RESULT] = true;
     $this->enabledColumns[self::COL_CERTIFICATE_BYTES] = $runResults->hasValidNonZeroMetric('certificate_bytes');
     $checkByMetric = array(self::COL_USER_TIME, self::COL_DOM_TIME, self::COL_TTI, self::COL_SPEED_INDEX,
-                           self::COL_VISUAL_COMPLETE);
+                           self::COL_LAST_PAINTED_HERO, self::COL_VISUAL_COMPLETE);
     foreach ($checkByMetric as $col) {
       $this->enabledColumns[$col] = $runResults->hasValidMetric($col) ||
                                    ($rvRunResults && $rvRunResults->hasValidMetric($col));
@@ -136,6 +137,9 @@ class RunResultHtmlTable {
     }
     if ($this->isColumnEnabled(self::COL_SPEED_INDEX)) {
       $out .= $this->_headCell('<a href="' . self::SPEED_INDEX_URL . '" target="_blank">Speed Index</a>');
+    }
+    if ($this->isColumnEnabled(self::COL_LAST_PAINTED_HERO)) {
+      $out .= $this->_headCell('<a href="https://github.com/WPO-Foundation/webpagetest/blob/master/docs/Metrics/HeroElements.md">Last Painted Hero</a>');
     }
     if ($this->isColumnEnabled(self::COL_DOM_TIME)) {
       $out .= $this->_headCell("DOM Element");
@@ -233,6 +237,9 @@ class RunResultHtmlTable {
       $speedIndex = $speedIndex !== null ? $speedIndex : $stepResult->getMetric("SpeedIndex");
       $speedIndex = $speedIndex !== null ? $speedIndex : "-";
       $out .= $this->_bodyCell($idPrefix . "SpeedIndex" . $idSuffix, $speedIndex, $class);
+    }
+    if($this->isColumnEnabled(self::COL_LAST_PAINTED_HERO)) {
+      $out .= $this->_bodyCell($idPrefix . "LastPaintedHero" . $idSuffix, $this->_getIntervalMetric($stepResult, "LastPaintedHero"), $class);
     }
     if ($this->isColumnEnabled(self::COL_DOM_TIME)) {
       $out .= $this->_bodyCell($idPrefix . "DomTime" . $idSuffix, $this->_getIntervalMetric($stepResult, "domTime"), $class);
