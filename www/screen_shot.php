@@ -241,7 +241,7 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
             $hero_times = $testStepResult->getMetric('heroElementTimes');
             $viewport = $hero_data['viewport'];
 
-            foreach ($hero_elements as $hero) {
+            foreach ($hero_elements as $heroIndex => $hero) {
                 $hero_time = $hero_times[$hero['name']];
 
                 if ($hero_time > 0 && isset($frames[$hero_time])) {
@@ -267,9 +267,9 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
                     echo '<img class="center" alt="Hero Element Screen Shot" src="' . $frame_path . '">';
                     echo <<<SVG
                     <svg viewBox="0 0 {$frame_w} {$frame_h}" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0; width: {$frame_w}; height: {$frame_h};">
-                        <rect x="0" y="0" width="100%" height="100%" fill="rgba(0, 0, 0, 0.3)" mask="url(#opacity-mask)" />
+                        <rect x="0" y="0" width="100%" height="100%" fill="rgba(0, 0, 0, 0.3)" mask="url(#opacity-mask-{$heroIndex})" />
 
-                        <mask id="opacity-mask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+                        <mask id="opacity-mask-{$heroIndex}" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
                             <rect x="0" y="0" width="100%" height="100%" fill="white" />
                             <rect x="{$x}" y="{$y}" width="{$w}" height="{$h}" fill="black" />
                         </mask>
