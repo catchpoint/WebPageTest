@@ -245,11 +245,15 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
                 $hero_time = $hero_times[$hero['name']];
 
                 if ($hero_time > 0 && isset($frames[$hero_time])) {
-                    $frame_path = $frames[$hero_time]['path'];
-                    if (strtolower(substr($frame_path, -4)) == '.png') {
-                        $frame = imagecreatefrompng("./{$frame_path}");
+                    $frame_path = './' . ltrim($frames[$hero_time]['path'], '/');
+                    if ($fileHandler->fileExists(substr($frame_path, 0, -4) . '.png')) {
+                        $frame_path = substr($frame_path, 0, -4) . '.png';
+                        $frame = imagecreatefrompng($frame_path);
+                    } else if ($fileHandler->fileExists(substr($frame_path, 0, -4) . '.jpg')) {
+                        $frame_path = substr($frame_path, 0, -4) . '.jpg';
+                        $frame = imagecreatefromjpeg($frame_path);
                     } else {
-                        $frame = imagecreatefromjpeg("./{$frame_path}");
+                        continue;
                     }
 
                     $frame_w = imagesx($frame);
