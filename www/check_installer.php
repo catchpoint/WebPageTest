@@ -94,8 +94,10 @@ function IsValidIp($ip, $installer) {
   $filename = __DIR__ . '/settings/block_installer_ip.txt';
   if (is_file($filename)) {
     $blocked_addresses = file($filename, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    if (in_array($ip, $blocked_addresses)) {
-      $ok = false;
+    foreach ($blocked_addresses as $address) {
+      if (strpos($ip, $address) === 0) {
+        $ok = false;
+      }
     }
   }
 
