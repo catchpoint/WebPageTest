@@ -16,7 +16,7 @@ if (isset($_SERVER["HTTP_X_FORWARDED_FOR"])) {
 if (isset($_SERVER["HTTP_FASTLY_CLIENT_IP"]))
   $ip = $_SERVER["HTTP_FASTLY_CLIENT_IP"];
 
-if (IsValidIp($ip)) {
+if (!isset($ip) || IsValidIp($ip)) {
   $files = glob('./update/*.ini');
   if ($files && is_array($files) && count($files)) {
     foreach ($files as $file) {
@@ -44,7 +44,11 @@ if (IsValidIp($ip)) {
       }
     }
   }
+  echo json_encode($updates);
+} else {
+  header('HTTP/1.0 403 Forbidden');
 }
+
 function IsValidIp($ip) {
   $ok = true;
   
@@ -60,5 +64,4 @@ function IsValidIp($ip) {
   }
   return $ok;
 }
-echo json_encode($updates);
 ?>
