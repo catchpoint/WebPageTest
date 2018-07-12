@@ -1,4 +1,4 @@
-<?php 
+<?php
 include __DIR__ . '/common.inc';
 require_once __DIR__ . '/video.inc';
 require_once __DIR__ . '/page_data.inc';
@@ -228,6 +228,63 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
     if ($fileHandler->fileExists($localPaths->additionalScreenShotFile("responsive"))) {
         echo '<br><br><h2 id="responsive">Responsive Site Check</h2>';
         echo '<img class="center" alt="Responsive Site Check image" src="' . $urlPaths->additionalScreenShotFile("responsive") . '">';
+    }
+
+    // Display hero element frames
+    if (gz_is_file($localPaths->heroElementsJsonFile())) {
+        $hero_data = json_decode(gz_file_get_contents($localPaths->heroElementsJsonFile()), true);
+        $visual_progress = $testStepResult->getVisualProgress();
+
+        if (isset($visual_progress['frames']) && $hero_data) {
+            $frames = $visual_progress['frames'];
+            $hero_elements = $hero_data['heroes'];
+            $hero_times = $testStepResult->getMetric('heroElementTimes');
+            $viewport = $hero_data['viewport'];
+
+            foreach ($hero_elements as $heroIndex => $hero) {
+                $hero_time = $hero_times[$hero['name']];
+
+                if ($hero_time > 0 && isset($frames[$hero_time])) {
+                    $frame_path = './' . ltrim($frames[$hero_time]['path'], '/');
+                    if ($fileHandler->fileExists(substr($frame_path, 0, -4) . '.png')) {
+                        $frame_path = substr($frame_path, 0, -4) . '.png';
+                        $frame = imagecreatefrompng($frame_path);
+                    } else if ($fileHandler->fileExists(substr($frame_path, 0, -4) . '.jpg')) {
+                        $frame_path = substr($frame_path, 0, -4) . '.jpg';
+                        $frame = imagecreatefromjpeg($frame_path);
+                    } else {
+                        continue;
+                    }
+
+                    $frame_w = imagesx($frame);
+                    $frame_h = imagesy($frame);
+                    imagedestroy($frame);
+
+                    $scale = min($frame_w / $viewport['width'], $frame_h / $viewport['height']);
+                    $x = $hero['x'] * $scale;
+                    $y = $hero['y'] * $scale;
+                    $w = $hero['width'] * $scale;
+                    $h = $hero['height'] * $scale;
+
+                    echo '<br><br><h2 id="hero_' . $hero['name'] . '">Hero Time: ' . $hero['name'] . '</h2>';
+                    echo '<div style="display: inline-block; position: relative">';
+                    echo '<img class="center" alt="Hero Element Screen Shot" src="' . $frame_path . '">';
+                    echo <<<SVG
+                    <svg viewBox="0 0 {$frame_w} {$frame_h}" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0; width: {$frame_w}; height: {$frame_h};">
+                        <rect x="0" y="0" width="100%" height="100%" fill="rgba(0, 0, 0, 0.3)" mask="url(#opacity-mask-{$heroIndex})" />
+
+                        <mask id="opacity-mask-{$heroIndex}" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse">
+                            <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                            <rect x="{$x}" y="{$y}" width="{$w}" height="{$h}" fill="black" />
+                        </mask>
+
+                        <rect x="{$x}" y="{$y}" width="{$w}" height="{$h}" stroke="rgb(0, 255, 0)" stroke-width="2" fill="none" />
+                    </svg>
+SVG;
+                    echo '</div>';
+                }
+            }
+        }
     }
 
     // display all of the status messages

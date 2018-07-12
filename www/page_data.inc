@@ -473,7 +473,14 @@ function loadPageStepData($localPaths, $runCompleted, $testInfo = null) {
         foreach ($hero_elements['timings'] as $timing) {
           if (isset($timing['value'])) {
             $ret['heroElementTimes'][$timing['name']] = $timing['value'];
+            $ret["heroElementTimes.{$timing['name']}"] = $timing['value'];
           }
+        }
+      }
+
+      foreach (['FirstPaintedHero', 'LastPaintedHero'] as $metric) {
+        if (isset($ret['heroElementTimes'][$metric])) {
+          $ret[$metric] = $ret['heroElementTimes'][$metric];
         }
       }
     }
