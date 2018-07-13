@@ -77,6 +77,25 @@
       }
     }
     BuildLocations($locations);
+    // Copy the lat/lng configurations to all of the child locations
+    foreach($locations as $loc_name => $loc) {
+      if (isset($loc['lat']) && isset($loc['lng']) && !isset($loc['browser'])) {
+        foreach($loc as $key => $child_loc) {
+          if (is_numeric($key) && isset($locations[$child_loc])) {
+            $locations[$child_loc]['lat'] = $loc['lat'];
+            $locations[$child_loc]['lng'] = $loc['lng'];
+            $separator = strpos($child_loc, ':');
+            if ($separator > 0) {
+              $child_loc = substr($child_loc, 0, $separator);
+              if (isset($locations[$child_loc])) {
+                $locations[$child_loc]['lat'] = $loc['lat'];
+                $locations[$child_loc]['lng'] = $loc['lng'];
+              }
+            }
+          }
+        }
+      }
+    }
 
     // see if we are running a relay test
     if( @strlen($req_rkey) )
@@ -411,17 +430,6 @@
             if (isset($locations[$test['location']]['ami']))
               $test['ami'] = $locations[$test['location']]['ami'];
 
-            if (isset($_REQUEST['lat']) && floatval($_REQUEST['lat']) != 0)
-              $test['lat'] = floatval($_REQUEST['lat']);
-            if (isset($_REQUEST['lng']) && floatval($_REQUEST['lng']) != 0)
-              $test['lng'] = floatval($_REQUEST['lng']);
-            if (!isset($test['lat']) && !isset($test['lng']) &&
-                isset($locations[$test['location']]['lat']) &&
-                isset($locations[$test['location']]['lng'])) {
-              $test['lat'] = floatval($locations[$test['location']]['lat']);
-              $test['lng'] = floatval($locations[$test['location']]['lng']);
-            }
-            
             // set the browser to the default if one wasn't specified
             if ((!array_key_exists('browser', $test) ||
                  !strlen($test['browser'])) &&
@@ -1351,6 +1359,18 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                 $loc = $locations[$locations[$def]['1']]['location'];
                 //    $loc = $locations[$def]['1'];
                 $test['location'] = $loc;
+            }
+
+            // Pull the lat and lng from the location if available
+            $test_loc = $locations[$test['location']];
+            if (isset($_REQUEST['lat']) && floatval($_REQUEST['lat']) != 0)
+              $test['lat'] = floatval($_REQUEST['lat']);
+            if (isset($_REQUEST['lng']) && floatval($_REQUEST['lng']) != 0)
+              $test['lng'] = floatval($_REQUEST['lng']);
+            if (!isset($test['lat']) && !isset($test['lng']) &&
+                isset($test_loc['lat']) && isset($test_loc['lng'])) {
+              $test['lat'] = floatval($test_loc['lat']);
+              $test['lng'] = floatval($test_loc['lng']);
             }
             
             // Use the default browser if one wasn't specified
