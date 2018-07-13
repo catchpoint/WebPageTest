@@ -410,6 +410,17 @@
             }
             if (isset($locations[$test['location']]['ami']))
               $test['ami'] = $locations[$test['location']]['ami'];
+
+            if (isset($_REQUEST['lat']) && floatval($_REQUEST['lat']) != 0)
+              $test['lat'] = floatval($_REQUEST['lat']);
+            if (isset($_REQUEST['lng']) && floatval($_REQUEST['lng']) != 0)
+              $test['lng'] = floatval($_REQUEST['lng']);
+            if (!isset($test['lat']) && !isset($test['lng']) &&
+                isset($locations[$test['location']]['lat']) &&
+                isset($locations[$test['location']]['lng'])) {
+              $test['lat'] = floatval($locations[$test['location']]['lat']);
+              $test['lng'] = floatval($locations[$test['location']]['lng']);
+            }
             
             // set the browser to the default if one wasn't specified
             if ((!array_key_exists('browser', $test) ||
@@ -2243,6 +2254,10 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'APIKey', $test['key']);
             if (isset($test['ip']) && strlen($test['ip']))
                 AddIniLine($testFile, 'IPAddr', $test['ip']);
+            if (isset($test['lat']) && strlen($test['lat']))
+                AddIniLine($testFile, 'lat', $test['lat']);
+            if (isset($test['lng']) && strlen($test['lng']))
+                AddIniLine($testFile, 'lng', $test['lng']);
 
             // Add custom metrics
             if (array_key_exists('customMetrics', $test)) {
