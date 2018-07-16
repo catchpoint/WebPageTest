@@ -89,7 +89,7 @@ if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
 define('VER_WEBPAGETEST', '18.02');   // webpagetest version
 define('VER_CSS', 74);           // version of the sitewide css file
 define('VER_JS', 33);            // version of the sitewide javascript file
-define('VER_JS_TEST', 39);       // version of the javascript specific to the test pages
+define('VER_JS_TEST', 40);       // version of the javascript specific to the test pages
 define('VER_JS_RUNNING', 1);     // version of the javascript specific to the test running status page
 define('UNKNOWN_TIME', -1);      // Value used as a flag for an unknown time.
                                  // To find code that fails to check that a time

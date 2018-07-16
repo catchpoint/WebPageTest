@@ -506,28 +506,37 @@ function InitializeMap()
     var map = new google.maps.Map(document.getElementById("map"), myOptions);
 
     var currentLoc = $('#location').val();
+    
+    var locList = [];
     for( var loc in locations )
     {
-        if( locations[loc]['lat'] != undefined && locations[loc]['lng'] != undefined )
+      if( locations[loc]['lat'] != undefined && locations[loc]['lng'] != undefined )
+      {
+        locList.push(loc);
+      }
+    }
+    locList.reverse();
+
+    for( var index in locList )
+    {
+        var loc = locList[index];
+        var pos = new google.maps.LatLng(locations[loc]['lat'], locations[loc]['lng']);
+        var marker = new google.maps.Marker({
+            position: pos,
+            title:locations[loc]['label'],
+            icon:'/images/map_red.png',
+            map: map
+        });
+        
+        if( loc == currentLoc )
         {
-            var pos = new google.maps.LatLng(locations[loc]['lat'], locations[loc]['lng']);
-            var marker = new google.maps.Marker({
-                position: pos,
-                title:locations[loc]['label'],
-                icon:'/images/map_red.png',
-                map: map
-            });
-            
-            if( loc == currentLoc )
-            {
-                marker.setIcon('/images/map_green.png');
-                selectedMarker = marker;
-            }
-            
-            locations[loc]['marker'] = marker;
-            
-            AttachClickEvent(marker, loc);
+            marker.setIcon('/images/map_green.png');
+            selectedMarker = marker;
         }
+        
+        locations[loc]['marker'] = marker;
+        
+        AttachClickEvent(marker, loc);
     }
     
 }
