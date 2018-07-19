@@ -24,7 +24,7 @@ $userImages = true;
         <?php $gaTemplate = 'Screen Shot'; include ('head.inc'); ?>
         <style type="text/css">
         img.center {
-            display:block; 
+            display:block;
             margin-left: auto;
             margin-right: auto;
         }
@@ -77,7 +77,7 @@ $userImages = true;
             overflow: hidden;
         }
         .time {
-            white-space:nowrap; 
+            white-space:nowrap;
         }
         tr.even {
             background: whitesmoke;
@@ -93,7 +93,7 @@ $userImages = true;
 
             printContent($fileHandler, $testInfo, $testRunResults);
             ?>
-            
+
             </div>
 
             <?php include('footer.inc'); ?>
@@ -245,7 +245,8 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
                 $hero_time = $hero_times[$hero['name']];
 
                 if ($hero_time > 0 && isset($frames[$hero_time])) {
-                    $frame_path = './' . ltrim($frames[$hero_time]['path'], '/');
+                    $frame_file = $frames[$hero_time]['file'];
+                    $frame_path = "{$localPaths->videoDir()}/{$frame_file}";
                     if ($fileHandler->fileExists(substr($frame_path, 0, -4) . '.png')) {
                         $frame_path = substr($frame_path, 0, -4) . '.png';
                         $frame = imagecreatefrompng($frame_path);
@@ -268,7 +269,7 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
 
                     echo '<br><br><h2 id="hero_' . $hero['name'] . '">Hero Time: ' . $hero['name'] . '</h2>';
                     echo '<div style="display: inline-block; position: relative">';
-                    echo '<img class="center" alt="Hero Element Screen Shot" src="' . $frame_path . '">';
+                    echo '<img class="center" alt="Hero Element Screen Shot" src="' . "{$urlPaths->videoDir()}/{$frame_file}" . '">';
                     echo <<<SVG
                     <svg viewBox="0 0 {$frame_w} {$frame_h}" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0; width: {$frame_w}; height: {$frame_h};">
                         <rect x="0" y="0" width="100%" height="100%" fill="rgba(0, 0, 0, 0.3)" mask="url(#opacity-mask-{$heroIndex})" />
