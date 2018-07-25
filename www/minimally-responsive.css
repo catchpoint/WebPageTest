@@ -1,0 +1,14 @@
+ @media only screen and (max-width: 980px) {
+    /* remove explicitly-set widths on a bunch of things */
+    .page, #test_box-container, .test_box input.text.large, .test_box label {
+        width: auto;
+    }
+    .test_box select, #location {
+        width: auto;
+        display: block;
+    }
+    #test_box-container, .test_box label { float: none; }
+    #test_box-container .ui-tabs-nav { height: auto; }
+    #test_box-container .ui-tabs-nav li { float: none; width: auto; display: block; }
+
+}
