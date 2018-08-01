@@ -17,20 +17,22 @@ var wtt = function(n, t, b) {
   }
 };
 utReportRUM = function(b){
-  var m = window.performance.getEntriesByType("mark");
-  var lm={};
-  for (i = 0; i < m.length; i++) {
-    g = 'usertiming';
-    if (lm[g] == undefined || m[i].startTime > lm[g])
-      lm[g] = m[i].startTime;
-    p = m[i].name.match(/([^\.]+)\.([^\.]*)/);
-    if (p && p.length > 2 &&
-        (lm[p[1]] == undefined ||
-         m[i].startTime > lm[p[1]]))
-        lm[p[1]] = m[i].startTime;
+  if (window['performance'] && window.performance['getEntriesByType']) {
+    var m = window.performance.getEntriesByType("mark");
+    var lm={};
+    for (i = 0; i < m.length; i++) {
+      g = 'usertiming';
+      if (lm[g] == undefined || m[i].startTime > lm[g])
+        lm[g] = m[i].startTime;
+      p = m[i].name.match(/([^\.]+)\.([^\.]*)/);
+      if (p && p.length > 2 &&
+          (lm[p[1]] == undefined ||
+           m[i].startTime > lm[p[1]]))
+          lm[p[1]] = m[i].startTime;
+    }
+    for (g in lm)
+      wtt(g, lm[g], b);
   }
-  for (g in lm)
-    wtt(g, lm[g], b);
 };
 utOnLoad = function() {utReportRUM(false);};
 if (window['addEventListener'])
