@@ -109,6 +109,7 @@ CDN_PROVIDER cdnList[] = {
   {".vo.msecnd.net", "Microsoft Azure"},
   {".azureedge.net", "Microsoft Azure"},
   {".azure.microsoft.com", "Microsoft Azure"},
+  {"bat.bing.com", "Microsoft"},
   {".voxcdn.net", "VoxCDN"},
   {".bluehatnetwork.com", "Blue Hat Network"},
   {".swiftcdn1.com", "SwiftCDN"},
