@@ -242,7 +242,8 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "MNCDN", "Medianova"},
   {"server", "Roast.io", "Roast.io"},
   {"server", "SingularCDN", "Singular CDN"},
-  {"x-rocket-node", "", "Rocket CDN"}
+  {"x-rocket-node", "", "Rocket CDN"},
+  {"x-msedge-ref", "", "Microsoft"}
 };
 
 // Specific providers that require multiple headers
