@@ -1809,8 +1809,14 @@ function FindJobPosition($location, $workDir, $testId)
       }
     }
     $beanstalkd = GetSetting('beanstalkd');
-    if (!$found && $beanstalkd && strlen($beanstalkd))
-      $found = true;
+    if (!$found && $beanstalkd && strlen($beanstalkd)) {
+      require_once('./lib/beanstalkd/pheanstalk_init.php');
+      $pheanstalk = new Pheanstalk_Pheanstalk($beanstalkd);
+      $stats = $pheanstalk->stats();
+      if ($stats['current-jobs-ready'] > 0) {
+        $found = true;
+      }
+    }
   }
 
   if( !$found )
