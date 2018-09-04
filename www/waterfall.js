@@ -121,7 +121,7 @@ function SelectRequest(step, request) {
             details += ", weight " + htmlEncode(parseInt(r['http2_stream_weight']));
           if (r['http2_stream_dependency'] !== undefined)
             details += ", depends on " + htmlEncode(r['http2_stream_dependency']);
-          if (r['http2_stream_exclusive'] !== undefined && r['http2_stream_exclusive'] > 0)
+          if (r['http2_stream_exclusive'] !== undefined && (r['http2_stream_exclusive'] > 0 || r['http2_stream_exclusive'] === "True"))
             details += ", EXCLUSIVE";
           details += '<br>';
         }
