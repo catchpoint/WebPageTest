@@ -895,6 +895,7 @@ function loadUserTimingData(&$pageData, $userTimingFile) {
               if (!isset($pageData['userTimes']))
                 $pageData['userTimes'] = array();
               $pageData['userTimes'][$name] = $time;
+              $pageData['userTimes'][$event['name']] = $time;
             }
           } elseif ($event['entryType'] == 'measure' &&
                     isset($event['duration'])) {
