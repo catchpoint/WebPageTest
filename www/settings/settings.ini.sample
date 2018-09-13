@@ -59,6 +59,9 @@ maxtime=600
 ; Time limit for all steps in a single test run.
 ;run_time_limit=180
 
+; Force individual runs to end if they didn't complete.
+max_run_minutes=60
+
 ; Maximum server load to allow when rendering video on the server
 render_max_load=8
 

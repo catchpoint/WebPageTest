@@ -92,10 +92,9 @@ function GetTestStatus($id, $includePosition = true) {
                   else
                     $ret['statusText'] = "Test Started $elapsed minutes ago (probably failed)";
                     
-                  // For any test that runs for over 60 minutes and where we haven't seen an update
-                  // in the last 60 minutes, Force individual runs to end if they didn't complete
-                  // within 60 minutes and force the overall test to end if all of the individual
-                  // runs are complete.
+                  // For any test that runs for over max_run_minutes and where we haven't seen an update
+                  // Force individual runs to end if they didn't complete within max_run_minutes and force
+                  // the overall test to end if all of the individual runs are complete.
                   $max_run_minutes = GetSetting('max_run_minutes', 60);
                   if ($elapsed > $max_run_minutes) {
                     $elapsedUpdate = 100;
@@ -113,7 +112,7 @@ function GetTestStatus($id, $includePosition = true) {
                               if (!array_key_exists('done', $testRun) || !$testRun['done']) {
                                 if (array_key_exists('started', $testRun) && $testRun['started'] && $testRun['started'] < $now) {
                                   $runElapsed = intval(($now - $testRun['started']) / 60);
-                                  if ($runElapsed > 60) {
+                                  if ($runElapsed > $max_run_minutes) {
                                     $testRun['done'] = true;
                                     if (array_key_exists('tester', $testRun) && strlen($testRun['tester']))
                                       $tester = " on {$testRun['tester']}";
