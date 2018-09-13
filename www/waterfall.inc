@@ -791,6 +791,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     }
     if ($max_ms > 0 && !$is_image_map) {
         // Draw requests.
+        $connection_state = array();
         foreach ($rows as $row) {
             $is_connection = $row['is_connection'];
             foreach ($row['requests'] as $request) {
@@ -815,7 +816,8 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                     @$request['contentType'],
                     $is_thumbnail, $is_mime, $is_state, $request['url']);
                 $bars = GetBars($request, $x_scaler, $y1, $y2,
-                                $is_thumbnail, $is_mime, $is_state, $include_js);
+                                $is_thumbnail, $is_mime, $is_state, $include_js,
+                                $max_bw, $is_connection, $connection_state);
                 foreach ($bars as $bar) {
                     list($x1, $x2, $y1, $y2, $color, $shaded) = $bar;
                     DrawBar($im, $x1, $y1, $x2, $y2, $color, $shaded);
@@ -1199,7 +1201,8 @@ function AddMapUserTime(&$map, $x1, $y1, $x2, $y2, $label) {
 * for the parts of a request.
 */
 function GetBars($request, $x_scaler, $y1, $y2,
-                 $is_thumbnail, $is_mime, $is_state, $include_js) {
+                 $is_thumbnail, $is_mime, $is_state, $include_js,
+                 $max_bw, $is_connection, &$connection_state) {
   $bars = array();
   $state_y1 = $y1;
   $state_y2 = $y2;
@@ -1213,11 +1216,54 @@ function GetBars($request, $x_scaler, $y1, $y2,
   // TODO(slamm): tweak minimum width of bars.
   //  (!$is_mime && !$is_thumbnail) ? each bar at least 1px
   //   ($is_mime && !$is_thumbnail) ? each bar group at least 1px
-  AddBarIfValid($bars, 'download', $request, $x_scaler, $y1, $y2);
-  AddBarIfValid($bars, 'ttfb',     $request, $x_scaler, $y1, $y2);
-  AddBarIfValid($bars, 'ssl',      $request, $x_scaler, $state_y1, $state_y2);
-  AddBarIfValid($bars, 'connect',  $request, $x_scaler, $state_y1, $state_y2);
-  AddBarIfValid($bars, 'dns',      $request, $x_scaler, $state_y1, $state_y2);
+  if (isset($request['chunks']) && is_array($request['chunks']) && count($request['chunks'])) {
+    // Show each chunk of the download
+    // First, draw the TTFB color over the whole request time
+    $connection_id = isset($request['socket']) ? $request['socket'] : null;
+    $ttfb_drawn = isset($connection_id) ? isset($connection_state[$connection_id]) : false;
+    if (!$is_connection || !$ttfb_drawn) {
+      $start_key = null;
+      if (isset($request['ttfb_start']))
+        $start_key = 'ttfb_start';
+      if (isset($request['download_start']) && (!isset($start_key) || $request['download_start'] < $request[$start_key]))
+        $start_key = 'download_start';
+      $end_key = null;
+      if (isset($request['download_end']))
+        $end_key = 'download_end';
+      if (isset($request['ttfb_end']) && (!isset($end_key) || $request['ttfb_end'] > $request[$end_key]))
+        $end_key = 'ttfb_end';
+      if (isset($start_key) && isset($end_key))
+        AddBarIfValid($bars, 'ttfb', $start_key, $end_key, $request, $x_scaler, $y1, $y2);
+      if (isset($connection_id))
+        $connection_state[$connection_id] = true;
+    }
+    // Add a bar for the TTFB (headers)
+    AddBarIfValid($bars, 'download', 'download_start', 'download_start', $request, $x_scaler, $y1, $y2);
+    // Add the bars for each chunk
+    foreach($request['chunks'] as $chunk) {
+      if (isset($chunk['ts'])) {
+        $start = $chunk['ts'];
+        if ($max_bw > 0 && isset($chunk['bytes'])) {
+          // Calculate when the chunk started
+          $chunk_time = floatval($chunk['bytes']) / (floatval($max_bw) / 8.0);
+          if ($chunk_time > 0)
+            $start -= $chunk_time;
+        }
+        $bars[] = array(
+            $x_scaler(round($start)), $x_scaler(round($chunk['ts'])),
+            $y1, $y2,
+            $request['colors']['download'],
+            true);
+      }
+    }
+  } else {
+    // Show the download as a single bar
+    AddBarIfValid($bars, 'download', 'download_start', 'download_end', $request, $x_scaler, $y1, $y2);
+    AddBarIfValid($bars, 'ttfb', 'ttfb_start', 'ttfb_end', $request, $x_scaler, $y1, $y2);
+  }
+  AddBarIfValid($bars, 'ssl', 'ssl_start', 'ssl_end', $request, $x_scaler, $state_y1, $state_y2);
+  AddBarIfValid($bars, 'connect', 'connect_start', 'connect_end', $request, $x_scaler, $state_y1, $state_y2);
+  AddBarIfValid($bars, 'dns', 'dns_start', 'dns_end', $request, $x_scaler, $state_y1, $state_y2);
   if (isset($request['js_timing']) && $include_js) {
     $bar_height = $y2 - $y1 + 1;
     $js_height = max(2, intval($bar_height * 0.5));
@@ -1237,9 +1283,7 @@ function GetBars($request, $x_scaler, $y1, $y2,
 /**
 * Append a bar for a request part if it exists and is valid.
 */
-function AddBarIfValid(&$bars, $key, $request, $x_scaler, $y1, $y2) {
-    $start_key = $key . '_start';
-    $end_key = $key . '_end';
+function AddBarIfValid(&$bars, $key, $start_key, $end_key, $request, $x_scaler, $y1, $y2) {
     if (array_key_exists($start_key, $request) &&
         array_key_exists($end_key, $request) &&
         $request[$end_key] > 0) {
