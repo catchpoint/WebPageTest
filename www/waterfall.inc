@@ -794,40 +794,42 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
         $connection_state = array();
         foreach ($rows as $row) {
             $is_connection = $row['is_connection'];
-            foreach ($row['requests'] as $request) {
-                $y1 = $top + $row['y1'];
-                $y2 = $top + $row['y2'];
-                if (!$is_thumbnail && !$is_connection) {
-                  $label_x1 = $x_scaler($request['all_start']);
-                  $label_x2 = $x_scaler($request['all_end']);
-                  $label_y1 = $y1;
-                  $label_y2 = $y2;
-                  $bg_color = $row['bg_color'];
-                  DrawRequestTimeLabelBackground(
-                      $im, $request, $label_x1, $label_y1, $label_x2, $label_y2,
-                      $data_x, $width - 1,
-                      $font, $font_width, $black, $bg_color);
-                }
-                if (!$is_thumbnail) {
-                    $y1 += 1;
-                    $y2 -= 1;
-                }
-                $request['colors'] = GetRequestColors(
-                    @$request['contentType'],
-                    $is_thumbnail, $is_mime, $is_state, $request['url']);
-                $bars = GetBars($request, $x_scaler, $y1, $y2,
-                                $is_thumbnail, $is_mime, $is_state, $include_js,
-                                $max_bw, $is_connection, $connection_state);
-                foreach ($bars as $bar) {
-                    list($x1, $x2, $y1, $y2, $color, $shaded) = $bar;
-                    DrawBar($im, $x1, $y1, $x2, $y2, $color, $shaded);
-                }
-                if (!$is_thumbnail && !$is_connection) {
-                  DrawRequestTimeLabel(
-                      $im, $request, $label_x1, $label_y1, $label_x2, $label_y2,
-                      $data_x, $width - 1,
-                      $font, $font_width, $black, $bg_color);
-                }
+            for ($pass = 1; $pass <= 2; $pass++) {
+              foreach ($row['requests'] as $request) {
+                  $y1 = $top + $row['y1'];
+                  $y2 = $top + $row['y2'];
+                  if (!$is_thumbnail && !$is_connection) {
+                    $label_x1 = $x_scaler($request['all_start']);
+                    $label_x2 = $x_scaler($request['all_end']);
+                    $label_y1 = $y1;
+                    $label_y2 = $y2;
+                    $bg_color = $row['bg_color'];
+                    DrawRequestTimeLabelBackground(
+                        $im, $request, $label_x1, $label_y1, $label_x2, $label_y2,
+                        $data_x, $width - 1,
+                        $font, $font_width, $black, $bg_color);
+                  }
+                  if (!$is_thumbnail) {
+                      $y1 += 1;
+                      $y2 -= 1;
+                  }
+                  $request['colors'] = GetRequestColors(
+                      @$request['contentType'],
+                      $is_thumbnail, $is_mime, $is_state, $request['url']);
+                  $bars = GetBars($request, $x_scaler, $y1, $y2,
+                                  $is_thumbnail, $is_mime, $is_state, $include_js,
+                                  $max_bw, $is_connection, $connection_state, $pass);
+                  foreach ($bars as $bar) {
+                      list($x1, $x2, $y1, $y2, $color, $shaded) = $bar;
+                      DrawBar($im, $x1, $y1, $x2, $y2, $color, $shaded);
+                  }
+                  if (!$is_thumbnail && !$is_connection) {
+                    DrawRequestTimeLabel(
+                        $im, $request, $label_x1, $label_y1, $label_x2, $label_y2,
+                        $data_x, $width - 1,
+                        $font, $font_width, $black, $bg_color);
+                  }
+              }
             }
         }
     }
@@ -1202,7 +1204,7 @@ function AddMapUserTime(&$map, $x1, $y1, $x2, $y2, $label) {
 */
 function GetBars($request, $x_scaler, $y1, $y2,
                  $is_thumbnail, $is_mime, $is_state, $include_js,
-                 $max_bw, $is_connection, &$connection_state) {
+                 $max_bw, $is_connection, &$connection_state, $pass) {
   $bars = array();
   $state_y1 = $y1;
   $state_y2 = $y2;
@@ -1216,12 +1218,12 @@ function GetBars($request, $x_scaler, $y1, $y2,
   // TODO(slamm): tweak minimum width of bars.
   //  (!$is_mime && !$is_thumbnail) ? each bar at least 1px
   //   ($is_mime && !$is_thumbnail) ? each bar group at least 1px
+  $connection_id = isset($request['socket']) ? $request['socket'] : null;
+  $ttfb_drawn = isset($connection_id) ? isset($connection_state[$connection_id]) : false;
   if (isset($request['chunks']) && is_array($request['chunks']) && count($request['chunks'])) {
     // Show each chunk of the download
     // First, draw the TTFB color over the whole request time
-    $connection_id = isset($request['socket']) ? $request['socket'] : null;
-    $ttfb_drawn = isset($connection_id) ? isset($connection_state[$connection_id]) : false;
-    if (!$is_connection || !$ttfb_drawn) {
+    if ($pass == 1) {
       $start_key = null;
       if (isset($request['ttfb_start']))
         $start_key = 'ttfb_start';
@@ -1259,7 +1261,11 @@ function GetBars($request, $x_scaler, $y1, $y2,
   } else {
     // Show the download as a single bar
     AddBarIfValid($bars, 'download', 'download_start', 'download_end', $request, $x_scaler, $y1, $y2);
-    AddBarIfValid($bars, 'ttfb', 'ttfb_start', 'ttfb_end', $request, $x_scaler, $y1, $y2);
+    if ($pass == 1) {
+      AddBarIfValid($bars, 'ttfb', 'ttfb_start', 'ttfb_end', $request, $x_scaler, $y1, $y2);
+      if (isset($connection_id))
+        $connection_state[$connection_id] = true;
+    }
   }
   AddBarIfValid($bars, 'ssl', 'ssl_start', 'ssl_end', $request, $x_scaler, $state_y1, $state_y2);
   AddBarIfValid($bars, 'connect', 'connect_start', 'connect_end', $request, $x_scaler, $state_y1, $state_y2);
