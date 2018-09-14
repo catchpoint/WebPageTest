@@ -13,7 +13,7 @@ global $testPath, $run, $cached, $step, $id, $url, $test;
 $testInfo = TestInfo::fromFiles($testPath);
 $testStepResult = TestStepResult::fromFiles($testInfo, $run, $cached, $step);
 
-$is_mime = isset($_REQUEST['mime']) ? (bool)@$_REQUEST['mime'] : (bool)GetSetting('mime_waterfalls');
+$is_mime = isset($_REQUEST['mime']) ? (bool)@$_REQUEST['mime'] : (bool)GetSetting('mime_waterfalls', 1);
 $is_state = (bool)@$_REQUEST['state'];
 $include_js = isset($_REQUEST['js']) ? (bool)@$_REQUEST['js'] : true;
 $use_dots = (!isset($_REQUEST['dots']) || $_REQUEST['dots'] != 0);

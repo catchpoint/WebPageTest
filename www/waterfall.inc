@@ -1314,7 +1314,7 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
     // create the image map (this is for fallback when Javascript isn't enabled
     // but also gives us the position for each request)
     $out = '<map name="waterfall_map_step' . $step . '">';
-    $is_mime = (bool)GetSetting('mime_waterfalls');
+    $is_mime = (bool)GetSetting('mime_waterfalls', 1);
     if (strpos($waterfall_options, 'mime=1') !== false)
       $is_mime = true;
     $options = array(

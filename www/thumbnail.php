@@ -121,7 +121,7 @@ function tbnDrawWaterfall($testStepResult, &$img)
         'show_user_timing' => GetSetting('waterfall_show_user_timing'),
         'is_thumbnail' => true,
         'include_js' => true,
-        'is_mime' => (bool)GetSetting('mime_waterfalls'),
+        'is_mime' => (bool)GetSetting('mime_waterfalls', 1),
         'width' => $newWidth
         );
     $url = $testStepResult->readableIdentifier($url);

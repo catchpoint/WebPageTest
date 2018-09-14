@@ -48,7 +48,7 @@ class WaterfallViewHtmlSnippet {
 
   private function _createLegend() {
     $out = '';
-    if (!GetSetting('mime_waterfalls')) {
+    if (!GetSetting('mime_waterfalls', 1)) {
       $out .= '<table border="1" bordercolor="silver" cellpadding="2px" cellspacing="0" ' .
         'style="width:auto; font-size:11px; margin-left:auto; margin-right:auto;">';
       $out .= "\n<tr>\n";
