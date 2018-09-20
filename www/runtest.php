@@ -229,6 +229,8 @@
               $test['standards'] = $req_standards;
             if (isset($req_netlog))
               $test['netlog'] = $req_netlog;
+            if (isset($_REQUEST['coverage']))
+              $test['coverage'] = $_REQUEST['coverage'];
             if (isset($req_spdy3))
               $test['spdy3'] = $req_spdy3;
             if (isset($req_noscript))
@@ -2224,6 +2226,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
                 AddIniLine($testFile, 'lighthouseThrottle', '1');
             if( isset($test['heroElementTimes']) && $test['heroElementTimes'] )
                 AddIniLine($testFile, 'heroElementTimes', '1');
+            if( isset($test['coverage']) && $test['coverage'] )
+                AddIniLine($testFile, 'coverage', '1');
             if( isset($test['heroElements']) && strlen($test['heroElements']) )
                 AddIniLine($testFile, 'heroElements', $test['heroElements']);
             if( isset($test['debug']) && $test['debug'] )
