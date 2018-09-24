@@ -967,7 +967,7 @@ function ParseUserTiming($file) {
     // Find the first navigation to determine which is the main frame
     foreach ($events as $event) {
       if (is_array($event) && isset($event['name']) && isset($event['ts'])) {
-        if (!isset($start_time)) {
+        if (!isset($start_time) && $event['name'] == 'navigationStart') {
           $start_time = $event['ts'];
         }
         if ($event['name'] == 'navigationStart' ||
