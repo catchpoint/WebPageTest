@@ -158,7 +158,7 @@ function GetWaterfallImage($rows, $url, $page_events, $options, $page_data) {
 */
 function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $page_data) {
     global $settings;
-    $is_mime = (bool)@$options['is_mime'];
+    $is_mime = isset($options['is_mime']) ? (bool)@$options['is_mime'] : (bool)GetSetting('mime_waterfalls', 1);
     $is_state = (bool)@$options['is_state'] || $is_mime;
     $is_thumbnail = (bool)@$options['is_thumbnail'];
     $show_labels = (bool)@$options['show_labels'];
@@ -329,19 +329,17 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     AddRowCoordinates($rows, $data_header_height + 1, $row_height);
     if ($is_image_map) {
       $map = array();
-      AddMapUrl($map, 0, $top, $data_x, $data_header_height, $url);
+      AddMapUrl($map, 0, $top + $data_header_height - $row_height, $data_x, $top + $data_header_height, $url);
       if (isset($rows) && is_array($rows) && count($rows)) {
         foreach ($rows as $row) {
-          $is_connection = $row['is_connection'];
-          foreach ($row['requests'] as $request) {
-            if ($is_connection) {
-              $x1 = $x_scaler($request['ttfb_start']);
-              $x2 = $x_scaler($request['download_end']);
-            } else {
+          if ($row['is_connection']) {
+            AddMapUrl($map, 0, $top + $row['y1'], $data_x, $top + $row['y2'], $row['host']);
+          } else {
+            foreach ($row['requests'] as $request) {
               $x1 = 0;
               $x2 = $width - 1;
+              AddMapRequest($map, $x1, $top + $row['y1'], $x2, $top + $row['y2'], $request);
             }
-            AddMapRequest($map, $x1, $top + $row['y1'], $x2, $top + $row['y2'], $request);
           }
         }
       }
