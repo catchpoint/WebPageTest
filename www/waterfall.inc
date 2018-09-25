@@ -35,7 +35,25 @@ function GetConnectionRows(&$requests, $show_labels = true) {
       }
     }
     if (count($host_connections)) {
-      $rows = call_user_func_array('array_merge', $host_connections);
+      // merge the hosts together by connection
+      $rows = array();
+      foreach ($host_connections as $host => $connections) {
+        foreach ($connections as $socket => $connection) {
+          if (!isset($rows[$socket])) {
+            $rows[$socket] = $connection;
+          } else {
+            if (strpos($rows[$socket]['host'], $connection['host']) === False)
+              $rows[$socket]['host'] .= ',' . $connection['host'];
+            if ($connection['start'] < $rows[$socket]['start'])
+              $rows[$socket]['start'] = $connection['start'];
+            if ($connection['end'] > $rows[$socket]['end'])
+              $rows[$socket]['end'] = $connection['end'];
+            foreach ($connection['requests'] as $request)
+              $rows[$socket]['requests'][] = $request;
+          }
+        }
+      }
+      $rows = array_values($rows);
       foreach (array_keys($rows) as $row_index) {
         if ($show_labels) {
           $rows[$row_index]['label'] = sprintf(
