@@ -1,4 +1,6 @@
-This is the official repository for the [WebPagetest](https://www.webpagetest.org/) web performance testing code.
+[![travis](https://img.shields.io/travis/WPO-Foundation/webpagetest.svg?label=travis)](http://travis-ci.org/WPO-Foundation/webpagetest)
+
+This is the official repository for the [WebPageTest](https://www.webpagetest.org/) web-performance testing code.
 
 If you are looking to install your own instance, I recommend grabbing the latest [private instance release](https://github.com/WPO-Foundation/webpagetest-docs/blob/master/user/Private%20Instances/README.md).
 
