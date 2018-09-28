@@ -1,10 +1,8 @@
 FROM php:5.6-apache
 MAINTAINER iteratec WPT Team <wpt@iteratec.de>
 
-# RUN echo deb http://www.deb-multimedia.org jessie main non-free >> /etc/apt/sources.list && \
-RUN    apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -q -y --allow-unauthenticated --allow-downgrades --allow-change-held-packages \
-#    deb-multimedia-keyring \
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -q -y --allow-unauthenticated \
     imagemagick \
     libjpeg-progs \
     exiftool \
