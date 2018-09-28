@@ -235,7 +235,7 @@ class RunResultHtmlTable {
     if($this->isColumnEnabled(self::COL_SPEED_INDEX)) {
       $speedIndex = $stepResult->getMetric("SpeedIndexCustom");
       $speedIndex = $speedIndex !== null ? $speedIndex : $stepResult->getMetric("SpeedIndex");
-      $speedIndex = $speedIndex !== null ? $speedIndex : "-";
+      $speedIndex = $speedIndex !== null ? formatMsInterval($speedIndex, 3) : "-";
       $out .= $this->_bodyCell($idPrefix . "SpeedIndex" . $idSuffix, $speedIndex, $class);
     }
     if($this->isColumnEnabled(self::COL_LAST_PAINTED_HERO)) {
