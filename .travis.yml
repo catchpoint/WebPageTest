@@ -4,5 +4,9 @@ language: php
 
 services:
   - docker
+
 before_install:
-  - docker build -t webpagetest .
+  - docker build --rm --no-cache -t webpagetest .
+
+script:
+  - docker ps -a
