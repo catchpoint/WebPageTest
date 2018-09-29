@@ -39,7 +39,7 @@ There are also several browser-specific extensions for interacting with the vari
 
 * /agent/browser/ie/wptbho - A c++ Browser Helper Object for IE.
 * /agent/browser/chrome/extension - Extension for supporting Chrome (JS).  It relies on closure and must be compiled (there is a compile.cmd that will run the closure compiler for you).
-* /agent/browser/firefox/extension - Extension for supporting Firefox (JS).
+* /agent/browser/firefox/webextension/extension - WebExtension for supporting Firefox (JS).
 * /agent/browser/firefox/prefs.js - Default prefs file for the Firefox user profile.
 * /agent/browser/safari - Extension for supporting Safari (JS).
 
