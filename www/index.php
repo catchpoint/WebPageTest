@@ -1,4 +1,4 @@
-<?php 
+<?php
 include 'common.inc';
 
 if (array_key_exists('bulk', $_GET)) {
@@ -13,7 +13,7 @@ if (isset($_COOKIE['maxruns']) && (int)$_GET['maxruns'] > 0) {
 }
 if (isset($_GET['maxruns'])) {
     $settings['maxruns'] = (int)$_GET['maxruns'];
-    setcookie("maxruns", $settings['maxruns']);    
+    setcookie("maxruns", $settings['maxruns']);
 }
 
 if (!isset($settings['maxruns']) || $settings['maxruns'] <= 0) {
@@ -70,7 +70,7 @@ $loc = ParseLocations($locations);
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Website Performance and Optimization Test</title>
+        <title>WebPageTest - Website Performance and Optimization Test</title>
         <?php $gaTemplate = 'Main'; include ('head.inc'); ?>
     </head>
     <body>
@@ -98,18 +98,18 @@ $loc = ParseLocations($locations);
             ?>
             <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
             <input type="hidden" name="lighthouseTrace" value="1">
-            
+
             <?php
             echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
             if( strlen($secret) ){
               $hashStr = $secret;
               $hashStr .= $_SERVER['HTTP_USER_AGENT'];
               $hashStr .= $owner;
-              
+
               $now = gmdate('c');
               echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
               $hashStr .= $now;
-              
+
               $hmac = sha1($hashStr);
               echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
             }
@@ -202,7 +202,7 @@ $loc = ParseLocations($locations);
                                         } else
                                             $lastGroup = null;
                                     }
-                                        
+
                                     echo "<option value=\"{$location['name']}\" $selected>{$location['label']}</option>";
                                 }
                                 if (isset($lastGroup))
@@ -474,7 +474,7 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <label for="injectScript">
                                             Inject Script<br>
-                                            <small>Javascript to run after the document has started loading.</small>
+                                            <small>JavaScript to run after the document has started loading</small>
                                         </label>
                                         <textarea id="injectScript" type="text" class="text" name="injectScript" value=""></textarea>
                                     </li>
@@ -614,16 +614,16 @@ $loc = ParseLocations($locations);
                                     </li>
                                 </ul>
                             </div>
-                            
+
                             <?php if (!isset($settings['no_basic_auth_ui'])) { ?>
                             <div id="auth" class="test_subbox ui-tabs-hide">
                                 <div class="notification-container">
                                     <div class="notification"><div class="warning">
                                         PLEASE USE A TEST ACCOUNT! as your credentials may be available to anyone viewing the results.<br><br>
-                                        Utilizing this feature will make this test Private. Thus, it will not appear in Test History.
+                                        Using this feature will make this test Private. Thus, it will *not* appear in Test History.
                                     </div></div>
                                 </div>
-                                
+
                                 <ul class="input_fields">
                                     <li>
                                         HTTP Basic Authentication
@@ -647,7 +647,7 @@ $loc = ParseLocations($locations);
                                             Check out <a href="https://sites.google.com/a/webpagetest.org/docs/using-webpagetest/scripting">the documentation</a> for more information on this feature
                                         </div></div>
                                     </div>
-                                    
+
                                     <p><label for="enter_script" class="full_width">Enter Script</label></p>
                                     <?php
                                       $script = '';
@@ -661,7 +661,7 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="sensitive" id="sensitive" class="checkbox" style="float: left;width: auto;">
                                         <label for="sensitive" class="auto_width">
-                                            Script includes sensitive data<br><small>The script will be discarded and the http headers will not be available in the results</small>
+                                            Script includes sensitive data<br><small>The script will be discarded and the HTTP headers will not be available in the results</small>
                                         </label>
                                     </li>
                                     <li>
@@ -677,7 +677,7 @@ $loc = ParseLocations($locations);
                                 <p>
                                     <label for="block_requests_containing" class="full_width">
                                         Block Requests Containing...<br>
-                                        <small>Space separated list</small>
+                                        <small>Space-separated list</small>
                                     </label>
                                 </p>
                                 <textarea name="block" id="block_requests_containing" cols="0" rows="0"></textarea>
@@ -685,7 +685,7 @@ $loc = ParseLocations($locations);
 
                             <div id="spof" class="test_subbox ui-tabs-hide">
                                 <p>
-                                    Simulate failure of specified domains.  This is done by re-routing all requests for 
+                                    Simulate failure of specified domains.  This is done by re-routing all requests for
                                     the domains to <a href="http://blog.patrickmeenan.com/2011/10/testing-for-frontend-spof.html">blackhole.webpagetest.org</a> which will silently drop all requests.
                                 </p>
                                 <p>
@@ -729,12 +729,12 @@ $loc = ParseLocations($locations);
                             <div id="bulk" class="test_subbox ui-tabs-hide">
                                 <p>
                                     <label for="bulkurls" class="full_width">
-                                        List of urls to test (one URL per line)...
+                                        List of URLs to test (one URL per line)...
                                     </label>
                                 </p>
                                 <textarea name="bulkurls" id="bulkurls" cols="0" rows="0"></textarea><br>
                                 <b>or</b><br>
-                                upload list of Urls (one per line): <input type="file" name="bulkfile" size="40"> 
+                                upload list of URLs (one per line): <input type="file" name="bulkfile" size="40">
                             </div>
                             <?php } ?>
 
@@ -768,7 +768,7 @@ $loc = ParseLocations($locations);
                             $selected = '';
                             if( isset($location['checked']) && $location['checked'] )
                                 $selected = 'selected';
-                                
+
                             if (array_key_exists('group', $location) && $location['group'] != $lastGroup) {
                                 if (isset($lastGroup))
                                     echo "</optgroup>";
@@ -789,7 +789,7 @@ $loc = ParseLocations($locations);
                 </p>
             </div>
             </form>
-            
+
             <?php
             if( is_file('settings/intro.inc') )
                 include('settings/intro.inc');
@@ -800,7 +800,7 @@ $loc = ParseLocations($locations);
         </div>
 
         <script type="text/javascript">
-        <?php 
+        <?php
             echo "var maxRuns = {$settings['maxruns']};\n";
             echo "var locations = " . json_encode($locations) . ";\n";
             echo "var connectivity = " . json_encode($connectivity) . ";\n";
@@ -822,7 +822,7 @@ $loc = ParseLocations($locations);
               echo "var forgetSettings = false;\n";
         ?>
         </script>
-        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script> 
+        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script>
     </body>
 </html>
 
@@ -830,13 +830,13 @@ $loc = ParseLocations($locations);
 
 /**
 * Load the location information
-* 
+*
 */
 function LoadLocations()
 {
     $locations = LoadLocationsIni();
     FilterLocations( $locations );
-    
+
     // strip out any sensitive information
     foreach( $locations as $index => &$loc )
     {
@@ -846,7 +846,7 @@ function LoadLocations()
             $loc['backlog'] = CountTests($loc['localDir']);
             unset( $loc['localDir'] );
         }
-        
+
         if( isset($loc['key']) )
             unset( $loc['key'] );
         if( isset($loc['remoteDir']) )
@@ -854,7 +854,7 @@ function LoadLocations()
         if( isset($loc['notify']) )
             unset( $loc['notify'] );
     }
-    
+
     return $locations;
 }
 ?>
