@@ -206,9 +206,9 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
 
     // Load the pcap-based bandwidth information if we have it
     $max_bw = 0;
+    if (isset($options) && array_key_exists('max_bw', $options))
+        $max_bw = $options['max_bw'];
     if ($use_bw) {
-      if (isset($options) && array_key_exists('max_bw', $options))
-          $max_bw = $options['max_bw'];
       $pcap_slices = LoadPcapSlices($localPaths->pcapUtilizationFile(), $max_bw);
     }
     if ($use_cpu || $use_bw) {
