@@ -151,6 +151,8 @@
             } else {
               $test['private'] = 0;
             }
+            if (GetSetting('forcePrivate'))
+              $test['private'] = 1;
             if (isset($req_web10))
               $test['web10'] = $req_web10;
             if (isset($req_ignoreSSL))
