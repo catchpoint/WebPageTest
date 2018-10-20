@@ -503,8 +503,9 @@
             }
             
             // If API requests explicitly mark tests as not-private, allow it
-            if (($_SERVER['REQUEST_METHOD'] == 'GET' || $xml || $json) && isset($_REQUEST['private']) && !$_REQUEST['private'])
-              $test['private'] = 0;
+            if (($_SERVER['REQUEST_METHOD'] == 'GET' || $xml || $json) && isset($_REQUEST['private']) && !$_REQUEST['private'] && !GetSetting('forcePrivate')) {
+                $test['private'] = 0;
+            }
 
             // default batch and API requests to a lower priority
             if( !isset($req_priority) )
