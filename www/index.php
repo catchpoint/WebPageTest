@@ -371,6 +371,8 @@ $loc = ParseLocations($locations);
                                         <input type="checkbox" name="private" id="keep_test_private" class="checkbox" <?php if (((int)@$_COOKIE["testOptions"] & 1) || array_key_exists('hidden', $_REQUEST) || GetSetting('defaultPrivate')) echo " checked=checked"; ?>>
                                     </li>
                                     <?php
+                                    } else {
+                                      echo "<li>All test results are configured to be private by default.</li>";
                                     }
                                     ?>
                                     <li>

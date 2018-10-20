@@ -99,7 +99,7 @@ else
                          <input id="filter" name="filter" type="text" style="width:30em" value="<?php echo htmlspecialchars($filter); ?>">
                          <input id="SubmitBtn" type="submit" value="Update List"><br>
                          <?php
-                         if( isset($uid) || (isset($owner) && strlen($owner)) ) { ?>
+                         if( ($admin || !GetSetting('forcePrivate')) && (isset($uid) || (isset($owner) && strlen($owner))) ) { ?>
                              <label><input id="all" type="checkbox" name="all" <?php check_it($all);?> onclick="this.form.submit();"> Show tests from all users</label> &nbsp;&nbsp;
                              <?php
                          }
