@@ -189,7 +189,8 @@ function gradeTTFBForStep($ttfb, $latency, $localPaths, &$target) {
     if( !isset($score) )
     {
       $target = getTargetTTFBForStep($localPaths, $latency);
-      $score = (int)min(max(100 - (($ttfb - $target) / 10), 0), 100);
+      $stepTime = $latency <= 100 ? 10 : 15;
+      $score = (int)min(max(100 - (($ttfb - $target) / $stepTime), 0), 100);
     }
   }
 
@@ -202,8 +203,9 @@ function gradeTTFBForStep($ttfb, $latency, $localPaths, &$target) {
  * @param int $rtt The latency if set, or null
  * @return int|null The target TTFB or null if it can't get determined
  */
-function getTargetTTFBForStep($localPaths, $rtt) {
+function getTargetTTFBForStep($localPaths, &$rtt) {
   $target = NULL;
+  $latency = $rtt;
 
   // load the object data (unavoidable, we need the socket connect time to the first host)
   require_once('object_detail.inc');
@@ -223,7 +225,7 @@ function getTargetTTFBForStep($localPaths, $rtt) {
       if ($rtt > 0 && (!isset($connect_ms) || $connect_ms > 3000 || $connect_ms < 0))
         $rtt += 100;    // allow for an additional 100ms to reach the server on top of the traffic-shaped RTT
       else
-        $rtt = $connect_ms;
+        $rtt = max($connect_ms, $latency);
     }
 
     // allow for a minimum of 100ms for the RTT
@@ -231,6 +233,7 @@ function getTargetTTFBForStep($localPaths, $rtt) {
 
     $ssl_ms = 0;
     $i = 0;
+    $request_start = null;
     while (isset($requests[$i])) {
       if (isset($requests[$i]['contentType']) &&
         (stripos($requests[$i]['contentType'], 'ocsp') !== false ||
@@ -239,12 +242,20 @@ function getTargetTTFBForStep($localPaths, $rtt) {
       } else {
         if ($requests[$i]['is_secure'])
           $ssl_ms = $rtt;
+        if (isset($requests[$i]['ttfb_start']) && $requests[$i]['ttfb_start'] > 0)
+          $request_start = $requests[$i]['ttfb_start'];
         break;
       }
     }
 
-    // RTT's: DNS + Socket Connect + HTTP Request + 100ms allowance
-    $target = ($rtt * 3) + $ssl_ms + 100;
+    // Set the target based off of the time when the first request was sent (if available)
+    $buffer = $latency > 100 ? 150 : 100;
+    if (isset($request_start)) {
+      $target = $request_start + $rtt + $buffer;
+    } else {
+      // RTT's: DNS + Socket Connect + HTTP Request + 100ms allowance
+      $target = ($rtt * 3) + $ssl_ms + $buffer;
+    }
   }
 
   return $target;
