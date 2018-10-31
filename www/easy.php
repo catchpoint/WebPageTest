@@ -110,7 +110,7 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
                         </li>
                         <li>
                             <label for="videoCheck">Run Lighthouse Audit:<br></label>
-                            <input type="checkbox" name="lighthouse" id="lighthouse" class="checkbox" onclick="lighthouseChanged()">(Mobile devices only)
+                            <input type="checkbox" name="lighthouse" id="lighthouse" class="checkbox" onclick="lighthouseChanged()">
                         </li>
                     </ul>
                 </div>
