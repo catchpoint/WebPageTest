@@ -214,6 +214,7 @@ $page_description = "Website performance test details$testLabel";
                         echo "<td><a href='#request_headers_$stepSuffix'>Request Headers</a></td>";
                         echo "<td><a href='" . $urlGenerator->stepDetailPage("customWaterfall", "width=930") . "'>Customize Waterfall</a></td>";
                         echo "<td><a href='" . $urlGenerator->stepDetailPage("pageimages") . "'>All Images</a></td>";
+                        echo "<td><a href='" . $urlGenerator->stepDetailPage("http2_dependencies") . "'>HTTP/2 Dependency Graph</a></td>";
                         echo "</tr>";
                     }
                     echo "</table>\n<br>\n";
