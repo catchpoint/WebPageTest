@@ -241,6 +241,7 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "MNCDN", "Medianova"},
   {"server", "Roast.io", "Roast.io"},
   {"server", "SingularCDN", "Singular CDN"},
+  {"server", "WPX CLOUD", "WPX Cloud"},
   {"x-rocket-node", "", "Rocket CDN"}
 };
 
