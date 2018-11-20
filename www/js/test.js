@@ -450,7 +450,6 @@ function UpdateSettingsSummary()
     if( conn != undefined )
         summary += ", " + conn.replace(/\((.)*\)/,'') + " connection";
         
-    summary += ", results are private";
         
     $('#settings_summary').text(summary);
 }
