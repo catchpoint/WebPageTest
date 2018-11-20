@@ -450,10 +450,7 @@ function UpdateSettingsSummary()
     if( conn != undefined )
         summary += ", " + conn.replace(/\((.)*\)/,'') + " connection";
         
-    if( $('#keep_test_private').attr('checked') )
-        summary += ", private";
-    else
-        summary += ", results are public";
+    summary += ", results are private";
         
     $('#settings_summary').text(summary);
 }
