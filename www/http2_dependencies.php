@@ -47,8 +47,9 @@ foreach ($requests as $request) {
     $id = "$connection:$stream";
     $label = isset($request['number']) ? "{$request['number']}: " : "";
     $label .= get_short_path($request['url']);
+    $label .= "<br>stream: $stream";
     if (isset($request['http2_stream_weight'])) {
-      $label .= "<br>weight: {$request['http2_stream_weight']}";
+      $label .= ", weight: {$request['http2_stream_weight']}";
       if (isset($request['http2_stream_exclusive']) && $request['http2_stream_exclusive'])
         $label .= 'x';
     }
