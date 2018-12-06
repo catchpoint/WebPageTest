@@ -14,7 +14,7 @@ It is worth noting that these instructions may not be the BEST way to configure 
 	- [These](http://www.amazon.com/Rankie%C2%AE-Premium-Charging-Samsung-Motorola/dp/B00UFG5GVM?ie=UTF8&psc=1&redirect=true&ref_=oh_aui_detailpage_o06_s00) have worked well on the public instance
 - Ethernet Cable (Recommended)
 	- Assumes the Pi will be hard-wired which is what is detailed in this doc.  The Pi 3 supports WiFi as well but that configuration is not documented (and eliminates the option to reverse-tether the phone which provides consistency improvements)
-	- [This](http://www.amazon.com/Hexagon-Network-Ethernet-Internet-Connectors/dp/B00VZXS008?ie=UTF8&psc=1&redirect=true&ref_=oh_aui_detailpage_o08_s01) is the cable used on the public instance devices, mostly because they take up less space but any working cable is fine.
+	- [This](https://www.amazon.com/Hexagon-Network-Ethernet-Shielded-Connectors/dp/B00WSKQ5ZO) is the cable used on the public instance devices, mostly because they take up less space but any working cable is fine.
 - Power Supply (Optional)
 	- To save space when deploying multiple devices the public instance uses [10-way USB power chargers](http://www.amazon.com/Anker-10-Port-Charger-Multi-Port-PowerPort/dp/B00YRYS4T4?ie=UTF8&psc=1&redirect=true&ref_=oh_aui_detailpage_o09_s00)
 - Switch (Optional)
