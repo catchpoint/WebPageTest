@@ -7,7 +7,7 @@ $days = $_REQUEST['days'];
 if( !$days || $days > 1000 )
     $days = 7;
 
-$title = 'WebPagetest - Usage';
+$title = 'WebPageTest - Usage';
 
 include 'admin_header.inc';
 ?>
@@ -16,7 +16,7 @@ include 'admin_header.inc';
     if( array_key_exists('k', $_REQUEST) && strlen($_REQUEST['k']) ) {
         $key = trim($_REQUEST['k']);
         $keys = parse_ini_file('./settings/keys.ini', true);
-        
+
         // Add the list of self-provisioned keys
         $prefix = 'A';
         if (is_file(__DIR__ . "/dat/{$prefix}_api_keys.db")) {
@@ -30,7 +30,7 @@ include 'admin_header.inc';
           }
           $db->close();
         }
-        
+
         if( $admin && $key == 'all' ) {
             if (!isset($_REQUEST['days']))
               $days = 1;

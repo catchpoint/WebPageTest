@@ -28,7 +28,7 @@ if (gz_is_file("$testPath/{$fileBase}_trace.json")) {
   $ok = true;
   header("Content-disposition: attachment; filename=timeline.json");
   header ("Content-type: application/json");
-  
+
   // Trim off the beginning "traceEvents" object and the trailing }
   // and reduce the trace to just an array which is what the timeline
   // viewer expects
@@ -78,7 +78,7 @@ if (gz_is_file("$testPath/{$fileBase}_trace.json")) {
           $ok = true;
           header("Content-disposition: attachment; filename=timeline.json");
           header ("Content-type: application/json");
-          echo "[\"WebPagetest\"";
+          echo "[\"WebPageTest\"";
         }
         foreach ($events as $event) {
           echo ",\n";

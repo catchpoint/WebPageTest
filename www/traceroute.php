@@ -6,11 +6,11 @@ $secret = '';
 $keys = parse_ini_file('./settings/keys.ini', true);
 if( $keys && isset($keys['server']) && isset($keys['server']['secret']) )
   $secret = trim($keys['server']['secret']);
-    
+
 $connectivity = parse_ini_file('./settings/connectivity.ini', true);
 $locations = LoadLocations();
 $loc = ParseLocations($locations);
-$page_keywords = array('Traceroute','Webpagetest','Website Speed Test','Test');
+$page_keywords = array('Traceroute','WebPageTest','Website Speed Test','Test');
 $page_description = "Test network path from multiple locations around the world (traceroute).";
 ?>
 <!DOCTYPE html>
@@ -42,7 +42,7 @@ $page_description = "Test network path from multiple locations around the world 
             include 'header.inc';
             ?>
             <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
-            
+
             <input type="hidden" name="type" value="traceroute">
             <input type="hidden" name="vo" value="<?php echo htmlspecialchars($owner);?>">
             <?php
@@ -50,18 +50,18 @@ $page_description = "Test network path from multiple locations around the world 
               $hashStr = $secret;
               $hashStr .= $_SERVER['HTTP_USER_AGENT'];
               $hashStr .= $owner;
-              
+
               $now = gmdate('c');
               echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
               $hashStr .= $now;
-              
+
               $hmac = sha1($hashStr);
               echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
             }
             ?>
 
             <h2 class="cufon-dincond_black">Run an ICMP traceroute from one of the test agents....</h2>
-            
+
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">
                     <li class="analytical_review"><a href="/">Advanced Testing</a></li>
@@ -85,7 +85,7 @@ $page_description = "Test network path from multiple locations around the world 
                                     $selected = '';
                                     if( $location['checked'] )
                                         $selected = 'selected';
-                                        
+
                                     echo "<option value=\"{$location['name']}\" $selected>{$location['label']}</option>";
                                 }
                                 ?>
@@ -159,7 +159,7 @@ $page_description = "Test network path from multiple locations around the world 
                             $selected = '';
                             if( $location['checked'] )
                                 $selected = 'SELECTED';
-                                
+
                             echo "<option value=\"{$location['name']}\" $selected>{$location['label']}</option>";
                         }
                         ?>
@@ -168,12 +168,12 @@ $page_description = "Test network path from multiple locations around the world 
                 </p>
             </div>
             </form>
-            
+
             <?php include('footer.inc'); ?>
         </div>
 
         <script type="text/javascript">
-        <?php 
+        <?php
             echo "var maxRuns = {$settings['maxruns']};\n";
             echo "var locations = " . json_encode($locations) . ";\n";
             echo "var connectivity = " . json_encode($connectivity) . ";\n";
@@ -191,7 +191,7 @@ $page_description = "Test network path from multiple locations around the world 
             echo "var sponsors = " . @json_encode($sponsors) . ";\n";
         ?>
         </script>
-        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script> 
+        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script>
     </body>
 </html>
 
@@ -199,13 +199,13 @@ $page_description = "Test network path from multiple locations around the world 
 <?php
 /**
 * Load the location information
-* 
+*
 */
 function LoadLocations()
 {
     $locations = LoadLocationsIni();
     FilterLocations( $locations );
-    
+
     // strip out any sensitive information
     foreach( $locations as $index => &$loc )
     {
@@ -215,13 +215,13 @@ function LoadLocations()
             $loc['backlog'] = CountTests($loc['localDir']);
             unset( $loc['localDir'] );
         }
-        
+
         if( isset($loc['key']) )
             unset( $loc['key'] );
         if( isset($loc['remoteDir']) )
             unset( $loc['remoteDir'] );
     }
-    
+
     return $locations;
 }
 

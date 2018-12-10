@@ -13,15 +13,15 @@ $fileHandler = new FileHandler();
 $testInfo = TestInfo::fromFiles($testPath);
 $testRunResults = TestRunResults::fromFiles($testInfo, $run, $cached, $fileHandler);
 
-$page_keywords = array('Screen Shot','Webpagetest','Website Speed Test');
-$page_description = "Website performance test screen shots$testLabel.";
+$page_keywords = array('Screenshot','WebPageTest','Website Speed Test');
+$page_description = "Website performance test screenshots$testLabel.";
 $userImages = true;
 ?>
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest Screen Shots<?php echo $testLabel; ?></title>
-        <?php $gaTemplate = 'Screen Shot'; include ('head.inc'); ?>
+        <title>WebPageTest Screenshots<?php echo $testLabel; ?></title>
+        <?php $gaTemplate = 'Screenshot'; include ('head.inc'); ?>
         <style type="text/css">
         img.center {
             display:block;
@@ -88,7 +88,7 @@ $userImages = true;
         <div class="page">
             <?php
             $tab = 'Test Result';
-            $subtab = 'Screen Shot';
+            $subtab = 'Screenshot';
             include 'header.inc';
 
             printContent($fileHandler, $testInfo, $testRunResults);
@@ -201,21 +201,21 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
         if (isset($pageRunData) && isset($pageRunData['render']))
             echo ' (' . number_format($pageRunData['render'] / 1000.0, 3) . '  sec)';
         echo '</h2></a>';
-        echo '<img class="center" alt="Start Render Screen Shot" src="' . $urlPaths->additionalScreenShotFile("render") . '">';
+        echo '<img class="center" alt="Start Render Screenshot" src="' . $urlPaths->additionalScreenShotFile("render") . '">';
     }
     if ($fileHandler->fileExists($localPaths->additionalScreenShotFile("dom"))) {
         echo '<br><br><a name="dom_element' . $linkSuffix . '"><h2>DOM Element';
         if (isset($pageRunData) && isset($pageRunData['domTime']))
             echo ' (' . number_format($pageRunData['domTime'] / 1000.0, 3) . '  sec)';
         echo '</h2></a>';
-        echo '<img class="center" alt="DOM Element Screen Shot" src="' . $urlPaths->additionalScreenShotFile("dom") . '">';
+        echo '<img class="center" alt="DOM Element Screenshot" src="' . $urlPaths->additionalScreenShotFile("dom") . '">';
     }
     if ($fileHandler->fileExists($localPaths->additionalScreenShotFile("doc"))) {
         echo '<br><br><a name="doc_complete' . $linkSuffix . '"><h2>Document Complete';
         if (isset($pageRunData) && isset($pageRunData['docTime']))
             echo ' (' . number_format($pageRunData['docTime'] / 1000.0, 3) . '  sec)';
         echo '</h2></a>';
-        echo '<img class="center" alt="Document Complete Screen Shot" src="' . $urlPaths->additionalScreenShotFile("doc") . '">';
+        echo '<img class="center" alt="Document Complete Screenshot" src="' . $urlPaths->additionalScreenShotFile("doc") . '">';
     }
     if ($fileHandler->fileExists($localPaths->aftDiagnosticImageFile())) {
         echo '<br><br><a name="aft' . $linkSuffix . '"><h2>AFT Details';

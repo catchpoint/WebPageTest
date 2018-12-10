@@ -1,4 +1,4 @@
-<?php 
+<?php
 // We intend to change to "?tests" but also allow "?test" so as to not break existing links.
 $tests = (isset($_REQUEST['tests'])) ? $_REQUEST['tests'] : $_REQUEST['test'];
 $tests = preg_replace('/[^a-zA-Z0-9,_\.\-:\ ]/', '', $tests);
@@ -85,7 +85,7 @@ $common_label = implode(" ", $common_labels);
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Graph Page Data</title>
+        <title>WebPageTest - Graph Page Data</title>
         <meta http-equiv="charset" content="iso-8859-1">
         <meta name="author" content="Patrick Meenan">
         <?php $gaTemplate = 'Graph'; include ('head.inc'); ?>
@@ -161,26 +161,26 @@ $common_label = implode(" ", $common_labels);
             }
             ?>
             <?php
-            $metrics = array('docTime' => 'Load Time (onload - ms)', 
+            $metrics = array('docTime' => 'Load Time (onload - ms)',
                             'loadEventStart' => 'Browser-reported Load Time (Navigation Timing onload)',
                             'domContentLoadedEventStart' => 'DOM Content Loaded (Navigation Timing)',
                             'SpeedIndex' => 'Speed Index',
-                            'TTFB' => 'Time to First Byte (ms)', 
+                            'TTFB' => 'Time to First Byte (ms)',
                             'basePageSSLTime' => 'Base Page SSL Time (ms)',
-                            'render' => 'Time to Start Render (ms)', 
+                            'render' => 'Time to Start Render (ms)',
                             'TimeToInteractive' => 'Time to Interactive (ms) - Beta',
                             'visualComplete' => 'Time to Visually Complete (ms)',
-                            'lastVisualChange' => 'Last Visual Change (ms)', 
+                            'lastVisualChange' => 'Last Visual Change (ms)',
                             'titleTime' => 'Time to Title (ms)',
-                            'fullyLoaded' => 'Fully Loaded (ms)', 
+                            'fullyLoaded' => 'Fully Loaded (ms)',
                             'server_rtt' => 'Estimated RTT to Server (ms)',
                             'docCPUms' => 'CPU Busy Time',
-                            'domElements' => 'Number of DOM Elements', 
-                            'connections' => 'Connections', 
-                            'requests' => 'Requests (Fully Loaded)', 
-                            'requestsDoc' => 'Requests (onload)', 
-                            'bytesInDoc' => 'Bytes In (onload)', 
-                            'bytesIn' => 'Bytes In (Fully Loaded)', 
+                            'domElements' => 'Number of DOM Elements',
+                            'connections' => 'Connections',
+                            'requests' => 'Requests (Fully Loaded)',
+                            'requestsDoc' => 'Requests (onload)',
+                            'bytesInDoc' => 'Bytes In (onload)',
+                            'bytesIn' => 'Bytes In (Fully Loaded)',
                             'browser_version' => 'Browser Version');
             $customMetrics = null;
             $csiMetrics = null;
@@ -331,7 +331,7 @@ function InsertChart($metric, $label) {
     }
     echo '</table></div>';
   }
-  
+
   // For each view (first / repeat) that we want to show
   foreach ($views as $cached) {
     $statValues = array();

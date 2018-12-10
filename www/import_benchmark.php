@@ -94,7 +94,7 @@ if (array_key_exists('tests', $_REQUEST) && array_key_exists('benchmark', $_REQU
 [{"id":"xxxxxx_xx_xxxx",
   "url":"http:\/\/example.com",
   "label":"Friendly label",
-  "config":"Defined config in bechmark definition",
+  "config":"Defined config in benchmark definition",
   "location":"Matching location in benchmark definition"},
  {"id":"yyyyyy_yy_yyy",
   "url":"http:\/\/someothersite.com",
@@ -119,8 +119,8 @@ if (array_key_exists('tests', $_REQUEST) && array_key_exists('benchmark', $_REQU
             <input type="submit" value="Submit">
           </div>
         </div>
-      </form>            
-      
+      </form>
+
       <?php include('footer.inc'); ?>
     </div>
   </body>
@@ -158,7 +158,7 @@ function ImportBenchmarkRun($benchmark, $epoch, &$test_data) {
       $test['submitted'] = $epoch;
       $state['tests'][] = $test;
     }
-    file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));        
+    file_put_contents("./results/benchmarks/$benchmark/state.json", json_encode($state));
     Unlock($lock);
     // kick off the collection and aggregation of the results
     $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
