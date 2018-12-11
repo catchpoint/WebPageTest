@@ -7,8 +7,8 @@ if ($userIsBot || !empty($settings['disableTestlog'])) {
   exit;
 }
 
-$page_keywords = array('Log','History','Webpagetest','Website Speed Test');
-$page_description = "History of website performance speed tests run on WebPagetest.";
+$page_keywords = array('Log','History','WebPageTest','Website Speed Test');
+$page_description = "History of website performance speed tests run on WebPageTest.";
 
 $supportsGrep = false;
 $out = exec('grep --version', $output, $result_code);
@@ -22,7 +22,7 @@ $filter    = $_GET["filter"];
 $filterstr = $filter ? preg_replace('/[^a-zA-Z0-9 \.\(\))\-\+]/', '', strtolower($filter)) : null;
 $onlyVideo = !empty($_REQUEST['video']);
 $all       = !empty($_REQUEST['all']);
-$repeat   = !empty($_REQUEST['repeat']);
+$repeat    = !empty($_REQUEST['repeat']);
 $nolimit   = !empty($_REQUEST['nolimit']);
 $csv       = !strcasecmp($_GET["f"], 'csv');
 
@@ -37,7 +37,7 @@ if (isset($this_user) && !isset($user))
 if (isset($filterstr) && $supportsGrep)
   $filterstr = trim(escapeshellarg(str_replace(array('"', "'", '\\'), '', trim($filterstr))), "'\"");
 
-if(extension_loaded('newrelic')) { 
+if(extension_loaded('newrelic')) {
   newrelic_add_custom_parameter('filter', $filter);
   newrelic_add_custom_parameter('days', $days);
   newrelic_add_custom_parameter('all', $all);
@@ -227,7 +227,7 @@ else
                                               }
                                             }
                                           }
-                                          
+
                                           // see if it is supposed to be filtered out
                                           if ($private) {
                                               $ok = false;
@@ -288,7 +288,7 @@ else
                                                       echo "<input type=\"checkbox\" name=\"t[]\" value=\"$guid\" title=\"First View\">";
                                                       if($repeat) {
                                                           echo "<input type=\"checkbox\" name=\"t[]\" value=\"$guid-c:1\" title=\"Repeat View\">";
-                                                      } 
+                                                      }
                                                   }
                                                   echo '</td>';
                                                   echo '<td class="date">';

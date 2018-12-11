@@ -1,6 +1,6 @@
-<?php 
+<?php
 include 'common.inc';
-$page_keywords = array('Optimization','Webpagetest','Website Speed Test','Tips');
+$page_keywords = array('Optimization','WebPageTest','Website Speed Test','Tips');
 $page_description = "Website performance optimization tips.";
 ?>
 <!DOCTYPE html>
@@ -34,7 +34,7 @@ $page_description = "Website performance optimization tips.";
                 }
             }
             ?>
-            
+
             <?php include('footer.inc'); ?>
         </div>
     </body>

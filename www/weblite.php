@@ -8,9 +8,9 @@ $secret = '';
 $keys = parse_ini_file('./settings/keys.ini', true);
 if( $keys && isset($keys['server']) && isset($keys['server']['secret']) )
   $secret = trim($keys['server']['secret']);
-    
+
 $connectivity = parse_ini_file('./settings/connectivity.ini', true);
-$page_keywords = array('Comparison','Webpagetest','Website Speed Test','Page Speed');
+$page_keywords = array('Comparison','WebPageTest','Website Speed Test','Page Speed');
 $page_description = "Comparison Test$testLabel.";
 ?>
 
@@ -48,7 +48,7 @@ $page_description = "Comparison Test$testLabel.";
             include 'header.inc';
             ?>
             <form id="urlEntry" name="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return PreparePSSTest(this)">
-            
+
             <input type="hidden" name="private" value="1">
             <input type="hidden" name="view" value="weblite">
             <input type="hidden" name="label" value="">
@@ -68,11 +68,11 @@ $page_description = "Comparison Test$testLabel.";
               $hashStr = $secret;
               $hashStr .= $_SERVER['HTTP_USER_AGENT'];
               $hashStr .= $owner;
-              
+
               $now = gmdate('c');
               echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
               $hashStr .= $now;
-              
+
               $hmac = sha1($hashStr);
               echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
             }
@@ -109,7 +109,7 @@ $page_description = "Comparison Test$testLabel.";
             </form>
 
             <?php
-            include('footer.inc'); 
+            include('footer.inc');
             ?>
         </div>
 
@@ -123,12 +123,12 @@ $page_description = "Comparison Test$testLabel.";
                     form.testurl.focus();
                     return false;
                 }
-                
+
                 if (url.substring(0, 4) != 'http')
                   url = 'http://' + url;
                 form.label.value = 'Optimized Pages Comparison for ' + url;
                 form.bulkurls.value = "Original=" + url + "\nOptimized by Google=http://icl.googleusercontent.com/?lite_url=" + encodeURIComponent(url);
-                                
+
                 return true;
             }
         <?php

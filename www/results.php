@@ -1,4 +1,4 @@
-<?php 
+<?php
 include 'common.inc';
 require_once('page_data.inc');
 
@@ -9,7 +9,7 @@ if (array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json') {
 } else {
     $pageData = loadAllPageData($testPath);
 
-    // if we don't have an url, try to get it from the page results
+    // if we don't have an URL, try to get it from the page results
     if( !strlen($url) && isset($pageData[1][0]['URL']))
         $url = $pageData[1][0]['URL'];
     if (isset($test['testinfo']['spam']) && $test['testinfo']['spam']) {
