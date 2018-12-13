@@ -1,11 +1,11 @@
-<?php 
-$page_keywords = array('Access Denied','Blocked','Webpagetest','Website Speed Test','Page Speed');
+<?php
+$page_keywords = array('Access Denied','Blocked','WebPagetest','Website Speed Test','Page Speed');
 $page_description = "Website speed test blocked.";
 ?>
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Test Blocked</title>
+        <title>WebPageTest - Test Blocked</title>
         <?php $gaTemplate = 'Blocked'; include ('head.inc'); ?>
     </head>
     <body>
