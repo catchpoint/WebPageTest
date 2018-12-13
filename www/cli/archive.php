@@ -206,7 +206,7 @@ function CheckOldDir($path) {
     if( $oldDir != '.' && $oldDir != '..' ) {
       // see if it is a test or a higher-level directory
       if( is_file("$path/$oldDir/testinfo.ini") )
-        CheckTest("$path/$oldDir", $oldDir, 1000);
+        CheckTest("$path/$oldDir", $oldDir, 1000, FALSE);
       else
         CheckOldDir("$path/$oldDir");
     }
