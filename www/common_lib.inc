@@ -2049,7 +2049,7 @@ function UpdateTester($location, $tester, $testerInfo = null, $cpu = null, $erro
 
   // keep track of the success/error count
   if (isset($error)) {
-    if (!isset($tester_info['errors']))
+    if (!isset($tester_info['errors']) || !is_array($tester_info['errors']))
       $tester_info['errors'] = array();
     $tester_info['errors'][] = strlen($error) ? 100 : 0;
     if (count($tester_info['errors']) > 100)
