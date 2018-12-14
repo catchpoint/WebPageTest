@@ -56,7 +56,7 @@ function StatsdPost($location, $browser, $label, $cached, &$metrics) {
   }
 }
 
-function graphite_key($location, $browser, $label, $cached, $metric) {
+function graphite_key($location, $browser, $label, $cached, $metric = '') {
   if (GetSetting('statsdCleanPattern')) {
     $label = preg_replace('/' . GetSetting('statsdPattern') . '/', '', $label);
   }
