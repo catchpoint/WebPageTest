@@ -2043,9 +2043,9 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         $test_num;
         $id = uniqueId($test_num);
         if( $test['private'] )
-            $id = ShardKey($test_num) . md5(uniqid(rand(), true));
+            $id = ShardKey($test_num, $locationShard) . md5(uniqid(rand(), true));
         else
-            $id = ShardKey($test_num) . $id;
+            $id = ShardKey($test_num, $locationShard) . $id;
         $today = new DateTime("now", new DateTimeZone('UTC'));
         $testId = $today->format('ymd_') . $id;
         $test['path'] = './' . GetTestPath($testId);
@@ -2054,7 +2054,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         while( is_dir($test['path']) )
         {
             // fall back to random ID's
-            $id = ShardKey($test_num) . md5(uniqid(rand(), true));
+            $id = ShardKey($test_num, $locationShard) . md5(uniqid(rand(), true));
             $testId = $today->format('ymd_') . $id;
             $test['path'] = './' . GetTestPath($testId);
         }
