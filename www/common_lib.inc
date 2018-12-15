@@ -2479,7 +2479,7 @@ function ShardKey($test_num, $locationID = null) {
   if (isset($locationID) && strlen($key)) {
     $locationID = preg_replace('/[^a-zA-Z0-9]/', '', $locationID);
     if (strlen($locationID))
-      $key = $locationID . 'l' . $key;
+      $key = $locationID . 'x' . $key;
   }
   
   // add the server ID if we are using one
