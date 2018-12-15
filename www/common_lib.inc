@@ -2448,7 +2448,7 @@ function http_post_raw($url, $body) {
 * Generate a shard key to better spread out the test results
 *
 */
-function ShardKey($test_num) {
+function ShardKey($test_num, $locationID = null) {
   $key = '';
 
   $bucket_size = GetSetting('bucket_size');
@@ -2473,6 +2473,13 @@ function ShardKey($test_num) {
       }
       $key .= '_';
     }
+  }
+  
+  // Add the location ID if we are using one
+  if (isset($locationID) && strlen($key)) {
+    $locationID = preg_replace('/[^a-zA-Z0-9]/', '', $locationID);
+    if (strlen($locationID))
+      $key = $locationID . 'l' . $key;
   }
   
   // add the server ID if we are using one

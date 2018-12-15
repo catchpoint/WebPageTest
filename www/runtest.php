@@ -433,6 +433,8 @@
             }
             if (isset($locations[$test['location']]['ami']))
               $test['ami'] = $locations[$test['location']]['ami'];
+            if (isset($locations[$test['location']]['shardID']))
+              $test['locationShard'] = $locations[$test['location']]['shardID'];
 
             // set the browser to the default if one wasn't specified
             if ((!array_key_exists('browser', $test) ||
@@ -2035,6 +2037,8 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
       $forceBlock = trim(file_get_contents('./settings/block.txt'));
 
     if (CheckUrl($url) && WptHookValidateTest($test)) {
+        $locationShard = isset($test['locationShard']) ? $test['locationShard'] : null;
+        
         // generate the test ID
         $test_num;
         $id = uniqueId($test_num);
