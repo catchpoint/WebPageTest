@@ -21,8 +21,8 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 <form style="margin-left:2em;" name="urlEntry" action="javascript:UpdateWaterfall();" method="GET">
                     Chart Type: <input type="radio" name="type" value="waterfall" checked="checked"> Waterfall
                      &nbsp; <input type="radio" name="type" value="connection"> Connection View<br>
-                    Chart Coloring: <input type="radio" name="coloring" value="classic" checked="checked"> Classic
-                     &nbsp; <input type="radio" name="coloring" value="mime"> By MIME Type<br>
+                    Chart Coloring: <input type="radio" name="coloring" value="classic"> Classic
+                     &nbsp; <input type="radio" name="coloring" value="mime" checked="checked"> By MIME Type<br>
                      Image Width: <input id="width" type="text" name="width" style="width:3em" value="930"> Pixels (300-2000)<br>
                      Maximum Time: <input id="max" type="text" name="max" style="width:2em" value=""> Seconds (leave blank for automatic)<br>
                      Requests (i.e. 1,2,3,4-9,8): <input id="requests" type="text" name="requests" style="width:20em" value="">
@@ -39,7 +39,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 $extension = 'php';
                 if( FRIENDLY_URLS )
                     $extension = 'png';
-                echo "<img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1\">";
+                echo "<img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1&mime=1\">";
             ?>
             
             <?php include('footer.inc'); ?>
