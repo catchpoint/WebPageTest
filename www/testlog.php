@@ -68,7 +68,7 @@ else
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Test Log</title>
+        <title>WebPageTest - Test Log</title>
         <?php $gaTemplate = 'Test Log'; include ('head.inc'); ?>
         <style type="text/css">
             h4 {text-align: center;}
@@ -111,7 +111,7 @@ else
                         <label><input id="nolimit" type="checkbox" name="nolimit" <?php check_it($nolimit);?> onclick="this.form.submit();"> Do not limit the number of results (warning, WILL be slow)</label>
 
                 </form>
-                <h4>Clicking on an url will bring you to the results for that test</h4>
+                <h4>Clicking on an URL will bring you to that test's results</h4>
                 <form name="compare" method="get" action="/video/compare.php">
                 <table class="history" border="0" cellpadding="5px" cellspacing="0">
                     <tr>
@@ -127,7 +127,7 @@ else
                         }
                         ?>
                         <th>Label</th>
-                        <th>Url</th>
+                        <th>URL</th>
                     </tr>
                     <?php
     }  // if( $csv )
