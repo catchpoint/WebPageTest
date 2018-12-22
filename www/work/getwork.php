@@ -53,8 +53,11 @@ if (isset($locations) && is_array($locations) && count($locations) &&
   $location = trim($locations[0]);
   if (!$is_done && array_key_exists('reboot', $_GET) && GetSetting('allowReboot'))
     $is_done = GetReboot();
+  /*
+  // The legacy agents are no longer supported. Server-based updating is now disabled.
   if (!$is_done && array_key_exists('ver', $_GET))
     $is_done = GetUpdate();
+  */
   foreach ($locations as $loc) {
     $location = trim($loc);
     if (!$is_done && strlen($location)) {

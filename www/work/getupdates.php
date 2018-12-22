@@ -1,4 +1,8 @@
 <?php
+// Disable the update logic as it has long-since been deprecated
+header('HTTP/1.0 403 Forbidden');
+exit();
+
 // Return the version, size and md5 hash of all of the agent updates currently available
 header("Cache-Control: no-cache, must-revalidate");
 header("Pragma: no-cache");
