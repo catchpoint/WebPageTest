@@ -45,9 +45,20 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
       }
       echo "</tr>\n";
       $count = 0;
+      $lastPC = null;
       foreach($location['testers'] as $tester) {
         $count++;
-        echo "<tr><td nowrap class=\"tester\">$count</td>";
+        $style = '';
+        if (isset($tester['pc'])) {
+          if (preg_match('/^VM([0-9A-Za-z][0-9A-Za-z])-([0-9A-Za-z][0-9A-Za-z])/', $tester['pc'], $matches)) {
+            $pc = intval($matches[2]);
+            if (isset($lastPC) && $pc !== ($lastPC + 1)) {
+              $style = ' style="background-color:#ffffb3;"';
+            }
+            $lastPC = $pc;
+          }
+        }
+        echo "<tr$style><td nowrap class=\"tester\">$count</td>";
         echo "<td nowrap>" . @htmlspecialchars($tester['busy']) . "</td>";
         echo "<td nowrap>" . @htmlspecialchars($tester['elapsed']) . "</td>";
         echo "<td nowrap>" . @htmlspecialchars($tester['last']) . "</td>";
