@@ -11,7 +11,7 @@ require_once __DIR__ . '/include/TestResultsHtmlTables.php';
 $breakdown = array();
 $testComplete = true;
 $status = GetTestStatus($id, false);
-if( $status['statusCode'] < 200 ) 
+if( $status['statusCode'] < 200 )
     $testComplete = false;
 $headless = false;
 if (array_key_exists('headless', $settings) && $settings['headless']) {
@@ -21,13 +21,13 @@ if (array_key_exists('headless', $settings) && $settings['headless']) {
 $testInfo = TestInfo::fromFiles($testPath);
 $testResults = TestResults::fromFiles($testInfo);
 
-$page_keywords = array('Results','Webpagetest','Website Speed Test','Page Speed');
+$page_keywords = array('Results','WebPageTest','Website Speed Test','Page Speed');
 $page_description = "Website performance test result$testLabel.";
 ?>
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest Test Result<?php echo $testLabel; ?></title>
+        <title>WebPageTest Test Result<?php echo $testLabel; ?></title>
         <style type="text/css">
             tr.stepResultRow.jkActive td.resultCell {
                 border-left: 2px #181741 solid;
@@ -44,7 +44,7 @@ $page_description = "Website performance test result$testLabel.";
             if( window.location.host.length && wpt_host.length && window.location.host != wpt_host )
                 window.location = document.location.protocol + '//' + wpt_host + window.location.pathname;
         </script>
-        <?php if( !$testComplete ) { 
+        <?php if( !$testComplete ) {
                 $autoRefresh = true;
         ?>
         <noscript>
@@ -61,23 +61,23 @@ $page_description = "Website performance test result$testLabel.";
             include 'header.inc';
             ?>
             <div id="result">
-            <?php 
-            if( !$testComplete ) 
+            <?php
+            if( !$testComplete )
             {
                 ?>
                 <p class="left">
                 <br>
-                <?php 
+                <?php
                     if ($settings['nolinks']) {
-                        echo "Url: $url<br>\n";
+                        echo "URL: $url<br>\n";
                     } else {
-                        echo "Url: <a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";
+                        echo "URL: <a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";
                     }
                     echo "From: {$test['test']['location']}<br>\n";
                     echo GetTestInfoHtml();
                 ?>
                 </p>
-                <?php 
+                <?php
                 $expected = $test['test']['runs'];
                 $available = $testResults->countRuns();
                 echo "<h3>Test is partially complete ($available of $expected tests).<br>This page will refresh as tests complete.</h3>";
@@ -85,15 +85,15 @@ $page_description = "Website performance test result$testLabel.";
                 echo "var availableTests=$available;\n";
                 echo "</script>\n";
             }
-            else 
-            { 
+            else
+            {
             ?>
             <div id="download">
                 <div id="testinfo">
                     <?php
                     $show_sensitive = false;
                     echo GetTestInfoHtml();
-                    if( !$headless && gz_is_file("$testPath/testinfo.json") 
+                    if( !$headless && gz_is_file("$testPath/testinfo.json")
                         && !array_key_exists('published', $test['testinfo'])
                         && ($isOwner || !$test['testinfo']['sensitive'])
                         && (!isset($test['testinfo']['type']) || !strlen($test['testinfo']['type'])) )
@@ -122,11 +122,11 @@ $page_description = "Website performance test result$testLabel.";
                           $hashStr = $secret;
                           $hashStr .= $_SERVER['HTTP_USER_AGENT'];
                           $hashStr .= $owner;
-                          
+
                           $now = gmdate('c');
                           echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
                           $hashStr .= $now;
-                          
+
                           $hmac = sha1($hashStr);
                           echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
                         }
@@ -291,7 +291,7 @@ $page_description = "Website performance test result$testLabel.";
 		    <br>
             <?php if (file_exists('./ads/results_bottom.inc')) include('./ads/results_bottom.inc'); ?>
 		    <br>
-            
+
             <?php include('footer.inc'); ?>
         </div>
         <script type="text/javascript" src="/js/jk-navigation.js"></script>
