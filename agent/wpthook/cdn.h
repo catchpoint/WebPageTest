@@ -190,6 +190,7 @@ CDN_PROVIDER cdnList[] = {
   {".cedexis.net", "Cedexis"},
   {".streamprovider.net", "Rocket CDN"},
   {".singularcdn.net.br", "Singular CDN"},
+  {"myracloud.com", "Myracloud"},
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -246,5 +247,6 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
 
 // Specific providers that require multiple headers
 CDN_PROVIDER_MULTI_HEADER cdnMultiHeaderList[] = {
-  {"Fastly", {{"X-Served-By", "cache-"}, {"X-Cache", ""}}}
+  {"Fastly", {{"X-Served-By", "cache-"}, {"X-Cache", ""}}},
+  {"Myracloud", {{"server", "myracloud"}, {"x-cdn", "1"}}}
 };
