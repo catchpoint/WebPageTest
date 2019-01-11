@@ -59,12 +59,11 @@ if (!defined('EMBED')) {
         {
             // see if we have a location that the test was run from (for a custom ad)
             $testLoc = null;
-            if( isset($testInfo) )
-                $testLoc = $testInfo->getTestLocation();
+            if( isset($test) && isset($test['test']['loc']) )
+                $testLoc = $test['test']['loc'];
             
-            if( isset($testLoc) && strlen($testLoc) && 
-                strpos($testLoc, '..') === false && strpos($testLoc, '/') === false && strpos($testLoc, '\\') === false && 
-                is_file("./custom/$testLoc/headerAd.inc") ) {
+            if( strpos($testLoc, '..') === false && strpos($testLoc, '/') === false && strpos($testLoc, '\\') === false && 
+                isset($testLoc) && strlen($testLoc) && is_file("./custom/$testLoc/headerAd.inc") ) {
                 include("./custom/$testLoc/headerAd.inc");
             } elseif(is_file('./ads/header.inc')) {
                 include('./ads/header.inc');
