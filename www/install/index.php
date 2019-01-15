@@ -5,9 +5,9 @@ include 'common.inc';
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Install Check</title>
+        <title>WebPageTest - Install Check</title>
         <meta http-equiv="charset" content="iso-8859-1">
-        <meta name="description" content="Installation check for WebPagetest">
+        <meta name="description" content="Installation check for WebPageTest">
         <meta name="author" content="Patrick Meenan">
         <meta name="robots" content="noindex,nofollow" />
         <style type="text/css">
@@ -19,17 +19,17 @@ include 'common.inc';
             padding:0 2em;
             margin:0;
         }
-        li.pass { 
+        li.pass {
             background:url("../images/check.png") no-repeat 0 0;
-            padding-left: 20px; 
+            padding-left: 20px;
         }
-        li.fail { 
+        li.fail {
             background:url("../images/error.png") no-repeat 0 0;
-            padding-left: 20px; 
+            padding-left: 20px;
         }
-        li.warn { 
+        li.warn {
             background:url("../images/warning.png") no-repeat 0 0;
-            padding-left: 20px; 
+            padding-left: 20px;
         }
         span.pass {
             color: #008600;
@@ -46,7 +46,7 @@ include 'common.inc';
         </style>
     </head>
     <body>
-        <h1>WebPagetest <?php echo VER_WEBPAGETEST; ?> Installation Check</h1>
+        <h1>WebPageTest <?php echo VER_WEBPAGETEST; ?> Installation Check</h1>
         <h2>PHP</h2><ul>
         <?php CheckPHP(); ?>
         </ul><h2>System Utilities</h2><ul>
@@ -282,7 +282,7 @@ function return_bytes($val) {
 
 /**
 * See if we can talk to beanstalkd
-* 
+*
 */
 function CheckBeanstalkd() {
     global $settings;
@@ -303,7 +303,7 @@ function CheckBeanstalkd() {
 
 /**
 * Check to make sure ffmpeg is installed and working
-* 
+*
 */
 function CheckFfmpeg() {
     $ret = false;
@@ -318,13 +318,13 @@ function CheckFfmpeg() {
                 $x264 = true;
         }
     }
-    
+
     return $ret && $x264;
 }
 
 /**
 * Check to make sure ffmpeg is installed and working
-* 
+*
 */
 function CheckFfmpegFilters(&$info) {
     $ret = false;
@@ -405,7 +405,7 @@ function CheckPythonVideo(&$info) {
   $ret = CheckPythonVisualMetrics($failures);
   if (!$ret) {
     if (isset($failures)) {
-      $info = 'Missing python modules: ' . implode(',', $failures);
+      $info = 'Missing Python modules: ' . implode(',', $failures);
     } else {
       $info = 'Error running "python video/visualmetrics.py -c"';
     }
