@@ -2,7 +2,7 @@
 include 'common.inc';
 set_time_limit(0);
 
-if ($userIsBot || GetSetting('disableTestlog') || GetSetting('headless')) {
+if ($userIsBot || GetSetting('disableTestlog')) {
   header('HTTP/1.0 403 Forbidden');
   exit;
 }
