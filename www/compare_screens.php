@@ -1,4 +1,4 @@
-<?php 
+<?php
 if(array_key_exists("HTTP_IF_MODIFIED_SINCE",$_SERVER) && strlen(trim($_SERVER['HTTP_IF_MODIFIED_SINCE'])))
 {
     header("HTTP/1.0 304 Not Modified");
@@ -32,7 +32,7 @@ else
     $black = imagecolorallocate($im, 0, 0, 0);
     $textColor = imagecolorallocate($im, 255, 255, 255);
     imagefilledrectangle($im, 0, 0, $width - 1, $height - 1, $black);
-    
+
     $x = 0;
     foreach ($tests as $test) {
       if (substr($test['image'], -4) == '.png')
@@ -50,11 +50,11 @@ else
         $pos = CenterText($im, $x + $textMargin, $textTop + $textMargin, $w - 2 * $textMargin, $textHeight - 2 * $textMargin, $fontSize, $test['label']);
         if (isset($pos))
           imagettftext($im, $fontSize, 0, $pos['x'],  $pos['y'], $textColor, $labelFont, $test['label']);
-        
+
         $x += $w + $spacing;
       }
     }
-    
+
     header ("Content-type: image/png");
     imagepng($im);
   } else {
@@ -63,13 +63,13 @@ else
 }
 
 /**
-* Parse the list of tests and identify the screen shots to compare
-* 
+* Parse the list of tests and identify the screenshots to compare
+*
 */
 function ParseTests() {
   $tests = array();
   global $median_metric;
-  
+
   if (isset($_REQUEST['tests'])) {
     $groups = explode(',', $_REQUEST['tests']);
     foreach ($groups as $group) {
@@ -91,7 +91,7 @@ function ParseTests() {
         }
         RestoreTest($test['id']);
         $test['path'] = GetTestPath($test['id']);
-        
+
         if (!isset($test['run'])) {
           $pageData = loadAllPageData($test['path']);
           $test['run'] = GetMedianRun($pageData, $test['cached'], $median_metric);
@@ -109,7 +109,7 @@ function ParseTests() {
         }
         if (!isset($test['label']))
           $test['label'] = $test['id'];
-        
+
         $cachedText = '';
         if($test['cached'])
             $cachedText='_Cached';
@@ -118,7 +118,7 @@ function ParseTests() {
           $test['image'] = "$fileBase.png";
         elseif (is_file("$fileBase.jpg"))
           $test['image'] = "$fileBase.jpg";
-        
+
         if (isset($test['image'])) {
           $size = getimagesize($test['image']);
           if ($size && count($size) >= 2 && $size[0] > 0 && $size[1] > 0) {
@@ -130,15 +130,15 @@ function ParseTests() {
       }
     }
   }
-  
+
   if (!count($tests))
     unset($tests);
   return $tests;
-}  
+}
 
 /**
 * Get the largest font size that will fit the text in the target area
-* 
+*
 * @param mixed $width
 * @param mixed $height
 * @param mixed $text
@@ -162,7 +162,7 @@ function GetFontSize($width, $height, $text) {
       $size = floor($size - (($size - $small) / 2));
     }
   } while ($last_size !== $size && $size > 0);
-  
+
   return $size;
 }
 

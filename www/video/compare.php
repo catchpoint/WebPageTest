@@ -34,10 +34,10 @@ else
     require_once('object_detail.inc');
     require_once('waterfall.inc');
 
-    $page_keywords = array('Video','comparison','Webpagetest','Website Speed Test');
+    $page_keywords = array('Video','comparison','WebPageTest','Website Speed Test');
     $page_description = "Visual comparison of multiple websites with a side-by-side video and filmstrip view of the user experience.";
 
-    $title = 'Web page visual comparison';
+    $title = 'Webpage visual comparison';
     $labels = '';
     $location = null;
     foreach( $tests as &$test )
@@ -65,7 +65,7 @@ else
     <!DOCTYPE html>
     <html>
         <head>
-            <title>WebPagetest - Visual Comparison</title>
+            <title>WebPageTest - Visual Comparison</title>
             <?php
                 if( !$ready )
                 {
@@ -523,7 +523,7 @@ function ScreenShotTable()
                 echo "<input type=\"hidden\" name=\"tests\" value=\"" . htmlspecialchars($_REQUEST['tests']) . "\">\n";
             ?>
                 <table id="layoutTable">
-                    <tr><th>Thumbnail Size</th><th>Thumbnail Interval</th><th>Comparison End Point</th></th></tr>
+                    <tr><th>Thumbnail Size</th><th>Thumbnail Interval</th><th>Comparison Endpoint</th></th></tr>
                     <?php
                         // fill in the thumbnail size selection
                         echo "<tr><td>";
@@ -567,7 +567,7 @@ function ScreenShotTable()
                         echo "<input type=\"radio\" name=\"ival\" value=\"5000\"$checked onclick=\"this.form.submit();\"> 5 sec<br>";
                         echo "</td>";
 
-                        // fill in the end-point selection
+                        // fill in the endpoint selection
                         echo "<td>";
                         if( !strcasecmp($endTime, 'aft') )
                             $endTime = 'visual';

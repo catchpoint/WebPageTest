@@ -1,10 +1,10 @@
-Here are the rules that you need to add to a server configuration for Nginx to operate as a WebPagetest server.  Make sure to change the script path in the fcgi section.
+Here are the rules that you need to add to a server configuration for Nginx to operate as a WebPageTest server.  Make sure to change the script path in the fcgi section.
 
         location / {
                 index  index.php;
         }
 
-        # disable chunked encoding for mp4 files because it breaks flash video on firefox
+        # disable chunked encoding for mp4 files because it breaks flash video on Firefox
         location ~* \.mp4 {
                 gzip off;
         }
@@ -131,7 +131,7 @@ Here are the rules that you need to add to a server configuration for Nginx to o
 
         #embeddable video widget
         rewrite ^/video/embed/([a-zA-Z0-9_]+)$ /video/view.php?embed=1&id=$1 last;
-        
+
         #widgets
         rewrite ^/widgets/pagespeed/tree$ /widgets/pagespeed/tree.php last;
 

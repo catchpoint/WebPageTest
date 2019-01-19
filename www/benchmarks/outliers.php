@@ -2,13 +2,13 @@
 chdir('..');
 include 'common.inc';
 require_once('./benchmarks/data.inc.php');
-$page_keywords = array('Benchmarks','Webpagetest','Website Speed Test','Page Speed');
+$page_keywords = array('Benchmarks','WebPageTest','Website Speed Test','Page Speed');
 $page_description = "WebPagetest benchmarks";
 ?>
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Benchmarks</title>
+        <title>WebPageTest - Benchmarks</title>
         <meta http-equiv="charset" content="iso-8859-1">
         <meta name="keywords" content="Performance, Optimization, Pagetest, Page Design, performance site web, internet performance, website performance, web applications testing, web application performance, Internet Tools, Web Development, Open Source, http viewer, debugger, http sniffer, ssl, monitor, http header, http header viewer">
         <meta name="description" content="Speed up the performance of your web pages with an automated analysis">
@@ -27,7 +27,7 @@ $page_description = "WebPagetest benchmarks";
             $tab = 'Benchmarks';
             include 'header.inc';
             ?>
-            
+
             <script type="text/javascript">
             function SelectedPoint(benchmark, metric, series, time, cached) {
                 time = parseInt(time / 1000, 10);
@@ -79,7 +79,7 @@ $page_description = "WebPagetest benchmarks";
                     if (array_key_exists('description', $benchmark))
                         echo "<p>{$benchmark['description']}</p>\n";
                 }
-                
+
                 if ($benchmark['expand'] && count($benchmark['locations'] > 1)) {
                     foreach ($benchmark['locations'] as $location => $label) {
                         if (is_numeric($label))
@@ -92,7 +92,7 @@ $page_description = "WebPagetest benchmarks";
             }
             ?>
             </div>
-            
+
             <?php include('footer.inc'); ?>
         </div>
     </body>
@@ -101,7 +101,7 @@ $page_description = "WebPagetest benchmarks";
 
 /**
 * Display the charts for the given benchmark
-* 
+*
 * @param mixed $benchmark
 */
 function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
@@ -123,7 +123,7 @@ function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
         }
     }
 
-    $out_data = array();    
+    $out_data = array();
     if (LoadTestData($data, $configurations, $benchmark[name], 0, 'SpeedIndex', $test_time, $meta, $loc)) {
         foreach ($data as $urlid => &$row) {
             $url = $meta[$urlid]['url'];
@@ -132,7 +132,7 @@ function DisplayBenchmarkData(&$benchmark, $loc = null, $title = null) {
             // figure out the maximum number of data points we have
             foreach($configurations as &$configuration) {
                 foreach ($configuration['locations'] as &$location) {
-                    if (array_key_exists($configuration['name'], $row) && 
+                    if (array_key_exists($configuration['name'], $row) &&
                         array_key_exists($location['location'], $row[$configuration['name']]) &&
                         is_array($row[$configuration['name']][$location['location']])) {
                         $raw_values = $row[$configuration['name']][$location['location']];

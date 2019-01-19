@@ -15,7 +15,7 @@ if ($newTimeline) {
   $cdn = GetSetting('cdn');
   $url = $cdn ? $cdn : "$protocol://$host";
   $url .= $uri;
-  // short-term hack because the timeline code doesn't URLdecode query params and we can't pass any URL with a &
+  // short-term hack because the timeline code doesn't URLdecode query params and we can't pass any URL with an &
   $url .= "/inspector-20181102/inspector.html?experiments=true&loadTimelineFromURL=$timelineUrlParam";
   header("Location: $url");
 }

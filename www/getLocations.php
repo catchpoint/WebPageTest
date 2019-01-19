@@ -31,7 +31,7 @@ if( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'json' ) {
   json_response($ret);
 } elseif( array_key_exists('f', $_REQUEST) && $_REQUEST['f'] == 'html' ) {
   $refresh = 240;
-  $title = 'WebPagetest - Location Status';
+  $title = 'WebPageTest - Location Status';
   include 'admin_header.inc';
 
   echo "<table class=\"table\">\n";

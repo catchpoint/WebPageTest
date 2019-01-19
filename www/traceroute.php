@@ -16,7 +16,7 @@ $page_description = "Test network path from multiple locations around the world 
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Traceroute diagnostic</title>
+        <title>WebPageTest - Traceroute diagnostic</title>
         <?php $gaTemplate = 'Traceroute'; include ('head.inc'); ?>
     </head>
     <body>
@@ -60,7 +60,7 @@ $page_description = "Test network path from multiple locations around the world 
             }
             ?>
 
-            <h2 class="cufon-dincond_black">Run an ICMP traceroute from one of the test agents....</h2>
+            <h2 class="cufon-dincond_black">Run an ICMP traceroute from one of the test agents...</h2>
 
             <div id="test_box-container">
                 <ul class="ui-tabs-nav">

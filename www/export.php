@@ -1,10 +1,10 @@
 <?php
 
 /******************************************************************************
-* 
-*   Export a result data set  in HTTP archive format:
+*
+*   Export a result dataset in HTTP archive format:
 *   http://groups.google.com/group/firebug-working-group/web/http-tracing---export-format
-* 
+*
 ******************************************************************************/
 
 include 'common.inc';
@@ -28,7 +28,7 @@ if (isset($_REQUEST['pretty']))
   $options['pretty'] = $_REQUEST['pretty'];
 if (isset($_REQUEST['run']))
   $options['run'] = $_REQUEST['run'];
-  
+
 $filename = '';
 if (@strlen($url)) {
     $parts = parse_url($url);

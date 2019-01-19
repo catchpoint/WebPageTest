@@ -1,6 +1,6 @@
 <?php
 require_once('devtools.inc.php');
-if(extension_loaded('newrelic')) { 
+if(extension_loaded('newrelic')) {
   newrelic_add_custom_tracer('ProcessAVIVideo');
   newrelic_add_custom_tracer('Video2PNG');
   newrelic_add_custom_tracer('FindAVIViewport');
@@ -12,7 +12,7 @@ if(extension_loaded('newrelic')) {
 
 /**
 * Re-process all of the video for an existing test
-* 
+*
 * @param mixed $id
 */
 function ReprocessVideo($id) {
@@ -45,8 +45,8 @@ function ReprocessVideo($id) {
 }
 
 /**
-* Convert an AVI video capture into the video frames the WPT is expecting
-* 
+* Convert an AVI video capture into the video frames WPT is expecting
+*
 * @param mixed $testPath
 * @param mixed $run
 * @param mixed $cached
@@ -60,7 +60,7 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
   $crop = '';
   if (!is_file($videoFile))
     $videoFile = "$testPath/$run{$cachedText}_video.avi";
-    
+
   if (!GetSetting('disable_video_processing') && is_file($videoFile)) {
     $videoDir = "$testPath/video_$run" . strtolower($cachedText);
     if (!is_file("$videoDir/video.json")) {
@@ -101,7 +101,7 @@ function ProcessAVIVideo(&$test, $testPath, $run, $cached) {
 
 /**
 * Use ffmpeg to extract the given video file to individual frames at 10fps
-* 
+*
 * @param mixed $infile
 * @param mixed $outdir
 */
@@ -109,7 +109,7 @@ function Video2PNG($infile, $outdir, $crop) {
   $ret = false;
   $oldDir = getcwd();
   chdir($outdir);
-  
+
   // figure out which decimate filter we need to use (originally it was called decimate but then renamed to mpdecimate)
   $decimate = null;
   exec('ffmpeg -filters', $output, $result);
@@ -155,7 +155,7 @@ function Video2PNG($infile, $outdir, $crop) {
 
 /**
 * De-dupe the video frames and compress them for normal WPT processing
-* 
+*
 * @param mixed $videoDir
 */
 function ProcessVideoFrames($videoDir, $viewport) {
@@ -201,7 +201,7 @@ function IsBlankAVIFrame($file) {
 * Check to see if the given frame is an "orange" marker frame.
 * We need to be kind of loose for the definition of orange since
 * it varies a bit from capture to capture.
-* 
+*
 * @param mixed $im
 */
 function IsOrangeAVIFrame($file) {
@@ -220,7 +220,7 @@ function IsOrangeAVIFrame($file) {
 /**
 * Go through the video files and delete the ones that have identical md5 hashes
 * (in a series)
-* 
+*
 * @param mixed $videoDir
 */
 function EliminateDuplicateAVIFiles($videoDir, $viewport) {
@@ -249,7 +249,7 @@ function EliminateDuplicateAVIFiles($videoDir, $viewport) {
     else
       break;
   }
-  
+
   // Do a second pass looking for the last frame but with an allowance for up
   // to a 10% difference in individual pixels to deal with noise around text.
   $files = glob("$videoDir/image*.png");
@@ -293,8 +293,8 @@ function AreAVIFramesDuplicate($image1, $image2, $fuzzPct = 0, $crop = null) {
 }
 
 /**
-* Take a ms duration and convert it to HH:MM:SS.xxx fiormat
-* 
+* Take a ms duration and convert it to HH:MM:SS.xxx format
+*
 * @param mixed $duration
 */
 function msToHMS($duration) {
@@ -308,9 +308,9 @@ function msToHMS($duration) {
 }
 
 /**
-* If the first frame is orange, use the orage to detect the viewport
+* If the first frame is orange, use the orange to detect the viewport
 * and re-number the remaining frames
-* 
+*
 * @param mixed $videoDir
 * @param mixed $viewport
 */
@@ -349,7 +349,7 @@ function FindAVIViewport($videoDir, $startOffset, &$viewport) {
 
 /**
 * Find the viewport from the given image
-* 
+*
 * @param mixed $file
 */
 function GetImageViewport($file) {
@@ -474,7 +474,7 @@ function CreateHistogram($image_file, $histogram_file, $viewport) {
 
 /**
 * See if we can find the viewport from the first frame of the video and crop down to that
-* 
+*
 * @param mixed $videoFile
 * @param mixed $videoDir
 */
@@ -498,9 +498,9 @@ function FindVideoCrop($videoFile, $videoDir) {
 }
 
 /**
-* Run the python version of the video extraction if it is available.
-* It is much faster for generating the histograms.
-* 
+* Run the Python version of the video extraction, if available.
+* It's much faster at generating the histograms.
+*
 * @param mixed $videoFile
 * @param mixed $videoDir
 * @param mixed $devToolsFile

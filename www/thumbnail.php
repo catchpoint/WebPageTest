@@ -1,5 +1,5 @@
 <?php
-if(extension_loaded('newrelic')) { 
+if(extension_loaded('newrelic')) {
     newrelic_add_custom_tracer('tbnDrawWaterfall');
     newrelic_add_custom_tracer('tbnDrawChecklist');
     newrelic_add_custom_tracer('GenerateThumbnail');
@@ -147,7 +147,7 @@ function tbnDrawChecklist($testStepResult, &$img)
 
 /**
 * Resize the image down to thumbnail size
-* 
+*
 * @param mixed $img
 */
 function GenerateThumbnail(&$img, $type)
@@ -158,7 +158,7 @@ function GenerateThumbnail(&$img, $type)
     // figure out what the height needs to be
     $width = imagesx($img);
     $height = imagesy($img);
-    
+
     if ($fit > 0) {
         if ($width > $height) {
             $scale = $fit / $width;
@@ -168,12 +168,12 @@ function GenerateThumbnail(&$img, $type)
     } else {
         $scale = $newWidth / $width;
     }
-    
+
     if( $scale < 1 )
     {
         $newWidth = (int)($width * $scale);
         $newHeight = (int)($height * $scale);
-        
+
         # Create a new temporary image
         $tmp = imagecreatetruecolor($newWidth, $newHeight);
 
@@ -183,14 +183,14 @@ function GenerateThumbnail(&$img, $type)
             $quality = 3;
         fastimagecopyresampled($tmp, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height, $quality);
         imagedestroy($img);
-        $img = $tmp;    
+        $img = $tmp;
         unset($tmp);
     }
 }
 
 /**
 * Send the actual thumbnail back to the user
-* 
+*
 * @param mixed $img
 * @param mixed $type
 */

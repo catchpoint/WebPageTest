@@ -46,7 +46,7 @@ $userImages = true;
           echo "<h3>Step " . $stepResult->readableIdentifier($step) . "</h3>";
         }
         ?>
-        <p>Images are currently being served from the given URL, and may not necessarily match what was loaded at the time of the test.</p>
+        <p>Images are currently being served from the given URL, and might not necessarily match what was loaded at the time of the test.</p>
         <table class="images">
           <?php
           foreach( $requests as &$request ) {

@@ -1,4 +1,4 @@
-<?php 
+<?php
 include 'common.inc';
 
 $headless = false;
@@ -25,7 +25,7 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Website Performance and Optimization Test</title>
+        <title>WebPageTest - Website Performance and Optimization Test</title>
         <?php $gaTemplate = 'Main'; include ('head.inc'); ?>
         <style>
         #description { min-height: 2em; padding-left: 170px; width:380px;}
@@ -55,18 +55,18 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
             if (!$headless) {
             ?>
             <form name="urlEntry" id="urlEntry" action="/runtest.php" method="POST" enctype="multipart/form-data" onsubmit="return ValidateInput(this)">
-            
+
             <?php
             echo '<input type="hidden" name="vo" value="' . htmlspecialchars($owner) . "\">\n";
             if( strlen($secret) ){
               $hashStr = $secret;
               $hashStr .= $_SERVER['HTTP_USER_AGENT'];
               $hashStr .= $owner;
-              
+
               $now = gmdate('c');
               echo "<input type=\"hidden\" name=\"vd\" value=\"$now\">\n";
               $hashStr .= $now;
-              
+
               $hmac = sha1($hashStr);
               echo "<input type=\"hidden\" name=\"vh\" value=\"$hmac\">\n";
             }
@@ -127,7 +127,7 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
             </div>
             <div class="cleared"></div>
             </form>
-            
+
             <?php
             } // $headless
             ?>
@@ -136,7 +136,7 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
         </div>
 
         <script type="text/javascript">
-        <?php 
+        <?php
           echo "var profiles = " . json_encode($profiles) . ";\n";
         ?>
         var wptStorage = window.localStorage || {};
@@ -159,7 +159,7 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
           if (profiles[profile] !== undefined) {
             var d = new Date();
             d.setTime(d.getTime() + (365*24*60*60*1000));
-            document.cookie = "testProfile=" + profile + ";" + "expires=" + d.toUTCString() + ";path=/";          
+            document.cookie = "testProfile=" + profile + ";" + "expires=" + d.toUTCString() + ";path=/";
             if (profiles[profile]['description'] !== undefined)
               description = profiles[profile]['description'];
           }
@@ -167,6 +167,6 @@ $profiles = parse_ini_file('./settings/profiles.ini', true);
         };
         profileChanged();
         </script>
-        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script> 
+        <script type="text/javascript" src="<?php echo $GLOBALS['cdnPath']; ?>/js/test.js?v=<?php echo VER_JS_TEST;?>"></script>
     </body>
 </html>

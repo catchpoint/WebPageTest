@@ -26,9 +26,9 @@ class HttpArchiveGenerator
      * HttpArchiveGenerator constructor.
      *
      * @param $testIfo
-     *          Object of type TestInfo containing infos about the test har file should be created for.
+     *          Object of type TestInfo containing info about the test har file should be created for.
      * @param $options
-     *          Options for har file generation.
+     *          Options for HAR-file generation.
      */
     public function __construct($testInfo, $options) {
         $this->resultData = TestResults::fromFiles($testInfo);
@@ -37,7 +37,7 @@ class HttpArchiveGenerator
     }
 
     /**
-     * Builds up the data set from tests data and provides it json encoded.
+     * Builds up the dataset from test data and provides it JSON-encoded.
      *
      */
     public function generate() {
@@ -46,7 +46,7 @@ class HttpArchiveGenerator
     }
 
     /**
-     * Builds the data set.
+     * Builds the dataset.
      */
     private function buildHAR() {
 
@@ -146,7 +146,7 @@ class HttpArchiveGenerator
         $pd['id'] = "page_{$run}_{$cached}_{$stepNumber}";
         $pd['pageTimings'] = array('onLoad' => $stepData['docTime'], 'onContentLoad' => -1, '_startRender' => $stepData['render']);
 
-        // dump all of our metrics into the har data as custom fields
+        // dump all of our metrics into the HAR data as custom fields
         foreach ($stepData as $name => $value) {
             if (!is_array($value) || isset(HttpArchiveGenerator::$includePageArrays[$name]))
                 $pd["_$name"] = $value;
@@ -362,9 +362,9 @@ class HttpArchiveGenerator
         if (!$timings['dns'])
             $timings['dns'] = -1;
 
-        // HAR did not have an ssl time until version 1.2 .  For
+        // HAR did not have an ssl time until version 1.2.  For
         // backward compatibility, "connect" includes "ssl" time.
-        // WepbageTest's internal representation does not assume any
+        // WebPageTest's internal representation does not assume any
         // overlap, so we must add our connect and ssl time to get the
         // connect time expected by HAR.
         $timings['connect'] = (HttpArchiveGenerator::durationOfInterval($requestData['connect_ms']) +
@@ -376,7 +376,7 @@ class HttpArchiveGenerator
         if (!$timings['ssl'])
             $timings['ssl'] = -1;
 
-        // TODO(skerner): WebpageTest's data model has no way to
+        // TODO(skerner): WebPageTest's data model has no way to
         // represent the difference between the states HAR calls
         // send (time required to send HTTP request to the server)
         // and wait (time spent waiting for a response from the server).
@@ -402,7 +402,7 @@ class HttpArchiveGenerator
             }
         }
 
-        // dump all of our metrics into the har data as custom fields
+        // dump all of our metrics into the HAR data as custom fields
         foreach ($requestData as $name => $value) {
             $entry["_$name"] = $value;
         }
@@ -412,11 +412,11 @@ class HttpArchiveGenerator
     }
 
     /**
-     * Encodes previously build dataset as json.
+     * Encodes previously-built dataset as JSON.
      *
      * @param $options
      * @return mixed|string
-     *          Json encoded harfile.
+     *          JSON-encoded HAR file.
      */
     private function getJsonEncoded($options) {
         $json_encode_good = version_compare(phpversion(), '5.4.0') >= 0 ? true : false;

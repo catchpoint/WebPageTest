@@ -102,12 +102,12 @@ else
                 $test['bg'] = $bgColor;
                 $test['text'] = $textColor;
                 $label = null;
-                
+
                 if (isset($_REQUEST['labelHeight']) && is_numeric($_REQUEST['labelHeight']))
                   $test['labelHeight'] = intval($_REQUEST['labelHeight']);
                 if (isset($_REQUEST['timeHeight']) && is_numeric($_REQUEST['timeHeight']))
                   $test['timeHeight'] = intval($_REQUEST['timeHeight']);
-                
+
                 if (isset($_REQUEST['slow']) && $_REQUEST['slow'])
                   $test['speed'] = 0.2;
 
@@ -128,7 +128,7 @@ else
                             $test['end'] = trim($p[1]);
                         if( $p[0] == 'i' )
                             $test['initial'] = intval(trim($p[1]) * 1000.0);
-                        // Optional Extra info to sync the video with
+                        // Optional extra info to sync the video with
                         if( $p[0] == 'p' )
                             $test['syncStartRender'] = (int)$p[1];
                         if( $p[0] == 'd' )
@@ -201,7 +201,7 @@ else
                 $test['end'] = intval(ceil(floatval($test['end']) / 100.0) * 100.0);
                 $localPaths = new TestPaths('./' . $test['path'], $test["run"], $test["cached"], $test["step"]);
                 $test['videoPath'] = $localPaths->videoDir();
-  
+
                 if ($test['syncStartRender'] || $test['syncDocTime'] || $test['syncFullyLoaded'])
                     $videoIdExtra .= ".{$test['syncStartRender']}.{$test['syncDocTime']}.{$test['syncFullyLoaded']}";
 
@@ -220,7 +220,7 @@ else
                 if (empty($label))
                     $label = trim($stepResult->getUrl());
                 $test['label'] = $label;
-                
+
                 if ($info && isset($info['locationText']))
                     $test['location'] = $info['locationText'];
 

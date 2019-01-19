@@ -432,7 +432,7 @@ $loc = ParseLocations($locations);
                                         <input type="checkbox" name="bodies" id="bodies" class="checkbox" style="float: left;width: auto;">
                                         <label for="bodies" class="auto_width">
                                             Save response bodies<br>
-                                            <small>For text resources</small>
+                                            <small>For text resources (HTML, CSS, etc.)</small>
                                         </label>
                                     </li>
                                     <li>
@@ -588,7 +588,7 @@ $loc = ParseLocations($locations);
                                     <li>
                                         <input type="checkbox" name="wprDesktop" id="wprDesktop" class="checkbox" style="float: left;width: auto;">
                                         <label for="wprDesktop" class="auto_width">
-                                            Use Web Page Replay recorded Desktop Page<br>
+                                            Use Web Page Replay-recorded Desktop Page<br>
                                             <small>Limited list of available <a href="/wprDesktop.txt">URLs</a></small>
                                         </label>
                                     </li>

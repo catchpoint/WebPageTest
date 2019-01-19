@@ -43,7 +43,7 @@ if (isset($_REQUEST['name']) && isset($_FILES['apk']['tmp_name']) && isset($_FIL
             'activity' => 'org.chromium.content_shell_apk.ContentShellActivity',
             'flagsFile' => '/data/local/tmp/content-shell-command-line',
             'socket' => 'localabstract:content_shell_devtools_remote');
-            
+
         file_put_contents("./browsers/$name.json", json_encode($apk_settings));
         $md5 = md5_file("./browsers/$name.apk");
         if ($md5 !== false) {
@@ -68,7 +68,7 @@ if (isset($_REQUEST['name']) && isset($_FILES['apk']['tmp_name']) && isset($_FIL
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Custom Browsers</title>
+        <title>WebPageTest - Custom Browsers</title>
         <meta http-equiv="charset" content="iso-8859-1">
         <meta name="keywords" content="Performance, Optimization, Pagetest, Page Design, performance site web, internet performance, website performance, web applications testing, web application performance, Internet Tools, Web Development, Open Source, http viewer, debugger, http sniffer, ssl, monitor, http header, http header viewer">
         <meta name="description" content="Speed up the performance of your web pages with an automated analysis">
@@ -90,7 +90,7 @@ if (isset($_REQUEST['name']) && isset($_FILES['apk']['tmp_name']) && isset($_FIL
             $tab = 'custom';
             include 'header.inc';
             ?>
-            
+
             <div class="translucent">
                 <?php
                 if (isset($uploadResult)) {
@@ -120,7 +120,7 @@ if (isset($_REQUEST['name']) && isset($_FILES['apk']['tmp_name']) && isset($_FIL
                 DisplayBrowsers('zip');
                 ?>
             </div>
-            
+
             <?php include('footer.inc'); ?>
         </div>
     </body>

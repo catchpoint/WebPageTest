@@ -15,10 +15,10 @@ for($offset = 0; $offset <= $days; $offset++)
 {
     $dayCount = array();
 
-    // figure out the name of the log file
+    // figure out the name of the logfile
     $fileName = './logs/' . $targetDate->format("Ymd") . '.log';
 
-    // load the log file into an array of lines
+    // load the logfile into an array of lines
     $lines = file($fileName, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     if( $lines) {
       foreach($lines as &$line) {
@@ -60,7 +60,7 @@ for($offset = 0; $offset <= $days; $offset++)
 arsort($counts);
 
 
-$title = 'WebPagetest - Check URLs';
+$title = 'WebPageTest - Check URLs';
 include 'admin_header.inc';
 
 echo '<table class="table"><tr><th>Total</th>';

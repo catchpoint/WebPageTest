@@ -69,7 +69,7 @@ for ($offset = 0; $offset <= $days; $offset++) {
 // sort the counts descending
 arsort($counts);
 
-$title = 'WebPagetest - Check IPs';
+$title = 'WebPageTest - Check IPs';
 include 'admin_header.inc';
 
 echo '<table class="table"><tr><th>Total</th>';

@@ -15,7 +15,7 @@ else
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Visual Comparison</title>
+        <title>WebPageTest - Visual Comparison</title>
         <?php $gaTemplate = 'Video Download Error'; include ('head.inc'); ?>
         <style type="text/css">
             div.content
@@ -43,8 +43,8 @@ else
             $tab = null;
             include 'header.inc';
             ?>
-            <h1>The video requested does not exist.</h1>
-            
+            <h1>The requested video does not exist.</h1>
+
             <?php include('footer.inc'); ?>
         </div>
     </body>

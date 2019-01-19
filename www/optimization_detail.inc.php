@@ -96,7 +96,7 @@ function createGradeArray($scores) {
     );
   }
 
-  // define the labels for all  of them
+  // define the labels for all of them
   $opt['ttfb']['label'] = 'First Byte Time';
   $opt['keep-alive']['label'] = 'Keep-alive Enabled';
   $opt['gzip']['label'] = 'Compress Transfer';
@@ -169,7 +169,7 @@ function createGradeArray($scores) {
  * @param int|null $latency The latency or null if it's unknown
  * @param TestPaths $localPaths Paths corresponding to this step
  * @param int $target Gets set to the target TTFB
- * @return int|null The TTFB score or null, if it can't get determined
+ * @return int|null The TTFB score or null, if undetermined
  */
 function gradeTTFBForStep($ttfb, $latency, $localPaths, &$target) {
   $score = null;
@@ -248,7 +248,7 @@ function getTargetTTFBForStep($localPaths, &$rtt) {
       }
     }
 
-    // Set the target based off of the time when the first request was sent (if available)
+    // Set the target derived from the time when the first request was sent (if available)
     $buffer = $latency > 100 ? 150 : 100;
     if (isset($request_start)) {
       $target = $request_start + $rtt + $buffer;

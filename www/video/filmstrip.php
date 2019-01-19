@@ -7,7 +7,7 @@ chdir('..');
 include 'common.inc';
 require_once('page_data.inc');
 require_once('draw.inc');
-include 'video/filmstrip.inc.php';  // include the commpn php shared across the filmstrip code
+include 'video/filmstrip.inc.php';  // include the common PHP shared across the filmstrip code
 
 $colMargin = 5;
 $rowMargin = 5;
@@ -180,7 +180,7 @@ foreach( $tests as &$test ) {
                     imagedestroy($tmp);
                 }
             }
-            
+
             // draw the thumbnail
             $left += $colMargin;
             $width = imagesx($thumb);
@@ -189,11 +189,11 @@ foreach( $tests as &$test ) {
                 imagefilledrectangle($im, $left - 2 + $padding, $top - 2, $left + imagesx($thumb) + 2 + $padding, $top + imagesy($thumb) + 2, $border);
             imagecopy($im, $thumb, $left + $padding, $top, 0, 0, $width, imagesy($thumb));
             $left += $columnWidth + $colMargin;
-            
+
             $lastThumb = $path;
         }
     }
-    
+
     $top += $test['video']['thumbHeight'] + $rowMargin;
 }
 
