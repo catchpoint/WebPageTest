@@ -41,7 +41,7 @@ $page_description = "Publish test results to WebPageTest.";
                 if( isset($pubUrl) && strlen($pubUrl) )
                     echo "The test has been published to $pub and is available here: <a href=\"$pubUrl\">$pubUrl</a>";
                 else
-                    echo "There was an error publishing the results to $pub. Please try again later";
+                    echo "There was an error publishing the results to $pub. Please try again later.";
                 if( FRIENDLY_URLS )
                     echo "</p><p><a href=\"/result/$id/\">Back to the test results</a></p>";
                 else
@@ -164,7 +164,7 @@ function PublishResult()
                     $result = "$pub/results.php?test=$response";
             }
 
-            // delete the zip file
+            // delete the ZIP file
             unlink($zipFile);
         }
     }

@@ -1,12 +1,12 @@
 <?php
 include 'common.inc';
-$page_keywords = array('Custom','Waterfall','Webpagetest','Website Speed Test');
+$page_keywords = array('Custom','Waterfall','WebPageTest','Website Speed Test');
 $page_description = "Website speed test custom waterfall$testLabel";
 ?>
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest Custom Waterfall<?php echo $testLabel; ?></title>
+        <title>WebPageTest Custom Waterfall<?php echo $testLabel; ?></title>
         <?php $gaTemplate = 'Custom Waterfall'; include ('head.inc'); ?>
     </head>
     <body>
@@ -28,7 +28,7 @@ $page_description = "Website speed test custom waterfall$testLabel";
                      Requests (i.e. 1,2,3,4-9,8): <input id="requests" type="text" name="requests" style="width:20em" value="">
                     <button id="update" onclick="javascript:UpdateWaterfall();">Update Waterfall</button><br>
                     <input id="showUT" type="checkbox" checked> Draw lines for User Timing Marks
-                    <input id="showCPU" type="checkbox" checked> Show CPU Utilization 
+                    <input id="showCPU" type="checkbox" checked> Show CPU Utilization
                     <input id="showBW" type="checkbox" checked> Show Bandwidth Utilization <br>
                     <input id="showDots" type="checkbox" checked> Show Ellipsis (...) for missing items
                     <input id="showLabels" type="checkbox" checked> Show Labels for requests (URL)
@@ -41,13 +41,13 @@ $page_description = "Website speed test custom waterfall$testLabel";
                     $extension = 'png';
                 echo "<img id=\"waterfallImage\" style=\"display: block; margin-left: auto; margin-right: auto;\" alt=\"Waterfall\" src=\"/waterfall.$extension?test=$id&run=$run&cached=$cached&step=$step&cpu=1&bw=1&ut=1&mime=1\">";
             ?>
-            
+
             <?php include('footer.inc'); ?>
         </div>
 
         <script type="text/javascript">
-            $(document).ready(function(){ 
-                
+            $(document).ready(function(){
+
                 // handle when the selection changes for the location
                 $("input[name=type]").click(function(){
                     // disable the requests for connection view
@@ -56,10 +56,10 @@ $page_description = "Website speed test custom waterfall$testLabel";
                         $('#requests').attr("disabled", "disabled");
                     else
                         $('#requests').removeAttr("disabled");
-                    
+
                     UpdateWaterfall();
                 });
-                
+
                 $("input[name=coloring]").click(function(){
                     UpdateWaterfall();
                 });
@@ -70,13 +70,13 @@ $page_description = "Website speed test custom waterfall$testLabel";
 
                 // reset the wait cursor when the image loads
                 $('#waterfallImage').load(function(){
-                    $('body').css('cursor', 'default'); 
+                    $('body').css('cursor', 'default');
                 });
             });
-            
+
             function UpdateWaterfall()
             {
-                $('body').css('cursor', 'wait'); 
+                $('body').css('cursor', 'wait');
                 var type = $('input[name=type]:checked').val();
                 var coloring = $('input[name=coloring]:checked').val();
                 var mime = 0;
@@ -107,20 +107,20 @@ $page_description = "Website speed test custom waterfall$testLabel";
                 echo "var extension='$extension';\n";
                 echo "var step='$step';\n";
                 ?>
-                
-                var src = '/waterfall.' + extension + '?test=' + testId + 
-                          '&run=' + testRun + 
+
+                var src = '/waterfall.' + extension + '?test=' + testId +
+                          '&run=' + testRun +
                           '&cached=' + cached +
                           '&step=' + step +
-                          '&max=' + max + 
-                          '&width=' + width + 
-                          '&type=' + type + 
-                          '&mime=' + mime + 
-                          '&ut=' + showUT + 
-                          '&cpu=' + showCPU + 
-                          '&bw=' + showBW + 
-                          '&dots=' + showDots + 
-                          '&labels=' + showLabels + 
+                          '&max=' + max +
+                          '&width=' + width +
+                          '&type=' + type +
+                          '&mime=' + mime +
+                          '&ut=' + showUT +
+                          '&cpu=' + showCPU +
+                          '&bw=' + showBW +
+                          '&dots=' + showDots +
+                          '&labels=' + showLabels +
                           '&requests=' + requests;
                 $('#waterfallImage').attr("src", src);
             };

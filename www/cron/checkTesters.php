@@ -76,9 +76,9 @@ class MyDOMDocument extends DOMDocument
             foreach ($oDomNode->childNodes as $oChildNode) {
                 // how many of these child nodes do we have?
                 // this will give us a clue as to what the result structure should be
-                $oChildNodeList = $oDomNode->getElementsByTagName($oChildNode->nodeName); 
+                $oChildNodeList = $oDomNode->getElementsByTagName($oChildNode->nodeName);
                 $iChildCount = 0;
-                // there are x number of childs in this node that have the same tag name
+                // there are x number of children in this node that have the same tag name
                 // however, we are only interested in the # of siblings with the same tag name
                 foreach ($oChildNodeList as $oNode) {
                     if ($oNode->parentNode->isSameNode($oChildNode->parentNode)) {

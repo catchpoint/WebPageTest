@@ -20,7 +20,7 @@
         }
         DealWithMagicQuotes($GLOBALS);
     }
-    
+
     // see if we are loading the test settings from a profile
     if (isset($_REQUEST['profile']) && is_file(__DIR__ . '/settings/profiles.ini')) {
       $profiles = parse_ini_file(__DIR__ . '/settings/profiles.ini', true);
@@ -51,7 +51,7 @@
         $headless = true;
     }
 
-    // load the location information
+    // Load the location information
     $locations = LoadLocationsIni();
     // See if we need to load a subset of the locations
     if (!$privateInstall) {
@@ -97,12 +97,12 @@
       }
     }
 
-    // see if we are running a relay test
+    // See if we are running a relay test
     if( @strlen($req_rkey) )
         RelayTest();
     else
     {
-        // see if we're re-running an existing test
+        // See if we're re-running an existing test
         if( isset($test) )
             unset($test);
         if (array_key_exists('resubmit', $_POST)) {
@@ -117,7 +117,7 @@
           }
         }
 
-        // pull in the test parameters
+        // Pull in the test parameters
         if( !isset($test) )
         {
             $test = array();
@@ -226,7 +226,7 @@
                 strpos($test['traceCategories'], "\n") === false &&
                 trim($test['traceCategories']) != "*") {
               $test['traceCategories'] = $_REQUEST['traceCategories'];
-            }                                                                                                           
+            }
             if (isset($req_standards))
               $test['standards'] = $req_standards;
             if (isset($req_netlog))
@@ -298,10 +298,10 @@
 
             if (array_key_exists('tsview_id', $_REQUEST)){
               $test['tsview_id'] = $_REQUEST['tsview_id'];
-              
+
               $protocol = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_SSL']) && $_SERVER['HTTP_SSL'] == 'On')) ? 'https' : 'http';
               $test['tsview_results_host'] = "{$protocol}://{$_SERVER['HTTP_HOST']}";
-             
+
               // tsview_configs format: KEY>VALUE,KEY>VALUE,......
               if (array_key_exists('tsview_configs', $_REQUEST))
                $test['tsview_configs'] = $_REQUEST['tsview_configs'];
@@ -479,7 +479,7 @@
             // login tests are forced to be private
             if( isset($test['login']) && strlen($test['login']) )
                 $test['private'] = 1;
-                
+
             if (!$test['browser_width'] || !$test['browser_height']) {
               $browser_size = GetSetting('default_browser_size');
               if ($browser_size) {
@@ -494,7 +494,7 @@
                 }
               }
             }
-            
+
             // Tests that include credentials in the URL (usually indicated by @ in the host section) are forced to be private
             $atPos = strpos($test['url'], '@');
             if ($atPos !== false) {
@@ -503,7 +503,7 @@
                 $test['private'] = 1;
               }
             }
-            
+
             // If API requests explicitly mark tests as not-private, allow it
             if (($_SERVER['REQUEST_METHOD'] == 'GET' || $xml || $json) && isset($_REQUEST['private']) && !$_REQUEST['private'] && !GetSetting('forcePrivate')) {
                 $test['private'] = 0;
@@ -568,7 +568,7 @@
             }
 
             if (array_key_exists('heroElements', $_REQUEST)) {
-              // Custom hero element selectors should be specified as a JSON string
+              // Custom hero-element selectors should be specified as a JSON string
               // in { heroName: selector[, heroName2: selector2[, ...]] } format.
               $heroElements = json_decode($_REQUEST['heroElements']);
               if (is_object($heroElements)) {
@@ -584,7 +584,7 @@
               }
             }
 
-            // Force some test options when running a lighthouse-only test
+            // Force some test options when running a Lighthouse-only test
             if (isset($test['type']) && $test['type'] == 'lighthouse') {
               $test['lighthouse'] = 1;
               $test['runs'] = 1;
@@ -626,7 +626,7 @@
                 unset($test['spam']);
             $test['priority'] =  0;
         }
-        
+
         if ($test['mobile'] && is_file('./settings/mobile_devices.ini')) {
           $devices = parse_ini_file('./settings/mobile_devices.ini', true);
           if ($devices) {
@@ -650,7 +650,7 @@
               $test['throttle_cpu'] = $devices[$test['mobileDevice']]['throttle_cpu'];
           }
         }
-        
+
         $test['created'] = time();
 
         // the API key requirements are for all test paths
@@ -748,13 +748,13 @@
                         UpdateLocation($testData, $locations, $location_string, $error);
                         if (strlen($error))
                           break;
-                          
+
                         $id = CreateTest($testData, $testData['url']);
                         if( isset($id) )
                             $test['tests'][] = array('url' => $test['url'], 'id' => $id);
                     }
 
-                    // write out the list of urls and the test ID for each
+                    // write out the list of URLs and the test ID for each
                     if (!strlen($error)) {
                       if( count($test['tests']) )
                       {
@@ -767,7 +767,7 @@
                 }
                 elseif( isset($test['batch']) && $test['batch'] )
                 {
-                    // build up the full list of urls
+                    // build up the full list of URLs
                     $bulk = array();
                     $bulk['urls'] = array();
                     $bulk['variations'] = array();
@@ -898,23 +898,23 @@
                             }
                         }
 
-                        // write out the list of urls and the test ID for each
+                        // write out the list of URLs and the test ID for each
                         if( $testCount )
                         {
                             $path = GetTestPath($test['id']);
                             gz_file_put_contents("./$path/bulk.json", json_encode($bulk));
                         }
                         else
-                            $error = 'Urls could not be submitted for testing';
+                            $error = 'URLs could not be submitted for testing';
                     }
                     else
-                        $error = "No valid urls submitted for bulk testing";
+                        $error = "No valid URLs submitted for bulk testing";
                 }
                 else
                 {
                     $test['id'] = CreateTest($test, $test['url']);
                     if( !$test['id'] && !strlen($error) )
-                        $error = 'Error submitting url for testing';
+                        $error = 'Error submitting URL for testing';
                 }
             }
 
@@ -1144,7 +1144,7 @@ function ValidateKey(&$test, &$error, $key = null)
   global $uid;
   global $user;
   global $this_user;
-  
+
   // load the secret key (if there is one)
   $secret = '';
   $keys = parse_ini_file('./settings/keys.ini', true);
@@ -1188,7 +1188,7 @@ function ValidateKey(&$test, &$error, $key = null)
     }elseif( isset($key) || (isset($test['key']) && strlen($test['key'])) ){
       if( isset($test['key']) && strlen($test['key']) && !isset($key) )
         $key = $test['key'];
-      
+
       // see if it was an auto-provisioned key
       if (preg_match('/^(?P<prefix>[0-9A-Za-z]+)\.(?P<key>[0-9A-Za-z]+)$/', $key, $matches)) {
         $prefix = $matches['prefix'];
@@ -1201,7 +1201,7 @@ function ValidateKey(&$test, &$error, $key = null)
             $keys[$key] = array('limit' => $info['key_limit']);
         }
       }
-      
+
       // validate their API key and enforce any rate limits
       if( array_key_exists($key, $keys) ){
         if (array_key_exists('default location', $keys[$key]) &&
@@ -1353,7 +1353,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
                 $test[$value] = 0;
             }
             $test['aft'] = 0;
-            
+
             // use the default location if one wasn't specified
             if( !strlen($test['location']) )
             {
@@ -1379,7 +1379,7 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
               $test['lat'] = floatval($test_loc['lat']);
               $test['lng'] = floatval($test_loc['lng']);
             }
-            
+
             // Use the default browser if one wasn't specified
             if ((!isset($test['browser']) || !strlen($test['browser'])) && isset($locations[$test['location']]['browser'])) {
               $browsers = explode(',', $locations[$test['location']]['browser']);
@@ -1398,12 +1398,12 @@ function ValidateParameters(&$test, $locations, &$error, $destination_url = null
             // see if we need to override the browser
             if( isset($locations[$test['location']]['browserExe']) && strlen($locations[$test['location']]['browserExe']))
                 $test['browserExe'] = $locations[$test['location']]['browserExe'];
-                
+
             // See if we need to force mobile emulation
             if (!$test['mobile'] && isset($locations[$test['location']]['force_mobile']) && $locations[$test['location']]['force_mobile'])
               $test['mobile'] = 1;
-            
-            // See if the location carries a timeout override 
+
+            // See if the location carries a timeout override
             if (!isset($test['timeout']) && isset($locations[$test['location']]['timeout']) && $locations[$test['location']]['timeout'] > 0)
               $test['timeout'] = intval($locations[$test['location']]['timeout']);
 
@@ -1636,7 +1636,7 @@ function ScriptParameterCount($command)
 * @param mixed $error
 */
 function ValidateURL(&$url, &$error, &$settings)
-{                
+{
     $ret = false;
 
     // make sure the url starts with http://
@@ -1858,7 +1858,7 @@ function LogTest(&$test, $testId, $url)
 {
     if (GetSetting('logging_off'))
         return;
-        
+
     if( !is_dir('./logs') )
         mkdir('./logs', 0777, true);
 
@@ -1995,14 +1995,14 @@ function CheckUrl($url)
       }
     }
   }
-  
+
   if ($ok && !$admin && !$usingAPI) {
     $ok = SBL_Check($url, $message);
     if (!$ok) {
-      $error = "<br>Sorry, your test was blocked because " . htmlspecialchars($url) . " is suspected of being used for 
-      <a href=\"https://www.antiphishing.org/\">phishing</a> or 
+      $error = "<br>Sorry, your test was blocked because " . htmlspecialchars($url) . " is suspected of being used for
+      <a href=\"https://www.antiphishing.org/\">phishing</a> or
       <a href=\"http://www.stopbadware.org/\">hosting malware</a>.
-      <br><br>Advisory provided by 
+      <br><br>Advisory provided by
       <a href=\"http://code.google.com/apis/safebrowsing/safebrowsing_faq.html#whyAdvisory\">Google</a>.";
       logMsg("{$_SERVER['REMOTE_ADDR']}: $url failed Safe Browsing check: $message", "./log/{$date}-blocked.log", true);
     }
@@ -2011,7 +2011,7 @@ function CheckUrl($url)
   return $ok;
 }
 
-/** 
+/**
 * Add a single entry to ini-style files
 * @param mixed $ini
 * @param mixed $key
@@ -2038,7 +2038,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
 
     if (CheckUrl($url) && WptHookValidateTest($test)) {
         $locationShard = isset($test['locationShard']) ? $test['locationShard'] : null;
-        
+
         // generate the test ID
         $test_num;
         $id = uniqueId($test_num);
@@ -2303,7 +2303,7 @@ function CreateTest(&$test, $url, $batch = 0, $batch_locations = 0)
         // log the test
         if (isset($testId)) {
           logTestMsg($testId, "Test Created");
-          
+
           // store the entire test data structure JSON encoded (instead of a bunch of individual files)
           $oldUrl = @$test['url'];
           $test['url'] = $url;
@@ -2379,7 +2379,7 @@ function ParseBulkUrl($line)
 }
 
 /**
-* Parse the url variation from the bulk data
+* Parse the URL variation from the bulk data
 * in the format:
 * <label>=<query param>
 *
@@ -2573,7 +2573,7 @@ function ErrorPage($error) {
     <!DOCTYPE html>
     <html>
         <head>
-            <title>WebPagetest - Test Error</title>
+            <title>WebPageTest - Test Error</title>
             <?php $gaTemplate = 'Test Error'; include ('head.inc'); ?>
         </head>
         <body>
@@ -2655,14 +2655,14 @@ function ProcessTestScript($url, &$test) {
 /**
 * Break up the supplied command-line string and make sure it isn't using
 * invalid characters that may cause system issues.
-* 
+*
 * @param mixed $cmd
 * @param mixed $error
 */
 function ValidateCommandLine($cmd, &$error) {
   if (isset($cmd) && strlen($cmd)) {
     $flags = explode(' ', $cmd);
-    if ($flags && is_array($flags) && count($flags)) {                
+    if ($flags && is_array($flags) && count($flags)) {
       foreach($flags as $flag) {
         if (strlen($flag) && !preg_match('/^--(([a-zA-Z0-9\-\.\+=,_< "]+)|((data-reduction-proxy-http-proxies|data-reduction-proxy-config-url|proxy-server|proxy-pac-url|force-fieldtrials|force-fieldtrial-params|trusted-spdy-proxy|origin-to-force-quic-on|oauth2-refresh-token)=[a-zA-Z0-9\-\.\+=,_:\/"%]+))$/', $flag)) {
           $error = 'Invalid command-line option: "' . htmlspecialchars($flag) . '"';

@@ -143,7 +143,7 @@ $page_description = "Website performance test result$testLabel.";
                     $fvMedian = $testResults->getMedianRunNumber($median_metric, false);
                     $rvMedian = $testResults->getMedianRunNumber($median_metric, true);
 
-                    // create a friendlier (unique) name for the fi
+                    // create friendlier (unique) names for the file URLs
                     $fileUrl = GetFileUrl($url);
                     if( FRIENDLY_URLS )
                     {

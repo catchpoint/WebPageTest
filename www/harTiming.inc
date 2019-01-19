@@ -5,7 +5,7 @@
  * A value of -1 or the absence of an event key from the record indicates
  * that an event did not occur.
  *
- * An event that takes 0 milliseconds is considered to have occured.  We
+ * An event which takes 0 milliseconds is considered to have occured.  We
  * assume that it actually took time, but was rounded down.
  */
 function harTimingEventOccured($harTimingsRec, $eventName) {
@@ -29,7 +29,7 @@ function harTimingEventOccured($harTimingsRec, $eventName) {
  *
  * Used on time intervals from HAR files, where -1 or unset or null means
  * "unknown".  When drawing an unknown time in a waterfall, we show unknown
- * times as no time, so $default will be 0 .
+ * times as no time, so $default will be 0.
  */
 function positiveNumberKeyOrDefault($harTimingsRec, $eventName, $default) {
   if (!array_key_exists($eventName, $harTimingsRec))
@@ -47,10 +47,10 @@ function positiveNumberKeyOrDefault($harTimingsRec, $eventName, $default) {
 
 /**
  * Given the timings field and start time of a HAR request, construct
- * and return an array with the start, end and duration of each event type.
+ * and return an array with the start, end, and duration of each event type.
  */
 function convertHarTimesToStartEndDuration($harTimingsRec, $entryTime) {
-  // A HAR timing record includes the duration of several events.
+  // A HAR-timing record includes the duration of several events.
   // ssl overlaps connect.  Otherwise, all events happen one at a time in
   // order:
   //
@@ -98,7 +98,7 @@ function convertHarTimesToStartEndDuration($harTimingsRec, $entryTime) {
                       "time.  Probably a bug in the HAR generator.  Timing ".
                       "record is: " . print_r($harTimingsRec, true));
 
-    // Alter teh ssl timing to conform to the spec.
+    // Alter the ssl timing to conform to the spec.
     $eventTimes['ssl']['start'] = $eventTimes['connect']['start'];
     $eventTimes['ssl']['ms']    = $eventTimes['connect']['ms'];
   }
@@ -108,7 +108,7 @@ function convertHarTimesToStartEndDuration($harTimingsRec, $entryTime) {
 
 /**
  * Given the timings field and start time of a HAR request, construct and
- * return an array with the times WebpageTest uses for storage.
+ * return an array with the times WebPageTest uses for storage.
  *
  * TODO(skerner): object_detail.inc:FixUpRequestTimes() defines an object
  * with request timing that is almost the same, but slightly different.
@@ -118,7 +118,7 @@ function convertHarTimesToStartEndDuration($harTimingsRec, $entryTime) {
 function convertHarTimesToWebpageTestTimes($harTimingsRec, $entryTime) {
   $harTimes = convertHarTimesToStartEndDuration($harTimingsRec, $entryTime);
 
-  // WebpageTest records timing using a different set of events and deltas
+  // WebPageTest records timing using a different set of events and deltas
   // than HAR.  To understand them, it helps to look at a timeline.
   //
   // Arrows ( \|/ ) denote a point in time, encoded as an integer number of
@@ -151,7 +151,7 @@ function convertHarTimesToWebpageTestTimes($harTimingsRec, $entryTime) {
 
 
   // If no DNS request was recorded, set dns start and end times to 0.
-  // The same rule applies to all webpagetest intervals.
+  // The same rule applies to all WebPageTest intervals.
   if (harTimingEventOccured($harTimingsRec, 'dns')) {
     $wptTimes['dns_start'] = $harTimes['dns']['start'];
     $wptTimes['dns_end'  ] = $harTimes['dns']['end'];

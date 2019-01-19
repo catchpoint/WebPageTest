@@ -7,7 +7,7 @@ require_once('contentColors.inc');
 require_once __DIR__ . '/include/TestInfo.php';
 require_once __DIR__ . '/include/TestRunResults.php';
 
-// not functional, but to declare what to expect from common.inc
+// not functional; just to declare what to expect from common.inc
 global $testPath, $run, $cached, $step, $id, $url, $test;
 $testInfo = TestInfo::fromFiles($testPath);
 $testStepResult = TestStepResult::fromFiles($testInfo, $run, $cached, $step);
@@ -36,7 +36,7 @@ foreach ($requests as $request) {
       $row = array($data, "", $tooltip);
       $row_data[] = $row;
     }
-    
+
     // Create the row entry for the request
     $parent = $connection;
     if (isset($request['http2_stream_dependency']) && $request['http2_stream_dependency'] != 0) {
@@ -58,7 +58,7 @@ foreach ($requests as $request) {
     $row = array($data, $parent, $tooltip);
     $row_data[] = $row;
     $streams[$id] = $id;
-    
+
     // Set the coloring for the cell
     $row_num = strval(count($row_data) - 1);
     $style = "";
@@ -76,7 +76,7 @@ foreach ($requests as $request) {
   }
 }
 
-// Go through all of the parents and make sure nodes exist for all of them.
+// Go through all parents and ensure nodes exist for each.
 foreach ($parents as $id => $connection) {
   if (!isset($streams[$id])) {
     // special-case the Firefox ghost streams
@@ -135,7 +135,7 @@ function get_short_path($path) {
           border: 2px solid #b5d9ea;
           background-color: #edf7ff;
           white-space: nowrap;
-      }    
+      }
     </style>
     <script src="https://www.gstatic.com/charts/loader.js"></script>
     <script>
@@ -151,7 +151,7 @@ function get_short_path($path) {
         <?php
         // Add the actual chart data
         echo 'data.addRows(' . json_encode($row_data) . ");\n";
-        
+
         // Add the node-specific styles
         foreach($styles as $row_num => $style) {
           echo "data.setRowProperty($row_num, 'style', '$style');\n";

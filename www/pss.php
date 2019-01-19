@@ -26,7 +26,7 @@ $page_description = "Comparison Test$testLabel.";
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Comparison Test</title>
+        <title>WebPageTest - Comparison Test</title>
         <?php $gaTemplate = 'PSS'; include ('head.inc'); ?>
     </head>
     <body>

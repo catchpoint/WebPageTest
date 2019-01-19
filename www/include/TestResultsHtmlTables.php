@@ -162,7 +162,7 @@ class TestResultsHtmlTables {
     $out .=  "<th align=\"center\" class=\"empty\" valign=\"middle\"></th>\n";
     $out .=  "<th align=\"center\" valign=\"middle\">Waterfall</th>\n";
     if ($this->hasScreenshots) {
-      $out .=  '<th align="center" valign="middle">Screen Shot</th>';
+      $out .=  '<th align="center" valign="middle">Screenshot</th>';
     }
     if ($this->hasVideo) {
       $out .=  '<th align="center" valign="middle">Video</th>';
@@ -321,7 +321,7 @@ class TestResultsHtmlTables {
     $out .= "<a href=\"$downloadUrl\" title=\"Download Chrome Dev Tools Timeline\">Timeline</a>\n";
     $out .= " (<a href=\"$viewUrl\" target=\"_blank\" title=\"View Chrome Dev Tools Timeline\">view</a>)\n";
     $out .= "<br>\n";
-    $out .= "<a href=\"$breakdownUrl\" title=\"View browser main thread activity by event type\">Processing Breakdown</a>";
+    $out .= "<a href=\"$breakdownUrl\" title=\"View browser main-thread activity by event type\">Processing Breakdown</a>";
     return $out;
   }
 

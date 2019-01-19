@@ -25,7 +25,7 @@ if( isset($test['test']) )
             {
                 if( CancelTest($testData['id']) )
                     $count++;
-                    
+
                 foreach( $testData['v'] as $variationIndex => $variationId )
                 {
                     if( CancelTest($variationId) )
@@ -40,14 +40,14 @@ if( isset($test['test']) )
         if( CancelTest($id) )
             echo '<h3 align="center">Test cancelled!</h3>';
         else
-          echo '<h3>Sorry, the test could not be cancelled.  It may have already started or been cancelled</h3>';
+          echo '<h3>Sorry, the test could not be cancelled.  It might have already started or been cancelled</h3>';
     }
     echo '<form><input type="button" value="Back" onClick="history.go(-1);return true;"> </form>';
 }
 
 /**
 * Cancel and individual test
-* 
+*
 * @param mixed $id
 * @return bool
 */

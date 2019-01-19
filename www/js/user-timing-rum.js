@@ -1,6 +1,6 @@
 // Support routines for automatically reporting user timing for common analytics platforms
 // Currently supports Google Analytics, Boomerang and SOASTA mPulse
-// In the case of boomerang, you will need to map the event names you want reported
+// In the case of Boomerang, you will need to map the event names you want reported
 // to timer names (for mPulse these need to be custom0, custom1, etc) using a global variable:
 // rumMapping = {'aft': 'custom0'};
 (function() {
@@ -10,7 +10,7 @@ var wtt = function(n, t, b) {
     // Google Analytics
     if (!b && window['_gaq'])
       _gaq.push(['_trackTiming', 'UserTimings', n, t]);
-      
+
     // Boomerang/mPulse
     if (b && window['rumMapping'] && window.rumMapping[n])
       BOOMR.plugins.RT.setTimer(window.rumMapping[n], t);
@@ -36,9 +36,9 @@ utReportRUM = function(b){
 };
 utOnLoad = function() {utReportRUM(false);};
 if (window['addEventListener'])
-    window.addEventListener('load', utOnLoad, false);   
+    window.addEventListener('load', utOnLoad, false);
 else if (window['attachEvent'])
-    window.attachEvent('onload', utOnLoad);  
+    window.attachEvent('onload', utOnLoad);
 
 // Boomerang/mPulse support
 utSent = false;

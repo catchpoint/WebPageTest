@@ -32,7 +32,7 @@ $autoplay = 'false';
 if (array_key_exists('autoplay', $_REQUEST) && $_REQUEST['autoplay'])
     $autoplay = 'true';
 
-$page_keywords = array('Video','comparison','Webpagetest','Website Speed Test');
+$page_keywords = array('Video','comparison','WebPageTest','Website Speed Test');
 $page_description = "Side-by-side video comparison of website performance.";
 
 $xml = false;
@@ -45,7 +45,7 @@ if( array_key_exists('f', $_REQUEST)) {
 }
 
 $ini = null;
-$title = "WebPagetest - Visual Comparison";
+$title = "WebPageTest - Visual Comparison";
 
 $dir = GetVideoPath($videoId, true);
 if( is_dir("./$dir") )
@@ -59,7 +59,7 @@ if( is_dir("./$dir") )
             GenerateVideoThumbnail("./$dir");
         }
     }
-    
+
     // get the video time
     $date = gmdate("M j, Y", filemtime("./$dir"));
     if( is_file("./$dir/video.mp4")  )
@@ -77,7 +77,7 @@ if( is_dir("./$dir") )
             $title .= $label;
         }
     }
-    
+
     $location = null;
     if (gz_is_file("./$dir/testinfo.json")) {
         $tests = json_decode(gz_file_get_contents("./$dir/testinfo.json"), true);
@@ -179,11 +179,11 @@ else
             <?php
         }
         ?>
-        <?php 
+        <?php
             if( !$embed )
             {
-                $gaTemplate = 'Video'; 
-                include ('head.inc'); 
+                $gaTemplate = 'Video';
+                include ('head.inc');
             }
         ?>
         <style type="text/css">
@@ -333,10 +333,10 @@ else
             else
                 echo '<h1>The requested video does not exist.  Please try creating it again and if the problem persists please contact us.</h1>';
             ?>
-            
-            <?php 
+
+            <?php
                 if (!$embed)
-                    include('footer.inc'); 
+                    include('footer.inc');
             ?>
         </div>
         <script>
@@ -362,9 +362,9 @@ else
         </script>
         <div id="embed" style="display:none;">
             <h3>Video Embed</h3>
-            <p>Copy and past the code below into a website to embed the video.</p>  
-            <p>You can adjust the size of the video as necessary by changing the 
-            width and height parameters<br>(make sure to change both the parameters on 
+            <p>Copy and past the code below into a website to embed the video.</p>
+            <p>You can adjust the size of the video as necessary by changing the
+            width and height parameters<br>(make sure to change both the parameters on
             the src URL and the iFrame).</p>
             <p id="embed-code">
             <?php

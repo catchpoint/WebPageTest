@@ -159,7 +159,7 @@ function PopulateResult() {
     VisualProgressEMDPath($progress, 'EMD Path');
     DisplayResults($progress);
   } else {
-    echo '<p>Select a video in the list to see it\'s analysis</p>';
+    echo '<p>Select a video in the list to see its analysis</p>';
   }
 }
 
@@ -432,8 +432,8 @@ function VisualProgressEMDPath(&$progress, $label, $colorSpace = 'RGB') {
 
 
 /**
-* Calculate a RGB histogram excluding white pixels
-* 
+* Calculate an RGB histogram excluding white pixels
+*
 * @param mixed $image_file
 * @param mixed $ignoreWhite - bool - should white pixels be ignored
 * @param mixed $colorSpace - string - RGB, HSV or YUV
@@ -501,10 +501,10 @@ function Histogram($image_file, $ignoreWhite, $colorSpace = 'RGB') {
   To do this, calculate the difference in one bucket between the two
   histograms. Then carry it over in the calculation for the next bucket.
   In this way, the difference is weighted by how far it has to move.
-  
+
   Adapted from the Chromium Implementation:
   https://code.google.com/p/chromium/codesearch#chromium/src/tools/telemetry/telemetry/core/bitmap.py&l=24
-  
+
   if len(hist1) != len(hist2):
     raise ValueError('Trying to compare histograms '
       'of different sizes, %s != %s' % (len(hist1), len(hist2)))
@@ -525,8 +525,8 @@ function Histogram($image_file, $ignoreWhite, $colorSpace = 'RGB') {
       '%s pixel(s) left over after computing histogram distance.'
       % abs(remainder))
   return abs(float(total) / n1 / n2)
-    
-* 
+
+*
 * @param mixed $start
 * @param mixed $end
 */
@@ -612,7 +612,7 @@ function CalculateFrameProgress(&$histogram, &$start_histogram, &$final_histogra
     $total = 0;
     $achieved = 0;
     $buckets = count($values);
-    for ($i = 0; $i < $buckets; $i++) 
+    for ($i = 0; $i < $buckets; $i++)
       $total += abs($final_histogram[$channel][$i] - $start_histogram[$channel][$i]);
     for ($i = 0; $i < $buckets; $i++)
       $achieved += min(abs($final_histogram[$channel][$i] - $start_histogram[$channel][$i]), abs($histogram[$channel][$i] - $start_histogram[$channel][$i]));

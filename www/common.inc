@@ -87,17 +87,17 @@ if (array_key_exists('HTTP_USER_AGENT', $_SERVER) &&
 
 // constants
 define('VER_WEBPAGETEST', '18.10');   // webpagetest version
-define('VER_CSS', 74);           // version of the sitewide css file
-define('VER_JS', 33);            // version of the sitewide javascript file
-define('VER_JS_TEST', 41);       // version of the javascript specific to the test pages
-define('VER_JS_RUNNING', 1);     // version of the javascript specific to the test running status page
-define('UNKNOWN_TIME', -1);      // Value used as a flag for an unknown time.
-                                 // To find code that fails to check that a time
-                                 // is unknown, change this constant to a large
-                                 // negative number.
+define('VER_CSS', 74);                // version of the sitewide css file
+define('VER_JS', 33);                 // version of the sitewide javascript file
+define('VER_JS_TEST', 41);            // version of the javascript specific to the test pages
+define('VER_JS_RUNNING', 1);          // version of the javascript specific to the test running status page
+define('UNKNOWN_TIME', -1);           // Value used as a flag for an unknown time.
+                                      // To find code that fails to check that a time
+                                      // is unknown, change this constant to a large
+                                      // negative number.
 
 // SEO stuff
-$page_keywords = array('Webpagetest','Website Speed Test','Page Speed');
+$page_keywords = array('WebPageTest','Website Speed Test','Page Speed');
 $page_description = "Run a free website speed test from around the globe using real browsers at consumer connection speeds with detailed optimization recommendations.";
 
 $tempDir = './tmp';
@@ -332,11 +332,11 @@ if (strlen($id)) {
         if( isset($testDate) && strlen($testDate) )
             $testLabel .= " - $testDate";
     }
-    
+
     if (!isset($test)) {
         $test = array();
     }
-    
+
     if (!array_key_exists('testinfo', $test)) {
         $test['testinfo'] = array();
     }

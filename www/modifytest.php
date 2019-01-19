@@ -1,7 +1,7 @@
 <?php
 include 'common.inc';
 
-// Handle an Ajax call to update a test ID
+// Handle an AJAX call to update a test ID
 if (isset($_POST['label']) && isset($_POST['testID'])) {
     $new_label = $_POST['label'];
     $update_label_result = updateLabel($_POST['testID'], $new_label, $uid, $user, $owner);

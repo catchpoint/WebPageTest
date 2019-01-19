@@ -27,7 +27,7 @@ if (!Initialized()) {
   }
 }
 
-// go back to whatever working directory was being used before running the script
+// go back to whichever working directory was being used before running the script
 chdir($dir);
 
 function UpdateSettings() {
