@@ -191,6 +191,7 @@ CDN_PROVIDER cdnList[] = {
   {".streamprovider.net", "Rocket CDN"},
   {".singularcdn.net.br", "Singular CDN"},
   {"myracloud.com", "Myracloud"},
+  {".fontawesome.com", "Font Awesome"},
   {"END_MARKER", "END_MARKER"}
 };
 
@@ -242,7 +243,8 @@ CDN_PROVIDER_HEADER cdnHeaderList[] = {
   {"server", "MNCDN", "Medianova"},
   {"server", "Roast.io", "Roast.io"},
   {"server", "SingularCDN", "Singular CDN"},
-  {"x-rocket-node", "", "Rocket CDN"}
+  {"x-rocket-node", "", "Rocket CDN"},
+  {"server", "Fly.io", "Fly.io"}
 };
 
 // Specific providers that require multiple headers
