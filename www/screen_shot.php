@@ -138,7 +138,7 @@ function printQuicklinks($testRunResults) {
         $class = ($i % 2 == 0) ? " class='even'" : "";
         echo '<tr' . $class . '>';
         echo '<th>' . $testRunResults->getStepResult($i)->readableIdentifier() . '</th>';
-        echo '<td><a href="#step_' . $i . '">Screen Shots</a></td>';
+        echo '<td><a href="#step_' . $i . '">Screenshots</a></td>';
         echo '</tr>';
     }
     echo '</tbody>';
@@ -182,7 +182,7 @@ function printStep($fileHandler, $testInfo, $testStepResult, $useQuicklinks) {
     if ($screenShotUrl) {
         echo '<h2>Fully Loaded</h2>';
         echo '<a href="' . $screenShotUrl . '">';
-        echo '<img class="center" alt="Screen Shot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="' . $screenShotUrl .'">';
+        echo '<img class="center" alt="Screenshot" style="max-width:930px; -ms-interpolation-mode: bicubic;" src="' . $screenShotUrl .'">';
         echo '</a>';
     }
 

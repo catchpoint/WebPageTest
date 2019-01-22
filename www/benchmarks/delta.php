@@ -3,7 +3,7 @@ chdir('..');
 include 'common.inc';
 require_once('./benchmarks/data.inc.php');
 $page_keywords = array('Benchmarks','Webpagetest','Website Speed Test','Page Speed');
-$page_description = "WebPagetest benchmark test details";
+$page_description = "WebPageTest benchmark test details";
 $benchmark = '';
 if (array_key_exists('benchmark', $_REQUEST)) {
     $benchmark = $_REQUEST['benchmark'];
@@ -30,46 +30,46 @@ else {
         }
     }
 }
-$metrics = array('docTime' => 'Load Time (onload)', 
+$metrics = array('docTime' => 'Load Time (onload)',
                 'SpeedIndex' => 'Speed Index',
-                'TTFB' => 'Time to First Byte', 
+                'TTFB' => 'Time to First Byte',
                 'basePageSSLTime' => 'Base Page SSL Time',
-                'titleTime' => 'Time to Title', 
-                'render' => 'Time to Start Render', 
-                'chromeUserTiming.firstContentfulPaint' => 'Time to First Contentful Paint', 
-                'chromeUserTiming.firstMeaningfulPaint' => 'Time to First Meaningful Paint', 
+                'titleTime' => 'Time to Title',
+                'render' => 'Time to Start Render',
+                'chromeUserTiming.firstContentfulPaint' => 'Time to First Contentful Paint',
+                'chromeUserTiming.firstMeaningfulPaint' => 'Time to First Meaningful Paint',
                 'domContentLoadedEventStart' => 'DOM Content Loaded',
-                'visualComplete' => 'Time to Visually Complete', 
-                'visualComplete85' => 'Time to 85% Visually Complete', 
-                'visualComplete90' => 'Time to 90% Visually Complete', 
-                'visualComplete95' => 'Time to 95% Visually Complete', 
-                'visualComplete99' => 'Time to 99% Visually Complete', 
+                'visualComplete' => 'Time to Visually Complete',
+                'visualComplete85' => 'Time to 85% Visually Complete',
+                'visualComplete90' => 'Time to 90% Visually Complete',
+                'visualComplete95' => 'Time to 95% Visually Complete',
+                'visualComplete99' => 'Time to 99% Visually Complete',
                 'lastVisualChange' => 'Last Visual Change',
-                'fullyLoaded' => 'Load Time (Fully Loaded)', 
-                'TimeToInteractive' => 'Time to Interactive', 
+                'fullyLoaded' => 'Load Time (Fully Loaded)',
+                'TimeToInteractive' => 'Time to Interactive',
                 'server_rtt' => 'Estimated RTT to Server',
                 'docCPUms' => 'CPU Busy Time',
-                'domElements' => 'Number of DOM Elements', 
-                'connections' => 'Connections', 
-                'requests' => 'Requests (Fully Loaded)', 
-                'requestsDoc' => 'Requests (onload)', 
-                'bytesInDoc' => 'Bytes In (KB - onload)', 
-                'bytesIn' => 'Bytes In (KB - Fully Loaded)', 
-                'js_bytes' => 'Javascript Bytes (KB)', 
-                'js_requests' => 'Javascript Requests', 
-                'css_bytes' => 'CSS Bytes (KB)', 
-                'css_requests' => 'CSS Requests', 
-                'image_bytes' => 'Image Bytes (KB)', 
+                'domElements' => 'Number of DOM Elements',
+                'connections' => 'Connections',
+                'requests' => 'Requests (Fully Loaded)',
+                'requestsDoc' => 'Requests (onload)',
+                'bytesInDoc' => 'Bytes In (KB - onload)',
+                'bytesIn' => 'Bytes In (KB - Fully Loaded)',
+                'js_bytes' => 'JavaScript Bytes (KB)',
+                'js_requests' => 'JavaScript Requests',
+                'css_bytes' => 'CSS Bytes (KB)',
+                'css_requests' => 'CSS Requests',
+                'image_bytes' => 'Image Bytes (KB)',
                 'image_requests' => 'Image Requests',
-                'flash_bytes' => 'Flash Bytes (KB)', 
+                'flash_bytes' => 'Flash Bytes (KB)',
                 'flash_requests' => 'Flash Requests',
-                'video_bytes' => 'Video Bytes (KB)', 
-                'video_requests' => 'Video Requests', 
-                'html_bytes' => 'HTML Bytes (KB)', 
-                'html_requests' => 'HTML Requests', 
-                'text_bytes' => 'Text Bytes (KB)', 
+                'video_bytes' => 'Video Bytes (KB)',
+                'video_requests' => 'Video Requests',
+                'html_bytes' => 'HTML Bytes (KB)',
+                'html_requests' => 'HTML Requests',
+                'text_bytes' => 'Text Bytes (KB)',
                 'text_requests' => 'Text Requests',
-                'other_bytes' => 'Other Bytes (KB)', 
+                'other_bytes' => 'Other Bytes (KB)',
                 'other_requests' => 'Other Requests',
                 'browser_version' => 'Browser Version'
                 );
@@ -94,7 +94,7 @@ if (!isset($ref)) {
 <!DOCTYPE html>
 <html>
     <head>
-        <title>WebPagetest - Benchmark Comparison</title>
+        <title>WebPageTest - Benchmark Comparison</title>
         <meta http-equiv="charset" content="iso-8859-1">
         <meta name="keywords" content="Performance, Optimization, Pagetest, Page Design, performance site web, internet performance, website performance, web applications testing, web application performance, Internet Tools, Web Development, Open Source, http viewer, debugger, http sniffer, ssl, monitor, http header, http header viewer">
         <meta name="description" content="Speed up the performance of your web pages with an automated analysis">
@@ -115,7 +115,7 @@ if (!isset($ref)) {
             echo "<script type=\"text/javascript\" src=\"{$GLOBALS['cdnPath']}/js/site.js?v=" . VER_JS . "\"></script>\n";
             $site_js_loaded = true;
             ?>
-            
+
             <div class="translucent">
             <?php
             if (isset($info) && array_key_exists('links', $info)) {
@@ -248,7 +248,7 @@ if (!isset($ref)) {
             }
             ?>
             </div>
-            
+
             <?php include('footer.inc'); ?>
         </div>
     </body>
@@ -294,7 +294,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null) {
                         axes: {x: {valueFormatter: function(delta) {
                                     var num = delta * 100;
                                     return num.toFixed(2) + '%';
-                                  }, 
+                                  },
                                   axisLabelFormatter: function(delta) {
                                     var num = delta * 100;
                                     return num.toFixed(0) + '%';
@@ -342,7 +342,7 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null) {
                             axes: {x: {valueFormatter: function(delta) {
                                         var num = delta * 100;
                                         return num.toFixed(2) + '%';
-                                      }, 
+                                      },
                                       axisLabelFormatter: function(delta) {
                                         var num = delta * 100;
                                         return num.toFixed(0) + '%';
@@ -367,5 +367,5 @@ function DisplayBenchmarkData(&$benchmark, $metric, $loc = null) {
             }
         }
     }
-}    
+}
 ?>

@@ -24,7 +24,7 @@ class MimetypeBreakdownHtmlSnippet extends BreakdownHtmlSnippet {
     $out .= "<h3 name=\"connection\">Connection View</h3>\n";
     $out .= $this->connectionView->create();
     $out .= "</div>\n";
-    $out .= $this->createJavascript("wptBreakdownData", $this->_getJSONBreakdown());
+    $out .= $this->createJavaScript("wptBreakdownData", $this->_getJSONBreakdown());
     return $out;
   }
 

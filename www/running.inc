@@ -31,9 +31,9 @@
                 <p>
                 <?php
                     if ($settings['nolinks']) {
-                        echo "Url: $url<br>\n";
+                        echo "URL: $url<br>\n";
                     } else {
-                        echo "Url: <a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";
+                        echo "URL: <a rel=\"nofollow\" href=\"$url\">$url</a><br>\n";
                     }
                     echo "From: {$test['test']['location']}<br>\n";
                     echo GetTestInfoHtml(false);

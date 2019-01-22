@@ -61,8 +61,8 @@ if (!defined('EMBED')) {
             $testLoc = null;
             if( isset($test) && isset($test['test']['loc']) )
                 $testLoc = $test['test']['loc'];
-            
-            if( strpos($testLoc, '..') === false && strpos($testLoc, '/') === false && strpos($testLoc, '\\') === false && 
+
+            if( strpos($testLoc, '..') === false && strpos($testLoc, '/') === false && strpos($testLoc, '\\') === false &&
                 isset($testLoc) && strlen($testLoc) && is_file("./custom/$testLoc/headerAd.inc") ) {
                 include("./custom/$testLoc/headerAd.inc");
             } elseif(is_file('./ads/header.inc')) {
@@ -135,13 +135,13 @@ if (!defined('BARE_UI') && isset($settings['alert']) && strlen($settings['alert'
 }
 } // EMBED
 ?>
-    
+
 <div id="main">
     <div class="level_2">
         <div class="content-wrap">
             <div class="content">
 
-            
+
 <?php
 //If we're looking at a test result, include the extra header section and sub-menu
 if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
@@ -153,7 +153,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
           $testInfo = TestInfo::fromFiles($testPath);
           $testResults = TestResults::fromFiles($testInfo);
         }
-            
+
         $gradeRun = 1;
         if( array_key_exists('run', $_GET) && $_GET["run"] )
             $gradeRun = intval($_GET["run"]);
@@ -174,7 +174,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
               echo '<div id="optimization_header">';
               $localPaths = new TestPaths($testPath, $gradeRun, false);
               $urlGenerator = UrlGenerator::create(false, "", $id, $gradeRun, false);
-              
+
               echo "<div id=\"opthelp\"><a href=\"https://sites.google.com/a/webpagetest.org/docs/other-resources/optimization-resources\" title=\"Optimization Resources\" target=\"_blank\">Need help improving?</a></div>\n";
               echo '</div>';
               echo '<div id="grades">';
@@ -201,7 +201,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
         } else {
           $data_class = ' class="header_data_full"';
         }
-        
+
         echo "<div id=\"header_data\"$data_class>";
         // for multistep, link the first URL and show additional text. Otherwise take the test URL
         $numSteps = $gradeRunResults->countSteps();
@@ -215,7 +215,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
                 echo "<a class=\"url cufon-dincond_black\"  rel=\"nofollow\" title=\"$showUrl\" href=\"$showUrl\">$shortUrl</a>";
             }
             echo "</h2>";
-            
+
             echo "<p class=\"heading_details\"><strong>From:</strong> {$test['test']['location']}";
             if (isset($test['testinfo']['mobile']) && $test['testinfo']['mobile'] === 1)
             {
@@ -234,13 +234,13 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
                 echo "<span class=\"jsdate\" date=\"$timeStr\">$time</span><br>\n";
             }
 
-            if( $dom ) 
+            if( $dom )
                 echo 'DOM Element: <b>' . $dom . '</b><br>';
             if( array_key_exists('authenticated', $test['test']) && (int)$test['test']['authenticated'] == 1)
                 echo '<b>Authenticated: ' . $login . '</b><br>';
             if( (int)$test['test']['connections'] !== 0)
                  echo '<b>' . $test['test']['connections'] . ' Browser connections</b><br>';
-            if( array_key_exists('script', $test['test']) && strlen($test['test']['script']) ) 
+            if( array_key_exists('script', $test['test']) && strlen($test['test']['script']) )
                 echo '<b>Scripted test</b><br>';
             if( strlen($blockString) )
                 echo "Blocked: <b>$blockString</b><br>";
@@ -285,7 +285,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
             }
         echo '</div>';
         echo '</div>';
-        
+
         echo '<div id="test_results-container">';
 
         echo '<div id="test-1" class="test_results">';
@@ -315,7 +315,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
         }
 
         if( !isset($test['testinfo']) || !isset($test['testinfo']['noimages']) || !$test['testinfo']['noimages'] )
-            $tabs['Screen Shot'] = $menuUrlGenerator->resultPage("screen_shot", $endParams);
+            $tabs['Screenshot'] = $menuUrlGenerator->resultPage("screen_shot", $endParams);
         //$tabs['More Checks'] = "/moreChecks.php?test=$id";
 
         foreach( $tabs as $tabName => $tabUrl )
@@ -330,7 +330,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
                 echo "<li$current><a href=\"$tabUrl\">$tabName</a></li>";
             }
         }
-        
+
         // Add the "Image Analysis" link
         if (isset($id) && strlen($id)) {
           $tabUrl = GetSetting('image_analysis');
@@ -339,7 +339,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
             echo "<li><a href=\"$tabUrl\" title=\"Cloudinary Image Analysis (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" style=\"padding-right: 2px;\">Image Analysis<img src=\"/images/external_header.svg\" style=\"padding-top: 4px; float: right;\"></a></li>";
           }
         }
-        
+
         // Add the "Request Map" link
         if (isset($id) && strlen($id)) {
           $tabUrl = GetSetting('request_map');
@@ -348,7 +348,7 @@ if( !strcasecmp('Test Result', $tab) && !@$nosubheader && !defined('EMBED') )
             echo "<li><a href=\"$tabUrl\" title=\"Request Map (external) - Opens in a new window.\" target=\"_blank\" rel=\"noopener\" style=\"padding-right: 2px;\">Request Map<img src=\"/images/external_header.svg\" style=\"padding-top: 4px; float: right;\"></a></li>";
           }
         }
-    
+
         echo '</ul>';
         echo '<div class="test_results-content">';
     }
@@ -411,7 +411,7 @@ function GetGrades($testInfo, $testRunResults, $firstRunResults)
         $grades['cache_static_content'] = array( 'class' => $opt['caching']['class'], 'grade' => $opt['caching']['grade'], 'description' => $opt['caching']['label']);
         $grades['use_of_cdn'] = array( 'class' => $opt['cdn']['class'], 'grade' => $opt['cdn']['grade'], 'description' => $opt['cdn']['label']);
     }
-    
+
     return $grades;
 }
 ?>
