@@ -289,7 +289,7 @@ class TestResultsHtmlTables {
   private function _createScreenshotCell($stepResult, $even) {
     $urlGenerator = $stepResult->createUrlGenerator("", FRIENDLY_URLS);
     $class = $even ? 'class="even"' : '';
-    $onload = $this->screenshotDisplayed ? "" : " onload=\"markUserTime('aft.First Screen Shot')\"";
+    $onload = $this->screenshotDisplayed ? "" : " onload=\"markUserTime('aft.First Screenshot')\"";
     $screenShotUrl = $urlGenerator->resultPage("screen_shot") . "#step_" . $stepResult->getStepNumber();
     $thumbnailUrl = $urlGenerator->thumbnail("screen.jpg");
     $out = "<td align=\"center\" valign=\"middle\" $class>\n";

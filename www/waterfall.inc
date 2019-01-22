@@ -95,7 +95,7 @@ function GetRequestRows($requests, $use_dots, $show_labels = true) {
         if ($request['number'] > $last_request_number + 1) {
             $rows[] = _GetDotsRow();
         }
-        
+
         $rows[] = array(
             'is_connection' => false,
             'label' => GetRequestLabel($request, $show_labels),
@@ -163,7 +163,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
     $is_thumbnail = (bool)@$options['is_thumbnail'];
     $show_labels = (bool)@$options['show_labels'];
     $include_js = (bool)@$options['include_js'];
-    
+
     $top = 0;
     $row_count = count($rows);
     if (isset($options) && array_key_exists('rowcount', $options) && $options['rowcount'] > 0)
@@ -263,7 +263,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
         }
       }
     }
-    
+
     if ($show_labels) {
         if ($is_thumbnail) {
             $data_x = (int)($width * 0.25); // width of request labels (no borders)
@@ -317,7 +317,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
             $user_times[$label] = $value;
           }
         }
-      }    
+      }
       if (isset($csi_info)) {
         if (!isset($user_times))
           $user_times = array();
@@ -385,7 +385,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
         if (isset($cpu_slice_info)) {
           $cpu_slice_colors = array();
           $mime_colors = MimeColors();
-          
+
           $cpu_slice_colors['ParseHTML'] = GetColor($im, 112, 162, 227);
           $cpu_slice_colors['ResourceReceivedData'] = $cpu_slice_colors['ParseHTML'];
           $cpu_slice_colors['ResourceSendRequest'] = $cpu_slice_colors['ParseHTML'];
@@ -471,14 +471,14 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                 }
             }
         }
-        
+
         // Draw pcap-based bandwidth backgrounds, labels and borders
         if (isset($pcap_slices)) {
           if (!$is_thumbnail && $show_labels)
               DrawPerfLabel($im, 'pcap_bw', $pcap_slices, $font, $black);
           DrawPerfBackground($im, $pcap_slices, $data_x, $border_color, $bg_colors['alt']);
         }
-        
+
         // Draw timeline backgrounds, labels and borders
         if (isset($cpu_slice_info)) {
           foreach ($cpu_slice_info as $thread => $p) {
@@ -489,7 +489,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
               DrawPerfBackground($im, $p, $data_x, $border_color, $bg_colors['alt']);
           }
         }
-        
+
         if (isset($interactive)) {
           $iTop = $height - $row_height - 1;
           imagerectangle($im, 0, $iTop, $width - 1, $height - 1, $border_color);  // border
@@ -645,7 +645,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                 }
               }
             }
-            
+
             // Draw the pcap-based bandwidth data
             if (isset($pcap_slices)) {
               // go through each pixel and draw bars individually
@@ -674,7 +674,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                 }
               }
             }
-            
+
             // Draw the Timeline information
             if (isset($cpu_slice_info) && $max_ms) {
               foreach ($cpu_slice_info as $p) {
@@ -743,7 +743,7 @@ function _GetMapOrImage($rows, $url, $page_events, $options, $is_image_map, $pag
                   imagefilledrectangle($im, $iLeft, $iTop, $r, $iBottom, $white);
               }
             }
-            
+
             // Draw the user timings
             if (isset($user_times)) {
                 foreach ($user_times as $name => $value) {
@@ -941,7 +941,7 @@ function FilterRequests($requests) {
 
     if (!count($filtered_requests))
         $filtered_requests = $requests;
-        
+
     return $filtered_requests;
 }
 
@@ -1296,7 +1296,7 @@ function GetBars($request, $x_scaler, $y1, $y2,
 }
 
 /**
-* Append a bar for a request part if it exists and is valid.
+* Append a bar for a request part if it exists and is valid
 */
 function AddBarIfValid(&$bars, $key, $start_key, $end_key, $request, $x_scaler, $y1, $y2) {
     if (array_key_exists($start_key, $request) &&
@@ -1317,7 +1317,7 @@ function AddBarIfValid(&$bars, $key, $start_key, $end_key, $request, $x_scaler, 
 
 /**
 * Insert an interactive waterfall into the current page
-* 
+*
 */
 function InsertWaterfall($url, $requests, $id, $run, $cached, $page_data, $waterfall_options = '') {
   echo CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $waterfall_options);
@@ -1326,7 +1326,7 @@ function InsertWaterfall($url, $requests, $id, $run, $cached, $page_data, $water
 function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $waterfall_options = '', $step = 1) {
     global $settings;
 
-    // create the image map (this is for fallback when Javascript isn't enabled
+    // create the image map (this is for fallback when JavaScript isn't enabled
     // but also gives us the position for each request)
     $out = '<map name="waterfall_map_step' . $step . '">';
     $is_mime = (bool)GetSetting('mime_waterfalls', 1);
@@ -1357,7 +1357,7 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
         }
     }
     $out .= '</map>';
-    
+
     // main container for the waterfall
     $out .= '<div class="waterfall-container">';
     $out .= "<img class=\"waterfall-image\" alt=\"\" onload=\"markUserTime('aft.Waterfall')\" usemap=\"#waterfall_map_step$step\" " .
@@ -1406,7 +1406,7 @@ function CreateWaterfallHtml($url, $requests, $id, $run, $cached, $page_data, $w
 EOT;
 
     $out .= '</div>'; // container
-    
+
     // script support
     $out .= "<script type=\"text/javascript\">\n";
     $out .= "if (typeof wptRequestCount == 'undefined') var wptRequestCount = {};\n";
@@ -1456,7 +1456,7 @@ function InsertMultiWaterfall(&$waterfalls, $waterfall_options) {
         $row_count = $count;
     }
   }
-  
+
   $height_style = '';
   if ($row_count) {
     $row_height = imagefontheight(2) + 4;
@@ -1491,7 +1491,7 @@ function LoadPcapSlices($slices_file, $max_bw) {
           $data[$series]["$time"] = $value * 80; // 8 bits per byte, 10 100ms buckets per second
         }
       }
-      
+
       // Smooth out the bandwidth as needed to not exceed the configured bandwidth
       if ($max_bw) {
         $max_bw *= 1000;
@@ -1528,7 +1528,7 @@ function LoadPcapSlices($slices_file, $max_bw) {
           }
         }
       }
-      
+
       $count = count($data['in']);
       if ($count) {
         $slices = array('count' => $count);
@@ -1545,18 +1545,18 @@ function LoadPcapSlices($slices_file, $max_bw) {
         if (isset($data['in_dup']))
           $slices['in_dup'] = $data['in_dup'];
       }
-    }    
+    }
   }
   return $slices;
 }
 
 function GetAverageSliceValue($slices, $start, $end) {
   $avg = 0.0;
-  
+
   $start_bucket = floatval(floor($start * 10.0)) / 10.0;
   $end_bucket = floatval(ceil($end * 10.0)) / 10.0;
   $slice_width = $end - $start;
-  
+
   if ($slice_width > 0.1) {
     // Spans multiple buckets
     $count = 0;
@@ -1587,19 +1587,19 @@ function GetAverageSliceValue($slices, $start, $end) {
       $avg = $start_weight * $start_value + $end_weight * $end_value;
     }
   }
-  
+
   return $avg;
 }
 
 /**
 * Add the JS execution times to the requests
-* 
+*
 * @param mixed $requests
 * @param mixed $script_timings_file
 */
 
 function AddRequestScriptTimings(&$requests, $script_timings_file) {
-  $script_events = array('EvaluateScript', 
+  $script_events = array('EvaluateScript',
                          'v8.compile',
                          'FunctionCall',
                          'GCEvent',
