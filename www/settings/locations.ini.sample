@@ -41,7 +41,7 @@ label="Test Location"
 
 [WPT_Dulles]
 browser=Chrome,Firefox
-label="WebPagetest.org Dulles, VA - IE8"
+label="WebPageTest.org Dulles, VA - IE8"
 relayServer="https://www.webpagetest.org/"
 relayKey=<your API key>
 relayLocation=Dulles
