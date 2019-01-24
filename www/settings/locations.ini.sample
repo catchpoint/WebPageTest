@@ -15,11 +15,11 @@ group=Desktop
 
 [Public_Dulles]
 1=WPT_Dulles
-label="WebPagetest.org - Dulles, VA"
+label="WebPageTest.org - Dulles, VA"
 group=Public
 
 ;
-; Tese are the browser-specific configurations that match the configurations
+; These are the browser-specific configurations which match those
 ; defined in the top-level locations.  Each one of these MUST match the location
 ; name configured on the test agent (urlblast.ini or wptdriver.ini)
 ;
@@ -29,19 +29,19 @@ browser=Chrome,Firefox
 label="Test Location"
 
 ;
-; This is an exaple of a "remote" configuration where tests can be proxied to a remote
-; webpagetest instance.  The test will be run by the remote server but the results
+; This is an example of a "remote" configuration where tests can be proxied to a remote
+; WebPageTest instance.  The test will be run by the remote server, but the results
 ; will be downloaded to the local server and deleted from the remote agent
 ;
-; Each location that you want to use from the remote server needs to be configured
+; Each desired location from the remote server needs to be configured
 ; individually on the local configuration (location names do not need to match)
 ;
-; To use the public webpagetest.org instance you will need an API key
+; To use the public webpagetest.org instance you will need an API key: https://www.webpagetest.org/getkey.php
 ;
 
 [WPT_Dulles]
 browser=Chrome,Firefox
-label="WebPagetest.org Dulles, VA - IE8"
+label="WebPageTest.org Dulles, VA - IE8"
 relayServer="https://www.webpagetest.org/"
 relayKey=<your API key>
 relayLocation=Dulles
